@@ -79,6 +79,32 @@ SimpleGrid& SimpleGrid::operator = (const SimpleGrid &SG) {
    return *this;
 }
 
+// Number of samples -------------------------------------------------------
+int SimpleGrid::get_number_of_samples() const {
+   if (R2==-1) {
+      int Zdim, Ydim, Xdim;
+      get_size(Zdim,Ydim,Xdim);
+      return Zdim*Ydim*Xdim;
+   } else {
+      int ZZ_lowest =(int) ZZ(lowest);
+      int YY_lowest =(int) YY(lowest);
+      int XX_lowest =(int) XX(lowest);
+      int ZZ_highest=(int) ZZ(highest);
+      int YY_highest=(int) YY(highest);
+      int XX_highest=(int) XX(highest);
+      matrix1D<double> grid_index(3), univ_position(3);
+      int N=0;
+      for (int k=ZZ_lowest; k<=ZZ_highest; k++)
+	 for (int i=YY_lowest; i<=YY_highest; i++)
+	    for (int j=XX_lowest; j<=XX_highest; j++) {
+	       VECTOR_R3(grid_index,j,i,k);
+	       grid2universe(grid_index,univ_position);
+      	       if (is_interesting(univ_position)) N++;
+	    }
+      return N;
+   }
+}
+
 // Prepare Grid ------------------------------------------------------------
 void SimpleGrid::prepare_grid() _THROW {
    // Compute matrix for inverse basis conversion

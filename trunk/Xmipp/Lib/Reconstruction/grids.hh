@@ -240,6 +240,12 @@ public:
       Ydim=(int) (YY(highest)-YY(lowest))+1;
       Xdim=(int) (XX(highest)-XX(lowest))+1;
    }
+   
+   /** Get number of samples.
+      This function returns the number of samples within the grid.
+      If the grid has a radius of interest, then only those samples
+      within that radius are accounted. */
+   int get_number_of_samples() const;
 
    /// Set reconstruction radius
    void set_interest_radius(double _R) {if (_R==-1) R2=-1; else R2=_R*_R;}
