@@ -29,6 +29,7 @@
 /* Forward declarations ---------------------------------------------------- */ 
 class QImage;
 class Micrograph;
+class QtWidgetMicrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
 class QtImage : public QWidget {   
@@ -38,6 +39,7 @@ private:
    QImage              *__img;
    Micrograph          *__m;
    QtFiltersController *__filtersController;
+   QtWidgetMicrograph  *__wm;
    
    int        	        __mingray;
    int        	        __maxgray;
@@ -49,6 +51,9 @@ public:
    
    // Set the micrograph
    void setMicrograph( Micrograph *_m );
+   
+   // Set the widget micrograph
+   void setWidgetMicrograph( QtWidgetMicrograph *_wm );
    
    // Set the filters controller
    void setFiltersController( QtFiltersController *_f );
@@ -83,6 +88,8 @@ protected:
       
    // Get the micrograph
    Micrograph *getMicrograph() { return( __m ); }
+   // Get the widget micrograph
+   QtWidgetMicrograph *getWidgetMicrograph() { return( __wm ); }
    // Get the image handler
    QImage     *image()         { return( __img ); }
 

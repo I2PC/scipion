@@ -84,6 +84,11 @@ void QtImage::setMicrograph( Micrograph *_m ) {
    }
 }
 
+/* Set WidgetMicrograph ---------------------------------------------------- */
+void QtImage::setWidgetMicrograph( QtWidgetMicrograph *_wm ) {
+   __wm=_wm;
+}
+
 /* Set Pixel --------------------------------------------------------------- */
 void QtImage::setPixel(int _x, int _y, int _value) {
     __img->setPixel( _x, _y, _value);
