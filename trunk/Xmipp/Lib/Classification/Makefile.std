@@ -1,17 +1,39 @@
-###########################################################################
-# Main Action = Build library ----------------------------------------------
-all:
-	@( cd Src ; $(MAKE) )
+############################################################################
+LIBPROJ = ../libClassif_$(XMIPP_PREFIX)$(MACHINE).so
+
+SRC_OBJS = Src/xmippCTVectors.o Src/xmippCodeBook.o Src/xmippFuzzyCodeBook.o Src/xmippDistances.o \
+	   Src/xmippSammon.o Src/xmippFCMeans.o Src/xmippMap.o Src/xmippSOM.o Src/xmippFKCN.o \
+	   Src/xmippFuzzySOM.o Src/xmippKerDenSOM.o Src/xmippBatchSOM.o Src/xmippUmatrix.o \
+	   Src/xmippPlanes.o Src/xmippTStudentKerDenSOM.o Src/xmippGaussianKerDenSOM.o \
+           Src/xmippPC.o Programs/Src/Prog_Angular_Reference.o \
+	   Programs/Src/Prog_Angular_Project.o
+
+# Main Action = Built library ----------------------------------------------
+all: $(LIBPROJ)
+
+$(LIBPROJ): $(SRC_OBJS)
+	@echo "Creating library Xmipp General Library ..."
+	@rm -f $(LIBPROJ)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
-	@echo "Creating Makefile in Classification/Src ..."
-	@( cd Src ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ; \
-	   $(MAKE) depend )
+	@$(MAKE) depend
 
 # Cleaning -----------------------------------------------------------------
 clean:
-	@( cd Src ; $(MAKE) clean )
+	@echo "Removing in Classification library ..."
+	@rm -f $(LIBPROJ) $(SRC_OBJS)
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for Classification/Src ..."
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
 
 # DistCleaning -------------------------------------------------------------
 distclean:
@@ -21,7 +43,7 @@ distclean:
 	@echo "Removing distribution for Classification ..."
 	@rm -f Makefile Src/Makefile
 
-## Documents -------------------------------------------------------
+# Documents ----------------------------------------------------------------
 docs:
 	@echo "Creating documentation in Classification ..."
 	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation
