@@ -1,3 +1,13 @@
+OPTIONAL_PROGS =
+
+if BUILD_MPI
+OPTIONAL_PROGS += MPIArt MPI_WBP 
+endif
+
+if BUILD_OGL
+OPTIONAL_PROGS += Phan3D
+endif
+
 SUBDIRS = 2DInterpolation \
 	3DInterpolation \
 	Adapt_for_Spider \
@@ -61,7 +71,6 @@ SUBDIRS = 2DInterpolation \
 	Normalize \
 	Operate \
 	PCA \
-	Phan3D \
 	Phantom_transform \
 	Project \
 	Projection_Neighbourhood \
@@ -106,12 +115,5 @@ SUBDIRS = 2DInterpolation \
 	WBP \
 	Window \
 	Window_micrograph \
-	XMask 
-
-if BUILD_MPI
-SUBDIRS += MPIArt \
-	MPI_WBP 
-else
-SUBDIRS +=  
-endif
+	XMask $(OPTIONAL_PROGS)
 
