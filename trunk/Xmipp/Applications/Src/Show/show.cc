@@ -59,6 +59,7 @@ int main( int argc, char **argv ) {
    QApplication::setFont( QFont("Helvetica", 12) );
    QApplication a(argc,argv);
 
+   int shown=0;
    for ( int i=ifirst+1; i<argc; i++ ) {
        if (!exists(argv[i])) {
           if (argv[i][0]=='-') break; // There is nothing else to show
@@ -72,6 +73,7 @@ int main( int argc, char **argv ) {
 		   fn=fn.substr(0,fn.length()-1);
 		   if (!exists(fn.c_str())) continue;
 		} else continue;
+                break;
 	     case 3: continue;
 	     case 4: break;
 	     case 5: break;
@@ -81,30 +83,38 @@ int main( int argc, char **argv ) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
           showimg->loadImage( argv[i] );
           showimg->show();
+          shown++;
        } else if (mode==1) {
           ShowSel *showsel = new ShowSel;
           showsel->showonlyactive = !check_param(argc,argv,"-showall");
 	  showsel->initWithFile(numRows, numCols, argv[i]);
 	  showsel->show();
+          shown++;
        } else if (mode==2) {
           ShowVol *showvol = new ShowVol;
 	  if (poll) showvol->setPoll();
 	  showvol->initWithFile(numRows, numCols, argv[i]);
 	  showvol->show();
+          shown++;
        } else if (mode==3) {
           ShowSpectra *showspectra=new ShowSpectra;
 	  showspectra->initWithFile(numRows, numCols, argv[i]);
 	  showspectra->show();
+          shown++;
        } else if (mode==4) {
           ShowSOM *showsom=new ShowSOM;
 	  showsom->initWithFile(argv[i]);
 	  showsom->show();
+          shown++;
        } else if (mode==5) {
           ShowSpectraSOM *showspectrasom=new ShowSpectraSOM;
 	  showspectrasom->initWithFile(argv[i],fn_dat);
 	  showspectrasom->show();
+          shown++;
        }
    }
+   
+   if (!shown) return 0;
 
    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
    return a.exec();
