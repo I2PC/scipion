@@ -218,6 +218,8 @@ bool ImagicWriteImagicFile (const FileName &hed_fname,
       static const unsigned int ARCH_VAL = 33686018;
 #elif defined(_SUN)
       static const unsigned int ARCH_VAL = 67372036;
+#else
+      static const unsigned int ARCH_VAL = 33686018;
 #endif
       // This next line will generate an error if not using linux or sun!
       header_block[IMAGIC_IDX_ARCHTYPE] = ARCH_VAL;
