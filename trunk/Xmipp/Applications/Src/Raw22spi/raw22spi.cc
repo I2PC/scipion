@@ -157,8 +157,10 @@ void Usage (char **argv) {
      "\n   [-16]                 raw file is read/written in 16-bit integers"
      "\n   [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n"
-     "\n    -s Zdim Ydim Xdim    Z,Y,X dimensions for input files."
-     "\n			 For 2D raw images set the Zdim to 1\n"
+     "\n   [-s Zdim Ydim Xdim]   Z,Y,X dimensions for input files."
+     "\n			 For 2D raw images set the Zdim to 1"
+     "\n   [-is_micrograph]      If this flag is provided the size is taken"
+     "\n                         from <file_in>.inf\n"
      ,argv[0]);
 }
 void raw22spi (const FileName &fn_in, const FileName &fn_out,
