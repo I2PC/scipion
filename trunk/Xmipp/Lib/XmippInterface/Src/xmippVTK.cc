@@ -4,17 +4,24 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2000 , CSIC .
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- *
- *****************************************************************************/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
 #ifdef _HAVE_VTK
 
@@ -88,6 +95,77 @@ template <class T, class VTKT>
    SET_VTK_TYPE(T,retval);
    COPY_VALUES_TO_VTK(T,v,retval,scalarN);
    retval->Update();
+}
+
+template <class T>
+   void shift_for_VTK(matrix1D<T> &v) {
+   int firstX=STARTINGX(v);
+   int finalX=FINISHINGX(v);
+   T aux=v(firstX);
+   for (int j=firstX; j<finalX; j++)
+       v(j)=v(j+1);
+   v(finalX)=(T)aux;
+}
+
+template <class T>
+   void shift_for_VTK(matrix2D<T> &v, char dir) {
+   int firstY=STARTINGY(v);
+   int firstX=STARTINGX(v);
+   int finalY=FINISHINGY(v);
+   int finalX=FINISHINGX(v);
+   if (dir=='y') {
+      for (int j=firstX; j<=finalX; j++) {
+   	  T aux=v(firstY,j);
+   	  for (int i=firstY; i<finalY; i++)
+   	     v(i,j)=v(i+1,j);
+   	  v(finalY,j)=(T)aux;
+      }
+   }
+   if (dir=='x') {
+      for (int i=firstY; i<=finalY; i++) {
+   	  T aux=v(i,firstX);
+   	  for (int j=firstX; j<finalX; j++)
+   	     v(i,j)=v(i,j+1);
+   	  v(i,finalX)=(T)aux;
+      }
+   }
+}
+
+template <class T>
+   void shift_for_VTK(matrix3D<T> &v, char dir) {
+   int firstZ=STARTINGZ(v);
+   int firstY=STARTINGY(v);
+   int firstX=STARTINGX(v);
+   int finalZ=FINISHINGZ(v);
+   int finalY=FINISHINGY(v);
+   int finalX=FINISHINGX(v);
+   if (dir=='z') {
+      for (int i=firstY; i<=finalY; i++)
+	  for (int j=firstX; j<=finalX; j++) {
+   	      T aux=v(firstZ,i,j);
+   	      for (int k=firstZ; k<finalZ; k++)
+   	    	 v(k,i,j)=v(k+1,i,j);
+   	      v(finalZ,i,j)=(T)aux;
+	  }
+   }
+   if (dir=='y') {
+      for (int k=firstZ; k<=finalZ; k++)
+	  for (int j=firstX; j<=finalX; j++) {
+   	      T aux=v(k,firstY,j);
+   	      for (int i=firstY; i<finalY; i++)
+   	    	 v(k,i,j)=v(k,i+1,j);
+   	      v(k,finalY,j)=(T)aux;
+	  }
+   }
+   if (dir=='x') {
+      for (int k=firstZ; k<=finalZ; k++)
+	  for (int i=firstY; i<=finalY; i++) {
+   	      T aux=v(k,i,firstX);
+   	      for (int j=firstX; j<finalX; j++)
+   	    	 v(k,i,j)=v(k,i,j+1);
+   	      v(k,i,finalX)=(T)aux;
+	  }
+   }
 }
 
 void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
@@ -733,6 +811,9 @@ void instantiate_VTK(T a, VTKT *vtkI) {
    xmippArray2VTK(v,vtkI);
    xmippArray2VTK(m,vtkI);
    xmippArray2VTK(V,vtkI);
+   shift_for_VTK(v);
+   shift_for_VTK(m,'x');
+   shift_for_VTK(V,'x');
    VTK2xmippArray(vtkI,v);
    VTK2xmippArray(vtkI,m);
    VTK2xmippArray(vtkI,V);
@@ -757,7 +838,12 @@ void instantiate_VTK() {
    float         f; instantiate_VTK(f,vtkID); instantiate_VTK(f,vtkSP);
    double        d; instantiate_VTK(d,vtkID); instantiate_VTK(d,vtkSP);
 
+   matrix1D<double> v; FFT_magnitude(vtkID,v); FFT_phase(vtkID,v);
    matrix2D<double> m; FFT_magnitude(vtkID,m); FFT_phase(vtkID,m);
    matrix3D<double> V; FFT_magnitude(vtkID,V); FFT_phase(vtkID,V);
+
+   matrix1D< complex<double> > vc; shift_for_VTK(vc);
+   matrix2D< complex<double> > mc; shift_for_VTK(mc,'x');
+   matrix3D< complex<double> > Vc; shift_for_VTK(Vc,'x');
 }
 #endif

@@ -53,6 +53,27 @@
    template <class T, class VTKT>
       void xmippArray2VTK(const matrix3D<T> &v, VTKT * &retval, int scalarN=1);
 
+   /** Shift and wrap a 1D image along direction X or Y.
+       Used for adjusting the volume from/for VTK
+       when the size is even. Howver this function always shift, no
+       matter the size*/
+   template <class T>
+      void shift_for_VTK(matrix1D<T> &v);
+
+   /** Shift and wrap a 2D image along direction X or Y.
+       Used for adjusting the volume from/for VTK
+       when the size is even. Howver this function always shift, no
+       matter the size. Valid directions are 'x' or 'y'*/
+   template <class T>
+      void shift_for_VTK(matrix2D<T> &v, char dir);
+
+   /** Shift and wrap a 3D image along direction X or Y.
+       Used for adjusting the volume from/for VTK
+       when the size is even. Howver this function always shift, no
+       matter the size. Valid directions are 'x' or 'y'*/
+   template <class T>
+      void shift_for_VTK(matrix3D<T> &v, char dir);
+
    /** FFT_Xmipp -> VTK 1D.
        Converts a Xmipp FFT into a vtkImageData with an FFT.
        An exception is thrown if the input array does not have an even
