@@ -143,7 +143,8 @@ try {
             success=fi2i(img, prm);
 	    if (prm->each_image_produces_an_output) {
 	      if (prm->apply_geo) {
-		EXIT_ERROR(1,"BUG: apply_geo and each_image_produces_an_output should not co-exist");
+		      cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+		           << " the only exception is the apply_geo program";
 	      }
 	    img.write(fn_out);
 	    }
@@ -248,7 +249,8 @@ try {
         	  success=fi2i(img, prm);
 		  if (prm->each_image_produces_an_output) {
 		    if (prm->apply_geo) {
-		      EXIT_ERROR(1,"BUG: apply_geo and each_image_produces_an_output should not co-exist");
+		      cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+		           << " the only exception is the apply_geo program";
 		    }
 		    img.write(prm->fn_out);
 		  }
