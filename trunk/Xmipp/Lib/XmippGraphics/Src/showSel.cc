@@ -434,3 +434,17 @@ void ShowSel::unSelectAll() {
        updateCellIdx(i);
      }
 }
+
+// Update status -----------------------------------------------------------
+void ShowSel::contentsMouseMoveEvent( QMouseEvent* e) {
+    QPoint Pos = e->pos(); // extract pointer position
+    int row=rowAt(Pos.y());
+    int col=columnAt(Pos.x());
+    if (row<0 || col<0) return;
+    updateStatus(indexOf(row,col));
+}
+
+void ShowSel::updateStatus(int i) {
+   if (i>listSize) return;
+   status->setText(imgnames[i].c_str());
+}

@@ -87,6 +87,11 @@ protected:
             void openNewFile (const FileName &);
     /* Read a Selfile */
     void readFile(const FileName &_fn) _THROW;
+    /* Update the label with the filename at cell i*/
+    virtual void updateStatus(int i);
+private slots:
+    // For updating the status label
+    virtual void contentsMouseMoveEvent(QMouseEvent *);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
     /* Unselect all cells */
