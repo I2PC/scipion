@@ -164,7 +164,7 @@ void ShowTable::initTable() {
     adjustStatusLabel();
 
     // Make Table connections
-    connect(this, SIGNAL( QTable::clicked(int, int, int, const QPoint &) ),
+    connect(this, SIGNAL( clicked(int, int, int, const QPoint &) ),
                 this, SLOT(contentsMousePressEvent(int, int,int,
 		                        const QPoint &)));
 
@@ -326,6 +326,7 @@ void ShowTable::contentsMousePressEvent(  int row, int col, int button,
     const QPoint & mousePos  ) 
      {
       setCurrentCell(row,col);
+cout << "button " <<   button  << endl;  
       if( button==RightButton) menubar->exec(mousePos);           
      }
 
