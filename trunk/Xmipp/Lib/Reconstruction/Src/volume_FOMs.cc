@@ -752,11 +752,11 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
 
 /* ------------------------------------------------------------------------- */
 /* Compute resolution                                                        */
-/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */// Based on Spider
 #ifdef NEVER_DEFINED
-// Based on Spider
 void compute_resolution(VolumeXmipp &vol_phantom,
-   const VolumeXmipp &vol_recons, double &resolution, int tell) _THROW {
+   VolumeXmipp &vol_recons, double &resolution) _THROW {
+   int tell=1;
    // If the phantom is not saved, save it
    FileName ext=vol_recons.name().get_extension();
    FileName original_phantom_name=vol_phantom.name();
@@ -807,7 +807,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
       double xF=DF(i  ,0), yF=DF(i  ,2)-DF(i  ,3);
       resolution=x0-y0*(xF-x0)/(yF-y0);
 
-      system(((string)"rm resolution."+ext).c_str());
+      //system(((string)"rm resolution."+ext).c_str());
       system("rm LOG* results* b01*");
       system(((string)"rm superfeo."+ext).c_str());
    } else resolution=-1;
@@ -816,7 +816,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    if (tell&0x4) // This is the flag SHOW_PROCESS of Prog_evaluate.hh
       system(((string)"cat resolution."+ext).c_str());
 
-   system(((string)"rm resolution."+ext).c_str());
+//   system(((string)"rm resolution."+ext).c_str());
 }
 #endif
 
