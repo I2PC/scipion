@@ -291,11 +291,11 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
          I.write(fn_out);
       }
    if (labels[label]!="") {
-      SF.write(fn_root+"."+labels[label]+".sel");
-      write_coordinates(label,fn_root+"."+labels[label]+".pos");
+      SF.write(fn_micrograph+"."+labels[label]+".sel");
+      write_coordinates(label,fn_micrograph+"."+labels[label]+".pos");
    } else {
-      SF.write(fn_root+".sel");
-      write_coordinates(label,fn_root+".pos");
+      SF.write(fn_micrograph+".sel");
+      write_coordinates(label,fn_micrograph+".pos");
    }
    
    // Free source image??

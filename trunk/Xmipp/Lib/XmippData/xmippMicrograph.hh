@@ -198,7 +198,7 @@ public:
         else return (unsigned char) (__a*(*this)(x,y)+__b);}
 
    /** Produce all single particle images.
-       The file fn_root+".sel" is also generated. The angle is the angle
+       The file fn_micrograph+".sel" is also generated. The angle is the angle
        from the Y axis to the tilt axis, angles are positive clockwise.
        Images are rotated by -ang.
        If this angle is 0 no rotation is applied.*/
