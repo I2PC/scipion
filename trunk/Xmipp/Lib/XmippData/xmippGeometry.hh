@@ -289,7 +289,8 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
    double &new_rot, double &new_tilt, double &new_psi, matrix2D<double> &D);
 
 /** Euler direction.
-    This function returns the a vector parallel to the  projection direction. */
+    This function returns  a vector parallel to the  projection direction.
+    Resizes v if needed */
 void Euler_direction(double alpha, double beta, double gamma,
     matrix1D<double> &v);
 
