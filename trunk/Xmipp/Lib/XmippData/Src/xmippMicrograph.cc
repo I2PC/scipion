@@ -76,6 +76,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
       Xdim = (int) fXdim; Ydim= (int)fYdim;
       __offset=header.get_header_size();
       __depth=32;
+      reversed=header.reversed();
    }
    else {
       fn_inf=fn_micrograph.add_extension("inf");
