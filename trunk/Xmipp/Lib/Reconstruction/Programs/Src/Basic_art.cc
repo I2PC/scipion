@@ -420,7 +420,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
-   int rank=-1)
+   int rank)
    {
    SelFile     selfile;
    SelFile     selctf;
