@@ -3,13 +3,14 @@ ifeq ($(HAVE_QT),YES)
     LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).so
 endif
 
-SRC_OBJS = Src/showTools.o   showTools.moc \
-           Src/show2D.o      show2D.moc \
-           Src/showTable.o   showTable.moc \
-	   Src/showSel.o     showSel.moc \
-	   Src/showVol.o     showVol.moc \
-	   Src/showSpectra.o showSpectra.moc \
-	   Src/showSOM.o     showSOM.moc
+SRC_OBJS = Src/showTools.o      showTools.moc \
+           Src/show2D.o         show2D.moc \
+           Src/showTable.o      showTable.moc \
+	   Src/showSel.o        showSel.moc \
+	   Src/showVol.o        showVol.moc \
+	   Src/showSpectra.o    showSpectra.moc \
+	   Src/showSOM.o        showSOM.moc \
+	   Src/showSpectraSOM.o showSpectraSOM.moc
 
 # Main Action = Built library ----------------------------------------------
 .SUFFIXES: .moc .cc .hh .c

@@ -30,20 +30,25 @@
 #include <XmippGraphics/showVol.hh>
 #include <XmippGraphics/showSpectra.hh>
 #include <XmippGraphics/showSOM.hh>
+#include <XmippGraphics/showSpectraSOM.hh>
 #include <qapplication.h>
 
 void Usage();
 
 int main( int argc, char **argv ) {
     int numCols, numRows, mode, ifirst;
+    FileName fn_dat;
     bool poll;
     try {
-       if (check_param(argc,argv,"-img"))        {mode=0; ifirst=position_param(argc,argv,"-img");}
-       else if (check_param(argc,argv,"-sel"))   {mode=1; ifirst=position_param(argc,argv,"-sel");}
-       else if (check_param(argc,argv,"-vol"))   {mode=2; ifirst=position_param(argc,argv,"-vol");}
-       else if (check_param(argc,argv,"-spect")) {mode=3; ifirst=position_param(argc,argv,"-spect");}
-       else if (check_param(argc,argv,"-som"))   {mode=4; ifirst=position_param(argc,argv,"-som");}
-       else
+       if (check_param(argc,argv,"-img"))          {mode=0; ifirst=position_param(argc,argv,"-img");}
+       else if (check_param(argc,argv,"-sel"))     {mode=1; ifirst=position_param(argc,argv,"-sel");}
+       else if (check_param(argc,argv,"-vol"))     {mode=2; ifirst=position_param(argc,argv,"-vol");}
+       else if (check_param(argc,argv,"-spect"))   {mode=3; ifirst=position_param(argc,argv,"-spect");}
+       else if (check_param(argc,argv,"-som"))     {mode=4; ifirst=position_param(argc,argv,"-som");}
+       else if (check_param(argc,argv,"-spectsom")){
+          mode=5; ifirst=position_param(argc,argv,"-spectsom");
+	  fn_dat=get_param(argc,argv,"-din");
+       } else
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
        numCols = AtoI(get_param(argc, argv, "-w", "10"));
        numRows = AtoI(get_param(argc, argv, "-h", "10"));
@@ -62,7 +67,9 @@ int main( int argc, char **argv ) {
 		fn=fn.substr(0,fn.length()-1);
 		if (!exists(fn.c_str())) continue;
 	     } else continue;
-	 } else if (mode==4) {};
+	 } else if (mode==4) {
+	 } else if (mode==5) {
+	 }
        } 
        if (mode==0) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
@@ -85,6 +92,10 @@ int main( int argc, char **argv ) {
           ShowSOM *showsom=new ShowSOM;
 	  showsom->initWithFile(argv[i]);
 	  showsom->show();
+       } else if (mode==5) {
+          ShowSpectraSOM *showspectrasom=new ShowSpectraSOM;
+	  showspectrasom->initWithFile(argv[i],fn_dat);
+	  showspectrasom->show();
        }
    }
 
@@ -94,14 +105,16 @@ int main( int argc, char **argv ) {
 
 void Usage() {
     cout << "Usage: showsel [options]\n"
-         << "    -img <images> |    : Input images\n"
-         << "    -sel <selfiles> |  : Input selfiles\n"
-         << "    -vol <XmippVolumes>: Add x or y to the filename\n"
-	 << "                         to see slices in that direction\n"
-         << "    -spect <datafile>  : Spectra .dat file\n"
-	 << "    -som <SOM rootname>: SOM images\n"
-         << "   [-w]                : width (default: 10)\n"
-         << "   [-h]                : height (default: 10)\n"
-         << "   [-poll]             : check file change, only for volumes\n"
+         << "    -img <images> |       : Input images\n"
+         << "    -sel <selfiles> |     : Input selfiles\n"
+         << "    -vol <XmippVolumes>   : Add x or y to the filename\n"
+	 << "                            to see slices in that direction\n"
+         << "    -spect <datafile>     : Spectra .dat file\n"
+	 << "    -som <SOM rootname>   : SOM images\n"
+	 << "    -spectsom <SOM root>  : SOM spectra\n"
+	 << "       -din <Original.dat>: Original data\n"
+         << "   [-w]                   : width (default: 10)\n"
+         << "   [-h]                   : height (default: 10)\n"
+         << "   [-poll]                : check file change, only for volumes\n"
     ;
 }
