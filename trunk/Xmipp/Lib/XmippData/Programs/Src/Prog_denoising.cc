@@ -36,15 +36,21 @@ Denoising_parameters::Denoising_parameters(): Prog_parameters() {
    DWT_type="DAUB12";
    denoising_type=REMOVE_SCALE;
    scale=0;
+   output_scale=0;
    threshold=50;
    R=-1;
+   SNR0=1.0/10;
+   SNRF=1.0/5;
+   white_noise=false;
    Shah_outer=10;
    Shah_inner=1;
    Shah_refinement=1;
    Shah_weight.init_zeros(4);
    Shah_weight(1)=Shah_weight(2)=50; Shah_weight(3)=0.02;
    Shah_edge=false;
-   Shah_adjust_range=true;
+   adjust_range=true;
+   tell=0;
+   dont_denoise=false;
 }
 
 // Read from command line --------------------------------------------------
@@ -60,8 +66,12 @@ void Denoising_parameters::read(int argc, char **argv) _THROW {
    else if (aux=="difussion")         denoising_type=SHAH;
    else                               denoising_type=REMOVE_SCALE;
    scale=AtoI(get_param(argc,argv,"-scale","0"));
+   output_scale=AtoI(get_param(argc,argv,"-output_scale","0"));
    threshold=AtoF(get_param(argc,argv,"-th","50"));
    R=AtoI(get_param(argc,argv,"-R","-1"));
+   SNR0=AtoF(get_param(argc,argv,"-SNR0","0.1"));
+   SNRF=AtoF(get_param(argc,argv,"-SNRF","0.2"));
+   white_noise=check_param(argc,argv,"-white_noise");
    Shah_outer=AtoI(get_param(argc,argv,"-outer","10"));
    Shah_inner=AtoI(get_param(argc,argv,"-inner","1"));
    Shah_refinement=AtoI(get_param(argc,argv,"-refinement","1"));
@@ -72,6 +82,7 @@ void Denoising_parameters::read(int argc, char **argv) _THROW {
       Shah_weight(1)=Shah_weight(2)=50; Shah_weight(3)=0.02;
    }
    Shah_edge=check_param(argc,argv,"-only_edge");
+   if (check_param(argc,argv,"-show")) tell=1;
    
    produce_side_info();
 }
@@ -102,6 +113,9 @@ void Denoising_parameters::show_specific() {
          break;
       case BAYESIAN:
 	 cout << " Bayesian\n";
+	 cout << " SNR between " << SNR0 << " and " << SNRF << endl
+	      << " up to scale " << scale << endl;
+	 if (white_noise) cout << " Imposing white noise\n";
 	 break;
       case ADAPTIVE_SOFT:
 	 cout << " Adaptive soft thresholding\n";
@@ -118,6 +132,8 @@ void Denoising_parameters::show_specific() {
 	 if (Shah_edge) cout << " Generating edge image\n";
 	 break;
    }
+   if (denoising_type!=SHAH)
+      cout << "Output scale: " << output_scale << endl;
 }
 
 // Usage -------------------------------------------------------------------s
@@ -136,9 +152,13 @@ void Denoising_parameters::usage_specific() {
 	<< "                               adaptive_soft\n"
 	<< "                               central\n"
 	<< "                               difussion\n"
-        << "  [-scale <s=0>]             : scale to remove\n"
+        << "  [-scale <s=0>]             : scale\n"
+	<< "  [-output_scale <s=0>]      : output_scale\n"
         << "  [-th <th=50>]              : threshold of values (%) to remove\n"
 	<< "  [-R <r=-1>]                : Radius to keep, by default half the size\n"
+	<< "  [-SNR0 <SNR=0.1>]          : Smallest SNR\n"
+	<< "  [-SNRF <SNR=0.2>]          : Largest SNR\n"
+	<< "  [-white_noise]             : Select if the noise is white\n"
 	<< "  [-outer <it=10>]           : Difussion outer iterations\n"
 	<< "  [-inner <it=1>]            : Difussion inner iterations\n"
 	<< "  [-refinement <it=1>]       : Difussion refinement iterations\n"
@@ -148,11 +168,13 @@ void Denoising_parameters::usage_specific() {
 	<< "                               w2=edge strength (=50)\n"
 	<< "                               w3=edge smoothness (=0.02)\n"
 	<< "  [-only_edge]               : Produce the edge image of the diffusion\n"
+	<< "  [-show]                    : Show information about the process\n"
    ;
 }
 
 // Denoise image -----------------------------------------------------------
 void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
+   if (denoising_type==BAYESIAN && adjust_range) img.range_adjust(0,1);
    if (denoising_type!=SHAH) {
       double size2=log10((double)XSIZE(img))/log10(2.0);
       if (ABS(size2-ROUND(size2))>1e-6)
@@ -176,7 +198,8 @@ void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
          soft_thresholding(img,hist.percentil(threshold));
          break;
       case BAYESIAN:
-         bayesian_wiener_filtering(img,scale);
+         estimatedS=bayesian_wiener_filtering(img,scale,SNR0,SNRF,
+	    white_noise,tell,!dont_denoise);
 	 break;
       case ADAPTIVE_SOFT:
       	 adaptive_soft_thresholding(img,scale);
@@ -187,17 +210,26 @@ void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
       case SHAH:
 	 Smoothing_Shah(img, surface_strength, edge_strength,
 	    Shah_weight, Shah_outer, Shah_inner,
-	    Shah_refinement, Shah_adjust_range);
+	    Shah_refinement, adjust_range);
 	 if (Shah_edge) img=edge_strength;
 	 else           img=surface_strength;
          break;
    }
-   if (denoising_type!=SHAH) IDWT(img,img);
+   if (denoising_type!=SHAH) {
+      if (output_scale!=0) {
+         int reduction=(int)pow(2.0,output_scale);
+         img.resize(YSIZE(img)/reduction,XSIZE(img)/reduction);
+      }
+      IDWT(img,img);
+   }
 }
 
 // Denoise volume ----------------------------------------------------------
 void Denoising_parameters::denoise(matrix3D<double> &vol) _THROW {
-   if (denoising_type==SHAH) return;
+   if (denoising_type==SHAH) {
+      cerr << "Shah denoising is not implemented for volumes\n";
+      return;
+   }
    double size2=log10((double)XSIZE(vol))/log10(2.0);
    if (ABS(size2-ROUND(size2))>1e-6)
       REPORT_ERROR(1,"Denoising::denoise: Input volume must be of a size power of 2");
@@ -225,6 +257,10 @@ void Denoising_parameters::denoise(matrix3D<double> &vol) _THROW {
          compute_hist(vol,hist,100);
          soft_thresholding(vol,hist.percentil(threshold));
          break;
+      case BAYESIAN:
+         estimatedS=bayesian_wiener_filtering(vol,scale,SNR0,SNRF,
+	    white_noise,tell,!dont_denoise);
+	 break;
       case ADAPTIVE_SOFT:
       	 cout << "Adaptive soft-thresholding not implemented for volumes\n";
 	 break;
@@ -234,6 +270,22 @@ void Denoising_parameters::denoise(matrix3D<double> &vol) _THROW {
       case SHAH:
          cout << "Shah Difussion not implemented for volumes\n";
 	 break;
+   }
+
+   if (output_scale!=0) {
+      int reduction=(int)pow(2.0,output_scale);
+      vol.resize(ZSIZE(vol)/reduction,YSIZE(vol)/reduction,XSIZE(vol)/reduction);
+   }
+   IDWT(vol,vol);
+}
+
+void Denoising_parameters::denoise_avg_bayesian(matrix3D<double> &vol) {
+   DWT(vol,vol);
+   bayesian_wiener_filtering(vol,scale,estimatedS);
+
+   if (output_scale!=0) {
+      int reduction=(int)pow(2.0,output_scale);
+      vol.resize(ZSIZE(vol)/reduction,YSIZE(vol)/reduction,XSIZE(vol)/reduction);
    }
    IDWT(vol,vol);
 }

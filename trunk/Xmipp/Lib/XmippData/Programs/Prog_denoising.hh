@@ -31,7 +31,6 @@
 
 /**@name Denoising */
 //@{
-/** Denoising parameters */
 class Denoising_parameters: public Prog_parameters {
 public:
    typedef enum {REMOVE_SCALE,
@@ -53,12 +52,31 @@ public:
    /** Scale to which the denoising is applied.
        It is used by remove scale, adaptive soft */
    int    scale;
+   
+   /** Output scale.
+       All wavelet coefficients up to this output scale will be
+       removed. Thus, the output image is reduced by a factor
+       that is related to this output scale. For instance, if the
+       output scale is 0, then no reduction is done. If the
+       output scale is 1, then the output image is reduced by 1/2,
+       if the output scale is 2, then it is reduced by 1/4, ...
+   */
+   int output_scale;
 
    /** Threshold for soft thresholding*/
    double threshold;
 
    /** Radius for central */
    int    R;
+
+   /** Smallest SNR */
+   double SNR0;
+   
+   /** Largest SNR */
+   double SNRF;
+
+   /** White noise */
+   bool white_noise;
 
    /** Shah number of outer iterations */
    int    Shah_outer;
@@ -79,8 +97,21 @@ public:
    /** Produce Shah edge instead of Shah smooth. */
    bool   Shah_edge;
    
-   /** Adjust range in Shah */
-   bool   Shah_adjust_range;
+   /** Adjust range in Shah or Bayesian denoising */
+   bool   adjust_range;
+   
+   /** Debugging level.
+       0, no dubug */
+   int    tell;
+
+   /** Don't denoise.
+       This is used in the Bayesian method, where the estimatedS
+       parameters caan be averaged. */
+   bool dont_denoise;
+public:
+   // estimatedS of the Bayesian method
+   matrix1D<double> estimatedS;
+
 public:
    /// Empty constructor
    Denoising_parameters();
@@ -109,6 +140,9 @@ public:
    
    /// Denoise a volume
    void denoise(matrix3D<double> &vol) _THROW;
+
+   /// Denoise a volume using a precalculated estimate of the bayesian parameters
+   void denoise_avg_bayesian(matrix3D<double> &vol);
 };
 //@}
 #endif
