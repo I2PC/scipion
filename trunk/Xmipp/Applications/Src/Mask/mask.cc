@@ -25,6 +25,7 @@
 
 /* INCLUDES ---------------------------------------------------------------- */
 #include <XmippData/xmippMasks.hh>
+#include <XmippData/xmippMatrices2D.hh>
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippSelFiles.hh>
 #include <XmippData/xmippVolumes.hh>
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
    int             create_mask;
    int             count_above; double th_above;
    int             count_below; double th_below;
+   bool            apply_geo;
    double          subs_val;
    string          str_subs_val;
    int             count;
@@ -86,6 +88,7 @@ int main(int argc, char **argv) {
       oext         = get_param(argc,argv,"-oext","");
       save_mask    = check_param(argc,argv,"-save_mask");
       count_above  = check_param(argc,argv,"-count_above");
+      apply_geo    = !check_param(argc,argv,"-dont_apply_geo");
       if (count_above) 
          th_above  = AtoF(get_param(argc,argv,"-count_above"));
       count_below  = check_param(argc,argv,"-count_below");
@@ -108,10 +111,18 @@ int main(int argc, char **argv) {
    // Mask a single image ---------------------------------------------------
    if (Is_ImageXmipp(fn_input)) {
       image.read(fn_input); image().set_Xmipp_origin();
+      if (apply_geo) {
+	if (mask_prm.x0+mask_prm.y0!=0.) {
+	  REPORT_ERROR(1,"Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
+	} else {
+	  // Read geometric transformation from the image and store for mask
+	  mask_prm.mask_geo=image.get_transformation_matrix();
+	}
+      }
       mask_prm.generate_2Dmask(I);
       if (!create_mask) {
          SET_SUBS_VAL(I);
-         mask_prm.apply_mask(I,I,subs_val);
+         mask_prm.apply_mask(I,I,subs_val,apply_geo);
          if (!count)
             if (fn_out=="") image.write(fn_input);
             else            image.write(fn_out);
@@ -176,9 +187,17 @@ int main(int argc, char **argv) {
          // Process an image ...............................................
          if (Is_ImageXmipp(fn_in)) {
             image.read(fn_in); image().set_Xmipp_origin();
+	    if (apply_geo) {
+	      if (mask_prm.x0+mask_prm.y0!=0.) {
+		REPORT_ERROR(1,"Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
+	      } else {
+		// Read geometric transformation from the image and store for mask
+		mask_prm.mask_geo=image.get_transformation_matrix();
+	      }
+	    }
             mask_prm.generate_2Dmask(I);
             SET_SUBS_VAL(I);
-            mask_prm.apply_mask(I,I,subs_val);
+            mask_prm.apply_mask(I,I,subs_val,apply_geo);
             if (!count) image.write(fn_out);
             else {
                if (mask_prm.datatype()==INT_MASK) {
@@ -232,6 +251,7 @@ void Usage() {
          << "   -i <image or volume> [-o <image_out or volume_out]\n"
          << "   -i <selfile> [-oext <output extension>]\n"
          << "   [-save_mask]                       : apply and save mask\n"
+         << "   [-dont_apply_geo]                  : dont apply (opposite) geometric transformation as stored in header of 2D-image\n"
          << "   [-create_mask <output mask file>]  : don't apply and save mask\n"
          << "   [-count_above <th>]                : voxels within mask >= th\n"
          << "   [-count_below <th>]                : voxels within mask <= th\n"

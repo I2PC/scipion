@@ -485,6 +485,9 @@ public:
 /** Filename from which the mask is read, if it is the case */
     FileName fn_mask;
 
+/** Geometrix transformation matrix for the mask */
+    matrix2D<double> mask_geo;
+
 /** Allowed data types. */
     int allowed_data_types;
 /** 1D integer mask. */
@@ -609,7 +612,7 @@ template <class T>
 /** Apply mask to image.
     subs_val is the substitute value in case of binary masks*/
 template <class T>
-   void apply_mask(const matrix2D<T> &I, matrix2D<T> &result, T subs_val=0);
+   void apply_mask(const matrix2D<T> &I, matrix2D<T> &result, T subs_val=0, const bool &apply_geo=false);
 
 /** Apply mask to volume.
     subs_val is the substitute value in case of binary masks*/
@@ -666,6 +669,12 @@ void force_to_be_binary() {
 template <class T>
    void compute_stats_within_binary_mask(const matrix2D<int> &mask,
       const matrix2D<T> &m, T &min_val, T &max_val, double &avg, double &stddev);
+
+/** Apply geometric transformation to a binary mask  */
+void apply_geo_binary_2D_mask(matrix2D<int> &mask, const matrix2D<double> &A);
+
+/** Apply geometric transformation to a continuous mask  */
+void apply_geo_cont_2D_mask(matrix2D<double> &mask, const matrix2D<double> &A);
 
 /** Apply binary mask to an image (1D).
     The image values for which the input mask is 0 are set to <subs_val>.

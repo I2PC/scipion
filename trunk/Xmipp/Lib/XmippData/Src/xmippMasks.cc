@@ -919,12 +919,14 @@ template <class T>
 
 template <class T>
    void Mask_Params::apply_mask(const matrix2D<T> &I, matrix2D<T> &result,
-      T subs_val) {
+      T subs_val, const bool &apply_geo) {
    switch (datatype()) {
       case INT_MASK:
+	 if (apply_geo) apply_geo_binary_2D_mask(imask2D,mask_geo);
          apply_binary_mask(imask2D, I, result, subs_val);
          break;
       case DOUBLE_MASK:
+	 if (apply_geo) apply_geo_cont_2D_mask(dmask2D,mask_geo);
          apply_cont_mask(dmask2D, I, result);
          break;
    }
@@ -946,6 +948,25 @@ template <class T>
 /*---------------------------------------------------------------------------*/
 /* Mask tools                                                                */
 /*---------------------------------------------------------------------------*/
+
+// Apply geometric transformation to a binary mask ========================
+void apply_geo_binary_2D_mask(matrix2D<int> &mask, const matrix2D<double> &A) {
+  matrix2D<double> tmp;
+  tmp.resize(mask);
+  type_cast(mask,tmp);
+  double outside=DIRECT_MAT_ELEM(tmp,0,0);
+  // Instead of IS_INV for images use IS_NOT_INV for masks!
+  tmp.self_apply_geom(A,IS_NOT_INV,DONT_WRAP,outside);
+  type_cast(tmp,mask);
+}
+
+// Apply geometric transformation to a continuous mask =====================
+void apply_geo_cont_2D_mask(matrix2D<double> &mask, const matrix2D<double> &A) {
+  double outside=DIRECT_MAT_ELEM(mask,0,0);
+  // Instead of IS_INV for images use IS_NOT_INV for masks!
+  mask.self_apply_geom(A,IS_NOT_INV,DONT_WRAP,outside);
+}
+
 // Apply binary mask =======================================================
 template <class T>
    void apply_binary_mask(const matrix1D<int> &mask, const matrix1D<T> &m_in,
