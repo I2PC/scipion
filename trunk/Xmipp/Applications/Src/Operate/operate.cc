@@ -244,7 +244,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
 	   ImageXmipp out;
 	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);
-	   out()=out()-number1;
+	   out()=number1-out();
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
