@@ -453,7 +453,10 @@ void Prog_assign_CTF_prm::process() {
            if (particle_horizontal<=0||particle_vertical<=0)
 	      SF.ImgSize(particle_vertical,particle_horizontal);
 	} else {
-	   N=FLOOR(Ydim/N_vertical)*FLOOR(Xdim/N_horizontal);
+	   if (ARMA_averaging || Periodogram_averaging)
+	      N=(FLOOR(Ydim/(N_vertical/2))-1)*(FLOOR(Xdim/(N_horizontal/2))-1);
+	   else
+	      N=FLOOR(Ydim/N_vertical)*FLOOR(Xdim/N_horizontal);
 	}
 
 	#ifdef DEBUG
@@ -512,15 +515,19 @@ void Prog_assign_CTF_prm::process() {
  	      if (i>Ydim-N_horizontal) i=Ydim-N_horizontal-1;
  	      if (j>Xdim-N_vertical)   j=Xdim-N_vertical-1;
 	   } else {
-	      if(N!=1) j+=N_horizontal;
+	      int Xstep=N_horizontal, Ystep=N_vertical;
+	      if (ARMA_averaging || Periodogram_averaging)
+	         {Xstep/=2; Ystep/=2;}
+	      if(N!=1) j+=Xstep;
 	      if (j>Xdim) {
 		 j=0;
-		 i+=N_vertical;
+		 i+=Ystep;
 	      }
 	      if (i>Ydim)
 	         REPORT_ERROR(1,"Prog_assign_CTF_prm: window is outside the micrograph");
 	   }
 
+           #define ijDEBUG
 	   #ifdef ijDEBUG
 	      cout << "Block " << N <<" (j,i)= (" << j << "," << i << ")" <<endl;
 	   #endif
