@@ -72,6 +72,10 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    Xdim=AtoI(get_param(fh_inf,"Xdim"));
    Ydim=AtoI(get_param(fh_inf,"Ydim"));
    __depth=AtoI(get_param(fh_inf,"bitspersample"));
+   if(check_param(fh_inf,"offset"))
+      __offset=AtoI(get_param(fh_inf,"offset"));
+   else
+      __offset=0;   
    fclose(fh_inf);
 
    // Open micrograph and map
@@ -79,14 +83,16 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    if (fh_micrograph==-1)
       REPORT_ERROR(1,(string)"Micrograph::open_micrograph: There is a "
          "problem opening "+fn_micrograph);
+   char *aux_ptr;
    switch (__depth) {
       case 8:
          /* if (!in_core) { */
-            m8=(unsigned char *) mmap(0,(__depth/8)*Ydim*Xdim,
+            m8=(unsigned char *) mmap(0,(__depth/8)*Ydim*Xdim+__offset,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
             if (m8==MAP_FAILED)
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
                   _fn_micrograph+" in memory");
+	     m8+=__offset;
          /* } else {
             m8=new unsigned char (Ydim*Xdim*__depth/8);
             int length=Ydim*Xdim*__depth/8;
@@ -127,6 +133,9 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot read "+
                   _fn_micrograph+" in memory");
          } */
+         aux_ptr=(char *)m16;
+	 aux_ptr+=__offset;
+	 m16=(short int *) aux_ptr;
          break;
       case 32:
       	    // Map file in memory
@@ -135,6 +144,9 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
             if (m32==MAP_FAILED)
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
                   _fn_micrograph+" in memory");
+            aux_ptr=(char *)m32;
+	    aux_ptr+=__offset;
+	    m32=(float *) aux_ptr;
 	    break;
       default:
          REPORT_ERROR(1,"Micrograph::open_micrograph: depth is not 8, 16 nor 32");
@@ -148,9 +160,20 @@ void Micrograph::close_micrograph() {
    if (fh_micrograph!=-1) {
       close(fh_micrograph);
       /* if (!__in_core) { */
-         if      (__depth== 8) munmap((char *)m8,Ydim*Xdim*__depth/8);
-         else if (__depth==16) munmap((char *)m16,Ydim*Xdim*__depth/8);
-         else if (__depth==32) munmap((char *)m32,Ydim*Xdim*__depth/8);
+         if      (__depth== 8) {
+	    m8-=__offset;
+	    munmap((char *)m8,Ydim*Xdim*__depth/8+__offset);
+         } else if (__depth==16) {
+	    char *aux_ptr=(char *)m16;
+	    aux_ptr-=__offset;
+	    m16=(short int *)aux_ptr;
+	    munmap((char *)m16,Ydim*Xdim*__depth/8+__offset);
+         } else if (__depth==32) {
+	    char *aux_ptr=(char *)m32;
+	    aux_ptr-=__offset;
+	    m32=(float *)aux_ptr;
+	    munmap((char *)m32,Ydim*Xdim*__depth/8+__offset);
+	 }
       /* } else {
          if      (__depth== 8) delete m8;
          else if (__depth==16) delete m16;
@@ -166,9 +189,11 @@ void Micrograph::compute_8_bit_scaling() {
    float minval, maxval;
    minval=maxval=(*this)(0,0);
    for (int j=0; j<Xdim; j++)
+   {  
       for (int i=0; i<Ydim; i++) {
          if ((*this)(j,i)<minval) minval=(*this)(j,i);
          if ((*this)(j,i)>maxval) maxval=(*this)(j,i);
+      }
    }
 
    // Compute output range

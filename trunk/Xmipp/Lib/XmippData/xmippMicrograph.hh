@@ -75,6 +75,7 @@ protected:
    int                     Xdim;
    int                     Ydim;
    int                     __depth;
+   int                     __offset;
    bool                    __reversed;
    unsigned char           *m8;
    short int               *m16;
