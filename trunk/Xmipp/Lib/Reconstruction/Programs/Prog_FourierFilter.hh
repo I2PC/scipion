@@ -51,6 +51,7 @@
    Example of use reading a mask from file
    \begin{verbatim}
       ImageXmipp I("image.xmp");
+      I().set_Xmipp_origin();
       FourierMask Filter;
       Filter.read_mask("mask.fft");
       Filter.apply_mask_Space(I());
