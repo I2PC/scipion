@@ -11,6 +11,7 @@ mark_SOURCES = mark.cc QtColorLabel.cc QtColorLabel_moc.cc \
         QtImageMicrograph.cc QtImageMicrograph_moc.cc \
         QtImageOverviewMicrograph.cc QtImageOverviewMicrograph_moc.cc \
         QtMainWidgetMark.cc QtMainWidgetMark_moc.cc \
+        QtAutoMenu.cc QtAutoMenu_moc.cc \
         QtPopupMenuMark_moc.cc \
         QtWidgetMicrograph.cc QtWidgetMicrograph_moc.cc \
         ../DownSample/xvsmooth.c
@@ -24,6 +25,8 @@ mark_LDFLAGS = @QT_LIBS@
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 
+QtAutoMenu_moc.cc : 
+	@QT_MOC@ QtAutoMenu.hh -o QtAutoMenu_moc.cc
 QtColorLabel_moc.cc : 
 	@QT_MOC@ QtColorLabel.hh -o QtColorLabel_moc.cc
 QtDialogFamilies_moc.cc : 
