@@ -1,4 +1,6 @@
 ######################################################################
 PROJ = spots2realspace
 OBJ  = spots2realspace.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)
+LIBS = -l$(LIBXMIPP_INTERFACE_VTK) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBRECONS) -l$(LIBXMIPP) \
+       -l$(LIBRECONS_INTERFACE) -l$(LIBRECONS_VTK) $(LIBVTK) 
