@@ -15,6 +15,9 @@
 #include	"debug.h"
 #include	"error.h"
 
+/* COSS */
+#define FABS(x) (((x)<0)?(-x):(x))
+
 /*****************************************************************************
  *	Toolbox includes
  ****************************************************************************/
@@ -57,8 +60,10 @@ static double	Pythag
 /**/DEBUG_WRITE_ENTERING(Pythag,
 /**/	"About to apply the Pythagorean theorem")
 
-	absa = fabs(a);
-	absb = fabs(b);
+	//absa = fabs(a);
+	//absb = fabs(b);
+	absa = FABS(a);
+	absb = FABS(b);
 	if (absb < absa) {
 /**/	DEBUG_WRITE_LEAVING(Pythag, "Done")
 		return(absa * sqrt(1.0 + absb * absb / (absa * absa)));
@@ -1235,6 +1240,7 @@ extern int		SingularValueDecomposition
 /**/	DEBUG_WRITE_LEAVING(SingularValueDecomposition, "Done")
 		return(*Status);
 	}
+	
 	g = Scale = Norm = 0.0;
 	for (i = 0L; (i < Columns); i++) {
 		l = i + 1L;
@@ -1242,17 +1248,21 @@ extern int		SingularValueDecomposition
 		g = s = Scale = 0.0;
 		if (i < Lines) {
 			for (k = i; (k < Lines); k++) {
-				Scale += fabs(U[k * Columns + i]);
+				/*Scale += fabs(U[k * Columns + i]);*/
+				Scale += FABS(U[k * Columns + i]);
 			}
 			if (Scale != 0.0) {
+			        double iScale=1.0/Scale;
 				for (k = i; (k < Lines); k++) {
-					U[k * Columns + i] /= Scale;
-					s += U[k * Columns + i] * U[k * Columns + i];
+				        long ki=k * Columns + i;
+					U[ki] *= iScale;
+					s += U[ki] * U[ki];
 				}
-				f = U[i * Columns + i];
+				long ii=i * Columns + i;
+				f = U[ii];
 				g = (0.0 <= f) ? (-sqrt(s)) : (sqrt(s));
 				h = f * g - s;
-				U[i * Columns + i] = f - g;
+				U[ii] = f - g;
 				for (j = l; (j < Columns); j++) {
 					for (s = 0.0, k = i; (k < Lines); k++) {
 						s += U[k * Columns + i] * U[k * Columns + j];
@@ -1271,19 +1281,24 @@ extern int		SingularValueDecomposition
 		g = s = Scale = 0.0;
 		if ((i < Lines) && (i != (Columns - 1L))) {
 			for (k = l; (k < Columns); k++) {
-				Scale += fabs(U[i * Columns + k]);
+				/*Scale += fabs(U[i * Columns + k]);*/
+				Scale += FABS(U[i * Columns + k]);
 			}
 			if (Scale != 0.0) {
+			        double iScale=1.0/Scale;
 				for (k = l; (k < Columns); k++) {
-					U[i * Columns + k] /= Scale;
-					s += U[i * Columns + k] * U[i * Columns + k];
+				        long ik=i * Columns + k;
+					U[ik] *= iScale;
+					s += U[ik] * U[ik];
 				}
-				f = U[i * Columns + l];
+				long il=i * Columns + l;
+				f = U[il];
 				g = (0.0 <= f) ? (-sqrt(s)) : (sqrt(s));
 				h = f * g - s;
-				U[i * Columns + l] = f - g;
+				U[il] = f - g;
+				double ih=1.0/h;
 				for (k = l; (k < Columns); k++) {
-					rv1[k] = U[i * Columns + k] / h;
+					rv1[k] = U[i * Columns + k] *ih;
 				}
 				for (j = l; (j < Lines); j++) {
 					for (s = 0.0, k = l; (k < Columns); k++) {
@@ -1298,7 +1313,8 @@ extern int		SingularValueDecomposition
 				}
 			}
 		}
-		Norm = ((fabs(W[i]) + fabs(rv1[i])) < Norm) ? (Norm) : (fabs(W[i]) + fabs(rv1[i]));
+		//Norm = ((fabs(W[i]) + fabs(rv1[i])) < Norm) ? (Norm) : (fabs(W[i]) + fabs(rv1[i]));
+		Norm = ((FABS(W[i]) + FABS(rv1[i])) < Norm) ? (Norm) : (FABS(W[i]) + FABS(rv1[i]));
 	}
 	for (i = Columns - 1L; (0L <= i); i--) {
 		if (i < (Columns - 1L)) {
@@ -1360,11 +1376,13 @@ extern int		SingularValueDecomposition
 			Flag = TRUE;
 			for (l = k; (0L <= l); l--) {
 				nm = l - 1L;
-				if ((fabs(rv1[l]) + Norm) == Norm) {
+				//if ((fabs(rv1[l]) + Norm) == Norm) {
+				if ((FABS(rv1[l]) + Norm) == Norm) {
 					Flag = FALSE;
 					break;
 				}
-				if ((fabs(W[nm]) + Norm) == Norm) {
+				//if ((fabs(W[nm]) + Norm) == Norm) {
+				if ((FABS(W[nm]) + Norm) == Norm) {
 					break;
 				}
 			}
@@ -1374,7 +1392,8 @@ extern int		SingularValueDecomposition
 				for (i = l; (i <= k); i++) {
 					f = s * rv1[i];
 					rv1[i] *= c;
-					if ((fabs(f) + Norm) == Norm) {
+					//if ((fabs(f) + Norm) == Norm) {
+					if ((FABS(f) + Norm) == Norm) {
 						break;
 					}
 					g = W[i];
@@ -1384,10 +1403,12 @@ extern int		SingularValueDecomposition
 					c = g * h;
 					s = -f * h;
 					for (j = 0L; (j < Lines); j++) {
-						y = U[j * Columns + nm];
-						z = U[j * Columns + i];
-						U[j * Columns + nm] = y * c + z * s;
-						U[j * Columns + i] = z * c - y * s;
+					        long jnm=j * Columns + nm;
+						long ji=j * Columns + i;
+						y = U[jnm];
+						z = U[ji];
+						U[jnm] = y * c + z * s;
+						U[ji] = z * c - y * s;
 					}
 				}
 			}
@@ -1396,7 +1417,8 @@ extern int		SingularValueDecomposition
 				if (z < 0.0) {
 					W[k] = -z;
 					for (j = 0L; (j < Columns); j++) {
-						V[j * Columns + k] = -V[j * Columns + k];
+					        long jk=j * Columns + k;
+						V[jk] = -V[jk];
 					}
 				}
 				break;
@@ -1415,8 +1437,10 @@ extern int		SingularValueDecomposition
 			h = rv1[k];
 			f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
 			g = Pythag(f, 1.0);
-			f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (fabs(g))
-				: (-fabs(g))))) - h)) / x;
+			//f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (fabs(g))
+			//	: (-fabs(g))))) - h)) / x;
+			f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (FABS(g))
+				: (-FABS(g))))) - h)) / x;
 			c = s = 1.0;
 			for (j = l; (j <= nm); j++) {
 				i = j + 1L;
@@ -1426,17 +1450,20 @@ extern int		SingularValueDecomposition
 				g = c * g;
 				z = Pythag(f, h);
 				rv1[j] = z;
-				c = f / z;
-				s = h / z;
+				double iz=1.0/z;
+				c = f * iz;
+				s = h * iz;
 				f = x * c + g * s;
 				g = g * c - x * s;
 				h = y * s;
 				y *= c;
 				for (jj = 0L; (jj < Columns); jj++) {
-					x = V[jj * Columns + j];
-					z = V[jj * Columns + i];
-					V[jj * Columns + j] = x * c + z * s;
-					V[jj * Columns + i] = z * c - x * s;
+				        long jjj=jj * Columns + j;
+					long jji=jj * Columns + i;
+					x = V[jjj];
+					z = V[jji];
+					V[jjj] = x * c + z * s;
+					V[jji] = z * c - x * s;
 				}
 				z = Pythag(f, h);
 				W[j] = z;
@@ -1448,10 +1475,12 @@ extern int		SingularValueDecomposition
 				f = c * g + s * y;
 				x = c * y - s * g;
 				for (jj = 0L; (jj < Lines); jj++) {
-					y = U[jj * Columns + j];
-					z = U[jj * Columns + i];
-					U[jj * Columns + j] = y * c + z * s;
-					U[jj * Columns + i] = z * c - y * s;
+				        long jjj=jj * Columns + j;
+					long jji=jj * Columns + i;
+					y = U[jjj];
+					z = U[jji];
+					U[jjj] = y * c + z * s;
+					U[jji] = z * c - y * s;
 				}
 			}
 			rv1[l] = 0.0;
