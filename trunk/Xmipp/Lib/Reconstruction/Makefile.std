@@ -38,7 +38,8 @@ SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
 	   Programs/Src/Prog_Angular_Predict.o \
            Programs/Src/Prog_Angular_Denoise.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
-           Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
+           Src/recons_spider.o  Programs/Src/Prog_recons_test.o \
+	   Programs/Src/Prog_Align2d.cc
 
 
 # Main Action = Build library ----------------------------------------------
