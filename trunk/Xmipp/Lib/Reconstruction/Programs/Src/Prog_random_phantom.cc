@@ -78,6 +78,7 @@ void Random_Phantom_Side_Info::produce_Side_Info(
    if (Is_VolumeXmipp(prm.fn_random)) {
       voxel_mode=TRUE;
       VoxelPhantom.read(prm.fn_random);
+      VoxelPhantom().set_Xmipp_origin();
    } else {
       voxel_mode=FALSE;
       Random.read(prm.fn_random);
@@ -266,6 +267,7 @@ void generate_realization_of_random_phantom(
 }
 
 /* Main Random Phantom Routine --------------------------------------------- */
+//#define DEBUG
 void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
    Phantom &Realization) _THROW {
 
@@ -323,6 +325,13 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
          proj_area(n)=0;
          FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
             if (proj(i,j)>0) proj_area(n)++;
+	 #ifdef DEBUG
+	    cout << "Area: " << proj_area(n) << endl;
+	    proj.write("inter.xmp");
+	    cout << "Press any key\n";
+	    char c; cin >> c;
+	 #endif
+
 
          // Apply CTF
          #ifdef _HAVE_VTK
@@ -358,4 +367,4 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 	   << hist_area;
    }
 }
-
+#undef DEBUG
