@@ -32,6 +32,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 #ifdef LINUX
    #include <unistd.h>
@@ -81,7 +82,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    switch (__depth) {
       case 8:
          /* if (!in_core) { */
-            m8=(unsigned char *) mmap(0,Ydim*Xdim*__depth/8,
+            m8=(unsigned char *) mmap(0,(__depth/8)*Ydim*Xdim,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
             if (m8==MAP_FAILED)
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
@@ -99,11 +100,26 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
          break;
       case 16:
          /* if (!in_core) { */
-            m16=(short int *) mmap(0,Ydim*Xdim*__depth/8,
+            m16=(short int *) mmap(0,(__depth/8)*Ydim*Xdim,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
-            if (m16==MAP_FAILED)
+            if (m16==MAP_FAILED) {
+               /*
+	       switch (errno) {
+	          case EACCES:    cout << "EACCES:   \n"; break;
+      	          case EAGAIN:    cout << "EAGAIN:   \n"; break;
+		  case EBADF:     cout << "EBADF:    \n"; break;
+		  case EINVAL:    cout << "EINVAL:   \n"; break;
+		  case EMFILE:    cout << "EMFILE:   \n"; break;
+		  case ENODEV:    cout << "ENODEV:   \n"; break;
+		  case ENOMEM:    cout << "ENOMEM:   \n"; break;
+		  case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
+		  case ENXIO:     cout << "ENXIO:    \n"; break;
+		  case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+	       }
+	       */
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
                   _fn_micrograph+" in memory");
+	    }
          /* } else {
             m16=new short int (Ydim*Xdim*__depth/8);
             int length=Ydim*Xdim*__depth/8;
@@ -114,7 +130,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
          break;
       case 32:
       	    // Map file in memory
-            m32=(float*) mmap(0,Ydim*Xdim*__depth/8,
+            m32=(float*) mmap(0,(__depth/8)*Ydim*Xdim,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph,0);
             if (m32==MAP_FAILED)
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
