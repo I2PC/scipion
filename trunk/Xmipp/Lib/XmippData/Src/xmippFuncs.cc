@@ -187,6 +187,14 @@ float student_outside_probb(float p, float degrees_of_freedom) {
    return tm;
 }
 
+float chi2_up_to_t0(float t0, float degrees_of_freedom) {
+   return gammp(degrees_of_freedom/2,t0/2);
+}
+
+float chi2_from_t0(float t0, float degrees_of_freedom) {
+   return 1-chi2_up_to_t0(t0,degrees_of_freedom);
+}
+
 // Log uniform distribution ................................................
 float rnd_log(float a, float b)  {if (a==b) return a;
                                   else return exp(rnd_unif(log(a),log(b)));}

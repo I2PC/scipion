@@ -33,7 +33,7 @@
    in this file. */
   
 #ifndef _XMIPPFUNCS_HH
-#   define _XMIPPFUNCS_HH
+#define _XMIPPFUNCS_HH
 
 using namespace std;
 
@@ -67,17 +67,17 @@ using namespace std;
 //@{
 /// PI = 3.1415926535897931
 #ifndef PI
-#   define PI       3.14159265358979323846
+#define PI       3.14159265358979323846
 #endif
 
 /// TRUE = 1
 #ifndef TRUE
-#   define TRUE 1
+#define TRUE 1
 #endif
 
 /// FALSE = 0
 #ifndef FALSE
-#   define FALSE 0
+#define FALSE 0
 #endif
 
 /// Maximum FileName Length = 128
@@ -95,14 +95,14 @@ using namespace std;
     Valid for any kind of number (int, short, float, etc)
     \\ Ex: x=ABS(x); */
 #ifndef ABS
-#   define ABS(x)   (((x)>=0)?(x):(-(x)))
+#define ABS(x)   (((x)>=0)?(x):(-(x)))
 #endif
 
 /** Sign of.
     Valid for any kind of number (int, short, float, etc). It returns +1 or -1
     \\ Ex: if (SGN(x)==-1) cout << "x is negative" << endl; */
 #ifndef SGN
-#   define SGN(x)   (((x)>=0)?1:-1)
+#define SGN(x)   (((x)>=0)?1:-1)
 #endif
 
 /** Sign of, considering 0 as 0.
@@ -111,21 +111,21 @@ using namespace std;
     number is 0.
     \\ Ex: if (SGN0(x)==-1) cout << "x is negative" << endl; */
 #ifndef SGN0
-#   define SGN0(x)   (((x)>=0)? (((x)==0)? 0:1) :-1)
+#define SGN0(x)   (((x)>=0)? (((x)==0)? 0:1) :-1)
 #endif
 
 /** Minimum.
     Valid for any kind of numbers (int, short, float, etc).
     \\ Ex: min_val=MIN(x,y); */
 #ifndef MIN
-#   define MIN(x,y) (((x)>=(y))?(y):(x))
+#define MIN(x,y) (((x)>=(y))?(y):(x))
 #endif
 
 /** Maximum.
     Valid for any kind of numbers (int, short, float, etc).
     \\ Ex: max_val=MAX(x,y); */
 #ifndef MAX
-#   define MAX(x,y) (((x)>=(y))?(x):(y))
+#define MAX(x,y) (((x)>=(y))?(x):(y))
 #endif
 
 /** Round to next integer.
@@ -400,6 +400,16 @@ float student_up_to_t0(float t0, float degrees_of_freedom);
     There is no restriction over the sign of t0 */
 float student_from_t0(float t0, float degrees_of_freedom);
 
+/** chi2 area from -inf to t0.
+    By default the chi2 mean is 0 and the chi2 standard deviation is 1.
+    There is no restriction over the sign of t0 */
+float chi2_up_to_t0(float t0, float degrees_of_freedom);
+
+/** chi2 area from t0 to inf.
+    By default the chi2 mean is 0 and the chi2 standard deviation is 1.
+    There is no restriction over the sign of t0 */
+float chi2_from_t0(float t0, float degrees_of_freedom);
+
 // Log uniform .............................................................
 /** Produce a log uniform random number between a and b.
     Watch out that the following inequation must hold 0<a<=b. 
@@ -477,7 +487,7 @@ void _Xmipp_error (const int nerr, const string &what);
     error management styles), ie, which might call REPORT_ERROR
     should have this macro on its definition.
     \\ Ex: void write(const FileName &fn) const _THROW; */
-   #define _THROW
+#define _THROW
 
 /** Show message and either exit or throw an exception.
     The choice between exitting and throwing the exception is
@@ -486,10 +496,10 @@ void _Xmipp_error (const int nerr, const string &what);
     definition of the function.
     \\ Ex: if (...) REPORT_ERROR(4001,"Number too small");
     @see Configuration */
-   #define REPORT_ERROR(nerr,ErrormMsg) _Xmipp_error(nerr,ErrormMsg)
+#define REPORT_ERROR(nerr,ErrormMsg) _Xmipp_error(nerr,ErrormMsg)
 #else
-   #define _THROW                  throw (Xmipp_error)
-   #define REPORT_ERROR(nerr,ErrormMsg) throw Xmipp_error(nerr,ErrormMsg)
+#define _THROW                  throw (Xmipp_error)
+#define REPORT_ERROR(nerr,ErrormMsg) throw Xmipp_error(nerr,ErrormMsg)
 /** Exception class.
     This is the class type for the errors thrown by the routines when the
     exception handling mode is active (see Xmipp Configuration for details
