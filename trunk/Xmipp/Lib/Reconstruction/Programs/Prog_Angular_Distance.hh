@@ -90,9 +90,6 @@ public:
    double Prog_angular_distance_prm::check_symmetries(
       double rot1, double tilt1, double psi1,
       double &rot2, double &tilt2, double &psi2, bool projdir_mode=false);
-   
-   /** Compute distance. */
-   double compute_distance();
 };
 //@}
 #endif
