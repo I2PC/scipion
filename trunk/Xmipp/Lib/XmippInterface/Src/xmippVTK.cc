@@ -168,24 +168,6 @@ template <class T>
    }
 }
 
-void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
-
-   if (retval==NULL) retval=vtkImageData::New();
-   else retval->Initialize();
-   retval->SetDimensions(XSIZE(v()),YSIZE(v()),1);
-   retval->SetNumberOfScalarComponents(2);
-   retval->SetScalarType(VTK_FLOAT);
-   retval->AllocateScalars();
-   retval->Update();
-   
-   float *ptr= (float *) retval->GetScalarPointer();    
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(v())
-   {
-      *ptr++=(v(i,j)).real();
-	  *ptr++=(v(i,j)).imag(); 
-   }   
-}
-
 void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) _THROW {
 
    if (retval==NULL) retval=vtkImageData::New();
@@ -201,6 +183,22 @@ void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) _THR
    {
       *ptr++=(v(i)).real();
 	  *ptr++=(v(i)).imag(); 
+   }   
+}
+
+void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
+   if (retval==NULL) retval=vtkImageData::New();
+   else retval->Initialize();
+   retval->SetDimensions(XSIZE(v()),YSIZE(v()),1);
+   retval->SetNumberOfScalarComponents(2);
+   retval->SetScalarType(VTK_FLOAT);
+   retval->AllocateScalars();
+   retval->Update();
+   float *ptr= (float *) retval->GetScalarPointer();    
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(v())
+   {
+      *ptr++=(float)(v(i,j).real());
+         *ptr++=(float)(v(i,j).imag());
    }   
 }
 
