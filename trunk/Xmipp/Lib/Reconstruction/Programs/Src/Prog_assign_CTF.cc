@@ -399,7 +399,7 @@ void Prog_assign_CTF_prm::process()
 
    if (!only_interpolate) {
 	// Counter of divisions;
-	int N=1;
+	int N=0;
 	  
 	/*****************************************************************************
 	 Divide the micrograph into smaller ones, as many as the user desires
@@ -430,8 +430,8 @@ void Prog_assign_CTF_prm::process()
 	   {
 		  // If the point is outside the micrograph, it implies that a division
 		  // of (N_vertical,N_horizontal) cannot be formed with the rest of the pixels 
-		  // horizontal or vertical ones. So conitnue.
-		  if(((i+N_vertical)> (Ydim-1)) || ((j+N_horizontal) > (Xdim-1))) continue;
+		  // horizontal or vertical ones. So continue.
+		  if(i+N_vertical>Ydim || j+N_horizontal>Xdim) continue;
 
       	  // The downsampling is done by taking 1 out of 2,3, ... pixels
 	  // in the extracted region
@@ -472,7 +472,6 @@ void Prog_assign_CTF_prm::process()
 		  // Estimate the CTF parameters of division 
 		  adjust_CTF_prm.fn_ctf=ARMA_prm.fn_filter;
 		  adjust_CTF_prm.fn_outroot=CTFfile.get_root()+ItoA(N,5);
-		  adjust_CTF_prm.show_optimization=FALSE;
 		  adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
 		     adjust_CTF_prm.adjust(0)=0;
 		     // Compute the background and CTF from scratch
@@ -564,8 +563,9 @@ void Prog_assign_CTF_prm::process()
     		   Filter_Out().scale_to_size(particle_vertical,particle_horizontal);
 			   // Write the filter file and assign it to the particle's image in the 
 			   // output file.  
-    		   string fn_current_particle=SF.get_current_file();
-			   string file_with_ctf_for_current_particle=(string)"ctf-"+fn_current_particle+".fft";
+    		   FileName fn_current_particle=SF.get_current_file();
+			   string file_with_ctf_for_current_particle=
+			      fn_current_particle.add_prefix("ctf-")+".fft";
 			   Filter_Out.write(file_with_ctf_for_current_particle);
 			   // Write in output file the name of the micrograph and the name of 
 			   //the associated CTF file 
