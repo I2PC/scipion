@@ -63,6 +63,11 @@ public:
    FileName                image_fn;
    /// Do not perform CTF estimation, only interpolate
    bool                    only_interpolate;
+   /** the center of the windows in which the CTF is computed
+       are the particles (stored at the .pos file) instead of 
+       a regular grid. By default this is false.
+   */
+   bool                    compute_at_particle;
 public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
