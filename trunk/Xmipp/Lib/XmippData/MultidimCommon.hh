@@ -35,6 +35,21 @@
        for (int i=0; i<(v).__dim; i++)
 #endif
 
+/** For all elements in the array (pointer version).
+    This macro is used to generate loops for the array in an easy manner.
+    It uses an external pointer 'ptr' which ranges the array using its
+    physical definition
+    \\Ex:
+    \begin{verbatim}
+    T* ptr;
+    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr(v) 
+       cout << *ptr << " ";
+    \end{verbatim}*/
+#ifndef FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr
+   #define FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr(v) \
+       for (int i=0, ptr=__m; i<(v).__dim; i++, ptr++)
+#endif
+
 /** Vector element: Physical access.
     Be careful because this is physical access, usually vectors follow
     the C convention of starting index==0.
