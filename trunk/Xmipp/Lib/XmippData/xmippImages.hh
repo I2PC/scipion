@@ -216,6 +216,7 @@ public:
        You can give a name to the written volume different from the one used
        when it was read. From this point the filename of the volume has
        changed. This is somehow like the "Save as ..." and "Save".
+       Valid types are IBYTE, I16, IFLOAT.
        \\ Ex: I.write() ---> Save
        \\ Ex: I.write("g0ta0001.raw") ---> Save as */
    void write(FileName name = "", bool reversed=FALSE,
