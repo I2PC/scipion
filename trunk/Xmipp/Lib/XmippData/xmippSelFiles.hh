@@ -411,6 +411,12 @@ public:
    // Get current line
    SelLine get_current_line() {return *current_line;}
 
+   /** Get the filename at the ACTIVE line number i.
+       The first file is number 0. If i is greater than the total number
+       of ACTIVE files, then "" is returned.
+       \\Ex: fn=SF.get_file_number(i); */
+   string get_file_number(int i);
+   
    /** Gets statistics of the active images in the sel file
        it returns the average image, the minimum and maximum.
        \\Ex: SF.get_statistics(aveImg, min, max); */

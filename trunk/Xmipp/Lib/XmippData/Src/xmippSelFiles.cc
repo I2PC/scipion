@@ -543,6 +543,22 @@ string SelFile::get_current_file() {
    return (*current_line).text;
 }
 
+/* Get filename number i --------------------------------------------------- */
+string SelFile::get_file_number(int i) {
+   if (i<0) return "";
+   vector<SelLine>::iterator current = text_line.begin();
+   vector<SelLine>::iterator last    = text_line.end();
+
+   int currenti=0;
+   while (current != last) {
+      if ((*current).line_type==SelLine::DATALINE &&
+         (*current).label==SelLine::ACTIVE) currenti++;
+      if (currenti>i) return (*current).text;
+      current++;
+   }
+   return "";
+}
+
 /* Remove a certain file --------------------------------------------------- */
 void SelFile::remove(string img_name) {
    vector<SelLine>::iterator aux=find(img_name);
