@@ -29,6 +29,7 @@
 #include "../xmippMatrices2D.hh"
 #include "../xmippArgs.hh"
 #include <stdio.h>
+#include "../Bilib/headers/linearalgebra.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
@@ -191,7 +192,7 @@ template <class T>
 template <class T>
    void mT::from_vector(const vT &op1) {
    // Null vector => Null matrix
-   if (op1.get_dim()==0) clear(); return;
+   if (XSIZE(op1)==0) {clear(); return;}
    
    // Look at shape and copy values
    if (op1.isRow()) {
@@ -201,14 +202,12 @@ template <class T>
       STARTINGX(*this)=STARTINGX(op1);
       STARTINGY(*this)=0;
    } else {
-      temp.resize(XSIZE(op1),1);
+      resize(XSIZE(op1),1);
       for (int i=0; i<XSIZE(op1); i++)
          DIRECT_MAT_ELEM(*this,i,0)=DIRECT_VEC_ELEM(op1,i);
       STARTINGX(*this)=0;
       STARTINGY(*this)=STARTINGX(op1);
    }
-   
-   return temp;
 }
 
 /* Load from a numerical recipes matrix ------------------------------------ */
@@ -234,7 +233,7 @@ template <class T>
    if (YSIZE(*this)==1) {
       // Row vector
       op1.resize(XSIZE(*this));
-      for (int j=0; j<XSIZE(this); j++)
+      for (int j=0; j<XSIZE(*this); j++)
           DIRECT_VEC_ELEM(op1,j)=DIRECT_MAT_ELEM(*this,0,j);
       op1.setRow();
       STARTINGX(op1)=STARTINGX(*this);
@@ -506,6 +505,7 @@ template <class T>
 }
 
 //interface to numerical recipes
+#define VIA_BILIB
 template <class T>
 void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
                matrix1D<double> &w, matrix2D<double> &v)
@@ -518,11 +518,23 @@ void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
    v.init_zeros(u.ColNo(),u.ColNo());
    
    // Call to the numerical recipes routine
+#ifdef VIA_NR
    svdcmp(MULTIDIM_ARRAY(u),
           u.RowNo(),u.ColNo(),
           MULTIDIM_ARRAY(w),
           MULTIDIM_ARRAY(v));
+#endif
+#ifdef VIA_BILIB
+   int status;
+   SingularValueDecomposition (MULTIDIM_ARRAY(u),
+          u.RowNo(),u.ColNo(),
+          MULTIDIM_ARRAY(w),
+          MULTIDIM_ARRAY(v),
+	  1000, &status);
+#endif
 }
+#undef VIA_NR
+#undef VIA_BILIB
 
 //interface to numerical recipes
 void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
@@ -1274,6 +1286,188 @@ void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
    val+=0.5*quad;
 }
 
+/* Quadprog and Lsqlin ----------------------------------------------------- */
+/* Structure to pass the objective function and constraints to cfsqp*/
+typedef struct {
+   matrix2D<double> C;
+   matrix2D<double> D;
+   matrix2D<double> A;
+   matrix2D<double> B;
+} CDAB;
+
+/*/////////////////////////////////////////////////////////////////////////
+      Internal functions used by the quadprog function
+/////////////////////////////////////////////////////////////////////////*/
+/* To calculate the value of the objective function */
+void quadprog_obj32(int nparam,int j,double* x,double* fj,void* cd)
+{
+   CDAB* in = (CDAB *)cd;
+   matrix2D<double> X;
+   XSIZE(X)=1;
+   YSIZE(X)=nparam;
+   MULTIDIM_ARRAY(X)=x;
+   
+   matrix2D<double> result;
+   result= 0.5*X.transpose()*in->C*X + in->D.transpose()*X;
+   
+   *fj=result(0,0);
+   MULTIDIM_ARRAY(X)=NULL;
+   XSIZE(X)=YSIZE(X)=0;
+   return;
+}
+
+/* To calculate the value of the jth constraint */
+void quadprog_cntr32(int nparam,int j,double* x,double* gj,void* cd)
+{
+   CDAB* in = (CDAB *)cd;
+   *gj=0;
+   for (int k=0; k<nparam; k++)
+      *gj+=in->A(j-1,k)*x[k];
+    *gj-=in->B(j-1,0);
+    
+   return;
+}
+
+/* To calculate the value of the derivative of objective function */
+void quadprog_grob32(int nparam,int j,double* x,double* gradfj, void (*mydummy)(int, int, double*, double*, void*), void *cd)
+{
+   CDAB* in = (CDAB *)cd;
+   matrix2D<double> X;
+   XSIZE(X)=1;
+   YSIZE(X)=nparam;
+   MULTIDIM_ARRAY(X)=x;
+
+   matrix2D<double> gradient;
+   gradient=in->C*X+in->D;
+   for (int k=0; k<nparam; k++)
+      gradfj[k]=gradient(k,0);   
+
+   MULTIDIM_ARRAY(X)=NULL;
+   XSIZE(X)=YSIZE(X)=0;
+   return;
+}
+
+/* To calculate the value of the derivative of jth constraint */
+void quadprog_grcn32(int nparam, int j, double *x, double *gradgj,void (*mydummy)(int, int, double*, double*, void*), void *cd)
+{
+   CDAB* in = (CDAB *)cd;
+   for (int k=0; k<nparam; k++)
+      gradgj[k]=in->A(j-1,k);   
+   return;
+}   
+
+/************************************************************************** 
+
+   Solves Quadratic programming subproblem. 
+
+  min 0.5*x'Cx + d'x   subject to:  A*x <= b 
+   x                                Aeq*x=beq
+      	             	      	    bl<=x<=bu  
+
+**************************************************************************/
+void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
+   const matrix2D<double> &A,   const matrix1D<double> &b,
+   const matrix2D<double> &Aeq, const matrix1D<double> &beq,
+         matrix1D<double> &bl,        matrix1D<double> &bu,
+         matrix1D<double> &x) {
+   CDAB prm;
+   prm.C=C;
+   prm.D.from_vector(d);
+   prm.A.init_zeros(YSIZE(A)+YSIZE(Aeq),XSIZE(A));
+   prm.B.init_zeros(YSIZE(prm.A),1);
+
+   
+   // Copy Inequalities
+   for (int i=0; i<YSIZE(A); i++) {
+      for (int j=0; j<XSIZE(A); j++)
+         prm.A(i,j)=A(i,j);
+      prm.B(i,0)=b(i);
+   }
+   
+   // Copy Equalities
+   for (int i=0; i<YSIZE(Aeq); i++) {
+      for (int j=0; j<XSIZE(Aeq); j++)
+         prm.A(i+YSIZE(A),j)=Aeq(i,j);
+      prm.B(i+YSIZE(A),0)=beq(i);
+   }
+   
+   double bigbnd=1e30;
+   // Bounds
+   if (XSIZE(bl)==0) {
+      bl.resize(XSIZE(C)); bl.init_constant(-bigbnd);
+   }
+   if (XSIZE(bu)==0) {
+      bu.resize(XSIZE(C)); bu.init_constant( bigbnd);
+   }
+   
+   // Define intermediate variables
+   int    mode=100;    // CFSQP mode
+   int    iprint=0;    // Debugging 
+   int    miter=1000;  // Maximum number of iterations
+   double eps=1e-4;   // Epsilon
+   double epsneq=1e-4; // Epsilon for equalities
+   double udelta=0.e0; // Finite difference approximation
+                       // of the gradients. Not used in this function
+   int    nparam=XSIZE(C); // Number of variables
+   int    nf=1;            // Number of objective functions
+   int    neqn=YSIZE(Aeq);          // Number of nonlinear equations
+   int    nineqn=YSIZE(A);        // Number of nonlinear inequations
+   int    nineq=YSIZE(A);  // Number of linear inequations
+   int    neq=YSIZE(Aeq);  // Number of linear equations
+   int    inform;
+   int    ncsrl=0, ncsrn=0, nfsr=0, mesh_pts[]={0};
+
+   if (XSIZE(x)==0) x.init_zeros(nparam);
+   matrix1D<double> f(nf), g(nineq+neq), lambda(nineq+neq+nf+nparam);
+
+   // Call the minimization routine
+   cfsqp(nparam,nf,nfsr,nineqn,nineq,neqn,neq,ncsrl,ncsrn,mesh_pts,
+         mode,iprint,miter,&inform,bigbnd,eps,epsneq,udelta,
+	 MULTIDIM_ARRAY(bl),MULTIDIM_ARRAY(bu),
+	 MULTIDIM_ARRAY(x),
+         MULTIDIM_ARRAY(f),MULTIDIM_ARRAY(g),
+	 MULTIDIM_ARRAY(lambda),
+//	 quadprog_obj32,quadprog_cntr32,quadprog_grob32,quadprog_grcn32,
+	 quadprog_obj32,quadprog_cntr32,grobfd,grcnfd,
+	 (void*)&prm);
+
+   #ifdef DEBUG
+      if (inform==0) cout <<"SUCCESSFUL RETURN. \n";
+      if (inform==1 || inform==2) cout << "\nINITIAL GUESS INFEASIBLE.\n";
+      if (inform==3) printf("\n MAXIMUM NUMBER OF ITERATIONS REACHED.\n");
+      if (inform>3) printf("\ninform=%d\n",inform);
+   #endif
+   
+}
+
+
+/************************************************************************** 
+
+   Solves the least square problem 
+
+  min 0.5*(Norm(C*x-d))   subject to:  A*x <= b 
+   x                                Aeq*x=beq  
+      	             	      	    bl<=x<=bu 
+**************************************************************************/
+void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
+   const matrix2D<double> &A,   const matrix1D<double> &b,
+   const matrix2D<double> &Aeq, const matrix1D<double> &beq,
+         matrix1D<double> &bl,        matrix1D<double> &bu,
+         matrix1D<double> &x) {
+   
+   // Convert d to matrix2D for multiplication
+   matrix2D<double> P;
+   P.from_vector(d);
+   P=-2*P.transpose()*C;
+   P=P.transpose();
+   
+   //Convert back to vector for passing it to quadprog
+   matrix1D<double> newd; 
+   P.to_vector(newd);
+      
+   quadprog(C.transpose()*C,newd,A,b,Aeq,beq,bl,bu,x);
+}
+
 /* ------------------------------------------------------------------------- */
 /* INSTANTIATE                                                               */
 /* ------------------------------------------------------------------------- */
@@ -1308,7 +1502,6 @@ template <class T>
       a.compute_stats(d,d,Taux,Taux,ir,ir);
       a.range_adjust(0,1);
       a.statistics_adjust(0,1);
-      a.effective_range(99);
       a.init_random(0,1);
       a.add_noise(0,1);      
       a.threshold("abs_above",1,0);
@@ -1352,6 +1545,8 @@ template <class T>
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);
       a.for_all_cols(&vector_first);
+      a.from_vector(b);
+      a.to_vector(b);
       if (a.IsDiagonal() || a.IsScalar() || a.IsSymmetric() ||
           a.IsSkewSymmetric() || a.IsUpperTriangular() ||
           a.IsLowerTriangular()) cout << "Special matrix\n";
@@ -1407,6 +1602,8 @@ void instantiate_complex_matrix () {
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);
       a.for_all_cols(&vector_first);
+      a.from_vector(b);
+      a.to_vector(b);
       if (a.IsDiagonal() || a.IsScalar() || a.IsSymmetric() ||
           a.IsSkewSymmetric() || a.IsUpperTriangular() ||
           a.IsLowerTriangular()) cout << "Special matrix\n";
