@@ -64,6 +64,7 @@ void Statis_parameters::final_process() {
          MULTIDIM_ELEM(sumI(), i) /= nI;
          MULTIDIM_ELEM(sumI2(),i) /= nI;
          MULTIDIM_ELEM(sumI2(),i) -= MULTIDIM_ELEM(sumI(),i)*MULTIDIM_ELEM(sumI(),i);
+         MULTIDIM_ELEM(sumI2(),i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(),i)));
       }
       sumI.write(fn_root+".med.xmp");
       sumI2.write(fn_root+".sig.xmp");
@@ -73,6 +74,7 @@ void Statis_parameters::final_process() {
          MULTIDIM_ELEM(sumV(), i) /= nV;
          MULTIDIM_ELEM(sumV2(),i) /= nV;
          MULTIDIM_ELEM(sumV2(),i) -= MULTIDIM_ELEM(sumV(),i)*MULTIDIM_ELEM(sumV(),i);
+         MULTIDIM_ELEM(sumV2(),i) = sqrt(ABS(MULTIDIM_ELEM(sumV2(),i)));
       }
       sumV.write(fn_root+".med.vol");
       sumV2.write(fn_root+".sig.vol");
