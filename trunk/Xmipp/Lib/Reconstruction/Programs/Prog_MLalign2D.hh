@@ -145,7 +145,7 @@ public:
 				  vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
 				  double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror, 
 				  double &LL, double &maxcorr, 
-				  int opt_refno, double opt_psi, double opt_xoff, double opt_yoff) _THROW;
+				  int &opt_refno, double &opt_psi, double &opt_xoff, double &opt_yoff) _THROW;
 
   /// Integrate over all experimental images
   void ML_sum_over_all_images(SelFile &SF, vector<bool> &active_model, vector<ImageXmipp> &Iref, 

@@ -88,7 +88,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   do_mirror=check_param(argc,argv,"-mirror");
   eps=AtoF(get_param(argc,argv,"-eps","5e-5"));
   fn_frac=get_param(argc,argv,"-frac","");
-  write_docfile=check_param(argc,argv,"-output_docfile");
+  write_docfile=check_param(argc,argv,"-output_assignments");
   write_intermediate=!check_param(argc,argv,"-dont_output_intermediate");
   apply_shifts=check_param(argc,argv,"-apply_shifts");
   fix_fractions=check_param(argc,argv,"-fix_fractions");
@@ -265,7 +265,7 @@ void Prog_MLalign2D_prm::show() {
       cerr << " -> Use least-squares instead of maximum likelihood target."<<endl;
     }
     if (write_docfile) {
-      cerr << " -> Write out docfile with assignments that give maximum probability."<<endl;
+      cerr << " -> Write out assignments (doc & selfiles) that give maximum probability."<<endl;
     }
 
     // Hidden stuff
@@ -306,7 +306,7 @@ void Prog_MLalign2D_prm::usage() {
        << " [ -frac <docfile=\"\"> ]          : Docfile with expected model fractions (default: even distr.)\n"
        << " [ -mirror ]                     : Also check mirror image of each reference \n"
        << " [ -LSQ ]                        : Use least-squares instead of maximum likelihood target \n"
-       << " [ -output_docfile ]             : Write out docfile with assignments at maximum probability \n"
+       << " [ -output_assignments ]         : Write out docfile & selfiles with assignments at maximum probability\n"
        << endl;
 }
 
@@ -444,7 +444,7 @@ void Prog_MLalign2D_prm::ML_integrate_phi_one_image(matrix2D<double> &Mimg, vect
                         vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
 			double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror, 
 			double &LL, double &maxcorr, 
-                        int opt_refno, double opt_psi, double opt_xoff, double opt_yoff) _THROW {
+                        int &opt_refno, double &opt_psi, double &opt_xoff, double &opt_yoff) _THROW {
 
   matrix2D<double> Maux,Mdzero;
   matrix2D<complex<double> > Fimg, Faux;
@@ -690,19 +690,22 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<bool> &activ
 			       Fwsum_imgs,wsum_sigma_noise, wsum_sigma_offset,sumw,sumw_mirror, 
 			       LL,maxcorr,opt_refno,opt_psi,opt_xoff,opt_yoff);
     avecorr+=maxcorr;
-
     if (write_docfile) {
       opt_flip=0.;
       if (-opt_psi>360.) { 
 	opt_psi-=360.;
 	opt_flip=1.;
       }
+      if (apply_shifts) {
+	opt_xoff+=ROUND(img.Xoff());
+	opt_yoff+=ROUND(img.Yoff());
+      }
       dataline(0)=Iref[opt_refno].Phi();
       dataline(1)=Iref[opt_refno].Theta();
-      dataline(2)=(double)opt_psi;
-      dataline(3)=(double)opt_xoff;
-      dataline(4)=(double)opt_yoff;
-      dataline(5)=(double)opt_refno;
+      dataline(2)=opt_psi;
+      dataline(3)=opt_xoff;
+      dataline(4)=opt_yoff;
+      dataline(5)=(double)(opt_refno+1);
       dataline(6)=opt_flip;
       dataline(7)=maxcorr;
       DFo.append_comment(img.name());
@@ -784,10 +787,10 @@ void Prog_MLalign2D_prm::MLalign2D() _THROW {
   vector<ImageXmipp> Ireg;
   vector<double> sumw,sumw_mirror;
   matrix2D<double> P_phi,Mr2,Maux;
-  FileName fn_img;
+  FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
-  SelFile SFa;
+  SelFile SFo,SFa;
   
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
@@ -881,9 +884,24 @@ void Prog_MLalign2D_prm::MLalign2D() _THROW {
   write_output_files(-1,SFa,DFf,sumw_allrefs,LL,avecorr,conv);
 
   if (write_docfile) {
-    // Write out docfile with optimal tranformation & references
+    // Write out docfile with optimal transformation & references
+    SFo.reserve(SF.ImgNo()+1);
     fn_img=fn_root+".doc";
     DFo.write(fn_img);
+    // Also write out selfiles of all experimental images, classified according to optimal reference image
+    FOR_ALL_MODELS() {
+      DFo.go_beginning();
+      SFo.clear();
+      for (int n=0; n<DFo.dataLineNo(); n++ ) {
+	DFo.next();
+	fn_img=((DFo.get_current_line()).get_text()).erase(0,3);
+	DFo.adjust_to_data_line();
+	if ((refno+1)==(int)DFo(5)) SFo.insert(fn_img,SelLine::ACTIVE);
+      }
+      fn_tmp=fn_root+"_ref";
+      fn_tmp.compose(fn_tmp,refno+1,"sel");
+      SFo.write(fn_tmp);
+    }
   }
 
 }
