@@ -32,9 +32,20 @@ if test $use_debug = no; then
 	CXXFLAGS= $AUX
 fi
 
-echo "$CFLAGS"
+AC_ARG_ENABLE([static-exec],
+  AC_HELP_STRING([--enable-static-exec], [Enables static executables building]),
+  [build_static_exec=$enableval], [build_static_exec=no])
+if test $build_static_exec = yes; then
+	EXEC_TYPE="-all-static"
+	echo "static"
+else
+	EXEC_TYPE=
+	echo "dynami"
+fi
 
-# Checking for PERL
+AC_SUBST(EXEC_TYPE)
+
+# Checking for PERL, csh and sh interpreters
 AC_PATH_PROG( PERL_PATH, perl, "not found" )
 AC_PATH_PROG( CSH_PATH, csh, "not found" )
 AC_PATH_PROG( SH_PATH, sh, "not found" )
