@@ -31,7 +31,7 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm) {
 }
 
 void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cerr << "Normalize: Skipping " << vol.name() << endl;
+   vol().statistics_adjust(0,1);
 }
 
 int main (int argc, char **argv) {
