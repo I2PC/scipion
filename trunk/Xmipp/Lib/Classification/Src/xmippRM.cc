@@ -50,7 +50,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k){
        listener->OnInitOperation(_k);
      for (int i = 0; i < _k; i++) {
        for (int j = 0; j < dim; j++) {
-          double cm = sqrt(3);
+          double cm = sqrt(3.0);
           float rn;
 	  rn = rnd_unif();
 	  if (rn < 0.16666) cm *= 1;
