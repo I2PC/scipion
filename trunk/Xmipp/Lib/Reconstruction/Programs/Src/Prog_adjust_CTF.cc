@@ -195,7 +195,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
       weight=get_vector_param(fh_param,"weight",6);
    else { 
       weight.init_zeros(6); 
-      weight(0)=2;
+      weight(0)=4;
       weight(3)=15;
       weight(5)=415;
    } 
@@ -466,6 +466,7 @@ void estimate_background_sqrt_parameters() {
 }
 
 // Estimate gaussian parameters --------------------------------------------
+//#define DEBUG
 void estimate_background_gauss_parameters() {
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
@@ -493,9 +494,8 @@ void estimate_background_gauss_parameters() {
 	 radial_N(r)++;
       }
 
-   // Compute the maximum and minimum radial error
+   // Compute the minimum radial error
    bool   first=true;
-   double error_max=0, wmax, fmax;
    double error_min=0, wmin, fmin;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
       XX(idx)=0; YY(idx)=i;
@@ -506,22 +506,47 @@ void estimate_background_gauss_parameters() {
       if (error<0 && first) continue;
       else if (error<0) break;
       error*=error;
-      if (first) {
-         wmin=wmax=w; error_min=error_max=error;
-	 first=false;
-      }
-      if (error>error_max) {wmin=wmax=w; error_min=error_max=error;}
+      if (first) {wmin=w; error_min=error; first=false;}
       if (error<error_min) {wmin=w; error_min=error;}
+      #ifdef DEBUG
+	 cout << w << " " << error << " " << wmin << endl;
+      #endif
    }
    global_max_gauss_freq=wmin;
    
+   VECTOR_R2(freq,wmin,wmin);
+   digfreq2contfreq(freq, freq, global_Tm);
+   fmin=YY(freq);
+   
+   #ifdef DEBUG
+      cout << "Freq of the minimum error: " << wmin << " " << fmin << endl;
+   #endif
+
+   // Compute the maximum radial error
+   first=true;
+   double error_max=0, wmax, fmax;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
+      XX(idx)=0; YY(idx)=i;
+      FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
+      if (w<global_min_freq || w>wmin) continue;
+
+      double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
+      if (error<0 && first) continue;
+      else if (error<0) break;
+      error*=error;
+      if (first) {wmax=w; error_max=error; first=false;}
+      if (error>error_max) {wmax=w; error_max=error;}
+      #ifdef DEBUG
+	 cout << w << " " << error << " " << wmax << endl;
+      #endif
+   }
    VECTOR_R2(freq,wmax,wmax);
    digfreq2contfreq(freq, freq, global_Tm);
    fmax=global_ctfmodel.cV=global_ctfmodel.cU=YY(freq);
 
-   VECTOR_R2(freq,wmin,wmin);
-   digfreq2contfreq(freq, freq, global_Tm);
-   fmin=YY(freq);
+   #ifdef DEBUG
+      cout << "Freq of the maximum error: " << wmax << " " << fmax << endl;
+   #endif
 
    // Find the linear least squares solution for the gauss part
    matrix2D<double> A(2,2); A.init_zeros();
@@ -558,6 +583,7 @@ void estimate_background_gauss_parameters() {
    global_ctfmodel.sigmaV=b(1);
    global_ctfmodel.gaussian_K=exp(b(0));
 }
+#undef DEBUG
 
 /* Compute central region -------------------------------------------------- */
 void compute_central_region(double &w1, double &w2, double ang) {
@@ -592,7 +618,7 @@ void compute_central_region(double &w1, double &w2, double ang) {
 
 /* Center focus ----------------------------------------------------------- */
 void center_optimization_focus(bool adjust_freq, bool adjust_th, double margin=1) {
-   if (global_show>=2)
+   if (global_Adjust_CTF_parameters->show_optimization)
       cout << "Freq frame before focusing=" << global_min_freq << ","
            << global_max_freq << endl
 	   << "Value_th before focusing=" << global_value_th << endl;
@@ -625,7 +651,7 @@ void center_optimization_focus(bool adjust_freq, bool adjust_th, double margin=1
       else                     global_value_th=max_val*margin;
    }
 
-   if (global_show>=2)
+   if (global_Adjust_CTF_parameters->show_optimization)
       cout << "Freq frame after focusing=" << global_min_freq << ","
            << global_max_freq << endl
 	   << "Value_th after focusing=" << global_value_th << endl;
@@ -771,7 +797,7 @@ double CTF_fitness(double *p) {
 	  // Compute correlation contribution
           // Write these values in the considered image
           // for posterior Fourier distance
-      	  if (global_action>0 && global_action<4) {
+      	  if (global_action!=0) {
              wparam_sum2    +=weight*param*param;
 	     wctf2_param_sum+=weight*ctf2*param;
              wparam_sum     +=weight*param;
@@ -818,7 +844,7 @@ double CTF_fitness(double *p) {
    // CO: I'm not sure where the -1 comes from and it is making some
    //     images to fail
    double wcorr, wcovariance, wctf2_var, wparam_var, wctf2_avg, wparam_avg;
-   if (global_action>0 && global_action<4) {
+   if (global_action!=0) {
       wctf2_avg =wctf2_sum/w_sum;
       wparam_avg=wparam_sum/w_sum;
       wctf2_var =(wctf2_sum2 -wctf2_avg *wctf2_avg *w_sum)/(w_sum/*CO:-1*/);
@@ -1039,7 +1065,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     
     // Check if there is no initial guess
     if (global_initial_ctfmodel->DeltafU!=0) {
-       initial_defocusStep=8000;
+       initial_defocusStep=4000;
        defocusU0=defocusV0=global_initial_ctfmodel->DeltafU+initial_defocusStep;
        defocusUF=defocusVF=global_initial_ctfmodel->DeltafU-initial_defocusStep;
     }
@@ -1224,9 +1250,9 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
          save_intermidiate_results("best_penalized_sqrt_fit");
    }
 
-   global_show=2;
-   if (prm.autofocus) center_optimization_focus(false,true,1.25);
-   global_show=0;
+   //global_show=2;
+   if (prm.autofocus) center_optimization_focus(false,true,1.5);
+   //global_show=0;
 
    // If initial parameters weren´t supplied for the gaussian curve,
    // estimate them from the CTF file
@@ -1265,9 +1291,9 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
          save_intermidiate_results("first_parametric_fit");
 
       // Center optimization focus
-      global_show=2;
-      if (prm.autofocus) center_optimization_focus(true,true,1.25);
-      global_show=0;
+      //global_show=2;
+      if (prm.autofocus) center_optimization_focus(true,true,1.5);
+      //global_show=0;
 
       // Now optimize the background
       cerr << "Improving parametric fit ...\n";
@@ -1321,10 +1347,11 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    global_weight.init_zeros(prm.weight);
    global_weight(3)=prm.weight(3); // Average radial error
    global_weight(5)=prm.weight(5); // Average radial der error
+   global_weight=prm.weight;
 
-   global_show=2;
-   if (prm.autofocus) center_optimization_focus(true,true,1.25);
-   global_show=0;
+   //global_show=2;
+   if (prm.autofocus) center_optimization_focus(true,true,1.5);
+   //global_show=0;
 
    // Prepare steps
    steps.resize(CTF_PARAMETERS);
