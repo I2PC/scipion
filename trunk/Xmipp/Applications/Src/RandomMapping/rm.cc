@@ -46,7 +46,7 @@ FileName       cb_in = "";   	// Code vectors input file
 FileName       tmpN;		// Temporary variable
 unsigned       verb = 0;	// Verbosity level
 unsigned       k;               // Dimension of projected subspace  
-string         matdist = "sparse"; // Type of random matrix distribution
+string         matdist = "gaussian"; // Type of random matrix distribution
 
 /* Parameters ============================================================== */
    try {
@@ -130,8 +130,8 @@ string         matdist = "sparse"; // Type of random matrix distribution
    xmippTextualListener myListener;	    // Define the listener class
    myListener.setVerbosity() = verb;	    // Set verbosity level
    RM.setListener(&myListener);       	    // Set Listener
-
-   RM.Project(ts, projectedTs, k);
+   RM.setRMDistribution(matdist);           // Set matrix distribution
+   RM.Project(ts, projectedTs, k);          // Map the data
 
   /******************************************************* 
       Saving all kind of Information 
@@ -186,8 +186,8 @@ void Usage (char **argv) {
      "\n    -din    file_in           Input data file (plain data)"
      "\n    -cout   file_out          Base name for output data files:"
      "\n    -k      k                 Dimension of projected subspace" 
-     "\n    -sparse                   Sparse distribution of random matrix (default)" 
-     "\n    -gaussian                 Gaussian distribution of random matrix" 
+     "\n    -sparse                   Sparse distribution of random matrix" 
+     "\n    -gaussian                 Gaussian distribution of random matrix (default)" 
      "\n    -verb      verbosity      Information level while running: "     
      "\n    			      0: No information"     
      "\n    			      1: Progress bar (default)"     
