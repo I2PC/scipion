@@ -44,7 +44,7 @@
 /* ************************************************************************* */
 /**@name Volumes*/
 //@{
-typedef enum {VBYTE=1, VFLOAT=2, VINT=3, VUCHAR=4} Volume_Type;
+typedef enum {VBYTE=1, VFLOAT=2, VINT=3, VUCHAR=4, V16=5} Volume_Type;
 
 /** Basic Volume Class.
     The volume class is a general class which only contains 
@@ -205,8 +205,8 @@ public:
        Elements are supposed to be in the following order (y,x)=
        (0,0)(0,1)(0,2), ..., (0,Xdim-1), (1,0), (1,1), ...
        
-       The element size can be adjusted so that raw images of bytes (VBYTE)
-       and floats (VFLOAT) can be read. 
+       The element size can be adjusted so that raw images of bytes (VBYTE),
+       unsigned ints of 16 bits (V16) and floats (VFLOAT) can be read. 
        \\ Ex: V.read(65,65,65,"art0001.raw");*/
 
    void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=FALSE,
