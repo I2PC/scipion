@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = CTF_profile
 OBJ  = CTF_profile.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

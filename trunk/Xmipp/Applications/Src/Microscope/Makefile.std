@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = microscope
 OBJ  = microscope.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

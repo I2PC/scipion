@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = angular_refinement
 OBJ  = angular_refinement.o
-LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE)
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)
 

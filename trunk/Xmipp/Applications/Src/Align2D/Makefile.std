@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = align2d
 OBJ  = align2d.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

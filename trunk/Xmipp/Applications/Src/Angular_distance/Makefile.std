@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = angular_distance
 OBJ  = angular_distance.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = centilt
 OBJ  = centilt.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

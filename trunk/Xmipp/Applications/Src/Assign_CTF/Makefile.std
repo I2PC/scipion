@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = assign_CTF
 OBJ  = assign_CTF.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) 
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 

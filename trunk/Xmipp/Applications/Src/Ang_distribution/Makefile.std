@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = ang_distribution
 OBJ  = ang_distribution.o
-LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE)
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)
 

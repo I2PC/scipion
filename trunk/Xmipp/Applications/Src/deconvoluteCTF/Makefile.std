@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = deconvoluteCTF
 OBJ  = deconvoluteCTF.o
-LIBS = -l$(LIBXMIPP) -L$(LIBRECONS)
+LIBS =  -l$(LIBRECONS) -l$(LIBXMIPP)
 
