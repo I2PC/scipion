@@ -174,7 +174,7 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
       // Produce output filename
       int fn_number=fn_img.get_number();
       fn_out=fn_img.get_root()+"_idr";
-      if (dont_rewrite) fn_out += ItoA(it,2);
+      if (dont_rewrite) fn_out += ItoA(it,2)+"_";
       fn_out+=ItoA(fn_number,5);
 
       //#define DEBUG
@@ -243,6 +243,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       if (prm.max_resolution!=-1) {
          cerr << "Filtering result ...\n";
          prm.Filter.apply_mask(vol_recons());
+	 vol_recons.write();
          convert_to_blobs=TRUE;
       }
 
