@@ -189,6 +189,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
 	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);	      
 	   out() = out() + number1;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
@@ -197,6 +198,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
 	   out.read(fn_1,FALSE,FALSE,TRUE);	   
 	   double number2=AtoF(fn_2);   
 	   out() = out() + number2;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
@@ -205,6 +207,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
 	   Op1.read(fn_1,FALSE,FALSE,TRUE);
 	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   out()=Op1()+out();		 
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==NUMBER && operand_type2==VOLUME)
@@ -242,6 +245,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
 	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);
 	   out()=out()-number1;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
@@ -250,6 +254,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
 	   out.read(fn_1,FALSE,FALSE,TRUE);
 	   double number2=AtoF(fn_2);
 	   out()=out()-number2;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
@@ -257,7 +262,8 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
 	   ImageXmipp Op1,out;
 	   Op1.read(fn_1,FALSE,FALSE,TRUE);
 	   out.read(fn_2,FALSE,FALSE,TRUE);
-       out()=Op1()-out();		 
+	   out()=Op1()-out();		 
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==NUMBER && operand_type2==VOLUME)
@@ -296,6 +302,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number1;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
@@ -305,6 +312,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number2;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
@@ -313,6 +321,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
 	   Op1.read(fn_1,FALSE,FALSE,TRUE);
 	   out.read(fn_2,FALSE,FALSE,TRUE);
 		    mul_elements(Op1(),out(), out());
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==NUMBER && operand_type2==VOLUME)
@@ -354,6 +363,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= number1 / out(i,j);
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
@@ -363,6 +373,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= out(i,j) / number2;
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
@@ -372,6 +383,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
 	   out.read(fn_2,FALSE,FALSE,TRUE);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=Op1(i,j)/out(i,j);
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==NUMBER && operand_type2==VOLUME)
@@ -413,6 +425,7 @@ void log10(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   out.read(fn_1,FALSE,FALSE,TRUE);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=log10(1+out(i,j));	  
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==VOLUME)
@@ -433,6 +446,7 @@ void sqrt(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   out.read(fn_1,FALSE,FALSE,TRUE);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=sqrt(out(i,j));	  
+	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
    }
    else if(operand_type1==VOLUME)
