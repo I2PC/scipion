@@ -1,0 +1,414 @@
+############################################################################
+#                                                                          #
+#                          Makefile for XMIPP                              #
+#                               May  2004                                  #
+#                                                                          #
+############################################################################
+
+############################################################################
+#                                                                          #
+# *  NOTE: This program package is copyrighted in the sense that it      * #
+# *  may be used for scientific purposes. The package as a whole, or     * #
+# *  parts thereof, cannot be included or used in any commercial         * #
+# *  application without written permission granted by its producents.   * #
+# *  No programs contained in this package may be copied for commercial  * #
+# *  distribution.                                                       * #
+# *                                                                      * #
+# *  This software is provided as is with no warranty expressed or       * #
+# *  implied. We hope you find it useful, but we won't be held           * #
+# *  responsible for any damage that may occur from reading, compiling,  * #
+# *  installing, using, or even thinking about it.                       * #
+# *                                                                      * #
+# *  All comments concerning this program package may be sent to the     * #
+# *  e-mail address 'xmipp@cnb.uam.es'                                   * #
+# *                                                                      * #
+#             Centro Nacional de Biotecnologia , C.S.I.C.                  #
+#                            Madrid, Spain                                 #
+#                                                                          #
+############################################################################
+
+XMIPPDIR      = `pwd`
+ENV           = `which env`
+
+#
+######################  Platform definition ################################
+# Valid machines: ALPHA, SUN, IRIX65, LINUX, AIX, CYGWIN
+MACHINE       = LINUX
+
+# Compiler directories
+COMPILER_DIR = /usr/include/g++-3/
+MAKE         = make
+
+# Set the following to YES for a developer's version: 
+# programs will be called devel_name instead of xmipp_name 
+# in order not to interfer with any pre-installed user-version
+DEVELOPING    = YES
+
+# Statically link all libraries
+# Only tested for Redhat 7.3; 
+# Makefile.std of some applications may still require switch in order of libraries!
+STATIC        = YES
+
+#
+######################  External packages ##################################
+# NewXmipp relies on a number of external packages.
+# Setting variables HAVE_PACKAGE to NO will disable the use of those packages.
+# This allows you to install NewXmipp without having that package installed, 
+# but some of its programs may be omitted from the installation.
+
+# qt and qt-devel (V3.1 or newer!!!) are used for the graphical interface.
+# Affected programs: xmipp_show, xmipp_mark etc.
+HAVE_QT       = NO
+XMIPP_QTDIR   = /usr/lib/qt-3.1
+QTLIBS        = -lqt
+
+# Tiff is used for conversion from scanned micrographs in TIFF to RAW-format
+# Affected programs: xmipp_tiff2raw
+HAVE_TIFF     = NO
+  XMIPP_TIFFLIBDIR = /mnt/bioinfo/sharedfs/app/lib
+  XMIPP_TIFFINCDIR = /mnt/bioinfo/sharedfs/app/include
+
+# OpenGL is used for for the graphical program to create 3D-phantom
+# Affected programs: xmipp_phan3D
+HAVE_OPENGL    = NO
+XMIPP_GLINCDIR = /usr/include/GL
+XMIPP_GLLIBDIR = /usr/lib
+LIBGL          = -lGL -lGLU
+
+# MPI is used for parallelisation of computational intensive algorithms
+# Affected programs: xmipp_MPI_art, xmipp_MPI_wbp
+HAVE_MPI      = NO
+XMIPP_MPIDIR  = 
+# NOPROCESS is the number of processes to be run in parallel
+# in general NOPROCESS should be equal or less than the number of CPUs
+# set it to 1 if your make utility does not admit the j flag
+NOPROCESS   = 1
+
+# If some libraries (linkable) are not to be found in the actual path for
+# the compiler, you can add the paths here using LIBPATHS=-L<path>
+LIBPATHS = 
+
+# If some includes are not to be found in the actual path for the compiler,
+# you can add the paths here using INCPATHS=-I<path>
+INCPATHS = -I$(XMIPPDIR)/Lib/XmippData/Bilib/headers -I$(XMIPPDIR)/Lib/XmippData/Bilib/types
+
+
+############################################################################
+############################################################################
+##                                                                        ##
+##  Usually nothing to be changed below here...                           ##
+##                                                                        ##
+############################################################################
+############################################################################
+
+
+#
+#############  External packages no longer in use ##########################
+
+# Colimate was a GUI developed for NewXmipp, can be safely omitted
+# Affected programs: none
+HAVE_COLIMATE = NO
+
+# INRIA now comes with the NewXmipp distribution
+HAVE_INRIA    = YES
+  XMIPP_INRIADIR = $(XMIPPDIR)/Other_packages/LibINRIA
+
+# VTK is no longer used, but option to include still remains here
+# Affected programs: none
+HAVE_VTK      = NO
+  XMIPP_VTKLIBDIR =  -L/mnt/bioinfo/sharedfs/app/lib
+  XMIPP_VTKINCDIR =  -I/mnt/bioinfo/sharedfs/app/include/vtk/
+  XMIPP_VTKNEEDDIR = -L/usr/X11/lib
+   # Sometimes it also needs -lOSMesa
+  LIBVTK = -lvtkImaging  -lvtkGraphics -lvtkCommon \
+           -lvtkFiltering -lvtkIO -lvtkjpeg -lvtkpng -lvtkzlib \
+           -lXext -lXt -lX11 -lpthread
+HAVE_VTKQT    = NO
+XMIPP_VTKQTDIR= /mnt/bioinfo/sharedfs/app/lib/vtkqt
+
+
+######################  Platform independent definitions ###################
+
+# Shell to be used
+SHELL=/bin/sh
+
+# User libraries archiver
+AR            = ar rcs
+
+ifeq ($(HAVE_QT),YES)
+   COMPILEOPTS_1 = -D_HAVE_QT -Wno-deprecated
+   INCPATHS_1    = -I$(XMIPP_QTDIR)/include
+   LIBPATHS_1    = -L$(XMIPP_QTDIR)
+else
+   COMPILEOPTS_1 = -Wno-deprecated
+   INCPATHS_1    = 
+   LIBPATHS_1    = 
+endif
+
+ifeq ($(HAVE_INRIA),YES)
+   COMPILEOPTS_2 = -D_HAVE_INRIA $(COMPILEOPTS_1)
+   INCPATHS_2    = -I$(XMIPP_INRIADIR) $(INCPATHS_1)
+   LIBPATHS_2    = -L$(XMIPP_INRIADIR) $(LIBPATHS_1)
+else
+   COMPILEOPTS_2 = $(COMPILEOPTS_1)
+   INCPATHS_2    = $(INCPATHS_1)
+   LIBPATHS_2    = $(LIBPATHS_1)
+endif
+
+ifeq ($(HAVE_TIFF),YES)
+   COMPILEOPTS_3 = -D_HAVE_TIFF $(COMPILEOPTS_2)
+   INCPATHS_3    = -I$(XMIPP_TIFFINCDIR) $(INCPATHS_2)
+   LIBPATHS_3    = -L$(XMIPP_TIFFLIBDIR) $(LIBPATHS_2)
+else
+   COMPILEOPTS_3 = $(COMPILEOPTS_2)
+   INCPATHS_3    = $(INCPATHS_2)
+   LIBPATHS_3    = $(LIBPATHS_2)
+endif
+
+ifeq ($(HAVE_VTK),YES)
+   COMPILEOPTS_4 = -D_HAVE_VTK $(COMPILEOPTS_3)
+   INCPATHS_4    = $(XMIPP_VTKINCDIR) $(INCPATHS_3)
+   LIBPATHS_4    = $(XMIPP_VTKLIBDIR) $(XMIPP_VTKNEEDDIR) $(LIBPATHS_3)
+else
+   COMPILEOPTS_4 = $(COMPILEOPTS_3)
+   INCPATHS_4    = $(INCPATHS_3)
+   LIBPATHS_4    = $(LIBPATHS_3)
+endif
+
+COMPILEOPTS_5    = $(INCPATHS) $(INCPATHS_4) $(COMPILEOPTS_4) -c
+LINKOPTS_5       = $(LIBPATHS) $(LIBPATHS_4) 
+
+ifeq ($(DEVELOPING),YES)
+	COMPILEOPTS_6 = -g $(COMPILEOPTS_5)
+	LINKOPTS_6    = -g $(LINKOPTS_5)
+	XMIPP_PREFIX  = devel_
+else
+	COMPILEOPTS_6 = $(COMPILEOPTS_5)
+	LINKOPTS_6    = $(LINKOPTS_5)
+	XMIPP_PREFIX  = xmipp_
+endif
+
+ifeq ($(HAVE_MPI),YES)
+	COMPILEOPTS_7 = -D_HAVE_MPI -I $(XMIPP_MPIDIR)/include $(COMPILEOPTS_6)
+	LINKOPTS_7    = -L$(XMIPP_MPIDIR)/lib $(LINKOPTS_6)
+else
+	COMPILEOPTS_7 = $(COMPILEOPTS_6)
+	LINKOPTS_7    = $(LINKOPTS_6)
+endif
+FINAL_COMPILEOPTS     = $(COMPILEOPTS_7)
+FINAL_LINKOPTS        = $(LINKOPTS_7)
+
+########################  Platform specific definitions ####################
+# for Alpha ....................
+ifeq ($(MACHINE),ALPHA)
+	CC          = g++
+	CCLIB       = gcc
+	DEPENDDIRS  = $(INCPATHS) -I/opt/include/c++/3.1.1 \
+	-I/opt/include/c++/3.1.1/backward \
+	-I/opt/include/c++/3.1.1/alphaev68-dec-osf5.1
+        COMPILEOPTS = $(FINAL_COMPILEOPTS) -O -mieee -Wno-deprecated 
+        LINKOPTS    = $(FINAL_LINKOPTS) -O -Wno-deprecated
+endif
+
+# for AIX ......................
+ifeq ($(MACHINE),AIX)
+	CC          = g++
+	CCLIB       = gcc
+	DEPENDDIRS  = $(INCPATHS)
+        COMPILEOPTS = $(FINAL_COMPILEOPTS) -O 
+        LINKOPTS    = $(FINAL_LINKOPTS) -O
+endif
+
+# for sunOS 5.x ................
+ifeq ($(MACHINE),SUN)
+	CC          = g++
+	CCLIB       = gcc
+	DEPENDDIRS  = -I$(COMPILER_DIR)/include/g++ \
+	   -I$(COMPILER_DIR)/lib/gcc-lib/sparc-sun-solaris2.5.1/2.8.1/include \
+	   -I$(COMPILER_DIR)/sparc-sun-solaris2.5.1/include $(INCPATHS)
+        # In SUN STL cannot be optimized
+        COMPILEOPTS = $(FINAL_COMPILEOPTS)
+        LINKOPTS    = $(FINAL_LINKOPTS) -Xlinker -z -Xlinker muldefs
+endif
+
+# for SGI IRIX 6.5 ...............
+ifeq ($(MACHINE),IRIX65)
+	CC          = g++
+	CCLIB       = gcc
+	DEPENDDIRS  = -I$(COMPILER_DIR) $(INCPATHS)
+        COMPILEOPTS = $(FINAL_COMPILEOPTS) -O
+        LINKOPTS    = $(FINAL_LINKOPTS) -O -z -LD_MSG:off=15,134,85
+        #LINKOPTS    = $(LINKOPTS_1) -O -Xlinker -d
+endif
+
+# for LINUX ....................
+ifeq ($(MACHINE),LINUX)
+	CC          = g++
+	CCLIB       = gcc
+        DEPENDDIRS  = -I$(XMIPPDIR)/Lib -I$(COMPILER_DIR) $(INCPATHS) $(FINAL_COMPILEOPTS)
+        COMPILEOPTS = $(FINAL_COMPILEOPTS) -O
+        LINKOPTS    = $(FINAL_LINKOPTS) -O
+endif
+
+# for CYGWIN ....................
+ifeq ($(MACHINE),CYGWIN)
+	CC          = g++
+	CCLIB       = g++
+        DEPENDDIRS  = -I$(XMIPPDIR)/Lib -I$(COMPILER_DIR) $(INCPATHS) $(FINAL_COMPILEOPTS)
+        COMPILEOPTS = $(FINAL_COMPILEOPTS) -O
+        LINKOPTS    = $(FINAL_LINKOPTS) -O
+endif
+
+# Variable definitions #####################################################
+ALLDIRS       = Applications Lib
+COMPILERFLAGS = $(COMPILEOPTS) -I $(XMIPPDIR)/Lib -D_$(MACHINE)
+LINKERFLAGS   = $(LINKOPTS) -L$(XMIPPDIR)/Lib
+
+# Action definitions #######################################################
+# Fast Action --------------------------------------------------------------
+all:
+	$(MAKE) libraries
+	$(MAKE) apps
+
+# The whole package --------------------------------------------------------
+Xmipp:
+	$(MAKE) Makefiles
+	$(MAKE) libraries
+	$(MAKE) apps
+	$(MAKE) install
+	$(MAKE) docs
+
+# Make makefiles -----------------------------------------------------------
+Makefiles:
+	@echo "XMIPPDIR        = $(XMIPPDIR)"          > local_def
+	@echo "CC              = $(CC)"                >> local_def
+	@echo "CCLIB           = $(CCLIB)"             >> local_def
+	@echo "MAKE            = $(MAKE)"              >> local_def
+	@echo "NOPROCESS       = $(NOPROCESS)"         >> local_def
+	@echo "AR              = $(AR)"                >> local_def
+	@echo "MACHINE         = $(MACHINE)"           >> local_def
+	@echo "COMPILERFLAGS   = $(COMPILERFLAGS)"     >> local_def
+	@echo "LINKERFLAGS     = $(LINKERFLAGS)"       >> local_def
+	@echo "DEPENDDIRS      = $(DEPENDDIRS)"        >> local_def
+	@echo "DEVELOPING      = $(DEVELOPING)"        >> local_def
+	@echo "STATIC          = $(STATIC)"            >> local_def
+	@echo "XMIPP_PREFIX    = $(XMIPP_PREFIX)"      >> local_def
+	@echo "HAVE_QT         = $(HAVE_QT)"           >> local_def
+	@echo "QTLIBS          = $(QTLIBS)"	       >> local_def
+	@echo "XMIPP_QTDIR     = $(XMIPP_QTDIR)"       >> local_def
+	@echo "XMIPP_INRIADIR  = $(XMIPP_INRIADIR)"    >> local_def
+	@echo "XMIPP_TIFFLIBDIR= $(XMIPP_TIFFLIBDIR)"  >> local_def
+	@echo "XMIPP_TIFFINCDIR= $(XMIPP_TIFFINCDIR)"  >> local_def
+	@echo "XMIPP_VTKINCDIR = $(XMIPP_VTKINCDIR)"   >> local_def
+	@echo "XMIPP_VTKLIBDIR = $(XMIPP_VTKLIBDIR)"   >> local_def
+	@echo "XMIPP_VTKQTDIR  = $(XMIPP_VTKQTDIR)"    >> local_def
+	@echo "XMIPP_MPIDIR    = $(XMIPP_MPIDIR)"      >> local_def
+	@echo "LIBVTK          = $(LIBVTK)"            >> local_def
+	@echo "HAVE_OPENGL     = $(HAVE_OPENGL)"       >> local_def
+	@echo "XMIPP_GLINCDIR  = $(XMIPP_GLINCDIR)"    >> local_def
+	@echo "XMIPP_GLLIBDIR  = $(XMIPP_GLLIBDIR)"    >> local_def
+	@echo "LIBGL           = $(LIBGL)"             >> local_def
+	@echo "HAVE_COLIMATE   = $(HAVE_COLIMATE)"     >> local_def
+	@echo "HAVE_INRIA      = $(HAVE_INRIA)"        >> local_def
+	@echo "HAVE_TIFF       = $(HAVE_TIFF)"         >> local_def
+	@echo "HAVE_VTK        = $(HAVE_VTK)"          >> local_def
+	@echo "HAVE_VTKQT      = $(HAVE_VTKQT)"        >> local_def
+	@echo "HAVE_MPI        = $(HAVE_MPI)"          >> local_def
+	@echo "ENV             = $(ENV)"               >> local_def
+	@for i in $(ALLDIRS) ;\
+	do \
+		echo "creating Makefile in $$i..."; \
+		( cd $$i ; cat ../local_def Makefile.std > Makefile ; \
+			$(MAKE) Makefiles ) \
+	done 
+
+# Make libraries -----------------------------------------------------------
+libraries:
+	@( cd Lib ; $(MAKE) )
+
+# Make applications --------------------------------------------------------
+apps:
+	@( cd Applications; $(MAKE) )
+
+# Install applications -----------------------------------------------------
+install:
+	@( cd Applications; $(MAKE) install )
+
+# Make docs ----------------------------------------------------------------
+docs:
+	@( cd Lib ; $(MAKE) docs )
+
+# Make clean ---------------------------------------------------------------
+clean:
+	@for i in $(ALLDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) clean ) \
+	done 
+
+# Make dist clean ----------------------------------------------------------
+distclean:
+	@if [ `find . -name *.bak | head -1 `z!=z ] ;\
+	 then find . -name *.bak | xargs rm -f ;\
+	 fi
+	@rm -f local_def
+	@(cd bin ; if [ `ls | grep -v CVS | head -1 `z!=z ] ;\
+	 then ls | grep -v CVS | xargs rm -f ;\
+	 fi )
+	@for i in $(ALLDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) distclean ) \
+	done 
+
+# Down Load ----------------------------------------------------------------
+source_download:
+	@echo "Generating Source tar file ..."
+	@cvs checkout NewXmipp > /dev/null 2>&1
+	@if [ -f DownLoad/xmippSource.tar.gz ] ;  \
+	    then rm -f DownLoad/xmippSource.tar.gz ; \
+	 fi
+	@touch DownLoad/xmippSource.tar
+	@find NewXmipp/Applications -type f| grep -v CVS | xargs tar -rf DownLoad/xmippSource.tar
+	@find NewXmipp/Lib          -type f| grep -v CVS | xargs tar -rf DownLoad/xmippSource.tar
+	@find NewXmipp/Extra_Docs   -type f| grep -v CVS | xargs tar -rf DownLoad/xmippSource.tar
+	@tar -rf DownLoad/xmippSource.tar NewXmipp/Makefile NewXmipp/xmippConfiguration.inc
+	@gzip DownLoad/xmippSource.tar
+	@rm -r NewXmipp
+
+download:
+	@echo "Generating Executable tar file for $(MACHINE) ..."
+	@if [ -f DownLoad/xmipp$(MACHINE).tar.gz ] ;  \
+	    then rm -f DownLoad/xmipp$(MACHINE).tar.gz ; \
+	 fi
+	@tar -cf DownLoad/xmipp$(MACHINE).tar Lib/*.so
+	@find bin -type l| grep -v CVS | xargs tar -hrf DownLoad/xmipp$(MACHINE).tar
+	@gzip DownLoad/xmipp$(MACHINE).tar
+
+lib_download:
+	@echo "Generating Auxiliary libraries tar file for $(MACHINE) ..."
+	@if [ -f DownLoad/xmippAuxLib$(MACHINE).tar ] ;  \
+	   then rm -f DownLoad/xmippAuxLib$(MACHINE).tar ; \
+	 fi
+	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i GL   >  inter
+	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i qt   >> inter
+	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i stdc >> inter
+	@-ldd Applications/Src/FFT/$(XMIPP_PREFIX)FFT   | grep -i vtk | grep -v XmippInterface >> inter
+	@awk '{n=split($$0,w,"=>"); print w[n]}' < inter > inter2
+	@if [ $(MACHINE) = LINUX7 ] ; \
+	   then awk '{n=split($$0,w," "); print w[1]}' < inter2 > inter3 ; mv -f inter3 inter2 ; \
+	 fi
+	@for i in `cat inter2` ; \
+	 do \
+	   cp $$i Lib ; \
+	   FN=`echo $$i | awk '{n=split($$0,w,"/"); print w[n]}'` ; \
+	   if [ -f DownLoad/xmippAuxLib$(MACHINE).tar ] ; \
+	      then tar -rvf DownLoad/xmippAuxLib$(MACHINE).tar Lib/$$FN ; \
+	   else \
+	      tar -cvf DownLoad/xmippAuxLib$(MACHINE).tar Lib/$$FN ; \
+	   fi ; \
+	   rm -f Lib/$$FN ; \
+	 done
+	@gzip DownLoad/xmippAuxLib$(MACHINE).tar
+	@if [ -f DownLoad/xmippAuxLib$(MACHINE).tar ] ;  \
+	   then rm -f DownLoad/xmippAuxLib$(MACHINE).tar ; \
+	 fi
+	@rm inter inter2
