@@ -52,8 +52,8 @@ unsigned       verb = 0;	// Verbosity level
 bool           norm = 1;	// Normalize?
 unsigned       xdim;		// X-dimension (-->)
 unsigned       ydim;		// Y-dimension 
-double         reg0 = 5;	// Initial reg
-double         reg1 = 0.01;	// Final reg
+double         reg0 = 1000;	// Initial reg
+double         reg1 = 100;	// Final reg
 int	       df = 3;		// Degrees of freedom	 
 string         layout = "RECT"; // layout (Topology)
 unsigned       annSteps = 10;   // Deterministic Annealing steps
@@ -121,8 +121,8 @@ bool 	       tStudent = false;        // tStudent Kernel
 	  tStudent = true;
        }
 
-       reg0 = AtoF(get_param(argc, argv, "-reg0", "5.0"));
-       reg1 = AtoF(get_param(argc, argv, "-reg1", "0.01"));
+       reg0 = AtoF(get_param(argc, argv, "-reg0", "1000.0"));
+       reg1 = AtoF(get_param(argc, argv, "-reg1", "100.0"));
        df = (int) AtoI(get_param(argc, argv, "-df", "3"));
 
        fn_algo_in = get_param(argc, argv, "-ain", "");
@@ -322,22 +322,9 @@ bool 	       tStudent = false;        // tStudent Kernel
    cout << "Calibrating....." << endl;
    myMap->calibrate(ts);
 
-   if (norm) {
-   	cout << "Denormalizing code vectors....." << endl;
-   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
-   }	
-
-
   /******************************************************* 
       Saving all kind of Information 
   *******************************************************/
-
-
-   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".cod"; 
-   ofstream codS(tmpN.c_str());
-   codS << *myMap;
-   codS.flush();    
 
    if (saveCodebook) {
    	cout << "Saving whole codebook as " << fn_out << ".cbk ....." << endl;  
@@ -435,6 +422,18 @@ bool 	       tStudent = false;        // tStudent Kernel
    myMap->printQuantError(errStream);
    errStream.flush();    
 
+   if (norm) {
+   	cout << "Denormalizing code vectors....." << endl;
+   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
+   }	
+
+   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
+   tmpN = fn_out.c_str() + (string) ".cod"; 
+   ofstream codS(tmpN.c_str());
+   codS << *myMap;
+   codS.flush();    
+
+
    cout << endl;
    
    delete myMap;
@@ -464,8 +463,8 @@ void Usage (char **argv) {
      "\n    -hexa    	   	      Hexagonal topology"     
      "\n    -rect    	   	      Rectangular topology (default)"     
      "\n    -steps  steps    	      Deterministic annealing steps (default = 10)"     
-     "\n    -reg0   Initial reg       Initial smoothness factor (default = 5)"
-     "\n    -reg1   Final reg 	      Final  smoothness factor (default = 0.01)"     
+     "\n    -reg0   Initial reg       Initial smoothness factor (default = 1000)"
+     "\n    -reg1   Final reg 	      Final  smoothness factor (default = 100)"     
      "\n    -gaussian    	      Gaussian Kernel Function (default)"     
      "\n    -tStudent    	      t-Student Kernel Function "     
      "\n    -df     df 	      	      t-Student degrees of freedom (default = 3)"     

@@ -268,22 +268,9 @@ bool 	       tStudent = false;        // tStudent Kernel
    cout << "Calibrating....." << endl;
    myMap->calibrate(ts);
 
-   if (norm) {
-   	cout << "Denormalizing code vectors....." << endl;
-   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
-   }	
-
-
   /******************************************************* 
       Saving all kind of Information 
   *******************************************************/
-
-
-   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".cod"; 
-   ofstream codS(tmpN.c_str());
-   codS << *myMap;
-   codS.flush();    
 
    if (saveCodebook) {
    	cout << "Saving whole codebook as " << fn_out << ".cbk ....." << endl;  
@@ -361,6 +348,19 @@ bool 	       tStudent = false;        // tStudent Kernel
    ofstream errStream(tmpN.c_str());
    myMap->printQuantError(errStream);
    errStream.flush();    
+
+
+   if (norm) {
+   	cout << "Denormalizing code vectors....." << endl;
+   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
+   }	
+
+   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
+   tmpN = fn_out.c_str() + (string) ".cod"; 
+   ofstream codS(tmpN.c_str());
+   codS << *myMap;
+   codS.flush();    
+
 
    cout << endl;
    

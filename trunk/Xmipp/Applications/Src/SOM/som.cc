@@ -271,20 +271,10 @@ bool 	       use_rand_cvs = false; // NT: flag to truly randomize codevectors or
    cout << "Calibrating....." << endl;
    myMap->calibrate(ts);
 
-   if (norm) {
-   	cout << "Denormalizing code vectors....." << endl;
-   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
-   }	
 
   /******************************************************* 
       Saving all kind of Information 
   *******************************************************/
-
-   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".cod"; 
-   ofstream codS(tmpN.c_str());
-   codS << *myMap;
-   codS.flush();    
 
    cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;  
    tmpN = fn_out.c_str() + (string) ".inf"; 
@@ -361,6 +351,16 @@ bool 	       use_rand_cvs = false; // NT: flag to truly randomize codevectors or
    myMap->printQuantError(errStream);
    errStream.flush();    
 
+   if (norm) {
+   	cout << "Denormalizing code vectors....." << endl;
+   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
+   }	
+
+   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
+   tmpN = fn_out.c_str() + (string) ".cod"; 
+   ofstream codS(tmpN.c_str());
+   codS << *myMap;
+   codS.flush();    
 
    cout << endl;
    

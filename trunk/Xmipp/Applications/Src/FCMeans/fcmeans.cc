@@ -220,19 +220,6 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    cout << "Compactness and Separation index (min) (S) : " << S << endl;
    cout << endl;
 
-   if (norm) {
-   	cout << "Denormalizing cluster centers....." << endl;
-   	thisFCB->unNormalize(ts.getNormalizationInfo()); // de-normalize cluster centers        
-   }	
-
-   // Save codevectors
-   cout << "Saving cluster centers in " << fn_out << ".cod....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".cod"; 
-   ofstream outStream(tmpN.c_str());
-   outStream << ts.theItems[0].size() << " " << thisFCB->size() << endl;
-   outStream << *thisFCB;
-   outStream.flush();    
-
    // assign data to clusters according to fuzzy threshold
    if (saveClusters) {
    	cout << "Saving clusters assigments ....." << endl;  
@@ -299,6 +286,19 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    infS << "Compactness and Separation index (min) (S) : " << S << endl;
    infS.flush();    
   
+   if (norm) {
+   	cout << "Denormalizing cluster centers....." << endl;
+   	thisFCB->unNormalize(ts.getNormalizationInfo()); // de-normalize cluster centers        
+   }	
+
+   // Save codevectors
+   cout << "Saving cluster centers in " << fn_out << ".cod....." << endl;  
+   tmpN = fn_out.c_str() + (string) ".cod"; 
+   ofstream outStream(tmpN.c_str());
+   outStream << ts.theItems[0].size() << " " << thisFCB->size() << endl;
+   outStream << *thisFCB;
+   outStream.flush();    
+
    delete thisFCB;
  
  } catch ( const exception& e ) {
