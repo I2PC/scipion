@@ -377,12 +377,21 @@ int SelFile::LineNo() {
 void SelFile::ImgSize(int &Ydim, int &Xdim) _THROW {
    vector<SelLine>::iterator aux=current_line;
    go_first_ACTIVE();
-   ImageXmipp img;
-   try {img.read((*current_line).text);}
-   catch (Xmipp_error XE) {throw(XE);}
-   Ydim=img().ydim;
-   Xdim=img().xdim;
-   current_line=aux;
+   FileName fn_img=(*current_line).text;
+   if (Is_ImageXmipp(fn_img)) {
+      ImageXmipp img;
+      img.read(fn_img);
+      Ydim=img().ydim;
+      Xdim=img().xdim;
+   } else if (Is_FourierImageXmipp(fn_img)) {
+      FourierImageXmipp img;
+      img.read(fn_img);
+      Ydim=img().ydim;
+      Xdim=img().xdim;
+   } else
+      REPORT_ERROR(1,"SelFile::ImgSize: First Active file is not an image");
+      
+  current_line=aux;
 }
 
 /* File Extension ---------------------------------------------------------- */
