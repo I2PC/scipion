@@ -80,15 +80,32 @@ void project_Volume(GridVolumeT<T> &vol,
    GridVolumeT<T> *vol_var=NULL, double ray_length=-1);
 
 /** From voxel volumes.
+    
     The voxel volume is projected onto a projection plane defined by
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
     The projection itself, from now on, will keep the Euler angles.
     
-    An exception is thrown if the SPIDER environment variable is not set */
+    An exception is thrown if the SPIDER environment variable is not set 
+
+ */
 void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double rot, double tilt, double psi) _THROW;
 
+/** Projects a single particle into a voxels volume by updating its components this way:
+
+	Voxel(i,j,k) = Voxel(i,j,k) + Pixel( x,y) * Distance.
+	
+	Where:
+	
+	- Voxel(i,j,k) is the voxel the ray is crossing.
+	- Pixel( y,z ) is the value of the pixel where the ray departs from.
+	- Distance is the distance the ray goes through the Voxel.
+*/	
+	
+
+void singleWBP(matrix3D<double> &V, Projection &P) _THROW;
+ 
 /** Count equations in volume.
    For Component AVeraing (CAV), the number of equations in which
    each blob is involved is needed. */
