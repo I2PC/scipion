@@ -4,5 +4,5 @@ ifeq ($(HAVE_TIFF),YES)
 endif
 OBJ  = tiff2raw.o
 LIBS = -ltiff
-EXTRA_LIB_DIRS = -L $(XMIPP_TIFFDIR)/lib
+EXTRA_LIB_DIRS = -L$(XMIPP_TIFFDIR)
 EXTRA_INCLUDE_DIRS = -I $(XMIPP_TIFFDIR)/include

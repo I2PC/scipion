@@ -77,9 +77,9 @@ void QtImageOverviewMicrograph::exact_overviewToMicrograph( int _x, int _y,
 }
 
 /* Constructor ------------------------------------------------------------- */
-QtImageOverviewMicrograph::QtImageOverviewMicrograph( QWidget *_parent = 0, 
-                                                      const char *_name = 0, 
-                                                      WFlags _f = 0 ) : 
+QtImageOverviewMicrograph::QtImageOverviewMicrograph( QWidget *_parent, 
+                                                      const char *_name, 
+                                                      WFlags _f) : 
    QtImage( _parent, _name, _f ) { 
    __x = 0;    __y = 0; 
    __w = 0;    __h = 0;

@@ -687,8 +687,9 @@ bool maskImg::convertEvent( QMouseEvent* e, int& x, int& y)
 
 void maskImg::mousePressEvent( QMouseEvent *e )
 {
+    QPoint clickedPos = e->pos();		// extract pointer position
     if (e->button() == RightButton)  
-      menubar->exec(QCursor::pos());
+      menubar->exec(clickedPos);
 }
 
 

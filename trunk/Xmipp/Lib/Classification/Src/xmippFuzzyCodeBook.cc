@@ -41,7 +41,7 @@
    */
    
   xmippFCB::xmippFCB (unsigned _n, unsigned _size, unsigned _data,
-         bool _cal = false ): xmippCB(_n, _size, _cal) {
+         bool _cal ): xmippCB(_n, _size, _cal) {
 	 
    // Initialize Fuzzy membership Matrix
     
@@ -69,8 +69,8 @@
    */
    
 
-  xmippFCB::xmippFCB (unsigned _n, unsigned _size, unsigned _data, double _lower = 0, double _upper = 1,
-         bool _cal = false ): xmippCB(_n, _size, _lower, _upper, _cal) {
+  xmippFCB::xmippFCB (unsigned _n, unsigned _size, unsigned _data, double _lower, double _upper,
+         bool _cal): xmippCB(_n, _size, _lower, _upper, _cal) {
 	 
    // Initialize Fuzzy membership Matrix
     

@@ -61,8 +61,8 @@ ifdef PROJ
 install: $(FINAL_PROJ)
 	@echo "Installing $(FINAL_PROJ) ..."
 	@if [ ! -e $(XMIPPDIR)/bin/$(FINAL_PROJ) ] ; then \
-	    export DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
-	    export THIS_DIR=`pwd | cut -d"/" -f $$DEPTH` ; \
+	    DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
+	    THIS_DIR=`pwd | cut -d"/" -f$$DEPTH` ; \
 	    ln -s $(XMIPPDIR)/Applications/Src/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
 	fi
 else

@@ -303,19 +303,23 @@ ostream& operator << (ostream &out, const xmippPC &PC) {
 istream& operator >> (istream &in, xmippPC &PC) {
    PC.clear();
    int D;
-   in.scan("Relevant Dimension: %d", &D);
+   string read_line;
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Relevant Dimension: %d", &D);
    PC.set_Dimension(D);
    PC.eigenval.resize(D);
    PC.eigenvec.resize(D);
    
    int size;
-   in.scan("Mean vector: (%d) --->",&size);
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Mean vector: (%d) --->",&size);
    PC.mean.resize(size);
    for (int j=0; j<size; j++)
       in >> PC.mean[j];
    
    for (int i=0; i<D; i++) {
-      in.scan("%F (%d) ---> ",&(PC.eigenval[i]),&size);
+      getline(in,read_line);
+      sscanf(read_line.c_str(),"%F (%d) ---> ",&(PC.eigenval[i]),&size);
       PC.eigenvec[i].resize(size);
       for (int j=0; j<size; j++)
          in >> PC.eigenvec[i][j];
@@ -347,7 +351,9 @@ ostream& operator << (ostream &out, const PCA_set &PS) {
 
 istream& operator >> (istream &in, PCA_set &PS) {
    int imax;
-   in.scan("Number of PCAs: %d\n", &imax);
+   string read_line;
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Number of PCAs: %d\n", &imax);
    PS.PCA.resize(imax);
    for (int i=0; i<imax; i++) {
       PS.PCA[i]=new xmippPC;

@@ -181,8 +181,8 @@ vector<T> randomVector(const unsigned& _size, const T& _lower,
 {
   vector<T> v(_size);
   xmippUniform<T> u(_lower, _upper);
-
-  for (vector<T>::iterator i=v.begin() ; i<v.end() ; *i++ = u());
+  typename vector<T>::iterator i;
+  for (i=v.begin() ; i<v.end() ; *i++ = u());
 
   return v;
 };
@@ -277,7 +277,7 @@ T operator * ( const vector<T>& _v1, const vector<T>& _v2 )
     throw runtime_error("different size vectors in *");
 
   T dotProd = 0;
-  vector<T>::const_iterator i, j;
+  typename vector<T>::const_iterator i, j;
   for ( i=_v1.begin(), j=_v2.begin() ; i!=_v1.end() ; i++, j++ )
     dotProd += *i * *j;
 
@@ -292,7 +292,7 @@ T operator * ( const vector<T>& _v1, const vector<T>& _v2 )
 template <class T>
 vector<T>& operator *= ( vector<T>& _v, const T _alpha )
 {
-  vector<T>::iterator i;
+  typename vector<T>::iterator i;
   for ( i=_v.begin() ; i!=_v.end() ; i++ )
     *i *= _alpha;
 
@@ -308,7 +308,7 @@ vector<T>& operator *= ( vector<T>& _v, const T _alpha )
 template <class T>
 vector<T>& operator /= ( vector<T>& _v, const T _alpha )
 {
-  vector<T>::iterator i;
+  typename vector<T>::iterator i;
   for ( i=_v.begin() ; i!=_v.end() ; i++ )
     *i /= _alpha;
 
@@ -324,7 +324,9 @@ template <class T>
 ostream& operator << ( ostream& _os, const vector<T>& _v )
 {
   _os << "< ";
-  copy( _v.begin(), _v.end(), ostream_iterator<T>( _os, " "));
+  typename vector<T>::const_iterator i;
+  for (i=_v.begin(); i!=_v.end(); i++) _os << *i << " ";
+  //CO: copy( _v.begin(), _v.end(), ostream_iterator<T>( _os, " "));
   _os<< ">";  
   return _os;
 };

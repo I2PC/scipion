@@ -35,8 +35,8 @@ bool check_for_operation(int argc,char **argv,char *operation,
                         FileName &fn,int &operand_type);
 void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,
              FileName &fn_2,FileName &fn_out);
-void plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
-void minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
+void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
+void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
 void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
 void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out);
 void log10(int operand_type1,FileName &fn_1,FileName &fn_out);
@@ -50,8 +50,8 @@ void extract_slice(int operand_type1,int operand_type2,
 			
 
 // Operations suported
-#define    PLUS    1
-#define    MINUS   2
+#define    OPERATE_PLUS   1
+#define    OPERATE_MINUS  2
 #define    MULTIPLICATION 3
 #define    DIVISION       4
 #define    LOG10          5
@@ -89,8 +89,8 @@ int main(int argc, char **argv)
 	  check_for_operation(argc,argv,"#",fn_1,operand_type1);
   		 		 
     // Check the operations supported
-	if(check_for_operation(argc,argv,"+",fn_2,operand_type2)) operation=PLUS;
-	else if(check_for_operation(argc,argv,"-",fn_2,operand_type2)) operation=MINUS;
+	if(check_for_operation(argc,argv,"+",fn_2,operand_type2)) operation=OPERATE_PLUS;
+	else if(check_for_operation(argc,argv,"-",fn_2,operand_type2)) operation=OPERATE_MINUS;
 	else if(check_for_operation(argc,argv,"x",fn_2,operand_type2)) operation=MULTIPLICATION;
 	else if(check_for_operation(argc,argv,"/",fn_2,operand_type2)) operation=DIVISION;
 	else if(check_for_operation(argc,argv,"log10",fn_2,operand_type2)) operation=LOG10;
@@ -145,11 +145,11 @@ void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,Fi
 {
     switch(operation)
 	{
-		case    PLUS:
-                                  plus(operand_type1,operand_type2,fn_1,fn_2,fn_out);
+		case    OPERATE_PLUS:
+                                  operate_plus(operand_type1,operand_type2,fn_1,fn_2,fn_out);
 								  break;
-		case    MINUS:
-                                  minus(operand_type1,operand_type2,fn_1,fn_2,fn_out);
+		case    OPERATE_MINUS:
+                                  operate_minus(operand_type1,operand_type2,fn_1,fn_2,fn_out);
 								  break;
 		case    MULTIPLICATION:
                                   multiplication(operand_type1,operand_type2,fn_1,fn_2,fn_out);
@@ -176,7 +176,7 @@ void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,Fi
 	}
 }
 
-void plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out)
+void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out)
 {
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
@@ -229,7 +229,7 @@ void plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,File
    
 }
 
-void minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out)
+void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,FileName &fn_out)
 {
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {

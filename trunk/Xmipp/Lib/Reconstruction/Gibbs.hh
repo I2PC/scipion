@@ -101,7 +101,7 @@ public:
    ClickMode Click_Table[DIF_CONF];
    int EnergyChange[DIF_CONF][NEIGHBORS_IN];
    int ClickChange[DIF_CONF][NEIGHBORS_IN];
-   long long iNu_iter; //number of iterations
+   long int iNu_iter; //number of iterations
    //random vector with valid coordinates
    //I know this should be private but I am triying to speed up things
    int * valid_coordinates;
@@ -128,7 +128,7 @@ private:
    //input parameters normalized to integres
    int iCte_Border, iCte_homo, iBeta;
    //Total Energy
-   long long Total_Energy;
+   long int Total_Energy;
    //Output file_name seed
    FileName       fn_out_seed;
    //file with initial gridvolume
@@ -191,16 +191,16 @@ public:
 /** Calculate total Energy */
    void Calculate_Total_Energy(void){
    Count_clicks_of_each_type();
-   Total_Energy  = (long long)iCte_Border * (long long)iBorder_clicks +
-                   (long long)iCte_homo   * (long long)iHomo_clicks;
-   Total_Energy *= (long long) iBeta;
+   Total_Energy  = (long int)iCte_Border * (long int)iBorder_clicks +
+                   (long int)iCte_homo   * (long int)iHomo_clicks;
+   Total_Energy *= (long int) iBeta;
    }
 /** Fill auxiliar Grid volume with the value of the clicks centered on 
     each point (of the principal grid volume */
    void FillauxGridVolumewithClicks(void);
 /** Store the user provided parameters as integers */
    void Set_User_Parameters(int homo, int border, int beta, 
-                            long long nu_iter, FileName fh_out_name,
+                            long int nu_iter, FileName fh_out_name,
 			                       FileName fn_initfile)
    {
    iCte_homo   = homo;
@@ -258,7 +258,7 @@ public:
     }
 
 /** Get Total Energy */
-   long long Get_Total_energy(void) {return (Total_Energy);}   
+   long int Get_Total_energy(void) {return (Total_Energy);}   
 /** Update Total Energy */
    void Update_Total_energy(int energy_change) {Total_Energy += energy_change;}  /** Remove gridvolume mask */
    void Remove_Mask(void); 

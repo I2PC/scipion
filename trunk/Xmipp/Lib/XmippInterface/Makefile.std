@@ -1,11 +1,7 @@
 ############################################################################
 LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).so
-ifeq ($(HAVE_INRIA),YES)
 LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).so
-endif
-ifeq ($(HAVE_VTK),YES)
 LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).so
-endif
 LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA) $(LIBINTERFACEVTK)
 
 SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \

@@ -542,8 +542,8 @@ class xmippCTSet
    */
   void writeItems (ostream& _os, bool _delim = false) const
   {
-    vector<Item>::const_iterator i;
-    vector<Target>::const_iterator j;
+    typename vector<Item>::const_iterator i;
+    typename vector<Target>::const_iterator j;
     for (i=theItems.begin(), j=theTargets.begin() ; i<theItems.end() ;
          i++, j++)
     {   
@@ -601,7 +601,7 @@ class xmippCTSet
   /** Protected interface to the items
       @return a const_iterator that points to the first Item in the set
    */
-  vector<Item>::const_iterator itemsBegin() const {
+  typename vector<Item>::const_iterator itemsBegin() const {
     return theItems.begin();
   }
 
@@ -609,7 +609,7 @@ class xmippCTSet
   /** Protected interface to the items
    @return a const_iterator that points to the last Item in the set
    */
-  vector<Item>::const_iterator itemsEnd() const {
+  typename vector<Item>::const_iterator itemsEnd() const {
     return theItems.end();
   }
 
@@ -618,14 +618,14 @@ class xmippCTSet
       @return a const_iterator that points to the first Target in the set
   */
 
-  vector<Target>::const_iterator targetsBegin() const {
+  typename vector<Target>::const_iterator targetsBegin() const {
     return theTargets.begin();
   }
 
   /** Protected interface to the targets
       @return a const_iterator that points to the last Target in the set
   */
-  vector<Target>::const_iterator targetsEnd() const {
+  typename vector<Target>::const_iterator targetsEnd() const {
     return theTargets.end();
   }
 

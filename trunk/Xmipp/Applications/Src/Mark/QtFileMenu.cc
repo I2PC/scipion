@@ -36,6 +36,7 @@
 #include "qlabel.h"
 #include "qpushbutton.h"
 #include "qmessagebox.h"
+#include "qlineedit.h"
 
 /* Constructor ------------------------------------------------------------- */
 QtFileMenu::QtFileMenu( QtWidgetMicrograph* _parent) :

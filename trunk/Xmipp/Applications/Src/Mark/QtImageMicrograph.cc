@@ -34,9 +34,9 @@
 #include "../DownSample/xvsmooth.h"
 
 /* Constructor ------------------------------------------------------------- */
-QtImageMicrograph::QtImageMicrograph( QWidget *_parent = 0, 
-                                      const char *_name = 0, 
-                                      WFlags _f = 0 ) : 
+QtImageMicrograph::QtImageMicrograph( QWidget *_parent, 
+                                      const char *_name, 
+                                      WFlags _f) : 
    QtImage( _parent, _name, _f ) { 
    __x          = 0; 
    __y          = 0;

@@ -205,7 +205,7 @@ string Quadrant3D(int q) {
 }
 
 // Provide block -----------------------------------------------------------
-#define DWT_Scale(i,smax) ((int)((i==0)?smax-1:(ABS((CEIL(log10(i+1)/log10(2.0))-smax)))))
+#define DWT_Scale(i,smax) ((int)((i==0)?smax-1:(ABS((CEIL(log10((double)(i+1))/log10(2.0))-smax)))))
 #define DWT_Quadrant1D(i,s,smax) ((s!=smax-1)?'1':((i==0)?'0':'1'))
 #define DWT_QuadrantnD(i,s,sp,smax) \
   ((s!=sp)?'0':DWT_Quadrant1D(i,s,smax))

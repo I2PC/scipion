@@ -59,7 +59,7 @@
    * @param _upper   Upper value for random elements
    * @param _cal     Calibrated or not, that is, a CB with class labels or not
    */
-  xmippCB::xmippCB (unsigned _n, unsigned _size, bool _cal = false )
+  xmippCB::xmippCB (unsigned _n, unsigned _size, bool _cal)
    : xmippCDSet<xmippVector, xmippLabel>(),
      xmippCTSet<xmippVector, xmippLabel>(_cal)
     {
@@ -86,8 +86,8 @@
    * @param _upper   Upper value for random elements
    * @param _cal     Calibrated or not, that is, a CB with class labels or not
    */
-  xmippCB::xmippCB (unsigned _n, unsigned _size, xmippFeature _lower = 0, xmippFeature _upper = 1,
-         bool _cal = false )
+  xmippCB::xmippCB (unsigned _n, unsigned _size, xmippFeature _lower,
+     xmippFeature _upper, bool _cal)
    : xmippCDSet<xmippVector, xmippLabel>(),
      xmippCTSet<xmippVector, xmippLabel>(_cal)
     {
@@ -301,7 +301,7 @@
    * @exception runtime_error  If the training set is not calibrated
    */
   void xmippCB::calibrate (xmippCTVectors& _ts, 
-			  xmippLabel _def = "")
+			  xmippLabel _def)
   {
     // set the default label
     for (vector<xmippVector>::const_iterator i = itemsBegin() ;

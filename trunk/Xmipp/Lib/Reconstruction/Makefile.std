@@ -2,13 +2,10 @@
 LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
 LIBRECONS_CLASIF= ../libRecons_Clasif_$(XMIPP_PREFIX)$(MACHINE).so
 LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
-ifeq ($(HAVE_INRIA),YES)
-   LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
-endif
 
-ifeq ($(HAVE_VTK),YES)
+LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
+
 LIBRECONS_VTK   = ../libReconsVTK_$(XMIPP_PREFIX)$(MACHINE).so
-endif
 
 LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) $(LIBRECONS_VTK) \
                   $(LIBRECONS_CLASIF) $(LIBRECONS_INTERFACE)
@@ -59,19 +56,15 @@ $(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
 	@rm -f $(LIBRECONS_INTERFACE)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE)
 
-ifeq ($(HAVE_INRIA),YES)
 $(LIBRECONS_INRIA): $(SRC_OBJS_INRIA)
 	@echo "Creating library Xmipp Reconstruction INRIA Library ..."
 	@rm -f $(LIBRECONS_INRIA)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA)
-endif
 
-ifeq ($(HAVE_VTK),YES)
 $(LIBRECONS_VTK): $(SRC_OBJS_VTK)
 	@echo "Creating library Xmipp Reconstruction VTK Library ..."
 	@rm -f $(LIBRECONS_VTK)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_VTK) $(SRC_OBJS_VTK)
-endif
 
 # Compiling by default -----------------------------------------------------
 .cc.o:

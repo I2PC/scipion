@@ -706,7 +706,7 @@ template <class T>
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
 template <class T>
-   void mT::translate(const matrix1D<double> &v, mT &result, bool wrap=WRAP) const
+   void mT::translate(const matrix1D<double> &v, mT &result, bool wrap) const
       {matrix2D<double> temp=translation2D_matrix(v);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
@@ -743,7 +743,7 @@ template <class T>
    }
 
 template <class T>
-   void mT::superpixel_expand(mT &result, int size=2) const {
+   void mT::superpixel_expand(mT &result, int size) const {
       result.init_zeros(YSIZE(*this)*size,XSIZE(*this)*size);
       FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
          for (int ii=0; ii<size; ii++)

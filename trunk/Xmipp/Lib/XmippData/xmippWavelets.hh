@@ -127,7 +127,7 @@ template <class T>
    /** Get maximum scale.
        This function returns the maximum scale achievable by the 
        DWT transform of a given size.*/
-   inline int Get_Max_Scale(int size) {return ROUND(log10(size) / log10(2.0));}
+   inline int Get_Max_Scale(int size) {return ROUND(log10((double)size) / log10(2.0));}
 
    /** Given a quadrant number it returns the string associated to it.
        That is nothing more than its corresponding binary representation */

@@ -2,6 +2,7 @@
 # Main Action = Built library ----------------------------------------------
 all:
 	@( cd Src ; $(MAKE) )
+	@( cd Batches ; $(MAKE) )
 	@( cd OldXmipp ; $(MAKE) )
 	@if [ "$(HAVE_COLIMATE)" = "YES" ] ; then \
 		( cd Menus ; $(MAKE) ) ; \

@@ -60,8 +60,8 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out) {
 
 // Extract angles ----------------------------------------------------------
 void extract_angles(SelFile &SF_in, DocFile &DF_out,
-   const string &ang1="rot", const string &ang2="tilt",
-   const string &ang3="psi") {
+   const string &ang1, const string &ang2,
+   const string &ang3) {
 
    check_angle_descr(ang1);
    check_angle_descr(ang2);
