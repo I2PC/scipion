@@ -89,4 +89,12 @@ void four1(double *data,int nn,int isign);
 void powell(double *p, double **xi, int n, double ftol, int &iter,
    double &fret, double (*func)(double *), bool show);
 
+// Wavelets
+void wt1(double a[], unsigned long n, int isign,
+	void (*wtstep)(double [], unsigned long, int));
+void wtn(double a[], unsigned long nn[], int ndim, int isign,
+	void (*wtstep)(double [], unsigned long, int));
+void pwtset(int n);
+void pwt(double a[], unsigned long n, int isign);
+
 #endif

@@ -1530,6 +1530,140 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
     free_Tvector(indx,1,m+1);
 }
 
+// Wavelets ----------------------------------------------------------------
+void wt1(double a[], unsigned long n, int isign,
+	void (*wtstep)(double [], unsigned long, int))
+{
+	unsigned long nn;
+
+	if (n < 4) return;
+	if (isign >= 0) {
+		for (nn=n;nn>=4;nn>>=1) (*wtstep)(a,nn,isign);
+	} else {
+		for (nn=4;nn<=n;nn<<=1) (*wtstep)(a,nn,isign);
+	}
+}
+
+void wtn(double a[], unsigned long nn[], int ndim, int isign,
+	void (*wtstep)(double [], unsigned long, int))
+{
+	unsigned long i1,i2,i3,k,n,nnew,nprev=1,nt,ntot=1;
+	int idim;
+	double *wksp;
+
+	for (idim=1;idim<=ndim;idim++) ntot *= nn[idim];
+	ask_Tvector(wksp,1,ntot);
+	for (idim=1;idim<=ndim;idim++) {
+		n=nn[idim];
+		nnew=n*nprev;
+		if (n > 4) {
+			for (i2=0;i2<ntot;i2+=nnew) {
+				for (i1=1;i1<=nprev;i1++) {
+					for (i3=i1+i2,k=1;k<=n;k++,i3+=nprev) wksp[k]=a[i3];
+					if (isign >= 0) {
+						for(nt=n;nt>=4;nt >>= 1)
+							(*wtstep)(wksp,nt,isign);
+					} else {
+						for(nt=4;nt<=n;nt <<= 1)
+							(*wtstep)(wksp,nt,isign);
+					}
+
+					for (i3=i1+i2,k=1;k<=n;k++,i3+=nprev) a[i3]=wksp[k];
+				}
+			}
+		}
+		nprev=nnew;
+	}
+	free_Tvector(wksp,1,ntot);
+}
+
+typedef struct {
+	int ncof,ioff,joff;
+	double *cc,*cr;
+} wavefilt;
+
+wavefilt wfilt;
+
+void pwtset(int n)
+{
+	void nrerror(char error_text[]);
+	int k;
+	float sig = -1.0;
+	static double c4[5]={0.0,0.4829629131445341,0.8365163037378079,
+			0.2241438680420134,-0.1294095225512604};
+	static double c12[13]={0.0,0.111540743350, 0.494623890398, 0.751133908021,
+		0.315250351709,-0.226264693965,-0.129766867567,
+		0.097501605587, 0.027522865530,-0.031582039318,
+		0.000553842201, 0.004777257511,-0.001077301085};
+	static double c20[21]={0.0,0.026670057901, 0.188176800078, 0.527201188932,
+		0.688459039454, 0.281172343661,-0.249846424327,
+		-0.195946274377, 0.127369340336, 0.093057364604,
+		-0.071394147166,-0.029457536822, 0.033212674059,
+		0.003606553567,-0.010733175483, 0.001395351747,
+		0.001992405295,-0.000685856695,-0.000116466855,
+		0.000093588670,-0.000013264203};
+	static double c4r[5],c12r[13],c20r[21];
+
+	wfilt.ncof=n;
+	if (n == 4) {
+		wfilt.cc=c4;
+		wfilt.cr=c4r;
+	}
+	else if (n == 12) {
+		wfilt.cc=c12;
+		wfilt.cr=c12r;
+	}
+	else if (n == 20) {
+		wfilt.cc=c20;
+		wfilt.cr=c20r;
+	}
+	else nrerror("unimplemented value n in pwtset");
+	for (k=1;k<=n;k++) {
+		wfilt.cr[wfilt.ncof+1-k]=sig*wfilt.cc[k];
+		sig = -sig;
+	}
+	wfilt.ioff = wfilt.joff = -(n >> 1);
+}
+
+void pwt(double a[], unsigned long n, int isign)
+{
+	double ai,ai1,*wksp;
+	unsigned long i,ii,j,jf,jr,k,n1,ni,nj,nh,nmod;
+
+	if (n < 4) return;
+	ask_Tvector(wksp,1,n);
+	nmod=wfilt.ncof*n;
+	n1=n-1;
+	nh=n >> 1;
+	for (j=1;j<=n;j++) wksp[j]=0.0;
+	if (isign >= 0) {
+		for (ii=1,i=1;i<=n;i+=2,ii++) {
+			ni=i+nmod+wfilt.ioff;
+			nj=i+nmod+wfilt.joff;
+			for (k=1;k<=wfilt.ncof;k++) {
+				jf=n1 & (ni+k);
+				jr=n1 & (nj+k);
+				wksp[ii] += wfilt.cc[k]*a[jf+1];
+				wksp[ii+nh] += wfilt.cr[k]*a[jr+1];
+			}
+		}
+	} else {
+		for (ii=1,i=1;i<=n;i+=2,ii++) {
+			ai=a[ii];
+			ai1=a[ii+nh];
+			ni=i+nmod+wfilt.ioff;
+			nj=i+nmod+wfilt.joff;
+			for (k=1;k<=wfilt.ncof;k++) {
+				jf=(n1 & (ni+k))+1;
+				jr=(n1 & (nj+k))+1;
+				wksp[jf] += wfilt.cc[k]*ai;
+				wksp[jr] += wfilt.cr[k]*ai1;
+			}
+		}
+	}
+	for (j=1;j<=n;j++) a[j]=wksp[j];
+	free_Tvector(wksp,1,n);
+}
 
 /* Instantiantion ---------------------------------------------------------- */
 template <class T>
