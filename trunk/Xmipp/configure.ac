@@ -199,6 +199,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Mask/Makefile \
 	Applications/Src/Microscope/Makefile \
 	Applications/Src/MLalign2D/Makefile \
+	Applications/Src/MLalign2D_combine/Makefile \
 	Applications/Src/Morphology/Makefile \
 	Applications/Src/MPIArt/Makefile \
 	Applications/Src/MPI_WBP/Makefile \

@@ -1,4 +1,5 @@
 lib_LTLIBRARIES = libXmippData_@host_os@.la
+
 libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Src/xmippArgs.cc \
 	Src/xmippMatrices1D.cc Src/xmippMatrices2D.cc \
 	Src/xmippMatrices3D.cc Src/xmippSelFiles.cc Src/xmippHistograms.cc \
@@ -15,6 +16,7 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippWavelets.cc \
 	Src/xmippImagic.cc \
 	Src/xmippFFT.cc \
+	Src/xmippTomogram.cc \
 	Bilib/sources/changebasis.cc \
 	Bilib/sources/convert.cc \
 	Bilib/sources/dft.cc \
