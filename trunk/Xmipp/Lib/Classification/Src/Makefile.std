@@ -5,7 +5,7 @@ SRC_OBJS = xmippCTVectors.o xmippCodeBook.o xmippFuzzyCodeBook.o xmippDistances.
 	   xmippSammon.o xmippFCMeans.o xmippMap.o xmippSOM.o xmippFKCN.o \
 	   xmippFuzzySOM.o xmippKerDenSOM.o xmippBatchSOM.o xmippUmatrix.o \
 	   xmippPlanes.o xmippTStudentKerDenSOM.o xmippGaussianKerDenSOM.o \
-           xmippPC.o
+           xmippPC.o xmippRM.o
 
 # Main action: Built library -----------------------------------------------
 all:  $(LIBPROJ)
