@@ -29,8 +29,8 @@
 #include "QtColorLabel.hh"
 #include "QtDialogProperties.hh"
 #include "QtWidgetMicrograph.hh"
-#include "XmippData/xmippMicrograph.hh"
-#include "qpainter.h"
+#include <XmippData/xmippMicrograph.hh>
+#include <qpainter.h>
 #include "../DownSample/xvsmooth.h"
 
 /* Constructor ------------------------------------------------------------- */
@@ -53,7 +53,6 @@ void QtImageMicrograph::setMicrograph( Micrograph *_m ) {
    
    emit signalSetWidthHeight( image()->width(), image()->height() );   
 }
-
 
 /* Load Image -------------------------------------------------------------- */
 void QtImageMicrograph::loadImage() {
@@ -88,7 +87,7 @@ void QtImageMicrograph::loadImage() {
       ptr=result;
       for( int y = 0; y < image()->height(); y++ )
          for( int x = 0; x < image()->width(); x++ )
-            image()->setPixel( x, y, *ptr++);
+            setPixel( x, y, *ptr++);
       free(result);
       delete piece;
    } else {
@@ -108,8 +107,8 @@ void QtImageMicrograph::loadImage() {
                           wy *(1-wx)*getMicrograph()->val8(mX1,mY2)+
                           wy *   wx *getMicrograph()->val8(mX2,mY2);
                }
-               image()->setPixel( x, y, (unsigned int)val );
-            } else image()->setPixel( x, y, 0 );
+               setPixel( x, y, (unsigned int)val );
+            } else setPixel( x, y, 0 );
    }
 }
 

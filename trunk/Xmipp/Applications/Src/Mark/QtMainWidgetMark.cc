@@ -84,6 +84,7 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
      
    __ctrlPlus    = new QAccel( this );
    __ctrlMinus   = new QAccel( this );
+   __otherCtrl   = new QAccel( this );
    
    connect( __familyDialog, SIGNAL(signalActiveFamily(int)),
             __mWidget, SLOT(slotActiveFamily(int)) );
@@ -94,6 +95,10 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                             __mWidget->image(), SLOT(slotZoomIn(void)) );
    __ctrlMinus->connectItem( __ctrlMinus->insertItem(Key_Minus+CTRL, 201),
                              __mWidget->image(), SLOT(slotZoomOut(void)) );
+   __otherCtrl->connectItem( __otherCtrl->insertItem(Key_Q+CTRL, 200),
+                             __mWidget, SLOT(slotQuit(void)) );
+   __otherCtrl->connectItem( __otherCtrl->insertItem(Key_S+CTRL, 201),
+                             this, SLOT(slotSaveCoords(void)) );
    
    if ( _mTilted != NULL ) {
       connect( __familyDialog, SIGNAL(signalActiveFamily(int)),
@@ -493,4 +498,12 @@ void QtMainWidgetMark::slotActualizeTiltedOverview( int _muX, int _muY ) {
    mtX=CLIP(mtX,0,mMaxX-1);
    mtY=CLIP(mtY,0,mMaxY-1);
    __mTiltedWidget->overview()->slotActualizeOtherOverview(mtX,mtY);
+}
+
+void QtMainWidgetMark::slotSaveCoords() {
+   __mWidget->file_menu()->slotSaveCoords();
+   if (__mTiltedWidget!=NULL) {
+      __mTiltedWidget->file_menu()->slotSaveCoords();
+      __mWidget->file_menu()->slotSaveAngles();
+   }
 }

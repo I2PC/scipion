@@ -29,8 +29,8 @@
 #include "QtMainWidgetMark.hh"
 #include "QtFiltersController.hh"
 #include "XmippData/xmippMicrograph.hh"
-#include "qpainter.h"
-#include "qimage.h"
+#include <qpainter.h>
+#include <qimage.h>
 
 double QtImage::__zoom = 1.0;
 
@@ -64,6 +64,10 @@ QtImage::QtImage( QWidget *_parent, const char *_name, WFlags _f ) :
    __activeFamily      = -1;
    __paint             = new QPainter( this );
       
+   __mingray=0;
+   __maxgray=255;
+   __gamma=1;
+
    for( int i = 0; i < 256; i++ ) __img->setColor( i, qRgb( i, i, i ) );
 }
 
@@ -78,6 +82,11 @@ void QtImage::setMicrograph( Micrograph *_m ) {
       __m = _m;
       setCaption(_m->micrograph_name().c_str());
    }
+}
+
+/* Set Pixel --------------------------------------------------------------- */
+void QtImage::setPixel(int _x, int _y, int _value) {
+    __img->setPixel( _x, _y, _value);
 }
 
 /* Set the filters controller ---------------------------------------------- */
@@ -114,4 +123,29 @@ void QtImage::paintEvent( QPaintEvent * ) {
    __paint->drawImage( 0, 0, *__img );
    loadSymbols();
    draw_axis(__axis_ang);
+}
+
+/* Change contrast --------------------------------------------------------- */
+void QtImage::changeContrast(int _mingray, int _maxgray, float _gamma) {
+   __mingray=_mingray;
+   __maxgray=_maxgray;
+   __gamma  =_gamma;
+   
+   if (__mingray < __maxgray) {
+      float a =255.0/(__maxgray-__mingray);
+      float ap=1.0  /(__maxgray-__mingray);
+      for (int i=0; i<__mingray; i++) __img->setColor(i, qRgb(0,0,0));
+      for (int i=__mingray; i<=__maxgray; i++) {
+          float pregray=ap*(i-__mingray);
+	  float fgray;
+	  if (__gamma==1.0) fgray=pregray;
+	  else              fgray=pow(pregray,__gamma);
+	  int gray=(int)(255.0*fgray);
+	  __img->setColor( i, qRgb(gray,gray,gray));
+      }
+      for (int i=__maxgray+1; i<256; i++) __img->setColor(i, qRgb(255,255,255));
+   } else {
+      for (int i=0; i<256; i++) __img->setColor(i, qRgb(0,0,0));
+   }
+   repaint(false);
 }

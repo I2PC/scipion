@@ -103,7 +103,7 @@ void QtImageOverviewMicrograph::loadImage() {
       byte *ptr=result;
       for( int y = 0; y < image()->height(); y++ )
          for( int x = 0; x < image()->width(); x++ )
-            image()->setPixel( x, y, *ptr++);
+            setPixel( x, y, *ptr++);
       free(result);
    } else {
       // Apply bilinear interpolation
@@ -122,8 +122,8 @@ void QtImageOverviewMicrograph::loadImage() {
                           wy *(1-wx)*getMicrograph()->val8(mX1,mY2)+
                           wy *   wx *getMicrograph()->val8(mX2,mY2);
                }
-               image()->setPixel( x, y, (unsigned int)val );
-            } else image()->setPixel( x, y, 0 );
+               setPixel( x, y, (unsigned int)val );
+            } else setPixel( x, y, 0 );
    }
 }
 
@@ -223,17 +223,25 @@ void QtImageOverviewMicrograph::slotSetWidthHeight( int _w, int _h ) {
 }
 
 void QtImageOverviewMicrograph::slotActualizeOtherOverview( int _x, int _y ) {
-   __x = _x; 
-   __y = _y;
+   bool inside_current_window=true;
+   if      (_x<__x           ) inside_current_window=false;
+   else if (_x>__x+__w*__zoom) inside_current_window=false;
+   else if (_y<__y           ) inside_current_window=false;
+   else if (_y>__y+__h*__zoom) inside_current_window=false;
 
-   // This now should be the center
-   int Xdim, Ydim; getMicrograph()->size(Xdim,Ydim);
-   __x = MAX(0,(int)(__x-__w/2.0));
-   __y = MAX(0,(int)(__y-__h/2.0));
-   __x = MIN((int)(Xdim-1-__w*__zoom),__x);
-   __y = MIN((int)(Ydim-1-__h*__zoom),__y);
+   if (!inside_current_window) {
+      __x = _x; 
+      __y = _y;
 
-   emit signalSetCoords( __x, __y );
+      // This now should be the center
+      int Xdim, Ydim; getMicrograph()->size(Xdim,Ydim);
+      __x = MAX(0,(int)(__x-__w/2.0));
+      __y = MAX(0,(int)(__y-__h/2.0));
+      __x = MIN((int)(Xdim-1-__w*__zoom),__x);
+      __y = MIN((int)(Ydim-1-__h*__zoom),__y);
+
+      emit signalSetCoords( __x, __y );
+   }
    emit signalRepaint();
 }
 

@@ -50,6 +50,7 @@ private:
    QGridLayout         *__gridLayout;
    QAccel              *__ctrlPlus;
    QAccel              *__ctrlMinus;
+   QAccel              *__otherCtrl;
    QtFiltersController *__filtersController;
    
    // For tilted-untilted correspondance
@@ -131,6 +132,7 @@ public slots:
    void slotAddCoordUntilted( int _mX, int _mY, int _f );
    void slotRecalculateTiltMatrix() { recalculate_passing_matrix(); }
    void slotActualizeTiltedOverview( int _mX, int _mY);
+   void slotSaveCoords();
 };
 
 #endif

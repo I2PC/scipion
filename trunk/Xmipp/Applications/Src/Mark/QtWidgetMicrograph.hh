@@ -21,10 +21,13 @@
 #define __QT_WIDGET_MICROGRAPH_HH__
 
 /* Includes ---------------------------------------------------------------- */
-#include "qwidget.h"
-#include "qpainter.h"
-#include "qlayout.h"
-#include "qmenubar.h"
+#include <qwidget.h>
+#include <qpainter.h>
+#include <qlayout.h>
+#include <qmenubar.h>
+#include <qaccel.h>
+#include <qscrollbar.h>
+#include <qlabel.h>
 #include "QtImageMicrograph.hh"
 #include "QtImageOverviewMicrograph.hh"
 #include "QtFileMenu.hh"
@@ -50,6 +53,9 @@ private:
    QVBoxLayout               *__gridLayout;
    QtFileMenu                *__file_menu;
    bool                       __tilted;
+   int                        __mingray;
+   int                        __maxgray;
+   float                      __gamma;
 
 public:
    // Constructor
@@ -82,6 +88,9 @@ public:
    // Get Image
    QtImageMicrograph *image() { return( __mImage ); }   
    
+   // Get Filemenu
+   QtFileMenu *file_menu() {return __file_menu;}
+   
    // Add menu item
    void addMenuItem( const char *_msg, const QtPopupMenuMark *_item ) {
        __menuBar->insertItem( _msg, (QPopupMenu*)_item );
@@ -95,6 +104,10 @@ public:
    // Add your menus to this function
    void openMenus();
    
+   // Change contrast
+   void changeContrast(int _mingray, int _maxgray, float _gamma);
+   
+   // Repaint 
    void repaint( int t=FALSE );
    
 public slots:
@@ -105,10 +118,32 @@ public slots:
    void slotRepaint() { repaint( FALSE ); }
    void slotDrawEllipse(int _x, int _y, int _f);
    void slotDrawLastEllipse(int _x, int _y, int _f);
+   void slotQuit();
+   void slotChangeContrast();
 signals:
    void signalActiveFamily( int _f );
    void signalAddFamily( const char *_familyName );
 };
 
+/** Class to adjust contrast
+*/
+class AdjustContrastWidget : public QWidget {
+   Q_OBJECT
+public:
+   /** Constructor */
+   AdjustContrastWidget(int min, int max, float gamma, 
+      QtWidgetMicrograph *_qtwidgetmicrograph,
+      QWidget *parent=0, const char *name=0, int wflags=0);
+private:
+   QtWidgetMicrograph *__qtwidgetmicrograph;
+   QScrollBar 	      *__scroll_min;
+   QScrollBar 	      *__scroll_max;
+   QScrollBar 	      *__scroll_gamma;
+   QLabel     	      *__label_min;
+   QLabel     	      *__label_max;
+   QLabel     	      *__label_gamma;
+private slots:
+   void scrollValueChanged(int);  
+};
 
 #endif

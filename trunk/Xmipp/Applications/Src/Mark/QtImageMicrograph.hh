@@ -34,7 +34,7 @@ private:
    bool    __pressed;
    int     __movingMark;
    bool    __tilted;
-                  
+
 public:
    // Constructor
    QtImageMicrograph( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );

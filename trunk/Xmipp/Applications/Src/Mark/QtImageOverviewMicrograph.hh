@@ -31,7 +31,7 @@ class QtImageOverviewMicrograph : public QtImage {
    Q_OBJECT
          
 private:
-   double __w, __h;
+   double  __w, __h;
    
 public:
    // Constructor

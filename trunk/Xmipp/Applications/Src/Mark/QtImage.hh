@@ -21,8 +21,8 @@
 #define __QT_IMAGE_HH__
 
 /* Includes ---------------------------------------------------------------- */
-#include "qwidget.h"
-#include "qimage.h"
+#include <qwidget.h>
+#include <qimage.h>
 #include "QtColorLabel.hh"
 #include "QtFiltersController.hh"
 
@@ -39,6 +39,9 @@ private:
    Micrograph          *__m;
    QtFiltersController *__filtersController;
    
+   int        	        __mingray;
+   int        	        __maxgray;
+   float      	        __gamma;
 public:
    // Constructor
    QtImage( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );
@@ -58,6 +61,8 @@ public:
    void enableAxis() {__enable_axis=TRUE;}
    virtual void draw_axis(double _ang) {};
    
+   // Change Image contrast
+   void changeContrast(int _mingray, int _maxgray, float _gamma);
 protected:   
    int               __x, __y;
    static double     __zoom;
@@ -81,6 +86,8 @@ protected:
    // Get the image handler
    QImage     *image()         { return( __img ); }
 
+   // Set pixel
+   void setPixel(int _x, int _y, int _value);
 public slots:
    void slotRepaint()          { repaint( FALSE ); }
    void slotActiveFamily( int _f );
