@@ -149,6 +149,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Angular_predict/Makefile \
 	Applications/Src/Angular_predict_continuous/Makefile \
 	Applications/Src/Angular_refinement/Makefile \
+	Applications/Src/ApplyGeo/Makefile \
 	Applications/Src/Are_different/Makefile \
 	Applications/Src/Art/Makefile \
 	Applications/Src/Assign_angles/Makefile \
@@ -156,12 +157,15 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Assign_multiple_CTFs/Makefile \
 	Applications/Src/BatchSOM/Makefile \
 	Applications/Src/CCP4Spider/Makefile \
+	Applications/Src/Centilt/Makefile \
 	Applications/Src/CodeStatis/Makefile \
 	Applications/Src/Combine_stats/Makefile \
+	Applications/Src/Compare_Selfiles/Makefile \
 	Applications/Src/CorrectPhase/Makefile \
 	Applications/Src/Correlation/Makefile \
 	Applications/Src/CpSel/Makefile Applications/Src/Create_phantom/Makefile \
 	Applications/Src/CTF_profile/Makefile \
+	Applications/Src/deconvoluteCTF/Makefile \
 	Applications/Src/Data2Img/Makefile \
 	Applications/Src/Data2Vol/Makefile \
 	Applications/Src/Deform/Makefile \
@@ -209,6 +213,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Radon_Transform/Makefile \
 	Applications/Src/RandomMapping/Makefile \
 	Applications/Src/Random_phantom/Makefile \
+	Applications/Src/Range_adjust/Makefile \
 	Applications/Src/Raw22spi/Makefile \
 	Applications/Src/Recons_test/Makefile \
 	Applications/Src/Reverse_endian/Makefile \
@@ -230,6 +235,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/SpAR/Makefile \
 	Applications/Src/SpARMA/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
+	Applications/Src/Split_selfile/Makefile \
 	Applications/Src/SSNR/Makefile \
 	Applications/Src/Statis/Makefile \
 	Applications/Src/Surface/Makefile \
