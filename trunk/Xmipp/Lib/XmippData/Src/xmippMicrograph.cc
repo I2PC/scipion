@@ -256,7 +256,7 @@ if(maxval > 32000)
 */
       }
    }
-cout << "Max, Min " << maxval << " " << minval << endl; 
+
    // Compute output range
    float minF, maxF;
    if      (minval<0)         {minF=0; maxF=MIN(255,maxval+minval);}
@@ -470,13 +470,14 @@ void Micrograph::invalidate_coord(int n) _THROW {
 }
 
 /* Add coordinate ---------------------------------------------------------- */
-void Micrograph::add_coord(int x, int y, int label) {
+int Micrograph::add_coord(int x, int y, int label) {
    struct Particle_coords aux;
    aux.valid=TRUE;
    aux.X=x;
    aux.Y=y;
    aux.label=label;
    coords.push_back(aux);
+   return coords.size()-1;
 }
 
 /* Move last coordinate ---------------------------------------------------- */
