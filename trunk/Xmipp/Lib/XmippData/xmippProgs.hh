@@ -176,6 +176,12 @@ add_noise.cc:
           Prog_parameters *prm)
     \\ Ex: process_img(ImageXmipp &input, const FileName &fn_out,
           Prog_parameters *prm)
+
+    If the program mode is FILE2FILE then the process function must be of
+    the form: bool process(const FileName &fn_in, const FileName &fn_out, 
+    const Prog_parameters *prm); and it must return true if the file
+    was successfully processed. This function must be provided as the
+    process_img function to SF_main, the process_vol can be set to NULL.
 */
 void SF_main(int argc, char **argv, Prog_parameters *prm,
    void *process_img,
