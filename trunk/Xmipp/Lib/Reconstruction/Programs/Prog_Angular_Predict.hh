@@ -30,6 +30,7 @@
 #include <Classification/xmippPC.hh>
 #include "Prog_Angular_Project.hh"
 #include "Prog_Angular_Distance.hh"
+#include "Prog_Angular_Denoise.hh"
 #include "../symmetries.hh"
 
 #include <map>
@@ -42,6 +43,8 @@ class Prog_angular_predict_prm: public Prog_parameters {
 public:
    /** Root filename from Angular Reference */
    FileName fn_ref;
+   /** Selfile with the reference projections */
+   FileName fn_refsel;
    /** Root filename from Angular Project */
    FileName fn_pcaproj;
    /** List of PCAs to use for projection */
@@ -65,6 +68,13 @@ public:
    double max_shift_change;
    /** Shift step */
    double shift_step;
+   /** Threshold for discarding images.
+       If it is 20%, only the 20% of the images will be kept each round. */
+   double th_discard;
+   /** Update visible space */
+   bool update_visible_space;
+   /** Threshold for PCA values when creating the visible space */
+   double th_denoise;
    #define TELL_ROT_TILT  1
    #define TELL_PSI_SHIFT 2
    #define TELL_OPTIONS   4
@@ -76,6 +86,8 @@ public:
    vector<double> rot;
    // Vector with the tilting angles to learn
    vector<double> tilt;
+   // Visible space
+   Prog_angular_denoise_prm PCA_denoise;
    // PCA projector
    Prog_angular_project_prm PCA_projector;
    /* Vector with all projections of the reference images
