@@ -1,12 +1,11 @@
 ###########################################################################
 LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
-LIBRECONS_CLASSIF= ../libRecons_Classif_$(XMIPP_PREFIX)$(MACHINE).so
 LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
 
 LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
 
 LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) \
-                  $(LIBRECONS_CLASSIF) $(LIBRECONS_INTERFACE)
+                  $(LIBRECONS_INTERFACE)
 LIBDIRS         = Src Programs/Src
 
 SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
@@ -32,12 +31,9 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Programs/Src/Prog_assign_CTF.o \
 	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o \
            Programs/Src/Prog_SSNR.o \
+	   Programs/Src/Prog_Angular_Predict.o \
            Programs/Src/Prog_Angular_Predict_continuous.o
 SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
-SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
-	   Programs/Src/Prog_Angular_Project.o \
-	   Programs/Src/Prog_Angular_Predict.o \
-           Programs/Src/Prog_Angular_Denoise.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
            Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
 
@@ -49,11 +45,6 @@ $(LIBRECONS): $(SRC_OBJS)
 	@echo "Creating library Xmipp Reconstruction Library ..."
 	@rm -f $(LIBRECONS)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS)
-
-$(LIBRECONS_CLASSIF): $(SRC_OBJS_CLASSIF)
-	@echo "Creating library Xmipp Reconstruction-Classification Library ..."
-	@rm -f $(LIBRECONS_CLASSIF)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_CLASSIF) $(SRC_OBJS_CLASSIF)
 
 $(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
 	@echo "Creating library Xmipp Reconstruction-Interface Library ..."
@@ -78,7 +69,7 @@ Makefiles:
 clean:
 	@echo "Removing Reconstruction library ..."
 	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) \
-	   $(SRC_OBJS_CLASSIF) $(SRC_OBJS_INTERFACE)
+	   $(SRC_OBJS_INTERFACE)
 
 # DistCleaning -------------------------------------------------------------
 distclean:
@@ -94,4 +85,4 @@ docs:
 # Dependencies -------------------------------------------------------------
 depend:
 	@echo "Creating dependencies for Reconstruction ..."
-	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_CLASSIF) $(SRC_OBJS_INTERFACE) | sed -e's/\.o/\.cc/g'`
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_INTERFACE) | sed -e's/\.o/\.cc/g'`
