@@ -1399,6 +1399,7 @@ template <class T>
 void instantiate_masks_3D() {
    short  s; instantiate_masks_3D_template(s);
    int    i; instantiate_masks_3D_template(i);
+   float  f; instantiate_masks_3D_template(f);
    double d; instantiate_masks_3D_template(d);
 
    matrix3D<double_complex> m5;
