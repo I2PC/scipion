@@ -2,10 +2,9 @@ FINAL_PROJ=$(XMIPP_PREFIX)$(PROJ)
 
 all:
 	@echo "Making $(FINAL_PROJ) ..."
-	@chmod 755 $(PROJ)
-	@if [ ! -e $(FINAL_PROJ) ] ; then \
-	    ln -s $(PROJ) $(FINAL_PROJ) ; \
-	fi
+	echo "#!$(ENV) $(MYSHELL)" > $(FINAL_PROJ)
+	cat $(PROJ) >> $(FINAL_PROJ)
+	@chmod 755 $(FINAL_PROJ)
 
 install: $(PROJ)
 	@echo "Installing $(PROJ) ..."
