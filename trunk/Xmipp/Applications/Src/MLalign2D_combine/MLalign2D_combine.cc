@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
   int          argcp;
   char         **argvp, *copyp;
   string       line;
+  bool         out_assign=false;
 
    // Read arguments --------------------------------------------------------
    try {
@@ -78,6 +79,7 @@ int main(int argc, char **argv) {
        fn_tmp=fn_tmp.add_extension("doc");
        ln=DFa.dataLineNo();
        if (exists(fn_tmp)) {
+	 out_assign=true;
 	 DFa.append(fn_tmp);
 	 DFa.search(ln);
 	 DFa.next();
@@ -88,25 +90,25 @@ int main(int argc, char **argv) {
 	 DFa.remove_current();
        }
      }
-     fn_tmp=fn_oroot+".doc";
-     DFa.write(fn_tmp);
-
-     // Check whether selfiles with reference assignment exist and append
-
-     for (int ref=1;ref<=nimg;ref++) {
-       SFa.clear();
-       SFlog.go_beginning();
-       while (!SFlog.eof()) {
-         fn_tmp=SFlog.NextImg();
-	 fn_tmp=fn_tmp.remove_extension("log");
-	 fn_tmp+="_ref";
+     if (out_assign) {
+       fn_tmp=fn_oroot+".doc";
+       DFa.write(fn_tmp);
+       // Check whether selfiles with reference assignment exist and append
+       for (int ref=1;ref<=nimg;ref++) {
+	 SFa.clear();
+	 SFlog.go_beginning();
+	 while (!SFlog.eof()) {
+	   fn_tmp=SFlog.NextImg();
+	   fn_tmp=fn_tmp.remove_extension("log");
+	   fn_tmp+="_ref";
+	   fn_tmp.compose(fn_tmp,ref,"sel");
+	   if (exists(fn_tmp)) SFa.append(fn_tmp);
+	 }
+	 SFa.sort_by_filenames();
+	 fn_tmp=fn_oroot+"_ref";
 	 fn_tmp.compose(fn_tmp,ref,"sel");
-	 if (exists(fn_tmp)) SFa.append(fn_tmp);
+	 SFa.write(fn_tmp);
        }
-       SFa.sort_by_filenames();
-       fn_tmp=fn_oroot+"_ref";
-       fn_tmp.compose(fn_tmp,ref,"sel");
-       SFa.write(fn_tmp);
      }
 
      // Calculate weighted average of all images in the reference selfiles
