@@ -8,6 +8,10 @@ if BUILD_OGL
 OPTIONAL_PROGS += Phan3D
 endif
 
+if TIFF
+OPTIONAL_PROGS += Tiff2Raw 
+endif
+
 SUBDIRS = 2DInterpolation \
 	3DInterpolation \
 	Adapt_for_Spider \
@@ -105,7 +109,6 @@ SUBDIRS = 2DInterpolation \
 	Symmetrize \
 	Taxa_tilt \
 	Threshold \
-	Tiff2Raw \
 	ToPDB \
 	ToPhantom \
 	Visualize_FFT \
