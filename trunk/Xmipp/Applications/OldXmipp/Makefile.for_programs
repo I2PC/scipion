@@ -40,11 +40,9 @@ endif
 ifdef PROJ
 install: $(FINAL_PROJ)
 	@echo "Installing $(FINAL_PROJ) ..."
-	@if [ ! -e $(XMIPPDIR)/bin/$(FINAL_PROJ) ] ; then \
-	    DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
-	    THIS_DIR=`pwd | cut -d"/" -f $$DEPTH` ; \
-	    cp $(XMIPPDIR)/Applications/OldXmipp/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
-	fi
+	DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
+	THIS_DIR=`pwd | cut -d"/" -f$$DEPTH` ; \
+	cp $(XMIPPDIR)/Applications/OldXmipp/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ)
 else
 install:
 endif
