@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "../xmippRotationalSpectrum.hh"
+#include "../xmippArgs.hh"
 
 // Show CWD ----------------------------------------------------------------
 ostream & operator << (ostream &_out,
@@ -346,8 +347,8 @@ void Rotational_Spectrum::compute_rotational_spectrum (matrix2D<double> &img,
    Cylindrical_Wave_Decomposition cwd;
    cwd.numin = numin;
    cwd.numax = numax;
-   cwd.x0    = x0;
-   cwd.y0    = y0;
+   cwd.x0    = (x0==-1)?(double)XSIZE(img)/2:x0;
+   cwd.y0    = (y0==-1)?(double)YSIZE(img)/2:y0;
    cwd.r1    = rl;
    cwd.r2    = rh;
    cwd.r3    = dr;
@@ -357,3 +358,27 @@ void Rotational_Spectrum::compute_rotational_spectrum (matrix2D<double> &img,
    // Compute the rotational spectrum
    compute_rotational_spectrum(cwd,xr1,xr2,xdr,xr);
 }
+
+// Read arguments ----------------------------------------------------------
+void Rotational_Spectrum::read(int argc, char **argv) {
+   rl=AtoI(get_param(argc,argv,"-r1"));
+   rh=AtoI(get_param(argc,argv,"-r2"));
+   dr=AtoI(get_param(argc,argv,"-rInc","1"));
+   x0=AtoF(get_param(argc,argv,"-x0","-1"));
+   y0=AtoF(get_param(argc,argv,"-y0","-1"));
+   numin=AtoI(get_param(argc,argv,"-low","1"));
+   numax=AtoI(get_param(argc,argv,"-high","15"));
+}
+
+// Usage -------------------------------------------------------------------
+void Rotational_Spectrum::usage() {
+    cerr << "   -r1 <low radius>            : Integration radius\n"
+         << "   -r2 <high radius>           : Integration radius\n"
+	 << "  [-rInc <increment=1>]        : Integration increment\n"
+	 << "  [-x0 <x center=-1>]          : In physical units.\n"
+	 << "  [-y0 <y center=-1>]          : By default, the Xmipp origin\n"
+	 << "  [-low  <lower harmonic=  1>] : Lower harmonic to compute\n"
+	 << "  [-high <higher harmonic=15>] : Higher harmonic to compute\n"
+    ;
+}
+

@@ -125,6 +125,10 @@ public:
    /// Compute rotational spectrum using CWD
    void compute_rotational_spectrum (Cylindrical_Wave_Decomposition &cwd,
       double xr1, double xr2, double xdr, double xr);
+   /// Read parameters from command line
+   void read(int argc, char **argv);
+   /// Usage
+   void usage();
 };
 //@}
 #endif
