@@ -124,7 +124,9 @@ AC_CHECK_LIB(pthread, main)
 
 # Generates Makefiles for the different source directories.
 
-AC_OUTPUT( Lib/Makefile \
+AC_OUTPUT( Other_packages/Makefile \
+	Other_packages/LibINRIA/Makefile \
+	Lib/Makefile \
 	Lib/XmippData/Makefile \
 	Lib/Reconstruction/Makefile \
 	Lib/Classification/Makefile \
