@@ -37,7 +37,7 @@ void Prog_parameters::read(int argc, char **argv) _THROW {
 
 void Prog_parameters::show() {
    cout << "Input File: " << fn_in << endl;
-   if (apply_geo) 
+   if (apply_geo && !Is_VolumeXmipp(fn_in)) 
      cout << "Applying transformation stored in header of 2D-image"<< endl;
    if (each_image_produces_an_output) {
       if (fn_out!="") cout << "Output File: " << fn_out << endl;
