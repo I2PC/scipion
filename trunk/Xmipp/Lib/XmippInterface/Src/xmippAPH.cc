@@ -15,7 +15,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
  * GNU General Public License for more details.                        
- *                                                                     
+ *                                      <                               
  * You should have received a copy of the GNU General Public License   
  * along with this program; if not, write to the Free Software         
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
@@ -26,7 +26,9 @@
  ***************************************************************************/
 
 #include "../xmippAPH.hh"
+#include <Reconstruction/symmetries.hh>
 #include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippImages.hh>
 #include <fstream>
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
@@ -65,8 +67,7 @@ void APHFile2D::read(const FileName &fn) _THROW {
       istringstream is(line.c_str());
    #endif
    try {
-       double dummy;
-       is >> dummy >> XX(astar) >> YY(astar) >> XX(bstar) >> YY(bstar)
+       is >> label >> XX(astar) >> YY(astar) >> XX(bstar) >> YY(bstar)
           >> Xdim >> Ydim >> sampling_rate;
    } catch (...) {
       REPORT_ERROR(1601,"aphFile::read: Wrong first line in file "+fn);
@@ -77,18 +78,19 @@ void APHFile2D::read(const FileName &fn) _THROW {
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
-	 int h = AtoI(first_token(line));
-	 int k = AtoI(next_token());
-	 hmax=MAX(hmax,h);
-	 kmax=MAX(kmax,k);
-	 hmin=MIN(hmin,h);
-	 kmin=MIN(kmin,k);
+	 if (line.length()!=0) {
+	    int h = AtoI(first_token(line));
+	    int k = AtoI(next_token());
+	    hmax=MAX(hmax,h);
+	    kmax=MAX(kmax,k);
+	    hmin=MIN(hmin,h);
+	    kmin=MIN(kmin,k);
+	 }
       }
       catch (Xmipp_error) {
          cout << "aph File: Line " << line_no << " is skipped due to an error\n";
       }
       line_no++;
-      fh_aph.peek();
    }/* while */
    #ifdef DEBUG   
    cout << "hmax: " << hmax <<" kmax: " << kmax <<endl;
@@ -96,6 +98,8 @@ void APHFile2D::read(const FileName &fn) _THROW {
    #endif      
      
    // Ask for memory
+   spots_l.init_zeros(kmax-kmin+1,hmax-hmin+1);
+      STARTINGX(spots_l)=hmin; STARTINGY(spots_l)=kmin;
    spots_abs.init_zeros(kmax-kmin+1,hmax-hmin+1);
       STARTINGX(spots_abs)=hmin; STARTINGY(spots_abs)=kmin;
    spots_arg.init_zeros(kmax-kmin+1,hmax-hmin+1);
@@ -108,24 +112,47 @@ void APHFile2D::read(const FileName &fn) _THROW {
 
    // Read each line (again) and copy values to the matrices
    fh_aph.close();
+   fh_aph.clear();
    fh_aph.open(fn.c_str(), ios::in);
    line_no=1;
 
    // Read first line and skip it
-   fh_aph.peek();
    getline(fh_aph,line);
-
-   fh_aph.peek();
+   l_is_present=false;
+   bool first=true;
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
-	 int   h     	 = AtoI(first_token(line));
-	 int   k     	 = AtoI(next_token());
-         spots_abs(k,h)  = AtoF(next_token());
-         spots_arg(k,h)  = AtoF(next_token());
-	 IQ(k,h)     	 = AtoI(next_token());
-	 background(k,h) = AtoF(next_token());
-	 // CTF(k,h)        = AtoF(next_token());
+   	 if (line.length()!=0) {
+	    int i=0;
+	    int   h         = AtoI(next_token(line,i));
+	    int   k         = AtoI(next_token(line,i));
+	    double a1,a2,a3,a4,a5,a6;
+            a1 = AtoF(next_token(line,i));
+            a2 = AtoF(next_token(line,i));
+	    a3 = AtoF(next_token(line,i));
+	    a4 = AtoF(next_token(line,i));
+	    a5 = AtoF(next_token(line,i));
+	    string aux;
+	    aux=next_token(line,i);
+	    if (first) {l_is_present=(aux!=""); first=false;}
+	    
+	    if (l_is_present) {
+	       a6 = AtoF(aux);
+               spots_l(k,h)    = a1;
+               spots_abs(k,h)  = a2;
+               spots_arg(k,h)  = a3;
+	       IQ(k,h)         = (int) a4;
+	       background(k,h) = a5;
+	       CTF(k,h)        = a6;
+	    } else {
+               spots_abs(k,h)  = a1;
+               spots_arg(k,h)  = a2;
+	       IQ(k,h)         = (int) a3;
+	       background(k,h) = a4;
+	       CTF(k,h)        = a5;
+	    }
+	 }
       }
       catch (Xmipp_error XE) {
          cout << XE;
@@ -139,6 +166,33 @@ void APHFile2D::read(const FileName &fn) _THROW {
    
    fn_aph=fn;
 }/*  APHFile2D::read */
+
+/* ------------------------------------------------------------------------- */
+void APHFile2D::write(const FileName &fn) const _THROW {
+   ofstream fh;
+   fh.open(fn.c_str());
+   if (!fh)
+      REPORT_ERROR(1,(string)"APHFile2D::write: Cannot open "+
+         fn+" for output");
+   
+   fh << label << " " << XX(astar) << " " << YY(astar) << " "
+      << XX(bstar) << " " << YY(bstar) << " "
+      << Xdim << " " << Ydim << " " << sampling_rate << endl;
+      
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(spots_abs) {
+      if (spots_abs(i,j)!=0) {
+	 fh << j << " " << i << " ";
+	 if (l_is_present) fh << spots_l(i,j) << " ";
+	 fh << spots_abs(i,j) << " "
+	    << spots_arg(i,j) << " "
+	    << IQ(i,j) << " "
+	    << background(i,j) << " "
+	    << CTF(i,j) << endl;
+      }
+   }
+   fh.close();
+}
+
 /* ------------------------------------------------------------------------- */
 void APHFile2D::clear(){
    astar.clear();
@@ -151,6 +205,7 @@ void APHFile2D::clear(){
    background.clear();
    CTF.clear();
 } /*clear*/
+
 /*----transform Xmipp Euler angles into MRC angles *--------------*/
 void Euler_to_MRC(double rot, double tilt, double psi,
                   double * mrc_tilt, double * mrc_taxa)
@@ -195,4 +250,134 @@ void Euler_to_MRC(double rot, double tilt, double psi,
 //cout << "\nDEBUG *mrc_tilt: " << *mrc_tilt<<endl;
         
 }		  
+
+void APHFile2D::copy_reflection(int h, int k, int new_h, int new_k,
+   double new_l, bool conjugate, int sign) {
+   spots_abs(new_k,new_h)=spots_abs(k,h);
+   spots_l  (new_k,new_h)=new_l;
+   double conj=1; if (conjugate) conj=-1;
+   if (sign%2==1) spots_arg(new_k,new_h)=conj*spots_arg(k,h)+180;
+   else           spots_arg(new_k,new_h)=conj*spots_arg(k,h);
+   IQ(new_k,new_h)=IQ(k,h);
+   background(new_k,new_h)=background(k,h);
+   CTF(new_k,new_h)=CTF(k,h);
+}
+
+/* Generate reflections ---------------------------------------------------- */
+void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
+   // Resize the spot matrices
+   int new_kmin=MIN(-FINISHINGY(spots_abs),STARTINGY(spots_abs) );
+   int new_hmin=MIN(-FINISHINGX(spots_abs),STARTINGX(spots_abs) );
+   int new_kmax=MAX(-STARTINGY(spots_abs) ,FINISHINGY(spots_abs));
+   int new_hmax=MAX(-STARTINGX(spots_abs) ,FINISHINGX(spots_abs));
+   
+   spots_l   .window(new_kmin,new_hmin,new_kmax,new_hmax);
+   spots_abs .window(new_kmin,new_hmin,new_kmax,new_hmax);
+   spots_arg .window(new_kmin,new_hmin,new_kmax,new_hmax);
+   IQ        .window(new_kmin,new_hmin,new_kmax,new_hmax);
+   background.window(new_kmin,new_hmin,new_kmax,new_hmax);
+   CTF       .window(new_kmin,new_hmin,new_kmax,new_hmax);
+
+   matrix2D<int> visited;
+   visited.init_zeros(YSIZE(spots_abs),XSIZE(spots_abs));
+   STARTINGY(visited)=STARTINGY(spots_abs);
+   STARTINGX(visited)=STARTINGX(spots_abs);
+
+   // Generate symmetrical points
+   // Symmetrical points are generated through the multiplication
+   //                               [R[0] R[2]  0    0 R[5]] 
+   //                               [R[1] R[3]  0    0 R[6]]
+   // [h' k' l' A' ph']=[h k l A ph][ 0    0   R[4]  0  0  ]
+   //                               [ 0    0    0    1  0  ]
+   //                               [ 0    0    0    0 R[7]]
+   //
+   // These R matrices are obtained for each crystallographic group
+   // They can be easily seen in origtiltd.for from the MRC source code
+   int mode=1;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(visited)
+      if (!visited(i,j)) {
+         visited(i,j)=1;
+	 if (spots_abs(i,j)!=0) {
+	    int h=j;
+	    int k=i;
+	    switch (symmetry_group) {
+	       case sym_P222_1:
+	          /* Possible Rs for this group
+		     R1:[-1 0 0 -1 -1 0   0 -1] -> (-h,-k,-l)=conj(h,k,l)
+		     R2:[ 1 0 0  1 -1 0   0 -1] -> ( h, k,-l)=conj(h,k,l)
+		     R3:[ 1 0 0 -1  1 0 180 -1] -> ( h,-k, l)=conj(h,k,l)*(-1)^h
+		     
+		     If an image must be reflected, there are two possible
+		     sets of coefficients that can belong to the same projection:
+		     P0:{(h,k,l),(-h,-k,-l),(-h, k, l)( h,-k,-l)}
+		     P1:{(h,k,l),(-h,-k,-l),( h,-k, l)(-h, k,-l)}
+		     
+		     P0:
+		        Obtain (-h,-k,-l) by conj(h,k,l) (R1)
+		        Obtain (-h, k, l) by conj(h,k,l)*(-1)^h (R1*R2*R3)
+			Obtain ( h,-k,-l) by conj(-h, k, l) (R1)
+		     P1:
+		        Obtain (-h,-k,-l) by conj(h,k,l) (R1)
+		        Obtain ( h,-k, l) by conj(h,k,l)*(-1)^h (R3)
+			Obtain (-h, k,-l) by conj(h,-k,l) (R1)
+		     
+		     Both ways of symmetrization would give a P2221 symmetry.
+		     
+		     The tilt angle of P0 is atan2(l,k)
+		     The tilt angle of P1 is atan2(l,h)
+		     
+		     The special cases of this group are
+		     Real         Imag
+		     ----         ----
+		     (0,2n,l)     (0,2n+1,l)
+		     (h,k,0)
+		     (h,0,l)
+		     
+		     I will only use those restrictions valid for all l.
+		  */
+		  /* These shouldn't be the systematic absences, but
+		     they appear clearly when 
+		    if (k==0 && h%2==1) {
+		     spots_arg(k,h)=0;
+		     spots_abs(k,h)=0;
+		  } else */if ((h==0 && k%2==0) || (k==0)) {
+		     double c=cos(DEG2RAD(spots_arg(k,h)));
+		     if (c<0) spots_arg(k,h)=180;
+		     else     spots_arg(k,h)=0;
+		  } /*else if  (h==0 && k%2==1) {
+		     if (spots_l(k,h)!=0) {
+			double s=sin(DEG2RAD(spots_arg(k,h)));
+			if (s<0) spots_arg(k,h)=-90;
+			else     spots_arg(k,h)= 90;
+		     } else {
+		        spots_arg(k,h)=0;
+                        spots_arg(k,h)=0;
+		     }
+		  }*/
+		  
+		  double l=spots_l(k,h);
+		  
+	          //copy_reflection( h, k,-h,-k,-l,true,0); visited(-k,-h)=1;
+		  if (mode==0) {
+	             //1:copy_reflection( h, k,-h, k, l,true,h); visited( k,-h)=1;
+	             //1:copy_reflection(-h, k, h,-k,-l,true,0); visited(-k, h)=1;
+	             copy_reflection(h, k, h,-k,-l,false,h); visited(-k, h)=1;
+	             //copy_reflection(h,-k,-h, k, l,true,0); visited( k,-h)=1;
+      	          } else {
+	             copy_reflection( h, k, h,-k, l,false,h); visited(-k, h)=1;
+	             //copy_reflection( h,-k,-h, k,-l,true,0); visited( k,-h)=1;
+	             //1:copy_reflection( h,-k,-h, k,-l,true,0); visited( k,-h)=1;
+		  }
+	          break;
+	    }
+	    #ifdef DEBUG
+	       ImageXmipp save;
+	       save()=spots_abs; save.write("PPPSpots_abs.xmp");
+	       save()=spots_arg; save.write("PPPSpots_arg.xmp");
+	       type_cast(visited,save()); save.write("PPPvisited.xmp");
+	       cout << "Press\n"; char c; cin >> c;
+	    #endif
+	 }
+      }
+}
 
