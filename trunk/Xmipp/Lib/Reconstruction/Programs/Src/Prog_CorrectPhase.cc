@@ -4,24 +4,17 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
- ***************************************************************************/
+ * Copyright (c) 2001 , CSIC .
+ *
+ * Permission is granted to copy and distribute this file, for noncommercial
+ * use, provided (a) this copyright notice is preserved, (b) no attempt
+ * is made to restrict redistribution of this file, and (c) this file is
+ * restricted by a compilation copyright.
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
+ *
+ *****************************************************************************/
 
 #ifdef _HAVE_VTK
    #include "../Prog_CorrectPhase.hh"
@@ -29,7 +22,14 @@
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhase_Params::read(int argc, char **argv) {
-   fn_ctf=get_param(argc,argv,"-ctf");
+   if (check_param(argc,argv,"-ctf_descr")) {
+      fn_ctf=get_param(argc,argv,"-ctf_descr");
+      CTF_description_file=TRUE;
+   } else {
+      fn_ctf=get_param(argc,argv,"-ctf");
+      CTF_description_file=FALSE;
+   }
+   
    epsilon=AtoF(get_param(argc,argv,"-small","0"));
    string aux; aux=get_param(argc,argv,"-method","");
    if      (aux=="remove")           method=CORRECT_SETTING_SMALL_TO_ZERO;
@@ -65,12 +65,17 @@ void CorrectPhase_Params::usage() {
 
 /* Produce Side information ------------------------------------------------ */
 void CorrectPhase_Params::produce_side_info() {
-   ctf.FilterShape=ctf.FilterBand=FROM_FILE;
-   if (!multiple_CTFs) {
+   if (!multiple_CTFs && !CTF_description_file) {
+      ctf.FilterShape=ctf.FilterBand=FROM_FILE;
       ctf.fn_mask=fn_ctf;
       ctf.generate_mask(NULL);
-   } else {
+   } else if (multiple_CTFs) {
+      ctf.FilterShape=ctf.FilterBand=FROM_FILE;
       SF_CTF.read(fn_ctf);
+   } else {
+      ctf.FilterBand=CTF;
+      ctf.ctf.read(fn_ctf);
+      ctf.ctf.Produce_Side_Info();
    }
 }
 
@@ -91,6 +96,9 @@ FileName CorrectPhase_Params::CTF_filename(const FileName &fn) {
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
 void CorrectPhase_Params::correct(vtkImageData *v) _THROW {
+   if (ctf.mask==NULL && CTF_description_file)
+      ctf.generate_mask(v); // This is the first time
+                            // that the CTF is applied
    if (!same_shape(v,ctf.mask))
       REPORT_ERROR(1,"CorrectPhase::correct: ctf and input FT do not have"
          " the same shape");
