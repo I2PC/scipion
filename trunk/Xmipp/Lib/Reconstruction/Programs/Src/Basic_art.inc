@@ -338,6 +338,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               // Force symmetry, so far only crystallographic
 
               //Force symmetry in the volume each
+
               if (prm.sym_each &&
 	          act_proj%prm.sym_each==0 &&
 		  (act_proj!=0 || prm.sym_each==1) ) {
@@ -345,7 +346,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               }
           // Apply POCS ....................................................
           if ((prm.surface_mask!=NULL || 
-	      prm.positivity || prm.force_sym!=0 ||
+	      prm.positivity || (prm.force_sym!=0 && !prm.is_crystal) ||
 	      prm.known_volume!=-1) && POCS_i%POCS_freq==0) {
 	      apply_POCS=TRUE;
               VolumeXmipp vol_aux;
@@ -580,9 +581,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
 	     //Vcoefs.write((string)"PPPblob_coefs.vol");
 	     if (!iv_launched) {
-	        system("devel_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
-		system("devel_show -vol PPPvol.vol -poll &");
-		if (vol_blobs_var!=NULL) system("devel_show -vol PPPvolvar.vol -poll &");
+	        system("xmipp_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
+		system("xmipp_show -vol PPPvol.vol -poll &");
+		if (vol_blobs_var!=NULL) system("xmipp_show -vol PPPvolvar.vol -poll &");
 		iv_launched=true;
 	     }
              cout << "\nHit any key and enter\n"; char c; cin >> c;
@@ -617,9 +618,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
             // Launch viewer
 	    if (!iv_launched) {
-	       system("devel_show -vol PPPvol.vol -poll &");
+	       system("xmipp_show -vol PPPvol.vol -poll &");
                if (vol_blobs_var!=NULL)
-	          system("devel_show -vol PPPvarvol.vol -poll &");
+	          system("xmipp_show -vol PPPvarvol.vol -poll &");
 	       iv_launched=true;
 	    }
 	 }
