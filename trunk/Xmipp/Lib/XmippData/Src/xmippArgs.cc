@@ -206,7 +206,8 @@ void read_float_list(const char *str, int N, vector<T> &v,
    token=first_token(str);
    for (int i=0; i<N; i++) {
       if (token==NULL) {
-         cout << "Read float list: Number of true parameters doesn't coincide\n";
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
          REPORT_ERROR(_errno,errmsg);
       }
 
@@ -234,7 +235,8 @@ void read_float_list(char *str, int N, matrix1D<T> &v,
    token=first_token(str);
    for (int i=0; i<N; i++) {
       if (token==NULL) {
-         cout << "Read float list: Number of true parameters doesn't coincide\n";
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
          REPORT_ERROR(_errno,errmsg);
       }
 
