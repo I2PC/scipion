@@ -240,6 +240,11 @@ int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
     Logical Xor.*/
 #define XOR(a,b) (((a) && !(b)) || (!(a) && (b)))
 
+/** 1D gaussian value.
+    This function returns the value of a univariate gaussian
+    function at the point x.*/
+double gaussian1D(double x, double sigma, double mu=0);
+
 /** 2D gaussian value.
     This function returns the value of a multivariate (2D) gaussian
     function at the point (x,y) when the X axis of the gaussian is

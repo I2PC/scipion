@@ -50,6 +50,11 @@ int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
 }
 
 /* Gaussian value ---------------------------------------------------------- */
+double gaussian1D(double x, double sigma, double mu) {
+   x -= mu;
+   return 1/sqrt(2*PI*sigma*sigma)*exp(-0.5*((x/sigma)*(x/sigma)));
+}
+
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
    double ang, double muX, double muY) {
    // Express x,y in the gaussian internal coordinates
