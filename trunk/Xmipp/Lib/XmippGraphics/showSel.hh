@@ -42,6 +42,9 @@
 */
 class ShowSel: public ShowTable {
     Q_OBJECT;
+public:
+    // Show only active images (!= -1 in showsel). 1-> show active, 0-> show all
+    bool        showonlyactive;
 protected:
     // Filenames within the Selfile
     FileName   *imgnames;
