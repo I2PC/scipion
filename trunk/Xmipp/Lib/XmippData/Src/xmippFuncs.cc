@@ -32,6 +32,8 @@
 #include <fstream>
 #include <typeinfo>
 
+using namespace std;
+
 /* Numerical functions ----------------------------------------------------- */
 // Solve second degree equation. ax^2+bx+c=0 -------------------------------
 int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
