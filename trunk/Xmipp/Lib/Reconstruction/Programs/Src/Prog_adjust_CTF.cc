@@ -787,18 +787,25 @@ double CTF_fitness(double *p) {
       if (global_compute_ctf2_part)
          considered_ctf_ampl2.init_zeros(considered_ctfmodel_ampl2);
    }
-   for(int i=STARTINGY(*global_ctf_ampl2), ii=0;i<=FINISHINGY(*global_ctf_ampl2);i+=step, ii++)
-       for(int j=STARTINGX(*global_ctf_ampl2), jj=0;j<=FINISHINGX(*global_ctf_ampl2);j+=step, jj++)
+   double *ptr_ctf_ampl2=MULTIDIM_ARRAY(*global_ctf_ampl2);
+   double *row_ptr_ctf_ampl2;
+   int i, ii, j, jj;
+   double iTm=1.0/global_Tm;
+   for(i=STARTINGY(*global_ctf_ampl2), ii=0;i<=FINISHINGY(*global_ctf_ampl2);i+=step, ii++, ptr_ctf_ampl2+=step*XSIZE(*global_ctf_ampl2))
+       for(j=STARTINGX(*global_ctf_ampl2), jj=0, row_ptr_ctf_ampl2=ptr_ctf_ampl2;j<=FINISHINGX(*global_ctf_ampl2);j+=step, jj++, row_ptr_ctf_ampl2+=step)
        {
           // Disregard this point?
-    	  double ctf2=(*global_ctf_ampl2)(i,j);
+    	  double ctf2=*row_ptr_ctf_ampl2;
       	  if (global_value_th!=-1 && ctf2>=global_value_th) continue;
-    	  XX(idx)=j; YY(idx)=i;
-    	  FFT_idx2digfreq(global_ctf, idx, freq);
+    	  //XX(idx)=j; YY(idx)=i;
+    	  //FFT_idx2digfreq(global_ctf, idx, freq);
+	  FFT_IDX2DIGFREQ(j,XSIZE(global_ctf),XX(freq));
+	  FFT_IDX2DIGFREQ(i,YSIZE(global_ctf),YY(freq));
           if (YY(freq)<0) continue;
     	  double w=freq.module();
 	  if (w<=global_min_freq || w>=global_max_freq) continue;
-    	  digfreq2contfreq(freq, freq, global_Tm);
+    	  //digfreq2contfreq(freq, freq, global_Tm);
+	  XX(freq)*=iTm; YY(freq)*=iTm;
 	  
 	  // Compute each component
           double gaus=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
@@ -813,15 +820,16 @@ double CTF_fitness(double *p) {
           if (global_show>=2) save(i,j)=weight;
 
       	  // Compute gaussian distance
+	  double ictf2=1.0/ctf2;
           double dist_gaus=ABS(ctf2-gaus);
-	  if (global_action!=0) dist_gaus/=ctf2;
+	  if (global_action!=0) dist_gaus*=ictf2;
           if (gaus>ctf2 && global_penalize && w>global_max_gauss_freq)
 	     dist_gaus*=global_current_penalty;
 
       	  // Compute parametric distance
 	  double dist_param;
 	  if (global_action==0) dist_param=0;
-	  else                  dist_param=ABS(ctf2-param)/ctf2;
+	  else                  dist_param=ABS(ctf2-param)*ictf2;
 
       	  // Compute distance
 	  double dist=weight*(dist_gaus+dist_param);
@@ -871,9 +879,10 @@ double CTF_fitness(double *p) {
          if (radialN(i)!=0) {
 	    if (i_radial_min==-32000) i_radial_min=i;
 	    i_radial_max=i;
-	    radial_CTFmodel_avg(i)/=radialN(i);
+	    double iradialNi=1.0/radialN(i);
+	    radial_CTFmodel_avg(i)*=iradialNi;
 	    if (global_compute_ctf2_part)
-	       radial_CTFampl_avg(i)/=radialN(i);
+	       radial_CTFampl_avg(i)*=iradialNi;
             double radial_error_i=
 	       ABS(radial_CTFmodel_avg(i)-radial_CTFampl_avg(i));
 	    if (radial_error_i>max_radial_error) {max_radial_error=radial_error_i;}
@@ -966,10 +975,12 @@ double CTF_fitness(double *p) {
       int jmax=XSIZE(fftmodel_ampl())/6;
       N=0;
       for (int i=0; i<=imax; i++)
-          for (int j=-jmax; j<=jmax; j++, N++)
-             if (ABS(fft_ampl(i,j))>1e-2)
-                fft_error+=ABS(fftmodel_ampl(i,j)-fft_ampl(i,j))/
-                   ABS(fft_ampl(i,j));
+          for (int j=-jmax; j<=jmax; j++, N++) {
+	     double fft_ampl_ij=fft_ampl(i,j);
+             if (ABS(fft_ampl_ij)>1e-2)
+                fft_error+=ABS(fftmodel_ampl(i,j)-fft_ampl_ij)/
+                   ABS(fft_ampl_ij);
+	  }
       fft_error/=N;
       retval+=fft_error;
       if (global_show>=2) {

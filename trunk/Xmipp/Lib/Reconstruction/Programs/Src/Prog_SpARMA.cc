@@ -450,6 +450,7 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
 
    	// And calculate sigma
 	dSigma=(MAT_ELEM(R,0,0)-2*dSum); 
+	double idSigma=1.0/dSigma;
 	
     /**********************************************************************/
 	// Determine the MA parameters of the model using the AR parameters and
@@ -461,20 +462,24 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    for (long n=0 ; n<NumberOfMAParameters; n++)
    {
    
-          dSum=0;
+       dSum=0;
+       double MAn0=MAT_ELEM(MAParameters,n,0);
+       double MAn1=MAT_ELEM(MAParameters,n,1);
        for (long m=0 ; m<NumberOfARParameters; m++)
 	   {
-    	  int alpha1= (int)(MAParameters(n,0) - ARParameters(m,0)); 
-	      int alpha2= (int)(MAParameters(n,1) - ARParameters(m,1));
-		  int beta1 = (int)(MAParameters(n,0) + ARParameters(m,0)); 
-	      int beta2 = (int)(MAParameters(n,1) + ARParameters(m,1));
-		  dSum += MAT_ELEM(ARParameters,m,2) * ( R(alpha1,alpha2) + R(beta1,beta2));
-	   
+	   double ARm0=MAT_ELEM(ARParameters,m,0);
+	   double ARm1=MAT_ELEM(ARParameters,m,1);
+    	   int alpha1= (int)(MAn0 - ARm0); 
+	   int alpha2= (int)(MAn1 - ARm1);
+           int beta1 = (int)(MAn0 + ARm0); 
+	   int beta2 = (int)(MAn1 + ARm1);
+	   dSum += MAT_ELEM(ARParameters,m,2) * (
+	       MAT_ELEM(R,alpha1,alpha2) + MAT_ELEM(R,beta1,beta2));
 	   }
  
-       int p=(int)MAParameters(n,0);	  
-       int q=(int)MAParameters(n,1);
-	   MAT_ELEM(MAParameters,n,2)=(MAT_ELEM(R,p,q)-dSum)/dSigma;
+       int p=(int)MAn0;	  
+       int q=(int)MAn1;
+       MAT_ELEM(MAParameters,n,2)=(MAT_ELEM(R,p,q)-dSum)*idSigma;
    }	      
 
    // return the sigma coeficient
