@@ -418,7 +418,7 @@ void Euler_mirrorXY(double rot, double tilt, double psi,
     when vector coordinates are not homogeneous) and it will be applied
     in the sense:
     \begin{verbatim}
-    New Euler matrix = Old Euler matrix * Transformation matrix
+    New Euler matrix = L * Old Euler matrix * R
     \end{verbatim}
     where you know that the Euler matrix rows represent the different
     system axes. See \Ref{Euler_angles2matrix} for more information
