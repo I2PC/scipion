@@ -595,7 +595,7 @@ int Feature::intersects_sphere(const matrix1D<double> &r, double radius,
 	 for (double j=FLOOR(XX(r)-radius); j<=CEIL(XX(r)+radius) && !intersects; j++) {
 	    if ((k-ZZ(r))*(k-ZZ(r))+(i-YY(r))*(i-YY(r))+(j-XX(r))*(j-XX(r))>
 	        radius2) continue;
-	    VECTOR_R3(aux3,k,i,j);
+	    VECTOR_R3(aux3,j,i,k);
 	    intersects=voxel_inside(aux3,aux1,aux2);
 	 }
    return intersects;
@@ -1783,7 +1783,7 @@ void Phantom::surface(double z0, double radius, int direction, Image *P)
    #endif
 
    matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
-   P->adapt_to_size(ydim,xdim);
+   if (XSIZE((*P)())==0) P->adapt_to_size(ydim,xdim);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*P)) {
       #ifdef DEBUG
          cout << "Processing (" << i << "," << j << ")" << endl;
