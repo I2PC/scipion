@@ -28,11 +28,11 @@
 #include <XmippInterface/xmippVTK.hh>
 
 #include <vtkImageFFT.h>
-#if (VTK_MAJOR_VERSION==4)
-   #include <IO/vtkTIFFWriter.h>
-#else
+//#if (VTK_MAJOR_VERSION==4)
+//   #include <IO/vtkTIFFWriter.h>
+//#else
    #include <vtkTIFFWriter.h>
-#endif
+//#endif
 #include <vtkImageMagnitude.h>
 
 class FFT_parameters: public Prog_parameters {
