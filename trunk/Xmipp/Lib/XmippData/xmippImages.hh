@@ -509,6 +509,17 @@ public:
        \\Ex: cout << "Origin Offset in Y-direction: " << IX.Yoff() << endl;*/
    float  Yoff() const {return header.fYoff();}
    //@}
+
+   /**@name Weight (stored in fAv, used for ML optimization) */
+   //@{
+   /** Set weight
+       \\Ex: IX.weight()=3.50;*/
+   float& weight() {return header.fAv();}
+   
+   /** Get weight.
+       \\Ex: cout << "Weight: " << IX.weight() << endl;*/
+   float  weight() const {return header.fAv();}
+   //@}
    //@}
 
    /**@name Euler angles
