@@ -513,9 +513,10 @@ void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
    v.init_zeros(u.ColNo(),u.ColNo());
    
    // Call to the numerical recipes routine
-   svdcmp(u.adapt_for_numerical_recipes2(),u.RowNo(),u.ColNo(),
-          w.adapt_for_numerical_recipes(),
-          v.adapt_for_numerical_recipes2());
+   svdcmp(MULTIDIM_ARRAY(u),
+          u.RowNo(),u.ColNo(),
+          MULTIDIM_ARRAY(w),
+          MULTIDIM_ARRAY(v));
 }
 
 //interface to numerical recipes
