@@ -100,7 +100,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   istart=AtoI(get_param(argc,argv,"-istart","1"));
   do_esthetics=check_param(argc,argv,"-esthetics");
   fast_mode=check_param(argc,argv,"-fast");
-  do_precenter=check_param(argc,argv,"-precenter");
   max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
 
   // Fill all memory vectors with appropriate variables
@@ -216,8 +215,8 @@ void Prog_MLalign2D_prm::read_all_input_in_memory() _THROW {
   if (fast_mode) {
     while (!SF.eof()) {
       img.read(SF.NextImg());
-      offset_x.push_back(0.);
-      offset_y.push_back(0.);
+      offset_x.push_back(img.Xoff());
+      offset_y.push_back(img.Yoff());
     }
   }
 }
@@ -289,6 +288,9 @@ void Prog_MLalign2D_prm::show() {
     }
 
     // Hidden stuff
+    if (fast_mode) {
+      cerr << " -> Use CC-centering instead of ML-integration over all translations."<<endl;
+    }
     if (!write_intermediate) {
       cerr << " -> Do not write out images after each iteration."<<endl;
     }
@@ -330,7 +332,7 @@ void Prog_MLalign2D_prm::usage() {
        << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n"
        << " [ -mirror ]                   : Also check mirror image of each reference \n"
        << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n"
-       << " [ -output_docfile ]           : Write out docfile with most likeliy angles & translations \n"
+       << " [ -output_docfile ]           : Write out docfile with most likely angles & translations \n"
        << " [ -output_selfiles ]          : Write out selfiles with most likely reference assignments \n"
        << endl;
 }
@@ -474,37 +476,6 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<doubl
   }
 
 }
-
-// For fast_mode: pre-center images before entering ML-refinement
-void Prog_MLalign2D_prm::precenter_images() _THROW{
-
-  int ioptx,iopty,imgno=0;
-  ImageXmipp img;
-  matrix2D<double> Maux,Maveref;
-
-  Maveref.resize(dim,dim);
-  Maveref.set_Xmipp_origin();
-  Maux.resize(dim,dim);
-  Maux.set_Xmipp_origin();
-
-  FOR_ALL_MODELS() { Maveref+=Iref[refno](); }
-  Maveref/=n_ref;
-
-  cerr << "  Pre-centering images against average of all reference images .. "<<endl;
-  SF.go_beginning();
-  while (!SF.eof()) {
-    img.read(SF.NextImg());
-    img().set_Xmipp_origin();
-    correlation_matrix(img(),Maveref,Maux);
-    Maux.max_index(iopty,ioptx);
-    offset_x[imgno]=-(double)ioptx;
-    offset_y[imgno]=-(double)iopty;
-    imgno++;
-  }
-
-}
-
-
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all models and in-plane rotations
@@ -1042,8 +1013,6 @@ void Prog_MLalign2D_prm::MLalign2D() _THROW {
   DFf.reserve(2*SFr.ImgNo()+4);
   SFa.reserve(Niter*n_ref);
   SFa.clear();
-
-  if (fast_mode && do_precenter) precenter_images();
 
   // Loop over all iterations
   for (iter=istart; iter<=Niter; iter++) {

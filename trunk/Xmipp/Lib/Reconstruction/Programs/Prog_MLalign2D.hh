@@ -102,8 +102,6 @@ public:
   bool fast_mode;
   // For fast mode: optimal origin offsets
   vector<double > offset_x,offset_y;
-  // For fast mode: precenter?
-  bool do_precenter;
   // SelFile images (working and reference set)
   SelFile SF, SFr;
   // vector for flipping (i.e. 90/180-degree rotations) matrices
@@ -143,9 +141,6 @@ public:
 				bool &real_space, 
                                 vector<matrix2D<double> > &Mref) _THROW;
  
-  /// Pre-center particles for fast_mode
-  void precenter_images() _THROW;
-
   /// Calculate weighted averages for new model and new model parameters 
   /// Only integrate over all references and in-plane rotations (i.e. skip translations!)
   void ML_integrate_model_phi(matrix2D<double> &Mimg, vector <vector< matrix2D<double > > > &Mref, 
