@@ -152,10 +152,10 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
    if (!skip_type_check) {
      // Read file type
      fseek(fp, 16, SEEK_SET);
-     for (int i=0; i<4; i++)
+     for (int i=0; i<4; i++) {     
          fread(&(file_type.c[i]), sizeof(unsigned char), 1, fp);
+     }
      fseek(fp,  0, SEEK_SET);
-
      // Select type
      int correct_type=0;
      __reversed=FALSE;
@@ -189,10 +189,13 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
 
   if (!skip_extra_checkings)
      if (!fstat(fileno(fp), &info)) {
+       unsigned long usfNcol=(unsigned long) header.fNcol;
+       unsigned long usfNrow=(unsigned long) header.fNrow;
+       unsigned long usfNslice=(unsigned long) header.fNslice;
+       unsigned long usfHeader=(unsigned long) get_header_size();
        switch (im) {
        case IMG_XMIPP: 
-         size = (unsigned long) (get_header_size() +
-             		         header.fNcol*header.fNrow*sizeof(float));
+         size = usfHeader + usfNcol*usfNrow*sizeof(float);
          if ((size != info.st_size) || (header.fIform != 1)) return FALSE;
          else if (skip_type_check) header.fIform=1; // This is done to recover
                                                     // files which are not
@@ -200,8 +203,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
                                                     // other packages
          break;
        case IMG_INT: 
-         size = (unsigned long) (get_header_size() +
-             		         header.fNcol*header.fNrow*sizeof(float));
+         size = usfHeader + usfNcol*usfNrow*sizeof(float);
          if ((size != info.st_size) || (header.fIform != 9)) return FALSE;
          else if (skip_type_check) header.fIform=9; // This is done to recover
                                                     // files which are not
@@ -209,24 +211,21 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
                                                     // other packages
          break;
        case VOL_BYTE:
-         size = (unsigned long) (header.fNslice*header.fNcol*header.fNrow*sizeof(float));
+         size = usfNslice*usfNcol*usfNrow*sizeof(float);
          if ((size != info.st_size)) return FALSE;
          break;
        case VOL_XMIPP: 
-         size = (unsigned long) (get_header_size() +
-             		         header.fNslice*header.fNcol*header.fNrow*sizeof(float));
+         size = usfHeader + usfNslice*usfNcol*usfNrow*sizeof(float);
          if ((size != info.st_size) || (header.fIform != 3)) return FALSE;
          else if (skip_type_check) header.fIform=3;
          break;
        case VOL_INT: 
-         size = (unsigned long) (get_header_size() +
-             		         header.fNslice*header.fNcol*header.fNrow*sizeof(float));
+         size = usfHeader + usfNslice*usfNcol*usfNrow*sizeof(float);
          if ((size != info.st_size) || (header.fIform != 10)) return FALSE;
          else if (skip_type_check) header.fIform=10;
          break;
        case IMG_FOURIER: 
-         size = (unsigned long) (get_header_size() +
-             		         2*header.fNcol*header.fNrow*sizeof(float)); 
+         size = usfHeader + 2*usfNcol*usfNrow*sizeof(float); 
 				 // The term 2 is to take into account that IMG_FOURIER 
 				 // stores complex numbers with 2 floats for each one.
          if ((size != info.st_size) ||
@@ -234,8 +233,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          else if (skip_type_check) header.fIform=-1;
          break;
        case VOL_FOURIER: 
-         size = (unsigned long) (get_header_size() +
-             		         2*header.fNslice*header.fNcol*header.fNrow*sizeof(float));
+         size = usfHeader +2*usfNslice*usfNcol*usfNrow*sizeof(float);
 				 // The term 2 is to take into account that VOL_FOURIER 
 				 // stores complex numbers with 2 floats for each one.
          if ((size != info.st_size) ||
