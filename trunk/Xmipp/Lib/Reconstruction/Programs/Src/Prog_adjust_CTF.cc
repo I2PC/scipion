@@ -1423,7 +1423,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    
    // Adjust
    cerr << "Looking for best fitting CTF ...\n";
-   CTF_fitness_evaluations=0; show_performance=true;
+   CTF_fitness_evaluations=0;
    for (global_evaluation_reduction=2; global_evaluation_reduction>=1; global_evaluation_reduction--) {
       global_compute_ctf2_part=true;
       if (global_evaluation_reduction==1) global_weight=prm.weight;
