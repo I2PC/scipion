@@ -189,7 +189,7 @@ public:
       if      (__depth== 8) m8[y*Xdim+x]=(unsigned char) new_val;
       else if (__depth==16) m16[y*Xdim+x]=(short int) new_val;
       else if (__depth==32) m32[y*Xdim+x]=(float) new_val;
-      else REPORT_ERROR(1,"Micrograph::set_val: depth is not 8 neither 16");
+      else REPORT_ERROR(1,"Micrograph::set_val: depth is not 8, 16 or 32");
    }
 
    /** Pixel value with 8 bits. */
