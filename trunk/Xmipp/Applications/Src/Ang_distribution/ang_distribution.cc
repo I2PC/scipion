@@ -45,6 +45,7 @@ int main (int argc,char *argv[]) {
    float           rot_view;
    float           tilt_view;
    int             up_down_correction;
+   bool            solid_sphere;
 
 // Check the command line ==================================================
    try {
@@ -59,6 +60,7 @@ int main (int argc,char *argv[]) {
       rot_view =AtoF(get_param(argc,argv,"-rot_view",  "0"));
       tilt_view=AtoF(get_param(argc,argv,"-tilt_view","30"));
       up_down_correction=check_param(argc,argv,"-up_down_correction");
+      solid_sphere=check_param(argc,argv,"-solid_sphere");
 
       // Angle order
       int i;
@@ -162,18 +164,20 @@ int main (int argc,char *argv[]) {
          y=400.0f-x*250.0f/60; \
          x=300.0f+tmp*250.0f/60;
 
-      matrix1D<double> p1(4),p2(4),p3(4);
+      matrix1D<double> p0(4),p1(4),p2(4),p3(4),origin(3);
       matrix2D<double> A,euler_view;
       Euler_angles2matrix(rot_view,tilt_view,0.0f,euler_view);
+      origin.init_zeros();
       double tmp;
       for (int i=0; i<AngleNo; i++) {
           // Initially the triangle is on the floor of the projection plane
+          VECTOR_R3(p0,    0   ,      0        ,0);
           VECTOR_R3(p1,    0   , r*2/3*SIND(60),0);
           VECTOR_R3(p2, r/2*0.6,-r*1/3*SIND(60),0);
           VECTOR_R3(p3,-r/2*0.6,-r*1/3*SIND(60),0);
 
           // Convert to homogeneous coordinates
-          p1(3)=1; p2(3)=1; p3(3)=1;
+          p0(3)=1; p1(3)=1; p2(3)=1; p3(3)=1;
 
           // Compute Transformation matrix
           GET_ANGLES(i+1);
@@ -188,9 +192,19 @@ int main (int argc,char *argv[]) {
           A(0,3)=R*XX(v[i]); A(1,3)=R*YY(v[i]); A(2,3)=R*ZZ(v[i]); A(3,3)=1;
 
           // Convert triangle coordinates to universal ones
+          p0=A*p0;
           p1=A*p1;
           p2=A*p2;
           p3=A*p3;
+
+          // Check if this triangle must be drawn
+          if (solid_sphere) {
+             matrix1D<double> view_direction, p0p;
+             euler_view.getRow(2,view_direction);
+             p0p=p0; p0p.resize(3);
+             if (point_plane_distance_3D(p0,origin,view_direction)<0)
+                continue;
+          }
 
           // Project this triangle onto the view plane and write in PS
           matrix1D<double> pp(3);
@@ -241,7 +255,10 @@ void Usage() {
          << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
          << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
          << "      [-up_down_correction]         : correct angles so that a semisphere\n"
-         << "                                      is shown\n";
+         << "                                      is shown\n"
+         << "      [-solid_sphere]               : projections in the back plane are\n"
+         << "                                      not shown\n"
+   ;
 }
 
 /* ------------------------------------------------------------------------- */
