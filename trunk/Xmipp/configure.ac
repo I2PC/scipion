@@ -53,7 +53,8 @@ AC_CHECK_LIBTIFF
 
 
 #Checking for the presence and usability of MPI library
-ACX_MPI
+ACX_MPI(USE_MPI=true)
+AM_CONDITIONAL(BUILD_MPI, test x"$USE_MPI" = xtrue )
 
 #checking for Qt
 BNV_HAVE_QT
