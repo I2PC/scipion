@@ -24,7 +24,10 @@
  ***************************************************************************/
 
 /* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippMasks.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippVolumes.hh>
 #include <stdio.h>
 
 /* PROTOTYPES -------------------------------------------------------------- */

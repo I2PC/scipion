@@ -33,7 +33,8 @@
 #include <qimageio.h>
 #endif
 
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippFuncs.hh>
+#include <XmippData/xmippArgs.hh>
 
 
 int main( int argc, char **argv )

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippSelFiles.hh>
 #include <stdlib.h>
 
 /* Prototypes -============================================================= */

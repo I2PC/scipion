@@ -27,7 +27,7 @@
 #pragma warning(disable:4786)
 
 #include <fstream>
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
 #include <Classification/xmippCTVectors.hh>
 #include <Classification/xmippSammon.hh>
 

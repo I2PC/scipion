@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 /* Includes ---------------------------------------------------------------- */
-#include "XmippData/xmippTypes.hh"
+#include <XmippData/xmippArgs.hh>
 #include "qapplication.h"
 #include "QtMainWidgetMark.hh"
 

@@ -24,7 +24,10 @@
  ***************************************************************************/
 
 /* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippImages.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippDocFiles.hh>
 
 /* PROTOTYPES -------------------------------------------------------------- */
 void Usage();

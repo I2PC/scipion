@@ -56,21 +56,18 @@ public:
          if(i_shift>0){
 	    DF_shifts.read(argv[i_shift+1]);
   	    colX_shift=AtoI(get_param(argc,argv,"-colX_shift"));
-	    colX_shift -=3;
-	    if(colX_shift<0) {cout << "colX_shift must be no less than 3" 
-	                            << endl; exit(1);
-			      }
-	    }
-         else colX_shift= -1;
+	    colX_shift -=1;
+	    // if(colX_shift<0)
+            //   REPORT_ERROR(1,"colX_shift must be no less than 3");
+	 } else colX_shift= -1;
+         
          if(i_scale>0){
             DF_scales.read(argv[i_scale+1]);
   	    colX_scale=AtoI(get_param(argc,argv,"-colX_scale","5"));
 	    colX_scale -=3;
-	    if(colX_scale<0) {cout << "colX_scale must be no less than 3" 
-	                            << endl; exit(1);
-			      }
-	    }
-         else colX_scale= -1;
+	    if (colX_scale<0)
+               REPORT_ERROR(1,"colX_scale must be no less than 3");
+	 } else colX_scale= -1;
       }
       else{
          shift=get_vector_param(argc,argv,"-shift",-1);
@@ -105,9 +102,9 @@ public:
            << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
            << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
 	   << "                              Docfile used for shifts\n"
-	   << "  [-colXshift <col>]           : Column with  the X shift\n"
-	   << "                              First column with data is number 1.\n"
-	   << "  [-colXscale <col>]       : Column with the scale information\n"
+	   << "  [-colX_shift <col>]       : Column with  the X shift\n"
+	   << "                              First column in the DocFile with data is number 1.\n"
+	   << "  [-colX_scale <col>]       : Column with the scale information\n"
            << "  [-dont_wrap]              : By default, the image is wrapped\n";
    }
 };

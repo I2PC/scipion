@@ -25,7 +25,6 @@
 
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippTypes.hh>
 
 void Usage(char *argv[]);
 

@@ -20,7 +20,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
 #include <stdio.h>
 #include <stdlib.h>
 #include <algo.h>

@@ -25,7 +25,9 @@
 // This program "unskrew" a volume produced by the MRC package
 // (An converted to Spider format)
 
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippVolumes.hh>
+#include <XmippData/xmippImages.hh>
+#include <XmippData/xmippArgs.hh>
 #include <stdio.h>
 
 struct TransfMat {

@@ -40,7 +40,8 @@ Paired t-test: In many applications it is natural to make two measurements of es
 Small-sample Comparations...: this method is similar to the above one but does not assume that the data is paired. the input is just the mean and the standard deviation of both populations.
 
 *************************************************************************/
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippDocFiles.hh>
 
 void Usage();
 

@@ -24,7 +24,10 @@
  ***************************************************************************/
 
 /* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippGeometry.hh>
+#include <XmippData/xmippHistograms.hh>
 #include <XmippInterface/xmippSpider.hh>
 #include <fstream.h>
 

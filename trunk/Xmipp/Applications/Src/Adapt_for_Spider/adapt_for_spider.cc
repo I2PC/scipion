@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
 #include <XmippInterface/xmippSpider.hh>
 
 void Usage();
