@@ -50,8 +50,10 @@ void Micrograph::clear() {
    __depth=-1;
    m8=NULL;
    m16=NULL;
+   um16=NULL;
    m32=NULL;
-   compute_log=FALSE;
+   compute_transmitance=FALSE;
+   compute_inverse=FALSE;
    __scaling_valid=FALSE;
    /* __in_core=FALSE;*/
 }
@@ -77,6 +79,9 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
       __offset=AtoI(get_param(fh_inf,"offset"));
    else
       __offset=0;   
+   if (check_param(fh_inf,"is_signed"))
+      __is_signed=(get_param(fh_inf,"is_signed")=="true");
+   else __is_signed=false;
    fclose(fh_inf);
 
    // Open micrograph and map
@@ -107,6 +112,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
          break;
       case 16:
          /* if (!in_core) { */
+	 if(__is_signed){
             m16=(short int *) mmap(0,(__depth/8)*Ydim*Xdim,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
             if (m16==MAP_FAILED) {
@@ -127,6 +133,33 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
                   _fn_micrograph+" in memory");
 	    }
+          aux_ptr=(char *)m16;
+	  m16=(short int *) aux_ptr;
+	  }
+	  else {
+            um16=(unsigned short int *) mmap(0,(__depth/8)*Ydim*Xdim,
+               PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
+            if (um16==MAP_FAILED) {
+               /*
+	       switch (errno) {
+	          case EACCES:    cout << "EACCES:   \n"; break;
+      	          case EAGAIN:    cout << "EAGAIN:   \n"; break;
+		  case EBADF:     cout << "EBADF:    \n"; break;
+		  case EINVAL:    cout << "EINVAL:   \n"; break;
+		  case EMFILE:    cout << "EMFILE:   \n"; break;
+		  case ENODEV:    cout << "ENODEV:   \n"; break;
+		  case ENOMEM:    cout << "ENOMEM:   \n"; break;
+		  case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
+		  case ENXIO:     cout << "ENXIO:    \n"; break;
+		  case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+	       }
+	       */
+               REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
+                  _fn_micrograph+" in memory");
+	    }
+          aux_ptr=(char *)um16;
+	  um16=(unsigned short int *) aux_ptr;
+	  } 
          /* } else {
             m16=new short int (Ydim*Xdim*__depth/8);
             int length=Ydim*Xdim*__depth/8;
@@ -134,9 +167,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot read "+
                   _fn_micrograph+" in memory");
          } */
-         aux_ptr=(char *)m16;
-	 aux_ptr+=__offset;
-	 m16=(short int *) aux_ptr;
+         aux_ptr+=__offset;
          break;
       case 32:
       	    // Map file in memory
@@ -165,11 +196,19 @@ void Micrograph::close_micrograph() {
 	    m8-=__offset;
 	    munmap((char *)m8,Ydim*Xdim*__depth/8+__offset);
          } else if (__depth==16) {
-	    char *aux_ptr=(char *)m16;
-	    aux_ptr-=__offset;
-	    m16=(short int *)aux_ptr;
-	    munmap((char *)m16,Ydim*Xdim*__depth/8+__offset);
-         } else if (__depth==32) {
+	    if(__is_signed){
+		char *aux_ptr=(char *)m16;
+		aux_ptr-=__offset;
+		m16=(short int *)aux_ptr;
+		munmap((char *)m16,Ydim*Xdim*__depth/8+__offset);
+            }
+	    else{
+	        char *aux_ptr=(char *)um16;
+	        aux_ptr-=__offset;
+	        um16=(unsigned short int *)aux_ptr;
+	        munmap((char *)um16,Ydim*Xdim*__depth/8+__offset);
+	    }	
+	 } else if (__depth==32) {
 	    char *aux_ptr=(char *)m32;
 	    aux_ptr-=__offset;
 	    m32=(float *)aux_ptr;
@@ -272,7 +311,8 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, Image &result,
-   double scaleX, double scaleY, bool only_check) _THROW {
+   double Dmin, double Dmax, double scaleX, double scaleY, 
+   bool only_check) _THROW {
    if (X_window_size==-1 || Y_window_size==-1)
       REPORT_ERROR(1,"Micrograph::scissor: window size not set");
 
@@ -282,33 +322,40 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
    int j0=ROUND(scaleX*P.X)+FIRST_XMIPP_INDEX(X_window_size);
    int jF=ROUND(scaleX*P.X)+LAST_XMIPP_INDEX(X_window_size);
    int retval=1;
+   double range,temp;
+   range=Dmax-Dmin;
    if (i0<0 || iF>=Ydim || j0<0 || jF>=Xdim) {
       result().init_zeros();
       retval=0;
    } else
-      if (!only_check) 
+      if (!only_check){
 	 for (int i=i0; i<=iF; i++)
             for (int j=j0; j<=jF; j++){
-	       if(compute_log){
-	          if((*this)(j,i)<1){
-		     result(i-i0,j-j0)=0;
-		     if((*this)(j,i)<0)
-		     cerr << "WARNING: Input Pixel negative (Micrograph::scissor)" << endl;
-		  }   
+	       if(compute_transmitance){
+		  if((*this)(j,i)<1)
+		     temp = (*this)(j,i);
 		  else   
-	             result(i-i0,j-j0)=log10((double)(*this)(j,i));
-	       }  
-               else
-	          result(i-i0,j-j0)=(*this)(j,i);
-	     }	  
+		     temp = log10((double)(*this)(j,i));
+		  if(compute_inverse)
+		     result(i-i0,j-j0)= (Dmax-temp)/range;
+		  else  
+		     result(i-i0,j-j0)= (temp-Dmin)/range;
+		  }   
+	        else{ 
+		   if(compute_inverse)
+	                result(i-i0,j-j0)= (Dmax-(*this)(j,i))/range;
+	           else
+	                result(i-i0,j-j0)= (*this)(j,i);
+	        }
+	     }
+      }	     	  
    return retval;
 }
 
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, const FileName &fn_root,
    int starting_index, const FileName &fn_image, double ang, double tilt,
-   double psi
-    ) _THROW {
+   double psi) _THROW {
    SelFile SF;
    FileName fn_out;
    ImageXmipp I;
@@ -320,7 +367,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
       M=new Micrograph;
       M->open_micrograph(fn_image,__reversed);
       M->set_window_size(X_window_size, Y_window_size);
-      M->set_log_flag(compute_log);
+      M->set_transmitance_flag(compute_transmitance);
+      M->set_inverse_flag(compute_inverse);
    }
    
    // Set scale for particles
@@ -329,7 +377,23 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
    this->size(thisXdim, thisYdim);
    double scaleX=(double)MXdim/thisXdim;
    double scaleY=(double)MYdim/thisYdim;
-
+   
+   // Compute max and minimum if compute_transmitance 
+   // or compute_inverse flags are ON
+   double Dmax, Dmin;
+   if(compute_transmitance || compute_inverse){
+      (*this).compute_double_minmax(Dmin,Dmax);
+      //#define DEBUG66
+      #ifdef DEBUG66
+        cout << "Min= " << Dmin << " Dmax" << Dmax << endl;
+      #endif
+      #undef DEBUG66
+      if(compute_transmitance)
+         if( Dmin > 1) Dmin = log10(Dmin);
+         if( Dmax > 1) Dmax = log10(Dmax);
+   }
+cout << "compute_transmitance " << compute_transmitance
+     << " compute_inverse " << compute_inverse << endl;
    // Scissor all particles
    if (ang!=0)
       cout << "Angle from Y axis to tilt axis " << ang << endl
@@ -339,7 +403,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
    for (int n=0; n<nmax; n++) 
       if (coords[n].valid && coords[n].label==label) {
          fn_out.compose(fn_root,i++,"xmp");
-         if (!M->scissor(coords[n],(Image &) I, scaleX, scaleY)) {
+         if (!M->scissor(coords[n],(Image &) I, Dmin, Dmax, scaleX, scaleY)) {
             cout << "Particle " << fn_out << " is very near the border, "
                  << "corresponding image is set to blank\n";
             SF.insert(fn_out,SelLine::DISCARDED);

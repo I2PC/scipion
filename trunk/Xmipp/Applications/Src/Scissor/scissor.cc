@@ -33,6 +33,8 @@ int main (int argc, char **argv) {
    int      Ydim, Xdim;
    int      startN;
    bool     reverse_endian;
+   bool     compute_transmitance=FALSE;
+   bool     compute_inverse=FALSE;
    double   alpha;
    try {
       fn_micrograph = get_param(argc,argv,"-i");
@@ -46,6 +48,8 @@ int main (int argc, char **argv) {
       else Ydim=Xdim;
       startN        = AtoI(get_param(argc,argv,"-start","1"));
       reverse_endian= check_param(argc,argv,"-reverse_endian");
+      compute_inverse= check_param(argc,argv,"-invert");
+      compute_transmitance= check_param(argc,argv,"-log");
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
    try {
       Micrograph m;
@@ -53,7 +57,11 @@ int main (int argc, char **argv) {
       m.set_window_size(Xdim,Ydim);
       m.read_coordinates(0,fn_pos);
       m.add_label("");
+      m.set_transmitance_flag(compute_transmitance);
+      m.set_inverse_flag(compute_inverse);
       m.produce_all_images(0,fn_root,startN,fn_orig,alpha);
+cout << "compute_transmitance " << compute_transmitance
+     << " compute_inverse " << compute_inverse << endl;
    } catch (Xmipp_error XE) {cout << XE;}
 }
 
@@ -70,6 +78,9 @@ void Usage() {
         << "  [-reverse_endian]           : of the input micrographs\n"
 	<< "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
 	<< "                                as it comes out from xmipp_mark\n"
+	<< "  [-invert]                   : Invert contrast\n"
+	<< "  [-log]                      : Compute optical density\n"
+	<< "                                from transmitance\n"
    ;
 }
 

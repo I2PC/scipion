@@ -32,7 +32,7 @@
 #include <vector>
 #include "xmippFuncs.hh"
 #include "xmippImages.hh"
-
+#include "xmippMatrices2D.hh"
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
@@ -77,9 +77,12 @@ protected:
    int                     __depth;
    int                     __offset;
    bool                    __reversed;
-   bool                    compute_log;
+   bool                    __is_signed;
+   bool                    compute_transmitance;
+   bool                    compute_inverse;
    unsigned char           *m8;
    short int               *m16;
+   unsigned short int      *um16;
    float                   *m32;
    bool                    __scaling_valid;
    float                   __a;
@@ -138,19 +141,33 @@ public:
    void set_window_size(int _X_window_size, int _Y_window_size)
       {X_window_size=_X_window_size; Y_window_size=_Y_window_size;}
       
-   /** Set Log flag.
-       When cutting images, a log10 is computed over the pixel values
-       if this flag=true. This function sets it
-       Note: if pixel_value=FALSE, no log is computed */   
+   /** Set Transmitance flag.
+       When cutting images, 1/log10 is computed over the pixel values
+       if this transmitance_flag=true. This function sets it
+       Note: if pixel_value=0, no log is computed */   
        
-   void set_log_flag (bool flag_value){compute_log=flag_value;}
+   void set_transmitance_flag (bool flag_value){compute_transmitance =
+                                                            flag_value;}
+      
+   /** Get Transmitance flag.
+       When cutting images, 1/log10 is computed over the pixel values
+       if transmitance_flag=true. This function reads it
+       Note: if pixel_value=0, no log is computed */   
+       
+   bool read_transmitance_flag (void){return compute_transmitance;}
+
+   /** Set Log flag.
+       When cutting images, the contrast is inverted if inverse flag
+       is true.  */   
+       
+   void set_inverse_flag (bool flag_value){compute_inverse =
+                                                            flag_value;}
       
    /** Get Log flag.
-       When cutting images, a log10 is computed over the pixel values
-       if this flag=true. This function read it.
-       Note: if pixel_value=FALSE, no log is computed */   
+       When cutting images, the contrast is inverted
+       if inverse flag=true.  This function reads it*/   
        
-   bool read_log_flag (void){return compute_log;}
+   bool read_inverse_flag (void){return compute_inverse;}
 
    /** Scissor.
        The single particle is selected by an index within the particle
@@ -166,8 +183,12 @@ public:
        If only check is true then the particle is not scissored, but
        the routine only checks if it can be done.
        
+       Dmax and Dmin are used to invert the image and or compute the
+       trnasmitance
+       
        Returns 0 if an error ocurred and 1 if everything is all right*/
    int scissor(const Particle_coords &P, Image &result,
+      double Dmin, double Dmax,
       double scaleX=1, double scaleY=1, bool only_check=false) _THROW;
 
    /** Access to array of 8 bits. */
@@ -175,6 +196,9 @@ public:
 
    /** Access to array of 16 bits. */
    short int * array16() const {return m16;}
+
+   /** Access to unsigned array of 16 bits. */
+   unsigned short int * arrayU16() const {return um16;}
 
    /** Access to array of 32 bits. */
    float * array32() const {return m32;}
@@ -188,12 +212,21 @@ public:
       if      (__depth== 8) {
          return m8[y*Xdim+x];
       } else if (__depth==16) {
-         unsigned short int retval=m16[y*Xdim+x];
-         if (__reversed) {
-	    unsigned char *ptr=(unsigned char *)&retval, temp;
-	    SWAP(*ptr,*(ptr+1),temp);
+        if (__is_signed) {
+            short int retval=m16[y*Xdim+x];
+            if (__reversed) {
+               unsigned char *ptr=(unsigned char *)&retval, temp;
+               SWAP(*ptr,*(ptr+1),temp);
+            }
+            return retval;
+         } else {
+            unsigned short int retval=um16[y*Xdim+x];
+            if (__reversed) {
+	       unsigned char *ptr=(unsigned char *)&retval, temp;
+	       SWAP(*ptr,*(ptr+1),temp);
+            }
+            return retval;
          }
-         return retval;
       } else if (__depth==32) {
          float retval=m32[y*Xdim+x];
          if (__reversed) {
@@ -205,12 +238,64 @@ public:
       } else REPORT_ERROR(1,"Micrograph::(): depth is not 8, 16 or 32");
    }
 
+   /** Micrograph max min*/
+   void compute_double_minmax(double &Dmin, double &Dmax) const _THROW {
+      if      (__depth== 8) {
+     unsigned char _Max=0;
+     unsigned char _min=255;
+      for (int i=0; i < Ydim; i++)
+        for (int j=0; j < Xdim; j++)
+        {
+            if(m8[i*Xdim+j]>_Max) _Max=m8[i*Xdim+j];
+            if(m8[i*Xdim+j]<_min) _min=m8[i*Xdim+j];
+        }
+	Dmin=(double)_min;Dmax=(double)_Max;
+      } 
+      else if (__depth==16) {
+         if(__is_signed){ 
+	    int _Max= -32768;
+	    int _min=32767;
+	     for (int i=0; i < Ydim; i++)
+               for (int j=0; j < Xdim; j++){
+        	   if(m16[i*Xdim+j]>_Max) _Max=m16[i*Xdim+j];
+        	   if(m16[i*Xdim+j]<_min) _min=m16[i*Xdim+j];
+               }
+          Dmin=(double)_min;Dmax=(double)_Max;
+	  }   
+         else{ 
+	    unsigned int _Max= 0;
+	    unsigned int _min=65535;
+	     for (int i=0; i < Ydim; i++)
+               for (int j=0; j < Xdim; j++){
+        	   if(um16[i*Xdim+j]>_Max) _Max=um16[i*Xdim+j];
+        	   if(um16[i*Xdim+j]<_min) _min=um16[i*Xdim+j];
+               }
+          Dmin=(double)_min;Dmax=(double)_Max;
+	  }   
+      }
+      else if (__depth==32) {
+	    float _Max= -10e10;
+	    float _min=  10e10;
+	     for (int i=0; i < Ydim; i++)
+               for (int j=0; j < Xdim; j++){
+        	   if(m32[i*Xdim+j]>_Max) _Max=m32[i*Xdim+j];
+        	   if(m32[i*Xdim+j]<_min) _min=m32[i*Xdim+j];
+               }
+
+	Dmin=(double)_min;Dmax=(double)_Max;
+      }
+      else REPORT_ERROR(1,"Micrograph::(): depth is not 8, 16 or 32");
+   }
+
    /** Pixel access for writing. */
    void set_val(int x, int y, double new_val) _THROW {
       if (y<0 || y>=Ydim || x<0 || x>=Xdim)
          REPORT_ERROR(1,"Micrograph::set_val: index out of range");
       if      (__depth== 8) m8[y*Xdim+x]=(unsigned char) new_val;
-      else if (__depth==16) m16[y*Xdim+x]=(short int) new_val;
+      else if (__depth==16 && __is_signed==TRUE) m16[y*Xdim+x]=
+                                                   (short int) new_val;
+      else if (__depth==16 && __is_signed==FALSE) um16[y*Xdim+x]=
+                                                   (unsigned short int) new_val;
       else if (__depth==32) m32[y*Xdim+x]=(float) new_val;
       else REPORT_ERROR(1,"Micrograph::set_val: depth is not 8, 16 or 32");
    }

@@ -104,7 +104,7 @@ void QtFileMenu::slotSaveCoords() {
 void QtFileMenu::slotGenerateImages() {
    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
    if ( m == NULL ) return;
-   
+/*   
    switch(QMessageBox::information( this, "Mark",
                                    "Generate active family images\n"
                                    "Are you sure?",
@@ -116,7 +116,7 @@ void QtFileMenu::slotGenerateImages() {
        case 1: // No clicked or Alt-N pressed or ESC
            return; break;
     }
-
+*/
    int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
    try {
       QDialog   setPropertiesDialog( this, 0, TRUE );
@@ -136,9 +136,10 @@ void QtFileMenu::slotGenerateImages() {
       startingIndexLineEdit.setText( "1" );
       QLabel    originalM( "Original micrograph: ", &qgrid );
       QLineEdit originalMLineEdit( &qgrid );
-      QLabel    onlytofill( "Compute Log?:", &qgrid );
-      QRadioButton  computeLOG( "Check box for yes", &qgrid );
-      computeLOG.setChecked(FALSE);
+      QRadioButton  computeTransmitance( "Transmitance -> O.D.  ", &qgrid );
+      QRadioButton  computeInverse( "Invert", &qgrid );
+      computeTransmitance.setChecked(FALSE);
+      computeInverse.setChecked(FALSE);
       QPushButton okButton( "Ok", &qgrid );
       QPushButton cancelButton( "Cancel", &qgrid );
   
@@ -150,8 +151,8 @@ void QtFileMenu::slotGenerateImages() {
       if ( setPropertiesDialog.exec() ) {
          m->set_window_size( windowSizeXLineEdit.text().toInt(), 
                              windowSizeYLineEdit.text().toInt() );
-         m->set_log_flag(computeLOG.isChecked());
-cout << "compute_log (File Menu)" << m->read_log_flag() << endl;
+         m->set_transmitance_flag(computeTransmitance.isChecked());
+         m->set_inverse_flag(computeInverse.isChecked());
          if ( !rootNameLineEdit.text().isEmpty() ) {
 	    // Select right angle
 	    #define MAIN_WIDGET \
