@@ -57,8 +57,6 @@ SUBDIRS = 2DInterpolation \
 	Mask \
 	Microscope \
 	Morphology \
-	MPIArt \
-	MPI_WBP \
 	MvSel \
 	Normalize \
 	Operate \
@@ -108,5 +106,12 @@ SUBDIRS = 2DInterpolation \
 	WBP \
 	Window \
 	Window_micrograph \
-	XMask
-	
+	XMask 
+
+if BUILD_MPI
+SUBDIRS += MPIArt \
+	MPI_WBP 
+else
+SUBDIRS +=  
+endif
+
