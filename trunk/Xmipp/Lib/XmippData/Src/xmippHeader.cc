@@ -187,12 +187,20 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
        FREAD(&header.fNada2,      sizeof(char),  764, fp, TRUE); 
   }
 
-  if (!skip_extra_checkings)
-     if (!fstat(fileno(fp), &info)) {
-       unsigned long usfNcol=(unsigned long) header.fNcol;
-       unsigned long usfNrow=(unsigned long) header.fNrow;
-       unsigned long usfNslice=(unsigned long) header.fNslice;
-       unsigned long usfHeader=(unsigned long) get_header_size();
+  unsigned long usfNcol=(unsigned long) header.fNcol;
+  unsigned long usfNrow=(unsigned long) header.fNrow;
+  unsigned long usfNslice=(unsigned long) header.fNslice;
+  unsigned long usfHeader=(unsigned long) get_header_size();
+  if (fstat(fileno(fp), &info)) return FALSE;
+  
+  // CO: Check if it is an "aberrant" image
+  if (im==IMG_XMIPP || header.fIform==1)
+     if (usfNcol*usfNrow*sizeof(float) == info.st_size) {
+        usfNrow=(unsigned long)(--header.fNrow); --header.fNrec;
+     }
+  
+  // Extra checkings
+  if (!skip_extra_checkings) {
        switch (im) {
        case IMG_XMIPP: 
          size = usfHeader + usfNcol*usfNrow*sizeof(float);
@@ -241,7 +249,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          else if (skip_type_check) header.fIform=-3;
          break;
        }    
-     } else return FALSE;
+     }
 
   /* This is Spider stuff, it's an acient trick.
      The only thing we need to know is that Spider images
