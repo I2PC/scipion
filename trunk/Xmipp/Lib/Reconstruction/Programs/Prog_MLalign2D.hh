@@ -58,8 +58,6 @@ public:
   vector<double> mirror_fraction;
   /** Flag for checking mirror images of all references */
   bool do_mirror;
-  /** Flag whether to apply shifts in header of 2D-images */
-  bool apply_shifts;
   /** Flag whether to fix estimates for model fractions */
   bool fix_fractions;
   /** Flag whether to fix estimate for sigma of origin offset */
@@ -98,10 +96,6 @@ public:
   bool write_selfiles;
   // Write out images and selfile after each iteration
   bool write_intermediate;
-  // Fast mode
-  bool fast_mode;
-  // For fast mode: optimal origin offsets
-  vector<double > offset_x,offset_y;
   // SelFile images (working and reference set)
   SelFile SF, SFr;
   // vector for flipping (i.e. 90/180-degree rotations) matrices
@@ -110,58 +104,70 @@ public:
   vector <ImageXmipp> Iref, Iold;
   /** Maximum-shift for conventional LSQ refinement */
   double max_shift;
+  // Vector to store optimal origin offsets (for CC-precalculation)
+  vector<vector<matrix1D<double> > > imgs_offsets;
+  // Matrices for calculating PDF of (in-plane) translations
+  matrix2D<double> P_phi, Mr2;
+  // Fast mode
+  bool fast_mode;
+  // Fast mode
+  double C_fast;
+  // Fast mode
+  double Paccept_fast;
 
 public:
-  /// Read argument from command line
+  /// Read arguments from command line
   void read(int argc, char **argv) _THROW;
   
-  /// Read input images all in memory
-  void read_all_input_in_memory() _THROW;
-
-  /// Generate initial references from random subset averages
-  void generate_initial_references() _THROW;
-
   /// Show
   void show();
 
   /// Usage
   void usage();
 
+  /// Read input images all in memory
+  void produce_Side_info() _THROW;
+
+  /// Generate initial references from random subset averages
+  void generate_initial_references() _THROW;
+
   /// Calculate probability density distribution for in-plane transformations
-  void calculate_pdf_phi(double &sigma_offset, matrix2D<double> &P_phi, matrix2D<double> &Mr2) _THROW;
+  void calculate_pdf_phi() _THROW;
 
   /// Fill vector of matrices with all rotations of reference
-  void rotate_reference(vector<ImageXmipp> &Iref, bool &real_space, 
-			vector <vector< matrix2D<double> > > &Mref,
+  void rotate_reference(vector<ImageXmipp> &Iref, bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW;
 
   /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-  void reverse_rotate_reference(vector <vector< matrix2D<double> > > &Mnew, 
-                                vector <vector< matrix2D<complex<double> > > > &Fnew, 
-				bool &real_space, 
-                                vector<matrix2D<double> > &Mref) _THROW;
+  void reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fnew, 
+				vector <vector< matrix2D<double> > > &Mnew, bool &real_space, 
+				vector<matrix2D<double> > &Mref) _THROW;
  
-  /// Calculate weighted averages for new model and new model parameters 
-  /// Only integrate over all references and in-plane rotations (i.e. skip translations!)
-  void ML_integrate_model_phi(matrix2D<double> &Mimg, vector <vector< matrix2D<double > > > &Mref, 
-			      vector<double> &P_model, vector<vector<matrix2D<double> > > &Mwsum_imgs,
-			      double &wsum_sigma_noise, vector<double> &sumw, vector<double> &sumw_mirror, 
-			      double &LL, double &maxcorr,
-			      int &opt_refno, double &opt_psi, double &opt_xoff, double &opt_yoff) _THROW;
+  /// Pre-calculate which model and phi have significant probabilities without taking translations into account!
+  void preselect_significant_model_phi(matrix2D<double> &Mimg, vector<matrix1D<double> > &offsets, 
+				       vector <vector< matrix2D<double > > > &Mref, 
+				       matrix2D<int> &Msign) _THROW;
 
-  /// Calculate weighted averages for new model and new model parameters 
-  /// Complete integration over all references, in-plane rotations and translations
+  /// Calculate weighted ML averages for new model and new model parameters 
   void ML_integrate_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
-				    vector<double> &P_model, matrix2D<double> &P_phi, matrix2D<double> &Mr2,
+				    matrix2D<int> &Msignificant,
 				    vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
-				    double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror, 
-				    double &LL, double &maxcorr, 
-				    int &opt_refno, double &opt_psi, double &opt_xoff, double &opt_yoff) _THROW;
+				    double &wsum_sigma_noise, double &wsum_sigma_offset, 
+				    vector<double> &sumw, vector<double> &sumw_mirror, 
+				    double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
+				    matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW;
+
+  /// Calculate LSQ averages for new model and new model parameters 
+  void LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
+				  double &max_shift, matrix2D<int> &Msignificant, 
+				  vector <vector< matrix2D<double> > > &Msum_imgs, 
+				  vector<double> &sumw, vector<double> &sumw_mirror, 
+				  double &maxCC, int &opt_refno, double &opt_psi, 
+				  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW;
 
   /// Integrate over all experimental images
   void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, 
-			  matrix2D<double> &P_phi, matrix2D<double> &Mr2, vector<double> &P_model, vector<double> &mirror_fraction, 
-			  double &LL, double &avecorr, DocFile &DFo, 
+			  double &LL, double &sumcorr, DocFile &DFo, 
 			  vector<matrix2D<double> > &wsum_Mref,
 			  double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror) _THROW;
 
@@ -169,8 +175,6 @@ public:
   void write_output_files(const int iter, SelFile &SF, DocFile &DF, 
 			  double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv) _THROW;
 
-  /// Main routine
-  void MLalign2D() _THROW;
 
 };				    
 //@}
