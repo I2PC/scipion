@@ -1,0 +1,5 @@
+######################################################################
+PROJ = compare_selfiles
+OBJ  = compare_selfiles.o
+LIBS = -l$(LIBXMIPP)
+
