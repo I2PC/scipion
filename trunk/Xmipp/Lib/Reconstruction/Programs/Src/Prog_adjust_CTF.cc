@@ -1196,7 +1196,7 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
        global_current_central_weight=2;
        
        // Adjust without penalization
-       double imax=CEIL(log(prm.central_weight)/log(2));
+       double imax=CEIL(log(prm.central_weight)/log(2.0));
        for (int i=1; i<=imax; i+=2) {
           cerr << "   Central weight= "
                << global_current_central_weight << endl;
@@ -1235,7 +1235,7 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
        if ((int)p==p) imax=(int)p-1;
        else imax=FLOOR(p);
        for (int i=imax; i>=0; i-=2) {
-          global_current_penalty=pow(2,i);
+          global_current_penalty=pow(2.0,i);
           if (global_current_penalty==1) global_penalize=FALSE;
           cerr << "     Iteration " << i
  	      << " penalty=" << global_current_penalty << endl;
@@ -1267,7 +1267,7 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
        global_current_central_weight=2;
        
        // Adjust without penalization
-       double imax=CEIL(log(prm.central_weight)/log(2));
+       double imax=CEIL(log(prm.central_weight)/log(2.0));
        for (int i=1; i<=imax; i+=2) {
           cerr << "   Central weight= "
                << global_current_central_weight << endl;
