@@ -273,7 +273,8 @@ int main (int argc, char *argv[]) {
 			}
 	        }
 		else if( art_prm.parallel_mode==Basic_ART_Parameters::BiCAV ){
-			// Creates and initializes special variables needed to BICAV weights computation.
+
+		// Creates and initializes special variables needed to BICAV weights computation.
 			GridVolumeT<int> GVNeq_aux; // This is a buffer for communications
 			
 			int numsteps = Npart / art_prm.block_size;
@@ -357,10 +358,12 @@ int main (int argc, char *argv[]) {
 			}	
 		}
 		else{   // SIRT AND AVSP
-			if(art_prm.SIRT)
+
+			if( art_prm.parallel_mode == Basic_ART_Parameters::SIRT )
+			{
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
-			
+			}
 			Basic_ART_iterations(art_prm, eprm, vol_blobs, dummy, rank);
 		
 			// All processors send their result and get the other's so all of them
@@ -368,7 +371,7 @@ int main (int argc, char *argv[]) {
 			for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 			{
 			        // SIRT Alg. needs to store previous results but AVSP doesn't
-				if(art_prm.SIRT)
+				if( art_prm.parallel_mode == Basic_ART_Parameters::SIRT )
 				{
 					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
 					vol_blobs(j)() *= ((double)art_prm.numIMG /(double) num_img_tot);
@@ -378,8 +381,9 @@ int main (int argc, char *argv[]) {
 				aux_t = MPI_Wtime() - aux_comm_t;
 				comms_t += aux_t;
 				comms_t_it += aux_t;
+
 				// SIRT uses the previously stored volume
-				if( !art_prm.SIRT )
+				if( art_prm.parallel_mode == Basic_ART_Parameters::AVSP )
 				{
 					vol_blobs(j)() = vol_blobs_aux(j)();
 					vol_blobs(j)() /= size; // Non-SIRT Normalization
