@@ -46,8 +46,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    psi_step=AtoF(get_param(argc,argv,"-psi_step","5"));
    shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
    th_discard=AtoF(get_param(argc,argv,"-keep","50"));
-   update_visible_space=check_param(argc,argv,"-update_visible");
-   th_denoise=AtoF(get_param(argc,argv,"-th_denoise","99.75"));
+   s_denoise=AtoI(get_param(argc,argv,"-s_denoise","0"));
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
@@ -71,8 +70,7 @@ void Prog_angular_predict_prm::show() {
 	<< "Max psi change: " << max_psi_change << " step: " << psi_step << endl
 	<< "Max shift change: " << max_shift_change << " step: " << shift_step << endl
         << "Keep %: " << th_discard << endl
-        << "Update visible space:" << update_visible_space << endl
-        << "th_denoise: " << th_denoise << endl
+        << "s_denoise: " << s_denoise << endl
         << "Check mirrors: " << check_mirrors << endl
         << "Show level: " << tell << endl
    ;
@@ -98,8 +96,7 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
 	<< "  [-shift_step <r=1>]       : Step in shift in pixels\n"
         << "  [-keep <th=50%>]          : How many images are kept each round\n"
-        << "  [-update_visible]         : Update visible space\n"
-        << "  [-th_denoise <th=99.75%>] : Threshold for building the visible space\n"
+        << "  [-s_denoise <s=0>]        : Scale used when building the visible space\n"
         << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
         << "                              images are also explored\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
@@ -172,26 +169,16 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    // Read or update the visible space
    if (fn_refsel!="") { // No projection will be done in this program
       PCA_denoise.fn_ref=fn_refsel;
-      PCA_denoise.th_var=th_denoise;
+      PCA_denoise.th_var=0;
       PCA_denoise.fn_exp="";
-      PCA_denoise.s=0;
+      PCA_denoise.s=s_denoise;
       PCA_denoise.produce_side_info();
-      bool create_visible_space=update_visible_space;
-      if (!create_visible_space) {
-         try {
-            PCA_denoise.read_PCA_from_file();
-         } catch (Xmipp_error XE) {
-            // If the files cannot be found then create them
-            // if the error is something else then throw again the exception
-            if (XE.__errno==1) create_visible_space=true;
-            else REPORT_ERROR(XE.__errno,XE.msg);
-         }
-      }
-
-      if (create_visible_space) {
-         cerr << "Creating the visible space ...\n";
-         PCA_denoise.build_training_sets();
-         PCA_denoise.perform_PCA();
+      try {
+         PCA_denoise.read_PCA_from_file();
+      } catch (Xmipp_error XE) {
+         cout << XE;
+         REPORT_ERROR(1,"Prog_angular_predict_prm::produce_side_info: "
+            "the visible space has not been constructed");
       }
    }
 }
@@ -503,6 +490,7 @@ int Prog_angular_predict_prm::pick_view(vector< vector<int> >groups,
 }
 
 // Predict shift and psi -----------------------------------------------------
+//#define DEBUG
 double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double &assigned_shiftX, double &assigned_shiftY,
    double &assigned_rot, double &assigned_tilt, double &assigned_psi) {
@@ -518,65 +506,79 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    else {psi0=I.psi()-max_psi_change; psiF=I.psi()+max_psi_change;}
 //   psi0=psiF=max_psi_change;
    double R2=max_shift_change*max_shift_change;
-
+   
    // Search in the psi-shift space
    int N_trials=0;
    vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr;
-   for (double shiftX=-max_shift_change; shiftX<=max_shift_change; shiftX+=shift_step)
-      for (double shiftY=-max_shift_change; shiftY<=max_shift_change; shiftY+=shift_step) {
-         if (shiftX*shiftX+shiftY*shiftY>R2) continue;
-         for (double psi=psi0; psi<=psiF; psi+=psi_step)
-            for (int mirror=0; mirror<=check_mirrors; mirror++) {
-      	       // Shift image if necessary
-               if (shiftX==0 && shiftY==0) Ip()=I();
-	       else {
-	          VECTOR_R2(shift,shiftX,shiftY);
-	          I().translate(shift,Ip(),WRAP);
+   for (int mirror=0; mirror<=check_mirrors; mirror++)
+      for (double shiftX=-max_shift_change; shiftX<=max_shift_change; shiftX+=shift_step)
+         for (double shiftY=-max_shift_change; shiftY<=max_shift_change; shiftY+=shift_step) {
+            if (shiftX*shiftX+shiftY*shiftY>R2) continue;
+            for (double psi=psi0; psi<=psiF; psi+=psi_step) {
+      	          // Shift image if necessary
+                  if (shiftX==0 && shiftY==0) Ip()=I();
+	          else {
+	             VECTOR_R2(shift,shiftX,shiftY);
+	             I().translate(shift,Ip(),WRAP);
+	          }
+
+	          // Rotate image if necessary
+	          // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
+	          // are treated in a different way
+	          Ip().self_rotate(psi+2, WRAP);
+	          Ip().self_rotate(-2,WRAP);
+
+                  // Mirror the image if necessary
+                  if (mirror) Ip().self_reverseY();
+
+                  #ifdef DEBUG
+                     Ip.write("PPPbefore_denoising.xmp");
+                  #endif
+
+                  // Project the resulting image onto the visible space
+                  if (fn_refsel!="") {
+                     xmippVector Vpca;
+                     STARTINGX(Ip())=STARTINGY(Ip())=0;
+                     Ip().statistics_adjust(0,1);
+                     PCA_denoise.project_image(Ip(),Vpca);
+                     PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
+                     Ip().set_Xmipp_origin();
+                     Ip().statistics_adjust(0,1);
+                  }
+
+                  #ifdef DEBUG
+                     Ip.write("PPPafter_denoising.xmp");
+                  #endif
+
+      	          // Search for the best tilt, rot angles
+                  double rotp, tiltp;
+                  double corrp=predict_rot_tilt_angles(Ip,rotp,tiltp);
+      	          if (tell & TELL_PSI_SHIFT)
+                     cout << "mirror=" << mirror
+                          << " shiftX= " << shiftX << " shiftY= " << shiftY
+	                  << " psi= " << psi << " rot= " << rotp
+		          << " tilt= " << tiltp << " corr= " << corrp
+		          /* << " error= " << error_pca */
+		          << endl; 
+
+                  // Check if the image was mirrored
+                  double rotp_aux=rotp, tiltp_aux=tiltp, psi_aux=psi;
+                  if (mirror) Euler_up_down(rotp,tiltp,psi,
+                     rotp_aux,tiltp_aux,psi_aux);
+
+	          vshiftX.push_back(shiftX);
+	          vshiftY.push_back(shiftY);
+	          vrot.push_back(rotp_aux);
+	          vtilt.push_back(tiltp_aux);
+	          vpsi.push_back(psi_aux);
+	          vcorr.push_back(corrp);
+
+	          N_trials++;
+                  #ifdef DEBUG
+                     cout << "Press any key\n"; char c; cin >> c;
+                  #endif
 	       }
-
-	       // Rotate image if necessary
-	       // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
-	       // are treated in a different way
-	       Ip().self_rotate(psi+2, WRAP);
-	       Ip().self_rotate(-2,WRAP);
-
-               // Mirror the image if necessary
-               if (mirror) Ip().self_reverseX();
-
-               // Project the resulting image onto the visible space
-               if (fn_refsel!="") {
-                  xmippVector Vpca;
-                  STARTINGX(Ip())=STARTINGY(Ip())=0;
-                  Ip().statistics_adjust(0,1);
-                  PCA_denoise.project_image(Ip(),Vpca);
-                  PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
-                  Ip().set_Xmipp_origin();
-                  Ip().statistics_adjust(0,1);
-               }
-
-      	       // Search for the best tilt, rot angles
-               double rotp, tiltp;
-               double corrp=predict_rot_tilt_angles(Ip,rotp,tiltp);
-      	       if (tell & TELL_PSI_SHIFT)
-                  cout << "shiftX= " << shiftX << " shiftY= " << shiftY
-	               << " psi= " << psi << " rot= " << rotp
-		       << " tilt= " << tiltp << " corr= " << corrp
-		       /* << " error= " << error_pca */
-		       << endl; 
-
-               // Check if the image was mirrored
-               if (mirror) Euler_up_down(rotp,tiltp,psi,rotp,tiltp,psi);
-
-	       vshiftX.push_back(shiftX);
-	       vshiftY.push_back(shiftY);
-	       vrot.push_back(rotp);
-	       vtilt.push_back(tiltp);
-	       vpsi.push_back(psi);
-	       vcorr.push_back(corrp);
-
-	       N_trials++;
-	    }
-      }
+         }
 
    // Is the psi range circular?
    bool circular=realWRAP(vpsi[0]-psi_step,-180,180)==
@@ -774,6 +776,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    current_img++;
    return best_rate;
 }
+#undef DEBUG
 
 // Finish processing ---------------------------------------------------------
 void Prog_angular_predict_prm::finish_processing() {
