@@ -211,12 +211,12 @@ try {
             else if (prm->oroot!="") {
                prm->fn_out=prm->oroot+fn_read.without_root();
 	       if (operation_mode==IMAGE2FOURIER)
-	          if (fn_read.get_extension()==".xmp")
+	          if (fn_read.get_extension()=="xmp")
       	             prm->fn_out=prm->fn_out.without_extension()+".fft";
 		  else
 		     prm->fn_out=prm->fn_out.without_extension()+".fft3";
 	       if (operation_mode==FOURIER2IMAGE)
-	          if (prm->fn_out.get_extension()==".fft")
+	          if (fn_read.get_extension()=="fft")
       	             prm->fn_out=prm->fn_out.without_extension()+".xmp";
 		  else
 		     prm->fn_out=prm->fn_out.without_extension()+".vol";
