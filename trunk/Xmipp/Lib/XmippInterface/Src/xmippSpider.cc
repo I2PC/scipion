@@ -522,7 +522,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
        << "ap mq\n"
        << "ideal****\n"
        << "projlist\n"
-       << "" << max_shift << endl
+       <<  max_shift << "," << shift_step << endl
        << first_ring << "," << last_ring << endl
        << "kk*****\n"
        << "1-" << last_image << endl
