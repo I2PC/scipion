@@ -1,0 +1,4 @@
+######################################################################
+PROJ = projectpca
+OBJ  = projectpca.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)
