@@ -30,6 +30,8 @@ SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
 	   Programs/Src/Prog_denoising.o Programs/Src/Prog_test_cluster.o \
            Programs/Src/Prog_normalize.o \
 	   Programs/Src/Prog_range_adjust.o \
+	   Programs/Src/Prog_make_spectra.o \
+	   Programs/Src/Prog_find_center.o \
            Src/xmippWavelets.o Src/xmippImagic.o \
            Src/xmippFFT.o Src/xmippTomogram.o
 BILIB_OBJS=Bilib/sources/changebasis.o \
@@ -67,7 +69,11 @@ BILIB_OBJS=Bilib/sources/changebasis.o \
            Bilib/sources/timestamp.o \
            Bilib/sources/traceline.o \
            Bilib/sources/window.o \
-           Bilib/sources/messagedisplay.o
+           Bilib/sources/messagedisplay.o \
+	   Bilib/sources/wavelet.cc \
+	   Bilib/sources/waveletfiltersfract.cc \
+	   Bilib/sources/waveletfilters.cc \
+	   Bilib/sources/wavelettools.cc 	
 
 # Main Action = Built library ----------------------------------------------
 all: $(LIBPROJ)

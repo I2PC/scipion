@@ -13,6 +13,8 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Programs/Src/Prog_test_cluster.cc \
 	Programs/Src/Prog_normalize.cc \
 	Programs/Src/Prog_range_adjust.cc \
+	Programs/Src/Prog_make_spectra.cc \
+	Programs/Src/Prog_find_center.cc \
 	Src/xmippWavelets.cc \
 	Src/xmippImagic.cc \
 	Src/xmippFFT.cc \
@@ -52,8 +54,11 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Bilib/sources/timestamp.cc \
 	Bilib/sources/traceline.cc \
 	Bilib/sources/window.cc \
-	Bilib/sources/messagedisplay.cc 
-	
+	Bilib/sources/messagedisplay.cc \
+	Bilib/sources/wavelet.cc \
+	Bilib/sources/waveletfiltersfract.cc \
+	Bilib/sources/waveletfilters.cc \
+	Bilib/sources/wavelettools.cc 	
 		
 INCLUDES = -I$(top_srcdir)/Lib \
 	-I$(top_srcdir)/Lib/XmippData/Bilib/headers \
