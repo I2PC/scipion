@@ -60,6 +60,7 @@ void Basic_ART_Parameters::default_values() {
     print_system_matrix=false;
     tell               = 0;
     save_intermidiate_every=0;
+    is_crystal         = false;
     
     IMG_Inf            = NULL;
     D                  = NULL;

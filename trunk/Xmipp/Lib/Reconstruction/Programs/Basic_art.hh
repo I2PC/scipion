@@ -193,6 +193,9 @@ public:
 
    /// Print system matrix
    bool print_system_matrix;
+
+   /// Is this a crystal 0 means NO 1 YES
+   bool is_crystal;
    
    #define TELL_IV   		     0x100
    #define TELL_ONLY_SYM	     0x80
