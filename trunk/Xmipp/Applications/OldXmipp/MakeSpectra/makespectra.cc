@@ -146,7 +146,7 @@ else
     Usage(argv[0]);
     exit(1);
  }
-x0 = atof(tmp);
+y00 = atof(tmp);
 
 if (check_param(argc, argv, "-y0"))
   tmp = (char*) get_param(argc, argv, "-y0", "");
@@ -156,7 +156,7 @@ else
     exit(1);
  }
   
-y00 = atof(tmp);
+x0 = atof(tmp);
 
 
 x0 ++;              /*** problemas del fortran ***/
