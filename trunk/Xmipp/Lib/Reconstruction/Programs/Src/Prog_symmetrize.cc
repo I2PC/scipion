@@ -60,6 +60,7 @@ ostream & operator << (ostream &out, const Symmetrize_Parameters &prm) {
 }
 
 /* Really symmetrize ------------------------------------------------------- */
+//#define DEBUG
 void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
    bool wrap, bool show_progress) {
    matrix2D<double> L(4,4), R(4,4); // A matrix from the list
@@ -82,6 +83,9 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
       /* *** CO: I don't know why the compiler doesn't allow me
          to reuse V_in !!!, this is very memory wasting */
       apply_geom(V_aux(),R.transpose(),V_in(),IS_NOT_INV,wrap);
+      #ifdef DEBUG
+         V_aux.write((string)"PPPsym_"+ItoA(i)+".vol");
+      #endif
 
       /* *** CO: I am not very sure about the reason for this, but it
          seems to work */
@@ -92,6 +96,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
    if (show_progress) progress_bar(SL.SymsNo());
    array_by_scalar(V_out(),SL.SymsNo()+1.0f,V_out(),'/');
 }
+#undef DEBUG
 
 /* Main program ------------------------------------------------------------ */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm) {

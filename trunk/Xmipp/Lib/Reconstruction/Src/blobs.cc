@@ -810,15 +810,12 @@ void ART_voxels2blobs_single_step(
    #ifdef DEBUG
       cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats();
       cout << endl;
-      VolumeXmipp save, save2;
-      save()=(*theo_vol)(); save.write("PPPtheovol.vol");
-      save()=(*corr_vol)(); save.write("PPPcorr2vol.vol");
-      save2().resize(save());
    #endif
    }
    #ifdef DEBUG
       VolumeXmipp save, save2;
       save()=(*theo_vol)(); save.write("PPPtheovol.vol");
+      cout << "Theoretical stats:"; save().print_stats(); cout << endl;
       save()=(*corr_vol)(); save.write("PPPcorr2vol.vol");
       save2().resize(save());
    #endif
@@ -863,8 +860,11 @@ void ART_voxels2blobs_single_step(
    }
    #ifdef DEBUG
       save.write("PPPdiffvol.vol");
+      cout << "Diff stats:"; save().print_stats(); cout << endl;
       save2.write("PPPreadvol.vol");
+      cout << "Read stats:"; save2().print_stats(); cout << endl;
       save()=(*corr_vol)(); save.write("PPPcorrvol.vol");
+      cout << "Corr stats:"; save().print_stats(); cout << endl;
    #endif
 
    mean_error /= MAX(N,1); // At worst, divided by 1
@@ -876,9 +876,11 @@ void ART_voxels2blobs_single_step(
       #ifdef DEBUG
 	 cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats();
 	 cout << endl;
-	 char c; cout << "Press any key to continue\n"; cin >> c;
       #endif
    }
+   #ifdef DEBUG
+      char c; cout << "Press any key to continue\n"; cin >> c;
+   #endif
 }
 #undef DEBUG
 
