@@ -48,31 +48,19 @@ public:
    XmippCTF             ctfmodel;
    /// Show convergence values
    bool                 show_optimization;
-   /// Do not optimize, only show the adjustment
-   bool                 do_not_optimize;
-   /// Do not fine search
-   bool                 do_not_fine_search;
    /// Allow astigmatic noise
    bool                 astigmatic_noise;
+   /// Allow autofocus
+   bool                 autofocus;
    
    /// Penalty for trespassing CTF in gaussian adjust 
    double               penalty;
-   /// Weight for the central (first two CTF lobes) region
-   double               central_weight;
    /// Minimum frequency to adjust 
    double               min_freq;
    /// Maximum frequency to adjust 
    double               max_freq;
-   /** Gamma correction.
-       This factor is applied during the determination of the
-       defoci parameters when there is no hint about their
-       values. The higher it is the more importance it is given
-       to low frequencies. A default value of 3 is recommended.*/
-   double               gamma;
    /// Accuracy. Stop criterion for iterations 
    double               accuracy;
-   /// Minimum threshold for adjusting
-   double               value_th;
    /// Sampling rate
    double               Tm;
    /// Evalaute fitness functions every n pixels, where n comes from evaluation_reduction
@@ -81,7 +69,14 @@ public:
    matrix1D<double>     adjust;
    /// Set of selected parameters to adjust
    matrix1D<double>     steps;
-
+   /** Weights of the fitting criterium.
+       \\weight(0)=10 avg L1 2D fit
+       \\weight(1)=10 correlation 2D fit
+       \\weight(2)= 1 sum L1 1D radial fit
+       \\weight(3)=10 max L1 1D radial fit
+       \\weight(4)=10 sum L1 1D derivative radial fit
+       \\weight(5)=10 max L1 1D derivative radial fit */
+   matrix1D<double>     weight;
 public:
    /// Read parameters from file
    void read(const FileName &fn_param) _THROW;

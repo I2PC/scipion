@@ -30,6 +30,9 @@
 #include <XmippData/xmippHistograms.hh>
 #include <vector.h>   // vector from STL library
 
+/* prototypes */
+double CTF_fitness(double *);
+
 /* Number of CTF parameters */
 #define CTF_PARAMETERS             23
 #define PARAMETRIC_CTF_PARAMETERS  13
@@ -45,31 +48,26 @@ matrix2D<int>    *global_ctf_mask;
 matrix1D<double> *global_adjust;
 vtkImageData     *global_ctf;
 
-histogram1D      *global_hist;
 double            global_value_th;
-
-vector<int>       global_minima_X,global_minima_Y;
-
-double            global_min_val;
-double            global_max_val;
 double            global_min_freq;
 double            global_max_freq;
+double            global_max_gauss_freq;
 double            global_w1U, global_w2U, global_w1V, global_w2V;
-double            global_gamma;
 double            global_Tm;
 bool              global_penalize;
 double            global_penalty;
 double            global_current_penalty;
-double            global_central_weight;
 matrix1D<double>  global_weight(6);
-double	          global_radial_length=1.0;
-double            global_current_central_weight;
 int               global_action; // 0=adjust background
-      	             	      	 // 1=adjust CTF
-				 // 2=adjust both
-                                 // 3=adjust CTF with few parameters
+      	             	      	 // 1=initial guess of CTF with few parameters 
+				 // 2=adjust CTF with few parameters
+				 // 3=adjust everything coarsely
+                                 // 4=adjust CTF finely
 
 int               global_show;   // Force CTF_fitness to show debugging info
+                                 // 0=no information
+				 // 1=low level of information
+				 // 2=deep level
 bool              global_compute_FFT_distance;
 
 // Penalization for forbidden values of the parameters
@@ -117,7 +115,6 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
    if (ia<=22 && l>0)
       if (astigmatic_noise) {ctfmodel.cV            =p[22]; l--;}
       else                  {ctfmodel.cV            =p[21]; l--;}
-//   cout << "Estoy 1:" << ctfmodel;
 }
 
 void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
@@ -153,7 +150,6 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
    if (ia<=22 && l>0)
       if (astigmatic_noise) {p[22]=ctfmodel.cV; l--;}
       else                  {p[22]=0;           l--;}
-//   cout << "Estoy 2:" << ctfmodel;
 }
 
 /* Read parameters --------------------------------------------------------- */
@@ -178,17 +174,14 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
          fn_out_CTF_parameters=fn_outroot+"_model.param";
    
    show_optimization=check_param(fh_param,"show_optimization"); 
-   do_not_optimize=check_param(fh_param,"do_not_optimize"); 
-   do_not_fine_search=check_param(fh_param,"do_not_fine_search"); 
-   penalty=AtoF(get_param(fh_param,"penalty",0,"128")); 
-   central_weight=AtoF(get_param(fh_param,"central_weight",0,"1")); 
+   penalty=AtoF(get_param(fh_param,"penalty",0,"16")); 
    min_freq=AtoF(get_param(fh_param,"min_freq",0,"0.05")); 
-   max_freq=AtoF(get_param(fh_param,"max_freq",0,"0.45")); 
-   gamma=AtoF(get_param(fh_param,"gamma",0,"3"));
+   max_freq=AtoF(get_param(fh_param,"max_freq",0,"0.35")); 
    accuracy=AtoF(get_param(fh_param,"accuracy",0,"1"));
       accuracy/=100; 
    evaluation_reduction=AtoI(get_param(fh_param,"eval_red",0,"4")); 
    astigmatic_noise=check_param(fh_param,"astigmatic_noise");
+   autofocus=!check_param(fh_param,"do_not_autofocus");
    
    if (check_param(fh_param,"steps")) 
       steps=get_vector_param(fh_param,"steps",PARAMETRIC_CTF_PARAMETERS); 
@@ -198,7 +191,14 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
       steps(1)=steps(5)=steps(6)=steps(7)=steps(8)=steps(10)=steps(11)=0; 
    } 
    
-   value_th=AtoF(get_param(fh_param,"value_th",0,"80")); 
+   if (check_param(fh_param,"weight")) 
+      weight=get_vector_param(fh_param,"weight",6);
+   else { 
+      weight.init_zeros(6); 
+      weight(0)=2;
+      weight(3)=15;
+      wieght(5)=415;
+   } 
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -218,46 +218,45 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
    if (fn_out_CTF_parameters!="" && fn_out_CTF_parameters!="_model.param")
       fh_param << "out_CTF_parameters="<< fn_out_CTF_parameters   << endl;
    fh_param << "penalty="              << penalty                 << endl
-            << "central_weight="       << central_weight          << endl
             << "min_freq="             << min_freq                << endl
             << "max_freq="             << max_freq                << endl
-            << "gamma="                << gamma                   << endl
             << "accuracy="             << 100*accuracy            << endl
             << "eval_red="             << evaluation_reduction    << endl
-            << "value_th="             << value_th                << endl
    ;
    if (show_optimization)  fh_param << "show_optimization=yes\n";
-   if (do_not_optimize)    fh_param << "do_not_optimize=yes\n";
-   if (do_not_fine_search) fh_param << "do_not_fine_search=yes\n";
    if (astigmatic_noise)   fh_param << "astigmatic_noise=yes\n";
+   if (!autofocus)         fh_param << "do_not_autofocus=yes\n";
 
    fh_param << "steps=[" << steps(0);
    for (int i=1; i<PARAMETRIC_CTF_PARAMETERS; i++)
       fh_param << ", " << steps(i);
    fh_param << "]\n";
 
+   fh_param << "weight=[" << weight(0);
+   for (int i=1; i<6; i++)
+      fh_param << ", " << weight(i);
+   fh_param << "]\n";
+   
    fh_param << endl;
 
    fh_param << ctfmodel << endl;
    fh_param.close();
 }
 
-
 /* Show -------------------------------------------------------------------- */
 void Adjust_CTF_Parameters::show() {
-   cout << "CTF file:        " << fn_ctf << endl
-	<< "Penalty:         " << penalty << endl
-	<< "Central weight:  " << central_weight << endl
-	<< "Min Freq.:       " << min_freq << endl
-	<< "Max Freq.:       " << max_freq << endl
-        << "Gamma:           " << gamma << endl
-	<< "Accuracy:        " << accuracy << endl
-	<< "Eval reduction:  " << evaluation_reduction << endl
-	<< "Sampling:        " << Tm << endl
-	<< "Threshold Sqrt:  " << value_th << endl
-        << "Astigmatic noise:" << astigmatic_noise << endl
-	<< "Starting:\n"       << ctfmodel << endl
-	<< "Steps:	     " << steps.transpose() << endl
+   cout << "CTF file:          " << fn_ctf << endl
+	<< "Penalty:           " << penalty << endl
+	<< "Min Freq.:         " << min_freq << endl
+	<< "Max Freq.:         " << max_freq << endl
+	<< "Accuracy:          " << accuracy << endl
+	<< "Eval reduction:    " << evaluation_reduction << endl
+	<< "Sampling:          " << Tm << endl
+        << "Astigmatic noise:  " << astigmatic_noise << endl
+	<< "Autofocus:         " << autofocus << endl
+	<< "Starting:\n"         << ctfmodel << endl
+	<< "Steps:	       " << steps.transpose() << endl
+	<< "Weight:	       " << weight.transpose() << endl
     ;
 }
 
@@ -277,25 +276,21 @@ void Adjust_CTF_Parameters::Usage() {
         << "                                 the input file.\n"
 	<< "   [steps=<vector>]            : An Xmipp vector of 13 elements saying what parameters \n"
 	<< "                                 of the CTF to adjust (put 1) or not (put 0).\n"  
-	<< "   [penalty=<f=128>]           : Penalty applied in background adjust to points whose\n"
+	<< "   [weight=<vector>]           : An Xmipp vector of 6 elements stating criteria weight.\n" 
+	<< "                                 By default, [2,0,0,15,0,415]\n"
+	<< "   [penalty=<f=16>]            : Penalty applied in background adjust to points whose\n"
 	<< "                                 value is greater than the CTF\n"
-	<< "   [central_weight=<w=1>]      : Weight for the first two CTF lobes\n"
 	<< "   [eval_red=<n=4>]            : Use values of images taken every n pixels. As images are\n"
 	<< "                                 usually huge. A value between 4 and 8 is recommended.\n"
         << "   [show_optimization=yes]     : Show optimization process\n"
 	<< "   [min_freq=<f=0.05>]         : Minimum digital frequency to use in adjust. Its value\n"
 	<< "                                 should be a little lower than the dig. freq. of the first \n"  
 	<< "                                 CTF zero.\n"  
- 	<< "   [max_freq=<f=0.45>]         : Maximum digital frequency to use in adjust.\n"
+ 	<< "   [max_freq=<f=0.35>]         : Maximum digital frequency to use in adjust.\n"
 	<< "                                 It should be higher than the last zero of the CTF.\n"  
-        << "   [gamma=<gamma=3>]           : Gamma correction used when adjusting\n"
-        << "                                 the initial defoci without any hint\n"
 	<< "   [accuracy=<acc=1>]          : Stop criteria for adjustment iterations\n"
-	<< "   [do_not_optimize=yes]       : Only shows adjustment of initial point. Mainly to use\n"
-	<< "                                 in combination with -save_images.\n"
-	<< "   [do_not_fine_search=yes]    : Do not perform final fine search\n"
-	<< "   [value_th=<th0=80>]         : values above this threshold do not contribute\n"
         << "   [astigmatic_noise=yes|no]   : By default, noise is not astigmatic\n"
+	<< "   [do_not_autofocus=yes|no]   : By default, autofocus is used\n"
    ;
 }
 
@@ -364,7 +359,7 @@ void save_intermidiate_results(const FileName &fn_root) {
       if (w<global_min_freq || w>global_max_freq) continue;
       if (YY(freq)<0) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plotY << YY(freq) << " " << pow(10,save(i,0)) << " "
+      plotY << w << " " << YY(freq) << " " << pow(10,save(i,0)) << " "
 	    << (*global_ctf_ampl2)(i,0) << endl;
    }
 
@@ -375,7 +370,7 @@ void save_intermidiate_results(const FileName &fn_root) {
       if (w<global_min_freq || w>global_max_freq) continue;
       if (XX(freq)<0) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plotX << XX(freq) << " " << pow(10,save(0,j)) << " "
+      plotX << w << " " << XX(freq) << " " << pow(10,save(0,j)) << " "
 	    << (*global_ctf_ampl2)(0,j) << endl;
    }
 
@@ -400,7 +395,7 @@ void save_intermidiate_results(const FileName &fn_root) {
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>global_max_freq) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plot_radial << YY(freq) << " " << pow(10.0,radial_CTFmodel_avg(i)/radial_N(i)) << " "
+      plot_radial << w << " " << YY(freq) << " " << pow(10.0,radial_CTFmodel_avg(i)/radial_N(i)) << " "
 	    << radial_CTFampl_avg(i)/radial_N(i) << endl;
    }
 
@@ -408,6 +403,14 @@ void save_intermidiate_results(const FileName &fn_root) {
    save.write((fn_root+"_log10.xmp").c_str());
    plotX.close();
    plotY.close();
+   
+   // Show error in each component
+   int old_global_show=global_show;
+   global_show=1;
+   double *pptr=global_adjust->adapt_for_numerical_recipes();
+   if (global_action==0) pptr+=PARAMETRIC_CTF_PARAMETERS;
+   CTF_fitness(pptr);
+   global_show=old_global_show;
 }
 
 // Estimate sqrt parameters ------------------------------------------------
@@ -432,7 +435,7 @@ void estimate_background_sqrt_parameters() {
    matrix1D<double> b(2);   b.init_zeros();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(*f) {
       // Disregard this point?
-      if ((*f)(i,j)>=global_value_th) continue;
+      if (global_value_th!=-1 && (*f)(i,j)>=global_value_th) continue;
       VECTOR_R2(idx,j,i);
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w>=global_max_freq || w<=global_min_freq) continue;
@@ -441,11 +444,7 @@ void estimate_background_sqrt_parameters() {
       
       // Compute weight for this point
       int n;
-      double weight;
-      global_hist->val2index(w,n);
-      if ((*global_hist)(n)!=0) weight=1/(*global_hist)(n);
-      else continue;
-      weight*=1+global_max_freq-w;
+      double weight=1+global_max_freq-w;
 
       // Compute error
       double explained=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
@@ -477,10 +476,11 @@ void estimate_background_gauss_parameters() {
    matrix1D<double> radial_CTFmodel_avg(YSIZE(*f)/2);
    matrix1D<double> radial_CTFampl_avg(YSIZE(*f)/2);
    matrix1D<int>    radial_N(YSIZE(*f)/2);
-   double w_max_gauss=global_min_freq+0.2*(global_max_freq-global_min_freq);
+   double value_th=pow(10.0, global_value_th);
+   double w_max_gauss=0.25;
    for (int i=STARTINGY(*f); i<=FINISHINGY(*f); i++)
       for (int j=STARTINGX(*f); j<=FINISHINGX(*f)/2; j++) {
-         if ((*f)(i,j)>=global_value_th) continue;
+         if (global_value_th!=-1 && (*f)(i,j)>=value_th) continue;
 	 XX(idx)=j; YY(idx)=i;
 	 FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
 	 if (w<global_min_freq || w>w_max_gauss) continue;
@@ -502,16 +502,18 @@ void estimate_background_gauss_parameters() {
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>w_max_gauss) continue;
 
-      double error=radial_CTFampl_avg(i)/radial_N(i)
-                    -pow(10.0,radial_CTFmodel_avg(i)/radial_N(i));
-             error*=error;
+      double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
+      if (error<0 && first) continue;
+      else if (error<0) break;
+      error*=error;
       if (first) {
          wmin=wmax=w; error_min=error_max=error;
 	 first=false;
       }
-      if (error>error_max) {wmax=w; error_max=error;}
+      if (error>error_max) {wmin=wmax=w; error_min=error_max=error;}
       if (error<error_min) {wmin=w; error_min=error;}
    }
+   global_max_gauss_freq=wmin;
    
    VECTOR_R2(freq,wmax,wmax);
    digfreq2contfreq(freq, freq, global_Tm);
@@ -526,7 +528,7 @@ void estimate_background_gauss_parameters() {
    matrix1D<double> b(2);   b.init_zeros();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(*f) {
       // Disregard this point?
-      if ((*f)(i,j)>=global_value_th) continue;
+      if (global_value_th!=-1 && (*f)(i,j)>=value_th) continue;
       VECTOR_R2(idx,j,i);
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w>=wmin || w<=global_min_freq) continue;
@@ -536,11 +538,7 @@ void estimate_background_gauss_parameters() {
 
       // Compute weight for this point
       int n;
-      double weight;
-      global_hist->val2index(w,n);
-      if ((*global_hist)(n)!=0) weight=1/(*global_hist)(n);
-      else continue;
-      weight*=1+global_max_freq-w;
+      double weight=1+global_max_freq-w;
 
       // Compute error
       double explained=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
@@ -577,26 +575,76 @@ void compute_central_region(double &w1, double &w2, double ang) {
       double w;
       if (XX(dir)>0.1) w=XX(freq)/XX(dir);
       else w=YY(freq)/YY(dir);
-      w1=MAX(global_min_freq,MIN(w1,w)-0.05);
+      w1=MAX(global_min_freq,MIN(w1,w));
    }
 
-   // Detect fourth zero
-   global_ctfmodel.zero(4,dir,freq);
+   // Detect fifth zero
+   global_ctfmodel.zero(5,dir,freq);
    if (XX(freq)==-1 && YY(freq)==-1) w2=global_max_freq;
    else {
       double w;
       contfreq2digfreq(freq,freq,global_Tm);
       if (XX(dir)>0.1) w=XX(freq)/XX(dir);
       else w=YY(freq)/YY(dir);
-      w2=MIN(global_max_freq,MAX(w2,w)+0.05);
+      w2=MIN(global_max_freq,MAX(w2,w));
    }
 }
 
+/* Center focus ----------------------------------------------------------- */
+void center_optimization_focus(bool adjust_freq, bool adjust_th, double margin=1) {
+   if (global_show>=2)
+      cout << "Freq frame before focusing=" << global_min_freq << ","
+           << global_max_freq << endl
+	   << "Value_th before focusing=" << global_value_th << endl;
+
+   double w1=global_min_freq,w2=global_max_freq;
+   if (adjust_freq) {
+      double w1U, w2U, w1V, w2V;
+      compute_central_region(w1U,w2U,global_ctfmodel.azimuthal_angle);
+      compute_central_region(w1V,w2V,global_ctfmodel.azimuthal_angle+90);
+      w1=MIN(w1U,w1V);
+      w2=MAX(w2U,w2V);
+      global_min_freq=MAX(global_min_freq,w1-0.05);
+      global_max_freq=MIN(global_max_freq,w2+0.01);
+   }
+
+   // Compute maximum value within central region
+   if (adjust_th) {
+      ImageXmipp save; generate_model_so_far(save);
+      matrix1D<int>    idx(2);  // Indexes for Fourier plane
+      matrix1D<double> freq(2); // Frequencies for Fourier plane
+      double max_val=0;
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(save()) {
+         XX(idx)=j; YY(idx)=i;
+         FFT_idx2digfreq(global_ctf, idx, freq);
+         double w=freq.module();
+         if (w>=w1 && w<=w2)
+   	    max_val=MAX(max_val,save(i,j));
+      }      
+      if (global_value_th!=-1) global_value_th=MIN(global_value_th,max_val*margin);
+      else                     global_value_th=max_val*margin;
+   }
+
+   if (global_show>=2)
+      cout << "Freq frame after focusing=" << global_min_freq << ","
+           << global_max_freq << endl
+	   << "Value_th after focusing=" << global_value_th << endl;
+}
+
+/* These variables are global so that they have to be computed only once */
+matrix2D<double> considered_ctf_ampl2;
+double wctf2_sum,wctf2_param_sum, w_sum, w_sum2, wctf2_sum2;
+matrix1D<double> radial_CTFampl_avg;
+matrix1D<double> radial_CTFampl_der;
+matrix1D<double> radialN;
+ImageXmipp fft_ampl;
+
+bool global_compute_ctf2_part;
 /* CTF fitness ------------------------------------------------------------- */
 /* All variables are taken as global since there is no other way
    of communicating through Powell function */
 double CTF_fitness(double *p) {
-   double retval=0;
+   double retval, shape_error=0;
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
    ImageXmipp save;
@@ -604,14 +652,14 @@ double CTF_fitness(double *p) {
    bool proceed=TRUE;
    
    // Show input variables for debugging
-   if (global_show>=1) {
+   if (global_show>=2) {
       int imax;
       switch (global_action) {
          case 0: imax=BACKGROUND_CTF_PARAMETERS; break;
-         case 3:
          case 1: imax=PARAMETRIC_CTF_PARAMETERS; break;
-	 case 4:
-         case 2: imax=CTF_PARAMETERS; break;
+         case 2: imax=BACKGROUND_CTF_PARAMETERS; break;
+	 case 3:
+         case 4: imax=CTF_PARAMETERS; break;
       }
       cout << "Input vector: ";
       for (int i=0; i<imax; i++) cout << p[i+1] << " ";
@@ -628,42 +676,53 @@ double CTF_fitness(double *p) {
       case 0: assign_CTF_from_parameters(p-12,global_ctfmodel,
                 13,BACKGROUND_CTF_PARAMETERS,
                 global_Adjust_CTF_parameters->astigmatic_noise); break;
-      case 3:
       case 1: assign_CTF_from_parameters(p+1,global_ctfmodel,
                  0,PARAMETRIC_CTF_PARAMETERS,
                  global_Adjust_CTF_parameters->astigmatic_noise); break;
-      case 4:
-      case 2: assign_CTF_from_parameters(p+1,global_ctfmodel,
+      case 2: assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust),
+                 global_ctfmodel,0,PARAMETRIC_CTF_PARAMETERS,
+                 global_Adjust_CTF_parameters->astigmatic_noise);
+	      assign_CTF_from_parameters(p-12,global_ctfmodel,
+                13,BACKGROUND_CTF_PARAMETERS,
+                global_Adjust_CTF_parameters->astigmatic_noise); break;
+      case 3:
+      case 4: assign_CTF_from_parameters(p+1,global_ctfmodel,
                  0,CTF_PARAMETERS,
                  global_Adjust_CTF_parameters->astigmatic_noise); break;
    }
    global_ctfmodel.enable_CTF=(global_action!=0);
    global_ctfmodel.enable_CTFnoise=TRUE;
-   if (global_show>=1) cout << "Model:\n" << global_ctfmodel << endl;
+   if (global_show>=2) cout << "Model:\n" << global_ctfmodel << endl;
    global_ctfmodel.Produce_Side_Info();
    if(!global_ctfmodel.physical_meaning()) return global_heavy_penalization;
-   
+      
    // Now the 2D error
    double N=0;
-   double wctf2_sum=0, wparam_sum=0, wctf2_param_sum=0, w_sum=0, w_sum2=0,
-          wctf2_sum2=0, wparam_sum2=0;
+   double wparam_sum=0, wctf2_param_sum=0, wparam_sum2=0;
+   if (global_compute_ctf2_part)
+      wctf2_sum=wctf2_param_sum=w_sum=w_sum2=wctf2_sum2=0;
    int step=global_evaluation_reduction;
-   matrix1D<double> radial_CTFmodel_avg(YSIZE(*global_ctf_ampl2)/2);
-   matrix1D<double> radial_CTFampl_avg(YSIZE(*global_ctf_ampl2)/2);
-   matrix1D<double> radial_weight(YSIZE(*global_ctf_ampl2)/2);
-   matrix1D<double> radialN(YSIZE(*global_ctf_ampl2)/2);
+   matrix1D<double> radial_CTFmodel_avg;
+   if (global_action==4) {
+      radial_CTFmodel_avg.init_zeros(YSIZE(*global_ctf_ampl2)/2);
+      if (global_compute_ctf2_part) {
+	 radial_CTFampl_avg.init_zeros(YSIZE(*global_ctf_ampl2)/2);
+	 radialN.init_zeros(YSIZE(*global_ctf_ampl2)/2);
+      }
+   }
    
    if (global_action!=0 && global_compute_FFT_distance) {
       considered_ctfmodel_ampl2.init_zeros(CEIL((double)YSIZE(*global_ctf_ampl2)/step),
          CEIL((double)XSIZE(*global_ctf_ampl2)/step));
-      considered_ctf_ampl2.init_zeros(considered_ctfmodel_ampl2);
+      if (global_compute_ctf2_part)
+         considered_ctf_ampl2.init_zeros(considered_ctfmodel_ampl2);
    }
    for(int i=STARTINGY(*global_ctf_ampl2), ii=0;i<=FINISHINGY(*global_ctf_ampl2);i+=step, ii++)
        for(int j=STARTINGX(*global_ctf_ampl2), jj=0;j<=FINISHINGX(*global_ctf_ampl2);j+=step, jj++)
        {
           // Disregard this point?
     	  double ctf2=(*global_ctf_ampl2)(i,j);
-      	  if (ctf2>=global_value_th) continue;
+      	  if (global_value_th!=-1 && ctf2>=global_value_th) continue;
     	  XX(idx)=j; YY(idx)=i;
     	  FFT_idx2digfreq(global_ctf, idx, freq);
           if (YY(freq)<0) continue;
@@ -671,18 +730,6 @@ double CTF_fitness(double *p) {
 	  if (w<=global_min_freq || w>=global_max_freq) continue;
     	  digfreq2contfreq(freq, freq, global_Tm);
 	  
-          if (global_action==4) {
-             double ellipsoid_ang=
-                atan2(YY(freq),XX(freq))-global_ctfmodel.rad_azimuth;
-             double w1Up=global_w1U*cos(ellipsoid_ang);
-             double w1Vp=global_w1V*sin(ellipsoid_ang);
-             double w2Up=global_w2U*cos(ellipsoid_ang);
-             double w2Vp=global_w2V*sin(ellipsoid_ang);
-             double w1=sqrt(w1Up*w1Up+w1Vp*w1Vp);
-             double w2=sqrt(w2Up*w2Up+w2Vp*w2Vp);
-	     if (w<w1 || w>w2) continue;
-	  }
-
 	  // Compute each component
           double gaus=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
      	  double param, ctf_without_damping;
@@ -698,10 +745,8 @@ double CTF_fitness(double *p) {
       	  // Compute gaussian distance
           double dist_gaus=ABS(ctf2-gaus);
 	  if (global_action!=0) dist_gaus/=ctf2;
-          if (gaus>ctf2 && global_penalize)
-	     dist_gaus*=weight*global_current_penalty*(1+global_max_freq-w)/
-        	(global_max_freq-global_min_freq)*
-		 (1.0-global_ctfmodel.CTFgaussian_at(XX(freq),YY(freq)));
+          if (gaus>ctf2 && global_penalize && w>global_max_gauss_freq)
+	     dist_gaus*=global_current_penalty;
 
       	  // Compute parametric distance
 	  double dist_param;
@@ -710,37 +755,42 @@ double CTF_fitness(double *p) {
 
       	  // Compute distance
 	  double dist=weight*(dist_gaus+dist_param);
-	  retval+=dist;
+	  shape_error+=dist;
           N++;
 	  
 	  // Compute contribution to radial error
 	  if (global_action==4) {
 	     int r=(int)FLOOR(w*(double)YSIZE(*global_ctf_ampl2));
 	     radial_CTFmodel_avg(r)+=param;
-	     radial_CTFampl_avg(r)+=ctf2;
-	     radial_weight(r)+=weight;
-	     radialN(r)++;
+	     if (global_compute_ctf2_part) {
+		radial_CTFampl_avg(r)+=ctf2;
+		radialN(r)++;
+      	     }
 	  }
 
 	  // Compute correlation contribution
           // Write these values in the considered image
           // for posterior Fourier distance
-      	  if (global_action!=0) {
-             wctf2_sum2     +=weight*ctf2*ctf2;
+      	  if (global_action>0 && global_action<4) {
              wparam_sum2    +=weight*param*param;
 	     wctf2_param_sum+=weight*ctf2*param;
-             wctf2_sum      +=weight*ctf2;
              wparam_sum     +=weight*param;
-             w_sum          +=weight;
-
+	     if (global_compute_ctf2_part) {
+        	wctf2_sum2     +=weight*ctf2*ctf2;
+        	wctf2_sum      +=weight*ctf2;
+        	w_sum          +=weight;
+      	     }
+	     
              if (global_compute_FFT_distance) {
                 considered_ctfmodel_ampl2(ii,jj)=weight*param;
-                considered_ctf_ampl2(ii,jj)=weight*ctf2;
+                if (global_compute_ctf2_part)
+		   considered_ctf_ampl2(ii,jj)=weight*ctf2;
              }
       	  }
        }
-   retval*=global_weight(0)/N;
-   if (global_show>=2) cout << "Euclidean error " << retval << endl;
+   shape_error/=N;
+   if (global_action==4) retval=global_weight(0)*shape_error;
+   else retval=shape_error;
 
    // Compute radial distance
    double max_radial_error=0, avg_radial_error=0;
@@ -751,15 +801,15 @@ double CTF_fitness(double *p) {
          if (radialN(i)!=0) {
 	    if (i_radial_min==-32000) i_radial_min=i;
 	    i_radial_max=i;
-	    radial_weight(i)/=radialN(i);
 	    radial_CTFmodel_avg(i)/=radialN(i);
-	    radial_CTFampl_avg(i)/=radialN(i);
+	    if (global_compute_ctf2_part)
+	       radial_CTFampl_avg(i)/=radialN(i);
             double radial_error_i=
 	       ABS(radial_CTFmodel_avg(i)-radial_CTFampl_avg(i));
 	    if (radial_error_i>max_radial_error) {max_radial_error=radial_error_i;}
 	    avg_radial_error+=radial_error_i; N_avg_radial_error++;
 	 }
-      //if (N_avg_radial_error>0) avg_radial_error/=N_avg_radial_error;
+      if (N_avg_radial_error>0) avg_radial_error/=N_avg_radial_error;
       retval+=max_radial_error*global_weight(2);
       retval+=avg_radial_error*global_weight(3);
    }
@@ -768,7 +818,7 @@ double CTF_fitness(double *p) {
    // CO: I'm not sure where the -1 comes from and it is making some
    //     images to fail
    double wcorr, wcovariance, wctf2_var, wparam_var, wctf2_avg, wparam_avg;
-   if (global_action!=0) {
+   if (global_action>0 && global_action<4) {
       wctf2_avg =wctf2_sum/w_sum;
       wparam_avg=wparam_sum/w_sum;
       wctf2_var =(wctf2_sum2 -wctf2_avg *wctf2_avg *w_sum)/(w_sum/*CO:-1*/);
@@ -777,7 +827,7 @@ double CTF_fitness(double *p) {
          wparam_avg*wctf2_sum+wctf2_avg*wparam_avg*w_sum)/(w_sum/*CO:-1*/);
       wcorr=wcovariance/sqrt(wctf2_var*wparam_var);
       if (wcorr<0) {
-         if (global_show>=1)
+         if (global_show>=2)
             cout << "Negative correlation: " << wcorr << endl
                  << "wctf2_avg=" << wctf2_avg << " wparam_avg=" << wparam_avg << endl
                  << "wctf2_var=" << wctf2_var << " wparam_var=" << wparam_var << endl
@@ -786,23 +836,25 @@ double CTF_fitness(double *p) {
          proceed=FALSE;
       }
 
-      retval+=global_weight(1)*(1-wcorr);
-      if (global_show>=2) cout << "Correlation error " << global_weight(1)*(1-wcorr) << endl;
+     retval+=global_weight(1)*(1-wcorr);
    }
 
    // Compute radial derivative distance
    double max_radial_der_error=0, avg_radial_der_error=0;
-   matrix1D<double> radial_CTFmodel_der(radial_CTFmodel_avg);
-   matrix1D<double> radial_CTFampl_der(radial_CTFmodel_avg);
+   matrix1D<double> radial_CTFmodel_der;
    if (global_action==4) {
+      radial_CTFmodel_der.init_zeros(radial_CTFmodel_avg);
+      if (global_compute_ctf2_part)
+	 radial_CTFampl_der.init_zeros(radial_CTFmodel_avg);
       int N_der_radial_error=0;
       FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
          if (radialN(i)!=0) {
 	    if (i<=i_radial_min+2 || i>=i_radial_max-2) continue;
 	    // Compute radial derivatives using Richardson approximation
-	    radial_CTFampl_der(i)=
-	      (-radial_CTFampl_avg(i-2)+8*radial_CTFampl_avg(i-1)
-	       +radial_CTFampl_avg(i+2)-8*radial_CTFampl_avg(i-1))/12.0;
+	    if (global_compute_ctf2_part)
+	       radial_CTFampl_der(i)=
+		 (-radial_CTFampl_avg(i-2)+8*radial_CTFampl_avg(i-1)
+		  +radial_CTFampl_avg(i+2)-8*radial_CTFampl_avg(i-1))/12.0;
 	    radial_CTFmodel_der(i)=
 	      (-radial_CTFmodel_avg(i-2)+8*radial_CTFmodel_avg(i-1)
 	       +radial_CTFmodel_avg(i+2)-8*radial_CTFmodel_avg(i-1))/12.0;
@@ -813,7 +865,7 @@ double CTF_fitness(double *p) {
 	       {max_radial_der_error=radial_error_der_i;}
 	    avg_radial_der_error+=radial_error_der_i; N_der_radial_error++;
 	 }
-      //if (N_der_radial_error>0) avg_radial_der_error/=N_der_radial_error;
+      if (N_der_radial_error>0) avg_radial_der_error/=N_der_radial_error;
       retval+=max_radial_der_error*global_weight(4);
       retval+=avg_radial_der_error*global_weight(5);
    }
@@ -823,14 +875,16 @@ double CTF_fitness(double *p) {
    if (global_action!=0 && global_compute_FFT_distance && proceed) {
       // Compute the magnitude of both CTF images
       vtkImageData *fft=NULL;
-      ImageXmipp fft_ampl, fftmodel_ampl;
-      fft_ampl()=considered_ctf_ampl2;
-      considered_ctf_ampl2-=considered_ctf_ampl2.compute_avg();
-      FFT_VTK(considered_ctf_ampl2,fft,TRUE);
-      FFT_magnitude(fft,fft_ampl());
-      fft_ampl().self_log10();
-      fft_ampl().set_Xmipp_origin();
+      if (global_compute_ctf2_part) {
+	 fft_ampl()=considered_ctf_ampl2;
+	 considered_ctf_ampl2-=considered_ctf_ampl2.compute_avg();
+	 FFT_VTK(considered_ctf_ampl2,fft,TRUE);
+	 FFT_magnitude(fft,fft_ampl());
+	 fft_ampl().self_log10();
+	 fft_ampl().set_Xmipp_origin();
+      }
  
+      ImageXmipp fftmodel_ampl;
       considered_ctfmodel_ampl2-=considered_ctfmodel_ampl2.compute_avg();
       FFT_VTK(considered_ctfmodel_ampl2,fft,TRUE);
       FFT_magnitude(fft,fftmodel_ampl());
@@ -839,53 +893,63 @@ double CTF_fitness(double *p) {
       fft->Delete();
 
       // Compute the differences
-      int imax=YSIZE(fftmodel_ampl())/4;
-      int jmax=XSIZE(fftmodel_ampl())/4;
+      int imax=YSIZE(fftmodel_ampl())/6;
+      int jmax=XSIZE(fftmodel_ampl())/6;
       N=0;
       for (int i=0; i<=imax; i++)
           for (int j=-jmax; j<=jmax; j++, N++)
              if (ABS(fft_ampl(i,j))>1e-2)
                 fft_error+=ABS(fftmodel_ampl(i,j)-fft_ampl(i,j))/
                    ABS(fft_ampl(i,j));
-      retval+=fft_error/N;
+      fft_error/=N;
+      retval+=fft_error;
       if (global_show>=2) {
-         cout << "FFT error " << fft_error/N << endl;
          cout << "Model: ";fftmodel_ampl().print_stats(); cout << endl;
          cout << "Org: "; fft_ampl().print_stats(); cout << endl;
       }
    }
 
    // Show some debugging information?
+   if (global_show>=1) {
+      cout << "Score:       " << retval      << endl
+           << "Shape error: " << global_weight(0)*shape_error << endl;
+      if (global_action!=0)  {
+         cout << "Correlation error: " << global_weight(1)*(1-wcorr) << endl;
+	 if (global_action!=4)
+	    cout << "FFT error: " << fft_error << endl;
+	 else 
+	     cout << "Max_Radial error: " << global_weight(2)*max_radial_error << endl
+	          << "Avg_Radial error: " << global_weight(3)*avg_radial_error << endl
+	          << "Max_Radial der error: " << global_weight(4)*max_radial_der_error << endl
+	          << "Avg_Radial der error: " << global_weight(5)*avg_radial_der_error << endl;
+      }
+   }
+
    if (global_show>=2) {
       save.write("weight.xmp");
-      cout << "Score: " << retval << endl;
       if (global_action!=0) {
          cout << "Correlation index: " << wcorr << endl
               << wctf2_avg << " " << wparam_avg << " " << wcovariance << " "
-              << wctf2_var << " " << wparam_var << endl
-	      << "Avg_Radial error: " << global_weight(2)*avg_radial_error << endl
-	      << "Max_Radial error: " << global_weight(3)*max_radial_error << endl
-	      << "Avg_Radial der error: " << global_weight(4)*avg_radial_der_error << endl
-	      << "Max_Radial der error: " << global_weight(5)*max_radial_der_error << endl;
-	 cout << "Radial model, ctf2 and relative error, RadN, weight, der_model, der_ctf2\n";
+              << wctf2_var << " " << wparam_var << endl;
+	 cout << "Radial model, ctf2 and relative error, RadN, der_model, der_ctf2\n";
          FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
 	    if (radial_CTFmodel_avg(i)!=0) {
                XX(idx)=i; YY(idx)=i;
     	       FFT_idx2digfreq(global_ctf, idx, freq);
     	       double w=freq.module();
 	       cout << radial_CTFmodel_avg(i) << " " << radial_CTFampl_avg(i)
-	            << " " << (ABS(radial_CTFmodel_avg(i)-radial_CTFampl_avg(i)))/
-	             radial_CTFmodel_avg(i) << " " << radialN(i) << " " 
-		     << radial_weight(i) << " "
-		     << radial_CTFmodel_der(i) << " " << radial_CTFampl_der(i)
-		     << endl;
+	            << " " << (ABS(radial_CTFmodel_avg(i)-radial_CTFampl_avg(i)))
+	            << " " << radialN(i) << " " 
+		    << radial_CTFmodel_der(i) << " " << radial_CTFampl_der(i)
+		    << " " << ABS(radial_CTFmodel_der(i)-radial_CTFampl_der(i))
+		    << endl;
 	    }
       }
       matrix1D<double> aux; aux=*global_adjust;
       if (global_action==0) {
         for (int i=1; i<=BACKGROUND_CTF_PARAMETERS; i++)
 	   (*global_adjust)(12+i)=p[i];
-      } else if (global_action==1 || global_action==3 || global_action==4) {
+      } else if (global_action==1 || global_action==2 || global_action==4) {
         for (int i=1; i<=PARAMETRIC_CTF_PARAMETERS; i++)
 	   (*global_adjust)(i-1)=p[i];
       } else {
@@ -897,47 +961,9 @@ double CTF_fitness(double *p) {
       cout << "Press any key\n"; char c; cin >> c;
    }
 
+   if (global_compute_ctf2_part && retval!=global_heavy_penalization)
+      global_compute_ctf2_part=false;
    return retval;
-}
-
-// Compute CTF stats -------------------------------------------------------
-/* Compute image minimum and maximum and the number of points per frequency */
-void CTF_stats() {
-   matrix1D<int>    idx(2);
-   matrix1D<double> freq(2);
-   matrix2D<double> *f=global_ctf_ampl2; // Pointer for simplifying expressions
-   bool first=TRUE;
-   
-   // Compute minimum and maximum
-   for(int i=STARTINGY(*f);i<=FINISHINGY(*f);i+=global_evaluation_reduction)
-       for(int j=STARTINGX(*f);j<=FINISHINGX(*f);j+=global_evaluation_reduction)
-       {
-    	  XX(idx)=j; YY(idx)=i;
-    	  FFT_idx2digfreq(global_ctf, idx, freq);
-    	  double w=freq.module();
-	  if (w>=global_min_freq && w<=global_max_freq) {
-	     if (first) {global_min_val=global_max_val=(*f)(i,j); first=FALSE;}
-	     else {
-	        global_min_val=MIN(global_min_val,(*f)(i,j));
-	        global_max_val=MAX(global_max_val,(*f)(i,j));
-	     }
-	  }
-       }
-
-   // Compute histogram
-   global_hist->clear();
-   global_hist->init(global_min_freq,global_max_freq,25);
-   for(int i=STARTINGY(*f);i<=FINISHINGY(*f);i+=global_evaluation_reduction)
-       for(int j=STARTINGX(*f);j<=FINISHINGX(*f);j+=global_evaluation_reduction)
-       {
-    	  XX(idx)=j; YY(idx)=i;
-    	  FFT_idx2digfreq(global_ctf, idx, freq);
-    	  double w=freq.module();
-	  if (w<global_min_freq || w>global_max_freq) continue;
-	  if (YY(freq)<0) continue;
-	  global_hist->insert_value(w);
-       }
-   (*global_hist)/=global_hist->compute_max();
 }
 
 /* Estimate best paramtric CTF when the defoci are fixed ------------------- */
@@ -957,7 +983,7 @@ void estimate_best_parametric_CTF_for_defoci() {
    for(int i=STARTINGY(*f);i<=FINISHINGY(*f);i+=global_evaluation_reduction)
        for(int j=STARTINGX(*f);j<=FINISHINGX(*f);j+=global_evaluation_reduction) {
       // Disregard this point?
-      if ((*f)(i,j)>=global_value_th) continue;
+      if (global_value_th!=-1 && (*f)(i,j)>=global_value_th) continue;
       VECTOR_R2(idx,j,i);
       FFT_idx2digfreq(global_ctf, idx, freq); double w=freq.module();
       if (w>=global_max_freq || w<=global_min_freq) continue;
@@ -966,11 +992,7 @@ void estimate_best_parametric_CTF_for_defoci() {
       
       // Compute weight for this point
       int n;
-      double weight;
-      global_hist->val2index(w,n);
-      if ((*global_hist)(n)!=0) weight=1/(*global_hist)(n);
-      else continue;
-      //weight*=1+global_max_freq-w;
+      double weight=1+global_max_freq-w;
 
       // Compute error
       double explained=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
@@ -1017,7 +1039,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     
     // Check if there is no initial guess
     if (global_initial_ctfmodel->DeltafU!=0) {
-       initial_defocusStep=8e3;
+       initial_defocusStep=8000;
        defocusU0=defocusV0=global_initial_ctfmodel->DeltafU+initial_defocusStep;
        defocusUF=defocusVF=global_initial_ctfmodel->DeltafU-initial_defocusStep;
     }
@@ -1025,7 +1047,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     for (double defocusStep=initial_defocusStep; defocusStep>=1e3; defocusStep/=2) {
        error.resize(CEIL((defocusV0-defocusVF)/defocusStep),
                     CEIL((defocusU0-defocusUF)/defocusStep));
-       if (global_show>=1)
+       if (global_show>=2)
           cout << "V=["<<defocusV0 << "," << defocusVF << "]\n"
                << "U=["<<defocusU0 << "," << defocusUF << "]\n" << defocusStep << endl;
        for (defocusV=defocusV0,i=0; defocusV>defocusVF; defocusV-=defocusStep, i++) {
@@ -1062,12 +1084,12 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
                 else if (error(ii,jj)>errmax) errmax=error(ii,jj);
           }
 
-       if (global_show>=1) cout << "Range=" << errmax -errmin << endl;
+       if (global_show>=2) cout << "Range=" << errmax -errmin << endl;
        double best_defocusVmin=best_defocusV, best_defocusVmax=best_defocusV;
        double best_defocusUmin=best_defocusU, best_defocusUmax=best_defocusU;
        for (defocusV=defocusV0,i=0; defocusV>defocusVF; defocusV-=defocusStep, i++) {
           for (defocusU=defocusU0,j=0; defocusU>defocusUF; defocusU-=defocusStep, j++) {
-            if (global_show>=1)
+            if (global_show>=2)
                 cout << i << "," << j << " " << error(i,j) << " " << defocusU << " " << defocusV << endl
                      << best_defocusUmin << " " << best_defocusUmax << endl
                      << best_defocusVmin << " " << best_defocusVmax << endl;
@@ -1085,7 +1107,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
        defocusUF=MAX(-100e3,best_defocusUmin-defocusStep);
        defocusU0=MIN(-1e3,best_defocusUmax+defocusStep);
        i=j=0;
-       if (global_show>=1) {
+       if (global_show>=2) {
           ImageXmipp save; save()=error; save.write("error.xmp");
           cout << "Press any key: Error saved\n";
           char c; cin >> c;
@@ -1104,6 +1126,9 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    matrix2D<double> ctf_ampl,ctf_ampl2; // To store the amplitude images
    ImageXmipp save, gauss;  // To save and keep the gaussian images
    global_Adjust_CTF_parameters=&prm;
+   matrix1D<int>    idx(2);  // Indexes for Fourier plane
+   matrix1D<double> freq(2); // Frequencies for Fourier plane
+   matrix1D<double> steps;
 
    // Show starting parameters
    prm.show();
@@ -1141,20 +1166,16 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    global_penalize=TRUE;
    global_min_freq=prm.min_freq;
    global_max_freq=prm.max_freq;
+   global_max_gauss_freq=0;
    global_penalty=prm.penalty;
    global_current_penalty=0;
-   global_central_weight=prm.central_weight;
-   global_current_central_weight=1;
    global_evaluation_reduction=prm.evaluation_reduction;
    global_heavy_penalization=
       ctf_ampl2(0,0)*ctf_ampl2.RowNo()*ctf_ampl2.ColNo();
    global_weight.init_zeros();
    global_weight(0)=global_weight(1)=1;
-   histogram1D hist;
-   global_hist=&hist;
-   CTF_stats();
-   global_value_th=global_min_val+(global_max_val-global_min_val)*
-      prm.value_th/100;
+   global_value_th=-1;
+   global_compute_ctf2_part=true;
 
    /************************************************************************
      STEP 1:  Find background which best fits the CTF
@@ -1163,7 +1184,6 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    double fitness=0;
    int    iter=0;
    global_action=0;
-   global_gamma=1;
    
    // If initial parameters weren´t supplied for the gaussian curve,
    // estimate them from the CTF file
@@ -1176,35 +1196,37 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
        if (prm.show_optimization) save_intermidiate_results("first_sqrt_fit");
    
       // Now optimize 
-      if (!prm.do_not_optimize) {
-         // Use every parameter to first gausssian optimization
-         matrix1D<double> steps(BACKGROUND_CTF_PARAMETERS);
-         steps.init_constant(0);
-         steps(1)=steps(5)=steps(7)=1;
-         if (prm.astigmatic_noise) {steps(4)=steps(6)=1;}
-         cerr << "Looking for best fitting sqrt ...\n";
-         global_penalize=FALSE;
-         Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS,
-            &CTF_fitness, 2*prm.accuracy, fitness, iter, steps,
-            prm.show_optimization);
-         if (prm.show_optimization)
-            save_intermidiate_results("best_sqrt_fit");
-         global_penalize=TRUE;
-         cerr << "   Penalizing best fitting sqrt ...\n";
-         global_current_penalty=2;
-         int imax=CEIL(log(global_penalty)/log(2.0));
-         for (int i=1; i<=imax; i++) {
-            cerr << "     Iteration " << i
-	         << " penalty=" << global_current_penalty << endl;
-	    Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
-               2*prm.accuracy, fitness, iter, steps, prm.show_optimization);
-	    global_current_penalty*=2;
-	    global_current_penalty=MIN(global_current_penalty, global_penalty);
-         }
-         if (prm.show_optimization)
-            save_intermidiate_results("best_penalized_sqrt_fit");
+      // Use every parameter to first gausssian optimization
+      steps.resize(BACKGROUND_CTF_PARAMETERS);
+      steps.init_constant(0);
+      steps(1)=steps(5)=steps(7)=1;
+      if (prm.astigmatic_noise) {steps(4)=steps(6)=1;}
+      cerr << "Looking for best fitting sqrt ...\n";
+      global_penalize=FALSE;
+      Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS,
+         &CTF_fitness, 2*prm.accuracy, fitness, iter, steps,
+         prm.show_optimization);
+      if (prm.show_optimization)
+         save_intermidiate_results("best_sqrt_fit");
+      global_penalize=TRUE;
+      cerr << "   Penalizing best fitting sqrt ...\n";
+      global_current_penalty=2;
+      int imax=CEIL(log(global_penalty)/log(2.0));
+      for (int i=1; i<=imax; i++) {
+         cerr << "     Iteration " << i
+	      << " penalty=" << global_current_penalty << endl;
+	 Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
+            2*prm.accuracy, fitness, iter, steps, prm.show_optimization);
+	 global_current_penalty*=2;
+	 global_current_penalty=MIN(global_current_penalty, global_penalty);
       }
+      if (prm.show_optimization)
+         save_intermidiate_results("best_penalized_sqrt_fit");
    }
+
+   global_show=2;
+   if (prm.autofocus) center_optimization_focus(false,true,1.25);
+   global_show=0;
 
    // If initial parameters weren´t supplied for the gaussian curve,
    // estimate them from the CTF file
@@ -1216,31 +1238,6 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
           global_Adjust_CTF_parameters->astigmatic_noise);
        if (prm.show_optimization)
           save_intermidiate_results("first_background_fit");
-   
-       // Now optimize 
-       if (!prm.do_not_optimize && false /* ***CO */) {
-          // Use every parameter to first gausssian optimization
-          matrix1D<double> steps(BACKGROUND_CTF_PARAMETERS);
-          steps.init_constant(1);
-          if (!prm.astigmatic_noise) {
-             steps(3)=steps(4)=steps(6)=steps(9)=0;
-          }
-          global_penalize=TRUE;
-          cerr << "Looking best fitting background ...\n";
-          global_current_penalty=2;
-          int imax=CEIL(log(global_penalty)/log(2.0));
-          for (int i=1; i<imax; i++) {
-             cerr << "     Iteration " << i
- 	         << " penalty=" << global_current_penalty << endl;
-             Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS,
-                &CTF_fitness, 2*prm.accuracy, fitness, iter, steps,
-                prm.show_optimization);
- 	     global_current_penalty*=2;
- 	     global_current_penalty=MIN(global_current_penalty, global_penalty);
-          }
-       }
-      if (prm.show_optimization)
-         save_intermidiate_results("best_penalized_background_fit");
    }
 
    /************************************************************************
@@ -1252,32 +1249,38 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    iter=0;
    global_penalize=TRUE;
    global_ctfmodel.enable_CTF=TRUE;
-   global_gamma=prm.gamma;
    global_compute_FFT_distance=TRUE;
+   global_compute_ctf2_part=true;
    
    if (prm.adjust(0)==0) {
       // Find the best initial defocus and K estimation
-      if (!prm.do_not_optimize) {
-         cerr << "Looking for best fitting parametric CTF ...\n";
-         // First perform an exhaustive search
-         global_action=3;
-         estimate_best_parametric_CTF(&CTF_fitness);
-         assign_CTF_from_parameters(VEC_ARRAY(prm.adjust),
-            global_ctfmodel,0,CTF_PARAMETERS,
-            global_Adjust_CTF_parameters->astigmatic_noise);
-         if (prm.show_optimization)
-            save_intermidiate_results("first_parametric_fit");
+      cerr << "Looking for best fitting parametric CTF ...\n";
+      // First perform an exhaustive search
+      global_action=1;
+      estimate_best_parametric_CTF(&CTF_fitness);
+      assign_CTF_from_parameters(VEC_ARRAY(prm.adjust),
+         global_ctfmodel,0,CTF_PARAMETERS,
+         global_Adjust_CTF_parameters->astigmatic_noise);
+      if (prm.show_optimization)
+         save_intermidiate_results("first_parametric_fit");
 
-         // Now optimize
-         cerr << "Improving parametric fit ...\n";
-         global_action=1;
-         matrix1D<double> steps(PARAMETRIC_CTF_PARAMETERS);
-         for (int i=0; i<PARAMETRIC_CTF_PARAMETERS; i++) 
-             steps(i)=prm.steps(i);
-         Powell_optimizer(prm.adjust, 1, PARAMETRIC_CTF_PARAMETERS,
-            &CTF_fitness, 3*prm.accuracy, fitness, iter, steps,
-            prm.show_optimization);
-      }
+      // Center optimization focus
+      global_show=2;
+      if (prm.autofocus) center_optimization_focus(true,true,1.25);
+      global_show=0;
+
+      // Now optimize the background
+      cerr << "Improving parametric fit ...\n";
+      global_action=2;
+      steps.init_constant(1);
+      if (!prm.astigmatic_noise) {steps(4)=steps(3)=steps(6)=steps(9)=0;}
+      global_penalize=false;
+      global_compute_FFT_distance=false;
+      global_compute_ctf2_part=true;
+      Powell_optimizer(prm.adjust, 14, BACKGROUND_CTF_PARAMETERS,
+         &CTF_fitness, 2*prm.accuracy, fitness, iter, steps,
+         prm.show_optimization);
+
       if (prm.show_optimization)
          save_intermidiate_results("best_parametric_fit");
    }
@@ -1285,61 +1288,66 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    /************************************************************************
      STEP 5:  Remove penalization
     ************************************************************************/
-   if (!prm.do_not_optimize) {
-       global_action=2;
-       matrix1D<double> steps(CTF_PARAMETERS);
-       steps.init_constant(1);
-       for (int i=0; i<PARAMETRIC_CTF_PARAMETERS; i++) 
-           steps(i)=prm.steps(i);
-       if (!prm.astigmatic_noise) {
-          steps(PARAMETRIC_CTF_PARAMETERS+3)=steps(PARAMETRIC_CTF_PARAMETERS+4)=
-             steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
-       }
-       cerr << "Looking for best not penalized fitting CTF ...\n";
-       
-       global_penalize=FALSE;
-       Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
-          2*prm.accuracy, fitness, iter, steps, prm.show_optimization);
-       if (prm.show_optimization)
-          save_intermidiate_results("best_fit_less");
-       global_current_penalty=1;
+#ifdef NEVER_DEFINED
+    global_action=3;
+    global_compute_ctf2_part=true;
+    global_compute_FFT_distance=true;
+
+    // Compute steps
+    steps.resize(CTF_PARAMETERS);
+    steps.init_constant(1);
+    for (int i=0; i<PARAMETRIC_CTF_PARAMETERS; i++) 
+        steps(i)=prm.steps(i);
+    if (!prm.astigmatic_noise) {
+       steps(PARAMETRIC_CTF_PARAMETERS+3)=steps(PARAMETRIC_CTF_PARAMETERS+4)=
+          steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
     }
+    cerr << "Looking for best not penalized fitting CTF ...\n";
+
+    // Optimize
+    Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
+       2*prm.accuracy, fitness, iter, steps, prm.show_optimization);
+    if (prm.show_optimization)
+       save_intermidiate_results("best_fit_less");
+    global_current_penalty=1;
+#endif
 
    /************************************************************************
      STEP 7:  Fine search
     ************************************************************************/
-   if (!prm.do_not_optimize) {
-       global_action=4; /*** CO:*/
-       global_compute_FFT_distance=FALSE;
-       global_weight.init_constant(10);
-       global_weight(2)=1;
-       global_weight(3)=3;
-//       global_show=2;
+   global_action=4;
+   global_compute_ctf2_part=true;
+   global_compute_FFT_distance=false;
+   global_weight.init_zeros(prm.weight);
+   global_weight(3)=prm.weight(3); // Average radial error
+   global_weight(5)=prm.weight(5); // Average radial der error
 
-       // Compute central region
-       compute_central_region(global_w1U,global_w2U,global_ctfmodel.azimuthal_angle);
-       compute_central_region(global_w1V,global_w2V,global_ctfmodel.azimuthal_angle+90);
-       if (global_show>=1)
-          cout << "U=[" << global_w1U << "," << global_w2U << "]\n"
-               << "V=[" << global_w1V << "," << global_w2V << "]\n";
-       global_radial_length=1;
+   global_show=2;
+   if (prm.autofocus) center_optimization_focus(true,true,1.25);
+   global_show=0;
 
-       matrix1D<double> steps(CTF_PARAMETERS);
-       steps.init_constant(1);
-       for (int i=0; i<PARAMETRIC_CTF_PARAMETERS; i++) 
-           steps(i)=prm.steps(i);
-       if (!prm.astigmatic_noise) {
-          steps(PARAMETRIC_CTF_PARAMETERS+3)=steps(PARAMETRIC_CTF_PARAMETERS+4)=
-             steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
-       }
-       cerr << "Looking for best fitting CTF ...\n";
-       global_evaluation_reduction=1;
-       
-       // Adjust without penalization
-       Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
-          prm.accuracy, fitness, iter, steps,
-          prm.show_optimization);
+   // Prepare steps
+   steps.resize(CTF_PARAMETERS);
+   steps.init_constant(1);
+   for (int i=0; i<PARAMETRIC_CTF_PARAMETERS; i++) 
+       steps(i)=prm.steps(i);
+   if (!prm.astigmatic_noise) {
+      steps(PARAMETRIC_CTF_PARAMETERS+3)=steps(PARAMETRIC_CTF_PARAMETERS+4)=
+   	 steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
    }
+   
+   // Adjust
+   cerr << "Looking for best fitting CTF ...\n";
+   for (global_evaluation_reduction=2; global_evaluation_reduction>=1; global_evaluation_reduction--) {
+      global_compute_ctf2_part=true;
+      if (global_evaluation_reduction==1) global_weight=prm.weight;
+      cout << "Step size: " << global_evaluation_reduction << endl;
+      Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
+	 prm.accuracy, fitness, iter, steps,
+	 prm.show_optimization);
+      save_intermidiate_results((string)"best_fit"+ItoA(global_evaluation_reduction));
+   }
+   global_evaluation_reduction=1;
 
    // Save total CTF if images are required
    if (prm.show_optimization) save_intermidiate_results("best_fit");
