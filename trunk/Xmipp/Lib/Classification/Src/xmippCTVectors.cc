@@ -131,7 +131,7 @@
       long dim, size;       
       _is >> dim; 
       _is >> line;
-      if (!sscanf(line.c_str(),"%d",&size)) {
+      if (!sscanf(line.c_str(),"%ld",&size)) {
          int x, y;
 	 _is >> x;
 	 _is >> y;
