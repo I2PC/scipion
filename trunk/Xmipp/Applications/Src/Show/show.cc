@@ -149,7 +149,7 @@ int main( int argc, char **argv ) {
        if (mode==MODE_IMG) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
           showimg->apply_geo=apply_geo;
-          showimg->loadImage( argv[i], m, M);
+          showimg->loadImage( argv[i] );
           showimg->show();
           shown++;
        } else if (mode==MODE_SEL) {
@@ -162,7 +162,7 @@ int main( int argc, char **argv ) {
        } else if (mode==MODE_VOL) {
           ShowVol *showvol = new ShowVol;
 	  if (poll) showvol->setPoll();
-	  showvol->initWithFile(numRows, numCols, argv[i], m, M);
+	  showvol->initWithFile(numRows, numCols, argv[i]);
 	  showvol->show();
           shown++;
        } else if (mode==MODE_SPECT) {
