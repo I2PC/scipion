@@ -283,7 +283,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
        nr=m;
    else
        nr=(int)(xr/dr+1);
-   ir2=min(ir2,m);
+   ir2=MIN(ir2,m);
    ncol=ir2-nr+1-ir1;
    if (ncol < 0)
        ncol=0;
@@ -320,7 +320,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
    rot_spectrum.init_zeros(n-j1+1);
    for (k = 1; k <= nvez; k++)
    {   k1=13*(k-1)+1;
-       k2=min(ncol,13*k);
+       k2=MIN(ncol,13*k);
        for (i = j1; i <= n; i++)
             rot_spectrum(i-j1) = erp[i][k1]/10000;
    }
