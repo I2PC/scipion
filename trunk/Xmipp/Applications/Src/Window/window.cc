@@ -33,9 +33,40 @@ public:
    int sizeX, sizeY, sizeZ;
    int x0, y0, z0;
    int xF, yF, zF;
+   double init_value;
+   int wrong_parameters;
+   int average_pad;
+   int corner_pad;
 
+   
    void read(int argc, char **argv) _THROW {
+      init_value=0.;
+      wrong_parameters=0;
+      average_pad=FALSE;
+      corner_pad=FALSE;
+      
       Prog_parameters::read(argc,argv);
+      
+      if (check_param(argc,argv,"-pad_value"))
+         {
+	 init_value = AtoF(get_param(argc, argv, "-pad_value"));
+	 wrong_parameters=1;
+	 }
+      if (check_param(argc,argv,"-corner_pad_value"))
+         {
+         corner_pad=TRUE;
+	 if (wrong_parameters>0)  wrong_parameters=-1;
+	 else  wrong_parameters=1;
+	 }
+      if (check_param(argc,argv,"-average_pad_value"))
+         {
+         average_pad=TRUE;
+	 if (wrong_parameters>0)  wrong_parameters=-1;
+	 else  wrong_parameters=1;
+	 }
+      if(wrong_parameters==-1)	 
+         REPORT_ERROR(1,"incompatible options");
+	 
       if (check_param(argc,argv,"-size")) {
          size_mode=TRUE;
          int i=position_param(argc,argv,"-size");
@@ -92,30 +123,47 @@ public:
 
    void usage() {
       Prog_parameters::usage();
-      cerr << "  [-r0 <x0> <y0> [<z0>]        : Window using window corners\n"
-           << "   -rF <xF> <yF> [<zF>]]       : in logical indexes\n"
+      cerr << " -physical                  : Use physical instead of logical\n"
+           << "                              coordinates\n"
+	   << " -pad_value                 : value used for padding\n"
+	   << " -corner_pad_value          : use the value of the upper\n"
+	   << "                              left corner for averaging"
+	   << "                              for padding\n"
+	   << " -average_pad_value         : use the image average for padding\n"
+           << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
+           << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
            << "  [-size <sizeX> [<sizeY>] [<sizeZ>]: Window to a new size\n"
-           << "                               : if only one is given, the other two\n"
-           << "                                 are supposed to be the same\n";
+           << "                            : if only one is given, the other two\n"
+           << "                              are supposed to be the same\n"
+	   ;
    }
 };
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
+   if (eprm->average_pad==TRUE)
+       eprm->init_value=(img()).compute_avg();
+   else if (eprm->corner_pad==TRUE)
+       eprm->init_value=DIRECT_MAT_ELEM(img(),0,0);
    if (!eprm->physical_coords)
-      img().window(eprm->y0,eprm->x0,eprm->yF,eprm->xF);
+      img().window(eprm->y0,eprm->x0,eprm->yF,eprm->xF,eprm->init_value);
    else img().window(STARTINGY(img())+eprm->y0,STARTINGX(img())+eprm->x0,
-           STARTINGY(img())+eprm->yF,STARTINGX(img())+eprm->xF);
+           STARTINGY(img())+eprm->yF,STARTINGX(img())+eprm->xF,eprm->init_value);
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
+   if (eprm->average_pad==TRUE)
+       eprm->init_value=(vol()).compute_avg();
+   else if (eprm->corner_pad==TRUE)
+       eprm->init_value=DIRECT_VOL_ELEM(vol(),0,0,0);
    if (!eprm->physical_coords)
-      vol().window(eprm->z0,eprm->y0,eprm->x0,eprm->zF,eprm->yF,eprm->xF);
+      vol().window(eprm->z0,eprm->y0,eprm->x0,eprm->zF,eprm->yF,eprm->xF,
+      eprm->init_value);
    else vol().window(STARTINGZ(vol())+eprm->z0,STARTINGY(vol())+eprm->y0,
       STARTINGX(vol())+eprm->x0,STARTINGZ(vol())+eprm->zF,
-      STARTINGY(vol())+eprm->yF,STARTINGX(vol())+eprm->xF);
+      STARTINGY(vol())+eprm->yF,STARTINGX(vol())+eprm->xF,eprm->init_value);
    return TRUE;
 }
 
