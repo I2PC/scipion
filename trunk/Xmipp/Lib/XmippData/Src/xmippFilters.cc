@@ -262,7 +262,6 @@ void fill_binary_object(matrix2D<double> &I, int neighbourhood) {
    matrix2D<double> label;
    FOR_ALL_ELEMENTS_IN_MATRIX2D(I) I(i,j)=1-I(i,j);
    int imax=label_image(I,label,neighbourhood);
-   ImageXmipp save; save()=label; save.write("PPPlabel.xmp");
    double l0=label(STARTINGY(I),STARTINGX(I));
    FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
       if (label(i,j)==l0) I(i,j)=0;
