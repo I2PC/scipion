@@ -699,14 +699,13 @@ public:
    /** Put a window to vector.
        The vector is windowed within the two indexes given to this function.
        Indexes always refer to logical indexes. If an index is outside the
-       actual vector range then the vector is padded with 0's until the
-       new index is reached. In the following examples suppose that v1=
+       actual vector range then the vector is padded winit_value. In the following examples suppose that v1=
        [-2 -1 0 1 2] and that the origin is -2.
        \\Ex: v1.window(-1,2);
        \\--> v1=[-1 0 1 2]; v1.startingX()==-1
        \\Ex: v1.window(-3,1);
        \\--> v1=[0 -2 -1 0 1]; v1.startingX()==-3 */
-   void window(int x0, int xF);
+   void window(int x0, int xF, T init_value=0);
 
    /** Maximum element.
        This function returns the index of the maximum element of an array.
