@@ -89,6 +89,8 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " Symmetry file: " << prm.fn_sym << endl;
    prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections" 
                                                            <<endl;
+   prm.fh_hist << " Maximun absolute tilt angle: " << prm.max_tilt << " degrees" 
+                                                           <<endl;
    prm.fh_hist << " Generating symmetry group: ";
        print(prm.fh_hist,!prm.do_not_generate_subgroup); prm.fh_hist << endl;
    prm.fh_hist << " Do not use symmetrized projections: ";
@@ -268,7 +270,23 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
           read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
-
+          
+          //skipping if  tilt greater than max_tilt
+          //tilt is inbetween 0 and 360
+          {
+          double aux_tilt;
+          aux_tilt=read_proj.tilt();
+          if((aux_tilt > prm.max_tilt &&
+              aux_tilt < 180.-prm.max_tilt) ||
+             (aux_tilt > prm.max_tilt + 180 &&
+              aux_tilt < 360.-prm.max_tilt) 
+            )
+	          {
+              cerr << "Skipping Proj no: " << iact_proj 
+		             << "tilt=" << read_proj.tilt()  << endl;
+		        continue;
+		       }
+          }
           // Projection extension? .........................................
           if (prm.proj_ext!=0)
              read_proj().window(

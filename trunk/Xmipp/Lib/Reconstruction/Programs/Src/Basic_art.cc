@@ -111,6 +111,7 @@ void Basic_ART_Parameters::default_values() {
        {lambda_list.resize(1); lambda_list.init_constant(1);}               \
     sampling           = AtoF(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
     sym_each           = AtoI(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
+    max_tilt           = AtoF(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
     ref_trans_after    = AtoI(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
     ref_trans_step     = AtoF(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
     blob.radius        = AtoF(GET_PARAM_WITH_DEF("r",         "2"         )); \
@@ -239,6 +240,8 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
      << "\n                         each n projections"
+     << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
+     << "\n                         greater than n\n"
      << "\n   [-ref_trans_after n]  Refine the translation alignement"
      << "\n                         after n projections."
      << "\n   [-ref_trans_step n]   Max displazament in translation alignement"

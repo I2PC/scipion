@@ -134,6 +134,10 @@ public:
    /// deafult is 0
    int sym_each;
    
+   /// Skip projection with absolute tilt angle greater than max_tilt
+   /// deafult is infinite
+   double max_tilt;
+
    /// Refine the translation alignement after n projection presentations
    int ref_trans_after;
 
