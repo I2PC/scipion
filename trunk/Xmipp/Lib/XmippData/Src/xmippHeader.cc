@@ -186,8 +186,8 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
   else {
        FREAD(&header,             sizeof(float),  36, fp, TRUE);
        FREAD(&header.fGeo_matrix, sizeof(double),  9, fp, TRUE);
-       FREAD(&header.fAngle1,     sizeof(float),  11, fp, TRUE);
-       FREAD(&header.fNada2,      sizeof(char),  764, fp, TRUE); 
+       FREAD(&header.fAngle1,     sizeof(float),  13, fp, TRUE);
+       FREAD(&header.fNada2,      sizeof(char),  756, fp, TRUE); 
   }
 
   unsigned long usfNcol=(unsigned long) header.fNcol;
@@ -307,8 +307,8 @@ void headerXmipp::write(FILE *fp, bool force_reversed) {
      __reversed=TRUE;
      FWRITE(&header,             sizeof(float),  36, fp, TRUE);
      FWRITE(&header.fGeo_matrix, sizeof(double),  9, fp, TRUE);
-     FWRITE(&header.fAngle1,     sizeof(float),  11, fp, TRUE);
-     fwrite(&header.fNada2,      sizeof(char),  764, fp); 
+     FWRITE(&header.fAngle1,     sizeof(float),  13, fp, TRUE);
+     fwrite(&header.fNada2,      sizeof(char),  756, fp); 
   } else {
      __reversed=FALSE;
      fwrite(&header, sizeof(headerXmipp::SpiderHeader), 1, fp);

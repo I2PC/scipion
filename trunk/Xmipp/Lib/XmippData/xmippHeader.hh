@@ -311,9 +311,9 @@ private:
              float Tend;
              float Tinc;   		// 4*3 = 12, 12+28 = 40B
 
-             /** Sjors Scheres 17/12/04 For Maximum-Likelihood refinement in Xmipp **/
+             /** Sjors Scheres 17/12/04 **/
 
-             float Weight;
+             float Weight;          // For Maximum-Likelihood refinement
              float Flip;            // 0=no flipping operation (false), 1=flipping (true)
 
              char  fNada2[576];         // empty     700-76-40=624-40-8= 576 bytes
