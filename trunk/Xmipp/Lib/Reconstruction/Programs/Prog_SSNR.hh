@@ -47,6 +47,9 @@ public:
    /// Selfile with all the noise images
    FileName fn_Nsel;
 
+   /// Filename of the Volumetric SSNR, used only for radial averaging
+   FileName fn_VSSNR;
+
    /// Ringwidth
    double ring_width;   
 
@@ -56,6 +59,9 @@ public:
    /** Output filename.
        If empty, SSNR is inserted before the extension in fn_S */
    FileName fn_out;
+
+   /** Generate SSNR images.*/
+   bool generate_images;
 public:
    /* Side info -------------------------------------------------------- */
    // Signal volume
@@ -69,6 +75,9 @@ public:
    
    // Selfile with all noisy images
    SelFile SF_N;
+
+   // SSNR3D for the radial_avg
+   VolumeXmipp VSSNR;
 
 public:
    /// Read parameters from command line
@@ -96,12 +105,31 @@ public:
     Column 8: N21D
     */
    void Estimate_SSNR_1D(matrix2D<double> &output);
+
+   /** Estimate SSNR 2D.
+       Generate images with the particular SSNR. The output filename
+       is used as a rootname */
+   void Estimate_SSNR_2D();
+
+   /** Radial average of a Volumetric SSNR.
+       The Volumetric SSNR is stored as 10*log10(VSSNR+1). To perform
+       a radial average that is consistent with the one produced
+       by the 1D estimation the +1 must be properly eliminated.
+
+       The columns of output are the following:
+       Column 0: sample number in Fourier Space,
+       Column 1: corresponding frequency in continuous freq (1/A),
+       Column 2: corrected radial_avg
+   */
+   void Radial_average(matrix2D<double> &output);
 };
 
 /** Compute the Uncorrected SSNR 1D.
     The input volume is projected in the same directions
     as the Selfile. Then for each image the SSNR1D is computed
     and finally all SSNR1D are averaged.
+    
+    The treat_as_noise field is useful for the computation of alpha
     
     The columns of output are the following:
     Column 0: sample number in Fourier Space,
@@ -113,7 +141,7 @@ public:
     void Compute_Uncorrected_SSNR_1D(
        matrix3D<double> &V, SelFile &SF,
        double ring_width, double Tm,
-       matrix2D<double> &output);
+       matrix2D<double> &output, bool treat_as_noise);
 
 /** Perform all the work.
     For the meaning of the output matrix look at the documentation
