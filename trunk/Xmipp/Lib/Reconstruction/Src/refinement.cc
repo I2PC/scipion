@@ -28,7 +28,7 @@
 #include "../refinement.hh"
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippGeometry.hh>
-#include <XmippInterface/xmippVTK.hh> // correlation_matrix()
+#include <XmippData/xmippFFT.hh> // correlation matrix
 
 //-------------------------------------------------------------------------
 /* Correlate two matrix and find the maximun of the correlation matrix -- */
