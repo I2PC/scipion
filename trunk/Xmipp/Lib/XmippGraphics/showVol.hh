@@ -49,14 +49,6 @@ protected:
     // Axis for slicing. Valid values 'X', 'Y' or 'Z'
     char slices;
 
-    // Status for volumes. Label with the voxel value
-    QLabel     *status;
-
-    /* Initialize.
-       Sets status to NULL and calss ShowTable::init*/
-    virtual void init();
-    /* Clear everything */
-    virtual void clear();
     /* Init table widget.
        Current volume must have been already read */
     virtual void initTable();

@@ -84,6 +84,8 @@ protected:
     QPopupMenu *menubar;
     // Options of the menubar
     QPopupMenu *options;
+    // Status label. Need not be used
+    QLabel     *status;
 public:
     /** Empty constructor */
     ShowTable();
@@ -130,6 +132,8 @@ protected:
     virtual void initRightclickMenubar()=0;
     /* Insert help and Quit in the right click menu bar*/
             void insertGeneralItemsInRightclickMenubar();
+    /* Adjust label to window size */
+    virtual void adjustStatusLabel();
 
     /* Send update to a cell */
 	    void updateCellIdx(int i)

@@ -51,6 +51,7 @@ ShowTable::~ShowTable() {
    clear();
    if (menubar != NULL) delete menubar;
    if (options != NULL) delete options;
+   if (status  != NULL) delete status;
 }
 
 void ShowTable::init() {
@@ -63,6 +64,7 @@ void ShowTable::init() {
     content         = NULL;
     options         = NULL;
     menubar         = NULL;
+    status          = NULL;
     content_queue.clear();
 }
 
@@ -146,6 +148,9 @@ void ShowTable::initTable() {
     verticalHeader()->hide();   setLeftMargin(0);
     horizontalHeader()->hide(); setTopMargin(0);
 
+    // Adjust size of the status label
+    adjustStatusLabel();
+
     // Make Table connections
     connect( this, SIGNAL(doubleClicked ( int, int, int, const QPoint &)),
              this, SLOT(mouseDoubleClickEvent( int, int, int, const QPoint &)) );
@@ -162,6 +167,17 @@ void ShowTable::insertGeneralItemsInRightclickMenubar() {
 
     // Quit ................................................................
     menubar->insertItem( "&Quit", this,  SLOT(close()));
+}
+
+/* Adjust label to window size --------------------------------------------- */
+void ShowTable::adjustStatusLabel() {
+   if (status==NULL) status = new QLabel(this);
+   status->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
+   status->setFixedHeight( fontMetrics().height() + 4 );
+   status->setFixedWidth( maxWidth );
+   status->move(0,maxHeight);
+   status->show();
+   maxHeight += status->height();
 }
 
 /* Rewrite cell painting --------------------------------------------------- */

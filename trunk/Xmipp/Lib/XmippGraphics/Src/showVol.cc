@@ -27,17 +27,6 @@
 #include "../showVol.hh"
 #include "../showTools.hh"
 
-/* Init/Clear data --------------------------------------------------------- */
-void ShowVol::init() {
-    status = NULL;
-    ShowTable::init();
-}
-
-void ShowVol::clear() {
-    if (status != NULL) delete status;
-    ShowTable::clear();
-}
-
 /* Initialize with a volume file.------------------------------------------- */
 void ShowVol::initWithFile( int _numRows, int _numCols,
    const FileName &_fn) {
@@ -87,14 +76,6 @@ void ShowVol::readFile(const FileName &_fn) _THROW {
 void ShowVol::initTable() {
    ShowTable::initTable();
    setFocusPolicy( NoFocus ); // no keyboard focus is accepted
-   if (status==NULL) status = new QLabel(this);
-   status->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
-   status->setFixedHeight( fontMetrics().height() + 4 );
-   status->setFixedWidth( maxWidth );
-   status->move(0,maxHeight);
-   status->show();
-   maxHeight += status->height();
-
    // Really set size
    setMaximumSize(maxWidth,maxHeight);    
    resize(maxWidth,maxHeight);
@@ -134,8 +115,9 @@ void ShowVol::producePixmapAt(int i) {
 /* Show voxel value -------------------------------------------------------- */
 void ShowVol::contentsMouseMoveEvent( QMouseEvent* e) {
     QPoint Pos = e->pos(); // extract pointer position
-    int row=columnAt(Pos.y());
+    int row=rowAt(Pos.y());
     int col=columnAt(Pos.x());
+    if (row<0 || col<0) return;
     int k,i,j;
     switch (slices) {
        case 'X':
