@@ -362,7 +362,7 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
 		  else  
 		     result(i-i0,j-j0)= (temp-Dmin)/range;
 		  }   
-	        else{ 
+	        else{
 		   if(compute_inverse)
 	                result(i-i0,j-j0)= (Dmax-(*this)(j,i))/range;
 	           else
@@ -410,8 +410,10 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
       #endif
       #undef DEBUG66
       if(compute_transmitance)
-         if( Dmin > 1) Dmin = log10(Dmin);
+         {
+	 if( Dmin > 1) Dmin = log10(Dmin);
          if( Dmax > 1) Dmax = log10(Dmax);
+	 }
    }
 cout << "compute_transmitance " << compute_transmitance
      << " compute_inverse " << compute_inverse << endl;
