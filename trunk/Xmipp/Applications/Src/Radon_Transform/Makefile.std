@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = radon_transform
 OBJ  = radon_transform.o
-LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE)
+LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS)
 

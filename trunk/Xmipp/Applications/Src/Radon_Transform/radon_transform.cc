@@ -26,6 +26,7 @@
 #include <XmippData/xmippProgs.hh>
 #include <XmippData/xmippArgs.hh>
 #include <XmippInterface/xmippSpider.hh>
+#include <Reconstruction/radon.hh>
 
 class Radon_parameters: public Prog_parameters {
 public:
@@ -35,6 +36,7 @@ public:
    bool   Fourier;
    double low_pass;
    double temperature;
+   bool   use_Xmipp;
 
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
@@ -44,6 +46,7 @@ public:
       Fourier     =    check_param(argc,argv,"-fourier");
       low_pass    = AtoF(get_param(argc,argv,"-low_pass","0"));
       temperature = AtoF(get_param(argc,argv,"-temperature","0.2"));
+      use_Xmipp   = check_param(argc,argv,"-use_Xmipp");
 
       if (Fourier && low_pass==0)
          REPORT_ERROR(1,"Radon_transform: Some low_pass parameter needed");
@@ -56,7 +59,9 @@ public:
            << "Output size    = " << output_size << endl
            << "Fourier output = " << Fourier     << endl
            << "Low pass       = " << low_pass    << endl
-           << "Temperature    = " << temperature << endl;
+           << "Temperature    = " << temperature << endl
+	   << "Use Xmipp      = " << use_Xmipp   << endl
+      ;
    }
 
    void usage() {
@@ -68,17 +73,28 @@ public:
            << "                              By default, 1.5*SIZE(input)\n"
            << "  [-fourier]                : Produce Fourier outputs\n"
            << "  [-low_pass <w=0>]         : Normalized to 0.5\n"
-           << "  [-temperature <t=0.02>]   : Fermi filter paramter\n";
+           << "  [-temperature <t=0.02>]   : Fermi filter paramter\n"
+	   << "  [-use_Xmipp]              : Only for images, without FFT\n"
+      ;
    }
 };
 
 bool process_img(ImageXmipp &img, const FileName &fn_out,
    const Prog_parameters *prm) {
    Radon_parameters *eprm=(Radon_parameters *) prm;
-   radon_transform(img, fn_out, eprm->Delta_rot, eprm->output_size);
-   if (eprm->Fourier)
-      Fourier_transform_of_Radon_transform(fn_out,fn_out,
-         eprm->low_pass, eprm->temperature);
+   if (!eprm->use_Xmipp) {
+      // Do it via Spider
+      radon_transform(img, fn_out, eprm->Delta_rot, eprm->output_size);
+      if (eprm->Fourier)
+	 Fourier_transform_of_Radon_transform(fn_out,fn_out,
+            eprm->low_pass, eprm->temperature);
+   } else {
+      // Do it via Xmipp
+      matrix2D<double> RT;
+      Radon_Transform(img(),eprm->Delta_rot,RT);
+      img()=RT;
+      img.write(fn_out);
+   }
    return TRUE;
 }
 
