@@ -37,7 +37,6 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
    Nshift_avg=0;
    Nshift_dev=0;
    disappearing_th=0;
-   grid_relative_size=0;
 }
 
 /* Read Crystal Projection Parameters ====================================== */
@@ -99,17 +98,11 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) _THROW {
             break;
          case 5:
             orthogonal=(strcmp(first_token(line),"Yes")==0);
-            if (orthogonal) lineNo++;
-            else            lineNo+=2;
-            break;
-         case 6:
-            grid_relative_size=AtoF(first_token(line),3007,
-               "Prog_Project_Crystal::read: Error in grid relative size");
             lineNo++;
             break;
       } /* switch end */  
    } /* while end */
-   if (lineNo!=7)
+   if (lineNo!=6)
       REPORT_ERROR(3007,(string)"Prog_Project_Crystal::read: I "
          "couldn't read all parameters from file " + fn_crystal);
 
@@ -145,7 +138,6 @@ void Crystal_Projection_Parameters::write(FileName fn_crystal) _THROW {
    else            fprintf(fh_param,"No\n");
       
    fprintf(fh_param,"# Grid relative size\n");
-   fprintf(fh_param,"%f\n",grid_relative_size);
       
    fclose(fh_param);
 }
