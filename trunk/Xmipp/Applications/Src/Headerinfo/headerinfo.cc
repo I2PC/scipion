@@ -48,6 +48,7 @@ int main (int argc,char *argv[]) {
    SelFile         SF;
    DocFile         DF;
    ImageXmipp      img;
+   headerXmipp     head;
 
 // Check command line options ===========================================
    try {
@@ -115,17 +116,19 @@ int main (int argc,char *argv[]) {
 
        docline.init_zeros(7);
        int j=0;
+       float xx,yy;
        SF.go_beginning();
        while (!SF.eof()) {
 	 fn_img=SF.NextImg();
-	 img.read(fn_img);
-	 docline(0)=img.rot();
-	 docline(1)=img.tilt();
-	 docline(2)=img.psi();
-	 docline(3)=img.Xoff();
-	 docline(4)=img.Yoff();
-	 docline(5)=img.weight();
-	 docline(6)=img.flip();
+	 head.read(fn_img);
+	 head.get_originOffsets(xx,yy);
+	 docline(0)=head.Phi();
+	 docline(1)=head.Theta();
+	 docline(2)=head.Psi();
+	 docline(3)=xx;
+	 docline(4)=yy;
+	 docline(5)=head.Weight();
+	 docline(6)=head.Flip();
 	 DF.append_comment(fn_img);
 	 DF.append_data_line(docline);
 	 j++;
