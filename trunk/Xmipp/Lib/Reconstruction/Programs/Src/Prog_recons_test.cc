@@ -622,6 +622,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.R=prm.reconstruction_radius;
       art_prm.fn_sel=Prog_proj_prm.fn_sel_file;
       art_prm.proj_ext=6;
+      art_prm.max_tilt=1e7;
       if (!prm.succesive_params) {
          art_prm.lambda_list.resize(1);
 	 art_prm.lambda_list(0)=rnd_log(prm.lambda0[i],prm.lambdaF[i]);
