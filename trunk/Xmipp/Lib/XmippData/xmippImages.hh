@@ -406,9 +406,22 @@ public:
    /** Read Xmipp image from disk.
        If the image doesn't exist at the given path then an exception is
        thrown.
+       
+       If only_apply_shifts is TRUE, then only the shifts of the header are
+       applied (even if apply_geo is FALSE).
+       If apply_geo is TRUE and only_apply_shifts is FALSE, then shifts
+       and in-plane rotation are applied. 
+       
+       If skip_type_check is FALSE, then the routine automatically checks
+       the endianness of thee file, and reversed should be set to FALSE.
+       
+       If skip_type_check is TRUE, then the programmer must know whether
+       the endian is reversed or not, and provide this information in reversed.
+       
        \\ Ex: IX.read("g1ta0002.spd");*/
    virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
-      bool reversed=FALSE, bool apply_geo=FALSE, bool apply_shifts=FALSE) _THROW;
+      bool reversed=FALSE, bool apply_geo=FALSE,
+      bool only_apply_shifts=FALSE) _THROW;
    
    /** Write Xmipp image to disk.
        If there is any problem in the writing, an exception is thrown.
