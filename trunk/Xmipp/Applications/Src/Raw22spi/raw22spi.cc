@@ -93,7 +93,7 @@ try {
        FileName in_name = line.get_text();
        short label = line.get_label();
        FileName out_name = in_name.without_extension();
-       out_name.add_extension(sel_ext);
+       out_name=out_name.add_extension(sel_ext);
        SF_out.insert(out_name,(SelLine::Label)label);
        raw22spi(in_name,out_name,raw_type,Zdim,Ydim,Xdim);
       }
