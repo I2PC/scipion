@@ -427,6 +427,7 @@ void project_Volume(
       proj.reset(Ydim,Xdim);
       proj.set_angles(rot,tilt,psi);
       norm_proj().resize(proj());
+      norm_proj().init_zeros();
    }
    
    #ifdef DEBUG_LITTLE
