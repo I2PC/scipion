@@ -962,7 +962,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile
   comment="MLalign2D-logfile: Number of images= "+FtoA(sumw_allrefs);
   if (LSQ_rather_than_ML) comment+=" <CC>= "+FtoA(avecorr,10,5);
   else { 
-    comment+=" LL= "+FtoA(LL,10,5)+" R= "+FtoA(avecorr,10,5);
+    comment+=" LL= "+FtoA(LL,10,5)+" <Pmax/sumP>= "+FtoA(avecorr,10,5);
     DF.insert_comment(comment);
     comment="-noise "+FtoA(sigma_noise,10,7)+" -offset "+FtoA(sigma_offset,10,7)+" -istart "+ItoA(iter+1);
   }
