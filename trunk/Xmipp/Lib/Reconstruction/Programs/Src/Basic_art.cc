@@ -43,6 +43,7 @@ void Basic_ART_Parameters::default_values() {
     block_size	       = 1;
     eq_mode            = ARTK;
     random_sort        = FALSE;
+    dont_sort          = FALSE;
     sort_last_N        = 2;
     no_it              = 1;
     lambda_list.resize(1); lambda_list.init_constant(1);
@@ -109,6 +110,7 @@ void Basic_ART_Parameters::default_values() {
     do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
     fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
+    dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
     sort_last_N        = AtoI(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
     no_it              = AtoI(GET_PARAM_WITH_DEF("n",         "1"       )); \
     stop_at            = AtoI(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
@@ -132,9 +134,10 @@ void Basic_ART_Parameters::default_values() {
     if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
     else if (grid_relative_size == -2)  grid_relative_size = pow (2.0,1.0/3.0); \
     \
-    if      (CHECK_PARAM("CAVK")) eq_mode=CAVK; \
-    else if (CHECK_PARAM("CAV"))  eq_mode=CAV; \
-    else                          eq_mode=ARTK; \
+    if      (CHECK_PARAM("CAVK"))    eq_mode=CAVK; \
+    else if (CHECK_PARAM("CAV"))     eq_mode=CAV; \
+    else if (CHECK_PARAM("CAVARTK")) eq_mode=CAVARTK; \
+    else                             eq_mode=ARTK; \
     \
     if      (CHECK_PARAM("FCC")) grid_type=FCC; \
     else if (CHECK_PARAM("CC"))  grid_type=CC; \
@@ -273,12 +276,14 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
      << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
      << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
+     << "\n   [-no_sort]            No sort must be applied"
      << "\nParallel parameters"
      << "\n                         by default, sequential ART is applied"
      << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
      << "\n   [-SART]               Simultaneous ART\n"
      << "\n   [-AVSP]               Average Strings\n"
      << "\n   [-BiCAV]              Block Iterative CAV\n"
+     << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
      << "\n   [-block_size <n=1>]   Number of projections to each block\n"
      << "\nBlob parameters"
      << "\n   [-r blrad=2]          blob radius"
@@ -357,7 +362,7 @@ void sort_perpendicular (int numIMG, Recons_info *IMG_Inf,
    i=(int)rnd_unif(0,numIMG);
    VEC_ELEM(chosen,i)=1;
    VEC_ELEM(ordered_list,0)=i;
-
+   
    // Choose the rest of projections
    cerr << "Sorting projections ...\n";
    init_progress_bar(numIMG-1);
@@ -500,7 +505,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
       build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf,do_not_use_symproj);
 
       if (!(tell&TELL_MANUAL_ORDER))
-	 if (parallel_mode==SIRT || eq_mode==CAV || rank>0)
+	 if (parallel_mode==SIRT || eq_mode==CAV || rank>0 || dont_sort)
 	                           no_sort(numIMG,ordered_list);
 	 else if (random_sort)     sort_randomly(numIMG,ordered_list);
 	 else if (sort_last_N!=-1) sort_perpendicular(numIMG,IMG_Inf,ordered_list,
@@ -516,9 +521,15 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
 	 else {
 	    Grid grid_blobs;
       	    if (R==-1) {
-	       matrix1D<double> corner=
-        	  vector_R3((double)projXdim/2, (double)projXdim/2,
+	       matrix1D<double> corner;
+	       if (Zoutput_volume_size==0) 
+        	  corner=vector_R3((double)projXdim/2, (double)projXdim/2,
 		     (double)projXdim/2);
+	       else
+	          corner=vector_R3(
+		     (double)Xoutput_volume_size/2,
+		     (double)Youtput_volume_size/2,
+		     (double)Zoutput_volume_size/2);
 	       /* If you substract half the blob radius, you are forcing that the
         	  last blob touches slightly the volume border. By not substracting
         	  it there is a blob center as near the border as possible. */
