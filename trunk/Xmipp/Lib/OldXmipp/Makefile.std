@@ -10,6 +10,13 @@ else
     EXTRALINK_FLAGS = 
     EXTRA_RM =
 endif
+ifeq ($(STATIC),YES) 
+    LIBPROJ = ../libOldXmipp_$(XMIPP_PREFIX)$(MACHINE).a
+    EXTRACC_FLAGS = 
+    COMMAND = $(AR)  $(LIBPROJ) $(SRC_OBJS) ;
+else
+    COMMAND = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+endif
 SRC_OBJS = cabecero.o varios.o varios2.o varios3.o dimension.o \
              floatnat.o iocabecero.o usages.o fft.o fftmod.o fftn.o allfft.o \
              filtros.o specmod.o
@@ -20,7 +27,7 @@ all:  $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS)
 	@echo "Creating library OldXmipp Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+	@$(COMMAND)
 
 # Compiling by default -----------------------------------------------------
 .c.o:

@@ -18,6 +18,19 @@ else
     EXTRALINK_INRIA_FLAGS =
     EXTRA_RM = 
 endif
+ifeq ($(STATIC),YES)
+    LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).a
+    LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).a
+    LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).a
+    EXTRACC_FLAGS = 
+    COMMANDONE = $(AR) $(LIBRECONS) $(SRC_OBJS)
+    COMMANDTWO = $(AR) $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE)
+    COMMANDTHR = $(AR) $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA)
+else 
+    COMMANDONE = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS) $(EXTRALINK_FLAGS)
+    COMMANDTWO = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE) $(EXTRALINK_INTERFACE_FLAGS) 
+    COMMANDTHR = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) 
+endif
 
 
 LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) \
@@ -60,17 +73,17 @@ all: $(LIBPROJ)
 $(LIBRECONS): $(SRC_OBJS)
 	@echo "Creating library Xmipp Reconstruction Library ..."
 	@rm -f $(LIBRECONS)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS) $(EXTRALINK_FLAGS)
+	@$(COMMANDONE)
 
 $(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
 	@echo "Creating library Xmipp Reconstruction-Interface Library ..."
 	@rm -f $(LIBRECONS_INTERFACE)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE) $(EXTRALINK_INTERFACE_FLAGS) 
+	@$(COMMANDTWO)
 
 $(LIBRECONS_INRIA): $(SRC_OBJS_INRIA)
 	@echo "Creating library Xmipp Reconstruction INRIA Library ..."
 	@rm -f $(LIBRECONS_INRIA)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) 
+	@$(COMMANDTHR)
 
 # Compiling by default -----------------------------------------------------
 .cc.o:

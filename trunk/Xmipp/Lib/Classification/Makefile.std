@@ -10,7 +10,13 @@ else
     EXTRALINK_FLAGS = 
     EXTRA_RM =
 endif
-
+ifeq ($(STATIC),YES) 
+    LIBPROJ = ../libClassif_$(XMIPP_PREFIX)$(MACHINE).a
+    EXTRACC_FLAGS = 
+    COMMAND = $(AR) $(LIBPROJ) $(SRC_OBJS) ;
+else
+    COMMAND = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
+endif
 
 SRC_OBJS = Src/xmippCTVectors.o Src/xmippCodeBook.o Src/xmippFuzzyCodeBook.o Src/xmippDistances.o \
 	   Src/xmippSammon.o Src/xmippFCMeans.o Src/xmippMap.o Src/xmippSOM.o Src/xmippFKCN.o \
@@ -24,7 +30,7 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS)
 	@echo "Creating library Xmipp Classification Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
+	@$(COMMAND)
 
 # Compiling by default -----------------------------------------------------
 .cc.o:

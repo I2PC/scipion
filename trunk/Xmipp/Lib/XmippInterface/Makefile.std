@@ -18,6 +18,24 @@ else
     EXTRALINK_INRIA_FLAGS =
     EXTRA_RM = 
 endif
+ifeq ($(STATIC),YES)
+    LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).a
+    LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).a
+    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).a
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = 
+    EXTRALINK_INTERFACE_FLAGS =
+    EXTRALINK_INRIA_FLAGS =
+    EXTRA_RM = 
+    COMMANDONE = $(AR) $(LIBINTERFACE) $(SRC_OBJS)
+    COMMANDTWO = $(AR) $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA)
+    COMMANDTHR = $(AR) $(LIBINTERFACEVTK) $(SRC_OBJS_VTK)  
+else 
+    COMMANDONE = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) $(EXTRALINK_FLAGS) ;
+    COMMANDTWO = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) ; 
+    COMMANDTHR = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK) $(EXTRALINK_VTK_FLAGS) ;
+endif
+
 LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA) $(LIBINTERFACEVTK)
 
 SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
@@ -33,17 +51,17 @@ all:  $(LIBPROJ)
 $(LIBINTERFACE): $(SRC_OBJS)
 	@echo "Creating library XmippInterface Library ..."
 	@rm -f $(LIBINTERFACE)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) $(EXTRALINK_FLAGS) ;
+	@$(COMMANDONE)
 
 $(LIBINTERFACEINRIA): $(SRC_OBJS_INRIA)
 	@echo "Creating library XmippInterface INRIA Library ..."
 	@rm -f $(LIBINTERFACEINRIA)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) ;
+	@$(COMMANDTWO)
 
 $(LIBINTERFACEVTK): $(SRC_OBJS_VTK)
 	@echo "Creating library XmippInterface VTK Library ..."
 	@rm -f $(LIBINTERFACEVTK)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK) $(EXTRALINK_VTK_FLAGS) ;
+	@$(COMMANDTHR)
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:

@@ -1,15 +1,22 @@
 ############################################################################
 ifeq ($(HAVE_QT),YES)
     ifeq ($(MACHINE),CYGWIN)
-        LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).dll
-    	EXTRACC_FLAGS = 
-    	EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBRECONS).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libClassif_$(XMIPP_PREFIX)$(MACHINE).dll.a -L$(XMIPP_QTDIR)/lib $(QTLIBS)
-        EXTRA_RM = $(LIBPROJ).a
+	LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).dll
+	EXTRACC_FLAGS = 
+	EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBRECONS).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libClassif_$(XMIPP_PREFIX)$(MACHINE).dll.a -L$(XMIPP_QTDIR)/lib $(QTLIBS)
+	EXTRA_RM = $(LIBPROJ).a
     else
         LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).so
     	EXTRACC_FLAGS = -fPIC
     	EXTRALINK_FLAGS = 
         EXTRA_RM =
+    endif
+    ifeq ($(STATIC),YES)
+        LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).a
+        EXTRACC_FLAGS = 
+        COMMAND = $(AR)  $(LIBPROJ) $(SRC_OBJS) ; 
+    else
+        COMMAND = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
     endif
 endif
 
@@ -29,7 +36,7 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS)
 	@echo "Creating library Xmipp Graphics Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
+	@$(COMMAND)
 
 # Compiling by default -----------------------------------------------------
 .cc.o:

@@ -10,6 +10,13 @@ else
     EXTRALINK_FLAGS = 
     EXTRA_RM =
 endif
+ifeq ($(STATIC),YES)
+    LIBPROJ = ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).a
+    EXTRACC_FLAGS =
+    COMMAND = $(AR) $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS)
+else
+    COMMAND = $(CCLIB) $(LINKERFLAGS) -shared $(EXTRALINK_FLAGS) -o $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS);
+endif
 
 SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Src/xmippMatrices1D.o Src/xmippMatrices2D.o \
@@ -65,7 +72,7 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS) $(BILIB_OBJS)
 	@echo "Creating library Xmipp General Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared $(EXTRALINK_FLAGS) -o $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS);
+	@$(COMMAND)
 
 # Compiling by default -----------------------------------------------------
 .cc.o:
