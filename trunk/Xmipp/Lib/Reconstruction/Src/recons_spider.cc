@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <fstream.h>
+#include <fstream>
 #include <XmippData/xmippDocFiles.hh>
 #include <XmippInterface/xmippSpider.hh>
 #include "../recons_spider.hh"
