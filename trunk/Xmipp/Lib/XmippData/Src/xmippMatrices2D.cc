@@ -29,7 +29,11 @@
 #include "../xmippMatrices2D.hh"
 #include "../xmippArgs.hh"
 #include <stdio.h>
+#include "../Bilib/types/tsplinebasis.h"
+#include "../Bilib/types/tboundaryconvention.h"
 #include "../Bilib/headers/linearalgebra.h"
+#include "../Bilib/headers/changebasis.h"
+#include "../Bilib/headers/kernel.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
@@ -250,7 +254,6 @@ template <class T>
 /*
  * "Bi-linear Interpolation"
  */
-
 template <class T>
    T mT::interpolated_elem(double x, double y, T outside_value) {
     int x0 = FLOOR(x); double fx = x - x0; int x1 = x0 + 1;
@@ -280,6 +283,47 @@ complex<double> matrix2D< complex<double> >::interpolated_elem(
     complex<double> d0 = LIN_INTERP(fx, d00, d01);
     complex<double> d1 = LIN_INTERP(fx, d10, d11);    
     return LIN_INTERP(fy, d0, d1);
+}
+
+/*
+ * "B-Spline Interpolation"
+ */
+template <class T>
+   T mT::interpolated_elem_as_Bspline(double x, double y, int SplineDegree) {
+    int SplineDegree_1=SplineDegree-1;
+
+    // Logical to physical
+    y-=STARTINGY(*this);
+    x-=STARTINGX(*this);
+
+    int lmax = XSIZE(*this);
+    int mmax = YSIZE(*this);
+    int l1 = CEIL(x - SplineDegree_1);
+    int l2 = l1 + SplineDegree;
+    int m1 = CEIL(y - SplineDegree_1);
+    int m2 = m1 + SplineDegree;
+    double columns = 0.0;
+    for (int m=m1; m<=m2; m++)
+        if (m<mmax && m>-1L) {
+           int row_m = XSIZE(*this)*m;
+      	   double rows = 0.0;
+           for (int l=l1; l<=l2; l++) {
+               if (l<lmax && l>-1L) {
+        	  double xminusl = x-(double)l;
+        	  double Coeff = (double) __m[row_m+l];
+		  switch (SplineDegree) {
+		     case 2: rows += Coeff * Bspline02(xminusl); break; 
+                     case 3: rows += Coeff * Bspline03(xminusl); break;
+		  }
+               }
+           }
+           double yminusm=y-(double)m;
+	   switch (SplineDegree) {
+              case 2: columns += rows * Bspline03(yminusm); break;
+              case 3: columns += rows * Bspline03(yminusm); break;
+	   }
+        }
+    return (T)columns;
 }
 
 /* Transpose --------------------------------------------------------------- */
@@ -622,7 +666,7 @@ template <class T>
 //#define DEBUG
 template <class T>
    void apply_geom(mT &M2,matrix2D<double> A, const mT &M1, bool inv,
-   bool wrap, T outside) _THROW {
+   bool wrap, T outside) {
    int m1, n1, m2, n2;
    double x, y, xp, yp;
    double minxp, minyp, maxxp, maxyp;
@@ -757,11 +801,133 @@ template <class T>
 }
 #undef DEBUG
 
+/* Apply a geometrical transformation -------------------------------------- */
+// It is translated from function transforma in Lib/varios2.c
+// We should check which one performs better.
+//#define DEBUG
+template <class T>
+   void apply_geom_Bspline(mT &M2,matrix2D<double> A, const mT &M1,
+   int Splinedegree, bool inv, bool wrap, T outside) {
+   int m1, n1, m2, n2;
+   double x, y, xp, yp;
+   double minxp, minyp, maxxp, maxyp;
+   int   cen_x, cen_y, cen_xp, cen_yp;
+   double wx, wy; // Weights in X,Y directions for bilinear interpolation
+   
+   if ((XSIZE(A)!=3) || (YSIZE(A)!=3))
+      REPORT_ERROR(1102,"Apply_geom: geometrical transformation is not 3x3");
+   if (A.IsIdent())   {M2=M1; return;}
+   if (XSIZE(M1)==0)  {M2.clear(); return;}
+   
+   if (!inv) A=A.inv();
+
+   // For scalings the output matrix is resized outside to the final
+   // size instead of being resized inside the routine with the
+   // same size as the input matrix
+   if (XSIZE(M2)==0) M2.resize(M1);
+   if (outside!=0.) {
+   // Initialise output matrix with value=outside
+     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
+   }
+  
+   // Find center and limits of image
+   cen_y  = (int)(YSIZE(M2)/2);
+   cen_x  = (int)(XSIZE(M2)/2);
+   cen_yp = (int)(YSIZE(M1)/2);
+   cen_xp = (int)(XSIZE(M1)/2);
+   minxp  = -cen_xp;
+   minyp  = -cen_yp;
+   maxxp  = XSIZE(M1)-cen_xp-1;
+   maxyp  = YSIZE(M1)-cen_yp-1;
+   
+   // Build the B-spline coefficients
+   matrix2D<double> Bcoeffs;
+   M1.produce_spline_coeffs(Bcoeffs,Splinedegree);
+   STARTINGX(Bcoeffs)=(int)minxp;
+   STARTINGY(Bcoeffs)=(int)minyp;
+
+   // Now we go from the output image to the input image, ie, for any pixel
+   // in the output image we calculate which are the corresponding ones in
+   // the original image, make an interpolation with them and put this value
+   // at the output pixel
+   for (int i=0; i<YSIZE(M2); i++) {
+      // Calculate position of the beginning of the row in the output image
+      x= -cen_x;
+      y=i-cen_y;
+
+      // Calculate this position in the input image according to the
+      // geometrical transformation
+      // they are related by
+      // coords_output(=x,y) = A * coords_input (=xp,yp)
+      xp=x*dMij(A,0,0) + y*dMij(A,0,1) + dMij(A,0,2);
+      yp=x*dMij(A,1,0) + y*dMij(A,1,1) + dMij(A,1,2);
+     
+      for (int j=0; j<XSIZE(M2); j++) {
+         bool interp;
+         T tmp;
+         
+         #ifdef DEBUG
+         cout << "Computing (" << i << "," << j << ")\n";
+         cout << "   (y, x) =(" << y << "," << x << ")\n"
+              << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         #endif
+
+         // If the point is outside the image, apply a periodic extension
+         // of the image, what exits by one side enters by the other
+         interp=TRUE;
+         if (wrap) {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY)
+		xp=realWRAP(xp, minxp-0.5, maxxp+0.5);
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp-0.5, maxyp+0.5);
+         } else {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+         }
+
+         #ifdef DEBUG
+         cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         cout << "   Interp = " << interp << endl;
+         x++;
+         #endif
+
+         if (interp) {            
+            dMij(M2,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
+	       xp,yp,Splinedegree);
+
+            #ifdef DEBUG
+            cout << "   val= " << tmp << endl;
+            #endif
+         }
+
+         // Compute new point inside input image
+         xp += dMij(A,0,0);
+         yp += dMij(A,1,0);
+      }
+   }
+}
+#undef DEBUG
+
 /* Geometrical operations -------------------------------------------------- */
 template <class T>
    void mT::rotate(double ang, mT &result, bool wrap) const
       {matrix2D<double> temp=rot2D_matrix(ang);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
+
+template <class T>
+   void mT::rotate_Bspline(int Splinedegree,
+      double ang, mT &result, bool wrap) const
+      {matrix2D<double> temp=rot2D_matrix(ang);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
+
+template <class T>
+   void mT::translate_Bspline(int Splinedegree,
+      const matrix1D<double> &v, mT &result, bool wrap) const
+      {matrix2D<double> temp=translation2D_matrix(v);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
 
 template <class T>
    void mT::translate(const matrix1D<double> &v, mT &result, bool wrap) const
@@ -779,12 +945,33 @@ template <class T>
    }
 
 template <class T>
+   void mT::scale_to_size_Bspline(int Splinedegree,
+      int Ydim,int Xdim, mT &result) const {
+      matrix2D<double> temp(3,3);
+      result.resize(Ydim,Xdim);
+      temp.init_identity();
+      DIRECT_MAT_ELEM(temp,0,0)=(double)Xdim/(double)XSIZE(*this);
+      DIRECT_MAT_ELEM(temp,1,1)=(double)Ydim/(double)YSIZE(*this);
+      apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,WRAP);
+   }
+
+template <class T>
    void mT::self_translate_center_of_mass_to_center(bool wrap) {
       set_Xmipp_origin();
       matrix1D<double> center;
       center_of_mass(center);
       center*=-1;
       self_translate(center,wrap);
+   }
+
+template <class T>
+   void mT::self_translate_center_of_mass_to_center_Bspline(
+      int Splinedegree, bool wrap) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate_Bspline(Splinedegree,center,wrap);
    }
 
 template <class T>
@@ -810,6 +997,24 @@ template <class T>
 	          DIRECT_MAT_ELEM(*this,i,j);
       }
    }
+
+/* Change to Spline coeffs ------------------------------------------------- */
+template <class T>
+   void mT::produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree)
+      const {
+   coeffs.init_zeros(YSIZE(*this),XSIZE(*this));
+   STARTINGX(coeffs)=STARTINGX(*this);
+   STARTINGY(coeffs)=STARTINGY(*this);
+   int Status;
+   matrix2D<double> aux;
+   type_cast(*this,aux);
+   ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(coeffs),
+       XSIZE(*this), YSIZE(*this), 1,
+       CardinalSpline, BasicSpline, SplineDegree,
+       FiniteCoefficientSupport, DBL_EPSILON, &Status);
+   if (Status)
+      REPORT_ERROR(1,"matrix2D::produce_spline_coeffs: Error");
+}
 
 /* Matrix by matrix multiplication ----------------------------------------- */
 // xinit and yinit are taken from op1
@@ -1516,7 +1721,7 @@ template <class T>
  	  matrix1D<int> pixel(2);
 	  a.isBorder(pixel);
       a.isBorder(0,0);
-
+      
       a.intersects(a);
       a.intersects(r,r);
       a.isCorner(r);
@@ -1530,6 +1735,7 @@ template <class T>
       matrix2D<T> A;
       a.init_identity(10,10);
       a.interpolated_elem(3.5,3.5);
+      a.interpolated_elem_as_Bspline(3.5,3.5);
       a.reverseX();
       a.reverseY();
       a=a.inv()*a.det();
@@ -1538,9 +1744,11 @@ template <class T>
       solve(A,A,A);
       matrix2D<double> B;
       apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP,Taux);
+      apply_geom_Bspline(a, B, a, IS_NOT_INV,DONT_WRAP,Taux);
       a.scale_to_size(32,32,a);
       a.superpixel_reduce(a,2);
       a.superpixel_expand(a,2);
+      a.produce_spline_coeffs(B);
       a.for_all_rows(&vector_minus_first);
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);
@@ -1554,6 +1762,10 @@ template <class T>
       a.rotate(60);
       a.scale_to_size(45,45);
       a.self_translate_center_of_mass_to_center();
+      a.translate_Bspline(3,vector_R2(0,0));
+      a.rotate_Bspline(3,60);
+      a.scale_to_size_Bspline(3,45,45);
+      a.self_translate_center_of_mass_to_center_Bspline(3);
       int imax;
       a.max_index(imax,imax);
       a.min_index(imax,imax);

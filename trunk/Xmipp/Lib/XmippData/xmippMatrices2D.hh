@@ -79,7 +79,11 @@ void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
 			   
 template <class T>
    void apply_geom(mT &m2, matrix2D<double> A, const mT &m1, bool inv,
-      bool wrap, T outside=(T)0) _THROW;
+      bool wrap, T outside=(T)0);
+
+template <class T>
+   void apply_geom_Bspline(mT &m2, matrix2D<double> A, const mT &m1,
+      int Splinedegree, bool inv, bool wrap, T outside=(T)0);
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -692,8 +696,14 @@ public:
         {return MAT_ELEM(*this,YY(v),XX(v));}
 
    /** Interpolates the value of the 2D matrix M at the point (x,y).
+       Bilinear interpolation.
        (x,y) are in logical coordinates.*/
    T   interpolated_elem(double x, double y, T outside_value=(T)0);
+
+   /** Interpolates the value of the 2D matrix M at the point (x,y) knowing
+       that this image is a set of B-spline coefficients.
+       (x,y) are in logical coordinates.*/
+   T   interpolated_elem_as_Bspline(double x, double y, int Splinedegree=3);
 
    /** Logical to physical index translation.
        This function returns the physical position of a logical one. See
@@ -956,7 +966,12 @@ public:
        m2 cannot be the same matrix as m1.
        \\Ex: matrix2D<double> A(3,3); A.init_identity; apply_geom(m2,A,m1);*/
    friend void apply_geom<>(mT &m2, matrix2D<double> A,
-       const mT &m1, bool inv, bool wrap, T outside) _THROW;
+       const mT &m1, bool inv, bool wrap, T outside);
+
+   /** Apply geom with B-spline interpolation. */
+   friend void apply_geom_Bspline<>(mT &m2, matrix2D<double> A,
+       const mT &m1, int Splinedegree, bool inv, bool wrap, T outside);
+
    /** Self apply geom.
        Same as the previous one, but the result is kept in this object */
    void self_apply_geom(matrix2D<double> A, bool inv, bool wrap, T outside=(T)0)
@@ -982,6 +997,22 @@ public:
    void self_rotate(double ang, bool wrap=DONT_WRAP)
       {mT aux; rotate(ang,aux,wrap); *this=aux;}
 
+   /** Rotate matrix (using Bspline interpolation).
+       The angle must be in degrees. The result cannot be this object.
+       \\Ex: m1.rotate(60,m2);*/
+   void rotate_Bspline(int Splinedegree,
+      double ang, mT &result, bool wrap=DONT_WRAP) const;
+   
+   /** Rotate matrix  (using Bspline interpolation).
+       Same as the previous one. */
+   mT rotate_Bspline(int Splinedegree, double ang, bool wrap=DONT_WRAP) const
+      {mT aux; rotate_Bspline(Splinedegree,ang,aux,wrap); return aux;}
+
+   /** Rotate matrix  (using Bspline interpolation).
+       Same as the previous one, but the result is kept in this object */
+   void self_rotate_Bspline(int Splinedegree, double ang, bool wrap=DONT_WRAP)
+      {mT aux; rotate_Bspline(Splinedegree,ang,aux,wrap); *this=aux;}
+
    /** Translate matrix.
        The displacement is given as a R2 vector of the form (shift_X,shift_Y).
        The result cannot be this object.
@@ -999,10 +1030,36 @@ public:
    void self_translate(const matrix1D<double> &v, bool wrap=WRAP)
       {mT aux; translate(v,aux,wrap); *this=aux;}
 
+   /** Translate matrix (using Bspline interpolation).
+       The displacement is given as a R2 vector of the form (shift_X,shift_Y).
+       The result cannot be this object.
+       \\Ex: m2=m1.translate(vector_R2(0,2));
+       \\--> m1 is shifted 2 pixels down and stored in m2*/
+   void translate_Bspline(int Splinedegree,
+      const matrix1D<double> &v, mT &result, bool wrap=WRAP) const;
+   
+   /** Translate matrix (using Bspline interpolation).
+       Same as the previous one. */
+   mT translate_Bspline(int Splinedegree,
+      const matrix1D<double> &v, bool wrap=WRAP) const
+      {mT aux; translate_Bspline(Splinedegree,v,aux,wrap); return aux;}
+   
+   /** Translate matrix (using Bspline interpolation).
+       Same as the previous one, but the result is kept in this object */
+   void self_translate_Bspline(int Splinedegree,
+      const matrix1D<double> &v, bool wrap=WRAP)
+      {mT aux; translate_Bspline(Splinedegree,v,aux,wrap); *this=aux;}
+
    /** Translate center of mass to center.
        If the input has very high values, it is better to rescale it to
        be between 0 and 1. */
    void self_translate_center_of_mass_to_center(bool wrap=WRAP);
+
+   /** Translate center of mass to center (using Bspline interpolation).
+       If the input has very high values, it is better to rescale it to
+       be between 0 and 1. */
+   void self_translate_center_of_mass_to_center_Bspline(
+      int Splinedegree, bool wrap=WRAP);
 
    /** Scales to a new size.
        The matrix is scaled (resampled) to fill a new size. It is not the
@@ -1022,6 +1079,25 @@ public:
    void self_scale_to_size(int Ydim,int Xdim)
       {mT aux; scale_to_size(Ydim, Xdim, aux); *this=aux;}
 
+   /** Scales to a new size (using Bspline interpolation).
+       The matrix is scaled (resampled) to fill a new size. It is not the
+       same as "window" in this same class. The size can be larger or 
+       smaller than the actual one. But the result matrix cannot be
+       this object.
+       \\Ex: m1.scale_to_size(128,128);*/
+   void scale_to_size_Bspline(int Splinedegree,
+      int Ydim,int Xdim, mT &result) const;
+
+   /** Scales to a new size (using Bspline interpolation).
+       Same as the previous one. */
+   mT scale_to_size_Bspline(int Splinedegree,int Ydim,int Xdim) const
+      {mT aux; scale_to_size_Bspline(Splinedegree,Ydim, Xdim, aux); return aux;}
+
+   /** Scales to a new size (using Bspline interpolation).
+       Same as the previous one, but the result is kept in this object. */
+   void self_scale_to_size_Bspline(int Splinedegree,int Ydim,int Xdim)
+      {mT aux; scale_to_size_Bspline(Splinedegree,Ydim, Xdim, aux); *this=aux;}
+
    /** Superpixel reduce.
        This function reduces the given image averaging in the superpixel
        of the given size. The last columns and rows are removed if the
@@ -1033,6 +1109,10 @@ public:
        This function copies each pixel to a new image as many times
        as the size of the superpixel. */
    void superpixel_expand(mT &result, int size=2) const;
+
+   /** Produce spline coefficients.*/
+   void produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree=3)
+      const;
    //@}
 
    /* Iterators ------------------------------------------------------------ */
@@ -1328,7 +1408,6 @@ void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
    const matrix2D<double> &Aeq, const matrix1D<double> &beq,
          matrix1D<double> &bl,        matrix1D<double> &bu,
          matrix1D<double> &x);
-
 //@}
 //@}
 //@}
