@@ -28,6 +28,7 @@
 #include <XmippGraphics/show2D.hh>
 #include <XmippGraphics/showSel.hh>
 #include <XmippGraphics/showVol.hh>
+#include <XmippGraphics/showSpectra.hh>
 #include <qapplication.h>
 
 void Usage();
@@ -38,9 +39,10 @@ int main( int argc, char **argv ) {
     int  mode;
     bool poll;
     try {
-       if (check_param(argc,argv,"-img"))       mode=0;
-       else if (check_param(argc,argv,"-sel"))  mode=1;
-       else if (check_param(argc,argv,"-vol"))  mode=2;
+       if (check_param(argc,argv,"-img"))        mode=0;
+       else if (check_param(argc,argv,"-sel"))   mode=1;
+       else if (check_param(argc,argv,"-vol"))   mode=2;
+       else if (check_param(argc,argv,"-spect")) mode=3;
        else
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
        numCols = AtoI(get_param(argc, argv, "-w", "10"));
@@ -73,6 +75,10 @@ int main( int argc, char **argv ) {
 	  if (poll) showvol->setPoll();
 	  showvol->initWithFile(numRows, numCols, argv[i]);
 	  showvol->show();
+       } else if (mode==3) {
+          ShowSpectra *showspectra=new ShowSpectra;
+	  showspectra->initWithFile(numRows, numCols, argv[i]);
+	  showspectra->show();
        }
    }
 
