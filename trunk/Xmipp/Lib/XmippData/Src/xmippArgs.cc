@@ -114,7 +114,10 @@ string FtoA(float F, int _width, int _prec) {
    #if GCC_VERSION < 30300
       return (string)aux;
    #else
-      return outs.str();
+      string retval=outs.str();
+      int i=retval.find('\0');
+      if (i!=-1) retval=retval.substr(0,i);
+      return retval;
    #endif
 }
 
@@ -213,6 +216,19 @@ void tolower(char *_str) {
       if (_str[i]>='A' && _str[i]<='Z') _str[i] += 'a'-'A';
       i++;
    }
+}
+
+// Next token ==============================================================
+string next_token(const string &str, int &i) {
+   string retval;
+   if (i>=str.length()) return retval;
+   int j=str.find_first_not_of(" \n",i);
+   if (j==-1) return retval;
+   int k=str.find_first_of(" \n",j+1);
+   if (k==-1) k=str.length();
+   retval=str.substr(j,k-j+1);
+   i=k+1;
+   return retval;
 }
 
 // Get word ================================================================

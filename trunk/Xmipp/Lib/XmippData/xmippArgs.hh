@@ -236,6 +236,11 @@ inline char * first_token(const string &str) {return strtok((char *)str.c_str(),
              << next_token(line) << endl;*/
 inline char * next_token() {return strtok((char *)NULL," \n");}
 
+   /** Returns next token.
+       It reads from position i. Returns (in i) the following position to search on.
+       When there are no more tokens. It returns "".*/
+       string next_token(const string &str, int &i);
+
    /** Get non empty string (char *).
        This function returns the first word found in the given line disregarding
        the leading blanks. If no word is found then an exception or an exit error
