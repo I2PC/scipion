@@ -35,11 +35,13 @@ void Usage(const Prog_downsample_prm &prm);
 int main(int argc, char **argv) {
    Prog_downsample_prm prm;
    bool                smooth;
+   bool                reversed;
 
    // Get input parameters -------------------------------------------------
    try {
       prm.read(argc,argv);
       smooth         = check_param(argc,argv,"-smooth");
+      reversed       = check_param(argc,argv,"-reverse_endian");
    } catch (Xmipp_error XE) {cout << XE; Usage(prm); exit(1);}
 
    try {
@@ -48,7 +50,7 @@ int main(int argc, char **argv) {
       prm.create_empty_output_file();
       if (smooth) {
          Micrograph Mp;
-         Mp.open_micrograph(prm.fn_downsampled/*,in_core*/);
+         Mp.open_micrograph(prm.fn_downsampled, reversed);
          byte rgb[256]; for (int i=0; i<256; i++) rgb[i]=i;
          byte *result = SmoothResize((byte *) (prm.M.array8()),
             prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
@@ -69,7 +71,7 @@ void Usage(const Prog_downsample_prm &prm) {
         << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
         << "                            must exist\n"
         << "   -o <output_file>       : Must be different from input one\n"
-        << "  [-smooth]\n             : Use Smoothing for downsampling"
+        << "  [-smooth]               : Use Smoothing for downsampling\n"
    ;
    prm.usage();
 }
