@@ -371,7 +371,15 @@ void mask3D_26neig(matrix3D<int> &mask, int value1=1, int value2=1, int value3=1
 /*---------------------------------------------------------------------------*/
 /** Parameters for a general Mask.
     This class contains all parameters needed to generate masks. The class
-    can read parameters from the command line. */
+    can read parameters from the command line.
+    
+    To read a mask from a file within a program do the following
+    \begin{verbatim}
+    Mask_Params Mask;
+    Mask.type=READ_MASK;
+    Mask.fn_mask="...";
+    Mask.generate_2Dmask();
+    \end{verbatim}*/
 class Mask_Params {
 public:
 #define NO_MASK               	  0
@@ -485,7 +493,7 @@ public:
     void read(int argc, char **argv) _THROW;
 
 /** Show. */
-    void show();
+    void show() const;
 
 /** Usage. */
     void usage() const;
@@ -604,6 +612,15 @@ void force_to_be_continuous() {
       {type_cast(imask1D,dmask1D);
        type_cast(imask2D,dmask2D);
        type_cast(imask3D,dmask3D);}
+}
+
+/** Force to be binary.
+    This function is used when you need a double mask as a binary matrix. */
+void force_to_be_binary() {
+   if (datatype()==DOUBLE_MASK)
+      {type_cast(dmask1D,imask1D);
+       type_cast(dmask2D,imask2D);
+       type_cast(dmask3D,imask3D);}
 }
 };
 

@@ -652,7 +652,7 @@ void Mask_Params::read(int argc, char **argv) _THROW {
 }
 
 // Show --------------------------------------------------------------------
-void Mask_Params::show() {
+void Mask_Params::show() const {
    #define SHOW_MODE \
       if (mode==INNER_MASK) cout << "   mode=INNER MASK\n"; \
       else                  cout << "   mode=OUTER MASK\n";
