@@ -164,8 +164,12 @@ void ShowTable::initTable() {
     adjustStatusLabel();
 
     // Make Table connections
+    connect(this, SIGNAL( QTable::clicked(int, int, int, const QPoint &) ),
+                this, SLOT(contentsMousePressEvent(int, int,int,
+		                        const QPoint &)));
+
     connect( this, SIGNAL(doubleClicked ( int, int, int, const QPoint &)),
-             this, SLOT(mouseDoubleClickEvent( int, int, int, const QPoint &)) );
+             this, SLOT(contentsMouseDoubleClickEvent( int, int, int, const QPoint &)) );
 }
 // Change colors -----------------------------------------------------------
 void ShowTable::GUIchangeColor(QColor &_color, const char *_color_title) {
@@ -315,13 +319,15 @@ void ShowTable::changeScale(double newScale) {
     repaintContents();
 }
 
-void ShowTable::mouseDoubleClickEvent(  int row, int col, int button,
+void ShowTable::contentsMouseDoubleClickEvent(  int row, int col, int button,
     const QPoint & mousePos ) {changeMark(row,col);}
 
-void ShowTable::contentsMousePressEvent( QMouseEvent* e ) {
-    QPoint clickedPos = e->pos(); // extract pointer position
-    if (e->button() == RightButton) menubar->exec(clickedPos); 
-}
+void ShowTable::contentsMousePressEvent(  int row, int col, int button,
+    const QPoint & mousePos  ) 
+     {
+      setCurrentCell(row,col);
+      if( button==RightButton) menubar->exec(mousePos);           
+     }
 
 void ShowTable::keyPressEvent( QKeyEvent* e ) {
     switch( e->key() ) { // Look at the key code
