@@ -477,7 +477,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
 
 // See generate_even_angles for comments
 int count_even_angles(const Projection_Parameters &prm) {
-   int N=1;
+   int N=0;
    int limit=prm.tilt_range.samples;
    double rot_step_at_equator=(prm.rot_range.angF-prm.rot_range.ang0)/
       (double)(Nrot-1);
