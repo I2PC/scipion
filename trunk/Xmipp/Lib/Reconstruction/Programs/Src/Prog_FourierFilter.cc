@@ -217,39 +217,28 @@ void FourierMask::generate_mask(vtkImageData *v) _THROW {
 
       // Copy mask from real Xmipp mask
       if (copy_from_Xmipp_real_mask) {
-	 if (dim[2]==1) {
+      	 if (dim[2]==1 && dim[1]==1) {
+            real_mask.resize(dim[0]);
+            real_mask.generate_1Dmask();
+	    // CO: for even sizes the CenterFFT does not work too well
+	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask1D());
+	    xmippArray2VTK(real_mask.get_cont_mask1D(),mask,2);
+	    CenterFFT(mask);
+	 } else if (dim[2]==1) {
             real_mask.resize(dim[1],dim[0]);
             real_mask.generate_2Dmask();
 	    // CO: for even sizes the CenterFFT does not work too well
-	    if (dim[1]%2==0 || dim[0]%2==0) {
-      	       int firstY=STARTINGY(real_mask.get_cont_mask2D());
-      	       int firstX=STARTINGX(real_mask.get_cont_mask2D());
-	       int finalY=FINISHINGY(real_mask.get_cont_mask2D());
-	       int finalX=FINISHINGX(real_mask.get_cont_mask2D());
-	       if (dim[1]%2==0) {firstY++; finalY++;}
-	       if (dim[0]%2==0) {firstX++; finalX++;}
-	       real_mask.get_cont_mask2D().window(
-	          firstY,firstX,finalY,finalX);
-	    }
+	    if (dim[1]%2==0) shift_for_VTK(real_mask.get_cont_mask2D(),'y');
+	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask2D(),'x');
 	    xmippArray2VTK(real_mask.get_cont_mask2D(),mask,2);
 	    CenterFFT(mask);
 	 } else {
             real_mask.resize(dim[2],dim[1],dim[0]);
             real_mask.generate_3Dmask();
 	    // CO: for even sizes the CenterFFT does not work too well
-	    if (dim[2]%2==0 || dim[1]%2==0 || dim[0]%2==0) {
-      	       int firstZ=STARTINGZ(real_mask.get_cont_mask3D());
-      	       int firstY=STARTINGY(real_mask.get_cont_mask3D());
-      	       int firstX=STARTINGX(real_mask.get_cont_mask3D());
-	       int finalZ=FINISHINGZ(real_mask.get_cont_mask3D());
-	       int finalY=FINISHINGY(real_mask.get_cont_mask3D());
-	       int finalX=FINISHINGX(real_mask.get_cont_mask3D());
-	       if (dim[2]%2==0) {firstZ++; finalZ++;}
-	       if (dim[1]%2==0) {firstY++; finalY++;}
-	       if (dim[0]%2==0) {firstX++; finalX++;}
-	       real_mask.get_cont_mask3D().window(
-	          firstZ,firstY,firstX,finalZ,finalY,finalX);
-	    }
+	    if (dim[2]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'z');
+	    if (dim[1]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'y');
+	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'x');
 	    xmippArray2VTK(real_mask.get_cont_mask3D(),mask,2);
 	    CenterFFT(mask);
 	 }
@@ -271,19 +260,23 @@ void FourierMask::write_amplitude(const FileName &fn, bool do_not_center) {
    int dim[3]; mask->GetDimensions(dim);
    vtkImageData *aux=NULL; VTK2VTK(mask,aux);
    if (!do_not_center) CenterFFT(aux);
-   if (dim[2]==1) {
+   if (dim[2]==1 && dim[1]==1) {
+      matrix1D<double> v; FFT_magnitude(aux,v);
+      // CO: for even sizes the CenterFFT does not work too well
+      // Even for odd sizes??
+      // if (dim[1]%2==0 || dim[0]%2==0) {
+      if (TRUE) shift_for_VTK(v);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+         v(i)=log10(1+v(i)*v(i));
+      v.write(fn);
+   } else if (dim[2]==1) {
       ImageXmipp  I; FFT_magnitude(aux,I());
       // CO: for even sizes the CenterFFT does not work too well
       // Even for odd sizes??
       // if (dim[1]%2==0 || dim[0]%2==0) {
       if (TRUE) {
-      	 int firstY=STARTINGY(I());
-      	 int firstX=STARTINGX(I());
-	 int finalY=FINISHINGY(I());
-	 int finalX=FINISHINGX(I());
-	 if (TRUE /*dim[1]%2==0*/) {firstY++; finalY++;}
-	 if (TRUE /*dim[0]%2==0*/) {firstX++; finalX++;}
-	 I().window(firstY,firstX,finalY,finalX);
+         shift_for_VTK(I(),'x');
+         shift_for_VTK(I(),'y');
       }
       FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
          I(i,j)=log10(1+I(i,j)*I(i,j));
@@ -294,16 +287,9 @@ void FourierMask::write_amplitude(const FileName &fn, bool do_not_center) {
       // Even for odd sizes??
       // if (dim[2]%2==0 || dim[1]%2==0 || dim[0]%2==0) {
       if (TRUE) {
-      	 int firstZ=STARTINGZ(V());
-      	 int firstY=STARTINGY(V());
-      	 int firstX=STARTINGX(V());
-	 int finalZ=FINISHINGZ(V());
-	 int finalY=FINISHINGY(V());
-	 int finalX=FINISHINGX(V());
-	 if (TRUE /*dim[2]%2==0*/) {firstZ++; finalZ++;}
-	 if (TRUE /*dim[1]%2==0*/) {firstY++; finalY++;}
-	 if (TRUE /*dim[0]%2==0*/) {firstX++; finalX++;}
-	 V().window(firstZ,firstY,firstX,finalZ,finalY,finalX);
+         shift_for_VTK(V(),'x');
+         shift_for_VTK(V(),'y');
+         shift_for_VTK(V(),'z');
       }
       FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
          V(k,i,j)=log10(1+V(k,i,j)*V(k,i,j));
@@ -314,10 +300,12 @@ void FourierMask::write_amplitude(const FileName &fn, bool do_not_center) {
 void FourierMask::write_mask(const FileName &fn) {
    if (mask==NULL) return;
    int dim[3]; mask->GetDimensions(dim);
-   if (dim[2]==1) {
+   if (dim[2]==1 && dim[1]==1) {
+      matrix1D<double_complex> v; VTK2xmippFFT(mask,v); v.write(fn);
+   } else if (dim[2]==1) {
       FourierImageXmipp  I; VTK2xmippFFT(mask,I); I.write(fn);
    } else {
-      // FourierVolumeXmipp V; VTK2xmippFFT(mask,V); V.write(fn);
+      FourierVolumeXmipp V; VTK2xmippFFT(mask,V); V.write(fn);
    }
 }
 
@@ -341,6 +329,17 @@ void FourierMask::apply_mask(vtkImageData *v) _THROW {
 	      *(vi)=result_re; *(vi+1)=result_im;
 	      vi+=2; mi+=2;
 	   }
+}
+
+void FourierMask::apply_mask(matrix1D<double> &v) {
+   vtkImageData *FFTv=NULL;
+   int startingX=STARTINGX(v);
+   FFT_VTK(v,FFTv,TRUE);
+   if (mask==NULL) generate_mask(FFTv);
+   apply_mask(FFTv);
+   IFFT_VTK(FFTv,v,TRUE);
+   STARTINGX(v)=startingX;
+   FFTv->Delete();
 }
 
 void FourierMask::apply_mask(matrix2D<double> &v) {
@@ -379,6 +378,14 @@ void FourierMask::resize_mask(int Ydim, int Xdim) {
    I().scale_to_size(Ydim,Xdim);
    xmippFFT2VTK(I,mask);
    mask->UpdateInformation();
+}
+
+/* Get size ---------------------------------------------------------------- */
+void FourierMask::mask_size(int &Zdim, int &Ydim, int &Xdim) {
+   int dim[3]; mask->GetDimensions(dim);
+   Zdim=dim[2];
+   Ydim=dim[1];
+   Xdim=dim[0];
 }
 
 /* Mask power -------------------------------------------------------------- */

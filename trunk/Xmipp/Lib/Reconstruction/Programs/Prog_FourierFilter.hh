@@ -104,10 +104,10 @@ public:
    An exception is thrown if you try to apply a CTF to a volume. */
    void generate_mask(vtkImageData *v) _THROW;
 
-   /** Save mask as a Fourier ImageXmipp or VolumeXmipp. */
+   /** Save mask as a text file, Fourier ImageXmipp or VolumeXmipp. */
    void write_mask(const FileName &fn);
 
-   /** Save amplitude as a ImageXmipp or VolumeXmipp */
+   /** Save amplitude as a text file, ImageXmipp or VolumeXmipp */
    void write_amplitude(const FileName &fn, bool do_not_center=FALSE);
 
    /** Apply mask.
@@ -115,6 +115,10 @@ public:
        An exception is thrown if the mask do not fit the size and shape of
        the */
    void apply_mask(vtkImageData *v) _THROW;
+
+   /** Apply mask to signal.
+       The same as the following one but for signals */
+   void apply_mask(matrix1D<double> &v);
 
    /** Apply mask to image.
        It doesn't need to have a mask already generated. If the mask is equal
@@ -126,8 +130,14 @@ public:
        The same as the previous one but for volumes*/
    void apply_mask(matrix3D<double> &v);
 
+   /** Resize fourier mask to a desired scale.*/
+   void resize_mask(int Xdim);
+
    /** Resize fourier mask to a desired scale. */
    void resize_mask(int Ydim, int Xdim);
+
+   /** Return the size of the mask. */
+   void mask_size(int &Zdim, int &Ydim, int &Xdim);
    
    /** Mask power. Return the power of the Fourier Image contained in mask 
    within the given frequencies. */
