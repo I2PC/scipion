@@ -133,9 +133,9 @@ int main(int argc, char **argv) {
 
            // Show information
            cout << AtoA(file_name,max_length+1);
-           cout << ItoA(ZSIZE(V),3,' ') << 'x'
-                << ItoA(YSIZE(V),3,' ') << 'x'
-                << ItoA(XSIZE(V),3,' ') << ' ';
+           cout << ItoA(ZSIZE(V),4,' ') << 'x'
+                << ItoA(YSIZE(V),4,' ') << 'x'
+                << ItoA(XSIZE(V),4,' ') << ' ';
            if (!short_format)
               cout << "min= "    << FtoA(min_val,10) << ' '
                    << "max= "    << FtoA(max_val,10) << ' '
@@ -181,8 +181,8 @@ int main(int argc, char **argv) {
            // Show information
            cout << AtoA(file_name,max_length+1);
            cout << "    "; // Stands for the ZSIZE in volumes
-           cout << ItoA(YSIZE(I),3,' ') << 'x'
-                << ItoA(XSIZE(I),3,' ') << ' ';
+           cout << ItoA(YSIZE(I),4,' ') << 'x'
+                << ItoA(XSIZE(I),4,' ') << ' ';
            if (!short_format) {
               cout << "min= "    << FtoA(min_val,10) << ' '
                    << "max= "    << FtoA(max_val,10) << ' '
