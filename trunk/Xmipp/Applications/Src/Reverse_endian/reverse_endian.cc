@@ -25,6 +25,7 @@
 
 /* INCLUDES ---------------------------------------------------------------- */
 #include <XmippData/xmippTypes.hh>
+#include <XmippInterface/xmippVTK.hh>
 
 /* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
@@ -34,6 +35,7 @@ int main(int argc, char **argv) {
    FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
    SelFile         SF;
    ImageXmipp      image;
+	FourierImageXmipp Fourier_image;
    VolumeXmipp     volume;
    bool Force_Reverse_Flag, image_reversed;
 
@@ -45,7 +47,9 @@ int main(int argc, char **argv) {
      if(check_param(argc,argv,"-force")==TRUE)
         Force_Reverse_Flag=TRUE;
       else Force_Reverse_Flag=FALSE;
-     if (Is_ImageXmipp(fn_input) || Is_VolumeXmipp(fn_input)) {
+     if (Is_ImageXmipp(fn_input) || 
+	      Is_VolumeXmipp(fn_input) ||
+			Is_FourierImageXmipp(fn_input) ) {
        SF.insert(fn_input,SelLine::ACTIVE);
        SF.go_beginning();
      } else  {
@@ -57,7 +61,14 @@ int main(int argc, char **argv) {
 
    try {
    // Mask a single image ---------------------------------------------------
-   if (Is_ImageXmipp(fn_input)) {
+   if(Is_FourierImageXmipp(fn_input)) {
+      Fourier_image.read(fn_input);
+      if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      else image_reversed=Fourier_image.reversed();
+      if (fn_out=="") Fourier_image.write(fn_input,image_reversed);
+      else            Fourier_image.write(fn_out,image_reversed);
+	
+	} else if (Is_ImageXmipp(fn_input)) {
       image.read(fn_input);
       if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
       else image_reversed=image.reversed();
