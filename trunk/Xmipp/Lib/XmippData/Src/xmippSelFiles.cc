@@ -255,28 +255,25 @@ void SelFile::write(const FileName &sel_name) _THROW {
    fh_sel.close();
 }
 
-/* Merging, operator + ----------------------------------------------------- */
-// If the same file is in both Sel Files the label in the first is kept
-SelFile SelFile::operator + (SelFile &SF) {
-   SelFile result;
-   SelLine discrepancy;
+/* Merging with another selfile -------------------------------------------- */
+void SelFile::merge(SelFile &SF) {
    vector<SelLine>::iterator current = SF.text_line.begin();
    vector<SelLine>::iterator last    = SF.text_line.end();
    vector<SelLine>::iterator found;
 
+   SelLine discrepancy;
    discrepancy.line_type=SelLine::COMMENT;
    discrepancy.text="# There were discrepancy in the tags for next line, the "
       "ACTIVE state is kept";
 
-   result=*this;
    while (current != last) {
       if ((*current).line_type!=SelLine::DATALINE) {current++; continue;}
-      if ((found=result.find((*current).text))==result.text_line.end()) {
+      if ((found=find((*current).text))==text_line.end()) {
          // New image not found in the whole Sel File. 
          // Add it if it is not discarded
          if ((*current).label!=SelLine::DISCARDED) {
-            result.text_line.push_back(*current);
-            result.no_imgs++;
+            text_line.push_back(*current);
+            no_imgs++;
          }
       } else
          // New image is found, check that its line is not going
@@ -285,12 +282,20 @@ SelFile SelFile::operator + (SelFile &SF) {
          if ((*found).label!=(*current).label) {
             if ((*found).label<(*current).label) {
                (*found).label=SelLine::ACTIVE;
-               result.no_imgs++;
+               no_imgs++;
             }
-            result.text_line.insert(found,1,discrepancy);
+            text_line.insert(found,1,discrepancy);
          }
       current++;
    }
+}
+
+/* Merging, operator + ----------------------------------------------------- */
+// If the same file is in both Sel Files the label in the first is kept
+SelFile SelFile::operator + (SelFile &SF) {
+   SelFile result;
+   result=*this;
+   result.merge(SF);
    return result;
 }
 

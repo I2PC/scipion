@@ -240,6 +240,9 @@ public:
        \\Ex: SF.read("g1t.sel"); SF.merge("g2t.sel"); */
    void merge(const FileName &sel_name);
    
+   /** Merge this file with another selfile. */
+   void merge(SelFile &SF);
+
    /** Merge two already read files.
        \\ Ex: SF1.read("g1t.sel"); SF2.merge("g2t.sel"); SF1=SF1+SF2; */
    SelFile  operator +(SelFile &SF);
