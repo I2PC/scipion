@@ -342,7 +342,7 @@ bool XmippCTF::physical_meaning() {
 	  gaussian_K>=0     &&
 	  base_line>=0      &&
 	  sigmaU>=0         && sigmaV>=0     	   &&
-	  sigmaU<=50e3      && sigmaV<=50e3        &&
+	  sigmaU<=100e3     && sigmaV<=100e3       &&
 	  cU>=0             && cV>=0         	   &&
 	  sqU>=0            && sqV>=0        	   &&
 	  sqrt_K>=0         &&
@@ -356,13 +356,20 @@ bool XmippCTF::physical_meaning() {
          cout << "gaussian_K>=0     &&  		  " << (gaussian_K>=0	  )			 << endl
       	      << "base_line>=0      &&  		  " << (base_line>=0	  )			 << endl
 	      << "sigmaU>=0	    && sigmaV>=0	  " << (sigmaU>=0	  && sigmaV>=0) 	 << endl
+	      << "sigmaU<=100e3     && sigmaV<=100e3      " << (sigmaU<=100e3     && sigmaV<=100e3)
 	      << "cU>=0 	    && cV>=0		  " << (cU>=0		  && cV>=0 )		 << endl
 	      << "sqU>=0	    && sqV>=0		  " << (sqU>=0  	  && sqV>=0)		 << endl
 	      << "sqrt_K>=0	    &&  		  " << (sqrt_K>=0)				 << endl
 	      << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
+	      << "ABS(sigmaU-sigmaV)/min_sigma<3          " << (ABS(sigmaU-sigmaV)/min_sigma<3)          << endl
+	      << "ABS(cU-cV)/min_c<3                      " << (ABS(cU-cV)/min_c<3)                      << endl
+	      << "(cU>=0.01) && (cV>=0.01)                " << ((cU>=0.01) && (cV>=0.01))                << endl
          ;
       #endif
-   } else retval2=FALSE;
+   } else retval2=TRUE;
+   #ifdef DEBUG
+       cout << "Retval= " << retval << " retval2= " << retval2 << endl;
+   #endif
    return retval && retval2;
 }
 #undef DEBUG
