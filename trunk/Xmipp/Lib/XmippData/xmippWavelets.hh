@@ -86,6 +86,13 @@ template <class T>
    void IDWT(const matrix3D<double> &v,
    matrix3D<double> &result);
 
+/** DWT Low pass versions.
+    This function returns the low pass versions at different scales.
+    The low pass version of the image at scale s is stored in the 01
+    quadrant of that scale.*/
+    void DWT_lowpass(const matrix2D<double> &v,
+       matrix2D<double> &result);
+
 /** Select Block 1D.
     Given the scale (s=0 is the finest) and the quadrant
     "0"(Lower frequencies) or "1"(Higher frequencies)

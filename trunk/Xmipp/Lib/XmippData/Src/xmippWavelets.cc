@@ -119,6 +119,25 @@ void instantiate_XmippWavelets() {
    int    i; instantiate_XmippWavelets1(i);
 }
 
+// Lowpass DWT -------------------------------------------------------------
+void DWT_lowpass(const matrix2D<double> &v, matrix2D<double> &result) {
+   matrix2D<double> dwt, aux;
+   result.init_zeros(YSIZE(v),XSIZE(v)/2);
+   DWT(v,dwt);
+   int Nx=Get_Max_Scale(XSIZE(v));
+   for (int s=0; s<Nx; s++) {
+      // Perform the inverse DWT transform of the low pass
+      dwt.resize(XSIZE(dwt)/2,YSIZE(dwt)/2);
+      IDWT(dwt,aux);
+      // Copy the result to the 01 quadrant of the result
+      int x1,y1,x2,y2,x,y,i,j;
+      SelectDWTBlock(s,v,"01",x1,x2,y1,y2);
+      for (y=y1, i=0; y<=y2; y++, i++)
+         for (x=x1, j=0; x<=x2; x++, j++)
+	    result(y,x)=aux(i,j);
+   }
+}
+
 // Select block ------------------------------------------------------------
 #define DWT_Imin(s,smax,l) (int)((l=='0')?0:pow(2.0,smax-s-1))
 #define DWT_Imax(s,smax,l) (int)((l=='0')?pow(2.0,smax-s-1)-1:pow(2.0,smax-s)-1)
