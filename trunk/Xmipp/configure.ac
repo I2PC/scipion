@@ -25,11 +25,12 @@ AC_LANG(C++)
 
 AC_PREFIX_DEFAULT(`pwd`)
 
-if test "x$program_prefix" = xNONE; then
-	program_prefix=`echo xmipp_`
-fi
+# xmipp_ string is prepended by default to installed xmipp programs. It can be 
+# changed using --program-prefix=your_string
 
-echo hola $program_prefix
+if test "x$program_prefix" = xNONE; then
+	program_transform_name=`echo s,^,xmipp_,`
+fi
 
 # If --enable-debug , -g compiler flag
 # will be enabled.
