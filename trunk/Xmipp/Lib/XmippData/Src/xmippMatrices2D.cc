@@ -34,6 +34,8 @@
 #include "../Bilib/headers/linearalgebra.h"
 #include "../Bilib/headers/changebasis.h"
 #include "../Bilib/headers/kernel.h"
+#include "../Bilib/headers/pyramidfilters.h"
+#include "../Bilib/headers/pyramidtools.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
@@ -325,6 +327,54 @@ template <class T>
         }
     return (T)columns;
 }
+
+/* Expand a set of B-spline coefficients ----------------------------------- */
+template <class T>
+   void mT::expand_Bspline(matrix2D<double> &expanded, int SplineDegree) const {
+      double   g[200];    /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];    /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      expanded.resize(2*YSIZE(aux),2*XSIZE(aux));
+      Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(expanded), h, nh, IsCentered);
+   }
+
+/* Reduce a set of B-spline coefficients ----------------------------------- */
+template <class T>
+   void mT::reduce_Bspline(matrix2D<double> &reduced, int SplineDegree) const {
+      double   g[200];    /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];    /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      if (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux)-1);
+      else if (YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux));
+      else if (XSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)  ,XSIZE(aux)-1);
+      reduced.resize(YSIZE(aux)/2,XSIZE(aux)/2);
+      Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(reduced), g, ng, IsCentered);
+   }
 
 /* Transpose --------------------------------------------------------------- */
 template <class T>
@@ -998,6 +1048,52 @@ template <class T>
       }
    }
 
+template <class T>
+   void mT::pyramid_reduce(matrix2D<double> &result) const {
+      double   g[200];    /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];    /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", 3,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      if (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux)-1);
+      else if (YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux));
+      else if (XSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)  ,XSIZE(aux)-1);
+      result.resize(YSIZE(aux)/2,XSIZE(aux)/2);
+      Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(result), g, ng, IsCentered);
+   }
+
+template <class T>
+   void mT::pyramid_expand(matrix2D<double> &result) const {
+      double   g[200];     /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];     /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", 3,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      result.resize(2*YSIZE(aux),2*XSIZE(aux));
+      Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(result), h, nh, IsCentered);
+   }
+
 /* Change to Spline coeffs ------------------------------------------------- */
 template <class T>
    void mT::produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree)
@@ -1014,6 +1110,24 @@ template <class T>
        FiniteCoefficientSupport, DBL_EPSILON, &Status);
    if (Status)
       REPORT_ERROR(1,"matrix2D::produce_spline_coeffs: Error");
+}
+
+/* Change to Spline coeffs ------------------------------------------------- */
+template <class T>
+   void mT::produce_image_from_spline_coeffs(
+      matrix2D<double> &img, int SplineDegree) const {
+   img.init_zeros(YSIZE(*this),XSIZE(*this));
+   STARTINGX(img)=STARTINGX(*this);
+   STARTINGY(img)=STARTINGY(*this);
+   int Status;
+   matrix2D<double> aux;
+   type_cast(*this,aux);
+   ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(img),
+       XSIZE(*this), YSIZE(*this), 1,
+       BasicSpline, CardinalSpline, SplineDegree,
+       MirrorOnBounds, DBL_EPSILON, &Status);
+   if (Status)
+      REPORT_ERROR(1,"matrix2D::produce_spline_img: Error");
 }
 
 /* Matrix by matrix multiplication ----------------------------------------- */
@@ -1745,10 +1859,15 @@ template <class T>
       matrix2D<double> B;
       apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP,Taux);
       apply_geom_Bspline(a, B, a, IS_NOT_INV,DONT_WRAP,Taux);
+      a.expand_Bspline(B,3);
+      a.reduce_Bspline(B,3);
       a.scale_to_size(32,32,a);
       a.superpixel_reduce(a,2);
       a.superpixel_expand(a,2);
-      a.produce_spline_coeffs(B);
+      a.pyramid_reduce(B);
+      a.pyramid_expand(B);
+      a.produce_spline_coeffs(B,3);
+      a.produce_image_from_spline_coeffs(B,3);
       a.for_all_rows(&vector_minus_first);
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);

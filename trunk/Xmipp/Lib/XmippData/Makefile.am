@@ -43,6 +43,8 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Bilib/sources/movingaverage.cc \
 	Bilib/sources/polynomial.cc \
 	Bilib/sources/positivepower.cc \
+	Bilib/sources/pyramidfilters.cc \
+	Bilib/sources/pyramidtools.cc \
 	Bilib/sources/round.cc \
 	Bilib/sources/swap.cc \
 	Bilib/sources/timestamp.cc \

@@ -60,6 +60,8 @@ BILIB_OBJS=Bilib/sources/changebasis.o \
            Bilib/sources/movingaverage.o \
            Bilib/sources/polynomial.o \
            Bilib/sources/positivepower.o \
+	   Bilib/sources/pyramidfilters.o \
+	   Bilib/sources/pyramidtools.o \
            Bilib/sources/round.o \
            Bilib/sources/swap.o \
            Bilib/sources/timestamp.o \

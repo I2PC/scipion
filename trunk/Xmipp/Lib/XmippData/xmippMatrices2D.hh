@@ -1110,9 +1110,32 @@ public:
        as the size of the superpixel. */
    void superpixel_expand(mT &result, int size=2) const;
 
+   /** Reduce the image by 2 using a BSpline pyramid. */
+   void pyramid_reduce(matrix2D<double> &reduced) const;
+
+   /** Expand the image by 2 using a BSpline pyramid. */
+   void pyramid_expand(matrix2D<double> &expanded) const;
+
    /** Produce spline coefficients.*/
    void produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree=3)
       const;
+
+   /** Produce image from B-spline coefficients. */
+   void produce_image_from_spline_coeffs(
+      matrix2D<double> &img, int SplineDegree=3) const;
+
+   /** Expand a set of B-spline coefficients.
+       Knowing that this matrix is a set of B-spline coefficients,
+       produce the expanded set of B-spline coefficients using the
+       two-scale relationship. */
+   void expand_Bspline(matrix2D<double> &expanded, int SplineDegree=3) const;
+
+   /** Reduce a set of B-spline coefficients.
+       Knowing that this matrix is a set of B-spline coefficients,
+       produce the reduced set of B-spline coefficients using the
+       two-scale relationship. */
+   void reduce_Bspline(matrix2D<double> &reduced, int SplineDegree=3) const;
+
    //@}
 
    /* Iterators ------------------------------------------------------------ */
