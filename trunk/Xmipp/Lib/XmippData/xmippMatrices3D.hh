@@ -841,8 +841,12 @@ public:
       {VT aux; translate(v, aux, wrap); return aux;}
 
    /** Translate a volume, keep in this object.*/
-   void translate(const matrix1D<double> &v, bool wrap=WRAP)
+   void self_translate(const matrix1D<double> &v, bool wrap=WRAP)
       {VT aux; translate(v, aux, wrap); *this=aux;}
+
+   /** Translate center of mass to center.
+       The Xmipp origin is set for this object. */
+   void self_translate_center_of_mass_to_center(bool wrap=WRAP);
 
    /** Scales to a new size.
        The volume is scaled (resampled) to fill a new size. It is not the

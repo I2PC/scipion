@@ -973,8 +973,12 @@ public:
    
    /** Translate matrix.
        Same as the previous one, but the result is kept in this object */
-   void translate(const matrix1D<double> &v, bool wrap=WRAP)
+   void self_translate(const matrix1D<double> &v, bool wrap=WRAP)
       {mT aux; translate(v,aux,wrap); *this=aux;}
+
+   /** Translate center of mass to center.
+       The Xmipp origin is set for this object. */
+   void self_translate_center_of_mass_to_center(bool wrap=WRAP);
 
    /** Scales to a new size.
        The matrix is scaled (resampled) to fill a new size. It is not the

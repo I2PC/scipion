@@ -762,6 +762,9 @@ public:
    friend maT log10(const maT &a)
      {maT temp(a); temp.self_log10(); return temp;}
 
+   /** Compute center of mass.*/
+   void center_of_mass(matrix1D<double> &center);
+
    //@}
 #undef mi
 #undef msize

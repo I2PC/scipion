@@ -356,6 +356,18 @@ void Powell_optimizer(matrix1D<double> &p, int i0, int n,
    p.kill_adaptation_for_numerical_recipes(pptr);
 }
 
+/* Center of mass ---------------------------------------------------------- */
+template <class T>
+   void vT::center_of_mass(matrix1D<double> &center) {
+      center.init_zeros(1);
+      double mass=0;
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(*this) {
+         XX(center)+=i*VEC_ELEM(*this,i);
+	 mass+=VEC_ELEM(*this,i);
+      }
+      center/=mass;
+   }
+
 /*
    The multidimensional arrays must be instantiated if we want them to compile
    into a library. All methods of all possible classes must be called. The
@@ -400,6 +412,7 @@ template <class T>
       a.add_noise(0,1);      
       a.threshold("abs_above",1,0);
       a.count_threshold("abs_above",1,0);
+      a.center_of_mass(r);
 
       a.print_shape();
       a.outside(r);

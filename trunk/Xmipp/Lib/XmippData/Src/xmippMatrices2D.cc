@@ -718,6 +718,15 @@ template <class T>
       apply_geom(result,temp,*this,IS_NOT_INV,WRAP);
    }
 
+template <class T>
+   void mT::self_translate_center_of_mass_to_center(bool wrap) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate(center,wrap);
+   }
+
 /* Matrix by matrix multiplication ----------------------------------------- */
 // xinit and yinit are taken from op1
 template <class T>
@@ -1115,6 +1124,19 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
    }
 }
 
+/* Center of mass ---------------------------------------------------------- */
+template <class T>
+   void mT::center_of_mass(matrix1D<double> &center) {
+      center.init_zeros(2);
+      double mass=0;
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
+         XX(center)+=j*MAT_ELEM(*this,i,j);
+         YY(center)+=i*MAT_ELEM(*this,i,j);
+	 mass+=MAT_ELEM(*this,i,j);
+      }
+      center/=mass;
+   }
+
 /* ------------------------------------------------------------------------- */
 /* INSTANTIATE                                                               */
 /* ------------------------------------------------------------------------- */
@@ -1149,6 +1171,7 @@ template <class T>
       a.add_noise(0,1);      
       a.threshold("abs_above",1,0);
       a.count_threshold("abs_above",1,0);
+      a.center_of_mass(r);
 
       a.print_shape();
       a.outside(r);
@@ -1190,6 +1213,7 @@ template <class T>
       a.translate(vector_R2(0,0));
       a.rotate(60);
       a.scale_to_size(45,45);
+      a.self_translate_center_of_mass_to_center();
       int imax;
       a.max_index(imax,imax);
       a.min_index(imax,imax);

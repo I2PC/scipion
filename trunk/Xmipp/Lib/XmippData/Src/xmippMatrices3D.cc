@@ -494,6 +494,15 @@ template <class T>
        result.resize(Zdim,Ydim,Xdim);
        apply_geom(result,temp,*this,IS_NOT_INV,WRAP);}
 
+template <class T>
+   void VT::self_translate_center_of_mass_to_center(bool wrap) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate(center,wrap);
+   }
+
 /* Max index --------------------------------------------------------------- */
 template <class T>
    void VT::max_index(int &kmax, int &imax, int &jmax) const {
@@ -618,6 +627,20 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
       radial_mean(i)/=(T)radial_count(i);
 }
 
+/* Center of mass ---------------------------------------------------------- */
+template <class T>
+   void VT::center_of_mass(matrix1D<double> &center) {
+      center.init_zeros(3);
+      double mass=0;
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(*this) {
+         XX(center)+=j*VOL_ELEM(*this,k,i,j);
+         YY(center)+=i*VOL_ELEM(*this,k,i,j);
+         ZZ(center)+=k*VOL_ELEM(*this,k,i,j);
+	 mass+=VOL_ELEM(*this,k,i,j);
+      }
+      center/=mass;
+   }
+
 /* ------------------------------------------------------------------------- */
 /* INSTANTIATE                                                               */
 /* ------------------------------------------------------------------------- */
@@ -680,6 +703,7 @@ template <class T>
       a.max_index(imax,imax,imax);
       a.min_index(imax,imax,imax);
       a.scale_to_size(32,32,32,a);
+      a.self_translate_center_of_mass_to_center();
       a.for_all_slices(&slice_minus_first);
       a.for_all_slices(&slice_first);
       cut_to_common_size(a,a);
