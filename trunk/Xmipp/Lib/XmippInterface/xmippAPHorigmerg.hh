@@ -54,7 +54,8 @@ struct spot{
       os << "\tIQ= "     << s.IQ     << endl;
       os << "\tFLMWGT= " << s.FLMWGT << endl;
       os << "\tBACK= "   << s.BACK   << endl;
-      os << "\tCTF= "    << s.CTF    << endl;      
+      os << "\tCTF= "    << s.CTF    << endl;
+      return os;
       }
 
 /**@name APH2D Files */
