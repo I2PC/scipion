@@ -527,7 +527,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 			      const matrix1D<double> &eprm_bint,
 			      int eprm_space_group,
 			      const matrix2D<int> &mask, int grid_type){
-
+//SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER 
+//ONE SINCE REQUIRE INTERPOLATION IS IGNORED
    switch(eprm_space_group)
      {
      case(sym_undefined):
