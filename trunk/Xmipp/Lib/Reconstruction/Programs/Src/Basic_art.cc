@@ -87,6 +87,7 @@ void Basic_ART_Parameters::default_values() {
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
+    unmatched          =      CHECK_PARAM(       "unmatched"            );  \
     if (CHECK_PARAM("o")) \
          fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
@@ -158,7 +159,7 @@ void Basic_ART_Parameters::default_values() {
        tell |= TELL_SAVE_AT_EACH_STEP; \
     if (CHECK_PARAM("save_intermidiate")) {\
        tell |= TELL_SAVE_INTERMIDIATE; \
-       save_intermidiate_every=AtoI(GET_PARAM("save_intermidiate")); \
+       save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
     } \
     if (CHECK_PARAM("save_blobs")) \
        tell |= TELL_SAVE_BLOBS; \
@@ -236,6 +237,7 @@ void Basic_ART_Parameters::usage() {
      << "\n    -i selfile           full name of sel file"
      << "\n   [-o name]             name of output files, extensions are added"
      << "\n   [-CTF name]           name of a sel file or a file with a CTF"
+     << "\n   [-unmatched]          apply unmatched forward/backward projectors"
      << "\n   [-start blobvolume]   Start from blobvolume"
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
@@ -457,9 +459,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
    // Read CTF
    if (fn_ctf!="") {
       if (Is_FourierImageXmipp(fn_ctf)) {
-	 ctf.FilterBand=ctf.FilterShape=FROM_FILE;
-	 ctf.fn_mask=fn_ctf;
-	 ctf.generate_mask(NULL);
+         ctf.read_mask(fn_ctf);
 	 multiple_CTFs=FALSE;
       } else {
 	 selctf.read(fn_ctf);
