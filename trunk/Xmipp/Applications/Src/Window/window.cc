@@ -29,6 +29,7 @@
 class Window_parameters: public Prog_parameters {
 public:
    bool size_mode;
+   bool physical_coords;
    int sizeX, sizeY, sizeZ;
    int x0, y0, z0;
    int xF, yF, zF;
@@ -57,14 +58,22 @@ public:
          int i=position_param(argc,argv,"-r0");
          if (i+2>=argc) REPORT_ERROR(1,"Not enough parameters after -r0");
          else {x0=AtoI(argv[i+1]); y0=AtoI(argv[i+2]);}
-         if (i+3<argc) z0=AtoI(argv[i+3]);
+         if (i+3<argc)
+            try {
+               z0=AtoI(argv[i+3]);
+            } catch (Xmipp_error XE) {z0=1;}
 
          // Get rF
          i=position_param(argc,argv,"-rF");
          if (i==-1) REPORT_ERROR(1,"-rF not present");
          if (i+2>=argc) REPORT_ERROR(1,"Not enough parameters after -rF");
          else {xF=AtoI(argv[i+1]); yF=AtoI(argv[i+2]);}
-         if (i+3<argc) zF=AtoI(argv[i+3]);
+         if (i+3<argc)
+            try {
+               zF=AtoI(argv[i+3]);
+            } catch (Xmipp_error XE) {zF=1;}
+
+         physical_coords=check_param(argc,argv,"-physical");
       } else
          REPORT_ERROR(1,"Unknown windowing type");
    }
@@ -75,9 +84,10 @@ public:
          cout << "New size: (XxYxZ)=" << sizeX << "x" << sizeY << "x"
               << sizeZ << endl;
       else
-         cout << "New window: from (z0,y0,x0)="<< z0 << ","
+         cout << "New window: from (z0,y0,x0)=("<< z0 << ","
               << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
-              << "," << xF << ")\n";
+              << "," << xF << ")\n"
+              << "Physical: " << physical_coords << endl;
    }
 
    void usage() {
@@ -92,13 +102,20 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
-   img().window(eprm->y0,eprm->x0,eprm->yF,eprm->xF);
+   if (!eprm->physical_coords)
+      img().window(eprm->y0,eprm->x0,eprm->yF,eprm->xF);
+   else img().window(STARTINGY(img())+eprm->y0,STARTINGX(img())+eprm->x0,
+           STARTINGY(img())+eprm->yF,STARTINGX(img())+eprm->xF);
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
-   vol().window(eprm->z0,eprm->y0,eprm->x0,eprm->zF,eprm->yF,eprm->xF);
+   if (!eprm->physical_coords)
+      vol().window(eprm->z0,eprm->y0,eprm->x0,eprm->zF,eprm->yF,eprm->xF);
+   else vol().window(STARTINGZ(vol())+eprm->z0,STARTINGY(vol())+eprm->y0,
+      STARTINGX(vol())+eprm->x0,STARTINGZ(vol())+eprm->zF,
+      STARTINGY(vol())+eprm->yF,STARTINGX(vol())+eprm->xF);
    return TRUE;
 }
 
