@@ -1,0 +1,4 @@
+######################################################################
+PROJ = angular_predict_continuous
+OBJ  = angular_predict_continuous.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
