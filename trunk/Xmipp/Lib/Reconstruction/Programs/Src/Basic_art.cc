@@ -30,6 +30,7 @@
    implementation (single particles, crystals, ...) */
 
 #include "../Basic_art.hh"
+#include "../recons_misc.hh"
 
 /* Default values ========================================================== */
 void Basic_ART_Parameters::default_values() {
@@ -62,6 +63,7 @@ void Basic_ART_Parameters::default_values() {
     tell               = 0;
     save_intermidiate_every=0;
     is_crystal         = false;
+    variability_analysis=false;
     
     IMG_Inf            = NULL;
     D                  = NULL;
@@ -99,12 +101,12 @@ void Basic_ART_Parameters::default_values() {
     fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
     if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
     else if (CHECK_PARAM("pSIRT"))  parallel_mode=pSIRT; \
-    else if (CHECK_PARAM("SIRT"))  parallel_mode=SIRT; \
+    else if (CHECK_PARAM("SIRT"))   parallel_mode=SIRT; \
     else if (CHECK_PARAM("pfSIRT")) parallel_mode=pfSIRT; \
     else if (CHECK_PARAM("pBiCAV")) parallel_mode=pBiCAV; \
     else if (CHECK_PARAM("pAVSP"))  parallel_mode=pAVSP; \
-    else if (CHECK_PARAM("pCAV"))  parallel_mode=pCAV; \
-    else                           parallel_mode=ART; \
+    else if (CHECK_PARAM("pCAV"))   parallel_mode=pCAV; \
+    else                            parallel_mode=ART; \
     ray_length         = AtoI(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
     block_size	       = AtoI(GET_PARAM_WITH_DEF("block_size","1"	)); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
@@ -180,6 +182,11 @@ void Basic_ART_Parameters::default_values() {
     if (CHECK_PARAM("show_iv")) {\
        tell |= TELL_IV; \
        save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("show_iv","10")); \
+    } \
+    if (CHECK_PARAM("variability")) {\
+       variability_analysis=true; \
+       parallel_mode=SIRT; \
+       no_it=1; \
     }
 
 void Basic_ART_Parameters::read(int argc, char **argv) {
@@ -267,8 +274,9 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-surface surf_mask]  Use this file as a surface mask"
      << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
      << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
-     << "\n   [-POCS_positivity]    Apply positivity constraint\n"
+     << "\n   [-POCS_positivity]    Apply positivity constraint"
      << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers\n"
+     << "\n   [-variability]        Perform variability analysis"
   ;
   cerr
      << "\nIteration parameters"
@@ -288,10 +296,9 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
      << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
      << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
-     << "\n   [-pCAV]	            Paralle (MPI) CAV\n"
+     << "\n   [-pCAV]	            Parallel (MPI) CAV\n"
      << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
      << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
-     << "\n   [-block_size <n=1>]   Number of projections to each block\n"
      << "\nBlob parameters"
      << "\n   [-r blrad=2]          blob radius"
      << "\n   [-m blord=2]          order of Bessel function in blob"
@@ -458,6 +465,10 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
    {
    SelFile     selfile;
    SelFile     selctf;
+
+/* If checking the variability --------------------------------------------- */
+   if (variability_analysis)
+      parallel_mode==SIRT;
 
 /* Create history file handler --------------------------------------------- */
    if (level>=FULL) {

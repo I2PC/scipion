@@ -28,14 +28,15 @@
 #include <fstream>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippVolumes.hh>
+#include <XmippData/xmippSelFiles.hh>
 #include "../refinement.hh"
 #include "../grids.hh"
 #include "../symmetries.hh"
 #include "../blobs.hh"
 #include "../projection.hh"
-#include "recons_misc.hh"
 #include "Prog_FourierFilter.hh"
 
+class Recons_info;
 const int BLOB_SUBSAMPLING=10;
 
 /**@name Basic and common ART
@@ -200,6 +201,9 @@ public:
    /// Is this a crystal 0 means NO 1 YES
    bool is_crystal;
    
+   /// Variability analysis
+   bool variability_analysis;
+
    #define TELL_IV   		     0x100
    #define TELL_ONLY_SYM	     0x80
    #define TELL_USE_INPUT_BLOBVOLUME 0x40
@@ -462,8 +466,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs,
-   GridVolume *&vol_blobs_var, int rank=-1);
+   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs, int rank=-1);
 
 /** Main Routine for ART.
     Given any set of Art parameters, this function returns the voxel
@@ -474,7 +477,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
     Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
-    GridVolume &vol_blobs, GridVolume *&vol_blobs_var);
+    GridVolume &vol_blobs);
 
 //@}
 //@}
