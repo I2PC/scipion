@@ -259,6 +259,36 @@ template <class T>
       if (VEC_ELEM(*this,i)<min) {min=VEC_ELEM(*this,i); imin=i;}
 }
 
+/* Statistics in region ---------------------------------------------------- */
+template <class T>
+void vT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(3);
+   double N=0, sum=0, sum2=0;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1,corner2) {
+      sum+=(*this)(r); sum2+=(*this)(r)*(*this)(r); N++;
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+   if (N!=0) {
+      avg=sum/N;
+      stddev=sqrt(sum2/N-avg*avg);
+   } else {avg=stddev=0;}
+}
+
+/* Minimum and maximum in region ------------------------------------------- */
+template <class T>
+void vT::compute_double_minmax(double &min_val, double &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(1);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1,corner2) {
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+}
+
 /* Vector R2 and R3 -------------------------------------------------------- */
 matrix1D<double> vector_R2(double x, double y) {
    matrix1D<double> result(2);
@@ -391,7 +421,9 @@ template <class T>
    void instantiate_vector (matrix1D<T> v) {
       matrix1D<T>      a;
       matrix1D<double> r;
+      matrix1D<int>    ir;
       double           d;
+      T                Taux;
       
       // General functions for multidimensional arrays
       a==a;
@@ -401,6 +433,9 @@ template <class T>
       a=a*a;
       a.print_stats();
       a.compute_double_minmax(d,d);
+      a.compute_double_minmax(d,d,r,r);
+      a.compute_double_minmax(d,d,ir,ir);
+      a.compute_stats(d,d,Taux,Taux,ir,ir);
       a.compute_max();
       a.compute_min();
       a.compute_avg();

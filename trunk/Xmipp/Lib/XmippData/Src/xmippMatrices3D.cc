@@ -525,6 +525,36 @@ template <class T>
          {min=VOL_ELEM(*this,kmin,imin,jmin); kmin=k; imin=i; jmin=j;}
 }
 
+/* Statistics in region ---------------------------------------------------- */
+template <class T>
+void VT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(3);
+   double N=0, sum=0, sum2=0;
+   FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2) {
+      sum+=(*this)(r); sum2+=(*this)(r)*(*this)(r); N++;
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+   if (N!=0) {
+      avg=sum/N;
+      stddev=sqrt(sum2/N-avg*avg);
+   } else {avg=stddev=0;}
+}
+
+/* Minimum and maximum in region ------------------------------------------- */
+template <class T>
+void VT::compute_double_minmax(double &min_val, double &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(3);
+   FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2) {
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+}
+
 /* For all slices ---------------------------------------------------------- */
 template <class T>
    VT VT::for_all_slices(mT (*f)(mT&)) const {
@@ -655,7 +685,9 @@ template <class T>
       matrix3D<T>      a;
       matrix1D<T>      vectorT;
       matrix1D<double> r;
+      matrix1D<int>    ir;
       double           d;
+      T                Taux;
       
       // General functions for multidimensional arrays
       a==a;
@@ -668,6 +700,9 @@ template <class T>
       a.compute_avg();
       a.compute_stddev();
       a.compute_double_minmax(d,d);
+      a.compute_double_minmax(d,d,r,r);
+      a.compute_double_minmax(d,d,ir,ir);
+      a.compute_stats(d,d,Taux,Taux,ir,ir);
       a.range_adjust(0,1);
       a.statistics_adjust(0,1);
       a.effective_range(99);
