@@ -14,7 +14,6 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Programs/Src/Prog_normalize.cc \
 	Programs/Src/Prog_range_adjust.cc \
 	Programs/Src/Prog_make_spectra.cc \
-	Programs/Src/Prog_find_center.cc \
 	Src/xmippWavelets.cc \
 	Src/xmippImagic.cc \
 	Src/xmippFFT.cc \
