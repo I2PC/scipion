@@ -19,12 +19,12 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_LANG(C++)
 
-# If --disable-debug or --enable-debug=no is passed to configure, -g compiler flag
-# will be disabled.
+# If --enable-debug , -g compiler flag
+# will be enabled.
 
 AC_ARG_ENABLE([debug],
-  AC_HELP_STRING([--disable-debug], [Disable the use of debug capabilities.]),
-  [use_debug=$enableval], [use_debug=yes])
+  AC_HELP_STRING([--enable-debug], [Enable the use of debugging capabilities.]),
+  [use_debug=$enableval], [use_debug=no])
 if test $use_debug = no; then
 	AUX= echo $CFLAGS | sed 's/\-g //g'
 	CFLAGS= $AUX
@@ -44,6 +44,8 @@ fi
 AC_SUBST(EXEC_TYPE)
 
 # Checking for PERL, csh and sh interpreters
+# This is needed for Xmipp scripts. If not found scripts wont be installed.
+
 AC_PATH_PROG( PERL_PATH, perl, "not found" )
 AC_PATH_PROG( CSH_PATH, csh, "not found" )
 AC_PATH_PROG( SH_PATH, sh, "not found" )
