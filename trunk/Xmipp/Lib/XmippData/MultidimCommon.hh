@@ -28,7 +28,7 @@
     \\Ex:
     \begin{verbatim}
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) 
-       cout << DIRECT_MULTIDIM_ELEM(v,i) << " ";
+       cout << MULTIDIM_ELEM(v,i) << " ";
     \end{verbatim}*/
 #ifndef FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY
    #define FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) \
