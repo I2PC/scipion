@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
+
 /* Here are all basic functions which are not extra_parameter dependent for
    the ART process. The extra parameter dependent functions are implemented
    in the Basic_art.inc file and must be included in each specific
@@ -35,11 +36,11 @@ void Basic_ART_Parameters::default_values() {
     fn_start           = "";
     fn_sym             = "";
     force_sym          = 0;
-    sym_each           = 0;
     do_not_generate_subgroup = FALSE;
     do_not_use_symproj = FALSE;
     fn_surface_mask    = "";
-    SIRT               = FALSE;
+    parallel_mode      = ART;
+    block_size	       = 1;
     eq_mode            = ARTK;
     random_sort        = FALSE;
     sort_last_N        = 2;
@@ -89,12 +90,17 @@ void Basic_ART_Parameters::default_values() {
          fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
     fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
+    if      (CHECK_PARAM("SART"))  parallel_mode=SART;\
+    else if (CHECK_PARAM("SIRT"))  parallel_mode=SIRT; \
+    else if (CHECK_PARAM("BiCAV")) parallel_mode=BiCAV; \
+    else if (CHECK_PARAM("AVSP"))  parallel_mode=AVSP; \
+    else                           parallel_mode=ART; \
+    block_size	       = AtoI(GET_PARAM_WITH_DEF("block_size","1"	)); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
     force_sym          = AtoI(GET_PARAM_WITH_DEF("force_sym","0"        )); \
     do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
     do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
     fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
-    SIRT               =      CHECK_PARAM(       "SIRT"                 );  \
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
     sort_last_N        = AtoI(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
     no_it              = AtoI(GET_PARAM_WITH_DEF("n",         "1"       )); \
@@ -246,10 +252,16 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-stop_at stop_at=0]  number of images presented"
      << "\n   [-l lambda=1 |        relaxation factor (0.0 - 2.0)"
      << "\n    -l [lambda0, lambda1, ...]"
-     << "\n   [-SIRT]               by default, ART is applied"
      << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
      << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
      << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
+     << "\nParallel parameters"
+     << "\n                         by default, sequential ART is applied"
+     << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
+     << "\n   [-SART]               Simultaneous ART\n"
+     << "\n   [-AVSP]               Average Strings\n"
+     << "\n   [-BiCAV]              Block Iterative CAV\n"
+     << "\n   [-block_size <n=1>]   Number of projections to each block\n"
      << "\nBlob parameters"
      << "\n   [-r blrad=2]          blob radius"
      << "\n   [-m blord=2]          order of Bessel function in blob"
@@ -407,7 +419,8 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
 /* Produce Side Information                                                  */
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
-void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
+void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
+   int rank=-1)
    {
    SelFile     selfile;
    SelFile     selctf;
@@ -467,7 +480,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
       build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf,do_not_use_symproj);
 
       if (!(tell&TELL_MANUAL_ORDER))
-	 if (SIRT || eq_mode==CAV) no_sort(numIMG,ordered_list);
+	 if (parallel_mode==SIRT || eq_mode==CAV || rank>0)
+	                           no_sort(numIMG,ordered_list);
 	 else if (random_sort)     sort_randomly(numIMG,ordered_list);
 	 else if (sort_last_N!=-1) sort_perpendicular(numIMG,IMG_Inf,ordered_list,
                                       sort_last_N);
@@ -532,41 +546,47 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
 	 ImageXmipp save; save()=blobprint(); save.write("footprint.xmp");
       #endif
    }
-
-/* Count number of equations for CAV --------------------------------------- */
-   if (level>=FULL) {
-      if (eq_mode==CAV) {
-	 GVNeq=new GridVolumeT<int>;
-	 GVNeq->resize(vol_blobs0);
-	 Projection read_proj;
-	 cerr << "Counting equations ...\n";
-	 init_progress_bar(numIMG);
-	 for (int act_proj = 0; act_proj < numIMG ; act_proj++) {
-	     read_proj.read(IMG_Inf[act_proj].fn_proj);
-             read_proj.move_origin_to_center();
-
-             // Projection extension? .........................................
-             if (proj_ext!=0)
-        	read_proj().window(
-                   STARTINGY (read_proj())-proj_ext,
-                   STARTINGX (read_proj())-proj_ext,
-                   FINISHINGY(read_proj())+proj_ext,
-                   FINISHINGX(read_proj())+proj_ext);
-
-             count_eqs_in_projection(*GVNeq, blobprint, blobprint2, read_proj);
-
-             if (act_proj%MAX(1,numIMG/60)==0) progress_bar(act_proj);
-	 }
-	 progress_bar(numIMG);
-	 long int Neq=0, Nunk=0;
-	 for (int n=0; n<GVNeq->VolumesNo(); n++)
-            FOR_ALL_ELEMENTS_IN_MATRIX3D((*GVNeq)(n)()) {
-               Neq += (*GVNeq)(n)(k,i,j);
-               Nunk++;
-            }
-	 cerr << "There are " << Neq << " equations and " << Nunk
-              << " unknowns (redundancy=" << 100.0-100.0*Nunk/Neq << ")\n";
-      }
-   }
 }
 #undef DEBUG
+
+/* Count number of equations for CAV --------------------------------------- */
+void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0, 
+   int numProjs_node, int debug_level) {
+   if (GVNeq==NULL) GVNeq=new GridVolumeT<int>;
+   GVNeq->resize(vol_blobs0);
+   GVNeq->init_zeros();
+   
+   Projection read_proj;
+   if (debug_level>0) {
+      cerr << "Counting equations ...\n";
+      init_progress_bar(numIMG);
+   }
+   for (int act_proj = 0; act_proj < numProjs_node ; act_proj++) {
+       read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj);
+       read_proj.move_origin_to_center();
+
+       // Projection extension? .........................................
+       if (proj_ext!=0)
+          read_proj().window(
+             STARTINGY (read_proj())-proj_ext,
+             STARTINGX (read_proj())-proj_ext,
+             FINISHINGY(read_proj())+proj_ext,
+             FINISHINGX(read_proj())+proj_ext);
+
+       count_eqs_in_projection(*GVNeq, blobprint, blobprint2, read_proj);
+
+       if (debug_level>0 && 
+           act_proj%MAX(1,numIMG/60)==0) progress_bar(act_proj);
+   }
+   if (debug_level>0) {
+      progress_bar(numIMG);
+      long int Neq=0, Nunk=0;
+      for (int n=0; n<GVNeq->VolumesNo(); n++)
+	 FOR_ALL_ELEMENTS_IN_MATRIX3D((*GVNeq)(n)()) {
+            Neq += (*GVNeq)(n)(k,i,j);
+            Nunk++;
+	 }
+      cerr << "There are " << Neq << " equations and " << Nunk
+           << " unknowns (redundancy=" << 100.0-100.0*Nunk/Neq << ")\n";
+   }
+}

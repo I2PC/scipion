@@ -58,6 +58,9 @@ const int BLOB_SUBSAMPLING=10;
     for more information. */
 class Basic_ART_Parameters {
 public:
+   // Type of the parallel processing
+   typedef enum {ART, AVSP, SART, BiCAV, SIRT} t_parallel_mode;
+
    /* User parameters ...................................................... */
    /**@name User parameters */
    //@{
@@ -70,14 +73,22 @@ public:
    /// Relaxation parameter
    matrix1D<double> lambda_list;
    
-   /// True if SIRT mode
-   int SIRT;
-
+   /** Valid methods are ART, AVSP, SART, BiCAV, SIRT.
+       This variable establish the way that particles are
+       divided into blocks for parallel processing. If sequential
+       processing is wanted, set it to ART. This is the default.
+       
+       \\Ex: parallel_mode=Basic_ART_Parameters::ART*/
+   t_parallel_mode parallel_mode;
+   
+   /// Number of projections for each parallel block
+   int block_size;
+   
    /** Valid mdoes are ARTK, CAVK and CAV.
        This is the mode of updating a single projection, it has nothing
        to do with the global ART or SIRT mode */
    int eq_mode;
-
+   
    /// True if random sort of projections
    bool random_sort;
 
@@ -315,8 +326,20 @@ public:
        The info level takes the following values:
         \\ BASIC: Generate Blob footprints
 	\\ FULL: Generate all the rest neede values.
+	
+       The rank is a number idetifying the parallel process. If -1 then
+       the algorithm is sequential. If 0 then it is the root process.
        */
-   void produce_Side_Info(GridVolume &vol_blobs0, int level=FULL);
+   void produce_Side_Info(GridVolume &vol_blobs0, int level=FULL, int rank=-1);
+
+   /** Compute CAV weights.
+       The weights are stored in the GVNeq within this object. If the
+       debugging level is greater than 0 then a progress bar is shown
+       and the number of equations and unknowns are shown at the end.
+       Otherwise nothing is printed (this is the suggested debugging level
+       for parallel processing). */
+   void compute_CAV_weights(GridVolume &vol_blobs0, 
+      int numProjs_node, int debug_level=0);
 
    /** Lambda for iteration n (first one is iteration 0).
        If the iteration requested is greater than the number of lambdas
@@ -389,12 +412,19 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     and when this function finishes, it contains the final solution volume
     in blobs.
     
+    The rank is the identification number of the process running this function.
+    If it is -1, the function is run in seuqential mode. If it is 0, then
+    it is the root process.
+    
     See the \Ref{Basic_ART_Parameters} for more information
     about how to generate the iterations.
 */
+
+
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs);
+   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs,
+   int rank=-1);
 
 /** Main Routine for ART.
     Given any set of Art parameters, this function returns the voxel
@@ -406,6 +436,7 @@ template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
     Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
     GridVolume &vol_blobs);
+
 //@}
 //@}
 #endif

@@ -63,7 +63,18 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
       << "x" << prm.Xoutput_volume_size << endl;
    prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << endl
                << "                No. Iter=" << prm.no_it << endl;
-   prm.fh_hist << " Iteration mode: "; print(prm.fh_hist,prm.SIRT); prm.fh_hist << endl;
+   prm.fh_hist << " Parallel mode: ";
+   switch (prm.parallel_mode) {
+      case Basic_ART_Parameters::ART:   prm.fh_hist << "ART\n"; break;
+      case Basic_ART_Parameters::SIRT:  prm.fh_hist << "SIRT\n"; break;
+      case Basic_ART_Parameters::SART:
+          prm.fh_hist << "SART, block size=" << prm.block_size << endl;
+          break;
+      case Basic_ART_Parameters::AVSP:  prm.fh_hist << "AVSP\n"; break;
+      case Basic_ART_Parameters::BiCAV:
+          prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
+          break;
+   }
    prm.fh_hist << " Equation mode: ";
    if (prm.eq_mode==CAV) prm.fh_hist << "CAV\n";
    else if (prm.eq_mode==CAVK) prm.fh_hist << "CAVK\n";
@@ -145,7 +156,8 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 //#define DEBUG_POCS
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs) {
+   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs,
+   int rank) {
    // Some variables .......................................................
    int        ART_numIMG;              // Normalizing factor
    GridVolume *ptr_vol_out;            // Pointer to output volume
@@ -196,7 +208,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    POCS_errors.init_zeros();
 
    // If SIRT set normalizing factor and create output volume ..............
-   if (prm.SIRT) {
+   if (prm.parallel_mode==Basic_ART_Parameters::SIRT ||
+       prm.parallel_mode==Basic_ART_Parameters::SART) {
       ART_numIMG=prm.numIMG;           // Normalizing factor = Total no. images
       ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
       vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs
@@ -215,18 +228,20 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    TimeStamp time0;                    // For measuring the elapsed time
    annotate_time(&time0);
    int images=0;
-   for (int it = 0; it < prm.no_it; it++) {
+    for (int it = 0; it < prm.no_it; it++) {
       // Initialisation of some variables
       global_mean_error = 0;
       POCS_global_mean_error = 0;
 
       // For each projection -----------------------------------------------
-      cerr << "Running iteration " << it << " with lambda= " << prm.lambda(it)
-           << " ...\n";
-      if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+      if (rank==-1) {
+	 cerr << "Running iteration " << it << " with lambda= " << prm.lambda(it)<< "\n" << endl;
+	 if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+      }
+      
       for (int act_proj = 0; act_proj < prm.numIMG ; act_proj++) {
-      	  POCS_N=0;
-
+          POCS_N=0;
+  
           // Select next projection ........................................
           int iact_proj; // Index inside the sorting information for act_proj
           if (prm.tell&TELL_MANUAL_ORDER) {
@@ -282,17 +297,20 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		
           // Apply the reconstruction algorithm ............................
       	  // Notice that the following function is extern
-          ART_single_step(vol_blobs, ptr_vol_out,
+	  ART_single_step(vol_blobs, ptr_vol_out,
       	      prm, eprm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
 	      images, prm.IMG_Inf[iact_proj].fn_ctf);
+      
+
           global_mean_error += mean_error;
           
               // Force symmetry, so far only crystallographic
-              // Force symmetry in the volume each
-              if (prm.sym_each>0 &&
+
+              //Force symmetry in the volume each
+              if (prm.sym_each &&
 	          act_proj%prm.sym_each==0 &&
 		  (act_proj!=0 || prm.sym_each==1) ) {
                  apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
@@ -368,7 +386,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                     prm.positivity)
                     {vol_POCS(k,i,j)=1; posi++;}
                // Debugging messages
-               // cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
+               //cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
                //     << (double)posi/(double)fg << " " << endl;
 
               // Solve volumetric equations
@@ -543,28 +561,33 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          // Check if algorithm must stop via stop_at
          if (++images==prm.stop_at) break;
       }
+
       if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
 
       // Prepare for next global iteration ---------------------------------
       // Calculate norm and print
-      prm.fh_hist << "Finished - Iteration " << it << endl;
-      cerr        <<"   Global mean squared error: "
-                  << global_mean_error/prm.numIMG << endl;
-      prm.fh_hist << "   Global mean squared error: "
-                  << global_mean_error/prm.numIMG << endl;
-      if (apply_POCS) {
-         cerr        << "   POCS Global mean squared error: "
-                     << POCS_global_mean_error/POCS_N << endl;
-         prm.fh_hist << "   POCS Global mean squared error: "
-                     << POCS_global_mean_error/POCS_N << endl;
+      if (rank==-1) {
+	 prm.fh_hist << "Finished - Iteration " << it << endl;
+	 cerr        <<"   Global mean squared error: "
+                     << global_mean_error/prm.numIMG << endl;
+	 prm.fh_hist << "   Global mean squared error: "
+                     << global_mean_error/prm.numIMG << endl;
+	 if (apply_POCS) {
+            cerr        << "   POCS Global mean squared error: "
+                	<< POCS_global_mean_error/POCS_N << endl;
+            prm.fh_hist << "   POCS Global mean squared error: "
+                	<< POCS_global_mean_error/POCS_N << endl;
+	 }
       }
 
       // Convert volume and write if not last iteration
       // If in SIRT mode move the volume to the reference one
-      if (prm.SIRT || prm.eq_mode==CAV) vol_blobs=vol_blobs_out;
+      if (prm.parallel_mode==Basic_ART_Parameters::SIRT || prm.eq_mode==CAV ||
+          prm.parallel_mode==Basic_ART_Parameters::SART)
+	  vol_blobs=vol_blobs_out;
 
       if (prm.tell&TELL_SAVE_INTERMIDIATE && it!=prm.no_it-1) {
-         cerr << "Converting blob volume to voxels ...\n";   
+         if (rank==-1) cerr << "Converting blob volume to voxels ...\n";   
          blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
          vol_voxels.write(prm.fn_root+"it"+ItoA(it)+".vol");
@@ -577,8 +600,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       if (images==prm.stop_at) break;
    }
    // Times on screen
-   cout << "\nTime of " << prm.no_it << " iterations: \n";
-   print_elapsed_time(time0);
+   if (rank==-1) {
+      cout << "\nTime of " << prm.no_it << " iterations: \n";
+      print_elapsed_time(time0);
+   }
 }
 
 /* ------------------------------------------------------------------------- */
