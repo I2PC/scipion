@@ -55,11 +55,13 @@ int main( int argc, char **argv ) {
        poll=check_param(argc,argv,"-poll");
    } catch (Xmipp_error) {Usage(); exit(1);}
 
+   try {
    QApplication::setFont( QFont("Helvetica", 12) );
    QApplication a(argc,argv);
 
    for ( int i=ifirst+1; i<argc; i++ ) {
        if (!exists(argv[i])) {
+          if (argv[i][0]=='-') break; // There is nothing else to show
           FileName fn;
           switch (mode) {
 	     case 0: continue;
@@ -106,6 +108,7 @@ int main( int argc, char **argv ) {
 
    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
    return a.exec();
+   } catch (Xmipp_error XE) {cerr << XE;}
 }
 
 void Usage() {
