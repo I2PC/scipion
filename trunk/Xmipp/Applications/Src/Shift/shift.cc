@@ -101,7 +101,7 @@ public:
       Prog_parameters::usage();
       cerr << "   -shift [<x>,<y>[,<z>]]   : Shift by (x,y,z)\n"
            << "   -scale [<x>,[<y>,<z>]]   : Scale by (x,y,z)\n"
-           << "   -Docfile                 : Shift and/or Scales are stored in a Docfile\n"
+//           << "   -Docfile                 : Shift and/or Scales are stored in a Docfile\n"
            << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
            << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
 	   << "                              Docfile used for shifts\n"
