@@ -273,7 +273,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
    ir1=(int)((xr1-rl)/dr+1);
    if (ir1 < 1)
        ir1=1;
-   ir2=(int)((min(xr2,rh)-rl)/dr+1);
+   ir2=(int)((MIN(xr2,rh)-rl)/dr+1);
    if (ir2 < ir1)
       ir2=ir1;
    ndr=(int)(xdr/dr);
