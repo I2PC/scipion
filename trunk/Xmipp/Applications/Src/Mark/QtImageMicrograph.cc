@@ -167,6 +167,7 @@ void QtImageMicrograph::mouseReleaseEvent( QMouseEvent *e ) {
 
    // If moving a particle
    if ( __movingMark != -1 && __pressed ) {
+      getWidgetMicrograph()->move_particle(__movingMark);
       __movingMark = -1;
       __pressed    = false;
       emit signalRecalculateTiltMatrix();
@@ -209,7 +210,8 @@ void QtImageMicrograph::changeProperties( int mX, int mY ) {
    int coord = getMicrograph()->search_coord_near( mX, mY, 10 );
    if ( coord == -1 ) return;
    
-   QtDialogProperties dialogProperties( getMicrograph(), coord, this, 0, TRUE );
+   QtDialogProperties dialogProperties( getMicrograph(), getWidgetMicrograph(),
+      coord, this, 0, TRUE );
    
    connect( &dialogProperties, SIGNAL(signalDeleteMarkOther(int)),
             this, SLOT(slotDeleteMarkOther(int)) );
