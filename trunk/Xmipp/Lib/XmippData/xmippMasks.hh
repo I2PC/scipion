@@ -400,7 +400,7 @@ void mask3D_26neig(matrix3D<int> &mask, int value1=1, int value2=1, int value3=1
     Mask.generate_2Dmask();
 
     // Apply the mask to some image
-    Mask.apply(input_matrix2D,output_matrix2D);
+    Mask.apply_mask(input_matrix2D,output_matrix2D);
     \end{verbatim}
     */
 class Mask_Params {
