@@ -501,6 +501,7 @@ void Usage (char *name)
    puts ("Example:");
    puts ("xmipp_findcenter -img file.ave -x0 25 -y0 25 -low 23 -high 25 -r1 10 -r2 20");
    puts ("");
+   puts ("WARNING: THIS PROGRAM DOES NOT APPLY THE ALIGNMENT PARAMETERS IN THE IMAGE HEADERS! ");
 
 /* printf("\nUsage: \n  %s",name);
  puts (" file_name x0 y0 low high R1 R2 RIn harm +1/-1 ");

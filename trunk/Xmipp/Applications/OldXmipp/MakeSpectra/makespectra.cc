@@ -264,8 +264,8 @@ llancho = dim;
 largo = llargo;
 lancho = llancho;
 if (r2 > x0-4 || r2 > y00-4 || r2 > largo-x0-3 || r2 > lancho-y00-3)
-{   printf ("\n%s> Error: radius %2.3f is very long",r2);
-    exit (1);
+{   printf ("\n%f> Error: radius r2 is very long",r2);
+ exit (1);
 }
 
 /* ****************   ALLOC MEMORY   ************************/
@@ -641,6 +641,7 @@ static void Usage( char *name)
    puts ("Example:");
    puts ("xmipp_makespectra -sel file.sel -out myfile.sim -x0 25 -y0 25 -r1 10 -r2 20");
    puts ("");
+   puts ("WARNING: THIS PROGRAM DOES NOT APPLY THE ALIGNMENT PARAMETERS IN THE IMAGE HEADERS! ");
 }
 
 /*****************************************************************************/
