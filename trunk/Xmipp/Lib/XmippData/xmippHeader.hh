@@ -143,6 +143,12 @@ public:
    float  Scale() const {return header.fScale;};       // Get Scale
    float& Scale()       {return header.fScale;}   
 
+   // For Xmipp Maximum-Likelihood refinement
+   float  Flip()     const {return header.Flip;}
+   float& Flip()           {return header.Flip;}
+   float  Weight()     const {return header.Weight;}
+   float& Weight()           {return header.Weight;}
+
    // Other ugly fields
    float  fNrec()   const {return header.fNrec;}
    float& fNrec()         {return header.fNrec;}
@@ -304,7 +310,13 @@ private:
              float Tstart;
              float Tend;
              float Tinc;   		// 4*3 = 12, 12+28 = 40B
-             char  fNada2[584];         // empty     700-76-40=624-40= 584 bytes
+
+             /** Sjors Scheres 17/12/04 For Maximum-Likelihood refinement in Xmipp **/
+
+             float Weight;
+             float Flip;            // 0=no flipping operation (false), 1=flipping (true)
+
+             char  fNada2[576];         // empty     700-76-40=624-40-8= 576 bytes
 
  /*212-214*/ char szIDat[12];   // LOGICAL * 1 ARRAY DIMENSIONED 10, CONTAINING 
  			        // THE DATE OF CREATION (10 CHARS)

@@ -234,6 +234,7 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
     A(0,2)=-header.fXoff();   
     A(1,2)=-header.fYoff();
   }
+
   return A;
 }
 
@@ -243,6 +244,7 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   bool reversed, bool apply_geo, bool only_apply_shifts) _THROW {
   FILE *fp;
   bool ret;
+  matrix2D<double>    A(3,3);
 
   ImageXmippT<T>::rename(name); 
   if ((fp = fopen(fn_img.c_str(), "rb")) == NULL)
@@ -260,7 +262,12 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
       T  outside=DIRECT_MAT_ELEM(img,0,0);
-      img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(only_apply_shifts),IS_INV,DONT_WRAP,outside);
+      A=ImageXmippT<T>::get_transformation_matrix(only_apply_shifts);
+      if (ImageXmippT<T>::flip()==1.) {
+	img.self_reverseX();
+	A(0,2)=-A(0,2);
+      }
+      img.self_apply_geom(A,IS_INV,DONT_WRAP,outside);
     } 
 
     // scale if necessary (check this with Carlos)
