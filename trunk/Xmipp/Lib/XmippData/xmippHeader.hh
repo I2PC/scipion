@@ -132,6 +132,7 @@ public:
    float& Slices() {return header.fNslice;};          // Set Slices
    float  Slices()  const {return header.fNslice;};   // Get Slices
    int    iSlices() const {return (int) header.fNslice;};// Get Slices
+   int    iZdim()   const {return (int) header.fNslice;}
 
   // Rotation Angle 
    float  old_rot() const {return header.fAngle1;};   // Get Rot. Angle
