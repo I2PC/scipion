@@ -294,10 +294,12 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
 	 case OLDXMIPP:      out << "OldXmipp\n"; break;
 	 case NEAR_OLDXMIPP: out << "Near_OldXmipp\n"; break;
 	 case NEWXMIPP:      out << "NewXmipp\n"; break;
+	 case NEWXMIPP2:     out << "NewXmipp2\n"; break;
 	 case MICHAEL:       out << "Michael\n"; break;
 	 case NONE:          out << "None\n"; break;
       }
       if (prm.normalizing_method==NEWXMIPP || 
+	  prm.normalizing_method==NEWXMIPP2 ||
 	  prm.normalizing_method==NEAR_OLDXMIPP ||
 	  prm.normalizing_method==MICHAEL)
 	  cout << "   Background mode: Circle, radius " << prm.bg_radius << endl;
@@ -682,6 +684,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
       	 idr_prm.mu0_list=prm.mu0_list;
       	 idr_prm.muF_list=prm.muF_list;
       	 idr_prm.fn_ctf=fn_applied_CTF;
+         idr_prm.max_resolution=prm.max_resolution;
+         idr_prm.fn_final_sym=prm.fn_final_sym;
 	 idr_prm.produce_side_info();
 	 Basic_ROUT_IDR_Art(idr_prm, vol_recons);
 	 fn_recons_root=vol_recons.name().without_extension();
