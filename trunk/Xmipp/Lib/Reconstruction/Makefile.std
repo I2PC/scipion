@@ -1,5 +1,7 @@
 ###########################################################################
 LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
+LIBRECONS_CLASIF= ../libRecons_Clasif_$(XMIPP_PREFIX)$(MACHINE).so
+LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
 ifeq ($(HAVE_INRIA),YES)
    LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
 endif
@@ -8,20 +10,21 @@ ifeq ($(HAVE_VTK),YES)
 LIBRECONS_VTK   = ../libReconsVTK_$(XMIPP_PREFIX)$(MACHINE).so
 endif
 
-LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) $(LIBRECONS_VTK)
+LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) $(LIBRECONS_VTK) \
+                  $(LIBRECONS_CLASIF) $(LIBRECONS_INTERFACE)
 LIBDIRS         = Src Programs/Src
 
 SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Src/projection.o Src/volume_FOMs.o Src/radon.o \
-           Src/recons_spider.o Src/Gibbs.o \
-           Programs/Src/Prog_project.o Programs/Src/Prog_art.o \
+           Src/Gibbs.o \
+           Programs/Src/Prog_project.o \
            Programs/Src/Prog_evaluate.o \
-           Programs/Src/recons_misc.o Programs/Src/Basic_art.o \
-	   Programs/Src/Prog_Spots2RealSpace2D.o  \
+           Programs/Src/recons_misc.o \
            Programs/Src/Prog_project_crystal.o Programs/Src/Prog_surface.o \
            Programs/Src/Prog_euler.o Programs/Src/Prog_draw_surface.o \
            Programs/Src/Prog_symmetrize.o Programs/Src/Prog_range_adjust.o \
-           Programs/Src/Prog_normalize.o 
+           Programs/Src/Prog_normalize.o \
+	   Programs/Src/Prog_Angular_Distance.o 
 SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
 SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
            Programs/Src/Prog_IDR_art.o Programs/Src/Prog_CorrectPhase.o \
@@ -29,7 +32,14 @@ SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
            Programs/Src/Prog_SpARMA.o \
            Programs/Src/Prog_random_phantom.o \
 	   Programs/Src/Prog_microscope.o Programs/Src/Prog_adjust_CTF.o \
-	   Programs/Src/Prog_recons_test.o Programs/Src/Prog_assign_CTF.o
+	   Programs/Src/Prog_assign_CTF.o \
+	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o
+SRC_OBJS_CLASIF = Programs/Src/Prog_Angular_Reference.o \
+	   Programs/Src/Prog_Angular_Project.o \
+	   Programs/Src/Prog_Angular_Predict.o
+SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
+           Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
+
 
 # Main Action = Build library ----------------------------------------------
 all: $(LIBPROJ)
@@ -38,6 +48,16 @@ $(LIBRECONS): $(SRC_OBJS)
 	@echo "Creating library Xmipp Reconstruction Library ..."
 	@rm -f $(LIBRECONS)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS)
+
+$(LIBRECONS_CLASIF): $(SRC_OBJS_CLASIF)
+	@echo "Creating library Xmipp Reconstruction-Classification Library ..."
+	@rm -f $(LIBRECONS_CLASIF)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_CLASIF) $(SRC_OBJS_CLASIF)
+
+$(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
+	@echo "Creating library Xmipp Reconstruction-Interface Library ..."
+	@rm -f $(LIBRECONS_INTERFACE)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE)
 
 ifeq ($(HAVE_INRIA),YES)
 $(LIBRECONS_INRIA): $(SRC_OBJS_INRIA)
@@ -65,7 +85,8 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing Reconstruction library ..."
-	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) 
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) \
+	   $(SRC_OBJS_CLASIF) $(SRC_OBJS_INTERFACE)
 
 # DistCleaning -------------------------------------------------------------
 distclean:
