@@ -1323,6 +1323,7 @@ void instantiate_masks_1D() {
    matrix1D<double_complex> m5;
    matrix1D<int> mask;
    apply_binary_mask(mask,m5,m5,(double_complex)0);
+   Mask_Params prm; prm.resize(m5);
 }
 
 template <class T>
@@ -1353,6 +1354,7 @@ void instantiate_masks_2D() {
    matrix2D<int> mask;
    apply_binary_mask(mask,m5,m5,(double_complex)0);
    count_with_mask_above(mask,m5,1.0f);
+   Mask_Params prm; prm.resize(m5);
 }
 
 template <class T>
@@ -1382,5 +1384,6 @@ void instantiate_masks_3D() {
    matrix3D<int> mask;
    apply_binary_mask(mask,m5,m5,(double_complex)0);
    count_with_mask_above(mask,m5,1.0f);
+   Mask_Params prm; prm.resize(m5);
 }
 
