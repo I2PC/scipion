@@ -71,10 +71,8 @@ public:
    /** Threshold for discarding images.
        If it is 20%, only the 20% of the images will be kept each round. */
    double th_discard;
-   /** Update visible space */
-   bool update_visible_space;
-   /** Threshold for PCA values when creating the visible space */
-   double th_denoise;
+   /** Scale for the denoising */
+   int s_denoise;
    /** Check mirrors.
       If 1 then mirror versions of the experimental images are also explored.*/
    int check_mirrors;
