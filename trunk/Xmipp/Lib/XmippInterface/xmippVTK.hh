@@ -250,6 +250,10 @@
    template <class maT>
       void FFT_magnitude(vtkImageData *fft_in, maT &mag);
 
+   /** Magnitude of FFT. Valid for 2D and 3D */
+   void FFT_magnitude(FourierImageXmipp &fft_in,
+      matrix2D<double> &mag, bool do_not_center=false);
+
    /** Phase of FFT.
        An exception is thrown if the operation is not valid. */
    template <class maT>

@@ -492,6 +492,14 @@ template <class maT>
       mag_filter->Delete();
 }
 
+void FFT_magnitude(FourierImageXmipp &fft_in,
+   matrix2D<double> &mag, bool do_not_center) {
+   vtkImageData *fftI=NULL; xmippFFT2VTK(fft_in,fftI);
+   if (!do_not_center) CenterFFT(fftI);
+   FFT_magnitude(fftI,mag);
+   fftI->Delete();
+}
+
 /* Phase ------------------------------------------------------------------- */
 /* This is a very short exercise of implementing a VTK filter. It is
    inspired in vtkImageMagnitude */
