@@ -1608,7 +1608,7 @@ static float maxarg1,maxarg2;
 #define MAX(a,b) (maxarg1=(a),maxarg2=(b),(maxarg1) > (maxarg2) ?\
 	(maxarg1) : (maxarg2))
 
-#define EPS 1e-20
+#define EPS 1e-40
 void svdcmp(double *a,int m,int n,double *w, double *v)
 {
 	int flag,i,its,j,jj,k,l,nm;
