@@ -35,6 +35,7 @@ void Basic_ART_Parameters::default_values() {
     fn_start           = "";
     fn_sym             = "";
     force_sym          = 0;
+    sym_each           = 0;
     do_not_generate_subgroup = FALSE;
     do_not_use_symproj = FALSE;
     fn_surface_mask    = "";
