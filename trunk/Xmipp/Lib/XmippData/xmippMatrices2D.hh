@@ -868,7 +868,7 @@ public:
    /** Put a window to matrix.
        The matrix is windowed within the two positions given to this function.
        Indexes always refer to logical indexes. If a position is outside the
-       actual matrix range then the matrix is padded with 0's until the
+       actual matrix range then the matrix is padded with init_value until the
        new position is reached. In the following examples suppose that m1
        is the following and that the origin is (-1,-1).
 
@@ -879,7 +879,7 @@ public:
        \end{verbatim}
        \\Ex: m1.window(-1,-1,1,2);
        */
-   void window(int y0, int x0, int yF, int xF);
+   void window(int y0, int x0, int yF, int xF, T init_value=0);
    //@}
 
    /* Geometrical transformations ------------------------------------------ */
@@ -960,7 +960,7 @@ public:
 
    /** Rotate matrix.
        Same as the previous one, but the result is kept in this object */
-   void rotate(double ang, bool wrap=DONT_WRAP)
+   void self_rotate(double ang, bool wrap=DONT_WRAP)
       {mT aux; rotate(ang,aux,wrap); *this=aux;}
 
    /** Translate matrix.
@@ -1001,6 +1001,18 @@ public:
        Same as the previous one, but the result is kept in this object. */
    void scale_to_size(int Ydim,int Xdim)
       {mT aux; scale_to_size(Ydim, Xdim, aux); *this=aux;}
+
+   /** Superpixel reduce.
+       This function reduces the given image averaging in the superpixel
+       of the given size. The last columns and rows are removed if the
+       size of the original image is not an exact multiple of the given
+       superpixel size */
+   void superpixel_reduce(mT &result, int size=2) const;
+
+   /** Superpixel expand.
+       This function copies each pixel to a new image as many times
+       as the size of the superpixel. */
+   void superpixel_expand(mT &result, int size=2) const;
    //@}
 
    /* Iterators ------------------------------------------------------------ */
