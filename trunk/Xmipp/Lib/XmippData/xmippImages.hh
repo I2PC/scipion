@@ -454,7 +454,7 @@ public:
    bool reversed() const {return header.reversed();}
 
   /** Get geometric transformation matrix from 2D-image header.  */
-  matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shifts=FALSE);
+  matrix2D<double> get_transformation_matrix(bool only_apply_shifts=FALSE);
 
    /** Check OldXmipp header location for image translation offsets
        If image appears to be in OldXmipp format, copy offsets to NewXmipp header location */

@@ -212,6 +212,25 @@
      void correlation_matrix(matrix2D<T> const &m1,matrix2D<T> const &m2,
         matrix2D<double> &R);
 
+   /** Fourier-Ring-Correlation between two 2D-matrices using Fast Fourier Transform.*/
+template <class T>
+     void fourier_ring_correlation(matrix2D<T> const &m1,matrix2D<T> const &m2, double sampling_rate,
+        matrix1D<double> &frequency, matrix1D<double> &frc, matrix1D<double> &frc_noise);
+
+   /** Fourier-Ring-Correlation between two 3D-matrices using Fast Fourier Transform.*/
+template <class T>
+     void fourier_ring_correlation(matrix3D<T> const &m1,matrix3D<T> const &m2, double sampling_rate,
+        matrix1D<double> &frequency, matrix1D<double> &frc, matrix1D<double> &frc_noise);
+
+   /** Differential Phase Residualbetween two 2D-matrices using Fast Fourier Transform.*/
+template <class T>
+     void differential_phase_residual(matrix2D<T> const &m1,matrix2D<T> const &m2, double sampling_rate,
+        matrix1D<double> &frequency, matrix1D<double> &dpr);
+
+   /** Differential Phase Residualbetween two 3D-matrices using Fast Fourier Transform.*/
+template <class T>
+     void differential_phase_residual(matrix3D<T> const &m1,matrix3D<T> const &m2, double sampling_rate,
+        matrix1D<double> &frequency, matrix1D<double> &dpr);
 
    /** Series convolution function. Gives the convolution of two series
        given as Xmipp Vectors. Result is stored in result vector.

@@ -120,6 +120,49 @@
            const matrix3D<int> *mask=NULL,
 		   matrix3D<double> *Contributions=NULL);
 
+/** euclidian_distance 1D.
+    Return the SQRT[sum{(x-y)*(x-y)}]
+	in the common positions. */
+    template <class T>
+       double euclidian_distance(const matrix1D<T> &x, const matrix1D<T> &y);
+
+/** euclidian distance 2D. */
+    template <class T>
+       double euclidian_distance(const matrix2D<T> &x, const matrix2D<T> &y,
+           const matrix2D<int> *mask=NULL);
+
+/** euclidian distance 3D. */
+    template <class T>
+       double euclidian_distance(const matrix3D<T> &x, const matrix3D<T> &y,
+           const matrix3D<int> *mask=NULL);
+
+/** mutual information 1D.
+    Return the mutual information:
+    MI = sum [ P(x,y)*log2{P(x,y)/(P(x)*P(y))} ] 
+	in the common positions. 
+    P(x), P(y) are 1D-histograms of the values of matrix x and y.
+    P(x,y)     is the 2D-histogram, i.e. the count of times that a certain 
+               combination of values in matrices x and y has ocurred.
+    The sum runs over all histogram bins. 
+
+    The histograms are calculated using the number of bins nx and ny.
+    If no values (or zeros) are given, a Gaussian distribution of the values 
+    in the matrices is assumed, and the number of bins is calculated as: log2(n)+1.
+    (according to: Tourassi et al. (2001) Med. Phys. 28 pp. 2394-2402.) */
+    template <class T>
+       double mutual_information(const matrix1D<T> &x, const matrix1D<T> &y,
+           int nx=0, int ny=0);
+
+/** mutual information 2D. */
+    template <class T>
+       double mutual_information(const matrix2D<T> &x, const matrix2D<T> &y,
+           int nx=0, int ny=0, const matrix2D<int> *mask=NULL);
+
+/** mutual information 3D. */
+    template <class T>
+       double mutual_information(const matrix3D<T> &x, const matrix3D<T> &y,
+           int nx=0, int ny=0, const matrix3D<int> *mask=NULL);
+
 /** RMS 1D.
     Return the sqrt(sum{(x-y)*(x-y)}/n) in the common positions. */
     template <class T>

@@ -1266,10 +1266,19 @@ template <class T>
 	   distance to the origin is (0-1),
 	 - the second element is the mean of the pixels 
        whose distance to the origin is (1-2)
-	 - and so on. */
+	 - and so on. 
+    A second vector radial_count is returned containing the number of 
+    pixels over which each radial average was calculated.
+    if rounding=true, element=round(distance);
+         - so the first element is the mean of the voxels whose
+           distance to the origin is (0.5-1.5),
+         - the second element is the mean of the voxels
+       whose distance to the origin is (1.5-2.5)
+         - and so on. */
 template <class T>
 void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean) _THROW;
+                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+                    const bool &rounding=false) _THROW;
 
 /** Solve equation system, nonnegative solution.
     The equation system is defined by Ax=b, it is solved for x.

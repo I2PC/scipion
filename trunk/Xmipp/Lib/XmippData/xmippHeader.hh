@@ -100,6 +100,7 @@ public:
    int read(const FileName &fn, bool skip_type_check=FALSE,
       bool reversed=FALSE, bool skip_extra_checkings=FALSE) _THROW;
    void write(FILE *fp, bool force_reversed=FALSE);
+   void write(const FileName &fn, bool force_reversed=FALSE);
 
    // Other header operators
    

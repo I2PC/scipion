@@ -927,15 +927,24 @@ template <class T>
 
 
 /** Does a radial average of a volume, around the voxel where is the origin.
-    A vector is returned where:
+    A vector radial_mean is returned where:
 	 - the first element is the mean of the voxels whose
 	   distance to the origin is (0-1),
 	 - the second element is the mean of the voxels 
        whose distance to the origin is (1-2)
+	 - and so on. 
+    A second vector radial_count is returned containing the number of 
+    voxels over which each radial average was calculated.
+    Sjors nov2003: if rounding=true, element=round(distance); 
+         - so the first element is the mean of the voxels whose
+	   distance to the origin is (0.5-1.5),
+	 - the second element is the mean of the voxels 
+       whose distance to the origin is (1.5-2.5)
 	 - and so on. */
 template <class T>
 void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean) _THROW;
+                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+                    const bool &rounding=false) _THROW;
 //@}
 //@}
 //@}

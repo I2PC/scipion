@@ -247,6 +247,9 @@ public:
        \\ Ex: SF1.read("g1t.sel"); SF2.merge("g2t.sel"); SF1=SF1+SF2; */
    SelFile  operator +(SelFile &SF);
    
+   /** Merge this file into two random halfes */
+   void split_in_two(SelFile &SF1,SelFile &SF2);
+
    /** Write a selection file to disk.
        If you give a name then it becomes like a "Save as ..." and from
        this point on the name of the selection file has changed.
