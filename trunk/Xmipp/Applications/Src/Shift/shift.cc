@@ -70,8 +70,12 @@ public:
 	 } else colX_scale= -1;
       }
       else{
-         shift=get_vector_param(argc,argv,"-shift",-1);
-         scale=get_vector_param(argc,argv,"-scale",-1);
+         if (check_param(argc,argv,"-shift"))
+              shift=get_vector_param(argc,argv,"-shift",-1);
+         else shift.init_zeros(2);
+         if (check_param(argc,argv,"-scale"))
+               scale=get_vector_param(argc,argv,"-scale",-1);
+         else {scale.resize(2); scale.init_constant(1);}
       }	 
       wrap=!check_param(argc,argv,"-dont_wrap");
    }
