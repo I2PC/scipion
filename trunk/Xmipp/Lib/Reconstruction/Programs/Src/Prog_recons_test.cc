@@ -488,7 +488,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 int i=0;
 	 while (!SF.eof()) {
       	    FileName fn_proj=SF.NextImg();
-	    ImageXmipp I; I.read(fn_proj);
+	    ImageXmipp I; I.read(fn_proj); I().set_Xmipp_origin();
 
       	    prm_micro.apply(I());
 
