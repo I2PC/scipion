@@ -21,6 +21,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
            Programs/Src/Prog_symmetrize.o Programs/Src/Prog_range_adjust.o \
            Programs/Src/Prog_normalize.o \
 	   Programs/Src/Prog_Angular_Distance.o \
+	   Programs/Src/Prog_Projection_Neighbourhood.o \
            Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
            Programs/Src/Prog_IDR_art.o Programs/Src/Prog_CorrectPhase.o \
 	   Programs/Src/Prog_SpAR.o Programs/Src/Prog_art_crystal.o\
