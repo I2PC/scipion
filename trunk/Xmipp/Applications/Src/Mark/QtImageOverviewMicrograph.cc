@@ -225,7 +225,15 @@ void QtImageOverviewMicrograph::slotSetWidthHeight( int _w, int _h ) {
 void QtImageOverviewMicrograph::slotActualizeOtherOverview( int _x, int _y ) {
    __x = _x; 
    __y = _y;
-   emit signalSetCoords( _x, _y );
+
+   // This now should be the center
+   int Xdim, Ydim; getMicrograph()->size(Xdim,Ydim);
+   __x = MAX(0,(int)(__x-__w/2.0));
+   __y = MAX(0,(int)(__y-__h/2.0));
+   __x = MIN((int)(Xdim-1-__w*__zoom),__x);
+   __y = MIN((int)(Ydim-1-__h*__zoom),__y);
+
+   emit signalSetCoords( __x, __y );
    emit signalRepaint();
 }
 
