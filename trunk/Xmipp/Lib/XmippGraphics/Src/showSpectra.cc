@@ -68,7 +68,7 @@ void ShowSpectra::initWithVectors(int _numRows, int _numCols,
 }
 
 /* Read a Spectra ---------------------------------------------------------- */
-void ShowSpectra::readFile(const FileName &_fn) _THROW {
+void ShowSpectra::readFile(const FileName &_fn, double _minGray, double _maxGray) _THROW {
     clear();
     fn = _fn;
     setCaption(fn.c_str());
