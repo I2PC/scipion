@@ -80,6 +80,8 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
                                                            <<endl;
    prm.fh_hist << " Generating symmetry group: ";
        print(prm.fh_hist,!prm.do_not_generate_subgroup); prm.fh_hist << endl;
+   prm.fh_hist << " Do not use symmetrized projections: ";
+       print(prm.fh_hist,!prm.do_not_use_symproj); prm.fh_hist << endl;
    prm.fh_hist << " Number of total projections (including symmetrized): "
       << prm.numIMG << endl;
    prm.fh_hist << " Number of different projections: " << prm.trueIMG << endl;
@@ -223,6 +225,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
            << " ...\n";
       if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
       for (int act_proj = 0; act_proj < prm.numIMG ; act_proj++) {
+      	  POCS_N=0;
 
           // Select next projection ........................................
           int iact_proj; // Index inside the sorting information for act_proj
@@ -307,8 +310,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
                  Zoutput_volume_size, Youtput_volume_size,
 		 Xoutput_volume_size);
-              if (prm.tell&TELL_SAVE_AT_EACH_STEP)
+              if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
 		 vol_voxels.write("PPPvolPOCS0.vol");
+		 cout << "Stats PPPvolPOCS0.vol: "; vol_voxels().print_stats(); cout << endl;
+	      }
               // Apply surface restriction
 	      if (prm.surface_mask!=NULL) {
       	         vol_POCS()=(*(prm.surface_mask))();
@@ -316,14 +321,18 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		 vol_POCS().resize(vol_voxels());
 		 vol_POCS().init_zeros();
               }
-              if (prm.tell&TELL_SAVE_AT_EACH_STEP)
+              if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
 		 vol_POCS.write("PPPvolPOCS1.vol");
+		 cout << "Stats PPPvolPOCS1.vol: "; vol_POCS().print_stats(); cout << endl;
+      	      }
               // Force symmetry
               if (prm.force_sym!=0) {
                  symmetrize(prm.SL,vol_voxels,vol_aux,FALSE);
                  desired_volume=&vol_aux;
-                 if (prm.tell&TELL_SAVE_AT_EACH_STEP)
+                 if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
 		    vol_aux.write("PPPvolPOCS2.vol");
+                    cout << "Stats PPPvolPOCS2.vol: "; vol_aux().print_stats(); cout << endl;
+	         }
               }
 	      // Apply volume constraint
 	      if (prm.known_volume!=-1) {
@@ -342,8 +351,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	         FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels())
 	            if (vol_voxels(k,i,j)<threshold) vol_POCS(k,i,j)=1;
 	      }
-              if (prm.tell&TELL_SAVE_AT_EACH_STEP)
+              if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
 		 vol_POCS.write("PPPvolPOCS3.vol");
+		 cout << "Stats PPPvolPOCS3.vol: "; vol_POCS().print_stats(); cout << endl;
+	      }
 
               // Do not allow positivity outside interest region
               // and do not allow negativity inside the interest region
@@ -372,13 +383,17 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               else {
                  FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
                     if (vol_POCS(k,i,j)==1) (*desired_volume)(k,i,j)=0;
+//      	         vol_blobs(0)().init_zeros();
                  for (int i=0; i<prm.force_sym; i++) {
                     ART_voxels2blobs_single_step(vol_blobs, &vol_blobs,
-                       prm.blob, prm.D, 1/*prm.lambda(it)*/,
+                       prm.blob, prm.D, prm.lambda(it),
 	               (Volume *) &theo_POCS_vol, desired_volume,
 	               (Volume *) &corr_POCS_vol,
                        NULL,
                        POCS_mean_error, POCS_max_error, VARTK);
+                    if (prm.tell&TELL_SAVE_AT_EACH_STEP)
+		       cout << "    POCS Iteration " << i
+		            << " POCS Error=" <<  POCS_mean_error << endl;
                  }
               }
               POCS_i=1;
@@ -386,7 +401,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               POCS_N++;
 
               // Now some control logic
-              if (prm.numIMG-images<100 || images%100==0) {
+              if (prm.numIMG-images<100 || images%100==0 ||
+	          desired_volume!=NULL) {
                  POCS_freq=1;
                  POCS_state=POCS_measuring;
                  POCS_vec_i=0;
@@ -495,6 +511,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           }
 
           if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
+      	     cout << "Stats PPPdiff.xmp: "; diff_proj().print_stats(); cout << endl;
+      	     cout << "Stats PPPtheo.xmp: "; theo_proj().print_stats(); cout << endl;
+      	     cout << "Stats PPPread.xmp: "; read_proj().print_stats(); cout << endl;
+      	     cout << "Stats PPPcorr.xmp: "; corr_proj().print_stats(); cout << endl;
              diff_proj.write("PPPdiff.xmp"); 
              theo_proj.write("PPPtheo.xmp");
              read_proj.write("PPPread.xmp");
@@ -504,8 +524,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              vol_blobs.write("PPPblobs.blob");
              blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D,
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+      	     cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); cout << endl;
              vol_voxels.write("PPPvol.vol");
-	     VolumeXmipp Vcoefs;
+	     //VolumeXmipp Vcoefs;
 	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
 	     //Vcoefs.write((string)"PPPblob_coefs.vol");
              cout << "\nHit any key and enter\n"; char c; cin >> c;
