@@ -153,8 +153,8 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
    pose(0)=rot;
    pose(1)=tilt;
    pose(2)=psi;
-   pose(3)=shiftX;
-   pose(4)=shiftY;
+   pose(3)=-shiftX; // The convention of shifts is different
+   pose(4)=-shiftY; // for Slavica
    mask_Real.apply_mask(I(),I());
    double cost=CSTSplineAssignment(reDFTVolume, imDFTVolume,
       I(), mask_Fourier.get_cont_mask2D(), pose, max_no_iter);
@@ -162,8 +162,8 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
    rot    = pose(0); predicted_rot   [current_image]=rot;
    tilt   = pose(1); predicted_tilt  [current_image]=tilt;
    psi    = pose(2); predicted_psi   [current_image]=psi;
-   shiftX = pose(3); predicted_shiftX[current_image]=shiftX;
-   shiftY = pose(4); predicted_shiftY[current_image]=shiftY;
+   shiftX =-pose(3); predicted_shiftX[current_image]=shiftX;
+   shiftY =-pose(4); predicted_shiftY[current_image]=shiftY;
    current_image++;
    return cost;
 }
