@@ -31,6 +31,7 @@
 #include <XmippData/xmippMatrices2D.hh>
 #include "projection.hh"
 
+/**@name Shift refinement */
 //@{
 
 /**Correlates two projections and finds the maximun of the correlation matrix.
@@ -48,7 +49,7 @@ void calculate_and_find_correlation_max_proj( Projection const &proj1,
    \begin{enumerate} 
    \item Search for the maximun with pixel acuraccy inside the window
    \item Calculate the gravity centre of the corelation 
-         in a neighborhood such as  maximum/sqrt(2) > value
+         in a neighborhood such as maximum/sqrt(2) > value
    \item Look for the gravity centre in this neighborhood
    \end{enumerate}
    {\bf Note:} The neighborhood is circular   
