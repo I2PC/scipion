@@ -71,6 +71,8 @@ public:
    /** Perform ARMA averaging.
        Like Periodogram averaging.*/
    bool                    ARMA_averaging;
+   /** Perform Periodogram averaging */
+   bool                    Periodogram_averaging;
 public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters

@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.uam.es)
+ *              Carlos Oscar Sánchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -303,10 +304,10 @@ void InterpolateRegionsCTF(int X,int Y, int N_horizontal,int N_vertical,
 				fn_3.compose(fn_CTFfile.get_root().c_str(),Regions(2),"fft");
 				fn_4.compose(fn_CTFfile.get_root().c_str(),Regions(3),"fft");
 				// Interpolate
-				CTFfile.read(fn_1);	Result+=w1*CTFfile();
+				CTFfile.read(fn_1); Result+=w1*CTFfile();
 				CTFfile.read(fn_2); Result+=w2*CTFfile();
 				CTFfile.read(fn_3); Result+=w3*CTFfile();
-				CTFfile.read(fn_4);	Result+=w4*CTFfile();
+				CTFfile.read(fn_4); Result+=w4*CTFfile();
 				
 				break;
 	}
@@ -329,9 +330,6 @@ void FFT_idx2digfreq(matrix2D<T> &M, matrix1D<int> &idx, matrix1D<double> &freq)
 
 /* Read parameters ========================================================= */
 void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _THROW {
-   // Read ARMA parameters from input file
-   ARMA_prm.read(fn_prm);
-
    // Read parameters for adjust CTF from input file
    adjust_CTF_prm.read(fn_prm);
    
@@ -358,6 +356,12 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
    only_interpolate     =check_param(fh_param,"only_interpolate");
    compute_at_particle  =check_param(fh_param,"compute_at_particle");
    ARMA_averaging       =check_param(fh_param,"ARMA_averaging");
+   Periodogram_averaging=check_param(fh_param,"Periodogram_averaging");
+   fclose(fh_param);
+
+   // Read ARMA parameters from input file
+   if (!Periodogram_averaging)
+      ARMA_prm.read(fn_prm);
 }
 
 /* Write parameters ========================================================= */
@@ -381,6 +385,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm) _THROW {
    if (only_interpolate) fh_param << "only_interpolate=yes\n";
    if (compute_at_particle) fh_param << "compute_at_particle=yes\n";
    if (ARMA_averaging) fh_param << "ARMA_averaging=yes\n";
+   if (Periodogram_averaging) fh_param << "Periodogram_averaging=yes\n";
   
    fh_param << endl;
    fh_param.close();
@@ -448,15 +453,14 @@ void Prog_assign_CTF_prm::process() {
            if (particle_horizontal<=0||particle_vertical<=0)
 	      SF.ImgSize(particle_vertical,particle_horizontal);
 	} else {
-	   for (int i=0;i<Ydim;i+=N_vertical)
-	       for(int j=0;j<Xdim;j+=N_horizontal) N++;
+	   N=FLOOR(Ydim/N_vertical)*FLOOR(Xdim/N_horizontal);
 	}
 
 	#ifdef DEBUG
 	   cout << "N=" << N << endl;
 	#endif
 	div_Number=N;
-	int ARMA_Number=ARMA_averaging? 1:N;
+	int ARMA_Number=(ARMA_averaging || Periodogram_averaging)? 1:N;
         matrix1D<double> X_zeros(ARMA_Number), Y_zeros(ARMA_Number);
 
         // Open the output file for the CTF zeros
@@ -539,19 +543,24 @@ void Prog_assign_CTF_prm::process() {
       	              M_in(j+downsampling*l,i+downsampling*k);
            ImgDivision().statistics_adjust(0,1);
 
-      	   // Perform an spectral estimation of the division by means of an ARMA model
-	   cerr << "Performing ARMA spectral estimation\n";
-      	   matrix2D<double> ARParameters,MAParameters;
-      	   double dSigma=CausalARMA(ImgDivision(),ARMA_prm.N_AR,ARMA_prm.M_AR,
-      	       ARMA_prm.N_MA,ARMA_prm.M_MA,ARParameters,MAParameters);
+           FourierImageXmipp Filter_Out; Filter_Out().resize(ImgDivision());
+	   if (!Periodogram_averaging) {
+              // Perform an spectral estimation of the division by means of an ARMA model
+	      cerr << "Performing ARMA spectral estimation\n";
+      	      matrix2D<double> ARParameters,MAParameters;
+      	      double dSigma=CausalARMA(ImgDivision(),ARMA_prm.N_AR,ARMA_prm.M_AR,
+      		  ARMA_prm.N_MA,ARMA_prm.M_MA,ARParameters,MAParameters);
 
-    	   // Get the AR filter coeficients in the fourier plane
-      	   FourierImageXmipp Filter_Out; Filter_Out().resize(ImgDivision());
-    	   ARMAFilter(ImgDivision(),Filter_Out(),
-	      ARParameters,MAParameters,dSigma);
+    	      // Get the AR filter coeficients in the fourier plane
+    	      ARMAFilter(ImgDivision(),Filter_Out(),
+		 ARParameters,MAParameters,dSigma);
+	   } else {
+              // Compute the periodogram
+	      FourierTransform(ImgDivision(),Filter_Out());
+	   }
 
       	   // Store the determined filter
-	   if (!ARMA_averaging) {
+	   if (!ARMA_averaging && !Periodogram_averaging) {
     	      ARMAfile.compose(ARMAfile.get_root().c_str(),N,"fft");
       	      ARMA_prm.fn_filter=ARMAfile; 
       	      Filter_Out.write(ARMA_prm.fn_filter);
@@ -617,8 +626,7 @@ void Prog_assign_CTF_prm::process() {
 	      Filter_Out()*=Filter_Out();
 	      if (N==1) Filter_ARMA_avg()=Filter_Out();
 	      else      Filter_ARMA_avg()+=Filter_Out();
-	      Filter_ARMA_avg.write("PPPARMAavg.fft");
-	      if (N==1)
+	      if (N==1 && ARMA_averaging)
 	         system("xmipp_show -img PPPARMAavg.fft -poll &");
 	   }
 
@@ -631,19 +639,40 @@ void Prog_assign_CTF_prm::process() {
 	  If ARMA_averaging, adjust the model to the average
 	*****************************************************************************/
 	FileName fn_ARMA_avg, fn_ARMA_avg_model;
-	if (ARMA_averaging) {
+	if (ARMA_averaging || Periodogram_averaging) {
+	   FileName fn_root=image_fn.remove_directories();
+	   fn_root=fn_root.without_extension();
 	   Filter_ARMA_avg()/=div_Number;
-              FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Filter_ARMA_avg())
-	         MULTIDIM_ELEM(Filter_ARMA_avg(),i)=
-		    sqrt(abs(MULTIDIM_ELEM(Filter_ARMA_avg(),i)));
+	   if (Periodogram_averaging)
+	      Filter_ARMA_avg()*=MULTIDIM_SIZE(Filter_ARMA_avg());
+           FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Filter_ARMA_avg())
+	      MULTIDIM_ELEM(Filter_ARMA_avg(),i)=
+		 sqrt(abs(MULTIDIM_ELEM(Filter_ARMA_avg(),i)));
 
 	   // Write the Average file
-	   fn_ARMA_avg=(string)"ctf-"+image_fn.get_root()+".fft";
+	   fn_ARMA_avg=fn_root.add_prefix("ctf-")+".fft";
 	   Filter_ARMA_avg.write(fn_ARMA_avg);
+
+      	   // Write the average file amplitude
+	   ImageXmipp save;
+	   FFT_magnitude(Filter_ARMA_avg(),save());
+	   CenterFFT(save(),true);
+	   double min_positive=save().compute_max();
+	   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(save()) {
+	      double val=MULTIDIM_ELEM(save(),i);
+	      if (val!=0) {
+	         MULTIDIM_ELEM(save(),i)=10*log10(val*val);
+	         if (val<min_positive) min_positive=val;
+	      }
+	   }
+	   min_positive=10*log10(min_positive*min_positive)-1;
+	   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(save())
+	      if (MULTIDIM_ELEM(save(),i)==0) MULTIDIM_ELEM(save(),i)=min_positive;
+	   save.write(fn_root.add_prefix("ctf-")+".xmp");
 	
 	   // Estimate the CTF parameters
 	   adjust_CTF_prm.fn_ctf=fn_ARMA_avg;
-	   adjust_CTF_prm.fn_outroot=fn_ARMA_avg.get_root();
+	   adjust_CTF_prm.fn_outroot=fn_root;
 	   adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
 	      adjust_CTF_prm.adjust(0)=0;
       	   adjust_CTF_prm.fn_out_CTF_parameters=
@@ -668,13 +697,14 @@ void Prog_assign_CTF_prm::process() {
       	   pure_ctf.Generate_CTF(N_vertical, N_horizontal, Img_pure_CTF());
 
       	   // Save the image
-	   fn_ARMA_avg_model=(string)"ctfmodel-"+image_fn.get_root()+".fft";
+	   fn_ARMA_avg_model=fn_root.add_prefix("ctfmodel-")+".fft";
       	   Img_pure_CTF.write(fn_ARMA_avg_model);
 
            // Generate the CTF at the particle scale
-      	   Img_pure_CTF().self_scale_to_size(
-	      particle_vertical,particle_horizontal);
-	   fn_ARMA_avg_model=(string)"ctfmodelparticle-"+image_fn.get_root()+".fft";
+           Img_pure_CTF().init_zeros(particle_vertical,particle_horizontal);
+      	   pure_ctf.Generate_CTF(particle_vertical,particle_horizontal,
+	      Img_pure_CTF());
+	   fn_ARMA_avg_model=fn_root.add_prefix("ctfmodelparticle-")+".fft";
       	   Img_pure_CTF.write(fn_ARMA_avg_model);
 
            // Compute CTF zeros as a checking point
@@ -705,7 +735,7 @@ void Prog_assign_CTF_prm::process() {
               FileName file_with_ctf_for_current_particle;
               if (line[0]!='#') {
 		 if (SF.Is_ACTIVE()) {
-		    if (!ARMA_averaging) {
+		    if (!ARMA_averaging && !Periodogram_averaging) {
                        // Read coordinates of the particle
                        int X,Y;
                        sscanf(line.c_str(),"%d %d",&X,&Y);
@@ -736,8 +766,8 @@ void Prog_assign_CTF_prm::process() {
                     OutputFile_ctf << file_with_ctf_for_current_particle
 		                   << " 1\n";
 		 }
-		 SF.next();
               }
+              SF.next();
 	   }
         }
         OutputFile_ctf.close();
