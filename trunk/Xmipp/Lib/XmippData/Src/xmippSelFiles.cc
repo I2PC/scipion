@@ -81,6 +81,7 @@ istream& operator >> (istream& o, SelLine &SFL) _THROW {
    SFL.line_type=SelLine::NOT_ASSIGNED;
    SFL.text="";
    SFL.label=SelLine::DISCARDED;
+   if (line.length()==0) return o;
 
    // Check if comment or empty line
    if (line[0]=='#' || line[0]=='\0' || line[0]==';') {
