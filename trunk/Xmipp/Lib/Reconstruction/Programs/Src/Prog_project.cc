@@ -395,6 +395,8 @@ void generate_angles(int ExtProjs, const Angle_range &range,
       case 'p': idx=2; break;
    }
 
+   double unif_min=cos(DEG2RAD(range.angF));
+   double unif_max=cos(DEG2RAD(range.ang0));
    for (i=0; i<limit; i++) {
        // Select angle .....................................................
        if (range.randomness==ANGLE_RANGE_DETERMINISTIC) {
@@ -402,8 +404,14 @@ void generate_angles(int ExtProjs, const Angle_range &range,
              ang=range.ang0 +
                 (range.angF-range.ang0)/(double)(range.samples-1)*i;
           else ang=range.ang0;
-       }  else
-          ang=rnd_unif(range.ang0,range.angF);
+       }  else {
+	    switch(ang_name) {
+	       case 'r':
+	       case 'p': ang=rnd_unif(range.ang0,range.angF);            break;
+	       case 't': ang=RAD2DEG(acos(rnd_unif(unif_min,unif_max))); break;
+	    }
+       }
+          
 
        // Copy this angle to those projections belonging to this group .....
        // If there is any group
