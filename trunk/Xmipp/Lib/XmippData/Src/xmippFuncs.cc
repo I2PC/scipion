@@ -374,7 +374,7 @@ FileName FileName::remove_extension(const string &ext) const {
 
 // Remove all extensions....................................................
 FileName FileName::remove_all_extensions() const {
-   int first=find("/");
+   int first=rfind("/");
    first=find(".",first+1);
    if (first==-1) return *this;
    else return substr(0,first);
