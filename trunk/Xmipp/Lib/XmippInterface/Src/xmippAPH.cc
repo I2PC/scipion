@@ -30,6 +30,7 @@
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippImages.hh>
 #include <fstream>
+#include <iomanip>
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
    + __GNUC_PATCHLEVEL__)
@@ -152,8 +153,14 @@ void APHFile2D::read(const FileName &fn) _THROW {
 	       background(k,h) = a4;
 	       CTF(k,h)        = a5;
 	    }
-	 }
-      }
+//	 #define DEBUG
+	 #ifdef DEBUG
+	 cout << " " << h << " "<< k << " "<< a1 << " "<< a2 << " ";
+	 cout << a3 << " "<< a4 << " "<< a5 << " "<< a6<< endl;
+	 #endif
+//	 #undef DEBUG 
+ 	 }
+     }
       catch (Xmipp_error XE) {
          cout << XE;
          cout << "aph File: Line " << line_no << " is skipped due to an error\n";
@@ -171,23 +178,26 @@ void APHFile2D::read(const FileName &fn) _THROW {
 void APHFile2D::write(const FileName &fn) const _THROW {
    ofstream fh;
    fh.open(fn.c_str());
+   char aux_char[128];
    if (!fh)
       REPORT_ERROR(1,(string)"APHFile2D::write: Cannot open "+
          fn+" for output");
    
-   fh << label << " " << XX(astar) << " " << YY(astar) << " "
+   fh << setfill('0') << setw(4) << label << " " 
+      << XX(astar) << " " << YY(astar) << " "
       << XX(bstar) << " " << YY(bstar) << " "
       << Xdim << " " << Ydim << " " << sampling_rate << endl;
-      
    FOR_ALL_ELEMENTS_IN_MATRIX2D(spots_abs) {
       if (spots_abs(i,j)!=0) {
-	 fh << j << " " << i << " ";
-	 if (l_is_present) fh << spots_l(i,j) << " ";
-	 fh << spots_abs(i,j) << " "
-	    << spots_arg(i,j) << " "
-	    << IQ(i,j) << " "
-	    << background(i,j) << " "
-	    << CTF(i,j) << endl;
+         if (l_is_present)
+	    sprintf(aux_char," %4d%4d%8.4f%10.1f%7.1f%7d%3d%8.5f%10.1f%7.3f\n",
+	                      j,i,spots_l(i,j),spots_abs(i,j),spots_arg(i,j),
+		   	      label,IQ(i,j), background(i,j),CTF(i,j));
+	 else
+	    sprintf(aux_char,"%4d%4d%8.1f%8.1f%3d%8.1f%8.1f\n",
+	                      j,i,spots_abs(i,j),spots_arg(i,j),
+		   	      IQ(i,j), background(i,j),CTF(i,j));
+	 fh <<aux_char;
       }
    }
    fh.close();
@@ -211,9 +221,6 @@ void Euler_to_MRC(double rot, double tilt, double psi,
                   double * mrc_tilt, double * mrc_taxa)
 {
 
-//cout << "\nDEBUG rot: " << rot<<endl;
-//cout << "\nDEBUG tilt: " << tilt<<endl;
-//cout << "\nDEBUG psi: " << psi<<endl;
 
    EULER_CLIPPING_RAD(rot,tilt,psi);
    if(tilt==0) rot=0;//rot irrelevant if tilt = 0
@@ -251,6 +258,22 @@ void Euler_to_MRC(double rot, double tilt, double psi,
         
 }		  
 
+/*----transform Xmipp Euler angles into MRC angles *--------------*/
+void MRC_to_Euler(double  mrc_taxa, double  mrc_tilt,
+                  double *rot, double *tilt, double *psi)
+{
+   *psi =0;
+   if(mrc_tilt==0) {*tilt=0.; *rot=0.;}//taxa irrelevant if tilt = 0
+   else if(mrc_taxa<=PI/2.)   {*rot=PI/2-mrc_taxa; *tilt=mrc_tilt;}
+   else if(mrc_taxa<PI*3./2.) {*rot=PI*3./2-mrc_taxa; *tilt= - mrc_tilt;}
+   else
+     {cerr <<"\nHORROR: (MRC_to_Euler) taxa bigger than 180\n)"; exit(1);}
+   if(*tilt !=0 && ((mrc_taxa <PI/2+0.1   && mrc_taxa >PI/2-.1)|| 
+                   (mrc_taxa <PI+0.1 && mrc_taxa >PI-.1)||
+                   (mrc_taxa <0.1)))
+      cerr <<"\nWARNING, taxa close 0,90 or 180 degrees, conversion not reliable\n";
+}		  
+
 void APHFile2D::copy_reflection(int h, int k, int new_h, int new_k,
    double new_l, bool conjugate, int sign) {
    spots_abs(new_k,new_h)=spots_abs(k,h);
@@ -262,6 +285,7 @@ void APHFile2D::copy_reflection(int h, int k, int new_h, int new_k,
    background(new_k,new_h)=background(k,h);
    CTF(new_k,new_h)=CTF(k,h);
 }
+#ifdef DISCONTINUATED
 
 /* Generate reflections ---------------------------------------------------- */
 void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
@@ -292,7 +316,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
    //                               [ 0    0    0    0 R[7]]
    //
    // These R matrices are obtained for each crystallographic group
-   // They can be easily seen in origtiltd.for from the MRC source code
+   // They can be easily obtaine from  origtiltd.for (MRC source code)
    int mode=1;
    FOR_ALL_ELEMENTS_IN_MATRIX2D(visited)
       if (!visited(i,j)) {
@@ -303,28 +327,16 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 	    switch (symmetry_group) {
 	       case sym_P222_1:
 	          /* Possible Rs for this group
-		     R1:[-1 0 0 -1 -1 0   0 -1] -> (-h,-k,-l)=conj(h,k,l)
-		     R2:[ 1 0 0  1 -1 0   0 -1] -> ( h, k,-l)=conj(h,k,l)
-		     R3:[ 1 0 0 -1  1 0 180 -1] -> ( h,-k, l)=conj(h,k,l)*(-1)^h
-		     
-		     If an image must be reflected, there are two possible
-		     sets of coefficients that can belong to the same projection:
-		     P0:{(h,k,l),(-h,-k,-l),(-h, k, l)( h,-k,-l)}
-		     P1:{(h,k,l),(-h,-k,-l),( h,-k, l)(-h, k,-l)}
-		     
-		     P0:
-		        Obtain (-h,-k,-l) by conj(h,k,l) (R1)
-		        Obtain (-h, k, l) by conj(h,k,l)*(-1)^h (R1*R2*R3)
-			Obtain ( h,-k,-l) by conj(-h, k, l) (R1)
-		     P1:
-		        Obtain (-h,-k,-l) by conj(h,k,l) (R1)
-		        Obtain ( h,-k, l) by conj(h,k,l)*(-1)^h (R3)
-			Obtain (-h, k,-l) by conj(h,-k,l) (R1)
-		     
-		     Both ways of symmetrization would give a P2221 symmetry.
-		     
-		     The tilt angle of P0 is atan2(l,k)
-		     The tilt angle of P1 is atan2(l,h)
+                     h > 0
+		      I:[ 1 0 0  1  1 0    0  1] -> ( h, k, l)=(h,k,l)
+		     R2:[ 1 0 0  1 -1 0    0 -1] -> ( h, k,-l)=conj(h,k,l)
+		     R3:[ 1 0 0 -1  1 0  180 -1] -> ( h,-k, l)=conj(h,k,l)*(-1)^h
+		  R3.R2:[ 1 0 0 -1 -1 0 -180  1] -> ( h,-k,-l)=(h,k,l)*(-1)^h
+                     h < 0
+		     R1:[-1 0 0 -1 -1 0    0 -1] -> (-h,-k,-l)=conj(h,k,l)
+		  R1.R2:[-1 0 0 -1  1 0    0  1] -> (-h,-k, l)=(h,k,l)
+		  R1.R3:[-1 0 0  1 -1 0 -180  1] -> (-h, k,-l)=(h,k,l)*(-1)^h
+	       R1.R2.R3:[-1 0 0  1  1 0 -180 -1] -> (-h, k, l)=conj(h,k,l)*(-1)^h
 		     
 		     The special cases of this group are
 		     Real         Imag
@@ -335,26 +347,21 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 		     
 		     I will only use those restrictions valid for all l.
 		  */
-		  /* These shouldn't be the systematic absences, but
-		     they appear clearly when 
-		    if (k==0 && h%2==1) {
-		     spots_arg(k,h)=0;
-		     spots_abs(k,h)=0;
-		  } else */if ((h==0 && k%2==0) || (k==0)) {
+                  if ((h==0 && k%2==0) || (k==0)) {
 		     double c=cos(DEG2RAD(spots_arg(k,h)));
 		     if (c<0) spots_arg(k,h)=180;
 		     else     spots_arg(k,h)=0;
-		  } /*else if  (h==0 && k%2==1) {
+		  } else if  (h==0 && k%2==1) {
 		     if (spots_l(k,h)!=0) {
 			double s=sin(DEG2RAD(spots_arg(k,h)));
 			if (s<0) spots_arg(k,h)=-90;
 			else     spots_arg(k,h)= 90;
-		     } else {
+		     } else if(l_is_present) {
 		        spots_arg(k,h)=0;
                         spots_arg(k,h)=0;
-		     }
-		  }*/
-		  
+		     }		     
+		  }
+// (h,k,0)== real missing		  
 		  double l=spots_l(k,h);
 		  
 	          //copy_reflection( h, k,-h,-k,-l,true,0); visited(-k,-h)=1;
@@ -380,4 +387,5 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 	 }
       }
 }
+#endif
 

@@ -58,7 +58,7 @@ public:
    /** APH Filename */
    FileName fn_aph;
    /** Label */
-   string label;
+   int label;
    /** a* vector */
    matrix1D<double> astar;
    /** b* vector */
@@ -106,16 +106,19 @@ public:
     produce the new spot.*/
 void copy_reflection(int h, int k, int new_h, int new_k, double new_l,
     bool conjugate, int sign);
-
+#ifdef DISCONTINUATED
 /** Generate symmetrical spot reflections.
     See the symmetries.hh file in the Reconstruction library to know
     about valid symmetry groups.*/
    void generate_symmetrical_reflections(int symmetry_group);
+#endif
 };
-
 /**  Transform Xmipp Euler angles into MRC angles  */
    void Euler_to_MRC(double rot, double tilt, double psi,
                      double *mrc_tilt, double *mrc_taxa);
+/**  Transform Xmipp MRC angles into EULER angles, psi is set to 0  */
+   void MRC_to_Euler(double mrc_taxa, double mrc_tilt,
+                     double *rot, double *tilt, double *psi);
 
 //@}
 #endif
