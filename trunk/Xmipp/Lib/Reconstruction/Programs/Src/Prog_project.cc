@@ -491,6 +491,9 @@ int count_even_angles(const Projection_Parameters &prm) {
       for (double rot=prm.rot_range.ang0; rot<=prm.rot_range.angF; rot+=rot_step)
          N++;
    }
+   N++; // This shouldn't be necessary but some GCC optimization
+        // sometimes doesn't do well its work. For instance if we
+        // add cout << N after N++ in the loop, then it works perfectly
    return N;
 }
 
