@@ -413,7 +413,8 @@ template <class T>
 
    // Solve
    result=b;
-   gaussj(A.adapt_for_numerical_recipes2(),A.ydim,
+   mT Aux=A;
+   gaussj(Aux.adapt_for_numerical_recipes2(),Aux.ydim,
           result.adapt_for_numerical_recipes2(),b.xdim);
 }
 
