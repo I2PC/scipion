@@ -336,14 +336,21 @@ bool XmippCTF::physical_meaning() {
    } else retval=TRUE;
    bool retval2;
    if (enable_CTFnoise) {
+      double min_sigma=MIN(sigmaU,sigmaV);
+      double min_c=MIN(cU,cV);
       retval2=
 	  gaussian_K>=0     &&
 	  base_line>=0      &&
 	  sigmaU>=0         && sigmaV>=0     	   &&
+	  sigmaU<=50e3      && sigmaV<=50e3        &&
 	  cU>=0             && cV>=0         	   &&
 	  sqU>=0            && sqV>=0        	   &&
 	  sqrt_K>=0         &&
-	  gaussian_angle>=0 && gaussian_angle<=90;
+	  gaussian_angle>=0 && gaussian_angle<=90
+      ;
+      if (min_sigma>0)   retval2=retval2 && ABS(sigmaU-sigmaV)/min_sigma<3;
+      if (min_c>0)       retval2=retval2 && ABS(cU-cV)/min_c<3;
+      if (gaussian_K!=0) retval2=retval2 && (cU>=0.01) && (cV>=0.01);
       #ifdef DEBUG
          cout << *this << endl;
          cout << "gaussian_K>=0     &&  		  " << (gaussian_K>=0	  )			 << endl
