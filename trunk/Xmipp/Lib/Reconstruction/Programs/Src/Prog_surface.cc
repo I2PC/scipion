@@ -55,15 +55,14 @@ void Prog_Surface_Parameters::usage() const {
         << "  [-bottom <bottom surface file>] : Output Bottom surface\n"
         << "  [-ztop <ztop>]                  : Maximum height for top ray\n"
         << "  [-zbottom <zbottom>]            : Maximum height for bottom ray\n"
-        << "  [-zdim <zdim>]                  : Output Z dimension, only for\n"
-        << "                                  : non phantoms\n";
+        << "  [-zdim <zdim>]                  : Output Z dimension\n";
 }
 
 /* Produce side information ================================================ */
 void Prog_Surface_Parameters::produce_Side_Info() {
    if (fn_phantom!="") {
       phantom.read(fn_phantom);
-      zdim=phantom.zdim;
+      if (zdim==0)         zdim   =phantom.zdim;
       if (!enable_ztop)    ztop   =phantom.zdim;
       if (!enable_zbottom) zbottom=phantom.zdim;
    }
@@ -111,6 +110,7 @@ void ROUT_surface(Prog_Surface_Parameters &prm) {
    if (prm.fn_phantom!="") {
       // Create top surface
       if (prm.fn_top!="") {
+         top_surface.adapt_to_size(prm.zdim,prm.zdim);
          prm.phantom.surface(prm.ztop, prm.probe_radius,
 	    NEG_POS, (Image *) &top_surface);
          top_surface.write(prm.fn_top);
@@ -118,6 +118,7 @@ void ROUT_surface(Prog_Surface_Parameters &prm) {
 
       // Create bottom surface
       if (prm.fn_bottom!="") {
+         bottom_surface.adapt_to_size(prm.zdim,prm.zdim);
          prm.phantom.surface(prm.zbottom, prm.probe_radius,
 	    POS_NEG, (Image *) &bottom_surface);
          bottom_surface.write(prm.fn_bottom);
@@ -137,10 +138,11 @@ void ROUT_surface(Prog_Surface_Parameters &prm) {
    // Create volume mask
    if (prm.fn_mask!="") {
       VolumeXmipp mask;
+      int zdim_to_use;
       if (XSIZE(bottom_surface())!=0 && XSIZE(top_surface())!=0)
          create_surface_mask((Image *) &top_surface, (Image *) &bottom_surface,
             prm.zdim, (Volume *) &mask);
-      else if (XSIZE(bottom_surface())!=0)
+      else if (XSIZE(top_surface())!=0)
          create_surface_mask((Image *) &top_surface, NULL,
             prm.zdim, (Volume *) &mask);
       else
