@@ -95,6 +95,10 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
                "Spot2RealSpace2D_Parameters::read: Cannot read Cell Size");}
       delete is;
       Scale_Factor=AtoF(get_param(fh_param,"Scale Factor",0,"-1"));
+      generate_symmetrical_reflections=
+         check_param(fh_param,"Generate symmetrical reflections");
+      str_symmetry_group=
+         get_param(fh_param,"Symmetry group",0,"P1");
 //      align_a_axis_with_x=check_param(fh_param,"Align A axis");
    } catch (Xmipp_error XE) {
       cout << XE << endl;
@@ -104,10 +108,13 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
 }
 
 /* Produce Side info ------------------------------------------------------- */
-void Spot2RealSpace2D_Parameters::produce_SideInfo() {
+void Spot2RealSpace2D_Parameters::produce_SideInfo() _THROW {
    // Read APH files
    aph_file.read(fnaph_in);
    if (fnaph_ref!="") aph_ref.read(fnaph_ref);
+    ImageXmipp save;
+    save()=aph_file.spots_abs; save.write("Spots_ABS0.xmp");
+    save()=aph_file.spots_arg; save.write("Spots_ARG0.xmp");
 
    // Compute Reference lattice vectors in both spaces
    aph_ref=(fnaph_ref!="")?aph_ref:aph_file;   
@@ -116,7 +123,6 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo() {
    Vref.setCol(0,aph_ref.astar);
    Vref.setCol(1,aph_ref.bstar);
    vol_latt_vec=aph_ref.Xdim*(Vref.transpose()).inv();
-//cout << "vol_latt_vec" <<  vol_latt_vec;
    
    //FACTOR
    {
@@ -153,17 +159,12 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo() {
    Vfile.setCol(0,aph_file.astar);
    Vfile.setCol(1,aph_file.bstar);
 
-//cout << "Vfile" <<  Vfile;
-//cout << "Vref" <<  Vref;
-
    aph_file.astar *= SamplingScale;
    aph_file.bstar *= SamplingScale;
    Vfile.setCol(0,aph_file.astar);
    Vfile.setCol(1,aph_file.bstar);
-//cout << "Vfile" <<  Vfile;
    proj_latt_vec=aph_ref.Xdim*(Vfile.transpose()).inv();
    Proj_Matrix=proj_latt_vec * vol_latt_vec.inv();
-cout << "Euler" << Proj_Matrix;
    //-----------------------------------------------
    //Tilt
    //-----------------------------------------------
@@ -326,6 +327,32 @@ double mrc_taxa, mrc_tilt;
           
     //I like tilt between -90 and 90
     if(tilt > M_PI) tilt -= 2*M_PI;   
+
+    // Translate symmetry group
+    if      (str_symmetry_group=="P1")       symmetry_group = sym_P1;
+    else if (str_symmetry_group=="P2")       symmetry_group = sym_P2;
+    else if (str_symmetry_group=="P21")      symmetry_group = sym_P2_1;
+    else if (str_symmetry_group=="C2")       symmetry_group = sym_C2;
+    else if (str_symmetry_group=="P222")     symmetry_group = sym_P222;
+    else if (str_symmetry_group=="P2221")    symmetry_group = sym_P222_1;
+    else if (str_symmetry_group=="P22121")   symmetry_group = sym_P22_12_1;
+    else if (str_symmetry_group=="P4")       symmetry_group = sym_P4;
+    else if (str_symmetry_group=="P422")     symmetry_group = sym_P422;
+    else if (str_symmetry_group=="P4212")    symmetry_group = sym_P42_12;
+    else if (str_symmetry_group=="P3")       symmetry_group = sym_P3;
+    else if (str_symmetry_group=="P312")     symmetry_group = sym_P312;
+    else if (str_symmetry_group=="P6")       symmetry_group = sym_P6;
+    else if (str_symmetry_group=="P622")     symmetry_group = sym_P622;
+    else
+       REPORT_ERROR(1,(string)"Spot2RealSpace2D_Parameters::produce_SideInfo:"
+          " Unknown symmetry group:"+str_symmetry_group);
+    
+    // Generate symmetrical reflections
+    if (generate_symmetrical_reflections)
+       aph_file.generate_symmetrical_reflections(symmetry_group);
+   
+    save()=aph_file.spots_abs; save.write("Spots_ABS1.xmp");
+    save()=aph_file.spots_arg; save.write("Spots_ARG1.xmp");
 }
 
 /* Show parameters --------------------------------------------------------- */
@@ -345,7 +372,7 @@ ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm) {
                                 << YY(prm.Phase_Shift)  << endl
      << "Keep Contrast      : " << prm.KeepContrast << endl
      << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << endl
-//     << "Crystaledge        : " << prm.aph_file.Xdim << endl
+     << "Crystaledge        : " << prm.aph_file.Xdim << endl
      << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << endl
      << "Scale_Factor       : " << prm.Scale_Factor << endl
      << "Sampling Scale*    : " << prm.SamplingScale << endl;
@@ -405,7 +432,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    STARTINGY(FT)=-ksize;
    STARTINGX(FT)=-hsize;
    FOR_ALL_ELEMENTS_IN_MATRIX2D(prm.aph_file.spots_abs) {
-      if (MAT_ELEM(prm.aph_file.IQ,i,j)<=prm.maxIQ &&
+      if (ABS(MAT_ELEM(prm.aph_file.IQ,i,j))<=prm.maxIQ &&
           MAT_ELEM(prm.aph_file.IQ,i,j)!=0) {
 	 MAT_ELEM(FT, i, j) = polar(MAT_ELEM(prm.aph_file.spots_abs,i,j),
                                     MAT_ELEM(prm.aph_file.spots_arg,i,j) );
