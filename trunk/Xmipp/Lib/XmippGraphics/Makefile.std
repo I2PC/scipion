@@ -8,7 +8,8 @@ SRC_OBJS = Src/showTools.o   showTools.moc \
            Src/showTable.o   showTable.moc \
 	   Src/showSel.o     showSel.moc \
 	   Src/showVol.o     showVol.moc \
-	   Src/showSpectra.o showSpectra.moc
+	   Src/showSpectra.o showSpectra.moc \
+	   Src/showSOM.o     showSOM.moc
 
 # Main Action = Built library ----------------------------------------------
 .SUFFIXES: .moc .cc .hh .c

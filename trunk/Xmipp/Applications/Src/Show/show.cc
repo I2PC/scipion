@@ -29,20 +29,20 @@
 #include <XmippGraphics/showSel.hh>
 #include <XmippGraphics/showVol.hh>
 #include <XmippGraphics/showSpectra.hh>
+#include <XmippGraphics/showSOM.hh>
 #include <qapplication.h>
 
 void Usage();
 
 int main( int argc, char **argv ) {
-    int numCols;
-    int numRows;
-    int  mode;
+    int numCols, numRows, mode, ifirst;
     bool poll;
     try {
-       if (check_param(argc,argv,"-img"))        mode=0;
-       else if (check_param(argc,argv,"-sel"))   mode=1;
-       else if (check_param(argc,argv,"-vol"))   mode=2;
-       else if (check_param(argc,argv,"-spect")) mode=3;
+       if (check_param(argc,argv,"-img"))        {mode=0; ifirst=position_param(argc,argv,"-img");}
+       else if (check_param(argc,argv,"-sel"))   {mode=1; ifirst=position_param(argc,argv,"-sel");}
+       else if (check_param(argc,argv,"-vol"))   {mode=2; ifirst=position_param(argc,argv,"-vol");}
+       else if (check_param(argc,argv,"-spect")) {mode=3; ifirst=position_param(argc,argv,"-spect");}
+       else if (check_param(argc,argv,"-som"))   {mode=4; ifirst=position_param(argc,argv,"-som");}
        else
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
        numCols = AtoI(get_param(argc, argv, "-w", "10"));
@@ -53,14 +53,16 @@ int main( int argc, char **argv ) {
    QApplication::setFont( QFont("Helvetica", 12) );
    QApplication a(argc,argv);
 
-   for ( int i=1; i<argc; i++ ) {
+   for ( int i=ifirst+1; i<argc; i++ ) {
        if (!exists(argv[i])) {
-          // Check that the last letter is not x or y
-	  FileName fn=argv[i];
-	  if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
-	     fn=fn.substr(0,fn.length()-1);
-	     if (!exists(fn.c_str())) continue;
-	  } else continue;
+          if (mode==2) {
+             // Check that the last letter is not x or y
+	     FileName fn=argv[i];
+	     if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
+		fn=fn.substr(0,fn.length()-1);
+		if (!exists(fn.c_str())) continue;
+	     } else continue;
+	 } else if (mode==4) {};
        } 
        if (mode==0) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
@@ -79,6 +81,10 @@ int main( int argc, char **argv ) {
           ShowSpectra *showspectra=new ShowSpectra;
 	  showspectra->initWithFile(numRows, numCols, argv[i]);
 	  showspectra->show();
+       } else if (mode==4) {
+          ShowSOM *showsom=new ShowSOM;
+	  showsom->initWithFile(argv[i]);
+	  showsom->show();
        }
    }
 
@@ -92,6 +98,8 @@ void Usage() {
          << "    -sel <selfiles> |  : Input selfiles\n"
          << "    -vol <XmippVolumes>: Add x or y to the filename\n"
 	 << "                         to see slices in that direction\n"
+         << "    -spect <datafile>  : Spectra .dat file\n"
+	 << "    -som <SOM rootname>: SOM images\n"
          << "   [-w]                : width (default: 10)\n"
          << "   [-h]                : height (default: 10)\n"
          << "   [-poll]             : check file change, only for volumes\n"
