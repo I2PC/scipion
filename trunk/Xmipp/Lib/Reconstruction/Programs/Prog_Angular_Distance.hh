@@ -42,6 +42,8 @@ public:
    FileName fn_sym;
    /** Filename of output file with merging */
    FileName fn_ang_out;
+   /** Check mirrors for Spider APMQ */
+   bool check_mirrors;
 public:
    // DocFile 1
    DocFile DF1;

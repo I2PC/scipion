@@ -33,14 +33,16 @@ void Prog_angular_distance_prm::read(int argc, char **argv) _THROW {
    fn_ang2=get_param(argc,argv,"-ang2");
    fn_ang_out=get_param(argc,argv,"-o","");
    fn_sym=get_param(argc,argv,"-sym","");
+   check_mirrors=check_param(argc,argv,"-check_mirrors");
 }
 
 // Show ====================================================================
 void Prog_angular_distance_prm::show() {
-   cout << "Angular docfile 1: " << fn_ang1    << endl
-        << "Angular docfile 2: " << fn_ang2    << endl
-	<< "Angular output   : " << fn_ang_out << endl
-	<< "Symmetry file    : " << fn_sym     << endl
+   cout << "Angular docfile 1: " << fn_ang1       << endl
+        << "Angular docfile 2: " << fn_ang2       << endl
+	<< "Angular output   : " << fn_ang_out    << endl
+	<< "Symmetry file    : " << fn_sym        << endl
+        << "Check mirrors    : " << check_mirrors << endl
    ;
 }
 
@@ -51,6 +53,8 @@ void Prog_angular_distance_prm::usage() {
 	<< "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
 	<< "                               not generated\n"
 	<< "  [-sym <symmetry file>]     : Symmetry file if any\n"
+        << "  [-check_mirrors]           : Check if mirrored axes give better\n"
+        << "                               fit (Spider, APMQ)\n"
    ;
 }
 
@@ -66,9 +70,18 @@ void Prog_angular_distance_prm::produce_side_info() _THROW {
 }
 
 // 2nd angle set -----------------------------------------------------------
+#define SHOW_ANGLES(rot,tilt,psi) \
+    cout << #rot  << "=" << rot << " " \
+         << #tilt << "=" << tilt << " " \
+	 << #psi  << "=" << psi << " ";
+//#define DEBUG
 double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
    double psi1, double &rot2, double &tilt2, double &psi2,
    bool projdir_mode) {
+   #ifdef DEBUG
+      cout << "   "; SHOW_ANGLES(rot2,tilt2,psi2);
+   #endif
+
    // Distance based on angular values
    double ang_dist=ABS(rot1-rot2)+ABS(tilt1-tilt2)+ABS(psi1-psi2);
    double rot2p, tilt2p, psi2p;
@@ -95,22 +108,32 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
       if (projdir_mode && i!=2) continue;
       E1.getRow(i,v1);
       E2.getRow(i,v2);
-      axes_dist+=RAD2DEG(acos(CLIP(dot_product(v1,v2),0,1)));
+      double dist=RAD2DEG(acos(CLIP(dot_product(v1,v2),0,1)));
+      axes_dist+=dist;
       N++;
+      #ifdef DEBUG
+         cout << "d(" << i << ")=" << dist << " ";
+      #endif
    }
    axes_dist/=N;
+   
+   #ifdef DEBUG
+      cout << "-->" << axes_dist << endl;
+   #endif
 
    return axes_dist;
 }
+#undef DEBUG
 
 // Check symmetries --------------------------------------------------------
-#define SHOW_ANGLES(rot,tilt,psi) \
-    cout << #rot  << "=" << rot << " " \
-         << #tilt << "=" << tilt << " " \
-	 << #psi  << "=" << psi << endl;
+//#define DEBUG
 double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
    double psi1, double &rot2, double &tilt2, double &psi2,
    bool projdir_mode) {
+   #ifdef DEBUG
+      SHOW_ANGLES(rot1,tilt1,psi1); cout << endl;
+   #endif
+
    int imax=SL.SymsNo()+1;
    matrix2D<double>  L(4,4), R(4,4);    // A matrix from the list
    double best_ang_dist=3600;
@@ -134,12 +157,28 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
          best_rot2=rot2p; best_tilt2=tilt2p; best_psi2=psi2p;
 	 best_ang_dist=ang_dist;
       }
+      
+      if (check_mirrors) {
+         Euler_up_down(rot2p,tilt2p,psi2p,rot2p,tilt2p,psi2p);
+         double ang_dist_mirror=second_angle_set(rot1,tilt1,psi1,rot2p,tilt2p,psi2p,
+            projdir_mode);
+
+         if (ang_dist_mirror<best_ang_dist) {
+            best_rot2=rot2p; best_tilt2=tilt2p; best_psi2=psi2p;
+	    best_ang_dist=ang_dist_mirror;
+         }
+
+      }
    }
+   #ifdef DEBUG
+      cout << "   Best=" << best_ang_dist << endl;
+   #endif
    rot2=best_rot2;
    tilt2=best_tilt2;
    psi2=best_psi2;
    return best_ang_dist;
 }
+#define DEBUG
 
 // Compute distance --------------------------------------------------------
 double Prog_angular_distance_prm::compute_distance() {
