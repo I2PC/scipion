@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <Reconstruction/Programs/Prog_normalize.hh>
+#include <XmippData/Programs/Prog_normalize.hh>
 
 void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Normalize_parameters * eprm=(Normalize_parameters *) prm;
