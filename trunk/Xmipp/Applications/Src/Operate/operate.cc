@@ -47,6 +47,7 @@ void extract_column(int operand_type1,int operand_type2,
 			FileName &fn_1,FileName &fn_2,FileName &fn_out);
 void extract_slice(int operand_type1,int operand_type2,
 			FileName &fn_1,FileName &fn_2,FileName &fn_out);
+void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out);
 			
 
 // Operations suported
@@ -59,6 +60,7 @@ void extract_slice(int operand_type1,int operand_type2,
 #define	   SLICE		  7
 #define	   COLUMN		  8
 #define	   ROW			9
+#define    RADIAL_AVG    10
 
 // types supported
 #define    VOLUME    1
@@ -98,6 +100,7 @@ int main(int argc, char **argv)
 	else if(check_for_operation(argc,argv,"slice",fn_2,operand_type2)) operation=SLICE; 
 	else if(check_for_operation(argc,argv,"column",fn_2,operand_type2)) operation=COLUMN; 
 	else if(check_for_operation(argc,argv,"row",fn_2,operand_type2)) operation=ROW; 
+	else if(check_for_operation(argc,argv,"radial_avg",fn_2,operand_type2)) operation=RADIAL_AVG; 
 	else 
 		REPORT_ERROR(1,"No valid operation specified");
 			  
@@ -172,7 +175,9 @@ void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,Fi
 		case    ROW:
                                   extract_row(operand_type1,operand_type2,fn_1,fn_2,fn_out);
 								  break;
-								  
+	        case    RADIAL_AVG:
+		                  radial_avg(operand_type2,fn_2,fn_out);
+				                                  break;
 	}
 }
 
@@ -547,6 +552,29 @@ void extract_row(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn
    }
 }
 
+void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
+{
+   if(operand_type1==IMAGE)
+   {
+	   ImageXmipp input;
+	   input.read(fn_1);
+	   matrix1D<int> center(2);
+	   center.init_zeros();
+	   matrix1D<double> radial_mean;
+	   radial_average(input(),center,radial_mean);
+	   radial_mean.write(fn_out);
+   }
+   else if(operand_type1==VOLUME)
+   {
+	   VolumeXmipp input;
+	   input.read(fn_1);
+	   matrix1D<int> center(2);
+	   center.init_zeros();
+	   matrix1D<double> radial_mean;
+	   radial_average(input(),center,radial_mean);
+	   radial_mean.write(fn_out);
+   }   
+}
 
 /**************************************************************************
 
@@ -558,13 +586,15 @@ void extract_row(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn
   
 /**************************************************************************/
 void Usage() {
-     cout << " A simple Xmipp images calculator. Binary and unary operations\n"
+     cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
 	   << "Examples of binary operations : \n"	
 	   << "operate # image1.xmp + image2.xmp = image3.xmp\n"
 	   << "operate # image1.xmp + 3 = image3.xmp\n"
-	   << "Example of a binary operation : \n"	
+	   << "operate # volume1.vol row 3 = row3.xmp\n"
+	   << "Example of a unary operation : \n"	
 	   << "operate log10 image1.xmp = image3.xmp\n"
 	   << "Currently supported operations : \n"
-	   << " + - x / log10 sqrt slice column row \n";
+	   << "Binary: + - x / slice column row\n"
+	   << "Unary: log10 sqrt radial_avg\n"
         ;		  
 } 
