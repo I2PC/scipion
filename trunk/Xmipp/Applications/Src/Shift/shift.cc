@@ -54,13 +54,13 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Shift_parameters *eprm=(Shift_parameters *) prm;
-   img().translate(eprm->shift,eprm->wrap);
+   img().self_translate(eprm->shift,eprm->wrap);
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Shift_parameters *eprm=(Shift_parameters *) prm;
-   vol().translate(eprm->shift,eprm->wrap);
+   vol().self_translate(eprm->shift,eprm->wrap);
    return TRUE;
 }
 
