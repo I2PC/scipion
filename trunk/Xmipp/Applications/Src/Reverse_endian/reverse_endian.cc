@@ -28,7 +28,6 @@
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippSelFiles.hh>
-#include <XmippInterface/xmippVTK.hh>
 
 /* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
