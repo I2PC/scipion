@@ -78,8 +78,10 @@ public:
   float psi_step;
   /** Number of reference images */
   int n_ref;
-  /** Sum of squared amplitudes of the references (all scaled to first one) */
-  double A2;
+  /** Sum of squared amplitudes of the references */
+  vector<double> A2;
+  /** Mean sum of squared amplitudes of the references */
+  double A2mean;
   /** Verbose level:
       1: gives progress bar (=default)
       0: gives no output to screen at all */
@@ -124,6 +126,9 @@ public:
 
   /// Usage
   void usage();
+
+  /// Extended Usage
+  void extended_usage();
 
   /// Read input images all in memory
   void produce_Side_info() _THROW;

@@ -76,6 +76,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   }
     
   // Read command line
+  if (check_param(argc,argv,"-show_all_options")) { usage(); extended_usage();}
   n_ref=AtoI(get_param(argc,argv,"-nref","0"));
   fn_ref=get_param(argc,argv,"-ref","");
   SF.read(get_param(argc,argv,"-i"));
@@ -95,14 +96,13 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   fix_sigma_offset=check_param(argc,argv,"-fix_sigma_offset");
   fix_sigma_noise=check_param(argc,argv,"-fix_sigma_noise");
   verb=AtoI(get_param(argc,argv,"-verb","1"));
-  // Maximum cross-correlation stuff
-  LSQ_rather_than_ML=check_param(argc,argv,"-LSQ");
-  max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
-  // Hidden arguments
-  istart=AtoI(get_param(argc,argv,"-istart","1"));
-  do_esthetics=check_param(argc,argv,"-esthetics");
   fast_mode=check_param(argc,argv,"-fast");
   C_fast=AtoF(get_param(argc,argv,"-C","1e-12"));
+  LSQ_rather_than_ML=check_param(argc,argv,"-LSQ");
+  max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
+  istart=AtoI(get_param(argc,argv,"-istart","1"));
+  // Hidden arguments
+  do_esthetics=check_param(argc,argv,"-esthetics");
   Paccept_fast=AtoF(get_param(argc,argv,"-Paccept","0.0"));
 
 }
@@ -173,18 +173,29 @@ void Prog_MLalign2D_prm::usage() {
        << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n"
        << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n"
        << " [ -mirror ]                   : Also check mirror image of each reference \n"
-       << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n"
        << " [ -output_docfile ]           : Write out docfile with most likely angles & translations \n"
        << " [ -output_selfiles ]          : Write out selfiles with most likely reference assignments \n"
-    //       << " [ -eps <float=5e-5> ]         : Stopping criterium \n"
-    //       << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n"
-    //       << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n"
-    //       << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n"
-    //       << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n"
-    //       << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n"
-    //       << " [ -max_shift <float=dim/2>]   : For LSQ only: maximum allowed shift [pix] \n"
-       << " ***** See manual pages for less common parameters ***** \n"
+       << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n"
+       << " [ -show_all_options ]         : Show all possible input parameters \n";
+}
+
+// Extended usage ===================================================================
+void Prog_MLalign2D_prm::extended_usage() {
+  cerr << "Additional options: "<<endl;
+  cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n"
+       << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n"
+       << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n"
+       << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n"
+       << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n"
+       << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n"
+       << " [ -istart <int> ]             : number of initial iteration \n"
+       << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n"
+       << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n"
+       << " [ -fix_fractions]             : Do not re-estimate the model fractions \n"
+       << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n"
+       << " [ -max_shift <float=dim/2>]   : For LSQ only: maximum allowed shift [pix] \n"
        << endl;
+  exit(1);
 }
 
 // Read all input selfiles in memory 
@@ -362,7 +373,7 @@ void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
 void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW {
 
-  double psi,dum,avg,sum;
+  double AA,stdAA,sumAA=0.,psi,dum,avg;
   matrix2D<double> Maux;
   matrix2D<complex<double> > Faux;
   vector<matrix2D<complex <double> > > dumF;
@@ -381,6 +392,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 
   Fref.clear();
   Mref.clear();
+  A2.clear();
 
   FOR_ALL_MODELS() {
     Mref.push_back(dumM);
@@ -391,14 +403,18 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       psi=(double)(ipsi*90./nr_psi)+1.75; 
       Maux=Iref[refno]().rotate(psi,DONT_WRAP);
       apply_binary_mask(mask,Maux,Maux,avg);
-      // Normalize the magnitude of the rotated references to 1st rot of 1st ref
+      AA=Maux.sum2();      
+      // Normalize the magnitude of the rotated references to 1st rot of that ref
       // This is necessary because interpolation due to rotation can lead to lower overall Fref 
       // This would result in lower probabilities for those rotations
-      if (ipsi==0 && refno==0) A2=Maux.sum2();
-      sum=Maux.sum2();
+      if (ipsi==0) {
+	stdAA=AA;
+	sumAA+=AA;
+	A2.push_back(AA);
+      }
       if (also_real_space) {
 	Mref[refno].push_back(Maux);
-	if (sum>0) Mref[refno][ipsi]*=sqrt(A2/sum);
+	if (AA>0) Mref[refno][ipsi]*=sqrt(stdAA/AA);
       }
       FourierTransform(Maux,Faux);
       Faux*=dim*dim;
@@ -406,9 +422,10 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 	dMij(Faux,i,j)=conj(dMij(Faux,i,j));
       }
       Fref[refno].push_back(Faux);
-      if (sum>0) Fref[refno][ipsi]*=sqrt(A2/sum);
+      if (AA>0) Fref[refno][ipsi]*=sqrt(stdAA/AA);
     }
   }
+  A2mean=sumAA/n_ref;
 
 }
 
@@ -557,7 +574,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   vector <vector< matrix2D<double> > > Mweight;
   vector<double> refw(n_ref), refw_mirror(n_ref);
   double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,max,maxc=-99.e99;
-  double wsum_corr=0., sum_refw=0., maxweight=-99.e99;
+  double sum,wsum_corr=0., sum_refw=0., wsum_A2=0., maxweight=-99.e99;
   int irot,irefmir,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
   if (fast_mode) imax=n_ref*nr_flip/4;
@@ -633,14 +650,17 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 	if (dMij(Msignificant,refno,irot)) {
 	  if (iflip<4) fracpdf=alpha_k[refno]*(1.-mirror_fraction[refno]);
 	  else fracpdf=alpha_k[refno]*mirror_fraction[refno];
+	  sum=0.;
 	  FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot]) {
 	    aux=MAT_ELEM(Mweight[refno][irot],i,j)-maxc;
-	    aux=exp(aux/sigma_noise2)*fracpdf*MAT_ELEM(P_phi,i,j);
+	    aux=exp(aux/sigma_noise2)*fracpdf*MAT_ELEM(P_phi,i,j)*exp((A2mean-A2[refno])/2*sigma_noise2);
 	    wsum_corr+=aux*MAT_ELEM(Mweight[refno][irot],i,j);
 	    MAT_ELEM(Mweight[refno][irot],i,j)=aux;
+	    sum+=aux;
 	  }
-	  if (iflip<4) refw[refno]+=Mweight[refno][irot].sum();
-	  else refw_mirror[refno]+=Mweight[refno][irot].sum();
+	  wsum_A2+=sum*A2[refno];
+	  if (iflip<4) refw[refno]+=sum;
+	  else refw_mirror[refno]+=sum;
 	  Mweight[refno][irot].max_index(ymax,xmax);
 	  max=MAT_ELEM(Mweight[refno][irot],ymax,xmax);
 	  if (max>maxweight) {
@@ -665,7 +685,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 
   // Normalize all weighted sums by sum_refw such that sum over all weights is one!
   // And accumulate the FT of the weighted, shifted images.
-  wsum_sigma_noise+=A2+Xi2-2*wsum_corr/sum_refw;
+  wsum_sigma_noise+=(wsum_A2/sum_refw)+Xi2-(2*wsum_corr/sum_refw);
   FOR_ALL_MODELS() {
     sumw[refno]+=(refw[refno]+refw_mirror[refno])/sum_refw;
     sumw_mirror[refno]+=refw_mirror[refno]/sum_refw;
@@ -711,7 +731,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   // 2nd term: for subtracting maxc
   // 3rd term: for only considering Xi*A instead of (A-Xi)^2
   // 4th term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-  LL+= log(sum_refw) + maxc/sigma_noise2 - (A2+Xi2)/(2*sigma_noise2) - dim*dim*log(2.50663*sigma_noise);
+  LL+= log(sum_refw) + maxc/sigma_noise2 - (A2mean+Xi2)/(2*sigma_noise2) - dim*dim*log(2.50663*sigma_noise);
 
 }
 
