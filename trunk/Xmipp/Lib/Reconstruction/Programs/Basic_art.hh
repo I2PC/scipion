@@ -59,7 +59,7 @@ const int BLOB_SUBSAMPLING=10;
 class Basic_ART_Parameters {
 public:
    // Type of the parallel processing
-   typedef enum {ART, AVSP, SART, BiCAV, SIRT} t_parallel_mode;
+   typedef enum {ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT, pfSIRT, SIRT } t_parallel_mode;
 
    /* User parameters ...................................................... */
    /**@name User parameters */
@@ -73,10 +73,10 @@ public:
    /// Relaxation parameter
    matrix1D<double> lambda_list;
    
-   /** Valid methods are ART, AVSP, SART, BiCAV, SIRT.
-       This variable establish the way that particles are
+   /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
+       for parallel computation. This variable establish the way that particles are
        divided into blocks for parallel processing. If sequential
-       processing is wanted, set it to ART. This is the default.
+       processing is wanted, set it to ART or SIRT. This is the default.
        
        \\Ex: parallel_mode=Basic_ART_Parameters::ART*/
    t_parallel_mode parallel_mode;
@@ -384,6 +384,13 @@ public:
       if (n>=imax) return lambda_list(imax-1);
       else         return lambda_list(n);
    }
+   
+   /** Returns X dimension for projections under use. */
+   int ProjXdim();
+
+   /** Returns Y dimension for projections under use. */
+   int ProjYdim();
+
 };
 
 /**@name Projection Sorting*/
