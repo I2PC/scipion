@@ -42,12 +42,12 @@ MAKE         = make
 # Set the following to YES for a developer's version: 
 # programs will be called devel_name instead of xmipp_name 
 # in order not to interfer with any pre-installed user-version
-DEVELOPING    = YES
+DEVELOPING    = NO
 
 # Statically link all libraries
 # Only tested for Redhat 7.3; 
 # Makefile.std of some applications may still require switch in order of libraries!
-STATIC        = YES
+STATIC        = NO
 
 #
 ######################  External packages ##################################
@@ -64,9 +64,9 @@ QTLIBS        = -lqt
 
 # Tiff is used for conversion from scanned micrographs in TIFF to RAW-format
 # Affected programs: xmipp_tiff2raw
-HAVE_TIFF     = NO
-  XMIPP_TIFFLIBDIR = /mnt/bioinfo/sharedfs/app/lib
-  XMIPP_TIFFINCDIR = /mnt/bioinfo/sharedfs/app/include
+HAVE_TIFF     = YES
+  XMIPP_TIFFLIBDIR = /usr/lib
+  XMIPP_TIFFINCDIR = /usr/include
 
 # OpenGL is used for for the graphical program to create 3D-phantom
 # Affected programs: xmipp_phan3D
