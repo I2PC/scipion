@@ -1173,7 +1173,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
 
 /* Main routine ------------------------------------------------------------ */
 //#define DEBUG
-void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    matrix2D<double> ctf_ampl,ctf_ampl2; // To store the amplitude images
    ImageXmipp save, gauss;  // To save and keep the gaussian images
    global_Adjust_CTF_parameters=&prm;

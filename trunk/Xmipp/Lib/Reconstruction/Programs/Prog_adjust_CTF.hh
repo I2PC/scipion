@@ -95,8 +95,9 @@ public:
 };
 
 /** Core of the Adjust CTF routine.
-    This is the routine which does everything. */
-void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm);
+    This is the routine which does everything. It returns the fitting error
+    committed in the best fit.*/
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm);
 //@}
 #endif
 #endif

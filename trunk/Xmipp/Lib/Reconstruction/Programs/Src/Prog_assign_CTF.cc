@@ -416,6 +416,7 @@ void Prog_assign_CTF_prm::process()
         OutputZeros.open(fn_OutputZeros.c_str(), ios::out);
         if (!OutputZeros)
            REPORT_ERROR(1551,(string)"Assign_CTF: Cannot open "+fn_OutputZeros+" for output");
+	OutputZeros << "# Piece_name first_zero_in_X first_zero_in_Y fitting_error\n";
 
         N=1;
         // Save the original sampling rate
@@ -482,7 +483,7 @@ void Prog_assign_CTF_prm::process()
 		  
 		  cerr << "Estimating CTF parameters of region number " << N << endl;
 	 	  
-		  ROUT_Adjust_CTF(adjust_CTF_prm);
+		  double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm);
     	  
 		  cerr << "CTF adjust of piece number " << N << " finished." <<  endl;
 		  
@@ -510,7 +511,8 @@ void Prog_assign_CTF_prm::process()
                   matrix1D<double> u(2), freq(2);
                   VECTOR_R2(u,1,0); pure_ctf.zero(1,u,freq); X_zeros(N-1)=XX(freq);
                   VECTOR_R2(u,0,1); pure_ctf.zero(1,u,freq); Y_zeros(N-1)=YY(freq);
-                  OutputZeros << CTFfile << " " << X_zeros(N-1) << " " << Y_zeros(N-1) << endl;
+                  OutputZeros << CTFfile << " " << X_zeros(N-1) << " "
+		              << Y_zeros(N-1) << " " << fitting_error << endl;
 
 		  // Increment the division counter
 		  N++;
