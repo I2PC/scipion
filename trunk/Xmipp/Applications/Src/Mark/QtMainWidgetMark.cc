@@ -39,16 +39,29 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
    int mXdim, mYdim; _m->size(mXdim,mYdim);
    float maspect_ratio=(float)mYdim/mXdim;
    if (_mTilted==NULL) {
-      setMinimumSize( 600, (int)(600*maspect_ratio) );
+      int suggested_X=600;
+      int suggested_Y=(int)(suggested_X*maspect_ratio);
+      if (suggested_Y>600) {
+         suggested_Y=600;
+         suggested_X=(int)(suggested_Y/maspect_ratio);
+      }
+      setMinimumSize( suggested_X, suggested_Y);
       QRect G=geometry();
-      G.setWidth(600); G.setHeight((int)(600*maspect_ratio));
+      G.setWidth(suggested_X); G.setHeight(suggested_Y);
       setGeometry(G);
    } else {
       int tXdim, tYdim; _m->size(tXdim,tYdim);
       float taspect_ratio=(float)tYdim/tXdim;
-      setMinimumSize(600,(int)(300*maspect_ratio+300*taspect_ratio));
+      int suggested_Y=400;
+      int suggested_X=(int)(suggested_Y*(1/maspect_ratio+1/taspect_ratio));
+      if (suggested_X>800) {
+         int suggested_YU=(int)(400*maspect_ratio);
+         int suggested_YT=(int)(400*taspect_ratio);
+         suggested_Y=MAX(suggested_YU,suggested_YT);
+      }
+      setMinimumSize(suggested_X,suggested_Y);
       QRect G=geometry();
-      G.setWidth(600); G.setHeight((int)(300*maspect_ratio+300*taspect_ratio));
+      G.setWidth(suggested_X); G.setHeight(suggested_Y);
       setGeometry(G);
    }
 
@@ -175,13 +188,17 @@ QtMainWidgetMark::~QtMainWidgetMark() {
    if ( __mTiltedWidget != NULL ) delete __mTiltedWidget;
 }
 
-
 //#define _DEBUG
 /* Add point to least squares matrices ------------------------------------- */
 void QtMainWidgetMark::add_point(const Particle_coords &U,
    const Particle_coords &T) {
    __Nu++; // Number of particles
 
+   #ifdef _DEBUG
+      cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
+           << T.Y << ")\n";
+      cout << "A at input" << __Au << "B at input" << __Bt;   
+   #endif
    // Adjust untilted dependent matrix
    __Au(0,0)+=U.X*U.X  ; __Au(0,1)+=U.X*U.Y  ; __Au(0,2)+=U.X;
    __Au(1,0) =__Au(0,1); __Au(1,1)+=U.Y*U.Y  ; __Au(1,2)+=U.Y;
@@ -193,9 +210,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
    __Bt(2,0)+=T.X      ; __Bt(2,1)+=T.Y      ; __Bt(2,2) =__Au(2,2);
 
    #ifdef _DEBUG
-      cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
-           << T.Y << ")\n";
-      cout << "A" << __Au << "B" << __Bt;   
+      cout << "A at output" << __Au << "B at output" << __Bt;   
    #endif
 }
 
@@ -233,8 +248,8 @@ void QtMainWidgetMark::recalculate_passing_matrix() {
 }
 
 /* Passing to tilted ------------------------------------------------------- */
-void QtMainWidgetMark::pass_to_tilted( int _muX, int _muY, int &_mtX, 
-                                       int &_mtY) {
+void QtMainWidgetMark::pass_to_tilted( int _muX, int _muY,
+   int &_mtX, int &_mtY, bool _update_passing_matrix) {
    if ( can_use_passing_matrix() ) {
       matrix1D<double> m(3);
       SPEED_UP_temps;
@@ -242,6 +257,7 @@ void QtMainWidgetMark::pass_to_tilted( int _muX, int _muY, int &_mtX,
       VECTOR_R3(m,_muX, _muY, 1);
       #ifdef _DEBUG
          cout << "Input=" << m.transpose() << endl;
+         cout << "Matrix=\n" << __Put;
       #endif
       M3x3_BY_V3x1(m,__Put,m);
       #ifdef _DEBUG
@@ -251,11 +267,14 @@ void QtMainWidgetMark::pass_to_tilted( int _muX, int _muY, int &_mtX,
       _mtX=(int)XX(m);
       _mtY=(int)YY(m);
    } else { _mtX = _muX; _mtY = _muY; } 
-   Particle_coords T, U;
-   U.X=_muX; U.Y=_muY;
-   T.X=_mtX; T.Y=_mtY;
-   adjust_passing_matrix(U,T);
+   if (_update_passing_matrix) {
+      Particle_coords T, U;
+      U.X=_muX; U.Y=_muY;
+      T.X=_mtX; T.Y=_mtY;
+      adjust_passing_matrix(U,T);
+   }
 }
+#undef DEBUG
 
 /* Passing to tilted ------------------------------------------------------- */
 void QtMainWidgetMark::pass_to_untilted(int _mtX, int _mtY, int &_muX,
@@ -396,7 +415,8 @@ void QtMainWidgetMark::draw_axes() {
 void QtMainWidgetMark::slotAddCoordTilted( int _muX, int _muY, int _f ) {
    int mtX, mtY;
    
-   pass_to_tilted( _muX, _muY, mtX, mtY);
+   pass_to_tilted( _muX, _muY, mtX, mtY, true);
+   cout << "     --> in the tilted image (" << mtX << "," << mtY << ")\n";
    __mTiltedWidget->getMicrograph()->add_coord( mtX, mtY, _f );
 
    __mTiltedWidget->slotDrawEllipse( mtX, mtY, _f);
@@ -415,7 +435,7 @@ void QtMainWidgetMark::slotAddCoordUntilted( int _mtX, int _mtY, int _f ) {
 
 void QtMainWidgetMark::slotActualizeTiltedOverview( int _muX, int _muY ) {
    int mtX, mtY;
-   pass_to_tilted( _muX, _muY, mtX, mtY);
+   pass_to_tilted( _muX, _muY, mtX, mtY, false);
    int mMaxX, mMaxY;
    __mTiltedWidget->getMicrograph()->size( mMaxX, mMaxY );
    mtX=CLIP(mtX,0,mMaxX-1);
