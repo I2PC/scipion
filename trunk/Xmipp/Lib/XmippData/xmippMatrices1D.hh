@@ -154,7 +154,7 @@ ostream& operator << (ostream & ostrm, const matrix1D< complex<double> > &m);
     }
     \end{verbatim} */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<YSIZE(v); i++) 
+    for (int i=0; i<XSIZE(v); i++) 
 
 //@}
 
