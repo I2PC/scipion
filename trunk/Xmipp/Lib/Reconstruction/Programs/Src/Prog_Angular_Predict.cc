@@ -48,6 +48,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    th_discard=AtoF(get_param(argc,argv,"-keep","50"));
    s_denoise=AtoI(get_param(argc,argv,"-s_denoise","0"));
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
+   pick=AtoI(get_param(argc,argv,"-pick","1"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
@@ -72,6 +73,7 @@ void Prog_angular_predict_prm::show() {
         << "Keep %: " << th_discard << endl
         << "s_denoise: " << s_denoise << endl
         << "Check mirrors: " << check_mirrors << endl
+	<< "Pick: " << pick << endl
         << "Show level: " << tell << endl
    ;
 }
@@ -99,6 +101,8 @@ void Prog_angular_predict_prm::usage() {
         << "  [-s_denoise <s=0>]        : Scale used when building the visible space\n"
         << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
         << "                              images are also explored\n"
+	<< "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
+	<< "                              1 --> maximum of the most populated\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
 	<< "  [-show_psi_shift]         : Show the psi-shift process\n"
 	<< "  [-show_options]           : Show final options among which\n"
@@ -334,33 +338,39 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 }
 
 // Evaluate candidates by correlation ----------------------------------------
-double Prog_angular_predict_prm::evaluate_candidates_by_correlation(
-   const vector<double> &vcorr, const vector<int> &candidate_idx,
+double Prog_angular_predict_prm::evaluate_candidates(
+   const vector<double> &vscore,
+   const vector<int> &candidate_idx,
    vector<double> &candidate_rate, double weight) {
    // Compute maximum and minimum of correlations
-   int imax=vcorr.size();
-   double min_corr, max_corr;
-   min_corr=max_corr=vcorr[0];
+   int imax=vscore.size();
+   double min_score, max_score;
+   min_score =max_score =vscore[0];
    for (int i=1; i<imax; i++) {
-      if (vcorr[i]<min_corr) min_corr=vcorr[i];
-      if (vcorr[i]>max_corr) max_corr=vcorr[i];
+      if (vscore[i] <min_score ) min_score =vscore [i];
+      if (vscore[i] >max_score ) max_score =vscore [i];
    }
    
    // Divide the correlation segment in as many pieces as candidates
-   double corr_step=(max_corr-min_corr)/10;
+   double score_step=(max_score-min_score)/10;
 
    int jmax=candidate_idx.size();
    for (int j=0; j<jmax; j++) {
       int i=candidate_idx[j];
       int points;
-      if (corr_step!=0) points=FLOOR((vcorr[i]-min_corr)/corr_step);
-      else              points=10;
+      if (score_step!=0) points=FLOOR((vscore[i]-min_score)/score_step);
+      else               points=10;
       if (tell & TELL_PSI_SHIFT)
-         cout << "Candidate (" << i << ") corr=" << vcorr[i] << " points=" << points << endl;
+         cout << "Candidate (" << i << ") score=" << vscore[i]
+              << " points=" << points << endl;
       candidate_rate[j]+=weight*points;
    }
 
-   return min_corr+7*corr_step;
+   if (tell & TELL_PSI_SHIFT)
+         cout << "Evaluation:" << candidate_rate << endl
+	      << "Threshold for obtaining a 7 in score: "
+              << min_score+7*score_step << endl;
+   return min_score+7*score_step;
 }
 
 // Group images --------------------------------------------------------------
@@ -369,6 +379,8 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    const vector<double> &vtilt, const vector<double> &vpsi,
    const vector<int> &best_idx, const vector<int> &candidate_idx, 
    vector< vector<int> > &groups) {
+   bool using_denoising=(fn_refsel!="");
+   
    for (int j=0; j<best_idx.size(); j++) {
       int i=candidate_idx[best_idx[j]];  
       #ifdef DEBUG    
@@ -390,7 +402,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
                cout << "   comparing with " << groups[g][jp] << " d="
                     << ang_distance << endl;
             #endif
-	    if (ang_distance>20) {fits=false; break;}
+	    if (ang_distance>15) {fits=false; break;}
 	 }
 	 if (fits) {assigned=true; break;}
       }
@@ -414,7 +426,8 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 
    // Check if there are so many groups as images.
    // If that is the case, then everything is a single group
-   if (groups.size()==best_idx.size()) {
+   // if denoising is not used
+   if (groups.size()==best_idx.size() && !using_denoising) {
       groups.clear();
       vector<int> group;
       for (int j=0; j<best_idx.size(); j++) group.push_back(best_idx[j]);
@@ -424,176 +437,96 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 #undef DEBUG
 
 // Pick view -----------------------------------------------------------------
-// This one returns the most correlated image
-#ifdef NEVER_DEFINED
-int Prog_angular_predict_prm::pick_view(vector< vector<int> > &groups,
-   vector<double> &vcorr, 
+int Prog_angular_predict_prm::pick_view(int method,
+   vector< vector<int> > &groups,
+   vector<double> &vscore, 
    vector<double> &vrot, 
    vector<double> &vtilt, 
    vector<double> &vpsi, 
    const vector<int> &best_idx,
    const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
-   return groups[0][0];
-}
-#endif
 
-#ifdef NEVER_DEFINED
-   // This is for getting an average of the most populated group
-int Prog_angular_predict_prm::pick_view(vector< vector<int> >&groups,
-   vector<double> &vcorr, 
-   vector<double> &vrot, 
-   vector<double> &vtilt, 
-   vector<double> &vpsi, 
-   const vector<int> &best_idx,
-   const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
-   // Sum the rates in all groups
-   vector<double> group_rate;
-   group_rate.reserve(groups.size());
-   int best_g;
-   double best_group_rate=-1e38;
-   for (int g=0; g<groups.size(); g++) {
-      double temp_group_rate=0;
-      for (int j=0; j<groups[g].size(); j++)
-         temp_group_rate+=candidate_rate[groups[g][j]];
-      group_rate.push_back(temp_group_rate);
-      if (temp_group_rate>best_group_rate) {
-         best_g=g;
-	 best_group_rate=group_rate[g];
-      }
-   }
-   
-   // Check that there are not two groups with the same score
-   int groups_with_max_rate=0;
-   for (int g=0; g<groups.size(); g++)
-      if (group_rate[g]==best_group_rate) groups_with_max_rate++;
-   #ifdef DEBUG
-   if (groups_with_max_rate>1) {
-      cout << "There are two groups with maximum rate\n";
-   }
-   #endif
-
-   // Take a weighted average within that group
-   matrix2D<double> Eavg(3,3), E; Eavg.init_zeros();
-   double corravg=0;
-   for (int j=0; j<groups[best_g].size(); j++) {
-      int ref_idx=candidate_idx[groups[best_g][j]];
-      Euler_angles2matrix(vrot[ref_idx],vtilt[ref_idx],vpsi[ref_idx],E);
-      E*=vcorr[ref_idx]; // Weight by the correlation
-      Eavg+=E;
-      corravg+=vcorr[ref_idx];
-      if (tell & TELL_PSI_SHIFT) {
-         cout << "   Taking image (rot,tilt,psi)="
-              << vrot[ref_idx] << " " << vtilt[ref_idx] << " " << vpsi[ref_idx]
-              << " corr=" << vcorr[ref_idx] << endl;
-      }
-   }
-   Eavg/=groups[best_g].size();
-   corravg/=groups[best_g].size();
-
-   // Normalize the basis vectors
-   for (int i=0; i<3; i++) {
-      double norm=0;
-      for (int j=0; j<3; j++) norm+=Eavg(i,j)*Eavg(i,j);
-      norm=sqrt(norm);
-      for (int j=0; j<3; j++) Eavg(i,j)/=norm;
-   }
-   
-   // Produce the suggested angles
-   double rotavg, tiltavg, psiavg;
-   Euler_matrix2angles(Eavg, rotavg, tiltavg, psiavg);
-   
-   // Change the angles of the first image in the group
-   // to the suggested ones
-   int ref_idx=candidate_idx[groups[best_g][0]];
-   vrot [ref_idx]=rotavg;
-   vtilt[ref_idx]=tiltavg;
-   vpsi [ref_idx]=psiavg;
-   vcorr[ref_idx]=corravg;
-   if (tell & TELL_PSI_SHIFT) {
-      cout << "   Group angle set to (rot,tilt,psi)="
-           << vrot[ref_idx] << " " << vtilt[ref_idx] << " " << vpsi[ref_idx]
-           << " corr=" << vcorr[ref_idx] << endl;
-   }
-   return groups[best_g][0];
-}
-# endif
-
-// This is taking the maximum correlation within the most populated group
-int Prog_angular_predict_prm::pick_view(vector< vector<int> > &groups,
-   vector<double> &vcorr, 
-   vector<double> &vrot, 
-   vector<double> &vtilt, 
-   vector<double> &vpsi, 
-   const vector<int> &best_idx,
-   const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
-   // Sum the rates in all groups
-   vector<double> group_rate;
-   group_rate.reserve(groups.size());
-   int best_g;
-   double best_group_rate=-1e38;
-   for (int g=0; g<groups.size(); g++) {
-      double temp_group_rate=0;
-      for (int j=0; j<groups[g].size(); j++)
-         temp_group_rate+=candidate_rate[groups[g][j]];
-      group_rate.push_back(temp_group_rate);
-      if (temp_group_rate>best_group_rate) {
-         best_g=g;
-	 best_group_rate=group_rate[g];
-      }
-   }
-   
-   // Check that there are not two groups with the same score
-   int groups_with_max_rate=0;
-   for (int g=0; g<groups.size(); g++)
-      if (group_rate[g]==best_group_rate) groups_with_max_rate++;
-   #ifdef DEBUG
-   if (groups_with_max_rate>1) {
-      cout << "There are two groups with maximum rate\n";
-   }
-   #endif
-
-   // Take the best image within that group
-   int best_j;
-   double best_rate=-1e38;
-   for (int j=0; j<groups[best_g].size(); j++) {
-      #ifdef NEVER_DEFINED
-      // Select the best with the rate
-      if (candidate_rate[groups[best_g][j]]>best_rate) {
-         best_j=j;
-	 best_rate=candidate_rate[groups[best_g][j]];
-      }
-      #endif
-      // Select the best with the correlation
-      if (vcorr[candidate_idx[groups[best_g][j]]]>best_rate) {
-         best_j=j;
-	 best_rate=vcorr[candidate_idx[groups[best_g][j]]];
-      }
-   }
-
-   // Check that there are not two images with the same rate
-   int images_with_max_rate=0;
-   for (int j=0; j<groups[best_g].size(); j++)
-      #ifdef NEVER_DEFINED
-      // Select the best with the rate
-      if (candidate_rate[groups[best_g][j]]==best_rate)
-         images_with_max_rate++;
-      #endif
-      // Select the best with correlation
-      if (vcorr[candidate_idx[groups[best_g][j]]]==best_rate)
-         images_with_max_rate++;
-   if (images_with_max_rate>1) {
-      // If there are several with the same punctuation take the one
-      // with the best correlation
-      double best_corr=-1e38;
-      for (int j=0; j<groups[best_g].size(); j++) {
-         if (vcorr[candidate_idx[groups[best_g][j]]]>best_corr &&
-	     candidate_rate[groups[best_g][j]]==best_rate) {
+   if (method==0) {
+   // This one returns the most scored image of the first group
+      double best_rate=-1e38;
+      int    best_j, jmax=groups[0].size();
+      for (int j=0; j<jmax; j++)
+	 // Select the best with the scoreelation
+	 if (vscore[candidate_idx[groups[0][j]]]>best_rate) {
             best_j=j;
-	    best_corr=vcorr[candidate_idx[groups[best_g][j]]];
-         }
+	    best_rate=vscore[candidate_idx[groups[0][j]]];
+	 }
+      return groups[0][best_j];
+   } else if (method==1) {
+      // Sum the rates in all groups
+      vector<double> group_rate;
+      group_rate.reserve(groups.size());
+      int best_g;
+      double best_group_rate=-1e38;
+      for (int g=0; g<groups.size(); g++) {
+	 double temp_group_rate=0;
+	 for (int j=0; j<groups[g].size(); j++)
+            temp_group_rate+=candidate_rate[groups[g][j]];
+	 group_rate.push_back(temp_group_rate);
+	 if (temp_group_rate>best_group_rate) {
+            best_g=g;
+	    best_group_rate=group_rate[g];
+	 }
       }
+
+      // Check that there are not two groups with the same score
+      int groups_with_max_rate=0;
+      for (int g=0; g<groups.size(); g++)
+	 if (group_rate[g]==best_group_rate) groups_with_max_rate++;
+      #ifdef DEBUG
+      if (groups_with_max_rate>1) {
+	 cout << "There are two groups with maximum rate\n";
+      }
+      #endif
+
+      // Take the best image within that group
+      int best_j;
+      double best_rate=-1e38;
+      for (int j=0; j<groups[best_g].size(); j++) {
+	 #ifdef NEVER_DEFINED
+	 // Select the best with the rate
+	 if (candidate_rate[groups[best_g][j]]>best_rate) {
+            best_j=j;
+	    best_rate=candidate_rate[groups[best_g][j]];
+	 }
+	 #endif
+	 // Select the best with the scoreelation
+	 if (vscore[candidate_idx[groups[best_g][j]]]>best_rate) {
+            best_j=j;
+	    best_rate=vscore[candidate_idx[groups[best_g][j]]];
+	 }
+      }
+
+      // Check that there are not two images with the same rate
+      int images_with_max_rate=0;
+      for (int j=0; j<groups[best_g].size(); j++)
+	 #ifdef NEVER_DEFINED
+	 // Select the best with the rate
+	 if (candidate_rate[groups[best_g][j]]==best_rate)
+            images_with_max_rate++;
+	 #endif
+	 // Select the best with scoreelation
+	 if (vscore[candidate_idx[groups[best_g][j]]]==best_rate)
+            images_with_max_rate++;
+      if (images_with_max_rate>1) {
+	 // If there are several with the same punctuation take the one
+	 // with the best scoreelation
+	 double best_score=-1e38;
+	 for (int j=0; j<groups[best_g].size(); j++) {
+            if (vscore[candidate_idx[groups[best_g][j]]]>best_score &&
+		candidate_rate[groups[best_g][j]]==best_rate) {
+               best_j=j;
+	       best_score=vscore[candidate_idx[groups[best_g][j]]];
+            }
+	 }
+      }
+      return groups[best_g][best_j];
    }
-   return groups[best_g][best_j];
 }
 
 // Predict shift and psi -----------------------------------------------------
@@ -602,7 +535,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double &assigned_shiftX, double &assigned_shiftY,
    double &assigned_rot, double &assigned_tilt, double &assigned_psi) {
    double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
-          best_corr=0, best_rate;
+          best_score=0, best_rate;
+   bool using_denoising=(fn_refsel!="");
+
    ImageXmipp Ip;
    Ip=I;
    matrix1D<double> shift(2);
@@ -616,13 +551,17 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    
    // Search in the psi-shift space
    int N_trials=0;
-   vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr;
+   vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr,
+                  vproj_error, vproj_compact, vang_jump, vscore;
    vector<int>    vref_idx;
+   
    for (int mirror=0; mirror<=check_mirrors; mirror++)
       for (double shiftX=-max_shift_change; shiftX<=max_shift_change; shiftX+=shift_step)
          for (double shiftY=-max_shift_change; shiftY<=max_shift_change; shiftY+=shift_step) {
             if (shiftX*shiftX+shiftY*shiftY>R2) continue;
             for (double psi=psi0; psi<=psiF; psi+=psi_step) {
+	          N_trials++;
+
       	          // Shift image if necessary
                   if (shiftX==0 && shiftY==0) Ip()=I();
 	          else {
@@ -644,32 +583,35 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   #endif
 
                   // Project the resulting image onto the visible space
-                  if (fn_refsel!="") {
+                  double proj_error=0.0, proj_compact=0.0;
+                  bool   look_for_rot_tilt=true;
+                  if (using_denoising) {
                      matrix1D<double> Vp;
                      STARTINGX(Ip())=STARTINGY(Ip())=0;
                      Ip().statistics_adjust(0,1);
-                     Angular_denoise.project_image(Ip(),Vp);
+                     proj_error=Angular_denoise.project_image(Ip(),Vp);
                      Angular_denoise.build_image(Vp,Ip(),YSIZE(Ip()),XSIZE(Ip()));
                      Ip().set_Xmipp_origin();
-                     Ip().statistics_adjust(0,1);
+		     
+		     // Measure the compactness of the projection
+		     double total_sum=Vp.sum();
+		     int imax; Vp.max_index(imax);
+		     proj_compact=Vp(imax)/total_sum;
+                     Vp(imax)=0;
+                     Vp.max_index(imax);
+		     proj_compact+=Vp(imax)/total_sum;
                   }
-
-                  #ifdef DEBUG
-                     Ip.write("PPPafter_denoising.xmp");
-                  #endif
 
       	          // Search for the best tilt, rot angles
                   double rotp, tiltp;
                   int best_ref_idx;
-                  double corrp=predict_rot_tilt_angles(Ip,rotp,tiltp,best_ref_idx);
-      	          if (tell & TELL_PSI_SHIFT)
-                     cout << "mirror=" << mirror
-                          << " shiftX= " << shiftX << " shiftY= " << shiftY
-	                  << " psi= " << psi << " rot= " << rotp
-		          << " tilt= " << tiltp << " corr= " << corrp
-                          << " refidx= " << best_ref_idx
-		          /* << " error= " << error_pca */
-		          << endl; 
+                  double corrp=
+		     predict_rot_tilt_angles(Ip,rotp,tiltp,best_ref_idx);
+
+                  double aux_rot=rotp, aux_tilt=tiltp, aux_psi=psi;
+                  double ang_jump=distance_prm.check_symmetries(
+	             I.rot(),I.tilt(),I.psi(),
+                     aux_rot,aux_tilt,aux_psi,false);
 
                   // Check if the image was mirrored
                   double rotp_aux=rotp, tiltp_aux=tiltp, psi_aux=psi;
@@ -682,95 +624,112 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	          vtilt.push_back(tiltp_aux);
 	          vpsi.push_back(psi_aux);
 	          vcorr.push_back(corrp);
+                  vproj_error.push_back(proj_error);
+		  vproj_compact.push_back(proj_compact);
+                  vang_jump.push_back(ang_jump);
                   vref_idx.push_back(best_ref_idx);
 
-	          N_trials++;
                   #ifdef DEBUG
+                     Ip.write("PPPafter_denoising.xmp");
                      ImageXmipp Iref((string)"g0tb"+ItoA(best_ref_idx+1,5)+".xmp");
                      Iref.write("PPPref.xmp");
                      cerr << "Press any key\n"; char c; cin >> c;
                   #endif
+
 	       }
          }
+
+   // Compute extrema of all scoring factors
+   double max_corr        =vcorr[0],         min_corr        =vcorr[0];
+   double max_proj_error  =vproj_error[0],   min_proj_error  =vproj_error[0];
+   double max_proj_compact=vproj_compact[0], min_proj_compact=vproj_compact[0];
+   for (int i=1; i<N_trials; i++) {
+      // Compute extrema of projection error
+      if (vproj_error[i]<min_proj_error) min_proj_error=vproj_error[i];
+      if (vproj_error[i]>max_proj_error) max_proj_error=vproj_error[i];
+
+      // Compute extrema of correlation
+      if (vcorr[i]<min_corr) min_corr=vcorr[i];
+      if (vcorr[i]>max_corr) max_corr=vcorr[i];
+   
+      // Compute extrema of projection error
+      if (vproj_compact[i]<min_proj_compact) min_proj_compact=vproj_compact[i];
+      if (vproj_compact[i]>max_proj_compact) max_proj_compact=vproj_compact[i];
+   }
+   
+   // Score each projection
+   double corr_step=max_corr-min_corr;
+   double proj_error_step=max_proj_error-min_proj_error;
+   double proj_compact_step=max_proj_compact-min_proj_compact;
+   vscore.reserve(vcorr.size());
+   for (int i=0; i<N_trials; i++) {
+      if (!using_denoising) vscore.push_back(vcorr[i]);
+      else {
+         // Normalize scores between 0.9 and 1.1
+         double norm_corr, norm_proj_error, norm_proj_compact;
+         if (corr_step==0) norm_corr=1;
+         else              norm_corr=0.9+0.2*(vcorr[i]-min_corr)/corr_step;
+         if (proj_error_step==0) norm_proj_error=1;
+         else              norm_proj_error=0.9+0.2*(max_proj_error-vproj_error[i])/proj_error_step;
+         if (proj_compact_step==0) norm_proj_compact=1;
+         else              norm_proj_compact=0.9+0.2*(vproj_compact[i]-min_proj_compact)/proj_compact_step;
+         
+         // Score
+         vscore.push_back(norm_corr*
+                          norm_proj_error*norm_proj_error*
+                          norm_proj_compact);
+      }
+      if (tell & TELL_PSI_SHIFT)
+         cout << "i=" << i
+              << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
+	      << " psi= "          << vpsi[i]
+              << " rot= "          << vrot[i]
+              << " tilt= "         << vtilt[i]
+              << " score= "        << vscore[i]
+              << " corr= "         << vcorr[i]
+              << " proj_error= "   << vproj_error[i]
+	      << " proj_compact= " << vproj_compact[i]
+              << " refidx= "       << vref_idx[i]
+              << " ang_jump= "     << vang_jump[i]
+	      << endl; 
+   }
 
    // Is the psi range circular?
    bool circular=realWRAP(vpsi[0]-psi_step,-180,180)==
                  realWRAP(vpsi[N_trials-1],-180,180);
 
-   // Smooth the correlation curve
-   #ifdef NEVER_DEFINED
-   if (tell & TELL_PSI_SHIFT) cout << "Smoothing correlation\n";
-   vector<double> aux_corr;
-   aux_corr.resize(N_trials);
-   for (int i=0; i<N_trials; i++) {
-      int il=i-1; if (il==-1       && circular) il=N_trials-1;
-      int ir=i+1; if (ir==N_trials) 
-                     if (circular) ir=0; else ir=-1;
-      aux_corr[i]=vcorr[i]; int N=1;
-      if (il!=-1) {aux_corr[i]+=vcorr[il]; N++;}
-      if (ir!=-1) {aux_corr[i]+=vcorr[ir]; N++;}
-      aux_corr[i]/=N;
-
-      if (tell & TELL_PSI_SHIFT)
-         cout << " psi= " << vpsi[i] << " rot= " << vrot[i]
-	      << " tilt= " << vtilt[i] << " corr= " << vcorr[i]
-	      << " new corr= " << aux_corr[i] << endl; 
-   }
-   vcorr=aux_corr;
-   matrix1D<double> aux_corr;
-   aux_corr.resize(N_trials);
-   for (int i=0; i<N_trials; i++) aux_corr(i)=vcorr[i];
-   FourierMask Filter_corr;
-   Filter_corr.FilterShape=RAISED_COSINE;
-   Filter_corr.FilterBand=LOWPASS;
-   Filter_corr.w1=0.15;
-   Filter_corr.raised_w=0.02;
-   Filter_corr.apply_mask(aux_corr);
-   for (int i=0; i<N_trials; i++) {
-      if (tell & TELL_PSI_SHIFT)
-         cout << " psi= " << vpsi[i] << " rot= " << vrot[i]
-	      << " tilt= " << vtilt[i] << " corr= " << vcorr[i]
-	      << " new corr= " << aux_corr(i) << endl; 
-      vcorr[i]=aux_corr(i);
-   }
-   #endif
-
-   // Compute minimum and maximum of the correlation
-   double max_corr=vcorr[0], min_corr=vcorr[0];
-   double avg_maxima=0;
-   vector<int> local_maxima, idx_all;
-   idx_all.resize(N_trials);
+   // Compute minimum and maximum of the correlation and projection error
+   double avg_score_maxima=0;
+   vector<int> local_maxima;
    if (tell & TELL_PSI_SHIFT) cout << "Local maxima\n";
    for (int i=0; i<N_trials; i++) {
-      idx_all[i]=i;
-
-      // Compute maxima
-      if (vcorr[i]   <min_corr   ) min_corr   =vcorr[i];
-      if (vcorr[i]   >max_corr   ) max_corr   =vcorr[i];
-
       // Look for the left and right sample
       int il=i-1, ir=i+1;
       if      (i==0 && circular) il=N_trials-1;
       else if (i==N_trials-1)
               if (circular) ir=0; else ir=-1;
 
-      // Check if the correlation is a local maximum
+      // Check if the error is a local minimum of the projection error
+      // or a local maxima of the correlation
+      bool is_local_maxima=true;
       if (il!=-1)
-         if (vcorr[il]>=vcorr[i]) continue;
+         if (vscore[il]>=vscore[i]) is_local_maxima=false;
       if (ir!=-1)
-         if (vcorr[ir]>=vcorr[i]) continue;
+         if (vscore[ir]>=vscore[i]) is_local_maxima=false;
 
-      // It is a maximum
-      local_maxima.push_back(i);
-      avg_maxima+=vcorr[i];
-      if (tell & TELL_PSI_SHIFT)
-         cout << "psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-              << vtilt[i] << " corr= " << vcorr[i] << endl;
+      // It is a local minimum
+      if (is_local_maxima) avg_score_maxima+=vcorr[i];
+      if (is_local_maxima || using_denoising) {
+         local_maxima.push_back(i);
+         if (tell & TELL_PSI_SHIFT)
+            cout << "i= " << i
+                 << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                 << vtilt[i] << " score= " << vscore[i] << endl;
+      }
    }
-   avg_maxima/=local_maxima.size();
+   avg_score_maxima/=local_maxima.size();
    if (tell & TELL_PSI_SHIFT)
-      cout << "Avg_maxima=" << avg_maxima << " Max.corr=" << max_corr << " "
-           << " Min.corr=" << min_corr << endl;
+      cout << "Avg_maxima=" << avg_score_maxima << endl;
 
    // Remove all local maxima below the average
    int jmax=local_maxima.size();
@@ -779,37 +738,41 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    if (tell & TELL_PSI_SHIFT) cout << "Keeping ...\n";
    for (int j=0; j<jmax; j++) {
       int i=local_maxima[j];
-      if (vcorr[i]>=avg_maxima) {
+      if (vscore[i]>=avg_score_maxima) {
          candidate_local_maxima.push_back(i);
 	 candidate_rate.push_back(0);
 	 if (tell & TELL_PSI_SHIFT)
-            cout << "psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-        	 << vtilt[i] << " corr= " << vcorr[i] << endl;
+            cout << "i= " << i
+                 << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+        	 << vtilt[i] << " score= " << vscore[i] << endl;
       }
    }
    jmax=candidate_local_maxima.size();
 
    // Evaluate the local maxima according to their correlations
-   double th_corr=evaluate_candidates_by_correlation(vcorr,
-      candidate_local_maxima,candidate_rate,1);
-   if (tell & TELL_PSI_SHIFT)
-         cout << "Evaluation on correlation:" << candidate_rate << endl
-	      << "Threshold for obtaining a 7 in correlation: " << th_corr << endl;
+   evaluate_candidates(vscore,candidate_local_maxima,candidate_rate,1);
 
    // Sort the candidates
    if (tell & TELL_PSI_SHIFT) cout << "\nSelecting image\n";
    matrix1D<double> score(jmax);
-   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
+//   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
+   for (int j=0; j<jmax; j++) score(j)=vscore[candidate_local_maxima[j]];
    matrix1D<int> idx_score=score.index_sort();
-
+   
    if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS)) {
       cout << I.name() << endl;  cout.flush();
       for (int j=0; j<jmax; j++) {
 	 int jp=idx_score(j)-1;
 	 double score=candidate_rate[jp];
 	 int i=candidate_local_maxima[jp];
-         cout << "psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-              << vtilt[i] << " corr= " << vcorr[i]
+         cout << "i= " << i
+              << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+              << vtilt[i]
+              << " score= " << vscore[i]
+              << " corr= " << vcorr[i]
+              << " error= " << vproj_error[i]
+              << " compact= " << vproj_compact[i]
+              << " angjump= " << vang_jump[i]
 	      << " rate=" << candidate_rate[jp]
               << " reference image #=" << vref_idx[i]+1 << endl;
       }
@@ -819,9 +782,10 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    // Consider the top
    int jtop=jmax-1;
    vector<int> best_idx;
+   int max_score_diff=1;
    while (jtop>0 &&
           candidate_rate[idx_score(jmax-1)-1]-
-	    candidate_rate[idx_score(jtop-1)-1]<=1) {
+	    candidate_rate[idx_score(jtop-1)-1]<=max_score_diff) {
 	  best_idx.push_back(idx_score(jtop)-1);
 	  jtop--;
    }
@@ -844,7 +808,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
          cout << "Partition: " << groups << endl;
       
       // Pick the best image from the groups
-      jbest=pick_view(groups,vcorr,vrot,vtilt,vpsi,
+      jbest=pick_view(pick,groups,vscore,vrot,vtilt,vpsi,
          best_idx,candidate_local_maxima,candidate_rate);
       ibest=candidate_local_maxima[jbest];
    }
@@ -855,7 +819,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    best_psi    = vpsi[ibest];
    best_shiftX = vshiftX[ibest];
    best_shiftY = vshiftY[ibest];
-   best_corr   = vcorr[ibest];
+   best_score  = vscore[ibest];
    best_rate   = candidate_rate[jbest];
    
    if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS)) {
@@ -865,7 +829,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       if (tell & TELL_PSI_SHIFT) cout << jbest << "\n";
       cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
            << best_tilt << " shiftX=" << best_shiftX
-	   << " shiftY=" << best_shiftY << " corr= " << best_corr
+	   << " shiftY=" << best_shiftY << " score= " << best_score
 	   << " rate= " << best_rate << endl << endl;
    }
 
@@ -875,7 +839,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    assigned_psi    = predicted_psi[current_img]    = best_psi;
    assigned_shiftX = predicted_shiftX[current_img] = best_shiftX;
    assigned_shiftY = predicted_shiftY[current_img] = best_shiftY;
-                     predicted_corr[current_img]   = best_corr;
+                     predicted_corr[current_img]   = best_score;
    current_img++;
    return best_rate;
 }
