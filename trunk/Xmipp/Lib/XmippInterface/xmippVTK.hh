@@ -122,6 +122,11 @@
    template <class T, class VTKT>
       void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v) _THROW;
 
+   /** Resize a VTK object after another VTK object.*/
+   template <class VTKT>
+      void VTK_resize_VTK(VTKT *v_in, VTKT *&v_out, bool change_type=FALSE,
+         int new_type=VTK_FLOAT);
+
    /** VTK --> XmippVector */
    template <class T, class VTKT>
       void VTK2xmippArray(VTKT *v, matrix1D<T> &retval);
@@ -144,12 +149,24 @@
        TRUE if the two VTK objects have the same dimensions and sizes */
    bool same_shape(vtkImageData *v1, vtkImageData *v2);
 
-   /** Center an FFT. */
-   void CenterFFT(vtkImageData *&v);
+   /** Self center an FFT.
+       Use the offset to uncenter properly odd size images*/
+   void CenterFFT(vtkImageData *&v, int zoff=0, int yoff=0, int xoff=0);
+
+   /** Center an FFT.
+       Use the offset to uncenter properly odd size images*/
+   void CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
+      int zoff=0, int yoff=0, int xoff=0);
 
    /** Show VTK object. */
    template <class VTKT>
       void VTK_print (ostream &out, VTKT *v);
+
+   /** Index to frequency.
+       Given an index and a size of the FFT, this function returns the
+       corresponding digital frequency (-1/2 to 1/2). */
+   #define FFT_IDX2DIGFREQ(idx,size,freq) \
+       freq=((double)((idx)<(size)/2)?(idx):-(size)+(idx))/(double)(size);
 
    /** Index to frequency.
        This function can be used with vectors of any size (1,2,3).
@@ -169,12 +186,21 @@
          size[1] = (double)(wholeExtent[2] + wholeExtent[3] + 1);
          size[2] = (double)(wholeExtent[4] + wholeExtent[5] + 1);
 
-         FOR_ALL_ELEMENTS_IN_MATRIX1D(idx) {
-            VEC_ELEM(freq,i)=(VEC_ELEM(idx,i)<size[i]/2)?
-               VEC_ELEM(idx,i):-size[i]+VEC_ELEM(idx,i);
-            VEC_ELEM(freq,i) /= size[i];
-         }
+         FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+            FFT_IDX2DIGFREQ(VEC_ELEM(idx,i),size[i],VEC_ELEM(freq,i));
    }
+
+   /** Frequency to index (int).
+       Given a frequency and a size of the FFT, this macro returns the
+       corresponding integer index. */
+   #define DIGFREQ2FFT_IDX(freq,size,idx) {\
+       (idx)=(int)(ROUND((size)*(freq))); if ((idx)<0) (idx)+=(int)(size);}
+   
+   /** Frequency to index (double).
+       Given a frequency and a size of the FFT, this macro returns the
+       corresponding double index. */
+   #define DIGFREQ2FFT_IDX_DOUBLE(freq,size,idx) {\
+       (idx)=((size)*(freq)); if ((idx)<0) (idx)+=(size);}
    
    /** Frequency to index.
        This function can be used with vectors of any size (1,2,3).
@@ -194,12 +220,8 @@
          size[1] = (double)(wholeExtent[2] + wholeExtent[3] + 1);
          size[2] = (double)(wholeExtent[4] + wholeExtent[5] + 1);
 
-         FOR_ALL_ELEMENTS_IN_MATRIX1D(idx) {
-	    if (VEC_ELEM(freq,i)>=0)
-	       VEC_ELEM(idx,i)=(int)(size[i]*VEC_ELEM(freq,i));
-	    else
-	       VEC_ELEM(idx,i)=(int)(size[i]+size[i]*VEC_ELEM(freq,i));
-         }
+         FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+            DIGFREQ2FFT_IDX(VEC_ELEM(freq,i),size[i],VEC_ELEM(idx,i));
    }
    
    /** Digital to Continuous frequency.

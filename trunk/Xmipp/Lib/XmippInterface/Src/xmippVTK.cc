@@ -31,7 +31,6 @@
 #include <vtkImageFFT.h>
 #include <vtkImageRFFT.h>
 #include <vtkImageMagnitude.h>
-#include <vtkImageFourierCenter.h>
 #include <vtkImageExtractComponents.h>
 
 /* Xmipp --> VTK ----------------------------------------------------------- */
@@ -311,7 +310,7 @@ template <class T, class VTKT>
 
 /* VTK -> VTK -------------------------------------------------------------- */
 template <class VTKT>
-   void VTK2VTK(VTKT *v_in, VTKT *&v_out, bool change_type, int new_type) {
+   void VTK_resize_VTK(VTKT *v_in, VTKT *&v_out, bool change_type, int new_type) {
    if (v_out==NULL)  v_out=VTKT::New();
    else              v_out->PrepareForNewData();
    if (v_in!=NULL) {
@@ -319,9 +318,16 @@ template <class VTKT>
       else              v_out->SetScalarType(new_type);
       v_out->SetNumberOfScalarComponents(v_in->GetNumberOfScalarComponents());
       v_out->CopyStructure(v_in);
-      v_out->CopyAndCastFrom(v_in,v_in->GetExtent());
       v_out->Update();
    }
+}
+
+template <class VTKT>
+   void VTK2VTK(VTKT *v_in, VTKT *&v_out, bool change_type, int new_type) {
+   if (v_in==NULL) return;
+   VTK_resize_VTK(v_in,v_out,change_type,new_type);
+   v_out->CopyAndCastFrom(v_in,v_in->GetExtent());
+   v_out->Update();
 }
 
 /* Same shape -------------------------------------------------------------- */
@@ -346,15 +352,55 @@ bool same_shape(vtkImageData *v1, vtkImageData *v2) {
 }
 
 /* Center FFT -------------------------------------------------------------- */
-void CenterFFT(vtkImageData *&v) {
+void CenterFFT(vtkImageData *&v, int zoff, int yoff, int xoff) {
    if (v==NULL) return;
-   vtkImageFourierCenter *fftcenter=vtkImageFourierCenter::New();
-   fftcenter->SetInput(v); fftcenter->Update();
-   VTK2VTK(fftcenter->GetOutput(),v);
-   fftcenter->Delete();
+   vtkImageData *v_centered=NULL;
+   CenterFFT(v,v_centered, zoff, yoff, xoff);
+   VTK2VTK(v_centered,v);
+   v_centered->Delete();
 }
 
+void CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
+   int zoff, int yoff, int xoff) {
+   if (v_in==NULL) return;
 
+   SPEED_UP_vtk;
+   VTK_resize_VTK(v_in,v_out); // Copy the structure
+   float *v_inPtr =(float *)v_in->GetScalarPointer();
+   float *v_outPtr=(float *)v_out->GetScalarPointer();
+   
+   // Compute the shift
+   inExt=v_in->GetExtent();
+   maxX = inExt[1] - inExt[0];
+   maxY = inExt[3] - inExt[2];
+   maxZ = inExt[5] - inExt[4];
+   int maxXY=(maxX+1)*(maxY+1);
+   int shift_X=(int)((double)(maxX+1)/2.0);
+   int shift_Y=(int)((double)(maxY+1)/2.0);
+   int shift_Z=(int)((double)(maxZ+1)/2.0);
+   // Copy the elements applying the appropiate shift
+   int dim=v_in->GetNumberOfScalarComponents();
+   for (int k = 0; k <= maxZ; k++) {
+       int k0=k*maxXY*dim; // pointer to the slice k
+       for (int i = 0; i <= maxY; i++) {
+           int i0=k0+i*(maxX+1)*dim; // pointer to the column i
+           for (int j = 0; j <= maxX; j++) {
+              float *ptr_j=v_inPtr+i0+j*dim; // pointer to the element
+              
+              // New coordinate
+              int kp=intWRAP(k+shift_Z+zoff,0,maxZ);
+              int ip=intWRAP(i+shift_Y+yoff,0,maxY);
+              int jp=intWRAP(j+shift_X+xoff,0,maxX);
+              
+              // Compute the shift of this element
+              float *ptr_jp=v_outPtr+dim*(kp*maxXY+ip*(maxX+1)+jp);
+              
+              // Now copy all elements from 1 position to the other
+              for (int d=0; d<dim; d++) *ptr_jp++=*ptr_j++;
+           }
+       }
+   }
+}
 
 /* VTK -> Xmipp FFT -------------------------------------------------------- */
 void VTK2xmippFFT(vtkImageData *v, matrix1D< complex <double> > &retval) {
@@ -537,10 +583,15 @@ void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out,
    if (is_not_centered) {
       rfft->SetInput(fft_in); rfft->Update();
    } else {
-      vtkImageFourierCenter *fftcenter=vtkImageFourierCenter::New();
-      fftcenter->SetInput(fft_in); fftcenter->Update();
-      rfft->SetInput(fftcenter->GetOutput()); rfft->Update();
-      fftcenter->Delete();
+      int dim[3]; fft_in->GetDimensions(dim);
+      int zoff=(dim[2]%2==1)?1:0;
+      int yoff=(dim[1]%2==1)?1:0;
+      int xoff=(dim[0]%2==1)?1:0;
+      cout << "Offset: " << zoff << "," << yoff << "," << xoff << endl;
+      vtkImageData *fft_not_centered=NULL;
+      CenterFFT(fft_in,fft_not_centered,zoff,yoff,xoff);
+      rfft->SetInput(fft_not_centered); rfft->Update();
+      fft_not_centered->Delete();
    }
 
    vtkImageExtractComponents *real_part=vtkImageExtractComponents::New();
