@@ -67,6 +67,7 @@ void busca ()
     short n1, in1, mu5, i, mu3, ind, ind1, indice, iflag, j, ix, iy, k;
     float h, th, costh, sinth, fi, anc, xk0, yk0, hpi, x, y, z, xx, yy;
     float b, g, d1, e1, ext;
+    int count=0;
 
     suaviza();
 /*    printf("      x         y        funci¢n    delta  radio M x.\n");*/
@@ -148,6 +149,9 @@ e9: if(indice >= ni)
 	}
 	x+=del;
     }
+    // Introduced by Sjors dd 28.9.2004 to avoid infinite loops
+    count++;
+    if (count>1000) goto s1;
 e23:ext=-1000000.;
     for (i = 1; i <= ind; i++) /* do 7 */
 	for (j = 1; j <= ind; j++) /* do 7 */
@@ -194,6 +198,7 @@ e13:	    y+=del;
     }
     x=xc0-(in-1)*del;
     y=yc0-(in-1)*del;
+
     for (k = 2; k <= ind1; k++) /* do 16 */
     {	if(k == in1)
 	    goto e17;
@@ -231,6 +236,8 @@ e17:	x+=del;
       goto e23;
 e10:  printf ("\nOptimal center coordinates: x =%10.3f, y = %10.3f\n",
 	      yc0-1,xc0-1);
+      return;
+ s1:  printf ("\nNot-converged\n");
       return;
 }
 
