@@ -318,15 +318,13 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               }
               if (prm.tell&TELL_SAVE_AT_EACH_STEP)
 		 vol_POCS.write("PPPvolPOCS1.vol");
-#ifdef NEVERDEFINED
               // Force symmetry
               if (prm.force_sym!=0) {
-                 symmetrize(prm.SL,vol_voxels,vol_aux);
+                 symmetrize(prm.SL,vol_voxels,vol_aux,FALSE);
                  desired_volume=&vol_aux;
                  if (prm.tell&TELL_SAVE_AT_EACH_STEP)
-		    vol_aux.write("PPPvolPOCS15.vol");
+		    vol_aux.write("PPPvolPOCS2.vol");
               }
-#endif
 	      // Apply volume constraint
 	      if (prm.known_volume!=-1) {
 	         histogram1D hist;
@@ -345,7 +343,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	            if (vol_voxels(k,i,j)<threshold) vol_POCS(k,i,j)=1;
 	      }
               if (prm.tell&TELL_SAVE_AT_EACH_STEP)
-		 vol_POCS.write("PPPvolPOCS2.vol");
+		 vol_POCS.write("PPPvolPOCS3.vol");
 
               // Do not allow positivity outside interest region
               // and do not allow negativity inside the interest region
@@ -376,7 +374,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                     if (vol_POCS(k,i,j)==1) (*desired_volume)(k,i,j)=0;
                  for (int i=0; i<prm.force_sym; i++) {
                     ART_voxels2blobs_single_step(vol_blobs, &vol_blobs,
-                       prm.blob, prm.D, prm.lambda(it),
+                       prm.blob, prm.D, 1/*prm.lambda(it)*/,
 	               (Volume *) &theo_POCS_vol, desired_volume,
 	               (Volume *) &corr_POCS_vol,
                        NULL,
