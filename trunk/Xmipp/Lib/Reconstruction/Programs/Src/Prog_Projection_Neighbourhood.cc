@@ -27,7 +27,7 @@
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippImages.hh>
-#include <XmippInterface/xmippSpider.hh>
+#include <XmippData/xmippHeader.hh>
 
 // Read arguments ==========================================================
 void Prog_projection_neighbourhood_prm::read(int argc, char **argv) _THROW {
@@ -44,6 +44,25 @@ void Prog_projection_neighbourhood_prm::read(int argc, char **argv) _THROW {
    if (DF1.FirstLine_ColNo()<2) {
      REPORT_ERROR(1,"Projection Neighbourhood: Neighbourhoods docfile has less than 2 columns.");
    }
+}
+
+// Extract angles ==========================================================
+void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_out) {
+   DF_out.clear();
+   int i=0;
+   double phi,theta,psi;
+   time_config();
+   cerr << "Extracting angles ...\n";
+   init_progress_bar(SF_in.ImgNo());
+   while (!SF_in.eof()) {
+     headerXmipp H;
+     H.read(SF_in.NextImg());
+     H.get_eulerAngles(phi,theta,psi);  
+     DF_out.append_angles(phi,theta,psi,"rot","tilt","psi");
+     i++;
+     if (i%10==0) progress_bar(i);
+   }
+   progress_bar(SF_in.ImgNo());
 }
 
 // Show ====================================================================
@@ -142,7 +161,7 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood() {
   SelFile SF_out;
   SelLine selline;
 
-  extract_angles(SF,DF2,"rot","tilt","psi");
+  get_angles(SF,DF2);
 
   cerr << "Calculating ...\n";
   DF1.go_first_data_line();

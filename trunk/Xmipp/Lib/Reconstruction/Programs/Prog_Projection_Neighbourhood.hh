@@ -68,6 +68,9 @@ public:
    /// Usage
    void usage();
 
+   /// Extract angles 
+   void get_angles(SelFile &SF_in, DocFile &DF_out);
+
    /** Check symmetries.
        Given two sets of angles, this function modifies set 2 so that
        the difference with set 1 are minimized searching in the symmetry
