@@ -444,11 +444,11 @@ template <class T>
             interp=TRUE;
             if (wrap) {
                if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
-	           xp>maxxp+XMIPP_EQUAL_ACCURACY) xp=realWRAP(xp, minxp, maxxp);
+	           xp>maxxp+XMIPP_EQUAL_ACCURACY) xp=realWRAP(xp, minxp-0.5, maxxp+0.5);
                if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
-	           yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp, maxyp);
+	           yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp-0.5, maxyp+0.5);
                if (zp<minzp-XMIPP_EQUAL_ACCURACY ||
-	           zp>maxzp+XMIPP_EQUAL_ACCURACY) zp=realWRAP(zp, minzp, maxzp);
+	           zp>maxzp+XMIPP_EQUAL_ACCURACY) zp=realWRAP(zp, minzp-0.5, maxzp+0.5);
             } else {
                if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
 	           xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
