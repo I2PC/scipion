@@ -160,10 +160,10 @@ void Denoising_parameters::usage_specific() {
 // Denoise image -----------------------------------------------------------
 void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
    if (denoising_type!=SHAH) {
-      double size2=log10(XSIZE(img))/log10(2.0);
+      double size2=log10((double)XSIZE(img))/log10(2.0);
       if (ABS(size2-ROUND(size2))>1e-6)
 	 REPORT_ERROR(1,"Denoising::denoise: Input image must be of a size power of 2");
-      size2=log10(YSIZE(img))/log10(2.0);
+      size2=log10((double)YSIZE(img))/log10(2.0);
       if (ABS(size2-ROUND(size2))>1e-6)
 	 REPORT_ERROR(1,"Denoising::denoise: Input image must be of a size power of 2");
       DWT(img,img);
@@ -206,13 +206,13 @@ void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
 // Denoise volume ----------------------------------------------------------
 void Denoising_parameters::denoise(matrix3D<double> &vol) _THROW {
    if (denoising_type==SHAH) return;
-   double size2=log10(XSIZE(vol))/log10(2.0);
+   double size2=log10((double)XSIZE(vol))/log10(2.0);
    if (ABS(size2-ROUND(size2))>1e-6)
       REPORT_ERROR(1,"Denoising::denoise: Input volume must be of a size power of 2");
-   size2=log10(YSIZE(vol))/log10(2.0);
+   size2=log10((double)YSIZE(vol))/log10(2.0);
    if (ABS(size2-ROUND(size2))>1e-6)
       REPORT_ERROR(1,"Denoising::denoise: Input volume must be of a size power of 2");
-   size2=log10(ZSIZE(vol))/log10(2.0);
+   size2=log10((double)ZSIZE(vol))/log10(2.0);
    if (ABS(size2-ROUND(size2))>1e-6)
       REPORT_ERROR(1,"Denoising::denoise: Input volume must be of a size power of 2");
 
