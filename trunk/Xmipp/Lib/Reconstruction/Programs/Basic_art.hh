@@ -25,7 +25,7 @@
 #ifndef _BASIC_ART_HH
 #  define _BASIC_ART_HH
 
-#include <fstream.h>
+#include <fstream>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippVolumes.hh>
 #include "../refinement.hh"

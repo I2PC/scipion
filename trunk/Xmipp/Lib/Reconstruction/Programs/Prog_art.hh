@@ -25,7 +25,7 @@
 #ifndef _PROG_ART_HH
 #  define _PROG_ART_HH
 
-#include <iostream.h>
+#include <iostream>
 #include "Basic_art.hh"
 
 /**@name Plain ART
