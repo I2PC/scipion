@@ -68,6 +68,16 @@ public:
    /** Minimum and maximum of the values in the array.*/
    void compute_double_minmax(double &min, double &max) const;
 
+   /** Minimum and maximum within region. The region is specified
+       by two corners. */
+   void compute_double_minmax(double &min, double &max,
+      const matrix1D<double> &corner1, const matrix1D<double> &corner2) const;
+
+   /** Minimum and maximum within region. The region is specified
+       by two corners. */
+   void compute_double_minmax(double &min, double &max,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const;
+
    /** Average of the values in the array.
        The returned value is always double, independently of the type
        of the array.
@@ -87,6 +97,16 @@ public:
        returned. */
    void compute_stats(double &avg, double &stddev, T &min, T &max) const;
    
+   /** Compute statistics within region. The region is specified
+       by two corners. */
+   void compute_stats(double &avg, double &stddev, T &min, T &max,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const;
+
+   /** Compute statistics within region. The region is specified
+       by two corners. */
+   void compute_stats(double &avg, double &stddev, T &min, T &max,
+      const matrix1D<double> &corner1, const matrix1D<double> &corner2) const;
+
    /** Adjust the range of the array to a given one.
        A linear operation is performed on the values of the array such
        that after it, the values of the array are comprissed between

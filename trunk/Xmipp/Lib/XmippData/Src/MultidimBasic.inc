@@ -79,6 +79,24 @@ template <class T>
       }
    }
 
+template <class T>
+   void maT::compute_double_minmax(double &min, double &max,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const {
+      matrix1D<double> dcorner1, dcorner2;
+      type_cast(corner1,dcorner1);
+      type_cast(corner2,dcorner2);
+      compute_double_minmax(min,max,dcorner1,dcorner2);
+   }
+
+template <class T>
+   void maT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const {
+      matrix1D<double> dcorner1, dcorner2;
+      type_cast(corner1,dcorner1);
+      type_cast(corner2,dcorner2);
+      compute_stats(avg,stddev,min_val,max_val,dcorner1,dcorner2);
+   }
+
 /* Compute avg ------------------------------------------------------------- */
 template <class T>
    double maT::compute_avg() const {
