@@ -352,15 +352,15 @@ bool same_shape(vtkImageData *v1, vtkImageData *v2) {
 }
 
 /* Center FFT -------------------------------------------------------------- */
-void CenterFFT(vtkImageData *&v, int zoff, int yoff, int xoff) {
+void VTK_CenterFFT(vtkImageData *&v, int zoff, int yoff, int xoff) {
    if (v==NULL) return;
    vtkImageData *v_centered=NULL;
-   CenterFFT(v,v_centered, zoff, yoff, xoff);
+   VTK_CenterFFT(v,v_centered, zoff, yoff, xoff);
    VTK2VTK(v_centered,v);
    v_centered->Delete();
 }
 
-void CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
+void VTK_CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
    int zoff, int yoff, int xoff) {
    if (v_in==NULL) return;
 
@@ -526,23 +526,23 @@ void FFT_VTK(vtkImageData *v_in, vtkImageData * &fft_out,
    fft->SetInput((vtkStructuredPoints *) v_in); fft->Update();
    VTK2VTK(fft->GetOutput(),fft_out);
    fft->Delete();
-   if (!do_not_center) CenterFFT(fft_out);
+   if (!do_not_center) VTK_CenterFFT(fft_out);
 }
 
 /* Magnitude --------------------------------------------------------------- */
 template <class maT>
-   void FFT_magnitude(vtkImageData *fft_in, maT &mag) {
+   void VTK_FFT_magnitude(vtkImageData *fft_in, maT &mag) {
       vtkImageMagnitude *mag_filter=vtkImageMagnitude::New();
       mag_filter->SetInput(fft_in); mag_filter->Update();
       VTK2xmippArray(mag_filter->GetOutput(),mag);
       mag_filter->Delete();
 }
 
-void FFT_magnitude(FourierImageXmipp &fft_in,
+void VTK_FFT_magnitude(FourierImageXmipp &fft_in,
    matrix2D<double> &mag, bool do_not_center) {
    vtkImageData *fftI=NULL; xmippFFT2VTK(fft_in,fftI);
-   if (!do_not_center) CenterFFT(fftI);
-   FFT_magnitude(fftI,mag);
+   if (!do_not_center) VTK_CenterFFT(fftI);
+   VTK_FFT_magnitude(fftI,mag);
    fftI->Delete();
 }
 
@@ -550,7 +550,7 @@ void FFT_magnitude(FourierImageXmipp &fft_in,
 /* This is a very short exercise of implementing a VTK filter. It is
    inspired in vtkImageMagnitude */
 template <class maT>
-   void FFT_phase(vtkImageData *fft_in, maT &phase) _THROW {
+   void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) _THROW {
    // Check validity of operation
    int maxC = fft_in->GetNumberOfScalarComponents();
    if (maxC!=2)
@@ -589,7 +589,7 @@ void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out,
       int xoff=(dim[0]%2==1)?1:0;
       cout << "Offset: " << zoff << "," << yoff << "," << xoff << endl;
       vtkImageData *fft_not_centered=NULL;
-      CenterFFT(fft_in,fft_not_centered,zoff,yoff,xoff);
+      VTK_CenterFFT(fft_in,fft_not_centered,zoff,yoff,xoff);
       rfft->SetInput(fft_not_centered); rfft->Update();
       fft_not_centered->Delete();
    }
@@ -603,261 +603,6 @@ void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out,
    rfft->Delete();
    real_part->Delete();
 }
-
-
-/* Correlation and Autocorrelation ----------------------------------------- */
-template <class T>
-void auto_correlation_matrix(const matrix2D<T> &Img,matrix2D<double> &R)
-{
-   R.resize(Img);
-   // Compute the Fourier Transform
-   vtkImageData *VTK_FourierTransform=NULL;
-   FourierImageXmipp FFT1,FFT2; 
-   FFT_VTK(Img, VTK_FourierTransform,TRUE);
-   VTK2xmippFFT (VTK_FourierTransform, FFT1);   
-
-   FFT2().resize(FFT1());
-   // Compute the complex conjugate
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT2())
-   {
-      complex<double> A(FFT1(i,j).real(),-FFT1(i,j).imag());
-	  FFT2(i,j)=A;
-   }
-   // Multiply the matrices element by element
-   mul_elements(FFT1(),FFT2(),FFT1());
-   // Invert the product, in order to obtain the correlation image
-   xmippFFT2VTK (FFT1, VTK_FourierTransform);
-   IFFT_VTK(VTK_FourierTransform, R,TRUE);
-
-   double N=R.RowNo()*R.ColNo();
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(R)
-      R(i,j)=R(i,j)/N;
-	  
-   // Center the resulting image to obtain a centered autocorrelation
-   int ym=(int)R.RowNo()/2;
-   int xm=(int)R.ColNo()/2;
-   int xp,yp;
-   for(int i=0;i<R.RowNo();i++)   
-      for(int j=0;j<R.ColNo()/2;j++)
-	  {	  
-    	  // Determine the destination row
-		  if(i>=ym)
-			 yp=i-ym;
-		  else 
-			 yp=i+ym;
-		  // Determine the destination column
-    	  xp=j+xm;
-		  // Swap origin and destination
-		  double tmp;
-		  SWAP(R(i,j),R(yp,xp),tmp);	  
-      }
-}
-
-template <class T>
-void correlation_matrix(const matrix2D<T> &m1, const matrix2D<T> &m2,
-                              matrix2D<double> &R)
-{
-   // Compute the Fourier Transform of the images
-    vtkImageData *VTK_FourierTransform=NULL;
-    FourierImageXmipp FFT1,FFT2; 
-    FFT_VTK(m1, VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT1);
-    FFT_VTK(m2, VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT2);
-
-    // Compute the complex conjugate
-    
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FFT2())
-    {
-       complex<double> A(DIRECT_MAT_ELEM(FFT2(),i,j).real(),-
-                         DIRECT_MAT_ELEM(FFT2(),i,j).imag());
-	   DIRECT_MAT_ELEM(FFT2(),i,j)=A;
-    }
-    // Multiply the matrices element by element
-    mul_elements(FFT1(),FFT2(),FFT1());
-    // Invert the product, in order to obtain the correlation image
-    matrix2D<double> R_aux(R);    
-
-    xmippFFT2VTK (FFT1, VTK_FourierTransform);
-    IFFT_VTK(VTK_FourierTransform, R_aux,TRUE);
-
-    int xinit = 0;//R.startingX(); Let's use direct coordinate to speed this up
-    int yinit = 0;//R.startingY();
-    int xend  = R.ColNo()-1;//last index in direct_mat
-    int yend  = R.RowNo()-1;
-    
-    // Divide by the number of pixels to obtain the correlation value used 
-    // in Xmipp
-    double N=R.RowNo()*R.ColNo();
-    int ii,jj;
-
-    int ym=(int)R.RowNo()/2;
-    int xm=(int)R.ColNo()/2;
-
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(R)
-       {
-	ii=intWRAP(i+ym,yinit,yend);
-	jj=intWRAP(j+xm,xinit,xend);
-	DIRECT_MAT_ELEM (R,ii,jj)= DIRECT_MAT_ELEM (R_aux,i,j)/N;
-        }
-}
-
-/* Convolution of series --------------------------------------------------- */
-template <class T>
-void series_convolution(matrix1D<T> &series1,matrix1D<T> &series2,
-                        matrix1D<T> &result,bool FullConvolution)
-{
-	// Store dimension of series
-	int dim1=series1.get_dim();
-	int dim2=series2.get_dim();
-	// Resize series to the size of the resulting series
-	// (Zeros are stored in the expanded values)
-	series1.resize(dim1+dim2-1);
-	series2.resize(dim1+dim2-1);
-	result.resize(dim1+dim2-1);
-	// Fourier Transform the two series
-    vtkImageData *VTK_FourierTransform=NULL;
-    matrix1D<complex <double> > FFT1,FFT2;
-    FFT_VTK(series1,VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT1);
-    FFT_VTK(series2, VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT2);
-    // Multiply the vectors element by element to do the 
-	// convolution in the Fourier space.
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-		FFT1(i)=FFT1(i)*FFT2(i);
-	// Recover the convolution result by inverse FFT
-	result.resize(series1.get_dim()*2-1);	// Resize to store the result
-    xmippFFT2VTK (FFT1, VTK_FourierTransform);
-    IFFT_VTK(VTK_FourierTransform, result,TRUE);
-	// Restore the dimensions
-	series1.resize(dim1);
-	series2.resize(dim2);
-	
-	/* If the full convolution is required, nothing more remains to be done.
-	Otherwise, if the valid values are required, return the central ones. */
-	if(FullConvolution==FALSE)
-	{
-		// First get the maximum dimension of the series, which is the dimension
-		// of the result
-		int dim=MAX(dim1,dim2);
-		// Determine the number of values to discard
-		int discard=result.get_dim()-dim;
-		// Divide it by two as we have to discard them in both sides of the vector
-		discard=discard/2;  // Integer division is intended
-		// copy required values (simple displacement of values)
-		for(int i=STARTINGX(result);i<STARTINGX(result)+dim;i++)
-			result(i)=result(i+discard);
-		// and finally resize to discard not copied values
-		result.resize(dim);
-	}
-}
-
-/* Convolution of a series with a given filter --------------------------- */
-template <class T>
-void convolve(matrix1D<T> &series1,matrix1D<T> &filter, matrix1D<T> &result)
-{
-	// Store dimension of series
-	int dim1=series1.get_dim();
-	int dim2=filter.get_dim();
-	// Resize series to the size of the resulting series
-	// (Zeros are stored in the expanded values)
-	series1.resize(dim1+dim2-1);
-	filter.resize(dim1+dim2-1);
-	result.resize(dim1+dim2-1);
-	// Fourier Transform the two series
-    vtkImageData *VTK_FourierTransform=NULL;
-    matrix1D<complex <double> > FFT1,FFT2;
-    FFT_VTK(series1,VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT1);
-    FFT_VTK(filter, VTK_FourierTransform,TRUE);
-    VTK2xmippFFT (VTK_FourierTransform, FFT2);
-    // Multiply the vectors element by element to do the 
-	// convolution in the Fourier space.
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-	{
-		FFT1(i)=FFT1(i)*FFT2(i);
-	}	
-	// Recover the convolution result by inverse FFT
-	result.resize(series1.get_dim()*2-1);	// Resize to store the result
-    xmippFFT2VTK (FFT1, VTK_FourierTransform);
-    IFFT_VTK(VTK_FourierTransform, result,TRUE);
-	
-	
-	// Restore the dimensions
-	series1.resize(dim1);
-	filter.resize(dim2);
-	// Determine the number of values to discard
-	int discard=result.get_dim()-dim1;
-	// Divide it by two as we have to discard them in both sides of the vector
-	discard=discard/2;  // Integer division is intended
-	// copy required values (simple displacement of values)
-	for(int i=STARTINGX(result);i<STARTINGX(result)+dim1;i++)
-		result(i)=result(i+discard);
-	// and finally resize to discard not copied values
-	result.resize(dim1);
-}
-
-
-/* Numerical derivative of a matrix ----------------------------- */
-void numerical_derivative(matrix2D<double> &M,matrix2D<double> &D,
-							char direction,int order,
-							int window_size,int polynomial_order)
-{
-    // Set D to be a copy in shape of M
-	D.copy_shape(M);
-	matrix1D<double> v,rotated; 
-	matrix1D<double> ans; // To obtain results 
-	// Wrap around version of the Savitzky-Golay coefficients
-    rotated.resize(2*window_size+1);
-
-	double *pans=ans.adapt_for_numerical_recipes();
-	double *pv=v.adapt_for_numerical_recipes();
-	double *protated=rotated.adapt_for_numerical_recipes();
-	// Calculate the Savitzky-Golay filter coeficients
-	 savgol(protated, 2*window_size+1, window_size,
-		     window_size, order, polynomial_order);
-     // Savitzky-Golay filter is returned in wrap-around style, so
-	 // correct it to use with the convolution routine
-	 int dim=rotated.get_dim();
-	 matrix1D<double> coeficients(dim);
-	 for(int i=0;i<dim;i++)
-	 {
-	 	int j=i+window_size;
-		if(j<dim)
-			coeficients(j)=rotated(i);
-		else
-			coeficients(j-dim)=rotated(i);
-	 }
-     // Apply the Savitzky-Golay filter to every row or column
-	if(direction=='x')
-	{
-		 // For every row (values in a row are values of the X direction)
-		 for(int i=STARTINGY(M);i<=FINISHINGY(M);i++)
-		 {
-			M.getRow(i,v); 
-			convolve(v,coeficients,ans);
-			ans.setRow();
-			D.setRow(i,ans);			
-		 }
-	}
-	else if(direction=='y')
-	{
-		 // For every column (values in a column are values of the Y direction)
-		 for(int i=STARTINGX(M);i<=FINISHINGX(M);i++)
-		 {
-			M.getCol(i,v);
-			convolve(v,coeficients,ans);
-			ans.setCol();
-			D.setCol(i,ans);						
-		 }
-	}	
-
-	ans.kill_adaptation_for_numerical_recipes(pans);
-	v.kill_adaptation_for_numerical_recipes(pv);
-	coeficients.kill_adaptation_for_numerical_recipes(protated);
-}
-
 
 /* Instantiate ------------------------------------------------------------- */
 template <class T, class VTKT>
@@ -876,13 +621,6 @@ void instantiate_VTK(T a, VTKT *vtkI) {
    VTK2xmippArray(vtkI,V);
    VTK2VTK(vtkI,vtkI);
    VTK_print(cout,vtkI);
-   
-   matrix2D<double> R;
-   int ca;
-   auto_correlation_matrix(m,R);
-   correlation_matrix(m,m,R);
-   series_convolution(v,v,v);
-   convolve(v,v,v);
 }
 
 
@@ -895,9 +633,9 @@ void instantiate_VTK() {
    float         f; instantiate_VTK(f,vtkID); instantiate_VTK(f,vtkSP);
    double        d; instantiate_VTK(d,vtkID); instantiate_VTK(d,vtkSP);
 
-   matrix1D<double> v; FFT_magnitude(vtkID,v); FFT_phase(vtkID,v);
-   matrix2D<double> m; FFT_magnitude(vtkID,m); FFT_phase(vtkID,m);
-   matrix3D<double> V; FFT_magnitude(vtkID,V); FFT_phase(vtkID,V);
+   matrix1D<double> v; VTK_FFT_magnitude(vtkID,v); VTK_FFT_phase(vtkID,v);
+   matrix2D<double> m; VTK_FFT_magnitude(vtkID,m); VTK_FFT_phase(vtkID,m);
+   matrix3D<double> V; VTK_FFT_magnitude(vtkID,V); VTK_FFT_phase(vtkID,V);
 
    matrix1D< complex<double> > vc; shift_for_VTK(vc);
    matrix2D< complex<double> > mc; shift_for_VTK(mc,'x');

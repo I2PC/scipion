@@ -33,6 +33,7 @@
    #include <XmippData/xmippMatrices3D.hh>
    #include <XmippData/xmippImages.hh>
    #include <XmippData/xmippVolumes.hh>
+   #include <XmippData/xmippFFT.hh>
    #include <vtkStructuredPoints.h>
    #include <vtkImageData.h>
 /**@name VTK */
@@ -55,21 +56,21 @@
 
    /** Shift and wrap a 1D image along direction X or Y.
        Used for adjusting the volume from/for VTK
-       when the size is even. Howver this function always shift, no
+       when the size is even. However this function always shift, no
        matter the size*/
    template <class T>
       void shift_for_VTK(matrix1D<T> &v);
 
    /** Shift and wrap a 2D image along direction X or Y.
        Used for adjusting the volume from/for VTK
-       when the size is even. Howver this function always shift, no
+       when the size is even. However this function always shift, no
        matter the size. Valid directions are 'x' or 'y'*/
    template <class T>
       void shift_for_VTK(matrix2D<T> &v, char dir);
 
    /** Shift and wrap a 3D image along direction X or Y.
        Used for adjusting the volume from/for VTK
-       when the size is even. Howver this function always shift, no
+       when the size is even. However this function always shift, no
        matter the size. Valid directions are 'x' or 'y'*/
    template <class T>
       void shift_for_VTK(matrix3D<T> &v, char dir);
@@ -147,15 +148,15 @@
 
    /** Same shape.
        TRUE if the two VTK objects have the same dimensions and sizes */
-   bool same_shape(vtkImageData *v1, vtkImageData *v2);
+   bool VTK_same_shape(vtkImageData *v1, vtkImageData *v2);
 
    /** Self center an FFT.
        Use the offset to uncenter properly odd size images*/
-   void CenterFFT(vtkImageData *&v, int zoff=0, int yoff=0, int xoff=0);
+   void VTK_CenterFFT(vtkImageData *&v, int zoff=0, int yoff=0, int xoff=0);
 
    /** Center an FFT.
        Use the offset to uncenter properly odd size images*/
-   void CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
+   void VTK_CenterFFT(vtkImageData *&v_in, vtkImageData *&v_out,
       int zoff=0, int yoff=0, int xoff=0);
 
    /** Show VTK object. */
@@ -163,17 +164,11 @@
       void VTK_print (ostream &out, VTKT *v);
 
    /** Index to frequency.
-       Given an index and a size of the FFT, this function returns the
-       corresponding digital frequency (-1/2 to 1/2). */
-   #define FFT_IDX2DIGFREQ(idx,size,freq) \
-       freq=((double)((idx)<(size)/2)?(idx):-(size)+(idx))/(double)(size);
-
-   /** Index to frequency.
        This function can be used with vectors of any size (1,2,3).
        The Digital spectrum is limited between -1/2 and 1/2.
        If the vector has got more than 3 coordinates, then an exception
        is thrown*/
-   inline void FFT_idx2digfreq(vtkImageData *fft, const matrix1D<int> &idx,
+   inline void VTK_FFT_idx2digfreq(vtkImageData *fft, const matrix1D<int> &idx,
       matrix1D<double> &freq) _THROW {
          if (XSIZE(idx)<1 || XSIZE(idx)>3)
             REPORT_ERROR(1,"FFT_idx2digfreq: Index is not of the correct size");
@@ -190,24 +185,12 @@
             FFT_IDX2DIGFREQ(VEC_ELEM(idx,i),size[i],VEC_ELEM(freq,i));
    }
 
-   /** Frequency to index (int).
-       Given a frequency and a size of the FFT, this macro returns the
-       corresponding integer index. */
-   #define DIGFREQ2FFT_IDX(freq,size,idx) {\
-       (idx)=(int)(ROUND((size)*(freq))); if ((idx)<0) (idx)+=(int)(size);}
-   
-   /** Frequency to index (double).
-       Given a frequency and a size of the FFT, this macro returns the
-       corresponding double index. */
-   #define DIGFREQ2FFT_IDX_DOUBLE(freq,size,idx) {\
-       (idx)=((size)*(freq)); if ((idx)<0) (idx)+=(size);}
-   
    /** Frequency to index.
        This function can be used with vectors of any size (1,2,3).
        The Digital spectrum is limited between -1/2 and 1/2.
        If the vector has got more than 3 coordinates, then an exception
        is thrown*/
-   inline void digfreq2FFT_idx(vtkImageData *fft, const matrix1D<double> &freq,
+   inline void VTK_digfreq2FFT_idx(vtkImageData *fft, const matrix1D<double> &freq,
       matrix1D<int> &idx) _THROW {
          if (XSIZE(freq)<1 || XSIZE(freq)>3)
             REPORT_ERROR(1,"digfreq2FFT_idx: freq is not of the correct size");
@@ -223,20 +206,6 @@
          FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
             DIGFREQ2FFT_IDX(VEC_ELEM(freq,i),size[i],VEC_ELEM(idx,i));
    }
-   
-   /** Digital to Continuous frequency.
-       The pixel size must be given in Amstrongs. The digital frequency is
-       between [-1/2,1/2].*/
-   inline void digfreq2contfreq(const matrix1D<double> &digfreq,
-      matrix1D<double> &contfreq, double pixel_size)
-      {contfreq=digfreq/pixel_size;}
-   
-   /** Continuous to Digital frequency.
-       The pixel size must be given in Amstrongs. The digital frequency is
-       between [-1/2,1/2].*/
-   inline void contfreq2digfreq(const matrix1D<double> &contfreq,
-      matrix1D<double> &digfreq, double pixel_size)
-      {digfreq=contfreq*pixel_size;}
 //@}
 
 /**@name FFT */
@@ -270,16 +239,16 @@
 
    /** Magnitude of FFT. Valid for 2D and 3D */
    template <class maT>
-      void FFT_magnitude(vtkImageData *fft_in, maT &mag);
+      void VTK_FFT_magnitude(vtkImageData *fft_in, maT &mag);
 
-   /** Magnitude of FFT. Valid for 2D and 3D */
-   void FFT_magnitude(FourierImageXmipp &fft_in,
+   /** Magnitude of FFT. */
+   void VTK_FFT_magnitude(FourierImageXmipp &fft_in,
       matrix2D<double> &mag, bool do_not_center=false);
 
    /** Phase of FFT.
        An exception is thrown if the operation is not valid. */
    template <class maT>
-      void FFT_phase(vtkImageData *fft_in, maT &phase) _THROW;
+      void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) _THROW;
 
    /** Inverse FFT of a vector/image/volume */
    void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out, bool
@@ -309,64 +278,6 @@
          {vtkImageData *vtkI=NULL; IFFT_VTK(fft_in,vtkI,is_not_centered);
           VTK2xmippArray(vtkI, v); vtkI->Delete();}
 
-   /** Autocorrelation function of an Xmipp matrix.
-       Fast calcuation of the autocorrelation matrix of a given one using
-	   Fast Fourier Transform. (Using the correlation theorem) */
-  template <class T>
-   void auto_correlation_matrix(matrix2D<T> const &Img,matrix2D<double> &R);
-
-   /** Autocorrelation function of an Xmipp matrix.
-       Fast calcuation of the correlation matrix on two matrices using
-	   Fast Fourier Transform. (Using the correlation theorem).
-	   The output matrix must be already resized*/
-  template <class T>
-   void correlation_matrix(matrix2D<T> const &m1,matrix2D<T> const &m2,
-                           matrix2D<double> &R);
-
-
-   /** Series convolution function. Gives the convolution of two series
-   	   given as Xmipp Vectors. Result is stored in result vector.
-       Fast calcuation of the convolution result using
-	   Fast Fourier Transform. If FullConvolution, set by default to
-	   FALSE, is TRUE the full convolution series is returned. Otherwise
-	   the convolution vector refers only to the valid values, whose
-	   number is the greater dimension of the two series.
-	   Note: Complex numbers are allowed */
-template <class T>
-void series_convolution(matrix1D<T> &series1,matrix1D<T> &series2,
-                        matrix1D<T> &result,bool FullConvolution=FALSE);
-
-   /** Convolution of a series (vector) with a given filter. Result is stored
-       in result vector. Use this function when the dimension of the result
-	   must be the dimension of the given series (first argument)
-	   Note: Complex numbers are allowed */
-template <class T>
-void convolve(matrix1D<T> &series1,matrix1D<T> &filter, matrix1D<T> &result);
-
-   /** numerical_derivative : This function computes the numerical derivative
-      of a matrix in Y direction (rows) or X direction (columns) of a given
-	   matrix, using a Savitzky-Golay filter on every row or column, and then
-	   convolving.Input matrix is M, result is stored in D, direction can have
-	   values of 'x' or 'y'. Order is the derivative order.
-	   Window size and polynomial order are parameters for the
-	   Savitzky-Golay filter that define the number of points forward (+window_size)
-	   and backward (-window_size) considered to calculate the filter, and the degree of
-	   the polynomial to interpolate these values, respectively. Default values are
-	   window_size=2 and polynomial_order=4, which are equivalent to a
-	   5-point algorithm to calculate the derivate and give good results.
-	   But they can be changed provided that polynomial_order <= 2*window_size.
-	   As one can expect, the values of the matrix in a border of size
-	   window_size are not accurate ones, as there aren't enough points to perform
-	   the estimation. As a rule of thumb, the greater the window, the more the
-	   filtering and the less the precission of the derivatives, and the
-	   greater the order of the polynomial, the greater the precission.  */
-
-void numerical_derivative(matrix2D<double> &M,matrix2D<double> &D,
-							char direction,int order,
-							int window_size=2,int polynomial_order=4);
-
-
-
    /** Some variables used in speed up macros related with VTK */
    #define SPEED_UP_vtk \
       int *inExt, maxX, maxY, maxZ; \
@@ -386,8 +297,6 @@ void numerical_derivative(matrix2D<double> &M,matrix2D<double> &D,
       for (int k = 0; k <= maxZ; k++) \
           for (int i = 0; i <= maxY; i++) \
               for (int j = 0; j <= maxX; j++) \
-
-
 //@}
 //@}
 #endif
