@@ -496,42 +496,45 @@ void estimate_background_gauss_parameters() {
       }
 
    // Compute the average radial error
-   double error_avg=0;
+   double error2_avg=0;
    int N_avg=0;
+   matrix1D<double> error; error.init_zeros(radial_CTFmodel_avg);
    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
       XX(idx)=0; YY(idx)=i;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>w_max_gauss) continue;
 
-      double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
-      error_avg+=ABS(error); N_avg++;
+      error(i)=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
+      error2_avg+=error(i)*error(i); N_avg++;
    }
-   if (N_avg!=0) error_avg/=N_avg;
-   error_avg*=error_avg;
+   if (N_avg!=0) error2_avg/=N_avg;
    #ifdef DEBUG
-      cout << "Error avg=" << error_avg << endl;
+      cout << "Error2 avg=" << error2_avg << endl;
    #endif
 
    // Compute the minimum radial error
-   bool   first=true;
-   double error_min=0, wmin, fmin;
+   bool   first=true, OK_to_proceed=false;
+   double error2_min=0, wmin, fmin;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
       XX(idx)=0; YY(idx)=i;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>w_max_gauss) continue;
 
-      double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
-      if (error<0 && first) {error_min=MIN(error_min,error); continue;}
-      else if (error<0) break;
-      error*=error;
-      if (first && error>0.15*error_avg)
-         // If the two lines cross, do not consider any error until
-	 // the cross is "old" enough
-         {wmin=w; error_min=error; first=false;}
+      if (error(i)<0 && first) continue;
+      else if (error(i)<0) break;
+      double error2=error(i)*error(i);
+      // If the two lines cross, do not consider any error until
+      // the cross is "old" enough
+      if (first && error2>0.15*error2_avg) OK_to_proceed=true;
+      if (first && i>0) OK_to_proceed&=(error(i)<error(i-1));
 
-      if (error<error_min) {wmin=w; error_min=error;}
+      // If the error now is bigger than a 30% (1.69=1.3*1.3) of the error min
+      // this must be a rebound. Stop here
+      if (!first && error2>1.69*error2_min) break;
+      if ( first && OK_to_proceed) {wmin=w; error2_min=error2; first=false;}
+      if (!first && error2<error2_min) {wmin=w; error2_min=error2;}
       #ifdef DEBUG
-	 cout << w << " " << error << " " << wmin << " " << endl;
+	 cout << w << " " << error2 << " " << wmin << " " << endl;
       #endif
    }
    global_max_gauss_freq=wmin;
@@ -546,20 +549,19 @@ void estimate_background_gauss_parameters() {
 
    // Compute the maximum radial error
    first=true;
-   double error_max=0, wmax, fmax;
+   double error2_max=0, wmax, fmax;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
       XX(idx)=0; YY(idx)=i;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>wmin) continue;
 
-      double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
-      if (error<0 && first) continue;
-      else if (error<0) break;
-      error*=error;
-      if (first) {wmax=w; error_max=error; first=false;}
-      if (error>error_max) {wmax=w; error_max=error;}
+      if (error(i)<0 && first) continue;
+      else if (error(i)<0) break;
+      double error2=error(i)*error(i);
+      if (first) {wmax=w; error2_max=error2; first=false;}
+      if (error2>error2_max) {wmax=w; error2_max=error2;}
       #ifdef DEBUG
-	 cout << w << " " << error << " " << wmax << endl;
+	 cout << w << " " << error2 << " " << wmax << endl;
       #endif
    }
    VECTOR_R2(freq,wmax,wmax);
@@ -1089,10 +1091,13 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     matrix2D<double> error;
     
     // Check if there is no initial guess
+    double min_allowed_defocus=-100e3, max_allowed_defocus=-1e3;
     if (global_initial_ctfmodel->DeltafU!=0) {
        initial_defocusStep=4000;
-       defocusU0=defocusV0=global_initial_ctfmodel->DeltafU+initial_defocusStep;
-       defocusUF=defocusVF=global_initial_ctfmodel->DeltafU-initial_defocusStep;
+       max_allowed_defocus=defocusU0=defocusV0=
+          global_initial_ctfmodel->DeltafU+initial_defocusStep;
+       min_allowed_defocus=defocusUF=defocusVF=
+          global_initial_ctfmodel->DeltafU-initial_defocusStep;
     }
     
     for (double defocusStep=initial_defocusStep; defocusStep>=1e3; defocusStep/=2) {
@@ -1153,10 +1158,10 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
           }
        }
 
-       defocusVF=MAX(-100e3,best_defocusVmin-defocusStep);
-       defocusV0=MIN(-1e3,best_defocusVmax+defocusStep);
-       defocusUF=MAX(-100e3,best_defocusUmin-defocusStep);
-       defocusU0=MIN(-1e3,best_defocusUmax+defocusStep);
+       defocusVF=MAX(min_allowed_defocus,best_defocusVmin-defocusStep);
+       defocusV0=MIN(max_allowed_defocus,best_defocusVmax+defocusStep);
+       defocusUF=MAX(min_allowed_defocus,best_defocusUmin-defocusStep);
+       defocusU0=MIN(max_allowed_defocus,best_defocusUmax+defocusStep);
        i=j=0;
        if (global_show>=2) {
           ImageXmipp save; save()=error; save.write("error.xmp");
