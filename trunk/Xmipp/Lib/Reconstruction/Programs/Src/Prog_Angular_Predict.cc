@@ -34,22 +34,15 @@
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
+   fn_pcaproj=get_param(argc,argv,"-pcaproj");
    fn_ang=get_param(argc,argv,"-ang");
    PCA_list=get_vector_param(argc,argv,"-PCA_list",-1);
    fn_out_ang=get_param(argc,argv,"-oang");
-   fn_pred_ang=get_param(argc,argv,"-prev_ang","");
    fn_sym=get_param(argc,argv,"-sym","");
-   max_rot_change=AtoF(get_param(argc,argv,"-max_rot_change","-1"));
-   max_tilt_change=AtoF(get_param(argc,argv,"-max_tilt_change","-1"));
+   max_proj_change=AtoF(get_param(argc,argv,"-max_proj_change","-1"));
    max_psi_change=AtoF(get_param(argc,argv,"-max_psi_change","-1"));
    max_shift_change=AtoF(get_param(argc,argv,"-max_shift_change","0"));
    psi_step=AtoF(get_param(argc,argv,"-psi_step","5"));
-   if (check_param(argc,argv,"-rot_step"))
-      rot_step=AtoF(get_param(argc,argv,"-psi_step"));
-   else rot_step=psi_step;
-   if (check_param(argc,argv,"-tilt_step"))
-      tilt_step=AtoF(get_param(argc,argv,"-tilt_step"));
-   else tilt_step=psi_step;
    shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
@@ -62,14 +55,13 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
 void Prog_angular_predict_prm::show() {
    Prog_parameters::show();
    cout << "Reference rootname: " << fn_ref << endl
+        << "PCA projection rootname: " << fn_pcaproj << endl
         << "Angle file: " << fn_ang << endl;
    cout << "PCA list:           ";
    if (XSIZE(PCA_list)==0) cout << "All\n";
    else                    cout << PCA_list.transpose() << endl;
-   cout << "Previously Predicted angles: " << fn_pred_ang << endl
-        << "Ouput angular file: " << fn_out_ang << endl
-	<< "Max rot change: " << max_rot_change << " step: " << rot_step << endl
-	<< "Max tilt change: " << max_tilt_change << " step: " << tilt_step << endl
+   cout << "Ouput angular file: " << fn_out_ang << endl
+	<< "Max proj change: " << max_proj_change << endl
 	<< "Max psi change: " << max_psi_change << " step: " << psi_step << endl
 	<< "Max shift change: " << max_shift_change << " step: " << shift_step << endl
         << "Show level: " << tell << endl
@@ -80,21 +72,19 @@ void Prog_angular_predict_prm::show() {
 void Prog_angular_predict_prm::usage() {
    Prog_parameters::usage();
    cerr << "   -ref <ref rootname>      : Rootname passed to Angular_Reference\n"
+        << "   -pcaproj <pca rootname>  : Rootname passed to Angular_Project\n"
 	<< "  [-PCA_list \"[n,n,n,...]\"] : Number of the PCAs to use for prediction\n"
 	<< "                            : by default, all\n"
 	<< "   -ang <angle file>        : DocFile with the angles for the reference\n"
 	<< "                              produced by xmipp_project\n"
-	<< "  [-prev_ang <angle file>]  : DocFile produced by this same program\n"
-	<< "                              with the predicted angles from previous stages\n"
+//	<< "  [-prev_ang <angle file>]  : DocFile produced by this same program\n"
+//	<< "                              with the predicted angles from previous stages\n"
 	<< "   -oang <angle file>       : DocFile with output angles\n"
         << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-	<< "  [-max_rot_change <ang=-1>]: Maximum change allowed in rot\n"
-	<< "  [-max_tilt_change <ang=-1>]: Maximum change allowed in tilt\n"
+	<< "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
 	<< "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
 	<< "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
 	<< "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
-	<< "  [-rot_step <ang=psi_step>]: Step in rot in degrees\n"
-	<< "  [-tilt_step <ang=psi_step>]: Step in tilt in degrees\n"
 	<< "  [-shift_step <r=1>]       : Step in shift in pixels\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
 	<< "  [-show_psi_shift]         : Show the psi-shift process\n"
@@ -132,24 +122,7 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
       tilt[i]=DF(1); // Tilting angle
       i++; DF.next_data_line();
    }
-
-   // Read the previous angle file
-   if (fn_pred_ang!="") {
-      DocFile DF(fn_pred_ang);
-      DF.go_first_data_line();
-      so_far_rot.resize(DF.dataLineNo());
-      so_far_tilt.resize(DF.dataLineNo());
-      int i=0;
-      while (!DF.eof()) {
-	 so_far_rot[i]=DF(0);  // Rotational angle
-	 so_far_tilt[i]=DF(1); // Tilting angle
-	 i++; DF.next_data_line();
-      }
-   }
    
-   // Symmetry file
-   if (fn_sym!="") SL.read_sym_file(fn_sym);
-
    // Resize the predicted vectors
    int number_of_images=get_images_to_process();
    current_img=0;
@@ -169,7 +142,7 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
          PCA_projector.PCASet(m)->prepare_for_correlation();
       
          PCA_ref[m]=new xmippCTVectors(0,true);
-         FileName fn_in=fn_ref+"_PCA_"+ItoA(m,2)+".dat";
+         FileName fn_in=fn_pcaproj+"_PCA_"+ItoA(m,2)+".dat";
 	 ifstream fh_in;
 	 fh_in.open(fn_in.c_str());
 	 if (!fh_in)
@@ -194,10 +167,16 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
    for (int i=0; i<refNo; i++) {
       candidate_list[i]=true;
       sumxx[i]=sumyy[i]=sumxy[i]=cumulative_corr[i]=0;
-      if (max_rot_change!=-1)
-         candidate_list[i]=candidate_list[i] && (ABS(rot[i]-I.rot())<max_rot_change);
-      if (max_tilt_change!=-1)
-         candidate_list[i]=candidate_list[i] && (ABS(tilt[i]-I.tilt())<max_tilt_change);
+      if (max_proj_change!=-1) {
+         double dummy_rot=rot[i], dummy_tilt=tilt[i], dummy_psi;
+         double ang_distance=distance_prm.check_symmetries(
+	    I.rot(),I.tilt(),0,dummy_rot,dummy_tilt,dummy_psi,true);
+	 candidate_list[i]=(ang_distance<=max_proj_change);
+	 #ifdef DEBUG
+	    cout << "(" << I.rot() << "," << I.tilt() << ") and ("
+		 << rot[i] << "," << tilt[i] << ") --> " << ang_distance << endl;
+	 #endif
+      }
    }
 }
 
@@ -289,7 +268,9 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
       if (PCA_projector.use_this_PCA[m]) {
          // Show image name
          if (tell & TELL_ROT_TILT)
-	    cout << "# " << I.name() << " m=" << m << endl;
+	    cout << "# " << I.name() << " m=" << m
+	         << " current rot="  << I.rot()
+		 << " current tilt=" << I.tilt() << endl;
          PCAs_used++;
          refine_candidate_list_with_correlation(m,Vpca[m],*(PCA_ref[m]),
 	    candidate_list, cumulative_corr, sumxy, sumxx, sumyy, dim, 50);
@@ -377,7 +358,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
          for (int jp=0; jp<groups[g].size(); jp++) {
 	    int ip=candidate_idx[groups[g][jp]];
 	    double ang_distance=distance_prm.check_symmetries(
-	       vrot[ip],vtilt[ip],vpsi[ip],roti,tilti,psii);
+	       vrot[ip],vtilt[ip],vpsi[ip],roti,tilti,psii,false);
 	    if (ang_distance>20) {fits=false; break;}
 	 }
 	 if (fits) {assigned=true; break;}
@@ -711,10 +692,13 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    best_rate   = candidate_rate[jbest];
    
    if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS)) {
+      cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
+           << " tilt=" << I.tilt() << endl;
       cout << "Finally I choose: ";
       if (tell & TELL_PSI_SHIFT) cout << jbest << "\n";
       cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
-           << best_tilt << " corr= " << best_corr
+           << best_tilt << " shiftX=" << best_shiftX
+	   << " shiftY=" << best_shiftY << " corr= " << best_corr
 	   << " rate= " << best_rate << endl << endl;
    }
 
@@ -736,7 +720,7 @@ void Prog_angular_predict_prm::finish_processing() {
    DocFile DF;
    DF.reserve(p+1);
    DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Corr");
-   matrix1D<double> v(7);
+   matrix1D<double> v(6);
    for (int i=0; i<p; i++) {
       v(0)=predicted_rot[i];
       v(1)=predicted_tilt[i];

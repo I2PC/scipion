@@ -42,6 +42,8 @@ class Prog_angular_predict_prm: public Prog_parameters {
 public:
    /** Root filename from Angular Reference */
    FileName fn_ref;
+   /** Root filename from Angular Project */
+   FileName fn_pcaproj;
    /** List of PCAs to use for projection */
    matrix1D<double> PCA_list;
    /** Filename with the angles. As provided by the movement file
@@ -49,26 +51,14 @@ public:
    FileName fn_ang;
    /** Filename for the output angles.*/
    FileName fn_out_ang;
-   /** Filename with the predicted angles.
-       A document file with the rotational and tilting angle
-       for each projection given by previous stages.
-       If not given, none is used. */
-   FileName fn_pred_ang;
    /** Filename for the symmetry file */
    FileName fn_sym;
-   /** Maximum rot change.
+   /** Maximum projection change.
        -1 means all are allowed. */
-   double max_rot_change;
-   /** Maximum tilt change.
-       -1 means all are allowed. */
-   double max_tilt_change;
+   double max_proj_change;
    /** Maximum psi change.
        -1 means all are allowed */
    double max_psi_change;
-   /** Rot step */
-   double rot_step;
-   /** Tilt step */
-   double tilt_step;
    /** Psi step */
    double psi_step;
    /** Maximum shift change */
@@ -86,12 +76,6 @@ public:
    vector<double> rot;
    // Vector with the tilting angles to learn
    vector<double> tilt;
-   // Symmetry list
-   SymList SL;
-   // Vector with the so far predicted rotational angles
-   vector<double> so_far_rot;
-   // Vector with the so far predicted tilting angles
-   vector<double> so_far_tilt;
    // PCA projector
    Prog_angular_project_prm PCA_projector;
    /* Vector with all projections of the reference images
