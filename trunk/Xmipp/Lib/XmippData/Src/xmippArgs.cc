@@ -24,8 +24,17 @@
  ***************************************************************************/
 #include "../xmippArgs.hh"
 #include <stdio.h>
-#include <strstream.h>
 #include <math.h>
+
+#define GCC_VERSION (__GNUC__ * 10000 \
+   + __GNUC_MINOR__ * 100 \
+   + __GNUC_PATCHLEVEL__)
+/* Test for GCC > 3.3.0 */
+#if GCC_VERSION >= 30300
+   #include <sstream>
+#else
+   #include <strstream.h>
+#endif
 
 // Char --> Float ========================================================
 float AtoF(const char *str, int _errno, string errmsg, int exit) _THROW {
@@ -84,31 +93,43 @@ int best_prec(float F, int _width) {
 
 // Float --> String ========================================================
 string FtoA(float F, int _width, int _prec) {
-   char aux[15];
-   #ifndef _LINUX7
+   #if GCC_VERSION < 30300
+      char aux[15];
       ostrstream outs(aux,sizeof(aux));
-      outs.fill(' ');
-      if (_width!=0) outs.width(_width);
-      if (_prec==0) _prec=best_prec(F,_width);
-      if (_prec==-1 && _width>7)
-         {outs.precision(_width-7); outs.setf(ios::scientific);}
-      else
-         outs.precision(_prec);
-      outs << F << ends;
    #else
-      sprintf(aux,"%f",F);
+      ostringstream outs;
    #endif
-   return (string)aux;
+   outs.fill(' ');
+   if (_width!=0) outs.width(_width);
+   if (_prec==0) _prec=best_prec(F,_width);
+   if (_prec==-1 && _width>7)
+      {outs.precision(_width-7); outs.setf(ios::scientific);}
+   else
+      outs.precision(_prec);
+   outs << F << ends;
+   #if GCC_VERSION < 30300
+      return (string)aux;
+   #else
+      return outs.str();
+   #endif
 }
 
 // Integer --> String ======================================================
 string ItoA(int I, int _width, char fill_with) {
-   char aux[15];
-   ostrstream outs(aux,sizeof(aux));
+   #if GCC_VERSION < 30300
+      char aux[15];
+      ostrstream outs(aux,sizeof(aux));
+   #else
+      ostringstream outs;
+   #endif
    outs.fill(fill_with);
    if (_width!=0) outs.width(_width);
    outs << I << ends;
-   return (string)aux;
+   #if GCC_VERSION < 30300
+      return (string)aux;
+   #else
+      return outs.str();
+   #endif
 }
 
 // Character --> Integer ===================================================

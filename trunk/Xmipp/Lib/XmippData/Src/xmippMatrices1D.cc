@@ -28,7 +28,6 @@
 /* ------------------------------------------------------------------------- */
 #include "../xmippMatrices1D.hh"
 #include "../xmippArgs.hh"
-#include <strstream.h>
 #include <stdio.h>
 
 /* ************************************************************************* */
@@ -493,8 +492,8 @@ void instantiate_complex_vector () {
       matrix1D<double>         r;
       
       // General functions for multidimensional arrays
-      a=1.0-a;
-      a=a-1.0;
+      a=(double_complex)1.0-a;
+      a=a-(double_complex)1.0;
       a=a*a;
       a.print_shape();
       a.outside(r);
