@@ -113,6 +113,11 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
 
    // Read input reference image names
    SF_ref.read(fn_ref);
+   int refYdim, refXdim;
+   SF_ref.ImgSize(refYdim, refXdim);
+   if (refYdim!=NEXT_POWER_OF_2(refYdim) || refXdim!=NEXT_POWER_OF_2(refXdim))
+      REPORT_ERROR(1,"Prog_angular_predict_prm::produce_side_info: "
+         "reference images must be of a size that is power of 2");
 
    // Produce side info of the angular distance computer
    distance_prm.fn_ang1=distance_prm.fn_ang2="";
@@ -291,6 +296,11 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 // Predict rot and tilt ----------------------------------------------------
 double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
    double &assigned_rot, double &assigned_tilt, int &best_ref_idx) _THROW {
+   if (XSIZE(I())!=NEXT_POWER_OF_2(XSIZE(I())) ||
+       YSIZE(I())!=NEXT_POWER_OF_2(YSIZE(I())))
+      REPORT_ERROR(1,"Prog_angular_predict_prm::predict_rot_tilt_angles: "
+         "experimental images must be of a size that is power of 2");
+
    // Build initial candidate list
    vector<bool>   candidate_list;
    vector<double> cumulative_corr;
