@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.uam.es (2002)
+ * Authors:    Carlos Oscar            coss@cnb.uam.es (2003)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -114,12 +114,10 @@ void Prog_SSNR_prm::Estimate_SSNR_1D(
    matrix2D<double> output_S, output_N;
 
    // Compute the uncorrected SSNR for the signal
-   //Compute_Uncorrected_SSNR_1D(S(), SF_S, ring_width, Tm, output_S, false);
+   Compute_Uncorrected_SSNR_1D(S(), SF_S, ring_width, Tm, output_S, false);
    
-
    // Compute the uncorrected SSNR for the noise
    Compute_Uncorrected_SSNR_1D(N(), SF_N, ring_width, Tm, output_N, true);
-   output_S=output_N;
 
    // Correct the SSNR and produce output
    output.resize(YSIZE(output_S), 9);
