@@ -85,7 +85,8 @@ void ShowSel::readSelFile(const FileName &_fn) _THROW {
 }
 
 void ShowSel::readObject(SelFile &SF) {
-    listSize        = SF.ImgNo()+SF.ImgNo(SelLine::DISCARDED);
+    listSize        = SF.ImgNo();
+    if(!showonlyactive)   listSize += SF.ImgNo(SelLine::DISCARDED);
     if (listSize==0)
        REPORT_ERROR(1,"ShowSel::readFile: Input selfile is empty");
     imgnames        = new FileName[listSize];
@@ -97,7 +98,8 @@ void ShowSel::readObject(SelFile &SF) {
       	imgnames[i] = SF.get_current_file();
 	selstatus[i]= SF.Is_ACTIVE();
 	SF.next();
-	i++;
+        if(selstatus[i]==TRUE || !showonlyactive)
+	   i++;
     }
 }
 
