@@ -60,14 +60,14 @@ int main(int argc, char **argv) {
    // Scale a single image -------------------------------------------------
    if (Is_ImageXmipp(fn_input)) {
       image.read(fn_input);
-      image().scale_to_size(ydim, xdim);
+      image().self_scale_to_size(ydim, xdim);
       if (fn_out=="") image.write(fn_input);
       else            image.write(fn_out);
       
    // Scale a single volume ------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input);
-      volume().scale_to_size(zdim, ydim, xdim);
+      volume().self_scale_to_size(zdim, ydim, xdim);
       if (fn_out=="") volume.write(fn_input);
       else            volume.write(fn_out);
 
@@ -85,12 +85,12 @@ int main(int argc, char **argv) {
          // Process an image ...............................................
          if (Is_ImageXmipp(fn_in)) {
             image.read(fn_in);
-            image().scale_to_size(ydim, xdim);
+            image().self_scale_to_size(ydim, xdim);
             image.write(fn_out);
          // Process a volume ...............................................
          } else if (Is_VolumeXmipp(fn_in)) {
             volume.read(fn_in);
-            volume().scale_to_size(zdim, ydim, xdim);
+            volume().self_scale_to_size(zdim, ydim, xdim);
             volume.write(fn_out);
          // Not a Spider file ..............................................
          } else
