@@ -151,8 +151,30 @@
        matrix1D<double> &v_out);
 
 /** Median_filter with a 3x3 window */
- template <class T> 
-    void median_filter3x3(matrix2D<T> &m,matrix2D<T> &out);
+    template <class T> 
+       void median_filter3x3(matrix2D<T> &m,matrix2D<T> &out);
 
+/** Mumford-Shah smoothing.
+    Purpose:  This function simultaneously smooths and segments an image	 
+	      using non-linear diffusion.  Mumford-&-Shah's functional	 
+	      minimization algorithm is used to detect region boundaries	  
+	      and relax image smoothness constraints near these		 
+	      discontinuities.						 
+	      The functional minimized is: 				 
+
+	      E = W0*(f-d)*(f-d)	              (data matching)	 
+		+ W1*(fx*fx + fy*fy)*(1-s)*(1-s)      (1st deriv smooth) 
+		+ W2*(s*s) 			      (edge strengths)   
+		+ W3*(sx*sx + sy*sy)		      (edge smoothness)  
+
+
+    Comments:								 
+	      The program diffusion from KUIM (developed by J. Gaush,	 
+	      U. Kansas) was used as the "seed".
+*/			 
+void Smoothing_Shah(matrix2D<double> &img, 
+   matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
+   const matrix1D<double> &W, int OuterLoops, int InnerLoops,
+   int RefinementLoops);
 //@}
 #endif

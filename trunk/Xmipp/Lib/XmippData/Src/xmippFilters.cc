@@ -865,6 +865,178 @@ void median_filter3x3(matrix2D<T> &m,matrix2D<T> &out)
 		
 }
 
+/* Shah energy ------------------------------------------------------------- */
+/* This function computes the current functional energy */
+double Shah_energy(const matrix2D<double> &img, 
+   const matrix2D<double> &surface_strength,
+   const matrix2D<double> &edge_strength,
+   double K, const matrix1D<double> &W) {
+   int Ydim1 = YSIZE(img) - 1;
+   int Xdim1 = XSIZE(img) - 1;
+
+   double Kinv = 1.0/K;
+   
+   /* Calculate surface energy */
+   double E1 = 0.0, E2 = 0.0, E3 = 0.0, E4 = 0.0;
+   for (int i=1; i<Ydim1; i++)
+      for (int j=1; j<Xdim1; j++) {
+	    /* Calculate data matching terms */
+	    double D = dMij(img,i,j);
+	    double F = dMij(surface_strength,i,j);
+	    double S = dMij(edge_strength,i,j);
+	    E1 += W(0) * (D - F) * (D - F);
+	    E3 += W(2) * K * S * S;
+
+	    /* Calculate first derivative terms */
+	    double Fx = (dMij(surface_strength,i,j+1) - dMij(surface_strength,i,j-1)) / 2;
+	    double Fy = (dMij(surface_strength,i+1,j) - dMij(surface_strength,i-1,j)) / 2;
+	    double Sx = (dMij(edge_strength,i,j+1)    - dMij(edge_strength,i,j-1)) / 2;
+	    double Sy = (dMij(edge_strength,i+1,j)    - dMij(edge_strength,i-1,j)) / 2;
+	    E2 += W(1) * (1 - S) * (1 - S) * (Fx * Fx + Fy * Fy);
+	    E4 += W(3) * Kinv * (Sx * Sx + Sy * Sy);
+      }
+
+   return E1 + E2 + E3 + E4; // Total energy
+}
+
+/* Update Surface Shah ----------------------------------------------------- */
+/* This routine performs one update to the edge estimate based     
+   on a finite differences solution to the following equation:     
+       0 = dE/df = dF/df - d(dF/dfx)/dx - d(dF/dfy)/dy                 
+           + dd(dF/dfxx)/dxx + dd(dF/dfxy)/dxy + dd(dF/dfyy)/dyy */
+double Update_surface_Shah(matrix2D<double> &img, 
+   matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
+   const matrix1D<double> &W) {
+   double Diff = 0.0, Norm=0.0;
+
+   int Ydim1 = YSIZE(img) - 1;
+   int Xdim1 = XSIZE(img) - 1;
+
+   /* Update surface estimate */
+   for (int i=1; i<Ydim1; i++)
+      for (int j=1; j<Xdim1; j++) {
+	 /* Calculate edge partial derivative terms */
+	 double S  =  dMij(edge_strength,i,j);
+	 double Sx = (dMij(edge_strength,i,j+1)    - dMij(edge_strength,i,j-1)) / 2;
+	 double Sy = (dMij(edge_strength,i+1,j)    - dMij(edge_strength,i-1,j)) / 2;
+
+	 double nS  = 1-S;
+	 double nS2 = nS*nS;
+
+	 /* Calculate surface partial derivative terms (excluding central pixel) */
+	 double F,D; F=D=dMij(img,i,j);
+	 double Fx = (dMij(surface_strength,i,j+1) - dMij(surface_strength,i,j-1)) / 2;
+	 double Fy = (dMij(surface_strength,i+1,j) - dMij(surface_strength,i-1,j)) / 2;
+	 double Fxx=  dMij(surface_strength,i,j+1) + dMij(surface_strength,i,j-1);
+	 double Fyy=  dMij(surface_strength,i+1,j) + dMij(surface_strength,i-1,j);
+
+	 /* Calculate surface partial derivative weights */
+	 double wFx = 4 * W(1) * nS * Sx;
+	 double wFy = 4 * W(1) * nS * Sy;
+	 double wFxx = -2 * W(1) * nS2;
+	 double wFyy = -2 * W(1) * nS2;
+
+	 /* Calculate new surface value */
+	 double Constant = -2 * W(0) * D;
+	 double Central  = -2 * W(0) + 2 * wFxx + 2 * wFyy;
+	 double Neighbors = wFx * Fx + wFy * Fy + wFxx * Fxx + wFyy * Fyy;
+
+	 if (ABS(Central)>XMIPP_EQUAL_ACCURACY)
+	    F=(Constant + Neighbors) / Central;
+	 F=CLIP(F,0,1);
+
+	 // Compute the difference. 
+	 Diff += ABS(dMij(surface_strength,i,j) - F);
+	 Norm += ABS(dMij(surface_strength,i,j));
+
+         // Update the new value.
+	 dMij(surface_strength,i,j) = F;
+      }
+   return Diff/Norm; // Return the relative difference.
+}
+
+/* Update Edge Shah -------------------------------------------------------- */
+/* This routine performs one update to the edge estimate based	 
+   on a finite differences solution to the following equation:
+   0 = dE/ds = dF/ds - d(dF/dsx)/dx - d(dF/dsy)/dy */
+double Update_edge_Shah(matrix2D<double> &img, 
+   matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
+   double K, const matrix1D<double> &W) {
+   double Diff = 0.0, Norm=0.0;
+
+   int Ydim1 = YSIZE(img) - 1;
+   int Xdim1 = XSIZE(img) - 1;
+   double Kinv = 1.0 / K;
+
+   /* Update edge estimate */
+   for (int i=1; i<Ydim1; i++)
+      for (int j=1; j<Xdim1; j++) {
+	 /* Calculate first and second derivative terms */
+	 double Fx = (dMij(surface_strength,i,j+1) - dMij(surface_strength,i,j-1)) / 2;
+	 double Fy = (dMij(surface_strength,i+1,j) - dMij(surface_strength,i-1,j)) / 2;
+	 double Constant = W(1) * (Fx * Fx + Fy * Fy);
+
+	 /* Calculate weights for central pixel and neighbors */
+	 double Central   = W(2) * K + W(3) * Kinv * 4;
+	 double Neighbors = W(3) * Kinv * (
+	     dMij(edge_strength,i-1,j)+dMij(edge_strength,i+1,j)
+	    +dMij(edge_strength,i,j-1)+dMij(edge_strength,i,j+1));
+
+	 /* Calculate new S value */
+	 double Old_edge_strength = dMij(edge_strength,i,j);
+	 double S = (Constant + Neighbors) / (Constant + Central);
+	 if	 (S < 0) dMij(edge_strength,i,j)/=2;
+	 else if (S > 1) dMij(edge_strength,i,j)=(dMij(edge_strength,i,j)+1)/2;
+	 else		 dMij(edge_strength,i,j)=S;
+
+	 // Compute the difference. 
+	 Diff += ABS(dMij(edge_strength,i,j)-Old_edge_strength);
+	 Norm += ABS(Old_edge_strength);
+      }
+   return Diff/Norm; // Return the relative difference.
+}
+
+/* Smoothing Shah ---------------------------------------------------------- */
+#define SHAH_CONVERGENCE_THRESHOLD  0.0001
+void Smoothing_Shah(matrix2D<double> &img, 
+   matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
+   const matrix1D<double> &W, int OuterLoops, int InnerLoops,
+   int RefinementLoops) {
+
+   type_cast(img,surface_strength);
+   surface_strength.range_adjust(0,1);
+   edge_strength.resize(img);
+
+   for(int k=1; k<=RefinementLoops; k++) {
+       // Initialize Edge Image.
+       edge_strength.init_zeros();
+
+       double diffsurface = MAXFLOAT; // Reset surface difference
+       for (int i=0; ((i<OuterLoops) && OuterLoops) ||
+               ((diffsurface>SHAH_CONVERGENCE_THRESHOLD) && !OuterLoops); i++) {
+
+      	  /* cout << "Iteration ..." << i+1;*/
+          /* Iteratively update surface estimate */
+          for (int j=0; j<InnerLoops; j++)
+             diffsurface=
+	        Update_surface_Shah(img,surface_strength,edge_strength,W);
+	     
+          /* Iteratively update edge estimate */
+	  double diffedge;
+          for (int j=0; j<InnerLoops; j++)
+             diffedge=
+	        Update_edge_Shah(img,surface_strength,edge_strength,k,W);
+	     	     
+          /* Calculate new functional energy */
+          double energy=Shah_energy(img,surface_strength,edge_strength,k,W);
+	  /* cout << " Energy " << energy
+	       << " ... Relative Diff " << diffsurface
+	       << " ... Edge diff " << diffedge
+	       << endl; */
+       }
+    }
+}
+
 /* Instantiation ----------------------------------------------------------- */
 template <class T>
    void instantiate_filtersT(T t) {
