@@ -217,7 +217,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_min= new QLabel( this, "label" );	 
     __label_min->setFont( QFont("courier",14) );
-    __label_min->setText( ItoA(min,3) );
+    __label_min->setText( ItoA(min,3).c_str() );
     __label_min->setFixedSize(__label_min->sizeHint());
     grid->addWidget( __label_min, 0, 2, AlignCenter );
 
@@ -238,7 +238,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_max= new QLabel( this, "label" );	 
     __label_max->setFont( QFont("courier",14) );
-    __label_max->setText( ItoA(max,3) );
+    __label_max->setText( ItoA(max,3).c_str() );
     __label_max->setFixedSize(__label_max->sizeHint());
     grid->addWidget( __label_max, 1, 2, AlignCenter );
 
@@ -259,7 +259,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_gamma= new QLabel( this, "label" );    
     __label_gamma->setFont( QFont("courier",14) );
-    __label_gamma->setText( FtoA(gamma,3,2) );
+    __label_gamma->setText( FtoA(gamma,3,2).c_str() );
     __label_gamma->setFixedSize(__label_gamma->sizeHint());
     grid->addWidget( __label_gamma, 2, 2, AlignCenter );
 
@@ -267,9 +267,9 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
 // One of the sliders changed ----------------------------------------------
 void AdjustContrastWidget::scrollValueChanged(int new_val) {
-    __label_min  ->setText( ItoA(__scroll_min  ->value(),3) );
-    __label_max  ->setText( ItoA(__scroll_max  ->value(),3) );
-    __label_gamma->setText( FtoA((__scroll_gamma->value())/10.0,3,2) );
+    __label_min  ->setText( ItoA(__scroll_min  ->value(),3).c_str() );
+    __label_max  ->setText( ItoA(__scroll_max  ->value(),3).c_str() );
+    __label_gamma->setText( FtoA((__scroll_gamma->value())/10.0,3,2).c_str() );
     __qtwidgetmicrograph->changeContrast(__scroll_min->value(),
        __scroll_max->value(),__scroll_gamma->value()/10.0);
 }
