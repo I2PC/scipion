@@ -36,6 +36,7 @@ void Prog_Microscope_Parameters::read(int argc, char **argv) _THROW {
 void Prog_Microscope_Parameters::usage() {
    Prog_parameters::usage();
    cerr << "  [-ctf <CTF file>]         : a Xmipp Fourier Image or a CTF description\n"
+        << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
 	<< "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
         << "  [-noise <stddev=0>]       : noise to be added\n"
 	<< "  [-after_ctf <spectrum>]   : a Xmipp Fourier Image or a CTF description with\n"
