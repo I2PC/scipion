@@ -291,9 +291,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           global_mean_error += mean_error;
           
               // Force symmetry, so far only crystallographic
-
-              //Force symmetry in the volume each
-              if (prm.sym_each &&
+              // Force symmetry in the volume each
+              if (prm.sym_each>0 &&
 	          act_proj%prm.sym_each==0 &&
 		  (act_proj!=0 || prm.sym_each==1) ) {
                  apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
@@ -369,7 +368,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                     prm.positivity)
                     {vol_POCS(k,i,j)=1; posi++;}
                // Debugging messages
-               //cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
+               // cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
                //     << (double)posi/(double)fg << " " << endl;
 
               // Solve volumetric equations
