@@ -25,6 +25,7 @@ SUBDIRS = 2DInterpolation \
 	Angular_predict \
 	Angular_predict_continuous \
 	Angular_refinement \
+	ApplyGeo \
 	Are_different \
 	Art \
 	Assign_angles \
@@ -32,8 +33,10 @@ SUBDIRS = 2DInterpolation \
 	Assign_multiple_CTFs \
 	BatchSOM \
 	CCP4Spider \
+	Centilt \
 	CodeStatis \
 	Combine_stats \
+	Compare_Selfiles \
 	CorrectPhase \
 	Correlation \
 	CpSel \
@@ -41,6 +44,7 @@ SUBDIRS = 2DInterpolation \
 	CTF_profile \
 	Data2Img \
 	Data2Vol \
+	deconvoluteCTF \
 	Deform \
 	Denoising \
 	Denoising_micrograph \
@@ -83,6 +87,7 @@ SUBDIRS = 2DInterpolation \
 	Radon_Transform \
 	RandomMapping \
 	Random_phantom \
+	Range_adjust \
 	Raw22spi \
 	Recons_test \
 	Reverse_endian \
@@ -101,6 +106,7 @@ SUBDIRS = 2DInterpolation \
 	Show \
 	Skew \
 	SOM \
+	Split_selfile \
 	SpAR \
 	SpARMA \
 	Spots2RealSpace2D \
