@@ -334,7 +334,8 @@ void ART_single_step(
                                              // in SIRT the correction must
                                              // be divided by this number
    double                  lambda,           // Lambda to be used
-   int                     imagen_no)         // Projection number
+   int                     imagen_no,        // Projection number
+   const FileName         &fn_ctf)           // CTF to apply
 {
 // Compute lattice vectors to be used ......................................
    matrix1D<double> aint, bint, shift;

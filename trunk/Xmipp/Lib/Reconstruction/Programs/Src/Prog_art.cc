@@ -5,7 +5,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU GeneraFl Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
  * (at your option) any later version.                                 
  *                                                                     
@@ -42,8 +42,6 @@ ostream & operator << (ostream &o, const Plain_ART_Parameters &eprm) {
 /* ART Single step                                                           */
 /* ------------------------------------------------------------------------- */
 #define blob       prm.blob
-#define footprint  prm.blobprint
-#define footprint2 prm.blobprint2
 void ART_single_step(
    GridVolume        	   &vol_in,          // Input Reconstructed volume
    GridVolume        	   *vol_out,         // Output Reconstructed volume
@@ -64,13 +62,65 @@ void ART_single_step(
                                              // in SIRT the correction must
                                              // be divided by this number
    double                  lambda,           // Lambda to be used
-   int                     act_proj)         // Projection number
+   int                     act_proj,         // Projection number
+   const FileName          &fn_ctf)          // CTF to apply
 
 {
+// Prepare to work with CTF ................................................
+   FourierMask ctf;
+   ImageOver *footprint=(ImageOver *)&prm.blobprint;
+   ImageOver *footprint2=(ImageOver *)&prm.blobprint2;
+   bool remove_footprints=false;
+
+   if (fn_ctf!="")
+      if (Is_FourierImageXmipp(fn_ctf)) {
+	 // If it is a fft file
+	 ctf.FilterBand=ctf.FilterShape=FROM_FILE;
+	 ctf.fn_mask=fn_ctf;
+	 ctf.generate_mask(NULL);
+      } else {
+	 // It is a description of the CTF
+	 ctf.FilterShape=ctf.FilterBand=CTF;
+	 ctf.ctf.read(fn_ctf);
+	 ctf.ctf.Tm/=BLOB_SUBSAMPLING;
+	 ctf.ctf.Produce_Side_Info();
+
+	 // Create new footprints
+	 footprint=new ImageOver;
+	 footprint2=new ImageOver;
+	 remove_footprints=true;
+
+	 // Enlarge footprint, bigger than necessary to avoid
+	 // aliasing
+	 *footprint=prm.blobprint;
+	 (*footprint)().set_Xmipp_origin();
+	 int finalsize=2*CEIL(30+blob.radius)+1;
+	 footprint->window(
+            FIRST_XMIPP_INDEX(finalsize),FIRST_XMIPP_INDEX(finalsize),
+            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
+
+	 // Apply CTF
+	 ctf.apply_mask((*footprint)());
+
+	 // Remove unnecessary regions
+	 finalsize=2*CEIL(15+blob.radius)+1;
+	 footprint->window(
+            FIRST_XMIPP_INDEX(finalsize),FIRST_XMIPP_INDEX(finalsize),
+            LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
+	 #ifdef DEBUG
+            ImageXmipp save; save()=(*footprint)();
+            save.write("PPPfootprint.xmp");
+	 #endif
+
+	 // Create footprint2
+	 *footprint2=*footprint;
+	 (*footprint2)()*=(*footprint2)();
+      }
+
 // Project structure .......................................................
    // The correction image is reused in this call to store the normalising
    // projection, ie, the projection of an all-1 volume
-   project_Volume(vol_in,footprint,footprint2,theo_proj,
+   project_Volume(vol_in,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),FORWARD,prm.eq_mode,
       prm.GVNeq);
@@ -79,7 +129,7 @@ void ART_single_step(
    double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
    mean_error=0;
    diff_proj().resize(read_proj());
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
    // Compute difference image and error
       IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
@@ -93,15 +143,19 @@ void ART_single_step(
    }
    mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
 
-// Backprojection of correction plane ......................................
-   project_Volume(*vol_out,footprint,footprint2,theo_proj,
+   // Backprojection of correction plane ......................................
+   project_Volume(*vol_out,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
       prm.GVNeq);
+
+   // Remove footprints if necessary
+   if (remove_footprints) {
+      delete footprint;
+      delete footprint2;
+   }
 }
 #undef blob
-#undef footprint
-#undef footprint2
 
 /* Instantiation of the ART process ---------------------------------------- */
 void instantiate_Plain_ART() {

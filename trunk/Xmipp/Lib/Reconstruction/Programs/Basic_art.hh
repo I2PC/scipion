@@ -34,6 +34,9 @@
 #include "../blobs.hh"
 #include "../projection.hh"
 #include "recons_misc.hh"
+#include "Prog_FourierFilter.hh"
+
+const int BLOB_SUBSAMPLING=10;
 
 /**@name Basic and common ART
     The main difference between ART applied to different cases (single
@@ -150,6 +153,9 @@ public:
    /// Known volume. If -1, not applied.
    double known_volume;
 
+   /// Selection file with all images to process
+   FileName fn_ctf;
+
    /// Apply positivity constraint
    bool positivity;
    #define TELL_ONLY_SYM	     0x80
@@ -261,6 +267,15 @@ public:
        This volume contains the number of equations at which each blob
        is involved */
    GridVolumeT<int> *GVNeq;
+
+   /// CTF 
+   FourierMask ctf;
+
+   /// multiple CTF mode
+   bool multiple_CTFs;
+
+   /// Set of CTFs
+   SelFile SF_ctf;
    //@}
 public:
    /** Generate default values for ART parameters.

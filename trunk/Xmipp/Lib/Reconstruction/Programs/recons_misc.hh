@@ -49,6 +49,8 @@
 struct Recons_info {
    /// Projection filename
    FileName fn_proj;
+   /// CTF filename
+   FileName fn_ctf;
    /// Rotational angle
    float  rot;
    /// Tilting angle
@@ -65,8 +67,8 @@ struct Recons_info {
 /** Build from a Selection File and a Symmetry List. 
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
-void build_recons_info(SelFile &selfile, const SymList &SL,
-   Recons_info * &IMG_Inf);
+void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
+   const SymList &SL, Recons_info * &IMG_Inf);
 //@}
 
 #endif

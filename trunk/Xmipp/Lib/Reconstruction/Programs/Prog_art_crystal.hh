@@ -148,7 +148,8 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    Projection &theo_proj, /*const*/ Projection &read_proj, 
    int sym_no,
    Projection &diff_proj, Projection &corr_proj, Projection align_proj,
-   double &mean_error, int numIMG, double lambda, int act_proj);
+   double &mean_error, int numIMG, double lambda, int act_proj,
+   const FileName &fn_ctf);
 
 /* Finish ART iterations.
    Expand output volume to fill space if necessary. */

@@ -40,6 +40,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
    prm.fh_hist << " Parameters -------------------------------------------------\n";
    prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
+   prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
    prm.fh_hist << " Sampling= " << prm.sampling << endl;   
    prm.fh_hist << " Blobs:         radius=" << prm.blob.radius 
       << " pixels" << " alpha="
@@ -163,6 +164,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                        // factors for unitary blobs
    Projection      diff_proj;          // Difference between the
                                        // theoretical and real image
+   vtkImageData    *FFTtheo=NULL;      // Fourier transform of a projection
 
    // Reconstruction results ...............................................
    double          mean_error;
@@ -247,9 +249,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
           read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
-          #ifdef DEBUG
-             cerr << "reading  ..." << prm.IMG_Inf[iact_proj].fn_proj << endl;
-          #endif
 
           // Projection extension? .........................................
           if (prm.proj_ext!=0)
@@ -285,7 +284,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images);
+	      images, prm.IMG_Inf[iact_proj].fn_ctf);
           global_mean_error += mean_error;
           
               // Force symmetry, so far only crystallographic

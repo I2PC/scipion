@@ -82,6 +82,7 @@ void Basic_ART_Parameters::default_values() {
 #define GET_ART_PARAMS \
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
+    fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     if (CHECK_PARAM("o")) \
          fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
@@ -218,6 +219,7 @@ void Basic_ART_Parameters::usage() {
      << "\nI/O parameters"
      << "\n    -i selfile           full name of sel file"
      << "\n   [-o name]             name of output files, extensions are added"
+     << "\n   [-CTF name]           name of a sel file or a file with a CTF"
      << "\n   [-start blobvolume]   Start from blobvolume"
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
@@ -404,6 +406,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
    {
    SelFile     selfile;
+   SelFile     selctf;
 
 /* Create history file handler --------------------------------------------- */
    if (level>=FULL) {
@@ -419,6 +422,23 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
       trueIMG = selfile.ImgNo();
       if (trueIMG==0) REPORT_ERROR(3008,"Produce_Basic_ART_Side_Info: No images !!");
       selfile.ImgSize(projYdim,projXdim);
+   }
+
+/* Get the CTF correction file JPZ2002 ------------------------------------- */
+   // Read CTF
+   if (fn_ctf!="") {
+      if (Is_FourierImageXmipp(fn_ctf)) {
+	 ctf.FilterBand=ctf.FilterShape=FROM_FILE;
+	 ctf.fn_mask=fn_ctf;
+	 ctf.generate_mask(NULL);
+	 multiple_CTFs=FALSE;
+      } else {
+	 selctf.read(fn_ctf);
+	 if (selctf.ImgNo()!=selfile.ImgNo())
+            REPORT_ERROR(1,"Basic_ART_Parameters: The number of images in "
+               "the ctf and original selfiles do not match");
+	 multiple_CTFs=TRUE;
+      }
    }
 
 /* Read symmetry file ------------------------------------------------------ */
@@ -439,13 +459,14 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
 
 /* Fill ART_sort_info structure and Sort ----------------------------------- */
    if (level>=FULL) {
-      build_recons_info(selfile,SL,IMG_Inf);
+      build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf);
 
       if (!(tell&TELL_MANUAL_ORDER))
 	 if (SIRT || eq_mode==CAV) no_sort(numIMG,ordered_list);
 	 else if (random_sort)     sort_randomly(numIMG,ordered_list);
-	 else                      sort_perpendicular(numIMG,IMG_Inf,ordered_list,
+	 else if (sort_last_N!=-1) sort_perpendicular(numIMG,IMG_Inf,ordered_list,
                                       sort_last_N);
+      	 else                      no_sort(numIMG,ordered_list);
    }
 
 /* Setting initial volumes ------------------------------------------------- */
@@ -494,7 +515,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
 
 /* Blob footprint computation ---------------------------------------------- */
    if (level>=BASIC) {
-      footprint_blob (blobprint, blob, 50);
+      footprint_blob (blobprint, blob, BLOB_SUBSAMPLING);
       double sum_on_grid=sum_blob_Grid(blob,vol_blobs0.grid(),D);
       blobprint()  /= sum_on_grid;
       blobprint2()  = blobprint();
