@@ -451,14 +451,14 @@ FileName SelFile::FileExtension() {
 
 /* Statistics -------------------------------------------------------------- */
 void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
-   double& _max) {
+   double& _max, bool apply_geo) {
    _min = MAXFLOAT; _max = 0; bool first = true; int n = 0;   
    // Calculate Mean
    go_beginning();
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        Image *image = Image::LoadImage(image_name);      // reads image 
+        Image *image = Image::LoadImage(image_name,apply_geo); // reads image 
         double min, max, avg, stddev;      
         (*image)().compute_stats(avg, stddev, min, max);
         if (_min > min) _min = min;  
@@ -481,7 +481,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        Image *image = Image::LoadImage (image_name);      // reads image 
+        Image *image = Image::LoadImage (image_name,apply_geo); // reads image 
         Image tmpImg;
         tmpImg() = (((*image)() - _ave()));   
         tmpImg() *= tmpImg();       
