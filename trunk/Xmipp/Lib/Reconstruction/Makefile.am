@@ -19,11 +19,10 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_euler.cc \
 	Programs/Src/Prog_draw_surface.cc \
 	Programs/Src/Prog_symmetrize.cc \
-	Programs/Src/Prog_range_adjust.cc \
-	Programs/Src/Prog_normalize.cc \
 	Programs/Src/Prog_Angular_Distance.cc \
 	Programs/Src/Prog_Align2d.cc \
 	Programs/Src/Prog_Projection_Neighbourhood.cc \
+	Programs/Src/Prog_Centilt.o \
 	Src/CTF.cc \
 	Src/refinement.cc \
 	Programs/Src/Prog_FourierFilter.cc \
