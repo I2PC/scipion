@@ -1,0 +1,4 @@
+######################################################################
+PROJ = make_spectra
+OBJ  = make_spectra.o
+LIBS = -l$(LIBXMIPP)
