@@ -52,6 +52,29 @@
     blob.order  = 2;                       // Order of the Bessel function
     blob.alpha  = 3.6;                     // Smoothness parameter
     \end{verbatim}
+    
+    Sometimes it is useful to plot any quantity related to the blobs. In the
+    following example you have how to plot their Fourier transform in the
+    continuous frequency space.
+    
+    \begin{verbatim}
+      #include <Reconstruction/blobs.hh>
+      #include <XmippData/xmippArgs.hh>
+
+      int main(int argc, char **argv) {
+	  struct blobtype blob;                  // Definition of the blob
+	  blob.radius = 2;                       // Blob radius in voxels
+	  blob.order  = 2;                       // Order of the Bessel function
+	  blob.alpha  = AtoF(argv[1]);           // Smoothness parameter
+
+
+	  double M=blob_Fourier_val (0, blob);
+	  for (double w=0; w<=2; w += 0.05)
+	     cout << w << " " <<  blob_Fourier_val (w, blob)/M << endl;
+
+	  return 0;
+      }
+    \end{verbatim}
 */
 struct blobtype {
    /// Spatial radius in \Ref{Universal System} units
