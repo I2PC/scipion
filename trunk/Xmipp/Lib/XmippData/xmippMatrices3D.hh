@@ -854,7 +854,8 @@ public:
       {VT aux; translate(v, aux, wrap); *this=aux;}
 
    /** Translate center of mass to center.
-       The Xmipp origin is set for this object. */
+       If the input has very high values, sometimes it is better to
+       rescale it to be between 0 and 1. */
    void self_translate_center_of_mass_to_center(bool wrap=WRAP);
 
    /** Scales to a new size.

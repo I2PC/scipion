@@ -379,7 +379,30 @@ void mask3D_26neig(matrix3D<int> &mask, int value1=1, int value2=1, int value3=1
     Mask.type=READ_MASK;
     Mask.fn_mask="...";
     Mask.generate_2Dmask();
-    \end{verbatim}*/
+    
+    Mask.apply(input_matrix2D,output_matrix2D);
+    \end{verbatim}
+    
+    To generate a geometric mask within a program do the following:
+    \begin{verbatim}
+    Mask_Params Mask;
+    
+    // Define an spherical mask of radius 32 (the active part is
+    // within the sphere)
+    Mask.type=BINARY_CIRCULAR_MASK;
+    Mask.mode=INNER_MASK;
+    Mask.R1=32;
+    
+    // resize the mask after this pattern
+    Mask.resize(input_matrix2D);
+    
+    // Really generate the mask. It is stored internally
+    Mask.generate_2Dmask();
+
+    // Apply the mask to some image
+    Mask.apply(input_matrix2D,output_matrix2D);
+    \end{verbatim}
+    */
 class Mask_Params {
 public:
 #define NO_MASK               	  0
