@@ -81,6 +81,8 @@ public:
    virtual void usage();
    /// Get input size
    void get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW;
+   /// Get the number of images to process
+   int get_images_to_process() _THROW;
 };
 
 #define IMAGE2IMAGE     1

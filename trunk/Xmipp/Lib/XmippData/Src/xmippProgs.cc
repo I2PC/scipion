@@ -70,6 +70,16 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {
    }
 }
 
+int Prog_parameters::get_images_to_process() _THROW {
+   if (Is_ImageXmipp(fn_in)) return 1;
+   else if (Is_VolumeXmipp(fn_in)) return 1;
+   else {
+      SelFile SF;
+      SF.read(fn_in);
+      return SF.ImgNo();
+   }
+}
+
 /* With arguments ---------------------------------------------------------- */
 void SF_main(int argc, char **argv,
    Prog_parameters *prm,
