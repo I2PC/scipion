@@ -692,17 +692,18 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<bool> &activ
     avecorr+=maxcorr;
     if (write_docfile) {
       opt_flip=0.;
-      if (-opt_psi>360.) { 
-	opt_psi-=360.;
-	opt_flip=1.;
-      }
       if (apply_shifts) {
 	opt_xoff+=ROUND(img.Xoff());
 	opt_yoff+=ROUND(img.Yoff());
       }
+      if (-opt_psi>360.) { 
+	opt_psi+=360.;
+	opt_flip=1.;
+	opt_xoff=-opt_xoff;
+      }
       dataline(0)=Iref[opt_refno].Phi();
       dataline(1)=Iref[opt_refno].Theta();
-      dataline(2)=opt_psi;
+      dataline(2)=opt_psi+360.;
       dataline(3)=opt_xoff;
       dataline(4)=opt_yoff;
       dataline(5)=(double)(opt_refno+1);
