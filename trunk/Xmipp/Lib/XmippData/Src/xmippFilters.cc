@@ -214,7 +214,7 @@ int label_volume(const Volume *V, Volume *label) {
 
 /* Correlation ------------------------------------------------------------- */
 template <class T> 
-double correlation(matrix1D<T> &x,matrix1D<T> &y,const matrix1D<int> *mask,int l)
+double correlation(const matrix1D<T> &x,const matrix1D<T> &y,const matrix1D<int> *mask,int l)
 {
    /* Note: l index is for rows and m index for columns */
    
@@ -230,7 +230,8 @@ double correlation(matrix1D<T> &x,matrix1D<T> &y,const matrix1D<int> *mask,int l
       if(ip>=0 && ip<Rows)
 	  {
 		 if (mask!=NULL)
-            if (!(*mask)(i)) continue;
+		   //            if (!(*mask)(i)) continue;
+               if (!DIRECT_VEC_ELEM((*mask),i)) continue;
 		 retval+=DIRECT_VEC_ELEM(x,i)*DIRECT_VEC_ELEM(y,ip);
 	  }
    }
@@ -241,7 +242,7 @@ double correlation(matrix1D<T> &x,matrix1D<T> &y,const matrix1D<int> *mask,int l
 }
 
 template <class T>
-double correlation(matrix2D<T> &x,matrix2D<T> &y,
+double correlation(const matrix2D<T> &x,const matrix2D<T> &y,
                     const matrix2D<int> *mask, int l, int m)
 {
    /* Note: l index is for rows and m index for columns */
@@ -262,7 +263,7 @@ double correlation(matrix2D<T> &x,matrix2D<T> &y,
       	 if(ip>=0 && ip<Rows && jp>=0 && jp<Cols)
 	     {
 		    if (mask!=NULL)
-	//  Sjors: bug repaired
+	//  Sjors: 
 	//if (!(*mask)(i,j)) continue;
                if (!DIRECT_MAT_ELEM((*mask),i,j)) continue;
 		    retval+=DIRECT_MAT_ELEM(x,i,j)*DIRECT_MAT_ELEM(y,ip,jp);
@@ -274,7 +275,7 @@ double correlation(matrix2D<T> &x,matrix2D<T> &y,
 }
 
 template <class T>
-double correlation(matrix3D<T> &x, matrix3D<T> &y,
+double correlation(const matrix3D<T> &x, const matrix3D<T> &y,
           const matrix3D<int> *mask,int l, int m, int q) 
 {
    /* Note: l index is for rows and m index for columns */
@@ -297,9 +298,12 @@ double correlation(matrix3D<T> &x, matrix3D<T> &y,
       	    if(ip>=0 && ip<Rows && jp>=0 && jp<Cols && kp>=0 && kp<Slices)
 	        {
 		       if (mask!=NULL)
-                  if (!(*mask)(k,i,j)) continue;
-			   retval+=VOL_ELEM(x,k,i,j)*VOL_ELEM(y,kp,ip,jp);
-	        }
+			 //  Sjors: 
+			 //if (!(*mask)(k,i,j)) continue;
+			 //retval+=VOL_ELEM(x,k,i,j)*VOL_ELEM(y,kp,ip,jp);
+			 if (!DIRECT_VOL_ELEM((*mask),k,i,j)) continue;
+		       retval+=DIRECT_VOL_ELEM(x,k,i,j)*DIRECT_VOL_ELEM(y,kp,ip,jp);
+		}
          }
    
  

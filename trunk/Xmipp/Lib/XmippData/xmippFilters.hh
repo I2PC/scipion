@@ -90,17 +90,17 @@
     
     This function returns the number of objects (different from background)*/
     template <class T>
-       double correlation(matrix1D<T> &x, matrix1D<T> &y, 
+       double correlation(const matrix1D<T> &x, const matrix1D<T> &y, 
 	    				  const matrix1D<int> *mask=NULL,int l=0);
 
 /** Correlation 2D. */
     template <class T>
-       double correlation(matrix2D<T> &x, matrix2D<T> &y,
+       double correlation(const matrix2D<T> &x, const matrix2D<T> &y,
                           const matrix2D<int> *mask=NULL,int l=0, int m=0);
 
 /** Correlation 3D. */
     template <class T>
-       double correlation(matrix3D<T> &x, matrix3D<T> &y,
+       double correlation(const matrix3D<T> &x, const matrix3D<T> &y,
                           const matrix3D<int> *mask=NULL,int l=0, int m=0,
 						  int q=0);
 
