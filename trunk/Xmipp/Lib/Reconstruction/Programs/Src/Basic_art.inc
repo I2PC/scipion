@@ -67,12 +67,12 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
                << "                No. Iter=" << prm.no_it << endl;
    prm.fh_hist << " Parallel mode: ";
    switch (prm.parallel_mode) {
-      case Basic_ART_Parameters::ART:   prm.fh_hist << "ART\n"; break;
-      case Basic_ART_Parameters::SIRT:  prm.fh_hist << "SIRT\n"; break;
+      case Basic_ART_Parameters::ART:    prm.fh_hist << "ART\n"; break;
+      case Basic_ART_Parameters::SIRT:   prm.fh_hist << "SIRT\n"; break;
       case Basic_ART_Parameters::SART:
           prm.fh_hist << "SART, block size=" << prm.block_size << endl;
           break;
-      case Basic_ART_Parameters::AVSP:  prm.fh_hist << "AVSP\n"; break;
+      case Basic_ART_Parameters::AVSP:   prm.fh_hist << "AVSP\n"; break;
       case Basic_ART_Parameters::BiCAV:
           prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
           break;
@@ -80,6 +80,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " Equation mode: ";
    if (prm.eq_mode==CAV) prm.fh_hist << "CAV\n";
    else if (prm.eq_mode==CAVK) prm.fh_hist << "CAVK\n";
+   else if (prm.eq_mode==CAVARTK) prm.fh_hist << "CAVARTK\n";
    else prm.fh_hist << "ARTK\n";
    prm.fh_hist << " Projections: Ydim x Xdim = " << prm.projYdim
       << " x " << prm.projXdim << endl;
@@ -204,8 +205,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    double          POCS_avg, POCS_stddev, POCS_min, POCS_max;
 
    // Variance track .......................................................
-   //vol_blobs_var=new GridVolume;
-   //*vol_blobs_var=vol_blobs;
+   vol_blobs_var=new GridVolume;
+   *vol_blobs_var=vol_blobs;
 
    // Some initialisation ..................................................
    Xoutput_volume_size=(prm.Xoutput_volume_size==0) ?
@@ -242,7 +243,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Initialisation of some variables
       global_mean_error = 0;
       POCS_global_mean_error = 0;
-      if (vol_blobs_var!=NULL) vol_blobs_var->init_zeros();
 
       // For each projection -----------------------------------------------
       if (rank==-1) {
@@ -251,6 +251,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       }
       
       for (int act_proj = 0; act_proj < prm.numIMG ; act_proj++) {
+          //PARALLEL:vol_blobs=*vol_blobs_var;
           POCS_N=0;
   
           // Select next projection ........................................
@@ -331,19 +332,18 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               mean_error, ART_numIMG, prm.lambda(it),
 	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
               prm.ray_length,
-              vol_blobs_var, prm.print_system_matrix);
+              NULL, prm.print_system_matrix);
 
           global_mean_error += mean_error;
           
-              // Force symmetry, so far only crystallographic
+          // Force symmetry, so far only crystallographic
 
-              //Force symmetry in the volume each
+          //Force symmetry in the volume each
+          if (prm.sym_each &&
+             act_proj%prm.sym_each==0 &&
+             (act_proj!=0 || prm.sym_each==1))
+             apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
 
-              if (prm.sym_each &&
-	          act_proj%prm.sym_each==0 &&
-		  (act_proj!=0 || prm.sym_each==1) ) {
-                 apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
-              }
           // Apply POCS ....................................................
           if ((prm.surface_mask!=NULL || 
 	      prm.positivity || (prm.force_sym!=0 && !prm.is_crystal) ||
@@ -571,12 +571,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	     cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); cout << endl;
              vol_voxels.write("PPPvol.vol");
-             if (vol_blobs_var!=NULL) {
-                blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D,
-                   Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-      	        cout << "Stats PPPvolvar.vol : "; vol_voxels().print_stats(); cout << endl;
-                vol_voxels.write("PPPvolvar.vol");
-             }
+
 	     //VolumeXmipp Vcoefs;
 	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
 	     //Vcoefs.write((string)"PPPblob_coefs.vol");
@@ -604,17 +599,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		  ItoA(act_proj,5)+".vol");
 	    else
                vol_voxels.write("PPPvol.vol");
-
-            // If keeping track of the variance
-            if (vol_blobs_var!=NULL) {
-               blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D, 
-                  Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-               if (prm.tell&TELL_SAVE_INTERMIDIATE)
-                  vol_voxels.write(prm.fn_root+"var_it"+ItoA(it)+"proj"+
-                     ItoA(act_proj,5)+".vol");
-               else 
-                  vol_voxels.write("PPPvarvol.vol");
-            }
 
             // Launch viewer
 	    if (!iv_launched) {
@@ -661,13 +645,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
          if (prm.tell&TELL_SAVE_BLOBS)
             vol_blobs.write(prm.fn_root+"it"+ItoA(it)+".blob");
-
-         // If keeping track of the variance
-         if (vol_blobs_var!=NULL) {
-            blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D, 
-               Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-            vol_voxels.write(prm.fn_root+"var_it"+ItoA(it)+".vol");
-         }
       }
       
       // Check if algorithm must stop via stop_at
@@ -717,11 +694,6 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
       Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    vol_voxels.write(prm.fn_root+".vol");
    if (prm.tell&TELL_SAVE_BLOBS) vol_blobs.write(prm.fn_root+".blob");
-   if (vol_blobs_var!=NULL) {
-      blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D,
-         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-      vol_voxels.write(prm.fn_root+"var.vol");
-   }      
    prm.fh_hist.close();
 
 }
