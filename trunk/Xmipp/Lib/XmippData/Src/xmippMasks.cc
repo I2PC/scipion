@@ -945,6 +945,106 @@ template <class T>
    }
 }
 
+/* Produce vector ---------------------------------------------------------- */
+template <class T>
+   void Mask_Params::produce_vector(const matrix1D<T> &I, matrix1D<T> &result) {
+   // Resize the output vector
+   if (XSIZE(result)==0) {
+      int size=0;
+      switch (datatype()) {
+	 case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
+	       if (DIRECT_VEC_ELEM(imask1D,i)>0) size++;
+            break;
+	 case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
+	       if (DIRECT_VEC_ELEM(dmask1D,i)>0) size++;
+            break;
+      }
+      result.init_zeros(size);
+   }
+
+   int p=0;
+   switch (datatype()) {
+      case INT_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
+	    if (DIRECT_VEC_ELEM(imask1D,i)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_VEC_ELEM(I,i);
+         break;
+      case DOUBLE_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
+	    if (DIRECT_VEC_ELEM(dmask1D,i)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_VEC_ELEM(I,i);
+         break;
+   }
+}
+
+template <class T>
+   void Mask_Params::produce_vector(const matrix2D<T> &I, matrix1D<T> &result) {
+   // Resize the output vector
+   if (XSIZE(result)==0) {
+      int size=0;
+      switch (datatype()) {
+	 case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
+	       if (DIRECT_MAT_ELEM(imask2D,i,j)>0) size++;
+            break;
+	 case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
+	       if (DIRECT_MAT_ELEM(dmask2D,i,j)>0) size++;
+            break;
+      }
+      result.init_zeros(size);
+   }
+
+   int p=0;
+   switch (datatype()) {
+      case INT_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
+	    if (DIRECT_MAT_ELEM(imask2D,i,j)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+         break;
+      case DOUBLE_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
+	    if (DIRECT_MAT_ELEM(dmask2D,i,j)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+         break;
+   }
+}
+
+template <class T>
+   void Mask_Params::produce_vector(const matrix3D<T> &I, matrix1D<T> &result) {
+   // Resize the output vector
+   if (XSIZE(result)==0) {
+      int size=0;
+      switch (datatype()) {
+	 case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
+	       if (DIRECT_MAT_ELEM(imask3D,i,j)>0) size++;
+            break;
+	 case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
+	       if (DIRECT_MAT_ELEM(dmask3D,i,j)>0) size++;
+            break;
+      }
+      result.init_zeros(size);
+   }
+
+   int p=0;
+   switch (datatype()) {
+      case INT_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
+	    if (DIRECT_MAT_ELEM(imask3D,i,j)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+         break;
+      case DOUBLE_MASK:
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
+	    if (DIRECT_MAT_ELEM(dmask3D,i,j)>0)
+	        DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+         break;
+   }
+}
+
 /*---------------------------------------------------------------------------*/
 /* Mask tools                                                                */
 /*---------------------------------------------------------------------------*/
@@ -1323,7 +1423,7 @@ void range_adjust_within_mask(const matrix3D<double> *mask,
 /*---------------------------------------------------------------------------*/
 template <class T>
    void instantiate_masks_1D_template(T t) {
-   matrix1D<T>   m;
+   matrix1D<T>   m,v;
    matrix1D<int> mask;
    T minval, maxval;
    double avg, stddev;
@@ -1332,6 +1432,7 @@ template <class T>
 
    prm.resize(m);
    prm.apply_mask(m,m,(T)0);
+   prm.produce_vector(m,v);
    apply_binary_mask(mask,m,m,(T)0);
 }
 
@@ -1351,6 +1452,7 @@ template <class T>
    void instantiate_masks_2D_template(T t) {
    matrix2D<T>   m;
    matrix2D<int> mask;
+   matrix1D<T>   v;
    T minval, maxval;
    double avg, stddev;
    histogram1D hist;
@@ -1358,6 +1460,7 @@ template <class T>
 
    prm.resize(m);
    prm.apply_mask(m,m,(T)0);
+   prm.produce_vector(m,v);
    apply_binary_mask(mask,m,m,(T)0);
    compute_stats_within_binary_mask(mask, m, minval, maxval, avg, stddev);
    compute_hist_within_binary_mask(mask, m, hist, 100);
@@ -1381,6 +1484,7 @@ void instantiate_masks_2D() {
 template <class T>
    void instantiate_masks_3D_template(T t) {
    matrix3D<T>   m;
+   matrix1D<T>   v;
    matrix3D<int> mask;
    T minval, maxval;
    double avg, stddev;
@@ -1389,6 +1493,7 @@ template <class T>
 
    prm.resize(m);
    prm.apply_mask(m,m,(T)0);
+   prm.produce_vector(m,v);
    apply_binary_mask(mask,m,m,(T)0);
    compute_stats_within_binary_mask(mask, m, minval, maxval, avg, stddev);
    compute_hist_within_binary_mask(mask, m, hist, 100);

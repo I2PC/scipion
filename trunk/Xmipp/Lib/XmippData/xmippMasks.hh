@@ -402,6 +402,15 @@ void mask3D_26neig(matrix3D<int> &mask, int value1=1, int value2=1, int value3=1
     // Apply the mask to some image
     Mask.apply_mask(input_matrix2D,output_matrix2D);
     \end{verbatim}
+
+    To read a mask from the command line:
+    \begin{verbatim}
+    Mask_Params mask;
+    mask.read(argc,argv);
+    mask.resize(Ydim,Xdim);
+    mask.generate_2Dmask();
+    Mask.apply_mask(input_matrix2D,output_matrix2D);
+    \end{verbatim}
     */
 class Mask_Params {
 public:
@@ -618,6 +627,33 @@ template <class T>
     subs_val is the substitute value in case of binary masks*/
 template <class T>
    void apply_mask(const matrix3D<T> &I, matrix3D<T> &result, T subs_val=0);
+
+/** Produce vector from signal.
+    This function returns a 1D vector with all those points for which
+    the mask was greater than 0. If the output vector is of size 0, then
+    it is resized to the right size. Otherwise, it is assumed that it has
+    already the right size. The input vector is assumed to be of the same size
+    as the existing mask.*/
+template <class T>
+   void produce_vector(const matrix1D<T> &I, matrix1D<T> &result);
+
+/** Produce vector from image.
+    This function returns a 1D vector with all those pixels for which
+    the mask was greater than 0. If the output vector is of size 0, then
+    it is resized to the right size. Otherwise, it is assumed that it has
+    already the right size. The input image is assumed to be of the same size
+    as the existing mask.*/
+template <class T>
+   void produce_vector(const matrix2D<T> &I, matrix1D<T> &result);
+
+/** Produce vector from volume.
+    This function returns a 1D vector with all those voxels for which
+    the mask was greater than 0. If the output vector is of size 0, then
+    it is resized to the right size. Otherwise, it is assumed that it has
+    already the right size. The input volume is assumed to be of the same size
+    as the existing mask.*/
+template <class T>
+   void produce_vector(const matrix3D<T> &I, matrix1D<T> &result);
 
 /** Get binary 1D mask. */
 matrix1D<int>    & get_binary_mask1D() {return imask1D;}
