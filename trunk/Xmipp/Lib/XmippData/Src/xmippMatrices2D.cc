@@ -322,6 +322,15 @@ template <class T> T mT::det() const _THROW {
    if (xdim!=ydim)
       REPORT_ERROR(1109, "determinant: Matrix is not squared");
 
+   for (int i=0; i<YSIZE(*this); i++) {
+      bool all_zeros=true;
+      for (int j=0; j<XSIZE(*this); j++)
+         if (ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY) {
+	    all_zeros=false; break;
+	 }
+      if (all_zeros) return 0;
+   }
+
    // Perform decomposition
    matrix1D<int> indx;
    T d;
