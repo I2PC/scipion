@@ -437,7 +437,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
    }
 
 /* Get True Image number and projection size ------------------------------- */
-   if (level>=FULL) {
+   if (level>=BASIC) {
       selfile.read(fn_sel);
       trueIMG = selfile.ImgNo();
       if (trueIMG==0) REPORT_ERROR(3008,"Produce_Basic_ART_Side_Info: No images !!");
