@@ -314,9 +314,12 @@ template <class T>
    double mean_x, mean_y;
    double stddev_x, stddev_y;
    double aux;
+   T dummy;
    long n=0;
    
-  
+   x.compute_stats(mean_x, stddev_x, dummy, dummy);
+   y.compute_stats(mean_y, stddev_y, dummy, dummy);
+
    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x,y)
    {
          retval+=(VEC_ELEM(x,i)-mean_x)*(VEC_ELEM(y,i)-mean_y);
