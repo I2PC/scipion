@@ -32,7 +32,11 @@ void Prog_parameters::read(int argc, char **argv) _THROW {
       fn_out = get_param(argc,argv,"-o","");
       oext   = get_param(argc,argv,"-oext","");
       oroot  = get_param(argc,argv,"-oroot","");
-      apply_geo=!check_param(argc,argv,"-dont_apply_geo");
+      // For each_image_produces_an_output there exists no possibility to apply_geo
+      // This because it would require a back-transformation, which deteriorates the images
+      if (!each_image_produces_an_output) {
+	apply_geo=!check_param(argc,argv,"-dont_apply_geo");
+      }
 }
 
 void Prog_parameters::show() {
@@ -48,11 +52,13 @@ void Prog_parameters::show() {
 
 void Prog_parameters::usage() {
    cerr << "   -i <input file>          : either an image or a selection file\n";
-   if (each_image_produces_an_output)
+   if (each_image_produces_an_output) {
       cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
            << "  [-oext <extension>]       : if wanted in case of a selection file\n"
 	   << "  [-oroot <root>]           : if wanted in case of a selection file\n";
-   cerr    << "  [-dont_apply_geo]         : do not apply transformation stored in the header of 2D-images\n";
+   } else {
+     cerr  << "  [-dont_apply_geo]         : do not apply transformation stored in the header of 2D-images\n";
+   }
 }
 
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {
@@ -136,12 +142,8 @@ try {
 	    fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
             success=fi2i(img, prm);
 	    if (prm->each_image_produces_an_output) {
-	      if (prm->apply_geo) { 
-		// read in again original image
-		orig_img.read(prm->fn_in,FALSE,FALSE,FALSE); orig_img().set_Xmipp_origin();
-		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img()) {
-		  DIRECT_MAT_ELEM(img(),i,j)=DIRECT_MAT_ELEM(orig_img(),i,j);
-		}
+	      if (prm->apply_geo) {
+		EXIT_ERROR(1,"BUG: apply_geo and each_image_produces_an_output should not co-exist");
 	      }
 	    img.write(fn_out);
 	    }
@@ -245,12 +247,8 @@ try {
 		  fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
         	  success=fi2i(img, prm);
 		  if (prm->each_image_produces_an_output) {
-		    if (prm->apply_geo) { 
-		      // read in again original image
-		      orig_img.read(fn_read,FALSE,FALSE,FALSE); orig_img().set_Xmipp_origin();
-		      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img()) {
-			DIRECT_MAT_ELEM(img(),i,j)=DIRECT_MAT_ELEM(orig_img(),i,j);
-		      }
+		    if (prm->apply_geo) {
+		      EXIT_ERROR(1,"BUG: apply_geo and each_image_produces_an_output should not co-exist");
 		    }
 		    img.write(prm->fn_out);
 		  }
