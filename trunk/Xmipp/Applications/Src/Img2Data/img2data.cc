@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
   vector < string > labels;   
   bool nomask = false;
   bool verb = false;
+  bool apply_geo = true;
       
 
   // Read arguments
@@ -54,15 +55,19 @@ int main(int argc, char **argv) {
      nomask = true; 
     if (check_param(argc, argv, "-verb"))
      verb = true; 
+    if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
+    else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
   } 
   catch (Xmipp_error) {
     cout << "img2data: Convert a set of images into a set of data vectors" << endl;
     cout << "Usage:" << endl;
-    cout << "-sel           : Sel file name" << endl;
-    cout << "-mname         : Input Mask file name (default: mask.spi)" << endl;
-    cout << "[-nomask]      : set if the mask is not going to be used" << endl;
-    cout << "[-fname]       : Output file name (default: out.dat)" << endl;
-    cout << "[-verb]        : Verbosity (default: false)" << endl;
+    cout << "-sel                 : Sel file name" << endl;
+    cout << "-mname               : Input Mask file name (default: mask.spi)" << endl;
+    cout << "[-nomask]            : set if the mask is not going to be used" << endl;
+    cout << "[-fname]             : Output file name (default: out.dat)" << endl;
+    cout << "[-verb]              : Verbosity (default: false)" << endl;
+    cout << "[-apply_geo]         : apply transformation stored in the header of a 2D-image (default)"<< endl;
+    cout << "[-dont_apply_geo]    : do NOT apply header transformation\n"<< endl;
     exit(1);
    }
     
@@ -94,7 +99,7 @@ int main(int argc, char **argv) {
       string image_name = SF.NextImg();
       if (verb)
         cout << "generating points for image " << image_name << "......" << endl;
-      ImageXmipp image(image_name);      // reads image      
+      ImageXmipp image(image_name,apply_geo);      // reads image      
 
       // Extract the data
   

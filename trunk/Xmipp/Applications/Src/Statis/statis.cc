@@ -82,6 +82,8 @@ void Statis_parameters::final_process() {
 int main (int argc, char **argv) {
    Statis_parameters prm;
    prm.each_image_produces_an_output=FALSE;
+   // Set default action for application of header transformation
+   prm.apply_geo=TRUE;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
    prm.final_process();
 }

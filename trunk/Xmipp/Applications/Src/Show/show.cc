@@ -38,7 +38,8 @@ void Usage();
 int main( int argc, char **argv ) {
     int numCols, numRows, mode, ifirst;
     FileName fn_dat;
-    bool poll;
+    bool poll, apply_geo=TRUE;
+
     try {
        if (check_param(argc,argv,"-img"))          {mode=0; ifirst=position_param(argc,argv,"-img");}
        else if (check_param(argc,argv,"-sel"))     {mode=1; ifirst=position_param(argc,argv,"-sel");}
@@ -52,6 +53,8 @@ int main( int argc, char **argv ) {
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
        numCols = AtoI(get_param(argc, argv, "-w", "10"));
        numRows = AtoI(get_param(argc, argv, "-h", "10"));
+       if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
+       else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
        poll=check_param(argc,argv,"-poll");
    } catch (Xmipp_error) {Usage(); exit(1);}
 
@@ -93,11 +96,13 @@ int main( int argc, char **argv ) {
        } 
        if (mode==0) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
+          showimg->apply_geo=apply_geo;
           showimg->loadImage( argv[i] );
           showimg->show();
           shown++;
        } else if (mode==1) {
           ShowSel *showsel = new ShowSel;
+          showsel->apply_geo=apply_geo;
           showsel->showonlyactive = !check_param(argc,argv,"-showall");
 	  showsel->initWithFile(numRows, numCols, argv[i]);
 	  showsel->show();
@@ -115,6 +120,7 @@ int main( int argc, char **argv ) {
           shown++;
        } else if (mode==4) {
           ShowSOM *showsom=new ShowSOM;
+          showsom->apply_geo=apply_geo;
 	  showsom->initWithFile(argv[i]);
 	  showsom->show();
           shown++;
@@ -148,5 +154,7 @@ void Usage() {
          << "   [-showall]          : only for sel mode, show all images even\n"
          << "                         if sel = -1\n"
          << "   [-poll]                : check file change, NOT for sel files\n"
+         << "   [-apply_geo]           : apply transformation stored in the header of a 2D-image (default)\n"
+         << "   [-dont_apply_geo]      : do NOT apply header transformation\n"
     ;
 }
