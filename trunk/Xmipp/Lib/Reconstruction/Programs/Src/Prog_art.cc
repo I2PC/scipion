@@ -5,7 +5,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU GeneraFl Public License as published by
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
  * (at your option) any later version.                                 
  *                                                                     
@@ -127,9 +127,10 @@ void ART_single_step(
 
 // Now compute differences .................................................
    double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
+   
    mean_error=0;
    diff_proj().resize(read_proj());
-
+   
    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
    // Compute difference image and error
       IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
@@ -142,8 +143,8 @@ void ART_single_step(
          applied_lambda*IMGPIXEL(diff_proj,i,j)/IMGPIXEL(corr_proj,i,j);
    }
    mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
-
-   // Backprojection of correction plane ......................................
+   
+// Backprojection of correction plane ......................................
    project_Volume(*vol_out,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
