@@ -49,7 +49,7 @@
 /* ************************************************************************* */
 /**@name Images*/
 //@{
-typedef enum {IBYTE=1, IFLOAT=2} Image_Type;
+typedef enum {IBYTE=1, IFLOAT=2, I16=3} Image_Type;
 
 /** Basic Image Class.
     The image class is a general class which only contains 
@@ -201,8 +201,8 @@ public:
        Elements are supposed to be in the following order (y,x)=
        (0,0)(0,1)(0,2), ..., (0,Xdim-1), (1,0), (1,1), ...
        
-       The element size can be adjusted so that raw images of bytes (IBYTE)
-       and floats (IFLOAT) can be read. 
+       The element size can be adjusted so that raw images of bytes (IBYTE),
+       unsigned ints woth 16 bits (I16) and floats (IFLOAT) can be read. 
        \\ Ex: I.read(65,65,"g0ta0001.raw");*/
    void read(FileName name, int Ydim, int Xdim, bool reversed=FALSE,
       Image_Type image_type=IBYTE) _THROW;
