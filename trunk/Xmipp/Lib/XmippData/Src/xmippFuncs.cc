@@ -351,6 +351,7 @@ FileName FileName::insert_before_extension(const string &str) const {
       if (point==-1) {point=length(); done=TRUE;}
       else if (point==length()-1) done=TRUE;
       else if ((*this)[point+1]=='.' || (*this)[point+1]=='/') done=FALSE;
+      else done=true;
    } while (!done);
    FileName retval=*this;
    return retval.insert(point,str);
