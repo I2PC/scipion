@@ -153,22 +153,46 @@ public:
 
    /// Deltaf at a given direction
    double Deltaf(double X, double Y) const {
+      if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
+          ABS(Y)<XMIPP_EQUAL_ACCURACY) return 0;
       double ellipsoid_ang=atan2(Y,X)-rad_azimuth;
       double DeltafUp=DeltafU*cos(ellipsoid_ang);
       double DeltafVp=DeltafV*sin(ellipsoid_ang);
       return SGN(DeltafU)*sqrt(DeltafUp*DeltafUp+DeltafVp*DeltafVp);
    }
 
-   double CTF_at(double X, double Y) const {
+   double CTF_at(double X, double Y, bool show=FALSE) const {
       double pure_CTF;
-      if (enable_CTF)      pure_CTF=CTFpure_at(X,Y);
+      if (enable_CTF)      pure_CTF=CTFpure_at(X,Y,show);
       else                 pure_CTF=0;
-      if (enable_CTFnoise) return sqrt(pure_CTF*pure_CTF+CTFnoise_at(X,Y));
+      if (enable_CTFnoise) return sqrt(pure_CTF*pure_CTF+CTFnoise_at(X,Y,show));
       else                 return pure_CTF;
    }
 
    /// Compute CTF at (U,V). Continuous frequencies
-   double CTFpure_at(double X, double Y) const {
+   double CTFpure_without_damping_at(double X, double Y, bool show=FALSE) const {
+      double u2=X*X+Y*Y;
+      double u=sqrt(u2);
+      double u4=u2*u2;
+      // if (u2>=ua2) return 0;
+      double deltaf=Deltaf(X,Y);
+      double argument=K1*deltaf*u2+K2*u4;
+      double sine_part=sin(argument); // OK
+      double cosine_part=cos(argument);
+      if (show) {
+         cout << "   Deltaf=" << deltaf << endl;
+         cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
+         cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
+              << sine_part << endl;
+	 cout << "   Q0=" << Q0 << endl;
+         cout << "   (X,Y)=(" << X << "," << Y << ") CTF without damping="
+              << -(sine_part+Q0*cosine_part) << endl;
+      }
+      return -(sine_part+Q0*cosine_part);
+   }
+
+   /// Compute CTF at (U,V). Continuous frequencies
+   double CTFpure_at(double X, double Y, bool show=FALSE) const {
       double u2=X*X+Y*Y;
       double u=sqrt(u2);
       double u4=u2*u2;
@@ -184,8 +208,7 @@ public:
       double Ealpha=exp(-K6*(K7*u2*u+deltaf*u)*(K7*u2*u+deltaf*u)); // OK
       // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
       double E=Eespr*EdeltaF*EdeltaR*Ealpha;
-      //#define DEBUG
-      #ifdef DEBUG
+      if (show) {
          cout << "   Deltaf=" << deltaf << endl;
          cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
          cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
@@ -200,15 +223,43 @@ public:
 	 cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << endl;
          cout << "   (X,Y)=(" << X << "," << Y << ") CTF="
               << -K*(sine_part+Q0*cosine_part)*E+base_line << endl;
-      #endif
-      #undef DEBUG
+      }
       return -K*(sine_part+Q0*cosine_part)*E;
+   }
+
+   /** Compute CTF gaussian at (U,V). Continuous frequencies.
+       This is the pure gaussian, without any scaling factor. Its range
+       is between 0 and 1.*/
+   double CTFgaussian_at(double X, double Y, bool show=false) const {
+      double ellipsoid_ang;
+      if (gaussian_K==0.0) return 0.0;
+      if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
+          ABS(Y)<XMIPP_EQUAL_ACCURACY) ellipsoid_ang=0;
+      else ellipsoid_ang=atan2(Y,X)-rad_gaussian;
+      double cUp=cU*cos(ellipsoid_ang);
+      double cVp=cV*sin(ellipsoid_ang);
+      double c=sqrt(cUp*cUp+cVp*cVp);
+      double sigmaUp=sigmaU*cos(ellipsoid_ang);
+      double sigmaVp=sigmaV*sin(ellipsoid_ang);
+      double sigma=sqrt(sigmaUp*sigmaUp+sigmaVp*sigmaVp);
+      double w=sqrt(X*X+Y*Y);
+      if (show) {
+         cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << endl
+              << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
+              << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n";
+         cout << "   (X,Y)=(" << X << "," << Y << ") (" << w << ") Gaussian="
+              << exp(-sigma*(w-c)*(w-c)) << endl;
+      }
+      return exp(-sigma*(w-c)*(w-c));	
    }
 
    /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
    //#define DEBUG
-   double CTFnoise_at(double X, double Y) const {
-      double ellipsoid_ang=atan2(Y,X)-rad_gaussian;
+   double CTFnoise_at(double X, double Y, bool show=false) const {
+      double ellipsoid_ang;
+      if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
+          ABS(Y)<XMIPP_EQUAL_ACCURACY) ellipsoid_ang=0;
+      else ellipsoid_ang=atan2(Y,X)-rad_gaussian;
       double sqUp=sqU*cos(ellipsoid_ang);
       double sqVp=sqV*sin(ellipsoid_ang);
       double sq=sqrt(sqUp*sqUp+sqVp*sqVp);
@@ -219,7 +270,7 @@ public:
       double sigmaVp=sigmaV*sin(ellipsoid_ang);
       double sigma=sqrt(sigmaUp*sigmaUp+sigmaVp*sigmaVp);
       double w=sqrt(X*X+Y*Y);
-      #ifdef DEBUG
+      if (show) {
          cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << endl
               << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
               << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
@@ -227,7 +278,7 @@ public:
          cout << "   (X,Y)=(" << X << "," << Y << ") (" << w << ") CTFnoise="
               << base_line+
              gaussian_K*exp(-sigma*(w-c)*(w-c))+sqrt_K*exp(-sq*sqrt(w)) << endl;
-      #endif
+      }
       return base_line+
              gaussian_K*exp(-sigma*(w-c)*(w-c))+sqrt_K*exp(-sq*sqrt(w));	
    }
