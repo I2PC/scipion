@@ -624,6 +624,140 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 }
 #undef DEBUG
 
+// Projection from a voxel volume ==========================================
+/* Project a voxel volume -------------------------------------------------- */
+//#define DEBUG
+void singleWBP(matrix3D<double> &V, Projection &P) _THROW {
+   SPEED_UP_temps;
+
+   // Compute the distance for this line crossing one voxel
+   int x_0=STARTINGX(V), x_F=FINISHINGX(V);
+   int y_0=STARTINGY(V), y_F=FINISHINGY(V);
+   int z_0=STARTINGZ(V), z_F=FINISHINGZ(V);
+
+   // Distances in X and Y between the center of the projection pixel begin
+   // computed and each computed ray
+   double step= 1.0/3.0;
+    
+   // Avoids divisions by zero and allows orthogonal rays computation
+   if(XX(P.direction)==0) XX(P.direction)=XMIPP_EQUAL_ACCURACY;
+   if(YY(P.direction)==0) YY(P.direction)=XMIPP_EQUAL_ACCURACY;
+   if(ZZ(P.direction)==0) ZZ(P.direction)=XMIPP_EQUAL_ACCURACY;
+
+   // Some precalculated variables
+   int x_sign = SGN(XX(P.direction));
+   int y_sign = SGN(YY(P.direction));
+   int z_sign = SGN(ZZ(P.direction));
+   double half_x_sign = 0.5 * x_sign;
+   double half_y_sign = 0.5 * y_sign;
+   double half_z_sign = 0.5 * z_sign;
+   
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(P()) {
+      matrix1D<double> r_p(3); // r_p are the coordinates of the 
+                               // pixel being projected in the
+                               // coordinate system attached to the
+                               // projection
+      matrix1D<double> p1(3);  // coordinates of the pixel in the
+      			       // universal space
+      double ray_sum=0.0;      // Line integral value
+      
+      // Computes 4 different rays for each pixel.
+/*      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++)
+      { 
+	// universal coordinate system                        
+	switch(rays_per_pixel){
+		case 0:	VECTOR_R3(r_p,j-step,i-step,0);
+			break;
+		case 1: VECTOR_R3(r_p,j-step,i+step,0);
+			break;
+		case 2: VECTOR_R3(r_p,j+step,i-step,0);
+			break;
+		case 3: VECTOR_R3(r_p,j+step,i+step,0);
+			break;
+	}*/
+	
+	//***********************
+	VECTOR_R3(r_p,j,i,0);		
+	
+	// Express r_p in the universal coordinate system
+	M3x3_BY_V3x1(p1,P.eulert,r_p);
+	
+	// Compute the minimum and maximum alpha for the ray
+	// intersecting the given volume
+	double alpha_xmin=(x_0-0.5-XX(p1))/XX(P.direction);
+	double alpha_xmax=(x_F+0.5-XX(p1))/XX(P.direction);
+	double alpha_ymin=(y_0-0.5-YY(p1))/YY(P.direction);
+	double alpha_ymax=(y_F+0.5-YY(p1))/YY(P.direction);
+	double alpha_zmin=(z_0-0.5-ZZ(p1))/ZZ(P.direction);
+	double alpha_zmax=(z_F+0.5-ZZ(p1))/ZZ(P.direction);
+	
+	double alpha_min =MAX(MIN(alpha_xmin,alpha_xmax),
+                              MIN(alpha_ymin,alpha_ymax));
+               alpha_min =MAX(alpha_min,MIN(alpha_zmin,alpha_zmax));
+	double alpha_max =MIN(MAX(alpha_xmin,alpha_xmax),
+                              MAX(alpha_ymin,alpha_ymax));
+               alpha_max =MIN(alpha_max,MAX(alpha_zmin,alpha_zmax));
+	if (alpha_max-alpha_min<XMIPP_EQUAL_ACCURACY)	continue;
+	
+	// Compute the first point in the volume intersecting the ray
+	matrix1D<double>  v(3);
+	matrix1D<int>    idx(3);
+	V3_BY_CT(v,P.direction,alpha_min);
+	V3_PLUS_V3(v,p1,v);
+
+	// Compute the index of the first voxel
+	XX(idx)=CLIP(ROUND(XX(v)),x_0,x_F);
+	YY(idx)=CLIP(ROUND(YY(v)),y_0,y_F);
+	ZZ(idx)=CLIP(ROUND(ZZ(v)),z_0,z_F);
+
+	
+	#ifdef DEBUG
+           cout << "First voxel: " << v.transpose() << endl;
+           cout << "   First index: " << idx.transpose() << endl;
+           cout << "   Alpha_min: " << alpha_min << endl;
+	#endif
+   
+	// Follow the ray
+	double alpha=alpha_min;
+	do {  
+	   #ifdef DEBUG
+	   	cout << " \n\nCurrent Value: " << V(ZZ(idx),YY(idx),XX(idx)) << endl;
+	   #endif
+	   
+	   double alpha_x = (XX(idx)+half_x_sign-XX(p1))/XX(P.direction);
+           double alpha_y = (YY(idx)+half_y_sign-YY(p1))/YY(P.direction);
+           double alpha_z = (ZZ(idx)+half_z_sign-ZZ(p1))/ZZ(P.direction);
+
+	   // Which dimension will ray move next step into?, it isn't neccesary to be only
+	   // one. 
+	   double diffx = ABS(alpha-alpha_x);
+	   double diffy = ABS(alpha-alpha_y);
+	   double diffz = ABS(alpha-alpha_z);
+	  
+	   double diff_alpha = MIN(MIN(diffx,diffy),diffz);
+
+	   V(ZZ(idx), YY(idx), XX(idx)) += diff_alpha * P(i,j);
+	
+	   if(ABS(diff_alpha-diffx) <=XMIPP_EQUAL_ACCURACY){
+		  alpha = alpha_x; XX(idx)+=x_sign;
+	   }
+	   if(ABS(diff_alpha-diffy) <=XMIPP_EQUAL_ACCURACY){
+		  alpha = alpha_y; YY(idx)+=y_sign;
+	   }
+	   if(ABS(diff_alpha-diffz) <=XMIPP_EQUAL_ACCURACY){
+		  alpha = alpha_z; ZZ(idx)+=z_sign;
+	   }
+    
+	} while ((alpha_max-alpha)>XMIPP_EQUAL_ACCURACY);
+  //    } // for
+
+       #ifdef DEBUG
+      	cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
+      #endif
+   }
+}
+#undef DEBUG
+
 #ifdef NEVER_DEFINED
 // Project using spider
 void project_Volume(VolumeXmipp &V, Projection &P, int Ydim, int Xdim,
