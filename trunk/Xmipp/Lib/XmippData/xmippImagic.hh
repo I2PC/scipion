@@ -33,6 +33,17 @@
 
 #include <vector>
 #include "xmippImages.hh"
+                                                                               
+#define GCC_VERSION (__GNUC__ * 10000 \
+    + __GNUC_MINOR__ * 100 \
+    + __GNUC_PATCHLEVEL__)
+/* Test for GCC > 3.3.0 */
+#if GCC_VERSION >= 30300
+    #include <sstream>
+#else
+    #include <strstream.h>
+#endif
+
 
 /**@name IMAGIC Images */
 //@{
@@ -188,7 +199,12 @@ typedef ImageImagicT<double> ImageImagic;
     suitable for use as an image name. */
 inline string ImagicMakeName (const char *hed_fname, unsigned int imgnum)
 {
-  ostringstream ss;
+#if GCC_VERSION < 30300
+       char aux[15];
+       ostrstream ss(aux,sizeof(aux));
+#else
+       ostringstream ss;
+#endif
   ss << IMAGIC_TAG << hed_fname << IMAGIC_TAG_SEP << imgnum;
   return (ss.str());
 };
