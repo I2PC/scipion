@@ -87,7 +87,7 @@ int main (int argc, char **argv) {
          fn_fr =get_param(argc,argv,"-fr");
       } else {
          shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
-         first_ring=AtoI(get_param(argc,argv,"-first_ring","0"));
+         first_ring=AtoI(get_param(argc,argv,"-first_ring","1"));
          last_ring= AtoI(get_param(argc,argv,"-last_ring","-1"));
          tilt_step= AtoF(get_param(argc,argv,"-tilt_step","10"));
       }
@@ -293,7 +293,7 @@ void Usage() {
         << "  [-max_shift <s=2>]                     : in pixels\n"
         << "  [-shift_step <s=1>]                    : max_shift must be a multiple\n"
         << "                                           of shift_step\n"
-        << "  [-first ring <r=0>]                    : First ring to evaluate\n"
+        << "  [-first_ring <r=1>]                    : First ring to evaluate\n"
         << "  [-last_ring <r=-1>]                    : Last ring to evaluate\n"
         << "Both --------------------------------------------------------------------------------\n"
         << "  [-omit_check]                          : Check that the angles are within\n"
