@@ -84,9 +84,9 @@ int main (int argc, char **argv) {
       
       // Really window
       M_out.open_micrograph(fn_out);
-      for (int i=i0; i<Ypdim; i++)
-          for (int j=j0; j<Xpdim; j++)
-	      M_out.set_val(j,i,M_in(j,i));
+      for (int i=0; i<Ypdim; i++)
+          for (int j=0; j<Xpdim; j++)
+	      M_out.set_val(j,i,M_in(j+j0,i+i0));
       
       // Close
       M_out.close_micrograph();
@@ -99,7 +99,7 @@ void Usage() {
     cout << "Purpose:\n"
          << "    Reduce size of input image\n"
          << "Usage: window_micrograph\n"
-         << " -i <input_micrograph>            : Either 8 or 16 bits\n"
+         << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
          << " -o <output_micrograph>           : It will be rewritten\n"
          << " -size <new Xdim> <new Ydim>      : In pixels\n"
          << "[-top_left_corner <X=0,Y=0>]      : In pixels\n"
