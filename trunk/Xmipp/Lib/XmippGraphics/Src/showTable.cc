@@ -325,6 +325,9 @@ void ShowTable::mousePressEvent( QMouseEvent* e ) {
 
 void ShowTable::keyPressEvent( QKeyEvent* e ) {
     switch( e->key() ) { // Look at the key code
+	case Key_F1:
+	   menubar->exec();
+	   break;
 	case Key_Space:
 	   changeMark(currentRow(), currentColumn());
 	   break;

@@ -636,6 +636,9 @@ void ImageViewer::mouseMoveEvent( QMouseEvent *e )
 void ImageViewer::keyPressEvent( QKeyEvent* e )
 {
     switch( e->key() ) {			// Look at the key code
+	case Key_F1:
+	   menubar->exec();
+	   break;
 	case Key_R:
              if (e->state() == ControlButton) {	// If 'Ctrol R' key, 
   		  xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner        
