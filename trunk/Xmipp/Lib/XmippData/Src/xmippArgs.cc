@@ -132,7 +132,7 @@ string ItoA(int I, int _width, char fill_with) {
 
    // Start filling the array
    aux[width--]='\0';
-   I=Iaux;
+   Iaux=I;
    do {
       int digit=Iaux%10;
       Iaux/=10;
