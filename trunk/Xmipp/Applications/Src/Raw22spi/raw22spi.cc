@@ -66,7 +66,8 @@ Zdim=Ydim=Xdim=0;
          }
        }
 
-       if (check_param(argc, argv, "-f")) raw_type='f'; 
+       if (check_param(argc, argv, "-f"))  raw_type='f'; 
+       if (check_param(argc, argv, "-16")) raw_type='h';
        
        if (check_param(argc, argv, "-s")){ 
          size_arg = position_param(argc, argv, "-s");
@@ -142,7 +143,8 @@ void Usage (char **argv) {
      "\n			 files were specified in a sel file"
      "\nGENERAL PARAMETERS"
      "\n   [-f]		         raw file is read/written in float format "
-     "\n                         (byte by default)."      
+     "\n                         (byte by default)."
+     "\n   [-16]                 raw file is read/written in 16-bit integers"
      "\n   [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n"
      "\n    -s Zdim Ydim Xdim    Z,Y,X dimensions for input files."
@@ -162,6 +164,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
       bool endianness=(reverse_endian)?!Vx.reversed():Vx.reversed();
       switch (raw_type) {
          case 'b': ((Volume)Vx).write(fn_out,endianness,VBYTE); break;
+	 case 'h': ((Volume)Vx).write(fn_out,endianness,V16); break;
          case 'f': ((Volume)Vx).write(fn_out,endianness,VFLOAT); break;
       }
    // Image Xmipp --> Raw Image
@@ -171,6 +174,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
       int bits;
       switch (raw_type) {
          case 'b': ((Image)Ix).write(fn_out,endianness,IBYTE); bits=8; break;
+	 case 'h': ((Image)Ix).write(fn_out,endianness,I16); bits=16; break;
          case 'f': ((Image)Ix).write(fn_out,endianness,IFLOAT); bits=32; break;
       }
       if (generate_inf) {
@@ -191,6 +195,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
       Image *I=&Ix; // This is a trick for the compiler
       switch (raw_type) {
          case 'b': I->read(fn_in,Ydim,Xdim,FALSE,IBYTE); break;
+	 case 'h': I->read(fn_in,Ydim,Xdim,FALSE,I16); break;
          case 'f': I->read(fn_in,Ydim,Xdim,FALSE,IFLOAT); break;
       }
       Ix.write(fn_out,reverse_endian);
@@ -199,6 +204,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
       Volume *V=&Vx; // This is a trick for the compiler
       switch (raw_type) {
          case 'b': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VBYTE); break;
+	 case 'h': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,V16); break;
          case 'f': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VFLOAT); break;
       }
       Vx.write(fn_out,reverse_endian);
