@@ -27,7 +27,8 @@
 
 /* Prototypes -============================================================= */
 void Usage (char **argv);
-void raw22spi (const FileName &, const FileName &, char, int, int, int); 
+void raw22spi (const FileName &, const FileName &, char, int, int, int, bool,
+   bool); 
 
 int main (int argc, char *argv[]) {
 /* Input Parameters ======================================================== */
@@ -38,6 +39,8 @@ string 	       sel_ext;  // extension for output files in selection file.
 char	       raw_type = 'b';
 int            Zdim, Ydim, Xdim;
 int 	       size_arg;
+bool           generate_inf;
+bool           reverse_endian;
 
 Zdim=Ydim=Xdim=0;
 /* Parameters ============================================================== */
@@ -72,6 +75,8 @@ Zdim=Ydim=Xdim=0;
          Ydim= AtoI(argv[size_arg+2]);
          Xdim= AtoI(argv[size_arg+3]);
        }
+       generate_inf=check_param(argc,argv,"-generate_inf");
+       reverse_endian=check_param(argc,argv,"-reverse_endian");
        if (argc == 1) {Usage(argv);}
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
@@ -95,7 +100,8 @@ try {
        FileName out_name = in_name.without_extension();
        out_name=out_name.add_extension(sel_ext);
        SF_out.insert(out_name,(SelLine::Label)label);
-       raw22spi(in_name,out_name,raw_type,Zdim,Ydim,Xdim);
+       raw22spi(in_name,out_name,raw_type,Zdim,Ydim,Xdim,generate_inf,
+          reverse_endian);
       }
       else if (line.Is_comment()){
         SF_out.insert(line);
@@ -107,7 +113,8 @@ try {
  //input/output are single files
  
  else if (check_param(argc, argv,"-i") && check_param(argc, argv,"-o")){
-   raw22spi(fn_in,fn_out,raw_type,Zdim,Ydim,Xdim);
+   raw22spi(fn_in,fn_out,raw_type,Zdim,Ydim,Xdim,generate_inf,
+      reverse_endian);
  }
  
 } catch (Xmipp_error XE) {cout << XE;}
@@ -128,6 +135,7 @@ void Usage (char **argv) {
      "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
      "\n    -i    file_in        input raw or Xmipp file"
      "\n    -o    file_out       output Xmipp or raw file"
+     "\n   [-generate_inf]       only valid if the output is a raw image"
      "\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"     
      "\n    -sel  input_file     input sel file"
      "\n    -oext input_file     extension for the output files if the input"
@@ -135,12 +143,15 @@ void Usage (char **argv) {
      "\nGENERAL PARAMETERS"
      "\n   [-f]		         raw file is read/written in float format "
      "\n                         (byte by default)."      
+     "\n   [-reverse_endian]     by default, output has the same endiannes as input"
+     "\n                         use this option to change endianness\n"
      "\n    -s Zdim Ydim Xdim    Z,Y,X dimensions for input files."
      "\n			 For 2D raw images set the Zdim to 1\n"
      ,argv[0]);
 }
 void raw22spi (const FileName &fn_in, const FileName &fn_out,
-     char raw_type, int Zdim,  int Ydim, int Xdim) {
+     char raw_type, int Zdim,  int Ydim, int Xdim, bool generate_inf,
+     bool reverse_endian) {
 
  VolumeXmipp    Vx;
  ImageXmipp     Ix;
@@ -148,16 +159,31 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
   // Volume Xmipp --> Raw Volume
    if (Is_VolumeXmipp(fn_in)) {
       Vx.read(fn_in);
+      bool endianness=(reverse_endian)?!Vx.reversed():Vx.reversed();
       switch (raw_type) {
-         case 'b': ((Volume)Vx).write(fn_out,Vx.reversed(),VBYTE); break;
-         case 'f': ((Volume)Vx).write(fn_out,Vx.reversed(),VFLOAT); break;
+         case 'b': ((Volume)Vx).write(fn_out,endianness,VBYTE); break;
+         case 'f': ((Volume)Vx).write(fn_out,endianness,VFLOAT); break;
       }
    // Image Xmipp --> Raw Image
    } else if (Is_ImageXmipp(fn_in)) {
-     Ix.read(fn_in);
+      Ix.read(fn_in);
+      bool endianness=(reverse_endian)?!Ix.reversed():Ix.reversed();
+      int bits;
       switch (raw_type) {
-         case 'b': ((Image)Ix).write(fn_out,Ix.reversed(),IBYTE); break;
-         case 'f': ((Image)Ix).write(fn_out,Ix.reversed(),IFLOAT); break;
+         case 'b': ((Image)Ix).write(fn_out,endianness,IBYTE); bits=8; break;
+         case 'f': ((Image)Ix).write(fn_out,endianness,IFLOAT); bits=32; break;
+      }
+      if (generate_inf) {
+         ofstream fh((fn_out+".inf").c_str());
+	 if (!fh) 
+	    REPORT_ERROR(1,"Cannot create output .inf file");
+	 fh << "# Image width\n";
+	 fh << "Xdim=" << XSIZE(Ix()) << endl;
+	 fh << "# Image length\n";
+	 fh << "Ydim=" << YSIZE(Ix()) << endl;
+	 fh << "# Pixel depth\n";
+	 fh << "bitspersample=" << bits << endl;
+	 fh.close();
       }
    }   
    // Raw image --> Xmipp Image
@@ -167,7 +193,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
          case 'b': I->read(fn_in,Ydim,Xdim,FALSE,IBYTE); break;
          case 'f': I->read(fn_in,Ydim,Xdim,FALSE,IFLOAT); break;
       }
-      Ix.write(fn_out);
+      Ix.write(fn_out,reverse_endian);
    // Raw Volume --> Xmipp Volume
    } else {
       Volume *V=&Vx; // This is a trick for the compiler
@@ -175,7 +201,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
          case 'b': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VBYTE); break;
          case 'f': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VFLOAT); break;
       }
-      Vx.write(fn_out);
+      Vx.write(fn_out,reverse_endian);
    }
 }
 
