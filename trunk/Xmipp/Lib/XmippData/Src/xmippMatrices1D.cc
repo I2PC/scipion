@@ -373,24 +373,23 @@ template <class T>
 void Powell_optimizer(matrix1D<double> &p, int i0, int n,
    double (*f)(double *x), double ftol, double &fret,
    int &iter, const matrix1D<double> &steps, bool show) {
-   double **xi=NULL;
+   double *xi=NULL;
 
    // Adapt indexes of p
    double *pptr=p.adapt_for_numerical_recipes();
    double *auxpptr=pptr+(i0-1);
 
    // Form direction matrix
-   ask_Tmatrix(xi,1,n,1,n);
+   ask_Tvector(xi,1,n*n);
    for (int i=1; i<=n; i++)
        for (int j=1; j<=n; j++)
-           xi[i][j]=(i==j)?steps(i-1):0;
+           xi[i*n+j]=(i==j)?steps(i-1):0;
    
    // Optimize
    powell(auxpptr,xi,n,ftol,iter,fret,f, show);
    
    // Exit
-   free_Tmatrix(xi,1,n,1,n);
-   p.kill_adaptation_for_numerical_recipes(pptr);
+   free_Tvector(xi,1,n*n);
 }
 
 /* Center of mass ---------------------------------------------------------- */
