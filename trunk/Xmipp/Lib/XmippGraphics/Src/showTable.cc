@@ -41,6 +41,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <qfontdialog.h>
+#include <qcolordialog.h>
 
 /* Constructor/Destructor -------------------------------------------------- */
 ShowTable::ShowTable() {
@@ -66,6 +68,8 @@ void ShowTable::init() {
     options         = NULL;
     menubar         = NULL;
     status          = NULL;
+    QFont tmpFont("Fixed", 12);
+    fontColor       = green; 
     content_queue.clear();
 }
 
@@ -156,9 +160,34 @@ void ShowTable::initTable() {
     connect( this, SIGNAL(doubleClicked ( int, int, int, const QPoint &)),
              this, SLOT(mouseDoubleClickEvent( int, int, int, const QPoint &)) );
 }
+// Change colors -----------------------------------------------------------
+void ShowTable::GUIchangeColor(QColor &_color, const char *_color_title) {
+   QColor tmpColor = QColorDialog::getColor(fontColor, this, _color_title);
+   if (tmpColor.isValid()) {
+      _color = tmpColor;
+      repaintContents();
+   }
+}
+
+void ShowTable::changeFontColor()  {GUIchangeColor(fontColor, "Font color");}
+
+// Change Font -------------------------------------------------------------
+void ShowTable::changeFont() {
+   QFont tmpFont; bool ok;
+   tmpFont = QFontDialog::getFont(&ok, labelFont, this, "Font type");
+   if (ok) {
+   	labelFont = tmpFont;
+        repaintContents();
+   }
+}
 
 /* Init Rightclick menubar ------------------------------------------------- */
 void ShowTable::insertGeneralItemsInRightclickMenubar() {    
+    //Colors................................................................
+    QPopupMenu* colorMenu = new QPopupMenu();
+       colorMenu->insertItem( "&Font", this, SLOT(changeFontColor()));
+    menubar->insertItem( "&Change color...", colorMenu);
+    menubar->insertItem( "&Change font...", this, SLOT(changeFont()));
     // Help ................................................................
     QPopupMenu* help = new QPopupMenu();
        help->insertItem( "About &Xmipp", this, SLOT(aboutXmipp()));
@@ -169,6 +198,7 @@ void ShowTable::insertGeneralItemsInRightclickMenubar() {
     // Quit ................................................................
     menubar->insertItem( "&Quit", this,  SLOT(close()));
 }
+
 
 /* Change boolean option --------------------------------------------------- */
 void ShowTable::changeBoolOption(int _mi, int _mic) {
@@ -193,7 +223,6 @@ void ShowTable::adjustStatusLabel() {
    status->show();
    maxHeight += status->height();
 }
-
 /* Rewrite cell painting --------------------------------------------------- */
 void ShowTable::paintCell(QPainter *p, int row, int col,const QRect & cr,
    bool selected, const QColorGroup & cg) {
@@ -204,7 +233,6 @@ void ShowTable::paintCell(QPainter *p, int row, int col,const QRect & cr,
    p->drawPixmap(0, 0, *(content[i]));
    drawFrameAndLabel(p,row,col,i);
 }
-
 void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
    int label_position) {
    int w = columnWidth( col );  	       // width of cell in pixels
@@ -227,8 +255,9 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
 
    // Draw label
    if (cellLabel(i)!=NULL) {
-      QPen pen( green );
+      QPen pen( fontColor );
       p->setPen( pen );
+      p->setFont( labelFont );
       switch (label_position) {
          case 0: p->drawText(0, 0, x2, y2,
                     (Qt::AlignBottom | Qt::AlignRight), cellLabel(i));
