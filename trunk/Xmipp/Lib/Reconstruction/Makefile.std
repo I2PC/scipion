@@ -16,6 +16,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
            Src/Gibbs.o \
            Programs/Src/Prog_project.o \
            Programs/Src/Prog_evaluate.o \
+           Programs/Src/Prog_evaluate_FSCs.o \
            Programs/Src/recons_misc.o \
            Programs/Src/Prog_project_crystal.o Programs/Src/Prog_surface.o \
            Programs/Src/Prog_euler.o Programs/Src/Prog_draw_surface.o \
