@@ -27,6 +27,9 @@ using namespace std;
 #include <Classification/xmippCTVectors.hh>
 #include <XmippData/xmippFuncs.hh>
 
+/**@name PCA classes*/
+//@{
+/** Basic PCA class */
 class xmippPC {
 public:
 
@@ -73,13 +76,51 @@ public:
 	*/
 	xmippVector eigenval;
 
+	/**
+	* Mean of the input training set
+	*/
+        xmippVector mean;
+
+        /** Number of relevant eigenvectors */
+	int D;
+
 	/**Set identity matrix as eigenvector matrix
 		@param n The number of eigenvectors*/
 	void setIdentity(int n);
   	
+        /** Clear.
+	    Clean the eigenvector, eigenvalues and D */
+        void clear();
+
+        /** Set the number of relevant eigenvalues. */
+	void set_Dimension(int _D) {D=_D;}
+
+        /** Get the number of relevant eigenvalues. */
+	int get_Dimension() const {return D;}
+
+      	/** Number of components for a given accuracy explanation.
+	    This function returns the number of components to be taken
+	    if th_var% of the variance should be explained */
+	int Dimension_for_variance(double th_var);
+
+        /** Project onto PCA space.
+	    Given a vector of the same size as the PCA vectors this function
+	    returns the projection of size D onto the first D eigenvectors.
+	    D is set via the set_Dimension function
+	    
+	    An exception is thrown if the input vectors are not of the same size
+	    as the PCA ones.*/
+        void Project(xmippVector &input, xmippVector &output) _THROW;
+
 	/** Defines Listener class
   	*/
   	void setListener(xmippBaseListener* _listener) { listener = _listener; };
+
+	/** Show relevant eigenvectors and eigenvalues */
+	friend ostream& operator << (ostream &out, const xmippPC &PC);
+
+	/** Read a set of PCA just as shown */
+	friend istream& operator >> (istream &in, xmippPC &PC);
 
 private:
 
@@ -87,5 +128,34 @@ private:
 
 
 };
+
+
+/** Set of PCA classes */
+class PCA_set {
+public:
+   /** Set of PCA analysis. */
+   vector<xmippPC *> PCA;
+   
+public:
+   /** Destructor */
+   ~PCA_set();
+
+   /** Create empty PCA.
+       Creates space for n new PCA and returns the index of the first one */
+   int create_empty_PCA(int n=1);
+
+   /** Returns the number of PCA analysis.*/
+   int PCANo() const {return PCA.size();}
+
+   /** Returns a pointer to PCA number i*/
+   xmippPC * operator ()(int i) const {return PCA[i];}
+
+   /** Show all PCA */
+   friend ostream& operator << (ostream &out, const PCA_set &PS);
+   
+   /** Read a set of PCA just as shown */
+   friend istream& operator >> (istream &in, PCA_set &PS);
+};
+//@}
 #endif
 

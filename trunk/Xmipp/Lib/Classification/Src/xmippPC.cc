@@ -53,7 +53,6 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
   		listener->OnReportOperation((string) "Diagonalizing matrix....\n");  
 	
 		//Get the mean of the given cluster of vectors
-		xmippVector mean;
 		for(int k=0;k<n;k++){
 			a[k].resize(n);
 			xmippFeature sum=0.0;
@@ -92,6 +91,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 
 	eigenval.resize(n);
 	eigenvec.resize(n);
+	set_Dimension(n);
 
 	xmippVector b;
 	b.resize(n);
@@ -215,5 +215,114 @@ void xmippPC::setIdentity(int n)
 	}
 }
 
+/* Components for variance ------------------------------------------------- */
+int xmippPC::Dimension_for_variance(double th_var) {
+   int imax=eigenval.size();
+   double sum=0;
+   th_var/=100;
+   for (int i=0; i<imax; i++) sum+=eigenval[i];
+   
+   double explained=0;
+   int i=0;
+   do {
+      explained+=eigenval[i++];
+   } while (explained/sum<th_var);
+   return i;
+}
 
+/* Project ----------------------------------------------------------------- */
+void xmippPC::Project(xmippVector &input, xmippVector &output) _THROW {
+   if (input.size()!=eigenvec[0].size())
+      REPORT_ERROR(1,"PCA_project: vectors are not of the same size");
+
+   int size=input.size();
+   output.resize(D);
+   for (int i=0; i<D; i++) {
+      output[i]=0;
+      // Comput the dot product between the input and the PCA vector[i]
+      for (int j=0; j<size; j++)
+         output[i]+=input[j]*eigenvec[i][j];
+   }
+}
+
+/* Clear ------------------------------------------------------------------- */
+void xmippPC::clear() {
+   set_Dimension(0);
+   mean.clear();
+   eigenvec.clear();
+   eigenval.clear();
+}
+
+/* Show/read PCA ----------------------------------------------------------- */
+ostream& operator << (ostream &out, const xmippPC &PC) {
+   out << "Relevant Dimension: " << PC.get_Dimension() << endl;
+   out << "Mean vector: ";
+   int size=PC.mean.size(); out << "(" << size << ") ---> ";
+   for (int j=0; j<size; j++)
+      out << PC.mean[j] << " ";
+   out << endl;
+   for (int i=0; i<PC.get_Dimension(); i++) {
+      out << PC.eigenval[i] << " (" << size << ") ---> ";
+      for (int j=0; j<size; j++)
+         out << PC.eigenvec[i][j] << " ";
+      out << endl;
+   }
+   return out;
+}
+
+istream& operator >> (istream &in, xmippPC &PC) {
+   PC.clear();
+   int D;
+   in.scan("Relevant Dimension: %d", &D);
+   PC.set_Dimension(D);
+   PC.eigenval.resize(D);
+   PC.eigenvec.resize(D);
+   
+   int size;
+   in.scan("Mean vector: (%d) --->",&size);
+   PC.mean.resize(size);
+   for (int j=0; j<size; j++)
+      in >> PC.mean[j];
+   
+   for (int i=0; i<D; i++) {
+      in.scan("%F (%d) ---> ",&(PC.eigenval[i]),&size);
+      PC.eigenvec[i].resize(size);
+      for (int j=0; j<size; j++)
+         in >> PC.eigenvec[i][j];
+   }
+   return in;
+}
+
+/* PCA set destructur ------------------------------------------------------ */
+PCA_set::~PCA_set() {
+   int imax=PCA.size();
+   for (int i=0; i<imax; i++) delete PCA[i];
+}
+
+/* Create empty PCA -------------------------------------------------------- */
+int PCA_set::create_empty_PCA(int n) {
+   int retval=PCA.size();
+   PCA.resize(retval+n);
+   for (int i=0; i<n; i++) PCA[retval+i]=new xmippPC;
+   return retval;
+}
+
+/* Show/Read PCAset -------------------------------------------------------- */
+ostream& operator << (ostream &out, const PCA_set &PS) {
+   int imax=PS.PCA.size();
+   out << "Number of PCAs: " << imax << endl;
+   for (int i=0; i<imax; i++) out << *(PS.PCA[i]);
+   return out;
+}
+
+istream& operator >> (istream &in, PCA_set &PS) {
+   int imax;
+   in.scan("Number of PCAs: %d\n", &imax);
+   PS.PCA.resize(imax);
+   for (int i=0; i<imax; i++) {
+      PS.PCA[i]=new xmippPC;
+      in >> *(PS.PCA[i]);
+   }
+   return in;
+}
 
