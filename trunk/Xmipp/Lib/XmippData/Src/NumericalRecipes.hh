@@ -63,6 +63,7 @@ double bessi3_5(double x);
 
 // Special functions
 double gammln(double xx);
+double gammp(double a, double x);
 double betacf(double a, double b, double x);
 double betai(double a, double b, double x);
 
