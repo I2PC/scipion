@@ -76,6 +76,7 @@ SUBDIRS = 2DInterpolation \
 	Mask \
 	Microscope \
 	MLalign2D \
+	MLalign2D_combine \
 	Morphology \
 	MvSel \
 	Normalize \
