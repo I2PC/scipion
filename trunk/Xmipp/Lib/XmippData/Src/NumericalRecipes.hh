@@ -33,11 +33,11 @@ double ran1(int *idum);                                 // Uniform random
 double gasdev(int *idum);                               // Gaussian random
 
 // Working with matrices
-template <class T> void ludcmp(T **a, int n, int *indx, T *d);  
+template <class T> void ludcmp(T *a, int n, int *indx, T *d);  
                                                        // LU decomposition
-template <class T> void lubksb(T **a, int n, int *indx,T b[]);  
+template <class T> void lubksb(T *a, int n, int *indx, T b[]);  
                                                        // Solve Ax=b
-template <class T> void gaussj(T **a, int n, T **b, int m);
+template <class T> void gaussj(T *a, int n, T *b, int m);
                                                        // Solve Ax=b (b=matrix)
 
 // FFT
@@ -67,16 +67,16 @@ double betacf(double a, double b, double x);
 double betai(double a, double b, double x);
 
 // Eigen decomposition
-void jacobi(double **a, int n, double *d, double **v, int *nrot);
+void jacobi(double *a, int n, double *d, double *v, int *nrot);
 // These functions are needed two obtain eigenvalues of real non-symetric
 // matrices 
-void balanc(double **a, int n);
-void elmhes(double **a, int n);
-void hqr(double **a, int n,double *wr,double *wi);
+void balanc(double *a, int n);
+void elmhes(double *a, int n);
+void hqr(double *a, int n,double *wr,double *wi);
 
 // Singular value descomposition of matrix a (numerical recipes, chapter 2-6 for details)
-void svdcmp(double **a, int m,int n,double *w, double **v);
-void svbksb(double **u,double *w,double **v, int m,int n,double *b,double *x);
+void svdcmp(double *a, int m,int n,double *w, double *v);
+void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x);
 
 // 
 void convlv(double *data,int n,double *respns,int m,int isign,double *ans);
@@ -86,8 +86,15 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m);
 void four1(double *data,int nn,int isign);
 
 // Optimization
-void powell(double *p, double **xi, int n, double ftol, int &iter,
+void powell(double *p, double *xi, int n, double ftol, int &iter,
    double &fret, double (*func)(double *), bool show);
+// These two routines have been taken from
+// http://users.utu.fi/vesoik/userdocs/programs/libpet
+// and they implement an algorithm of Lawson-Hanson of
+// nonnegative least squares
+int nnls(double *a, int m, int n, double *b, double *x,
+          double *rnorm, double *w, double *zz, int *index);
+int nnlsWght(int N, int M, double *A, double *b, double *weight);
 
 // Wavelets
 void wt1(double a[], unsigned long n, int isign,

@@ -120,7 +120,7 @@ double gasdev(int *idum) {
 #define TINY 1.0e-20;
 /* Chapter 2 Section 3: LU DECOMPOSITION */
 template <class T>
-void ludcmp(T **a, int n, int *indx, T *d)
+void ludcmp(T *a, int n, int *indx, T *d)
 {
 	int i,imax,j,k;
 	T big,dum,sum,temp;
@@ -131,22 +131,22 @@ void ludcmp(T **a, int n, int *indx, T *d)
 	for (i=1;i<=n;i++) {
 		big=(T)0.0;
 		for (j=1;j<=n;j++)
-			if ((temp=(T)fabs((double)a[i][j])) > big) big=temp;
+			if ((temp=(T)fabs((double)a[i*n+j])) > big) big=temp;
 		if (big == (T)0.0) nrerror("Singular matrix in routine LUDCMP");
 		vv[i]=(T)1.0/big;
 	}
 	for (j=1;j<=n;j++) {
 		for (i=1;i<j;i++) {
-			sum=a[i][j];
-			for (k=1;k<i;k++) sum -= a[i][k]*a[k][j];
-			a[i][j]=sum;
+			sum=a[i*n+j];
+			for (k=1;k<i;k++) sum -= a[i*n+k]*a[k*n+j];
+			a[i*n+j]=sum;
 		}
 		big=(T)0.0;
 		for (i=j;i<=n;i++) {
-			sum=a[i][j];
+			sum=a[i*n+j];
 			for (k=1;k<j;k++)
-				sum -= a[i][k]*a[k][j];
-			a[i][j]=sum;
+				sum -= a[i*n+k]*a[k*n+j];
+			a[i*n+j]=sum;
 			if ( (dum=vv[i]*(T)fabs((double)sum)) >= big) {
 				big=dum;
 				imax=i;
@@ -154,18 +154,18 @@ void ludcmp(T **a, int n, int *indx, T *d)
 		}
 		if (j != imax) {
 			for (k=1;k<=n;k++) {
-				dum=a[imax][k];
-				a[imax][k]=a[j][k];
-				a[j][k]=dum;
+				dum=a[imax*n+k];
+				a[imax*n+k]=a[j*n+k];
+				a[j*n+k]=dum;
 			}
 			*d = -(*d);
 			vv[imax]=vv[j];
 		}
 		indx[j]=imax;
-		if (a[j][j] == 0.0) a[j][j]=(T) TINY;
+		if (a[j*n+j] == 0.0) a[j*n+j]=(T) TINY;
 		if (j != n) {
-			dum=(T)1.0/(a[j][j]);
-			for (i=j+1;i<=n;i++) a[i][j] *= dum;
+			dum=(T)1.0/(a[j*n+j]);
+			for (i=j+1;i<=n;i++) a[i*n+j] *= dum;
 		}
 	}
 	free_Tvector(vv,1,n);
@@ -174,7 +174,7 @@ void ludcmp(T **a, int n, int *indx, T *d)
 #undef TINY
 
 /* Chapter 2 Section 3: LU BACKWARD-FORWARD SUBSTITUTION */
-template <class T> void lubksb(T **a, int n, int *indx,T b[])
+template <class T> void lubksb(T *a, int n, int *indx,T b[])
 {
 	int i,ii=0,ip,j;
 	T sum;
@@ -184,20 +184,20 @@ template <class T> void lubksb(T **a, int n, int *indx,T b[])
 		sum=b[ip];
 		b[ip]=b[i];
 		if (ii)
-			for (j=ii;j<=i-1;j++) sum -= a[i][j]*b[j];
+			for (j=ii;j<=i-1;j++) sum -= a[i*n+j]*b[j];
 		else if (sum) ii=i;
 		b[i]=sum;
 	}
 	for (i=n;i>=1;i--) {
 		sum=b[i];
-		for (j=i+1;j<=n;j++) sum -= a[i][j]*b[j];
-		b[i]=sum/a[i][i];
+		for (j=i+1;j<=n;j++) sum -= a[i*n+j]*b[j];
+		b[i]=sum/a[i*n+i];
 	}
 }
 
 /* Chapter 2, Section 1. Gauss-Jordan equation system resolution ----------- */
 template <class T>
-void gaussj(T **a, int n, T **b, int m)
+void gaussj(T *a, int n, T *b, int m)
 {
     T temp;
     int *indxc,*indxr,*ipiv;
@@ -215,8 +215,8 @@ void gaussj(T **a, int n, T **b, int m)
 	    if (ipiv[j] != 1)
 		for (k=1;k<=n;k++) {
 		    if (ipiv[k] == 0) {
-			if (fabs((double)a[j][k]) >= (double) big) {
-			    big=ABS(a[j][k]);
+			if (fabs((double)a[j*n+k]) >= (double) big) {
+			    big=ABS(a[j*n+k]);
 			    irow=j;
 			    icol=k;
 			}
@@ -224,28 +224,28 @@ void gaussj(T **a, int n, T **b, int m)
 		}
 	++(ipiv[icol]);
 	if (irow != icol) {
-	    for (l=1;l<=n;l++) SWAP(a[irow][l],a[icol][l],temp)
-	    for (l=1;l<=m;l++) SWAP(b[irow][l],b[icol][l],temp)
+	    for (l=1;l<=n;l++) SWAP(a[irow*n+l],a[icol*n+l],temp)
+	    for (l=1;l<=m;l++) SWAP(b[irow*n+l],b[icol*n+l],temp)
 	}
 	indxr[i]=irow;
 	indxc[i]=icol;
-	if (a[icol][icol] == 0.0) nrerror("GAUSSJ: Singular Matrix-2");
-	pivinv=1.0f/a[icol][icol];
-	a[icol][icol]=(T)1;
-	for (l=1;l<=n;l++) a[icol][l] = (T)(pivinv * a[icol][l]);
-	for (l=1;l<=m;l++) b[icol][l] = (T)(pivinv * b[icol][l]);
+	if (a[icol*n+icol] == 0.0) nrerror("GAUSSJ: Singular Matrix-2");
+	pivinv=1.0f/a[icol*n+icol];
+	a[icol*n+icol]=(T)1;
+	for (l=1;l<=n;l++) a[icol*n+l] = (T)(pivinv * a[icol*n+l]);
+	for (l=1;l<=m;l++) b[icol*n+l] = (T)(pivinv * b[icol*n+l]);
 	for (ll=1;ll<=n;ll++)
 	    if (ll != icol) {
-		dum=a[ll][icol];
-		a[ll][icol]=(T)0;
-		for (l=1;l<=n;l++) a[ll][l] -= a[icol][l]*dum;
-		for (l=1;l<=m;l++) b[ll][l] -= b[icol][l]*dum;
+		dum=a[ll*n+icol];
+		a[ll*n+icol]=(T)0;
+		for (l=1;l<=n;l++) a[ll*n+l] -= a[icol*n+l]*dum;
+		for (l=1;l<=m;l++) b[ll*n+l] -= b[icol*n+l]*dum;
 	    }
     }
     for (l=n;l>=1;l--) {
 	if (indxr[l] != indxc[l])
 	    for (k=1;k<=n;k++)
-		SWAP(a[k][indxr[l]],a[k][indxc[l]],temp);
+		SWAP(a[k*n+indxr[l]],a[k*n+indxc[l]],temp);
     }
     free_Tvector(ipiv,1,n);
     free_Tvector(indxr,1,n);
@@ -695,9 +695,9 @@ double betacf(double a, double b, double x) {
 // define SWAP in the Numerical Recipes style
 #undef  SWAP
 #define SWAP(a,b) {double temp=(a);(a)=(b);(b)=temp;}
-#define ROTATE(a,i,j,k,l) g=a[i][j];h=a[k][l];a[i][j]=g-s*(h+g*tau);\
-	a[k][l]=h+s*(g-h*tau);
-void jacobi(double **a, int n, double *d, double **v, int *nrot)
+#define ROTATE(a,i,j,k,l) g=a[i*n+j];h=a[k*n+l];a[i*n+j]=g-s*(h+g*tau);\
+	a[k*n+l]=h+s*(g-h*tau);
+void jacobi(double *a, int n, double *d, double *v, int *nrot)
 {
 	int j,iq,ip,i;
 	double tresh,theta,tau,t,sm,s,h,g,c,*b,*z;
@@ -705,11 +705,11 @@ void jacobi(double **a, int n, double *d, double **v, int *nrot)
 	ask_Tvector(b,1,n);
 	ask_Tvector(z,1,n);
 	for (ip=1;ip<=n;ip++) {
-		for (iq=1;iq<=n;iq++) v[ip][iq]=0.0;
-		v[ip][ip]=1.0;
+		for (iq=1;iq<=n;iq++) v[ip*n+iq]=0.0;
+		v[ip*n+ip]=1.0;
 	}
 	for (ip=1;ip<=n;ip++) {
-		b[ip]=d[ip]=a[ip][ip];
+		b[ip]=d[ip]=a[ip*n+ip];
 		z[ip]=0.0;
 	}
 	*nrot=0;
@@ -717,7 +717,7 @@ void jacobi(double **a, int n, double *d, double **v, int *nrot)
 		sm=0.0;
 		for (ip=1;ip<=n-1;ip++) {
 			for (iq=ip+1;iq<=n;iq++)
-				sm += fabs(a[ip][iq]);
+				sm += fabs(a[ip*n+iq]);
 		}
 		if (sm == 0.0) {
 			free_Tvector(z,1,n);
@@ -730,28 +730,28 @@ void jacobi(double **a, int n, double *d, double **v, int *nrot)
 			tresh=0.0;
 		for (ip=1;ip<=n-1;ip++) {
 			for (iq=ip+1;iq<=n;iq++) {
-				g=100.0*fabs(a[ip][iq]);
+				g=100.0*fabs(a[ip*n+iq]);
 				if (i > 4 && fabs(d[ip])+g == fabs(d[ip])
 					&& fabs(d[iq])+g == fabs(d[iq]))
-					a[ip][iq]=0.0;
-				else if (fabs(a[ip][iq]) > tresh) {
+					a[ip*n+iq]=0.0;
+				else if (fabs(a[ip*n+iq]) > tresh) {
 					h=d[iq]-d[ip];
 					if (fabs(h)+g == fabs(h))
-						t=(a[ip][iq])/h;
+						t=(a[ip*n+iq])/h;
 					else {
-						theta=0.5*h/(a[ip][iq]);
+						theta=0.5*h/(a[ip*n+iq]);
 						t=1.0/(fabs(theta)+sqrt(1.0+theta*theta));
 						if (theta < 0.0) t = -t;
 					}
 					c=1.0/sqrt(1+t*t);
 					s=t*c;
 					tau=s/(1.0+c);
-					h=t*a[ip][iq];
+					h=t*a[ip*n+iq];
 					z[ip] -= h;
 					z[iq] += h;
 					d[ip] -= h;
 					d[iq] += h;
-					a[ip][iq]=0.0;
+					a[ip*n+iq]=0.0;
 					for (j=1;j<=ip-1;j++) {
 						ROTATE(a,j,ip,j,iq)
 					}
@@ -801,7 +801,7 @@ void instantiate_recipes() {
 
 #define RADIX 2.0
 
-void balanc(double **a, int n)
+void balanc(double *a, int n)
 {
 	int last,j,i;
 	double s,r,g,f,c,sqrdx;
@@ -814,8 +814,8 @@ void balanc(double **a, int n)
 			r=c=0.0;
 			for (j=1;j<=n;j++)
 				if (j != i) {
-					c += fabs(a[j][i]);
-					r += fabs(a[i][j]);
+					c += fabs(a[j*n+i]);
+					r += fabs(a[i*n+j]);
 				}
 			if (c && r) {
 				g=r/RADIX;
@@ -833,8 +833,8 @@ void balanc(double **a, int n)
 				if ((c+r)/f < 0.95*s) {
 					last=0;
 					g=1.0/f;
-					for (j=1;j<=n;j++) a[i][j] *= g;
-					for (j=1;j<=n;j++) a[j][i] *= f;
+					for (j=1;j<=n;j++) a[i*n+j] *= g;
+					for (j=1;j<=n;j++) a[j*n+i] *= f;
 				}
 			}
 		}
@@ -842,7 +842,7 @@ void balanc(double **a, int n)
 }
 
 #undef RADIX
-void elmhes(double **a, int n)
+void elmhes(double *a, int n)
 {
 	int m,j,i;
 	double y,x;
@@ -851,24 +851,24 @@ void elmhes(double **a, int n)
 		x=0.0;
 		i=m;
 		for (j=m;j<=n;j++) {
-			if (fabs(a[j][m-1]) > fabs(x)) {
-				x=a[j][m-1];
+			if (fabs(a[j*n+m-1]) > fabs(x)) {
+				x=a[j*n+m-1];
 				i=j;
 			}
 		}
 		if (i != m) {
-			for (j=m-1;j<=n;j++) SWAP(a[i][j],a[m][j])
-			for (j=1;j<=n;j++) SWAP(a[j][i],a[j][m])
+			for (j=m-1;j<=n;j++) SWAP(a[i*n+j],a[m*n+j])
+			for (j=1;j<=n;j++) SWAP(a[j*n+i],a[j*n+m])
 		}
 		if (x) {
 			for (i=m+1;i<=n;i++) {
-				if (y=a[i][m-1]) {
+				if (y=a[i*n+m-1]) {
 					y /= x;
-					a[i][m-1]=y;
+					a[i*n+m-1]=y;
 					for (j=m;j<=n;j++)
-						a[i][j] -= y*a[m][j];
+						a[i*n+j] -= y*a[m*n+j];
 					for (j=1;j<=n;j++)
-						a[j][m] += y*a[j][i];
+						a[j*n+m] += y*a[j*n+i];
 				}
 			}
 		}
@@ -877,33 +877,33 @@ void elmhes(double **a, int n)
 
 #define SIGN(a,b) ((b) > 0 ? fabs(a) : -fabs(a))
 
-void hqr(double **a, int n,double *wr,double *wi)
+void hqr(double *a, int n,double *wr,double *wi)
 {
 	int nn,m,l,k,j,its,i,mmin;
 	double z,y,x,w,v,u,t,s,r,q,p,anorm;
 	//void nrerror();
 
-	anorm=fabs(a[1][1]);
+	anorm=fabs(a[1*n+1]);
 	for (i=2;i<=n;i++)
 		for (j=(i-1);j<=n;j++)
-			anorm += fabs(a[i][j]);
+			anorm += fabs(a[i*n+j]);
 	nn=n;
 	t=0.0;
 	while (nn >= 1) {
 		its=0;
 		do {
 			for (l=nn;l>=2;l--) {
-				s=fabs(a[l-1][l-1])+fabs(a[l][l]);
+				s=fabs(a[l-1*n+l-1])+fabs(a[l*n+l]);
 				if (s == 0.0) s=anorm;
-				if (fabs(a[l][l-1]) + s == s) break;
+				if (fabs(a[l*n+l-1]) + s == s) break;
 			}
-			x=a[nn][nn];
+			x=a[nn*n+nn];
 			if (l == nn) {
 				wr[nn]=x+t;
 				wi[nn--]=0.0;
 			} else {
-				y=a[nn-1][nn-1];
-				w=a[nn][nn-1]*a[nn-1][nn];
+				y=a[nn-1*n+nn-1];
+				w=a[nn*n+nn-1]*a[nn-1*n+nn];
 				if (l == (nn-1)) {
 					p=0.5*(y-x);
 					q=p*p+w;
@@ -923,38 +923,38 @@ void hqr(double **a, int n,double *wr,double *wi)
 					if (its == 30) nrerror("Too many iterations in HQR");
 					if (its == 10 || its == 20) {
 						t += x;
-						for (i=1;i<=nn;i++) a[i][i] -= x;
-						s=fabs(a[nn][nn-1])+fabs(a[nn-1][nn-2]);
+						for (i=1;i<=nn;i++) a[i*n+i] -= x;
+						s=fabs(a[nn*n+nn-1])+fabs(a[nn-1*n+nn-2]);
 						y=x=0.75*s;
 						w = -0.4375*s*s;
 					}
 					++its;
 					for (m=(nn-2);m>=l;m--) {
-						z=a[m][m];
+						z=a[m*n+m];
 						r=x-z;
 						s=y-z;
-						p=(r*s-w)/a[m+1][m]+a[m][m+1];
-						q=a[m+1][m+1]-z-r-s;
-						r=a[m+2][m+1];
+						p=(r*s-w)/a[m+1*n+m]+a[m*n+m+1];
+						q=a[m+1*n+m+1]-z-r-s;
+						r=a[m+2*n+m+1];
 						s=fabs(p)+fabs(q)+fabs(r);
 						p /= s;
 						q /= s;
 						r /= s;
 						if (m == l) break;
-						u=fabs(a[m][m-1])*(fabs(q)+fabs(r));
-						v=fabs(p)*(fabs(a[m-1][m-1])+fabs(z)+fabs(a[m+1][m+1]));
+						u=fabs(a[m*n+m-1])*(fabs(q)+fabs(r));
+						v=fabs(p)*(fabs(a[m-1*n+m-1])+fabs(z)+fabs(a[m+1*n+m+1]));
 						if (u+v == v) break;
 					}
 					for (i=m+2;i<=nn;i++) {
-						a[i][i-2]=0.0;
-						if  (i != (m+2)) a[i][i-3]=0.0;
+						a[i*n+i-2]=0.0;
+						if  (i != (m+2)) a[i*n+i-3]=0.0;
 					}
 					for (k=m;k<=nn-1;k++) {
 						if (k != m) {
-							p=a[k][k-1];
-							q=a[k+1][k-1];
+							p=a[k*n+k-1];
+							q=a[k+1*n+k-1];
 							r=0.0;
-							if (k != (nn-1)) r=a[k+2][k-1];
+							if (k != (nn-1)) r=a[k+2*n+k-1];
 							if (x=fabs(p)+fabs(q)+fabs(r)) {
 								p /= x;
 								q /= x;
@@ -964,9 +964,9 @@ void hqr(double **a, int n,double *wr,double *wi)
 						if (s=SIGN(sqrt(p*p+q*q+r*r),p)) {
 							if (k == m) {
 								if (l != m)
-								a[k][k-1] = -a[k][k-1];
+								a[k*n+k-1] = -a[k*n+k-1];
 							} else
-								a[k][k-1] = -s*x;
+								a[k*n+k-1] = -s*x;
 							p += s;
 							x=p/s;
 							y=q/s;
@@ -974,23 +974,23 @@ void hqr(double **a, int n,double *wr,double *wi)
 							q /= p;
 							r /= p;
 							for (j=k;j<=nn;j++) {
-								p=a[k][j]+q*a[k+1][j];
+								p=a[k*n+j]+q*a[k+1*n+j];
 								if (k != (nn-1)) {
-									p += r*a[k+2][j];
-									a[k+2][j] -= p*z;
+									p += r*a[k+2*n+j];
+									a[k+2*n+j] -= p*z;
 								}
-								a[k+1][j] -= p*y;
-								a[k][j] -= p*x;
+								a[k+1*n+j] -= p*y;
+								a[k*n+j] -= p*x;
 							}
 							mmin = nn<k+3 ? nn : k+3;
 							for (i=l;i<=mmin;i++) {
-								p=x*a[i][k]+y*a[i][k+1];
+								p=x*a[i*n+k]+y*a[i*n+k+1];
 								if (k != (nn-1)) {
-									p += z*a[i][k+2];
-									a[i][k+2] -= p*r;
+									p += z*a[i*n+k+2];
+									a[i*n+k+2] -= p*r;
 								}
-								a[i][k+1] -= p*q;
-								a[i][k] -= p;
+								a[i*n+k+1] -= p*q;
+								a[i*n+k] -= p;
 							}
 						}
 					}
@@ -1175,7 +1175,7 @@ void linmin(double *p, double *xi, int n, double &fret,
 static double sqrarg;
 #define SQR(a) (sqrarg=(a),sqrarg*sqrarg)
 
-void powell(double *p, double **xi, int n, double ftol, int &iter,
+void powell(double *p, double *xi, int n, double ftol, int &iter,
    double &fret, double (*func)(double *), bool show)
 {
 	int i,ibig,j;
@@ -1204,7 +1204,7 @@ void powell(double *p, double **xi, int n, double ftol, int &iter,
 		for (i=1;i<=n;i++) {
       	             	different_from_0=FALSE; // CO
 			for (j=1;j<=n;j++) {
-			    xit[j]=xi[j][i];
+			    xit[j]=xi[j*n+i];
 			    if (xit[j]!=0) different_from_0=TRUE;
 			}
       	             	if (different_from_0) {
@@ -1246,7 +1246,7 @@ void powell(double *p, double **xi, int n, double ftol, int &iter,
 			t=2.0*(fp-2.0*fret+fptt)*SQR(fp-fret-del)-del*SQR(fp-fptt);
 			if (t < 0.0) {
 				linmin(p,xit,n,fret,func);
-				for (j=1;j<=n;j++) xi[j][ibig]=xit[j];
+				for (j=1;j<=n;j++) xi[j*n+ibig]=xit[j];
 			}
 		}
 	}
@@ -1254,6 +1254,350 @@ void powell(double *p, double **xi, int n, double ftol, int &iter,
 
 #undef ITMAX
 #undef SQR
+
+/* Non linear least squares ------------------------------------------------ */
+// These routines have been taken from
+// http://users.utu.fi/vesoik/userdocs/programs/libpet
+// and they implement an algorithm of Lawson-Hanson of
+// nonnegative least squares
+
+/* Example of use:
+   double a[]={ 5, 0, -2,
+               0, 3,  0,
+               1, 1, -1,
+              -1, 1, -1,
+               9, 9, -9};
+   double b[]={1, 9, -1};
+   double x[5];
+   double rnorm;
+   int i;
+   
+   int success=nnls(a,3,5,b,x,&rnorm,NULL,NULL,NULL);
+   printf("success=%d\n",success);
+   printf("rnorm=%d\n",rnorm);
+   for (i=0; i<5; i++)
+      printf("%f\n",x[i]);
+   
+   In this case: x=0 2.666 0 0 0.111
+   
+   This program resolves A^t*x=b subject to x>=0.
+   In terms of basis vectors, the rows of A are the basis axes, b is
+   the vector we want to represent in the subspace spanned by the rows of A
+   and x are the nonnegative coordinates of the representation of b in A.
+*/
+
+/*****************************************************************************
+ *
+ *  Compute orthogonal rotation matrix:
+ *    (C, S) so that (C, S)(A) = (sqrt(A**2+B**2))
+ *    (-S,C)         (-S,C)(B)   (   0          )
+ *  Compute sig = sqrt(A**2+B**2):
+ *    sig is computed last to allow for the possibility that sig may be in
+ *    the same location as A or B.
+ */
+void _nnls_g1(double a, double b, double *cterm, double *sterm, double *sig)
+{
+  double d1, xr, yr;
+
+  if(fabs(a)>fabs(b)) {
+    xr=b/a; d1=xr; yr=sqrt(d1*d1 + 1.); d1=1./yr;
+    *cterm=(a>=0.0 ? fabs(d1) : -fabs(d1));
+    *sterm=(*cterm)*xr; *sig=fabs(a)*yr;
+  } else if(b!=0.) {
+    xr=a/b; d1=xr; yr=sqrt(d1*d1 + 1.); d1=1./yr;
+    *sterm=(b>=0.0 ? fabs(d1) : -fabs(d1));
+    *cterm=(*sterm)*xr; *sig=fabs(b)*yr;
+  } else {
+    *sig=0.; *cterm=0.; *sterm=1.;
+  }
+} /* _nnls_g1 */
+/****************************************************************************/
+
+/*****************************************************************************
+ *
+ *  Construction and/or application of a single Householder transformation:
+ *           Q = I + U*(U**T)/B
+ *
+ *  Function returns 0 if succesful, or >0 in case of erroneous parameters.
+ *
+ */
+int _nnls_h12(
+  int mode,
+  /* mode=1 to construct and apply a Householder transformation, or
+     mode=2 to apply a previously constructed transformation */
+  int lpivot,     /* Index of the pivot element */
+  int l1, int m,
+  /* Transformation is constructed to zero elements indexed from l1 to M */
+  double *u, int u_dim1, double *up,
+  /* With mode=1: On entry, u[] must contain the pivot vector.
+     On exit, u[] and up contain quantities defining the vector u[] of
+     the Householder transformation. */
+  /* With mode=2: On entry, u[] and up should contain quantities previously
+     computed with mode=1. These will not be modified. */
+  /* u_dim1 is the storage increment between elements. */
+  double *cm,
+  /* On entry, cm[] must contain the matrix (set of vectors) to which the
+     Householder transformation is to be applied. On exit, cm[] will contain
+     the set of transformed vectors */
+  int ice,        /* Storage increment between elements of vectors in cm[] */
+  int icv,        /* Storage increment between vectors in cm[] */
+  int ncv         /* Nr of vectors in cm[] to be transformed;
+                     if ncv<=0, then no operations will be done on cm[] */
+) {
+  double d1, d2, b, clinv, cl, sm;
+  int incr, k, j, i2, i3, i4;
+
+  /* Check parameters */
+  if(mode!=1 && mode!=2) return(1);
+  if(m<1 || u==NULL || u_dim1<1 || cm==NULL) return(2);
+  if(lpivot<0 || lpivot>=l1 || l1>=m) return(0);
+  /* Function Body */
+  cl= (d1 = u[lpivot*u_dim1], fabs(d1));
+  if(mode==2) { /* Apply transformation I+U*(U**T)/B to cm[] */
+    if(cl<=0.) return(0);
+  } else { /* Construct the transformation */
+    for(j=l1; j<m; j++) { /* Computing MAX */
+      d2=(d1=u[j*u_dim1], fabs(d1)); if(d2>cl) cl=d2;}
+    if(cl<=0.) return(0);
+    clinv=1.0/cl;
+    /* Computing 2nd power */
+    d1=u[lpivot*u_dim1]*clinv; sm=d1*d1;
+    for(j=l1; j<m; j++) {d1=u[j*u_dim1]*clinv; sm+=d1*d1;}
+    cl*=sqrt(sm); if(u[lpivot*u_dim1]>0.) cl=-cl;
+    *up=u[lpivot*u_dim1]-cl; u[lpivot*u_dim1]=cl;
+  }
+  if(ncv<=0) return(0);
+  b=(*up)*u[lpivot*u_dim1];
+  /* b must be nonpositive here; if b>=0., then return */
+  if(b>=0.) return(0);
+  b=1.0/b; i2=1-icv+ice*lpivot; incr=ice*(l1-lpivot);
+  for(j=0; j<ncv; j++) {
+    i2+=icv; i3=i2+incr; i4=i3; sm=cm[i2-1]*(*up);
+    for(k=l1; k<m; k++) {sm+=cm[i3-1]*u[k*u_dim1]; i3+=ice;}
+    if(sm!=0.0) {
+      sm*=b; cm[i2-1]+=sm*(*up);
+      for(k=l1; k<m; k++) {cm[i4-1]+=sm*u[k*u_dim1]; i4+=ice;}
+    }
+  }
+  return(0);
+} /* _nnls_h12 */
+
+/*****************************************************************************
+ *  Algorithm NNLS (Non-negative least-squares)
+ *
+ *  Given an m by n matrix A, and an m-vector B, computes an n-vector X,
+ *  that solves the least squares problem
+ *      A * X = B   , subject to X>=0
+ *
+ *  Function returns 0 if succesful, 1, if iteration count exceeded 3*N,
+ *  or 2 in case of invalid problem dimensions or memory allocation error.
+ *
+ *  Instead of pointers for working space, NULL can be given to let this
+ *  function to allocate and free the required memory.
+ */
+int nnls(
+  double *a, int m, int n,
+  /* On entry, a[n][m] contains the m by n matrix A. On exit, a[][] contains 
+     the product matrix Q*A, where Q is an m by n orthogonal matrix generated
+     implicitly by this function.*/
+  double *b,
+  /* On entry, b[] must contain the m-vector B.
+     On exit, b[] contains Q*B */
+  double *x,
+  /* On exit, x[] will contain the solution vector */
+  double *rnorm,
+  /* On exit, rnorm contains the Euclidean norm of the residual vector */
+  double *wp,  /* An n-array of working space, w[]. */
+  /* On exit, w[] will contain the dual solution vector.
+     w[i]=0.0 for all i in set p and w[i]<=0.0 for all i in set z. */
+  double *zzp, /* An m-array of working space, zz[]. */
+  int *indexp  /* An n-array of working space, index[]. */
+) {
+  int pfeas, ret=0, iz, jz, iz1, iz2, npp1, *index;
+  double d1, d2, sm, up, ss, *w, *zz;
+  int iter, k, j=0, l, itmax, izmax=0, nsetp, ii, jj=0, ip;
+  double temp, wmax, t, alpha, asave, dummy, unorm, ztest, cc;
+
+
+  /* Check the parameters and data */
+  if(m<=0 || n<=0 || a==NULL || b==NULL || x==NULL) return(2);
+  /* Allocate memory for working space, if required */
+  if(wp!=NULL) w=wp; else w=(double*)calloc(n, sizeof(double));
+  if(zzp!=NULL) zz=zzp; else zz=(double*)calloc(m, sizeof(double));
+  if(indexp!=NULL) index=indexp; else index=(int*)calloc(n, sizeof(int));
+  if(w==NULL || zz==NULL || index==NULL) return(2);
+
+  /* Initialize the arrays INDEX[] and X[] */
+  for(k=0; k<n; k++) {x[k]=0.; index[k]=k;}
+  iz2=n-1; iz1=0; nsetp=0; npp1=0;
+
+  /* Main loop; quit if all coeffs are already in the solution or */
+  /* if M cols of A have been triangularized */
+  iter=0; itmax=n*3;
+  while(iz1<=iz2 && nsetp<m) {
+    /* Compute components of the dual (negative gradient) vector W[] */
+    for(iz=iz1; iz<=iz2; iz++) {
+      j=index[iz]; sm=0.; for(l=npp1; l<m; l++) sm+=a[j*m+l]*b[l];
+      w[j]=sm;
+    }
+
+    while(1) {
+      /* Find largest positive W[j] */
+      for(wmax=0., iz=iz1; iz<=iz2; iz++) {
+        j=index[iz]; if(w[j]>wmax) {wmax=w[j]; izmax=iz;}}
+
+      /* Terminate if wmax<=0.; */
+      /* it indicates satisfaction of the Kuhn-Tucker conditions */
+      if(wmax<=0.0) break;
+      iz=izmax; j=index[iz];
+
+      /* The sign of W[j] is ok for j to be moved to set P. */
+      /* Begin the transformation and check new diagonal element to avoid */
+      /* near linear dependence. */
+      asave=a[j*m+npp1];
+      _nnls_h12(1, npp1, npp1+1, m, &a[j*m+0], 1, &up, &dummy, 1, 1, 0);
+      unorm=0.;
+      if(nsetp!=0) for(l=0; l<nsetp; l++) {d1=a[j*m+l]; unorm+=d1*d1;}
+      unorm=sqrt(unorm);
+      d2=unorm+(d1=a[j*m+npp1], fabs(d1)) * 0.01;
+      if((d2-unorm)>0.) {
+        /* Col j is sufficiently independent. Copy B into ZZ, update ZZ */
+        /* and solve for ztest ( = proposed new value for X[j] ) */
+        for(l=0; l<m; l++) zz[l]=b[l];
+        _nnls_h12(2, npp1, npp1+1, m, &a[j*m+0], 1, &up, zz, 1, 1, 1);
+        ztest=zz[npp1]/a[j*m+npp1];
+        /* See if ztest is positive */
+        if(ztest>0.) break;
+      }
+
+      /* Reject j as a candidate to be moved from set Z to set P. Restore */
+      /* A[npp1,j], set W[j]=0., and loop back to test dual coeffs again */
+      a[j*m+npp1]=asave; w[j]=0.;
+    } /* while(1) */
+    if(wmax<=0.0) break;
+
+    /* Index j=INDEX[iz] has been selected to be moved from set Z to set P. */
+    /* Update B and indices, apply householder transformations to cols in */
+    /* new set Z, zero subdiagonal elts in col j, set W[j]=0. */
+    for(l=0; l<m; ++l) b[l]=zz[l];
+    index[iz]=index[iz1]; index[iz1]=j; iz1++; nsetp=npp1+1; npp1++;
+    if(iz1<=iz2) for(jz=iz1; jz<=iz2; jz++) {
+      jj=index[jz];
+      _nnls_h12(2, nsetp-1, npp1, m, &a[j*m+0], 1, &up,
+           &a[jj*m+0], 1, m, 1);
+    }
+    if(nsetp!=m) for(l=npp1; l<m; l++) a[j*m+l]=0.;
+    w[j]=0.;
+    /* Solve the triangular system; store the solution temporarily in Z[] */
+    for(l=0; l<nsetp; l++) {
+      ip=nsetp-(l+1);
+      if(l!=0) for(ii=0; ii<=ip; ii++) zz[ii]-=a[jj*m+ii]*zz[ip+1];
+      jj=index[ip]; zz[ip]/=a[jj*m+ip];
+    }
+
+    /* Secondary loop begins here */
+    while(++iter<itmax) {
+      /* See if all new constrained coeffs are feasible; if not, compute alpha */
+      for(alpha=2.0, ip=0; ip<nsetp; ip++) {
+        l=index[ip];
+        if(zz[ip]<=0.) {t=-x[l]/(zz[ip]-x[l]); if(alpha>t) {alpha=t; jj=ip-1;}}
+      }
+
+      /* If all new constrained coeffs are feasible then still alpha==2. */
+      /* If so, then exit from the secondary loop to main loop */
+      if(alpha==2.0) break;
+      /* Use alpha (0.<alpha<1.) to interpolate between old X and new ZZ */
+      for(ip=0; ip<nsetp; ip++) {l=index[ip]; x[l]+=alpha*(zz[ip]-x[l]);}
+
+      /* Modify A and B and the INDEX arrays to move coefficient i */
+      /* from set P to set Z. */
+      k=index[jj+1]; pfeas=1;
+      do {
+        x[k]=0.;
+        if(jj!=(nsetp-1)) {
+          jj++;
+          for(j=jj+1; j<nsetp; j++) {
+            ii=index[j]; index[j-1]=ii;
+            _nnls_g1(a[ii*m+j-1], a[ii*m+j], &cc, &ss, &a[ii*m+j-1]);
+            for(a[ii*m+j]=0., l=0; l<n; l++) if(l!=ii) {
+              /* Apply procedure G2 (CC,SS,A(J-1,L),A(J,L)) */
+              temp=a[l*m+j-1];
+              a[l*m+j-1]=cc*temp+ss*a[l*m+j];
+              a[l*m+j]=-ss*temp+cc*a[l*m+j];
+            }
+            /* Apply procedure G2 (CC,SS,B(J-1),B(J)) */
+            temp=b[j-1]; b[j-1]=cc*temp+ss*b[j]; b[j]=-ss*temp+cc*b[j];
+          }
+        }
+        npp1=nsetp-1; nsetp--; iz1--; index[iz1]=k;
+
+        /* See if the remaining coeffs in set P are feasible; they should */
+        /* be because of the way alpha was determined. If any are */
+        /* infeasible it is due to round-off error. Any that are */
+        /* nonpositive will be set to zero and moved from set P to set Z */
+        for(jj=0; jj<nsetp; jj++) {k=index[jj]; if(x[k]<=0.) {pfeas=0; break;}}
+      } while(pfeas==0);
+
+      /* Copy B[] into zz[], then solve again and loop back */
+      for(k=0; k<m; k++) zz[k]=b[k];
+      for(l=0; l<nsetp; l++) {
+        ip=nsetp-(l+1);
+        if(l!=0) for(ii=0; ii<=ip; ii++) zz[ii]-=a[jj*m+ii]*zz[ip+1];
+        jj=index[ip]; zz[ip]/=a[jj*m+ip];
+      }
+    } /* end of secondary loop */
+    if(iter>itmax) {ret=1; break;}
+    for(ip=0; ip<nsetp; ip++) {k=index[ip]; x[k]=zz[ip];}
+  } /* end of main loop */
+  /* Compute the norm of the final residual vector */
+  sm=0.;
+  if(npp1<m) for(k=npp1; k<m; k++) sm+=(b[k]*b[k]);
+  else for(j=0; j<n; j++) w[j]=0.;
+  *rnorm=sqrt(sm);
+  /* Free working space, if it was allocated here */
+  if(wp==NULL) free(w); if(zzp==NULL) free(zz); if(indexp==NULL) free(index);
+  return(ret);
+} /* nnls_ */
+/****************************************************************************/
+/****************************************************************************/
+/*
+  nnlsWght()
+
+  Algorithm for weighting the problem that is given to nnls-algorithm.
+  Square roots of weights are used because in nnls the difference
+  w*A-w*b is squared.
+  Algorithm returns zero if successful, 1 if arguments are inappropriate.
+
+*/
+int nnlsWght(int N, int M, double *A, double *b, double *weight)
+{
+  int n, m;
+  double *w;
+
+  /* Check the arguments */
+  if(N<1 || M<1 || A==NULL || b==NULL || weight==NULL) return(1);
+
+  /* Allocate memory */
+  w=(double*)malloc(M*sizeof(double)); if(w==NULL) return(2);
+
+  /* Check that weights are not zero and get the square roots of them to w[] */
+  for(m=0; m<M; m++) {
+    if(weight[m]<=1.0e-20) w[m]=0.0;
+    else w[m]=sqrt(weight[m]);
+  }
+ 
+  /* Multiply rows of matrix A and elements of vector b with weights*/
+  for(m=0; m<M; m++) {
+    for(n=0; n<N; n++) {
+      A[n*M+m]*=w[m];
+    }
+    b[m]*=w[m];
+  }
+
+  free(w);
+  return(0);
+}
+/****************************************************************************/
 
 /* Singular value descomposition ------------------------------------------- */
 static double at,bt,ct;
@@ -1264,7 +1608,8 @@ static float maxarg1,maxarg2;
 #define MAX(a,b) (maxarg1=(a),maxarg2=(b),(maxarg1) > (maxarg2) ?\
 	(maxarg1) : (maxarg2))
 
-void svdcmp(double **a,int m,int n,double *w, double **v)
+#define EPS 1e-20
+void svdcmp(double *a,int m,int n,double *w, double *v)
 {
 	int flag,i,its,j,jj,k,l,nm;
 	double c,f,h,s,x,y,z;
@@ -1278,47 +1623,47 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 		rv1[i]=scale*g;
 		g=s=scale=0.0;
 		if (i <= m) {
-			for (k=i;k<=m;k++) scale += fabs(a[k][i]);
+			for (k=i;k<=m;k++) scale += fabs(a[k*n+i]);
 			if (scale) {
 				for (k=i;k<=m;k++) {
-					a[k][i] /= scale;
-					s += a[k][i]*a[k][i];
+					a[k*n+i] /= scale;
+					s += a[k*n+i]*a[k*n+i];
 				}
-				f=a[i][i];
+				f=a[i*n+i];
 				g = -SIGN(sqrt(s),f);
 				h=f*g-s;
-				a[i][i]=f-g;
+				a[i*n+i]=f-g;
 				if (i != n) {
 					for (j=l;j<=n;j++) {
-						for (s=0.0,k=i;k<=m;k++) s += a[k][i]*a[k][j];
+						for (s=0.0,k=i;k<=m;k++) s += a[k*n+i]*a[k*n+j];
 						f=s/h;
-						for (k=i;k<=m;k++) a[k][j] += f*a[k][i];
+						for (k=i;k<=m;k++) a[k*n+j] += f*a[k*n+i];
 					}
 				}
-				for (k=i;k<=m;k++) a[k][i] *= scale;
+				for (k=i;k<=m;k++) a[k*n+i] *= scale;
 			}
 		}
 		w[i]=scale*g;
 		g=s=scale=0.0;
 		if (i <= m && i != n) {
-			for (k=l;k<=n;k++) scale += fabs(a[i][k]);
+			for (k=l;k<=n;k++) scale += fabs(a[i*n+k]);
 			if (scale) {
 				for (k=l;k<=n;k++) {
-					a[i][k] /= scale;
-					s += a[i][k]*a[i][k];
+					a[i*n+k] /= scale;
+					s += a[i*n+k]*a[i*n+k];
 				}
-				f=a[i][l];
+				f=a[i*n+l];
 				g = -SIGN(sqrt(s),f);
 				h=f*g-s;
-				a[i][l]=f-g;
-				for (k=l;k<=n;k++) rv1[k]=a[i][k]/h;
+				a[i*n+l]=f-g;
+				for (k=l;k<=n;k++) rv1[k]=a[i*n+k]/h;
 				if (i != m) {
 					for (j=l;j<=m;j++) {
-						for (s=0.0,k=l;k<=n;k++) s += a[j][k]*a[i][k];
-						for (k=l;k<=n;k++) a[j][k] += s*rv1[k];
+						for (s=0.0,k=l;k<=n;k++) s += a[j*n+k]*a[i*n+k];
+						for (k=l;k<=n;k++) a[j*n+k] += s*rv1[k];
 					}
 				}
-				for (k=l;k<=n;k++) a[i][k] *= scale;
+				for (k=l;k<=n;k++) a[i*n+k] *= scale;
 			}
 		}
 		anorm=MAX(anorm,(fabs(w[i])+fabs(rv1[i])));
@@ -1326,16 +1671,20 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 	for (i=n;i>=1;i--) {
 		if (i < n) {
 			if (g) {
-				for (j=l;j<=n;j++)
-					v[j][i]=(a[i][j]/a[i][l])/g;
 				for (j=l;j<=n;j++) {
-					for (s=0.0,k=l;k<=n;k++) s += a[i][k]*v[k][j];
-					for (k=l;k<=n;k++) v[k][j] += s*v[k][i];
+                                        double den=a[i*n+l]*g;
+                                        if (ABS(den)>EPS) v[j*n+i]=a[i*n+j]/den;
+                                        else              v[j*n+i]=0.0;
+					//COSS: v[j][i]=(a[i][j]/a[i][l])/g;
+                                 }
+				for (j=l;j<=n;j++) {
+					for (s=0.0,k=l;k<=n;k++) s += a[i*n+k]*v[k*n+j];
+					for (k=l;k<=n;k++) v[k*n+j] += s*v[k*n+i];
 				}
 			}
-			for (j=l;j<=n;j++) v[i][j]=v[j][i]=0.0;
+			for (j=l;j<=n;j++) v[i*n+j]=v[j*n+i]=0.0;
 		}
-		v[i][i]=1.0;
+		v[i*n+i]=1.0;
 		g=rv1[i];
 		l=i;
 	}
@@ -1343,21 +1692,23 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 		l=i+1;
 		g=w[i];
 		if (i < n)
-			for (j=l;j<=n;j++) a[i][j]=0.0;
-		if (g) {
+			for (j=l;j<=n;j++) a[i*n+j]=0.0;
+		if (ABS(g)>EPS) {
 			g=1.0/g;
 			if (i != n) {
 				for (j=l;j<=n;j++) {
-					for (s=0.0,k=l;k<=m;k++) s += a[k][i]*a[k][j];
-					f=(s/a[i][i])*g;
-					for (k=i;k<=m;k++) a[k][j] += f*a[k][i];
+					for (s=0.0,k=l;k<=m;k++) s += a[k*n+i]*a[k*n+j];
+                                        if (ABS(a[i*n+i])>EPS) f=(s/a[i*n+i])*g;
+                                        else                  f=0.0;
+                                        // COSS: f=(s/a[i*n+i])*g;
+					for (k=i;k<=m;k++) a[k*n+j] += f*a[k*n+i];
 				}
 			}
-			for (j=i;j<=m;j++) a[j][i] *= g;
+			for (j=i;j<=m;j++) a[j*n+i] *= g;
 		} else {
-			for (j=i;j<=m;j++) a[j][i]=0.0;
+			for (j=i;j<=m;j++) a[j*n+i]=0.0;
 		}
-		++a[i][i];
+		++a[i*n+i];
 	}
 	for (k=n;k>=1;k--) {
 		for (its=1;its<=30;its++) {
@@ -1383,10 +1734,10 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 						c=g*h;
 						s=(-f*h);
 						for (j=1;j<=m;j++) {
-							y=a[j][nm];
-							z=a[j][i];
-							a[j][nm]=y*c+z*s;
-							a[j][i]=z*c-y*s;
+							y=a[j*n+nm];
+							z=a[j*n+i];
+							a[j*n+nm]=y*c+z*s;
+							a[j*n+i]=z*c-y*s;
 						}
 					}
 				}
@@ -1395,7 +1746,7 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 			if (l == k) {
 				if (z < 0.0) {
 					w[k] = -z;
-					for (j=1;j<=n;j++) v[j][k]=(-v[j][k]);
+					for (j=1;j<=n;j++) v[j*n+k]=(-v[j*n+k]);
 				}
 				break;
 			}
@@ -1424,10 +1775,10 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 				h=y*s;
 				y=y*c;
 				for (jj=1;jj<=n;jj++) {
-					x=v[jj][j];
-					z=v[jj][i];
-					v[jj][j]=x*c+z*s;
-					v[jj][i]=z*c-x*s;
+					x=v[jj*n+j];
+					z=v[jj*n+i];
+					v[jj*n+j]=x*c+z*s;
+					v[jj*n+i]=z*c-x*s;
 				}
 				z=PYTHAG(f,h);
 				w[j]=z;
@@ -1439,10 +1790,10 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 				f=(c*g)+(s*y);
 				x=(c*y)-(s*g);
 				for (jj=1;jj<=m;jj++) {
-					y=a[jj][j];
-					z=a[jj][i];
-					a[jj][j]=y*c+z*s;
-					a[jj][i]=z*c-y*s;
+					y=a[jj*n+j];
+					z=a[jj*n+i];
+					a[jj*n+j]=y*c+z*s;
+					a[jj*n+i]=z*c-y*s;
 				}
 			}
 			rv1[l]=0.0;
@@ -1456,8 +1807,9 @@ void svdcmp(double **a,int m,int n,double *w, double **v)
 #undef SIGN
 #undef MAX
 #undef PYTHAG
+#undef EPS
 
-void svbksb(double **u,double *w,double **v, int m,int n,double *b,double *x)
+void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x)
 {
 	int jj,j,i;
 	double s,*tmp;
@@ -1466,14 +1818,14 @@ void svbksb(double **u,double *w,double **v, int m,int n,double *b,double *x)
 	for (j=1;j<=n;j++) {
 		s=0.0;
 		if (w[j]) {
-			for (i=1;i<=m;i++) s += u[i][j]*b[i];
+			for (i=1;i<=m;i++) s += u[i*n+j]*b[i];
 			s /= w[j];
 		}
 		tmp[j]=s;
 	}
 	for (j=1;j<=n;j++) {
 		s=0.0;
-		for (jj=1;jj<=n;jj++) s += v[j][jj]*tmp[jj];
+		for (jj=1;jj<=n;jj++) s += v[j*n+jj]*tmp[jj];
 		x[j]=s;
 	}
 	free_Tvector(tmp,1,n);
@@ -1492,12 +1844,12 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
  moment; usual values are m = 2or m = 4. */
 {
 	int imj,ipj,j,k,kk,mm,*indx;
-	double d,fac,sum,**a,*b;
+	double d,fac,sum,*a,*b;
 	
 	if (np < nl+nr+1 || nl < 0 || nr < 0 || ld > m||nl+nr < m)
 		nrerror("SAVGOL: bad arguments");
 	ask_Tvector(indx,1,m+1);
-	ask_Tmatrix(a,1,m+1,1,m+1);
+	ask_Tvector(a,1,(m+1)*(m+1));
 	ask_Tvector(b,1,m+1);
 	// Set up the normal equations of the desired least-squares fit. 
 	for (ipj=0;ipj<=(m << 1);ipj++)
@@ -1506,7 +1858,8 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
 		for (k=1;k<=nr;k++) sum += pow((double)k,(double)ipj);
 		for (k=1;k<=nl;k++) sum += pow((double)-k,(double)ipj);
 		mm=MIN(ipj,2*m-ipj);
-   		for (imj = -mm;imj<=mm;imj+=2) a[1+(ipj+imj)/2][1+(ipj-imj)/2]=sum;
+   		for (imj = -mm;imj<=mm;imj+=2)
+                   a[(1+(ipj+imj)/2)*(m+1)+1+(ipj-imj)/2]=sum;
    	}
    	// Solve them: LU decomposition.
    	ludcmp(a,m+1,indx,&d);
@@ -1525,8 +1878,8 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
 		c[kk]=sum;   
    	}
 	
-	free_Tvector(b,1,m+1);   
-    free_Tmatrix(a,1,m+1,1,m+1);
+    free_Tvector(b,1,m+1);   
+    free_Tvector(a,1,(m+1)*(m+1));
     free_Tvector(indx,1,m+1);
 }
 
@@ -1668,7 +2021,7 @@ void pwt(double a[], unsigned long n, int isign)
 /* Instantiantion ---------------------------------------------------------- */
 template <class T>
    void instantiate_Numerical_T(T t) {
-      T  **a, *d;
+      T  *a, *d;
       int n, *indx;
       ludcmp(a, n, indx, d);
       lubksb(a, n, indx, d);

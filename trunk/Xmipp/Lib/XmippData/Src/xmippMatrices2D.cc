@@ -334,12 +334,11 @@ template <class T> T mT::det() const _THROW {
    // Perform decomposition
    matrix1D<int> indx;
    T d;
-   T** LU;
-   ludcmp(*this, &LU, indx, d);
+   mT LU;
+   ludcmp(*this, LU, indx, d);
 
    // Calculate determinant
-   for (int i=1; i<=XSIZE(*this); i++) d *= (T)LU[i][i];
-   kill_adaptation_for_numerical_recipes(LU);
+   for (int i=1; i<=XSIZE(*this); i++) d *= (T)LU(i,i);
    return d;
 }
 
@@ -359,11 +358,10 @@ template <class T>
    // Perform LU decomposition and then solve
    matrix1D<int> indx;
    T d;
-   T** LU;
-   ludcmp(A, &LU, indx, d);
+   mT LU;
+   ludcmp(A, LU, indx, d);
    result=b;
    lubksb(LU, indx, result);
-   A.kill_adaptation_for_numerical_recipes(LU);
 }
 
 
@@ -414,59 +412,91 @@ template <class T>
       REPORT_ERROR(1102, "Solve: Different sizes of A and b");
 
    // Solve
-   T **Anr=A.adapt_for_numerical_recipes();
-   T **bnr=b.adapt_for_numerical_recipes();
-   gaussj(Anr,A.ydim,bnr,b.xdim);
-   result.load_from_numerical_recipes(bnr,YSIZE(b),XSIZE(b));
-   b.kill_adaptation_for_numerical_recipes(bnr);
-   A.kill_adaptation_for_numerical_recipes(Anr);
+   result=b;
+   gaussj(A.adapt_for_numerical_recipes2(),A.ydim,
+          result.adapt_for_numerical_recipes2(),b.xdim);
+}
+
+/* Solve Cx=d, nonnegative x */
+double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
+   matrix1D<double> &result) _THROW {
+   if (C.xdim==0)
+      REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
+   if (C.ydim!=d.get_dim())
+      REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
+   if (d.isRow())
+      REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
+   
+   matrix2D<double> Ct(XSIZE(C),YSIZE(C)); // Ct=C^t
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
+      DIRECT_MAT_ELEM(Ct,i,j)=DIRECT_MAT_ELEM(C,j,i);
+
+   result.init_zeros(YSIZE(Ct));
+   double rnorm;
+
+   // Watch out that matrix Ct is transformed.
+   int success=nnls(MULTIDIM_ARRAY(Ct),XSIZE(Ct),YSIZE(Ct),
+        MULTIDIM_ARRAY(d),
+        MULTIDIM_ARRAY(result),
+        &rnorm, NULL, NULL, NULL);
+   if (success==1) cerr << "Warning, too many iterations in nnls\n";
+   else if (success==2)
+      REPORT_ERROR(1,"Solve_nonneg: Not enough memory");
+   return rnorm;
 }
 
 /* Inverse of the matrix --------------------------------------------------- */
 // See Numerical Recipes Chapter 2, Section 4
 template <class T>
-   mT mT::inv() const _THROW {
+   void mT::inv(mT &result) const {
    if (xdim==0)
       REPORT_ERROR(1108, "Inverse: Matrix is empty");
-   if (xdim!=ydim)
-      REPORT_ERROR(1109, "Inverse: Matrix is not squared");
 
-   // Perform decomposition
-   matrix1D<int> indx;
-   T d;
-   T **LU;
-   ludcmp(*this, &LU, indx, d);
-
-   // Calculate inverse
-   vT col(xdim);
-   mT inverse; inverse.resize(*this);
-
-   for (int j=0; j<xdim; j++) {
-      col.init_zeros(); DIRECT_VEC_ELEM(col,j)=1;
-      lubksb(LU,indx,col);
-      inverse.setCol(j,col);
-      for (int i=0; i<ydim; i++)
-         DIRECT_MAT_ELEM(inverse,i,j)=DIRECT_VEC_ELEM(col,i);
+   // Perform SVD decomposition
+   matrix2D<double> u,v;
+   matrix1D<double> w;
+   svdcmp(*this,u,w,v); //*this=U*W*V^t
+   
+   double tol=compute_max()*MAX(XSIZE(*this),YSIZE(*this))*1e-14;
+   result.init_zeros(XSIZE(*this),YSIZE(*this));
+   
+   // Compute W^-1
+   bool invertible=false;
+   for (int i=0; i<XSIZE(w); i++) {
+      if (ABS(DIRECT_VEC_ELEM(w,i))>tol) {
+         DIRECT_VEC_ELEM(w,i)=1.0/DIRECT_VEC_ELEM(w,i);
+         invertible=true;
+      } else DIRECT_VEC_ELEM(w,i)=0.0;
    }
-   kill_adaptation_for_numerical_recipes(LU);
-   return inverse;
+   if (!invertible) return;
+
+   // Compute V*W^-1
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
+      DIRECT_MAT_ELEM(v,i,j)*=DIRECT_VEC_ELEM(w,j);
+   
+   // Compute Inverse
+   for (int i=0; i<XSIZE(*this); i++)
+      for (int j=0; j<YSIZE(*this); j++)
+         for (int k=0; k<XSIZE(*this); k++)
+            DIRECT_MAT_ELEM(result,i,j)+= (T)(
+               DIRECT_MAT_ELEM(v,i,k)*DIRECT_MAT_ELEM(u,j,k));
 }
 
 //interface to numerical recipes
 template <class T>
-   void ludcmp(const mT &A, T** *LU, matrix1D<int> &indx, T &d) {
-   *LU = A.adapt_for_numerical_recipes();
+   void ludcmp(const mT &A, mT &LU, matrix1D<int> &indx, T &d) {
+   LU=A;
    indx.resize(XSIZE(A));
-   int *indx_array=indx.adapt_for_numerical_recipes();
-   ludcmp (*LU,XSIZE(A),indx_array,&d);
+   ludcmp (LU.adapt_for_numerical_recipes2(),XSIZE(A),
+      indx.adapt_for_numerical_recipes(),&d);
 }
 
 /* Interface to Numerical Recipes: lubksb  --------------------------------- */
 template <class T>
-   void lubksb(T** LU, matrix1D<int> &indx, vT &b) {
-   T   * b_array=b.adapt_for_numerical_recipes();
-   int * indx_array=indx.adapt_for_numerical_recipes();
-   lubksb(LU,XSIZE(indx),indx_array,b_array);
+   void lubksb(const mT &LU, matrix1D<int> &indx, vT &b) {
+   lubksb(LU.adapt_for_numerical_recipes2(),XSIZE(indx),
+      indx.adapt_for_numerical_recipes(),
+      b.adapt_for_numerical_recipes());
 }
 
 //interface to numerical recipes
@@ -475,55 +505,30 @@ void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
                matrix1D<double> &w, matrix2D<double> &v)
 {
    // svdcmp only works with double
-   matrix2D<double> ad;
-   type_cast(a,ad);
+   type_cast(a,u);
    
    // Set size of matrices
-   u.resize(ad.RowNo(),ad.ColNo());
-   w.resize(ad.ColNo());
-   v.resize(ad.ColNo(),ad.ColNo());
-   
-   // Adapt
-   double **A=ad.adapt_for_numerical_recipes();
-   double  *W=w.adapt_for_numerical_recipes();
-   double **V=v.adapt_for_numerical_recipes();
-   
+   w.init_zeros(u.ColNo());
+   v.init_zeros(u.ColNo(),u.ColNo());
    
    // Call to the numerical recipes routine
-   svdcmp(A,ad.RowNo(),ad.ColNo(),W,V);
-   
-   // Copy results 
-   u.load_from_numerical_recipes(A, ad.RowNo(), ad.ColNo());
-   v.load_from_numerical_recipes(V, v.RowNo(), v.ColNo());
-   // There is no need to copy results from W, as w is modified
-   // at the same time (only works for matrix1D, not for matrix2D)
-   
-   ad.kill_adaptation_for_numerical_recipes(A);
-   v.kill_adaptation_for_numerical_recipes(V);
-   w.kill_adaptation_for_numerical_recipes(W);   
+   svdcmp(u.adapt_for_numerical_recipes2(),u.RowNo(),u.ColNo(),
+          w.adapt_for_numerical_recipes(),
+          v.adapt_for_numerical_recipes2());
 }
 
 //interface to numerical recipes
 void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
              matrix1D<double> &b,matrix1D<double> &x)
 {
-   double **U=u.adapt_for_numerical_recipes();   
-   double  *W=w.adapt_for_numerical_recipes();
-   double **V=v.adapt_for_numerical_recipes();
-   double  *B=b.adapt_for_numerical_recipes();
-   double  *X=x.adapt_for_numerical_recipes();
-
    // Call to the numerical recipes routine. Results will be stored in X
-   svbksb(U,W,V,u.RowNo(),u.ColNo(),B,X);
-          
-   u.kill_adaptation_for_numerical_recipes(U);
-   w.kill_adaptation_for_numerical_recipes(W);
-   v.kill_adaptation_for_numerical_recipes(V);
-   b.kill_adaptation_for_numerical_recipes(B);
-   x.kill_adaptation_for_numerical_recipes(X);
+   svbksb(u.adapt_for_numerical_recipes2(),
+          w.adapt_for_numerical_recipes(),
+          v.adapt_for_numerical_recipes2(),
+          u.RowNo(),u.ColNo(),
+          b.adapt_for_numerical_recipes(),
+          x.adapt_for_numerical_recipes());
 }
-
-
 
 /* Window ------------------------------------------------------------------ */
 template <class T>
@@ -1223,6 +1228,34 @@ template <class T>
       if (mass!=0) center/=mass;
    }
 
+/* Quadratic form ---------------------------------------------------------- */
+void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
+   const matrix2D<double> &H, double &val, matrix1D<double> &grad) _THROW {
+   if (XSIZE(x)!=XSIZE(c))
+      REPORT_ERROR(1102,"Eval_quadratic: Not compatible sizes in x and c");
+   if (XSIZE(H)!=XSIZE(x))
+      REPORT_ERROR(1102,"Eval_quadratic: Not compatible sizes in x and H");
+
+   // H*x, store in grad
+   grad.init_zeros(XSIZE(x));
+   for (int i=0; i<YSIZE(H); i++)
+      for (int j=0; j<XSIZE(x); j++)
+            DIRECT_VEC_ELEM(grad,i) += DIRECT_MAT_ELEM(H,i,j)*
+               DIRECT_VEC_ELEM(x,j);
+   
+   // Now, compute c^t*x+1/2*x^t*H*x
+   // Add c to the gradient
+   double quad=0;
+   val=0;
+   for (int j=0; j<XSIZE(x); j++) {
+      quad+=DIRECT_VEC_ELEM(grad,j)*DIRECT_VEC_ELEM(grad,j); // quad=x^t*H^t*H*x
+      val+=DIRECT_VEC_ELEM(c,j)*DIRECT_VEC_ELEM(x,j);        // val=c^t*x
+
+      DIRECT_VEC_ELEM(grad,j)+=DIRECT_VEC_ELEM(c,j);         // grad+=c
+   }
+   val+=0.5*quad;
+}
+
 /* ------------------------------------------------------------------------- */
 /* INSTANTIATE                                                               */
 /* ------------------------------------------------------------------------- */
@@ -1315,7 +1348,7 @@ template <class T>
 	  radial_average(v,center,b);
       // Singular value decomposition
       svdcmp(v,B,r,B);
-	  solve_by_svd(v,b,r,d);
+      solve_by_svd(v,b,r,d);
 }
 
 void instantiate_complex_matrix () {

@@ -67,9 +67,9 @@ template <class T>
 template <class T>
    void solve_by_svd(const mT &A, const vT &b, matrix1D<double> &result,double tolerance) _THROW;
 template <class T>
-   void ludcmp(const mT &A, T** *LU, matrix1D<int> &indx, T &d);
+   void ludcmp(const mT &A, mT &LU, matrix1D<int> &indx, T &d);
 template <class T>
-   void lubksb(T **LU,matrix1D<int> &indx, vT &b);
+   void lubksb(const mT &LU,matrix1D<int> &indx, vT &b);
 
 template <class T>
 void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
@@ -382,10 +382,10 @@ protected:
    // The following functions are directly an interface to the Numerical
    // Recipes ones with the same name, but with a better interface
    // LU decomposition
-   friend void ludcmp<>(const mT &A, T** *LU, matrix1D<int> &indx, T &d);
+   friend void ludcmp<>(const mT &A, mT &LU, matrix1D<int> &indx, T &d);
 
    // Solving an equation system based on LU. Remember to free LU outside
-   friend void lubksb<>(T **LU, matrix1D<int> &indx, vT &b);
+   friend void lubksb<>(const mT &LU, matrix1D<int> &indx, vT &b);
           
 public:
    /* Constructors/Destructor ---------------------------------------------- */
@@ -549,13 +549,24 @@ public:
          m[i+1][j+1]=DIRECT_MAT_ELEM(*this,i,j);
       return m;}
 
+   /** Produce a pointer suitable for working with Numerical Recipes (2).
+       This function meets the same goal as the one before, however this one
+       work with 2D arrays as a single pointer. The first element of
+       the array is pointed by result[1*Xdim+1], and in general
+       result[i*Xdim+j] */
+   T * adapt_for_numerical_recipes2() const {return __m-1-XSIZE(*this);}
+
    /** Load from numerical recipes result. */
    void load_from_numerical_recipes(T **m, int Ydim, int Xdim);
 
    /** Kill an array produced for numerical recipes.
-       Nothing needs to be done in fact. */
+       The allocated memory is freed. */
    void kill_adaptation_for_numerical_recipes(T **m) const
       {free_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));}
+
+   /** Kill an array produced for numerical recipes, 2.
+       Nothing needs to be done in fact. */
+   void kill_adaptation_for_numerical_recipes2(T **m) const {}
 
    /** Intersects.
        TRUE if this array intersects with the rectangle defined by the
@@ -849,10 +860,13 @@ public:
    T det() const _THROW;
 
    /** Inverse of a matrix.
-       An exception is thrown if the matrix is not invertible (either
-       because it is empty or not squared or because its determinant is 0).
-       \\Ex: matrix2D<double> m2=m1.inv();*/
-   mT inv() const _THROW;
+       The matrix is inverted using a SVD decomposition.
+       In fact the pseudoinverse is returned.
+       \\Ex: matrix2D<double> m1_inv; m1.inv(m1_inv);*/
+   void inv(mT &result) const;
+
+   /** Inverse of a matrix.*/
+   mT inv() const {mT result; inv(result); return result;}
 
    /** Solve equation system.
        The equation system is defined by Ax=b, it is solved for x.
@@ -1255,6 +1269,27 @@ template <class T>
 template <class T>
 void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
                     matrix1D<T> &radial_mean) _THROW;
+
+/** Solve equation system, nonnegative solution.
+    The equation system is defined by Ax=b, it is solved for x.
+    x is forced to be nonnegative. It is designed to cope with
+    large equation systems. This function is borrowed from
+    LAPACK nnls.
+    
+    The norm of the vector Ax-b is returned.
+    \\Ex: matrix1D<double> x=m.inv();*/
+double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
+   matrix1D<double> &result) _THROW;
+
+/** Evaluate quadratic form.
+    Given x, c and H this function returns the value of the quadratic
+    form val=c^t*x+0.5*x^t*H^t*H*x and the gradient of the quadratic form at x
+    grad=c+H*x.
+    
+    Exceptions are thrown if the vectors and matrices do not have consistent
+    dimensions.*/
+void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
+   const matrix2D<double> &H, double &val, matrix1D<double> &grad) _THROW;
 //@}
 //@}
 //@}
