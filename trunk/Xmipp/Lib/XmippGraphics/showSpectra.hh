@@ -44,6 +44,8 @@ protected:
    int offX, offY;
    // Spacing between X ticks
    int spacing;
+   // Offset for ticks
+   int x_tick_off;
 
    // Background Color
    QColor backColor;
@@ -107,7 +109,7 @@ protected slots:
     // Change ticks spacing
     virtual void changeXstep();    
     // returns spacing from scroll window
-    virtual void set_spacing(float _spacing);
+    virtual void set_spacing(float _spacing, float _x_tick_off);
 
 public:
     /** Initialize with a set of vectors.

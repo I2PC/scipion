@@ -139,6 +139,133 @@ void ScrollParam::but_ok_clicked()
   close();  
 }
 
+ScrollParam2::ScrollParam2(float min , float max, float initial_value,
+                         float initial_value2,
+   char *caption, QWidget *parent, const char *name, int wFlags, int precision  ) : 
+   QWidget( parent, name, wFlags )
+{
+    my_precision = (int)pow ((double)10,(double)precision);
+    int tmp_min=(int) (min*my_precision);
+    int tmp_max=(int) (max*my_precision);
+    value  = (float)initial_value*my_precision;
+    value2 = (float)initial_value2*my_precision;;
+    QColor col;
+   // Set the window caption/title
+
+    setCaption( caption );
+
+    // Create a layout to position the widgets
+
+    QBoxLayout *Layout = new QVBoxLayout( this, 10 );
+
+    // Create a grid layout to hold most of the widgets
+    QGridLayout *grid = new QGridLayout( 6, 4 );
+    // This layout will get all of the stretch
+
+    Layout->addLayout( grid, 5 );
+
+    //title
+    QLabel     *title= new QLabel( this, "title" );    
+    title->setFont( QFont("times",12,QFont::Bold) );
+    title->setText( "Spacing and Offset X-Selector" );
+    title->setFixedSize(title->sizeHint());
+    grid->addMultiCellWidget( title, 0, 0, 0, 2);
+     
+    //Scroll Bar
+    QScrollBar  *scroll= new QScrollBar(tmp_min, tmp_max, 1, 1, (int)value, QScrollBar::Horizontal,this,"scroll");
+    scroll->setFixedWidth(200); 
+    scroll->setFixedHeight(15); 
+    connect( scroll, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)) );
+    grid->addMultiCellWidget( scroll, 1, 1, 0, 2);			   
+
+    //Scroll Bar2
+    QScrollBar  *scroll2= new QScrollBar(tmp_min, tmp_max, 1, 1, (int)value2, QScrollBar::Horizontal,this,"scroll");
+    scroll2->setFixedWidth(200); 
+    scroll2->setFixedHeight(15); 
+    connect( scroll2, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged2(int)) );
+    grid->addMultiCellWidget( scroll2, 2, 1, 0, 2);			   
+
+    //labels under scroll bar
+    QLabel     *lab1= new QLabel( this, "lab1" );    
+    lab1->setFont( QFont("times",12,QFont::Bold) );
+    lab1->setNum( (float)tmp_min/my_precision);
+    lab1->setFixedSize(lab1->sizeHint());
+    grid->addWidget( lab1, 3, 0, AlignLeft );
+    QLabel     *lab2= new QLabel( this, "lab2" );	 
+    lab2->setFont( QFont("times",12,QFont::Bold) );
+    lab2->setNum( (float)tmp_max/my_precision);
+    lab2->setFixedSize(lab2->sizeHint());
+    grid->addWidget( lab2, 3, 2, AlignRight );
+
+    //Labels for the current value
+    QLabel     *lab3= new QLabel( this, "lab3" );    
+    lab3->setFont( QFont("times",12,QFont::Bold) );
+    lab3->setText( "Spac/tick: ");
+    lab3->setFixedSize(lab3->sizeHint());
+    grid->addWidget( lab3, 4, 0, AlignCenter );
+    value_lab= new QLabel( this, "value_lab" );        
+    value_lab->setFont( QFont("times",12,QFont::Bold) );
+    value_lab->setNum( value/my_precision );
+    grid->addWidget( value_lab, 4, 1, AlignLeft);
+    value_lab2= new QLabel( this, "value_lab2" );        
+    value_lab2->setFont( QFont("times",12,QFont::Bold) );
+    value_lab2->setNum( value2/my_precision );
+    grid->addWidget( value_lab2, 4, 2, AlignLeft);
+
+    //Close Button
+    QPushButton *close;
+    close = new QPushButton( this, "close" );	// create button 1
+    close->setFont( QFont("times",12,QFont::Bold) );
+    close->setText( "Close" );    
+    close->setFixedSize( close->sizeHint());
+    grid->addWidget( close, 5, 0, AlignVCenter ); 
+    QToolTip::add( close, "Close the window" );
+    connect( close, SIGNAL(clicked()), SLOT(but_close_clicked()) );
+        
+    QPushButton *do_it;
+    do_it = new QPushButton( this, "do_it" );	// create button 3
+    do_it->setFont( QFont("times",12,QFont::Bold) );
+    do_it->setText( "Ok" );
+    do_it->setFixedHeight( do_it->sizeHint().height());
+    do_it->setFixedWidth(80);
+    grid->addWidget( do_it, 5, 2, AlignVCenter ); 
+    QToolTip::add( do_it, "Commit action" );
+    connect( do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()) );
+    
+    setFixedSize(350,250);
+}
+
+/****************************************************/
+ScrollParam2::~ScrollParam2()
+{
+}
+/****************************************************/
+
+void ScrollParam2::scrollValueChanged(int v){
+   value = (float)v/my_precision;
+   value_lab->setNum(value);
+}
+
+void ScrollParam2::scrollValueChanged2(int v){
+   value2 = (float)v/my_precision;
+   value_lab2->setNum(value2);
+}
+
+/****************************************************/
+
+void ScrollParam2::but_close_clicked()
+{
+  close();
+}
+
+/****************************************************/
+
+void ScrollParam2::but_ok_clicked()   
+{
+  emit new_value( value, value2 );
+  close();  
+}
+
 /* Qimage -> Xmipp --------------------------------------------------------- */
 void Qt2xmipp( QImage &_qimage, Image &_ximage ) {
    _ximage().resize(_qimage.height(), _qimage.width());

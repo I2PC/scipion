@@ -62,7 +62,7 @@ class ScrollParam : public QWidget
 public:
     /** Constructor.
         Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam( float min, float max, float initial_value,
+    ScrollParam( float min, float max, float initial_value, 
        char *caption, QWidget *parent = 0,
        const char *name = 0, int wFlags=0, int precision=2  );
     ~ScrollParam();
@@ -78,6 +78,57 @@ private slots:
 signals:
    /** Signal emitted when the value is changed*/
    void new_value(float);
+};
+
+
+/**Scroll param2 class.
+    This class opens a window and asks for TWO Scroll parameters.
+    It emits a signal called new_value(float,float). (precision is the number of 
+    digits used by the mantise)
+    
+    An example of use of this class is
+    \begin{verbatim}
+      // Create window
+      ScrollParam* param_window=
+           new ScrollParam(min,max, first init parameter, 
+	      second_init_parameter,"Set spac/x_ticks", 
+             0, "new window", WDestructiveClose, precision);
+
+      // Connect its output to my input (set_spacing)
+      connect( param_window, SIGNAL(new_value(float,float)), 
+               this,         SLOT(set_spacing(float,float)));
+
+      // Show
+      param_window->setFixedSize(250,200);
+      param_window->show();
+    \end{verbatim}
+*/
+class ScrollParam2 : public QWidget
+{ 
+  Q_OBJECT
+public:
+    /** Constructor.
+        Provide the min_value, max_value, caption and initial_value.*/
+    ScrollParam2( float min, float max, float initial_value, 
+       float initial_value2,
+       char *caption, QWidget *parent = 0,
+       const char *name = 0, int wFlags=0, int precision=2  );
+    ~ScrollParam2();
+
+private:
+   float     value;
+   float     value2;
+   QLabel   *value_lab;   //test label for the current value of the slider
+   QLabel   *value_lab2;   //test label for the current value of the slider
+   int       my_precision;
+private slots:
+   void scrollValueChanged(int);
+   void scrollValueChanged2(int);
+   void but_close_clicked();
+   void but_ok_clicked();   
+signals:
+   /** Signal emitted when the value is changed*/
+   void new_value(float,float);
 };
 
 /**@name Image conversions */

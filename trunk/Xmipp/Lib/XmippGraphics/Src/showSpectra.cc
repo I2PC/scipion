@@ -35,6 +35,7 @@ void ShowSpectra::init() {
     V = NULL;
     offX = 10; offY = 10;
     spacing=3;
+    x_tick_off=1;
     backColor = black;
     axisColor = white;
     curveColor = green;
@@ -204,7 +205,7 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
    p->drawLine(offX, scprojYdim-offY, scprojXdim-offX, scprojYdim-offY);
    double scaleX = (scprojXdim-2*offX)/N;
    int    istep = spacing;
-   for (int l=0; l<=N; l+=istep) {
+   for (int l=x_tick_off-1; l<=N; l+=istep) {
 	 int x = offX + (int)(l*scaleX);
 	 // Draw legend
          if (!options->isItemEnabled(mi_showXlegend)) {
@@ -324,21 +325,24 @@ void ShowSpectra::changeFont() {
 // Change Grid spacing in X axis -------------------------------------
 void ShowSpectra::changeXstep() {
       int N=V->theItems[0].size();
-      ScrollParam* param_window;
-      param_window = new ScrollParam(1 //min
+      ScrollParam2* param_window;
+      param_window = new ScrollParam2(1 //min
                                     ,N //max
 				    , spacing //init value
+				    , x_tick_off // init value
 				    , "Set spacing",
          0, "new window", WDestructiveClose,0);
-      connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
+      connect( param_window, SIGNAL(new_value(float,float)), this,
+      SLOT(set_spacing(float,float)) );
       param_window->setFixedSize(250,200);
       param_window->show();
 
 }
 /****************************************************/
 
-void ShowSpectra::set_spacing(float _spacing) {
+void ShowSpectra::set_spacing(float _spacing, float _x_tick_off) {
   spacing = (int) _spacing;
+  x_tick_off = (int) _x_tick_off;
     clearContents();
     repaintContents();
   
