@@ -4,24 +4,17 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
- ***************************************************************************/
+ * Copyright (c) 2000 , CSIC .
+ *
+ * Permission is granted to copy and distribute this file, for noncommercial
+ * use, provided (a) this copyright notice is preserved, (b) no attempt
+ * is made to restrict redistribution of this file, and (c) this file is
+ * restricted by a compilation copyright.
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
+ *
+ *****************************************************************************/
 
 #ifdef _HAVE_VTK
 
@@ -72,6 +65,7 @@ template <class T, class VTKT>
    retval->SetNumberOfScalarComponents(scalarN);
    SET_VTK_TYPE(T,retval);
    COPY_VALUES_TO_VTK(T,v,retval,scalarN);
+   retval->Update();
 }
 
 template <class T, class VTKT>
@@ -82,6 +76,7 @@ template <class T, class VTKT>
    retval->SetNumberOfScalarComponents(scalarN);
    SET_VTK_TYPE(T,retval);
    COPY_VALUES_TO_VTK(T,v,retval,scalarN);
+   retval->Update();
 }
 
 template <class T, class VTKT>
@@ -92,6 +87,7 @@ template <class T, class VTKT>
    retval->SetNumberOfScalarComponents(scalarN);
    SET_VTK_TYPE(T,retval);
    COPY_VALUES_TO_VTK(T,v,retval,scalarN);
+   retval->Update();
 }
 
 void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
@@ -360,6 +356,7 @@ void VTK2xmippFFT(vtkImageData *v, FourierVolumeXmipp &retval)
 /* Show VTK ---------------------------------------------------------------- */
 template <class VTKT>
    void VTK_print(ostream &out, VTKT *v) {
+   if (v==NULL) {out << "NULL vtkdata\n"; return;}
    int maxC = v->GetNumberOfScalarComponents();
 
    // find the region to loop over
