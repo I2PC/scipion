@@ -302,6 +302,12 @@ void read_float_list(const char *str, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
    int exit=0) _THROW;
 
+/** list --> STL vector. */
+template <class T> 
+void read_float_list(const string &str, int &i, int N, vector<T> &v,
+   int _errno=2105, string errmsg="Error reading list",
+   int exit=0) _THROW;
+
 /** list --> matrix1D. */
 template <class T> 
 void read_float_list(const char *str, int N, matrix1D<T> &v,

@@ -295,6 +295,31 @@ void read_float_list(const char *str, int N, vector<T> &v,
    }
 }
 
+template <class T> 
+void read_float_list(const string &str, int &i, int N, vector<T> &v,
+   int _errno=2105, string errmsg="Error reading list",
+   int exit=0) _THROW {
+   T  valueF;
+   string token;
+
+   token=next_token(str,i);
+   for (int j=0; j<N; j++) {
+      if (token=="") {
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
+         REPORT_ERROR(_errno,errmsg);
+      }
+
+      try {
+         valueF=(T) AtoF(token.c_str());
+      }
+      catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
+
+      v.push_back(valueF);
+      if (j!=N-1) token=next_token(str,i);
+   }
+}
+
 // list --> Matrix1D =================================================
 template <class T> 
 void read_float_list(char *str, int N, matrix1D<T> &v,
@@ -731,7 +756,9 @@ template <class T>
 void instantiateArgsTemplate(T t) {
   vector<T> v1;
   string line;
+  int i;
   read_float_list(line.c_str(), 1, v1);
+  read_float_list(line, i, 1, v1);
 }
 
 void instantiateArgs() {

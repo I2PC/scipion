@@ -142,12 +142,13 @@ void DocLine::read(istream& in) _THROW {
    } else {
       line_type=DocLine::DATALINE;
       text="";
-      key=AtoI(first_token(line),1602,"Error reading key");
-      param_no=AtoI(next_token(),1602,"Error reading number parameters");
+      int i=0;
+      key=AtoI(next_token(line,i),1602,"Error reading key");
+      param_no=AtoI(next_token(line,i),1602,"Error reading number parameters");
       string auxline=line;
       try {
          // Try unfixed mode first
-         read_float_list(NULL,param_no,data,1602,"Error reading doc file line");
+         read_float_list(line,i,param_no,data,1602,"Error reading doc file line");
       } catch (Xmipp_error) {
          // If doesn't work the try fix
          data.clear();
