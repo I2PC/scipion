@@ -262,8 +262,10 @@ double correlation(matrix2D<T> &x,matrix2D<T> &y,
       	 if(ip>=0 && ip<Rows && jp>=0 && jp<Cols)
 	     {
 		    if (mask!=NULL)
-               if (!(*mask)(i,j)) continue;
-            retval+=DIRECT_MAT_ELEM(x,i,j)*DIRECT_MAT_ELEM(y,ip,jp);
+	//  Sjors: bug repaired
+	//if (!(*mask)(i,j)) continue;
+               if (!DIRECT_MAT_ELEM((*mask),i,j)) continue;
+		    retval+=DIRECT_MAT_ELEM(x,i,j)*DIRECT_MAT_ELEM(y,ip,jp);
 	     }
       }
     
