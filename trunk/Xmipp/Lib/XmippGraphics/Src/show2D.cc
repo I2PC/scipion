@@ -151,9 +151,22 @@ ImageViewer::ImageViewer( FourierImageXmipp *_FFTimage, const char *name)
     ImageXmipp I;
     FFT_magnitude((*_FFTimage)(),I());
     CenterFFT(I(),true);
+
+    // Compute the log of all those that are not 0
+    double min_positive=I().compute_max();
+    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I()) {
+       double val=MULTIDIM_ELEM(I(),i);
+       if (val!=0) {
+	  MULTIDIM_ELEM(I(),i)=10*log10(val*val);
+	  if (val<min_positive) min_positive=val;
+       }
+    }
+    
+    // Substitute 0s by something a little bit smaller
+    min_positive=10*log10(min_positive*min_positive)-1;
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
-       MULTIDIM_ELEM(I(),i)=
-	  log10(1+MULTIDIM_ELEM(I(),i)*MULTIDIM_ELEM(I(),i));
+       if (MULTIDIM_ELEM(I(),i)==0) MULTIDIM_ELEM(I(),i)=min_positive;
+
     // Set the image and show
     if (xmipp2Qt(I)) showImage();
 }
@@ -412,10 +425,20 @@ bool ImageViewer::loadImage( const char *fileName )
 	       FourierImageXmipp If; If.read(filename);
 	       FFT_magnitude(If(),tmpImage());
 	       CenterFFT(tmpImage(),true);
+	       double min_positive=tmpImage().compute_max();
+	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage()) {
+	          double val=MULTIDIM_ELEM(tmpImage(),i);
+	          if (val!=0) {
+	             MULTIDIM_ELEM(tmpImage(),i)=10*log10(val*val);
+	             if (val<min_positive) min_positive=val;
+	          }
+	       }
+
+	       // Substitute 0s by something a little bit smaller
+	       min_positive=10*log10(min_positive*min_positive)-1;
 	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage())
-                  MULTIDIM_ELEM(tmpImage(),i)=
-	             log10(1+MULTIDIM_ELEM(tmpImage(),i)*
-		             MULTIDIM_ELEM(tmpImage(),i));
+	          if (MULTIDIM_ELEM(tmpImage(),i)==0)
+		     MULTIDIM_ELEM(tmpImage(),i)=min_positive;
 	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
 	    tmpImage().set_Xmipp_origin();
 	    ok = xmipp2Qt(tmpImage);
