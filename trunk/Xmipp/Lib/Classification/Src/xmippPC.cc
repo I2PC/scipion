@@ -358,13 +358,16 @@ istream& operator >> (istream &in, xmippPC &PC) {
    
    for (int i=0; i<D; i++) {
       getline(in,read_line);
-      sscanf(read_line.c_str(),"%F (%d) ---> ",&(PC.eigenval[i]),&size);
+      float f;
+      sscanf(read_line.c_str(),"%f (%d) ---> ",&f,&size);
+      PC.eigenval[i]=f;
       read_line.erase(0,read_line.find('>')+1); // remove until --->
       PC.eigenvec[i].resize(size);
       istrstream istr2(read_line.c_str());
       for (int j=0; j<size; j++)
          istr2 >> PC.eigenvec[i][j];
    }
+
    return in;
 }
 
