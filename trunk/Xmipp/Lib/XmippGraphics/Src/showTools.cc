@@ -31,14 +31,13 @@
 #include <qtooltip.h> 
 
 ScrollParam::ScrollParam(float min , float max, float initial_value,
-   char *caption, QWidget *parent, const char *name, int wFlags  ) : 
+   char *caption, QWidget *parent, const char *name, int wFlags, int precision  ) : 
    QWidget( parent, name, wFlags )
 {
-    int tmp_min=(int) (min*100);
-    int tmp_max=(int) (max*100);
-    value  = (float)initial_value*100;
-
-
+    my_precision = (int)pow ((double)10,(double)precision);
+    int tmp_min=(int) (min*my_precision);
+    int tmp_max=(int) (max*my_precision);
+    value  = (float)initial_value*my_precision;
     QColor col;
    // Set the window caption/title
 
@@ -49,7 +48,7 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
     QBoxLayout *Layout = new QVBoxLayout( this, 10 );
 
     // Create a grid layout to hold most of the widgets
-    QGridLayout *grid = new QGridLayout( 5, 3 );
+    QGridLayout *grid = new QGridLayout( 6, 4 );
     // This layout will get all of the stretch
 
     Layout->addLayout( grid, 5 );
@@ -71,26 +70,26 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
     //labels under scroll bar
     QLabel     *lab1= new QLabel( this, "lab1" );    
     lab1->setFont( QFont("times",12,QFont::Bold) );
-    lab1->setNum( (float)tmp_min/100);
+    lab1->setNum( (float)tmp_min/my_precision);
     lab1->setFixedSize(lab1->sizeHint());
     grid->addWidget( lab1, 2, 0, AlignLeft );
     QLabel     *lab2= new QLabel( this, "lab2" );        
     lab2->setFont( QFont("times",12,QFont::Bold) );
-    lab2->setNum( (float)tmp_max/100);
+    lab2->setNum( (float)tmp_max/my_precision);
     lab2->setFixedSize(lab2->sizeHint());
     grid->addWidget( lab2, 2, 2, AlignRight );
 
     //Labels for the current value
     QLabel     *lab3= new QLabel( this, "lab3" );    
     lab3->setFont( QFont("times",12,QFont::Bold) );
-    lab3->setText( "Value: ");
+    lab3->setText( "Spacing: ");
     lab3->setFixedSize(lab3->sizeHint());
     grid->addWidget( lab3, 3, 0, AlignCenter );
     value_lab= new QLabel( this, "value_lab" );        
     value_lab->setFont( QFont("times",12,QFont::Bold) );
-    value_lab->setNum( value/100 );
+    value_lab->setNum( value/my_precision );
     grid->addWidget( value_lab, 3, 1, AlignLeft);
-        
+
     //Close Button
     QPushButton *close;
     close = new QPushButton( this, "close" );	// create button 1
@@ -121,7 +120,7 @@ ScrollParam::~ScrollParam()
 /****************************************************/
 
 void ScrollParam::scrollValueChanged(int v){
-   value = (float)v/100;
+   value = (float)v/my_precision;
    value_lab->setNum(value);
 }
 
