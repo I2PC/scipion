@@ -1,0 +1,6 @@
+######################################################################
+PROJ = mpi_MLalign2D
+NEEDS_MPI = true
+
+OBJ  = mpi_MLalign2D.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
