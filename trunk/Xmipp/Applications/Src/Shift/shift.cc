@@ -70,12 +70,22 @@ public:
 	 } else colX_scale= -1;
       }
       else{
+         int my_dim;
          if (check_param(argc,argv,"-shift"))
+              {
               shift=get_vector_param(argc,argv,"-shift",-1);
-         else shift.init_zeros(2);
+              my_dim=shift.get_dim();
+              }
          if (check_param(argc,argv,"-scale"))
-               scale=get_vector_param(argc,argv,"-scale",-1);
-         else {scale.resize(2); scale.init_constant(1);}
+              {
+              scale=get_vector_param(argc,argv,"-scale",-1);
+              my_dim=scale.get_dim();
+              }
+
+      	 if (!check_param(argc,argv,"-shift"))
+               shift.init_zeros(my_dim);
+ 	 if (!check_param(argc,argv,"-scale"))
+          {scale.resize(my_dim); scale.init_constant(1);}
       }	 
       wrap=!check_param(argc,argv,"-dont_wrap");
    }
@@ -182,6 +192,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       eprm->DF_scales.next_data_line();
    }
    else if (eprm->Docfile!=FALSE){
+cout << "B" << endl; cout.flush();
       eprm->scale.resize(3); 
       eprm->scale.init_constant(1.);
    }
