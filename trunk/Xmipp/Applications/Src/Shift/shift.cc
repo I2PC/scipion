@@ -25,16 +25,29 @@
 
 #include <XmippData/xmippProgs.hh>
 #include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippDocFiles.hh>
 #include <XmippData/xmippGeometry.hh>
 
 class Shift_parameters: public Prog_parameters {
 public:
    matrix1D<double> shift;
-   bool wrap;
+   bool             wrap;
+   DocFile          DF_shifts;
+   int              colX;
 
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
-      shift=get_vector_param(argc,argv,"-shift",-1);
+      int i=position_param(argc,argv,"-shift");
+      if (i==-1)
+         REPORT_ERROR(1,"Shift:: Cannot find -shift");
+      else if (i+1>=argc)
+         REPORT_ERROR(1,"Shift: Not enough parameters after -shift");
+      if (exists(argv[i+1])) {
+         DF_shifts.read(argv[i+1]);
+	 colX=AtoI(get_param(argc,argv,"-colX","3"));
+      }
+      else
+         shift=get_vector_param(argc,argv,"-shift",-1);
       wrap=!check_param(argc,argv,"-dont_wrap");
    }
    
@@ -42,25 +55,50 @@ public:
       Prog_parameters::show();
       if (wrap) cout << "Wrapping image/volume\n";
       else      cout << "Not wrapping image/volume\n";
-      cout << "Shift: " << shift.transpose() << endl;
+      if (DF_shifts.name()=="")
+         cout << "Shift: " << shift.transpose() << endl;
+      else {
+         cout << "Shift: " << DF_shifts.name() << endl;
+	 cout << "ColX:  " << colX << endl;
+      }
    }
 
    void usage() {
       Prog_parameters::usage();
       cerr << "   -shift [<x>,<y>[,<z>]]   : Shift by (x,y,z)\n"
+           << "   -shift <DocFile>         : Shifts are stored in a file\n"
+	   << "  [-colX <col=3>]           : Column of the X shift in the DocFile\n"
+	   << "                              First column is number 1.\n"
            << "  [-dont_wrap]              : By default, the volume is wrapped\n";
    }
 };
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Shift_parameters *eprm=(Shift_parameters *) prm;
-   img().self_translate(eprm->shift,eprm->wrap);
+   if (eprm->DF_shifts.name()=="")
+      img().self_translate(eprm->shift,eprm->wrap);
+   else {
+      matrix1D<double> shift(2);
+      XX(shift)=eprm->DF_shifts(eprm->colX);
+      YY(shift)=eprm->DF_shifts(eprm->colX+1);
+      img().self_translate(shift,eprm->wrap);
+      eprm->DF_shifts.next_data_line();
+   }
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Shift_parameters *eprm=(Shift_parameters *) prm;
-   vol().self_translate(eprm->shift,eprm->wrap);
+   if (eprm->DF_shifts.name()=="")
+      vol().self_translate(eprm->shift,eprm->wrap);
+   else {
+      matrix1D<double> shift(3);
+      XX(shift)=eprm->DF_shifts(eprm->colX);
+      YY(shift)=eprm->DF_shifts(eprm->colX+1);
+      ZZ(shift)=eprm->DF_shifts(eprm->colX+2);
+      vol().self_translate(shift,eprm->wrap);
+      eprm->DF_shifts.next_data_line();
+   }
    return TRUE;
 }
 
