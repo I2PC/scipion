@@ -104,6 +104,11 @@ protected slots:
     virtual void changeAxisColor();
     // Change Font
     virtual void changeFont();
+    // Change ticks spacing
+    virtual void changeXstep();    
+    // returns spacing from scroll window
+    virtual void set_spacing(float _spacing);
+
 public:
     /** Initialize with a set of vectors.
         The same as with initWithFile but without reading any file.
