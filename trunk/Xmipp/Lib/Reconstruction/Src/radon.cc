@@ -73,3 +73,18 @@ void Local_Radon_Transform(Volume *vol, double rot, double tilt,
                VEC_ELEM(RT_n,k)++;
             }
 }
+
+/* Radon Transform of an image --------------------------------------------- */
+void Radon_Transform(const matrix2D<double> &I, double rot_step,
+   matrix2D<double> &RT) {
+   matrix2D<double> rot_I;
+   RT.init_zeros(CEIL(360.0/rot_step),XSIZE(I));
+   STARTINGX(RT)=STARTINGX(I);
+   int l=0;
+   for (double rot=0; rot<360; rot+=rot_step, l++) {
+      // Rotate image
+      I.rotate(rot,rot_I);
+      // Sum by columns
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(rot_I) RT(l,j)+=rot_I(i,j);
+   }
+}

@@ -53,4 +53,7 @@ void Radon_Transform(Volume *vol, double rot, double psi,
 void Local_Radon_Transform(Volume *vol, double rot, double tilt,
    int label, Volume *vol_label, matrix1D<double> &RT,
    matrix1D<double> &RT_n);
+
+void Radon_Transform(const matrix2D<double> &I, double rot_step,
+   matrix2D<double> &RT);
 #endif
