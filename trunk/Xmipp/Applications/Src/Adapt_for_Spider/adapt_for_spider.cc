@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
    DocFile           DF;
    matrix1D<float>   aux;
    int               selline;
+   bool              newsel_style;
 
 // Check command line ------------------------------------------------------
 try {
@@ -53,6 +54,7 @@ try {
       out_ext=get_param(argc, argv, "-oext","");
    } else if (command=="translate_sel") {
       fn_sel=get_param(argc, argv, "-i");
+      newsel_style=check_param(argc,argv,"-new_style");
    } else if (command=="generate_count") {
       maxcount=AtoI(get_param(argc, argv, "-max"));
    } else if (command=="extract_angles") {
@@ -81,7 +83,7 @@ try {
       DF.write(fn_out);
    } else if (command=="translate_sel") {
       SF.read(fn_sel);
-      translate_to_Spider_sel(SF,DF);
+      translate_to_Spider_sel(SF,DF,newsel_style);
       DF.write(fn_out);
    } else if (command=="extract_angles") {
       SF.read(fn_sel);
@@ -106,6 +108,7 @@ void Usage() {
         << "       adapt_for_Spider translate_sel     : Generate corresponding Spider SelFile\n"
         << "            -i <Xmipp Selfile>            : Input Xmipp selection file\n"
         << "            -o <Spider Selfile>           : Output Spider SelFile\n"
+	<< "           [-new_style]                   : Generate new Spider Selfile style\n"
         << "       adapt_for_Spider extract_angles    : Generate a Docfile with angles\n"
         << "            -i <sel_file>                 : Input Xmipp selection file\n"
         << "            -o <Ang DocFile>              : Output Docfile\n"
