@@ -197,7 +197,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
       weight.init_zeros(6); 
       weight(0)=2;
       weight(3)=15;
-      wieght(5)=415;
+      weight(5)=415;
    } 
 }
 
