@@ -278,7 +278,7 @@ int main (int argc, char **argv) {
 void Usage() {
    cerr << "Usage: angular_refinement\n"
         << "If Radon wrapper --------------------------------------------------------------------\n"
-        << "   -i <FR Volume>	                     : Fourier Radon Volume\n"
+        << "   -i <FR Volume>                        : Fourier Radon Volume\n"
         << "   -fr <FR selfile>                      : Fourier Radon images\n"
         << "   -img <selfile>                        : Real space images\n"
         << "  [-rot  <rot0=0>  <rotF=360> <step=10>] : Rotational angle range\n"
@@ -289,7 +289,7 @@ void Usage() {
         << "  [-max_shift <s=2>]                     : in pixels\n"
         << "If Projection Matching wrapper ------------------------------------------------------\n"
         << "   -apmq                                 : This flag sets the Projection Matching mode\n"
-        << "   -i <Xmipp Volume>	             : referenece volume\n"
+        << "   -i <Xmipp Volume>                     : referenece volume\n"
         << "   -img <selfile>                        : Real space images\n"
         << "  [-tilt_step <step=10>]                 : Tilting angle range\n"
         << "  [-max_shift <s=2>]                     : in pixels\n"
