@@ -76,6 +76,11 @@ public:
    /** Check mirrors.
       If 1 then mirror versions of the experimental images are also explored.*/
    int check_mirrors;
+   /** Way to pick views.
+       0 maximum correlation of the first group.
+       1 average of the most populated group.
+       2 maximum correlation of the most populated group. */
+   int pick;
    #define TELL_ROT_TILT  1
    #define TELL_PSI_SHIFT 2
    #define TELL_OPTIONS   4
@@ -151,8 +156,8 @@ public:
 
    /** Evaluate candidates by correlation. The evaluation is returned in
        candidate_rate. Furthermore, this function returns the threshold for
-       passing in the "correlation exam", a 5*/
-   double evaluate_candidates_by_correlation(const vector<double> &vcorr,
+       passing in the "score exam", a 7*/
+   double evaluate_candidates(const vector<double> &vscore,
       const vector<int> &candidate_idx, vector<double> &candidate_rate,
       double weight);
    
@@ -165,9 +170,12 @@ public:
       vector< vector<int> > &groups);
 
    /** Pick the best image from the groups.
-       Update this comment to what really does *** */
-   int pick_view(vector< vector<int> > &groups,
-      vector<double> &vcorr,
+       If method == 0 it takes the maximum of the first group (the
+       one with best rate). If method==1, it takes the maximum
+       of the most populated group. */
+   int pick_view(int method,
+      vector< vector<int> > &groups,
+      vector<double> &vscore,
       vector<double> &vrot,
       vector<double> &vtilt,
       vector<double> &vpsi,
