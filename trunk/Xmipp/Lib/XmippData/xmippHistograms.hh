@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -295,6 +296,83 @@ template <class T>
     that this probability usually has got a very low value.
     \\Ex: detect_error=detectability_error(hist1,hist2); */
 double detectability_error(const histogram1D &h1, const histogram1D &h2);
+
+/** Returns the effective range of a multidimensional array.
+    The effective range is defined as the difference of those two
+    values comprissing a given central percentage of the array histogram.
+    This function is used to compute the range removing outliers.
+    The default central percentage is 99.75%, although this value should
+    be increased as the number of values in the array decreases. For
+    the default, for instance, the 0.125% of the smaller values are
+    left out as well as the 0.125% of the higher values. The range is
+    given always as a double number.
+    \\Ex: double range=v.effective_range();
+    \\-->range for the 99.75% of the mass
+    \\Ex: double range=v.effective_range(1);
+    \\-->range for the 99% of the mass
+    */
+template <class T>
+   double effective_range(const T &v, double percentil_out=0.25) {
+   histogram1D hist;
+   compute_hist(v,hist,200);
+   double min_val = hist.percentil(percentil_out/2);
+   double max_val = hist.percentil(100-percentil_out/2);
+   return max_val-min_val;
+}
+
+/** Clips the array values within the effective range.
+    Look at the documentation of effective_rage.
+    */
+template <class T>
+   void reject_outliers(const T &v, double percentil_out=0.25) {
+   histogram1D hist;
+   compute_hist(v,hist,200);
+   double eff0=hist.percentil(percentil_out/2);
+   double effF=hist.percentil(100-percentil_out/2);
+   #define vi MULTIDIM_ELEM(v,i)
+   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
+      if      (vi<eff0) vi=eff0;
+      else if (vi>effF) vi=effF;
+   #undef vi
+}
+
+/** Histogram equalization and re-quantization.
+    This function equalizes the histogram of the input multidimensional
+    array, and re-quantize the input array to a specified number of bins.
+    The output array is defined between 0 and bins-1. */
+template <class T>
+   void histogram_equalization(T &v, int bins=8) {
+   const int hist_steps=200;
+   histogram1D hist;
+   compute_hist(v,hist,hist_steps);
+
+   // Compute the distribution function of the pdf
+   matrix1D<double> norm_sum(hist_steps);
+   norm_sum(0)=hist(0);
+   for(int i=1;i<hist_steps;i++) norm_sum(i)=norm_sum(i-1)+hist(i);
+   norm_sum/=MULTIDIM_SIZE(v);
+  
+  // array to store the boundary pixels of bins
+  matrix1D<double> div(bins-1);
+  int index=0;
+  for(int current_bin=1;current_bin<bins;current_bin++){
+     double current_value=(double)current_bin/bins;
+     while (norm_sum(index)<current_value) index++;
+     hist.index2val((double)index,div(current_bin-1));
+  }
+  
+  // requantize and equalize histogram
+   #define vi MULTIDIM_ELEM(v,i)
+   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
+      if      (vi<div(0))      vi=0;
+      else if (vi>div(bins-2)) vi=bins-1;
+      else {
+	 index=0; while(vi>div(index)) index++;
+	 vi=index;
+      }
+   #undef vi
+}
+
 //@}
 
 // Histograms 2D ===========================================================
