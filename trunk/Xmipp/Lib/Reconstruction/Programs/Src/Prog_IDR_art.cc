@@ -87,9 +87,6 @@ void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
    if (fn_blob_volume!="") vol_blobs.read(fn_blob_volume);
    art_prm->produce_Side_Info(vol_blobs,BASIC);
 
-   // Prepare variance volume
-   vol_blobs_var=NULL;
-
    // Prepare Lowpass filter
    if (max_resolution!=-1) {
       Filter.FilterShape=RAISED_COSINE;
@@ -220,8 +217,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
 	 prm.art_prm->fn_root=prm.fn_root+"_idr"+ItoA(prm.it,2);
 	 prm.art_prm->fn_start = fn_blobs;
 	 prm.vol_blobs.clear();
-	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs,
-            prm.vol_blobs_var);
+	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs);
       	 fn_blobs=prm.art_prm->fn_root+".blob";
       }
 

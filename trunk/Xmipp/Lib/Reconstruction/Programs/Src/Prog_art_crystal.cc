@@ -349,7 +349,6 @@ void ART_single_step(
    const FileName         &fn_ctf,           // CTF to apply
    bool                    unmatched,        // Apply unmatched projectors
    double                  ray_length,       // Ray length for the projection
-   GridVolume              *vol_var,         // Keep track of the variance
    bool                    print_system_matrix)
 {
 // Compute lattice vectors to be used ......................................
@@ -452,8 +451,8 @@ void instantiate_Crystal_ART() {
    Basic_ART_Parameters prm;
    Crystal_ART_Parameters eprm;
    VolumeXmipp vol_voxels;
-   GridVolume  vol_blobs, *vol_blobs_var=NULL;
-   Basic_ROUT_Art(prm,eprm,vol_voxels,vol_blobs, vol_blobs_var);
+   GridVolume  vol_blobs;
+   Basic_ROUT_Art(prm,eprm,vol_voxels,vol_blobs);
 }
 
 /* Finish iterations ------------------------------------------------------- */

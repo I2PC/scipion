@@ -27,6 +27,7 @@
 #include "Basic_art.inc"
 #include "../Prog_FourierFilter.hh"
 #include <XmippData/xmippWavelets.hh>
+#include <XmippData/Programs/Prog_denoising.hh>
 
 /* ------------------------------------------------------------------------- */
 /* Plain ART Parameters                                                      */
@@ -43,77 +44,28 @@ ostream & operator << (ostream &o, const Plain_ART_Parameters &eprm) {
 /* ------------------------------------------------------------------------- */
 /* Process correction                                                        */
 /* ------------------------------------------------------------------------- */
-void process_correction(Projection &corr_proj, 
-   Projection &theo_proj, GridVolume *vol_var) {
+void process_correction(Projection &corr_proj) {
    // Mask correction
-   double R2=vol_var->grid(0).R2;
-   if (R2!=-1)
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj())
-         if (i*i+j*j>R2) corr_proj(i,j)=0;
+   int Rmin=CEIL(MIN(XSIZE(corr_proj()),YSIZE(corr_proj()))/2);
+   int R2=Rmin*Rmin;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj()) 
+      if (i*i+j*j>R2) corr_proj(i,j)=0;
 
-   // Denoise correction
-   set_DWT_type(DAUB12);
-   DWT(corr_proj(),corr_proj());
-   bayesian_wiener_filtering(corr_proj(),1);
-   clean_quadrant(corr_proj(),0,"01");
-   clean_quadrant(corr_proj(),0,"10");
-   clean_quadrant(corr_proj(),0,"11");
-   IDWT(corr_proj(),corr_proj());
-
-   // Robust estimation of the variance
-   double min, max, avg, stddev, stddev_ant;
-   corr_proj().compute_stats(avg, stddev, min, max);
-   int N=1;
-   do {
-      stddev_ant=stddev;
-      max=3*stddev;
-      min=-max;
-
-      double sum=0, sum2=0;
-      int    N_accounted=0;
-
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj()) 
-         if (corr_proj(i,j)>=min && corr_proj(i,j)<=max) {
-            N_accounted++;
-	    sum+=corr_proj(i,j);
-	    sum2+=corr_proj(i,j)*corr_proj(i,j);
-         }
-
-      if (N_accounted!=0) {
-         sum2/=N_accounted;
-         sum /=N_accounted;
-         stddev=sqrt(sum2-sum*sum);
-      } else stddev=0;
-
-      N++;
-   } while (ABS(stddev-stddev_ant)/stddev>0.01 && N<10);
-
-   // Remove outliers
-   min=avg-2*stddev;
-   max=avg+2*stddev;
-   double avg_theo=theo_proj().compute_avg();
-   double min_theo=theo_proj().compute_avg();
-   double th_theo=0.5*(avg_theo+min_theo);
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj())
-      if (corr_proj(i,j)<min || corr_proj(i,j)>max)
-          corr_proj(i,j)=0;
-      //else if (theo_proj(i,j)<th_theo) corr_proj(i,j)=0;
-
-   // Low pass filter the result
-   FourierMask Filter;
-   Filter.FilterShape=RAISED_COSINE;
-   Filter.FilterBand=LOWPASS;
-   Filter.w1=0.25;
-   Filter.raised_w=0.02;
-   Filter.apply_mask_Space(corr_proj());
-   
-   // High pass filter the variance tracking
-   FourierMask Filter2;
-   Filter2.FilterShape=RAISED_COSINE;
-   Filter2.FilterBand=HIGHPASS;
-   Filter2.w1=0.04;
-   Filter2.raised_w=0.02;
-   Filter2.apply_mask_Space((*vol_var)(0)());
+   // Denoise the corrections
+   Denoising_parameters denoiser;
+   denoiser.denoising_type=Denoising_parameters::ADAPTIVE_SOFT;
+   denoiser.scale=3;
+   denoiser.output_scale=0;
+   denoiser.produce_side_info();
+   matrix2D<double> denoised=corr_proj();
+   denoiser.denoise(denoised);
+   ImageXmipp save; save()=corr_proj(); save.write("PPPbefore.xmp");
+   if (denoised(0,0)==denoised(0,0))
+      // This condition is not true if there are NaNs
+      corr_proj()=denoised;
+   save()=corr_proj(); save.write("PPPafter.xmp");
+   cout << "Press\n";
+   char c; cin >> c;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -144,7 +96,6 @@ void ART_single_step(
    const FileName          &fn_ctf,          // CTF to apply
    bool                    unmatched,        // Apply unmatched projectors
    double                  ray_length,       // Ray length for the projection
-   GridVolume              *vol_var,         // Keep track of the variance
    bool                    print_system_matrix) // Print matrix (A in Ax=b) of
                                              // the equation system, as well as
 					     // the independent vector (b)
@@ -201,10 +152,11 @@ void ART_single_step(
    // projection, ie, the projection of an all-1 volume
    matrix2D<double> *A=NULL;
    if (print_system_matrix) A=new matrix2D<double>;
+   corr_proj().init_zeros();
    project_Volume(vol_in,blob,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),FORWARD,prm.eq_mode,
-      prm.GVNeq,A,vol_var,prm.ray_length);
+      prm.GVNeq,A,prm.ray_length);
 
    if (fn_ctf!="" && unmatched)
       if (Is_FourierImageXmipp(fn_ctf)) {
@@ -263,13 +215,13 @@ void ART_single_step(
    mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
    
    // Denoising of the correction image
-   //if (vol_var!=NULL) process_correction(corr_proj,theo_proj,vol_var);
+   //process_correction(corr_proj);
 
    // Backprojection of correction plane ......................................
    project_Volume(*vol_out,blob,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
-      prm.GVNeq,NULL,vol_var,prm.ray_length);
+      prm.GVNeq,NULL,prm.ray_length);
 
    // Remove footprints if necessary
    if (remove_footprints) {
@@ -284,8 +236,8 @@ void instantiate_Plain_ART() {
    Basic_ART_Parameters prm;
    Plain_ART_Parameters eprm;
    VolumeXmipp vol_voxels;
-   GridVolume  vol_blobs, *vol_blobs_var=NULL;
-   Basic_ROUT_Art(prm,eprm,vol_voxels, vol_blobs, vol_blobs_var);
+   GridVolume  vol_blobs;
+   Basic_ROUT_Art(prm,eprm,vol_voxels, vol_blobs);
 }
 
 /* Finish iterations ------------------------------------------------------- */

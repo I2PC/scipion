@@ -76,7 +76,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
-   VolumeT<T> *vol_var=NULL, double ray_length=-1.0) {
+   double ray_length=-1.0) {
    matrix1D<double> zero(3);                // Origin (0,0,0) 
    matrix1D<double> prjPix(3);              // Position of the pixel within the
                                             // projection (used in VSSNR)
@@ -361,18 +361,6 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                            break;
                      }
                      VOLVOXEL(vol,k,i,j)+=correction;
-                     if (vol_var!=NULL) {
-                        bool interesting=grid.R2==-1 ||
-                           (sqrt(XX(univ_position)*XX(univ_position)+
-                           YY(univ_position)*YY(univ_position)+
-                           ZZ(univ_position)*ZZ(univ_position))+5<
-                           sqrt(grid.R2));
-                        if (interesting || true)
-                           VOLVOXEL(*vol_var,k,i,j)=(T)
-                              (0.99*VOLVOXEL(*vol_var,k,i,j)+
-                               0.01*ABS(correction));
-                               //0.005*ABS(correction));
-                     }
 
                      #ifdef DEBUG
                      if (condition) {
@@ -419,7 +407,6 @@ void project_Volume(
    int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
    GridVolumeT<int> *GVNeq,              // Number of equations per blob
    matrix2D<double> *M,                  // System matrix
-   GridVolumeT<T>   *vol_var,            // Volume to keep track of the variance
    double            ray_length)         // Ray length of the projection
 {
    // If projecting forward initialise projections
@@ -443,11 +430,9 @@ void project_Volume(
    // Project each subvolume
    for (int i=0; i<vol.VolumesNo(); i++) {
       VolumeT<int> *VNeq;
-      VolumeT<T>   *Vvar;
       if (GVNeq!=NULL)   VNeq=&((*GVNeq  )(i)); else VNeq=NULL;
-      if (vol_var!=NULL) Vvar=&((*vol_var)(i)); else Vvar=NULL;
       project_SimpleGrid(vol(i),vol.grid(i),blob,footprint,footprint2,
-         proj, norm_proj, FORW, eq_mode, VNeq, M, Vvar, ray_length);
+         proj, norm_proj, FORW, eq_mode, VNeq, M, ray_length);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
       if (FORW) save.write((string)"PPPnorm_FORW"+(char)(48+i));

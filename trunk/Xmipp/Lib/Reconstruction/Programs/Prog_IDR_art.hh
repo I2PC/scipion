@@ -74,8 +74,6 @@ public:
    FileName             fn_root;
    /// Side Info: Blob volume
    GridVolume           vol_blobs;
-   /// Side Info: Blob volume for the variance
-   GridVolume          *vol_blobs_var;
    /// Side Info: Lowpass filter
    FourierMask          Filter;
 public:
