@@ -176,6 +176,6 @@
 void Smoothing_Shah(matrix2D<double> &img, 
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    const matrix1D<double> &W, int OuterLoops, int InnerLoops,
-   int RefinementLoops);
+   int RefinementLoops, bool adjust_range=true);
 //@}
 #endif

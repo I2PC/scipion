@@ -1001,10 +1001,10 @@ double Update_edge_Shah(matrix2D<double> &img,
 void Smoothing_Shah(matrix2D<double> &img, 
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    const matrix1D<double> &W, int OuterLoops, int InnerLoops,
-   int RefinementLoops) {
+   int RefinementLoops, bool adjust_range) {
 
    type_cast(img,surface_strength);
-   surface_strength.range_adjust(0,1);
+   if (adjust_range) surface_strength.range_adjust(0,1);
    edge_strength.resize(img);
 
    for(int k=1; k<=RefinementLoops; k++) {
