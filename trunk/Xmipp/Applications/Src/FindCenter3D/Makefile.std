@@ -1,0 +1,5 @@
+######################################################################
+PROJ = findcenter3D
+OBJ  = findcenter3D.o
+LIBS = -l$(LIBXMIPP)
+
