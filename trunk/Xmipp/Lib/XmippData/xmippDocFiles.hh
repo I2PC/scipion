@@ -138,9 +138,9 @@ public:
    
    /** Read a Document Line.
        An exception is thrown if the line doesn't meet the Document
-       File specifications. If the fixed flag is set then the input
-       is read as an exact Fortran output.*/
-   void read(istream& i, bool fixed=FALSE) _THROW;
+       File specifications. First the line is read in a C way,
+       if it fails then the exact Fortran output is tried.*/
+   void read(istream& i) _THROW;
 };
 
 /*****************************************************************************/
@@ -239,13 +239,13 @@ public:
        is thrown if the file doesn't exist. Lines which do not fit the
        file format are ignored.
 
-       If the fixed flag is set then the Document File is read with
-       the exact structure provided by Fortran. It is specially useful
+       First the file is tried to be read in a loose C way. If it fails
+       then the Fortran style is tried. It is specially useful
        for reading files
        coming from Spider because there might be no space between
        two fields 
        \\Ex: DF.read("angles.doc"); */
-   void read(FileName _name, int overrinding=1, bool fixed=FALSE) _THROW;
+   void read(FileName _name, int overrinding=1) _THROW;
 
    /** Append a file from disk to an already read one.
        The old information on the variable is not lost. All lines in

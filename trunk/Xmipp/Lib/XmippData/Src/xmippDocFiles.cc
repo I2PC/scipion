@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include <fstream.h>
+#include <sstream>
 #include <stdio.h>
 #include "../xmippDocFiles.hh"
 #include "../xmippArgs.hh"
@@ -116,7 +117,7 @@ ostream& operator << (ostream& o, DocLine &DL) {
    return o;
 }
 
-void DocLine::read(istream& in, bool fixed) _THROW {
+void DocLine::read(istream& in) _THROW {
    string   line;
    int      key, param_no;
 
@@ -139,23 +140,20 @@ void DocLine::read(istream& in, bool fixed) _THROW {
 
    // Read a true document file line
    } else {
+      line_type=DocLine::DATALINE;
+      text="";
+      key=AtoI(first_token(line),1602,"Error reading key");
+      param_no=AtoI(next_token(),1602,"Error reading number parameters");
+      string auxline=line;
       try {
-         line_type=DocLine::DATALINE;
-         text="";
-         key=AtoI(first_token(line),1602,"Error reading key");
-         if (!fixed) {
-            param_no=AtoI(next_token(),1602,"Error reading number parameters");
-            read_float_list(NULL,param_no,data,1602,"Error reading doc file line");
-         } else {
-            param_no=CtoI(next_token(),1602,"Error reading number parameters");
-            data.reserve(param_no);
-            for (int i=0; i<param_no; i++)
-               data.push_back(AtoF(line.substr(8+i*12,12)));
-         }
-      }
-      catch (Xmipp_error) {
-         line_type=DocLine::NOT_ASSIGNED;
-         REPORT_ERROR(1602,"Line is discarded");
+         // Try unfixed mode first
+         read_float_list(NULL,param_no,data,1602,"Error reading doc file line");
+      } catch (Xmipp_error) {
+         // If doesn't work the try fix
+         data.reserve(param_no);
+         for (int i=0; i<param_no; i++) {
+            data.push_back(AtoF(line.substr(8+i*12,12)));
+	 }
       }
    }
 }
@@ -296,7 +294,7 @@ void DocFile::renum() {
 }
 
 /* Read -------------------------------------------------------------------- */
-void DocFile::read(FileName _name, int overriding, bool fixed=FALSE) _THROW {
+void DocFile::read(FileName _name, int overriding) _THROW {
    DocLine   temp;
    ifstream  fh_doc;
    int       line_no=1;
@@ -315,7 +313,7 @@ void DocFile::read(FileName _name, int overriding, bool fixed=FALSE) _THROW {
       #ifndef _NO_EXCEPTION
       try {
       #endif
-         temp.read(fh_doc,fixed);
+         temp.read(fh_doc);
       #ifndef _NO_EXCEPTION
       }
       catch (Xmipp_error) {
