@@ -36,14 +36,15 @@
 
 /**Scroll param class.
     This class opens a window for asking for the Scroll parameter.
-    It emits a signal called new_value(float).
+    It emits a signal called new_value(float). (precision is the number of 
+    digits used by the mantise)
     
     An example of use of this class is
     \begin{verbatim}
       // Create window
       ScrollParam* param_window=
            new ScrollParam(min,max, spacing, "Set spacing", 
-             0, "new window", WDestructiveClose);
+             0, "new window", WDestructiveClose, precision);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(float)), 
@@ -62,12 +63,13 @@ public:
         Provide the min_value, max_value, caption and initial_value.*/
     ScrollParam( float min, float max, float initial_value,
        char *caption, QWidget *parent = 0,
-       const char *name = 0, int wFlags=0  );
+       const char *name = 0, int wFlags=0, int precision=2  );
     ~ScrollParam();
 
 private:
    float     value;
    QLabel   *value_lab;   //test label for the current value of the slider
+   int       my_precision;
 private slots:
    void scrollValueChanged(int);
    void but_close_clicked();
