@@ -256,6 +256,22 @@ void ImageOver::init(int _vmin, int _vmax, int _vistep,
 //   STARTINGX(img)=_umin*_uistep - (_uistep-1)/2;
 }
 
+// Window ------------------------------------------------------------------
+void ImageOver::window(int _v0, int _u0, int _vF, int _uF) {
+   overvmin=_v0;
+   overumin=_u0;
+   overvmax=_vF;
+   overumax=_uF;
+   
+   int newYdim=(_vF-_v0)*vistep+1;
+   int newXdim=(_uF-_u0)*uistep+1;
+   img.set_Xmipp_origin();
+   img.window(FIRST_XMIPP_INDEX(newYdim),FIRST_XMIPP_INDEX(newXdim),
+      LAST_XMIPP_INDEX(newYdim),LAST_XMIPP_INDEX(newXdim));
+   STARTINGY(img)=0;
+   STARTINGX(img)=0;
+}
+
 // Clear -------------------------------------------------------------------
 void ImageOver::clear() {
    overvmin=overvmax=0;

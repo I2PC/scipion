@@ -219,7 +219,7 @@ public:
        \\ Ex: I.write() ---> Save
        \\ Ex: I.write("g0ta0001.raw") ---> Save as */
    void write(FileName name = "", bool reversed=FALSE,
-      Image_Type image_type=BYTE) _THROW;
+      Image_Type image_type=IBYTE) _THROW;
 
    /** Write image to disk using a file pointer.
        This is the core routine of the previous one. */
@@ -790,6 +790,10 @@ public:
        \\ Ex: IO.init(-2,2,51,-2,2,51); */
    void init(int _vmin, int _vmax, int _vistep,
              int _umin, int _umax, int _uistep);
+
+   /** Window.
+       Set a window in the logical space. */
+   void window(int _v0, int _u0, int _vF, int _uF);
 
    /** Empty image.
        A 0x0 image with no information about oversampling is produced.
