@@ -217,9 +217,11 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
    while (!fh.eof()) {
       getline(fh,line);
       if (line.length()>0 && line[0]!='#' && line[0]!=';') {
-         aux.X=AtoI(first_token(line));
-         aux.Y=AtoI(next_token());
-         coords.push_back(aux);
+      	 int converted_elements=sscanf(line.c_str(),"%d %d",
+	    &aux.X, &aux.Y);
+	 if (converted_elements!=2)
+	      cerr << "Ignoring line: " << line << endl;
+         else coords.push_back(aux);
       }
       fh.peek();
    }
