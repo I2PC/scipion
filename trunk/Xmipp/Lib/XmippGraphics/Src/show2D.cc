@@ -69,6 +69,7 @@ void ImageViewer::Init()
     options =  new QPopupMenu();
     menubar->insertItem( "&Options", options );
     ss = options->insertItem( "Set Spacing" );
+    ravg = options->insertItem( "Radial average" );
 
     menubar->insertSeparator();
 
@@ -199,6 +200,20 @@ void ImageViewer::doOption(int item)
       connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
       param_window->setFixedSize(250,200);
       param_window->show();
+    } else if (item == ravg) {
+      matrix1D<double> radial_profile;
+      matrix1D<int> center_of_rot(2), radial_count;
+      radial_average(xmippImage(),center_of_rot,radial_profile,radial_count);
+      radial_profile.write("PPP.txt");
+      ofstream fh_gplot;
+      fh_gplot.open("PPP.gpl");
+      if (!fh_gplot)
+         REPORT_ERROR(1,"ImageViewer::doOption: Cannot open PPP.gpl for output");
+      fh_gplot << "set xlabel \"Radius\"\n";
+      fh_gplot << "plot \"PPP.txt\" title \"Radial average\" w l\n";
+      fh_gplot << "pause 300 \"\"\n";
+      fh_gplot.close();
+      system("(gnuplot PPP.gpl; rm PPP.txt PPP.gpl) &");
     }
 }
 

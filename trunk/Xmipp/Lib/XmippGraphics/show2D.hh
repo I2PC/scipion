@@ -114,7 +114,7 @@ private:
     QPrinter   *printer;    
     QLabel     *status;
     QTimer     *timer;
-    int 	ss, si, pi ;
+    int 	ss, si, pi, ravg;
     void	Init();
     bool 	xmipp2Qt(Image& _image);
     bool 	Qt2xmipp(QImage &_image);
