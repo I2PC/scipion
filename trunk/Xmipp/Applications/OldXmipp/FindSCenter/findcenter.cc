@@ -45,7 +45,7 @@
 #include <OldXmipp/groe.h>
 #include <XmippData/xmippArgs.hh>
 
-CABECERO cabecero;
+//CABECERO cabecero;
 
 #define DEF_IT     5  /*Default iterations number */
 #define DEF_DEL    2
