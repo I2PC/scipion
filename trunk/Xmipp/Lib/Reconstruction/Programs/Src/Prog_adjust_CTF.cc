@@ -350,30 +350,38 @@ double save_intermidiate_results(const FileName &fn_root) {
       REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
    if (!plot_radial)
       REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
-   plotX << "# freq gaus ctf2\n";
-   plotY << "# freq gaus ctf2\n";
-   plot_radial << "# freq gaus ctf2\n";
+   plotX << "# freq_dig freq_angstrom gaus ctf2\n";
+   plotY << "# freq_dig freq_angstrom gaus ctf2\n";
+   plot_radial << "# freq_dig freq_angstrom gaus ctf2\n";
 
    double w;
    // Generate cut along X
    for (int i=STARTINGY(save()); i<=FINISHINGY(save())/2; i++) {
+      double model2=pow(10,save(i,0));
+      if (global_value_th!=-1 &&
+          ((*global_ctf_ampl2)(i,0)>global_value_th ||
+          model2>global_value_th)) continue;
       XX(idx)=0; YY(idx)=i;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>global_max_freq) continue;
       if (YY(freq)<0) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plotY << w << " " << YY(freq) << " " << pow(10,save(i,0)) << " "
+      plotY << w << " " << YY(freq) << " " << model2 << " "
 	    << (*global_ctf_ampl2)(i,0) << endl;
    }
 
    // Generate cut along Y
    for (int j=STARTINGX(save()); j<=FINISHINGX(save())/2; j++) {
+      double model2=pow(10,save(0,j));
+      if (global_value_th!=-1 &&
+          ((*global_ctf_ampl2)(0,j)>global_value_th ||
+          model2>global_value_th)) continue;
       XX(idx)=j; YY(idx)=0;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>global_max_freq) continue;
       if (XX(freq)<0) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plotX << w << " " << XX(freq) << " " << pow(10,save(0,j)) << " "
+      plotX << w << " " << XX(freq) << " " << model2 << " "
 	    << (*global_ctf_ampl2)(0,j) << endl;
    }
 
@@ -383,12 +391,17 @@ double save_intermidiate_results(const FileName &fn_root) {
    matrix1D<int>    radial_N(YSIZE(save())/2);
    for (int i=STARTINGY(save()); i<=FINISHINGY(save()); i++)
       for (int j=STARTINGX(save()); j<=FINISHINGX(save())/2; j++) {
+         double model2=pow(10.0,save(i,j));
+	 double model=save(i,j);
+	 if (global_value_th!=-1 &&
+	     ((*global_ctf_ampl2)(i,j)>global_value_th ||
+              model2>global_value_th)) model=log10(global_value_th);
 	 XX(idx)=j; YY(idx)=i;
 	 FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
 	 if (w<global_min_freq || w>global_max_freq) continue;
       	 
 	 int r=FLOOR(w*(double)YSIZE(save()));
-      	 radial_CTFmodel_avg(r)+=save(i,j);
+      	 radial_CTFmodel_avg(r)+=model;
 	 radial_CTFampl_avg(r)+=(*global_ctf_ampl2)(i,j);
 	 radial_N(r)++;
       }
