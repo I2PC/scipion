@@ -168,7 +168,7 @@ int main (int argc,char *argv[]) {
 	     if (col_psi==0  )  psi=0.;     else psi    = DF(ABS(col_psi)-1)*sign_psi;
 	     if (col_xshift==0 ) xshift=0.; else xshift = DF(ABS(col_xshift)-1)*sign_xshift;
 	     if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
-	     if (col_weight==0 ) weight=-1; else weight = DF(ABS(col_weight)-1);
+	     if (do_weights) {if (col_weight==0 ) weight=-1; else weight = DF(ABS(col_weight)-1);}
 
 	 
 	     // Assign angles
