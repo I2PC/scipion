@@ -34,7 +34,7 @@
 // Read arguments ==========================================================
 void Prog_align2d_prm::read(int argc, char **argv) _THROW  {
 
-  fn_sel=get_param(argc,argv,"-sel");
+  fn_sel=get_param(argc,argv,"-i");
   SF.read(fn_sel);
   // Filename for output reference
   fn_ave=fn_sel.without_extension()+".xmp";
@@ -105,22 +105,19 @@ void Prog_align2d_prm::show() {
 
 // usage ===================================================================
 void Prog_align2d_prm::usage() {
-  cerr << "Purpose:\n";
-  cerr << "    2-Dimensional alignment of images \n"<<endl;
-  cerr << "      a. If a reference is given, images are aligned wrt to the reference \n"<<endl;
-  cerr << "      b. otherwise, images are piramidally combined to construct an initial reference \n"<<endl;
-  cerr << endl;
-  cerr << "   -sel <selfile>           : Selfile containing images to be aligned \n"
-       << " [ -ref <image> ]           : reference image \n"
+  cerr << "Usage:  "<<endl;
+  cerr << "  align2d [options]"<<endl;
+  cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
+       << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
+       << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
+       << " [ -iter <int=4> ]          : Number of iterations to perform \n"
        << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
        << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
-       << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [in Ang!] \n"
-       << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [in Ang!] \n"
-       << " [ -iter <int=4> ]          : Number of iterations to perform \n"
-       << " [ -max_shift <float> ]     : Discard images which shift more in the last iteration\n"
-       << " [ -max_rot <float> ]       : Discard images which rotate more in the last iteration\n"
-       << " [ -oext <extension> ]      : For output images; if none provided: input will be overwritten \n"
-       << " [ -doc <docfile> ]         : write document file with rotations & translations \n"
+       << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
+       << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [Ang]; required for filtering. \n"
+       << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
+       << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
+       << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
        << " [ -ACF ]                   : Use Auto-Correlation Function alignment \n"
        << " [ -only_trans ]            : Skip translational alignment \n"
        << " [ -only_rot ]              : Skip rotational alignment \n"
@@ -452,7 +449,7 @@ void Prog_align2d_prm::do_pspc() _THROW {
   vector<ImageXmipp>  imgpspc;
   for (imgno=0;imgno<n_piram;imgno++) imgpspc.push_back(images[imgno]);
 
-  cerr << " Piramidal combination of "<<n_piram<<" images" <<endl;
+  cerr << "  Piramidal combination of "<<n_piram<<" images" <<endl;
   init_progress_bar(n_piram);
        
   imgno=0;
@@ -520,7 +517,7 @@ void Prog_align2d_prm::refinement() _THROW {
 
   
   n_refined=0;
-  cerr << "  Alignment:  iteration " << 1 <<" of "<< Niter <<endl;
+  cerr << "  Alignment:  iteration " << 1 <<" of "<< Niter << " (with "<<n_images<<" images)" <<endl;
   for (int iter=0; iter < Niter; iter++) {
 
     if (iter>0) cerr<<"  Refinement: iteration "<<iter+1<<" of "<<Niter<<endl;
@@ -687,7 +684,7 @@ void Prog_align2d_prm::align2d() _THROW {
     else SFo.insert(fn_out,SelLine::DISCARDED);
   }
   fn_out=fn_sel;
-  if (oext!="") fn_out=fn_out.insert_before_extension(oext);
+  if (oext!="") fn_out=fn_out.insert_before_extension("_"+oext);
   SFo.write(fn_out);
   
   images.clear();
