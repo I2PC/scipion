@@ -140,7 +140,7 @@ int main( int argc, char **argv ) {
 }
 
 void Usage() {
-    cout << "Usage: showsel [options]\n"
+    cout << "Usage: show [options]\n"
          << "    -img <images> |       : Input images\n"
          << "    -sel <selfiles> |     : Input selfiles\n"
          << "    -vol <XmippVolumes>   : Add x or y to the filename\n"
