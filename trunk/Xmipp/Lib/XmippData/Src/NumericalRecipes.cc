@@ -1464,7 +1464,7 @@ void svdcmp(double *a,int m,int n,double *w, double *v)
 				}
 				break;
 			}
-			if (its == 30) nrerror("No convergence in 30 SVDCMP iterations");
+			if (its == 60) nrerror("No convergence in 60 SVDCMP iterations");
 			x=w[l];
 			nm=k-1;
 			y=w[nm];
