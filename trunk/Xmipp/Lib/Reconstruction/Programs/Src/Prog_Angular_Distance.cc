@@ -190,15 +190,17 @@ double Prog_angular_distance_prm::compute_distance() {
    DF_out.reserve(DF1.dataLineNo());
    
    int dim=DF1.FirstLine_ColNo();
-   matrix1D<double> aux(10);
-   matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff;
+   matrix1D<double> aux(16);
+   matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
    rot_diff.resize(DF1.dataLineNo());
    tilt_diff.resize(rot_diff);
    psi_diff.resize(rot_diff);
    vec_diff.resize(rot_diff);   
+   X_diff.resize(rot_diff);   
+   Y_diff.resize(rot_diff);   
 
    // Build output comment
-   DF_out.append_comment("rot1 rot2 diff_rot  tilt1 tilt2 diff_tilt psi1 psi2 diff_psi corr");
+   DF_out.append_comment("            rot1       rot2    diff_rot     tilt1      tilt2    diff_tilt    psi1       psi2     diff_psi   ang_dist      X1         X2        Xdiff       Y1          Y2       Ydiff");
 
    int i=0;
    while (!DF1.eof()) {
@@ -207,12 +209,17 @@ double Prog_angular_distance_prm::compute_distance() {
       double rot2,  tilt2,  psi2;
       double rot2p, tilt2p, psi2p;
       double distp;
+      double X1, X2, Y1, Y2;
       if (dim>=1) {rot1=DF1(0); rot2=DF2(0);}
       else        {rot1=rot2=0;}
       if (dim>=2) {tilt1=DF1(1); tilt2=DF2(1);}
       else        {tilt1=tilt2=0;}
       if (dim>=3) {psi1=DF1(2); psi2=DF2(2);}
       else        {psi1=psi2=0;}
+      if (dim>=4) {X1=DF1(3); X2=DF2(3);}
+      else        {X1=X2=0;}
+      if (dim>=5) {Y1=DF1(4); Y2=DF2(4);}
+      else        {Y1=Y2=0;}
       
       // Bring both angles to a normalized set
       rot1=realWRAP(rot1,-180,180);
@@ -234,12 +241,16 @@ double Prog_angular_distance_prm::compute_distance() {
       tilt_diff(i)=tilt1-tilt2p;
       psi_diff(i)=psi1-psi2p;
       vec_diff(i)=distp;
+      X_diff(i)=X1-X2;
+      Y_diff(i)=Y1-Y2;
       
       // Fill the output result
       aux(0)=rot1;  aux(1)=rot2p;  aux(2)=rot_diff(i);
       aux(3)=tilt1; aux(4)=tilt2p; aux(5)=tilt_diff(i);
       aux(6)=psi1;  aux(7)=psi2p;  aux(8)=psi_diff(i);
       aux(9)=distp;
+      aux(10)=X1;   aux(11)=X2;    aux(12)=X_diff(i);
+      aux(13)=Y1;   aux(14)=Y2;    aux(15)=Y_diff(i);
       dist+=distp;
       DF_out.append_data_line(aux);
 
@@ -261,6 +272,10 @@ double Prog_angular_distance_prm::compute_distance() {
       hist.write(fn_ang_out+"_psi_diff_hist.txt");
       compute_hist(vec_diff,hist,0,90,91);
       hist.write(fn_ang_out+"_vec_diff_hist.txt");
+      compute_hist(X_diff,hist,20);
+      hist.write(fn_ang_out+"_X_diff_hist.txt");
+      compute_hist(Y_diff,hist,20);
+      hist.write(fn_ang_out+"_Y_diff_hist.txt");
    }
    return dist;
 }
