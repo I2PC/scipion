@@ -89,8 +89,11 @@ protected:
     virtual void producePixmapAt(int i);
     /* Open a new file. Old parameters must be discarded */
             void openNewFile (const FileName &);
-    /* Read a Selfile */
+    /* Read a Selfile.
+       It performs some initializatrion and then calls to readSelFile*/
     virtual void readFile(const FileName &_fn) _THROW;
+    /* Really read a SelFile. */
+    virtual void readSelFile(const FileName &_fn) _THROW;
     /* Read a SelFile object */
     virtual void readObject(SelFile &SF);
     /* Update the label with the filename at cell i*/

@@ -75,6 +75,10 @@ void ShowSel::readFile(const FileName &_fn) _THROW {
     clear();
     fn              = _fn;
     setCaption(fn.c_str());
+    readSelFile(_fn);
+}
+
+void ShowSel::readSelFile(const FileName &_fn) _THROW {
     SelFile         SF(_fn);
     annotateTime(_fn);
     readObject(SF);
