@@ -44,11 +44,11 @@ endif
 
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) $(FINAL_COMPILERFLAGS) $*.cc -o $*.o
+	@$(CC) $(FINAL_COMPILERFLAGS) $*.cc -o $*.o -c
 
 .c.o:
 	@echo "Compiling" $*.c "..."
-	@gcc $(FINAL_COMPILERFLAGS) $*.c -o $*.o
+	@gcc $(FINAL_COMPILERFLAGS) $*.c -o $*.o -c
 
 .hh.moc:
 	@echo "Generating MOC for" $*.hh "..."
