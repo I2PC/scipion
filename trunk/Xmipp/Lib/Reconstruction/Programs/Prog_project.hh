@@ -101,10 +101,11 @@ struct Angle_range {
    #define ANGLE_RANGE_DETERMINISTIC 0
    #define ANGLE_RANGE_RANDOM_GROUPS 1
    #define ANGLE_RANGE_RANDOM        2
+   #define ANGLE_EVENLY              3
    /** Kind of range.
        The kind of range can be any of these three:
        ANGLE_RANGE_DETERMINISTIC, ANGLE_RANGE_RANDOM_GROUPS,
-       ANGLE_RANGE_RANDOM */
+       ANGLE_RANGE_RANDOM, ANGLE_EVENLY */
    int      randomness;
    /// Mean of the noise that must be added to the definition of the angle
    double    Navg;
