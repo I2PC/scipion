@@ -214,6 +214,10 @@ template <class T>
    matrix1D<double> temp;
    
    if (XSIZE(*this)==0) return indx;
+   if (XSIZE(*this)==1) {
+      indx.resize(1); indx(0)=1;
+      return indx;
+   }
    
    // Initialise data
    indx.resize(xdim);
