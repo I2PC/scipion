@@ -83,7 +83,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       fn_voxel_phantom=get_param(fh_param,"voxel phantom",0,"");
       fn_crystal=get_param(fh_param,"crystal parameters",0,"");
       fn_sym    =get_param(fh_param,"symmetry file",0,"");
-      force_sym =AtoI(get_param(fh_param,"force symmetry",0,"-1"));
+      force_sym =AtoI(get_param(fh_param,"force symmetry",0,"0"));
       do_not_use_symproj =check_param(fh_param,"no projsym");
       fn_final_sym=get_param(fh_param,"final symmetry file",0,"");
       fn_CTF=get_param(fh_param,"CTF",0,"");
@@ -607,6 +607,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
       GridVolume           vol_blobs;
 
       art_prm.default_values();
+      // art_prm.tell |= TELL_SHOW_ERROR;
+      // art_prm.tell |= TELL_SAVE_AT_EACH_STEP;
       if (prm.blob_type==BIG_BLOB) {
          art_prm.blob.alpha=3.6;
          art_prm.grid_relative_size=2.26;
