@@ -1,1 +1,1 @@
-SUBDIRS = Src
+SUBDIRS = Src Batches
