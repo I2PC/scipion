@@ -3,7 +3,7 @@ FINAL_PROJ=$(XMIPP_PREFIX)$(PROJ)
 all:
 	@echo "Making $(FINAL_PROJ) ..."
 	echo "#!$(ENV) $(MYSHELL)" > $(FINAL_PROJ)
-	cat $(PROJ) >> $(FINAL_PROJ)
+	cat batch_$(PROJ) >> $(FINAL_PROJ)
 	@chmod 755 $(FINAL_PROJ)
 
 install: $(PROJ)
