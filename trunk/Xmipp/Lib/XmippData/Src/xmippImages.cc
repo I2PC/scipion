@@ -258,8 +258,9 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   {
 
     if (apply_geo || only_apply_shifts) {
-      // If NOT only_apply_shifts: flip image if requested
-      if (!only_apply_shifts && (ImageXmippT<T>::flip()==1.)) img.self_reverseX();
+      // Mirror image if requested in the header 
+      // Also mirror if only_apply_shifts, since Xoff in the header is assumed to be related with flip
+      if (ImageXmippT<T>::flip()==1.) img.self_reverseX();
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
       T  outside=DIRECT_MAT_ELEM(img,0,0);

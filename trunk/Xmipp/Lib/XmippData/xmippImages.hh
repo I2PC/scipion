@@ -407,10 +407,12 @@ public:
        If the image doesn't exist at the given path then an exception is
        thrown.
        
+       If apply_geo and/or only_apply_shifts, the image will be mirrored
+         if the img.flip() flag is set to 1.
        If only_apply_shifts is TRUE, then only the shifts of the header are
-       applied (even if apply_geo is FALSE).
+         applied (even if apply_geo is FALSE).
        If apply_geo is TRUE and only_apply_shifts is FALSE, then shifts
-       and in-plane rotation are applied. 
+         and in-plane rotation are applied. 
        
        If skip_type_check is FALSE, then the routine automatically checks
        the endianness of thee file, and reversed should be set to FALSE.
