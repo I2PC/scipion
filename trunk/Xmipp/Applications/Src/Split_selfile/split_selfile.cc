@@ -38,7 +38,7 @@ int main( int argc, char **argv ) {
     fn_in=get_param(argc,argv,"-sel");
     N=AtoI(get_param(argc,argv,"-n","2"));
     fn_root=get_param(argc,argv,"-o","");
-    if (fn_root=="") fn_root=fn_in;
+    if (fn_root=="") fn_root=fn_in.without_extension();
     SFin.read(fn_in);
   }  catch (Xmipp_error) {Usage(); exit(1);}
 
@@ -60,6 +60,7 @@ int main( int argc, char **argv ) {
       SFout=SFtmp2;
       string num="_"+ItoA(i+1);
       fn_out=fn_root.insert_before_extension(num);
+      fn_out+=".sel";
       SFout.write(fn_out);
     }
 
