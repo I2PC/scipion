@@ -69,8 +69,8 @@ extern int		FirConvolveAntiSymmetric
 /** FIR Convolve Antisymmetric 3D.
     The specified boundary convention applies to the input data only,
     not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. VolumeSource is a (float)volume of size (Nx x Ny x Nz).
-    OutputData is a (float)volume of size (Nx x Ny x Nz). The origin for the
+    FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+    OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
     kernel is its leftmost sample; it corresponds to its anti-symmetry axis.
     The full length of the amti-symmetric kernel is (2L * KernelHalfLength - 1L).
     The 1D kernel is applied successively to each principal direction in a
@@ -90,8 +90,8 @@ extern int		FirConvolveAntiSymmetric
 */
 extern int		FirConvolveAntiSymmetricVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -138,8 +138,8 @@ extern int		FirConvolveSymmetric
 /** FIR Convolve Symmetric 3D.
     The specified boundary convention applies to the input data only,
     not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. VolumeSource is a (float)volume of size (Nx x Ny x Nz).
-    OutputData is a (float)volume of size (Nx x Ny x Nz). The origin for the
+    FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+    OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
     kernel is its leftmost sample; it corresponds to its symmetry axis.
     The full length of the symmetric kernel is (2L * KernelHalfLength - 1L).
     The 1D kernel is applied successively to each principal direction in a
@@ -159,8 +159,8 @@ extern int		FirConvolveSymmetric
 */
 extern int		FirConvolveSymmetricVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */

@@ -19,6 +19,7 @@
 #include	"changebasis.h"
 #include	"firconvolve.h"
 #include	"getpoles.h"
+#include	"getputd.h"
 #include	"getput.h"
 #include	"iirconvolve.h"
 #include	"kernel.h"
@@ -339,8 +340,8 @@ extern int		ChangeBasis
 /*--------------------------------------------------------------------------*/
 extern int		ChangeBasisVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -356,15 +357,15 @@ extern int		ChangeBasisVolume
 				)
 
 /* change a volume of spline coefficients from a source basis into a destination basis */
-/* VolumeSource is a (float)volume of size (Nx x Ny x Nz) */
-/* OutputData is a (float)volume of size (Nx x Ny x Nz) */
+/* VolumeSource is a (double)volume of size (Nx x Ny x Nz) */
+/* OutputData is a (double)volume of size (Nx x Ny x Nz) */
 /* success: return(!ERROR); failure: return(ERROR) */
 
 { /* begin ChangeBasisVolume */
 
 	double	*p;
 	double	*HalfKernel = (double *)NULL, *RealPoles = (double *)NULL;
-	float	*Buffer;
+	double	*Buffer;
 	long	KernelHalfLength, PoleNumber;
 	long	i;
 
@@ -406,8 +407,8 @@ extern int		ChangeBasisVolume
 		case BasicSpline:
 			switch (ToBasis) {
 				case BasicSpline:
-					VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-						(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+					VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+						(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 					break;
 				case CardinalSpline:
 					KernelHalfLength = Degree / 2L + 1L;
@@ -455,8 +456,8 @@ extern int		ChangeBasisVolume
 					switch (Degree) {
 						case 0L:
 						case 1L:
-							VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-								(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+							VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+								(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 							break;
 						default:
 							PoleNumber = Degree / 2L;
@@ -483,11 +484,11 @@ extern int		ChangeBasisVolume
 					}
 					break;
 				case CardinalSpline:
-					VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-						(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+					VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+						(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 					break;
 				case DualSpline:
-					AllocateVolumeFloat(&Buffer, Nx, Ny, Nz, Status);
+					AllocateVolumeDouble(&Buffer, Nx, Ny, Nz, Status);
 					if (*Status == ERROR) {
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
@@ -496,7 +497,7 @@ extern int		ChangeBasisVolume
 						CardinalSpline, BasicSpline, Degree,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
@@ -504,14 +505,14 @@ extern int		ChangeBasisVolume
 						BasicSpline, CardinalSpline, 2L * Degree + 1L,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
-					*Status = FreeVolumeFloat(&Buffer);
+					*Status = FreeVolumeDouble(&Buffer);
 					break;
 				case OrthogonalSpline:
-					AllocateVolumeFloat(&Buffer, Nx, Ny, Nz, Status);
+					AllocateVolumeDouble(&Buffer, Nx, Ny, Nz, Status);
 					if (*Status == ERROR) {
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
@@ -520,7 +521,7 @@ extern int		ChangeBasisVolume
 						CardinalSpline, BasicSpline, Degree,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
@@ -528,11 +529,11 @@ extern int		ChangeBasisVolume
 						BasicSpline, OrthogonalSpline, Degree,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
-					*Status = FreeVolumeFloat(&Buffer);
+					*Status = FreeVolumeDouble(&Buffer);
 					break;
 				default:
 					*Status = ERROR;
@@ -548,7 +549,7 @@ extern int		ChangeBasisVolume
 						Convention, Tolerance, Status);
 					break;
 				case CardinalSpline:
-					AllocateVolumeFloat(&Buffer, Nx, Ny, Nz, Status);
+					AllocateVolumeDouble(&Buffer, Nx, Ny, Nz, Status);
 					if (*Status == ERROR) {
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
@@ -557,7 +558,7 @@ extern int		ChangeBasisVolume
 						CardinalSpline, BasicSpline, 2L * Degree + 1L,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
@@ -565,15 +566,15 @@ extern int		ChangeBasisVolume
 						BasicSpline, CardinalSpline, Degree,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
-					*Status = FreeVolumeFloat(&Buffer);
+					*Status = FreeVolumeDouble(&Buffer);
 					break;
 				case DualSpline:
-					VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-						(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+					VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+						(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 					break;
 				case OrthogonalSpline:
 					ChangeBasisVolume(VolumeSource, VolumeDestination, Nx, Ny, Nz,
@@ -593,7 +594,7 @@ extern int		ChangeBasisVolume
 					WRITE_ERROR(ChangeBasisVolume, "Not yet implemented")
 					break;
 				case CardinalSpline:
-					AllocateVolumeFloat(&Buffer, Nx, Ny, Nz, Status);
+					AllocateVolumeDouble(&Buffer, Nx, Ny, Nz, Status);
 					if (*Status == ERROR) {
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
@@ -602,7 +603,7 @@ extern int		ChangeBasisVolume
 						OrthogonalSpline, BasicSpline, Degree,
 						Convention, Tolerance, Status);
 					if (*Status == ERROR) {
-						FreeVolumeFloat(&Buffer);
+						FreeVolumeDouble(&Buffer);
 /**/					DEBUG_WRITE_LEAVING(ChangeBasisVolume, "Done")
 						return(*Status);
 					}
@@ -616,8 +617,8 @@ extern int		ChangeBasisVolume
 						Convention, Tolerance, Status);
 					break;
 				case OrthogonalSpline:
-					VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-						(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+					VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+						(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 					break;
 				default:
 					*Status = ERROR;

@@ -964,6 +964,39 @@ extern int		MatrixTranspose
 } /* end MatrixTranspose */
 
 /*--------------------------------------------------------------------------*/
+int		multiply_3Matrices(	double	*A,			 /* left matrix operand */
+							double	*B,			 /* middle maxtrix operand */
+							double	*C,			 /* right maxtrix operand */
+							double	*X,			 /* resulting matrix */
+							long	Lines,		 /* height (left and resulting) */
+							long	CommonSizeH, /* left width and middle hight */
+							long	CommonSizeW, /* right hight and middle width */
+							long	Columns		 /* width (right and resulting) */ ) {
+
+double	*Help;
+
+Help = (double *)malloc((size_t)(Columns * CommonSizeH) * sizeof(double));
+if (Help == (double *)NULL){ 
+	WRITE_ERROR( multiply_3Matrices, "ERROR - Not enough memory for Help");
+	return(ERROR);
+}
+
+
+if (MatrixMultiply(B, C, Help, CommonSizeH, CommonSizeW, Columns) == ERROR){ 
+	WRITE_ERROR( multiply_3Matrices, "Error returned by MatrixMultiply");
+	return(ERROR);
+}
+if (MatrixMultiply(A, Help, X, Lines, CommonSizeH, Columns) == ERROR){
+	WRITE_ERROR( multiply_3Matrices, "Error returned by MatrixMultiply"); 
+	return(ERROR);
+}
+
+free(Help);
+
+return(!ERROR);
+}
+
+/*--------------------------------------------------------------------------*/
 extern int		QRdecomposition
 				(
 					double	*Q,					/* in-place matrix */

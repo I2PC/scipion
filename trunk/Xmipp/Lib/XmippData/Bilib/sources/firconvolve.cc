@@ -19,6 +19,7 @@
  ****************************************************************************/
 #include	"firconvolve.h"
 #include	"getput.h"
+#include	"getputd.h"
 #include	"messagedisplay.h"
 
 /*****************************************************************************
@@ -1147,8 +1148,8 @@ extern int		FirConvolveAntiSymmetric
 /*--------------------------------------------------------------------------*/
 extern int		FirConvolveAntiSymmetricVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -1160,8 +1161,8 @@ extern int		FirConvolveAntiSymmetricVolume
 
 /* the specified boundary convention applies to the input data only, not to the kernel */
 /* the boundary convention applied to the kernel is FiniteDataSupport */
-/* VolumeSource is a (float)volume of size (Nx x Ny x Nz) */
-/* OutputData is a (float)volume of size (Nx x Ny x Nz) */
+/* VolumeSource is a (double)volume of size (Nx x Ny x Nz) */
+/* OutputData is a (double)volume of size (Nx x Ny x Nz) */
 /* the origin for the kernel is its leftmost sample; it corresponds to its anti-symmetry axis */
 /* the full length of the amti-symmetric kernel is (2L * KernelHalfLength - 1L) */
 /* the 1D kernel is applied successively to each principal direction in a separable fashion */
@@ -1228,7 +1229,7 @@ extern int		FirConvolveAntiSymmetricVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (j = 0L; (j < Ny); j++) {
-				Status = GetxFloatToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, InBuffer, Nx);
+				Status = GetxDoubleToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, InBuffer, Nx);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -1243,7 +1244,7 @@ extern int		FirConvolveAntiSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveAntiSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutxDoubleToFloat(VolumeDestination, Nx, Ny, Nz, 0L, j, k, OutBuffer, Nx);
+				Status = PutxDoubleToDouble(VolumeDestination, Nx, Ny, Nz, 0L, j, k, OutBuffer, Nx);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -1265,8 +1266,8 @@ extern int		FirConvolveAntiSymmetricVolume
 		}
 	}
 	else {
-		VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-			(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+		VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+			(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 	}
 	if (1L < Ny) {
 		AllocateLineDouble(&InBuffer, Ny, &Status);
@@ -1282,7 +1283,7 @@ extern int		FirConvolveAntiSymmetricVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (i = 0L; (i < Nx); i++) {
-				Status = GetyFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, InBuffer, Ny);
+				Status = GetyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, InBuffer, Ny);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -1297,7 +1298,7 @@ extern int		FirConvolveAntiSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveAntiSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutyDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, 0L, k, OutBuffer, Ny);
+				Status = PutyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, OutBuffer, Ny);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -1332,7 +1333,7 @@ extern int		FirConvolveAntiSymmetricVolume
 		}
 		for (j = 0L; (j < Ny); j++) {
 			for (i = 0L; (i < Nx); i++) {
-				Status = GetzFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, InBuffer, Nz);
+				Status = GetzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, InBuffer, Nz);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -1347,7 +1348,7 @@ extern int		FirConvolveAntiSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveAntiSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutzDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, j, 0L, OutBuffer, Nz);
+				Status = PutzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, OutBuffer, Nz);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2195,8 +2196,8 @@ extern int		FirConvolveSymmetric
 /*--------------------------------------------------------------------------*/
 extern int		FirConvolveSymmetricVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -2208,8 +2209,8 @@ extern int		FirConvolveSymmetricVolume
 
 /* the specified boundary convention applies to the input data only, not to the kernel */
 /* the boundary convention applied to the kernel is FiniteDataSupport */
-/* VolumeSource is a (float)volume of size (Nx x Ny x Nz) */
-/* OutputData is a (float)volume of size (Nx x Ny x Nz) */
+/* VolumeSource is a (double)volume of size (Nx x Ny x Nz) */
+/* OutputData is a (double)volume of size (Nx x Ny x Nz) */
 /* the origin for the kernel is its leftmost sample; it corresponds to its symmetry axis */
 /* the full length of the symmetric kernel is (2L * KernelHalfLength - 1L) */
 /* the 1D kernel is applied successively to each principal direction in a separable fashion */
@@ -2276,7 +2277,7 @@ extern int		FirConvolveSymmetricVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (j = 0L; (j < Ny); j++) {
-				Status = GetxFloatToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, InBuffer, Nx);
+				Status = GetxDoubleToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, InBuffer, Nx);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2291,7 +2292,7 @@ extern int		FirConvolveSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutxDoubleToFloat(VolumeDestination, Nx, Ny, Nz, 0L, j, k, OutBuffer, Nx);
+				Status = PutxDoubleToDouble(VolumeDestination, Nx, Ny, Nz, 0L, j, k, OutBuffer, Nx);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2313,8 +2314,8 @@ extern int		FirConvolveSymmetricVolume
 		}
 	}
 	else {
-		VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-			(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+		VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+			(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 	}
 	if (1L < Ny) {
 		AllocateLineDouble(&InBuffer, Ny, &Status);
@@ -2330,7 +2331,7 @@ extern int		FirConvolveSymmetricVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (i = 0L; (i < Nx); i++) {
-				Status = GetyFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, InBuffer, Ny);
+				Status = GetyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, InBuffer, Ny);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2345,7 +2346,7 @@ extern int		FirConvolveSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutyDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, 0L, k, OutBuffer, Ny);
+				Status = PutyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, OutBuffer, Ny);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2380,7 +2381,7 @@ extern int		FirConvolveSymmetricVolume
 		}
 		for (j = 0L; (j < Ny); j++) {
 			for (i = 0L; (i < Nx); i++) {
-				Status = GetzFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, InBuffer, Nz);
+				Status = GetzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, InBuffer, Nz);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);
@@ -2395,7 +2396,7 @@ extern int		FirConvolveSymmetricVolume
 /**/				DEBUG_WRITE_LEAVING(FirConvolveSymmetricVolume, "Done")
 					return(Status);
 				}
-				Status = PutzDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, j, 0L, OutBuffer, Nz);
+				Status = PutzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, OutBuffer, Nz);
 				if (Status == ERROR) {
 					FreeLineDouble(&OutBuffer);
 					FreeLineDouble(&InBuffer);

@@ -56,14 +56,14 @@ extern int		IirConvolvePoles
 /*--------------------------------------------------------------------------*/
 /** The filter is defined by its poles (3D).
     No more than two poles are allowed for a finite support boundary.
-    VolumeSource is a (float)volume of size (Nx x Ny x Nz).
-    OutputData is a (float)volume of size (Nx x Ny x Nz).
+    VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+    OutputData is a (double)volume of size (Nx x Ny x Nz).
     
     success: return(!ERROR); failure: return(ERROR) */
 extern int		IirConvolvePolesVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */

@@ -20,6 +20,7 @@
  ****************************************************************************/
 #include	"../headers/convert.h"
 #include	"getput.h"
+#include	"getputd.h"
 #include	"iirconvolve.h"
 #include	"messagedisplay.h"
 #include	"positivepower.h"
@@ -631,8 +632,8 @@ extern int		IirConvolvePoles
 /*--------------------------------------------------------------------------*/
 extern int		IirConvolvePolesVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -645,8 +646,8 @@ extern int		IirConvolvePolesVolume
 				)
 
 /* no more than two poles are allowed for a finite support boundary */
-/* VolumeSource is a (float)volume of size (Nx x Ny x Nz) */
-/* OutputData is a (float)volume of size (Nx x Ny x Nz) */
+/* VolumeSource is a (double)volume of size (Nx x Ny x Nz) */
+/* OutputData is a (double)volume of size (Nx x Ny x Nz) */
 /* success: return(!ERROR); failure: return(ERROR) */
 
 { /* begin IirConvolvePolesVolume */
@@ -704,7 +705,7 @@ extern int		IirConvolvePolesVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (j = 0L; (j < Ny); j++) {
-				*Status = GetxFloatToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, Buffer, Nx);
+				*Status = GetxDoubleToDouble(VolumeSource, Nx, Ny, Nz, 0L, j, k, Buffer, Nx);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);
@@ -719,7 +720,7 @@ extern int		IirConvolvePolesVolume
 /**/				DEBUG_WRITE_LEAVING(IirConvolvePolesVolume, "Done")
 					return(*Status);
 				}
-				*Status = PutxDoubleToFloat(VolumeDestination, Nx, Ny, Nz, 0L, j, k, cBuffer, Nx);
+				*Status = PutxDoubleToDouble(VolumeDestination, Nx, Ny, Nz, 0L, j, k, cBuffer, Nx);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);
@@ -741,8 +742,8 @@ extern int		IirConvolvePolesVolume
 		}
 	}
 	else {
-		VolumeDestination = (float *)memcpy(VolumeDestination, VolumeSource,
-			(size_t)(Nx * Ny * Nz * (long)sizeof(float)));
+		VolumeDestination = (double *)memcpy(VolumeDestination, VolumeSource,
+			(size_t)(Nx * Ny * Nz * (long)sizeof(double)));
 	}
 	if (1L < Ny) {
 		AllocateLineDouble(&Buffer, Ny, Status);
@@ -758,7 +759,7 @@ extern int		IirConvolvePolesVolume
 		}
 		for (k = 0L; (k < Nz); k++) {
 			for (i = 0L; (i < Nx); i++) {
-				*Status = GetyFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, Buffer, Ny);
+				*Status = GetyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, Buffer, Ny);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);
@@ -773,7 +774,7 @@ extern int		IirConvolvePolesVolume
 /**/				DEBUG_WRITE_LEAVING(IirConvolvePolesVolume, "Done")
 					return(*Status);
 				}
-				*Status = PutyDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, 0L, k, cBuffer, Ny);
+				*Status = PutyDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, 0L, k, cBuffer, Ny);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);
@@ -808,7 +809,7 @@ extern int		IirConvolvePolesVolume
 		}
 		for (j = 0L; (j < Ny); j++) {
 			for (i = 0L; (i < Nx); i++) {
-				*Status = GetzFloatToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, Buffer, Nz);
+				*Status = GetzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, Buffer, Nz);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);
@@ -823,7 +824,7 @@ extern int		IirConvolvePolesVolume
 /**/				DEBUG_WRITE_LEAVING(IirConvolvePolesVolume, "Done")
 					return(*Status);
 				}
-				*Status = PutzDoubleToFloat(VolumeDestination, Nx, Ny, Nz, i, j, 0L, cBuffer, Nz);
+				*Status = PutzDoubleToDouble(VolumeDestination, Nx, Ny, Nz, i, j, 0L, cBuffer, Nz);
 				if (*Status == ERROR) {
 					FreeLineDouble(&cBuffer);
 					FreeLineDouble(&Buffer);

@@ -177,6 +177,23 @@ extern int		MatrixTranspose
 				);
 
 /*--------------------------------------------------------------------------*/
+/** Multiply 3 Matrices.
+    X=A*B*C; A is of size Lines x CommonSizeH,
+             B is of size CommonSizeH x CommonSizeW,
+             C is of size CommonSizeW x Columns.
+             Finally, X is of size Lines x Columns.
+*/
+int		multiply_3Matrices(	double	*A,	
+					double	*B,	
+					double	*C,	
+					double	*X,
+					long	Lines,
+					long	CommonSizeH,
+					long	CommonSizeW,
+					long	Columns
+                                   );
+
+/*--------------------------------------------------------------------------*/
 /** Decompose the (Lines x Columns) input matrix Q into an orthonormal.
     Output matrix Q of same size (Lines x Columns) and an upper-diagonal.
     Square matrix R of size (Columns x Columns), such that the matrix.

@@ -29,15 +29,15 @@ extern int		ChangeBasis
 /** Spline transform 3D.
     Change a volume of spline coefficients from a source basis into a
     destination basis.
-    VolumeSource is a (float)volume of size (Nx x Ny x Nz).
-    OutputData is a (float)volume of size (Nx x Ny x Nz).
+    VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+    OutputData is a (double)volume of size (Nx x Ny x Nz).
     
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int		ChangeBasisVolume
 				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
+					double	*VolumeSource,		/* data to process */
+					double	*VolumeDestination,	/* result */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
