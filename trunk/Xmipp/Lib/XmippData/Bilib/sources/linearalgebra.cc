@@ -1426,7 +1426,7 @@ extern int		SingularValueDecomposition
 			if (its == MaxIterations) {
 				*Status = ERROR;
 				FreeMatrix(&rv1);
-				WRITE_ERROR(SingularValueDecomposition, "No convergence")
+				//WRITE_ERROR(SingularValueDecomposition, "No convergence")
 /**/			DEBUG_WRITE_LEAVING(SingularValueDecomposition, "Done")
 				return(*Status);
 			}
