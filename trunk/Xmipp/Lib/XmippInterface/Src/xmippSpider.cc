@@ -566,11 +566,10 @@ void Angular_refinement_Matching(const FileName &fn_vol,
                          DF_report.write((string)"apmq."+fn_ext);
 
    // Call again spider to get the assigned angles
-   spider_batch.open(((string)"b01."+fn_ext).c_str());
+   spider_batch.open(((string)"b02."+fn_ext).c_str());
    if (!spider_batch)
       REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
    spider_batch
-      // If the output document file for reference angles exists, delete it
       << "vo md\n"
       << "   refangles\n"        // vo ea docfile
       << "   apmq\n"             // apmq output docfile
@@ -579,14 +578,12 @@ void Angular_refinement_Matching(const FileName &fn_vol,
       << "   projlist\n"
       << "de\n"
       << "   experimentalsel\n"
-      << "de\n"
-      << "   refangles\n"
       << "en\n"
    ;
    spider_batch.close();
-   system(((string)spider_prog+" "+fn_ext+" b01").c_str());
+   system(((string)spider_prog+" "+fn_ext+" b02").c_str());
    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
-    "* b01*."+fn_ext).c_str());
+    "* "/*+"b01*."+fn_ext*/).c_str());
 
    DocFile DF_assigned_angles, DF_report_standard;
    DF_assigned_angles.read((string)"assigned_angles."+fn_ext);
