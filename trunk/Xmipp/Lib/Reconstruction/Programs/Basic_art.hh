@@ -176,6 +176,7 @@ public:
    /// Print system matrix
    bool print_system_matrix;
    
+   #define TELL_IV   		     0x100
    #define TELL_ONLY_SYM	     0x80
    #define TELL_USE_INPUT_BLOBVOLUME 0x40
    #define TELL_SHOW_ERROR           0x20
@@ -186,6 +187,9 @@ public:
    #define TELL_STATS                0x1
    /** Debugging level.
        This is a bit valued field, you can set the following bits
+       \\TELL_IV: Show intermidiate images if saved,
+       \\         Show the reconstructed volume each time the progress
+                  bar is updated.
        \\TELL_ONLY_SYM: Skip all the extra projections created using the
           samle symmetry
        \\TELL_USE_INPUT_BLOBVOLUME: This flag causes the program to

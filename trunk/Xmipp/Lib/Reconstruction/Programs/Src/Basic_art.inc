@@ -228,6 +228,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    TimeStamp time0;                    // For measuring the elapsed time
    annotate_time(&time0);
    int images=0;
+   bool iv_launched=false;
     for (int it = 0; it < prm.no_it; it++) {
       // Initialisation of some variables
       global_mean_error = 0;
@@ -514,7 +515,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 cout        << "\tPOCS:" << POCS_mean_error;
              cout << endl;
           } else if (act_proj%MAX(1,prm.numIMG/60)==0) progress_bar(act_proj);
-          
+
           if (prm.tell&TELL_STATS) {
              cout << "   read      ";   read_proj().print_stats();
              cout << "\n   theo      "; theo_proj().print_stats();
@@ -544,17 +545,32 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     //VolumeXmipp Vcoefs;
 	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
 	     //Vcoefs.write((string)"PPPblob_coefs.vol");
+	     if (!iv_launched) {
+	        system("devel_iv PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
+		system("devel_show -vol PPPvol.vol -poll &");
+		iv_launched=true;
+	     }
              cout << "\nHit any key and enter\n"; char c; cin >> c;
          }
 
-	 if (prm.tell&TELL_SAVE_INTERMIDIATE &&
+      	 // Save intermidiate
+	 if ((prm.tell&TELL_SAVE_INTERMIDIATE | prm.tell&TELL_IV) &&
 	     act_proj%prm.save_intermidiate_every==0) {
-            cerr << "\nSaving intermidiate ...\n"
-                 << "Converting blob volume to voxels ...\n";   
+	    if (prm.tell&TELL_SAVE_INTERMIDIATE) 
+               cerr << "\nSaving intermidiate ...\n"
+                    << "Converting blob volume to voxels ...\n";   
             blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-            vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
-	       ItoA(act_proj,5)+".vol");	       
+      	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
+               vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
+		  ItoA(act_proj,5)+".vol");
+	    else {
+               vol_voxels.write("PPPvol.vol");
+	       if (!iv_launched) {
+		  system("devel_show -vol PPPvol.vol -poll &");
+		  iv_launched=true;
+	       }
+	    }
 	 }
 
          // Check if algorithm must stop via stop_at
@@ -598,6 +614,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Check if algorithm must stop via stop_at
       if (images==prm.stop_at) break;
    }
+
    // Times on screen
    if (rank==-1) {
       cout << "\nTime of " << prm.no_it << " iterations: \n";

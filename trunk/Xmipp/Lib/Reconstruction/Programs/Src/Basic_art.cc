@@ -162,7 +162,11 @@ void Basic_ART_Parameters::default_values() {
     if (CHECK_PARAM("save_blobs")) \
        tell |= TELL_SAVE_BLOBS; \
     if (CHECK_PARAM("show_stats")) \
-       tell |= TELL_STATS;
+       tell |= TELL_STATS; \
+    if (CHECK_PARAM("show_iv")) {\
+       tell |= TELL_IV; \
+       save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("show_iv","10")); \
+    }
 
 void Basic_ART_Parameters::read(int argc, char **argv) {
     GET_ART_PARAMS;
@@ -288,6 +292,8 @@ void Basic_ART_Parameters::usage() {
   cerr
      << "\nDebugging options"
      << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
+     << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
+     << "\n                         the volume is update every <n> projections\n"
      << "\n   [-show_error]         show error for each projection"
      << "\n   [-show_stats]         give some statistical information during the process"
      << "\n   [-save_at_each_step]  save intermidiate projections"
