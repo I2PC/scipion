@@ -38,10 +38,12 @@ public:
 
 public slots:
    // Add filter
+   void slotAdjustContrast();
    void slotAddFilter();
    void slotCleanFilters();
 
 signals:
+   void signalAdjustContrast();
    void signalAddFilter();
    void signalCleanFilters();
 };

@@ -31,11 +31,16 @@
 /* Constructor ------------------------------------------------------------- */
 QtFilterMenu::QtFilterMenu( QtWidgetMicrograph* _parent) :
    QtPopupMenuMark( _parent ) {
+   insertItem( "Adjust contrast", this, SLOT(slotAdjustContrast()) );
    insertItem( "Add filter", this, SLOT(slotAddFilter()) );
    insertItem( "Clean filters", this, SLOT(slotCleanFilters()) );
 }
 
 /* Add Filter -------------------------------------------------------------- */
+void QtFilterMenu::slotAdjustContrast() {
+   emit signalAdjustContrast();
+}
+
 void QtFilterMenu::slotAddFilter() {
    emit signalAddFilter();
 }

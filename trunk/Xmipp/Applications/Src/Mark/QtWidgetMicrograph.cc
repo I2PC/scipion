@@ -323,6 +323,8 @@ void QtWidgetMicrograph::openMenus() {
    connect( __file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)) );
    
+   connect( (QObject*)filterMenu, SIGNAL(signalAdjustContrast()),
+            this, SLOT(slotChangeContrast(void)) );   
    connect( (QObject*)filterMenu, SIGNAL(signalAddFilter()),
             (QObject*)__filtersController, SLOT(slotAddFilter()) );   
    connect( (QObject*)filterMenu, SIGNAL(signalCleanFilters()),
