@@ -84,7 +84,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                    get_param(fh_inf,"is_signed")=="TRUE");
    else __is_signed=false;
    fclose(fh_inf);
-
+cout << "is:signed: " << __is_signed << endl;
    // Open micrograph and map
    fh_micrograph=open(fn_micrograph.c_str(),O_RDWR,S_IREAD|S_IWRITE);
    if (fh_micrograph==-1)
@@ -114,7 +114,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
       case 16:
          /* if (!in_core) { */
 	 if(__is_signed){
-            m16=(short int *) mmap(0,(__depth/8)*Ydim*Xdim,
+            m16=(short int *) mmap(0,(__depth/8)*Ydim*Xdim+__offset,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
             if (m16==MAP_FAILED) {
                /*
@@ -135,10 +135,12 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                   _fn_micrograph+" in memory");
 	    }
           aux_ptr=(char *)m16;
+cout << "offset " << __offset << endl;
+	  aux_ptr+=__offset;
 	  m16=(short int *) aux_ptr;
 	  }
 	  else {
-            um16=(unsigned short int *) mmap(0,(__depth/8)*Ydim*Xdim,
+            um16=(unsigned short int *) mmap(0,(__depth/8)*Ydim*Xdim+__offset,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
             if (um16==MAP_FAILED) {
                /*
@@ -159,6 +161,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                   _fn_micrograph+" in memory");
 	    }
           aux_ptr=(char *)um16;
+	  aux_ptr+=__offset;
 	  um16=(unsigned short int *) aux_ptr;
 	  } 
          /* } else {
@@ -168,11 +171,10 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot read "+
                   _fn_micrograph+" in memory");
          } */
-         aux_ptr+=__offset;
          break;
       case 32:
       	    // Map file in memory
-            m32=(float*) mmap(0,(__depth/8)*Ydim*Xdim,
+            m32=(float*) mmap(0,(__depth/8)*Ydim*Xdim+__offset,
                PROT_READ|PROT_WRITE, MAP_SHARED, fh_micrograph,0);
             if (m32==MAP_FAILED)
                REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot map "+
@@ -229,14 +231,20 @@ void Micrograph::compute_8_bit_scaling() {
    // Compute minimum and maximum value
    float minval, maxval;
    minval=maxval=(*this)(0,0);
-   for (int j=0; j<Xdim; j++)
-   {  
-      for (int i=0; i<Ydim; i++) {
-         if ((*this)(j,i)<minval) minval=(*this)(j,i);
-         if ((*this)(j,i)>maxval) maxval=(*this)(j,i);
+   for (int i=0; i<Ydim; i++) {
+      for (int j=0; j<Xdim; j++) {
+         float tmp=(*this)(j,i);
+         if      (tmp<minval) minval=tmp;
+         else if (tmp>maxval) maxval=tmp;
+/*
+if(maxval > 32000)
+  cout << "(i,j) max min valuefloat value" << i << " " << j 
+     << " " << maxval << " " << minval << " "<< tmp 
+     << " " << (*this)(j,i) << endl;
+*/
       }
    }
-
+cout << "Max, Min " << maxval << " " << minval << endl; 
    // Compute output range
    float minF, maxF;
    if      (minval<0)         {minF=0; maxF=MIN(255,maxval+minval);}

@@ -241,45 +241,50 @@ public:
    /** Micrograph max min*/
    void compute_double_minmax(double &Dmin, double &Dmax) const _THROW {
       if      (__depth== 8) {
-     unsigned char _Max=0;
-     unsigned char _min=255;
-      for (int i=0; i < Ydim; i++)
-        for (int j=0; j < Xdim; j++)
+     unsigned char _Max=m8[0];
+     unsigned char _min=_Max;
+     long tmp=0;
+      for (int i=0; i < Ydim; i++) {
+        for (int j=0; j < Xdim; j++, tmp++)
         {
-            if(m8[i*Xdim+j]>_Max) _Max=m8[i*Xdim+j];
-            if(m8[i*Xdim+j]<_min) _min=m8[i*Xdim+j];
+            if(m8[tmp]>_Max) _Max=m8[tmp];
+            else if(m8[tmp]<_min) _min=m8[tmp];
         }
+       }
 	Dmin=(double)_min;Dmax=(double)_Max;
       } 
       else if (__depth==16) {
          if(__is_signed){ 
-	    int _Max= -32768;
-	    int _min=32767;
+	    int _Max=m16[0];
+	    int _min=_Max;
+	    long tmp=0;
 	     for (int i=0; i < Ydim; i++)
-               for (int j=0; j < Xdim; j++){
-        	   if(m16[i*Xdim+j]>_Max) _Max=m16[i*Xdim+j];
-        	   if(m16[i*Xdim+j]<_min) _min=m16[i*Xdim+j];
+               for (int j=0; j < Xdim; j++, tmp++){
+        	   if(m16[tmp]>_Max) _Max=m16[tmp];
+        	   else if(m16[tmp]<_min) _min=m16[tmp];
                }
           Dmin=(double)_min;Dmax=(double)_Max;
 	  }   
          else{ 
-	    unsigned int _Max= 0;
-	    unsigned int _min=65535;
+	    unsigned int _Max=um16[0];
+	    unsigned int _min=_Max;
+	    long tmp=0;
 	     for (int i=0; i < Ydim; i++)
-               for (int j=0; j < Xdim; j++){
-        	   if(um16[i*Xdim+j]>_Max) _Max=um16[i*Xdim+j];
-        	   if(um16[i*Xdim+j]<_min) _min=um16[i*Xdim+j];
+               for (int j=0; j < Xdim; j++, tmp++){
+        	   if(um16[tmp]>_Max) _Max=um16[tmp];
+        	   else if(um16[tmp]<_min) _min=um16[tmp];
                }
           Dmin=(double)_min;Dmax=(double)_Max;
 	  }   
       }
       else if (__depth==32) {
-	    float _Max= -10e10;
-	    float _min=  10e10;
+	    float _Max=m32[0];
+	    float _min=_Max;
+	    long  tmp=0;
 	     for (int i=0; i < Ydim; i++)
-               for (int j=0; j < Xdim; j++){
-        	   if(m32[i*Xdim+j]>_Max) _Max=m32[i*Xdim+j];
-        	   if(m32[i*Xdim+j]<_min) _min=m32[i*Xdim+j];
+               for (int j=0; j < Xdim; j++, tmp++){
+        	   if(m32[tmp]>_Max) _Max=m32[tmp];
+        	   else if(m32[tmp]<_min) _min=m32[tmp];
                }
 
 	Dmin=(double)_min;Dmax=(double)_Max;
