@@ -196,6 +196,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
    else { 
       weight.init_zeros(6); 
       weight(0)=4;
+      weight(1)=35;
       weight(3)=15;
       weight(5)=415;
    } 
@@ -277,7 +278,7 @@ void Adjust_CTF_Parameters::Usage() {
 	<< "   [steps=<vector>]            : An Xmipp vector of 13 elements saying what parameters \n"
 	<< "                                 of the CTF to adjust (put 1) or not (put 0).\n"  
 	<< "   [weight=<vector>]           : An Xmipp vector of 6 elements stating criteria weight.\n" 
-	<< "                                 By default, [2,0,0,15,0,415]\n"
+	<< "                                 By default, [4,35,0,15,0,415]\n"
 	<< "   [penalty=<f=16>]            : Penalty applied in background adjust to points whose\n"
 	<< "                                 value is greater than the CTF\n"
 	<< "   [eval_red=<n=4>]            : Use values of images taken every n pixels. As images are\n"
@@ -503,10 +504,13 @@ void estimate_background_gauss_parameters() {
       if (w<global_min_freq || w>w_max_gauss) continue;
 
       double error=(radial_CTFampl_avg(i)-radial_CTFmodel_avg(i))/radial_N(i);
-      if (error<0 && first) continue;
+      if (error<0 && first) {error_min=MIN(error_min,error); continue;}
       else if (error<0) break;
       error*=error;
-      if (first) {wmin=w; error_min=error; first=false;}
+      if (first && error>ABS(error_min))
+         // If the two lines cross, do not consider any error until
+	 // the cross is "old" enough
+         {wmin=w; error_min=error; first=false;}
       if (error<error_min) {wmin=w; error_min=error;}
       #ifdef DEBUG
 	 cout << w << " " << error << " " << wmin << endl;
