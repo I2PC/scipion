@@ -40,8 +40,9 @@ public:
    #define NEWXMIPP      3
    #define MICHAEL       4
    #define NEWXMIPP2     5
+   #define RANDOM        6
    /** Normalizing method. Valid methods are OLDXMIPP, NEAR_OLDXMIPP 
-       NEWXMIPP, NEWXMIPP2, MICHAEL and NONE */
+       NEWXMIPP, NEWXMIPP2, MICHAEL, NONE, RANDOM */
    int                   normalizing_method;
 
    /** Nomalization of volumes. */
@@ -54,6 +55,14 @@ public:
    int                   background_mode;
    /** Frame width or circle radius */
    int                   r;
+   /** Upper limit of a in y=ax+b */
+   double                aF;
+   /** Lower limit of a in y=ax+b */
+   double                a0;
+   /** Upper limit of b in y=ax+b */
+   double                bF;
+   /** Lower limit of b in y=ax+b */
+   double                b0;
 public:
    matrix2D<int>         bg_mask;
    bool                  apply_geo;
