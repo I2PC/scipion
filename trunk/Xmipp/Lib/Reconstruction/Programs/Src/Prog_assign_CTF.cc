@@ -340,6 +340,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
       REPORT_ERROR(1,(string)"assign_CTF: There is a problem "
             "opening the file "+fn_prm); 
                                       
+   reversed          =check_param(fh_param,"reverse endian");
    N_horizontal      =AtoI(get_param(fh_param,"N_horizontal",0));
    N_vertical        =AtoI(get_param(fh_param,"N_vertical",0));
    particle_horizontal=AtoI(get_param(fh_param,"particle_horizontal",0));
@@ -390,7 +391,7 @@ void Prog_assign_CTF_prm::process()
         	Read input micrograph
 	/*****************************************************************************/
 	Micrograph     M_in;
-	M_in.open_micrograph(image_fn);
+	M_in.open_micrograph(image_fn,reversed);
 	int bits=M_in.depth();
 	int Ydim, Xdim; // Micrograph dimensions
 	M_in.size(Xdim, Ydim);
@@ -458,6 +459,9 @@ void Prog_assign_CTF_prm::process()
 		  adjust_CTF_prm.fn_ctf=ARMA_prm.fn_filter;
 		  adjust_CTF_prm.fn_outroot=CTFfile.get_root();
 		  adjust_CTF_prm.show_optimization=FALSE;
+		  adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
+		     adjust_CTF_prm.adjust(0)=0;
+		     // Compute the background and CTF from scratch
   		  // The name of the parameters file that generates ROUT_Adjust_CTF
 		  adjust_CTF_prm.fn_out_CTF_parameters  = CTFfile.get_root()+".param";
 		  adjust_CTF_prm.produce_side_info();
@@ -469,13 +473,14 @@ void Prog_assign_CTF_prm::process()
 		  cerr << "CTF adjust of piece number " << N << " finished." <<  endl;
 		  
    		  // Read parameters of the CTF from parameters file
-		   XmippCTF          pure_ctf; // An Xmipp Model of ctf
-    	  pure_ctf.enable_CTFnoise=FALSE;
-    	  pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
+	          XmippCTF          pure_ctf; // An Xmipp Model of ctf
+         	  pure_ctf.enable_CTFnoise=FALSE;
+    	          pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
 		  pure_ctf.Produce_Side_Info();
 
 		  // Generate the pure CTF file determined from the parameters file	  
-    	  cerr << "Generating CTF for piece number " << N <<  endl;
+    	          cerr << "Generating CTF for piece number " << N <<  endl;
+
 		  FourierImageXmipp Img_pure_CTF(N_vertical,N_horizontal);
 		  vtkImageData *vtkImage=NULL;
 		  xmippFFT2VTK (Img_pure_CTF, vtkImage);
