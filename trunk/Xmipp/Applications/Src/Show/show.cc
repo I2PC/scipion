@@ -60,16 +60,20 @@ int main( int argc, char **argv ) {
 
    for ( int i=ifirst+1; i<argc; i++ ) {
        if (!exists(argv[i])) {
-          if (mode==2) {
-             // Check that the last letter is not x or y
-	     FileName fn=argv[i];
-	     if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
-		fn=fn.substr(0,fn.length()-1);
-		if (!exists(fn.c_str())) continue;
-	     } else continue;
-	 } else if (mode==4) {
-	 } else if (mode==5) {
-	 }
+          FileName fn;
+          switch (mode) {
+	     case 0: continue;
+	     case 1: continue;
+	     case 2:
+	        fn=argv[i];
+		if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
+		   fn=fn.substr(0,fn.length()-1);
+		   if (!exists(fn.c_str())) continue;
+		} else continue;
+	     case 3: continue;
+	     case 4: break;
+	     case 5: break;
+	  }
        } 
        if (mode==0) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
