@@ -353,7 +353,7 @@ ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm) {
 }
 
 /* DFT^-1 ------------------------------------------------------------------ */
-void IDFT(const matrix2D<double_complex> &FT, matrix2D<double> &I,
+void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
    int ydim, int xdim) {
    I.init_zeros(ydim,xdim);
    time_config();
@@ -400,7 +400,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
 
    int ksize=MAX(ABS(kmin),ABS(kmax));
    int hsize=MAX(ABS(hmin),ABS(hmax));
-   matrix2D<double_complex> FT;
+   matrix2D< complex<double> > FT;
    FT.init_zeros(2*ksize+1,2*hsize+1);
    STARTINGY(FT)=-ksize;
    STARTINGX(FT)=-hsize;

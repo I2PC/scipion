@@ -28,7 +28,7 @@
 #include "../Prog_evaluate_FSCs.hh"
 #include "../../volume_FOMs.hh"
 
-#include <fstream.h>
+#include <fstream>
 
 /* Read Evaluate parameters from command line ============================== */
 void Prog_Evaluate_FSCs_Parameters::read(int argc, char **argv) {
