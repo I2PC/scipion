@@ -81,7 +81,6 @@ int main (int argc,char *argv[]) {
          fn_img=get_param(argc,argv,"-img","");
          generate_img=(fn_img!="");
       }
-      cout << col2 << " " << fn_img << " " << generate_img << endl;
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
 
 // Compute Histogram =======================================================
