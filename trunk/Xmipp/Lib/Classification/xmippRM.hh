@@ -38,6 +38,13 @@ public:
 	*/
 	xmippRM(void){matdist = "gaussian";}
 
+	/**
+	* Sets the matrix distribution:
+	* "gaussian" or "sparse"
+	* @param _type The type of the matrix distribution
+	*/
+	void setRMDistribution(string _type){matdist = _type;}
+
 
 	/**
 	* Calculate the Random matrix
