@@ -683,8 +683,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
       if (prm.run_also_without_constraints) {
          art_prm.fn_root=fn_recons_root+"_wos";
-         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_blobs,
-            vol_blobs_var);
+         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_blobs);
       }
 
       // Extra conditions
@@ -723,8 +722,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
       if (!prm.correct_amplitude)
 	 // Do not correct 
-	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_blobs,
-            vol_blobs_var);
+	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_blobs);
       else {
 	 Prog_IDR_ART_Parameters idr_prm;
 	 idr_prm.art_prm=&art_prm;
