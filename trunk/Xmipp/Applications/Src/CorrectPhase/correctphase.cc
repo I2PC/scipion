@@ -80,8 +80,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    if (eprm->cpprm.multiple_CTFs) {
       FileName fn_ctf_out;
       if (eprm->out_ctf=="") fn_ctf_out=fn_ctf;
-      else if (prm->oroot!="")
-         fn_ctf_out=eprm->out_ctf+ItoA(fn_ctf.get_number(),5)+".fft";
+      else fn_ctf_out=eprm->out_ctf+ItoA(fn_ctf.get_number(),5)+".fft";
 
       eprm->cpprm.correct(eprm->cpprm.ctf.mask);
       eprm->cpprm.ctf.write_mask(fn_ctf_out);
