@@ -201,7 +201,7 @@ void ART_single_step(
    // projection, ie, the projection of an all-1 volume
    matrix2D<double> *A=NULL;
    if (print_system_matrix) A=new matrix2D<double>;
-   project_Volume(vol_in,*footprint,*footprint2,theo_proj,
+   project_Volume(vol_in,blob,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),FORWARD,prm.eq_mode,
       prm.GVNeq,A,vol_var,prm.ray_length);
@@ -253,10 +253,10 @@ void ART_single_step(
    mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
    
    // Denoising of the correction image
-   if (vol_var!=NULL) process_correction(corr_proj,theo_proj,vol_var);
+   //if (vol_var!=NULL) process_correction(corr_proj,theo_proj,vol_var);
 
    // Backprojection of correction plane ......................................
-   project_Volume(*vol_out,*footprint,*footprint2,theo_proj,
+   project_Volume(*vol_out,blob,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
       prm.GVNeq,NULL,vol_var,prm.ray_length);

@@ -153,7 +153,8 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
          ctf.read_mask(SF_ctf.NextImg());
 
       // Project the volume in the same direction
-      project_Volume (vol_blobs, art_prm->blobprint,
+      project_Volume (vol_blobs,
+         art_prm->blob, art_prm->blobprint,
 	 art_prm->blobprint2, Itheo, Inorm,
 	 YSIZE(Ireal()), XSIZE(Ireal()),
 	 Ireal.rot(), Ireal.tilt(), Ireal.psi(),
