@@ -318,7 +318,7 @@ void ShowTable::changeScale(double newScale) {
 void ShowTable::mouseDoubleClickEvent(  int row, int col, int button,
     const QPoint & mousePos ) {changeMark(row,col);}
 
-void ShowTable::mousePressEvent( QMouseEvent* e ) {
+void ShowTable::contentsMousePressEvent( QMouseEvent* e ) {
     QPoint clickedPos = e->pos(); // extract pointer position
     if (e->button() == RightButton) menubar->exec(clickedPos); 
 }

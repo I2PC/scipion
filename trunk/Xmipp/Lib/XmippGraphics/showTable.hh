@@ -213,7 +213,7 @@ protected slots:
     virtual void mouseDoubleClickEvent(int row, int col, int button,
          const QPoint & mousePos);
     /* Process single clicks */
-    virtual void mousePressEvent( QMouseEvent* e );
+    virtual void contentsMousePressEvent( QMouseEvent* e );
     /* Process mouse move events */
     virtual void contentsMouseMoveEvent ( QMouseEvent* e )
        {QTable::contentsMouseMoveEvent(e);};
