@@ -81,6 +81,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
       power_percentage=95;
       sinc_reduction=40;
    }
+   reversed=check_param(argc,argv,"-reverse_endian");
 }
 
 // Usage -------------------------------------------------------------------
@@ -93,6 +94,7 @@ void Prog_downsample_prm::usage() const {
         << "  [-kernel gaussian  <r> <sigma>]\n"
         << "  [-kernel pick]\n"
         << "  [-kernel sinc <power_percentage> <sinc_reduction>]\n"
+	<< "  [-reverse_endian]       : Reverse endian\n"
    ;
 }
 
@@ -184,7 +186,7 @@ void Prog_downsample_prm::create_empty_output_file() {
 
 // Open input micrograph ---------------------------------------------------
 void Prog_downsample_prm::open_input_micrograph()  {
-   M.open_micrograph(fn_micrograph/*,in_core*/);
+   M.open_micrograph(fn_micrograph,reversed);
    bitsM=M.depth();
    M.size(Xdim,Ydim);
 }
@@ -197,7 +199,7 @@ void Prog_downsample_prm::close_input_micrograph()  {
 // Downsample micrograph ---------------------------------------------------
 void Prog_downsample_prm::Downsample() const {
    Micrograph Mp;
-   Mp.open_micrograph(fn_downsampled/*,in_core*/);
+   Mp.open_micrograph(fn_downsampled,reversed);
    downsample(M,Xstep,Ystep,kernel,Mp);
    Mp.close_micrograph();
 }

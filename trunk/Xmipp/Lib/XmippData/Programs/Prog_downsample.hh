@@ -73,6 +73,8 @@ public:
    int      Yrect;
    /// Output bits
    int      bitsMp;
+   /// Reverse endian
+   bool     reversed;
 public:
    // Side information
    // Kernel
