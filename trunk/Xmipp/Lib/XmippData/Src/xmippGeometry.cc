@@ -112,6 +112,17 @@ V3_MINUS_V3(p_a,p,a);
 return (vector_product(p_a,v).module()/v.module());
 }			      
 
+/* Point to plane distance ------------------------------------------------- */
+double point_plane_distance_3D(const matrix1D<double> &p, 
+                               const matrix1D<double> &a,
+			       const matrix1D<double> &v)
+			      
+{
+matrix1D<double> p_a(3);
+V3_MINUS_V3(p_a,p,a); 
+return (dot_product(p_a,v)/v.module());
+}			      
+
 /* Rectangle enclosing ----------------------------------------------------- */
 void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
     const matrix2D<double> &V, matrix1D<double> &corner1,

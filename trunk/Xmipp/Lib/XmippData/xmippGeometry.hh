@@ -170,6 +170,14 @@ double point_line_distance_3D(const matrix1D<double> &p,
                               const matrix1D<double> &a,
 			      const matrix1D<double> &v);
 
+/** Point to plane distance in 3D.
+    Let a plane in 3-D be specified by the point a and the perpendicular vector v,
+    this fuction returns the minimum distance of this plane to the point p.
+     */
+double point_plane_distance_3D(const matrix1D<double> &p, 
+                               const matrix1D<double> &a,
+			       const matrix1D<double> &v);
+
 /** Rectangle which encloses a deformed rectangle.
     Given a rectangle characterized by the top-left corner and the right-bottom
     corner, and given a matrix after which the rectangle is deformed. Which
