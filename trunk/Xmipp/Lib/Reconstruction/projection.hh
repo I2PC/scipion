@@ -75,7 +75,7 @@ void project_Volume(GridVolumeT<T> &vol,
    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
    double rot, double tilt, double psi, int FORW, int eq_mode=ARTK,
    GridVolumeT<int> *GVNeq=NULL, matrix2D<double> *M=NULL,
-   GridVolumeT<T> *vol_var=NULL);
+   GridVolumeT<T> *vol_var=NULL, double ray_length=-1);
 
 /** From voxel volumes.
     The voxel volume is projected onto a projection plane defined by

@@ -75,24 +75,25 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
-   VolumeT<T> *vol_var=NULL) {
-   matrix1D<double> prjX(3);                 // Coordinate: Projection of the
-   matrix1D<double> prjY(3);                 // 3 grid vectors
+   VolumeT<T> *vol_var=NULL, double ray_length=-1.0) {
+   matrix1D<double> zero(3);                // Origin (0,0,0) 
+   matrix1D<double> prjX(3);                // Coordinate: Projection of the
+   matrix1D<double> prjY(3);                // 3 grid vectors
    matrix1D<double> prjZ(3);
-   matrix1D<double> prjOrigin(3);            // Coordinate: Where in the 2D
+   matrix1D<double> prjOrigin(3);           // Coordinate: Where in the 2D
                                             // projection plane the origin of
                                             // the grid projects
 
-   matrix1D<double> actprj(3);               // Coord: Actual position inside
+   matrix1D<double> actprj(3);              // Coord: Actual position inside
                                             // the projection plane
-   matrix1D<double> beginZ(3);               // Coord: Plane coordinates of the
+   matrix1D<double> beginZ(3);              // Coord: Plane coordinates of the
                                             // projection of the 3D point
                                             // (z0,YY(lowest),XX(lowest))
-   matrix1D<double> beginY(3);               // Coord: Plane coordinates of the
+   matrix1D<double> beginY(3);              // Coord: Plane coordinates of the
                                             // projection of the 3D point
                                             // (z0,y0,XX(lowest))
-   double XX_footprint_size;                 // The footprint is supposed
-   double YY_footprint_size;                 // to be defined between
+   double XX_footprint_size;                // The footprint is supposed
+   double YY_footprint_size;                // to be defined between
                                             // (-vmax,+vmax) in the Y axis,
                                             // and (-umax,+umax) in the X axis
                                             // This footprint size is the
@@ -201,7 +202,18 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 	 for (j=XX_lowest; j<=XX_highest; j++) {
 	    VECTOR_R3(grid_index,j,i,k);
 	    grid.grid2universe(grid_index,univ_position);
-      	    if (grid.is_interesting(univ_position)) {
+            
+            // Ray length interesting
+            bool ray_length_interesting=true;
+            if (ray_length!=-1) {
+               ray_length_interesting=
+                  ABS(point_plane_distance_3D(univ_position, zero,
+                      proj.direction))<=ray_length;
+            }
+            
+            
+      	    if (grid.is_interesting(univ_position) &&
+                ray_length_interesting) {
                // Be careful that you cannot skip any blob, although its
                // value be 0, because it is useful for norm_proj
                #ifdef DEBUG
@@ -388,7 +400,8 @@ void project_Volume(
    int              eq_mode,             // ARTK, CAVK or CAV
    GridVolumeT<int> *GVNeq,              // Number of equations per blob
    matrix2D<double> *M,                  // System matrix
-   GridVolumeT<T>   *vol_var)            // Volume to keep track of the variance
+   GridVolumeT<T>   *vol_var,            // Volume to keep track of the variance
+   double            ray_length)         // Ray length of the projection
 {
    // If projecting forward initialise projections
    if (FORW) {
@@ -408,14 +421,13 @@ void project_Volume(
    #endif
 
    // Project each subvolume
-   
    for (int i=0; i<vol.VolumesNo(); i++) {
       VolumeT<int> *VNeq;
       VolumeT<T>   *Vvar;
       if (GVNeq!=NULL)   VNeq=&((*GVNeq  )(i)); else VNeq=NULL;
       if (vol_var!=NULL) Vvar=&((*vol_var)(i)); else Vvar=NULL;
       project_SimpleGrid(vol(i),vol.grid(i),footprint,footprint2,
-         proj, norm_proj, FORW, eq_mode, VNeq, M, Vvar);
+         proj, norm_proj, FORW, eq_mode, VNeq, M, Vvar, ray_length);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
       if (FORW) save.write((string)"PPPnorm_FORW"+(char)(48+i));
