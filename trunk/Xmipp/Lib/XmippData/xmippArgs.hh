@@ -190,7 +190,8 @@ void remove_quotes(char **_str);
 //@}
 
 // Tokenization ============================================================
-/**@name Tokenization.
+/**@name Tokenization
+
    These functions allow to split a string into small pieces separated by
    blank spaces, giving you a pointer to the different words each time.
    The different elements from the string are selected using strtok, so after
@@ -211,7 +212,10 @@ void remove_quotes(char **_str);
    When there aren't more words, both functions return a NULL pointer.
    Here we make a distinction between tokens (words that might be empty)
    and words (words that cannot be empty, if they are then an exception
-   or an exit error is thrown). */
+   or an exit error is thrown).
+   
+   For C++, there is anothere way. You supply a string object and a vector
+   of strings is returned with all the elements.*/
 //@{
    /** Returns first token (char *).
        \\Ex: char line[80]; ...; cout << "First  word: "
@@ -254,6 +258,10 @@ inline char * first_word(string &str, int _errno=2106,
 inline char * next_word(int _errno=2106, 
        string errmsg="next word: String not found", int exit = 0)
        {return first_word((char *)NULL,_errno, errmsg, exit);}
+
+void tokenize(const string& str,
+              vector<string>& tokens,const string& delimiters = " \t");
+
 //@}
 
 // Read lists ==============================================================
