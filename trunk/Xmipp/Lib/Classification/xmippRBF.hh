@@ -31,22 +31,49 @@
 
 class xmippRBF;
 
-/**@name Radial Basis Functions. */
-//@{
-/** Compute design matrix.
-    Given the set of centers (C), the set of radius and the set of points (X)
-    this function computes the design matrix of the experiment. Element (i,j)
-    is the value of the gaussian centered at center j on point i. It throws
-    an exception if the centers and points are not of the same size.
-    
-    Look the Mark Orr's function rbf_dm */
-void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
-   xmippCTVectors &X, matrix2D<double> &H) _THROW;
+/**@name Radial Basis Functions.
 
-    
+The simplest way to use the Radial Basis Functions is by training different
+RBFs using different scales. To do so, use the function RBF_train_best_scale.
+You must provide a set of candidate centroids (not all of them will be used in
+the best RBF), a set of X (the independent variables), a set of corresponding y
+(y is supposed to be a function of X). You must also provide a search range for
+the scale (this is a number that helps to find the radius, and from 0.5 to 2
+should be a good enough range). The output of this function is the best RBF
+found for the data as well as the fitting error and the predicted y using the
+RBF model.
+
+The RBF model is predicted_y=sum_{for_all_centroids} weight(i)*
+   gaussian_radius(i)(X-Centroid(i)). This is the function used to estimate
+the value of y at X.
+
+Once the RBF is selected (trained) then you may use it to predict the value of y
+at a certain X. Use RBF predict for this task.
+
+Example:
+\begin{verbatim}
+   // Compute the RBF model for the known X and y.
+   // Training stage
+   xmippCTVectors knownX;     // Initialize conveniently
+   vector<double> knowny;     // Initialize conveniently
+   xmippCTVectors candidateC; // Initialize conveniently
+   xmippRBF       RBFmodel;   // Do not need to be initialized
+   double         error;      // Do not need to be initialized
+   vector<double> predicted_y;// Do not need to be initialized
+   RBF_train_best_scale(candidate_C, knownX, knowny, 0.5, 2, 0.1,
+      RBF, error, y_predicted);
+
+   // Interpolate for other Xs using the model previously trained.
+   xmippCTVectors another_set_X; // Initialize
+   vector<double> predictions_for_another_set_X; // Do not initialize
+   RBF_predict(RBF, another_set_X, predictions_for_another_set_X);
+\end{verbatim}
+*/
+//@{
+
 /** Compute the best scale.
     Range over a set of scales looking for the best one.
-    The results are the Centers are radius that better fit the function.
+    The results are the Centers and radius that better fit the function.
     The input vectors are modified.
     
     Exceptions are thrown if any of the input dimensions do not
@@ -56,6 +83,21 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
    double maxscale, double scalestep, xmippRBF &RBF,
    double &error, vector<double> &y_predicted) _THROW;
 
+/** Predict the values at given points.
+    Given the centers, weight and radii this function returns the predicted
+    values at given X. */
+void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted);
+
+/** Compute design matrix. Given the set of centers (C), the set of radius (r)
+    and the set of points (X) this function computes the design matrix of the
+    experiment. Element (i,j) is the value of the gaussian centered at center j
+    on point i. It throws an exception if the centers and points are not of the
+    same size.
+
+    Look the Mark Orr's function rbf_dm */
+void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
+   xmippCTVectors &X, matrix2D<double> &H) _THROW;
+    
 /** Compute model given a certain scale.
     The selected centers are chosen via the index_out variable.
     */
@@ -63,11 +105,6 @@ void RBF_train(xmippCTVectors &C,  xmippCTVectors &X,
    vector<double> &y, matrix1D<double> &r, double scale,
    vector<int> &idx_out, matrix1D<double> &r_out,
    matrix1D<double> &w_out, double &error);
-
-/** Predict the values at given points.
-    Given the centers, weight and radii this function returns the predicted
-    values at given X. */
-void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted);
 
 /** RBF class.
     This class holds a RBF. */
