@@ -75,7 +75,7 @@ void ARMA_parameters::read(const FileName &InputFile) _THROW
       fn_in        = get_param(file,"image", 0,"");
       fn_filter    = get_param(file,"ARMAfile",0,"");                 
       N_AR         = AtoI(get_param(file,"N_AR",0));
-      M_AR         = AtoI(get_param(file,"N_AR",0,"0"));
+      M_AR         = AtoI(get_param(file,"M_AR",0,"0"));
          if (M_AR==0) M_AR=N_AR;
       N_MA         = AtoI(get_param(file,"N_MA",0));
       M_MA         = AtoI(get_param(file,"M_MA",0,"0"));
