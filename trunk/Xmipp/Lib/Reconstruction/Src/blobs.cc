@@ -672,6 +672,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 void blobs2voxels(const GridVolume &vol_blobs,
    const struct blobtype &blob, Volume *vol_voxels, const matrix2D<double> *D,
    int Zdim, int Ydim, int Xdim) {
+
    // Resize and set starting corner .......................................
    if (Zdim==0 || Ydim==0 || Xdim==0) {
       matrix1D<int> size, corner;
@@ -690,6 +691,8 @@ void blobs2voxels(const GridVolume &vol_blobs,
       blobs2voxels_SimpleGrid((Volume &)vol_blobs(i),vol_blobs.grid(i),
          blob,vol_voxels,D);
       #ifdef DEBUG
+	 cout << "Blob grid no " << i << " stats: "; vol_blobs(i)().print_stats(); cout << endl;
+         cout << "So far vol stats: "; (*vol_voxels)().print_stats(); cout << endl;
          VolumeXmipp save; save=*vol_voxels;
          save.write((string)"PPPvoxels"+ItoA(i));
       #endif
@@ -808,18 +811,24 @@ void ART_voxels2blobs_single_step(
       blobs2voxels_SimpleGrid(vol_in(i),vol_in.grid(i),blob,theo_vol,D,
       50, corr_vol, mask_vol, FORWARD, eq_mode);
    #ifdef DEBUG
-      cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats();
-      cout << endl;
+      cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats(); cout << endl;
+      cout << "So far vol stats: "; (*theo_vol)().print_stats(); cout << endl;
    #endif
    }
+
+   // Now normalise the resulting volume ..................................
+   double norm=sum_blob_Grid(blob,vol_in.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*theo_vol))
+      VOLVOXEL(*theo_vol,k,i,j) /= norm;
+   
    #ifdef DEBUG
       VolumeXmipp save, save2;
       save()=(*theo_vol)(); save.write("PPPtheovol.vol");
-      cout << "Theoretical stats:"; save().print_stats(); cout << endl;
+      cout << "Theo stats:"; save().print_stats(); cout << endl;
       save()=(*corr_vol)(); save.write("PPPcorr2vol.vol");
       save2().resize(save());
    #endif
-   
+
    // Compute differences ..................................................
    mean_error=0;
    double read_val;
@@ -893,6 +902,8 @@ void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
    VolumeXmipp theo_vol, corr_vol;
    double mean_error, mean_error_1, max_error;
    int it=1;
+
+   tell=SHOW_CONVERSION;
 
    // Resize output volume .................................................
    Grid grid_blobs;
