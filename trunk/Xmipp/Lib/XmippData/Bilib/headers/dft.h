@@ -582,8 +582,8 @@ extern int		RealImaginaryToAmplitudePhase
    success: return(!ERROR); failure: return(ERROR); */
 extern int		VolumeAmplitudePhaseToRealImaginary
 				(
-					float	Am2Re[],			/* (amplitude -> real) */
-					float	Ph2Im[],			/* (phase -> imaginary) */
+					double	Am2Re[],			/* (amplitude -> real) */
+					double	Ph2Im[],			/* (phase -> imaginary) */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz					/* depth of the volume */
@@ -619,8 +619,8 @@ extern int		VolumeAmplitudePhaseToRealImaginary
    The returned value is duplicated in Status */
 extern int		VolumeDftAmplitudePhaseToAmplitudePhase
 				(
-					float	*Am2Am,				/* amplitude -> amplitude */
-					float	*Ph2Ph,				/* phase -> phase */
+					double	*Am2Am,				/* amplitude -> amplitude */
+					double	*Ph2Ph,				/* phase -> phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -653,8 +653,8 @@ extern int		VolumeDftAmplitudePhaseToAmplitudePhase
    The returned value is duplicated in Status */
 extern int		VolumeDftAmplitudePhaseToRealImaginary
 				(
-					float	*Am2Re,				/* amplitude -> real */
-					float	*Ph2Im,				/* phase -> imaginary */
+					double	*Am2Re,				/* amplitude -> real */
+					double	*Ph2Im,				/* phase -> imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -687,8 +687,8 @@ extern int		VolumeDftAmplitudePhaseToRealImaginary
    The returned value is duplicated in Status */
 extern int		VolumeDftRealImaginaryToAmplitudePhase
 				(
-					float	*Re2Am,				/* real -> amplitude */
-					float	*Im2Ph,				/* imaginary -> phase */
+					double	*Re2Am,				/* real -> amplitude */
+					double	*Im2Ph,				/* imaginary -> phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -720,8 +720,8 @@ extern int		VolumeDftRealImaginaryToAmplitudePhase
    The returned value is duplicated in Status */
 extern int		VolumeDftRealImaginaryToRealImaginary
 				(
-					float	*Re2Re,				/* real -> real */
-					float	*Im2Im,				/* imaginary -> imaginary */
+					double	*Re2Re,				/* real -> real */
+					double	*Im2Im,				/* imaginary -> imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -753,8 +753,8 @@ extern int		VolumeDftRealImaginaryToRealImaginary
    The returned value is duplicated in Status */
 extern int		VolumeDftRealToAmplitudePhase
 				(
-					float	*Re2Am,				/* real -> amplitude */
-					float	*PhOut,				/* output phase */
+					double	*Re2Am,				/* real -> amplitude */
+					double	*PhOut,				/* output phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -787,8 +787,8 @@ extern int		VolumeDftRealToAmplitudePhase
     The returned value is duplicated in Status */
 extern int		VolumeDftRealToRealImaginary
 				(
-					float	*Re2Re,				/* real -> real */
-					float	*ImOut,				/* output imaginary */
+					double	*Re2Re,				/* real -> real */
+					double	*ImOut,				/* output imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -823,8 +823,8 @@ extern int		VolumeDftRealToRealImaginary
     The returned value is duplicated in Status */
 extern int		VolumeInvDftAmplitudePhaseToAmplitudePhase
 				(
-					float	*Am2Am,				/* amplitude -> amplitude */
-					float	*Ph2Ph,				/* phase -> phase */
+					double	*Am2Am,				/* amplitude -> amplitude */
+					double	*Ph2Ph,				/* phase -> phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -859,8 +859,8 @@ extern int		VolumeInvDftAmplitudePhaseToAmplitudePhase
     The returned value is duplicated in Status */
 extern int		VolumeInvDftAmplitudePhaseToReal
 				(
-					float	*Am2Re,				/* amplitude -> real */
-					float	*PhIn,				/* input phase */
+					double	*Am2Re,				/* amplitude -> real */
+					double	*PhIn,				/* input phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -894,8 +894,8 @@ extern int		VolumeInvDftAmplitudePhaseToReal
     The returned value is duplicated in Status */
 extern int		VolumeInvDftAmplitudePhaseToRealImaginary
 				(
-					float	*Am2Re,				/* amplitude -> real */
-					float	*Ph2Im,				/* phase -> imaginary */
+					double	*Am2Re,				/* amplitude -> real */
+					double	*Ph2Im,				/* phase -> imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -928,8 +928,8 @@ extern int		VolumeInvDftAmplitudePhaseToRealImaginary
     The returned value is duplicated in Status */
 extern int		VolumeInvDftRealImaginaryToAmplitudePhase
 				(
-					float	*Re2Am,				/* real -> amplitude */
-					float	*Im2Ph,				/* imaginary -> phase */
+					double	*Re2Am,				/* real -> amplitude */
+					double	*Im2Ph,				/* imaginary -> phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -963,8 +963,8 @@ extern int		VolumeInvDftRealImaginaryToAmplitudePhase
    The returned value is duplicated in Status */
 extern int		VolumeInvDftRealImaginaryToReal
 				(
-					float	*Re2Re,				/* real -> real */
-					float	*ImIn,				/* input imaginary */
+					double	*Re2Re,				/* real -> real */
+					double	*ImIn,				/* input imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -997,8 +997,8 @@ extern int		VolumeInvDftRealImaginaryToReal
     The returned value is duplicated in Status */
 extern int		VolumeInvDftRealImaginaryToRealImaginary
 				(
-					float	*Re2Re,				/* real -> real */
-					float	*Im2Im,				/* imaginary -> imaginary */
+					double	*Re2Re,				/* real -> real */
+					double	*Im2Im,				/* imaginary -> imaginary */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz,					/* depth of the volume */
@@ -1006,7 +1006,7 @@ extern int		VolumeInvDftRealImaginaryToRealImaginary
 				);
 
 /*--------------------------------------------------------------------------*/
-/* Real/Imaginary --> Amplitude/Phase.
+/** Volume Real/Imaginary --> Amplitude/Phase.
    Converts a (real, imaginary) representation of a complex signal
    into an (amplitude, phase) representation.
    The output phase is in [rad]; its domain is (-PI, PI).
@@ -1020,8 +1020,8 @@ extern int		VolumeInvDftRealImaginaryToRealImaginary
    success: return(!ERROR); failure: return(ERROR);*/
 extern int		VolumeRealImaginaryToAmplitudePhase
 				(
-					float	Re2Am[],			/* real -> amplitude */
-					float	Im2Ph[],			/* imaginary -> phase */
+					double	Re2Am[],			/* real -> amplitude */
+					double	Im2Ph[],			/* imaginary -> phase */
 					long	Nx,					/* width of the volume */
 					long	Ny,					/* height of the volume */
 					long	Nz					/* depth of the volume */
