@@ -1,0 +1,5 @@
+######################################################################
+PROJ = split_selfile
+OBJ  = split_selfile.o
+LIBS = -l$(LIBXMIPP)
+
