@@ -80,7 +80,8 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    else
       __offset=0;   
    if (check_param(fh_inf,"is_signed"))
-      __is_signed=(get_param(fh_inf,"is_signed")=="true");
+      __is_signed=(get_param(fh_inf,"is_signed")=="true" ||
+                   get_param(fh_inf,"is_signed")=="TRUE");
    else __is_signed=false;
    fclose(fh_inf);
 
