@@ -27,7 +27,7 @@
 #include "../Prog_adjust_CTF.hh"
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippHistograms.hh>
-#include <vector.h>   // vector from STL library
+#include <vector>   // vector from STL library
 
 /* prototypes */
 double CTF_fitness(double *);
@@ -1423,7 +1423,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    
    // Adjust
    cerr << "Looking for best fitting CTF ...\n";
-   CTF_fitness_evaluations=0;
+   CTF_fitness_evaluations=0; show_performance=false;
    for (global_evaluation_reduction=2; global_evaluation_reduction>=1; global_evaluation_reduction--) {
       global_compute_ctf2_part=true;
       if (global_evaluation_reduction==1) global_weight=prm.weight;
