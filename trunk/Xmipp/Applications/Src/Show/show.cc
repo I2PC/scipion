@@ -53,8 +53,7 @@ int main( int argc, char **argv ) {
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
        numCols = AtoI(get_param(argc, argv, "-w", "10"));
        numRows = AtoI(get_param(argc, argv, "-h", "10"));
-       if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
-       else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
+       apply_geo=!check_param(argc,argv,"-dont_apply_geo");
        poll=check_param(argc,argv,"-poll");
    } catch (Xmipp_error) {Usage(); exit(1);}
 
@@ -152,10 +151,9 @@ void Usage() {
 	 << "       -din <Original.dat>: Original data\n"
          << "   [-w]                   : width (default: 10)\n"
          << "   [-h]                   : height (default: 10)\n"
-         << "   [-showall]          : only for sel mode, show all images even\n"
-         << "                         if sel = -1\n"
+         << "   [-showall]             : only for sel mode, show all images even\n"
+         << "                            if sel = -1\n"
          << "   [-poll]                : check file change, NOT for sel files\n"
-         << "   [-apply_geo]           : apply transformation stored in the header of a 2D-image (default)\n"
-         << "   [-dont_apply_geo]      : do NOT apply header transformation\n"
+         << "   [-dont_apply_geo]      : Do not apply transformation stored in the header of 2D-images\n"
     ;
 }

@@ -55,8 +55,7 @@ int main(int argc, char **argv) {
      nomask = true; 
     if (check_param(argc, argv, "-verb"))
      verb = true; 
-    if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
-    else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
+    apply_geo=!check_param(argc,argv,"-dont_apply_geo");
   } 
   catch (Xmipp_error) {
     cout << "img2data: Convert a set of images into a set of data vectors" << endl;
@@ -66,8 +65,7 @@ int main(int argc, char **argv) {
     cout << "[-nomask]            : set if the mask is not going to be used" << endl;
     cout << "[-fname]             : Output file name (default: out.dat)" << endl;
     cout << "[-verb]              : Verbosity (default: false)" << endl;
-    cout << "[-apply_geo]         : apply transformation stored in the header of a 2D-image (default)"<< endl;
-    cout << "[-dont_apply_geo]    : do NOT apply header transformation\n"<< endl;
+    cout << "[-dont_apply_geo]    : Do not apply transformation stored in the header of 2D-images"<< endl;
     exit(1);
    }
     
