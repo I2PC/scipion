@@ -1256,11 +1256,11 @@ class maskImg : public QWidget
     Q_OBJECT
 public:
     maskImg( QWidget *parent=0, const char *name=0, int wFlags=0 );
-    maskImg( QWidget *parent=0, ImageXmipp *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
+    maskImg( QWidget *parent=0, Image *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
     maskImg( QWidget *parent=0, QImage *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
     ~maskImg();
     bool	loadImage( const char *fileName );
-    ImageXmipp	xmippImage;				// Xmipp Image
+    Image	xmippImage;				// Xmipp Image
 
 protected:
     void	paintEvent( QPaintEvent * );
@@ -1290,7 +1290,7 @@ private:
     QLabel     *status;
     int         circle, rect, ellip, squ, ring, ellipring, rectframe, squframe, si; // Menu item ids
     void	Init();
-    bool 	xmipp2Qt(ImageXmipp &_image);
+    bool 	xmipp2Qt(Image &_image);
     bool 	Qt2xmipp(QImage _image);
     bool 	showImage();
     void	updateStatus();
@@ -1298,7 +1298,7 @@ private:
     int		pickx, picky;
     int		clickx, clicky;
     static 	maskImg* other;
-    ImageXmipp  mask;
+    Image       mask;
     maskType    typeOfMask;    
     int         cx, cy, w, h, KEYevent;
     maskFigure* theMaskFigure;    

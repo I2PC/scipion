@@ -208,9 +208,9 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
    else if (Zdim==1) {
       Image *I=&Ix; // This is a trick for the compiler
       switch (raw_type) {
-         case 'b': I->read(fn_in,Ydim,Xdim,reverse_endian,IBYTE); break;
-	 case 'h': I->read(fn_in,Ydim,Xdim,reverse_endian,I16); break;
-         case 'f': I->read(fn_in,Ydim,Xdim,reverse_endian,IFLOAT); break;
+         case 'b': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IBYTE); break;
+	 case 'h': I->read(fn_in,0,Ydim,Xdim,reverse_endian,I16); break;
+         case 'f': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IFLOAT); break;
       }
       Ix.write(fn_out);
    // Raw Volume --> Xmipp Volume

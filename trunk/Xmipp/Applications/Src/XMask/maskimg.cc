@@ -137,7 +137,7 @@ maskImg::maskImg( QWidget *parent, QImage *_image, maskType _typeOfMask, const c
 
 /****************************************************/
 
-maskImg::maskImg( QWidget *parent, ImageXmipp *_image, maskType _typeOfMask, const char *name, int wFlags )
+maskImg::maskImg( QWidget *parent, Image *_image, maskType _typeOfMask, const char *name, int wFlags )
     : QWidget( parent, name, wFlags ),
       filename( 0 ),
       helpmsg( 0 )
@@ -440,7 +440,7 @@ bool maskImg::showImage()
 
 /*****************************************/
 
-bool maskImg::xmipp2Qt(ImageXmipp &_image )
+bool maskImg::xmipp2Qt(Image &_image )
 {
     bool ok = FALSE;
 		
@@ -489,7 +489,7 @@ bool maskImg::Qt2xmipp( QImage _image )
       image.setNumColors(256);
 
       // Creates a Xmipp Image to hold Qt Image
-      ImageXmipp tmpImage(image.height(), image.width());
+      Image tmpImage(image.height(), image.width());
 
       // Reads pixels.
       for (int y = 0; y < image.width(); y++)
@@ -539,10 +539,12 @@ bool maskImg::loadImage( const char *fileName )
 	if (!ok) {
           try { 
  	    // reads Xmipp Image
-            ImageXmipp tmpImage; 
-	    tmpImage.read((string) filename); 
+            Image *tmpImage = Image::LoadImage (fileName);
+	    if (!tmpImage)
+	      REPORT_ERROR (1501, (string)"Error opening file " + fileName);
 	    ok = TRUE; 
-	    ok = xmipp2Qt(tmpImage);
+	    ok = xmipp2Qt(*tmpImage);
+	    delete tmpImage;
 	  } catch (Xmipp_error) {
 	    ok = FALSE;
 	    char *helptext = "Invalid image type";

@@ -73,7 +73,7 @@ int main( int argc, char **argv )
    } else {
         cout << "Calculating average and SD images from sel file......" << endl;
   	SelFile SF((FileName) selname); 
-	ImageXmipp ave, sd;
+	Image ave, sd;
 	double min, max;
 	SF.get_statistics(ave, sd, min, max); 
 	maskImg* w;

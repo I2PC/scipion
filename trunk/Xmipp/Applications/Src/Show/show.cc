@@ -66,6 +66,8 @@ int main( int argc, char **argv ) {
           FileName fn;
           switch (mode) {
 	     case 0:
+                 fn=argv[i];
+                 if (fn.find("imagic:")!=-1) break;
                  cerr << argv[i] << " is not a valid filename\n";
                  continue;
 	     case 1:
