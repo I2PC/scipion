@@ -116,7 +116,7 @@ void ShowTable::initTable() {
 
     // Check size of the table
     bool vertical_scroll_needed=true;
-    if (numCols*numRows > listSize) {
+    if (numCols*numRows >= listSize) {
       vertical_scroll_needed=false;
       if (numCols > listSize) {
          maxCols=numCols=listSize; maxRows=numRows=1;
@@ -169,6 +169,19 @@ void ShowTable::insertGeneralItemsInRightclickMenubar() {
     menubar->insertItem( "&Quit", this,  SLOT(close()));
 }
 
+/* Change boolean option --------------------------------------------------- */
+void ShowTable::changeBoolOption(int _mi, int _mic) {
+    bool show=options->isItemEnabled(_mi); 
+    if (show) {
+       options->setItemEnabled(_mi,  false);
+       options->setItemEnabled(_mic, true);
+    } else {
+       options->setItemEnabled(_mi,  true);
+       options->setItemEnabled(_mic, false);
+    }
+    repaintContents();
+}
+
 /* Adjust label to window size --------------------------------------------- */
 void ShowTable::adjustStatusLabel() {
    if (status==NULL) status = new QLabel(this);
@@ -183,37 +196,47 @@ void ShowTable::adjustStatusLabel() {
 /* Rewrite cell painting --------------------------------------------------- */
 void ShowTable::paintCell(QPainter *p, int row, int col,const QRect & cr,
    bool selected, const QColorGroup & cg) {
-    int w = columnWidth( col );			// width of cell in pixels
-    int h = rowHeight( row );			// height of cell in pixels
-    int x2 = w - 1;
-    int y2 = h - 1;
-    
-    //  Draw cell content (Pixmap)
-    if (indexOf(row,col) >= listSize) return;
-    int i=indexOf(row,col);
-    if (content[i]==NULL) producePixmapAt(i);
-    insert_content_in_queue(i);
-    p->drawPixmap(0, 0, *(content[i]));
-    
-    if ( cellMarks[i] ) {	// if we are on current cell,
-      QPen pen;
-      pen.setColor( red );
-      pen.setWidth(3);
-      p->setPen( pen );			// paint it in red
-      p->drawRect( 0, 0, x2, y2 );	// draw rect. along cell edges
-    } else {
-      p->setPen( white );		// restore to normal
-      p->drawLine( x2, 0, x2, y2 );	// draw vertical line on right
-      p->drawLine( 0, y2, x2, y2 );	// draw horiz. line at bottom
-    }
+   int i=indexOf(row,col);
+   if (i >= listSize) return;
+   if (content[i]==NULL) producePixmapAt(i);
+   insert_content_in_queue(i);
+   p->drawPixmap(0, 0, *(content[i]));
+   drawFrameAndLabel(p,row,col,i);
+}
 
-    // Draw label
-    if (cellLabel(i)!=NULL) {
-       QPen pen( green );
-       p->setPen( pen );
-       p->drawText(0, 0, x2, y2,
-          (Qt::AlignBottom | Qt::AlignRight), cellLabel(i));
-    }
+void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
+   int label_position) {
+   int w = columnWidth( col );  	       // width of cell in pixels
+   int h = rowHeight( row );		       // height of cell in pixels
+   int x2 = w - 1;
+   int y2 = h - 1;
+   
+   // Draw frame
+   if ( cellMarks[i] ) { // if the cell is marked
+     QPen pen;
+     pen.setColor( red );
+     pen.setWidth(3);
+     p->setPen( pen );  	       // paint it in red
+     p->drawRect( 0, 0, x2, y2 );      // draw rect. along cell edges
+   } else {
+     p->setPen( white );	       // restore to normal
+     p->drawLine( x2, 0, x2, y2 );     // draw vertical line on right
+     p->drawLine( 0, y2, x2, y2 );     // draw horiz. line at bottom
+   }
+
+   // Draw label
+   if (cellLabel(i)!=NULL) {
+      QPen pen( green );
+      p->setPen( pen );
+      switch (label_position) {
+         case 0: p->drawText(0, 0, x2, y2,
+                    (Qt::AlignBottom | Qt::AlignRight), cellLabel(i));
+	         break;
+         case 1: p->drawText(0, 0, x2, y2,
+                    (Qt::AlignTop | Qt::AlignRight), cellLabel(i));
+	         break;
+      }
+   }
 }
 
 /* Scale and normalize an image -------------------------------------------- */

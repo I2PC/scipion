@@ -132,6 +132,8 @@ protected:
     virtual void initRightclickMenubar()=0;
     /* Insert help and Quit in the right click menu bar*/
             void insertGeneralItemsInRightclickMenubar();
+    /* Change a boolean option */
+    virtual void changeBoolOption(int _mi, int _mic);
     /* Adjust label to window size */
     virtual void adjustStatusLabel();
 
@@ -153,6 +155,11 @@ protected:
        corresponding pixmap pointer is NULL. */
     virtual void paintCell(QPainter *p, int row, int col,const QRect & cr,
        bool selected, const QColorGroup & cg);
+    /* Draw Red/White frame and label in the Cell.
+       The position of the label can be 0=Bottom-right corner or
+       1=Top-right corner */
+    virtual void drawFrameAndLabel(QPainter *p, int row, int col, int i,
+       int label_pos=0);
     /* This is the function that all inherited classes should implement */
     virtual void producePixmapAt(int i)=0;
     /* Scale to currScale and produce the output minGray and maxGray
