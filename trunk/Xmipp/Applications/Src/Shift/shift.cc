@@ -33,6 +33,7 @@ public:
    matrix1D<double> shift;
    matrix1D<double> scale;
    bool             wrap;
+   bool             store_in_header;
    DocFile          DF_shifts;
    DocFile          DF_scales;
    int              colX_shift;
@@ -88,12 +89,15 @@ public:
           {scale.resize(my_dim); scale.init_constant(1);}
       }	 
       wrap=!check_param(argc,argv,"-dont_wrap");
+      store_in_header=check_param(argc,argv,"-store_in_header");
    }
    
    void show() {
       Prog_parameters::show();
       if (wrap) cout << "Wrapping image/volume\n";
       else      cout << "Not wrapping image/volume\n";
+      if (store_in_header) cout << "Storing the shift in header\n";
+      else                 cout << "Shifting image/volume\n";
       if (shift.get_dim() > 1 )
          cout << "Shift: " << shift.transpose() << endl;
       else if (DF_shifts.name()!=""){
@@ -119,7 +123,9 @@ public:
 	   << "  [-colX_shift <col>]       : Column with  the X shift\n"
 	   << "                              First column in the DocFile with data is number 0.\n"
 	   << "  [-colX_scale <col>]       : Column with the scale information\n"
-           << "  [-dont_wrap]              : By default, the image is wrapped\n";
+           << "  [-dont_wrap]              : By default, the image is wrapped\n"
+	   << "  [-store_in_header]        : Do not shift, but store the shift in the header\n"
+	   << "                              Not applicable to volumes\n";
    }
 };
 
@@ -157,7 +163,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    }
    A(0,0)=XX(eprm->scale);
    A(1,1)=YY(eprm->scale);
-   img().self_apply_geom(A,IS_NOT_INV,eprm->wrap);
+   if (!eprm->store_in_header) img().self_apply_geom(A,IS_NOT_INV,eprm->wrap);
+   else                        img.set_originOffsets(XX(eprm->shift),YY(eprm->shift));
    return TRUE;
 }
 
@@ -192,7 +199,6 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       eprm->DF_scales.next_data_line();
    }
    else if (eprm->Docfile!=FALSE){
-cout << "B" << endl; cout.flush();
       eprm->scale.resize(3); 
       eprm->scale.init_constant(1.);
    }
