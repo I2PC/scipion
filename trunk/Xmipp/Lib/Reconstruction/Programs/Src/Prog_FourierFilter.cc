@@ -99,7 +99,8 @@ void FourierMask::read(int argc, char **argv) _THROW {
       double sampling_rate=AtoF(get_param(argc,argv,"-sampling"));
       if (w1!=0)       w1=sampling_rate/w1;
       if (w2!=0)       w2=sampling_rate/w2;
-      if (raised_w!=0) raised_w=sampling_rate/raised_w;
+      /*CO: I think it is more confusing */
+      //if (raised_w!=0) raised_w=sampling_rate/raised_w;
    }
 }
 
@@ -138,10 +139,10 @@ void FourierMask::usage() {
         << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
         << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
         << "   -fourier_mask <file>              : Provide a Fourier file\n"
-        << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges\n"
+        << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
         << "   -fourier_mask ctf                 : In that case the following\n"
 	<< "                                       parameters apply\n"
-        << "  [-sampling <sampling_rate>]        : If provided all frequencies\n"
+        << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
         << "                                       are taken in Angstroms\n"
    ;
    cerr << "CTF parameters -----------------------------\n";
