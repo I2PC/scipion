@@ -707,7 +707,10 @@ bool global_compute_ctf2_part;
 /* CTF fitness ------------------------------------------------------------- */
 /* All variables are taken as global since there is no other way
    of communicating through Powell function */
+int  CTF_fitness_evaluations;
+bool show_performance=false;
 double CTF_fitness(double *p) {
+   CTF_fitness_evaluations++;
    double retval, shape_error=0;
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
@@ -1029,6 +1032,7 @@ double CTF_fitness(double *p) {
 
    if (global_compute_ctf2_part && retval!=global_heavy_penalization)
       global_compute_ctf2_part=false;
+      if (show_performance) cout << "CTF: " << CTF_fitness_evaluations << " " << retval << endl;
    return retval;
 }
 
@@ -1419,6 +1423,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    
    // Adjust
    cerr << "Looking for best fitting CTF ...\n";
+   CTF_fitness_evaluations=0; show_performance=true;
    for (global_evaluation_reduction=2; global_evaluation_reduction>=1; global_evaluation_reduction--) {
       global_compute_ctf2_part=true;
       if (global_evaluation_reduction==1) global_weight=prm.weight;
