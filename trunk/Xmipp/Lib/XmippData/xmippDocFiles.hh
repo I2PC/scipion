@@ -117,6 +117,11 @@ public:
    /** Get the key of this line. */
    int get_key() {return key;}
 
+   /** Get the number of components.
+       If it is a comment or it hasn't been assigned it returns -1 */
+   int get_no_components()
+      {if (line_type==DATALINE) return data.size(); else return -1;}
+
    /** Empty the document line. */
    void clear();
 
