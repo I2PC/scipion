@@ -1,5 +1,5 @@
 ###########################################################################
-LIBDIRS  = XmippData XmippInterface Reconstruction Classification  \
+LIBDIRS  = XmippData Reconstruction Classification XmippInterface \
            OldXmipp XmippGraphics
 
 # Main Action = Built library ----------------------------------------------
