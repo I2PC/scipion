@@ -337,7 +337,7 @@ istream& operator >> (istream &in, xmippPC &PC) {
    return in;
 }
 
-/* PCA set destructur ------------------------------------------------------ */
+/* PCA set destructor ------------------------------------------------------ */
 PCA_set::~PCA_set() {
    int imax=PCA.size();
    for (int i=0; i<imax; i++) delete PCA[i];
