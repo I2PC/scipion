@@ -52,9 +52,13 @@
     voxels in its border are greater than the region voxels.
     If less is FALSE the region is grown so that all voxels on its 
     border are smaller than the region voxels.
+
+    Valid neighbourhoods are 4 or 8.
     */
-    void region_growing(const Image *I_in, Image *I_out, int i, int j,
-       float stop_colour=1, float filling_colour=1, bool less=TRUE);
+    void region_growing(const matrix2D<double> &I_in, matrix2D<double> &I_out,
+       int i, int j,
+       float stop_colour=1, float filling_colour=1, bool less=TRUE,
+       int neighbourhood=8);
     
 /** Region growing for volumes.
     Given a position inside a volume this function grows
@@ -67,20 +71,37 @@
     If less is FALSE the region is grown so that all voxels on its 
     border are smaller than the region voxels.
     */
-    void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
+    void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
+       int k, int i, int j,
        float stop_colour=1, float filling_colour=1, bool less=TRUE);
 
 /** Label a binary image.
     This function receives a binary volume and labels all its connected
     components. The background is labeled as 0, and the components as 
     1, 2, 3, ....*/
-    int label_image(const Image *I, Image *label);
+    int label_image(const matrix2D<double> &I, matrix2D<double> &label,
+       int neighbourhood=8);
 
 /** Label a binary volume.
     This function receives a binary image and labels all its connected
     components. The background is labeled as 0, and the components as 
     1, 2, 3, ....*/
-    int label_volume(const Volume *V, Volume *label);
+    int label_volume(const matrix3D<double> &V, matrix3D<double> &label);
+
+/** Remove connected components smaller than a given size. They are set to 0.*/
+    void remove_small_components(matrix2D<double> &I, int size,
+       int neighbourhood=8);
+
+/** Keep the biggest connected component.
+    If the biggest component does not cover the percentage required
+    (by default, 0), more big components are taken until this is
+    accomplished.*/
+    void keep_biggest_component(matrix2D<double> &I, double percentage=0,
+       int neighbourhood=8);
+
+/** Fill object.
+    Everything that is not background is assumed to be object. */
+    void fill_binary_object(matrix2D<double> &I,int neighbourhood=8);
 
 /** Correlation 1D.
     This function returns the product of both signals in the common
@@ -222,5 +243,28 @@ void Smoothing_Shah(matrix2D<double> &img,
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    const matrix1D<double> &W, int OuterLoops, int InnerLoops,
    int RefinementLoops, bool adjust_range=true);
+
+/** Rotational invariant moments.
+    The mask and the image are supposed to be of the same shape.
+    If no mask is provided, the moments are computed on the whole image.
+    The moments are measured with respect to the origin of the image.
+
+    These moments have been taken from
+    http://www.cs.cf.ac.uk/Dave/Vision_lecture/node36.html (moments 1 to 5).
+*/
+void rotational_invariant_moments(const matrix2D<double> &img,
+   const matrix2D<int> *mask, matrix1D<double> &v_out);
+
+/** Inertia moments.
+    They are measured with respect to the center of the image, and not
+    with respect to the center of mass. For an image there are only two
+    inertia moments. */
+void inertia_moments(const matrix2D<double> &img,
+   const matrix2D<int> *mask, matrix1D<double> &v_out);
+
+/** Fill a triangle defined by three points.
+    The points are supplied as a pointer to three integer positions. They can
+    be negative. */
+void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color);
 //@}
 #endif

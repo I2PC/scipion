@@ -54,14 +54,15 @@ void contrast_enhancement(Image *I) {
 }
 
 /* Region growing for images ----------------------------------------------- */
- void region_growing(const Image *I_in, Image *I_out, int i, int j,
-    float stop_colour, float filling_colour, bool less)
+ void region_growing(const matrix2D<double> &I_in, matrix2D<double> &I_out,
+    int i, int j,
+    float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
    list<int> iNeighbours;       /* A list for neighbour pixels */
    int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
    
    /* First task is copying the input image into the output one */
-   *I_out=*I_in;
+   I_out=I_in;
    
    /**** Then the region growing is done ****/
    /* Insert at the beginning of the list the seed coordinates */
@@ -69,7 +70,7 @@ void contrast_enhancement(Image *I) {
    iNeighbours.push_front(i);
 
    /* Fill the seed coordinates */
-   IMGPIXEL(*I_out,i,j)=filling_colour;
+   MAT_ELEM(I_out,i,j)=filling_colour;
    
    while(!iNeighbours.empty())
    {
@@ -83,11 +84,11 @@ void contrast_enhancement(Image *I) {
 
       #define CHECK_POINT(i,j) \
          XX(r)=j; YY(r)=i; \
-         if (!(*I_out)().outside(r))  { \
-            if (IMGPIXEL(*I_out,i,j)!=filling_colour) \
-               if ((less && IMGPIXEL (*I_out,i,j) < stop_colour) || \
-                   (!less && IMGPIXEL (*I_out,i,j) > stop_colour)) { \
-                  IMGPIXEL (*I_out,i,j)=filling_colour; \
+         if (!I_out.outside(r))  { \
+            if (MAT_ELEM(I_out,i,j)!=filling_colour) \
+               if ((less && MAT_ELEM (I_out,i,j) < stop_colour) || \
+                   (!less && MAT_ELEM (I_out,i,j) > stop_colour)) { \
+                  MAT_ELEM (I_out,i,j)=filling_colour; \
                   iNeighbours.push_front(j); \
                   iNeighbours.push_front(i); \
                } \
@@ -97,23 +98,26 @@ void contrast_enhancement(Image *I) {
       CHECK_POINT(iCurrenti  ,iCurrentj-1);
       CHECK_POINT(iCurrenti  ,iCurrentj+1);
       CHECK_POINT(iCurrenti-1,iCurrentj  );
-      CHECK_POINT(iCurrenti-1,iCurrentj-1);
-      CHECK_POINT(iCurrenti-1,iCurrentj+1);
       CHECK_POINT(iCurrenti+1,iCurrentj  );
-      CHECK_POINT(iCurrenti+1,iCurrentj-1);
-      CHECK_POINT(iCurrenti+1,iCurrentj+1);
+      if (neighbourhood==8) {
+	 CHECK_POINT(iCurrenti-1,iCurrentj-1);
+	 CHECK_POINT(iCurrenti-1,iCurrentj+1);
+	 CHECK_POINT(iCurrenti+1,iCurrentj-1);
+	 CHECK_POINT(iCurrenti+1,iCurrentj+1);
+      }
    }             
 }
 
 /* Region growing for volumes ----------------------------------------------- */
-void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
+void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
+   int k, int i, int j,
    float stop_colour, float filling_colour, bool less)
 {
    list<int> iNeighbours;       /* A list for neighbour voxels */
    int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
    
    /* First task is copying the input volume into the output one */
-   *V_out=*V_in;
+   V_out=V_in;
    
    /**** Then the region growing is done in output volume ****/
    /* Insert at the beginning of the list the seed coordinates */
@@ -122,7 +126,7 @@ void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
    iNeighbours.push_front(k);
    
    /* Fill the seed coordinates */
-   VOLVOXEL(*V_out,k,i,j)=filling_colour;
+   VOL_ELEM(V_out,k,i,j)=filling_colour;
    
    while(!iNeighbours.empty())
    {
@@ -141,11 +145,11 @@ void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
       list for exploring its neighbours */
       #define CHECK_POINT_3D(k,i,j) \
          XX(r)=j; YY(r)=i; ZZ(r)=k; \
-         if (!(*V_out)().outside(r))  { \
-            if (VOLVOXEL(*V_out,k,i,j)!=filling_colour) \
-               if ((less && VOLVOXEL (*V_out,k,i,j) < stop_colour)|| \
-                   (!less &&VOLVOXEL (*V_out,k,i,j) > stop_colour)) { \
-                  VOLVOXEL (*V_out,k,i,j)=filling_colour; \
+         if (!V_out.outside(r))  { \
+            if (VOL_ELEM(V_out,k,i,j)!=filling_colour) \
+               if ((less && VOL_ELEM (V_out,k,i,j) < stop_colour)|| \
+                   (!less &&VOL_ELEM (V_out,k,i,j) > stop_colour)) { \
+                  VOL_ELEM (V_out,k,i,j)=filling_colour; \
                   iNeighbours.push_front(j); \
                   iNeighbours.push_front(i); \
                   iNeighbours.push_front(k); \
@@ -183,33 +187,86 @@ void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
 }
 
 /* Label image ------------------------------------------------------------ */
-int label_image(const Image *I, Image *label) {
-   (*label)()=(*I)();
+int label_image(const matrix2D<double> &I, matrix2D<double> &label,
+   int neighbourhood) {
+   label=I;
    int colour=32000;
    bool found;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D((*label)()) {
-      if ((*label)(i,j)!=1) continue;
-      region_growing(label,label,i,j,0,colour,FALSE);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label) {
+      if (label(i,j)!=1) continue;
+      region_growing(label,label,i,j,0,colour,FALSE,neighbourhood);
       colour++;
    }
-   FOR_ALL_ELEMENTS_IN_MATRIX2D((*label)())
-      if ((*label)(i,j)!=0) (*label)(i,j)=(*label)(i,j)-31999;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
+      if (label(i,j)!=0) label(i,j)=label(i,j)-31999;
    return colour-32000;
 }
 
 /* Label volume ------------------------------------------------------------ */
-int label_volume(const Volume *V, Volume *label) {
-   (*label)()=(*V)();
+int label_volume(const matrix3D<double> &V, matrix3D<double> &label) {
+   label=V;
    int colour=32000;
    bool found;
-   FOR_ALL_ELEMENTS_IN_MATRIX3D((*label)()) {
-      if ((*label)(k,i,j)!=1) continue;
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(label) {
+      if (label(k,i,j)!=1) continue;
       region_growing(label,label,k,i,j,0,colour,FALSE);
       colour++;
    }
-   FOR_ALL_ELEMENTS_IN_MATRIX3D((*label)())
-      if ((*label)(k,i,j)!=0) (*label)(k,i,j)=(*label)(k,i,j)-31999;
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(label)
+      if (label(k,i,j)!=0) label(k,i,j)=label(k,i,j)-31999;
    return colour-32000;
+}
+
+/* Remove small components ------------------------------------------------- */
+void remove_small_components(matrix2D<double> &I, int size,
+   int neighbourhood) {
+   matrix2D<double> label;
+   int imax=label_image(I,label,neighbourhood);
+   matrix1D<int> nlabel(imax+1);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label) nlabel((int)(label(i,j)))++;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
+      if (nlabel((int)(label(i,j)))<size) I(i,j)=0;
+}
+
+/* Keep biggest component -------------------------------------------------- */
+void keep_biggest_component(matrix2D<double> &I, double percentage,
+   int neighbourhood) {
+   matrix2D<double> label;
+   int imax=label_image(I,label,neighbourhood);
+   matrix1D<int> nlabel(imax+1);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label) {
+      int idx=(int)(label(i,j));
+      if (idx==0) continue;
+      nlabel(idx)++;
+   }
+   matrix1D<int> best=nlabel.index_sort();
+   best-=1;
+   int nbest=XSIZE(best)-1;
+   double total=nlabel.sum();
+   double explained=nlabel(best(nbest));
+   while (explained<percentage*total) {
+      nbest--;
+      explained+=nlabel(best(nbest));
+   }
+   
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label) {
+      bool among_the_best=false;
+      for (int n=nbest; n<imax+1; n++)
+         if (label(i,j)==best(n)) {among_the_best=true; break;}
+      if (!among_the_best) I(i,j)=0;
+   }
+}
+
+/* Fill object ------------------------------------------------------------- */
+void fill_binary_object(matrix2D<double> &I, int neighbourhood) {
+   matrix2D<double> label;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(I) I(i,j)=1-I(i,j);
+   int imax=label_image(I,label,neighbourhood);
+   ImageXmipp save; save()=label; save.write("PPPlabel.xmp");
+   double l0=label(STARTINGY(I),STARTINGX(I));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
+      if (label(i,j)==l0) I(i,j)=0;
+      else                I(i,j)=1;
 }
 
 /* Correlation ------------------------------------------------------------- */
@@ -1248,6 +1305,220 @@ void Smoothing_Shah(matrix2D<double> &img,
 	       << " ... Edge diff " << diffedge
 	       << endl; */
        }
+    }
+}
+
+/* Rotational invariant moments -------------------------------------------- */
+void rotational_invariant_moments(const matrix2D<double> &img,
+   const matrix2D<int> *mask,
+   matrix1D<double> &v_out) {
+   // Prepare some variables
+   double m_11=0, m_02=0, m_20=0, m_12=0, m_21=0, m_03=0, m_30=0; //, m_00=0;
+   double normalize_x=2.0/XSIZE(img);
+   double normalize_y=2.0/YSIZE(img);
+
+   // Compute low-level moments
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(img) {
+      if (mask!=NULL)
+         if (!(*mask)(i,j)) continue;
+      double val=img(i,j);
+      double dx=j*normalize_x;
+      double dy=i*normalize_y;
+      double dx2=dx*dx, dx3=dx2*dx;
+      double dy2=dy*dy, dy3=dy2*dy;
+      // m_00+=val;
+      m_11+=val*dx*dy;  m_02+=val*dy2;    m_20+=val*dx2;
+      m_12+=val*dx*dy2; m_21+=val*dx2*dy; m_03+=val*dy3; m_30+=val*dx3;
+   }
+   //m_11/=m_00; m_02/=m_00; m_20/=m_00;
+   //m_12/=m_00; m_21/=m_00; m_03/=m_00; m_30/=m_00;
+   
+   // Compute high-level rotational invariant moments
+   v_out.resize(5);
+   v_out( 0)= m_20+m_02;
+   v_out( 1)=(m_20-m_02)*(m_20-m_02)+4*m_11*m_11;
+   v_out( 2)=(m_30-3*m_12)*(m_30-3*m_12)+
+             (3*m_21-m_03)*(3*m_21-m_03);
+   v_out( 3)=(m_30+m_12)*(m_30+m_12)+
+             (m_21+m_03)*(m_21+m_03);
+   v_out( 4)=(m_30-3*m_12)*(m_30+m_12)*(
+                   (m_30+m_12)*(m_30+m_12)
+	        -3*(m_21+m_03)*(m_21+m_03))+
+	     (3*m_21-m_03)*(m_21+m_03)*(
+	         3*(m_30+m_12)*(m_30+m_12)
+		  -(m_21+m_03)*(m_21+m_03));
+/*
+   v_out( 5)=(m_20+m_02)*(
+             	  (m_30+m_12)*(m_30+m_12)
+	       -3*(m_21+m_03)*(m_21+m_03))
+	     +4*m_11*(m_30+m_12)*(m_03+m_21);
+   v_out( 6)=(3*m_21-m_03)*(m_12+m_30)*(
+             	    (m_30+m_12)*(m_30+m_12)
+	     	 -3*(m_21+m_03)*(m_21+m_03))
+	     -(m_30-3*m_12)*(m_12+m_03)*(
+	     	  3*(m_30+m_12)*(m_30+m_12)
+		   -(m_21+m_03)*(m_21+m_03));
+*/
+}   
+
+/* Inertia moments --------------------------------------------------------- */
+void inertia_moments(const matrix2D<double> &img,
+   const matrix2D<int> *mask,
+   matrix1D<double> &v_out) {
+   // Prepare some variables
+   double m_11=0, m_02=0, m_20=0;
+   double normalize_x=2.0/XSIZE(img);
+   double normalize_y=2.0/YSIZE(img);
+
+   // Compute low-level moments
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(img) {
+      if (mask!=NULL)
+         if (!(*mask)(i,j)) continue;
+      double val=img(i,j);
+      double dx=j*normalize_x;
+      double dy=i*normalize_y;
+      double dx2=dx*dx;
+      double dy2=dy*dy;
+      m_11+=val*dx*dy;  m_02+=val*dy2;    m_20+=val*dx2;
+   }
+   
+   // Compute the eigen values of the inertia matrix
+   // [m_02 m_11
+   //  m_11 m_20]
+   matrix2D<double> A(2,2);
+   A(0,0)=m_02;
+   A(0,1)=A(1,0)=m_11;
+   A(1,1)=m_20;
+   matrix2D<double> u,v;
+   svdcmp(A,u,v_out,v);
+   v_out=v_out.sort();
+}   
+
+/* Fill triangle ----------------------------------------------------------- */
+void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color) {
+    /*
+     * Order in y values
+     */
+    int y1 = 0;
+    while (!y1) {
+       y1 = 1;
+       for (int y2 = 0; y2 < 2; y2++) {
+          if (ty[y2] > ty[y2 + 1] ||
+             (ty[y2] == ty[y2 + 1] && tx[y2] < tx[y2 + 1])) {
+	     int x1 = ty[y2];
+	     ty[y2] = ty[y2 + 1];
+	     ty[y2 + 1] = x1;
+	     x1 = tx[y2];
+	     tx[y2] = tx[y2 + 1];
+	     tx[y2 + 1] = x1;
+	     y1 = 0;
+          }
+       }
+    }
+
+    int dx1 = tx[1] - tx[0];
+    int dx2 = tx[2] - tx[0];
+    int dy1 = ty[1] - ty[0];
+    int dy2 = ty[2] - ty[0];
+
+    int sx1 = SGN0(dx1);
+    int sx2 = SGN0(dx2);
+    int sy1 = SGN0(dy1);
+
+    int ix1 = ABS(dx1);
+    int ix2 = ABS(dx2);
+    int iy1 = ABS(dy1);
+    int iy2 = ABS(dy2);
+
+    int inc1 = MAX(ix1, iy1);
+    int inc2 = MAX(ix2, iy2);
+
+    int x1, x2, y2, xl, xr;
+    x1 = x2 = y1 = y2 = 0;
+    xl = xr = tx[0];
+    int y = ty[0];
+
+    while (y != ty[1]) {
+       int doit1 = 0;
+       int doit2 = 0;
+
+       while (!doit1) {   /* Wait until y changes */
+	   x1 += ix1;
+	   y1 += iy1;
+	   if (x1 > inc1) {
+	      x1 -= inc1;
+	      xl += sx1;
+	   }
+	   if (y1 > inc1) {
+	      y1 -= inc1;
+	      y += sy1;
+	      doit1 = 1;
+	   }
+       }
+
+       while (!doit2) {   /* Wait until y changes */
+	   x2 += ix2;
+	   y2 += iy2;
+	   if (x2 > inc2) {
+	      x2 -= inc2;
+	      xr += sx2;
+	   }
+	   if (y2 > inc2) {
+	      y2 -= inc2;
+	      doit2 = 1;
+	   }
+       }
+
+       for (int myx=xl; myx<=xr; myx++)
+          img(y,myx)=color;
+    }
+
+    dx1 = tx[2] - tx[1];
+    dy1 = ty[2] - ty[1];
+
+    sx1 = SGN0(dx1);
+    sy1 = SGN0(dy1);
+
+    ix1 = ABS(dx1);
+    iy1 = ABS(dy1);
+
+    inc1 = MAX(ix1, iy1);
+    xl = tx[1];
+    x1 = 0;
+
+    while (y != ty[2]) {
+       int doit1 = 0;
+       int doit2 = 0;
+
+       while (!doit1) {   /* Wait until y changes */
+	   x1 += ix1;
+	   y1 += iy1;
+	   if (x1 > inc1) {
+	      x1 -= inc1;
+	      xl += sx1;
+	   }
+	   if (y1 > inc1) {
+	      y1 -= inc1;
+	      y += sy1;
+	      doit1 = 1;
+	   }
+       }
+
+       while (!doit2) {   /* Wait until y changes */
+	   x2 += ix2;
+	   y2 += iy2;
+	   if (x2 > inc2) {
+	      x2 -= inc2;
+	      xr += sx2;
+	   }
+	   if (y2 > inc2) {
+	      y2 -= inc2;
+	      doit2 = 1;
+	   }
+       }
+
+       for (int myx=xl; myx<=xr; myx++)
+          img(y,myx)=color;
     }
 }
 
