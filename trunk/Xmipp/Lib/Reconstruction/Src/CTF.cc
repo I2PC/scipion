@@ -278,11 +278,12 @@ void XmippCTF::Generate_CTF(vtkImageData * FFTI, vtkImageData * &CTF) const {
    matrix1D<double> freq(2);
    int dim[3]; FFTI->GetDimensions(dim);
    if (CTF==NULL) CTF=vtkImageData::New();
-   else           CTF->PrepareForNewData();
-   CTF->CopyStructure(FFTI);
+   else           CTF->Initialize();
+   CTF->SetDimensions(dim[0],dim[1],dim[2]);
    CTF->SetScalarType(VTK_FLOAT);
    CTF->SetNumberOfScalarComponents(2);
    CTF->AllocateScalars();
+   CTF->Update();
    SPEED_UP_vtk;
    FOR_ALL_ELEMENTS_IN_VTK(CTF) {
       XX(idx)=j; YY(idx)=i;
@@ -315,22 +316,24 @@ bool XmippCTF::physical_meaning() {
 	  Q0>=-0.20 && Q0<=0         &&
           DeltafU<0 && DeltafV<0     &&
 	  CTF_at(0,0)>=0;
+      #ifdef DEBUG
+         cout << *this << endl;
+         cout << "K>=0      && base_line>=0  " << (K>=0      && base_line>=0) << endl
+      	      << "kV>=50e3  && kV<=1000e3    " << (kV>=50e3  && kV<=1000e3)   << endl
+	      << "espr>=0   && espr<=20      " << (espr>=0   && espr<=20)     << endl
+	      << "ispr>=0   && ispr<=20e-6   " << (ispr>=0   && ispr<=20e-6)  << endl
+	      << "Cs>=0     && Cs<=20e7      " << (Cs>=0     && Cs<=20e7)     << endl
+	      << "Ca>=0     && Ca<=20e7      " << (Ca>=0     && Ca<=20e7)     << endl
+	      << "alpha>=0  && alpha<=5e-3   " << (alpha>=0  && alpha<=5e-3)  << endl
+	      << "DeltaF>=0 && DeltaF<=1000  " << (DeltaF>=0 && DeltaF<=1000) << endl
+	      << "DeltaR>=0 && DeltaR<=100   " << (DeltaR>=0 && DeltaR<=100)  << endl
+	      << "Q0>=-0.20 && Q0<=0	     " << (Q0>=-0.20 && Q0<=0)        << endl
+      	      << "DeltafU<0 && DeltafV<0     " << (DeltafU<0 && DeltafV<0)    << endl
+	      << "CTF_at(0,0)>=0	     " << (CTF_at(0,0)>=0)	      << endl
+         ;
+         cout << "CTF_at(0,0)=" << CTF_at(0,0,true) << endl;
+      #endif
    } else retval=TRUE;
-   #ifdef DEBUG
-      cout << "K>=0      && base_line>=0  " << (K>=0      && base_line>=0) << endl
-           << "kV>=50e3  && kV<=1000e3    " << (kV>=50e3  && kV<=1000e3)   << endl
-	   << "espr>=0   && espr<=20      " << (espr>=0   && espr<=20)     << endl
-	   << "ispr>=0   && ispr<=20e-6   " << (ispr>=0   && ispr<=20e-6)  << endl
-	   << "Cs>=0     && Cs<=20e7      " << (Cs>=0     && Cs<=20e7)     << endl
-	   << "Ca>=0     && Ca<=20e7      " << (Ca>=0     && Ca<=20e7)     << endl
-	   << "alpha>=0  && alpha<=5e-3   " << (alpha>=0  && alpha<=5e-3)  << endl
-	   << "DeltaF>=0 && DeltaF<=1000  " << (DeltaF>=0 && DeltaF<=1000) << endl
-	   << "DeltaR>=0 && DeltaR<=100   " << (DeltaR>=0 && DeltaR<=100)  << endl
-	   << "Q0>=-0.20 && Q0<=0         " << (Q0>=-0.20 && Q0<=0)        << endl
-           << "DeltafU<0 && DeltafV<0     " << (DeltafU<0 && DeltafV<0)    << endl
-	   << "CTF_at(0,0)>=0             " << (CTF_at(0,0)>=0)            << endl
-      ;
-   #endif
    bool retval2;
    if (enable_CTFnoise) {
       retval2=
@@ -341,17 +344,18 @@ bool XmippCTF::physical_meaning() {
 	  sqU>=0            && sqV>=0        	   &&
 	  sqrt_K>=0         &&
 	  gaussian_angle>=0 && gaussian_angle<=90;
+      #ifdef DEBUG
+         cout << *this << endl;
+         cout << "gaussian_K>=0     &&  		  " << (gaussian_K>=0	  )			 << endl
+      	      << "base_line>=0      &&  		  " << (base_line>=0	  )			 << endl
+	      << "sigmaU>=0	    && sigmaV>=0	  " << (sigmaU>=0	  && sigmaV>=0) 	 << endl
+	      << "cU>=0 	    && cV>=0		  " << (cU>=0		  && cV>=0 )		 << endl
+	      << "sqU>=0	    && sqV>=0		  " << (sqU>=0  	  && sqV>=0)		 << endl
+	      << "sqrt_K>=0	    &&  		  " << (sqrt_K>=0)				 << endl
+	      << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
+         ;
+      #endif
    } else retval2=FALSE;
-   #ifdef DEBUG
-      cout << "gaussian_K>=0     &&                    " << (gaussian_K>=0     )                      << endl
-           << "base_line>=0      &&                    " << (base_line>=0      )                      << endl
-	   << "sigmaU>=0         && sigmaV>=0          " << (sigmaU>=0         && sigmaV>=0)          << endl
-	   << "cU>=0             && cV>=0              " << (cU>=0             && cV>=0 )             << endl
-	   << "sqU>=0            && sqV>=0             " << (sqU>=0            && sqV>=0)             << endl
-	   << "sqrt_K>=0         &&                    " << (sqrt_K>=0)                               << endl
-	   << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
-      ;
-   #endif
    return retval && retval2;
 }
 #undef DEBUG
