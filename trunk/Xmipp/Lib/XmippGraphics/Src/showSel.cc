@@ -212,7 +212,7 @@ void ShowSel::producePixmapAt(int i) {
        delete img;
     } else if (Is_ImageXmipp(imgnames[i]))
        // Plain Xmipp images
-       I.read(imgnames[i]);
+       I.read(imgnames[i],FALSE,FALSE,apply_geo);
     else if (Is_FourierImageXmipp(imgnames[i])) {
        // FFT Xmipp images: plot log10(1+|I|^2)
        FourierImageXmipp If;
@@ -369,7 +369,7 @@ void ShowSel::showStats() {
     for (int i=0; i<listSize; i++)
         if (cellMarks[i])
 	  SFNew.insert(imgnames[i], SelLine::ACTIVE);
-    if (SFNew.ImgNo()) ShowTable::showStats(SFNew);
+    if (SFNew.ImgNo()) ShowTable::showStats(SFNew,apply_geo);
     else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 

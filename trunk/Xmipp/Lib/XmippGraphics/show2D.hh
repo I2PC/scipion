@@ -76,6 +76,9 @@ public:
     /** Set image from matrix */
     void setImage( const matrix2D<double> &img);
 
+    /** Flag whether or not to apply header transformation **/ 
+    bool        apply_geo;
+ 
 protected:
     void	paintEvent( QPaintEvent * );
     void	resizeEvent( QResizeEvent * );

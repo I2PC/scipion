@@ -45,6 +45,7 @@ class ShowSel: public ShowTable {
 public:
     // Show only active images (!= -1 in showsel). 1-> show active, 0-> show all
     bool        showonlyactive;
+    bool        apply_geo;
 protected:
     // Filenames within the Selfile
     FileName   *imgnames;

@@ -398,12 +398,12 @@ void ShowTable::check_file() {
 }
 
 /* Show Average and Standard deviation of a SelFile ------------------------ */
-void ShowTable::showStats(SelFile &SF) {
+void ShowTable::showStats(SelFile &SF, bool apply_geo) {
     try {
        Image _ave, _sd;
        double _minPixel, _maxPixel;
        SF.go_beginning(); 
-       SF.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
+       SF.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);  
        ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
        ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
        wavg->show();

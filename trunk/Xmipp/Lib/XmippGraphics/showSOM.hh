@@ -34,6 +34,10 @@
 /** Class to show SOM images. */
 class ShowSOM: public ShowSel {
    Q_OBJECT;
+public:
+  // Apply geometric transformation when showing average & stddev of original images
+  // and to compute the error image
+    bool        apply_geo;
 protected:
    // Array of selfiles, a selfile for each codevector
    SelFile *SFcv;

@@ -193,7 +193,7 @@ protected:
     virtual void reOpenFile() {};
 
     /* Show the average and SD of a Selfile */
-    void showStats(SelFile &SF);
+    void showStats(SelFile &SF, bool apply_geo=FALSE);
 
     /* Make a temp file */
     string makeTempFile (int &fd);

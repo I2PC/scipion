@@ -104,6 +104,7 @@ ImageViewer::ImageViewer( const char *name, bool _check_file_change):
       helpmsg( 0 )
 {
     check_file_change=_check_file_change;
+    apply_geo=true;
     Init();
 }
 
@@ -115,6 +116,7 @@ ImageViewer::ImageViewer( QImage *_image, const char *name)
       helpmsg( 0 )
 {
     check_file_change=false;
+    apply_geo=true;
     Init();
     filename = name;
     if (Qt2xmipp(*_image)) showImage();
@@ -128,6 +130,7 @@ ImageViewer::ImageViewer( Image *_image, const char *name)
       helpmsg( 0 )
 {
     check_file_change=false;
+    apply_geo=true;
     Init();
     filename = name;
     if (xmipp2Qt((Image&) *_image)) showImage();
@@ -141,6 +144,7 @@ ImageViewer::ImageViewer( FourierImageXmipp *_FFTimage, const char *name)
       helpmsg( 0 )
 {
     check_file_change=false;
+    apply_geo=true;
     Init();
     filename = name;
     // Compute the magnitude
@@ -401,7 +405,7 @@ bool ImageViewer::loadImage( const char *fileName )
                delete p;
             } else if (Is_ImageXmipp(filename)) {
                ImageXmipp p;
-               p.read((FileName)filename);
+               p.read((FileName)filename,FALSE,FALSE,apply_geo);
                tmpImage()=p();
             } else if (Is_FourierImageXmipp(filename)) {
 	       FourierImageXmipp If; If.read(filename);

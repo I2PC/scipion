@@ -307,7 +307,7 @@ const char * ShowSOM::cellLabel(int i) const {
 void ShowSOM::showRepresentedStats() {
    SelFile SFNew;
    extractRepresented(SFNew);
-   if (SFNew.ImgNo()) ShowTable::showStats(SFNew);
+   if (SFNew.ImgNo()) ShowTable::showStats(SFNew,apply_geo);
    else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
@@ -351,7 +351,7 @@ void ShowSOM::showRepresentedAverageTogether()
 	double _minPixel, _maxPixel;
 	SelFile SFNew(SFcv[i]);
 	SFNew.go_beginning();
-	SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel);
+	SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel,apply_geo);
       }
       else
 	_ave = Image (projXdim, projYdim);
@@ -392,6 +392,7 @@ void ShowSOM::showRepresentedSel() {
    if (SFNew.ImgNo()) {
       ShowSel *showsel=new ShowSel;
       showsel->initWithObject(10,10,SFNew,"Represented images");
+      showsel->apply_geo=apply_geo;
       showsel->show();
    }
    else QMessageBox::about( this, "Error!", "No images selected\n");
@@ -410,7 +411,7 @@ void ShowSOM::showErrorImage() {
        // Compute the average of the images assigned to that cell
        Image _ave, _sd;
        double _minPixel, _maxPixel;
-       SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
+       SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel,apply_geo);  
        
        // Load the cell code vector
        Image *image = Image::LoadImage (imgnames[i]), error_image;
