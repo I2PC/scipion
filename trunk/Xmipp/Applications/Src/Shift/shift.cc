@@ -138,7 +138,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    }
    else if (eprm->Docfile!=FALSE){
       eprm->shift.resize(2); 
-      eprm->shift.init_constant(1.);
+      eprm->shift.init_constant(0.);
    }
    A(0,2)=XX(eprm->shift);
    A(1,2)=YY(eprm->shift);
