@@ -361,14 +361,26 @@
      }     
      _is >> somWidth;  
      _is >> somHeight;  
+     str = ItoA(dim);
+     str += " ";
+     str += ItoA(somWidth*somHeight);
+     str += " ";
+     for (int i = str.size() - 1; i >= 0; i--)
+	 if (_is) _is.putback((char) str[i]);       
+     xmippCB::readSelf(_is);
+
+/*  IT DOESN'T WORK PROPERLY   
+    
+     _is >> somWidth;  
+     _is >> somHeight;  
      
-     char aux[128];
+   char aux[128];
      strstream ostr(aux,sizeof(aux));
      ostr << dim << " " << (somWidth*somHeight) << " " <<
         somWidth << " " << somHeight << endl;
      while (_is.good())
         ostr.put (_is.get());
-     xmippCB::readSelf(ostr);
+     xmippCB::readSelf(ostr);*/
   };
 
 
