@@ -27,7 +27,10 @@
 /* WAVELETS                                                                  */
 /* ------------------------------------------------------------------------- */
 
-#include <XmippData/xmippWavelets.hh>
+#include "../xmippWavelets.hh"
+#include "../xmippArgs.hh"
+#include "../xmippHistograms.hh"
+#include "../xmippMasks.hh"
 
 /* Wavelet ----------------------------------------------------------------- */
 
@@ -99,50 +102,64 @@ template <class T>
       matrix1D<T> v1;
       matrix2D<T> v2;
       matrix3D<T> v3;
-      DWT(v1,v1);
-      DWT(v2,v2);
-      DWT(v3,v3);
+      matrix1D<double> v1d;
+      matrix2D<double> v2d;
+      matrix3D<double> v3d;
+      DWT(v1,v1d);
+      DWT(v2,v2d);
+      DWT(v3,v3d);
+      int x;
+      SelectDWTBlock(0,v1,"0",x,x);
+      SelectDWTBlock(0,v2,"00",x,x,x,x);
+      SelectDWTBlock(0,v3,"000",x,x,x,x,x,x);
    }
 
 void instantiate_XmippWavelets() {
    double d; instantiate_XmippWavelets1(d);
+   int    i; instantiate_XmippWavelets1(i);
 }
 
 // Select block ------------------------------------------------------------
 #define DWT_Imin(s,smax,l) (int)((l=='0')?0:pow(2.0,smax-s-1))
 #define DWT_Imax(s,smax,l) (int)((l=='0')?pow(2.0,smax-s-1)-1:pow(2.0,smax-s)-1)
-void SelectDWTBlock(int scale, int size_x,
+template <class T>
+void SelectDWTBlock(int scale, const matrix1D<T> &I,
 const string &quadrant,
 int &x1, int &x2) {   
-   double Nx = log10(size_x) / log10(2.0);
-   x1=DWT_Imin(scale,Nx,quadrant[0]);
-   x2=DWT_Imax(scale,Nx,quadrant[0]);
+   double Nx = Get_Max_Scale(XSIZE(I));
+   I.physical2logical(DWT_Imin(scale,Nx,quadrant[0]),x1);
+   I.physical2logical(DWT_Imax(scale,Nx,quadrant[0]),x2);
 }
 
-void SelectDWTBlock(int scale, int size_x, int size_y,
+template <class T>
+void SelectDWTBlock(int scale, const matrix2D<T> &I,
 const string &quadrant,
 int &x1, int &x2, int &y1, int &y2) {   
-   double Nx = log10(size_x) / log10(2.0);
-   double Ny = log10(size_y) / log10(2.0);
+   double Nx = Get_Max_Scale(XSIZE(I));
+   double Ny = Get_Max_Scale(YSIZE(I));
    x1=DWT_Imin(scale,Nx,quadrant[0]);
    y1=DWT_Imin(scale,Ny,quadrant[1]);
    x2=DWT_Imax(scale,Nx,quadrant[0]);
    y2=DWT_Imax(scale,Ny,quadrant[1]);
+   I.physical2logical(y1,x1,y1,x1);
+   I.physical2logical(y2,x2,y2,x2);
 }
 
-void SelectDWTBlock(int scale,
-int size_x, int size_y, int size_z,
+template <class T>
+void SelectDWTBlock(int scale, const matrix3D<T> &I,
 const string &quadrant,
 int &x1, int &x2, int &y1, int &y2, int &z1, int &z2) {   
-   double Nx = log10(size_x) / log10(2.0);
-   double Ny = log10(size_y) / log10(2.0);
-   double Nz = log10(size_z) / log10(2.0);
+   double Nx = Get_Max_Scale(XSIZE(I));
+   double Ny = Get_Max_Scale(YSIZE(I));
+   double Nz = Get_Max_Scale(ZSIZE(I));
    x1=DWT_Imin(scale,Nx,quadrant[0]);
    y1=DWT_Imin(scale,Ny,quadrant[1]);
    z1=DWT_Imin(scale,Nz,quadrant[2]);
    x2=DWT_Imax(scale,Nx,quadrant[0]);
    y2=DWT_Imax(scale,Ny,quadrant[1]);
    z2=DWT_Imax(scale,Nz,quadrant[2]);
+   I.physical2logical(z1,y1,x1,z1,y1,x1);
+   I.physical2logical(z2,y2,x2,z2,y2,x2);
 }
 
 // Provide block -----------------------------------------------------------
@@ -153,7 +170,7 @@ int &x1, int &x2, int &y1, int &y2, int &z1, int &z2) {
    
 void Get_Scale_Quadrant(int size_x, int x,
    int &scale, string &quadrant) {
-   double Nx = log10(size_x) / log10(2.0);
+   double Nx = Get_Max_Scale(size_x);
    quadrant="x";
    scale=DWT_Scale(x,Nx);
    quadrant[0]=DWT_Quadrant1D(x,scale,Nx);
@@ -161,8 +178,8 @@ void Get_Scale_Quadrant(int size_x, int x,
 
 void Get_Scale_Quadrant(int size_x, int size_y, int x, int y,
    int &scale, string &quadrant) {
-   double Nx = log10(size_x) / log10(2.0);
-   double Ny = log10(size_y) / log10(2.0);
+   double Nx = Get_Max_Scale(size_x);
+   double Ny = Get_Max_Scale(size_y);
    quadrant="xy";
    double scalex=DWT_Scale(x,Nx);
    double scaley=DWT_Scale(y,Ny);
@@ -174,9 +191,9 @@ void Get_Scale_Quadrant(int size_x, int size_y, int x, int y,
 void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
    int x, int y, int z,
    int &scale, string &quadrant) {
-   double Nx = log10(size_x) / log10(2.0);
-   double Ny = log10(size_y) / log10(2.0);
-   double Nz = log10(size_z) / log10(2.0);
+   double Nx = Get_Max_Scale(size_x);
+   double Ny = Get_Max_Scale(size_y);
+   double Nz = Get_Max_Scale(size_z);
    quadrant="xyz";
    double scalex=DWT_Scale(x,Nx);
    double scaley=DWT_Scale(y,Ny);
@@ -190,20 +207,21 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
 // Clean quadrant ----------------------------------------------------------
 void clean_quadrant(matrix2D<double> &I, int scale, const string &quadrant) {
    int x1, y1, x2, y2;
-   SelectDWTBlock(scale, XSIZE(I), YSIZE(I), quadrant, x1, x2, y1, y2);
-   for (int y=y1; y<=y2; y++)
-      for (int x=x1; x<=x2; x++)
-         DIRECT_MAT_ELEM(I,y,x)=0;
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
+      YY(corner1), YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) I(r)=0;
 }
 
 void clean_quadrant(matrix3D<double> &I, int scale, const string &quadrant) {
    int x1, y1, z1, x2, y2, z2;
-   SelectDWTBlock(scale, XSIZE(I), YSIZE(I), ZSIZE(I), quadrant,
-      x1, x2, y1, y2, z1, z2);
-   for (int z=z1; z<=z2; z++)
-      for (int y=y1; y<=y2; y++)
-         for (int x=x1; x<=x2; x++)
-            DIRECT_VOL_ELEM(I,z,y,x)=0;
+   SelectDWTBlock(scale, I, quadrant, x1, x2, y1, y2, z1, z2);
+   matrix1D<int> corner1(3), corner2(3);
+   matrix1D<double> r(3);
+   SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
+      YY(corner1), YY(corner2), ZZ(corner1), ZZ(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) I(r)=0;
 }
 
 // Soft thresholding -------------------------------------------------------
@@ -220,3 +238,227 @@ void soft_thresholding(matrix3D<double> &I, double th) {
          if (I(k,i,j)>0) I(k,i,j)-=th; else I(k,i,j)+=th;
       else I(k,i,j)=0;
 }
+
+// Adaptive soft thresholding ----------------------------------------------
+void adaptive_soft_thresholding_block(matrix2D<double> &I, int scale,
+   const string &quadrant, double sigma) {
+   // Compute block variance
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   SelectDWTBlock(scale, I, quadrant,
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   double dummy, avg, stddev;
+   I.compute_stats(avg,stddev, dummy, dummy,corner1,corner2);
+
+   // Now denoise
+   double th=sigma*sigma/stddev;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      if (ABS(I(r))>th) 
+         if (I(r)>0) I(r)-=th; else I(r)+=th;
+      else I(r)=0;
+   }
+}
+
+double compute_noise_power(matrix2D<double> &I) {
+   // Compute histogram of the absolute values of the DWT coefficients
+   // at scale=0
+   histogram1D hist;
+   double avg, stddev, min_val, max_val;
+   I.compute_stats(avg,stddev,min_val,max_val);
+   hist.init(0,MAX(ABS(min_val),ABS(max_val)),100);   
+
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   SelectDWTBlock(0, I, "01",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2)
+      hist.insert_value(ABS(I(r)));
+
+   SelectDWTBlock(0, I, "10",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2)
+      hist.insert_value(ABS(I(r)));
+
+   SelectDWTBlock(0, I, "11",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2)
+      hist.insert_value(ABS(I(r)));
+
+   return hist.percentil(50)/0.6745;
+}
+
+void adaptive_soft_thresholding(matrix2D<double> &I, int scale) {
+   double sigma=compute_noise_power(I);
+   for (int s=0; s<=scale; s++) {
+      adaptive_soft_thresholding_block(I,s,"01",sigma);
+      adaptive_soft_thresholding_block(I,s,"10",sigma);
+      adaptive_soft_thresholding_block(I,s,"11",sigma);
+   }
+}
+
+// Keep central part -------------------------------------------------------
+void DWT_keep_central_part(matrix2D<double> &I, double R) {
+   Mask_Params mask(INT_MASK);
+   mask.type=BINARY_DWT_CIRCULAR_MASK;
+   if (R==-1) mask.R1=(double)XSIZE(I)/2+1;
+   else       mask.R1=R;
+   mask.smin=0; mask.smax=Get_Max_Scale(XSIZE(I));
+   mask.quadrant="xx";
+   mask.resize(I);
+   mask.generate_2Dmask();
+   mask.write_2Dmask("PPP.xmp");
+   mask.apply_mask(I,I);
+}
+
+
+#ifdef NEVER_DEFINED
+// CO: Doesn't work very fine
+// Bayesian Wiener filtering -----------------------------------------------
+#define DEBUG
+void estimate_gaussian_for_scale_with_limits(const matrix2D<double> &I,
+   int scale, double min_val, double max_val,
+   double &alpha, double &sigma) {
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   #ifdef DEBUG
+      histogram1D hist;
+      hist.init(min_val,max_val,20);
+   #endif
+   
+   double sum=0, sum2=0;
+   int    N_accounted=0, N=0;
+
+   // "01"
+   SelectDWTBlock(scale, I, "01",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      if (I(r)>min_val && I(r)<max_val) {
+         N_accounted++;
+	 sum+=I(r);
+	 sum2+=I(r)*I(r);
+	 #ifdef DEBUG
+	    hist.insert_value(I(r));
+	 #endif
+      }
+      N++;
+   }
+
+   // "10"
+   SelectDWTBlock(scale, I, "10",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      if (I(r)>min_val && I(r)<max_val) {
+         N_accounted++;
+	 sum+=I(r);
+	 sum2+=I(r)*I(r);
+	 #ifdef DEBUG
+	    hist.insert_value(I(r));
+	 #endif
+      }
+      N++;
+   }
+
+   // "11"
+   SelectDWTBlock(scale, I, "11",
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      if (I(r)>min_val && I(r)<max_val) {
+         N_accounted++;
+	 sum+=I(r);
+	 sum2+=I(r)*I(r);
+	 #ifdef DEBUG
+	    hist.insert_value(I(r));
+	 #endif
+      }
+      N++;
+   }
+
+   if (N_accounted!=0) {
+      sum2/=N_accounted;
+      sum/=N_accounted;
+      sigma=sqrt(sum2-sum*sum);
+      alpha=(double)N_accounted/(double)N;
+   } else {sigma=alpha=0;}
+   #ifdef DEBUG
+      hist/=hist.sampleNo();
+      hist.write((string)"Hist_"+ItoA(scale));;
+   #endif
+}
+#undef DEBUG
+
+void estimate_gaussian_for_scale(const matrix2D<double> &I,
+   int scale, double &alpha, double &sigma) {
+   double min_val, max_val;
+   I.compute_double_minmax(min_val,max_val);
+   estimate_gaussian_for_scale_with_limits(I,scale,min_val,max_val,alpha,sigma);
+   double alpha_ant, sigma_ant;
+   int N=1;
+   do {
+      alpha_ant=alpha;
+      sigma_ant=sigma;
+      max_val=3*sigma;
+      min_val=-max_val;
+      estimate_gaussian_for_scale_with_limits(I,scale,min_val,max_val,alpha,sigma);
+      N++;
+   } while (ABS(sigma-sigma_ant)/sigma>0.02 && N<10);
+}
+
+// See Bijaoui Signal Processing 2002, 82:709-712
+// for the variable notation
+void bayesian_wiener_filtering_block(const matrix2D<double> &I,
+   int scale, const string &quadrant, double N) {
+   // Compute block average
+   double avg=0, Nb=0;
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   SelectDWTBlock(scale, I, quadrant,
+      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      avg+=I(r); Nb++;
+   }
+   avg/=Nb;
+   
+   // Compute second and fourth moments
+   double M2=0, M4=0;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      double d=(I(r)-avg)*(I(r)-avg);
+      M2+=d; M4+=d*d;
+   }
+   M2/=Nb;
+   M4/=Nb;
+   
+   // Compute a and S
+   double a, S;
+   if (M2-N<0 || M4/3-N*N<0) {a=0; S=M2;}
+   else {
+      a=MIN(1,(M2-N)*(M2-N)/(M4/3-N*N));
+      S=(M2-N)/a;
+   }
+
+   cout << scale << " " << quadrant << " M2=" << M2 << " M4=" << M4
+        << " a=" << a << " S=" << S << " N=" << N << endl;
+
+   // Now denoise
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      double G_y_S_N=gaussian1D(I(r),S+N);
+      double G_y_N  =gaussian1D(I(r),N);
+      I(r)*=(a*S/(S-N)*G_y_S_N)/((1-a)*G_y_N+a*G_y_S_N);
+   }
+}
+
+//#define DEBUG
+void bayesian_wiener_filtering(matrix2D<double> &I, int scale) {
+   // Compute the amount of noise
+   double alpha,N;
+   estimate_gaussian_for_scale(I,0,alpha,N);
+   N*=N; // compute the power of the noise
+   
+   // Denoise all scales up to the given one
+   for (int s=0; s<=scale; s++) {
+      bayesian_wiener_filtering_block(I,s,"01",N);
+      bayesian_wiener_filtering_block(I,s,"10",N);
+      bayesian_wiener_filtering_block(I,s,"11",N);
+   }
+}
+#undef DEBUG
+#endif

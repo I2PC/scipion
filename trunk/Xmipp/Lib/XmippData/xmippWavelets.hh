@@ -29,8 +29,8 @@
 #ifndef _XMIPPWAVELETS_HH
    #define _XMIPPWAVELETS_HH
 
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/Src/NumericalRecipes.hh>
+#include "xmippMatrices3D.hh"
+#include "Src/NumericalRecipes.hh"
 
 /**@name Wavelets */
 ///@{
@@ -91,7 +91,8 @@ template <class T>
     "0"(Lower frequencies) or "1"(Higher frequencies)
     this routine returns the indices that should be explored
     for this block (x1 and x2 should be included in the for). */
-    void SelectDWTBlock(int scale, int size_x,
+    template <class T>
+    void SelectDWTBlock(int scale, const matrix1D<T> &I,
        const string &quadrant,
        int &x1, int &x2);
 
@@ -101,7 +102,8 @@ template <class T>
     "11" (Lower right).
     this routine returns the indices that should be explored
     for this block (the extremes should be included in the for). */
-    void SelectDWTBlock(int scale, int size_x, int size_y,
+    template <class T>
+    void SelectDWTBlock(int scale, const matrix2D<T> &I,
        const string &quadrant,
        int &x1, int &x2, int &y1, int &y2);
 
@@ -110,10 +112,15 @@ template <class T>
     "xyz"="000", "001", "010", "011", "100", "101", "110", "111".
     this routine returns the indices that should be explored
     for this block (the extremes should be included in the for). */
-    void SelectDWTBlock(int scale,
-       int size_x, int size_y, int size_z,
+    template <class T>
+    void SelectDWTBlock(int scale, const matrix3D<T> &I,
        const string &quadrant,
        int &x1, int &x2, int &y1, int &y2, int &z1, int &z2);
+
+   /** Get maximum scale.
+       This function returns the maximum scale achievable by the 
+       DWT transform of a given size.*/
+   inline int Get_Max_Scale(int size) {return ROUND(log10(size) / log10(2.0));}
 
    /** Get scale and quadrant 1D.
        Given a point and the maximum size of the image,
@@ -153,6 +160,22 @@ template <class T>
        greater than the absolute value of the coefficient, that coefficient
        is set to 0. */
    void soft_thresholding(matrix3D<double> &I, double th);
+   
+   /** Adaptive soft thresholding 2D.
+       Chang, Yu, Betterli. IEEE Int. Conf. Image Processing*/
+   void adaptive_soft_thresholding(matrix2D<double> &I, int scale);
+
+   /** Keep central part 2D.
+       Keep those coefficients in a certain radius. */
+   void DWT_keep_central_part(matrix2D<double> &I, double R);
+
+   #ifdef NEVER_DEFINED
+   /** Bayesian, Wiener filtering.
+       Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
+       is applied up to the scale given.*/
+   void bayesian_wiener_filtering(matrix2D<double> &I, int scale);
+   #endif
+
    ///@}
 ///@}
 #endif
