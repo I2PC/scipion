@@ -78,6 +78,16 @@ Zdim=Ydim=Xdim=0;
        }
        generate_inf=check_param(argc,argv,"-generate_inf");
        reverse_endian=check_param(argc,argv,"-reverse_endian");
+       if (check_param(argc,argv,"-is_micrograph")) {
+          FileName fn_inf=fn_in+".inf";
+	  FILE *fh_inf=fopen(fn_inf.c_str(),"r");
+	  if (!fh_inf)
+	     REPORT_ERROR(1,(string)"Raw22Spi:Cannot find "+fn_inf);
+	  Zdim=1;
+	  Ydim=AtoI(get_param(fh_inf,"Ydim"));
+	  Xdim=AtoI(get_param(fh_inf,"Xdim"));
+	  fclose(fh_inf);
+       }
        if (argc == 1) {Usage(argv);}
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
