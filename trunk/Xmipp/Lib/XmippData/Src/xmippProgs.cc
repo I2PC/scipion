@@ -142,11 +142,11 @@ try {
 	    fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
             success=fi2i(img, prm);
 	    if (prm->each_image_produces_an_output) {
-	      if (prm->apply_geo) {
+/*	      if (prm->apply_geo) {
 		      cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
 		           << " the only exception is the apply_geo program";
 	      }
-	    img.write(fn_out);
+*/	    img.write(fn_out);
 	    }
 	    break;
 	 case IMAGE2FOURIER:
