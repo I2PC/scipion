@@ -1,22 +1,28 @@
 /***************************************************************************
  *
  * Authors:     Jorge García de la Nava Ruiz (gdl@ac.uma.es)
- *              Carlos Oscar Sanchez Sorzano
+ *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
- * Departamento de Arquitectura de Computadores, Universidad de Málaga
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2001 , CSIC/UMA.
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'pascual@cnb.uam.es'
- *
- *****************************************************************************/
-
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
 #include "../xmippPC.hh"
 
@@ -313,16 +319,20 @@ istream& operator >> (istream &in, xmippPC &PC) {
    int size;
    getline(in,read_line);
    sscanf(read_line.c_str(),"Mean vector: (%d) --->",&size);
+   read_line.erase(0,read_line.find('>')+1); // remove until --->
    PC.mean.resize(size);
+   istrstream istr1(read_line.c_str());
    for (int j=0; j<size; j++)
-      in >> PC.mean[j];
+      istr1 >> PC.mean[j];
    
    for (int i=0; i<D; i++) {
       getline(in,read_line);
       sscanf(read_line.c_str(),"%F (%d) ---> ",&(PC.eigenval[i]),&size);
+      read_line.erase(0,read_line.find('>')+1); // remove until --->
       PC.eigenvec[i].resize(size);
+      istrstream istr2(read_line.c_str());
       for (int j=0; j<size; j++)
-         in >> PC.eigenvec[i][j];
+         istr2 >> PC.eigenvec[i][j];
    }
    return in;
 }
