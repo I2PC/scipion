@@ -30,7 +30,8 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Programs/Src/Prog_microscope.o Programs/Src/Prog_adjust_CTF.o \
 	   Programs/Src/Prog_assign_CTF.o \
 	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o \
-           Programs/Src/Prog_SSNR.o
+           Programs/Src/Prog_SSNR.o \
+           Programs/Src/Prog_Angular_Predict_continuous.o
 SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
 SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
 	   Programs/Src/Prog_Angular_Project.o \
