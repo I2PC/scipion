@@ -177,7 +177,7 @@ void rawWriteLine(
    unsigned char ucVal;
    
    unsigned char * aux_pointer;
-   
+
    uiVal=0;iVal=0;ucVal=0;
    
    if(bitsPerSample==16){
@@ -187,7 +187,7 @@ void rawWriteLine(
    for ( x = 0; x < imageWidth; x++) {
         switch (bitsPerSample) {
            case  8:
-              ucVal=tif_buf[y*imageWidth+x];
+              ucVal=tif_buf[x];
               if   (((double)ucVal)<minval) minval = (double)ucVal;
               else if (((double)ucVal)>maxval) maxval = (double)ucVal;
 	      raw_buf[y*imageWidth + x] = ucVal;
