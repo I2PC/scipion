@@ -116,20 +116,30 @@ string FtoA(float F, int _width, int _prec) {
 
 // Integer --> String ======================================================
 string ItoA(int I, int _width, char fill_with) {
-   #if GCC_VERSION < 30300
-      char aux[15];
-      ostrstream outs(aux,sizeof(aux));
-   #else
-      ostringstream outs;
-   #endif
-   outs.fill(fill_with);
-   if (_width!=0) outs.width(_width);
-   outs << I << ends;
-   #if GCC_VERSION < 30300
-      return (string)aux;
-   #else
-      return outs.str();
-   #endif
+   char aux[15];
+   
+   // Check width
+   int width=_width;
+   int Iaux=I;
+   if (width==0)
+      do {
+         Iaux/=10;
+	 width++;
+      } while (Iaux!=0);
+   
+   // Fill the number with the fill character
+   for (int i=0; i<width; i++) aux[i]=fill_with;
+
+   // Start filling the array
+   aux[width--]='\0';
+   I=Iaux;
+   do {
+      int digit=Iaux%10;
+      Iaux/=10;
+      aux[width--]='0'+digit;
+   } while (Iaux!=0);
+   
+   return (string)aux;
 }
 
 // Character --> Integer ===================================================
