@@ -177,7 +177,7 @@
     double bestDist = (double) eDist(*i, _in);
 
     // eval the rest
-    unsigned bestIndex = 0, index = 0;
+    unsigned bestIndex = 0, index = 1;
     for (i++ ; i<itemsEnd() ; i++)
     {
       double dist = (double) eDist(*i, _in);
