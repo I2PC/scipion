@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include "tiffio.h"
 
+
 /*
 // initFile
 //
@@ -57,7 +58,11 @@ int initFile( char *filename, size_t len ) {
   if ( buffer == NULL ) return( -1 );
 
   fd = fopen( filename, "w" );
-
+  if(fd==NULL)
+     {
+     fprintf(stderr, "Error opening file %s", filename);
+     exit(1);
+     }
   for (i=0; i< len/100000; i++)
       fwrite( buffer, sizeof(unsigned char), 100000, fd );
   fwrite( buffer, sizeof(unsigned char), len%100000 , fd );
@@ -167,8 +172,14 @@ int main(int argc, char *argv[])
   TIFFGetField( tif, TIFFTAG_SAMPLESPERPIXEL, &samplesPerPixel );
   TIFFGetField( tif, TIFFTAG_IMAGEWIDTH,      &imageWidth );
   TIFFGetField( tif, TIFFTAG_IMAGELENGTH,     &imageLength );
-  TIFFGetField( tif, TIFFTAG_TILEWIDTH,       &tileWidth );
-  TIFFGetField( tif, TIFFTAG_TILELENGTH,      &tileLength );
+  if (TIFFIsTiled(tif))
+     {
+     TIFFGetField( tif, TIFFTAG_TILEWIDTH,       &tileWidth );
+     TIFFGetField( tif, TIFFTAG_TILELENGTH,      &tileLength );
+     }
+  else
+     {printf("HORROR, this is not a tiled image\n"); 
+      printf("I do not know how to read this tiff format, bye\n"); exit(1);}
   byte_swapped=TIFFIsByteSwapped( tif );
   
   /* Calculates the TIFF image size */
