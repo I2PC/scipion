@@ -707,7 +707,7 @@ public:
    /** Put a window to volume.
        The volume is windowed within the two positions given to this function.
        Indexes always refer to logical indexes. If a position is outside the
-       actual matrix range then the matrix is padded with 0's until the
+       actual matrix range then the matrix is padded init_value until the
        new position is reached. In the following example suppose that m1
        is the following and that the origin is (-1,-1,-1).
 
@@ -724,7 +724,7 @@ public:
        \end{verbatim}
        \\Ex: V1.window(0,0,-1,1,1,2);
        */
-   void window(int z0, int y0, int x0, int zF, int yF, int xF);
+   void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value=0);
    //@}
 
    /* Geometrical transformations ------------------------------------------ */
@@ -810,7 +810,7 @@ public:
       {VT aux; rotate(ang, axis, aux, wrap); return aux;}
 
    /** Rotate a volume around system axis, keep in this object. */
-   void rotate(double ang, char axis, bool wrap=DONT_WRAP)
+   void self_rotate(double ang, char axis, bool wrap=DONT_WRAP)
       {VT aux; rotate(ang, axis, aux, wrap); *this=aux;}
 
    /** Rotate a volume around any axis.
@@ -828,7 +828,7 @@ public:
       {VT aux; rotate(ang, v, aux, wrap); return aux;}
 
    /** Rotate a volume around any axis, keep in this object. */
-   void rotate(double ang, const matrix1D<double> &v, bool wrap=DONT_WRAP)
+   void self_rotate(double ang, const matrix1D<double> &v, bool wrap=DONT_WRAP)
       {VT aux; rotate(ang, v, aux, wrap); *this=aux;}
 
    /** Translate a volume.
