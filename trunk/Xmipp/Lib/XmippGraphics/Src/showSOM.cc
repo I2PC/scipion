@@ -116,6 +116,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) _THROW {
     
     // Read codevectors
     if (exists(fn_class)) {
+cout << "1 fn_class" << endl;    
        ifstream fh_class(fn_class.c_str());
        if (fh_class) {
       	  string line, fn;
@@ -180,7 +181,7 @@ void ShowSOM::initRightclickMenubar() {
    mi_imgAsLabels = options->insertItem( "Show Image Names as Labels", this,  SLOT(changeLabelsToImg()));
    mi_selAsLabels = options->insertItem( "Show Sel status as Labels", this,  SLOT(changeLabelsToSel()));
    mi_hisAsLabels = options->insertItem( "Show Histogram as Labels", this, SLOT(changeLabelsToHis()));
-   mi_errAsLabels = options->insertItem( "Show Errors as Labels", this, SLOT(changeLabelsToErr()));
+   mi_errAsLabels = options->insertItem( "Show Quantization Errors as Labels", this, SLOT(changeLabelsToErr()));
    options->setItemEnabled(mi_imgAsLabels, true);
    options->setItemEnabled(mi_selAsLabels, true);
    options->setItemEnabled(mi_hisAsLabels, false);
@@ -189,8 +190,8 @@ void ShowSOM::initRightclickMenubar() {
    options->insertSeparator();
 
    // Statistics
-   options->insertItem( "View average and SD Images",  this,  SLOT(showStats()));
-   options->insertItem( "Show average and SD Represented Images", this,  SLOT(showRepresentedStats()));
+   options->insertItem( "View average and SD of the Selected Codevectors",  this,  SLOT(showStats()));
+   options->insertItem( "View average and SD of the Assigned Images", this,  SLOT(showRepresentedStats()));
    options->insertItem( "View assigned images", this,  SLOT(showRepresentedSel()), CTRL+Key_A );
    options->insertItem( "View error Image", this,  SLOT(showErrorImage()), CTRL+Key_E );
    options->insertSeparator();
