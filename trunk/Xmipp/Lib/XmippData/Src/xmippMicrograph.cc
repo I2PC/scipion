@@ -51,6 +51,7 @@ void Micrograph::clear() {
    m8=NULL;
    m16=NULL;
    m32=NULL;
+   compute_log=FALSE;
    __scaling_valid=FALSE;
    /* __in_core=FALSE;*/
 }
@@ -82,7 +83,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    fh_micrograph=open(fn_micrograph.c_str(),O_RDWR,S_IREAD|S_IWRITE);
    if (fh_micrograph==-1)
       REPORT_ERROR(1,(string)"Micrograph::open_micrograph: There is a "
-         "problem opening "skip header+fn_micrograph);
+         "problem opening " +fn_micrograph);
    char *aux_ptr;
    switch (__depth) {
       case 8:
@@ -287,8 +288,19 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
    } else
       if (!only_check) 
 	 for (int i=i0; i<=iF; i++)
-            for (int j=j0; j<=jF; j++)
-               result(i-i0,j-j0)=(*this)(j,i);
+            for (int j=j0; j<=jF; j++){
+	       if(compute_log){
+	          if((*this)(j,i)<1){
+		     result(i-i0,j-j0)=0;
+		     if((*this)(j,i)<0)
+		     cerr << "WARNING: Input Pixel negative (Micrograph::scissor)" << endl;
+		  }   
+		  else   
+	             result(i-i0,j-j0)=log10((double)(*this)(j,i));
+	       }  
+               else
+	          result(i-i0,j-j0)=(*this)(j,i);
+	     }	  
    return retval;
 }
 
@@ -308,6 +320,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
       M=new Micrograph;
       M->open_micrograph(fn_image,__reversed);
       M->set_window_size(X_window_size, Y_window_size);
+      M->set_log_flag(compute_log);
    }
    
    // Set scale for particles

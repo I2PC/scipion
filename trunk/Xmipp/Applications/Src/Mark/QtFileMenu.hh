@@ -22,6 +22,7 @@
 
 /* Includes ---------------------------------------------------------------- */
 #include "QtPopupMenuMark.hh"
+#include <qradiobutton.h>
 
 /* Forward declarations ---------------------------------------------------- */ 
 class QtWidgetMicrograph;

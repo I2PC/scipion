@@ -122,7 +122,7 @@ void QtFileMenu::slotGenerateImages() {
       QDialog   setPropertiesDialog( this, 0, TRUE );
       setPropertiesDialog.setCaption( "Generate images" );
       QGrid     qgrid( 2, &setPropertiesDialog );
-      qgrid.setMinimumSize( 250, 150 );
+      qgrid.setMinimumSize( 250, 170 );
       QLabel    windowSizeXLabel( "X window size: ", &qgrid );
       QLineEdit windowSizeXLineEdit( &qgrid );
       windowSizeXLineEdit.setText( "100" );
@@ -136,9 +136,12 @@ void QtFileMenu::slotGenerateImages() {
       startingIndexLineEdit.setText( "1" );
       QLabel    originalM( "Original micrograph: ", &qgrid );
       QLineEdit originalMLineEdit( &qgrid );
+      QLabel    onlytofill( "Compute Log?:", &qgrid );
+      QRadioButton  computeLOG( "Check box for yes", &qgrid );
+      computeLOG.setChecked(FALSE);
       QPushButton okButton( "Ok", &qgrid );
       QPushButton cancelButton( "Cancel", &qgrid );
-
+  
       connect( &okButton, SIGNAL(clicked(void)),
                &setPropertiesDialog, SLOT(accept(void)) );
       connect( &cancelButton, SIGNAL(clicked(void)),
@@ -147,6 +150,8 @@ void QtFileMenu::slotGenerateImages() {
       if ( setPropertiesDialog.exec() ) {
          m->set_window_size( windowSizeXLineEdit.text().toInt(), 
                              windowSizeYLineEdit.text().toInt() );
+         m->set_log_flag(computeLOG.isChecked());
+cout << "compute_log (File Menu)" << m->read_log_flag() << endl;
          if ( !rootNameLineEdit.text().isEmpty() ) {
 	    // Select right angle
 	    #define MAIN_WIDGET \

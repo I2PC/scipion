@@ -77,6 +77,7 @@ protected:
    int                     __depth;
    int                     __offset;
    bool                    __reversed;
+   bool                    compute_log;
    unsigned char           *m8;
    short int               *m16;
    float                   *m32;
@@ -136,6 +137,20 @@ public:
        images. */
    void set_window_size(int _X_window_size, int _Y_window_size)
       {X_window_size=_X_window_size; Y_window_size=_Y_window_size;}
+      
+   /** Set Log flag.
+       When cutting images, a log10 is computed over the pixel values
+       if this flag=true. This function sets it
+       Note: if pixel_value=FALSE, no log is computed */   
+       
+   void set_log_flag (bool flag_value){compute_log=flag_value;}
+      
+   /** Get Log flag.
+       When cutting images, a log10 is computed over the pixel values
+       if this flag=true. This function read it.
+       Note: if pixel_value=FALSE, no log is computed */   
+       
+   bool read_log_flag (void){return compute_log;}
 
    /** Scissor.
        The single particle is selected by an index within the particle
