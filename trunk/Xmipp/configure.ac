@@ -211,6 +211,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Vol2Data/Makefile \
 	Applications/Src/VolSampler/Makefile \
 	Applications/Src/Voxels22Blobs/Makefile \
+	Applications/Src/WBP/Makefile \
 	Applications/Src/Window/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \

@@ -105,6 +105,7 @@ SUBDIRS = 2DInterpolation \
 	Vol2Data \
 	VolSampler \
 	Voxels22Blobs \
+	WBP \
 	Window \
 	Window_micrograph \
 	XMask
