@@ -174,6 +174,9 @@ public:
    /// Selection file with all images to process
    FileName fn_ctf;
 
+   /// Apply unmatched projectors to correct for the CTF
+   bool unmatched;
+
    /// Apply positivity constraint
    bool positivity;
 
@@ -436,7 +439,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
    const Extra_ART_Parameters &eprm, GridVolume &vol_blobs,
-   int rank=-1);
+   GridVolume *&vol_blobs_var, int rank=-1);
 
 /** Main Routine for ART.
     Given any set of Art parameters, this function returns the voxel
@@ -447,7 +450,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
     Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
-    GridVolume &vol_blobs);
+    GridVolume &vol_blobs, GridVolume *&vol_blobs_var);
 
 //@}
 //@}

@@ -41,6 +41,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " Parameters -------------------------------------------------\n";
    prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
    prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
+   prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
    prm.fh_hist << " Sampling= " << prm.sampling << endl;   
    prm.fh_hist << " Blobs:         radius=" << prm.blob.radius 
       << " pixels" << " alpha="
@@ -159,7 +160,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
    const Extra_ART_Parameters &eprm, GridVolume &vol_blobs,
-   int rank) {
+   GridVolume *&vol_blobs_var, int rank) {
    // Some variables .......................................................
    int        ART_numIMG;              // Normalizing factor
    GridVolume *ptr_vol_out;            // Pointer to output volume
@@ -180,7 +181,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                        // factors for unitary blobs
    Projection      diff_proj;          // Difference between the
                                        // theoretical and real image
-   vtkImageData    *FFTtheo=NULL;      // Fourier transform of a projection
+   matrix2D< complex<double> > FFTtheo;// Fourier transform of a projection
 
    // Reconstruction results ...............................................
    double          mean_error;
@@ -199,6 +200,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    int             POCS_vec_i=0, POCS_used=0, POCS_N=0;
    matrix1D<double> POCS_errors(POCS_N_measure);
    double          POCS_avg, POCS_stddev, POCS_min, POCS_max;
+
+   // Variance track .......................................................
+   //vol_blobs_var=new GridVolume;
+   //*vol_blobs_var=vol_blobs;
 
    // Some initialisation ..................................................
    Xoutput_volume_size=(prm.Xoutput_volume_size==0) ?
@@ -235,6 +240,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Initialisation of some variables
       global_mean_error = 0;
       POCS_global_mean_error = 0;
+      if (vol_blobs_var!=NULL) vol_blobs_var->init_zeros();
 
       // For each projection -----------------------------------------------
       if (rank==-1) {
@@ -321,7 +327,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.print_system_matrix);
+	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
+              vol_blobs_var, prm.print_system_matrix);
 
           global_mean_error += mean_error;
           
@@ -560,12 +567,19 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	     cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); cout << endl;
              vol_voxels.write("PPPvol.vol");
+             if (vol_blobs_var!=NULL) {
+                blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D,
+                   Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+      	        cout << "Stats PPPvolvar.vol : "; vol_voxels().print_stats(); cout << endl;
+                vol_voxels.write("PPPvolvar.vol");
+             }
 	     //VolumeXmipp Vcoefs;
 	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
 	     //Vcoefs.write((string)"PPPblob_coefs.vol");
 	     if (!iv_launched) {
-	        system("devel_iv PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
+	        system("devel_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
 		system("devel_show -vol PPPvol.vol -poll &");
+		if (vol_blobs_var!=NULL) system("devel_show -vol PPPvolvar.vol -poll &");
 		iv_launched=true;
 	     }
              cout << "\nHit any key and enter\n"; char c; cin >> c;
@@ -573,21 +587,37 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
       	 // Save intermidiate
 	 if ((prm.tell&TELL_SAVE_INTERMIDIATE | prm.tell&TELL_IV) &&
+             prm.save_intermidiate_every!=0 &&
 	     act_proj%prm.save_intermidiate_every==0) {
 	    if (prm.tell&TELL_SAVE_INTERMIDIATE) 
                cerr << "\nSaving intermidiate ...\n"
                     << "Converting blob volume to voxels ...\n";   
+            // Save reconstructed volume
             blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
                vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
 		  ItoA(act_proj,5)+".vol");
-	    else {
+	    else
                vol_voxels.write("PPPvol.vol");
-	       if (!iv_launched) {
-		  system("devel_show -vol PPPvol.vol -poll &");
-		  iv_launched=true;
-	       }
+
+            // If keeping track of the variance
+            if (vol_blobs_var!=NULL) {
+               blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D, 
+                  Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+               if (prm.tell&TELL_SAVE_INTERMIDIATE)
+                  vol_voxels.write(prm.fn_root+"var_it"+ItoA(it)+"proj"+
+                     ItoA(act_proj,5)+".vol");
+               else 
+                  vol_voxels.write("PPPvarvol.vol");
+            }
+
+            // Launch viewer
+	    if (!iv_launched) {
+	       system("devel_show -vol PPPvol.vol -poll &");
+               if (vol_blobs_var!=NULL)
+	          system("devel_show -vol PPPvarvol.vol -poll &");
+	       iv_launched=true;
 	    }
 	 }
 
@@ -627,8 +657,15 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
          if (prm.tell&TELL_SAVE_BLOBS)
             vol_blobs.write(prm.fn_root+"it"+ItoA(it)+".blob");
-      }
 
+         // If keeping track of the variance
+         if (vol_blobs_var!=NULL) {
+            blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D, 
+               Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+            vol_voxels.write(prm.fn_root+"var_it"+ItoA(it)+".vol");
+         }
+      }
+      
       // Check if algorithm must stop via stop_at
       if (images==prm.stop_at) break;
    }
@@ -646,7 +683,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
    Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
-   GridVolume &vol_blobs) {
+   GridVolume &vol_blobs, GridVolume *&vol_blobs_var) {
 // Configure time clock
    time_config();
 
@@ -660,7 +697,7 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
    Basic_ART_Init_history(prm, eprm, vol_blobs);
    
 // Iterations
-   Basic_ART_iterations(prm, eprm, vol_blobs);
+   Basic_ART_iterations(prm, eprm, vol_blobs, vol_blobs_var);
    
 // Finish iterations
    finish_ART_iterations(prm, eprm, vol_blobs);
@@ -676,7 +713,11 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
       Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    vol_voxels.write(prm.fn_root+".vol");
    if (prm.tell&TELL_SAVE_BLOBS) vol_blobs.write(prm.fn_root+".blob");
-      
+   if (vol_blobs_var!=NULL) {
+      blobs2voxels(*vol_blobs_var, prm.blob, &vol_voxels, prm.D,
+         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+      vol_voxels.write(prm.fn_root+"var.vol");
+   }      
    prm.fh_hist.close();
 
 }
