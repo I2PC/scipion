@@ -255,6 +255,30 @@ template <class T>
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
       hist.insert_value(MULTIDIM_ELEM(v,i));}
 
+/** Compute histogram within a region.
+    The region is defined by its corners*/
+template <class T>
+   void compute_hist(const matrix2D<T> &v, histogram1D &hist,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2,
+      int no_steps=100)
+   {double min, max; v.compute_double_minmax(min, max, corner1, corner2);
+    hist.init(min,max,no_steps);
+    matrix1D<int> r(2);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2)
+      hist.insert_value(v(r));}
+
+/** Compute histogram within a region 3D.
+    The region is defined by the corners (k0,i0,j0) and (kF,iF,jF).*/
+template <class T>
+   void compute_hist(const matrix3D<T> &v, histogram1D &hist,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2,
+      int no_steps=100)
+   {double min, max; array.compute_double_minmax(min, max, corner1, corner2);
+    hist.init(min,max,no_steps);
+    matrix1D<int> r(3);
+    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2)
+      hist.insert_value(v(r));}
+
 /** Compute the detectability error between two pdf's.
     The input histograms are expressed as probability density functions
     representing two different objects with the same parameter of
