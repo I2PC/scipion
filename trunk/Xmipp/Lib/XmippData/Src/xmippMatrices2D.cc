@@ -624,7 +624,7 @@ void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
           u.RowNo(),u.ColNo(),
           MULTIDIM_ARRAY(w),
           MULTIDIM_ARRAY(v),
-	  1000, &status);
+	  5000, &status);
 #endif
 }
 #undef VIA_NR
