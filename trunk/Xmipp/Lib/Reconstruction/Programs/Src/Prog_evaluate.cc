@@ -29,7 +29,7 @@
 #include "../Prog_evaluate.hh"
 #include "../../volume_FOMs.hh"
 
-#include <fstream.h>
+#include <fstream>
 
 /* Compute special statistics ============================================== */
 /* Average of a vector without counting the -1, starting at index i0 */
@@ -273,7 +273,14 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
       results.scmu_FOM, results.scdev_FOM, results.scrange_FOM,
       results.sccorr_FOM, results.scinf_FOM,
       prm.tell&SHOW_PROCESS);
-   compute_resolution(side.vol_phantom,side.vol_recons,results.resol_FOM);
+   #define COMPUTE_THROUGH_SINGLE_VALUE
+   #ifdef COMPUTE_THROUGH_SINGLE_VALUE
+      compute_resolution(side.vol_phantom,side.vol_recons,results.resol_FOM);
+   #else
+      matrix1D<double> frequency, FSC;
+      results.resol_FOM=compute_FSC(side.vol_phantom,side.vol_recons,
+         1, frequency, FSC);
+   #endif
 
    // Local measures
    results.scL2_FOMs.init_zeros(side.num_feat+1); // 0, 1, ..., FeatNo()
