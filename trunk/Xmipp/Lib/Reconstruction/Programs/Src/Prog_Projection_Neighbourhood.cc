@@ -37,11 +37,10 @@ void Prog_projection_neighbourhood_prm::read(int argc, char **argv) _THROW {
    fn_root_out=get_param(argc,argv,"-oroot","nbhood");
    maxdist=AtoF(get_param(argc,argv,"-dist","10"));
    fn_sym=get_param(argc,argv,"-sym","");
-   flip_mirrors=check_param(argc,argv,"-flip_mirrors");
    if (fn_sym!="") SL.read_sym_file(fn_sym);
-   DF1.read(fn_ref);
-   SF.read(fn_sel);
-   if (DF1.FirstLine_ColNo()<2) {
+   DF2.read(fn_ref);
+   SF1.read(fn_sel);
+   if (DF2.FirstLine_ColNo()<2) {
      REPORT_ERROR(1,"Projection Neighbourhood: Neighbourhoods docfile has less than 2 columns.");
    }
 }
@@ -72,7 +71,6 @@ void Prog_projection_neighbourhood_prm::show() {
 	<< "Output root                  : " << fn_root_out   << endl
 	<< "Max. neighbour distance      : " << maxdist       << endl
 	<< "Symmetry file                : " << fn_sym        << endl
-        << "Flip mirrors                 : " << flip_mirrors  << endl
    ;
 }
 
@@ -83,7 +81,6 @@ void Prog_projection_neighbourhood_prm::usage() {
 	<< "  [-oroot <name=nbhood> ] : Rootname for output files \n"
 	<< "  [-dist  <d=10>        ] : Maximum neighbourhood distance \n"
 	<< "  [-sym <symmetry file> ] : Symmetry file if any\n"
-        << "  [-flip_mirrors        ] : Flip projections from southern to northern hemi-sphere\n"
    ;
 }
 
@@ -109,12 +106,6 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
                         // is useful and not the translation
          Euler_apply_transf(L,R,rot2,tilt2,psi2,rot2p,tilt2p,psi2p);
       }
-      if (flip_mirrors) { // Flip projections from southern to northern hemisphere
-	if (tilt2p>90.) {
-	  tilt2p=tilt2p+180.;
-	  realWRAP(tilt2p,-180.,180.);
-	}
-      }
       diff_rot=rot1-rot2p;
       diff_tilt=tilt1-tilt2p;
       // Some (like virus) symmetries can give equivalent images which are rotated in psi!
@@ -127,12 +118,6 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
 	best_ang_dist=ang_dist;
       }
       Euler_another_set(rot2p,tilt2p,psi2p,rot2p,tilt2p,psi2p);
-      if (flip_mirrors) { // Flip projections from southern to northern hemisphere
-	if (tilt2p>90.) {
-	  tilt2p=tilt2p+180.;
-	  realWRAP(tilt2p,-180.,180.);
-	}
-      }
       diff_rot=rot1-rot2p;
       diff_tilt=tilt1-tilt2p;
       diff_rot=ABS(realWRAP(diff_rot,-180,180));
@@ -151,65 +136,47 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
 #define DEBUG
 // Compute Projection Neighbourhood -----------------------------------------
 void Prog_projection_neighbourhood_prm::compute_neighbourhood() {
-  matrix1D<double> aux(7);
   double dist=0.;
-  double rot1,  tilt1;
-  double rot2,  tilt2,  psi2;
-  double rot2p, tilt2p, psi2p;
+  double rot1, tilt1;
+  double rot2, tilt2;
   double distp;
-  int nc,i=0;
+  int i=0;
   SelFile SF_out;
   SelLine selline;
 
-  get_angles(SF,DF2);
-
+  get_angles(SF1,DF1);
   cerr << "Calculating ...\n";
-  DF1.go_first_data_line();
-  while (!DF1.eof()) {
+  DF2.go_first_data_line();
+  while (!DF2.eof()) {
     // Read reference projection direction
-    rot1=DF1(0);
-    tilt1=DF1(1);
-    // Bring both angles to a normalized set
-    rot1=realWRAP(rot1,-180,180);
-    tilt1=realWRAP(tilt1,-180,180);
-    SF_out.reserve(DF2.LineNo());
+    rot1=realWRAP(DF2(0),-180,180);
+    tilt1=realWRAP(DF2(1),-180,180);
+    SF_out.reserve(DF1.LineNo());
     SF_out.go_beginning();
-    DF2.go_first_data_line();
-    while (!DF2.eof()) {
 
-      if (DF2.get_current_valNo()) {
-	
-	// Read assigned angles from document file
-	rot2=DF2(0);
-	tilt2=DF2(1);
-	psi2=DF2(2);
-	rot2=realWRAP(rot2,-180,180);
-	tilt2=realWRAP(tilt2,-180,180);
-	// Apply rotations to find the minimum distance angles
-	rot2p=rot2;
-	tilt2p=tilt2;
-	psi2p=psi2;
-	distp=check_symmetries(rot1,tilt1,rot2p,tilt2p);
-	// Fill the output result
-	if (distp<=maxdist) {
-	  SF.go_beginning();
-	  SF.jump(DF2.get_current_key()-1);
-	  selline=SF.current();
-	  SF_out.insert(selline);
-	}
-      
-      }
+    DF1.go_first_data_line();
+    while (!DF1.eof()) {
+      // Read assigned angles from document file
+      rot2=realWRAP(DF1(0),-180,180);
+      tilt2=realWRAP(DF1(1),-180,180);
+      distp=check_symmetries(rot1,tilt1,rot2,tilt2);
+      // Fill the output result
+      if (distp<=maxdist) {
+	SF1.go_beginning();
+	SF1.jump(DF1.get_current_key()-1);
+	selline=SF1.current();
+	SF_out.insert(selline);
+      }      
       // Move to next data line
-      DF2.next_data_line();
-
-    } // finished reading all particles for this neighbourhood
-    
+      DF1.next_data_line();
+    } 
+    // finished reading all particles for this neighbourhood
     i++;
     FileName fn_sel_out;
     fn_sel_out.compose(fn_root_out,i,"sel");
     SF_out.write(fn_sel_out);
     SF_out.clear();
-    DF1.next_data_line();
+    DF2.next_data_line();
   }
   return;
 }

@@ -37,7 +37,7 @@ class Prog_projection_neighbourhood_prm {
 public:
    /** Filename reference projection directions document file */
    FileName fn_ref;
-   /** Filename corresponding selection file */
+   /** Filename selection file containing the images */
    FileName fn_sel;
    /** Double maximum neighbour distance */
    double maxdist;
@@ -45,16 +45,14 @@ public:
    FileName fn_sym;
    /** Filename of output file with merging */
    char* fn_root_out;
-   /** Flip all projections from southern to northern hemisphere */
-   bool flip_mirrors;
 
 public:
-   // DocFile 1
+   // DocFile images
    DocFile DF1;
-   // DocFile 2
+   // DocFile nbhoods
    DocFile DF2;
-   // SelFile 
-   SelFile SF;
+   // SelFile images
+   SelFile SF1;
    // Symmetry List
    SymList SL;
 public:
