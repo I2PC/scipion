@@ -289,7 +289,11 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
 
    double min_val, max_val;
    _ximage().compute_double_minmax(min_val,max_val);
-   double a=(_max_scale-_min_scale)/(max_val-min_val);
+   double a;
+   if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
+      a=1.0;
+   else
+      a=(_max_scale-_min_scale)/(max_val-min_val);
    
    // Reads pixels.
    for (int y = 0; y < _ximage().RowNo(); y++)
