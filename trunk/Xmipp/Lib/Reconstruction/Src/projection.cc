@@ -72,11 +72,14 @@
 
 template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
+   const struct blobtype &blob,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
    VolumeT<T> *vol_var=NULL, double ray_length=-1.0) {
    matrix1D<double> zero(3);                // Origin (0,0,0) 
+   matrix1D<double> prjPix(3);              // Position of the pixel within the
+                                            // projection (used in VSSNR)
    matrix1D<double> prjX(3);                // Coordinate: Projection of the
    matrix1D<double> prjY(3);                // 3 grid vectors
    matrix1D<double> prjZ(3);
@@ -275,35 +278,48 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         	<< " , " << IMGPIXEL(footprint2,foot_V,foot_U);
                 	}
                 	#endif
+                        double a, a2;
+                        // Check if volumetric interpolation (i.e., SSNR)
+                        if (ray_length==blob.radius) {
+                           // This is the VSSNR case
+                           // Get the pixel position in the universal coordinate
+                           // system
+                           SPEED_UP_temps;
+                           VECTOR_R3(prjPix,x,y,0);
+                           M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
+                           // Get the distance between the blob center
+                           // and the pixel
+                           V3_MINUS_V3(prjPix,univ_position,prjPix);
+                           double r=prjPix.module();
+                           a=blob_val(r,blob);
+                           a2=a*a;
+                        } else {
+                           // This is normal reconstruction from projections
+                           a =IMGPIXEL(footprint,foot_V,foot_U);
+                           a2=IMGPIXEL(footprint2,foot_V,foot_U);
+                        }
 	        	if (FORW) {
                            switch(eq_mode) {
                               case ARTK:
-                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j) *
-                                    IMGPIXEL(footprint,foot_V,foot_U);
-                        	 IMGPIXEL(norm_proj,y,x) +=
-                                    IMGPIXEL(footprint2,foot_V,foot_U);
+                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j)*a;
+                        	 IMGPIXEL(norm_proj,y,x) += a2;
 				 if (M!=NULL) {
                                     int py, px;
 				    proj().logical2physical(y,x,py,px);
 				    int number_of_pixel=py*XSIZE(proj())+px;
-				    (*M)(number_of_pixel,number_of_blob)=
-				       IMGPIXEL(footprint,foot_V,foot_U);
+				    (*M)(number_of_pixel,number_of_blob)=a;
 				 }
                         	 break;
                               case CAVK:
-                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j) *
-                                    IMGPIXEL(footprint,foot_V,foot_U);
-                        	 IMGPIXEL(norm_proj,y,x) +=
-                                    IMGPIXEL(footprint2,foot_V,foot_U)*N_eq;
+                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j)*a;
+                        	 IMGPIXEL(norm_proj,y,x) += a2*N_eq;
                         	 break;
                               case COUNT_EQ:
                         	 VOLVOXEL(vol,k,i,j)++;
                         	 break;
                               case CAV:
-                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j) *
-                                    IMGPIXEL(footprint,foot_V,foot_U);
-                        	 IMGPIXEL(norm_proj,y,x) +=
-                                    IMGPIXEL(footprint2,foot_V,foot_U)*
+                        	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j)*a;
+                        	 IMGPIXEL(norm_proj,y,x) += a2 *
                                     VOLVOXEL(*VNeq,k,i,j);
                         	 break;
                            }
@@ -316,8 +332,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                               }
                            #endif
 	        	} else {
-	                   vol_corr += IMGPIXEL(norm_proj,y,x) *
-                              IMGPIXEL(footprint,foot_V,foot_U);
+	                   vol_corr += IMGPIXEL(norm_proj,y,x)*a;
                            #ifdef DEBUG
                            if (condition) {
                               cout << " corr_img= " << IMGPIXEL(norm_proj,y,x)
@@ -386,6 +401,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 template <class T>
 void project_Volume(
    GridVolumeT<T> &vol,                  // Volume
+   const struct blobtype &blob,          // Blob
    const ImageOver  &footprint,          // Footprint of a blob         
    const ImageOver  &footprint2,         // Used for error computation
    Projection       &proj,               // Projection
@@ -426,7 +442,7 @@ void project_Volume(
       VolumeT<T>   *Vvar;
       if (GVNeq!=NULL)   VNeq=&((*GVNeq  )(i)); else VNeq=NULL;
       if (vol_var!=NULL) Vvar=&((*vol_var)(i)); else Vvar=NULL;
-      project_SimpleGrid(vol(i),vol.grid(i),footprint,footprint2,
+      project_SimpleGrid(vol(i),vol.grid(i),blob,footprint,footprint2,
          proj, norm_proj, FORW, eq_mode, VNeq, M, Vvar, ray_length);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
@@ -1044,10 +1060,11 @@ void project_Crystal_Volume(
 
 /* Count equations in a grid volume --------------------------------------- */
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
+   const struct blobtype &blob,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &read_proj) {
    for (int i=0; i<GVNeq.VolumesNo(); i++)
-      project_SimpleGrid(GVNeq(i),GVNeq.grid(i),footprint,footprint2,
+      project_SimpleGrid(GVNeq(i),GVNeq.grid(i),blob,footprint,footprint2,
          read_proj, read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }
 
@@ -1057,6 +1074,7 @@ void instatiate_projection() {
    GridVolumeT<double> GVd;
    ImageOver           footprint;
    Projection          proj;
-   project_Volume(GVi,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
-   project_Volume(GVd,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
+   struct blobtype     blob;
+   project_Volume(GVi,blob,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
+   project_Volume(GVd,blob,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
 }

@@ -28,6 +28,7 @@
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippProjection.hh>
 #include "grids.hh"
+#include "blobs.hh"
 
 /*---------------------------------------------------------------------------*/
 /* PROJECTION                                                                */
@@ -71,6 +72,7 @@
     */
 template <class T>
 void project_Volume(GridVolumeT<T> &vol,
+   const struct blobtype &blob,
    const ImageOver &footprint,const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
    double rot, double tilt, double psi, int FORW, int eq_mode=ARTK,
