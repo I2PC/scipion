@@ -38,7 +38,7 @@ void ShowSpectra::init() {
     x_tick_off=1;
     backColor = black;
     axisColor = white;
-    curveColor = green;
+    curveColor = white;
     QFont tmpFont("Clean", 6);
     axisFont = tmpFont; 
     ShowSel::init();

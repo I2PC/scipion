@@ -76,7 +76,7 @@ void ShowTable::init() {
     menubar         = NULL;
     status          = NULL;
     QFont tmpFont("Fixed", 12);
-    fontColor       = green; 
+    fontColor       = white; 
     content_queue.clear();
 }
 
