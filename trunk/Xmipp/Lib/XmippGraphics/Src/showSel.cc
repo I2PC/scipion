@@ -40,7 +40,6 @@ void ShowSel::init() {
 }
 
 void ShowSel::clear() {
-   
     if (selstatus != NULL) delete[] selstatus;
     if (imgnames  != NULL) delete[] imgnames;
     ShowTable::clear();
@@ -106,9 +105,33 @@ void ShowSel::initTable() {
 /* Init Rightclick menubar ------------------------------------------------- */
 void ShowSel::initRightclickMenubar() {    
    menubar = new QPopupMenu(); 
+   setFileRightclickMenubar(); 
 
-   // File ................................................................
-   QPopupMenu * file = new QPopupMenu();
+   // Options .............................................................
+   options =  new QPopupMenu();
+   setCommonOptionsRightclickMenubar();
+
+   // What kind of labels
+   mi_imgAsLabels = options->insertItem( "Show Image Names as Labels", this,  SLOT(changeLabels()));
+   mi_selAsLabels = options->insertItem( "Show Sel status as Labels", this,  SLOT(changeLabels()));
+   options->setItemEnabled(mi_imgAsLabels, false);
+   options->setItemEnabled(mi_selAsLabels, true);
+   labeltype=Filename_LABEL;
+   options->insertSeparator();
+
+   // Statistics
+   options->insertItem( "View average and SD Images", this,  SLOT(showStats()));
+   options->insertItem( "Show Sel Statistics", this,  SLOT(showSelStats()));
+   options->insertSeparator();
+    
+   // Form the menu
+   menubar->insertItem( "&Options", options );    
+   menubar->insertSeparator();
+   insertGeneralItemsInRightclickMenubar();
+}
+
+void ShowSel::setFileRightclickMenubar() {
+  QPopupMenu * file = new QPopupMenu();
       file->insertItem( "Open...", this,  SLOT(GUIopenFile()));
       QPopupMenu * fileSave = new QPopupMenu();
       fileSave->insertItem( "As discarded...",
@@ -118,15 +141,10 @@ void ShowSel::initRightclickMenubar() {
       fileSave->insertItem( "In a new sel file...",
          this, SLOT(saveSelFileNew()));
       file->insertItem( "&Save Selected Images in a Sel File", fileSave);
+   menubar->insertItem( "&File", file );
+}
 
-   // Options .............................................................
-   options =  new QPopupMenu();
-
-   // Select/unselect
-   options->insertItem( "Select All", this,  SLOT(SelectAll()));
-   options->insertItem( "Unselect All", this,  SLOT(unSelectAll()));
-   options->insertSeparator();
-
+void ShowSel::setCommonOptionsRightclickMenubar() {
    // Normalization
    mi_Individual_norm = options->insertItem( "Individual Normalization",
       this, SLOT(changeNormalize()));
@@ -143,24 +161,10 @@ void ShowSel::initRightclickMenubar() {
    options->setItemEnabled(mi_hideLabel, true);
    options->insertSeparator();
 
-   // What kind of labels
-   mi_imgAsLabels = options->insertItem( "Show Image Names as Labels", this,  SLOT(changeLabels()));
-   mi_selAsLabels = options->insertItem( "Show Sel status as Labels", this,  SLOT(changeLabels()));
-   options->setItemEnabled(mi_imgAsLabels, false);
-   options->setItemEnabled(mi_selAsLabels, true);
-   labeltype=Filename_LABEL;
+   // Select/unselect
+   options->insertItem( "Select All", this,  SLOT(SelectAll()));
+   options->insertItem( "Unselect All", this,  SLOT(unSelectAll()));
    options->insertSeparator();
-
-   // Statistics
-   options->insertItem( "View average and SD Images", this,  SLOT(showStats()));
-   options->insertItem( "Show Sel Statistics", this,  SLOT(showSelStats()));
-   options->insertSeparator();
-    
-   // Form the menu
-   menubar->insertItem( "&File", file );
-   menubar->insertItem( "&Options", options );    
-   menubar->insertSeparator();
-   insertGeneralItemsInRightclickMenubar();
 }
 
 /* Cell label -------------------------------------------------------------- */
@@ -324,31 +328,8 @@ void ShowSel::changeNormalize() {
     repaintContents();
 }
 
-void ShowSel::changeShowLabels() {
-    bool showLabels=options->isItemEnabled(mi_showLabel); 
-    if (showLabels) {
-       options->setItemEnabled(mi_showLabel, false);
-       options->setItemEnabled(mi_hideLabel, true);
-    } else {
-       options->setItemEnabled(mi_showLabel, true);
-       options->setItemEnabled(mi_hideLabel, false);
-    }
-    repaintContents();
-}
-
-void ShowSel::changeLabels() {
-    bool imgAsLabelsFlag = options->isItemEnabled(mi_imgAsLabels); 
-    if (imgAsLabelsFlag) {
-       labeltype=Filename_LABEL;
-       options->setItemEnabled(mi_imgAsLabels, false);
-       options->setItemEnabled(mi_selAsLabels, true);
-    } else {
-       labeltype=SFLabel_LABEL;
-       options->setItemEnabled(mi_imgAsLabels, true);
-       options->setItemEnabled(mi_selAsLabels, false);
-    }
-    repaintContents();
-}
+void ShowSel::changeShowLabels() {changeBoolOption(mi_showLabel, mi_hideLabel);}
+void ShowSel::changeLabels()     {changeBoolOption(mi_imgAsLabels, mi_selAsLabels);}
 
 // Show statistics ---------------------------------------------------------
 void ShowSel::showStats() {  
@@ -357,14 +338,19 @@ void ShowSel::showStats() {
         if (cellMarks[i])
 	  SFNew.insert(imgnames[i], SelLine::ACTIVE);
     if (SFNew.ImgNo()) {
-       ImageXmipp _ave, _sd;
-       double _minPixel, _maxPixel;
-       SFNew.go_beginning(); 
-       SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
-       ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
-       ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
-       wavg->show();
-       wsd->show();
+       try {
+	  ImageXmipp _ave, _sd;
+	  double _minPixel, _maxPixel;
+	  SFNew.go_beginning(); 
+	  SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
+	  ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
+	  ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
+	  wavg->show();
+	  wsd->show();
+       } catch (Xmipp_error XE) {
+          QMessageBox::about( this, "Error!",
+	     "There is a problem opening files\n");
+       }
      } else
         QMessageBox::about( this, "Error!", "No images selected\n");
 }
