@@ -383,7 +383,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               else {
                  FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
                     if (vol_POCS(k,i,j)==1) (*desired_volume)(k,i,j)=0;
-//      	         vol_blobs(0)().init_zeros();
                  for (int i=0; i<prm.force_sym; i++) {
                     ART_voxels2blobs_single_step(vol_blobs, &vol_blobs,
                        prm.blob, prm.D, prm.lambda(it),
