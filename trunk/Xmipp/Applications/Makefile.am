@@ -1,1 +1,1 @@
-SUBDIRS = Src Batches
+SUBDIRS = OldXmipp Src Batches
