@@ -30,8 +30,6 @@
 #include "../Prog_art.hh"
 #include "../Prog_surface.hh"
 #include "../Prog_symmetrize.hh"
-#include "../Prog_normalize.hh"
-#include "../Prog_range_adjust.hh"
 #include "../Prog_FourierFilter.hh"
 #include "../../recons_spider.hh"
 #include "../Prog_CorrectPhase.hh"
@@ -39,6 +37,8 @@
 #include "../Prog_microscope.hh"
 #include <XmippData/Programs/Prog_segment.hh>
 #include <XmippData/xmippMorphology.hh>
+#include <XmippData/Programs/Prog_normalize.hh>
+#include <XmippData/Programs/Prog_range_adjust.hh>
 
 /* Read Reconstruction test parameters from file =========================== */
 void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
