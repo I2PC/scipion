@@ -82,7 +82,7 @@ public:
    /** Read a Projection from file.
        When a projection is read, the Euler matrices and perpendicular
        direction is computed and stored in the Projection structure. */
-   void read(const FileName &fn);
+   void read(const FileName &fn, const bool &apply_shifts=false);
 
    /** Assignment. */
    Projection & operator = (const Projection &P);    

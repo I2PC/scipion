@@ -212,7 +212,7 @@ void ShowSel::producePixmapAt(int i) {
        delete img;
     } else if (Is_ImageXmipp(imgnames[i]))
        // Plain Xmipp images
-       I.read(imgnames[i],FALSE,FALSE,apply_geo);
+       I.read(imgnames[i],FALSE,FALSE,apply_geo,FALSE);
     else if (Is_FourierImageXmipp(imgnames[i])) {
        // FFT Xmipp images: plot log10(1+|I|^2)
        FourierImageXmipp If;

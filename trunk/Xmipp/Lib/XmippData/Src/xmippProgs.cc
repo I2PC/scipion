@@ -32,8 +32,7 @@ void Prog_parameters::read(int argc, char **argv) _THROW {
       fn_out = get_param(argc,argv,"-o","");
       oext   = get_param(argc,argv,"-oext","");
       oroot  = get_param(argc,argv,"-oroot","");
-      if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
-      else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
+      apply_geo=!check_param(argc,argv,"-dont_apply_geo");
 }
 
 void Prog_parameters::show() {
@@ -53,8 +52,7 @@ void Prog_parameters::usage() {
       cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
            << "  [-oext <extension>]       : if wanted in case of a selection file\n"
 	   << "  [-oroot <root>]           : if wanted in case of a selection file\n";
-   cerr <<    "  [-apply_geo]              : apply transformation stored in header of 2D-image (default)\n";
-   cerr <<    "  [-dont_apply_geo]         : do not apply header transformation\n";
+   cerr    << "  [-dont_apply_geo]         : do not apply transformation stored in the header of 2D-images\n";
 }
 
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {

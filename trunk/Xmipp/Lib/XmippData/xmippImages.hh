@@ -342,7 +342,7 @@ public:
         header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex) 
      else if (typeid(T)==typeid(double))
         header.headerType() = headerXmipp::IMG_XMIPP;  // Sets header of type Image_XMipp
-        read(_name,FALSE,FALSE,apply_geo);  	       // Read image from file
+        read(_name,FALSE,FALSE,apply_geo,FALSE);       // Read image from file
    }
    
    /** Copy constructor.
@@ -408,7 +408,7 @@ public:
        thrown.
        \\ Ex: IX.read("g1ta0002.spd");*/
    virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
-      bool reversed=FALSE, bool apply_geo=FALSE) _THROW;
+      bool reversed=FALSE, bool apply_geo=FALSE, bool apply_shifts=FALSE) _THROW;
    
    /** Write Xmipp image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -452,6 +452,9 @@ public:
    /** Reversed status.
        This is used for the little/big endian process. */
    bool reversed() const {return header.reversed();}
+
+  /** Get geometric transformation matrix from 2D-image header.  */
+  matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shifts=FALSE);
 
    /** Check OldXmipp header location for image translation offsets
        If image appears to be in OldXmipp format, copy offsets to NewXmipp header location */

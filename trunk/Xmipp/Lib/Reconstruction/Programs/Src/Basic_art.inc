@@ -86,6 +86,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " POCS freq: " << prm.POCS_freq << endl;
    prm.fh_hist << " Known volume: " << prm.known_volume << endl;
    prm.fh_hist << " Positivity: "; print(prm.fh_hist,prm.positivity);
+   prm.fh_hist << " Apply shifts in images headers: "; print(prm.fh_hist,prm.apply_shifts);
       prm.fh_hist << endl;
    prm.fh_hist << " Symmetry file: " << prm.fn_sym << endl;
    prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections" 
@@ -271,7 +272,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           } else {
              iact_proj = prm.ordered_list(act_proj);
           }
-	  read_proj.read(prm.IMG_Inf[iact_proj].fn_proj);
+	  read_proj.read(prm.IMG_Inf[iact_proj].fn_proj,prm.apply_shifts);
           read_proj.move_origin_to_center();
           read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;

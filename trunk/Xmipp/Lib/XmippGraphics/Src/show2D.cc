@@ -405,7 +405,7 @@ bool ImageViewer::loadImage( const char *fileName )
                delete p;
             } else if (Is_ImageXmipp(filename)) {
                ImageXmipp p;
-               p.read((FileName)filename,FALSE,FALSE,apply_geo);
+               p.read((FileName)filename,FALSE,FALSE,apply_geo,FALSE);
                tmpImage()=p();
             } else if (Is_FourierImageXmipp(filename)) {
 	       FourierImageXmipp If; If.read(filename);

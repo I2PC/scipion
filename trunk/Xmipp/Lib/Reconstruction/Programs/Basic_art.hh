@@ -177,6 +177,9 @@ public:
    /// Apply unmatched projectors to correct for the CTF
    bool unmatched;
 
+   /// Apply shifts stored in the headers of the 2D-images
+   bool apply_shifts;
+
    /// Apply positivity constraint
    bool positivity;
 

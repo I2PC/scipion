@@ -70,7 +70,8 @@ void Basic_ART_Parameters::default_values() {
     POCS_freq          = 1;
     
     known_volume       =-1;
-    positivity         =FALSE;
+    positivity         = FALSE;
+    apply_shifts       = TRUE;
 }
 
 /* Read ART parameters ===================================================== */
@@ -123,6 +124,7 @@ void Basic_ART_Parameters::default_values() {
     POCS_freq          = AtoI(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
     known_volume       = AtoF(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
     positivity         = CHECK_PARAM("POCS_positivity"); \
+    apply_shifts       = !CHECK_PARAM("dont_apply_shifts"); \
     if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
     else if (grid_relative_size == -2)  grid_relative_size = pow (2.0,1.0/3.0); \
     \
@@ -256,6 +258,7 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
      << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
      << "\n   [-POCS_positivity]    Apply positivity constraint\n"
+     << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers\n"
   ;
   cerr
      << "\nIteration parameters"
@@ -574,7 +577,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0,
       init_progress_bar(numIMG);
    }
    for (int act_proj = 0; act_proj < numProjs_node ; act_proj++) {
-       read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj);
+       read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj,apply_shifts);
        read_proj.move_origin_to_center();
 
        // Projection extension? .........................................

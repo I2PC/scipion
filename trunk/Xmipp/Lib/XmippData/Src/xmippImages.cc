@@ -111,7 +111,7 @@ ImageT<T> *ImageT<T>::LoadImage (FileName name, bool apply_geo)
   else // For now, assume anything else is ImageXmipp type.
   {
     ImageXmippT<T> *i = new ImageXmippT<T>();
-    if (i->read (name,FALSE,FALSE,apply_geo))
+    if (i->read (name,FALSE,FALSE,apply_geo,FALSE))
       ret = i;
     else
       delete i;
@@ -200,10 +200,63 @@ void ImageXmippT<T>::check_oldxmipp_header() {
   } 
 }
 
+/* Get geometric transformation matrix from 2D-image header ---------------- */
+template <class T>
+matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shifts) {
+  matrix2D<double>    A(3,3);
+  double psi=realWRAP(header.Psi(),-180,180);
+  double theta=realWRAP(header.Theta(),-180,180);
+  bool is_mirror=false;
+  bool flip_mirrors=FALSE;
+#ifdef FLIP_MIRRORS
+  flip_mirrors=TRUE;
+#endif
+
+  A.init_identity();
+
+  /* This is to be compatible with old Xmipp images, that store image
+     translations in another position of the header */
+  ImageXmippT<T>::check_oldxmipp_header();
+
+  if (only_apply_shifts) {
+    Euler_angles2matrix(0.,0.,0.,A);
+    A(0,2)=-header.fXoff();   
+    A(1,2)=-header.fYoff();
+  } else {
+
+    if (theta==0.) {
+      // For untilted images: apply Euler matrix
+      Euler_angles2matrix (header.Phi(),0.,header.Psi(),A);
+    } else { 
+      // For tilted images: only apply Psi 
+      if (flip_mirrors && abs(theta)>90.) {
+	// Take mirror images (up_down) into account
+	theta=realWRAP(theta+180.,-180,180);
+	psi=-psi;
+	is_mirror=true;
+      }
+      // Take another_set into account
+      if (theta<0.) {
+	theta=-theta;
+	psi=realWRAP(psi-180.,-180,180);
+      }
+      Euler_angles2matrix(0.,0.,psi,A);
+    }
+    A(0,2)=-header.fXoff();   
+    A(1,2)=-header.fYoff();
+    if (flip_mirrors && is_mirror) {
+      // Mirror image
+      A(0,0)=-A(0,0);
+      A(0,1)=-A(0,1);
+    }
+  }
+  return A;
+}
+
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T>
 bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
-  bool reversed, bool apply_geo) _THROW {
+  bool reversed, bool apply_geo, bool apply_shifts) _THROW {
   FILE *fp;
   bool ret;
 
@@ -218,40 +271,22 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   // Read whole image and close file
   if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
   {
-    if(apply_geo) {
-      /* This is to be compatible with old Xmipp images, that store image
-         translations in another position of the header */
-      ImageXmippT<T>::check_oldxmipp_header();
 
-      /* Apply the geometric transformations in the header to the loaded image.  */
-      matrix2D<double>    A(3,3);
-      if (header.Theta()==0.) {
-        // For untilted images: apply Euler matrix
-	//	Euler_angles2matrix (-header.Phi(),0.,-header.Psi(),A);
-	Euler_angles2matrix (header.Phi(),0.,header.Psi(),A);
-      } else {
-        // For tilted images: only apply Psi
-	//	Euler_angles2matrix(0.,0.,-header.Psi(),A);
-	Euler_angles2matrix(0.,0.,header.Psi(),A);
-      }
-      A(0,2)=-header.fXoff();   
-      A(1,2)=-header.fYoff();
-
-      if (!A.IsIdent()) {
-	// Transform image without wrapping
-	T  outside=DIRECT_MAT_ELEM(img,0,0);
-	//	img.self_apply_geom(A,FALSE,FALSE,outside);
-	img.self_apply_geom(A,TRUE,FALSE,outside);
-      }
-    }
+    if (apply_geo || apply_shifts) {
+      // Apply the geometric transformations in the header to the loaded image.
+      // Transform image without wrapping, set new values to first element in the matrix
+      T  outside=DIRECT_MAT_ELEM(img,0,0);
+      img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(apply_shifts),IS_INV,DONT_WRAP,outside);
+    } 
 
     // scale if necessary (check this with Carlos)
     if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
       header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
-      img.self_scale_to_size(header.iYdim(), header.iXdim());
+      img.scale_to_size(header.iYdim(), header.iXdim());
     }; 
 
     header.set_header();  // Set header in a Xmipp consistent state
+
   }
   fclose(fp);
   return (ret);
