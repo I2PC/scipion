@@ -49,7 +49,9 @@ public:
       Prog_parameters::usage();
       cpprm.usage();
       cerr << "  [-output_ctf <Xmipp Fourier file>]: If not given, the \n"
-           << "                                      input one is rewritten\n"
+           << "                              input one is rewritten\n"
+	   << "                              If a selfile is used this\n"
+	   << "                              parameter is used as an output root\n"
       ;
    }
 };

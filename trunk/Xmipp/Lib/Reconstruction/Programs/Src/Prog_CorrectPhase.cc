@@ -56,7 +56,7 @@ void CorrectPhase_Params::show() {
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectPhase_Params::usage() {
-   cerr << "   -ctf <Xmipp Fourier file>: It must not be centered\n"
+   cerr << "   -ctf <Xmipp Fourier file or selfile>: It must not be centered\n"
         << "  [-small <epsilon=0>]      : Values under epsilon are small\n"
 	<< "  [-method <mth=leave>]     : Valid methods are: remove, leave\n"
 	<< "                              divide\n";
