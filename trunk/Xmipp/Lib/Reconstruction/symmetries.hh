@@ -29,6 +29,7 @@
 #  define _SYMMETRIES_HH
 
 //define the  crystallographic groups
+//symmetry matices from http://cci.lbl.gov/asu_gallery/
 #define sym_undefined    -1
 #define sym_P1            1
 #define sym_P2            3//c-axis, b-axis
@@ -36,6 +37,7 @@
 #define sym_C2           12
 #define sym_P222         16
 #define sym_P222_1       17
+//#define sym_P22_12       17
 #define sym_P22_12_1     18
 #define sym_P4           75
 #define sym_P422         89
@@ -224,8 +226,8 @@ public:
    /** Guess Crystallographic space group.  
        Return the  \URL[space group]{
        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
-       far it has only been implemented for P1 (1), P4 (75), P4212 (90) and P6
-       (168).
+       far it has only been implemented for P1 (1), P2212 (17), P4 (75), 
+       P4212 (90) and P6 (168).
        
        Mag_a and Mag_b are the crystal vector magnitude. */
        
@@ -265,6 +267,13 @@ public:
 			      int eprm_space_group,const matrix2D<int> &mask,
 			      int grid_type );
 
+/** Symmetrizes a simple grid with P2221  symmetry
+*/
+     void symmetry_P222_1(Volume &vol, const SimpleGrid &grid,
+                                const matrix1D<double> &eprm_aint, 
+			        const matrix1D<double> &eprm_bint,
+				const matrix2D<int> &mask, int volume_no,
+				int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
      void symmetry_P4(Volume &vol, const SimpleGrid &grid,
