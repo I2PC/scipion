@@ -168,18 +168,11 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    
    // Read or update the visible space
    if (fn_refsel!="") { // No projection will be done in this program
-      PCA_denoise.fn_ref=fn_refsel;
-      PCA_denoise.th_var=0;
-      PCA_denoise.fn_exp="";
-      PCA_denoise.s=s_denoise;
-      PCA_denoise.produce_side_info();
-      try {
-         PCA_denoise.read_PCA_from_file();
-      } catch (Xmipp_error XE) {
-         cout << XE;
-         REPORT_ERROR(1,"Prog_angular_predict_prm::produce_side_info: "
-            "the visible space has not been constructed");
-      }
+      Angular_denoise.fn_ref=fn_refsel;
+      Angular_denoise.fn_exp="";
+      Angular_denoise.s=s_denoise;
+      Angular_denoise.produce_side_info();
+      Angular_denoise.build_visible_space();
    }
 }
 
@@ -651,17 +644,15 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   #endif
 
                   // Project the resulting image onto the visible space
-                  /*
                   if (fn_refsel!="") {
-                     xmippVector Vpca;
+                     matrix1D<double> Vp;
                      STARTINGX(Ip())=STARTINGY(Ip())=0;
                      Ip().statistics_adjust(0,1);
-                     PCA_denoise.project_image(Ip(),Vpca);
-                     PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
+                     Angular_denoise.project_image(Ip(),Vp);
+                     Angular_denoise.build_image(Vp,Ip(),YSIZE(Ip()),XSIZE(Ip()));
                      Ip().set_Xmipp_origin();
                      Ip().statistics_adjust(0,1);
                   }
-                  */
 
                   #ifdef DEBUG
                      Ip.write("PPPafter_denoising.xmp");

@@ -88,7 +88,7 @@ public:
    // Vector with the tilting angles to learn
    vector<double> tilt;
    // Visible space
-   Prog_angular_denoise_prm PCA_denoise;
+   Prog_angular_denoise_prm Angular_denoise;
    // PCA projector
    Prog_angular_project_prm PCA_projector;
    /* Vector with all projections of the reference images
