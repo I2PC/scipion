@@ -23,6 +23,7 @@
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippVolumes.hh>
+#include <XmippData/xmippFuncs.hh>
 
 
 /**************************************************************************
@@ -577,7 +578,15 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   matrix1D<double> radial_mean;
 	   matrix1D<int> radial_count;
 	   radial_average(input(),center,radial_mean,radial_count);
-	   radial_mean.write(fn_out);
+	   radial_mean.write(fn_out);  
+	   
+	   int my_rad;
+	   FOR_ALL_ELEMENTS_IN_MATRIX2D(input()){
+              my_rad=(int)ROUND(sqrt((double)(i*i+j*j)));
+	          input(i,j)=radial_mean(my_rad);
+	   }
+	   input.write(fn_out+".img");
+
    }
    else if(operand_type1==VOLUME)
    {
@@ -589,6 +598,13 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   matrix1D<int> radial_count;
 	   radial_average(input(),center,radial_mean,radial_count);
 	   radial_mean.write(fn_out);
+	   
+	   int my_rad;
+	   FOR_ALL_ELEMENTS_IN_MATRIX3D(input()){
+              my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k)));
+	          input(k,i,j)=radial_mean(my_rad);
+	   }
+	   input.write(fn_out+".img");
    }   
 }
 
