@@ -93,6 +93,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    For Component AVeraing (CAV), the number of equations in which
    each blob is involved is needed. */
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
+   const struct blobtype &blob,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &read_proj);
 //@}
