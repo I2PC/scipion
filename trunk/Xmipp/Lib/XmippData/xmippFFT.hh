@@ -41,7 +41,7 @@
        Given an index and a size of the FFT, this function returns the
        corresponding digital frequency (-1/2 to 1/2). */
    #define FFT_IDX2DIGFREQ(idx,size,freq) \
-       freq=((double)((idx)<(size)/2)?(idx):-(size)+(idx))/(double)(size);
+       freq=((double)((idx)<((size)>>1))?(idx):-(size)+(idx))/(double)(size);
 
    /** Frequency to index (int).
        Given a frequency and a size of the FFT, this macro returns the
