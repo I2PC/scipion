@@ -634,7 +634,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
       }
       art_prm.random_sort=prm.random_sort;
       art_prm.sort_last_N=prm.sort_last_N;
-      if (prm.recons_method==use_SIRT) art_prm.SIRT=TRUE;
+      if (prm.recons_method==use_SIRT)
+         art_prm.parallel_mode=Basic_ART_Parameters::SIRT;
       if (prm.POCS_positivity) art_prm.positivity=TRUE;
 
       cout << "Selected: Lambda= " << art_prm.lambda_list.transpose() << endl
