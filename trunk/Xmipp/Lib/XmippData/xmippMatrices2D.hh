@@ -662,7 +662,7 @@ public:
            REPORT_ERROR(1103,"Matrix subscript (j) out of range");
         return MAT_ELEM(*this,i,j);}
    
-   /** Matrix element access via vector.
+   /** Matrix element access via double vector.
        Returns the value of a matrix logical position, but this time the
        element position is determined by a R2 vector.
        The elements can be used either by value or by reference.
@@ -674,7 +674,11 @@ public:
        \\ Ex: m(vector_R2(1,-2))=1;
        \\ Ex: val=m(vector_R2(1,-2));*/
    T&   operator () (const matrix1D<double> &v) const
-        {return MAT_ELEM(*this,ROUND(v.Y()),ROUND(v.X()));}
+        {return MAT_ELEM(*this,ROUND(YY(v)),ROUND(XX(v)));}
+
+   /** Matrix element access via intger vector.*/
+   T&   operator () (const matrix1D<int> &v) const
+        {return MAT_ELEM(*this,YY(v),XX(v));}
 
    /** Interpolates the value of the 2D matrix M at the point (x,y) */
    T   interpolated_elem(double x, double y, T outside_value=(T)0);

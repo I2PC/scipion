@@ -536,6 +536,18 @@ public:
            REPORT_ERROR(1003,"Vector subscript not defined for this vector");
         return MULTIDIM_ELEM(*this,i-STARTINGX(*this));}
    
+   /** Matrix element access via double vector.
+       Returns the value of a matrix logical position, but this time the
+       element position is determined by a R1 vector.
+       The elements can be used either by value or by reference.
+       No check is done on the validity of the vector. */
+   T&   operator () (const matrix1D<double> &v) const
+        {return VEC_ELEM(*this,ROUND(XX(v)));}
+
+   /** Matrix element access via integer vector.*/
+   T&   operator () (const matrix1D<int> &v) const
+        {return VEC_ELEM(*this,XX(v));}
+
    /** Access to X component.
        A special case of vectors are those of 2 or 3 components, they are
        treated as vectors in R2 or R3 for which the X component is defined.

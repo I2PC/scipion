@@ -548,7 +548,7 @@ public:
            REPORT_ERROR(1203,"Matrix3D::operator (): Matrix3D subscript (j) out of range");
         return VOL_ELEM(*this, k,i,j);}
 
-   /** Volume element access via vector.
+   /** Volume element access via double vector.
        Returns the value of a matrix logical position, but this time the
        element position is determined by a R3 vector.
        The elements can be used either by value or by reference.
@@ -560,8 +560,12 @@ public:
        \\ Ex: V(vector_R3(1,-2,0))=1;
        \\ Ex: val=V(vector_R3(1,-2,0));*/
    T&   operator () (const matrix1D<double> &v) const
-         {return (*this)(ROUND(v.Z()),
-            ROUND(v.Y()),ROUND(v.X()));}
+         {return VOL_ELEM((*this),ROUND(ZZ(v)),
+            ROUND(YY(v)),ROUND(XX(v)));}
+
+   /** Volume element access via integer vector.*/
+   T&   operator () (const matrix1D<int> &v) const
+         {return VOL_ELEM((*this),ZZ(v),YY(v),XX(v));}
 
    /** Interpolates the value of the 2D matrix M at the point (x,y) */
    T   interpolated_elem(double x, double y, double z, T outside_value=(T)0);
