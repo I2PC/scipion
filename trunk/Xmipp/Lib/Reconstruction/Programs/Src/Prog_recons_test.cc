@@ -761,6 +761,14 @@ void single_recons_test(const Recons_test_Parameters &prm,
    }
    eval_prm.fn_recons=fn_recons_root+".vol";
    eval_prm.fn_mask=fn_mask;
+   if (fn_mask!="") {
+      // Revert the mask for evaluation
+      VolumeXmipp aux;
+      aux.read(fn_mask);
+      aux()*=-1;
+      aux()+=1;
+      aux.write();
+   }
    if (prm.global_radius!=-1) eval_prm.global_radius=prm.global_radius;
    else eval_prm.global_radius=CEIL(proj_prm.proj_Xdim/2);
    eval_prm.tell |= SAVE_HISTOGRAMS | SAVE_MAPS | SHOW_PROCESS;
