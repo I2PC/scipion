@@ -29,7 +29,8 @@ class Micrograph;
 /* Widget for the micrograph ----------------------------------------------- */
 class QtImageMicrograph : public QtImage {   
    Q_OBJECT
-
+public:
+   float   __ellipse_radius;
 private:
    bool    __pressed;
    int     __movingMark;
@@ -45,7 +46,7 @@ public:
    bool isTilted() {return __tilted;}
    void movingMark( int _coord ) { __movingMark = _coord; }
    void drawEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
-   void drawLastEllipse(int _x, int _y, int _color);
+   void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
    
 protected:
    void loadImage();

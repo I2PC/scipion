@@ -137,6 +137,7 @@ private:
    int                        __mingray;
    int                        __maxgray;
    float                      __gamma;
+   float                      __ellipse_radius;
 
    bool                       __learn_particles_done;
    bool                       __autoselection_done;
@@ -227,6 +228,9 @@ public:
    // Change contrast
    void changeContrast(int _mingray, int _maxgray, float _gamma);
    
+   // Change contrast
+   void changeCircleRadius(float _circle_radius);
+
    // Repaint 
    void repaint( int t=FALSE );
    
@@ -351,6 +355,7 @@ public slots:
    void slotDrawLastEllipse(int _x, int _y, int _f);
    void slotQuit();
    void slotChangeContrast();
+   void slotChangeCircleRadius();
 signals:
    void signalActiveFamily( int _f );
    void signalAddFamily( const char *_familyName );
@@ -373,6 +378,24 @@ private:
    QLabel     	      *__label_min;
    QLabel     	      *__label_max;
    QLabel     	      *__label_gamma;
+private slots:
+   void scrollValueChanged(int);  
+};
+
+/** Class to adjust contrast
+*/
+class AdjustCircleRadiustWidget : public QWidget {
+   Q_OBJECT
+public:
+   /** Constructor */
+   AdjustCircleRadiustWidget(int min, int max, int start_with, 
+      QtWidgetMicrograph *_qtwidgetmicrograph,
+      QWidget *parent=0, const char *name=0, int wflags=0);
+private:
+   QtWidgetMicrograph *__qtwidgetmicrograph;
+   QScrollBar 	      *__scroll_radius;
+   QLabel     	      *__label_radius;   
+
 private slots:
    void scrollValueChanged(int);  
 };

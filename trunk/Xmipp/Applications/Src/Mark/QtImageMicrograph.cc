@@ -42,7 +42,8 @@ QtImageMicrograph::QtImageMicrograph( QWidget *_parent,
    __y          = 0;
    __pressed    = false;
    __movingMark = -1;
-   __tilted     = false; 
+   __tilted     = false;
+   __ellipse_radius = 5;
    
    emit signalSetWidthHeight( image()->width(), image()->height() );
 }
@@ -127,8 +128,8 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
    }
 }
 
-void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color) {
-   drawEllipse(_x,_y,_color,10);
+void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius) {
+   drawEllipse(_x,_y,_color,5.+_ellipse_radius);
 }
 
 /* Load Symbols ------------------------------------------------------------ */
@@ -137,7 +138,8 @@ void QtImageMicrograph::loadSymbols() {
    for( int i = 0; i < getMicrograph()->ParticleNo(); i++ ) {
       if ( !getMicrograph()->coord(i).valid ) continue;      
       drawEllipse(getMicrograph()->coord(i).X, 
-         getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label);
+         getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label,
+	 __ellipse_radius);
    }
 }
 

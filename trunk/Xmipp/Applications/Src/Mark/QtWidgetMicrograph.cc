@@ -247,6 +247,7 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
    __mImageOverview = new QtImageOverviewMicrograph( this );
       __mImageOverview->setWidgetMicrograph(this);
    __file_menu      = NULL;
+   __ellipse_radius = 5;
    
    __mImage->setFiltersController( _f );
    __mImageOverview->setFiltersController( _f );
@@ -276,6 +277,9 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
    QAccel *ctrl = new QAccel( this );
    ctrl->connectItem( ctrl->insertItem(Key_G+CTRL, 200),
                              this, SLOT(slotChangeContrast(void)) );
+   QAccel *ctrl2 = new QAccel( this );
+   ctrl2->connectItem( ctrl2->insertItem(Key_R+CTRL, 200),
+                              this, SLOT(slotChangeCircleRadius(void)) );
 
    setMicrograph( _m );
    
@@ -1598,20 +1602,26 @@ void QtWidgetMicrograph::changeContrast(int _mingray, int _maxgray, float _gamma
    __mImageOverview->changeContrast(_mingray,_maxgray,_gamma);
 }
 
+void QtWidgetMicrograph::changeCircleRadius(float _circle_radius) {
+   __ellipse_radius=_circle_radius;
+   __mImage->__ellipse_radius=__ellipse_radius;
+
+}
+
 void QtWidgetMicrograph::repaint( int t ) {
    __mImage->repaint( FALSE );
    __mImageOverview->repaint( FALSE );
 }
 
 void QtWidgetMicrograph::slotDrawEllipse(int _x, int _y, int _f) {
-   __mImage->drawEllipse(_x,_y,_f);
+   __mImage->drawEllipse(_x,_y,_f,__ellipse_radius);
    __mImageOverview->drawEllipse(_x,_y,_f);
 }
 
 void QtWidgetMicrograph::slotDrawLastEllipse(int _x, int _y, int _f) {
-   __mImage->drawEllipse(_x,_y,_f);
+   __mImage->drawEllipse(_x,_y,_f,__ellipse_radius);
    __mImageOverview->drawEllipse(_x,_y,_f);
-   __mImage->drawLastEllipse(_x,_y,_f);
+   __mImage->drawLastEllipse(_x,_y,_f,__ellipse_radius);
 }
 
 /* Active family ----------------------------------------------------------- */
@@ -1643,6 +1653,12 @@ void QtWidgetMicrograph::slotChangeContrast() {
       AdjustContrastWidget(0,255,1.0F,this,
         0,"new window", WDestructiveClose);
    adjustContrast->show();
+}
+void QtWidgetMicrograph::slotChangeCircleRadius() {
+   AdjustCircleRadiustWidget *adjustCircleRadius=new
+      AdjustCircleRadiustWidget(0,255,10,this,
+        0,"new window", WDestructiveClose);
+   adjustCircleRadius->show();
 }
 
 /* AdjustContrastWidget ---------------------------------------------------- */
@@ -1735,4 +1751,51 @@ void AdjustContrastWidget::scrollValueChanged(int new_val) {
     __label_gamma->setText( FtoA((__scroll_gamma->value())/10.0,3,2).c_str() );
     __qtwidgetmicrograph->changeContrast(__scroll_min->value(),
        __scroll_max->value(),__scroll_gamma->value()/10.0);
+}
+
+/* AdjustContrastWidget ---------------------------------------------------- */
+// Constructor
+AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max, 
+  int start_with, QtWidgetMicrograph *_qtwidgetmicrograph,
+   QWidget *parent, const char *name, int wflags):
+   QWidget(parent,name,wflags) {
+   __qtwidgetmicrograph=_qtwidgetmicrograph;
+
+    // Set this window caption
+    setCaption( "Change Circle Radius" );
+
+    // Create a layout to position the widgets
+    QBoxLayout *Layout = new QVBoxLayout( this, 3 );
+
+    // Create a grid layout to hold most of the widgets
+    QGridLayout *grid = new QGridLayout( 1,3 );
+    Layout->addLayout( grid );
+
+    // Radius
+    QLabel     *label_radius= new QLabel( this, "label" );    
+    label_radius->setFont( QFont("times",12,QFont::Bold) );
+    label_radius->setText( "Radius" );
+    label_radius->setFixedSize(label_radius->sizeHint());
+    grid->addWidget( label_radius, 0, 0, AlignCenter );
+
+    __scroll_radius= new QScrollBar(0, 255, 1,10,start_with,
+       QScrollBar::Horizontal,this,"scroll");
+    __scroll_radius->setFixedWidth(100); 
+    __scroll_radius->setFixedHeight(15); 
+    grid->addWidget( __scroll_radius, 0, 1, AlignCenter );
+    connect( __scroll_radius, SIGNAL(valueChanged(int)),
+       SLOT(scrollValueChanged(int)) );
+   
+    __label_radius= new QLabel( this, "label" );	 
+    __label_radius->setFont( QFont("courier",14) );
+    __label_radius->setText( ItoA(start_with,3).c_str() );
+    __label_radius->setFixedSize(__scroll_radius->sizeHint());
+    grid->addWidget( __label_radius, 0, 2, AlignCenter );
+
+
+}
+
+void AdjustCircleRadiustWidget::scrollValueChanged(int new_val) {
+    __label_radius  ->setText( ItoA(__scroll_radius  ->value(),3).c_str() );
+    __qtwidgetmicrograph->changeCircleRadius(__scroll_radius->value());
 }
