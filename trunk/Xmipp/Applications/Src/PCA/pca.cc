@@ -120,6 +120,7 @@ unsigned       verb = 0;	// Verbosity level
    cout << endl << "Saving eigenvalues as " << fn_out << ".eval ....." << endl;  
    tmpN = fn_out.c_str() + (string) ".eval"; 
    ofstream evalS(tmpN.c_str());
+   evalS << "3  " << myPCA.eigenvec.size() << endl;
    double cum = 0;
    for (int i = 0; i < myPCA.eigenval.size(); i++) cum += myPCA.eigenval[i];
    if (cum == 0) cum = 1;
