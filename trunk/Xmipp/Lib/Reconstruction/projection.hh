@@ -44,6 +44,7 @@
 #define CAVK     2
 #define COUNT_EQ 3
 #define CAV      4
+#define CAVARTK  5
 
 /** From blob volumes (Forward & Backward(ART)).
     Project a grid volume with a blob basis.
@@ -66,7 +67,7 @@
        in this case, and the normalising projection is not modified at
        all.
 
-    As for the mode, valid modes are ARTK, CAVK, COUNT_EQ.
+    As for the mode, valid modes are ARTK, CAVK, COUNT_EQ, CAVARTK.
     
     M is the matrix corresponding to the projection process.
     */
@@ -124,7 +125,7 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
     vectors, and the matrix to pass from the deformed to the undeformed
     vectors (D and Dinv). a=D*ai;
     
-    Valid eq_modes are ARTK and CAV.
+    Valid eq_modes are ARTK, CAVARTK and CAV.
 */
 void project_Crystal_Volume(GridVolume &vol,
    const ImageOver &footprint, const ImageOver &footprint2,
