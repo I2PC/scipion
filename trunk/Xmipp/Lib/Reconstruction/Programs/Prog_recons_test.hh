@@ -75,6 +75,9 @@ public:
    /// Noise root squared spectrum after CTF
    FileName fn_after_CTF;
 
+   /// High pass filter cutoff
+   double w_hp;
+
    #define use_ART   	   1
    #define use_SIRT        2
    #define use_WBP         3

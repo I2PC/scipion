@@ -91,6 +91,9 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       sigma=AtoF(get_param(fh_param,"noise stddev",0,"0"));
       low_pass_before_CTF=AtoF(get_param(fh_param,"noise lowpass before CTF",0,"0"));
       fn_after_CTF=get_param(fh_param,"noise spectrum after CTF",0,"");
+      
+      w_hp=AtoF(get_param(fh_param,"highpass cutoff",0,"0"));
+      if (w_hp<0 || w_hp>0.5) w_hp=0;
 
       MeasNo=AtoI(get_param(fh_param,"measurement number",0,"-1"));
       accuracy=AtoF(get_param(fh_param,"accuracy",0,"-1"));
@@ -271,6 +274,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    out << "   Noise stddev: " << prm.sigma << endl;
    out << "   Noise lowpass before CTF: " << prm.low_pass_before_CTF << endl;
    out << "   Noise spectrum after CTF: " << prm.fn_after_CTF << endl;
+   out << "   High pass cutoff: " << prm.w_hp << endl;
    out << "   Probe radius: " << prm.probe_radius << endl;
    out << "   Top surface: ";
    if (prm.enable_top_surface)
@@ -502,6 +506,34 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 SF.go_first_ACTIVE();
    }
 
+// Filter the images -------------------------------------------------------
+   if (prm.w_hp>0 && prm.w_hp<0.5) {
+      FourierMask Filter;
+      Filter.FilterShape=RAISED_COSINE;
+      Filter.FilterBand=HIGHPASS;
+      Filter.w1=prm.w_hp;
+      Filter.raised_w=0.02;
+      cerr << "Filtering the images ...\n";
+      init_progress_bar(SF.ImgNo());
+      int i=0;
+      bool first=true;
+      while (!SF.eof()) {
+      	 FileName fn_proj=SF.NextImg();
+	 ImageXmipp I; I.read(fn_proj); I().set_Xmipp_origin();
+
+         if (first) {
+	    Filter.generate_mask(I());
+	    first=false;
+	 }
+      	 Filter.apply_mask_Space(I());
+
+	 I.write(); i++;
+	 if (i%20==0) progress_bar(i);
+      }
+      progress_bar(SF.ImgNo());
+      SF.go_first_ACTIVE();
+   }
+
 // Normalize ---------------------------------------------------------------
    randomize_random_generator();
    if (prm.enable_normalization) {
@@ -671,6 +703,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
          Filter.w1=prm.starting_low_pass;
          Filter.raised_w=0.02;
          Filter.show();
+	 Filter.generate_mask(starting_vol());
          Filter.apply_mask_Space(starting_vol());
          starting_vol.write(fn_recons_root+"_starting.vol");
 
