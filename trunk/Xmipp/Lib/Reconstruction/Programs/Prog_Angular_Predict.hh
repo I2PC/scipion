@@ -29,9 +29,7 @@
 #include <XmippData/xmippProgs.hh>
 #include <XmippData/xmippSelFiles.hh>
 #include <Classification/xmippPC.hh>
-#include "Prog_Angular_Project.hh"
 #include "Prog_Angular_Distance.hh"
-#include "Prog_Angular_Denoise.hh"
 #include "../symmetries.hh"
 
 #include <map>
@@ -73,8 +71,6 @@ public:
    /** Check mirrors.
       If 1 then mirror versions of the experimental images are also explored.*/
    int check_mirrors;
-   /** Project onto the visible space.*/
-   bool visible_space;
    /** Way to pick views.
        0 maximum correlation of the first group.
        1 average of the most populated group.
@@ -106,8 +102,6 @@ public:
    vector<double> rot;
    // Vector with the tilting angles to learn
    vector<double> tilt;
-   // Visible space
-   Prog_angular_denoise_prm Angular_denoise;
    // Index of the current processed image
    int current_img;
    // Vector of predicted rotational angles

@@ -30,6 +30,7 @@
 #include <XmippData/xmippHistograms.hh>
 #include <XmippData/xmippGeometry.hh>
 #include <XmippData/xmippWavelets.hh>
+#include <XmippData/xmippMasks.hh>
 
 // Read arguments ==========================================================
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
@@ -47,14 +48,11 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    smin=AtoI(get_param(argc,argv,"-smin","1"));
    smax=AtoI(get_param(argc,argv,"-smax","-1"));
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
-   visible_space=check_param(argc,argv,"-visible_space");
    pick=AtoI(get_param(argc,argv,"-pick","1"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
-   if (check_param(argc,argv,"-mask"))
-      Angular_denoise.Mask.read(argc,argv);
    produce_side_info();
 }
 
@@ -71,7 +69,6 @@ void Prog_angular_predict_prm::show() {
         << "smin: " << smin << endl
         << "smax: " << smax << endl
         << "Check mirrors: " << check_mirrors << endl
-        << "Visible space: " << visible_space << endl
 	<< "Pick: " << pick << endl
         << "Show level: " << tell << endl
    ;
@@ -95,7 +92,6 @@ void Prog_angular_predict_prm::usage() {
         << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
         << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
         << "                              images are also explored\n"
-        << "  [-visible_space]          : use the projection onto the visible space\n"
 	<< "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
 	<< "                              1 --> maximum of the most populated\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
@@ -103,7 +99,6 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-show_options]           : Show final options among which\n"
 	<< "                              the angles are selected\n"
    ;
-   Angular_denoise.Mask.usage();
 }
 
 // Produce side information ================================================
@@ -143,18 +138,6 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    predicted_shiftY.resize(number_of_images);
    predicted_corr.resize(number_of_images);
    
-   // Read or update the visible space
-   if (visible_space) { // No projection will be done in this program
-      Angular_denoise.fn_ref=fn_ref;
-      Angular_denoise.fn_exp="";
-      Angular_denoise.s=smin;
-      Angular_denoise.produce_side_info();
-      Angular_denoise.build_visible_space();
-      
-      // Save some space
-      Angular_denoise.SF_ref.clear();
-   }
-
    // Build mask for subbands
    int Ydim, Xdim;
    SF_ref.ImgSize(Ydim,Xdim);
@@ -213,7 +196,7 @@ void Prog_angular_predict_prm::produce_library() _THROW {
    init_progress_bar(number_of_imgs);
    int n=0, nstep=MAX(1,number_of_imgs/60); // For progress bar
    while (!SF_ref.eof()) {
-      I.read(SF_ref.NextImg());
+      I.read(SF_ref.NextImg(),FALSE,FALSE,TRUE,TRUE);
       
       // Make and distribute its DWT coefficients in the different PCA bins
       I().statistics_adjust(0,1);
@@ -469,7 +452,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    // Check if there are so many groups as images.
    // If that is the case, then everything is a single group
    // if denoising is not used
-   if (groups.size()==best_idx.size() && !visible_space) {
+   if (groups.size()==best_idx.size()) {
       groups.clear();
       vector<int> group;
       for (int j=0; j<best_idx.size(); j++) group.push_back(best_idx[j]);
@@ -626,33 +609,6 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   // Project the resulting image onto the visible space
                   double proj_error=0.0, proj_compact=0.0;
                   bool   look_for_rot_tilt=true;
-                  if (visible_space) {
-                     matrix1D<double> Vp;
-                     STARTINGX(Ip())=STARTINGY(Ip())=0;
-                     Ip().statistics_adjust(0,1);
-                     proj_error=Angular_denoise.project_image(Ip(),Vp);
-                     //Angular_denoise.build_image(Vp,Ip(),YSIZE(Ip()),XSIZE(Ip()));
-                     Ip().set_Xmipp_origin();
-		     
-		     // Measure the compactness of the projection
-		     double total_sum=Vp.sum();
-		     int imax; Vp.max_index(imax);
-		     proj_compact=Vp(imax)/total_sum;
-                     Vp(imax)=0;
-                     Vp.max_index(imax);
-		     proj_compact+=Vp(imax)/total_sum;
-                     Vp(imax)=0;
-                     Vp.max_index(imax);
-		     proj_compact+=Vp(imax)/total_sum;
-                     /*
-		     int imax;  Vp.max_index(imax); Vp(imax)=0;
-                     int imax2; Vp.max_index(imax2);
-                     double psi1=0.0, psi2=0.0;
-                     proj_compact=-distance_prm.check_symmetries(
-	                rot[imax], tilt[imax], psi1,
-                        rot[imax2],tilt[imax2],psi2,false);
-                     */
-                  }
 
       	          // Search for the best tilt, rot angles
                   double rotp, tiltp;
@@ -715,21 +671,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double proj_compact_step=max_proj_compact-min_proj_compact;
    vscore.reserve(vcorr.size());
    for (int i=0; i<N_trials; i++) {
-      if (!visible_space) vscore.push_back(vcorr[i]);
-      else {
-         // Normalize scores between 0.9 and 1.1
-         double norm_corr, norm_proj_error, norm_proj_compact;
-         if (corr_step==0) norm_corr=1;
-         else              norm_corr=0.9+0.2*(vcorr[i]-min_corr)/corr_step;
-         if (proj_error_step==0) norm_proj_error=1;
-         else              norm_proj_error=0.9+0.2*(max_proj_error-vproj_error[i])/proj_error_step;
-         if (proj_compact_step==0) norm_proj_compact=1;
-         else              norm_proj_compact=0.9+0.2*(vproj_compact[i]-min_proj_compact)/proj_compact_step;
-         // Score
-         vscore.push_back(norm_corr*
-                          norm_proj_error*norm_proj_error*
-                          norm_proj_compact);
-      }
+      vscore.push_back(vcorr[i]);
       if (tell & TELL_PSI_SHIFT)
          cout << "i=" << i
               << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
