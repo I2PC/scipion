@@ -151,18 +151,20 @@ void QtFileMenu::slotGenerateImages() {
 	    // Select right angle
 	    #define MAIN_WIDGET \
 	       ((QtMainWidgetMark *)(parentWidget()->parentWidget()))
-	    double alpha=0;
+	    double alpha=0,psi=0;
 	    if (MAIN_WIDGET->there_is_tilted()) {
 	       if (((QtWidgetMicrograph *) (MAIN_WIDGET->untilted_widget()))==
 	           (QtWidgetMicrograph *) parentWidget())
 		    alpha=MAIN_WIDGET->alpha_u();
-	       else alpha=MAIN_WIDGET->alpha_t();
+	       else psi=MAIN_WIDGET->alpha_t();
 	    }
+            double gamma; 
+            gamma=MAIN_WIDGET->gamma_t();
             m->produce_all_images( activeFamily,
                                    (char*)rootNameLineEdit.text().ascii(),
                                    startingIndexLineEdit.text().toInt(),
                                    (char*)originalMLineEdit.text().ascii(),
-				   alpha );
+				                       alpha,gamma,psi/*rot,tilt,psi*/ );
          }
       }
    } catch( Xmipp_error XE ) { cout << XE; }

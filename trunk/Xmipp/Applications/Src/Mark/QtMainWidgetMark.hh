@@ -110,6 +110,9 @@ public:
    // Return alpha for tilted
    double alpha_t() const {return __alpha_t;}
 
+   // Return tilt for tilted
+   double gamma_t() const {return __gamma;}
+
    // True if there is a tilted micrograph
    bool there_is_tilted() const {return __mTiltedWidget!=NULL;}
    
