@@ -329,9 +329,9 @@ void ShowSel::writeSelFile(SelFile &_SF) {
       if (fi.exists())
    	 if ( QMessageBox::information( this, "Showsel application",
    		"The file already exist. Overwrite?", 
-   		"Yes", "No") == 0) _SF.write((string) newfilename);
+   		"Yes", "No") == 0) _SF.write((string)  ((const char *)newfilename));
    	 else QMessageBox::about( this, "Warning!", "Saving aborted\n");			   
-      else _SF.write((string) newfilename);
+      else _SF.write((string)  ((const char *)newfilename));
    } else  QMessageBox::about( this, "Warning!", "Saving aborted\n");
 }
 

@@ -345,7 +345,7 @@ void ShowTable::keyPressEvent( QKeyEvent* e ) {
 void ShowTable::GUIopenFile() {  
     QString newfilename = QFileDialog::getOpenFileName( QString::null, "*", this, "Sel files");
     if ( !newfilename.isEmpty() )
-       openNewFile((string)newfilename);
+       openNewFile((string)  ((const char *)newfilename));
 }
 
 /* Help -------------------------------------------------------------------- */

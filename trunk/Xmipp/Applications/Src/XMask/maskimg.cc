@@ -365,7 +365,7 @@ void maskImg::saveImage( int item )
 	      }		     
 
  	    // Saves Xmipp Image
-	    tmpImage.rename((string) savefilename);
+	    tmpImage.rename((string) ((const char *)savefilename));
             tmpImage.write(); 
 
 	  } catch (Xmipp_error) {
