@@ -105,7 +105,7 @@ void SF_main(int argc, char **argv,
 
    // Read command line ....................................................
    try {
-      prm->read(argc, argv);
+      (*(Prog_parameters *)prm).read(argc, argv);
    } catch (Xmipp_error XE) {
       cerr << XE;
       cerr << "Usage: \n"
