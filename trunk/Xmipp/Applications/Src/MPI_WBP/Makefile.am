@@ -7,6 +7,6 @@ MPI_WBP_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
 CC=@MPICXX@
 CXX=@MPICXX@
 	
-#MPI_Art_LDFLAGS = -all-static
+MPI_WBP_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib

@@ -4,5 +4,7 @@ angular_distance_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_o
 	$(top_srcdir)/Lib/XmippInterface/libXmippInterfaceVTK_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
+angular_distance_LDFLAGS = @EXEC_TYPE@
+
 INCLUDES = -I$(top_srcdir)/Lib
 

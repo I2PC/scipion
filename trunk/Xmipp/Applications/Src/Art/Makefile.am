@@ -6,6 +6,6 @@ Art_LDADD = $(top_srcdir)/Lib/XmippInterface/libXmippInterfaceVTK_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
 	
 	
-Art_LDFLAGS = -all-static
+Art_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib

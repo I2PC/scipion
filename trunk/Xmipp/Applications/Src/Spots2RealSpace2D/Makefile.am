@@ -6,6 +6,6 @@ spots2realspace_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
 	
 	
-spots2realspace_LDFLAGS = -all-static
+spots2realspace_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib
