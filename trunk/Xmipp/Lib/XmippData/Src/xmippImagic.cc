@@ -214,9 +214,9 @@ bool ImagicWriteImagicFile (const FileName &hed_fname,
       memcpy (&header_block[IMAGIC_IDX_TYPE], formatstr.c_str(), 4);
       strncpy ((char *) &header_block[IMAGIC_IDX_NAME],
 	       image->name().c_str(), IMAGIC_IDX_NAMELEN);
-#if defined(linux)
+#if defined(_LINUX)
       static const unsigned int ARCH_VAL = 33686018;
-#elif defined(sun)
+#elif defined(_SUN)
       static const unsigned int ARCH_VAL = 67372036;
 #endif
       // This next line will generate an error if not using linux or sun!
