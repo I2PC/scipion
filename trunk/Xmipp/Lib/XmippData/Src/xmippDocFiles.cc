@@ -163,7 +163,7 @@ void DocLine::read(istream& in) _THROW {
 /* DOC FILE     	      	             	      	             	     */
 /*****************************************************************************/
 /* Copy Constructor -------------------------------------------------------- */
-DocFile::DocFile(DocFile &DF) {
+DocFile::DocFile(const DocFile &DF) {
    fn_doc       = DF.fn_doc;
    m            = DF.m;
    no_lines     = DF.no_lines;

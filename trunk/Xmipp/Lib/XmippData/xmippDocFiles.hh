@@ -194,7 +194,7 @@ public:
    
    /** Copy constructor.
        \\Ex: DocFile DF2(DF1); */
-   DocFile(DocFile &DF);
+   DocFile(const DocFile &DF);
 
    /** Empties the object.
        \\Ex: DF.clear(); */
