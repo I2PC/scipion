@@ -71,7 +71,7 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    int sym_no,
    Projection &diff_proj, Projection &corr_proj, Projection alig_proj,
    double &mean_error, int numIMG, double lamdba, int act_proj,
-   const FileName &fn_ctf);
+   const FileName &fn_ctf, bool print_system_matrix=false);
 
 /** Finish iterations.
     Do nothing. */

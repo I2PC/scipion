@@ -57,6 +57,7 @@ void Basic_ART_Parameters::default_values() {
     Youtput_volume_size= 0;
     Zoutput_volume_size= 0;
     R                  =-1;
+    print_system_matrix=false;
     tell               = 0;
     save_intermidiate_every=0;
     
@@ -145,6 +146,7 @@ void Basic_ART_Parameters::default_values() {
        blob.alpha=13.3633; blob.radius=2.4; blob.order=2; \
     } \
     \
+    print_system_matrix=CHECK_PARAM("print_system_matrix"); \
     if (CHECK_PARAM("show_error")) \
        tell |= TELL_SHOW_ERROR; \
     if (CHECK_PARAM("manual_order")) \
@@ -285,7 +287,8 @@ void Basic_ART_Parameters::usage() {
   ;
   cerr
      << "\nDebugging options"
-     << "\n   [-show_error]         show error for each projection\n"
+     << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
+     << "\n   [-show_error]         show error for each projection"
      << "\n   [-show_stats]         give some statistical information during the process"
      << "\n   [-save_at_each_step]  save intermidiate projections"
      << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"

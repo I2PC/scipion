@@ -74,7 +74,7 @@ template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
-   const VolumeT<int> *VNeq) {
+   const VolumeT<int> *VNeq, matrix2D<double> *M) {
    matrix1D<double> prjX(3);                 // Coordinate: Projection of the
    matrix1D<double> prjY(3);                 // 3 grid vectors
    matrix1D<double> prjZ(3);
@@ -116,6 +116,10 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    int           N_eq;                      // Number of equations in which
                                             // a blob is involved
    int           i,j,k;                     // volume element indexes
+
+   // Prepare system matrix for printing ...................................
+   if (M!=NULL)
+      M->init_zeros(YSIZE(proj())*XSIZE(proj()),grid.get_number_of_samples());
 
    // Project grid axis ....................................................
    // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -186,6 +190,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    #endif
 
    matrix1D<double> grid_index(3), univ_position(3);
+   int number_of_blob=0;
    for (k=ZZ_lowest; k<=ZZ_highest; k++) {
       // Corner of the row defined by Y
       beginY=beginZ;
@@ -198,7 +203,6 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
       	    if (grid.is_interesting(univ_position)) {
                // Be careful that you cannot skip any blob, although its
                // value be 0, because it is useful for norm_proj
-
                #ifdef DEBUG
                // condition = !FORW && XX(grid.origin)==0 &&
                //              ((j==-2 && i==-7 && k==4)|| (j==-2 && i==-6 && k==4));
@@ -265,6 +269,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                     IMGPIXEL(footprint,foot_V,foot_U);
                         	 IMGPIXEL(norm_proj,y,x) +=
                                     IMGPIXEL(footprint2,foot_V,foot_U);
+				 if (M!=NULL) {
+                                    int py, px;
+				    proj().logical2physical(y,x,py,px);
+				    int number_of_pixel=py*XSIZE(proj())+px;
+				    (*M)(number_of_pixel,number_of_blob)=
+				       IMGPIXEL(footprint,foot_V,foot_U);
+				 }
                         	 break;
                               case CAVK:
                         	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j) *
@@ -327,6 +338,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                      #endif
         	  }
                } // If not collapsed
+	       number_of_blob++;
       	    } // If interesting
 
             // Prepare for next iteration
@@ -359,7 +371,8 @@ void project_Volume(
                                          // 0 if we are backprojecting
                                          //   norm_proj must be valid
    int              eq_mode,             // ARTK, CAVK or CAV
-   GridVolumeT<int> *GVNeq)
+   GridVolumeT<int> *GVNeq,              // Number of equations per blob
+   matrix2D<double> *M)                  // System matrix
 {
    // If projecting forward initialise projections
    if (FORW) {
@@ -379,11 +392,12 @@ void project_Volume(
    #endif
 
    // Project each subvolume
+   
    for (int i=0; i<vol.VolumesNo(); i++) {
       VolumeT<int> *VNeq;
       if (GVNeq!=NULL) VNeq=&((*GVNeq)(i)); else VNeq=NULL;
       project_SimpleGrid(vol(i),vol.grid(i),footprint,footprint2,
-         proj, norm_proj, FORW, eq_mode, VNeq);
+         proj, norm_proj, FORW, eq_mode, VNeq, M);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
       if (FORW) save.write((string)"PPPnorm_FORW"+(char)(48+i));
@@ -1004,7 +1018,7 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
    Projection &read_proj) {
    for (int i=0; i<GVNeq.VolumesNo(); i++)
       project_SimpleGrid(GVNeq(i),GVNeq.grid(i),footprint,footprint2,
-         read_proj, read_proj, FORWARD, COUNT_EQ, NULL);
+         read_proj, read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }
 
 /* Instantiation ----------------------------------------------------------- */

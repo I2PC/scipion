@@ -63,8 +63,10 @@ void ART_single_step(
                                              // be divided by this number
    double                  lambda,           // Lambda to be used
    int                     act_proj,         // Projection number
-   const FileName          &fn_ctf)          // CTF to apply
-
+   const FileName          &fn_ctf,          // CTF to apply
+   bool                    print_system_matrix) // Print matrix (A in Ax=b) of
+                                             // the equation system, as well as
+					     // the independent vector (b)
 {
 // Prepare to work with CTF ................................................
    FourierMask ctf;
@@ -120,12 +122,34 @@ void ART_single_step(
 // Project structure .......................................................
    // The correction image is reused in this call to store the normalising
    // projection, ie, the projection of an all-1 volume
+   matrix2D<double> *A=NULL;
+   if (print_system_matrix) A=new matrix2D<double>;
    project_Volume(vol_in,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),FORWARD,prm.eq_mode,
-      prm.GVNeq);
+      prm.GVNeq,A);
 
-// Now compute differences .................................................
+   // Print system matrix
+   if (print_system_matrix) {
+      cout << "Equation system (Ax=b) ----------------------\n";
+      cout << "Size: "; A->print_shape(); cout << endl;
+      for (int i=0; i<YSIZE(*A); i++) {
+         bool null_row=true;
+         for (int j=0; j<YSIZE(*A); j++)
+	    if (DIRECT_MAT_ELEM(*A,i,j)!=0) {null_row=false; break;}
+	 if (!null_row) {
+	    cout << "pixel=" << ItoA(i,3) << " --> "
+	         << MULTIDIM_ELEM(read_proj(),i) << " = ";
+            for (int j=0; j<XSIZE(*A); j++)
+	       cout << DIRECT_MAT_ELEM(*A,i,j) << " ";
+	    cout << endl;
+	 }
+      }
+      cout << "---------------------------------------------\n";
+      delete A;
+   }
+
+   // Now compute differences .................................................
    double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
    
    mean_error=0;
@@ -148,7 +172,7 @@ void ART_single_step(
    project_Volume(*vol_out,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
-      prm.GVNeq);
+      prm.GVNeq,NULL);
 
    // Remove footprints if necessary
    if (remove_footprints) {

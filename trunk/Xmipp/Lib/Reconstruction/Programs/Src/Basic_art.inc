@@ -302,8 +302,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images, prm.IMG_Inf[iact_proj].fn_ctf);
-      
+	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.print_system_matrix);
 
           global_mean_error += mean_error;
           

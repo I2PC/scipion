@@ -66,13 +66,15 @@
        all.
 
     As for the mode, valid modes are ARTK, CAVK, COUNT_EQ.
+    
+    M is the matrix corresponding to the projection process.
     */
 template <class T>
 void project_Volume(GridVolumeT<T> &vol,
    const ImageOver &footprint,const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
    double rot, double tilt, double psi, int FORW, int eq_mode=ARTK,
-   GridVolumeT<int> *GVNeq=NULL);
+   GridVolumeT<int> *GVNeq=NULL, matrix2D<double> *M=NULL);
 
 /** From voxel volumes.
     The voxel volume is projected onto a projection plane defined by

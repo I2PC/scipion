@@ -159,7 +159,7 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
 	 art_prm->blobprint2, Itheo, Inorm,
 	 YSIZE(Ireal()), XSIZE(Ireal()),
 	 Ireal.rot(), Ireal.tilt(), Ireal.psi(),
-	 FORWARD);
+	 FORWARD,false);
 
       // Apply CTF
       FFT_VTK(Itheo(),FFTtheo,TRUE);

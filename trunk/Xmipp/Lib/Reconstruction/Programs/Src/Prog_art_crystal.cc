@@ -335,7 +335,8 @@ void ART_single_step(
                                              // be divided by this number
    double                  lambda,           // Lambda to be used
    int                     imagen_no,        // Projection number
-   const FileName         &fn_ctf)           // CTF to apply
+   const FileName         &fn_ctf,           // CTF to apply
+   bool                    print_system_matrix)
 {
 // Compute lattice vectors to be used ......................................
    matrix1D<double> aint, bint, shift;

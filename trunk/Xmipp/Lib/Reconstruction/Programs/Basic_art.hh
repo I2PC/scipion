@@ -172,6 +172,10 @@ public:
 
    /// Apply positivity constraint
    bool positivity;
+
+   /// Print system matrix
+   bool print_system_matrix;
+   
    #define TELL_ONLY_SYM	     0x80
    #define TELL_USE_INPUT_BLOBVOLUME 0x40
    #define TELL_SHOW_ERROR           0x20
