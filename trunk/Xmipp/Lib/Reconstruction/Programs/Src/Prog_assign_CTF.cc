@@ -477,7 +477,8 @@ void Prog_assign_CTF_prm::process()
 		     adjust_CTF_prm.adjust(0)=0;
 		     // Compute the background and CTF from scratch
   		  // The name of the parameters file that generates ROUT_Adjust_CTF
-		  adjust_CTF_prm.fn_out_CTF_parameters  = CTFfile.get_root()+".param";
+		  adjust_CTF_prm.fn_out_CTF_parameters  =
+		     CTFfile.get_root()+ItoA(N,5)+".param";
 		  adjust_CTF_prm.produce_side_info();
 		  
 		  cerr << "Estimating CTF parameters of region number " << N << endl;
