@@ -725,7 +725,6 @@ template <class T>
       a.compute_stats(d,d,Taux,Taux,ir,ir);
       a.range_adjust(0,1);
       a.statistics_adjust(0,1);
-      a.effective_range(99);
       a.init_random(0,1);
       a.add_noise(0,1);      
       a.threshold("abs_above",1,0);
