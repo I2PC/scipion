@@ -27,6 +27,7 @@
 
 void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Normalize_parameters * eprm=(Normalize_parameters *) prm;
+   if (eprm->apply_geo) eprm->apply_geo_mask(img);
    eprm->apply(&img);
 }
 
