@@ -56,7 +56,7 @@ int main (int argc, char *argv[]) {
       FileName fn_ext=fn_in.get_extension();
       if (Is_ImageXmipp(fn_in)) {
          ImageXmipp I(fn_in), label;
-         int object_no=label_image(&I,&label);
+         int object_no=label_image(I(),label());
          for (int o=0; o<=object_no; o++) {
             I()=label();
             FOR_ALL_ELEMENTS_IN_MATRIX2D(I()) {
@@ -74,7 +74,7 @@ int main (int argc, char *argv[]) {
          }
       } else if (Is_VolumeXmipp(fn_in)) {
          VolumeXmipp V(fn_in), label;
-         int object_no=label_volume(&V,&label);
+         int object_no=label_volume(V(),label());
          for (int o=0; o<=object_no; o++) {
             V()=label();
             FOR_ALL_ELEMENTS_IN_MATRIX3D(V()) {
