@@ -1,0 +1,76 @@
+/***************************************************************************
+ *
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
+
+#include <XmippData/xmippProgs.hh>
+#include <XmippData/xmippArgs.hh>
+
+class Pyramid_parameters: public Prog_parameters {
+public:
+   enum Toperation {Expand, Reduce, None};
+   Toperation operation;
+
+   void read(int argc, char **argv) _THROW {
+      Prog_parameters::read(argc,argv);
+      if      (check_param(argc,argv,"-expand")) operation=Expand;
+      else if (check_param(argc,argv,"-reduce")) operation=Reduce;
+      else                                       operation=None;
+   }
+   
+   void show() {
+      Prog_parameters::show();
+      cout << "Operation: ";
+      switch (operation) {
+         case Expand: cout << "Expand\n"; break;
+         case Reduce: cout << "Reduce\n"; break;
+         case None  : cout << "None  \n"; break;
+      }
+   }
+
+   void usage() {
+      Prog_parameters::usage();
+      cerr << "  -expand | -reduce         : Expand or reduce the image\n";
+   }
+};
+
+bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
+   Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
+   matrix2D<double> result;
+   switch (eprm->operation) {
+      case Pyramid_parameters::Expand: img().pyramid_expand(result); break;
+      case Pyramid_parameters::Reduce: img().pyramid_reduce(result); break;
+   }
+   img()=result;
+   return TRUE;
+}
+
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
+   cerr << "This function is not implemented for volumes yet!\n";
+   return TRUE;
+}
+
+int main (int argc, char **argv) {
+   Pyramid_parameters prm;
+   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+}
