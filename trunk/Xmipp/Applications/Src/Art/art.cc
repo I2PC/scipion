@@ -55,10 +55,9 @@ int main (int argc, char *argv[]) {
 // Call main ART routine
    try {
       if (!crystal_mode)
-         Basic_ROUT_Art(art_prm,dummy,vol_voxels,vol_blobs,vol_blobs_var);
+         Basic_ROUT_Art(art_prm,dummy,vol_voxels,vol_blobs);
       else
-         Basic_ROUT_Art(art_prm,crystal_art_prm,vol_voxels,vol_blobs,
-            vol_blobs_var);
+         Basic_ROUT_Art(art_prm,crystal_art_prm,vol_voxels,vol_blobs);
    cerr.flush();
    } catch (Xmipp_error XE) {cout << XE; exit(1);}
    exit(0);
