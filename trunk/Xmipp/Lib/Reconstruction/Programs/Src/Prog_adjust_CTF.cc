@@ -532,6 +532,7 @@ double CTF_fitness(double *p) {
    matrix1D<double> freq(2);
    ImageXmipp save;
    matrix2D<double> considered_ctf_ampl2, considered_ctfmodel_ampl2;
+   bool proceed=TRUE;
    
    // Show input variables for debugging
    if (global_show>=1) {
@@ -691,19 +692,25 @@ double CTF_fitness(double *p) {
    if (global_show>=2) cout << "Euclidean error " << retval << endl;
 
    // Compute correlation distance
+   // CO: I'm not sure where the -1 comes from and it is making some
+   //     images to fail
    double wcorr, wcovariance, wctf2_var, wparam_var, wctf2_avg, wparam_avg;
    if (global_action!=0) {
       wctf2_avg =wctf2_sum/w_sum;
       wparam_avg=wparam_sum/w_sum;
-      wctf2_var =(wctf2_sum2 -wctf2_avg *wctf2_avg *w_sum)/(w_sum-1);
-      wparam_var=(wparam_sum2-wparam_avg*wparam_avg*w_sum)/(w_sum-1);
+      wctf2_var =(wctf2_sum2 -wctf2_avg *wctf2_avg *w_sum)/(w_sum/*CO:-1*/);
+      wparam_var=(wparam_sum2-wparam_avg*wparam_avg*w_sum)/(w_sum/*CO:-1*/);
       wcovariance=(wctf2_param_sum-wctf2_avg*wparam_sum-
-         wparam_avg*wctf2_sum+wctf2_avg*wparam_avg*w_sum)/(w_sum-1);
+         wparam_avg*wctf2_sum+wctf2_avg*wparam_avg*w_sum)/(w_sum/*CO:-1*/);
       wcorr=wcovariance/sqrt(wctf2_var*wparam_var);
       if (wcorr<0) {
          if (global_show>=1)
-            cout << "Negative correlation: " << wcorr << endl;
-         return global_heavy_penalization;
+            cout << "Negative correlation: " << wcorr << endl
+                 << "wctf2_avg=" << wctf2_avg << " wparam_avg=" << wparam_avg << endl
+                 << "wctf2_var=" << wctf2_var << " wparam_var=" << wparam_var << endl
+                 << "wcovariance=" << wcovariance << endl;
+         retval=global_heavy_penalization;
+         proceed=FALSE;
       }
 
       retval+=1-wcorr;
@@ -718,7 +725,7 @@ double CTF_fitness(double *p) {
 
    // Compute distance in Fourier Space
    double fft_error=0;
-   if (global_action!=0 && global_compute_FFT_distance) {
+   if (global_action!=0 && global_compute_FFT_distance && proceed) {
       // Compute the magnitude of both CTF images
       vtkImageData *fft=NULL;
       ImageXmipp fft_ampl, fftmodel_ampl;
@@ -874,7 +881,8 @@ void estimate_best_parametric_CTF_for_defoci() {
       b(1)  +=Y*weight*unexplained;
    }
    A(1,0)=A(0,1);
-   b=A.inv()*b;
+   if (ABS(A.det())>1e-4) b=A.inv()*b;
+   else b.init_zeros(2);
 
    (*global_adjust)( 0)=exp(b(0));                 // CTF gain
    if (b(1)>0) (*global_adjust)(9)=sqrt(b(1))*1e3; // alpha (mrad)
