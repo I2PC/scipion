@@ -37,10 +37,8 @@ AC_ARG_ENABLE([static-exec],
   [build_static_exec=$enableval], [build_static_exec=no])
 if test $build_static_exec = yes; then
 	EXEC_TYPE="-all-static"
-	echo "static"
 else
 	EXEC_TYPE=
-	echo "dynami"
 fi
 
 AC_SUBST(EXEC_TYPE)
@@ -52,6 +50,22 @@ AC_PATH_PROG( SH_PATH, sh, "not found" )
 
 #Checking for TIFF library as well as some of its capabilities
 AC_CHECK_LIBTIFF
+
+TIFF_LIBS=
+if test x"$have_tiff" = xyes; then
+	echo "TIFF"
+	if test x"$have_tiffjpg" = xyes; then
+		echo "JPEG"
+		if test x"$have_tiffzip" = xyes ; then
+			echo "ZIP"
+			TIFF_LIBS=" -ltiff -lm -lz -ljpeg "
+			use_tiff=yes
+		fi
+	fi
+fi
+
+AM_CONDITIONAL( BUILD_TIFF, test x"$use_tiff" = xyes )
+AC_SUBST(TIFF_LIBS)
 
 #Checking for the presence and usability of MPI library
 ACX_MPI(USE_MPI=true)
