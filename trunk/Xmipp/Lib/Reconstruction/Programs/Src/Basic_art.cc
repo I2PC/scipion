@@ -70,7 +70,9 @@ void Basic_ART_Parameters::default_values() {
     POCS_freq          = 1;
     
     known_volume       =-1;
-    positivity         = FALSE;
+    positivity         =FALSE;
+    unmatched          =false;
+    ray_length         =-1;
     apply_shifts       = TRUE;
 }
 
@@ -98,6 +100,7 @@ void Basic_ART_Parameters::default_values() {
     else if (CHECK_PARAM("BiCAV")) parallel_mode=BiCAV; \
     else if (CHECK_PARAM("AVSP"))  parallel_mode=AVSP; \
     else                           parallel_mode=ART; \
+    ray_length         = AtoI(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
     block_size	       = AtoI(GET_PARAM_WITH_DEF("block_size","1"	)); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
     force_sym          = AtoI(GET_PARAM_WITH_DEF("force_sym","0"        )); \
@@ -244,6 +247,7 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
      << "\n                         each n projections"
+     << "\n   [-ray_length <r=-1>]  In blob units\n"
      << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
      << "\n                         greater than n\n"
      << "\n   [-ref_trans_after n]  Refine the translation alignement"
@@ -561,6 +565,9 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
 	 ImageXmipp save; save()=blobprint(); save.write("footprint.xmp");
       #endif
    }
+
+/* Express the ray length in blob units ------------------------------------ */
+   if (ray_length!=-1) ray_length/=blob.radius;
 }
 #undef DEBUG
 

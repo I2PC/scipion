@@ -143,6 +143,7 @@ void ART_single_step(
    int                     act_proj,         // Projection number
    const FileName          &fn_ctf,          // CTF to apply
    bool                    unmatched,        // Apply unmatched projectors
+   double                  ray_length,       // Ray length for the projection
    GridVolume              *vol_var,         // Keep track of the variance
    bool                    print_system_matrix) // Print matrix (A in Ax=b) of
                                              // the equation system, as well as
@@ -203,7 +204,7 @@ void ART_single_step(
    project_Volume(vol_in,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),FORWARD,prm.eq_mode,
-      prm.GVNeq,A,vol_var);
+      prm.GVNeq,A,vol_var,prm.ray_length);
 
    if (fn_ctf!="" && unmatched)
       if (Is_FourierImageXmipp(fn_ctf)) {
@@ -258,7 +259,7 @@ void ART_single_step(
    project_Volume(*vol_out,*footprint,*footprint2,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
-      prm.GVNeq,NULL,vol_var);
+      prm.GVNeq,NULL,vol_var,prm.ray_length);
 
    // Remove footprints if necessary
    if (remove_footprints) {

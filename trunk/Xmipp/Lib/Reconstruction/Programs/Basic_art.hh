@@ -177,6 +177,14 @@ public:
    /// Apply unmatched projectors to correct for the CTF
    bool unmatched;
 
+   /** Ray length.
+       Blobs are taken into account only if their distance
+       to the projection plane is smaller than this value.
+       This value is expressed in blob.radius units. Set it to
+       -1 to disable it. Set it to 1 (1 blob away maximum) to
+       interpolate a set of planes). */
+   double ray_length;
+
    /// Apply shifts stored in the headers of the 2D-images
    bool apply_shifts;
 

@@ -337,6 +337,7 @@ void ART_single_step(
    int                     imagen_no,        // Projection number
    const FileName         &fn_ctf,           // CTF to apply
    bool                    unmatched,        // Apply unmatched projectors
+   double                  ray_length,       // Ray length for the projection
    GridVolume              *vol_var,         // Keep track of the variance
    bool                    print_system_matrix)
 {

@@ -51,6 +51,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
       case BCC: prm.fh_hist << " Grid Type: BCC "; break;
       case CC:  prm.fh_hist << " Grid Type: CC ";  break;
    }
+   prm.fh_hist << " Ray length: " << prm.ray_length << endl;
    prm.fh_hist << "\n Radius of the interest sphere= " << prm.R 
                << " pixels" << endl;
    prm.fh_hist << " Grid unit=" << prm.grid_relative_size 
@@ -329,6 +330,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
 	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
+              prm.ray_length,
               vol_blobs_var, prm.print_system_matrix);
 
           global_mean_error += mean_error;
