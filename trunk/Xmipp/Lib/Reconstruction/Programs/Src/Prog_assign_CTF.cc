@@ -675,7 +675,7 @@ void Prog_assign_CTF_prm::process() {
 	   min_positive=10*log10(min_positive*min_positive)-1;
 	   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(save())
 	      if (MULTIDIM_ELEM(save(),i)==0) MULTIDIM_ELEM(save(),i)=min_positive;
-	   save.write(fn_root.add_prefix("ctf-")+".xmp");
+	   save.write(fn_root.add_prefix("ctflog-")+".xmp");
 	
 	   // Estimate the CTF parameters
 	   adjust_CTF_prm.fn_ctf=fn_ARMA_avg;
