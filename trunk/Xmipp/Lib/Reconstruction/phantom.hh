@@ -1406,7 +1406,10 @@ public:
     This function throws an exception if z0 is outside the volume definition.
     If z0 is equal to zdim then it is not used.
     
-    The radius is the probe radius for the surface generation
+    The radius is the probe radius for the surface generation.
+    
+    If the output image is not resized, it is resized to the Y and X dimensions
+    of the phantom.
     */
     void surface(double z0, double radius, int direction, Image *P)
        const _THROW;
