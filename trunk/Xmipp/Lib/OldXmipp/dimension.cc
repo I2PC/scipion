@@ -36,8 +36,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 
 
 /***************************************************************

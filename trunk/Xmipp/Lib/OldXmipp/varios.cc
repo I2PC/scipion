@@ -61,8 +61,8 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 
 #ifdef _PARAMID
 void vuelta_cabecero( )

@@ -46,8 +46,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 #include <math.h>
 
 

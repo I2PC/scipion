@@ -49,8 +49,8 @@
 #include <sys/stat.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>

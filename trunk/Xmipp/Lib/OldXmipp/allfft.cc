@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fftn.h"
-#include <groe.h>
+#include "groe.h"
 /*
 # define fftn	fftnf
 */

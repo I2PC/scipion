@@ -73,8 +73,8 @@
 #  include <malloc.h>
 #  include <memory.h>
 #endif
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 #include <string.h>
 #include <stdlib.h>
 

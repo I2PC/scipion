@@ -52,8 +52,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <spider.h>
-#include <groe.h>
+#include "spider.h"
+#include "groe.h"
 
 #define Re(i,j)  fImg[i][2*(j)]
 #define Im(i,j)  fImg[i][2*(j)+1]
