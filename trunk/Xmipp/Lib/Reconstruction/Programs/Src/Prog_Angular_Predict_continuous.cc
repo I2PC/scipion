@@ -47,7 +47,7 @@ int cstregistration( struct cstregistrationStruct *Data);
 void Prog_angular_predict_continuous_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
-   fn_ang=get_param(argc,argv,"-ang");
+   fn_ang=get_param(argc,argv,"-ang","");
    fn_out_ang=get_param(argc,argv,"-oang");
    gaussian_DFT_sigma=AtoF(get_param(argc,argv,"-gaussian_Fourier","0.5"));
    gaussian_Real_sigma=AtoF(get_param(argc,argv,"-gaussian_Real","0.5"));
@@ -71,7 +71,9 @@ void Prog_angular_predict_continuous_prm::show() {
 void Prog_angular_predict_continuous_prm::usage() {
    Prog_parameters::usage();
    cerr << "   -ref <Xmipp Volume>      : Reference volume\n"
-	<< "   -ang <angle file>        : DocFile with the initial angles\n"
+	<< "  [-ang <angle file>]       : DocFile with the initial angles\n"
+	<< "                              otherwise, the angles and shifts\n"
+	<< "                              are taken from the image headers\n"
 	<< "   -oang <angle file>       : DocFile with output angles\n"
         << "  [-gaussian_Fourier <s=0.5>]: Weighting sigma in Fourier space\n"
         << "  [-gaussian_Real    <s=0.5>]: Weighting sigma in Real space\n"
@@ -81,9 +83,14 @@ void Prog_angular_predict_continuous_prm::usage() {
 
 // Produce side information ================================================
 void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
-   // Read the initial angles and reference volume
-   DF_initial.read(fn_ang);
+   // Read the initial angles
+   if (fn_ang!="") DF_initial.read(fn_ang);
+   else {
+      SelFile SF;
+   }
    DF_initial.go_first_data_line();
+
+   // Read the reference volume
    VolumeXmipp V; V.read(fn_ref); V().set_Xmipp_origin();
 
    // Resize the predicted vectors
@@ -176,7 +183,7 @@ void Prog_angular_predict_continuous_prm::finish_processing() {
    int p=predicted_rot.size();
    DocFile DF;
    DF.reserve(p+1);
-   DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Cost");
+   DF.append_comment("Headerinfo columns: Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Cost");
    matrix1D<double> v(6);
    for (int i=0; i<p; i++) {
       v(0)=predicted_rot[i];
