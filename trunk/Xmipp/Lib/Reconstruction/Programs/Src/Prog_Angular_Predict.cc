@@ -34,7 +34,7 @@
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
-   fn_refsel=get_param(argc,argv,"-refsel");
+   fn_refsel=get_param(argc,argv,"-refsel","");
    fn_pcaproj=get_param(argc,argv,"-pcaproj");
    fn_ang=get_param(argc,argv,"-ang");
    PCA_list=get_vector_param(argc,argv,"-PCA_list",-1);
@@ -166,26 +166,29 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    }
    
    // Read or update the visible space
-   PCA_denoise.fn_ref=fn_refsel;
-   PCA_denoise.th_var=th_denoise;
-   PCA_denoise.fn_exp="";
-   PCA_denoise.produce_side_info();
-   bool create_visible_space=update_visible_space;
-   if (!create_visible_space) {
-      try {
-         PCA_denoise.read_PCA_from_file();
-      } catch (Xmipp_error XE) {
-         // If the files cannot be found then create them
-         // if the error is something else then throw again the exception
-         if (XE.__errno==1) create_visible_space=true;
-         else REPORT_ERROR(XE.__errno,XE.msg);
+   if (fn_refsel!="") { // No projection will be done in this program
+      PCA_denoise.fn_ref=fn_refsel;
+      PCA_denoise.th_var=th_denoise;
+      PCA_denoise.fn_exp="";
+      PCA_denoise.s=0;
+      PCA_denoise.produce_side_info();
+      bool create_visible_space=update_visible_space;
+      if (!create_visible_space) {
+         try {
+            PCA_denoise.read_PCA_from_file();
+         } catch (Xmipp_error XE) {
+            // If the files cannot be found then create them
+            // if the error is something else then throw again the exception
+            if (XE.__errno==1) create_visible_space=true;
+            else REPORT_ERROR(XE.__errno,XE.msg);
+         }
       }
-   }
-   
-   if (create_visible_space) {
-      cerr << "Creating the visible space ...\n";
-      PCA_denoise.build_training_sets();
-      PCA_denoise.perform_PCA();
+
+      if (create_visible_space) {
+         cerr << "Creating the visible space ...\n";
+         PCA_denoise.build_training_sets();
+         PCA_denoise.perform_PCA();
+      }
    }
 }
 
@@ -533,12 +536,15 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	    Ip().self_rotate(-2,WRAP);
 
             // Project the resulting image onto the visible space
-            xmippVector Vpca;
-            STARTINGX(Ip())=STARTINGY(Ip())=0;
-            PCA_denoise.project_image(Ip(),Vpca);
-            PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
-            Ip().set_Xmipp_origin();
-            Ip().statistics_adjust(0,1);
+            if (fn_refsel!="") {
+               xmippVector Vpca;
+               STARTINGX(Ip())=STARTINGY(Ip())=0;
+               Ip().statistics_adjust(0,1);
+               PCA_denoise.project_image(Ip(),Vpca);
+               PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
+               Ip().set_Xmipp_origin();
+               Ip().statistics_adjust(0,1);
+            }
 
       	    // Search for the best tilt, rot angles
             double rotp, tiltp;
