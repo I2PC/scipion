@@ -11,7 +11,7 @@ install: $(PROJ)
 	@if [ ! -e $(XMIPPDIR)/bin/$(FINAL_PROJ) ] ; then \
 	    DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
 	    THIS_DIR=`pwd | cut -d"/" -f $$DEPTH` ; \
-	    ln -s $(XMIPPDIR)/Applications/Batches/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
+	   cp  $(XMIPPDIR)/Applications/Batches/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
 	fi
 
 clean:
