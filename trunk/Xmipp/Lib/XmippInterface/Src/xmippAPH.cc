@@ -28,7 +28,15 @@
 #include "../xmippAPH.hh"
 #include <XmippData/xmippArgs.hh>
 #include <fstream.h>
-#include <strstream.h>
+#define GCC_VERSION (__GNUC__ * 10000 \
+   + __GNUC_MINOR__ * 100 \
+   + __GNUC_PATCHLEVEL__)
+/* Test for GCC > 3.3.0 */
+#if GCC_VERSION >= 30300
+   #include <sstream>
+#else
+   #include <strstream.h>
+#endif
 
 #define VERBOSE
 //#define DEBUG
@@ -51,7 +59,11 @@ void APHFile2D::read(const FileName &fn) _THROW {
    fh_aph.peek();
    getline(fh_aph,line);
    astar.resize(2); bstar.resize(2);
-   istrstream is(line.c_str());
+   #if GCC_VERSION < 30300
+      istrstream is(line.c_str());
+   #else
+      istringstream is(line.c_str());
+   #endif
    try {
        double dummy;
        is >> dummy >> XX(astar) >> YY(astar) >> XX(bstar) >> YY(bstar)

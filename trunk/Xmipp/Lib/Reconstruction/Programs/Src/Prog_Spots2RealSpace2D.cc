@@ -23,12 +23,21 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <strstream.h>
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippGeometry.hh>
 #include <XmippInterface/xmippAPH.hh>
 #include "../Prog_Spots2RealSpace2D.hh"
 #include "../Prog_art_crystal.hh"
+
+#define GCC_VERSION (__GNUC__ * 10000 \
+   + __GNUC_MINOR__ * 100 \
+   + __GNUC_PATCHLEVEL__)
+/* Test for GCC > 3.3.0 */
+#if GCC_VERSION >= 30300
+   #include <sstream>
+#else
+   #include <strstream.h>
+#endif
 
 #define twoPI 2*M_PI
 
@@ -49,8 +58,13 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
          3007,"Spot2RealSpace2D_Parameters::read: Output File not found");
       maxIQ=AtoI(get_param(fh_param,"maxIQ",0,"6"));
       string aux_str=get_param(fh_param,"Output cells no",0,"1 1");
-      istrstream *is=NULL;
-      is = new istrstream(aux_str.c_str());
+      #if GCC_VERSION < 30300
+	 istrstream *is=NULL;
+         is = new istrstream(aux_str.c_str());
+      #else
+	 istringstream *is=NULL;
+         is = new istringstream(aux_str.c_str());
+      #endif
       try {*is >> NoCells_X >> NoCells_Y;}
       catch (...) {REPORT_ERROR(3007,
               "Spot2RealSpace2D_Parameters::read: Cannot read Phase Shift");}
@@ -59,13 +73,23 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
 //         3007,"Spot2RealSpace2D_Parameters::read: Tilt Sign not found"));
       Phase_Shift.resize(2);
       aux_str=get_param(fh_param,"Phase Shift",0,"180.0 180.0");
-      delete is; is = new istrstream(aux_str.c_str());
+      delete is;
+      #if GCC_VERSION < 30300
+         is = new istrstream(aux_str.c_str());
+      #else
+         is = new istringstream(aux_str.c_str());
+      #endif
       try {*is >> XX(Phase_Shift) >> YY(Phase_Shift);}
       catch (...) {REPORT_ERROR(3007,
               "Spot2RealSpace2D_Parameters::read: Cannot read Phase Shift");}
       KeepContrast=AtoI(get_param(fh_param,"Keep Contrast",0,"1"));
       aux_str=get_param(fh_param,"Cell Size");
-      delete is; is = new istrstream(aux_str.c_str());
+      delete is;
+      #if GCC_VERSION < 30300
+         is = new istrstream(aux_str.c_str());
+      #else
+         is = new istringstream(aux_str.c_str());
+      #endif
       try {*is >> CellXdim >> CellYdim;}
       catch (...) {REPORT_ERROR(3007,
                "Spot2RealSpace2D_Parameters::read: Cannot read Cell Size");}
