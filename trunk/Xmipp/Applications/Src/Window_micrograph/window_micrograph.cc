@@ -30,14 +30,24 @@ int main (int argc, char **argv) {
    Micrograph     M_in,  M_out;
    FileName       fn_in, fn_out;
    int            Ypdim, Xpdim;
+   int            i0, j0;
 
    // Get command line parameters ------------------------------------------
    try {
       int i=position_param(argc,argv,"-size");
+      if (i==-1)
+         REPORT_ERROR(1,"-size is missing");
       if (i+2>=argc)
          REPORT_ERROR(1,"Not enough parameters after -size");
       Xpdim=AtoI(argv[i+1]);
       Ypdim=AtoI(argv[i+2]);
+      i=position_param(argc,argv,"-top_left_corner");
+      if (i+2>=argc)
+         REPORT_ERROR(1,"Not enough parameters after -top_left_corner");
+      if (i!=-1) {
+         j0=AtoI(argv[i+1]);
+         i0=AtoI(argv[i+2]);
+      } else i0=j0=0;
       fn_in  = get_param(argc, argv, "-i");
       fn_out = get_param(argc, argv, "-o");
    } catch (Xmipp_error XE) {Usage(); exit(1);}
@@ -73,8 +83,8 @@ int main (int argc, char **argv) {
       
       // Really window
       M_out.open_micrograph(fn_out);
-      for (int i=0; i<Ypdim; i++)
-          for (int j=0; j<Xpdim; j++)
+      for (int i=i0; i<Ypdim; i++)
+          for (int j=j0; j<Xpdim; j++)
 	      M_out.set_val(j,i,M_in(j,i));
       
       // Close
@@ -91,6 +101,7 @@ void Usage() {
          << " -i <input_micrograph>            : Either 8 or 16 bits\n"
          << " -o <output_micrograph>           : It will be rewritten\n"
          << " -size <new Xdim> <new Ydim>      : In pixels\n"
+         << "[-top_left_corner <X=0,Y=0>]      : In pixels\n"
          << endl;
 }
 
