@@ -42,6 +42,8 @@
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
+      I().set_Xmipp_origin();
+      Filter.generate_mask(I());
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
    \end{verbatim}
