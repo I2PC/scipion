@@ -40,7 +40,9 @@ public:
    /// Parameters for ARMA
    ARMA_parameters         ARMA_prm;
    /// Reversed endian
-   bool reversed;
+   bool              	   reversed;
+   /// Downsample factor
+   int               	   downsampling;
    /// X dimension of micrograph pieces
    int                     N_horizontal;
    /// Y dimension of micrograph pieces

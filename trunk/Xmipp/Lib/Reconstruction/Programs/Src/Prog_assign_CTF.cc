@@ -341,6 +341,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
             "opening the file "+fn_prm); 
                                       
    reversed          =check_param(fh_param,"reverse endian");
+   downsampling      =AtoI(get_param(fh_param,"downsampling",0,"1"));
    N_horizontal      =AtoI(get_param(fh_param,"N_horizontal",0));
    N_vertical        =AtoI(get_param(fh_param,"N_vertical",0));
    particle_horizontal=AtoI(get_param(fh_param,"particle_horizontal",0));
@@ -417,6 +418,12 @@ void Prog_assign_CTF_prm::process()
            REPORT_ERROR(1551,(string)"Assign_CTF: Cannot open "+fn_OutputZeros+" for output");
 
         N=1;
+        // Save the original sampling rate
+	// The adjustment is done with one sampling rate related with the downsampling
+	// while the CTF generation should be done without downsampling
+	double original_sampling_rate=adjust_CTF_prm.Tm;
+	adjust_CTF_prm.Tm*=downsampling;
+	
 	for(int i=0;i<Ydim;i+=N_vertical)
 	{
 	   for(int j=0;j<Xdim;j+=N_horizontal)
@@ -426,19 +433,26 @@ void Prog_assign_CTF_prm::process()
 		  // horizontal or vertical ones. So conitnue.
 		  if(((i+N_vertical)> (Ydim-1)) || ((j+N_horizontal) > (Xdim-1))) continue;
 
-		  // Extract the division image where to perform the ARMA model
-    	  ImageXmipp 	     ImgDivision(N_vertical,N_horizontal);
-    	  FourierImageXmipp  Filter_Out(N_vertical,N_horizontal);  // image to store the filter     
+      	  // The downsampling is done by taking 1 out of 2,3, ... pixels
+	  // in the extracted region
+          // Extract the division image where to perform the ARMA model
+    	  ImageXmipp 	     ImgDivision(FLOOR(N_vertical/downsampling),
+	                                 FLOOR(N_horizontal/downsampling));
+          // image to store the filter     
+      	  FourierImageXmipp  Filter_Out(FLOOR(N_vertical/downsampling),
+	                                FLOOR(N_horizontal/downsampling));
 		  cerr << "Reading micrograph region number " << N << endl;
-    	  for (int k=0; k<N_vertical; k++)
-        	  for (int l=0; l<N_horizontal; l++)
+    	  for (int k=0; k<YSIZE(ImgDivision()); k++)
+        	  for (int l=0; l<XSIZE(ImgDivision()); l++)
 			  {
-		    	 ImgDivision(k,l)=M_in(j+l,i+k);
+		    	 ImgDivision(k,l)=
+			    M_in(j+downsampling*l,i+downsampling*k);
 			  }	  
 
 		  cerr << "Performing ARMA spectral estimation of region number " << N << endl;
          cerr << "Normalizing the input image ...\n";
          ImgDivision().statistics_adjust(0,1);
+	 //ImgDivision.write(ARMAfile.get_root()+ItoA(N,5)+".xmp");
 
 		  // Perform an spectral estimation of the division by means of an ARMA model
     	  matrix2D<double> ARParameters,MAParameters;
@@ -476,6 +490,7 @@ void Prog_assign_CTF_prm::process()
 	          XmippCTF          pure_ctf; // An Xmipp Model of ctf
          	  pure_ctf.enable_CTFnoise=FALSE;
     	          pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
+		  pure_ctf.Tm=original_sampling_rate; // Change the sampling rate to the original one
 		  pure_ctf.Produce_Side_Info();
 
 		  // Generate the pure CTF file determined from the parameters file	  
