@@ -97,10 +97,13 @@ void Basic_ART_Parameters::default_values() {
          fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
     fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
-    if      (CHECK_PARAM("SART"))  parallel_mode=SART;\
+    if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
+    else if (CHECK_PARAM("pSIRT"))  parallel_mode=pSIRT; \
     else if (CHECK_PARAM("SIRT"))  parallel_mode=SIRT; \
-    else if (CHECK_PARAM("BiCAV")) parallel_mode=BiCAV; \
-    else if (CHECK_PARAM("AVSP"))  parallel_mode=AVSP; \
+    else if (CHECK_PARAM("pfSIRT")) parallel_mode=pfSIRT; \
+    else if (CHECK_PARAM("pBiCAV")) parallel_mode=pBiCAV; \
+    else if (CHECK_PARAM("pAVSP"))  parallel_mode=pAVSP; \
+    else if (CHECK_PARAM("pCAV"))  parallel_mode=pCAV; \
     else                           parallel_mode=ART; \
     ray_length         = AtoI(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
     block_size	       = AtoI(GET_PARAM_WITH_DEF("block_size","1"	)); \
@@ -280,9 +283,13 @@ void Basic_ART_Parameters::usage() {
      << "\nParallel parameters"
      << "\n                         by default, sequential ART is applied"
      << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
-     << "\n   [-SART]               Simultaneous ART\n"
-     << "\n   [-AVSP]               Average Strings\n"
-     << "\n   [-BiCAV]              Block Iterative CAV\n"
+     << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
+     << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
+     << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
+     << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
+     << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
+     << "\n   [-pCAV]	            Paralle (MPI) CAV\n"
+     << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
      << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
      << "\n   [-block_size <n=1>]   Number of projections to each block\n"
      << "\nBlob parameters"
@@ -505,8 +512,13 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
       build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf,do_not_use_symproj);
 
       if (!(tell&TELL_MANUAL_ORDER))
-	 if (parallel_mode==SIRT || eq_mode==CAV || rank>0 || dont_sort)
-	                           no_sort(numIMG,ordered_list);
+	 if (parallel_mode==SIRT || 
+	 	parallel_mode==pSIRT ||
+		parallel_mode==pfSIRT || 
+		parallel_mode==pCAV || 
+	 	eq_mode==CAV || 
+	 	rank > 0 || dont_sort )
+				   no_sort(numIMG,ordered_list);
 	 else if (random_sort)     sort_randomly(numIMG,ordered_list);
 	 else if (sort_last_N!=-1) sort_perpendicular(numIMG,IMG_Inf,ordered_list,
                                       sort_last_N);
@@ -623,4 +635,14 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0,
       cerr << "There are " << Neq << " equations and " << Nunk
            << " unknowns (redundancy=" << 100.0-100.0*Nunk/Neq << ")\n";
    }
+}
+
+int Basic_ART_Parameters::ProjXdim()
+{
+	return projXdim;
+}
+
+int Basic_ART_Parameters::ProjYdim()
+{
+	return projYdim;
 }
