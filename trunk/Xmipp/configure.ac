@@ -23,13 +23,7 @@ AC_LANG(C++)
 # If not --prefix is passed to the configure script, Xmipp programs and
 # libraries will be installed under Xmipp dir by default.
 
-if test "x$prefix" = xNONE; then
-	prefix=`pwd`
-fi
-
-if test "x$exec_prefix" = xNONE; then
-	exec_prefix=`pwd`
-fi
+AC_PREFIX_DEFAULT(`pwd`)
 
 if test "x$program_prefix" = xNONE; then
 	program_prefix=`echo xmipp_`
