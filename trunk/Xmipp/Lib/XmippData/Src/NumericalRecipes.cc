@@ -1314,214 +1314,250 @@ int nnlsWght(int N, int M, double *A, double *b, double *weight)
 /****************************************************************************/
 
 /* Singular value descomposition ------------------------------------------- */
-static double at,bt,ct;
-#define PYTHAG(a,b) ((at=fabs(a)) > (bt=fabs(b)) ? \
-(ct=bt/at,at*sqrt(1.0+ct*ct)) : (bt ? (ct=at/bt,bt*sqrt(1.0+ct*ct)): 0.0))
+/* Copied from Bilib library (linearalgebra.h) */
+double Pythag(double a, double b) {
+   double absa, absb;
+   absa = fabs(a);
+   absb = fabs(b);
+   if (absb < absa) return(absa * sqrt(1.0 + absb * absb / (absa * absa)));
+   else             return((absb == 0.0) ? (0.0) : (absb * sqrt(1.0 + absa * absa / (absb * absb))));
+}
 
-static float maxarg1,maxarg2;
-#define MAX(a,b) (maxarg1=(a),maxarg2=(b),(maxarg1) > (maxarg2) ?\
-	(maxarg1) : (maxarg2))
-
-#define EPS 1e-40
-void svdcmp(double *a,int m,int n,double *w, double *v)
+#define SVDMAXITER 1000
+void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
 {
-	int flag,i,its,j,jj,k,l,nm;
-	double c,f,h,s,x,y,z;
-	double anorm=0.0,g=0.0,scale=0.0;
-	double *rv1=NULL;
+	double	*rv1 = (double *)NULL;
+	double	Norm, Scale;
+	double	c, f, g, h, s;
+	double	x, y, z;
+	long	i, its, j, jj, k, l = 0L, nm = 0L;
+	int     Flag;
+        int     MaxIterations=SVDMAXITER;
 
-	if (m < n) nrerror("SVDCMP: You must augment A with extra zero rows");
-	ask_Tvector(rv1,1,n);
-	for (i=1;i<=n;i++) {
-		l=i+1;
-		rv1[i]=scale*g;
-		g=s=scale=0.0;
-		if (i <= m) {
-			for (k=i;k<=m;k++) scale += fabs(a[k*n+i]);
-			if (scale) {
-				for (k=i;k<=m;k++) {
-					a[k*n+i] /= scale;
-					s += a[k*n+i]*a[k*n+i];
+	ask_Tvector(rv1,0,Columns*Columns-1);
+	g = Scale = Norm = 0.0;
+	for (i = 0L; (i < Columns); i++) {
+		l = i + 1L;
+		rv1[i] = Scale * g;
+		g = s = Scale = 0.0;
+		if (i < Lines) {
+			for (k = i; (k < Lines); k++) {
+				Scale += fabs(U[k * Columns + i]);
+			}
+			if (Scale != 0.0) {
+				for (k = i; (k < Lines); k++) {
+					U[k * Columns + i] /= Scale;
+					s += U[k * Columns + i] * U[k * Columns + i];
 				}
-				f=a[i*n+i];
-				g = -SIGN(sqrt(s),f);
-				h=f*g-s;
-				a[i*n+i]=f-g;
-				if (i != n) {
-					for (j=l;j<=n;j++) {
-						for (s=0.0,k=i;k<=m;k++) s += a[k*n+i]*a[k*n+j];
-						f=s/h;
-						for (k=i;k<=m;k++) a[k*n+j] += f*a[k*n+i];
+				f = U[i * Columns + i];
+				g = (0.0 <= f) ? (-sqrt(s)) : (sqrt(s));
+				h = f * g - s;
+				U[i * Columns + i] = f - g;
+				for (j = l; (j < Columns); j++) {
+					for (s = 0.0, k = i; (k < Lines); k++) {
+						s += U[k * Columns + i] * U[k * Columns + j];
+					}
+					f = s / h;
+					for (k = i; (k < Lines); k++) {
+						U[k * Columns + j] += f * U[k * Columns + i];
 					}
 				}
-				for (k=i;k<=m;k++) a[k*n+i] *= scale;
+				for (k = i; (k < Lines); k++) {
+					U[k * Columns + i] *= Scale;
+				}
 			}
 		}
-		w[i]=scale*g;
-		g=s=scale=0.0;
-		if (i <= m && i != n) {
-			for (k=l;k<=n;k++) scale += fabs(a[i*n+k]);
-			if (scale) {
-				for (k=l;k<=n;k++) {
-					a[i*n+k] /= scale;
-					s += a[i*n+k]*a[i*n+k];
+		W[i] = Scale * g;
+		g = s = Scale = 0.0;
+		if ((i < Lines) && (i != (Columns - 1L))) {
+			for (k = l; (k < Columns); k++) {
+				Scale += fabs(U[i * Columns + k]);
+			}
+			if (Scale != 0.0) {
+				for (k = l; (k < Columns); k++) {
+					U[i * Columns + k] /= Scale;
+					s += U[i * Columns + k] * U[i * Columns + k];
 				}
-				f=a[i*n+l];
-				g = -SIGN(sqrt(s),f);
-				h=f*g-s;
-				a[i*n+l]=f-g;
-				for (k=l;k<=n;k++) rv1[k]=a[i*n+k]/h;
-				if (i != m) {
-					for (j=l;j<=m;j++) {
-						for (s=0.0,k=l;k<=n;k++) s += a[j*n+k]*a[i*n+k];
-						for (k=l;k<=n;k++) a[j*n+k] += s*rv1[k];
+				f = U[i * Columns + l];
+				g = (0.0 <= f) ? (-sqrt(s)) : (sqrt(s));
+				h = f * g - s;
+				U[i * Columns + l] = f - g;
+				for (k = l; (k < Columns); k++) {
+					rv1[k] = U[i * Columns + k] / h;
+				}
+				for (j = l; (j < Lines); j++) {
+					for (s = 0.0, k = l; (k < Columns); k++) {
+						s += U[j * Columns + k] * U[i * Columns + k];
+					}
+					for (k = l; (k < Columns); k++) {
+						U[j * Columns + k] += s * rv1[k];
 					}
 				}
-				for (k=l;k<=n;k++) a[i*n+k] *= scale;
-			}
-		}
-		anorm=MAX(anorm,(fabs(w[i])+fabs(rv1[i])));
-	}
-	for (i=n;i>=1;i--) {
-		if (i < n) {
-			if (g) {
-				for (j=l;j<=n;j++) {
-                                        double den=a[i*n+l]*g;
-                                        if (ABS(den)>EPS) v[j*n+i]=a[i*n+j]/den;
-                                        else              v[j*n+i]=0.0;
-					//COSS: v[j][i]=(a[i][j]/a[i][l])/g;
-                                 }
-				for (j=l;j<=n;j++) {
-					for (s=0.0,k=l;k<=n;k++) s += a[i*n+k]*v[k*n+j];
-					for (k=l;k<=n;k++) v[k*n+j] += s*v[k*n+i];
+				for (k = l; (k < Columns); k++) {
+					U[i * Columns + k] *= Scale;
 				}
 			}
-			for (j=l;j<=n;j++) v[i*n+j]=v[j*n+i]=0.0;
 		}
-		v[i*n+i]=1.0;
-		g=rv1[i];
-		l=i;
+		Norm = ((fabs(W[i]) + fabs(rv1[i])) < Norm) ? (Norm) : (fabs(W[i]) + fabs(rv1[i]));
 	}
-	for (i=n;i>=1;i--) {
-		l=i+1;
-		g=w[i];
-		if (i < n)
-			for (j=l;j<=n;j++) a[i*n+j]=0.0;
-		if (ABS(g)>EPS) {
-			g=1.0/g;
-			if (i != n) {
-				for (j=l;j<=n;j++) {
-					for (s=0.0,k=l;k<=m;k++) s += a[k*n+i]*a[k*n+j];
-                                        if (ABS(a[i*n+i])>EPS) f=(s/a[i*n+i])*g;
-                                        else                  f=0.0;
-                                        // COSS: f=(s/a[i*n+i])*g;
-					for (k=i;k<=m;k++) a[k*n+j] += f*a[k*n+i];
+	for (i = Columns - 1L; (0L <= i); i--) {
+		if (i < (Columns - 1L)) {
+			if (g != 0.0) {
+				for (j = l; (j < Columns); j++) {
+					V[j * Columns + i] = U[i * Columns + j] / (U[i * Columns + l] * g);
 				}
-			}
-			for (j=i;j<=m;j++) a[j*n+i] *= g;
-		} else {
-			for (j=i;j<=m;j++) a[j*n+i]=0.0;
-		}
-		++a[i*n+i];
-	}
-	for (k=n;k>=1;k--) {
-		for (its=1;its<=30;its++) {
-			flag=1;
-			for (l=k;l>=1;l--) {
-				nm=l-1;
-				if (fabs(rv1[l])+anorm == anorm) {
-					flag=0;
-					break;
-				}
-				if (fabs(w[nm])+anorm == anorm) break;
-			}
-			if (flag) {
-				c=0.0;
-				s=1.0;
-				for (i=l;i<=k;i++) {
-					f=s*rv1[i];
-					if (fabs(f)+anorm != anorm) {
-						g=w[i];
-						h=PYTHAG(f,g);
-						w[i]=h;
-						h=1.0/h;
-						c=g*h;
-						s=(-f*h);
-						for (j=1;j<=m;j++) {
-							y=a[j*n+nm];
-							z=a[j*n+i];
-							a[j*n+nm]=y*c+z*s;
-							a[j*n+i]=z*c-y*s;
+				for (j = l; (j < Columns); j++) {
+					for (s = 0.0, k = l; (k < Columns); k++) {
+						s += U[i * Columns + k] * V[k * Columns + j];
+					}
+					for (k = l; (k < Columns); k++) {
+						if (s != 0.0) {
+							V[k * Columns + j] += s * V[k * Columns + i];
 						}
 					}
 				}
 			}
-			z=w[k];
+			for (j = l; (j < Columns); j++) {
+				V[i * Columns + j] = V[j * Columns + i] = 0.0;
+			}
+		}
+		V[i * Columns + i] = 1.0;
+		g = rv1[i];
+		l = i;
+	}
+	for (i = (Lines < Columns) ? (Lines - 1L) : (Columns - 1L); (0L <= i); i--) {
+		l = i + 1L;
+		g = W[i];
+		for (j = l; (j < Columns); j++) {
+			U[i * Columns + j] = 0.0;
+		}
+		if (g != 0.0) {
+			g = 1.0 / g;
+			for (j = l; (j < Columns); j++) {
+				for (s = 0.0, k = l; (k < Lines); k++) {
+					s += U[k * Columns + i] * U[k * Columns + j];
+				}
+				f = s * g / U[i * Columns + i];
+				for (k = i; (k < Lines); k++) {
+					if (f != 0.0) {
+						U[k * Columns + j] += f * U[k * Columns + i];
+					}
+				}
+			}
+			for (j = i; (j < Lines); j++) {
+				U[j * Columns + i] *= g;
+			}
+		}
+		else {
+			for (j = i; (j < Lines); j++) {
+				U[j * Columns + i] = 0.0;
+			}
+		}
+		U[i * Columns + i] += 1.0;
+	}
+	for (k = Columns - 1L; (0L <= k); k--) {
+		for (its = 1L; (its <= MaxIterations); its++) {
+			Flag = TRUE;
+			for (l = k; (0L <= l); l--) {
+				nm = l - 1L;
+				if ((fabs(rv1[l]) + Norm) == Norm) {
+					Flag = FALSE;
+					break;
+				}
+				if ((fabs(W[nm]) + Norm) == Norm) {
+					break;
+				}
+			}
+			if (Flag) {
+				c = 0.0;
+				s = 1.0;
+				for (i = l; (i <= k); i++) {
+					f = s * rv1[i];
+					rv1[i] *= c;
+					if ((fabs(f) + Norm) == Norm) {
+						break;
+					}
+					g = W[i];
+					h = Pythag(f, g);
+					W[i] = h;
+					h = 1.0 / h;
+					c = g * h;
+					s = -f * h;
+					for (j = 0L; (j < Lines); j++) {
+						y = U[j * Columns + nm];
+						z = U[j * Columns + i];
+						U[j * Columns + nm] = y * c + z * s;
+						U[j * Columns + i] = z * c - y * s;
+					}
+				}
+			}
+			z = W[k];
 			if (l == k) {
 				if (z < 0.0) {
-					w[k] = -z;
-					for (j=1;j<=n;j++) v[j*n+k]=(-v[j*n+k]);
+					W[k] = -z;
+					for (j = 0L; (j < Columns); j++) {
+						V[j * Columns + k] = -V[j * Columns + k];
+					}
 				}
 				break;
 			}
-			if (its == 60) nrerror("No convergence in 60 SVDCMP iterations");
-			x=w[l];
-			nm=k-1;
-			y=w[nm];
-			g=rv1[nm];
-			h=rv1[k];
-			f=((y-z)*(y+z)+(g-h)*(g+h))/(2.0*h*y);
-			g=PYTHAG(f,1.0);
-			f=((x-z)*(x+z)+h*((y/(f+SIGN(g,f)))-h))/x;
-			c=s=1.0;
-			for (j=l;j<=nm;j++) {
-				i=j+1;
-				g=rv1[i];
-				y=w[i];
-				h=s*g;
-				g=c*g;
-				z=PYTHAG(f,h);
-				rv1[j]=z;
-				c=f/z;
-				s=h/z;
-				f=x*c+g*s;
-				g=g*c-x*s;
-				h=y*s;
-				y=y*c;
-				for (jj=1;jj<=n;jj++) {
-					x=v[jj*n+j];
-					z=v[jj*n+i];
-					v[jj*n+j]=x*c+z*s;
-					v[jj*n+i]=z*c-x*s;
+			if (its == MaxIterations) {
+				free_Tvector(rv1,0,Columns*Columns-1);
+				return;
+			}
+			x = W[l];
+			nm = k - 1L;
+			y = W[nm];
+			g = rv1[nm];
+			h = rv1[k];
+			f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
+			g = Pythag(f, 1.0);
+			f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (fabs(g))
+				: (-fabs(g))))) - h)) / x;
+			c = s = 1.0;
+			for (j = l; (j <= nm); j++) {
+				i = j + 1L;
+				g = rv1[i];
+				y = W[i];
+				h = s * g;
+				g = c * g;
+				z = Pythag(f, h);
+				rv1[j] = z;
+				c = f / z;
+				s = h / z;
+				f = x * c + g * s;
+				g = g * c - x * s;
+				h = y * s;
+				y *= c;
+				for (jj = 0L; (jj < Columns); jj++) {
+					x = V[jj * Columns + j];
+					z = V[jj * Columns + i];
+					V[jj * Columns + j] = x * c + z * s;
+					V[jj * Columns + i] = z * c - x * s;
 				}
-				z=PYTHAG(f,h);
-				w[j]=z;
-				if (z) {
-					z=1.0/z;
-					c=f*z;
-					s=h*z;
+				z = Pythag(f, h);
+				W[j] = z;
+				if (z != 0.0) {
+					z = 1.0 / z;
+					c = f * z;
+					s = h * z;
 				}
-				f=(c*g)+(s*y);
-				x=(c*y)-(s*g);
-				for (jj=1;jj<=m;jj++) {
-					y=a[jj*n+j];
-					z=a[jj*n+i];
-					a[jj*n+j]=y*c+z*s;
-					a[jj*n+i]=z*c-y*s;
+				f = c * g + s * y;
+				x = c * y - s * g;
+				for (jj = 0L; (jj < Lines); jj++) {
+					y = U[jj * Columns + j];
+					z = U[jj * Columns + i];
+					U[jj * Columns + j] = y * c + z * s;
+					U[jj * Columns + i] = z * c - y * s;
 				}
 			}
-			rv1[l]=0.0;
-			rv1[k]=f;
-			w[k]=x;
+			rv1[l] = 0.0;
+			rv1[k] = f;
+			W[k] = x;
 		}
 	}
-	free_Tvector(rv1,1,n);
+	free_Tvector(rv1,0,Columns*Columns-1);
 }
-
-#undef SIGN
-#undef MAX
-#undef PYTHAG
-#undef EPS
 
 void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x)
 {
