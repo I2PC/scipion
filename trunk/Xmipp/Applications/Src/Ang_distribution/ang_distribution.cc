@@ -41,10 +41,10 @@ int main (int argc,char *argv[]) {
    FileName        fn_ang, fn_sel, fn_hist, fn_ps;
    int             steps;
    int             tell;
-   float           R, r;
+   float           R, r, rmax, wmax=-99.e99;
    float           rot_view;
    float           tilt_view;
-   int             up_down_correction;
+   int             up_down_correction, colw;
    bool            solid_sphere;
 
 // Check the command line ==================================================
@@ -56,11 +56,12 @@ int main (int argc,char *argv[]) {
       steps=AtoI(get_param(argc,argv,"-steps","100"));
       tell=check_param(argc,argv,"-show_process");
       R=AtoF(get_param(argc,argv,"-R","60"));
-      r=AtoF(get_param(argc,argv,"-r","1.5"));
+      rmax=AtoF(get_param(argc,argv,"-r","1.5"));
       rot_view =AtoF(get_param(argc,argv,"-rot_view",  "0"));
       tilt_view=AtoF(get_param(argc,argv,"-tilt_view","30"));
       up_down_correction=check_param(argc,argv,"-up_down_correction");
       solid_sphere=check_param(argc,argv,"-solid_sphere");
+      colw=AtoI(get_param(argc,argv,"-wcol","-1"));
 
       // Angle order
       int i;
@@ -98,6 +99,11 @@ int main (int argc,char *argv[]) {
    int AngleNo=angles.dataLineNo();
    if (AngleNo==0)
       EXIT_ERROR(1,"Angular distribution: Input files doesn't contain angular information");
+
+   if (colw>=0) {
+     // Find maximum weight
+     for (int i=0; i<AngleNo; i++) if (angles(i+1,colw)>wmax) wmax=angles(i+1,colw);
+   }
 
 // Build vector table ======================================================
    #define GET_ANGLES(i) \
@@ -170,6 +176,15 @@ int main (int argc,char *argv[]) {
       origin.init_zeros();
       double tmp;
       for (int i=0; i<AngleNo; i++) {
+
+
+	 // Triangle size depedent on w
+	 if (colw>=0) {
+	   r=angles(i+1,colw);
+	   r*=rmax/wmax;
+	 } else r=rmax;
+
+
           // Initially the triangle is on the floor of the projection plane
           VECTOR_R3(p0,    0   ,      0        ,0);
           VECTOR_R3(p1,    0   , r*2/3*SIND(60),0);
@@ -250,10 +265,12 @@ void Usage() {
          << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
          << "      [-show_process]               : show distances.\n"
          << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
-         << "      [-R <big_sphere_radius=60>]   : for the PS file\n"
-         << "      [-r <triangle side=1.5>]      : for the PS file\n"
+         << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS file\n"
+         << "      [-r <triangle side=1.5>]      : triangle size for the PS file\n"
          << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
          << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
+         << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
+         << "                                      number in corresponding column of the docfile\n"
          << "      [-up_down_correction]         : correct angles so that a semisphere\n"
          << "                                      is shown\n"
          << "      [-solid_sphere]               : projections in the back plane are\n"
