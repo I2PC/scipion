@@ -72,6 +72,8 @@ protected:
 protected slots:
     /* Save assigned images in a new selfile */
     virtual void saveAssigned();
+    /* Save assigned images in separate selfiles */
+    virtual void saveAssignedSeparately();
     /* Different kind of labels */
     virtual void changeLabelsToImg();
     virtual void changeLabelsToSel();
@@ -80,6 +82,8 @@ protected slots:
 
     /* Show Average and SD of the images represented */
     virtual void showRepresentedStats();
+    /* Show Average of the images represented together in one table */
+    virtual void showRepresentedAverageTogether();
     /* Show represented images */
     virtual void showRepresentedSel();
     /* Show the difference between the current code vector and the

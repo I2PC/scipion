@@ -58,8 +58,8 @@ public:
     /** Empty constructor. */
     ImageViewer( const char *name=0, bool _check_file_change=false);
     
-    /** Constructor with a pointer to a Xmipp Image */
-    ImageViewer( ImageXmipp *_image=0, const char *name=0);
+    /** Constructor with a pointer to an Image */
+    ImageViewer( Image *_image=0, const char *name=0);
 
     /** Constructor with a pointer to a Fourier Xmipp Image */
     ImageViewer( FourierImageXmipp *_FFTimage=0, const char *name=0);
@@ -88,7 +88,7 @@ private:
     int		alloc_context;
     bool	convertEvent( QMouseEvent* e, int& x, int& y );
     const char* filename;
-    ImageXmipp	xmippImage;		// Xmipp Image
+    Image	xmippImage;		// Xmipp Image
     QImage	image;			// the loaded image
     QPixmap	pm;			// the converted pixmap
     QPixmap	pmScaled;		// the scaled pixmap
@@ -107,7 +107,7 @@ private:
     QTimer     *timer;
     int 	ss, si, pi ;
     void	Init();
-    bool 	xmipp2Qt(ImageXmipp& _image);
+    bool 	xmipp2Qt(Image& _image);
     bool 	Qt2xmipp(QImage &_image);
     bool 	showImage();
     void	updateStatus();

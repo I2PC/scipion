@@ -206,7 +206,11 @@ const char * ShowSel::cellLabel(int i) const {
 void ShowSel::producePixmapAt(int i) {
     ImageXmipp I;
     // Read image
-    if (Is_ImageXmipp(imgnames[i]))
+    if (imgnames[i].find("imagic:")!=-1) {
+       Image *img = Image::LoadImage(imgnames[i]);
+       I()=(*img)();
+       delete img;
+    } else if (Is_ImageXmipp(imgnames[i]))
        // Plain Xmipp images
        I.read(imgnames[i]);
     else if (Is_FourierImageXmipp(imgnames[i])) {

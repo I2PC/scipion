@@ -80,14 +80,14 @@ signals:
 /**@name Image conversions */
 //@{
 /** QImage -> Xmipp.*/
-void xmipp2Qt(ImageXmipp& _ximage, QImage &_qimage,
+void xmipp2Qt(Image& _ximage, QImage &_qimage,
    int _minScale = 0, int _maxScale = 255);
 
 /** Xmipp -> QImage.*/
-void Qt2xmipp(QImage &_qimage, ImageXmipp &_ximage);
+void Qt2xmipp(QImage &_qimage, Image &_ximage);
 
 /** Xmipp -> PixMap */
-void xmipp2Pixmap(ImageXmipp &xmippImage, QPixmap* pixmap,
+void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
    int _minScale = 0, int _maxScale = 255);
 //@}
 

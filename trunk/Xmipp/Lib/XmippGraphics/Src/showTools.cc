@@ -141,7 +141,7 @@ void ScrollParam::but_ok_clicked()
 }
 
 /* Qimage -> Xmipp --------------------------------------------------------- */
-void Qt2xmipp( QImage &_qimage, ImageXmipp &_ximage ) {
+void Qt2xmipp( QImage &_qimage, Image &_ximage ) {
    _ximage().resize(_qimage.height(), _qimage.width());
    for (int y = 0; y < _qimage.width(); y++)
      for (int x = 0; x < _qimage.height(); x++)
@@ -149,7 +149,7 @@ void Qt2xmipp( QImage &_qimage, ImageXmipp &_ximage ) {
 }
 
 /* Xmipp -> QImage --------------------------------------------------------- */
-void xmipp2Qt(ImageXmipp& _ximage, QImage &_qimage, int _min_scale,
+void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
    int _max_scale) {
    // Creates a Qt Image to hold Xmipp Image
    _qimage.create(_ximage().ColNo(), _ximage().RowNo(), 8, 256);
@@ -173,7 +173,7 @@ void xmipp2Qt(ImageXmipp& _ximage, QImage &_qimage, int _min_scale,
 }
 
 /* Xmipp -> Pixmap --------------------------------------------------------- */
-void xmipp2Pixmap(ImageXmipp &xmippImage, QPixmap* pixmap,
+void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
    int _minScale, int _maxScale) {
    QImage tmpImage;
    xmipp2Qt(xmippImage,tmpImage,_minScale, _maxScale);

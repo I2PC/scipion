@@ -102,7 +102,7 @@ void ShowVol::producePixmapAt(int i) {
        case 'Y': log_i=i+STARTINGY(V()); break;
        case 'Z': log_i=i+STARTINGZ(V()); break;
     }
-    ImageXmipp I;
+    Image I;
     V().getSlice(log_i,I(),slices);
 
     int minGray, maxGray;

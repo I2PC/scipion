@@ -5,6 +5,10 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
+ * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
+ * Dept. Physiology of the David Geffen School of Medicine
+ * Univ. of California, Los Angeles.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
@@ -55,6 +59,9 @@ ShowTable::~ShowTable() {
    if (menubar != NULL) delete menubar;
    if (options != NULL) delete options;
    if (status  != NULL) delete status;
+   for (int i = 0; i < tempfilenames.size(); i++)
+     remove (tempfilenames[i].c_str());
+   tempfilenames.clear();
 }
 
 void ShowTable::init() {
@@ -384,7 +391,7 @@ void ShowTable::check_file() {
 /* Show Average and Standard deviation of a SelFile ------------------------ */
 void ShowTable::showStats(SelFile &SF) {
     try {
-       ImageXmipp _ave, _sd;
+       Image _ave, _sd;
        double _minPixel, _maxPixel;
        SF.go_beginning(); 
        SF.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
@@ -396,4 +403,19 @@ void ShowTable::showStats(SelFile &SF) {
        QMessageBox::about( this, "Error!",
 	  "There is a problem opening files\n");
     }
+}
+
+/* Make a temporary file; returns a string which is the filename, and an
+   OPEN file descriptor (passed in as a parameter) which must be closed
+   by the caller AFTER writing whatever contents are needed.  The file
+   will be automatically deleted when this ShowTable object is destroyed. */
+string ShowTable::makeTempFile (int &fd)
+{
+  string tmpfname = (string) P_tmpdir + "/xmipp_tempfile_XXXXXX";
+  char *tempfile = strdup (tmpfname.c_str());
+  fd = mkstemp (tempfile);
+  tmpfname = tempfile;
+  free (tempfile);
+  tempfilenames.push_back (tmpfname);
+  return (tmpfname);
 }

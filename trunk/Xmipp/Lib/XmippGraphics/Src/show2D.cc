@@ -122,7 +122,7 @@ ImageViewer::ImageViewer( QImage *_image, const char *name)
 
 /****************************************************/
 
-ImageViewer::ImageViewer( ImageXmipp *_image, const char *name)
+ImageViewer::ImageViewer( Image *_image, const char *name)
     : QWidget( NULL, name, QWidget::WDestructiveClose ),
       filename( 0 ),
       helpmsg( 0 )
@@ -130,7 +130,7 @@ ImageViewer::ImageViewer( ImageXmipp *_image, const char *name)
     check_file_change=false;
     Init();
     filename = name;
-    if (xmipp2Qt((ImageXmipp&) *_image)) showImage();
+    if (xmipp2Qt((Image&) *_image)) showImage();
 }
 
 /****************************************************/
@@ -226,8 +226,7 @@ void ImageViewer::saveImage( int item )
 
     if ( !savefilename.isEmpty() ) {
 	  try {
-
-	    ImageXmipp tmpImage(xmippImage);
+	    ImageXmipp tmpImage; tmpImage()=xmippImage();
  	    // Saves Xmipp Image
 	    tmpImage.rename((string) ((const char *)savefilename));
             tmpImage.write(); 
@@ -317,7 +316,7 @@ bool ImageViewer::showImage()
 
 /*****************************************/
 
-bool ImageViewer::xmipp2Qt(ImageXmipp& _image )
+bool ImageViewer::xmipp2Qt(Image& _image )
 {
     bool ok = FALSE;
 		
@@ -381,6 +380,7 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
 bool ImageViewer::loadImage( const char *fileName ) 
 {
     filename = fileName;
+    bool imagic=((string)(filename)).find("imagic:")==0;
     bool ok = FALSE;
     static bool message_shown=false;
     if ( filename ) {
@@ -392,19 +392,25 @@ bool ImageViewer::loadImage( const char *fileName )
 	if (!ok) {
           try { 
  	    // reads Xmipp Image
-            ImageXmipp tmpImage;
-	    wait_until_stable_size(filename);
-	    if (Is_ImageXmipp(filename))
-               tmpImage.read((string) filename); 
-	    else if (Is_FourierImageXmipp(filename)) {
+            Image tmpImage;
+	    if (!imagic) wait_until_stable_size(filename);
+            if (imagic) {
+	       Image *p = Image::LoadImage(filename);
+	       if (!p) REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
+               tmpImage() = (*p)();
+               delete p;
+            } else if (Is_ImageXmipp(filename)) {
+               ImageXmipp p;
+               p.read((FileName)filename);
+               tmpImage()=p();
+            } else if (Is_FourierImageXmipp(filename)) {
 	       FourierImageXmipp If; If.read(filename);
 	       FFT_magnitude(If,tmpImage());
 	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage())
                   MULTIDIM_ELEM(tmpImage(),i)=
 	             log10(1+MULTIDIM_ELEM(tmpImage(),i)*
 		             MULTIDIM_ELEM(tmpImage(),i));
-	    } else
-	        REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
+	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
 	    tmpImage().set_Xmipp_origin();
 	    ok = xmipp2Qt(tmpImage);
 	  } catch (Xmipp_error) {
@@ -424,10 +430,10 @@ bool ImageViewer::loadImage( const char *fileName )
     if (ok) {
        ok = showImage();
        struct stat info;
-       if (stat(filename, &info))
+       if (stat(filename, &info) && !imagic) {
           cerr << "loadImage: Cannot get time of file " << filename << endl;
-   
-       modification_time=info.st_mtime;
+          modification_time=0;
+       } else modification_time=info.st_mtime;
     }
     
     return ok;

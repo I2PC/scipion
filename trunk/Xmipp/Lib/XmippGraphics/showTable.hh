@@ -5,6 +5,10 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
+ * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
+ * Dept. Physiology of the David Geffen School of Medicine
+ * Univ. of California, Los Angeles.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
@@ -97,6 +101,8 @@ protected:
     QPopupMenu *options;
     // Status label. Need not be used
     QLabel     *status;
+    // Tempfiles that need to be deleted on destruction
+    vector<string> tempfilenames;
 public:
     /** Empty constructor */
     ShowTable();
@@ -188,6 +194,9 @@ protected:
 
     /* Show the average and SD of a Selfile */
     void showStats(SelFile &SF);
+
+    /* Make a temp file */
+    string makeTempFile (int &fd);
 private slots:
     /* Open window with help about keys */
             void giveHelp();
