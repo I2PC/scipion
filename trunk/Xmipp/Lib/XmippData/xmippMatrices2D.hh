@@ -823,10 +823,10 @@ public:
        \end{verbatim}
        \\Ex: m2=m1.reverseX();*/
    mT reverseX() const
-      {mT temp(*this); temp.reverseX(); return temp;}
+      {mT temp(*this); temp.self_reverseX(); return temp;}
    
    /** Reverse matrix values over X axis, keep in this object. */
-   void reverseX();
+   void self_reverseX();
    
    /** Reverse matrix values over Y axis.
        Maybe better with an example:
@@ -838,10 +838,10 @@ public:
        \end{verbatim}
        \\Ex: m2=m1.reverseY();*/
    mT reverseY() const
-      {mT temp(*this); temp.reverseY(); return temp;}
+      {mT temp(*this); temp.self_reverseY(); return temp;}
 
    /** Reverse matrix values over Y axis, keep in this object. */
-   void reverseY();
+   void self_reverseY();
    
    /** Determinant of a matrix.
        An exception is thrown if the matrix is not squared or it is empty.

@@ -292,7 +292,7 @@ template <class T>
 
 /* Reverse X --------------------------------------------------------------- */
 template <class T>
-   void mT::reverseX() {
+   void mT::self_reverseX() {
    T aux;
    int jmax=(int)(XSIZE(*this)-1)/2;
    for (int i=0; i<YSIZE(*this); i++)
@@ -304,7 +304,7 @@ template <class T>
 
 /* Reverse Y --------------------------------------------------------------- */
 template <class T>
-   void mT::reverseY() {
+   void mT::self_reverseY() {
    T aux;
    int imax=(int)(YSIZE(*this)-1)/2;
    for (int i=0; i<=imax; i++)

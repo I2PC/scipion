@@ -659,10 +659,10 @@ public:
            17 18 19]          11 12 13]
       \end{verbatim}
        \\Ex: V2=V1.reverseX();*/
-   VT reverseX() const {VT temp(*this); temp.reverseX(); return temp;}
+   VT reverseX() const {VT temp(*this); temp.self_reverseX(); return temp;}
 
    /** Reverse matrix values over X axis, keep in this object. */
-   void reverseX();
+   void self_reverseX();
    
    /** Reverse matrix values over Y axis.
        Maybe better with an example:
@@ -679,10 +679,10 @@ public:
           17 18 19]          19 18 17]
        \end{verbatim}
        \\Ex: V2=V1.reverseY();*/
-   VT reverseY() const {VT temp(*this); temp.reverseY(); return temp;}
+   VT reverseY() const {VT temp(*this); temp.self_reverseY(); return temp;}
 
    /** Reverse matrix values over Y axis, keep in this object. */
-   void reverseY();
+   void self_reverseY();
    
    /** Reverse matrix values over Z axis.
        Maybe better with an example:
@@ -699,10 +699,10 @@ public:
           17 18 19]          07 08 09]
        \end{verbatim}
        \\Ex: V2=V1.reverseZ();*/
-   VT reverseZ() const {VT temp(*this); temp.reverseZ(); return temp;}
+   VT reverseZ() const {VT temp(*this); temp.self_reverseZ(); return temp;}
 
    /** Reverse matrix values over Z axis, keep in this object. */
-   void reverseZ();
+   void self_reverseZ();
    
    /** Put a window to volume.
        The volume is windowed within the two positions given to this function.

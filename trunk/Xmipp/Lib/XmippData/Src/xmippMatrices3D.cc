@@ -310,7 +310,7 @@ template <class T>
 
 /* Reverse X --------------------------------------------------------------- */
 template <class T>
-   void VT::reverseX() {
+   void VT::self_reverseX() {
    for (int k=0; k<zdim; k++)
       for (int i=0; i<ydim; i++)
          for (int j=0; j<=(int)(xdim-1)/2; j++) {
@@ -325,7 +325,7 @@ template <class T>
 
 /* Reverse Y --------------------------------------------------------------- */
 template <class T>
-   void VT::reverseY() {
+   void VT::self_reverseY() {
    for (int k=0; k<zdim; k++)
       for (int i=0; i<=(int)(ydim-1)/2; i++)
          for (int j=0; j<xdim; j++) {
@@ -338,7 +338,7 @@ template <class T>
 
 /* Reverse Z --------------------------------------------------------------- */
 template <class T>
-   void VT::reverseZ() {
+   void VT::self_reverseZ() {
    for (int k=0; k<=(int)(zdim-1)/2; k++)
       for (int i=0; i<ydim; i++)
          for (int j=0; j<xdim; j++) {
