@@ -21,8 +21,11 @@
 #include <XmippData/xmippWavelets.hh>
 #include <XmippData/xmippHistograms.hh>
 
-#define REMOVE_SCALE 0
+#define REMOVE_SCALE      0
 #define SOFT_THRESHOLDING 1
+#define BAYESIAN          2
+#define ADAPTIVE_SOFT     3
+#define CENTRAL           4
 
 class Denoising_parameters: public Prog_parameters {
 public:
@@ -30,6 +33,7 @@ public:
    int    denoising_type;
    int    scale;
    double threshold;
+   int    R;
 public:
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
@@ -41,8 +45,15 @@ public:
       string aux=get_param(argc,argv,"-denoising","remove_scales");
       if (aux=="remove_scales") denoising_type=REMOVE_SCALE;
       else if (aux=="soft_thresholding") denoising_type=SOFT_THRESHOLDING;
+      #ifdef NEVER_DEFINED
+      else if (aux=="bayesian")          denoising_type=BAYESIAN;
+      #endif
+      else if (aux=="adaptive_soft")     denoising_type=ADAPTIVE_SOFT;
+      else if (aux=="central")           denoising_type=CENTRAL;
+      else                               denoising_type=REMOVE_SCALE;
       scale=AtoI(get_param(argc,argv,"-scale","0"));
       threshold=AtoF(get_param(argc,argv,"-th","50"));
+      R=AtoI(get_param(argc,argv,"-R","-1"));
    }
    
    void show() {
@@ -56,6 +67,17 @@ public:
          case SOFT_THRESHOLDING:
             cout << " Soft thresholding " << threshold << endl;
             break;
+	 #ifdef NEVER_DEFINED
+	 case BAYESIAN:
+	    cout << " Bayesian\n";
+	    break;
+	 #endif
+	 case ADAPTIVE_SOFT:
+	    cout << " Adaptive soft thresholding\n";
+	    break;
+	 case CENTRAL:
+	    cout << " Keeping central part " << R << " pixels\n";
+	    break;
       }
    }
 
@@ -65,9 +87,15 @@ public:
            << "                               DAUB4, DAUB12, DAUB20\n"
            << "  [-denoising <str=remove_scale] : Denoising action\n"
            << "                               remove_scale\n"
+      	   #ifdef NEVER_DEFINED
+	   << "                               bayesian\n"
+	   #endif
            << "                               soft_thresholding\n"
+	   << "                               adaptive_soft\n"
+	   << "                               central\n"
            << "  [-scale <s=0>]             : scale to remove\n"
            << "  [-threshold <th=50>]       : threshold of values (%) to remove\n"
+	   << "  [-R <r=-1>]                : Radius to keep, by default half the size\n"
       ;
    }
 };
@@ -87,6 +115,16 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm) {
          compute_hist(img(),hist,100);
          soft_thresholding(img(),hist.percentil(eprm->threshold));
          break;
+      #ifdef NEVER_DEFINED
+      case BAYESIAN:
+         bayesian_wiener_filtering(img(),eprm->scale);
+	 break;
+      #endif
+      case ADAPTIVE_SOFT:
+      	 adaptive_soft_thresholding(img(),eprm->scale);
+	 break;
+      case CENTRAL:
+         DWT_keep_central_part(img(),eprm->R);
    }
    IDWT(img(),img());
 }
@@ -110,6 +148,12 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
          compute_hist(vol(),hist,100);
          soft_thresholding(vol(),hist.percentil(eprm->threshold));
          break;
+      case ADAPTIVE_SOFT:
+      	 cout << "Adaptive soft-thresholding not implemented for volumes\n";
+	 break;
+      case CENTRAL:
+      	 cout << "Keep central part not implemented for volumes\n";
+	 break;
    }
    IDWT(vol(),vol());
 }
@@ -118,4 +162,3 @@ int main (int argc, char **argv) {
    Denoising_parameters prm;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
-
