@@ -75,6 +75,9 @@ public:
    bool update_visible_space;
    /** Threshold for PCA values when creating the visible space */
    double th_denoise;
+   /** Check mirrors.
+      If 1 then mirror versions of the experimental images are also explored.*/
+   int check_mirrors;
    #define TELL_ROT_TILT  1
    #define TELL_PSI_SHIFT 2
    #define TELL_OPTIONS   4
