@@ -4,24 +4,17 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
- ***************************************************************************/
+ * Copyright (c) 1999 , CSIC .
+ *
+ * Permission is granted to copy and distribute this file, for noncommercial
+ * use, provided (a) this copyright notice is preserved, (b) no attempt
+ * is made to restrict redistribution of this file, and (c) this file is
+ * restricted by a compilation copyright.
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
+ *
+ *****************************************************************************/
 
 #include "../Prog_recons_test.hh"
 
@@ -86,6 +79,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       force_sym =check_param(fh_param,"force symmetry");
       fn_final_sym=get_param(fh_param,"final symmetry file",0,"");
       fn_CTF=get_param(fh_param,"CTF",0,"");
+      defocus_change=AtoF(get_param(fh_param,"defocus change",0,"0"));
       sigma=AtoF(get_param(fh_param,"noise stddev",0,"0"));
       low_pass_before_CTF=AtoF(get_param(fh_param,"noise lowpass before CTF",0,"0"));
       fn_after_CTF=get_param(fh_param,"noise spectrum after CTF",0,"");
@@ -264,6 +258,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    out << "   Symmetry file: " << prm.fn_sym << endl;
    out << "   Final Symmetry file: " << prm.fn_final_sym << endl;
    out << "   CTF file: " << prm.fn_CTF << endl;
+   out << "   Defocus change: " << prm.defocus_change << endl;
    out << "   Noise stddev: " << prm.sigma << endl;
    out << "   Noise lowpass before CTF: " << prm.low_pass_before_CTF << endl;
    out << "   Noise spectrum after CTF: " << prm.fn_after_CTF << endl;
@@ -472,6 +467,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
          Prog_Microscope_Parameters prm_micro;
          prm_micro.fn_in=Prog_proj_prm.fn_sel_file;
 	 prm_micro.fn_ctf=prm.fn_CTF;
+         prm_micro.defocus_change=prm.defocus_change;
 	 prm_micro.sigma=prm.sigma;
 	 prm_micro.low_pass_before_CTF=prm.low_pass_before_CTF;
 	 prm_micro.fn_after_ctf=prm.fn_after_CTF;
@@ -530,6 +526,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
    if (prm.correct_phase) {
       CorrectPhase_Params correct;
       correct.fn_ctf=prm.fn_CTF;
+      correct.multiple_CTFs=FALSE;
+      correct.CTF_description_file=!Is_FourierImageXmipp(prm.fn_CTF);
       correct.method=prm.phase_correction_method;
       correct.epsilon=prm.phase_correction_param;
       correct.produce_side_info();
