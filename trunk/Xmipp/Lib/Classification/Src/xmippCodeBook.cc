@@ -283,7 +283,7 @@
   {
       if (_index < 0 || _index > classifVectors.size())
 	  {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "index out of range";
 		throw runtime_error(msg.str());
 	  }
@@ -298,7 +298,7 @@
   {
       if (_index < 0 || _index > classifVectors.size())
 	  {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "index out of range";
 		throw runtime_error(msg.str());
 	  }
@@ -402,7 +402,7 @@
     }
     catch (exception& e)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << e.what() << endl << "Error reading the code book";
       throw runtime_error(msg.str());
     }
@@ -466,7 +466,7 @@
   
   void xmippCB::unNormalize(const vector<xmippCTVectors::statsStruct>&  _varStats) {
         if (_varStats.size() != theItems[0].size()) {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "Normalization information does not coincide with codebook structure";
 		throw runtime_error(msg.str());
 	}
@@ -486,7 +486,7 @@
   
   void xmippCB::Normalize(const vector<xmippCTVectors::statsStruct>&  _varStats) {
         if (_varStats.size() != theItems[0].size()) {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "Normalization information does not coincide with codebook structure";
 		throw runtime_error(msg.str());
 	}

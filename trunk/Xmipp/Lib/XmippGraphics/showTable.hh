@@ -34,14 +34,14 @@
 #include <qglobal.h>
 #include <qtable.h>
 #include <qlabel.h>
-#include <stream.h>
+#include <iostream>
 #include <qpainter.h>
 #include <qpopupmenu.h>
 #include <qtimer.h>
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices2D.hh>
 #include <XmippData/xmippSelFiles.hh>
-#include <list.h>
+#include <list>
 
 
 /**@name Show Tables*/

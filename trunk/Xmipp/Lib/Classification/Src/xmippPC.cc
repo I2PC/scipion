@@ -25,8 +25,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
+#include <strstream>
 #include "../xmippPC.hh"
-
 #include "../xmippDistances.hh"
 
 

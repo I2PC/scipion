@@ -52,7 +52,7 @@
 	}
       catch (exception& e)
 	{
-	  ostrstream msg;
+	  ostringstream msg;
 	  msg << e.what() << endl << "Error reading the training vector";
 	  throw runtime_error(msg.str());
 	}
@@ -159,7 +159,7 @@
     }
     catch (exception& e)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << e.what() << endl << "Error reading the training set";
       throw runtime_error(msg.str());
     }
@@ -298,7 +298,7 @@
 	// Do some validation
 
 	if (_i > itemAt(0).size()) {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "Out of range. No variable at position " << _i;
 		throw out_of_range(msg.str());
 	}
@@ -370,19 +370,19 @@
 
   double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const {
 	  if (!normalized) {
-		 ostrstream msg;
+		 ostringstream msg;
 		 msg << "Variable is not normalized" << _var;
 		 throw runtime_error(msg.str());
 	  }
 
 	  if (_var > itemAt(0).size()) {
-		 ostrstream msg;
+		 ostringstream msg;
 		 msg << "Out of range. No variable at position " << _var;
 		 throw out_of_range(msg.str());
 	  }
 
 	  if (_item > size()) {
-		 ostrstream msg;
+		 ostringstream msg;
 		 msg << "Out of range. No item at position " << _var;
 		 throw out_of_range(msg.str());
 	  }
@@ -419,7 +419,7 @@
 	// Do some validation
 
 	if (_i > itemAt(0).size()) {
-		ostrstream msg;
+		ostringstream msg;
 		msg << "Out of range. No variable at position " << _i;
 		throw out_of_range(msg.str());
 	}

@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <fstream>  
 #include <iostream>
-#include <fstream.h>
+#include <fstream>
 #include <stdio.h>
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices1D.hh>

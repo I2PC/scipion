@@ -34,6 +34,7 @@
 // STL includes
 #include <algorithm>
 #include <vector>
+#include <strstream>
 
 // xmipp includes
 #include "xmippCodeBook.hh"

@@ -32,7 +32,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include <strstream>
+#include <sstream>
 #include <map>
 
 #include "xmippCDSet.hh"

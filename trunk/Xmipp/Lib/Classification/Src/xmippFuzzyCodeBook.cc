@@ -150,7 +150,7 @@
    */
   xmippFeature xmippFCB::membAt ( unsigned _di, unsigned _ci) const
   {
-    ostrstream msg;
+    ostringstream msg;
     if ((_di>=membVectors()) || (_ci>=membClusters()))
     {
       msg << "Out of range. No item at position " << _di << "," << _ci << endl;
@@ -168,7 +168,7 @@
    */
   xmippFeature& xmippFCB::membAt ( unsigned _di, unsigned _ci) 
   {
-    ostrstream msg;
+    ostringstream msg;
     if ((_di>=membVectors()) || (_ci>=membClusters()))
     {
       msg << "Out of range. No item at position " << _di << "," << _ci << endl;
@@ -351,14 +351,14 @@
     
      if ((_alpha < 0) || (_alpha >1))   
      {
-       ostrstream msg;
+       ostringstream msg;
        msg << "threshold must be in [0,1]";
        throw runtime_error(msg.str());
      }
        
      if ((_cluster < 0) || (_cluster >= membClusters()))   
      {
-       ostrstream msg;
+       ostringstream msg;
        msg << "Invalid cluster number";
        throw runtime_error(msg.str());
      }

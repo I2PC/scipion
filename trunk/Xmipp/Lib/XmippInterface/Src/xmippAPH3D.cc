@@ -31,7 +31,7 @@
 
 #include "../xmippAPH3D.hh"
 #include <XmippData/xmippArgs.hh>
-#include <fstream.h>
+#include <fstream>
 
 #define VERBOSE
 //#define DEBUG

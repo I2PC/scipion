@@ -35,7 +35,7 @@
 #include <ctype.h>    		
 #include <vector>
 #include <map>	  
-#include <strstream>  	
+#include <sstream>  	
 #include <stdexcept>  		
 #include "xmippCDataTypes.hh"
 #include "xmippVectorOps.hh"

@@ -27,7 +27,7 @@
 
 #include "../xmippAPH.hh"
 #include <XmippData/xmippArgs.hh>
-#include <fstream.h>
+#include <fstream>
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
    + __GNUC_PATCHLEVEL__)

@@ -182,7 +182,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
@@ -201,7 +201,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
@@ -218,14 +218,14 @@
   {
     if (!calibrated())
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "The S.O.M. is not calibrated. No target at position ("
           << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
     if (_pos.first>=(signed)somWidth || _pos.second>=(signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No target at position (" << _pos.first << ", "
           << _pos.second << ")";
       throw out_of_range(msg.str());
@@ -243,14 +243,14 @@
   {
     if (!calibrated())
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "The S.O.M. is not calibrated. No target at position ("
           << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
     if (_pos.first>=(signed)somWidth || _pos.second>=(signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No target at position (" << _pos.first << ", "
           << _pos.second << ")";
       throw out_of_range(msg.str());
@@ -283,7 +283,7 @@
   {
     if (_i >= somWidth * somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position " << _i;
 
       throw out_of_range(msg.str());
@@ -301,7 +301,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
@@ -829,7 +829,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
@@ -847,7 +847,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
@@ -864,14 +864,14 @@
   {
     if (!calibrated())
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "The S.O.M. is not calibrated. No target at position ("
           << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
     if (_pos.first>=(signed)somWidth || _pos.second>=(signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No target at position (" << _pos.first << ", "
           << _pos.second << ")";
       throw out_of_range(msg.str());
@@ -889,14 +889,14 @@
   {
     if (!calibrated())
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "The S.O.M. is not calibrated. No target at position ("
           << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }
     if (_pos.first>=(signed)somWidth || _pos.second>=(signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No target at position (" << _pos.first << ", "
           << _pos.second << ")";
       throw out_of_range(msg.str());
@@ -928,7 +928,7 @@
   {
     if (_i >= somWidth * somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position " << _i;
 
       throw out_of_range(msg.str());
@@ -947,7 +947,7 @@
   {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
-      ostrstream msg;
+      ostringstream msg;
       msg << "Out of range. No item at position (" << _pos.first << ", " << _pos.second << ")";
       throw out_of_range(msg.str());
     }

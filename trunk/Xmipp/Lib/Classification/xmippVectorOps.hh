@@ -37,8 +37,8 @@
 #include <vector>                // vector
 #include <functional>            // for plus<T>, minus<T>
 #include <algorithm>             // for transform()
-#include <strstream>             // for ostrstream
-#include "xmippUniform.hh"    // for Uniform (Random)
+#include <sstream>               // for ostrstream
+#include "xmippUniform.hh"       // for Uniform (Random)
 
 using namespace std;
 
