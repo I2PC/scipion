@@ -259,7 +259,7 @@ double Prog_angular_distance_prm::compute_distance() {
       hist.write(fn_ang_out+"_tilt_diff_hist.txt");
       compute_hist(psi_diff,hist,100);
       hist.write(fn_ang_out+"_psi_diff_hist.txt");
-      compute_hist(vec_diff,hist,100);
+      compute_hist(vec_diff,hist,0,90,91);
       hist.write(fn_ang_out+"_vec_diff_hist.txt");
    }
    return dist;
