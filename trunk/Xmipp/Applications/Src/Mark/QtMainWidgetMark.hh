@@ -5,17 +5,24 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2000 , CSIC .
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- *
- *****************************************************************************/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
 #ifndef __QT_MAIN_WIDGET_MARK_HH__
 #define __QT_MAIN_WIDGET_MARK_HH__
@@ -76,7 +83,8 @@ public:
    void recalculate_passing_matrix();
    
    // Pass from untilted to tilted
-   void pass_to_tilted(int _muX, int _muY, int &_mtX, int &_mtY);
+   void pass_to_tilted(int _muX, int _muY, int &_mtX, int &_mtY,
+      bool _update_passing_matrix);
    
    // Pass from tilted to untilted
    void pass_to_untilted(int _mtX, int _mtY, int &_muX, int &_muY);
