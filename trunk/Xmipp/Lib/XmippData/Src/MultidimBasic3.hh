@@ -127,22 +127,6 @@ public:
        \\The array has got now 0 mean and stddev=1 */
    // This function must be explictly implemented outside
    void statistics_adjust(double avgF, double stddevF);
-   
-   /** Returns the effective range.
-       The effective range is defined as the difference of those two
-       values comprissing a given central percentage of the array histogram.
-       This function is used to compute the range removing outliers.
-       The default central percentage is 99.75%, although this value should
-       be increased as the number of values in the array decreases. For
-       the default, for instance, the 0.125% of the smaller values are
-       left out as well as the 0.125% of the higher values. The range is
-       given always as a double number.
-       \\Ex: double range=v.effective_range();
-       \\-->range for the 99.75% of the mass
-       \\Ex: double range=v.effective_range(1);
-       \\-->range for the 99% of the mass
-       */
-   double effective_range(double percentil_out=0.25);
 //@}
 
 /**@name Arithmethic operations */

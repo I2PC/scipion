@@ -194,17 +194,6 @@ template <class T>
       mi = (T) (a*(double)mi+b);
 }
 
-/* Effective range --------------------------------------------------------- */
-template <class T>
-   double maT::effective_range(double percentil_out) {
-//   histogram1D hist;
-//   compute_hist(*this,hist,200);
-//   double min_val = hist.percentil(percentil_out/2);
-//   double max_val = hist.percentil(100-percentil_out/2);
-//   return max_val-min_val;
-     return 0;
-}
-
 /* Init random ------------------------------------------------------------- */
 template <class T>
    void maT::init_random(double op1, double op2, const string &mode) _THROW {
