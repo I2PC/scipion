@@ -200,10 +200,11 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
    fh.peek();
    while (!fh.eof()) {
       getline(fh,line);
-      if (line[0]!='#' && line[0]!=';') line_no++;
+      if (line.length()>0 && line[0]!='#' && line[0]!=';') line_no++;
       fh.peek();
    }
    fh.close();
+   fh.clear();
 
    // Resize coordinate list and read
    fh.open(fn_coords.c_str(), ios::in);
@@ -214,7 +215,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
    fh.peek();
    while (!fh.eof()) {
       getline(fh,line);
-      if (line[0]!='#' && line[0]!=';') {
+      if (line.length()>0 && line[0]!='#' && line[0]!=';') {
          aux.X=AtoI(first_token(line));
          aux.Y=AtoI(next_token());
          coords.push_back(aux);
