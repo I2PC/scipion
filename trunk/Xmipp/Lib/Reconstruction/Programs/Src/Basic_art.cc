@@ -47,7 +47,7 @@ void Basic_ART_Parameters::default_values() {
     dont_sort          = FALSE;
     sort_last_N        = 2;
     no_it              = 1;
-    lambda_list.resize(1); lambda_list.init_constant(1);
+    lambda_list.resize(1); lambda_list.init_constant(0.01);
     stop_at            = 0;
     blob.radius        = 2;
     blob.order         = 2;
@@ -121,7 +121,7 @@ void Basic_ART_Parameters::default_values() {
     stop_at            = AtoI(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
     lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
     if (XSIZE(lambda_list)==0)                                              \
-       {lambda_list.resize(1); lambda_list.init_constant(1);}               \
+       {lambda_list.resize(1); lambda_list.init_constant(0.01);}               \
     sampling           = AtoF(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
     sym_each           = AtoI(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
     max_tilt           = AtoF(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
@@ -282,7 +282,7 @@ void Basic_ART_Parameters::usage() {
      << "\nIteration parameters"
      << "\n   [-n noit=1]           number of iterations"
      << "\n   [-stop_at stop_at=0]  number of images presented"
-     << "\n   [-l lambda=1 |        relaxation factor (0.0 - 2.0)"
+     << "\n   [-l lambda=0.01 |     relaxation factor (recommended range 0.0 - 0.1)"
      << "\n    -l [lambda0, lambda1, ...]"
      << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
      << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
@@ -339,6 +339,17 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-manual_order]       manual selection of projection order"
      << "\n   [-only_sym]           skip all those symmetries different from -1"
      << "\n"
+  ;
+  cerr
+     << " ================================================================ \n"
+     << " Most common options:"
+     << "\n    -i selfile           full name of sel file"
+     << "\n   [-o name]             name of output files, extensions are added"
+     << "\n   [-sym symmfile]       Use a symmetry file"
+     << "\n   [-n noit=1]           number of iterations"
+     << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
+     << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
+     << "\n                         the volume is update every <n> projections\n"
   ;
 }
 
