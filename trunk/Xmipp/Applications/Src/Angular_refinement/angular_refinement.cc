@@ -284,8 +284,6 @@ void Usage() {
         << "  [-rot  <rot0=0>  <rotF=360> <step=10>] : Rotational angle range\n"
         << "  [-tilt <tilt0=0> <tiltF=180> <step=10>]: Tilting angle range\n"
         << "  [-psi  <psi0=0>  <psiF=360> <step=10>] : In-plane angle range\n"
-        << "  [-omit_check]                          : Check that the angles are within\n"
-        << "                                           the provided limits\n"
         << "  [-max_shift <s=2>]                     : in pixels\n"
         << "If Projection Matching wrapper ------------------------------------------------------\n"
         << "   -apmq                                 : This flag sets the Projection Matching mode\n"
@@ -298,6 +296,8 @@ void Usage() {
         << "  [-first ring <r=0>]                    : First ring to evaluate\n"
         << "  [-last_ring <r=-1>]                    : Last ring to evaluate\n"
         << "Both --------------------------------------------------------------------------------\n"
+        << "  [-omit_check]                          : Check that the angles are within\n"
+        << "                                           the provided limits\n"
         << "  [-apply]                               : Apply shift and angles to input images\n"
         << "  [-apply_to_original <selfile>]         : Apply shift and angles to original images.\n"
         << "                                           They are rewritten\n";
