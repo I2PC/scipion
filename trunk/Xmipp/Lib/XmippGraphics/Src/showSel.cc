@@ -217,7 +217,7 @@ void ShowSel::producePixmapAt(int i) {
        // FFT Xmipp images: plot log10(1+|I|^2)
        FourierImageXmipp If;
        If.read(imgnames[i]);
-       FFT_magnitude(If,I());
+       FFT_magnitude(If(),I());
        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
           MULTIDIM_ELEM(I(),i)=
 	     log10(1+MULTIDIM_ELEM(I(),i)*MULTIDIM_ELEM(I(),i));

@@ -149,7 +149,7 @@ ImageViewer::ImageViewer( FourierImageXmipp *_FFTimage, const char *name)
     filename = name;
     // Compute the magnitude
     ImageXmipp I;
-    FFT_magnitude(*_FFTimage,I());
+    FFT_magnitude((*_FFTimage)(),I());
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
        MULTIDIM_ELEM(I(),i)=
 	  log10(1+MULTIDIM_ELEM(I(),i)*MULTIDIM_ELEM(I(),i));
@@ -409,7 +409,7 @@ bool ImageViewer::loadImage( const char *fileName )
                tmpImage()=p();
             } else if (Is_FourierImageXmipp(filename)) {
 	       FourierImageXmipp If; If.read(filename);
-	       FFT_magnitude(If,tmpImage());
+	       FFT_magnitude(If(),tmpImage());
 	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage())
                   MULTIDIM_ELEM(tmpImage(),i)=
 	             log10(1+MULTIDIM_ELEM(tmpImage(),i)*

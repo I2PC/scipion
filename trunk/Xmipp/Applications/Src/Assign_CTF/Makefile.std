@@ -1,7 +1,4 @@
 ######################################################################
-ifeq ($(HAVE_VTK),YES)
-   PROJ = assign_CTF
-endif
+PROJ = assign_CTF
 OBJ  = assign_CTF.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
-       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) 

@@ -58,7 +58,7 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Prog_CorrectPhase_Params *eprm=(Prog_CorrectPhase_Params *) prm;
-   vtkImageData * fft=NULL;
+   matrix2D< complex<double> > fft;
    FileName       fn_ctf;
    if (eprm->cpprm.multiple_CTFs) {
       fn_ctf=eprm->cpprm.CTF_filename(img.name());
@@ -66,15 +66,12 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
          cerr << "Cannot find CTF for image " << img.name() << endl;
          return FALSE;
       }
-      eprm->cpprm.ctf.fn_mask=fn_ctf;
-      eprm->cpprm.ctf.generate_mask(NULL);
-      cerr << "Correcting " << img.name() << " with "
-           << eprm->cpprm.ctf.fn_mask << endl;
+      eprm->cpprm.ctf.read_mask(fn_ctf);
+      cerr << "Correcting " << img.name() << " with " << fn_ctf << endl;
    }
-   FFT_VTK(img(),fft,TRUE);
+   FourierTransform(img(),fft);
    eprm->cpprm.correct(fft);
-   IFFT_VTK(fft,img(),TRUE);
-   fft->Delete();
+   InverseFourierTransform(fft,img());
 
    // Correct the CTF itself
    if (eprm->cpprm.multiple_CTFs) {
@@ -82,8 +79,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       if (eprm->out_ctf=="") fn_ctf_out=fn_ctf;
       else fn_ctf_out=eprm->out_ctf+ItoA(fn_ctf.get_number(),5)+".fft";
 
-      eprm->cpprm.correct(eprm->cpprm.ctf.mask);
-      eprm->cpprm.ctf.write_mask(fn_ctf_out);
+      eprm->cpprm.correct(eprm->cpprm.ctf.mask2D);
+      eprm->cpprm.ctf.write_mask(fn_ctf_out,2);
    }
    return TRUE;
 }
@@ -98,8 +95,8 @@ int main (int argc, char **argv) {
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
    if (!prm.cpprm.multiple_CTFs) {
       // Correct the CTF itself
-      prm.cpprm.correct(prm.cpprm.ctf.mask);
-      if (prm.out_ctf=="") prm.cpprm.ctf.write_mask(prm.cpprm.fn_ctf);
-      else                 prm.cpprm.ctf.write_mask(prm.out_ctf);
+      prm.cpprm.correct(prm.cpprm.ctf.mask2D);
+      if (prm.out_ctf=="") prm.cpprm.ctf.write_mask(prm.cpprm.fn_ctf,2);
+      else                 prm.cpprm.ctf.write_mask(prm.out_ctf,2);
    }
 }

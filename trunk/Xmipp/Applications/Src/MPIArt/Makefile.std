@@ -1,10 +1,6 @@
 ######################################################################
-ifeq ($(HAVE_VTK),YES)
-   PROJ = mpi_art
-endif
-
+PROJ = mpi_art
 NEEDS_MPI = true
 
 OBJ  = mpi_art.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
-       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)

@@ -35,6 +35,7 @@ public:
    bool        do_not_center;
    
    bool        first;
+   int         dim;
 public:
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
@@ -62,32 +63,32 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    FourierFilter_parameters *eprm=(FourierFilter_parameters *) prm;
-   vtkImageData * fft=NULL;
-   FFT_VTK(img(),fft,TRUE);
+   matrix2D< complex<double> > fft;
+   FourierTransform(img(), fft);
    if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=FALSE;}
-   eprm->fmask.apply_mask(fft);
-   IFFT_VTK(fft,img(),TRUE);
-   fft->Delete();
+   eprm->fmask.apply_mask_Fourier(fft);
+   InverseFourierTransform(fft,img());
+   eprm->dim=2;
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    FourierFilter_parameters *eprm=(FourierFilter_parameters *) prm;
-   vtkImageData * fft=NULL;
-   FFT_VTK(vol(),fft,TRUE);
+   matrix3D< complex<double> > fft;
+   FourierTransform(vol(), fft);
    if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=FALSE;}
-   eprm->fmask.apply_mask(fft);
-   IFFT_VTK(fft,vol(),TRUE);
-   fft->Delete();
+   eprm->fmask.apply_mask_Fourier(fft);
+   InverseFourierTransform(fft,vol());
+   eprm->dim=3;
    return TRUE;
 }
 
 int main (int argc, char **argv) {
    FourierFilter_parameters prm;
    SF_main(argc, argv, &prm, (void *)&process_img, (void *)&process_vol);
-   if (prm.fn_mask!="")      prm.fmask.write_mask(prm.fn_mask);
+   if (prm.fn_mask!="")      prm.fmask.write_mask(prm.fn_mask,2);
    if (prm.fn_amplitude!="") prm.fmask.write_amplitude(prm.fn_amplitude,
-                                prm.do_not_center);
+                                prm.dim, prm.do_not_center);
 }
 
 /* Menus ------------------------------------------------------------------- */

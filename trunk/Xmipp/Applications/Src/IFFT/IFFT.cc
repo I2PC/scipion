@@ -25,23 +25,17 @@
 
 #include <XmippData/xmippProgs.hh>
 #include <XmippData/xmippArgs.hh>
-#include <XmippInterface/xmippVTK.hh>
+#include <XmippData/xmippFFT.hh>
 
 bool process_img(FourierImageXmipp &IMG, ImageXmipp &img,
    const Prog_parameters *prm) {
-   vtkImageData *vtk=NULL;
-   xmippFFT2VTK(IMG,vtk);
-   IFFT_VTK(vtk,img(),TRUE);
-   vtk->Delete();
+   InverseFourierTransform(IMG(),img());
    return TRUE;
 }
 
-bool process_vol(VolumeXmipp &vol, FourierVolumeXmipp &VOL,
+bool process_vol(FourierVolumeXmipp &VOL, VolumeXmipp &vol, 
    const Prog_parameters *prm) {
-   vtkImageData *vtk=NULL;
-   xmippFFT2VTK(VOL,vtk);
-   IFFT_VTK(vtk,vol(),TRUE);
-   vtk->Delete();
+   InverseFourierTransform(VOL(),vol());
    return TRUE;
 }
 

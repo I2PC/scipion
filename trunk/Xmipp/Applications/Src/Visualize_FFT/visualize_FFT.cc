@@ -25,15 +25,7 @@
 
 #include <XmippData/xmippProgs.hh>
 #include <XmippData/xmippArgs.hh>
-#include <XmippInterface/xmippVTK.hh>
-
-#include <vtkImageFFT.h>
-//#if (VTK_MAJOR_VERSION==4)
-//   #include <IO/vtkTIFFWriter.h>
-//#else
-   #include <vtkTIFFWriter.h>
-//#endif
-#include <vtkImageMagnitude.h>
+#include <XmippData/xmippFFT.hh>
 
 class FFT_parameters: public Prog_parameters {
 public:
@@ -79,36 +71,33 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    FFT_parameters *eprm=(FFT_parameters *) prm;
-   vtkImageData *fftI=NULL; FFT_VTK(img(),fftI,eprm->do_not_center);
+   matrix2D< complex<double> > fftI;
+   FourierTransform(img(), fftI);
    switch (eprm->FFT_mode) {
       case ONLY_PHASE:      FFT_phase(fftI,img()); break;
       case ONLY_AMPLITUDES: FFT_magnitude(fftI,img()); break;
    }
-   if (!eprm->do_not_center) shift_for_VTK(img(),'y');
-   if (!eprm->do_not_center) shift_for_VTK(img(),'x');
    if (eprm->squared) img() *= img();
    if (eprm->apply_log)
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
          MULTIDIM_ELEM(img(),i)=log10(1+MULTIDIM_ELEM(img(),i));
-   fftI->Delete();
+   if (!eprm->do_not_center) CenterFFT(img(),true);
    return TRUE;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    FFT_parameters *eprm=(FFT_parameters *) prm;
-   vtkImageData *fftI=NULL; FFT_VTK(vol(),fftI,eprm->do_not_center);
+   matrix3D< complex<double> > fftV;
+   FourierTransform(vol(), fftV);
    switch (eprm->FFT_mode) {
-      case ONLY_PHASE:      FFT_phase(fftI,vol()); break;
-      case ONLY_AMPLITUDES: FFT_magnitude(fftI,vol()); break;
+      case ONLY_PHASE:      FFT_phase(fftV,vol()); break;
+      case ONLY_AMPLITUDES: FFT_magnitude(fftV,vol()); break;
    }
-   if (!eprm->do_not_center) shift_for_VTK(vol(),'z');
-   if (!eprm->do_not_center) shift_for_VTK(vol(),'y');
-   if (!eprm->do_not_center) shift_for_VTK(vol(),'x');
    if (eprm->squared) vol() *= vol();
    if (eprm->apply_log)
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
          MULTIDIM_ELEM(vol(),i)=log10(1+MULTIDIM_ELEM(vol(),i));
-   fftI->Delete();
+   if (!eprm->do_not_center) CenterFFT(vol(),true);
    return TRUE;
 }
 

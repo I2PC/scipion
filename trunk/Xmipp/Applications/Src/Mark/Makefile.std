@@ -19,7 +19,6 @@ OBJ  = 	mark.o \
         QtWidgetMicrograph.o QtWidgetMicrograph.moc \
         ../DownSample/xvsmooth.o
 
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
-       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK) $(QTLIBS)
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE) $(QTLIBS)
 EXTRA_INCLUDE_DIRS = -I$(XMIPP_QTDIR)/include
 EXTRA_LIB_DIRS     = -L$(XMIPP_QTDIR)/lib

@@ -98,7 +98,7 @@ QtLowPassFilter::QtLowPassFilter(const Micrograph *_M): QtFilter(_M) {
 
 void QtLowPassFilter::apply( Image *_img ) {
    if ( _img != NULL ) {
-      filter.apply_mask((*_img)());
+      filter.apply_mask_Space((*_img)());
       FOR_ALL_ELEMENTS_IN_MATRIX2D((*_img)())
          (*_img)(i,j)=CLIP((*_img)(i,j),0,255);
    }
@@ -117,7 +117,7 @@ QtHighPassFilter::QtHighPassFilter(const Micrograph *_M): QtFilter(_M) {
 
 void QtHighPassFilter::apply( Image *_img ) {
    if ( _img != NULL ) {
-      filter.apply_mask((*_img)());
+      filter.apply_mask_Space((*_img)());
       FOR_ALL_ELEMENTS_IN_MATRIX2D((*_img)())
          (*_img)(i,j)=CLIP((*_img)(i,j),0,255);
    }

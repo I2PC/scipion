@@ -1,5 +1,4 @@
 ######################################################################
 PROJ = idr_art
 OBJ  = idr_art.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE) \
-       -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE)

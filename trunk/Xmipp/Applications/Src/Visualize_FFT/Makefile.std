@@ -1,6 +1,4 @@
 ######################################################################
-ifeq ($(HAVE_VTK),YES)
-   PROJ = visualize_FFT
-endif
+PROJ = visualize_FFT
 OBJ  = visualize_FFT.o
-LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+LIBS = -l$(LIBXMIPP)

@@ -56,8 +56,6 @@ int main(int argc, char **argv)
    FourierImageXmipp Filter_Out;        // image to store the filter
    string       method;                 // method of combine AR fliters
    double	dSigma;                 // std. deviation of the AR model.
-   vtkImageData *vtkFilter1,*vtkFilter2,*vtkFilter; // To store AR filters in VTK
-    
       
    // Obtain command line parameters form the program 
    try
@@ -93,10 +91,8 @@ int main(int argc, char **argv)
 
       cerr << "Generating Fourier mask ...\n";
       // Get the AR filter coeficients in the fourier plane
-      ARFilter(Img(),vtkFilter,ARParameters);	
+      ARFilter(Img(),Filter_Out(),ARParameters);	
       	            
-      // Copy the filter to Xmipp Format
-      VTK2xmippFFT(vtkFilter,Filter_Out);
       // Write the output filter
       Filter_Out.write(fn_filter);
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}

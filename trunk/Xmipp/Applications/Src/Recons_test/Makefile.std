@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = recons_test
 OBJ  = recons_test.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
-       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK) -l$(LIBRECONS_INTERFACE)
+LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS)\
+       -l$(LIBRECONS_INTERFACE)
