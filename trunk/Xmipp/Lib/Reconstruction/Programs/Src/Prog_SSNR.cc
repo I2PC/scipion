@@ -41,6 +41,7 @@ void Prog_SSNR_prm::read(int argc, char **argv) {
       fn_VSSNR=get_param(argc,argv,"-VSSNR");
    ring_width=AtoF(get_param(argc,argv,"-ring","4"));
    Tm=AtoF(get_param(argc,argv,"-sampling_rate","1"));
+   min_power=AtoF(get_param(argc,argv,"-min_power","1e-10"));
    fn_out=get_param(argc,argv,"-o","");
 }
 
@@ -76,6 +77,7 @@ void Prog_SSNR_prm::usage() const {
         << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
         << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
         << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
+	<< "  [-min_power <th=1e-10>]: Minimum power\n"
         << "  [-o <Text file=\"\">]    : Output file\n"
    ; 
 }
@@ -139,6 +141,7 @@ void Prog_SSNR_prm::Estimate_SSNR_1D(
 }
 
 // Estimate SSNR 2D --------------------------------------------------------
+//#define DEBUG
 void Prog_SSNR_prm::Estimate_SSNR_2D() {
    cerr << "Computing the SSNR 2D ...\n";
    init_progress_bar(SF_S.ImgNo());
@@ -153,7 +156,15 @@ void Prog_SSNR_prm::Estimate_SSNR_2D() {
          Is.rot(), Is.tilt(), Is.psi());
       project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
          Is.rot(), Is.tilt(), Is.psi());
-         
+      
+      #ifdef DEBUG
+         ImageXmipp save;
+	 save()=Is();   save.write("PPPread_signal.xmp");
+	 save()=In();   save.write("PPPread_noise.xmp");
+	 save()=Iths(); save.write("PPPtheo_signal.xmp");
+	 save()=Ithn(); save.write("PPPtheo_noise.xmp");
+      #endif
+      
       Is()-=Iths();
       In()-=Ithn();
 
@@ -161,6 +172,14 @@ void Prog_SSNR_prm::Estimate_SSNR_2D() {
       matrix2D< complex<double> > FFT_Iths; FourierTransform(Iths(),FFT_Iths);
       matrix2D< complex<double> > FFT_In;   FourierTransform(In  (),FFT_In  );
       matrix2D< complex<double> > FFT_Ithn; FourierTransform(Ithn(),FFT_Ithn);
+      
+      #ifdef DEBUG
+         ImageXmippT < complex<double> > savec;
+	 savec()=FFT_Is;   savec.write("PPPFFTread_signal.xmp");
+	 savec()=FFT_In;   savec.write("PPPFFTread_noise.xmp");
+	 savec()=FFT_Iths; savec.write("PPPFFTtheo_signal.xmp");
+	 savec()=FFT_Ithn; savec.write("PPPFFTtheo_noise.xmp");
+      #endif
 
       // Compute the amplitudes
       ImageXmipp S2s; FFT_magnitude(FFT_Iths,S2s()); S2s()*=S2s();
@@ -168,16 +187,26 @@ void Prog_SSNR_prm::Estimate_SSNR_2D() {
       ImageXmipp S2n; FFT_magnitude(FFT_Ithn,S2n()); S2n()*=S2n();
       ImageXmipp N2n; FFT_magnitude(FFT_In  ,N2n()); N2n()*=N2n();
 
+      #ifdef DEBUG
+	 save()=S2s(); save.write("PPPS2s.xmp");
+	 save()=N2s(); save.write("PPPN2s.xmp");
+	 save()=S2n(); save.write("PPPS2n.xmp");
+	 save()=N2n(); save.write("PPPN2n.xmp");
+      #endif
+
       // Compute the SSNR image
       ImageXmipp SSNR2D; SSNR2D().init_zeros(S2s());
       FOR_ALL_ELEMENTS_IN_MATRIX2D(S2s()) {
          double ISSNR=0, alpha=0, SSNR=0;
-         if (N2s(i,j)>XMIPP_EQUAL_ACCURACY) ISSNR=S2s(i,j)/N2s(i,j);
-         if (N2n(i,j)>1e-3) alpha=S2n(i,j)/N2n(i,j);
-         if (alpha   >XMIPP_EQUAL_ACCURACY) SSNR=MAX(ISSNR/alpha-1,0);
-         if (SSNR    >XMIPP_EQUAL_ACCURACY) SSNR2D(i,j)=10*log10(SSNR+1);
+         if (N2s(i,j)>min_power) ISSNR=S2s(i,j)/N2s(i,j);
+         if (N2n(i,j)>min_power) alpha=S2n(i,j)/N2n(i,j);
+         if (alpha   >min_power) SSNR=MAX(ISSNR/alpha-1,0);
+         if (SSNR    >min_power) SSNR2D(i,j)=10*log10(SSNR+1);
       }
       CenterFFT(SSNR2D(),true);
+      #ifdef DEBUG
+	 save()=SSNR2D(); save.write("PPPSSNR2D.xmp");
+      #endif
       
       // Set angles
       SSNR2D.rot ()=Is.rot ();
@@ -192,6 +221,7 @@ void Prog_SSNR_prm::Estimate_SSNR_2D() {
       if (++imgno%50==0) progress_bar(imgno);
    }
 }
+#undef DEBUG
 
 // Estimate SSNR 1D --------------------------------------------------------
 void Prog_SSNR_prm::Radial_average(

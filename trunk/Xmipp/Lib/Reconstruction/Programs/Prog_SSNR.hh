@@ -62,6 +62,9 @@ public:
 
    /** Generate SSNR images.*/
    bool generate_images;
+   
+   /** Min_power: Threshold for not dividing */
+   double min_power;
 public:
    /* Side info -------------------------------------------------------- */
    // Signal volume
