@@ -230,7 +230,7 @@ e17:	x+=del;
     }
       goto e23;
 e10:  printf ("\nOptimal center coordinates: x =%10.3f, y = %10.3f\n",
-	      xc0-1,yc0-1);
+	      yc0-1,xc0-1);
       return;
 }
 
