@@ -1,5 +1,5 @@
 ###########################################################################
-APPDIRS = `find . -type d | grep -v CVS | cut -c 3- | grep -v "/"`
+APPDIRS = `find . -type d | grep -v CVS | cut -c 3- | grep -v "/" | sort`
 
 # Main Action = Built library ----------------------------------------------
 all:
