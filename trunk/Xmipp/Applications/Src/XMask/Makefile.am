@@ -13,3 +13,5 @@ INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 
 maskimg_moc.cc :
 	@QT_MOC@ maskimg.hh -o maskimg_moc.cc
+
+MOSTLYCLEANFILES = *_moc.cc

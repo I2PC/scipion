@@ -25,6 +25,8 @@ mark_LDFLAGS = @QT_LIBS@
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 
+MOSTLYCLEANFILES = *_moc.cc
+
 QtAutoMenu_moc.cc : 
 	@QT_MOC@ QtAutoMenu.hh -o QtAutoMenu_moc.cc
 QtColorLabel_moc.cc : 

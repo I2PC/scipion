@@ -4,15 +4,14 @@ if BUILD_MPI
 OPTIONAL_PROGS += MPIArt MPI_WBP 
 endif
 
-if BUILD_OGL
-OPTIONAL_PROGS += Phan3D
-endif
-
 if BUILD_TIFF
 OPTIONAL_PROGS += Tiff2Raw 
 endif
 
 if BUILD_QT
+if BUILD_OGL
+OPTIONAL_PROGS += Phan3D
+endif
 OPTIONAL_PROGS += Mark Show XMask 
 endif
 

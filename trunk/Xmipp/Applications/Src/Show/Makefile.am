@@ -8,3 +8,5 @@ show_LDADD = $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
 show_LDFLAGS = 
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+
+MOSTLYCLEANFILES = *_moc.cc
