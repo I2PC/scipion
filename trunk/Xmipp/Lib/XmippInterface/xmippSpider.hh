@@ -43,8 +43,10 @@ void generate_Spider_count(int imax, DocFile &DF_out);
 
 /** From a Xmipp selfile to Spider selfile.
     Comments are lost. A Spider Selfile is created in which the -1
-    of the Xmipp Selfiles are translated into 0. */
-void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out);
+    of the Xmipp Selfiles are translated into 0.
+    
+    Set new_style to produce the new style of Spider selfiles.*/
+void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style);
 
 /** Extract angles from a SelFile and store them in a DocFile.
     You can specify the order of the angle extraction by default
