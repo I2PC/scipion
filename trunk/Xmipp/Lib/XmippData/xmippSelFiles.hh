@@ -309,6 +309,9 @@ public:
        \\Ex: SF.jump(2,SelLine::DISCARDED) ---> Jump over 2 discarded images
        @see get_current_file */
    void jump(int how_many, SelLine::Label label=SelLine::ACTIVE);
+   /** Jump over a number of lines disregarding the label.
+       returns false if the end of the line is reached before the number of requested line jumps */
+   bool jump_lines(int how_many);
    
    /** Move "pointer" to a certain image filename.
        This function searches for an image name within the file, and

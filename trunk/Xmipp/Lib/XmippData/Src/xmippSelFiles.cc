@@ -351,6 +351,15 @@ string SelFile::NextImg(SelLine::Label label) {
    else                               return "";
 }
 
+/* Jump over a certain number of data lines (disregarding any label) ------- */
+bool SelFile::jump_lines(int how_many) {
+  for (int i=0; i<how_many; i++) {
+    if (current_line!=text_line.end()) current_line++;
+    else return false;
+  }
+  return true;
+}
+
 /* Jump over images with a certain label ----------------------------------- */
 void SelFile::jump(int how_many, SelLine::Label label) {
    adjust_to_label(label);
@@ -589,11 +598,10 @@ void SelFile::insert(const SelLine &_selline) _THROW {
    if (_selline.line_type!=SelLine::DATALINE &&
        _selline.line_type!=SelLine::COMMENT)
       REPORT_ERROR(1552,"SelFile::insert(SelLine): SelLine type not valid");
-   if (_selline.line_type!=SelLine::DATALINE)
-      if (_selline.label!=SelLine::DISCARDED &&
-          _selline.label!=SelLine::ACTIVE)
+   if (_selline.line_type==SelLine::DATALINE)
+     if (_selline.label!=SelLine::DISCARDED &&
+	 _selline.label!=SelLine::ACTIVE)
       REPORT_ERROR(1552,"SelFile::insert(SelLine): SelLine label not valid");
-      REPORT_ERROR(1552,"SelFile::insert(SelLine): SelLine type not valid");
 
    // Insert and updates current_line
    current_line=text_line.insert(current_line,_selline);
