@@ -209,7 +209,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
    vector<double> &sumxy, vector<double> &sumxx, vector<double> &sumyy,
    double &dim, double th) {
    histogram1D hist;
-   hist.init(0,m+1,200);   
+   hist.init(-1,1,201);   
 
    int dimPCA=PCA.size();
    int dimp=PCA_projector.PCASet(m)->get_eigenDimension();
@@ -306,9 +306,13 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 	 else if (cumulative_corr[i]==cumulative_corr[best_i])
 	         N_max++;
 
-   if (N_max==0)
-      REPORT_ERROR(1,(string)"Predict_angles: Empty candidate list for image "+
-         I.name());
+   if (N_max==0) {
+      cerr << "Predict_angles: Empty candidate list for image "
+           << I.name() << endl;
+      assigned_rot=I.rot();
+      assigned_tilt=I.tilt();
+      return 0;
+   }
 
    // There are several maxima, choose one randomly
    if (N_max!=1) {
@@ -480,6 +484,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
           best_corr=0, best_rate;
    ImageXmipp Ip;
+   Ip=I;
    matrix1D<double> shift(2);
 
    // Establish psi limits
