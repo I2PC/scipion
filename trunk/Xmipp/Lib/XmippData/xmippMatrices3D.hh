@@ -567,7 +567,8 @@ public:
    T&   operator () (const matrix1D<int> &v) const
          {return VOL_ELEM((*this),ZZ(v),YY(v),XX(v));}
 
-   /** Interpolates the value of the 2D matrix M at the point (x,y) */
+   /** Interpolates the value of the 3D matrix M at the point (x,y,z).
+       (x,y,z) are in logical coordinates. */
    T   interpolated_elem(double x, double y, double z, T outside_value=(T)0);
 
    /** Logical to physical index translation.

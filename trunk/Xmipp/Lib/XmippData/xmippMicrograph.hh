@@ -329,8 +329,9 @@ public:
        coordinate list */
    void invalidate_coord(int n) _THROW;
 
-   /** Add coordinate. */
-   void add_coord(int x, int y, int label);
+   /** Add coordinate.
+       It returns the index of the particle added within the coordinate list. */
+   int add_coord(int x, int y, int label);
    
    /** Move last coordinate to this position. */
    void move_last_coord_to(int x, int y);
