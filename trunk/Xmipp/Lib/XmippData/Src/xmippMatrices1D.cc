@@ -395,14 +395,17 @@ void Powell_optimizer(matrix1D<double> &p, int i0, int n,
 
 /* Center of mass ---------------------------------------------------------- */
 template <class T>
-   void vT::center_of_mass(matrix1D<double> &center) {
+   void vT::center_of_mass(matrix1D<double> &center, void * mask) {
       center.init_zeros(1);
       double mass=0;
+      matrix1D<int> *imask=(matrix1D<int> *) mask;
       FOR_ALL_ELEMENTS_IN_MATRIX1D(*this) {
-         XX(center)+=i*VEC_ELEM(*this,i);
-	 mass+=VEC_ELEM(*this,i);
+         if (imask==NULL || VEC_ELEM(*imask,i)) {
+            XX(center)+=i*VEC_ELEM(*this,i);
+	    mass+=VEC_ELEM(*this,i);
+      	 }
       }
-      center/=mass;
+      if (mass!=0) center/=mass;
    }
 
 /*

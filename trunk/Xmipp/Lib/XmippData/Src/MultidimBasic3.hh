@@ -782,8 +782,12 @@ public:
    friend maT log10(const maT &a)
      {maT temp(a); temp.self_log10(); return temp;}
 
-   /** Compute center of mass.*/
-   void center_of_mass(matrix1D<double> &center);
+   /** Compute center of mass.
+       If a mask is provided it must be of the same dimension of the object 
+       and of type int (i.e., matrix2D<int> *). Only those logical indexes
+       within the object whose mask value is 1 (also in logical indexes)
+       are taken into account.*/
+   void center_of_mass(matrix1D<double> &center, void * mask=NULL);
 
    //@}
 #undef mi

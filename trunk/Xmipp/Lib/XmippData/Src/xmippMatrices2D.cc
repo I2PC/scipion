@@ -1209,15 +1209,18 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
 
 /* Center of mass ---------------------------------------------------------- */
 template <class T>
-   void mT::center_of_mass(matrix1D<double> &center) {
+   void mT::center_of_mass(matrix1D<double> &center, void * mask) {
       center.init_zeros(2);
       double mass=0;
+      matrix2D<int> *imask=(matrix2D<int> *) mask;
       FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
-         XX(center)+=j*MAT_ELEM(*this,i,j);
-         YY(center)+=i*MAT_ELEM(*this,i,j);
-	 mass+=MAT_ELEM(*this,i,j);
+         if (imask==NULL || MAT_ELEM(*imask,i,j)) {
+            XX(center)+=j*MAT_ELEM(*this,i,j);
+            YY(center)+=i*MAT_ELEM(*this,i,j);
+	    mass+=MAT_ELEM(*this,i,j);
+      	 }
       }
-      center/=mass;
+      if (mass!=0) center/=mass;
    }
 
 /* ------------------------------------------------------------------------- */

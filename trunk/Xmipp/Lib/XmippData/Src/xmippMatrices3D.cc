@@ -665,16 +665,19 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
 
 /* Center of mass ---------------------------------------------------------- */
 template <class T>
-   void VT::center_of_mass(matrix1D<double> &center) {
+   void VT::center_of_mass(matrix1D<double> &center, void * mask) {
       center.init_zeros(3);
       double mass=0;
+      matrix3D<int> *imask=(matrix3D<int> *) mask;
       FOR_ALL_ELEMENTS_IN_MATRIX3D(*this) {
-         XX(center)+=j*VOL_ELEM(*this,k,i,j);
-         YY(center)+=i*VOL_ELEM(*this,k,i,j);
-         ZZ(center)+=k*VOL_ELEM(*this,k,i,j);
-	 mass+=VOL_ELEM(*this,k,i,j);
+         if (imask==NULL || VOL_ELEM(*imask,k,i,j)) {
+            XX(center)+=j*VOL_ELEM(*this,k,i,j);
+            YY(center)+=i*VOL_ELEM(*this,k,i,j);
+            ZZ(center)+=k*VOL_ELEM(*this,k,i,j);
+	    mass+=VOL_ELEM(*this,k,i,j);
+      	 }
       }
-      center/=mass;
+      if (mass!=0) center/=mass;
    }
 
 /* ------------------------------------------------------------------------- */
