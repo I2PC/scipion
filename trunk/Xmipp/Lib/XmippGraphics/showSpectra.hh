@@ -60,7 +60,7 @@ protected:
        mi_showYlegend, mi_hideYlegend;
 
     /* Initialization.
-       Sets V = NULL; and then calls to ShowTable::init() */
+       Sets V = NULL; and then calls to ShowSel::init() */
     virtual void init();
     /* Clear everything */
     virtual void clear();
