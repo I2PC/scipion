@@ -30,6 +30,9 @@
 #include <complex>
 #define mi MULTIDIM_ELEM(*this,i)
 #define msize MULTIDIM_SIZE(*this)
+#ifndef double_complex
+   typedef complex<double> double_complex;
+#endif
 
 /* Print stats ------------------------------------------------------------- */
 template <class T>
