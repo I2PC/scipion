@@ -4,24 +4,17 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
- ***************************************************************************/
+ * Copyright (c) 2001 , CSIC .
+ *
+ * Permission is granted to copy and distribute this file, for noncommercial
+ * use, provided (a) this copyright notice is preserved, (b) no attempt
+ * is made to restrict redistribution of this file, and (c) this file is
+ * restricted by a compilation copyright.
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
+ *
+ *****************************************************************************/
 
 #ifndef _FOURIER_FILTER_HH
    #define _FOURIER_FILTER_HH
@@ -93,7 +86,8 @@ public:
    /** Clear */
    void clear();
 
-   /** Read parameters from command line. */
+   /** Read parameters from command line.
+       If a CTF description file is provided it is read. */
    void read(int argc, char **argv) _THROW;
 
    /** Show. */
@@ -104,7 +98,8 @@ public:
 
    /** Generate mask for a resized image.
    It is supposed that the image is already resized and with its logical
-   origin set.
+   origin set. If the filter is a CTF it must be already read and prepared
+   in the ctf variable.
    
    An exception is thrown if you try to apply a CTF to a volume. */
    void generate_mask(vtkImageData *v) _THROW;
