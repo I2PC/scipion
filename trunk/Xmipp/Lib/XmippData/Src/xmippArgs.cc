@@ -588,11 +588,13 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
       if (line[0]==';')  continue;
       if (line[0]=='\n') continue;
       
-      int i=0; while (line[i]!=0 && line[i]!='=') i++;
-      if (line[i]=='=') {
-         line[i]=0;
-         if (strcmp(line,param)==0) {
-            if (skipped==skip) {retval=line+i+1; found=TRUE; break;}
+      int i=0; char *line_wo_spaces=line;
+      while (*line_wo_spaces==' ' || *line_wo_spaces=='\t') line_wo_spaces++;
+      while (line_wo_spaces[i]!=0 && line_wo_spaces[i]!='=') i++;
+      if (line_wo_spaces[i]=='=') {
+         line_wo_spaces[i]=0;
+         if (strcmp(line_wo_spaces,param)==0) {
+            if (skipped==skip) {retval=line_wo_spaces+i+1; found=TRUE; break;}
             else skipped++;
          }
       }
