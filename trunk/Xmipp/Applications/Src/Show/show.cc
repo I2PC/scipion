@@ -135,6 +135,6 @@ void Usage() {
          << "   [-h]                   : height (default: 10)\n"
          << "   [-showall]          : only for sel mode, show all images even\n"
          << "                         if sel = -1\n"
-         << "   [-poll]                : check file change, only for volumes\n"
+         << "   [-poll]                : check file change, NOT for sel files\n"
     ;
 }
