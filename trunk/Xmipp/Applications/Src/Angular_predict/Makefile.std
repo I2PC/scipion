@@ -1,0 +1,5 @@
+######################################################################
+PROJ = angular_predict
+OBJ  = angular_predict.o
+LIBS = -l$(LIBXMIPP) -l$(LIBCLASSIF) -l$(LIBRECONS_CLASIF) -l$(LIBRECONS) \
+       -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
