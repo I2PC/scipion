@@ -84,6 +84,7 @@ int main (int argc,char *argv[]) {
 
 // Compute Histogram =======================================================
    try {
+      double avg, stddev, dummy;
       // 1D histograms -----------------------------------------------------
       if (col2==-1) {
          C=DF.col(col);
@@ -91,6 +92,8 @@ int main (int argc,char *argv[]) {
          compute_hist(C,hist,m,M,StepsNo);
          cerr << "Min: " << m << " max: " << M
               << " Steps: " << StepsNo << endl;
+	 C.compute_stats(avg,stddev,dummy,dummy);
+	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
          if (fn_out!="") hist.write(fn_out);
          else            cout << hist;
                  
@@ -105,8 +108,12 @@ int main (int argc,char *argv[]) {
          compute_hist(C,C2,hist2,m,M,m2,M2,StepsNo,StepsNo2);
          cerr << "Min1: "   << m        << " max1: " << M
               << " Steps1: " << StepsNo  << endl;
+	 C.compute_stats(avg,stddev,dummy,dummy);
+	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
          cerr << "Min2: "   << m2       << " max2: " << M2
               << " Steps2: " << StepsNo2 << endl;
+	 C2.compute_stats(avg,stddev,dummy,dummy);
+	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
          if (fn_out!="") hist2.write(fn_out);
          else            cout << hist2;
          if (generate_img) {
