@@ -95,9 +95,11 @@ class xmippMap : public xmippCB
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
    * @param _ts	     Training set; will be used to get initial values   
+   * @param _use_rand_cvs  Use random code vector values
    */
   xmippMap(const string& _layout,  unsigned _width,
-         const unsigned& _height, const xmippCTVectors& _ts);
+         const unsigned& _height, const xmippCTVectors& _ts,
+	const bool _use_rand_cvs=false);
 
   /**
    * Construct a SOM from the code vectors in a stream
@@ -317,9 +319,11 @@ class xmippFuzzyMap : public xmippFCB
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
    * @param _ts	     Training set; will be used to get initial values   
+   * @param _use_rand_cvs  Use random code vector pixel values
    */
   xmippFuzzyMap(const string& _layout,  unsigned _width,
-         const unsigned& _height, const xmippCTVectors& _ts);
+         const unsigned& _height, const xmippCTVectors& _ts,
+	  const bool _use_rand_cvs=false);
 
 
   /**

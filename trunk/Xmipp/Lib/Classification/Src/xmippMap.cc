@@ -90,10 +90,16 @@
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
    * @param _ts	     Training set; will be used to get initial values   
+   * @param _use_rand_cvs  Use random code vector pixel values
    */
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
   xmippMap::xmippMap(const string& _layout,  unsigned _width,
-         const unsigned& _height, const xmippCTVectors& _ts)
-  : xmippCB(_width*_height, _ts),
+         const unsigned& _height, const xmippCTVectors& _ts,
+         const bool _use_rand_cvs)
+  : xmippCB(_width*_height, _ts, _use_rand_cvs),
     somWidth(_width), somHeight(_height)
   {
 	if (_layout == "HEXA") {
@@ -701,10 +707,16 @@
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
    * @param _ts	     Training set; will be used to get initial values   
+   * @param _use_rand_cvs  Use random code vector pixel values
    */
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
   xmippFuzzyMap::xmippFuzzyMap(const string& _layout,  unsigned _width,
-         const unsigned& _height, const xmippCTVectors& _ts)
-  : xmippFCB(_width*_height, _ts), somWidth(_width), somHeight(_height)
+         const unsigned& _height, const xmippCTVectors& _ts,
+	 const bool _use_rand_cvs)
+  : xmippFCB(_width*_height, _ts, _use_rand_cvs), somWidth(_width), somHeight(_height)
   {
 	if (_layout == "HEXA") {
 		HEXALayout *tmpLayout = new HEXALayout();

@@ -104,10 +104,11 @@ class xmippFCB : public xmippCB
    * the training file.
    * @param _n       Number of vectors
    * @param _ts	     Training set; will be used to get initial values
+   * @param _use_rand_cvs  Use random code vectors (inherited from base class)
      It calls Base Class constructor (xmippCB) 
    */
 
-  xmippFCB (unsigned _n, const xmippCTVectors& _ts );
+  xmippFCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs=false);
 
   /*
    * Constructs a fuzzy code book given a stream

@@ -109,8 +109,15 @@
    * from an unsigned integer to instantiate the template
    * @param _n       Number of vectors
    * @param _ts	     Training set; will be used to get initial values
+   * @param _use_rand_cvs  Use random code vector values
    */
-  xmippCB::xmippCB (unsigned _n, const xmippCTVectors& _ts )
+
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
+
+  xmippCB::xmippCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs)
     : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_ts.calibrated())
   {
     // Take random samples
@@ -125,6 +132,21 @@
         vector<xmippFeature> v;
 	int index = (int) rnd_unif(0, _ts.size() -1);
 	v = _ts.theItems[index];
+	if (_use_rand_cvs)
+	{
+	  // NT: Scan this vector for the range of pixel values
+	  xmippFeature minval, maxval;
+	  vector<xmippFeature>::const_iterator viter = v.begin();
+	  minval = maxval = *viter;
+	  for (viter++; viter != v.end(); viter++)
+	  {
+	    if (*viter < minval)
+	      minval = *viter;
+	    else if (*viter > maxval)
+	      maxval = *viter;
+	  }
+	  v = randomVector(_ts.theItems[0].size(), minval, maxval);
+	}
 	theItems[i] = v;
     }
 

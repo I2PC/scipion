@@ -107,8 +107,9 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
    * from an unsigned integer to instantiate the template
    * @param _n       Number of vectors
    * @param _ts	     Training set; will be used to get initial values
+   * @param _use_rand_cvs  Use random code vector values
    */
-  xmippCB (unsigned _n, const xmippCTVectors& _ts );
+  xmippCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs);
 
   /**
    * Constructs a code book given a stream

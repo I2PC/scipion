@@ -91,10 +91,16 @@
    * the training file.
    * @param _n       Number of vectors
    * @param _ts	     Training set; will be used to get initial values
+   * @param _use_rand_cvs  Use random code vectors (inherited from base class)
      It calls Base Class constructor (xmippCB) 
    */
 
-  xmippFCB::xmippFCB (unsigned _n, const xmippCTVectors& _ts ) : xmippCB(_n, _ts) {
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
+
+  xmippFCB::xmippFCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs) : xmippCB(_n, _ts, _use_rand_cvs) {
 
    // Initialize Fuzzy membership Matrix
       
