@@ -357,6 +357,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
 
    only_interpolate     =check_param(fh_param,"only_interpolate");
    compute_at_particle  =check_param(fh_param,"compute_at_particle");
+   ARMA_averaging       =check_param(fh_param,"ARMA_averaging");
 }
 
 /* Write parameters ========================================================= */
@@ -379,6 +380,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm) _THROW {
    ;
    if (only_interpolate) fh_param << "only_interpolate=yes\n";
    if (compute_at_particle) fh_param << "compute_at_particle=yes\n";
+   if (ARMA_averaging) fh_param << "ARMA_averaging=yes\n";
   
    fh_param << endl;
    fh_param.close();
@@ -387,24 +389,22 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm) _THROW {
    ARMA_prm.write(fn_prm,FALSE);
 }
 
+//#define DEBUG
 /* Main ==================================================================== */
-void Prog_assign_CTF_prm::process() 
-{
-	ifstream     PosFile(picked_fn.c_str());  // File with picked coordinates
-	SelFile      SF(selfile_fn);  // Selfile
-        FileName fn_out=image_fn.remove_all_extensions();
-//why do we need to create this sel file?
-//	ofstream     OutputFile((fn_out+".sel").c_str());
-	ofstream     OutputFile_ctf((fn_out+"_ctf.sel").c_str());
+void Prog_assign_CTF_prm::process() {
+   ifstream PosFile(picked_fn.c_str());  // File with picked coordinates
+   SelFile  SF(selfile_fn);  // Selfile
+   FileName fn_out=image_fn.remove_all_extensions();
+   ofstream OutputFile_ctf((fn_out+"_ctf.sel").c_str());
 
-	/*****************************************************************************
-        	Read input micrograph
-	/*****************************************************************************/
-	Micrograph     M_in;
-	M_in.open_micrograph(image_fn,reversed);
-	int bits=M_in.depth();
-	int Ydim, Xdim; // Micrograph dimensions
-	M_in.size(Xdim, Ydim);
+   /*****************************************************************************
+   	   Read input micrograph
+   /*****************************************************************************/
+   Micrograph M_in;
+   M_in.open_micrograph(image_fn,reversed);
+   int bits=M_in.depth();
+   int Ydim, Xdim; // Micrograph dimensions
+   M_in.size(Xdim, Ydim);
 
    if (!only_interpolate) {
 	// Counter of divisions;
@@ -443,42 +443,24 @@ void Prog_assign_CTF_prm::process()
 		   << endl;
 	      exit(1);
 	   }
-      //find out the particle dimensions
-		
-		if(particle_horizontal<=0||particle_vertical<=0){
-		    float fY,fX;
-		    SF.go_beginning();
-          if(SF.ImgNo(SelLine::ACTIVE)<1){
-	       cerr << "Prog_assign_CTF_prm: number of active entries in "
-		      	<< "  sel file " 
-		      	<< SF.name() << "is less than 1"
-	         	<< "I can not go any further sorry" 
-		    << endl;
-	       exit(1);
-          }			 
-			 SF.go_first_ACTIVE();
-		    FileName fn_current_particle=SF.get_current_file();
-          headerXmipp     myheader;
-          myheader.read(fn_current_particle);
-          myheader.get_dimension(fY,fX);
-          particle_horizontal= (int) fY;
-			 particle_vertical  = (int) fX;
-		}//if(particle_horizontal<=0||particle_vertical<=0){
-	}//if (compute_at_particle)
-        else {
-	for(int i=0;i<Ydim;i+=N_vertical)
-	   for(int j=0;j<Xdim;j+=N_horizontal) N++;
+
+           //find out the particle dimensions
+           if (particle_horizontal<=0||particle_vertical<=0)
+	      SF.ImgSize(particle_vertical,particle_horizontal);
+	} else {
+	   for (int i=0;i<Ydim;i+=N_vertical)
+	       for(int j=0;j<Xdim;j+=N_horizontal) N++;
 	}
-//        #define NDEBUG
-	#ifdef NDEBUG
-	cout << "N=" << N << endl;
+
+	#ifdef DEBUG
+	   cout << "N=" << N << endl;
 	#endif
-	#undef NDEBUG
 	div_Number=N;
-        matrix1D<double> X_zeros(div_Number), Y_zeros(div_Number);
+	int ARMA_Number=ARMA_averaging? 1:N;
+        matrix1D<double> X_zeros(ARMA_Number), Y_zeros(ARMA_Number);
 
         // Open the output file for the CTF zeros
-        FileName     fn_OutputZeros=fn_out.insert_before_extension("_zeros");
+        FileName fn_OutputZeros=fn_out.insert_before_extension("_zeros");
         ofstream OutputZeros;
         OutputZeros.open(fn_OutputZeros.c_str(), ios::out);
         if (!OutputZeros)
@@ -502,172 +484,212 @@ void Prog_assign_CTF_prm::process()
         PosFile.clear();       
 	PosFile.seekg(0, ios::beg); // Start of file
 	SF.go_beginning();
-	while(N<=div_Number)
-        {//while not closed
-        if (compute_at_particle) {
-           string line;
-           getline(PosFile,line);
-           while (line[0]=='#')
-               getline(PosFile,line);	    
-           sscanf(line.c_str(),"%f %f",&fj,&fi);
-	   i = (int) fi;
-	   j = (int) fj;
-//           #define ijDEBUG
-	   #ifdef ijDEBUG
-           cout << "line" << line << endl;
-	   cout << "read from file (j,i)= (" << j << "," << i << ")" <<endl;
-	   cout << "Particle file name: " << SF.get_current_file() << endl;
-	   #endif
-	   #undef ijDEBUG
-	   
-	   //j,i are the window center, we need the up corner
-	   j -= (int) (N_horizontal/2);
-	   i -= (int) (N_vertical/2);
- 	   if(i<0) i=0;
- 	   if(j<0) j=0;
- 	   if(i>Ydim-N_horizontal) i=Ydim-N_horizontal-1;
- 	   if(j>Xdim-N_vertical)   j=Xdim-N_vertical-1;
-	}
-	else{
-	   if(N!=1)
-	      j+=N_horizontal;
-	   if(j>Xdim){
-	      j=0;
-	      i+=N_vertical;
+      	FourierImageXmipp Filter_ARMA_avg;
+	while (N<=div_Number) {
+           if (compute_at_particle) {
+              string line;
+              getline(PosFile,line);
+              while (line[0]=='#')
+        	  getline(PosFile,line);	    
+              sscanf(line.c_str(),"%f %f",&fj,&fi);
+	      i = (int) fi;
+	      j = (int) fj;
+	      #ifdef DEBUG
+        	 cout << "line" << line << endl;
+		 cout << "read from file (j,i)= (" << j << "," << i << ")" <<endl;
+		 cout << "Particle file name: " << SF.get_current_file() << endl;
+	      #endif
+
+	      //j,i are the window center, we need the top-left corner
+	      j -= (int) (N_horizontal/2);
+	      i -= (int) (N_vertical/2);
+ 	      if (i<0) i=0;
+ 	      if (j<0) j=0;
+ 	      if (i>Ydim-N_horizontal) i=Ydim-N_horizontal-1;
+ 	      if (j>Xdim-N_vertical)   j=Xdim-N_vertical-1;
+	   } else {
+	      if(N!=1) j+=N_horizontal;
+	      if (j>Xdim) {
+		 j=0;
+		 i+=N_vertical;
+	      }
+	      if (i>Ydim)
+	         REPORT_ERROR(1,"Prog_assign_CTF_prm: window is outside the micrograph");
 	   }
-	   if(i>Ydim){
-	      cerr << "Prog_assign_CTF_prm: window is outside" 
-	               << "the micrograph "
-	           << "I can not go any further sorry" << endl;
-	      exit(1);
-	   }	
-	}
 
-//        #define ijDEBUG
-	#ifdef ijDEBUG
-	cout << N <<") (j,i)= (" << j << "," << i << ")" <<endl;
-	#endif
-	#undef ijDEBUG
-		  // test if i,j is inside the micrograhp
-		  // this should never happend
-		  if(i+N_vertical>Ydim || j+N_horizontal>Xdim) continue;
+	   #ifdef ijDEBUG
+	      cout << "Block " << N <<" (j,i)= (" << j << "," << i << ")" <<endl;
+	   #endif
+      	   // test if i,j is inside the micrograph
+           // this should never happend
+      	   if (i+N_vertical>Ydim || j+N_horizontal>Xdim) continue;
 
-      	  // The downsampling is done by taking 1 out of 2,3, ... pixels
-	  // in the extracted region
-          // Extract the division image where to perform the ARMA model
-    	  ImageXmipp 	     ImgDivision(FLOOR(N_vertical/downsampling),
-	                                 FLOOR(N_horizontal/downsampling));
-          // image to store the filter     
-      	  FourierImageXmipp  Filter_Out(FLOOR(N_vertical/downsampling),
-	                                FLOOR(N_horizontal/downsampling));
-		  cerr << "Reading micrograph region number " << N << endl;
-    	  for (int k=0; k<YSIZE(ImgDivision()); k++)
-        	  for (int l=0; l<XSIZE(ImgDivision()); l++)
-			  {
-		    	 ImgDivision(k,l)=
-			    M_in(j+downsampling*l,i+downsampling*k);
-			  }	  
+      	   // The downsampling is done by taking 1 out of 2,3, ... pixels
+	   // in the extracted region
+           // Extract the division image where to perform the ARMA model
+    	   ImageXmipp ImgDivision(FLOOR(N_vertical/downsampling),
+      	             	      	  FLOOR(N_horizontal/downsampling));
 
-	 cerr << "Performing ARMA spectral estimation of region number " << N << endl;
-         cerr << "Normalizing the input image ...\n";
-         ImgDivision().statistics_adjust(0,1);
-	 //ImgDivision.write(ARMAfile.get_root()+ItoA(N,5)+".xmp");
+           // image to store the filter     
+           cerr << "Reading micrograph region number " << N
+	        << " out of " << div_Number << endl;
+    	   for (int k=0; k<YSIZE(ImgDivision()); k++)
+               for (int l=0; l<XSIZE(ImgDivision()); l++)
+		   ImgDivision(k,l)=
+      	              M_in(j+downsampling*l,i+downsampling*k);
+           ImgDivision().statistics_adjust(0,1);
 
-		  // Perform an spectral estimation of the division by means of an ARMA model
-    	  matrix2D<double> ARParameters,MAParameters;
-    	  // Determine the ARMA model
-		  double dSigma=CausalARMA(ImgDivision(),ARMA_prm.N_AR,ARMA_prm.M_AR,
-	                                        	 ARMA_prm.N_MA,ARMA_prm.M_MA,
-	                                        	 ARParameters,MAParameters);
+      	   // Perform an spectral estimation of the division by means of an ARMA model
+	   cerr << "Performing ARMA spectral estimation\n";
+      	   matrix2D<double> ARParameters,MAParameters;
+      	   double dSigma=CausalARMA(ImgDivision(),ARMA_prm.N_AR,ARMA_prm.M_AR,
+      	       ARMA_prm.N_MA,ARMA_prm.M_MA,ARParameters,MAParameters);
 
-    	  // Get the AR filter coeficients in the fourier plane
-    	  ARMAFilter(ImgDivision(),Filter_Out(),ARParameters,MAParameters,dSigma);
+    	   // Get the AR filter coeficients in the fourier plane
+      	   FourierImageXmipp Filter_Out; Filter_Out().resize(ImgDivision());
+    	   ARMAFilter(ImgDivision(),Filter_Out(),
+	      ARParameters,MAParameters,dSigma);
 
-		  // Store the determined filter
-    	  ARMAfile.compose(ARMAfile.get_root().c_str(),N,"fft");
-		  ARMA_prm.fn_filter=ARMAfile; 
-		  Filter_Out.write(ARMA_prm.fn_filter);
+      	   // Store the determined filter
+	   if (!ARMA_averaging) {
+    	      ARMAfile.compose(ARMAfile.get_root().c_str(),N,"fft");
+      	      ARMA_prm.fn_filter=ARMAfile; 
+      	      Filter_Out.write(ARMA_prm.fn_filter);
 
-		  // Estimate the CTF parameters of division 
-		  adjust_CTF_prm.fn_ctf=ARMA_prm.fn_filter;
-		  adjust_CTF_prm.fn_outroot=CTFfile.get_root()+ItoA(N,5);
-		  adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
-		     adjust_CTF_prm.adjust(0)=0;
-		     // Compute the background and CTF from scratch
-  		  // The name of the parameters file that generates ROUT_Adjust_CTF
-        if(compute_at_particle)
-		     {
-		     FileName fn_current_particle=SF.get_current_file();
-		     fn_current_particle = fn_current_particle.get_baseName();
-		     adjust_CTF_prm.fn_out_CTF_parameters  =
-		        fn_current_particle.add_prefix("ctf-")+".param";
-		     }	
-		  else 
-		     adjust_CTF_prm.fn_out_CTF_parameters  =
-   			   CTFfile.get_root()+ItoA(N,5)+".param";
-		     
-		  adjust_CTF_prm.produce_side_info();
-		  
-		  cerr << "Estimating CTF parameters of region number " << N << endl;
-	 	  
-		  double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm);
-    	  
-		  cerr << "CTF adjust of piece number " << N << " finished." <<  endl;
-		  
-   		  // Read parameters of the CTF from parameters file
-	          XmippCTF          pure_ctf; // An Xmipp Model of ctf
-         	  pure_ctf.enable_CTFnoise=FALSE;
-    	          pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
-		  pure_ctf.Tm=original_sampling_rate; // Change the sampling rate to the original one
-		  pure_ctf.Produce_Side_Info();
+	      // Estimate the CTF parameters of division 
+	      adjust_CTF_prm.fn_ctf=ARMA_prm.fn_filter;
+	      adjust_CTF_prm.fn_outroot=CTFfile.get_root()+ItoA(N,5);
+	      adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
+		 adjust_CTF_prm.adjust(0)=0;
 
-		  // Generate the pure CTF file determined from the parameters file	  
-    	          cerr << "Generating CTF for piece number " << N <<  endl;
-        FourierImageXmipp Img_pure_CTF;
+  	      // The name of the parameters file that generates ROUT_Adjust_CTF
+              if (compute_at_particle) {
+		 FileName fn_current_particle=SF.get_current_file();
+	         fn_current_particle = fn_current_particle.get_baseName();
+		 adjust_CTF_prm.fn_out_CTF_parameters  =
+		    fn_current_particle.add_prefix("ctf-")+".param";
+      	      }	else 
+		 adjust_CTF_prm.fn_out_CTF_parameters  =
+      	             CTFfile.get_root()+ItoA(N,5)+".param";
 
-        if(compute_at_particle)
- 		    Img_pure_CTF().init_zeros(particle_vertical,particle_horizontal);
-		  else
- 		    Img_pure_CTF().init_zeros(N_vertical,N_horizontal);
-		  
-		  pure_ctf.Generate_CTF(N_vertical, N_horizontal,
-                     Img_pure_CTF());
+	      // Compute the background and CTF
+      	      cerr << "Estimating CTF parameters\n";
+      	      adjust_CTF_prm.produce_side_info();
+	      double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm);
 
-		  // Save the image
-        if (compute_at_particle)
-	       {
-			 
-			 CTFfile=SF.get_current_file();
-			 CTFfile = CTFfile.get_baseName();
-			 CTFfile = CTFfile.add_prefix("ctf-")+".fft";
-          SF.next();		       
-		     }
-        else
-		     {
-		     CTFfile.compose(CTFfile.get_root().c_str(),N,"fft");
-		     }
-		     Img_pure_CTF.write(CTFfile);
+   	      // Read parameters of the CTF from parameters file
+	      XmippCTF pure_ctf; // An Xmipp Model of ctf
+              pure_ctf.enable_CTFnoise=FALSE;
+    	      pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
+	      pure_ctf.Tm=original_sampling_rate; // Change the sampling rate to the original one
+	      pure_ctf.Produce_Side_Info();
+
+      	      // Generate the pure CTF file determined from the parameters file	  
+      	      cerr << "Generating CTF\n";
+              FourierImageXmipp Img_pure_CTF;
+              if (compute_at_particle)
+ 		 Img_pure_CTF().init_zeros(particle_vertical,particle_horizontal);
+      	      else
+      	         Img_pure_CTF().init_zeros(N_vertical,N_horizontal);
+      	      pure_ctf.Generate_CTF(N_vertical, N_horizontal, Img_pure_CTF());
+
+      	      // Save the image
+              if (compute_at_particle) {
+		 CTFfile=SF.get_current_file();
+		 CTFfile = CTFfile.get_baseName();
+		 CTFfile = CTFfile.add_prefix("ctf-")+".fft";
+                 SF.next();		       
+      	      } else
+                 CTFfile.compose(CTFfile.get_root().c_str(),N,"fft");
+      	      Img_pure_CTF.write(CTFfile);
+	      
+              // Compute CTF zeros as a checking point
+              matrix1D<double> u(2), freq(2);
+              VECTOR_R2(u,1,0); pure_ctf.zero(1,u,freq); X_zeros(N-1)=XX(freq);
+              VECTOR_R2(u,0,1); pure_ctf.zero(1,u,freq); Y_zeros(N-1)=YY(freq);
+              OutputZeros << CTFfile << " " << X_zeros(N-1) << " "
+			  << Y_zeros(N-1) << " " << fitting_error << endl;
+	   } else {
+	      // Perform ARMA averaging
+              FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Filter_ARMA_avg())
+	         MULTIDIM_ELEM(Filter_ARMA_avg(),i)=
+		    abs(MULTIDIM_ELEM(Filter_ARMA_avg(),i));
+	      Filter_Out()*=Filter_Out();
+	      if (N==1) Filter_ARMA_avg()=Filter_Out();
+	      else      Filter_ARMA_avg()+=Filter_Out();
+	      Filter_ARMA_avg.write("PPPARMAavg.fft");
+	      if (N==1)
+	         system("xmipp_show -img PPPARMAavg.fft -poll &");
+	   }
+
+      	   // Increment the division counter
+           N++;
+        } //while end
+	M_in.close_micrograph();
+
+	/*****************************************************************************
+	  If ARMA_averaging, adjust the model to the average
+	*****************************************************************************/
+	FileName fn_ARMA_avg, fn_ARMA_avg_model;
+	if (ARMA_averaging) {
+	   Filter_ARMA_avg()/=div_Number;
+              FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Filter_ARMA_avg())
+	         MULTIDIM_ELEM(Filter_ARMA_avg(),i)=
+		    sqrt(abs(MULTIDIM_ELEM(Filter_ARMA_avg(),i)));
+
+	   // Write the Average file
+	   fn_ARMA_avg=(string)"ctf-"+image_fn.get_root()+".fft";
+	   Filter_ARMA_avg.write(fn_ARMA_avg);
+	
+	   // Estimate the CTF parameters
+	   adjust_CTF_prm.fn_ctf=fn_ARMA_avg;
+	   adjust_CTF_prm.fn_outroot=fn_ARMA_avg.get_root();
+	   adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
+	      adjust_CTF_prm.adjust(0)=0;
+      	   adjust_CTF_prm.fn_out_CTF_parameters=
+      	          adjust_CTF_prm.fn_outroot+".param";
+
+	   // Compute the background and CTF
+      	   cerr << "Estimating CTF parameters\n";
+      	   adjust_CTF_prm.produce_side_info();
+	   double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm);
+
+   	   // Read parameters of the CTF from parameters file
+	   XmippCTF pure_ctf; // An Xmipp Model of ctf
+           pure_ctf.enable_CTFnoise=FALSE;
+    	   pure_ctf.read(adjust_CTF_prm.fn_out_CTF_parameters);
+	   pure_ctf.Tm=original_sampling_rate; // Change the sampling rate to the original one
+	   pure_ctf.Produce_Side_Info();
+
+      	   // Generate the pure CTF file determined from the parameters file	  
+      	   cerr << "Generating CTF\n";
+           FourierImageXmipp Img_pure_CTF;
+           Img_pure_CTF().init_zeros(N_vertical,N_horizontal);
+      	   pure_ctf.Generate_CTF(N_vertical, N_horizontal, Img_pure_CTF());
+
+      	   // Save the image
+	   fn_ARMA_avg_model=(string)"ctfmodel-"+image_fn.get_root()+".fft";
+      	   Img_pure_CTF.write(fn_ARMA_avg_model);
+
+           // Generate the CTF at the particle scale
+      	   Img_pure_CTF().self_scale_to_size(
+	      particle_vertical,particle_horizontal);
+	   fn_ARMA_avg_model=(string)"ctfmodelparticle-"+image_fn.get_root()+".fft";
+      	   Img_pure_CTF.write(fn_ARMA_avg_model);
+
            // Compute CTF zeros as a checking point
            matrix1D<double> u(2), freq(2);
-           VECTOR_R2(u,1,0); pure_ctf.zero(1,u,freq); X_zeros(N-1)=XX(freq);
-           VECTOR_R2(u,0,1); pure_ctf.zero(1,u,freq); Y_zeros(N-1)=YY(freq);
-           OutputZeros << CTFfile << " " << X_zeros(N-1) << " "
-		       << Y_zeros(N-1) << " " << fitting_error << endl;
-
-		  // Increment the division counter
-		  N++;
-//	   }//for j end
-	}//while end
+           VECTOR_R2(u,1,0); pure_ctf.zero(1,u,freq); X_zeros(0)=XX(freq);
+           VECTOR_R2(u,0,1); pure_ctf.zero(1,u,freq); Y_zeros(0)=YY(freq);
+           OutputZeros << CTFfile << " " << X_zeros(0) << " "
+		       << Y_zeros(0) << " " << fitting_error << endl;
+	}
         OutputZeros.close();
-   }
-	// Close micrograph
-	M_in.close_micrograph();
 
 	/*****************************************************************************
 	  Assign a CTF to every image in the sel file
 	*****************************************************************************/
-	if (!compute_at_particle)
-      {
+	if (!compute_at_particle) {
 	   // Number of interger divisions in the micrograph
 	   int Ydiv=Ydim/N_vertical;
 	   int Xdiv=Xdim/N_horizontal; 
@@ -677,49 +699,49 @@ void Prog_assign_CTF_prm::process()
 	   // Process the Selfile
 	   cerr << "Interpolating CTF for every particle ... " <<  endl;
 	   SF.go_beginning();
-	   while (!SF.eof())
-	   {  
-		   int X,Y;
-		   // Read coordinates of the particle
-                   string line;
-                   getline(PosFile,line);
-                   if (line[0]!='#') {
-		      if(SF.Is_ACTIVE())
-		      {  
-                              sscanf(line.c_str(),"%d %d",&X,&Y);
-			      cerr << SF.get_current_file() <<  endl;	// Determine which Regions have to be interpolated for the coordinates
+	   while (!SF.eof()) {  
+              string line;
+              getline(PosFile,line);
+              FileName file_with_ctf_for_current_particle;
+              if (line[0]!='#') {
+		 if (SF.Is_ACTIVE()) {
+		    if (!ARMA_averaging) {
+                       // Read coordinates of the particle
+                       int X,Y;
+                       sscanf(line.c_str(),"%d %d",&X,&Y);
 
-			      matrix1D<int> Regions(4);
-			      DetermineRegionsToInterpolate(X,Y,N_horizontal,N_vertical,Xdiv,Ydiv,Regions);	
-			      // Interpolate the CTF files for the necessary Regions to obtain
-			      // a new CTF file specific for the particle's position  
-			      CTFfile=CTFfile.get_root();
-			      InterpolateRegionsCTF(X,Y,N_horizontal,N_vertical,Xdiv,Ydiv,
-							      Regions,CTFfile,Filter_Out());
+		       matrix1D<int> Regions(4);
+		       DetermineRegionsToInterpolate(X,Y,N_horizontal,N_vertical,Xdiv,Ydiv,Regions);     
+		       // Interpolate the CTF files for the necessary Regions to obtain
+		       // a new CTF file specific for the particle's position  
+		       CTFfile=CTFfile.get_root();
+		       InterpolateRegionsCTF(X,Y,N_horizontal,N_vertical,Xdiv,Ydiv,
+      	        	  Regions,CTFfile,Filter_Out());
 
-			      // Scale the filter to the size of the particle's images
-    		      Filter_Out().self_scale_to_size(particle_vertical,particle_horizontal);
-			      // Write the filter file and assign it to the particle's image in the 
-			      // output file.  
-    		      FileName fn_current_particle=SF.get_current_file();
-			      string file_with_ctf_for_current_particle=
-	            fn_current_particle.add_prefix("ctf-")+".fft";
-			      Filter_Out.write(file_with_ctf_for_current_particle);
-			      // Write in output file the name of the micrograph and the name of 
-			      //the associated CTF file 
-					// do not rewrite the sel
-			      // OutputFile << SF.get_current_file() << " 1\n";
-                              OutputFile_ctf
-    				 << file_with_ctf_for_current_particle << " 1\n";
-		      }
-		      // Go to the next active image
-		      SF.next();
-                   }
+      	               // Scale the filter to the size of the particle's images
+      	               Filter_Out().self_scale_to_size(
+			  particle_vertical,particle_horizontal);
+
+      	               // Write the filter file and assign it to the particle's
+		       // image in the output file.  
+    		       FileName fn_current_particle=SF.get_current_file();
+      	               file_with_ctf_for_current_particle=
+      	                  fn_current_particle.add_prefix("ctf-")+".fft";
+      	               Filter_Out.write(file_with_ctf_for_current_particle);
+		    } else
+      	               file_with_ctf_for_current_particle=fn_ARMA_avg_model;
+
+      	            // Write in output file the name of the micrograph and
+		    // the name of the associated CTF file 
+                    OutputFile_ctf << file_with_ctf_for_current_particle
+		                   << " 1\n";
+		 }
+		 SF.next();
+              }
 	   }
-	 }//if (compute_at_particle)
-		   
-//        OutputFile.close();
+        }
         OutputFile_ctf.close();
         PosFile.close();
+   }
 }
-
+#undef DEBUG

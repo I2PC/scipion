@@ -68,6 +68,9 @@ public:
        a regular grid. By default this is false.
    */
    bool                    compute_at_particle;
+   /** Perform ARMA averaging.
+       Like Periodogram averaging.*/
+   bool                    ARMA_averaging;
 public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
