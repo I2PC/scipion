@@ -37,12 +37,13 @@ void Usage();
 /* MAIN -------------------------------------------------------------------- */
 int main (int argc,char *argv[]) {
    float           rot, tilt, psi, xshift, yshift;
-   int             i,col_rot=1,col_tilt=2,col_psi=3,col_xshift=4,col_yshift=5;
+   int             i,ncol,col_rot=1,col_tilt=2,col_psi=3,col_xshift=4,col_yshift=5,col_weight=6;
    float           sign_rot=PLUS,sign_tilt=PLUS,sign_psi=PLUS;
    float           sign_xshift=PLUS,sign_yshift=PLUS;
    int             key_img;
    string          root,ext;
-   bool            extract,assign,reset,verb;
+   bool            extract,assign,reset,verb,do_weights;
+   double          weight;
    FileName        fn_img,fn_out,fn_tst;
    SelFile         SF;
    DocFile         DF;
@@ -68,18 +69,21 @@ int main (int argc,char *argv[]) {
 	 verb=check_param(argc,argv,"-verb");
        }
      }
+     if (do_weights=check_param(argc,argv,"-w")) ncol=6;
+     else ncol=5;
 
      // Columns numbers
      if ((i=position_param(argc,argv,"-columns"))!=-1) {
-       if (i+5>=argc) {
-	 REPORT_ERROR(1,"At least five integers required after -columns");
+       if (i+ncol>=argc) {
+	 REPORT_ERROR(1,"Not enough integers after -columns");
        }
        col_rot=AtoI(argv[i+1]);
        col_tilt=AtoI(argv[i+2]);
        col_psi=AtoI(argv[i+3]);
        col_xshift=AtoI(argv[i+4]);
        col_yshift=AtoI(argv[i+5]);
-     
+       if (do_weights) col_weight=AtoI(argv[i+6]);
+
        // Check colum signs 
        if (col_rot<0) sign_rot=MINUS;
        if (col_tilt<0) sign_tilt=MINUS;
@@ -96,9 +100,16 @@ int main (int argc,char *argv[]) {
 // Extracting information  ==================================================
      if (extract) {
        DF.reserve(SF.ImgNo());
-       DF.append_comment("Headerinfo columns: rot ("+ItoA(col_rot)+"), tilt ("+ItoA(col_tilt)+"), psi ("+ItoA(col_psi)+
-			 "), Xoff ("+ItoA(col_xshift)+"), Yoff ("+ItoA(col_yshift)+")");
        matrix1D<double> docline(5);
+       if (do_weights) {
+	 DF.append_comment("Headerinfo columns: rot ("+ItoA(col_rot)+"), tilt ("+ItoA(col_tilt)+"), psi ("+ItoA(col_psi)+
+			 "), Xoff ("+ItoA(col_xshift)+"), Yoff ("+ItoA(col_yshift)+"), Weight ("+ItoA(col_weight)+")");
+	 docline.resize(6);
+       } else {
+
+	 DF.append_comment("Headerinfo columns: rot ("+ItoA(col_rot)+"), tilt ("+ItoA(col_tilt)+"), psi ("+ItoA(col_psi)+
+			 "), Xoff ("+ItoA(col_xshift)+"), Yoff ("+ItoA(col_yshift)+")");
+       }
        int j=0;
        SF.go_beginning();
        while (!SF.eof()) {
@@ -109,6 +120,7 @@ int main (int argc,char *argv[]) {
 	 docline(ABS(col_psi)-1)=img.psi()*sign_psi;
 	 docline(ABS(col_xshift)-1)=img.Xoff()*sign_xshift;
 	 docline(ABS(col_yshift)-1)=img.Yoff()*sign_yshift;
+	 if (do_weights) docline(ABS(col_weight)-1)=img.weight();
 	 DF.append_comment(fn_img);
 	 DF.append_data_line(docline);
 	 j++;
@@ -123,11 +135,13 @@ int main (int argc,char *argv[]) {
 	 // Resetting all angles and shifts to zero
 	 SF.go_beginning();
 	 cerr <<" Resetting all angles and origin offsets to zero ... "<<endl;
+	 if (do_weights) cerr <<" and resetting all weights to -1 ..."<<endl;
 	 while (!SF.eof()) {
 	   img.read(SF.NextImg());
 	   img.set_eulerAngles(0.,0.,0.);
 	   img.set_originOffsets(0.,0.);
 	   img.write(img.name());
+	   if (do_weights) img.weight()=-1;
 	 }
        } else {
 
@@ -154,12 +168,19 @@ int main (int argc,char *argv[]) {
 	     if (col_psi==0  )  psi=0.;     else psi    = DF(ABS(col_psi)-1)*sign_psi;
 	     if (col_xshift==0 ) xshift=0.; else xshift = DF(ABS(col_xshift)-1)*sign_xshift;
 	     if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
+	     if (col_weight==0 ) weight=-1; else weight = DF(ABS(col_weight)-1);
+
 	 
 	     // Assign angles
 	     img.set_eulerAngles(rot,tilt,psi);
 	     img.set_originOffsets(xshift,yshift);
-	     if (verb) cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
-		  << " psi = " << psi << " Xoff = " << xshift <<" Yoff = " << yshift  << endl;
+	     img.weight()=weight;
+	     if (verb) {
+	       cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
+		    << " psi = " << psi << " Xoff = " << xshift <<" Yoff = " << yshift;
+	       if (do_weights) cout <<" Weight = " <<weight;
+	       cout << endl;
+	     }
 	     img.write(fn_img);
 	 
 	     //Move to next line in SF and document file
@@ -184,12 +205,18 @@ int main (int argc,char *argv[]) {
 	     if (col_psi==0  )  psi=0.;     else psi    = DF(ABS(col_psi)-1)*sign_psi;
 	     if (col_xshift==0 ) xshift=0.; else xshift = DF(ABS(col_xshift)-1)*sign_xshift;
 	     if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
-	     
+	     if (do_weights) if (col_weight==0 ) weight=-1; else weight = DF(ABS(col_weight)-1);
+     
 	     // Assign angles
 	     img.set_eulerAngles(rot,tilt,psi);
 	     img.set_originOffsets(xshift,yshift);
-	     if (verb) cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
-		  << " psi = " << psi << " Xoff = " << xshift <<" Yoff = " << yshift  << endl;
+	     img.weight()=weight;
+	     if (verb) {
+	       cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
+		    << " psi = " << psi << " Xoff = " << xshift <<" Yoff = " << yshift;
+	       if (do_weights) cout <<" Weight = " <<weight;
+	       cout << endl;
+	     }
 	     img.write(fn_img);
 	   }
 
@@ -198,7 +225,6 @@ int main (int argc,char *argv[]) {
 
 
        }
-
 
 
      }
@@ -222,9 +248,12 @@ void Usage() {
     printf("       [-reset <selfile>] : sets angles & shifts to zero for all images in selfile\n");
     printf("       [-verb]            : output assigned information to screen \n");
     printf("   For both modes:\n");
-    printf("        -columns  <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5>\n"
-           "         where the five integers are the column numbers for the document file\n"
-           "         A negative column number results in a sign change\n"
-           "         Only for -assign: A zero column number results in zero values\n");
+    printf("       [-w]               : Also get/set probability weights (for ML).  \n");
+    printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> [<weight=6>]\n"
+           "                  where the 5 [or 6] integers are the column numbers for the docfile\n"
+           "                  A negative column number results in a sign change\n"
+           "                  Only for -assign: A zero column number results in zero values\n"
+           "                  for the weights no sign change can be applied, and a zero column \n"
+           "                  number will results in -1 weights (i.e. the default: unset weights)\n");
     exit(1);
 }
