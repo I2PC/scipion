@@ -283,14 +283,8 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
       generate_realization_of_random_phantom(prm, side, Realization);
       if (prm.fn_output!="") Realization.write(prm.fn_output);
    } else {
-      #ifdef _HAVE_VTK
-         FourierMask ctf;
-         if (prm.fn_CTF!="") {
-            ctf.FilterBand=ctf.FilterShape=FROM_FILE;
-            ctf.fn_mask=prm.fn_CTF;
-            ctf.generate_mask(NULL);
-         }
-      #endif
+      FourierMask ctf;
+      if (prm.fn_CTF!="") ctf.read_mask(prm.fn_CTF);
    
       int Xdim=prm.Xdim, Ydim=prm.Ydim;
       if (Xdim==-1) 
@@ -313,18 +307,21 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
          else volume(n)=
                  side.VoxelPhantom().count_threshold("above",0,0);
          
-         // Compute projection power
+         // Compute projection
          if (!side.voxel_mode)
             Realization.project_to(proj, Ydim, Xdim,
                   rnd_unif(0,360),rnd_unif(0,180),rnd_unif(0,360));
          else
-            project_Volume(side.VoxelPhantom, proj, Ydim, Xdim,
+            project_Volume(side.VoxelPhantom(), proj, Ydim, Xdim,
                   rnd_unif(0,360),rnd_unif(0,180),rnd_unif(0,360));
+
+         // Apply CTF
+         if (prm.fn_CTF!="") ctf.apply_mask_Space(proj());
 
          // Compute projection area
          proj_area(n)=0;
          FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
-            if (proj(i,j)>0) proj_area(n)++;
+            if (ABS(proj(i,j))>1e-6) proj_area(n)++;
 	 #ifdef DEBUG
 	    cout << "Area: " << proj_area(n) << endl;
 	    proj.write("inter.xmp");
@@ -332,11 +329,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 	    char c; cin >> c;
 	 #endif
 
-
-         // Apply CTF
-         #ifdef _HAVE_VTK
-            if (prm.fn_CTF!="") ctf.apply_mask(proj());
-         #endif
+         // Compute projection power
          proj().compute_stats(avg,proj_power(n),dummy,dummy);
 
 

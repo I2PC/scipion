@@ -24,7 +24,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#ifdef _HAVE_VTK
 #include "../Prog_adjust_CTF.hh"
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippHistograms.hh>
@@ -46,7 +45,7 @@ matrix2D<double> *global_ctf_ampl;
 matrix2D<double> *global_ctf_ampl2;
 matrix2D<int>    *global_ctf_mask;
 matrix1D<double> *global_adjust;
-vtkImageData     *global_ctf;
+matrix2D< complex<double> > global_ctf;
 
 double            global_value_th;
 double            global_min_freq;
@@ -296,10 +295,8 @@ void Adjust_CTF_Parameters::Usage() {
 }
 
 /* Produce side information ------------------------------------------------ */
-void Adjust_CTF_Parameters::produce_side_info() {    
-   ctftomodel.FilterBand=ctftomodel.FilterShape=FROM_FILE;
-   ctftomodel.fn_mask=fn_ctf;
-   ctftomodel.generate_mask(NULL);
+void Adjust_CTF_Parameters::produce_side_info() {
+   ctftomodel.read_mask(fn_ctf);   
 }
 
 /* Generate model so far ---------------------------------------------------- */
@@ -944,11 +941,11 @@ double CTF_fitness(double *p) {
    double fft_error=0;
    if (global_action!=0 && global_compute_FFT_distance && proceed) {
       // Compute the magnitude of both CTF images
-      vtkImageData *fft=NULL;
+      matrix2D< complex<double> > fft;
       if (global_compute_ctf2_part) {
 	 fft_ampl()=considered_ctf_ampl2;
 	 considered_ctf_ampl2-=considered_ctf_ampl2.compute_avg();
-	 FFT_VTK(considered_ctf_ampl2,fft,TRUE);
+	 FourierTransform(considered_ctf_ampl2,fft);
 	 FFT_magnitude(fft,fft_ampl());
 	 fft_ampl().self_log10();
 	 fft_ampl().set_Xmipp_origin();
@@ -956,11 +953,10 @@ double CTF_fitness(double *p) {
  
       ImageXmipp fftmodel_ampl;
       considered_ctfmodel_ampl2-=considered_ctfmodel_ampl2.compute_avg();
-      FFT_VTK(considered_ctfmodel_ampl2,fft,TRUE);
+      FourierTransform(considered_ctfmodel_ampl2,fft);
       FFT_magnitude(fft,fftmodel_ampl());
       fftmodel_ampl().self_log10();
       fftmodel_ampl().set_Xmipp_origin();
-      fft->Delete();
 
       // Compute the differences
       int imax=YSIZE(fftmodel_ampl())/6;
@@ -1108,13 +1104,23 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     matrix2D<double> error;
     
     // Check if there is no initial guess
-    double min_allowed_defocus=-100e3, max_allowed_defocus=-1e3;
+    double min_allowed_defocusU=-100e3, max_allowed_defocusU=-1e3;
+    double min_allowed_defocusV=-100e3, max_allowed_defocusV=-1e3;
     if (global_initial_ctfmodel->DeltafU!=0) {
        initial_defocusStep=4000;
-       max_allowed_defocus=defocusU0=defocusV0=
+       max_allowed_defocusU=defocusU0=
           global_initial_ctfmodel->DeltafU+initial_defocusStep;
-       min_allowed_defocus=defocusUF=defocusVF=
+       min_allowed_defocusU=defocusUF=
           global_initial_ctfmodel->DeltafU-initial_defocusStep;
+       if (global_initial_ctfmodel->DeltafV==0) {
+          defocusV0=defocusU0; min_allowed_defocusV=min_allowed_defocusU;
+          defocusVF=defocusUF; max_allowed_defocusV=max_allowed_defocusU;
+       } else {
+          max_allowed_defocusV=defocusV0=
+             global_initial_ctfmodel->DeltafV+initial_defocusStep;
+          min_allowed_defocusV=defocusVF=
+             global_initial_ctfmodel->DeltafV-initial_defocusStep;
+       }
     }
     
     for (double defocusStep=initial_defocusStep; defocusStep>=1e3; defocusStep/=2) {
@@ -1175,10 +1181,10 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
           }
        }
 
-       defocusVF=MAX(min_allowed_defocus,best_defocusVmin-defocusStep);
-       defocusV0=MIN(max_allowed_defocus,best_defocusVmax+defocusStep);
-       defocusUF=MAX(min_allowed_defocus,best_defocusUmin-defocusStep);
-       defocusU0=MIN(max_allowed_defocus,best_defocusUmax+defocusStep);
+       defocusVF=MAX(min_allowed_defocusV,best_defocusVmin-defocusStep);
+       defocusV0=MIN(max_allowed_defocusV,best_defocusVmax+defocusStep);
+       defocusUF=MAX(min_allowed_defocusU,best_defocusUmin-defocusStep);
+       defocusU0=MIN(max_allowed_defocusU,best_defocusUmax+defocusStep);
        i=j=0;
        if (global_show>=2) {
           ImageXmipp save; save()=error; save.write("error.xmp");
@@ -1210,10 +1216,10 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    // Read the CTF file
    FourierImageXmipp I;
    I.read(prm.fn_ctf);
-   xmippFFT2VTK(I,prm.ctftomodel.mask);
+   prm.ctftomodel.mask2D=I();
 
    // Get the amplitude of the cft
-   FFT_magnitude(prm.ctftomodel.mask, ctf_ampl);
+   FFT_magnitude(prm.ctftomodel.mask2D, ctf_ampl);
 
    // Get the squared amplitude
    ctf_ampl2.resize(ctf_ampl);   
@@ -1231,7 +1237,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    // Prepare global variables
    global_ctf_ampl=&ctf_ampl;
    global_ctf_ampl2=&ctf_ampl2;   
-   global_ctf=prm.ctftomodel.mask;
+   global_ctf=prm.ctftomodel.mask2D;
    global_ctfmodel=prm.ctfmodel;
    global_initial_ctfmodel=&prm.ctfmodel;
    global_Tm=prm.Tm;
@@ -1446,4 +1452,3 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    double fitting_error=save_intermidiate_results(prm.fn_outroot+"_model");
    return fitting_error;
 }
-#endif

@@ -471,7 +471,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
    SF.go_first_ACTIVE();
 
 // Adding microscope effect ------------------------------------------------
-   #ifdef _HAVE_VTK
    if (prm.sigma!=0 ||
        prm.low_pass_before_CTF!=0 ||
        prm.fn_CTF!="" || prm.fn_after_CTF!="") {
@@ -499,7 +498,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 progress_bar(SF.ImgNo());
 	 SF.go_first_ACTIVE();
    }
-   #endif
 
 // Normalize ---------------------------------------------------------------
    randomize_random_generator();
@@ -531,7 +529,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
    }
 
 // Correct phase -----------------------------------------------------------
-   #ifdef _HAVE_VTK
    FileName fn_applied_CTF;
    FourierMask ctf;
    if (prm.correct_phase) {
@@ -546,13 +543,12 @@ void single_recons_test(const Recons_test_Parameters &prm,
       // Correct images
       correct.correct(SF);
       // Correct the CTF itself
-      correct.correct(ctf.mask);
+      correct.correct(ctf.mask2D);
       // Save corrected CTF
       fn_applied_CTF=prm.fn_CTF.insert_before_extension("_phase_corrected");
-      ctf.write_mask(fn_applied_CTF);
+      ctf.write_mask(fn_applied_CTF,2);
    } else
       fn_applied_CTF=prm.fn_CTF;
-   #endif
 
 // Generate surface --------------------------------------------------------
    Prog_Surface_Parameters prm_surface;
@@ -605,6 +601,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       Basic_ART_Parameters art_prm;
       Plain_ART_Parameters plain_art_prm;
       GridVolume           vol_blobs;
+      GridVolume           *vol_blobs_var=NULL;
 
       art_prm.default_values();
       // art_prm.tell |= TELL_SHOW_ERROR;
@@ -644,7 +641,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
       if (prm.run_also_without_constraints) {
          art_prm.fn_root=fn_recons_root+"_wos";
-         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_blobs);
+         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_blobs,
+            vol_blobs_var);
       }
 
       // Extra conditions
@@ -666,7 +664,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
          Filter.w1=prm.starting_low_pass;
          Filter.raised_w=0.02;
          Filter.show();
-         Filter.apply_mask(starting_vol());
+         Filter.apply_mask_Space(starting_vol());
          starting_vol.write(fn_recons_root+"_starting.vol");
 
          cerr << "Converting phantom to blobs ...\n";
@@ -680,9 +678,9 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
       if (!prm.correct_amplitude)
 	 // Do not correct 
-	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_blobs);
+	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_blobs,
+            vol_blobs_var);
       else {
-         #ifdef _HAVE_VTK
 	 Prog_IDR_ART_Parameters idr_prm;
 	 idr_prm.art_prm=&art_prm;
       	 idr_prm.idr_iterations=prm.idr_iterations;
@@ -696,7 +694,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 idr_prm.produce_side_info();
 	 Basic_ROUT_IDR_Art(idr_prm, vol_recons);
 	 fn_recons_root=vol_recons.name().without_extension();
-	 #endif
       }
    } else if (prm.recons_method==use_WBP) {
       // Estaría bien que WBP se tradujese y no hubiese que llamarlo
@@ -736,7 +733,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       Filter.FilterBand=LOWPASS;
       Filter.w1=prm.max_resolution;
       Filter.raised_w=0.02;
-      Filter.apply_mask(vol_recons());
+      Filter.apply_mask_Space(vol_recons());
       vol_recons.write();
    }
 

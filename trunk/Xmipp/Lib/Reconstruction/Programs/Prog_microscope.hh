@@ -25,7 +25,6 @@
 #ifndef _PROG_MICROSCOPE_HH
 #  define _PROG_MICROSCOPE_HH
 
-#ifdef _HAVE_VTK
 #include "Prog_FourierFilter.hh"
 #include <XmippData/xmippProgs.hh>
 
@@ -83,5 +82,4 @@ public:
    void apply(matrix2D<double> &I);
 };
 //@}
-#endif
 #endif

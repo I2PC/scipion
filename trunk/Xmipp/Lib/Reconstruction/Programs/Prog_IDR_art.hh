@@ -25,8 +25,6 @@
 #ifndef _PROG_IDR_ART_HH
 #  define _PROG_IDR_ART_HH
 
-#ifdef _HAVE_VTK
-
 #include "Basic_art.hh"
 #include "Prog_art.hh"
 #include "Prog_FourierFilter.hh"
@@ -76,6 +74,8 @@ public:
    FileName             fn_root;
    /// Side Info: Blob volume
    GridVolume           vol_blobs;
+   /// Side Info: Blob volume for the variance
+   GridVolume          *vol_blobs_var;
    /// Side Info: Lowpass filter
    FourierMask          Filter;
 public:
@@ -118,6 +118,4 @@ public:
     This is the routine which does everything except the TRUE IDR correction. */
 void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons);
 //@}
-#endif
-
 #endif

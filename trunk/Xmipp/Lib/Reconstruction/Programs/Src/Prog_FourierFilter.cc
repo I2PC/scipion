@@ -23,10 +23,12 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#ifdef _HAVE_VTK
-   #include "../Prog_FourierFilter.hh"
-   #include <XmippData/xmippArgs.hh>
-   #include <XmippData/xmippMasks.hh>
+#include "../Prog_FourierFilter.hh"
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippMasks.hh>
+#include <XmippData/xmippFFT.hh>
+#include <XmippData/xmippVolumes.hh>
+#include <XmippData/xmippImages.hh>
 
 /* Clear ------------------------------------------------------------------- */
 void FourierMask::clear() {
@@ -36,7 +38,9 @@ void FourierMask::clear() {
    raised_w=0;
    ctf.clear();
    ctf.enable_CTFnoise=TRUE;
-   if (mask!=NULL) {mask->Delete(); mask=NULL;}
+   mask1D.clear();
+   mask2D.clear();
+   mask3D.clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -50,7 +54,9 @@ FourierMask & FourierMask::operator = (const FourierMask &F) {
       w1=F.w1;
       raised_w=F.raised_w;
       ctf=F.ctf;
-      if (F.mask!=NULL) VTK2VTK(F.mask,mask);
+      mask1D=F.mask1D;
+      mask2D=F.mask2D;
+      mask3D=F.mask3D;
    }
    return *this;
 }
@@ -150,264 +156,226 @@ void FourierMask::usage() {
 }
 
 /* Generate mask for a resized image --------------------------------------- */
-void FourierMask::generate_mask(vtkImageData *v) _THROW {
-   if (FilterBand!=FROM_FILE) {
-      // Resize Xmipp real mask
-      bool copy_from_Xmipp_real_mask=TRUE;
-      Mask_Params real_mask;
-      int dim[3]; v->GetDimensions(dim);
-      double N1=w1*dim[0];
-      double N2=w2*dim[0];
-      double raised_pixels=raised_w*dim[0];
+template <class T>
+void FourierMask::generate_mask(T &v) _THROW {
+   int dim=SPACE_DIM(v);
+   // Resize Xmipp real mask
+   bool copy_from_Xmipp_real_mask=TRUE;
+   Mask_Params real_mask;
+   double N1=w1*XSIZE(v);
+   double N2=w2*XSIZE(v);
+   double raised_pixels=raised_w*XSIZE(v);
 
-      // Generate mask
-      switch (FilterBand) {
-	 case LOWPASS:
-            switch (FilterShape) {
-	       case RAISED_COSINE:
-		  real_mask.type=RAISED_COSINE_MASK;
-		  real_mask.mode=INNER_MASK;
-		  real_mask.R1=N1;
-		  real_mask.R2=N1+raised_pixels;
-		  real_mask.x0=real_mask.y0=real_mask.z0=0;
-		  break;
-	    }
-            break;
-	 case HIGHPASS:
-            switch (FilterShape) {
-	       case RAISED_COSINE:
-		  real_mask.type=RAISED_COSINE_MASK;
-		  real_mask.mode=OUTSIDE_MASK;
-		  real_mask.R1=N1-raised_pixels;
-		  real_mask.R2=N1;
-		  real_mask.x0=real_mask.y0=real_mask.z0=0;
-		  break;
-	    }
-            break;
-	 case BANDPASS:
-            switch (FilterShape) {
-	       case RAISED_COSINE:
-		  real_mask.type=RAISED_CROWN_MASK;
-		  real_mask.mode=INNER_MASK;
-		  real_mask.R1=N1;
-		  real_mask.R2=N2;
-		  real_mask.x0=real_mask.y0=real_mask.z0=0;
-		  real_mask.pix_width=raised_pixels;
-		  break;
-	    }
-            break;
-	 case STOPBAND:
-            switch (FilterShape) {
-	       case RAISED_COSINE:
-		  real_mask.type=RAISED_CROWN_MASK;
-		  real_mask.mode=OUTSIDE_MASK;
-		  real_mask.R1=N1;
-		  real_mask.R2=N2;
-		  real_mask.x0=real_mask.y0=real_mask.z0=0;
-		  real_mask.pix_width=raised_pixels;
-		  break;
-	    }
-            break;
-	 case CTF:
-            copy_from_Xmipp_real_mask=FALSE;
-	    if (dim[2]==1) ctf.Generate_CTF(v,mask);
-	    else REPORT_ERROR(1,
-	       "Fourier_mask::generate: Cannot apply CTF to a volume\n");
-            break;
-      }
-
-      // Copy mask from real Xmipp mask
-      if (copy_from_Xmipp_real_mask) {
-      	 if (dim[2]==1 && dim[1]==1) {
-            real_mask.resize(dim[0]);
-            real_mask.generate_1Dmask();
-	    // CO: for even sizes the CenterFFT does not work too well
-	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask1D());
-	    xmippArray2VTK(real_mask.get_cont_mask1D(),mask,2);
-	    CenterFFT(mask);
-	 } else if (dim[2]==1) {
-            real_mask.resize(dim[1],dim[0]);
-            real_mask.generate_2Dmask();
-	    // CO: for even sizes the CenterFFT does not work too well
-	    if (dim[1]%2==0) shift_for_VTK(real_mask.get_cont_mask2D(),'y');
-	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask2D(),'x');
-	    xmippArray2VTK(real_mask.get_cont_mask2D(),mask,2);
-	    CenterFFT(mask);
-	 } else {
-            real_mask.resize(dim[2],dim[1],dim[0]);
-            real_mask.generate_3Dmask();
-	    // CO: for even sizes the CenterFFT does not work too well
-	    if (dim[2]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'z');
-	    if (dim[1]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'y');
-	    if (dim[0]%2==0) shift_for_VTK(real_mask.get_cont_mask3D(),'x');
-	    xmippArray2VTK(real_mask.get_cont_mask3D(),mask,2);
-	    CenterFFT(mask);
+   // Generate mask
+   switch (FilterBand) {
+      case FROM_FILE:
+         read_mask(fn_mask);
+         copy_from_Xmipp_real_mask=FALSE;
+         break;
+      case LOWPASS:
+         switch (FilterShape) {
+	    case RAISED_COSINE:
+	       real_mask.type=RAISED_COSINE_MASK;
+	       real_mask.mode=INNER_MASK;
+	       real_mask.R1=N1;
+	       real_mask.R2=N1+raised_pixels;
+	       real_mask.x0=real_mask.y0=real_mask.z0=0;
+	       break;
 	 }
-      }
-   } else {
-   // Read from file
-      if (Is_FourierImageXmipp(fn_mask)) {
-         FourierImageXmipp  I; I.read(fn_mask); xmippFFT2VTK(I,mask);
+         break;
+      case HIGHPASS:
+         switch (FilterShape) {
+	    case RAISED_COSINE:
+	       real_mask.type=RAISED_COSINE_MASK;
+	       real_mask.mode=OUTSIDE_MASK;
+	       real_mask.R1=N1-raised_pixels;
+	       real_mask.R2=N1;
+	       real_mask.x0=real_mask.y0=real_mask.z0=0;
+	       break;
+	 }
+         break;
+      case BANDPASS:
+         switch (FilterShape) {
+	    case RAISED_COSINE:
+	       real_mask.type=RAISED_CROWN_MASK;
+	       real_mask.mode=INNER_MASK;
+	       real_mask.R1=N1;
+	       real_mask.R2=N2;
+	       real_mask.x0=real_mask.y0=real_mask.z0=0;
+	       real_mask.pix_width=raised_pixels;
+	       break;
+	 }
+         break;
+      case STOPBAND:
+         switch (FilterShape) {
+	    case RAISED_COSINE:
+	       real_mask.type=RAISED_CROWN_MASK;
+	       real_mask.mode=OUTSIDE_MASK;
+	       real_mask.R1=N1;
+	       real_mask.R2=N2;
+	       real_mask.x0=real_mask.y0=real_mask.z0=0;
+	       real_mask.pix_width=raised_pixels;
+	       break;
+	 }
+         break;
+      case CTF:
+         generate_CTF_mask(v);
+         copy_from_Xmipp_real_mask=FALSE;
+         break;
+   }
+
+   // Copy mask from real Xmipp mask
+   if (copy_from_Xmipp_real_mask) {
+      real_mask.resize(v);
+      if (dim==1) {
+         real_mask.generate_1Dmask();
+         type_cast(real_mask.get_cont_mask1D(),mask1D);
+	 CenterFFT(mask1D,false);
+      } else if (dim==2) {
+         real_mask.generate_2Dmask();
+         type_cast(real_mask.get_cont_mask2D(),mask2D);
+	 CenterFFT(mask2D,false);
       } else {
-         FourierVolumeXmipp V; V.read(fn_mask); xmippFFT2VTK(V,mask);
+         real_mask.generate_3Dmask();
+         type_cast(real_mask.get_cont_mask3D(),mask3D);
+	 CenterFFT(mask3D,false);
       }
    }
-   mask->UpdateInformation();
+}
+
+template <class T>
+void FourierMask::generate_CTF_mask(T &v) _THROW {
+   int dim=SPACE_DIM(v);
+   if (dim!=2)
+      REPORT_ERROR(1,
+         "generate_CTF_mask is intended only for images");
+   FilterBand=CTF;
+   ctf.Generate_CTF(YSIZE(v),XSIZE(v),mask2D);
+   STARTINGX(mask2D)=STARTINGX(v);
+   STARTINGY(mask2D)=STARTINGY(v);
+}
+
+// Read mask from file -----------------------------------------------------
+void FourierMask::read_mask(const FileName &fn) {
+   FilterBand=FilterShape=FROM_FILE;
+   fn_mask=fn;
+   if (Is_FourierImageXmipp(fn_mask)) {
+      FourierImageXmipp  I; I.read(fn_mask); mask2D=I();
+      mask2D.set_Xmipp_origin();
+   } else {
+      FourierVolumeXmipp V; V.read(fn_mask); mask3D=V();
+      mask3D.set_Xmipp_origin();
+   }
 }
 
 /* Save -------------------------------------------------------------------- */
-void FourierMask::write_amplitude(const FileName &fn, bool do_not_center) {
-   if (mask==NULL) return;
-   int dim[3]; mask->GetDimensions(dim);
-   vtkImageData *aux=NULL; VTK2VTK(mask,aux);
-   if (!do_not_center) CenterFFT(aux);
-   if (dim[2]==1 && dim[1]==1) {
-      matrix1D<double> v; FFT_magnitude(aux,v);
-      // CO: for even sizes the CenterFFT does not work too well
-      // Even for odd sizes??
-      // if (dim[1]%2==0 || dim[0]%2==0) {
-      if (TRUE) shift_for_VTK(v);
+void FourierMask::write_amplitude(const FileName &fn, int dim,
+   bool do_not_center) {
+   matrix1D< complex<double> > aux1D;
+   matrix2D< complex<double> > aux2D;
+   matrix3D< complex<double> > aux3D;
+   switch (dim) {
+      case 1: aux1D=mask1D; break;
+      case 2: aux2D=mask2D; break;
+      case 3: aux3D=mask3D; break;
+   }
+   if (!do_not_center) {
+      switch (dim) {
+         case 1: CenterFFT(aux1D,true); break;
+         case 2: CenterFFT(aux2D,true); break;
+         case 3: CenterFFT(aux3D,true); break;
+      }
+   }
+   if (dim==1) {
+      matrix1D<double> v; FFT_magnitude(aux1D,v);
       FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
          v(i)=log10(1+v(i)*v(i));
       v.write(fn);
-   } else if (dim[2]==1) {
-      ImageXmipp  I; FFT_magnitude(aux,I());
-      // CO: for even sizes the CenterFFT does not work too well
-      // Even for odd sizes??
-      // if (dim[1]%2==0 || dim[0]%2==0) {
-      if (TRUE) {
-         shift_for_VTK(I(),'x');
-         shift_for_VTK(I(),'y');
-      }
+   } else if (dim==2) {
+      ImageXmipp  I; FFT_magnitude(aux2D,I());
       FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
          I(i,j)=log10(1+I(i,j)*I(i,j));
       I.write(fn);
    } else {
-      VolumeXmipp V; FFT_magnitude(aux,V());
-      // CO: for even sizes the CenterFFT does not work too well
-      // Even for odd sizes??
-      // if (dim[2]%2==0 || dim[1]%2==0 || dim[0]%2==0) {
-      if (TRUE) {
-         shift_for_VTK(V(),'x');
-         shift_for_VTK(V(),'y');
-         shift_for_VTK(V(),'z');
-      }
+      VolumeXmipp V; FFT_magnitude(aux3D,V());
       FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
          V(k,i,j)=log10(1+V(k,i,j)*V(k,i,j));
       V.write(fn);
    }
 }
 
-void FourierMask::write_mask(const FileName &fn) {
-   if (mask==NULL) return;
-   int dim[3]; mask->GetDimensions(dim);
-   if (dim[2]==1 && dim[1]==1) {
-      matrix1D<double_complex> v; VTK2xmippFFT(mask,v); v.write(fn);
-   } else if (dim[2]==1) {
-      FourierImageXmipp  I; VTK2xmippFFT(mask,I); I.write(fn);
-   } else {
-      FourierVolumeXmipp V; VTK2xmippFFT(mask,V); V.write(fn);
+void FourierMask::write_mask(const FileName &fn, int dim) {
+   FourierImageXmipp  I;
+   FourierVolumeXmipp V;
+   switch(dim) {
+      case 1: mask1D.write(fn); break;
+      case 2: I()=mask2D; I.write(fn); break;
+      case 3: V()=mask3D; V.write(fn); break;
    }
 }
 
 /* Apply mask -------------------------------------------------------------- */
-void FourierMask::apply_mask(vtkImageData *v) _THROW {
-   if (!same_shape(v,mask))
-      REPORT_ERROR(1,"FourierMask::apply_mask: mask and input FT do not have"
-         " the same shape");
-   if (v->GetScalarType()!=VTK_FLOAT || v->GetNumberOfScalarComponents()!=2)
-      REPORT_ERROR(1,"FourierMask::apply_mask: input array do not seem to be"
-         " a Fourier Transform");
-   
-   int dim[3]; v->GetDimensions(dim);
-   float *mi=(float *) mask->GetScalarPointer();
-   float *vi=(float *)    v->GetScalarPointer();
-   for (int k=0; k<dim[2]; k++)
-       for (int i=0; i<dim[1]; i++)
-      	   for (int j=0; j<dim[0]; j++) {
-	      double result_re=(*mi)*(*vi)-(*(mi+1))*(*(vi+1));
-	      double result_im=(*(mi+1))*(*vi)+(*(mi))*(*(vi+1));
-	      *(vi)=result_re; *(vi+1)=result_im;
-	      vi+=2; mi+=2;
-	   }
-}
+void FourierMask::apply_mask_Fourier(matrix1D< complex<double> > &v)
+   {v*=mask1D;}
+void FourierMask::apply_mask_Fourier(matrix2D< complex<double> > &v)
+   {v*=mask2D;}
+void FourierMask::apply_mask_Fourier(matrix3D< complex<double> > &v)
+   {v*=mask3D;}
 
-void FourierMask::apply_mask(matrix1D<double> &v) {
-   vtkImageData *FFTv=NULL;
-   int startingX=STARTINGX(v);
-   FFT_VTK(v,FFTv,TRUE);
-   if (mask==NULL) generate_mask(FFTv);
-   apply_mask(FFTv);
-   IFFT_VTK(FFTv,v,TRUE);
-   STARTINGX(v)=startingX;
-   FFTv->Delete();
+void FourierMask::apply_mask_Space(matrix1D<double> &v) {
+   matrix1D< complex<double> > aux1D;
+   FourierTransform(v,aux1D);
+   aux1D*=mask1D;
+   InverseFourierTransform(aux1D,v);
 }
-
-void FourierMask::apply_mask(matrix2D<double> &v) {
-   vtkImageData *FFTv=NULL;
-   int startingX=STARTINGX(v);
-   int startingY=STARTINGY(v);
-   FFT_VTK(v,FFTv,TRUE);
-   if (mask==NULL) generate_mask(FFTv);
-   apply_mask(FFTv);
-   IFFT_VTK(FFTv,v,TRUE);
-   STARTINGX(v)=startingX;
-   STARTINGY(v)=startingY;
-   FFTv->Delete();
+void FourierMask::apply_mask_Space(matrix2D<double> &v) {
+   matrix2D< complex<double> > aux2D;
+   FourierTransform(v,aux2D);
+   aux2D*=mask2D;
+   InverseFourierTransform(aux2D,v);
 }
-
-void FourierMask::apply_mask(matrix3D<double> &v) {
-   vtkImageData *FFTv=NULL;
-   int startingX=STARTINGX(v);
-   int startingY=STARTINGY(v);
-   int startingZ=STARTINGZ(v);
-   FFT_VTK(v,FFTv,TRUE);
-   if (mask==NULL) generate_mask(FFTv);
-   apply_mask(FFTv);
-   IFFT_VTK(FFTv,v,TRUE);
-   STARTINGX(v)=startingX;
-   STARTINGY(v)=startingY;
-   STARTINGZ(v)=startingZ;
-   FFTv->Delete();
+void FourierMask::apply_mask_Space(matrix3D<double> &v) {
+   matrix3D< complex<double> > aux3D;
+   FourierTransform(v,aux3D);
+   aux3D*=mask3D;
+   InverseFourierTransform(aux3D,v);
 }
 
 /* Resize ------------------------------------------------------------------ */
 void FourierMask::resize_mask(int Ydim, int Xdim) {
-   if (mask==NULL) return;
-   FourierImageXmipp I;
-   VTK2xmippFFT(mask,I);
-   I().scale_to_size(Ydim,Xdim);
-   xmippFFT2VTK(I,mask);
-   mask->UpdateInformation();
+   mask2D.self_scale_to_size(Ydim,Xdim);
 }
-
-/* Get size ---------------------------------------------------------------- */
-void FourierMask::mask_size(int &Zdim, int &Ydim, int &Xdim) {
-   int dim[3]; mask->GetDimensions(dim);
-   Zdim=dim[2];
-   Ydim=dim[1];
-   Xdim=dim[0];
+void FourierMask::resize_mask(int Zdim, int Ydim, int Xdim) {
+   mask3D.self_scale_to_size(Zdim,Ydim,Xdim);
 }
 
 /* Mask power -------------------------------------------------------------- */
-double FourierMask::mask_power(double wmin, double wmax) {
-   if (mask==NULL) return 0;
+double FourierMask::mask2D_power(double wmin, double wmax) {
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
    double retval=0, N=0;
-   SPEED_UP_vtk;
-   FOR_ALL_ELEMENTS_IN_VTK(mask) {
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D) {
       XX(idx)=j; YY(idx)=i;
-      FFT_idx2digfreq(mask, idx, freq);
+      FFT_idx2digfreq(mask2D, idx, freq);
       double w=freq.module();
       if (w>wmin && w<wmax) {
-         retval += (*vtkPtr)*(*vtkPtr)+(*(vtkPtr+1))*(*(vtkPtr+1));
+         double mag=abs(mask2D(i,j));
+         retval += mag*mag;
          N++;
       }
-      vtkPtr+=2;
    }
 
    if (N!=0) return retval/N;
    else      return 0;
 }
-#endif
+
+/* Instantiation ----------------------------------------------------------- */
+void instantiate_FourierFilter() {
+   FourierMask Mask;
+   matrix2D< complex<double> > mc2; Mask.generate_mask(mc2);
+   matrix2D< double          > md2; Mask.generate_mask(md2);
+                                    Mask.generate_CTF_mask(mc2);
+                                    Mask.generate_CTF_mask(md2);
+   matrix3D< complex<double> > mc3; Mask.generate_mask(mc3);
+   matrix3D< double          > md3; Mask.generate_mask(md3);
+}

@@ -630,10 +630,8 @@ void Prog_assign_CTF_prm::process()
 		  else
  		    Img_pure_CTF().init_zeros(N_vertical,N_horizontal);
 		  
-		  vtkImageData *vtkImage=NULL;
-		  xmippFFT2VTK (Img_pure_CTF, vtkImage);
-		  pure_ctf.Generate_CTF(vtkImage, vtkImage);
-		  VTK2xmippFFT (vtkImage, Img_pure_CTF) ;
+		  pure_ctf.Generate_CTF(N_vertical, N_horizontal,
+                     Img_pure_CTF());
 
 		  // Save the image
         if (compute_at_particle)

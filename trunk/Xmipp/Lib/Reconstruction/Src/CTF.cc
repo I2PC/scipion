@@ -25,6 +25,7 @@
 
 #include "../CTF.hh"
 #include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippFFT.hh>
 
 /* Read -------------------------------------------------------------------- */
 void XmippCTF::read(const FileName &fn, bool disable_if_not_K) _THROW {
@@ -258,42 +259,32 @@ void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) {
 }
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void XmippCTF::Apply_CTF(vtkImageData * &FFTI) const {
+void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const {
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
-   SPEED_UP_vtk;
-   FOR_ALL_ELEMENTS_IN_VTK(FFTI) {
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(FFTI) {
       XX(idx)=j; YY(idx)=i;
       FFT_idx2digfreq(FFTI, idx, freq);
       double ctf=CTF_at(XX(freq),YY(freq));
-      *vtkPtr++ *= ctf; // Real part
-      *vtkPtr++ *= ctf; // Imaginary part
+      FFTI(i,j)*=ctf;
    }
 }
 
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
-void XmippCTF::Generate_CTF(vtkImageData * FFTI, vtkImageData * &CTF) const {
+void XmippCTF::Generate_CTF(int Ydim, int Xdim,
+   matrix2D < complex<double> > &CTF) const {
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
-   int dim[3]; FFTI->GetDimensions(dim);
-   if (CTF==NULL) CTF=vtkImageData::New();
-   else           CTF->Initialize();
-   CTF->SetDimensions(dim[0],dim[1],dim[2]);
-   CTF->SetScalarType(VTK_FLOAT);
-   CTF->SetNumberOfScalarComponents(2);
-   CTF->AllocateScalars();
-   CTF->Update();
-   SPEED_UP_vtk;
-   FOR_ALL_ELEMENTS_IN_VTK(CTF) {
+   CTF.resize(Ydim, Xdim);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(CTF) {
       XX(idx)=j; YY(idx)=i;
-      FFT_idx2digfreq(FFTI, idx, freq);
+      FFT_idx2digfreq(CTF, idx, freq);
       digfreq2contfreq(freq, freq, Tm);
-      *vtkPtr++=CTF_at(XX(freq),YY(freq)); // Real part
-      *vtkPtr++=0;                         // Imaginary part
+      CTF(i,j)=CTF_at(XX(freq),YY(freq));
       #ifdef DEBUG
          cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-              << " " << CTF_at(XX(freq),YY(freq)) << endl;
+              << " " << CTF(i,j) << endl;
       #endif
    }
 }

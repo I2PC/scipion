@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#ifdef _HAVE_VTK
 #include "../Prog_microscope.hh"
 #include <XmippData/xmippArgs.hh>
 
@@ -71,30 +70,26 @@ void Prog_Microscope_Parameters::produce_side_info() {
    int Zdim;
    get_input_size(Zdim,Ydim,Xdim);
    matrix2D<double> aux;
-   vtkImageData *vtkaux=NULL;
 
    double before_power=0, after_power=0;
    
    if (fn_ctf!="") {
       if (Is_FourierImageXmipp(fn_ctf)) {
-         ctf.FilterBand=ctf.FilterShape=FROM_FILE;
-         ctf.fn_mask=fn_ctf;
-         ctf.generate_mask(NULL);
+         ctf.read_mask(fn_ctf);
          ctf.resize_mask(Ydim,Xdim);
       } else {
          ctf.FilterBand=CTF;
          ctf.ctf.read(fn_ctf);
          ctf.ctf.enable_CTFnoise=FALSE;
          ctf.ctf.Produce_Side_Info();
-         aux.init_zeros(Ydim,Xdim);
-         xmippArray2VTK(aux, vtkaux,2);
-         ctf.generate_mask(vtkaux);
+         aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
+         ctf.generate_mask(aux);
       }
 
       #ifdef DEBUG
 	 ctf.write_amplitude("PPP.xmp");
       #endif
-      before_power=ctf.mask_power();
+      before_power=ctf.mask2D_power();
    }
 
    if (low_pass_before_CTF!=0) {
@@ -105,29 +100,32 @@ void Prog_Microscope_Parameters::produce_side_info() {
 
    if (fn_after_ctf!="") {
       if (Is_FourierImageXmipp(fn_ctf)) {
-         after_ctf.FilterBand=after_ctf.FilterShape=FROM_FILE;
-         after_ctf.fn_mask=fn_after_ctf;
-         after_ctf.generate_mask(NULL);
+         after_ctf.read_mask(fn_after_ctf);
          after_ctf.resize_mask(Ydim,Xdim);
       } else {
          after_ctf.FilterBand=CTF;
          after_ctf.ctf.read(fn_after_ctf);
          after_ctf.ctf.enable_CTF=FALSE;
          after_ctf.ctf.Produce_Side_Info();
-         after_ctf.generate_mask(vtkaux);
+         aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
+         after_ctf.generate_mask(aux);
       }
       #ifdef DEBUG
 	 after_ctf.write_amplitude("PPPafter.xmp");
       #endif
-      after_power=after_ctf.mask_power();
+      after_power=after_ctf.mask2D_power();
    }
-   if (vtkaux!=NULL) vtkaux->Delete();
 
    // Compute noise balance
    if (after_power!=0 || before_power!=0) {
       double p=after_power/(after_power+before_power);
-      sigma_after_CTF=sqrt(p)*sigma;
-      sigma_before_CTF=sqrt(1-p)*sigma;
+      double K=1/sqrt(p*after_power+(1-p)*before_power);
+      sigma_after_CTF=sqrt(p)*K*sigma;
+      sigma_before_CTF=sqrt(1-p)*K*sigma;
+      cout << "After  power=" << after_power << endl
+           << "Before power=" << before_power << endl
+           << "p=" << p << endl
+           << "K=" << K << endl;
    } else if (sigma!=0) {
       sigma_before_CTF=sigma;
       sigma_after_CTF=0;
@@ -142,7 +140,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
    matrix2D<double> noisy;
    noisy.resize(I);
    noisy.init_random(0,sigma_before_CTF,"gaussian");
-   if (low_pass_before_CTF!=0) lowpass.apply_mask(noisy);
+   if (low_pass_before_CTF!=0) lowpass.apply_mask_Space(noisy);
    I += noisy;
 
    // Check if the mask is a defocus changing CTF
@@ -151,13 +149,10 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
       double old_DefocusU=ctf.ctf.DeltafU;
       double old_DefocusV=ctf.ctf.DeltafV;
       matrix2D<double> aux;
-      vtkImageData *vtkaux=NULL;
       ctf.ctf.DeltafU*=rnd_unif(1-defocus_change/100,1+defocus_change/100);
       ctf.ctf.DeltafV*=rnd_unif(1-defocus_change/100,1+defocus_change/100);
       aux.init_zeros(Ydim,Xdim);
-      xmippArray2VTK(aux, vtkaux,2);
-      ctf.generate_mask(vtkaux);
-      vtkaux->Delete();
+      ctf.generate_mask(aux);
       ctf.ctf.DeltafU=ctf.ctf.DeltafU;
       ctf.ctf.DeltafV=ctf.ctf.DeltafV;
       #ifdef DEBUG
@@ -167,12 +162,11 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
    }
 
    // Apply CTF
-   if (fn_ctf!="") ctf.apply_mask(I);
+   if (fn_ctf!="") ctf.apply_mask_Space(I);
 
    // Add noise after CTF
    noisy.init_random(0,sigma_after_CTF,"gaussian");
-   if (fn_after_ctf!="") after_ctf.apply_mask(noisy);
+   if (fn_after_ctf!="") after_ctf.apply_mask_Space(noisy);
    I += noisy;
 }
 #undef DEBUG
-#endif

@@ -4,22 +4,27 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2001 , CSIC .
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- *
- *****************************************************************************/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
 #ifndef _CORRECTPHASE_HH
    #define _CORRECTPHASE_HH
-
-#ifdef _HAVE_VTK
 
 #include "Prog_FourierFilter.hh"
 #include <XmippData/xmippSelFiles.hh>
@@ -83,11 +88,10 @@ public:
    /** Correct phase of an image.
        An exception is thrown if the input image is not of the same size
        as the ctf or if the CTF is not real */
-   void correct(vtkImageData *v) _THROW;
+   void correct(matrix2D< complex<double> > &v);
 
    /** Correct phase of a set of images.*/
    void correct(SelFile &SF);
 };
 //@}
-#endif
 #endif

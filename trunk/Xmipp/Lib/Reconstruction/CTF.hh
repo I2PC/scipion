@@ -27,7 +27,6 @@
    #define _CTF_HH
 
 #include <XmippData/xmippImages.hh>
-#include <XmippInterface/xmippVTK.hh>
 
 /**@name CTF Correction */
 //@{
@@ -317,10 +316,20 @@ public:
    void zero(int n, const matrix1D<double> &u, matrix1D<double> &freq);
 
    /// Apply CTF to an image
-   void Apply_CTF(vtkImageData * &FFTI) const;
+   void Apply_CTF(matrix2D < complex<double> > &FFTI) const;
 
-   /// Generate CTF image
-   void Generate_CTF(vtkImageData * FFTI, vtkImageData *&CTF) const;
+   /** Generate CTF image.
+       The sample image is used only to take its dimensions. */
+   template <class T>
+   void Generate_CTF(const matrix2D<T> &sample_image,
+      matrix2D < complex<double> > &CTF) const
+      {Generate_CTF(YSIZE(sample_image),XSIZE(sample_image),CTF);
+       STARTINGX(CTF)=STARTINGX(sample_image);
+       STARTINGY(CTF)=STARTINGY(sample_image);}
+
+   /// Generate CTF image.
+   void Generate_CTF(int Ydim, int Xdim,
+      matrix2D < complex<double> > &CTF) const;
 
    /** Check physical meaning.
        TRUE if the CTF parameters have physical meaning.

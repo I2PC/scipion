@@ -26,7 +26,7 @@
 
 #include <XmippData/xmippArgs.hh>
 #include "../Prog_SpARMA.hh"
-#include <XmippInterface/xmippVTK.hh> // auto_correlation_matrix()
+#include <XmippData/xmippFFT.hh> // auto_correlation_matrix()
 
 
 double    global_tolerance;

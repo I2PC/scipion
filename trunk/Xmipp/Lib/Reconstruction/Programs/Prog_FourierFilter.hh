@@ -23,13 +23,12 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-
 #ifndef _FOURIER_FILTER_HH
    #define _FOURIER_FILTER_HH
 
-#ifdef _HAVE_VTK
-
 #include "../CTF.hh"
+#include <XmippData/xmippMatrices3D.hh>
+#include <XmippData/xmippFFT.hh>
 
 /**@name Fourier Masks */
 //@{
@@ -43,7 +42,16 @@
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
-      Filter.apply_mask(I());
+      Filter.apply_mask_Space(I());
+      I.write("filtered_image.xmp");
+   \end{verbatim}
+
+   Example of use reading a mask from file
+   \begin{verbatim}
+      ImageXmipp I("image.xmp");
+      FourierMask Filter;
+      Filter.read_mask("mask.fft");
+      Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
    \end{verbatim}
 */
@@ -79,11 +87,17 @@ public:
    /** CTF parameters. */
    XmippCTF ctf;
    
-   /** Mask */
-   vtkImageData *mask;   
+   /** Mask1D */
+   matrix1D< complex<double> > mask1D;
+   
+   /** Mask2D */
+   matrix2D< complex<double> > mask2D;
+   
+   /** Mask3D */
+   matrix3D< complex<double> > mask3D;
 public:
    /** Empty constructor */
-   FourierMask() {mask=NULL; clear();}
+   FourierMask() {clear();}
 
    /** Destructor */
    ~FourierMask() {clear();}
@@ -109,48 +123,62 @@ public:
    origin set. If the filter is a CTF it must be already read and prepared
    in the ctf variable.
    
-   An exception is thrown if you try to apply a CTF to a volume. */
-   void generate_mask(vtkImageData *v) _THROW;
+   The dimension is 1, 2 or 3 depending it is a signal,
+   an image or a volume.
+   
+   This function cannot be used to generate CTF masks.*/
+   template <class T>
+   void generate_mask(T &v) _THROW;
 
-   /** Save mask as a text file, Fourier ImageXmipp or VolumeXmipp. */
-   void write_mask(const FileName &fn);
+   /** Read mask from file. */
+   void read_mask(const FileName &fn);
 
-   /** Save amplitude as a text file, ImageXmipp or VolumeXmipp */
-   void write_amplitude(const FileName &fn, bool do_not_center=FALSE);
+   /** Generate CTF mask for images */
+   template <class T>
+   void generate_CTF_mask(T &v) _THROW;
 
-   /** Apply mask.
+   /** Save mask as a text file.
+       Indicate which is the dimension od the mask to save */
+   void write_mask(const FileName &fn, int dim);
+
+   /** Save amplitude as a text file, Indicate
+       which is the dimension of the mask to save. */
+   void write_amplitude(const FileName &fn, int dim,
+      bool do_not_center=FALSE);
+
+   /** Apply mask (argument is in Fourier space).
        It should have been already generated. The given image is modified.
        An exception is thrown if the mask do not fit the size and shape of
        the */
-   void apply_mask(vtkImageData *v) _THROW;
+   void apply_mask_Fourier(matrix1D< complex<double> > &v);
 
-   /** Apply mask to signal.
-       The same as the following one but for signals */
-   void apply_mask(matrix1D<double> &v);
+   /** Apply mask in 2D. */
+   void apply_mask_Fourier(matrix2D< complex<double> > &v);
 
-   /** Apply mask to image.
+   /** Apply mask in 3D. */
+   void apply_mask_Fourier(matrix3D< complex<double> > &v);
+
+   /** Apply mask (argument is in real space)..
        It doesn't need to have a mask already generated. If the mask is equal
        to NULL, the apropiate mask is generated if not, nothing is done with
        the mask except filtering. The given image is modified. */
-   void apply_mask(matrix2D<double> &v);
+   void apply_mask_Space(matrix1D<double> &v);
 
-   /** Apply mask to volume.
-       The same as the previous one but for volumes*/
-   void apply_mask(matrix3D<double> &v);
+   /** Apply mask in 2D. */
+   void apply_mask_Space(matrix2D<double> &v);
 
-   /** Resize fourier mask to a desired scale.*/
-   void resize_mask(int Xdim);
+   /** Apply mask in 3D. */
+   void apply_mask_Space(matrix3D<double> &v);
 
    /** Resize fourier mask to a desired scale. */
    void resize_mask(int Ydim, int Xdim);
 
-   /** Return the size of the mask. */
-   void mask_size(int &Zdim, int &Ydim, int &Xdim);
-   
+   /** Resize fourier mask to a desired scale. */
+   void resize_mask(int Zdim, int Ydim, int Xdim);
+
    /** Mask power. Return the power of the Fourier Image contained in mask 
    within the given frequencies. */
-   double mask_power(double wmin=0, double wmax=0.5);
+   double mask2D_power(double wmin=0, double wmax=1);
 };
 //@}
-#endif
 #endif

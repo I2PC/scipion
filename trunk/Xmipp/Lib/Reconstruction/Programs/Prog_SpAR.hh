@@ -26,10 +26,8 @@
 
 #ifndef _PROG_SPAR_HH
    #define _PROG_SPAR_HH
-#ifdef _HAVE_VTK
 
 #include <XmippData/xmippMatrices2D.hh>
-#include <XmippInterface/xmippVTK.hh>
 
 /**@name Spectrum modelling by AR filters */
 //@{
@@ -105,18 +103,16 @@ double NonCausalAR(matrix2D<double> &Img,
 
     PARAMETERS:   Img - The matrix - Here it's supposed that it comes from
     		        an input image
-		  vtkFilter - The matrix, in VTK format
+		  Filter - The matrix if Fourier space
 		           that will contain the filter. It has double
 		           size in columns to store complex numbers. 		
 		  ARParameters - The matrix with the AR model coeficients.
 				
-   OUTPUT: 	The function stores the output in vtkFilter.
+   OUTPUT: 	The function stores the output in Filter.
    
    DATE:        6-1-2001
-
-   NOTE:        This functions uses VTK
 */
-void ARFilter(matrix2D<double> &Img, vtkImageData *&vtkFilter, 
+void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter, 
    matrix2D<double> &ARParameters);
 
 /** Combine AR Filters.
@@ -126,25 +122,22 @@ void ARFilter(matrix2D<double> &Img, vtkImageData *&vtkFilter,
    doing the armonic mean of their magnitudes. 
 
     PARAMETERS:   
-		  vtkFilter1 - The matrix with coeficients of the 1st filter,
-		              in VTK format
-		  vtkFilter2 - The matrix with coeficients of the 2nd filter,
-		              in VTK format
-		  vtkFilter  - The matrix with coeficients of the resulting filter,
-		              in VTK format	
+		  Filter1 - The matrix with coeficients of the 1st filter,
+		            in Fourier space
+		  Filter2 - The matrix with coeficients of the 2nd filter,
+		            in Fourier space
+		  Filter  - The matrix with coeficients of the resulting filter,
+		            in Fourier space	
  	          method _ The method employed to combine the filters
 		  
-   OUTPUT: 	The function stores the output in vtkFilter.
+   OUTPUT: 	The function stores the output in Filter.
    
    DATE:        6-1-2001
-
-   NOTE:        This functions uses VTK and complex numbes (#include <complex>)
 */
-void combineARFilters(vtkImageData *&vtkFilter1,
-		      vtkImageData *&vtkFilter2,
-		      vtkImageData *&vtkFilter,
-	              string method);
+void combineARFilters( const matrix2D< complex<double> > &Filter1,
+		       const matrix2D< complex<double> > &Filter2,
+		       matrix2D< complex<double> > &Filter,
+	               const string &method);
 
 //@}
-#endif
 #endif

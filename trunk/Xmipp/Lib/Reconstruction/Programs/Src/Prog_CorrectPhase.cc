@@ -4,21 +4,27 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2001 , CSIC .
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- *
- *****************************************************************************/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
-#ifdef _HAVE_VTK
-   #include "../Prog_CorrectPhase.hh"
-   #include <XmippData/xmippArgs.hh>
+#include "../Prog_CorrectPhase.hh"
+#include <XmippData/xmippArgs.hh>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhase_Params::read(int argc, char **argv) {
@@ -65,11 +71,9 @@ void CorrectPhase_Params::usage() {
 
 /* Produce Side information ------------------------------------------------ */
 void CorrectPhase_Params::produce_side_info() {
-   if (!multiple_CTFs && !CTF_description_file) {
-      ctf.FilterShape=ctf.FilterBand=FROM_FILE;
-      ctf.fn_mask=fn_ctf;
-      ctf.generate_mask(NULL);
-   } else if (multiple_CTFs) {
+   if (!multiple_CTFs && !CTF_description_file)
+      ctf.read_mask(fn_ctf);
+   else if (multiple_CTFs) {
       ctf.FilterShape=ctf.FilterBand=FROM_FILE;
       SF_CTF.read(fn_ctf);
    } else {
@@ -95,56 +99,45 @@ FileName CorrectPhase_Params::CTF_filename(const FileName &fn) {
 
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
-void CorrectPhase_Params::correct(vtkImageData *v) _THROW {
-   if (ctf.mask==NULL && CTF_description_file)
+void CorrectPhase_Params::correct(matrix2D< complex<double> > &v) {
+   if (XSIZE(ctf.mask2D)==0 && CTF_description_file)
       ctf.generate_mask(v); // This is the first time
                             // that the CTF is applied
-   if (!same_shape(v,ctf.mask))
-      REPORT_ERROR(1,"CorrectPhase::correct: ctf and input FT do not have"
-         " the same shape");
-   if (v->GetScalarType()!=VTK_FLOAT || v->GetNumberOfScalarComponents()!=2)
-      REPORT_ERROR(1,"CorrectPhase::correct: input array do not seem to be"
-         " a Fourier Transform");
    #ifdef DEBUG
       cout << "New image ----------------------------\n";
    #endif
    
-   int dim[3]; v->GetDimensions(dim);
-   float *mi=(float *) ctf.mask->GetScalarPointer();
-   float *vi=(float *)        v->GetScalarPointer();
-   for (int k=0; k<dim[2]; k++)
-       for (int i=0; i<dim[1]; i++)
-      	   for (int j=0; j<dim[0]; j++) {
-	      if (*(mi+1)!=0) 
-	         REPORT_ERROR(1,"CorrectPhase::correct: CTF is not real\n");
-	      #ifdef DEBUG
-	         cout << "CTF at (" << j << "," << i << "," << k << ")="
-		      << *mi << " Value there " << *vi << "+i" << *(vi+1);
-	      #endif
-	      switch (method) {
-		 case CORRECT_SETTING_SMALL_TO_ZERO:
-		    if (*mi<0)
-		       if (*mi<-epsilon) {*vi=-(*vi); *(vi+1)=-(*(vi+1));}
-		       else              {*vi=*(vi+1)=0;}
-		    break;
-		 case CORRECT_LEAVING_SMALL:
-		    if (*mi<-epsilon) {*vi=-(*vi); *(vi+1)=-(*(vi+1));}
-		    break;
-		 case CORRECT_AMPLIFYING_NOT_SMALL:
-		    if (ABS(*mi)>epsilon) {(*vi)/=(*mi); (*(vi+1))/=(*mi);}
-		    break;
-	      }
-	      #ifdef DEBUG
-	         cout << " Final value " << *vi << "+i" << *(vi+1) << endl;
-	      #endif
-	      vi+=2; mi+=2;
-	   }
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(v) {
+     complex<double> m=ctf.mask2D(i,j);
+     if (m.imag()!=0) 
+	REPORT_ERROR(1,"CorrectPhase::correct: CTF is not real\n");
+     #ifdef DEBUG
+	cout << "CTF at (" << j << "," << i << "," << k << ")="
+	     << m << " Value there " << v(i,j);
+     #endif
+     switch (method) {
+	case CORRECT_SETTING_SMALL_TO_ZERO:
+	   if (m.real()<0)
+	      if (v(i,j).real()<-epsilon) v(i,j)*=-1;
+	      else                        v(i,j)=0;
+	   break;
+	case CORRECT_LEAVING_SMALL:
+	   if (m.real()<-epsilon) v(i,j)*=-1;
+	   break;
+	case CORRECT_AMPLIFYING_NOT_SMALL:
+	   if (ABS(m.real())>epsilon) v(i,j)/=m.real();
+	   break;
+     }
+     #ifdef DEBUG
+	cout << " Final value " << v(i,j) << endl;
+     #endif
+  }
 }
 #undef DEBUG
 
 /* Correct a set of images ------------------------------------------------- */
 void CorrectPhase_Params::correct(SelFile &SF) {
-   vtkImageData * fft=NULL;
+   matrix2D< complex<double> > fft;
    SF.go_first_ACTIVE();
    cerr << "Correcting CTF phase ...\n";
    int istep=CEIL((double)SF.ImgNo()/60.0);
@@ -153,13 +146,11 @@ void CorrectPhase_Params::correct(SelFile &SF) {
    while (!SF.eof()) {
       ImageXmipp I;
       I.read(SF.NextImg());
-      FFT_VTK(I(),fft,TRUE);
+      FourierTransform(I(),fft);
       correct(fft);
-      IFFT_VTK(fft,I(),TRUE);
+      InverseFourierTransform(fft,I());
       I.write();
       if (i++%istep==0) progress_bar(i);
    }
    progress_bar(SF.ImgNo());
-   if (fft!=NULL) fft->Delete();
 }
-#endif

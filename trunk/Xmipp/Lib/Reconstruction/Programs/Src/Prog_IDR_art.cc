@@ -31,7 +31,6 @@
    #include "../Prog_FourierFilter.hh"
 #endif
 
-#ifdef _HAVE_VTK
 void Prog_IDR_ART_Parameters::read(const FileName &fn) {
    if (art_prm!=NULL) delete art_prm;
    art_prm=new Basic_ART_Parameters;
@@ -74,9 +73,7 @@ void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
 
    // Read CTF
    if (Is_FourierImageXmipp(fn_ctf)) {
-      ctf.FilterBand=ctf.FilterShape=FROM_FILE;
-      ctf.fn_mask=fn_ctf;
-      ctf.generate_mask(NULL);
+      ctf.read_mask(fn_ctf);
       multiple_CTFs=FALSE;
    } else {
       SF_ctf.read(fn_ctf);
@@ -89,6 +86,9 @@ void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
    // Read Blob volume
    if (fn_blob_volume!="") vol_blobs.read(fn_blob_volume);
    art_prm->produce_Side_Info(vol_blobs,BASIC);
+
+   // Prepare variance volume
+   vol_blobs_var=NULL;
 
    // Prepare Lowpass filter
    if (max_resolution!=-1) {
@@ -133,7 +133,8 @@ void Prog_IDR_ART_Parameters::Usage() {
 void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
    FileName fn_img, fn_out;
    Projection Ireal, Inorm, Itheo, Itheo_CTF;
-   vtkImageData *FFTtheo=NULL;
+   matrix2D< complex<double> >FFTtheo;
+
 
    SF_original.go_first_ACTIVE();
    SF_ctf.go_first_ACTIVE();
@@ -148,23 +149,20 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
       Ireal.read(fn_img);
 
       // Read CTF file if necessary
-      if (multiple_CTFs) {
-         ctf.FilterBand=ctf.FilterShape=FROM_FILE;
-         ctf.fn_mask=SF_ctf.NextImg();
-         ctf.generate_mask(NULL);
-      }
+      if (multiple_CTFs)
+         ctf.read_mask(SF_ctf.NextImg());
 
       // Project the volume in the same direction
       project_Volume (vol_blobs, art_prm->blobprint,
 	 art_prm->blobprint2, Itheo, Inorm,
 	 YSIZE(Ireal()), XSIZE(Ireal()),
 	 Ireal.rot(), Ireal.tilt(), Ireal.psi(),
-	 FORWARD,false);
+	 FORWARD,ARTK);
 
       // Apply CTF
-      FFT_VTK(Itheo(),FFTtheo,TRUE);
-      ctf.apply_mask(FFTtheo);
-      IFFT_VTK(FFTtheo,Itheo_CTF(),TRUE);
+      FourierTransform(Itheo(),FFTtheo);
+      ctf.apply_mask_Fourier(FFTtheo);
+      InverseFourierTransform(FFTtheo,Itheo_CTF());
 
       // Center the three images
       Ireal().set_Xmipp_origin();
@@ -221,7 +219,8 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
 	 prm.art_prm->fn_root=prm.fn_root+"_idr"+ItoA(prm.it,2);
 	 prm.art_prm->fn_start = fn_blobs;
 	 prm.vol_blobs.clear();
-	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs);
+	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs,
+            prm.vol_blobs_var);
       	 fn_blobs=prm.art_prm->fn_root+".blob";
       }
 
@@ -242,7 +241,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       // Lowpass filtering
       if (prm.max_resolution!=-1) {
          cerr << "Filtering result ...\n";
-         prm.Filter.apply_mask(vol_recons());
+         prm.Filter.apply_mask_Space(vol_recons());
 	 vol_recons.write();
          convert_to_blobs=TRUE;
       }
@@ -264,5 +263,3 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       prm.it++;
    } while (prm.it<prm.idr_iterations+1);
 }
-
-#endif

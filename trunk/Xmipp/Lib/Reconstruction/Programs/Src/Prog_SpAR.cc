@@ -24,8 +24,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#ifdef _HAVE_VTK
-
 #include <XmippData/xmippFilters.hh>
 #include "../Prog_SpAR.hh"
 
@@ -410,134 +408,74 @@ double NonCausalAR(matrix2D<double> &Img,
 
 /* AR Filter --------------------------------------------------------------- */
 #define DEBUG
-void ARFilter(matrix2D<double> &Img, vtkImageData *&vtkFilter, 
+void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter, 
    matrix2D<double> &ARParameters) {
 
-   int iDimensions[2];              // dimensions of an image
-   double A,B;                      /* Two Terms involved in calculation 
-                                        of the filter defined by the AR model */
+   double A,B;  /* Two Terms involved in calculation 
+                   of the filter defined by the AR model */
 					
-   // The next lines get a image prepared to receive the FFT 
-   // components of the filter.	
-   SPEED_UP_vtk;   
-   vtkFilter=NULL;
-   vtkFilter=vtkImageData::New();   
-   vtkFilter->SetDimensions(XSIZE(Img),YSIZE(Img),1);
-   // vtkFilter->SetUpdateExtent(0,Img.ColNo()-1,0,Img.RowNo()-1,0,0);
-   vtkFilter->SetNumberOfScalarComponents(2);   
-   vtkFilter->SetScalarType(VTK_FLOAT);
-   vtkFilter->AllocateScalars();
+   Filter.resize(Img);
 
-   /**** Then, the Fourier Transform of the filter defined by the AR model is done ****/
+   /* Then, the Fourier Transform of the filter defined by the AR model
+      is done */
    
-   // Get image dimensions
-   vtkFilter->GetDimensions(iDimensions); 
- 
    // Compute the filter  
-   float *vtk=(float *)vtkFilter->GetScalarPointer();	
-   matrix1D<int>    iIndex(2);       // index in a VTK image
+   matrix1D<int>    iIndex(2);       // index in the Fourier image
    matrix1D<double> dDigitalFreq(2); // digital frequency corresponding to and
    				     // index
 
-/*****************************************/
    #ifdef DEBUG
-     ofstream fichero("coeficientes.txt");
+     ofstream filelog("coeficientes.txt");
    #endif
-/******************************************/
-
-   FOR_ALL_ELEMENTS_IN_VTK(vtkFilter)
-   {
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(Filter) {
      // Compute dDigitalFreq
-     XX(dDigitalFreq)=j/(double)iDimensions[0];
-     YY(dDigitalFreq)=i/(double)iDimensions[1];
+     XX(dDigitalFreq)=j/XSIZE(Filter);
+     YY(dDigitalFreq)=i/YSIZE(Filter);
+
      // Compute terms A and B for Filter
      A=ComputeTermA(dDigitalFreq,ARParameters);	   
      B=ComputeTermB(dDigitalFreq,ARParameters);      
 
-   double sigma=sqrt(MAT_ELEM(ARParameters,0,0));
-    *vtk=sigma*(1+A)/((1+A)*(1+A)+B*B);    // Real part of the filter coeficient
-    *(vtk+1)=sigma*(-B)/((1+A)*(1+A)+B*B); // Imag part of the filter coeficient
+     double sigma=sqrt(MAT_ELEM(ARParameters,0,0));
+     Filter(i,j)=complex<double> (sigma*(1+A)/((1+A)*(1+A)+B*B),
+                                  sigma*(-B)/((1+A)*(1+A)+B*B));
 
-/*****************************************/
    #ifdef DEBUG
-     fichero << "A " << A << " B " << B << " po " << (*vtk)*(*vtk)+(*(vtk+1))*(*(vtk+1)) << endl ;
+     filelog << "A " << A << " B " << B << " po " << abs(Filter(i,j)) << endl ;
    #endif
-/******************************************/
-    // Increment the pointer
-    vtk+=2;
    }
-/*****************************************/
-   #ifdef DEBUG
-     fichero.close();
-   #endif
-/******************************************/
-  
-}
 
+   #ifdef DEBUG
+     filelog.close();
+   #endif
+}
 #undef DEBUG
+
 /* Combine AR filters ------------------------------------------------------ */
-void combineARFilters(vtkImageData *&vtkFilter1,
-		      vtkImageData *&vtkFilter2,
-		      vtkImageData *&vtkFilter,
-	              string method)
-{
-   // The next lines get a new image prepared to receive data
-   SPEED_UP_vtk;   
-   vtkFilter=vtkImageData::New();
-   vtkFilter->CopyStructure(vtkFilter1);
-   vtkFilter->SetScalarType(VTK_FLOAT);
-   vtkFilter->SetNumberOfScalarComponents(2);
-   vtkFilter->AllocateScalars();
-
-   float *vtk1=(float *)vtkFilter1->GetScalarPointer();
-   float *vtk2=(float *)vtkFilter2->GetScalarPointer();
-   float *vtk=(float *)vtkFilter->GetScalarPointer();
+void combineARFilters(const matrix2D< complex<double> > &Filter1,
+		      const matrix2D< complex<double> > &Filter2,
+		      matrix2D< complex<double> > &Filter,
+	              const string &method) {
+   Filter.resize(Filter1);
    
-   FOR_ALL_ELEMENTS_IN_VTK(vtkFilter)
-   {
-	   // Get the coeficients from the matrices
-	   complex<double> c1(*vtk1,*(vtk1+1));
-	   complex<double> c2(*vtk2,*(vtk2+1));
-	   	    
-	   if(method=="arithmetic_mean")
-	   {
-	   // Take the arithmetic mean of the two filters
-	   complex<double> c=(c1+c2)/2.0;	  
-	   *vtk=c.real();
-	   *(vtk+1)=c.imag();
-	   }
-	   else if(method=="armonic_mean")
-	   {
-	   // Take the armonic mean of the two filters
-	   complex<double> c=2.0/((1.0/c1)+(1.0/c2));
-	   *vtk=c.real();
-	   *(vtk+1)=c.imag();
-	   }
-	   else if(method=="geometric_mean")
-	   {
-	   // Take the geometric mean of the two filters
-	   complex<double> c=sqrt(c1*c2);
-	   *vtk=c.real();
-	   *(vtk+1)=c.imag();
-	   }
-	   else if(method=="armonic_spectrum")
-	   {
-	   // Take the armonic mean of the spectrum. 
-	   *vtk=sqrt(2/(1/(abs(c1)*abs(c1))+1/(abs(c2)*abs(c2))));
-	   *(vtk+1)=0;
-	   }
-	   else
-	   {
-	   // by default take the arithmetic mean of the two filters
-	   complex<double> c=(c1+c2)/2.0;
-	   *vtk=c.real();
-	   *(vtk+1)=c.imag();
-	   }
-	   
-	   // Increment the pointers 
-	   vtk1+=2; vtk2+=2; vtk+=2;	  	   	   
+   int imethod;
+   if      (method=="arithmetic_mean")  imethod=0;
+   else if (method=="armonic_mean")     imethod=1;
+   else if (method=="geometric_mean")   imethod=2;
+   else if (method=="armonic_spectrum") imethod=3;
+   else                                 imethod=0;
+
+   double abs1, abs2;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(Filter) {
+      switch (imethod) {
+         case 0: Filter(i,j)=0.5*(Filter1(i,j)+Filter2(i,j));         break;
+         case 1: Filter(i,j)=2.0/(1.0/Filter1(i,j)+1.0/Filter2(i,j)); break;
+         case 2: Filter(i,j)=sqrt(Filter1(i,j)*Filter2(i,j));         break;
+         case 3: 
+            abs1=abs(Filter1(i,j));
+            abs2=abs(Filter2(i,j));
+            Filter(i,j)=sqrt(2.0/(1.0/(abs1*abs1)+1.0/(abs2*abs2)));
+            break;
+      }
    }
-
 }
-
-#endif

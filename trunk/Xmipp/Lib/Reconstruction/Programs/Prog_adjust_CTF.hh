@@ -27,7 +27,6 @@
 #ifndef _ADJUST_CTF_HH
    #define _ADJUST_CTF_HH
 
-#ifdef _HAVE_VTK
 #include "Prog_FourierFilter.hh"
 
 /**@name Adjust parametric CTF */
@@ -99,5 +98,4 @@ public:
     committed in the best fit.*/
 double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm);
 //@}
-#endif
 #endif
