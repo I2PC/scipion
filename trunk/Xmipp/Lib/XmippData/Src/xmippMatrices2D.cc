@@ -338,7 +338,7 @@ template <class T> T mT::det() const _THROW {
    ludcmp(*this, LU, indx, d);
 
    // Calculate determinant
-   for (int i=1; i<=XSIZE(*this); i++) d *= (T)LU(i,i);
+   for (int i=0; i<XSIZE(*this); i++) d *= (T)LU(i,i);
    return d;
 }
 
