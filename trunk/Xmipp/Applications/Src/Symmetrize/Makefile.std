@@ -1,0 +1,4 @@
+######################################################################
+PROJ = symmetrize
+OBJ  = symmetrize.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

@@ -1,0 +1,4 @@
+######################################################################
+PROJ = toPhantom
+OBJ  = toPhantom.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

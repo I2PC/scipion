@@ -1,0 +1,39 @@
+###########################################################################
+# Main Action = Built library ----------------------------------------------
+all:
+	@( cd Src ; $(MAKE) )
+	@( cd OldXmipp ; $(MAKE) )
+	@if [ "$(HAVE_COLIMATE)" = "YES" ] ; then \
+		( cd Menus ; $(MAKE) ) ; \
+	fi
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@( cd Src ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ; \
+		$(MAKE) Makefiles )
+	@( cd OldXmipp ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ; \
+		$(MAKE) Makefiles )
+	@( cd Batches ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ; \
+		$(MAKE) Makefiles )
+	@( cd Menus ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile )
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@( cd Src ; $(MAKE) clean )
+	@( cd OldXmipp ; $(MAKE) clean )
+	@( cd Menus ; $(MAKE) clean )
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@( cd Src ; $(MAKE) distclean )
+	@( cd OldXmipp ; $(MAKE) distclean )
+	@( cd Batches ; $(MAKE) distclean )
+	@( cd Menus ; $(MAKE) distclean )
+	@rm -f Makefile
+
+# Install ------------------------------------------------------------------
+install:
+	@( cd Src ; $(MAKE) install )
+	@( cd OldXmipp ; $(MAKE) install )
+	@( cd Batches ; $(MAKE) install )
+	@( cd Menus ; $(MAKE) install )

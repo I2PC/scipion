@@ -1,0 +1,4 @@
+######################################################################
+PROJ = data2vol
+OBJ  = data2vol.o
+LIBS = -l$(LIBXMIPP) -l$(LIBCLASSIF)

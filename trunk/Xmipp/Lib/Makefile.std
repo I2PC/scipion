@@ -1,0 +1,44 @@
+###########################################################################
+LIBDIRS  = XmippData Reconstruction Classification XmippInterface \
+           OldXmipp
+
+# Main Action = Built library ----------------------------------------------
+all:
+	@for i in $(LIBDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) -j $(NOPROCESS) ) \
+	done;
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@for i in $(LIBDIRS) ;\
+	do \
+		echo "Creating Makefile in $$i ..." ;\
+		( cd $$i ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ;\
+                  $(MAKE) Makefiles ) \
+	done;
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@for i in $(LIBDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) clean ) \
+	done;
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@for i in $(LIBDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) distclean ) \
+	done;
+	@if [ -f `find . -name so_locations | head -1 ` ] ;\
+	 then find . -name so_locations | xargs rm -f ;\
+	 fi
+	@rm -f Makefile
+
+# Documentation ------------------------------------------------------------
+docs:
+	@for i in $(LIBDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) docs ) \
+	done;

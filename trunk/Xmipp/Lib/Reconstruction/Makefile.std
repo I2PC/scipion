@@ -1,0 +1,84 @@
+###########################################################################
+LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(HAVE_INRIA),YES)
+   LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
+endif
+
+ifeq ($(HAVE_VTK),YES)
+LIBRECONS_VTK   = ../libReconsVTK_$(XMIPP_PREFIX)$(MACHINE).so
+endif
+
+LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) $(LIBRECONS_VTK)
+LIBDIRS         = Src Programs/Src
+
+SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
+	   Src/projection.o Src/volume_FOMs.o Src/radon.o \
+           Src/recons_spider.o Src/Gibbs.o \
+           Programs/Src/Prog_project.o Programs/Src/Prog_art.o \
+           Programs/Src/Prog_evaluate.o \
+           Programs/Src/recons_misc.o Programs/Src/Basic_art.o \
+	   Programs/Src/Prog_Spots2RealSpace2D.o  \
+           Programs/Src/Prog_project_crystal.o Programs/Src/Prog_surface.o \
+           Programs/Src/Prog_euler.o Programs/Src/Prog_draw_surface.o \
+           Programs/Src/Prog_symmetrize.o Programs/Src/Prog_range_adjust.o \
+           Programs/Src/Prog_normalize.o 
+SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
+SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
+           Programs/Src/Prog_IDR_art.o Programs/Src/Prog_CorrectPhase.o \
+	   Programs/Src/Prog_SpAR.o Programs/Src/Prog_art_crystal.o\
+           Programs/Src/Prog_SpARMA.o \
+           Programs/Src/Prog_random_phantom.o \
+	   Programs/Src/Prog_microscope.o Programs/Src/Prog_adjust_CTF.o \
+	   Programs/Src/Prog_recons_test.o Programs/Src/Prog_assign_CTF.o
+
+# Main Action = Build library ----------------------------------------------
+all: $(LIBPROJ)
+
+$(LIBRECONS): $(SRC_OBJS)
+	@echo "Creating library Xmipp Reconstruction Library ..."
+	@rm -f $(LIBRECONS)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS)
+
+ifeq ($(HAVE_INRIA),YES)
+$(LIBRECONS_INRIA): $(SRC_OBJS_INRIA)
+	@echo "Creating library Xmipp Reconstruction INRIA Library ..."
+	@rm -f $(LIBRECONS_INRIA)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA)
+endif
+
+ifeq ($(HAVE_VTK),YES)
+$(LIBRECONS_VTK): $(SRC_OBJS_VTK)
+	@echo "Creating library Xmipp Reconstruction VTK Library ..."
+	@rm -f $(LIBRECONS_VTK)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_VTK) $(SRC_OBJS_VTK)
+endif
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@$(MAKE) depend
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing Reconstruction library ..."
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) 
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@$(MAKE) clean
+	@echo "Removing documentation in Reconstruction ..."
+	@rm -f Docs/*.html Docs/*.gif Docs/*.class Docs/*.tex Docs/*.db
+
+## Documents -------------------------------------------------------
+docs:
+	@echo "Creating documentation in Reconstruction ..."
+	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for Reconstruction ..."
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK)| sed -e's/\.o/\.cc/g'`

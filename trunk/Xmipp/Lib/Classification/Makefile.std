@@ -1,0 +1,27 @@
+###########################################################################
+# Main Action = Build library ----------------------------------------------
+all:
+	@( cd Src ; $(MAKE) )
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@echo "Creating Makefile in Classification/Src ..."
+	@( cd Src ; cat $(XMIPPDIR)/local_def Makefile.std > Makefile ; \
+	   $(MAKE) depend )
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@( cd Src ; $(MAKE) clean )
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@$(MAKE) clean
+	@echo "Removing documentation in Classification ..."
+	@rm -f Docs/*.html Docs/*.gif Docs/*.class Docs/*.tex Docs/*.db
+	@echo "Removing distribution for Classification ..."
+	@rm -f Makefile Src/Makefile
+
+## Documents -------------------------------------------------------
+docs:
+	@echo "Creating documentation in Classification ..."
+	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation

@@ -1,0 +1,36 @@
+###########################################################################
+APPDIRS = `ls -1 | grep -v Makefile | grep -v CVS`
+
+# Main Action = Null -------------------------------------------------------
+all:
+	@for i in $(APPDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) ) \
+	done;
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@for i in $(APPDIRS) ;\
+	do \
+		echo "Creating Makefile in $$i ..." ;\
+		( cd $$i ; cat $(XMIPPDIR)/local_def Makefile.std \
+                   ../Makefile.for_batches > Makefile ) \
+	done;
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@for i in $(APPDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) clean ) \
+	done;
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@rm -f Makefile
+
+# Installing ---------------------------------------------------------------
+install:
+	@for i in $(APPDIRS) ;\
+	do \
+		( cd $$i ; $(MAKE) install ) \
+	done;

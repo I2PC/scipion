@@ -1,0 +1,8 @@
+######################################################################
+ifeq ($(HAVE_VTK),YES)
+   PROJ = IFFT
+endif
+OBJ  = IFFT.o
+LIBS = -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+

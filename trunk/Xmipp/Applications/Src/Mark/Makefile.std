@@ -1,0 +1,25 @@
+######################################################################
+ifeq ($(HAVE_QT),YES)
+   PROJ = mark
+endif
+OBJ  = 	mark.o \
+        QtColorLabel.o QtColorLabel.moc \
+        QtDialogFamilies.o QtDialogFamilies.moc \
+        QtDialogProperties.o QtDialogProperties.moc \
+	QtFileMenu.o QtFileMenu.moc \
+        QtFilter.o QtFilter.moc \
+        QtFilterMenu.o QtFilterMenu.moc \
+        QtFiltersController.o QtFiltersController.moc \
+        QtImage.o QtImage.moc \
+        QtImageConverter.o \
+        QtImageMicrograph.o QtImageMicrograph.moc \
+        QtImageOverviewMicrograph.o QtImageOverviewMicrograph.moc \
+        QtMainWidgetMark.o QtMainWidgetMark.moc \
+        QtPopupMenuMark.moc \
+        QtWidgetMicrograph.o QtWidgetMicrograph.moc \
+        ../DownSample/xvsmooth.o
+
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK) -lqt
+EXTRA_INCLUDE_DIRS = -I$(XMIPP_QTDIR)/include
+EXTRA_LIB_DIRS     = -L$(XMIPP_QTDIR)/lib

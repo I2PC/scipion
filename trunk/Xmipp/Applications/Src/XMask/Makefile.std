@@ -1,0 +1,10 @@
+######################################################################
+ifeq ($(HAVE_QT),YES)
+   PROJ =  xmask
+endif
+OBJ  =  xmask.o \
+	maskimg.o maskimg.moc
+        
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP) -lqt
+EXTRA_INCLUDE_DIRS = -I$(XMIPP_QTDIR)/include
+EXTRA_LIB_DIRS     = -L$(XMIPP_QTDIR)/lib

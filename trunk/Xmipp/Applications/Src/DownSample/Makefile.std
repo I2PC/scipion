@@ -1,0 +1,5 @@
+######################################################################
+PROJ = downsample
+OBJ  = downsample.o xvsmooth.o
+LIBS = -l$(LIBXMIPP)
+

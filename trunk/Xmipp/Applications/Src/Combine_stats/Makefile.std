@@ -1,0 +1,5 @@
+######################################################################
+PROJ = combine_stats
+OBJ  = combine_stats.o
+LIBS = -l$(LIBXMIPP)
+

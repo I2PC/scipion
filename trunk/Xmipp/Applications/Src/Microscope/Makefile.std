@@ -1,0 +1,8 @@
+######################################################################
+ifeq ($(HAVE_VTK),YES)
+   PROJ = microscope
+endif
+OBJ  = microscope.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+

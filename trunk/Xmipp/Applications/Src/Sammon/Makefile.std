@@ -1,0 +1,4 @@
+######################################################################
+PROJ = sammon
+OBJ  = sammon.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

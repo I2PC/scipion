@@ -1,0 +1,5 @@
+######################################################################
+PROJ = lattice_vectors
+OBJ  = lattice_vectors.o
+LIBS = -l$(LIBXMIPP)
+

@@ -1,0 +1,4 @@
+######################################################################
+PROJ = volsampler
+OBJ  = volsampler.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

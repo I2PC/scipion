@@ -1,0 +1,5 @@
+######################################################################
+PROJ = normalize
+OBJ  = normalize.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE)
+

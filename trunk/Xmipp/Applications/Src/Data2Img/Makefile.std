@@ -1,0 +1,4 @@
+######################################################################
+PROJ = data2img
+OBJ  = data2img.o
+LIBS = -l$(LIBXMIPP) -l$(LIBCLASSIF)

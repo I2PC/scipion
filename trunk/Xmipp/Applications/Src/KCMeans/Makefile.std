@@ -1,0 +1,4 @@
+######################################################################
+PROJ = kcmeans
+OBJ  = kcmeans.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

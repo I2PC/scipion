@@ -1,0 +1,4 @@
+PROJ = findcenter
+OBJ  = findcenter.o \
+       findc.o
+LIBS = -l$(LIBOLDXMIPP) -l$(LIBXMIPP)

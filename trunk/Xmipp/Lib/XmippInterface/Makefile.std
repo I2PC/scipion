@@ -1,0 +1,69 @@
+############################################################################
+LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(HAVE_INRIA),YES)
+LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).so
+endif
+ifeq ($(HAVE_VTK),YES)
+LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).so
+endif
+LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA) $(LIBINTERFACEVTK)
+
+SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
+                 Src/xmippCrisp.o Src/xmippVrml.o  Src/xmippOpenDX.o \
+		 Src/xmippAPH3D.o
+SRC_OBJS_INRIA = Src/xmippINRIA.o
+SRC_OBJS_VTK   = Src/xmippVTK.o
+
+# Main Action = Built library ----------------------------------------------
+all:  $(LIBPROJ)
+
+# Built library ------------------------------------------------------------
+$(LIBINTERFACE): $(SRC_OBJS)
+	@echo "Creating library XmippInterface Library ..."
+	@rm -f $(LIBINTERFACE)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) ;
+
+$(LIBINTERFACEINRIA): $(SRC_OBJS_INRIA)
+	@echo "Creating library XmippInterface INRIA Library ..."
+	@rm -f $(LIBINTERFACEINRIA)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) ;
+
+$(LIBINTERFACEVTK): $(SRC_OBJS_VTK)
+	@echo "Creating library XmippInterface VTK Library ..."
+	@rm -f $(LIBINTERFACEVTK)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK);
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@$(MAKE) depend
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing in XmippInterface library ..."
+	@rm -f $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK)
+	@rm -f $(LIBPROJ)
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@$(MAKE) clean
+	@echo "Removing documentation in XmippInterface ..."
+	@rm -f Docs/*.html Docs/*.gif Docs/*.class Docs/*.tex Docs/*.db
+	@echo "Removing distribution for XmippInterface ..."
+	@rm -f Makefile Src/Makefile
+
+# Documents ----------------------------------------------------------------
+docs:
+	@echo "Creating documentation in XmippInterface ..."
+	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for XmippInterface/Src ..."
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS_INRIA) | sed -e's/\.o/\.cc/g'`
+	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS_VTK) | sed -e's/\.o/\.cc/g'`

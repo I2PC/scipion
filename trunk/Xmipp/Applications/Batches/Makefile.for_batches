@@ -1,0 +1,22 @@
+FINAL_PROJ=$(XMIPP_PREFIX)$(PROJ)
+
+all:
+	@echo "Making $(FINAL_PROJ) ..."
+	@if [ ! -e $(FINAL_PROJ) ] ; then \
+	    ln -s $(PROJ) $(FINAL_PROJ) ; \
+	fi
+
+install: $(PROJ)
+	@echo "Installing $(PROJ) ..."
+	@if [ ! -e $(XMIPPDIR)/bin/$(FINAL_PROJ) ] ; then \
+	    export DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
+	    export THIS_DIR=`pwd | cut -d"/" -f $$DEPTH` ; \
+	    ln -s $(XMIPPDIR)/Applications/Batches/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
+	fi
+
+clean:
+
+distclean:
+	@echo "Removing distribution for $(PROJ) ..."
+	@$(MAKE) clean
+	@rm -f */Test/* Makefile

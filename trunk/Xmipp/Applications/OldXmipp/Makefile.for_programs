@@ -1,0 +1,65 @@
+
+FINAL_PROJ=$(XMIPP_PREFIX)$(PROJ)
+LIBXMIPP                  = Xmipp_$(XMIPP_PREFIX)$(MACHINE)
+LIBOLDXMIPP               = OldXmipp_$(XMIPP_PREFIX)$(MACHINE)
+
+.SUFFIXES: .h .c .hh .cc
+
+ifdef EXTRA_LIB_DIRS
+   FINAL_LINKERFLAGS = $(LINKERFLAGS) $(EXTRA_LIB_DIRS)
+else
+   FINAL_LINKERFLAGS = $(LINKERFLAGS)
+endif
+
+ifdef EXTRA_INCLUDE_DIRS
+   FINAL_COMPILERFLAGS = $(COMPILERFLAGS) $(EXTRA_INCLUDE_DIRS)
+   FINAL_DEPENDDIRS    = $(DEPENDDIRS) $(EXTRA_INCLUDE_DIRS) -I$(XMIPPDIR)/Lib
+else
+   FINAL_COMPILERFLAGS = $(COMPILERFLAGS)
+   FINAL_DEPENDDIRS    = $(DEPENDDIRS) -I$(XMIPPDIR)/Lib
+endif
+
+all: $(FINAL_PROJ)
+
+ifdef PROJ
+$(FINAL_PROJ): $(OBJ) $(MOCS) $(MPIS)
+	@echo "Linking $(FINAL_PROJ) ..."
+	@$(CC) -o $(FINAL_PROJ) $(OBJ) $(FINAL_LINKERFLAGS) $(LIBS)
+else
+$(FINAL_PROJ):
+endif
+
+.c.o:
+	@echo "Compiling" $*.c "..."
+	@gcc $(FINAL_COMPILERFLAGS) $*.c
+
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@gcc $(FINAL_COMPILERFLAGS) $*.cc
+
+ifdef PROJ
+install: $(FINAL_PROJ)
+	@echo "Installing $(FINAL_PROJ) ..."
+	@if [ ! -e $(XMIPPDIR)/bin/$(FINAL_PROJ) ] ; then \
+	    export DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
+	    export THIS_DIR=`pwd | cut -d"/" -f $$DEPTH` ; \
+	    ln -s $(XMIPPDIR)/Applications/OldXmipp/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ) ; \
+	fi
+else
+install:
+endif
+
+ifdef PROJ
+clean:
+	@echo "Removing $(FINAL_PROJ) ..."
+	@rm -f $(FINAL_PROJ) $(OBJ)
+else
+clean:
+endif
+
+distclean:
+	@echo "Removing distribution for $(FINAL_PROJ) ..."
+	@$(MAKE) clean
+	@rm -f */Test/* Makefile
+
+depend:

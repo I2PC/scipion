@@ -1,0 +1,4 @@
+######################################################################
+PROJ = select_images
+OBJ  = select_images.o
+LIBS = -l$(LIBXMIPP)

@@ -1,0 +1,51 @@
+############################################################################
+LIBPROJ = ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).so
+
+SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
+           Src/xmippMatrices1D.o Src/xmippMatrices2D.o \
+           Src/xmippMatrices3D.o Src/xmippSelFiles.o Src/xmippHistograms.o \
+           Src/xmippHeader.o Src/xmippImages.o Src/xmippVolumes.o \
+           Src/xmippDocFiles.o Src/xmippGeometry.o Src/xmippProjection.o \
+           Src/xmippProgs.o Src/xmippMasks.o Src/xmippMicrograph.o \
+           Src/xmippFilters.o Src/xmippMorphology.o \
+           Programs/Src/Prog_downsample.o Programs/Src/Prog_segment.o
+
+# Main Action = Built library ----------------------------------------------
+all: $(LIBPROJ)
+
+$(LIBPROJ): $(SRC_OBJS)
+	@echo "Creating library Xmipp General Library ..."
+	@rm -f $(LIBPROJ)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@$(MAKE) depend
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing in XmippData library ..."
+	@rm -f $(LIBPROJ) $(SRC_OBJS)
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for XmippData/Src ..."
+	@makedepend $(DEPENDDIRS) `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@$(MAKE) clean
+	@echo "Removing documentation in XmippData ..."
+	@rm -f Docs/*.html Docs/*.gif Docs/*.class Docs/*.tex Docs/*.db
+	@echo "Removing distribution for XmippData ..."
+	@rm -f Makefile Src/Makefile
+
+# Documents ----------------------------------------------------------------
+docs:
+	@echo "Creating documentation in XmippData ..."
+	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation

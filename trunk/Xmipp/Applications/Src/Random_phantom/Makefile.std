@@ -1,0 +1,5 @@
+######################################################################
+PROJ = random_phantom
+OBJ  = random_phantom.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) -l$(LIBRECONS_VTK) \
+       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)

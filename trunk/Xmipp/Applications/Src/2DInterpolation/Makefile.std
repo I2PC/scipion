@@ -1,0 +1,4 @@
+######################################################################
+PROJ = 2Dinterpolation
+OBJ  = 2Dinterpolation.o
+LIBS = -l$(LIBXMIPP)

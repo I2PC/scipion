@@ -1,0 +1,4 @@
+######################################################################
+PROJ = surface
+OBJ  = surface.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

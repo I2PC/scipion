@@ -1,0 +1,4 @@
+######################################################################
+PROJ = deform
+OBJ  = deform.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

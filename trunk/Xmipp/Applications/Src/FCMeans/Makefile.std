@@ -1,0 +1,4 @@
+######################################################################
+PROJ = fcmeans
+OBJ  = fcmeans.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

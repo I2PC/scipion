@@ -1,0 +1,4 @@
+######################################################################
+PROJ = batchsom
+OBJ  = batchsom.o
+LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

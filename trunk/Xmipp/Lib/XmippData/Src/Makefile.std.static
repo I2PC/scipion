@@ -1,0 +1,39 @@
+############################################################################
+LIBPROJ = ../../libXmipp$(MACHINE).a
+
+# Any compiling option should be set in the following variable
+CPPFLAGS = $(COMPILERFLAGS)
+
+SRC_OBJS = NumericalRecipes.o xmippFuncs.o xmippArgs.o\
+           xmippMatrices1D.o xmippMatrices2D.o \
+           xmippMatrices3D.o xmippSelFiles.o xmippHistograms.o \
+           xmippHeader.o imageByte.o imageXmipp.o imageOver.o \
+           volumeXmipp.o volumeByte.o xmippDocFiles.o \
+           volume.o image.o xmippGeometry.o xmippProjection.o \
+           xmippProgs.o xmippOther.o xmippMasks.o
+
+# Main Action = Built library ----------------------------------------------
+all:  $(LIBPROJ)
+
+# Built library ------------------------------------------------------------
+$(LIBPROJ): $(SRC_OBJS)
+	@echo "Creating library Xmipp General Library ..."
+	@rm -f $(LIBPROJ)
+	@$(AR) $(LIBPROJ) *.o
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) $(CPPFLAGS) $*.cc -o $*.o
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing in XmippData/Src ..."
+	@rm -f $(SRC_OBJS)
+	@echo "Removing" $(LIBPROJ) "..."
+	@rm -f $(LIBPROJ)
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for XmippData/Src ..."
+	@makedepend $(DEPENDDIRS) *.cc

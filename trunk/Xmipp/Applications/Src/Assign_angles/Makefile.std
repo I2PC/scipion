@@ -1,0 +1,5 @@
+######################################################################
+PROJ = assign_angles
+OBJ  = assign_angles.o
+LIBS = -l$(LIBXMIPP)
+

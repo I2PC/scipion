@@ -1,0 +1,5 @@
+######################################################################
+PROJ = spARMA
+OBJ  = spARMA.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)

@@ -1,0 +1,4 @@
+######################################################################
+PROJ = separate_objects
+OBJ  = separate_objects.o
+LIBS = -l$(LIBXMIPP)

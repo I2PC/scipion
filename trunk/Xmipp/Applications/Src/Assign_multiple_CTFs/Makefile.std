@@ -1,0 +1,6 @@
+######################################################################
+PROJ = assign_multiple_CTFs
+OBJ  = assign_multiple_CTFs.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBRECONS_VTK) -l$(LIBXMIPP_INTERFACE) \
+       -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)
+

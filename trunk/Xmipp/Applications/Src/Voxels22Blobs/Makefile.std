@@ -1,0 +1,4 @@
+######################################################################
+PROJ = voxels22blobs
+OBJ  = voxels22blobs.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

@@ -1,0 +1,4 @@
+######################################################################
+PROJ = window_micrograph
+OBJ  = window_micrograph.o
+LIBS = -l$(LIBXMIPP)

@@ -1,0 +1,30 @@
+CC = g++
+CCLIB = g++
+
+###########################################################################
+LIBPROJ  = ../libINRIA.so
+SRC_OBJS = convert.o curvature.o extrema.o recbuffer.o recline.o
+
+# Main action: Built library -----------------------------------------------
+all:  $(LIBPROJ)
+
+$(LIBPROJ): $(SRC_OBJS)
+	@echo "Creating library INRIA Library ..."
+	@rm -f $(LIBPROJ)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) *.o ;
+
+
+# Compiling by default -----------------------------------------------------
+.c.o:
+	@echo "Compiling" $*.c "..."
+	@$(CC) $(COMPILERFLAGS) -fPIC $*.c -c
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing in INRIA/Src ..."
+	@rm -f $(SRC_OBJS)
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for INRIA/Src ..."
+	@makedepend $(DEPENDDIRS) *.c
