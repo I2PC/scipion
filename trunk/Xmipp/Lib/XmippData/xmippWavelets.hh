@@ -33,7 +33,7 @@
 #include "Src/NumericalRecipes.hh"
 
 /**@name Wavelets */
-///@{
+//@{
 
 #define DAUB4   4
 #define DAUB12 12
@@ -157,7 +157,7 @@ template <class T>
       int &scale, string &quadrant);
 
    /**@name Denoising */
-   ///@{
+   //@{
    /** Remove all information within a quadrant and scale */
    void clean_quadrant(matrix2D<double> &I, int scale, const string &quadrant);
 
@@ -189,6 +189,6 @@ template <class T>
        is applied up to the scale given.*/
    void bayesian_wiener_filtering(matrix2D<double> &I, int scale);
 
-   ///@}
-///@}
+   //@}
+//@}
 #endif

@@ -31,6 +31,7 @@
 
 /**@name Denoising */
 //@{
+/** Denoising parameters */
 class Denoising_parameters: public Prog_parameters {
 public:
    typedef enum {REMOVE_SCALE,
