@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libXmippRecons_@host_os@.la \
-	libXmippRecons_Classif_@host_os@.la \
+#	libXmippRecons_Classif_@host_os@.la \
 	libXmippRecons_Interface_@host_os@.la \
 	libXmippReconsINRIA_@host_os@.la
 #	libXmippReconsVTK.la
@@ -40,12 +40,14 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_assign_CTF.cc \
 	Programs/Src/Prog_art.cc \
 	Programs/Src/Basic_art.cc \
-	Programs/Src/Prog_SSNR.cc
-
-libXmippRecons_Classif_@host_os@_la_SOURCES = Programs/Src/Prog_Angular_Reference.cc \
-	Programs/Src/Prog_Angular_Project.cc \
+	Programs/Src/Prog_SSNR.cc \
 	Programs/Src/Prog_Angular_Predict.cc \
-	Programs/Src/Prog_Angular_Denoise.cc
+	Programs/Src/Prog_Angular_Predict_continuous.cc
+
+#libXmippRecons_Classif_@host_os@_la_SOURCES = Programs/Src/Prog_Angular_Reference.cc \
+#	Programs/Src/Prog_Angular_Project.cc \
+#	Programs/Src/Prog_Angular_Predict.cc \
+#	Programs/Src/Prog_Angular_Denoise.cc
 
 libXmippRecons_Interface_@host_os@_la_SOURCES = Programs/Src/Prog_Spots2RealSpace2D.cc \
 	Src/recons_spider.cc \
