@@ -312,7 +312,7 @@ void printb(ostream &o,T value);
    \\
    \begin{verbatim}
    // Initialise according to the clock
-   rnd_rnd_unif();
+   randomize_random_generator();
    
    // Show 10 random numbers between -1 and 1
    for (int i=0; i<10; i++) cout << rnd_unif(-1,1) << endl;
