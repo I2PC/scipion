@@ -397,11 +397,16 @@ ostream & operator << (ostream &out, xmippRBF &rbf) {
 
 istream & operator >> (istream &in, xmippRBF &rbf) {
    int p, dim;
-   in.scan("Model dimension: %d",&p);
+   string read_line;
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Model dimension: %d",&p);
    rbf.w.resize(p);
-   in.scan("Radii: %d",&dim);
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Radii: %d",&dim);
    rbf.r.resize(dim); in >> rbf.r;
-   in.scan("Weights:"); in >> rbf.w; rbf.w.self_transpose();
-   in.scan("Centers:"); in >> rbf.C;
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Weights:"); in >> rbf.w; rbf.w.self_transpose();
+   getline(in,read_line);
+   sscanf(read_line.c_str(),"Centers:"); in >> rbf.C;
    return in;
 }
