@@ -220,11 +220,36 @@ void FourierMask::generate_mask(vtkImageData *v) _THROW {
 	 if (dim[2]==1) {
             real_mask.resize(dim[1],dim[0]);
             real_mask.generate_2Dmask();
+	    // CO: for even sizes the CenterFFT does not work too well
+	    if (dim[1]%2==0 || dim[0]%2==0) {
+      	       int firstY=STARTINGY(real_mask.get_cont_mask2D());
+      	       int firstX=STARTINGX(real_mask.get_cont_mask2D());
+	       int finalY=FINISHINGY(real_mask.get_cont_mask2D());
+	       int finalX=FINISHINGX(real_mask.get_cont_mask2D());
+	       if (dim[1]%2==0) {firstY++; finalY++;}
+	       if (dim[0]%2==0) {firstX++; finalX++;}
+	       real_mask.get_cont_mask2D().window(
+	          firstY,firstX,finalY,finalX);
+	    }
 	    xmippArray2VTK(real_mask.get_cont_mask2D(),mask,2);
 	    CenterFFT(mask);
 	 } else {
             real_mask.resize(dim[2],dim[1],dim[0]);
             real_mask.generate_3Dmask();
+	    // CO: for even sizes the CenterFFT does not work too well
+	    if (dim[2]%2==0 || dim[1]%2==0 || dim[0]%2==0) {
+      	       int firstZ=STARTINGZ(real_mask.get_cont_mask3D());
+      	       int firstY=STARTINGY(real_mask.get_cont_mask3D());
+      	       int firstX=STARTINGX(real_mask.get_cont_mask3D());
+	       int finalZ=FINISHINGZ(real_mask.get_cont_mask3D());
+	       int finalY=FINISHINGY(real_mask.get_cont_mask3D());
+	       int finalX=FINISHINGX(real_mask.get_cont_mask3D());
+	       if (dim[2]%2==0) {firstZ++; finalZ++;}
+	       if (dim[1]%2==0) {firstY++; finalY++;}
+	       if (dim[0]%2==0) {firstX++; finalX++;}
+	       real_mask.get_cont_mask3D().window(
+	          firstZ,firstY,firstX,finalZ,finalY,finalX);
+	    }
 	    xmippArray2VTK(real_mask.get_cont_mask3D(),mask,2);
 	    CenterFFT(mask);
 	 }
@@ -248,11 +273,38 @@ void FourierMask::write_amplitude(const FileName &fn, bool do_not_center) {
    if (!do_not_center) CenterFFT(aux);
    if (dim[2]==1) {
       ImageXmipp  I; FFT_magnitude(aux,I());
+      // CO: for even sizes the CenterFFT does not work too well
+      // Even for odd sizes??
+      // if (dim[1]%2==0 || dim[0]%2==0) {
+      if (TRUE) {
+      	 int firstY=STARTINGY(I());
+      	 int firstX=STARTINGX(I());
+	 int finalY=FINISHINGY(I());
+	 int finalX=FINISHINGX(I());
+	 if (TRUE /*dim[1]%2==0*/) {firstY++; finalY++;}
+	 if (TRUE /*dim[0]%2==0*/) {firstX++; finalX++;}
+	 I().window(firstY,firstX,finalY,finalX);
+      }
       FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
          I(i,j)=log10(1+I(i,j)*I(i,j));
       I.write(fn);
    } else {
       VolumeXmipp V; FFT_magnitude(aux,V());
+      // CO: for even sizes the CenterFFT does not work too well
+      // Even for odd sizes??
+      // if (dim[2]%2==0 || dim[1]%2==0 || dim[0]%2==0) {
+      if (TRUE) {
+      	 int firstZ=STARTINGZ(V());
+      	 int firstY=STARTINGY(V());
+      	 int firstX=STARTINGX(V());
+	 int finalZ=FINISHINGZ(V());
+	 int finalY=FINISHINGY(V());
+	 int finalX=FINISHINGX(V());
+	 if (TRUE /*dim[2]%2==0*/) {firstZ++; finalZ++;}
+	 if (TRUE /*dim[1]%2==0*/) {firstY++; finalY++;}
+	 if (TRUE /*dim[0]%2==0*/) {firstX++; finalX++;}
+	 V().window(firstZ,firstY,firstX,finalZ,finalY,finalX);
+      }
       FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
          V(k,i,j)=log10(1+V(k,i,j)*V(k,i,j));
       V.write(fn);
