@@ -8,7 +8,6 @@
 # Initialization of configure parameters and checks for common tools
 # like C compiler, libtool tool, C flags, etc..
 
-
 AC_INIT
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(Xmipp,0.9)
@@ -56,12 +55,9 @@ AC_CHECK_LIBTIFF
 
 TIFF_LIBS=
 if test x"$have_tiff" = xyes; then
-	echo "TIFF"
 	if test x"$have_tiffjpg" = xyes; then
-		echo "JPEG"
 		if test x"$have_tiffzip" = xyes ; then
-			echo "ZIP"
-			TIFF_LIBS=" -ltiff -lm -lz -ljpeg "
+			TIFF_LIBS="-lm -ljpeg -lz "
 			use_tiff=yes
 		fi
 	fi
