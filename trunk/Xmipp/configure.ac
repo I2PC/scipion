@@ -212,6 +212,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Project/Makefile \
 	Applications/Src/Projection_Neighbourhood/Makefile \
 	Applications/Src/ProjectPCA/Makefile \
+	Applications/Src/Pyramid/Makefile \
 	Applications/Src/Radon_Transform/Makefile \
 	Applications/Src/RandomMapping/Makefile \
 	Applications/Src/Random_phantom/Makefile \

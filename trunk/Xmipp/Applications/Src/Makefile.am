@@ -86,6 +86,7 @@ SUBDIRS = 2DInterpolation \
 	Project \
 	Projection_Neighbourhood \
 	ProjectPCA \
+	Pyramid \
 	Radon_Transform \
 	RandomMapping \
 	Random_phantom \
