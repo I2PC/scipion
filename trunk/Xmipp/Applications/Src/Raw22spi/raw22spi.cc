@@ -208,20 +208,20 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
    else if (Zdim==1) {
       Image *I=&Ix; // This is a trick for the compiler
       switch (raw_type) {
-         case 'b': I->read(fn_in,Ydim,Xdim,FALSE,IBYTE); break;
-	 case 'h': I->read(fn_in,Ydim,Xdim,FALSE,I16); break;
-         case 'f': I->read(fn_in,Ydim,Xdim,FALSE,IFLOAT); break;
+         case 'b': I->read(fn_in,Ydim,Xdim,reverse_endian,IBYTE); break;
+	 case 'h': I->read(fn_in,Ydim,Xdim,reverse_endian,I16); break;
+         case 'f': I->read(fn_in,Ydim,Xdim,reverse_endian,IFLOAT); break;
       }
-      Ix.write(fn_out,reverse_endian);
+      Ix.write(fn_out);
    // Raw Volume --> Xmipp Volume
    } else {
       Volume *V=&Vx; // This is a trick for the compiler
       switch (raw_type) {
-         case 'b': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VBYTE); break;
-	 case 'h': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,V16); break;
-         case 'f': V->read(fn_in,Zdim,Ydim,Xdim,FALSE,VFLOAT); break;
+         case 'b': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VBYTE); break;
+	 case 'h': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,V16); break;
+         case 'f': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VFLOAT); break;
       }
-      Vx.write(fn_out,reverse_endian);
+      Vx.write(fn_out);
    }
 }
 
