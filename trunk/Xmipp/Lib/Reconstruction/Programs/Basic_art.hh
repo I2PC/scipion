@@ -135,6 +135,9 @@ public:
    /// Do not generate symmetry subgroup
    bool do_not_generate_subgroup;
    
+   /// Do not use symmetrized projections
+   bool do_not_use_symproj;
+
    /// File containing surface mask
    FileName fn_surface_mask;
 

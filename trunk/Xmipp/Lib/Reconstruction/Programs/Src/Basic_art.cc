@@ -36,6 +36,7 @@ void Basic_ART_Parameters::default_values() {
     fn_sym             = "";
     force_sym          = 0;
     do_not_generate_subgroup = FALSE;
+    do_not_use_symproj = FALSE;
     fn_surface_mask    = "";
     SIRT               = FALSE;
     eq_mode            = ARTK;
@@ -90,6 +91,7 @@ void Basic_ART_Parameters::default_values() {
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
     force_sym          = AtoI(GET_PARAM_WITH_DEF("force_sym","0"        )); \
     do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
+    do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
     fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
     SIRT               =      CHECK_PARAM(       "SIRT"                 );  \
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
@@ -231,6 +233,7 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-force_sym <n=0>]    Force the reconstruction to be symmetric"
      << "\n                         n times at each projection"
      << "\n   [-no_group]           Do not generate symmetry subgroup"
+     << "\n   [-no_symproj]         Do not use symmetrized projections"
      << "\n   [-surface surf_mask]  Use this file as a surface mask"
      << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
      << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
@@ -445,7 +448,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
    if (level>=FULL) {
       double accuracy=(do_not_generate_subgroup)?-1:1e-6;
       if (fn_sym!="") SL.read_sym_file(fn_sym,accuracy);
-      numIMG = trueIMG * (SL.SymsNo() + 1);
+      if (!do_not_use_symproj) numIMG = trueIMG * (SL.SymsNo() + 1);
+      else                     numIMG = trueIMG;
    }
 
 /* Read surface mask ------------------------------------------------------- */
@@ -459,7 +463,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level)
 
 /* Fill ART_sort_info structure and Sort ----------------------------------- */
    if (level>=FULL) {
-      build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf);
+      build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf,do_not_use_symproj);
 
       if (!(tell&TELL_MANUAL_ORDER))
 	 if (SIRT || eq_mode==CAV) no_sort(numIMG,ordered_list);

@@ -28,7 +28,7 @@
 /* Fill Reconstruction info structure -------------------------------------- */
 void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
    const SymList &SL,
-   Recons_info * &IMG_Inf) {
+   Recons_info * &IMG_Inf, bool do_not_use_symproj) {
    matrix2D<double>  L(4,4), R(4,4);    // A matrix from the list
    FileName          fn_proj;
    FileName          fn_ctf1; 
@@ -38,7 +38,9 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
 
    int trueIMG=selfile.ImgNo();
    selfile.go_first_ACTIVE();
-   int numIMG=trueIMG*(SL.SymsNo() + 1);
+   int numIMG;
+   if (!do_not_use_symproj) numIMG=trueIMG*(SL.SymsNo() + 1);
+   else numIMG=trueIMG;
    
    // The next two ifs check whether there is a CTF file, and 
    // whether it is unique 
@@ -77,7 +79,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
         EULER_CLIPPING(IMG_Inf[i].rot,IMG_Inf[i].tilt,IMG_Inf[i].psi);
 
         // Any symmetry?
-        if (SL.SymsNo()>0) {
+        if (SL.SymsNo()>0 && !do_not_use_symproj) {
            for (int j=0; j<SL.SymsNo(); j++) {
                int sym_index=SYMINDEX(SL,j,i,trueIMG);
                IMG_Inf[sym_index].fn_proj=IMG_Inf[i].fn_proj;
