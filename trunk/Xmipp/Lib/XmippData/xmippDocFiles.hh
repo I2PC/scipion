@@ -294,6 +294,11 @@ public:
        It doesn't matter if next line is a comment or a data line.
        \\Ex: DF.next(); */
    void next() {if (current_line!=m.end()) current_line++;}
+
+   /** Moves pointer to previous line.
+       It doesn't matter if previous line is a comment or a data line.
+       \\Ex: DF.previous(); */
+   void previous() {if (current_line!=m.begin()) current_line--;}
    
    /** Moves pointer to next data line.
        \\Ex: DF.next_data_line(); */
