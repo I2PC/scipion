@@ -291,7 +291,8 @@
 
    /** Autocorrelation function of an Xmipp matrix.
        Fast calcuation of the correlation matrix on two matrices using
-	   Fast Fourier Transform. (Using the correlation theorem) */
+	   Fast Fourier Transform. (Using the correlation theorem).
+	   The output matrix must be already resized*/
   template <class T>
    void correlation_matrix(matrix2D<T> const &m1,matrix2D<T> const &m2,
                            matrix2D<double> &R);
