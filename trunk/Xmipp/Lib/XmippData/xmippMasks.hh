@@ -52,6 +52,17 @@
 void BinaryCircularMask(matrix2D<int> &mask, 
    double radius, int mode=INNER_MASK, double x0=0, double y0=0);
 
+/* DWT Circular ............................................................ */
+/** Creates a 2D DWT circular for already sized masks.
+    The mask size must be a power of 2. The radius must be expressed in 
+    pixel units corresponding to the size of the image. For instance,
+    a 64x64 image might have a radius of 32 pixels to concentrate on the
+    central part only. The mask is generated only for the desired masks.
+    
+    If the quadrant="xx" then 01, 10 and 11 are generated together*/
+void BinaryDWTCircularMask(matrix2D<int> &mask,
+   double radius, int smin, int smax, const string &quadrant);
+
 /* Crown ................................................................... */
 /** Creates a 2D crown mask for already sized masks.
     The mask is supposed to be resized and with its logical origin already
@@ -178,6 +189,18 @@ void mask2D_8neig(matrix2D<int> &mask, int value1=1, int value2=1,
 */
 void BinarySphericalMask(matrix3D<int> &mask,
    double radius, int mode=INNER_MASK, double x0=0, double y0=0, int z0=0);
+
+/* DWT Spherical ............................................................ */
+/** Creates a 3D DWT spherical for already sized masks.
+    The mask size must be a power of 2. The radius must be expressed in 
+    pixel units corresponding to the size of the image. For instance,
+    a 64x64x64 image might have a radius of 32 pixels to concentrate on the
+    central part only.
+    
+    If quadrant=xxx then 001,010,011,100,101,110 and 111 are generated
+    together*/
+void BinaryDWTCircularMask(matrix3D<int> &mask,
+   double radius, int smin, int smax, const string &quadrant);
 
 /* Crown ................................................................... */
 /** Creates a 3D crown mask for already sized masks.
@@ -317,18 +340,19 @@ void mask3D_26neig(matrix3D<int> &mask, int value1=1, int value2=1, int value3=1
     can read parameters from the command line. */
 class Mask_Params {
 public:
-#define NO_MASK               0
-#define BINARY_CIRCULAR_MASK  1
-#define BINARY_CROWN_MASK     2
-#define BINARY_CYLINDER_MASK  3
-#define BINARY_FRAME_MASK     4
-#define GAUSSIAN_MASK         5
-#define RAISED_COSINE_MASK    6
-#define BLACKMAN_MASK         7
-#define SINC_MASK             8
-#define SINC_BLACKMAN_MASK    9
-#define READ_MASK            10
-#define RAISED_CROWN_MASK    11
+#define NO_MASK               	  0
+#define BINARY_CIRCULAR_MASK  	  1
+#define BINARY_CROWN_MASK     	  2
+#define BINARY_CYLINDER_MASK  	  3
+#define BINARY_FRAME_MASK     	  4
+#define GAUSSIAN_MASK         	  5
+#define RAISED_COSINE_MASK    	  6
+#define BLACKMAN_MASK         	  7
+#define SINC_MASK             	  8
+#define SINC_BLACKMAN_MASK    	  9
+#define READ_MASK             	 10
+#define RAISED_CROWN_MASK        11
+#define BINARY_DWT_CIRCULAR_MASK 12
 /** Mask Type.
     The only valid types are BINARY_CIRCULAR_MASK,
     BINARY_CROWN_MASK, BINARY_CYLINDER_MASK, BINARY_FRAME_MASK,
@@ -382,6 +406,16 @@ public:
     
 /** X origin */
     double x0;
+    
+/** Minimum scale for DWT masks. */
+    int smin;
+
+/** Maximum scale for DWT masks. */
+    int smax;
+
+/** Quadrant.
+    If it is empty then all, except 000, are generated. */
+    string quadrant;
 
 /** Filename from which the mask is read, if it is the case */
     FileName fn_mask;
@@ -428,7 +462,8 @@ public:
     int datatype() {
        if (type==BINARY_CIRCULAR_MASK || type==BINARY_CROWN_MASK ||
            type==BINARY_CYLINDER_MASK || type==BINARY_FRAME_MASK ||
-           type==NO_MASK              || type==READ_MASK)
+           type==NO_MASK              || type==READ_MASK         ||
+	   type==BINARY_DWT_CIRCULAR_MASK)
            return INT_MASK;
        else if (type==GAUSSIAN_MASK   || type==RAISED_COSINE_MASK ||
                 type==SINC_MASK       || type==SINC_BLACKMAN_MASK ||

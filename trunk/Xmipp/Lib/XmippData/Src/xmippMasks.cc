@@ -27,6 +27,7 @@
 #include "../xmippArgs.hh"
 #include "../xmippImages.hh"
 #include "../xmippVolumes.hh"
+#include "../xmippWavelets.hh"
 
 /*---------------------------------------------------------------------------*/
 /* 2D Masks                                                                  */
@@ -39,6 +40,33 @@ void BinaryCircularMask(matrix2D<int> &mask,
       double r2=(i-y0)*(i-y0)+(j-x0)*(j-x0);
       if      (r2<=radius2 && mode==INNER_MASK  ) MAT_ELEM(mask,i,j)=1;
       else if (r2>=radius2 && mode==OUTSIDE_MASK) MAT_ELEM(mask,i,j)=1;
+   }
+}
+
+#define DWTCIRCULAR2D_BLOCK(s,quadrant) \
+      SelectDWTBlock(s, mask, quadrant, \
+	 XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
+      V2_PLUS_V2(center,corner1,corner2); \
+      V2_BY_CT(center,center,0.5); \
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
+	 double r2=(XX(r)-XX(center))*(XX(r)-XX(center))+ \
+            (YY(r)-YY(center))*(YY(r)-YY(center)); \
+	 MAT_ELEM(mask,YY(r),XX(r))=(r2<=radius2); \
+      }         
+void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
+   int smin, int smax, const string &quadrant) {
+   double radius2=radius*radius/(4*(smin+1));
+   mask.init_zeros();
+   for (int s=smin; s<=smax; s++) {
+      matrix1D<int> corner1(2), corner2(2), r(2);
+      matrix1D<double> center(2);
+      if (quadrant=="xx") {
+	 DWTCIRCULAR2D_BLOCK(s,"01");
+	 DWTCIRCULAR2D_BLOCK(s,"10");
+	 DWTCIRCULAR2D_BLOCK(s,"11");
+      } else 
+	 DWTCIRCULAR2D_BLOCK(s,quadrant);
+      radius2/=4;
    }
 }
 
@@ -197,6 +225,39 @@ void BinarySphericalMask(matrix3D<int> &mask,
       double r2=(k-z0)*(k-z0)+(i-y0)*(i-y0)+(j-x0)*(j-x0);
       if      (r2<=radius2 && mode==INNER_MASK  ) VOL_ELEM(mask,k,i,j)=1;
       else if (r2>=radius2 && mode==OUTSIDE_MASK) VOL_ELEM(mask,k,i,j)=1;
+   }
+}
+
+#define DWTSPHERICALMASK_BLOCK(s,quadrant) \
+      SelectDWTBlock(s, mask, quadrant, \
+	 XX(corner1),XX(corner2),YY(corner1),YY(corner2), \
+	 ZZ(corner1),ZZ(corner2)); \
+      V3_PLUS_V3(center,corner1,corner2); \
+      V3_BY_CT(center,center,0.5); \
+      FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2) { \
+	 double r2=(XX(r)-XX(center))*(XX(r)-XX(center))+ \
+            (YY(r)-YY(center))*(YY(r)-YY(center))+ \
+	    (ZZ(r)-ZZ(center))*(ZZ(r)-ZZ(center)); \
+	 VOL_ELEM(mask,ZZ(r),YY(r),XX(r))=(r2<=radius2); \
+      }         
+void BinaryDWTSphericalMask(matrix3D<int> &mask, double radius,
+   int smin, int smax, const string &quadrant) {
+   mask.init_zeros();
+   double radius2=radius*radius/(4*(smin+1));
+   for (int s=smin; s<=smax; s++) {
+      matrix1D<int> corner1(3), corner2(3), r(3);
+      matrix1D<double> center(3);
+      if (quadrant=="xxx") {
+	 DWTSPHERICALMASK_BLOCK(s,"001");
+	 DWTSPHERICALMASK_BLOCK(s,"010");
+	 DWTSPHERICALMASK_BLOCK(s,"011");
+	 DWTSPHERICALMASK_BLOCK(s,"100");
+	 DWTSPHERICALMASK_BLOCK(s,"101");
+	 DWTSPHERICALMASK_BLOCK(s,"110");
+	 DWTSPHERICALMASK_BLOCK(s,"111");
+      } else
+	 DWTSPHERICALMASK_BLOCK(s,quadrant);
+      radius2/=4;
    }
 }
 
@@ -438,6 +499,17 @@ void Mask_Params::read(int argc, char **argv) _THROW {
       else if (R1>0) mode=OUTSIDE_MASK;
       else REPORT_ERROR(3000,"Mask_Params: circular mask with radius 0");
       type=BINARY_CIRCULAR_MASK;
+   // Circular DWT mask ....................................................
+   } else if (strcmp(argv[i+1],"DWT_circular")==0) {
+      if (i+5>=argc)
+         REPORT_ERROR(3000,"Mask_Params: DWT circular mask with not enough parameters");
+      if (!(allowed_data_types & INT_MASK))
+         REPORT_ERROR(3000,"Mask_Params: binary masks are not allowed");
+      R1=ABS(AtoF(argv[i+2]));
+      smin=AtoI(argv[i+3]);
+      smax=AtoI(argv[i+4]);
+      quadrant=argv[i+5];
+      type=BINARY_DWT_CIRCULAR_MASK;
    // Rectangular mask .....................................................
    } else if (strcmp(argv[i+1],"rectangular")==0) {
       if (i+3>=argc)
@@ -550,6 +622,13 @@ void Mask_Params::show() {
               << "   R=" << R1 << endl;
          SHOW_MODE; SHOW_CENTER;
          break;
+      case BINARY_DWT_CIRCULAR_MASK:
+         cout << "Mask type: Binary DWT circular\n"
+              << "   R=" << R1 << endl
+	      << "   smin=" << smin << endl
+	      << "   smax=" << smax << endl
+	      << "   quadrant=" << quadrant << endl;
+         break;
       case BINARY_CROWN_MASK:
          cout << "Mask type: Binary crown\n"
               << "   R1=" << R1 << endl
@@ -609,6 +688,9 @@ void Mask_Params::usage() const {
       cerr << "   [-mask circular <R>       : circle/sphere mask\n"
            << "                               if R>0 => outside R\n"
            << "                               if R<0 => inside  R\n"
+           << "   [-mask DWT_circular <R> <smin> <smax>: circle/sphere mask\n"
+           << "                               smin and smax define the scales\n"
+	   << "                               to be kept\n"
            << "   |-mask rectangular <Xrect> <Yrect> [<Zrect>]: 2D or 3D rectangle\n"
            << "                               if X,Y,Z > 0 => outside rectangle\n"
            << "                               if X,Y,Z < 0 => inside rectangle\n"
@@ -663,6 +745,9 @@ void Mask_Params::generate_2Dmask() {
       case BINARY_CIRCULAR_MASK:
          BinaryCircularMask(imask2D,R1,mode,x0,y0);
          break;
+      case BINARY_DWT_CIRCULAR_MASK:
+         BinaryDWTCircularMask(imask2D,R1,smin,smax,quadrant);
+         break;
       case BINARY_CROWN_MASK:
          BinaryCrownMask(imask2D,R1,R2,mode,x0,y0);
          break;
@@ -707,6 +792,9 @@ void Mask_Params::generate_3Dmask() {
          break;
       case BINARY_CIRCULAR_MASK:
          BinarySphericalMask(imask3D,R1,mode,x0,y0,z0);
+         break;
+      case BINARY_DWT_CIRCULAR_MASK:
+         BinaryDWTSphericalMask(imask3D,R1,smin,smax,quadrant);
          break;
       case BINARY_CROWN_MASK:
          BinaryCrownMask(imask3D,R1,R2,mode,x0,y0,z0);
