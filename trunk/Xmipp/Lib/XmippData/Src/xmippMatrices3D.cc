@@ -660,7 +660,7 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
       XX(idx)=j-XX(center_of_rot);
       // Determine distance to the center
       int distance;
-      if (rounding) distance=(int)round(idx.module());
+      if (rounding) distance=(int)ROUND(idx.module());
       else distance=(int)floor(idx.module());
       
       // Sum te value to the pixels with the same distance  
