@@ -452,6 +452,7 @@ void progress_bar(long rlen) {
    int min, i, hour;
    float h1, h2, m1, m2;
 
+   if (rlen==0) return;
    currt=time(NULL);
 
    if (rlen<0) {
