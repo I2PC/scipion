@@ -56,7 +56,7 @@ public:
          if(i_shift>0){
 	    DF_shifts.read(argv[i_shift+1]);
   	    colX_shift=AtoI(get_param(argc,argv,"-colX_shift"));
-	    colX_shift -=1;
+	    // colX_shift -=3;
 	    // if(colX_shift<0)
             //   REPORT_ERROR(1,"colX_shift must be no less than 3");
 	 } else colX_shift= -1;
@@ -103,7 +103,7 @@ public:
            << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
 	   << "                              Docfile used for shifts\n"
 	   << "  [-colX_shift <col>]       : Column with  the X shift\n"
-	   << "                              First column in the DocFile with data is number 1.\n"
+	   << "                              First column in the DocFile with data is number 0.\n"
 	   << "  [-colX_scale <col>]       : Column with the scale information\n"
            << "  [-dont_wrap]              : By default, the image is wrapped\n";
    }
