@@ -65,14 +65,24 @@ int main( int argc, char **argv ) {
           if (argv[i][0]=='-') break; // There is nothing else to show
           FileName fn;
           switch (mode) {
-	     case 0: continue;
-	     case 1: continue;
+	     case 0:
+                 cerr << argv[i] << " is not a valid filename\n";
+                 continue;
+	     case 1:
+                 cerr << argv[i] << " is not a valid filename\n";
+                 continue;
 	     case 2:
 	        fn=argv[i];
 		if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
 		   fn=fn.substr(0,fn.length()-1);
-		   if (!exists(fn.c_str())) continue;
-		} else continue;
+		   if (!exists(fn.c_str())) {
+                      cerr << fn << " is not a valid filename\n";
+                      continue;
+                   }
+		} else {
+                   continue;
+                   cerr << fn << " is not a valid filename\n";
+                }
                 break;
 	     case 3: continue;
 	     case 4: break;
