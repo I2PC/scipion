@@ -171,6 +171,7 @@
     Comments:								 
 	      The program diffusion from KUIM (developed by J. Gaush,	 
 	      U. Kansas) was used as the "seed".
+	      Paper: Teboul, et al. IEEE-Trans. on Image Proc. Vol. 7, 387-397.
 */			 
 void Smoothing_Shah(matrix2D<double> &img, 
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
