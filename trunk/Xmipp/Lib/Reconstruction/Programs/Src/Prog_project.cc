@@ -150,6 +150,7 @@ void Projection_Parameters::read(FileName fn_proj_param) _THROW {
                   rot_range.samples=AtoI(next_token(),3007,
                      "Prog_Project_Parameters::read: Error in Rotational "
                      "Samples");
+                  if (rot_range.ang0==rot_range.angF) rot_range.samples=1;
                   rot_range.randomness=translate_randomness(next_token());
                }
                lineNo=5;
@@ -172,6 +173,7 @@ void Projection_Parameters::read(FileName fn_proj_param) _THROW {
                   "Prog_Project_Parameters::read: Error in Tilting Final");
                tilt_range.samples=AtoI(next_token(),3007,
                   "Prog_Project_Parameters::read: Error in Tilting Samples");
+	       if (tilt_range.ang0==tilt_range.angF) tilt_range.samples=1;
                tilt_range.randomness=translate_randomness(next_token());
             }
             lineNo=6;
@@ -190,6 +192,7 @@ void Projection_Parameters::read(FileName fn_proj_param) _THROW {
                   "Prog_Project_Parameters::read: Error in Psi Final");
                psi_range.samples=AtoI(next_token(),3007,
                   "Prog_Project_Parameters::read: Error in Psi Samples");
+	       if (psi_range.ang0==psi_range.angF) psi_range.samples=1;
                psi_range.randomness=translate_randomness(next_token());
             }
             lineNo=7;
@@ -535,10 +538,17 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
          generate_angles(ExtProjs,prm.psi_range,  DF, 'p', prm);
       } else {
          generate_even_angles(ExtProjs,Nrottilt,DF,prm);
-         // Check if the last entry is empty
-         DF.locate(DF.LineNo());
-         if (DF.get_current_line().get_no_components()==0) 
-            DF.remove_current();
+         // Clear empty entries
+         DF.go_first_data_line();
+	 vector<int> to_remove;
+	 while (!DF.eof()) {
+            if (DF.get_current_line().get_no_components()==0) 
+               to_remove.push_back(DF.get_current_key());
+	    DF.next_data_line();
+	 }
+	 int imax=to_remove.size();
+	 for (int i=imax-1; i>=0; i--) DF.remove(to_remove[i]);
+	 DF.renum();
       }
    }
 
@@ -552,7 +562,7 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm)
    _THROW {
 // Generate Projection angles
    Assign_angles(DF,prm);
-
+   
 // Load Phantom and set working mode
    if (Is_VolumeXmipp(prm.fn_phantom)) {
       phantom_vol.read(prm.fn_phantom);
