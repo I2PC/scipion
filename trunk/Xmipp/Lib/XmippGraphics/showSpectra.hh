@@ -29,6 +29,8 @@
 
 #include "showSel.hh"
 #include <Classification/xmippCTVectors.hh>
+#include <qscrollbar.h>
+#include <qlabel.h>
 
 /**@name Show Spectra Data. */
 //@{
@@ -89,8 +91,13 @@ protected:
     void GUIchangeColor(QColor &_color, const char * _color_title);
     /* set common spectra options*/
     void setCommonSpectraOptionsRightclickMenubar(void);
+public:
+    /* Apply filter */
+    void applyFilter(const vector<int> &min, const vector<int> &max);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
+    // Select spectra by value
+    virtual void selectByValues();
     // Change Show/Hide Grid
     virtual void changeGrid();
     // Change Show/Hide X legend
@@ -121,5 +128,30 @@ public:
     virtual void initWithVectors(int _numRows, int _numCols,
        xmippCTVectors *_V, const char *_title);
 };
+
+/** Class to filter spectra.
+*/
+class SpectraFilter : public QWidget {
+   Q_OBJECT
+public:
+   /** Constructor */
+   SpectraFilter(int min, int max, const vector<float> &_x,
+      ShowSpectra *show_spectra, 
+      QWidget *parent=0, const char *name=0, int wflags=0) _THROW;
+   /** Destructor */
+   ~SpectraFilter();
+private:
+   ShowSpectra *__show_spectra;
+   int         __N;    // Number of sliders
+   float      *__current_values;
+   QScrollBar **__scroll_min;
+   QScrollBar **__scroll_max;
+   QLabel     **__label_min;
+   QLabel     **__label_max;
+private slots:
+   void but_ok_clicked();
+   void scrollValueChanged(int);  
+};
+
 //@}
 #endif

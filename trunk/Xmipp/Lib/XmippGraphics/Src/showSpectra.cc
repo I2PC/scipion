@@ -28,6 +28,9 @@
 #include <qcolordialog.h>
 #include <qfontdialog.h>
 #include <qmessagebox.h>
+#include <qlayout.h>
+#include <qpushbutton.h>
+#include <qtooltip.h> 
 #include "../showTools.hh"
 
 /* Init/Clear data --------------------------------------------------------- */
@@ -129,7 +132,6 @@ void ShowSpectra::initRightclickMenubar() {
    menubar->insertItem( "&Options", options );    
    menubar->insertSeparator();
 
-
    // Inser Help and Quit
    insertGeneralItemsInRightclickMenubar();
 }
@@ -200,7 +202,7 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
       if (!options->isItemEnabled(mi_showYlegend)) {
          QString tmpS;
          if (l == 0) tmpS.setNum(myMinValue, 'f', 2);
-         else	     tmpS.setNum((l*(myMaxValue/3.0)), 'f', 2);
+         else	     tmpS.setNum((myMinValue+l*((myMaxValue-myMinValue)/3.0)), 'f', 2);
          p->drawText(2, (int) (scprojYdim-offY-(l*((scprojYdim-2*offY)/3.0))), tmpS);
       }
       
@@ -241,7 +243,33 @@ void ShowSpectra::openNewFile(const FileName &_fn) {
    repaint();
 }
 
-/* Change options ----------------------------------------------------------- */
+/* Select by value ---------------------------------------------------------- */
+void ShowSpectra::selectByValues() {
+   SpectraFilter* filter_window=new SpectraFilter(
+        FLOOR(minPixel), CEIL(maxPixel), V->theItems[0], this,
+	0, "new window", WDestructiveClose);
+   filter_window->show();
+}
+
+/* Apply filter ------------------------------------------------------------ */
+void ShowSpectra::applyFilter(const vector<int> &min, const vector<int> &max) {
+   int N=V->theItems[0].size();
+
+   for (int i = 0; i < listSize; i++) {
+       bool current_status=cellMarks[i];
+       bool new_status=true;
+       for (int j=0; j<N; j++) {
+            float v=V->theItems[i][j];
+	    if (v<min[j] || v>max[j]) {new_status=false; break;}
+       }
+       if (current_status!=new_status) {
+          cellMarks[i] = new_status;
+          updateCellIdx(i);
+       }
+   }
+}
+
+/* Change options ---------------------------------------------------------- */
 void ShowSpectra::changeGrid()    {changeBoolOption(mi_showgrid, mi_hidegrid);}
 void ShowSpectra::changeXlegend() {changeBoolOption(mi_showXlegend, mi_hideXlegend);}
 void ShowSpectra::changeYlegend() {changeBoolOption(mi_showYlegend, mi_hideYlegend);}
@@ -309,8 +337,8 @@ void ShowSpectra::changeXstep() {
       SLOT(set_spacing(float,float)) );
       param_window->setFixedSize(250,200);
       param_window->show();
-
 }
+
 /****************************************************/
 
 void ShowSpectra::set_spacing(float _spacing, float _x_tick_off) {
@@ -323,6 +351,10 @@ void ShowSpectra::set_spacing(float _spacing, float _x_tick_off) {
 
 void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
 {
+   // Select by value
+   options->insertItem( "Select by spectral values", this, SLOT(selectByValues()));
+   options->insertSeparator();
+
    // Show grid
    mi_showgrid = options->insertItem( "Show Grid", this,  SLOT(changeGrid()));
    mi_hidegrid = options->insertItem( "Hide Grid", this,  SLOT(changeGrid()));
@@ -352,4 +384,138 @@ void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
       colorMenu->insertItem( "&Axis", this, SLOT(changeAxisColor()));
    menubar->insertItem( "&Colors", colorMenu);
    menubar->insertSeparator();
+}
+
+/* ------------------------------------------------------------------------- */
+// Spectra filter constructor
+SpectraFilter::SpectraFilter(int min, int max,
+   const vector<float> &_x, ShowSpectra *_show_spectra,
+   QWidget *parent, const char *name, int wflags) _THROW:
+   QWidget(parent,name,wflags) {
+   __N=_x.size();
+   __show_spectra=_show_spectra;
+
+   // Allocate memory
+   __current_values=new float[__N];
+   if (!__current_values) 
+      REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
+   __scroll_min=new QScrollBar *[__N];
+   if (!__scroll_min) 
+      REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
+   __scroll_max=new QScrollBar *[__N];
+   if (!__scroll_max) 
+      REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
+   __label_min=new QLabel *[__N];
+   if (!__label_min) 
+      REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
+   __label_max=new QLabel *[__N];
+   if (!__label_max) 
+      REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
+
+    // Set this window caption
+    setCaption( "Spectra Filter" );
+
+    // Create a layout to position the widgets
+    QBoxLayout *Layout = new QVBoxLayout( this, 10 );
+
+    // Create a grid layout to hold most of the widgets
+    QGridLayout *grid = new QGridLayout( __N+2, 5 );
+    Layout->addLayout( grid, 5 );
+
+    // Label
+    QLabel     *label_min= new QLabel( this, "label" );    
+    label_min->setFont( QFont("times",12,QFont::Bold) );
+    label_min->setText( "Minimum value" );
+    label_min->setFixedSize(label_min->sizeHint());
+    grid->addWidget( label_min, 0, 1, AlignCenter );
+
+    // Label
+    QLabel     *label_max= new QLabel( this, "label" );    
+    label_max->setFont( QFont("times",12,QFont::Bold) );
+    label_max->setText( "Maximum value" );
+    label_max->setFixedSize(label_max->sizeHint());
+    grid->addWidget( label_max, 0, 3, AlignCenter );
+
+    // Create all sliders
+    for (int i=0; i<__N; i++) {
+    
+       // Label
+       __label_min[i]= new QLabel( this, "label" );    
+       __label_min[i]->setFont( QFont("courier",14) );
+       __label_min[i]->setText( ItoA(min,3) );
+       __label_min[i]->setFixedSize(__label_min[i]->sizeHint());
+       grid->addWidget( __label_min[i], i+1, 0, AlignCenter );
+
+       //Scroll Bar
+       __scroll_min[i]= new QScrollBar(min, max, 1, 1, min,
+          QScrollBar::Horizontal,this,"scroll");
+       __scroll_min[i]->setFixedWidth(100); 
+       __scroll_min[i]->setFixedHeight(15); 
+       grid->addWidget( __scroll_min[i], i+1, 1, AlignCenter );
+       connect( __scroll_min[i], SIGNAL(valueChanged(int)),
+                                 SLOT(scrollValueChanged(int)) );
+
+       // Label
+       QLabel     *label= new QLabel( this, "label" );    
+       label->setFont( QFont("times",12) );
+       label->setText( (string)"Harmonic "+ItoA(i+1,2) );
+       label->setFixedSize(label->sizeHint());
+       grid->addWidget( label, i+1, 2, AlignCenter );
+
+       //Scroll Bar
+       __scroll_max[i]= new QScrollBar(min, max, 1, 1, max,
+          QScrollBar::Horizontal,this,"scroll");
+       __scroll_max[i]->setFixedWidth(100); 
+       __scroll_max[i]->setFixedHeight(15); 
+       grid->addWidget( __scroll_max[i], i+1, 3, AlignCenter );
+       connect( __scroll_max[i], SIGNAL(valueChanged(int)),
+                                 SLOT(scrollValueChanged(int)) );
+
+       // Label
+       __label_max[i]= new QLabel( this, "label" );    
+       __label_max[i]->setFont( QFont("courier",14) );
+       __label_max[i]->setText( ItoA(max,3) );
+       __label_max[i]->setFixedSize(__label_max[i]->sizeHint());
+       grid->addWidget( __label_max[i], i+1, 4, AlignCenter );
+
+    }
+
+    // Filter Button
+    QPushButton *do_it;
+    do_it = new QPushButton( this, "do_it" );	// create button 3
+    do_it->setFont( QFont("times",12,QFont::Bold) );
+    do_it->setText( "Filter" );
+    do_it->setFixedSize( do_it->sizeHint());
+    grid->addWidget( do_it, __N+1, 0, AlignCenter ); 
+    QToolTip::add( do_it, "Select Spectra according to filter" );
+    connect( do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()) );
+}
+
+// Spectra filter destructor
+SpectraFilter::~SpectraFilter() {
+   delete __current_values;
+}
+
+// One of the sliders changed ----------------------------------------------
+void SpectraFilter::scrollValueChanged(int new_val) {
+    int dummy=new_val;  // This is to cheat some compilers
+    if (dummy);         // who complain that the values
+      	                // are never used
+
+    // Read all sliders
+    for (int i=0; i<__N; i++) {
+       __label_min[i]->setText( ItoA(__scroll_min[i]->value(),3) );
+       __label_max[i]->setText( ItoA(__scroll_max[i]->value(),3) );
+    }
+}
+
+/* Filter ------------------------------------------------------------------ */
+void SpectraFilter::but_ok_clicked() {
+   vector<int> min(__N);
+   vector<int> max(__N);
+   for (int i=0; i<__N; i++) {
+      min[i]=__scroll_min[i]->value();
+      max[i]=__scroll_max[i]->value();
+   }
+   __show_spectra->applyFilter(min,max);
 }
