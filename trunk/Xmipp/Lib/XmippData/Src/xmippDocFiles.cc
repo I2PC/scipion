@@ -150,6 +150,7 @@ void DocLine::read(istream& in) _THROW {
          read_float_list(NULL,param_no,data,1602,"Error reading doc file line");
       } catch (Xmipp_error) {
          // If doesn't work the try fix
+         data.clear();
          data.reserve(param_no);
          for (int i=0; i<param_no; i++) {
             data.push_back(AtoF(line.substr(8+i*12,12)));
