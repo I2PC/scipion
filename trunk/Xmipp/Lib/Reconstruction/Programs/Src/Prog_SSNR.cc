@@ -294,6 +294,11 @@ void Compute_Uncorrected_SSNR_1D(matrix3D<double> &V,
       Projection Ith; 
       project_Volume(V, Ith, YSIZE(Iexp()), XSIZE(Iexp()),
          Iexp.rot(), Iexp.tilt(), Iexp.psi());
+      #ifdef DEBUG
+         Iexp.write("PPPexp.xmp");
+	 Ith.write("PPPth.xmp");
+	 ImageXmipp save; save()=Ith()-Iexp(); save.write("PPPdiffreal.xmp");
+      #endif
       
       // Compute the difference
       if (!treat_as_noise) Iexp()-=Ith();
@@ -352,8 +357,8 @@ void Compute_Uncorrected_SSNR_1D(matrix3D<double> &V,
             output(i,0)=i;
             output(i,1)=w*1/Tm;
             output(i,2)=S21D(i)/N21D(i);
-            output(i,3)=10*log10(S21D(i)/imgno);
-            output(i,4)=10*log10(N21D(i)/imgno);
+            output(i,3)=10*log10(S21D(i)/(imgno+1));
+            output(i,4)=10*log10(N21D(i)/(imgno+1));
             imax++;
          }
          output.resize(imax,5);
@@ -386,6 +391,10 @@ void Compute_Uncorrected_SSNR_1D(matrix3D<double> &V,
       imax++;
    }
    output.resize(imax,5);
+   #ifdef DEBUG
+      cout << "Finally, Uncorrected SSNR\n"
+           << output.transpose() << endl;
+   #endif
 }
 #undef DEBUG
 
