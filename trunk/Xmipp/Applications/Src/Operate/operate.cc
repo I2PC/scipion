@@ -557,7 +557,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp input;
-	   input.read(fn_1);
+	   input.read(fn_1); input().set_Xmipp_origin();
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;
@@ -567,7 +567,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
    else if(operand_type1==VOLUME)
    {
 	   VolumeXmipp input;
-	   input.read(fn_1);
+	   input.read(fn_1); input().set_Xmipp_origin();
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;
