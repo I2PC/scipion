@@ -395,6 +395,25 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
    SF_kk.go_first_ACTIVE();
    while (!SF_kk.eof())
       system(((string)"rm "+SF_kk.NextImg()).c_str());
+
+   // Reorder the report columns
+   DocFile DF_report, DF_report_standard;
+   DF_report.read(fn_report+"."+fn_ext);
+   DF_report_standard.reserve(DF_report.dataLineNo());
+   while (!DF_report.eof()) {
+      matrix1D<double> data_line(6);
+      data_line(0)=DF_report(1); // rot
+      data_line(1)=DF_report(2); // tilt
+      data_line(2)=DF_report(3); // psi
+      data_line(3)=DF_report(4); // X
+      data_line(4)=DF_report(5); // Y
+      data_line(5)=DF_report(0); // Correlation
+    
+      DF_report.next_data_line();
+      DF_report_standard.append_data_line(data_line);
+   }
+
+   DF_report_standard.write(fn_report+"."+fn_ext);
 }
 
 // Angular Refinement via Projection matching ------------------------------
@@ -569,23 +588,23 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
     "* b01*."+fn_ext).c_str());
 
-   DocFile DF_assigned_angles, DF_report_like_Radon;
+   DocFile DF_assigned_angles, DF_report_standard;
    DF_assigned_angles.read((string)"assigned_angles."+fn_ext);
-   DF_report_like_Radon.reserve(DF_report.dataLineNo());
+   DF_report_standard.reserve(DF_report.dataLineNo());
    while (!DF_report.eof()) {
       matrix1D<double> data_line(6);
-      data_line(0)=DF_report(1);          // Correlation
-      data_line(1)=DF_assigned_angles(2); // rot
-      data_line(2)=DF_assigned_angles(1); // tilt
-      data_line(3)=DF_assigned_angles(0); // psi
-      data_line(4)=DF_report(3);          // X
-      data_line(5)=DF_report(4);          // Y
+      data_line(0)=DF_assigned_angles(2); // rot
+      data_line(1)=DF_assigned_angles(1); // tilt
+      data_line(2)=DF_assigned_angles(0); // psi
+      data_line(3)=DF_report(3);          // X
+      data_line(4)=DF_report(4);          // Y
+      data_line(5)=DF_report(1);          // Correlation
     
       DF_assigned_angles.next_data_line();
       DF_report.next_data_line();
-      DF_report_like_Radon.append_data_line(data_line);
+      DF_report_standard.append_data_line(data_line);
    }
 
-   DF_report_like_Radon.write(fn_report+".txt");
+   DF_report_standard.write(fn_report+".txt");
    system(((string)"rm apmq."+fn_ext+" assigned_angles."+fn_ext).c_str());
 }
