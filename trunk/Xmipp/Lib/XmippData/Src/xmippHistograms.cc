@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
