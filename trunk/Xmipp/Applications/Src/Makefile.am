@@ -23,6 +23,7 @@ SUBDIRS = 2DInterpolation \
 	Ang_distribution \
 	Angular_distance \
 	Angular_predict \
+	Angular_predict_continuous \
 	Angular_refinement \
 	Are_different \
 	Art \
