@@ -95,7 +95,13 @@ int main(int argc, char **argv) {
          if (fn_oext=="") fn_out=fn_in;
          else             fn_out=fn_in.without_extension()+"."+fn_oext;
          // Process an image ...............................................
-         if (Is_ImageXmipp(fn_in)) {
+   		if(Is_FourierImageXmipp(fn_in)) {
+      		Fourier_image.read(fn_in);
+      		if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      		else image_reversed=Fourier_image.reversed();
+            Fourier_image.write(fn_out,image_reversed);
+
+			} else  if (Is_ImageXmipp(fn_in)) {
             image.read(fn_in);
             if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
             else image_reversed=image.reversed();
