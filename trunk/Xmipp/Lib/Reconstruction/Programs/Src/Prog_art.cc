@@ -245,8 +245,18 @@ void ART_single_step(
       mean_error += IMGPIXEL(diff_proj,i,j) * IMGPIXEL(diff_proj,i,j);
 
    // Compute the correction image
-      if (ABS(IMGPIXEL(corr_proj,i,j))<1)
-         IMGPIXEL(corr_proj,i,j)=SGN(IMGPIXEL(corr_proj,i,j));
+   // if (ABS(IMGPIXEL(corr_proj,i,j))<1)
+   //    IMGPIXEL(corr_proj,i,j)=SGN(IMGPIXEL(corr_proj,i,j));
+   // 17 March 2005, remove next line if nobody complains
+      if (IMGPIXEL(corr_proj,i,j)<0) 
+         {
+	  cout << " You have found a bug, please report it" << endl;
+	  cout << " Error: IMGPIXEL(corr_proj,i,j)<0 " << endl;
+	  cout << " email: xmipp@cnb.uam.es" << endl;
+	  exit(1);
+	 }
+      if (IMGPIXEL(corr_proj,i,j)<1)
+         IMGPIXEL(corr_proj,i,j)=1.;
       IMGPIXEL(corr_proj,i,j)=
          applied_lambda*IMGPIXEL(diff_proj,i,j)/IMGPIXEL(corr_proj,i,j);
    }
