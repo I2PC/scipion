@@ -31,15 +31,16 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Programs/Src/Prog_assign_CTF.o \
 	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o \
            Programs/Src/Prog_SSNR.o \
-           Programs/Src/Prog_Angular_Predict_continuous.o
+           Programs/Src/Prog_Angular_Predict_continuous.o \
+   	   Programs/Src/Prog_Align2d.o
+
 SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
 SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
 	   Programs/Src/Prog_Angular_Project.o \
 	   Programs/Src/Prog_Angular_Predict.o \
            Programs/Src/Prog_Angular_Denoise.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
-           Src/recons_spider.o  Programs/Src/Prog_recons_test.o \
-	   Programs/Src/Prog_Align2d.o
+           Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
 
 
 # Main Action = Build library ----------------------------------------------
