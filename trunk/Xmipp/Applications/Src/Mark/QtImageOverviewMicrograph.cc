@@ -186,13 +186,14 @@ void QtImageOverviewMicrograph::loadSymbols() {
       if ( !getMicrograph()->coord(i).valid ) continue;
       drawEllipse(getMicrograph()->coord(i).X, 
          getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label);
-   }   
+   }
 }
 
 void QtImageOverviewMicrograph::mouseMoveEvent( QMouseEvent *e ) {
    int mX, mY, x, y;
 
    if ( getMicrograph() == NULL ) return;
+   if ( e->button() != LeftButton ) return;
    
    x = e->pos().x();
    y = e->pos().y();
