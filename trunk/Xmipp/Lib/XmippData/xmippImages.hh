@@ -388,10 +388,8 @@ public:
        \\Ex: matrix2D<int> m; ImageXmipp IX; IX=m; */
    template <class T1>
       ImageXmippT<T>& operator=(const matrix2D<T1> &op1) {
-         if (&img!=(matrix2D<T> *) &op1) {
-            this->ImageT<T>::operator = (op1);
-            clear_header(); adjust_header();
-         }
+         this->ImageT<T>::operator = (op1);
+         clear_header(); adjust_header();
          return *this;
       }
    
@@ -450,11 +448,11 @@ public:
          header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex) 
       else if (typeid(T)==typeid(double))
          header.headerType() = headerXmipp::IMG_XMIPP;  // Sets header of type Image_XMipp
-      header.set_dimension(YSIZE(img), XSIZE(img)); // Sets header dimensions     
+      header.set_dimension(YSIZE(ImageT<T>::img), XSIZE(ImageT<T>::img)); // Sets header dimensions     
       header.Slices() = 1;                 	    // Sets header Slices 
       header.set_time();			    // Set time and date 
       header.set_date();
-      header.set_title(fn_img);                     // Set title
+      header.set_title(ImageT<T>::fn_img);          // Set title
       header.set_header(); 			    // Initialize header
    }
 

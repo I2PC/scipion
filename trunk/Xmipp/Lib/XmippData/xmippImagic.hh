@@ -98,7 +98,7 @@ public:
   /** Rename. */
   virtual void rename (FileName newName)
   {
-    if (newName != fn_img)
+    if (newName != ImageT<T>::fn_img)
     {
       ImageT<T>::rename (newName);
       name_parsed = false;
@@ -139,7 +139,7 @@ public:
   template <class T1>
   ImageImagicT<T>& operator= (const matrix2D<T1> &m)
   {
-    if (&img != (matrix2D<T> *) &m)
+    if (&ImageT<T>::img != (matrix2D<T> *) &m)
     {
       this->ImageT<T>::operator= (m);
       name_parsed = false;
@@ -151,9 +151,11 @@ public:
   friend ostream& operator<< (ostream& out, const ImageImagicT<T> &I)
   {
     out << (ImageT<T>&) I;
-    out << "IMAGIC header fname: " << get_hedfname() << endl;
-    out << "IMAGIC image fname:  " << get_imgfname() << endl;
-    out << "image number:        " << get_imgnum() << endl;
+    /* COSS: These functions are not defined 
+       out << "IMAGIC header fname: " << get_hedfname() << endl;
+       out << "IMAGIC image fname:  " << get_imgfname() << endl;
+       out << "image number:        " << get_imgnum() << endl;
+    */
     return (out);
   };
 

@@ -31,15 +31,15 @@ void ImageImagicT<T>::parseFname()
     imgfname = "";
     imgnum = -1;
     // Look for special IMAGIC format: 'imagic:<hedfile>:<imgnum>'
-    if (fn_img.find (IMAGIC_TAG) != string::npos)
+    if (ImageT<T>::fn_img.find (IMAGIC_TAG) != string::npos)
     {
-      const string::size_type imgnumpos = fn_img.rfind (IMAGIC_TAG_SEP);
+      const string::size_type imgnumpos = ImageT<T>::fn_img.rfind (IMAGIC_TAG_SEP);
       if (imgnumpos > IMAGIC_TAG_LEN)
       {
-	hedfname = fn_img.substr (IMAGIC_TAG_LEN, imgnumpos-IMAGIC_TAG_LEN);
+	hedfname = ImageT<T>::fn_img.substr (IMAGIC_TAG_LEN, imgnumpos-IMAGIC_TAG_LEN);
 	imgfname = hedfname.substitute_extension (IMAGIC_HEADER_EXT,
 						  IMAGIC_IMAGE_EXT);
-	imgnum = atoi ((fn_img.substr (imgnumpos+1)).c_str());
+	imgnum = atoi ((ImageT<T>::fn_img.substr (imgnumpos+1)).c_str());
       }
     }
     name_parsed = true;
@@ -64,7 +64,7 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
   const int imgnum = getImgNum();
   const size_t img_offset = img_info.xsize * img_info.ysize;
   // Read the image data
-  img.resize (img_info.ysize, img_info.xsize);
+  ImageT<T>::img.resize (img_info.ysize, img_info.xsize);
   const bool reversed = false;
   switch (img_info.img_types[imgnum])
   {
@@ -73,10 +73,10 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
       float data;
       const unsigned size = 4;
       fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
 	{
 	  FREAD (&data, size, 1, img_fh, reversed);
-	  MULTIDIM_ELEM(img,i) = data;
+	  MULTIDIM_ELEM(ImageT<T>::img,i) = data;
 	}
       break;
     }
@@ -85,10 +85,10 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
       short int data;
       const unsigned size = 2;
       fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
 	{
 	  FREAD (&data, size, 1, img_fh, reversed);
-	  MULTIDIM_ELEM(img,i) = data;
+	  MULTIDIM_ELEM(ImageT<T>::img,i) = data;
 	}
       break;
     }
@@ -97,10 +97,10 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
       unsigned char data;
       const unsigned size = 1;
       fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
 	{
 	  FREAD (&data, size, 1, img_fh, reversed);
-	  MULTIDIM_ELEM(img,i) = data;
+	  MULTIDIM_ELEM(ImageT<T>::img,i) = data;
 	}
       break;
     }

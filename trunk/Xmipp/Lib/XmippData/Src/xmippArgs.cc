@@ -615,7 +615,7 @@ void generate_command_line(const string &command_line, int &argcp,
    }
    
    // Resize argv and cut words
-   argvp = new (char *)[words+1];
+   argvp = new char *[words+1];
    argvp[0]=new char[6]; strcpy(argvp[0],"autom");
    if (copy[0]==' ') {state=OUTSIDE_WORD;                      argcp=1;}
    else              {state=INSIDE_WORD;  argvp[1]=&(copy[0]); argcp=2;}

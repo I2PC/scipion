@@ -194,8 +194,8 @@ void ImageXmippT<T>::check_oldxmipp_header() {
       cerr << "WARNING%% Copying shifts from old to new header location: "<< (*this).name() <<endl;
       header.fXoff()=-(float)mat(2,0);
       header.fYoff()=-(float)mat(2,1);
-      if (XSIZE(img)%2==0) header.fXoff()+=0.5;
-      if (YSIZE(img)%2==0) header.fYoff()+=0.5;
+      if (XSIZE(ImageT<T>::img)%2==0) header.fXoff()+=0.5;
+      if (YSIZE(ImageT<T>::img)%2==0) header.fYoff()+=0.5;
     } 
   } 
 }
@@ -246,11 +246,11 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   bool ret;
 
   ImageXmippT<T>::rename(name); 
-  if ((fp = fopen(fn_img.c_str(), "rb")) == NULL)
-    REPORT_ERROR(1501,(string)"ImageXmipp::read: File "+fn_img+" not found");
+  if ((fp = fopen(ImageT<T>::fn_img.c_str(), "rb")) == NULL)
+    REPORT_ERROR(1501,(string)"ImageXmipp::read: File "+ImageT<T>::fn_img+" not found");
   // Read header
   if (!header.read(fp, skip_type_check, reversed))
-     REPORT_ERROR(1502,"ImageXmipp::read: File " + fn_img +
+     REPORT_ERROR(1502,"ImageXmipp::read: File " + ImageT<T>::fn_img +
         " is not a valid Xmipp file");   
 
   // Read whole image and close file
@@ -260,17 +260,17 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
     if (apply_geo || only_apply_shifts) {
       // Mirror image if requested in the header 
       // Also mirror if only_apply_shifts, since Xoff in the header is assumed to be related with flip
-      if (ImageXmippT<T>::flip()==1.) img.self_reverseX();
+      if (ImageXmippT<T>::flip()==1.) ImageT<T>::img.self_reverseX();
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
-      T  outside=DIRECT_MAT_ELEM(img,0,0);
-      img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(only_apply_shifts),IS_INV,DONT_WRAP,outside);
+      T  outside=DIRECT_MAT_ELEM(ImageT<T>::img,0,0);
+      ImageT<T>::img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(only_apply_shifts),IS_INV,DONT_WRAP,outside);
     }
 
     // scale if necessary (check this with Carlos)
     if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
       header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
-      img.scale_to_size(header.iYdim(), header.iXdim());
+      ImageT<T>::img.scale_to_size(header.iYdim(), header.iXdim());
     }; 
 
     header.set_header();  // Set header in a Xmipp consistent state
@@ -285,8 +285,8 @@ template <class T>
 void ImageXmippT<T>::write(const FileName &name, bool force_reversed) _THROW {
   FILE *fp;
   if (name != "") ImageXmippT<T>::rename(name); 
-  if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
-    REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+fn_img +
+  if ((fp = fopen(ImageT<T>::fn_img.c_str(), "wb")) == NULL)
+    REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+ImageT<T>::fn_img +
        " cannot be written");
   adjust_header();
   bool reversed=(force_reversed) ? !header.reversed():header.reversed();

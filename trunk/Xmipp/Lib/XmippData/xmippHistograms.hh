@@ -274,7 +274,8 @@ template <class T>
    void compute_hist(const matrix3D<T> &v, histogram1D &hist,
       const matrix1D<int> &corner1, const matrix1D<int> &corner2,
       int no_steps=100)
-   {double min, max; array.compute_double_minmax(min, max, corner1, corner2);
+   {double min, max; 
+    v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min,max,no_steps);
     matrix1D<int> r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2)

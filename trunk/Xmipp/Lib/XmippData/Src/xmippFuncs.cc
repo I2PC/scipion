@@ -700,8 +700,8 @@ template <class T>
 
    random_vector =  new char[(Number_of_Numbers*Type_size)];
    T_random_vector = (T *) random_vector;
-   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                Number_of_Numbers*Type_size) ) ),ios::beg);
+   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - (std::streamoff)
+                                (Number_of_Numbers*Type_size)) ) ),ios::beg);
    in.read(random_vector, (Number_of_Numbers*Type_size));
 
     in.close();
@@ -791,7 +791,7 @@ template <class T>
    m_max;
    //get a random number to set the file pointer at a random position
    in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                Number_of_Numbers*Type_size) ) ),ios::beg);
+                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
     for(int ii=0; ii<Number_of_Numbers;)
        {  
           
@@ -803,7 +803,7 @@ template <class T>
              {
              if(in.eof())
                  in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                Number_of_Numbers*Type_size) ) ),ios::beg);
+                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
         
              in.read((char*)&(T_random_vector[ii]),Type_size);
              }

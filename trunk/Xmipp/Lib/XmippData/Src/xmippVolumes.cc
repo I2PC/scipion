@@ -158,12 +158,12 @@ template <class T> void VolumeXmippT<T>::read(const FileName &name,
   FILE *fp; 
 
   rename(name); 
-  if ((fp = fopen(fn_img.c_str(), "rb")) == NULL)
-    REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+fn_img+" not found");
+  if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "rb")) == NULL)
+    REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+VolumeT<T>::fn_img+" not found");
 
   // Read header
   if (!header.read(fp, skip_type_check, force_reversed))
-     REPORT_ERROR(1502,"VolumeXmipp::read: File " + fn_img +
+     REPORT_ERROR(1502,"VolumeXmipp::read: File " + VolumeT<T>::fn_img +
         " is not a valid Xmipp file");   
 
   // Read whole image and close file
@@ -179,8 +179,8 @@ template <class T> void VolumeXmippT<T>::write(const FileName &name,
   bool force_reversed) _THROW {
   FILE *fp;
   if (name != "") rename(name); 
-  if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
-    REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+fn_img +
+  if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
+    REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+VolumeT<T>::fn_img +
        " cannot be written");
   adjust_header();  
   header.write(fp, force_reversed);

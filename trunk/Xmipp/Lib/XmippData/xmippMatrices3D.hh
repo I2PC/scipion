@@ -830,7 +830,7 @@ public:
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
    /** Rotate a volume around any axis, return result. */
-   VT rotate(double ang, const matrix1D<double> v, bool wrap=DONT_WRA) const
+   VT rotate(double ang, const matrix1D<double> v, bool wrap=DONT_WRAP) const
       {VT aux; rotate(ang, v, aux, wrap); return aux;}
 
    /** Rotate a volume around any axis, keep in this object. */

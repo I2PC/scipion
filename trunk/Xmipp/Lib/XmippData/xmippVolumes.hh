@@ -404,10 +404,8 @@ public:
        \\Ex: matrix3D<float> m; VolumeXmipp VX; VX=m; */
    template <class Type>
       VolumeXmippT& operator=(const matrix3D<Type> &op1) {
-         if (&img!=(matrix3D<T> *) &op1) {
-            this->VolumeT<T>::operator = (op1);
-            clear_header(); adjust_header();
-         }
+         this->VolumeT<T>::operator = (op1);
+         clear_header(); adjust_header();
          return *this;
       }
 
@@ -460,11 +458,11 @@ public:
       else if (typeid(T) == typeid(complex<double>) )   
            header.headerType() = headerXmipp::VOL_FOURIER;
 
-      header.set_dimension(YSIZE(img), XSIZE(img)); // Sets header dimensions     
-      header.Slices() = ZSIZE(img);                 // Sets header Slices 
+      header.set_dimension(YSIZE(VolumeT<T>::img), XSIZE(VolumeT<T>::img)); // Sets header dimensions     
+      header.Slices() = ZSIZE(VolumeT<T>::img);     // Sets header Slices 
       header.set_time();			    // Set time and date 
       header.set_date();
-      header.set_title(fn_img);                     // Set title
+      header.set_title(VolumeT<T>::fn_img);         // Set title
       header.set_header(); 			    // Initialize header
    }
 
