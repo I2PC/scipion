@@ -28,11 +28,11 @@
 #ifndef _NUMERICAL_HH
 #   define _NUMERICAL_HH
 
-// Random numbers
+// Random numbers ---------------------------------------------------------
 double ran1(int *idum);                                 // Uniform random
 double gasdev(int *idum);                               // Gaussian random
 
-// Working with matrices
+// Working with matrices ---------------------------------------------------
 template <class T> void ludcmp(T *a, int n, int *indx, T *d);  
                                                        // LU decomposition
 template <class T> void lubksb(T *a, int n, int *indx, T b[]);  
@@ -40,16 +40,16 @@ template <class T> void lubksb(T *a, int n, int *indx, T b[]);
 template <class T> void gaussj(T *a, int n, T *b, int m);
                                                        // Solve Ax=b (b=matrix)
 
-// FFT
+// FFT ---------------------------------------------------------------------
 void four1(double data[],int nn,int isign);             // Complex FFT 1D
 void realft(double data[],int n,int isign);             // Real FFT 1D
 void fourn(double data[],int nn[],int ndim,int isign);  // Complex FFT 2D,3D,...
 
-// Sorting
+// Sorting -----------------------------------------------------------------
 void indexx(int n, double arrin[], int indx[]);         // Sorting indexes
 void qcksrt(int n, double arr[]);                       // Sorting
 
-// Bessel functions
+// Bessel functions --------------------------------------------------------
 double bessj0(double x);
 double bessj3_5(double x);
 
@@ -61,7 +61,7 @@ double bessi2(double x);
 double bessi2_5(double x);
 double bessi3_5(double x);
 
-// Special functions
+// Special functions -------------------------------------------------------
 double gammln(double xx);
 double gammp(double a, double x);
 double betacf(double a, double b, double x);
@@ -71,14 +71,14 @@ double betai(double a, double b, double x);
 void svdcmp(double *a, int m,int n,double *w, double *v);
 void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x);
 
-// 
+// -------------------------------------------------------------------------
 void convlv(double *data,int n,double *respns,int m,int isign,double *ans);
 void realft(double *data,int n,int isign);
 void twofft(double *data1,double *data2,double *fft1,double *fft2,int n);
 void savgol(double *c, int np, int nl, int nr, int ld, int m);
 void four1(double *data,int nn,int isign);
 
-// Optimization
+// Optimization ------------------------------------------------------------
 void powell(double *p, double *xi, int n, double ftol, int &iter,
    double &fret, double (*func)(double *), bool show);
 // These two routines have been taken from
@@ -89,7 +89,32 @@ int nnls(double *a, int m, int n, double *b, double *x,
           double *rnorm, double *w, double *zz, int *index);
 int nnlsWght(int N, int M, double *A, double *b, double *weight);
 
-// Wavelets
+// CFSQP -------------------------------------------------------------------
+// These routines are from 
+// http://www.aemtechnology.com/aemdesign/downloadfsqp.htm
+// They implement the CFSQP algorithm
+/* Declare and initialize user-accessible flag indicating    */
+/* whether x sent to user functions has been changed within  */
+/* CFSQP.				 		     */
+// Gradients - Finite Difference
+void    grobfd(int,int,double *,double *,void (*)(int,int,
+               double *,double *,void *),void *);
+void    grcnfd(int,int,double *,double *,void (*)(int,int,
+               double *,double *,void *),void *);
+
+// CFSQP
+void    cfsqp(int,int,int,int,int,int,int,int,int,int *,int,int,
+              int,int *,double,double,double,double,double *,
+              double *,double *,double *,double *,double *,
+              void (*)(int,int,double *,double *,void *),
+              void (*)(int,int,double *,double *,void *),
+              void (*)(int,int,double *,double *,
+                   void (*)(int,int,double *,double *,void *),void *),
+              void (*)(int,int,double *,double *,
+                   void (*)(int,int,double *,double *,void *),void *),
+              void *);
+
+// Wavelets ----------------------------------------------------------------
 void wt1(double a[], unsigned long n, int isign,
 	void (*wtstep)(double [], unsigned long, int));
 void wtn(double a[], unsigned long nn[], int ndim, int isign,
