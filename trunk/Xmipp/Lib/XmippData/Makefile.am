@@ -6,6 +6,7 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippDocFiles.cc Src/xmippGeometry.cc Src/xmippProjection.cc \
 	Src/xmippProgs.cc Src/xmippMasks.cc Src/xmippMicrograph.cc \
 	Src/xmippFilters.cc Src/xmippMorphology.cc \
+	Src/xmippRotationalSpectrum.cc \
 	Programs/Src/Prog_downsample.cc Programs/Src/Prog_segment.cc \
 	Programs/Src/Prog_denoising.cc \
 	Programs/Src/Prog_test_cluster.cc \
