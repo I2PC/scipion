@@ -185,6 +185,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       if (start_from_phantom) {
          starting_low_pass=AtoF(get_param(fh_param,"starting lowpass",0,"",
             3007,"Recons_test_Parameters::read: starting lowpass is missing"));
+         starting_noise=AtoF(get_param(fh_param,"starting noise",0,"0"));
       }
 
       segmented_dilation=AtoI(get_param(fh_param,"segmented dilation",0,"0"));
@@ -287,6 +288,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    out << "   Start from phantom: "; print(out,prm.start_from_phantom);
       out << endl;
    out << "   Start from lowpass filter: " << prm.starting_low_pass << endl;
+   out << "   Start noise: " << prm.starting_noise << endl;
    out << "   Stop at: " << prm.stop_at << endl;
    out << "   Reconstruction radius: " << prm.reconstruction_radius << endl;
    out << "   Run also without constraints: ";
@@ -655,6 +657,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.fn_sel=Prog_proj_prm.fn_sel_file;
       art_prm.proj_ext=0;
       art_prm.max_tilt=1e7;
+      art_prm.eq_mode=CAVARTK;
       if (!prm.succesive_params) {
          art_prm.lambda_list.resize(1);
 	 art_prm.lambda_list(0)=rnd_log(prm.lambda0[i],prm.lambdaF[i]);
@@ -698,6 +701,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
          cerr << "Filtering phantom ...\n";
          VolumeXmipp starting_vol;
          starting_vol()=vol_phantom();
+	 if (prm.starting_noise!=0)
+	    starting_vol().add_noise(0,prm.starting_noise,"gaussian");
          Filter.FilterShape=RAISED_COSINE;
          Filter.FilterBand=LOWPASS;
          Filter.w1=prm.starting_low_pass;

@@ -169,6 +169,9 @@ public:
    /// Starting filter (in digital freq.)
    double starting_low_pass;
 
+   /// Starting noise 
+   double starting_noise;
+
    /// Mass constraint
    double mass;
 
