@@ -29,15 +29,13 @@
 #include <XmippData/xmippDocFiles.hh>
 #include <XmippData/xmippHistograms.hh>
 #include <XmippData/xmippGeometry.hh>
+#include <XmippData/xmippWavelets.hh>
 
 // Read arguments ==========================================================
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
-   fn_refsel=get_param(argc,argv,"-refsel","");
-   fn_pcaproj=get_param(argc,argv,"-pcaproj");
    fn_ang=get_param(argc,argv,"-ang");
-   PCA_list=get_vector_param(argc,argv,"-PCA_list",-1);
    fn_out_ang=get_param(argc,argv,"-oang");
    fn_sym=get_param(argc,argv,"-sym","");
    max_proj_change=AtoF(get_param(argc,argv,"-max_proj_change","-1"));
@@ -46,33 +44,34 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    psi_step=AtoF(get_param(argc,argv,"-psi_step","5"));
    shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
    th_discard=AtoF(get_param(argc,argv,"-keep","50"));
-   s_denoise=AtoI(get_param(argc,argv,"-s_denoise","0"));
+   smin=AtoI(get_param(argc,argv,"-smin","1"));
+   smax=AtoI(get_param(argc,argv,"-smax","-1"));
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
+   visible_space=check_param(argc,argv,"-visible_space");
    pick=AtoI(get_param(argc,argv,"-pick","1"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
+   if (check_param(argc,argv,"-mask"))
+      Angular_denoise.Mask.read(argc,argv);
    produce_side_info();
 }
 
 // Show ====================================================================
 void Prog_angular_predict_prm::show() {
    Prog_parameters::show();
-   cout << "Reference rootname: " << fn_ref << endl
-        << "Reference images: " << fn_refsel << endl
-        << "PCA projection rootname: " << fn_pcaproj << endl
-        << "Angle file: " << fn_ang << endl;
-   cout << "PCA list:           ";
-   if (XSIZE(PCA_list)==0) cout << "All\n";
-   else                    cout << PCA_list.transpose() << endl;
-   cout << "Ouput angular file: " << fn_out_ang << endl
+   cout << "Reference images: " << fn_ref << endl
+        << "Angle file: " << fn_ang << endl
+        << "Ouput angular file: " << fn_out_ang << endl
 	<< "Max proj change: " << max_proj_change << endl
 	<< "Max psi change: " << max_psi_change << " step: " << psi_step << endl
 	<< "Max shift change: " << max_shift_change << " step: " << shift_step << endl
         << "Keep %: " << th_discard << endl
-        << "s_denoise: " << s_denoise << endl
+        << "smin: " << smin << endl
+        << "smax: " << smax << endl
         << "Check mirrors: " << check_mirrors << endl
+        << "Visible space: " << visible_space << endl
 	<< "Pick: " << pick << endl
         << "Show level: " << tell << endl
    ;
@@ -81,15 +80,9 @@ void Prog_angular_predict_prm::show() {
 // usage ===================================================================
 void Prog_angular_predict_prm::usage() {
    Prog_parameters::usage();
-   cerr << "   -ref <ref rootname>      : Rootname passed to Angular_Reference\n"
-        << "   -refsel <selfile>        : Selfile with the reference images\n"
-        << "   -pcaproj <pca rootname>  : Rootname passed to Angular_Project\n"
-	<< "  [-PCA_list \"[n,n,n,...]\"] : Number of the PCAs to use for prediction\n"
-	<< "                            : by default, all\n"
+   cerr << "   -ref <selfile>           : Selfile with the reference images\n"
 	<< "   -ang <angle file>        : DocFile with the angles for the reference\n"
 	<< "                              produced by xmipp_project\n"
-//	<< "  [-prev_ang <angle file>]  : DocFile produced by this same program\n"
-//	<< "                              with the predicted angles from previous stages\n"
 	<< "   -oang <angle file>       : DocFile with output angles\n"
         << "  [-sym <symmetry file>]    : Symmetry file if any\n"
 	<< "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
@@ -98,9 +91,11 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
 	<< "  [-shift_step <r=1>]       : Step in shift in pixels\n"
         << "  [-keep <th=50%>]          : How many images are kept each round\n"
-        << "  [-s_denoise <s=0>]        : Scale used when building the visible space\n"
+        << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
+        << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
         << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
         << "                              images are also explored\n"
+        << "  [-visible_space]          : use the projection onto the visible space\n"
 	<< "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
 	<< "                              1 --> maximum of the most populated\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
@@ -108,19 +103,17 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-show_options]           : Show final options among which\n"
 	<< "                              the angles are selected\n"
    ;
+   Angular_denoise.Mask.usage();
 }
 
 // Produce side information ================================================
 void Prog_angular_predict_prm::produce_side_info() _THROW {
+   // Information for the SF_main
    each_image_produces_an_output=false;
    allow_time_bar=(tell==0);
 
-   // Produce side info of the PCA projector
-   PCA_projector.do_not_write=true;
-   PCA_projector.fn_ref=fn_ref;
-   PCA_projector.PCA_list=PCA_list;
-   PCA_projector.fn_in=fn_in;
-   PCA_projector.produce_side_info();
+   // Read input reference image names
+   SF_ref.read(fn_ref);
 
    // Produce side info of the angular distance computer
    distance_prm.fn_ang1=distance_prm.fn_ang2="";
@@ -150,49 +143,108 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    predicted_shiftY.resize(number_of_images);
    predicted_corr.resize(number_of_images);
    
-   // Read the PCA projection of the reference images onto
-   // the selected PCAs
-   PCA_ref.resize(PCA_projector.PCANo);
-   for (int m=0; m<PCA_projector.PCANo; m++) {
-      PCA_ref[m]=NULL;
-      if (PCA_projector.use_this_PCA[m]) {
-         PCA_projector.PCASet(m)->prepare_for_correlation();
+   // Read or update the visible space
+   if (visible_space) { // No projection will be done in this program
+      Angular_denoise.fn_ref=fn_ref;
+      Angular_denoise.fn_exp="";
+      Angular_denoise.s=smin;
+      Angular_denoise.produce_side_info();
+      Angular_denoise.build_visible_space();
       
-         PCA_ref[m]=new xmippCTVectors(0,true);
-         FileName fn_in=fn_pcaproj+"_PCA_"+ItoA(m,2)+".dat";
-	 ifstream fh_in;
-	 fh_in.open(fn_in.c_str());
-	 if (!fh_in)
-	    REPORT_ERROR(1,(string)": Cannot find file"+fn_in);
+      // Save some space
+      Angular_denoise.SF_ref.clear();
+   }
 
-	 fh_in >> *(PCA_ref[m]);
-	 fh_in.close();
+   // Build mask for subbands
+   int Ydim, Xdim;
+   SF_ref.ImgSize(Ydim,Xdim);
+   Mask_no.resize(Ydim,Xdim);
+   Mask_no.init_constant(-1);
+
+   if (smax==-1) smax=Get_Max_Scale(Ydim)-3;
+   SBNo=(smax-smin+1)*3+1;
+   SBsize.resize(SBNo);
+   
+   Mask_Params Mask(INT_MASK);
+   Mask.type=BINARY_DWT_CIRCULAR_MASK;
+   Mask.R1=CEIL((double)Xdim/2.0);
+   Mask.resize(Ydim,Xdim);
+
+   int m=0, s;
+   for (s=smax; s>=smin; s--) {
+      for (int q=0; q<=3; q++) {
+         if (q==0 && s!=smax) continue;
+   	 Mask.smin=s; Mask.smax=s;
+	 Mask.quadrant=Quadrant2D(q);
+	 Mask.generate_2Dmask();
+         
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask.imask2D)
+	    if (DIRECT_MAT_ELEM(Mask.imask2D,i,j))
+               {Mask_no(i,j)=m; SBsize(m)++;}
+
+	 m++;
       }
    }
    
-   // Read or update the visible space
-   if (fn_refsel!="") { // No projection will be done in this program
-      Angular_denoise.fn_ref=fn_refsel;
-      Angular_denoise.fn_exp="";
-      Angular_denoise.s=s_denoise;
-      Angular_denoise.produce_side_info();
-      Angular_denoise.build_visible_space();
+   // Produce library
+   produce_library();
+   
+   // Save a little space
+   SF_ref.clear();
+}
+
+// Produce library -----------------------------------------------------------
+void Prog_angular_predict_prm::produce_library() _THROW {
+   ImageXmipp I;
+   int number_of_imgs=SF_ref.ImgNo();
+   SF_ref.go_first_ACTIVE();
+   set_DWT_type(DAUB12);
+
+   // Create space for all the DWT coefficients of the library
+   matrix1D<int> SBidx(SBNo);
+   for (int m=0; m<SBNo; m++) {
+      matrix2D<double> *subband=new matrix2D<double>;
+      subband->resize(number_of_imgs,SBsize(m));
+      library.push_back(subband);
    }
+   library_power.init_zeros(number_of_imgs,SBNo);
+
+   cerr << "Generating reference library ...\n";
+   init_progress_bar(number_of_imgs);
+   int n=0, nstep=MAX(1,number_of_imgs/60); // For progress bar
+   while (!SF_ref.eof()) {
+      I.read(SF_ref.NextImg());
+      
+      // Make and distribute its DWT coefficients in the different PCA bins
+      I().statistics_adjust(0,1);
+      DWT(I(),I());
+      SBidx.init_zeros();
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask_no) {
+         int m=Mask_no(i,j);
+	 if (m!=-1) {
+            double coef=I(i,j), coef2=coef*coef;
+            (*library[m])(n,SBidx(m)++)=coef;
+            for (int mp=m; mp<SBNo; mp++) library_power(n,mp)+=coef2;
+         }
+      }
+
+      // Prepare for next iteration
+      if (++n%nstep==0) progress_bar(n);
+   }
+   progress_bar(SF_ref.ImgNo());
 }
 
 // Build candidate list ------------------------------------------------------
 void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
    vector<bool> &candidate_list, vector<double> &cumulative_corr,
-   vector<double> &sumxy, vector<double> &sumxx, vector<double> &sumyy) {
+   vector<double> &sumxy) {
    int refNo=rot.size();
    candidate_list.resize(refNo);
    cumulative_corr.resize(refNo);
-   sumxx.resize(refNo);
-   sumyy.resize(refNo);
    sumxy.resize(refNo);
    for (int i=0; i<refNo; i++) {
       candidate_list[i]=true;
-      sumxx[i]=sumyy[i]=sumxy[i]=cumulative_corr[i]=0;
+      sumxy[i]=cumulative_corr[i]=0;
       if (max_proj_change!=-1) {
          double dummy_rot=rot[i], dummy_tilt=tilt[i], dummy_psi;
          double ang_distance=distance_prm.check_symmetries(
@@ -209,48 +261,26 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
 // Refine candidate list ---------------------------------------------------
 void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
    int m,
-   xmippVector &PCA, xmippCTVectors &PCA_ref, vector<bool> &candidate_list,
-   vector<double> &cumulative_corr,
-   vector<double> &sumxy, vector<double> &sumxx, vector<double> &sumyy,
-   double &dim, double th) {
+   matrix1D<double> &dwt,
+   vector<bool> &candidate_list,vector<double> &cumulative_corr,
+   matrix1D<double> &x_power, vector<double> &sumxy,
+   double th) {
    histogram1D hist;
    hist.init(-1,1,201);   
 
-   int dimPCA=PCA.size();
-   int dimp=PCA_projector.PCASet(m)->get_eigenDimension();
-   dim+=dimp;
+   int dimp=SBsize(m);
    int imax=candidate_list.size();
+   matrix2D<double> *library_m=library[m];
    for (int i=0; i<imax; i++) {
       if (candidate_list[i]) {
-         double sumxyp=PCA_projector.PCASet(m)->prod_mean_mean;
-	 double sumxxp=PCA_projector.PCASet(m)->prod_mean_mean;
-	 double sumyyp=PCA_projector.PCASet(m)->prod_mean_mean;
-	 double x_mean=PCA_projector.PCASet(m)->avg_mean;
-	 double y_mean=PCA_projector.PCASet(m)->avg_mean;
-	 #define x PCA[d]
-	 #define y PCA_ref.itemAt(i)[d]
-	 for (int d=0; d<dimPCA; d++) {
-	    x_mean+=x*PCA_projector.PCASet(m)->avg_ei[d];
-	    y_mean+=y*PCA_projector.PCASet(m)->avg_ei[d];
-	    sumxxp+=
-	       x*x*PCA_projector.PCASet(m)->prod_ei_ei[d]+
-	       2*x*PCA_projector.PCASet(m)->prod_ei_mean[d];
-	    sumyyp+=
-	       y*y*PCA_projector.PCASet(m)->prod_ei_ei[d]+
-	       2*y*PCA_projector.PCASet(m)->prod_ei_mean[d];
-	    sumxyp+=
-	       x*y*PCA_projector.PCASet(m)->prod_ei_ei[d]+
-	       (x+y)*PCA_projector.PCASet(m)->prod_ei_mean[d];
-	 }
-	 #undef x
-	 #undef y
-         sumxx[i]+=sumxxp-x_mean*x_mean*dimp;
-	 sumyy[i]+=sumyyp-y_mean*y_mean*dimp;
-	 sumxy[i]+=sumxyp-x_mean*y_mean*dimp;
+         double sumxyp=0.0;
+         for (int j=0; j<dimp; j++)
+            sumxyp+=dwt(j)*(*library_m)(i,j);
+         sumxy[i]+=sumxyp;
 
-	 double corr=sumxy[i]/sqrt(sumxx[i]*sumyy[i]);
-	 cumulative_corr[i]/*+*/=corr;
-         hist.insert_value(cumulative_corr[i]);
+	 double corr=sumxy[i]/sqrt(library_power(i,m)*x_power(m));
+	 cumulative_corr[i]=corr;
+         hist.insert_value(corr);
 
 	 if (tell & TELL_ROT_TILT) {
             cout << "Candidate " << i << " corr= " << cumulative_corr[i]
@@ -266,9 +296,8 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
          candidate_list[i]=false;
 	 
    // Show the percentil used
-   if (tell & TELL_ROT_TILT) {
+   if (tell & TELL_ROT_TILT)
       cout << "# Percentil " << corr_th << endl << endl;
-   }
 }
 
 // Predict rot and tilt ----------------------------------------------------
@@ -277,30 +306,43 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
    // Build initial candidate list
    vector<bool>   candidate_list;
    vector<double> cumulative_corr;
-   vector<double> sumxx, sumyy, sumxy;
-   build_ref_candidate_list(I,candidate_list,cumulative_corr,sumxy,sumxx,sumyy);
+   vector<double> sumxy;
+   build_ref_candidate_list(I,candidate_list,cumulative_corr,sumxy);
    int imax=candidate_list.size();
 
-   // Project this image onto the PCA space
-   vector<xmippVector> Vpca;
-   PCA_projector.project_image(I(), Vpca);
+   // Make DWT of the input image and build vectors for comparison
+   vector<matrix1D<double> *> Idwt;
+   matrix1D<double> x_power(SBNo); x_power.init_zeros();
+   matrix1D<int> SBidx(SBNo); SBidx.init_zeros();
+   for (int m=0; m<SBNo; m++) {
+      matrix1D<double> *subband=new matrix1D<double>;
+      subband->resize(SBsize(m));
+      Idwt.push_back(subband);
+   }
+
+   I().statistics_adjust(0,1);
+   DWT(I(),I());
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask_no) {
+      int m=Mask_no(i,j);
+      if (m!=-1) {
+         double coef=DIRECT_IMGPIXEL(I,i,j), coef2=coef*coef;
+         (*(Idwt[m]))(SBidx(m)++)=coef;
+         for (int mp=m; mp<SBNo; mp++) x_power(mp)+=coef2;
+      }
+   }
    
    // Measure correlation for all possible PCAs
    // These variables are used to compute the correlation at a certain
    // scale
-   double dim=0;
-   int    PCAs_used=0;
-   for (int m=0; m<PCA_projector.PCANo; m++)
-      if (PCA_projector.use_this_PCA[m]) {
-         // Show image name
-         if (tell & TELL_ROT_TILT)
-	    cout << "# " << I.name() << " m=" << m
-	         << " current rot="  << I.rot()
-		 << " current tilt=" << I.tilt() << endl;
-         PCAs_used++;
-         refine_candidate_list_with_correlation(m,Vpca[m],*(PCA_ref[m]),
-	    candidate_list, cumulative_corr, sumxy, sumxx, sumyy, dim, th_discard);
-      }
+   for (int m=0; m<SBNo; m++) {
+      // Show image name
+      if (tell & TELL_ROT_TILT)
+	 cout << "# " << I.name() << " m=" << m
+	      << " current rot="  << I.rot()
+	      << " current tilt=" << I.tilt() << endl;
+      refine_candidate_list_with_correlation(m,*(Idwt[m]),
+	 candidate_list, cumulative_corr, x_power, sumxy, th_discard);
+   }
 
    // Select the maximum
    int best_i=-1;
@@ -330,11 +372,13 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 	       {best_i=i; selected--;}
    }
    
+   // Free asked memory
+   for (int m=0; m<SBNo; m++) delete Idwt[m];
+
    assigned_rot    = rot[best_i];
    assigned_tilt   = tilt[best_i];
    best_ref_idx    = best_i;
-   if (PCAs_used==0) return 0;
-   else return cumulative_corr[best_i]/PCAs_used;
+   return cumulative_corr[best_i];
 }
 
 // Evaluate candidates by correlation ----------------------------------------
@@ -379,8 +423,6 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    const vector<double> &vtilt, const vector<double> &vpsi,
    const vector<int> &best_idx, const vector<int> &candidate_idx, 
    vector< vector<int> > &groups) {
-   bool using_denoising=(fn_refsel!="");
-   
    for (int j=0; j<best_idx.size(); j++) {
       int i=candidate_idx[best_idx[j]];  
       #ifdef DEBUG    
@@ -427,7 +469,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    // Check if there are so many groups as images.
    // If that is the case, then everything is a single group
    // if denoising is not used
-   if (groups.size()==best_idx.size() && !using_denoising) {
+   if (groups.size()==best_idx.size() && !visible_space) {
       groups.clear();
       vector<int> group;
       for (int j=0; j<best_idx.size(); j++) group.push_back(best_idx[j]);
@@ -536,7 +578,6 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double &assigned_rot, double &assigned_tilt, double &assigned_psi) {
    double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
           best_score=0, best_rate;
-   bool using_denoising=(fn_refsel!="");
 
    ImageXmipp Ip;
    Ip=I;
@@ -561,7 +602,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             if (shiftX*shiftX+shiftY*shiftY>R2) continue;
             for (double psi=psi0; psi<=psiF; psi+=psi_step) {
 	          N_trials++;
-
+                  
       	          // Shift image if necessary
                   if (shiftX==0 && shiftY==0) Ip()=I();
 	          else {
@@ -585,12 +626,12 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   // Project the resulting image onto the visible space
                   double proj_error=0.0, proj_compact=0.0;
                   bool   look_for_rot_tilt=true;
-                  if (using_denoising) {
+                  if (visible_space) {
                      matrix1D<double> Vp;
                      STARTINGX(Ip())=STARTINGY(Ip())=0;
                      Ip().statistics_adjust(0,1);
                      proj_error=Angular_denoise.project_image(Ip(),Vp);
-                     Angular_denoise.build_image(Vp,Ip(),YSIZE(Ip()),XSIZE(Ip()));
+                     //Angular_denoise.build_image(Vp,Ip(),YSIZE(Ip()),XSIZE(Ip()));
                      Ip().set_Xmipp_origin();
 		     
 		     // Measure the compactness of the projection
@@ -600,6 +641,17 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                      Vp(imax)=0;
                      Vp.max_index(imax);
 		     proj_compact+=Vp(imax)/total_sum;
+                     Vp(imax)=0;
+                     Vp.max_index(imax);
+		     proj_compact+=Vp(imax)/total_sum;
+                     /*
+		     int imax;  Vp.max_index(imax); Vp(imax)=0;
+                     int imax2; Vp.max_index(imax2);
+                     double psi1=0.0, psi2=0.0;
+                     proj_compact=-distance_prm.check_symmetries(
+	                rot[imax], tilt[imax], psi1,
+                        rot[imax2],tilt[imax2],psi2,false);
+                     */
                   }
 
       	          // Search for the best tilt, rot angles
@@ -663,7 +715,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    double proj_compact_step=max_proj_compact-min_proj_compact;
    vscore.reserve(vcorr.size());
    for (int i=0; i<N_trials; i++) {
-      if (!using_denoising) vscore.push_back(vcorr[i]);
+      if (!visible_space) vscore.push_back(vcorr[i]);
       else {
          // Normalize scores between 0.9 and 1.1
          double norm_corr, norm_proj_error, norm_proj_compact;
@@ -673,7 +725,6 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
          else              norm_proj_error=0.9+0.2*(max_proj_error-vproj_error[i])/proj_error_step;
          if (proj_compact_step==0) norm_proj_compact=1;
          else              norm_proj_compact=0.9+0.2*(vproj_compact[i]-min_proj_compact)/proj_compact_step;
-         
          // Score
          vscore.push_back(norm_corr*
                           norm_proj_error*norm_proj_error*
@@ -718,8 +769,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
          if (vscore[ir]>=vscore[i]) is_local_maxima=false;
 
       // It is a local minimum
-      if (is_local_maxima) avg_score_maxima+=vcorr[i];
-      if (is_local_maxima || using_denoising) {
+      if (is_local_maxima /*|| visible_space*/) avg_score_maxima+=vscore[i];
+      if (is_local_maxima /*|| visible_space*/) {
          local_maxima.push_back(i);
          if (tell & TELL_PSI_SHIFT)
             cout << "i= " << i

@@ -27,6 +27,7 @@
 
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippProgs.hh>
+#include <XmippData/xmippSelFiles.hh>
 #include <Classification/xmippPC.hh>
 #include "Prog_Angular_Project.hh"
 #include "Prog_Angular_Distance.hh"
@@ -41,14 +42,8 @@
 /** Angular Predict parameters. */
 class Prog_angular_predict_prm: public Prog_parameters {
 public:
-   /** Root filename from Angular Reference */
+   /** Selfile with the reference images */
    FileName fn_ref;
-   /** Selfile with the reference projections */
-   FileName fn_refsel;
-   /** Root filename from Angular Project */
-   FileName fn_pcaproj;
-   /** List of PCAs to use for projection */
-   matrix1D<double> PCA_list;
    /** Filename with the angles. As provided by the movement file
        provided by xmipp_project */
    FileName fn_ang;
@@ -71,11 +66,15 @@ public:
    /** Threshold for discarding images.
        If it is 20%, only the 20% of the images will be kept each round. */
    double th_discard;
-   /** Scale for the denoising */
-   int s_denoise;
+   /** Minimum scale. Finest level */
+   int smin;
+   /** Maximum scale. Coarsest level */
+   int smax;
    /** Check mirrors.
       If 1 then mirror versions of the experimental images are also explored.*/
    int check_mirrors;
+   /** Project onto the visible space.*/
+   bool visible_space;
    /** Way to pick views.
        0 maximum correlation of the first group.
        1 average of the most populated group.
@@ -88,17 +87,27 @@ public:
    int tell;
 
 public:
+   // Number of subbands
+   int SBNo;
+   // Subband size
+   matrix1D<int> SBsize;
+   // Selfile with the reference projections
+   SelFile SF_ref;
+   // Mask disitribution of DWT coefficients.
+   // It is created when the training sets
+   matrix2D<int> Mask_no;
+   // Vector with all the DWT coefficients of the
+   // library
+   vector<matrix2D<double> *> library;
+   // Power of the library images at different
+   // subbands
+   matrix2D<double> library_power;
    // Vector with the rotational angles to learn
    vector<double> rot;
    // Vector with the tilting angles to learn
    vector<double> tilt;
    // Visible space
    Prog_angular_denoise_prm Angular_denoise;
-   // PCA projector
-   Prog_angular_project_prm PCA_projector;
-   /* Vector with all projections of the reference images
-      in the selected PCAs. */
-   vector<xmippCTVectors *> PCA_ref;
    // Index of the current processed image
    int current_img;
    // Vector of predicted rotational angles
@@ -126,9 +135,11 @@ public:
    void usage();
 
    /** Produce side info.
-       Read the PCASet file and the Mask_no.
        An exception is thrown if any of the files is not found*/
    void produce_side_info() _THROW;
+
+   /** Produce library.*/
+   void produce_library() _THROW;
 
    /** Build candidate list.
        Build a candidate list with all possible reference projections
@@ -139,20 +150,18 @@ public:
        image the list is true if it is still a candidate.*/
    void build_ref_candidate_list(const ImageXmipp &I,
       vector<bool> &candidate_list, vector<double> &cumulative_corr,
-      vector<double> &sumxy, vector<double> &sumxx, vector<double> &sumyy);
+      vector<double> &sumxy);
 
-   /** Refine candidate list via correlation.
-       Given the projection of the image at hand on a certain PCA
-       space, and the list of alive candidates, this function
-       correlates the input image with all alive candidates and
-       leave to pass on ly th% of the images.
+   /** Refine candidate list via correlation. Given a projection image and the
+       list of alive candidates, this function correlates the input image with
+       all alive candidates and leave to pass on ly th% of the images.
        
-       m is the PCA being studied.*/
-   void refine_candidate_list_with_correlation(int m, xmippVector &PCA,
-      xmippCTVectors &TS, vector<bool> &candidate_list,
+       m is the subband being studied*/
+   void refine_candidate_list_with_correlation(int m, 
+      matrix1D<double> &dwt, vector<bool> &candidate_list,
       vector<double> &cumulative_corr,
-      vector<double> &sumxy, vector<double> &sumxx, vector<double> &sumyy,
-      double &dim, double th=50);
+      matrix1D<double> &x_power,
+      vector<double> &sumxy, double th=50);
 
    /** Evaluate candidates by correlation. The evaluation is returned in
        candidate_rate. Furthermore, this function returns the threshold for
