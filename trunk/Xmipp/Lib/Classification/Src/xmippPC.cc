@@ -201,6 +201,36 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	throw Xmipp_error(1,"too many Jacobi iterations");
 }
 
+/* Prepare for correlation ------------------------------------------------- */
+void xmippPC::prepare_for_correlation() {
+   int nmax=D;
+   int dmax=mean.size();
+   
+   // Initialize
+   prod_ei_mean.resize(nmax);
+   prod_ei_ei.resize(nmax);
+   avg_ei.resize(nmax);
+   
+   // Compute products <ei,ei>, <ei,mean>
+   for (int n=0; n<nmax; n++) {
+      prod_ei_ei[n]=prod_ei_mean[n]=avg_ei[n]=0;
+      for (int d=0; d<dmax; d++) {
+         prod_ei_mean[n]+=eigenvec[n][d]*mean[d];
+	 prod_ei_ei[n]+=eigenvec[n][d]*eigenvec[n][d];
+	 avg_ei[n]+=eigenvec[n][d];
+      }
+      avg_ei[n]/=dmax;
+   }
+
+   // Compute product <mean,mean>
+   prod_mean_mean=avg_mean=0;
+   for (int d=0; d<dmax; d++) {
+      prod_mean_mean+=mean[d]*mean[d];
+      avg_mean+=mean[d];
+   }
+   avg_mean/=dmax;
+}
+
 	/**Set identity matrix as eigenvector matrix*/
 void xmippPC::setIdentity(int n)
 {

@@ -84,6 +84,21 @@ public:
         /** Number of relevant eigenvectors */
 	int D;
 
+        /** Product <mean,mean> */
+	double prod_mean_mean;
+	
+	/** Products <ei,mean> */
+	vector<double> prod_ei_mean;
+	
+	/** Products <ei,ei> */
+	vector<double> prod_ei_ei;
+
+      	/** Average of the mean vector */
+	double avg_mean;
+	
+	/** Average of the ei vectors */
+	vector<double> avg_ei;
+
 	/**Set identity matrix as eigenvector matrix
 		@param n The number of eigenvectors*/
 	void setIdentity(int n);
@@ -91,12 +106,24 @@ public:
         /** Clear.
 	    Clean the eigenvector, eigenvalues and D */
         void clear();
+	
+      	/** Prepare for correlation.
+	    This function computes the inner products emong the ei,
+	    and the mean vector, among the ei, and the average of all
+	    vectors*/
+        void prepare_for_correlation();
 
         /** Set the number of relevant eigenvalues. */
 	void set_Dimension(int _D) {D=_D;}
 
         /** Get the number of relevant eigenvalues. */
 	int get_Dimension() const {return D;}
+
+      	/** Get the dimension of the eigenvectors. */
+	int get_eigenDimension() const {
+	   if (eigenvec.size()>1) return eigenvec[0].size();
+	   else return 0;
+	}
 
       	/** Number of components for a given accuracy explanation.
 	    This function returns the number of components to be taken
