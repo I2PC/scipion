@@ -1,6 +1,6 @@
 ###########################################################################
 LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
-LIBRECONS_CLASIF= ../libRecons_Clasif_$(XMIPP_PREFIX)$(MACHINE).so
+LIBRECONS_CLASSIF= ../libRecons_Classif_$(XMIPP_PREFIX)$(MACHINE).so
 LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
 
 LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
@@ -8,7 +8,7 @@ LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
 LIBRECONS_VTK   = ../libReconsVTK_$(XMIPP_PREFIX)$(MACHINE).so
 
 LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) $(LIBRECONS_VTK) \
-                  $(LIBRECONS_CLASIF) $(LIBRECONS_INTERFACE)
+                  $(LIBRECONS_CLASSIF) $(LIBRECONS_INTERFACE)
 LIBDIRS         = Src Programs/Src
 
 SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
@@ -31,7 +31,7 @@ SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
 	   Programs/Src/Prog_microscope.o Programs/Src/Prog_adjust_CTF.o \
 	   Programs/Src/Prog_assign_CTF.o \
 	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o
-SRC_OBJS_CLASIF = Programs/Src/Prog_Angular_Reference.o \
+SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
 	   Programs/Src/Prog_Angular_Project.o \
 	   Programs/Src/Prog_Angular_Predict.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
@@ -46,10 +46,10 @@ $(LIBRECONS): $(SRC_OBJS)
 	@rm -f $(LIBRECONS)
 	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS)
 
-$(LIBRECONS_CLASIF): $(SRC_OBJS_CLASIF)
+$(LIBRECONS_CLASSIF): $(SRC_OBJS_CLASSIF)
 	@echo "Creating library Xmipp Reconstruction-Classification Library ..."
-	@rm -f $(LIBRECONS_CLASIF)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_CLASIF) $(SRC_OBJS_CLASIF)
+	@rm -f $(LIBRECONS_CLASSIF)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_CLASSIF) $(SRC_OBJS_CLASSIF)
 
 $(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
 	@echo "Creating library Xmipp Reconstruction-Interface Library ..."
@@ -79,7 +79,7 @@ Makefiles:
 clean:
 	@echo "Removing Reconstruction library ..."
 	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) \
-	   $(SRC_OBJS_CLASIF) $(SRC_OBJS_INTERFACE)
+	   $(SRC_OBJS_CLASSIF) $(SRC_OBJS_INTERFACE)
 
 # DistCleaning -------------------------------------------------------------
 distclean:
