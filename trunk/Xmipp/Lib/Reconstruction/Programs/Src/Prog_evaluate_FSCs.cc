@@ -186,7 +186,8 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
 /* Main routine ============================================================ */
 void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) _THROW {
    matrix1D<double> frequency, FSC, min_FSC, max_FSC, stddev_FSC;
-   double avg_resol, stddev_resol, resolution;
+   double avg_resol, stddev_resol, resolution, avg_FSC;
+   int i;
    ofstream fh_out;
 
    switch (prm.action) {
@@ -196,6 +197,14 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) _THROW {
             prm.sampling_rate, frequency, FSC);
          cout << "The resolution (FSC<0.5) of this volume is "
               << resolution << endl;
+         
+         // Compute the average FSC until the resolution
+         avg_FSC=0;
+         i=0;
+         while (frequency(i)<resolution) avg_FSC+=FSC(i++);
+         if (i!=0) avg_FSC/=i;
+         cout << "The average FSC until the resolution is "
+              << avg_FSC << endl;
          
          // Write the FSC
          fh_out.open(prm.fn_out.c_str());
