@@ -1095,6 +1095,9 @@ template <class T>
    }
 
 /* Change to Spline coeffs ------------------------------------------------- */
+#ifndef DBL_EPSILON
+   #define DBL_EPSILON 1e-50
+#endif
 template <class T>
    void mT::produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree)
       const {
@@ -1129,6 +1132,7 @@ template <class T>
    if (Status)
       REPORT_ERROR(1,"matrix2D::produce_spline_img: Error");
 }
+#undef DBL_EPSILON
 
 /* Matrix by matrix multiplication ----------------------------------------- */
 // xinit and yinit are taken from op1
