@@ -471,7 +471,7 @@ void Prog_assign_CTF_prm::process()
 
 		  // Estimate the CTF parameters of division 
 		  adjust_CTF_prm.fn_ctf=ARMA_prm.fn_filter;
-		  adjust_CTF_prm.fn_outroot=CTFfile.get_root();
+		  adjust_CTF_prm.fn_outroot=CTFfile.get_root()+ItoA(N,5);
 		  adjust_CTF_prm.show_optimization=FALSE;
 		  adjust_CTF_prm.adjust(20)=adjust_CTF_prm.adjust(13)=
 		     adjust_CTF_prm.adjust(0)=0;
