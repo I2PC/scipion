@@ -80,6 +80,9 @@ public:
    // Vector of predicted corr
    vector<double>   predicted_cost;
 public:
+   /// Empty constructor
+   Prog_angular_predict_continuous_prm();
+
    /// Read argument from command line
    void read(int argc, char **argv) _THROW;
 

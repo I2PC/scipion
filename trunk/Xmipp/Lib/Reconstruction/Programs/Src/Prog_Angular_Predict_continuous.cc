@@ -43,6 +43,11 @@
 // Prototypes
 int cstregistration( struct cstregistrationStruct *Data);
 
+// Empty constructor =======================================================
+Prog_angular_predict_continuous_prm::Prog_angular_predict_continuous_prm() {
+   each_image_produces_an_output=false;
+}
+
 // Read arguments ==========================================================
 void Prog_angular_predict_continuous_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
@@ -87,6 +92,18 @@ void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
    if (fn_ang!="") DF_initial.read(fn_ang);
    else {
       SelFile SF;
+      SF.read(fn_in);
+      while (!SF.eof()) {
+         FileName fn_img=SF.NextImg();
+	 ImageXmipp I; I.read(fn_img);
+	 matrix1D<double> aux(5);
+	 aux(0)=I.rot();
+	 aux(1)=I.tilt();
+	 aux(2)=I.psi();
+	 aux(3)=I.Xoff();
+	 aux(4)=I.Yoff();
+	 DF_initial.append_data_line(aux);
+      }
    }
    DF_initial.go_first_data_line();
 
