@@ -174,11 +174,11 @@ void Prog_downsample_prm::create_empty_output_file() {
    fh_downsample_inf << "# Ystep x Xstep: " << Ystep << " x "
       << Xstep << endl;
    fh_downsample_inf << "# Image width\n";
-   fh_downsample_inf << "Xdim=" << Xpdim << endl;
+   fh_downsample_inf << "Xdim= " << Xpdim << endl;
    fh_downsample_inf << "# Image length\n";
-   fh_downsample_inf << "Ydim=" << Ypdim << endl;
+   fh_downsample_inf << "Ydim= " << Ypdim << endl;
    fh_downsample_inf << "# Pixel depth\n";
-   fh_downsample_inf << "bitspersample=" << bitsMp << endl;
+   fh_downsample_inf << "bitspersample= " << bitsMp << endl;
    fh_downsample_inf.close();
 }
 
