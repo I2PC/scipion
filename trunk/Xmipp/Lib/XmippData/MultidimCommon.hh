@@ -16,6 +16,11 @@
    #define MULTIDIM_SIZE(v) ((v).__dim)
 #endif
 
+/** Dimension of the space in which it is defined (1D, 2D or 3D).*/
+#ifndef SPACE_DIM
+   #define SPACE_DIM(v) ((v).__spcdim)
+#endif
+
 /** For all elements in the array.
     This macro is used to generate loops for the array in an easy manner.
     It defines an internal index 'i' which ranges the array using its

@@ -309,7 +309,8 @@ public:
        \\--> both are examples of empty column vectors
        \\Ex: matrix1D<int> v1('n');
        \\--> empty row vector */
-   matrix1D(const char column='y') _THROW {core_init(); init_shape(column);}
+   matrix1D(const char column='y') _THROW
+      {core_init(); init_shape(column); __spcdim=1;}
 
    /** Dimension constructor.
        The dimension constructor creates a vector with memory associated
@@ -322,7 +323,7 @@ public:
        \\Ex: matrix1D<int> v1('n');
        \\--> empty row vector */
    matrix1D(int dim, const char column='y') _THROW
-      {core_init(); init_shape(column); resize(dim);}
+      {core_init(); init_shape(column); resize(dim); __spcdim=1;}
 
    /** Copy constructor.
        The created vector is a perfect copy of the input vector but

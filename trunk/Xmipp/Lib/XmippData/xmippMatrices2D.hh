@@ -395,7 +395,7 @@ public:
        The empty constructor creates a matrix with no memory associated,
        origin=0, size=0, no statistics, ...
        \\Ex: matrix2D<double> m1;*/
-   matrix2D() {core_init(); init_shape();}
+   matrix2D() {core_init(); init_shape(); __spcdim=2;}
 
    /** Dimension constructor.
        The dimension constructor creates a matrix with memory associated
@@ -405,7 +405,7 @@ public:
        and the second the X dimension (number of columns).
        \\Ex: matrix2D<double> v1(6,3);*/
    matrix2D(int Ydim, int Xdim)
-      {core_init(); init_shape(); resize(Ydim, Xdim);}
+      {core_init(); init_shape(); resize(Ydim, Xdim);  __spcdim=2;}
 
    /** Copy constructor.
        The created matrix is a perfect copy of the input matrix but
@@ -1018,7 +1018,7 @@ public:
 
    /** Scales to a new size.
        Same as the previous one, but the result is kept in this object. */
-   void scale_to_size(int Ydim,int Xdim)
+   void self_scale_to_size(int Ydim,int Xdim)
       {mT aux; scale_to_size(Ydim, Xdim, aux); *this=aux;}
 
    /** Superpixel reduce.

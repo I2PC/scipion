@@ -271,7 +271,7 @@ public:
        The empty constructor creates a volume with no memory associated,
        origin=0, size=0, no statistics, ...
        \\Ex: matrix3D<double> V1;*/
-   matrix3D() {core_init(); init_shape();}
+   matrix3D() {core_init(); init_shape(); __spcdim=3;}
    
    /** Dimension constructor.
        The dimension constructor creates a volume with memory associated
@@ -282,7 +282,7 @@ public:
        and at the end the X dimension (number of columns).
        \\Ex: matrix3D<double> V1(3,6,3);*/
    matrix3D(int Zdim, int Ydim, int Xdim)
-         {core_init(); init_shape(); resize(Zdim, Ydim, Xdim);}
+         {core_init(); init_shape(); resize(Zdim, Ydim, Xdim); __spcdim=3;}
 
    /** Copy constructor.
        The created volume is a perfect copy of the input volume but
@@ -870,7 +870,7 @@ public:
       {VT aux; scale_to_size(Zdim,Ydim,Xdim,aux); return aux;}
 
    /** Scales to a new size., keep in this object*/
-   void scale_to_size(int Zdim, int Ydim, int Xdim)
+   void self_scale_to_size(int Zdim, int Ydim, int Xdim)
       {VT aux; scale_to_size(Zdim,Ydim,Xdim,aux); *this=aux;}
 
    /** Maximum element.
