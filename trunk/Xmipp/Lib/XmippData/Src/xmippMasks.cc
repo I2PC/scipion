@@ -30,6 +30,32 @@
 #include "../xmippWavelets.hh"
 
 /*---------------------------------------------------------------------------*/
+/* 1D Masks                                                                  */
+/*---------------------------------------------------------------------------*/
+void RaisedCosineMask(matrix1D<double> &mask,
+   double r1, double r2, int mode, double x0) {
+   double k=PI/(r2-r1);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(mask) {
+      double r=(i-x0);
+      if      (r<=r1) VEC_ELEM(mask,i)=1;
+      else if (r<r2)  VEC_ELEM(mask,i)=(1+cos(k*(r-r1)))/2;
+      else            VEC_ELEM(mask,i)=0;
+      if (mode==OUTSIDE_MASK) VEC_ELEM(mask,i)=1-VEC_ELEM(mask,i);
+   }
+}
+
+void RaisedCrownMask(matrix1D<double> &mask, 
+   double r1, double r2, double pix_width, int mode, double x0) {
+   RaisedCosineMask(mask,r1-pix_width,r1+pix_width, OUTSIDE_MASK, x0);
+   matrix1D<double> aux; aux.resize(mask);
+   RaisedCosineMask(aux, r2-pix_width,r2+pix_width, INNER_MASK, x0);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(mask) {
+      VEC_ELEM(mask,i) *=VEC_ELEM(aux,i);
+      if (mode==OUTSIDE_MASK) VEC_ELEM(mask,i)=1-VEC_ELEM(mask,i);
+   }
+}
+
+/*---------------------------------------------------------------------------*/
 /* 2D Masks                                                                  */
 /*---------------------------------------------------------------------------*/
 void BinaryCircularMask(matrix2D<int> &mask,
@@ -430,8 +456,10 @@ void Mask_Params::clear() {
    type=NO_MASK;
    mode=INNER_MASK;
    H=R1=R2=sigma=0;
+   imask1D.clear();
    imask2D.clear();
    imask3D.clear();
+   dmask1D.clear();
    dmask2D.clear();
    dmask3D.clear();
    allowed_data_types=0;
@@ -440,6 +468,15 @@ void Mask_Params::clear() {
 }
 
 // Resize ------------------------------------------------------------------
+void Mask_Params::resize(int Xdim) {
+   switch (datatype()) {
+      case INT_MASK:
+         imask1D.resize(Xdim); imask1D.set_Xmipp_origin(); break;
+      case DOUBLE_MASK:
+         dmask1D.resize(Xdim); dmask1D.set_Xmipp_origin(); break;
+   }
+}
+
 void Mask_Params::resize(int Ydim, int Xdim) {
    switch (datatype()) {
       case INT_MASK:
@@ -455,6 +492,14 @@ void Mask_Params::resize(int Zdim, int Ydim, int Xdim) {
          imask3D.resize(Zdim,Ydim,Xdim); imask3D.set_Xmipp_origin(); break;
       case DOUBLE_MASK:
          dmask3D.resize(Zdim,Ydim,Xdim); dmask3D.set_Xmipp_origin(); break;
+   }
+}
+
+template <class T>
+   void Mask_Params::resize(const matrix1D<T> &v) {
+   switch (datatype()) {
+      case INT_MASK:    imask1D.resize(v); break;
+      case DOUBLE_MASK: dmask1D.resize(v); break;
    }
 }
 
@@ -721,6 +766,11 @@ void Mask_Params::usage() const {
 }
 
 // Write -------------------------------------------------------------------
+void Mask_Params::write_1Dmask(const FileName &fn) {
+   if      (datatype()==INT_MASK)    imask2D.write(fn);
+   else if (datatype()==DOUBLE_MASK) dmask2D.write(fn);
+}
+
 void Mask_Params::write_2Dmask(const FileName &fn) {
    ImageXmipp I;
    if      (datatype()==INT_MASK)    I=imask2D;
@@ -733,6 +783,28 @@ void Mask_Params::write_3Dmask(const FileName &fn) {
    if      (datatype()==INT_MASK)    V=imask3D;
    else if (datatype()==DOUBLE_MASK) V=dmask3D;
    V.write(fn);
+}
+
+// Generate 1D mask --------------------------------------------------------
+void Mask_Params::generate_1Dmask() {
+   switch (type) {
+      case NO_MASK:
+         imask2D.init_constant(1);
+         break;
+      case RAISED_COSINE_MASK:
+         RaisedCosineMask(dmask1D,R1,R2,mode,x0);
+         break;
+      case RAISED_CROWN_MASK:
+         RaisedCrownMask(dmask1D,R1,R2,pix_width,mode,x0);
+         break;
+      case READ_MASK:
+         imask2D.read(fn_mask);
+         imask2D.set_Xmipp_origin();
+         break;
+      default:
+         REPORT_ERROR(3000,"Mask_Params::generate_mask: Non implemented or "
+	    "unknown mask type :"+ ItoA(type));
+   }
 }
 
 // Generate 2D mask --------------------------------------------------------
@@ -833,6 +905,19 @@ void Mask_Params::generate_3Dmask() {
 
 /* Apply a mask ------------------------------------------------------------ */
 template <class T>
+   void Mask_Params::apply_mask(const matrix1D<T> &I, matrix1D<T> &result,
+      T subs_val) {
+   switch (datatype()) {
+      case INT_MASK:
+         apply_binary_mask(imask1D, I, result, subs_val);
+         break;
+      case DOUBLE_MASK:
+         apply_cont_mask(dmask1D, I, result);
+         break;
+   }
+}
+
+template <class T>
    void Mask_Params::apply_mask(const matrix2D<T> &I, matrix2D<T> &result,
       T subs_val) {
    switch (datatype()) {
@@ -862,6 +947,19 @@ template <class T>
 /* Mask tools                                                                */
 /*---------------------------------------------------------------------------*/
 // Apply binary mask =======================================================
+template <class T>
+   void apply_binary_mask(const matrix1D<int> &mask, const matrix1D<T> &m_in,
+      matrix1D<T> &m_out, T subs_val) {
+   m_out.resize(m_in);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
+      // If in common with the mask
+      if (i>=STARTINGX(mask) && i<=FINISHINGX(mask))
+          if (VEC_ELEM(mask,i)==0) VEC_ELEM(m_out,i)=subs_val;
+          else                     VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+      // It is not in common, leave the original one
+      else VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+}
+
 template <class T>
    void apply_binary_mask(const matrix2D<int> &mask, const matrix2D<T> &m_in,
       matrix2D<T> &m_out, T subs_val) {
@@ -893,6 +991,18 @@ template <class T>
 }
 
 // Apply cont mask =========================================================
+template <class T>
+   void apply_cont_mask(const matrix1D<double> &mask, const matrix1D<T> &m_in,
+      matrix1D<T> &m_out) {
+   m_out.resize(m_in);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
+      // If in common with the mask
+      if (i>=STARTINGX(mask) && i<=FINISHINGX(mask))
+          VEC_ELEM(m_out,i)=(T) (VEC_ELEM(m_in,i)*VEC_ELEM(mask,i));
+      // It is not in common, leave the original one
+      else VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+}
+
 template <class T>
    void apply_cont_mask(const matrix2D<double> &mask, const matrix2D<T> &m_in,
       matrix2D<T> &m_out) {
@@ -1190,6 +1300,31 @@ void range_adjust_within_mask(const matrix3D<double> *mask,
 /*---------------------------------------------------------------------------*/
 /* Instantiation                                                             */
 /*---------------------------------------------------------------------------*/
+template <class T>
+   void instantiate_masks_1D_template(T t) {
+   matrix1D<T>   m;
+   matrix1D<int> mask;
+   T minval, maxval;
+   double avg, stddev;
+   histogram1D hist;
+   Mask_Params prm;
+
+   prm.resize(m);
+   prm.apply_mask(m,m,(T)0);
+   apply_binary_mask(mask,m,m,(T)0);
+}
+
+void instantiate_masks_1D() {
+   short  s; instantiate_masks_1D_template(s);
+   int    i; instantiate_masks_1D_template(i);
+   float  f; instantiate_masks_1D_template(f);
+   double d; instantiate_masks_1D_template(d);
+
+   matrix1D<double_complex> m5;
+   matrix1D<int> mask;
+   apply_binary_mask(mask,m5,m5,(double_complex)0);
+}
+
 template <class T>
    void instantiate_masks_2D_template(T t) {
    matrix2D<T>   m;

@@ -32,14 +32,48 @@
 */
 //@{
 /*---------------------------------------------------------------------------*/
-/* 2D Masks                                                                  */
+/* 1D Masks                                                                  */
 /*---------------------------------------------------------------------------*/
-/**@name 2D masks */
+/**@name 1D masks */
 //@{
 #define INNER_MASK 1
 #define OUTSIDE_MASK 2
 #define NO_ACTIVATE 0
 #define ACTIVATE 1
+/* RaisedCosine ............................................................ */
+/** Creates a 1D RaisedCosine mask for already sized masks.
+    The mask is supposed to be resized and with its logical origin already
+    set. A circle placed logically at (x0,y0), by default (0,0),
+    is created with
+    the radius indicated. The only two valid modes are INNER_MASK (by default)
+    or OUTSIDE_MASK. Inner mask are normal RaisedCosines, and outside masks
+    are 1-RaisedCosine.
+    When entering, the mask is initialiazed to 0 and then the mask is created.
+*/
+void RaisedCosineMask(matrix1D<double> &mask, 
+   double r1, double r2, int mode=INNER_MASK, double x0=0);
+
+/* RaisedCrown ............................................................. */
+/** Creates a 1D RaisedCrown mask for already sized masks.
+    The mask is supposed to be resized and with its logical origin already
+    set. A circle placed logically at (x0,y0), by default (0,0),
+    is created within the two
+    the radii indicated with an extra region of <pix_width> pixels.
+    The only two valid modes are INNER_MASK (by default)
+    or OUTSIDE_MASK. Inner mask are normal RaisedCrowns, and outside masks
+    are 1-RaisedCrowns.
+    When entering, the mask is initialiazed to 0 and then the mask is created.
+*/
+void RaisedCrownMask(matrix1D<double> &mask, 
+   double r1, double r2, double pix_width, int mode=INNER_MASK,
+   double x0=0);
+//@}
+
+/*---------------------------------------------------------------------------*/
+/* 2D Masks                                                                  */
+/*---------------------------------------------------------------------------*/
+/**@name 2D masks */
+//@{
 /* Circular ................................................................ */
 /** Creates a 2D circular mask for already sized masks.
     The mask is supposed to be resized and with its logical origin already
@@ -422,10 +456,14 @@ public:
 
 /** Allowed data types. */
     int allowed_data_types;
+/** 1D integer mask. */
+    matrix1D<int> imask1D;
 /** 2D integer mask. */
     matrix2D<int> imask2D;
 /** 3D integer mask. */
     matrix3D<int> imask3D;
+/** 1D double mask */
+    matrix1D<double> dmask1D;
 /** 2D double mask. */
     matrix2D<double> dmask2D;
 /** 3D double mask. */
@@ -452,6 +490,9 @@ public:
 /** Usage. */
     void usage() const;
 
+/** Save 1D mask as a text file */
+    void write_1Dmask(const FileName &fn);
+
 /** Save 2D mask as an ImageXmipp. */
     void write_2Dmask(const FileName &fn);
 
@@ -471,16 +512,35 @@ public:
            return DOUBLE_MASK;
     }
 
+/** Resize and set Xmipp origin */
+    void resize(int Xdim);
 /** Resize and set Xmipp origin. */
     void resize(int Ydim, int Xdim);
 /** Resize and set Xmipp origin. */
     void resize(int Zdim, int Ydim, int Xdim);
 /** Resize after a pattern */
 template <class T>
+    void resize(const matrix1D<T> &m);
+/** Resize after a pattern */
+template <class T>
     void resize(const matrix2D<T> &m);
 /** Resize after a pattern */
 template <class T>
     void resize(const matrix3D<T> &m);
+
+/** Generate mask for a resized signal.
+    It is supposed that the image is already resized and with its logical
+    origin set. */
+    void generate_1Dmask();
+
+/** Generate mask for an empty signal.*/
+    void generate_1Dmask(int Xdim)
+       {resize(Xdim); generate_1Dmask();}
+    
+/** Generate mask for a signal following a pattern. */
+template <class T>
+   void generate_1Dmask(const matrix1D<T> &m)
+       {resize(m); generate_1Dmask();}
 
 /** Generate mask for a resized image.
     It is supposed that the image is already resized and with its logical
@@ -510,6 +570,11 @@ template <class T>
    void generate_3Dmask(const matrix3D<T> &m)
        {resize(m); generate_3Dmask();}
 
+/** Apply mask to signal.
+    subs_val is the substitute value in case of binary masks*/
+template <class T>
+   void apply_mask(const matrix1D<T> &I, matrix1D<T> &result, T subs_val=0);
+
 /** Apply mask to image.
     subs_val is the substitute value in case of binary masks*/
 template <class T>
@@ -520,19 +585,25 @@ template <class T>
 template <class T>
    void apply_mask(const matrix3D<T> &I, matrix3D<T> &result, T subs_val=0);
 
+/** Get binary 1D mask. */
+matrix1D<int>    & get_binary_mask1D() {return imask1D;}
+/** Get continuous 1D mask. */
+matrix1D<double> & get_cont_mask1D()   {return dmask1D;}
 /** Get binary 2D mask. */
-const matrix2D<int>    & get_binary_mask2D() {return imask2D;}
+matrix2D<int>    & get_binary_mask2D() {return imask2D;}
 /** Get continuous 2D mask. */
-const matrix2D<double> & get_cont_mask2D()   {return dmask2D;}
+matrix2D<double> & get_cont_mask2D()   {return dmask2D;}
 /** Get binary 3D mask. */
-const matrix3D<int>    & get_binary_mask3D() {return imask3D;}
+matrix3D<int>    & get_binary_mask3D() {return imask3D;}
 /** Get continuous 3D mask. */
-const matrix3D<double> & get_cont_mask3D()   {return dmask3D;}
+matrix3D<double> & get_cont_mask3D()   {return dmask3D;}
 /** Force to be continuous.
     This function is used when you need a binary mask as a double matrix. */
 void force_to_be_continuous() {
    if (datatype()==INT_MASK)
-      {type_cast(imask2D,dmask2D); type_cast(imask3D,dmask3D);}
+      {type_cast(imask1D,dmask1D);
+       type_cast(imask2D,dmask2D);
+       type_cast(imask3D,dmask3D);}
 }
 };
 
@@ -556,6 +627,22 @@ template <class T>
    void compute_stats_within_binary_mask(const matrix2D<int> &mask,
       const matrix2D<T> &m, T &min_val, T &max_val, double &avg, double &stddev);
 
+/** Apply binary mask to an image (1D).
+    The image values for which the input mask is 0 are set to <subs_val>.
+    The input and output matrices can be the same ones.
+    Only the overlapping values are affected by the mask */
+template <class T>
+   void apply_binary_mask(const matrix1D<int> &mask, const matrix1D<T> &m_in,
+      matrix1D<T> &m_out, T subs_val=(T)0);
+
+/** Apply continuous mask to an image (1D).
+    The image is multiplied by the mask.
+    The input and output matrices can be the same ones.
+    Only the overlapping values are affected by the mask */
+template <class T>
+   void apply_cont_mask(const matrix1D<double> &mask, const matrix1D<T> &m_in,
+      matrix1D<T> &m_out);
+
 /** Apply binary mask to an image (2D).
     The image values for which the input mask is 0 are set to <subs_val>.
     The input and output matrices can be the same ones.
@@ -569,7 +656,7 @@ template <class T>
     The input and output matrices can be the same ones.
     Only the overlapping values are affected by the mask */
 template <class T>
-   void apply_binary_mask(const matrix2D<int> &mask, const matrix2D<T> &m_in,
+   void apply_cont_mask(const matrix2D<double> &mask, const matrix2D<T> &m_in,
       matrix2D<T> &m_out);
 
 /** Compute statistics in the active area (3D).
@@ -591,7 +678,7 @@ template <class T>
     The input and output matrices can be the same ones.
     Only the overlapping values are affected by the mask */
 template <class T>
-   void apply_binary_mask(const matrix3D<int> &mask, const matrix3D<T> &m_in,
+   void apply_cont_mask(const matrix3D<double> &mask, const matrix3D<T> &m_in,
       matrix3D<T> &m_out);
 
 /** Compute histogram inside mask within its minimum and maximum value (2D).
