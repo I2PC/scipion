@@ -34,8 +34,289 @@
 #include "../xmippMasks.hh"
 
 #include "../xmippImages.hh"
+#include "../Bilib/headers/wavelet.h"
 
 /* Wavelet ----------------------------------------------------------------- */
+
+// Bilib wavelets ----------------------------------------------------------
+/* Wavelet transform ------------------------------------------------------- */
+void Bilib_DWT(const matrix1D<double> &input,
+   matrix1D<double> &result, int iterations, int isign) {
+   if (iterations<1)
+      REPORT_ERROR(1,"Bilib_DWT 2D: iterations must be >=1");
+   int size_multiple=(int)pow(2.0,(double) iterations);
+   if (XSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 1D: Xsize must be a multiple of "+
+	    ItoA(size_multiple));
+
+   result.init_zeros(input);
+   TWaveletStruct TW;
+   if      (isign== 1) TW.Operation="Analysis";
+   else if (isign==-1) TW.Operation="Synthesis";
+   else
+      REPORT_ERROR(1,(string)"waveletTransform 1D: unrecognized isign");
+   TW.Filter="Orthonormal Spline";
+   TW.BoundaryConditions="Mirror";
+   TW.Order="3";
+   TW.Alpha=0;
+
+   if (isign==1) {
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=1;
+      TW.NzOutput=TW.NzInput=1;
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+
+      // Subsequent iterations
+      for (int i=1; i<iterations; i++) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix1D<double> input_aux(xsize), result_aux(xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
+            DIRECT_VEC_ELEM(input_aux,i)=DIRECT_VEC_ELEM(result,i);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=1;
+	 TW.NzOutput=TW.NzInput=1;
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
+            DIRECT_VEC_ELEM(result,i)=DIRECT_VEC_ELEM(result_aux,i);
+      }
+   } else if (isign==-1) {
+      // Subsequent iterations
+      for (int i=iterations-1; i>=1; i--) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix1D<double> input_aux(xsize), result_aux(xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
+            DIRECT_VEC_ELEM(input_aux,i)=DIRECT_VEC_ELEM(input,i);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=1;
+	 TW.NzOutput=TW.NzInput=1;
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
+            DIRECT_VEC_ELEM(input,i)=DIRECT_VEC_ELEM(result_aux,i);
+      }
+   
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=1;
+      TW.NzOutput=TW.NzInput=1;
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+   }
+}
+
+void Bilib_DWT(const matrix2D<double> &input,
+   matrix2D<double> &result, int iterations, int isign) {
+   if (iterations<1)
+      REPORT_ERROR(1,"Bilib_DWT 2D: iterations must be >=1");
+   int size_multiple=(int)pow(2.0,(double) iterations);
+   if (XSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 2D: Xsize must be a multiple of "+
+	    ItoA(size_multiple));
+   if (YSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 2D: Ysize must be a multiple of "+
+	    ItoA(size_multiple));
+
+   result.init_zeros(input);
+   TWaveletStruct TW;
+   if      (isign== 1) TW.Operation="Analysis";
+   else if (isign==-1) TW.Operation="Synthesis";
+   else
+      REPORT_ERROR(1,(string)"waveletTransform 1D: unrecognized isign");
+   TW.Filter="Orthonormal Spline";
+   TW.BoundaryConditions="Mirror";
+   TW.Order="3";
+   TW.Alpha=0;
+
+   if (isign==1) {
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=YSIZE(input);
+      TW.NzOutput=TW.NzInput=1;
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+
+      // Subsequent iterations
+      for (int i=1; i<iterations; i++) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+	 int ysize=YSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix2D<double> input_aux(ysize,xsize), result_aux(ysize,xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
+            DIRECT_MAT_ELEM(input_aux,i,j)=DIRECT_MAT_ELEM(result,i,j);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=YSIZE(input_aux);
+	 TW.NzOutput=TW.NzInput=1;
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
+            DIRECT_MAT_ELEM(result,i,j)=DIRECT_MAT_ELEM(result_aux,i,j);
+      }
+   } else if (isign==-1) {
+      // Subsequent iterations
+      for (int i=iterations-1; i>=1; i--) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+	 int ysize=YSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix2D<double> input_aux(ysize,xsize), result_aux(ysize,xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
+            DIRECT_MAT_ELEM(input_aux,i,j)=DIRECT_MAT_ELEM(input,i,j);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=YSIZE(input_aux);
+	 TW.NzOutput=TW.NzInput=1;
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
+            DIRECT_MAT_ELEM(input,i,j)=DIRECT_MAT_ELEM(result_aux,i,j);
+      }
+   
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=YSIZE(input);
+      TW.NzOutput=TW.NzInput=1;
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+   }
+}
+
+void Bilib_DWT(const matrix3D<double> &input,
+   matrix3D<double> &result, int iterations, int isign) {
+   if (iterations<1)
+      REPORT_ERROR(1,"Bilib_DWT 2D: iterations must be >=1");
+   int size_multiple=(int)pow(2.0,(double) iterations);
+   if (XSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 3D: Xsize must be a multiple of "+
+	    ItoA(size_multiple));
+   if (YSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 3D: Ysize must be a multiple of "+
+	    ItoA(size_multiple));
+   if (ZSIZE(input)%size_multiple!=0)
+      REPORT_ERROR(1,
+         (string)"Bilib_DWT 3D: Zsize must be a multiple of "+
+	    ItoA(size_multiple));
+
+   result.init_zeros(input);
+   TWaveletStruct TW;
+   if      (isign== 1) TW.Operation="Analysis";
+   else if (isign==-1) TW.Operation="Synthesis";
+   else
+      REPORT_ERROR(1,(string)"waveletTransform 1D: unrecognized isign");
+   TW.Filter="Orthonormal Spline";
+   TW.BoundaryConditions="Mirror";
+   TW.Order="1";
+   TW.Alpha=0;
+
+   if (isign==1) {
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=YSIZE(input);
+      TW.NzOutput=TW.NzInput=ZSIZE(input);
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+
+      // Subsequent iterations
+      for (int i=1; i<iterations; i++) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+	 int ysize=YSIZE(input)/(int)pow(2.0,(double)i);
+	 int zsize=ZSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix3D<double> input_aux(zsize,ysize,xsize),
+	    result_aux(zsize,ysize,xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
+            DIRECT_VOL_ELEM(input_aux,k,i,j)=DIRECT_VOL_ELEM(result,k,i,j);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=YSIZE(input_aux);
+	 TW.NzOutput=TW.NzInput=ZSIZE(input_aux);
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
+            DIRECT_VOL_ELEM(result,k,i,j)=DIRECT_VOL_ELEM(result_aux,k,i,j);
+      }
+   } else if (isign==-1) {
+      // Subsequent iterations
+      for (int i=iterations-1; i>=1; i--) {
+	 // Size of the Lowest subband
+	 int xsize=XSIZE(input)/(int)pow(2.0,(double)i);
+	 int ysize=YSIZE(input)/(int)pow(2.0,(double)i);
+	 int zsize=ZSIZE(input)/(int)pow(2.0,(double)i);
+
+	 // Pick the Lowest subband
+	 matrix3D<double> input_aux(zsize,ysize,xsize),
+	    result_aux(zsize,ysize,xsize);
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
+            DIRECT_VOL_ELEM(input_aux,k,i,j)=DIRECT_VOL_ELEM(input,k,i,j);
+
+	 // DWT
+	 TW.Input=MULTIDIM_ARRAY(input_aux);
+	 TW.NxOutput=TW.NxInput=XSIZE(input_aux);
+	 TW.NyOutput=TW.NyInput=YSIZE(input_aux);
+	 TW.NzOutput=TW.NzInput=ZSIZE(input_aux);
+	 TW.Output=MULTIDIM_ARRAY(result_aux);
+	 Wavelet(&TW);
+
+	 // Return the subband to the output
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
+            DIRECT_VOL_ELEM(input,k,i,j)=DIRECT_VOL_ELEM(result_aux,k,i,j);
+      }
+   
+      // First iteration
+      TW.Input=MULTIDIM_ARRAY(input);
+      TW.NxOutput=TW.NxInput=XSIZE(input);
+      TW.NyOutput=TW.NyInput=YSIZE(input);
+      TW.NzOutput=TW.NzInput=ZSIZE(input);
+      TW.Output=MULTIDIM_ARRAY(result);
+      Wavelet(&TW);
+   }
+}
 
 // Set the DWT type --------------------------------------------------------
 void set_DWT_type(int DWT_type) {
@@ -43,7 +324,6 @@ void set_DWT_type(int DWT_type) {
 }
 
 // DWT ---------------------------------------------------------------------
-
 template <class T>
    void DWT(const matrix1D<T> &v,
    matrix1D<double> &result, int isign)
@@ -212,6 +492,7 @@ string Quadrant3D(int q) {
 #define DWT_Quadrant1D(i,s,smax) ((s!=smax-1)?'1':((i==0)?'0':'1'))
 #define DWT_QuadrantnD(i,s,sp,smax) \
   ((s!=sp)?'0':DWT_Quadrant1D(i,s,smax))
+#define DWT_icoef1D(i,s,smax) ()
    
 void Get_Scale_Quadrant(int size_x, int x,
    int &scale, string &quadrant) {

@@ -40,6 +40,31 @@
 #define DAUB12 12
 #define DAUB20 20
 
+/**@name Bilib Wavelets */
+//@{
+/** B-spline Wavelet transform of a vector.
+    The B-spline wavelet transform of the input array is computed.
+    The size of the array must be so as to allow the downsampling by 2
+    as many times as the number of iterations. For instance,
+    if iterations is 1, then it must be a multiple of 2. If iterations is 2,
+    then it must be a multiple of 4. If itereations if 3, then it must be
+    a multiple of 8. And so on.
+    
+    If the isign=-1 then the inverse wavelet transform is perdormed*/
+void Bilib_DWT(const matrix1D<double> &input,
+   matrix1D<double> &result, int iterations, int isign=1);
+
+/** B-spline Wavelet transform of a matrix.*/
+void Bilib_DWT(const matrix2D<double> &input,
+   matrix2D<double> &result, int iterations, int isign=1);
+
+/** B-spline Wavelet transform of a matrix.*/
+void Bilib_DWT(const matrix3D<double> &input,
+   matrix3D<double> &result, int iterations, int isign=1);
+//@}
+
+/**@name Numerical recipes wavelets */
+//@{
 /** Set DWT type.
     The DWT type should be set before starting making transforms.
     Valid types are: DAUB4, DAUB12, DAUB20*/
@@ -93,6 +118,7 @@ template <class T>
     quadrant of that scale.*/
     void DWT_lowpass(const matrix2D<double> &v,
        matrix2D<double> &result);
+//@}
 
 /** Select Block 1D.
     Given the scale (s=0 is the finest) and the quadrant
