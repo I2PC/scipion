@@ -132,6 +132,12 @@ void QtWidgetMicrograph::slotDrawEllipse(int _x, int _y, int _f) {
    __mImageOverview->drawEllipse(_x,_y,_f);
 }
 
+void QtWidgetMicrograph::slotDrawLastEllipse(int _x, int _y, int _f) {
+   __mImage->drawEllipse(_x,_y,_f);
+   __mImageOverview->drawEllipse(_x,_y,_f);
+   __mImage->drawLastEllipse(_x,_y,_f);
+}
+
 /* Active family ----------------------------------------------------------- */
 void QtWidgetMicrograph::slotActiveFamily( int _f ) {
    __activeFamily = _f;

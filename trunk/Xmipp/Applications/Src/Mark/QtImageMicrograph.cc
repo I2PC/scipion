@@ -114,19 +114,22 @@ void QtImageMicrograph::loadImage() {
 }
 
 /* Draw ellipse ------------------------------------------------------------ */
-void QtImageMicrograph::drawEllipse(int _x, int _y, int _color) {
+void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius) {
    int mX, mY;
-   #define ellipse_radius 5.0
    micrographToImage( _x, _y, mX, mY );
    if ( (mX > 0 && mX < image()->width()) && 
         (mY > 0 && mY < image()->height()) ) {
       QPen pen( __col.col(_color), 2 );
       __paint->setPen( pen );
-      __paint->drawEllipse(ROUND(mX-ellipse_radius/__zoom),
-         ROUND(mY-ellipse_radius/__zoom),
-      	 ROUND(2*ellipse_radius/__zoom), ROUND(2*ellipse_radius/__zoom) );
+      __paint->drawEllipse(ROUND(mX-_ellipse_radius/__zoom),
+         ROUND(mY-_ellipse_radius/__zoom),
+      	 ROUND(2*_ellipse_radius/__zoom), ROUND(2*_ellipse_radius/__zoom) );
       __paint->flush();
    }
+}
+
+void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color) {
+   drawEllipse(_x,_y,_color,10);
 }
 
 /* Load Symbols ------------------------------------------------------------ */

@@ -104,7 +104,7 @@ public slots:
    void slotChangeFamilyOther( int _coord, int _f );
    void slotRepaint() { repaint( FALSE ); }
    void slotDrawEllipse(int _x, int _y, int _f);
-
+   void slotDrawLastEllipse(int _x, int _y, int _f);
 signals:
    void signalActiveFamily( int _f );
    void signalAddFamily( const char *_familyName );

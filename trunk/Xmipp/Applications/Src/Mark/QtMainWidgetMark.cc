@@ -457,6 +457,7 @@ void QtMainWidgetMark::slotAddCoordTilted( int _muX, int _muY, int _f ) {
    __mTiltedWidget->slotDrawEllipse( mtX, mtY, _f);
    slotActualizeTiltedOverview(_muX,_muY);
 // CO:   __mWidget->slotDrawEllipse( _muX, _muY, _f);
+   __mTiltedWidget->slotDrawLastEllipse( mtX, mtY, _f);
 }
 
 void QtMainWidgetMark::slotAddCoordUntilted( int _mtX, int _mtY, int _f ) {
