@@ -164,18 +164,23 @@ public:
       const vector<int> &best_idx, const vector<int> &candidate_idx,
       vector< vector<int> > &groups);
 
-   /** Pick the best image from the groups */
-   int pick_view(vector< vector<int> >groups,
-      const vector<double> &vcorr,
+   /** Pick the best image from the groups.
+       Update this comment to what really does *** */
+   int pick_view(vector< vector<int> > &groups,
+      vector<double> &vcorr,
+      vector<double> &vrot,
+      vector<double> &vtilt,
+      vector<double> &vpsi,
       const vector<int> &best_idx,
       const vector<int> &candidate_idx, const vector<double> &candidate_rates);
 
    /** Predict rotational and tilting angles.
        The function returns the two assigned angles and the corresponding
-       correlation. The function predict shift and psi angle calls this
+       correlation. The index of the best matching reference image is also
+       returned. The function predict shift and psi angle calls this
        one for evaluating each possible combination.*/
    double predict_rot_tilt_angles(ImageXmipp &I,
-      double &assigned_rot, double &assigned_tilt) _THROW;
+      double &assigned_rot, double &assigned_tilt, int &best_ref_idx) _THROW;
 
    /** Predict angles and shift.
        This function searches in the shift-psi space and for each combination

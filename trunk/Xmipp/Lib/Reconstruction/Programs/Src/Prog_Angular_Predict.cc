@@ -276,7 +276,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
 // Predict rot and tilt ----------------------------------------------------
 double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
-   double &assigned_rot, double &assigned_tilt) _THROW {
+   double &assigned_rot, double &assigned_tilt, int &best_ref_idx) _THROW {
    // Build initial candidate list
    vector<bool>   candidate_list;
    vector<double> cumulative_corr;
@@ -335,6 +335,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
    
    assigned_rot    = rot[best_i];
    assigned_tilt   = tilt[best_i];
+   best_ref_idx    = best_i;
    if (PCAs_used==0) return 0;
    else return cumulative_corr[best_i]/PCAs_used;
 }
@@ -370,12 +371,16 @@ double Prog_angular_predict_prm::evaluate_candidates_by_correlation(
 }
 
 // Group images --------------------------------------------------------------
+//#define DEBUG
 void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    const vector<double> &vtilt, const vector<double> &vpsi,
    const vector<int> &best_idx, const vector<int> &candidate_idx, 
    vector< vector<int> > &groups) {
    for (int j=0; j<best_idx.size(); j++) {
-      int i=candidate_idx[best_idx[j]];
+      int i=candidate_idx[best_idx[j]];  
+      #ifdef DEBUG    
+         cout << "Looking for a group for image " << best_idx[j] << endl;
+      #endif
       double roti=vrot[i];
       double tilti=vtilt[i];
       double psii=vpsi[i];
@@ -388,17 +393,27 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 	    int ip=candidate_idx[groups[g][jp]];
 	    double ang_distance=distance_prm.check_symmetries(
 	       vrot[ip],vtilt[ip],vpsi[ip],roti,tilti,psii,false);
+            #ifdef DEBUG
+               cout << "   comparing with " << groups[g][jp] << " d="
+                    << ang_distance << endl;
+            #endif
 	    if (ang_distance>20) {fits=false; break;}
 	 }
 	 if (fits) {assigned=true; break;}
       }
 
       if (!assigned) {
+         #ifdef DEBUG    
+            cout << "Creating a new group\n";
+         #endif
          // Create a new group with the first item in the list
          vector<int> group;
 	 group.push_back(best_idx[j]);
 	 groups.push_back(group);
       } else {
+         #ifdef DEBUG    
+            cout << "Assigning to group " << g << endl;
+         #endif
          // Insert the image in the fitting group
          groups[g].push_back(best_idx[j]);
       }
@@ -413,10 +428,109 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
       groups.push_back(group);
    }
 }
+#undef DEBUG
 
 // Pick view -----------------------------------------------------------------
-int Prog_angular_predict_prm::pick_view(vector< vector<int> >groups,
-   const vector<double> &vcorr, 
+// This one returns the most correlated image
+#ifdef NEVER_DEFINED
+int Prog_angular_predict_prm::pick_view(vector< vector<int> > &groups,
+   vector<double> &vcorr, 
+   vector<double> &vrot, 
+   vector<double> &vtilt, 
+   vector<double> &vpsi, 
+   const vector<int> &best_idx,
+   const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
+   return groups[0][0];
+}
+#endif
+
+#ifdef NEVER_DEFINED
+   // This is for getting an average of the most populated group
+int Prog_angular_predict_prm::pick_view(vector< vector<int> >&groups,
+   vector<double> &vcorr, 
+   vector<double> &vrot, 
+   vector<double> &vtilt, 
+   vector<double> &vpsi, 
+   const vector<int> &best_idx,
+   const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
+   // Sum the rates in all groups
+   vector<double> group_rate;
+   group_rate.reserve(groups.size());
+   int best_g;
+   double best_group_rate=-1e38;
+   for (int g=0; g<groups.size(); g++) {
+      double temp_group_rate=0;
+      for (int j=0; j<groups[g].size(); j++)
+         temp_group_rate+=candidate_rate[groups[g][j]];
+      group_rate.push_back(temp_group_rate);
+      if (temp_group_rate>best_group_rate) {
+         best_g=g;
+	 best_group_rate=group_rate[g];
+      }
+   }
+   
+   // Check that there are not two groups with the same score
+   int groups_with_max_rate=0;
+   for (int g=0; g<groups.size(); g++)
+      if (group_rate[g]==best_group_rate) groups_with_max_rate++;
+   #ifdef DEBUG
+   if (groups_with_max_rate>1) {
+      cout << "There are two groups with maximum rate\n";
+   }
+   #endif
+
+   // Take a weighted average within that group
+   matrix2D<double> Eavg(3,3), E; Eavg.init_zeros();
+   double corravg=0;
+   for (int j=0; j<groups[best_g].size(); j++) {
+      int ref_idx=candidate_idx[groups[best_g][j]];
+      Euler_angles2matrix(vrot[ref_idx],vtilt[ref_idx],vpsi[ref_idx],E);
+      E*=vcorr[ref_idx]; // Weight by the correlation
+      Eavg+=E;
+      corravg+=vcorr[ref_idx];
+      if (tell & TELL_PSI_SHIFT) {
+         cout << "   Taking image (rot,tilt,psi)="
+              << vrot[ref_idx] << " " << vtilt[ref_idx] << " " << vpsi[ref_idx]
+              << " corr=" << vcorr[ref_idx] << endl;
+      }
+   }
+   Eavg/=groups[best_g].size();
+   corravg/=groups[best_g].size();
+
+   // Normalize the basis vectors
+   for (int i=0; i<3; i++) {
+      double norm=0;
+      for (int j=0; j<3; j++) norm+=Eavg(i,j)*Eavg(i,j);
+      norm=sqrt(norm);
+      for (int j=0; j<3; j++) Eavg(i,j)/=norm;
+   }
+   
+   // Produce the suggested angles
+   double rotavg, tiltavg, psiavg;
+   Euler_matrix2angles(Eavg, rotavg, tiltavg, psiavg);
+   
+   // Change the angles of the first image in the group
+   // to the suggested ones
+   int ref_idx=candidate_idx[groups[best_g][0]];
+   vrot [ref_idx]=rotavg;
+   vtilt[ref_idx]=tiltavg;
+   vpsi [ref_idx]=psiavg;
+   vcorr[ref_idx]=corravg;
+   if (tell & TELL_PSI_SHIFT) {
+      cout << "   Group angle set to (rot,tilt,psi)="
+           << vrot[ref_idx] << " " << vtilt[ref_idx] << " " << vpsi[ref_idx]
+           << " corr=" << vcorr[ref_idx] << endl;
+   }
+   return groups[best_g][0];
+}
+# endif
+
+// This is taking the maximum correlation within the most populated group
+int Prog_angular_predict_prm::pick_view(vector< vector<int> > &groups,
+   vector<double> &vcorr, 
+   vector<double> &vrot, 
+   vector<double> &vtilt, 
+   vector<double> &vpsi, 
    const vector<int> &best_idx,
    const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
    // Sum the rates in all groups
@@ -510,6 +624,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    // Search in the psi-shift space
    int N_trials=0;
    vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr;
+   vector<int>    vref_idx;
    for (int mirror=0; mirror<=check_mirrors; mirror++)
       for (double shiftX=-max_shift_change; shiftX<=max_shift_change; shiftX+=shift_step)
          for (double shiftY=-max_shift_change; shiftY<=max_shift_change; shiftY+=shift_step) {
@@ -536,6 +651,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   #endif
 
                   // Project the resulting image onto the visible space
+                  /*
                   if (fn_refsel!="") {
                      xmippVector Vpca;
                      STARTINGX(Ip())=STARTINGY(Ip())=0;
@@ -545,6 +661,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                      Ip().set_Xmipp_origin();
                      Ip().statistics_adjust(0,1);
                   }
+                  */
 
                   #ifdef DEBUG
                      Ip.write("PPPafter_denoising.xmp");
@@ -552,12 +669,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
       	          // Search for the best tilt, rot angles
                   double rotp, tiltp;
-                  double corrp=predict_rot_tilt_angles(Ip,rotp,tiltp);
+                  int best_ref_idx;
+                  double corrp=predict_rot_tilt_angles(Ip,rotp,tiltp,best_ref_idx);
       	          if (tell & TELL_PSI_SHIFT)
                      cout << "mirror=" << mirror
                           << " shiftX= " << shiftX << " shiftY= " << shiftY
 	                  << " psi= " << psi << " rot= " << rotp
 		          << " tilt= " << tiltp << " corr= " << corrp
+                          << " refidx= " << best_ref_idx
 		          /* << " error= " << error_pca */
 		          << endl; 
 
@@ -572,10 +691,13 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	          vtilt.push_back(tiltp_aux);
 	          vpsi.push_back(psi_aux);
 	          vcorr.push_back(corrp);
+                  vref_idx.push_back(best_ref_idx);
 
 	          N_trials++;
                   #ifdef DEBUG
-                     cout << "Press any key\n"; char c; cin >> c;
+                     ImageXmipp Iref((string)"g0tb"+ItoA(best_ref_idx+1,5)+".xmp");
+                     Iref.write("PPPref.xmp");
+                     cerr << "Press any key\n"; char c; cin >> c;
                   #endif
 	       }
          }
@@ -697,7 +819,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	 int i=candidate_local_maxima[jp];
          cout << "psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
               << vtilt[i] << " corr= " << vcorr[i]
-	      << " rate=" << candidate_rate[jp] << endl;
+	      << " rate=" << candidate_rate[jp]
+              << " reference image #=" << vref_idx[i]+1 << endl;
       }
       cout << endl; cout.flush();
    }
@@ -721,19 +844,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       // There is only one on the top
       jbest=best_idx[0];
       ibest=candidate_local_maxima[jbest];
-   } else if (jtop==jmax-2) {
-      // There are two on the top
-      // select that with more correlation
-      if (vcorr[candidate_local_maxima[best_idx[0]]]>
-          vcorr[candidate_local_maxima[best_idx[1]]]) {
-	 jbest=best_idx[0];
-	 ibest=candidate_local_maxima[jbest];
-      } else {
-	 jbest=best_idx[1];
-	 ibest=candidate_local_maxima[jbest];
-      }
    } else {
-      // There are more than two in the top
+      // There are more than one in the top
       // Group the different views
       vector< vector<int> > groups;
       group_views(vrot,vtilt,vpsi,best_idx,candidate_local_maxima,groups);
@@ -741,7 +853,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
          cout << "Partition: " << groups << endl;
       
       // Pick the best image from the groups
-      jbest=pick_view(groups,vcorr,
+      jbest=pick_view(groups,vcorr,vrot,vtilt,vpsi,
          best_idx,candidate_local_maxima,candidate_rate);
       ibest=candidate_local_maxima[jbest];
    }
