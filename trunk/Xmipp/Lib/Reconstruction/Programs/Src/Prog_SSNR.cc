@@ -408,7 +408,11 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, matrix2D<double> &output) {
       if (!prm.generate_images) {
          prm.Estimate_SSNR_1D(output);
          if (prm.fn_out!="") output.write(prm.fn_out);
-         else                output.write(prm.fn_S.insert_before_extension("_SSNR"));
+         else {
+	    FileName fn_out=prm.fn_S.insert_before_extension("_SSNR");
+	    fn_out.substitute_extension("vol","txt");
+	    output.write(fn_out);
+	 }
       } else prm.Estimate_SSNR_2D();
    } else {
       prm.Radial_average(output);
