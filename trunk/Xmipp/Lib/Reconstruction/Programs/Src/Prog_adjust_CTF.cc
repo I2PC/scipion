@@ -332,8 +332,10 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log=FALSE) {
 
 /* Save intermidiate results ----------------------------------------------- */
 /* First call to generate model so far and then save the image, and a couple
-   of cuts along X and Y */
-void save_intermidiate_results(const FileName &fn_root) {
+   of cuts along X and Y.
+   
+   This function returns the fitting error.*/
+double save_intermidiate_results(const FileName &fn_root) {
    ofstream plotX, plotY, plot_radial;
    ImageXmipp save;
    matrix1D<int>    idx(2);  // Indexes for Fourier plane
@@ -410,8 +412,9 @@ void save_intermidiate_results(const FileName &fn_root) {
    global_show=1;
    double *pptr=global_adjust->adapt_for_numerical_recipes();
    if (global_action==0) pptr+=PARAMETRIC_CTF_PARAMETERS;
-   CTF_fitness(pptr);
+   double fitting_error=CTF_fitness(pptr);
    global_show=old_global_show;
+   return fitting_error;
 }
 
 // Estimate sqrt parameters ------------------------------------------------
@@ -603,8 +606,9 @@ void estimate_background_gauss_parameters() {
    }
    A(1,0)=A(0,1);
    b=A.inv()*b;
-   global_ctfmodel.sigmaU=ABS(b(1));
-   global_ctfmodel.sigmaV=ABS(b(1));
+   global_ctfmodel.sigmaU=MIN(ABS(b(1)),95e3); // This value should be
+   global_ctfmodel.sigmaV=MIN(ABS(b(1)),95e3); // conformant with the physical
+      	             	      	               // meaning routine in CTF.cc
    global_ctfmodel.gaussian_K=exp(b(0));
 }
 #undef DEBUG
@@ -1426,6 +1430,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    output_file << global_ctfmodel << endl;
    output_file.close();
 
-   save_intermidiate_results(prm.fn_outroot+"_model");
+   double fitting_error=save_intermidiate_results(prm.fn_outroot+"_model");
+   return fitting_error;
 }
 #endif
