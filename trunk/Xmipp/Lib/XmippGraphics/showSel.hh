@@ -81,12 +81,16 @@ protected:
     virtual const char* cellLabel(int i) const;
     /* Initialize right click menubar */
     virtual void initRightclickMenubar();
+    /* Set File in right click menu bar */
+            void setFileRightclickMenubar();
+    /* Set common options in right click menu bar */
+            void setCommonOptionsRightclickMenubar();
     /* Produce Pixmap for cell i */
     virtual void producePixmapAt(int i);
     /* Open a new file. Old parameters must be discarded */
             void openNewFile (const FileName &);
     /* Read a Selfile */
-    void readFile(const FileName &_fn) _THROW;
+    virtual void readFile(const FileName &_fn) _THROW;
     /* Update the label with the filename at cell i*/
     virtual void updateStatus(int i);
 private slots:
