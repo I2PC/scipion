@@ -594,7 +594,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
       if (side.voxel_mode) {
          project_Volume(side.phantom_vol,proj,prm.proj_Ydim,prm.proj_Xdim,
             rot,tilt,psi);
-         IMGMATRIX(proj).translate(vector_R2(shiftX,shiftY));
+         IMGMATRIX(proj).self_translate(vector_R2(shiftX,shiftY));
       } else {
          Phantom aux;
          aux=side.phantom_descr;
