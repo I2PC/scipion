@@ -81,6 +81,7 @@ int main( int argc, char **argv ) {
           showimg->show();
        } else if (mode==1) {
           ShowSel *showsel = new ShowSel;
+          showsel->showonlyactive = !check_param(argc,argv,"-showall");
 	  showsel->initWithFile(numRows, numCols, argv[i]);
 	  showsel->show();
        } else if (mode==2) {
@@ -119,6 +120,8 @@ void Usage() {
 	 << "       -din <Original.dat>: Original data\n"
          << "   [-w]                   : width (default: 10)\n"
          << "   [-h]                   : height (default: 10)\n"
+         << "   [-showall]          : only for sel mode, show all images even\n"
+         << "                         if sel = -1\n"
          << "   [-poll]                : check file change, only for volumes\n"
     ;
 }
