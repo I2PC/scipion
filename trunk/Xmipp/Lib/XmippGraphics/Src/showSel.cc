@@ -95,11 +95,12 @@ void ShowSel::readObject(SelFile &SF) {
     SF.ImgSize(projYdim,projXdim);
     int i=0;
     while (!SF.eof()) {
-      	imgnames[i] = SF.get_current_file();
-	selstatus[i]= SF.Is_ACTIVE();
-	SF.next();
-        if(selstatus[i]==TRUE || !showonlyactive)
+        if(SF.Is_ACTIVE() || !showonlyactive) {
+      	   imgnames[i] = SF.get_current_file();
+	   selstatus[i]= SF.Is_ACTIVE();
 	   i++;
+        }
+	SF.next();
     }
 }
 
