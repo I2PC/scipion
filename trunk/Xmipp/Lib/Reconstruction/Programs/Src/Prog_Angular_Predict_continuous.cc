@@ -89,6 +89,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
    // Resize the predicted vectors
    int number_of_images=get_images_to_process();
    current_image=0;
+   image_name.resize(number_of_images);
    predicted_rot.resize(number_of_images);
    predicted_tilt.resize(number_of_images);
    predicted_psi.resize(number_of_images);
@@ -159,6 +160,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
    double cost=CSTSplineAssignment(reDFTVolume, imDFTVolume,
       I(), mask_Fourier.get_cont_mask2D(), pose, max_no_iter);
    predicted_cost[current_image]=cost;
+                     image_name      [current_image]=I.name();
    rot    = pose(0); predicted_rot   [current_image]=rot;
    tilt   = pose(1); predicted_tilt  [current_image]=tilt;
    psi    = pose(2); predicted_psi   [current_image]=psi;
@@ -183,6 +185,7 @@ void Prog_angular_predict_continuous_prm::finish_processing() {
       v(3)=predicted_shiftX[i];
       v(4)=predicted_shiftY[i];
       v(5)=predicted_cost[i];
+      DF.append_comment(image_name[i]);
       DF.append_data_line(v);
    }
    DF.write(fn_out_ang);

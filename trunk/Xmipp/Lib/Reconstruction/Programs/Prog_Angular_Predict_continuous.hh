@@ -65,6 +65,8 @@ public:
    Mask_Params      mask_Real;
    // Number of images processed so far
    int              current_image;
+   // Vector of image names
+   vector<string> image_name;
    // Vector of predicted rotational angles
    vector<double>   predicted_rot;
    // Vector of predicted tilting angles
