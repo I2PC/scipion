@@ -122,6 +122,60 @@ matrix1D<double> p_a(3);
 V3_MINUS_V3(p_a,p,a); 
 return (dot_product(p_a,v)/v.module());
 }			      
+/* Least-squares-fit a plane to an arbitrary number of (x,y,z) points
+    PLane described as Ax + By + C  = z
+    where D = -1
+    Returns -1  if  A²+B²+C² <<1
+     */
+     
+void least_squares_plane_fit(  const vector<fit_point> & IN_points, 
+                               double &plane_a,
+			       double &plane_b,
+			       double &plane_c)
+{
+    double  D = 0;
+    double  E = 0;
+    double  F = 0;
+    double  G = 0;
+    double  H = 0;
+    double  I = 0;
+    double  J = 0;
+    double  K = 0;
+    double  L = 0;
+    double  W2 = 0;
+    double  error = 0;
+    double  denom = 0;
+    const fit_point * point;
+
+    int n = IN_points.size();
+
+    for ( int i=0; i<n; i++ )
+    {
+        point = &(IN_points[i]);//Can I copy just the address?
+        W2 = point->w * point->w;
+        D += point->x * point->x * W2 ;
+        E += point->x * point->y * W2 ;
+        F += point->x * W2 ;
+        G += point->y * point->y * W2 ;
+        H += point->y * W2 ;
+        I += 1 * W2 ;
+        J += point->x * point->z * W2 ;
+        K += point->y * point->z * W2 ;
+        L += point->z * W2 ;
+    }
+
+    denom = F*F*G - 2*E*F*H + D*H*H + E*E*I - D*G*I;
+
+    // X axis slope
+    plane_a = (H*H*J - G*I*J + E*I*K + F*G*L - H*(F*K + E*L)) / denom;
+    // Y axis slope
+    plane_b = (E*I*J + F*F*K - D*I*K + D*H*L - F*(H*J + E*L)) / denom;
+    // Z axis intercept
+    plane_c = (F*G*J - E*H*J - E*F*K + D*H*K + E*E*L - D*G*L) / denom;
+
+}
+
+			       
 
 /* Rectangle enclosing ----------------------------------------------------- */
 void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,

@@ -29,11 +29,27 @@
 #ifndef _GEOMETRY_HH
 #  define _GEOMETRY_HH
 
+// structures to store a point and a plane
+// w is a weight, quality assigned to that point
+// if you do not want to use it set it to 1
+
 #include "xmippMatrices3D.hh"
 #ifndef FLT_EPSILON
 #   define FLT_EPSILON 1.19209e-07
 #endif
-
+#include <vector>
+#include <iostream>
+struct fit_point{
+   double x;
+   double y;
+   double z;
+   double w;} ;
+/*   
+ostream &operator<<(ostream &os, const fit_point &s)
+   {
+   os << "(" << s.x << "," << s.y <<"," << s.z << ") " << s.w << endl;      
+   }
+*/
 /**@name Geometry
    \begin{description}
    \item[Geometrical Operations]
@@ -177,7 +193,26 @@ double point_line_distance_3D(const matrix1D<double> &p,
 double point_plane_distance_3D(const matrix1D<double> &p, 
                                const matrix1D<double> &a,
 			       const matrix1D<double> &v);
-
+/** Least-squares-fit a plane to an arbitrary number of (x,y,z) points
+    PLane described as Ax + By + C = z
+    Returns -1  if  A²+B²+C² <<1
+    
+    Points are defined using the stuct
+        \\Ex:
+    \begin{verbatim}
+    struct fit_point{
+       double x;
+       double y;
+       double z;
+       double w;};
+    \end{verbatim}
+     where w is a weighting factor. Set it to 1 if you do not want to use it
+     */
+void least_squares_plane_fit(  const vector<fit_point> &IN_points, 
+                               double &plane_A,
+			       double &plane_B,
+			       double &plane_C);
+         
 /** Rectangle which encloses a deformed rectangle.
     Given a rectangle characterized by the top-left corner and the right-bottom
     corner, and given a matrix after which the rectangle is deformed. Which
