@@ -2459,6 +2459,9 @@ int levenberg_cst   (
    double tol_shift,
    int    *IteratingStop)
 {
+#ifndef DBL_EPSILON
+   #define DBL_EPSILON 2e-16
+#endif
       double   *da, epsilon = DBL_EPSILON;
       double   *u,   *v, *w;
       double   *t;
@@ -2604,6 +2607,13 @@ int levenberg_cst   (
       *cost = costchanged[0];
       
         
+#ifndef DBL_MIN
+   #define DBL_MIN 1e-26
+#endif
+#ifndef DBL_MAX
+   #define DBL_MAX 1e+26
+#endif
+
         
       if (costchanged[0] < OldCost) {
            if (*lambda > DBL_MIN) {
