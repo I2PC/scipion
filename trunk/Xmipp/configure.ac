@@ -8,6 +8,7 @@
 # Initialization of configure parameters and checks for common tools
 # like C compiler, libtool tool, C flags, etc..
 
+
 AC_INIT
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(Xmipp,0.9)
