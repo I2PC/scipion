@@ -285,7 +285,6 @@ int FileName::get_number() const {
    if (root_end+1 != point) {
       if (point-root_end>5) root_end=point-5-1;
       string aux=substr(root_end+1,point-root_end+1);
-     
       return atoi(aux.c_str());
    } else return -1;
 }
@@ -378,8 +377,9 @@ FileName FileName::remove_until_prefix(const string &str) const {
 
 // Remove directories ......................................................
 FileName FileName::remove_directories() const {
-   FileName retval=*this;
-   return retval.substr(0,rfind("/"));
+   int last_slash=rfind("/");
+   if (last_slash==-1) return *this;
+   else                return substr(last_slash+1,length()-last_slash);
 }
 
 /* Time managing ----------------------------------------------------------- */
