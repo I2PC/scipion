@@ -698,7 +698,7 @@ void Prog_assign_CTF_prm::process()
 							      Regions,CTFfile,Filter_Out());
 
 			      // Scale the filter to the size of the particle's images
-    		      Filter_Out().scale_to_size(particle_vertical,particle_horizontal);
+    		      Filter_Out().self_scale_to_size(particle_vertical,particle_horizontal);
 			      // Write the filter file and assign it to the particle's image in the 
 			      // output file.  
     		      FileName fn_current_particle=SF.get_current_file();

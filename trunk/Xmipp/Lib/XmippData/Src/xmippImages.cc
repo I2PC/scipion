@@ -248,7 +248,7 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
     // scale if necessary (check this with Carlos)
     if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
       header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
-      img.scale_to_size(header.iYdim(), header.iXdim());
+      img.self_scale_to_size(header.iYdim(), header.iXdim());
     }; 
 
     header.set_header();  // Set header in a Xmipp consistent state
