@@ -353,7 +353,6 @@ void QtMainWidgetMark::compute_gamma() {
    __gamma=RAD2DEG(__gamma);
    if(triang<100)
       cout << "Not many particles, tilt angle may not be accurate" <<endl;
-cout << triang << "triangles used" << "tilt " << __gamma << endl ;
 }
 
 /* Compute alphas ---------------------------------------------------------- */
