@@ -16,3 +16,4 @@ extern int		GetElapsedTime
 												/* elapsed system time in seconds */
 					double	*RealTimeDifference	/* true elapsed time in seconds */
 				);
+

@@ -11,3 +11,4 @@ enum TBoundaryConvention
 	MirrorOnBounds,
 	Periodic
 };
+

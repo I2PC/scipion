@@ -75,3 +75,4 @@ extern int		IirConvolvePolesVolume
 					int		*Status				/* error management */
 				);
 //@}
+

@@ -299,3 +299,4 @@ extern int		PutzDoubleToShort
 					double	PillarSource[],		/* double input data */
 					long	NzCopy				/* length of the input */
 				);
+

@@ -57,3 +57,4 @@ extern short	ConvertLongToShort
 				(
 					long	Argument			/* value to convert */
 				);
+

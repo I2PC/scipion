@@ -29,3 +29,4 @@ extern int		GetFoldedValueShort
 					enum TBoundaryConvention
 							Convention			/* boundary convention */
 				);
+

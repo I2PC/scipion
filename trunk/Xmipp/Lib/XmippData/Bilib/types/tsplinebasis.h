@@ -9,3 +9,4 @@ enum TSplineBasis
 	DualSpline,
 	OrthogonalSpline
 };
+

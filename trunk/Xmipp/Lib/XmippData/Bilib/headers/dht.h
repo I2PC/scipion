@@ -30,3 +30,4 @@ extern int		DiscreteHartleyTransform
 					int		Forward				/* direction */
 				);
 //@}
+

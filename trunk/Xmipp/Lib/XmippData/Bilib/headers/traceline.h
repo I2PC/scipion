@@ -11,3 +11,4 @@ extern int		NextIndex3DLine6Connected
 					struct TTraceLine
 							*LineData			/* line description */
 				);
+

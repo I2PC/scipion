@@ -78,3 +78,4 @@ extern int		SincDiff
 					double	*Result				/* output */
 				);
 //@}
+

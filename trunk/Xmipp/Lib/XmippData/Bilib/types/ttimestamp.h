@@ -8,3 +8,4 @@ struct TTimeStamp
 	struct tm
 			LocalTime;
 };
+

@@ -7,3 +7,4 @@ extern double	PositiveIntPower
 					double	Argument,			/* argument */
 					long	Exponent			/* exponent */
 				);
+

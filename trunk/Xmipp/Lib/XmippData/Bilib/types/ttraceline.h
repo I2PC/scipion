@@ -9,3 +9,4 @@ struct TTraceLine
 	double	P[3];				/* point on line */
 	double	q[3];				/* direction of line */
 };
+

@@ -165,3 +165,4 @@ extern double	SincDiff1
 				(
 					double	Argument			/* input */
 				);
+

@@ -67,3 +67,4 @@ extern short	MinShort
 					short	Argument1,			/* first argument */
 					short	Argument2			/* second argument */
 				);
+
