@@ -31,7 +31,36 @@
 
 /**@name CTF Correction */
 //@{
-/** CTF class. */
+/** CTF class.
+    Here goes how to compute the radial average of a parametric CTF:
+    
+    \begin{verbatim}
+      #include <Reconstruction/CTF.hh>
+
+      int main() {
+      	 // Read the parametric CTF
+	 XmippCTF CTF;
+	 CTF.enable_CTF=true;
+	 CTF.enable_CTFnoise=false;
+	 CTF.read("ctf_crio.param");
+	 CTF.Produce_Side_Info();
+
+      	 // Compute the CTF radial average
+	 double sampling_rate=3.5; // in Angstroms/pixel
+	 double fmax=1.0/(2.0*sampling_rate);
+	 for (double f=0; f<fmax; f+=fmax/100.0) {
+	    double CTF_at_f=0;
+	    double N=0;
+	    for(double ang=0; ang<2*PI; ang+=0.01) {
+               CTF_at_f+=CTF.CTF_at(f*cos(ang),f*sin(ang));
+	       N++;
+	    }
+	    cout << f << " " << CTF_at_f/N << endl;
+	 }
+	 return 0;
+      }
+   \end{verbatim}
+*/
 class XmippCTF {
 public:
    // Electron wavelength (Amstrongs)
