@@ -36,6 +36,7 @@
 #include <qtimer.h>
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices2D.hh>
+#include <XmippData/xmippSelFiles.hh>
 #include <list.h>
 
 /**@name Show Tables*/
@@ -172,6 +173,8 @@ protected:
     /* Reopen this file */
     virtual void reOpenFile() {};
 
+    /* Show the average and SD of a Selfile */
+    void showStats(SelFile &SF);
 private slots:
     /* Open window with help about keys */
             void giveHelp();

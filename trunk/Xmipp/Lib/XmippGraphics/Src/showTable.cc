@@ -31,6 +31,7 @@
 */
 
 #include "../showTable.hh"
+#include "../show2D.hh"
 #include <qpainter.h>
 #include <qkeycode.h>
 #include <qscrollbar.h>
@@ -349,4 +350,21 @@ void ShowTable::check_file() {
       message_shown=true;
    }
    if (info.st_mtime!=modification_time) reOpenFile();
+}
+
+/* Show Average and Standard deviation of a SelFile ------------------------ */
+void ShowTable::showStats(SelFile &SF) {
+    try {
+       ImageXmipp _ave, _sd;
+       double _minPixel, _maxPixel;
+       SF.go_beginning(); 
+       SF.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
+       ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
+       ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
+       wavg->show();
+       wsd->show();
+    } catch (Xmipp_error XE) {
+       QMessageBox::about( this, "Error!",
+	  "There is a problem opening files\n");
+    }
 }
