@@ -196,9 +196,9 @@ template <class T>
     }
     \end{verbatim} */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V) \
-    for (int k=0; k<=ZSIZE(V); k++) \
-       for (int i=0; i<=YSIZE(V); i++) \
-          for (int j=0; j<=XSIZE(V); j++)
+    for (int k=0; k<ZSIZE(V); k++) \
+       for (int i=0; i<YSIZE(V); i++) \
+          for (int j=0; j<XSIZE(V); j++)
 //@}
 
 /**@name Memory access*/
