@@ -300,6 +300,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         }
 	        	if (FORW) {
                            switch(eq_mode) {
+			      case CAVARTK:
                               case ARTK:
                         	 IMGPIXEL(proj,y,x) += VOLVOXEL(vol,k,i,j)*a;
                         	 IMGPIXEL(norm_proj,y,x) += a2;
@@ -351,7 +352,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 		  if (!FORW) {
                      T correction;
                      switch (eq_mode) {
-                	case ARTK: correction=(T) (vol_corr/N_eq);
+                	case ARTK: correction=(T) vol_corr;
+                           break;
+                	case CAVARTK: correction=(T) (vol_corr/N_eq);
                            break;
                 	case CAVK:
                 	case CAV:  correction=(T) vol_corr;
@@ -413,7 +416,7 @@ void project_Volume(
                                          //   norm_proj is calculated
                                          // 0 if we are backprojecting
                                          //   norm_proj must be valid
-   int              eq_mode,             // ARTK, CAVK or CAV
+   int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
    GridVolumeT<int> *GVNeq,              // Number of equations per blob
    matrix2D<double> *M,                  // System matrix
    GridVolumeT<T>   *vol_var,            // Volume to keep track of the variance
@@ -616,7 +619,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 	} while ((alpha_max-alpha)>XMIPP_EQUAL_ACCURACY);
       } // for
 
-      P(i,j)=ray_sum/4.0;
+      P(i,j)=ray_sum*0.25;
       #ifdef DEBUG
       	cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
       #endif
@@ -1104,6 +1107,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                         IMGPIXEL(proj,yw,xw) += VOLVOXEL(vol,k,i,j) *
                            IMGPIXEL(footprint,foot_V,foot_U);
                         switch(eq_mode) {
+                           case CAVARTK:
                            case ARTK:
                               IMGPIXEL(norm_proj,yw,xw) +=
                                  IMGPIXEL(footprint2,foot_V,foot_U);
@@ -1125,6 +1129,9 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 	       if (!FORW)
                   switch (eq_mode) {
                      case ARTK:
+                        VOLVOXEL(vol,k,i,j) += vol_corr;
+                        break;
+                     case CAVARTK:
                         VOLVOXEL(vol,k,i,j) += vol_corr/N_eq;
                         break;
                   }
@@ -1169,7 +1176,7 @@ void project_Crystal_Volume(
                                          //   norm_proj is calculated
                                          // 0 if we are backprojecting
                                          //   norm_proj must be valid
-   int eq_mode)                          // ARTK, CAVK or CAV
+   int eq_mode)                          // ARTK, CAVARTK, CAVK or CAV
 {
    // If projecting forward initialise projections
    if (FORW) {
