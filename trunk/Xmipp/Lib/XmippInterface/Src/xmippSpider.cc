@@ -537,9 +537,9 @@ void Angular_refinement_Matching(const FileName &fn_vol,
 
        // Delete reference projections
        << endl
-       << "do lb4 I=1,x83\n"
+       << "do lb4 x12=1,x83\n"
        << "   de\n"
-       << "   ideal*x0\n"
+       << "   ideal{****x12}\n"
        << "lb4\n"
        << "en\n"
    ;
@@ -549,12 +549,12 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    if (spider_prog==NULL)
       REPORT_ERROR(1,"Angular refinement:: The environment variable SPIDER is not set");
    system(((string)spider_prog+" "+fn_ext+" b01").c_str());
-//   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
-//    "* b01*."+fn_ext).c_str());
+   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+    "* b01*."+fn_ext).c_str());
 
    SF_kk.go_first_ACTIVE();
-//   while (!SF_kk.eof())
-//      system(((string)"rm "+SF_kk.NextImg()).c_str());
+   while (!SF_kk.eof())
+      system(((string)"rm "+SF_kk.NextImg()).c_str());
 
    // Rewrite the report in the same format as the Radon programs
    system(((string)"grep -v \";\" apmq."+fn_ext+" > apmq1."+fn_ext).c_str());
@@ -563,24 +563,25 @@ void Angular_refinement_Matching(const FileName &fn_vol,
                          DF_report.write((string)"apmq."+fn_ext);
 
    // Call again spider to get the assigned angles
-   spider_batch.open(((string)"b02."+fn_ext).c_str());
-   if (!spider_batch)
-      REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
-   spider_batch
+//    spider_batch.open(((string)"b02."+fn_ext).c_str());
+//    if (!spider_batch)
+//       REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
+//    spider_batch
 //      << "vo md\n"
 //      << "   refangles\n"        // vo ea docfile
 //      << "   apmq\n"             // apmq output docfile
 //      << "   assigned_angles\n"  // angles assigned
-      << "de\n"
-      << "   projlist\n"
-      << "de\n"
-      << "   experimentalsel\n"
-      << "en\n"
-   ;
-   spider_batch.close();
-//   system(((string)spider_prog+" "+fn_ext+" b02").c_str());
-//   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
-//    "* "/*+"b01*."+fn_ext*/).c_str());
+//       << "de\n"
+//       << "   projlist\n"
+//       << "de\n"
+//       << "   experimentalsel\n"
+//       << "en\n"
+//    ;
+//    spider_batch.close();
+//    system(((string)spider_prog+" "+fn_ext+" b02").c_str());
+//    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+//       "* "+"b02*."+fn_ext).c_str());
+   system(((string)"rm projlist."+fn_ext+" experimentalsel."+fn_ext).c_str());
 
    DocFile refangles((string)"refangles."+fn_ext);
    DocFile apmq((string)"apmq."+fn_ext);
@@ -612,5 +613,5 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    }
 
    DF_report_standard.write(fn_report+".txt");
-   system(((string)"rm apmq."+fn_ext).c_str());
+   system(((string)"rm apmq."+fn_ext+" refangles."+fn_ext).c_str());
 }
