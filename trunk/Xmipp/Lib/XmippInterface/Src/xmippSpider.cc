@@ -433,7 +433,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     int Zdim, Ydim, Xdim;
     GetXmippVolumeSize(fn_vol, Zdim, Ydim, Xdim);
 
-    if (last_ring==-1) last_ring=(int)(Xdim/2);
+    if (last_ring<0) last_ring=(int)(Xdim/2)-5;
  
     // Rename input images
     rename_for_Spider(SF, SF_kk, "kk",fn_ext);
@@ -506,10 +506,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
        << "x20=" << last_image << endl
        << "do lb2 I=1,x20\n"
        << "   ud x0,x55\n"
-       << "   experimentalsel"
-       << endl
-       << "   sd 1,x55\n"
-       << "   intersel***x55\n"
+       << "   experimentalsel\n"
        << "lb2\n"
 
        // If the output document file for the projection list exists, delete it
@@ -521,27 +518,17 @@ void Angular_refinement_Matching(const FileName &fn_vol,
        << "endif\n"
        << endl
 
-       // Refine each projection
-       << "x21=" << first_ring << endl
-       << "x22=" << last_ring << endl
-       << "do lb3 I=1,x20\n"
-       << "   ud x0,x55\n"
-       << "   experimentalsel\n" // The file number is in x55
-       << endl
        // Effectively refine
-       << "   ap mq\n"
-       << "   ideal****\n"
-       << "   projlist\n"
-       << "   " << max_shift << endl
-       << "   x21,x22\n"
-       << "   kk*****\n"
-       << "   intersel***x55\n"
-       << "   apmq\n"
+       << "ap mq\n"
+       << "ideal****\n"
+       << "projlist\n"
+       << "" << max_shift << endl
+       << first_ring << "," << last_ring << endl
+       << "kk*****\n"
+       << "1-" << last_image << endl
+       << "apmq\n"
        << endl
-       // Delete individual selfile
-       << "   de\n"
-       << "      intersel***x55\n"
-       << "lb3\n"
+
        // Delete reference projections
        << endl
        << "do lb4 I=1,x83\n"
@@ -556,12 +543,12 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    if (spider_prog==NULL)
       REPORT_ERROR(1,"Angular refinement:: The environment variable SPIDER is not set");
    system(((string)spider_prog+" "+fn_ext+" b01").c_str());
-   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
-    "* b01*."+fn_ext).c_str());
+//   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+//    "* b01*."+fn_ext).c_str());
 
    SF_kk.go_first_ACTIVE();
-   while (!SF_kk.eof())
-      system(((string)"rm "+SF_kk.NextImg()).c_str());
+//   while (!SF_kk.eof())
+//      system(((string)"rm "+SF_kk.NextImg()).c_str());
 
    // Rewrite the report in the same format as the Radon programs
    system(((string)"grep -v \";\" apmq."+fn_ext+" > apmq1."+fn_ext).c_str());
@@ -585,12 +572,12 @@ void Angular_refinement_Matching(const FileName &fn_vol,
       << "en\n"
    ;
    spider_batch.close();
-   system(((string)spider_prog+" "+fn_ext+" b02").c_str());
-   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
-    "* "/*+"b01*."+fn_ext*/).c_str());
+//   system(((string)spider_prog+" "+fn_ext+" b02").c_str());
+//   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+//    "* "/*+"b01*."+fn_ext*/).c_str());
 
-   DocFile refangles((string)"refangles"+fn_ext);
-   DocFile apmq((string)"apmq"+fn_ext);
+   DocFile refangles((string)"refangles."+fn_ext);
+   DocFile apmq((string)"apmq."+fn_ext);
    DocFile DF_report_standard;
    DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
    
@@ -619,5 +606,5 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    }
 
    DF_report_standard.write(fn_report+".txt");
-   system(((string)"rm apmq."+fn_ext+" assigned_angles."+fn_ext).c_str());
+   system(((string)"rm apmq."+fn_ext).c_str());
 }
