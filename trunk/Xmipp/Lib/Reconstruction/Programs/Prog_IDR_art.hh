@@ -55,6 +55,12 @@ public:
    FileName             fn_ctf;
    /// Iteration number
    int                  it;
+   /** Maximum resolution.
+       If distinct than -1 volumes are filtered at each step to this frequency. */
+   double               max_resolution;
+   /** Symmetry file.
+       If provided then volumes are symmetrized after every step. */
+   FileName             fn_final_sym;
 
    /// Side Info: CTF
    FourierMask          ctf;
@@ -70,6 +76,8 @@ public:
    FileName             fn_root;
    /// Side Info: Blob volume
    GridVolume           vol_blobs;
+   /// Side Info: Lowpass filter
+   FourierMask          Filter;
 public:
    /// Empty creator
    Prog_IDR_ART_Parameters(): art_prm(NULL) {};

@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "../Prog_IDR_art.hh"
+#include "../Prog_symmetrize.hh"
 
 #define OTHER_FILTERS
 #ifdef OTHER_FILTERS
@@ -52,6 +53,8 @@ void Prog_IDR_ART_Parameters::read(const FileName &fn) {
    if (XSIZE(mu0_list)==0)
       {mu0_list.resize(1); mu0_list.init_constant(1);}
    muF_list=get_vector_param(fh,"muF",-1);
+   max_resolution=AtoF(get_param(fh,"max resolution",0,"-1"));
+   fn_final_sym=get_param(fh,"final symmetry file",0,"");
    fclose(fh);
 }
 
@@ -86,6 +89,14 @@ void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
    // Read Blob volume
    if (fn_blob_volume!="") vol_blobs.read(fn_blob_volume);
    art_prm->produce_Side_Info(vol_blobs,BASIC);
+
+   // Prepare Lowpass filter
+   if (max_resolution!=-1) {
+      Filter.FilterShape=RAISED_COSINE;
+      Filter.FilterBand=LOWPASS;
+      Filter.w1=max_resolution;
+      Filter.raised_w=0.02;
+   }
 }
 
 void Prog_IDR_ART_Parameters::show() {
@@ -97,6 +108,8 @@ void Prog_IDR_ART_Parameters::show() {
         << "Mu0=            " << mu0_list.transpose() << endl
         << "MuF=            " << muF_list.transpose() << endl
         << "Mu=             " << mu_list.transpose() << endl
+        << "max resolution= " << max_resolution << endl
+        << "final symmetry file=" << fn_final_sym << endl
         << "ART parameters =================================================\n"
         << /* art_prm << */ endl
    ;
@@ -109,7 +122,9 @@ void Prog_IDR_ART_Parameters::Usage() {
         << "CTF=<Xmipp Fourier file>|<selfile>    : CTF file\n"
         << "[dont_rewrite=<rw=No>]                : Keep or not the input projs\n"
 	<< "[only_reproject=<Blob volume>]        : Do not reconstruct, use this volume\n"
-	<< "                                        instead\n";
+	<< "                                        instead\n"
+        << "[max resolution=<w=-1>]               : Maximum resolution\n"
+        << "[final symmetry file=<sym file>]      : Symmetry file\n";
    cerr << "ART parameters =================================================\n";
    art_prm->usage();
 }
@@ -206,6 +221,35 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
 	 if (prm.it>0) prm.art_prm->tell |= TELL_USE_INPUT_BLOBVOLUME;
 	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs);
       }
+
+      // Check if there is postprocessing ..................................
+      bool convert_to_blobs=FALSE;
+      // Symmetrization
+      if (prm.fn_final_sym!="") {
+         Symmetrize_Parameters sym_prm;
+         sym_prm.fn_in=prm.art_prm->fn_root+".vol";
+         sym_prm.fn_out="";
+         sym_prm.fn_sym=prm.fn_final_sym;
+         sym_prm.wrap=TRUE;
+         ROUT_symmetrize(sym_prm);
+         vol_recons.read(prm.art_prm->fn_root+".vol");
+         convert_to_blobs=TRUE;
+      }
+
+      // Lowpass filtering
+      if (prm.max_resolution!=-1) {
+         cerr << "Filtering result ...\n";
+         prm.Filter.apply_mask(vol_recons());
+         convert_to_blobs=TRUE;
+      }
+
+      // Convert to blobs
+      if (convert_to_blobs) {
+         prm.vol_blobs.clear();
+         voxels2blobs(&vol_recons, prm.art_prm->blob, prm.vol_blobs,
+            prm.art_prm->grid_type, prm.art_prm->grid_relative_size, 0.05, NULL,
+            NULL, 0.01, 0, prm.art_prm->R);
+      }     
 
       // Apply IDR correction ..............................................
       if (prm.it<prm.idr_iterations || prm.fn_blob_volume!="")
