@@ -326,7 +326,6 @@ void ShowTable::contentsMousePressEvent(  int row, int col, int button,
     const QPoint & mousePos  ) 
      {
       setCurrentCell(row,col);
-cout << "button " <<   button  << endl;  
       if( button==RightButton) menubar->exec(mousePos);           
      }
 
