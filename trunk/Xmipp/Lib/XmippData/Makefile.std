@@ -9,7 +9,7 @@ SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Src/xmippProgs.o Src/xmippMasks.o Src/xmippMicrograph.o \
            Src/xmippFilters.o Src/xmippMorphology.o \
            Programs/Src/Prog_downsample.o Programs/Src/Prog_segment.o \
-	   Programs/Src/Prog_denoising.o \
+	   Programs/Src/Prog_denoising.o Programs/Src/Prog_test_cluster.o \
            Src/xmippWavelets.o Src/xmippImagic.o \
            Src/xmippFFT.o
 BILIB_OBJS=Bilib/sources/changebasis.o \
