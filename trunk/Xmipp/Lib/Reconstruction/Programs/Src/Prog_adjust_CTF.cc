@@ -335,21 +335,26 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log=FALSE) {
 /* First call to generate model so far and then save the image, and a couple
    of cuts along X and Y */
 void save_intermidiate_results(const FileName &fn_root) {
-   ofstream plotX, plotY;
+   ofstream plotX, plotY, plot_radial;
    ImageXmipp save;
    matrix1D<int>    idx(2);  // Indexes for Fourier plane
    matrix1D<double> freq(2); // Frequencies for Fourier plane
    generate_model_so_far(save,TRUE);
    plotX.open((fn_root+"X.txt").c_str());
    plotY.open((fn_root+"Y.txt").c_str());
+   plot_radial.open((fn_root+"_radial.txt").c_str());
    if (!plotX)
       REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
    if (!plotY)
       REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
+   if (!plot_radial)
+      REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
    plotX << "# freq gaus ctf2\n";
    plotY << "# freq gaus ctf2\n";
+   plot_radial << "# freq gaus ctf2\n";
 
    double w;
+   // Generate cut along X
    for (int i=STARTINGY(save()); i<=FINISHINGY(save())/2; i++) {
       XX(idx)=0; YY(idx)=i;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
@@ -360,6 +365,7 @@ void save_intermidiate_results(const FileName &fn_root) {
 	    << (*global_ctf_ampl2)(i,0) << endl;
    }
 
+   // Generate cut along Y
    for (int j=STARTINGX(save()); j<=FINISHINGX(save())/2; j++) {
       XX(idx)=j; YY(idx)=0;
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
@@ -369,6 +375,33 @@ void save_intermidiate_results(const FileName &fn_root) {
       plotX << XX(freq) << " " << pow(10,save(0,j)) << " "
 	    << (*global_ctf_ampl2)(0,j) << endl;
    }
+
+   // Generate radial average
+   matrix1D<double> radial_CTFmodel_avg(YSIZE(save())/2);
+   matrix1D<double> radial_CTFampl_avg(YSIZE(save())/2);
+   matrix1D<int>    radial_N(YSIZE(save())/2);
+   for (int i=STARTINGY(save()); i<=FINISHINGY(save()); i++)
+      for (int j=STARTINGX(save()); j<=FINISHINGX(save())/2; j++) {
+	 XX(idx)=j; YY(idx)=i;
+	 FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
+	 if (w<global_min_freq || w>global_max_freq) continue;
+      	 
+	 int r=FLOOR(w*(double)YSIZE(save()));
+      	 radial_CTFmodel_avg(r)+=save(i,j);
+	 radial_CTFampl_avg(r)+=(*global_ctf_ampl2)(i,j);
+	 radial_N(r)++;
+      }
+
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
+      XX(idx)=0; YY(idx)=i;
+      FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
+      if (w<global_min_freq || w>global_max_freq) continue;
+      digfreq2contfreq(freq, freq, global_Tm);
+      plot_radial << YY(freq) << " " << pow(10,radial_CTFmodel_avg(i)/radial_N(i)) << " "
+	    << radial_CTFampl_avg(i)/radial_N(i) << endl;
+   }
+
+   // Generate 2D image
    save.write((fn_root+"_log10.xmp").c_str());
    plotX.close();
    plotY.close();
