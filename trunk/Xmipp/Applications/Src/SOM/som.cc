@@ -23,6 +23,12 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
+
+
 // To avoid problems with long template names
 #pragma warning(disable:4786)
 
@@ -55,6 +61,8 @@ string         layout = "HEXA";	// Type of layout (Topology)
 bool 	       gaussian = true; // Gaussian kernel
 bool 	       bubble = false;  // Bubble kernel
 bool 	       saveClusters = false;    // Save clusters in separate files
+bool 	       use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
+
 
 /* Parameters ============================================================== */
    try {
@@ -118,6 +126,9 @@ bool 	       saveClusters = false;    // Save clusters in separate files
           saveClusters = true;
        else saveClusters = false;
 
+       if (check_param(argc, argv, "-randomcodevectors"))
+	 use_rand_cvs = true;
+       else use_rand_cvs = false;
 
        if (argc == 1) {Usage(argv);}
        
@@ -166,6 +177,8 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    cout << "Output file name : " << fn_out << endl;
    if (cb_in != "")
    	cout << "Input code vectors file name : " << cb_in << endl;   
+   else if (use_rand_cvs)
+     cout << "Using randomized code vectors" << endl;
    if (saveClusters)
      cout << "Save clusters in separate files: " << fn_out << ".(cluster number)"<< endl;
    cout << "Horizontal dimension (Xdim) = " << xdim << endl;
@@ -225,7 +238,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
         }
         myMap = new xmippMap(codeStream);
    } else    
-        myMap = new xmippMap(layout, xdim, ydim, ts);
+        myMap = new xmippMap(layout, xdim, ydim, ts, use_rand_cvs);
 
 
    xmippSOM *thisSOM;
@@ -280,6 +293,8 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    infS << "Input data file : " << fn_in << endl;
    if (cb_in != "")
      infS << "Input code vectors file : " << cb_in << endl;
+   else if (use_rand_cvs)
+     infS << "Using randomized code vectors" << endl;
    infS << "Code vectors output file : " << fn_out <<  ".cod" << endl;
    infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
    infS << "Number of feature vectors: " << ts.size() << endl;
@@ -387,6 +402,7 @@ void Usage (char **argv) {
      "\n    			      0: No information (default)"     
      "\n    			      1: Progress bar"     
      "\n    			      2: Code vectors change between iterations"     
+     "\n    -randomcodevectors        Use truly randomized codevectors (default FALSE)"
      "\n			   \n"
      ,argv[0]);
      exit(0);
