@@ -25,48 +25,29 @@ AC_LANG(C++)
 AC_ARG_WITH([devel],
 [  --devel                 build development versions],AC_SUBST(XMIPP_PREFIX,[devel_]),AC_SUBST(XMIPP_PREFIX,[xmipp_]))
 
-# checking for the existence of VTK on regular PATH
-#AC_MSG_CHECKING("VTK library dir")
-#AC_ARG_WITH(vtk-libdir,[  --with-vtk-libdir=DIR           location of the 
-#vtk lib directory],
-#	[LDFLAGS="${LDFLAGS} -L${withval} -lvtkImaging  -lvtkGraphics 
-#-lvtkFiltering -lvtkIO -lvtkjpeg -lvtkpng -lvtkzlib -lvtkCommon -dl" ])
-
-#AC_ARG_WITH(vtk-incdir,[  --with-vtk-incdir=DIR           location of the 
-#vtk include directory],
-#	[CPPFLAGS="${CPPFLAGS} -I${withval}"])
-
-#AC_CHECK_LIB(vtkCommon, main,,
-#	[AC_MSG_ERROR([VTK not found; Check your installation or try 
-#./configure --with-vtk-libdir=/libdir/for/vtk])])
-#AC_CHECK_LIB(vtkImaging, main,,
-#	[AC_MSG_ERROR([VTK not found; Check your installation or try 
-#./configure --with-vtk-libdir=/libdir/for/vtk])])
-#AC_CHECK_LIB(vtkGraphics, main,,
-#	[AC_MSG_ERROR([VTK not found; Check your installation or try 
-#./configure --with-vtk-libdir=/libdir/for/vtk])])
-#AC_CHECK_HEADERS([vtkImageFFT.h])
-
+if test "$program_prefix" = NONE
+then
+	program_prefix="xmipp_"
+fi
 
 #Checking for TIFF library as well as some of its capabilities
 AC_CHECK_LIBTIFF
-
 
 #Checking for the presence and usability of MPI library
 ACX_MPI(USE_MPI=true)
 AM_CONDITIONAL(BUILD_MPI, test x"$USE_MPI" = xtrue )
 
-#checking for Qt
-BNV_HAVE_QT
-
+# checking for Qt
 # If Qt is present then set HAVE_QT to 1 in config.h file
 # else print error and exit 
+BNV_HAVE_QT
+AM_CONDITIONAL(BUILD_QT, test x"$have_qt" = xyes )
 
 if have_qt=yes
 then
 	AC_DEFINE([HAVE_QT],1,Define HAVE_QT to 1 if Qt is present and usable)
 else
-	AC_MSG_ERROR([Qt Not found, check your installation.])
+	AC_MSG_RESULT([WARNING!!!: Qt Not found, Qt capabilities will be disabled.])
 fi
 
 #checking for OpenGL
@@ -74,19 +55,19 @@ MDL_HAVE_OPENGL
 
 if test -z "$GL_LIBS"
 then
-	AC_MSG_RESULT([GL libs not found, OpenGL disabled.])
+	AC_MSG_RESULT([WARNING!!!: GL libs not found, OpenGL disabled.])
 else
 	if test -z "$GL_CFLAGS"
 	then
-		AC_MSG_RESULT([GL headers not found, OpenGL disabled.])
+		AC_MSG_RESULT([WARNING!!!: GL headers not found, OpenGL disabled.])
 	else
 		AC_MSG_RESULT([OpenGL flags: $GL_CFLAGS])
 		AC_MSG_RESULT([OpenGL libs: $GL_LIBS])
-		PHAN3D="phan3D"
-		AC_SUBST([PHAN3D])
 	fi
 fi
 
+AM_CONDITIONAL(BUILD_OGL, test -n "$GL_LIBS" )
+AM_CONDITIONAL(BUILD_OGL, test -n "$GL_CFLAGS" )
 
 # Checks for the presence of some system libs 
 
