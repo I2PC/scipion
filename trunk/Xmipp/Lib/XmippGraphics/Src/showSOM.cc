@@ -34,6 +34,7 @@ void ShowSOM::init() {
     SFcv        = NULL;
     hisAssigned = NULL;
     cv_errors   = NULL;
+    infStr      = "";
     ShowSel::init();
 }
 
@@ -59,13 +60,16 @@ void ShowSOM::readFile(const FileName &_fn_root) _THROW {
     clear();
     fn              = _fn_root;
     setCaption(fn.c_str());
+    readSOMFiles(_fn_root);
+    readSelFile(_fn_root+".sel");
+}
 
-    FileName fn_class, fn_his, fn_err, fn_inf, fn_sel;
+void ShowSOM::readSOMFiles(const FileName &_fn_root) _THROW {
+    FileName fn_class, fn_his, fn_err, fn_inf;
     fn_class=_fn_root+".vs";
     fn_his  =_fn_root+".his";
     fn_err  =_fn_root+".err";
     fn_inf  =_fn_root+".inf";
-    fn_sel  =_fn_root+".sel";
     
     // Read histogram
     if (exists(fn_his)) {
@@ -157,22 +161,6 @@ void ShowSOM::readFile(const FileName &_fn_root) _THROW {
        }
        fh_class.close();
     }
-
-    // Read Selfile
-    SelFile         SF(fn_sel);
-    imgnames        = new FileName[listSize];
-    selstatus       = new bool[listSize];
-    initContents();
-    SF.ImgSize(projYdim,projXdim);
-    int i=0;
-    while (!SF.eof()) {
-      	imgnames[i] = SF.get_current_file();
-	selstatus[i]= SF.Is_ACTIVE();
-	SF.next();
-	i++;
-    }
-
-    annotateTime(fn_sel);
 }
 
 /* Initialize right click menubar ------------------------------------------ */
@@ -217,7 +205,7 @@ void ShowSOM::initRightclickMenubar() {
    insertGeneralItemsInRightclickMenubar();
 }
 
-/* Save assigned .---------------------------------------------------------- */
+/* Extract represented .---------------------------------------------------- */
 void ShowSOM::extractRepresented(SelFile &SF_represented) {
    for (int i=0; i<listSize; i++) {
       if (cellMarks[i])

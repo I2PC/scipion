@@ -65,13 +65,17 @@ void ShowSpectra::initWithVectors(int _numRows, int _numCols,
 /* Read a Spectra ---------------------------------------------------------- */
 void ShowSpectra::readFile(const FileName &_fn) _THROW {
     clear();
-    fn              = _fn;
+    fn = _fn;
     setCaption(fn.c_str());
+    readDatFile(_fn);
+}
 
+void ShowSpectra::readDatFile(const FileName &_fn) _THROW {
     ifstream fh_in(_fn.c_str());
     if (!fh_in)
        REPORT_ERROR(1,(string)"ShowSpectra::readFile: Cannot open"+_fn);
     V=new xmippCTVectors(fh_in);
+    fh_in.close();
 
     annotateTime(_fn);
     initFromVectors();

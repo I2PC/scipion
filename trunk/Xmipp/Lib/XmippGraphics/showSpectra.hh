@@ -75,8 +75,11 @@ protected:
     virtual void producePixmapAt(int i) {}
     /* Open a new file. Old parameters must be discarded */
             void openNewFile (const FileName &);
-    /* Read a Selfile */
+    /* Read a Dat File.
+       First some initialization is done and then it call readDatFile*/
     virtual void readFile(const FileName &_fn) _THROW;
+   // Really read a Dat file
+   virtual void readDatFile(const FileName &_fn_root) _THROW;
     /* Init from vectors.
        Initialize many variables from the information contained in the
        vectors.*/

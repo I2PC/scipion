@@ -49,8 +49,10 @@ protected:
     virtual void init();
     /* Clear everything */
     virtual void clear();
-    /* Read SOM files. */
+    /* Read SOM files and Sel file. */
     virtual void readFile(const FileName &_fn_root) _THROW;
+    /* Read only SOM files. */
+    virtual void readSOMFiles(const FileName &_fn_root) _THROW;
 
     /* Extract the represented images to a SelFile.
        The selfile is not cleared at the beginning. */
