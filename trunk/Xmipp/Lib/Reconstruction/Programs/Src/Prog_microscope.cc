@@ -130,6 +130,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
       sigma_before_CTF=sqrt(1-p)*sigma;
    } else if (sigma!=0) {
       sigma_before_CTF=sigma;
+      sigma_after_CTF=0;
    }
 }
 #undef DEBUG
