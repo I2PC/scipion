@@ -12,6 +12,10 @@ if BUILD_TIFF
 OPTIONAL_PROGS += Tiff2Raw 
 endif
 
+if BUILD_QT
+OPTIONAL_PROGS += Mark Show XMask 
+endif
+
 SUBDIRS = 2DInterpolation \
 	3DInterpolation \
 	Adapt_for_Spider \
@@ -72,7 +76,6 @@ SUBDIRS = 2DInterpolation \
 	KCMeans \
 	KerDenSOM \
 	Lattice_vectors \
-	Mark \
 	Mask \
 	Microscope \
 	MLalign2D \
@@ -106,7 +109,6 @@ SUBDIRS = 2DInterpolation \
 	SelStats \
 	Separate_Objects \
 	Shift \
-	Show \
 	Skew \
 	SOM \
 	Split_selfile \
@@ -128,5 +130,5 @@ SUBDIRS = 2DInterpolation \
 	WBP \
 	Window \
 	Window_micrograph \
-	XMask $(OPTIONAL_PROGS)
+	$(OPTIONAL_PROGS)
 
