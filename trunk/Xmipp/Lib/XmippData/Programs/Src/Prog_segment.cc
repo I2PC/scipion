@@ -77,6 +77,7 @@ void Prog_segment_prm::produce_side_info() _THROW {
       if (dalton_mass!=-1) voxel_mass=dalton_mass*1.207/sampling_rate3;
       else                 voxel_mass=aa_mass*110*1.207/sampling_rate3;
    }
+   cout << endl << "Derived voxel_mass=" << voxel_mass << endl;
 }
 
 // Count voxels ============================================================
