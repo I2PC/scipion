@@ -689,7 +689,7 @@ template <class T>
 
    ifstream in(fn_in.c_str());
    in.seekg(0, ios::end);         // End of file
-   streampos sp = in.tellg();     // Size of file
+   std::streampos sp = in.tellg();     // Size of file
    if(sp < Number_of_Numbers*Type_size)
        {
        REPORT_ERROR(1,(string)"Marsaglia::Init: File "+fn_in+"is too small");
@@ -700,7 +700,7 @@ template <class T>
 
    random_vector =  new char[(Number_of_Numbers*Type_size)];
    T_random_vector = (T *) random_vector;
-   in.seekg((streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
                                 Number_of_Numbers*Type_size) ) ),ios::beg);
    in.read(random_vector, (Number_of_Numbers*Type_size));
 
@@ -782,7 +782,7 @@ template <class T>
 
    ifstream in(fn_in.c_str());
    in.seekg(0, ios::end);         // End of file
-   streampos sp = in.tellg();     // Size of file
+   std::streampos sp = in.tellg();     // Size of file
    T power_of_2 =(T)NEXT_POWER_OF_2(m_max);
    if (power_of_2==m_max)
       power_of_2=(T)NEXT_POWER_OF_2(m_max+1);
@@ -790,7 +790,7 @@ template <class T>
    T aux_number;
    m_max;
    //get a random number to set the file pointer at a random position
-   in.seekg((streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
                                 Number_of_Numbers*Type_size) ) ),ios::beg);
     for(int ii=0; ii<Number_of_Numbers;)
        {  
@@ -802,7 +802,7 @@ template <class T>
              (T_random_vector[ii] <= 0) && (aux_number==0) )
              {
              if(in.eof())
-                 in.seekg((streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+                 in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
                                 Number_of_Numbers*Type_size) ) ),ios::beg);
         
              in.read((char*)&(T_random_vector[ii]),Type_size);
