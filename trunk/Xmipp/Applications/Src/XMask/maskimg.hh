@@ -146,6 +146,12 @@ public:
      */
      virtual bool isIn(int _cx, int _cy) = 0;
 
+     /** This method prints the class parameters.
+         I wish I knew how to do this with \begin{verbatin}
+	 friend ostream & operator << \end{verbatin}
+	 */
+     virtual void print(float scalex=1.0, float scaley=1.0) = 0;
+
      	
 protected:
      int rcx, rcy;  			// actual center of the figure
@@ -377,6 +383,14 @@ public:
 	   return false;
      };
 
+     /** Prints mask parameters (virtual)*/
+     virtual void print(float scalex, float scaley) {
+	cout << "(Origin_x,Origin_y): (" << rcx/scalex << ", "
+	                                 << rcy/scaley << ")" << endl;
+
+	cout << "(Radius_x,Radius_y): (" << rxradius/scalex << ", "
+	                                 << ryradius/scaley << ")" << endl;
+     }
      	
 protected:
      int rxradius, oxradius;  // real radius of the figure
@@ -674,6 +688,14 @@ public:
 	   return false;
      };
 
+     /** Prints mask parameters (virtual)*/
+     virtual void print(float scalex, float scaley) {
+	cout << "(Origin_x,Origin_y): (" << rcx/scalex << ", "
+	                                 << rcy/scaley << ")" << endl;
+
+	cout << "(half_width,half_height): (" << rrwidth/scalex << ", "
+	                                      << rrheight/scaley << ")" << endl;
+     }
      	
 protected:
      int rrwidth, orwidth;    // real width of the rectangle
@@ -932,6 +954,14 @@ public:
 	return false;
      };
 
+     /** Prints mask parameters (virtual)*/
+     virtual void print(float scalex, float scaley) {
+        maskEllipse::print(scalex,scaley);
+	cout << "(innerXradius,innerYradius): (" << innerXradius/scalex << ", "
+	                                         << innerYradius/scaley << ")" 
+						 << endl;
+     }
+
      	
 protected:
      int innerXradius; 	      // inner X radius   
@@ -1168,6 +1198,15 @@ public:
 	return false;
      };
 
+     /** Prints mask parameters (virtual)*/
+     virtual void print(float scalex, float scaley) {
+        maskRectangle::print(scalex,scaley);
+	cout << "(half_innerwidth,"
+	         "half_innerheight): (" << innerwidth/scalex << ", "
+	                                << innerheight/scaley << ")" 
+					<< endl;
+     }
+
      	
 protected:
      int innerwidth;   // real width of the rectangle
@@ -1254,6 +1293,7 @@ class QPopupMenu;
 class maskImg : public QWidget
 {
     Q_OBJECT
+    QPixmap	pmScaled;		// the scaled pixmap
 public:
     maskImg( QWidget *parent=0, const char *name=0, int wFlags=0 );
     maskImg( QWidget *parent=0, Image *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
@@ -1277,7 +1317,6 @@ private:
     const char* filename;
     QImage	image;			// the loaded image
     QPixmap	pm;			// the converted pixmap
-    QPixmap	pmScaled;		// the scaled pixmap
     int 	xmippFlag;		// stands for:
     					// -1: No Xmipp image
 					//  0: Xmipp image

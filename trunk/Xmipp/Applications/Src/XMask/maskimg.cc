@@ -367,7 +367,9 @@ void maskImg::saveImage( int item )
  	    // Saves Xmipp Image
 	    tmpImage.rename((string) ((const  char *)savefilename));
             tmpImage.write(); 
-
+            // print parameters
+            theMaskFigure->print(pmScaled.width()/ (float)xmippImage().ColNo(),
+	                         pmScaled.height()/ (float)xmippImage().RowNo());
 	  } catch (Xmipp_error) {
 	      char *helptext = "Invalid image type";
 	      helpmsg = new QMessageBox( "Error", helptext,
