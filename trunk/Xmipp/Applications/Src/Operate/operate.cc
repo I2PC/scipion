@@ -561,7 +561,8 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;
-	   radial_average(input(),center,radial_mean);
+	   matrix1D<int> radial_count;
+	   radial_average(input(),center,radial_mean,radial_count);
 	   radial_mean.write(fn_out);
    }
    else if(operand_type1==VOLUME)
@@ -571,7 +572,8 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;
-	   radial_average(input(),center,radial_mean);
+	   matrix1D<int> radial_count;
+	   radial_average(input(),center,radial_mean,radial_count);
 	   radial_mean.write(fn_out);
    }   
 }
