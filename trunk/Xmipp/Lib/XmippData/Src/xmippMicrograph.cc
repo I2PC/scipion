@@ -27,7 +27,7 @@
 #include "../xmippArgs.hh"
 #include "../xmippSelFiles.hh"
 #include "../xmippMasks.hh"
-#include <fstream.h>
+#include <fstream>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -230,7 +230,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, Image &result,
-   double scaleX, double scaleY) _THROW {
+   double scaleX, double scaleY, bool only_check) _THROW {
    if (X_window_size==-1 || Y_window_size==-1)
       REPORT_ERROR(1,"Micrograph::scissor: window size not set");
 
@@ -244,9 +244,10 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
       result().init_zeros();
       retval=0;
    } else
-      for (int i=i0; i<=iF; i++)
-         for (int j=j0; j<=jF; j++)
-            result(i-i0,j-j0)=(*this)(j,i);
+      if (!only_check) 
+	 for (int i=i0; i<=iF; i++)
+            for (int j=j0; j<=jF; j++)
+               result(i-i0,j-j0)=(*this)(j,i);
    return retval;
 }
 

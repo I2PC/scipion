@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "../xmippFilters.hh"
-#include <slist.h>
+#include<list>
 
 /* Substract background ---------------------------------------------------- */
 void substract_background_plane(Image *I) {
@@ -57,7 +57,7 @@ void contrast_enhancement(Image *I) {
  void region_growing(const Image *I_in, Image *I_out, int i, int j,
     float stop_colour, float filling_colour, bool less)
 {
-   slist<int> iNeighbours;       /* A list for neighbour pixels */
+   list<int> iNeighbours;       /* A list for neighbour pixels */
    int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
    
    /* First task is copying the input image into the output one */
@@ -109,7 +109,7 @@ void contrast_enhancement(Image *I) {
 void region_growing(const Volume *V_in, Volume *V_out, int k, int i, int j,
    float stop_colour, float filling_colour, bool less)
 {
-   slist<int> iNeighbours;       /* A list for neighbour voxels */
+   list<int> iNeighbours;       /* A list for neighbour voxels */
    int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
    
    /* First task is copying the input volume into the output one */

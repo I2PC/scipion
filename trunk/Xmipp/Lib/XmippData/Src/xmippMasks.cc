@@ -124,7 +124,7 @@ void BinaryFrameMask(matrix2D<int> &mask,
 void GaussianMask(matrix2D<double> &mask,
    double sigma, int mode, double x0, double y0) {
    double sigma2=sigma*sigma;
-   double k=1/sqrt(2*PI*sigma);
+   double k=1/(sqrt(2*PI)*sigma);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
       double r2=(i-y0)*(i-y0)+(j-x0)*(j-x0);
       MAT_ELEM(mask,i,j)=k*exp(-0.5*r2/sigma2);
@@ -1178,7 +1178,7 @@ int count_with_mask(const matrix2D<int> &mask,
 }
 
 int count_with_mask(const matrix2D<int> &mask,
-   const matrix2D<double_complex> &m, int mode, double th1, double th2) {
+   const matrix2D< complex<double> > &m, int mode, double th1, double th2) {
    SPEED_UP_temps;
    int N=0;
    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,m)
@@ -1219,7 +1219,7 @@ int count_with_mask(const matrix3D<int> &mask,
 }
 
 int count_with_mask(const matrix3D<int> &mask,
-   const matrix3D<double_complex> &m, int mode, double th1, double th2) {
+   const matrix3D< complex<double> > &m, int mode, double th1, double th2) {
    SPEED_UP_temps;
    int N=0;
    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask,m)
@@ -1341,9 +1341,9 @@ void instantiate_masks_1D() {
    float  f; instantiate_masks_1D_template(f);
    double d; instantiate_masks_1D_template(d);
 
-   matrix1D<double_complex> m5;
+   matrix1D< complex<double> > m5;
    matrix1D<int> mask;
-   apply_binary_mask(mask,m5,m5,(double_complex)0);
+   apply_binary_mask(mask,m5,m5,(complex<double>)0);
    Mask_Params prm; prm.resize(m5);
 }
 
@@ -1371,9 +1371,9 @@ void instantiate_masks_2D() {
    float  f; instantiate_masks_2D_template(f);
    double d; instantiate_masks_2D_template(d);
 
-   matrix2D<double_complex> m5;
+   matrix2D< complex<double> > m5;
    matrix2D<int> mask;
-   apply_binary_mask(mask,m5,m5,(double_complex)0);
+   apply_binary_mask(mask,m5,m5,(complex<double>)0);
    count_with_mask_above(mask,m5,1.0f);
    Mask_Params prm; prm.resize(m5);
 }
@@ -1402,9 +1402,9 @@ void instantiate_masks_3D() {
    float  f; instantiate_masks_3D_template(f);
    double d; instantiate_masks_3D_template(d);
 
-   matrix3D<double_complex> m5;
+   matrix3D< complex<double> > m5;
    matrix3D<int> mask;
-   apply_binary_mask(mask,m5,m5,(double_complex)0);
+   apply_binary_mask(mask,m5,m5,(complex<double>)0);
    count_with_mask_above(mask,m5,1.0f);
    Mask_Params prm; prm.resize(m5);
 }

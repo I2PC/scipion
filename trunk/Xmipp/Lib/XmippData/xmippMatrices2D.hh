@@ -33,10 +33,10 @@
 /* ************************************************************************* */
 
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 #include <string>
 #include <math.h>
-#include <complex.h>
+#include <complex>
 
 #include "xmippMatrices1D.hh"
 #include "xmippFuncs.hh"
@@ -44,14 +44,14 @@
 #define maT  matrix2D<T>
 #define maT1 matrix2D<T1>
 #undef  maTC
-#define maTC matrix2D<double_complex>
+#define maTC matrix2D< complex<double> >
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
 template <>
-ostream& operator << (ostream & ostrm, const matrix2D<double_complex> &m);
+ostream& operator << (ostream & ostrm, const matrix2D< complex<double> > &m);
 
 template <class T>
    mT mul_elements(const mT &op1, const mT &op2);

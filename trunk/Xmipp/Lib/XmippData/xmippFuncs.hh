@@ -38,7 +38,7 @@
 using namespace std;
 
 // Includes ----------------------------------------------------------------
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <values.h>
 #include <complex>

@@ -26,7 +26,7 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
-#include <fstream.h>
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>

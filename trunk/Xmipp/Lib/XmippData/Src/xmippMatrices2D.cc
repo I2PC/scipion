@@ -164,7 +164,7 @@ template <class T>
 
 // Special case for complex numbers
 template <>
-ostream& operator << (ostream& ostrm, const matrix2D<double_complex> &v) {
+ostream& operator << (ostream& ostrm, const matrix2D< complex<double> > &v) {
    if (XSIZE(v)==0 || YSIZE(v)==0)
       ostrm << "NULL matrix\n";
    else
@@ -268,18 +268,18 @@ template <class T>
 }
 
 // Special case for complex numbers
-double_complex matrix2D<double_complex>::interpolated_elem(
-   double x, double y, double_complex outside_value) {
+complex<double> matrix2D< complex<double> >::interpolated_elem(
+   double x, double y, complex<double> outside_value) {
     int x0 = FLOOR(x); double fx = x - x0; int x1 = x0 + 1;
     int y0 = FLOOR(y); double fy = y - y0; int y1 = y0 + 1;
     
-    double_complex d00 = outside(y0,x0) ? outside_value : dMij(*this,y0,x0);
-    double_complex d10 = outside(y1,x0) ? outside_value : dMij(*this,y1,x0);
-    double_complex d11 = outside(y1,x1) ? outside_value : dMij(*this,y1,x1);
-    double_complex d01 = outside(y0,x1) ? outside_value : dMij(*this,y0,x1);
+    complex<double> d00 = outside(y0,x0) ? outside_value : dMij(*this,y0,x0);
+    complex<double> d10 = outside(y1,x0) ? outside_value : dMij(*this,y1,x0);
+    complex<double> d11 = outside(y1,x1) ? outside_value : dMij(*this,y1,x1);
+    complex<double> d01 = outside(y0,x1) ? outside_value : dMij(*this,y0,x1);
 
-    double_complex d0 = LIN_INTERP(fx, d00, d01);
-    double_complex d1 = LIN_INTERP(fx, d10, d11);    
+    complex<double> d0 = LIN_INTERP(fx, d00, d01);
+    complex<double> d1 = LIN_INTERP(fx, d10, d11);    
     return LIN_INTERP(fy, d0, d1);
 }
 
@@ -864,7 +864,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsDiagonal() const
+bool matrix2D< complex<double> >::IsDiagonal() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
           if (i!=j && abs(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY)
@@ -881,7 +881,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsScalar() const
+bool matrix2D< complex<double> >::IsScalar() const
    {if (!IsDiagonal()) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
        if (abs(DIRECT_MAT_ELEM(*this,i,i)-DIRECT_MAT_ELEM(*this,0,0))>
@@ -899,7 +899,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsSymmetric() const
+bool matrix2D< complex<double> >::IsSymmetric() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=0; i<YSIZE(*this); i++)
        for (int j=i+1; j<XSIZE(*this); j++)
@@ -919,7 +919,7 @@ template <class T>
 
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsSkewSymmetric() const
+bool matrix2D< complex<double> >::IsSkewSymmetric() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=0; i<YSIZE(*this); i++)
        for (int j=i+1; j<XSIZE(*this); j++)
@@ -938,7 +938,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsUpperTriangular() const
+bool matrix2D< complex<double> >::IsUpperTriangular() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
        for (int j=0; j<i-1; j++)
@@ -957,7 +957,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
-bool matrix2D<double_complex>::IsLowerTriangular() const
+bool matrix2D< complex<double> >::IsLowerTriangular() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
        for (int j=i+1; j<XSIZE(*this); j++)
@@ -1371,7 +1371,7 @@ template <class T>
 }
 
 void instantiate_complex_matrix () {
-      matrix2D<double_complex> a;
+      matrix2D< complex<double> > a;
       matrix1D<double>         r;
 
       // General functions for multidimensional arrays
@@ -1392,7 +1392,7 @@ void instantiate_complex_matrix () {
       cut_to_common_size(a,a);
    
       // Specific for matrices
-      matrix1D<double_complex> b;
+      matrix1D< complex<double> > b;
       a.init_identity(10,10);
       a.interpolated_elem(3.5,3.5);
       a.reverseX();

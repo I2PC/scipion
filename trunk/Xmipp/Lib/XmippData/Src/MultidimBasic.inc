@@ -11,7 +11,7 @@
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * MERCHANTABILITY or FITNESS FOR Aouble_ PARTICULAR PURPOSE.  See the       
  * GNU General Public License for more details.                        
  *                                                                     
  * You should have received a copy of the GNU General Public License   
@@ -290,7 +290,7 @@ template <class T>
 
 /* Equality for complex numbers -------------------------------------------- */
 #ifdef ENABLE_COMPLEX_MATRICES
-bool operator == (const ma<double_complex> &op1, const ma<double_complex> &op2) {
+bool operator == (const ma< complex<double> > &op1, const ma< complex<double> > &op2) {
    if (!op1.same_shape(op2)) return FALSE;
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(op1)
       if (ABS(MULTIDIM_ELEM(op1,i).real()-MULTIDIM_ELEM(op2,i).real())
@@ -323,8 +323,8 @@ void core_array_by_scalar(const maT &op1, const T &op2,
    }
 
 template <>
-void core_array_by_scalar<double_complex>(const maTC &op1,
-   const double_complex &op2, maTC &result, char operation) _THROW {
+void core_array_by_scalar< complex<double> >(const maTC &op1,
+   const complex<double> &op2, maTC &result, char operation) _THROW {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -362,7 +362,7 @@ void core_scalar_by_array(const T &op1, const maT &op2,
    }
 
 template <>
-void core_scalar_by_array<double_complex>(const double_complex &op1,
+void core_scalar_by_array< complex<double> >(const complex<double> &op1,
    const maTC &op2, maTC &result, char operation) _THROW {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
@@ -405,7 +405,7 @@ void core_array_by_array(const maT &op1, const maT &op2,
    }
 
 template <>
-void core_array_by_array<double_complex>(const maTC &op1, const maTC &op2,
+void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
    maTC &result, char operation) _THROW {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {

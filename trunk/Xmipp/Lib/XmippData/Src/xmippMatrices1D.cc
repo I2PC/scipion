@@ -147,7 +147,7 @@ template <class T>
 
 // Special case for complex numbers
 template <>
-ostream& operator << (ostream& out, const matrix1D<double_complex>& v) {
+ostream& operator << (ostream& out, const matrix1D< complex<double> >& v) {
    if (MULTIDIM_SIZE(v)==0) out << "NULL vector\n";
    else {
       FOR_ALL_ELEMENTS_IN_MATRIX1D(v) {      
@@ -424,9 +424,9 @@ template <class T>
       int
       double
       double
-      double_complex
+      complex<double>
 
-   For double_complex arrays not all methods are valid, so they are not in
+   For complex<double> arrays not all methods are valid, so they are not in
    the library.
 
 */
@@ -494,12 +494,12 @@ template <class T>
 }
 
 void instantiate_complex_vector () {
-      matrix1D<double_complex> a;
+      matrix1D< complex<double> > a;
       matrix1D<double>         r;
       
       // General functions for multidimensional arrays
-      a=(double_complex)1.0-a;
-      a=a-(double_complex)1.0;
+      a=(complex<double>)1.0-a;
+      a=a-(complex<double>)1.0;
       a=a*a;
       a.print_shape();
       int size[3]; a.get_size(size);

@@ -61,7 +61,7 @@
 /* ************************************************************************* */
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include "xmippFuncs.hh"
 #include "xmippMatrices2D.hh"

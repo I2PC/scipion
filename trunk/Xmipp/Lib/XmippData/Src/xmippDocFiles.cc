@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <fstream.h>
+#include <fstream>
 #include <sstream>
 #include <stdio.h>
 #include "../xmippDocFiles.hh"

@@ -32,9 +32,9 @@
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
 #include "xmippFuncs.hh"
-#include <fstream.h>
+#include <fstream>
 #include <math.h>
-#include <complex.h>
+#include <complex>
 
 #define maT  matrix1D<T>
 #define maT1 matrix1D<T1>
@@ -45,7 +45,7 @@
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
 template <>
-ostream& operator << (ostream & ostrm, const matrix1D<double_complex> &m);
+ostream& operator << (ostream & ostrm, const matrix1D< complex<double> > &m);
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */

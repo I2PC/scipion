@@ -106,7 +106,11 @@ string FtoA(float F, int _width, int _prec) {
       {outs.precision(_width-7); outs.setf(ios::scientific);}
    else
       outs.precision(_prec);
-   outs << F << ends;
+   #if GCC_VERSION < 30301
+      outs << F << ends;
+   #else
+      outs << F;
+   #endif 
    #if GCC_VERSION < 30300
       return (string)aux;
    #else

@@ -28,8 +28,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <complex.h>
-#include <fstream.h>
+#include <complex>
+#include <fstream>
 #include <typeinfo>
 
 /* Numerical functions ----------------------------------------------------- */
@@ -817,7 +817,7 @@ void instantiante_xmippFuncs() {
    float          *f, **ff, ***fff;
    double         *d, **dd, ***ddd;
    long double    *ld,**ldd,***lddd;
-   double_complex *c, **cc, ***ccc;
+   complex<double> *c, **cc, ***ccc;
 
    ask_Tvector(h,  1,1);         free_Tvector(h,  1,1);
    ask_Tmatrix(hh, 1,1,1,1);     free_Tmatrix(hh, 1,1,1,1);

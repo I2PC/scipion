@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "../xmippGeometry.hh"

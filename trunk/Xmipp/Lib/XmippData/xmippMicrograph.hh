@@ -126,6 +126,10 @@ public:
        Number of particles in the coordinate list */
    int ParticleNo() const {return coords.size();}
 
+   /** Particle.
+       Return the list of particles. */
+   vector<Particle_coords> & Particles() {return coords;}
+
    /** Set window size.
        This window is set upon each coordinate and is used to cut all
        images. */
@@ -141,11 +145,14 @@ public:
        Make sure that index n represents a valid particle before cutting it
        
        The scale affects the particle position, such that the position cut
-       is pos*scale, but not the window size
+       is pos*scale, but not the window size.
+       
+       If only check is true then the particle is not scissored, but
+       the routine only checks if it can be done.
        
        Returns 0 if an error ocurred and 1 if everything is all right*/
    int scissor(const Particle_coords &P, Image &result,
-      double scaleX=1, double scaleY=1) _THROW;
+      double scaleX=1, double scaleY=1, bool only_check=false) _THROW;
 
    /** Access to array of 8 bits. */
    unsigned char * array8() const {return m8;}

@@ -32,7 +32,7 @@
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
 
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <typeinfo>
 #include "xmippFuncs.hh"

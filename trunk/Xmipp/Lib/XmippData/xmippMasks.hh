@@ -813,7 +813,7 @@ template <class T>
    int count_with_mask(const matrix2D<int> &mask,
       const matrix2D<T> &m, int mode, double th1, double th2);
 int count_with_mask(const matrix2D<int> &mask,
-   const matrix2D<double_complex> &m, int mode, double th1, double th2);
+   const matrix2D< complex<double> > &m, int mode, double th1, double th2);
 
 /** Count voxels with mask and threshold.
     This function returns the number of voxels in the ACTIVE area of an
@@ -826,7 +826,7 @@ template <class T>
    int count_with_mask(const matrix3D<int> &mask,
       const matrix3D<T> &m, int mode, double th1, double th2);
 int count_with_mask(const matrix3D<int> &mask,
-   const matrix3D<double_complex> &m, int mode, double th1, double th2);
+   const matrix3D< complex<double> > &m, int mode, double th1, double th2);
 
 /** Invert binary mask (2D).
     0's are converted in 1's and viceversa*/

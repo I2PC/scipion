@@ -185,7 +185,7 @@ template <class T>
 }
 
 template <>
-ostream& operator << (ostream& ostrm, const matrix3D<double_complex>& v) {
+ostream& operator << (ostream& ostrm, const matrix3D< complex<double> >& v) {
    if (v.xdim==0)
       ostrm << "NULL matrix3D\n";
    else
@@ -231,27 +231,27 @@ template <class T>
 }
 
 // Special case for complex numbers
-double_complex matrix3D<double_complex>::interpolated_elem(
-   double x, double y, double z, double_complex outside_value) {
+complex<double> matrix3D< complex<double> >::interpolated_elem(
+   double x, double y, double z, complex<double> outside_value) {
     int x0 = FLOOR(x); double fx = x - x0; int x1=x0+1;
     int y0 = FLOOR(y); double fy = y - y0; int y1=y0+1;
     int z0 = FLOOR(z); double fz = z - z0; int z1=z0+1;
 
-    double_complex d000 = outside(z0,y0,x0) ? outside_value : dVkij(*this,z0,y0,x0);
-    double_complex d001 = outside(z0,y0,x1) ? outside_value : dVkij(*this,z0,y0,x1);
-    double_complex d010 = outside(z0,y1,x0) ? outside_value : dVkij(*this,z0,y1,x0);
-    double_complex d011 = outside(z0,y1,x1) ? outside_value : dVkij(*this,z0,y1,x1);
-    double_complex d100 = outside(z1,y0,x0) ? outside_value : dVkij(*this,z1,y0,x0);
-    double_complex d101 = outside(z1,y0,x1) ? outside_value : dVkij(*this,z1,y0,x1);
-    double_complex d110 = outside(z1,y1,x0) ? outside_value : dVkij(*this,z1,y1,x0);
-    double_complex d111 = outside(z1,y1,x1) ? outside_value : dVkij(*this,z1,y1,x1);
+    complex<double> d000 = outside(z0,y0,x0) ? outside_value : dVkij(*this,z0,y0,x0);
+    complex<double> d001 = outside(z0,y0,x1) ? outside_value : dVkij(*this,z0,y0,x1);
+    complex<double> d010 = outside(z0,y1,x0) ? outside_value : dVkij(*this,z0,y1,x0);
+    complex<double> d011 = outside(z0,y1,x1) ? outside_value : dVkij(*this,z0,y1,x1);
+    complex<double> d100 = outside(z1,y0,x0) ? outside_value : dVkij(*this,z1,y0,x0);
+    complex<double> d101 = outside(z1,y0,x1) ? outside_value : dVkij(*this,z1,y0,x1);
+    complex<double> d110 = outside(z1,y1,x0) ? outside_value : dVkij(*this,z1,y1,x0);
+    complex<double> d111 = outside(z1,y1,x1) ? outside_value : dVkij(*this,z1,y1,x1);
 
-    double_complex dx00 = LIN_INTERP(fx, d000, d001);
-    double_complex dx01 = LIN_INTERP(fx, d100, d101);
-    double_complex dx10 = LIN_INTERP(fx, d010, d011);
-    double_complex dx11 = LIN_INTERP(fx, d110, d111);
-    double_complex dxy0 = LIN_INTERP(fy, dx00, dx10);
-    double_complex dxy1 = LIN_INTERP(fy, dx01, dx11);
+    complex<double> dx00 = LIN_INTERP(fx, d000, d001);
+    complex<double> dx01 = LIN_INTERP(fx, d100, d101);
+    complex<double> dx10 = LIN_INTERP(fx, d010, d011);
+    complex<double> dx11 = LIN_INTERP(fx, d110, d111);
+    complex<double> dxy0 = LIN_INTERP(fy, dx00, dx10);
+    complex<double> dxy1 = LIN_INTERP(fy, dx01, dx11);
 
     return LIN_INTERP(fz, dxy0, dxy1);
 }
@@ -768,9 +768,9 @@ template <class T>
 }
 
 void instantiate_complex_matrix3D () {
-      matrix3D<double_complex> a;
+      matrix3D< complex<double> > a;
       matrix1D<double>         r;
-      matrix1D<double_complex> vectorT;
+      matrix1D< complex<double> > vectorT;
       
       // General functions for multidimensional arrays
       a=1.0-a;
@@ -791,7 +791,7 @@ void instantiate_complex_matrix3D () {
       cut_to_common_size(a,a);
    
       // Specific for volumes
-      matrix2D<double_complex> aux;
+      matrix2D< complex<double> > aux;
       matrix2D<double> A;
       a.interpolated_elem(3.5,3.5,3.5);
       a.getSlice(0,aux);

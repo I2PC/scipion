@@ -34,11 +34,11 @@
 /* ************************************************************************* */
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
-#include <iostream.h>
+#include <iostream>
 #include <string>
 #include <stdlib.h>
 #include <math.h>
-#include <complex.h>
+#include <complex>
 
 #include "xmippMatrices1D.hh"
 #include "xmippMatrices2D.hh"
@@ -47,14 +47,14 @@
 #define maT  matrix3D<T>
 #define maT1 matrix3D<T1>
 #undef  maTC
-#define maTC matrix3D<double_complex>
+#define maTC matrix3D< complex<double> >
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
 template<>
-ostream& operator << (ostream & ostrm, const matrix3D<double_complex> &m);
+ostream& operator << (ostream & ostrm, const matrix3D< complex<double> > &m);
 
 template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
