@@ -184,12 +184,10 @@ template <class T>
        Keep those coefficients in a certain radius. */
    void DWT_keep_central_part(matrix2D<double> &I, double R);
 
-   #ifdef NEVER_DEFINED
    /** Bayesian, Wiener filtering.
        Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
        is applied up to the scale given.*/
    void bayesian_wiener_filtering(matrix2D<double> &I, int scale);
-   #endif
 
    ///@}
 ///@}

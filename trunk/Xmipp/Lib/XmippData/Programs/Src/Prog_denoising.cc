@@ -54,9 +54,7 @@ void Denoising_parameters::read(int argc, char **argv) _THROW {
    string aux=get_param(argc,argv,"-denoising","remove_scales");
    if      (aux=="remove_scales")     denoising_type=REMOVE_SCALE;
    else if (aux=="soft_thresholding") denoising_type=SOFT_THRESHOLDING;
-   #ifdef NEVER_DEFINED
    else if (aux=="bayesian")          denoising_type=BAYESIAN;
-   #endif
    else if (aux=="adaptive_soft")     denoising_type=ADAPTIVE_SOFT;
    else if (aux=="central")           denoising_type=CENTRAL;
    else if (aux=="difussion")         denoising_type=SHAH;
@@ -102,11 +100,9 @@ void Denoising_parameters::show_specific() {
       case SOFT_THRESHOLDING:
          cout << " Soft thresholding " << threshold << endl;
          break;
-      #ifdef NEVER_DEFINED
       case BAYESIAN:
 	 cout << " Bayesian\n";
 	 break;
-      #endif
       case ADAPTIVE_SOFT:
 	 cout << " Adaptive soft thresholding\n";
 	 break;
@@ -135,9 +131,7 @@ void Denoising_parameters::usage_specific() {
         << "                               DAUB4, DAUB12, DAUB20\n"
         << "  [-denoising <str=remove_scale] : Denoising action\n"
         << "                               remove_scale\n"
-      	#ifdef NEVER_DEFINED
 	<< "                               bayesian\n"
-	#endif
         << "                               soft_thresholding\n"
 	<< "                               adaptive_soft\n"
 	<< "                               central\n"
@@ -181,11 +175,9 @@ void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
          compute_hist(img,hist,100);
          soft_thresholding(img,hist.percentil(threshold));
          break;
-      #ifdef NEVER_DEFINED
       case BAYESIAN:
          bayesian_wiener_filtering(img,scale);
 	 break;
-      #endif
       case ADAPTIVE_SOFT:
       	 adaptive_soft_thresholding(img,scale);
 	 break;

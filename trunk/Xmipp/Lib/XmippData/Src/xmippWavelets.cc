@@ -351,81 +351,40 @@ void DWT_keep_central_part(matrix2D<double> &I, double R) {
    mask.apply_mask(I,I);
 }
 
-
-#ifdef NEVER_DEFINED
-// CO: Doesn't work very fine
 // Bayesian Wiener filtering -----------------------------------------------
-#define DEBUG
 void estimate_gaussian_for_scale_with_limits(const matrix2D<double> &I,
-   int scale, double min_val, double max_val,
-   double &alpha, double &sigma) {
+   int scale, double min_val, double max_val, double &alpha, double &sigma) {
    matrix1D<int> corner1(2), corner2(2);
    matrix1D<double> r(2);
-   #ifdef DEBUG
-      histogram1D hist;
-      hist.init(min_val,max_val,20);
-   #endif
    
    double sum=0, sum2=0;
    int    N_accounted=0, N=0;
 
-   // "01"
-   SelectDWTBlock(scale, I, "01",
-      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      if (I(r)>min_val && I(r)<max_val) {
-         N_accounted++;
-	 sum+=I(r);
-	 sum2+=I(r)*I(r);
-	 #ifdef DEBUG
-	    hist.insert_value(I(r));
-	 #endif
-      }
-      N++;
-   }
+   // Measure the mean and variance within a block
+   // with limits
+   #define MEASURE_MEAN_VAR_BLOCK_LIMITS(quadrant) \
+      SelectDWTBlock(scale, I, quadrant, \
+         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
+         if (I(r)>=min_val && I(r)<=max_val) { \
+            N_accounted++; \
+	    sum+=I(r); \
+	    sum2+=I(r)*I(r); \
+         } \
+         N++; \
+      } \
 
-   // "10"
-   SelectDWTBlock(scale, I, "10",
-      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      if (I(r)>min_val && I(r)<max_val) {
-         N_accounted++;
-	 sum+=I(r);
-	 sum2+=I(r)*I(r);
-	 #ifdef DEBUG
-	    hist.insert_value(I(r));
-	 #endif
-      }
-      N++;
-   }
-
-   // "11"
-   SelectDWTBlock(scale, I, "11",
-      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      if (I(r)>min_val && I(r)<max_val) {
-         N_accounted++;
-	 sum+=I(r);
-	 sum2+=I(r)*I(r);
-	 #ifdef DEBUG
-	    hist.insert_value(I(r));
-	 #endif
-      }
-      N++;
-   }
+   MEASURE_MEAN_VAR_BLOCK_LIMITS("01");
+   MEASURE_MEAN_VAR_BLOCK_LIMITS("10");
+   MEASURE_MEAN_VAR_BLOCK_LIMITS("11");
 
    if (N_accounted!=0) {
       sum2/=N_accounted;
-      sum/=N_accounted;
+      sum /=N_accounted;
       sigma=sqrt(sum2-sum*sum);
       alpha=(double)N_accounted/(double)N;
    } else {sigma=alpha=0;}
-   #ifdef DEBUG
-      hist/=hist.sampleNo();
-      hist.write((string)"Hist_"+ItoA(scale));;
-   #endif
 }
-#undef DEBUG
 
 void estimate_gaussian_for_scale(const matrix2D<double> &I,
    int scale, double &alpha, double &sigma) {
@@ -441,50 +400,75 @@ void estimate_gaussian_for_scale(const matrix2D<double> &I,
       min_val=-max_val;
       estimate_gaussian_for_scale_with_limits(I,scale,min_val,max_val,alpha,sigma);
       N++;
-   } while (ABS(sigma-sigma_ant)/sigma>0.02 && N<10);
+   } while (ABS(sigma-sigma_ant)/sigma>0.01 && N<10);
 }
 
 // See Bijaoui Signal Processing 2002, 82:709-712
 // for the variable notation
-void bayesian_wiener_filtering_block(const matrix2D<double> &I,
-   int scale, const string &quadrant, double N) {
-   // Compute block average
-   double avg=0, Nb=0;
+//#define DEBUG
+void estimate_gaussian_mixture_scale(const matrix2D<double> &I,
+   int scale, double N, double &mu, double &a, double &S) {
    matrix1D<int> corner1(2), corner2(2);
    matrix1D<double> r(2);
-   SelectDWTBlock(scale, I, quadrant,
-      XX(corner1),XX(corner2),YY(corner1),YY(corner2));
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      avg+=I(r); Nb++;
-   }
-   avg/=Nb;
+   
+   // Compute block average
+   double Nb=0;
+   mu=0;
+   #define MEASURE_BLOCK_AVG(quadrant) \
+      SelectDWTBlock(scale, I, quadrant, \
+         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
+         mu+=I(r); Nb++; \
+      }
+   MEASURE_BLOCK_AVG("01");
+   MEASURE_BLOCK_AVG("10");
+   MEASURE_BLOCK_AVG("11");
+   mu/=Nb;
    
    // Compute second and fourth moments
    double M2=0, M4=0;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      double d=(I(r)-avg)*(I(r)-avg);
-      M2+=d; M4+=d*d;
-   }
+   #define MEASURE_BLOCK_M2M4(quadrant) \
+      SelectDWTBlock(scale, I, quadrant, \
+         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
+         double d=(I(r)-mu)*(I(r)-mu); \
+         M2+=d; M4+=d*d; \
+      }
+   MEASURE_BLOCK_M2M4("01");
+   MEASURE_BLOCK_M2M4("10");
+   MEASURE_BLOCK_M2M4("11");
    M2/=Nb;
    M4/=Nb;
    
    // Compute a and S
-   double a, S;
-   if (M2-N<0 || M4/3-N*N<0) {a=0; S=M2;}
-   else {
-      a=MIN(1,(M2-N)*(M2-N)/(M4/3-N*N));
-      S=(M2-N)/a;
-   }
+   S=(M4/3-N*N)/(M2-N);
+   a=((M2-N)*(M2-N))/(M4/3-N*N);
+   if (a<0) a=0;
 
-   cout << scale << " " << quadrant << " M2=" << M2 << " M4=" << M4
-        << " a=" << a << " S=" << S << " N=" << N << endl;
+   #ifdef DEBUG
+      cout << scale << " " << " M2=" << M2 << " M4=" << M4 << " mu=" << mu
+           << " a=" << a << " S=" << S << " N=" << N << endl;
+   #endif
+}
+#undef DEBUG
 
-   // Now denoise
-   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
-      double G_y_S_N=gaussian1D(I(r),S+N);
-      double G_y_N  =gaussian1D(I(r),N);
-      I(r)*=(a*S/(S-N)*G_y_S_N)/((1-a)*G_y_N+a*G_y_S_N);
-   }
+// See Bijaoui Signal Processing 2002, 82:709-712
+// for the variable notation
+void bayesian_wiener_filtering_scale(const matrix2D<double> &I,
+   int scale, double N, double mu, double a, double S) {
+   matrix1D<int> corner1(2), corner2(2);
+   matrix1D<double> r(2);
+   #define DENOISE_BLOCK(quadrant) \
+      SelectDWTBlock(scale, I, quadrant, \
+         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
+         double G_y_S_N=exp(-0.5*(I(r)-mu)*(I(r)-mu)/(S+N)); \
+         double G_y_N  =exp(-0.5*(I(r)-mu)*(I(r)-mu)/N); \
+         I(r)*=(a*S/(S-N)*G_y_S_N)/((1-a)*G_y_N+a*G_y_S_N); \
+      }
+   DENOISE_BLOCK("01");
+   DENOISE_BLOCK("10");
+   DENOISE_BLOCK("11");
 }
 
 //#define DEBUG
@@ -496,10 +480,9 @@ void bayesian_wiener_filtering(matrix2D<double> &I, int scale) {
    
    // Denoise all scales up to the given one
    for (int s=0; s<=scale; s++) {
-      bayesian_wiener_filtering_block(I,s,"01",N);
-      bayesian_wiener_filtering_block(I,s,"10",N);
-      bayesian_wiener_filtering_block(I,s,"11",N);
+      double mu,a,S;
+      estimate_gaussian_mixture_scale(I,s,N,mu,a,S);
+      bayesian_wiener_filtering_scale(I,s,N,mu,a,S);
    }
 }
 #undef DEBUG
-#endif
