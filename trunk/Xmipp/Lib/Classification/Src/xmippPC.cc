@@ -2,6 +2,7 @@
  *
  * Authors:     Jorge García de la Nava Ruiz (gdl@ac.uma.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *              Alberto Pascual Montano (pascual@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -51,12 +52,14 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	vector<xmippVector> a;
 	int n=ts.dimension();
 	a.resize(n);
+    	int verbosity = listener->getVerbosity();
 
 	{
 
-    	int verbosity = listener->getVerbosity();
     	if (verbosity)
-  		listener->OnReportOperation((string) "Diagonalizing matrix....\n");  
+  		listener->OnReportOperation((string) "Normalizing....\n");  
+        if (verbosity == 1)    
+           listener->OnInitOperation(n);
 	
 		//Get the mean of the given cluster of vectors
 		for(int k=0;k<n;k++){
@@ -70,8 +73,14 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 				}
 			}
 			mean.push_back(sum/l);
+			if (verbosity == 1)    
+      			   listener->OnProgress(k);
 		}
+	        if (verbosity == 1)    
+      	          listener->OnProgress(n);
 
+                if (verbosity == 1)    
+                  listener->OnInitOperation(n);
 		for(int i=0;i<n;i++){
 			for(int j=0;j<=i;j++){
 				xmippFeature sum=0.0;
@@ -87,7 +96,11 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 				if(l) a[i][j]=a[j][i]=sum/l;
 				else a[i][j]=a[j][i]=0;
 			}
+	        	if (verbosity == 1)    
+      	          		listener->OnProgress(i);
 		}
+	        if (verbosity == 1)    
+      	          listener->OnProgress(n);
 
 //		for(int i=0;i<n;i++)
 //			cout << a[i] << endl;
@@ -114,8 +127,16 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 
 	int nrot=0;
 
+    	if (verbosity)
+  		listener->OnReportOperation((string) "Diagonalizing matrix....\n");  
+        if (verbosity == 1)    
+           listener->OnInitOperation(50);
+
 	//Jacobi method (it=iterationn number)
 	for(int it=1;it<=50;it++){
+      	    	if ((verbosity == 1) && (it ==1))    
+      			listener->OnProgress(0);
+	
 		xmippFeature tresh;
 		xmippFeature sm=0.0;
 		for (int ip = 0; ip < n - 1; ip++) {
@@ -202,7 +223,15 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	    d[ip] = b[ip];
 	    z[ip] = 0.0;
 		}
+		
+      	    if (verbosity == 1)    
+      		listener->OnProgress(it-1);
+		
 	}//for it
+	
+      	if (verbosity == 1)    
+          listener->OnProgress(50);
+	
 
 	throw Xmipp_error(1,"too many Jacobi iterations");
 }

@@ -2,6 +2,7 @@
  *
  * Authors:     Jorge García de la Nava Ruiz (gdl@ac.uma.es)
  *              Carlos Oscar Sanchez Sorzano
+ *              Alberto Pascual Montano (pascual@cnb.uam.es)
  *
  * Departamento de Arquitectura de Computadores, Universidad de Málaga
  *
