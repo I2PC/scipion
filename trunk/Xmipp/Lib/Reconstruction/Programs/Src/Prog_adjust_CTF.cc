@@ -1254,7 +1254,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
    global_current_penalty=0;
    global_evaluation_reduction=prm.evaluation_reduction;
    global_heavy_penalization=
-      ctf_ampl2(0,0)*ctf_ampl2.RowNo()*ctf_ampl2.ColNo();
+      ctf_ampl2.compute_max()*ctf_ampl2.RowNo()*ctf_ampl2.ColNo();
    global_weight.init_zeros();
    global_weight(0)=global_weight(1)=1;
    global_value_th=-1;
