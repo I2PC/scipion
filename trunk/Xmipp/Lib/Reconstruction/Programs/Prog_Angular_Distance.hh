@@ -70,18 +70,24 @@ public:
        the difference with set 1 are minimized searching in the second
        way of expressing the angles.
        
-       The sum of the absolute values of the differences among angles */
+       The sum of the absolute values of the differences among angles.
+       If the projdir_mode is false then the angular distance is measured
+       among all axes. If it is true, then it is only measured in the
+       projection direction.*/
    double Prog_angular_distance_prm::second_angle_set(
       double rot1, double tilt1, double psi1,
-      double &rot2, double &tilt2, double &psi2);
+      double &rot2, double &tilt2, double &psi2, bool projdir_mode=false);
    
    /** Check symmetries.
        Given two sets of angles, this function modifies set 2 so that
        the difference with set 1 are minimized searching in the symmetry
-       list and the second set. Return the angle distance */
+       list and the second set. Return the angle distance.
+       
+       See the method second_angle_set of this class to understand
+       projdir_mode*/
    double Prog_angular_distance_prm::check_symmetries(
       double rot1, double tilt1, double psi1,
-      double &rot2, double &tilt2, double &psi2);
+      double &rot2, double &tilt2, double &psi2, bool projdir_mode=false);
    
    /** Compute distance. */
    double compute_distance();

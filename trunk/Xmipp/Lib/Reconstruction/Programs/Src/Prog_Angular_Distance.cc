@@ -67,7 +67,8 @@ void Prog_angular_distance_prm::produce_side_info() _THROW {
 
 // 2nd angle set -----------------------------------------------------------
 double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
-   double psi1, double &rot2, double &tilt2, double &psi2) {
+   double psi1, double &rot2, double &tilt2, double &psi2,
+   bool projdir_mode) {
    // Distance based on angular values
    double ang_dist=ABS(rot1-rot2)+ABS(tilt1-tilt2)+ABS(psi1-psi2);
    double rot2p, tilt2p, psi2p;
@@ -89,12 +90,15 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
    Euler_angles2matrix(rot2,tilt2,psi2,E2);
    matrix1D<double> v1, v2;
    double axes_dist=0;
+   double N=0;
    for (int i=0; i<3; i++) {
+      if (projdir_mode && i!=2) continue;
       E1.getRow(i,v1);
       E2.getRow(i,v2);
       axes_dist+=RAD2DEG(acos(CLIP(dot_product(v1,v2),0,1)));
+      N++;
    }
-   axes_dist/=3;
+   axes_dist/=N;
 
    return axes_dist;
 }
@@ -105,7 +109,8 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
          << #tilt << "=" << tilt << " " \
 	 << #psi  << "=" << psi << endl;
 double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
-   double psi1, double &rot2, double &tilt2, double &psi2) {
+   double psi1, double &rot2, double &tilt2, double &psi2,
+   bool projdir_mode) {
    int imax=SL.SymsNo()+1;
    matrix2D<double>  L(4,4), R(4,4);    // A matrix from the list
    double best_ang_dist=3600;
@@ -122,7 +127,8 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
       	 Euler_apply_transf(L,R,rot2,tilt2,psi2,rot2p,tilt2p,psi2p);
       }
 
-      double ang_dist=second_angle_set(rot1,tilt1,psi1,rot2p,tilt2p,psi2p);
+      double ang_dist=second_angle_set(rot1,tilt1,psi1,rot2p,tilt2p,psi2p,
+         projdir_mode);
 
       if (ang_dist<best_ang_dist) {
          best_rot2=rot2p; best_tilt2=tilt2p; best_psi2=psi2p;
