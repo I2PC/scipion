@@ -332,7 +332,7 @@ int main (int argc, char *argv[]) {
 					vol_blobs(j)() = vol_aux2(j)() + vol_blobs_aux(j)();
 				}	
 			}
-			art_prm.eq_mode = CAVK; // trick undone
+			art_prm.eq_mode = Basic_ART_Parameters::BiCAV; // trick undone
 		}
 		else if( art_prm.eq_mode == CAV){
 		
