@@ -73,6 +73,7 @@ int main( int argc, char **argv ) {
       if ( fnRawTilted != "" ) mTilted.close_micrograph();
       delete mainWidget;
    } catch ( Xmipp_error XE ) { cout << XE; }
+   return 0;
 }
 
 /* Usage ------------------------------------------------------------------- */
