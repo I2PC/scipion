@@ -700,8 +700,8 @@ template <class T>
 
    random_vector =  new char[(Number_of_Numbers*Type_size)];
    T_random_vector = (T *) random_vector;
-   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - (std::streamoff)
-                                (Number_of_Numbers*Type_size)) ) ),ios::beg);
+   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
    in.read(random_vector, (Number_of_Numbers*Type_size));
 
     in.close();
