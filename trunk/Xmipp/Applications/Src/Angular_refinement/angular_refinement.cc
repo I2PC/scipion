@@ -147,12 +147,12 @@ int main (int argc, char **argv) {
 
       SelFile SF_out;
       FOR_ALL_ELEMENTS_IN_MATRIX1D(rot_diff) {
-         double corr=report(0);
-         double rot =report(1);
-         double tilt=report(2);
-         double psi =report(3);
-         double X   =report(4);
-         double Y   =report(5);
+         double rot =report(0);
+         double tilt=report(1);
+         double psi =report(2);
+         double X   =report(3);
+         double Y   =report(4);
+         double corr=report(5);
          rot_diff(i)  =realWRAP(angles_in(0)-rot,-180,180);
          tilt_diff(i) =realWRAP(angles_in(1)-tilt,-180,180);
          psi_diff(i)  =realWRAP(angles_in(2)-psi,-180,180);
