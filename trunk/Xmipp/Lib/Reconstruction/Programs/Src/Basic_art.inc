@@ -67,18 +67,21 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
                << "                No. Iter=" << prm.no_it << endl;
    prm.fh_hist << " Parallel mode: ";
    switch (prm.parallel_mode) {
-      case Basic_ART_Parameters::ART:    prm.fh_hist << "ART\n"; break;
-      case Basic_ART_Parameters::SIRT:   prm.fh_hist << "SIRT\n"; break;
-      case Basic_ART_Parameters::SART:
+      case Basic_ART_Parameters::ART:   prm.fh_hist << "ART\n"; break;
+      case Basic_ART_Parameters::SIRT:  prm.fh_hist << "SIRT\n"; break;
+      case Basic_ART_Parameters::pSIRT:  prm.fh_hist << "Parallel SIRT\n"; break;
+      case Basic_ART_Parameters::pfSIRT:  prm.fh_hist << "Parallel False SIRT\n"; break;
+      case Basic_ART_Parameters::pSART:
           prm.fh_hist << "SART, block size=" << prm.block_size << endl;
           break;
-      case Basic_ART_Parameters::AVSP:   prm.fh_hist << "AVSP\n"; break;
-      case Basic_ART_Parameters::BiCAV:
+      case Basic_ART_Parameters::pAVSP:   prm.fh_hist << "AVSP\n"; break;
+      case Basic_ART_Parameters::pBiCAV:
           prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
           break;
+      case Basic_ART_Parameters::pCAV:  prm.fh_hist << "CAV (global algorithm)\n";break;
    }
    prm.fh_hist << " Equation mode: ";
-   if (prm.eq_mode==CAV) prm.fh_hist << "CAV\n";
+   if (prm.eq_mode==CAV) prm.fh_hist << "CAV (Projection update)\n";
    else if (prm.eq_mode==CAVK) prm.fh_hist << "CAVK\n";
    else if (prm.eq_mode==CAVARTK) prm.fh_hist << "CAVARTK\n";
    else prm.fh_hist << "ARTK\n";
@@ -218,9 +221,20 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    POCS_errors.init_zeros();
 
    // If SIRT set normalizing factor and create output volume ..............
-   if (prm.parallel_mode==Basic_ART_Parameters::SIRT ||
-       prm.parallel_mode==Basic_ART_Parameters::SART) {
-      ART_numIMG=prm.numIMG;           // Normalizing factor = Total no. images
+   if (prm.parallel_mode==Basic_ART_Parameters::SIRT )
+   {
+  	ART_numIMG=prm.numIMG;
+	ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
+      	vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs 
+   }else if ( prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
+       prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
+       prm.parallel_mode==Basic_ART_Parameters::pSART ||
+       prm.parallel_mode==Basic_ART_Parameters::pCAV ) 
+   {
+   // In those cases, normalization must be done at the top level program once we
+   // have the reconstruction values. Have a look ar /Applications/Src/MPIArt/mpi_art.cc for
+   // an example
+      ART_numIMG= 1; 		       
       ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
       vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs
                                        // and possible initial values
@@ -633,9 +647,13 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
       // Convert volume and write if not last iteration
       // If in SIRT mode move the volume to the reference one
-      if (prm.parallel_mode==Basic_ART_Parameters::SIRT || prm.eq_mode==CAV ||
-          prm.parallel_mode==Basic_ART_Parameters::SART)
-	  vol_blobs=vol_blobs_out;
+      if (prm.parallel_mode==Basic_ART_Parameters::SIRT || 
+          prm.parallel_mode==Basic_ART_Parameters::pSIRT || 
+          prm.parallel_mode==Basic_ART_Parameters::pfSIRT || 
+          prm.parallel_mode==Basic_ART_Parameters::pSART ||
+	  prm.parallel_mode==Basic_ART_Parameters::pCAV ||
+	  prm.eq_mode==CAV )
+          vol_blobs=vol_blobs_out;
 
       if (prm.tell&TELL_SAVE_INTERMIDIATE && it!=prm.no_it-1) {
          if (rank==-1) cerr << "Converting blob volume to voxels ...\n";   
