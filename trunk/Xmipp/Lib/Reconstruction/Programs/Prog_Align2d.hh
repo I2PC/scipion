@@ -73,14 +73,9 @@ public:
   bool do_rot;
   /** Boolean to perform translational alignment */
   bool do_trans;
-  /** Boolean to perform alignment using Auto-Correlation Function */
-  bool do_acf;
 
   /** Boolean to perform complete-search (psi and translations) alignment */
   bool do_complete;
-  /** Integer number for shift range in complete search 
-      X and Y translations will be searched from -shift_range to +shift_range */
-  int shift_range;
   /** Float psi-interval in complete search */
   float psi_interval;
 
@@ -108,19 +103,15 @@ public:
   
   /// Rotational alignment of an image
   bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref, 
-		 const float &max_rot, const float &Rin, const float &Rout) _THROW;
+		 const float &max_rot, const float &Rin, const float &Rout, const double &outside=0.) _THROW;
 
    /// Translational alignment of an image
-  bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift) _THROW;
-
-  /// Alignment of an image (rot&trans) using Auto-correlation Function
-  bool align_acf(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift, 
-		 const float &max_rot, const float &Rin, const float &Rout) _THROW;
+  bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside=0.) _THROW;
 
   /// Alignment by complete search of rotations and translations
   bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
                        const float &max_shift, const float &max_rot, const float &psi_interval, 
-		       const int &shift_range, const float &Rin, const float &Rout) _THROW;
+		       const float &Rin, const float &Rout, const double &outside=0.) _THROW;
 
   /// Piramidal combination of images to construct a reference
   void do_pspc() _THROW;

@@ -66,10 +66,8 @@ void Prog_align2d_prm::read(int argc, char **argv) _THROW  {
   // Only translational/rotational
   do_rot=!check_param(argc,argv,"-only_trans");
   do_trans=!check_param(argc,argv,"-only_rot");
-  do_acf=check_param(argc,argv,"-ACF");
   do_complete=check_param(argc,argv,"-complete");
   psi_interval=AtoF(get_param(argc,argv,"-psi_step","10"));
-  shift_range=AtoI(get_param(argc,argv,"-shift_range","5"));
 }
 
 // Show ====================================================================
@@ -100,13 +98,9 @@ void Prog_align2d_prm::show() {
     cerr << "Skip rotational alignment "<<endl;
   if (!do_trans) 
     cerr << "Skip translational alignment "<<endl;
-  if (do_acf) 
-    cerr << "Use Auto-Correlation Function alignment" <<endl;
   if (do_complete) { 
     cerr << "Use complete-search alignment with:" <<endl;
     cerr << " Psi interval          : "<< psi_interval  <<endl;
-    cerr << " Shift range           : "<< shift_range  <<endl;
-
   }
 }
 
@@ -127,17 +121,15 @@ void Prog_align2d_prm::usage() {
        << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
        << " [ -only_trans ]            : Skip rotational alignment \n"
        << " [ -only_rot ]              : Skip translational alignment \n"
-       << " [ -ACF ]                   : Use Auto-Correlation Function alignment \n"
        << " [ -complete ]              : Use complete-search alignment \n"
        << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
-       << " [ -shift_range <int=5> ]   : Shift range to be searched (from -range to +range) [pix] \n"
 
        << endl;
 }
 
 // Rotational alignment ========================================================
 bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref, 
-		 const float &max_rot, const float &Rin, const float &Rout) _THROW {
+		 const float &max_rot, const float &Rin, const float &Rout, const double &outside) _THROW {
 
   matrix2D<double> Mimg,Maux,A;
   matrix1D<double> corr;
@@ -155,7 +147,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
   Mimg.resize(img());
   Mimg.set_Xmipp_origin();
   A=img.get_transformation_matrix();
-  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,0.);
+  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,outside);
   Maux.resize(Mimg);
   Maux.set_Xmipp_origin();
 
@@ -210,7 +202,8 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 }
 
 // translational alignment =====================================================
-bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift) _THROW {
+bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift, 
+                                   const double &outside) _THROW {
 
   matrix2D<double> Maux,Mcorr,A;
   int              dim,imax,jmax,i_actual,j_actual,dim2;
@@ -227,7 +220,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 
   // Apply transformation already present in its header
   A=img.get_transformation_matrix();
-  apply_geom(Maux,A,img(),IS_INV,DONT_WRAP,0.);
+  apply_geom(Maux,A,img(),IS_INV,DONT_WRAP,outside);
 
   // Calculate cross-correlation
   correlation_matrix(Maux,Mref,Mcorr);
@@ -282,187 +275,36 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 
 }
 
-// ACF-alignment ===============================================================
-bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift, 
-                                 const float &max_rot, const float &Rin, const float &Rout) _THROW {
-
-  matrix2D<double> Mimg,Mcorr,Mcorr2,Mimg2,Mref2,Maux,A;
-  matrix1D<double> corr;
-  matrix2D<int>    mask;
-  int              dim,nstep,i,i_maxcorr,avewidth,xdim,ydim,imax,jmax,imax2,jmax2,i_actual,j_actual;
-  double           max,max2,xmax,ymax,psi_actual,psi_max_coarse,psi_max_fine,sumcorr,psi_coarse_step=15.;
-  float            xshift,yshift,psi,shift;
-  bool             OK;
-
-  // Apply transformation already present in header of the image
-  Mimg=img();
-  Mimg.set_Xmipp_origin();
-  A=img.get_transformation_matrix();
-  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,0.);
-
-  dim=img().RowNo();
-  mask.resize(dim,dim);
-  mask.set_Xmipp_origin();
-  if (Rout<=Rin)  REPORT_ERROR(1,"Align2d_acf: Rout <= Rin");
-  BinaryCrownMask(mask,Rin,Rout,INNER_MASK);
-  Maux.resize(img()); 
-  Maux.set_Xmipp_origin();
-  Mimg2.resize(img()); 
-  Mimg2.set_Xmipp_origin();
-  Mref2.resize(img()); 
-  Mref2.set_Xmipp_origin();
-  Mcorr.resize(img());
-  Mcorr.set_Xmipp_origin();
-  Mcorr2.resize(img());
-  Mcorr2.set_Xmipp_origin();
-
-  apply_binary_mask(mask,Mimg,Maux);
-  auto_correlation_matrix(Maux,Mimg2);
-  apply_binary_mask(mask,Mref,Maux);
-  auto_correlation_matrix(Maux,Mref2);
-  BinaryCircularMask(mask,(int)Mref2.ColNo()/2,INNER_MASK);
-
-  // Optimize rotation in coarse steps
-  nstep=(int)(360/psi_coarse_step);
-  corr.resize(nstep);
-  for (i = 0; i < nstep; i++) {
-    psi_actual=(double)i*psi_coarse_step;
-    Maux=Mimg2.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation(Mref2,Maux,&mask);
-  }
-  corr.max_index(i_maxcorr);
-  psi_max_coarse=(double)i_maxcorr*psi_coarse_step;
-
-  // Optimize rotation in fine steps
-  nstep=(int)(2*psi_coarse_step-1);
-  corr.resize(nstep);
-  for (i = 0; i < nstep; i++) {
-    psi_actual=psi_max_coarse-psi_coarse_step+1+(double)i;
-    Maux=Mimg2.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation(Mref2,Maux,&mask);
-  }
-  corr.max_index(i_maxcorr);
-  psi_max_fine=psi_max_coarse-psi_coarse_step+(double)i_maxcorr;
-
-  psi=0.;
-  sumcorr=0.;
-  // Weighted average over neighbours
-  avewidth=MIN(i_maxcorr,nstep-i_maxcorr);
-  if (avewidth>0) {
-    for (i = i_maxcorr-avewidth+1; i < i_maxcorr+avewidth; i++) {
-      psi_actual=psi_max_coarse-psi_coarse_step+1+(double)i;
-      psi+=corr(i)*psi_actual;
-      sumcorr+=corr(i);
-    }
-    psi/=sumcorr;
-  } else psi=psi_max_fine;
-
-  // Calculate cross-correlation
-  // Try both psi and psi+180. for CCF
-
-  Maux=Mref.rotate(-psi,DONT_WRAP);
-  correlation_matrix(Mimg,Maux,Mcorr);
-  Mcorr.max_index(imax,jmax);
-  max=MAT_ELEM(Mcorr,imax,jmax);
-
-  Maux=Mref.rotate(-psi+180.,DONT_WRAP);
-  correlation_matrix(Mimg,Maux,Mcorr2);
-  Mcorr2.max_index(imax2,jmax2);
-  max2=MAT_ELEM(Mcorr2,imax2,jmax2);
-
-  if (max2>max) {
-    max=max2;
-    imax=imax2;
-    jmax=jmax2;
-    Mcorr=Mcorr2;
-    psi=realWRAP(psi+180.,0.,360.);
-  }
-
-  // Refine best option
-  int              n_max=-1;
-  bool             neighbourhood=TRUE;
-  while (neighbourhood) {  
-    n_max ++;
-    for (int i=-n_max; i <= n_max; i++)
-      for (int j=-n_max; j <= n_max; j++) {   
-	i_actual = i+imax;
-	j_actual = j+jmax;
-	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
-	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
-	  neighbourhood=FALSE;
-	else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
-	    neighbourhood=FALSE;
-      }
-  }
-  // We have the neighbourhood => looking for the gravity centre 
-
-  xmax = ymax = sumcorr = 0.;
-  for (int i=-n_max; i <= n_max; i++)
-    for (int j=-n_max; j <= n_max; j++) {
-      i_actual = i+imax;
-      j_actual = j+jmax;
-      if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() && 
-          i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX() ) {
-	ymax += i_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
-	xmax += j_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
-	sumcorr += MAT_ELEM(Mcorr,i_actual,j_actual);
-      }
-    }
-  xmax /= sumcorr; ymax /= sumcorr;
-  xshift=(float)-xmax; yshift=(float)-ymax;
-
-  Mimg.core_deallocate();
-  Mimg2.core_deallocate();
-  Maux.core_deallocate();
-  Mref2.core_deallocate();
-  Mcorr.core_deallocate();
-  Mcorr2.core_deallocate();
-
-  OK=true;
-  shift=sqrt(xshift*xshift+yshift*yshift);
-  psi=realWRAP(psi,-180.,180.);
-  if ((max_shift>XMIPP_EQUAL_ACCURACY) && (shift>max_shift)) OK=false;
-  if ((max_rot>XMIPP_EQUAL_ACCURACY) && (ABS(psi)>max_rot)) OK=false;
-
-  if (OK) {
-    // Store rotation & translation in the header of the image
-    psi+=img.Psi();
-    img.Psi()=realWRAP(psi,0.,360.);
-    A=img.get_transformation_matrix();
-    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
-    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
-    img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
-    img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
-    return TRUE;
-  } else return FALSE;
-
-}
-
 // Complete search alignment ========================================================
 bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
                        const float &max_shift, const float &max_rot, const float &psi_interval, 
-                       const int &shift_range, const float &Rin, const float &Rout) _THROW{
+                       const float &Rin, const float &Rout, const double &outside) _THROW{
 
-  matrix2D<double> Mimg,Maux,Mref2,A;
+  matrix2D<double> Mimg,Maux,Mcorr,Mref2,A;
   matrix2D<int>    mask;
-  int dim,nstep;
+  int dim,nstep,imax,jmax;
   double psi_actual,corr,maxcorr,xshift,yshift,shift,psi_max;
   bool OK;
 
-  Mref2=Mref;
-  Mref2.set_Xmipp_origin();
-  Maux.resize(Mimg);
-  Maux.set_Xmipp_origin();
-  Mimg=img();
-  Mimg.set_Xmipp_origin();
-  A=img.get_transformation_matrix();
-  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,0.);
-
   dim=img().RowNo();
   mask.resize(dim,dim);
+  Mref2=Mref;
+  Maux.resize(Mimg);
+  Mimg=img();
+  Mcorr.resize(img());
+
   mask.set_Xmipp_origin();
+  Mref2.set_Xmipp_origin();
+  Maux.set_Xmipp_origin();
+  Mimg.set_Xmipp_origin();
+  Mcorr.set_Xmipp_origin();
+
+  A=img.get_transformation_matrix();
+  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,outside);
+
   if (Rout<=Rin)  REPORT_ERROR(1,"Align2d: Rout <= Rin");
   BinaryCrownMask(mask,Rin,Rout,INNER_MASK);
+  apply_binary_mask(mask,Mref,Mref2);
 
   // Optimize correlation in coarse steps
   nstep=(int)(360/psi_interval);
@@ -470,19 +312,18 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
   xshift=0.;
   yshift=0.;
   psi_max=0.;
+
   for (int i = 0; i < nstep; i++) {
     psi_actual=(double)i*psi_interval;
-    Maux=Mimg.rotate(psi_actual,DONT_WRAP);
-    for (int x=-shift_range; x <= shift_range; x++) {
-      for (int y=-shift_range; y <= shift_range; y++) {   
-	corr=correlation(Mref2,Maux,&mask,y,x);
-	if (corr>maxcorr) {
-	  maxcorr=corr;
-	  psi_max=psi_actual;
-	  xshift=x;
-	  yshift=y;
-	}
-      }
+    Maux=Mref2.rotate(-psi_actual,DONT_WRAP);
+    correlation_matrix(Mimg,Maux,Mcorr);
+    Mcorr.max_index(imax,jmax);
+    corr=MAT_ELEM(Mcorr,imax,jmax);
+    if (corr>maxcorr) {
+      maxcorr=corr;
+      psi_max=psi_actual;
+      xshift=-jmax;
+      yshift=-imax;
     }
   }
 
@@ -494,9 +335,8 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
 
   if (OK) {
     // Store rotation & translation in the header of the image
-    psi_max+=img.Psi();
-    img.Psi()=realWRAP(psi_max,0.,360.);
-    A=img.get_transformation_matrix();
+    img.Psi()+=psi_max;
+    img.Psi()=realWRAP(img.Psi(),0.,360.);
     img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
     img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
     img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
@@ -509,9 +349,10 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
 // PsPc piramidal combination of images ========================================
 void Prog_align2d_prm::do_pspc() _THROW {
 
-  int               imgno,nlev,n_piram,nlevimgs;
+  int               barf,imgno,nlev,n_piram,nlevimgs;
   float             xshift,yshift,psi,zero=0.;
   matrix2D<double>  Mref,Maux;
+  matrix2D<int>     mask;
 
   // Set-up matrices, etc.
   Mref.resize(images[0]());
@@ -541,6 +382,7 @@ void Prog_align2d_prm::do_pspc() _THROW {
 
   cerr << "  Piramidal combination of "<<n_piram<<" images" <<endl;
   init_progress_bar(n_piram);
+  barf=MAX(1,(int)(1+(n_piram/60)));
        
   imgno=0;
   for (int lev=nlev; lev>0; lev--) {
@@ -551,12 +393,8 @@ void Prog_align2d_prm::do_pspc() _THROW {
       apply_geom(Mref,imgpspc[2*j].get_transformation_matrix(),imgpspc[2*j](),IS_INV,DONT_WRAP);
       Mref.set_Xmipp_origin();
 	   
-      
-      if (do_acf) {
-	align_acf(imgpspc[2*j+1],Mref,zero,zero,Ri,Ro);
-      } else if (do_complete) {
-	success[imgno]=align_complete_search(images[imgno],Mref,zero,
-					     zero,psi_interval,shift_range,Ri,Ro);
+      if (do_complete) {
+	align_complete_search(imgpspc[2*j+1],Mref,zero,zero,psi_interval,Ri,Ro);
       } else {
 	/** FIRST **/
 	if (do_trans) align_trans(imgpspc[2*j+1],Mref,zero);
@@ -576,7 +414,7 @@ void Prog_align2d_prm::do_pspc() _THROW {
       imgpspc[j].Yoff()=0.;
 	   
       imgno++;
-      if (imgno%100==0) progress_bar(imgno);
+      if (imgno%barf==0) progress_bar(imgno);
       
     }//loop over images
 	 
@@ -610,11 +448,16 @@ void Prog_align2d_prm::do_pspc() _THROW {
 // Alignment of all images by iterative refinement  ========================================
 void Prog_align2d_prm::refinement() _THROW {
 
-  int               n_refined;
+  int               dim,n_refined,barf;
   float             curr_max_shift,curr_max_rot,xshift,yshift,psi,zero=0.;
+  double            outside, dummy;
   matrix2D<double>  Mref,Maux,Msum;
+  matrix2D<int>     mask;
 
   // Set-up matrices, etc.
+  dim=Iref().ColNo();
+  mask.resize(dim,dim);
+  BinaryCircularMask(mask,(int)dim/2,OUTSIDE_MASK);
   Mref=Iref();
   Mref.set_Xmipp_origin();
   Maux.resize(Mref);
@@ -622,7 +465,7 @@ void Prog_align2d_prm::refinement() _THROW {
   Maux.set_Xmipp_origin();
   Msum.set_Xmipp_origin();
   Msum.init_zeros();
-
+  barf=MAX(1,(int)(1+(n_images/60)));
   
   n_refined=0;
   cerr << "  Alignment:  iteration " << 1 <<" of "<< Niter << " (with "<<n_images<<" images)" <<endl;
@@ -640,9 +483,12 @@ void Prog_align2d_prm::refinement() _THROW {
     init_progress_bar(n_images);
     for (int imgno=0; imgno < n_images; imgno++) {
 
+      // Following to compute best value for "outside", assuming no large shifts...
+      compute_stats_within_binary_mask(mask,images[imgno](),dummy,dummy,outside,dummy);
+
       if (iter!=0) { 
 	// Subtract current image from the reference
-	apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP);
+	apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP,outside);
 	Maux.set_Xmipp_origin();
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mref) {
 	  dMij(Mref,i,j)*=n_refined;
@@ -652,14 +498,12 @@ void Prog_align2d_prm::refinement() _THROW {
       }
       
       // Align translationally and rotationally
-      if (do_acf) {
-	success[imgno]=align_acf(images[imgno],Mref,curr_max_shift,curr_max_rot,Ri,Ro);
-      } else if (do_complete) {
+      if (do_complete) {
 	success[imgno]=align_complete_search(images[imgno],Mref,curr_max_shift,
-					     curr_max_rot,psi_interval,shift_range,Ri,Ro);
+					     curr_max_rot,psi_interval,Ri,Ro,outside);
       } else {
 	if (do_trans) success[imgno]=align_trans(images[imgno],Mref,curr_max_shift);
-	if (do_rot && success[imgno]) success[imgno]=align_rot(images[imgno],Mref,curr_max_rot,Ri,Ro);
+	if (do_rot && success[imgno]) success[imgno]=align_rot(images[imgno],Mref,curr_max_rot,Ri,Ro,outside);
       }
       
       if (!success[imgno]) {
@@ -668,14 +512,14 @@ void Prog_align2d_prm::refinement() _THROW {
 	if (iter==0) {
 	  // Add refined images to form a new reference
 	  n_refined++;
-	  apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP);
+	  apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP,outside);
 	  Maux.set_Xmipp_origin();
 	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Msum) {
 	    dMij(Msum,i,j)+=dMij(Maux,i,j);
 	  }
 	} else {
 	  // Add refined image to reference again
-	  apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP);
+	  apply_geom(Maux,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP,outside);
 	  Maux.set_Xmipp_origin();
 	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mref) {
 	    dMij(Mref,i,j)*=(n_refined-1);
@@ -684,7 +528,7 @@ void Prog_align2d_prm::refinement() _THROW {
 	  }
 	} 
       }
-      if (imgno%100==0) progress_bar(imgno);
+      if (imgno%barf==0) progress_bar(imgno);
 
     } // loop over all images
     progress_bar(n_images);
@@ -793,9 +637,7 @@ void Prog_align2d_prm::align2d() _THROW {
 
   // Get Reference (either from file or from piramidal combination of images)
   if (fn_ref!="") {
-    Iref.read(fn_ref);
-    if (Iref.Psi()!=0. || Iref.Xoff()!=0. || Iref.Yoff()!=0.) 
-      cerr << "WARNING!! Transformation in header of reference will NOT be applied"<<endl;
+    Iref.read(fn_ref,FALSE,FALSE,TRUE);
   } else do_pspc();
 
   // Circular mask around reference image
