@@ -691,7 +691,8 @@ public:
    T&   operator () (const matrix1D<int> &v) const
         {return MAT_ELEM(*this,YY(v),XX(v));}
 
-   /** Interpolates the value of the 2D matrix M at the point (x,y) */
+   /** Interpolates the value of the 2D matrix M at the point (x,y).
+       (x,y) are in logical coordinates.*/
    T   interpolated_elem(double x, double y, T outside_value=(T)0);
 
    /** Logical to physical index translation.
@@ -1300,6 +1301,34 @@ double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
     dimensions.*/
 void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
    const matrix2D<double> &H, double &val, matrix1D<double> &grad) _THROW;
+
+/** Solves Quadratic programming subproblem. 
+    \begin{verbatim}
+       min 0.5*x'Cx + d'x   subject to:  A*x <= b 
+        x                                Aeq*x=beq
+      	                                 bl<=x<=bu
+    \end{verbatim}
+    */
+void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
+   const matrix2D<double> &A,   const matrix1D<double> &b,
+   const matrix2D<double> &Aeq, const matrix1D<double> &beq,
+         matrix1D<double> &bl,        matrix1D<double> &bu,
+         matrix1D<double> &x);
+	 
+	 
+/** Solves the least square problem.
+    \begin{verbatim}
+      min 0.5*(Norm(C*x-d))   subject to:  A*x <= b 
+      x                                    Aeq*x=beq  
+      	             	      	           bl<=x<=bu 
+    \end{verbatim}
+    */
+void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
+   const matrix2D<double> &A,   const matrix1D<double> &b,
+   const matrix2D<double> &Aeq, const matrix1D<double> &beq,
+         matrix1D<double> &bl,        matrix1D<double> &bu,
+         matrix1D<double> &x);
+
 //@}
 //@}
 //@}
