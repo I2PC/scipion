@@ -214,6 +214,8 @@ public:
    matrix1D<double> mu0_list;
    /// List of relaxation parameters for IDR: right border
    matrix1D<double> muF_list;
+   /// Unmatched CTF correction
+   bool unmatched;
 public:
    /** Read parameters from file. */
    void read(const FileName &fn_test_params) _THROW;

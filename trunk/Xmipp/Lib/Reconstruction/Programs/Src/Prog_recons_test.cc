@@ -159,6 +159,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       if (XSIZE(mu0_list)==0)
 	 {mu0_list.resize(1); mu0_list.init_constant(1);}
       muF_list=get_vector_param(fh_param,"muF",-1);
+      unmatched=check_param(fh_param,"unmatched");
 
       // Only valid for ART and SIRT
       str=get_param(fh_param,"blob type",0,"big");
@@ -325,6 +326,8 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
           << "   No. IDR iterations: " << prm.idr_iterations << endl
 	  << "   IDR relaxation parameters FROM: " << prm.mu0_list.transpose() << endl
 	  << "                               TO: " << prm.muF_list.transpose() << endl;
+   if (prm.unmatched)
+      out << "   Unmatched CTF correction\n";
    if (prm.recons_method==use_ART || prm.recons_method==use_SIRT) {
       if (prm.blob_type==BIG_BLOB) out << "   Blob type: big\n";
       else                         out << "   Blob type: small\n";
@@ -618,7 +621,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.stop_at=prm.stop_at;
       art_prm.R=prm.reconstruction_radius;
       art_prm.fn_sel=Prog_proj_prm.fn_sel_file;
-      art_prm.proj_ext=6;
+      art_prm.proj_ext=0;
       art_prm.max_tilt=1e7;
       if (!prm.succesive_params) {
          art_prm.lambda_list.resize(1);
@@ -635,6 +638,10 @@ void single_recons_test(const Recons_test_Parameters &prm,
       if (prm.recons_method==use_SIRT)
          art_prm.parallel_mode=Basic_ART_Parameters::SIRT;
       if (prm.POCS_positivity) art_prm.positivity=TRUE;
+      if (prm.unmatched) {
+         art_prm.unmatched=true;
+         art_prm.fn_ctf=fn_applied_CTF;
+      }
 
       cout << "Selected: Lambda= " << art_prm.lambda_list.transpose() << endl
            << " No_it= " << art_prm.no_it << endl;
