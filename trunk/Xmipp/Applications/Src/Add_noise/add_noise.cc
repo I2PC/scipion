@@ -88,6 +88,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 
 int main (int argc, char **argv) {
    Add_noise_parameters prm;
+   randomize_random_generator();
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
