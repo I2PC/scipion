@@ -39,6 +39,7 @@
 #include <XmippData/xmippSelFiles.hh>
 #include <list.h>
 
+
 /**@name Show Tables*/
 //@{
 /** Class to show tables.
@@ -47,7 +48,16 @@
 */
 class ShowTable : public QTable {
     Q_OBJECT
+
 protected:
+
+    // Axis color
+    QColor lableColor;
+    // Font for axes
+    QFont labelFont;
+    // Font Color
+    QColor fontColor;
+
     // Filename of the file being represented
     FileName    fn;
     
@@ -108,6 +118,8 @@ private:
     /* Change mark of cell */
     void changeMark(int row, int col);
 protected:
+    /* GUI Change Color */
+    void GUIchangeColor(QColor &_color, const char * _color_title);
     // Annotate modification time of the represented file
     void annotateTime(const FileName &_fn);
 
@@ -131,6 +143,7 @@ protected:
     virtual void initTable();
     /* Form the right click menu bar */
     virtual void initRightclickMenubar()=0;
+    
     /* Insert help and Quit in the right click menu bar*/
             void insertGeneralItemsInRightclickMenubar();
     /* Change a boolean option */
@@ -183,7 +196,6 @@ private slots:
 protected slots:
     /* GUI for opening a file */
     virtual void GUIopenFile();
-
     /* Change scale */
     virtual void changeScale(double newScale);
     /* Process keys */
@@ -198,6 +210,11 @@ protected slots:
        {QTable::contentsMouseMoveEvent(e);};
     /* Check the change of file */
     virtual void check_file();
+    /*Change background color */
+    void changeFontColor();
+    /* Change Font for labels */
+    void changeFont();
+    
 };
 //@}
 
