@@ -190,6 +190,8 @@ void ShowSpectraSOM::initRightclickMenubar() {
    options =  new QPopupMenu();
    setCommonOptionsRightclickMenubar();
 
+   setCommonSpectraOptionsRightclickMenubar();
+
    // What kind of labels
    mi_imgAsLabels = options->insertItem( "Show Image Names as Labels", this,  SLOT(changeLabelsToImg()));
    mi_selAsLabels = options->insertItem( "Show Sel status as Labels", this,  SLOT(changeLabelsToSel()));

@@ -66,7 +66,6 @@ protected:
     virtual void init();
     /* Clear everything */
     virtual void clear();
-
     /* Initialize right click menubar */
     virtual void initRightclickMenubar();
     /* How to repaint the cell.
@@ -88,6 +87,8 @@ protected:
     virtual void initFromVectors();
     /* GUI Change Color */
     void GUIchangeColor(QColor &_color, const char * _color_title);
+    /* set common spectra options*/
+    void setCommonSpectraOptionsRightclickMenubar(void);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
     // Change Show/Hide Grid

@@ -117,28 +117,8 @@ void ShowSpectra::initRightclickMenubar() {
    options =  new QPopupMenu();
    setCommonOptionsRightclickMenubar();
    labeltype=Filename_LABEL;
-
-   // Show grid
-   mi_showgrid = options->insertItem( "Show Grid", this,  SLOT(changeGrid()));
-   mi_hidegrid = options->insertItem( "Hide Grid", this,  SLOT(changeGrid()));
-   options->setItemEnabled(mi_showgrid, true);
-   options->setItemEnabled(mi_hidegrid, false);
-   options->insertSeparator();
-
-   // Show X legend
-   mi_showXlegend = options->insertItem( "Show X legend", this,  SLOT(changeXlegend()));
-   mi_hideXlegend = options->insertItem( "Hide X legend", this,  SLOT(changeXlegend()));
-   options->insertItem( "&Change X-axis step...", this, SLOT(changeXstep()));
-   options->setItemEnabled(mi_showXlegend, false);
-   options->setItemEnabled(mi_hideYlegend, true);
-   options->insertSeparator();
-
-   // Show Y legend
-   mi_showYlegend = options->insertItem( "Show Y legend", this,  SLOT(changeYlegend()));
-   mi_hideYlegend = options->insertItem( "Hide Y legend", this,  SLOT(changeYlegend()));
-   options->setItemEnabled(mi_showYlegend, false);
-   options->setItemEnabled(mi_hideYlegend, true);
-   options->insertSeparator();
+   // spectra common options (pased to spectraSOM too)
+   setCommonSpectraOptionsRightclickMenubar();
 
    // Statistics
    options->insertItem( "View average and SD Images",  this,  SLOT(showStats()));
@@ -149,13 +129,6 @@ void ShowSpectra::initRightclickMenubar() {
    menubar->insertItem( "&Options", options );    
    menubar->insertSeparator();
 
-   // Colors and change font
-   QPopupMenu* colorMenu = new QPopupMenu();
-      colorMenu->insertItem( "&Background", this, SLOT(changeBackColor()));
-      colorMenu->insertItem( "&Curve", this, SLOT(changeCurveColor()));
-      colorMenu->insertItem( "&Axis", this, SLOT(changeAxisColor()));
-   menubar->insertItem( "&Colors", colorMenu);
-   menubar->insertSeparator();
 
    // Inser Help and Quit
    insertGeneralItemsInRightclickMenubar();
@@ -348,3 +321,35 @@ void ShowSpectra::set_spacing(float _spacing, float _x_tick_off) {
   
 }
 
+void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
+{
+   // Show grid
+   mi_showgrid = options->insertItem( "Show Grid", this,  SLOT(changeGrid()));
+   mi_hidegrid = options->insertItem( "Hide Grid", this,  SLOT(changeGrid()));
+   options->setItemEnabled(mi_showgrid, true);
+   options->setItemEnabled(mi_hidegrid, false);
+   options->insertSeparator();
+
+   // Show X legend
+   mi_showXlegend = options->insertItem( "Show X legend", this,  SLOT(changeXlegend()));
+   mi_hideXlegend = options->insertItem( "Hide X legend", this,  SLOT(changeXlegend()));
+   options->insertItem( "&Change X-axis step...", this, SLOT(changeXstep()));
+   options->setItemEnabled(mi_showXlegend, false);
+   options->setItemEnabled(mi_hideYlegend, true);
+   options->insertSeparator();
+
+   // Show Y legend
+   mi_showYlegend = options->insertItem( "Show Y legend", this,  SLOT(changeYlegend()));
+   mi_hideYlegend = options->insertItem( "Hide Y legend", this,  SLOT(changeYlegend()));
+   options->setItemEnabled(mi_showYlegend, false);
+   options->setItemEnabled(mi_hideYlegend, true);
+   options->insertSeparator();
+
+   // Colors and change font
+   QPopupMenu* colorMenu = new QPopupMenu();
+      colorMenu->insertItem( "&Background", this, SLOT(changeBackColor()));
+      colorMenu->insertItem( "&Curve", this, SLOT(changeCurveColor()));
+      colorMenu->insertItem( "&Axis", this, SLOT(changeAxisColor()));
+   menubar->insertItem( "&Colors", colorMenu);
+   menubar->insertSeparator();
+}
