@@ -61,7 +61,8 @@ void ShowSOM::initWithFile(const FileName &_fn_root) {
 }
 
 /* Read a SOM -------------------------------------------------------------- */
-void ShowSOM::readFile(const FileName &_fn_root) _THROW {
+void ShowSOM::readFile(const FileName &_fn_root,
+   double _minGray, double _maxGray) _THROW {
     clear();
     fn              = _fn_root;
     setCaption(fn.c_str());

@@ -54,7 +54,8 @@ protected:
     /* Clear everything */
     virtual void clear();
     /* Read SOM files and Sel file. */
-    virtual void readFile(const FileName &_fn_root) _THROW;
+    virtual void readFile(const FileName &_fn,
+       double _minGray=0, double _maxGray=0) _THROW;
     /* Read only SOM files. */
     virtual void readSOMFiles(const FileName &_fn_root) _THROW;
 

@@ -80,7 +80,8 @@ protected:
             void openNewFile (const FileName &);
     /* Read a Dat File.
        First some initialization is done and then it call readDatFile*/
-    virtual void readFile(const FileName &_fn) _THROW;
+    virtual void readFile(const FileName &_fn,
+       double _minGray=0, double _maxGray=0) _THROW;
    // Really read a Dat file
    virtual void readDatFile(const FileName &_fn_root) _THROW;
     /* Init from vectors.
