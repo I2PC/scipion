@@ -19,17 +19,20 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_LANG(C++)
 
-# Checking for --devel flag. If present, programs are buit with prefix devel, if not
-# they will use prefix xmipp
+# If --disable-debug or --enable-debug=no is passed to configure, -g compiler flag
+# will be disabled.
 
-AC_ARG_WITH([devel],
-[  --devel                 build development versions],AC_SUBST(XMIPP_PREFIX,[devel_]),AC_SUBST(XMIPP_PREFIX,[xmipp_]))
-
-if test "$program_prefix" = NONE
-then
-	program_prefix="xmipp_"
+AC_ARG_ENABLE([debug],
+  AC_HELP_STRING([--disable-debug], [Disable the use of debug capabilities.]),
+  [use_debug=$enableval], [use_debug=yes])
+if test $use_debug = no; then
+	AUX= echo $CFLAGS | sed 's/\-g //g'
+	CFLAGS= $AUX
+	AUX= echo $CXXFLAGS | sed 's/\-g //g'
+	CXXFLAGS= $AUX
 fi
 
+echo "$CFLAGS"
 
 # Checking for PERL
 AC_PATH_PROG( PERL_PATH, perl, "not found" )
