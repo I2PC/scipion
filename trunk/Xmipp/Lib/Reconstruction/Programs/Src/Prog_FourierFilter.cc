@@ -331,12 +331,14 @@ void FourierMask::apply_mask_Space(matrix1D<double> &v) {
 void FourierMask::apply_mask_Space(matrix2D<double> &v) {
    matrix2D< complex<double> > aux2D;
    FourierTransform(v,aux2D);
+   if (XSIZE(mask2D)==0) generate_mask(v);
    aux2D*=mask2D;
    InverseFourierTransform(aux2D,v);
 }
 void FourierMask::apply_mask_Space(matrix3D<double> &v) {
    matrix3D< complex<double> > aux3D;
    FourierTransform(v,aux3D);
+   if (XSIZE(mask3D)==0) generate_mask(v);
    aux3D*=mask3D;
    InverseFourierTransform(aux3D,v);
 }
