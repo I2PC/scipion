@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libOldXmipp_@host_os@.la
-libOldXmipp_@host_os@_la_SOURCES = cabecero.c varios.c varios2.c varios3.c dimension.c \
-	floatnat.c iocabecero.c usages.c fft.c fftmod.c fftn.c allfft.c \
-	filtros.c specmod.c
+libOldXmipp_@host_os@_la_SOURCES = cabecero.cc varios.cc varios2.cc varios3.cc dimension.cc \
+	floatnat.cc iocabecero.cc usages.cc fft.cc fftmod.cc fftn.cc allfft.cc \
+	filtros.cc specmod.cc
 
 INCLUDES = -I$(top_srcdir)/Lib
