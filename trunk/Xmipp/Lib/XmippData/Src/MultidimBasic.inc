@@ -123,6 +123,7 @@ template <class T>
          stddev = sqrt((double)(ABS(stddev))); // Foreseeing numerical
                                                // instabilities
       } else stddev=0;
+      return stddev;
    }
 
 /* Compute stats ---------------------------------------------------------- */
