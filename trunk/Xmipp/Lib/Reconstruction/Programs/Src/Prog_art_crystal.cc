@@ -34,6 +34,7 @@
 void Crystal_ART_Parameters::read(int argc, char **argv,
                                   Basic_ART_Parameters &prm) _THROW {
     try {
+       prm.is_crystal = true;
        a_mag = AtoF(get_param(argc, argv, "-mag_a"));
        a_mag /= prm.sampling;
        b_mag = AtoF(get_param(argc, argv, "-mag_b"));
@@ -117,6 +118,16 @@ void compute_integer_lattice(const matrix1D<double> &a,
    switch(space_group){
       
        case sym_P1: break;// no check needed
+       case sym_P222_1://XX(aint) and YY(aint) should be even
+         if(XX(aint)!=2*(int)(XX(aint)/2) ||
+	    YY(bint)!=2*(int)(YY(bint)/2))
+	    {
+	     cout << "\nLattice connstrains for P2212 are not satisficed"
+	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
+		 << "\nPlease modify the parmeters and try again" << endl;
+	     exit(0);	 	    
+	    }
+	 break;
        case sym_P42_12://XX(aint) and YY(aint) should be even
          if(XX(aint)!=2*(int)(XX(aint)/2) ||
 	    YY(bint)!=2*(int)(YY(bint)/2))
@@ -429,7 +440,6 @@ void ART_single_step(
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Crystal_ART_Parameters &eprm, int grid_type)
 {
-
  symmetrize_crystal_volume(vol_in, eprm.aint, eprm.bint,
                                    eprm.space_group,eprm.unit_cell_mask,
 				   grid_type);
