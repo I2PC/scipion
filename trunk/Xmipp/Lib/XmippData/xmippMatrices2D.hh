@@ -942,6 +942,10 @@ public:
        \\Ex: matrix2D<double> A(3,3); A.init_identity; apply_geom(m2,A,m1);*/
    friend void apply_geom<>(mT &m2, matrix2D<double> A,
        const mT &m1, bool inv, bool wrap) _THROW;
+   /** Self apply geom.
+       Same as the previous one, but the result is kept in this object */
+   void self_apply_geom(matrix2D<double> A, bool inv, bool wrap)
+      {mT aux; apply_geom(aux,A,*this,inv,wrap); *this=aux;}
 
    #define IS_INV     TRUE
    #define IS_NOT_INV FALSE
