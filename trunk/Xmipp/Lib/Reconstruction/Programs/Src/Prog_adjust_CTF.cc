@@ -1193,11 +1193,13 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
           steps(PARAMETRIC_CTF_PARAMETERS+3)=steps(PARAMETRIC_CTF_PARAMETERS+4)=
              steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
        }
-       global_current_central_weight=2;
        
        // Adjust without penalization
        double imax=CEIL(log(prm.central_weight)/log(2.0));
        for (int i=1; i<=imax; i+=2) {
+          global_current_central_weight=pow(2.0,i);
+          global_current_central_weight=MIN(prm.central_weight,
+             global_current_central_weight);
           cerr << "   Central weight= "
                << global_current_central_weight << endl;
           Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
@@ -1207,9 +1209,6 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
           if (prm.show_optimization) save_intermidiate_results(
              (string)"best_fit_weight_"+ItoA(i));
           #endif
-          global_current_central_weight*=2;
-          global_current_central_weight=MIN(prm.central_weight,
-             global_current_central_weight);
        }
        if (prm.show_optimization)
           save_intermidiate_results("best_fit_weight");
@@ -1264,11 +1263,13 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
              steps(PARAMETRIC_CTF_PARAMETERS+6)=steps(PARAMETRIC_CTF_PARAMETERS+9)=0;
        }
        cerr << "Looking again for best central fitting CTF ...\n";
-       global_current_central_weight=2;
        
        // Adjust without penalization
        double imax=CEIL(log(prm.central_weight)/log(2.0));
        for (int i=1; i<=imax; i+=2) {
+          global_current_central_weight=pow(2.0,i);
+          global_current_central_weight=MIN(prm.central_weight,
+             global_current_central_weight);
           cerr << "   Central weight= "
                << global_current_central_weight << endl;
           Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
@@ -1278,9 +1279,6 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
           if (prm.show_optimization) save_intermidiate_results(
              (string)"best_fit_weight_again_"+ItoA(i));
           #endif
-          global_current_central_weight*=2;
-          global_current_central_weight=MIN(prm.central_weight,
-             global_current_central_weight);
        }
        if (prm.show_optimization)
           save_intermidiate_results("best_fit_weight_again");
