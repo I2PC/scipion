@@ -235,6 +235,12 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
     A(1,2)=-header.fYoff();
   }
 
+  // Also for only_apply_shifts: mirror if necessary!
+  if (header.Flip()==1) {
+    A(0,0)=-A(0,0); 
+    A(0,1)=-A(0,1); 
+  }
+
   return A;
 }
 
@@ -258,9 +264,6 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   {
 
     if (apply_geo || only_apply_shifts) {
-      // Mirror image if requested in the header 
-      // Also mirror if only_apply_shifts, since Xoff in the header is assumed to be related with flip
-      if (ImageXmippT<T>::flip()==1.) ImageT<T>::img.self_reverseX();
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
       T  outside=DIRECT_MAT_ELEM(ImageT<T>::img,0,0);
