@@ -405,7 +405,7 @@ int check_param(int argc, char **argv, const char *param)
 {
   int i = 0;
  
-  while ((i < argc) && (strcmp(param, argv[i])))
+  while ((i < argc) && (strcmp(param, argv[i])!=0))
     i++;
  
   if (i < argc)  return(TRUE);
