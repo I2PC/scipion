@@ -5,6 +5,6 @@ endif
 OBJ  = show.o
         
 LIBS = -l$(LIBXMIPP_GRAPHICS) -l$(LIBXMIPP_INTERFACE_VTK) $(LIBVTK)\
-       -l$(LIBXMIPP) -l$(LIBCLASSIF) -lqt 
+       -l$(LIBXMIPP) -l$(LIBCLASSIF) $(QTLIBS)
 EXTRA_INCLUDE_DIRS = -I$(XMIPP_QTDIR)/include
 EXTRA_LIB_DIRS     = -L$(XMIPP_QTDIR)/lib
