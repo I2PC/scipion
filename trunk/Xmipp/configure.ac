@@ -30,6 +30,12 @@ then
 	program_prefix="xmipp_"
 fi
 
+
+# Checking for PERL
+AC_PATH_PROG( PERL_PATH, perl, "not found" )
+AC_PATH_PROG( CSH_PATH, csh, "not found" )
+AC_PATH_PROG( SH_PATH, sh, "not found" )
+
 #Checking for TIFF library as well as some of its capabilities
 AC_CHECK_LIBTIFF
 
@@ -86,6 +92,21 @@ AC_OUTPUT( Lib/Makefile \
 	Lib/OldXmipp/Makefile \
 	Lib/XmippGraphics/Makefile \
 	Applications/Makefile \
+	Applications/OldXmipp/Makefile \
+	Applications/OldXmipp/MakeSpectra/Makefile \
+	Applications/OldXmipp/FindSCenter/Makefile \
+	Applications/Batches/Makefile \
+	Applications/Batches/Do_Selfile/Makefile \
+	Applications/Batches/Gnuplot_mplot/Makefile \
+	Applications/Batches/Gnuplot_mprint/Makefile \
+	Applications/Batches/Iv/Makefile \
+	Applications/Batches/Look_at_FFT/Makefile \
+	Applications/Batches/PDB2descr/Makefile \
+	Applications/Batches/Pdb2surface/Makefile \
+	Applications/Batches/Showsel/Makefile \
+	Applications/Batches/ShowSOM/Makefile \
+	Applications/Batches/ShowSpectra/Makefile \
+	Applications/Batches/ShowSpectraSOM/Makefile \
 	Applications/Src/Makefile \
 	Applications/Src/2DInterpolation/Makefile \
 	Applications/Src/3DInterpolation/Makefile \
