@@ -1,0 +1,58 @@
+############################################################################
+ifeq ($(HAVE_QT),YES)
+    LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).so
+endif
+
+SRC_OBJS = Src/showTools.o showTools.moc \
+           Src/show2D.o    show2D.moc \
+           Src/showTable.o showTable.moc \
+	   Src/showSel.o   showSel.moc \
+	   Src/showVol.o   showVol.moc
+
+# Main Action = Built library ----------------------------------------------
+.SUFFIXES: .moc .cc .hh .c
+all: $(LIBPROJ)
+
+$(LIBPROJ): $(SRC_OBJS)
+	@echo "Creating library Xmipp Graphics Library ..."
+	@rm -f $(LIBPROJ)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+
+# Compiling by default -----------------------------------------------------
+.cc.o:
+	@echo "Compiling" $*.cc "..."
+	@$(CC) -o $*.o $(COMPILERFLAGS) -I$(XMIPP_QTDIR)/include -fPIC $*.cc -c
+
+.hh.moc:
+	@echo "Generating MOC for" $*.hh "..."
+	@$(XMIPP_QTDIR)/bin/moc -o $*_moc.cc $*.hh
+	@$(MAKE) $*_moc.o
+	@mv $*_moc.o $*.moc
+	@rm $*_moc.cc
+
+# Makefiles ----------------------------------------------------------------
+Makefiles:
+	@$(MAKE) depend
+
+# Cleaning -----------------------------------------------------------------
+clean:
+	@echo "Removing in XmippGraphics library ..."
+	@rm -f $(LIBPROJ) $(SRC_OBJS)
+
+# Dependencies -------------------------------------------------------------
+depend:
+	@echo "Creating dependencies for XmippGraphics/Src ..."
+	@makedepend $(DEPENDDIRS) `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
+
+# DistCleaning -------------------------------------------------------------
+distclean:
+	@$(MAKE) clean
+	@echo "Removing documentation in XmippGraphics ..."
+	@rm -f Docs/*.html Docs/*.gif Docs/*.class Docs/*.tex Docs/*.db
+	@echo "Removing distribution for XmippGraphics ..."
+	@rm -f Makefile Src/Makefile
+
+# Documents ----------------------------------------------------------------
+docs:
+	@echo "Creating documentation in XmippGraphics ..."
+	@doc++ -f -B $(XMIPPDIR)/Extra_Docs/banner.html -d Docs documentation
