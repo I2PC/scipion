@@ -387,5 +387,15 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
 */
 void compute_resolution(VolumeXmipp &vol_phantom,
    VolumeXmipp &vol_recons, double &resolution) _THROW;
+
+/* Compute Fourier Shell Correlation.
+   This function is performed via Bsoft. If there is any problem calling
+   the program or reading the output file then empty vectors (frequency
+   (in 1/Angstroms),FSC) are returned. This function returns the first
+   frequency at which the FSC falls below 0.5.
+*/
+double compute_FSC(VolumeXmipp &vol_phantom,
+  VolumeXmipp &vol_recons, double sampling_rate,
+  matrix1D<double> &frequency, matrix1D<double> &FSC) _THROW;
 //@}
 #endif

@@ -852,3 +852,84 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    // Remove intermidiate files
    system("rm superfeo.spi superfeo2.spi superfeo3");
 }
+
+// Based on Bsoft
+double compute_FSC(VolumeXmipp &vol_phantom,
+   VolumeXmipp &vol_recons, double sampling_rate,
+   matrix1D<double> &frequency, matrix1D<double> &FSC) _THROW {
+   double resolution=-1;
+   frequency.clear();
+   FSC.clear();
+
+   // Prepare volumes to be evaluated
+   if (vol_phantom.name()!="")
+      system(((string)"ln -s "+vol_phantom.name()+" superfeo.spi").c_str());
+   else vol_phantom.write("superfeo.spi");
+   if (vol_recons.name()!="")
+      system(((string)"ln -s "+vol_recons.name()+" superfeo2.spi").c_str());
+   else vol_recons.write("superfeo2.spi");
+
+   // Run bresolve of bsoft to compute resolution
+   string command=(string)"bresolve -s "+FtoA(sampling_rate)+
+      " -v4 -m superfeo.spi superfeo2.spi > superfeo3";
+   system(command.c_str());
+   
+   // Process output file
+   ifstream fh_resol;
+   fh_resol.open("superfeo3");
+   if (!fh_resol)
+      REPORT_ERROR(1,
+         "compute_FSC: Cannot open results file from Bresolve");
+   try {
+      string line;
+      
+      // Find the line that says radius
+      bool radius_found=false;
+      do {
+         if (!getline(fh_resol,line))
+            REPORT_ERROR(1,
+               "compute_FSC: unexpected end of file from Bresolve");
+         if (line.find("Radius")==0) radius_found=true;
+      } while (!radius_found);
+      
+      // Copy until the line that says Fourier
+      bool fourier_found=false;
+      vector<double> auxfreq, auxFSC;
+      vector<string> tokens;
+      do {
+         if (!getline(fh_resol,line))
+            REPORT_ERROR(1,
+               "compute_FSC: unexpected end of file from Bresolve");
+         if (line.find("Fourier")==0) {fourier_found=true; continue;}
+         
+         // It is a valid line
+         tokenize(line,tokens);
+         double f  =AtoF(tokens[1]);
+         double fsc=AtoF(tokens[4]);
+         auxfreq.push_back(f);
+         auxFSC. push_back(fsc);
+         if (resolution==-1 && fsc<0.5) resolution=f;
+      } while (!fourier_found);
+      
+      // Read the FSC
+      frequency.resize(auxfreq.size());
+      FSC.resize(auxfreq.size());
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency) {
+         frequency(i)=auxfreq[i];
+         FSC      (i)=auxFSC [i];
+      }
+      
+      // Now copy 
+   } catch (Xmipp_error XE) {
+      cerr << XE << endl
+           << "compute_resolution: Error reading resolution, ignoring it\n";
+   }
+   fh_resol.close();
+   
+   // Fix a bug of Bresolve
+   if (FSC(0)>1) FSC(0)=1;
+   
+   // Remove intermidiate files
+   system("rm superfeo.spi superfeo2.spi superfeo3");
+   return resolution;
+}
