@@ -973,7 +973,7 @@ template <class T>
    T   max=MAT_ELEM(*this,imax,jmax);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
       if (MAT_ELEM(*this,i,j)>max)
-         {max=MAT_ELEM(*this,imax,jmax); imax=i; jmax=j;}
+         {max=MAT_ELEM(*this,i,j); imax=i; jmax=j;}
 }
 
 /* Min index --------------------------------------------------------------- */
@@ -984,7 +984,7 @@ template <class T>
    T   min=MAT_ELEM(*this,imin,jmin);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
       if (MAT_ELEM(*this,i,j)>min)
-         {min=MAT_ELEM(*this,imin,jmin); imin=i; jmin=j;}
+         {min=MAT_ELEM(*this,i,j); imin=i; jmin=j;}
 }
 
 /* Statistics in region ---------------------------------------------------- */
@@ -1179,7 +1179,7 @@ template <class T>
 /* Radial average ---------------------------------------------------------- */
 template <class T>
 void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean) _THROW
+                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, const bool &rounding) _THROW
 {
    matrix1D<double> idx(2);
    
@@ -1199,11 +1199,12 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
    y=FINISHINGY(m)-YY(center_of_rot);
    distances(3)=(int)floor(sqrt(x*x+y*y));
    int dim=(int)CEIL(distances.compute_max())+1;
-   
+   if (rounding) dim++;
+
    // Define the vectors
    radial_mean.resize(dim);
-   matrix1D<int> radial_count(dim);
-   
+   radial_count.resize(dim);
+   radial_count.init_zeros();   
    
    /* Perform the radial sum and count pixels that contribute to
       every distance */
@@ -1212,7 +1213,10 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
       YY(idx)=i-YY(center_of_rot);
 	  XX(idx)=j-XX(center_of_rot);
 	  // Determine distance to the center
-	  int distance=(int)floor(idx.module());
+	  int distance;
+	  if (rounding) distance=(int)round(idx.module());
+	  else distance=(int)floor(idx.module());
+
       // Sum te value to the pixels with the same distance  
 	  radial_mean(distance)+=m(i,j);
 	  // Count the pixel
@@ -1340,7 +1344,7 @@ template <class T>
       solve(A,b,b);
       solve(A,A,A);
       matrix2D<double> B;
-      apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP);
+      apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP,Taux);
       a.scale_to_size(32,32,a);
       a.superpixel_reduce(a,2);
       a.superpixel_expand(a,2);
@@ -1359,8 +1363,8 @@ template <class T>
       a.max_index(imax,imax);
       a.min_index(imax,imax);
 	  
-	  matrix1D<int> center;
-	  radial_average(v,center,b);
+      matrix1D<int> center;
+      radial_average(v,center,b,center);
       // Singular value decomposition
       svdcmp(v,B,r,B);
       solve_by_svd(v,b,r,d);
@@ -1369,7 +1373,7 @@ template <class T>
 void instantiate_complex_matrix () {
       matrix2D<double_complex> a;
       matrix1D<double>         r;
-      
+
       // General functions for multidimensional arrays
       a.print_shape();
       int size[3]; a.get_size(size);
@@ -1409,6 +1413,8 @@ void instantiate_complex_matrix () {
       a.translate(vector_R2(0,0));
       a.rotate(60);
       a.scale_to_size(45,45);
+      matrix1D<int> center;
+      radial_average(a,center,b,center);
 	  	  
 }
 
@@ -1418,4 +1424,5 @@ void instantiate2D() {
    matrix2D<int>            V2; instantiate_matrix(V2);
    matrix2D<float>          V3; instantiate_matrix(V3);
    matrix2D<double>         V4; instantiate_matrix(V4);
+   matrix2D<long double>    V5; instantiate_matrix(V5);
 }

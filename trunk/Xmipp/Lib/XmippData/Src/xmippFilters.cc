@@ -446,6 +446,210 @@ template <class T>
    if (n!=0) return retval/((stddev_x*stddev_y)*n); else return 0;
 }
 
+/* Euclidian distance ------------------------------------------------------ */
+template <class T>
+   double euclidian_distance(const matrix1D<T> &x, const matrix1D<T> &y) {
+   SPEED_UP_temps;
+   double retval=0;
+   long n=0;
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x,y) {
+     retval+=(VEC_ELEM(x,i)-VEC_ELEM(y,i))*(VEC_ELEM(x,i)-VEC_ELEM(y,i));
+     n++;
+   }
+   if (n!=0) return sqrt(retval); else return 0;
+    
+}
+
+/* Euclidian distance ------------------------------------------------------ */
+template <class T>
+   double euclidian_distance(const matrix2D<T> &x, const matrix2D<T> &y,
+      const matrix2D<int> *mask) {
+   SPEED_UP_temps;
+   double retval=0;
+   long n=0;
+
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x,y) {
+     if (mask!=NULL)
+       if (!(*mask)(i,j)) continue;
+         retval+=(MAT_ELEM(x,i,j)-MAT_ELEM(y,i,j))*(MAT_ELEM(x,i,j)-MAT_ELEM(y,i,j));
+         n++;
+   }
+   if (n!=0) return sqrt(retval); else return 0;
+}
+
+template <class T>
+   double euclidian_distance(const matrix3D<T> &x, const matrix3D<T> &y,
+      const matrix3D<int> *mask) {
+   SPEED_UP_temps;
+   double retval=0;
+   long n=0;
+
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x,y) {
+     if (mask!=NULL)
+       if (!(*mask)(k,i,j)) continue;
+         retval+=(VOL_ELEM(x,k,i,j)-VOL_ELEM(y,k,i,j))*
+                 (VOL_ELEM(x,k,i,j)-VOL_ELEM(y,k,i,j));
+         n++;
+   }
+   if (n!=0) return sqrt(retval); else return 0;
+}
+
+/* Mutual information --------------------------------------------------- */
+template <class T>
+   double mutual_information(const matrix1D<T> &x, const matrix1D<T> &y,
+      int nx, int ny) {
+   SPEED_UP_temps;
+   long n=0;
+   histogram1D       histx,histy;
+   histogram2D       histxy;
+   matrix1D<T>       aux_x,aux_y;
+   matrix1D<double>  mx,my;
+   matrix2D<double>  mxy;
+   int xdim,ydim;
+   double MI=0.;
+   double HAB=0.;
+
+   aux_x.resize(x);
+   aux_y.resize(y);
+
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x,y) {
+     aux_x(n)= VEC_ELEM(x,i);
+     aux_y(n)= VEC_ELEM(y,i);
+     n++;
+   }
+   aux_x.resize(n);
+   aux_y.resize(n);
+
+   if (n!=0) {
+
+     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     compute_hist(aux_x,histx,nx);
+     compute_hist(aux_y,histy,ny);
+     compute_hist(aux_x,aux_y,histxy,nx,ny);
+
+     mx=histx;
+     my=histy;
+     mxy=histxy;
+     for(int i=0;i<nx;i++) {
+       double histxi=(histx(i)+1e-20)/n;
+       for(int j=0;j<ny;j++) {
+	 double histyj=(histy(j)+1e-20)/n;
+	 double histxyij=(histxy(i,j)+1e-20)/n;
+	 MI +=histxyij*log2(histxyij/(histxi*histyj));
+	 HAB+=histxyij*log2(histxyij);
+       }
+     }
+     return MI/(-HAB);
+   } else return 0;
+    
+}
+
+/* Mutual information ------------------------------------------------------ */
+template <class T>
+   double mutual_information(const matrix2D<T> &x, const matrix2D<T> &y,
+      int nx, int ny, const matrix2D<int> *mask) {
+   SPEED_UP_temps;
+   long n=0;
+   histogram1D       histx,histy;
+   histogram2D       histxy;
+   matrix1D<T>       aux_x,aux_y;
+   matrix1D<double>  mx,my;
+   matrix2D<double>  mxy;
+   int xdim,ydim;
+   double retval=0.;
+
+   x.get_dim(xdim,ydim);
+   aux_x.resize(xdim*ydim);
+   y.get_dim(xdim,ydim);
+   aux_y.resize(xdim*ydim);
+
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x,y) {
+     if (mask!=NULL)
+       if (!(*mask)(i,j)) continue;
+	 aux_x(n)= MAT_ELEM(x,i,j);
+	 aux_y(n)= MAT_ELEM(y,i,j);
+         n++;
+   }
+
+   aux_x.resize(n);
+   aux_y.resize(n);
+
+   if (n!=0) {
+
+     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     compute_hist(aux_x,histx,nx);
+     compute_hist(aux_y,histy,ny);
+     compute_hist(aux_x,aux_y,histxy,nx,ny);
+
+     mx=histx;
+     my=histy;
+     mxy=histxy;
+     for(int i=0;i<nx;i++) {
+       double histxi=(histx(i))/n;
+       for(int j=0;j<ny;j++) {
+	 double histyj=(histy(j))/n;
+	 double histxyij=(histxy(i,j))/n;
+	 if (histxyij>0) retval +=histxyij*log2(histxyij/(histxi*histyj));
+       }
+     }
+     return retval;
+   } else return 0;
+}
+
+template <class T>
+   double mutual_information(const matrix3D<T> &x, const matrix3D<T> &y,
+      int nx, int ny, const matrix3D<int> *mask) {
+
+   SPEED_UP_temps;
+   long n=0;
+   histogram1D       histx,histy;
+   histogram2D       histxy;
+   matrix1D<T>       aux_x,aux_y;
+   matrix1D<double>  mx,my;
+   matrix2D<double>  mxy;
+   int xdim,ydim,zdim;
+   double retval=0.;
+
+   x.get_dim(ydim,xdim,zdim);
+   aux_x.resize(xdim*ydim*zdim);
+   y.get_dim(ydim,xdim,zdim);
+   aux_y.resize(xdim*ydim*zdim);
+
+   FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x,y) {
+     if (mask!=NULL)
+       if (!(*mask)(k,i,j)) continue;
+	 aux_x(n)= VOL_ELEM(x,k,i,j);
+	 aux_y(n)= VOL_ELEM(y,k,i,j);
+         n++;
+   }
+   aux_x.resize(n);
+   aux_y.resize(n);
+
+   if (n!=0) {
+
+     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     compute_hist(aux_x,histx,nx);
+     compute_hist(aux_y,histy,ny);
+     compute_hist(aux_x,aux_y,histxy,nx,ny);
+
+     mx=histx;
+     my=histy;
+     mxy=histxy;
+     for(int i=0;i<nx;i++) {
+       double histxi=(histx(i))/n;
+       for(int j=0;j<ny;j++) {
+	 double histyj=(histy(j))/n;
+	 double histxyij=(histxy(i,j))/n;
+	 if (histxyij>0) retval +=histxyij*log2(histxyij/(histxi*histyj));
+       }
+     }
+     return retval;
+   } else return 0;
+}
+
 /* RMS --------------------------------------------------------------------- */
 template <class T>
    double rms(const matrix1D<T> &x, const matrix1D<T> &y,
@@ -1072,6 +1276,18 @@ template <class T>
    correlation_index(x3,y3);
    correlation_index(x2,y2,&mask2,&cont2);
    correlation_index(x3,y3,&mask3,&cont3);
+
+   euclidian_distance(x1,y1);
+   euclidian_distance(x2,y2);
+   euclidian_distance(x3,y3);
+   euclidian_distance(x2,y2,&mask2);
+   euclidian_distance(x3,y3,&mask3);
+   
+   mutual_information(x1,y1,position,position);
+   mutual_information(x2,y2,position,position);
+   mutual_information(x3,y3,position,position);
+   mutual_information(x2,y2,position,position,&mask2);
+   mutual_information(x3,y3,position,position,&mask3);
    
    rms(x1,y1);
    rms(x2,y2);

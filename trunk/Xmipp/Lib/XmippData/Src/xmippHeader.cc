@@ -330,6 +330,15 @@ void headerXmipp::write(FILE *fp, bool force_reversed) {
   }  
 }
 
+void headerXmipp::write(const FileName &name, bool force_reversed) {
+  FILE *fp; 
+  // Open file
+  if ((fp = fopen(name.c_str(), "wb")) == NULL)
+    REPORT_ERROR(1501,"HeaderXmipp::read: File " + name + " not found");
+  write(fp, force_reversed);
+  fclose(fp);
+}
+
 /* Clear header *******************************************************/
 void headerXmipp::clear() {
   /* Set all header to zero */

@@ -338,6 +338,192 @@ void correlation_matrix(const matrix2D<T> &m1, const matrix2D<T> &m2,
    CenterFFT(R,true);
 }
 
+
+/* 2D Fourier Ring Correlation ------------------------------------------------ */
+template <class T>
+void fourier_ring_correlation(matrix2D<T> const &m1, matrix2D<T> const &m2, double sam,
+		 matrix1D<double> &freq, matrix1D<double> &frc, matrix1D<double> &frc_noise) {
+
+  if (!m1.same_shape(m2)) {
+    cerr << "Error: matrices have different shapes!"<< endl;
+    exit(0);
+  }
+
+  matrix2D<T> aux(m1);
+  matrix1D<int> origin(3),radial_count;
+  matrix1D<double> tmp1,tmp2;
+  matrix1D<complex <double> > tmp3;
+  matrix2D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
+  matrix2D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  int dim=(int)FT1.RowNo()/2;
+  origin.init_zeros();
+
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux) {
+    dMij(aux,i,j)=abs(dMij(FT1,i,j))*abs(dMij(FT1,i,j));
+  }
+  tmp1.init_zeros();
+  radial_average(aux,origin,tmp1,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux) {
+    dMij(aux,i,j)=abs(dMij(FT2,i,j))*abs(dMij(FT2,i,j));
+  }
+  tmp2.init_zeros();
+  radial_average(aux,origin,tmp2,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FT1) {
+    dMij(FT1,i,j)=conj(dMij(FT1,i,j))*dMij(FT2,i,j);
+  }
+  tmp3.init_zeros();
+  radial_average(FT1,origin,tmp3,radial_count,TRUE);
+  FFT_magnitude(tmp3,frc);
+  frc.resize(dim);
+  frc_noise.resize(dim);
+  freq.resize(dim);
+  FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+    int j=i;
+    VEC_ELEM(freq,i)=(double)j/(dim*2*sam);
+    VEC_ELEM(frc,i)=VEC_ELEM(frc,i)/sqrt(VEC_ELEM(tmp1,i)*VEC_ELEM(tmp2,i));
+    VEC_ELEM(frc_noise,i)=2/sqrt((double)VEC_ELEM(radial_count,i));
+  }
+
+}
+
+/* 3D Fourier Ring Correlation ------------------------------------------------ */
+template <class T>
+void fourier_ring_correlation(matrix3D<T> const &m1, matrix3D<T> const &m2, double sam,
+		 matrix1D<double> &freq, matrix1D<double> &frc, matrix1D<double> &frc_noise) {
+
+  if (!m1.same_shape(m2)) {
+    cerr << "Error: matrices have different shapes!"<< endl;
+    exit(0);
+  }
+
+  matrix3D<T> aux(m1);
+  matrix1D<int> origin(3),radial_count;
+  matrix1D<double> tmp1,tmp2;
+  matrix1D<complex <double> > tmp3;
+  matrix3D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
+  matrix3D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  int dim=(int)FT1.RowNo()/2;
+  origin.init_zeros();
+
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux) {
+    dVkij(aux,k,i,j)=abs(dVkij(FT1,k,i,j))*abs(dVkij(FT1,k,i,j));
+  }
+  tmp1.init_zeros();
+  radial_average(aux,origin,tmp1,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux) {
+    dVkij(aux,k,i,j)=abs(dVkij(FT2,k,i,j))*abs(dVkij(FT2,k,i,j));
+  }
+  tmp2.init_zeros();
+  radial_average(aux,origin,tmp2,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1) {
+    dVkij(FT1,k,i,j)=conj(dVkij(FT1,k,i,j))*dVkij(FT2,k,i,j);
+  }
+  tmp3.init_zeros();
+  radial_average(FT1,origin,tmp3,radial_count,TRUE);
+  FFT_magnitude(tmp3,frc);
+  frc.resize(dim);
+  frc_noise.resize(dim);
+  freq.resize(dim);
+  FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+    int j=i;
+    VEC_ELEM(freq,i)=(double)j/(dim*2*sam);
+    VEC_ELEM(frc,i)=VEC_ELEM(frc,i)/sqrt(VEC_ELEM(tmp1,i)*VEC_ELEM(tmp2,i));
+    VEC_ELEM(frc_noise,i)=2/sqrt((double)VEC_ELEM(radial_count,i));
+  }
+
+}
+
+/* 2D Differential Phase residual ------------------------------------------------ */
+template <class T>
+void differential_phase_residual(matrix2D<T> const &m1, matrix2D<T> const &m2, double sam,
+		 matrix1D<double> &freq, matrix1D<double> &dpr) {
+
+  if (!m1.same_shape(m2)) {
+    cerr << "Error: matrices have different shapes!"<< endl;
+    exit(0);
+  }
+
+  matrix2D<T> aux(m1);
+  matrix1D<int> origin(3),radial_count;
+  matrix1D<double> tmp1,tmp2;
+  matrix1D<complex <double> > tmp3;
+  matrix2D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
+  matrix2D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  int dim=(int)FT1.RowNo()/2;
+
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux) {
+    dMij(aux,i,j)=abs(dMij(FT1,i,j))+abs(dMij(FT2,i,j));
+  }
+  tmp1.init_zeros();
+  radial_average(aux,origin,tmp1,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux) {
+    dMij(aux,i,j)*=realWRAP(RAD2DEG(
+                     (atan2(dMij(FT1,i,j).imag(),dMij(FT1,i,j).real())) -
+                     (atan2(dMij(FT2,i,j).imag(),dMij(FT2,i,j).real()))) 
+				  ,-180,180);
+    dMij(aux,i,j)*=realWRAP(RAD2DEG(
+                     (atan2(dMij(FT1,i,j).imag(),dMij(FT1,i,j).real())) -
+                     (atan2(dMij(FT2,i,j).imag(),dMij(FT2,i,j).real()))) 
+				  ,-180,180);
+  }
+  tmp2.init_zeros();
+  radial_average(aux,origin,tmp2,radial_count,TRUE);
+  dpr=tmp2/tmp1;
+  dpr=SQRTnD(dpr);
+  dpr.resize(dim);
+  freq.resize(dim);
+  FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+    int j=i;
+    VEC_ELEM(freq,i)=(double)j/(dim*2*sam);
+  }
+
+}
+
+/* 3D Differential Phase residual ------------------------------------------------ */
+template <class T>
+void differential_phase_residual(matrix3D<T> const &m1, matrix3D<T> const &m2, double sam,
+		 matrix1D<double> &freq, matrix1D<double> &dpr) {
+
+  if (!m1.same_shape(m2)) {
+    cerr << "Error: matrices have different shapes!"<< endl;
+    exit(0);
+  }
+  matrix3D<T> aux(m1);
+  matrix1D<int> origin(3),radial_count;
+  matrix1D<double> tmp1,tmp2;
+  matrix1D<complex <double> > tmp3;
+  matrix3D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
+  matrix3D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  int dim=(int)FT1.RowNo()/2;
+
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux) {
+    dVkij(aux,k,i,j)=abs(dVkij(FT1,k,i,j))+abs(dVkij(FT2,k,i,j));
+  }
+  tmp1.init_zeros();
+  radial_average(aux,origin,tmp1,radial_count,TRUE);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux) {
+    dVkij(aux,k,i,j)*=realWRAP(RAD2DEG(
+                     (atan2(dVkij(FT1,k,i,j).imag(),dVkij(FT1,k,i,j).real())) -
+                     (atan2(dVkij(FT2,k,i,j).imag(),dVkij(FT2,k,i,j).real()))) 
+				  ,-180,180);
+    dVkij(aux,k,i,j)*=realWRAP(RAD2DEG(
+                     (atan2(dVkij(FT1,k,i,j).imag(),dVkij(FT1,k,i,j).real())) -
+                     (atan2(dVkij(FT2,k,i,j).imag(),dVkij(FT2,k,i,j).real()))) 
+				  ,-180,180);
+  }
+  tmp2.init_zeros();
+  radial_average(aux,origin,tmp2,radial_count,TRUE);
+  dpr=tmp2/tmp1;
+  dpr=SQRTnD(dpr);
+  dpr.resize(dim);
+  freq.resize(dim);
+  FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+    int j=i;
+    VEC_ELEM(freq,i)=(double)j/(dim*2*sam);
+  }
+
+}
+
 /* Convolution of series --------------------------------------------------- */
 template <class T>
 void series_convolution(matrix1D<T> &series1, matrix1D<T> &series2,
@@ -455,6 +641,13 @@ void instantiate_FFT() {
    matrix2D<double> R;
    auto_correlation_matrix(m1,R);
    correlation_matrix(m1,m1,R);
+   matrix1D<double> t;
+   double s;
+   matrix3D<double> m3;
+   differential_phase_residual(m1,m1,s,t,t);
+   differential_phase_residual(m3,m3,s,t,t);
+   fourier_ring_correlation(m1,m1,s,t,t,t);
+   fourier_ring_correlation(m3,m3,s,t,t,t);
    
    matrix1D<double> series1;
    series_convolution(series1, series1, series1, false);

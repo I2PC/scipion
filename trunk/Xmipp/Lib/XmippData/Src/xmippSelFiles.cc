@@ -244,7 +244,6 @@ void SelFile::read(const FileName &sel_name, int overriding) _THROW {
    if (overriding) fn_sel=sel_name;
    go_first_ACTIVE();
 }
-
 /* Merge ------------------------------------------------------------------- */
 void SelFile::merge(const FileName &sel_name) {
    SelFile SF(sel_name);
@@ -332,6 +331,28 @@ SelFile SelFile::operator + (SelFile &SF) {
    result=*this;
    result.merge(SF);
    return result;
+}
+
+/* Split randomly in two equally large selfiles ---------------------------- */
+void SelFile::split_in_two(SelFile &SF1,SelFile &SF2) {
+  SelFile  SFtmp;
+  SF1=*this;
+  SFtmp=SF1.randomize();
+  SF1.clear();
+  int N=SFtmp.ImgNo();
+  SF1.reserve(N);
+  SF2.reserve(N);
+  int half=N/2;
+  SFtmp.go_beginning();
+  for (int i=0;i<N; i++) {
+    if (i<half) SF1.insert(SFtmp.current());
+    else SF2.insert(SFtmp.current());
+    if (i<N-1) SFtmp.NextImg();
+  }  
+  SFtmp=SF1.sort_by_filenames();
+  SF1=SFtmp;
+  SFtmp=SF2.sort_by_filenames();
+  SF2=SFtmp;
 }
 
 /* Adjust to label --------------------------------------------------------- */

@@ -816,6 +816,7 @@ void instantiante_xmippFuncs() {
    int            *i, **ii, ***iii;
    float          *f, **ff, ***fff;
    double         *d, **dd, ***ddd;
+   long double    *ld,**ldd,***lddd;
    double_complex *c, **cc, ***ccc;
 
    ask_Tvector(h,  1,1);         free_Tvector(h,  1,1);
@@ -833,6 +834,9 @@ void instantiante_xmippFuncs() {
    ask_Tvector(d,  1,1);         free_Tvector(d,  1,1);
    ask_Tmatrix(dd, 1,1,1,1);     free_Tmatrix(dd, 1,1,1,1);
    ask_Tvolume(ddd,1,1,1,1,1,1); free_Tvolume(ddd,1,1,1,1,1,1);
+   ask_Tvector(ld,  1,1);        free_Tvector(ld,  1,1);
+   ask_Tmatrix(ldd, 1,1,1,1);    free_Tmatrix(ldd, 1,1,1,1);
+   ask_Tvolume(lddd,1,1,1,1,1,1);free_Tvolume(lddd,1,1,1,1,1,1);
    ask_Tvector(c,  1,1);         free_Tvector(c,  1,1);
    ask_Tmatrix(cc, 1,1,1,1);     free_Tmatrix(cc, 1,1,1,1);
    ask_Tvolume(ccc,1,1,1,1,1,1); free_Tvolume(ccc,1,1,1,1,1,1);

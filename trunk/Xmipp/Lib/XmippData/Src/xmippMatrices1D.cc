@@ -523,4 +523,5 @@ void instantiate1D() {
    matrix1D<int>            V2; instantiate_vector(V2);
    matrix1D<float>          V3; instantiate_vector(V3);
    matrix1D<double>         V4; instantiate_vector(V4);
+   matrix1D<long double>    V5; instantiate_vector(V5);
 }

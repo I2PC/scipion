@@ -522,7 +522,7 @@ template <class T>
    T   max=VOL_ELEM(*this,kmax,imax,jmax);
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
       if (VOL_ELEM(*this,k,i,j)>max)
-         {max=VOL_ELEM(*this,kmax,imax,jmax); kmax=k; imax=i; jmax=j;}
+         {max=VOL_ELEM(*this,k,i,j); kmax=k; imax=i; jmax=j;}
 }
 
 /* Min index --------------------------------------------------------------- */
@@ -533,7 +533,7 @@ template <class T>
    T   min=VOL_ELEM(*this,kmin,imin,jmin);
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
       if (VOL_ELEM(*this,k,i,j)>min)
-         {min=VOL_ELEM(*this,kmin,imin,jmin); kmin=k; imin=i; jmin=j;}
+         {min=VOL_ELEM(*this,k,i,j); kmin=k; imin=i; jmin=j;}
 }
 
 /* Statistics in region ---------------------------------------------------- */
@@ -617,7 +617,8 @@ template <class T>
 /* Radial average ---------------------------------------------------------- */
 template <class T>
 void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean) _THROW
+                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+                    const bool &rounding) _THROW
 {
    matrix1D<double> idx(3);
    
@@ -644,10 +645,12 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
    distances(7)=(int)floor(sqrt(x*x+y*y+z*z));
 
    int dim=(int)CEIL(distances.compute_max())+1;
+   if (rounding) dim++;
    
    // Define the vectors
    radial_mean.resize(dim);
-   matrix1D<int> radial_count(dim);
+   radial_count.resize(dim);
+   radial_count.init_zeros();
    
    /* Perform the radial sum and count pixels that contribute to
       every distance */
@@ -656,13 +659,16 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
       YY(idx)=i-YY(center_of_rot);
       XX(idx)=j-XX(center_of_rot);
       // Determine distance to the center
-      int distance=(int)floor(idx.module());
+      int distance;
+      if (rounding) distance=(int)round(idx.module());
+      else distance=(int)floor(idx.module());
+      
       // Sum te value to the pixels with the same distance  
       radial_mean(distance)+=m(k,i,j);
       // Count the pixel
-      radial_count(distance)++;      	  	  
+      radial_count(distance)++;
    }
-   
+
    // Perform the mean
    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
       radial_mean(i)/=(T)radial_count(i);
@@ -757,7 +763,8 @@ template <class T>
       a.for_all_slices(&slice_minus_first);
       a.for_all_slices(&slice_first);
       cut_to_common_size(a,a);
-      radial_average(a,pixel,vectorT);
+      matrix1D<int> count;
+      radial_average(a,pixel,vectorT,count);
 }
 
 void instantiate_complex_matrix3D () {
@@ -797,7 +804,8 @@ void instantiate_complex_matrix3D () {
       a.for_all_slices(&slice_minus_first);
       a.for_all_slices(&slice_first);
       cut_to_common_size(a,a);
-      radial_average(a,pixel,vectorT);
+      matrix1D<int> count;
+      radial_average(a,pixel,vectorT,count);
 }
 
 void instantiate3D() {
@@ -806,4 +814,5 @@ void instantiate3D() {
    matrix3D<int>            V2; instantiate_matrix3D(V2);
    matrix3D<float>          V3; instantiate_matrix3D(V3);
    matrix3D<double>         V4; instantiate_matrix3D(V4);
+   matrix3D<long double>    V5; instantiate_matrix3D(V5);
 }

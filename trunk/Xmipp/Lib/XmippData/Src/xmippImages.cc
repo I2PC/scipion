@@ -206,11 +206,6 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
   matrix2D<double>    A(3,3);
   double psi=realWRAP(header.Psi(),-180,180);
   double theta=realWRAP(header.Theta(),-180,180);
-  bool is_mirror=false;
-  bool flip_mirrors=FALSE;
-#ifdef FLIP_MIRRORS
-  flip_mirrors=TRUE;
-#endif
 
   A.init_identity();
 
@@ -229,12 +224,6 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
       Euler_angles2matrix (header.Phi(),0.,header.Psi(),A);
     } else { 
       // For tilted images: only apply Psi 
-      if (flip_mirrors && abs(theta)>90.) {
-	// Take mirror images (up_down) into account
-	theta=realWRAP(theta+180.,-180,180);
-	psi=-psi;
-	is_mirror=true;
-      }
       // Take another_set into account
       if (theta<0.) {
 	theta=-theta;
@@ -244,11 +233,6 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
     }
     A(0,2)=-header.fXoff();   
     A(1,2)=-header.fYoff();
-    if (flip_mirrors && is_mirror) {
-      // Mirror image
-      A(0,0)=-A(0,0);
-      A(0,1)=-A(0,1);
-    }
   }
   return A;
 }
@@ -473,6 +457,8 @@ template <class T>
    img.write(fh,  reversed,image_type);
    imgx.read(name,skip_type_check,reversed);
    imgx.write(name,force_reversed);
+   imgx.get_transformation_matrix(reversed);
+   imgx.check_oldxmipp_header();
 
 
 }

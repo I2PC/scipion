@@ -51,13 +51,13 @@ void Prog_parameters::show() {
 }
 
 void Prog_parameters::usage() {
-   cerr << "   -i <input file>          : either an image or a selection file\n";
+   cerr << "   -i <input file>          : either an image/volume or a selection file\n";
    if (each_image_produces_an_output) {
       cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
            << "  [-oext <extension>]       : if wanted in case of a selection file\n"
 	   << "  [-oroot <root>]           : if wanted in case of a selection file\n";
    } else {
-     cerr  << "  [-dont_apply_geo]         : do not apply transformation stored in the header of 2D-images\n";
+     cerr  << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
    }
 }
 

@@ -1784,4 +1784,5 @@ void instantiate_Numerical() {
    int            i; instantiate_Numerical_T(i);
    float          f; instantiate_Numerical_T(f);
    double         d; instantiate_Numerical_T(d);
+   long double   ld; instantiate_Numerical_T(ld);
 }
