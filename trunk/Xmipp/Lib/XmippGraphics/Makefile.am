@@ -12,6 +12,8 @@ libXmippGraphics_@host_os@_la_SOURCES = Src/showTools.cc      showTools_moc.cc \
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 LIBADD = @QT_LIBS@
 
+MOSTLYCLEANFILES = *_moc.cc
+
 showTools_moc.cc :
 	@QT_MOC@ showTools.hh -o showTools_moc.cc
 show2D_moc.cc :
