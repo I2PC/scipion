@@ -45,7 +45,6 @@ FileName       fn_out;   	// output file
 FileName       cb_in = "";   	// Code vectors input file
 FileName       tmpN;		// Temporary variable
 unsigned       verb = 0;	// Verbosity level
-bool           norm = 1;	// Normalize?
 
 /* Parameters ============================================================== */
    try {
@@ -59,12 +58,9 @@ bool           norm = 1;	// Normalize?
 	 exit(EXIT_FAILURE);
        } 
 
-       verb = AtoI(get_param(argc, argv, "-verb", "0"));
+       verb = AtoI(get_param(argc, argv, "-verb", "1"));
 
-       if (check_param(argc, argv, "-norm"))
-          norm = true;
-       else norm = false;
-       
+     
        if (argc == 1) {Usage(argv);}
        
    }
@@ -86,10 +82,6 @@ bool           norm = 1;	// Normalize?
    cout << "Input data file : " << fn_in << endl;
    cout << "Output file name : " << fn_out << endl;
    cout << "verbosity level = " << verb << endl;
-   if (norm)
-     cout << "Normalize input data" << endl;
-   else
-     cout << "Do not normalize input data " << endl;
 
 
 /* Open training vector ================================================= */
@@ -111,25 +103,21 @@ bool           norm = 1;	// Normalize?
 
 
  try {
-   if (norm) {
-   	cout << "Normalizing....." << endl;
-   	ts.normalize();  		    // Normalize input data        
-   }	
 
    // Define PCA class and do the projection      
    xmippPC myPCA;
    
    xmippTextualListener myListener;	    // Define the listener class
    myListener.setVerbosity() = verb;	    // Set verbosity level
-   myPCA.setListener(&myListener);       // Set Listener
+   myPCA.setListener(&myListener);          // Set Listener
 
-   myPCA.reset(ts);              // find eigenvectors and eigenvalues
+   myPCA.reset(ts);                         // find eigenvectors and eigenvalues
  
   /******************************************************* 
       Saving all kind of Information 
   *******************************************************/
 
-   cout << "Saving eigenvalues as " << fn_out << ".eval ....." << endl;  
+   cout << endl << "Saving eigenvalues as " << fn_out << ".eval ....." << endl;  
    tmpN = fn_out.c_str() + (string) ".eval"; 
    ofstream evalS(tmpN.c_str());
    double cum = 0;
@@ -160,10 +148,6 @@ bool           norm = 1;	// Normalize?
    infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
    infS << "Number of feature vectors: " << ts.size() << endl;
    infS << "Number of variables: " << ts.itemAt(0).size() << endl;
-   if (norm)
-     infS << "Input data normalized" << endl;
-   else
-     infS << "Input data not normalized" << endl;
 
    infS.flush();    
 
@@ -189,11 +173,9 @@ void Usage (char **argv) {
      "\n"
      "\n    -din    file_in           Input data file (plain data)"
      "\n    -cout   file_out          Base name for output data files:"
-     "\n    -norm            	      Normalize training data (default)"     
-     "\n    -verb      verbosity      Information level while running: "     
-     "\n    			      0: No information (default)"     
-     "\n    			      1: Progress bar"     
-     "\n    			      2: Code vectors change between iterations"     
+     "\n    -verb   level	      Show progress bar: "
+     "\n    			      0: Do not show the progress bar"
+     "\n    			      1: Show the progress bar (default)"
      "\n			   \n"
      ,argv[0]);
      exit(0);
