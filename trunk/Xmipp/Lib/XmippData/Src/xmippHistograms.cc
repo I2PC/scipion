@@ -118,20 +118,28 @@ double histogram1D::percentil(double percent_mass) {
 
    // Any other case, find index of corresponding piece
    required_mass=(double)no_samples*percent_mass/100.0;
+   int N_diff_from_0=0;
    while (acc<required_mass) {
       acc += VEC_ELEM(*this,i);
+      if (VEC_ELEM(*this,i)>0) N_diff_from_0++;
       i++;
    }
    
    // If the sum is just the one we want OK
    if   (acc==required_mass) percentil_i=i;
-   
+   // If there is only one sample different from 0
+   // then there is no way of setting the threshold in the middle
+   // Let's put it at the beginning of the bin
+   else if (N_diff_from_0==1) percentil_i=i-1;
    // If not, then go back a step and compute which fraction of the
    // bar is needed to finish the required mass
    else {
-      i--;
-      acc -= VEC_ELEM(*this,i);
-      percentil_i=i+(required_mass-acc)/(double) VEC_ELEM(*this,i);
+      /* CO: We cannot assure that there is at least what is supposed to be
+             above this threshold. Let's move to the safe side
+	 i--;
+	 acc -= VEC_ELEM(*this,i);
+	 percentil_i=i+(required_mass-acc)/(double) VEC_ELEM(*this,i); */
+      percentil_i=i-1;
    }
    
    // Now translate from index to range
