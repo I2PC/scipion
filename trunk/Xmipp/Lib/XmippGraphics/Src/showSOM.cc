@@ -357,10 +357,14 @@ void ShowSOM::showRepresentedAverageTogether()
 	_ave = Image (projXdim, projYdim);
 
       // Write _ave to a temp file
+      // Need to convert it to ImageXmipp because Selfile can't handle plain
+      // Image files when it is being read back in.
+      ImageXmipp xm_ave;
+      xm_ave = _ave;
       int tempfd;
       string tmpImgfile = makeTempFile (tempfd);
       // Add that image file to the SelFile and save it
-      _ave.write (tmpImgfile);
+      xm_ave.write (tmpImgfile);
       SFAvgs.insert (tmpImgfile);
       ::close (tempfd);
       /*
