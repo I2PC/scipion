@@ -36,6 +36,7 @@ int main (int argc, char *argv[]) {
    Crystal_ART_Parameters crystal_art_prm;
    VolumeXmipp            vol_voxels;
    GridVolume             vol_blobs;
+   GridVolume             *vol_blobs_var=NULL;
    int                    crystal_mode;
 
 // Read Art Parameters
@@ -54,9 +55,10 @@ int main (int argc, char *argv[]) {
 // Call main ART routine
    try {
       if (!crystal_mode)
-         Basic_ROUT_Art(art_prm,dummy,vol_voxels,vol_blobs);
+         Basic_ROUT_Art(art_prm,dummy,vol_voxels,vol_blobs,vol_blobs_var);
       else
-         Basic_ROUT_Art(art_prm,crystal_art_prm,vol_voxels,vol_blobs);
+         Basic_ROUT_Art(art_prm,crystal_art_prm,vol_voxels,vol_blobs,
+            vol_blobs_var);
    cerr.flush();
    } catch (Xmipp_error XE) {cout << XE; exit(1);}
    exit(0);
