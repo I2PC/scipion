@@ -49,6 +49,7 @@ FileName       tmpN;		// Temporary variable
 unsigned       k;               // Dimension of projected subspace  
 float          p;               // Percent of explained variance  
 bool           met;             // project by k?
+bool           recon;           // Reconstruct original data using k components?
 
 /* Parameters ============================================================== */
    try {
@@ -63,6 +64,11 @@ bool           met;             // project by k?
          Usage(argv); 
 	 exit(EXIT_FAILURE);
        } 
+
+       if (check_param(argc, argv, "-recon"))
+          recon = true;
+       else 
+          recon = false;
 
        if (check_param(argc, argv, "-k")) {
        		if (check_param(argc, argv, "-p")) {
@@ -109,6 +115,8 @@ bool           met;             // project by k?
    	cout << "Dimension of projected subspace : " << k << endl;
    else 
    	cout << "Percent of explained variance : " << p << endl;
+   if (recon)
+   	cout << "Reconstruct original data" << endl;
 
 
 /* Open training vector ================================================= */
@@ -187,7 +195,11 @@ bool           met;             // project by k?
 
    // Do the projection
 
-   cout << "projecting into " << k << " dimensions..." << endl; 
+ // Calculate mean of the vectors
+  xmippCTVectors statVec(0, true);
+  statVec = ts.getStatVector();
+
+  cout << "projecting into " << k << " dimensions..." << endl; 
   int size=ts.size();
   int dim = ts.itemAt(0).size();
    
@@ -200,12 +212,31 @@ bool           met;             // project by k?
        for (int z = 0; z < size; z++) {
          double cum = 0;
          for (int j = 0; j < dim; j++) {
-           cum += ev.theItems[i][j]*ts.theItems[z][j];  
+           cum += ev.theItems[i][j]*(ts.theItems[z][j]-statVec.theItems[0][j]);  
          } // j
          projectedTs.theItems[z][i] = cum; 
        }  // z
     } // i
-    
+
+  xmippCTVectors reconsTs(0, true);
+  if (recon) {
+    cout << "Estimating original data using " << k << " components..." << endl; 
+    reconsTs.theItems.resize(size);
+    reconsTs.theTargets.resize(size);
+    for (int h = 0; h < size; h++) reconsTs.theItems[h].resize(dim, 0); 
+
+      for (int i = 0; i < dim; i++) {
+         for (int z = 0; z < size; z++) {
+           double cum = 0;
+           for (int j = 0; j < k; j++) {
+             cum += ev.theItems[j][i]*projectedTs.theItems[z][j];  
+           } // j
+           cum += statVec.theItems[0][i];  
+           reconsTs.theItems[z][i] = cum; 
+         }  // z
+      } // i
+  } // if recon
+  
   /******************************************************* 
       Saving all kind of Information 
   *******************************************************/
@@ -220,6 +251,19 @@ bool           met;             // project by k?
      projS << " " << ts.theTargets[j] << endl;  
    }
    projS.flush();    
+
+   if (recon) {
+     cout << "Saving reconstructed vectors as " << fn_out << ".recon ....." << endl;  
+     tmpN = fn_out.c_str() + (string) ".recon"; 
+     ofstream rS(tmpN.c_str());
+     rS << dim << " " << size << endl;
+     for (int j = 0; j < size ; j++) {
+       for (int i = 0; i < dim; i++)
+         rS << " " << reconsTs.theItems[j][i];
+       rS << " " << ts.theTargets[j] << endl;  
+     }
+     rS.flush();    
+   }
 
    cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;  
    tmpN = fn_out.c_str() + (string) ".inf"; 
@@ -237,6 +281,8 @@ bool           met;             // project by k?
    	infS << "Percent of explained variance : " << p << endl;
    	infS << "Number of final components : " << k << endl;
    }
+   if (recon)
+   	infS << "Reconstruct original data" << endl;
    infS.flush();    
 
    cout << endl;
@@ -264,6 +310,9 @@ void Usage (char **argv) {
      "\n    -cout   file_out          Base name for output data files"
      "\n    -k      k                 Number of components"
      "\n    -p      p                 Percent of the explained variance"
+     "\n    -recon  true/false        If true, reconstruct original data"
+     "\n    			      using the k principal components"
+     "\n    			      (default: false)"
      "\n			   \n"
      ,argv[0]);
      exit(0);
