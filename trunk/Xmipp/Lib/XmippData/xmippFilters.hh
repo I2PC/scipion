@@ -25,6 +25,8 @@
 #ifndef _XMIPP_FILTERS_HH
 #  define _XMIPP_FILTERS_HH
 
+#define LOG2 0.693147181
+
 #include "xmippImages.hh"
 #include "xmippVolumes.hh"
 #include "xmippMasks.hh"

@@ -499,6 +499,7 @@ template <class T>
    double mutual_information(const matrix1D<T> &x, const matrix1D<T> &y,
       int nx, int ny) {
    SPEED_UP_temps;
+
    long n=0;
    histogram1D       histx,histy;
    histogram2D       histxy;
@@ -508,6 +509,7 @@ template <class T>
    int xdim,ydim;
    double MI=0.;
    double HAB=0.;
+   double retval=0;
 
    aux_x.resize(x);
    aux_y.resize(y);
@@ -522,8 +524,8 @@ template <class T>
 
    if (n!=0) {
 
-     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
-     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (nx==0) nx=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
      compute_hist(aux_x,histx,nx);
      compute_hist(aux_y,histy,ny);
      compute_hist(aux_x,aux_y,histxy,nx,ny);
@@ -532,15 +534,14 @@ template <class T>
      my=histy;
      mxy=histxy;
      for(int i=0;i<nx;i++) {
-       double histxi=(histx(i)+1e-20)/n;
+       double histxi=(histx(i))/n;
        for(int j=0;j<ny;j++) {
-	 double histyj=(histy(j)+1e-20)/n;
-	 double histxyij=(histxy(i,j)+1e-20)/n;
-	 MI +=histxyij*log2(histxyij/(histxi*histyj));
-	 HAB+=histxyij*log2(histxyij);
+	 double histyj=(histy(j))/n;
+	 double histxyij=(histxy(i,j))/n;
+	 if (histxyij>0) retval +=histxyij*log(histxyij/(histxi*histyj))/LOG2;
        }
      }
-     return MI/(-HAB);
+     return retval;
    } else return 0;
     
 }
@@ -577,8 +578,8 @@ template <class T>
 
    if (n!=0) {
 
-     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
-     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (nx==0) nx=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
      compute_hist(aux_x,histx,nx);
      compute_hist(aux_y,histy,ny);
      compute_hist(aux_x,aux_y,histxy,nx,ny);
@@ -591,7 +592,7 @@ template <class T>
        for(int j=0;j<ny;j++) {
 	 double histyj=(histy(j))/n;
 	 double histxyij=(histxy(i,j))/n;
-	 if (histxyij>0) retval +=histxyij*log2(histxyij/(histxi*histyj));
+	 if (histxyij>0) retval +=histxyij*log(histxyij/(histxi*histyj))/LOG2;
        }
      }
      return retval;
@@ -629,8 +630,8 @@ template <class T>
 
    if (n!=0) {
 
-     if (nx==0) nx=(int)(log2(n)+1); //Assume Gaussian distribution
-     if (ny==0) ny=(int)(log2(n)+1); //Assume Gaussian distribution
+     if (nx==0) nx=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
+     if (ny==0) ny=(int)((log((double)n)/LOG2)+1); //Assume Gaussian distribution
      compute_hist(aux_x,histx,nx);
      compute_hist(aux_y,histy,ny);
      compute_hist(aux_x,aux_y,histxy,nx,ny);
@@ -643,7 +644,7 @@ template <class T>
        for(int j=0;j<ny;j++) {
 	 double histyj=(histy(j))/n;
 	 double histxyij=(histxy(i,j))/n;
-	 if (histxyij>0) retval +=histxyij*log2(histxyij/(histxi*histyj));
+	 if (histxyij>0) retval +=histxyij*log(histxyij/(histxi*histyj))/LOG2;
        }
      }
      return retval;
@@ -1307,5 +1308,6 @@ template <class T>
 void instantiate_filters() {
     int    i; instantiate_filtersT(i);
     double d; instantiate_filtersT(d);
+    float  f; instantiate_filtersT(f);
 }
 
