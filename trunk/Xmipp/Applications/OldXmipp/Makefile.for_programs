@@ -52,7 +52,7 @@ endif
 ifdef PROJ
 clean:
 	@echo "Removing $(FINAL_PROJ) ..."
-	@rm -f $(FINAL_PROJ) $(OBJ)
+	@rm -f $(FINAL_PROJ) $(OBJ) $(XMIPPDIR)/bin/$(FINAL_PROJ)
 else
 clean:
 endif
