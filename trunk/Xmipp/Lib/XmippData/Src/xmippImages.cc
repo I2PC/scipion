@@ -240,7 +240,7 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T>
 bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
-  bool reversed, bool apply_geo, bool apply_shifts) _THROW {
+  bool reversed, bool apply_geo, bool only_apply_shifts) _THROW {
   FILE *fp;
   bool ret;
 
@@ -256,11 +256,11 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
   {
 
-    if (apply_geo || apply_shifts) {
+    if (apply_geo || only_apply_shifts) {
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
       T  outside=DIRECT_MAT_ELEM(img,0,0);
-      img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(apply_shifts),IS_INV,DONT_WRAP,outside);
+      img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(only_apply_shifts),IS_INV,DONT_WRAP,outside);
     } 
 
     // scale if necessary (check this with Carlos)
