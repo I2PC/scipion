@@ -179,13 +179,13 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
 
       //#define DEBUG
       #ifdef DEBUG
-	 Itheo.write((string)"theo_"+fn_out+".xmp");
-	 Itheo_CTF.write((string)"theo_CTF_"+fn_out+".xmp");
-	 Ireal.write((string)"real_"+fn_out+".xmp");
+	 Itheo.write(fn_out.add_prefix("theo_")+".xmp");
+	 Itheo_CTF.write(fn_out.add_prefix("theo_CTF_")+".xmp");
+	 Ireal.write(fn_out.add_prefix("real_")+".xmp");
 	 ImageXmipp save;
 	 save()=Itheo()-mu(it)*Itheo_CTF();
-	 save.write((string)"diff_"+fn_out+".xmp");
-	 // cout << "Press any key to continue\n"; char c; cin >> c;
+	 save.write(fn_out.add_prefix("diff_")+".xmp");
+	 cout << "Press any key to continue\n"; char c; cin >> c;
       #endif
 
       // Apply IDR process
@@ -248,7 +248,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       }
 
       // Convert to blobs
-      if (convert_to_blobs) {
+      if (convert_to_blobs && prm.it<prm.idr_iterations) {
          prm.vol_blobs.clear();
          voxels2blobs(&vol_recons, prm.art_prm->blob, prm.vol_blobs,
             prm.art_prm->grid_type, prm.art_prm->grid_relative_size, 0.05, NULL,
