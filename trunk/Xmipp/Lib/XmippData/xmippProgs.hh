@@ -65,6 +65,8 @@ public:
    FileName fn_out;
    /// Input file
    FileName fn_in;
+   /// This flag for application of the transformation as stored in the header
+   bool     apply_geo;
    /// Use this flag for not writing at every image
    bool     each_image_produces_an_output;
    /// Use this flag for not producing a time bar
@@ -72,7 +74,7 @@ public:
 public:
    /// Empty constructor
    Prog_parameters() {oroot=oext=fn_out=fn_in="";
-      each_image_produces_an_output=TRUE; allow_time_bar=TRUE;}
+      each_image_produces_an_output=TRUE; allow_time_bar=TRUE; apply_geo=FALSE;}
    /// Read the basic parameters defined for this class
    virtual void read(int argc, char **argv) _THROW;
    /// Show these parameters

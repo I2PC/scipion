@@ -32,10 +32,14 @@ void Prog_parameters::read(int argc, char **argv) _THROW {
       fn_out = get_param(argc,argv,"-o","");
       oext   = get_param(argc,argv,"-oext","");
       oroot  = get_param(argc,argv,"-oroot","");
+      if (check_param(argc,argv,"-apply_geo")) apply_geo=TRUE;
+      else if (check_param(argc,argv,"-dont_apply_geo")) apply_geo=FALSE;
 }
 
 void Prog_parameters::show() {
    cout << "Input File: " << fn_in << endl;
+   if (apply_geo) 
+     cout << "Applying transformation stored in header of 2D-image"<< endl;
    if (each_image_produces_an_output) {
       if (fn_out!="") cout << "Output File: " << fn_out << endl;
       if (oext!="")   cout << "Output Extension: " << oext << endl;
@@ -49,6 +53,8 @@ void Prog_parameters::usage() {
       cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
            << "  [-oext <extension>]       : if wanted in case of a selection file\n"
 	   << "  [-oroot <root>]           : if wanted in case of a selection file\n";
+   cerr <<    "  [-apply_geo]              : apply transformation stored in header of 2D-image (default)\n";
+   cerr <<    "  [-dont_apply_geo]         : do not apply header transformation\n";
 }
 
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {
@@ -86,11 +92,12 @@ void SF_main(int argc, char **argv,
    void *process_img,
    void *process_vol, int operation_mode) {
    // Some variables .......................................................
-   ImageXmipp img;
+   ImageXmipp img,orig_img;
    VolumeXmipp vol;
    FourierImageXmipp IMG;
    FourierVolumeXmipp VOL;
    SelFile SF_in, SF_out;
+
    bool (*fi2i) (ImageXmipp &, const Prog_parameters *)=NULL;
    bool (*fi2I) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)=NULL;
    bool (*fI2i) (FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)=NULL;
@@ -125,12 +132,21 @@ try {
    if (prm->fn_out=="") fn_out=prm->fn_in;
    else 		fn_out=prm->fn_out;
    if (Is_ImageXmipp(prm->fn_in)) {
-      img.read(prm->fn_in); img().set_Xmipp_origin();
-      switch (operation_mode) {
-      	 case IMAGE2IMAGE:
+     img.read(prm->fn_in,FALSE,FALSE,prm->apply_geo); img().set_Xmipp_origin();
+     switch (operation_mode) {
+      case IMAGE2IMAGE:
 	    fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
             success=fi2i(img, prm);
-	    if (prm->each_image_produces_an_output) img.write(fn_out);
+	    if (prm->each_image_produces_an_output) {
+	      if (prm->apply_geo) { 
+		// read in again original image
+		orig_img.read(prm->fn_in,FALSE,FALSE,FALSE); orig_img().set_Xmipp_origin();
+		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img()) {
+		  DIRECT_MAT_ELEM(img(),i,j)=DIRECT_MAT_ELEM(orig_img(),i,j);
+		}
+	      }
+	    img.write(fn_out);
+	    }
 	    break;
 	 case IMAGE2FOURIER:
 	    fi2I=(bool (*) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;
@@ -225,13 +241,21 @@ try {
             }
 
 	 if (Is_ImageXmipp(fn_read)) {
-	    img.read(fn_read); img().set_Xmipp_origin();
-	    switch (operation_mode) {
+	   img.read(fn_read,FALSE,FALSE,prm->apply_geo); img().set_Xmipp_origin();
+	   switch (operation_mode) {
       	       case IMAGE2IMAGE:
 		  fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
         	  success=fi2i(img, prm);
-		  if (prm->each_image_produces_an_output)
-		     img.write(prm->fn_out);
+		  if (prm->each_image_produces_an_output) {
+		    if (prm->apply_geo) { 
+		      // read in again original image
+		      orig_img.read(fn_read,FALSE,FALSE,FALSE); orig_img().set_Xmipp_origin();
+		      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img()) {
+			DIRECT_MAT_ELEM(img(),i,j)=DIRECT_MAT_ELEM(orig_img(),i,j);
+		      }
+		    }
+		    img.write(prm->fn_out);
+		  }
 		  break;
 	       case IMAGE2FOURIER:
 		  fi2I=(bool (*) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;

@@ -177,6 +177,10 @@ public:
    float& fLenbyt()       {return header.fLenbyt;}
    matrix2D<double> fGeo_matrix();
 
+  // Origin offsets
+  void set_originOffsets(float Xoff, float Yoff);
+  void get_originOffsets(float &Xoff, float &Yoff) const;
+
   // Euler angles
    void set_eulerAngles(float Phi, float Theta, float Psi);
    void set_eulerAngles1(float Phi1, float Theta1, float Psi1);

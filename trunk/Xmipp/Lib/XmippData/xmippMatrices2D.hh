@@ -79,7 +79,7 @@ void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
 			   
 template <class T>
    void apply_geom(mT &m2, matrix2D<double> A, const mT &m1, bool inv,
-      bool wrap) _THROW;
+      bool wrap, T outside=(T)0) _THROW;
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -955,11 +955,11 @@ public:
        m2 cannot be the same matrix as m1.
        \\Ex: matrix2D<double> A(3,3); A.init_identity; apply_geom(m2,A,m1);*/
    friend void apply_geom<>(mT &m2, matrix2D<double> A,
-       const mT &m1, bool inv, bool wrap) _THROW;
+       const mT &m1, bool inv, bool wrap, T outside) _THROW;
    /** Self apply geom.
        Same as the previous one, but the result is kept in this object */
-   void self_apply_geom(matrix2D<double> A, bool inv, bool wrap)
-      {mT aux; apply_geom(aux,A,*this,inv,wrap); *this=aux;}
+   void self_apply_geom(matrix2D<double> A, bool inv, bool wrap, T outside=(T)0)
+      {mT aux; apply_geom(aux,A,*this,inv,wrap,outside); *this=aux;}
 
    #define IS_INV     TRUE
    #define IS_NOT_INV FALSE

@@ -31,7 +31,8 @@
 
 #include "../xmippImages.hh"
 #include "../xmippImagic.hh"
-
+#include "../xmippGeometry.hh"
+ 
 /* Input (read) from file specifying its dimensions ------------------------ */
 template <class T>
 bool ImageT<T>::read(const FileName &name, float fIform, int Ydim,
@@ -96,7 +97,7 @@ bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
 // LoadImage loads an image from file, returning a pointer to the generic
 // Image interface.
 template <class T>
-ImageT<T> *ImageT<T>::LoadImage (FileName name)
+ImageT<T> *ImageT<T>::LoadImage (FileName name, bool apply_geo)
 {
   ImageT<T> *ret = NULL;
   if (name.find (IMAGIC_TAG) != string::npos)
@@ -110,7 +111,7 @@ ImageT<T> *ImageT<T>::LoadImage (FileName name)
   else // For now, assume anything else is ImageXmipp type.
   {
     ImageXmippT<T> *i = new ImageXmippT<T>();
-    if (i->read (name))
+    if (i->read (name,FALSE,FALSE,apply_geo))
       ret = i;
     else
       delete i;
@@ -177,10 +178,32 @@ void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image
   }
 }
 
+/* Check OldXmipp header location for image offsets ----------------------- */
+template <class T>
+void ImageXmippT<T>::check_oldxmipp_header() {
+  if (header.fXoff()==0. && header.fYoff()==0. && header.fZoff()==0.) {
+    // Might be oldXmipp image header
+    float ang=header.old_rot();   
+    matrix2D<double> mat=header.fGeo_matrix();
+    if (ABS(mat(0,0)-COSD(ang))<XMIPP_EQUAL_ACCURACY &&
+	ABS(mat(1,1)-COSD(ang))<XMIPP_EQUAL_ACCURACY &&
+	ABS(mat(0,1)-SIND(ang))<XMIPP_EQUAL_ACCURACY &&
+	ABS(mat(1,0)+SIND(ang))<XMIPP_EQUAL_ACCURACY &&
+        mat(2,0)!=0. && mat(2,1)!=0. ) {
+      // This indeed seems to be an OldXmipp style header with non-zero offsets
+      cerr << "WARNING%% Copying shifts from old to new header location: "<< (*this).name() <<endl;
+      header.fXoff()=-(float)mat(2,0);
+      header.fYoff()=-(float)mat(2,1);
+      if (XSIZE(img)%2==0) header.fXoff()+=0.5;
+      if (YSIZE(img)%2==0) header.fYoff()+=0.5;
+    } 
+  } 
+}
+
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T>
 bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
-  bool reversed) _THROW {
+  bool reversed, bool apply_geo) _THROW {
   FILE *fp;
   bool ret;
 
@@ -195,16 +218,32 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   // Read whole image and close file
   if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
   {
-    /* Apply the geometric transformations in the header to the 
-       loaded image.
-       This is to be compatible with old Xmipp images taht kept 
-       geometric transformation information in the header.
-       From now on, this information will never be keep in the header
-       but in the pixels themself (image).
-    */
+    if(apply_geo) {
+      /* This is to be compatible with old Xmipp images, that store image
+         translations in another position of the header */
+      ImageXmippT<T>::check_oldxmipp_header();
 
-    // rotate image fAngle1 degrees if necessary
-    // img = img.rotate(header.rotAngle());     
+      /* Apply the geometric transformations in the header to the loaded image.  */
+      matrix2D<double>    A(3,3);
+      if (header.Theta()==0.) {
+        // For untilted images: apply Euler matrix
+	//	Euler_angles2matrix (-header.Phi(),0.,-header.Psi(),A);
+	Euler_angles2matrix (header.Phi(),0.,header.Psi(),A);
+      } else {
+        // For tilted images: only apply Psi
+	//	Euler_angles2matrix(0.,0.,-header.Psi(),A);
+	Euler_angles2matrix(0.,0.,header.Psi(),A);
+      }
+      A(0,2)=-header.fXoff();   
+      A(1,2)=-header.fYoff();
+
+      if (!A.IsIdent()) {
+	// Transform image without wrapping
+	T  outside=DIRECT_MAT_ELEM(img,0,0);
+	//	img.self_apply_geom(A,FALSE,FALSE,outside);
+	img.self_apply_geom(A,TRUE,FALSE,outside);
+      }
+    }
 
     // scale if necessary (check this with Carlos)
     if ((header.Scale() != 0.) && (header.Scale() != 1.)) {

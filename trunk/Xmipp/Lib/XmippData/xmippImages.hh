@@ -219,7 +219,7 @@ public:
   // what kind of image type (e.g., Xmipp, Imagic) it is; it returns a
   // pointer to the base Image class.  Caller is responsible for deleting
   // the memory for the object.  Returns NULL on error.
-  static ImageT<T> *LoadImage (FileName name);
+  static ImageT<T> *LoadImage (FileName name, bool apply_geo=FALSE);
 
    /** Write image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -337,12 +337,12 @@ public:
        ImageXmipp class structure. You have loaded the image at the
        declaration time.
        \\ Ex: ImageXmipp IX("g1ta0001.spd"); */
-   ImageXmippT (FileName _name):ImageT<T>(_name){
+   ImageXmippT (FileName _name, bool apply_geo=FALSE):ImageT<T>(_name){
      if (typeid(T)==typeid(complex<double>))
         header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex) 
      else if (typeid(T)==typeid(double))
         header.headerType() = headerXmipp::IMG_XMIPP;  // Sets header of type Image_XMipp
-      read(_name);  			  		// Read image from file
+        read(_name,FALSE,FALSE,apply_geo);  	       // Read image from file
    }
    
    /** Copy constructor.
@@ -408,7 +408,7 @@ public:
        thrown.
        \\ Ex: IX.read("g1ta0002.spd");*/
    virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
-      bool reversed=FALSE) _THROW;
+      bool reversed=FALSE, bool apply_geo=FALSE) _THROW;
    
    /** Write Xmipp image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -452,6 +452,48 @@ public:
    /** Reversed status.
        This is used for the little/big endian process. */
    bool reversed() const {return header.reversed();}
+
+   /** Check OldXmipp header location for image translation offsets
+       If image appears to be in OldXmipp format, copy offsets to NewXmipp header location */
+   void check_oldxmipp_header();
+
+   /**@name Origin Offsets
+      Origin Offsets Xoff and Yoff are in pixels and do not have to be integer values.*/
+   /**@name As a block*/
+   //@{
+   /** Set origin Offsets 
+       \\Ex: IX.set_originOffsets(1.51,-3.43); */
+      void set_originOffsets(float _Xoff, float _Yoff)
+        {header.set_originOffsets( _Xoff, _Yoff);}
+
+   /** Get origin Offsets 
+       \\Ex: IX.get_originOffsets(Xoff,Yoff); */
+      void get_originOffsets(float &_Xoff, float &_Yoff) const
+        {header.get_originOffsets(_Xoff, _Yoff);}
+   //@}
+   /**@name Independently*/
+   //@{
+   /**@name origin Offset in X-direction */
+   //@{
+   /** Set Xoff
+       \\Ex: IX.Xoff()=3.50;*/
+   float& Xoff() {return header.fXoff();}
+   
+   /** Get Xoff.
+       \\Ex: cout << "Origin Offset in X-direction: " << IX.Xoff() << endl;*/
+   float  Xoff() const {return header.fXoff();}
+   //@}
+   /**@name origin Offset in Y-direction */
+   //@{
+   /** Set Yoff
+       \\Ex: IX.Yoff()=3.50;*/
+   float& Yoff() {return header.fYoff();}
+   
+   /** Get Yoff.
+       \\Ex: cout << "Origin Offset in Y-direction: " << IX.Yoff() << endl;*/
+   float  Yoff() const {return header.fYoff();}
+   //@}
+   //@}
 
    /**@name Euler angles
        The angles must be in degrees and can be either positive or negative.

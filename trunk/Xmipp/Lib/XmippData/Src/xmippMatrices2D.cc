@@ -605,7 +605,7 @@ template <class T>
 //#define DEBUG
 template <class T>
    void apply_geom(mT &M2,matrix2D<double> A, const mT &M1, bool inv,
-   bool wrap) _THROW {
+   bool wrap, T outside) _THROW {
    int m1, n1, m2, n2;
    double x, y, xp, yp;
    double minxp, minyp, maxxp, maxyp;
@@ -623,7 +623,11 @@ template <class T>
    // size instead of being resized inside the routine with the
    // same size as the input matrix
    if (XSIZE(M2)==0) M2.resize(M1);
-   
+   if (outside!=0.) {
+   // Initialise output matrix with value=outside
+     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
+   }
+  
    // Find center and limits of image
    cen_y  = (int)(YSIZE(M2)/2);
    cen_x  = (int)(XSIZE(M2)/2);
@@ -638,7 +642,7 @@ template <class T>
    // in the output image we calculate which are the corresponding ones in
    // the original image, make an interpolation with them and put this value
    // at the output pixel
-   
+   //#define DEBUG
    #ifdef DEBUG
       cout << "A\n"    << A     << endl
 	   << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
@@ -647,12 +651,15 @@ template <class T>
 	   << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n"
       ;
    #endif
-
+      //#undef DEBUG
    for (int i=0; i<YSIZE(M2); i++) {
       // Calculate position of the beginning of the row in the output image
       x= -cen_x;
       y=i-cen_y;
-      
+      // For OldXmipp origins with even XSIZE & YSIZE:
+      //      x= -cen_x+0.5;
+      //      y=i-cen_y+0.5;
+
       // Calculate this position in the input image according to the
       // geometrical transformation
       // they are related by

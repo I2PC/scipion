@@ -80,6 +80,9 @@ ostream& operator << (ostream& o, const headerXmipp &I) {
    o << "  Phi   (rotation around Z axis) = " << I.header.fPhi << endl;
    o << "  theta (tilt, second rotation around new Y axis) = " << I.header.fTheta << endl;
    o << "  Psi   (third rotation around new Z axis) = " << I.header.fPsi << endl;
+   o << "Origin Offsets : " << endl;
+   o << "  Xoff  (origin offset in X-direction) = " << I.header.fXoff << endl;
+   o << "  Yoff  (origin offset in Y-direction) = " << I.header.fYoff << endl;
   if(I.header.fFlag == 1.0f || I.header.fFlag == 2.0f ){ 
      o << "  Phi1   = " << I.header.fPhi1 ;
      o << "  theta1 = " << I.header.fTheta1 ;
@@ -452,6 +455,11 @@ void headerXmipp::set_title(FileName newName) {
   strcpy(header.szITit, newName.c_str()); // Set title of image in the header
 }
 
+void headerXmipp::set_originOffsets(float Xoff, float Yoff) {
+  header.fXoff = Xoff;
+  header.fYoff = Yoff;
+}
+
 void headerXmipp::set_eulerAngles(float Phi, float Theta, float Psi){
   header.fIangle = 1; // sets flag
   header.fPhi = Phi;
@@ -473,6 +481,11 @@ void headerXmipp::set_eulerAngles2(float Phi2, float Theta2, float Psi2){
   header.fPhi2 = Phi2;
   header.fTheta2 = Theta2;
   header.fPsi2 = Psi2;
+}
+
+void headerXmipp::get_originOffsets(float &Xoff, float &Yoff) const{
+  Xoff =  header.fXoff;
+  Yoff =  header.fYoff;
 }
 
 template <class T>
