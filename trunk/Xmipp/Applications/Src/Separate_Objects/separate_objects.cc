@@ -36,17 +36,21 @@ void Usage();
 int main (int argc, char *argv[]) {
    FileName fn_in, fn_root;
    bool invert;
+   double min_size;
+   
 
    // Get input parameters .................................................
    try {
       fn_in   = get_param(argc, argv, "-i");
       fn_root = get_param(argc, argv, "-o","");
       invert  = check_param(argc,argv,"-invert");
+      min_size  = AtoF(get_param(argc,argv,"-min_size","0"));
       if (fn_root=="") fn_root=fn_in.get_root();
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(0);}
    
    // Process ..............................................................
    try {
+      double number_elements;
       int N=0;
       FileName fn_out;
       FileName fn_ext=fn_in.get_extension();
@@ -59,8 +63,14 @@ int main (int argc, char *argv[]) {
                I(i,j)=I(i,j)==o;
                if (invert) I(i,j)=1-I(i,j);
             }
-            fn_out.compose(fn_root,o,fn_ext);
-            I.write(fn_out);
+	    number_elements=I().sum();
+	    if (number_elements>min_size) {	       
+               fn_out.compose(fn_root,o,fn_ext);
+               I.write(fn_out);
+	    }
+	    
+            cout << "Image number " << o << " contains " << number_elements
+                 << " pixels set to 1\n";
          }
       } else if (Is_VolumeXmipp(fn_in)) {
          VolumeXmipp V(fn_in), label;
@@ -69,11 +79,15 @@ int main (int argc, char *argv[]) {
             V()=label();
             FOR_ALL_ELEMENTS_IN_MATRIX3D(V()) {
                V(k,i,j)=V(k,i,j)==o;
-               if (invert) V(k,i,j)=-V(k,i,j);
+               if (invert) V(k,i,j)=1-V(k,i,j);
             }
-            fn_out.compose(fn_root,o,fn_ext);
-            V.write(fn_out);
-            cout << "Volume number " << o << " contains " << V().sum()
+	    number_elements=V().sum();
+	    if (number_elements>min_size) {	       
+               fn_out.compose(fn_root,o,fn_ext);
+               V.write(fn_out);
+	    }
+	    
+            cout << "Volume number " << o << " contains " << number_elements
                  << " voxels set to 1\n";
          }
       } else {
@@ -89,5 +103,6 @@ void Usage() {
         << "  [-o <fn_root>]                   : Root filename for output\n"
         << "                                     By default, the input name\n"
         << "  [-invert]                        : Produce inverse masks\n"
+        << "  [-min_size <size=0>]             : Save if size is greater than this\n"
    ;
 }
