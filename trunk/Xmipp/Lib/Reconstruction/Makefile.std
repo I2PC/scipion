@@ -21,7 +21,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
            Programs/Src/Prog_euler.o Programs/Src/Prog_draw_surface.o \
            Programs/Src/Prog_symmetrize.o Programs/Src/Prog_range_adjust.o \
            Programs/Src/Prog_normalize.o \
-	   Programs/Src/Prog_Angular_Distance.o 
+	   Programs/Src/Prog_Angular_Distance.o
 SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
 SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
            Programs/Src/Prog_IDR_art.o Programs/Src/Prog_CorrectPhase.o \
@@ -33,7 +33,8 @@ SRC_OBJS_VTK = Src/CTF.o Src/refinement.o Programs/Src/Prog_FourierFilter.o \
 	   Programs/Src/Prog_art.o Programs/Src/Basic_art.o
 SRC_OBJS_CLASSIF = Programs/Src/Prog_Angular_Reference.o \
 	   Programs/Src/Prog_Angular_Project.o \
-	   Programs/Src/Prog_Angular_Predict.o
+	   Programs/Src/Prog_Angular_Predict.o \
+           Programs/Src/Prog_Angular_Denoise.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
            Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
 
