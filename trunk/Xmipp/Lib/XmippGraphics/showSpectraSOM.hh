@@ -42,8 +42,10 @@ class ShowSpectraSOM: public ShowSpectra {
 protected:
    // Original data
    xmippCTVectors *Vdat;
-   // Array of list of spectra, a list for each codevector
+   // Array of list of images, a list for each codevector
    vector<string> *SFcv;
+   // Array of list of spectra, a list for each codevector
+   vector<int>    *SFcvs;
    // Histogram of images assigned
    string  *hisAssigned;
    // Errors within group
@@ -62,8 +64,12 @@ protected:
     virtual void readSOMFiles(const FileName &_fn_root) _THROW;
 
     /* Extract the represented images to a list.
-       The list is not cleared at the beginning. */
-    virtual void extractRepresented(vector<string> &SF_represented);
+       The SelFile is not cleared at the beginning. */
+    virtual void extractRepresented(SelFile &SF_represented);
+
+    /* Extract the represented spectra to a list.
+       The xmippCTVector is not cleared at the beginning. */
+    virtual void extractRepresented(xmippCTVectors &v_represented);
 
     /* Initialize right click menubar */
     virtual void initRightclickMenubar();
@@ -86,12 +92,16 @@ protected slots:
     virtual void changeLabelsToErr();
 
     /* Show Average and SD of the images represented */
-    virtual void showRepresentedStats();
+    virtual void showRepresentedImagesStats();
+    /* Show Average and SD of the spectra represented */
+    virtual void showRepresentedSpectraStats();
     /* Show represented images */
     virtual void showRepresentedSel();
+    /* Show represented spectra */
+    virtual void showRepresentedSpectra();
     /* Show the difference between the current code vector and the
        average of the assigned images. */
-    virtual void showErrorImage();
+    virtual void showErrorSpectrum();
     /* Show algorithm information */
     virtual void showAlgoInfo();
 public:

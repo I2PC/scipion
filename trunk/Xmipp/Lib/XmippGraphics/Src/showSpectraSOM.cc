@@ -31,6 +31,7 @@
 void ShowSpectraSOM::init() {
     Vdat        = NULL;
     SFcv        = NULL;
+    SFcvs       = NULL;
     hisAssigned = NULL;
     cv_errors   = NULL;
     infStr      = "";
@@ -40,6 +41,7 @@ void ShowSpectraSOM::init() {
 void ShowSpectraSOM::clear() {
     if (Vdat        != NULL) delete    Vdat;
     if (SFcv        != NULL) delete [] SFcv;
+    if (SFcvs       != NULL) delete [] SFcvs;
     if (hisAssigned != NULL) delete [] hisAssigned;
     if (cv_errors   != NULL) delete [] cv_errors;
     infStr = "";
@@ -158,6 +160,8 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) _THROW {
 	  }
 
           SFcv=new vector<string>[listSize];
+          SFcvs=new vector<int>[listSize];
+          int j=0;
 	  while (!fh_class.eof()) {
 	       int row, col;
 	       float tmp;
@@ -165,6 +169,8 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) _THROW {
 	       getline(fh_class, line);
 	       int i=row*NumCols+col;
 	       SFcv[i].push_back(first_token(line)); 
+	       SFcvs[i].push_back(j);
+               j++; 
 	  }
        }
        fh_class.close();
@@ -197,10 +203,11 @@ void ShowSpectraSOM::initRightclickMenubar() {
    options->insertSeparator();
 
    // Statistics
-   options->insertItem( "View average and SD Images",  this,  SLOT(showStats()));
-   options->insertItem( "Show average and SD Represented Images", this,  SLOT(showRepresentedStats()));
-   options->insertItem( "View assigned images", this,  SLOT(showRepresentedSel()), CTRL+Key_A );
-   options->insertItem( "View error Image", this,  SLOT(showErrorImage()), CTRL+Key_E );
+   options->insertItem( "View average and SD Represented Spectra",  this,  SLOT(showRepresentedSpectraStats()));
+   options->insertItem( "View average and SD Represented Images", this,  SLOT(showRepresentedImagesStats()));
+   options->insertItem( "View Represented Spectra", this,  SLOT(showRepresentedSpectra()));
+   options->insertItem( "View Represented Images", this,  SLOT(showRepresentedSel()));
+   options->insertItem( "View error spectrum", this,  SLOT(showErrorSpectrum()), CTRL+Key_E );
    options->insertSeparator();
    options->insertItem( "Show Algorithm Information", this,  SLOT(showAlgoInfo()), CTRL+Key_G );
    options->insertSeparator();
@@ -214,17 +221,44 @@ void ShowSpectraSOM::initRightclickMenubar() {
 }
 
 /* Extract represented.----------------------------------------------------- */
-void ShowSpectraSOM::extractRepresented(vector<string> &SF_represented) {
+void ShowSpectraSOM::extractRepresented(SelFile &SF_represented) {
    for (int i=0; i<listSize; i++)
       if (cellMarks[i]) {
          int jmax=SFcv[i].size();
 	 for (int j=0; j<jmax; j++)
-   	    SF_represented.push_back((SFcv[i])[j]);
+   	    SF_represented.insert((SFcv[i])[j],SelLine::ACTIVE);
       }
 }
 
+void ShowSpectraSOM::extractRepresented(xmippCTVectors &_v_represented) {
+   // Count the number of represented vectors
+   int counter=0;
+   for (int i=0; i<listSize; i++)
+      if (cellMarks[i]) counter+=SFcvs[i].size();
+
+   // Resize the represented vectors
+   _v_represented.theItems.resize(counter);
+   _v_represented.theTargets.resize(counter);
+
+   // Now copy the items indicated by SFcvs
+   long myIndex = 0;
+   for (long i=0; i<listSize; i++)
+     if (cellMarks[i]) {
+         int jmax=SFcvs[i].size();
+	 for (int j=0; j<jmax; j++) {
+            _v_represented.theItems[myIndex] = Vdat->theItems[(SFcvs[i])[j]]; 
+            _v_represented.theTargets[myIndex] = Vdat->theTargets[(SFcvs[i])[j]]; 
+            myIndex++;
+         }
+     } 
+}
+
+/* Save assigned images ---------------------------------------------------- */
 void ShowSpectraSOM::saveAssigned() {
-   QMessageBox::about( this, "Error!", "Not implemented\n");
+   SelFile SFNew;
+   extractRepresented(SFNew);
+   if (SFNew.ImgNo()) writeSelFile(SFNew);
+   else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
 /* Change labels ----------------------------------------------------------- */
@@ -260,18 +294,84 @@ const char * ShowSpectraSOM::cellLabel(int i) const {
 }
 
 /* Show Average and SD of the represented images --------------------------- */
-void ShowSpectraSOM::showRepresentedStats() {
-   QMessageBox::about( this, "Error!", "Not implemented\n");
+void ShowSpectraSOM::showRepresentedImagesStats() {
+    SelFile SFNew;
+    extractRepresented(SFNew);
+    if (SFNew.ImgNo()) ShowTable::showStats(SFNew);
+    else QMessageBox::about( this, "Error!", "No images selected\n");
+}
+
+void ShowSpectraSOM::showRepresentedSpectraStats() {
+   // Extract represented vectors
+   xmippCTVectors V_represented(0,true);
+   extractRepresented(V_represented);
+   // Get Avg and SD
+   xmippCTVectors *myVect = new xmippCTVectors(0, true);
+   *myVect = V_represented.getStatVector();
+   // Represent
+   ShowSpectra *myST = new ShowSpectra;
+   myST->initWithVectors(1, 2, myVect, "Average and SD of represented spectra");
+   myST->show();
 }
 
 /* Show assigned sel ------------------------------------------------------- */
 void ShowSpectraSOM::showRepresentedSel() {
-   QMessageBox::about( this, "Error!", "Not implemented\n");
+    SelFile SFNew;
+    extractRepresented(SFNew);
+    if (SFNew.ImgNo()) {
+      ShowSel *showsel=new ShowSel;
+      showsel->initWithObject(10,10,SFNew,"Represented images");
+      showsel->show();
+   }
+    else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
-/* Show error image -------------------------------------------------------- */
-void ShowSpectraSOM::showErrorImage() {  
-   QMessageBox::about( this, "Error!", "Not implemented\n");
+/* Show assigned spectra --------------------------------------------------- */
+void ShowSpectraSOM::showRepresentedSpectra() {
+   xmippCTVectors *V_represented=new xmippCTVectors(0,true);
+   extractRepresented(*V_represented);
+   ShowSpectra *myST = new ShowSpectra;
+   myST->initWithVectors(6, 6, V_represented, "Represented spectra");
+   myST->show();
+}
+
+/* Show error spectrum ----------------------------------------------------- */
+void ShowSpectraSOM::showErrorSpectrum() {  
+   // Extract represented vectors
+   xmippCTVectors V_represented(0,true);
+   int row=currentRow();
+   int col=currentColumn();
+   if (row<0 || col<0) return;
+   int i=indexOf(row,col);
+   int represented_images=SFcvs[i].size();
+   if (represented_images==0) {
+      QMessageBox::about( this, 
+         "Error!", "This vector does not represent any spectrum\n");
+      return;
+   }
+
+   V_represented.theItems.resize(represented_images);
+   V_represented.theTargets.resize(represented_images);
+   for (int j=0; j<represented_images; j++) {
+      V_represented.theItems[j] = Vdat->theItems[(SFcvs[i])[j]]; 
+      V_represented.theTargets[j] = Vdat->theTargets[(SFcvs[i])[j]]; 
+   }
+
+   // Get Avg
+   xmippCTVectors *myVect = new xmippCTVectors(0, true);
+   *myVect = V_represented.getStatVector();
+   myVect->deleteRow(1);
+   myVect->theTargets[0]="Error spectrum";
+
+   // Compute the difference with the code vector
+   int jmax=myVect->theItems[0].size();
+   for (int j=0; j<jmax; j++)
+      myVect->theItems[0][j]-=V->theItems[i][j];
+   
+   // Represent
+   ShowSpectra *myST = new ShowSpectra;
+   myST->initWithVectors(1, 1, myVect, "Error spectrum of the represented spectra");
+   myST->show();
 }
 
 /* Show algorithm information ---------------------------------------------- */
