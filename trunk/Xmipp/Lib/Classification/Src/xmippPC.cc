@@ -160,6 +160,8 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 					v[k]=t;
 				}
 			}
+      			if (verbosity == 1)    
+          			listener->OnProgress(50);
 			return;
 		}
 
