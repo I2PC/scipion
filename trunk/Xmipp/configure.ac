@@ -19,12 +19,31 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_LANG(C++)
 
+
+# If not --prefix is passed to the configure script, Xmipp programs and
+# libraries will be installed under Xmipp dir by default.
+
+if test "x$prefix" = xNONE; then
+	prefix=`pwd`
+fi
+
+if test "x$exec_prefix" = xNONE; then
+	exec_prefix=`pwd`
+fi
+
+if test "x$program_prefix" = xNONE; then
+	program_prefix=`echo xmipp_`
+fi
+
+echo hola $program_prefix
+
 # If --enable-debug , -g compiler flag
 # will be enabled.
 
 AC_ARG_ENABLE([debug],
   AC_HELP_STRING([--enable-debug], [Enable the use of debugging capabilities.]),
   [use_debug=$enableval], [use_debug=no])
+
 if test $use_debug = no; then
 	AUX= echo $CFLAGS | sed 's/\-g //g'
 	CFLAGS= $AUX
