@@ -28,7 +28,7 @@
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices2D.hh>
 #include <XmippData/xmippProjection.hh>
-#include <XmippInterface/xmippAPH.hh>
+#include <XmippInterface/xmippAPHorigmerg.hh>
 
 /**@name Spots-->Real Space 2D program */
 //@{
@@ -42,8 +42,6 @@ public:
    /** Input file (MRC aph)
    */
    FileName        fnaph_in;    
-   /** Reference Image (tilt=0) */
-   FileName        fnaph_ref;
    /** output file (Spider real space)
    */
    FileName        fn_out;
@@ -59,9 +57,6 @@ public:
    /** Move the phase origin (degrees)
    */
    matrix1D<double> Phase_Shift; 
-// Not longer needed
-//   /** Tilt sign (+1, -1) */
-//   int             tilt_sign;
    /** Keep contrast.
        If FALSE then the image is contrast is reversed.
    */
@@ -77,22 +72,23 @@ public:
    origtilt
    */   
    float           Scale_Factor;
-   /** Scale between the magnification in the different micrographies */
-   double SamplingScale;
-   /** Align A axis with x.
-       This is used for phantoms, where usually it is */
-   bool            align_a_axis_with_x;
+   /** Sampling Rate in the different micrographies */
+   double SamplingRate;
    /** Generate symmetrical reflections.
        By default, no */
    bool            generate_symmetrical_reflections;
    /** Symmetry group */
    string          str_symmetry_group;
+#ifdef NEVERDEFINED
+   /** vector perpendicular to projection plane */
+   matrix1D<double> v_perpendicular_proj_plane;
+#endif   
 public:
    /* Side information */
    /** This image APH */
-   APHFile2D       aph_file;
-   /** Reference APH */
-   APHFile2D       aph_ref;
+   APHFileorigmerg       aph_file;
+   /** Matrix that stores the number of spots for a given (k,h) */
+   matrix2D<int> Counter;
    /** Lattice vectors in the volume */
    matrix2D<double> vol_latt_vec;
    /** Lattice vectors in the volume */
@@ -103,12 +99,22 @@ public:
    double          tilt;
    /** Psi angle */
    double          psi;
+   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS 
+    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN 
+    BY ASTAR TO BSTAR BEING POSITIVE.*/
+   double          taxa;
+   /** angle between a and b (real space and degrees) */
+   double          a_b_ang;//2*180,10*90,5*60
+   /** a module(real space in A) */
+   double          a_mag;
+   /** b module(real space in A) */
+   double          b_mag;
+   /** Tilt angle following MRC conventions*/
+   double          mrc_tilt;
    /* Symmetry group code */
    int             symmetry_group;
-//   /** Mirror correction phase shift in X */
-//   double          mirror_phase_X;
-//   /** Mirror correction phase shift in Y */
-//   double          mirror_phase_Y;
+   /** MRC micrograph label. If label= -1 -> wildcard */
+   int             mrc_label;
 public:
    /** This routine reads the parameters, supplied by the user, from a file. 
    */
@@ -117,10 +123,22 @@ public:
    friend ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm);
    /** Produce Side Information */
    void produce_SideInfo() _THROW;
+#ifdef NEVERDEFINED
+   /** Constructor */
+   Spot2RealSpace2D_Parameters()
+   {
+   v_perpendicular_proj_plane.resize(3);
+   }
+#endif
 };
 
    void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    Projection &prj);
-   
 //@}
+
+/** Discrete inverse, but not fast Fourier transform
+*/
+void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
+   int ydim, int xdim);
+
 #endif

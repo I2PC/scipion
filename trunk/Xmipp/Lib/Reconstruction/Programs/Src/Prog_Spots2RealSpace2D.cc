@@ -50,8 +50,10 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
          "opening the file "+fnprm);
          
    try {
+#ifdef REMOVE   
       fnaph_ref=get_param(fh_param,"APH Ref file",0,"",
          3007,"Spot2RealSpace2D_Parameters::read: APH Ref File not found");
+#endif
       fnaph_in=get_param(fh_param,"APH file",0,NULL,
          3007,"Spot2RealSpace2D_Parameters::read: APH File not found");
       fn_out=get_param(fh_param,"Output file",0,NULL,
@@ -67,10 +69,19 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
       #endif
       try {*is >> NoCells_X >> NoCells_Y;}
       catch (...) {REPORT_ERROR(3007,
-              "Spot2RealSpace2D_Parameters::read: Cannot read Phase Shift");}
-//    NOT longer needed
-//      tilt_sign=AtoI(get_param(fh_param,"tilt sign",0,NULL,
-//         3007,"Spot2RealSpace2D_Parameters::read: Tilt Sign not found"));
+              "Spot2RealSpace2D_Parameters::read: Cannot read Output Cell no");}
+      a_mag=AtoF(get_param(fh_param,"a_mag",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: a_mag not found"));
+      b_mag=AtoF(get_param(fh_param,"b_mag",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: b_mag not found"));
+      a_b_ang=DEG2RAD(AtoF(get_param(fh_param,"a_b_ang",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: a_b_ang not found")));
+      taxa=DEG2RAD(AtoF(get_param(fh_param,"taxa",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: Taxa not found")));
+      mrc_tilt=DEG2RAD(AtoF(get_param(fh_param,"tilt",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: tilt not found")));
+      SamplingRate=AtoF(get_param(fh_param,"sampling rate",0,NULL,
+	 3007,"Spot2RealSpace2D_Parameters::read: sampling rate not found"));
       Phase_Shift.resize(2);
       aux_str=get_param(fh_param,"Phase Shift",0,"180.0 180.0");
       delete is;
@@ -82,6 +93,7 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
       try {*is >> XX(Phase_Shift) >> YY(Phase_Shift);}
       catch (...) {REPORT_ERROR(3007,
               "Spot2RealSpace2D_Parameters::read: Cannot read Phase Shift");}
+      mrc_label=AtoI(get_param(fh_param,"mrc_label",0,"-1"));
       KeepContrast=AtoI(get_param(fh_param,"Keep Contrast",0,"1"));
       aux_str=get_param(fh_param,"Cell Size");
       delete is;
@@ -109,273 +121,80 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
 
 /* Produce Side info ------------------------------------------------------- */
 void Spot2RealSpace2D_Parameters::produce_SideInfo() _THROW {
-   // Read APH files
-   aph_file.read(fnaph_in);
-   if (fnaph_ref!="") aph_ref.read(fnaph_ref);
-    ImageXmipp save;
-    save()=aph_file.spots_abs; save.write("Spots_ABS0.xmp");
-    save()=aph_file.spots_arg; save.write("Spots_ARG0.xmp");
-
-   // Compute Reference lattice vectors in both spaces
-   aph_ref=(fnaph_ref!="")?aph_ref:aph_file;   
-   // Reference
-   matrix2D<double> Vref(2,2), Vfile(2,2),Proj_Matrix(2,2);
-   Vref.setCol(0,aph_ref.astar);
-   Vref.setCol(1,aph_ref.bstar);
-   vol_latt_vec=aph_ref.Xdim*(Vref.transpose()).inv();
    
-   //FACTOR
-   {
-    double gammarefstar=atan2(YY(aph_ref.bstar),XX(aph_ref.bstar)) -
-                        atan2(YY(aph_ref.astar),XX(aph_ref.astar));
-    double gammastar   =atan2(YY(aph_file.bstar),XX(aph_file.bstar)) -
-                        atan2(YY(aph_file.astar),XX(aph_file.astar));
-    double A =aph_ref.astar.module();
-    double B =aph_ref.bstar.module();
-    double AT=aph_file.astar.module();
-    double BT=aph_file.bstar.module();
-    double C1 = (A*A)/(AT*AT);
-    double C2 = (B*B)/(BT*BT);
-    double C3 = (A*B)/(AT*BT*cos(gammastar));
-    double C4 = (A*B*cos(gammarefstar))/(AT*BT*cos(gammastar));
-    double AX = C2*(C1/C3)*(C1/C3) - C1;
-    double BX = C2 + 2.0*C2*(C1/C3)*((C1-C4)/C3) - C1;
-    double CX = C2*((C1-C4)/C3)*((C1-C4)/C3);
-    double DISC = BX*BX - 4.0*AX*CX;
-    double PSQ1 = (-BX + sqrt(DISC))/(2.0*AX);
-    double PSQ2 = (-BX - sqrt(DISC))/(2.0*AX);
-    double PP=0;
-    if(PSQ1 < 0.0 && PSQ2 < 0.0) {
-                    cout << "HORROR: DISCRIMINANT LESS THAN ZERO" <<endl;
-                    exit(1);
-                    }  
-    if(PSQ1 > 0.0) PP = sqrt(PSQ1);
-    if(PSQ2 > 0.0) PP = sqrt(PSQ2);
-    double QQ = (C1/C3)*PP + ((C1-C4)/C3)*(1.0/PP);
-    SamplingScale = sqrt(C1*(PP*PP + 1.0));
-    }
-    
-   // actual projection
-   Vfile.setCol(0,aph_file.astar);
-   Vfile.setCol(1,aph_file.bstar);
-
-   aph_file.astar *= SamplingScale;
-   aph_file.bstar *= SamplingScale;
-   Vfile.setCol(0,aph_file.astar);
-   Vfile.setCol(1,aph_file.bstar);
-   proj_latt_vec=aph_ref.Xdim*(Vfile.transpose()).inv();
-   Proj_Matrix=proj_latt_vec * vol_latt_vec.inv();
-   //-----------------------------------------------
-   //Tilt
-   //-----------------------------------------------
-   char all_done='n';
-
-   if(Proj_Matrix.det()> 1.0)
-       {
-       cerr << "\nHORROR: Matrix determinant greater than 1,\n"
-               "It is equal to:" << Proj_Matrix.det() <<
-               "\nIf the value is almost 1 and tilt should be\n"
-	       " arround 0, then it may be OK (I will make tilt=0)\n"
-	       "\nPRESS anykey AND enter to continue\n";
-       cin >> all_done; 
-       tilt = 0.;
-       }
-   else    
-       tilt = /* tilt_sign * */ acos(Proj_Matrix.det());
-   //sign is given by the user 
-
-   //-----------------------------------------------
-   // ROT  and PSI
-   //-----------------------------------------------
-   rot=psi=0.;
-   double v1=Proj_Matrix(0,0); double v2=Proj_Matrix(0,1);
-   double v3=Proj_Matrix(1,0); double v4=Proj_Matrix(1,1);
-   all_done='n';
-   if(v2< 0.01 && v3 <0.01)// special case
-        {
-         cerr << "\nInput Files: " <<fnaph_in << " " << fnaph_ref;
-	 
-	 if(v4<v1)//shortening along y direction
-	     {
-             cerr << "\nWARMING, posible rounding error. Since"
-                 "\nit seems  to be a shortening along the y axis"
-                 "\nshould I make rot=270 and psi=90?\n"
-                 "\n y= set, n= continue (y/n)";
-             do {
-                 cin >> all_done;     
-	         rot=PI*3./2.;psi=PI/2.;
-                } while ( !((all_done !='y') || 
-                            (all_done !='n' ))   );
-	     
-	     }
-	 else if(v4< -0.99 && v1< -0.99)//shortening along y direction
-	     {
-             cerr << "\nWARMING, posible rounding error. "
-                 "\nshould I make rot=180 and psi=0? (if tilt is small this"
-                 "\nis not very important)?\n\n"
-                 "\n y= set, n= continue (y/n)";
-             do {
-                 cin >> all_done;     
-	         rot=PI;psi=0;
-                } while ( !((all_done !='y') || 
-                            (all_done !='n' ))   );
-	     
-	     }
-	  else
-	    {   
-             cerr << "\nWARMING, posible rounding error. Should I set"
-                     "\nrot  and psi to =0 (if tilt is small this"
-                     "\nis not very important)?\n"
-                     "\n y= set to zero, n= continue (y/n)";
-        	do {
-                    cin >> all_done;     
-                    rot=psi=0.;
-        	   } while ( !((all_done !='y') || 
-                               (all_done !='n' ))   );
-	      }	       
-        }           
-   if(fabs(tilt)<0.0873 && all_done == 'n') //tilt zero or small 
-       { rot = atan2(-v3,v4); psi=0.; 
-         cerr << "WARMING, rot calculated using tilt=0\n"; 
-        }
-   else if(all_done == 'n')
-       { 
-
-         rot = atan2(v2*v2+v4*v4-1.,v1*v2+v3*v4);    
-         psi = atan2( -(v1*v3) -(v2*v4), v1*v1+v2*v2-1.);
-
-       //Our matrix v1, v2, v3, v4 is only a guess of the REAL euler Matrix
-       //if any of the values in the atan2 functions is close to zero 
-       //the sign of the angle may be wrong. A way to overcome this
-       //is to recalculate the crystal vectors from the projection vectors and
-       //if there is a sign error to invert the signs.
-       
-         matrix2D<double> E2D;
-         Euler_angles2matrix(RAD2DEG(rot),
-                             RAD2DEG(tilt),
-                             RAD2DEG(psi),E2D); E2D.resize(2,2);
-         if(v1-E2D(0,0)>0.1 || v2-E2D(0,1)>0.1 || 
-            v3-E2D(1,0)>0.1 || v4-E2D(1,1)>0.1) psi += M_PI;
-         Euler_angles2matrix(RAD2DEG(rot),
-                             RAD2DEG(tilt),
-                             RAD2DEG(psi),E2D); E2D.resize(2,2);
-         if(v1-E2D(0,0)>0.1 || v2-E2D(0,1)>0.1 || 
-            v3-E2D(1,0)>0.1 || v4-E2D(1,1)>0.1) 
-         cerr << "\nOh My! spots2realspace can't find the angles\n";    
-                 
-        }
-   //Ask user what angles want to use.
-   EULER_CLIPPING_RAD(rot,tilt,psi);
-//   if(all_done == 'n')//ask always
-   {
-double mrc_taxa, mrc_tilt;        
-       cout << "\n\nThey are two solutions to the system"
-            << "\nSelect the solution you think is the correct"
-            <<  "\n(it will be stored in the image header )"
-            << "\n\t (1) Rotational tilt and psi angle: " << 
-                   RAD2DEG(rot) << ", " << 
-                   RAD2DEG(tilt)<< ", " << 
-                   RAD2DEG(psi) 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot) << ", " << 
-                   RAD2DEG(tilt)+180.<< ", " << 
-                 -(RAD2DEG(psi)+180.) 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot)+180. << ", " << 
-                  -RAD2DEG(tilt)<< ", " << 
-                   RAD2DEG(psi)-180. 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot)+180. << ", " << 
-                  -RAD2DEG(tilt)+180.<< ", " << 
-                  -(RAD2DEG(psi)-180+180.);
-       Euler_to_MRC( rot,  tilt,  psi, &mrc_tilt, &mrc_taxa);
-       cout << "\n\tMRC (taxa,tilt): " << RAD2DEG(mrc_taxa) << " " 
-                                     << RAD2DEG(mrc_tilt) << endl;
-       cout << "\n\t (2) Rotational tilt and psi angle: "<< 
-                   RAD2DEG(rot) << ", " << 
-                   RAD2DEG(-tilt)<< ", " << 
-                   RAD2DEG(psi) 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot) << ", " << 
-                   RAD2DEG(-tilt)+180.<< ", " << 
-                 -(RAD2DEG(psi)+180.) 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot)+180. << ", " << 
-                  -RAD2DEG(-tilt)<< ", " << 
-                   RAD2DEG(psi)-180. 
-            << "\n\t                                    " << 
-                   RAD2DEG(rot)+180. << ", " << 
-                  -RAD2DEG(-tilt)+180.<< ", " << 
-                  -(RAD2DEG(psi)-180+180.);
-       Euler_to_MRC( rot, -tilt,  psi, &mrc_tilt, &mrc_taxa);
-       cout << "\n\tMRC (taxa,tilt): " << RAD2DEG(mrc_taxa) << " " 
-                                       << RAD2DEG(mrc_tilt) << endl;
-		   
-       cout<<  "\n(type 1, 2 <enter>)";
-       int answer;
-       // only two cases are different but it make live easier 
-       // for the user to have the four
-       do {
-          cin >> answer;     
-	  
-          if (answer ==2 ) {tilt = -tilt; break;}
-          else if (answer == 1) break;
-          else cout << "\nType 1, 2!";
-          } while (TRUE );
-	  
-     }
-          
-    //I like tilt between -90 and 90
-    if(tilt > M_PI) tilt -= 2*M_PI;   
-
     // Translate symmetry group
-    if      (str_symmetry_group=="P1")       symmetry_group = sym_P1;
-    else if (str_symmetry_group=="P2")       symmetry_group = sym_P2;
-    else if (str_symmetry_group=="P21")      symmetry_group = sym_P2_1;
-    else if (str_symmetry_group=="C2")       symmetry_group = sym_C2;
-    else if (str_symmetry_group=="P222")     symmetry_group = sym_P222;
-    else if (str_symmetry_group=="P2221")    symmetry_group = sym_P222_1;
-    else if (str_symmetry_group=="P22121")   symmetry_group = sym_P22_12_1;
-    else if (str_symmetry_group=="P4")       symmetry_group = sym_P4;
-    else if (str_symmetry_group=="P422")     symmetry_group = sym_P422;
-    else if (str_symmetry_group=="P4212")    symmetry_group = sym_P42_12;
-    else if (str_symmetry_group=="P3")       symmetry_group = sym_P3;
-    else if (str_symmetry_group=="P312")     symmetry_group = sym_P312;
-    else if (str_symmetry_group=="P6")       symmetry_group = sym_P6;
-    else if (str_symmetry_group=="P622")     symmetry_group = sym_P622;
+    if      (str_symmetry_group=="P1")      {symmetry_group = sym_P1;
+                                             a_b_ang = 0;}//not sure about this
+    else if (str_symmetry_group=="P2")      symmetry_group = sym_P2;
+    else if (str_symmetry_group=="P21")     symmetry_group = sym_P2_1;
+    else if (str_symmetry_group=="C2")      symmetry_group = sym_C2;
+    else if (str_symmetry_group=="P222")    symmetry_group = sym_P222;
+    else if (str_symmetry_group=="P2221")   symmetry_group = sym_P222_1;
+    else if (str_symmetry_group=="P22121")  symmetry_group = sym_P22_12_1;
+    else if (str_symmetry_group=="P4")      symmetry_group = sym_P4;
+    else if (str_symmetry_group=="P422")    symmetry_group = sym_P422;
+    else if (str_symmetry_group=="P4212")   symmetry_group = sym_P42_12;
+    else if (str_symmetry_group=="P3")      symmetry_group = sym_P3;
+    else if (str_symmetry_group=="P312")    symmetry_group = sym_P312;
+    else if (str_symmetry_group=="P6")      symmetry_group = sym_P6;
+    else if (str_symmetry_group=="P622")    symmetry_group = sym_P622;
     else
        REPORT_ERROR(1,(string)"Spot2RealSpace2D_Parameters::produce_SideInfo:"
           " Unknown symmetry group:"+str_symmetry_group);
-    
-    // Generate symmetrical reflections
-    if (generate_symmetrical_reflections)
-       aph_file.generate_symmetrical_reflections(symmetry_group);
-   
-    save()=aph_file.spots_abs; save.write("Spots_ABS1.xmp");
-    save()=aph_file.spots_arg; save.write("Spots_ARG1.xmp");
+
+    // convert taxa, tilt to Euler angles
+    // psi will be set to 0
+    MRC_to_Euler(taxa, mrc_tilt, &rot, &tilt, &psi);
+#ifdef REMOVE
+    // Undo moving spots to asymmetryc unit
+    aph_file.unasymmetrization( a_mag,  b_mag, taxa,  mrc_tilt,
+			       symmetry_group);   
+#endif   
+#ifdef DEBUG   
+    ImageXmipp save;
+    save()=aph_file.spots_abs; save.write("Spots_ABS0.xmp");
+    save()=aph_file.spots_arg; save.write("Spots_ARG0.xmp");
+#endif
+
 }
 
 /* Show parameters --------------------------------------------------------- */
 ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm) {
    o << "APH Input          : " << prm.fnaph_in << endl
+#ifdef REMOVE
      << "APH Reference      : " << prm.fnaph_ref << endl
+#endif
      << "Output Spider File : " << prm.fn_out << endl
      << "Maximum IQ         : " << prm.maxIQ << endl
+     << "a_mag(A)           : " << prm.a_mag << endl
+     << "b_mag(A)           : " << prm.b_mag << endl
+     << "a->b angle         : " << RAD2DEG(prm.a_b_ang) << endl
      << "Rotational angle   : " << RAD2DEG(prm.rot) << endl
      << "Tilt angle         : " << RAD2DEG(prm.tilt) << endl
      << "psi angle          : " << RAD2DEG(prm.psi) << endl
+     << "taxa angle         : " << RAD2DEG(prm.taxa) << endl
+     << "mrc_tilt angle     : " << RAD2DEG(prm.mrc_tilt) << endl
+     << "mrc_label          : " << prm.mrc_label << endl
+     << "sampling rate      : " << prm.SamplingRate << endl
+#ifdef REMOVE
      << "Lattice a          : " << prm.proj_latt_vec.Col(0).transpose() << endl
      << "Lattice b          : " << prm.proj_latt_vec.Col(1).transpose() << endl
+#endif
      << "Ouput Layout (x,y) : " << prm.NoCells_X
                        << " x " << prm.NoCells_Y << endl
      << "Phase_Shift (x,y)  : " << XX(prm.Phase_Shift) << ","
                                 << YY(prm.Phase_Shift)  << endl
      << "Keep Contrast      : " << prm.KeepContrast << endl
      << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << endl
+#ifdef REMOVE
      << "Crystaledge        : " << prm.aph_file.Xdim << endl
      << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << endl
+#endif
      << "Scale_Factor       : " << prm.Scale_Factor << endl
-     << "Sampling Scale*    : " << prm.SamplingScale << endl;
+#ifdef REMOVE
+     << "Sampling Scale*    : " << prm.SamplingScale << endl
+#endif
+     << "3D Symmetry group  : " << prm.symmetry_group << endl;
    return o;
 }
 
@@ -407,36 +226,79 @@ void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
 /* Main routine for transforming ------------------------------------------- */
 void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm, 
    Projection &prj) {
+   int h,k;
+   //symmery should be reforced after APPLYYING SHIFT
    prm.produce_SideInfo();
    cout << prm;
+   // Read APH files, vector size must be in Amstrongs
+   (prm.aph_file).read(prm.fnaph_in,prm.mrc_label);
+   // Now we should be able to check if the points does belong to the
+   // plane (only for aph with z*) or not
+   // if data is P1, all point should be OK if not several should
+   // not belong to the plane.
    
    // Apply phase shift
-   double phase_shift=(prm.KeepContrast)? 0:180;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(prm.aph_file.spots_arg) {
-       MAT_ELEM(prm.aph_file.spots_arg,i,j)  =  (double) DEG2RAD 
-           (MAT_ELEM(prm.aph_file.spots_arg,i,j) + phase_shift + 
-           i*(YY(prm.Phase_Shift)/* +prm.mirror_phase_Y*/) +
-           j*(XX(prm.Phase_Shift)/* +prm.mirror_phase_X*/));
-   }
+   // Up to here angles are in degrees
+   // When copied to FT convert degrees to radians
+   double phase_shift=(prm.KeepContrast)? 0.:180.;
+   if(phase_shift!=0 || (prm.Phase_Shift).module()!=0)
+      for(int i=0;i< ((prm.aph_file).aph_data_vector).size();i++) {
+	  h = (prm.aph_file.aph_data_vector[i]).h;
+	  k = (prm.aph_file.aph_data_vector[i]).k;
+	  ((prm.aph_file).aph_data_vector[i]).phase  =
+              ((prm.aph_file).aph_data_vector[i]).phase + phase_shift + 
+              k*(YY(prm.Phase_Shift)) +
+              h*(XX(prm.Phase_Shift));
+      }
+   // Move all the reflections to the same plane
+   #define DEBUG   
+   #ifdef DEBUG
+   (prm.aph_file).write("IN1");
+   #endif
+   #undef DEBUG   
 
+
+
+   if (prm.generate_symmetrical_reflections)
+      ((prm.aph_file).unasymmetrization)( prm.a_mag,    prm.b_mag, 
+                                          prm.taxa,     prm.mrc_tilt,
+			                  prm.a_b_ang,  prm.symmetry_group,
+					  prm.Counter);   
+   #define DEBUG   
+   #ifdef DEBUG
+   (prm.aph_file).write("OUT1");
+   #endif
+   #undef DEBUG   
+   //alloc a 2D matrix and transfer data
    // Resize and symmetrize Fourier Transform
-   int kmin=STARTINGY (prm.aph_file.spots_abs);
-   int kmax=FINISHINGY(prm.aph_file.spots_abs);
-   int hmin=STARTINGX (prm.aph_file.spots_abs);
-   int hmax=FINISHINGX(prm.aph_file.spots_abs);
+   #define DEBUG
+   #ifdef DEGUG
+   cout << "prm.a_mag: "          << prm.a_mag             << endl;
+   cout << "prm.b_mag: "          << prm.b_mag             << endl;
+   cout << "prm.taxa: "           << RAD2DEG(prm.taxa)     << endl;
+   cout << "prm.mrc_tilt: "       << RAD2DEG(prm.mrc_tilt) << endl;
+   cout << "prm.symmetry_group: " << prm.symmetry_group    << endl;
+   #endif
+   #undef DEBUG
+   int ksize=MAX(ABS((prm.aph_file).min_k),ABS((prm.aph_file).max_k));
+   int hsize=MAX(ABS((prm.aph_file).min_h),ABS((prm.aph_file).max_h));
 
-   int ksize=MAX(ABS(kmin),ABS(kmax));
-   int hsize=MAX(ABS(hmin),ABS(hmax));
+   //When data is copied to FT move it from degrees to radians.
+   //It is done inside the polar function
    matrix2D< complex<double> > FT;
    FT.init_zeros(2*ksize+1,2*hsize+1);
    STARTINGY(FT)=-ksize;
    STARTINGX(FT)=-hsize;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(prm.aph_file.spots_abs) {
-      if (ABS(MAT_ELEM(prm.aph_file.IQ,i,j))<=prm.maxIQ &&
-          MAT_ELEM(prm.aph_file.IQ,i,j)!=0) {
-	 MAT_ELEM(FT, i, j) = polar(MAT_ELEM(prm.aph_file.spots_abs,i,j),
-                                    MAT_ELEM(prm.aph_file.spots_arg,i,j) );
- 	 MAT_ELEM(FT,-i,-j) = conj(MAT_ELEM(FT, i, j));
+
+   for(int i=0;i< prm.aph_file.aph_data_vector.size();i++) {
+      if (ABS((prm.aph_file.aph_data_vector[i]).IQ)<=prm.maxIQ &&
+              (prm.aph_file.aph_data_vector[i]).amp!=0) {
+	 h = (prm.aph_file.aph_data_vector[i]).h;
+	 k = (prm.aph_file.aph_data_vector[i]).k;
+	      
+	 MAT_ELEM(FT, k, h) = polar((prm.aph_file.aph_data_vector[i]).amp,
+                            DEG2RAD((prm.aph_file.aph_data_vector[i]).phase));
+ 	 MAT_ELEM(FT,-k,-h) = conj(MAT_ELEM(FT, k, h));
       }
    }
 
@@ -446,7 +308,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
       prm.CellXdim=XSIZE(FT);
    }
    IDFT(FT,prj(),prm.CellYdim,prm.CellXdim);
-   prj() *= prm.Scale_Factor/sqrt((double)prm.aph_file.Xdim*prm.aph_file.Ydim);
+   prj() *= prm.Scale_Factor;
 //ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION    
    
    // Any repetition?
@@ -462,11 +324,5 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    // Set Euler angles and Save Image
    prj.set_angles(RAD2DEG(prm.rot), RAD2DEG(prm.tilt), RAD2DEG(prm.psi));
    prj.write(prm.fn_out);
-   
-#ifdef DEBUGROUT_Spots2RealSpace
-    cout << "\no_taxa " << prm.taxa << "  o_tilt " << prm.tilt << endl;
-    cout << "taxa "     << new_rot  << "  tilt "   << new_tilt << endl;
-#endif
 }
-#undef DEBUGROUT_Spots2RealSpace
 
