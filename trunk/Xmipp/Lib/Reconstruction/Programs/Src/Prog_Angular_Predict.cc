@@ -34,6 +34,7 @@
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
+   fn_refsel=get_param(argc,argv,"-refsel");
    fn_pcaproj=get_param(argc,argv,"-pcaproj");
    fn_ang=get_param(argc,argv,"-ang");
    PCA_list=get_vector_param(argc,argv,"-PCA_list",-1);
@@ -44,6 +45,9 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    max_shift_change=AtoF(get_param(argc,argv,"-max_shift_change","0"));
    psi_step=AtoF(get_param(argc,argv,"-psi_step","5"));
    shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
+   th_discard=AtoF(get_param(argc,argv,"-keep","50"));
+   update_visible_space=check_param(argc,argv,"-update_visible");
+   th_denoise=AtoF(get_param(argc,argv,"-th_denoise","99.75"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
@@ -55,6 +59,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
 void Prog_angular_predict_prm::show() {
    Prog_parameters::show();
    cout << "Reference rootname: " << fn_ref << endl
+        << "Reference images: " << fn_refsel << endl
         << "PCA projection rootname: " << fn_pcaproj << endl
         << "Angle file: " << fn_ang << endl;
    cout << "PCA list:           ";
@@ -64,6 +69,9 @@ void Prog_angular_predict_prm::show() {
 	<< "Max proj change: " << max_proj_change << endl
 	<< "Max psi change: " << max_psi_change << " step: " << psi_step << endl
 	<< "Max shift change: " << max_shift_change << " step: " << shift_step << endl
+        << "Keep %: " << th_discard << endl
+        << "Update visible space:" << update_visible_space << endl
+        << "th_denoise: " << th_denoise << endl
         << "Show level: " << tell << endl
    ;
 }
@@ -72,6 +80,7 @@ void Prog_angular_predict_prm::show() {
 void Prog_angular_predict_prm::usage() {
    Prog_parameters::usage();
    cerr << "   -ref <ref rootname>      : Rootname passed to Angular_Reference\n"
+        << "   -refsel <selfile>        : Selfile with the reference images\n"
         << "   -pcaproj <pca rootname>  : Rootname passed to Angular_Project\n"
 	<< "  [-PCA_list \"[n,n,n,...]\"] : Number of the PCAs to use for prediction\n"
 	<< "                            : by default, all\n"
@@ -86,6 +95,9 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
 	<< "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
 	<< "  [-shift_step <r=1>]       : Step in shift in pixels\n"
+        << "  [-keep <th=50%>]          : How many images are kept each round\n"
+        << "  [-update_visible]         : Update visible space\n"
+        << "  [-th_denoise <th=99.75%>] : Threshold for building the visible space\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
 	<< "  [-show_psi_shift]         : Show the psi-shift process\n"
 	<< "  [-show_options]           : Show final options among which\n"
@@ -151,6 +163,29 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
 	 fh_in >> *(PCA_ref[m]);
 	 fh_in.close();
       }
+   }
+   
+   // Read or update the visible space
+   PCA_denoise.fn_ref=fn_refsel;
+   PCA_denoise.th_var=th_denoise;
+   PCA_denoise.fn_exp="";
+   PCA_denoise.produce_side_info();
+   bool create_visible_space=update_visible_space;
+   if (!create_visible_space) {
+      try {
+         PCA_denoise.read_PCA_from_file();
+      } catch (Xmipp_error XE) {
+         // If the files cannot be found then create them
+         // if the error is something else then throw again the exception
+         if (XE.__errno==1) create_visible_space=true;
+         else REPORT_ERROR(XE.__errno,XE.msg);
+      }
+   }
+   
+   if (create_visible_space) {
+      cerr << "Creating the visible space ...\n";
+      PCA_denoise.build_training_sets();
+      PCA_denoise.perform_PCA();
    }
 }
 
@@ -273,7 +308,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 		 << " current tilt=" << I.tilt() << endl;
          PCAs_used++;
          refine_candidate_list_with_correlation(m,Vpca[m],*(PCA_ref[m]),
-	    candidate_list, cumulative_corr, sumxy, sumxx, sumyy, dim, 50);
+	    candidate_list, cumulative_corr, sumxy, sumxx, sumyy, dim, th_discard);
       }
 
    // Select the maximum
@@ -410,9 +445,11 @@ int Prog_angular_predict_prm::pick_view(vector< vector<int> >groups,
    int groups_with_max_rate=0;
    for (int g=0; g<groups.size(); g++)
       if (group_rate[g]==best_group_rate) groups_with_max_rate++;
+   #ifdef DEBUG
    if (groups_with_max_rate>1) {
       cout << "There are two groups with maximum rate\n";
    }
+   #endif
 
    // Take the best image within that group
    int best_j;
@@ -494,6 +531,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	    // are treated in a different way
 	    Ip().self_rotate(psi+2, WRAP);
 	    Ip().self_rotate(-2,WRAP);
+
+            // Project the resulting image onto the visible space
+            xmippVector Vpca;
+            STARTINGX(Ip())=STARTINGY(Ip())=0;
+            PCA_denoise.project_image(Ip(),Vpca);
+            PCA_denoise.build_image(Vpca,Ip(),YSIZE(Ip()),XSIZE(Ip()));
+            Ip().set_Xmipp_origin();
+            Ip().statistics_adjust(0,1);
 
       	    // Search for the best tilt, rot angles
             double rotp, tiltp;
