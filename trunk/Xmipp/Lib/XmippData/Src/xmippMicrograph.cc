@@ -436,10 +436,10 @@ cout << "compute_transmitance " << compute_transmitance
          I.write(fn_out);
       }
    if (labels[label]!="") {
-      SF.write(fn_micrograph+"."+labels[label]+".sel");
+      SF.write(fn_micrograph.remove_directories()+"."+labels[label]+".sel");
       write_coordinates(label,fn_micrograph+"."+labels[label]+".pos");
    } else {
-      SF.write(fn_micrograph+".sel");
+      SF.write(fn_micrograph.remove_directories()+".sel");
       write_coordinates(label,fn_micrograph+".pos");
    }
    
