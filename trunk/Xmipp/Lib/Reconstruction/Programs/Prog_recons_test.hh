@@ -51,8 +51,11 @@ public:
    /// Symemtry file. Included while ART process
    FileName fn_sym;
 
+   /// Do not use symproj
+   bool     do_not_use_symproj;
+
    /// Force symmetry
-   bool     force_sym;
+   int      force_sym;
    
    /// Final symmetry file. At the end of the reconstruction process
    FileName fn_final_sym;

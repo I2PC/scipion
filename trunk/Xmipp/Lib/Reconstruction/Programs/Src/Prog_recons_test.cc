@@ -83,7 +83,8 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       fn_voxel_phantom=get_param(fh_param,"voxel phantom",0,"");
       fn_crystal=get_param(fh_param,"crystal parameters",0,"");
       fn_sym    =get_param(fh_param,"symmetry file",0,"");
-      force_sym =check_param(fh_param,"force symmetry");
+      force_sym =AtoI(get_param(fh_param,"force symmetry",0,"-1"));
+      do_not_use_symproj =check_param(fh_param,"no projsym");
       fn_final_sym=get_param(fh_param,"final symmetry file",0,"");
       fn_CTF=get_param(fh_param,"CTF",0,"");
       defocus_change=AtoF(get_param(fh_param,"defocus change",0,"0"));
@@ -330,7 +331,8 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
       out << "   Succesive parameters: "; print(out,prm.succesive_params);
          out << endl;
       if (prm.POCS_positivity) out << "   Positivity constraint allowed\n";
-      if (prm.force_sym)       out << "   Symmetry forced\n";
+      if (prm.force_sym!=-1)   out << "   Symmetry forced=" << prm.force_sym << "\n";
+      if (prm.do_not_use_symproj) out << "   Do not use symmetrized projections\n";
       if (prm.enable_segmented_surface)
          out << "   Segmented surface threshold: " << prm.threshold_surface_segment << endl;
       out << "   Dilation for segmented volumes/surfaces: " << prm.segmented_dilation << endl;
@@ -645,6 +647,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.fn_root=fn_recons_root;
       art_prm.fn_sym=prm.fn_sym;
       art_prm.force_sym=prm.force_sym;
+      art_prm.do_not_use_symproj=prm.do_not_use_symproj;
       art_prm.known_volume=prm.mass;
       if (prm.enable_top_surface || prm.enable_bottom_surface ||
           prm.enable_segmented_surface)
