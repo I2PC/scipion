@@ -157,9 +157,10 @@ void Micrograph::compute_8_bit_scaling() {
 
    // Compute output range
    float minF, maxF;
-   if      (minval<0)   {minF=0; maxF=MIN(255,maxval+minval);}
-   else if (maxval>255) {minF=MAX(0,minval-(maxval-255)); maxF=255;}
-   else                 {minF=minval; maxF=maxval;}
+   if      (minval<0)         {minF=0; maxF=MIN(255,maxval+minval);}
+   else if (maxval>255)       {minF=MAX(0,minval-(maxval-255)); maxF=255;}
+   else if (maxval-minval<32) {minF=0; maxF=255;}
+   else                       {minF=minval; maxF=maxval;}
 
    // Compute scaling
    __a=(maxF-minF)/(maxval-minval);
