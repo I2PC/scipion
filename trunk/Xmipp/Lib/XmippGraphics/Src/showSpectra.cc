@@ -44,7 +44,7 @@ void ShowSpectra::init() {
 
 void ShowSpectra::clear() {
     if (V != NULL) delete V;
-    ShowTable::clear();
+    ShowSel::clear();
 }
 
 /* Init with vectors ------------------------------------------------------- */
@@ -61,7 +61,6 @@ void ShowSpectra::initWithVectors(int _numRows, int _numCols,
    initRightclickMenubar();
    repaint();
 }
-
 
 /* Read a Spectra ---------------------------------------------------------- */
 void ShowSpectra::readFile(const FileName &_fn) _THROW {
@@ -314,6 +313,6 @@ void ShowSpectra::changeFont() {
    tmpFont = QFontDialog::getFont(&ok, axisFont, this, "Font type");
    if (ok) {
    	axisFont = tmpFont;
-        repaint();
+        repaintContents();
    }
 }
