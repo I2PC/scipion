@@ -202,7 +202,7 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
       if (imgs++%istep==0) progress_bar(imgs);
    }
    progress_bar(SF_original.ImgNo());
-   SF_current.write(fn_root+"_idr.sel");
+   SF_current.write(fn_root+"_idr"+ItoA(it,2)+".sel");
 }
 
 /* Core routine ------------------------------------------------------------ */
@@ -210,6 +210,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
    // Reconstruction variables
    Plain_ART_Parameters plain_art_prm;
    prm.art_prm->tell |= TELL_SAVE_BLOBS;
+   FileName fn_blobs="";
 
    do {
       cout << "Running IDR iteration no. " << prm.it << " with mu= "
@@ -218,8 +219,10 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       if (prm.fn_blob_volume=="") {
 	 prm.art_prm->fn_sel =prm.SF_current.name();
 	 prm.art_prm->fn_root=prm.fn_root+"_idr"+ItoA(prm.it,2);
-	 if (prm.it>0) prm.art_prm->tell |= TELL_USE_INPUT_BLOBVOLUME;
+	 prm.art_prm->fn_start = fn_blobs;
+	 prm.vol_blobs.clear();
 	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs);
+      	 fn_blobs=prm.art_prm->fn_root+".blob";
       }
 
       // Check if there is postprocessing ..................................
@@ -249,6 +252,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
          voxels2blobs(&vol_recons, prm.art_prm->blob, prm.vol_blobs,
             prm.art_prm->grid_type, prm.art_prm->grid_relative_size, 0.05, NULL,
             NULL, 0.01, 0, prm.art_prm->R);
+         prm.vol_blobs.write(fn_blobs);
       }     
 
       // Apply IDR correction ..............................................
