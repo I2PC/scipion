@@ -814,7 +814,7 @@ public:
        given as a R3 vector. An exception is thrown if the axis is not a
        R3 vector. The axis needs not to be unitary.
        \\Ex: V2=V1.rotate(60,vector_R3(1,1,1));*/
-   void rotate(double ang, const matrix1D<double> v, VT &result,
+   void rotate(double ang, const matrix1D<double> &axis, VT &result,
       bool wrap=DONT_WRAP) const
       {matrix2D<double> temp=rot3D_matrix(ang,axis);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
@@ -824,7 +824,7 @@ public:
       {VT aux; rotate(ang, v, aux, wrap); return aux;}
 
    /** Rotate a volume around any axis, keep in this object. */
-   void rotate(double ang, const matrix1D<double> v, bool wrap=DONT_WRAP)
+   void rotate(double ang, const matrix1D<double> &v, bool wrap=DONT_WRAP)
       {VT aux; rotate(ang, v, aux, wrap); *this=aux;}
 
    /** Translate a volume.
@@ -832,16 +832,16 @@ public:
        An exception is thrown if the displacement is not a R3 vector.
        \\Ex: V2=V1.translate(vector_R3(0,0,2));
        \\--> Displacement of 2 pixels down */
-   void translate(const matrix1D<double> v, VT &result, bool wrap=WRAP) const
+   void translate(const matrix1D<double> &v, VT &result, bool wrap=WRAP) const
       {matrix2D<double> temp=translation3D_matrix(v);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
    /** Translate a volume, return result.*/
-   VT translate(const matrix1D<double> v, bool wrap=WRAP) const
+   VT translate(const matrix1D<double> &v, bool wrap=WRAP) const
       {VT aux; translate(v, aux, wrap); return aux;}
 
    /** Translate a volume, keep in this object.*/
-   void translate(const matrix1D<double> v, bool wrap=WRAP)
+   void translate(const matrix1D<double> &v, bool wrap=WRAP)
       {VT aux; translate(v, aux, wrap); *this=aux;}
 
    /** Scales to a new size.
