@@ -528,7 +528,7 @@ bool maskImg::Qt2xmipp( QImage _image )
   Returns TRUE if the image was successfully loaded.
 */
 
-bool maskImg::loadImage( const char *fileName )
+bool maskImg::loadImage( const char *fileName)
 {
     filename = fileName;
     bool ok = FALSE;
@@ -541,7 +541,7 @@ bool maskImg::loadImage( const char *fileName )
 	if (!ok) {
           try { 
  	    // reads Xmipp Image
-            Image *tmpImage = Image::LoadImage (fileName);
+            Image *tmpImage = Image::LoadImage (fileName,apply_geo);
 	    if (!tmpImage)
 	      REPORT_ERROR (1501, (string)"Error opening file " + fileName);
 	    ok = TRUE; 

@@ -48,6 +48,7 @@ int main( int argc, char **argv )
 
   string selname = "", imgname = "";
   bool sdflag = false;
+  bool apply_geo;
 
   try {     
     if (check_param(argc, argv, "-sel"))
@@ -56,31 +57,36 @@ int main( int argc, char **argv )
     	imgname = get_param(argc, argv, "-img");
     if (check_param(argc, argv, "-sd"))
      sdflag = true; 
+    apply_geo=!check_param(argc, argv, "-dont_apply_geo");
   } 
   catch (Xmipp_error) {
     cout << "Xmask: Creates a mask using a Graphical User Interface" << endl;
     cout << "Usage:" << endl;
-    cout << "-img           : Image to visualize" << endl;
-    cout << "-sel           : Use Sel file average or SD Image" << endl;
-    cout << "[-sd]          : Uses SD image instead of Average image (default: false)" << endl;
+    cout << "-img              : Image to visualize" << endl;
+    cout << "-sel              : Use Sel file average or SD Image" << endl;
+    cout << "[-sd]             : Uses SD image instead of Average image (default: false)" << endl;
+    cout << "[-dont_apply_geo] : Do not apply transformation stored in the header" << endl;
+
     exit(1);
    }
 
    if (imgname != "")  {
 	    maskImg *w = new maskImg(0, imgname.c_str(), QWidget::WDestructiveClose);
-	    w->loadImage( imgname.c_str() );
+	    w->apply_geo=apply_geo;
+	    w->loadImage( imgname.c_str());
 	    w->show();
    } else {
         cout << "Calculating average and SD images from sel file......" << endl;
   	SelFile SF((FileName) selname); 
 	Image ave, sd;
 	double min, max;
-	SF.get_statistics(ave, sd, min, max); 
+	SF.get_statistics(ave, sd, min, max, apply_geo); 
 	maskImg* w;
 	if (sdflag) 
 	   w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
 	else    
 	   w = new maskImg(NULL, &ave, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
+	w->apply_geo=apply_geo;
 	w->show();
    }
    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));

@@ -1299,7 +1299,10 @@ public:
     maskImg( QWidget *parent=0, Image *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
     maskImg( QWidget *parent=0, QImage *_image=0, maskType _typeOfMask = CIRCLE, const char *name=0, int wFlags=0 );
     ~maskImg();
-    bool	loadImage( const char *fileName );
+
+    /** Apply transformations that are stored in the headers of the images? */
+    bool        apply_geo;
+    bool	loadImage( const char *fileName);
     Image	xmippImage;				// Xmipp Image
 
 protected:
