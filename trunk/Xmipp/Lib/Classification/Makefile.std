@@ -1,5 +1,16 @@
 ############################################################################
-LIBPROJ = ../libClassif_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(MACHINE),CYGWIN)
+    LIBPROJ = ../libClassif_$(XMIPP_PREFIX)$(MACHINE).dll
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBPROJ).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
+    EXTRA_RM = $(LIBPROJ).a
+else
+    LIBPROJ = ../libClassif_$(XMIPP_PREFIX)$(MACHINE).so
+    EXTRACC_FLAGS = -fPIC
+    EXTRALINK_FLAGS = 
+    EXTRA_RM =
+endif
+
 
 SRC_OBJS = Src/xmippCTVectors.o Src/xmippCodeBook.o Src/xmippFuzzyCodeBook.o Src/xmippDistances.o \
 	   Src/xmippSammon.o Src/xmippFCMeans.o Src/xmippMap.o Src/xmippSOM.o Src/xmippFKCN.o \
@@ -13,12 +24,12 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS)
 	@echo "Creating library Xmipp Classification Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
 
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) $(EXTRACC_FLAGS) $*.cc -c
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
@@ -27,7 +38,7 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in Classification library ..."
-	@rm -f $(LIBPROJ) $(SRC_OBJS)
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(EXTRA_RM)
 
 # Dependencies -------------------------------------------------------------
 depend:

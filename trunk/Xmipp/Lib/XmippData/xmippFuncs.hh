@@ -40,12 +40,22 @@ using namespace std;
 // Includes ----------------------------------------------------------------
 #include <iostream>
 #include <math.h>
-#include <values.h>
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
 #include <limits.h>
+
+#ifndef _CYGWIN
+   #include <values.h>
+#else
+   #ifndef MINFLOAT
+      #define MINFLOAT -1e30
+   #endif
+   #ifndef MAXFLOAT
+      #define MAXFLOAT  1e30
+   #endif
+#endif
 
 // For timing functions
 #include        <unistd.h>
@@ -59,6 +69,8 @@ using namespace std;
 
 // Load Xmipp Configuration ------------------------------------------------
 #include "../../xmippConfiguration.inc"
+
+using namespace std;
 
 /**@name General functions*/
 //@{

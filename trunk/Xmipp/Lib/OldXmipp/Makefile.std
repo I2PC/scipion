@@ -1,5 +1,15 @@
 ###########################################################################
-LIBPROJ = ../libOldXmipp_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(MACHINE),CYGWIN)
+    LIBPROJ = ../libOldXmipp_$(XMIPP_PREFIX)$(MACHINE).dll
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBPROJ).a -Wl,--enable-auto-import
+    EXTRA_RM = $(LIBPROJ).a
+else
+    LIBPROJ = ../libOldXmipp_$(XMIPP_PREFIX)$(MACHINE).so
+    EXTRACC_FLAGS = -fPIC
+    EXTRALINK_FLAGS = 
+    EXTRA_RM =
+endif
 SRC_OBJS = cabecero.o varios.o varios2.o varios3.o dimension.o \
              floatnat.o iocabecero.o usages.o fft.o fftmod.o fftn.o allfft.o \
              filtros.o specmod.o
@@ -15,7 +25,7 @@ $(LIBPROJ): $(SRC_OBJS)
 # Compiling by default -----------------------------------------------------
 .c.o:
 	@echo "Compiling" $*.c "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -I. -fPIC $*.c -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) -I. $(EXTRACC_FLAGS) $*.c -c
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
@@ -23,7 +33,7 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in OldXmipp library ..."
-	@rm -f $(LIBPROJ) $(SRC_OBJS)
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(EXTRA_RM)
 
 # DistCleaning -------------------------------------------------------------
 distclean:

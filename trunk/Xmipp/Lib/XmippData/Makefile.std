@@ -1,5 +1,15 @@
 ############################################################################
-LIBPROJ = ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(MACHINE),CYGWIN)
+    LIBPROJ = ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBPROJ).a -Wl,--enable-auto-import
+    EXTRA_RM = $(LIBPROJ).a
+else
+    LIBPROJ = ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).so
+    EXTRACC_FLAGS = -fPIC
+    EXTRALINK_FLAGS = 
+    EXTRA_RM =
+endif
 
 SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Src/xmippMatrices1D.o Src/xmippMatrices2D.o \
@@ -55,16 +65,16 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS) $(BILIB_OBJS)
 	@echo "Creating library Xmipp General Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS);
+	@$(CCLIB) $(LINKERFLAGS) -shared $(EXTRALINK_FLAGS) -o $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS);
 
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -IBilib -IBilib/headers -IBilib/types -fPIC $*.cc -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) -IBilib -IBilib/headers -IBilib/types $(EXTRACC_FLAGS) $*.cc -c
 
 .c.o:
 	@echo "Compiling" $*.c "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -IBilib -IBilib/headers -IBilib/types -fPIC $*.c -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) -IBilib -IBilib/headers -IBilib/types $(EXTRACC_FLAGS) $*.c -c
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
@@ -73,7 +83,7 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in XmippData library ..."
-	@rm -f $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS)
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(BILIB_OBJS) $(EXTRA_RM)
 
 # Dependencies -------------------------------------------------------------
 depend:

@@ -1,8 +1,24 @@
 ###########################################################################
-LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
-LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(MACHINE),CYGWIN)
+    LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).dll
+    LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).dll
+    LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).dll
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBRECONS).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
+    EXTRALINK_INTERFACE_FLAGS = -Wl,--out-implib=$(LIBRECONS_INTERFACE).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a $(LIBRECONS).a ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).dll.a
+    EXTRALINK_INRIA_FLAGS = -Wl,--out-implib=$(LIBRECONS_INRIA).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libINRIA.dll.a ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).dll.a $(LIBRECONS).a
+    EXTRA_RM = $(LIBRECONS).a $(LIBRECONS_INTERFACE).a $(LIBRECONS_INRIA).a
+else
+    LIBRECONS       = ../libRecons_$(XMIPP_PREFIX)$(MACHINE).so
+    LIBRECONS_INTERFACE=../libRecons_Interface_$(XMIPP_PREFIX)$(MACHINE).so
+    LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
+    EXTRACC_FLAGS = -fPIC
+    EXTRALINK_FLAGS = 
+    EXTRALINK_INTERFACE_FLAGS =
+    EXTRALINK_INRIA_FLAGS =
+    EXTRA_RM = 
+endif
 
-LIBRECONS_INRIA = ../libReconsINRIA_$(XMIPP_PREFIX)$(MACHINE).so
 
 LIBPROJ         = $(LIBRECONS) $(LIBRECONS_INRIA) \
                   $(LIBRECONS_INTERFACE)
@@ -44,22 +60,22 @@ all: $(LIBPROJ)
 $(LIBRECONS): $(SRC_OBJS)
 	@echo "Creating library Xmipp Reconstruction Library ..."
 	@rm -f $(LIBRECONS)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS) $(SRC_OBJS) $(EXTRALINK_FLAGS)
 
 $(LIBRECONS_INTERFACE): $(SRC_OBJS_INTERFACE)
 	@echo "Creating library Xmipp Reconstruction-Interface Library ..."
 	@rm -f $(LIBRECONS_INTERFACE)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INTERFACE) $(SRC_OBJS_INTERFACE) $(EXTRALINK_INTERFACE_FLAGS) 
 
 $(LIBRECONS_INRIA): $(SRC_OBJS_INRIA)
 	@echo "Creating library Xmipp Reconstruction INRIA Library ..."
 	@rm -f $(LIBRECONS_INRIA)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA)
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBRECONS_INRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) 
 
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc
+	@$(CC) -o $*.o $(COMPILERFLAGS) $(EXTRACC_FLAGS) $*.cc
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
@@ -69,7 +85,7 @@ Makefiles:
 clean:
 	@echo "Removing Reconstruction library ..."
 	@rm -f $(LIBPROJ) $(SRC_OBJS) $(SRC_OBJS_INRIA) \
-	   $(SRC_OBJS_INTERFACE)
+	   $(SRC_OBJS_INTERFACE) $(EXTRA_RM)
 
 # DistCleaning -------------------------------------------------------------
 distclean:

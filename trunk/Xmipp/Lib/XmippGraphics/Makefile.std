@@ -1,6 +1,16 @@
 ############################################################################
 ifeq ($(HAVE_QT),YES)
-    LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).so
+    ifeq ($(MACHINE),CYGWIN)
+        LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).dll
+    	EXTRACC_FLAGS = 
+    	EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBRECONS).a  -Wl,--enable-auto-import -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libClassif_$(XMIPP_PREFIX)$(MACHINE).dll.a -L$(XMIPP_QTDIR)/lib $(QTLIBS)
+        EXTRA_RM = $(LIBPROJ).a
+    else
+        LIBPROJ = ../libXmippGraphics_$(XMIPP_PREFIX)$(MACHINE).so
+    	EXTRACC_FLAGS = -fPIC
+    	EXTRALINK_FLAGS = 
+        EXTRA_RM =
+    endif
 endif
 
 SRC_OBJS = Src/showTools.o      showTools.moc \
@@ -19,12 +29,12 @@ all: $(LIBPROJ)
 $(LIBPROJ): $(SRC_OBJS)
 	@echo "Creating library Xmipp Graphics Library ..."
 	@rm -f $(LIBPROJ)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) ;
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBPROJ) $(SRC_OBJS) $(EXTRALINK_FLAGS);
 
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -I$(XMIPP_QTDIR)/include -fPIC $*.cc -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) -I$(XMIPP_QTDIR)/include $(EXTRACC_FLAGS) $*.cc -c
 
 .hh.moc:
 	@echo "Generating MOC for" $*.hh "..."
@@ -40,7 +50,7 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in XmippGraphics library ..."
-	@rm -f $(LIBPROJ) $(SRC_OBJS)
+	@rm -f $(LIBPROJ) $(SRC_OBJS) $(EXTRA_RM)
 
 # Dependencies -------------------------------------------------------------
 depend:

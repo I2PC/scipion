@@ -1,7 +1,23 @@
 ############################################################################
-LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).so
-LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).so
-LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).so
+ifeq ($(MACHINE),CYGWIN)
+    LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).dll
+    LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).dll
+    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).dll
+    EXTRACC_FLAGS = 
+    EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBINTERFACE).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
+    EXTRALINK_INRIA_FLAGS = -Wl,--out-implib=$(LIBINTERFACEINRIA).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libINRIA.dll.a
+    EXTRALINK_VTK_FLAGS = -Wl,--out-implib=$(LIBINTERFACEVTK).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
+    EXTRA_RM = $(LIBINTERFACE).a $(LIBINTERFACEINRIA).a $(LIBINTERFACEVTK).a
+else
+    LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).so
+    LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).so
+    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).so
+    EXTRACC_FLAGS = -fPIC
+    EXTRALINK_FLAGS = 
+    EXTRALINK_INTERFACE_FLAGS =
+    EXTRALINK_INRIA_FLAGS =
+    EXTRA_RM = 
+endif
 LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA) $(LIBINTERFACEVTK)
 
 SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
@@ -17,17 +33,17 @@ all:  $(LIBPROJ)
 $(LIBINTERFACE): $(SRC_OBJS)
 	@echo "Creating library XmippInterface Library ..."
 	@rm -f $(LIBINTERFACE)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) ;
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) $(EXTRALINK_FLAGS) ;
 
 $(LIBINTERFACEINRIA): $(SRC_OBJS_INRIA)
 	@echo "Creating library XmippInterface INRIA Library ..."
 	@rm -f $(LIBINTERFACEINRIA)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) ;
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) ;
 
 $(LIBINTERFACEVTK): $(SRC_OBJS_VTK)
 	@echo "Creating library XmippInterface VTK Library ..."
 	@rm -f $(LIBINTERFACEVTK)
-	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK);
+	@$(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK) $(EXTRALINK_VTK_FLAGS) ;
 
 # Makefiles ----------------------------------------------------------------
 Makefiles:
@@ -36,12 +52,12 @@ Makefiles:
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) $(EXTRACC_FLAGS) $*.cc -c
 
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in XmippInterface library ..."
-	@rm -f $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK)
+	@rm -f $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) $(EXTRA_RM)
 	@rm -f $(LIBPROJ)
 
 # DistCleaning -------------------------------------------------------------

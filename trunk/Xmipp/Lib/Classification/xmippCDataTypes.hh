@@ -39,7 +39,9 @@ using namespace std;
 
 // MAXDOUBLE
 #include <limits.h>
-#include <values.h>
+#ifndef _CYGWIN
+   #include <values.h>
+#endif
 
 #ifndef MAXFLOAT
 #define  MAXFLOAT (float)1e38

@@ -16,6 +16,12 @@ ifdef NEEDS_MPI
    CC = mpiCC
 endif
 
+ifeq ($(MACHINE),CYGWIN)
+    EXTRA_INSTALL = .exe
+else
+    EXTRA_INSTALL =
+endif
+
 .SUFFIXES: .moc .cc .hh .c
 
 ifdef EXTRA_LIB_DIRS
@@ -62,7 +68,7 @@ install: $(FINAL_PROJ)
 	@echo "Installing $(FINAL_PROJ) ..."
 	DEPTH=`pwd | sed -e's/\// /g' | wc -w | awk '{printf "%d",$$1+1}'` ; \
 	THIS_DIR=`pwd | cut -d"/" -f$$DEPTH` ; \
-	cp $(XMIPPDIR)/Applications/Src/$$THIS_DIR/$(FINAL_PROJ) $(XMIPPDIR)/bin/$(FINAL_PROJ)
+	cp $(XMIPPDIR)/Applications/Src/$$THIS_DIR/$(FINAL_PROJ)$(EXTRA_INSTALL) $(XMIPPDIR)/bin/$(FINAL_PROJ)$(EXTRA_INSTALL)
 else
 install:
 endif
