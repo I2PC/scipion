@@ -299,8 +299,9 @@ void QtMainWidgetMark::pass_to_untilted(int _mtX, int _mtY, int &_muX,
 
 /* Compute tilting angle --------------------------------------------------- */
 void QtMainWidgetMark::compute_gamma() {
-   #define TRIANGLE_NO 15000
+   #define TRIANGLE_NO  5000
    #define MIN_AREA       15
+   #define MAX_AREA   250000
    __gamma=0;
    // If there is no tilted image there is nothing to do
    if (__mTiltedWidget==NULL) return;
@@ -311,9 +312,18 @@ void QtMainWidgetMark::compute_gamma() {
                                                  // From i to j in tilted
                                                  // From i to k in tilted
    int triang=0; // Number of triangles considered
-   for (int i=0; i<__Nu; i +=step)
-      for (int j=i+1; j<__Nu; j +=step)
-         for (int k=j+1; k<__Nu; k +=step) {
+   int i,j,k, counter1;
+   counter1=0;
+   randomize_random_generator();
+   long noCombinations;
+   noCombinations=__Nu *(__Nu-1) *(__Nu-2)/6;
+	 while(triang< TRIANGLE_NO || counter1 < noCombinations)
+	 {
+	    counter1++;
+	    i=ROUND(rnd_unif(0,__Nu-1));
+	    j=ROUND(rnd_unif(0,__Nu-1));
+	    k=ROUND(rnd_unif(0,__Nu-1));
+
             // Compute area of triangle in untilted micrograph
             VECTOR_R2(iju,Mu->coord(j).X-Mu->coord(i).X,
                Mu->coord(j).Y-Mu->coord(i).Y);
@@ -329,7 +339,10 @@ void QtMainWidgetMark::compute_gamma() {
                Mt->coord(k).Y-Mt->coord(i).Y);
             double tilted_area=ABS(dot_product(ijt,ikt)/*/2*/);
             if (tilted_area<MIN_AREA) continue; // For numerical stability
-            
+            if (tilted_area>MAX_AREA) continue; // micrograph are not perfect 
+	                                        // sheets so avoid
+						// very far away particles
+           
             // Now we know that tilted_area=untilted_area*cos(gamma)
 	    if (tilted_area>untilted_area) continue; // There are user errors
 	                                             // In the point selection
@@ -338,6 +351,8 @@ void QtMainWidgetMark::compute_gamma() {
          }
    __gamma/=triang;
    __gamma=RAD2DEG(__gamma);
+   if(triang<100)
+      cout << "Not many particles, tilt angle may not be accurate" <<endl;
 }
 
 /* Compute alphas ---------------------------------------------------------- */
