@@ -49,7 +49,7 @@ void Basic_ART_Parameters::default_values() {
     stop_at            = 0;
     blob.radius        = 2;
     blob.order         = 2;
-    blob.alpha         = 3.6;
+    blob.alpha         = 10.4;
     grid_relative_size = 2.26;
     grid_type          = BCC;
     proj_ext           = 0;
@@ -567,7 +567,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
    }
 
 /* Express the ray length in blob units ------------------------------------ */
-   if (ray_length!=-1) ray_length/=blob.radius;
+   if (ray_length!=-1) ray_length*=blob.radius;
 }
 #undef DEBUG
 
