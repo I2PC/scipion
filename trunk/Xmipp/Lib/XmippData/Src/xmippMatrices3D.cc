@@ -351,7 +351,7 @@ template <class T>
 
 /* Window ------------------------------------------------------------------ */
 template <class T>
-   void VT::window(int z0, int y0, int x0, int zF, int yF, int xF) {
+   void VT::window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value) {
    VT result(zF-z0+1, yF-y0+1, xF-x0+1);
    result.zinit=z0;
    result.yinit=y0;
@@ -365,7 +365,7 @@ template <class T>
                  (j>=xinit && j<=xinit+xdim-1))
                      VOL_ELEM(result,k,i,j)=VOL_ELEM(*this,k,i,j);
              else
-                     VOL_ELEM(result,k,i,j)=0;
+                     VOL_ELEM(result,k,i,j)=init_value;
    *this=result;
 }
 

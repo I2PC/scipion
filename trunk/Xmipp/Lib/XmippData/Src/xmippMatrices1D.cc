@@ -229,13 +229,16 @@ template <class T>
 
 /* Window ------------------------------------------------------------------ */
 template <class T>
-   void vT::window(int x0, int xF) {
+   void vT::window(int x0, int xF, T init_value) {
    vT result(xF-x0+1);
    STARTINGX(result)=x0;
-   
+      
    for (int j=x0; j<=xF; j++)
        if (j>=STARTINGX(*this) && j<=FINISHINGX(*this))
                VEC_ELEM(result,j)=VEC_ELEM(*this,j);
+       else
+               VEC_ELEM(result,j)=init_value;
+	        
    *this=result;
 }
 

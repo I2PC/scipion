@@ -518,7 +518,7 @@ void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
 
 /* Window ------------------------------------------------------------------ */
 template <class T>
-   void mT::window(int y0, int x0, int yF, int xF) {
+   void mT::window(int y0, int x0, int yF, int xF, T init_value) {
    mT result(yF-y0+1, xF-x0+1);
    STARTINGY(result)=y0;
    STARTINGX(result)=x0;
@@ -527,6 +527,8 @@ template <class T>
       if (j>=STARTINGX(*this) && j<=FINISHINGX(*this) &&
           i>=STARTINGY(*this) && i<=FINISHINGY(*this))
           MAT_ELEM(result,i,j)=MAT_ELEM(*this,i,j);
+       else
+           MAT_ELEM(result,i,j)=init_value;	  
    *this=result;
 }
 
@@ -725,6 +727,30 @@ template <class T>
       center_of_mass(center);
       center*=-1;
       self_translate(center,wrap);
+   }
+
+template <class T>
+   void mT::superpixel_reduce(mT &result, int size) const {
+      result.init_zeros(YSIZE(*this)/size,XSIZE(*this)/size);
+      int size2=size*size;
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(result) {
+         for (int ii=0; ii<size; ii++)
+	    for (int jj=0; jj<size; jj++)
+	       DIRECT_MAT_ELEM(result,i,j)+=
+	          DIRECT_MAT_ELEM(*this,size*i+ii,size*j+jj);
+      	 DIRECT_MAT_ELEM(result,i,j)/=size2;
+      }
+   }
+
+template <class T>
+   void mT::superpixel_expand(mT &result, int size=2) const {
+      result.init_zeros(YSIZE(*this)*size,XSIZE(*this)*size);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
+         for (int ii=0; ii<size; ii++)
+	    for (int jj=0; jj<size; jj++)
+	       DIRECT_MAT_ELEM(result,size*i+ii,size*j+jj)=
+	          DIRECT_MAT_ELEM(*this,i,j);
+      }
    }
 
 /* Matrix by matrix multiplication ----------------------------------------- */
@@ -1238,6 +1264,8 @@ template <class T>
       matrix2D<double> B;
       apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP);
       a.scale_to_size(32,32,a);
+      a.superpixel_reduce(a,2);
+      a.superpixel_expand(a,2);
       a.for_all_rows(&vector_minus_first);
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);
@@ -1290,6 +1318,8 @@ void instantiate_complex_matrix () {
       matrix2D<double> B;
       apply_geom(a, B, a, IS_NOT_INV,DONT_WRAP);
       a.scale_to_size(32,32,a);
+      a.superpixel_reduce(a,2);
+      a.superpixel_expand(a,2);
       a.for_all_rows(&vector_minus_first);
       a.for_all_rows(&vector_first);
       a.for_all_cols(&vector_minus_first);
