@@ -49,6 +49,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    smax=AtoI(get_param(argc,argv,"-smax","-1"));
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
    pick=AtoI(get_param(argc,argv,"-pick","1"));
+   dont_apply_geo=check_param(argc,argv,"-dont_apply_geo");
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
@@ -70,6 +71,7 @@ void Prog_angular_predict_prm::show() {
         << "smax: " << smax << endl
         << "Check mirrors: " << check_mirrors << endl
 	<< "Pick: " << pick << endl
+	<< "Dont apply geo: " << dont_apply_geo << endl
         << "Show level: " << tell << endl
    ;
 }
@@ -94,6 +96,8 @@ void Prog_angular_predict_prm::usage() {
         << "                              images are also explored\n"
 	<< "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
 	<< "                              1 --> maximum of the most populated\n"
+	<< "  [-dont_apply_geo]         : do not apply the translations in the header\n"
+	<< "                              The header rotation is never applied\n"
 	<< "  [-show_rot_tilt]          : Show the rot-tilt process\n"
 	<< "  [-show_psi_shift]         : Show the psi-shift process\n"
 	<< "  [-show_options]           : Show final options among which\n"
@@ -131,6 +135,7 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    // Resize the predicted vectors
    int number_of_images=get_images_to_process();
    current_img=0;
+   image_name.resize(number_of_images);
    predicted_rot.resize(number_of_images);
    predicted_tilt.resize(number_of_images);
    predicted_psi.resize(number_of_images);
@@ -565,12 +570,19 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    ImageXmipp Ip;
    Ip=I;
    matrix1D<double> shift(2);
+   
+   // Get the 2D alignment shift
+   double Xoff, Yoff;
+   if (!dont_apply_geo) {
+      Xoff=I.Xoff();
+      Yoff=I.Yoff();
+   } else
+      Xoff=Yoff=0.0;
 
    // Establish psi limits
    double psi0, psiF;
    if (max_psi_change==-1) {psi0=-180; psiF=180-psi_step;}
    else {psi0=I.psi()-max_psi_change; psiF=I.psi()+max_psi_change;}
-//   psi0=psiF=max_psi_change;
    double R2=max_shift_change*max_shift_change;
    
    // Search in the psi-shift space
@@ -580,9 +592,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    vector<int>    vref_idx;
    
    for (int mirror=0; mirror<=check_mirrors; mirror++)
-      for (double shiftX=-max_shift_change; shiftX<=max_shift_change; shiftX+=shift_step)
-         for (double shiftY=-max_shift_change; shiftY<=max_shift_change; shiftY+=shift_step) {
-            if (shiftX*shiftX+shiftY*shiftY>R2) continue;
+      for (double shiftX=Xoff-max_shift_change; shiftX<=Xoff+max_shift_change; shiftX+=shift_step)
+         for (double shiftY=Yoff-max_shift_change; shiftY<=Yoff+max_shift_change; shiftY+=shift_step) {
+            if ((shiftX-Xoff)*(shiftX-Xoff)+(shiftY-Yoff)*(shiftY-Yoff)>R2) continue;
             for (double psi=psi0; psi<=psiF; psi+=psi_step) {
 	          N_trials++;
                   
@@ -827,6 +839,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    }
 
    // Save results
+                     image_name[current_img]       = I.name();
    assigned_rot    = predicted_rot[current_img]    = best_rot;
    assigned_tilt   = predicted_tilt[current_img]   = best_tilt;
    assigned_psi    = predicted_psi[current_img]    = best_psi;
@@ -853,6 +866,7 @@ void Prog_angular_predict_prm::finish_processing() {
       v(3)=predicted_shiftX[i];
       v(4)=predicted_shiftY[i];
       v(5)=predicted_corr[i];
+      DF.append_comment(image_name[i]);
       DF.append_data_line(v);
    }
    DF.write(fn_out_ang);

@@ -76,6 +76,8 @@ public:
        1 average of the most populated group.
        2 maximum correlation of the most populated group. */
    int pick;
+   /** Dont apply geo.*/
+   bool dont_apply_geo;
    #define TELL_ROT_TILT  1
    #define TELL_PSI_SHIFT 2
    #define TELL_OPTIONS   4
@@ -104,6 +106,8 @@ public:
    vector<double> tilt;
    // Index of the current processed image
    int current_img;
+   // Vector of image names
+   vector<string> image_name;
    // Vector of predicted rotational angles
    vector<double> predicted_rot;
    // Vector of predicted tilting angles
