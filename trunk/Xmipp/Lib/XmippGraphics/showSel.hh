@@ -91,6 +91,8 @@ protected:
             void openNewFile (const FileName &);
     /* Read a Selfile */
     virtual void readFile(const FileName &_fn) _THROW;
+    /* Read a SelFile object */
+    virtual void readObject(SelFile &SF);
     /* Update the label with the filename at cell i*/
     virtual void updateStatus(int i);
 private slots:
@@ -124,6 +126,10 @@ public:
         If you need to update the volume representation, use openNewFile(()*/
     virtual void initWithFile(int _numRows, int _numCols,
        const FileName &_fn);
+
+    /** Initialize with a Selfile. */
+    virtual void initWithObject(int _numRows, int _numCols,
+       SelFile &_SF, const char *_title);
 };
 //@}
 #endif

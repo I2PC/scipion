@@ -25,7 +25,6 @@
  ***************************************************************************/
 
 #include "../showSel.hh"
-#include "../show2D.hh"
 #include "../showTools.hh"
 #include <XmippInterface/xmippVTK.hh>
 #include <qmessagebox.h>
@@ -57,6 +56,20 @@ void ShowSel::initWithFile( int _numRows, int _numCols,
    repaint();
 }
 
+void ShowSel::initWithObject(int _numRows, int _numCols,
+   SelFile &_SF, const char *_title) {
+   init();
+   fn="";
+   setCaption(_title);
+   _SF.go_first_ACTIVE();
+   readObject(_SF);
+   NumRows = _numRows;
+   NumCols = _numCols;
+   initTable();
+   initRightclickMenubar();
+   repaint();
+}
+
 /* Read a Selfile ---------------------------------------------------------- */
 void ShowSel::readFile(const FileName &_fn) _THROW {
     clear();
@@ -64,6 +77,10 @@ void ShowSel::readFile(const FileName &_fn) _THROW {
     setCaption(fn.c_str());
     SelFile         SF(_fn);
     annotateTime(_fn);
+    readObject(SF);
+}
+
+void ShowSel::readObject(SelFile &SF) {
     listSize        = SF.ImgNo()+SF.ImgNo(SelLine::DISCARDED);
     if (listSize==0)
        REPORT_ERROR(1,"ShowSel::readFile: Input selfile is empty");
@@ -337,22 +354,8 @@ void ShowSel::showStats() {
     for (int i=0; i<listSize; i++)
         if (cellMarks[i])
 	  SFNew.insert(imgnames[i], SelLine::ACTIVE);
-    if (SFNew.ImgNo()) {
-       try {
-	  ImageXmipp _ave, _sd;
-	  double _minPixel, _maxPixel;
-	  SFNew.go_beginning(); 
-	  SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel);  
-	  ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
-	  ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
-	  wavg->show();
-	  wsd->show();
-       } catch (Xmipp_error XE) {
-          QMessageBox::about( this, "Error!",
-	     "There is a problem opening files\n");
-       }
-     } else
-        QMessageBox::about( this, "Error!", "No images selected\n");
+    if (SFNew.ImgNo()) ShowTable::showStats(SFNew);
+    else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
 // Show Sel Stats ----------------------------------------------------------
