@@ -1096,13 +1096,13 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
     }
     
     for (double defocusStep=initial_defocusStep; defocusStep>=1e3; defocusStep/=2) {
-       error.resize(CEIL((defocusV0-defocusVF)/defocusStep),
-                    CEIL((defocusU0-defocusUF)/defocusStep));
+       error.resize(CEIL((defocusV0-defocusVF)/defocusStep+1),
+                    CEIL((defocusU0-defocusUF)/defocusStep+1));
        if (global_show>=2)
           cout << "V=["<<defocusV0 << "," << defocusVF << "]\n"
                << "U=["<<defocusU0 << "," << defocusUF << "]\n" << defocusStep << endl;
-       for (defocusV=defocusV0,i=0; defocusV>defocusVF; defocusV-=defocusStep, i++) {
-          for (defocusU=defocusU0,j=0; defocusU>defocusUF; defocusU-=defocusStep, j++) {
+       for (defocusV=defocusV0,i=0; defocusV>=defocusVF; defocusV-=defocusStep, i++) {
+          for (defocusU=defocusU0,j=0; defocusU>=defocusUF; defocusU-=defocusStep, j++) {
 	      // Determine the distance between the parametric CTF
 	      // (with the defocus and the K values) and the CTF file
               // Select all parameters except defoci
