@@ -163,8 +163,8 @@ public:
    /** Paremeter for generating background.
        It is either a radius or a enlarging factor */
    double             back_param;
-   #define XMIPP_PHANTOM 1
-   #define MATH_PHANTOM  2
+#define XMIPP_PHANTOM 1
+#define MATH_PHANTOM  2
    /** Phantom description. 
        Flag to indicate if the phantom has been given with a mathematical
        description or a Xmipp volume. It can only take two values:
