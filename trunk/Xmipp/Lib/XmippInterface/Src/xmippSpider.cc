@@ -41,7 +41,7 @@ void generate_Spider_count(int imax, DocFile &DF_out) {
 }
 
 // Translate to Spider selfile ---------------------------------------------
-void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out) {
+void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style) {
    matrix1D<double>   aux(1);
    int               selline=1;
 
@@ -50,10 +50,16 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out) {
 
    SF_in.go_beginning();
    while (!SF_in.eof()) {
+      bool store=true;
       if (!SF_in.Is_COMMENT()) {
-         if (SF_in.Is_ACTIVE()) aux(0)=1;
-         else                   aux(0)=0;
-         DF_out.append_data_line(aux);
+         if (SF_in.Is_ACTIVE()) {
+	    if (!new_style) aux(0)=1;
+	    else            aux(0)=((FileName)SF_in.get_current_file()).get_number();
+         } else {
+	    if (!new_style) aux(0)=0;
+	    else            store=false;
+	 }
+         if (store) DF_out.append_data_line(aux);
       }
       SF_in.next();
    }

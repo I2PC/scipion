@@ -36,7 +36,7 @@
 #define VERBOSE
 //#define DEBUG
 // APH =====================================================================
-void APHFile3D::read(const FileName &fn) _THROW {
+void APHFile3D::read_from_prepmklcf(const FileName &fn) _THROW {
    ifstream  fh_aph;
    int       line_no=1;
    int       hmax=0, kmax=0, lmax=0, hmin=0, kmin=0,lmin=0;
