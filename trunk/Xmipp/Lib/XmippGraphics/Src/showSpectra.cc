@@ -28,6 +28,7 @@
 #include <qcolordialog.h>
 #include <qfontdialog.h>
 #include <qmessagebox.h>
+#include "../showTools.hh"
 
 /* Init/Clear data --------------------------------------------------------- */
 void ShowSpectra::init() {
@@ -126,6 +127,7 @@ void ShowSpectra::initRightclickMenubar() {
    // Show X legend
    mi_showXlegend = options->insertItem( "Show X legend", this,  SLOT(changeXlegend()));
    mi_hideXlegend = options->insertItem( "Hide X legend", this,  SLOT(changeXlegend()));
+   options->insertItem( "&Change X-axis step...", this, SLOT(changeXstep()));
    options->setItemEnabled(mi_showXlegend, false);
    options->setItemEnabled(mi_hideYlegend, true);
    options->insertSeparator();
@@ -152,7 +154,6 @@ void ShowSpectra::initRightclickMenubar() {
       colorMenu->insertItem( "&Curve", this, SLOT(changeCurveColor()));
       colorMenu->insertItem( "&Axis", this, SLOT(changeAxisColor()));
    menubar->insertItem( "&Colors", colorMenu);
-   menubar->insertItem( "&Change font...", this, SLOT(changeFont()));
    menubar->insertSeparator();
 
    // Inser Help and Quit
@@ -202,7 +203,7 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
    p->setPen(pen);
    p->drawLine(offX, scprojYdim-offY, scprojXdim-offX, scprojYdim-offY);
    double scaleX = (scprojXdim-2*offX)/N;
-   int    istep = N/spacing;
+   int    istep = spacing;
    for (int l=0; l<=N; l+=istep) {
 	 int x = offX + (int)(l*scaleX);
 	 // Draw legend
@@ -320,3 +321,26 @@ void ShowSpectra::changeFont() {
         repaintContents();
    }
 }
+// Change Grid spacing in X axis -------------------------------------
+void ShowSpectra::changeXstep() {
+      int N=V->theItems[0].size();
+      ScrollParam* param_window;
+      param_window = new ScrollParam(1 //min
+                                    ,N //max
+				    , spacing //init value
+				    , "Set spacing",
+         0, "new window", WDestructiveClose,0);
+      connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
+      param_window->setFixedSize(250,200);
+      param_window->show();
+
+}
+/****************************************************/
+
+void ShowSpectra::set_spacing(float _spacing) {
+  spacing = (int) _spacing;
+    clearContents();
+    repaintContents();
+  
+}
+
