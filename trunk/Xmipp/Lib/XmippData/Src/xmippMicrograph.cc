@@ -66,7 +66,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    fn_inf=fn_micrograph.add_extension("inf");
    FILE *fh_inf=fopen(fn_inf.c_str(),"r");
    if (!fh_inf)
-      REPORT_ERROR(1,(string)"Micrograph::open_micrograph: Cannot find"+
+      REPORT_ERROR(1,(string)"Micrograph::open_micrograph: Cannot find "+
          fn_inf);
    Xdim=AtoI(get_param(fh_inf,"Xdim"));
    Ydim=AtoI(get_param(fh_inf,"Ydim"));
