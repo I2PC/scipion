@@ -84,6 +84,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       case ONLY_PHASE:      FFT_phase(fftI,img()); break;
       case ONLY_AMPLITUDES: FFT_magnitude(fftI,img()); break;
    }
+   if (!eprm->do_not_center) shift_for_VTK(img(),'y');
+   if (!eprm->do_not_center) shift_for_VTK(img(),'x');
    if (eprm->squared) img() *= img();
    if (eprm->apply_log)
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
@@ -99,6 +101,9 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       case ONLY_PHASE:      FFT_phase(fftI,vol()); break;
       case ONLY_AMPLITUDES: FFT_magnitude(fftI,vol()); break;
    }
+   if (!eprm->do_not_center) shift_for_VTK(vol(),'z');
+   if (!eprm->do_not_center) shift_for_VTK(vol(),'y');
+   if (!eprm->do_not_center) shift_for_VTK(vol(),'x');
    if (eprm->squared) vol() *= vol();
    if (eprm->apply_log)
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
