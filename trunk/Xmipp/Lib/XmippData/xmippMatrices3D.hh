@@ -796,6 +796,11 @@ public:
    friend void apply_geom<>(VT &V2, matrix2D<double> A,
             const VT &V1, bool inv, bool wrap) _THROW;
 
+   /** Self apply geom.
+       As apply geometry, but the result is kept in this object */
+   void self_apply_geom(matrix2D<double> A, bool inv, bool wrap)
+      {VT aux; apply_geom(aux, A,*this,inv,wrap); *this=aux;}
+
    /** Rotate a volume around system axis.
        The rotation angle is in degrees, and the rotational axis is
        either 'X', 'Y' or 'Z'. An exception is thrown if the axis given
