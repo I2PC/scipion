@@ -70,8 +70,6 @@ public:
    double    Nshift_dev;
    /// Disappearing threshold
    double    disappearing_th;
-   /// Grid relative size. For the posterior 3D reconstruction 
-   double    grid_relative_size;
 public:
    /** Empty constructor*/
    Crystal_Projection_Parameters();
