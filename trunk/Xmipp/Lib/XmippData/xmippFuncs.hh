@@ -692,6 +692,15 @@ public:
     \\ Ex: if (exists("g1ta00001")) cout << "The file exists" << endl; */
 int exists(const FileName &fn);
 
+/** Waits until the given filename has a stable size.
+    The stable size is defined as having the same size within two
+    samples saprated by time_step (microsecs.). 
+    
+    An exception is throw if the file exists but its size cannot be
+    stated.*/
+void wait_until_stable_size(const FileName &fn,
+   unsigned long time_step=250000) _THROW;
+
 /** Write a zero filled file with the desired size.
     The file is written by blocks to speed up, you can modify the block size.
     An exception is thrown if any error happens */

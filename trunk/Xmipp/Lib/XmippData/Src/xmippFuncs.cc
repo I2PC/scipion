@@ -25,6 +25,8 @@
 #include "../xmippFuncs.hh"
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <time.h>
 #include <complex.h>
 #include <fstream.h>
@@ -216,6 +218,27 @@ int exists (const FileName &fn) {
    if ((aux = fopen (fn.c_str(), "r")) == NULL) return 0;
    fclose (aux);
    return 1;
+}
+
+/* Wait until file has a stable size --------------------------------------- */
+void wait_until_stable_size(const FileName &fn,
+   unsigned long time_step) _THROW {
+   if (!exists(fn)) return;
+   struct stat info1, info2;
+   if (stat(fn.c_str(), &info1))
+      REPORT_ERROR(1,
+         (string)"wait_until_stable_size: Cannot get size of file "+fn);
+   off_t size1=info1.st_size;
+   do {
+      usleep(time_step);
+      if (stat(fn.c_str(), &info2))
+	 REPORT_ERROR(1,
+            (string)"wait_until_stable_size: Cannot get size of file "+fn);
+      off_t size2=info2.st_size;
+      if (size1==size2) break;
+      size1=size2;
+   } while (true);
+   return;
 }
 
 /* Create empty file ------------------------------------------------------- */
