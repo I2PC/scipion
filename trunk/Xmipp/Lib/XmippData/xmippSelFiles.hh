@@ -174,8 +174,7 @@ public:
    SelFile();
    
    /** Constructor with filename, read from disk.
-       The given name is loaded as a selection file. If it doesn't exist
-       an exception is thrown.
+       The given name is loaded (method read) as a selection file.
        \\Ex: SelFile SF("g1t.sel");
        @see read*/
    SelFile(FileName sel_name) {read(sel_name);}
@@ -218,6 +217,8 @@ public:
        is thrown if the file doesn't exist. Lines which do not fit the
        comment structure or the "image-label" structure are ignored.
        The image name is limited to MAX_FILENAME_LENGTH characters.
+       After reading the selfile pointer is moved to the first ACTIVE
+       image. 
        \\Ex: SF.read("g2t.sel"); */
    void read(const FileName &sel_name, int overrinding=1) _THROW;
    
