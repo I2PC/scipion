@@ -62,7 +62,7 @@ void Prog_align2d_prm::read(int argc, char **argv) _THROW  {
     sam=AtoF(get_param(argc,argv,"-sampling"));
   }
   // Number of iterations
-  Niter=AtoI(get_param(argc,argv,"-iter","4"));
+  Niter=AtoI(get_param(argc,argv,"-iter","1"));
   // Only translational/rotational
   do_rot=!check_param(argc,argv,"-only_trans");
   do_trans=!check_param(argc,argv,"-only_rot");
@@ -117,7 +117,7 @@ void Prog_align2d_prm::usage() {
   cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
        << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
        << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
-       << " [ -iter <int=4> ]          : Number of iterations to perform \n"
+       << " [ -iter <int=1> ]          : Number of iterations to perform \n"
        << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
        << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
        << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
@@ -320,7 +320,7 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   auto_correlation_matrix(Maux,Mimg2);
   apply_binary_mask(mask,Mref,Maux);
   auto_correlation_matrix(Maux,Mref2);
-  BinaryCircularMask(mask,Mref2.ColNo(),INNER_MASK);
+  BinaryCircularMask(mask,(int)Mref2.ColNo()/2,INNER_MASK);
 
   // Optimize rotation in coarse steps
   nstep=(int)(360/psi_coarse_step);
