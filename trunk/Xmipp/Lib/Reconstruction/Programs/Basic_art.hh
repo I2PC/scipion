@@ -92,6 +92,9 @@ public:
    /// True if random sort of projections
    bool random_sort;
 
+   /// True if no sort must be made
+   bool dont_sort;
+
    /// Sort perpendicular with the last N projections. If -1 with all previous
    int sort_last_N;
 
