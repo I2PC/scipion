@@ -362,12 +362,12 @@
      _is >> somWidth;  
      _is >> somHeight;  
      
-     stringstream ostr;
+     char aux[128];
+     strstream ostr(aux,sizeof(aux));
      ostr << dim << " " << (somWidth*somHeight) << " " <<
         somWidth << " " << somHeight << endl;
      while (_is.good())
         ostr.put (_is.get());
-     ostr.sync();
      xmippCB::readSelf(ostr);
   };
 
