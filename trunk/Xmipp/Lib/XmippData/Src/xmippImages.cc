@@ -52,6 +52,11 @@ void ImageT<T>::read(FILE * &fh, int Ydim, int Xdim, bool reversed,
             FREAD (&u, sizeof(unsigned char), 1, fh, reversed);
             MULTIDIM_ELEM(img,i)=u;
             break;
+	 case I16:
+	    unsigned short us;
+	    FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
+	    MULTIDIM_ELEM(img,i)=us;
+	    break;
          case IFLOAT:
             float f;
             FREAD (&f, sizeof(float), 1, fh, reversed);
@@ -94,12 +99,27 @@ void ImageT<T>::write(FileName name, bool reversed, Image_Type image_type) _THRO
 template <class T>
 void ImageT<T>::write(FILE * &fh, bool reversed, Image_Type image_type) {
   if (XSIZE(img)==0 || YSIZE(img)==0) return;
+  double a,b;
+  if (image_type!=IFLOAT) {
+     double min_val, max_val;
+     (*this)().compute_double_minmax(min_val,max_val);
+     if (image_type==IBYTE) a=255;
+     else                   a=65535;
+     a/=(max_val-min_val);
+     b=min_val;
+  }
+  
   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
       switch (image_type) {
          case IBYTE:
             unsigned char u;
-            u=(unsigned char) MULTIDIM_ELEM(img,i);
+            u=(unsigned char) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
             FWRITE (&u, sizeof(unsigned char), 1, fh, reversed);
+            break;
+	 case I16:
+	    unsigned short us;	    
+            us=(unsigned short) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+            FWRITE (&us, sizeof(unsigned short), 1, fh, reversed);
             break;
          case IFLOAT:
             float f;

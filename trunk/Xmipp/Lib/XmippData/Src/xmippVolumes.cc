@@ -53,10 +53,15 @@ template <class T> void VolumeT<T>::read(FILE *fh,
             break;
          case VINT:
             int ii;
-            FREAD (&i, sizeof(int), 1, fh, reversed);
+            FREAD (&ii, sizeof(int), 1, fh, reversed);
             MULTIDIM_ELEM(img,i)=(T)ii;
             break;
             //NOTE integers and floats need to be reversed in identical way
+         case V16:
+            unsigned short us;
+            FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
+            MULTIDIM_ELEM(img,i)=(T)us;
+            break;
          case VFLOAT:
             float f;
             FREAD (&f, sizeof(float), 1, fh, reversed);
@@ -99,12 +104,26 @@ template <class T> void VolumeT<T>::write(FileName name, bool reversed,
 template <class T> void VolumeT<T>::write(FILE *fh, bool reversed,
    Volume_Type volume_type) {
    if (XSIZE(img)==0 || YSIZE(img)==0 || ZSIZE(img)==0) return;
+   double a,b;
+   if (volume_type!=VFLOAT) {
+      double min_val, max_val;
+      (*this)().compute_double_minmax(min_val,max_val);
+      if (volume_type==VBYTE) a=255;
+      else                   a=65535;
+      a/=(max_val-min_val);
+      b=min_val;
+   }
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
        switch (volume_type) {
           case VBYTE:
              unsigned char u;
-             u=(unsigned char) MULTIDIM_ELEM(img,i);
+             u=(unsigned char) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
              FWRITE (&u, sizeof(unsigned char), 1, fh, reversed);
+             break;
+          case V16:
+             unsigned short us;
+             us=(unsigned short) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+             FWRITE (&us, sizeof(unsigned short), 1, fh, reversed);
              break;
           case VFLOAT:
              float f;
