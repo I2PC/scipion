@@ -32,24 +32,7 @@
     Here you will find some routines which might help you to write programs
     with a common structure where only a small part changes. These routines
     make the heavy work for you and you only have to supply the changing
-    part from one to another. To generate easily the programs you might
-    use the following UNIX script (called XmippCompile)
-    \begin{verbatim}
-    #!/bin/sh
-    if [ -e $1 ] ; then
-       PROG=`echo $1 | cut -d. -f1`
-       g++ -o $PROG $1  -I $XMIPPDIR/Lib/ -L $XMIPPDIR/Lib/ \
-          -lReconsIRIX62 -lXmippIRIX62 ;
-    else
-       echo "XmippCompile:" $1 "doesn't exist"
-    fi
-    \end{verbatim}
-    where XMIPPDIR is an environment variable with the path to the directory
-    where Xmipp is installed, and in this script it is said implicitly that
-    we are compiling for IRIX 6.2 in the library names (you might change
-    this last part).
-    \\ Ex: XmippCompile change_angles.cc
-    Now you have a program called change_angles in the actual directory.
+    part from one to another.
 */
 //@{
 /** Virtual Program parameters class.
