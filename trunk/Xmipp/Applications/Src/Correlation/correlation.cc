@@ -98,7 +98,7 @@ public:
     cerr << "  [-co ]                    : Only calculate correlation (i.e. signal product) \n";
     cerr << "  [-cc ]                    : Only calculate cross-correlation coefficient \n";
     cerr << "  [-eu ]                    : Only calculate euclidian distance \n";
-    cerr << "  [-mi ]                    : Only calculate mutual distance\n";
+    cerr << "  [-mi ]                    : Only calculate mutual information\n";
   }
 };
                                                                                                    
