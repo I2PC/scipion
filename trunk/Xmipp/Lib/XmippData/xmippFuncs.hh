@@ -614,6 +614,9 @@ public:
 /**@name Manipulators*/
 //@{
    /** Add string at the beginning.
+       If there is a path then the prefix is added after the path.
+       \\ Ex: fn_proj="imgs/g1ta00001"; fn_proj.add_prefix("h");
+       \\ ---> fn_proj=="imgs/hg1ta00001"
        \\ Ex: fn_proj="g1ta00001"; fn_proj.add_prefix("h");
        \\ ---> fn_proj=="hg1ta00001"*/
    FileName add_prefix(const string &prefix) const;

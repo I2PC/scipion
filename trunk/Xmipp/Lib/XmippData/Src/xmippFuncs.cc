@@ -301,7 +301,8 @@ string FileName::get_extension() const {
 // Add at beginning ........................................................
 FileName FileName::add_prefix(const string &prefix) const {
    FileName retval=*this;
-   return retval.insert(0,prefix);
+   int skip_directories=find_last_of("/")+1;
+   return retval.insert(skip_directories,prefix);
 }
 
 // Add at the end ..........................................................
