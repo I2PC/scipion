@@ -50,6 +50,11 @@ template <class T>
        << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
+/* Get size--- ------------------------------------------------------------- */
+template <class T>
+   void vT::get_size(int *size) const
+   {size[0]=xdim; size[1]=1; size[2]=1;}
+
 /* Outside ----------------------------------------------------------------- */
 template <class T>
    bool vT::outside(const matrix1D<double> &v) const _THROW {
@@ -462,6 +467,7 @@ template <class T>
       a.center_of_mass(r);
 
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
 	  a.isBorder(0);
 	  matrix1D<int> pixel(1); a.isBorder(pixel);
@@ -496,6 +502,7 @@ void instantiate_complex_vector () {
       a=a-(double_complex)1.0;
       a=a*a;
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
       a.outside(0);
       a.intersects(a);

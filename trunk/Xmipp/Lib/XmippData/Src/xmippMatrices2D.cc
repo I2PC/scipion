@@ -51,6 +51,11 @@ template <class T>
        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
+/* Get size--- ------------------------------------------------------------- */
+template <class T>
+   void mT::get_size(int *size) const
+   {size[0]=xdim; size[1]=ydim; size[2]=1;}
+
 /* Outside ----------------------------------------------------------------- */
 template <class T>
    bool mT::outside(const matrix1D<double> &v) const _THROW {
@@ -1307,6 +1312,7 @@ template <class T>
       a.center_of_mass(r);
 
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
       a.outside(0,0);
 	  
@@ -1366,6 +1372,7 @@ void instantiate_complex_matrix () {
       
       // General functions for multidimensional arrays
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
       a.outside(0,0);
       

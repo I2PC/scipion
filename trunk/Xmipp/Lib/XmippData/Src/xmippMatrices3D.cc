@@ -55,6 +55,11 @@ template <class T>
        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
+/* Get size--- ------------------------------------------------------------- */
+template <class T>
+   void VT::get_size(int *size) const
+   {size[0]=xdim; size[1]=ydim; size[2]=zdim;}
+
 /* Outside ----------------------------------------------------------------- */
 template <class T>
    bool VT::outside(const matrix1D<double> &v) const _THROW {
@@ -721,6 +726,7 @@ template <class T>
       a.count_threshold("abs_above",1,0);
 
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
       a.outside(0,0,0);
 	  a.isBorder(0,0,0);
@@ -764,6 +770,7 @@ void instantiate_complex_matrix3D () {
       a=a-1.0;
       a=a*a;
       a.print_shape();
+      int size[3]; a.get_size(size);
       a.outside(r);
       a.outside(0,0,0);
       a.intersects(a);
