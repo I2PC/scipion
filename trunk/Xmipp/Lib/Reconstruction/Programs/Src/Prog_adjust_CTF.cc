@@ -397,7 +397,7 @@ void save_intermidiate_results(const FileName &fn_root) {
       FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
       if (w<global_min_freq || w>global_max_freq) continue;
       digfreq2contfreq(freq, freq, global_Tm);
-      plot_radial << YY(freq) << " " << pow(10,radial_CTFmodel_avg(i)/radial_N(i)) << " "
+      plot_radial << YY(freq) << " " << pow(10.0,radial_CTFmodel_avg(i)/radial_N(i)) << " "
 	    << radial_CTFampl_avg(i)/radial_N(i) << endl;
    }
 
@@ -470,16 +470,39 @@ void estimate_background_gauss_parameters() {
    double           w;                   // module of the frequency
    matrix2D<double> *f=global_ctf_ampl2; // A pointer to simplify expresions
 
-   // Estimate the gaussian centers
-   VECTOR_R2(freq,0,global_min_freq+0.2*(global_max_freq-global_min_freq));
-   digfreq2contfreq(freq, freq, global_Tm);
-   global_ctfmodel.cV=YY(freq);
-   global_ctfmodel.cV=0;
+   // Compute radial error
+   matrix1D<double> radial_CTFmodel_avg(YSIZE(*f)/2);
+   matrix1D<double> radial_CTFampl_avg(YSIZE(*f)/2);
+   matrix1D<int>    radial_N(YSIZE(*f)/2);
+   for (int i=STARTINGY(*f); i<=FINISHINGY(*f); i++)
+      for (int j=STARTINGX(*f); j<=FINISHINGX(*f)/2; j++) {
+	 XX(idx)=j; YY(idx)=i;
+	 FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
+	 if (w<global_min_freq || w>global_max_freq) continue;
+      	 
+	 int r=FLOOR(w*(double)YSIZE(*f));
+      	 radial_CTFmodel_avg(r)+=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
+	 radial_CTFampl_avg(r)+=(*f)(i,j);
+	 radial_N(r)++;
+      }
 
-   VECTOR_R2(freq,global_min_freq+0.2*(global_max_freq-global_min_freq),0);
+   // Compute the maximum radial error
+   bool   first=true;
+   double error_max=0, wmax, fmax;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg) {
+      XX(idx)=0; YY(idx)=i;
+      FFT_idx2digfreq(global_ctf, idx, freq); w=freq.module();
+      if (w<global_min_freq || w>global_max_freq) continue;
+
+      double error=radial_CTFampl_avg(i)/radial_N(i)
+                    -pow(10.0,radial_CTFmodel_avg(i)/radial_N(i));
+             error*=error;
+      if (first || error>error_max) {wmax=w; error_max=error; first=false;}
+   }
+   
+   VECTOR_R2(freq,wmax,wmax);
    digfreq2contfreq(freq, freq, global_Tm);
-   global_ctfmodel.cU=XX(freq);
-   global_ctfmodel.cU=0;
+   fmax=global_ctfmodel.cV=global_ctfmodel.cU=YY(freq);
 
    // Find the linear least squares solution for the gauss part
    matrix2D<double> A(3,3); A.init_zeros();
@@ -506,8 +529,8 @@ void estimate_background_gauss_parameters() {
       double unexplained=(*f)(i,j)-explained;
       if (unexplained<=0) continue;
       unexplained=log(unexplained);
-      double X=-XX(freq)*XX(freq);
-      double Y=-YY(freq)*YY(freq);
+      double X=-(XX(freq)-fmax)*(XX(freq)-fmax);
+      double Y=-(YY(freq)-fmax)*(YY(freq)-fmax);
       A(0,0)+=weight*X*X;
       A(0,1)+=weight*X*Y;
       A(0,2)+=weight*X;
@@ -932,9 +955,17 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
 
     double defocusV0=-1e3, defocusU0=-1e3;
     double defocusVF=-100e3, defocusUF=-100e3;
+    double initial_defocusStep=16e3;
     matrix2D<double> error;
+    
+    // Check if there is no initial guess
+    if (global_initial_ctfmodel->DeltafU!=0) {
+       initial_defocusStep=8e3;
+       defocusU0=defocusV0=global_initial_ctfmodel->DeltafU+initial_defocusStep;
+       defocusUF=defocusVF=global_initial_ctfmodel->DeltafU-initial_defocusStep;
+    }
 
-    for (double defocusStep=16e3; defocusStep>=1e3; defocusStep/=2) {
+    for (double defocusStep=initial_defocusStep; defocusStep>=1e3; defocusStep/=2) {
        error.resize(CEIL((defocusV0-defocusVF)/defocusStep),
                     CEIL((defocusU0-defocusUF)/defocusStep));
        if (global_show>=1)
@@ -950,7 +981,7 @@ void estimate_best_parametric_CTF(double (*fitness)(double *p)) {
                  global_Adjust_CTF_parameters->astigmatic_noise);
 	      (*global_adjust)(2)=defocusU;
 	      (*global_adjust)(3)=defocusV;
-
+   
               estimate_best_parametric_CTF_for_defoci();
               error(i,j)=(*fitness)(p);
 
