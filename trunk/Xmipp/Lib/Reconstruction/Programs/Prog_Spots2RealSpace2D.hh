@@ -82,6 +82,11 @@ public:
    /** Align A axis with x.
        This is used for phantoms, where usually it is */
    bool            align_a_axis_with_x;
+   /** Generate symmetrical reflections.
+       By default, no */
+   bool            generate_symmetrical_reflections;
+   /** Symmetry group */
+   string          str_symmetry_group;
 public:
    /* Side information */
    /** This image APH */
@@ -98,6 +103,8 @@ public:
    double          tilt;
    /** Psi angle */
    double          psi;
+   /* Symmetry group code */
+   int             symmetry_group;
 //   /** Mirror correction phase shift in X */
 //   double          mirror_phase_X;
 //   /** Mirror correction phase shift in Y */
@@ -109,7 +116,7 @@ public:
    /** Show parameters. */
    friend ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm);
    /** Produce Side Information */
-   void produce_SideInfo();
+   void produce_SideInfo() _THROW;
 };
 
    void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
