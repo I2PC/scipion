@@ -58,7 +58,7 @@ $(LIBPROJ): $(SRC_OBJS) $(BILIB_OBJS)
 # Compiling by default -----------------------------------------------------
 .cc.o:
 	@echo "Compiling" $*.cc "..."
-	@$(CC) -o $*.o $(COMPILERFLAGS) -fPIC $*.cc -c
+	@$(CC) -o $*.o $(COMPILERFLAGS) -IBilib -IBilib/headers -IBilib/types -fPIC $*.cc -c
 
 .c.o:
 	@echo "Compiling" $*.c "..."
@@ -77,7 +77,7 @@ clean:
 depend:
 	@echo "Creating dependencies for XmippData/Src ..."
 	@makedepend $(DEPENDDIRS) `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
-	@makedepend $(DEPENDDIRS) `echo $(BILIB_OBJS) | sed -e's/\.o/\.c/g'`
+	@makedepend $(DEPENDDIRS) `echo $(BILIB_OBJS) | sed -e's/\.o/\.cc/g'`
 
 # DistCleaning -------------------------------------------------------------
 distclean:
