@@ -1,6 +1,32 @@
-dnl Available from the GNU Autoconf Macro Archive at:
-dnl http://www.gnu.org/software/ac-archive/htmldoc/acx_mpi.html
+dnl @synopsis ACX_MPI([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
+dnl This macro tries to find out how to compile programs that
+dnl use MPI (Message Passing Interface), a standard API for
+dnl parallel process communication (see http://www-unix.mcs.anl.gov/mpi/)
+dnl
+dnl On success, it sets the MPICC, MPICXX, or MPIF77 output variable to
+dnl the name of the MPI compiler, depending upon the current language.
+dnl (This may just be $CC/$CXX/$F77, but is more often something like
+dnl mpicc/mpiCC/mpif77.)  It also sets MPILIBS to any libraries that are
+dnl needed for linking MPI (e.g. -lmpi, if a special MPICC/MPICXX/MPIF77
+dnl was not found).
+dnl
+dnl If you want to compile everything with MPI, you should set:
+dnl
+dnl     CC="$MPICC" #OR# CXX="$MPICXX" #OR# F77="$MPIF77"
+dnl     LIBS="$MPILIBS $LIBS"
+dnl
+dnl The user can force a particular library/compiler by setting the
+dnl MPICC/MPICXX/MPIF77 and/or MPILIBS environment variables.
+dnl
+dnl ACTION-IF-FOUND is a list of shell commands to run if an MPI
+dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
+dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
+dnl the default action will define HAVE_MPI.
+dnl
+dnl @version $Id$
+dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
+
 AC_DEFUN([ACX_MPI], [
 AC_PREREQ(2.50) dnl for AC_LANG_CASE
 
