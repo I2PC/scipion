@@ -496,13 +496,17 @@ typedef VolumeXmippT<complex<double> > FourierVolumeXmipp;
 //@{
 /** True if the given volume is an Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
-int Is_VolumeXmipp(FileName fn, bool skip_type_check=FALSE,
+int Is_VolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
    bool force_reversed=FALSE) _THROW;
 
 /** True if the given volume is a Fourier Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
-int Is_FourierVolumeXmipp(FileName fn, bool skip_type_check=FALSE,
+int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
    bool force_reversed=FALSE) _THROW;
+
+/** Get size of a volume.
+    It returns -1 if the file is not an Xmipp volume.*/
+void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim);
 //@}
 
 //@}

@@ -667,12 +667,16 @@ public:
 /**@name Related functions */
 //@{
 /** True if the given volume is an Xmipp image. */
-int Is_ImageXmipp(FileName fn, bool skip_type_check=FALSE,
+int Is_ImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
       bool reversed=FALSE) _THROW;
 
 /** True if the given volume is a Fourier Xmipp image. */
-int Is_FourierImageXmipp(FileName fn, bool skip_type_check=FALSE,
+int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
       bool reversed=FALSE) _THROW;
+
+/** Get size of an image.
+    It returns -1 if the given image is not an Xmipp file*/
+void GetXmippImageSize(const FileName &fn, int &Ydim, int &Xdim);
 //@}
 
 /* ************************************************************************* */

@@ -189,7 +189,7 @@ template <class T> void VolumeXmippT<T>::write(const FileName &name,
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
-int Is_VolumeXmipp(FileName fn, bool skip_type_check, bool force_reversed)
+int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed)
    _THROW {
    FILE *fp; 
    int result=0;
@@ -211,7 +211,7 @@ int Is_VolumeXmipp(FileName fn, bool skip_type_check, bool force_reversed)
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
-int Is_FourierVolumeXmipp(FileName fn, bool skip_type_check, bool force_reversed)
+int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed)
    _THROW {
    FILE *fp; 
    int result=0;
@@ -225,6 +225,29 @@ int Is_FourierVolumeXmipp(FileName fn, bool skip_type_check, bool force_reversed
    result = header.read(fp, skip_type_check, force_reversed);
    fclose(fp);
    return result;
+}
+
+/* Get Volume size ---------------------------------------------------------- */
+void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim) {
+   FILE *fp; 
+   int result;
+   headerXmipp header(headerXmipp::VOL_XMIPP);
+
+   // Open file
+   if ((fp = fopen(fn.c_str(), "rb")) == NULL)
+     REPORT_ERROR(1501,"Is_ImageXmipp: File " + fn + " not found");
+
+   // Read header
+   result = header.read(fp, FALSE, FALSE);
+
+   fclose(fp);
+   if (result) {
+      Zdim=header.iZdim();
+      Ydim=header.iYdim();
+      Xdim=header.iXdim();
+   } else {
+      Zdim=Ydim=Xdim=-1;
+   }
 }
 
 template <class T>

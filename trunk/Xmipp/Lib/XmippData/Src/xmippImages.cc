@@ -196,7 +196,7 @@ void ImageXmippT<T>::write(const FileName &name, bool force_reversed) _THROW {
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
-int Is_ImageXmipp(FileName fn, bool skip_type_check,
+int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
    bool reversed) _THROW {
    FILE *fp; 
    int result;
@@ -215,7 +215,7 @@ int Is_ImageXmipp(FileName fn, bool skip_type_check,
 }
 
 /* Is Fourier Xmipp image? ------------------------------------------------- */
-int Is_FourierImageXmipp(FileName fn, bool skip_type_check,
+int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check,
    bool reversed) _THROW {
    FILE *fp; 
    int result;
@@ -231,6 +231,28 @@ int Is_FourierImageXmipp(FileName fn, bool skip_type_check,
    fclose(fp);
    
    return result;
+}
+
+/* Get Image size ---------------------------------------------------------- */
+void GetXmippImageSize(const FileName &fn, int &Ydim, int &Xdim) {
+   FILE *fp; 
+   int result;
+   headerXmipp header(headerXmipp::IMG_XMIPP);
+
+   // Open file
+   if ((fp = fopen(fn.c_str(), "rb")) == NULL)
+     REPORT_ERROR(1501,"Is_ImageXmipp: File " + fn + " not found");
+
+   // Read header
+   result = header.read(fp, FALSE, FALSE);
+
+   fclose(fp);
+   if (result) {
+      Ydim=header.iYdim();
+      Xdim=header.iXdim();
+   } else {
+      Ydim=Xdim=-1;
+   }
 }
 
 /* Convert a Xmipp Image into  a Fourier Xmipp Image -------------------------------*/
