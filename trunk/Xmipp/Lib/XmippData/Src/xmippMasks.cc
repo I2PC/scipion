@@ -307,7 +307,7 @@ void BinaryCylinderMask(matrix3D<int> &mask,
    double H_2=H/2;
    FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
       double r2=(i-y0)*(i-y0)+(j-x0)*(j-x0);
-      int in_cyilinder=(r2<=R2 && ABS(k)<=H_2);
+      int in_cyilinder=(r2<=R2 && ABS(k-z0)<=H_2);
       if      (in_cyilinder  && mode==INNER_MASK  ) VOL_ELEM(mask,k,i,j)=1;
       else if (!in_cyilinder && mode==OUTSIDE_MASK) VOL_ELEM(mask,k,i,j)=1;
    }
