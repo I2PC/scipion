@@ -7,6 +7,7 @@ OBJ  = 	mark.o \
         QtDialogFamilies.o QtDialogFamilies.moc \
         QtDialogProperties.o QtDialogProperties.moc \
 	QtFileMenu.o QtFileMenu.moc \
+	QtAutoMenu.o QtAutoMenu.moc \
         QtFilter.o QtFilter.moc \
         QtFilterMenu.o QtFilterMenu.moc \
         QtFiltersController.o QtFiltersController.moc \
