@@ -1,0 +1,204 @@
+/***************************************************************************
+ *
+ * Authors:     Sjors Scheres (scheres@cnb.uam.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
+
+#include <XmippData/xmippProgs.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippFFT.hh>
+#include <XmippData/xmippSelFiles.hh>
+
+class Resolution_parameters: public Prog_parameters {
+public:
+  FileName    fn_ref,fn_root;
+  ImageXmipp  refI;
+  VolumeXmipp refV;
+  float       sam;
+public:
+  Resolution_parameters() {}
+  void read(int argc, char **argv) _THROW {
+    Prog_parameters::read(argc,argv);
+    fn_ref=get_param(argc,argv,"-ref");
+    sam=AtoF(get_param(argc,argv,"-sam"));
+    if (Is_ImageXmipp(fn_ref)) {
+      refI.read(fn_ref,FALSE,FALSE,apply_geo);
+      refI().set_Xmipp_origin();
+    } else if (Is_VolumeXmipp(fn_ref)) {
+      refV.read(fn_ref);
+      refV().set_Xmipp_origin();
+    } else exit(0);
+  }
+   void show() {
+      Prog_parameters::show();
+      cout << "Reference file = " << fn_ref << endl;
+      cout << "Sampling rate  = " << sam << endl;
+   }
+   void usage() {
+     cerr << " EITHER:\n";
+     cerr << "   -ref <input file>        : Filename for reference image/volume \n";
+     cerr << "   -i <input file>          : either an image/volume or a selection file\n";
+     cerr << " OR:\n";
+     cerr << "   -set_of_images <selfile> : SelFile containing a set of 2D-images\n";
+     cerr << " For both modes:\n";
+     cerr << "   -sam <sampling rate>     : i.e. pixel size (in Angstrom) \n";
+     cerr << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
+   }
+};
+
+void process_img(ImageXmipp &img, const Prog_parameters *prm) {
+   Resolution_parameters *eprm=(Resolution_parameters *) prm;
+
+   matrix1D<double> freq,frc,dpr,frc_noise;
+
+   fourier_ring_correlation(eprm->refI(),img(),eprm->sam,freq,frc,frc_noise);
+   differential_phase_residual(eprm->refI(),img(),eprm->sam,freq,dpr);
+
+   // Write output
+   FileName fn_dpr,fn_frc;
+   fn_dpr=img.name()+".dpr";
+   fn_frc=img.name()+".frc";
+   ofstream out(fn_dpr.c_str(), ios::out);
+   ofstream out2(fn_frc.c_str(), ios::out);
+   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+   out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+     if (i>0) {
+       out.width(10);
+       out  << VEC_ELEM(freq,i);
+       out.width(17);
+       out << VEC_ELEM(dpr,i)  <<endl;
+       out2.width(10);
+       out2  << VEC_ELEM(freq,i);
+       out2.width(17);
+       out2  << VEC_ELEM(frc,i);
+       out2.width(17);
+       out2  << VEC_ELEM(frc_noise,i)<<endl;
+     }
+   }
+   out.close();
+   out2.close();
+
+   dpr.core_deallocate();
+   frc.core_deallocate();
+
+}
+
+void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
+   Resolution_parameters *eprm=(Resolution_parameters *) prm;
+
+   matrix1D<double> freq,frc,dpr,frc_noise;
+
+   fourier_ring_correlation(eprm->refV(),vol(),eprm->sam,freq,frc,frc_noise);
+   differential_phase_residual(eprm->refV(),vol(),eprm->sam,freq,dpr);
+
+   // Write output
+   FileName fn_dpr,fn_frc;
+   fn_dpr=vol.name()+".dpr";
+   fn_frc=vol.name()+".frc";
+   ofstream out(fn_dpr.c_str(), ios::out);
+   ofstream out2(fn_frc.c_str(), ios::out);
+   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+   out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+     if (i>0) {
+       out.width(10);
+       out  << VEC_ELEM(freq,i);
+       out.width(17);
+       out << VEC_ELEM(dpr,i)  <<endl;
+       out2.width(10);
+       out2  << VEC_ELEM(freq,i);
+       out2.width(17);
+       out2  << VEC_ELEM(frc,i);
+       out2.width(17);
+       out2  << VEC_ELEM(frc_noise,i)<<endl;
+     }
+   }
+   out.close();
+   out2.close();
+
+   dpr.core_deallocate();
+   frc.core_deallocate();
+}
+
+
+int main (int argc, char **argv) {
+
+  if (!check_param(argc,argv,"-set_of_images")) {
+
+    Resolution_parameters prm;
+    prm.each_image_produces_an_output=FALSE;
+    prm.apply_geo=TRUE;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+
+  } else {
+
+    SelFile     SF,SF1,SF2;
+    Image       I1,I2,Id;
+    FileName    fn_sel;
+    float       sam;
+    double      dummy;
+    bool        apply_geo;
+    matrix1D<double> freq,frc,dpr,frc_noise;
+
+    try {
+      fn_sel=get_param(argc,argv,"-set_of_images");
+      SF.read(fn_sel);
+      sam=AtoF(get_param(argc,argv,"-sam"));
+      apply_geo=!check_param(argc,argv,"-dont_apply_geo");
+      SF.split_in_two(SF1,SF2);
+      SF1.get_statistics(I1,Id,dummy,dummy,apply_geo);
+      SF2.get_statistics(I2,Id,dummy,dummy,apply_geo);
+      I1().set_Xmipp_origin();
+      I2().set_Xmipp_origin();
+      fourier_ring_correlation(I1(),I2(),sam,freq,frc,frc_noise);
+      differential_phase_residual(I1(),I2(),sam,freq,dpr);
+
+      // Write output
+      FileName fn_dpr,fn_frc;
+      fn_dpr=fn_sel+".dpr";
+      fn_frc=fn_sel+".frc";
+      ofstream out(fn_dpr.c_str(), ios::out);
+      ofstream out2(fn_frc.c_str(), ios::out);
+      out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+      out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
+	if (i>0) {
+	  out.width(10);
+	  out  << VEC_ELEM(freq,i);
+	  out.width(17);
+	  out << VEC_ELEM(dpr,i)  <<endl;
+	  out2.width(10);
+	  out2  << VEC_ELEM(freq,i);
+	  out2.width(17);
+	  out2  << VEC_ELEM(frc,i);
+	  out2.width(17);
+	  out2  << VEC_ELEM(frc_noise,i)<<endl;
+	}
+      }
+      out.close();
+      out2.close();
+    } catch (Xmipp_error XE) {cout << XE;     Resolution_parameters prm; prm.usage();}
+
+  }
+}
+
