@@ -22,7 +22,7 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_Angular_Distance.cc \
 	Programs/Src/Prog_Align2d.cc \
 	Programs/Src/Prog_Projection_Neighbourhood.cc \
-	Programs/Src/Prog_Centilt.o \
+	Programs/Src/Prog_Centilt.cc \
 	Src/CTF.cc \
 	Src/refinement.cc \
 	Programs/Src/Prog_FourierFilter.cc \
