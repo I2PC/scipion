@@ -697,6 +697,19 @@ void Feature::shift(double shiftX, double shiftY, double shiftZ) {
    ZZ(Center) += shiftZ;
 }
 
+/* Apply a general transformation to a feature ------------------------------ */
+void Feature::self_apply_geom(const matrix2D<double> &A) {
+   matrix1D<double> r(4);
+   XX(r)=XX(Center);
+   YY(r)=YY(Center);
+   ZZ(r)=ZZ(Center);
+   r(3)=1;
+   r=A*r;
+   XX(Center)=XX(r);
+   YY(Center)=YY(r);
+   ZZ(Center)=ZZ(r);
+}
+
 /* ------------------------------------------------------------------------- */
 /* Intersection                                                              */
 /* ------------------------------------------------------------------------- */
@@ -1451,6 +1464,7 @@ Phantom::Phantom() {
    xdim = ydim = zdim = 0;
    Background_Density = 0;
    fn="";
+   current_scale=1;
 }
 
 void Phantom::clear() {
@@ -1516,7 +1530,7 @@ double Phantom::volume() const {
 }
 
 /* Read Volume Description ------------------------------------------------- */
-void Phantom::read(const FileName &fn_phantom) _THROW {
+void Phantom::read(const FileName &fn_phantom, bool apply_scale) _THROW {
 
 FILE *fh_phantom;
 char line[201];
@@ -1559,9 +1573,12 @@ char       straux[6];
             REPORT_ERROR(3003,"Phantom::read: God bless us, check the volume"
                " dimensions and global density in volume description file");
          if (stat==4) scale=1;
-         xdim = (int) CEIL(scale*xdim);
-         ydim = (int) CEIL(scale*ydim);
-         zdim = (int) CEIL(scale*zdim);
+	 if (apply_scale) {
+            xdim = (int) CEIL(scale*xdim);
+            ydim = (int) CEIL(scale*ydim);
+            zdim = (int) CEIL(scale*zdim);
+	    current_scale=1;
+	 } else current_scale=scale;
          continue;
       }
 
@@ -1590,12 +1607,15 @@ char       straux[6];
          REPORT_ERROR(3003,(string)"Phantom::read: Unknown feature type: "+line);
 
       // Scale and Store feature
-      scaled_feat=feat->scale(scale);
-      scaled_feat->Center = scaled_feat->Center * scale;
-      delete feat;
+      if (apply_scale) {
+	 scaled_feat=feat->scale(scale);
+	 scaled_feat->Center = scaled_feat->Center * scale;
+	 delete feat;
 
-      // Store feature
-      VF.push_back(scaled_feat);
+	 // Store feature
+	 VF.push_back(scaled_feat);
+      } else
+         VF.push_back(feat);
    }
    fclose(fh_phantom);
 }
@@ -1622,7 +1642,9 @@ char line[201];
 
 // Write global comment and size
    fprintf(fh_phantom,"#Phantom Xdim Ydim Zdim Background density\n");
-   fprintf(fh_phantom,"       %d    %d   %d   %f\n",xdim,ydim,zdim,Background_Density);
+   fprintf(fh_phantom,"       %d    %d   %d   %f",xdim,ydim,zdim,Background_Density);
+   if (current_scale!=1) fprintf(fh_phantom,"   %f",current_scale);
+   fprintf(fh_phantom,"\n");
 
 // Write description comment and features
    fprintf(fh_phantom,"#Type +/= Density X_Center Y_Center Z_Center\n");
@@ -1687,6 +1709,18 @@ void Phantom::sketch_in(Volume *V, int clean, double colour) {
 /* Shift a phantom --------------------------------------------------------- */
 void Phantom::shift(double shiftX, double shiftY, double shiftZ) {
    for (int i=0; i<VF.size(); i++) VF[i]->shift(shiftX,shiftY,shiftZ);
+}
+
+/* Apply geometrical transformatio to a phantom ---------------------------- */
+void Phantom::self_apply_geom(const matrix2D<double> &A, int inv) _THROW {
+   if ((XSIZE(A)!=4) || (YSIZE(A)!=4))
+      REPORT_ERROR(1102,"Apply_geom3D: geometrical transformation is not 4x4");
+   if (A.IsIdent()) return;
+   matrix2D<double> T;
+   if (inv==IS_INV) T=A.inv();
+   else             T=A;
+
+   for (int i=0; i<VF.size(); i++) VF[i]->self_apply_geom(T);
 }
 
 /* Projecting a phantom ---------------------------------------------------- */

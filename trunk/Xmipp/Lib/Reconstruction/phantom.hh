@@ -347,6 +347,18 @@ public:
     Shift the feature a given amount of voxels. The new center is the old
     center plus the given shift, and that's all*/
     void shift(double shiftX, double shiftY, double shiftZ);
+
+/** Apply a general geometric transformation.
+    The transformation must be
+    defined by a 4x4 matrix that can be generated using the geometric functions
+    in xmippGeometry or xmippMatrix2D. The matrix must be the desired
+    transformation (i.e., new coordinate=A*old_coordinate.
+    Don't worry because the self_apply_geom of Phantom take
+    cares of passing to this function the apropriate matrix. No check is done
+    about the size of A.
+
+    Only the center is transformed, the feature will keep the same size.*/
+    void self_apply_geom(const matrix2D<double> &A);
 //@}
 
 /**@name I/O */
@@ -1180,6 +1192,9 @@ public:
    /// Final volume background density
    double          Background_Density;
    
+   /// Current scale
+   double          current_scale;
+
    /// List with the features
    vector<Feature*> VF;
 public:
@@ -1236,8 +1251,18 @@ public:
 /**@name I/O */
 //@{
 /** Read a phantom file.
-    The file must accomplish the structure given in \Ref{Phantoms}. */
-    void read(const FileName &fn_phantom) _THROW;
+    The file must accomplish the structure given in \Ref{Phantoms}.
+    
+    If you don't apply the scale then all spatial coordinates are
+    expressed in the given scale units. I.e., if the scale is 0.25 that
+    means that every voxel in the voxel phantom represent 4 length units
+    (usually Angstroms). If the scale is applied, then coordinates are
+    expressed in voxel edge units. Otherwise, coordinates are expressed
+    in length units (usually Angstroms).
+    
+    We recommend apply_scale=false only if you plan to modify the
+    description file without producing projections, voxel phantoms, ... */
+    void read(const FileName &fn_phantom, bool apply_scale=true) _THROW;
 
 /** Show a phantom file.
     The more descriptive format is used instead of the standard Feature format */
@@ -1324,6 +1349,16 @@ public:
     Shift all features in the phantom a given amount of voxels. See
     \Ref{Feature::shift}. */
     void shift(double shiftX, double shiftY, double shiftZ);
+
+/** Apply a general geometric transformation.
+    The transformation must be defined by a 4x4 matrix that can be
+    generated using the geometric functions in xmippGeometry or
+    xmippMatrix2D. The inv argument is either IS_INV or IS_NOT_INV.
+    Matrices coming out from xmippGeometry for rotations, shifts, ...
+    are not INV.
+    
+    An exception is thrown if the matrix A is not valid.*/
+    void self_apply_geom(const matrix2D<double> &A, int inv) _THROW;
 
 /** Project phantom from a direction.
     The direction is specified by the 3 Euler angles (as usual, rot=1st,
