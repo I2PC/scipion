@@ -23,6 +23,12 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
+
+/* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
+   of the department of Physiology of the David Geffen School of Medicine,
+   University of California, Los Angeles   
+*/
+
 // To avoid problems with long template names
 #pragma warning(disable:4786)
 
@@ -57,6 +63,7 @@ double         reg;		// Regularization (smoothness) parameter
 string         layout = "RECT"; // topology (layout)
 unsigned       annSteps = 1000; // Deterministic Annealing steps
 bool 	       saveClusters = false;    // Save clusters in separate files
+bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
 
 /* Parameters ============================================================== */
    try {
@@ -119,6 +126,10 @@ bool 	       saveClusters = false;    // Save clusters in separate files
        if (check_param(argc, argv, "-saveclusters"))
           saveClusters = true;
        else saveClusters = false;
+
+       if (check_param(argc, argv, "-randomcodevectors"))
+	 use_rand_cvs = true;
+       else use_rand_cvs = false;
 
        if (argc == 1) {Usage(argv);}
        
@@ -184,6 +195,8 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    cout << "Output code vector file : " << fn_out << ".cod" << endl;
    if (cb_in != "")
    	cout << "Input code vectors file name : " << cb_in << endl;
+   else if (use_rand_cvs)
+     cout << "Using randomized code vectors" << endl;
    cout << "Horizontal dimension (Xdim) = " << xdim << endl;
    cout << "Vertical dimension (Ydim) = " << ydim << endl;
    if (layout == "HEXA")
@@ -246,7 +259,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
         }
 	myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
    } else    
-        myMap = new xmippFuzzyMap(layout, xdim, ydim, ts);
+        myMap = new xmippFuzzyMap(layout, xdim, ydim, ts, use_rand_cvs);
 
    
    xmippFuzzySOM *thisSOM;
@@ -316,6 +329,8 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    infS << "Input data file : " << fn_in << endl;
    if (cb_in != "")
      infS << "Input code vectors file : " << cb_in << endl;
+   else if (use_rand_cvs)
+     infS << "Using randomized code vectors" << endl;
    infS << "Code vectors output file : " << fn_out <<  ".cod" << endl;
    infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
    infS << "Number of feature vectors: " << ts.size() << endl;
@@ -420,6 +435,7 @@ void Usage (char **argv) {
      "\n    			      0: No information (default)"     
      "\n    			      1: Progress bar"     
      "\n    			      2: Code vectors change between iterations"     
+     "\n    -randomcodevectors        Use truly randomized codevectors (default: FALSE)"
      "\n			   \n"
      ,argv[0]);
 }
