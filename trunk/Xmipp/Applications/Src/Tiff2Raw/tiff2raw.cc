@@ -351,6 +351,7 @@ int main(int argc, char *argv[])
       fprintf( inf, "# Signed short?\nis_signed=FALSE\n");
    
    fclose( inf );
+   return 0;
 }
 
 /* Colimate menu =========================================================== */
