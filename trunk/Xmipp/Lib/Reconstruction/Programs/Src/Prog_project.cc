@@ -525,12 +525,18 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
 	 generate_angles(ExtProjs,prm.rot_range,  DF, 'r', prm);
 	 generate_angles(ExtProjs,prm.tilt_range, DF, 't', prm);
          generate_angles(ExtProjs,prm.psi_range,  DF, 'p', prm);
-      } else
+      } else {
          generate_even_angles(ExtProjs,Nrottilt,DF,prm);
+         // Check if the last entry is empty
+         DF.locate(DF.LineNo());
+         if (DF.get_current_line().get_no_components()==0) 
+            DF.remove_current();
+      }
    }
 
 // Exit
    DF.go_first_data_line();
+   cout << "Aqui\n" << DF << endl;
    return ExtProjs+IntProjs;
 }
 
