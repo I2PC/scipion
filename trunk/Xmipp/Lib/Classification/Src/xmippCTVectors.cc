@@ -29,6 +29,7 @@
 
 
 #include "../xmippCTVectors.hh"
+#include <XmippData/xmippArgs.hh>
 
 //-----------------------------------------------------------------------------
 
@@ -151,7 +152,7 @@
 	 }
          getline(_is, line);
 	 theItems[i] = v;
-	 theTargets[i] = line;
+	 theTargets[i] = remove_spaces(line);
       }
 
     #ifndef _NO_EXCEPTION
