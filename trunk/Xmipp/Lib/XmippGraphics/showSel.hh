@@ -29,6 +29,7 @@
 
 #include "showTable.hh"
 #include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippFFT.hh>
 
 /**@name Show Selection File. */
 //@{
