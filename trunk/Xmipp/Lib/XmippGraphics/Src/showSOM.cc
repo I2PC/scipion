@@ -263,8 +263,7 @@ void ShowSOM::saveAssignedSeparately()
 			    "Skipping file " + newfilename + ".");
 	continue;
       }
-      const string tmpS = (string) newfilename;
-      SFcv[i].write (tmpS);
+      SFcv[i].write (newfilename.ascii());
     }
   if (basename.isNull())
     QMessageBox::about (this, "Error!", "No images selected\n");
