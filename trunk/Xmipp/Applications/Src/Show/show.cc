@@ -126,6 +126,7 @@ int main( int argc, char **argv ) {
           shown++;
        } else if (mode==5) {
           ShowSpectraSOM *showspectrasom=new ShowSpectraSOM;
+          showspectrasom->apply_geo=apply_geo;
 	  showspectrasom->initWithFile(argv[i],fn_dat);
 	  showspectrasom->show();
           shown++;

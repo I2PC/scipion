@@ -299,7 +299,7 @@ const char * ShowSpectraSOM::cellLabel(int i) const {
 void ShowSpectraSOM::showRepresentedImagesStats() {
     SelFile SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo()) ShowTable::showStats(SFNew);
+    if (SFNew.ImgNo()) ShowTable::showStats(SFNew,apply_geo);
     else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 

@@ -39,6 +39,10 @@
 /** Class to show Spectra SOM. */
 class ShowSpectraSOM: public ShowSpectra {
    Q_OBJECT;
+public:
+   // Apply geometric transformation when showing average & stddev of original 
+   // images and to compute the error image
+   bool        apply_geo;
 protected:
    // Original data
    xmippCTVectors *Vdat;
