@@ -595,7 +595,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0,
              FINISHINGY(read_proj())+proj_ext,
              FINISHINGX(read_proj())+proj_ext);
 
-       count_eqs_in_projection(*GVNeq, blobprint, blobprint2, read_proj);
+       count_eqs_in_projection(*GVNeq, blob, blobprint, blobprint2, read_proj);
 
        if (debug_level>0 && 
            act_proj%MAX(1,numIMG/60)==0) progress_bar(act_proj);
