@@ -252,7 +252,9 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
 
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, const FileName &fn_root,
-   int starting_index, const FileName &fn_image, double ang) _THROW {
+   int starting_index, const FileName &fn_image, double ang, double tilt,
+   double psi
+    ) _THROW {
    SelFile SF;
    FileName fn_out;
    ImageXmipp I;
@@ -279,7 +281,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
 	   << "   applying apropriate rotation\n";
    int i=starting_index;
    int nmax=ParticleNo();
-   for (int n=0; n<nmax; n++)
+   for (int n=0; n<nmax; n++) 
       if (coords[n].valid && coords[n].label==label) {
          fn_out.compose(fn_root,i++,"xmp");
          if (!M->scissor(coords[n],(Image &) I, scaleX, scaleY)) {
@@ -287,7 +289,10 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
                  << "corresponding image is set to blank\n";
             SF.insert(fn_out,SelLine::DISCARDED);
          } else SF.insert(fn_out);
-	 if (ang!=0) I().rotate(-ang);
+//	 if (ang!=0) I().rotate(-ang);
+         I.rot()=(float)ang;
+         I.tilt()=(float)tilt;
+         I.psi()=(float)psi;
          I.write(fn_out);
       }
    if (labels[label]!="") {
