@@ -299,7 +299,7 @@ void QtMainWidgetMark::pass_to_untilted(int _mtX, int _mtY, int &_muX,
 
 /* Compute tilting angle --------------------------------------------------- */
 void QtMainWidgetMark::compute_gamma() {
-   #define TRIANGLE_NO  5000
+   #define TRIANGLE_NO 15000
    #define MIN_AREA       15
    #define MAX_AREA   250000
    __gamma=0;
@@ -317,7 +317,7 @@ void QtMainWidgetMark::compute_gamma() {
    randomize_random_generator();
    long noCombinations;
    noCombinations=__Nu *(__Nu-1) *(__Nu-2)/6;
-	 while(triang< TRIANGLE_NO || counter1 < noCombinations)
+	 while(triang< TRIANGLE_NO && counter1 < noCombinations)
 	 {
 	    counter1++;
 	    i=ROUND(rnd_unif(0,__Nu-1));
@@ -353,6 +353,7 @@ void QtMainWidgetMark::compute_gamma() {
    __gamma=RAD2DEG(__gamma);
    if(triang<100)
       cout << "Not many particles, tilt angle may not be accurate" <<endl;
+cout << triang << "triangles used" << "tilt " << __gamma << endl ;
 }
 
 /* Compute alphas ---------------------------------------------------------- */
