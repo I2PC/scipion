@@ -331,7 +331,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
    /** Michael's normalization.
       Formula:
       \begin{verbatim}
-      I'=(I-m(I))/b
+      I'=(I-b)/b
       \end{verbatim}
       Properties:
       \begin{verbatim}

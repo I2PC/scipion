@@ -456,8 +456,13 @@ void normalize_Michael(Image *I, const matrix2D<int> &bg_mask) {
    (*I)().compute_stats(avg, stddev, min, max);
    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
       stddevbg);
-   (*I)() -= avg;
-   (*I)() /= avgbg;
+   if (avgbg>0) {
+      (*I)() -= avgbg;
+      (*I)() /= avgbg;
+   } else { // To avoid the contrast inversion
+      (*I)() -= (avgbg-min);
+      (*I)() /= (avgbg-min);
+   }
 }
 
 void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask) {
@@ -475,7 +480,7 @@ void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask) {
    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
       stddevbg);
    (*I)() -= avgbg;
-   (*I)() /= (avg-avgbg);
+   (*I)() /= ABS(avg-avgbg);
 }
 
 #ifdef NEVER_DEFINED
