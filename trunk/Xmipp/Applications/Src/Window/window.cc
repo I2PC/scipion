@@ -51,7 +51,7 @@ public:
          xF=LAST_XMIPP_INDEX(sizeX);
          yF=LAST_XMIPP_INDEX(sizeY);
          zF=LAST_XMIPP_INDEX(sizeZ);
-
+         physical_coords=FALSE;
       } else if (check_param(argc,argv,"-r0")) {
          size_mode=FALSE;
          // Get r0
