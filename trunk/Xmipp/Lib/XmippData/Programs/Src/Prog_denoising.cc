@@ -32,7 +32,7 @@
 #include <iomanip>
 
 // Empty constructor -------------------------------------------------------
-Denoising_parameters::Denoising_parameters() {
+Denoising_parameters::Denoising_parameters(): Prog_parameters() {
    DWT_type="DAUB12";
    denoising_type=REMOVE_SCALE;
    scale=0;
