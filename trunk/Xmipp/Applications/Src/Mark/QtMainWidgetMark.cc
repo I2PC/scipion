@@ -30,9 +30,10 @@
 #include "QtImageOverviewMicrograph.hh"
 #include "QtDialogFamilies.hh"
 #include "QtFiltersController.hh"
-#include "XmippData/xmippMatrices2D.hh"
-#include "XmippData/xmippGeometry.hh"
-#include "qaccel.h"
+#include <XmippData/xmippMatrices2D.hh>
+#include <XmippData/xmippGeometry.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <qaccel.h>
 
 /* Constructor ------------------------------------------------------------- */
 QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
@@ -64,6 +65,8 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
       G.setWidth(suggested_X); G.setHeight(suggested_Y);
       setGeometry(G);
    }
+   __tilted_generated=false;
+   __untilted_generated=false;
 
    __gridLayout         = new QGridLayout( this, 1, 2, 0 );
    __filtersController  = new QtFiltersController( this , _m);   
@@ -346,8 +349,10 @@ double matrix_fitness(double *p) {
    Euler_angles2matrix(p[1],pair_tilt,-p[2],pair_E);
    double retval=0;
    for (int i=0; i<2; i++)
-      for (int j=0; j<2; j++)
-         retval += ABS(pair_E(i,j)-(*pair_Put)(i,j));
+      for (int j=0; j<2; j++) {
+         double error=ABS(pair_E(i,j)-(*pair_Put)(i,j));
+         retval +=error*error;
+      }
    return retval;
 }
 
@@ -410,6 +415,36 @@ void QtMainWidgetMark::write_angles() _THROW {
 void QtMainWidgetMark::draw_axes() {
    __mWidget->draw_axis(__alpha_u);
    __mTiltedWidget->draw_axis(__alpha_t);
+}
+
+/* Get informed that one of the micrographs generated images --------------- */
+void QtMainWidgetMark::generated(bool _this_is_tilted,
+   const string &_label) {
+   cerr << "Balancing both selfiles ...\n";
+   if (_this_is_tilted)   __tilted_generated=true;
+   else                 __untilted_generated=true;
+   if (__untilted_generated && __tilted_generated) {
+      FileName fn_untilted=
+         __mWidget->getMicrograph()->micrograph_name()+"."+_label+".sel";
+      FileName fn_tilted=
+         __mTiltedWidget->getMicrograph()->micrograph_name()+"."+_label+".sel";
+      SelFile SFUntilted(fn_untilted);
+      SelFile SFTilted(fn_tilted);
+      SFUntilted.go_beginning();
+      SFTilted.go_beginning();
+      while (!SFUntilted.eof() && !SFTilted.eof()) {
+         if (SFUntilted.Is_DISCARDED() || SFTilted.Is_DISCARDED()) {
+	    SFUntilted.set_current(SelLine::DISCARDED);
+	    SFTilted.set_current(SelLine::DISCARDED);
+	    cerr << "Images " << SFUntilted.get_current_file() << " and "
+	         << SFTilted.get_current_file() << " are discarded\n";
+	 }
+	 SFUntilted.next();
+	 SFTilted.next();
+      }
+      SFUntilted.write(fn_untilted);
+      SFTilted.write(fn_tilted);
+   }
 }
 
 void QtMainWidgetMark::slotAddCoordTilted( int _muX, int _muY, int _f ) {

@@ -152,15 +152,18 @@ void QtFileMenu::slotGenerateImages() {
 	    #define MAIN_WIDGET \
 	       ((QtMainWidgetMark *)(parentWidget()->parentWidget()))
 	    double alpha=0,psi=0,gamma=0;
+	    bool this_is_tilted;
 	    if (MAIN_WIDGET->there_is_tilted()) {
 	       if (((QtWidgetMicrograph *) (MAIN_WIDGET->tilted_widget()))==
 	           (QtWidgetMicrograph *) parentWidget()) {
 	           psi   = MAIN_WIDGET->alpha_t(); 
                    gamma = MAIN_WIDGET->gamma_t();
+		   this_is_tilted=true;
 	       }	   
 	       else {
 	            gamma=0;
                     psi=MAIN_WIDGET->alpha_u();
+		    this_is_tilted=false;
 	       }
 	    }
             m->produce_all_images( activeFamily,
@@ -168,6 +171,8 @@ void QtFileMenu::slotGenerateImages() {
                                    startingIndexLineEdit.text().toInt(),
                                    (char*)originalMLineEdit.text().ascii(),
 				                       alpha,gamma,psi/*rot,tilt,psi*/ );
+	    MAIN_WIDGET->generated(this_is_tilted,
+	       m->get_label(activeFamily));
          }
       }
    } catch( Xmipp_error XE ) { cout << XE; }

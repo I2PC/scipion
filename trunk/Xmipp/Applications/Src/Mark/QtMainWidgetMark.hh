@@ -62,6 +62,11 @@ private:
    double              __alpha_u;// Angle of axis with X axis in radians
    double              __alpha_t;// Anfle of axis with X axis in radians
 
+   // To balance the selfiles of a pair
+   bool                __untilted_generated;
+   bool                __tilted_generated;
+
+
 public:
    // Constructor
    QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted=NULL );
@@ -116,6 +121,11 @@ public:
    // True if there is a tilted micrograph
    bool there_is_tilted() const {return __mTiltedWidget!=NULL;}
    
+   // The main widget is informed when each of the micrographs
+   // has generated its set of values. When both micrographs
+   // generated the images, the selfiles are compared to remove
+   // those images that were discarded in only one of them
+   void generated(bool _this_is_tilted, const string &_label);
 public slots:
    void slotAddCoordTilted( int _mX, int _mY, int _f );
    void slotAddCoordUntilted( int _mX, int _mY, int _f );
