@@ -623,6 +623,15 @@ template <class T>
    // the original image, make an interpolation with them and put this value
    // at the output pixel
    
+   #ifdef DEBUG
+      cout << "A\n"    << A     << endl
+	   << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
+	   << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
+	   << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
+	   << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n"
+      ;
+   #endif
+
    for (int i=0; i<YSIZE(M2); i++) {
       // Calculate position of the beginning of the row in the output image
       x= -cen_x;
@@ -639,21 +648,30 @@ template <class T>
          bool interp;
          T tmp;
          
+         #ifdef DEBUG
+         cout << "Computing (" << i << "," << j << ")\n";
+         cout << "   (y, x) =(" << y << "," << x << ")\n"
+              << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         #endif
+
          // If the point is outside the image, apply a periodic extension
          // of the image, what exits by one side enters by the other
          interp=TRUE;
          if (wrap) {
-            if (xp<minxp || xp>maxxp) xp=realWRAP(xp, minxp, maxxp);
-            if (yp<minyp || yp>maxyp) yp=realWRAP(yp, minyp, maxyp);
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY)
+		xp=realWRAP(xp, minxp, maxxp);
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp, maxyp);
          } else {
-            if (xp<minxp || xp>maxxp) interp=FALSE;
-            if (yp<minyp || yp>maxyp) interp=FALSE;
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
          }
 
          #ifdef DEBUG
-         cout << "Computing (" << i << "," << j << ")\n";
-         cout << "   (y, x) =(" << y << "," << x << ") "
-              << "   (y',x')=(" << yp << "," << xp << ") " << endl;
+         cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
          cout << "   Interp = " << interp << endl;
          x++;
          #endif

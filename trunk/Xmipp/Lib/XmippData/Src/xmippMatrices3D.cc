@@ -438,13 +438,19 @@ template <class T>
             // of the volume, what exits by one side enters by the other
             interp=TRUE;
             if (wrap) {
-               if (xp<minxp || xp>maxxp) xp=realWRAP(xp, minxp, maxxp);
-               if (yp<minyp || yp>maxyp) yp=realWRAP(yp, minyp, maxyp);
-               if (zp<minzp || zp>maxzp) zp=realWRAP(zp, minzp, maxzp);
+               if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	           xp>maxxp+XMIPP_EQUAL_ACCURACY) xp=realWRAP(xp, minxp, maxxp);
+               if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	           yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp, maxyp);
+               if (zp<minzp-XMIPP_EQUAL_ACCURACY ||
+	           zp>maxzp+XMIPP_EQUAL_ACCURACY) zp=realWRAP(zp, minzp, maxzp);
             } else {
-               if (xp<minxp || xp>maxxp) interp=FALSE;
-               if (yp<minyp || yp>maxyp) interp=FALSE;
-               if (zp<minzp || zp>maxzp) interp=FALSE;
+               if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	           xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+               if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	           yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+               if (zp<minzp-XMIPP_EQUAL_ACCURACY ||
+	           zp>maxzp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
             }
 
             if (interp) {            
