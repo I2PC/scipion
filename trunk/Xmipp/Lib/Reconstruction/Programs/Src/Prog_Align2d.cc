@@ -201,26 +201,21 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift) _THROW {
 
   matrix2D<double> Maux,Mcorr,A;
-  matrix2D<int>    mask;
-  int              xdim,ydim,imax,jmax,i_actual,j_actual,dim2;
+  int              dim,imax,jmax,i_actual,j_actual,dim2;
   double           max,xmax,ymax,sumcorr;
   float            xshift,yshift,shift;
  
   xshift=0.;
   yshift=0.;
+  dim=img().RowNo();
   Maux.resize(img());
   Maux.set_Xmipp_origin();
   Mcorr.resize(img());
   Mcorr.set_Xmipp_origin();
-  mask.resize(img().RowNo(),img().ColNo());
-  mask.set_Xmipp_origin();
-  BinaryCircularMask(mask,img().ColNo()/2,INNER_MASK);
 
-  // Rotate image with transformation already present in its header
-  // Apply circular mask to prevent wrapping effects
+  // Apply transformation already present in its header
   A=img.get_transformation_matrix();
   apply_geom(Maux,A,img(),IS_INV,DONT_WRAP,0.);
-  apply_binary_mask(mask,Maux,Maux);
 
   // Calculate cross-correlation
   correlation_matrix(Maux,Mref,Mcorr);
@@ -233,14 +228,15 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
   while (neighbourhood) {  
     n_max ++;
     for (int i=-n_max; i <= n_max; i++)
-      for (int j=-n_max; j <= n_max; j++)
-	{   i_actual = i+imax;
+      for (int j=-n_max; j <= n_max; j++) {   
+	i_actual = i+imax;
 	j_actual = j+jmax;
-	if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() && 
-	    i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX() ) 
-	  if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
+	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
+	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
+	  neighbourhood=FALSE;
+	else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
 	    neighbourhood=FALSE;
-	}
+      }
   }
   // We have the neighbourhood => looking for the gravity centre 
 
@@ -263,11 +259,12 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
   Mcorr.core_deallocate();
 
   shift=sqrt(xshift*xshift+yshift*yshift);
-
   if ((max_shift<XMIPP_EQUAL_ACCURACY) || (shift < max_shift)) {
     // Store shift in the header of the image
-    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
-    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    xshift=img.Xoff()+xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
+    yshift=img.Yoff()+xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    img.Xoff()=realWRAP(xshift,(float)-dim/2.,(float)dim/2.);
+    img.Yoff()=realWRAP(yshift,(float)-dim/2.,(float)dim/2.);
     return TRUE;
   } else return FALSE;
 
@@ -280,7 +277,7 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   matrix2D<double> Mimg,Mcorr,Mcorr2,Mimg2,Mref2,Maux,A;
   matrix1D<double> corr;
   matrix2D<int>    mask;
-  int              nstep,i,i_maxcorr,avewidth,xdim,ydim,imax,jmax,imax2,jmax2,i_actual,j_actual;
+  int              dim,nstep,i,i_maxcorr,avewidth,xdim,ydim,imax,jmax,imax2,jmax2,i_actual,j_actual;
   double           max,max2,xmax,ymax,psi_actual,psi_max_coarse,psi_max_fine,sumcorr,psi_coarse_step=15.;
   float            xshift,yshift,psi,shift;
   bool             OK;
@@ -291,7 +288,8 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   A=img.get_transformation_matrix();
   apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,0.);
 
-  mask.resize(img().RowNo(),img().ColNo());
+  dim=img().RowNo();
+  mask.resize(dim,dim);
   mask.set_Xmipp_origin();
   if (Rout<=Rin)  REPORT_ERROR(1,"Align2d_acf: Rout <= Rin");
   BinaryCrownMask(mask,Rin,Rout,INNER_MASK);
@@ -374,14 +372,15 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   while (neighbourhood) {  
     n_max ++;
     for (int i=-n_max; i <= n_max; i++)
-      for (int j=-n_max; j <= n_max; j++)
-	{   i_actual = i+imax;
+      for (int j=-n_max; j <= n_max; j++) {   
+	i_actual = i+imax;
 	j_actual = j+jmax;
-	if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() && 
-	    i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX() ) 
-	  if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
+	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
+	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
+	  neighbourhood=FALSE;
+	else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
 	    neighbourhood=FALSE;
-	}
+      }
   }
   // We have the neighbourhood => looking for the gravity centre 
 
@@ -414,8 +413,10 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
 
   if (OK) {
     // Store rotation & translation in the header of the image
-    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
-    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    xshift=img.Xoff()+xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
+    yshift=img.Yoff()+xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    img.Xoff()=realWRAP(xshift,(float)-dim/2.,(float)dim/2.);
+    img.Yoff()=realWRAP(yshift,(float)-dim/2.,(float)dim/2.);
     img.Psi()+=psi;
     return TRUE;
   } else return FALSE;
