@@ -43,6 +43,9 @@ public:
    int         __dim;            // In matrix1D dim=xdim;
                                  // In matrix2D dim=xdim*ydim;
                                  // In matrix3D dim=xdim*ydim*zdim;
+   int         __spcdim;         // In matrix1D spcdim=1;
+                                 // In matrix2D spcdim=2;
+                                 // In matrix3D spcdim=3;
 
 /* Methods ================================================================= */
 public:
@@ -337,6 +340,12 @@ public:
        \\--> v2 has got now the same structure as v1 */
    template <class T1>
       void resize(const maT1 &op1) {copy_shape(op1);}
+
+   /** Get size.
+       Returns the size of the object in a 3D vector. If the object
+       is a matrix or a vector, then the higher order dimensions
+       will be set to 1, ie, (Xdim, 1, 1) or (Xdim, Ydim, 1). */
+   void get_size(int *size) const;
 
    /** Print shape of multidimensional array.
        This function shows the size, starting and finishing indexes of the
