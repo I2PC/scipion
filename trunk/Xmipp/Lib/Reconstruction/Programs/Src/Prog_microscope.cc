@@ -128,6 +128,8 @@ void Prog_Microscope_Parameters::produce_side_info() {
       double p=after_power/(after_power+before_power);
       sigma_after_CTF=sqrt(p)*sigma;
       sigma_before_CTF=sqrt(1-p)*sigma;
+   } else if (sigma!=0) {
+      sigma_before_CTF=sigma;
    }
 }
 #undef DEBUG
