@@ -1,0 +1,9 @@
+#!/bin/sh
+if [ $# != 0 ] ; then
+   for i in $1
+   do
+      echo $i 1
+   done
+else 
+   echo "Usage: do_selfile \"pattern\" > selfile"
+fi
