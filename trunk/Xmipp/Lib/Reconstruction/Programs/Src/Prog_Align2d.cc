@@ -165,7 +165,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
   for (i = 0; i < nstep; i++) {
     psi_actual=(double)i*psi_coarse_step;
     Maux=Mimg.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation_index(Mref,Maux,&mask);
+    corr(i)=correlation(Mref,Maux,&mask);
   }
   corr.max_index(i_maxcorr);
   psi_max_coarse=(double)i_maxcorr*psi_coarse_step;
@@ -176,7 +176,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
   for (i = 0; i < nstep; i++) {
     psi_actual=psi_max_coarse-psi_coarse_step+1+(double)i;
     Maux=Mimg.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation_index(Mref,Maux,&mask);
+    corr(i)=correlation(Mref,Maux,&mask);
   }
   corr.max_index(i_maxcorr);
   psi_max_fine=psi_max_coarse-psi_coarse_step+(double)i_maxcorr;
@@ -328,7 +328,7 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   for (i = 0; i < nstep; i++) {
     psi_actual=(double)i*psi_coarse_step;
     Maux=Mimg2.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation_index(Mref2,Maux,&mask);
+    corr(i)=correlation(Mref2,Maux,&mask);
   }
   corr.max_index(i_maxcorr);
   psi_max_coarse=(double)i_maxcorr*psi_coarse_step;
@@ -339,7 +339,7 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
   for (i = 0; i < nstep; i++) {
     psi_actual=psi_max_coarse-psi_coarse_step+1+(double)i;
     Maux=Mimg2.rotate(psi_actual,DONT_WRAP);
-    corr(i)=correlation_index(Mref2,Maux,&mask);
+    corr(i)=correlation(Mref2,Maux,&mask);
   }
   corr.max_index(i_maxcorr);
   psi_max_fine=psi_max_coarse-psi_coarse_step+(double)i_maxcorr;
@@ -519,6 +519,12 @@ void Prog_align2d_prm::do_pspc() _THROW {
   Mref.set_Xmipp_origin();
   Maux.set_Xmipp_origin();
  
+  // Calculate average image of non-aligned images to center pspc-reference
+  ImageXmipp med,sig;
+  double min,max;
+  SF.get_statistics(med,sig,min,max,TRUE);
+  med().set_Xmipp_origin();
+
   // Use piramidal combination of images to construct an initial reference
   nlev=SF.ImgNo();
   int i=0;
@@ -578,8 +584,23 @@ void Prog_align2d_prm::do_pspc() _THROW {
   progress_bar(n_piram);
   imgpspc.clear();
 
+  // Center pspc reference wrt to average image
+  matrix1D<double> center(2);
+  matrix2D<double> Mcorr;
+  Mcorr.resize(Mref);
+  int imax,jmax;
+  correlation_matrix(Mref,med(),Mcorr);
+  Mcorr.max_index(imax,jmax);
+  XX(center)=-jmax;
+  YY(center)=-imax;
+  Mref.self_translate(center);
+
   // Write out inter-mediate reference
   Iref()=Mref;
+  FileName fn_tmp;
+  fn_tmp=fn_sel.without_extension()+".xmp";
+  fn_tmp=fn_tmp.insert_before_extension(".pspc");
+  Iref.write(fn_tmp);
   Iref.write(fn_ave);
 
   Maux.core_deallocate();
@@ -685,9 +706,58 @@ void Prog_align2d_prm::refinement() _THROW {
 }
 
 // Write out results  ========================================================
+void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout) _THROW {
+
+  matrix2D<double> Maux,Mimg;
+  matrix2D<int>    mask;
+  int dim=Mref.RowNo();
+  int nstep=(int)(360/psi_interval);
+  matrix1D<double> ccf;
+  double psi_actual;
+  FileName fn_tmp;
+
+  ccf.resize(nstep);
+  Maux.resize(Mref);
+  Mimg.resize(Mref);
+  mask.resize(dim,dim);
+  Mimg.set_Xmipp_origin();
+  Maux.set_Xmipp_origin();
+  mask.set_Xmipp_origin();
+  if (Rout<=Rin)  REPORT_ERROR(1,"Align2d: Rout <= Rin");
+  BinaryCrownMask(mask,Rin,Rout,INNER_MASK);
+ 
+  for (int imgno=0; imgno < n_images; imgno++) {
+    apply_geom(Mimg,images[imgno].get_transformation_matrix(),images[imgno](),IS_INV,DONT_WRAP);
+    Mimg.set_Xmipp_origin();
+    corr[imgno]=correlation_index(Mref,Mimg,&mask);
+
+    if (do_rot) {
+      for (int i = 0; i < nstep; i++) {
+	psi_actual=(double)i*psi_interval;
+	Maux=Mimg.rotate(psi_actual,DONT_WRAP);
+	ccf(i)+=correlation_index(Mref,Maux,&mask);
+      }
+    }
+  }
+  if (do_rot) {
+    ccf/=n_images;
+    fn_tmp=fn_sel.without_extension()+".corr";
+    if (oext!="") fn_tmp=fn_tmp.insert_before_extension("_"+oext);
+    //Output rotation correlation file
+    ofstream out(fn_tmp.c_str(), ios::out);
+    out << "# Angle [deg]   Corr.Coeff."<<endl;
+    for (int i = 0; i < nstep; i++) {
+      out << i*psi_interval<<"  "<<ccf(i)<<endl;
+    }
+    out.close();
+  }
+}
+
+// Write out results  ========================================================
 void Prog_align2d_prm::align2d() _THROW {
 
   // Read in all images
+  double zero=0.;
   FileName fn_img;
   ImageXmipp Itmp;
   n_images=0;
@@ -698,6 +768,7 @@ void Prog_align2d_prm::align2d() _THROW {
     Itmp.read(fn_img);
     Itmp().set_Xmipp_origin();
     images.push_back(Itmp);
+    corr.push_back(zero);
     success.push_back(true);
     n_images++;
   }
@@ -737,24 +808,6 @@ void Prog_align2d_prm::align2d() _THROW {
 
   // Do actual alignment & iteratively refine the reference 
   refinement();
-  
-  // Write out docfile
-  if (fn_doc!="") {
-    DocFile           DFo;
-    DFo.reserve(n_images);
-    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5)");
-    matrix1D<double>  dataline(5);
-    for (int imgno=0; imgno < n_images; imgno++) {
-      dataline(0)=images[imgno].Phi();
-      dataline(1)=images[imgno].Theta();
-      dataline(2)=images[imgno].Psi();
-      dataline(3)=images[imgno].Xoff();
-      dataline(4)=images[imgno].Yoff();
-      DFo.append_comment(images[imgno].name());
-      DFo.append_data_line(dataline);
-    }
-    DFo.write(fn_doc);
-  }
      
   // Write out images & selfile
   FileName          fn_out;
@@ -777,6 +830,46 @@ void Prog_align2d_prm::align2d() _THROW {
   fn_out=fn_sel;
   if (oext!="") fn_out=fn_out.insert_before_extension("_"+oext);
   SFo.write(fn_out);
+
+  cerr << "Calculating average, correlations and writing out results ..."<<endl;
+
+  // Calculate average and stddev image and write out
+  ImageXmipp med,sig;
+  double min,max;
+  SFo.get_statistics(med,sig,min,max,TRUE);
+  fn_img=fn_sel.without_extension()+".xmp";
+  if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
+  fn_img=fn_img.insert_before_extension(".med");
+  med.write(fn_img);
+  fn_img=fn_sel.without_extension()+".xmp";
+  if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
+  fn_img=fn_img.insert_before_extension(".sig");
+  sig.write(fn_img);
+
+  // Calculate correlation wrt average image for document file
+  med().set_Xmipp_origin();
+  calc_correlation(med(),Ri,Ro);
+  
+  // Write out docfile
+  if (fn_doc!="") {
+    DocFile           DFo;
+    DFo.reserve(n_images);
+    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Corr (6)");
+    matrix1D<double>  dataline(6);
+    for (int imgno=0; imgno < n_images; imgno++) {
+      dataline(0)=images[imgno].Phi();
+      dataline(1)=images[imgno].Theta();
+      dataline(2)=images[imgno].Psi();
+      dataline(3)=images[imgno].Xoff();
+      dataline(4)=images[imgno].Yoff();
+      dataline(5)=corr[imgno];
+      DFo.append_comment(images[imgno].name());
+      DFo.append_data_line(dataline);
+    }
+    DFo.write(fn_doc);
+  }
   
   images.clear();
+  corr.clear();
+  success.clear();
 }

@@ -89,6 +89,8 @@ public:
   SelFile SF;
   // Stack of input images
   vector<ImageXmipp>  images;  
+  // Stack of optimal correlations for all images
+  vector<double>  corr;  
   // Boolean for successful alignment of image
   vector<bool>  success;
   // Image holding current reference
@@ -120,14 +122,14 @@ public:
                        const float &max_shift, const float &max_rot, const float &psi_interval, 
 		       const int &shift_range, const float &Rin, const float &Rout) _THROW;
 
-  bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, const float &psi_interval,
-		      const int &shift_range, const float &Rin, const float &Rout) _THROW;
-
   /// Piramidal combination of images to construct a reference
   void do_pspc() _THROW;
 
   /// Alignment of all images by iterative refinement 
   void refinement() _THROW;
+
+  /// Calculate optimal correlation for in document file
+  void calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout) _THROW;
 
   /// Main routine
   void align2d() _THROW;
