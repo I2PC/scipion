@@ -82,7 +82,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    fh_micrograph=open(fn_micrograph.c_str(),O_RDWR,S_IREAD|S_IWRITE);
    if (fh_micrograph==-1)
       REPORT_ERROR(1,(string)"Micrograph::open_micrograph: There is a "
-         "problem opening "+fn_micrograph);
+         "problem opening "skip header+fn_micrograph);
    char *aux_ptr;
    switch (__depth) {
       case 8:
