@@ -408,6 +408,7 @@ FileName SelFile::FileExtension() {
 void SelFile::get_statistics(ImageXmipp& _ave, ImageXmipp& _sd, double& _min, double& _max) {
    _min = MAXFLOAT; _max = 0; bool first = true; int n = 0;   
    // Calculate Mean
+   go_beginning();
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
