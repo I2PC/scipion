@@ -601,8 +601,8 @@ void estimate_background_gauss_parameters() {
    }
    A(1,0)=A(0,1);
    b=A.inv()*b;
-   global_ctfmodel.sigmaU=b(1);
-   global_ctfmodel.sigmaV=b(1);
+   global_ctfmodel.sigmaU=ABS(b(1));
+   global_ctfmodel.sigmaV=ABS(b(1));
    global_ctfmodel.gaussian_K=exp(b(0));
 }
 #undef DEBUG
@@ -1398,7 +1398,9 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
       Powell_optimizer(prm.adjust, 1, CTF_PARAMETERS, &CTF_fitness,
 	 prm.accuracy, fitness, iter, steps,
 	 prm.show_optimization);
-      save_intermidiate_results((string)"best_fit"+ItoA(global_evaluation_reduction));
+      if (prm.show_optimization)
+         save_intermidiate_results((string)"best_fit"+
+	    ItoA(global_evaluation_reduction));
    }
    global_evaluation_reduction=1;
 
