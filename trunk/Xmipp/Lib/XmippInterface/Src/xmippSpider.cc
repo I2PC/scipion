@@ -27,6 +27,7 @@
 #include "../xmippSpider.hh"
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippImages.hh>
+#include <XmippData/xmippGeometry.hh>
 
 // Generate Count File -----------------------------------------------------
 void generate_Spider_count(int imax, DocFile &DF_out) {
@@ -398,8 +399,10 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
 
    // Reorder the report columns
    DocFile DF_report, DF_report_standard;
+   DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
    DF_report.read(fn_report+"."+fn_ext);
    DF_report_standard.reserve(DF_report.dataLineNo());
+   SF.go_first_ACTIVE();
    while (!DF_report.eof()) {
       matrix1D<double> data_line(6);
       data_line(0)=DF_report(1); // rot
@@ -410,6 +413,7 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
       data_line(5)=DF_report(0); // Correlation
     
       DF_report.next_data_line();
+      DF_report_standard.append_comment(SF.NextImg());
       DF_report_standard.append_data_line(data_line);
    }
 
@@ -570,10 +574,10 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    if (!spider_batch)
       REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
    spider_batch
-      << "vo md\n"
-      << "   refangles\n"        // vo ea docfile
-      << "   apmq\n"             // apmq output docfile
-      << "   assigned_angles\n"  // angles assigned
+//      << "vo md\n"
+//      << "   refangles\n"        // vo ea docfile
+//      << "   apmq\n"             // apmq output docfile
+//      << "   assigned_angles\n"  // angles assigned
       << "de\n"
       << "   projlist\n"
       << "de\n"
@@ -585,21 +589,33 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
     "* "/*+"b01*."+fn_ext*/).c_str());
 
-   DocFile DF_assigned_angles, DF_report_standard;
-   DF_assigned_angles.read((string)"assigned_angles."+fn_ext);
-   DF_report_standard.reserve(DF_report.dataLineNo());
-   while (!DF_report.eof()) {
-      matrix1D<double> data_line(6);
-      data_line(0)=DF_assigned_angles(2); // rot
-      data_line(1)=DF_assigned_angles(1); // tilt
-      data_line(2)=DF_assigned_angles(0); // psi
-      data_line(3)=DF_report(3);          // X
-      data_line(4)=DF_report(4);          // Y
-      data_line(5)=DF_report(1);          // Correlation
-    
-      DF_assigned_angles.next_data_line();
-      DF_report.next_data_line();
+   DocFile refangles((string)"refangles"+fn_ext);
+   DocFile apmq((string)"apmq"+fn_ext);
+   DocFile DF_report_standard;
+   DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
+   
+   matrix1D<double> data_line(6);
+   SF.go_first_ACTIVE();
+   while (!apmq.eof()) {
+      data_line(5)=apmq(1);     // Correlation
+      data_line(2)=apmq(2);     // psi
+      data_line(3)=apmq(3);     // x
+      data_line(4)=apmq(4);     // y
+
+      // get the rot and tilt angles
+      int iref=(int)apmq(0);
+      bool mirror=(iref<0);
+      if (mirror) iref=-iref;
+      refangles.locate(iref);
+      data_line(0)=refangles(2);// rot
+      data_line(1)=refangles(1);// tilt
+      if (mirror)
+         Euler_mirrorY(data_line(0),data_line(1),data_line(2),
+	    data_line(0),data_line(1),data_line(2));
+      
+      DF_report_standard.append_comment(SF.NextImg());
       DF_report_standard.append_data_line(data_line);
+      apmq.next_data_line();
    }
 
    DF_report_standard.write(fn_report+".txt");
