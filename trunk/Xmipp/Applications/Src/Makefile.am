@@ -8,7 +8,7 @@ if BUILD_OGL
 OPTIONAL_PROGS += Phan3D
 endif
 
-if TIFF
+if BUILD_TIFF
 OPTIONAL_PROGS += Tiff2Raw 
 endif
 
