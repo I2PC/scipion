@@ -151,7 +151,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   matrix2D<double> A(4,4); A.init_identity; 
+   matrix2D<double> A(4,4); A.init_identity(); 
    Shift_Scale_parameters *eprm=(Shift_Scale_parameters *) prm;
 //   if (eprm->DF_shifts.name()=="")
 //        ;//shift is already filled
