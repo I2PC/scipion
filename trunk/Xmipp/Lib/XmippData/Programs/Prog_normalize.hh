@@ -1,0 +1,83 @@
+/***************************************************************************
+ *
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
+#ifndef _PROG_NORMALIZE_HH
+#  define _PROG_NORMALIZE_HH
+
+#include <XmippData/xmippMatrices2D.hh>
+#include <XmippData/xmippProgs.hh>
+
+/**@name Normalize program */
+//@{
+/* Normalize parameters ---------------------------------------------------- */
+/// Recons_test Parameters
+class Normalize_parameters: public Prog_parameters {
+public:
+   #define NONE          0
+   #define OLDXMIPP      1
+   #define NEAR_OLDXMIPP 2
+   #define NEWXMIPP      3
+   #define MICHAEL       4
+   #define NEWXMIPP2     5
+   /** Normalizing method. Valid methods are OLDXMIPP, NEAR_OLDXMIPP 
+       NEWXMIPP, NEWXMIPP2, MICHAEL and NONE */
+   int                   normalizing_method;
+
+   /** Nomalization of volumes. */
+   bool                  normalizing_vol;
+
+   #define NONE          0
+   #define FRAME         1
+   #define CIRCLE        2
+   /** Background mode. Valid modes are NONE, FRAME, CIRCLE*/
+   int                   background_mode;
+   /** Frame width or circle radius */
+   int                   r;
+public:
+   matrix2D<int>         bg_mask;
+   bool                  apply_geo;
+//   bool                enable_mask;
+//   Mask_Params         mask_prm;
+
+public:
+   /** Read parameters from command line */
+   void read(int argc, char **argv) _THROW;
+   
+   /** Produce side information */
+   void produce_side_info();
+
+   /** Show parameters */
+   void show();
+
+   /** Usage */
+   void usage();
+
+   /** Apply inverse geometric transformation as stored in image header to the mask */
+   void apply_geo_mask(ImageXmipp &img);
+
+   /** Apply to an image. The input image is modified */
+   void apply(Image *img);
+};
+//@}
+#endif
