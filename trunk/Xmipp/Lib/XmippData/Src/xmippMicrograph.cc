@@ -415,8 +415,6 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
          if( Dmax > 1) Dmax = log10(Dmax);
 	 }
    }
-cout << "compute_transmitance " << compute_transmitance
-     << " compute_inverse " << compute_inverse << endl;
    // Scissor all particles
    if (ang!=0)
       cout << "Angle from Y axis to tilt axis " << ang << endl
