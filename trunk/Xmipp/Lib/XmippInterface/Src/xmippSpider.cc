@@ -300,8 +300,8 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
    system(((string)"mv superfeo2.fft "+fn_out).c_str());
 }
 
-// Angular refinement ------------------------------------------------------
-void Angular_refinement(const FileName &fn_vol, const FileName &fn_sel,
+// Angular refinement Radon ------------------------------------------------
+void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
    const FileName &fn_report,
    double rot0, double rotF, double rot_step,
    double tilt0, double tiltF, double tilt_step,
@@ -384,7 +384,7 @@ void Angular_refinement(const FileName &fn_vol, const FileName &fn_sel,
 
    char *spider_prog=getenv("SPIDER");
    if (spider_prog==NULL)
-      REPORT_ERROR(1,"Project:: The environment variable SPIDER is not set");
+      REPORT_ERROR(1,"Angular refinement:: The environment variable SPIDER is not set");
    system(((string)"rm "+fn_report+"."+fn_ext).c_str());
    system(((string)spider_prog+" "+fn_ext+" b01").c_str());
    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
@@ -395,4 +395,197 @@ void Angular_refinement(const FileName &fn_vol, const FileName &fn_sel,
    SF_kk.go_first_ACTIVE();
    while (!SF_kk.eof())
       system(((string)"rm "+SF_kk.NextImg()).c_str());
+}
+
+// Angular Refinement via Projection matching ------------------------------
+void Angular_refinement_Matching(const FileName &fn_vol,
+    const FileName &fn_sel, const FileName &fn_report,
+    double tilt_step,
+    double max_shift, double shift_step,
+    double first_ring, double last_ring) _THROW {
+    
+    SelFile SF, SF_kk;
+    SF.read(fn_sel);
+    FileName fn_ext=fn_vol.get_extension();
+    int Zdim, Ydim, Xdim;
+    GetXmippVolumeSize(fn_vol, Zdim, Ydim, Xdim);
+
+    if (last_ring==-1) last_ring=(int)(Xdim/2);
+ 
+    // Rename input images
+    rename_for_Spider(SF, SF_kk, "kk",fn_ext);
+    SF_kk.go_first_ACTIVE();
+    FileName fn_first=SF_kk.get_current_file();
+    int first_image=fn_first.get_number();
+    int last_image=first_image+SF_kk.ImgNo()-1;
+
+    DocFile experimental_sel;
+    generate_Spider_count(last_image, experimental_sel);
+    experimental_sel.write((string)"experimentalsel."+fn_ext);
+
+    // Generate Spider batch
+    ofstream spider_batch;
+    spider_batch.open(((string)"b01."+fn_ext).c_str());
+
+    if (!spider_batch)
+       REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
+    spider_batch
+       // If the output document file for reference angles exists, delete it
+       << "iq fi x88\n"
+       << "refangles\n" // This is the name of the docfile
+       << "if (x88.eq.1) then\n"
+       << "   de\n"
+       << "   refangles\n"
+       << "endif\n"
+       << endl
+
+       // If the output document file for the projection list exists, delete it
+       << "iq fi x88\n"
+       << "projlist\n" // This is the name of the docfile
+       << "if (x88.eq.1) then\n"
+       << "   de\n"
+       << "   projlist\n"
+       << "endif\n"
+       << endl
+
+       // Generate an even angular distribution
+       // spaced after the tilt_step
+       << "vo ea,x83\n"
+       << tilt_step << endl
+       << "0,0\n"
+       << "0,0\n"
+       << "refangles\n"
+       << "x83=x83-1\n"
+       << endl
+
+       // Create a list with the projection numbers
+       //<< "doc create\n"
+       //<< "projlist\n"
+       //<< "1\n"
+       //<< "1-x83\n"
+       //<< endl
+       << "do lb1 I=1,x83\n"
+       << "   sd x0,x0\n"
+       << "   projlist\n"
+       << "lb1\n"
+       << endl
+
+       // Create projections
+       << "pj 3q\n"
+       << fn_vol.without_extension() << endl
+       << Xdim*0.69 << endl // Radius
+       << "projlist\n"
+       << "refangles\n"
+       << "ideal****\n"
+       << endl
+
+       // Create individual selfiles for each projection
+       << "x20=" << last_image << endl
+       << "do lb2 I=1,x20\n"
+       << "   ud x0,x55\n"
+       << "   experimentalsel"
+       << endl
+       << "   sd 1,x55\n"
+       << "   intersel***x55\n"
+       << "lb2\n"
+
+       // If the output document file for the projection list exists, delete it
+       << "iq fi x88\n"
+       << "apmq\n" // This is the name of the docfile
+       << "if (x88.eq.1) then\n"
+       << "   de\n"
+       << "   apmq\n"
+       << "endif\n"
+       << endl
+
+       // Refine each projection
+       << "x21=" << first_ring << endl
+       << "x22=" << last_ring << endl
+       << "do lb3 I=1,x20\n"
+       << "   ud x0,x55\n"
+       << "   experimentalsel\n" // The file number is in x55
+       << endl
+       // Effectively refine
+       << "   ap mq\n"
+       << "   ideal****\n"
+       << "   projlist\n"
+       << "   " << max_shift << endl
+       << "   x21,x22\n"
+       << "   kk*****\n"
+       << "   intersel***x55\n"
+       << "   apmq\n"
+       << endl
+       // Delete individual selfile
+       << "   de\n"
+       << "      intersel***x55\n"
+       << "lb3\n"
+       // Delete reference projections
+       << endl
+       << "do lb4 I=1,x83\n"
+       << "   de\n"
+       << "   ideal*x0\n"
+       << "lb4\n"
+       << "en\n"
+   ;
+   spider_batch.close();
+
+   char *spider_prog=getenv("SPIDER");
+   if (spider_prog==NULL)
+      REPORT_ERROR(1,"Angular refinement:: The environment variable SPIDER is not set");
+   system(((string)spider_prog+" "+fn_ext+" b01").c_str());
+   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+    "* b01*."+fn_ext).c_str());
+
+   SF_kk.go_first_ACTIVE();
+   while (!SF_kk.eof())
+      system(((string)"rm "+SF_kk.NextImg()).c_str());
+
+   // Rewrite the report in the same format as the Radon programs
+   system(((string)"grep -v \";\" apmq."+fn_ext+" > apmq1."+fn_ext).c_str());
+   system(((string)"mv apmq1."+fn_ext+" apmq."+fn_ext).c_str());
+   DocFile DF_report;    DF_report.read((string)"apmq."+fn_ext);
+                         DF_report.write((string)"apmq."+fn_ext);
+
+   // Call again spider to get the assigned angles
+   spider_batch.open(((string)"b01."+fn_ext).c_str());
+   if (!spider_batch)
+      REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
+   spider_batch
+      // If the output document file for reference angles exists, delete it
+      << "vo md\n"
+      << "   refangles\n"        // vo ea docfile
+      << "   apmq\n"             // apmq output docfile
+      << "   assigned_angles\n"  // angles assigned
+      << "de\n"
+      << "   projlist\n"
+      << "de\n"
+      << "   experimentalsel\n"
+      << "de\n"
+      << "   refangles\n"
+      << "en\n"
+   ;
+   spider_batch.close();
+   system(((string)spider_prog+" "+fn_ext+" b01").c_str());
+   system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+    "* b01*."+fn_ext).c_str());
+
+   DocFile DF_assigned_angles, DF_report_like_Radon;
+   DF_assigned_angles.read((string)"assigned_angles."+fn_ext);
+   DF_report_like_Radon.reserve(DF_report.dataLineNo());
+   while (!DF_report.eof()) {
+      matrix1D<double> data_line(6);
+      data_line(0)=DF_report(1);          // Correlation
+      data_line(1)=DF_assigned_angles(2); // rot
+      data_line(2)=DF_assigned_angles(1); // tilt
+      data_line(3)=DF_assigned_angles(0); // psi
+      data_line(4)=DF_report(3);          // X
+      data_line(5)=DF_report(4);          // Y
+    
+      DF_assigned_angles.next_data_line();
+      DF_report.next_data_line();
+      DF_report_like_Radon.append_data_line(data_line);
+   }
+
+   DF_report_like_Radon.write(fn_report+".txt");
+   system(((string)"rm apmq."+fn_ext+" assigned_angles."+fn_ext).c_str());
 }

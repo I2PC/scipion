@@ -123,7 +123,7 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
    const FileName &fn_out, double cutoff_freq,
    double Fermi_temperature=0.2) _THROW;
 
-/** Angular_refinement.
+/** Angular_refinement via Radon.
     The angular refinement process via the Radon transform is performed.
     All refinements are considered as subsearches within the given range.
     The default range (0,360),(0,90),(0,360) covers the whole 
@@ -134,12 +134,27 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
 
     An exception is thrown if the file b01."ext" cannot be created.
 */
-void Angular_refinement(const FileName &fn_vol, const FileName &fn_sel,
+void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     const FileName &fn_report,
     double rot0=0, double rotF=360, double rot_step=2,
     double tilt0=0, double tiltF=90, double tilt_step=2,
     double psi0=0, double psiF=360, double psi_step=2,
     double max_shift=2) _THROW;
+
+/** Angular refinement via Projection Matching. fn_ext is computed as the
+    extension of the volume. The files refangles.<fn_ext> and projlist.<fn_ext> are
+    created with the reference angles and the projection list respectively.
+    Ideal projections are called ideal****.<fn_ext>. The selfile with the
+    experimental images (fn_sel) is translated for Spider under the name
+    experimentalsel.<fn_ext>. The max_shift must be a multiple of the
+    shift_step*/
+
+void Angular_refinement_Matching(const FileName &fn_vol, const FileName &fn_sel,
+    const FileName &fn_report,
+    double tilt_step=2,
+    double max_shift=2, double shift_step=1,
+    double first_ring=0, double last_ring=-1) _THROW;
+
 //@}
 
 #endif

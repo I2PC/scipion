@@ -32,19 +32,25 @@ void Usage();
 
 int main (int argc, char **argv) {
    FileName fn_vol, fn_fr, fn_img, fn_original;
-   bool apply, apply_to_original;
+   bool apply, apply_to_original, omit_check;
    double rot0,  rotF,  rot_step;
    double tilt0, tiltF, tilt_step;
    double psi0,  psiF,  psi_step;
-   double max_shift;
+   double max_shift, shift_step;
+   double first_ring, last_ring;
+   char   wrapper_mode; // There are two wrapper modes
+                        // R: Radon
+                        // M: projection matching
 
    // Get input parameters -------------------------------------------------
    try {
+      if (check_param(argc,argv,"-apmq")) wrapper_mode='M';
+      else wrapper_mode='R';
       fn_vol=get_param(argc,argv,"-i");
-      fn_fr =get_param(argc,argv,"-fr");
       fn_img=get_param(argc,argv,"-img");
       apply=check_param(argc,argv,"-apply");
       apply_to_original=check_param(argc,argv,"-apply_to_original");
+      omit_check=check_param(argc,argv,"-omit_check");
       if (apply_to_original)
          fn_original=get_param(argc,argv,"-apply_to_original");
       max_shift=AtoF(get_param(argc,argv,"-max_shift","2"));
@@ -76,6 +82,15 @@ int main (int argc, char **argv) {
          psiF=AtoF(argv[i+2]);
          psi_step=AtoF(argv[i+3]);
       } else {psi0=0; psiF=360; psi_step=10;}
+
+      if (wrapper_mode=='R') {
+         fn_fr =get_param(argc,argv,"-fr");
+      } else {
+         shift_step=AtoF(get_param(argc,argv,"-shift_step","1"));
+         first_ring=AtoI(get_param(argc,argv,"-first_ring","0"));
+         last_ring= AtoI(get_param(argc,argv,"-last_ring","-1"));
+         tilt_step= AtoF(get_param(argc,argv,"-tilt_step","10"));
+      }
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(0);}
 
    // Perform refinement ---------------------------------------------------
@@ -92,9 +107,8 @@ int main (int argc, char **argv) {
 
       // Get original angles ...............................................
       DocFile angles_in;
-      SelFile SF_img, SF_fr, SF_original;
+      SelFile SF_img, SF_original;
       SF_img.read(fn_img);
-      SF_fr.read(fn_fr);
       if (apply_to_original) SF_original.read(fn_original);
       extract_angles(SF_img,angles_in);
       angles_in.go_beginning();
@@ -102,15 +116,19 @@ int main (int argc, char **argv) {
       SF_img.go_first_ACTIVE();
 
       // Perform refinement ................................................
-      Angular_refinement(fn_vol, fn_fr, fn_root+fn_iter+"_orfsfs",
-        rot0, rotF, rot_step, tilt0, tiltF, tilt_step,
-        psi0, psiF, psi_step, max_shift);
-      system(((string)"mv "+fn_root+fn_iter+"_orfsfs."+fn_vol.get_extension()+" "+
-         fn_root+fn_iter+"_orfsfs.txt").c_str());
+      if (wrapper_mode=='R') {
+         Angular_refinement_Radon(fn_vol, fn_fr, fn_root+fn_iter+"_orfsfs",
+           rot0, rotF, rot_step, tilt0, tiltF, tilt_step,
+           psi0, psiF, psi_step, max_shift);
+         system(((string)"mv "+fn_root+fn_iter+"_orfsfs."+fn_vol.get_extension()+" "+
+            fn_root+fn_iter+"_orfsfs.txt").c_str());
+      } else {
+         Angular_refinement_Matching(fn_vol, fn_img, fn_root+fn_iter+"_orfsfs",
+           tilt_step, max_shift, shift_step, first_ring, last_ring);
+      }
 
       // Get report ........................................................
       DocFile report;
-      SF_fr.read(fn_fr);
       report.read(fn_root+fn_iter+"_orfsfs.txt",TRUE);
       
       // Process report ....................................................
@@ -142,9 +160,10 @@ int main (int argc, char **argv) {
 
          // Check that the new angles really meets the 
          // subsearch constraints
-         if (0.9*rot_diff(i) <rot0  || 0.9*rot_diff(i) >rotF  ||
-             0.9*tilt_diff(i)<tilt0 || 0.9*tilt_diff(i)>tiltF ||
-             0.9*psi_diff(i) <psi0  || 0.9*psi_diff(i) >psiF) {
+         if (!omit_check &&
+             (0.9*rot_diff(i) <rot0  || 0.9*rot_diff(i) >rotF  ||
+              0.9*tilt_diff(i)<tilt0 || 0.9*tilt_diff(i)>tiltF ||
+              0.9*psi_diff(i) <psi0  || 0.9*psi_diff(i) >psiF)) {
             double other_rot, other_tilt, other_psi;
             Euler_another_set(rot,tilt,psi,
                other_rot, other_tilt, other_psi);
@@ -258,13 +277,27 @@ int main (int argc, char **argv) {
 // Usage -------------------------------------------------------------------
 void Usage() {
    cerr << "Usage: angular_refinement\n"
+        << "If Radon wrapper --------------------------------------------------------------------\n"
         << "   -i <FR Volume>	                     : Fourier Radon Volume\n"
         << "   -fr <FR selfile>                      : Fourier Radon images\n"
         << "   -img <selfile>                        : Real space images\n"
         << "  [-rot  <rot0=0>  <rotF=360> <step=10>] : Rotational angle range\n"
         << "  [-tilt <tilt0=0> <tiltF=180> <step=10>]: Tilting angle range\n"
         << "  [-psi  <psi0=0>  <psiF=360> <step=10>] : In-plane angle range\n"
+        << "  [-omit_check]                          : Check that the angles are within\n"
+        << "                                           the provided limits\n"
         << "  [-max_shift <s=2>]                     : in pixels\n"
+        << "If Projection Matching wrapper ------------------------------------------------------\n"
+        << "   -apmq                                 : This flag sets the Projection Matching mode\n"
+        << "   -i <Xmipp Volume>	             : referenece volume\n"
+        << "   -img <selfile>                        : Real space images\n"
+        << "  [-tilt_step <step=10>]                 : Tilting angle range\n"
+        << "  [-max_shift <s=2>]                     : in pixels\n"
+        << "  [-shift_step <s=1>]                    : max_shift must be a multiple\n"
+        << "                                           of shift_step\n"
+        << "  [-first ring <r=0>]                    : First ring to evaluate\n"
+        << "  [-last_ring <r=-1>]                    : Last ring to evaluate\n"
+        << "Both --------------------------------------------------------------------------------\n"
         << "  [-apply]                               : Apply shift and angles to input images\n"
         << "  [-apply_to_original <selfile>]         : Apply shift and angles to original images.\n"
         << "                                           They are rewritten\n";
