@@ -592,7 +592,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
 
       // Really project ....................................................
       if (side.voxel_mode) {
-         project_Volume(side.phantom_vol,proj,prm.proj_Ydim,prm.proj_Xdim,
+         project_Volume(side.phantom_vol(),proj,prm.proj_Ydim,prm.proj_Xdim,
             rot,tilt,psi);
          IMGMATRIX(proj).self_translate(vector_R2(shiftX,shiftY));
       } else {
@@ -635,6 +635,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     
 /* ROUT_project ============================================================ */
 int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
+   randomize_random_generator();
 // Read projection parameters and produce side information
    Projection_Parameters proj_prm;
    PROJECT_Side_Info side;
