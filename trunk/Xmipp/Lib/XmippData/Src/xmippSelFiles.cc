@@ -4,6 +4,10 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
+ * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
+ * Dept. Physiology of the David Geffen School of Medicine
+ * Univ. of California, Los Angeles.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
@@ -29,6 +33,7 @@
 #include "../xmippFuncs.hh"
 #include "../xmippSelFiles.hh"
 #include "../xmippImages.hh"
+#include "../xmippImagic.hh"
 
 /*****************************************************************************/   
 /* SEL FILE LINE        	             	      	             	     */
@@ -192,35 +197,48 @@ void SelFile::read(const FileName &sel_name, int overriding) _THROW {
    if (overriding) clear();
    
    // Open file
-   fh_sel.open(sel_name.c_str(), ios::in);
-   if (!fh_sel)
-      REPORT_ERROR(1551,(string)"SelFile::read: File "+sel_name+" not found");
+   if (sel_name.find (IMAGIC_TAG) == 0) {
+      // Read Imagic selfile
+      const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
+      ImageImagicInfo info = ImagicGetImgInfo (hed_fname);
+      no_imgs = info.num_img;
+      temp.line_type = SelLine::DATALINE;
+      temp.label = SelLine::ACTIVE;
+      for (unsigned i = 0; i < no_imgs; i++) {
+          temp.text = ImagicMakeName (hed_fname.c_str(), i);
+          text_line.push_back (temp);
+      }
+   } else {
+      // Read normal selfile
+      fh_sel.open(sel_name.c_str(), ios::in);
+      if (!fh_sel)
+         REPORT_ERROR(1551,(string)"SelFile::read: File "+sel_name+" not found");
 
-   // Read each line and keep it in the list of the SelFile object
-   fh_sel.peek();
-   while (!fh_sel.eof()) {
-      try {
-         fh_sel >> temp;
-      }
-      catch (Xmipp_error) {
-         cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
-      }
-      switch (temp.line_type) {
-         case (SelLine::NOT_ASSIGNED): break; // Line with an error
-         case (SelLine::DATALINE):
-            if (temp.label!=SelLine::DISCARDED) no_imgs++;
-            text_line.push_back(temp);
-            break;
-         case (SelLine::COMMENT):
-            text_line.push_back(temp);
-            break;
-      }
-      line_no++;
+      // Read each line and keep it in the list of the SelFile object
       fh_sel.peek();
+      while (!fh_sel.eof()) {
+         try {
+            fh_sel >> temp;
+         } catch (Xmipp_error) {
+            cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
+         }
+         switch (temp.line_type) {
+            case (SelLine::NOT_ASSIGNED): break; // Line with an error
+            case (SelLine::DATALINE):
+	       if (temp.label!=SelLine::DISCARDED) no_imgs++;
+	       text_line.push_back(temp);
+	       break;
+            case (SelLine::COMMENT):
+	       text_line.push_back(temp);
+	       break;
+          }
+          line_no++;
+          fh_sel.peek();
+      }
+     
+      // Close file
+      fh_sel.close();
    }
-   
-   // Close file
-   fh_sel.close();
    
    // Set "pointer" to the beginning of the file
    if (overriding) fn_sel=sel_name;
@@ -243,16 +261,33 @@ void SelFile::write(const FileName &sel_name) _THROW {
    if (strcmp(sel_name.c_str(),"")!=0) fn_sel=sel_name;
       // Don't use sel_name=="" because it wastes memory
 
-   // Open file
-   fh_sel.open(fn_sel.c_str(), ios::out);
-   if (!fh_sel)
-      REPORT_ERROR(1553,"SelFile::write: File "+fn_sel+" cannot be written");
+   if (sel_name.find (IMAGIC_TAG) == 0) {
+      // Write Imagic selfile
+      const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
+      vector<Image *> imgs;
+      for ( ; current != last; current++) {
+          Image *img;
+          if (current->Is_data() && (current->get_label() == SelLine::ACTIVE) &&
+	     (img = Image::LoadImage (current->get_text())))
+	     imgs.push_back (img);
+      }
+      if (!ImagicWriteImagicFile (hed_fname, imgs))
+         REPORT_ERROR (1553, "Error writing selfile to Imagic file "+sel_name);
+      for (vector<Image *>::iterator i = imgs.begin(); i != imgs.end(); i++)
+          delete (*i);
+   } else {
+      // Write Xmipp selfile
+      // Open file
+      fh_sel.open(fn_sel.c_str(), ios::out);
+      if (!fh_sel)
+         REPORT_ERROR(1553,"SelFile::write: File "+fn_sel+" cannot be written");
 
-   // Read each line and keep it in the list of the SelFile object
-   while (current != last) fh_sel << *(current++);
-   
-   // Close file
-   fh_sel.close();
+      // Read each line and keep it in the list of the SelFile object
+      while (current != last) fh_sel << *(current++);
+     
+      // Close file
+      fh_sel.close();
+   }
 }
 
 /* Merging with another selfile -------------------------------------------- */
@@ -383,7 +418,12 @@ void SelFile::ImgSize(int &Ydim, int &Xdim) _THROW {
    vector<SelLine>::iterator aux=current_line;
    go_first_ACTIVE();
    FileName fn_img=(*current_line).text;
-   if (Is_ImageXmipp(fn_img)) {
+   if (fn_img.find("imagic:")!=-1) {
+      Image *img = Image::LoadImage(fn_img);
+      Ydim=(*img)().ydim;
+      Xdim=(*img)().xdim;
+      delete img;
+   } else if (Is_ImageXmipp(fn_img)) {
       ImageXmipp img;
       img.read(fn_img);
       Ydim=img().ydim;
@@ -410,24 +450,26 @@ FileName SelFile::FileExtension() {
 }
 
 /* Statistics -------------------------------------------------------------- */
-void SelFile::get_statistics(ImageXmipp& _ave, ImageXmipp& _sd, double& _min, double& _max) {
+void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
+   double& _max) {
    _min = MAXFLOAT; _max = 0; bool first = true; int n = 0;   
    // Calculate Mean
    go_beginning();
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        ImageXmipp image(image_name);      // reads image 
+        Image *image = Image::LoadImage(image_name);      // reads image 
         double min, max, avg, stddev;      
-        image().compute_stats(avg, stddev, min, max);
+        (*image)().compute_stats(avg, stddev, min, max);
         if (_min > min) _min = min;  
         if (_max < max) _max = max; 
         if (first) {    
-           _ave = image;
+           _ave = *image;
 	   first = false;	 
         } else {
-           _ave() += image();
+           _ave() += (*image)();
 	}
+	delete image;
         n++;
    }
    if (n > 0)
@@ -439,11 +481,12 @@ void SelFile::get_statistics(ImageXmipp& _ave, ImageXmipp& _sd, double& _min, do
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        ImageXmipp image(image_name);      // reads image 
-        ImageXmipp tmpImg;
-        tmpImg() = ((image() - _ave()));   
+        Image *image = Image::LoadImage (image_name);      // reads image 
+        Image tmpImg;
+        tmpImg() = (((*image)() - _ave()));   
         tmpImg() *= tmpImg();       
         _sd() += tmpImg();
+	delete image;
    }
    _sd() /= (n-1);
    _sd().SQRTnD(); 

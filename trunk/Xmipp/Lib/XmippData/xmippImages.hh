@@ -4,6 +4,10 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
+ * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
+ * Dept. Physiology of the David Geffen School of Medicine
+ * Univ. of California, Los Angeles.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
@@ -204,13 +208,19 @@ public:
        The element size can be adjusted so that raw images of bytes (IBYTE),
        unsigned ints woth 16 bits (I16) and floats (IFLOAT) can be read. 
        \\ Ex: I.read(65,65,"g0ta0001.raw");*/
-   void read(FileName name, int Ydim, int Xdim, bool reversed=FALSE,
-      Image_Type image_type=IBYTE) _THROW;
+   bool read(const FileName &name, float fIform, int Ydim, int Xdim,
+      bool reversed=FALSE, Image_Type image_type=IBYTE) _THROW;
 
    /** Read image from disk using a file pointer.
        This is the core routine of the previous one. */
-   void read(FILE * &fh, int Ydim, int Xdim, bool reversed, Image_Type image_type);
-   
+   bool read(FILE * &fh, float fIform, int Ydim, int Xdim, bool reversed, Image_Type image_type);
+
+  // LoadImage is a static function that loads an image file depending on
+  // what kind of image type (e.g., Xmipp, Imagic) it is; it returns a
+  // pointer to the base Image class.  Caller is responsible for deleting
+  // the memory for the object.  Returns NULL on error.
+  static ImageT<T> *LoadImage (FileName name);
+
    /** Write image to disk.
        If there is any problem in the writing, an exception is thrown.
        You can give a name to the written volume different from the one used
@@ -337,7 +347,7 @@ public:
    
    /** Copy constructor.
        \\ Ex: ImageXmipp IX2(IX1); */
-   ImageXmippT (ImageXmippT<T> &I): ImageT<T>(I) {header = I.header;}
+   ImageXmippT (const ImageXmippT<T> &I): ImageT<T>(I) {header = I.header;}
 
    /** Empty image.
        All information is cleared.
@@ -397,7 +407,7 @@ public:
        If the image doesn't exist at the given path then an exception is
        thrown.
        \\ Ex: IX.read("g1ta0002.spd");*/
-   virtual void read(FileName _name, bool skip_type_check=FALSE,
+   virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
       bool reversed=FALSE) _THROW;
    
    /** Write Xmipp image to disk.
@@ -961,6 +971,7 @@ public:
    //@}
 };
 
+//@Include: xmippImagic.hh
 
 //@}
 #endif

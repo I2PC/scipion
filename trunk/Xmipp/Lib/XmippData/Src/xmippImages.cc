@@ -6,6 +6,10 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
+ * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
+ * Dept. Physiology of the David Geffen School of Medicine
+ * Univ. of California, Los Angeles.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
@@ -26,25 +30,29 @@
  ***************************************************************************/
 
 #include "../xmippImages.hh"
+#include "../xmippImagic.hh"
 
 /* Input (read) from file specifying its dimensions ------------------------ */
 template <class T>
-void ImageT<T>::read(FileName name, int Ydim, int Xdim, bool reversed,
-  Image_Type image_type) _THROW {
+bool ImageT<T>::read(const FileName &name, float fIform, int Ydim,
+  int Xdim, bool reversed, Image_Type image_type) _THROW {
   FILE *fh;
   clear(); 
 
   if ((fh = fopen(name.c_str(), "rb")) == NULL)
     REPORT_ERROR(1501,"Image::read: File " + name + " not found");
-  ImageT<T>::read(fh, Ydim, Xdim, reversed, image_type);
-  fn_img=name;
+  bool ret;
+  if ((ret = ImageT<T>::read(fh, fIform, Ydim, Xdim, reversed, image_type)))
+     fn_img=name;
   fclose(fh);
+  return (ret);
 }
   
 template <class T>
-void ImageT<T>::read(FILE * &fh, int Ydim, int Xdim, bool reversed,
-  Image_Type image_type) {  
+bool ImageT<T>::read(FILE * &fh, float fIform, int Ydim, int Xdim,
+   bool reversed, Image_Type image_type) {  
   img.resize(Ydim,Xdim);
+
   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
       switch (image_type) {
          case IBYTE:
@@ -52,37 +60,64 @@ void ImageT<T>::read(FILE * &fh, int Ydim, int Xdim, bool reversed,
             FREAD (&u, sizeof(unsigned char), 1, fh, reversed);
             MULTIDIM_ELEM(img,i)=u;
             break;
-	 case I16:
-	    unsigned short us;
-	    FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
-	    MULTIDIM_ELEM(img,i)=us;
-	    break;
+         case I16:
+            unsigned short us;
+            FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
+            MULTIDIM_ELEM(img,i)=us;
+            break;
          case IFLOAT:
             float f;
             FREAD (&f, sizeof(float), 1, fh, reversed);
             MULTIDIM_ELEM(img,i)=f;
             break;
       }
+   return (TRUE);
 }
 
 // Specific function to read images with complex numbers in them
-void ImageT<complex<double> >::read(FILE * &fh, int Ydim, int Xdim, bool reversed,
-  Image_Type image_type) 
+bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
+   int Ydim, int Xdim, bool reversed, Image_Type image_type)
 {
   img.resize(Ydim,Xdim);
   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
   {
         float a,b;
-	    // read real part of a complex number
+	// read real part of a complex number
         FREAD (&a, sizeof(float), 1, fh, reversed);
-	    // read imaginary part of a complex number 
-	    FREAD (&b, sizeof(float), 1, fh, reversed);
-	    // Assign the number
+	// read imaginary part of a complex number 
+	FREAD (&b, sizeof(float), 1, fh, reversed);
+	// Assign the number
         complex<double> c(a,b);
         MULTIDIM_ELEM(img,i)=c;
-	    
   }
+  return (true);
 }
+
+// LoadImage loads an image from file, returning a pointer to the generic
+// Image interface.
+template <class T>
+ImageT<T> *ImageT<T>::LoadImage (FileName name)
+{
+  ImageT<T> *ret = NULL;
+  if (name.find (IMAGIC_TAG) != string::npos)
+  {
+    ImageImagicT<T> *i = new ImageImagicT<T>();
+    if (i->read (name))
+      ret = i;
+    else
+      delete i;
+  }
+  else // For now, assume anything else is ImageXmipp type.
+  {
+    ImageXmippT<T> *i = new ImageXmippT<T>();
+    if (i->read (name))
+      ret = i;
+    else
+      delete i;
+  }
+  return (ret);
+}
+
 /* Output (write) ---------------------------------------------------------- */
 template <class T>
 void ImageT<T>::write(FileName name, bool reversed, Image_Type image_type) _THROW {
@@ -144,11 +179,12 @@ void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image
 
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T>
-void ImageXmippT<T>::read(FileName name, bool skip_type_check, bool reversed) _THROW {
-  FILE *fp; 
+bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
+  bool reversed) _THROW {
+  FILE *fp;
+  bool ret;
 
   ImageXmippT<T>::rename(name); 
-
   if ((fp = fopen(fn_img.c_str(), "rb")) == NULL)
     REPORT_ERROR(1501,(string)"ImageXmipp::read: File "+fn_img+" not found");
   // Read header
@@ -157,27 +193,29 @@ void ImageXmippT<T>::read(FileName name, bool skip_type_check, bool reversed) _T
         " is not a valid Xmipp file");   
 
   // Read whole image and close file
-   ImageT<T>::read(fp, header.iYdim(), header.iXdim(), header.reversed(), IFLOAT);
+  if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
+  {
+    /* Apply the geometric transformations in the header to the 
+       loaded image.
+       This is to be compatible with old Xmipp images taht kept 
+       geometric transformation information in the header.
+       From now on, this information will never be keep in the header
+       but in the pixels themself (image).
+    */
+
+    // rotate image fAngle1 degrees if necessary
+    // img = img.rotate(header.rotAngle());     
+
+    // scale if necessary (check this with Carlos)
+    if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
+      header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
+      img.scale_to_size(header.iYdim(), header.iXdim());
+    }; 
+
+    header.set_header();  // Set header in a Xmipp consistent state
+  }
   fclose(fp);
-
-  /* Apply the geometric transformations in the header to the 
-     loaded image.
-     This is to be compatible with old Xmipp images taht kept 
-     geometric transformation information in the header.
-     From now on, this information will never be keep in the header
-     but in the pixels themself (image).
-  */
-
-  // rotate image fAngle1 degrees if necessary
-  // img = img.rotate(header.rotAngle());     
-
-  // scale if necessary (check this with Carlos)
-  if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
-    header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
-    img.scale_to_size(header.iYdim(), header.iXdim());
-  }; 
-
-  header.set_header();  // Set header in a Xmipp consistent state
+  return (ret);
 }
 
 /* Write Xmipp image ------------------------------------------------------- */
@@ -351,10 +389,12 @@ template <class T>
    
    int Ydim,Xdim;
    bool reversed,skip_type_check,force_reversed;
+   float fIform;
    FILE *fh;
    
-   img.read(name,Ydim,Xdim,reversed,image_type);        
-   img.read(fh  ,Ydim,Xdim,reversed,image_type);
+   img.read(name,fIform,Ydim,Xdim,reversed,image_type);        
+   img.read(fh  ,fIform,Ydim,Xdim,reversed,image_type);
+   img.LoadImage(name);
    img.write(name,reversed,image_type);     
    img.write(fh,  reversed,image_type);
    imgx.read(name,skip_type_check,reversed);

@@ -408,7 +408,7 @@ public:
    /** Gets statistics of the active images in the sel file
        it returns the average image, the minimum and maximum.
        \\Ex: SF.get_statistics(aveImg, min, max); */
-   void get_statistics(ImageXmipp& _ave, ImageXmipp& _sd, double& _min, double& _max);
+   void get_statistics(Image& _ave, Image& _sd, double& _min, double& _max);
 
    //@}
 

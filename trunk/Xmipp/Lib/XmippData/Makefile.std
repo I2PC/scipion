@@ -10,7 +10,7 @@ SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Src/xmippFilters.o Src/xmippMorphology.o \
            Programs/Src/Prog_downsample.o Programs/Src/Prog_segment.o \
 	   Programs/Src/Prog_denoising.o \
-           Src/xmippWavelets.o
+           Src/xmippWavelets.o Src/xmippImagic.o
 
 # Main Action = Built library ----------------------------------------------
 all: $(LIBPROJ)
