@@ -122,10 +122,6 @@ void Prog_Microscope_Parameters::produce_side_info() {
       double K=1/sqrt(p*after_power+(1-p)*before_power);
       sigma_after_CTF=sqrt(p)*K*sigma;
       sigma_before_CTF=sqrt(1-p)*K*sigma;
-      cout << "After  power=" << after_power << endl
-           << "Before power=" << before_power << endl
-           << "p=" << p << endl
-           << "K=" << K << endl;
    } else if (sigma!=0) {
       sigma_before_CTF=sigma;
       sigma_after_CTF=0;
