@@ -23,7 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippArgs.hh>
+#include <XmippData/xmippMicrograph.hh>
 void Usage();
 
 int main (int argc, char **argv) {
