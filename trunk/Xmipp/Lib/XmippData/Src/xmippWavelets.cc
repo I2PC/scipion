@@ -162,6 +162,29 @@ int &x1, int &x2, int &y1, int &y2, int &z1, int &z2) {
    I.physical2logical(z2,y2,x2,z2,y2,x2);
 }
 
+// Quadrant .---------------------------------------------------------------
+string Quadrant2D(int q) {
+   switch (q) {
+      case 0: return "00"; break;
+      case 1: return "01"; break;
+      case 2: return "10"; break;
+      case 3: return "11"; break;
+   }
+}
+
+string Quadrant3D(int q) {
+   switch (q) {
+      case 0: return "000"; break;
+      case 1: return "001"; break;
+      case 2: return "010"; break;
+      case 3: return "011"; break;
+      case 4: return "100"; break;
+      case 5: return "101"; break;
+      case 6: return "110"; break;
+      case 7: return "111"; break;
+   }
+}
+
 // Provide block -----------------------------------------------------------
 #define DWT_Scale(i,smax) ((int)((i==0)?smax-1:(ABS((CEIL(log10(i+1)/log10(2.0))-smax)))))
 #define DWT_Quadrant1D(i,s,smax) ((s!=smax-1)?'1':((i==0)?'0':'1'))
@@ -306,7 +329,6 @@ void DWT_keep_central_part(matrix2D<double> &I, double R) {
    mask.quadrant="xx";
    mask.resize(I);
    mask.generate_2Dmask();
-   mask.write_2Dmask("PPP.xmp");
    mask.apply_mask(I,I);
 }
 

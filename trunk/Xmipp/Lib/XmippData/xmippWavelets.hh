@@ -122,6 +122,14 @@ template <class T>
        DWT transform of a given size.*/
    inline int Get_Max_Scale(int size) {return ROUND(log10(size) / log10(2.0));}
 
+   /** Given a quadrant number it returns the string associated to it.
+       That is nothing more than its corresponding binary representation */
+   string Quadrant2D(int q);
+
+   /** Given a quadrant number it returns the string associated to it.
+       That is nothing more than its corresponding binary representation */
+   string Quadrant3D(int q);
+
    /** Get scale and quadrant 1D.
        Given a point and the maximum size of the image,
        this routine returns the scale and quadrant it belongs. */
