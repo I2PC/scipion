@@ -79,7 +79,7 @@ public:
    void clear();
 
    // Reserve space for a number of example particles
-   void reserve_examples(int _N) {__training_particle.reserve(_N);}
+   void reserve_examples(int my_N) {__training_particle.reserve(my_N);}
 
    // Add example particle to model
    void add_particle(const Particle &p) {__training_particle.push_back(p);}
@@ -101,14 +101,14 @@ public:
    void compute_largest_distance();
    
    // Distance between two vectors
-   double distance(const matrix1D<double> &_X, const matrix1D<double> &_Y);
+   double distance(const matrix1D<double> &my_X, const matrix1D<double> &my_Y);
 
    // Distance between a vector and the average
-   double distance_to_average(const matrix1D<double> &_X)
-      {return distance(__avg,_X);}
+   double distance_to_average(const matrix1D<double> &my_X)
+      {return distance(__avg,my_X);}
    
    // Euclidean distance between a vector and the average
-   double euclidean_distance_to_average(const matrix1D<double> &_X);
+   double euclidean_distance_to_average(const matrix1D<double> &my_X);
    
    // Print
    friend ostream & operator << (ostream &_out, const Classification_model &_m);
@@ -312,7 +312,7 @@ public:
       vector<Particle> &_candidate_vec);
 
    // Refine the position of a particle within the current piece
-   void refine_center(Particle &_P);
+   void refine_center(Particle &my_P);
 
    // Add family.
    // The family label is returned

@@ -138,9 +138,9 @@ double Classification_model::distance(const matrix1D<double> &X,
 }
 
 double Classification_model::euclidean_distance_to_average(
-   const matrix1D<double> &_X) {
+   const matrix1D<double> &my_X) {
    if (XSIZE(__avg)==0) return 1e30;
-   matrix1D<double> dif=_X-__avg;
+   matrix1D<double> dif=my_X-__avg;
    return dif.sum2();
 }
 
@@ -1136,13 +1136,13 @@ void QtWidgetMicrograph::reject_previously_selected(
 }
 
 /* Refine center of a particle --------------------------------------------- */
-void QtWidgetMicrograph::refine_center(Particle &_P) {
+void QtWidgetMicrograph::refine_center(Particle &my_P) {
    int previous_direction=-1;
    double dist_at_previous=0, dist_left, dist_right, dist_top, dist_bottom;
    bool improvement=true;
    matrix1D<double> current_vec;
-   double current_dist=_P.dist;
-   int    current_x=_P.x, current_y=_P.y;
+   double current_dist=my_P.dist;
+   int    current_x=my_P.x, current_y=my_P.y;
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
    bool success;
    do {
@@ -1201,9 +1201,9 @@ void QtWidgetMicrograph::refine_center(Particle &_P) {
 	 current_dist=best_dist;
       }
    } while (improvement);
-   _P.x=current_x;
-   _P.y=current_y;
-   _P.dist=current_dist;
+   my_P.x=current_x;
+   my_P.y=current_y;
+   my_P.dist=current_dist;
 }
 
 /* Correct particles ------------------------------------------------------- */
