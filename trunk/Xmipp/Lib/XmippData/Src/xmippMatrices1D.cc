@@ -381,12 +381,16 @@ void Powell_optimizer(matrix1D<double> &p, int i0, int n,
 
    // Form direction matrix
    ask_Tvector(xi,1,n*n);
-   for (int i=1; i<=n; i++)
-       for (int j=1; j<=n; j++)
-           xi[i*n+j]=(i==j)?steps(i-1):0;
+   int ptr;
+   for (int i=1,ptr=1; i<=n; i++)
+       for (int j=1; j<=n; j++,ptr++)
+           xi[ptr]=(i==j)?steps(i-1):0;
    
    // Optimize
+   xi-=n; // This is because NR works with matrices
+            // starting at [1,1]
    powell(auxpptr,xi,n,ftol,iter,fret,f, show);
+   xi+=n;
    
    // Exit
    free_Tvector(xi,1,n*n);
