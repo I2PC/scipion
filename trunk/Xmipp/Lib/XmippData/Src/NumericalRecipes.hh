@@ -66,14 +66,6 @@ double gammln(double xx);
 double betacf(double a, double b, double x);
 double betai(double a, double b, double x);
 
-// Eigen decomposition
-void jacobi(double *a, int n, double *d, double *v, int *nrot);
-// These functions are needed two obtain eigenvalues of real non-symetric
-// matrices 
-void balanc(double *a, int n);
-void elmhes(double *a, int n);
-void hqr(double *a, int n,double *wr,double *wi);
-
 // Singular value descomposition of matrix a (numerical recipes, chapter 2-6 for details)
 void svdcmp(double *a, int m,int n,double *w, double *v);
 void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x);
