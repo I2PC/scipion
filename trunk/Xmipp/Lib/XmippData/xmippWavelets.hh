@@ -2,6 +2,7 @@
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *              Antonio Jose Rodriguez Sanchez (ajr@cnb.uam.es)
+ *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -186,9 +187,37 @@ template <class T>
 
    /** Bayesian, Wiener filtering.
        Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
-       is applied up to the scale given.*/
-   void bayesian_wiener_filtering(matrix2D<double> &I, int scale);
+       is applied up to the scale given.
+       SNR0 is the smallest SNR and SNRF is the largest SNR.
+       
+       This function returns the estimated coefficients for S and N at
+       each scale. If denoise is set to false, then S and N coefficients
+       are estimated but they are not applied to the image.*/
+   matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_scale,
+      double SNR0=0.1, double SNRF=0.2, bool white_noise=false, int tell=0,
+      bool denoise=true);
 
+   /** Bayesian, Wiener filtering.
+       This is the function that really denoise. */
+   void bayesian_wiener_filtering(matrix2D<double> &WI,
+      int allowed_scale, matrix1D<double> &estimatedS);
+
+   /** Bayesian, Wiener filtering.
+       Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
+       is applied up to the scale given.
+       SNR0 is the smallest SNR and SNRF is the largest SNR.
+       
+       This function returns the estimated coefficients for S and N at
+       each scale. If denoise is set to false, then S and N coefficients
+       are estimated but they are not applied to the image.*/
+   matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_scale,
+      double SNR0=0.1, double SNRF=0.2, bool white_noise=false, int tell=0,
+      bool denoise=true);
+
+   /** Bayesian, Wiener filtering.
+       This is the function that really denoise. */
+   void bayesian_wiener_filtering(matrix3D<double> &WI,
+      int allowed_scale, matrix1D<double> &estimatedS);
    //@}
 //@}
 #endif

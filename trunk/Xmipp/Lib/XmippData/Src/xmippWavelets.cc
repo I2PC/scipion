@@ -2,6 +2,7 @@
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *              Antonio Jose Rodriguez Sanchez (ajr@cnb.uam.es)
+ *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -31,6 +32,8 @@
 #include "../xmippArgs.hh"
 #include "../xmippHistograms.hh"
 #include "../xmippMasks.hh"
+
+#include "../xmippImages.hh"
 
 /* Wavelet ----------------------------------------------------------------- */
 
@@ -352,137 +355,395 @@ void DWT_keep_central_part(matrix2D<double> &I, double R) {
 }
 
 // Bayesian Wiener filtering -----------------------------------------------
-void estimate_gaussian_for_scale_with_limits(const matrix2D<double> &I,
-   int scale, double min_val, double max_val, double &alpha, double &sigma) {
-   matrix1D<int> corner1(2), corner2(2);
-   matrix1D<double> r(2);
-   
-   double sum=0, sum2=0;
-   int    N_accounted=0, N=0;
-
-   // Measure the mean and variance within a block
-   // with limits
-   #define MEASURE_MEAN_VAR_BLOCK_LIMITS(quadrant) \
-      SelectDWTBlock(scale, I, quadrant, \
-         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
-      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
-         if (I(r)>=min_val && I(r)<=max_val) { \
-            N_accounted++; \
-	    sum+=I(r); \
-	    sum2+=I(r)*I(r); \
-         } \
-         N++; \
-      } \
-
-   MEASURE_MEAN_VAR_BLOCK_LIMITS("01");
-   MEASURE_MEAN_VAR_BLOCK_LIMITS("10");
-   MEASURE_MEAN_VAR_BLOCK_LIMITS("11");
-
-   if (N_accounted!=0) {
-      sum2/=N_accounted;
-      sum /=N_accounted;
-      sigma=sqrt(sum2-sum*sum);
-      alpha=(double)N_accounted/(double)N;
-   } else {sigma=alpha=0;}
+//DWT_Bijaoui_denoise_LL -- Bijaoui denoising at a perticular scale.
+void DWT_Bijaoui_denoise_LL(matrix2D<double> &WI,int scale,
+      	             	   const string &orientation,
+			   double mu,double S,double N){
+   matrix1D<int> x0(2), xF(2), r(2);
+   SelectDWTBlock(scale, WI, orientation, XX(x0), XX(xF), YY(x0), YY(xF));
+  
+   double SN=S+N;
+   double S_N=S/SN;
+   if (S<1e-6 && N<1e-6) {
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0,xF) WI(r)=0;
+   } else {
+      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0,xF){
+	 double y=WI(r);
+	 double ymu=y-mu;
+	 double ymu2=-0.5*ymu*ymu;
+	 double expymu2SN=exp(ymu2/SN);
+	 double den=exp(ymu2/N)+expymu2SN;
+	 if (den>1e-10) WI(r)=S_N*expymu2SN/den*y;
+      }
+   }   
 }
 
-void estimate_gaussian_for_scale(const matrix2D<double> &I,
-   int scale, double &alpha, double &sigma) {
-   double min_val, max_val;
-   I.compute_double_minmax(min_val,max_val);
-   estimate_gaussian_for_scale_with_limits(I,scale,min_val,max_val,alpha,sigma);
-   double alpha_ant, sigma_ant;
-   int N=1;
-   do {
-      alpha_ant=alpha;
-      sigma_ant=sigma;
-      max_val=3*sigma;
-      min_val=-max_val;
-      estimate_gaussian_for_scale_with_limits(I,scale,min_val,max_val,alpha,sigma);
-      N++;
-   } while (ABS(sigma-sigma_ant)/sigma>0.01 && N<10);
+void DWT_Bijaoui_denoise_LL(matrix3D<double> &WI,int scale,
+      	             	   const string &orientation,
+			   double mu,double S,double N){
+   matrix1D<int> x0(3), xF(3), r(3);
+   SelectDWTBlock(scale, WI, orientation, XX(x0), XX(xF), YY(x0), YY(xF),
+      ZZ(x0), ZZ(xF));
+  
+   double SN=S+N;
+   double S_N=S/SN;
+   if (S<1e-6 && N<1e-6) {
+      FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0,xF) WI(r)=0;
+   } else {
+      FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0,xF){
+	 double y=WI(r);
+	 double ymu=y-mu;
+	 double ymu2=-0.5*ymu*ymu;
+	 double expymu2SN=exp(ymu2/SN);
+	 double den=exp(ymu2/N)+expymu2SN;
+	 if (den>1e-10) WI(r)=S_N*expymu2SN/den*y;
+      }
+   }   
 }
 
-// See Bijaoui Signal Processing 2002, 82:709-712
-// for the variable notation
 //#define DEBUG
-void estimate_gaussian_mixture_scale(const matrix2D<double> &I,
-   int scale, double N, double &mu, double &a, double &S) {
-   matrix1D<int> corner1(2), corner2(2);
-   matrix1D<double> r(2);
-   
-   // Compute block average
-   double Nb=0;
-   mu=0;
-   #define MEASURE_BLOCK_AVG(quadrant) \
-      SelectDWTBlock(scale, I, quadrant, \
-         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
-      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
-         mu+=I(r); Nb++; \
-      }
-   MEASURE_BLOCK_AVG("01");
-   MEASURE_BLOCK_AVG("10");
-   MEASURE_BLOCK_AVG("11");
-   mu/=Nb;
-   
-   // Compute second and fourth moments
-   double M2=0, M4=0;
-   #define MEASURE_BLOCK_M2M4(quadrant) \
-      SelectDWTBlock(scale, I, quadrant, \
-         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
-      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
-         double d=(I(r)-mu)*(I(r)-mu); \
-         M2+=d; M4+=d*d; \
-      }
-   MEASURE_BLOCK_M2M4("01");
-   MEASURE_BLOCK_M2M4("10");
-   MEASURE_BLOCK_M2M4("11");
-   M2/=Nb;
-   M4/=Nb;
-   
-   // Compute a and S
-   S=(M4/3-N*N)/(M2-N);
-   a=((M2-N)*(M2-N))/(M4/3-N*N);
-   if (a<0) a=0;
+void bayesian_solve_eq_system(
+   const matrix1D<double> &power,
+   const matrix1D<double> &average,
+   const matrix1D<double> &Ncoefs,
+   double SNR0,
+   double SNRF,
+   double powerI,
+   double power_rest,
+   bool white_noise,
+   int tell,
+   matrix1D<double> &estimatedS) {
 
+   int scale_dim=XSIZE(power);
+
+   matrix2D<double> A;
+   int extra_constraints=0;
+   if (white_noise) extra_constraints+=(scale_dim-1);
+   A.init_zeros(2*(scale_dim-1)+2*scale_dim+2+extra_constraints,2*scale_dim);
+   for(int i=1;i<scale_dim;i++){
+      A(i-1,i-1)=1;
+      A(i-1,i)=-1;
+      A(i-1+scale_dim-1,i-1+scale_dim)=1;
+      A(i-1+scale_dim-1,i+scale_dim)=-1;
+   }
+   for(int i=0;i<2*scale_dim;i++)
+      A(i+2*(scale_dim-1),i)=-1;
+       
+   // Constraints on the SNR
+   matrix1D<double> aux0coefs(scale_dim);
+   for(int j=0;j<scale_dim;j++)
+      aux0coefs(j)=Ncoefs(j)*SNR0;
+   matrix1D<double> auxFcoefs(scale_dim);
+   for(int j=0;j<scale_dim;j++)
+      auxFcoefs(j)=Ncoefs(j)*SNRF;
+   
+   //initializing the second last row of A
+   for(int j=0;j<scale_dim;j++)
+      A(2*(scale_dim-1)+2*scale_dim,j)=(-1)*auxFcoefs(j);
+   for(int j=scale_dim;j<2*scale_dim;j++)
+      A(2*(scale_dim-1)+2*scale_dim,j)=Ncoefs(j-scale_dim);
+   
+   //initializing the last row of A
+   for(int j=0;j<scale_dim;j++)
+      A(2*(scale_dim-1)+2*scale_dim+1,j)=aux0coefs(j);
+   for(int j=scale_dim;j<2*scale_dim;j++)
+      A(2*(scale_dim-1)+2*scale_dim+1,j)=(-1)*Ncoefs(j-scale_dim);
+      
+   // White noise constraints
+   if (white_noise)
+      for (int i=0; i<scale_dim-1; i++) {
+          A(YSIZE(A)-(scale_dim-1)+i,i)  =-1.01;
+          A(YSIZE(A)-(scale_dim-1)+i,i+1)= 1;
+      }
+   
+   //initialize the matrix b
+   matrix1D<double> b(A.RowNo());
+   
+   // Initialize Aeq matrix
+   matrix2D<double> Aeq;
+   Aeq.init_zeros(1,2*scale_dim);
+   for(int j=0;j<scale_dim;j++){
+      Aeq(0,j)=Ncoefs(j);
+      Aeq(0,j+scale_dim)=Ncoefs(j);
+   }
+   
+   //initialize beq matrix
+   matrix1D<double> beq;
+   beq.init_zeros(1);
+   beq(0)=powerI-power_rest;
+   
+   //initialization of Matrix C (cost matrix)
+   matrix2D<double> C;
+   C.init_zeros(scale_dim,2*scale_dim);
+   for(int j=0;j<scale_dim;j++){
+      C(j,j)=1;
+      C(j,j+scale_dim)=1;
+   }
+   
+   // initialise the estimatedS which will contain the solution vector
+   estimatedS.init_zeros(2*scale_dim);
    #ifdef DEBUG
-      cout << scale << " " << " M2=" << M2 << " M4=" << M4 << " mu=" << mu
-           << " a=" << a << " S=" << S << " N=" << N << endl;
+      //Writing the matrices to ASCII files for comparing with matlab
+      C.write("./matrices/C.txt");
+      power.write("./matrices/power.txt");
+      A.write("./matrices/A.txt");
+      b.write("./matrices/b.txt");
+      Aeq.write("./matrices/Aeq.txt");
+      beq.write("./matrices/beq.txt");
+      
+      cout << "Equation system Cx=d\n"
+           << "C=\n" << C << endl
+	   << "d=" << (power/Ncoefs).transpose() << endl
+	   << "Constraints\n"
+	   << "Ax<=b\n"
+	   << "A=\n" << A << endl
+	   << "b=" << b.transpose() << endl
+	   << "Aeq x=beq\n"
+	   << "Aeq=\n" << Aeq << endl
+	   << "beq=" << beq.transpose() << endl;
+   #endif
+      
+   // Solve the system
+   matrix1D<double> bl,bu;
+   lsqlin(C,power/Ncoefs,A,b,Aeq,beq,bl,bu,estimatedS);
+   // COSS
+   estimatedS/=2;
+   
+   #ifdef DEBUG
+      cout<<"scale_dim :: "<<scale_dim<<endl;
+      cout<<"--------estimatedS -------- \n";
+      cout<<estimatedS;
+      cout<<"--------------------------- \n";
+      cout<<"Inequality constraints agreement"<<endl
+          <<(A*estimatedS).transpose() << endl;
+      cout<<"Equality constraints agreement"<<endl
+          <<(Aeq*estimatedS).transpose()<<endl;
+      cout<<"Goal function value: " <<(C*estimatedS).transpose() <<endl;
    #endif
 }
 #undef DEBUG
 
-// See Bijaoui Signal Processing 2002, 82:709-712
-// for the variable notation
-void bayesian_wiener_filtering_scale(const matrix2D<double> &I,
-   int scale, double N, double mu, double a, double S) {
-   matrix1D<int> corner1(2), corner2(2);
-   matrix1D<double> r(2);
-   #define DENOISE_BLOCK(quadrant) \
-      SelectDWTBlock(scale, I, quadrant, \
-         XX(corner1),XX(corner2),YY(corner1),YY(corner2)); \
-      FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) { \
-         double G_y_S_N=exp(-0.5*(I(r)-mu)*(I(r)-mu)/(S+N)); \
-         double G_y_N  =exp(-0.5*(I(r)-mu)*(I(r)-mu)/N); \
-         I(r)*=(a*S/(S-N)*G_y_S_N)/((1-a)*G_y_N+a*G_y_S_N); \
+//#define DEBUG
+matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_scale,
+   double SNR0, double SNRF, bool white_noise, int tell, bool denoise) {
+   /*Calculate the power of the wavelet transformed image */
+   double powerI=WI.sum2();
+         
+   /*Number of pixels and some constraints on SNR*/
+   int Ydim=0,Xdim=0;
+   WI.get_dim(Ydim,Xdim);
+   int Ncoef_total=Ydim*Xdim;
+   int max_scale=ROUND(log(double(Xdim))/log(2.0));  
+
+   #ifdef DEBUG
+      cout<<"powerI= "<<powerI<<endl;
+      double powerWI=WI.sum2();
+      cout<<"powerWI= "<<powerWI<<endl;
+      cout<<"Ydim = "<<Ydim<<"  Xdim = "<<Xdim<<"\n";
+      cout<<"Ncoef_total= "<<Ncoef_total<<endl;
+      cout<<"max_scale = "<<max_scale<<"\n";
+   #endif
+   
+   /*Calculate the power at each band*/
+   //init the scale vector
+   matrix1D<int> scale(MIN(allowed_scale+1,max_scale-1));
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i)=i;
+   int scale_dim=scale.get_dim();
+   
+     //define some vectors
+   matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+   matrix1D<int> x0(2), xF(2), r(2);
+   vector<string> orientation;
+   orientation.push_back("01");
+   orientation.push_back("10");
+   orientation.push_back("11");
+   for (int j=0;j<scale.get_dim();j++) {
+      for (int k=0; k<orientation.size(); k++) {
+	 SelectDWTBlock(scale(j), WI, orientation[k],
+	    XX(x0), XX(xF), YY(x0), YY(xF));
+	 FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0,xF){
+      	    power(j)+=WI(r)*WI(r);
+	    average(j)+=WI(r);
+	 }
       }
-   DENOISE_BLOCK("01");
-   DENOISE_BLOCK("10");
-   DENOISE_BLOCK("11");
+      Ncoefs(j)=(int)pow(2.0,2*(max_scale-scale(j)-1))*orientation.size();
+      average(j)=average(j)/Ncoefs(j);
+   }
+   
+   /*Evaluate the power of the unconsidered part of the image */
+   double power_rest=0.0;
+   int Ncoefs_rest=0;
+   SelectDWTBlock(scale(scale_dim-1), WI, "00", XX(x0), XX(xF), YY(x0), YY(xF));
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0,xF)
+     power_rest+=WI(r)*WI(r);
+   Ncoefs_rest=(int)pow(2.0,2*(max_scale-1-scale(scale_dim-1)));
+   
+   if (tell) {
+      cout<<"scale = "<<endl<<scale<<endl;
+      cout<<"power= "<<endl<<power<<"\n";
+      cout<<"average= "<<endl<<average<<"\n";
+      cout<<"Ncoefs= "<<endl<<Ncoefs<<"\n";
+      cout<<"power_rest= "<<power_rest<<"\n";
+      cout<<"Ncoefs_rest= "<<Ncoefs_rest<<"\n";
+      cout<<"powerI= "<<powerI<<endl;
+      cout<<"Total sum of powers = "<<power.sum()+power_rest<<endl;
+      cout<<"Difference powers = "<<powerI-power.sum()-power_rest<<endl;
+   }
+   
+   /*Solve the Equation System*/
+   matrix1D<double> estimatedS;
+   bayesian_solve_eq_system(power, average, Ncoefs,
+      SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
+   
+   if (tell) {
+      cout<<"estimatedS =\n"<< estimatedS <<endl;
+      double S=0,N=0;
+      for (int i=0; i<scale_dim; i++) {
+         N+=Ncoefs(i)*estimatedS(i);
+         S+=Ncoefs(i)*estimatedS(scale_dim+i);
+      }
+      cout << "SNR value=" << S/N << endl << endl;
+   }
+
+   /* Apply the Bijaoui denoising to all scales >= allowed_scale */
+   if (denoise)
+      bayesian_wiener_filtering(WI,allowed_scale,estimatedS);
+
+   return estimatedS;
+}
+#undef DEBUG
+
+void bayesian_wiener_filtering(matrix2D<double> &WI,
+   int allowed_scale, matrix1D<double> &estimatedS) {
+   vector<string> orientation;
+   orientation.push_back("01");
+   orientation.push_back("10");
+   orientation.push_back("11");
+
+   int max_scale=ROUND(log(double(XSIZE(WI)))/log(2.0));  
+   matrix1D<int> scale(MIN(allowed_scale+1,max_scale-1));
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i)=i;
+
+   for(int i=0;i<XSIZE(scale);i++){
+      double N=estimatedS(i);
+      double S=estimatedS(i+XSIZE(scale));
+      for (int k=0; k<orientation.size(); k++)
+          DWT_Bijaoui_denoise_LL(WI,scale(i),orientation[k],0,S,N);
+   }
 }
 
 //#define DEBUG
-void bayesian_wiener_filtering(matrix2D<double> &I, int scale) {
-   // Compute the amount of noise
-   double alpha,N;
-   estimate_gaussian_for_scale(I,0,alpha,N);
-   N*=N; // compute the power of the noise
+matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_scale,
+   double SNR0, double SNRF, bool white_noise, int tell, bool denoise) {
+   /*Calculate the power of the wavelet transformed image */
+   double powerI=WI.sum2();
+         
+   /*Number of pixels and some constraints on SNR*/
+   int Zdim,Ydim,Xdim;
+   WI.get_dim(Zdim, Ydim,Xdim);
+   int Ncoef_total=Zdim*Ydim*Xdim;
+   int max_scale=ROUND(log(double(Xdim))/log(2.0));  
+
+   #ifdef DEBUG
+      cout<<"powerI= "<<powerI<<endl;
+      double powerWI=WI.sum2();
+      cout<<"powerWI= "<<powerWI<<endl;
+      cout<<"Zdim= " << Zdim << " Ydim = "<<Ydim<<"  Xdim = "<<Xdim<<"\n";
+      cout<<"Ncoef_total= "<<Ncoef_total<<endl;
+      cout<<"max_scale = "<<max_scale<<"\n";
+   #endif
    
-   // Denoise all scales up to the given one
-   for (int s=0; s<=scale; s++) {
-      double mu,a,S;
-      estimate_gaussian_mixture_scale(I,s,N,mu,a,S);
-      bayesian_wiener_filtering_scale(I,s,N,mu,a,S);
+   /*Calculate the power at each band*/
+   //init the scale vector
+   matrix1D<int> scale(allowed_scale+1);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i)=i;
+   int scale_dim=scale.get_dim();
+   
+     //define some vectors
+   matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+   matrix1D<int> x0(3), xF(3), r(3);
+   vector<string> orientation;
+   orientation.push_back("001");
+   orientation.push_back("010");
+   orientation.push_back("011");
+   orientation.push_back("100");
+   orientation.push_back("101");
+   orientation.push_back("110");
+   orientation.push_back("111");
+   for (int j=0;j<scale.get_dim();j++) {
+      for (int k=0; k<orientation.size(); k++) {
+	 SelectDWTBlock(scale(j), WI, orientation[k],
+	    XX(x0), XX(xF), YY(x0), YY(xF), ZZ(x0), ZZ(xF));
+	 FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0,xF){
+      	    power(j)+=WI(r)*WI(r);
+	    average(j)+=WI(r);
+	 }
+      }
+      Ncoefs(j)=(int)pow(2.0,3*(max_scale-scale(j)-1))*orientation.size();
+      average(j)=average(j)/Ncoefs(j);
    }
+   
+   /*Evaluate the power of the unconsidered part of the image */
+   double power_rest=0.0;
+   int Ncoefs_rest=0;
+   SelectDWTBlock(scale(scale_dim-1), WI, "000", XX(x0), XX(xF), YY(x0), YY(xF),
+      ZZ(x0), ZZ(xF));
+   FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0,xF)
+     power_rest+=WI(r)*WI(r);
+   Ncoefs_rest=(int)pow(2.0,3*(max_scale-1-scale(scale_dim-1)));
+   
+   if (tell) {
+      cout<<"scale = "<<endl<<scale<<endl;
+      cout<<"power= "<<endl<<power<<"\n";
+      cout<<"average= "<<endl<<average<<"\n";
+      cout<<"Ncoefs= "<<endl<<Ncoefs<<"\n";
+      cout<<"power_rest= "<<power_rest<<"\n";
+      cout<<"Ncoefs_rest= "<<Ncoefs_rest<<"\n";
+      cout<<"powerI= "<<powerI<<endl;
+      cout<<"Total sum of powers = "<<power.sum()+power_rest<<endl;
+      cout<<"Difference powers = "<<powerI-power.sum()-power_rest<<endl;
+   }
+   
+   /*Solve the Equation System*/
+   matrix1D<double> estimatedS;
+   bayesian_solve_eq_system(power, average, Ncoefs,
+      SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
+   if (tell) {
+      cout<<"estimatedS =\n"<< estimatedS <<endl;
+      double S=0,N=0;
+      for (int i=0; i<scale_dim; i++) {
+         N+=Ncoefs(i)*estimatedS(i);
+         S+=Ncoefs(i)*estimatedS(scale_dim+i);
+      }
+      cout << "SNR value=" << S/N << endl << endl;
+   }
+   
+   /* Apply the Bijaoui denoising to all scales >= allowed_scale */
+   if (denoise)
+      bayesian_wiener_filtering(WI,allowed_scale,estimatedS);
+   return estimatedS;
 }
 #undef DEBUG
+
+void bayesian_wiener_filtering(matrix3D<double> &WI,
+   int allowed_scale, matrix1D<double> &estimatedS) {
+   vector<string> orientation;
+   orientation.push_back("001");
+   orientation.push_back("010");
+   orientation.push_back("011");
+   orientation.push_back("100");
+   orientation.push_back("101");
+   orientation.push_back("110");
+   orientation.push_back("111");
+
+   int max_scale=ROUND(log(double(XSIZE(WI)))/log(2.0));  
+   matrix1D<int> scale(MIN(allowed_scale+1,max_scale-1));
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i)=i;
+
+   for(int i=0;i<XSIZE(scale);i++){
+      double N=estimatedS(i);
+      double S=estimatedS(i+XSIZE(scale));
+      for (int k=0; k<orientation.size(); k++)
+          DWT_Bijaoui_denoise_LL(WI,scale(i),orientation[k],0,S,N);
+   }
+}
