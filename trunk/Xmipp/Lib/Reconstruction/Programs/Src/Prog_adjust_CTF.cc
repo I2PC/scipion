@@ -742,7 +742,10 @@ double CTF_fitness(double *p) {
    global_ctfmodel.enable_CTFnoise=TRUE;
    if (global_show>=2) cout << "Model:\n" << global_ctfmodel << endl;
    global_ctfmodel.Produce_Side_Info();
-   if(!global_ctfmodel.physical_meaning()) return global_heavy_penalization;
+   if(!global_ctfmodel.physical_meaning()) {
+      if (global_show>=2) cout << "Does not have physical meaning\n";
+      return global_heavy_penalization;
+   }
       
    // Now the 2D error
    double N=0;
@@ -1305,6 +1308,7 @@ void ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm) {
       cerr << "Looking for best fitting parametric CTF ...\n";
       // First perform an exhaustive search
       global_action=1;
+      //global_show=2;
       estimate_best_parametric_CTF(&CTF_fitness);
       assign_CTF_from_parameters(VEC_ARRAY(prm.adjust),
          global_ctfmodel,0,CTF_PARAMETERS,
