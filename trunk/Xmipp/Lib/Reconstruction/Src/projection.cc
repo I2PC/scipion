@@ -74,7 +74,8 @@ template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    const ImageOver &footprint, const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
-   const VolumeT<int> *VNeq, matrix2D<double> *M) {
+   const VolumeT<int> *VNeq, matrix2D<double> *M,
+   VolumeT<T> *vol_var=NULL) {
    matrix1D<double> prjX(3);                 // Coordinate: Projection of the
    matrix1D<double> prjY(3);                 // 3 grid vectors
    matrix1D<double> prjZ(3);
@@ -164,7 +165,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 
    #ifdef DEBUG_LITTLE
    int condition;
-   condition = FORW;
+   condition = FORW && XX(grid.origin)==0;
    if (condition) {
       cout << "Equation mode " << eq_mode << endl;
       cout << "Footprint size " << YY_footprint_size << "x"
@@ -204,8 +205,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                // Be careful that you cannot skip any blob, although its
                // value be 0, because it is useful for norm_proj
                #ifdef DEBUG
-               // condition = !FORW && XX(grid.origin)==0 &&
-               //              ((j==-2 && i==-7 && k==4)|| (j==-2 && i==-6 && k==4));
+               condition = FORW && XX(grid.origin)==0 &&
+                             ((j==0 && i==0 && k==0));
                if (condition) {
         	  printf("\nProjecting grid coord (%d,%d,%d) ",j,i,k);
         	  cout << "Vol there = " << VOLVOXEL(vol,k,i,j) << endl;
@@ -321,12 +322,26 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
         	  } // Project this blob
 
 		  if (!FORW) {
+                     T correction;
                      switch (eq_mode) {
-                	case ARTK: VOLVOXEL(vol,k,i,j) += (T) (vol_corr/N_eq);
+                	case ARTK: correction=(T) (vol_corr/N_eq);
                            break;
                 	case CAVK:
-                	case CAV:  VOLVOXEL(vol,k,i,j) += (T) vol_corr;
+                	case CAV:  correction=(T) vol_corr;
                            break;
+                     }
+                     VOLVOXEL(vol,k,i,j)+=correction;
+                     if (vol_var!=NULL) {
+                        bool interesting=grid.R2==-1 ||
+                           (sqrt(XX(univ_position)*XX(univ_position)+
+                           YY(univ_position)*YY(univ_position)+
+                           ZZ(univ_position)*ZZ(univ_position))+5<
+                           sqrt(grid.R2));
+                        if (interesting || true)
+                           VOLVOXEL(*vol_var,k,i,j)=(T)
+                              (0.99*VOLVOXEL(*vol_var,k,i,j)+
+                               0.01*ABS(correction));
+                               //0.005*ABS(correction));
                      }
 
                      #ifdef DEBUG
@@ -372,7 +387,8 @@ void project_Volume(
                                          //   norm_proj must be valid
    int              eq_mode,             // ARTK, CAVK or CAV
    GridVolumeT<int> *GVNeq,              // Number of equations per blob
-   matrix2D<double> *M)                  // System matrix
+   matrix2D<double> *M,                  // System matrix
+   GridVolumeT<T>   *vol_var)            // Volume to keep track of the variance
 {
    // If projecting forward initialise projections
    if (FORW) {
@@ -395,9 +411,11 @@ void project_Volume(
    
    for (int i=0; i<vol.VolumesNo(); i++) {
       VolumeT<int> *VNeq;
-      if (GVNeq!=NULL) VNeq=&((*GVNeq)(i)); else VNeq=NULL;
+      VolumeT<T>   *Vvar;
+      if (GVNeq!=NULL)   VNeq=&((*GVNeq  )(i)); else VNeq=NULL;
+      if (vol_var!=NULL) Vvar=&((*vol_var)(i)); else Vvar=NULL;
       project_SimpleGrid(vol(i),vol.grid(i),footprint,footprint2,
-         proj, norm_proj, FORW, eq_mode, VNeq, M);
+         proj, norm_proj, FORW, eq_mode, VNeq, M, Vvar);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
       if (FORW) save.write((string)"PPPnorm_FORW"+(char)(48+i));
@@ -411,7 +429,7 @@ void project_Volume(
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(VolumeXmipp &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double rot, double tilt, double psi) _THROW {
    SPEED_UP_temps;
 
@@ -420,9 +438,9 @@ void project_Volume(VolumeXmipp &V, Projection &P, int Ydim, int Xdim,
    P.set_angles(rot,tilt,psi);
   
    // Compute the distance for this line crossing one voxel
-   int x_0=STARTINGX(V()), x_F=FINISHINGX(V());
-   int y_0=STARTINGY(V()), y_F=FINISHINGY(V());
-   int z_0=STARTINGZ(V()), z_F=FINISHINGZ(V());
+   int x_0=STARTINGX(V), x_F=FINISHINGX(V);
+   int y_0=STARTINGY(V), y_F=FINISHINGY(V);
+   int z_0=STARTINGZ(V), z_F=FINISHINGZ(V);
 
    // Distances in X and Y between the center of the projection pixel begin
    // computed and each computed ray

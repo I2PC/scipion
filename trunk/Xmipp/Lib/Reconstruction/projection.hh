@@ -74,7 +74,8 @@ void project_Volume(GridVolumeT<T> &vol,
    const ImageOver &footprint,const ImageOver &footprint2,
    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
    double rot, double tilt, double psi, int FORW, int eq_mode=ARTK,
-   GridVolumeT<int> *GVNeq=NULL, matrix2D<double> *M=NULL);
+   GridVolumeT<int> *GVNeq=NULL, matrix2D<double> *M=NULL,
+   GridVolumeT<T> *vol_var=NULL);
 
 /** From voxel volumes.
     The voxel volume is projected onto a projection plane defined by
@@ -83,7 +84,7 @@ void project_Volume(GridVolumeT<T> &vol,
     The projection itself, from now on, will keep the Euler angles.
     
     An exception is thrown if the SPIDER environment variable is not set */
-void project_Volume(VolumeXmipp &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double rot, double tilt, double psi) _THROW;
 
 /** Count equations in volume.
