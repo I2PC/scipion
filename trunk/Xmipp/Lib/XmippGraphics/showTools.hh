@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #ifndef _SHOWTOOLS_H
+#define _SHOWTOOLS_H
 #include <qwidget.h>
 #include <qlabel.h>
 #include <qimage.h>
