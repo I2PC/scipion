@@ -111,7 +111,7 @@ int main (int argc, char **argv) {
       // Get report ........................................................
       DocFile report;
       SF_fr.read(fn_fr);
-      report.read(fn_root+fn_iter+"_orfsfs.txt",TRUE,TRUE);
+      report.read(fn_root+fn_iter+"_orfsfs.txt",TRUE);
       
       // Process report ....................................................
       matrix1D<double> rot_diff, tilt_diff, psi_diff, shift_diff;
