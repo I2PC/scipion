@@ -253,7 +253,7 @@ void  Sphere::feat_printf(FILE *fh) const {
 /* Show a Blob    ---------------------------------------------------------- */
 void  Blob::feat_printf(FILE *fh) const {
    fprintf(fh,"blo    %c     %1.4f    % 7.2f   % 7.2f    % 7.2f    % 7.2f"
-              "    % 7.2    %1d\n",
+              "    % 7.2f    %1d\n",
        Add_Assign, Density, XX(Center), YY(Center), ZZ(Center),
        radius, alpha,m);
 }
