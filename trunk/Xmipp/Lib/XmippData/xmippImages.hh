@@ -510,15 +510,27 @@ public:
    float  Yoff() const {return header.fYoff();}
    //@}
 
-   /**@name Weight (stored in fAv, used for ML optimization) */
+   /**@name Weight (used for ML optimization) */
    //@{
    /** Set weight
        \\Ex: IX.weight()=3.50;*/
-   float& weight() {return header.fAv();}
+   float& weight() {return header.Weight();}
    
    /** Get weight.
        \\Ex: cout << "Weight: " << IX.weight() << endl;*/
-   float  weight() const {return header.fAv();}
+   float  weight() const {return header.Weight();}
+   //@}
+   //@}
+
+   /**@name Flip (used for ML optimization) */
+   //@{
+   /** Set flip
+       \\Ex: IX.flip()=1; (flip image), or IX.flip()=0; (do NOT flip image) */
+   float& flip() {return header.Flip();}
+   
+   /** Get flip.
+       \\Ex: cout << "Flip: " << IX.flip() << endl;*/
+   float  flip() const {return header.Flip();}
    //@}
    //@}
 
