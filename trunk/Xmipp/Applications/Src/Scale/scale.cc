@@ -109,7 +109,7 @@ void Usage() {
     cerr << "Purpose:\n";
     cerr << "    Scale images/volumes to a given size\n";
     
-    cerr << "Usage: reverse_endian <parameters>\n"
+    cerr << "Usage: scale <parameters>\n"
          << "   -i <image or volume> [-o <image_out or volume_out]\n"
          << "   -i <selfile> [-oext <output extension>]\n"
          << "   -xdim <new x dimension>\n"
