@@ -117,6 +117,8 @@ public:
     double             max_distance;
 
 public:
+    virtual ~Feature() {}
+
 /** Prepare feature for work.
     This function computes the maximum distance and possibly the Euler
     and inverse Euler matrices. */
@@ -416,6 +418,8 @@ public:
    /// Inverse Euler matrix
    matrix2D<double>   eulert;
 public:
+   virtual ~Oriented_Feature() {}
+
 /** Compute Euler and inverse Euler matrices from the Euler angles. */
     void prepare_Euler() {
        Euler_angles2matrix(rot,tilt,psi,euler);
