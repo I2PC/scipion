@@ -4,7 +4,8 @@ LIBPROJ = ../../libClassif_$(XMIPP_PREFIX)$(MACHINE).so
 SRC_OBJS = xmippCTVectors.o xmippCodeBook.o xmippFuzzyCodeBook.o xmippDistances.o \
 	   xmippSammon.o xmippFCMeans.o xmippMap.o xmippSOM.o xmippFKCN.o \
 	   xmippFuzzySOM.o xmippKerDenSOM.o xmippBatchSOM.o xmippUmatrix.o \
-	   xmippPlanes.o xmippTStudentKerDenSOM.o xmippGaussianKerDenSOM.o
+	   xmippPlanes.o xmippTStudentKerDenSOM.o xmippGaussianKerDenSOM.o \
+           xmippPC.o
 
 # Main action: Built library -----------------------------------------------
 all:  $(LIBPROJ)
