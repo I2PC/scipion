@@ -37,6 +37,7 @@
 #include <qtimer.h>
 #include <XmippData/xmippImages.hh>
 #include <sys/stat.h>
+#include <XmippData/xmippFFT.hh>
 
 /**@name Show 2D*/
 //@{
