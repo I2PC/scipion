@@ -353,7 +353,11 @@ void ShowSel::changeNormalize() {
 }
 
 void ShowSel::changeShowLabels() {changeBoolOption(mi_showLabel, mi_hideLabel);}
-void ShowSel::changeLabels()     {changeBoolOption(mi_imgAsLabels, mi_selAsLabels);}
+void ShowSel::changeLabels()     {
+   if      (options->isItemEnabled(mi_imgAsLabels)) labeltype=Filename_LABEL;
+   else if (options->isItemEnabled(mi_selAsLabels)) labeltype=SFLabel_LABEL;
+   changeBoolOption(mi_imgAsLabels, mi_selAsLabels);
+}
 
 // Show statistics ---------------------------------------------------------
 void ShowSel::showStats() {  
