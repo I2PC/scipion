@@ -27,6 +27,7 @@
 /* Includes ---------------------------------------------------------------- */
 #include "QtDialogProperties.hh"
 #include "QtImageMicrograph.hh"
+#include "QtWidgetMicrograph.hh"
 #include "XmippData/xmippMicrograph.hh"
 #include "qlistbox.h"
 #include "qpushbutton.h"
@@ -34,7 +35,9 @@
 #include "qhbox.h"
 
 /* Constructor ------------------------------------------------------------- */
-QtDialogProperties::QtDialogProperties( Micrograph *_m, int _coord, 
+QtDialogProperties::QtDialogProperties( Micrograph *_m,
+                                        QtWidgetMicrograph *_wm,
+                                        int _coord, 
                                         QWidget *_parent, 
                                         const char *_name, 
                                         bool _modal,
@@ -43,6 +46,7 @@ QtDialogProperties::QtDialogProperties( Micrograph *_m, int _coord,
 
    setCaption( "Change properties" );
    __m            = _m;
+   __wm           = _wm;
    __coord        = _coord;
    __moving       = false;   
    __vBoxLayout   = new QVBox( this );
@@ -78,6 +82,7 @@ void QtDialogProperties::slotChangeFamily( int _f ) {
 
 void QtDialogProperties::slotDeleteMark() {
    __m->coord(__coord).valid = false;
+   __wm->delete_particle(__coord);
    emit signalDeleteMarkOther( __coord );
    accept();
 }

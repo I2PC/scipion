@@ -28,23 +28,26 @@ class QListBox;
 class QPushButton;
 class QVBox;
 class Micrograph;
+class QtWidgetMicrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
 class QtDialogProperties : public QDialog {   
    Q_OBJECT
 
 private:
-   Micrograph  *__m;   
-   int          __coord;
-   bool         __moving;
-   QListBox    *__familyList;
-   QPushButton *__moveButton;
-   QPushButton *__deleteButton;
-   QVBox       *__vBoxLayout;
+   Micrograph         *__m;
+   QtWidgetMicrograph *__wm;
+   int                 __coord;
+   bool                __moving;
+   QListBox           *__familyList;
+   QPushButton        *__moveButton;
+   QPushButton        *__deleteButton;
+   QVBox              *__vBoxLayout;
 
 public:
    // Constructor
-   QtDialogProperties( Micrograph *_m, int _coord, QWidget *_parent=0, 
+   QtDialogProperties( Micrograph *_m, QtWidgetMicrograph *_wm,
+                       int _coord, QWidget *_parent=0, 
                        const char *_name=0, bool _modal=FALSE, WFlags _f=0 );
    ~QtDialogProperties();
          
