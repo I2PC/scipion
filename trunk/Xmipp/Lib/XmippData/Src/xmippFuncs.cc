@@ -402,6 +402,14 @@ void time_config() {XmippTICKS = sysconf(_SC_CLK_TCK);}
 // Annotate actual time ....................................................
 void annotate_time(TimeStamp *time) {times(time);}
 
+// Acumulative time
+void acum_time(TimeStamp *orig, TimeStamp *dest){
+	TimeStamp now;
+	times(&now);
+	(*dest).tms_utime += (*dest).tms_utime + (now.tms_utime-(*orig).tms_utime);
+	(*dest).tms_stime += (*dest).tms_stime + (now.tms_utime-(*orig).tms_utime);
+}
+
 // Show elapsed time since last annotation .................................
 void print_elapsed_time(TimeStamp &time, int _IN_SECS) {
    TimeStamp now; times(&now);

@@ -793,6 +793,14 @@ void time_config();
     @see print_elapsed_time */
 void annotate_time(TimeStamp *time);
 
+/** Acumulate time.
+    Initially dest_time should be set to orig time. Then you acumulate
+    succesive times calling this function 
+    (Destination time=destination_time+(now-original time))
+    nad finally the elapsed time is the dest time minus the first one (the
+    one which initiliazed the dest time. */
+void acum_time(TimeStamp *orig, TimeStamp *dest);
+
 /** Compute elapsed time since a given annotation.
     Given an annotation of time, this function computes the time elapsed
     since then in seconds. The annotation is not modified.
