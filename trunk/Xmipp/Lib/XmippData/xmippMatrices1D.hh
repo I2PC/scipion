@@ -141,6 +141,21 @@ ostream& operator << (ostream & ostrm, const matrix1D< complex<double> > &m);
     ispduptmp4=MAX(STARTINGX(v1), STARTINGX(v2)); \
     ispduptmp5=MIN(FINISHINGX(v1),FINISHINGX(v2)); \
     for (int i=ispduptmp4; i<=ispduptmp5; i++)
+
+/** For all elements in the array, accessed physically.
+    This macro is used to generate loops for the vector in an easy way
+    using physical indexes.
+    It defines internal the index 'i' which ranges the vector using
+    its physical definition.
+    \\Ex:
+    \begin{verbatim}
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) {
+       cout << DIRECT_MAT_ELEM(v,i) << " ";
+    }
+    \end{verbatim} */
+#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
+    for (int i=0; i<YSIZE(v); i++) 
+
 //@}
 
 /**@name Memory access */
