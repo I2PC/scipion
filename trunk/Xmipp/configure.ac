@@ -29,7 +29,7 @@ AC_PREFIX_DEFAULT(`pwd`)
 # changed using --program-prefix=your_string
 
 if test "x$program_prefix" = xNONE; then
-	program_transform_name=`echo s,^,xmipp_,`
+	program_transform_name="s,^,xmipp_,"
 fi
 
 # If --enable-debug , -g compiler flag
@@ -40,15 +40,14 @@ AC_ARG_ENABLE([debug],
   [use_debug=$enableval], [use_debug=no])
 
 if test $use_debug = no; then
-	AUX= echo $CFLAGS | sed 's/\-g //g'
-	CFLAGS= $AUX
-	AUX= echo $CXXFLAGS | sed 's/\-g //g'
-	CXXFLAGS= $AUX
+	CFLAGS=`echo $CFLAGS | sed 's/\-g //g'`
+	CXXFLAGS=`echo $CXXFLAGS | sed 's/\-g //g'`
 fi
 
 AC_ARG_ENABLE([static-exec],
   AC_HELP_STRING([--enable-static-exec], [Enables static executables building]),
   [build_static_exec=$enableval], [build_static_exec=no])
+
 if test $build_static_exec = yes; then
 	EXEC_TYPE="-all-static"
 else
