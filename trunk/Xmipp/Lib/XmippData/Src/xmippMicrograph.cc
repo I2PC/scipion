@@ -67,24 +67,35 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
    fn_micrograph = _fn_micrograph;
 
    // Look for micrograph dimensions
-   fn_inf=fn_micrograph.add_extension("inf");
-   FILE *fh_inf=fopen(fn_inf.c_str(),"r");
-   if (!fh_inf)
-      REPORT_ERROR(1,(string)"Micrograph::open_micrograph: Cannot find "+
-         fn_inf);
-   Xdim=AtoI(get_param(fh_inf,"Xdim"));
-   Ydim=AtoI(get_param(fh_inf,"Ydim"));
-   __depth=AtoI(get_param(fh_inf,"bitspersample"));
-   if(check_param(fh_inf,"offset"))
-      __offset=AtoI(get_param(fh_inf,"offset"));
-   else
-      __offset=0;   
-   if (check_param(fh_inf,"is_signed"))
-      __is_signed=(get_param(fh_inf,"is_signed")=="true" ||
-                   get_param(fh_inf,"is_signed")=="TRUE");
-   else __is_signed=false;
-   fclose(fh_inf);
-cout << "is:signed: " << __is_signed << endl;
+   // check if the file format is spider
+   if(Is_ImageXmipp(fn_micrograph)){
+      headerXmipp     header;
+      header.read(fn_micrograph);
+      float fXdim,fYdim;
+      header.get_dimension(fYdim,fXdim);
+      Xdim = (int) fXdim; Ydim= (int)fYdim;
+      __offset=header.get_header_size();
+      __depth=32;
+   }
+   else {
+      fn_inf=fn_micrograph.add_extension("inf");
+      FILE *fh_inf=fopen(fn_inf.c_str(),"r");
+      if (!fh_inf)
+	 REPORT_ERROR(1,(string)"Micrograph::open_micrograph: Cannot find "+
+            fn_inf);
+      Xdim=AtoI(get_param(fh_inf,"Xdim"));
+      Ydim=AtoI(get_param(fh_inf,"Ydim"));
+      __depth=AtoI(get_param(fh_inf,"bitspersample"));
+      if(check_param(fh_inf,"offset"))
+	 __offset=AtoI(get_param(fh_inf,"offset"));
+      else
+	 __offset=0;   
+      if (check_param(fh_inf,"is_signed"))
+	 __is_signed=(get_param(fh_inf,"is_signed")=="true" ||
+                      get_param(fh_inf,"is_signed")=="TRUE");
+      else __is_signed=false;
+      fclose(fh_inf);
+   }
    // Open micrograph and map
    fh_micrograph=open(fn_micrograph.c_str(),O_RDWR,S_IREAD|S_IWRITE);
    if (fh_micrograph==-1)
@@ -135,7 +146,7 @@ cout << "is:signed: " << __is_signed << endl;
                   _fn_micrograph+" in memory");
 	    }
           aux_ptr=(char *)m16;
-cout << "offset " << __offset << endl;
+
 	  aux_ptr+=__offset;
 	  m16=(short int *) aux_ptr;
 	  }
