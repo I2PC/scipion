@@ -220,7 +220,7 @@ public:
    }
 
    /// Compute CTF at (U,V). Continuous frequencies
-   double CTFpure_at(double X, double Y, bool show=FALSE) const {
+   inline double CTFpure_at(double X, double Y, bool show=FALSE) const {
       double u2=X*X+Y*Y;
       double u=sqrt(u2);
       double u4=u2*u2;
@@ -258,7 +258,7 @@ public:
    /** Compute CTF gaussian at (U,V). Continuous frequencies.
        This is the pure gaussian, without any scaling factor. Its range
        is between 0 and 1.*/
-   double CTFgaussian_at(double X, double Y, bool show=false) const {
+   inline double CTFgaussian_at(double X, double Y, bool show=false) const {
       double ellipsoid_ang;
       if (gaussian_K==0.0) return 0.0;
       if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
@@ -283,19 +283,21 @@ public:
 
    /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
    //#define DEBUG
-   double CTFnoise_at(double X, double Y, bool show=false) const {
+   inline double CTFnoise_at(double X, double Y, bool show=false) const {
       double ellipsoid_ang;
       if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
           ABS(Y)<XMIPP_EQUAL_ACCURACY) ellipsoid_ang=0;
       else ellipsoid_ang=atan2(Y,X)-rad_gaussian;
-      double sqUp=sqU*cos(ellipsoid_ang);
-      double sqVp=sqV*sin(ellipsoid_ang);
+      double cos_ang=cos(ellipsoid_ang);
+      double sin_ang=sin(ellipsoid_ang);
+      double sqUp=sqU*cos_ang;
+      double sqVp=sqV*sin_ang;
       double sq=sqrt(sqUp*sqUp+sqVp*sqVp);
-      double cUp=cU*cos(ellipsoid_ang);
-      double cVp=cV*sin(ellipsoid_ang);
+      double cUp=cU*cos_ang;
+      double cVp=cV*sin_ang;
       double c=sqrt(cUp*cUp+cVp*cVp);
-      double sigmaUp=sigmaU*cos(ellipsoid_ang);
-      double sigmaVp=sigmaV*sin(ellipsoid_ang);
+      double sigmaUp=sigmaU*cos_ang;
+      double sigmaVp=sigmaV*sin_ang;
       double sigma=sqrt(sigmaUp*sigmaUp+sigmaVp*sigmaVp);
       double w=sqrt(X*X+Y*Y);
       if (show) {
