@@ -128,7 +128,7 @@ void Projection_Parameters::read(FileName fn_proj_param) _THROW {
                }
             }  else
                REPORT_ERROR(3007,(string)"Prog_Project_Parameters::read: "
-                  "file " + auxstr + " doesn't exist");
+                  "file " + fn_angle + " doesn't exist");
             lineNo=4;
             break;
          case 4:
