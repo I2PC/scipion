@@ -742,6 +742,7 @@ void Prog_align2d_prm::align2d() _THROW {
   if (fn_doc!="") {
     DocFile           DFo;
     DFo.reserve(n_images);
+    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5)");
     matrix1D<double>  dataline(5);
     for (int imgno=0; imgno < n_images; imgno++) {
       dataline(0)=images[imgno].Phi();
