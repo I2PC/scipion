@@ -8,6 +8,9 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippFilters.cc Src/xmippMorphology.cc \
 	Programs/Src/Prog_downsample.cc Programs/Src/Prog_segment.cc \
 	Programs/Src/Prog_denoising.cc \
+	Programs/Src/Prog_test_cluster.cc \
+	Programs/Src/Prog_normalize.cc \
+	Programs/Src/Prog_range_adjust.cc \
 	Src/xmippWavelets.cc \
 	Src/xmippImagic.cc \
 	Src/xmippFFT.cc \
