@@ -39,7 +39,9 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include "tiffio.h"
+#include <iostream>
 
+using namespace std;
 
 /*
 // initFile
@@ -54,8 +56,8 @@ int initFile( char *filename, size_t len ) {
   FILE *                                  fd;
 
   buffer = (unsigned char*)malloc( sizeof(unsigned char) * 100000 );
-  for (int i=0; i<100000; i++) buffer[i]=0;
   if ( buffer == NULL ) return( -1 );
+  for (int i=0; i<100000; i++) buffer[i]=0;
 
   fd = fopen( filename, "w" );
   if(fd==NULL)
@@ -84,45 +86,144 @@ void rawWriteTile(
    unsigned int x, unsigned int y,
    unsigned int imageWidth, unsigned int imageLength, 
    unsigned int tileWidth, unsigned int tileLength,
-   unsigned short bitsPerSample, int byte_swapped,
-   unsigned int *minval, unsigned int *maxval) {
+   unsigned short bitsPerSample, unsigned short imageSampleFormat,
+   int byte_swapped,
+   char * zsMinval, char * zsMaxval) {
    unsigned int i, j;
    unsigned int x_max = x + tileWidth,
                 y_max = y + tileLength;
+   static double minval=10e10;
+   static double maxval=-10e10;
+   unsigned short int  uiVal;
+   short int            iVal;
+   unsigned char ucVal;
+   
+   unsigned char * aux_pointer;
+   
+   uiVal=0;iVal=0;ucVal=0;
 
+   
    if ( x_max > imageWidth )  x_max = imageWidth;
    if ( y_max > imageLength ) y_max = imageLength;
-
+   if(bitsPerSample==16){
+      if(imageSampleFormat==SAMPLEFORMAT_INT) aux_pointer=(unsigned char *)&iVal;
+      else aux_pointer=(unsigned char *)&uiVal;
+   }
+      
    for ( j = y; j < y_max; j++ )
        for ( i = x; i < x_max; i++) {
-            unsigned int val;
             switch (bitsPerSample) {
                case  8:
-                  val=(unsigned int)(tif_buf[(j-y)*tileWidth+(i-x)]);
+                  ucVal=tif_buf[(j-y)*tileWidth+(i-x)];
+                  if   (((double)ucVal)<minval) minval = (double)ucVal;
+                  else if (((double)ucVal)>maxval) maxval = (double)ucVal;
+		  raw_buf[j*imageWidth + i] = ucVal;
                   break;
                case 16:
-                  if (!byte_swapped)
-                     val=256*tif_buf[((j-y)*tileWidth+(i-x))*2+1]+
-                             tif_buf[((j-y)*tileWidth+(i-x))*2];
-                  else
-                     val=256*tif_buf[((j-y)*tileWidth+(i-x))*2]+
-                             tif_buf[((j-y)*tileWidth+(i-x))*2+1];
-                  break;      
-            }
-            if (val<*minval) *minval=val;
-            if (val>*maxval) *maxval=val;
-            switch (bitsPerSample) {
-               case  8:
-                  raw_buf[j*imageWidth + i] = (unsigned char) val;
+	          if(imageSampleFormat==SAMPLEFORMAT_INT){
+		       
+                       if (!byte_swapped){
+		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2];
+			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
+		       }  
+                       else{
+		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
+			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2];
+		       }  
+                       if ((double)iVal<minval) minval=(double)iVal;
+                       else if ((double)iVal>maxval) maxval=(double)iVal;
+		  }          
+	          else{
+		       
+                       if (!byte_swapped){
+		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2];
+			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
+		       }  
+                       else{
+		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
+			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2];
+		       }  
+                       if ((double)uiVal<minval) minval=(double)uiVal;
+                       else if ((double)uiVal>maxval) maxval=(double)uiVal;
+	          }          
+                  raw_buf[(j*imageWidth + i)*2]   = aux_pointer[0];
+                  raw_buf[(j*imageWidth + i)*2+1] = aux_pointer[1];
                   break;
-               case 16:
-                  raw_buf[(j*imageWidth + i)*2]   =
-                     (unsigned char) (val & 0xFF);
-                  raw_buf[(j*imageWidth + i)*2+1] =
-                     (unsigned char) ((val>>8) & 0xFF);
-                  break;
-            }
-       }
+            }//switch
+       }//for
+       sprintf(zsMinval," %f",minval);
+       sprintf(zsMaxval," %f",maxval);
+}
+
+/*
+//
+// rawWriteLine
+//
+// write the content of a line from a TIFF file to an image array
+//
+*/
+void rawWriteLine(
+   unsigned char* raw_buf, unsigned char* tif_buf, 
+   unsigned int y,
+   unsigned int imageWidth, unsigned int imageLength, 
+   unsigned short bitsPerSample, unsigned short imageSampleFormat,
+   int byte_swapped,
+   char * zsMinval, char * zsMaxval) {
+   unsigned int x;
+   static double minval=10e10;
+   static double maxval=-10e10;
+   unsigned short int  uiVal;
+   short int            iVal;
+   unsigned char ucVal;
+   
+   unsigned char * aux_pointer;
+   
+   uiVal=0;iVal=0;ucVal=0;
+   
+   if(bitsPerSample==16){
+      if(imageSampleFormat==SAMPLEFORMAT_INT) aux_pointer=(unsigned char *)&iVal;
+      else aux_pointer=(unsigned char *)&uiVal;
+   }
+   for ( x = 0; x < imageWidth; x++) {
+        switch (bitsPerSample) {
+           case  8:
+              ucVal=tif_buf[y*imageWidth+x];
+              if   (((double)ucVal)<minval) minval = (double)ucVal;
+              else if (((double)ucVal)>maxval) maxval = (double)ucVal;
+	      raw_buf[y*imageWidth + x] = ucVal;
+              break;
+           case 16:
+	      if(imageSampleFormat==SAMPLEFORMAT_INT){
+                   if (!byte_swapped){
+		      aux_pointer[0]=tif_buf[x*2];
+		      aux_pointer[1]=tif_buf[x*2+1];
+		   }  
+                   else{
+		      aux_pointer[0]=tif_buf[x*2+1];
+		      aux_pointer[1]=tif_buf[x*2];
+		   }  
+                   if ((double)iVal<minval) minval=(double)iVal;
+                   else if ((double)iVal>maxval) maxval=(double)iVal;
+	      }          
+	      else{
+                   if (!byte_swapped){
+		      aux_pointer[0]=tif_buf[x*2];
+		      aux_pointer[1]=tif_buf[x*2+1];
+		   }  
+                   else{
+		      aux_pointer[0]=tif_buf[x*2+1];
+		      aux_pointer[1]=tif_buf[x*2];
+		   }  
+                   if ((double)uiVal<minval) minval=(double)uiVal;
+                   else if ((double)uiVal>maxval) maxval=(double)uiVal;
+	      }          
+              raw_buf[(y*imageWidth+x)*2]   = aux_pointer[0];
+              raw_buf[(y*imageWidth+x)*2+1] = aux_pointer[1];
+              break;
+        }//switch
+   }//for
+   sprintf(zsMinval," %f",minval);
+   sprintf(zsMaxval," %f",maxval);
 }
 
 /*
@@ -147,21 +248,23 @@ int main(int argc, char *argv[])
   unsigned short  samplesPerPixel;
   unsigned int	  imageWidth;
   unsigned int	  imageLength;
+  unsigned short  imageSampleFormat;
+  unsigned short  imageBitsPerSample;
   unsigned int    tileWidth;
   unsigned int    tileLength;
   int             byte_swapped;
   size_t          len;
+  uint32 rowsperstrip;
+  tsize_t scanline;
 
   unsigned int    x, y;
-  unsigned int    minval, maxval;
-
+  char     zsMinval[64], zsMaxval[64];
+  zsMinval[0]='\0'; zsMaxval[0]='\0';
   if ( argc < 3 ) {
      fprintf( stderr, "Usage: tiff2raw inputfile outputfile\n" );
      exit(-1);
   }
 
-  minval=65535;
-  maxval=0;
 
   /* Open TIFF image */
   tif = TIFFOpen( argv[1], "r" );
@@ -172,14 +275,23 @@ int main(int argc, char *argv[])
   TIFFGetField( tif, TIFFTAG_SAMPLESPERPIXEL, &samplesPerPixel );
   TIFFGetField( tif, TIFFTAG_IMAGEWIDTH,      &imageWidth );
   TIFFGetField( tif, TIFFTAG_IMAGELENGTH,     &imageLength );
+  TIFFGetField( tif, TIFFTAG_SAMPLEFORMAT,    &imageSampleFormat );
   if (TIFFIsTiled(tif))
      {
      TIFFGetField( tif, TIFFTAG_TILEWIDTH,       &tileWidth );
      TIFFGetField( tif, TIFFTAG_TILELENGTH,      &tileLength );
+     tif_buf = (unsigned char*)_TIFFmalloc(TIFFTileSize(tif));
      }
   else
-     {printf("HORROR, this is not a tiled image\n"); 
-      printf("I do not know how to read this tiff format, bye\n"); exit(1);}
+     {
+     TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+     scanline = TIFFScanlineSize(tif);
+     tif_buf = (unsigned char*)_TIFFmalloc(scanline);
+      }
+  if (tif_buf == 0) {
+      TIFFError(TIFFFileName(tif), "No space for strip buffer");
+      exit (-1);
+  }
   byte_swapped=TIFFIsByteSwapped( tif );
   
   /* Calculates the TIFF image size */
@@ -202,27 +314,43 @@ int main(int argc, char *argv[])
   fprintf( inf, "Ydim= %d\n", imageLength );
 
   /* Start to convert the TIFF image to the RAW file */
-  tif_buf = (unsigned char*)_TIFFmalloc( TIFFTileSize(tif) );
-  
-  for ( y = 0; y < imageLength; y +=tileLength )
-      for ( x = 0; x < imageWidth; x += tileWidth ) {
-              TIFFReadTile( tif, tif_buf, x, y, 0, 0 );
-              rawWriteTile( raw_buf, tif_buf, x, y, 
-                 imageWidth, imageLength,
-                 tileWidth, tileLength,
-                 bitsPerSample, byte_swapped,
-                 &minval, &maxval );
+
+  if (TIFFIsTiled(tif)){
+     for ( y = 0; y < imageLength; y +=tileLength )
+	 for ( x = 0; x < imageWidth; x += tileWidth ) {
+        	 TIFFReadTile( tif, tif_buf, x, y, 0, 0 );
+        	 rawWriteTile( raw_buf, tif_buf, x, y, 
+                    imageWidth, imageLength,
+                    tileWidth, tileLength,
+                    bitsPerSample, imageSampleFormat,
+		    byte_swapped,
+                    zsMinval, zsMaxval );
+	 }
+   }
+   else{
+      for (y = 0; y < imageLength; y++){
+         TIFFReadScanline(tif, tif_buf, y);
+         rawWriteLine( raw_buf, tif_buf, y, 
+            imageWidth, imageLength,
+            bitsPerSample, imageSampleFormat,
+	    byte_swapped,
+            zsMinval, zsMaxval );
       }
+   }
+   _TIFFfree( tif_buf );
+   munmap( (char *) raw_buf, len );
 
-  _TIFFfree( tif_buf );
-  munmap( (char *) raw_buf, len );
+   TIFFClose( tif );
+   close( raw_fd );
 
-  TIFFClose( tif );
-  close( raw_fd );
-
-  fprintf( inf, "# Minimum value=%d\n",minval );
-  fprintf( inf, "# Maximum value=%d\n",maxval );
-  fclose( inf );
+   fprintf( inf, "# Minimum value=%s\n",zsMinval );
+   fprintf( inf, "# Maximum value=%s\n",zsMaxval );
+   if(imageSampleFormat==SAMPLEFORMAT_INT)
+      fprintf( inf, "# Signed short?\nis_signed=TRUE\n");
+   else
+      fprintf( inf, "# Signed short?\nis_signed=FALSE\n");
+   
+   fclose( inf );
 }
 
 /* Colimate menu =========================================================== */
