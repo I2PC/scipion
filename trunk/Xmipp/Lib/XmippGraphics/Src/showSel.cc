@@ -46,9 +46,9 @@ void ShowSel::clear() {
 
 /* Initialize with a sel file.---------------------------------------------- */
 void ShowSel::initWithFile( int _numRows, int _numCols,
-   const FileName &_fn) {
+   const FileName &_fn, double _minGray, double _maxGray) {
    init();
-   readFile(_fn);
+   readFile(_fn, _minGray, _maxGray);
    NumRows = _numRows;
    NumCols = _numCols;
    initTable();
@@ -71,20 +71,21 @@ void ShowSel::initWithObject(int _numRows, int _numCols,
 }
 
 /* Read a Selfile ---------------------------------------------------------- */
-void ShowSel::readFile(const FileName &_fn) _THROW {
+void ShowSel::readFile(const FileName &_fn, double _minGray, double _maxGray)
+    _THROW {
     clear();
     fn              = _fn;
     setCaption(fn.c_str());
-    readSelFile(_fn);
+    readSelFile(_fn, _minGray, _maxGray);
 }
 
-void ShowSel::readSelFile(const FileName &_fn) _THROW {
+void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray) _THROW {
     SelFile         SF(_fn);
     annotateTime(_fn);
-    readObject(SF);
+    readObject(SF, _minGray, _maxGray);
 }
 
-void ShowSel::readObject(SelFile &SF) {
+void ShowSel::readObject(SelFile &SF, double _minGray, double _maxGray) {
     listSize        = SF.ImgNo();
     if(!showonlyactive)   listSize += SF.ImgNo(SelLine::DISCARDED);
     if (listSize==0)
@@ -93,6 +94,7 @@ void ShowSel::readObject(SelFile &SF) {
     selstatus       = new bool[listSize];
     initContents();
     SF.ImgSize(projYdim,projXdim);
+    minPixel=_minGray; maxPixel=_maxGray;
     int i=0;
     while (!SF.eof()) {
         if(SF.Is_ACTIVE() || !showonlyactive) {

@@ -56,7 +56,8 @@ protected:
     virtual void initRightclickMenubar();
 
     /* Read a volume file */
-    virtual void readFile(const FileName &_fn) _THROW;
+    virtual void readFile(const FileName &_fn,
+       double _minGray=0, double _maxGray=0) _THROW;
     /* Open a new file.
        The old window and volume parameters must be discarded */
     virtual void openNewFile (const FileName &);
@@ -72,8 +73,11 @@ private slots:
 public:
     /** Read volume for the first time.
         If you need to update the volume representation, use setPoll() 
-	and change the saved volume or use openNewFile()*/
-    void initWithFile(int _numRows, int _numCols, const FileName &_fn);
+	and change the saved volume or use openNewFile().
+	The gray limits are used for common normalization. Set them to 0
+	if you don't want to use this option. */
+    void initWithFile(int _numRows, int _numCols, const FileName &_fn,
+       double _minGray=0, double _maxGray=0);
 };
 //@}
 #endif

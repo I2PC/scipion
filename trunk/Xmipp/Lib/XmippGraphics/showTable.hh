@@ -116,7 +116,7 @@ public:
 
     /** Only way to initialize the show... widgets */
     virtual void initWithFile(int _numRows, int _numCols,
-       const FileName &_fn)=0;
+       const FileName &_fn, double _minGray=0, double _maxGray=0)=0;
     /** Open new file.
         Use this function to change the file being represented.*/
     virtual void openNewFile(const FileName &_fn)=0;

@@ -29,9 +29,9 @@
 
 /* Initialize with a volume file.------------------------------------------- */
 void ShowVol::initWithFile( int _numRows, int _numCols,
-   const FileName &_fn) {
+   const FileName &_fn, double _minGray, double _maxGray) {
    init();
-   readFile(_fn);
+   readFile(_fn,_minGray,_maxGray);
    NumRows = _numRows;
    NumCols = _numCols;
    initTable();
@@ -41,7 +41,8 @@ void ShowVol::initWithFile( int _numRows, int _numCols,
 }
 
 /* Read a Volume ---------------------------------------------------------- */
-void ShowVol::readFile(const FileName &_fn) _THROW {
+void ShowVol::readFile(const FileName &_fn,
+   double _minGray, double _maxGray) _THROW {
     FileName aux_fn=_fn;
     clear();
 
@@ -58,7 +59,9 @@ void ShowVol::readFile(const FileName &_fn) _THROW {
     annotateTime(aux_fn);
     
     V().set_Xmipp_origin();
-    V().compute_double_minmax(minPixel,maxPixel);
+    if (_minGray==0 && _maxGray==0)
+       V().compute_double_minmax(minPixel,maxPixel);
+    else {minPixel=_minGray; maxPixel=_maxGray;}
     switch (slices) {
        case 'X': listSize=XSIZE(V()); projYdim=ZSIZE(V()); projXdim=YSIZE(V());
           break;

@@ -35,19 +35,26 @@
 
 void Usage();
 
+#define MODE_IMG      0
+#define MODE_SEL      1
+#define MODE_VOL      2
+#define MODE_SPECT    3
+#define MODE_SOM      4
+#define MODE_SPECTSOM 5
+
 int main( int argc, char **argv ) {
     int numCols, numRows, mode, ifirst;
     FileName fn_dat;
-    bool poll, apply_geo=TRUE;
+    bool poll, apply_geo=true, common_normalization=false;
 
     try {
-       if (check_param(argc,argv,"-img"))          {mode=0; ifirst=position_param(argc,argv,"-img");}
-       else if (check_param(argc,argv,"-sel"))     {mode=1; ifirst=position_param(argc,argv,"-sel");}
-       else if (check_param(argc,argv,"-vol"))     {mode=2; ifirst=position_param(argc,argv,"-vol");}
-       else if (check_param(argc,argv,"-spect"))   {mode=3; ifirst=position_param(argc,argv,"-spect");}
-       else if (check_param(argc,argv,"-som"))     {mode=4; ifirst=position_param(argc,argv,"-som");}
+       if (check_param(argc,argv,"-img"))          {mode=MODE_IMG; ifirst=position_param(argc,argv,"-img");}
+       else if (check_param(argc,argv,"-sel"))     {mode=MODE_SEL; ifirst=position_param(argc,argv,"-sel");}
+       else if (check_param(argc,argv,"-vol"))     {mode=MODE_VOL; ifirst=position_param(argc,argv,"-vol");}
+       else if (check_param(argc,argv,"-spect"))   {mode=MODE_SPECT; ifirst=position_param(argc,argv,"-spect");}
+       else if (check_param(argc,argv,"-som"))     {mode=MODE_SOM; ifirst=position_param(argc,argv,"-som");}
        else if (check_param(argc,argv,"-spectsom")){
-          mode=5; ifirst=position_param(argc,argv,"-spectsom");
+          mode=MODE_SPECTSOM; ifirst=position_param(argc,argv,"-spectsom");
 	  fn_dat=get_param(argc,argv,"-din");
        } else
           REPORT_ERROR(1,"No mode (img/sel/vol) supplied");
@@ -55,27 +62,73 @@ int main( int argc, char **argv ) {
        numRows = AtoI(get_param(argc, argv, "-h", "10"));
        apply_geo=!check_param(argc,argv,"-dont_apply_geo");
        poll=check_param(argc,argv,"-poll");
+       common_normalization=check_param(argc,argv,"-common_norm");
    } catch (Xmipp_error) {Usage(); exit(1);}
 
    try {
    QApplication::setFont( QFont("Helvetica", 12) );
    QApplication a(argc,argv);
 
+   // Get common normalization
+   double m=0,M=0;
+   if (common_normalization) {
+      for ( int i=ifirst+1; i<argc; i++ ) {
+	  if (!exists(argv[i])) {
+             if (argv[i][0]=='-') break; // There is nothing else to show
+             if (mode==MODE_VOL) {
+		FileName fn=argv[i];
+		if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y')
+		   fn=fn.substr(0,fn.length()-1);
+		   if (exists(fn.c_str())) {
+                      VolumeXmipp V(fn);
+		      double maux, Maux;
+		      V().compute_double_minmax(maux,Maux);
+		      if (i==ifirst+1) {m=maux; M=Maux;}
+		      else {m=MIN(m,maux); M=MAX(M,Maux);}
+                   }
+	     }
+	  } else {
+	     if (mode==MODE_IMG) {
+        	ImageXmipp I(argv[i]);
+		double maux, Maux;
+		I().compute_double_minmax(maux,Maux);
+		if (i==ifirst+1) {m=maux; M=Maux;}
+		else {m=MIN(m,maux); M=MAX(M,Maux);}
+	     } else if (mode==MODE_SEL) {
+        	// Not implemented
+	     } else if (mode==MODE_VOL) {
+        	VolumeXmipp V(argv[i]);
+		double maux, Maux;
+		V().compute_double_minmax(maux,Maux);
+		if (i==ifirst+1) {m=maux; M=Maux;}
+		else {m=MIN(m,maux); M=MAX(M,Maux);}
+	     } else if (mode==MODE_SPECT) {
+        	// Not implemented
+	     } else if (mode==MODE_SOM) {
+        	// Not implemented
+	     } else if (mode==MODE_SPECTSOM) {
+        	// Not implemented
+	     }
+	  }
+      }
+   }
+
+   // Show
    int shown=0;
    for ( int i=ifirst+1; i<argc; i++ ) {
        if (!exists(argv[i])) {
           if (argv[i][0]=='-') break; // There is nothing else to show
           FileName fn;
           switch (mode) {
-	     case 0:
+	     case MODE_IMG:
                  fn=argv[i];
                  if (fn.find("imagic:")!=-1) break;
                  cerr << argv[i] << " is not a valid filename\n";
                  continue;
-	     case 1:
+	     case MODE_SEL:
                  cerr << argv[i] << " is not a valid filename\n";
                  continue;
-	     case 2:
+	     case MODE_VOL:
 	        fn=argv[i];
 		if (fn[fn.length()-1]=='x' || fn[fn.length()-1]=='y') {
 		   fn=fn.substr(0,fn.length()-1);
@@ -88,42 +141,42 @@ int main( int argc, char **argv ) {
                    cerr << fn << " is not a valid filename\n";
                 }
                 break;
-	     case 3: continue;
-	     case 4: break;
-	     case 5: break;
+	     case MODE_SPECT: continue;
+	     case MODE_SOM: break;
+	     case MODE_SPECTSOM: break;
 	  }
        } 
-       if (mode==0) {
+       if (mode==MODE_IMG) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
           showimg->apply_geo=apply_geo;
-          showimg->loadImage( argv[i] );
+          showimg->loadImage( argv[i], m, M);
           showimg->show();
           shown++;
-       } else if (mode==1) {
+       } else if (mode==MODE_SEL) {
           ShowSel *showsel = new ShowSel;
           showsel->apply_geo=apply_geo;
           showsel->showonlyactive = !check_param(argc,argv,"-showall");
 	  showsel->initWithFile(numRows, numCols, argv[i]);
 	  showsel->show();
           shown++;
-       } else if (mode==2) {
+       } else if (mode==MODE_VOL) {
           ShowVol *showvol = new ShowVol;
 	  if (poll) showvol->setPoll();
-	  showvol->initWithFile(numRows, numCols, argv[i]);
+	  showvol->initWithFile(numRows, numCols, argv[i], m, M);
 	  showvol->show();
           shown++;
-       } else if (mode==3) {
+       } else if (mode==MODE_SPECT) {
           ShowSpectra *showspectra=new ShowSpectra;
 	  showspectra->initWithFile(numRows, numCols, argv[i]);
 	  showspectra->show();
           shown++;
-       } else if (mode==4) {
+       } else if (mode==MODE_SOM) {
           ShowSOM *showsom=new ShowSOM;
           showsom->apply_geo=apply_geo;
 	  showsom->initWithFile(argv[i]);
 	  showsom->show();
           shown++;
-       } else if (mode==5) {
+       } else if (mode==MODE_SPECTSOM) {
           ShowSpectraSOM *showspectrasom=new ShowSpectraSOM;
           showspectrasom->apply_geo=apply_geo;
 	  showspectrasom->initWithFile(argv[i],fn_dat);

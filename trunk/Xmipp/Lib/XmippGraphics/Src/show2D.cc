@@ -46,6 +46,8 @@
 
 void ImageViewer::Init()
 {
+    minGray=maxGray=0;
+   
     pickx = -1;
     clickx = -1;
     alloc_context = 0;
@@ -340,7 +342,11 @@ bool ImageViewer::xmipp2Qt(Image& _image )
 		
     try { 
       xmippImage = _image;
-      ::xmipp2Qt(_image,image); // Take the one in showTools
+      // Take the one in showTools
+      if (minGray==0 && maxGray==0)
+	 ::xmipp2Qt(_image,image); 
+      else
+	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray);
       xmippFlag = 0;	 	// Sets flag = Xmipp image.
       ok = TRUE; 
     } catch (Xmipp_error) {
@@ -395,7 +401,8 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
   Returns TRUE if the image was successfully loaded.
 */
 
-bool ImageViewer::loadImage( const char *fileName ) 
+bool ImageViewer::loadImage( const char *fileName,
+   double _minGray, double _maxGray ) 
 {
     filename = fileName;
     bool imagic=((string)(filename)).find("imagic:")==0;
@@ -404,7 +411,6 @@ bool ImageViewer::loadImage( const char *fileName )
     if ( filename ) {
 	
 	// try to read image from standard format.	
-	
 	if (image.load(filename, 0)) ok = Qt2xmipp(image);	  
 	
 	if (!ok) {
@@ -441,6 +447,8 @@ bool ImageViewer::loadImage( const char *fileName )
 		     MULTIDIM_ELEM(tmpImage(),i)=min_positive;
 	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
 	    tmpImage().set_Xmipp_origin();
+	    minGray=_minGray;
+	    maxGray=_maxGray;
 	    ok = xmipp2Qt(tmpImage);
 	  } catch (Xmipp_error) {
 	    ok = FALSE;

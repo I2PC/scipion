@@ -276,7 +276,7 @@ void Qt2xmipp( QImage &_qimage, Image &_ximage ) {
 
 /* Xmipp -> QImage --------------------------------------------------------- */
 void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
-   int _max_scale) {
+   int _max_scale, double _m, double _M) {
    // Creates a Qt Image to hold Xmipp Image
    _qimage.create(_ximage().ColNo(), _ximage().RowNo(), 8, 256);
 
@@ -288,7 +288,8 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
    }  
 
    double min_val, max_val;
-   _ximage().compute_double_minmax(min_val,max_val);
+   if (_m==0 && _M==0) _ximage().compute_double_minmax(min_val,max_val);
+   else {min_val=_m; max_val=_M;}
    double a;
    if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
       a=1.0;
@@ -304,8 +305,8 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
 
 /* Xmipp -> Pixmap --------------------------------------------------------- */
 void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
-   int _minScale, int _maxScale) {
+   int _minScale, int _maxScale, double _m, double _M) {
    QImage tmpImage;
-   xmipp2Qt(xmippImage,tmpImage,_minScale, _maxScale);
+   xmipp2Qt(xmippImage,tmpImage,_minScale,_maxScale,_m,_M);
    pixmap->convertFromImage(tmpImage, 0); 
 }

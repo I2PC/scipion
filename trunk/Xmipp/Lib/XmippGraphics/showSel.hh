@@ -96,11 +96,14 @@ protected:
             void openNewFile (const FileName &);
     /* Read a Selfile.
        It performs some initializatrion and then calls to readSelFile*/
-    virtual void readFile(const FileName &_fn) _THROW;
+    virtual void readFile(const FileName &_fn,
+       double _minGray=0, double _maxGray=0) _THROW;
     /* Really read a SelFile. */
-    virtual void readSelFile(const FileName &_fn) _THROW;
+    virtual void readSelFile(const FileName &_fn,
+       double _minGray=0, double _maxGray=0) _THROW;
     /* Read a SelFile object */
-    virtual void readObject(SelFile &SF);
+    virtual void readObject(SelFile &SF,
+       double _minGray=0, double _maxGray=0);
     /* Update the label with the filename at cell i*/
     virtual void updateStatus(int i);
 private slots:
@@ -133,7 +136,7 @@ public:
     /** Read selfile for the first time.
         If you need to update the volume representation, use openNewFile(()*/
     virtual void initWithFile(int _numRows, int _numCols,
-       const FileName &_fn);
+       const FileName &_fn, double _minGray=0, double _maxGray=0);
 
     /** Initialize with a Selfile. */
     virtual void initWithObject(int _numRows, int _numCols,

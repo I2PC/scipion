@@ -71,8 +71,11 @@ public:
     ~ImageViewer();
 
     /** Load image from file.
-        The image may be in any standard format or Xmipp format */
-    bool loadImage( const char *fileName );
+        The image may be in any standard format or Xmipp format.
+	The gray limits are used for common normalization. Set them to 0
+	if you don't want to use this option.*/
+    bool loadImage( const char *fileName,
+       double _minGray=0, double _maxGray=0 );
     
     /** Set image from matrix */
     void setImage( const matrix2D<double> &img);
@@ -93,6 +96,8 @@ private:
     bool	convertEvent( QMouseEvent* e, int& x, int& y );
     const char* filename;
     Image	xmippImage;		// Xmipp Image
+    double      minGray;                // Minimum value of the image
+    double      maxGray;                // Maximum value of the image
     QImage	image;			// the loaded image
     QPixmap	pm;			// the converted pixmap
     QPixmap	pmScaled;		// the scaled pixmap
