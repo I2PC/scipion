@@ -536,7 +536,6 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
 
 // Exit
    DF.go_first_data_line();
-   cout << "Aqui\n" << DF << endl;
    return ExtProjs+IntProjs;
 }
 
