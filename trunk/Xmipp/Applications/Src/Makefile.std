@@ -1,5 +1,5 @@
 ###########################################################################
-APPDIRS = `ls -1 | grep -v Makefile | grep -v CVS`
+APPDIRS = `find . -type d | grep -v CVS | cut -c 3- | grep -v "/"`
 
 # Main Action = Built library ----------------------------------------------
 all:
