@@ -147,6 +147,7 @@ AC_OUTPUT( Lib/Makefile \
 	Applications/Src/Ang_distribution/Makefile \
 	Applications/Src/Angular_distance/Makefile \
 	Applications/Src/Angular_predict/Makefile \
+	Applications/Src/Angular_predict_continuous/Makefile \
 	Applications/Src/Angular_refinement/Makefile \
 	Applications/Src/Are_different/Makefile \
 	Applications/Src/Art/Makefile \
