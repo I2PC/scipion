@@ -67,7 +67,9 @@ void Prog_align2d_prm::read(int argc, char **argv) _THROW  {
   do_rot=!check_param(argc,argv,"-only_trans");
   do_trans=!check_param(argc,argv,"-only_rot");
   do_acf=check_param(argc,argv,"-ACF");
-  
+  do_complete=check_param(argc,argv,"-complete");
+  psi_interval=AtoF(get_param(argc,argv,"-psi_step","10"));
+  shift_range=AtoI(get_param(argc,argv,"-shift_range","5"));
 }
 
 // Show ====================================================================
@@ -100,7 +102,12 @@ void Prog_align2d_prm::show() {
     cerr << "Skip translational alignment "<<endl;
   if (do_acf) 
     cerr << "Use Auto-Correlation Function alignment" <<endl;
+  if (do_complete) { 
+    cerr << "Use complete-search alignment with:" <<endl;
+    cerr << " Psi interval          : "<< psi_interval  <<endl;
+    cerr << " Shift range           : "<< shift_range  <<endl;
 
+  }
 }
 
 // usage ===================================================================
@@ -118,9 +125,13 @@ void Prog_align2d_prm::usage() {
        << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
        << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
        << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
-       << " [ -ACF ]                   : Use Auto-Correlation Function alignment \n"
        << " [ -only_trans ]            : Skip translational alignment \n"
        << " [ -only_rot ]              : Skip rotational alignment \n"
+       << " [ -ACF ]                   : Use Auto-Correlation Function alignment \n"
+       << " [ -complete ]              : Use complete-search alignment \n"
+       << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
+       << " [ -shift_range <int=5> ]   : Shift range to be searched (from -range to +range) [pix] \n"
+
        << endl;
 }
 
@@ -187,14 +198,15 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
   Maux.core_deallocate();
   mask.core_deallocate();
 
-  if ((max_rot<XMIPP_EQUAL_ACCURACY) || (psi < max_rot)) {
+  psi=realWRAP(psi,-180.,180.);
+  if ((max_rot<XMIPP_EQUAL_ACCURACY) || (ABS(psi) < max_rot)) {
     // Store new rotation in the header of the image 
     // beware: for untilted images (phi+psi) is rotated, and phi can be non-zero!
     // Add new rotation to psi only!
-    img.Psi()+=psi;
+    psi+=img.Psi();
+    img.Psi()=realWRAP(psi,0.,360.);   
     return TRUE;
   } else return FALSE;
-
 }
 
 // translational alignment =====================================================
@@ -261,10 +273,10 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
   shift=sqrt(xshift*xshift+yshift*yshift);
   if ((max_shift<XMIPP_EQUAL_ACCURACY) || (shift < max_shift)) {
     // Store shift in the header of the image
-    xshift=img.Xoff()+xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
-    yshift=img.Yoff()+xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
-    img.Xoff()=realWRAP(xshift,(float)-dim/2.,(float)dim/2.);
-    img.Yoff()=realWRAP(yshift,(float)-dim/2.,(float)dim/2.);
+    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
+    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
+    img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
     return TRUE;
   } else return FALSE;
 
@@ -408,16 +420,87 @@ bool Prog_align2d_prm::align_acf(ImageXmipp &img, const matrix2D<double> &Mref,c
 
   OK=true;
   shift=sqrt(xshift*xshift+yshift*yshift);
+  psi=realWRAP(psi,-180.,180.);
   if ((max_shift>XMIPP_EQUAL_ACCURACY) && (shift>max_shift)) OK=false;
-  if ((max_rot>XMIPP_EQUAL_ACCURACY) && (psi>max_rot)) OK=false;
+  if ((max_rot>XMIPP_EQUAL_ACCURACY) && (ABS(psi)>max_rot)) OK=false;
 
   if (OK) {
     // Store rotation & translation in the header of the image
-    xshift=img.Xoff()+xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
-    yshift=img.Yoff()+xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
-    img.Xoff()=realWRAP(xshift,(float)-dim/2.,(float)dim/2.);
-    img.Yoff()=realWRAP(yshift,(float)-dim/2.,(float)dim/2.);
-    img.Psi()+=psi;
+    psi+=img.Psi();
+    img.Psi()=realWRAP(psi,0.,360.);
+    A=img.get_transformation_matrix();
+    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
+    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
+    img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
+    return TRUE;
+  } else return FALSE;
+
+}
+
+// Complete search alignment ========================================================
+bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
+                       const float &max_shift, const float &max_rot, const float &psi_interval, 
+                       const int &shift_range, const float &Rin, const float &Rout) _THROW{
+
+  matrix2D<double> Mimg,Maux,Mref2,A;
+  matrix2D<int>    mask;
+  int dim,nstep;
+  double psi_actual,corr,maxcorr,xshift,yshift,shift,psi_max;
+  bool OK;
+
+  Mref2=Mref;
+  Mref2.set_Xmipp_origin();
+  Maux.resize(Mimg);
+  Maux.set_Xmipp_origin();
+  Mimg=img();
+  Mimg.set_Xmipp_origin();
+  A=img.get_transformation_matrix();
+  apply_geom(Mimg,A,img(),IS_INV,DONT_WRAP,0.);
+
+  dim=img().RowNo();
+  mask.resize(dim,dim);
+  mask.set_Xmipp_origin();
+  if (Rout<=Rin)  REPORT_ERROR(1,"Align2d: Rout <= Rin");
+  BinaryCrownMask(mask,Rin,Rout,INNER_MASK);
+
+  // Optimize correlation in coarse steps
+  nstep=(int)(360/psi_interval);
+  maxcorr=0.;
+  xshift=0.;
+  yshift=0.;
+  psi_max=0.;
+  for (int i = 0; i < nstep; i++) {
+    psi_actual=(double)i*psi_interval;
+    Maux=Mimg.rotate(psi_actual,DONT_WRAP);
+    for (int x=-shift_range; x <= shift_range; x++) {
+      for (int y=-shift_range; y <= shift_range; y++) {   
+	corr=correlation(Mref2,Maux,&mask,y,x);
+	if (corr>maxcorr) {
+	  maxcorr=corr;
+	  psi_max=psi_actual;
+	  xshift=x;
+	  yshift=y;
+	}
+      }
+    }
+  }
+
+  OK=true;
+  psi_max=realWRAP(psi_max,-180.,180.);
+  shift=sqrt(xshift*xshift+yshift*yshift);
+  if ((max_shift>XMIPP_EQUAL_ACCURACY) && (shift>max_shift)) OK=false;
+  if ((max_rot>XMIPP_EQUAL_ACCURACY) && (ABS(psi_max)>max_rot)) OK=false;
+
+  if (OK) {
+    // Store rotation & translation in the header of the image
+    psi_max+=img.Psi();
+    img.Psi()=realWRAP(psi_max,0.,360.);
+    A=img.get_transformation_matrix();
+    img.Xoff()+=xshift*DIRECT_MAT_ELEM(A,0,0)+yshift*DIRECT_MAT_ELEM(A,0,1);
+    img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
+    img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
+    img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
     return TRUE;
   } else return FALSE;
 
@@ -465,6 +548,9 @@ void Prog_align2d_prm::do_pspc() _THROW {
       
       if (do_acf) {
 	align_acf(imgpspc[2*j+1],Mref,zero,zero,Ri,Ro);
+      } else if (do_complete) {
+	success[imgno]=align_complete_search(images[imgno],Mref,zero,
+					     zero,psi_interval,shift_range,Ri,Ro);
       } else {
 	/** FIRST **/
 	if (do_trans) align_trans(imgpspc[2*j+1],Mref,zero);
@@ -547,6 +633,9 @@ void Prog_align2d_prm::refinement() _THROW {
       // Align translationally and rotationally
       if (do_acf) {
 	success[imgno]=align_acf(images[imgno],Mref,curr_max_shift,curr_max_rot,Ri,Ro);
+      } else if (do_complete) {
+	success[imgno]=align_complete_search(images[imgno],Mref,curr_max_shift,
+					     curr_max_rot,psi_interval,shift_range,Ri,Ro);
       } else {
 	if (do_trans) success[imgno]=align_trans(images[imgno],Mref,curr_max_shift);
 	if (do_rot && success[imgno]) success[imgno]=align_rot(images[imgno],Mref,curr_max_rot,Ri,Ro);
