@@ -162,7 +162,7 @@ void QtFileMenu::slotGenerateImages() {
 	       }	   
 	       else {
 	            gamma=0;
-                    psi=MAIN_WIDGET->alpha_u();
+                    alpha=MAIN_WIDGET->alpha_u();
 		    this_is_tilted=false;
 	       }
 	    }
