@@ -573,7 +573,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   vector<bool> dumb;
   vector <vector< matrix2D<double> > > Mweight;
   vector<double> refw(n_ref), refw_mirror(n_ref);
-  double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,max,maxc=-99.e99;
+  double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,corrA2,max,maxc=-99.e99;
   double sum,wsum_corr=0., sum_refw=0., wsum_A2=0., maxweight=-99.e99;
   int irot,irefmir,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
@@ -599,7 +599,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   sigdim++; // (to get uneven number)
   sigdim=MIN(dim,sigdim);
 
-  if (fast_mode) for (int i=0; i<2*n_ref; i++) maxw_ref[i]=-99.e99;
+  if (fast_mode) for (int i=0; i<imax; i++) maxw_ref[i]=-99.e99;
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Faux.resize(dim,dim);
@@ -643,6 +643,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   FOR_ALL_MODELS() {
     refw[refno]=0.;
     refw_mirror[refno]=0.;
+    corrA2=exp((A2mean-A2[refno])/2*sigma_noise2);
     FOR_ALL_ROTATIONS() {
       FOR_ALL_FLIPS() {
 	irot=iflip*nr_psi+ipsi;
@@ -653,7 +654,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 	  sum=0.;
 	  FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot]) {
 	    aux=MAT_ELEM(Mweight[refno][irot],i,j)-maxc;
-	    aux=exp(aux/sigma_noise2)*fracpdf*MAT_ELEM(P_phi,i,j)*exp((A2mean-A2[refno])/2*sigma_noise2);
+	    aux=exp(aux/sigma_noise2)*fracpdf*MAT_ELEM(P_phi,i,j)*corrA2;
 	    wsum_corr+=aux*MAT_ELEM(Mweight[refno][irot],i,j);
 	    MAT_ELEM(Mweight[refno][irot],i,j)=aux;
 	    sum+=aux;
@@ -766,7 +767,7 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
   */
 
   maxCC=-99.e99; 
-  if (fast_mode) for (int i=0; i<2*n_ref; i++) maxCC_ref[i]=-99.e99;
+  if (fast_mode) for (int i=0; i<imax; i++) maxCC_ref[i]=-99.e99;
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
