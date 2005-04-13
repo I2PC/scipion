@@ -38,8 +38,8 @@ public:
    int         dim;
 public:
    void read(int argc, char **argv) _THROW {
-      Prog_parameters::read(argc,argv);
       fmask.read(argc,argv);
+      Prog_parameters::read(argc,argv);
       fn_mask=get_param(argc,argv,"-save_mask","");
       fn_amplitude=get_param(argc,argv,"-save_amplitude","");
       do_not_center=check_param(argc,argv,"-do_not_center");
@@ -54,10 +54,10 @@ public:
 
    void usage() {
       Prog_parameters::usage();
-      cerr << "  [-save_mask <fn_mask>]     : Save applied filter\n"
-           << "  [-save_amplitude <fn_ampl>]: Save amplitude of filter\n"
-	   << "  [-do_not_center]           : For the amplitude file\n";
       fmask.usage();
+      cerr << "  [-save_mask <fn_mask>]                : Save applied filter\n"
+           << "  [-save_amplitude <fn_ampl>]           : Save amplitude of filter\n"
+	   << "  [-do_not_center]                      : For the amplitude file\n";
    }
 };
 
