@@ -67,9 +67,12 @@ void FourierMask::read(int argc, char **argv) _THROW {
 
    // Filter shape .........................................................
    int i=position_param(argc,argv,"-fourier_mask");
-   if (i==-1) return;
-   if (i+1>=argc) REPORT_ERROR(3000,"FourierMask: -mask with no mask_type");
-   if (strcmp(argv[i+1],"raised_cosine")==0) {
+   if (i+1>=argc) REPORT_ERROR(3000,"FourierMask: -fourier_mask with no mask_type");
+   if (i==-1) {
+     // The default is to use raised_cosine with width 0.02
+     raised_w=0.02;
+     FilterShape=RAISED_COSINE;
+   } else if (strcmp(argv[i+1],"raised_cosine")==0) {
       if (i+2>=argc)
          REPORT_ERROR(3000,"FourierMask: Raised cosine needs a number of pixels");
       raised_w=AtoF(argv[i+2]);
@@ -140,19 +143,17 @@ void FourierMask::show() {
 
 /* Usage ------------------------------------------------------------------- */
 void FourierMask::usage() {
-   cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
-        << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
-        << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-        << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-        << "   -fourier_mask <file>              : Provide a Fourier file\n"
-        << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
-        << "   -fourier_mask ctf                 : In that case the following\n"
-	<< "                                       parameters apply\n"
-        << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
-        << "                                       are taken in Angstroms\n"
-   ;
-   cerr << "CTF parameters -----------------------------\n";
-   ctf.Usage();
+   cerr << "   -low_pass  <w1>          : Cutoff freq (<1/2 or A)\n"
+        << "   -high_pass <w1>          : Cutoff freq (<1/2 or A)\n"
+        << "   -band_pass <w1> <w2>     : Cutoff freq (<1/2 or A)\n"
+        << "   -stop_band <w1> <w2>     : Cutoff freq (<1/2 or A)\n"
+        << "  [-sampling <ang>]         : If provided pass frequencies are taken\n"
+        << "                              in Angstroms (otherwise dig. freq.)\n"
+        << "  [-fourier_mask raised_cosine <w=0.02>]: The default filter has \n"
+        << "                                          raised cosine edges with w=0.02 \n"
+        << "  [-fourier_mask <file>]                : Provide a Fourier file \n"
+        << "  [-fourier_mask ctf]                   : Provide a CTF file \n"
+     ;
 }
 
 /* Generate mask for a resized image --------------------------------------- */
