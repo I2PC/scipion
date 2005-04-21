@@ -44,11 +44,12 @@ class Prog_projection_matching_prm {
 public:
 
   /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_vol,fn_out,fn_refs,fn_sym;
+  FileName fn_vol,fn_root,fn_sym;
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
   vector<matrix2D<double> > ref_img;
+  vector<matrix2D<double> >::iterator idirno;
   /** Vectors for standard deviation and mean of reference library projections */
   vector<double> ref_stddev, ref_mean;
   /** Vector with reference library angles */
@@ -89,6 +90,12 @@ public:
   /// Extended Usage
   void extended_usage();
 
+  /** Make shiftmask and calculate nr_psi */
+  void produce_Side_info() _THROW;
+
+  /** Project volume and store in memory */
+  void project_reference_volume() _THROW;
+
   /** Check whether 2 projection directions are unique in terms of rot_limit & tilt_limit
       This function is needed by make_even_distribution   */
   bool directions_are_unique(double rot,  double tilt,
@@ -101,9 +108,6 @@ public:
       tilt angles. */
   void make_even_distribution(DocFile &DF, double &sampling,
 			      SymList &SL, bool exclude_mirror=false);
-
-  /** Read input images all in memory */
-  void produce_Side_info() _THROW;
 
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
