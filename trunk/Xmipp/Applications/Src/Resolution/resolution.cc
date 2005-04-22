@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Sjors Scheres (scheres@cnb.uam.es)
+ *              Roberto Marabini
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -98,7 +99,6 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    out.close();
    out2.close();
 
-   dpr.core_deallocate();
    frc.core_deallocate();
 
 }
@@ -142,7 +142,6 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 
 
 int main (int argc, char **argv) {
-
   if (!check_param(argc,argv,"-set_of_images")) {
 
     Resolution_parameters prm;
@@ -153,12 +152,12 @@ int main (int argc, char **argv) {
   } else {
 
     SelFile     SF,SF1,SF2;
-    Image       I1,I2,Id;
+    Image       It,I1,I2,Id;
     FileName    fn_sel;
     float       sam;
     double      dummy;
     bool        apply_geo;
-    matrix1D<double> freq,frc,dpr,frc_noise;
+    matrix1D<double> freq,frc,dpr,frc_noise,ssnr,pixel;
 
     try {
       fn_sel=get_param(argc,argv,"-set_of_images");
@@ -166,23 +165,33 @@ int main (int argc, char **argv) {
       sam=AtoF(get_param(argc,argv,"-sam"));
       apply_geo=!check_param(argc,argv,"-dont_apply_geo");
       SF.split_in_two(SF1,SF2);
+      SF.get_statistics(It,Id,dummy,dummy,apply_geo);
       SF1.get_statistics(I1,Id,dummy,dummy,apply_geo);
       SF2.get_statistics(I2,Id,dummy,dummy,apply_geo);
-      I1().set_Xmipp_origin();
-      I2().set_Xmipp_origin();
+      It().set_Xmipp_origin();
+      I1().set_Xmipp_origin();  
+      I2().set_Xmipp_origin();  
+
       fourier_ring_correlation(I1(),I2(),sam,freq,frc,frc_noise);
       differential_phase_residual(I1(),I2(),sam,freq,dpr);
+      //ssnr follows a totally different aproach from FRC and SPR,
+      //now we need to pass the whole sel file,
+      //The only reason why I send I1 is to keep the
+      //feed the template system (ROB March 2005)
+      my_ssnr(It(),SF,(double)sam,freq,ssnr,pixel,apply_geo);
 
       // Write output
-      FileName fn_dpr,fn_frc;
+      FileName fn_dpr,fn_frc,fn_ssnr;
       fn_dpr=fn_sel+".dpr";
       fn_frc=fn_sel+".frc";
+      fn_ssnr=fn_sel+".snr";
       ofstream out(fn_dpr.c_str(), ios::out);
       ofstream out2(fn_frc.c_str(), ios::out);
+      ofstream out3(fn_ssnr.c_str(), ios::out);
       out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
       out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
+      out3 << "# Resol. [1/Ang]       SSNR          #Pixels"<<endl;
       FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
-	if (i>0) {
 	  out.width(10);
 	  out  << VEC_ELEM(freq,i);
 	  out.width(17);
@@ -193,10 +202,16 @@ int main (int argc, char **argv) {
 	  out2  << VEC_ELEM(frc,i);
 	  out2.width(17);
 	  out2  << VEC_ELEM(frc_noise,i)<<endl;
-	}
+	  out3.width(10);
+	  out3  << VEC_ELEM(freq,i);
+	  out3.width(17);
+	  out3  << VEC_ELEM(ssnr,i);
+          out3.width(17);
+          out3  << VEC_ELEM(pixel,i)<<endl;
       }
       out.close();
       out2.close();
+      out3.close();
     } catch (Xmipp_error XE) {cout << XE;     Resolution_parameters prm; prm.usage();}
 
   }

@@ -32,6 +32,8 @@
 #include "xmippMatrices1D.hh"
 #include "xmippMatrices2D.hh"
 #include "xmippMatrices3D.hh"
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippFuncs.hh>
 
 /**@name Fourier Transforms */
 //@{
@@ -231,7 +233,21 @@ template <class T>
 template <class T>
      void differential_phase_residual(matrix3D<T> const &m1,matrix3D<T> const &m2, double sampling_rate,
         matrix1D<double> &frequency, matrix1D<double> &dpr);
+   /** Signal to noise ratio for 2D */
+template <class T>
+     void my_ssnr(matrix2D<T> const &m1, SelFile  &SF, double sampling_rate,
+		 matrix1D<double> &freq, matrix1D<double> &ssnr,
+		 matrix1D<double> &pixel,bool apply_geo);
 
+   /** Signal to noise ratio for 2D, process one image. freq and ssnr
+       must have correct size */
+     void my_ssnr_step(matrix2D< complex<double> > const &AverageImage,
+                       matrix2D< complex<double> > const &FTaverageSubGroup,
+		       matrix1D<double> &ssnr,matrix1D<double> &pixel, int n);
+/** Square distance from the point (x,y) to (m/2,m/2)  (used by my_ssnr_step)
+*/
+ double distancia2( int x, int y, int m );
+		 
    /** Series convolution function. Gives the convolution of two series
        given as Xmipp Vectors. Result is stored in result vector.
        Fast calcuation of the convolution result using

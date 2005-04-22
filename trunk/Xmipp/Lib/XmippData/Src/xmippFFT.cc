@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "../xmippFFT.hh"
+#include "../xmippArgs.hh"
 #include "../Bilib/headers/dft.h"
 
 /* Format conversions ------------------------------------------------------ */
@@ -524,6 +525,151 @@ void differential_phase_residual(matrix3D<T> const &m1, matrix3D<T> const &m2, d
 
 }
 
+/* 2D SSNR ------------------------------------------------ */
+#define NGRUPOS 20
+template <class T>
+void my_ssnr(matrix2D<T> const &AverageImage, SelFile   &SF_sel, double sam,
+		 matrix1D<double> &freq, matrix1D<double> &ssnr, 
+		 matrix1D<double> &pixel,
+		 bool apply_geo) {
+  Image       Iaverage_sub_group,Id;
+  double      dummy;
+  SelFile  SF_tmp, SF_vector[NGRUPOS];
+  SelLine  line;
+  int N=NGRUPOS;
+  
+  if(SF_sel.ImgNo(SelLine::ACTIVE) < NGRUPOS)
+      REPORT_ERROR(1,(string)"FFT::my_ssnr: my_ssnr I need more than " +
+                   ItoA(SF_sel.ImgNo(SelLine::ACTIVE)) +
+                    " images in file " + SF_sel.name());
+                                                                                
+  int contImg=SF_sel.ImgNo();
+//  SF_tmp=SF_sel.randomize();
+SF_tmp=SF_sel;
+  int Nsub=(int)((double)contImg/N);//floor()
+  //assing images
+  for (int i=0; i<N; i++) {
+    SF_vector[i].clear();
+    SF_tmp.go_beginning();
+    SF_tmp.jump_lines(Nsub*i);
+    for (int nn=0; nn<Nsub; nn++) {
+      SF_vector[i].insert(SF_tmp.current());
+      SF_tmp.NextImg();
+    }
+  }
+  //all the images has been assigned?
+  if (contImg%N!=0){
+     for(int i=(N-(contImg%N));i<N;i++){
+	 SF_vector[i].insert(SF_tmp.current());
+	 SF_tmp.NextImg();}
+
+  }
+//#define DEBUG//check image name subsets
+#ifdef DEBUG
+  FileName fn_sel,fn_out;
+  fn_sel=SF_sel.name();
+  for (int i=0; i<N; i++) {
+     string num="_"+ItoA(i+1);
+     fn_out=fn_sel.insert_before_extension(num);
+     SF_vector[i].write(fn_out);
+  }
+#endif
+#undef DEBUG
+  //alloc memory for results      
+  int dim=(int)AverageImage.RowNo()/2;
+  ssnr.resize(dim);
+  pixel.resize(dim);
+  freq.resize(dim); 
+  //compute average and fft
+  //fft radial averaged image
+  matrix2D<complex <double> > FTAverageImage,
+                              FTaverageSubGroup;
+  FourierTransform(AverageImage,FTAverageImage);
+  CenterFFT(FTAverageImage,true);
+  for (int i=0; i<N; i++) {
+     SF_vector[i].get_statistics(Iaverage_sub_group,Id,dummy,dummy,apply_geo);
+     FourierTransform(Iaverage_sub_group(),FTaverageSubGroup);
+     CenterFFT(FTaverageSubGroup,true);   
+     //calculate ssNR
+     my_ssnr_step(FTAverageImage,FTaverageSubGroup,
+                  ssnr,pixel,SF_vector[i].ImgNo()); 
+	  
+//#define DEBUG//check average images
+#ifdef DEBUG
+     {
+     ImageXmipp IX; 
+     IX=Iaverage_sub_group; 
+     FileName fn_sel,fn_out;
+     fn_sel=SF_sel.name();
+     fn_out.compose(fn_sel.get_root(), i+1, (string) "xmp");
+     IX.write(fn_out);
+     }
+#endif
+#undef DEBUG      
+   }//end for (int i=0; i<N; i++) {
+   int dim2=(int)AverageImage.RowNo();
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(ssnr)
+       {
+       VEC_ELEM(ssnr,i)=(contImg*(NGRUPOS-1))/(VEC_ELEM(ssnr,i)-1);
+       VEC_ELEM(freq,i)=((double)i+0.5)/(dim2*sam);
+       if(VEC_ELEM(ssnr,i)>NGRUPOS)
+          VEC_ELEM(ssnr,i) = NGRUPOS;
+       }
+
+}
+/****************************************************************************/
+/*            Square distance from the point (x,y) to (m/2,m/2)             */
+/****************************************************************************/
+ double distancia2( int x, int y, int m )
+{
+	double x1, y1;
+	
+	x1 = (x-m/2)*(x-m/2);
+	y1 = (y-m/2)*(y-m/2);
+	
+	return( x1 + y1 );
+}
+
+/* SSNR process single image */
+void my_ssnr_step(const matrix2D< complex<double> > &FTAverageImage,
+                  const matrix2D< complex<double> > &FTaverageSubGroup,
+		  matrix1D<double> &ssnr, matrix1D<double> &pixel,int z)
+{
+   //n -> number of images in the subset
+   int top, cont;
+   double d, w2, w12;
+   double w=0.0;
+   float preal1, preal2, pimag1, pimag2;
+   float resta_real, resta_imag;
+   float mod2_diferencia, mod2_media;
+
+//   int dim (int)FTAverageImage.RowNo()/2;
+   int n = (int)FTAverageImage.RowNo();
+   top = (int) (n/2);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(ssnr){
+       mod2_media = 0.0;
+       mod2_diferencia = 0.0;
+       w=i+0.5;
+       w2 = w*w;
+       w12 = (w+1)*(w+1);
+       cont = 0;
+       for( int ii=0; ii<n; ii++ )
+	  for( int jj=0; jj<=top; jj++ )
+	  {
+	     d= distancia2( ii, jj, n);
+	     if( d>=w2 && d<w12 ){
+                   cont++;
+                   mod2_diferencia += norm(dMij(FTAverageImage,ii,jj)-
+	                                   dMij(FTaverageSubGroup,ii,jj));
+                   mod2_media += norm(dMij(FTAverageImage,ii,jj));						      
+	     }
+	  }
+       mod2_diferencia *= z;
+       VEC_ELEM(ssnr,i) += mod2_diferencia/mod2_media;
+       VEC_ELEM(pixel,i) = cont;
+       }
+}		  
+
 /* Convolution of series --------------------------------------------------- */
 template <class T>
 void series_convolution(matrix1D<T> &series1, matrix1D<T> &series2,
@@ -639,6 +785,7 @@ void instantiate_FFT() {
 
    matrix2D<double> m1;
    matrix2D<double> R;
+   SelFile     SF;
    auto_correlation_matrix(m1,R);
    correlation_matrix(m1,m1,R);
    matrix1D<double> t;
@@ -648,7 +795,9 @@ void instantiate_FFT() {
    differential_phase_residual(m3,m3,s,t,t);
    fourier_ring_correlation(m1,m1,s,t,t,t);
    fourier_ring_correlation(m3,m3,s,t,t,t);
-   
+   //ssnr not defined for volumes
+   my_ssnr(m1, SF, s, t, t, t,(bool) 1);
+
    matrix1D<double> series1;
    series_convolution(series1, series1, series1, false);
 
