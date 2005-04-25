@@ -65,8 +65,9 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 	 true_symNo += (fold-1); no_axis++;
       } else if (strcmp(auxstr,"mirror_plane")==0) {true_symNo++;
                                                     no_mirror_planes++;}
-      else if (strcmp(auxstr,"P4212")==0) true_symNo+=7;
-      else if (strcmp(auxstr,"P2221")==0) true_symNo+=3;
+      else if (strcmp(auxstr,"P4212" )==0) true_symNo+=7;
+      else if (strcmp(auxstr,"P2_122")==0) true_symNo+=3;
+      else if (strcmp(auxstr,"P22_12")==0) true_symNo+=3;
    }
 
    fseek (fpoii, 0L, SEEK_SET);
@@ -135,8 +136,8 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 	 R(1,1)=R(2,2)=-1; R(0,0)=1; set_shift(i,shift); set_matrices(i++,L,R);
 
          __sym_elements++;
-      } else if (strcmp(auxstr,"P2221")==0) {
-         space_group=sym_P222_1;
+      } else if (strcmp(auxstr,"P2_122")==0) {
+         space_group=sym_P2_122;
          accuracy=-1; // Do not compute subgroup
 	 L.init_identity();
 
@@ -151,6 +152,22 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 	 R.init_zeros(); R(3,3)=1;
 	 R(0,0)= 1; R(1,1)=-1; R(2,2)=-1; set_shift(i,shift); set_matrices(i++,L,R);
          __sym_elements++;
+      } else if (strcmp(auxstr,"P22_12")==0) {
+         space_group=sym_P22_12;
+         accuracy=-1; // Do not compute subgroup
+	 L.init_identity();
+
+      	 // With 0 shift
+	 R.init_zeros(); R(3,3)=1;
+	 R(0,0)=-1; R(1,1)=-1; R(2,2)=1; set_shift(i,shift); set_matrices(i++,L,R);
+
+      	 // With 1/2 shift
+	 VECTOR_R3(shift,0.0,0.5,0.0);
+	 R.init_zeros(); R(3,3)=1;
+	 R(0,0)= 1; R(1,1)=-1; R(2,2)=-1; set_shift(i,shift); set_matrices(i++,L,R);
+	 R.init_zeros(); R(3,3)=1;
+	 R(0,0)=-1; R(1,1)= 1; R(2,2)=-1; set_shift(i,shift); set_matrices(i++,L,R);
+         __sym_elements++;
       }
    }
    fclose(fpoii);
@@ -161,8 +178,11 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
       true_symNo==7 && space_group==sym_P42_12)
          space_group=sym_P42_12;
    else if(no_axis==0 && no_mirror_planes== 0 && 
-      true_symNo==3 && space_group==sym_P222_1)
-         space_group=sym_P222_1;
+      true_symNo==3 && space_group==sym_P2_122)
+         space_group=sym_P2_122;
+   else if(no_axis==0 && no_mirror_planes== 0 && 
+      true_symNo==3 && space_group==sym_P22_12)
+         space_group=sym_P22_12;
    // P4 and P6	 
    else if (no_axis==1 && no_mirror_planes== 0 && 
             fabs(R(2,2)-1.) < XMIPP_EQUAL_ACCURACY &&
@@ -184,7 +204,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    else if (no_axis==0 && no_mirror_planes== 0) 
          space_group=sym_P1;
    else 
-        space_group=sym_undefined;	 
+         space_group=sym_undefined;	 
    
 }
 
@@ -318,7 +338,8 @@ void SymList::compute_subgroup(double accuracy) {
    /** Guess Crystallographic space group.  
        Return the  \URL[space group]{
        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
-       far it has only been implemented for P1 (1), P221_2 (17) ,
+       far it has only been implemented for P1 (1), P2_122 (17) ,
+       P22_12,
        P4 (75), P4212 (90) and P6 (168) */
 
 int  SymList::crystallographic_space_group (double mag_a,double mag_b,
@@ -335,10 +356,17 @@ int  SymList::crystallographic_space_group (double mag_a,double mag_b,
 	      << " or ang_a2b !=90" << endl;
 	 return(space_group);
 	 break;
-       case sym_P222_1:
+       case sym_P2_122:
 	 if ( fabs((mag_a - mag_b)) >XMIPP_EQUAL_ACCURACY ||
 	      fabs(ang_a2b_deg -90) >XMIPP_EQUAL_ACCURACY)
-         cerr << "\nWARNING: P222_1 but mag_a != mag_b\n"
+         cerr << "\nWARNING: P2_122 but mag_a != mag_b\n"
+	      << " or ang_a2b !=90" << endl;
+	 return(space_group);
+	 break;
+       case sym_P22_12:
+	 if ( fabs((mag_a - mag_b)) >XMIPP_EQUAL_ACCURACY ||
+	      fabs(ang_a2b_deg -90) >XMIPP_EQUAL_ACCURACY)
+         cerr << "\nWARNING: P22_12 but mag_a != mag_b\n"
 	      << " or ang_a2b !=90" << endl;
 	 return(space_group);
 	 break;
@@ -409,7 +437,7 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
         break;
      case(sym_P222):     cerr << "\n Group P222 not implemented\n"; exit(1);
         break;
-     case(sym_P222_1):
+     case(sym_P2_122):
            switch(sym_no)
 	   {
             case(-1): XX(aint)=   XX(eprm_aint);
@@ -432,9 +460,36 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 		      YY(aint)=                 - YY(eprm_aint);
 		      XX(bint)= + XX(eprm_bint);
 		      YY(bint)=                 - YY(eprm_bint);
-		    VECTOR_R3(shift,0.5,0.0,0.0);
+		    VECTOR_R3(shift, 0.5,0.0,0.0);
 	      break;
-	   }//switch P2221 end   
+	   }//switch P2_122 end   
+      break;
+     case(sym_P22_12):
+           switch(sym_no)
+	   {
+            case(-1): XX(aint)=   XX(eprm_aint);
+                      YY(aint)=                   YY(eprm_aint);
+                      XX(bint)=   XX(eprm_bint);
+                      YY(bint)=                   YY(eprm_bint);
+              break;
+	    case(0):  XX(aint)= - XX(eprm_aint);  
+                      YY(aint)=                 - YY(eprm_aint);
+		      XX(bint)= - XX(eprm_bint);   
+                      YY(bint)=                 - YY(eprm_bint);
+              break;
+	    case(1):  XX(aint)=   XX(eprm_aint);  
+                      YY(aint)=                 - YY(eprm_aint);
+		      XX(bint)=   XX(eprm_bint);  
+                      YY(bint)=                 - YY(eprm_bint);
+		    VECTOR_R3(shift, 0.0,0.5,0.0);
+              break;
+	    case(2):  XX(aint)= - XX(eprm_aint);
+		      YY(aint)=                  YY(eprm_aint);
+		      XX(bint)= - XX(eprm_bint);
+		      YY(bint)=                  YY(eprm_bint);
+		    VECTOR_R3(shift,0.0,0.5,0.0);
+	      break;
+	   }//switch P22_12 end   
       break;
 
      case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n"; exit(1);
@@ -596,8 +651,11 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
         break;
      case(sym_P222):     cerr << "\n Group P222 not implemented\n"; exit(1);
         break;
-     case(sym_P222_1):   
-        Symmetrize_Vol(symmetry_P222_1)//already has ;
+     case(sym_P2_122):   
+        Symmetrize_Vol(symmetry_P2_122)//already has ;
+        break;
+     case(sym_P22_12):   
+        Symmetrize_Vol(symmetry_P22_12)//already has ;
         break;
      case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n"; exit(1);
         break;
@@ -626,9 +684,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    if( (j) < (j_min) ) { (j) = (j) + (jint);}\
    else if( (j) > (j_max) ) { (j) = (j) - (jint);};
 
-/* Symmetrizes a simple grid with P2221 symmetry--------------------------*/
+/* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
-     void symmetry_P222_1(Volume &vol, const SimpleGrid &grid,
+     void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 				const matrix1D<double> &eprm_aint, 
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
@@ -654,7 +712,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
          break;
       if(XX_lowest==XX_highest) 
          {
-	 cerr << "Error in symmetry_P2221, while(1)" << endl;
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
      }
@@ -665,7 +723,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
          break;
       if(XX_lowest==XX_highest) 
          {
-	 cerr << "Error in symmetry_P2221, while(1)" << endl;
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
      }
@@ -676,7 +734,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
          break;
       if(YY_lowest==YY_highest) 
          {
-	 cerr << "Error in symmetry_P2221, while(1)" << endl;
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
      }
@@ -687,7 +745,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
          break;
       if(YY_lowest==YY_highest) 
          {
-	 cerr << "Error in symmetry_P2221, while(1)" << endl;
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
 	 
@@ -734,6 +792,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 
 	   //sym=0 ---------------------------------------------------------
 	   xx =-x; yy=-y; zz=z;
+//	   xx = x; yy=-y; zz=-z;
 	   if(volume_no==1) { xx--;yy--;}
 	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
 	      {
@@ -747,7 +806,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
            x0=xx;y0=yy;z0=zz;
 	   
 	   //sym=1----------------------------------------------------------
-	   xx = -x+XXaint_2; yy= +y; zz= -z;
+	   xx = XXaint_2-x; yy= y; zz= -z;
+//	   xx = -x; yy= -y+YYbint_2; zz= -z;
 	   if(volume_no==1) { xx--;zz--;}
 	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
 	      {
@@ -761,7 +821,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
-	   xx = +x+XXaint_2; yy= -y; zz= -z;
+	   xx = XXaint_2+x; yy= -y; zz= -z;
+//	   xx = -x; yy= y+YYbint_2; zz= -z;
 	   if(volume_no==1) { yy--;zz--;}
 	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
 	      {
@@ -794,7 +855,179 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2))/4.0;
 	   }//for end
-}//symmetryP2221 end				
+}//symmetryP2_122 end	
+/* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
+
+     void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+				const matrix1D<double> &eprm_aint, 
+			        const matrix1D<double> &eprm_bint,
+				const matrix2D<int> &mask, int volume_no,
+				int grid_type)
+{
+
+   int ZZ_lowest =(int) ZZ(grid.lowest);
+   int YY_lowest =STARTINGY(mask);
+   int XX_lowest =STARTINGX(mask);
+   int ZZ_highest=(int) ZZ(grid.highest);
+   int YY_highest=FINISHINGY(mask);
+   int XX_highest=FINISHINGX(mask);
+
+   //if there is an extra slice in the z direction there is no way
+   //to calculate the -z slice
+   if(ABS(ZZ_lowest) >ABS(ZZ_highest) ) ZZ_lowest= -(ZZ_highest);
+   else ZZ_highest= ABS(ZZ_lowest);
+   
+   while(1)
+     {
+      if(mask(0,XX_lowest)==0) XX_lowest++;
+      else
+         break;
+      if(XX_lowest==XX_highest) 
+         {
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
+	 exit(0);
+	 }
+     }
+   while(1)
+     {
+      if(mask(0,XX_highest)==0) XX_highest--;
+      else
+         break;
+      if(XX_lowest==XX_highest) 
+         {
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
+	 exit(0);
+	 }
+     }
+   while(1)
+     {
+      if(mask(YY_lowest,0)==0) YY_lowest++;
+      else
+         break;
+      if(YY_lowest==YY_highest) 
+         {
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
+	 exit(0);
+	 }
+     }
+   while(1)
+     {
+      if(mask(YY_highest,0)==0) YY_highest--;
+      else
+         break;
+      if(YY_lowest==YY_highest) 
+         {
+	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
+	 exit(0);
+	 }
+	 
+     }
+
+
+   int maxZ, maxY, maxX, minZ, minY, minX;
+   int x,y,z;
+
+   int x0,y0,z0;
+   int x1,y1,z1;
+   int x2,y2,z2;
+
+   int XXaint, YYbint;
+   XXaint = (int) XX(eprm_aint); YYbint = (int)YY(eprm_bint);
+
+   int XXaint_2, YYbint_2;
+   XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
+   int xx,yy,zz;
+   
+   if( ABS(XX_lowest) > ABS(XX_highest)) 
+       { minX=XX_lowest; maxX=0;}
+   else 
+       { minX=0; maxX=XX_highest;}
+   if( ABS(YY_lowest) > ABS(YY_highest)) 
+       { minY=YY_lowest; maxY=0;}
+   else 
+       { minY=0; maxY=YY_highest;}
+   if( ABS(ZZ_lowest) > ABS(ZZ_highest)) 
+       { minZ=ZZ_lowest; maxZ=0;}
+   else 
+       { minZ=0; maxZ=ZZ_highest;}
+
+   //FCC non supported yet
+   if(volume_no==1 && grid_type==FCC)   
+      {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
+       
+   for (z=minZ;z<=maxZ;z++) 
+     for (y=minY;y<=maxY;y++) 
+       for (x=minX;x<=maxX;x++) {
+	   //sym=-1---------------------------------------------------------
+           if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
+             continue;
+
+	   //sym=0 ---------------------------------------------------------
+	   xx =-x; yy=-y; zz=z;
+//	   xx = x; yy=-y; zz=-z;
+	   if(volume_no==1) { xx--;yy--;}
+	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
+	      {
+	      put_inside(xx,XX_lowest,XX_highest,XXaint)
+	      put_inside(yy,YY_lowest,YY_highest,YYbint)
+	      if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx))
+	          cerr << "ERROR in symmetry_P function"
+		       << "after correction spot is still"
+		       << "outside mask\a"<<endl;
+	      }	     
+           x0=xx;y0=yy;z0=zz;
+	   
+	   //sym=1----------------------------------------------------------
+//	   xx = XXaint_2-x; yy= y; zz= -z;
+	   xx = x; yy= -y+YYbint_2; zz= -z;
+	   if(volume_no==1) { yy--;zz--;}
+	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
+	      {
+	      put_inside(xx,XX_lowest,XX_highest,XXaint)
+	      put_inside(yy,YY_lowest,YY_highest,YYbint)
+	      if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx))
+	          cerr << "ERROR in symmetry_P function"
+		       << "after correction spot is still"
+		       << "outside mask\a"<<endl;
+	      }//sym=1 end	     
+           x1=xx;y1=yy;z1=zz;
+
+	   //sym=2----------------------------------------------------------
+//	   xx = XXaint_2+x; yy= -y; zz= -z;
+	   xx = -x; yy= y+YYbint_2; zz= -z;
+	   if(volume_no==1) { xx--;zz--;}
+	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
+	      {
+	      put_inside(xx,XX_lowest,XX_highest,XXaint)
+	      put_inside(yy,YY_lowest,YY_highest,YYbint)
+	      if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx))
+	          cerr << "ERROR in symmetry_P function"
+		       << "after correction spot is still"
+		       << "outside mask\a"<<endl;
+	      }//sym=2 end	      	      	       
+           x2=xx;y2=yy;z2=zz;
+
+           //only the first simple grid center and the origen is the same 
+	   //point. 
+//	   if(volume_no==1)
+//	   {
+// 	    switch (grid_type) {
+//		case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
+//		case BCC: x0--;y0--;               z1--; 
+//		          x2--;y2--;z2--;     y3--;
+//			  x4--;          x5--;     z5--;
+//			       y6--;z6--;
+//		          break;
+//		case CC:  break;
+//	     }
+//	   }
+
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
+	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
+	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2))/4.0;
+	   }//for end
+}//symmetryP2_122 end	
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
      void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                       const matrix1D<double> &eprm_aint, 
