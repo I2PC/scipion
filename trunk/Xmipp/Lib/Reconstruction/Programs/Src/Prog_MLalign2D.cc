@@ -99,7 +99,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   fast_mode=check_param(argc,argv,"-fast");
   C_fast=AtoF(get_param(argc,argv,"-C","1e-12"));
   LSQ_rather_than_ML=check_param(argc,argv,"-LSQ");
-  max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
+  max_shift=AtoF(get_param(argc,argv,"-max_shift","5"));
   istart=AtoI(get_param(argc,argv,"-istart","1"));
   // Hidden arguments
   do_esthetics=check_param(argc,argv,"-esthetics");
@@ -164,37 +164,39 @@ void Prog_MLalign2D_prm::show() {
 } 
 
 // Usage ===================================================================
-void Prog_MLalign2D_prm::usage() {
-  cerr << "Usage:  MLalign2D [options] "<<endl;
-  cerr << "   -i <selfile>                : Selfile with input images \n"
-       << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n"
-       << "      OR -nref <int>               OR number of bias-free references to generate automatically\n"
-       << " [ -o <rootname=\"MLalign2D\"> ] : Output rootname \n"
-       << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n"
-       << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n"
-       << " [ -mirror ]                   : Also check mirror image of each reference \n"
-       << " [ -output_docfile ]           : Write out docfile with most likely angles & translations \n"
-       << " [ -output_selfiles ]          : Write out selfiles with most likely reference assignments \n"
-       << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n"
-       << " [ -show_all_options ]         : Show all possible input parameters \n";
+void Prog_MLalign2D_prm::usage(bool ML3D) {
+  if (!ML3D) {
+    cerr << "Usage:  MLalign2D [options] "<<endl;
+    cerr << "   -i <selfile>                : Selfile with input images \n";
+    cerr      << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n";
+    cerr      << "      OR -nref <int>               OR number of bias-free references to generate automatically\n";
+    cerr      << " [ -o <rootname=\"MLalign2D\"> ] : Output rootname \n";
+  }
+  cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
+  cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
+  if (!ML3D) cerr      << " [ -mirror ]                   : Also check mirror image of each reference \n";
+  cerr << " [ -output_docfile ]           : Write out docfile with most likely angles & translations \n";
+  cerr << " [ -output_selfiles ]          : Write out selfiles with most likely reference assignments \n";
+  cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
+  if (!ML3D) cerr      << " [ -show_all_options ]         : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
-void Prog_MLalign2D_prm::extended_usage() {
+void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
   cerr << "Additional options: "<<endl;
-  cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n"
-       << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n"
-       << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n"
-       << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n"
-       << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n"
-       << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n"
-       << " [ -istart <int> ]             : number of initial iteration \n"
-       << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n"
-       << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n"
-       << " [ -fix_fractions]             : Do not re-estimate the model fractions \n"
-       << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n"
-       << " [ -max_shift <float=dim/2>]   : For LSQ only: maximum allowed shift [pix] \n"
-       << endl;
+  cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
+  cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+  cerr << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
+  cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+  cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
+  if (!ML3D) cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
+  if (!ML3D) cerr << " [ -istart <int> ]             : number of initial iteration \n";
+  cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
+  cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
+  cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+  cerr << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n";
+  cerr << " [ -max_shift <float=5>]       : For LSQ only: maximum allowed shift [pix] \n";
+  cerr << endl;
   exit(1);
 }
 
@@ -399,8 +401,8 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
     Fref.push_back(dumF);
     compute_stats_within_binary_mask(omask,Iref[refno](),dum,dum,avg,dum);
     FOR_ALL_ROTATIONS() {
-      // Add arbitrary number to avoid 0-degree rotation (lacking interpolation effects)
-      psi=(double)(ipsi*90./nr_psi)+1.75; 
+      // Add arbitrary number (SMALLANGLE) to avoid 0-degree rotation (lacking interpolation effects)
+      psi=(double)(ipsi*90./nr_psi)+SMALLANGLE; 
       Maux=Iref[refno]().rotate(psi,DONT_WRAP);
       apply_binary_mask(mask,Maux,Maux,avg);
       AA=Maux.sum2();      
@@ -457,7 +459,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<compl
     Mnew.push_back(Maux);
     FOR_ALL_ROTATIONS() {
       // Add arbitrary number to avoid 0-degree rotation without interpolation effects
-      psi=(double)(ipsi*90./nr_psi)+1.75;
+      psi=(double)(ipsi*90./nr_psi)+SMALLANGLE;
       if (real_space) {
 	Maux=Mref[refno][ipsi];
       } else {
@@ -741,18 +743,18 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
 						    double &max_shift, matrix2D<int> &Msignificant, 
 						    vector <vector< matrix2D<double> > > &Msum_imgs, 
 						    vector<double> &sumw, vector<double> &sumw_mirror, 
-						    double &maxCC, int &opt_refno, double &opt_psi, 
+						    double &minSQ, int &opt_refno, double &opt_psi, 
 						    matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
 
   matrix2D<double> Maux,Maux2;
   matrix2D<complex<double> > Fimg, Faux;
   double sigma_noise2,aux,avg,std;
-  double CC;
+  double Xi2,CC;
   int irot,irefmir,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
   if (fast_mode) imax=n_ref*nr_flip/4;
   vector<int> ioptx_ref(imax),iopty_ref(imax),ioptflip_ref(imax);
-  vector<double> maxCC_ref(imax);
+  vector<double> minSQ_ref(imax);
 
   /* Not to store all 360-degrees rotations of the references (and pdf, Fwsum_imgs etc.) in memory,
      the experimental image is rotated over 0, 90, 180 & 270 degrees (called FLIPS), and only
@@ -766,8 +768,9 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
      Anyway, the total number of (I)FFT's is determined in much greater extent by n_ref and n_rot!
   */
 
-  maxCC=-99.e99; 
-  if (fast_mode) for (int i=0; i<imax; i++) maxCC_ref[i]=-99.e99;
+  Xi2=Mimg.sum2();
+  minSQ=99.e99; 
+  if (fast_mode) for (int i=0; i<imax; i++) minSQ_ref[i]=99.e99;
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
@@ -800,17 +803,18 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
 	  Maux.set_Xmipp_origin();
 	  if (max_shift>0.) apply_binary_mask(shiftmask,Maux,Maux,0.);
 	  Maux.max_index(ymax,xmax);
-	  CC=MAT_ELEM(Maux,ymax,xmax);
-	  if (CC>maxCC) {
-	    maxCC=CC;
+	  // Calculate least squares instead of maxCC
+	  CC=A2[refno]+Xi2-2*MAT_ELEM(Maux,ymax,xmax);
+	  if (CC<minSQ) {
+	    minSQ=CC;
 	    iopty=ymax;
 	    ioptx=xmax;
 	    ioptpsi=ipsi;
 	    ioptflip=iflip;
 	    opt_refno=refno;
 	  }
-	  if (fast_mode && CC>maxCC_ref[irefmir]) {
-	    maxCC_ref[irefmir]=CC;
+	  if (fast_mode && CC<minSQ_ref[irefmir]) {
+	    minSQ_ref[irefmir]=CC;
 	    iopty_ref[irefmir]=ymax;
 	    ioptx_ref[irefmir]=xmax;
 	    ioptflip_ref[irefmir]=iflip;
@@ -832,7 +836,7 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
   }
   opt_offsets(0)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],0,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
   opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
-  opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi);
+  opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
 
   // Store sums of the aligned images
   Mimg.translate(opt_offsets,Maux,true);

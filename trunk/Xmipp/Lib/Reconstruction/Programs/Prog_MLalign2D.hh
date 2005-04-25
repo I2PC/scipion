@@ -36,6 +36,7 @@
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<(nr_psi); ipsi++ ) 
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
+#define SMALLANGLE 1.75
 
 /**@name MLalign2D */
 //@{
@@ -125,10 +126,10 @@ public:
   void show();
 
   /// Usage
-  void usage();
+  void usage(bool ML3D=false);
 
   /// Extended Usage
-  void extended_usage();
+  void extended_usage(bool ML3D=false);
 
   /// Read input images all in memory
   void produce_Side_info() _THROW;
@@ -167,7 +168,7 @@ public:
 				  double &max_shift, matrix2D<int> &Msignificant, 
 				  vector <vector< matrix2D<double> > > &Msum_imgs, 
 				  vector<double> &sumw, vector<double> &sumw_mirror, 
-				  double &maxCC, int &opt_refno, double &opt_psi, 
+				  double &minSQ, int &opt_refno, double &opt_psi, 
 				  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW;
 
   /// Integrate over all experimental images
