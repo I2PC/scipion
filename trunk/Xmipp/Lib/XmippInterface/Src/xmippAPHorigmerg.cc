@@ -170,7 +170,9 @@ void APHFileorigmerg::clear(){
  	
         case sym_P1     :	//Nothing to do here
 	   break;			 
-        case sym_P222_1 :
+        case sym_P2_122 :     // must do P22_12 but I do not think
+	                      // it will be used but for debuging (ROB april
+			      // 2005)
 	   unsymmetrice_P222_1( a_mag,  b_mag, 
                                 mrc_taxa,  mrc_tilt,
 			        a_b_ang,  symmetry_group, Counter); 
@@ -184,7 +186,8 @@ void APHFileorigmerg::clear(){
   }//unasymmetrization end
 /////////////////////////////////////////////////////////////////////////
 
-    /* Possible Rs for this group
+    /* Possible Rs for this group **SEEMS to be P22_12 NOT P2_122  rob april
+    2005**
        h > 0
 	I:[ 1 0 0  1  1 0    0  1] -> ( h, k, l)=(h,k,l)
        R2:[ 1 0 0  1 -1 0    0 -1] -> ( h, k,-l)=conj(h,k,l)
