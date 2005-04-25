@@ -118,11 +118,21 @@ void compute_integer_lattice(const matrix1D<double> &a,
    switch(space_group){
       
        case sym_P1: break;// no check needed
-       case sym_P222_1://XX(aint) and YY(aint) should be even
+       case sym_P2_122://XX(aint) and YY(aint) should be even
          if(XX(aint)!=2*(int)(XX(aint)/2) ||
 	    YY(bint)!=2*(int)(YY(bint)/2))
 	    {
-	     cout << "\nLattice connstrains for P2212 are not satisficed"
+	     cout << "\nLattice connstrains for P2_122 are not satisficed"
+	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
+		 << "\nPlease modify the parmeters and try again" << endl;
+	     exit(0);	 	    
+	    }
+	 break;
+       case sym_P22_12://XX(aint) and YY(aint) should be even
+         if(XX(aint)!=2*(int)(XX(aint)/2) ||
+	    YY(bint)!=2*(int)(YY(bint)/2))
+	    {
+	     cout << "\nLattice connstrains for P22_12 are not satisficed"
 	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
 		 << "\nPlease modify the parmeters and try again" << endl;
 	     exit(0);	 	    
