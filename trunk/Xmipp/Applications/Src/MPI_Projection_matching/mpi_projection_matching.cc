@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
     else  { prm.verb=0; prm.output_refs=false; }
 
     prm.produce_Side_info();
+    prm.project_reference_volume();
 
     // Calculate indices myFirst and myLast and adapt prm.SF
     prm.SF.clean_comments();
