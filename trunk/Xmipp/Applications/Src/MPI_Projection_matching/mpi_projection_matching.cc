@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 
 
      // All nodes write out temporary DFo
-    fn_img.compose(prm.fn_out,rank,"tmpdoc");
+    fn_img.compose(prm.fn_root,rank,"tmpdoc");
     DFo.write(fn_img);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     if (rank==0) {
       DFo.clear();
       for (int rank2=0; rank2<size; rank2++) {
-	fn_img.compose(prm.fn_out,rank2,"tmpdoc");
+	fn_img.compose(prm.fn_root,rank2,"tmpdoc");
 	int ln=DFo.LineNo();
 	DFo.append(fn_img);
 	DFo.locate(DFo.get_last_key());
