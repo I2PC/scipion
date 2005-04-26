@@ -117,7 +117,8 @@ int main(int argc, char **argv) {
 	DFo.remove_current();
 	system(((string)"rm -f "+fn_img).c_str());
       }
-      DFo.write(prm.fn_out);
+      fn_tmp=prm.fn_root+".doc";
+      DFo.write(fn_tmp);
     }
 
 
