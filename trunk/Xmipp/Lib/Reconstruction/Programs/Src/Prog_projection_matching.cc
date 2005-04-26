@@ -284,6 +284,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   double mean_ref,stddev_ref,stddev_img,mean_img,dummy;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
+  vector<matrix2D<double> >::iterator ipp;
 
   maxCC=-99.e99; 
   Mimg.resize(dim,dim);
@@ -297,19 +298,20 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
     Mimg=Mexp.rotate(psi,DONT_WRAP);
     Mimg.compute_stats(mean_ref,stddev_img,dummy,dummy);
     Mimg-=mean_img;
+    ipp=ref_img.begin();
     FOR_ALL_DIRECTIONS() {
       search=true;
-      // For some strange reason the following line went 50 slower on jumilla...
-      // Mref=ref_img[dirno];
-      Mref=ref_img.at(dirno);
+      // For some strange reason I need to access the vector via its pointer
+      // otherwise it goes 50x slower on jumilla (Alpha-Unix)
+      Mref=*(ipp);
       if (rot_range>0) {
 	// Rot_range is tilt-angle dependent!
-	if (ref_tilt.at(dirno)>0 && ref_tilt.at(dirno)<180) act_rot_range=rot_range/sin(DEG2RAD(ref_tilt.at(dirno))); 
+	if (ref_tilt[dirno]>0 && ref_tilt[dirno]<180) act_rot_range=rot_range/sin(DEG2RAD(ref_tilt[dirno])); 
 	else act_rot_range=361.;
-	if (ABS(realWRAP(img_rot-ref_rot.at(dirno),-180.,180.)) > act_rot_range) search=false;
+	if (ABS(realWRAP(img_rot-ref_rot[dirno],-180.,180.)) > act_rot_range) search=false;
       }
       if (search && tilt_range>0)
-	if (ABS(realWRAP(img_tilt-ref_tilt.at(dirno),-180.,180.)) > tilt_range) search=false;
+	if (ABS(realWRAP(img_tilt-ref_tilt[dirno],-180.,180.)) > tilt_range) search=false;
       if (search && psi_range>0) 
 	if (ABS(realWRAP(img_psi-psi,-180.,180.)) > psi_range) search=false;
       if (search) {
@@ -317,7 +319,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
 	  thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
 	}
-	thisCC/=ref_stddev.at(dirno)*stddev_img*dim*dim;
+	thisCC/=ref_stddev[dirno]*stddev_img*dim*dim;
 	c++;
 	oldCC=aveCC;
 	aveCC+=(thisCC-oldCC)/(c+1);
@@ -327,6 +329,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	  opt_psi=psi;
 	  opt_dirno=dirno;
 	}
+	ipp++;
       }
     }
   }
@@ -343,8 +346,8 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
   // Calculate cross-correlation matrix to search shifts
   Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
-  Mref=ref_img.at(opt_dirno);
-  Mref+=ref_mean.at(opt_dirno);
+  Mref=ref_img[opt_dirno];
+  Mref+=ref_mean[opt_dirno];
   correlation_matrix(Mimg,Mref,Mcorr);
   // Adjust statistics within shiftmask to average 0 and stddev 1
   compute_stats_within_binary_mask(shiftmask,Mcorr,dummy,dummy,avecorr,stdcorr);
@@ -428,8 +431,8 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
     sumCC+=maxCC;
     sumZ+=Z;
-    dataline(0)=ref_rot.at(opt_dirno);      // rot
-    dataline(1)=ref_tilt.at(opt_dirno);     // tilt
+    dataline(0)=ref_rot[opt_dirno];      // rot
+    dataline(1)=ref_tilt[opt_dirno];     // tilt
     dataline(2)=opt_psi;                 // psi
     dataline(3)=opt_xoff;                // Xoff
     dataline(4)=opt_yoff;                // Yoff
@@ -441,7 +444,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     if (modify_header) {
       // Re-read image to get the untransformed image matrix again
       img.read(fn_img);
-      img.set_eulerAngles(ref_rot.at(opt_dirno),ref_tilt.at(opt_dirno),opt_psi);
+      img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
       img.set_originOffsets(opt_xoff,opt_yoff);
       img.write(fn_img);
     }
