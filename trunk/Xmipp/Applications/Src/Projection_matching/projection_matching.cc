@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
   double                        sumCC,sumZ;
   DocFile                       DFo;
   Prog_projection_matching_prm  prm;
+  FileName                      fn_tmp;
 
   // Get input parameters
   try {
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
     prm.show();
 
     prm.produce_Side_info();
+    prm.project_reference_volume();
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
     
@@ -52,7 +54,8 @@ int main(int argc, char **argv) {
     prm.PM_loop_over_all_images(prm.SF,DFo,sumCC,sumZ);
  
     cerr << " Average maxCC = "<<sumCC/prm.SF.ImgNo()<<" average Z-score = "<<sumZ/prm.SF.ImgNo() <<endl;
-    DFo.write(prm.fn_out);
+    fn_tmp=prm.fn_root+".doc";
+    DFo.write(fn_tmp);
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 
