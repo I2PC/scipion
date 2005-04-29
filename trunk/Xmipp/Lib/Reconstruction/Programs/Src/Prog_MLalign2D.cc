@@ -429,8 +429,13 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
   }
   A2mean=sumAA/n_ref;
 
+  // Check that the differences in powers are not to large 
+  // for the numerical precision of the exp function...
+  FOR_ALL_MODELS() {
+    if (ABS((A2mean-A2[refno])/2*sigma_noise*sigma_noise)>1000.)
+      REPORT_ERROR(1,"Very large differences in powers of images give numerical problems, are they normalized?");
+  }
 }
-
 
 // Collect all rotations and sum to update Iref() for all models ==========
 void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fref, 
@@ -575,7 +580,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   vector<bool> dumb;
   vector <vector< matrix2D<double> > > Mweight;
   vector<double> refw(n_ref), refw_mirror(n_ref);
-  double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,corrA2,max,maxc=-99.e99;
+  double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,max,corrA2,maxc=-99.e99;
   double sum,wsum_corr=0., sum_refw=0., wsum_A2=0., maxweight=-99.e99;
   int irot,irefmir,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
@@ -645,6 +650,10 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   FOR_ALL_MODELS() {
     refw[refno]=0.;
     refw_mirror[refno]=0.;
+    // There is a numerical problem with the following line 
+    // when the difference in power of the images is large, the exp becomes 0/inf.
+    // For now, I dont know what to do... Put a warning in rotate_reference
+    // If the images are properly normalized this does not seem to be so much of a problem?
     corrA2=exp((A2mean-A2[refno])/2*sigma_noise2);
     FOR_ALL_ROTATIONS() {
       FOR_ALL_FLIPS() {
