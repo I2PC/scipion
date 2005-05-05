@@ -69,10 +69,10 @@ BILIB_OBJS=Bilib/sources/changebasis.o \
            Bilib/sources/traceline.o \
            Bilib/sources/window.o \
            Bilib/sources/messagedisplay.o \
-	   Bilib/sources/wavelet.cc \
-	   Bilib/sources/waveletfiltersfract.cc \
-	   Bilib/sources/waveletfilters.cc \
-	   Bilib/sources/wavelettools.cc 	
+	   Bilib/sources/wavelet.o \
+	   Bilib/sources/waveletfiltersfract.o \
+	   Bilib/sources/waveletfilters.o \
+	   Bilib/sources/wavelettools.o 	
 
 # Main Action = Built library ----------------------------------------------
 all: $(LIBPROJ)
