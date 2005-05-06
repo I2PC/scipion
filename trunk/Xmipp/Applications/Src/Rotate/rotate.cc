@@ -83,11 +83,11 @@ public:
    void usage() {
       Prog_parameters::usage();
       cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-           << "  [-align_with_Z [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
+           << "  [-align_with_Z \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
            << "                                      Notice that brackets for the\n"
            << "                                      vector must be written and do not\n"
            << "                                      represent optional parameters\n"
-           << "  [[-axis [<x>,<y>,<z>]] -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
+           << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
            << "                                      by default (0,0,1)\n"
            << "  [-dont_wrap]                      : By default, the volume is wrapped\n";
    }
