@@ -83,7 +83,7 @@ public:
    void usage() {
       Prog_parameters::usage();
       cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-           << "  [-align_with_Z \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
+           << "  [-align_with_Z \"[<x>,<y>,<z>]\"]   : Align (x,y,z) with Z\n"
            << "                                      Notice that brackets for the\n"
            << "                                      vector must be written and do not\n"
            << "                                      represent optional parameters\n"
