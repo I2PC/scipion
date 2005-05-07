@@ -130,7 +130,7 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo() _THROW {
     else if (str_symmetry_group=="C2")      symmetry_group = sym_C2;
     else if (str_symmetry_group=="P222")    symmetry_group = sym_P222;
     else if (str_symmetry_group=="P2_122")  symmetry_group = sym_P2_122;
-    else if (str_symmetry_group=="P22_22")  symmetry_group = sym_P22_12;
+    else if (str_symmetry_group=="P22_12")  symmetry_group = sym_P22_12;
     else if (str_symmetry_group=="P22121")  symmetry_group = sym_P22_12_1;
     else if (str_symmetry_group=="P4")      symmetry_group = sym_P4;
     else if (str_symmetry_group=="P422")    symmetry_group = sym_P422;
