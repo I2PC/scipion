@@ -223,14 +223,14 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
   make_even_distribution(DF,sampling,SL,false);
 
   // Create reference projection images
-  ref_img.clear();
-  ref_rot.clear();
-  ref_tilt.clear();
-  ref_mean.clear();
-  ref_stddev.clear();
   vol.read(fn_vol);
   vol().set_Xmipp_origin();
   nl=DF.dataLineNo();
+  ref_img.clear();
+  ref_rot=(double*)malloc(nl*sizeof(double));
+  ref_tilt=(double*)malloc(nl*sizeof(double));
+  ref_mean=(double*)malloc(nl*sizeof(double));
+  ref_stddev=(double*)malloc(nl*sizeof(double));
   SF.reserve(nl);
   SF.go_beginning();
   DF.go_beginning();
@@ -241,8 +241,6 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
   DF.adjust_to_data_line();
   nr_dir=0;
   while (!DF.eof()) {
-    ref_rot.push_back(DF(0));
-    ref_tilt.push_back(DF(1));
     project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
     if (output_refs) {
       fn_tmp.compose(fn_refs,nr_dir+1,"proj");
@@ -252,8 +250,10 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
     proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
     proj()-=mean_ref;
     ref_img.push_back(proj());
-    ref_stddev.push_back(stddev_ref);
-    ref_mean.push_back(mean_ref);
+    ref_rot[nr_dir]=DF(0);
+    ref_tilt[nr_dir]=DF(1);
+    ref_stddev[nr_dir]=stddev_ref;
+    ref_mean[nr_dir]=mean_ref;
     DF.next_data_line();
     nr_dir++;
     if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
@@ -281,7 +281,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   // Rotational search ====================================================
   matrix2D<double> Mimg,Mref,Mcorr;
   double act_rot_range,psi,thisCC,oldCC,aveCC=0.,varCC=0.;
-  double mean_ref,stddev_ref,stddev_img,mean_img,dummy;
+  double stddev_img,mean_img,dummy;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
   vector<matrix2D<double> >::iterator ipp;
@@ -296,7 +296,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
     Mimg=Mexp.rotate(psi,DONT_WRAP);
-    Mimg.compute_stats(mean_ref,stddev_img,dummy,dummy);
+    Mimg.compute_stats(mean_img,stddev_img,dummy,dummy);
     Mimg-=mean_img;
     ipp=ref_img.begin();
     FOR_ALL_DIRECTIONS() {
@@ -456,4 +456,9 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   if (verb>0) progress_bar(nn);
   if (verb>0) cerr << " ================================================================="<<endl;
 
+  // free memory
+  free(ref_mean);
+  free(ref_rot);
+  free(ref_tilt);
+  ref_img.clear();
 }
