@@ -29,8 +29,9 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
 
-  double                        sumCC,sumZ;
-  DocFile                       DFo;
+  double                        sumCC;
+  DocFile                       DFlib,DFo;
+  SymList                       SL;
   Prog_projection_matching_prm  prm;
   FileName                      fn_tmp;
 
@@ -40,20 +41,20 @@ int main(int argc, char **argv) {
     prm.read(argc,argv);
     prm.show();
 
+    // Project reference volume etc.
     prm.produce_Side_info();
-    prm.project_reference_volume();
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
     
   try {
 
     DFo.clear();
-    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), maxCC (6), Z-score (7)");
+    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), maxCC (6)");
 
     // Process all images
-    prm.PM_loop_over_all_images(prm.SF,DFo,sumCC,sumZ);
+    prm.PM_loop_over_all_images(prm.SF,DFo,sumCC);
  
-    cerr << " Average maxCC = "<<sumCC/prm.SF.ImgNo()<<" average Z-score = "<<sumZ/prm.SF.ImgNo() <<endl;
+    cerr << " Average maxCC = "<<sumCC/prm.SF.ImgNo()<<endl;
     fn_tmp=prm.fn_root+".doc";
     DFo.write(fn_tmp);
 
