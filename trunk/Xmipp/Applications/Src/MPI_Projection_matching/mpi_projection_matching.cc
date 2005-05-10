@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   int myFirst, myLast, remaining, Npart;
   int rank, size;
 
-  double                        aux,sumCC,sumZ;
+  double                        aux,sumCC;
   FileName                      fn_img,fn_tmp;
   DocFile                       DFo;
   Prog_projection_matching_prm  prm;
@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
     else  { prm.verb=0; prm.output_refs=false; }
 
     prm.produce_Side_info();
-    prm.project_reference_volume();
 
     // Calculate indices myFirst and myLast and adapt prm.SF
     prm.SF.clean_comments();
@@ -87,17 +86,15 @@ int main(int argc, char **argv) {
 
     DFo.clear();
     if (rank==0) 
-      DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), maxCC (6), Z-score (7)");
+      DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), maxCC (6)");
 
     // Process all images
-    prm.PM_loop_over_all_images(prm.SF,DFo,sumCC,sumZ);
+    prm.PM_loop_over_all_images(prm.SF,DFo,sumCC);
  
     // Here MPI_allreduce 
     MPI_Allreduce(&sumCC,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     sumCC=aux;
-    MPI_Allreduce(&sumZ,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    sumZ=aux;
-    if (prm.verb>0) cerr << " Average maxCC = "<<sumCC/num_img_tot<<" average Z-score = "<<sumZ/num_img_tot <<endl;
+    if (prm.verb>0) cerr << " Average maxCC = "<<sumCC/num_img_tot<<endl;
 
 
      // All nodes write out temporary DFo
