@@ -220,6 +220,41 @@ using namespace std;
    Ex: if (SIND(90)==1) cout << "This is in degrees!\n"; */
 #define SIND(x) sin(PI*(x)/180.)
 
+/** Tabulated Sinc = SIN(PI*X)/(PI*X)
+    A lookup-table with the given sampling rate and range is created.
+    Ex: tabsinc TSINC(0.0001,64);
+    Ex: if (TSINC(1)==0) cout << "This is true!\n"; */
+class tabsinc {
+private:
+
+  float sampl;
+  int xmax;
+  int no_elem;
+  float * tabulatedsinc;
+
+public:
+   /** Constructor with sampling rate and range.*/
+  tabsinc(const float dd, const int xx) {sampl=dd; xmax=xx; filltable();} 
+
+  // Destructor 
+  ~tabsinc() {free(tabulatedsinc);}
+
+  /** Value access. Tabulated sine in radians.*/
+  float operator () (float val) const {return tabulatedsinc[ABS((int)(val/sampl))]; }
+
+  /** Actually fill the table.*/
+  void filltable() {
+    no_elem=(int)(xmax/sampl);
+    tabulatedsinc=(float*)malloc(no_elem*sizeof(float));
+    tabulatedsinc[0]=1;
+    for (int i=1; i<no_elem; i++) {
+      float xx=(float)i*sampl*PI;
+      tabulatedsinc[i]=sin(xx)/xx;
+    }
+  }
+
+};
+
 /** ArcSine in degrees.
    Ex: if (ASIND(0.5)==30.) cout << "This is in degrees!\n"; */
 #define ASIND(x) asin((x))*180./PI
