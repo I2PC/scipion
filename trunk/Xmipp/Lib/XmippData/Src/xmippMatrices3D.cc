@@ -377,6 +377,7 @@ template <class T>
 /* Apply a geometrical transformation -------------------------------------- */
 // It is translated from function transforma in Lib/varios2.c
 // We should check which one performs better.
+//#define DEBUG
 template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
       bool wrap) _THROW {
@@ -413,6 +414,17 @@ template <class T>
    maxxp  = V1.xdim-cen_xp-1;
    maxyp  = V1.ydim-cen_yp-1;
    maxzp  = V1.zdim-cen_zp-1;
+   #ifdef DEBUG
+      cout << "Geometry 2 center=("
+           << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+           << "Geometry 1 center=("
+           << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+	   << "           min=("
+           << minzp  << "," << minyp  << "," << minxp  << ")\n"
+	   << "           max=("
+           << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+      ;
+   #endif
     
    // Now we go from the output matrix3D to the input matrix3D, ie, for any voxel
    // in the output matrix3D we calculate which are the corresponding ones in
@@ -438,6 +450,17 @@ template <class T>
          for (int j=0; j<V2.xdim; j++) {
             bool interp;
             T tmp;
+
+            #ifdef DEBUG
+	       bool show_debug=false;
+	       if ((i==0 && j==0 && k==0) ||
+	           (i==V2.ydim-1 && j==V2.xdim-1 && k==V2.zdim-1))
+		   show_debug=true;
+	       if (show_debug)
+        	  cout << "(x,y,z)-->(xp,yp,zp)= "
+		       << "(" << x  << "," << y  << "," << z  << ") "
+		       << "(" << xp << "," << yp << "," << zp << ")\n";
+            #endif
 
             // If the point is outside the volume, apply a periodic extension
             // of the volume, what exits by one side enters by the other
@@ -466,6 +489,18 @@ template <class T>
                wx=xp+cen_xp; m1=(int) wx; wx=wx-m1; m2=m1+1;
                wy=yp+cen_yp; n1=(int) wy; wy=wy-n1; n2=n1+1;
                wz=zp+cen_zp; o1=(int) wz; wz=wz-o1; o2=o1+1;
+	       
+	       #ifdef DEBUG
+		  if (show_debug) {
+        	     cout << "After wrapping(xp,yp,zp)= "
+			  << "(" << xp << "," << yp << "," << zp << ")\n";
+	             cout << "(m1,n1,o1)-->(m2,n2,o2)="
+			  << "(" << m1 << "," << n1 << "," << o1 << ") "
+			  << "(" << m2 << "," << n2 << "," << o2 << ")\n";
+		     cout << "(wx,wy,wz)=" 
+			  << "(" << wx << "," << wy << "," << wz << ")\n";
+		  }
+	       #endif
 
                // Perform interpolation
                // if wx == 0 means that the rightest point is useless for this
@@ -477,13 +512,25 @@ template <class T>
                   if (wx!=0 && m2<V1.xdim)    tmp += (T) ((1-wz)*   wy *   wx *dVkij(V1,o1,n2,m2));
                }
                if (wz!=0 && o2<V1.zdim){
-                                              tmp += (T) (   wz *(1-wy)*(1-wx)*dVkij(V1,o1,n1,m1));
-                  if (wx!=0 && m2<V1.xdim)    tmp += (T) (   wz *(1-wy)*   wx *dVkij(V1,o1,n1,m2));
-                  if (wy!=0 && n2<V1.ydim){   tmp += (T) (   wz *   wy *(1-wx)*dVkij(V1,o1,n2,m1));
-                     if (wx!=0 && m2<V1.xdim) tmp += (T) (   wz *   wy *   wx *dVkij(V1,o1,n2,m2));
+                                              tmp += (T) (   wz *(1-wy)*(1-wx)*dVkij(V1,o2,n1,m1));
+                  if (wx!=0 && m2<V1.xdim)    tmp += (T) (   wz *(1-wy)*   wx *dVkij(V1,o2,n1,m2));
+                  if (wy!=0 && n2<V1.ydim){   tmp += (T) (   wz *   wy *(1-wx)*dVkij(V1,o2,n2,m1));
+                     if (wx!=0 && m2<V1.xdim) tmp += (T) (   wz *   wy *   wx *dVkij(V1,o2,n2,m2));
                   }
                }
                dVkij(V2,k,i,j) = tmp;
+	       #ifdef DEBUG
+		  if (show_debug)
+	             cout << "tmp1=" << dVkij(V1,o1,n1,m1) << " " << (T) ((1-wz)*(1-wy)*(1-wx)*dVkij(V1,o1,n1,m1)) << endl
+        		  << "tmp2=" << dVkij(V1,o1,n1,m2) << " " << (T) ((1-wz)*(1-wy)*   wx *dVkij(V1,o1,n1,m2)) << endl
+        		  << "tmp3=" << dVkij(V1,o1,n2,m1) << " " << (T) ((1-wz)*   wy *(1-wx)*dVkij(V1,o1,n2,m1)) << endl
+        		  << "tmp4=" << dVkij(V1,o1,n2,m2) << " " << (T) ((1-wz)*   wy *   wx *dVkij(V1,o1,n2,m2)) << endl
+        		  << "tmp5=" << dVkij(V1,o2,n1,m1) << " " << (T) (   wz *(1-wy)*(1-wx)*dVkij(V1,o2,n1,m1)) << endl
+        		  << "tmp6=" << dVkij(V1,o2,n1,m2) << " " << (T) (   wz *(1-wy)*   wx *dVkij(V1,o2,n1,m2)) << endl
+        		  << "tmp7=" << dVkij(V1,o2,n2,m1) << " " << (T) (   wz *   wy *(1-wx)*dVkij(V1,o2,n2,m1)) << endl
+        		  << "tmp8=" << dVkij(V1,o2,n2,m2) << " " << (T) (   wz *   wy *   wx *dVkij(V1,o2,n2,m2)) << endl
+			  << "tmp= " << tmp << endl;
+	       #endif
             }
 
             // Compute new point inside input image
@@ -493,6 +540,7 @@ template <class T>
          }
       }
 }
+#undef DEBUG
 
 /* Geometrical operations -------------------------------------------------- */
 template <class T>
