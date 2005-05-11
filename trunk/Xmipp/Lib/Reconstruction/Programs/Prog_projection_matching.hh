@@ -31,8 +31,8 @@
 #include <XmippData/xmippFilters.hh>
 #include <XmippData/xmippMasks.hh>
 #include <Reconstruction/projection.hh>
+#include <Reconstruction/directions.hh>
 #include <Reconstruction/symmetries.hh>
-#include <vector>
 
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<(nr_psi); ipsi++ ) 
@@ -51,9 +51,9 @@ public:
   vector<matrix2D<double> > ref_img;
   vector<matrix2D<double> >::iterator idirno;
   /** Vectors for standard deviation and mean of reference library projections */
-  vector<double> ref_stddev, ref_mean;
+  double * ref_stddev, * ref_mean;
   /** Vector with reference library angles */
-  vector<double> ref_rot, ref_tilt;
+  double * ref_rot, * ref_tilt;
   /** Number of projection directions */
   int nr_dir;
   /** Number of steps to sample in-plane rotation in 90 degrees */
@@ -93,31 +93,15 @@ public:
   /** Make shiftmask and calculate nr_psi */
   void produce_Side_info() _THROW;
 
-  /** Project volume and store in memory */
-  void project_reference_volume() _THROW;
-
-  /** Check whether 2 projection directions are unique in terms of rot_limit & tilt_limit
-      This function is needed by make_even_distribution   */
-  bool directions_are_unique(double rot,  double tilt,
-			     double rot2, double tilt2,
-			     double rot_limit, double tilt_limit,
-			     SymList &SL);
-
-  /** Make even distribution of rot and tilt angles
-      This function fills the Docfile with evenly distributed rot and
-      tilt angles. */
-  void make_even_distribution(DocFile &DF, double &sampling,
-			      SymList &SL, bool exclude_mirror=false);
-
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
 			    float &img_rot, float &img_tilt, float &img_psi, 
 			    int &opt_dirno, double &opt_psi,
 			    double &opt_xoff, double &opt_yoff, 
-			    double &maxCC, double &Z) _THROW;
+			    double &maxCC) _THROW;
 
   /** Loop over all images */
-  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC, double &sumZ) _THROW;
+  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC) _THROW;
 
 
 };				    

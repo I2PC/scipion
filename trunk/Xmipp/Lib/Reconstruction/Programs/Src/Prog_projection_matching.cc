@@ -110,103 +110,8 @@ void Prog_projection_matching_prm::extended_usage() {
   exit(1);
 }
 
-/* Check whether projection directions are unique ---------------------- */
-bool Prog_projection_matching_prm::directions_are_unique(double rot,  double tilt,
-							 double rot2, double tilt2, 
-							 double rot_limit, double tilt_limit,
-							 SymList &SL) {
-  
-  bool are_unique=true;
-  double rot2p,tilt2p,psi2p, psi2=0.;
-  double diff_rot,diff_tilt;
-  matrix2D<double>  L(4,4), R(4,4);
-  
-  for (int isym=0; isym<=SL.SymsNo(); isym++) {
-    
-    if (isym==0) {rot2p=rot2; tilt2p=tilt2; psi2p=psi2;}
-    else {
-      SL.get_matrices(isym-1,L,R);
-      L.resize(3,3); // Erase last row and column
-      R.resize(3,3); // as only the relative orientation
-      // is useful and not the translation
-      Euler_apply_transf(L,R,rot2,tilt2,psi2,rot2p,tilt2p,psi2p);
-    }
-
-    diff_rot=rot-rot2p;
-    diff_tilt=tilt-tilt2p;
-    diff_rot=ABS(realWRAP(diff_rot,-180,180));
-    diff_tilt=ABS(realWRAP(diff_tilt,-180,180));
-    if ((rot_limit-diff_rot)>1e-3 && (tilt_limit-diff_tilt)>1e-3) are_unique=false;
-    Euler_another_set(rot2p,tilt2p,psi2p,rot2p,tilt2p,psi2p);
-    diff_rot=rot-rot2p;
-    diff_tilt=tilt-tilt2p;
-    diff_rot=ABS(realWRAP(diff_rot,-180,180));
-    diff_tilt=ABS(realWRAP(diff_tilt,-180,180));
-    if ((rot_limit-diff_rot)>1e-3 && (tilt_limit-diff_tilt)>1e-3) are_unique=false;
-  }
-
-  return are_unique;
-
-}
-
-/* Fill DF with evenly distributed rot & tilt  ----------------------------- */
-void Prog_projection_matching_prm::make_even_distribution(DocFile &DF, double &sampling, 
-							  SymList &SL, bool exclude_mirror) {
-
-  int rot_nstep,tilt_nstep=ROUND(180./sampling)+1;
-  double rotp,tiltp,psip,rot_sam,tilt,rot,tilt_sam,psi=0.;
-  bool append;
-  matrix1D<double> dataline(3);
-  tilt_sam=(180./tilt_nstep);
-
-  DF.clear();
-  // Create evenly distributed angles
-  for (int tilt_step=0; tilt_step<tilt_nstep; tilt_step++) {
-    tilt=((double)tilt_step/(tilt_nstep-1))*180.;
-    if (tilt>0) rot_nstep=CEIL(360.*sin(DEG2RAD(tilt))/sampling);
-    else rot_nstep=1;
-    rot_sam=360./(double)rot_nstep;
-    for (double rot=0.; rot<360.; rot+=rot_sam) {
-      // Check whether by symmetry or mirror the angle has been included already
-      append=true;
-      DF.go_first_data_line();
-      while (!DF.eof()) {
-	if (!directions_are_unique(rot,tilt,DF(0),DF(1),rot_sam,tilt_sam,SL)) 
-	  append=false;
-	if (exclude_mirror) {
-	  Euler_up_down(rot,tilt,psi,rotp,tiltp,psip);
-	  if (!directions_are_unique(rotp,tiltp,DF(0),DF(1),rot_sam,tilt_sam,SL)) 
-	  append=false;
-	}
-	DF.next_data_line();
-      }
-      if (append) {
-	dataline(0)=rot;
-	dataline(1)=tilt;
-	dataline(2)=0.;
-	DF.append_data_line(dataline);
-      }
-    }
-  }
-  DF.go_beginning();
-
-}
-
 // Side info stuff ===================================================================
 void Prog_projection_matching_prm::produce_Side_info() _THROW {
-
-  // Set nr_psi
-  nr_psi=CEIL(360./sampling);
- 
-  // Create max_shift mask
-  shiftmask.resize(dim,dim);
-  shiftmask.set_Xmipp_origin();
-  if (max_shift<0.) max_shift=(double)dim/2.;
-  BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
-
-}
-
-void Prog_projection_matching_prm::project_reference_volume() _THROW {
 
   VolumeXmipp      vol;
   Projection       proj;
@@ -217,10 +122,18 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
   double           mean_ref,stddev_ref,dummy,psi=0.;
   int              nl;
 
+  // Set nr_psi
+  nr_psi=CEIL(360./sampling);
+ 
+  // Create max_shift mask
+  shiftmask.resize(dim,dim);
+  shiftmask.set_Xmipp_origin();
+  if (max_shift<0.) max_shift=(double)dim/2.;
+  BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
+
   // Create evenly-distributed reference projection angles
-  DF.clear();
   if (fn_sym!="") SL.read_sym_file(fn_sym);
-  make_even_distribution(DF,sampling,SL,false);
+  make_even_distribution(DF,sampling,SL,true);
 
   // Create reference projection images
   vol.read(fn_vol);
@@ -241,6 +154,8 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
   DF.adjust_to_data_line();
   nr_dir=0;
   while (!DF.eof()) {
+    ref_rot[nr_dir]=DF(0);
+    ref_tilt[nr_dir]=DF(1);
     project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
     if (output_refs) {
       fn_tmp.compose(fn_refs,nr_dir+1,"proj");
@@ -250,8 +165,6 @@ void Prog_projection_matching_prm::project_reference_volume() _THROW {
     proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
     proj()-=mean_ref;
     ref_img.push_back(proj());
-    ref_rot[nr_dir]=DF(0);
-    ref_tilt[nr_dir]=DF(1);
     ref_stddev[nr_dir]=stddev_ref;
     ref_mean[nr_dir]=mean_ref;
     DF.next_data_line();
@@ -275,12 +188,12 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 							float &img_rot, float &img_tilt, float &img_psi, 
 							int &opt_dirno, double &opt_psi,
 							double &opt_xoff, double &opt_yoff, 
-							double &maxCC, double &Z) _THROW {
+							double &maxCC) _THROW {
 
 
   // Rotational search ====================================================
   matrix2D<double> Mimg,Mref,Mcorr;
-  double act_rot_range,psi,thisCC,oldCC,aveCC=0.,varCC=0.;
+  double act_rot_range,psi,thisCC;
   double stddev_img,mean_img,dummy;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
@@ -321,9 +234,6 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	}
 	thisCC/=ref_stddev[dirno]*stddev_img*dim*dim;
 	c++;
-	oldCC=aveCC;
-	aveCC+=(thisCC-oldCC)/(c+1);
-	if (c>1) varCC=(1.-1./(double)c)*varCC+(c+1.)*(oldCC-aveCC)*(oldCC-aveCC);
 	if (thisCC>maxCC) {
 	  maxCC=thisCC;
 	  opt_psi=psi;
@@ -333,9 +243,6 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
       }
     }
   }
-
-  // Calculate Z-score on rotational permutations
-  Z=(maxCC-aveCC)/(sqrt(varCC));
 
   // Interpolated translational search =======================================================
   int              imax,jmax,i_actual,j_actual;
@@ -397,13 +304,14 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
 }
 
-void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC, double &sumZ) _THROW {
+void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile &DFo, 
+							   double &sumCC) _THROW {
 
 
   ImageXmipp img;
   FileName fn_img;
-  matrix1D<double> dataline(7);  
-  double opt_psi,opt_xoff,opt_yoff,maxCC,Z;
+  matrix1D<double> dataline(6);  
+  double opt_psi,opt_xoff,opt_yoff,maxCC;
   int c,nn,imgno,opt_dirno;
 
   if (verb>0) cerr << "--> Projection matching ... "<<endl;
@@ -415,7 +323,6 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   
   // Loop over all images
   sumCC=0.;
-  sumZ=0.;
   imgno=0;
   SF.go_beginning();
   while ((!SF.eof())) {
@@ -424,20 +331,19 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     img().set_Xmipp_origin();
 
     // Perform the projection matching for each image separately
-    PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC,Z);
+    PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),
+			 opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC);
 
     opt_xoff+=img.Xoff();
     opt_yoff+=img.Yoff();
 
     sumCC+=maxCC;
-    sumZ+=Z;
     dataline(0)=ref_rot[opt_dirno];      // rot
     dataline(1)=ref_tilt[opt_dirno];     // tilt
     dataline(2)=opt_psi;                 // psi
     dataline(3)=opt_xoff;                // Xoff
     dataline(4)=opt_yoff;                // Yoff
     dataline(5)=maxCC;                   // maximum CC
-    dataline(6)=Z;                       // Z-score
     DFo.append_comment(img.name());
     DFo.append_data_line(dataline);
 
