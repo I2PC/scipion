@@ -31,6 +31,9 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    double shiftX, shiftY, psi, rot, tilt;
    eprm->get_initial_guess(shiftX, shiftY, rot, tilt, psi);
    double corr=eprm->predict_angles(img,shiftX, shiftY, rot, tilt, psi);
+   img.read(img.name());
+   img.set_eulerAngles(rot,tilt,psi);
+   img.set_originOffsets(shiftX,shiftY);   
    return TRUE;
 }
 
