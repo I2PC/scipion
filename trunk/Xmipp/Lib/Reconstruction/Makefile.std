@@ -39,7 +39,7 @@ LIBDIRS         = Src Programs/Src
 
 SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Src/projection.o Src/volume_FOMs.o Src/radon.o \
-           Src/Gibbs.o \
+           Src/Gibbs.o Src/directions.o\
            Programs/Src/Prog_project.o \
            Programs/Src/Prog_evaluate.o \
            Programs/Src/Prog_evaluate_FSCs.o \
