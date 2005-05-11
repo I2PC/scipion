@@ -633,6 +633,7 @@ void Prog_assign_CTF_prm::process() {
 	      Filter_Out()*=Filter_Out();
 	      if (N==1) Filter_ARMA_avg()=Filter_Out();
 	      else      Filter_ARMA_avg()+=Filter_Out();
+              if (ARMA_averaging) Filter_ARMA_avg.write("PPPARMAavg.fft");
 	      if (N==1 && ARMA_averaging)
 	         system("xmipp_show -img PPPARMAavg.fft -poll &");
 	   }
@@ -647,6 +648,7 @@ void Prog_assign_CTF_prm::process() {
 	*****************************************************************************/
 	FileName fn_ARMA_avg, fn_ARMA_avg_model;
 	if (ARMA_averaging || Periodogram_averaging) {
+	   system("rm PPPARMAavg.fft");
 	   FileName fn_root=image_fn.remove_directories();
 	   fn_root=fn_root.without_extension();
 	   Filter_ARMA_avg()/=div_Number;
