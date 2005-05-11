@@ -29,6 +29,9 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Prog_angular_predict_prm *eprm=(Prog_angular_predict_prm *) prm;
    double shiftX, shiftY, psi, rot, tilt;
    double corr=eprm->predict_angles(img,shiftX, shiftY, rot, tilt, psi);
+   img.read(img.name());
+   img.set_eulerAngles(rot,tilt,psi);
+   img.set_originOffsets(shiftX,shiftY);   
    return TRUE;
 }
 
