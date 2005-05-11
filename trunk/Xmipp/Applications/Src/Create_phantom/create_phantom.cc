@@ -75,43 +75,6 @@ void Usage (char *argv[]) {
       "\n    -i <description file>"
       "\n    -o <output file>"
       ,argv[0]);
-   printf(
-      "\nStructure of Parameter file:"
-      "\n"
-      "# Phantom description file, (generated with phantom help)\n"
-      "# General Volume Parameters:\n"
-      "#      Xdim      Ydim      Zdim   Background Density [Scale Factor]\n"
-      "        65        65        65        0                   [1]\n"
-      "# Feature Parameters:\n"
-      "#Type +/= Density X_Center Y_Center Z_Center\n"
-      " sph   +     1      <x0>     <y0>     <z0>    <radius>\n"
-      " blo   +     1      <x0>     <y0>     <z0>    <radius>  <alpha>  <order> \n"
-      " cyl   +     1      <x0>     <y0>     <z0>    <radius>            <height>               <rot> <tilt> <psi>\n"
-      " dcy   +     1      <x0>     <y0>     <z0>    <radius>            <height>  <separation> <rot> <tilt> <psi>\n"
-      " cub   =     1      <x0>     <y0>     <z0>    <xdim>     <ydim>    <zdim>                <rot> <tilt> <psi>\n"
-      " ell   =     1      <x0>     <y0>     <z0>    <xradius> <yradius> <zradius>              <rot> <tilt> <psi>\n"
-      " con   +     1      <x0>     <y0>     <z0>    <radius>            <height>               <rot> <tilt> <psi>\n"
-   );
-   printf(
-      "\n"
-      "Where:\n"
-      "sph --> sphere, with center at (x0,y0,z0) and radius in pixels <radius>\n"
-      "blo --> blob, with center at (x0,y0,z0), max_radius in pixels <radius>\n"
-      "        alpha is the tampering parameter and the order should be self evident\n" 
-      "cyl --> cylinder, initially with base at plane XY and height in Z (-h/2 to h/2)\n"
-      "        and then it is moved to (x0,y0,z0) (its center) and rotated after\n"
-      "        (tilt,rot,psi)\n"
-      "dcy --> double cylinder, initially with base at plane XY and height in Z\n"
-      "        (-h/2 to h/2), then it is moved to (x0,y0,z0) and rotated after\n"
-      "        (tilt,rot,psi)\n"
-      "cub --> cube of size (xdim,ydim,zdim) whose center is moved to (x0,y0,z0)\n"
-      "        and rotated\n"
-      "ell --> ellipsoid with 3 radius and then moved and rotated\n"
-      "con --> cone, initially with base at plane XY and height in Z (-h/2 to h/2),\n"
-      "        and then the center of the base is moved to (x0,y0,z0) and rotated\n"
-      " +  --> the features can overlap and add their densities at overlapping positions\n"
-      " =  --> the overlapping positions will keep the last feature density\n"
-   );
    exit(1);
 }
 
