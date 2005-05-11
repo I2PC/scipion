@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
    // Scale a single image -------------------------------------------------
    if (Is_ImageXmipp(fn_input)) {
       image.read(fn_input);
-      image().self_scale_to_size(ydim, xdim);
+      image().self_scale_to_size_Bspline(3,ydim, xdim);
       if (fn_out=="") image.write(fn_input);
       else            image.write(fn_out);
       
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
          // Process an image ...............................................
          if (Is_ImageXmipp(fn_in)) {
             image.read(fn_in);
-            image().self_scale_to_size(ydim, xdim);
+            image().self_scale_to_size_Bspline(3,ydim, xdim);
             image.write(fn_out);
          // Process a volume ...............................................
          } else if (Is_VolumeXmipp(fn_in)) {
