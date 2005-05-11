@@ -206,6 +206,15 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    VariabilityClass VC(&prm, Zoutput_volume_size, Youtput_volume_size,
       Xoutput_volume_size);
 
+   // Noisy reconstruction .................................................
+   GridVolume vol_blobs_noisy; // Output volume (only for ART)
+   Projection noisy_projection;
+   SelFile SF_noise, SF_signal;
+   if (prm.noisy_reconstruction) {
+     vol_blobs_noisy=vol_blobs;
+     vol_blobs_noisy.init_zeros();
+   }
+
    // If SIRT set normalizing factor and create output volume ..............
    if (prm.parallel_mode==Basic_ART_Parameters::SIRT ) {
   	ART_numIMG=prm.numIMG;
@@ -279,6 +288,24 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
           read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
           
+      	  // If noisy reconstruction
+	  if (prm.noisy_reconstruction) {
+	     init_random_generator(prm.IMG_Inf[iact_proj].seed);
+	     noisy_projection().resize(read_proj());
+	     noisy_projection().init_random(0,1,"gaussian");
+             noisy_projection.move_origin_to_center();
+             noisy_projection.rot ()=prm.IMG_Inf[iact_proj].rot;
+             noisy_projection.tilt()=prm.IMG_Inf[iact_proj].tilt;
+             noisy_projection.psi ()=prm.IMG_Inf[iact_proj].psi;
+	     if (prm.IMG_Inf[iact_proj].sym==-1 && it==0) {
+	        FileName fn_noise=prm.fn_root+"_noise_proj"+
+		   ItoA(read_proj.name().get_number(),5)+".xmp";
+	        noisy_projection.write(fn_noise);
+	        SF_noise.insert(fn_noise);
+		SF_signal.insert(read_proj.name());
+	     }
+	  }
+ 
           //skipping if  tilt greater than max_tilt
           //tilt is inbetween 0 and 360
           aux_tilt=read_proj.tilt();
@@ -290,12 +317,14 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           }
 
           // Projection extension? .........................................
-          if (prm.proj_ext!=0)
+          if (prm.proj_ext!=0) {
              read_proj().window(
                 STARTINGY (read_proj())-prm.proj_ext,
                 STARTINGX (read_proj())-prm.proj_ext,
                 FINISHINGY(read_proj())+prm.proj_ext,
                 FINISHINGX(read_proj())+prm.proj_ext);
+	     noisy_projection().resize(read_proj());
+	  }
 
          //Skip if desired	  
           if (prm.tell&TELL_ONLY_SYM)
@@ -319,16 +348,31 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
               prm.ray_length, prm.print_system_matrix);
           global_mean_error += mean_error;
+	  if (prm.noisy_reconstruction) {
+	     double noise_mean_error;
+	     ART_single_step(vol_blobs_noisy, &vol_blobs_noisy,
+      		 prm, eprm,
+        	 theo_proj, noisy_projection, prm.IMG_Inf[iact_proj].sym,
+		 diff_proj,  corr_proj, alig_proj,
+        	 noise_mean_error, ART_numIMG, prm.lambda(it),
+		 images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
+        	 prm.ray_length, prm.print_system_matrix);
+	  }
           
           // Force symmetry in the volume ..................................
           // so far only crystallographic
           if (prm.sym_each &&
              act_proj%prm.sym_each==0 &&
-             (act_proj!=0 || prm.sym_each==1))
+             (act_proj!=0 || prm.sym_each==1)) {
              apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
+	     if (prm.noisy_reconstruction)
+		apply_symmetry(vol_blobs_noisy,&vol_blobs_noisy,eprm, prm.grid_type);
+	  }
 
           // Apply POCS ....................................................
 	  POCS.apply(vol_blobs,it,images);
+	  if (prm.noisy_reconstruction)
+	     POCS.apply(vol_blobs_noisy,it,images);
 
           // Variability analysis ..........................................
 	  if (prm.variability_analysis)
@@ -464,6 +508,16 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    
    // Finish variability analysis
    VC.finishAnalysis();
+
+   // Save the noisy reconstruction
+   if (prm.noisy_reconstruction) {
+      VolumeXmipp vol_voxels_noisy;
+      blobs2voxels(vol_blobs_noisy, prm.blob, &vol_voxels_noisy, prm.D, 
+         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+      vol_voxels_noisy.write(prm.fn_root+"_noise.vol");
+      SF_noise.write(prm.fn_root+"_noise_proj.sel");
+      SF_signal.write(prm.fn_root+"_signal_proj.sel");
+   }
 }
 
 /* ------------------------------------------------------------------------- */

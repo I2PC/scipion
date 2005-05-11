@@ -102,7 +102,7 @@ public:
 
    /** Usage message.
        This function shows the way of introducing these parameters. */
-   void usage();
+   void usage_more();
 
    /** Produce Initial and Side information for ART+crystal.
        This function computes from the ART+crystal parameters things like

@@ -65,7 +65,7 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
 }
 
 /* Usage =================================================================== */
-void Crystal_ART_Parameters::usage() {
+void Crystal_ART_Parameters::usage_more() {
   printf (
      "Special Parameters for crystals -----------------------------------\n"
      "    -crystal:            Crystal mode activation\n"

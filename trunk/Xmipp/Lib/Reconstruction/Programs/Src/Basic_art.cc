@@ -64,6 +64,7 @@ void Basic_ART_Parameters::default_values() {
     save_intermidiate_every=0;
     is_crystal         = false;
     variability_analysis=false;
+    noisy_reconstruction=false;
     
     IMG_Inf            = NULL;
     D                  = NULL;
@@ -187,6 +188,12 @@ void Basic_ART_Parameters::default_values() {
        variability_analysis=true; \
        parallel_mode=SIRT; \
        no_it=1; \
+    } \
+    if (CHECK_PARAM("noisy_reconstruction")) { \
+       if (parallel_mode!=ART) \
+          REPORT_ERROR(1,"Basic_ART_Parameters::read: Noisy reconstructions" \
+	     " can only be done for ART"); \
+       else noisy_reconstruction=true; \
     }
 
 void Basic_ART_Parameters::read(int argc, char **argv) {
@@ -252,6 +259,23 @@ void Basic_ART_Parameters::usage() {
      << "Usage: art [Options and Parameters]"
      << "\nOptions:"
      << "\nParameter Values: (note space before value)"
+     << "\n    -i selfile           full name of sel file"
+     << "\n   [-o name]             name of output files, extensions are added"
+     << "\n   [-sym symmfile]       Use a symmetry file"
+     << "\n   [-n noit=1]           number of iterations"
+     << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
+     << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
+     << "\n                         the volume is update every <n> projections"
+     << "\n   [-more_help]          show all parameters"
+     << "\n"
+  ;
+}
+
+void Basic_ART_Parameters::usage_more() {
+  cerr
+     << "Usage: art [Options and Parameters]"
+     << "\nOptions:"
+     << "\nParameter Values: (note space before value)"
      << "\nI/O parameters"
      << "\n    -i selfile           full name of sel file"
      << "\n   [-o name]             name of output files, extensions are added"
@@ -277,6 +301,7 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-POCS_positivity]    Apply positivity constraint"
      << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers\n"
      << "\n   [-variability]        Perform variability analysis"
+     << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
   ;
   cerr
      << "\nIteration parameters"
@@ -339,17 +364,6 @@ void Basic_ART_Parameters::usage() {
      << "\n   [-manual_order]       manual selection of projection order"
      << "\n   [-only_sym]           skip all those symmetries different from -1"
      << "\n"
-  ;
-  cerr
-     << " ================================================================ \n"
-     << " Most common options:"
-     << "\n    -i selfile           full name of sel file"
-     << "\n   [-o name]             name of output files, extensions are added"
-     << "\n   [-sym symmfile]       Use a symmetry file"
-     << "\n   [-n noit=1]           number of iterations"
-     << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
-     << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
-     << "\n                         the volume is update every <n> projections\n"
   ;
 }
 

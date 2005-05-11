@@ -204,6 +204,9 @@ public:
    /// Variability analysis
    bool variability_analysis;
 
+   /// Noisy reconstruction
+   bool noisy_reconstruction;
+
    #define TELL_IV   		     0x100
    #define TELL_ONLY_SYM	     0x80
    #define TELL_USE_INPUT_BLOBVOLUME 0x40
@@ -345,8 +348,12 @@ public:
    void read(const FileName &fn) _THROW;
 
    /** Usage message.
-       This function shows the way of introducing these parameters. */
+       This function shows the way of introducing the most common parameters. */
    void usage();
+
+   /** Full Usage message.
+       This function shows the way of introducing these parameters. */
+   void usage_more();
 
    #define BASIC 0
    #define FULL  1
