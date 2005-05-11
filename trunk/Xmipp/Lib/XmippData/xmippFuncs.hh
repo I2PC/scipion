@@ -370,8 +370,9 @@ void printb(ostream &o,T value);
 /** Reset uniform random generator to a known point.
     If you initialize the random generator with this function each time,
     then the same random sequence will be generated.
-    \\ Ex: init_rnd_unif(); */
-void  init_random_generator();
+    \\ Ex: init_rnd_unif();
+    \\ Ex: init_rnd_unif(17891)*/
+void  init_random_generator(int seed=-1);
 
 /** Reset uniform random generator according to the clock.
     This time the initialisation itself assures a random sequence different

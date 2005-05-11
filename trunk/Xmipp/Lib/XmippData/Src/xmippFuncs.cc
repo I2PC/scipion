@@ -95,7 +95,11 @@ void printb(ostream &o, T value) {
 /* Random functions -------------------------------------------------------- */
 int idum;
 // Uniform distribution ....................................................
-void  init_random_generator()     {idum=-1; ran1(&idum);}
+void  init_random_generator(int seed) {
+   idum=-1; ran1(&idum);
+   if (seed!=-1)
+      for (int i=0; i<seed; i++) ran1(&idum);
+}
 void  randomize_random_generator(){static  unsigned int seed;
                                    int rand_return;
                                    
