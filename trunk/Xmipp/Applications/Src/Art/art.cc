@@ -47,8 +47,12 @@ int main (int argc, char *argv[]) {
       if (crystal_mode) crystal_art_prm.read(argc, argv, art_prm);
    } catch (Xmipp_error &XE) {
       cout << XE;
-      art_prm.usage();
-      crystal_art_prm.usage();
+      bool usage_more=check_param(argc,argv,"-more_help");
+      if (usage_more) {
+	 art_prm.usage_more();
+	 crystal_art_prm.usage_more();
+      } else
+         art_prm.usage();
       exit(1);
    }
 
