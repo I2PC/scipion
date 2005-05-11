@@ -33,6 +33,7 @@
 #include <Reconstruction/projection.hh>
 #include <Reconstruction/directions.hh>
 #include <Reconstruction/symmetries.hh>
+#include <malloc.h>
 
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<(nr_psi); ipsi++ ) 
