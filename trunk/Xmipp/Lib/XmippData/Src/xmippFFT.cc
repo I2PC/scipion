@@ -339,7 +339,6 @@ void correlation_matrix(const matrix2D<T> &m1, const matrix2D<T> &m2,
    CenterFFT(R,true);
 }
 
-
 /* 2D Fourier Ring Correlation ------------------------------------------------ */
 template <class T>
 void fourier_ring_correlation(matrix2D<T> const &m1, matrix2D<T> const &m2, double sam,
