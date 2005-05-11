@@ -153,19 +153,13 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
 
 /* Read parameters --------------------------------------------------------- */
 void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
-   adjust.resize(CTF_PARAMETERS);
-   ctfmodel.enable_CTF=ctfmodel.enable_CTFnoise=TRUE; 
-   ctfmodel.read(fn_param,FALSE);
-   Tm=ctfmodel.Tm; 
-   assign_parameters_from_CTF(ctfmodel,VEC_ARRAY(adjust),0,CTF_PARAMETERS,
-      TRUE); 
-   
    FILE *fh_param; 
    if ((fh_param = fopen(fn_param.c_str(), "r")) == NULL) 
    	 REPORT_ERROR(1,(string)"Prog_Adjust_CTF::read: There is a problem " 
             "opening the file "+fn_param); 
    
    fn_ctf=get_param(fh_param,"ctf",0,"");
+   fn_similar_model=get_param(fh_param,"similar_model",0,"");
    fn_outroot=get_param(fh_param,"output_root",0,"");
       if (fn_outroot=="") fn_outroot=fn_ctf.without_extension();
    fn_out_CTF_parameters=get_param(fh_param,"out_CTF_parameters",0,"");
@@ -180,6 +174,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
       accuracy/=100; 
    evaluation_reduction=AtoI(get_param(fh_param,"eval_red",0,"4")); 
    astigmatic_noise=check_param(fh_param,"astigmatic_noise");
+   cout << "Aqui:" << astigmatic_noise << endl;
    autofocus=!check_param(fh_param,"do_not_autofocus");
    
    if (check_param(fh_param,"steps")) 
@@ -199,6 +194,14 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
       weight(3)=15;
       weight(5)=415;
    } 
+
+   adjust.resize(CTF_PARAMETERS);
+   ctfmodel.enable_CTF=ctfmodel.enable_CTFnoise=TRUE; 
+   if (fn_similar_model=="") ctfmodel.read(fn_param,FALSE);
+   else                      ctfmodel.read(fn_similar_model,FALSE);
+   Tm=ctfmodel.Tm; 
+   assign_parameters_from_CTF(ctfmodel,VEC_ARRAY(adjust),0,CTF_PARAMETERS,
+      TRUE); 
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -213,6 +216,8 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
    fh_param << "# Adjust CTF parameters\n";
    if (fn_ctf!="")
       fh_param << "ctf="               << fn_ctf                  << endl;
+   if (fn_similar_model!="")
+      fh_param << "similar_model="     << fn_similar_model        << endl;
    if (fn_outroot!="")
       fh_param << "output_root="       << fn_outroot              << endl;
    if (fn_out_CTF_parameters!="" && fn_out_CTF_parameters!="_model.param")
@@ -246,6 +251,7 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
 /* Show -------------------------------------------------------------------- */
 void Adjust_CTF_Parameters::show() {
    cout << "CTF file:          " << fn_ctf << endl
+        << "Similar model:     " << fn_similar_model << endl
 	<< "Penalty:           " << penalty << endl
 	<< "Min Freq.:         " << min_freq << endl
 	<< "Max Freq.:         " << max_freq << endl
@@ -267,6 +273,7 @@ void Adjust_CTF_Parameters::Usage() {
         << "   Where the parameters file may contain the description of a\n"
         << "      CTF and CTFnoise plus any of the following parameters\n"
 	<< "   [ctf=<Fourier Xmipp Image>] : CTF file\n"
+	<< "   [similar_model=<CTF and CTFnoisemodel>]: If known\n"
         << "   [output_root=<root name>]   : Output files are generated using\n"
         << "                                 this root name. By default, the root\n"
         << "                                 name of the ctf= option is used\n"

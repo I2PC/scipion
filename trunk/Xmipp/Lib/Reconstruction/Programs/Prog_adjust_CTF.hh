@@ -37,6 +37,8 @@ class Adjust_CTF_Parameters
 public:
    /// CTF filename
    FileName             fn_ctf;
+   /// Model to which the current one must be similar
+   FileName             fn_similar_model;
    /// Output rootname
    FileName             fn_outroot;
    /// Output CTF parameter file
