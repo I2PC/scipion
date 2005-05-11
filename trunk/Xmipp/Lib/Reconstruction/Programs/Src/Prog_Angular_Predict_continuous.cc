@@ -45,7 +45,7 @@ int cstregistration( struct cstregistrationStruct *Data);
 
 // Empty constructor =======================================================
 Prog_angular_predict_continuous_prm::Prog_angular_predict_continuous_prm() {
-   each_image_produces_an_output=false;
+   each_image_produces_an_output=true;
 }
 
 // Read arguments ==========================================================
@@ -57,6 +57,7 @@ void Prog_angular_predict_continuous_prm::read(int argc, char **argv) _THROW {
    gaussian_DFT_sigma=AtoF(get_param(argc,argv,"-gaussian_Fourier","0.5"));
    gaussian_Real_sigma=AtoF(get_param(argc,argv,"-gaussian_Real","0.5"));
    max_no_iter=AtoI(get_param(argc,argv,"-max_iter","60"));
+   dont_modify_header=check_param(argc,argv,"-dont_modify_header");
    produce_side_info();
 }
 
@@ -69,6 +70,7 @@ void Prog_angular_predict_continuous_prm::show() {
 	<< "Gaussian Fourier:   " << gaussian_DFT_sigma  << endl
         << "Gaussian Real:      " << gaussian_Real_sigma << endl
         << "Max. Iter:          " << max_no_iter         << endl
+	<< "Modify header:  " << !dont_modify_header << endl
    ;
 }
 
@@ -83,6 +85,8 @@ void Prog_angular_predict_continuous_prm::usage() {
         << "  [-gaussian_Fourier <s=0.5>]: Weighting sigma in Fourier space\n"
         << "  [-gaussian_Real    <s=0.5>]: Weighting sigma in Real space\n"
         << "  [-max_iter <max=60>]      : Maximum number of iterations\n"
+	<< "  [-dont_modify_header]     : Don't save the parameters in the\n"
+        << "                              image header\n"
    ;
 }
 
@@ -153,6 +157,10 @@ void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
       &Status); 
    CenterFFT(reDFTVolume,true);
    CenterFFT(imDFTVolume,true);
+
+   // If dont_modify_header
+   if (dont_modify_header)
+      each_image_produces_an_output=false;
 }
 
 // Predict =================================================================

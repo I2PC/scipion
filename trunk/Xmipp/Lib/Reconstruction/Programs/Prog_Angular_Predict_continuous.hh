@@ -52,6 +52,8 @@ public:
    double   gaussian_Real_sigma;
    /** Maximum number of iterations */
    int      max_no_iter;
+   /** Do not modify headers */
+   bool     dont_modify_header;
 public:
    // Real part of the Fourier transform
    matrix3D<double> reDFTVolume;
