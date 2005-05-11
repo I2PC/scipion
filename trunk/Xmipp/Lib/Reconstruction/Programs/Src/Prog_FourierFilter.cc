@@ -143,17 +143,19 @@ void FourierMask::show() {
 
 /* Usage ------------------------------------------------------------------- */
 void FourierMask::usage() {
-   cerr << "   -low_pass  <w1>          : Cutoff freq (<1/2 or A)\n"
-        << "   -high_pass <w1>          : Cutoff freq (<1/2 or A)\n"
-        << "   -band_pass <w1> <w2>     : Cutoff freq (<1/2 or A)\n"
-        << "   -stop_band <w1> <w2>     : Cutoff freq (<1/2 or A)\n"
-        << "  [-sampling <ang>]         : If provided pass frequencies are taken\n"
-        << "                              in Angstroms (otherwise dig. freq.)\n"
-        << "  [-fourier_mask raised_cosine <w=0.02>]: The default filter has \n"
-        << "                                          raised cosine edges with w=0.02 \n"
-        << "  [-fourier_mask <file>]                : Provide a Fourier file \n"
-        << "  [-fourier_mask ctf]                   : Provide a CTF file \n"
-     ;
+   cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
+        << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
+        << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
+        << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
+        << "   -fourier_mask <file>              : Provide a Fourier file\n"
+        << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
+        << "   -fourier_mask ctf                 : In that case the following\n"
+	<< "                                       parameters apply\n"
+        << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
+        << "                                       are taken in Angstroms\n"
+   ;
+   //cerr << "CTF parameters -----------------------------\n";
+   //ctf.Usage();
 }
 
 /* Generate mask for a resized image --------------------------------------- */
