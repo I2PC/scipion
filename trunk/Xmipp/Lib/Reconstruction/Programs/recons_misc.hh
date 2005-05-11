@@ -65,6 +65,11 @@ struct Recons_info {
        is related to (-1: without symmetry, 0: using symmetry matrix 0,
        1: using symmetry matrix 1 ...) */
    int    sym;
+   /** Random seed.
+       For the reconstruction of pure noise for VSSNR, all images
+       coming from the same projection by symmetry relationships should
+       have the same random seed. */
+   int    seed;
 }; 
 
 /** Build from a Selection File and a Symmetry List. 
@@ -72,7 +77,6 @@ struct Recons_info {
     to NULL when it is not initialized. */
 void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
    const SymList &SL, Recons_info * &IMG_Inf, bool do_not_use_symproj);
-
 //@}
 
 /* ------------------------------------------------------------------------- */

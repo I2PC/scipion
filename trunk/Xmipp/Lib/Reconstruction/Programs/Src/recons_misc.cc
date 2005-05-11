@@ -79,6 +79,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
         if      (is_ctf_unique) IMG_Inf[i].fn_ctf = fn_ctf;
         else if (is_there_ctf)  IMG_Inf[i].fn_ctf = fn_ctf1;
         IMG_Inf[i].sym     = -1;
+        IMG_Inf[i].seed    = ROUND(65535*rnd_unif());
         read_proj.get_eulerAngles(IMG_Inf[i].rot,IMG_Inf[i].tilt,IMG_Inf[i].psi);
         EULER_CLIPPING(IMG_Inf[i].rot,IMG_Inf[i].tilt,IMG_Inf[i].psi);
 
@@ -87,6 +88,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
            for (int j=0; j<SL.SymsNo(); j++) {
                int sym_index=SYMINDEX(SL,j,i,trueIMG);
                IMG_Inf[sym_index].fn_proj=IMG_Inf[i].fn_proj;
+               IMG_Inf[sym_index].seed   =IMG_Inf[i].seed;
                if (is_ctf_unique)     IMG_Inf[sym_index].fn_ctf = fn_ctf;
 	       else if (is_there_ctf) IMG_Inf[sym_index].fn_ctf = IMG_Inf[i].fn_ctf;
                IMG_Inf[sym_index].sym=j;
@@ -126,8 +128,10 @@ VariabilityClass::VariabilityClass(Basic_ART_Parameters *_prm,
 void VariabilityClass::newIteration() {
 }
 
+//#define MODE7
 #define MODE8
 //#define MODE15
+//#define DEBUG
 void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
    Projection &read_proj) {
    VolumeXmipp vol_voxels;
@@ -141,6 +145,10 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
    
    // Make the DWT
    matrix3D<double> DWTV;
+   #ifdef MODE7
+      int DWT_iterations=2;
+      int keep_from_iteration=0;
+   #endif
    #ifdef MODE8
       int DWT_iterations=2;
       int keep_from_iteration=0;
@@ -150,6 +158,10 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
       int keep_from_iteration=0;
    #endif
    Bilib_DWT(vol_voxels(),DWTV,DWT_iterations);
+   #ifdef DEBUG
+      vol_voxels.write("PPPVariability.vol");
+      char c; cout << "Press any key\n"; cin >> c;
+   #endif
    
    // Select the LLL block and keep it
    int x1, x2, y1, y2, z1, z2;
@@ -158,6 +170,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
    STARTINGZ(DWTV)=STARTINGY(DWTV)=STARTINGX(DWTV)=0;
    VA.push_back(DWTV);
 }
+#undef DEBUG
 
 #define DEBUG
 void VariabilityClass::finishAnalysis() {
@@ -168,24 +181,29 @@ void VariabilityClass::finishAnalysis() {
    matrix2D<int> coocurrence(nmax,nmax);
 
    // Study each voxel
-   VolumeXmipp Significant;
+   VolumeXmipp SignificantT2, SignificantMaxRatio, SignificantMinRatio;
    int zsize=ZSIZE(VA[0])/2;
    int ysize=YSIZE(VA[0])/2;
    int xsize=XSIZE(VA[0])/2;
    int zsize2=ZSIZE(VA[0])/4;
    int ysize2=YSIZE(VA[0])/4;
    int xsize2=XSIZE(VA[0])/4;
-   Significant().init_zeros(zsize,ysize,xsize);
+   SignificantT2().init_zeros(zsize,ysize,xsize);
+   SignificantMaxRatio().init_zeros(zsize,ysize,xsize);
+   SignificantMinRatio().init_zeros(zsize,ysize,xsize);
    cerr << "Classifying voxels ...\n";
-   init_progress_bar(MULTIDIM_SIZE(Significant()));
+   init_progress_bar(MULTIDIM_SIZE(SignificantT2()));
    int counter=0, nxny=ysize*zsize;
+   #ifdef MODE7
+      #define NFEATURES 7
+   #endif
    #ifdef MODE8
       #define NFEATURES 8
    #endif
    #ifdef MODE15
       #define NFEATURES 15
    #endif
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(Significant()) {
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(SignificantT2()) {
       // Save the data for this voxel 
       ofstream fh_dat;
       fh_dat.open("PPP.dat");
@@ -198,6 +216,15 @@ void VariabilityClass::finishAnalysis() {
       for (int n=0; n<nmax; n++) {
          matrix1D<double> v_aux(NFEATURES);
 
+         #ifdef MODE7
+	    v_aux( 0)=VA[n](      k,      i,j+xsize);
+	    v_aux( 1)=VA[n](      k,i+ysize,      j);
+	    v_aux( 2)=VA[n](      k,i+ysize,j+xsize);
+	    v_aux( 3)=VA[n](k+zsize,      i,      j);
+	    v_aux( 4)=VA[n](k+zsize,      i,j+xsize);
+	    v_aux( 5)=VA[n](k+zsize,i+ysize,      j);
+	    v_aux( 6)=VA[n](k+zsize,i+ysize,j+xsize);
+	 #endif
          #ifdef MODE8
             v_aux( 0)=VA[n](      k,      i,      j);
 	    v_aux( 1)=VA[n](      k,      i,j+xsize);
@@ -225,6 +252,9 @@ void VariabilityClass::finishAnalysis() {
 	    v_aux(13)=VA[n](k+zsize,i+ysize,      j);
 	    v_aux(14)=VA[n](k+zsize,i+ysize,j+xsize);
 	 #endif
+	 v_aux=v_aux*v_aux;
+	 // COSS: Doesn't work: v_aux=v_aux.sort();
+	 
 	 fh_dat << v_aux.transpose() << endl;
 	 v.push_back(v_aux);
       }
@@ -289,11 +319,11 @@ void VariabilityClass::finishAnalysis() {
 	 }
       #endif
 
-      matrix2D<double> T2;
+      matrix2D<double> T2, covariance;
       if (NFEATURES>1) {
          // Perform T2-Hotelling test
 	 matrix1D<double> avg_diff=avg1-avg0;
-	 matrix2D<double> covariance=1.0/(N0+N1-2)*
+	 covariance=1.0/(N0+N1-2)*
             ((N0-1)*covariance0+(N1-1)*covariance1);
 	 covariance*=(1.0/N0+1.0/N1);
 	 aux.from_vector(avg_diff);
@@ -308,6 +338,13 @@ void VariabilityClass::finishAnalysis() {
 	 T2.init_zeros(1,1); T2(0,0)=t;
       }
 
+      // Analysis of the covariance structure
+      matrix1D<double> eigenvalues;
+      if (NFEATURES>1) {
+	 matrix2D<double> U, V;
+	 svdcmp(covariance,U,eigenvalues,V);
+      }
+
       // Analysis of the coocurrences
       for (int n=0; n<XSIZE(idx0); n++)
           for (int np=n+1; np<XSIZE(idx0); np++)
@@ -318,20 +355,26 @@ void VariabilityClass::finishAnalysis() {
 	     if (idx1(n) && idx1(np)) coocurrence(n,np)++;
 
       // Keep results
-      Significant(k,i,j)=T2(0,0);
+      SignificantT2(k,i,j)=T2(0,0);
+      if (NFEATURES>1) {
+         SignificantMinRatio(k,i,j)=eigenvalues(1)/eigenvalues(0);
+         SignificantMaxRatio(k,i,j)=eigenvalues(NFEATURES-1)/eigenvalues(0);
+      }
       #ifdef DEBUG
          cout << "T2 for this classification is " << T2(0,0) << endl;
+         cout << "Eigenvalues are " << eigenvalues.transpose() << endl;
       #endif
       if (++counter%nxny==0) progress_bar(counter);
    }
-   progress_bar(MULTIDIM_SIZE(Significant()));
-   Significant.write(prm->fn_root+"_variability.vol");
+   progress_bar(MULTIDIM_SIZE(SignificantT2()));
+   SignificantT2.write(prm->fn_root+"_variability.vol");
+   SignificantMinRatio.write(prm->fn_root+"_minratio.vol");
+   SignificantMaxRatio.write(prm->fn_root+"_maxratio.vol");
    system("rm PPP.dat PPP.cod PPP.vs PPP.err PPP.his PPP.inf PPP.0 PPP.1");
    
-   for (int n=0; n<nmax; n++) {
+   for (int n=0; n<nmax; n++)
        for (int np=n+1; np<nmax; np++)
           coocurrence(np,n)=coocurrence(n,np);
-   }
    ImageXmipp save; type_cast(coocurrence,save());
    save.write(prm->fn_root+"_coocurrence.xmp");
 }
