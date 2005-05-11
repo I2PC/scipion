@@ -905,6 +905,18 @@ public:
        exception is thrown.
        \\Ex: V3=V1/V2; */
    GridVolumeT<T> operator / (const GridVolumeT<T> &GV) _THROW;
+
+   /** Sum another volume. */
+   void operator += (const GridVolumeT<T> &GV);
+
+   /** Substract another volume.*/
+   void operator -= (const GridVolumeT<T> &GV);
+
+   /** Multiply by another volume.*/
+   void operator *= (const GridVolumeT<T> &GV);
+
+   /** Divide by another volume.*/
+   void operator /= (const GridVolumeT<T> &GV);
    //@}
    //@}
    

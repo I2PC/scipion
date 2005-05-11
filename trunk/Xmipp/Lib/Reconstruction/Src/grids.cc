@@ -615,6 +615,36 @@ template <class T>
 GridVolumeT<T> GridVolumeT<T>::operator / (const GridVolumeT<T> &GV) _THROW
    {GRIDVOL_BY_GRIDVOL('/');}
 
+#define GRIDVOL_BY_GRIDVOLASSIG(op) \
+   if (VolumesNo()!=GV.VolumesNo()) \
+      REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different number of subvolumes");\
+   \
+   for (int i=0; i<VolumesNo(); i++) { \
+       try { \
+          array_by_array((*this)(i)(),GV(i)(),(*this)(i)(),op); \
+       } catch (Xmipp_error XE) {\
+          cout << XE; \
+          REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different shape of volume " +\
+             ItoA(i)); \
+       } \
+   }
+
+template <class T> 
+void GridVolumeT<T>::operator += (const GridVolumeT<T> &GV)
+   {GRIDVOL_BY_GRIDVOLASSIG('+');}
+
+template <class T> 
+void GridVolumeT<T>::operator -= (const GridVolumeT<T> &GV)
+   {GRIDVOL_BY_GRIDVOLASSIG('-');}
+
+template <class T> 
+void GridVolumeT<T>::operator *= (const GridVolumeT<T> &GV)
+   {GRIDVOL_BY_GRIDVOLASSIG('*');}
+
+template <class T> 
+void GridVolumeT<T>::operator /= (const GridVolumeT<T> &GV)
+   {GRIDVOL_BY_GRIDVOLASSIG('/');}
+
 // Write a Grid volume -----------------------------------------------------
 template <class T> 
 void GridVolumeT<T>::write(const FileName &fn) const {
@@ -894,6 +924,7 @@ template <class T>
    Gx.grid();// Constant access to the whole grid
    Gx+number;Gx-number;Gx*number;Gx/number;
    GVc+Gx; GVc-Gx;GVc*Gx;GVc/Gx;
+   GVc+=Gx; GVc-=Gx;GVc*=Gx;GVc/=Gx;
    Gx.read("kk"); Gx.write("kk");
    cout << Gx;
    Gx.VolumesNo();
