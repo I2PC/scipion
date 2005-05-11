@@ -143,6 +143,13 @@
            const matrix3D<int> *mask=NULL,
 		   matrix3D<double> *Contributions=NULL);
 
+/** Translational search.
+    This function returns the best interpolated shift for the alignment
+    of two images. You can restrict the shift to a region defined by a mask
+    (the maximum will be sought where the mask is 1). */
+    void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
+       double &shiftX, double &shiftY, const matrix2D<int> *mask=NULL);
+
 /** euclidian_distance 1D.
     Return the SQRT[sum{(x-y)*(x-y)}]
 	in the common positions. */

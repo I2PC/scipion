@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "../xmippFilters.hh"
+#include "../xmippFFT.hh"
 #include<list>
 
 /* Substract background ---------------------------------------------------- */
@@ -506,6 +507,61 @@ template <class T>
    }
    
    if (n!=0) return retval/((stddev_x*stddev_y)*n); else return 0;
+}
+
+/* Best shift -------------------------------------------------------------- */
+void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
+   double &shiftX, double &shiftY, const matrix2D<int> *mask) {
+   int              imax,jmax,i_actual,j_actual;
+   double           max,xmax,ymax,sumcorr,avecorr,stdcorr,dummy;
+   float            xshift,yshift,shift;
+   int              n_max=-1;
+   bool             neighbourhood=TRUE;
+   matrix2D<double> Mcorr;
+
+   correlation_matrix(I1,I2,Mcorr);
+ 
+   // Adjust statistics within shiftmask to average 0 and stddev 1
+   if (mask!=NULL) {
+      compute_stats_within_binary_mask(*mask,Mcorr,dummy,dummy,avecorr,stdcorr);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        if (MAT_ELEM(*mask,i,j)) 
+	   MAT_ELEM(Mcorr,i,j)=(MAT_ELEM(Mcorr,i,j)-avecorr)/stdcorr;
+        else MAT_ELEM(Mcorr,i,j)=0.;
+   } else
+      Mcorr.statistics_adjust(0,1);
+   Mcorr.max_index(imax,jmax);
+   max=MAT_ELEM(Mcorr,imax,jmax);
+
+   while (neighbourhood) {
+      n_max ++;
+      for (int i=-n_max; i <= n_max; i++)
+          for (int j=-n_max; j <= n_max; j++) {
+              i_actual = i+imax;
+              j_actual = j+jmax;
+              if (i_actual < STARTINGY(Mcorr)  || j_actual < STARTINGX(Mcorr) ||
+        	  i_actual > FINISHINGY(Mcorr) || j_actual > FINISHINGX(Mcorr) )
+        	 neighbourhood=FALSE;
+              else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
+        	  neighbourhood=FALSE;
+	  }
+   }
+
+   // We have the neighbourhood => looking for the gravity centre
+   xmax = ymax = sumcorr = 0.;
+   for (int i=-n_max; i <= n_max; i++)
+       for (int j=-n_max; j <= n_max; j++) {
+	 i_actual = i+imax;
+	 j_actual = j+jmax;
+         if (i_actual >= STARTINGY(Mcorr)  && j_actual >= STARTINGX(Mcorr) &&
+             i_actual <= FINISHINGY(Mcorr) && j_actual <= FINISHINGX(Mcorr)) {
+            ymax += i_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
+            xmax += j_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
+            sumcorr += MAT_ELEM(Mcorr,i_actual,j_actual);
+	 }
+   }
+   shiftX=xmax /sumcorr;
+   shiftY=ymax /sumcorr;
 }
 
 /* Euclidian distance ------------------------------------------------------ */
