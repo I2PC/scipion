@@ -307,8 +307,11 @@ void Second_Quadrant_Neighbors(int N, int M,matrix2D<double> &Neighbors)
 /**************************************************************************/
 void advert_of_ill_condition(void)
 {
-   cerr << "Warning: ARMA filter for this image is ill-conditioned.\n" 
-        << "         Some values of the filter couldn't not be correct.\n";
+   static bool message_shown=false;
+   if (!message_shown)
+      cerr << "Warning: ARMA filter for this image is ill-conditioned.\n" 
+           << "         Some values of the filter may not be correct.\n";
+   message_shown=true;
 }
 
 // ****************************************************************************************
