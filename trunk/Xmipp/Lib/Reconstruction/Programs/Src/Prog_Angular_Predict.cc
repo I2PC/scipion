@@ -31,12 +31,20 @@
 #include <XmippData/xmippGeometry.hh>
 #include <XmippData/xmippWavelets.hh>
 #include <XmippData/xmippMasks.hh>
+#include <XmippData/xmippFilters.hh>
+
+// Empty constructor =======================================================
+Prog_angular_predict_prm::Prog_angular_predict_prm() {
+   each_image_produces_an_output=true;
+}
 
 // Read arguments ==========================================================
 void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
+   extended_usage=check_param(argc,argv,"-more_help");
+   if (extended_usage) REPORT_ERROR(1,"");
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
-   fn_ang=get_param(argc,argv,"-ang");
+   fn_ang=get_param(argc,argv,"-ang","");
    fn_out_ang=get_param(argc,argv,"-oang");
    fn_sym=get_param(argc,argv,"-sym","");
    max_proj_change=AtoF(get_param(argc,argv,"-max_proj_change","-1"));
@@ -50,10 +58,13 @@ void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
    check_mirrors=!check_param(argc,argv,"-do_not_check_mirrors");
    pick=AtoI(get_param(argc,argv,"-pick","1"));
    dont_apply_geo=check_param(argc,argv,"-dont_apply_geo");
+   dont_modify_header=check_param(argc,argv,"-dont_modify_header");
+   proj_step=AtoF(get_param(argc,argv,"-proj_step","5"));
    tell=0;
    if (check_param(argc,argv,"-show_rot_tilt")) tell|=TELL_ROT_TILT;
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
+   search5D=check_param(argc,argv,"-5D");
    produce_side_info();
 }
 
@@ -66,6 +77,7 @@ void Prog_angular_predict_prm::show() {
 	<< "Max proj change: " << max_proj_change << endl
 	<< "Max psi change: " << max_psi_change << " step: " << psi_step << endl
 	<< "Max shift change: " << max_shift_change << " step: " << shift_step << endl
+	<< "Proj step: " << proj_step << endl
         << "Keep %: " << th_discard << endl
         << "smin: " << smin << endl
         << "smax: " << smax << endl
@@ -73,20 +85,39 @@ void Prog_angular_predict_prm::show() {
 	<< "Pick: " << pick << endl
 	<< "Dont apply geo: " << dont_apply_geo << endl
         << "Show level: " << tell << endl
+	<< "Modify header:  " << !dont_modify_header << endl
+	<< "5D search: " << search5D << endl
    ;
 }
 
 // usage ===================================================================
 void Prog_angular_predict_prm::usage() {
    Prog_parameters::usage();
-   cerr << "   -ref <selfile>           : Selfile with the reference images\n"
-	<< "   -ang <angle file>        : DocFile with the angles for the reference\n"
+   if (extended_usage) more_usage();
+   else {
+      cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
+           << "                              If a volume is given, supply -proj_step\n"
+	   << "   -oang <angle file>       : DocFile with output angles\n"
+           << "  [-sym <symmetry file>]    : Symmetry file if any\n"
+	   << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
+	   << "  [-dont_modify_header]     : Don't save the parameters in the\n"
+           << "                              image header\n"
+	   << "  [-more_help]              : Show all options\n"
+      ;
+   }
+}
+
+void Prog_angular_predict_prm::more_usage() {
+   cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
+        << "                              If a volume is given, supply -proj_step\n"
+	<< "  [-ang <angle file>]       : DocFile with the angles for the reference\n"
 	<< "                              produced by xmipp_project\n"
 	<< "   -oang <angle file>       : DocFile with output angles\n"
         << "  [-sym <symmetry file>]    : Symmetry file if any\n"
 	<< "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
 	<< "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
 	<< "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
+	<< "  [-proj_step <ang=5>]      : Projection (rot-tilt) step\n"
 	<< "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
 	<< "  [-shift_step <r=1>]       : Step in shift in pixels\n"
         << "  [-keep <th=50%>]          : How many images are kept each round\n"
@@ -102,16 +133,61 @@ void Prog_angular_predict_prm::usage() {
 	<< "  [-show_psi_shift]         : Show the psi-shift process\n"
 	<< "  [-show_options]           : Show final options among which\n"
 	<< "                              the angles are selected\n"
+	<< "  [-dont_modify_header]     : Don't save the parameters in the\n"
+        << "                              image header\n"
+	<< "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
    ;
 }
 
 // Produce side information ================================================
 void Prog_angular_predict_prm::produce_side_info() _THROW {
+   volume_mode=false;
+   
    // Information for the SF_main
-   each_image_produces_an_output=false;
    allow_time_bar=(tell==0);
 
    // Read input reference image names
+   if (Is_VolumeXmipp(fn_ref)) {
+      volume_mode=true;
+      cerr << "Generating reference projections ...\n";
+      VolumeXmipp V; V.read(fn_ref);
+      // Generate the reference projections internally
+      FileName fn_proj_param;
+      randomize_random_generator();
+      fn_random=ItoA(ROUND(10000*rnd_unif()));
+      fn_proj_param=(string)"proj"+fn_random+".param";
+      ofstream fh_proj_param;
+      fh_proj_param.open(fn_proj_param.c_str());
+      if (!fh_proj_param)
+         REPORT_ERROR(1,(string)"Prog_angular_predict_prm::produce_side_info:"
+	    " Cannot open "+fn_proj_param+" for output");
+      int rotF=FLOOR(360.0-proj_step);
+      int tiltF=FLOOR(180.0-proj_step);
+      fh_proj_param
+          << fn_ref << endl // Volume to project
+          << "reference" << fn_random << "_ 1 xmp\n" // projection name
+	  << XSIZE(V()) << " " << XSIZE(V()) << endl
+	  << "NULL\n" // External angles
+	  << "0 " << rotF  << " " << ROUND(1.0+rotF/proj_step)  << " even\n"
+	  << "0 " << tiltF << " " << ROUND(1.0+tiltF/proj_step) << "\n"
+	  << "0\n"
+	  << "0\n"
+	  << "0\n"
+	  << "0\n"
+	  << "0\n"
+	  << "0\n"
+      ;
+      fh_proj_param.close();
+      fn_ref=(string)"ref"+fn_random+".sel";
+      system(((string)"xmipp_project -i "+fn_proj_param+" -o "+fn_ref).c_str());
+      system(((string)"rm -f "+fn_proj_param).c_str());
+      fn_ang=(string)"reference"+fn_random+"__movements.txt";
+   } else {
+      if (fn_ang=="")
+         REPORT_ERROR(1,"Prog_angular_predict_prm::produce_side_info:"
+	    " using a reference selfile you must supply -ang option");
+   }
+   
    SF_ref.read(fn_ref);
    int refYdim, refXdim;
    SF_ref.ImgSize(refYdim, refXdim);
@@ -184,6 +260,10 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
    
    // Save a little space
    SF_ref.clear();
+
+   // If dont_modify_header
+   if (dont_modify_header)
+      each_image_produces_an_output=false;
 }
 
 // Produce library -----------------------------------------------------------
@@ -207,6 +287,7 @@ void Prog_angular_predict_prm::produce_library() _THROW {
    int n=0, nstep=MAX(1,number_of_imgs/60); // For progress bar
    while (!SF_ref.eof()) {
       I.read(SF_ref.NextImg(),FALSE,FALSE,TRUE,TRUE);
+      library_name.push_back(I.name());
       
       // Make and distribute its DWT coefficients in the different PCA bins
       I().statistics_adjust(0,1);
@@ -601,6 +682,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                   vproj_error, vproj_compact, vang_jump, vscore;
    vector<int>    vref_idx;
    
+   double backup_max_shift_change=max_shift_change;
+   if (!search5D) max_shift_change=0;
+
    for (int mirror=0; mirror<=check_mirrors; mirror++)
       for (double shiftX=Xoff-max_shift_change; shiftX<=Xoff+max_shift_change; shiftX+=shift_step)
          for (double shiftY=Yoff-max_shift_change; shiftY<=Yoff+max_shift_change; shiftY+=shift_step) {
@@ -828,6 +912,24 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       ibest=candidate_local_maxima[jbest];
    }
    
+   // Is it a 3D+2D search?
+   if (!search5D) {
+      ImageXmipp Iref; Iref.read(library_name[vref_idx[ibest]]);
+      Iref().set_Xmipp_origin();
+      if (Xoff==0 && Yoff==0) Ip()=I();
+      else {
+	 VECTOR_R2(shift,Xoff,Yoff);
+	 I().translate(shift,Ip(),WRAP);
+      }
+
+      double shiftX, shiftY;
+      best_shift(Iref(), Ip(), shiftX, shiftY);
+      if (shiftX*shiftX+shiftY*shiftY>R2) {shiftX=shiftY=0;}
+      vshiftX[ibest]=Xoff+shiftX;
+      vshiftY[ibest]=Yoff+shiftY;
+      max_shift_change=backup_max_shift_change;
+   }
+
    // Take the information of the best image
    best_rot    = vrot[ibest];
    best_tilt   = vtilt[ibest];
@@ -880,4 +982,9 @@ void Prog_angular_predict_prm::finish_processing() {
       DF.append_data_line(v);
    }
    DF.write(fn_out_ang);
+   
+   if (volume_mode) {
+      system(((string)"xmipp_rmsel "+fn_ref+" > /dev/null").c_str());
+      system(((string)"rm -f "+fn_ang).c_str());
+   }
 }

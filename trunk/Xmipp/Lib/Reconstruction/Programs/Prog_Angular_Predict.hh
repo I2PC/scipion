@@ -68,6 +68,8 @@ public:
    int smin;
    /** Maximum scale. Coarsest level */
    int smax;
+   /** Angular step for the even projections in case a volume is provided */
+   double proj_step;
    /** Check mirrors.
       If 1 then mirror versions of the experimental images are also explored.*/
    int check_mirrors;
@@ -83,8 +85,18 @@ public:
    #define TELL_OPTIONS   4
    /** Show level.*/
    int tell;
-
+   /** Do not modify headers */
+   bool dont_modify_header;
+   /** Random filename.
+       This is used for the internally generated projections. */
+   FileName fn_random;
+   /** Extended usage */
+   bool extended_usage;
+   /** 5D search, instead of 3D+2D */
+   bool search5D;
 public:
+   // A reference volume has been provided
+   bool volume_mode;
    // Number of subbands
    int SBNo;
    // Subband size
@@ -97,6 +109,8 @@ public:
    // Vector with all the DWT coefficients of the
    // library
    vector<matrix2D<double> *> library;
+   // Vector with all the names of the library images
+   vector<FileName> library_name;
    // Power of the library images at different
    // subbands
    matrix2D<double> library_power;
@@ -123,6 +137,9 @@ public:
    // Parameters for computing distances
    Prog_angular_distance_prm distance_prm;
 public:
+   /// Empty constructor
+   Prog_angular_predict_prm();
+
    /// Read argument from command line
    void read(int argc, char **argv) _THROW;
 
@@ -131,6 +148,9 @@ public:
 
    /// Usage
    void usage();
+
+   /// More Usage
+   void more_usage();
 
    /** Produce side info.
        An exception is thrown if any of the files is not found*/
