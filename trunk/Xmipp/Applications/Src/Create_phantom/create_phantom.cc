@@ -74,6 +74,7 @@ void Usage (char *argv[]) {
       "\nParameter Values: (note space before value)"
       "\n    -i <description file>"
       "\n    -o <output file>"
+      "\n"
       ,argv[0]);
    exit(1);
 }
