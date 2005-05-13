@@ -102,7 +102,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   max_shift=AtoF(get_param(argc,argv,"-max_shift","5"));
   istart=AtoI(get_param(argc,argv,"-istart","1"));
   // Hidden arguments
-  do_esthetics=check_param(argc,argv,"-esthetics");
   Paccept_fast=AtoF(get_param(argc,argv,"-Paccept","0.0"));
 
 }
@@ -155,9 +154,6 @@ void Prog_MLalign2D_prm::show() {
     if (fix_sigma_noise && !LSQ_rather_than_ML) {
       cerr << "  -> Do not update sigma-estimate of noise."<<endl;
     }
-    if (do_esthetics) {
-      cerr << "  -> Perform esthetics on (0,0)-pixel artifacts"<<endl;
-    }
     cerr << " -----------------------------------------------------------------"<<endl;
   }
 
@@ -194,7 +190,7 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
   cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
   cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
   cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-  cerr << " [ -LSQ ]                      : Use least-squares instead of maximum likelihood target \n";
+  cerr << " [ -LSQ ]                      : Use maximum cross-correlation instead of maximum likelihood target \n";
   cerr << " [ -max_shift <float=5>]       : For LSQ only: maximum allowed shift [pix] \n";
   cerr << endl;
   exit(1);
@@ -375,7 +371,7 @@ void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
 void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW {
 
-  double AA,stdAA,sumAA=0.,psi,dum,avg;
+  double AA,stdAA,sumAA=0.,psi,dum,avg,mean_ref,stddev_ref,dummy;
   matrix2D<double> Maux;
   matrix2D<complex<double> > Faux;
   vector<matrix2D<complex <double> > > dumF;
@@ -405,14 +401,20 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       psi=(double)(ipsi*90./nr_psi)+SMALLANGLE; 
       Maux=Iref[refno]().rotate(psi,DONT_WRAP);
       apply_binary_mask(mask,Maux,Maux,avg);
-      AA=Maux.sum2();      
       // Normalize the magnitude of the rotated references to 1st rot of that ref
       // This is necessary because interpolation due to rotation can lead to lower overall Fref 
       // This would result in lower probabilities for those rotations
+      AA=Maux.sum2();      
       if (ipsi==0) {
 	stdAA=AA;
 	sumAA+=AA;
 	A2.push_back(AA);
+      }
+      // Subtract mean_ref from image prior to FFT for maxCC
+      if (LSQ_rather_than_ML) {
+	Maux.compute_stats(mean_ref,stddev_ref,dummy,dummy);
+	Maux-=mean_ref;
+	if (ipsi==0) A2[refno]=stddev_ref;
       }
       if (also_real_space) {
 	Mref[refno].push_back(Maux);
@@ -425,6 +427,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       }
       Fref[refno].push_back(Faux);
       if (AA>0) Fref[refno][ipsi]*=sqrt(stdAA/AA);
+
     }
   }
   A2mean=sumAA/n_ref;
@@ -432,9 +435,13 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
   // Check that the differences in powers are not to large 
   // for the numerical precision of the exp function...
   FOR_ALL_MODELS() {
-    if (ABS((A2mean-A2[refno])/2*sigma_noise*sigma_noise)>1000.)
-      REPORT_ERROR(1,"Very large differences in powers of images give numerical problems, are they normalized?");
+    if (!LSQ_rather_than_ML && 
+	ABS((A2mean-A2[refno])/2*sigma_noise*sigma_noise)>1000.) {
+      cerr <<"mean power= "<<A2mean<<" power reference "<<refno<<"= "<<A2[refno]<<endl;
+      REPORT_ERROR(1,"Very large differences in powers of references give numerical problems, are the images normalized?");
+    }
   }
+
 }
 
 // Collect all rotations and sum to update Iref() for all models ==========
@@ -651,7 +658,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
     refw[refno]=0.;
     refw_mirror[refno]=0.;
     // There is a numerical problem with the following line 
-    // when the difference in power of the images is large, the exp becomes 0/inf.
+    // when the difference in power of the references is large, the exp becomes 0/inf.
     // For now, I dont know what to do... Put a warning in rotate_reference
     // If the images are properly normalized this does not seem to be so much of a problem?
     corrA2=exp((A2mean-A2[refno])/2*sigma_noise2);
@@ -735,7 +742,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   }
   opt_offsets(0)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],0,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
   opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
-  opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi);
+  opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
   fracweight=maxweight/sum_refw; 
 
   // Compute Log Likelihood
@@ -749,21 +756,18 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 
 
 void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
-						    double &max_shift, matrix2D<int> &Msignificant, 
+						    double &max_shift, 
 						    vector <vector< matrix2D<double> > > &Msum_imgs, 
 						    vector<double> &sumw, vector<double> &sumw_mirror, 
-						    double &minSQ, int &opt_refno, double &opt_psi, 
-						    matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
+						    double &maxCC, int &opt_refno, double &opt_psi, 
+						    matrix1D<double> &opt_offsets) _THROW {
 
   matrix2D<double> Maux,Maux2;
   matrix2D<complex<double> > Fimg, Faux;
-  double sigma_noise2,aux,avg,std;
-  double Xi2,CC;
-  int irot,irefmir,sigdim,xmax,ymax;
+  double sigma_noise2,aux,avg,std,CC;
+  int irot,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
-  if (fast_mode) imax=n_ref*nr_flip/4;
-  vector<int> ioptx_ref(imax),iopty_ref(imax),ioptflip_ref(imax);
-  vector<double> minSQ_ref(imax);
+  double stddev_img,mean_img,dummy;
 
   /* Not to store all 360-degrees rotations of the references (and pdf, Fwsum_imgs etc.) in memory,
      the experimental image is rotated over 0, 90, 180 & 270 degrees (called FLIPS), and only
@@ -777,9 +781,7 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
      Anyway, the total number of (I)FFT's is determined in much greater extent by n_ref and n_rot!
   */
 
-  Xi2=Mimg.sum2();
-  minSQ=99.e99; 
-  if (fast_mode) for (int i=0; i<imax; i++) minSQ_ref[i]=99.e99;
+  maxCC=-99.e99; 
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
@@ -795,54 +797,41 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
     BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
   }
 
+  Mimg.compute_stats(mean_img,stddev_img,dummy,dummy);
+  Maux2=Mimg;
+  Maux2-=mean_img;
+
   // Flip images and calculate correlation matrices and maximum correlation
   FOR_ALL_FLIPS() {
-    apply_geom(Maux,F[iflip],Mimg,IS_INV,WRAP);
+    apply_geom(Maux,F[iflip],Maux2,IS_INV,WRAP);
     FourierTransform(Maux,Fimg);
     Fimg*=dim*dim;
     FOR_ALL_MODELS() {
       FOR_ALL_ROTATIONS() {
 	irot=iflip*nr_psi+ipsi;
-	irefmir=FLOOR(iflip/4)*n_ref+refno;
-	if (dMij(Msignificant,refno,irot)) {
-	  mul_elements(Fimg,Fref[refno][ipsi],Faux);
-	  InverseFourierTransform(Faux,Maux);
-	  Maux/=dim*dim;
-	  CenterFFT(Maux,true);
-	  Maux.set_Xmipp_origin();
-	  if (max_shift>0.) apply_binary_mask(shiftmask,Maux,Maux,0.);
-	  Maux.max_index(ymax,xmax);
-	  // Calculate least squares instead of maxCC
-	  CC=A2[refno]+Xi2-2*MAT_ELEM(Maux,ymax,xmax);
-	  if (CC<minSQ) {
-	    minSQ=CC;
-	    iopty=ymax;
-	    ioptx=xmax;
-	    ioptpsi=ipsi;
-	    ioptflip=iflip;
-	    opt_refno=refno;
-	  }
-	  if (fast_mode && CC<minSQ_ref[irefmir]) {
-	    minSQ_ref[irefmir]=CC;
-	    iopty_ref[irefmir]=ymax;
-	    ioptx_ref[irefmir]=xmax;
-	    ioptflip_ref[irefmir]=iflip;
-	  }
+	mul_elements(Fimg,Fref[refno][ipsi],Faux);
+	InverseFourierTransform(Faux,Maux);
+	Maux/=dim*dim;
+	CenterFFT(Maux,true);
+	//Maux.set_Xmipp_origin();
+	if (max_shift>0.) apply_binary_mask(shiftmask,Maux,Maux,0.);
+	Maux.max_index(ymax,xmax);
+	CC=MAT_ELEM(Maux,ymax,xmax);
+	CC/=A2[refno]*stddev_img; // A2[refno] now holds stddev_ref!
+	if (CC>maxCC) {
+	  maxCC=CC;
+	  iopty=ymax;
+	  ioptx=xmax;
+	  ioptpsi=ipsi;
+	  ioptflip=iflip;
+	  opt_refno=refno;
 	}
       }
     }
   }
-
+  maxCC/=dim*dim;
 
   // Calculate optimal transformation parameters
-  if (fast_mode) {
-    for (int i=0; i<imax;i++) {
-      opt_offsets_ref[i](0)=-(double)ioptx_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],0,0)-
-	(double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],0,1);
-      opt_offsets_ref[i](1)=-(double)ioptx_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],1,0)-
-	(double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],1,1);
-    }
-  }
   opt_offsets(0)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],0,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
   opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
   opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
@@ -914,19 +903,24 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     img.read(fn_img,FALSE,FALSE,FALSE,FALSE);
     img().set_Xmipp_origin();
 
-    if (fast_mode) 
-      // Pre-calculate which models and phis are significant at zero origin shifts
-      preselect_significant_model_phi(img(),imgs_offsets[imgno],Mref,Msignificant);
-    else  Msignificant.init_constant(1);
-
     // Perform the integration over all shifts for all significant models and phis
     if (LSQ_rather_than_ML) {
-      LSQ_search_model_phi_trans(img(),Fref,max_shift,Msignificant,Msum_imgs,sumw,sumw_mirror,
-      				 maxcorr,opt_refno,opt_psi,opt_offsets,imgs_offsets[imgno]);
-    } else 
+
+      LSQ_search_model_phi_trans(img(),Fref,max_shift,Msum_imgs,sumw,sumw_mirror,
+      				 maxcorr,opt_refno,opt_psi,opt_offsets);
+
+    } else {
+
+      if (fast_mode) 
+	// Pre-calculate which models and phis are significant at zero origin shifts
+	preselect_significant_model_phi(img(),imgs_offsets[imgno],Mref,Msignificant);
+      else  Msignificant.init_constant(1);
+
       ML_integrate_model_phi_trans(img(),Fref,Msignificant,
 				   Fwsum_imgs,wsum_sigma_noise, wsum_sigma_offset,sumw,sumw_mirror, 
 				   LL,maxcorr,opt_refno,opt_psi,opt_offsets,imgs_offsets[imgno]);
+
+    }
 
     sumcorr+=maxcorr;
     if (write_docfile) {
@@ -953,6 +947,83 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   if (verb>0) progress_bar(nn);
 
   reverse_rotate_reference(Fwsum_imgs,Msum_imgs,LSQ_rather_than_ML,wsum_Mref);
+
+}
+
+// Update all model parameters
+void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
+					   double &wsum_sigma_noise, double &wsum_sigma_offset, 
+					   vector<double> &sumw, vector<double> &sumw_mirror, 
+					   double &sumcorr, double &sumw_allrefs) {
+
+  // Pre-calculate sumw_allrefs
+  sumw_allrefs=0.;
+  FOR_ALL_MODELS() {
+    sumw_allrefs+=sumw[refno];
+  }
+
+  FOR_ALL_MODELS() {
+    if (sumw[refno]>0.) {
+      Iref[refno]()=wsum_Mref[refno];
+      Iref[refno]()/=sumw[refno];
+      Iref[refno].weight()=sumw[refno];
+      if (!fix_fractions) alpha_k[refno]=sumw[refno]/sumw_allrefs;
+      if (!fix_fractions) mirror_fraction[refno]=sumw_mirror[refno]/sumw[refno];
+    } else {
+      Iref[refno].weight()=0.;
+      Iref[refno]().init_zeros();
+      alpha_k[refno]=0.;
+      mirror_fraction[refno]=0.;
+    }
+  }
+  if (!fix_sigma_offset) sigma_offset=sqrt(wsum_sigma_offset/(2*sumw_allrefs));
+  if (!fix_sigma_noise)  sigma_noise=sqrt(wsum_sigma_noise/(sumw_allrefs*dim*dim));
+  
+  sumcorr/=sumw_allrefs;
+
+}
+
+// Check convergence 
+bool Prog_MLalign2D_prm::check_convergence(vector<double> &conv) {
+
+  bool converged=true;
+  double convv;
+  matrix2D<double> Maux;
+
+  Maux.resize(dim,dim);
+  Maux.set_Xmipp_origin();
+
+  conv.clear();
+  FOR_ALL_MODELS() {
+    if (Iref[refno].weight()>0.) {
+      Maux=mul_elements(Iold[refno](),Iold[refno]());
+      convv=1./(Maux.compute_avg());
+      Maux=Iold[refno]()-Iref[refno]();
+      Maux=mul_elements(Maux,Maux);
+      convv*=Maux.compute_avg();
+      conv.push_back(convv);
+      if (convv>eps) converged=false;
+    } else {
+      conv.push_back(-1.);
+    }
+  }
+
+  return converged;
+} 
+
+// Output to screen
+void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL) {
+  if (verb>0) { 
+    if (LSQ_rather_than_ML) cout <<"  iter "<<iter<<" <CC>= "+FtoA(sumcorr,10,5);
+    else {
+      cout <<"  iter "<<iter<<" noise= "<<FtoA(sigma_noise,10,7)<<" offset= "<<FtoA(sigma_offset,10,7);
+      cout <<"  LL= "<<LL<<" <Pmax/sumP>= "<<sumcorr<<endl;
+      cout <<"  Model  fraction  mirror-fraction "<<endl;
+      FOR_ALL_MODELS() {
+	cout <<"  "<<ItoA(refno+1,5)<<" "<<FtoA(alpha_k[refno],10,7)<<" "<<FtoA(mirror_fraction[refno],10,7)<<endl;
+      }
+    }
+  }
 
 }
 

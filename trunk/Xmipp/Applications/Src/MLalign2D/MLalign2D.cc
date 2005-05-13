@@ -76,7 +76,6 @@ int main(int argc, char **argv) {
 
       for (int refno=0;refno<prm.n_ref; refno++) prm.Iold[refno]()=prm.Iref[refno]();
 
-      conv.clear();
       DFo.clear();
       if (prm.LSQ_rather_than_ML) 
 	DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
@@ -92,61 +91,15 @@ int main(int argc, char **argv) {
 				 wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
 
       // Update model parameters
-      sumw_allrefs=0.;
-      for (int refno=0;refno<prm.n_ref; refno++) {
-	if (sumw[refno]>0.) {
-	  prm.Iref[refno]()=wsum_Mref[refno];
-	  prm.Iref[refno]()/=sumw[refno];
-	  prm.Iref[refno].weight()=sumw[refno];
-	  sumw_allrefs+=sumw[refno];
-	  if (prm.do_esthetics) MAT_ELEM(prm.Iref[refno](),0,0)=
-			      (MAT_ELEM(prm.Iref[refno](),1,0)+MAT_ELEM(prm.Iref[refno](),0,1)+
-			       MAT_ELEM(prm.Iref[refno](),-1,0)+MAT_ELEM(prm.Iref[refno](),0,-1))/4;
-	  if (!prm.fix_fractions) prm.alpha_k[refno]=sumw[refno]/prm.SF.ImgNo();
-	  if (!prm.fix_fractions) prm.mirror_fraction[refno]=sumw_mirror[refno]/sumw[refno];
-	} else {
-	  prm.Iref[refno].weight()=0.;
-	  prm.Iref[refno]().init_zeros();
-	  prm.alpha_k[refno]=0.;
-	  prm.mirror_fraction[refno]=0.;
-	}
-      }
-      if (!prm.fix_sigma_offset) prm.sigma_offset=sqrt(wsum_sigma_offset/(2*sumw_allrefs));
-      if (!prm.fix_sigma_noise)  prm.sigma_noise=sqrt(wsum_sigma_noise/(sumw_allrefs*prm.dim*prm.dim));
-                                                                                     
-      sumcorr/=sumw_allrefs;
-
+      prm.update_parameters(wsum_Mref,wsum_sigma_noise, wsum_sigma_offset, 
+			    sumw, sumw_mirror, sumcorr, sumw_allrefs);    
+ 
       // Check convergence 
-      converged=true;
-      for (int refno=0;refno<prm.n_ref; refno++) { 
-	if (prm.Iref[refno].weight()>0.) {
-	  Maux=mul_elements(prm.Iold[refno](),prm.Iold[refno]());
-	  convv=1/(Maux.compute_avg());
-	  Maux=prm.Iold[refno]()-prm.Iref[refno]();
-	  Maux=mul_elements(Maux,Maux);
-	  convv*=Maux.compute_avg();
-	  conv.push_back(convv);
-	  if (convv>prm.eps) converged=false;
-	} else {
-	  conv.push_back(-1.);
-	}
-      }
+      converged=prm.check_convergence(conv);
 
-      if (prm.write_intermediate) {
+      if (prm.write_intermediate) 
 	prm.write_output_files(iter,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
-      } else {
-	// Output current parameter values to screen 
-	if (prm.verb>0) { 
-	  if (prm.LSQ_rather_than_ML) cout <<"  iter "<<iter<<" <CC>= "+FtoA(sumcorr,10,5);
-	  else {
-	    cout <<"  iter "<<iter<<" noise= "<<FtoA(prm.sigma_noise,10,7)<<" offset= "<<FtoA(prm.sigma_offset,10,7);
-	    cout <<"  LL= "<<LL<<" <Pmax/sumP>= "<<sumcorr<<endl;
-	    cout <<"  Model  fraction  mirror-fraction "<<endl;
-	    for (int refno=0;refno<prm.n_ref; refno++)  
-	      cout <<"  "<<ItoA(refno+1,5)<<" "<<FtoA(prm.alpha_k[refno],10,7)<<" "<<FtoA(prm.mirror_fraction[refno],10,7)<<endl;
-	  }
-	}
-      }
+      else prm.output_to_screen(iter,sumcorr,LL);
       
       if (converged) {
 	if (prm.verb>0) cerr <<" Optimization converged!"<<endl;
@@ -154,7 +107,6 @@ int main(int argc, char **argv) {
       }
 
     } // end loop iterations
-
 
     // Write out converged structures
     prm.write_output_files(-1,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);

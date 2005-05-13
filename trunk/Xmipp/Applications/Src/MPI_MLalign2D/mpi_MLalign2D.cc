@@ -59,7 +59,12 @@ int main(int argc, char **argv) {
    
   // Get input parameters
   try {
-    prm.read(argc,argv);
+    
+    // Read subsequently to avoid problems in restart procedure
+    for (int proc=0; proc<size; proc++) {    
+      if (proc==rank) prm.read(argc,argv);
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
 
     // Create references from random subset averages, or read them from selfile
     if (prm.fn_ref=="") {
@@ -130,7 +135,6 @@ int main(int argc, char **argv) {
 
       for (int refno=0;refno<prm.n_ref; refno++) prm.Iold[refno]()=prm.Iref[refno]();
 
-      conv.clear();
       DFo.clear();
       if (rank==0) 
 	if (prm.LSQ_rather_than_ML)
@@ -142,12 +146,11 @@ int main(int argc, char **argv) {
       if (!prm.LSQ_rather_than_ML) prm.calculate_pdf_phi();
 
       // Integrate over all images
-      prm.ML_sum_over_all_images(prm.SF,prm.Iref, 
-				 LL,sumcorr,DFo, 
-				 wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
+      prm.ML_sum_over_all_images(prm.SF,prm.Iref,LL,sumcorr,DFo, 
+				 wsum_Mref,wsum_sigma_noise,
+				 wsum_sigma_offset,sumw,sumw_mirror); 
 
       // Here MPI_allreduce of all wsums,LL and sumcorr !!!
-      // Still have to treat DFo!!
       MPI_Allreduce(&LL,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
       LL=aux;
       MPI_Allreduce(&sumcorr,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -166,60 +169,16 @@ int main(int argc, char **argv) {
       }
 
       // Update model parameters
-      sumw_allrefs=0.;
-      for (int refno=0;refno<prm.n_ref; refno++) {
-	if (sumw[refno]>0.) {
-	  prm.Iref[refno]()=wsum_Mref[refno];
-	  prm.Iref[refno]()/=sumw[refno];
-	  prm.Iref[refno].weight()=sumw[refno];
-	  sumw_allrefs+=sumw[refno];
-	  if (prm.do_esthetics) MAT_ELEM(prm.Iref[refno](),0,0)=
-			      (MAT_ELEM(prm.Iref[refno](),1,0)+MAT_ELEM(prm.Iref[refno](),0,1)+
-			       MAT_ELEM(prm.Iref[refno](),-1,0)+MAT_ELEM(prm.Iref[refno](),0,-1))/4;
-	  if (!prm.fix_fractions) prm.alpha_k[refno]=sumw[refno]/num_img_tot;
-	  if (!prm.fix_fractions) prm.mirror_fraction[refno]=sumw_mirror[refno]/sumw[refno];
-	} else {
-	  prm.Iref[refno].weight()=0.;
-	  prm.Iref[refno]().init_zeros();
-	  prm.alpha_k[refno]=0.;
-	  prm.mirror_fraction[refno]=0.;
-	}
-      }
-      if (!prm.fix_sigma_offset) prm.sigma_offset=sqrt(wsum_sigma_offset/(2*sumw_allrefs));
-      if (!prm.fix_sigma_noise)  prm.sigma_noise=sqrt(wsum_sigma_noise/(sumw_allrefs*prm.dim*prm.dim));
-      sumcorr/=sumw_allrefs;
+      prm.update_parameters(wsum_Mref,wsum_sigma_noise, wsum_sigma_offset, 
+			    sumw, sumw_mirror, sumcorr, sumw_allrefs);    
 
       // Check convergence 
-      converged=true;
-      for (int refno=0;refno<prm.n_ref; refno++) { 
-	if (prm.Iref[refno].weight()>0.) {
-	  Maux=mul_elements(prm.Iold[refno](),prm.Iold[refno]());
-	  convv=1/(Maux.compute_avg());
-	  Maux=prm.Iold[refno]()-prm.Iref[refno]();
-	  Maux=mul_elements(Maux,Maux);
-	  convv*=Maux.compute_avg();
-	  conv.push_back(convv);
-	  if (convv>prm.eps) converged=false;
-	} else {
-	  conv.push_back(-1.);
-	}
-      }
+      converged=prm.check_convergence(conv);
 
       if (rank==0) {
-	if (prm.write_intermediate) {
+	if (prm.write_intermediate)
 	  prm.write_output_files(iter,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
-	} else {
-	  if (prm.verb>0) { 
-	    if (prm.LSQ_rather_than_ML) cout <<"  iter "<<iter<<" <CC>= "+FtoA(sumcorr,10,5);
-	    else {
-	      cout <<"  iter "<<iter<<" noise= "<<FtoA(prm.sigma_noise,10,7)<<" offset= "<<FtoA(prm.sigma_offset,10,7);
-	      cout <<" LL= "<<LL<<" <Pmax/sumP>= "<<sumcorr<<endl;
-	      cout <<"  Model  fraction  mirror-fraction "<<endl;
-	      for (int refno=0;refno<prm.n_ref; refno++)  
-		cout <<"  "<<ItoA(refno+1,5)<<" "<<FtoA(prm.alpha_k[refno],10,7)<<" "<<FtoA(prm.mirror_fraction[refno],10,7)<<endl;
-	    }
-	  }
-	}
+	else prm.output_to_screen(iter,sumcorr,LL);
       }
       
       if (converged) {

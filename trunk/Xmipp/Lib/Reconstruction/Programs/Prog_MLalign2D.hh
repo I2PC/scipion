@@ -89,10 +89,6 @@ public:
   int verb;
   /** Stopping criterium */
   double eps;
-  // Sometimes (with very noisy data) artifacts at the origin pixel (0,0) are introduced
-  // Probably this is caused by the applied scaling in Fourier space
-  // The following hidden parameter serves to correct the origin pixel by averaging over its neighbouring 4 pixels
-  bool do_esthetics;
   // Write out document file with orientations & models that give max. probability for each image
   bool write_docfile;
   // Write out selection files according to model assignments
@@ -165,17 +161,28 @@ public:
 
   /// Calculate LSQ averages for new model and new model parameters 
   void LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
-				  double &max_shift, matrix2D<int> &Msignificant, 
+				  double &max_shift, 
 				  vector <vector< matrix2D<double> > > &Msum_imgs, 
 				  vector<double> &sumw, vector<double> &sumw_mirror, 
 				  double &minSQ, int &opt_refno, double &opt_psi, 
-				  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW;
+				  matrix1D<double> &opt_offsets) _THROW;
 
   /// Integrate over all experimental images
   void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, 
 			  double &LL, double &sumcorr, DocFile &DFo, 
 			  vector<matrix2D<double> > &wsum_Mref,
 			  double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror) _THROW;
+
+  /// Update all model parameters
+  void update_parameters(vector<matrix2D<double> > &wsum_Mref,
+			 double &wsum_sigma_noise, double &wsum_sigma_offset, 
+			 vector<double> &sumw, vector<double> &sumw_mirror, 
+			 double &sumcorr, double &sumw_allrefs) ;
+  /// check convergence
+  bool check_convergence(vector<double> &conv);
+
+  /// Output some parameters to screen
+  void output_to_screen(int &iter, double &sumcorr, double &LL);
 
   /// Write out reference images, selfile and logfile
   void write_output_files(const int iter, SelFile &SF, DocFile &DF, 
