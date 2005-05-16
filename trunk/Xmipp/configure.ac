@@ -225,6 +225,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Phantom_transform/Makefile \
 	Applications/Src/Project/Makefile \
 	Applications/Src/Projection_Neighbourhood/Makefile \
+	Applications/Src/Projection_matching/Makefile \
 	Applications/Src/ProjectPCA/Makefile \
 	Applications/Src/Pyramid/Makefile \
 	Applications/Src/Radon_Transform/Makefile \
@@ -266,7 +267,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Vol2Data/Makefile \
 	Applications/Src/VolSampler/Makefile \
 	Applications/Src/Voxels22Blobs/Makefile \
-	Applications/Src/WBP/Makefile \
+	Applications/Src/Wbp/Makefile \
 	Applications/Src/Window/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \
