@@ -60,8 +60,8 @@ using namespace std;
 // For timing functions
 #include        <unistd.h>
 #include        <sys/times.h>
-#ifdef IRIX6
-#   include     <sys/unistd.h>
+#ifdef _IRIX65
+#   include     <sys/types.h>
 #   include     <time.h>
 #endif
 
