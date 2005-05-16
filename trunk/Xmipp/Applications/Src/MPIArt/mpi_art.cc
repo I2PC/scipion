@@ -63,7 +63,6 @@ int main (int argc, char *argv[]) {
    Crystal_ART_Parameters crystal_art_prm;
    VolumeXmipp            vol_voxels,vol_voxels_aux;  // Volume to reconstruct
    GridVolume             vol_blobs;
-   GridVolume		  *dummy;
    int                    crystal_mode;
    MPI_Status		  status;            	// Stores MPI directives status
    int 			  num_img_tot;		// The total amount of images 
@@ -102,7 +101,7 @@ int main (int argc, char *argv[]) {
    	} catch (Xmipp_error &XE) {
   	 	cout << XE;
   		art_prm.usage();
-      		crystal_art_prm.usage();
+      		crystal_art_prm.usage_more();
       		exit(1);
 	}
 	
@@ -257,7 +256,7 @@ int main (int argc, char *argv[]) {
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
 				
-				Basic_ART_iterations(art_prm, eprm, vol_blobs, dummy, rank);
+				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 			
 				blocksize = art_prm.numIMG * size;
 				
@@ -325,7 +324,7 @@ int main (int argc, char *argv[]) {
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
 					
-				Basic_ART_iterations(art_prm, eprm, vol_blobs, dummy, rank);
+				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 				
 				processed += art_prm.numIMG;
 				
@@ -356,7 +355,7 @@ int main (int argc, char *argv[]) {
 			for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 				vol_aux2(j)() = vol_blobs(j)();
 				
-			Basic_ART_iterations(art_prm, eprm, vol_blobs, dummy, rank);
+			Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 				
 			// All processors send their result and get the other's so all of them
 			// have the same volume for the next step.
@@ -386,7 +385,7 @@ int main (int argc, char *argv[]) {
 					vol_aux2(j)() = vol_blobs(j)();
 			}
 			
-			Basic_ART_iterations(art_prm, eprm, vol_blobs, dummy, rank);
+			Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 		
 			// All processors send their result and get the other's so all of them
 			// have the same volume for the next step.
