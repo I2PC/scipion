@@ -36,7 +36,7 @@ void Prog_WBP_prm::read(int argc, char **argv) _THROW  {
   threshold=AtoF(get_param(argc,argv,"-threshold","1.667"));
   diameter=2*AtoI(get_param(argc,argv,"-radius","0"));
   if (diameter==0) diameter=dim;
-  sampling=AtoF(get_param(argc,argv,"-filsam","4"));
+  sampling=AtoF(get_param(argc,argv,"-filsam","5"));
   do_all_matrices=check_param(argc,argv,"-use_each_image");
   // Hidden
   verb=AtoI(get_param(argc,argv,"-verb","1"));
@@ -79,7 +79,7 @@ void Prog_WBP_prm::usage() {
   cerr << " [ -radius <int=dim/2> ]       : Reconstruction radius \n";
   cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
   cerr << " [ -threshold <float=1.66> ]   : Lower threshold for filter values \n";
-  cerr << " [ -filsam <float=4> ]         : Angular sampling rate for geometry filter \n";
+  cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
   cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
   cerr << " [ -dont_apply_shifts ]        : dont apply origin offsets as stored in the image headers\n";
   cerr << " -----------------------------------------------------------------"<<endl;
