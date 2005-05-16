@@ -64,6 +64,8 @@ public:
   /** Flag whether to use all experimental projection directions instead of
       sampled projection directions for arbitrary geometry filter */
   bool do_all_matrices;
+  /** Symmetry list for symmetric volumes */
+  SymList SL;
 
 public:
   /// Read arguments from command line
@@ -88,6 +90,9 @@ public:
   // Simple (i.e. unfiltered) backprojection of a single image
   void simple_backprojection(Projection &img, VolumeXmipp &vol, 
 			     int diameter) ;
+
+  // Calculate the filter and apply it to a projection
+  void filter_one_image(Projection &proj);
 
   // Calculate the filter for arbitrary tilt geometry in 2D and apply 
   void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
