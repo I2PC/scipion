@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
         
      // Is not an Spider file ..............................................
      } else
-        cout << "Is not a Spider File";
+       cout << file_name<<" is not a Spider File";
      
      // Finish information .................................................
      cout << endl;
