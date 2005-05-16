@@ -297,7 +297,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 
   int               c,nn,imgno;
   double            rot,tilt,psi,newrot,newtilt,newpsi;
-  Projection        proj;
+  Projection        proj,proj2;
   matrix2D<double>  L(4,4), R(4,4);
 
   vol().resize(dim,dim,dim);
@@ -317,6 +317,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
   while (!SF.eof()) {
     proj.read(SF.NextImg(),apply_shifts);
     proj().set_Xmipp_origin();
+    proj2=proj;
     rot=proj.rot();
     tilt=proj.tilt();
     psi=proj.psi();
@@ -327,6 +328,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
       SL.get_matrices(i,L,R);
       L.resize(3,3); R.resize(3,3);
       Euler_apply_transf(L,R,rot,tilt,psi,newrot,newtilt,newpsi);
+      proj=proj2;
       proj.set_angles(newrot,newtilt,newpsi);
       filter_one_image(proj);
       simple_backprojection(proj, vol, diameter);
