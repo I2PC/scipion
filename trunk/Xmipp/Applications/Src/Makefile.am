@@ -87,6 +87,7 @@ SUBDIRS = 2DInterpolation \
 	Phantom_transform \
 	Project \
 	Projection_Neighbourhood \
+	Projection_matching \
 	ProjectPCA \
 	Pyramid \
 	Radon_Transform \
@@ -126,7 +127,7 @@ SUBDIRS = 2DInterpolation \
 	Vol2Data \
 	VolSampler \
 	Voxels22Blobs \
-	WBP \
+	Wbp \
 	Window \
 	Window_micrograph \
 	$(OPTIONAL_PROGS)
