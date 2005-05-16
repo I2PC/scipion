@@ -99,6 +99,18 @@ public:
    /// Sort perpendicular with the last N projections. If -1 with all previous
    int sort_last_N;
 
+   /** Flag for weighted least squares reconstruction (for maximum-likelihood) */
+   bool WLS;
+
+   /** Relaxation parameter for WLS residual volume */
+   matrix1D<double> kappa_list;
+
+   /** Vector containing all residual images for wlsART */
+   vector<Projection> residual_imgs;
+ 
+   /** Sum ML-weight of all projections*/
+   double sum_weight;
+ 
    /// Relative size for the grid
    double grid_relative_size;
 
@@ -394,6 +406,18 @@ public:
          REPORT_ERROR(1,"Basic_art: There are no lambdas\n");
       if (n>=imax) return lambda_list(imax-1);
       else         return lambda_list(n);
+   }
+
+   /** Kappa (WLS) for iteration n (first one is iteration 0).
+       If the iteration requested is greater than the number of lambdas
+       provided then the last lambda in the list is returned. An exception
+       is thrown if there are no lambdas in the list. */
+   double kappa(int n) _THROW {
+      int imax=XSIZE(kappa_list);
+      if (imax==0)
+         REPORT_ERROR(1,"Basic_art: There are no kappas\n");
+      if (n>=imax) return kappa_list(imax-1);
+      else         return kappa_list(n);
    }
    
    /** Returns X dimension for projections under use. */

@@ -74,10 +74,16 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    const FileName &fn_ctf, bool unmatched, double ray_length,
    bool print_system_matrix=false);
 
+/** Update residual vector for WLS ART */
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_blobs, 
+			    double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
+
 /** Finish iterations.
-    Do nothing. */
+    For WLS: delete residual images
+    Else: do nothing. */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
    const Plain_ART_Parameters &eprm, GridVolume &vol_blobs);
+
 /** Force the {\it trial} volume to be symmetric. So far only implemented
     for crystals.*/
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,

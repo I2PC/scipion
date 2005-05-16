@@ -69,6 +69,116 @@ void process_correction(Projection &corr_proj) {
 }
 
 /* ------------------------------------------------------------------------- */
+/* Update residual vector for WLS                                            */
+/* ------------------------------------------------------------------------- */
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_blobs, 
+			    double &kappa, double &pow_residual_vol, double &pow_residual_imgs) {
+  GridVolume       residual_vol;
+  Projection       read_proj,dummy_proj,new_proj;
+  FileName         fn_resi,fn_tmp;
+  double           sqrtweight,dim2,norma,normb,apply_kappa;
+  ImageOver        *footprint=(ImageOver *)&prm.blobprint;
+  ImageOver        *footprint2=(ImageOver *)&prm.blobprint2;
+  matrix2D<double> *A=NULL;
+  vector<matrix2D<double> > newres_imgs;
+  matrix2D<int>    mask;
+
+  residual_vol.resize(vol_blobs);
+  residual_vol.init_zeros();
+
+  // Calculate volume from all backprojected residual images
+  cerr << "Backprojection of residual images " <<endl;
+  if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+
+  for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++) {
+
+    // backprojection of the weighted residual image
+    sqrtweight=sqrt(prm.residual_imgs[iact_proj].weight()/prm.sum_weight);
+
+    read_proj=prm.residual_imgs[iact_proj];
+    read_proj()*=sqrtweight;
+    dummy_proj().resize(read_proj());
+    dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,prm.IMG_Inf[iact_proj].tilt,prm.IMG_Inf[iact_proj].psi);
+
+    project_Volume(residual_vol,prm.blob,*footprint,*footprint2,dummy_proj,
+		   read_proj,YSIZE(read_proj()),XSIZE(read_proj()),
+		   prm.IMG_Inf[iact_proj].rot,prm.IMG_Inf[iact_proj].tilt,prm.IMG_Inf[iact_proj].psi,BACKWARD,prm.eq_mode,
+		   prm.GVNeq,NULL,prm.ray_length);
+
+   if (!(prm.tell&TELL_SHOW_ERROR)) if (iact_proj%MAX(1,prm.numIMG/60)==0) progress_bar(iact_proj);
+  }
+  if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
+
+  // Convert to voxels: solely for output of power of residual volume
+  VolumeXmipp      residual_vox;
+  int Xoutput_volume_size=(prm.Xoutput_volume_size==0) ?
+    prm.projXdim:prm.Xoutput_volume_size;
+  int Youtput_volume_size=(prm.Youtput_volume_size==0) ?
+    prm.projYdim:prm.Youtput_volume_size;
+  int Zoutput_volume_size=(prm.Zoutput_volume_size==0) ?
+    prm.projXdim:prm.Zoutput_volume_size;
+  blobs2voxels(residual_vol, prm.blob, &residual_vox, prm.D,
+               Zoutput_volume_size, Youtput_volume_size,
+               Xoutput_volume_size);
+  pow_residual_vol=residual_vox().sum2()/(Xoutput_volume_size*Youtput_volume_size*Zoutput_volume_size);
+  residual_vox.clear();
+
+  cerr << "Projection of residual volume; kappa = " << kappa<< endl;
+  if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+
+  // Now that we have the residual volume: project in all directions
+  pow_residual_imgs=0.;
+  new_proj().resize(read_proj()); 
+  mask.resize(read_proj());
+  BinaryCircularMask(mask,YSIZE(read_proj())/2,INNER_MASK);
+
+  dim2=(double)YSIZE(read_proj())*XSIZE(read_proj());
+  for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++) {
+
+    project_Volume(residual_vol,prm.blob,*footprint,*footprint2,new_proj,
+		   dummy_proj,YSIZE(read_proj()),XSIZE(read_proj()),
+		   prm.IMG_Inf[iact_proj].rot,prm.IMG_Inf[iact_proj].tilt,prm.IMG_Inf[iact_proj].psi,FORWARD,prm.eq_mode,
+		   prm.GVNeq,A,prm.ray_length);
+
+    sqrtweight=sqrt(prm.residual_imgs[iact_proj].weight()/prm.sum_weight);
+
+    // Next lines like normalization in [EHL] (2.18)?
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(new_proj()) {
+      dMij(dummy_proj(),i,j)=MAX(1.,dMij(dummy_proj(),i,j)); // to avoid division by zero
+      dMij(new_proj(),i,j)/=dMij(dummy_proj(),i,j);
+    }
+    new_proj()*=sqrtweight*kappa;
+
+    /*
+    fn_tmp="residual_"+ItoA(iact_proj);
+    dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+    dummy_proj.write(fn_tmp+".old");
+    */
+
+    prm.residual_imgs[iact_proj]()-=new_proj();
+    pow_residual_imgs+=prm.residual_imgs[iact_proj]().sum2();
+
+    // Mask out edges of the images
+    apply_binary_mask(mask,prm.residual_imgs[iact_proj](),prm.residual_imgs[iact_proj](),0.);
+
+    /*
+    dummy_proj()=1000*new_proj();
+    dummy_proj.write(fn_tmp+".change");
+    dummy_proj()=1000*prm.residual_imgs[iact_proj]();
+    dummy_proj.write(fn_tmp+".new");
+    */
+
+    if (!(prm.tell&TELL_SHOW_ERROR)) if (iact_proj%MAX(1,prm.numIMG/60)==0) progress_bar(iact_proj);
+  }
+
+  pow_residual_imgs/=dim2;
+  newres_imgs.clear();
+
+  if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
+
+}
+
+/* ------------------------------------------------------------------------- */
 /* ART Single step                                                           */
 /* ------------------------------------------------------------------------- */
 #define blob       prm.blob
@@ -105,6 +215,7 @@ void ART_single_step(
    ImageOver *footprint=(ImageOver *)&prm.blobprint;
    ImageOver *footprint2=(ImageOver *)&prm.blobprint2;
    bool remove_footprints=false;
+   double weight,sqrtweight;
 
    if (fn_ctf!="" && !unmatched)
       if (Is_FourierImageXmipp(fn_ctf)) ctf.read_mask(fn_ctf);
@@ -187,32 +298,47 @@ void ART_single_step(
 
    // Now compute differences .................................................
    double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
-   
+
    mean_error=0;
    diff_proj().resize(read_proj());
    
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
-   // Compute difference image and error
-      IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
-      mean_error += IMGPIXEL(diff_proj,i,j) * IMGPIXEL(diff_proj,i,j);
+   // Weighted least-squares ART for Maximum-Likelihood refinement
+   if (prm.WLS) { 
+     weight=read_proj.weight()/prm.sum_weight;
+     sqrtweight=sqrt(weight);
 
-   // Compute the correction image
-   // if (ABS(IMGPIXEL(corr_proj,i,j))<1)
-   //    IMGPIXEL(corr_proj,i,j)=SGN(IMGPIXEL(corr_proj,i,j));
-   // 17 March 2005, remove next line if nobody complains
-      if (IMGPIXEL(corr_proj,i,j)<0) 
-         {
-	  cout << " You have found a bug, please report it" << endl;
-	  cout << " Error: IMGPIXEL(corr_proj,i,j)<0 " << endl;
-	  cout << " email: xmipp@cnb.uam.es" << endl;
-	  exit(1);
-	 }
-      if (IMGPIXEL(corr_proj,i,j)<1)
-         IMGPIXEL(corr_proj,i,j)=1.;
-      IMGPIXEL(corr_proj,i,j)=
+     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
+       // Compute difference image and error
+       IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
+       mean_error += IMGPIXEL(diff_proj,i,j) * IMGPIXEL(diff_proj,i,j);
+       
+       // Subtract the residual image (stored in alig_proj!)
+       IMGPIXEL(diff_proj,i,j)=sqrtweight*IMGPIXEL(diff_proj,i,j)-IMGPIXEL(alig_proj,i,j);
+       
+       // Calculate the correction and the updated residual images
+       IMGPIXEL(corr_proj,i,j)=
+         applied_lambda*IMGPIXEL(diff_proj,i,j)/(weight*IMGPIXEL(corr_proj,i,j) + 1.);
+       IMGPIXEL(alig_proj,i,j)+=IMGPIXEL(corr_proj,i,j);
+       IMGPIXEL(corr_proj,i,j)*=sqrtweight;
+
+     }
+     mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
+     mean_error*=weight;
+
+   } else {
+
+     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
+       // Compute difference image and error
+       IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
+       mean_error += IMGPIXEL(diff_proj,i,j) * IMGPIXEL(diff_proj,i,j);
+
+       // Compute the correction image
+       IMGPIXEL(corr_proj,i,j)=MAX(IMGPIXEL(corr_proj,i,j),1);
+       IMGPIXEL(corr_proj,i,j)=
          applied_lambda*IMGPIXEL(diff_proj,i,j)/IMGPIXEL(corr_proj,i,j);
+     }
+     mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
    }
-   mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
    
    // Denoising of the correction image
    //process_correction(corr_proj);
@@ -242,7 +368,7 @@ void instantiate_Plain_ART() {
 
 /* Finish iterations ------------------------------------------------------- */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Plain_ART_Parameters &eprm, GridVolume &vol_blobs) {}
+   const Plain_ART_Parameters &eprm, GridVolume &vol_blobs) { }
 
 /* Apply_symmetry ------------------------------------------------------- */
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,

@@ -46,13 +46,15 @@ void Basic_ART_Parameters::default_values() {
     random_sort        = FALSE;
     dont_sort          = FALSE;
     sort_last_N        = 2;
+    WLS                = FALSE;
     no_it              = 1;
+    kappa_list.resize(1);  kappa_list.init_constant(0.5);
     lambda_list.resize(1); lambda_list.init_constant(0.01);
     stop_at            = 0;
     blob.radius        = 2;
     blob.order         = 2;
     blob.alpha         = 10.4;
-    grid_relative_size = 2.26;
+    grid_relative_size = 1.41;
     grid_type          = BCC;
     proj_ext           = 0;
     Xoutput_volume_size= 0;
@@ -79,6 +81,14 @@ void Basic_ART_Parameters::default_values() {
     unmatched          =false;
     ray_length         =-1;
     apply_shifts       = TRUE;
+
+    sampling           =1.;
+    sym_each           =0;
+    ref_trans_after    =-1;
+    ref_trans_step     =-1;
+    max_tilt           =10.e6;
+    grid_relative_size =1.41;
+
 }
 
 /* Read ART parameters ===================================================== */
@@ -118,6 +128,10 @@ void Basic_ART_Parameters::default_values() {
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
     dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
     sort_last_N        = AtoI(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
+    WLS                = CHECK_PARAM("WLS"); \
+    kappa_list  =  GET_VECTOR_PARAM("k",-1); \
+    if (XSIZE(kappa_list)==0)                                              \
+       {kappa_list.resize(1); kappa_list.init_constant(0.5);}               \
     no_it              = AtoI(GET_PARAM_WITH_DEF("n",         "1"       )); \
     stop_at            = AtoI(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
     lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
@@ -313,6 +327,9 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
      << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
      << "\n   [-no_sort]            No sort must be applied"
+     << "\n   [-WLS]                Perform weighted least squares ART"
+     << "\n   [-k kappa=0.5 |       Relaxation factor for WLS residual "
+     << "\n    -k [kappa0, kappa1, ...]"
      << "\nParallel parameters"
      << "\n                         by default, sequential ART is applied"
      << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
@@ -559,6 +576,36 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
 	 else if (sort_last_N!=-1) sort_perpendicular(numIMG,IMG_Inf,ordered_list,
                                       sort_last_N);
       	 else                      no_sort(numIMG,ordered_list);
+   }
+
+/* In case of weighted least-squares, find average weight & write residual images ------ */
+   if (WLS) {
+     FileName   fn_resi;
+     Projection read_proj;
+     double     weight;
+
+     sum_weight=0.;
+     for (int iact_proj = 0; iact_proj < numIMG ; iact_proj++) {
+
+       fn_resi=IMG_Inf[iact_proj].fn_proj;
+       read_proj.read(fn_resi);
+       read_proj().set_Xmipp_origin();
+       weight=read_proj.weight();
+       if (weight<0) {
+	 REPORT_ERROR(1,"negative weight not set correctly!");
+	 exit(1);
+       }
+       sum_weight+=weight;
+       /*
+       read_proj().init_zeros();
+       fn_resi+="."+fn_root+"_residual";
+       if (IMG_Inf[iact_proj].sym>-1) 
+	 fn_resi+=ItoA(IMG_Inf[iact_proj].sym);
+       read_proj.write(fn_resi);
+       */
+     }
+
+     fh_hist << "WLS-ART% Sum over all weights = "<<sum_weight<<endl;
    }
 
 /* Setting initial volumes ------------------------------------------------- */

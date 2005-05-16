@@ -27,6 +27,7 @@
 #include "../recons_misc.hh"
 #include "../Prog_symmetrize.hh"
 #include <XmippData/xmippDocFiles.hh>
+#include <XmippData/xmippMasks.hh>
 
 /* ------------------------------------------------------------------------- */
 /* Init history                                                              */
@@ -64,6 +65,11 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
       << "x" << prm.Xoutput_volume_size << endl;
    prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << endl
                << "                No. Iter=" << prm.no_it << endl;
+   if (prm.WLS) {
+     prm.fh_hist << " Perform weighted least-squares ART "<< endl;
+     prm.fh_hist << " Iterations:    kappa=" << prm.kappa_list.transpose() << endl
+                 << "                No. Iter=" << prm.no_it << endl;
+   }
    prm.fh_hist << " Parallel mode: ";
    switch (prm.parallel_mode) {
       case Basic_ART_Parameters::ART:   prm.fh_hist << "ART\n"; break;
@@ -187,8 +193,19 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                        // theoretical and real image
 
    // Reconstruction results ...............................................
-   double          mean_error;
-   double          global_mean_error;
+   double          mean_error,mean_error_1stblock;
+   double          global_mean_error,global_mean_error_1stblock;
+
+   // Initialize residual image vector for wlsART ..........................
+   if (prm.WLS) {
+     prm.residual_imgs.clear();
+     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++) {
+       read_proj.read(prm.IMG_Inf[iact_proj].fn_proj);
+       read_proj().set_Xmipp_origin();
+       read_proj().init_zeros();
+       prm.residual_imgs.push_back(read_proj);
+     }
+   }
 
    // Some initialisation ..................................................
    Xoutput_volume_size=(prm.Xoutput_volume_size==0) ?
@@ -247,10 +264,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    TimeStamp time0;                    // For measuring the elapsed time
    annotate_time(&time0);
    int images=0;
+   double mean_error_2ndblock,pow_residual_imgs; 
    bool iv_launched=false;
     for (int it = 0; it < prm.no_it; it++) {
       // Initialisation of some variables
       global_mean_error = 0;
+      global_mean_error_1stblock = 0;
       POCS.newIteration();
       VC.newIteration();
       if (rank==-1) {
@@ -338,6 +357,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym 
 		     <<  endl;
 		
+          // For wlsART: use alig_proj for residual image!!
+	  if (prm.WLS) alig_proj=prm.residual_imgs[iact_proj];
+
           // Apply the reconstruction algorithm ............................
       	  // Notice that the following function is extern
 	  ART_single_step(vol_blobs, ptr_vol_out,
@@ -347,6 +369,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               mean_error, ART_numIMG, prm.lambda(it),
 	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
               prm.ray_length, prm.print_system_matrix);
+
+          if (prm.WLS) {
+            prm.residual_imgs[iact_proj]=alig_proj;
+	    global_mean_error_1stblock += diff_proj().sum2()/(XSIZE(diff_proj())*YSIZE(diff_proj()));
+          }
+
           global_mean_error += mean_error;
 	  if (prm.noisy_reconstruction) {
 	     double noise_mean_error;
@@ -459,14 +487,42 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
       if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
 
+      // Update residual images for WLS
+      if (prm.WLS) {
+        double kappa=prm.kappa(it);
+        update_residual_vector( prm, vol_blobs, kappa, mean_error_2ndblock, pow_residual_imgs);
+      }
+
       // Prepare for next global iteration ---------------------------------
       // Calculate norm and print
       if (rank==-1) {
 	 prm.fh_hist << "Finished - Iteration " << it << endl;
-	 cerr        <<"   Global mean squared error: "
-                     << global_mean_error/prm.numIMG << endl;
-	 prm.fh_hist << "   Global mean squared error: "
-                     << global_mean_error/prm.numIMG << endl;
+        if (prm.WLS) {
+	   cerr      <<"   Weighted error: "
+                     << global_mean_error;
+	   cerr      <<"  1st block: "
+	             <<global_mean_error_1stblock;
+	   cerr      <<"  2nd block: "
+	             <<mean_error_2ndblock;
+	   cerr      <<" residual: "
+	             <<pow_residual_imgs<< endl;
+         } else {
+	   cerr      <<"   Global mean squared error: "
+                     << global_mean_error/prm.numIMG<< endl;
+         }
+         if (prm.WLS) {
+	   prm.fh_hist << "   Weighted error: "
+                       << global_mean_error;
+	   prm.fh_hist <<"  1st block: "
+	               <<global_mean_error_1stblock;
+	   prm.fh_hist <<"  2nd block: "
+	               <<mean_error_2ndblock;
+	   prm.fh_hist <<" residual: "
+	               <<pow_residual_imgs<< endl;
+         } else {
+	   prm.fh_hist << "   Global mean squared error: "
+                       << global_mean_error/prm.numIMG<< endl;
+         }
 	 if (POCS.apply_POCS) {
             cerr        << "   POCS Global mean squared error: "
                 	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
