@@ -1,6 +1,0 @@
-######################################################################
-PROJ = mpi_wbp
-NEEDS_MPI = true
-
-OBJ  = mpi_wbp.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
