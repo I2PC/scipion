@@ -194,7 +194,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   // Rotational search ====================================================
   matrix2D<double> Mimg,Mref,Mcorr;
   double act_rot_range,psi,thisCC;
-  double stddev_img,mean_img,dummy;
+  double stddev_img,mean_img,dummy,xmax,ymax;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
   vector<matrix2D<double> >::iterator ipp;
@@ -205,7 +205,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   Mref.resize(dim,dim);
   Mref.set_Xmipp_origin();
 
-  // Calculate correlations for all angles
+  // Calculate correlation coefficients for all angles
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
     Mimg=Mexp.rotate(psi,DONT_WRAP);
@@ -244,61 +244,15 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
     }
   }
 
-  // Interpolated translational search =======================================================
-  int              imax,jmax,i_actual,j_actual;
-  double           max,xmax,ymax,sumcorr,avecorr,stdcorr;
-  float            xshift,yshift,shift;
-  int              n_max=-1;
-  bool             neighbourhood=TRUE;
-
-  // Calculate cross-correlation matrix to search shifts
+  // Interpolated translational search for optimal angles ===================================
   Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
   Mref=ref_img[opt_dirno];
   Mref+=ref_mean[opt_dirno];
-  correlation_matrix(Mimg,Mref,Mcorr);
-  // Adjust statistics within shiftmask to average 0 and stddev 1
-  compute_stats_within_binary_mask(shiftmask,Mcorr,dummy,dummy,avecorr,stdcorr);
-  FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr) {
-    if (MAT_ELEM(shiftmask,i,j)) 
-      MAT_ELEM(Mcorr,i,j)=(MAT_ELEM(Mcorr,i,j)-avecorr)/stdcorr;
-    else MAT_ELEM(Mcorr,i,j)=0.;
-  }
-  Mcorr.max_index(imax,jmax);
-  max=MAT_ELEM(Mcorr,imax,jmax);
-
-  while (neighbourhood) {
-    n_max ++;
-    for (int i=-n_max; i <= n_max; i++)
-      for (int j=-n_max; j <= n_max; j++) {
-        i_actual = i+imax;
-        j_actual = j+jmax;
-        if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() &&
-            i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() )
-          neighbourhood=FALSE;
-        else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
-            neighbourhood=FALSE;
-      }
-  }
-
-  // We have the neighbourhood => looking for the gravity centre
-  xmax = ymax = sumcorr = 0.;
-  for (int i=-n_max; i <= n_max; i++)
-    for (int j=-n_max; j <= n_max; j++) {
-      i_actual = i+imax;
-      j_actual = j+jmax;
-      if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() &&
-          i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX() ) {
-        ymax += i_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
-        xmax += j_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
-        sumcorr += MAT_ELEM(Mcorr,i_actual,j_actual);
-      }
-    }
-  xmax/= sumcorr; ymax/= sumcorr;
-
+  best_shift(Mimg,Mref,xmax,ymax,&shiftmask);
   opt_xoff=-xmax*COSD(opt_psi)-ymax*SIND(opt_psi);
   opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
 
-  // Calculate correlation coefficient
+  // Calculate optimal correlation coefficient
   Mimg=Mimg.translate(vector_R2(-xmax,-ymax)); 
   maxCC=correlation_index(Mimg,Mref);
 
