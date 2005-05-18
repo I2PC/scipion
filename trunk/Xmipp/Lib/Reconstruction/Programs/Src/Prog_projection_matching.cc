@@ -29,7 +29,7 @@ void Prog_projection_matching_prm::read(int argc, char **argv) _THROW  {
 
   // Read command line
   if (check_param(argc,argv,"-show_all_options")) { usage(); extended_usage();}
-  fn_vol=get_param(argc,argv,"-vol");
+  fn_vol=get_param(argc,argv,"-vol","");
   SF.read(get_param(argc,argv,"-i"));
   SF.ImgSize(dim,dim);
   fn_root=get_param(argc,argv,"-o","out");
@@ -43,6 +43,10 @@ void Prog_projection_matching_prm::read(int argc, char **argv) _THROW  {
   fn_sym=get_param(argc,argv,"-sym","");
   output_refs=check_param(argc,argv,"-output_refs");
   modify_header=!check_param(argc,argv,"-dont_modify_header");
+  fn_ref=get_param(argc,argv,"-ref","");
+  if (fn_ref=="" && fn_vol=="") 
+       REPORT_ERROR(1," Provide either -vol or -ref!");
+ 
 
   // Hidden stuff
   verb=AtoI(get_param(argc,argv,"-verb","1"));
@@ -84,7 +88,6 @@ void Prog_projection_matching_prm::show() {
 
     cerr << " ================================================================="<<endl;
   }
-
 } 
 
 // Usage ===================================================================
@@ -106,6 +109,7 @@ void Prog_projection_matching_prm::extended_usage() {
        << " [ -psi_search <float=-1> ]    : Maximum change in psi  (+/- degrees) \n"
        << " [ -sym <symfile> ]            : Limit angular search to asymmetric part \n"
        << " [ -output_refs  ]             : Output reference projections, sel and docfile \n"
+       << " [ -ref <selfile>  ]           : Selfile with reference projections instead of volume\n"
        << " [ -dont_modify_header ]       : Do not store alignment parameters in the image headers \n";
   exit(1);
 }
@@ -131,55 +135,84 @@ void Prog_projection_matching_prm::produce_Side_info() _THROW {
   if (max_shift<0.) max_shift=(double)dim/2.;
   BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
 
-  // Create evenly-distributed reference projection angles
-  if (fn_sym!="") SL.read_sym_file(fn_sym);
-  make_even_distribution(DF,sampling,SL,true);
+  if (fn_ref!="") {
 
-  // Create reference projection images
-  vol.read(fn_vol);
-  vol().set_Xmipp_origin();
-  nl=DF.dataLineNo();
-  ref_img.clear();
-  ref_rot=(double*)malloc(nl*sizeof(double));
-  ref_tilt=(double*)malloc(nl*sizeof(double));
-  ref_mean=(double*)malloc(nl*sizeof(double));
-  ref_stddev=(double*)malloc(nl*sizeof(double));
-  SF.reserve(nl);
-  SF.go_beginning();
-  DF.go_beginning();
-  if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
-  if (verb>0) init_progress_bar(nl);
-
-  fn_refs=fn_root+"_lib";
-  DF.adjust_to_data_line();
-  nr_dir=0;
-  while (!DF.eof()) {
-    ref_rot[nr_dir]=DF(0);
-    ref_tilt[nr_dir]=DF(1);
-    project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
-    if (output_refs) {
-      fn_tmp.compose(fn_refs,nr_dir+1,"proj");
-      proj.write(fn_tmp);
-      SF.insert(fn_tmp);
+    // Read projections from selfile
+    SF.read(fn_ref);
+    nl=SF.ImgNo();
+    ref_img.clear();
+    ref_rot=(double*)malloc(nl*sizeof(double));
+    ref_tilt=(double*)malloc(nl*sizeof(double));
+    ref_mean=(double*)malloc(nl*sizeof(double));
+    ref_stddev=(double*)malloc(nl*sizeof(double));
+    SF.go_beginning();
+    nr_dir=0;
+    while (!SF.eof()) {
+      proj.read(SF.NextImg());
+      proj().set_Xmipp_origin();
+      ref_rot[nr_dir]=proj.rot();
+      ref_tilt[nr_dir]=proj.tilt();
+      proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
+      proj()-=mean_ref;
+      ref_img.push_back(proj());
+      ref_stddev[nr_dir]=stddev_ref;
+      ref_mean[nr_dir]=mean_ref;
+      nr_dir++;
     }
-    proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
-    proj()-=mean_ref;
-    ref_img.push_back(proj());
-    ref_stddev[nr_dir]=stddev_ref;
-    ref_mean[nr_dir]=mean_ref;
-    DF.next_data_line();
-    nr_dir++;
-    if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
-  }
-  if (output_refs) {
-    fn_tmp=fn_refs+".doc";
-    DF.write(fn_tmp);
-    fn_tmp=fn_refs+".sel";
-    SF.write(fn_tmp);
+
+  } else {
+
+    // Create evenly-distributed reference projection angles
+    if (fn_sym!="") SL.read_sym_file(fn_sym);
+    make_even_distribution(DF,sampling,SL,true);
+
+    // Create reference projection images
+    vol.read(fn_vol);
+    vol().set_Xmipp_origin();
+    nl=DF.dataLineNo();
+    ref_img.clear();
+    ref_rot=(double*)malloc(nl*sizeof(double));
+    ref_tilt=(double*)malloc(nl*sizeof(double));
+    ref_mean=(double*)malloc(nl*sizeof(double));
+    ref_stddev=(double*)malloc(nl*sizeof(double));
+    SF.reserve(nl);
+    SF.go_beginning();
+    DF.go_beginning();
+    if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
+    if (verb>0) init_progress_bar(nl);
+
+    fn_refs=fn_root+"_lib";
+    DF.adjust_to_data_line();
+    nr_dir=0;
+    while (!DF.eof()) {
+      ref_rot[nr_dir]=DF(0);
+      ref_tilt[nr_dir]=DF(1);
+      project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
+      if (output_refs) {
+	fn_tmp.compose(fn_refs,nr_dir+1,"proj");
+	proj.write(fn_tmp);
+	SF.insert(fn_tmp);
+      }
+      proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
+      proj()-=mean_ref;
+      ref_img.push_back(proj());
+      ref_stddev[nr_dir]=stddev_ref;
+      ref_mean[nr_dir]=mean_ref;
+      DF.next_data_line();
+      nr_dir++;
+      if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
+    }
+    if (output_refs) {
+      fn_tmp=fn_refs+".doc";
+      DF.write(fn_tmp);
+      fn_tmp=fn_refs+".sel";
+      SF.write(fn_tmp);
+    }
+    if (verb>0) progress_bar(nl);
+    if (verb>0) cerr << " ================================================================="<<endl;
+
   }
 
-  if (verb>0) progress_bar(nl);
-  if (verb>0) cerr << " ================================================================="<<endl;
 
 }
 
