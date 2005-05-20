@@ -76,7 +76,11 @@ public:
   /** Maximum allowed angular search ranges */
   double rot_range, tilt_range, psi_range;
   /** Mask for shifts */
-  matrix2D<int> shiftmask;
+  matrix2D<int> shiftmask, rotmask;
+  /** Number of white pixels in rotmask */
+  int nr_pixels_rotmask;
+  /** Inner and outer radii to limit the rotational search */
+  double Ri, Ro;
 
 public:
   /// Read arguments from command line

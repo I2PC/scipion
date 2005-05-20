@@ -40,6 +40,8 @@ void Prog_projection_matching_prm::read(int argc, char **argv) _THROW  {
   rot_range=AtoF(get_param(argc,argv,"-rot_search","-1"));
   tilt_range=AtoF(get_param(argc,argv,"-tilt_search","-1"));
   psi_range=AtoF(get_param(argc,argv,"-psi_search","-1"));
+  Ri=AtoF(get_param(argc,argv,"-Ri","-1"));
+  Ro=AtoF(get_param(argc,argv,"-Ro","-1"));
   fn_sym=get_param(argc,argv,"-sym","");
   output_refs=check_param(argc,argv,"-output_refs");
   modify_header=!check_param(argc,argv,"-dont_modify_header");
@@ -47,7 +49,6 @@ void Prog_projection_matching_prm::read(int argc, char **argv) _THROW  {
   if (fn_ref=="" && fn_vol=="") 
        REPORT_ERROR(1," Provide either -vol or -ref!");
  
-
   // Hidden stuff
   verb=AtoI(get_param(argc,argv,"-verb","1"));
 
@@ -64,6 +65,10 @@ void Prog_projection_matching_prm::show() {
     cerr << "  Reference volume        : "<< fn_vol<<endl;
     cerr << "  Output rootname         : "<< fn_root<<endl;
     cerr << "  Angular sampling rate   : "<< sampling <<endl;
+    if (Ri>0) 
+    cerr << "  Inner radius rot-search : "<<Ri<<endl;
+    if (Ro>0) 
+    cerr << "  Outer radius rot-search : "<<Ro<<endl;
     if (max_shift>0) {
       cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
     }
@@ -107,6 +112,8 @@ void Prog_projection_matching_prm::extended_usage() {
        << " [ -rot_search <float=-1> ]    : Maximum change in rot  (+/- degrees) \n"
        << " [ -tilt_search <float=-1> ]   : Maximum change in tilt (+/- degrees) \n"
        << " [ -psi_search <float=-1> ]    : Maximum change in psi  (+/- degrees) \n"
+       << " [ -Ri <float=0> ]             : Inner radius to limit rotational search \n"
+       << " [ -Ro <float=dim/2> ]         : Outer radius to limit rotational search \n"
        << " [ -sym <symfile> ]            : Limit angular search to asymmetric part \n"
        << " [ -output_refs  ]             : Output reference projections, sel and docfile \n"
        << " [ -ref <selfile>  ]           : Selfile with reference projections instead of volume\n"
@@ -135,6 +142,14 @@ void Prog_projection_matching_prm::produce_Side_info() _THROW {
   if (max_shift<0.) max_shift=(double)dim/2.;
   BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
 
+  // Create rotational-search mask
+  rotmask.resize(dim,dim);
+  rotmask.set_Xmipp_origin();
+  if (Ri<0.) Ri=0.;
+  if (Ro<0.) Ro=(double)dim/2;
+  BinaryCrownMask(rotmask,Ri,Ro,INNER_MASK);
+  nr_pixels_rotmask=(int)rotmask.sum();
+
   if (fn_ref!="") {
 
     // Read projections from selfile
@@ -152,8 +167,9 @@ void Prog_projection_matching_prm::produce_Side_info() _THROW {
       proj().set_Xmipp_origin();
       ref_rot[nr_dir]=proj.rot();
       ref_tilt[nr_dir]=proj.tilt();
-      proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
+      compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
       proj()-=mean_ref;
+      apply_binary_mask(rotmask,proj(),proj(),0.);
       ref_img.push_back(proj());
       ref_stddev[nr_dir]=stddev_ref;
       ref_mean[nr_dir]=mean_ref;
@@ -193,7 +209,7 @@ void Prog_projection_matching_prm::produce_Side_info() _THROW {
 	proj.write(fn_tmp);
 	SF.insert(fn_tmp);
       }
-      proj().compute_stats(mean_ref,stddev_ref,dummy,dummy);
+      compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
       proj()-=mean_ref;
       ref_img.push_back(proj());
       ref_stddev[nr_dir]=stddev_ref;
@@ -225,7 +241,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
 
   // Rotational search ====================================================
-  matrix2D<double> Mimg,Mref,Mcorr;
+  matrix2D<double> Mimg,Mref,Maux,Mcorr;
   double act_rot_range,psi,thisCC;
   double stddev_img,mean_img,dummy,xmax,ymax;
   int c=0,ioptpsi=0,ioptflip=0;
@@ -237,13 +253,19 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   Mimg.set_Xmipp_origin();
   Mref.resize(dim,dim);
   Mref.set_Xmipp_origin();
+  Maux.resize(dim,dim);
+  Maux.set_Xmipp_origin();
+
+  // Calculate mean_img,stddev_img and apply rotmask
+  Maux=Mexp;
+  compute_stats_within_binary_mask(rotmask,Mexp,dummy,dummy,mean_img,stddev_img);
+  Maux-=mean_img;
+  apply_binary_mask(rotmask,Maux,Maux,0.);
 
   // Calculate correlation coefficients for all angles
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
-    Mimg=Mexp.rotate(psi,DONT_WRAP);
-    Mimg.compute_stats(mean_img,stddev_img,dummy,dummy);
-    Mimg-=mean_img;
+    Mimg=Maux.rotate(psi,DONT_WRAP);
     ipp=ref_img.begin();
     FOR_ALL_DIRECTIONS() {
       search=true;
@@ -265,7 +287,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
 	  thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
 	}
-	thisCC/=ref_stddev[dirno]*stddev_img*dim*dim;
+	thisCC/=ref_stddev[dirno]*stddev_img*nr_pixels_rotmask;
 	c++;
 	if (thisCC>maxCC) {
 	  maxCC=thisCC;
