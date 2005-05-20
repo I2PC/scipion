@@ -162,7 +162,7 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
          REPORT_ERROR(1,(string)"Prog_angular_predict_prm::produce_side_info:"
 	    " Cannot open "+fn_proj_param+" for output");
       int rotF=FLOOR(360.0-proj_step);
-      int tiltF=FLOOR(180.0-proj_step);
+      int tiltF=FLOOR(90.0-proj_step);
       fh_proj_param
           << fn_ref << endl // Volume to project
           << "reference" << fn_random << "_ 1 xmp\n" // projection name
