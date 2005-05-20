@@ -41,6 +41,7 @@ void Prog_WBP_prm::read(int argc, char **argv) _THROW  {
   do_all_matrices=check_param(argc,argv,"-use_each_image");
   // Hidden
   verb=AtoI(get_param(argc,argv,"-verb","1"));
+  do_weights=check_param(argc,argv,"-weight");
 
 }
 
@@ -64,6 +65,8 @@ void Prog_WBP_prm::show() {
     cerr << " --> Use all projection directions in arbitrary geometry filter"<<endl;
     else
     cerr << " --> Use sampled directions for filter, sampling = " <<sampling<<endl;
+    if (do_weights)
+      cerr << " --> Use weights stored in the image headers"<<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
   }
 
@@ -98,18 +101,17 @@ void Prog_WBP_prm::produce_Side_info() {
 void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
   
   DocFile           DFlib,DFcp;
-  SymList           SLempty;
   headerXmipp       head;
   matrix2D<double>  A(3,3);
   matrix2D<double>  L(4,4), R(4,4);
-  double            newrot,newtilt,newpsi,rot,tilt;
+  double            newrot,newtilt,newpsi,rot,tilt,psi;
   int               NN,dir,optdir;
-  vector<int>       count_imgs,count_syms;
+  vector<double>    count_imgs;
 
   if (verb>0) cerr <<"--> Sampling the filter ..."<<endl;
 
-  // Create an even projection direction distribution
-  make_even_distribution(DFlib,sampling,SLempty,false);
+  // Create an (asymmetric part of an) even projection direction distribution
+  make_even_distribution(DFlib,sampling,SL,true);
   NN=DFlib.LineNo()+1;
   count_imgs.resize(NN);
 
@@ -119,19 +121,14 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
     head.read(SF.NextImg());
     rot=head.Phi();
     tilt=head.Theta();
-    count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1)]+=1;
-    // Also add symmetry-related projection directions (if they are unique)
-    for (int i=0; i<SL.SymsNo(); i++) {
-      SL.get_matrices(i,L,R);
-      L.resize(3,3);R.resize(3,3);
-      Euler_apply_transf(L,R,rot,tilt,0.,newrot,newtilt,newpsi);
-      count_imgs[find_nearest_direction(newrot,newtilt,DFlib,0,1)]+=1;
-    }
+    if (do_weights) 
+      count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)]+=head.Weight();
+    else count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)]+=1.;
   }
 
   // Now calculate transformation matrices for all representative directions
   no_mats=0;
-  for (int i=1; i<NN; i++) if (count_imgs[i]>0.) no_mats++;
+  for (int i=1; i<NN; i++) if (count_imgs[i]>0.) no_mats+=SL.SymsNo()+1;
   mat_g=(column*)malloc(no_mats*sizeof(column));
 
   no_mats=0;
@@ -144,6 +141,18 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
       mat_g[no_mats].two=A(2,2);
       mat_g[no_mats].count=count_imgs[i];
       no_mats++;
+      // Expand symmetric directions 
+      for (int j=0; j<SL.SymsNo(); j++) {
+	SL.get_matrices(j,L,R);
+	L.resize(3,3); R.resize(3,3);
+	Euler_apply_transf(L,R,newrot,newtilt,0.,rot,tilt,psi);
+	Euler_angles2matrix (rot,-tilt,psi,A);
+	mat_g[no_mats].zero=A(2,0);
+	mat_g[no_mats].one=A(2,1);
+	mat_g[no_mats].two=A(2,2);
+	mat_g[no_mats].count=count_imgs[i];
+	no_mats++;
+      }
     }
   }
 
@@ -171,7 +180,8 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
     mat_g[no_mats].zero=A(2,0);
     mat_g[no_mats].one=A(2,1);
     mat_g[no_mats].two=A(2,2);
-    mat_g[no_mats].count=1.;
+    if (do_weights) mat_g[no_mats].count=head.Weight();
+    else mat_g[no_mats].count=1.;
     no_mats++;
     // Also add symmetry-related projection directions
     for (int i=0; i<SL.SymsNo(); i++) {
@@ -182,7 +192,8 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
       mat_g[no_mats].zero=A(2,0);
       mat_g[no_mats].one=A(2,1);
       mat_g[no_mats].two=A(2,2);
-      mat_g[no_mats].count=1.;
+      if (do_weights) mat_g[no_mats].count=head.Weight();
+      else mat_g[no_mats].count=1.;
       no_mats++;
     }
   }
@@ -297,8 +308,9 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 
   int               c,nn,imgno;
   double            rot,tilt,psi,newrot,newtilt,newpsi;
-  Projection        proj,proj2;
+  Projection        proj;
   matrix2D<double>  L(4,4), R(4,4);
+  Mask_Params       mask_prm;
 
   vol().resize(dim,dim,dim);
   vol().set_Xmipp_origin();
@@ -317,28 +329,31 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
   while (!SF.eof()) {
     proj.read(SF.NextImg(),apply_shifts);
     proj().set_Xmipp_origin();
-    proj2=proj;
+    if (do_weights) proj()*=proj.weight(); 
     rot=proj.rot();
     tilt=proj.tilt();
     psi=proj.psi();
     filter_one_image(proj);
     simple_backprojection(proj, vol, diameter);
 
-    for (int i=0; i<SL.SymsNo(); i++) {
-      SL.get_matrices(i,L,R);
-      L.resize(3,3); R.resize(3,3);
-      Euler_apply_transf(L,R,rot,tilt,psi,newrot,newtilt,newpsi);
-      proj=proj2;
-      proj.set_angles(newrot,newtilt,newpsi);
-      filter_one_image(proj);
-      simple_backprojection(proj, vol, diameter);
-    }
-
     if (verb>0) if (imgno%c==0) progress_bar(imgno);
     imgno++;
 
   }
   if (verb>0) progress_bar(nn);
+
+  // Symmetrize if necessary
+  if (fn_sym!="") {
+    VolumeXmipp Vaux(vol);
+    symmetrize(SL,vol,Vaux);
+    vol=Vaux;
+    mask_prm.mode=INNER_MASK;
+    mask_prm.R1=diameter/2.;
+    mask_prm.type=BINARY_CIRCULAR_MASK;
+    mask_prm.generate_3Dmask(vol());
+    mask_prm.apply_mask(vol(),vol(),0.);
+  }
+
 
   // free memory
   free(mat_g);

@@ -43,4 +43,4 @@ void make_even_distribution(DocFile &DF, double sampling,
 
 // Determine which of the entries in DFlib is closest to [rot1,tilt1]
 int find_nearest_direction(double rot1, double tilt1,
-			   DocFile &DFlib, int col_rot, int col_tilt);
+			   DocFile &DFlib, int col_rot, int col_tilt, SymList &SL);

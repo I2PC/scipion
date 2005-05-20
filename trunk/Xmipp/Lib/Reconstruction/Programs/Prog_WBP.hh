@@ -64,6 +64,8 @@ public:
   /** Flag whether to use all experimental projection directions instead of
       sampled projection directions for arbitrary geometry filter */
   bool do_all_matrices;
+  /** Flag whether to use the weights in the image headers */
+  bool do_weights;
   /** Symmetry list for symmetric volumes */
   SymList SL;
 

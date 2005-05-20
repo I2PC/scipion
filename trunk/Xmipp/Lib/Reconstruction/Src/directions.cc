@@ -139,23 +139,37 @@ void make_even_distribution(DocFile &DF, double sampling,
 
 
 int find_nearest_direction(double rot1, double tilt1,
-			   DocFile &DFlib, int col_rot, int col_tilt) {
+			   DocFile &DFlib, int col_rot, int col_tilt, SymList &SL) {
 
-  int dir,optdir;
-  double dist,mindist;
+  int               dir,optdir;
+  double            dist,mindist;
+  double            newrot,newtilt,newpsi;
+  matrix2D<double>  L(4,4), R(4,4);
 
   DFlib.go_first_data_line();
   optdir=dir=1;
   mindist=9999.;
   while (!DFlib.eof()) {
-    dist=distance_directions(rot1,tilt1,DFlib(col_rot),DFlib(col_tilt),true);
+    dist=distance_directions(rot1,tilt1,DFlib(col_rot),DFlib(col_tilt),false);
     if (dist<mindist) {
       mindist=dist;
       optdir=dir;
     }
+    for (int i=0; i<SL.SymsNo(); i++) {
+      SL.get_matrices(i,L,R);
+      L.resize(3,3);R.resize(3,3);
+      Euler_apply_transf(L,R,rot1,tilt1,0.,newrot,newtilt,newpsi);
+      dist=distance_directions(newrot,newtilt,DFlib(col_rot),DFlib(col_tilt),false);
+      if (dist<mindist) {
+	mindist=dist;
+	optdir=dir;
+      }
+    }
+
     DFlib.next_data_line();
     dir++;
   }
+
   return optdir;
 
 }
