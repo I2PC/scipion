@@ -250,6 +250,10 @@ public:
    /** Merge this file into two random halfes */
    void split_in_two(SelFile &SF1,SelFile &SF2);
 
+  /** For MPI-parallelized runs: select relevant part of selfile for
+      that rank */
+  void mpi_select_part(int rank, int size, int &num_img_tot);
+
    /** Write a selection file to disk.
        If you give a name then it becomes like a "Save as ..." and from
        this point on the name of the selection file has changed.

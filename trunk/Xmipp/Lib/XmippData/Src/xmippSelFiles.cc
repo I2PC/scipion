@@ -355,6 +355,35 @@ void SelFile::split_in_two(SelFile &SF1,SelFile &SF2) {
   SF2=SFtmp;
 }
 
+/* Select only part of the selfile for parallel MPI-runs ------------------ */
+void SelFile::mpi_select_part(int rank, int size, int &num_img_tot) {
+
+  (*this).clean_comments();
+  (*this).clean();
+  num_img_tot = (*this).ImgNo();
+  int Npart = (int) ceil ((float)num_img_tot / (float)size);
+  int remaining = num_img_tot % size;
+  int myFirst, myLast;
+  if ( rank < remaining ) {
+    myFirst = rank * (Npart + 1);
+    myLast = myFirst + Npart;
+  } else {
+    myFirst = rank * Npart + remaining;
+    myLast = myFirst + Npart - 1;
+  }
+  // Now discard all images in Selfile that are outside myFirst-myLast
+  (*this).go_beginning();
+  SelFile  SFpart=*this;
+  SFpart.clear();
+  for (int nr=myFirst; nr<=myLast; nr++) {
+    (*this).go_beginning();
+    (*this).jump_lines(nr);
+    SFpart.insert((*this).current());
+  }
+  *this=SFpart;
+
+}
+
 /* Adjust to label --------------------------------------------------------- */
 void SelFile::adjust_to_label(SelLine::Label label) {
    if (current_line==text_line.end()) return;
