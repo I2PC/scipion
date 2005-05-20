@@ -28,15 +28,11 @@
 void Prog_WBP_prm::read(int argc, char **argv) _THROW  {
 
   fn_sel=get_param(argc,argv,"-i");
-  SF.read(fn_sel);
-  SF.ImgSize(dim,dim);
   apply_shifts=!check_param(argc,argv,"-dont_apply_shifts");
   fn_out =  get_param(argc,argv,"-o","wbp.vol"); 
   fn_sym =  get_param(argc,argv,"-sym",""); 
-  if (fn_sym!="") SL.read_sym_file(fn_sym);
   threshold=AtoF(get_param(argc,argv,"-threshold","1.667"));
   diameter=2*AtoI(get_param(argc,argv,"-radius","0"));
-  if (diameter==0) diameter=dim;
   sampling=AtoF(get_param(argc,argv,"-filsam","5"));
   do_all_matrices=check_param(argc,argv,"-use_each_image");
   // Hidden
@@ -91,6 +87,12 @@ void Prog_WBP_prm::usage() {
 }
 
 void Prog_WBP_prm::produce_Side_info() {
+
+  // Read-in stuff
+  SF.read(fn_sel);
+  SF.ImgSize(dim,dim);
+  if (fn_sym!="") SL.read_sym_file(fn_sym);
+  if (diameter==0) diameter=dim;
 
   // Fill arrays of transformation matrices
   if (do_all_matrices) get_all_matrices(SF);
@@ -344,7 +346,8 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 
   // Symmetrize if necessary
   if (fn_sym!="") {
-    VolumeXmipp Vaux(vol);
+    VolumeXmipp Vaux;
+    Vaux().resize(vol());
     symmetrize(SL,vol,Vaux);
     vol=Vaux;
     mask_prm.mode=INNER_MASK;
