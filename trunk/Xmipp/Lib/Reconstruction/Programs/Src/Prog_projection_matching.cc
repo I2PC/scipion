@@ -237,12 +237,12 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 							float &img_rot, float &img_tilt, float &img_psi, 
 							int &opt_dirno, double &opt_psi,
 							double &opt_xoff, double &opt_yoff, 
-							double &maxCC) _THROW {
+							double &maxCC, double &Zscore) _THROW {
 
 
   // Rotational search ====================================================
   matrix2D<double> Mimg,Mref,Maux,Mcorr;
-  double act_rot_range,psi,thisCC;
+  double act_rot_range,psi,thisCC,oldCC,aveCC=0.,varCC=0.;
   double stddev_img,mean_img,dummy,xmax,ymax;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
@@ -289,6 +289,10 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	}
 	thisCC/=ref_stddev[dirno]*stddev_img*nr_pixels_rotmask;
 	c++;
+        oldCC=aveCC;
+        aveCC+=(thisCC-oldCC)/(c+1);
+        if (c>1) varCC=(1.-1./(double)c)*varCC+(c+1.)*(oldCC-aveCC)*(oldCC-aveCC);
+	//cout << "rot= "<<ref_rot[dirno]<<" tilt= "<<ref_tilt[dirno]<<" psi= "<<psi<<" CC= "<<thisCC<<endl;
 	if (thisCC>maxCC) {
 	  maxCC=thisCC;
 	  opt_psi=psi;
@@ -298,6 +302,9 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
       }
     }
   }
+                                                                                
+  // Calculate Z-score on rotational permutations
+  Zscore=(maxCC-aveCC)/(sqrt(varCC));
 
   // Interpolated translational search for optimal angles ===================================
   Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
@@ -319,8 +326,8 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
   ImageXmipp img;
   FileName fn_img;
-  matrix1D<double> dataline(7);  
-  double opt_psi,opt_xoff,opt_yoff,maxCC;
+  matrix1D<double> dataline(8);  
+  double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
   int c,nn,imgno,opt_dirno;
 
   if (verb>0) cerr << "--> Projection matching ... "<<endl;
@@ -341,7 +348,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
     // Perform the projection matching for each image separately
     PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),
-			 opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC);
+			 opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC,Zscore);
 
     opt_xoff+=img.Xoff();
     opt_yoff+=img.Yoff();
@@ -354,6 +361,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     dataline(4)=opt_yoff;                // Yoff
     dataline(5)=opt_dirno+1;             // optimal direction number
     dataline(6)=maxCC;                   // maximum CC
+    dataline(7)=Zscore;                   // maximum CC
     DFo.append_comment(img.name());
     DFo.append_data_line(dataline);
 

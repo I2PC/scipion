@@ -103,7 +103,7 @@ public:
 			    float &img_rot, float &img_tilt, float &img_psi, 
 			    int &opt_dirno, double &opt_psi,
 			    double &opt_xoff, double &opt_yoff, 
-			    double &maxCC) _THROW;
+			    double &maxCC, double &Zscore) _THROW;
 
   /** Loop over all images */
   void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC) _THROW;
