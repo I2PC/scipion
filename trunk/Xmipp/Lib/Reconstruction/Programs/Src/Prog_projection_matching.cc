@@ -319,7 +319,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
   ImageXmipp img;
   FileName fn_img;
-  matrix1D<double> dataline(6);  
+  matrix1D<double> dataline(7);  
   double opt_psi,opt_xoff,opt_yoff,maxCC;
   int c,nn,imgno,opt_dirno;
 
@@ -352,7 +352,8 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     dataline(2)=opt_psi;                 // psi
     dataline(3)=opt_xoff;                // Xoff
     dataline(4)=opt_yoff;                // Yoff
-    dataline(5)=maxCC;                   // maximum CC
+    dataline(5)=opt_dirno+1;             // optimal direction number
+    dataline(6)=maxCC;                   // maximum CC
     DFo.append_comment(img.name());
     DFo.append_data_line(dataline);
 
