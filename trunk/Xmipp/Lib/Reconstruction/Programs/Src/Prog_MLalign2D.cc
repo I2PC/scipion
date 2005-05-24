@@ -380,7 +380,6 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 
   Maux.init_zeros(dim,dim);
   Maux.set_Xmipp_origin();
-  Faux.set_Xmipp_origin();
   mask.resize(dim,dim);
   mask.set_Xmipp_origin();
   omask.resize(dim,dim);
@@ -420,7 +419,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 	Mref[refno].push_back(Maux);
 	if (AA>0) Mref[refno][ipsi]*=sqrt(stdAA/AA);
       }
-      FourierTransform(Maux,Faux);
+      FourierTransformHalf(Maux,Faux);
       Faux*=dim*dim;
       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux) {
 	dMij(Faux,i,j)=conj(dMij(Faux,i,j));
@@ -475,7 +474,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<compl
       if (real_space) {
 	Maux=Mref[refno][ipsi];
       } else {
-	InverseFourierTransform(Fref[refno][ipsi],Maux);
+	InverseFourierTransformHalf(Fref[refno][ipsi],Maux,dim);
 	Maux/=dim*dim;
 	CenterFFT(Maux,true);
       }
@@ -574,12 +573,15 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg,
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
-void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
-						      matrix2D<int> &Msignificant,
-						      vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
-						      double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror, 
-						      double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
-						      matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
+void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
+     matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
+     matrix2D<int> &Msignificant,
+     vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
+     double &wsum_sigma_noise, double &wsum_sigma_offset, 
+     vector<double> &sumw, vector<double> &sumw_mirror, 
+     double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
+     matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
+
   matrix2D<double> Maux,Mdzero;
   matrix2D<complex<double> > Fimg, Faux;
   vector<matrix2D<complex<double> > > Fimg_flip;
@@ -607,6 +609,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
      Anyway, the total number of (I)FFT's is determined in much greater extent by n_ref and n_rot!
   */
   
+
   // Only translations smaller than 6 sigma_offset are considered!
   // This saves a lot of memory and CPU! (typically a factor 2, depending on sigma_offset vs. dim)
   sigdim=2*CEIL(sigma_offset*6);
@@ -617,7 +620,6 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Faux.resize(dim,dim);
-  Faux.set_Xmipp_origin();
   Fimg_flip.clear();
   Mweight.clear();
   sigma_noise2=sigma_noise*sigma_noise;
@@ -625,8 +627,9 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 
   // Flip images and calculate correlation matrices and maximum correlation
   FOR_ALL_FLIPS() {
+    Maux.set_Xmipp_origin();
     apply_geom(Maux,F[iflip],Mimg,IS_INV,WRAP);
-    FourierTransform(Maux,Fimg);
+    FourierTransformHalf(Maux,Fimg);
     Fimg*=dim*dim;
     Fimg_flip.push_back(Fimg);
     FOR_ALL_MODELS() {
@@ -635,7 +638,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 	irot=iflip*nr_psi+ipsi;
 	if (dMij(Msignificant,refno,irot)) {
 	  mul_elements(Fimg,Fref[refno][ipsi],Faux);
-	  InverseFourierTransform(Faux,Maux);
+	  InverseFourierTransformHalf(Faux,Maux,dim);
 	  Maux/=dim*dim;
 	  CenterFFT(Maux,true);
 	  Mweight[refno].push_back(Mdzero);
@@ -720,7 +723,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
 	      MAT_ELEM(Maux,i,j)=MAT_ELEM(Mweight[refno][irot],i,j);
 	      wsum_sigma_offset+=MAT_ELEM(Maux,i,j)*MAT_ELEM(Mr2,i,j);
 	    }
-	    FourierTransform(Maux,Faux);
+	    FourierTransformHalf(Maux,Faux);
 	    Faux*=dim*dim;
 	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux) {
 	      dMij(Fwsum_imgs[refno][ipsi],i,j)+=conj(dMij(Faux,i,j))*dMij(Fimg_flip[iflip],i,j);
@@ -735,13 +738,15 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   if (fast_mode) {
     for (int i=0; i<imax;i++) {
       opt_offsets_ref[i](0)=-(double)ioptx_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],0,0)-
-	(double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],0,1);
+	                     (double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],0,1);
       opt_offsets_ref[i](1)=-(double)ioptx_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],1,0)-
-	(double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],1,1);
+	                     (double)iopty_ref[i]*DIRECT_MAT_ELEM(F[ioptflip_ref[i]],1,1);
     }
   }
-  opt_offsets(0)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],0,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
-  opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)-(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
+  opt_offsets(0)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],0,0)-
+                  (double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
+  opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)-
+                  (double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
   opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
   fracweight=maxweight/sum_refw; 
 
@@ -750,7 +755,8 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(matrix2D<double> &Mimg, ve
   // 2nd term: for subtracting maxc
   // 3rd term: for only considering Xi*A instead of (A-Xi)^2
   // 4th term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-  LL+= log(sum_refw) + maxc/sigma_noise2 - (A2mean+Xi2)/(2*sigma_noise2) - dim*dim*log(2.50663*sigma_noise);
+  LL+= log(sum_refw) + maxc/sigma_noise2 - (A2mean+Xi2)/(2*sigma_noise2) 
+       - dim*dim*log(2.50663*sigma_noise);
 
 }
 
@@ -786,8 +792,7 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
   Maux2.set_Xmipp_origin();
-  Faux.resize(dim,dim);
-  Faux.set_Xmipp_origin();
+  Faux.resize((int)(dim/2)+1,dim);
   sigma_noise2=sigma_noise*sigma_noise;
   matrix2D<int> shiftmask;
 
@@ -804,16 +809,15 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
   // Flip images and calculate correlation matrices and maximum correlation
   FOR_ALL_FLIPS() {
     apply_geom(Maux,F[iflip],Maux2,IS_INV,WRAP);
-    FourierTransform(Maux,Fimg);
+    FourierTransformHalf(Maux,Fimg);
     Fimg*=dim*dim;
     FOR_ALL_MODELS() {
       FOR_ALL_ROTATIONS() {
 	irot=iflip*nr_psi+ipsi;
 	mul_elements(Fimg,Fref[refno][ipsi],Faux);
-	InverseFourierTransform(Faux,Maux);
+	InverseFourierTransformHalf(Faux,Maux,dim);
 	Maux/=dim*dim;
 	CenterFFT(Maux,true);
-	//Maux.set_Xmipp_origin();
 	if (max_shift>0.) apply_binary_mask(shiftmask,Maux,Maux,0.);
 	Maux.max_index(ymax,xmax);
 	CC=MAT_ELEM(Maux,ymax,xmax);
@@ -875,8 +879,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   Msum_imgs.clear();
   sumw.clear();
   sumw_mirror.clear();
-  Fdzero.resize(dim,dim);
-  Fdzero.set_Xmipp_origin();
+  Fdzero.resize((int)(dim/2)+1,dim);
   Mdzero.resize(dim,dim);
   Mdzero.set_Xmipp_origin();
   LL=0.;
@@ -919,7 +922,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
       ML_integrate_model_phi_trans(img(),Fref,Msignificant,
 				   Fwsum_imgs,wsum_sigma_noise, wsum_sigma_offset,sumw,sumw_mirror, 
 				   LL,maxcorr,opt_refno,opt_psi,opt_offsets,imgs_offsets[imgno]);
-
     }
 
     sumcorr+=maxcorr;
