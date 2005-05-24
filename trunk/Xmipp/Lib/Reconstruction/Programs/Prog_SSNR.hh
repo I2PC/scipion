@@ -35,10 +35,10 @@
 /** SSNR parameters. */
 class Prog_SSNR_prm {
 public:
-   /// Signal reconstructed volume
+   /// Signal reconstructed volume or a selfile with its projections
    FileName fn_S;
    
-   /// Noise reconstructed volume
+   /// Noise reconstructed volume or a selfile with its projections
    FileName fn_N;
    
    /// Selfile with all the experimental images
@@ -85,6 +85,12 @@ public:
    
    // Selfile with all noisy images
    SelFile SF_N;
+
+   // Selfile with all the images projected from the signal volume
+   SelFile SF_Sth;
+   
+   // Selfile with all the images projected from the noise volume
+   SelFile SF_Nth;
 
    // SSNR3D for the radial_avg
    VolumeXmipp VSSNR;

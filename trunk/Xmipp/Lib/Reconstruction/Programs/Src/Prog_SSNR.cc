@@ -70,8 +70,8 @@ ostream & operator << (ostream &out, const Prog_SSNR_prm &prm) {
 void Prog_SSNR_prm::usage() const {
    cerr << " SSNR Estimation ------------------------------------------------\n"
         << "SSNR\n"
-        << "   -S <Volume>           : Signal volume\n"
-        << "   -N <Volume>           : Noise volume\n"
+        << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
+        << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
         << "   -selS <Selfile>       : Selfile with experimental images\n"
         << "   -selN <Selfile>       : Selfile with noise images\n"
         << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
@@ -80,8 +80,8 @@ void Prog_SSNR_prm::usage() const {
         << " VSSNR Estimation -----------------------------------------------\n"
         << "SSNR\n"
         << "   -generate_VSSNR       : generate VSSNR\n"
-        << "   -S <Volume>           : Signal volume\n"
-        << "   -N <Volume>           : Noise volume\n"
+        << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
+        << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
         << "   -selS <Selfile>       : Selfile with experimental images\n"
         << "   -selN <Selfile>       : Selfile with noise images\n"
         << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
@@ -102,11 +102,19 @@ void Prog_SSNR_prm::usage() const {
 // Produce side Info -------------------------------------------------------
 void Prog_SSNR_prm::produce_side_info() _THROW {
    if (!radial_avg) {
-      S.read(fn_S); S().set_Xmipp_origin();
-      N.read(fn_N); N().set_Xmipp_origin();
-      if (!S().same_shape(N()))
-         REPORT_ERROR(1,
-            "SSNR: Signal and Noise volumes are not of the same size");
+      if (Is_VolumeXmipp(fn_S)) {
+	 S.read(fn_S); S().set_Xmipp_origin();
+	 N.read(fn_N); N().set_Xmipp_origin();
+	 if (!S().same_shape(N()))
+            REPORT_ERROR(1,
+               "SSNR: Signal and Noise volumes are not of the same size");
+      } else {
+	 SF_Sth.read(fn_S);
+	 SF_Nth.read(fn_N);
+	 if (SF_Sth.ImgNo()!=SF_Nth.ImgNo())
+            REPORT_ERROR(1,
+               "SSNR: the number of projections in both selfiles is different");
+      }
 
       SF_S.read(fn_Ssel);
       SF_N.read(fn_Nsel);
@@ -119,6 +127,9 @@ void Prog_SSNR_prm::produce_side_info() _THROW {
             "or projection/volume");
 
       if (SF_S.ImgNo()!=SF_N.ImgNo())
+         REPORT_ERROR(1,
+            "SSNR: the number of projections in both selfiles is different");
+      if (XSIZE(S())==0 && SF_Sth.ImgNo()!=SF_S.ImgNo())
          REPORT_ERROR(1,
             "SSNR: the number of projections in both selfiles is different");
 
@@ -154,10 +165,15 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
       Inp()=In();
       
       Projection Iths, Ithn;
-      project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
-         Is.rot(), Is.tilt(), Is.psi());
-      project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
-         Is.rot(), Is.tilt(), Is.psi());
+      if (XSIZE(S())!=0) {
+	 project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
+            Is.rot(), Is.tilt(), Is.psi());
+	 project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
+            Is.rot(), Is.tilt(), Is.psi());
+      } else {
+         Iths.read(SF_Sth.NextImg());
+         Ithn.read(SF_Nth.NextImg());
+      }
       
       #ifdef DEBUG
          ImageXmipp save;
