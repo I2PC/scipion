@@ -132,6 +132,15 @@
     template <class T>
        void Complex2AmplPhase(const complex<double> *_complex,
           T *_ampl, T *_phase, int length);
+
+    /** Conversion from whole -> half 2D.*/
+    void Whole2Half(const matrix2D<complex<double> > &in, 
+		    matrix2D<complex<double> > &out );
+
+    /** Conversion from half -> whole 2D.*/
+    void Half2Whole(const matrix2D<complex<double> > &in, 
+		    matrix2D<complex<double> > &out, int oriydim);
+
 //@}
 
 /**@name Fourier Transforms */
@@ -159,6 +168,15 @@
     /** Inverse Fourier Transform 3D.*/
     void InverseFourierTransform(const matrix3D< complex<double> > &in,
        matrix3D<double> &out);
+
+    /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform */
+    void FourierTransformHalf(const matrix2D<double> &in,
+       matrix2D< complex<double> > &out);
+
+    /** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform */
+    void InverseFourierTransformHalf(const matrix2D< complex<double> > &in,
+       matrix2D<double> &out, int oriydim);
+
 //@}
 
 /**@name Operations with the Fourier Transforms */
