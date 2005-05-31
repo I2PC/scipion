@@ -69,9 +69,7 @@ void Prog_projection_matching_prm::show() {
     cerr << "  Inner radius rot-search : "<<Ri<<endl;
     if (Ro>0) 
     cerr << "  Outer radius rot-search : "<<Ro<<endl;
-    if (max_shift>0) {
-      cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
-    }
+    cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
     if (rot_range>0) {
       cerr << "  -> Limit search of rot-angle to  +/- "<<rot_range<<" degrees"<<endl;
     }
@@ -136,12 +134,6 @@ void Prog_projection_matching_prm::produce_Side_info() _THROW {
   // Set nr_psi
   nr_psi=CEIL(360./sampling);
  
-  // Create max_shift mask
-  shiftmask.resize(dim,dim);
-  shiftmask.set_Xmipp_origin();
-  if (max_shift<0.) max_shift=(double)dim/2.;
-  BinaryCircularMask(shiftmask,max_shift,INNER_MASK);
-
   // Create rotational-search mask
   rotmask.resize(dim,dim);
   rotmask.set_Xmipp_origin();
@@ -310,7 +302,11 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
   Mref=ref_img[opt_dirno];
   Mref+=ref_mean[opt_dirno];
-  best_shift(Mimg,Mref,xmax,ymax,&shiftmask);
+  best_shift(Mimg,Mref,xmax,ymax);
+  if (xmax*xmax+ymax*ymax>max_shift*max_shift) {
+    xmax=0.; 
+    ymax=0.;
+  } 
   opt_xoff=-xmax*COSD(opt_psi)-ymax*SIND(opt_psi);
   opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
 

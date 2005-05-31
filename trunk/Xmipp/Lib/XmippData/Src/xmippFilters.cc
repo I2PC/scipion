@@ -521,13 +521,23 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
 
    correlation_matrix(I1,I2,Mcorr);
  
+   /*
+     Warning: for masks with a small number of non-zero pixels, this routine is NOT reliable...
+     Anyway, maybe using a mask is not a good idea at al...
+    */
+
    // Adjust statistics within shiftmask to average 0 and stddev 1
    if (mask!=NULL) {
-      compute_stats_within_binary_mask(*mask,Mcorr,dummy,dummy,avecorr,stdcorr);
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
-        if (MAT_ELEM(*mask,i,j)) 
-	   MAT_ELEM(Mcorr,i,j)=(MAT_ELEM(Mcorr,i,j)-avecorr)/stdcorr;
-        else MAT_ELEM(Mcorr,i,j)=0.;
+      if ((*mask).sum()<2) {
+        shiftX = shiftY = 0.; 
+        return;
+      } else { 
+	compute_stats_within_binary_mask(*mask,Mcorr,dummy,dummy,avecorr,stdcorr);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+	  if (MAT_ELEM(*mask,i,j)) 
+	    MAT_ELEM(Mcorr,i,j)=(MAT_ELEM(Mcorr,i,j)-avecorr)/stdcorr;
+	  else MAT_ELEM(Mcorr,i,j)=0.;
+      }
    } else
       Mcorr.statistics_adjust(0,1);
    Mcorr.max_index(imax,jmax);
