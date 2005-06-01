@@ -32,9 +32,7 @@
 int main(int argc, char **argv) {
 
   // For parallelization
-  int num_img_tot, num_img_node;
-  int myFirst, myLast, remaining, Npart;
-  int rank, size;
+  int rank, size, num_img_tot;
 
   int c,nn,imgno,opt_refno;
   double LL,sumw_allrefs,convv,sumcorr;
@@ -81,35 +79,8 @@ int main(int argc, char **argv) {
       }
     }
 
-    // Here discard part of SF for each node! If done here, reading imgs_offsets from headers of images goes OK.
-    // but reading from a docfile is not going to work... (that may be OK: the option of reading from a docfile
-    // was more for script-parallelized version anyway...
-
-    // Calculate indices myFirst and myLast and adapt prm.SF
-    prm.SF.clean_comments();
-    prm.SF.clean();
-    num_img_tot = prm.SF.ImgNo();
-    Npart = (int) ceil ((float)num_img_tot / (float)size);
-    remaining = num_img_tot % size;
-    if ( rank < remaining ) {
-      myFirst = rank * (Npart + 1);
-      myLast = myFirst + Npart;
-    } else {
-      myFirst = rank * Npart + remaining;
-      myLast = myFirst + Npart - 1;
-    }
-    // Now discard all images in Selfile that are outside myFirst-myLast
-    prm.SF.go_beginning();
-    SelFile SFpart;
-    SFpart.clear();
-    for (int nr=0; nr<num_img_tot; nr++) {
-      if ((nr>=myFirst) && (nr<=myLast)) {
-	prm.SF.go_beginning();
-	prm.SF.jump_lines(nr);
-	SFpart.insert(prm.SF.current());
-     }
-    }
-    prm.SF=SFpart;
+    // Select only relevant part of selfile for this rank
+    prm.SF.mpi_select_part(rank,size,num_img_tot);
 
     prm.produce_Side_info();
 
