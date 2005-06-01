@@ -361,8 +361,8 @@ void SelFile::mpi_select_part(int rank, int size, int &num_img_tot) {
   (*this).clean_comments();
   (*this).clean();
   num_img_tot = (*this).ImgNo();
-  int Npart = (int) ceil ((float)num_img_tot / (float)size);
   int remaining = num_img_tot % size;
+  int Npart = (int)(num_img_tot-remaining)/size;
   int myFirst, myLast;
   if ( rank < remaining ) {
     myFirst = rank * (Npart + 1);
