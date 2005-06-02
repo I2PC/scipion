@@ -52,17 +52,20 @@ int main (int argc, char **argv) {
     if (rank==0) prm.show();
     else  { prm.verb=0 }
 
+    // First produce the filter and then cut selfile in smaller parts
+    prm.produce_Side_info();
+
     // Select only relevant part of selfile for this rank
     prm.SF.mpi_select_part(rank,size,num_img_tot);
 
-    prm.produce_Side_info();
+    // Actual backprojection
     prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
 
     aux().resize(vol());
-    MPI_Allreduce(MULTIDIM_ARRAY(vol()),MULTIDIM_ARRAY(aux()),MULTIDIM_SIZE(vol()),
-		  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MULTIDIM_ARRAY(vol()),MULTIDIM_ARRAY(aux()),
+		  MULTIDIM_SIZE(vol()),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     vol=aux;
-
+    
     if (rank==0) vol.write(prm.fn_out);
 
   } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
