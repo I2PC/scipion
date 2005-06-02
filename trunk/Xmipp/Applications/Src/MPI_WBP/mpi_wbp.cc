@@ -22,14 +22,8 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippProjection.hh>
-#include <Reconstruction/projection.hh>
+/* INCLUDES ---------------------------------------------------------------- */
+#include <Reconstruction/Programs/Prog_WBP.hh>
 #include <mpi.h>
 
 int main (int argc, char **argv) {
