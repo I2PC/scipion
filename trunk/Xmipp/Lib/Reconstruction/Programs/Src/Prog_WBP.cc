@@ -31,7 +31,7 @@ void Prog_WBP_prm::read(int argc, char **argv) _THROW  {
   apply_shifts=!check_param(argc,argv,"-dont_apply_shifts");
   fn_out =  get_param(argc,argv,"-o","wbp.vol"); 
   fn_sym =  get_param(argc,argv,"-sym",""); 
-  threshold=AtoF(get_param(argc,argv,"-threshold","1.667"));
+  threshold=AtoF(get_param(argc,argv,"-threshold","0.005"));
   diameter=2*AtoI(get_param(argc,argv,"-radius","0"));
   sampling=AtoF(get_param(argc,argv,"-filsam","5"));
   do_all_matrices=check_param(argc,argv,"-use_each_image");
@@ -49,12 +49,13 @@ void Prog_WBP_prm::show() {
     cerr << " ================================================================="<<endl;
     cerr <<" Weighted-back projection (arbitrary geometry) "<<endl;
     cerr << " ================================================================="<<endl;
-    cerr << " Input selfile            : "<< fn_sel<<endl;
-    cerr << " Output volume            : "<< fn_out<<endl;
-    cerr << " Reconstruction radius    : "<< diameter/2<<endl;
-    cerr << " Filter threshold         : "<< threshold<<endl;
+    cerr << " Input selfile             : "<< fn_sel<<endl;
+    cerr << " Output volume             : "<< fn_out<<endl;
+    if (diameter>0)
+    cerr << " Reconstruction radius     : "<< diameter/2<<endl;
+    cerr << " Relative filter threshold : "<< threshold<<endl;
     if (fn_sym!="")
-    cerr << " Symmetry file:           : "<< fn_sym<<endl;
+    cerr << " Symmetry file:            : "<< fn_sym<<endl;
     if (!apply_shifts)
     cerr << " --> Do not apply shifts upon reading the images"<<endl;
     if (do_all_matrices)
@@ -78,7 +79,7 @@ void Prog_WBP_prm::usage() {
   cerr << " [ -o <name=\"wbp.vol\">         : filename for output volume \n";
   cerr << " [ -radius <int=dim/2> ]       : Reconstruction radius \n";
   cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
-  cerr << " [ -threshold <float=1.66> ]   : Lower threshold for filter values \n";
+  cerr << " [ -threshold <float=0.005> ]  : Lower (relative) threshold for filter values \n";
   cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
   cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
   cerr << " [ -dont_apply_shifts ]        : dont apply origin offsets as stored in the image headers\n";
@@ -93,7 +94,7 @@ void Prog_WBP_prm::produce_Side_info() {
   SF.ImgSize(dim,dim);
   if (fn_sym!="") SL.read_sym_file(fn_sym);
   if (diameter==0) diameter=dim;
-
+  
   // Fill arrays of transformation matrices
   if (do_all_matrices) get_all_matrices(SF);
   else get_sampled_matrices(SF);
@@ -106,7 +107,7 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
   headerXmipp       head;
   matrix2D<double>  A(3,3);
   matrix2D<double>  L(4,4), R(4,4);
-  double            newrot,newtilt,newpsi,rot,tilt,psi;
+  double            newrot,newtilt,newpsi,rot,tilt,psi,totimgs=0.;
   int               NN,dir,optdir;
   vector<double>    count_imgs;
 
@@ -142,6 +143,7 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
       mat_g[no_mats].one=A(2,1);
       mat_g[no_mats].two=A(2,2);
       mat_g[no_mats].count=count_imgs[i];
+      totimgs+=mat_g[no_mats].count;
       no_mats++;
       // Expand symmetric directions 
       for (int j=0; j<SL.SymsNo(); j++) {
@@ -153,10 +155,14 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
 	mat_g[no_mats].one=A(2,1);
 	mat_g[no_mats].two=A(2,2);
 	mat_g[no_mats].count=count_imgs[i];
+	totimgs+=mat_g[no_mats].count;
 	no_mats++;
       }
     }
   }
+
+  // Adjust relative threshold
+  threshold*=totimgs;
 
 }
 
@@ -166,7 +172,7 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
   headerXmipp      head;
   matrix2D<double> A(3,3);
   matrix2D<double> L(4,4), R(4,4);
-  double           newrot,newtilt,newpsi;
+  double           newrot,newtilt,newpsi,totimgs=0.;
   int              NN;
 
   SF.go_beginning();
@@ -176,6 +182,7 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
   NN*=(SL.SymsNo()+1);
   mat_g=(column*)malloc(NN*sizeof(column));
 
+
   while (!SF.eof()) {
     head.read(SF.NextImg());
     Euler_angles2matrix (head.Phi(),-head.Theta(),head.Psi(),A);
@@ -184,6 +191,7 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
     mat_g[no_mats].two=A(2,2);
     if (do_weights) mat_g[no_mats].count=head.Weight();
     else mat_g[no_mats].count=1.;
+    totimgs+=mat_g[no_mats].count;
     no_mats++;
     // Also add symmetry-related projection directions
     for (int i=0; i<SL.SymsNo(); i++) {
@@ -196,9 +204,13 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
       mat_g[no_mats].two=A(2,2);
       if (do_weights) mat_g[no_mats].count=head.Weight();
       else mat_g[no_mats].count=1.;
+      totimgs+=mat_g[no_mats].count;
       no_mats++;
     }
   }
+
+  // Adjust relative threshold
+  threshold*=totimgs;
 
 }
 
@@ -292,6 +304,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
       weight += mat_g[k].count*TSINC(argum);
     }
     if (fabs(weight) < threshold) {
+      count_thr++;
       MAT_ELEM(IMG(),i,j) /= (threshold*factor);
     } else {
       MAT_ELEM(IMG(),i,j) /= (weight*factor);
@@ -317,6 +330,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
   vol().resize(dim,dim,dim);
   vol().set_Xmipp_origin();
   vol().init_zeros();
+  count_thr=0;
 
    // Initialize time bar
   if (verb>0) cerr <<"--> Back-projecting ..."<<endl;
@@ -357,6 +371,9 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     mask_prm.apply_mask(vol(),vol(),0.);
   }
 
+  if (verb>0) 
+    cerr << "Fourier pixels for which the threshold was not reached: "
+	 <<(float)(count_thr*100.)/(SF.ImgNo()*dim*dim)<<" %"<<endl;
 
   // free memory
   free(mat_g);

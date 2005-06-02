@@ -49,6 +49,8 @@ public:
   bool apply_shifts;
   /** Lower threshold for the filter */
   double threshold;
+  /** Counter for how many times the threshold was not reached */
+  int count_thr;
   /** Diameter for reconstruction */
   int diameter;
   /** verbosity flag */
