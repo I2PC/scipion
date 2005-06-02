@@ -33,6 +33,7 @@ int main (int argc, char **argv) {
   // For program
   VolumeXmipp   vol,aux;
   Prog_WBP_prm  prm;
+  int           iaux;
 
   // Init Parallel interface		
   MPI_Init(&argc, &argv);  
@@ -44,7 +45,7 @@ int main (int argc, char **argv) {
     // Read command line & produce side info
     prm.read(argc,argv);
     if (rank==0) prm.show();
-    else  { prm.verb=0 }
+    else  { prm.verb=0; }
 
     // First produce the filter and then cut selfile in smaller parts
     prm.produce_Side_info();
@@ -59,8 +60,13 @@ int main (int argc, char **argv) {
     MPI_Allreduce(MULTIDIM_ARRAY(vol()),MULTIDIM_ARRAY(aux()),
 		  MULTIDIM_SIZE(vol()),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     vol=aux;
-    
-    if (rank==0) vol.write(prm.fn_out);
+    MPI_Allreduce(&prm.count_thr,&iaux,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+
+    if (rank==0) {
+	cerr << "Fourier pixels for which the threshold was not reached: "
+	     <<(float)(iaux*100.)/(num_img_tot*prm.dim*prm.dim)<<" %"<<endl;
+	vol.write(prm.fn_out);
+    }
 
   } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
 

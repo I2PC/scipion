@@ -37,7 +37,13 @@ int main(int argc, char **argv) {
     prm.show();    
     prm.produce_Side_info();
     prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
+
+    if (prm.verb>0) 
+	cerr << "Fourier pixels for which the threshold was not reached: "
+	     <<(float)(prm.count_thr*100.)/(prm.SF.ImgNo()*prm.dim*prm.dim)<<" %"<<endl;
+
     vol.write(prm.fn_out);
+
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 
