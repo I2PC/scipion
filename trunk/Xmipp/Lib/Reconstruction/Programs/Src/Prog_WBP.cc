@@ -371,10 +371,6 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     mask_prm.apply_mask(vol(),vol(),0.);
   }
 
-  if (verb>0) 
-    cerr << "Fourier pixels for which the threshold was not reached: "
-	 <<(float)(count_thr*100.)/(SF.ImgNo()*dim*dim)<<" %"<<endl;
-
   // free memory
   free(mat_g);
   free(mat_f);
