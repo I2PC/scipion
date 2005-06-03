@@ -47,6 +47,7 @@
 void ImageViewer::Init()
 {
     minGray=maxGray=0;
+    fft_show_mode=0;
    
     pickx = -1;
     clickx = -1;
@@ -70,6 +71,7 @@ void ImageViewer::Init()
     menubar->insertItem( "&Options", options );
     ss = options->insertItem( "Set Spacing" );
     ravg = options->insertItem( "Radial average" );
+    sfft = options->insertItem( "Set FFT show mode" );
 
     menubar->insertSeparator();
 
@@ -108,6 +110,7 @@ ImageViewer::ImageViewer( const char *name, bool _check_file_change):
 {
     check_file_change=_check_file_change;
     apply_geo=true;
+    isFourierImage=false;
     Init();
 }
 
@@ -120,6 +123,7 @@ ImageViewer::ImageViewer( QImage *_image, const char *name)
 {
     check_file_change=false;
     apply_geo=true;
+    isFourierImage=false;
     Init();
     filename = name;
     if (Qt2xmipp(*_image)) showImage();
@@ -134,6 +138,7 @@ ImageViewer::ImageViewer( Image *_image, const char *name)
 {
     check_file_change=false;
     apply_geo=true;
+    isFourierImage=false;
     Init();
     filename = name;
     if (xmipp2Qt((Image&) *_image)) showImage();
@@ -148,30 +153,60 @@ ImageViewer::ImageViewer( FourierImageXmipp *_FFTimage, const char *name)
 {
     check_file_change=false;
     apply_geo=true;
+    isFourierImage=true;
     Init();
     filename = name;
-    // Compute the magnitude
+    xmippImageFourier=(*_FFTimage)();
+    CenterFFT(xmippImageFourier,true);
     ImageXmipp I;
-    FFT_magnitude((*_FFTimage)(),I());
-    CenterFFT(I(),true);
+    generateFFTImage(I());
+    if (xmipp2Qt(I)) showImage();
+}
 
-    // Compute the log of all those that are not 0
-    double min_positive=I().compute_max();
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I()) {
-       double val=MULTIDIM_ELEM(I(),i);
-       if (val!=0) {
-	  MULTIDIM_ELEM(I(),i)=10*log10(val*val);
-	  if (val<min_positive) min_positive=val;
+void ImageViewer::generateFFTImage(matrix2D<double> &out) {
+    matrix2D<int> Isubs;
+    Isubs.init_zeros(YSIZE(xmippImageFourier),XSIZE(xmippImageFourier));
+    out.init_zeros(YSIZE(xmippImageFourier),XSIZE(xmippImageFourier));
+    double min_positive;
+    bool first=true;
+    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(xmippImageFourier) {
+       double ampl, phase, val, eps;
+       eps=0;
+       val=min_positive;
+       switch (fft_show_mode) {
+          case 0:
+	     ampl=abs(MULTIDIM_ELEM(xmippImageFourier,i));
+	     if (ampl!=0)
+		val=MULTIDIM_ELEM(out,i)=10*log10(ampl*ampl);
+	     else MULTIDIM_ELEM(Isubs,i)=1;
+	     break;
+	  case 1:
+	     val=MULTIDIM_ELEM(out,i)=real(MULTIDIM_ELEM(xmippImageFourier,i));
+	     break;
+	  case 2:
+	     val=MULTIDIM_ELEM(out,i)=imag(MULTIDIM_ELEM(xmippImageFourier,i));
+	     break;
+	  case 3:
+	     val=MULTIDIM_ELEM(out,i)=abs(MULTIDIM_ELEM(xmippImageFourier,i));
+	     break;
+	  case 4:
+	     ampl=abs(MULTIDIM_ELEM(xmippImageFourier,i));
+	     val=MULTIDIM_ELEM(out,i)=ampl*ampl;
+	     break;
+	  case 5:
+	     val=MULTIDIM_ELEM(out,i)=arg(MULTIDIM_ELEM(xmippImageFourier,i));
+	     break;
        }
+       if (val<min_positive || first) {min_positive=val; first=false;}
     }
     
     // Substitute 0s by something a little bit smaller
-    min_positive=10*log10(min_positive*min_positive)-1;
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
-       if (MULTIDIM_ELEM(I(),i)==0) MULTIDIM_ELEM(I(),i)=min_positive;
-
-    // Set the image and show
-    if (xmipp2Qt(I)) showImage();
+    if (fft_show_mode==0) {
+       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Isubs)
+	  if (MULTIDIM_ELEM(Isubs,i)==1) MULTIDIM_ELEM(out,i)=min_positive-1;
+    }
+    
+    out.set_Xmipp_origin();
 }
 
 /****************************************************/
@@ -198,6 +233,21 @@ void ImageViewer::doOption(int item)
       param_window = new ScrollParam(min,max, spacing, "Set spacing", 
          0, "new window", WDestructiveClose);
       connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
+      param_window->setFixedSize(250,200);
+      param_window->show();
+    } else if (item == sfft) {
+      ExclusiveParam* param_window;	
+      vector<string> list_values;
+      list_values.push_back("10*log10(abs(z)^2)");
+      list_values.push_back("real(z)");
+      list_values.push_back("imag(z)");
+      list_values.push_back("abs(z)");
+      list_values.push_back("abs(z)^2");
+      list_values.push_back("phase(z)");
+
+      param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode", 
+         0, "new window", WDestructiveClose);
+      connect( param_window, SIGNAL(new_value(int)), this, SLOT(set_fft_show_mode(int)) );
       param_window->setFixedSize(250,200);
       param_window->show();
     } else if (item == ravg) {
@@ -434,32 +484,25 @@ bool ImageViewer::loadImage( const char *fileName,
             Image tmpImage;
 	    if (!imagic) wait_until_stable_size(filename);
             if (imagic) {
+               isFourierImage=false;
 	       Image *p = Image::LoadImage(filename);
 	       if (!p) REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
                tmpImage() = (*p)();
                delete p;
+	       options->setItemEnabled(sfft,false);
             } else if (Is_ImageXmipp(filename)) {
+               isFourierImage=false;
                ImageXmipp p;
                p.read((FileName)filename,FALSE,FALSE,apply_geo,FALSE);
                tmpImage()=p();
+	       options->setItemEnabled(sfft,false);
             } else if (Is_FourierImageXmipp(filename)) {
+               isFourierImage=true;
 	       FourierImageXmipp If; If.read(filename);
-	       FFT_magnitude(If(),tmpImage());
-	       CenterFFT(tmpImage(),true);
-	       double min_positive=tmpImage().compute_max();
-	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage()) {
-	          double val=MULTIDIM_ELEM(tmpImage(),i);
-	          if (val!=0) {
-	             MULTIDIM_ELEM(tmpImage(),i)=10*log10(val*val);
-	             if (val<min_positive) min_positive=val;
-	          }
-	       }
-
-	       // Substitute 0s by something a little bit smaller
-	       min_positive=10*log10(min_positive*min_positive)-1;
-	       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(tmpImage())
-	          if (MULTIDIM_ELEM(tmpImage(),i)==0)
-		     MULTIDIM_ELEM(tmpImage(),i)=min_positive;
+               xmippImageFourier=If();
+               CenterFFT(xmippImageFourier,true);
+	       generateFFTImage(tmpImage());
+	       options->setItemEnabled(sfft,true);
 	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
 	    tmpImage().set_Xmipp_origin();
 	    minGray=_minGray;
@@ -822,6 +865,14 @@ void ImageViewer::set_spacing(float _spacing) {
   spacing = _spacing;
 }
 
+void ImageViewer::set_fft_show_mode(int _fft_show_mode) {
+  fft_show_mode = _fft_show_mode;
+  if (isFourierImage) {
+     ImageXmipp I;
+     generateFFTImage(I());
+     if (xmipp2Qt(I)) showImage();
+  }
+}
 
 /****************************************************/
 

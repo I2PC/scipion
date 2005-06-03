@@ -96,6 +96,7 @@ private:
     bool	convertEvent( QMouseEvent* e, int& x, int& y );
     const char* filename;
     Image	xmippImage;		// Xmipp Image
+    matrix2D< complex<double> > xmippImageFourier; // Fourier image
     double      minGray;                // Minimum value of the image
     double      maxGray;                // Maximum value of the image
     QImage	image;			// the loaded image
@@ -105,6 +106,13 @@ private:
     					// -1: No Xmipp image
 					//  0: Xmipp image
     bool        check_file_change;
+    int         fft_show_mode;          // 0 10*log10(abs(z)^2)
+                                        // 1 real(z)
+					// 2 imag(z)
+					// 3 abs(z)
+					// 4 abs(z)^2
+					// 5 phase(z)
+    bool        isFourierImage;         // True if the image is in Fourier
     time_t      modification_time;      // of the file
     QPopupMenu *menubar;
     QPopupMenu *file;
@@ -114,11 +122,12 @@ private:
     QPrinter   *printer;    
     QLabel     *status;
     QTimer     *timer;
-    int 	ss, si, pi, ravg;
+    int 	ss, si, pi, ravg, sfft;
     void	Init();
     bool 	xmipp2Qt(Image& _image);
     bool 	Qt2xmipp(QImage &_image);
     bool 	showImage();
+    void 	generateFFTImage(matrix2D<double> &out);
     void	updateStatus();
     bool 	reconvertImage();
     int		pickx, picky;
@@ -139,6 +148,7 @@ private slots:
     void	doOption(int);
     void 	printIt();
     void 	set_spacing(float _spacing);
+    void 	set_fft_show_mode(int _fft_show_mode);
     void        about();
     void        aboutXmipp();
     void        check_file();
