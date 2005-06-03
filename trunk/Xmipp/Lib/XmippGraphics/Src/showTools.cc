@@ -266,6 +266,100 @@ void ScrollParam2::but_ok_clicked()
   close();  
 }
 
+ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
+   char *caption, QWidget *parent, const char *name, int wFlags ) : 
+   QWidget( parent, name, wFlags )
+{
+    float my_precision=0;
+    int tmp_min=(int) 0;
+    int tmp_max=(int) 1;
+    value  = (int)initial_value;
+    QColor col;
+   // Set the window caption/title
+
+    setCaption( caption );
+
+    // Create a layout to position the widgets
+
+    QBoxLayout *Layout = new QVBoxLayout( this, 10 );
+
+    // Create a grid layout to hold most of the widgets
+    QGridLayout *grid = new QGridLayout( 5+list_values.size(), 3 );
+    // This layout will get all of the stretch
+
+    Layout->addLayout( grid, 5 );
+
+    //title
+    QLabel     *title= new QLabel( this, "title" );    
+    title->setFont( QFont("times",14,QFont::Bold) );
+    title->setText( "FFT show mode" );
+    title->setFixedSize(title->sizeHint());
+    grid->addMultiCellWidget( title, 0, 0, 0, 2);
+
+    // Set all QRadioButtons
+    for (int i=0; i<list_values.size(); i++) {
+       button.push_back(new QRadioButton(list_values[i],this,"radiobutton"));
+       if (i==initial_value) button[i]->setChecked(true);
+       connect(  button[i], SIGNAL(toggled(bool)), this, SLOT(exclusiveValueChanged()) );
+       grid->addMultiCellWidget( button[i], 2+i, 2+i, 0, 2);			   
+    }
+     
+    //Close Button
+    QPushButton *close;
+    close = new QPushButton( this, "close" );	// create button 1
+    close->setFont( QFont("times",12,QFont::Bold) );
+    close->setText( "Close" );    
+    close->setFixedSize( close->sizeHint());
+    grid->addWidget( close, 3+list_values.size(), 0, AlignVCenter ); 
+    QToolTip::add( close, "Close the window" );
+    connect( close, SIGNAL(clicked()), SLOT(but_close_clicked()) );
+        
+    QPushButton *do_it;
+    do_it = new QPushButton( this, "do_it" );	// create button 3
+    do_it->setFont( QFont("times",12,QFont::Bold) );
+    do_it->setText( "Ok" );
+    do_it->setFixedHeight( do_it->sizeHint().height());
+    do_it->setFixedWidth(80);
+    grid->addWidget( do_it, 3+list_values.size(), 2, AlignVCenter ); 
+    QToolTip::add( do_it, "Commit action" );
+    connect( do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()) );
+}
+
+/****************************************************/
+ExclusiveParam::~ExclusiveParam()
+{
+}
+/****************************************************/
+
+/****************************************************/
+
+void ExclusiveParam::but_close_clicked()
+{
+  close();
+}
+
+/****************************************************/
+
+void ExclusiveParam::but_ok_clicked()   
+{
+  emit new_value( value );
+  close();  
+}
+
+void ExclusiveParam::exclusiveValueChanged()   
+{
+   // Count the number of active buttons
+   int N=0;
+   for (int i=0; i<button.size(); i++)
+      if (button[i]->isChecked()) N++;
+   if (N==0) button[value]->setChecked(true);
+   else if (N>1) {
+      button[value]->setChecked(false);
+      for (int i=0; i<button.size(); i++)
+	 if (button[i]->isChecked()) {value=i; break;}
+   }
+}
+
 /* Qimage -> Xmipp --------------------------------------------------------- */
 void Qt2xmipp( QImage &_qimage, Image &_ximage ) {
    _ximage().resize(_qimage.height(), _qimage.width());

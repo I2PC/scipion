@@ -30,7 +30,10 @@
 #include <qlabel.h>
 #include <qimage.h>
 #include <qpixmap.h>
+#include <qradiobutton.h>
 #include <XmippData/xmippImages.hh>
+#include <vector>
+#include <string>
 
 /**@name ShowTools */
 //@{
@@ -129,6 +132,52 @@ private slots:
 signals:
    /** Signal emitted when the value is changed*/
    void new_value(float,float);
+};
+
+/**Exclusive param class.
+    This class opens a window for asking for a exclusive parameter.
+    It emits a signal called new_value(int) with the selected value
+    
+    An example of use of this class is
+    \begin{verbatim}
+       vector<string> list_values;
+       list_values.push_back("Option 1");
+       list_values.push_back("Option 2");
+      // Create window
+      ExclusiveParam* param_window=
+           new ExclusiveParam(list_values, parameter, "Set this exclusive parameter", 
+             0, "new window", WDestructiveClose);
+
+      // Connect its output to my input (set_spacing)
+      connect( param_window, SIGNAL(new_value(int)), 
+               this,         SLOT(set_spacing(int)));
+
+      // Show
+      param_window->setFixedSize(250,200);
+      param_window->show();
+    \end{verbatim}
+*/
+class ExclusiveParam : public QWidget
+{ 
+  Q_OBJECT
+public:
+    /** Constructor.
+        Provide the min_value, max_value, caption and initial_value.*/
+    ExclusiveParam( vector<string> &list_values, int initial_value, 
+       char *caption, QWidget *parent = 0,
+       const char *name = 0, int wFlags=0 );
+    ~ExclusiveParam();
+
+private:
+   int       value;
+   vector< QRadioButton *> button;
+private slots:
+   void but_close_clicked();
+   void but_ok_clicked();   
+   void exclusiveValueChanged();
+signals:
+   /** Signal emitted when the value is changed*/
+   void new_value(int);
 };
 
 /**@name Image conversions */
