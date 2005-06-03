@@ -435,7 +435,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
   // for the numerical precision of the exp function...
   FOR_ALL_MODELS() {
     if (!LSQ_rather_than_ML && 
-	ABS((A2mean-A2[refno])/2*sigma_noise*sigma_noise)>1000.) {
+	ABS((A2mean-A2[refno])/(2*sigma_noise*sigma_noise))>1000.) {
       cerr <<"mean power= "<<A2mean<<" power reference "<<refno<<"= "<<A2[refno]<<endl;
       REPORT_ERROR(1,"Very large differences in powers of references give numerical problems, are the images normalized?");
     }
@@ -664,7 +664,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
     // when the difference in power of the references is large, the exp becomes 0/inf.
     // For now, I dont know what to do... Put a warning in rotate_reference
     // If the images are properly normalized this does not seem to be so much of a problem?
-    corrA2=exp((A2mean-A2[refno])/2*sigma_noise2);
+    corrA2=exp((A2mean-A2[refno])/(2*sigma_noise2));
     FOR_ALL_ROTATIONS() {
       FOR_ALL_FLIPS() {
 	irot=iflip*nr_psi+ipsi;
