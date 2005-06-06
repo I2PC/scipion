@@ -81,6 +81,7 @@ void FourierMask::read(int argc, char **argv) _THROW {
       if (i+2>=argc)
          REPORT_ERROR(3000,"FourierMask: CTF needs a CTF file");
       ctf.read(argv[i+2]);
+      ctf.enable_CTFnoise=false;
       FilterShape=FilterBand=CTF;
       ctf.Produce_Side_Info();
    } else {
