@@ -371,7 +371,7 @@ void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
 void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW {
 
-  double AA,stdAA,sumAA=0.,psi,dum,avg,mean_ref,stddev_ref,dummy;
+  double AA,stdAA,psi,dum,avg,mean_ref,stddev_ref,dummy;
   matrix2D<double> Maux;
   matrix2D<complex<double> > Faux;
   vector<matrix2D<complex <double> > > dumF;
@@ -406,7 +406,6 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       AA=Maux.sum2();      
       if (ipsi==0) {
 	stdAA=AA;
-	sumAA+=AA;
 	A2.push_back(AA);
       }
       // Subtract mean_ref from image prior to FFT for maxCC
@@ -427,17 +426,6 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       Fref[refno].push_back(Faux);
       if (AA>0) Fref[refno][ipsi]*=sqrt(stdAA/AA);
 
-    }
-  }
-  A2mean=sumAA/n_ref;
-
-  // Check that the differences in powers are not to large 
-  // for the numerical precision of the exp function...
-  FOR_ALL_MODELS() {
-    if (!LSQ_rather_than_ML && 
-	ABS((A2mean-A2[refno])/(2*sigma_noise*sigma_noise))>1000.) {
-      cerr <<"mean power= "<<A2mean<<" power reference "<<refno<<"= "<<A2[refno]<<endl;
-      REPORT_ERROR(1,"Very large differences in powers of references give numerical problems, are the images normalized?");
     }
   }
 
@@ -493,23 +481,25 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg,
 							 vector <vector< matrix2D<double > > > &Mref, 
 							 matrix2D<int> &Msignificant) _THROW {
 
+
   matrix2D<double> Maux,Maux2,Mdsig(n_ref,nr_psi*nr_flip);
   double ropt,sigma_noise2,aux,fracpdf;
-  double CC,maxCC=-99.e99,maxweight=-99.e99;
+  double Xi2,A2_plus_Xi2,CC,mindiff=99.e99,maxweight=-99.e99;
   int irot,irefmir;
   vector<double> maxw_ref(2*n_ref);
   matrix1D<double> trans(2);
 
-  randomize_random_generator();
-
+  if (Paccept_fast>0.) randomize_random_generator();
   Maux.resize(dim,dim);
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
   Maux2.set_Xmipp_origin();
   sigma_noise2=sigma_noise*sigma_noise;
+  Xi2=Mimg.sum2();
 
   // Flip images and calculate correlations and maximum correlation
   FOR_ALL_MODELS() {
+    A2_plus_Xi2=0.5*(A2[refno]+Xi2);
     FOR_ALL_FLIPS() {
       irefmir=FLOOR(iflip/4)*n_ref+refno;
       // Do not trust optimal offsets if they are larger than 3*sigma_offset: 
@@ -517,52 +507,60 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg,
       if (ropt>3*sigma_offset)  {
 	FOR_ALL_ROTATIONS() {
 	  irot=iflip*nr_psi+ipsi;
-	  dMij(Mdsig,refno,irot)=1.;
+	  dMij(Msignificant,refno,irot)=1;
 	}
       } else {
 	Maux=Mimg.translate(offsets[irefmir],true);
 	apply_geom(Maux2,F[iflip],Maux,IS_INV,WRAP);
 	FOR_ALL_ROTATIONS() {
 	  irot=iflip*nr_psi+ipsi;
-	  CC=0.;
+	  dMij(Msignificant,refno,irot)=0;
+	  CC=A2_plus_Xi2;
 	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux2) {
-	    CC+=dMij(Maux2,i,j)*dMij(Mref[refno][ipsi],i,j);
+	    CC-=dMij(Maux2,i,j)*dMij(Mref[refno][ipsi],i,j);
 	  }
 	  dMij(Mdsig,refno,irot)=CC;
-	  if (CC>maxCC) maxCC=CC;
+	  if (CC<mindiff) mindiff=CC;
 	}
       }
     }
   }
 
-  // Now that we have maxCC calculate the weighting matrices and maxweight
+  // Now that we have mindiff calculate the weighting matrices and maxweight
   FOR_ALL_MODELS() {
     FOR_ALL_FLIPS() {
       irefmir=FLOOR(iflip/4)*n_ref+refno;
       FOR_ALL_ROTATIONS() {
 	irot=iflip*nr_psi+ipsi;
-	if (iflip<4) fracpdf=alpha_k[refno]*(1.-mirror_fraction[refno]);
-	else fracpdf=alpha_k[refno]*mirror_fraction[refno];
-	aux=dMij(Mdsig,refno,irot)-maxCC;
-	aux=exp(aux/sigma_noise2)*fracpdf;
-	dMij(Mdsig,refno,irot)=aux;
-	if (aux>maxw_ref[irefmir]) maxw_ref[irefmir]=aux;
+	if (!dMij(Msignificant,refno,irot)) {
+	  if (iflip<4) fracpdf=alpha_k[refno]*(1.-mirror_fraction[refno]);
+	  else fracpdf=alpha_k[refno]*mirror_fraction[refno];
+	  aux=(dMij(Mdsig,refno,irot)-mindiff)/sigma_noise2;
+	    // next line because of numerical precision of exp-function
+	  if (aux>1000.) aux=0.;
+	  else aux=exp(-aux)*fracpdf*MAT_ELEM(P_phi,(int)offsets[irefmir](1),(int)offsets[irefmir](0));
+	  dMij(Mdsig,refno,irot)=aux;
+	  if (aux>maxw_ref[irefmir]) maxw_ref[irefmir]=aux;
+	}
       }
     }
   }
 
   // Now that we have maxweight calculate which weighting matrices are significant
-  // Set Vweight to zero if insignificant
   FOR_ALL_MODELS() {
     FOR_ALL_FLIPS() {
       irefmir=FLOOR(iflip/4)*n_ref+refno;
       FOR_ALL_ROTATIONS() {
 	irot=iflip*nr_psi+ipsi;
-	if (dMij(Mdsig,refno,irot)>=C_fast*maxw_ref[irefmir]) dMij(Msignificant,refno,irot)=1;
-	else {
-	  // Allow a fraction Paccept_fast to have a complete search
-	  if (rnd_unif(0,1)<Paccept_fast) dMij(Msignificant,refno,irot)=1;
-	  else dMij(Msignificant,refno,irot)=0;
+	if (!dMij(Msignificant,refno,irot)) {
+	  if (dMij(Mdsig,refno,irot)>=C_fast*maxw_ref[irefmir]) dMij(Msignificant,refno,irot)=1;
+	  else {
+	    dMij(Msignificant,refno,irot)=0;
+	    if (Paccept_fast>0.) {
+	      // Allow a fraction Paccept_fast to have a complete search
+	      if (rnd_unif(0,1)<Paccept_fast) dMij(Msignificant,refno,irot)=1;
+	    }
+	  }
 	}
       }
     }
@@ -574,13 +572,13 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg,
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
 void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
-     matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
-     matrix2D<int> &Msignificant,
-     vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
-     double &wsum_sigma_noise, double &wsum_sigma_offset, 
-     vector<double> &sumw, vector<double> &sumw_mirror, 
-     double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
-     matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
+          matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
+          matrix2D<int> &Msignificant,
+	  vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
+	  double &wsum_sigma_noise, double &wsum_sigma_offset, 
+	  vector<double> &sumw, vector<double> &sumw_mirror, 
+	  double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
+	  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
 
   matrix2D<double> Maux,Mdzero;
   matrix2D<complex<double> > Fimg, Faux;
@@ -589,7 +587,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
   vector<bool> dumb;
   vector <vector< matrix2D<double> > > Mweight;
   vector<double> refw(n_ref), refw_mirror(n_ref);
-  double sigma_noise2,XiA,Xi2,aux,fracpdf,sigw,add,max,corrA2,maxc=-99.e99;
+  double sigma_noise2,XiA,Xi2,aux,fracpdf,A2_plus_Xi2,maxw,mind,mindiff2=99.e99;
   double sum,wsum_corr=0., sum_refw=0., wsum_A2=0., maxweight=-99.e99;
   int irot,irefmir,sigdim,xmax,ymax;
   int ioptx=0,iopty=0,ioptpsi=0,ioptflip=0,imax=0;
@@ -633,6 +631,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
     Fimg*=dim*dim;
     Fimg_flip.push_back(Fimg);
     FOR_ALL_MODELS() {
+      A2_plus_Xi2=0.5*(A2[refno]+Xi2);
       Mweight.push_back(dumM); 
       FOR_ALL_ROTATIONS() {
 	irot=iflip*nr_psi+ipsi;
@@ -645,10 +644,10 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
 	  Mweight[refno][irot].resize(sigdim,sigdim);
 	  Mweight[refno][irot].set_Xmipp_origin();
 	  FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot]) {
-	    MAT_ELEM(Mweight[refno][irot],i,j)=MAT_ELEM(Maux,i,j);
+	    MAT_ELEM(Mweight[refno][irot],i,j)=A2_plus_Xi2-MAT_ELEM(Maux,i,j);
 	  }
-	  max=Mweight[refno][irot].compute_max();
-	  if (max>maxc) maxc=max;
+	  mind=Mweight[refno][irot].compute_min();
+	  if (mind<mindiff2) mindiff2=mind;
 	} else {
 	  Mweight[refno].push_back(Mdzero);
 	}
@@ -656,15 +655,10 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
     }
   }
 
-  // Now that we have maxc calculate the weighting matrices and maxweight
+  // Now that we have mindiff2 calculate the weighting matrices and maxweight
   FOR_ALL_MODELS() {
     refw[refno]=0.;
     refw_mirror[refno]=0.;
-    // There is a numerical problem with the following line 
-    // when the difference in power of the references is large, the exp becomes 0/inf.
-    // For now, I dont know what to do... Put a warning in rotate_reference
-    // If the images are properly normalized this does not seem to be so much of a problem?
-    corrA2=exp((A2mean-A2[refno])/(2*sigma_noise2));
     FOR_ALL_ROTATIONS() {
       FOR_ALL_FLIPS() {
 	irot=iflip*nr_psi+ipsi;
@@ -674,27 +668,28 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
 	  else fracpdf=alpha_k[refno]*mirror_fraction[refno];
 	  sum=0.;
 	  FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot]) {
-	    aux=MAT_ELEM(Mweight[refno][irot],i,j)-maxc;
-	    aux=exp(aux/sigma_noise2)*fracpdf*MAT_ELEM(P_phi,i,j)*corrA2;
+	    aux=(MAT_ELEM(Mweight[refno][irot],i,j)-mindiff2)/sigma_noise2;
+	    // next line because of numerical precision of exp-function
+	    if (aux>1000.) aux=0.;
+	    else aux=exp(-aux)*fracpdf*MAT_ELEM(P_phi,i,j);
 	    wsum_corr+=aux*MAT_ELEM(Mweight[refno][irot],i,j);
 	    MAT_ELEM(Mweight[refno][irot],i,j)=aux;
 	    sum+=aux;
 	  }
-	  wsum_A2+=sum*A2[refno];
 	  if (iflip<4) refw[refno]+=sum;
 	  else refw_mirror[refno]+=sum;
 	  Mweight[refno][irot].max_index(ymax,xmax);
-	  max=MAT_ELEM(Mweight[refno][irot],ymax,xmax);
-	  if (max>maxweight) {
-	    maxweight=max;
+	  maxw=MAT_ELEM(Mweight[refno][irot],ymax,xmax);
+	  if (maxw>maxweight) {
+	    maxweight=maxw;
 	    iopty=ymax;
 	    ioptx=xmax;
 	    ioptpsi=ipsi;
 	    ioptflip=iflip;
 	    opt_refno=refno;
 	  }
-	  if (fast_mode && max>maxw_ref[irefmir]) {
-	    maxw_ref[irefmir]=max;
+	  if (fast_mode && maxw>maxw_ref[irefmir]) {
+	    maxw_ref[irefmir]=maxw;
 	    iopty_ref[irefmir]=ymax;
 	    ioptx_ref[irefmir]=xmax;
 	    ioptflip_ref[irefmir]=iflip;
@@ -707,7 +702,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
 
   // Normalize all weighted sums by sum_refw such that sum over all weights is one!
   // And accumulate the FT of the weighted, shifted images.
-  wsum_sigma_noise+=(wsum_A2/sum_refw)+Xi2-(2*wsum_corr/sum_refw);
+  wsum_sigma_noise+=(2*wsum_corr/sum_refw);
   FOR_ALL_MODELS() {
     sumw[refno]+=(refw[refno]+refw_mirror[refno])/sum_refw;
     sumw_mirror[refno]+=refw_mirror[refno]/sum_refw;
@@ -752,11 +747,9 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
 
   // Compute Log Likelihood
   // 1st term: log(refw_i)
-  // 2nd term: for subtracting maxc
-  // 3rd term: for only considering Xi*A instead of (A-Xi)^2
-  // 4th term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-  LL+= log(sum_refw) + maxc/sigma_noise2 - (A2mean+Xi2)/(2*sigma_noise2) 
-       - dim*dim*log(2.50663*sigma_noise);
+  // 2nd term: for subtracting mindiff2
+  // 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
+  LL+= log(sum_refw) - mindiff2/sigma_noise2 - dim*dim*log(2.50663*sigma_noise);
 
 }
 

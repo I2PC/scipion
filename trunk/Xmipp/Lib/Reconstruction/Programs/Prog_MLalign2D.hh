@@ -33,7 +33,7 @@
 #include <vector>
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)
-#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<(nr_psi); ipsi++ ) 
+#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ ) 
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 1.75
@@ -81,8 +81,6 @@ public:
   int n_ref;
   /** Sum of squared amplitudes of the references */
   vector<double> A2;
-  /** Mean sum of squared amplitudes of the references */
-  double A2mean;
   /** Verbose level:
       1: gives progress bar (=default)
       0: gives no output to screen at all */
