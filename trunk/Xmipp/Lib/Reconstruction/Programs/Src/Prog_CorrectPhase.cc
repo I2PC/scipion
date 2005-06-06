@@ -106,13 +106,13 @@ void CorrectPhase_Params::correct(matrix2D< complex<double> > &v) {
    #ifdef DEBUG
       cout << "New image ----------------------------\n";
    #endif
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) {
      complex<double> m=ctf.mask2D(i,j);
      if (m.imag()!=0) 
 	REPORT_ERROR(1,"CorrectPhase::correct: CTF is not real\n");
      #ifdef DEBUG
-	cout << "CTF at (" << j << "," << i << "," << k << ")="
+	cout << "CTF at (" << j << "," << i << ")="
 	     << m << " Value there " << v(i,j);
      #endif
      switch (method) {
