@@ -27,6 +27,7 @@
 #include "../xmippArgs.hh"
 #include "../xmippSelFiles.hh"
 #include "../xmippMasks.hh"
+#include "../xmippGeometry.hh"
 #include <fstream>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -631,6 +632,36 @@ void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask) {
       stddevbg);
    (*I)() -= avgbg;
    (*I)() /= ABS(avg-avgbg);
+}
+
+void normalize_ramp(Image *I, const matrix2D<int> &bg_mask) {
+  fit_point          onepoint;
+  vector<fit_point>  allpoints;
+  double             pA,pB,pC;
+  double             avgbg, stddevbg, minbg, maxbg;
+
+  // Fit a least squares plane through the background pixels
+  allpoints.clear();
+  (*I)().set_Xmipp_origin();
+  FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)()) {
+    if (MAT_ELEM(bg_mask,i,j)) {
+      onepoint.x=j;
+      onepoint.y=i;
+      onepoint.z=MAT_ELEM((*I)(),i,j);
+      onepoint.w=1.;
+      allpoints.push_back(onepoint);
+    }    
+  }
+  least_squares_plane_fit(allpoints,pA,pB,pC);
+  // Substract the plane from the image
+  FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)()) {
+    MAT_ELEM((*I)(),i,j)-=pA*j+pB*i+pC;
+  }  
+  // Divide by the remaining std.dev. in the background region
+  compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+				   stddevbg);
+  (*I)() /= stddevbg;
+
 }
 
 #ifdef NEVER_DEFINED

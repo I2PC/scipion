@@ -494,6 +494,13 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 	 volume.
    */
    void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask);
+
+   /** Removal of inclined background densities (ramps):
+       fitting of a least squares plane throught the pixels in the
+       bg_mask, then subtraction of the plane, and division by the
+       standard deviation of the pixels in the bg_mask */
+   void normalize_ramp(Image *I, const matrix2D<int> &bg_mask);
+
 //@}
 //@}
 #endif

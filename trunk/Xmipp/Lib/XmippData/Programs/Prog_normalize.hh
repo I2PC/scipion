@@ -41,6 +41,7 @@ public:
    #define MICHAEL       4
    #define NEWXMIPP2     5
    #define RANDOM        6
+   #define RAMP          7
    /** Normalizing method. Valid methods are OLDXMIPP, NEAR_OLDXMIPP 
        NEWXMIPP, NEWXMIPP2, MICHAEL, NONE, RANDOM */
    int                   normalizing_method;

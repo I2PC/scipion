@@ -42,6 +42,7 @@ void Normalize_parameters::read(int argc, char **argv) _THROW {
    else if (aux=="Michael")       normalizing_method=MICHAEL;
    else if (aux=="Random")        normalizing_method=RANDOM;
    else if (aux=="None")          normalizing_method=NONE;
+   else if (aux=="Ramp")          normalizing_method=RAMP;
    else REPORT_ERROR(1,"Normalize: Unknown normalizing method");
 
    // Normalizing a volume
@@ -51,7 +52,8 @@ void Normalize_parameters::read(int argc, char **argv) _THROW {
    // Get background mask
    if (!normalizing_vol) {
       if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
-          normalizing_method==MICHAEL || normalizing_method==NEAR_OLDXMIPP ) {
+          normalizing_method==MICHAEL || normalizing_method==NEAR_OLDXMIPP ||
+	  normalizing_method==RAMP) {
          int i=position_param(argc,argv,"-background");
          if (i+2>=argc)
             REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
@@ -126,11 +128,13 @@ void Normalize_parameters::show() {
          case NEWXMIPP2:     cout << "NewXmipp2\n"; break;
          case MICHAEL:       cout << "Michael\n"; break;
          case NONE:          cout << "None\n"; break;
+         case RAMP:          cout << "Ramp\n"; break;
 	 case RANDOM:        cout << "Random a=[" << a0 << "," << aF << "], "
 	                          << "b=[" << b0 << "," << bF << "]\n"; break;
       }
       if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
-          normalizing_method==NEAR_OLDXMIPP || normalizing_method==MICHAEL) {
+          normalizing_method==NEAR_OLDXMIPP || normalizing_method==MICHAEL ||
+	  normalizing_method==RAMP) {
          cout << "Background mode: ";
          switch (background_mode) {
             case NONE :  cout << "None\n"; break;
@@ -157,11 +161,11 @@ void Normalize_parameters::usage() {
    cerr << "NORMALIZATION OF IMAGES\n"
         << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
         << "                              OldXmipp, Near_OldXmipp, NewXmipp\n"
-        << "                              NewXmipp2, Michael, None, Random\n"
+        << "                              NewXmipp2, Michael, None, Random, Ramp\n"
         << "  [-background frame <r> |  : Frame background of r pixels\n"
         << "   -background circle <r>]  : Circular background outside radius=r\n"
         << "                              Background is needed for NewXmipp,\n"
-        << "                              Michael and Near_OldXmipp methods\n"
+        << "                              Michael, Near_OldXmipp and Ramp methods\n"
         << "  [-dont_apply_geo]           Do not apply (inverse) transformation, as stored\n"
         << "                              in the header of the images, to the mask\n"
 	<< "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
@@ -201,6 +205,9 @@ void Normalize_parameters::apply(Image *img) {
       case NEWXMIPP2:
          normalize_NewXmipp2(img,bg_mask);
          break;
+      case RAMP:
+       	 normalize_ramp(img,bg_mask);
+	 break;
       case MICHAEL:
          normalize_Michael(img,bg_mask);
          break;
