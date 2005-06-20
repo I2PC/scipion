@@ -8,6 +8,7 @@ libXmippInterface_@host_os@_la_SOURCES = Src/xmippAPH.cc \
 	Src/xmippCrisp.cc \
 	Src/xmippVrml.cc \
 	Src/xmippOpenDX.cc \
+	Src/xmippJDL.cc
 	Src/xmippAPH3D.cc \
 	Src/xmippAPHorigmerg.cc
 
