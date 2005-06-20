@@ -334,6 +334,13 @@ string FileName::get_extension() const {
    else  return substr(first_point+1);
 }
 
+// Init random .............................................................
+void FileName::init_random(int length) {
+   randomize_random_generator();
+   *this="";
+   for (int i=0; i<length; i++) *this+='a'+FLOOR(rnd_unif(0,26));
+}
+
 // Add at beginning ........................................................
 FileName FileName::add_prefix(const string &prefix) const {
    FileName retval=*this;

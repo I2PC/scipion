@@ -667,6 +667,10 @@ public:
        "" is returned.
        \\Ex: string ext=fn_proj.get_extension(); */
    string get_extension() const;
+
+   /** Random name.
+       Generate a random name of the desired length. */
+   void init_random(int length);
 //@}
 
 /**@name Manipulators*/
