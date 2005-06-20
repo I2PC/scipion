@@ -218,6 +218,14 @@ void tolower(char *_str) {
    }
 }
 
+void tolower(string &_str) {
+   int i=0;
+   while (_str[i]!='\0') {
+      if (_str[i]>='A' && _str[i]<='Z') _str[i] += 'a'-'A';
+      i++;
+   }
+}
+
 // Next token ==============================================================
 string next_token(const string &str, int &i) {
    string retval;

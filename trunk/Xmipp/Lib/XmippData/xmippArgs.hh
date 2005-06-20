@@ -176,6 +176,9 @@ void check_angle_descr(const string &str) _THROW;
     on input string*/
 void tolower(char *_str);
 
+/** To lower for C++ strings.*/
+void tolower(string &_str);
+
 /** Remove consecutive spaces.
     All consecutive spaces are replaced by a single one and
     starting and finishing spaces are removed*/
