@@ -355,6 +355,36 @@ void SelFile::split_in_two(SelFile &SF1,SelFile &SF2) {
   SF2=SFtmp;
 }
 
+/* Split randomly in N equally large selfiles ------------------------------ */
+void SelFile::split_in_N(int N, vector<SelFile> &SF) {
+  // Randomize input data
+  SelFile  SFtmp, SFrnd;
+  SFrnd=*this;
+  SFtmp=SFrnd.randomize();
+  SFtmp.go_beginning();
+  int Nimg=SFtmp.ImgNo();
+  SF.clear();
+  
+  // Create space for all SelFiles
+  for (int n=0; n<N; n++) {
+     SelFile *ptr_SF=new SelFile;
+     ptr_SF->reserve(CEIL(Nimg/N));
+     SF.push_back(*ptr_SF);
+  }
+  
+  // Distribute images  
+  int n=0;
+  for (int i=0;i<Nimg; i++) {
+    SF[n].insert(SFtmp.current());
+    n=(n+1)%N;
+    if (i<Nimg-1) SFtmp.NextImg();
+  }
+  
+  // Sort the Selfiles
+  for (int n=0; n<N; n++)
+     SF[n]=SF[n].sort_by_filenames();
+}
+
 /* Select only part of the selfile for parallel MPI-runs ------------------ */
 void SelFile::mpi_select_part(int rank, int size, int &num_img_tot) {
 

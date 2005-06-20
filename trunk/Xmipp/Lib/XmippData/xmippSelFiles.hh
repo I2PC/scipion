@@ -247,8 +247,11 @@ public:
        \\ Ex: SF1.read("g1t.sel"); SF2.merge("g2t.sel"); SF1=SF1+SF2; */
    SelFile  operator +(SelFile &SF);
    
-   /** Merge this file into two random halfes */
+   /** Split this file into two random halfes */
    void split_in_two(SelFile &SF1,SelFile &SF2);
+
+   /** Split this file into N random parts of approximately the same size. */
+   void split_in_N(int N, vector<SelFile> &SF);
 
   /** For MPI-parallelized runs: select relevant part of selfile for
       that rank */
