@@ -365,20 +365,29 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
 }
 
 /* Write parameters ========================================================= */
-void Prog_assign_CTF_prm::write(const FileName &fn_prm) _THROW {
+void Prog_assign_CTF_prm::write(const FileName &fn_prm,
+   string directory) _THROW {
    ofstream fh_param;
    fh_param.open(fn_prm.c_str(),ios::out);
    if (!fh_param)
       REPORT_ERROR(1,(string)"assign_CTF: There is a problem "
             "opening the file "+fn_prm+" for write");
    fh_param << "# Assign CTF parameters\n";
-   fh_param << "image="                << image_fn             << endl
+   string aux;
+   bool remove_directories=directory!="";
+   if (!remove_directories) aux=image_fn;
+   else                     aux=directory+"/"+image_fn.remove_directories();
+   fh_param << "image="                << aux                  << endl
             << "N_horizontal="         << N_horizontal         << endl
             << "N_vertical="           << N_vertical           << endl
             << "particle_horizontal="  << particle_horizontal  << endl
-            << "particle_vertical="    << particle_vertical    << endl
-            << "selfile="              << selfile_fn           << endl
-            << "picked="               << picked_fn            << endl
+            << "particle_vertical="    << particle_vertical    << endl;
+   if (!remove_directories) aux=selfile_fn;
+   else                     aux=directory+"/"+selfile_fn.remove_directories();
+   fh_param << "selfile="              << aux                  << endl;
+   if (!remove_directories) aux=picked_fn;
+   else                     aux=directory+"/"+picked_fn.remove_directories();
+   fh_param << "picked="               << aux                  << endl
             << "ARMAfile="             << ARMAfile             << endl
             << "CTFfile="              << CTFfile              << endl
    ;

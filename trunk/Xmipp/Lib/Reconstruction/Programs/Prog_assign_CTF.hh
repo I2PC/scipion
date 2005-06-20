@@ -79,8 +79,9 @@ public:
        are not read */
    void read(const FileName &fn_prm, bool do_not_read_files=FALSE) _THROW;
 
-   /// Write parameters to file
-   void write(const FileName &fn_prm) _THROW;
+   /** Write parameters to file.
+       The directory is an option used in the grid. */
+   void write(const FileName &fn_prm, string directory="") _THROW;
 
    /// Process the whole thing
    void process();
