@@ -30,7 +30,7 @@
 
 
 #include "../xmippMap.hh"
-
+#include <XmippData/xmippArgs.hh>
 
 //-----------------------------------------------------------------------------
 
@@ -352,7 +352,9 @@
      int dim; string layout, str; 
      _is >> dim; 
      _is >> layout;
-     if (layout == "HEXA") {
+     tolower(layout);
+     
+     if (layout == "hexa") {
 	HEXALayout *tmpLayout = new HEXALayout();
 	somLayout = tmpLayout;
      } else {
@@ -361,13 +363,15 @@
      }     
      _is >> somWidth;  
      _is >> somHeight;  
+     /* IT DOESN'T WORK PROPERLY
      str = ItoA(dim);
      str += " ";
      str += ItoA(somWidth*somHeight);
      str += " ";
      for (int i = str.size() - 1; i >= 0; i--)
-	 if (_is) _is.putback((char) str[i]);       
-     xmippCB::readSelf(_is);
+	 if (_is) _is.putback((char) str[i]);
+     */
+     xmippCB::readSelf(_is,dim,somWidth*somHeight);
 
 /*  IT DOESN'T WORK PROPERLY   
     
