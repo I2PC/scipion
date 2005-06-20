@@ -28,10 +28,19 @@
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/Programs/Prog_downsample.hh>
 #include <Reconstruction/Programs/Prog_assign_CTF.hh>
+#include <XmippInterface/xmippJDL.hh>
 #include <stdlib.h>
 #include <unistd.h>
+#include <vector>
 
 void Usage(const Prog_downsample_prm &down_prm);
+
+#define ISSUE_COMMAND \
+   if (!grid) fh_batch << command << endl; \
+   else       jdl->add_command_to_script(command);
+#define ISSUE_BLANK \
+   if (!grid) fh_batch << endl; \
+   else       jdl->add_command_to_script("");
 
 int main(int argc, char **argv) {
    FileName fn_sel;
@@ -40,7 +49,9 @@ int main(int argc, char **argv) {
    #define  RAW_IMAGES         1
    #define  DOWNSAMPLED_IMAGES 2
    bool     unzip;
+   bool     grid;
    int      proc; // Number of available processors
+   string   mail_address;
    
    FileName output_dir;
    FileName fn_params;
@@ -56,11 +67,13 @@ int main(int argc, char **argv) {
       if (input_type==TIFF_IMAGES || input_type==RAW_IMAGES)
          down_prm.read(argc,argv,TRUE);
       unzip=check_param(argc,argv,"-unzip");
+      grid=check_param(argc,argv,"-grid");
       output_dir=get_param(argc,argv,"-odir");
       fn_params=get_param(argc,argv,"-prm");
       proc=AtoI(get_param(argc,argv,"-proc","1"));
+      mail_address=get_param(argc,argv,"-mail","");
    } catch (Xmipp_error XE) {cout << XE; Usage(down_prm); exit(-1);}
-   
+
    try {
       SelFile SF(fn_sel);
       char current_dir[512]="";
@@ -73,45 +86,59 @@ int main(int argc, char **argv) {
       
       // Prepare all batches ...............................................
       int N=0; // number of batches
+      vector < JDLFile * > jdl_files;
+      JDLFile *jdl=NULL;
+      string command;
       while (!SF.eof()) {
          FileName fn_img=SF.NextImg();
          FileName fn_root=fn_img.remove_all_extensions();
          
          ofstream fh_batch;
-         fh_batch.open((fn_root+".bat").c_str(),ios::out);
-         if (!fh_batch)
-            REPORT_ERROR(1,(string)"Assign_multiple_CTFs: Cannot open "+
-               fn_root+".bat for writing");
-         fh_batch << "cd " << output_dir << endl << endl;
+	 if (!grid) {
+            fh_batch.open((fn_root+".bat").c_str(),ios::out);
+            if (!fh_batch)
+               REPORT_ERROR(1,(string)"Assign_multiple_CTFs: Cannot open "+
+        	  fn_root+".bat for writing");
+	 } else {
+	    jdl=new JDLFile;
+	    jdl->job_root=fn_root;
+	    jdl->local_output_dir=output_dir;
+	 }
+	 
+	 // Create output directory ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	 command=(string)"cd "+output_dir;
+	 ISSUE_COMMAND;
+	 ISSUE_BLANK;
          
          FileName remove_file, current_file;
          int current_input_type=input_type;
          // Unzip ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
          if (unzip) {
             current_file=remove_file=fn_img.without_extension();
-            fh_batch << "# Unzip input image" << endl
-                     << "gunzip -c " << current_dir << "/" << fn_img
-                     << " > " << current_file << endl;
+	    command="# Unzip input image"; ISSUE_COMMAND;
+	    command=(string)"gunzip -c "+current_dir+"/"+fn_img+
+	                      " > "+current_file; ISSUE_COMMAND;
             if (current_file.get_extension()!="tif") {
-               fh_batch << "cp " << current_dir << "/" << current_file
-                        << ".inf .\n";
+               command=(string)"cp "+current_dir+"/"+current_file+".inf .";
+	       ISSUE_COMMAND;
                remove_file+=(string)" "+current_file+".inf";
             }
-            fh_batch << endl;
+            ISSUE_BLANK;
          } else {
             current_file=(string)current_dir+"/"+fn_img;
          }
          
          // Tiff 2 raw ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
          if (current_input_type==TIFF_IMAGES) {
-            fh_batch << "# Generate Raw image" << endl
-                     << "xmipp_tiff2raw "<< current_file << " "
-                     << fn_root+".raw" << endl;
+            command="# Generate Raw image"; ISSUE_COMMAND;
+            command=(string)"xmipp_tiff2raw "+current_file+" "+
+                                fn_root+".raw"; ISSUE_COMMAND;
+	    if (grid) jdl->add_program_to_running_programs("xmipp_tiff2raw");
             if (remove_file!="") {
-               fh_batch << "rm -f " << remove_file << endl;
+               command=(string)"rm -f "+remove_file; ISSUE_COMMAND;
                remove_file="";
             }
-            fh_batch << endl;
+            ISSUE_BLANK;
             current_file=fn_root+".raw";
             remove_file=current_file+" "+current_file+".inf";
             current_input_type=RAW_IMAGES;
@@ -121,59 +148,95 @@ int main(int argc, char **argv) {
          if (current_input_type==RAW_IMAGES) {
             down_prm.fn_micrograph=current_file;
             down_prm.fn_downsampled=fn_root+".down";
-            fh_batch << "#Downsample input image\n"
-                     << "xmipp_downsample " << down_prm.command_line() << endl;
+	    command="#Downsample input image"; ISSUE_COMMAND;
+            command=(string)"xmipp_downsample "+down_prm.command_line();
+	    ISSUE_COMMAND;
+	    if (grid) jdl->add_program_to_running_programs("xmipp_downsample");
             if (remove_file!="") {
-               fh_batch << "rm -f " << remove_file << endl;
+               command=(string)"rm -f "+remove_file; ISSUE_COMMAND;
                remove_file="";
             }
-            fh_batch << endl;
+            ISSUE_BLANK;
             current_file=down_prm.fn_downsampled;
             remove_file=current_file+" "+current_file+".inf";
             current_input_type=DOWNSAMPLED_IMAGES;
          }
 
          // Assign CTF ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-         fh_batch << "# Assign different CTFs\n"
-                  << "xmipp_assign_CTF -i " << fn_root+"_assign_CTF.param\n";
+         command="# Assign different CTFs"; ISSUE_COMMAND;
+         command=(string)"xmipp_assign_CTF -i ../"+fn_root+"_assign_CTF.param";
+	 ISSUE_COMMAND;
+         if (grid) jdl->add_program_to_running_programs("xmipp_assign_CTF");
          if (remove_file!="") {
-            fh_batch << "rm -f " << remove_file << endl;
+            command=(string)"rm -f "+remove_file; ISSUE_COMMAND;
             remove_file="";
          }
                   
-         fh_batch.close();
-         system(((string)"chmod 755 "+fn_root+".bat").c_str());
-         N++;
-
          // Prepare assign CTF parameter file ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
          assign_CTF_prm.selfile_fn=(string)current_dir+"/"+fn_root+".sel";
          assign_CTF_prm.picked_fn=(string)current_dir+"/"+fn_root+".pos";
          assign_CTF_prm.ARMAfile=fn_root+"_arma";
          assign_CTF_prm.CTFfile=fn_root+"_ctf";
          assign_CTF_prm.image_fn=current_file;
-         assign_CTF_prm.write(output_dir+"/"+fn_root+"_assign_CTF.param");
+         assign_CTF_prm.write((string)current_dir+"/"+fn_root+"_assign_CTF.param",
+	    "..");
+
+         // Close batch
+         if (!grid) {
+	    fh_batch.close();
+            system(((string)"chmod 755 "+fn_root+".bat").c_str());
+	 } else {
+	    jdl->add_file_to_input_files(assign_CTF_prm.selfile_fn);
+	    jdl->add_file_to_input_files(assign_CTF_prm.picked_fn);
+	    jdl->add_file_to_input_files(assign_CTF_prm.image_fn);
+	    jdl->add_file_to_input_files(assign_CTF_prm.image_fn+".inf");
+	    jdl->add_file_to_input_files((string)current_dir+"/"+fn_root+"_assign_CTF.param");
+	    jdl->add_file_to_output_wildfiles(assign_CTF_prm.ARMAfile+"*.fft");
+	    jdl->add_file_to_output_wildfiles(assign_CTF_prm.CTFfile+"*.fft");
+	    jdl->add_file_to_output_wildfiles("*model*");
+	    jdl->add_file_to_output_wildfiles("ctf*");
+	    jdl->add_file_to_output_wildfiles("*.param");
+	    jdl->write();
+	    jdl_files.push_back(jdl);
+	 }
+         N++;
+
       }
 
       // Launch all processes ..............................................
-      SF.go_first_ACTIVE();
-      int n=0;
-      for (int i=0; i<proc; i++) {
-         string batches="(";
-         for (int j=0; j<FLOOR(N/proc); j++) {
+      if (!grid) {
+	 SF.go_first_ACTIVE();
+	 int n=0;
+	 for (int i=0; i<proc; i++) {
+            string batches="(";
+            for (int j=0; j<FLOOR(N/proc); j++) {
+               FileName fn_img=SF.NextImg();
+               FileName fn_root=fn_img.remove_all_extensions();
+               batches+=fn_root+".bat; ";
+               n++;
+            }
+            if (i<(N%proc)) {
+               FileName fn_img=SF.NextImg();
+               FileName fn_root=fn_img.remove_all_extensions();
+               batches+=fn_root+".bat; ";
+               n++;
+            }
+            batches+=") &";
+            cout << "Launching " << batches << endl;
+            system(batches.c_str());
+	 }
+      } else {
+         SF.go_first_ACTIVE();
+	 randomize_random_generator();
+	 while (!SF.eof()) {
             FileName fn_img=SF.NextImg();
             FileName fn_root=fn_img.remove_all_extensions();
-            batches+=fn_root+".bat; ";
-            n++;
-         }
-         if (i<(N%proc)) {
-            FileName fn_img=SF.NextImg();
-            FileName fn_root=fn_img.remove_all_extensions();
-            batches+=fn_root+".bat; ";
-            n++;
-         }
-         batches+=") &";
-         cout << "Launching " << batches << endl;
-         system(batches.c_str());
+	    
+            int time_to_sleep=FLOOR(rnd_unif(0,600));
+	    system(((string)"( sleep "+ItoA(time_to_sleep)+
+	       " ; nohup xmipp_grid_submit "+fn_root+" "+mail_address+
+               ")&").c_str());
+	 }
       }
    } catch (Xmipp_error XE) {cout << XE;}
 }
@@ -187,6 +250,8 @@ void Usage(const Prog_downsample_prm &down_prm) {
         << "   -odir <output_dir>     : Output directory\n"
         << "   -prm  <textfile>       : Parameters for Assign_CTF\n"
         << "  [-proc <n=1>]           : Number of processors available\n"
+	<< "  [-grid]                 : Launch in the grid\n"
+        << "  [-mail <address="">]    : The grid will inform to this address\n"
    ;
    down_prm.usage();
 }
