@@ -361,7 +361,7 @@
    * Standard input for a codebook
    * @param _is The input stream
    */
-  void xmippCB::readSelf (istream& _is)
+  void xmippCB::readSelf (istream& _is, long _dim, long _size)
   {
 
     #ifndef _NO_EXCEPTION
@@ -373,19 +373,23 @@
 
       // Determines the number of rows and columns in the training set
       
-      long dim, size;       
-      _is >> dim; 
-      _is >> line;
-      if (!sscanf(line.c_str(),"%d",&size)) {
-         int x, y;
-	 _is >> x;
-	 _is >> y;
-	 size = x*y;
-      } 
+      long dim, size;
+      if (_dim==-1) {
+	 _is >> dim;
+      } else dim=_dim;
+      if (_size==-1) {
+	 _is >> line;
+	 if (!sscanf(line.c_str(),"%d",&size)) {
+            int x, y;
+	    _is >> x;
+	    _is >> y;
+	    size = x*y;
+	 }
+      } else size=_size;
       getline(_is, line);
       theItems.resize(size);
       theTargets.resize(size);
-
+      
       for (int i = 0; i < size; i++) {
     	 vector<xmippFeature> v;
          v.resize(dim);

@@ -197,7 +197,7 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
    * Standard input for a code book
    * @param _is The input stream
    */
-  virtual void readSelf (istream& _is);
+  virtual void readSelf (istream& _is, long _dim=-1, long _size=-1);
 
   /**
    * Saves the xmippCodeBook class into a stream. 
