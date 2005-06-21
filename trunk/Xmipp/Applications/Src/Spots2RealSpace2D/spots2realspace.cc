@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Roberto Marabini (roberto@mipg.upenn.edu)
+ * Authors:     Roberto Marabini (roberto@mipg.upenn.edu )
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
