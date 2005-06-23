@@ -66,7 +66,7 @@ void APHFileorigmerg::read(const FileName &fn,
 	 tmp_spot.IQ	      = AtoI(next_token());
 	 tmp_spot.FLMWGT      = AtoF(next_token());
 	 tmp_spot.BACK	      = AtoF(next_token());
-	 tmp_spot.CTF	      = AtoF(next_token());
+	 tmp_spot.myCTF	      = AtoF(next_token());
          if (mrc_label >= 0 && (FILM != mrc_label))
 	     continue; 
 	 aph_data_vector.push_back(tmp_spot);
@@ -95,18 +95,19 @@ void APHFileorigmerg::read(const FileName &fn,
    fn_aph=fn;
 
 }/*  APHFile::read */
-
 /* ------------------------------------------------------------------------- */
 void APHFileorigmerg::write(const FileName &fn) const _THROW {
    ofstream fh;
    fh.open(fn.c_str());
    char aux_char[128];
+   //sort vector can not be done here
    if (!fh)
       REPORT_ERROR(1,(string)"APHFileorigmerg::write: Cannot open "+
          fn+" for output");
    
    fh << setfill('0') << setw(4) << read_mrc_label << endl;
    for(int line_no = 0; line_no < aph_data_vector.size(); line_no++){
+      if((aph_data_vector[line_no]).amp<0.0001) continue;
 //           1X,2I4,F8.4,F10.1,F7.1,I7,I3,F8.5,F10.1,F7.3
       sprintf(aux_char," %4d%4d%8.4f%10.1f%7.1f%7d%3d%8.5f%10.1f%7.3f\n",
 			       (aph_data_vector[line_no]).h,	
@@ -118,7 +119,7 @@ void APHFileorigmerg::write(const FileName &fn) const _THROW {
 			       (aph_data_vector[line_no]).IQ,	
 			       (aph_data_vector[line_no]).FLMWGT,
 			       (aph_data_vector[line_no]).BACK,
-			       (aph_data_vector[line_no]).CTF);
+			       (aph_data_vector[line_no]).myCTF);
       fh <<aux_char;
    }
    fh.close();

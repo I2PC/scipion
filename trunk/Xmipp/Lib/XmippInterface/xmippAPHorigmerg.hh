@@ -34,6 +34,7 @@
 #include <XmippData/xmippGeometry.hh>
 #include <Reconstruction/symmetries.hh>
 #include <iostream>
+#include <algorithm>
 struct spot{
    int h;
    int k;
@@ -44,8 +45,20 @@ struct spot{
    int    IQ;
    double FLMWGT;
    double BACK;
-   double CTF;
-   };
+   double myCTF;
+//   spot& operator= (const spot& B)  {
+//      h = B.h;
+//      k = B.k;
+//   }	 
+  bool operator<(  const spot& B ) const
+  {
+      if (h < B.h) return TRUE;
+      if (h== B.h && k < B.k) return TRUE;
+       return FALSE;
+  }
+        
+ };
+
    ostream &operator<<(ostream &os, const spot &s)
       {
       os << "(" << s.h     << "," << s.k <<"," << s.zstar << ") = ";
@@ -54,9 +67,17 @@ struct spot{
       os << "\tIQ= "     << s.IQ     << endl;
       os << "\tFLMWGT= " << s.FLMWGT << endl;
       os << "\tBACK= "   << s.BACK   << endl;
-      os << "\tCTF= "    << s.CTF    << endl;
+      os << "\tCTF= "    << s.myCTF    << endl;
       return os;
       }
+
+// function for sorting elements in ascending order
+//  bool operator<(  spot A, spot B ) 
+//  {
+//      if (A.h < B.h) return TRUE;
+//      if (A.k < B.k) return TRUE;
+//       return FALSE;
+//  }
 
 /**@name APH2D Files */
 //@{
