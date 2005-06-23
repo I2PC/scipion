@@ -29,8 +29,10 @@
 #include <XmippData/xmippMatrices2D.hh>
 #include <XmippData/xmippProjection.hh>
 #include <XmippInterface/xmippAPHorigmerg.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippMatrices1D.hh>
 
-/**@name Spots-->Real Space 2D program */
+/**@name Spots <-->Real Space 2D program */
 //@{
 /* Spot-->Real Space Program Parameters ------------------------------------ */
 /** Spot --> Real Space parameters.
@@ -136,9 +138,70 @@ public:
    Projection &prj);
 //@}
 
+//@{
+/* Real Space --> Spot Program Parameters ------------------------------------ */
+/** Real Space --> Spot  parameters.
+    Here are all the parameters needed to produce from the real space projections
+    2D Fourier Spots .
+*/
+class RealSpace2Spots2D_Parameters {
+public:
+   /** Input file (Spider real space)
+   */
+   FileName        fn_in;
+   /** Output file (MRC aph)
+   */
+   FileName        fnaph_out;    
+public:
+   /* Side information */
+   /** This image APH */
+   APHFileorigmerg       aph_file;
+   /** crystal vector_a */
+   matrix1D<double> vector_a;
+   /** crystal vector_b */
+   matrix1D<double> vector_b;
+   /** Rotational angle */
+   double          rot;
+   /** Tilt angle */
+   double          tilt;
+   /** Psi angle */
+   double          psi;
+   /** MRC micrograph label. If label= -1 -> wildcard */
+   int             mrc_label;
+   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS 
+    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN 
+    BY ASTAR TO BSTAR BEING POSITIVE.*/
+   double          taxa;
+   /** Tilt angle following MRC conventions*/
+   double          mrc_tilt;
+public:
+   /** This routine reads the parameters, supplied by the user, from a file. 
+   */
+   void read_from_file(const FileName &fnprm);
+   /** Show parameters. */
+   friend ostream& operator << (ostream &o, const RealSpace2Spots2D_Parameters &prm);
+   /** Produce Side Information */
+   void produce_SideInfo() _THROW;
+
+   /** Constructor */
+   RealSpace2Spots2D_Parameters()
+   {
+    vector_a.resize(2);
+    vector_b.resize(2);    
+   }
+
+};
+
+   void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
+   Projection &prj);
+//@}
 /** Discrete inverse, but not fast Fourier transform
 */
 void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
    int ydim, int xdim);
+
+/** Discrete direct, but not fast Fourier transform
+*/
+void DFT(const matrix2D<double> &I,  matrix2D< complex<double> > &FT);
 
 #endif
