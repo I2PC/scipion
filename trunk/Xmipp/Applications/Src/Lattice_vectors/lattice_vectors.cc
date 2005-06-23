@@ -57,21 +57,32 @@ int main(int argc, char **argv) {
      double gamma;
      matrix2D<double> E2D, vp(2,2), Vp(2,2), v(2,2);
      double x,y;
+/* compute projection crystal vectors in projection coordinate system
+   Solve system of equations:
+   
+    (a*)^t  a = 1, (a*)^t  b = 0
+    (b*)^t  a = 0, (b*)^t  b = 1
+    
+    ( (a*)^t ) ( a b ) = I
+    ( (b*)^t )
+    
+    Renaming
+    
+    V^t v = I
+    
+    Taking transpose
+    
+    v^t V = I
+    
+    Thus, V=(v^t)^(-1)
+
+    NOTE 1: asume column vectors
+    NOTE 2: a and b are the crystal vectors in real space
+*/
      #define SHOW(str,v,i) x=v(0,i); y=v(1,i); cout << str << "("<< x \
               << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
       if (op=="RF") {
-/*
-         if (MRC) {
-            a.resize(3); b.resize(3);
-            gamma=RAD2DEG(atan2(vector_product(a,b).module(),
-               dot_product(a,b)));
-            rot=taya+(180-gamma)-rot;
-            a.resize(2); b.resize(2);
-         }
-*/
-//cout <<endl << "angles: " <<rot <<" " << tilt<< " " << psi <<endl ;
          Euler_angles2matrix(rot,tilt,psi,E2D); E2D.resize(2,2);
-//cout << "Euler" << E2D;       
          v.setCol(0,a);
          v.setCol(1,b);
 	 vp=E2D*v;
