@@ -245,6 +245,107 @@ void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
    VECTOR_R3(v,XX_vF,YY_vF,ZZ_vF); DEFORM_AND_CHOOSE_CORNERS3D;
 }
 
+
+
+/* Line Plane Intersection ---------------------------------------------- */
+/*Let ax+by+cz+D=0 the equation of your plane
+(if your plane is defined by a normal vector N + one point M, then
+(a,b,c) are the coordinates of the normal N, and d is calculated by using
+the coordinates of M in the above equation).
+
+Let your line be defined by one point P(d,e,f) and a vector V(u,v,w), the
+points on your line are those which verify
+
+x=d+lu
+y=e+lv
+z=f+lw
+where l takes all real values.
+
+for this point to be on the plane, you have to have
+
+ax+by+cz+D=0, so,
+
+a(d+lu)+b(e+lv)+c(f+lw)+D=0
+that is
+
+l(au+bv+cw)=-(ad+be+cf+D)
+
+note that, if au+bv+cw=0, then your line is either in the plane, or
+parallel to it... otherwise you get the value of l, and the intersection
+has coordinates:
+x=d+lu
+y=e+lv
+z=f+lw
+where
+
+l = -(ad+be+cf+D)/(au+bv+cw)
+
+a= XX(normal_plane);
+b= YY(normal_plane);
+c= ZZ(normal_plane);
+D= intersection_point;
+
+d=XX(point_line)
+e=YY(point_line)
+f=ZZ(point_line)
+
+u=XX(vector_line);
+v=YY(vector_line);
+w=ZZ(vector_line);
+
+XX(intersection_point)=x;
+YY(intersection_point)=y;
+ZZ(intersection_point)=z;
+
+return 0 if sucessful
+return -1 if line paralell to plane
+return +1 if line in the plane
+
+TEST data (1)
+
+   point_line  = (1,2,3)
+   vector_line = (2,3,4)
+   
+   normal_line= (5,6,7)
+   point_plane_at_x_y_zero = 0
+   
+   Point of interesection (-0.35714,-0.035714,0.28571
+TEST data (2)
+   Same but change
+   vector_line = (-1.2,1.,0.) 
+TEST data (3)
+   Same but change
+   vector_line = (-1.2,1.,0.) 
+   point_line  = (0,0,0)
+*/
+int line_plane_intersection(const matrix1D<double> normal_plane,
+                            const matrix1D<double> vector_line, 
+			    matrix1D<double> &intersection_point,
+                            const matrix1D<double> point_line,
+			    double point_plane_at_x_y_zero){
+   double l;
+   intersection_point.resize(3);
+   // if au+bv+cw=0, then your line is either in the plane, or
+   // parallel to it
+   if(ABS(dot_product(normal_plane,vector_line))<XMIPP_EQUAL_ACCURACY){
+      intersection_point= point_line+vector_line;
+      if ( ABS(dot_product(intersection_point,normal_plane)+
+                                  point_plane_at_x_y_zero)<XMIPP_EQUAL_ACCURACY)
+          return(1);				  
+      else
+          return(-1);				  
+    
+      }
+    //compute intersection  
+    l= -1.0* dot_product(point_line,normal_plane)+
+                                  point_plane_at_x_y_zero;
+    l /=  dot_product(	normal_plane,vector_line);			  
+
+    intersection_point = point_line +l * vector_line;
+    return(0);
+}
+
+
 /* ######################################################################### */
 /* Euler Operations                                                          */
 /* ######################################################################### */
