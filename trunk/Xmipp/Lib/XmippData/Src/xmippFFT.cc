@@ -84,10 +84,15 @@ void Complex2AmplPhase(const complex<double> *_complex,
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
 void Whole2Half(const matrix2D<complex<double> > &in, matrix2D<complex<double> > &out) {
 
-  int ydim=(int)(YSIZE(in)/2)+1;
+  // This assumes squared images...
+  int ldim=(int)(YSIZE(in)/2)+1;
 
-  out.resize(ydim,XSIZE(in));
-  for (int i=0; i<ydim; i++) 
+  out.init_zeros(ldim,XSIZE(in));
+  // Fill first column only half
+  for (int j=0; j<ldim; j++)
+    dMij(out,0,j)=dMij(in,0,j);
+  // Fill rest
+  for (int i=1; i<ldim; i++) 
     for (int j=0; j<XSIZE(in); j++)
       dMij(out,i,j)=dMij(in,i,j);
 
@@ -96,13 +101,15 @@ void Whole2Half(const matrix2D<complex<double> > &in, matrix2D<complex<double> >
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
 void Half2Whole(const matrix2D<complex<double> > &in, matrix2D<complex<double> > &out, int oriydim) {
 
-  int yshift=2*(YSIZE(in)-1);
   out.resize(oriydim,XSIZE(in));
 
   // Old part
   for (int i=0; i<YSIZE(in); i++) 
     for (int j=0; j<XSIZE(in); j++)
       dMij(out,i,j)=dMij(in,i,j);
+  // Complete first column of old part
+  for (int j=YSIZE(in); j<XSIZE(in); j++)
+    dMij(out,0,j)=conj(dMij(in,0,XSIZE(in)-j));
   // New part
   for (int i=YSIZE(in); i<oriydim; i++) {
     dMij(out,i,0)=conj(dMij(in,oriydim-i,0));
@@ -199,6 +206,7 @@ void FourierTransformHalf(const matrix2D<double> &in,
   matrix2D<complex <double> > aux;
   FourierTransform(in,aux);
   Whole2Half(aux,out);
+
 }
 
 /** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform ---- */
