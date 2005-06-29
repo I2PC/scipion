@@ -1538,6 +1538,7 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
 
    // Define the vectors
    radial_mean.resize(dim);
+   radial_mean.init_zeros();
    radial_count.resize(dim);
    radial_count.init_zeros();   
    
