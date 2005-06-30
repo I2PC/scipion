@@ -105,7 +105,10 @@ void APHFileorigmerg::write(const FileName &fn) const _THROW {
       REPORT_ERROR(1,(string)"APHFileorigmerg::write: Cannot open "+
          fn+" for output");
    
-   fh << setfill('0') << setw(4) << read_mrc_label << endl;
+   if(read_mrc_label== -1)
+      fh << setfill('0') << setw(4) << 9999 << endl;
+   else
+      fh << setfill('0') << setw(4) << read_mrc_label << endl;
    for(int line_no = 0; line_no < aph_data_vector.size(); line_no++){
       if((aph_data_vector[line_no]).amp<0.0001) continue;
 //           1X,2I4,F8.4,F10.1,F7.1,I7,I3,F8.5,F10.1,F7.3
