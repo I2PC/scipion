@@ -298,7 +298,7 @@ ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
 
     // Set all QRadioButtons
     for (int i=0; i<list_values.size(); i++) {
-       button.push_back(new QRadioButton(list_values[i],this,"radiobutton"));
+       button.push_back(new QRadioButton(list_values[i].c_str(),this,"radiobutton"));
        if (i==initial_value) button[i]->setChecked(true);
        connect(  button[i], SIGNAL(toggled(bool)), this, SLOT(exclusiveValueChanged()) );
        grid->addMultiCellWidget( button[i], 2+i, 2+i, 0, 2);			   
