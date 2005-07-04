@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
    // Scale a single volume ------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input);
-      volume().self_scale_to_size(zdim, ydim, xdim);
+      volume().self_scale_to_size_Bspline(3,zdim, ydim, xdim);
       if (fn_out=="") volume.write(fn_input);
       else            volume.write(fn_out);
 
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
          // Process a volume ...............................................
          } else if (Is_VolumeXmipp(fn_in)) {
             volume.read(fn_in);
-            volume().self_scale_to_size(zdim, ydim, xdim);
+            volume().self_scale_to_size_Bspline(3,zdim, ydim, xdim);
             volume.write(fn_out);
          // Not a Spider file ..............................................
          } else

@@ -163,7 +163,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    }
    A(0,0)=XX(eprm->scale);
    A(1,1)=YY(eprm->scale);
-   if (!eprm->store_in_header) img().self_apply_geom(A,IS_NOT_INV,eprm->wrap);
+   if (!eprm->store_in_header) img().self_apply_geom_Bspline(A,3,IS_NOT_INV,eprm->wrap);
    else                        img.set_originOffsets(XX(eprm->shift),YY(eprm->shift));
    return TRUE;
 }
@@ -205,7 +205,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    A(0,0)=XX(eprm->scale);
    A(1,1)=YY(eprm->scale);
    A(2,2)=ZZ(eprm->scale);
-   vol().self_apply_geom(A,IS_NOT_INV,eprm->wrap);
+   vol().self_apply_geom_Bspline(A,3,IS_NOT_INV,eprm->wrap);
    return TRUE;
 }
 

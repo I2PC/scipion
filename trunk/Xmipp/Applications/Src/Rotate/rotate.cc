@@ -97,7 +97,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Rotate_parameters *eprm=(Rotate_parameters *) prm;
    Image img_out;
    if (XSIZE(eprm->A2D)!=0) {
-      apply_geom(img_out(),eprm->A2D,img(),IS_NOT_INV,eprm->wrap);
+      apply_geom_Bspline(img_out(),eprm->A2D,img(),3,IS_NOT_INV,eprm->wrap);
       img()=img_out();
    }
    return TRUE;
@@ -106,7 +106,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Rotate_parameters *eprm=(Rotate_parameters *) prm;
    Volume vol_out;
-   apply_geom(vol_out(),eprm->A3D,vol(),IS_NOT_INV,eprm->wrap);
+   apply_geom_Bspline(vol_out(),eprm->A3D,vol(),3,IS_NOT_INV,eprm->wrap);
    vol()=vol_out();
    return TRUE;
 }
