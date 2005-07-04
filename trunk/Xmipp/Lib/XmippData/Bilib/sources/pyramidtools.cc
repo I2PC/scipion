@@ -38,6 +38,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <iostream>
+
+using namespace std;
 
 /* --- Private includes --- */
 #include "../configs.h"
@@ -94,6 +97,42 @@ static void PutColumn(
 				double *Image, long Nx, long Ny,
 				long ColumnNb, 
 				double *Column, long ColumnSize
+				);
+
+static void GetX_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long y, long z,
+				double *out, long OutSize
+				);
+				
+static void GetY_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long z,
+				double *out, long OutSize
+				);
+				
+static void GetZ_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long y,
+				double *out, long OutSize
+				);
+				
+static void PutX_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long y, long z,
+				double *in, long inSize
+				);
+				
+static void PutY_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long z,
+				double *in, long inSize
+				);
+
+static void PutZ_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long y,
+				double *in, long inSize
 				);
 			
 /* ----------------------------------------------------------------------------
@@ -226,12 +265,11 @@ long 	NyOut;
 		for (ky=0L; ky<NyIn; ky++) {
 			GetRow( In, NxIn, NyIn, ky, InBuffer, NxIn); 
 			Reduce_1D(InBuffer, NxIn, OutBuffer, g, ng, IsCentered); 
-	    	PutRow( Tmp, NxOut, NyIn, ky, OutBuffer, NxOut);
-    	}
+          	    	PutRow( Tmp, NxOut, NyIn, ky, OutBuffer, NxOut);
+    	        }
 		free(InBuffer);
 		free(OutBuffer);
-    }
-    else
+        } else
 	   	memcpy( Tmp, In, (size_t)(NyIn*(long)sizeof(double)));
     	
 	/* --- Y processing --- */
@@ -261,6 +299,145 @@ long 	NyOut;
 	/* --- Free the temporary image --- */
 	free(Tmp);
 	
+	return (!ERROR);
+}
+
+/* ----------------------------------------------------------------------------
+	
+	Function: 
+		Reduce_3D
+	
+	Purpose: 
+ 		Reduces an image by a factor of two in each dimension.
+ 		
+	Note: 
+ 		Expects the output array (Out) to be allocated.
+
+	Parameters:
+		Input image:  	In[NxIn*NyIn*NzIn]
+		Output image: 	Out[NxIn/2*NyIn/2*NzIn/2]
+		Filter:		g[ng] coefficients of the filter
+		
+---------------------------------------------------------------------------- */
+extern int Reduce_3D(	
+				double *In, long NxIn, long NyIn, long NzIn,
+				double *Out,
+				double g[], long ng,
+				short IsCentered
+				)
+{
+double	*Tmp, *Tmp2;
+double 	*InBuffer;		/* Input buffer to 1D process */ 
+double	*OutBuffer;		/* Output buffer to 1D process */ 
+long	kx, ky, kz;
+long 	NxOut;
+long 	NyOut;
+long    NzOut;
+
+	/* --- Define dimension of the output --- */
+	NxOut = NxIn/2L;
+	if (NxOut < 1L) NxOut = 1L;
+	
+	NyOut = NyIn/2L;
+	if (NyOut < 1L) NyOut = 1L;
+
+	NzOut = NzIn/2L;
+	if (NzOut < 1L) NzOut = 1L;
+
+	/* --- Allocate a temporary image --- */
+	Tmp = (double *)malloc((size_t)(NxOut*NyIn*NzIn*(long)sizeof(double)));
+	if (Tmp == (double *)NULL) {
+		MessageDisplay("Unable to allocate memory");
+		return(ERROR);
+	}
+
+	Tmp2 = (double *)malloc((size_t)(NxOut*NyOut*NzIn*(long)sizeof(double)));
+	if (Tmp2 == (double *)NULL) {
+                free(Tmp);
+		MessageDisplay("Unable to allocate memory");
+		return(ERROR);
+	}
+	/* --- X processing --- */
+	if (NxIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NxIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NxOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (kz=0L; kz<NzIn; kz++)
+		for (ky=0L; ky<NyIn; ky++) {
+			GetX_3D( In, NxIn, NyIn, NzIn, ky, kz, InBuffer, NxIn); 
+			Reduce_1D(InBuffer, NxIn, OutBuffer, g, ng, IsCentered); 
+                 	PutX_3D( Tmp, NxOut, NyIn, NzIn, ky, kz, OutBuffer, NxOut);
+    	        }
+		free(InBuffer);
+		free(OutBuffer);
+        } else
+	   	memcpy( Tmp, In, (size_t)(NzOut*NyIn*NxIn*(long)sizeof(double)));
+
+	/* --- Y processing --- */
+	if (NyIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NyIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NyOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (kz=0L; kz<NzIn; kz++)
+	        for (kx=0L; kx<NxOut; kx++) {
+			GetY_3D( Tmp, NxOut, NyIn, NzIn, kx, kz, InBuffer, NyIn); 
+			Reduce_1D(InBuffer, NyIn, OutBuffer, g, ng,IsCentered);
+	 	   	PutY_3D( Tmp2, NxOut, NyOut, NzIn, kx, kz, OutBuffer, NyOut); 
+   		}
+		free(InBuffer);
+		free(OutBuffer);
+	}
+	else
+	   	memcpy( Tmp2, Tmp, (size_t)(NxOut*NyOut*NzIn*(long)sizeof(double)));
+
+	/* --- Z processing --- */
+	if (NzIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NzIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NzOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(Tmp); free(Tmp2);
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (kx=0L; kx<NxOut; kx++)
+		for (ky=0L; ky<NyOut; ky++) {
+			GetZ_3D( Tmp2, NxOut, NyOut, NzIn, kx, ky, InBuffer, NzIn); 
+			Reduce_1D(InBuffer, NzIn, OutBuffer, g, ng, IsCentered); 
+                 	PutZ_3D( Out, NxOut, NyOut, NzOut, kx, ky, OutBuffer, NzOut);
+    	        }
+		free(InBuffer);
+		free(OutBuffer);
+        }
+
+	/* --- Free the temporary image --- */
+	free(Tmp);
+        free(Tmp2);
 	return (!ERROR);
 }
 
@@ -353,6 +530,127 @@ long 	NyOut;
 	 
 	return (ERROR);
 	
+}
+
+/* ----------------------------------------------------------------------------
+	
+	Function: 
+		Expand_3D
+	
+	Purpose: 
+ 		Expands an image by a factor of two in each dimension.
+ 		
+	Note: 
+ 		Expects the output array (Out) to be allocated.
+
+	Parameters:
+		Input volume:  	In[NxIn,NyIn,NzIn]
+		Output voulme: 	Out[NxIn*2,NyIn*2,NzIn*2]
+		Filter coef:	h[nh]
+		
+---------------------------------------------------------------------------- */
+extern int Expand_3D(	
+				double *In, long NxIn, long NyIn,long NzIn,
+				double *Out,
+				double h[], long nh,
+				short IsCentered
+				)
+{
+double  *InBuffer; 		/* Input buffer to 1D process */ 
+double  *OutBuffer;		/* Output buffer to 1D process */ 
+long 	kx, ky, kz;
+long 	NxOut;
+long 	NyOut;
+long 	NzOut;
+	
+	if (NxIn <= 1L) 
+		NxOut = 1L; 
+	else 
+		NxOut = NxIn*2L;
+		
+	if (NyIn <= 1L) 
+		NyOut = 1L; 
+	else 
+		NyOut = NyIn*2L;
+ 
+	if (NzIn <= 1L) 
+		NzOut = 1L; 
+	else 
+		NzOut = NzIn*2L;
+
+	/* --- X processing --- */
+	if (NxIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NxIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NxOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (kz=0L; kz<NzIn; kz++)
+		for (ky=0L; ky<NyIn; ky++) {	
+			GetX_3D( In, NxIn, NyIn, NzIn, ky, kz, InBuffer, NxIn);
+			Expand_1D(InBuffer, NxIn, OutBuffer, h, nh, IsCentered);
+			PutX_3D( Out, NxOut, NyOut, NzOut, ky, kz, OutBuffer, NxOut);
+		}
+		free(InBuffer);
+		free(OutBuffer);
+	}
+	else
+	   	memcpy( Out, In, (size_t)(NxIn*NyIn*NzIn*(long)sizeof(double)));
+
+
+	/* --- Y processing --- */
+	if (NyIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NyIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NyOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (kz=0L; kz<NzIn; kz++)
+		for (kx=0L; kx<NxOut; kx++) {
+			GetY_3D( Out, NxOut, NyOut, NzOut, kx, kz, InBuffer, NyIn); 
+			Expand_1D(InBuffer, NyIn, OutBuffer, h, nh, IsCentered); 
+    		        PutY_3D( Out, NxOut, NyOut, NzOut, kx, kz, OutBuffer, NyOut);
+		}
+		free(InBuffer);
+		free(OutBuffer);
+	}
+	 
+	/* --- Z processing --- */
+	if (NzIn > 1L) {
+		InBuffer = (double *)malloc((size_t)(NzIn*(long)sizeof(double)));
+		if (InBuffer == (double *)NULL) {
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		OutBuffer = (double *)malloc((size_t)(NyOut*(long)sizeof(double)));
+		if (OutBuffer == (double *)NULL) {
+			free(InBuffer);
+			MessageDisplay("Unable to allocate memory");
+			return(ERROR);
+		}
+		for (ky=0L; ky<NyOut; ky++)
+		for (kx=0L; kx<NxOut; kx++) {
+			GetZ_3D( Out, NxOut, NyOut, NzOut, kx, ky, InBuffer, NzIn); 
+			Expand_1D(InBuffer, NyIn, OutBuffer, h, nh, IsCentered); 
+    		        PutZ_3D( Out, NxOut, NyOut, NzOut, kx, ky, OutBuffer, NzOut);
+		}
+		free(InBuffer);
+		free(OutBuffer);
+	}
+
+	return (ERROR);
 }
 
 /* ----------------------------------------------------------------------------
@@ -795,7 +1093,83 @@ int Index;
 	}
 }
 
+static void GetX_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long y, long z,
+				double *out, long outSize
+				)
+{
+	long index = z*Nx*Ny+y*Nx;
+	for (long i=0L; i<outSize; i++) {
+		out[i] = (double)Image[index];
+		index+=1;
+        }
+}
 
+static void GetY_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long z,
+				double *out, long outSize
+				)
+{
+	long index = z*Nx*Ny+x;
+	for (long i=0L; i<outSize; i++) {
+		out[i] = (double)Image[index];
+		index+=Nx;
+	}
+}
 
+static void GetZ_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long y,
+				double *out, long outSize
+				)
+{
+	long index = y*Nx+x;
+	long NyNx= Ny*Nx;
+	for (long i=0L; i<outSize; i++) {
+		out[i] = (double)Image[index];
+		index+=NyNx;
+	}
+}
 
+static void PutX_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long y, long z,
+				double *in, long inSize
+				)
+{
+	long index = z*Nx*Ny+y*Nx;
+	for (long i=0L; i<inSize; i++) {
+		Image[index]=in[i];
+		index+=1;
+        }
+}
+
+static void PutY_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long z,
+				double *in, long inSize
+				)
+{
+	long index = z*Nx*Ny+x;
+	for (long i=0L; i<inSize; i++) {
+		Image[index]=in[i];
+		index+=Ny;
+	}
+}
+
+static void PutZ_3D( 
+				double *Image, long Nx, long Ny, long Nz,
+				long x, long y,
+				double *in, long inSize
+				)
+{
+	long index = y*Nx+x;
+	long NyNx= Ny*Nx;
+	for (long i=0L; i<inSize; i++) {
+		Image[index]=in[i];
+		index+=NyNx;
+	}
+}
 

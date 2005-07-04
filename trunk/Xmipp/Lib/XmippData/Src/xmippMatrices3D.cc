@@ -31,6 +31,13 @@
 #include "../xmippGeometry.hh"
 
 #include <stdio.h>
+#include "../Bilib/types/tsplinebasis.h"
+#include "../Bilib/types/tboundaryconvention.h"
+#include "../Bilib/headers/linearalgebra.h"
+#include "../Bilib/headers/changebasis.h"
+#include "../Bilib/headers/kernel.h"
+#include "../Bilib/headers/pyramidfilters.h"
+#include "../Bilib/headers/pyramidtools.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
@@ -255,6 +262,135 @@ complex<double> matrix3D< complex<double> >::interpolated_elem(
 
     return LIN_INTERP(fz, dxy0, dxy1);
 }
+
+/*
+ * "B-Spline Interpolation"
+ */
+template <class T>
+   T VT::interpolated_elem_as_Bspline(double x, double y, double z,
+    int SplineDegree) {
+    int SplineDegree_1=SplineDegree-1;
+
+    // Logical to physical
+    z-=STARTINGZ(*this);
+    y-=STARTINGY(*this);
+    x-=STARTINGX(*this);
+
+    int lmax = XSIZE(*this);
+    int mmax = YSIZE(*this);
+    int nmax = ZSIZE(*this);
+    int l1 = CLIP(CEIL(x - SplineDegree_1),0,XSIZE(*this)-1);
+    int l2 = CLIP(l1 + SplineDegree,0,XSIZE(*this)-1);
+    int m1 = CLIP(CEIL(y - SplineDegree_1),0,YSIZE(*this)-1);
+    int m2 = CLIP(m1 + SplineDegree,0,YSIZE(*this)-1);
+    int n1 = CLIP(CEIL(z - SplineDegree_1),0,ZSIZE(*this)-1);
+    int n2 = CLIP(n1 + SplineDegree,0,ZSIZE(*this)-1);
+    
+    double zyxsum = 0.0;
+    for (int n=n1; n<=n2; n++)
+       if (n<nmax && n>=-1L) {
+          int plane_n = YSIZE(*this)*XSIZE(*this)*n;
+      	  double yxsum = 0.0;
+	  for (int m=m1; m<=m2; m++)
+              if (m<mmax && m>-1L) {
+        	 int row_m = plane_n+XSIZE(*this)*m;
+      		 double xsum = 0.0;
+        	 for (int l=l1; l<=l2; l++) {
+        	     double xminusl = x-(double)l;
+        	     double Coeff = (double) __m[row_m+l];
+		     switch (SplineDegree) {
+			case 2: xsum += Coeff * Bspline02(xminusl); break; 
+                	case 3: xsum += Coeff * Bspline03(xminusl); break;
+		     }
+        	 }
+        	 double yminusm=y-(double)m;
+		 switch (SplineDegree) {
+        	    case 2: yxsum += xsum * Bspline03(yminusm); break;
+        	    case 3: yxsum += xsum * Bspline03(yminusm); break;
+		 }
+              }
+           double zminusn=z-(double)n;
+	   switch (SplineDegree) {
+              case 2: zyxsum += yxsum * Bspline03(zminusn); break;
+              case 3: zyxsum += yxsum * Bspline03(zminusn); break;
+           }
+      }
+    return (T)zyxsum;
+}
+
+/* Expand a set of B-spline coefficients ----------------------------------- */
+template <class T>
+   void VT::expand_Bspline(matrix3D<double> &expanded, int SplineDegree) const {
+      double   g[200];     /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];     /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix3D<double> aux;
+      type_cast(*this,aux);
+      expanded.resize(2*ZSIZE(aux),2*YSIZE(aux),2*XSIZE(aux));
+      Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
+         MULTIDIM_ARRAY(expanded), h, nh, IsCentered);
+   }
+
+/* Reduce a set of B-spline coefficients ----------------------------------- */
+template <class T>
+   void VT::reduce_Bspline(matrix3D<double> &reduced, int SplineDegree) const {
+      double   g[200];     /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];     /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix3D<double> aux;
+      type_cast(*this,aux);
+      if      (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0 && ZSIZE(aux)%2!=0)
+          aux.resize(ZSIZE(aux-1),YSIZE(aux)-1,XSIZE(aux)-1);
+      else if (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0 && ZSIZE(aux)%2==0)
+          aux.resize(ZSIZE(aux),YSIZE(aux)-1,XSIZE(aux)-1);
+      else if (XSIZE(aux)%2!=0 && YSIZE(aux)%2==0 && ZSIZE(aux)%2!=0)
+          aux.resize(ZSIZE(aux)-1,YSIZE(aux),XSIZE(aux)-1);
+      else if (XSIZE(aux)%2!=0 && YSIZE(aux)%2==0 && ZSIZE(aux)%2==0)
+          aux.resize(ZSIZE(aux),YSIZE(aux),XSIZE(aux)-1);
+      else if (XSIZE(aux)%2==0 && YSIZE(aux)%2!=0 && ZSIZE(aux)%2!=0)
+          aux.resize(ZSIZE(aux)-1,YSIZE(aux)-1,XSIZE(aux));
+      else if (XSIZE(aux)%2==0 && YSIZE(aux)%2!=0 && ZSIZE(aux)%2==0)
+          aux.resize(ZSIZE(aux),YSIZE(aux)-1,XSIZE(aux));
+      else if (XSIZE(aux)%2==0 && YSIZE(aux)%2==0 && ZSIZE(aux)%2!=0)
+          aux.resize(ZSIZE(aux)-1,YSIZE(aux),XSIZE(aux));
+      reduced.resize(ZSIZE(aux)/2,YSIZE(aux)/2,XSIZE(aux)/2);
+      Reduce_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
+         MULTIDIM_ARRAY(reduced), g, ng, IsCentered);
+   }
+
+/* Pyramid reduce ---------------------------------------------------------- */
+template <class T>
+   void VT::pyramid_reduce(matrix3D<double> &result) const {
+      matrix3D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      reduce_Bspline(aux2,3);
+      aux2.produce_image_from_spline_coeffs(result,3);
+   }
+
+/* Pyramid expand ---------------------------------------------------------- */
+template <class T>
+   void VT::pyramid_expand(matrix3D<double> &result) const {
+      matrix3D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      expand_Bspline(aux2,3);
+      aux2.produce_image_from_spline_coeffs(result,3);
+   }
 
 /* Get slice --------------------------------------------------------------- */
 template <class T>
@@ -542,6 +678,129 @@ template <class T>
 }
 #undef DEBUG
 
+//#define DEBUG
+template <class T>
+   void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
+      int Splinedegree, bool inv, bool wrap) _THROW {
+   int m1, n1, o1, m2, n2, o2;
+   double x, y, z, xp, yp, zp;
+   double minxp, minyp, maxxp, maxyp, minzp, maxzp;
+   int   cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
+   
+   if ((XSIZE(A)!=4) || (YSIZE(A)!=4))
+      REPORT_ERROR(1102,"Apply_geom3D: geometrical transformation is not 4x4");
+   if (A.IsIdent()) {V2=V1; return;}
+   if (XSIZE(V1)==0)  {V2.clear(); return;}
+   
+   if (!inv) A=A.inv();
+   
+   if (XSIZE(V2)==0) V2.resize(V1);
+   
+   // For scalings the output matrix is resized outside to the final
+   // size instead of being resized inside the routine with the
+   // same size as the input matrix
+   if (XSIZE(V2)==0) V2.resize(V1);
+   
+   // Find center of matrix3D
+   cen_z  =(int)(V2.zdim/2);
+   cen_y  =(int)(V2.ydim/2);
+   cen_x  =(int)(V2.xdim/2);
+   cen_zp =(int)(V1.zdim/2);
+   cen_yp =(int)(V1.ydim/2);
+   cen_xp =(int)(V1.xdim/2);
+   minxp  = -cen_xp;
+   minyp  = -cen_yp;
+   minzp  = -cen_zp;
+   maxxp  = V1.xdim-cen_xp-1;
+   maxyp  = V1.ydim-cen_yp-1;
+   maxzp  = V1.zdim-cen_zp-1;
+   #ifdef DEBUG
+      cout << "Geometry 2 center=("
+           << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+           << "Geometry 1 center=("
+           << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+	   << "           min=("
+           << minzp  << "," << minyp  << "," << minxp  << ")\n"
+	   << "           max=("
+           << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+      ;
+   #endif
+    
+   // Build the B-spline coefficients
+   matrix3D<double> Bcoeffs;
+   V1.produce_spline_coeffs(Bcoeffs,Splinedegree);
+   STARTINGX(Bcoeffs)=(int)minxp;
+   STARTINGY(Bcoeffs)=(int)minyp;
+   STARTINGZ(Bcoeffs)=(int)minzp;
+
+   // Now we go from the output matrix3D to the input matrix3D, ie, for any voxel
+   // in the output matrix3D we calculate which are the corresponding ones in
+   // the original matrix3D, make an interpolation with them and put this value
+   // at the output voxel
+   
+   // V2 is not initialised to 0 because all its pixels are rewritten
+   for (int k=0; k<V2.zdim; k++)
+      for (int i=0; i<V2.ydim; i++) {
+         // Calculate position of the beginning of the row in the output matrix3D
+         x= -cen_x;
+         y=i-cen_y;
+         z=k-cen_z;
+
+         // Calculate this position in the input image according to the
+         // geometrical transformation
+         // they are related by
+         // coords_output(=x,y) = A * coords_input (=xp,yp)
+         xp=x*dMij(A,0,0) + y*dMij(A,0,1) + z*dMij(A,0,2) + dMij(A,0,3);
+         yp=x*dMij(A,1,0) + y*dMij(A,1,1) + z*dMij(A,1,2) + dMij(A,1,3);
+         zp=x*dMij(A,2,0) + y*dMij(A,2,1) + z*dMij(A,2,2) + dMij(A,2,3);
+
+         for (int j=0; j<V2.xdim; j++) {
+            bool interp;
+            T tmp;
+
+            #ifdef DEBUG
+	       bool show_debug=false;
+	       if ((i==0 && j==0 && k==0) ||
+	           (i==V2.ydim-1 && j==V2.xdim-1 && k==V2.zdim-1))
+		   show_debug=true;
+	       if (show_debug)
+        	  cout << "(x,y,z)-->(xp,yp,zp)= "
+		       << "(" << x  << "," << y  << "," << z  << ") "
+		       << "(" << xp << "," << yp << "," << zp << ")\n";
+            #endif
+
+            // If the point is outside the volume, apply a periodic extension
+            // of the volume, what exits by one side enters by the other
+            interp=TRUE;
+            if (wrap) {
+               if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	           xp>maxxp+XMIPP_EQUAL_ACCURACY) xp=realWRAP(xp, minxp-0.5, maxxp+0.5);
+               if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	           yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp-0.5, maxyp+0.5);
+               if (zp<minzp-XMIPP_EQUAL_ACCURACY ||
+	           zp>maxzp+XMIPP_EQUAL_ACCURACY) zp=realWRAP(zp, minzp-0.5, maxzp+0.5);
+            } else {
+               if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	           xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+               if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	           yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+               if (zp<minzp-XMIPP_EQUAL_ACCURACY ||
+	           zp>maxzp+XMIPP_EQUAL_ACCURACY) interp=FALSE;
+            }
+
+            if (interp) {
+               dVkij(V2,k,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
+	          xp,yp,zp,Splinedegree);
+            }
+
+            // Compute new point inside input image
+            xp += dMij(A,0,0);
+            yp += dMij(A,1,0);
+            zp += dMij(A,2,0);
+         }
+      }
+}
+
 /* Geometrical operations -------------------------------------------------- */
 template <class T>
    void VT::scale_to_size(int Zdim, int Ydim, int Xdim, VT &result) const
@@ -554,6 +813,17 @@ template <class T>
        apply_geom(result,temp,*this,IS_NOT_INV,WRAP);}
 
 template <class T>
+   void VT::scale_to_size_Bspline(int Splinedegree,
+      int Zdim, int Ydim, int Xdim, VT &result) const
+      {matrix2D<double> temp(4,4);
+       temp.init_identity();
+       DIRECT_MAT_ELEM(temp,0,0)=(double)Xdim/(double)xdim;
+       DIRECT_MAT_ELEM(temp,1,1)=(double)Ydim/(double)ydim;
+       DIRECT_MAT_ELEM(temp,2,2)=(double)Zdim/(double)zdim;
+       result.resize(Zdim,Ydim,Xdim);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,WRAP);}
+
+template <class T>
    void VT::self_translate_center_of_mass_to_center(bool wrap) {
       set_Xmipp_origin();
       matrix1D<double> center;
@@ -561,6 +831,58 @@ template <class T>
       center*=-1;
       self_translate(center,wrap);
    }
+
+template <class T>
+   void VT::self_translate_center_of_mass_to_center_Bspline(
+      int Splinedegree, bool wrap) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate_Bspline(Splinedegree,center,wrap);
+   }
+
+/* Change to Spline coeffs ------------------------------------------------- */
+#ifndef DBL_EPSILON
+   #define DBL_EPSILON 1e-50
+#endif
+template <class T>
+   void VT::produce_spline_coeffs(matrix3D<double> &coeffs, int SplineDegree)
+      const {
+   coeffs.init_zeros(ZSIZE(*this),YSIZE(*this),XSIZE(*this));
+   STARTINGX(coeffs)=STARTINGX(*this);
+   STARTINGY(coeffs)=STARTINGY(*this);
+   STARTINGZ(coeffs)=STARTINGZ(*this);
+   int Status;
+   matrix3D<double> aux;
+   type_cast(*this,aux);
+   ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(coeffs),
+       XSIZE(*this), YSIZE(*this), ZSIZE(*this),
+       CardinalSpline, BasicSpline, SplineDegree,
+       FiniteCoefficientSupport, DBL_EPSILON, &Status);
+   if (Status)
+      REPORT_ERROR(1,"matrix3D::produce_spline_coeffs: Error");
+}
+
+/* Change to Spline coeffs ------------------------------------------------- */
+template <class T>
+   void VT::produce_image_from_spline_coeffs(
+      matrix3D<double> &img, int SplineDegree) const {
+   img.init_zeros(ZSIZE(*this),YSIZE(*this),XSIZE(*this));
+   STARTINGX(img)=STARTINGX(*this);
+   STARTINGY(img)=STARTINGY(*this);
+   STARTINGZ(img)=STARTINGZ(*this);
+   int Status;
+   matrix3D<double> aux;
+   type_cast(*this,aux);
+   ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(img),
+       XSIZE(*this), YSIZE(*this), ZSIZE(*this),
+       BasicSpline, CardinalSpline, SplineDegree,
+       MirrorOnBounds, DBL_EPSILON, &Status);
+   if (Status)
+      REPORT_ERROR(1,"matrix3D::produce_spline_img: Error");
+}
+#undef DBL_EPSILON
 
 /* Max index --------------------------------------------------------------- */
 template <class T>
@@ -796,6 +1118,7 @@ template <class T>
       // Specific for volumes
       matrix2D<T> aux;
       matrix2D<double> A;
+      matrix3D<double> B;
       a.interpolated_elem(3.5,3.5,3.5);
       a.getSlice(0,aux);
       a.setSlice(0,aux);
@@ -807,6 +1130,11 @@ template <class T>
       a.max_index(imax,imax,imax);
       a.min_index(imax,imax,imax);
       a.scale_to_size(32,32,32,a);
+      a.scale_to_size_Bspline(3,32,32,32,a);
+      a.produce_spline_coeffs(B,3);
+      a.produce_image_from_spline_coeffs(B,3);
+      a.pyramid_reduce(B);
+      a.pyramid_expand(B);
       a.self_translate_center_of_mass_to_center();
       a.for_all_slices(&slice_minus_first);
       a.for_all_slices(&slice_first);

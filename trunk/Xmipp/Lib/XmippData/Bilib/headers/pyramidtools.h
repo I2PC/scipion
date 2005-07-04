@@ -71,6 +71,28 @@ extern int Reduce_2D(
 				short FlagCentered
 				);
 				
+/** Reduce 3D.
+	Function: 
+		Reduce_3D
+	
+	Purpose: 
+ 		Reduces a volume by a factor of two in each dimension.
+ 		
+	Note: 
+ 		Expects the output array (Out) to be allocated.
+
+	Parameters:
+		Input image:  	In[NxIn*NyIn*NzIn]
+		Output image: 	Out[NxIn/2*NyIn/2*NzIn/2]
+		Filter:			g[ng] coefficients of the filter
+*/
+extern int Reduce_3D(	
+				double *In, long NxIn, long NyIn, long NzIn,
+				double *Out,
+				double w[], long nw,
+				short FlagCentered
+				);
+				
 /** Expand 2D.
 	Function: 
 		Expand_2D
@@ -89,7 +111,29 @@ extern int Reduce_2D(
 extern int Expand_2D(	
 				double *In, long NxIn, long NyIn,
 				double *Out,
-				double w[], long nw,
+				double h[], long nh,
+				short FlagCentered
+				);
+
+/** Expand 3D.
+	Function: 
+		Expand_3D
+	
+	Purpose: 
+ 		Expands a volume by a factor of two in each dimension.
+ 		
+	Note: 
+ 		Expects the output array (Out) to be allocated.
+
+	Parameters:
+		Input volume:  	In[NxIn,NyIn,NzIn]
+		Output voulme: 	Out[NxIn*2,NyIn*2,NzIn*2]
+		Filter coef:	h[nh]
+*/
+extern int Expand_3D(	
+				double *In, long NxIn, long NyIn, long NzIn,
+				double *Out,
+				double h[], long nh,
 				short FlagCentered
 				);
 

@@ -60,6 +60,10 @@ template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
       bool wrap) _THROW;
 
+template <class T>
+   void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
+      int Splinedegree, bool inv, bool wrap) _THROW;
+
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
 /* ************************************************************************* */
@@ -571,6 +575,12 @@ public:
        (x,y,z) are in logical coordinates. */
    T   interpolated_elem(double x, double y, double z, T outside_value=(T)0);
 
+   /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+       that this image is a set of B-spline coefficients.
+       (x,y,z) are in logical coordinates.*/
+   T   interpolated_elem_as_Bspline(double x, double y, double z,
+       int Splinedegree=3);
+
    /** Logical to physical index translation.
        This function returns the physical position of a logical one. See
        \URL[Conventions]{../../../Extra_Docs/Conventions.html}
@@ -797,10 +807,20 @@ public:
    friend void apply_geom<>(VT &V2, matrix2D<double> A,
             const VT &V1, bool inv, bool wrap) _THROW;
 
+   /** Apply geom with B-spline interpolation. */
+   friend void apply_geom_Bspline<>(VT &V2, matrix2D<double> A,
+       const VT &V1, int Splinedegree, bool inv, bool wrap);
+
    /** Self apply geom.
        As apply geometry, but the result is kept in this object */
    void self_apply_geom(matrix2D<double> A, bool inv, bool wrap)
       {VT aux; apply_geom(aux, A,*this,inv,wrap); *this=aux;}
+
+   /** Self apply geom Bspline. */
+   void self_apply_geom_Bspline(matrix2D<double> A, int SplineDegree,
+      bool inv, bool wrap)
+      {VT aux; apply_geom_Bspline(aux, A,*this,SplineDegree,inv,wrap);
+          *this=aux;}
 
    /** Rotate a volume around system axis.
        The rotation angle is in degrees, and the rotational axis is
@@ -811,13 +831,29 @@ public:
       {matrix2D<double> temp=rot3D_matrix(ang, axis);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
+   /** Rotate a volume arounf system axis (BSpline). */
+   void rotate_Bspline(int Splinedegree, double ang, char axis, VT &result,
+      bool wrap=DONT_WRAP) const
+      {matrix2D<double> temp=rot3D_matrix(ang, axis);
+       apply_geom_Bspline(result,temp,*this,IS_NOT_INV,wrap);}
+
    /** Rotate a volume around system axis, return result.*/
    VT rotate(double ang, char axis, bool wrap=DONT_WRAP) const
       {VT aux; rotate(ang, axis, aux, wrap); return aux;}
 
+   /** Rotate a volume around system axis, return result (Bspline).*/
+   VT rotate_Bspline(int Splinedegree, double ang, char axis,
+      bool wrap=DONT_WRAP) const
+      {VT aux; rotate_Bspline(Splinedegree, ang, axis, aux, wrap); return aux;}
+
    /** Rotate a volume around system axis, keep in this object. */
    void self_rotate(double ang, char axis, bool wrap=DONT_WRAP)
       {VT aux; rotate(ang, axis, aux, wrap); *this=aux;}
+
+   /** Rotate a volume around system axis, keep in this object (Bspline). */
+   void self_rotate_Bspline(int Splinedegree, double ang, char axis,
+      bool wrap=DONT_WRAP)
+      {VT aux; rotate_Bspline(Splinedegree, ang, axis, aux, wrap); *this=aux;}
 
    /** Rotate a volume around any axis.
        The rotation angle is in degrees, and the rotational axis is
@@ -829,13 +865,29 @@ public:
       {matrix2D<double> temp=rot3D_matrix(ang,axis);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
+   /** Rotate a volume around any axis (Bspline).*/
+   void rotate_Bspline(int Splinedegree, double ang,
+      const matrix1D<double> &axis, VT &result, bool wrap=DONT_WRAP) const
+      {matrix2D<double> temp=rot3D_matrix(ang,axis);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
+
    /** Rotate a volume around any axis, return result. */
    VT rotate(double ang, const matrix1D<double> v, bool wrap=DONT_WRAP) const
       {VT aux; rotate(ang, v, aux, wrap); return aux;}
 
+   /** Rotate a volume around any axis, return result (Bspline). */
+   VT rotate_Bspline(int Splinedegree, double ang, const matrix1D<double> v,
+      bool wrap=DONT_WRAP) const
+      {VT aux; rotate_Bspline(Splinedegree, ang, v, aux, wrap); return aux;}
+
    /** Rotate a volume around any axis, keep in this object. */
    void self_rotate(double ang, const matrix1D<double> &v, bool wrap=DONT_WRAP)
       {VT aux; rotate(ang, v, aux, wrap); *this=aux;}
+
+   /** Rotate a volume around any axis, keep in this object (Bspline). */
+   void self_rotate_Bspline(int Splinedegree, double ang,
+      const matrix1D<double> &v, bool wrap=DONT_WRAP)
+      {VT aux; rotate_Bspline(Splinedegree, ang, v, aux, wrap); *this=aux;}
 
    /** Translate a volume.
        The shift is given as a R3 vector (shift_X, shift_Y, shift_Z);
@@ -846,18 +898,38 @@ public:
       {matrix2D<double> temp=translation3D_matrix(v);
        apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
 
+   /** Translate a volume (Bspline).*/
+   void translate_Bspline(int Splinedegree, const matrix1D<double> &v,
+      VT &result, bool wrap=WRAP) const
+      {matrix2D<double> temp=translation3D_matrix(v);
+       apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
+
    /** Translate a volume, return result.*/
    VT translate(const matrix1D<double> &v, bool wrap=WRAP) const
       {VT aux; translate(v, aux, wrap); return aux;}
+
+   /** Translate a volume, return result (Bspline).*/
+   VT translate_Bspline(int Splinedegree, const matrix1D<double> &v,
+      bool wrap=WRAP) const
+      {VT aux; translate_Bspline(Splinedegree, v, aux, wrap); return aux;}
 
    /** Translate a volume, keep in this object.*/
    void self_translate(const matrix1D<double> &v, bool wrap=WRAP)
       {VT aux; translate(v, aux, wrap); *this=aux;}
 
+   /** Translate a volume, keep in this object (Bspline).*/
+   void self_translate_Bspline(int Splinedegree, const matrix1D<double> &v,
+      bool wrap=WRAP)
+      {VT aux; translate_Bspline(Splinedegree, v, aux, wrap); *this=aux;}
+
    /** Translate center of mass to center.
        If the input has very high values, sometimes it is better to
        rescale it to be between 0 and 1. */
    void self_translate_center_of_mass_to_center(bool wrap=WRAP);
+
+   /** Translate center of mass to center (Bspline).*/
+   void self_translate_center_of_mass_to_center_Bspline(
+      int Splinedegree, bool wrap=WRAP);
 
    /** Scales to a new size.
        The volume is scaled (resampled) to fill a new size. It is not the
@@ -866,13 +938,55 @@ public:
        \\Ex: V2=V1.scale_to_size(128,128,128);*/
    void scale_to_size(int Zdim, int Ydim, int Xdim, VT &result) const;
 
-   /** Scales to a new size., return result*/
+   /** Scales to a new size (Bspline).*/
+   void scale_to_size_Bspline(int Splinedegree, int Zdim, int Ydim, int Xdim,
+      VT &result) const;
+
+   /** Scales to a new size, return result*/
    VT scale_to_size(int Zdim, int Ydim, int Xdim) const
       {VT aux; scale_to_size(Zdim,Ydim,Xdim,aux); return aux;}
+
+   /** Scales to a new size, return result (Bspline).*/
+   VT scale_to_size_Bspline(int Splinedegree, int Zdim, int Ydim,
+      int Xdim) const
+      {VT aux; scale_to_size_Bspline(Splinedegree, Zdim,Ydim,Xdim,aux);
+       return aux;}
 
    /** Scales to a new size., keep in this object*/
    void self_scale_to_size(int Zdim, int Ydim, int Xdim)
       {VT aux; scale_to_size(Zdim,Ydim,Xdim,aux); *this=aux;}
+
+   /** Scales to a new size., keep in this object (Bspline)*/
+   void self_scale_to_size_Bspline(int Splinedegree,
+      int Zdim, int Ydim, int Xdim)
+      {VT aux; scale_to_size_Bspline(Splinedegree,Zdim,Ydim,Xdim,aux);
+       *this=aux;}
+
+   /** Reduce the image by 2 using a BSpline pyramid. */
+   void pyramid_reduce(matrix3D<double> &reduced) const;
+
+   /** Expand the image by 2 using a BSpline pyramid. */
+   void pyramid_expand(matrix3D<double> &expanded) const;
+
+   /** Produce spline coefficients.*/
+   void produce_spline_coeffs(matrix3D<double> &coeffs, int SplineDegree=3)
+      const;
+
+   /** Produce image from B-spline coefficients. */
+   void produce_image_from_spline_coeffs(
+      matrix3D<double> &img, int SplineDegree=3) const;
+
+   /** Expand a set of B-spline coefficients.
+       Knowing that this matrix is a set of B-spline coefficients,
+       produce the expanded set of B-spline coefficients using the
+       two-scale relationship. */
+   void expand_Bspline(matrix3D<double> &expanded, int SplineDegree=3) const;
+
+   /** Reduce a set of B-spline coefficients.
+       Knowing that this matrix is a set of B-spline coefficients,
+       produce the reduced set of B-spline coefficients using the
+       two-scale relationship. */
+   void reduce_Bspline(matrix3D<double> &reduced, int SplineDegree=3) const;
 
    /** Maximum element.
        This function returns the index of the maximum element of an array.
