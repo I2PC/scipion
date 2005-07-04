@@ -19,3 +19,4 @@ extern int	WaveletMerge_3D(
 					double	Alpha,
 					short	BoundaryConditions,
 					int		*Status);
+

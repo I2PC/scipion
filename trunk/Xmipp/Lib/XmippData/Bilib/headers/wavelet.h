@@ -68,3 +68,4 @@ extern int WaveletSize( struct TWaveletStruct *Data);
     (IDWT="Synthesis") */
 extern int Wavelet( struct TWaveletStruct *Data);
 
+
