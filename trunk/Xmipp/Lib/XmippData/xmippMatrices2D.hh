@@ -977,6 +977,12 @@ public:
    void self_apply_geom(matrix2D<double> A, bool inv, bool wrap, T outside=(T)0)
       {mT aux; apply_geom(aux,A,*this,inv,wrap,outside); *this=aux;}
 
+   /** Self apply geom with Bspline interpolation.*/
+   void self_apply_geom_Bspline(matrix2D<double> A, int SplineDegree,
+      bool inv, bool wrap, T outside=(T)0)
+      {mT aux; apply_geom_Bspline(aux,A,*this,SplineDegree,inv,wrap,outside);
+       *this=aux;}
+
    #define IS_INV     TRUE
    #define IS_NOT_INV FALSE
    #define DONT_WRAP  FALSE
