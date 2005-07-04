@@ -300,31 +300,28 @@ template <class T>
 
     int lmax = XSIZE(*this);
     int mmax = YSIZE(*this);
-    int l1 = CEIL(x - SplineDegree_1);
-    int l2 = l1 + SplineDegree;
-    int m1 = CEIL(y - SplineDegree_1);
-    int m2 = m1 + SplineDegree;
+    int l1 = CLIP(CEIL(x - SplineDegree_1),0,lmax-1);
+    int l2 = CLIP(l1 + SplineDegree,0,lmax-1);
+    int m1 = CLIP(CEIL(y - SplineDegree_1),0,mmax-1);
+    int m2 = CLIP(m1 + SplineDegree,0,mmax-1);
     double columns = 0.0;
-    for (int m=m1; m<=m2; m++)
-        if (m<mmax && m>-1L) {
-           int row_m = XSIZE(*this)*m;
-      	   double rows = 0.0;
-           for (int l=l1; l<=l2; l++) {
-               if (l<lmax && l>-1L) {
-        	  double xminusl = x-(double)l;
-        	  double Coeff = (double) __m[row_m+l];
-		  switch (SplineDegree) {
-		     case 2: rows += Coeff * Bspline02(xminusl); break; 
-                     case 3: rows += Coeff * Bspline03(xminusl); break;
-		  }
-               }
-           }
-           double yminusm=y-(double)m;
-	   switch (SplineDegree) {
-              case 2: columns += rows * Bspline03(yminusm); break;
-              case 3: columns += rows * Bspline03(yminusm); break;
-	   }
+    for (int m=m1; m<=m2; m++) {
+        int row_m = XSIZE(*this)*m;
+      	double rows = 0.0;
+        for (int l=l1; l<=l2; l++) {
+            double xminusl = x-(double)l;
+            double Coeff = (double) __m[row_m+l];
+	    switch (SplineDegree) {
+	       case 2: rows += Coeff * Bspline02(xminusl); break; 
+               case 3: rows += Coeff * Bspline03(xminusl); break;
+	    }
         }
+        double yminusm=y-(double)m;
+	switch (SplineDegree) {
+           case 2: columns += rows * Bspline03(yminusm); break;
+           case 3: columns += rows * Bspline03(yminusm); break;
+	}
+    }
     return (T)columns;
 }
 
@@ -862,7 +859,6 @@ template <class T>
    double x, y, xp, yp;
    double minxp, minyp, maxxp, maxyp;
    int   cen_x, cen_y, cen_xp, cen_yp;
-   double wx, wy; // Weights in X,Y directions for bilinear interpolation
    
    if ((XSIZE(A)!=3) || (YSIZE(A)!=3))
       REPORT_ERROR(1102,"Apply_geom: geometrical transformation is not 3x3");
@@ -1048,51 +1044,24 @@ template <class T>
       }
    }
 
+/* Pyramid reduce ---------------------------------------------------------- */
 template <class T>
    void mT::pyramid_reduce(matrix2D<double> &result) const {
-      double   g[200];    /* Coefficients of the reduce filter */
-      long     ng;         /* Number of coefficients of the reduce filter */
-      double   h[200];    /* Coefficients of the expansion filter */
-      long     nh;         /* Number of coefficients of the expansion filter */
-      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
-
-      // Get the filter
-      if (GetPyramidFilter( "Centered Spline", 3,
-            g, &ng, h, &nh, &IsCentered))
-	 REPORT_ERROR(1,"Unable to load the filter coefficients");
-
-      matrix2D<double> aux;
-      type_cast(*this,aux);
-      if (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0)
-          aux.resize(YSIZE(aux)-1,XSIZE(aux)-1);
-      else if (YSIZE(aux)%2!=0)
-          aux.resize(YSIZE(aux)-1,XSIZE(aux));
-      else if (XSIZE(aux)%2!=0)
-          aux.resize(YSIZE(aux)  ,XSIZE(aux)-1);
-      result.resize(YSIZE(aux)/2,XSIZE(aux)/2);
-      Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
-         MULTIDIM_ARRAY(result), g, ng, IsCentered);
+      matrix2D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      reduce_Bspline(aux2,3);
+      aux2.produce_image_from_spline_coeffs(result,3);
    }
 
+/* Pyramid expand ---------------------------------------------------------- */
 template <class T>
    void mT::pyramid_expand(matrix2D<double> &result) const {
-      double   g[200];     /* Coefficients of the reduce filter */
-      long     ng;         /* Number of coefficients of the reduce filter */
-      double   h[200];     /* Coefficients of the expansion filter */
-      long     nh;         /* Number of coefficients of the expansion filter */
-      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
-
-      // Get the filter
-      if (GetPyramidFilter( "Centered Spline", 3,
-            g, &ng, h, &nh, &IsCentered))
-	 REPORT_ERROR(1,"Unable to load the filter coefficients");
-
-      matrix2D<double> aux;
-      type_cast(*this,aux);
-      result.resize(2*YSIZE(aux),2*XSIZE(aux));
-      Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
-         MULTIDIM_ARRAY(result), h, nh, IsCentered);
+      matrix2D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      expand_Bspline(aux2,3);
+      aux2.produce_image_from_spline_coeffs(result,3);
    }
+
 
 /* Change to Spline coeffs ------------------------------------------------- */
 #ifndef DBL_EPSILON
