@@ -66,7 +66,13 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cerr << "This function is not implemented for volumes yet!\n";
+   Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
+   matrix3D<double> result;
+   switch (eprm->operation) {
+      case Pyramid_parameters::Expand: vol().pyramid_expand(result); break;
+      case Pyramid_parameters::Reduce: vol().pyramid_reduce(result); break;
+   }
+   vol()=result;
    return TRUE;
 }
 
