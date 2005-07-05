@@ -963,10 +963,10 @@ public:
        *this=aux;}
 
    /** Reduce the image by 2 using a BSpline pyramid. */
-   void pyramid_reduce(matrix3D<double> &reduced) const;
+   void pyramid_reduce(matrix3D<double> &reduced, int levels=1) const;
 
    /** Expand the image by 2 using a BSpline pyramid. */
-   void pyramid_expand(matrix3D<double> &expanded) const;
+   void pyramid_expand(matrix3D<double> &expanded, int levels=1) const;
 
    /** Produce spline coefficients.*/
    void produce_spline_coeffs(matrix3D<double> &coeffs, int SplineDegree=3)

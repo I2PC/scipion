@@ -376,19 +376,25 @@ template <class T>
 
 /* Pyramid reduce ---------------------------------------------------------- */
 template <class T>
-   void VT::pyramid_reduce(matrix3D<double> &result) const {
+   void VT::pyramid_reduce(matrix3D<double> &result, int levels) const {
       matrix3D<double> aux, aux2;
       produce_spline_coeffs(aux,3);
-      reduce_Bspline(aux2,3);
+      for (int i=0; i<levels; i++) {
+         aux.reduce_Bspline(aux2,3);
+         aux=aux2;
+      }
       aux2.produce_image_from_spline_coeffs(result,3);
    }
 
 /* Pyramid expand ---------------------------------------------------------- */
 template <class T>
-   void VT::pyramid_expand(matrix3D<double> &result) const {
+   void VT::pyramid_expand(matrix3D<double> &result, int levels) const {
       matrix3D<double> aux, aux2;
       produce_spline_coeffs(aux,3);
-      expand_Bspline(aux2,3);
+      for (int i=0; i<levels; i++) {
+         aux.expand_Bspline(aux2,3);
+         aux=aux2;
+      }
       aux2.produce_image_from_spline_coeffs(result,3);
    }
 

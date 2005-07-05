@@ -1117,10 +1117,10 @@ public:
    void superpixel_expand(mT &result, int size=2) const;
 
    /** Reduce the image by 2 using a BSpline pyramid. */
-   void pyramid_reduce(matrix2D<double> &reduced) const;
+   void pyramid_reduce(matrix2D<double> &reduced, int levels=1) const;
 
    /** Expand the image by 2 using a BSpline pyramid. */
-   void pyramid_expand(matrix2D<double> &expanded) const;
+   void pyramid_expand(matrix2D<double> &expanded, int levels=1) const;
 
    /** Produce spline coefficients.*/
    void produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree=3)
