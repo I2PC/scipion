@@ -30,9 +30,11 @@ class Pyramid_parameters: public Prog_parameters {
 public:
    enum Toperation {Expand, Reduce, None};
    Toperation operation;
+   int levels;
 
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
+      levels=AtoI(get_param(argc,argv,"-levels","1"));
       if      (check_param(argc,argv,"-expand")) operation=Expand;
       else if (check_param(argc,argv,"-reduce")) operation=Reduce;
       else                                       operation=None;
@@ -46,11 +48,13 @@ public:
          case Reduce: cout << "Reduce\n"; break;
          case None  : cout << "None  \n"; break;
       }
+      cout << "Levels: " << levels << endl;
    }
 
    void usage() {
       Prog_parameters::usage();
       cerr << "  -expand | -reduce         : Expand or reduce the image\n";
+      cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
    }
 };
 
@@ -58,8 +62,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
    matrix2D<double> result;
    switch (eprm->operation) {
-      case Pyramid_parameters::Expand: img().pyramid_expand(result); break;
-      case Pyramid_parameters::Reduce: img().pyramid_reduce(result); break;
+      case Pyramid_parameters::Expand: img().pyramid_expand(result,eprm->levels); break;
+      case Pyramid_parameters::Reduce: img().pyramid_reduce(result,eprm->levels); break;
    }
    img()=result;
    return TRUE;
@@ -69,8 +73,8 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
    matrix3D<double> result;
    switch (eprm->operation) {
-      case Pyramid_parameters::Expand: vol().pyramid_expand(result); break;
-      case Pyramid_parameters::Reduce: vol().pyramid_reduce(result); break;
+      case Pyramid_parameters::Expand: vol().pyramid_expand(result,eprm->levels); break;
+      case Pyramid_parameters::Reduce: vol().pyramid_reduce(result,eprm->levels); break;
    }
    vol()=result;
    return TRUE;
