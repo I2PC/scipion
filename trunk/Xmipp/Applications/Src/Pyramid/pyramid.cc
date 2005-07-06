@@ -60,12 +60,21 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
+   float Xoff, Yoff; img.get_originOffsets(Xoff,Yoff);
    matrix2D<double> result;
+   float scale_factor=(float) (pow(2.0,eprm->levels));
    switch (eprm->operation) {
-      case Pyramid_parameters::Expand: img().pyramid_expand(result,eprm->levels); break;
-      case Pyramid_parameters::Reduce: img().pyramid_reduce(result,eprm->levels); break;
+      case Pyramid_parameters::Expand:
+         img().pyramid_expand(result,eprm->levels);
+         img.set_originOffsets(Xoff*scale_factor,Yoff*scale_factor);
+         break;
+      case Pyramid_parameters::Reduce:
+         img().pyramid_reduce(result,eprm->levels);
+         img.set_originOffsets(Xoff/scale_factor,Yoff/scale_factor);
+         break;
    }
    img()=result;
+   
    return TRUE;
 }
 
