@@ -1,5 +1,18 @@
+# As developer
+# Packages needed: gettext, gettext-devel, automake, autoconf
+
 gettextize --force --copy
-libtoolize --force --copy
 aclocal -I m4
+autoheader
+libtoolize --force --copy
 automake --gnu --add-missing
 autoconf
+
+./configure
+make
+make dist
+
+# As user:
+# 
+# ./configure
+# make
