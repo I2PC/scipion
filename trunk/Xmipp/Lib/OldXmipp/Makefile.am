@@ -4,3 +4,5 @@ libOldXmipp_@host_os@_la_SOURCES = cabecero.cc varios.cc varios2.cc varios3.cc d
 	filtros.cc specmod.cc
 
 INCLUDES = -I$(top_srcdir)/Lib
+
+EXTRA_DIST = fftn.h  groe.h  sacaf.h  spider.h

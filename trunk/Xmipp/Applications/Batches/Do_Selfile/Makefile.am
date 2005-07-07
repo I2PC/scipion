@@ -5,3 +5,4 @@ do_selfile:
 	cat batch_do_selfile >> aux_script
 	mv aux_script do_selfile
 
+EXTRA_DIST = batch_do_selfile

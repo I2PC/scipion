@@ -55,3 +55,9 @@ QtPopupMenuMark_moc.cc :
 	@QT_MOC@ QtPopupMenuMark.hh -o QtPopupMenuMark_moc.cc
 QtWidgetMicrograph_moc.cc : 
 	@QT_MOC@ QtWidgetMicrograph.hh -o QtWidgetMicrograph_moc.cc
+
+EXTRA_DIST = QtAutoMenu.hh          QtFilter.hh             QtImageMicrograph.hh \
+	QtColorLabel.hh        QtFilterMenu.hh         QtImageOverviewMicrograph.hh \
+	QtDialogFamilies.hh    QtFiltersController.hh  QtMainWidgetMark.hh \
+	QtDialogProperties.hh  QtImageConverter.hh     QtPopupMenuMark.hh \
+	QtFileMenu.hh          QtImage.hh              QtWidgetMicrograph.hh

@@ -272,6 +272,5 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \
 	Makefile \
-	m4/Makefile \
-	po/Makefile )
+	m4/Makefile )
 		

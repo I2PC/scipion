@@ -5,3 +5,4 @@ pdb2surface:
 	cat batch_pdb2surface >> aux_script
 	mv aux_script pdb2surface
 
+EXTRA_DIST = batch_pdb2surface

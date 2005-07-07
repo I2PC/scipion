@@ -63,3 +63,45 @@ INCLUDES = -I$(top_srcdir)/Lib \
 	-I$(top_srcdir)/Lib/XmippData/Bilib/headers \
 	-I$(top_srcdir)/Lib/XmippData/Bilib/types \
 	-I$(top_srcdir)/Lib/XmippData/Bilib
+
+EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
+	xmippArgs.hh        xmippImagic.hh      xmippRotationalSpectrum.hh \
+	xmippDocFiles.hh    xmippMasks.hh       xmippSelFiles.hh \
+	xmippFFT.hh         xmippMatrices1D.hh  xmippTomogram.hh \
+	xmippFilters.hh     xmippMatrices2D.hh  xmippTypes.hh \
+	xmippFuncs.hh       xmippMatrices3D.hh  xmippVectorial.hh \
+	xmippGeometry.hh    xmippMicrograph.hh  xmippVolumes.hh \
+	xmippHeader.hh      xmippMorphology.hh  xmippWavelets.hh \
+	xmippHistograms.hh  xmippProgs.hh \
+        Src/MultidimBasic.inc  Src/MultidimFriends.inc \
+        Src/MultidimBasic.hh Src/NumericalRecipes.hh \
+	Programs/Prog_denoising.hh     Programs/Prog_range_adjust.hh \
+	Programs/Prog_downsample.hh    Programs/Prog_segment.hh \
+	Programs/Prog_make_spectra.hh  Programs/Prog_test_cluster.hh \
+	Programs/Prog_normalize.hh \
+        Bilib/configs.h \
+	Bilib/headers/changebasis.h      Bilib/headers/kerneldiff.h \
+	Bilib/headers/convert.h          Bilib/headers/kernel.h \
+	Bilib/headers/debug.h            Bilib/headers/kernelintegrate.h \
+	Bilib/headers/dft.h              Bilib/headers/linearalgebra.h \
+	Bilib/headers/dht.h              Bilib/headers/messagedisplay.h \
+	Bilib/headers/error.h            Bilib/headers/minmax.h \
+	Bilib/headers/findroot.h         Bilib/headers/morphology.h \
+	Bilib/headers/firconvolve.h      Bilib/headers/movingaverage.h \
+	Bilib/headers/flip.h             Bilib/headers/polynomial.h \
+	Bilib/headers/fold.h             Bilib/headers/positivepower.h \
+	Bilib/headers/fourierconvolve.h  Bilib/headers/pyramidfilters.h \
+	Bilib/headers/geometry.h         Bilib/headers/pyramidtools.h \
+	Bilib/headers/getpoles.h         Bilib/headers/round.h \
+	Bilib/headers/getputd.h          Bilib/headers/swap.h \
+	Bilib/headers/getput.h           Bilib/headers/timestamp.h \
+	Bilib/headers/gradient.h         Bilib/headers/traceline.h \
+	Bilib/headers/histogram.h        Bilib/headers/waveletfiltersfract.h \
+	Bilib/headers/iirconvolve.h      Bilib/headers/waveletfilters.h \
+	Bilib/headers/interpolate.h      Bilib/headers/wavelet.h \
+	Bilib/headers/kerneldiff1.h      Bilib/headers/wavelettools.h \
+	Bilib/headers/kerneldiff2.h      Bilib/headers/window.h \
+        Bilib/types/tboundaryconvention.h \
+        Bilib/types/tsplinebasis.h \
+        Bilib/types/ttimestamp.h \
+        Bilib/types/ttraceline.h

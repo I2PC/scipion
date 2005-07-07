@@ -15,6 +15,12 @@ libXmippInterface_@host_os@_la_SOURCES = Src/xmippAPH.cc \
 libXmippInterfaceINRIA_@host_os@_la_SOURCES = Src/xmippINRIA.cc
 
 libXmippInterfaceVTK_@host_os@_la_SOURCES   = Src/xmippVTK.cc
+
+EXTRA_DIST = xmippAPH3D.hh        xmippCrisp.hh  xmippOpenDX.hh  xmippVrml.hh \
+	xmippAPH.hh          xmippINRIA.hh  xmippSpider.hh  xmippVTK.hh \
+	xmippAPHorigmerg.hh  xmippJDL.hh    xmippVirus.hh
+
+
 #libXmippInterfaceVTK_la_LIBADD = /usr/local/lib/vtk/libvtkCommon.a \
 #	/usr/local/lib/vtk/libvtkHybrid.a    /usr/local/lib/vtk/libvtkpng.a \
 #	/usr/local/lib/vtk/libvtkexpat.a      /usr/local/lib/vtk/libvtkImaging.a \

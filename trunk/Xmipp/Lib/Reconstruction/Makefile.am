@@ -53,3 +53,54 @@ libXmippReconsINRIA_@host_os@_la_SOURCES = Programs/Src/Prog_adjust_surface.cc
 
 
 INCLUDES = -I$(top_srcdir)/Lib
+
+EXTRA_DIST = blobs.hh \
+	CTF.hh \
+	directions.hh \
+	Gibbs.hh \
+	grids.hh \
+	phantom.hh \
+	Programs/Basic_art.hh \
+	Programs/Prog_adjust_CTF.hh \
+	Programs/Prog_adjust_surface.hh \
+	Programs/Prog_adjust_volume.hh \
+	Programs/Prog_Align2d.hh \
+	Programs/Prog_Angular_Distance.hh \
+	Programs/Prog_Angular_Predict_continuous.hh \
+	Programs/Prog_Angular_Predict.hh \
+	Programs/Prog_art_crystal.hh \
+	Programs/Prog_art.hh \
+	Programs/Prog_assign_CTF.hh \
+	Programs/Prog_Centilt.hh \
+	Programs/Prog_CorrectPhase.hh \
+	Programs/Prog_draw_surface.hh \
+	Programs/Prog_euler.hh \
+	Programs/Prog_evaluate_FSCs.hh \
+	Programs/Prog_evaluate.hh \
+	Programs/Prog_FourierFilter.hh \
+	Programs/Prog_IDR_art.hh \
+	Programs/Prog_microscope.hh \
+	Programs/Prog_MLalign2D.hh \
+	Programs/Prog_project_crystal.hh \
+	Programs/Prog_project.hh \
+	Programs/Prog_projection_matching.hh \
+	Programs/Prog_Projection_Neighbourhood.hh \
+	Programs/Prog_random_phantom.hh \
+	Programs/Prog_recons_test.hh \
+	Programs/Prog_SpAR.hh \
+	Programs/Prog_SpARMA.hh \
+	Programs/Prog_Spots2RealSpace2D.hh \
+	Programs/Prog_Spots2RealSpace3D.hh \
+	Programs/Prog_SSNR.hh \
+	Programs/Prog_surface.hh \
+	Programs/Prog_symmetrize.hh \
+	Programs/Prog_WBP.hh \
+	Programs/recons_misc.hh \
+	Programs/Src/Basic_art.inc \
+	projection.hh \
+	radon.hh \
+	recons_spider.hh \
+	refinement.hh \
+	symmetries.hh \
+	volume_FOMs.hh \
+	volume_labelling.hh

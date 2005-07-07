@@ -31,3 +31,5 @@ showSOM_moc.cc :
 showSpectraSOM_moc.cc :
 	@QT_MOC@ showSpectraSOM.hh -o showSpectraSOM_moc.cc
 
+EXTRA_DIST = show2D.hh   showSOM.hh      showSpectraSOM.hh  showTools.hh \
+	showSel.hh  showSpectra.hh  showTable.hh       showVol.hh

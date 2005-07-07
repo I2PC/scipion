@@ -6,4 +6,4 @@ downsample_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib
 
-
+EXTRA_DIST = xvsmooth.h
