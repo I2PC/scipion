@@ -32,6 +32,9 @@ if test "x$program_prefix" = xNONE; then
 	program_transform_name="s,^,xmipp_,"
 fi
 
+XMIPPDIR=`pwd`
+AC_SUBST(XMIPPDIR)
+
 # If --enable-debug , -g compiler flag
 # will be enabled.
 
@@ -112,8 +115,17 @@ else
 	fi
 fi
 
-AM_CONDITIONAL(BUILD_OGL, test -n "$GL_LIBS" )
-AM_CONDITIONAL(BUILD_OGL, test -n "$GL_CFLAGS" )
+AC_ARG_ENABLE([GL],
+  AC_HELP_STRING([--disable-GL], [Disable GL programs]),
+  [case "${enableval}" in
+     yes) USE_GL=true ;;
+      no) USE_GL=false ;;
+       *) AC_MSG_ERROR(bad value ${enableval} for --disable-GL) ;;
+   esac], [USE_GL=true])
+
+AM_CONDITIONAL(BUILD_OGL, test -n "$GL_LIBS")
+AM_CONDITIONAL(BUILD_OGL, test -n "$GL_CFLAGS")
+AM_CONDITIONAL(BUILD_OGL, test x"$USE_GL" = xtrue)
 
 # Checks for the presence of some system libs 
 
