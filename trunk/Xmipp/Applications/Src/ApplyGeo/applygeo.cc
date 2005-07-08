@@ -27,16 +27,6 @@
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippGeometry.hh>
 
-class Applygeo_parameters: public Prog_parameters {
-/*
-   void read(int argc, char **argv) _THROW {
-      Prog_parameters::read(argc,argv);
-      }
-   void usage() {
-      Prog_parameters::usage();
-    }
-*/
-};//class end
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
      cerr << "Inside Image\n";
      //set shifts to zero
@@ -46,12 +36,14 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
      
      return TRUE;
 }//images end
+
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
      cerr << "Applygeo does not work with volumes\n";
      return TRUE;
 }//volume end
+
 int main (int argc, char **argv) {
-   Applygeo_parameters prm;
+   Prog_parameters prm;
    prm.apply_geo=TRUE;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
