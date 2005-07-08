@@ -6,3 +6,6 @@ endif
 
 SUBDIRS = XmippData Reconstruction Classification XmippInterface \
 	OldXmipp $(OPTIONAL_LIBS)
+
+docs:
+	for dir in $(SUBDIRS); do cd $$dir; $(MAKE) docs; cd ..; done

@@ -31,3 +31,7 @@ EXTRA_DIST = xmippBaseAlgo.hh    xmippFKCN.hh               xmippRM.hh \
 	xmippCTVectors.hh   xmippPC.hh                 xmippVectorOps.hh \
 	xmippDistances.hh   xmippPlanes.hh \
 	xmippFCMeans.hh     xmippRBF.hh
+
+docs:
+	@echo "Creating documentation in Classification ..."
+	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

@@ -105,3 +105,7 @@ EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
         Bilib/types/tsplinebasis.h \
         Bilib/types/ttimestamp.h \
         Bilib/types/ttraceline.h
+
+docs:
+	@echo "Creating documentation in XmippData ..."
+	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

@@ -104,3 +104,7 @@ EXTRA_DIST = blobs.hh \
 	symmetries.hh \
 	volume_FOMs.hh \
 	volume_labelling.hh
+
+docs:
+	@echo "Creating documentation in Reconstruction ..."
+	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

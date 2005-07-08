@@ -33,3 +33,7 @@ showSpectraSOM_moc.cc :
 
 EXTRA_DIST = show2D.hh   showSOM.hh      showSpectraSOM.hh  showTools.hh \
 	showSel.hh  showSpectra.hh  showTable.hh       showVol.hh
+
+docs:
+	@echo "Creating documentation in XmippInterface ..."
+	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

@@ -32,3 +32,7 @@ EXTRA_DIST = xmippAPH3D.hh        xmippCrisp.hh  xmippOpenDX.hh  xmippVrml.hh \
 
 
 INCLUDES = -I$(top_srcdir)/Lib
+
+docs:
+	@echo "Creating documentation in XmippInterface ..."
+	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation
