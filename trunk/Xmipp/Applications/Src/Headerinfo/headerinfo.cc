@@ -37,12 +37,14 @@ void Usage();
 /* MAIN -------------------------------------------------------------------- */
 int main (int argc,char *argv[]) {
    float           rot, tilt, psi, xshift, yshift;
-   int             i,ncol,col_rot=1,col_tilt=2,col_psi=3,col_xshift=4,col_yshift=5,col_weight=-1,col_mirror=-1;
+   int             i,ncol,col_rot=1,col_tilt=2,col_psi=3;
+   int             col_xshift=4,col_yshift=5,col_weight=-1,col_mirror=-1;
    float           sign_rot=PLUS,sign_tilt=PLUS,sign_psi=PLUS;
    float           sign_xshift=PLUS,sign_yshift=PLUS;
    int             key_img;
    string          root,ext;
-   bool            extract,assign,reset,verb,do_weights=false,do_mirrors=false;
+   bool            extract,assign,reset,verb;
+   bool            do_weights=false,do_mirrors=false, round_shifts=false;
    float           weight,mirror;
    FileName        fn_img,fn_out,fn_tst;
    SelFile         SF;
@@ -56,6 +58,7 @@ int main (int argc,char *argv[]) {
      extract=check_param(argc,argv,"-extract");
      assign=check_param(argc,argv,"-assign");
      reset=check_param(argc,argv,"-reset");
+     round_shifts=check_param(argc,argv,"-round_shifts");
      if (!(extract || assign || reset)) REPORT_ERROR(1,"Please specify: -extract, -reset  or -assign");
 
      if (extract) {
@@ -122,6 +125,10 @@ int main (int argc,char *argv[]) {
 	 fn_img=SF.NextImg();
 	 head.read(fn_img);
 	 head.get_originOffsets(xx,yy);
+	 if (round_shifts) {
+	   xx=(float)ROUND(xx);
+	   yy=(float)ROUND(yy);
+	 }
 	 docline(0)=head.Phi();
 	 docline(1)=head.Theta();
 	 docline(2)=head.Psi();
@@ -176,7 +183,12 @@ int main (int argc,char *argv[]) {
 	   if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
 	   if (do_weights) weight = DF(ABS(col_weight)-1);
 	   if (do_mirrors) mirror=DF(ABS(col_mirror)-1);
-	 
+	   // Rounding if necessary
+	   if (round_shifts) {
+	     xshift=(float)ROUND(xshift);
+	     yshift=(float)ROUND(yshift);
+	   }
+
 	   // Assign angles
 	   img.set_eulerAngles(rot,tilt,psi);
 	   img.set_originOffsets(xshift,yshift);
@@ -215,6 +227,11 @@ int main (int argc,char *argv[]) {
 	   if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
 	   if (do_weights) weight = DF(ABS(col_weight)-1);
 	   if (do_mirrors) mirror=DF(ABS(col_mirror)-1);
+	   // Rounding if necessary
+	   if (round_shifts) {
+	     xshift=(float)ROUND(xshift);
+	     yshift=(float)ROUND(yshift);
+	   }
 	   
 	   // Assign angles
 	   img.set_eulerAngles(rot,tilt,psi);
@@ -242,7 +259,7 @@ void Usage() {
     printf("Purpose:\n");
     printf(" Access the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");
-    printf(" There are two modes: getting, resetting or putting information \n");
+    printf(" There are three modes: getting, resetting or putting information \n");
     printf("   headerinfo -extract \n");
     printf("        -i <selfile>       : input selfile\n");
     printf("        -o <docfile>       : output document file\n");
@@ -260,5 +277,6 @@ void Usage() {
            "                           : Zeros result in zero values\n");
     printf("       [-weight <col_w=6>] : Set ML-weights (from column number col_w) \n");
     printf("       [-mirror <col_m=7>] : Set mirror-flag (from column col_m) (0=no-flip; 1=flip)\n");
+    printf("       [-round_shifts]     : Round shifts to integers for extract/assign \n");
     exit(1);
 }
