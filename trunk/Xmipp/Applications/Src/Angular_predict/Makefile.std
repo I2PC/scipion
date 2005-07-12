@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = angular_predict
 OBJ  = angular_predict.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE)

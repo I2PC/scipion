@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = art
 OBJ  = art.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)  -l$(LIBXMIPP_INTERFACE)

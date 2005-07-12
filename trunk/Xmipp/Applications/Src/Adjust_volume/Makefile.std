@@ -1,5 +1,5 @@
 ######################################################################
 PROJ = adjust_volume
 OBJ  = adjust_volume.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE)
 
