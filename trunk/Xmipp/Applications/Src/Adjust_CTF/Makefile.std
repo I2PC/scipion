@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = adjust_CTF
 OBJ  = adjust_CTF.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) -l$(LIBXMIPP_INTERFACE)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
