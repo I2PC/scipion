@@ -35,6 +35,7 @@ Prog_Random_Phantom_Parameters::Prog_Random_Phantom_Parameters() {
    discrete=FALSE;
    RPP_distance=RPP_radius=-1;
    N_stats=-1;
+   target_SNR=-1;
 }
 
 /* Read Random Phantom parameters ========================================== */
@@ -49,6 +50,7 @@ void Prog_Random_Phantom_Parameters::read(int argc, char **argv) {
     fn_CTF        =      get_param(argc, argv, "-ctf","");
     Xdim          = AtoI(get_param(argc, argv, "-Xdim",       "-1") );
     Ydim          = AtoI(get_param(argc, argv, "-Ydim",       "-1") );
+    target_SNR    = AtoF(get_param(argc, argv, "-target_SNR", "-1.") );
 }
 
 /* Usage =================================================================== */
@@ -69,6 +71,7 @@ void Prog_Random_Phantom_Parameters::usage() {
    cout << "  [-ctf <Xmipp Fourier Image>] For computing the projection statistics\n";
    cout << "  [-Xdim <dim>        For computing the projection statistics\n";
    cout << "  [-Ydim <dim=Xdim>]  For computing the projection statistics\n";
+   cout << "  [-target_SNR <SNR>] For computing the noise power needed for this SNR\n";
 }
 
 /* Produce Side Information ================================================ */
@@ -296,7 +299,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
       matrix1D<double> proj_power(prm.N_stats);
       matrix1D<double> proj_area(prm.N_stats);
       Projection proj;
-      double avg, stddev, dummy;
+      double power_avg, power_stddev, area_avg, area_stddev, avg, stddev, dummy;
       init_progress_bar(prm.N_stats);
       for (int n=0; n<prm.N_stats; n++) {
 	 if (!side.voxel_mode)
@@ -346,18 +349,25 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
            << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << endl
            << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << endl
 	   << hist_vol << endl << endl;
-      proj_power.compute_stats(avg,stddev,dummy,dummy);
-      cout << "# Projection power average: " << avg << endl
-           << "# Projection power stddev:  " << stddev << endl
+      proj_power.compute_stats(power_avg,power_stddev,dummy,dummy);
+      cout << "# Projection power average: " << power_avg << endl
+           << "# Projection power stddev:  " << power_stddev << endl
            << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << endl
            << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << endl
 	   << hist_proj;
-      proj_area.compute_stats(avg,stddev,dummy,dummy);
-      cout << "# Projection area average: " << avg << endl
-           << "# Projection area stddev:  " << stddev << endl
+      proj_area.compute_stats(area_avg,area_stddev,dummy,dummy);
+      cout << "# Projection area average: " << area_avg << endl
+           << "# Projection area stddev:  " << area_stddev << endl
            << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << endl
            << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << endl
-	   << hist_area;
+	   << hist_area << endl;
+      if (prm.target_SNR!=-1) {
+         cout << endl;
+         cout << "For an SNR of " << prm.target_SNR
+              << ", a total noise with a standard deviation of "
+              << sqrt(power_avg*power_avg*Xdim*Ydim/(prm.target_SNR*area_avg))
+              << " is needed\n";
+      }
    }
 }
 #undef DEBUG

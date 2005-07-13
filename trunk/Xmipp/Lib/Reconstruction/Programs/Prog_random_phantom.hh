@@ -62,6 +62,8 @@ public:
    int Xdim;
    /// Ydim of projections
    int Ydim;
+   /// Target SNR
+   double target_SNR;
 public:
    /// Empty constructor
    Prog_Random_Phantom_Parameters();
