@@ -34,6 +34,7 @@ void Prog_Microscope_Parameters::read(int argc, char **argv) _THROW {
    low_pass_before_CTF=AtoF(get_param(argc,argv,"-low_pass","0"));
    fn_after_ctf=get_param(argc,argv,"-after_ctf","");
    defocus_change=AtoF(get_param(argc,argv,"-defocus_change","0"));
+   fn_out_pure_ctf=get_param(argc,argv,"-out_pure_ctf","");
    
    produce_side_info();
 }
@@ -47,7 +48,10 @@ void Prog_Microscope_Parameters::usage() {
         << "  [-noise <stddev=0>]       : noise to be added\n"
 	<< "  [-after_ctf <spectrum>]   : a Xmipp Fourier Image or a CTF description with\n"
 	<< "                              the root squared spectrum of noise\n"
-	<< "                              after the CTF\n";
+	<< "                              after the CTF\n"
+        << "  [-out_pure_ctf <filename>]: If provided the pure CTF component will\n"
+        << "                              be written in this file\n"
+   ;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -60,6 +64,7 @@ void Prog_Microscope_Parameters::show() {
 	<< "Low pass freq: " << low_pass_before_CTF << endl
 	<< "After CTF noise spectrum: " << fn_after_ctf << endl
         << "Defocus change: " << defocus_change << endl
+        << "Output Pure CTF: " << fn_out_pure_ctf << endl
    ;
 }
 
@@ -84,6 +89,8 @@ void Prog_Microscope_Parameters::produce_side_info() {
          ctf.ctf.Produce_Side_Info();
          aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
          ctf.generate_mask(aux);
+         if (fn_out_pure_ctf!="")
+            ctf.write_mask(fn_out_pure_ctf,2);
       }
 
       #ifdef DEBUG

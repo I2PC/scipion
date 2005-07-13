@@ -44,6 +44,8 @@ public:
    FileName fn_after_ctf;
    /// Defocus change (%)
    double   defocus_change;
+   /// Filename to write the pure CTF
+   FileName fn_out_pure_ctf;
 public:
    /// CTF
    FourierMask ctf;
