@@ -27,6 +27,7 @@
 
 #include <XmippData/xmippMatrices2D.hh>
 #include <XmippData/xmippProgs.hh>
+#include <XmippData/xmippMasks.hh>
 
 /**@name Normalize program */
 //@{
@@ -67,8 +68,8 @@ public:
 public:
    matrix2D<int>         bg_mask;
    bool                  apply_geo;
-//   bool                enable_mask;
-//   Mask_Params         mask_prm;
+   bool                  enable_mask;
+   Mask_Params           mask_prm;
 
 public:
    /** Read parameters from command line */

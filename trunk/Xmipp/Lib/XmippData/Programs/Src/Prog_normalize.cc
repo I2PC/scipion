@@ -54,47 +54,42 @@ void Normalize_parameters::read(int argc, char **argv) _THROW {
       if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
           normalizing_method==MICHAEL || normalizing_method==NEAR_OLDXMIPP ||
 	  normalizing_method==RAMP) {
-         int i=position_param(argc,argv,"-background");
-         if (i+2>=argc)
-            REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
-         aux=argv[i+1];
-         r=AtoI(argv[i+2]);
+         // Get mask
+         if (normalizing_method==NEWXMIPP) {
+            enable_mask=check_param(argc,argv,"-mask");
+            if (enable_mask) {
+               mask_prm.allowed_data_types=INT_MASK;
+               mask_prm.read(argc,argv);
+            } else {
+               enable_mask=FALSE;
+               int i=position_param(argc,argv,"-background");
+               if (i+2>=argc)
+                  REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
+               aux=argv[i+1];
+               r=AtoI(argv[i+2]);
 
-         int Zdim, Ydim, Xdim;
-         get_input_size(Zdim, Ydim, Xdim);
-         if (Zdim!=1)
-            REPORT_ERROR(1,"Normalize: This program works only with images");
-
-         if (aux=="frame")       background_mode=FRAME;
-         else if (aux=="circle") background_mode=CIRCLE;
-         else
-            REPORT_ERROR(1,"Normalize: Unknown background mode");
+               if (aux=="frame")       background_mode=FRAME;
+               else if (aux=="circle") background_mode=CIRCLE;
+               else
+                  REPORT_ERROR(1,"Normalize: Unknown background mode");
+            }
+         }
          produce_side_info();
 
 	 // Default is to apply inverse transformation from image header to the mask
 	 apply_geo=!check_param(argc,argv,"-dont_apply_geo");
-
       } else
          background_mode=NONE;
 
-
-      // Get mask
-      /*
-      if (normalizing_method==NEWXMIPP) {
-         enable_mask=check_param(argc,argv,"-mask");
-         mask_prm.read(argc,argv);
-      } else enable_mask=FALSE;
-      */
-   
-   if (normalizing_method==RANDOM) {
-      int i=position_param(argc,argv,"-prm");
-      if (i+4>=argc)
-         REPORT_ERROR(1,"Normalize_parameters::read: Not enough parameters after -prm");
-      a0=AtoF(argv[i+1]);
-      aF=AtoF(argv[i+2]);
-      b0=AtoF(argv[i+3]);
-      bF=AtoF(argv[i+4]);
-   }
+      if (normalizing_method==RANDOM) {
+         int i=position_param(argc,argv,"-prm");
+         if (i+4>=argc)
+            REPORT_ERROR(1,"Normalize_parameters::read: Not enough parameters after -prm");
+         a0=AtoF(argv[i+1]);
+         aF=AtoF(argv[i+2]);
+         b0=AtoF(argv[i+3]);
+         bF=AtoF(argv[i+4]);
+      }
    }
 }
    
@@ -103,14 +98,22 @@ void Normalize_parameters::produce_side_info() {
    int Zdim, Ydim, Xdim;
    get_input_size(Zdim, Ydim, Xdim);
    if (!normalizing_vol) {
-      bg_mask.resize(Ydim,Xdim); bg_mask.set_Xmipp_origin();
-      switch (background_mode) {
-         case FRAME:
-            BinaryFrameMask(bg_mask,Xdim-2*r,Ydim-2*r,OUTSIDE_MASK);
-	    break;
-         case CIRCLE:
-      	    BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
-	    break;
+      if (Zdim!=1)
+         REPORT_ERROR(1,"Normalize: This program works only with images");
+
+      if (!enable_mask) {
+         bg_mask.resize(Ydim,Xdim); bg_mask.set_Xmipp_origin();
+         switch (background_mode) {
+            case FRAME:
+               BinaryFrameMask(bg_mask,Xdim-2*r,Ydim-2*r,OUTSIDE_MASK);
+	       break;
+            case CIRCLE:
+      	       BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
+	       break;
+         }
+      } else {
+         mask_prm.generate_2Dmask(Ydim, Xdim);
+         bg_mask=mask_prm.imask2D;
       }
    }
 }
@@ -147,10 +150,7 @@ void Normalize_parameters::show() {
          }
       }
    }
-   /*
-   if (normalizing_method==NEWXMIPP || normalizing_method==COSS)
-      mask_prm.show();
-   */
+   if (normalizing_method==NEWXMIPP && enable_mask) mask_prm.show();
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -170,7 +170,8 @@ void Normalize_parameters::usage() {
         << "                              in the header of the images, to the mask\n"
 	<< "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
    ;
-   // mask_prm.usage();
+   mask_prm.allowed_data_types=INT_MASK;
+   mask_prm.usage();
 }
 
 /* Apply geometric transformation to the mask ------------------------------ */
@@ -180,7 +181,8 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp &img) {
   type_cast(bg_mask,tmp);
   double outside=DIRECT_MAT_ELEM(tmp,0,0);
   // Instead of IS_INV for images use IS_NOT_INV for masks!
-  tmp.self_apply_geom(img.get_transformation_matrix(),IS_NOT_INV,DONT_WRAP,outside);
+  tmp.self_apply_geom_Bspline(img.get_transformation_matrix(),3,
+     IS_NOT_INV,DONT_WRAP,outside);
   type_cast(tmp,bg_mask);
 }
 
@@ -195,12 +197,7 @@ void Normalize_parameters::apply(Image *img) {
          normalize_Near_OldXmipp(img,bg_mask);
          break;
       case NEWXMIPP:
-         /*
-         nprm->mask_prm.generate_2Dmask(img());
-         nprm->mask_prm.force_to_be_continuous();
-         */
-         normalize_NewXmipp(img,bg_mask
-            /*,&(nprm->mask_prm.get_cont_mask2D())*/);
+         normalize_NewXmipp(img,bg_mask);
          break;
       case NEWXMIPP2:
          normalize_NewXmipp2(img,bg_mask);
