@@ -732,6 +732,11 @@ public:
        This function returns the index of the minimum element of an array.
        array(i). Returns -1 if the array is empty */
    void min_index(int &i) const;
+   
+   /** Show using gnuplot.
+       This function uses gnuplot to plot this vector. You must supply
+       the xlabel, ylabel, and title. */
+   void show_with_gnuplot(const string &xlabel, const string &title);
    //@}
 };
 

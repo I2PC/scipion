@@ -270,6 +270,26 @@ template <class T>
       if (VEC_ELEM(*this,i)<min) {min=VEC_ELEM(*this,i); imin=i;}
 }
 
+/* Show with gnuplot ------------------------------------------------------- */
+template <class T>
+   void vT::show_with_gnuplot(const string &xlabel,
+      const string &title) {
+      FileName fn_tmp;
+      fn_tmp.init_random(10);
+      write((string)"PPP"+fn_tmp+".txt");
+      ofstream fh_gplot;
+      fh_gplot.open(((string)"PPP"+fn_tmp+".gpl").c_str());
+      if (!fh_gplot)
+         REPORT_ERROR(1,(string)"vector::show_with_gnuplot: Cannot open PPP"+
+            fn_tmp+".gpl for output");
+      fh_gplot << "set xlabel \""+xlabel+"\"\n";
+      fh_gplot << "plot \"PPP"+fn_tmp+".txt\" title \""+title+"\" w l\n";
+      fh_gplot << "pause 300 \"\"\n";
+      fh_gplot.close();
+      system(((string)"(gnuplot PPP"+fn_tmp+".gpl; rm PPP"+fn_tmp+
+         ".txt PPP"+fn_tmp+".gpl) &").c_str());
+   }
+
 /* Statistics in region ---------------------------------------------------- */
 template <class T>
 void vT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
@@ -481,6 +501,7 @@ template <class T>
       int imax;
       a.max_index(imax);
       a.min_index(imax);
+      a.show_with_gnuplot("x","title");
       cut_to_common_size(a,a);
    
       // Specific for vectors
