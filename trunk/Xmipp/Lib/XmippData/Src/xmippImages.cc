@@ -262,18 +262,20 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
   // Read whole image and close file
   if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
   {
-
     if (apply_geo || only_apply_shifts) {
       // Apply the geometric transformations in the header to the loaded image.
       // Transform image without wrapping, set new values to first element in the matrix
-      T  outside=DIRECT_MAT_ELEM(ImageT<T>::img,0,0);
-      ImageT<T>::img.self_apply_geom(ImageXmippT<T>::get_transformation_matrix(only_apply_shifts),IS_INV,DONT_WRAP,outside);
+      matrix2D<double> A=
+         ImageXmippT<T>::get_transformation_matrix(only_apply_shifts);
+      if (!A.IsIdent())
+         ImageT<T>::img.self_apply_geom_Bspline(
+            A,3,IS_INV,WRAP);
     }
 
     // scale if necessary (check this with Carlos)
     if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
       header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
-      ImageT<T>::img.scale_to_size(header.iYdim(), header.iXdim());
+      ImageT<T>::img.self_scale_to_size_Bspline(3,header.iYdim(), header.iXdim());
     }; 
 
     header.set_header();  // Set header in a Xmipp consistent state
