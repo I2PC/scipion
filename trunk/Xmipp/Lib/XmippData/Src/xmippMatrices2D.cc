@@ -37,6 +37,14 @@
 #include "../Bilib/headers/pyramidfilters.h"
 #include "../Bilib/headers/pyramidtools.h"
 
+// Prototypes in xmippFFT.hh
+template <class T>
+   void Complex2RealImag(const complex<double> *_complex,
+      T *_real, T *_imag, int length);
+template <class T>
+   void RealImag2Complex(const T *_real, const T *_imag,
+      complex<double> *_complex, int length);
+
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
@@ -325,6 +333,21 @@ template <class T>
     return (T)columns;
 }
 
+// Extracts profile --------------------------------------------------------
+template <class T>
+   void mT::profile(int x0, int y0, int xF, int yF, int N,
+      matrix1D<double> &profile) {
+      profile.init_zeros(N);
+      double tx_step=(double)(xF-x0)/(N-1);
+      double ty_step=(double)(yF-y0)/(N-1);
+      double tx=x0, ty=y0;
+      for (int i=0; i<N; i++) {
+         profile(i)=interpolated_elem(tx,ty);
+         tx+=tx_step;
+         ty+=ty_step;
+      }
+   }
+
 /* Expand a set of B-spline coefficients ----------------------------------- */
 template <class T>
    void mT::expand_Bspline(matrix2D<double> &expanded, int SplineDegree) const {
@@ -539,6 +562,19 @@ double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
    else if (success==2)
       REPORT_ERROR(1,"Solve_nonneg: Not enough memory");
    return rnorm;
+}
+
+/* Solve Ax=b, A definite positive and symmetric --------------------------- */
+double solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
+   matrix1D<double> &result) _THROW {
+   matrix2D<double> Ap=A;
+   matrix1D<double> p(XSIZE(A));
+   result.resize(XSIZE(A));
+   choldc(Ap.adapt_for_numerical_recipes2(),XSIZE(A),
+      p.adapt_for_numerical_recipes());
+   cholsl(Ap.adapt_for_numerical_recipes2(),XSIZE(A),
+      p.adapt_for_numerical_recipes(),b.adapt_for_numerical_recipes(),
+      result.adapt_for_numerical_recipes());
 }
 
 /* Inverse of the matrix --------------------------------------------------- */
@@ -957,6 +993,14 @@ template <class T>
 }
 #undef DEBUG
 
+// Special case for complex numbers
+template <>
+   void apply_geom_Bspline(matrix2D< complex<double> > &M2,
+      matrix2D<double> A, const matrix2D< complex<double> > &M1,
+   int Splinedegree, bool inv, bool wrap, complex<double> outside) {
+   REPORT_ERROR(1,"apply_geom_Bspline: Not yet implemented for complex matrices\n");
+}
+
 /* Geometrical operations -------------------------------------------------- */
 template <class T>
    void mT::rotate(double ang, mT &result, bool wrap) const
@@ -1000,6 +1044,20 @@ template <class T>
       DIRECT_MAT_ELEM(temp,1,1)=(double)Ydim/(double)YSIZE(*this);
       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,WRAP);
    }
+
+void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+   int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
+   matrix2D<double> re, im, scre, scim;
+   re.resize(YSIZE(*this),XSIZE(*this));
+   im.resize(YSIZE(*this),XSIZE(*this));
+   Complex2RealImag(MULTIDIM_ARRAY(*this),
+      MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),MULTIDIM_SIZE(*this));
+   re.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scre);
+   im.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scim);
+   result.resize(Ydim,Xdim);
+   RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
+      MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
+}
 
 template <class T>
    void mT::self_translate_center_of_mass_to_center(bool wrap) {
@@ -1831,6 +1889,7 @@ template <class T>
       a.init_identity(10,10);
       a.interpolated_elem(3.5,3.5);
       a.interpolated_elem_as_Bspline(3.5,3.5);
+      a.profile(0,0,0,0,100,r);
       a.reverseX();
       a.reverseY();
       a=a.inv()*a.det();

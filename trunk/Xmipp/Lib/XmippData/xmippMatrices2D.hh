@@ -705,6 +705,13 @@ public:
        (x,y) are in logical coordinates.*/
    T   interpolated_elem_as_Bspline(double x, double y, int Splinedegree=3);
 
+   /** Extracts the profile between two points.
+       Given two logical indexes, this function returns samples of
+       the line that joins them. This is done by bilinear interpolation.
+       The number of samples in the line is N. */
+   void profile(int x0, int y0, int xF, int yF, int N,
+      matrix1D<double> &profile);
+
    /** Logical to physical index translation.
        This function returns the physical position of a logical one. See
        \URL[Conventions]{../../../Extra_Docs/Conventions.html}
@@ -1396,9 +1403,16 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
     large equation systems. This function is borrowed from
     LAPACK nnls.
     
-    The norm of the vector Ax-b is returned.
-    \\Ex: matrix1D<double> x=m.inv();*/
+    The norm of the vector Ax-b is returned.*/
 double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
+   matrix1D<double> &result) _THROW;
+
+/** Solve equation system, symmetric positive-definite matrix.
+    The equation system is defined by Ax=b, it is solved for x.
+    This method can only be applied if A is positive-definite matrix
+    and symmetric. It applies a Cholesky factorization and 
+    backsubstitution (see Numerical Recipes). */
+double solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
    matrix1D<double> &result) _THROW;
 
 /** Evaluate quadratic form.
