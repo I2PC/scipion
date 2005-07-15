@@ -8205,6 +8205,36 @@ double gammp(double a, double x)
 	}
 }
 
+/* Solving linear equation systems via Cholesky ---------------------------- */
+void choldc(double *a, int n, double *p) {
+	int i,j,k;
+	float sum;
+
+	for (i=1;i<=n;i++) {
+		for (j=i;j<=n;j++) {
+			for (sum=a[i*n+j],k=i-1;k>=1;k--) sum -= a[i*n+k]*a[j*n+k];
+			if (i == j) {
+				if (sum <= 0.0) nrerror("choldc failed");
+				p[i]=sqrt(sum);
+			} else a[j*n+i]=sum/p[i];
+		}
+	}
+}
+
+void cholsl(double *a, int n, double *p, double *b, double *x) {
+	int i,k;
+	float sum;
+
+	for (i=1;i<=n;i++) {
+		for (sum=b[i],k=i-1;k>=1;k--) sum -= a[i*n+k]*x[k];
+		x[i]=sum/p[i];
+	}
+	for (i=n;i>=1;i--) {
+		for (sum=x[i],k=i+1;k<=n;k++) sum -= a[k*n+i]*x[k];
+		x[i]=sum/p[i];
+	}
+}
+
 /* Instantiantion ---------------------------------------------------------- */
 template <class T>
    void instantiate_Numerical_T(T t) {

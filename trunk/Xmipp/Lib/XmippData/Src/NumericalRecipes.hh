@@ -39,6 +39,9 @@ template <class T> void lubksb(T *a, int n, int *indx, T b[]);
                                                        // Solve Ax=b
 template <class T> void gaussj(T *a, int n, T *b, int m);
                                                        // Solve Ax=b (b=matrix)
+void choldc(double *a, int n, double *p); // Cholesky factorization
+void cholsl(double *a, int n, double *p, double *b, double *x);
+                                            // Cholesky backsubstitution
 
 // FFT ---------------------------------------------------------------------
 void four1(double data[],int nn,int isign);             // Complex FFT 1D
