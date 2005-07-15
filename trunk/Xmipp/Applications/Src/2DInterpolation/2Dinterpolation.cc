@@ -62,11 +62,11 @@ void Usage (char *argv[]) {
     cout << "    Calculation of the value of the image stored in the file";
     cout << " input_file at the point (u,v) where u and v are any float";
     cout << " number\n\n";
-    cout << "Usage:" << argv[0] 
-         << " -i input_file"
-         << " -u u"
-         << " -v v"
-         << endl << endl;
+    cout << "Usage:" << argv[0] << endl
+         << " -i input_file: Input image\n"
+         << " -u u:          X coordinate (in logical units)\n"
+         << " -v v:          Y coordinate (in logical units)\n"
+    ;
     exit(1);
 }
 
