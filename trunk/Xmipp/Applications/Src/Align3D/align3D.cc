@@ -157,7 +157,7 @@ int main (int argc, char **argv) {
 
                 // Apply geometrical transformation
                 if (!A.IsIdent()) {
-                   apply_geom(Vaux,A,V2(),IS_NOT_INV,WRAP);
+                   apply_geom_Bspline(Vaux,A,V2(),3,IS_NOT_INV,WRAP);
                    V=&Vaux;
                 } else V=&(V2());
 
@@ -229,7 +229,7 @@ int main (int argc, char **argv) {
 	 A=A*translation3D_matrix(best_r);
 	 A=A*scale3D_matrix(vector_R3(best_sc,best_sc,best_sc));
 	 V2()*=best_grey;
-         apply_geom(Vaux,A,V2(),IS_NOT_INV,WRAP);
+         apply_geom_Bspline(Vaux,A,V2(),3,IS_NOT_INV,WRAP);
 	 V2()=Vaux;
 	 V2.write();
       }
