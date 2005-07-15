@@ -26,6 +26,7 @@
 /* INCLUDES ---------------------------------------------------------------- */
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippDocFiles.hh>
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippMasks.hh>
 #include <stdio.h>
@@ -35,8 +36,9 @@ void Usage();
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
-   FileName        fn_input;
+   FileName        fn_input, fn_stats;
    SelFile         SF;
+   DocFile         DF_stats;
    ImageXmipp      image;
    VolumeXmippT<double> volume;
    VolumeXmippT<int>    volume_int;
@@ -64,6 +66,7 @@ int main(int argc, char **argv) {
      }
      mask_prm.read(argc,argv);
      stats        = check_param(argc,argv,"-stats");
+     if (stats)   fn_stats = get_param(argc,argv,"-o","");
      show_old_rot = check_param(argc,argv,"-show_old_rot");
      short_format = check_param(argc,argv,"-short_format");
      save_mask    = check_param(argc,argv,"-save_mask");
@@ -73,6 +76,9 @@ int main(int argc, char **argv) {
    catch (Xmipp_error XE) {cout << XE; Usage(); mask_prm.usage(); exit(1);}
 
    try {
+   DF_stats.append_comment((string)"# Statistics of "+fn_input);
+   DF_stats.append_comment("# min max avg stddev");
+   
    // Get maximum filename size ---------------------------------------------
    int max_length=0;
    if (stats) max_length=SF.MaxFileNameLength();
@@ -146,6 +152,12 @@ int main(int argc, char **argv) {
                    << FtoA(max_val,10) << ' '
                    << FtoA(avg    ,10) << ' '
                    << FtoA(stddev ,10) << ' ';
+            matrix1D<double> v(4);
+            v(0)=min_val;
+            v(1)=max_val;
+            v(2)=avg;
+            v(3)=stddev;
+            DF_stats.append_data_line(v);
 
             // Total statistics
             N++;
@@ -226,6 +238,13 @@ int main(int argc, char **argv) {
                  cout << FtoA(image.old_rot() ,10);
            }
 
+           matrix1D<double> v(4);
+           v(0)=min_val;
+           v(1)=max_val;
+           v(2)=avg;
+           v(3)=stddev;
+           DF_stats.append_data_line(v);
+
            // Total statistics
            N++;
            mean_min_val += min_val;
@@ -291,6 +310,9 @@ int main(int argc, char **argv) {
       mask_prm.write_2Dmask("mask2D");
       mask_prm.write_3Dmask("mask3D");
    }
+   
+   // Save statistics ------------------------------------------------------
+   if (fn_stats!="") DF_stats.write(fn_stats);
    } catch (Xmipp_error XE) {cout << XE;}
    exit(0);
 } //main
@@ -305,6 +327,7 @@ void Usage() {
     cerr << "Usage: infogeo <Xmipp file or SelFile>" << endl
          << "   [-show_old_rot]   : show old rotational angle\n"
          << "   [-stats]          : show image statistics\n"
+         << "      [-o <docfile>] : save the statistics in this docfile\n"
          << "   [-short_format]   : Don't show labels for statistics\n"
          << "   [-save_mask]      : save 2D and 3D masks with names: \n"
          << "                          mask2D and mask3D respectively\n"
