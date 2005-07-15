@@ -807,6 +807,14 @@ template <class T>
       }
 }
 
+// Special case for complex numbers
+template <>
+   void apply_geom_Bspline(matrix3D< complex<double> > &M2,
+      matrix2D<double> A, const matrix3D< complex<double> > &M1,
+   int Splinedegree, bool inv, bool wrap) _THROW {
+   REPORT_ERROR(1,"apply_geom_Bspline: Not yet implemented for complex matrices\n");
+}
+
 /* Geometrical operations -------------------------------------------------- */
 template <class T>
    void VT::scale_to_size(int Zdim, int Ydim, int Xdim, VT &result) const
