@@ -174,8 +174,11 @@ int main(int argc, char **argv) {
      // For images .........................................................
      } else if(Is_ImageXmipp(file_name)) {
         // Read file
-        if (repair || stats)
-           image.read(file_name); image().set_Xmipp_origin();
+        if (repair || stats) {
+           // Read the image applying the header
+           image.read(file_name,false,false,true);
+           image().set_Xmipp_origin();
+        }
 
         // Repair?
         if (repair) {image.clear_header(); image.write();}
