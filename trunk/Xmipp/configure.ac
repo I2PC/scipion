@@ -47,6 +47,11 @@ if test $use_debug = no; then
 	CXXFLAGS=`echo $CXXFLAGS | sed 's/\-g //g'`
 fi
 
+if test $use_debug = yes; then
+	CFLAGS=$CFLAGS" -g"
+	CXXFLAGS=$CXXFLAGS" -g"
+fi
+
 AC_ARG_ENABLE([static-exec],
   AC_HELP_STRING([--enable-static-exec], [Enables static executables building]),
   [build_static_exec=$enableval], [build_static_exec=no])
