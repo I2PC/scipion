@@ -79,7 +79,6 @@ int main (int argc, char *argv[]) {
    double		  total_t;		// Program execution time
    double 		  comms_t_it,aux_t;	// communicattions time in one iteration
    GridVolumeT<int> GVNeq_aux; 			// This is a buffer for the communication
-	
    int 			  rank, size;	     	// MPI number of proccess and number of proccesses
    
 	
@@ -146,25 +145,27 @@ int main (int argc, char *argv[]) {
 	
 	num_img_tot = art_prm.numIMG;
 
-	Npart = (int) ceil ((float)num_img_tot / (float)size);
+	Npart = (int) ((float)num_img_tot / (float)size);
 	remaining = num_img_tot % size;
-	
-	art_prm.numIMG = Npart;
-	
-	// each process will only see the images it is iterested in.            
-	if( !remaining || rank < remaining)
-        	myFirst = rank * Npart;
-	else                  // for rank >= remaining > 0
-        	myFirst = rank * Npart - (rank - remaining) - 1;
 
-     	myLast = myFirst + art_prm.numIMG - 1;
-	
-	num_img_node = art_prm.numIMG;
+	num_img_node = Npart;
 
-	art_prm.ordered_list.window( myFirst, myLast );
-	art_prm.ordered_list.startingX()=0;		
+	if( rank < remaining )
+	{
+		num_img_node ++;
+		myFirst = rank * (Npart+1);
+	}
+	else
+	{
+		myFirst = rank * Npart + remaining;
+	}
+
+	myLast = myFirst + num_img_node - 1;
+
+	art_prm.ordered_list.startingX() = -myFirst;
+
 	art_prm.no_it = 1;
-	
+
 	GridVolume   vol_blobs_aux = vol_blobs;
 	GridVolume   vol_aux2 = vol_blobs;
    	
@@ -229,36 +230,45 @@ int main (int argc, char *argv[]) {
 		cavk_it_t  = 0.0;
 		
 		it_t = MPI_Wtime();
+
 		// A bit tricky. Allows us to use the sequential Basic_ART_iterations as
 		// in parallel it runs internally only one iteration.
+
 		art_prm.lambda_list(0) = art_prm.lambda(i);
 		
       	        if( art_prm.parallel_mode==Basic_ART_Parameters::pSART ){
-		
-			int blocksize;
 			
-			int numsteps = Npart / art_prm.block_size;
-			
-			// could be necessary another step for remaining projections
-			if (( Npart % art_prm.block_size ) != 0) numsteps++;
+			int numsteps = num_img_node / art_prm.block_size;
+
 			int processed = 0;
-			
+				
 			art_prm.numIMG = art_prm.block_size;
 			
-			for(int k = 0; k < numsteps ; k++){
+			art_prm.ordered_list.startingX() = -myFirst;
 			
-				if( k == numsteps-1 )	art_prm.numIMG = num_img_node - processed;
-				
-				art_prm.ordered_list.startingX( ) = -processed; 
-				
-				processed += art_prm.numIMG;
+			for(int ns = 0; ns < numsteps ; ns++){
+				if( ns == ( numsteps - 1 ) )
+				{
+					art_prm.numIMG = num_img_node - processed;
+				}
 				
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
+
+                                Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+
+				int blocksize;
 				
-				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
-			
-				blocksize = art_prm.numIMG * size;
+				if( ns < ( numsteps - 1 ) )
+				{
+					art_prm.ordered_list.startingX() -= art_prm.numIMG;
+					processed += art_prm.numIMG;
+					blocksize = art_prm.numIMG * size;
+				}
+				else
+				{
+					blocksize = ( art_prm.numIMG * size ) + remaining;
+				}
 				
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
@@ -276,25 +286,26 @@ int main (int argc, char *argv[]) {
 				}	
 			}
 	        }
-		else if( art_prm.parallel_mode==Basic_ART_Parameters::pBiCAV ){
+		else if( art_prm.parallel_mode==Basic_ART_Parameters::pBiCAV )
+		{
 			// Creates and initializes special variables needed to BICAV weights computation.
 			GridVolumeT<int> GVNeq_aux; // This is a buffer for communications
 			
-			int numsteps = Npart / art_prm.block_size;
-	
-			if(( Npart % art_prm.block_size) != 0) numsteps++;
-			
+			int numsteps = num_img_node / art_prm.block_size;
+
 			int processed = 0;
 				
 			art_prm.numIMG = art_prm.block_size;
 			
-			art_prm.parallel_mode == Basic_ART_Parameters::pCAV; // Another trick
+			art_prm.parallel_mode = Basic_ART_Parameters::pCAV; // Another trick
+
+			art_prm.ordered_list.startingX() = -myFirst;
+
 			for(int ns = 0; ns < numsteps ; ns++){
-				
-				if( ns == numsteps-1 )	art_prm.numIMG = num_img_node - processed;
-				
-				art_prm.ordered_list.startingX()= -processed;	
-				
+				if( ns == numsteps-1 )	
+				{
+					art_prm.numIMG = num_img_node - processed;	
+				}	
 			        /*
 				EXTRA CALCULATIONS FOR BICAV WEIGHTS: Each node computes its own part related to its images
 				and after that send each others their results and sum up them. This part of code has been taken and
@@ -304,11 +315,14 @@ int main (int argc, char *argv[]) {
 				cav_t = MPI_Wtime();
 
 				// Comprobar si incializa a 0
-                                art_prm.compute_CAV_weights(vol_blobs,art_prm.numIMG);
+                                art_prm.compute_CAV_weights( vol_blobs, art_prm.numIMG );
+t
 				GVNeq_aux = *(art_prm.GVNeq);
-				 
+		
+ 		 
 				// All processors send their result and get the other's so all of them
 				// have the weights.
+
 				for ( int n = 0 ; n < (art_prm.GVNeq)->VolumesNo(); n++ )
 				{
 					MPI_Barrier( MPI_COMM_WORLD );
@@ -324,12 +338,18 @@ int main (int argc, char *argv[]) {
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
 					
-				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+                                Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 				
-				processed += art_prm.numIMG;
-				
+				if( ns < ( numsteps - 1 ) )
+				{
+					art_prm.ordered_list.startingX() -= art_prm.numIMG;
+					processed += art_prm.numIMG;
+				}
+		
+			
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
+
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 				{
 					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
@@ -339,12 +359,13 @@ int main (int argc, char *argv[]) {
 					aux_t = MPI_Wtime() - aux_comm_t;
 					comms_t += aux_t;
 					comms_t_it += aux_t;
-					
+			
 					FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_blobs(j)() )
 				          MULTIDIM_ELEM( vol_blobs(j)(),i) = 
 					  	MULTIDIM_ELEM( vol_aux2(j)(),i) + 
 						MULTIDIM_ELEM( vol_blobs_aux(j)(),i) /  
 						MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
+
 				}	
 			}
 			art_prm.parallel_mode = Basic_ART_Parameters::pBiCAV; // trick undone
