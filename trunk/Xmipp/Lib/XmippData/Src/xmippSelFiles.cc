@@ -43,6 +43,7 @@ SelLine::SelLine(const SelLine &l) {
    line_type = l.line_type;
    text      = l.text;
    label     = l.label;
+   number    = l.number;
 }
 
 SelLine& SelLine::operator = (const SelLine &SL) {
@@ -50,6 +51,7 @@ SelLine& SelLine::operator = (const SelLine &SL) {
       line_type = SL.line_type;
       text      = SL.text;
       label     = SL.label;
+      number    = SL.number;
    }
    return *this;
 }
@@ -102,6 +104,7 @@ istream& operator >> (istream& o, SelLine &SFL) _THROW {
          SFL.line_type=SelLine::DATALINE;
          SFL.text=img_name;
          SFL.label=(label>=0) ? SelLine::ACTIVE:SelLine::DISCARDED;
+	 SFL.number=label;
       } else
          REPORT_ERROR(1552,"Format error when reading Selection line");
    }

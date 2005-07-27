@@ -64,6 +64,7 @@ private:
    string text;                           // if a comment, the whole line
                                           // if a file, the filename only
    Label label;                           // if a file, the label associated
+   int number;                            // if a file, the original number
 
    friend class SelFile;
 public:
@@ -88,6 +89,9 @@ public:
    
    /// Get label of this line
    short get_label() {return label;}
+
+   /// Get number of this line
+   int get_number() {return number;}
    
    /** True if current line is a comment. */
    int Is_comment() {return line_type==COMMENT;}
