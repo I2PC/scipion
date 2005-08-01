@@ -583,7 +583,8 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX2D(input()){
               my_rad=(int)ROUND(sqrt((double)(i*i+j*j)));
-	          input(i,j)=radial_mean(my_rad);
+	      if (my_rad>XSIZE(radial_mean)-1) my_rad-=1;
+	      MAT_ELEM(input(),i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
 
@@ -602,7 +603,8 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX3D(input()){
               my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k)));
-	          input(k,i,j)=radial_mean(my_rad);
+	      if (my_rad>XSIZE(radial_mean)-1) my_rad-=1;
+	      VOL_ELEM(input(),k,i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
    }   
