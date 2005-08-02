@@ -274,6 +274,19 @@ void BinaryFrameMask(matrix3D<int> &mask,
    int Xrect, int Yrect, int Zrect, int mode=INNER_MASK,
    double x0=0, double y0=0, double z0=0);
 
+/* Cone ................................................................... */
+/** Creates a 3D cone mask for already sized masks.
+    The mask is supposed to be resized and with its logical origin already
+    set. A cone with angle theta is placed parallel to the
+    Z-axis and centered at (x0,y0,z0).
+    The only two valid modes are INNER_MASK (by default, inside the
+    crown is zero, outside is 1) or OUTSIDE_MASK (the negative of the
+    crown). 
+    When entering the mask is initialiazed to 0 and then the mask is created.
+*/
+void BinaryConeMask(matrix3D<int> &mask, 
+   double theta, int mode=INNER_MASK);
+
 /* Gaussian ................................................................ */
 /** Creates a 3D gaussian mask for already sized masks.
     The mask is supposed to be resized and with its logical origin already
@@ -427,11 +440,12 @@ public:
 #define READ_MASK             	 10
 #define RAISED_CROWN_MASK        11
 #define BINARY_DWT_CIRCULAR_MASK 12
+#define BINARY_CONE_MASK     	 13
 /** Mask Type.
     The only valid types are BINARY_CIRCULAR_MASK,
     BINARY_CROWN_MASK, BINARY_CYLINDER_MASK, BINARY_FRAME_MASK,
     GAUSSIAN_MASK, RAISED_COSINE_MASK, BLACKMAN_MASK, SINC_MASK,
-    SINC_BLACKMAN_MASK, READ_MASK, RAISED_CROWN_MASK */
+    SINC_BLACKMAN_MASK, READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK */
     int type;
 
 /** Mode.
@@ -547,7 +561,7 @@ public:
        if (type==BINARY_CIRCULAR_MASK || type==BINARY_CROWN_MASK ||
            type==BINARY_CYLINDER_MASK || type==BINARY_FRAME_MASK ||
            type==NO_MASK              || type==READ_MASK         ||
-	   type==BINARY_DWT_CIRCULAR_MASK)
+	   type==BINARY_DWT_CIRCULAR_MASK || type==BINARY_CONE_MASK)
            return INT_MASK;
        else if (type==GAUSSIAN_MASK   || type==RAISED_COSINE_MASK ||
                 type==SINC_MASK       || type==SINC_BLACKMAN_MASK ||

@@ -326,6 +326,16 @@ void BinaryFrameMask(matrix3D<int> &mask,
    }
 }
 
+void BinaryConeMask(matrix3D<int> &mask, double theta, int mode) {
+
+  FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
+    double rad=tan(PI*theta/180.)*(double)k;
+    if ((double)(i*i+j*j)<rad*rad) VOL_ELEM(mask,k,i,j)=0;
+    else VOL_ELEM(mask,k,i,j)=1;                                                                               if (mode==OUTSIDE_MASK) VOL_ELEM(mask,k,i,j)=1-VOL_ELEM(mask,k,i,j);
+  }
+
+}
+
 void GaussianMask(matrix3D<double> &mask,
    double sigma, int mode, double x0, double y0, double z0) {
    double sigma2=sigma*sigma;
@@ -572,6 +582,16 @@ void Mask_Params::read(int argc, char **argv) _THROW {
       else if (Xrect>0 && Yrect>0 && Zrect>=0) mode=OUTSIDE_MASK;
       else REPORT_ERROR(3000,"Mask_Params: cannot determine mode for rectangle");
       type=BINARY_FRAME_MASK;
+   // Cone mask ............................................................
+   } else if (strcmp(argv[i+1],"cone")==0) {
+      if (i+2>=argc)
+         REPORT_ERROR(3000,"Mask_Params: cone mask needs one angle");
+      if (!(allowed_data_types & INT_MASK))
+         REPORT_ERROR(3000,"Mask_Params: binary masks are not allowed");
+      R1=AtoF(argv[i+2]);
+      if (R1<0) {mode=INNER_MASK; R1=ABS(R1);}
+      else mode=OUTSIDE_MASK;
+      type=BINARY_CONE_MASK;
    // Crown mask ...........................................................
    } else if (strcmp(argv[i+1],"crown")==0) {
       if (i+3>=argc)
@@ -745,6 +765,9 @@ void Mask_Params::usage() const {
            << "   |-mask cylinder <R> <H>   : 2D circle or 3D cylinder\n"
            << "                               if R,H > 0 => outside cylinder\n"
            << "                               if R,H < 0 => inside cylinder\n"
+           << "   |-mask cone <theta>       : 3D cone (parallel to Z) \n"
+           << "                               if theta > 0 => outside cone\n"
+           << "                               if theta < 0 => inside cone\n"
            << "   |-mask <binary file>      : Read from file\n"   
       ;
    if (allowed_data_types & DOUBLE_MASK)
@@ -876,6 +899,9 @@ void Mask_Params::generate_3Dmask() {
          break;
       case BINARY_FRAME_MASK:
          BinaryFrameMask(imask3D,Xrect,Yrect,Zrect,mode,x0,y0,z0);
+         break;
+      case BINARY_CONE_MASK:
+         BinaryConeMask(imask3D,R1,mode);
          break;
       case GAUSSIAN_MASK:
          GaussianMask(dmask3D,sigma,mode,x0,y0,z0);
