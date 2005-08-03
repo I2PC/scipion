@@ -1125,7 +1125,6 @@ template <class T>
    void apply_binary_mask(const matrix3D<int> &mask, const matrix3D<T> &m_in,
       matrix3D<T> &m_out, T subs_val) {
    m_out.resize(m_in);
-   cout << "Applying binary mask\n";
    FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
       // If in common with the mask
       if (k>=STARTINGZ(mask) && k<=FINISHINGZ(mask) &&
