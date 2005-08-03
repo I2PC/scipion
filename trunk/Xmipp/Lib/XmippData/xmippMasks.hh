@@ -222,7 +222,7 @@ void mask2D_8neig(matrix2D<int> &mask, int value1=1, int value2=1,
     When entering the mask is initialiazed to 0 and then the mask is created.
 */
 void BinarySphericalMask(matrix3D<int> &mask,
-   double radius, int mode=INNER_MASK, double x0=0, double y0=0, int z0=0);
+   double radius, int mode=INNER_MASK, double x0=0, double y0=0, double z0=0);
 
 /* DWT Spherical ............................................................ */
 /** Creates a 3D DWT spherical for already sized masks.
