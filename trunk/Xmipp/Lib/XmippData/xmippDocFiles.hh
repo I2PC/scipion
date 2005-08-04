@@ -324,6 +324,12 @@ public:
        \\Ex: DF.search(700); */
    void search(int _key) {current_line=find(_key);}
 
+  /**  Search the entire file for the given comment. If found, place
+       the pointer to the next data line and return 1. Otherwise,
+       return 0
+       \\Ex: if (DF.search_comment(fn_img)) rot=DF(0); */
+       int search_comment(string comment);
+   
    /** Move "pointer" to a certain line.
        This function searches for the line with the given key, and
        locate the current line "pointer" pointing to that line. If
@@ -687,7 +693,7 @@ public:
        void for_all_lines(void (*f)(const matrix1D<double> &, matrix1D<double> &),
           int key0=-1, int keyF=-1);
 
-   /** Apply a function to a data line with a given key.
+  /** Apply a function to a data line with a given key.
        The function requirements are the same as for the preceeding function
        (see there for a more detailed explanation). If the key doesn't
        exist nothing is done. It is based on for_all_lines, so there is a

@@ -373,6 +373,22 @@ void DocFile::jump(int how_many) {
       if (current_line!=m.end()) {current_line++; adjust_to_data_line();}
 }
 
+/* Search comment ---------------------------------------------------------- */
+int DocFile::search_comment(string comment) {
+  go_beginning();
+  comment=" ; "+comment;
+  while (!eof()) {
+    if ((*current_line).Is_comment()) {
+      if (strcmp(comment.c_str(),((*current_line).get_text()).c_str())==0) {
+	adjust_to_data_line();
+	return 1;
+      }
+    }
+    next();
+  }
+  return 0;
+}
+
 /* Locate ------------------------------------------------------------------ */
 // It returns a pointer to the next element if the key is not inside
 void DocFile::locate(int _key) {
