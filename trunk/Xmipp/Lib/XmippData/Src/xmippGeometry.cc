@@ -661,7 +661,9 @@ void Euler_apply_transf (const matrix2D<double> &L, const matrix2D<double> &R,
 /* Rotate matrix3D with 3 Euler angles ------------------------------------- */
 matrix2D<double> Euler_rot3D_matrix(double rot, double tilt, double psi) {
    matrix2D<double> temp;
-   Euler_angles2matrix(rot,-tilt,psi,temp);
+   // Sjors 4aug05: this minus sign seems very odd....
+   //Euler_angles2matrix(rot,-tilt,psi,temp);
+   Euler_angles2matrix(rot,tilt,psi,temp);
    temp.resize(4,4);
    DIRECT_MAT_ELEM(temp,3,3)=1;
    return temp;
