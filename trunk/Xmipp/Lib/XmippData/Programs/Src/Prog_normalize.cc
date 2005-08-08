@@ -159,16 +159,14 @@ void Normalize_parameters::usage() {
         << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
         << "                              OldXmipp, Near_OldXmipp, NewXmipp\n"
         << "                              NewXmipp2, Michael, None, Random, Ramp\n"
-        << "  [-background frame <r> |  : Frame background of r pixels\n"
-        << "   -background circle <r>]  : Circular background outside radius=r\n"
-        << "                              Background is needed for NewXmipp,\n"
-        << "                              Michael, Near_OldXmipp and Ramp methods\n"
-        << "  [-dont_apply_geo]           Do not apply (inverse) transformation, as stored\n"
-        << "                              in the header of the images, to the mask\n"
+        << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
+        << "                              and Ramp need a background mask:\n"
+        << "  [-background frame <r>  | : Rectangular background of r pixels\n"
+        << "   -background circle <r> | : Circular background outside radius=r\n"
+        << "   -mask <options>]           Use an alternative type of background mask\n"
+        << "                               (see xmipp_mask for options) \n"
 	<< "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
    ;
-   mask_prm.allowed_data_types=INT_MASK;
-   mask_prm.usage();
 }
 
 /* Apply geometric transformation to the mask ------------------------------ */
