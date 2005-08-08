@@ -54,27 +54,24 @@ void Normalize_parameters::read(int argc, char **argv) _THROW {
       if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
           normalizing_method==MICHAEL || normalizing_method==NEAR_OLDXMIPP ||
 	  normalizing_method==RAMP) {
-         // Get mask
-         if (normalizing_method==NEWXMIPP) {
-            enable_mask=check_param(argc,argv,"-mask");
-            if (enable_mask) {
-               mask_prm.allowed_data_types=INT_MASK;
-               mask_prm.read(argc,argv);
-            } else {
-               enable_mask=FALSE;
-               int i=position_param(argc,argv,"-background");
-               if (i+2>=argc)
-                  REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
-               aux=argv[i+1];
-               r=AtoI(argv[i+2]);
-
-               if (aux=="frame")       background_mode=FRAME;
-               else if (aux=="circle") background_mode=CIRCLE;
-               else
-                  REPORT_ERROR(1,"Normalize: Unknown background mode");
-            }
-         }
-         produce_side_info();
+	enable_mask=check_param(argc,argv,"-mask");
+	if (enable_mask) {
+	  mask_prm.allowed_data_types=INT_MASK;
+	  mask_prm.read(argc,argv);
+	} else {
+	  enable_mask=FALSE;
+	  int i=position_param(argc,argv,"-background");
+	  if (i+2>=argc)
+	    REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
+	  aux=argv[i+1];
+	  r=AtoI(argv[i+2]);
+	  
+	  if (aux=="frame")       background_mode=FRAME;
+	  else if (aux=="circle") background_mode=CIRCLE;
+	  else
+	    REPORT_ERROR(1,"Normalize: Unknown background mode");
+	}
+	produce_side_info();
 
 	 // Default is to apply inverse transformation from image header to the mask
 	 apply_geo=!check_param(argc,argv,"-dont_apply_geo");
