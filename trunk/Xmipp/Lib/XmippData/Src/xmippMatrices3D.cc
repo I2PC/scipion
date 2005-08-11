@@ -797,7 +797,7 @@ template <class T>
             if (interp) {
                dVkij(V2,k,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
 	          xp,yp,zp,Splinedegree);
-            }
+            } else dVkij(V2,k,i,j) = 0.;
 
             // Compute new point inside input image
             xp += dMij(A,0,0);

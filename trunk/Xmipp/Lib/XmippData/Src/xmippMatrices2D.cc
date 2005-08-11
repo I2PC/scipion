@@ -907,10 +907,8 @@ template <class T>
    // size instead of being resized inside the routine with the
    // same size as the input matrix
    if (XSIZE(M2)==0) M2.resize(M1);
-   if (outside!=0.) {
    // Initialise output matrix with value=outside
-     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
-   }
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
   
    // Find center and limits of image
    cen_y  = (int)(YSIZE(M2)/2);
