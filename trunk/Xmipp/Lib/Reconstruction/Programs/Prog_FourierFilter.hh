@@ -71,7 +71,8 @@ public:
    #define BANDPASS      3
    #define STOPBAND      4
    #define CTF           5
-   /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, FROM_FILE */
+   #define WEDGE         7
+   /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE, FROM_FILE */
    int FilterBand;
    
    /** Cut frequency for Low and High pass filters, first freq for bandpass.

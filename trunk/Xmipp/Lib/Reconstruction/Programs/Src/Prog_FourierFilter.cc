@@ -77,6 +77,13 @@ void FourierMask::read(int argc, char **argv) _THROW {
          REPORT_ERROR(3000,"FourierMask: Raised cosine needs a number of pixels");
       raised_w=AtoF(argv[i+2]);
       FilterShape=RAISED_COSINE;
+   } else if (strcmp(argv[i+1],"wedge")==0) {
+      if (i+3>=argc)
+         REPORT_ERROR(3000,"FourierMask: Wedge needs two angle parameters");
+      w1=AtoF(argv[i+2]);
+      w2=AtoF(argv[i+3]);
+      FilterShape=WEDGE;
+      FilterBand=LOWPASS;
    } else if (strcmp(argv[i+1],"ctf")==0) {
       if (i+2>=argc)
          REPORT_ERROR(3000,"FourierMask: CTF needs a CTF file");
@@ -116,29 +123,33 @@ void FourierMask::read(int argc, char **argv) _THROW {
 
 /* Show -------------------------------------------------------------------- */
 void FourierMask::show() {
-   cout << "Filter Band: ";
-   switch (FilterBand) {
-      case LOWPASS:  cout << "Lowpass before " << w1 << endl;  break;
-      case HIGHPASS: cout << "Highpass after " << w1 << endl; break;
-      case BANDPASS: cout << "Bandpass between " << w1 << " and " << w2 << endl;
+   if (FilterShape==WEDGE) {
+     cout << "Missing wedge for data between tilting angles of " << w1 <<" and "<<w2<<" deg\n";
+   } else {
+     cout << "Filter Band: ";
+     switch (FilterBand) {
+     case LOWPASS:  cout << "Lowpass before " << w1 << endl;  break;
+     case HIGHPASS: cout << "Highpass after " << w1 << endl; break;
+     case BANDPASS: cout << "Bandpass between " << w1 << " and " << w2 << endl;
+       break;
+     case STOPBAND: cout << "Stopband between " << w1 << " and " << w2 << endl;
          break;
-      case STOPBAND: cout << "Stopband between " << w1 << " and " << w2 << endl;
-         break;
-      case CTF:      cout << "CTF\n";      break;
-      case FROM_FILE: cout <<"From file " << fn_mask << endl; break;
-   }
-   cout << "Filter Shape: ";
-   switch (FilterShape) {
-      case RAISED_COSINE:
-         cout << "Raised cosine with " << raised_w
-              << " raised frequencies\n";
-         break;
-      case CTF:
-         cout << "CTF\n" << ctf;
-         break;
-	  case FROM_FILE:
-	     cout << "From file " << fn_mask << endl;
-		 break;
+     case CTF:      cout << "CTF\n";      break;
+     case FROM_FILE: cout <<"From file " << fn_mask << endl; break;
+     }
+     cout << "Filter Shape: ";
+     switch (FilterShape) {
+     case RAISED_COSINE:
+       cout << "Raised cosine with " << raised_w
+	    << " raised frequencies\n";
+       break;
+     case CTF:
+       cout << "CTF\n" << ctf;
+       break;
+     case FROM_FILE:
+       cout << "From file " << fn_mask << endl;
+       break;
+     }
    }
 }
 
@@ -150,6 +161,7 @@ void FourierMask::usage() {
         << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
         << "   -fourier_mask <file>              : Provide a Fourier file\n"
         << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
+        << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
         << "   -fourier_mask ctf                 : In that case the following\n"
 	<< "                                       parameters apply\n"
         << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
@@ -184,6 +196,11 @@ void FourierMask::generate_mask(T &v) _THROW {
 	       real_mask.R1=N1;
 	       real_mask.R2=N1+raised_pixels;
 	       real_mask.x0=real_mask.y0=real_mask.z0=0;
+	       break;
+	    case WEDGE:
+	       real_mask.type=BINARY_WEDGE_MASK;
+	       real_mask.R1=w1;
+	       real_mask.R2=w2;
 	       break;
 	 }
          break;
