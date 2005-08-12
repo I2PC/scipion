@@ -80,7 +80,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   n_ref=AtoI(get_param(argc,argv,"-nref","0"));
   fn_ref=get_param(argc,argv,"-ref","");
   SF.read(get_param(argc,argv,"-i"));
-  SF.ImgSize(dim,dim);
   fn_root=get_param(argc,argv,"-o","MLalign2D");
   psi_step=AtoF(get_param(argc,argv,"-psi_step","5"));
   Niter=AtoI(get_param(argc,argv,"-iter","100"));
@@ -103,6 +102,20 @@ void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
   istart=AtoI(get_param(argc,argv,"-istart","1"));
   // Hidden arguments
   Paccept_fast=AtoF(get_param(argc,argv,"-Paccept","0.0"));
+  do_esthetics=check_param(argc,argv,"-esthetics");
+  fourier_mode=check_param(argc,argv,"-FS");
+  fn_sig=get_param(argc,argv,"-Msigma2","");
+  fn_cv=get_param(argc,argv,"-cv","");
+
+  // Get nr_focus from SelFile
+  SelLine SL;
+  SF.go_beginning();
+  nr_focus=0;
+  while (!SF.eof()) {
+    SL=SF.current();
+    nr_focus=MAX(nr_focus,SL.get_number());
+    SF.NextImg();
+  }
 
 }
 
@@ -142,6 +155,11 @@ void Prog_MLalign2D_prm::show() {
     }
 
     // Hidden stuff
+    if (fourier_mode) {
+      cerr << "  -> Use Fourier-space noise model, with "<<nr_focus<<" defocuss groups"<<endl;
+      if (fn_cv!="") 
+	cerr << "  -> Use cross-validation, with test set projections in "<<fn_cv<<endl;
+    }
     if (!write_intermediate) {
       cerr << "  -> Do not write out images after each iteration."<<endl;
     }
@@ -153,6 +171,9 @@ void Prog_MLalign2D_prm::show() {
     }
     if (fix_sigma_noise && !LSQ_rather_than_ML) {
       cerr << "  -> Do not update sigma-estimate of noise."<<endl;
+    }
+    if (do_esthetics) {
+      cerr << "  -> Perform esthetics on (0,0)-pixel artifacts"<<endl;
     }
     cerr << " -----------------------------------------------------------------"<<endl;
   }
@@ -199,11 +220,11 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
 // Read all input selfiles in memory 
 void Prog_MLalign2D_prm::produce_Side_info() _THROW {
 
-  FileName fn_img;
+  FileName fn_img, fn_tmp;
   ImageXmipp img;
   headerXmipp head;
   matrix1D<double> offsets(2);
-  matrix2D<double> A(3,3);
+  matrix2D<double> A(3,3), Maux;
   vector<matrix1D<double> > dum;
   int c,refno=0;
   float xx,yy;
@@ -212,6 +233,9 @@ void Prog_MLalign2D_prm::produce_Side_info() _THROW {
   nr_psi=ROUND(90./psi_step);
   psi_step=90./nr_psi;
  
+  // Get image size
+  SF.ImgSize(dim,dim);
+
   // Read image- and reference- selfiles
   if (Is_ImageXmipp(fn_ref)) {
     SFr.reserve(1);
@@ -259,6 +283,7 @@ void Prog_MLalign2D_prm::produce_Side_info() _THROW {
     refno++;
   }
 
+  // read in model fractions if given on command line (else uniform distribution)
   if (fn_frac!="") {
     DocFile  DF;
     DocLine DL;
@@ -280,6 +305,7 @@ void Prog_MLalign2D_prm::produce_Side_info() _THROW {
     for (refno=0; refno<n_ref; refno++) { alpha_k[refno]/=sumfrac; }
   }
 
+  // Set some stuff for LSQ-mode
   if (LSQ_rather_than_ML) {
     if (max_shift<0) max_shift=dim/2;
     fix_sigma_noise=true;
@@ -304,7 +330,148 @@ void Prog_MLalign2D_prm::produce_Side_info() _THROW {
     c++;
   }
 
+  if (fourier_mode) {
+
+    // Read cv test set if necessary
+    if (fn_cv!="") {
+      do_cv=true;
+      SFcv.read(fn_cv);
+    } else do_cv=false;
+
+    // Read in all defocuss group Msigma2 matrices
+    Msigma2.clear();
+    Msigma2.resize(nr_focus);
+    FOR_ALL_DEFOCUS_GROUPS() {
+      // Read Msigma2-matrices from disc (with fixed names)
+      fn_tmp=fn_root+"_it";
+      fn_tmp.compose(fn_tmp,istart-1,"");
+      fn_tmp+="_sig";
+      if (nr_focus>1) fn_tmp.compose(fn_tmp,ifocus+1,"");
+      fn_tmp+=".xmp";
+      img.read(fn_tmp);
+      CenterFFT(img(),false);
+      Msigma2[ifocus]=img();
+      Msigma2[ifocus].set_Xmipp_origin();
+      // For even-numbered dimensions: half22whole correction
+      if (!(dim%2)) {
+	for (int j=0; j<=XSIZE(Msigma2[ifocus]); j++) {
+	  dMij(Msigma2[ifocus],YSIZE(Msigma2[ifocus])/2,j)*=2.;
+	}
+	dMij(Msigma2[ifocus],0,XSIZE(Msigma2[ifocus])/2)*=2.;
+      }
+    }
+
+    // Fill offset vectors
+    SF.go_beginning();
+    while (!SF.eof()) {
+      head.read(SF.NextImg());
+      offset_x.push_back(head.fXoff());
+      offset_y.push_back(head.fYoff());
+    }
+
+    // Fill limited translation shift-vectors
+    matrix1D<double> shift(2);
+    nr_trans=0;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Msigma2[0]) {
+      double rr=(double)i*i+(double)j*j;
+      if (rr<=sigma_offset*sigma_offset) {
+	shift(0)=(double)j;
+	shift(1)=(double)i;
+	Vtrans.push_back(shift);
+	if (i==0 && j==0) zero_trans=nr_trans;
+	nr_trans++;
+      }
+    }
+
+    // Create resolution mask
+    Maux.resize(dim,dim);
+    resol_mask.resize(dim,dim);
+    Maux.set_Xmipp_origin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux) {
+      if ( ((i*i+j*j) <= (dim*dim/4)) && ((i*i+j*j)>0) ) MAT_ELEM(Maux,i,j)=1.;
+      else MAT_ELEM(Maux,i,j)=0.;
+    }
+    CenterFFT(Maux,false);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux) {
+      dMij(resol_mask,i,j)=(int)dMij(Maux,i,j);
+    }
+
+  } //end fourier_mode
+
 }
+
+// estimate initial noise in fourier_mode
+void Prog_MLalign2D_prm::estimate_initial_sigma2() _THROW {
+
+  matrix2D<double> Maux,Mave2;
+  matrix2D<complex<double> > Fimg,Faux;
+  matrix1D<double> rmean_noise;
+  matrix1D<int> center(2),radial_count;
+  ofstream fh_hist;
+  double rr;
+  ImageXmipp img;
+  FileName fn_tmp;
+  center.init_zeros();
+  SelLine SL;
+  vector<int> count_defocus;
+  int focus;
+
+  if (!fourier_mode) 
+    REPORT_ERROR(1,"Error: initial estimate sigma2 only valid in Fourier-mode");
+
+  if (fn_sig!="") {
+    // do nothing, i.e. assume that the correctly named images already exist
+  } else {
+    // Calculate initial estimate for sigma2 from average power
+    // spectrum of all experimental images
+    SF.ImgSize(dim,dim);
+    Msigma2.resize(nr_focus);
+    count_defocus.clear();
+    count_defocus.resize(nr_focus);
+    FOR_ALL_DEFOCUS_GROUPS() {
+      Msigma2[ifocus].init_zeros(dim,dim);
+      Msigma2[ifocus].set_Xmipp_origin();
+    }
+    Maux.init_zeros(dim,dim);
+    SF.go_beginning();
+    int imgno=0;
+    while (!SF.eof()) {
+      SL=SF.current();
+      focus=SL.get_number()-1;
+      img.read(SF.NextImg());
+      img().set_Xmipp_origin();
+      FourierTransform(img(),Fimg);
+      FFT_magnitude(Fimg,Maux);
+      Maux.set_Xmipp_origin();
+      Maux*=Maux;
+      Msigma2[focus]+=Maux;
+      count_defocus[focus]++;
+      imgno++;
+    }
+    FOR_ALL_DEFOCUS_GROUPS() {
+      // Factor 2 here, because the Gaussian distribution is in the
+      // complex plane, i.e. in 2-D!
+      Msigma2[ifocus]/=(double)(2*count_defocus[ifocus]);     
+      CenterFFT(Msigma2[ifocus],true);
+      rmean_noise.init_zeros();
+      radial_average(Msigma2[ifocus],center,rmean_noise,radial_count,true);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(Msigma2[ifocus]) {
+	rr=sqrt((double)(i*i+j*j));
+	if (ROUND(rr)>dim/2) rr=(double)dim/2.;
+	MAT_ELEM(Msigma2[ifocus],i,j)=rmean_noise(ROUND(rr));
+      }
+      img()=Msigma2[ifocus];
+      fn_tmp=fn_root+"_it";
+      fn_tmp.compose(fn_tmp,istart-1,"");
+      fn_tmp+="_sig";
+      if (nr_focus>1) fn_tmp.compose(fn_tmp,ifocus+1,"");
+      fn_tmp+=".xmp";
+      img.write(fn_tmp);
+    }
+  }
+
+}
+
 
 // Generate initial references =============================================
 void Prog_MLalign2D_prm::generate_initial_references() _THROW  {
@@ -371,21 +538,28 @@ void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
 void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW {
 
+  int r1,r2;
   double AA,stdAA,psi,dum,avg,mean_ref,stddev_ref,dummy;
   matrix2D<double> Maux;
   matrix2D<complex<double> > Faux;
   vector<matrix2D<complex <double> > > dumF;
   vector<matrix2D<double> > dumM;
-  matrix2D<int> mask, omask;
+  matrix2D<int> mask,omask;
+  matrix2D<double> cmask;
 
   Maux.init_zeros(dim,dim);
   Maux.set_Xmipp_origin();
   mask.resize(dim,dim);
   mask.set_Xmipp_origin();
+  cmask.resize(dim,dim);
+  cmask.set_Xmipp_origin();
   omask.resize(dim,dim);
   omask.set_Xmipp_origin();
-  BinaryCircularMask(mask,dim/2,INNER_MASK);
-  BinaryCircularMask(omask,dim/2,OUTSIDE_MASK);
+  r1=(dim/2)-2;
+  r2=dim/2;
+  if (fourier_mode) RaisedCosineMask(cmask,r1,r2);
+  else BinaryCircularMask(mask,r2,INNER_MASK);
+  BinaryCircularMask(omask,r1,OUTSIDE_MASK);
 
   Fref.clear();
   Mref.clear();
@@ -399,7 +573,8 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
       // Add arbitrary number (SMALLANGLE) to avoid 0-degree rotation (lacking interpolation effects)
       psi=(double)(ipsi*90./nr_psi)+SMALLANGLE; 
       Maux=Iref[refno]().rotate(psi,DONT_WRAP);
-      apply_binary_mask(mask,Maux,Maux,avg);
+      if (fourier_mode) apply_cont_mask(cmask,Maux,Maux);
+      else apply_binary_mask(mask,Maux,Maux,avg);
       // Normalize the magnitude of the rotated references to 1st rot of that ref
       // This is necessary because interpolation due to rotation can lead to lower overall Fref 
       // This would result in lower probabilities for those rotations
@@ -419,10 +594,12 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 	if (AA>0) Mref[refno][ipsi]*=sqrt(stdAA/AA);
       }
       FourierTransformHalf(Maux,Faux);
-      Faux*=dim*dim;
-      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux) {
-	dMij(Faux,i,j)=conj(dMij(Faux,i,j));
-      }
+      if (!fourier_mode) {
+	Faux*=dim*dim;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux) {
+	  dMij(Faux,i,j)=conj(dMij(Faux,i,j));
+	}
+      } 
       Fref[refno].push_back(Faux);
       if (AA>0) Fref[refno][ipsi]*=sqrt(stdAA/AA);
 
@@ -432,12 +609,12 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 }
 
 // Collect all rotations and sum to update Iref() for all models ==========
-void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fref, 
-						  vector <vector< matrix2D<double> > > &Mref, bool &real_space, 
-						  vector<matrix2D<double > > &Mnew ) _THROW {
+void Prog_MLalign2D_prm::reverse_rotate_reference(
+	     vector <vector< matrix2D<complex<double> > > > &Fref, 
+	     vector <vector< matrix2D<double> > > &Mref, bool &real_space, 
+	     vector<matrix2D<double > > &Mnew) _THROW {
 
   double psi,dum,avg,ang;
-  int s;
   matrix2D<double> Maux,Maux2;
   matrix2D<int> mask, omask;
   Maux.resize(dim,dim);
@@ -462,15 +639,25 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(vector <vector< matrix2D<compl
       if (real_space) {
 	Maux=Mref[refno][ipsi];
       } else {
-	InverseFourierTransformHalf(Fref[refno][ipsi],Maux,dim);
-	Maux/=dim*dim;
-	CenterFFT(Maux,true);
+	if (fourier_mode) { 
+	  InverseFourierTransformHalf(Fref[refno][ipsi],Maux,dim);
+	} else {
+	  InverseFourierTransformHalf(Fref[refno][ipsi],Maux,dim);
+	  Maux/=dim*dim;
+	  // Or this centering outside else??!!
+	  CenterFFT(Maux,true);
+	}
       }
       compute_stats_within_binary_mask(omask,Maux,dum,dum,avg,dum);
       Maux2=Maux.rotate(-psi,DONT_WRAP);
       apply_binary_mask(mask,Maux2,Maux2,avg);
       Mnew[refno]+=Maux2;
     }  
+    // perform correction of origin-pixel artifacts
+    if (do_esthetics)
+      MAT_ELEM(Mnew[refno],0,0)=(MAT_ELEM(Mnew[refno],1,0)+MAT_ELEM(Mnew[refno],0,1)+
+				 MAT_ELEM(Mnew[refno],-1,0)+MAT_ELEM(Mnew[refno],0,-1))/4;
+
   }
 
 }
@@ -565,6 +752,229 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg,
       }
     }
   }
+
+}
+
+
+// Maximum Likelihood calculation in Fourier Space for one image ======================
+// Integration over all models and in-plane rotations, search
+// translation only for optimal model and rotation
+void Prog_MLalign2D_prm::ML_integrate_FS_model_phi(
+	  matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref,
+	  vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
+	  matrix2D<double > &sigma2, matrix2D<double> &Mwsum_sigma2, 
+	  vector<double> &sumw, vector<double> &sumw_mirror, 
+	  double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
+	  double &opt_xoff, double &opt_yoff, double &sumw_cv, bool &cv_flag) _THROW {
+
+  matrix2D<double> Maux,Maux2;
+  matrix3D<double> Mweight;
+  matrix2D<complex<double> > Fimg, Faux;
+  vector<vector<matrix2D<complex<double> > > > Fimg_flip;
+  vector<matrix2D<complex<double> > >  dum1;
+  vector<double> refw(n_ref), refw_mirror(n_ref);
+  double sigma_noise2,XiA,Xi2,aux,fracpdf,xmax,ymax,norm,weight;
+  double tmpr,tmpi;
+  double sum_refw=0.,sum_refw_cv=0.;
+  double diff,maxweight=-99.e99,mindiff2=99.e99;
+  complex <double> tmpdiff;
+  int irot,opt_ipsi,opt_iflip,ioptx,iopty,opt_irot;
+
+  /* Not to store all 360-degrees rotations of the references (and pdf, Fwsum_imgs etc.) in memory,
+     the experimental image is rotated over 0, 90, 180 & 270 degrees (called FLIPS), and only
+     rotations over 90 degrees of the references are stored.
+     This save a factor of 4 in memory requirements, and these FLIPS do not require interpolation
+     of the experiemental image and thereby deterioration of the process.
+     If do_mirror there are 8 flips, now also including all mirrored versions.
+     Rotation is done in real space, and then the Fourier Transform is calculated four/eight times.
+     In principle, rotation could be done in Fourier space, but then there is a problem with
+     even-sized images, where the origin is not exactly in the center, and 1 pixel wrapping is required.
+  */
+
+  Mweight.init_zeros(nr_trans,n_ref,nr_flip*nr_psi);
+  Maux.resize(dim,dim);
+  Maux.set_Xmipp_origin();
+  Maux2.resize(dim,dim);
+  Maux2.set_Xmipp_origin();
+  Fimg_flip.clear();
+  fracweight=0.;
+
+  FOR_ALL_LIMITED_TRANSLATIONS() {
+    Mimg.translate(Vtrans[itrans],Maux2,WRAP);
+    Fimg_flip.push_back(dum1);
+    // Flip images and calculate correlation matrices and minimum variance
+    FOR_ALL_FLIPS() {
+      Maux.set_Xmipp_origin();
+      apply_geom(Maux,F[iflip],Maux2,IS_INV,WRAP);
+      FourierTransformHalf(Maux,Fimg);
+      Fimg_flip[itrans].push_back(Fimg);
+      FOR_ALL_MODELS() {
+	FOR_ALL_ROTATIONS() {
+	  irot=iflip*nr_psi+ipsi;
+	  diff=0.;
+	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg) {
+	    // Exclude origin and "corners" of FT
+	    if (dMij(resol_mask,i,j)) {
+	      tmpr= (double)dMij(Fimg,i,j).real() - (double)dMij(Fref[refno][ipsi],i,j).real();  
+	      tmpi= (double)dMij(Fimg,i,j).imag() - (double)dMij(Fref[refno][ipsi],i,j).imag();  
+	      diff+=(tmpr*tmpr+tmpi*tmpi)/(2*dMij(sigma2,i,j));
+	    }
+	  }
+	  dVkij(Mweight,itrans,refno,irot)=diff;
+	  if (diff<mindiff2) mindiff2=diff;
+	}
+      }
+    }
+  }
+
+  // Now that we have mindiff2 calculate all weights and maxweight
+  FOR_ALL_MODELS() {
+    refw[refno]=0.;
+    refw_mirror[refno]=0.;
+    FOR_ALL_LIMITED_TRANSLATIONS() {
+      FOR_ALL_FLIPS() {
+	if (iflip<4) fracpdf=alpha_k[refno]*(1.-mirror_fraction[refno]);
+	else fracpdf=alpha_k[refno]*mirror_fraction[refno];
+	FOR_ALL_ROTATIONS() {
+	  irot=iflip*nr_psi+ipsi;
+	  aux=dVkij(Mweight,itrans,refno,irot)-mindiff2;
+	  // next line because of numerical precision of exp-function
+	  if (aux>1000.) weight=0.;
+	  else weight=exp(-aux)*fracpdf;
+	  dVkij(Mweight,itrans,refno,irot)=weight;
+	  if (weight>maxweight) {
+	    maxweight=weight;
+	    opt_refno=refno;
+	    opt_ipsi=ipsi;
+	    opt_iflip=iflip;
+	  }
+	}
+      }
+    }
+  }
+
+  // Now for optimal model and optimal psi get the (non-interpolated!!) origin offsets
+  // (interpolation leads to filtering effects that affect the
+  // high-resolution terms...)
+  Half2Whole(Fimg_flip[zero_trans][opt_iflip],Fimg,dim);
+  Half2Whole(Fref[opt_refno][opt_ipsi],Faux,dim);
+  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg) {
+    dMij(Faux,i,j)=dMij(Fimg,i,j)*conj(dMij(Faux,i,j));
+  }
+  InverseFourierTransform(Faux,Maux);
+  Maux.set_Xmipp_origin();
+  CenterFFT(Maux,true);
+  Maux.max_index(iopty,ioptx);
+  xmax=(double)ioptx;
+  ymax=(double)iopty;
+  // Optimal in-plane transformation parameters
+  opt_xoff=-xmax*DIRECT_MAT_ELEM(F[opt_iflip],0,0)-ymax*DIRECT_MAT_ELEM(F[opt_iflip],0,1);
+  opt_yoff=-xmax*DIRECT_MAT_ELEM(F[opt_iflip],1,0)-ymax*DIRECT_MAT_ELEM(F[opt_iflip],1,1);
+  opt_psi=-psi_step*(opt_iflip*nr_psi+opt_ipsi)-SMALLANGLE;
+
+  // Dont trust too large offsets: they will not contribute to the weighted sums!
+  if ( (opt_xoff*opt_xoff+opt_yoff*opt_yoff)<=(max_shift*max_shift) ) {
+
+    // Determine the sums over all weights 
+    if (!cv_flag || !do_cv) {
+      FOR_ALL_MODELS() {
+	FOR_ALL_LIMITED_TRANSLATIONS() {
+	  FOR_ALL_FLIPS() {
+	    FOR_ALL_ROTATIONS() {
+	      irot=iflip*nr_psi+ipsi;
+	      weight=dVkij(Mweight,itrans,refno,irot);
+	      if (weight>SIGNIFICANT_WEIGHT_LOW*maxweight) {
+		if (iflip<4) refw[refno]+=weight;
+		else refw_mirror[refno]+=weight;
+	      } else dVkij(Mweight,itrans,refno,irot)=0.;
+	    } 
+	  }
+	}
+	sum_refw+=refw[refno]+refw_mirror[refno];
+      }
+      fracweight=maxweight/sum_refw; 
+    } else {
+      FOR_ALL_MODELS() {
+	FOR_ALL_LIMITED_TRANSLATIONS() {
+	  FOR_ALL_FLIPS() {
+	    FOR_ALL_ROTATIONS() {
+	      irot=iflip*nr_psi+ipsi;
+	      weight=dVkij(Mweight,itrans,refno,irot);
+	      if (weight>SIGNIFICANT_WEIGHT_LOW*maxweight) 
+		sum_refw_cv+=weight;
+	      else dVkij(Mweight,itrans,refno,irot)=0.;
+	    }
+	  }
+	}
+      }
+    }
+
+    // Accumulate weighted sums of images, sigma2 and fraction-parameters
+    if (cv_flag) sumw_cv+=1.;
+    else {
+      FOR_ALL_MODELS() {
+	sumw[refno]+=(refw[refno]+refw_mirror[refno])/sum_refw;
+	sumw_mirror[refno]+=refw_mirror[refno]/sum_refw;
+      }
+    }
+    // Acummulate all weighted sums 
+    // and normalize them by sum_refw, such that sum over all weights is one!
+    FOR_ALL_LIMITED_TRANSLATIONS() {
+      FOR_ALL_MODELS() {
+	FOR_ALL_FLIPS() {
+	  FOR_ALL_ROTATIONS() {
+	    irot=iflip*nr_psi+ipsi;
+	    weight=dVkij(Mweight,itrans,refno,irot);
+	    if (weight>0.) {
+	      if (!do_cv) {
+		weight/=sum_refw;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg_flip[itrans][iflip]) {
+		  // Why are the following lines so expensive on some machines?!
+		  tmpr=dMij(Fimg_flip[itrans][iflip],i,j).real()
+		    -dMij(Fref[refno][ipsi],i,j).real();  
+		  tmpi=dMij(Fimg_flip[itrans][iflip],i,j).imag()
+		    -dMij(Fref[refno][ipsi],i,j).imag();  
+		  dMij(Mwsum_sigma2,i,j)+=weight*(tmpr*tmpr+tmpi*tmpi);
+		  dMij(Fwsum_imgs[refno][ipsi],i,j)+=weight*dMij(Fimg_flip[itrans][iflip],i,j);
+		}
+	      } else {
+		if (cv_flag) {
+		  weight/=sum_refw_cv;
+		  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg_flip[itrans][iflip]) {
+		    tmpr=dMij(Fimg_flip[itrans][iflip],i,j).real()
+		      -dMij(Fref[refno][ipsi],i,j).real();  
+		    tmpi=dMij(Fimg_flip[itrans][iflip],i,j).imag()
+		      -dMij(Fref[refno][ipsi],i,j).imag();  
+		    dMij(Mwsum_sigma2,i,j)+=weight*(tmpr*tmpr+tmpi*tmpi);
+		  }
+		} else {
+		  weight/=sum_refw;
+		  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg_flip[itrans][iflip]) {
+		    dMij(Fwsum_imgs[refno][ipsi],i,j)+=weight*dMij(Fimg_flip[itrans][iflip],i,j);
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+
+    // Compute Log Likelihood
+    // 1st term: log(refw_i)
+    // 2nd term: for subtracting mindiff2 is missing
+    // 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
+    if (!cv_flag || !do_cv) {
+      double rr=0.;
+      
+      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg_flip[0][0]) {
+	if (dMij(resol_mask,i,j)) rr+=log(2*PI*dMij(sigma2,i,j)); 
+      }
+      LL+= log(sum_refw) - mindiff2 - rr;
+    }
+
+  }
+
 
 }
 
@@ -845,7 +1255,10 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
 void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, 
 			  double &LL, double &sumcorr, DocFile &DFo, 
 			  vector<matrix2D<double> > &wsum_Mref,
-			  double &wsum_sigma_noise, double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror) _THROW {
+			  double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
+			  double &sumw_cv, double &wsum_sigma_offset, 
+                          vector<double> &sumw, vector<double> &sumw_mirror,
+			  vector<int> &count_defocus) _THROW {
 
 
   ImageXmipp img;
@@ -859,7 +1272,10 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   matrix2D<int> Msignificant(n_ref,nr_psi*nr_flip);
   matrix1D<double> dataline(8), opt_offsets(2);  
   double opt_psi,opt_flip,maxcorr;
-  int c,nn,imgno,opt_refno;
+  double opt_xoff, opt_yoff;
+  int c,nn,imgno,opt_refno,focus;
+  bool cv_flag;
+  SelLine line;
 
   // Generate (FT of) each rotated version of all references 
   rotate_reference(Iref,fast_mode,Mref,Fref);
@@ -877,8 +1293,18 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   Mdzero.set_Xmipp_origin();
   LL=0.;
   wsum_sigma_noise=0.;
+  if (fourier_mode) {
+    count_defocus.clear();
+    count_defocus.resize(nr_focus);
+    Mwsum_sigma2.clear();
+    Mwsum_sigma2.resize(nr_focus);
+    FOR_ALL_DEFOCUS_GROUPS() {
+      Mwsum_sigma2[ifocus].init_zeros((int)(dim/2)+1,dim);
+    } 
+  }
   wsum_sigma_offset=0.;
   sumcorr=0.;
+  sumw_cv=0.;
   FOR_ALL_MODELS() {
     sumw.push_back(0.);
     sumw_mirror.push_back(0.);
@@ -895,6 +1321,10 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   imgno=0;
   SF.go_beginning();
   while ((!SF.eof())) {
+    // For defocus-groups in Fourier-mode
+    line=SF.current();
+    focus=line.get_number()-1;
+
     fn_img=SF.NextImg();
     img.read(fn_img,FALSE,FALSE,FALSE,FALSE);
     img().set_Xmipp_origin();
@@ -904,6 +1334,29 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 
       LSQ_search_model_phi_trans(img(),Fref,max_shift,Msum_imgs,sumw,sumw_mirror,
       				 maxcorr,opt_refno,opt_psi,opt_offsets);
+    } else if (fourier_mode) {
+
+      opt_offsets(0)=offset_x[imgno];
+      opt_offsets(1)=offset_y[imgno];
+      img().self_translate(opt_offsets,WRAP);
+      cv_flag=SFcv.exists(fn_img);
+
+      ML_integrate_FS_model_phi(img(),Fref,Fwsum_imgs,Msigma2[focus],Mwsum_sigma2[focus],
+				sumw,sumw_mirror, 
+				LL,maxcorr,opt_refno,opt_psi,opt_xoff,opt_yoff,sumw_cv,cv_flag);
+
+      if ( (opt_xoff*opt_xoff+opt_yoff*opt_yoff) <= (max_shift*max_shift) ) {
+	count_defocus[focus]++;
+	wsum_sigma_offset+=opt_xoff*opt_xoff+opt_yoff*opt_yoff;
+	offset_x[imgno]+=opt_xoff;
+	offset_y[imgno]+=opt_yoff;
+	// For output in docfile (see below)
+	opt_offsets(0)=offset_x[imgno];
+	opt_offsets(1)=offset_y[imgno];
+      } else {
+	opt_offsets(0)=0.;
+	opt_offsets(1)=0.;
+      }
 
     } else {
 
@@ -947,9 +1400,12 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 
 // Update all model parameters
 void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
-					   double &wsum_sigma_noise, double &wsum_sigma_offset, 
+					   double &wsum_sigma_noise, 
+                                           vector<matrix2D<double> > &Mwsum_sigma2, 
+					   double &sumw_cv, double &wsum_sigma_offset,
 					   vector<double> &sumw, vector<double> &sumw_mirror, 
-					   double &sumcorr, double &sumw_allrefs) {
+					   double &sumcorr, double &sumw_allrefs,
+					   vector<int> &count_defocus) {
 
   // Pre-calculate sumw_allrefs
   sumw_allrefs=0.;
@@ -972,8 +1428,56 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
     }
   }
   if (!fix_sigma_offset) sigma_offset=sqrt(wsum_sigma_offset/(2*sumw_allrefs));
-  if (!fix_sigma_noise)  sigma_noise=sqrt(wsum_sigma_noise/(sumw_allrefs*dim*dim));
-  
+  if (!fix_sigma_noise)  {
+
+    if (fourier_mode) {
+      matrix1D<double> rmean_sigma2;
+      matrix1D<int> center(2),radial_count;
+      matrix2D<complex<double> > Faux, Faux2;
+      matrix2D<double> Maux;
+      double rr;
+      FOR_ALL_DEFOCUS_GROUPS() {
+	// Get Mwsum_sigma2 from half to whole matrix...
+	Faux.resize((int)(dim/2)+1,dim);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux) {
+	  dMij(Faux,i,j)=dMij(Mwsum_sigma2[ifocus],i,j);
+	}
+	Half2Whole(Faux,Faux2,dim);
+	FFT_magnitude(Faux2,Maux);
+	CenterFFT(Maux,true);
+	Maux.set_Xmipp_origin();
+	center.init_zeros();
+	rmean_sigma2.init_zeros();
+	radial_average(Maux,center,rmean_sigma2,radial_count,true);
+
+	// Factor 2 here, because the Gaussian distribution is in the
+	// complex plane, i.e. in 2-D!
+	if (do_cv && nr_focus>1) {
+	  rmean_sigma2/=2*sumw_cv;
+	  cerr <<"bug: no longer valid: cross-validation & multiple defocus groups!"<<endl;
+	  exit(0);
+	} else rmean_sigma2/=(double)2*count_defocus[ifocus];
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(Msigma2[ifocus]) {
+	  rr=sqrt((double)(i*i+j*j));
+	  if (ROUND(rr)>dim/2) rr=(double)dim/2.;
+	  MAT_ELEM(Msigma2[ifocus],i,j)=rmean_sigma2(ROUND(rr));
+	}
+	CenterFFT(Msigma2[ifocus],false);
+	// Correct for even-numbered dimensions half vs whole
+	if (!(dim%2)) {
+	  // Sjors 1aug05??? for (int j=0; j<=XSIZE(Msigma2[ifocus]); j++) {
+	  for (int j=0; j<XSIZE(Msigma2[ifocus]); j++) {
+	    dMij(Msigma2[ifocus],YSIZE(Msigma2[ifocus])/2,j)*=2.;
+	  }
+	  dMij(Msigma2[ifocus],0,XSIZE(Msigma2[ifocus])/2)*=2.;
+	}
+      }
+    } else 
+      sigma_noise=sqrt(wsum_sigma_noise/(sumw_allrefs*dim*dim));
+    
+  }
+
   sumcorr/=sumw_allrefs;
 
 }
@@ -1025,21 +1529,22 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF, 
 			 double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv ) _THROW {
 
-  FileName fn_tmp;
+  FileName fn_tmp,fn_base;
   matrix1D<double> fracline(3);
   string comment;
  
   DF.clear();
   SF.clear();
 
+  fn_base=fn_root;
+  if (iter>=0) {
+    fn_base+="_it";
+    fn_base.compose(fn_base,iter,"");
+  }
+
   // Write out current reference images and fill sel & log-file
   FOR_ALL_MODELS() {
-    fn_tmp=fn_root;
-    if (iter>=0) {
-      fn_tmp+="_it";
-      fn_tmp.compose(fn_tmp,iter,"");
-    }
-    fn_tmp+="_ref";
+    fn_tmp=fn_base+"_ref";
     fn_tmp.compose(fn_tmp,refno+1,"");
     fn_tmp=fn_tmp+".xmp";
     Iref[refno].write(fn_tmp);
@@ -1050,12 +1555,22 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile
     DF.insert_comment(fn_tmp);
     DF.insert_data_line(fracline);
   }
-  // Write out sel & log-file
-  fn_tmp=fn_root;
-  if (iter>=0) {
-      fn_tmp+="_it";
-      fn_tmp.compose(fn_tmp,iter,"sel");
+  if (fourier_mode && !fix_sigma_noise) {
+    ImageXmipp Itmp;
+    FOR_ALL_DEFOCUS_GROUPS() {
+      // Write out (centered) sigma2 image
+      fn_tmp=fn_base+"_sig";
+      if (nr_focus>1) fn_tmp.compose(fn_tmp,ifocus+1,"");
+      fn_tmp+=".xmp";
+      Itmp()=Msigma2[ifocus];
+      CenterFFT(Itmp(),true);
+      MAT_ELEM(Itmp(),0,0)=0.;
+      Itmp.write(fn_tmp);
+    }
   }
+
+  // Write out sel & log-file
+  fn_tmp=fn_base+".sel";
   SF.write(fn_tmp);
 
   DF.go_beginning();
@@ -1069,11 +1584,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile
   DF.insert_comment(comment);
   DF.insert_comment(cline);
   DF.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
-  fn_tmp=fn_root;
-  if (iter>=0) {
-      fn_tmp+="_it";
-      fn_tmp.compose(fn_tmp,iter,"log");
-  } else fn_tmp+=".log";
+  fn_tmp=fn_base+".log";
   DF.write(fn_tmp);
 
 }
