@@ -331,7 +331,33 @@ void BinaryConeMask(matrix3D<int> &mask, double theta, int mode) {
   FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
     double rad=tan(PI*theta/180.)*(double)k;
     if ((double)(i*i+j*j)<rad*rad) VOL_ELEM(mask,k,i,j)=0;
-    else VOL_ELEM(mask,k,i,j)=1;                                                                               if (mode==OUTSIDE_MASK) VOL_ELEM(mask,k,i,j)=1-VOL_ELEM(mask,k,i,j);
+    else VOL_ELEM(mask,k,i,j)=1;
+    if (mode==OUTSIDE_MASK) VOL_ELEM(mask,k,i,j)=1-VOL_ELEM(mask,k,i,j);
+  }
+
+}
+
+void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF, 
+		     matrix2D<double> A) {
+
+  double xp,yp,zp;
+  double tg0,tgF,limx0,limxF;
+  
+  tg0=-tan(PI*(-90.-thetaF)/180.);
+  tgF=-tan(PI*(90.-theta0)/180.);
+
+  FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
+    xp=dMij(A,0,0)*(double)j+dMij(A,0,1)*(double)i+dMij(A,0,2)*(double)k;
+    zp=dMij(A,2,0)*(double)j+dMij(A,2,1)*(double)i+dMij(A,2,2)*(double)k;
+    limx0=tg0*zp;
+    limxF=tgF*zp;
+    if (zp>= 0) {
+      if (xp<=limx0 || xp>=limxF) VOL_ELEM(mask,k,i,j)=1.;
+      else VOL_ELEM(mask,k,i,j)=0.;
+    } else  {
+      if (xp<=limxF || xp>=limx0) VOL_ELEM(mask,k,i,j)=1.;
+      else VOL_ELEM(mask,k,i,j)=0.;
+    }
   }
 
 }
@@ -592,6 +618,15 @@ void Mask_Params::read(int argc, char **argv) _THROW {
       if (R1<0) {mode=INNER_MASK; R1=ABS(R1);}
       else mode=OUTSIDE_MASK;
       type=BINARY_CONE_MASK;
+   // Wedge mask ............................................................
+   } else if (strcmp(argv[i+1],"wedge")==0) {
+      if (i+3>=argc)
+         REPORT_ERROR(3000,"Mask_Params: wedge mask needs two angles");
+      if (!(allowed_data_types & DOUBLE_MASK))
+         REPORT_ERROR(3000,"Mask_Params: binary masks are not allowed");
+      R1=AtoF(argv[i+2]);
+      R2=AtoF(argv[i+3]);
+      type=BINARY_WEDGE_MASK;
    // Crown mask ...........................................................
    } else if (strcmp(argv[i+1],"crown")==0) {
       if (i+3>=argc)
@@ -768,6 +803,9 @@ void Mask_Params::usage() const {
            << "   |-mask cone <theta>       : 3D cone (parallel to Z) \n"
            << "                               if theta > 0 => outside cone\n"
            << "                               if theta < 0 => inside cone\n"
+           << "   |-mask wedge <th0> <thF>  : 3D missing-wedge mask for data \n"
+           << "                               collected between tilting angles \n"
+           << "                               th0 and thF (around the Y-axis) \n"
            << "   |-mask <binary file>      : Read from file\n"   
       ;
    if (allowed_data_types & DOUBLE_MASK)
@@ -881,6 +919,8 @@ void Mask_Params::generate_2Dmask() {
 // Generate 3D mask --------------------------------------------------------
 void Mask_Params::generate_3Dmask() {
    VolumeXmipp V;
+   matrix2D<double> AA(4,4);
+   AA.init_identity();
    switch (type) {
       case NO_MASK:
          imask3D.init_constant(1);
@@ -902,6 +942,9 @@ void Mask_Params::generate_3Dmask() {
          break;
       case BINARY_CONE_MASK:
          BinaryConeMask(imask3D,R1,mode);
+         break;
+      case BINARY_WEDGE_MASK:
+         BinaryWedgeMask(dmask3D,R1,R2,AA);
          break;
       case GAUSSIAN_MASK:
          GaussianMask(dmask3D,sigma,mode,x0,y0,z0);

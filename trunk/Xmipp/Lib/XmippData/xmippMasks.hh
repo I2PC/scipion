@@ -287,6 +287,18 @@ void BinaryFrameMask(matrix3D<int> &mask,
 void BinaryConeMask(matrix3D<int> &mask, 
    double theta, int mode=INNER_MASK);
 
+/* Wedge ................................................................... */
+/** Creates a 3D missing wedge mask. The mask is supposed to be
+    resized and with its logical origin already set. 
+    theta0 and thetaF are the tilting angles (around the Y-axis)
+    wherin between the data is supposed to be collected. In this
+    region the mask will be one, outside (ie in the missing wedge) it
+    will be zero. The mask is centered at (x0,y0,z0), and rotated with
+    respect to euler angle matrix A.
+*/
+void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF, 
+		     matrix2D<double> A);
+
 /* Gaussian ................................................................ */
 /** Creates a 3D gaussian mask for already sized masks.
     The mask is supposed to be resized and with its logical origin already
@@ -441,11 +453,13 @@ public:
 #define RAISED_CROWN_MASK        11
 #define BINARY_DWT_CIRCULAR_MASK 12
 #define BINARY_CONE_MASK     	 13
+#define BINARY_WEDGE_MASK     	 14
 /** Mask Type.
     The only valid types are BINARY_CIRCULAR_MASK,
     BINARY_CROWN_MASK, BINARY_CYLINDER_MASK, BINARY_FRAME_MASK,
     GAUSSIAN_MASK, RAISED_COSINE_MASK, BLACKMAN_MASK, SINC_MASK,
-    SINC_BLACKMAN_MASK, READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK */
+    SINC_BLACKMAN_MASK, READ_MASK, RAISED_CROWN_MASK, 
+    BINARY_CONE_MASK, BINARY_WEDGE_MASK */
     int type;
 
 /** Mode.
@@ -565,7 +579,8 @@ public:
            return INT_MASK;
        else if (type==GAUSSIAN_MASK   || type==RAISED_COSINE_MASK ||
                 type==SINC_MASK       || type==SINC_BLACKMAN_MASK ||
-                type==BLACKMAN_MASK   || type==RAISED_CROWN_MASK)
+                type==BLACKMAN_MASK   || type==RAISED_CROWN_MASK ||
+                type==BINARY_WEDGE_MASK)
            return DOUBLE_MASK;
     }
 
