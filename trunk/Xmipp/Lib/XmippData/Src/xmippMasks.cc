@@ -346,6 +346,7 @@ void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF,
   tg0=-tan(PI*(-90.-thetaF)/180.);
   tgF=-tan(PI*(90.-theta0)/180.);
 
+  A=A.inv();
   FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
     xp=dMij(A,0,0)*(double)j+dMij(A,0,1)*(double)i+dMij(A,0,2)*(double)k;
     zp=dMij(A,2,0)*(double)j+dMij(A,2,1)*(double)i+dMij(A,2,2)*(double)k;
