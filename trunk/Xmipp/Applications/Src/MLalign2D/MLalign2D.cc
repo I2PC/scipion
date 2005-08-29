@@ -33,11 +33,13 @@ int main(int argc, char **argv) {
   double LL,sumw_allrefs,convv,sumcorr;
   bool converged;
   vector<double> conv;
-  double aux,wsum_sigma_noise, wsum_sigma_offset;
+  double aux,wsum_sigma_noise, wsum_sigma_offset,sumw_cv;
   vector<matrix2D<double > > wsum_Mref;
   vector<ImageXmipp> Ireg;
   vector<double> sumw,sumw_mirror;
   matrix2D<double> P_phi,Mr2,Maux;
+  vector<matrix2D<double> > Mwsum_sigma2;
+  vector<int> count_defocus;
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
@@ -56,6 +58,7 @@ int main(int argc, char **argv) {
 	REPORT_ERROR(1,"Please provide -ref or -nref");
       }
     }
+    if (prm.fourier_mode) prm.estimate_initial_sigma2();
     prm.produce_Side_info();
     prm.show();
 
@@ -88,11 +91,15 @@ int main(int argc, char **argv) {
       // Integrate over all images
       prm.ML_sum_over_all_images(prm.SF,prm.Iref, 
 				 LL,sumcorr,DFo, 
-				 wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
+				 wsum_Mref,wsum_sigma_noise,Mwsum_sigma2,
+				 sumw_cv,wsum_sigma_offset,sumw,sumw_mirror,
+				 count_defocus); 
 
       // Update model parameters
-      prm.update_parameters(wsum_Mref,wsum_sigma_noise, wsum_sigma_offset, 
-			    sumw, sumw_mirror, sumcorr, sumw_allrefs);    
+      prm.update_parameters(wsum_Mref,wsum_sigma_noise, Mwsum_sigma2,
+			    sumw_cv, wsum_sigma_offset, 
+			    sumw, sumw_mirror, sumcorr, sumw_allrefs,
+			    count_defocus);    
  
       // Check convergence 
       converged=prm.check_convergence(conv);
