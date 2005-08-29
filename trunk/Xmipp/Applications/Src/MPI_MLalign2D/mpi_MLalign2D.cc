@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
   // For parallelization
   int rank, size, num_img_tot;
 
-  int c,nn,imgno,opt_refno;
-  double LL,sumw_allrefs,convv,sumcorr;
+  int c,nn,imgno,opt_refno,iaux;
+  double LL,sumw_allrefs,convv,sumcorr,sumw_cv;
   bool converged;
   vector<double> conv;
   double aux,wsum_sigma_noise, wsum_sigma_offset;
@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
   vector<ImageXmipp> Ireg;
   vector<double> sumw,sumw_mirror;
   matrix2D<double> P_phi,Mr2,Maux;
+  vector<matrix2D<double> > Mwsum_sigma2;
+  vector<int> count_defocus;
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
@@ -78,6 +80,9 @@ int main(int argc, char **argv) {
 	REPORT_ERROR(1,"Please provide -ref or -nref");
       }
     }
+
+    if (prm.fourier_mode && rank==0) prm.estimate_initial_sigma2();
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // Select only relevant part of selfile for this rank
     prm.SF.mpi_select_part(rank,size,num_img_tot);
@@ -118,8 +123,8 @@ int main(int argc, char **argv) {
 
       // Integrate over all images
       prm.ML_sum_over_all_images(prm.SF,prm.Iref,LL,sumcorr,DFo, 
-				 wsum_Mref,wsum_sigma_noise,
-				 wsum_sigma_offset,sumw,sumw_mirror); 
+				 wsum_Mref,wsum_sigma_noise,Mwsum_sigma2,sumw_cv,
+				 wsum_sigma_offset,sumw,sumw_mirror,count_defocus); 
 
       // Here MPI_allreduce of all wsums,LL and sumcorr !!!
       MPI_Allreduce(&LL,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -130,8 +135,18 @@ int main(int argc, char **argv) {
       wsum_sigma_noise=aux;
       MPI_Allreduce(&wsum_sigma_offset,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
       wsum_sigma_offset=aux;
+      MPI_Allreduce(&sumw_cv,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      sumw_cv=aux;
+      for (int ifocus=0;ifocus<prm.nr_focus;ifocus++) {
+	MPI_Allreduce(MULTIDIM_ARRAY(Mwsum_sigma2[ifocus]),MULTIDIM_ARRAY(Maux),
+		      MULTIDIM_SIZE(Mwsum_sigma2[ifocus]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	Mwsum_sigma2[ifocus]=Maux;
+	MPI_Allreduce(&count_defocus[ifocus],&iaux,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+	count_defocus[ifocus]=iaux;
+      }
       for (int refno=0;refno<prm.n_ref; refno++) { 
-	MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),MULTIDIM_ARRAY(Maux),MULTIDIM_SIZE(wsum_Mref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),MULTIDIM_ARRAY(Maux),
+		      MULTIDIM_SIZE(wsum_Mref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	wsum_Mref[refno]=Maux;
 	MPI_Allreduce(&sumw[refno],&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	sumw[refno]=aux;
@@ -140,8 +155,10 @@ int main(int argc, char **argv) {
       }
 
       // Update model parameters
-      prm.update_parameters(wsum_Mref,wsum_sigma_noise, wsum_sigma_offset, 
-			    sumw, sumw_mirror, sumcorr, sumw_allrefs);    
+      prm.update_parameters(wsum_Mref,wsum_sigma_noise, Mwsum_sigma2,
+			    sumw_cv,wsum_sigma_offset,
+			    sumw,sumw_mirror,sumcorr,sumw_allrefs,
+			    count_defocus);    
 
       // Check convergence 
       converged=prm.check_convergence(conv);
