@@ -137,12 +137,14 @@ int main(int argc, char **argv) {
       wsum_sigma_offset=aux;
       MPI_Allreduce(&sumw_cv,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
       sumw_cv=aux;
-      for (int ifocus=0;ifocus<prm.nr_focus;ifocus++) {
-	MPI_Allreduce(MULTIDIM_ARRAY(Mwsum_sigma2[ifocus]),MULTIDIM_ARRAY(Maux),
-		      MULTIDIM_SIZE(Mwsum_sigma2[ifocus]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-	Mwsum_sigma2[ifocus]=Maux;
-	MPI_Allreduce(&count_defocus[ifocus],&iaux,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-	count_defocus[ifocus]=iaux;
+      if (prm.fourier_mode) {
+	for (int ifocus=0;ifocus<prm.nr_focus;ifocus++) {
+	  MPI_Allreduce(MULTIDIM_ARRAY(Mwsum_sigma2[ifocus]),MULTIDIM_ARRAY(Maux),
+			MULTIDIM_SIZE(Mwsum_sigma2[ifocus]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	  Mwsum_sigma2[ifocus]=Maux;
+	  MPI_Allreduce(&count_defocus[ifocus],&iaux,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+	  count_defocus[ifocus]=iaux;
+	}
       }
       for (int refno=0;refno<prm.n_ref; refno++) { 
 	MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),MULTIDIM_ARRAY(Maux),
