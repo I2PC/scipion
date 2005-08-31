@@ -35,7 +35,7 @@ int main( int argc, char **argv ) {
   int N;
 
   try {
-    fn_in=get_param(argc,argv,"-sel");
+    fn_in=get_param(argc,argv,"-i");
     N=AtoI(get_param(argc,argv,"-n","2"));
     fn_root=get_param(argc,argv,"-o","");
     if (fn_root=="") fn_root=fn_in.without_extension();
@@ -59,7 +59,7 @@ int main( int argc, char **argv ) {
       SFtmp2=SFout.sort_by_filenames();
       SFout=SFtmp2;
       string num="_"+ItoA(i+1);
-      fn_out=fn_root.insert_before_extension(num);
+      fn_out=fn_root+num;
       fn_out+=".sel";
       SFout.write(fn_out);
     }
@@ -71,7 +71,7 @@ int main( int argc, char **argv ) {
                                                                                                           
 void Usage() {
     cout << "Usage: split_selfile [options]\n"
-         << "    -sel <selfile>          : Input selfile\n"
+         << "    -i <selfile>            : Input selfile\n"
          << "  [ -n <int=2> ]            : Number of output selfiles\n"
          << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
          << "                              output will be: rootname_<n>.sel\n"
