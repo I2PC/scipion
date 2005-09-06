@@ -29,6 +29,7 @@
 #include <XmippData/xmippGeometry.hh>
 #include <XmippData/xmippHistograms.hh>
 #include <XmippInterface/xmippSpider.hh>
+#include <XmippInterface/xmippOpenDXang.hh>
 #include <fstream.h>
 
 /* PROTOTYPES -------------------------------------------------------------- */
@@ -38,7 +39,7 @@ void Usage();
 int main (int argc,char *argv[]) {
    string          ang1="rot",ang2="tilt",ang3="psi";
    DocFile         angles;
-   FileName        fn_ang, fn_sel, fn_hist, fn_ps;
+   FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX;
    int             steps;
    int             tell;
    float           R, r, rmax, wmax=-99.e99;
@@ -46,6 +47,7 @@ int main (int argc,char *argv[]) {
    float           tilt_view;
    int             up_down_correction, colw;
    bool            solid_sphere;
+   
 
 // Check the command line ==================================================
    try {
@@ -53,6 +55,7 @@ int main (int argc,char *argv[]) {
       fn_ang=get_param(argc,argv,"-ang","");
       fn_hist=get_param(argc,argv,"-hist","");
       fn_ps=get_param(argc,argv,"-ps","");
+      fn_DX=get_param(argc,argv,"-DX","");
       steps=AtoI(get_param(argc,argv,"-steps","100"));
       tell=check_param(argc,argv,"-show_process");
       R=AtoF(get_param(argc,argv,"-R","60"));
@@ -105,25 +108,46 @@ int main (int argc,char *argv[]) {
      for (int i=0; i<AngleNo; i++) if (angles(i+1,colw)>wmax) wmax=angles(i+1,colw);
    }
 
-// Build vector table ======================================================
+// Build vector tables ======================================================
    #define GET_ANGLES(i) \
        angles.get_angles(i,rot,tilt,psi,ang1,ang2,ang3); \
        if (up_down_correction && ABS(tilt)>90) \
           Euler_up_down(rot,tilt,psi,rot,tilt,psi);
 
    double rot, tilt, psi;
-   vector< matrix1D<double> > v;
+   vector< matrix1D<double> > v,v_ang;
    v.reserve(AngleNo);
+   v_ang.reserve(AngleNo);
    for (int i=0; i<AngleNo; i++) {
        matrix1D<double> aux(3);
+       matrix1D<double> aux_ang(6); 
+       
+       
        GET_ANGLES(i+1);
        Euler_direction(rot, tilt, psi, aux);
        v.push_back(aux);
+        
+       
+       aux_ang=vector_R3(rot,tilt,psi);
+       v_ang.push_back(aux_ang);
+       
    }
+   
+ //Show distribution with OpenDx ==============================================
+ openDXang DX;
+ DX.openDXangFile(fn_DX);
+  
+ for (int i=0; i<AngleNo; i++) {
+             
+	
+       DX.Add_Item(v_ang[i]);
+   }
+ 
 
 // Compute histogram of distances =============================================
    if (fn_hist!="") {
       matrix1D<double> dist;
+        
       #define di VEC_ELEM(dist,i)
       #define dj VEC_ELEM(dist,j)
 
@@ -152,6 +176,8 @@ int main (int argc,char *argv[]) {
       for (int i=0; i<AngleNo; i++) dist_hist.insert_value(di);
       dist_hist.write(fn_hist);
    }
+   
+
    
 // Show distribution as triangles ==========================================
    if (fn_ps!="") {
@@ -261,6 +287,7 @@ void Usage() {
          << "                                      either psi, psi, tilt, tilt,\n"
          << "                                      rot or rot. The default\n"
          << "                                      order is rot, tilt and psi.\n"
+	 << "      [-DX <-DX file out>           : DX file\n"
          << "      [-hist <doc_file>]            : histogram of distances\n"
          << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
          << "      [-show_process]               : show distances.\n"
