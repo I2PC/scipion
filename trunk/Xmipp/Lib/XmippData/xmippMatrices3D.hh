@@ -62,7 +62,7 @@ template <class T>
 
 template <class T>
    void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
-      int Splinedegree, bool inv, bool wrap) _THROW;
+      int Splinedegree, bool inv, bool wrap, T outside=0) _THROW;
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -809,7 +809,8 @@ public:
 
    /** Apply geom with B-spline interpolation. */
    friend void apply_geom_Bspline<>(VT &V2, matrix2D<double> A,
-       const VT &V1, int Splinedegree, bool inv, bool wrap);
+       const VT &V1, int Splinedegree, bool inv, bool wrap, 
+       T outside);
 
    /** Self apply geom.
        As apply geometry, but the result is kept in this object */
@@ -818,8 +819,8 @@ public:
 
    /** Self apply geom Bspline. */
    void self_apply_geom_Bspline(matrix2D<double> A, int SplineDegree,
-      bool inv, bool wrap)
-      {VT aux; apply_geom_Bspline(aux, A,*this,SplineDegree,inv,wrap);
+      bool inv, bool wrap, T outside=0)
+      {VT aux; apply_geom_Bspline(aux, A,*this,SplineDegree,inv,wrap,outside);
           *this=aux;}
 
    /** Rotate a volume around system axis.
@@ -833,9 +834,9 @@ public:
 
    /** Rotate a volume arounf system axis (BSpline). */
    void rotate_Bspline(int Splinedegree, double ang, char axis, VT &result,
-      bool wrap=DONT_WRAP) const
+      bool wrap=DONT_WRAP, T outside=0) const
       {matrix2D<double> temp=rot3D_matrix(ang, axis);
-       apply_geom_Bspline(result,temp,*this,IS_NOT_INV,wrap);}
+       apply_geom_Bspline(result,temp,*this,IS_NOT_INV,wrap,outside);}
 
    /** Rotate a volume around system axis, return result.*/
    VT rotate(double ang, char axis, bool wrap=DONT_WRAP) const
@@ -867,9 +868,10 @@ public:
 
    /** Rotate a volume around any axis (Bspline).*/
    void rotate_Bspline(int Splinedegree, double ang,
-      const matrix1D<double> &axis, VT &result, bool wrap=DONT_WRAP) const
+      const matrix1D<double> &axis, VT &result, 
+      bool wrap=DONT_WRAP, T outside=0) const
       {matrix2D<double> temp=rot3D_matrix(ang,axis);
-       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap,outside);}
 
    /** Rotate a volume around any axis, return result. */
    VT rotate(double ang, const matrix1D<double> v, bool wrap=DONT_WRAP) const

@@ -687,7 +687,7 @@ template <class T>
 //#define DEBUG
 template <class T>
    void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
-      int Splinedegree, bool inv, bool wrap) _THROW {
+      int Splinedegree, bool inv, bool wrap, T outside) _THROW {
    int m1, n1, o1, m2, n2, o2;
    double x, y, z, xp, yp, zp;
    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
@@ -797,7 +797,7 @@ template <class T>
             if (interp) {
                dVkij(V2,k,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
 	          xp,yp,zp,Splinedegree);
-            } else dVkij(V2,k,i,j) = 0.;
+            } else dVkij(V2,k,i,j) = outside;
 
             // Compute new point inside input image
             xp += dMij(A,0,0);
@@ -811,7 +811,7 @@ template <class T>
 template <>
    void apply_geom_Bspline(matrix3D< complex<double> > &M2,
       matrix2D<double> A, const matrix3D< complex<double> > &M1,
-   int Splinedegree, bool inv, bool wrap) _THROW {
+   int Splinedegree, bool inv, bool wrap, complex<double> outside) _THROW {
    REPORT_ERROR(1,"apply_geom_Bspline: Not yet implemented for complex matrices\n");
 }
 
