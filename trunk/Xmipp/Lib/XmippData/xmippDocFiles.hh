@@ -328,8 +328,14 @@ public:
        the pointer to the next data line and return 1. Otherwise,
        return 0
        \\Ex: if (DF.search_comment(fn_img)) rot=DF(0); */
-       int search_comment(string comment);
+  int search_comment(string comment);
+
    
+  /**  For NewXmipp-type Docfiles: extract the selfile corresponding
+       to the image names in the comments 
+       \\Ex: DF.get_selfile(SF); */
+  void get_selfile(SelFile &SF) _THROW;
+
    /** Move "pointer" to a certain line.
        This function searches for the line with the given key, and
        locate the current line "pointer" pointing to that line. If

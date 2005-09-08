@@ -389,6 +389,24 @@ int DocFile::search_comment(string comment) {
   return 0;
 }
 
+/* For NewXmipp-style docfiles: get the corresponding selfile -------------- */
+void DocFile::get_selfile(SelFile &SF) _THROW {
+  go_beginning();
+  if ((*current_line).Is_comment()) 
+    if (strstr(((*current_line).get_text()).c_str(),"Headerinfo")==NULL) 
+      REPORT_ERROR(1605,"DocFile::get_selfile: Docfile is of non-NewXmipp type!");
+  SF.clear();
+  next();
+  FileName fn_img;
+  while (!eof()) {
+    if ((*current_line).Is_comment()) {
+      fn_img=(*current_line).get_text();
+      SF.insert(fn_img.without(" ; "));
+    }
+    next();
+  }
+}
+
 /* Locate ------------------------------------------------------------------ */
 // It returns a pointer to the next element if the key is not inside
 void DocFile::locate(int _key) {
