@@ -169,7 +169,7 @@ void SelFile::clean() {
          (*current).label==SelLine::DISCARDED) {
          temp=current; temp++;
          text_line.erase(current);
-         current=temp;
+         current=temp-1;
       } else current++;
    }
    current_line=text_line.begin();
