@@ -238,6 +238,7 @@ template <class T>
 }
 
 // Special case for complex numbers
+template <>
 complex<double> matrix3D< complex<double> >::interpolated_elem(
    double x, double y, double z, complex<double> outside_value) {
     int x0 = FLOOR(x); double fx = x - x0; int x1=x0+1;
@@ -301,18 +302,36 @@ template <class T>
 		     switch (SplineDegree) {
 			case 2: xsum += Coeff * Bspline02(xminusl); break; 
                 	case 3: xsum += Coeff * Bspline03(xminusl); break;
+                	case 4: xsum += Coeff * Bspline04(xminusl); break;
+                	case 5: xsum += Coeff * Bspline05(xminusl); break;
+                	case 6: xsum += Coeff * Bspline06(xminusl); break;
+                	case 7: xsum += Coeff * Bspline07(xminusl); break;
+                	case 8: xsum += Coeff * Bspline08(xminusl); break;
+                	case 9: xsum += Coeff * Bspline09(xminusl); break;
 		     }
         	 }
         	 double yminusm=y-(double)m;
 		 switch (SplineDegree) {
-        	    case 2: yxsum += xsum * Bspline03(yminusm); break;
+        	    case 2: yxsum += xsum * Bspline02(yminusm); break;
         	    case 3: yxsum += xsum * Bspline03(yminusm); break;
+        	    case 4: yxsum += xsum * Bspline04(yminusm); break;
+        	    case 5: yxsum += xsum * Bspline05(yminusm); break;
+        	    case 6: yxsum += xsum * Bspline06(yminusm); break;
+        	    case 7: yxsum += xsum * Bspline07(yminusm); break;
+        	    case 8: yxsum += xsum * Bspline08(yminusm); break;
+        	    case 9: yxsum += xsum * Bspline09(yminusm); break;
 		 }
               }
            double zminusn=z-(double)n;
 	   switch (SplineDegree) {
-              case 2: zyxsum += yxsum * Bspline03(zminusn); break;
+              case 2: zyxsum += yxsum * Bspline02(zminusn); break;
               case 3: zyxsum += yxsum * Bspline03(zminusn); break;
+              case 4: zyxsum += yxsum * Bspline04(zminusn); break;
+              case 5: zyxsum += yxsum * Bspline05(zminusn); break;
+              case 6: zyxsum += yxsum * Bspline06(zminusn); break;
+              case 7: zyxsum += yxsum * Bspline07(zminusn); break;
+              case 8: zyxsum += yxsum * Bspline08(zminusn); break;
+              case 9: zyxsum += yxsum * Bspline09(zminusn); break;
            }
       }
     return (T)zyxsum;
@@ -873,7 +892,7 @@ template <class T>
    ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(coeffs),
        XSIZE(*this), YSIZE(*this), ZSIZE(*this),
        CardinalSpline, BasicSpline, SplineDegree,
-       FiniteCoefficientSupport, DBL_EPSILON, &Status);
+       MirrorOffBounds, DBL_EPSILON, &Status);
    if (Status)
       REPORT_ERROR(1,"matrix3D::produce_spline_coeffs: Error");
 }
@@ -1126,6 +1145,7 @@ template <class T>
       a.isCorner(r);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,0,0,1,1,1);
       cut_to_common_size(a,a);
    
@@ -1177,6 +1197,7 @@ void instantiate_complex_matrix3D () {
       matrix1D<int> pixel(3);	  a.isBorder(pixel);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,0,0,1,1,1);
       cut_to_common_size(a,a);
    
