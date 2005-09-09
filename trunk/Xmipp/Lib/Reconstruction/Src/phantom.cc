@@ -155,6 +155,25 @@ Cone & Cone::operator = (const Cone &F) {
 }
 
 /* ------------------------------------------------------------------------- */
+/* Rotation                                                                  */
+/* ------------------------------------------------------------------------- */
+void Feature::rotate_center(const matrix2D<double> &E) {
+   Center=E*Center;
+}
+
+void Feature::rotate(const matrix2D<double> &E) {
+   rotate_center(E);
+}
+
+void Oriented_Feature::rotate(const matrix2D<double> &E) {
+   rotate_center(E);
+   prepare();
+   euler=euler*E;
+   eulert=E.transpose()*eulert;
+   Euler_matrix2angles(euler,rot,tilt,psi);
+}
+
+/* ------------------------------------------------------------------------- */
 /* I/O functions                                                             */
 /* ------------------------------------------------------------------------- */
 /* Read common part of features -------------------------------------------- */
@@ -1709,6 +1728,11 @@ void Phantom::sketch_in(Volume *V, int clean, double colour) {
 /* Shift a phantom --------------------------------------------------------- */
 void Phantom::shift(double shiftX, double shiftY, double shiftZ) {
    for (int i=0; i<VF.size(); i++) VF[i]->shift(shiftX,shiftY,shiftZ);
+}
+
+/* Rotate a phantom -------------------------------------------------------- */
+void Phantom::rotate(const matrix2D<double> &E) {
+   for (int i=0; i<VF.size(); i++) VF[i]->rotate(E);
 }
 
 /* Apply geometrical transformatio to a phantom ---------------------------- */

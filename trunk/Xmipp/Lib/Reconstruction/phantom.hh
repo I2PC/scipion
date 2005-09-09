@@ -127,6 +127,15 @@ public:
 /// Assignment
     Feature & operator = (const Feature &F);
 
+/** Rotate the whole feature.
+    Rotate this feature using a rotation matrix. The center as well as
+    the feature itself is rotated. */
+    virtual void rotate(const matrix2D<double> &E);
+    
+/** Rotate only the center.
+    Rotate the center of this feature only around the phantom center*/
+    virtual void rotate_center(const matrix2D<double> &E);
+
 /* Inside ------------------------------------------------------------------ */
 /**@name Inside */
 //@{
@@ -428,6 +437,11 @@ public:
 
 /// Assigment
    Oriented_Feature & operator = (const Oriented_Feature & OF);
+
+/** Rotate.
+    Rotate this feature. The center as well as the feature itself are
+    rotated. */
+    virtual void rotate(const matrix2D<double> &E);
 };
 
 /* SPHERES ================================================================= */
@@ -1353,6 +1367,10 @@ public:
     Shift all features in the phantom a given amount of voxels. See
     \Ref{Feature::shift}. */
     void shift(double shiftX, double shiftY, double shiftZ);
+
+/** Rotate.
+    Rotate a phantom after a given 3D rotation. */
+    void rotate(const matrix2D<double> &E);
 
 /** Apply a general geometric transformation.
     The transformation must be defined by a 4x4 matrix that can be
