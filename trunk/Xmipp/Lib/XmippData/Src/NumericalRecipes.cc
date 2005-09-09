@@ -1970,7 +1970,7 @@ typedef doublereal E_f;	/* real function with -R not specified */
 
 /* Common Block Declarations */
 
-struct {
+struct Tcmache {
     doublereal eps;
 } cmache_;
 
@@ -3803,21 +3803,21 @@ struct _violation {    /* SIP      */
 double 	bgbnd,tolfea;
 int  nstop,maxit;
 
-struct {
+struct Tglob_info {
 	 int nnineq, M, ncallg, ncallf, mode, modec;
 	 int tot_actf_sip,tot_actg_sip,nfsip,ncsipl,ncsipn; /* SIP */
 } glob_info;
 
-struct {
+struct Tglob_prnt {
 	 int iprint,info,ipd,iter,initvl,iter_mod;
 	 FILE *io;
 } glob_prnt;
 
-struct {
+struct Tglob_grd {
 	 double epsmac,rteps,udelta,valnom;
 } glob_grd;
 
-struct {
+struct Tglob_log{
 	 int dlfeas,local,update,first,rhol_is1,d0_is0,get_ne_mult;
 } glob_log;
 
