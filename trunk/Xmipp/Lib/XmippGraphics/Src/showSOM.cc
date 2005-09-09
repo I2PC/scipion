@@ -122,7 +122,6 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) _THROW {
     
     // Read codevectors
     if (exists(fn_class)) {
-cout << "1 fn_class" << endl;    
        ifstream fh_class(fn_class.c_str());
        if (fh_class) {
       	  string line, fn;
