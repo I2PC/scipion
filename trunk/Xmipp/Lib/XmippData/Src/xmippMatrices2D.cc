@@ -280,6 +280,7 @@ template <class T>
 }
 
 // Special case for complex numbers
+template <>
 complex<double> matrix2D< complex<double> >::interpolated_elem(
    double x, double y, complex<double> outside_value) {
     int x0 = FLOOR(x); double fx = x - x0; int x1 = x0 + 1;
@@ -322,12 +323,24 @@ template <class T>
 	    switch (SplineDegree) {
 	       case 2: rows += Coeff * Bspline02(xminusl); break; 
                case 3: rows += Coeff * Bspline03(xminusl); break;
+               case 4: rows += Coeff * Bspline04(xminusl); break;
+               case 5: rows += Coeff * Bspline05(xminusl); break;
+               case 6: rows += Coeff * Bspline06(xminusl); break;
+               case 7: rows += Coeff * Bspline07(xminusl); break;
+               case 8: rows += Coeff * Bspline08(xminusl); break;
+               case 9: rows += Coeff * Bspline09(xminusl); break;
 	    }
         }
         double yminusm=y-(double)m;
 	switch (SplineDegree) {
-           case 2: columns += rows * Bspline03(yminusm); break;
+           case 2: columns += rows * Bspline02(yminusm); break;
            case 3: columns += rows * Bspline03(yminusm); break;
+           case 4: columns += rows * Bspline04(yminusm); break;
+           case 5: columns += rows * Bspline05(yminusm); break;
+           case 6: columns += rows * Bspline06(yminusm); break;
+           case 7: columns += rows * Bspline07(yminusm); break;
+           case 8: columns += rows * Bspline08(yminusm); break;
+           case 9: columns += rows * Bspline09(yminusm); break;
 	}
     }
     return (T)columns;
@@ -565,7 +578,7 @@ double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
 }
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
-double solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
+void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
    matrix1D<double> &result) _THROW {
    matrix2D<double> Ap=A;
    matrix1D<double> p(XSIZE(A));
@@ -1043,6 +1056,7 @@ template <class T>
       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,WRAP);
    }
 
+template <>
 void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
    int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
    matrix2D<double> re, im, scre, scim;
@@ -1142,7 +1156,7 @@ template <class T>
    ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(coeffs),
        XSIZE(*this), YSIZE(*this), 1,
        CardinalSpline, BasicSpline, SplineDegree,
-       FiniteCoefficientSupport, DBL_EPSILON, &Status);
+       MirrorOffBounds, DBL_EPSILON, &Status);
    if (Status)
       REPORT_ERROR(1,"matrix2D::produce_spline_coeffs: Error");
 }
@@ -1231,6 +1245,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsDiagonal() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
@@ -1248,6 +1263,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsScalar() const
    {if (!IsDiagonal()) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
@@ -1266,6 +1282,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsSymmetric() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=0; i<YSIZE(*this); i++)
@@ -1286,6 +1303,7 @@ template <class T>
 
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsSkewSymmetric() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=0; i<YSIZE(*this); i++)
@@ -1305,6 +1323,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsUpperTriangular() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
@@ -1324,6 +1343,7 @@ template <class T>
        return TRUE;}
 
 // Special case for complex matrices
+template <>
 bool matrix2D< complex<double> >::IsLowerTriangular() const
    {if (XSIZE(*this)!=YSIZE(*this)) return FALSE;
     for (int i=1; i<YSIZE(*this); i++)
@@ -1878,6 +1898,7 @@ template <class T>
       a.isCorner(r);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,0,1,1);
       cut_to_common_size(a,a);
    
@@ -1952,6 +1973,7 @@ void instantiate_complex_matrix () {
       a.isCorner(r);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,0,1,1);
       cut_to_common_size(a,a);
    
