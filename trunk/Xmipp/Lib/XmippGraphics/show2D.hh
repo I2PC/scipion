@@ -56,6 +56,12 @@ class ImageViewer : public QWidget
 {
     Q_OBJECT
 public:
+    typedef enum {
+       Normal_mode,
+       PSD_mode,
+       CTF_mode
+    } TLoadMode;
+
     /** Empty constructor. */
     ImageViewer( const char *name=0, bool _check_file_change=false);
     
@@ -75,22 +81,23 @@ public:
 	The gray limits are used for common normalization. Set them to 0
 	if you don't want to use this option.*/
     bool loadImage( const char *fileName,
-       double _minGray=0, double _maxGray=0 );
+       double _minGray=0, double _maxGray=0,
+       TLoadMode load_mode=ImageViewer::Normal_mode );
     
-    /** Set image from matrix */
-    void setImage( const matrix2D<double> &img);
+    /** Set this image as a Fourier image */
+    void set_Fourier_flag() {isFourierImage=true;}
 
     /** Flag whether or not to apply header transformation **/ 
-    bool        apply_geo;
+    bool apply_geo;
  
 protected:
-    void	paintEvent( QPaintEvent * );
+    virtual void paintEvent( QPaintEvent * );
     void	resizeEvent( QResizeEvent * );
     void	mousePressEvent( QMouseEvent * );
     void	mouseReleaseEvent( QMouseEvent * );
     void	mouseMoveEvent( QMouseEvent * );
     void 	keyPressEvent( QKeyEvent* );
-private:
+protected:
     void	scale();
     int		alloc_context;
     bool	convertEvent( QMouseEvent* e, int& x, int& y );
@@ -113,6 +120,7 @@ private:
 					// 4 abs(z)^2
 					// 5 phase(z)
     bool        isFourierImage;         // True if the image is in Fourier
+    TLoadMode   load_mode;
     time_t      modification_time;      // of the file
     QPopupMenu *menubar;
     QPopupMenu *file;
@@ -122,25 +130,26 @@ private:
     QPrinter   *printer;    
     QLabel     *status;
     QTimer     *timer;
-    int 	ss, si, pi, ravg, sfft;
+    int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
     void	Init();
-    bool 	xmipp2Qt(Image& _image);
+    bool 	xmipp2Qt(Image& _image, bool treat_differently_left_right=false);
     bool 	Qt2xmipp(QImage &_image);
     bool 	showImage();
     void 	generateFFTImage(matrix2D<double> &out);
     void	updateStatus();
     bool 	reconvertImage();
+    void        refineProfileLine();
+    void        drawLine(int x1, int y1, int x2, int y2);
     int		pickx, picky;
-    int		clickx, clicky;
     bool	may_be_other;
     static 	ImageViewer* other;
     bool 	down;
     int 	xi, yi, xf, yf;
-    int 	xir, yir, xfr, yfr, ox, oy; 
+    int 	xir, yir, xfr, yfr, old_xfr, old_yfr; 
     float       spacing;    
     QMultiLineEdit *ed1;
 
-private slots:
+protected slots:
     void	newWindow();
     void	openFile();
     void	saveImage(int);
@@ -148,6 +157,7 @@ private slots:
     void	doOption(int);
     void 	printIt();
     void 	set_spacing(float _spacing);
+    void 	set_profile_line(vector<float> prm);
     void 	set_fft_show_mode(int _fft_show_mode);
     void        about();
     void        aboutXmipp();

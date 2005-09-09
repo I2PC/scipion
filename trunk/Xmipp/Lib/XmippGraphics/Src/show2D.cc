@@ -27,6 +27,7 @@
 #include "../show2D.hh"
 #include "../showTools.hh"
 #include <XmippData/xmippFuncs.hh>
+#include <XmippData/xmippHistograms.hh>
 #include <XmippInterface/xmippVTK.hh>
 #include <qmenubar.h>
 #include <qfiledialog.h>
@@ -50,7 +51,6 @@ void ImageViewer::Init()
     fft_show_mode=0;
    
     pickx = -1;
-    clickx = -1;
     alloc_context = 0;
     down = false;
     spacing = 1;
@@ -71,7 +71,14 @@ void ImageViewer::Init()
     menubar->insertItem( "&Options", options );
     ss = options->insertItem( "Set Spacing" );
     ravg = options->insertItem( "Radial average" );
+    line_setup = options->insertItem ( "Line setup" ); 
+    profile = options->insertItem( "Profile" );
     sfft = options->insertItem( "Set FFT show mode" );
+    options->setItemEnabled(sfft,false);
+
+    // Add CTF actions
+    editctfmodel=options->insertItem( "Edit CTF model");
+    options->setItemEnabled(editctfmodel,false);
 
     menubar->insertSeparator();
 
@@ -82,7 +89,6 @@ void ImageViewer::Init()
     help->insertSeparator();
     help->insertItem( "Help!", this, SLOT(giveHelp()));
 
-
     menubar->insertSeparator();
     menubar->insertItem( "Quit", this,  SLOT(close()));
 
@@ -92,6 +98,7 @@ void ImageViewer::Init()
     status->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
     status->setFixedHeight( fontMetrics().height() + 4 );
 
+    xi=yi=xf=yf=0;
     setMouseTracking( TRUE );
     
     if (check_file_change) {
@@ -111,6 +118,7 @@ ImageViewer::ImageViewer( const char *name, bool _check_file_change):
     check_file_change=_check_file_change;
     apply_geo=true;
     isFourierImage=false;
+    load_mode=ImageViewer::Normal_mode;
     Init();
 }
 
@@ -124,6 +132,7 @@ ImageViewer::ImageViewer( QImage *_image, const char *name)
     check_file_change=false;
     apply_geo=true;
     isFourierImage=false;
+    load_mode=ImageViewer::Normal_mode;
     Init();
     filename = name;
     if (Qt2xmipp(*_image)) showImage();
@@ -139,6 +148,7 @@ ImageViewer::ImageViewer( Image *_image, const char *name)
     check_file_change=false;
     apply_geo=true;
     isFourierImage=false;
+    load_mode=ImageViewer::Normal_mode;
     Init();
     filename = name;
     if (xmipp2Qt((Image&) *_image)) showImage();
@@ -154,6 +164,7 @@ ImageViewer::ImageViewer( FourierImageXmipp *_FFTimage, const char *name)
     check_file_change=false;
     apply_geo=true;
     isFourierImage=true;
+    load_mode=ImageViewer::Normal_mode;
     Init();
     filename = name;
     xmippImageFourier=(*_FFTimage)();
@@ -227,44 +238,99 @@ ImageViewer::~ImageViewer()
 void ImageViewer::doOption(int item)
 {
     if (item == ss) {
-      float min= 0.1;
-      float max= 10.0;        
-      ScrollParam* param_window;	
-      param_window = new ScrollParam(min,max, spacing, "Set spacing", 
-         0, "new window", WDestructiveClose);
-      connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
-      param_window->setFixedSize(250,200);
-      param_window->show();
+       ScrollParam* param_window;	
+       param_window = new ScrollParam(0.1, 10, spacing, "Set spacing", "Spacing",
+          0, "new window", WDestructiveClose);
+       connect( param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)) );
+       param_window->setFixedSize(250,150);
+       param_window->show();
     } else if (item == sfft) {
-      ExclusiveParam* param_window;	
-      vector<string> list_values;
-      list_values.push_back("10*log10(abs(z)^2)");
-      list_values.push_back("real(z)");
-      list_values.push_back("imag(z)");
-      list_values.push_back("abs(z)");
-      list_values.push_back("abs(z)^2");
-      list_values.push_back("phase(z)");
+       ExclusiveParam* param_window;	
+       vector<string> list_values;
+       list_values.push_back("10*log10(abs(z)^2)");
+       list_values.push_back("real(z)");
+       list_values.push_back("imag(z)");
+       list_values.push_back("abs(z)");
+       list_values.push_back("abs(z)^2");
+       list_values.push_back("phase(z)");
 
-      param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode", 
-         0, "new window", WDestructiveClose);
-      connect( param_window, SIGNAL(new_value(int)), this, SLOT(set_fft_show_mode(int)) );
-      param_window->setFixedSize(250,200);
-      param_window->show();
+       param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode", 
+          0, "new window", WDestructiveClose);
+       connect( param_window, SIGNAL(new_value(int)), this, SLOT(set_fft_show_mode(int)) );
+       param_window->setFixedSize(250,200);
+       param_window->show();
     } else if (item == ravg) {
-      matrix1D<double> radial_profile;
-      matrix1D<int> center_of_rot(2), radial_count;
-      radial_average(xmippImage(),center_of_rot,radial_profile,radial_count);
-      radial_profile.write("PPP.txt");
-      ofstream fh_gplot;
-      fh_gplot.open("PPP.gpl");
-      if (!fh_gplot)
-         REPORT_ERROR(1,"ImageViewer::doOption: Cannot open PPP.gpl for output");
-      fh_gplot << "set xlabel \"Radius\"\n";
-      fh_gplot << "plot \"PPP.txt\" title \"Radial average\" w l\n";
-      fh_gplot << "pause 300 \"\"\n";
-      fh_gplot.close();
-      system("(gnuplot PPP.gpl; rm PPP.txt PPP.gpl) &");
+       matrix1D<double> radial_profile;
+       matrix1D<int> center_of_rot(2), radial_count;
+       radial_average(xmippImage(),center_of_rot,radial_profile,radial_count);
+       radial_profile.show_with_gnuplot("Radius","Radial average");
+       radial_profile.edit();
+    } else if (item == line_setup) {
+       refineProfileLine();
+    } else if (item == profile) {
+       matrix1D<double> profile;
+       xmippImage().profile(
+          xi+STARTINGX(xmippImage()),yi+STARTINGY(xmippImage()),
+          xf+STARTINGX(xmippImage()),yf+STARTINGY(xmippImage()),100,profile);
+       profile.show_with_gnuplot("Length (%)","Profile");
+       profile.edit();
+    } else if (item == editctfmodel) {
+       FileName fn_param=((FileName)filename).without_extension()+".ctfparam";
+       string command=(string)"xmipp_edit -i "+fn_param+" &";
+       cout << command << endl;
+       system(command.c_str());
     }
+}
+
+/* Refine profile line ----------------------------------------------------- */
+void ImageViewer::refineProfileLine() {
+   vector<float> min, max;
+   min.push_back(0); max.push_back(XSIZE(xmippImage())-1);
+   min.push_back(0); max.push_back(YSIZE(xmippImage())-1);
+   min.push_back(0); max.push_back(XSIZE(xmippImage())-1);
+   min.push_back(0); max.push_back(YSIZE(xmippImage())-1);
+
+   vector<float> initial_value;
+      initial_value.push_back(xi); initial_value.push_back(yi);
+      initial_value.push_back(xf); initial_value.push_back(yf);
+   vector<char *> prm_name;
+      prm_name.push_back("X initial"); prm_name.push_back("Y initial");
+      prm_name.push_back("X final");   prm_name.push_back("Y final");
+
+   ScrollParam* param_window = new ScrollParam(min,max,initial_value,prm_name,
+      "Setup profile line", 0, "new window", WDestructiveClose,0);
+
+   // Connect its output to my input (set_spacing)
+   connect( param_window, SIGNAL(new_value(vector<float>)),
+           this,          SLOT(set_profile_line(vector<float>)) );
+
+   // Show
+   param_window->setFixedSize(200,300);
+   param_window->show();
+   
+   // Repaint and draw the old line
+   repaint();
+   drawLine(xir,yir,xfr,yfr);
+}
+
+void ImageViewer::set_profile_line(vector<float> prm) {
+   xi=(int)prm[0];
+   yi=(int)prm[1];
+   xf=(int)prm[2];
+   yf=(int)prm[3];
+   
+   // Remove current drawn line
+   drawLine(xir,yir,xfr,yfr);
+   
+   // Convert coordinates to real coordinates
+   int h = height() - status->height();
+   xir=ROUND((double) xi*width()/image.width());
+   yir=ROUND((double) yi*h      /image.height());
+   xfr=ROUND((double) xf*width()/image.width());
+   yfr=ROUND((double) yf*h      /image.height());
+   
+   // Draw the new line
+   drawLine(xir,yir,xfr,yfr);
 }
 
 /****************************************************/
@@ -371,7 +437,6 @@ bool ImageViewer::showImage()
     bool ok = FALSE;
     QApplication::setOverrideCursor( waitCursor ); // this might take time
     pickx = -1;
-    clickx = -1;
     ok = reconvertImage();
     if ( ok ) {     
 	setCaption( filename );			// set window caption
@@ -384,7 +449,13 @@ bool ImageViewer::showImage()
     	    int multiply = ( reasonable_width + w - 1 ) / w;
     	    w *= multiply;
     	    h *= multiply;
-    	}
+    	} else if (w>900 || h>650) {
+           double suggested_X=MIN(w,900.0);
+           double suggested_Y=MIN(h,650.0);
+           double scale=MIN(suggested_X/w,suggested_Y/h);
+           w=ROUND(scale*w);
+           h=ROUND(scale*h);
+        }
 
     	h += status->height();
     	resize( w, h ); 			    // we resize to fit image
@@ -401,7 +472,7 @@ bool ImageViewer::showImage()
 
 /*****************************************/
 
-bool ImageViewer::xmipp2Qt(Image& _image )
+bool ImageViewer::xmipp2Qt(Image& _image, bool treat_differently_left_right )
 {
     bool ok = FALSE;
 		
@@ -409,9 +480,10 @@ bool ImageViewer::xmipp2Qt(Image& _image )
       xmippImage = _image;
       // Take the one in showTools
       if (minGray==0 && maxGray==0)
-	 ::xmipp2Qt(_image,image); 
+	 ::xmipp2Qt(_image,image,0,255,0,0,treat_differently_left_right); 
       else
-	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray);
+	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray,
+            treat_differently_left_right);
       xmippFlag = 0;	 	// Sets flag = Xmipp image.
       ok = TRUE; 
     } catch (Xmipp_error) {
@@ -467,12 +539,14 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
 */
 
 bool ImageViewer::loadImage( const char *fileName,
-   double _minGray, double _maxGray ) 
+   double _minGray, double _maxGray, TLoadMode _load_mode ) 
 {
     filename = fileName;
+    load_mode=_load_mode;
     bool imagic=((string)(filename)).find("imagic:")==0;
     bool ok = FALSE;
     static bool message_shown=false;
+    bool treat_separately_left_right=false;
     if ( filename ) {
 	
 	// try to read image from standard format.	
@@ -489,13 +563,20 @@ bool ImageViewer::loadImage( const char *fileName,
 	       if (!p) REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
                tmpImage() = (*p)();
                delete p;
-	       options->setItemEnabled(sfft,false);
             } else if (Is_ImageXmipp(filename)) {
                isFourierImage=false;
                ImageXmipp p;
                p.read((FileName)filename,FALSE,FALSE,apply_geo,FALSE);
+               if (load_mode==ImageViewer::PSD_mode) {
+                  // It is only the ARMA model
+                  xmipp2PSD(p(),p());
+               } else if (load_mode==ImageViewer::CTF_mode) {
+                  // It is ARMA and CTF together
+                  xmipp2CTF(p(),p());
+                  treat_separately_left_right=true;
+                  options->setItemEnabled(editctfmodel,true);
+               }
                tmpImage()=p();
-	       options->setItemEnabled(sfft,false);
             } else if (Is_FourierImageXmipp(filename)) {
                isFourierImage=true;
 	       FourierImageXmipp If; If.read(filename);
@@ -504,10 +585,11 @@ bool ImageViewer::loadImage( const char *fileName,
 	       generateFFTImage(tmpImage());
 	       options->setItemEnabled(sfft,true);
 	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
+            
 	    tmpImage().set_Xmipp_origin();
 	    minGray=_minGray;
 	    maxGray=_maxGray;
-	    ok = xmipp2Qt(tmpImage);
+	    ok = xmipp2Qt(tmpImage,treat_separately_left_right);
 	  } catch (Xmipp_error) {
 	    ok = FALSE;
 	    if (!message_shown) {
@@ -532,12 +614,6 @@ bool ImageViewer::loadImage( const char *fileName,
     }
     
     return ok;
-}
-
-/*****************************************/
-void ImageViewer::setImage( const matrix2D<double> &img ) {
-    xmippImage()=img;
-    showImage();
 }
 
 /*****************************************/
@@ -626,17 +702,14 @@ bool ImageViewer::convertEvent( QMouseEvent* e, int& x, int& y)
 {
     if ( pm.size() != QSize( 0, 0 ) ) {
 	int h = height() - status->height();
-	int nx = e->x() * image.width() / width();
-	int ny = (e->y()) * image.height() / h;
-	if (nx != x || ny != y ) {
-	    x = nx;
-	    y = ny;
-	    return TRUE;
-	}
+	int nx = ROUND((double)e->x() * image.width()  / width());
+	int ny = ROUND((double)e->y() * image.height() / h);
+        x = CLIP(nx,0,image.width());
+        y = CLIP(ny,0,image.height());
+        return true;
     }
-    return FALSE;
+    return false;
 }
-
 
 /****************************************************/
 
@@ -644,92 +717,73 @@ bool ImageViewer::convertEvent( QMouseEvent* e, int& x, int& y)
   Mouse press events.
 */
 
-void ImageViewer::mousePressEvent( QMouseEvent *e )
-{
+void ImageViewer::mousePressEvent( QMouseEvent *e ) {
     QPoint clickedPos = e->pos();		// extract pointer position
     if (e->button() == RightButton) { 
       menubar->exec(clickedPos);
       down = false;
     } else {
     	if (!down) {    
-  		if (convertEvent(e,xi, yi)) {
-	        	repaint();
-	        	xir = e->x();   
-	        	yir = e->y(); 
-			ox = xir;
-			oy = yir;  
-    			down = true;  
-		}
+  	   if (convertEvent(e,xi, yi)) {
+	      repaint();
+	      xir = e->x();   
+	      yir = e->y(); 
+	      old_xfr = xir;
+	      old_yfr = yir;  
+    	      down = true;  
+	   }
     	}
     }      
 }
 
-
 /****************************************************/
-
-/*
-  Mouse release events.
-*/
-
-void ImageViewer::mouseReleaseEvent( QMouseEvent *e )
-{
-    if (down) {    
-  	if (convertEvent(e,xf,yf)) {
-	        xfr = e->x();   
-	        yfr = e->y();
-		if (xf > xmippImage().ColNo()) xf = xmippImage().ColNo();   
-		if (xf <  0) xf = 0;
-		if (yf > xmippImage().RowNo()) yf = xmippImage().RowNo();   
-		if (yf <  0) yf = 0;
-       		float distance = sqrt ((double) (xf -xi)*(xf -xi) + (yf -yi)*(yf -yi));	
-		QString message;
-	    	message.sprintf("Distance: %.3f Angstroms", distance*spacing);
-		status->setText(message);
-       		down = false;
-	}
-    }
-}
-
-
-/****************************************************/
-
-/*
-  Record the pixel position of interest.
-*/
-void ImageViewer::mouseMoveEvent( QMouseEvent *e )
-{
-  if (convertEvent(e,pickx,picky)) {
-    updateStatus();
+/*  Mouse release events. */
+void ImageViewer::mouseReleaseEvent( QMouseEvent *e ) {
     if (down) {
-        if ((e->x() < width()) && (e->y() < height()-(status->height()))) {
-  		QPainter p(this);
-    		QBrush brush( NoBrush );  // void brush
-    		QPen myPen(red, 3);
-    		p.setPen( myPen );	
-    		p.setBrush( brush );
-		p.setRasterOp(XorROP);
-		p.drawLine(xir, yir, ox, oy);      
-        	p.drawLine(xir, yir, e->x(), e->y());
-		ox = e->x(); oy = e->y();      
-		QString message;
-       		float distance = sqrt ((double) (pickx -xi)*(pickx -xi) + (picky -yi)*(picky -yi));	
-	    	message.sprintf("Distance: %.3f Angstroms", distance*spacing);
-		status->setText(message);
+  	if (convertEvent(e,xf,yf)) {
+	   xfr = e->x();   
+	   yfr = e->y();
+           drawLine(xir,yir, old_xfr, old_yfr);
+           drawLine(xir,yir, xfr, yfr);
+           old_xfr=xfr;
+           old_yfr=yfr;
+       	   float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi)); 
+	   QString message;
+	   message.sprintf("Distance: %.3f Angstroms", distance*spacing);
+	   status->setText(message);
+       	   down = false;
 	}
     }
-  }
 }
 
+/****************************************************/
+/* Record the pixel position of interest. */
+void ImageViewer::mouseMoveEvent( QMouseEvent *e ) {
+   if (convertEvent(e,pickx,picky)) {
+      updateStatus();
+      if (down) {
+         if ((e->x() < width()) && (e->y() < height()-(status->height()))) {
+            xf=pickx;
+            yf=picky;
+            xfr=e->x();
+            yfr=e->y();
+            drawLine(xir,yir, old_xfr, old_yfr);
+            drawLine(xir,yir, xfr, yfr);
+            old_xfr=xfr;
+            old_yfr=yfr;
 
+ 	    QString message;
+            float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi));     
+            message.sprintf("Distance: %.3f Angstroms", distance*spacing);
+	    status->setText(message);
+	 }
+      }
+   }
+}
 
 /****************************************************/
-
-/*
-  Handles key press events.
-*/
-
-void ImageViewer::keyPressEvent( QKeyEvent* e )
-{
+/* Handles key press events. */
+void ImageViewer::keyPressEvent( QKeyEvent* e ) {
     switch( e->key() ) {			// Look at the key code
 	case Key_F1:
 	   menubar->exec();
@@ -756,14 +810,21 @@ void ImageViewer::keyPressEvent( QKeyEvent* e )
 	     break;
 	case Key_M:     
 	case Key_Minus:				// Half size
-             if (e->state() == ControlButton) {	// If 'Ctrol+' key, 
-    		  resize(width()/2, height()/2 + status->height()/2 + 1);	         
+             if (e->state() == ControlButton) {	// If 'Ctrol-' key,
+                  // Aspect ratio of the original image
+                  double ratio_original=(double)xmippImage().ColNo()/xmippImage().RowNo();
+                  int new_width=width()/2;
+                  int new_height=ROUND(new_width/ratio_original);
+    		  resize(new_width, new_height+status->height());
 	     }
 	     break;
 	case Key_P:
 	case Key_Plus:				// Double size
              if (e->state() == ControlButton) {	// If 'Ctrol+' key, 
-    		  resize(width()*2, height()*2 - status->height());
+                  double ratio_original=(double)xmippImage().ColNo()/xmippImage().RowNo();
+                  int new_width=width()*2;
+                  int new_height=ROUND(new_width/ratio_original);
+    		  resize(new_width, new_height+status->height());
 	     }
 	     break;
 	case Key_A:    				// Aspect ratio
@@ -778,31 +839,35 @@ void ImageViewer::keyPressEvent( QKeyEvent* e )
     }
 }
 
-
 /****************************************************/
-
 /*
   Draws the portion of the scaled pixmap that needs to be updated or prints
   an error message if no legal pixmap has been loaded.
 */
 
-void ImageViewer::paintEvent( QPaintEvent *e )
-{
+void ImageViewer::paintEvent( QPaintEvent *e ) {
     if ( pm.size() != QSize( 0, 0 ) ) {		// is an image loaded?
-	QPainter painter(this);
-	painter.setClipRect(e->rect());
- 	painter.drawPixmap(0, 0, pmScaled);
+       QPainter painter(this);
+       painter.setClipRect(e->rect());
+       painter.drawPixmap(0, 0, pmScaled);
    }
 }
 
+void ImageViewer::drawLine(int x1, int y1, int x2, int y2) {
+   QPainter painter(this);
+   QBrush brush( NoBrush );
+   QPen myPen(red, 3);
+   painter.setPen( myPen );      
+   painter.setBrush( brush );
+   painter.setRasterOp(XorROP);
+   painter.drawLine(x1, y1, x2, y2);
+}
 
 /****************************************************/
-
 /*
   Explain anything that might be confusing.
 */
-void ImageViewer::giveHelp()
-{
+void ImageViewer::giveHelp() {
     if (!helpmsg) {
 	QString helptext = "Usage: xmipp_iv [filename]\n\n ";
     	QStrList support = QImage::outputFormats();
@@ -842,16 +907,12 @@ void ImageViewer::giveHelp()
     helpmsg->raise();
 }
 
-
-void ImageViewer::about()
-{
+void ImageViewer::about() {
     QMessageBox::about( this, "IV (Image Viewer)",
 			"Visualizes an Image in Spider format. \n");
 }
 
-
-void ImageViewer::aboutXmipp()
-{
+void ImageViewer::aboutXmipp() {
     QMessageBox::about( this, "Xmipp: Xmipp Image Processing Package",
     				"Biocomputing Unit.\n"
 				"National Center of Biotechnology-CSIC\n"
@@ -860,7 +921,6 @@ void ImageViewer::aboutXmipp()
 }
 
 /****************************************************/
-
 void ImageViewer::set_spacing(float _spacing) {
   spacing = _spacing;
 }
@@ -888,7 +948,7 @@ void ImageViewer::check_file() {
       message_shown=true;
    }
    if (info.st_mtime!=modification_time) {
-      loadImage(filename);
+      loadImage(filename,0,0,load_mode);
       repaint();
       updateStatus();
    }
