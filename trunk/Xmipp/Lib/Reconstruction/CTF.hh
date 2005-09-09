@@ -78,6 +78,8 @@ public:
    double rad_azimuth;
    // Gaussian angle in radians
    double rad_gaussian;
+   // Sqrt angle in radians
+   double rad_sqrt;
    // square roots of defoci
    double sqrt_DeltafU;
    double sqrt_DeltafV;
@@ -101,7 +103,7 @@ public:
    // double aperture;
    /// Spherical aberration (in milimeters). Typical value 5.6
    double Cs;
-   /// Chromatic aberration (in milimeters). Typical value 4
+   /// Chromatic aberration (in milimeters). Typical value 2
    double Ca;
    /** Mean energy loss (eV) due to interaction with sample.
        Typical value 1*/
@@ -141,6 +143,8 @@ public:
    double sqU;
    /// Sqrt width V
    double sqV;
+   /// Sqrt angle
+   double sqrt_angle;
 
    /** Empty constructor. */
    XmippCTF() {clear();}
@@ -153,6 +157,10 @@ public:
        are removed from the model unless the disable_if_not_K is set
        to FALSE*/
    void read(const FileName &fn, bool disable_if_not_K=TRUE) _THROW;
+   
+   /** Write to file.
+       An exception is thrown if the file cannot be open.*/
+   void write(const FileName &fn);
    
    /// Usage
    void Usage();
@@ -171,13 +179,6 @@ public:
    
    /// Produce Side information
    void Produce_Side_Info();
-
-   /** Produce Main information.
-       When producing the side information, some of the variables given
-       by the user are changed in scale. This function returns them to
-       the original scale so that they can be printed in the same way
-       as the user is used to them */
-   void Produce_Main_Info();
 
    /// Deltaf at a given direction
    double Deltaf(double X, double Y) const {
@@ -219,6 +220,33 @@ public:
       return -(sine_part+Q0*cosine_part);
    }
 
+   /// Compute CTF at (U,V). Continuous frequencies
+   inline double CTFdamping_at(double X, double Y, bool show=FALSE) const {
+      double u2=X*X+Y*Y;
+      double u=sqrt(u2);
+      double u4=u2*u2;
+      double deltaf=Deltaf(X,Y);
+      double Eespr=exp(-K3*u4); // OK
+      double EdeltaF=bessj0(K5*u2); // OK
+      double EdeltaR=SINC(u*DeltaR); // OK
+      double Ealpha=exp(-K6*(K7*u2*u+deltaf*u)*(K7*u2*u+deltaf*u)); // OK
+      double E=Eespr*EdeltaF*EdeltaR*Ealpha;
+      if (show) {
+         cout << "   Deltaf=" << deltaf << endl;
+         cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
+         cout << "   K3,Eespr=" << K3 << " " << Eespr << endl;
+         cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ endl;
+         cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << endl;
+         cout << "   EdeltaR=" << EdeltaR << endl;
+         cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+              << endl;
+         cout << "   Total atenuation(E)= " << E << endl;
+         cout << "   (X,Y)=(" << X << "," << Y << ") CTFdamp="
+              << E << endl;
+      }
+      return -K*E;
+   }
+   
    /// Compute CTF at (U,V). Continuous frequencies
    inline double CTFpure_at(double X, double Y, bool show=FALSE) const {
       double u2=X*X+Y*Y;
@@ -284,24 +312,33 @@ public:
    /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
    //#define DEBUG
    inline double CTFnoise_at(double X, double Y, bool show=false) const {
-      double ellipsoid_ang;
+      double ellipsoid_ang, ellipsoid_sqrt_ang;
       if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
-          ABS(Y)<XMIPP_EQUAL_ACCURACY) ellipsoid_ang=0;
-      else ellipsoid_ang=atan2(Y,X)-rad_gaussian;
+          ABS(Y)<XMIPP_EQUAL_ACCURACY) ellipsoid_sqrt_ang=ellipsoid_ang=0;
+      else {
+         double yx_ang=atan2(Y,X);
+         ellipsoid_ang=yx_ang-rad_gaussian;
+         ellipsoid_sqrt_ang=yx_ang-rad_sqrt;
+      }
+      double cos_sqrt_ang=cos(ellipsoid_sqrt_ang);
+      double sin_sqrt_ang=sin(ellipsoid_sqrt_ang);
+      double sqUp=sqU*cos_sqrt_ang;
+      double sqVp=sqV*sin_sqrt_ang;
+      double sq=sqrt(sqUp*sqUp+sqVp*sqVp);
+
       double cos_ang=cos(ellipsoid_ang);
       double sin_ang=sin(ellipsoid_ang);
-      double sqUp=sqU*cos_ang;
-      double sqVp=sqV*sin_ang;
-      double sq=sqrt(sqUp*sqUp+sqVp*sqVp);
       double cUp=cU*cos_ang;
       double cVp=cV*sin_ang;
       double c=sqrt(cUp*cUp+cVp*cVp);
       double sigmaUp=sigmaU*cos_ang;
       double sigmaVp=sigmaV*sin_ang;
       double sigma=sqrt(sigmaUp*sigmaUp+sigmaVp*sigmaVp);
+
       double w=sqrt(X*X+Y*Y);
       if (show) {
          cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << endl
+              << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << endl
               << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
               << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
               << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n";
@@ -313,7 +350,7 @@ public:
              gaussian_K*exp(-sigma*(w-c)*(w-c))+sqrt_K*exp(-sq*sqrt(w));	
    }
 
-   /** Returns the frequency of the zero number n in the direction u.
+   /** Returns the continuous frequency of the zero number n in the direction u.
        u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found */
    void zero(int n, const matrix1D<double> &u, matrix1D<double> &freq);
 

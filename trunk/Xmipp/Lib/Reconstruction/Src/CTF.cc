@@ -72,6 +72,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) _THROW {
 	 if (check_param(fh_param,"sqV"))
             sqV        =AtoF(get_param(fh_param,"sqV",0));
 	 else sqV      =sqU;
+	 sqrt_angle=AtoF(get_param(fh_param,"sqrt_angle",0,"0"));
 	 sqrt_K        =AtoF(get_param(fh_param,"sqrt_K",0,"0"));
          if (gaussian_K==0 && sqrt_K==0 && base_line==0  && disable_if_not_K)
             enable_CTFnoise=FALSE;
@@ -84,6 +85,17 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) _THROW {
    fclose(fh_param);
 }
    
+/* Write ------------------------------------------------------------------- */
+void XmippCTF::write(const FileName &fn) {
+   ofstream fh_param;
+   fh_param.open(fn.c_str());
+   if (!fh_param)
+      REPORT_ERROR(1,(string)"Xmipp_CTF::write: Cannot open "+fn+
+         " for output");
+   fh_param << *this << endl;
+   fh_param.close();
+}
+
 /* Usage ------------------------------------------------------------------- */
 void XmippCTF::Usage() {
    cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
@@ -110,6 +122,7 @@ void XmippCTF::Usage() {
         << "  [sqrt_K=<K=0>]                    : Square root gain\n"
         << "  [sqU=<sqU=0>]                     : Square root width\n"
         << "  [sqV=<sqV=0>]                     : if astigmatism\n"
+        << "  [sqrt_angle=<ang=0>]              : Angle between X and U (degrees)\n"
         << "  [base_line=<b=0>]                 : Global base line\n"
    ;
 }
@@ -145,6 +158,7 @@ ostream & operator << (ostream &out, const XmippCTF &ctf) {
 	  << "sqrt_K=               " << ctf.sqrt_K	<< endl
 	  << "sqU=                  " << ctf.sqU	<< endl
 	  << "sqV=                  " << ctf.sqV	<< endl
+          << "sqrt_angle=           " << ctf.sqrt_angle << endl
 	  << "base_line=            " << ctf.base_line  << endl
       ;
    }
@@ -161,7 +175,7 @@ void XmippCTF::clear() {
 
 void XmippCTF::clear_noise() {
    cU=cV=sigmaU=sigmaV=gaussian_angle=gaussian_K=0;
-   sqU=sqV=sqrt_K=0;
+   sqU=sqV=sqrt_K=sqrt_angle=0;
    base_line=0;
 }
 
@@ -181,13 +195,14 @@ void XmippCTF::clear_pure_ctf() {
 void XmippCTF::Produce_Side_Info() {
    // Change units
    // aperture *= 1e4; 
-   alpha    /= 1000;
-   Cs       *= 1e7;
-   Ca       *= 1e7;
-   kV       *= 1e3;
-   ispr     /= 1e6;
+   double local_alpha=alpha/1000;
+   double local_Cs = Cs*1e7;
+   double local_Ca = Ca*1e7;
+   double local_kV = kV*1e3;
+   double local_ispr= ispr*1e6;
    rad_azimuth=DEG2RAD(azimuthal_angle);
    rad_gaussian=DEG2RAD(gaussian_angle);
+   rad_sqrt=DEG2RAD(sqrt_angle);
 
    // ua2=1/(aperture*aperture);
    sqrt_DeltafU=sqrt(DeltafU);
@@ -198,14 +213,14 @@ void XmippCTF::Produce_Side_Info() {
    //    m: electron mass
    //    e: electron charge
    // lambda=0.387832/sqrt(kV*(1.+0.000978466*kV)); // Hewz: Angstroms
-   lambda=12.3/sqrt(kV*(1.+kV*1e-6)); // ICE
+   lambda=12.3/sqrt(local_kV*(1.+local_kV*1e-6)); // ICE
    
    // Phase shift for spherical aberration
    // X(u)=-PI*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
    // ICE: X(u)=-PI/2*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
    //          = K1*deltaf(u)*u^2         +K2*u^4
    K1=PI/2*2*lambda;
-   K2=PI/2*Cs*lambda*lambda*lambda;
+   K2=PI/2*local_Cs*lambda*lambda*lambda;
 
    // Envelope
    // D(u)=Ed(u)*Ealpha(u)
@@ -218,19 +233,10 @@ void XmippCTF::Produce_Side_Info() {
    // ICE: Ealpha(u)=exp(-PI^2*alpha^2*(Cs*lambda^2*u^3+Deltaf(u)*u)^2)
    // CO: K3=pow(0.25*PI*Ca*lambda*(espr/kV,2)/log(2); Both combines in new K3
    // CO: K4=pow(0.5*PI*Ca*lambda*ispr,2)/log(2);
-   K3=pow(0.25*PI*Ca*lambda*(espr/kV+2*ispr),2)/log(2.0);
+   K3=pow(0.25*PI*local_Ca*lambda*(espr/kV+2*local_ispr),2)/log(2.0);
    K5=PI*DeltaF*lambda;
    K6=PI*PI*alpha*alpha;
-   K7=Cs*lambda*lambda;
-}
-
-/* Produce Main Information ------------------------------------------------ */
-void XmippCTF::Produce_Main_Info() {
-   alpha    *= 1000;
-   Cs       /= 1e7;
-   Ca       /= 1e7;
-   kV       /= 1e3;
-   ispr     *= 1e6;
+   K7=local_Cs*lambda*lambda;
 }
 
 /* Zero -------------------------------------------------------------------- */
@@ -288,6 +294,7 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
       #endif
    }
 }
+#undef DEBUG
 
 /* Physical meaning -------------------------------------------------------- */
 //#define DEBUG
@@ -295,32 +302,32 @@ bool XmippCTF::physical_meaning() {
    bool retval;
    if (enable_CTF) {
       retval=
-          K>=0      && base_line>=0  &&
-          kV>=50e3  && kV<=1000e3    &&
-	  espr>=0   && espr<=20      &&
-	  ispr>=0   && ispr<=20e-6   &&
-	  Cs>=0     && Cs<=20e7      &&
-	  Ca>=0     && Ca<=20e7      &&
-	  alpha>=0  && alpha<=5e-3   &&
-	  DeltaF>=0 && DeltaF<=1000  &&
-	  DeltaR>=0 && DeltaR<=100   &&
-	  Q0>=-0.20 && Q0<=0         &&
-          DeltafU<0 && DeltafV<0     &&
+          K>=0       && base_line>=0  &&
+          kV>=50     && kV<=1000      &&
+	  espr>=0    && espr<=20      &&
+	  ispr>=0    && ispr<=20      &&
+	  Cs>=0      && Cs<=20        &&
+	  Ca>=0      && Ca<=20        &&
+	  alpha>=0   && alpha<=5      &&
+	  DeltaF>=0  && DeltaF<=1000  &&
+	  DeltaR>=0  && DeltaR<=100   &&
+	  Q0>=-0.40  && Q0<=0         &&
+          DeltafU<=0 && DeltafV<=0    &&
 	  CTF_at(0,0)>=0;
       #ifdef DEBUG
          cout << *this << endl;
-         cout << "K>=0      && base_line>=0  " << (K>=0      && base_line>=0) << endl
-      	      << "kV>=50e3  && kV<=1000e3    " << (kV>=50e3  && kV<=1000e3)   << endl
-	      << "espr>=0   && espr<=20      " << (espr>=0   && espr<=20)     << endl
-	      << "ispr>=0   && ispr<=20e-6   " << (ispr>=0   && ispr<=20e-6)  << endl
-	      << "Cs>=0     && Cs<=20e7      " << (Cs>=0     && Cs<=20e7)     << endl
-	      << "Ca>=0     && Ca<=20e7      " << (Ca>=0     && Ca<=20e7)     << endl
-	      << "alpha>=0  && alpha<=5e-3   " << (alpha>=0  && alpha<=5e-3)  << endl
-	      << "DeltaF>=0 && DeltaF<=1000  " << (DeltaF>=0 && DeltaF<=1000) << endl
-	      << "DeltaR>=0 && DeltaR<=100   " << (DeltaR>=0 && DeltaR<=100)  << endl
-	      << "Q0>=-0.20 && Q0<=0	     " << (Q0>=-0.20 && Q0<=0)        << endl
-      	      << "DeltafU<0 && DeltafV<0     " << (DeltafU<0 && DeltafV<0)    << endl
-	      << "CTF_at(0,0)>=0	     " << (CTF_at(0,0)>=0)	      << endl
+         cout << "K>=0       && base_line>=0  " << (K>=0       && base_line>=0) << endl
+      	      << "kV>=50     && kV<=1000      " << (kV>=50     && kV<=1000)     << endl
+	      << "espr>=0    && espr<=20      " << (espr>=0    && espr<=20)     << endl
+	      << "ispr>=0    && ispr<=20      " << (ispr>=0    && ispr<=20)     << endl
+	      << "Cs>=0      && Cs<=20        " << (Cs>=0      && Cs<=20)       << endl
+	      << "Ca>=0      && Ca<=20        " << (Ca>=0      && Ca<=20)       << endl
+	      << "alpha>=0   && alpha<=5      " << (alpha>=0   && alpha<=5)     << endl
+	      << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF>=0  && DeltaF<=1000) << endl
+	      << "DeltaR>=0  && DeltaR<=100   " << (DeltaR>=0  && DeltaR<=100)  << endl
+	      << "Q0>=-0.40  && Q0<=0	      " << (Q0>=-0.40  && Q0<=0)        << endl
+      	      << "DeltafU<=0 && DeltafV<=0    " << (DeltafU<=0 && DeltafV<=0)   << endl
+	      << "CTF_at(0,0)>=0	      " << (CTF_at(0,0)>=0)	        << endl
          ;
          cout << "CTF_at(0,0)=" << CTF_at(0,0,true) << endl;
       #endif
@@ -337,7 +344,8 @@ bool XmippCTF::physical_meaning() {
 	  cU>=0             && cV>=0         	   &&
 	  sqU>=0            && sqV>=0        	   &&
 	  sqrt_K>=0         &&
-	  gaussian_angle>=0 && gaussian_angle<=90
+	  gaussian_angle>=0 && gaussian_angle<=90 &&
+	  sqrt_angle>=0     && sqrt_angle<=90
       ;
       if (min_sigma>0)   retval2=retval2 && ABS(sigmaU-sigmaV)/min_sigma<3;
       if (min_c>0)       retval2=retval2 && ABS(cU-cV)/min_c<3;
@@ -347,14 +355,15 @@ bool XmippCTF::physical_meaning() {
          cout << "gaussian_K>=0     &&  		  " << (gaussian_K>=0	  )			 << endl
       	      << "base_line>=0      &&  		  " << (base_line>=0	  )			 << endl
 	      << "sigmaU>=0	    && sigmaV>=0	  " << (sigmaU>=0	  && sigmaV>=0) 	 << endl
-	      << "sigmaU<=100e3     && sigmaV<=100e3      " << (sigmaU<=100e3     && sigmaV<=100e3)
+	      << "sigmaU<=100e3     && sigmaV<=100e3      " << (sigmaU<=100e3     && sigmaV<=100e3)      << endl
 	      << "cU>=0 	    && cV>=0		  " << (cU>=0		  && cV>=0 )		 << endl
 	      << "sqU>=0	    && sqV>=0		  " << (sqU>=0  	  && sqV>=0)		 << endl
 	      << "sqrt_K>=0	    &&  		  " << (sqrt_K>=0)				 << endl
 	      << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
+	      << "sqrt_angle>=0     && sqrt_angle<=90     " << (sqrt_angle>=0     && sqrt_angle<=90)     << endl
 	      << "ABS(sigmaU-sigmaV)/min_sigma<3          " << (ABS(sigmaU-sigmaV)/min_sigma<3)          << endl
 	      << "ABS(cU-cV)/min_c<3                      " << (ABS(cU-cV)/min_c<3)                      << endl
-	      << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))                << endl
+	      << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))          << endl
          ;
       #endif
    } else retval2=TRUE;
