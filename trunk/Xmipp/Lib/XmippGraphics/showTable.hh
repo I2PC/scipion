@@ -141,7 +141,7 @@ protected:
     /* Ask for memory for contents and cellMarks. They are initialized.
        listSize must be already set */
     virtual void initContents();
-    /* Remove all contents ans content_queue. Memory is still allocated
+    /* Remove all contents and content_queue. Memory is still allocated
        for the arrays */
     virtual void clearContents();
 
@@ -151,21 +151,21 @@ protected:
     virtual void initRightclickMenubar()=0;
     
     /* Insert help and Quit in the right click menu bar*/
-            void insertGeneralItemsInRightclickMenubar();
+    void insertGeneralItemsInRightclickMenubar();
     /* Change a boolean option */
     virtual void changeBoolOption(int _mi, int _mic);
     /* Adjust label to window size */
     virtual void adjustStatusLabel();
 
     /* Send update to a cell */
-	    void updateCellIdx(int i)
-	        {int row, col; IndextoPos(i,row,col); updateCell(row,col);}
+    void updateCellIdx(int i)
+      {int row, col; IndextoPos(i,row,col); updateCell(row,col);}
     /* Index of cell */
-            int indexOf( int row, int col ) const
-	        {return (row * numCols()) + col;}
+    int indexOf( int row, int col ) const
+      {return (row * numCols()) + col;}
     /* Position of cell */
-	    void IndextoPos( int _index, int& _row, int& _col ) const
-		{_col = _index%NumCols; _row = _index/NumCols;}
+    void IndextoPos( int _index, int& _row, int& _col ) const
+      {_col = _index%NumCols; _row = _index/NumCols;}
     /* Label of cell */
     virtual const char* cellLabel( int i ) const
                 {return NULL;}
@@ -199,9 +199,9 @@ protected:
     string makeTempFile (int &fd);
 private slots:
     /* Open window with help about keys */
-            void giveHelp();
+    void giveHelp();
     /* Link to Xmipp */
-            void aboutXmipp();
+    void aboutXmipp();
 protected slots:
     /* GUI for opening a file */
     virtual void GUIopenFile();
@@ -224,7 +224,6 @@ protected slots:
     void changeFontColor();
     /* Change Font for labels */
     void changeFont();
-    
 };
 //@}
 
