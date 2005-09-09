@@ -77,6 +77,10 @@ long long AtoLL(const char *str, int _errno, string errmsg, int exit) _THROW {
 
 // Best precission =========================================================
 int best_prec(float F, int _width) {
+   // If it is 0
+   if (F==0) return 1;
+   
+   // Otherwise
    int exp=FLOOR(log10(ABS(F)));
    int advised_prec;
    if (exp>=0)
@@ -127,7 +131,8 @@ string ItoA(int I, int _width, char fill_with) {
    
    // Check width
    int width=_width;
-   int Iaux=I;
+   int Iaux=ABS(I);
+   if (SGN(I)<0) width--;
    if (width==0)
       do {
          Iaux/=10;
@@ -139,14 +144,15 @@ string ItoA(int I, int _width, char fill_with) {
 
    // Start filling the array
    aux[width--]='\0';
-   Iaux=I;
+   Iaux=ABS(I);
    do {
       int digit=Iaux%10;
       Iaux/=10;
       aux[width--]='0'+digit;
    } while (Iaux!=0);
-   
-   return (string)aux;
+
+   if (SGN(I)<0) return (string)"-"+aux;
+   else          return (string)aux;
 }
 
 // Character --> Integer ===================================================
