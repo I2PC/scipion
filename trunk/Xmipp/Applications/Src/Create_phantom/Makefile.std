@@ -1,4 +1,4 @@
 ######################################################################
 PROJ = create_phantom
 OBJ  = create_phantom.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
