@@ -40,7 +40,7 @@ void substract_background_plane(Image *I) {
       A(2,0)  = A(0,2); A(2,1)  =A(1,2); A(2,2) +=1;
       b(0)   += j*IMGPIXEL(*I,i,j);   
       b(1)   += i*IMGPIXEL(*I,i,j);
-      b(2) +=IMGPIXEL(*I,i,j);
+      b(2)   +=IMGPIXEL(*I,i,j);
    }
    solve(A,b,x);
 
