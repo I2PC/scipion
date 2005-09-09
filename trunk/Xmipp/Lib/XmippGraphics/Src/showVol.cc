@@ -32,8 +32,13 @@ void ShowVol::initWithFile( int _numRows, int _numCols,
    const FileName &_fn, double _minGray, double _maxGray) {
    init();
    readFile(_fn,_minGray,_maxGray);
-   NumRows = _numRows;
-   NumCols = _numCols;
+   if (_numRows!=-1 && _numCols!=-1) {
+      NumRows = _numRows;
+      NumCols = _numCols;
+   } else {
+      NumCols=MIN(10,FLOOR(900.0/XSIZE(V())));
+      NumRows=MIN(10,FLOOR(700.0/YSIZE(V())));
+   }
    initTable();
    initRightclickMenubar();
    repaint();
