@@ -28,7 +28,7 @@
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippProjection.hh>
 #include "grids.hh"
-#include "blobs.hh"
+#include "basis.hh"
 
 /*---------------------------------------------------------------------------*/
 /* PROJECTION                                                                */
@@ -46,8 +46,8 @@
 #define CAV      4
 #define CAVARTK  5
 
-/** From blob volumes (Forward & Backward(ART)).
-    Project a grid volume with a blob basis.
+/** From basis volumes (Forward & Backward(ART)).
+    Project a grid volume with a basis.
     The Grid volume is projected onto a projection plane defined by
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles). The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
@@ -57,7 +57,7 @@
        Each volume of the grid is projected on to the projection plane.
        The output is the projection itself and a normalising image, the
        normalising image is the projection of the same grid supposing
-       that all blobs are of value 1. This normalising image is used by
+       that all basis are of value 1. This normalising image is used by
        the ART process
     
     BACKWARD process:
@@ -72,9 +72,7 @@
     M is the matrix corresponding to the projection process.
     */
 template <class T>
-void project_Volume(GridVolumeT<T> &vol,
-   const struct blobtype &blob,
-   const ImageOver &footprint,const ImageOver &footprint2,
+void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
    double rot, double tilt, double psi, int FORW, int eq_mode=ARTK,
    GridVolumeT<int> *GVNeq=NULL, matrix2D<double> *M=NULL,
@@ -109,17 +107,15 @@ void singleWBP(matrix3D<double> &V, Projection &P) _THROW;
  
 /** Count equations in volume.
    For Component AVeraing (CAV), the number of equations in which
-   each blob is involved is needed. */
+   each basis is involved is needed. */
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
-   const struct blobtype &blob,
-   const ImageOver &footprint, const ImageOver &footprint2,
-   Projection &read_proj);
+   const Basis &basis, Projection &read_proj);
 //@}
 
 /**@name Crystal projections */
 //@{
-/** Project a crystal blob volume.
-    This function projects a crystal deformed blob volume, ie, in the
+/** Project a crystal basis volume.
+    This function projects a crystal deformed basis volume, ie, in the
     documentation volume g. However the angles given must be those for
     volume f, the undeformed one. You must supply the deformed lattice
     vectors, and the matrix to pass from the deformed to the undeformed
@@ -127,8 +123,7 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
     
     Valid eq_modes are ARTK, CAVARTK and CAV.
 */
-void project_Crystal_Volume(GridVolume &vol,
-   const ImageOver &footprint, const ImageOver &footprint2,
+void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
    Projection &proj, Projection &norm_proj,
    int Ydim, int Xdim,
    double rot, double tilt, double psi, const matrix1D<double> &shift,

@@ -34,7 +34,7 @@
 #define yDim YSIZE(IMGMATRIX(proj))
 
 // Projections from single particles #######################################
-// Projections from blob volumes ===========================================
+// Projections from basis volumes ==========================================
 
 /* Projection of a simple volume ------------------------------------------- */
 // The projection is not precleaned (set to 0) before projecting and its
@@ -58,9 +58,9 @@
    Case: DIRECT_IMGPIXEL   ----> IMGPIXEL:   +  5% (Acceptable)
    
    Algorithmic changes:
-   Case: project each blob position ---->    +325% (Inacceptable)
+   Case: project each basis position ---->   +325% (Inacceptable)
          get rid of all beginZ, beginY, prjX, ... and project each
-         blob position onto the projection plane
+         basis position onto the projection plane
    Case: footprint coordinates outside ----> - 33% (Great!!)
          the footprint coordinates are computed outside the inner
          loop, but you have to use the sampling rate instead to
@@ -72,20 +72,20 @@
 
 template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
-   const struct blobtype &blob,
-   const ImageOver &footprint, const ImageOver &footprint2,
+   const Basis &basis,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
    double ray_length=-1.0) {
    matrix1D<double> zero(3);                // Origin (0,0,0) 
    matrix1D<double> prjPix(3);              // Position of the pixel within the
-                                            // projection (used in VSSNR)
+                                            // projection
    matrix1D<double> prjX(3);                // Coordinate: Projection of the
    matrix1D<double> prjY(3);                // 3 grid vectors
    matrix1D<double> prjZ(3);
    matrix1D<double> prjOrigin(3);           // Coordinate: Where in the 2D
                                             // projection plane the origin of
                                             // the grid projects
+   matrix1D<double> prjDir(3);              // Projection direction
 
    matrix1D<double> actprj(3);              // Coord: Actual position inside
                                             // the projection plane
@@ -139,13 +139,21 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    // This time the origin of the grid is in the universal coord system
    Uproject_to_plane(grid.origin, proj.euler, prjOrigin);
 
+   // Get the projection direction .........................................
+   proj.euler.getRow(2,prjDir);
+
    // Footprint size .......................................................
    // The following vectors are integer valued vectors, but they are
    // stored as real ones to make easier operations with other vectors
-   XX_footprint_size = footprint.umax();
-   YY_footprint_size = footprint.vmax();
-   Usampling         = footprint.Ustep();
-   Vsampling         = footprint.Vstep();
+   if (basis.type==Basis::blobs) {
+      XX_footprint_size = basis.blobprint.umax();
+      YY_footprint_size = basis.blobprint.vmax();
+      Usampling         = basis.blobprint.Ustep();
+      Vsampling         = basis.blobprint.Vstep();
+   } else if (basis.type==Basis::voxels) {
+      YY_footprint_size = XX_footprint_size = CEIL(basis.max_length());
+      Usampling = Vsampling = 0;
+   }
 
    // Project the whole grid ...............................................
    // Corner of the plane defined by Z. These coordinates try to be within
@@ -167,9 +175,12 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    int YY_highest=(int) YY(grid.highest);
    int XX_highest=(int) XX(grid.highest);
 
+   // Check if in VSSNR
+   bool VSSNR_mode=(ray_length==basis.max_length());
+
    #ifdef DEBUG_LITTLE
    int condition;
-   condition = FORW && XX(grid.origin)==0;
+   condition = true;
    if (condition) {
       cout << "Equation mode " << eq_mode << endl;
       cout << "Footprint size " << YY_footprint_size << "x"
@@ -177,6 +188,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
       cout << "rot=" << proj.Phi() << " tilt=" << proj.Theta()
            << " psi=" << proj.Psi() << endl;
       cout << "Euler matrix " << proj.euler;
+      cout << "Projection direction " << prjDir << endl;
       cout << grid;
       cout << "image limits (" << x0 << "," << y0 << ") (" << xF << ","
            << yF << ")\n";
@@ -189,13 +201,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
            << " " << XX_lowest  << endl;
       cout << "highest        " << XX_highest << " " << YY_highest
            << " " << XX_highest << endl;
-      cout << "Stats of input blob volume "; vol().print_stats(); cout << endl;
+      cout << "Stats of input basis volume "; vol().print_stats(); cout << endl;
       cout.flush();
    }
    #endif
 
    matrix1D<double> grid_index(3), univ_position(3);
-   int number_of_blob=0;
+   int number_of_basis=0;
    for (k=ZZ_lowest; k<=ZZ_highest; k++) {
       // Corner of the row defined by Y
       beginY=beginZ;
@@ -208,37 +220,34 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
             
             // Ray length interesting
             bool ray_length_interesting=true;
-            if (ray_length!=-1) {
+            if (ray_length!=-1)
                ray_length_interesting=
                   ABS(point_plane_distance_3D(univ_position, zero,
                       proj.direction))<=ray_length;
-            }
-            
             
       	    if (grid.is_interesting(univ_position) &&
                 ray_length_interesting) {
-               // Be careful that you cannot skip any blob, although its
+               // Be careful that you cannot skip any basis, although its
                // value be 0, because it is useful for norm_proj
                #ifdef DEBUG
-               condition = FORW && XX(grid.origin)==0 &&
-                             ((j==0 && i==0 && k==0));
+               condition = (k==0);
                if (condition) {
         	  printf("\nProjecting grid coord (%d,%d,%d) ",j,i,k);
         	  cout << "Vol there = " << VOLVOXEL(vol,k,i,j) << endl;
 		  printf(" 3D universal position (%f,%f,%f) \n",
 		     ZZ(univ_position),YY(univ_position),XX(univ_position));
-        	  cout << " Center of the blob proj " << actprj.transpose()  << endl;
+        	  cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << endl;
 		  matrix1D<double> aux;
 		  Uproject_to_plane(univ_position, proj.euler, aux);
-		  cout << " Center of the blob proj (more accurate) " << aux.transpose() << endl;
+		  cout << " Center of the basis proj (more accurate) " << aux.transpose() << endl;
                }
                #endif
 
-               // Search for integer corners for this blob
-               XX_corner1=CEIL (MAX(x0,XX(actprj)-XX_footprint_size));
-               YY_corner1=CEIL (MAX(y0,YY(actprj)-YY_footprint_size));
-               XX_corner2=FLOOR(MIN(xF,XX(actprj)+XX_footprint_size));
-               YY_corner2=FLOOR(MIN(yF,YY(actprj)+YY_footprint_size));
+               // Search for integer corners for this basis
+               XX_corner1=CEIL (MAX(x0,XX(actprj)-XX_footprint_size-XMIPP_EQUAL_ACCURACY));
+               YY_corner1=CEIL (MAX(y0,YY(actprj)-YY_footprint_size-XMIPP_EQUAL_ACCURACY));
+               XX_corner2=FLOOR(MIN(xF,XX(actprj)+XX_footprint_size+XMIPP_EQUAL_ACCURACY));
+               YY_corner2=FLOOR(MIN(yF,YY(actprj)+YY_footprint_size+XMIPP_EQUAL_ACCURACY));
 
                #ifdef DEBUG
                if (condition) {
@@ -250,17 +259,18 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                #endif
 
                // If the two corners haven't collapsed into a line or a point
-               // This happens if the blob falls outside the projection plane
+               // This happens if the basis falls outside the projection plane
                if (XX_corner1<XX_corner2 && YY_corner1<YY_corner2) {
-
-        	  // Compute the index of the blob for corner1
-		  OVER2IMG(footprint,(double)YY_corner1-YY(actprj),
-                     (double)XX_corner1-XX(actprj), foot_V1, foot_U1);
+        	  // Compute the index of the basis for corner1
+                  if (basis.type==Basis::blobs)
+		     OVER2IMG(basis.blobprint,(double)YY_corner1-YY(actprj),
+                        (double)XX_corner1-XX(actprj), foot_V1, foot_U1);
 
         	  if (!FORW) vol_corr=0;
 
-		  // Effectively project this blob
-        	  N_eq=(YY_corner2-YY_corner1+1)*(XX_corner2-XX_corner1+1);
+		  // Effectively project this basis
+        	  // N_eq=(YY_corner2-YY_corner1+1)*(XX_corner2-XX_corner1+1);
+                  N_eq=0;
         	  foot_V=foot_V1;
 		  for (int y=YY_corner1; y<=YY_corner2; y++) {
                      foot_U=foot_U1;
@@ -268,36 +278,60 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                 	#ifdef DEBUG
                 	if (condition) {
                            cout << "Position in projection (" << x << ","
-                        	<< y << ") " << "in footprint ("
-                        	<< foot_U << "," << foot_V << ")";
+                        	<< y << ") ";
                            double y,x;
-                           IMG2OVER(footprint,foot_V,foot_U,y,x);
-                           cout << " (d= " << sqrt(y*y+x*x) << ") ";
-                           fflush(stdout);
-                           cout << "=" << IMGPIXEL(footprint,foot_V,foot_U)
-                        	<< " , " << IMGPIXEL(footprint2,foot_V,foot_U);
+                           if (basis.type==Basis::blobs) {
+                              cout << "in footprint ("
+                                   << foot_U << "," << foot_V << ")";
+                              IMG2OVER(basis.blobprint,foot_V,foot_U,y,x);
+                              cout << " (d= " << sqrt(y*y+x*x) << ") ";
+                              fflush(stdout);
+                           }
                 	}
                 	#endif
                         double a, a2;
                         // Check if volumetric interpolation (i.e., SSNR)
-                        if (ray_length==blob.radius) {
+                        if (VSSNR_mode) {
                            // This is the VSSNR case
                            // Get the pixel position in the universal coordinate
                            // system
                            SPEED_UP_temps;
                            VECTOR_R3(prjPix,x,y,0);
                            M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
-                           // Get the distance between the blob center
-                           // and the pixel
-                           V3_MINUS_V3(prjPix,univ_position,prjPix);
-                           double r=prjPix.module();
-                           a=blob_val(r,blob);
+                           V3_MINUS_V3(prjPix,prjPix,univ_position);
+                           a=basis.value_at(prjPix);
                            a2=a*a;
                         } else {
                            // This is normal reconstruction from projections
-                           a =IMGPIXEL(footprint,foot_V,foot_U);
-                           a2=IMGPIXEL(footprint2,foot_V,foot_U);
+                           if (basis.type==Basis::blobs) {
+                              // Projection of a blob
+                              a =IMGPIXEL(basis.blobprint,foot_V,foot_U);
+                              a2=IMGPIXEL(basis.blobprint2,foot_V,foot_U);
+                           } else {
+                              // Projection of other bases
+                              // Get the pixel in universal coordinates
+                              SPEED_UP_temps;
+                              VECTOR_R3(prjPix,x,y,0);
+                              // Express the point in a local coordinate system
+                              M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
+                              #ifdef DEBUG
+                                 if (condition)
+                                    cout << " in volume coord ("
+                                         << prjPix.transpose() << ")";
+                              #endif
+                              V3_MINUS_V3(prjPix,prjPix,univ_position);
+                              #ifdef DEBUG
+                                 if (condition)
+                                    cout << " in voxel coord ("
+                                         << prjPix.transpose() << ")";
+                              #endif
+                              a=basis.projection_at(prjDir,prjPix);
+                              a2=a*a;
+                           }
                         }
+                	#ifdef DEBUG
+                           if (condition) cout << "=" << a << " , " << a2;
+                	#endif
 	        	if (FORW) {
                            switch(eq_mode) {
 			      case CAVARTK:
@@ -308,7 +342,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                     int py, px;
 				    proj().logical2physical(y,x,py,px);
 				    int number_of_pixel=py*XSIZE(proj())+px;
-				    (*M)(number_of_pixel,number_of_blob)=a;
+				    (*M)(number_of_pixel,number_of_basis)=a;
 				 }
                         	 break;
                               case CAVK:
@@ -328,12 +362,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                            #ifdef DEBUG
                               if (condition) {
                         	 cout << " proj= " << IMGPIXEL(proj,y,x)
-                                      << " norm_proj=" << IMGPIXEL(norm_proj,y,x)  << endl;
-                        	 cout << endl; cout.flush();
+                                      << " norm_proj=" << IMGPIXEL(norm_proj,y,x) << endl;
+                        	 cout.flush();
                               }
                            #endif
 	        	} else {
 	                   vol_corr += IMGPIXEL(norm_proj,y,x)*a;
+                           if (a!=0) N_eq++;
                            #ifdef DEBUG
                            if (condition) {
                               cout << " corr_img= " << IMGPIXEL(norm_proj,y,x)
@@ -347,14 +382,15 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                 	foot_U += Usampling;
 	             }
                      foot_V += Vsampling;
-        	  } // Project this blob
+        	  } // Project this basis
 
 		  if (!FORW) {
-                     T correction;
+                     T correction=0;
                      switch (eq_mode) {
                 	case ARTK: correction=(T) vol_corr;
                            break;
-                	case CAVARTK: correction=(T) (vol_corr/N_eq);
+                	case CAVARTK:
+                           if (N_eq!=0) correction=(T) (vol_corr/N_eq);
                            break;
                 	case CAVK:
                 	case CAV:  correction=(T) vol_corr;
@@ -371,7 +407,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                      #endif
         	  }
                } // If not collapsed
-	       number_of_blob++;
+	       number_of_basis++;
       	    } // If interesting
 
             // Prepare for next iteration
@@ -392,9 +428,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 template <class T>
 void project_Volume(
    GridVolumeT<T> &vol,                  // Volume
-   const struct blobtype &blob,          // Blob
-   const ImageOver  &footprint,          // Footprint of a blob         
-   const ImageOver  &footprint2,         // Used for error computation
+   const Basis &basis,                   // Basis
    Projection       &proj,               // Projection
    Projection       &norm_proj,          // Projection of a unitary volume
    int              Ydim,                // Dimensions of the projection
@@ -431,7 +465,7 @@ void project_Volume(
    for (int i=0; i<vol.VolumesNo(); i++) {
       VolumeT<int> *VNeq;
       if (GVNeq!=NULL)   VNeq=&((*GVNeq  )(i)); else VNeq=NULL;
-      project_SimpleGrid(vol(i),vol.grid(i),blob,footprint,footprint2,
+      project_SimpleGrid(vol(i),vol.grid(i),basis,
          proj, norm_proj, FORW, eq_mode, VNeq, M, ray_length);
    #ifdef DEBUG
       ImageXmipp save; save=norm_proj;
@@ -476,7 +510,8 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double half_y_sign = 0.5 * y_sign;
    double half_z_sign = 0.5 * z_sign;
    
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(P()) {
+   matrix2D<double> &mP=P();
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mP) {
       matrix1D<double> r_p(3); // r_p are the coordinates of the 
                                // pixel being projected in the
                                // coordinate system attached to the
@@ -486,8 +521,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
       double ray_sum=0.0;      // Line integral value
       
       // Computes 4 different rays for each pixel.
-      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++)
-      { 
+      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++) { 
 	// universal coordinate system                        
 	switch(rays_per_pixel){
 		case 0:	VECTOR_R3(r_p,j-step,i-step,0);
@@ -644,7 +678,8 @@ void singleWBP(matrix3D<double> &V, Projection &P) _THROW {
    double half_y_sign = 0.5 * y_sign;
    double half_z_sign = 0.5 * z_sign;
    
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(P()) {
+   matrix2D<double> &mP=P();
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mP) {
       matrix1D<double> r_p(3); // r_p are the coordinates of the 
                                // pixel being projected in the
                                // coordinate system attached to the
@@ -654,140 +689,85 @@ void singleWBP(matrix3D<double> &V, Projection &P) _THROW {
       double ray_sum=0.0;      // Line integral value
       
       // Computes 4 different rays for each pixel.
-/*      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++)
-      { 
-	// universal coordinate system                        
-	switch(rays_per_pixel){
-		case 0:	VECTOR_R3(r_p,j-step,i-step,0);
-			break;
-		case 1: VECTOR_R3(r_p,j-step,i+step,0);
-			break;
-		case 2: VECTOR_R3(r_p,j+step,i-step,0);
-			break;
-		case 3: VECTOR_R3(r_p,j+step,i+step,0);
-			break;
-	}*/
-	
-	//***********************
-	VECTOR_R3(r_p,j,i,0);		
-	
-	// Express r_p in the universal coordinate system
-	M3x3_BY_V3x1(p1,P.eulert,r_p);
-	
-	// Compute the minimum and maximum alpha for the ray
-	// intersecting the given volume
-	double alpha_xmin=(x_0-0.5-XX(p1))/XX(P.direction);
-	double alpha_xmax=(x_F+0.5-XX(p1))/XX(P.direction);
-	double alpha_ymin=(y_0-0.5-YY(p1))/YY(P.direction);
-	double alpha_ymax=(y_F+0.5-YY(p1))/YY(P.direction);
-	double alpha_zmin=(z_0-0.5-ZZ(p1))/ZZ(P.direction);
-	double alpha_zmax=(z_F+0.5-ZZ(p1))/ZZ(P.direction);
-	
-	double alpha_min =MAX(MIN(alpha_xmin,alpha_xmax),
-                              MIN(alpha_ymin,alpha_ymax));
-               alpha_min =MAX(alpha_min,MIN(alpha_zmin,alpha_zmax));
-	double alpha_max =MIN(MAX(alpha_xmin,alpha_xmax),
-                              MAX(alpha_ymin,alpha_ymax));
-               alpha_max =MIN(alpha_max,MAX(alpha_zmin,alpha_zmax));
-	if (alpha_max-alpha_min<XMIPP_EQUAL_ACCURACY)	continue;
-	
-	// Compute the first point in the volume intersecting the ray
-	matrix1D<double>  v(3);
-	matrix1D<int>    idx(3);
-	V3_BY_CT(v,P.direction,alpha_min);
-	V3_PLUS_V3(v,p1,v);
+     VECTOR_R3(r_p,j,i,0);		
 
-	// Compute the index of the first voxel
-	XX(idx)=CLIP(ROUND(XX(v)),x_0,x_F);
-	YY(idx)=CLIP(ROUND(YY(v)),y_0,y_F);
-	ZZ(idx)=CLIP(ROUND(ZZ(v)),z_0,z_F);
+     // Express r_p in the universal coordinate system
+     M3x3_BY_V3x1(p1,P.eulert,r_p);
 
-	
+     // Compute the minimum and maximum alpha for the ray
+     // intersecting the given volume
+     double alpha_xmin=(x_0-0.5-XX(p1))/XX(P.direction);
+     double alpha_xmax=(x_F+0.5-XX(p1))/XX(P.direction);
+     double alpha_ymin=(y_0-0.5-YY(p1))/YY(P.direction);
+     double alpha_ymax=(y_F+0.5-YY(p1))/YY(P.direction);
+     double alpha_zmin=(z_0-0.5-ZZ(p1))/ZZ(P.direction);
+     double alpha_zmax=(z_F+0.5-ZZ(p1))/ZZ(P.direction);
+
+     double alpha_min =MAX(MIN(alpha_xmin,alpha_xmax),
+                           MIN(alpha_ymin,alpha_ymax));
+            alpha_min =MAX(alpha_min,MIN(alpha_zmin,alpha_zmax));
+     double alpha_max =MIN(MAX(alpha_xmin,alpha_xmax),
+                           MAX(alpha_ymin,alpha_ymax));
+            alpha_max =MIN(alpha_max,MAX(alpha_zmin,alpha_zmax));
+     if (alpha_max-alpha_min<XMIPP_EQUAL_ACCURACY)	continue;
+
+     // Compute the first point in the volume intersecting the ray
+     matrix1D<double>  v(3);
+     matrix1D<int>    idx(3);
+     V3_BY_CT(v,P.direction,alpha_min);
+     V3_PLUS_V3(v,p1,v);
+
+     // Compute the index of the first voxel
+     XX(idx)=CLIP(ROUND(XX(v)),x_0,x_F);
+     YY(idx)=CLIP(ROUND(YY(v)),y_0,y_F);
+     ZZ(idx)=CLIP(ROUND(ZZ(v)),z_0,z_F);
+
+
+     #ifdef DEBUG
+        cout << "First voxel: " << v.transpose() << endl;
+        cout << "   First index: " << idx.transpose() << endl;
+        cout << "   Alpha_min: " << alpha_min << endl;
+     #endif
+
+     // Follow the ray
+     double alpha=alpha_min;
+     do {  
 	#ifdef DEBUG
-           cout << "First voxel: " << v.transpose() << endl;
-           cout << "   First index: " << idx.transpose() << endl;
-           cout << "   Alpha_min: " << alpha_min << endl;
+	     cout << " \n\nCurrent Value: " << V(ZZ(idx),YY(idx),XX(idx)) << endl;
 	#endif
-   
-	// Follow the ray
-	double alpha=alpha_min;
-	do {  
-	   #ifdef DEBUG
-	   	cout << " \n\nCurrent Value: " << V(ZZ(idx),YY(idx),XX(idx)) << endl;
-	   #endif
-	   
-	   double alpha_x = (XX(idx)+half_x_sign-XX(p1))/XX(P.direction);
-           double alpha_y = (YY(idx)+half_y_sign-YY(p1))/YY(P.direction);
-           double alpha_z = (ZZ(idx)+half_z_sign-ZZ(p1))/ZZ(P.direction);
 
-	   // Which dimension will ray move next step into?, it isn't neccesary to be only
-	   // one. 
-	   double diffx = ABS(alpha-alpha_x);
-	   double diffy = ABS(alpha-alpha_y);
-	   double diffz = ABS(alpha-alpha_z);
-	  
-	   double diff_alpha = MIN(MIN(diffx,diffy),diffz);
+	double alpha_x = (XX(idx)+half_x_sign-XX(p1))/XX(P.direction);
+        double alpha_y = (YY(idx)+half_y_sign-YY(p1))/YY(P.direction);
+        double alpha_z = (ZZ(idx)+half_z_sign-ZZ(p1))/ZZ(P.direction);
 
-	   V(ZZ(idx), YY(idx), XX(idx)) += diff_alpha * P(i,j);
-	
-	   if(ABS(diff_alpha-diffx) <=XMIPP_EQUAL_ACCURACY){
-		  alpha = alpha_x; XX(idx)+=x_sign;
-	   }
-	   if(ABS(diff_alpha-diffy) <=XMIPP_EQUAL_ACCURACY){
-		  alpha = alpha_y; YY(idx)+=y_sign;
-	   }
-	   if(ABS(diff_alpha-diffz) <=XMIPP_EQUAL_ACCURACY){
-		  alpha = alpha_z; ZZ(idx)+=z_sign;
-	   }
-    
-	} while ((alpha_max-alpha)>XMIPP_EQUAL_ACCURACY);
-  //    } // for
+	// Which dimension will ray move next step into?, it isn't neccesary to be only
+	// one. 
+	double diffx = ABS(alpha-alpha_x);
+	double diffy = ABS(alpha-alpha_y);
+	double diffz = ABS(alpha-alpha_z);
 
-       #ifdef DEBUG
-      	cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
-      #endif
+	double diff_alpha = MIN(MIN(diffx,diffy),diffz);
+
+	V(ZZ(idx), YY(idx), XX(idx)) += diff_alpha * P(i,j);
+
+	if(ABS(diff_alpha-diffx) <=XMIPP_EQUAL_ACCURACY){
+	       alpha = alpha_x; XX(idx)+=x_sign;
+	}
+	if(ABS(diff_alpha-diffy) <=XMIPP_EQUAL_ACCURACY){
+	       alpha = alpha_y; YY(idx)+=y_sign;
+	}
+	if(ABS(diff_alpha-diffz) <=XMIPP_EQUAL_ACCURACY){
+	       alpha = alpha_z; ZZ(idx)+=z_sign;
+	}
+
+     } while ((alpha_max-alpha)>XMIPP_EQUAL_ACCURACY);
+     #ifdef DEBUG
+        cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
+     #endif
    }
 }
 #undef DEBUG
 
-#ifdef NEVER_DEFINED
-// Project using spider
-void project_Volume(VolumeXmipp &V, Projection &P, int Ydim, int Xdim,
-   double rot, double tilt, double psi) _THROW {
-   // Initialise projection
-   P.reset(Ydim, Xdim);
-   P.set_angles(rot,tilt,psi);
-
-   // Project all voxels
-   FileName fn_vol=V.name();
-   if (fn_vol=="") V.write("superfeo.kkk");
-   else system(((string) "ln -s "+fn_vol+" superfeo.kkk").c_str());
-
-   ofstream spider_batch;
-   spider_batch.open("b01.kkk");
-   if (!spider_batch)
-      REPORT_ERROR(1,"Project:: Cannot open file for Spider batch");
-   spider_batch
-      << "pj 3e\n"
-      << "superfeo" << endl
-      << Xdim << " " << Ydim << endl
-      << "superfeo2\n"
-      << rot << endl
-      << tilt << endl
-      << psi << endl
-      << "en\n"
-   ;
-   spider_batch.close();
-   char *spider_prog=getenv("SPIDER");
-   if (spider_prog==NULL)
-      REPORT_ERROR(1,"Project:: The environment variable SPIDER is not set");
-   system(((string)spider_prog+" kkk b01").c_str());
-   system("rm LOG*.kkk results*.kkk* b01*.kkk");
-   
-   P.read("superfeo2.kkk");
-   system("rm superfeo*.kkk");
-}
-#endif
 // Projections from crystals particles #####################################
 // The projection is not precleaned (set to 0) before projecting and its
 // angles are supposed to be already written (and all Euler matrices
@@ -825,7 +805,7 @@ For each blob in the grid
    yw=(int) intWRAP(y,y0,yF);
 
 void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
-   const ImageOver &footprint, const ImageOver &footprint2,
+   const Basis &basis,
    Projection &proj, Projection &norm_proj,
    const matrix1D<double> &shift,
    const matrix1D<double> &aint, const matrix1D<double> &bint,
@@ -877,6 +857,11 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
    int           i,j,k;                     // volume element indexes
    SPEED_UP_temps;   	      	            // Auxiliar variables for
       	             	      	            // fast multiplications
+
+   // Check that it is a blob volume .......................................
+   if (basis.type!=Basis::blobs)
+      REPORT_ERROR(1,"project_Crystal_SimpleGrid: Cannot project other than "
+         "blob volumes");
 
    // Compute the deformed direction of projection .........................
    matrix2D<double> Eulerg;
@@ -963,9 +948,9 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
    // Look out that this footprint size is in the deformed projection,
    // that is why it is not a square footprint but a parallelogram
    // and we have to look for the smaller rectangle which surrounds it
-   XX(footprint_size) = footprint.umax();
-   YY(footprint_size) = footprint.vmax();
-   N_eq=(2*footprint.umax()+1)*(2*footprint.vmax()+1);
+   XX(footprint_size) = basis.blobprint.umax();
+   YY(footprint_size) = basis.blobprint.vmax();
+   N_eq=(2*basis.blobprint.umax()+1)*(2*basis.blobprint.vmax()+1);
    matrix1D<double> c1(3), c2(3);
    XX(c1)    	      = XX(footprint_size);
    YY(c1)    	      = YY(footprint_size);
@@ -1067,7 +1052,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
       	             // Compute position in undeformed space and
 		     // corresponding sample in the blob footprint
 		     M2x2_BY_V2x1(rc,Ainv,r);
-		     OVER2IMG(footprint,yc-YY(actprj), xc-XX(actprj),
+		     OVER2IMG(basis.blobprint,yc-YY(actprj), xc-XX(actprj),
 		        foot_V, foot_U);
                      
                      #ifdef DEBUG
@@ -1078,7 +1063,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                              << foot_U << " " << foot_V << endl;
                         cout.flush();
                      #endif
-                     if (IMGMATRIX(footprint).outside(foot_V,foot_U)) continue;
+                     if (IMGMATRIX(basis.blobprint).outside(foot_V,foot_U)) continue;
 
       	             // Wrap positions
       	             int yw, xw;
@@ -1086,25 +1071,25 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                      #ifdef DEBUG
                         cout << "      After wrapping " << xw << " " << yw << endl;
                         cout << "      Value added = " << VOLVOXEL(vol,k,i,j) *
-                           IMGPIXEL(footprint,foot_V,foot_U) << " Blob value = "
-                           << IMGPIXEL(footprint,foot_V,foot_U) 
-                           << " Blob^2 " << IMGPIXEL(footprint2,foot_V,foot_U)
+                           IMGPIXEL(basis.blobprint,foot_V,foot_U) << " Blob value = "
+                           << IMGPIXEL(basis.blobprint,foot_V,foot_U) 
+                           << " Blob^2 " << IMGPIXEL(basis.blobprint2,foot_V,foot_U)
                            << endl;
                         cout.flush();
                      #endif
 	             if (FORW) {
                         IMGPIXEL(proj,yw,xw) += VOLVOXEL(vol,k,i,j) *
-                           IMGPIXEL(footprint,foot_V,foot_U);
+                           IMGPIXEL(basis.blobprint,foot_V,foot_U);
                         switch(eq_mode) {
                            case CAVARTK:
                            case ARTK:
                               IMGPIXEL(norm_proj,yw,xw) +=
-                                 IMGPIXEL(footprint2,foot_V,foot_U);
+                                 IMGPIXEL(basis.blobprint2,foot_V,foot_U);
                               break;
                         }
 	             } else {
 	                vol_corr += IMGPIXEL(norm_proj,yw,xw) *
-                           IMGPIXEL(footprint,foot_V,foot_U);
+                           IMGPIXEL(basis.blobprint,foot_V,foot_U);
 	             }
 
 	          }
@@ -1148,8 +1133,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 //#define DEBUG
 void project_Crystal_Volume(
    GridVolume &vol,                      // Volume
-   const ImageOver  &footprint,          // Footprint of a blob         
-   const ImageOver  &footprint2,         // Used for error computation
+   const Basis &basis,                   // Basis
    Projection       &proj,               // Projection
    Projection       &norm_proj,          // Projection of a unitary volume
    int              Ydim,                // Dimensions of the projection
@@ -1176,7 +1160,7 @@ void project_Crystal_Volume(
    
    // Project each subvolume
    for (int i=0; i<vol.VolumesNo(); i++) {
-      project_Crystal_SimpleGrid(vol(i),vol.grid(i),footprint,footprint2,
+      project_Crystal_SimpleGrid(vol(i),vol.grid(i),basis,
          proj, norm_proj, shift, aint, bint, D, Dinv, mask, FORW, eq_mode);
 
    #ifdef DEBUG
@@ -1190,11 +1174,9 @@ void project_Crystal_Volume(
 
 /* Count equations in a grid volume --------------------------------------- */
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
-   const struct blobtype &blob,
-   const ImageOver &footprint, const ImageOver &footprint2,
-   Projection &read_proj) {
+   const Basis &basis, Projection &read_proj) {
    for (int i=0; i<GVNeq.VolumesNo(); i++)
-      project_SimpleGrid(GVNeq(i),GVNeq.grid(i),blob,footprint,footprint2,
+      project_SimpleGrid(GVNeq(i),GVNeq.grid(i),basis,
          read_proj, read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }
 
@@ -1202,9 +1184,8 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
 void instatiate_projection() {
    GridVolumeT<int>    GVi;
    GridVolumeT<double> GVd;
-   ImageOver           footprint;
    Projection          proj;
-   struct blobtype     blob;
-   project_Volume(GVi,blob,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
-   project_Volume(GVd,blob,footprint,footprint,proj,proj,30,30,0,0,0,FORWARD,ARTK);
+   Basis               basis;
+   project_Volume(GVi,basis,proj,proj,30,30,0,0,0,FORWARD,ARTK);
+   project_Volume(GVd,basis,proj,proj,30,30,0,0,0,FORWARD,ARTK);
 }

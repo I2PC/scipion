@@ -30,8 +30,8 @@
 #include <XmippData/xmippWavelets.hh>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
-   const SymList &SL,
+void build_recons_info(SelFile &selfile, SelFile &selctf,
+   const FileName &fn_ctf,const SymList &SL,
    Recons_info * &IMG_Inf, bool do_not_use_symproj) {
    matrix2D<double>  L(4,4), R(4,4);    // A matrix from the list
    FileName          fn_proj;
@@ -49,10 +49,10 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
    // The next two ifs check whether there is a CTF file, and 
    // whether it is unique 
    if (fn_ctf!="") {
-      is_there_ctf=1;
-      is_ctf_unique=1;
-      if (Is_FourierImageXmipp(fn_ctf)==FALSE) {
-         is_ctf_unique=0;
+      is_there_ctf=true;
+      is_ctf_unique=true;
+      if (fn_ctf.get_extension()=="sel") {
+         is_ctf_unique=false;
          int truectf=selctf.ImgNo();
          selctf.go_first_ACTIVE();
          int numctf=truectf*(SL.SymsNo() + 1);
@@ -70,7 +70,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf
    init_progress_bar(trueIMG);
    while (!selfile.eof()) {
      fn_proj=selfile.NextImg();
-     if ((is_there_ctf==1)&&(is_ctf_unique!=1)) fn_ctf1=selctf.NextImg(); 
+     if (is_there_ctf && !is_ctf_unique) fn_ctf1=selctf.NextImg(); 
      if (fn_proj!="") {
         read_proj.read(fn_proj);
 
@@ -136,10 +136,9 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
    Projection &read_proj) {
    VolumeXmipp vol_voxels;
 
-   // Convert from blobs to voxels
-   blobs2voxels(*ptr_vol_out, prm->blob, &vol_voxels, prm->D, 
-      Zoutput_volume_size, Youtput_volume_size,
-      Xoutput_volume_size);
+   // Convert from basis to voxels
+   prm->basis.changeToVoxels(*ptr_vol_out, &(vol_voxels()), 
+      Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    (*ptr_vol_out).init_zeros();
    N++;
    
@@ -412,7 +411,7 @@ void POCSClass::newProjection() {
 }
 
 /* Apply ................................................................... */
-void POCSClass::apply(GridVolume &vol_blobs, int it, int images) {
+void POCSClass::apply(GridVolume &vol_basis, int it, int images) {
    VolumeXmipp vol_POCS, theo_POCS_vol, corr_POCS_vol, vol_voxels;
 
    if (apply_POCS && POCS_i%POCS_freq==0) {
@@ -420,9 +419,8 @@ void POCSClass::apply(GridVolume &vol_blobs, int it, int images) {
        VolumeXmipp *desired_volume=NULL;
 
        // Compute the corresponding voxel volume
-       blobs2voxels(vol_blobs, prm->blob, &vol_voxels, prm->D, 
-   	  Zoutput_volume_size, Youtput_volume_size,
-	  Xoutput_volume_size);
+       prm->basis.changeToVoxels(vol_basis, &(vol_voxels()),
+   	  Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
        if (prm->tell&TELL_SAVE_AT_EACH_STEP) {
 	  vol_voxels.write("PPPvolPOCS0.vol");
 	  cout << "Stats PPPvolPOCS0.vol: "; vol_voxels().print_stats(); cout << endl;
@@ -486,27 +484,42 @@ void POCSClass::apply(GridVolume &vol_blobs, int it, int images) {
    	//     << (double)posi/(double)fg << " " << endl;
 
        // Solve volumetric equations
-       if (desired_volume==NULL)
-   	  ART_voxels2blobs_single_step(vol_blobs, &vol_blobs,
-   	     prm->blob, prm->D, prm->lambda(it),
-   	     (Volume *) &theo_POCS_vol, NULL,
-   	     (Volume *) &corr_POCS_vol,
-   	     (Volume *) &vol_POCS,
-   	     POCS_mean_error, POCS_max_error, VARTK);
-       else {
-   	  FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
-   	     if (vol_POCS(k,i,j)==1) (*desired_volume)(k,i,j)=0;
-   	  for (int i=0; i<prm->force_sym; i++) {
-   	     ART_voxels2blobs_single_step(vol_blobs, &vol_blobs,
-   		prm->blob, prm->D, prm->lambda(it),
-   		(Volume *) &theo_POCS_vol, desired_volume,
-   		(Volume *) &corr_POCS_vol,
-   		NULL,
-   		POCS_mean_error, POCS_max_error, VARTK);
-   	     if (prm->tell&TELL_SAVE_AT_EACH_STEP)
-	 	cout << "    POCS Iteration " << i
-	 	     << " POCS Error=" <<  POCS_mean_error << endl;
-   	  }
+       switch (prm->basis.type) {
+          case Basis::blobs:
+             if (desired_volume==NULL)
+   	        ART_voxels2blobs_single_step(vol_basis, &vol_basis,
+   	           prm->basis.blob, prm->D, prm->lambda(it),
+   	           &(theo_POCS_vol()), NULL,
+   	           &(corr_POCS_vol()),
+   	           &(vol_POCS()),
+   	           POCS_mean_error, POCS_max_error, VARTK);
+             else {
+   	        FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
+   	           if (vol_POCS(k,i,j)==1) (*desired_volume)(k,i,j)=0;
+   	        for (int i=0; i<prm->force_sym; i++) {
+   	           ART_voxels2blobs_single_step(vol_basis, &vol_basis,
+   		      prm->basis.blob, prm->D, prm->lambda(it),
+   	              &(theo_POCS_vol()), &((*desired_volume)()),
+   		      &(corr_POCS_vol()),
+   		      NULL,
+   		      POCS_mean_error, POCS_max_error, VARTK);
+   	           if (prm->tell&TELL_SAVE_AT_EACH_STEP)
+	 	      cout << "    POCS Iteration " << i
+	 	           << " POCS Error=" <<  POCS_mean_error << endl;
+   	        }
+             }
+             break;
+          case Basis::voxels:
+             if (desired_volume==NULL) {
+                FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
+                   if (vol_POCS(k,i,j)) vol_basis(0)(k,i,j)=0;
+             } else {
+                vol_basis(0)().init_zeros();
+                FOR_ALL_ELEMENTS_IN_MATRIX3D((*desired_volume)())
+                   vol_basis(0)(k,i,j)=(*desired_volume)(k,i,j);
+             }
+             POCS_mean_error=-1;
+             break;
        }
        POCS_i=1;
        POCS_global_mean_error+=POCS_mean_error;

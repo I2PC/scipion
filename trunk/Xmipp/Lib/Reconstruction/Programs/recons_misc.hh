@@ -155,7 +155,7 @@ public:
    void newProjection();
 
    /// Apply
-   void apply(GridVolume &vol_blobs, int it, int images);
+   void apply(GridVolume &vol_basis, int it, int images);
 };
 //@}
 
