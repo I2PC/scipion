@@ -99,31 +99,27 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    distributed variables. In Xmipp the program to do that is Fourierfilter
 
     PARAMETERS:   Img - The matrix - Here it's supposed that it comes from
-    		        an input image
-		          Filter - The matrix that will contain the filter. This
-				              will contain complex values.  		
-		          ARParameters - The matrix with the AR model coeficients, as
-				                   is returned by CausalARMA or NonCausalARMA
-		          MAParameters - The matrix with the MA model coeficients, as
-				                   is returned by CausalARMA or NonCausalARMA
-				  dSigma        - The Sigma Coeficient for the ARMA model
+                        an input image
+                  Filter - The matrix that will contain the filter.
+		  ARParameters - The matrix with the AR model coeficients, as
+			   is returned by CausalARMA or NonCausalARMA
+		  MAParameters - The matrix with the MA model coeficients, as
+                           is returned by CausalARMA or NonCausalARMA
+		  dSigma        - The Sigma Coeficient for the ARMA model
 				
    OUTPUT: 	The function stores the output in Filter.
    
    DATE:        26-3-2001
-
 */
-void ARMAFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter, 
+void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter, 
                 matrix2D<double> &ARParameters, matrix2D<double> &MAParameters,
 				double dSigma);
-
-
 //@}
 
 class ARMA_parameters 
 {
 public:
-   FileName 	fn_in;		        // Name of input image
+   FileName 	fn_in;		    // Name of input image
    FileName     fn_filter;          // Name of filter image     
    int      	N_AR;               // order in the Rows direction of the AR part of the model
    int      	M_AR;               // order in the Cols direction of the AR part of the model
