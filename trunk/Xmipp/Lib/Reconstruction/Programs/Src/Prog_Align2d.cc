@@ -618,7 +618,6 @@ void Prog_align2d_prm::align2d() _THROW {
   }
 
   // Filter if necessary
-
   if (do_filter) {
     FourierMask fmask;
     fmask.w1=sam/resol; 
