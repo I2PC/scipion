@@ -118,7 +118,7 @@ protected slots:
     // Change ticks spacing
     virtual void changeXstep();    
     // returns spacing from scroll window
-    virtual void set_spacing(float _spacing, float _x_tick_off);
+    virtual void set_spacing(vector<float> prm);
 
 public:
     /** Initialize with a set of vectors.

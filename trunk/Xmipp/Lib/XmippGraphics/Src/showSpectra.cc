@@ -326,31 +326,32 @@ void ShowSpectra::changeFont() {
 // Change Grid spacing in X axis -------------------------------------
 void ShowSpectra::changeXstep() {
       int N=V->theItems[0].size();
-      ScrollParam2* param_window;
-      param_window = new ScrollParam2(1 //min
-                                    ,N //max
-				    , spacing //init value
-				    , x_tick_off // init value
-				    , "Set spacing",
-         0, "new window", WDestructiveClose,0);
-      connect( param_window, SIGNAL(new_value(float,float)), this,
-      SLOT(set_spacing(float,float)) );
-      param_window->setFixedSize(250,200);
+      ScrollParam* param_window;
+      vector<float> min; min.push_back(1); min.push_back(1);
+      vector<float> max; max.push_back(N); max.push_back(N);
+      vector<float> initial_value;
+         initial_value.push_back(spacing);
+         initial_value.push_back(x_tick_off);
+      vector<char *> prm_name;
+         prm_name.push_back("Spacing");
+         prm_name.push_back("Tick offset");
+      param_window = new ScrollParam(min,max,initial_value,prm_name,
+	 "Set spacing", 0, "new window", WDestructiveClose,0);
+      connect( param_window, SIGNAL(new_value(vector<float>)), this,
+      SLOT(set_spacing(vector<float>)) );
+      param_window->setFixedSize(200,175);
       param_window->show();
 }
 
 /****************************************************/
-
-void ShowSpectra::set_spacing(float _spacing, float _x_tick_off) {
-  spacing = (int) _spacing;
-  x_tick_off = (int) _x_tick_off;
-    clearContents();
-    repaintContents();
-  
+void ShowSpectra::set_spacing(vector<float> prm) {
+  spacing = (int) prm[0];
+  x_tick_off = (int) prm[1];
+  clearContents();
+  repaintContents();
 }
 
-void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
-{
+void ShowSpectra::setCommonSpectraOptionsRightclickMenubar() {
    // Select by value
    options->insertItem( "Select by spectral values", this, SLOT(selectByValues()));
    options->insertSeparator();
