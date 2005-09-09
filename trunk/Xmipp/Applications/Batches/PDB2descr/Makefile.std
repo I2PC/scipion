@@ -1,4 +1,5 @@
 ######################################################################
 MYSHELL = perl
-PROJ = PDB2descr.pl
+PROJ = PDB2descr
 
+PDB2descr: batch_PDB2descr.pl
