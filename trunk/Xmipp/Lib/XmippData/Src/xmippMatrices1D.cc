@@ -497,6 +497,7 @@ template <class T>
       a.isCorner(r);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,1);
       int imax;
       a.max_index(imax);
@@ -530,6 +531,7 @@ void instantiate_complex_vector () {
       a.isCorner(r);
       a.patch(a);
       cout << a;
+      a.edit();
       a.window(0,1);
       cut_to_common_size(a,a);
    
