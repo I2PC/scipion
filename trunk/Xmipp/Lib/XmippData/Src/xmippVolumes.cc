@@ -70,7 +70,7 @@ template <class T> void VolumeT<T>::read(FILE *fh,
       }
 }
 
-
+template <>
 void VolumeT<complex<double> >::read(FILE *fh,
   int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
 {
@@ -139,6 +139,7 @@ template <class T> void VolumeT<T>::write(FILE *fh, bool reversed,
 }
 
 // Specific function to write volumes with complex numbers in them
+template <>
 void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
    Volume_Type volume_type) 
 {
