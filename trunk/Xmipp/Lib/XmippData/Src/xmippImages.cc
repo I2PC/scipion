@@ -76,6 +76,7 @@ bool ImageT<T>::read(FILE * &fh, float fIform, int Ydim, int Xdim,
 }
 
 // Specific function to read images with complex numbers in them
+template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
    int Ydim, int Xdim, bool reversed, Image_Type image_type)
 {
@@ -166,6 +167,7 @@ void ImageT<T>::write(FILE * &fh, bool reversed, Image_Type image_type) {
 }
 
 // Specific function to write images with complex numbers in them
+template <>
 void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type)
 {
   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)

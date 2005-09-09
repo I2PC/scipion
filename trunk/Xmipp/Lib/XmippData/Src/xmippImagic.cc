@@ -112,6 +112,7 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
   return (TRUE);
 }
 
+template <>
 bool ImageImagicT<complex<double> >::read (const FileName &name) _THROW
 {
   rename (name);
