@@ -574,7 +574,8 @@ double intersection_unit_cylinder(const matrix1D<double> &u,
 
 /** Intersection of a ray with a unit cube.
     The cube is centered at (0,0,0) and has got unit size length in all
-    directions. The ray is defined by its direction (u) and a passing
+    directions, i.e., the cube goes from (-0.5,-0.5,-0.5) to (0.5,0.5,0.5).
+    The ray is defined by its direction (u) and a passing
     point (r). See \Ref{Cube} to know how you can intersect any ray with
     any cube.*/
 double intersection_unit_cube(const matrix1D<double> &u, 
