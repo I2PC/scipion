@@ -196,7 +196,7 @@ void ShowTable::changeFont() {
 void ShowTable::insertGeneralItemsInRightclickMenubar() {    
     //Colors................................................................
     QPopupMenu* colorMenu = new QPopupMenu();
-       colorMenu->insertItem( "&Font", this, SLOT(changeFontColor()));
+       colorMenu->insertItem( "&Font color", this, SLOT(changeFontColor()));
     menubar->insertItem( "&Change color...", colorMenu);
     menubar->insertItem( "&Change font...", this, SLOT(changeFont()));
     // Help ................................................................
@@ -234,6 +234,7 @@ void ShowTable::adjustStatusLabel() {
    status->show();
    maxHeight += status->height();
 }
+
 /* Rewrite cell painting --------------------------------------------------- */
 void ShowTable::paintCell(QPainter *p, int row, int col,const QRect & cr,
    bool selected, const QColorGroup & cg) {
@@ -244,6 +245,7 @@ void ShowTable::paintCell(QPainter *p, int row, int col,const QRect & cr,
    p->drawPixmap(0, 0, *(content[i]));
    drawFrameAndLabel(p,row,col,i);
 }
+
 void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
    int label_position) {
    int w = columnWidth( col );  	       // width of cell in pixels
