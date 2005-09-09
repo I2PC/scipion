@@ -340,10 +340,10 @@ void footprint_blob(
 // This function will construct a table of blob values (something like the
 // footprint)
 #define DEFORM_BLOB_WHEN_IN_CRYSTAL
-void blobs2voxels_SimpleGrid(Volume &vol_blobs,
+void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
    const SimpleGrid &grid, const struct blobtype &blob,
-   Volume *vol_voxels, const matrix2D<double> *D=NULL, int istep=50,
-   Volume *vol_corr=NULL, const Volume *vol_mask=NULL,
+   matrix3D<double> *vol_voxels, const matrix2D<double> *D=NULL, int istep=50,
+   matrix3D<double> *vol_corr=NULL, const matrix3D<double> *vol_mask=NULL,
    bool FORW=TRUE, int eq_mode=VARTK) {
    matrix2D<double> Dinv;                   // Inverse of D
    matrix1D<double> act_coord(3);           // Coord: Actual position inside
@@ -376,12 +376,12 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
    SPEED_UP_temps;
 
    // Some aliases
-   #define x0 STARTINGX(VOLMATRIX(*vol_voxels))
-   #define xF FINISHINGX(VOLMATRIX(*vol_voxels))
-   #define y0 STARTINGY(VOLMATRIX(*vol_voxels))
-   #define yF FINISHINGY(VOLMATRIX(*vol_voxels))
-   #define z0 STARTINGZ(VOLMATRIX(*vol_voxels))
-   #define zF FINISHINGZ(VOLMATRIX(*vol_voxels))
+   #define x0 STARTINGX(*vol_voxels)
+   #define xF FINISHINGX(*vol_voxels)
+   #define y0 STARTINGY(*vol_voxels)
+   #define yF FINISHINGY(*vol_voxels)
+   #define z0 STARTINGZ(*vol_voxels)
+   #define zF FINISHINGZ(*vol_voxels)
 
    #ifdef DEBUG
       bool condition=!FORW;
@@ -424,7 +424,7 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
 	    VECTOR_R3(grid_index,j,i,k);
             #ifdef DEBUG
 	       if (condition) {
-        	  printf("Dealing blob at (%d,%d,%d) = %f\n", j,i,k,VOLVOXEL(vol_blobs,k,i,j));
+        	  printf("Dealing blob at (%d,%d,%d) = %f\n", j,i,k,VOL_ELEM(vol_blobs,k,i,j));
         	  cout << "Center of the blob      "
                        << act_coord.transpose() << endl;
 	       }
@@ -510,7 +510,7 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
 	             for (intx=XX(corner1); intx<=XX(corner2); intx++) {
                         int iz=(int)intz, iy=(int)inty, ix=(int)intx;
                         if (vol_mask!=NULL)
-                           if (!VOLVOXEL(*vol_mask,iz,iy,ix)) continue;
+                           if (!VOL_ELEM(*vol_mask,iz,iy,ix)) continue;
 
                         // Compute distance to the center of the blob
                         VECTOR_R3(gcurrent, intx, inty, intz);
@@ -536,23 +536,23 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
                         // Add at that position the corresponding blob value
 
                         if (FORW) {
-                           VOLVOXEL(*vol_voxels,iz,iy,ix) +=
-                              VOLVOXEL(vol_blobs,k,i,j)*
+                           VOL_ELEM(*vol_voxels,iz,iy,ix) +=
+                              VOL_ELEM(vol_blobs,k,i,j)*
                                  VEC_ELEM(blob_table,id);
                            #ifdef DEBUG_MORE
 			      if (condition) {
-                        	 cout << " adding " << VOLVOXEL(vol_blobs,k,i,j)
+                        	 cout << " adding " << VOL_ELEM(vol_blobs,k,i,j)
 			              << " * " << VEC_ELEM(blob_table,id) << " = "
-				      << VOLVOXEL(vol_blobs,k,i,j)*
+				      << VOL_ELEM(vol_blobs,k,i,j)*
                                 	 VEC_ELEM(blob_table,id) << endl;
                         	 cout.flush();
 			      }
                            #endif
                            if (vol_corr!=NULL) 
-                              VOLVOXEL(*vol_corr,iz,iy,ix) +=
+                              VOL_ELEM(*vol_corr,iz,iy,ix) +=
                                  VEC_ELEM(blob_table,id)*VEC_ELEM(blob_table,id);
                         } else {
-			   double contrib=VOLVOXEL(*vol_corr,iz,iy,ix)*
+			   double contrib=VOL_ELEM(*vol_corr,iz,iy,ix)*
                                  VEC_ELEM(blob_table,id);
 			   switch (eq_mode) {
 			      case VARTK:
@@ -566,7 +566,7 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
 			   }
                            #ifdef DEBUG_MORE
 			      if (condition) {
-                        	 cout << " adding " << VOLVOXEL(*vol_corr,iz,iy,ix)
+                        	 cout << " adding " << VOL_ELEM(*vol_corr,iz,iy,ix)
 			              << " * " << VEC_ELEM(blob_table,id) << " = "
 				      << contrib << endl;
                         	 cout.flush();
@@ -576,12 +576,12 @@ void blobs2voxels_SimpleGrid(Volume &vol_blobs,
                      }
                if (N_eq==0) N_eq=1;
                if (!FORW) {
-	          VOLVOXEL(vol_blobs,k,i,j) += vol_correction/N_eq;
+	          VOL_ELEM(vol_blobs,k,i,j) += vol_correction/N_eq;
 	          #ifdef DEBUG_MORE
 		     cout << " correction= " << vol_correction << endl
 		          << " Number of eqs= " << N_eq << endl
 			  << " Blob after correction= "
-			  << VOLVOXEL(vol_blobs,k,i,j) << endl;
+			  << VOL_ELEM(vol_blobs,k,i,j) << endl;
 		  #endif
 	       }
             }
@@ -670,38 +670,38 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 /* Blobs -> Voxels for a Grid ---------------------------------------------- */
 //#define DEBUG      
 void blobs2voxels(const GridVolume &vol_blobs,
-   const struct blobtype &blob, Volume *vol_voxels, const matrix2D<double> *D,
-   int Zdim, int Ydim, int Xdim) {
+   const struct blobtype &blob, matrix3D<double> *vol_voxels,
+   const matrix2D<double> *D, int Zdim, int Ydim, int Xdim) {
 
    // Resize and set starting corner .......................................
    if (Zdim==0 || Ydim==0 || Xdim==0) {
       matrix1D<int> size, corner;
       voxel_volume_shape(vol_blobs, blob, D, corner, size);
-      (*vol_voxels)().init_zeros(ZZ(size),YY(size),XX(size));
-      (*vol_voxels)().startingX()=XX(corner);
-      (*vol_voxels)().startingY()=YY(corner);
-      (*vol_voxels)().startingZ()=ZZ(corner);
+      (*vol_voxels).init_zeros(ZZ(size),YY(size),XX(size));
+      (*vol_voxels).startingX()=XX(corner);
+      (*vol_voxels).startingY()=YY(corner);
+      (*vol_voxels).startingZ()=ZZ(corner);
    } else {
-      (*vol_voxels)().init_zeros(Zdim,Ydim,Xdim);
-      (*vol_voxels)().set_Xmipp_origin();
+      (*vol_voxels).init_zeros(Zdim,Ydim,Xdim);
+      (*vol_voxels).set_Xmipp_origin();
    }
 
    // Convert each subvolume ...............................................
    for (int i=0; i<vol_blobs.VolumesNo(); i++) {
-      blobs2voxels_SimpleGrid((Volume &)vol_blobs(i),vol_blobs.grid(i),
+      blobs2voxels_SimpleGrid(vol_blobs(i)(),vol_blobs.grid(i),
          blob,vol_voxels,D);
       #ifdef DEBUG
 	 cout << "Blob grid no " << i << " stats: "; vol_blobs(i)().print_stats(); cout << endl;
-         cout << "So far vol stats: "; (*vol_voxels)().print_stats(); cout << endl;
-         VolumeXmipp save; save=*vol_voxels;
+         cout << "So far vol stats: "; (*vol_voxels).print_stats(); cout << endl;
+         VolumeXmipp save; save()=*vol_voxels;
          save.write((string)"PPPvoxels"+ItoA(i));
       #endif
    }
    
    // Now normalise the resulting volume ..................................
    double norm=sum_blob_Grid(blob,vol_blobs.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*vol_voxels))
-      VOLVOXEL(*vol_voxels,k,i,j) /= norm;
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+      VOL_ELEM(*vol_voxels,k,i,j) /= norm;
 
    // Set voxels outside interest region to minimum value .................
    double R=vol_blobs.grid(0).get_interest_radius();
@@ -709,16 +709,16 @@ void blobs2voxels(const GridVolume &vol_blobs,
       double R2=(R-2)*(R-2);
 
       // Compute minimum value within sphere
-      double min_val=VOLVOXEL(*vol_voxels,0,0,0);
-      FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*vol_voxels))
+      double min_val=VOL_ELEM(*vol_voxels,0,0,0);
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
          if (j*j+i*i+k*k<=R2-4)
-	    min_val=MIN(min_val,VOLVOXEL(*vol_voxels,k,i,j));
+	    min_val=MIN(min_val,VOL_ELEM(*vol_voxels,k,i,j));
 
       // Substitute minimum value
       R2=R*R;
-      FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*vol_voxels))
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
          if (j*j+i*i+k*k>=R2)
-	    VOLVOXEL(*vol_voxels,k,i,j)=min_val;
+	    VOL_ELEM(*vol_voxels,k,i,j)=min_val;
    }
 }
 #undef DEBUG
@@ -726,7 +726,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
 /* Blobs -> Coefs ---------------------------------------------------------- */
 //#define DEBUG
 void blobs2space_coefficients(const GridVolume &vol_blobs,
-   const struct blobtype &blob, Volume *vol_coefs) {
+   const struct blobtype &blob, matrix3D<double> *vol_coefs) {
 
    // Compute vol_coefs shape
    matrix1D<int> corner1, size;
@@ -735,10 +735,10 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
    XX(corner1)=(int)(FLOOR(XX(corner1))/g_2); XX(size)=(int)(CEIL(XX(size))/g_2); 
    YY(corner1)=(int)(FLOOR(YY(corner1))/g_2); YY(size)=(int)(CEIL(YY(size))/g_2);
    ZZ(corner1)=(int)(FLOOR(ZZ(corner1))/g_2); ZZ(size)=(int)(CEIL(ZZ(size))/g_2);
-   (*vol_coefs)().init_zeros(ZZ(size),YY(size),XX(size));
-   (*vol_coefs)().startingX()=XX(corner1);
-   (*vol_coefs)().startingY()=YY(corner1);
-   (*vol_coefs)().startingZ()=ZZ(corner1);
+   (*vol_coefs).init_zeros(ZZ(size),YY(size),XX(size));
+   (*vol_coefs).startingX()=XX(corner1);
+   (*vol_coefs).startingY()=YY(corner1);
+   (*vol_coefs).startingZ()=ZZ(corner1);
 
    // Set all blob coefficients at the right position
    for (int n=0; n<vol_blobs.VolumesNo(); n++) {
@@ -785,10 +785,10 @@ void ART_voxels2blobs_single_step(
    const struct blobtype &blob,        // blob
    const matrix2D<double> *D,          // deformation matrix
    double lambda,                      // ART lambda
-   Volume       *theo_vol,             // Theoretical volume
-   const Volume *read_vol,             // Volume we want to translate to blobs
-   Volume       *corr_vol,             // Normalizing volume
-   const Volume *mask_vol,             // Mask volume, 1 if that voxel must
+   matrix3D<double> *theo_vol,         // Theoretical volume
+   const matrix3D<double> *read_vol,   // Volume we want to translate to blobs
+   matrix3D<double> *corr_vol,         // Normalizing volume
+   const matrix3D<double> *mask_vol,   // Mask volume, 1 if that voxel must
                                        // be counted as a true equation
    double &mean_error,                 // Output mean error
    double &max_error,                  // Output maximum error in a voxel
@@ -797,19 +797,19 @@ void ART_voxels2blobs_single_step(
 
    // Resize output volumes ................................................
    if (read_vol!=NULL) {
-      (*theo_vol)().init_zeros((*read_vol)());
+      (*theo_vol).init_zeros(*read_vol);
    } else if (mask_vol!=NULL) {
-      (*theo_vol)().init_zeros((*mask_vol)());
+      (*theo_vol).init_zeros(*mask_vol);
    } else {
       REPORT_ERROR(1,
          "ART_voxels2blobs_single_step: Mask and voxel volumes are empty");
    }
-   (*corr_vol)().init_zeros((*theo_vol)());
+   (*corr_vol).init_zeros(*theo_vol);
 
    // Translate actual blob volume to voxels ...............................
    for (int i=0; i<vol_in.VolumesNo(); i++) {
-      blobs2voxels_SimpleGrid(vol_in(i),vol_in.grid(i),blob,theo_vol,D,
-      50, corr_vol, mask_vol, FORWARD, eq_mode);
+      blobs2voxels_SimpleGrid(vol_in(i)(),vol_in.grid(i),blob,theo_vol,D,
+         50, corr_vol, mask_vol, FORWARD, eq_mode);
    #ifdef DEBUG
       cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats(); cout << endl;
       cout << "So far vol stats: "; (*theo_vol)().print_stats(); cout << endl;
@@ -818,37 +818,37 @@ void ART_voxels2blobs_single_step(
 
    // Now normalise the resulting volume ..................................
    double norm=sum_blob_Grid(blob,vol_in.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*theo_vol))
-      VOLVOXEL(*theo_vol,k,i,j) /= norm;
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(*theo_vol)
+      VOL_ELEM(*theo_vol,k,i,j) /= norm;
    
    #ifdef DEBUG
       VolumeXmipp save, save2;
-      save()=(*theo_vol)(); save.write("PPPtheovol.vol");
+      save()=*theo_vol; save.write("PPPtheovol.vol");
       cout << "Theo stats:"; save().print_stats(); cout << endl;
-      save()=(*corr_vol)(); save.write("PPPcorr2vol.vol");
+      save()=*corr_vol; save.write("PPPcorr2vol.vol");
       save2().resize(save());
    #endif
 
    // Compute differences ..................................................
    mean_error=0;
    double read_val;
-   if (read_vol!=NULL) read_val=VOLVOXEL(*read_vol,0,0,0);
+   if (read_vol!=NULL) read_val=VOL_ELEM(*read_vol,0,0,0);
    else                read_val=0;
-   max_error=ABS(read_val-VOLVOXEL(*theo_vol,0,0,0));
+   max_error=ABS(read_val-VOL_ELEM(*theo_vol,0,0,0));
 
    double diff;
    int N=0;
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*theo_vol)) {
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(*theo_vol) {
    // Compute difference volume and error
-      if (read_vol!=NULL) read_val=VOLVOXEL(*read_vol,k,i,j);
+      if (read_vol!=NULL) read_val=VOL_ELEM(*read_vol,k,i,j);
       else                read_val=0;
 
       if (mask_vol==NULL) {
-         diff=read_val-VOLVOXEL(*theo_vol,k,i,j);
+         diff=read_val-VOL_ELEM(*theo_vol,k,i,j);
          N++;
       } else
-         if (VOLVOXEL(*mask_vol,k,i,j)==1) {
-            diff=read_val-VOLVOXEL(*theo_vol,k,i,j);
+         if (VOL_ELEM(*mask_vol,k,i,j)==1) {
+            diff=read_val-VOL_ELEM(*theo_vol,k,i,j);
             N++;
          } else
             diff=0;
@@ -862,17 +862,17 @@ void ART_voxels2blobs_single_step(
 
 
    // Compute the correction volume
-      if (ABS(VOLVOXEL(*corr_vol,k,i,j))<1e-2)
-         VOLVOXEL(*corr_vol,k,i,j)=SGN(VOLVOXEL(*corr_vol,k,i,j));
-      VOLVOXEL(*corr_vol,k,i,j)=
-         lambda*diff/VOLVOXEL(*corr_vol,k,i,j);
+      if (ABS(VOL_ELEM(*corr_vol,k,i,j))<1e-2)
+         VOL_ELEM(*corr_vol,k,i,j)=SGN(VOL_ELEM(*corr_vol,k,i,j));
+      VOL_ELEM(*corr_vol,k,i,j)=
+         lambda*diff/VOL_ELEM(*corr_vol,k,i,j);
    }
    #ifdef DEBUG
       save.write("PPPdiffvol.vol");
       cout << "Diff stats:"; save().print_stats(); cout << endl;
       save2.write("PPPreadvol.vol");
       cout << "Read stats:"; save2().print_stats(); cout << endl;
-      save()=(*corr_vol)(); save.write("PPPcorrvol.vol");
+      save()=*corr_vol; save.write("PPPcorrvol.vol");
       cout << "Corr stats:"; save().print_stats(); cout << endl;
    #endif
 
@@ -880,7 +880,7 @@ void ART_voxels2blobs_single_step(
    
    // Backprojection of correction volume ..................................
    for (int i=0; i<vol_in.VolumesNo(); i++) {
-      blobs2voxels_SimpleGrid((*vol_out)(i),(*vol_out).grid(i),blob,
+      blobs2voxels_SimpleGrid((*vol_out)(i)(),(*vol_out).grid(i),blob,
          theo_vol, D, 50, corr_vol, mask_vol, BACKWARD, eq_mode);
       #ifdef DEBUG
 	 cout << "Blob grid no " << i << " stats: "; vol_in(i)().print_stats();
@@ -894,9 +894,10 @@ void ART_voxels2blobs_single_step(
 #undef DEBUG
 
 //#define DEBUG
-void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
+void voxels2blobs(const matrix3D<double> *vol_voxels,
+   const struct blobtype &blob,
    GridVolume &vol_blobs, int grid_type, double grid_relative_size,
-   double lambda, const Volume *vol_mask,
+   double lambda, const matrix3D<double> *vol_mask,
    const matrix2D<double> *D, double final_error_change,
    int tell, double R) {
    VolumeXmipp theo_vol, corr_vol;
@@ -909,12 +910,12 @@ void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
    Grid grid_blobs;
    if (R==-1) {
       matrix1D<double> corner1(3), corner2(3);
-      XX(corner1)=STARTINGX(VOLMATRIX(*vol_voxels)); 
-      YY(corner1)=STARTINGY(VOLMATRIX(*vol_voxels)); 
-      ZZ(corner1)=STARTINGZ(VOLMATRIX(*vol_voxels)); 
-      XX(corner2)=FINISHINGX(VOLMATRIX(*vol_voxels)); 
-      YY(corner2)=FINISHINGY(VOLMATRIX(*vol_voxels)); 
-      ZZ(corner2)=FINISHINGZ(VOLMATRIX(*vol_voxels));
+      XX(corner1)=STARTINGX(*vol_voxels); 
+      YY(corner1)=STARTINGY(*vol_voxels); 
+      ZZ(corner1)=STARTINGZ(*vol_voxels); 
+      XX(corner2)=FINISHINGX(*vol_voxels); 
+      YY(corner2)=FINISHINGY(*vol_voxels); 
+      ZZ(corner2)=FINISHINGZ(*vol_voxels);
 
       switch (grid_type) {
 	 case (CC): 
@@ -945,8 +946,8 @@ void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
    // Convert ..............................................................
    cout << "Converting voxel volume to blobs\n";
    ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda,
-      (Volume *) &theo_vol, vol_voxels, 
-      (Volume *) &corr_vol, vol_mask, mean_error_1, max_error, VARTK);
+      &(theo_vol()), vol_voxels, 
+      &(corr_vol()), vol_mask, mean_error_1, max_error, VARTK);
    if (tell&&SHOW_CONVERSION)
       cout << "   Finished iteration: " << it++
            << " Mean Error= " << mean_error_1
@@ -966,8 +967,8 @@ void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
    bool end_condition;
    do {
       ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda, 
-         (Volume *) &theo_vol, vol_voxels,
-         (Volume *) &corr_vol, vol_mask, mean_error, max_error, VARTK);
+         &(theo_vol()), vol_voxels,
+         &(corr_vol()), vol_mask, mean_error, max_error, VARTK);
       #ifdef DEBUG
          theo_vol.write("PPPtheo.vol");
          corr_vol.write("PPPcorr.vol");
@@ -987,7 +988,6 @@ void voxels2blobs(const Volume *vol_voxels, const struct blobtype &blob,
       }
       cout.flush();
       end_condition=change<=final_error_change;
-//     end_condition=it>100;
    } while (!end_condition);
    cout << endl;
 }
