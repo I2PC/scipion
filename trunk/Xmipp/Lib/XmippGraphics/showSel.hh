@@ -44,9 +44,16 @@
 class ShowSel: public ShowTable {
     Q_OBJECT;
 public:
+    typedef enum {
+       Normal_mode,
+       PSD_mode,
+       CTF_mode
+    } TLoadMode;
+
     // Show only active images (!= -1 in showsel). 1-> show active, 0-> show all
     bool        showonlyactive;
     bool        apply_geo;
+    TLoadMode   load_mode;
 protected:
     // Filenames within the Selfile
     FileName   *imgnames;
@@ -64,6 +71,9 @@ protected:
     int mi_Individual_norm, mi_Global_norm,
         mi_showLabel,       mi_hideLabel,
         mi_selAsLabels,     mi_imgAsLabels;
+
+    // Assign CTF file
+    FileName fn_assign;
 
     // Reimplementation of the insert_in queue to account for
     // the deletion of unused cells
@@ -109,8 +119,12 @@ protected:
 private slots:
     // For updating the status label
     virtual void contentsMouseMoveEvent(QMouseEvent *);
+    // For updating the image size
+    virtual void resizeEvent(QResizeEvent *);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
+    /* Reload all images */
+    virtual void reloadAll();
     /* Unselect all cells */
     virtual void unSelectAll();
     /* Select all cells */
@@ -126,6 +140,12 @@ protected slots:
     virtual void showStats();
     /* Show statistics of the SelFile */
     virtual void showSelStats();
+    /* Show this image separately */
+    virtual void showThisImage();
+    /* Show this image separately */
+    virtual void recomputeCTFmodel();
+    /* Show CTF model parameters */
+    virtual void editCTFmodel();
     /* Change the global/individual normalization status */
     virtual void changeNormalize();
     /* Change the show/hide labels status */
@@ -133,14 +153,26 @@ protected slots:
     /* Change the kind of labels.*/
     virtual void changeLabels();
 public:
+    /** Empty constructor. */
+    ShowSel();
+
     /** Read selfile for the first time.
         If you need to update the volume representation, use openNewFile(()*/
     virtual void initWithFile(int _numRows, int _numCols,
        const FileName &_fn, double _minGray=0, double _maxGray=0);
 
+    /** Read selfile for the first time changing the loading mode.*/
+    void initWithFile( int _numRows, int _numCols,
+       const FileName &_fn, TLoadMode _load_mode);
+
     /** Initialize with a Selfile. */
     virtual void initWithObject(int _numRows, int _numCols,
        SelFile &_SF, const char *_title);
+
+    /** For CTF mode, set assign CTF file. */
+    void setAssignCTFfile(const FileName &_fn_assign) {
+       fn_assign=_fn_assign;
+    }
 };
 //@}
 #endif

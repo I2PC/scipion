@@ -25,10 +25,18 @@
  ***************************************************************************/
 
 #include "../showSel.hh"
+#include "../show2D.hh"
 #include "../showTools.hh"
-#include <XmippInterface/xmippVTK.hh>
+#include "../showAssignCTF.hh"
+#include <Reconstruction/Programs/Prog_assign_CTF.hh>
+#include <XmippData/xmippArgs.hh>
 #include <qmessagebox.h>
 #include <qfiledialog.h>
+
+/* Empty constructor ------------------------------------------------------- */
+ShowSel::ShowSel(): ShowTable() {
+    load_mode       = Normal_mode;
+}
 
 /* Init/Clear data --------------------------------------------------------- */
 void ShowSel::init() {
@@ -49,8 +57,29 @@ void ShowSel::initWithFile( int _numRows, int _numCols,
    const FileName &_fn, double _minGray, double _maxGray) {
    init();
    readFile(_fn, _minGray, _maxGray);
+   if (_numRows!=-1 && _numCols!=-1) {
+      NumRows = _numRows;
+      NumCols = _numCols;
+   } else {
+      NumCols=FLOOR(900.0/projXdim);
+      NumRows=FLOOR(700.0/projYdim);
+   }
+   initTable();
+   initRightclickMenubar();
+   repaint();
+}
+
+void ShowSel::initWithFile( int _numRows, int _numCols,
+   const FileName &_fn, TLoadMode _load_mode) {
+   init();
+   load_mode=_load_mode;
    NumRows = _numRows;
    NumCols = _numCols;
+   readFile(_fn, 0, 0);
+   if (_numRows==-1 || _numCols==-1) {
+      NumCols=FLOOR(900.0/projXdim);
+      NumRows=FLOOR(700.0/projYdim);
+   }
    initTable();
    initRightclickMenubar();
    repaint();
@@ -94,6 +123,16 @@ void ShowSel::readObject(SelFile &SF, double _minGray, double _maxGray) {
     selstatus       = new bool[listSize];
     initContents();
     SF.ImgSize(projYdim,projXdim);
+    if (load_mode==PSD_mode && NumRows!=-1 && NumCols!=-1) {
+       // Scale to make the images fit into a reasonable window
+       double suggested_Xdim=MIN(900.0/NumCols,projXdim);
+       double suggested_Ydim=MIN(700.0/NumRows,projYdim);
+       double scale_X=suggested_Xdim/projXdim;
+       double scale_Y=suggested_Ydim/projYdim;
+       double scale=MIN(scale_X, scale_Y);
+       projYdim=FLOOR(scale*projYdim);
+       projXdim=FLOOR(scale*projXdim);
+    }
     minPixel=_minGray; maxPixel=_maxGray;
     int i=0;
     while (!SF.eof()) {
@@ -111,6 +150,8 @@ void ShowSel::compute_global_normalization_params() {
    bool first=true;
    for (int i=0; i<listSize; i++) {
       ImageXmipp I(imgnames[i]);
+      if      (load_mode==PSD_mode) xmipp2PSD(I(),I());
+      else if (load_mode==CTF_mode) xmipp2CTF(I(),I());
       double min_val, max_val;
       I().compute_double_minmax(min_val,max_val);
       if (first || min_val<minPixel) minPixel=min_val;
@@ -149,7 +190,22 @@ void ShowSel::initRightclickMenubar() {
    options->insertItem( "View average and SD Images", this,  SLOT(showStats()));
    options->insertItem( "Show Sel Statistics", this,  SLOT(showSelStats()));
    options->insertSeparator();
-    
+   
+   // Show this image
+   options->insertItem( "Reload all", this, SLOT(reloadAll()));
+   options->insertItem( "Show this image separately", this, SLOT(showThisImage()));
+   options->insertSeparator();
+   
+   // Recalculate CTF model
+   if (load_mode==CTF_mode) {
+      options->insertItem( "Edit CTF model", this, SLOT(editCTFmodel()));
+      options->insertItem( "Recompute CTF model", this, SLOT(recomputeCTFmodel()));
+      options->insertSeparator();
+      
+      options->setItemEnabled(mi_imgAsLabels,false);
+      options->setItemEnabled(mi_selAsLabels,false);
+   }
+   
    // Form the menu
    menubar->insertItem( "&Options", options );    
    menubar->insertSeparator();
@@ -183,8 +239,13 @@ void ShowSel::setCommonOptionsRightclickMenubar() {
    // Show/Hide labels
    mi_showLabel = options->insertItem( "Show Labels", this,  SLOT(changeShowLabels()));
    mi_hideLabel = options->insertItem( "Hide Labels", this,  SLOT(changeShowLabels()));
-   options->setItemEnabled(mi_showLabel, false);
-   options->setItemEnabled(mi_hideLabel, true);
+   if (load_mode==Normal_mode || load_mode==CTF_mode) {
+      options->setItemEnabled(mi_showLabel, false);
+      options->setItemEnabled(mi_hideLabel, true);
+   } else if (load_mode==PSD_mode) {
+      options->setItemEnabled(mi_showLabel, true);
+      options->setItemEnabled(mi_hideLabel, false);
+   }
    options->insertSeparator();
 
    // Select/unselect
@@ -196,26 +257,42 @@ void ShowSel::setCommonOptionsRightclickMenubar() {
 /* Cell label -------------------------------------------------------------- */
 const char * ShowSel::cellLabel(int i) const {
    if (options->isItemEnabled(mi_showLabel)) return NULL;
-   switch (labeltype) {
-      case SFLabel_LABEL:
-         return (selstatus[i])? "1":"-1";
-      case Filename_LABEL:
-         return imgnames[i].c_str();
+   if (load_mode==CTF_mode) {
+      // Get the defocus parameters from the ctfparam file
+      FileName fn_param=imgnames[i].without_extension()+".ctfparam";
+      XmippCTF ctf; ctf.read(fn_param,false);
+      string defocus_val=ItoA(ROUND(MIN(ctf.DeltafU,ctf.DeltafV)),6)+" "+
+                         ItoA(ROUND(MAX(ctf.DeltafU,ctf.DeltafV)),6)+" "+
+                         ItoA(ABS(ROUND(ctf.DeltafU-ctf.DeltafV)));
+      return defocus_val.c_str();
    }
+   else
+      switch (labeltype) {
+         case SFLabel_LABEL:
+            return (selstatus[i])? "1":"-1";
+         case Filename_LABEL:
+            return imgnames[i].c_str();
+      }
 }
 
 /* Produce pixmap ---------------------------------------------------------- */
 void ShowSel::producePixmapAt(int i) {
+    bool treat_separately_left_right=false;
     ImageXmipp I;
     // Read image
     if (imgnames[i].find("imagic:")!=-1) {
        Image *img = Image::LoadImage(imgnames[i]);
        I()=(*img)();
        delete img;
-    } else if (Is_ImageXmipp(imgnames[i]))
+    } else if (Is_ImageXmipp(imgnames[i])) {
        // Plain Xmipp images
        I.read(imgnames[i],FALSE,FALSE,apply_geo,FALSE);
-    else if (Is_FourierImageXmipp(imgnames[i])) {
+       if      (load_mode==PSD_mode) xmipp2PSD(I(),I());
+       else if (load_mode==CTF_mode) {
+          treat_separately_left_right=true;
+          xmipp2CTF(I(),I());
+       }
+    } else if (Is_FourierImageXmipp(imgnames[i])) {
        // FFT Xmipp images: plot log10(1+|I|^2)
        FourierImageXmipp If;
        If.read(imgnames[i]);
@@ -228,13 +305,38 @@ void ShowSel::producePixmapAt(int i) {
        I().init_zeros(projYdim,projXdim);
 
     // Scale and normalize
-    int minGray, maxGray;
+    int minGray=0, maxGray=0;
     scale_and_normalize(I(), options->isItemEnabled(mi_Individual_norm),
        minGray, maxGray);
 
+    // If PSD mode, make the full window fit the current size
+    if (load_mode==PSD_mode || load_mode==CTF_mode)
+       I().self_scale_to_size(rowHeight(0),columnWidth(0));
+
     // Convert Xmipp image to Pixmap
     content[i]=new QPixmap;
-    xmipp2Pixmap(I,content[i],minGray,maxGray);
+    xmipp2Pixmap(I,content[i],minGray,maxGray,0,0,treat_separately_left_right);
+}
+
+/* Resize event ------------------------------------------------------------ */
+void ShowSel::resizeEvent(QResizeEvent *event) {
+   if (load_mode==Normal_mode)
+      QTable::resizeEvent(event);
+   else {
+      int Xdim=(event->size().width()-4)/NumCols;
+      int Ydim=(event->size().height()-4-status->height())/NumRows;
+      for (int i=0; i<NumCols; i++) setColumnWidth(i,Xdim);
+      for (int i=0; i<NumRows; i++) setRowHeight(i,Ydim);
+      
+      // Reset all flags so that images are reloaded
+      clearContents();
+      
+      // Repaint
+      maxWidth=NumCols*Xdim+4;
+      maxHeight=NumRows*Ydim+4;
+      adjustStatusLabel();
+      repaintContents();
+   }
 }
 
 /* Grow older all contents ------------------------------------------------- */
@@ -424,21 +526,118 @@ void ShowSel::showSelStats() {
    QMessageBox::about( (QWidget*)this, "Sel File Statistics", Str1);
 }
 
+// Reload all --------------------------------------------------------------
+void ShowSel::reloadAll() {
+   clearContents();
+   repaint();
+}
+
+// Show This image ---------------------------------------------------------
+void ShowSel::showThisImage() {
+   int row=currentRow();
+   int col=currentColumn();
+   int i=indexOf(row,col);
+
+   ImageViewer *showimg = new ImageViewer(imgnames[i].c_str(), false);
+   if (load_mode==Normal_mode)
+      showimg->loadImage(imgnames[i].c_str());
+   else if (load_mode==PSD_mode)
+      showimg->loadImage(imgnames[i].c_str(), 0, 0, ImageViewer::PSD_mode);
+   else if (load_mode==CTF_mode)
+      showimg->loadImage(imgnames[i].c_str(), 0, 0, ImageViewer::CTF_mode);
+   showimg->show();
+}
+
+// Edit CTF model ----------------------------------------------------------
+void ShowSel::editCTFmodel() {
+   if (fn_assign=="") {
+      QMessageBox::about( this, "Error!", "No Assign CTF file provided\n");
+      return;
+   }
+   // Read the Assign CTF parameters
+   Prog_assign_CTF_prm assign_ctf_prm;
+   assign_ctf_prm.read(fn_assign);
+   
+   // Check if the CTF is computed at each particle
+   FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
+   FileName fn_param;
+
+   // Get the piece name
+   if (assign_ctf_prm.compute_at_particle) {
+      int i=indexOf(currentRow(),currentColumn());
+      fn_param=imgnames[i].without_extension()+".ctfparam";
+   } else if (assign_ctf_prm.micrograph_averaging) {
+      // If it is the average of the micrograph
+      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+           fn_param=fn_root+"_ARMAavg.ctfparam";
+      else fn_param=fn_root+"_Periodogramavg.ctfparam";
+   } else {
+      // If the micrograph was divided into pieces
+      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+           fn_param=fn_root+"_ARMA";
+      else fn_param=fn_root+"_Periodogram";
+      // Get the piece to edit
+      int i=indexOf(currentRow(),currentColumn())+1;
+      fn_param+=ItoA(i,5);
+      fn_param+=".ctfparam";
+   }
+
+   // Edit the CTF
+   system(((string)"xmipp_edit -i "+fn_param+" &").c_str());
+}
+
+// Recompute CTF model -----------------------------------------------------
+void ShowSel::recomputeCTFmodel() {
+   if (fn_assign=="") {
+      QMessageBox::about( this, "Error!", "No Assign CTF file provided\n");
+      return;
+   }
+
+   // Read the Assign CTF parameters
+   Prog_assign_CTF_prm assign_ctf_prm;
+   assign_ctf_prm.read(fn_assign);
+   
+   // Get the PSD name
+   FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
+   FileName fn_psd;
+   if (assign_ctf_prm.compute_at_particle) {
+      int i=indexOf(currentRow(),currentColumn());
+      fn_psd=imgnames[i].without_extension()+".psd";
+   } else if (assign_ctf_prm.micrograph_averaging) {
+      // If it is the average of the micrograph
+      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+           fn_psd=fn_root+"_ARMAavg.psd";
+      else fn_psd=fn_root+"_Periodogramavg.psd";
+   } else {
+      // If the micrograph was divided into pieces
+      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+           fn_psd=fn_root+"_ARMA";
+      else fn_psd=fn_root+"_Periodogram";
+      // Get the piece to recompute
+      int i=indexOf(currentRow(),currentColumn())+1;
+      fn_psd+=ItoA(i,5);
+      fn_psd+=".psd";
+   }
+
+   // Show this image in a separate window to select the main parameters
+   AssignCTFViewer *prm_selector=new AssignCTFViewer(fn_psd,assign_ctf_prm);
+}
+
 // Unselect/Select all -----------------------------------------------------
 void ShowSel::SelectAll() {  
-  for (int i = 0; i < listSize; i++) 
-     if (!cellMarks[i]) {
-       cellMarks[i] = true;
-       updateCellIdx(i);
-     }
+   for (int i = 0; i < listSize; i++) 
+      if (!cellMarks[i]) {
+         cellMarks[i] = true;
+         updateCellIdx(i);
+      }
 }
 
 void ShowSel::unSelectAll() {  
-  for (int i = 0; i < listSize; i++) 
-     if (cellMarks[i]) {
-       cellMarks[i] = false;
-       updateCellIdx(i);
-     }
+   for (int i = 0; i < listSize; i++) 
+      if (cellMarks[i]) {
+         cellMarks[i] = false;
+         updateCellIdx(i);
+      }
 }
 
 // Update status -----------------------------------------------------------
