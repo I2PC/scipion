@@ -28,9 +28,11 @@
 #define _SHOWTOOLS_H
 #include <qwidget.h>
 #include <qlabel.h>
+#include <qscrollbar.h>
 #include <qimage.h>
 #include <qpixmap.h>
 #include <qradiobutton.h>
+#include <qtextedit.h>
 #include <XmippData/xmippImages.hh>
 #include <vector>
 #include <string>
@@ -43,19 +45,43 @@
     It emits a signal called new_value(float). (precision is the number of 
     digits used by the mantise)
     
-    An example of use of this class is
+    An example of use of this class with a single parameter is
     \begin{verbatim}
       // Create window
-      ScrollParam* param_window=
-           new ScrollParam(min,max, spacing, "Set spacing", 
-             0, "new window", WDestructiveClose, precision);
+      ScrollParam* param_window;	
+      param_window = new ScrollParam(min, max, spacing, "Set spacing", "Spacing",
+         0, "new window", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(float)), 
                this,         SLOT(set_spacing(float)));
 
       // Show
-      param_window->setFixedSize(250,200);
+      param_window->setFixedSize(250,150);
+      param_window->show();
+    \end{verbatim}
+    
+    With two parameters
+    \begin{verbatim}
+      // Create window
+      ScrollParam* param_window;
+      vector<float> min; min.push_back(1); min.push_back(1);
+      vector<float> max; max.push_back(N); max.push_back(N);
+      vector<float> initial_value;
+         initial_value.push_back(spacing);
+         initial_value.push_back(x_tick_off);
+      vector<char *> prm_name;
+         prm_name.push_back("Spacing");
+         prm_name.push_back("Tick offset");
+      param_window = new ScrollParam(min,max,initial_value,prm_name,
+	 "Set spacing", 0, "new window", WDestructiveClose,0);
+
+      // Connect its output to my input (set_spacing)
+      connect( param_window, SIGNAL(new_value(vector<float>)),
+              this,          SLOT(set_spacing(vector<float>)) );
+
+      // Show
+      param_window->setFixedSize(200,175);
       param_window->show();
     \end{verbatim}
 */
@@ -63,75 +89,44 @@ class ScrollParam : public QWidget
 { 
   Q_OBJECT
 public:
-    /** Constructor.
+    /** Constructor for a single scroll.
         Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam( float min, float max, float initial_value, 
+    ScrollParam( float min, float max, float initial_value, char *prm_name,
        char *caption, QWidget *parent = 0,
        const char *name = 0, int wFlags=0, int precision=2  );
+
+    /** Constructor for several scrolls.
+        Provide the min_value, max_value, caption and initial_value.*/
+    ScrollParam( vector<float> &min, vector<float> &max,
+       vector<float> &initial_value, vector<char *> &prm_name,
+       char *caption, QWidget *parent = 0,
+       const char *name = 0, int wFlags=0, int precision=2  );
+
+    /** Destructor. */
     ~ScrollParam();
 
+    /** Init. */
+    void init(vector<float> &min, vector<float> &max,
+       vector<float> &initial_value, vector<char *> &prm_name,
+       char *caption, int precision=2);
 private:
-   float     value;
-   QLabel   *value_lab;   //test label for the current value of the slider
+   vector<float>     value;
+   vector<QLabel *>  value_lab;   // label for the current value of the slider
+   vector<QScrollBar *> scroll;      // sliders
    int       my_precision;
 private slots:
    void scrollValueChanged(int);
-   void but_close_clicked();
-   void but_ok_clicked();   
+   void slot_close_clicked();
+   void slot_ok_clicked();   
 signals:
    /** Signal emitted when the value is changed*/
    void new_value(float);
-};
-
-
-/**Scroll param2 class.
-    This class opens a window and asks for TWO Scroll parameters.
-    It emits a signal called new_value(float,float). (precision is the number of 
-    digits used by the mantise)
-    
-    An example of use of this class is
-    \begin{verbatim}
-      // Create window
-      ScrollParam* param_window=
-           new ScrollParam(min,max, first init parameter, 
-	      second_init_parameter,"Set spac/x_ticks", 
-             0, "new window", WDestructiveClose, precision);
-
-      // Connect its output to my input (set_spacing)
-      connect( param_window, SIGNAL(new_value(float,float)), 
-               this,         SLOT(set_spacing(float,float)));
-
-      // Show
-      param_window->setFixedSize(250,200);
-      param_window->show();
-    \end{verbatim}
-*/
-class ScrollParam2 : public QWidget
-{ 
-  Q_OBJECT
-public:
-    /** Constructor.
-        Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam2( float min, float max, float initial_value, 
-       float initial_value2,
-       char *caption, QWidget *parent = 0,
-       const char *name = 0, int wFlags=0, int precision=2  );
-    ~ScrollParam2();
-
-private:
-   float     value;
-   float     value2;
-   QLabel   *value_lab;   //test label for the current value of the slider
-   QLabel   *value_lab2;   //test label for the current value of the slider
-   int       my_precision;
-private slots:
-   void scrollValueChanged(int);
-   void scrollValueChanged2(int);
-   void but_close_clicked();
-   void but_ok_clicked();   
-signals:
    /** Signal emitted when the value is changed*/
-   void new_value(float,float);
+   void new_value(vector<float>);
+   /** Signal emitted when the close button is clicked */
+   void signal_close_clicked();
+   /** Signal emitted when the ok button is clicked */
+   void signal_ok_clicked();
 };
 
 /**Exclusive param class.
@@ -184,14 +179,24 @@ signals:
 //@{
 /** Xmipp -> QImage.*/
 void xmipp2Qt(Image& _ximage, QImage &_qimage,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
+   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0,
+   bool treat_separately_left_right=false);
 
 /** Qimage -> Xmipp.*/
 void Qt2xmipp(QImage &_qimage, Image &_ximage);
 
 /** Xmipp -> PixMap */
 void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
+   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0,
+   bool treat_separately_left_right=false);
+
+/** Xmipp image -> Xmipp PSD.
+    The log10 is taken, outliers rejected and the image is reorganized. */
+void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output); 
+
+/** Xmipp image -> Xmipp CTF.
+    The log10 is taken, outliers rejected and the image is reorganized. */
+void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output); 
 //@}
 
 //@}
