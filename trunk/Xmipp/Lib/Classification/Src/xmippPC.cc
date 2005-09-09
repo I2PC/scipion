@@ -406,3 +406,84 @@ istream& operator >> (istream &in, PCA_set &PS) {
    return in;
 }
 
+/* Running PCA constructor ------------------------------------------------- */
+Running_PCA::Running_PCA(int _J, int _d) {
+   J=_J;
+   d=_d;
+   n=0;
+   sum_all_samples.init_zeros(d);
+   current_sample_mean.init_zeros(d);
+   sum_proj.init_zeros(d);
+   sum_proj2.init_zeros(d);
+   eigenvectors.init_zeros(d,J);
+}
+
+/* Update with new sample -------------------------------------------------- */
+void Running_PCA::new_sample(const matrix1D<double> &sample) {
+   n++;
+
+   // Re-estimate sample mean
+   sum_all_samples+=sample;
+   current_sample_mean=sum_all_samples/n;
+   
+   // Estimate eigenvectors
+   matrix1D<double> un=sample; un.row=false;
+   for (int j=0; j<J; j++) {
+      if (n<=j+1) {
+         // If there are not enough samples to estimate this eigenvector, then
+         // skip it
+         double norm=un.module(); 
+         if (norm>XMIPP_EQUAL_ACCURACY) un/=norm;
+         eigenvectors.setCol(j,un);
+      } else {
+         // If there are enough samples
+         // Substract the sample mean to have a zero-mean vector
+         if (j==0) un-=current_sample_mean;
+         
+         // Compute the scale of this vector as the dot product
+         // between un and the current eigenvector estimate
+         double scale=0;
+         for (int i=0; i<d; i++)
+            scale+=DIRECT_VEC_ELEM(un,i)*DIRECT_MAT_ELEM(eigenvectors,i,j);
+         
+         // Re-estimate the eigenvector
+         double norm2=0;
+         double w1=(double)(n-1.0)/n;
+         double w2=(1.0-w1)*scale;
+         for (int i=0; i<d; i++) {
+             DIRECT_MAT_ELEM(eigenvectors,i,j)=
+                w1*DIRECT_MAT_ELEM(eigenvectors,i,j)+
+                w2*DIRECT_VEC_ELEM(un,i);
+             norm2+=DIRECT_MAT_ELEM(eigenvectors,i,j)*
+                    DIRECT_MAT_ELEM(eigenvectors,i,j);
+         }
+         
+         // Renormalize
+         if (norm2>XMIPP_EQUAL_ACCURACY) {
+            double norm=sqrt(norm2);
+            for (int i=0; i<d; i++) DIRECT_MAT_ELEM(eigenvectors,i,j)/=norm;
+         }
+         
+         // Project un onto the space spanned by this eigenvector
+         double project=0;
+         for (int i=0; i<d; i++)
+            project+=DIRECT_VEC_ELEM(un,i)*DIRECT_MAT_ELEM(eigenvectors,i,j);
+         for (int i=0; i<d; i++)
+            DIRECT_VEC_ELEM(un,i)-=project*DIRECT_MAT_ELEM(eigenvectors,i,j);
+         
+         // Update the variance of this vector
+         sum_proj (j)+=project;
+         sum_proj2(j)+=project*project;
+      }
+   }
+}
+
+/* Project a sample vector on the PCA space -------------------------------- */
+void Running_PCA::project(const matrix1D<double> &input,
+   matrix1D<double> &output) const {
+   output.init_zeros(J);
+   for (int j=0; j<J; j++)
+      for (int i=0; i<d; i++)
+         DIRECT_VEC_ELEM(output,j)+=
+            DIRECT_VEC_ELEM(input,d)*DIRECT_MAT_ELEM(eigenvectors,i,j);
+}

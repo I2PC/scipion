@@ -27,6 +27,7 @@ using namespace std;
 #include <Classification/xmippCDataTypes.hh>
 #include <Classification/xmippCTVectors.hh>
 #include <XmippData/xmippFuncs.hh>
+#include <XmippData/xmippMatrices2D.hh>
 
 /**@name PCA classes*/
 //@{
@@ -183,6 +184,66 @@ public:
    
    /** Read a set of PCA just as shown */
    friend istream& operator >> (istream &in, PCA_set &PS);
+};
+
+/** Running PCA.
+    Running PCA is an algorithm that estimates iteratively the
+    principal components of a dataset that is provided to the algorithm
+    as vectors are available.
+    
+    See J. Weng, Y. Zhang, W.S. Hwang. Candid covariance-free incremental
+    principal component analysis. IEEE Trans. On Pattern Analysis and
+    Machine Intelligence, 25(8): 1034-1040 (2003).
+*/
+class Running_PCA {
+public:
+   /// Total number of eigenvectors to be computed.
+   int J;
+
+   /// Dimension of the sample vectors
+   int d;
+
+   /// Current estimate of the population mean
+   matrix1D<double> current_sample_mean;
+   
+   /// Current number of samples seen
+   long n;
+   
+   /** Current estimate of the eigenvectors.
+       Each column is an eigenvector. */
+   matrix2D<double> eigenvectors;
+
+   /** Constructor.
+       J is the number of eigenvectors to compute. d is the
+       dimension of the sample vectors. */
+   Running_PCA(int _J, int _d);
+
+   /** Update estimates with a new sample. */
+   void new_sample(const matrix1D<double> &sample);
+
+   /** Project a sample vector on the PCA space. */
+   void project(const matrix1D<double> &input, matrix1D<double> &output) const;
+   
+   /// Get a certain eigenvector.
+   void get_eigenvector(int j, matrix1D<double> &result) const {
+      eigenvectors.getCol(j,result);
+   }
+
+   /// Get the variance associated to a certain eigenvector.
+   double get_eigenvector_variance(int j) const {
+      if (n<=j) return 0.0;
+      double mean_proj=sum_proj(j)/n;
+      return sum_proj2(j)/n-mean_proj*mean_proj;
+   }
+public:
+   // Sum of all samples so far
+   matrix1D<double> sum_all_samples;
+   
+   // Sum of all projections so far
+   matrix1D<double> sum_proj;
+
+   // Sum of all projections squared so far
+   matrix1D<double> sum_proj2;
 };
 //@}
 #endif
