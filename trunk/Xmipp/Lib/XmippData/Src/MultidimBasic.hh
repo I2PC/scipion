@@ -370,6 +370,7 @@ public:
        array, that is, 1 for vectors, 2 for matrices and 3 for volumes. */
    // This function must be explictly implemented outside
    bool isCorner(const matrix1D<double> &v) _THROW;
+
    /** True if the given index is in a border
        It is understood that one border in logical coordinates. It throws
        an exception if there are not enough components in v for this
@@ -377,9 +378,7 @@ public:
    // This function must be explictly implemented outside
    bool isBorder(const matrix1D<int> &v) _THROW;
    
-   
-   
-      /** Insert a patch in array.
+   /** Insert a patch in array.
        This function substitutes the array given as argument in this object.
        It works with logical indexes, only the overlapping area is
        patched. You can modify the patch behaviour with the following
@@ -565,6 +564,17 @@ public:
 	 fh.write((void *) &mi, sizeof(T));		  	 	 
       }
       fh.close();}
+
+    /** Edit with xmipp_editor.
+        This function generates a random filename starting with PPP and
+        edits it with xmipp_editor. After closing the editor the file is
+        removed. */
+    void edit() {
+       FileName fn_random; fn_random.init_random(15);
+       fn_random=(string)"PPP"+fn_random+".txt";
+       write(fn_random);
+       system(((string)"xmipp_edit -i "+fn_random+" -remove &").c_str());
+    }
 //@}
  
    /* Iterator ------------------------------------------------------------- */
