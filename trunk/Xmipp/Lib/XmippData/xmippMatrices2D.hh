@@ -1412,7 +1412,7 @@ double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
     This method can only be applied if A is positive-definite matrix
     and symmetric. It applies a Cholesky factorization and 
     backsubstitution (see Numerical Recipes). */
-double solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
+void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
    matrix1D<double> &result) _THROW;
 
 /** Evaluate quadratic form.
