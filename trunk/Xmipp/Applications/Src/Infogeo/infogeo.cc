@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
    int             save_mask;        // True if the masks must be saved
    int             repair;           // True if headers are initialized
    bool            show_angles;      // True if angles are to be shown in stats
+   bool            apply_geo;        // True if the header must be taken into account
    matrix2D<int>   mask2D;
    matrix3D<int>   mask3D;
    int             volume_type;
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
      save_mask    = check_param(argc,argv,"-save_mask");
      repair       = check_param(argc,argv,"-repair");
      show_angles  = check_param(argc,argv,"-show_angles");
+     apply_geo    =!check_param(argc,argv,"-dont_apply_geo");
    } 
    catch (Xmipp_error XE) {cout << XE; Usage(); mask_prm.usage(); exit(1);}
 
@@ -176,7 +178,7 @@ int main(int argc, char **argv) {
         // Read file
         if (repair || stats) {
            // Read the image applying the header
-           image.read(file_name,false,false,true);
+           image.read(file_name,false,false,apply_geo);
            image().set_Xmipp_origin();
         }
 
@@ -331,6 +333,7 @@ void Usage() {
          << "   [-show_old_rot]   : show old rotational angle\n"
          << "   [-stats]          : show image statistics\n"
          << "      [-o <docfile>] : save the statistics in this docfile\n"
+         << "      [-dont_apply_geo]: do not apply geo when the image is read\n"
          << "   [-short_format]   : Don't show labels for statistics\n"
          << "   [-save_mask]      : save 2D and 3D masks with names: \n"
          << "                          mask2D and mask3D respectively\n"
