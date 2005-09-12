@@ -283,14 +283,18 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
    matrix1D<int>    idx(2);
    matrix1D<double> freq(2);
    CTF.resize(Ydim, Xdim);
+   #ifdef DEBUG
+      cout << "CTF:\n" << *this << endl;
+   #endif
    FOR_ALL_ELEMENTS_IN_MATRIX2D(CTF) {
       XX(idx)=j; YY(idx)=i;
       FFT_idx2digfreq(CTF, idx, freq);
       digfreq2contfreq(freq, freq, Tm);
       CTF(i,j)=CTF_at(XX(freq),YY(freq));
       #ifdef DEBUG
-         cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-              << " " << CTF(i,j) << endl;
+         if (i==0)
+            cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+                 << " " << CTF(i,j) << endl;
       #endif
    }
 }
