@@ -162,6 +162,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Batches/Look_at_FFT/Makefile \
 	Applications/Batches/PDB2descr/Makefile \
 	Applications/Batches/Pdb2surface/Makefile \
+	Applications/Batches/PDBsidechain/Makefile \
 	Applications/Batches/Showsel/Makefile \
 	Applications/Batches/ShowSOM/Makefile \
 	Applications/Batches/ShowSpectra/Makefile \
@@ -206,6 +207,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/DownSample/Makefile \
 	Applications/Src/Draw_surface/Makefile \
 	Applications/Src/DWT/Makefile \
+	Applications/Src/Edit/Makefile \
 	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
 	Applications/Src/Evaluate_FSCs/Makefile \
@@ -227,6 +229,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/KerDenSOM/Makefile \
 	Applications/Src/Lattice_vectors/Makefile \
 	Applications/Src/Mark/Makefile \
+	Applications/Src/Markhan/Makefile \
 	Applications/Src/Mask/Makefile \
 	Applications/Src/Microscope/Makefile \
 	Applications/Src/MLalign2D/Makefile \
@@ -255,6 +258,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Resolution/Makefile \
 	Applications/Src/RmSel/Makefile \
 	Applications/Src/Rotate/Makefile \
+	Applications/Src/RotateDescr/Makefile \
 	Applications/Src/Sammon/Makefile \
 	Applications/Src/Sample_size/Makefile \
 	Applications/Src/Scale/Makefile \
