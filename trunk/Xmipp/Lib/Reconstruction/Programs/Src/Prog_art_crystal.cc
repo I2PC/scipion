@@ -46,7 +46,7 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
        //DISCLAMER: I know this 0 and 90 degrees cases are rather silly but
        //when debuging is so good that 90 is 90 and not 90.000001
        //NOTE:ang_x2a_deg is applied ONLY in the final volume
-       //when moving from blobs to voxels 
+       //when moving from basis to voxels 
 
        XX(avox) = a_mag; YY(avox) = 0.;
 
@@ -185,10 +185,7 @@ void compute_integer_lattice(const matrix1D<double> &a,
 //#define DEBUG
 //#define DEBUG_A_LOT
 void Crystal_ART_Parameters::produce_Side_Info(
-   Basic_ART_Parameters &prm, GridVolume &vol_blobs0) {
-
-   #define ground_volume    VOLMATRIX(vol_blobs0(0))
-   #define displaced_volume VOLMATRIX(vol_blobs0(1))
+   Basic_ART_Parameters &prm, GridVolume &vol_basis0) {
 
    // Lattice vectors in BCC units
    a = avox/prm.grid_relative_size;
@@ -206,7 +203,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    compute_integer_lattice(a,b,a_mag/prm.grid_relative_size,
                                b_mag/prm.grid_relative_size,
 			       ang_a2b_deg,aint,bint,D,
-			       space_group);   
+			       space_group);
    // Define two more useful lattice vectors
    ai=aint/2;
    bi=bint/2;
@@ -218,6 +215,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    MAT_ELEM(*(prm.D),2,2)=1;
    prm.Dinv=new matrix2D<double>;
    *(prm.Dinv)=prm.D->inv();
+   prm.basis.set_D(prm.D);
    
    // Unit cell mask within volume -----------------------------------------
    // Compute the 4 parallelogram corners
@@ -230,7 +228,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    
    // Resize unit cell mask
    // The unit mask is a little bigger to avoid the possibility of losing
-   // any blob due to a too tight mask.
+   // any basis due to a too tight mask.
    int mask_xdim=CEIL(MAX(ABS(XX(c1c3)),ABS(XX(c2c4))))+3;
    int mask_ydim=CEIL(MAX(ABS(YY(c1c3)),ABS(YY(c2c4))))+3;
    unit_cell_mask.init_zeros(mask_ydim,mask_xdim);
@@ -238,8 +236,8 @@ void Crystal_ART_Parameters::produce_Side_Info(
 
    // Resize the reconstructed volume
    matrix1D<double> r1(3), r2(3);
-   for (int n=0; n<vol_blobs0.VolumesNo(); n++) {
-      Volume &V=vol_blobs0(n);
+   for (int n=0; n<vol_basis0.VolumesNo(); n++) {
+      Volume &V=vol_basis0(n);
       ZZ(r1)=MIN(ZZ(r1),STARTINGZ(V()));
       ZZ(r2)=MAX(ZZ(r2),FINISHINGZ(V()));
    }
@@ -249,7 +247,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    XX(r2)=FINISHINGX(unit_cell_mask);
    YY(r2)=FINISHINGY(unit_cell_mask);
    r2 *= prm.grid_relative_size;
-   vol_blobs0.resize(r1,r2);
+   vol_basis0.resize(r1,r2);
 
    // Fill the unit cell mask
    matrix1D<double> r(2);
@@ -319,11 +317,6 @@ void Crystal_ART_Parameters::produce_Side_Info(
          I=unit_cell_mask;
          I.write("unit_cell_mask.xmp");
       cout << "unit_cell_mask shape="; unit_cell_mask.print_shape(); cout << endl;
-      /*
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(unit_cell_mask)
-         if (unit_cell_mask(i,j)!=0)
-            cout << i << " " << j << " " << unit_cell_mask(i,j) << endl;
-      */
    #endif
 }
 #undef DEBUG
@@ -332,9 +325,6 @@ void Crystal_ART_Parameters::produce_Side_Info(
 /* ------------------------------------------------------------------------- */
 /* ART Single step                                                           */
 /* ------------------------------------------------------------------------- */
-#define blob       prm.blob
-#define footprint  prm.blobprint
-#define footprint2 prm.blobprint2
 void ART_single_step(
    GridVolume        	   &vol_in,          // Input Reconstructed volume
    GridVolume        	   *vol_out,         // Output Reconstructed volume
@@ -356,11 +346,13 @@ void ART_single_step(
                                              // be divided by this number
    double                  lambda,           // Lambda to be used
    int                     imagen_no,        // Projection number
-   const FileName         &fn_ctf,           // CTF to apply
-   bool                    unmatched,        // Apply unmatched projectors
-   double                  ray_length,       // Ray length for the projection
-   bool                    print_system_matrix)
+   const FileName         &fn_ctf)           // CTF to apply
 {
+// Only works for blob volumes .............................................
+   if (prm.basis.type!=Basis::blobs)
+      REPORT_ERROR(1,
+         "ART_single_step: This function only works with blob volumes");
+
 // Compute lattice vectors to be used ......................................
    matrix1D<double> aint, bint, shift;
    aint.resize(2); bint.resize(2);
@@ -373,7 +365,7 @@ void ART_single_step(
    // The correction image is reused in this call to store the normalising
    // projection, ie, the projection of an all-1 volume
 
-   project_Crystal_Volume(vol_in,footprint,footprint2,theo_proj,
+   project_Crystal_Volume(vol_in,prm.basis,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),shift,
       aint, bint, *(prm.D), *(prm.Dinv), eprm.unit_cell_mask,
@@ -434,16 +426,12 @@ void ART_single_step(
    mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
 
 // Backprojection of correction plane ......................................
-   project_Crystal_Volume(*vol_out,footprint,footprint2,theo_proj,
+   project_Crystal_Volume(*vol_out,prm.basis,theo_proj,
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(), shift,
       aint, bint, *(prm.D), *(prm.Dinv), eprm.unit_cell_mask,
       BACKWARD,prm.eq_mode);
 }
-#undef lambda
-#undef blob
-#undef footprint
-#undef footprint2
 
 /* Force the {\it trial} volume to be symmetric.----------------------------*/
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
@@ -461,15 +449,15 @@ void instantiate_Crystal_ART() {
    Basic_ART_Parameters prm;
    Crystal_ART_Parameters eprm;
    VolumeXmipp vol_voxels;
-   GridVolume  vol_blobs;
-   Basic_ROUT_Art(prm,eprm,vol_voxels,vol_blobs);
+   GridVolume  vol_basis;
+   Basic_ROUT_Art(prm,eprm,vol_voxels,vol_basis);
 }
 
 /* Finish iterations ------------------------------------------------------- */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Crystal_ART_Parameters &eprm, GridVolume &vol_blobs) {
+   const Crystal_ART_Parameters &eprm, GridVolume &vol_basis) {
    if (eprm.fill_space)
-       expand_to_fill_space(prm, eprm, vol_blobs);
+       expand_to_fill_space(prm, eprm, vol_basis);
 }
 
 /* Expansion to fill space ------------------------------------------------- */

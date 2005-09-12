@@ -84,7 +84,7 @@ public:
        This mask is defined in the BCC space
        and it represent a parallelogram defined by points (-a-b)/2, (-a+b)/2,
        (a-b)/2, (a+b)/2. The reconstruction will be only performed for
-       the blobs inside this mask. Be careful that this is a 2D mask for a 3D
+       the basis inside this mask. Be careful that this is a 2D mask for a 3D
        reconstruction. */
    matrix2D<int> unit_cell_mask;
    //@}
@@ -111,7 +111,7 @@ public:
        mask fits.
    */
    void produce_Side_Info(Basic_ART_Parameters &prm,
-      GridVolume &vol_blobs0);
+      GridVolume &vol_basis0);
 };
 
 /** Compute integer lattice vectors and passing matrix.
@@ -149,16 +149,15 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    int sym_no,
    Projection &diff_proj, Projection &corr_proj, Projection align_proj,
    double &mean_error, int numIMG, double lambda, int act_proj,
-   const FileName &fn_ctf, bool unmatched, double ray_length,
-   bool print_system_matrix=false);
+   const FileName &fn_ctf);
 
 /* Finish ART iterations.
    Expand output volume to fill space if necessary. */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Crystal_ART_Parameters &eprm, GridVolume &vol_blobs);
+   const Crystal_ART_Parameters &eprm, GridVolume &vol_basis);
 
-/** Expand blob values to fill space.
-    Copy blob values as a crystal in order to fill the whole space determined
+/** Expand basis values to fill space.
+    Copy basis values as a crystal in order to fill the whole space determined
     by the output volume. */
 void expand_to_fill_space(const Basic_ART_Parameters &prm, 
    const Crystal_ART_Parameters &eprm, GridVolume &vol);
