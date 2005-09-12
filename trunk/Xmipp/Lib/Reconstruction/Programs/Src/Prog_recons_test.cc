@@ -572,7 +572,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
       CorrectPhase_Params correct;
       correct.fn_ctf=prm.fn_CTF;
       correct.multiple_CTFs=FALSE;
-      correct.CTF_description_file=!Is_FourierImageXmipp(prm.fn_CTF);
       correct.method=prm.phase_correction_method;
       correct.epsilon=prm.phase_correction_param;
       correct.produce_side_info();
@@ -637,17 +636,16 @@ void single_recons_test(const Recons_test_Parameters &prm,
    if (prm.recons_method==use_ART || prm.recons_method==use_SIRT) {
       Basic_ART_Parameters art_prm;
       Plain_ART_Parameters plain_art_prm;
-      GridVolume           vol_blobs;
-      GridVolume           *vol_blobs_var=NULL;
+      GridVolume           vol_basis;
 
       art_prm.default_values();
       // art_prm.tell |= TELL_SHOW_ERROR;
       // art_prm.tell |= TELL_SAVE_AT_EACH_STEP;
       if (prm.blob_type==BIG_BLOB) {
-         art_prm.blob.alpha=3.6;
+         art_prm.basis.blob.alpha=3.6;
          art_prm.grid_relative_size=2.26;
       } else {
-         art_prm.blob.alpha=10.4;
+         art_prm.basis.blob.alpha=10.4;
          art_prm.grid_relative_size=1.41;
       }
       art_prm.fn_surface_mask="";
@@ -683,7 +681,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
       if (prm.run_also_without_constraints) {
          art_prm.fn_root=fn_recons_root+"_wos";
-         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_blobs);
+         Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons,vol_basis);
       }
 
       // Extra conditions
@@ -711,18 +709,18 @@ void single_recons_test(const Recons_test_Parameters &prm,
          Filter.apply_mask_Space(starting_vol());
          starting_vol.write(fn_recons_root+"_starting.vol");
 
-         cerr << "Converting phantom to blobs ...\n";
-         voxels2blobs(&starting_vol, art_prm.blob, vol_blobs, BCC,
-            art_prm.grid_relative_size, 0.25, NULL, NULL, 0.01, 0,
+         cerr << "Converting phantom to basis ...\n";
+         art_prm.basis.changeFromVoxels(starting_vol(), vol_basis, BCC,
+            art_prm.grid_relative_size, NULL, NULL,
             CEIL(XSIZE(starting_vol())/2));
-         art_prm.fn_start=fn_recons_root+"_starting.blob";
-         vol_blobs.write(art_prm.fn_start);
+         art_prm.fn_start=fn_recons_root+"_starting.basis";
+         vol_basis.write(art_prm.fn_start);
          art_prm.fn_root=fn_recons_root;
       }
 
       if (!prm.correct_amplitude)
 	 // Do not correct 
-	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_blobs);
+	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_basis);
       else {
 	 Prog_IDR_ART_Parameters idr_prm;
 	 idr_prm.art_prm=&art_prm;

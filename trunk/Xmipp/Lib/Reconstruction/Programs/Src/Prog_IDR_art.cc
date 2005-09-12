@@ -45,9 +45,9 @@ void Prog_IDR_ART_Parameters::read(const FileName &fn) {
    idr_iterations=AtoI(get_param(fh,"idr_iterations",0,"1"));
    it=AtoI(get_param(fh,"first iteration",0,"0"));
    dont_rewrite=check_param(fh,"dont_rewrite");
-   fn_blob_volume=get_param(fh,"only_reproject",0,"");
-   if (fn_blob_volume!="") idr_iterations=0;
-   fn_ctf=get_param(fh,"CTF");
+   fn_basis_volume=get_param(fh,"only_reproject",0,"");
+   if (fn_basis_volume!="") idr_iterations=0;
+   fn_ctf=get_param(fh,"IDR_CTF_list");
    mu0_list=get_vector_param(fh,"mu",-1);
    if (XSIZE(mu0_list)==0)
       {mu0_list.resize(1); mu0_list.init_constant(1);}
@@ -71,21 +71,15 @@ void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
    SF_original.read(art_prm->fn_sel);
    fn_root=art_prm->fn_root;
 
-   // Read CTF
-   if (Is_FourierImageXmipp(fn_ctf)) {
-      ctf.read_mask(fn_ctf);
-      multiple_CTFs=FALSE;
-   } else {
-      SF_ctf.read(fn_ctf);
-      if (SF_ctf.ImgNo()!=SF_original.ImgNo())
-         REPORT_ERROR(1,"Prog_IDR_ART_Parameters: The number of images in "
-            "the ctf and original selfiles do not match");
-      multiple_CTFs=TRUE;
-   }
+   // Read CTF list
+   SF_ctf.read(fn_ctf);
+   if (SF_ctf.ImgNo()!=SF_original.ImgNo())
+      REPORT_ERROR(1,"Prog_IDR_ART_Parameters: The number of images in "
+         "the ctf and original selfiles do not match");
 
-   // Read Blob volume
-   if (fn_blob_volume!="") vol_blobs.read(fn_blob_volume);
-   art_prm->produce_Side_Info(vol_blobs,BASIC);
+   // Read basis volume
+   if (fn_basis_volume!="") vol_basis.read(fn_basis_volume);
+   art_prm->produce_Side_Info(vol_basis,BASIC);
 
    // Prepare Lowpass filter
    if (max_resolution!=-1) {
@@ -100,15 +94,15 @@ void Prog_IDR_ART_Parameters::show() {
    cout << "IDR parameters =================================================\n"
         << "IDR iterations= " << idr_iterations << endl
 	<< "Don't rewrite=  "; print(cout,dont_rewrite);
-   cout << "Only reproject= " << fn_blob_volume << endl
-        << "CTF=            " << fn_ctf << endl
+   cout << "Only reproject= " << fn_basis_volume << endl
+        << "IDR_CTF_list=   " << fn_ctf << endl
         << "Mu0=            " << mu0_list.transpose() << endl
         << "MuF=            " << muF_list.transpose() << endl
         << "Mu=             " << mu_list.transpose() << endl
         << "max resolution= " << max_resolution << endl
         << "final symmetry file=" << fn_final_sym << endl
         << "ART parameters =================================================\n"
-        << /* art_prm << */ endl
+        << art_prm <<  endl
    ;
 }
 
@@ -116,9 +110,9 @@ void Prog_IDR_ART_Parameters::Usage() {
    cerr << "[idr_iterations=<no it=1>]            : No. of IDR iterations\n"
 	<< "[mu=<mu=1>|\"[\"<mu0>,<mu1>,...\"]\"      : Relaxation parameters\n"
 	<< "[muF=<muF>|\"[\"<muF0>,<muF1>,...\"]\"    : Final Relaxation parameters\n"
-        << "CTF=<Xmipp Fourier file>|<selfile>    : CTF file\n"
+        << "IDR_CTF_list=<selfile>                : .ctfparam files\n"
         << "[dont_rewrite=<rw=No>]                : Keep or not the input projs\n"
-	<< "[only_reproject=<Blob volume>]        : Do not reconstruct, use this volume\n"
+	<< "[only_reproject=<Basis volume>]       : Do not reconstruct, use this volume\n"
 	<< "                                        instead\n"
         << "[max resolution=<w=-1>]               : Maximum resolution\n"
         << "[final symmetry file=<sym file>]      : Symmetry file\n";
@@ -127,11 +121,9 @@ void Prog_IDR_ART_Parameters::Usage() {
 }
 
 /* IDR correction ---------------------------------------------------------- */
-void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
+void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_basis, int it) {
    FileName fn_img, fn_out;
    Projection Ireal, Inorm, Itheo, Itheo_CTF;
-   matrix2D< complex<double> >FFTtheo;
-
 
    SF_original.go_first_ACTIVE();
    SF_ctf.go_first_ACTIVE();
@@ -145,22 +137,24 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
       fn_img=SF_original.NextImg();
       Ireal.read(fn_img);
 
-      // Read CTF file if necessary
-      if (multiple_CTFs)
-         ctf.read_mask(SF_ctf.NextImg());
-
+      // Read CTF file
+      ctf.FilterBand=CTF;
+      ctf.ctf.enable_CTFnoise=FALSE;
+      ctf.ctf.read(SF_ctf.NextImg());
+      ctf.ctf.Produce_Side_Info();
+      
       // Project the volume in the same direction
-      project_Volume (vol_blobs,
-         art_prm->blob, art_prm->blobprint,
-	 art_prm->blobprint2, Itheo, Inorm,
+      project_Volume (vol_basis,
+         art_prm->basis, Itheo, Inorm,
 	 YSIZE(Ireal()), XSIZE(Ireal()),
 	 Ireal.rot(), Ireal.tilt(), Ireal.psi(),
 	 FORWARD,ARTK);
 
       // Apply CTF
-      FourierTransform(Itheo(),FFTtheo);
-      ctf.apply_mask_Fourier(FFTtheo);
-      InverseFourierTransform(FFTtheo,Itheo_CTF());
+      Itheo_CTF()=Itheo();
+      ctf.generate_mask(Itheo_CTF());
+      ctf.correct_phase();
+      ctf.apply_mask_Space(Itheo_CTF());
 
       // Center the three images
       Ireal().set_Xmipp_origin();
@@ -185,10 +179,9 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
       #endif
 
       // Apply IDR process
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(Ireal()) {
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(Ireal())
 	 IMGPIXEL(Itheo,i,j)=mu(it)*IMGPIXEL(Ireal,i,j)+
 	    (IMGPIXEL(Itheo,i,j)-mu(it)*IMGPIXEL(Itheo_CTF,i,j));
-      }
 
       // Save output image
       fn_out+=".xmp";
@@ -205,24 +198,24 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_blobs, int it) {
 void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
    // Reconstruction variables
    Plain_ART_Parameters plain_art_prm;
-   prm.art_prm->tell |= TELL_SAVE_BLOBS;
-   FileName fn_blobs="";
+   prm.art_prm->tell |= TELL_SAVE_BASIS;
+   FileName fn_basis="";
 
    do {
       cout << "Running IDR iteration no. " << prm.it << " with mu= "
            << prm.mu(prm.it) << endl;
       // Run ART ...........................................................
-      if (prm.fn_blob_volume=="") {
+      if (prm.fn_basis_volume=="") {
 	 prm.art_prm->fn_sel =prm.SF_current.name();
 	 prm.art_prm->fn_root=prm.fn_root+"_idr"+ItoA(prm.it,2);
-	 prm.art_prm->fn_start = fn_blobs;
-	 prm.vol_blobs.clear();
-	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_blobs);
-      	 fn_blobs=prm.art_prm->fn_root+".blob";
+	 prm.art_prm->fn_start = fn_basis;
+	 prm.vol_basis.clear();
+	 Basic_ROUT_Art(*(prm.art_prm),plain_art_prm,vol_recons,prm.vol_basis);
+      	 fn_basis=prm.art_prm->fn_root+".basis";
       }
 
       // Check if there is postprocessing ..................................
-      bool convert_to_blobs=FALSE;
+      bool convert_to_basis=FALSE;
       // Symmetrization
       if (prm.fn_final_sym!="") {
          Symmetrize_Parameters sym_prm;
@@ -232,7 +225,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
          sym_prm.wrap=TRUE;
          ROUT_symmetrize(sym_prm);
          vol_recons.read(prm.art_prm->fn_root+".vol");
-         convert_to_blobs=TRUE;
+         convert_to_basis=TRUE;
       }
 
       // Lowpass filtering
@@ -240,21 +233,21 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
          cerr << "Filtering result ...\n";
          prm.Filter.apply_mask_Space(vol_recons());
 	 vol_recons.write();
-         convert_to_blobs=TRUE;
+         convert_to_basis=TRUE;
       }
 
-      // Convert to blobs
-      if (convert_to_blobs && prm.it<prm.idr_iterations) {
-         prm.vol_blobs.clear();
-         voxels2blobs(&vol_recons, prm.art_prm->blob, prm.vol_blobs,
-            prm.art_prm->grid_type, prm.art_prm->grid_relative_size, 0.05, NULL,
-            NULL, 0.01, 0, prm.art_prm->R);
-         prm.vol_blobs.write(fn_blobs);
-      }     
+      // Convert to basis
+      if (convert_to_basis && prm.it<prm.idr_iterations) {
+         prm.vol_basis.clear();
+         prm.art_prm->basis.changeFromVoxels(vol_recons(), prm.vol_basis,
+            prm.art_prm->grid_type, prm.art_prm->grid_relative_size, NULL,
+            NULL, prm.art_prm->R);
+         prm.vol_basis.write(fn_basis);
+      }
 
       // Apply IDR correction ..............................................
-      if (prm.it<prm.idr_iterations || prm.fn_blob_volume!="")
-         prm.IDR_correction(prm.vol_blobs,prm.it);
+      if (prm.it<prm.idr_iterations || prm.fn_basis_volume!="")
+         prm.IDR_correction(prm.vol_basis,prm.it);
 
       // Finish this iteration .............................................
       prm.it++;

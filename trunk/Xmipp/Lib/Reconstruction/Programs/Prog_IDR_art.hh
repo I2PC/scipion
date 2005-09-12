@@ -42,7 +42,7 @@ public:
    /// Dont rewrite projections
    bool                 dont_rewrite;
    /// Only reproject
-   FileName             fn_blob_volume;
+   FileName             fn_basis_volume;
    /// List of relaxation parameters: left border
    matrix1D<double>     mu0_list;
    /// List of relaxation parameters: right border
@@ -68,12 +68,10 @@ public:
    SelFile              SF_current;
    /// Side info: set of CTFs (maybe it is not necessary)
    SelFile              SF_ctf;
-   /// Side info: multiple CTF mode
-   bool                 multiple_CTFs;
    /// Side info: Root name of the original set of images
    FileName             fn_root;
-   /// Side Info: Blob volume
-   GridVolume           vol_blobs;
+   /// Side Info: Basis volume
+   GridVolume           vol_basis;
    /// Side Info: Lowpass filter
    FourierMask          Filter;
 public:
@@ -105,11 +103,11 @@ public:
    }
 
    /** IDR correction.
-       Given the reconstructed blob volume and the iteration step
+       Given the reconstructed basis volume and the iteration step
        this routine change the current set of images to a new set
        rewriting or not the current set of images.
    */
-   void IDR_correction(GridVolume &vol_blobs, int it);
+   void IDR_correction(GridVolume &vol_basis, int it);
 };
 
 /** Core of the IDR-ART routine.
