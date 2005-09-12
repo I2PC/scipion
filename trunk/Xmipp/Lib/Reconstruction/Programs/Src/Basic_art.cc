@@ -51,9 +51,7 @@ void Basic_ART_Parameters::default_values() {
     kappa_list.resize(1);  kappa_list.init_constant(0.5);
     lambda_list.resize(1); lambda_list.init_constant(0.01);
     stop_at            = 0;
-    blob.radius        = 2;
-    blob.order         = 2;
-    blob.alpha         = 10.4;
+    basis.set_default();
     grid_relative_size = 1.41;
     grid_type          = BCC;
     proj_ext           = 0;
@@ -88,7 +86,6 @@ void Basic_ART_Parameters::default_values() {
     ref_trans_step     =-1;
     max_tilt           =10.e6;
     grid_relative_size =1.41;
-
 }
 
 /* Read ART parameters ===================================================== */
@@ -142,9 +139,6 @@ void Basic_ART_Parameters::default_values() {
     max_tilt           = AtoF(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
     ref_trans_after    = AtoI(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
     ref_trans_step     = AtoF(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
-    blob.radius        = AtoF(GET_PARAM_WITH_DEF("r",         "2"         )); \
-    blob.order         = AtoI(GET_PARAM_WITH_DEF("m",         "2"         )); \
-    blob.alpha         = AtoF(GET_PARAM_WITH_DEF("a",         "10.4"      )); \
     grid_relative_size = AtoF(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
     R                  = AtoF(GET_PARAM_WITH_DEF("R",         "-1"        )); \
     POCS_freq          = AtoI(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
@@ -164,36 +158,25 @@ void Basic_ART_Parameters::default_values() {
     else                         grid_type=BCC; \
     proj_ext           = AtoI(GET_PARAM_WITH_DEF("ext",       "0"    )); \
     \
-    if (CHECK_PARAM("small_blobs")) { \
-       grid_relative_size=1.41; \
-       blob.alpha=10.4; blob.radius=2; blob.order=2; \
-    } \
-    if (CHECK_PARAM("big_blobs")) { \
-       grid_relative_size=2.26; \
-       blob.alpha=3.6; blob.radius=2; blob.order=2; \
-    } \
-    if (CHECK_PARAM("visual_blobs")) { \
-       grid_relative_size=1.41; \
-       blob.alpha=13.3633; blob.radius=2.4; blob.order=2; \
+    if (CHECK_PARAM("small_blobs"))  grid_relative_size=1.41; \
+    if (CHECK_PARAM("big_blobs"))    grid_relative_size=2.26; \
+    if (CHECK_PARAM("visual_blobs")) grid_relative_size=1.41; \
+    if (CHECK_PARAM("voxels")) { \
+       grid_relative_size=1; \
+       grid_type=CC; \
     } \
     \
     print_system_matrix=CHECK_PARAM("print_system_matrix"); \
-    if (CHECK_PARAM("show_error")) \
-       tell |= TELL_SHOW_ERROR; \
-    if (CHECK_PARAM("manual_order")) \
-       tell |= TELL_MANUAL_ORDER; \
-    if (CHECK_PARAM("only_sym")) \
-       tell |= TELL_ONLY_SYM; \
-    if (CHECK_PARAM("save_at_each_step")) \
-       tell |= TELL_SAVE_AT_EACH_STEP; \
+    if (CHECK_PARAM("show_error"))        tell |= TELL_SHOW_ERROR; \
+    if (CHECK_PARAM("manual_order"))      tell |= TELL_MANUAL_ORDER; \
+    if (CHECK_PARAM("only_sym"))          tell |= TELL_ONLY_SYM; \
+    if (CHECK_PARAM("save_at_each_step")) tell |= TELL_SAVE_AT_EACH_STEP; \
+    if (CHECK_PARAM("save_basis"))        tell |= TELL_SAVE_BASIS; \
+    if (CHECK_PARAM("show_stats"))        tell |= TELL_STATS; \
     if (CHECK_PARAM("save_intermidiate")) {\
        tell |= TELL_SAVE_INTERMIDIATE; \
        save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
     } \
-    if (CHECK_PARAM("save_blobs")) \
-       tell |= TELL_SAVE_BLOBS; \
-    if (CHECK_PARAM("show_stats")) \
-       tell |= TELL_STATS; \
     if (CHECK_PARAM("show_iv")) {\
        tell |= TELL_IV; \
        save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("show_iv","10")); \
@@ -212,16 +195,14 @@ void Basic_ART_Parameters::default_values() {
 
 void Basic_ART_Parameters::read(int argc, char **argv) {
     GET_ART_PARAMS;
+    basis.read(argc,argv);
     //divide by the sampling rate
-    if (sampling != 1.)
-       {
-       blob.radius /= sampling;
+    if (sampling != 1.) {
+       basis.set_sampling_rate(sampling);
        grid_relative_size /= sampling;
-       if (R != -1.) {
-                     R /= sampling;
-		     }
+       if (R != -1.) R /= sampling;
        ref_trans_step /= sampling;	     
-       }
+    }
     if (CHECK_PARAM("output_size")) {
        int i=position_param(argc,argv,"-output_size");
        if (i+3>=argc)
@@ -265,6 +246,7 @@ void Basic_ART_Parameters::read(const FileName &fn) _THROW {
       Xoutput_volume_size = AtoI(argvp[i+3]);
    }
    fclose(fh);
+   basis.read(fn);
 }
 
 /* Usage =================================================================== */
@@ -295,15 +277,15 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-o name]             name of output files, extensions are added"
      << "\n   [-CTF name]           name of a sel file or a file with a CTF"
      << "\n   [-unmatched]          apply unmatched forward/backward projectors"
-     << "\n   [-start blobvolume]   Start from blobvolume"
+     << "\n   [-start basisvolume]  Start from basisvolume"
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
      << "\n                         each n projections"
      << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
      << "\n                         greater than n\n"
-     << "\n   [-ref_trans_after n]  Refine the translation alignement"
+     << "\n   [-ref_trans_after n]  Refine the translation alignment"
      << "\n                         after n projections."
-     << "\n   [-ref_trans_step n]   Max displazament in translation alignement"
+     << "\n   [-ref_trans_step n]   Max displacement in translation alignment"
      << "\n                         This is a double."
      << "\n   [-force_sym <n=0>]    Force the reconstruction to be symmetric"
      << "\n                         n times at each projection"
@@ -316,6 +298,7 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers\n"
      << "\n   [-variability]        Perform variability analysis"
      << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
+     << "\n   [-ray_length <r=-1>]  In basis units\n"
   ;
   cerr
      << "\nIteration parameters"
@@ -329,7 +312,7 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-no_sort]            No sort must be applied"
      << "\n   [-WLS]                Perform weighted least squares ART"
      << "\n   [-k kappa=0.5 |       Relaxation factor for WLS residual "
-     << "\n    -k [kappa0, kappa1, ...]"
+     << "\n    -k [kappa0, kappa1, ...]\n"
      << "\nParallel parameters"
      << "\n                         by default, sequential ART is applied"
      << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
@@ -341,14 +324,6 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-pCAV]	            Parallel (MPI) CAV\n"
      << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
      << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
-     << "\nBlob parameters"
-     << "\n   [-r blrad=2]          blob radius"
-     << "\n   [-m blord=2]          order of Bessel function in blob"
-     << "\n   [-a blalpha=10.4]     blob parameter alpha"
-     << "\n   [-big_blobs]          blob parameters and grid relative size adjusted"
-     << "\n   [-small_blobs]           for using big, small blobs"
-     << "\n   [-visual_blobs]          or blobs optimal for direct visualization"
-     << "\n   [-ray_length <r=-1>]  In blob units\n"
      << "\nGrid parameters"
      << "\n   [-g gridsz=1.41]      relative grid size"
      << "\n                         if gridsz =  -1 => gridsz=2^(1/2)"
@@ -363,6 +338,7 @@ void Basic_ART_Parameters::usage_more() {
      << "\n                         Also to -mod_a and mod_b when processing"
      << "\n                         crystals"
   ;
+  basis.usage();
   cerr
      << "\nDebugging options"
      << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
@@ -372,12 +348,12 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-show_stats]         give some statistical information during the process"
      << "\n   [-save_at_each_step]  save intermidiate projections"
      << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"
-     << "\n                             PPPblobs.blob, PPPvol.vol"
+     << "\n                             PPPbasis.basis, PPPvol.vol"
      << "\n                             PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3"
      << "\n   [-save_intermidiate <n>] save intermidiate volumes (every <n> projections)"
      << "\n                             <fnroot>it<no_it>proj<no_projs>.vol"
-     << "\n   [-save_blobs]         every time you have to save a volume, save it"
-     << "\n                         also in blobs"
+     << "\n   [-save_basis]         every time you have to save a volume, save it"
+     << "\n                         also in basis"
      << "\n   [-manual_order]       manual selection of projection order"
      << "\n   [-only_sym]           skip all those symmetries different from -1"
      << "\n"
@@ -502,7 +478,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
 /* Produce Side Information                                                  */
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
-void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
+void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
    int rank)
    {
    SelFile     selfile;
@@ -610,11 +586,11 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
 
 /* Setting initial volumes ------------------------------------------------- */
    if (level>=FULL) {
-      if (!(tell & TELL_USE_INPUT_BLOBVOLUME)) {
+      if (!(tell & TELL_USE_INPUT_BASISVOLUME)) {
 	 if (fn_start != "")
-	    vol_blobs0.read(fn_start);
+	    vol_basis0.read(fn_start);
 	 else {
-	    Grid grid_blobs;
+	    Grid grid_basis;
       	    if (R==-1) {
 	       matrix1D<double> corner;
 	       if (Zoutput_volume_size==0) 
@@ -625,64 +601,55 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_blobs0, int level,
 		     (double)Xoutput_volume_size/2,
 		     (double)Youtput_volume_size/2,
 		     (double)Zoutput_volume_size/2);
-	       /* If you substract half the blob radius, you are forcing that the
-        	  last blob touches slightly the volume border. By not substracting
-        	  it there is a blob center as near the border as possible. */
+	       /* If you substract half the basis radius, you are forcing that the
+        	  last basis touches slightly the volume border. By not substracting
+        	  it there is a basis center as near the border as possible. */
 	       corner=corner+proj_ext/*CO: -blob.radius/2*/;
 	       switch (grid_type) {
         	  case (CC): 
-        	     grid_blobs=Create_CC_grid(grid_relative_size,-corner,corner);
+        	     grid_basis=Create_CC_grid(grid_relative_size,-corner,corner);
         	     break;
         	  case (FCC):
-        	     grid_blobs=Create_FCC_grid(grid_relative_size,-corner,corner);
+        	     grid_basis=Create_FCC_grid(grid_relative_size,-corner,corner);
         	     break;
         	  case (BCC):
-        	     grid_blobs=Create_BCC_grid(grid_relative_size,-corner,corner);
+        	     grid_basis=Create_BCC_grid(grid_relative_size,-corner,corner);
         	     break;
 	       }
 	    } else {
 	       switch (grid_type) {
         	  case (CC): 
-        	     grid_blobs=Create_CC_grid(grid_relative_size,R);
+        	     grid_basis=Create_CC_grid(grid_relative_size,R);
         	     break;
         	  case (FCC):
-        	     grid_blobs=Create_FCC_grid(grid_relative_size,R);
+        	     grid_basis=Create_FCC_grid(grid_relative_size,R);
         	     break;
         	  case (BCC):
-        	     grid_blobs=Create_BCC_grid(grid_relative_size,R);
+        	     grid_basis=Create_BCC_grid(grid_relative_size,R);
         	     break;
 	       }
 	    }
-	    vol_blobs0.adapt_to_grid(grid_blobs);
+	    vol_basis0.adapt_to_grid(grid_basis);
 	 }
       }
    }
 
-/* Blob footprint computation ---------------------------------------------- */
+/* Basis side info --------------------------------------------------------- */
    if (level>=BASIC) {
-      footprint_blob (blobprint, blob, BLOB_SUBSAMPLING);
-      double sum_on_grid=sum_blob_Grid(blob,vol_blobs0.grid(),D);
-      blobprint()  /= sum_on_grid;
-      blobprint2()  = blobprint();
-      blobprint2() *= blobprint();
-
-      #ifdef DEBUG
-	 cout << "Sum of a blob on the grid=" << sum_on_grid << endl;
-	 cout << "D\n" << D << endl;
-	 ImageXmipp save; save()=blobprint(); save.write("footprint.xmp");
-      #endif
+      basis.set_D(D);
+      basis.produce_side_info(vol_basis0.grid());
    }
 
-/* Express the ray length in blob units ------------------------------------ */
-   if (ray_length!=-1) ray_length*=blob.radius;
+/* Express the ray length in basis units ----------------------------------- */
+   if (ray_length!=-1) ray_length*=basis.max_length();
 }
 #undef DEBUG
 
 /* Count number of equations for CAV --------------------------------------- */
-void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0, 
+void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0, 
    int numProjs_node, int debug_level) {
    if (GVNeq==NULL) GVNeq=new GridVolumeT<int>;
-   GVNeq->resize(vol_blobs0);
+   GVNeq->resize(vol_basis0);
    GVNeq->init_zeros();
    
    Projection read_proj;
@@ -702,7 +669,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_blobs0,
              FINISHINGY(read_proj())+proj_ext,
              FINISHINGX(read_proj())+proj_ext);
 
-       count_eqs_in_projection(*GVNeq, blob, blobprint, blobprint2, read_proj);
+       count_eqs_in_projection(*GVNeq, basis, read_proj);
 
        if (debug_level>0 && 
            act_proj%MAX(1,numIMG/60)==0) progress_bar(act_proj);
