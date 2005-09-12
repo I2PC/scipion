@@ -141,6 +141,10 @@ public:
    template <class T>
    void generate_CTF_mask(T &v) _THROW;
 
+   /** Flip the phase of an already generated 2D mask.
+       Those frequencies that have negative amplitude are flipped. */
+   void correct_phase();
+
    /** Save mask as a text file.
        Indicate which is the dimension od the mask to save */
    void write_mask(const FileName &fn, int dim);

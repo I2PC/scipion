@@ -37,7 +37,7 @@ void FourierMask::clear() {
    w2=w1=0;
    raised_w=0;
    ctf.clear();
-   ctf.enable_CTFnoise=TRUE;
+   ctf.enable_CTFnoise=false;
    mask1D.clear();
    mask2D.clear();
    mask3D.clear();
@@ -87,9 +87,9 @@ void FourierMask::read(int argc, char **argv) _THROW {
    } else if (strcmp(argv[i+1],"ctf")==0) {
       if (i+2>=argc)
          REPORT_ERROR(3000,"FourierMask: CTF needs a CTF file");
-      ctf.read(argv[i+2]);
-      ctf.enable_CTFnoise=false;
       FilterShape=FilterBand=CTF;
+      ctf.enable_CTFnoise=false;
+      ctf.read(argv[i+2]);
       ctf.Produce_Side_Info();
    } else {
       if (i+1>=argc)
@@ -162,13 +162,10 @@ void FourierMask::usage() {
         << "   -fourier_mask <file>              : Provide a Fourier file\n"
         << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
         << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
-        << "   -fourier_mask ctf                 : In that case the following\n"
-	<< "                                       parameters apply\n"
+        << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
         << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
         << "                                       are taken in Angstroms\n"
    ;
-   //cerr << "CTF parameters -----------------------------\n";
-   //ctf.Usage();
 }
 
 /* Generate mask for a resized image --------------------------------------- */
@@ -266,6 +263,7 @@ void FourierMask::generate_mask(T &v) _THROW {
 
 template <class T>
 void FourierMask::generate_CTF_mask(T &v) _THROW {
+   STARTINGX(mask2D)=STARTINGY(mask2D)=0;
    int dim=SPACE_DIM(v);
    if (dim!=2)
       REPORT_ERROR(1,
@@ -274,6 +272,12 @@ void FourierMask::generate_CTF_mask(T &v) _THROW {
    ctf.Generate_CTF(YSIZE(v),XSIZE(v),mask2D);
    STARTINGX(mask2D)=STARTINGX(v);
    STARTINGY(mask2D)=STARTINGY(v);
+}
+
+// Correct phase -----------------------------------------------------------
+void FourierMask::correct_phase() {
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D)
+      if (real(mask2D(i,j))<0) mask2D(i,j)=-mask2D(i,j);
 }
 
 // Read mask from file -----------------------------------------------------
