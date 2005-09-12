@@ -39,8 +39,8 @@
 #include <XmippData/Programs/Prog_denoising.hh>
 #include <Reconstruction/Programs/Prog_FourierFilter.hh>
 #include <qinputdialog.h>
+#include <qmessagebox.h>
 #include <qlabel.h>
-#include <qlineedit.h>
 #include <qlayout.h>
 #include <qpushbutton.h>
 #include <qgrid.h>
@@ -325,6 +325,8 @@ void QtWidgetMicrograph::openMenus() {
    
    connect( (QObject*)filterMenu, SIGNAL(signalAdjustContrast()),
             this, SLOT(slotChangeContrast(void)) );   
+   connect( (QObject*)filterMenu, SIGNAL(signalCrop()),
+            this, SLOT(slotChangeCrop(void)) );   
    connect( (QObject*)filterMenu, SIGNAL(signalAddFilter()),
             (QObject*)__filtersController, SLOT(slotAddFilter()) );   
    connect( (QObject*)filterMenu, SIGNAL(signalCleanFilters()),
@@ -1656,6 +1658,14 @@ void QtWidgetMicrograph::slotChangeContrast() {
         0,"new window", WDestructiveClose);
    adjustContrast->show();
 }
+
+void QtWidgetMicrograph::slotChangeCrop() {
+   CropWidget *crop=new CropWidget(this,0,"new window", WDestructiveClose);
+   connect(crop,SIGNAL(new_value(vector<int>)),
+      __mImageOverview,SLOT(slotDrawCropArea(vector<int>)));
+   crop->show();
+}
+
 void QtWidgetMicrograph::slotChangeCircleRadius() {
    AdjustCircleRadiustWidget *adjustCircleRadius=new
       AdjustCircleRadiustWidget(0,255,10,this,
@@ -1755,7 +1765,160 @@ void AdjustContrastWidget::scrollValueChanged(int new_val) {
        __scroll_max->value(),__scroll_gamma->value()/10.0);
 }
 
-/* AdjustContrastWidget ---------------------------------------------------- */
+/* CropWidget -------------------------------------------------------------- */
+// Constructor
+CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
+   QWidget *parent, const char *name, int wflags):
+   QWidget(parent,name,wflags) {
+   __qtwidgetmicrograph=_qtwidgetmicrograph;
+   int Xdim, Ydim;
+   __qtwidgetmicrograph->getMicrograph()->size(Xdim,Ydim);
+   
+   // Set this window caption
+   setCaption( "Crop micrograph" );
+
+   // Create a layout to position the widgets
+   QBoxLayout *Layout = new QVBoxLayout( this, 10 );
+
+   // Create a grid layout to hold most of the widgets
+   QGridLayout *grid = new QGridLayout( 6,3 );
+   Layout->addLayout( grid, 5 );
+
+   // Layout the four bars
+   vector<int> min, max, init_value;
+   vector<char *> prm_name;
+   prm_name.push_back("x0"); min.push_back(0); max.push_back(Xdim); init_value.push_back(ROUND(0.25*Xdim));
+   prm_name.push_back("y0"); min.push_back(0); max.push_back(Ydim); init_value.push_back(ROUND(0.25*Ydim));
+   prm_name.push_back("xF"); min.push_back(0); max.push_back(Xdim); init_value.push_back(ROUND(0.75*Xdim));
+   prm_name.push_back("yF"); min.push_back(0); max.push_back(Ydim); init_value.push_back(ROUND(0.75*Ydim));
+   for (int i=0; i<min.size(); i++) {
+
+      // Add Parameter name
+      QLabel     *lab1= new QLabel( this, "lab1" );    
+      lab1->setFont( QFont("times",12,QFont::Bold) );
+      lab1->setText( prm_name[i] );
+      lab1->setFixedSize(lab1->sizeHint());
+      grid->addWidget( lab1, i, 0, AlignLeft );
+      
+      // Add Scroll Bar
+      QScrollBar  *scroll_aux= new QScrollBar(min[i], max[i], 1, 50, (int)init_value[i], QScrollBar::Horizontal,this,"scroll");
+      scroll_aux->setFixedWidth(100); 
+      scroll_aux->setFixedHeight(15);
+      grid->addWidget( scroll_aux, i, 1, AlignCenter );
+      __scroll.push_back(scroll_aux);
+
+      // Label for the current value
+      QLabel * value_lab_aux;
+      value_lab_aux= new QLabel( this, "value_lab" );        
+      value_lab_aux->setFont( QFont("times",12) );
+      value_lab_aux->setNum( init_value[i] );
+      grid->addWidget( value_lab_aux, i, 2, AlignLeft);
+      __label.push_back(value_lab_aux);
+   
+      connect( scroll_aux, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)) );
+   }
+   
+   // Layout the output name
+   QLabel     *lab2= new QLabel( this, "lab2" );
+   lab2->setFont( QFont("times",12,QFont::Bold) );
+   lab2->setText( "Output image" );
+   lab2->setFixedSize(lab2->sizeHint());
+   grid->addWidget( lab2, min.size()+1, 0, AlignLeft );
+   __outputNameLineEdit=new QLineEdit( this, "output name" );
+   grid->addWidget( __outputNameLineEdit, min.size()+1, 1, AlignLeft );
+
+   // Cancel Button
+   QPushButton *cancel;
+   cancel = new QPushButton( this, "cancel" );   // create button 1
+   cancel->setFont( QFont("times",12,QFont::Bold) );
+   cancel->setText( "Cancel" );    
+   cancel->setFixedSize( cancel->sizeHint());
+   grid->addWidget( cancel, min.size()+2, 0, AlignVCenter ); 
+   connect( cancel, SIGNAL(clicked()), this, SLOT(cancel()) );
+   
+   // OK button 
+   QPushButton *do_it;
+   do_it = new QPushButton( this, "do_it" );   // create button 3
+   do_it->setFont( QFont("times",12,QFont::Bold) );
+   do_it->setText( "Ok" );
+   do_it->setFixedHeight( do_it->sizeHint().height());
+   do_it->setFixedWidth(80);
+   grid->addWidget( do_it, min.size()+2, 2, AlignVCenter ); 
+   connect( do_it, SIGNAL(clicked()), this, SLOT(accept()) );
+
+   __qtwidgetmicrograph->overview()->init_crop_area();
+}
+
+// Destructor --------------------------------------------------------------
+CropWidget::~CropWidget() {
+   for (int i=0; i<__label.size(); i++) {
+      delete __label[i];
+      delete __scroll[i];
+   }
+}
+
+// One of the sliders changed ----------------------------------------------
+void CropWidget::scrollValueChanged(int new_val) {
+   vector<int> value;
+   // Get values
+   for (int i=0; i<__label.size(); i++) {
+      int v=__scroll[i]->value();
+      value.push_back(ROUND((float)v));
+   }
+   
+   // Check value validity
+   value[0]=MIN(value[0],value[2]);
+   value[2]=MAX(value[0],value[2]);
+   value[1]=MIN(value[1],value[3]);
+   value[3]=MAX(value[1],value[3]);
+   
+   // Set these values
+   for (int i=0; i<__label.size(); i++) {
+       __label[i]->setNum(value[i]);
+       __scroll[i]->setValue(value[i]);
+   }
+   
+   emit new_value(value);
+}
+
+void CropWidget::accept() {
+   __qtwidgetmicrograph->overview()->finish_crop_area();
+   // Get values
+   vector<int> value;
+   for (int i=0; i<__label.size(); i++)
+      value.push_back(__scroll[i]->value());
+   
+   // Get output image
+   string fn_out=__outputNameLineEdit->text().ascii();
+   if (fn_out=="") {
+      QMessageBox::information( this, "Mark",
+         "The output image is empty\n Cropping is not carried out\n");
+      close();
+      return;
+   } 
+   
+   // Do the cropping
+   int w=value[2]-value[0];
+   int h=value[3]-value[1];
+   string command=(string)"xmipp_window_micrograph "+
+      "-i "+__qtwidgetmicrograph->getMicrograph()->micrograph_name()+
+      " -o "+fn_out+
+      " -size "+ItoA(w,0)+" "+ItoA(h,0)+
+      " -top_left_corner "+ItoA(value[0],0)+" "+ItoA(value[1],0);
+   cout << "Executing:\n" << command << endl;
+   system(command.c_str());
+
+   // Close the parameters window
+   close();
+}
+
+void CropWidget::cancel() {
+   __qtwidgetmicrograph->overview()->finish_crop_area();
+   close();
+}
+
+
+/* AdjustCircleWidget ------------------------------------------------------ */
 // Constructor
 AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max, 
   int start_with, QtWidgetMicrograph *_qtwidgetmicrograph,
@@ -1793,8 +1956,6 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     __label_radius->setText( ItoA(start_with,3).c_str() );
     __label_radius->setFixedSize(__scroll_radius->sizeHint());
     grid->addWidget( __label_radius, 0, 2, AlignCenter );
-
-
 }
 
 void AdjustCircleRadiustWidget::scrollValueChanged(int new_val) {

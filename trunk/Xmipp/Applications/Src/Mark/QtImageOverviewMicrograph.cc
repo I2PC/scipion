@@ -84,6 +84,7 @@ QtImageOverviewMicrograph::QtImageOverviewMicrograph( QWidget *_parent,
    __x = 0;    __y = 0; 
    __w = 0;    __h = 0;
    __axis_ang=0; __enable_axis=FALSE;
+   __x0_crop=__y0_crop=__xF_crop=__yF_crop=-1;
 }
 
 /* Load Image -------------------------------------------------------------- */
@@ -187,6 +188,15 @@ void QtImageOverviewMicrograph::loadSymbols() {
       drawEllipse(getMicrograph()->coord(i).X, 
          getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label);
    }
+   
+   // Draw also the crop area if necessary
+   if (__x0_crop!=-1 && __y0_crop!=-1 && __xF_crop!=-1 && __yF_crop!=-1) {
+      int x0_crop, y0_crop, xF_crop, yF_crop;
+      micrographToOverview(__x0_crop, __y0_crop, x0_crop, y0_crop);
+      micrographToOverview(__xF_crop, __yF_crop, xF_crop, yF_crop);
+      __paint->setPen( blue );
+      __paint->drawRect(x0_crop , y0_crop, xF_crop-x0_crop, yF_crop-y0_crop);
+   }
 }
 
 void QtImageOverviewMicrograph::mouseMoveEvent( QMouseEvent *e ) {
@@ -255,4 +265,28 @@ void QtImageOverviewMicrograph::setMicrograph( Micrograph *_m ) {
       setGeometry( geometry().x(), geometry().y(), 
                    geometry().width(), (int)(geometry().width() * aspect));
    }
+}
+
+/* Crop area --------------------------------------------------------------- */
+void QtImageOverviewMicrograph::init_crop_area() {
+   int Xdim, Ydim;
+   getMicrograph()->size(Xdim,Ydim);
+   __x0_crop=ROUND(0.25*Xdim);
+   __y0_crop=ROUND(0.25*Ydim);
+   __xF_crop=ROUND(0.75*Xdim);
+   __yF_crop=ROUND(0.75*Ydim);
+   emit signalRepaint();
+}
+
+void QtImageOverviewMicrograph::finish_crop_area() {
+   __x0_crop=__y0_crop=__xF_crop=__yF_crop=-1;
+   emit signalRepaint();
+}
+
+void QtImageOverviewMicrograph::slotDrawCropArea(vector<int> value) {
+   __x0_crop=value[0];
+   __y0_crop=value[1];
+   __xF_crop=value[2];
+   __yF_crop=value[3];
+   emit signalRepaint();
 }

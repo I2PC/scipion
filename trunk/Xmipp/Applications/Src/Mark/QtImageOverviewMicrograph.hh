@@ -32,6 +32,7 @@ class QtImageOverviewMicrograph : public QtImage {
          
 private:
    double  __w, __h;
+   int     __x0_crop, __y0_crop, __xF_crop, __yF_crop;
    
 public:
    // Constructor
@@ -42,8 +43,12 @@ public:
    void drawEllipse(int _x, int _y, int _color);
    void draw_axis(double _ang);
    
+   // Crop area
+   void init_crop_area();
+   void finish_crop_area();
+   
 protected:
-   // Coordiantes transformations
+   // Coordinate transformations
    void micrographToOverview( const int _x, const int _y, 
                               int &_rx, int &_ry );
    void overviewToMicrograph( const int _x, const int _y,
@@ -59,6 +64,7 @@ protected:
 public slots:
    void slotSetWidthHeight( int _w, int _h );
    void slotActualizeOtherOverview( int _x, int _y );
+   void slotDrawCropArea(vector<int> value);
 
 signals:
    void signalActualizeOtherOverview( int _x, int _y );

@@ -6,17 +6,24 @@
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * Copyright (c) 2000 , CSIC .
- *
- * Permission is granted to copy and distribute this file, for noncommercial
- * use, provided (a) this copyright notice is preserved, (b) no attempt
- * is made to restrict redistribution of this file, and (c) this file is
- * restricted by a compilation copyright.
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- *
- *****************************************************************************/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
 
 #ifndef __QT_WIDGET_MICROGRAPH_HH__
 #define __QT_WIDGET_MICROGRAPH_HH__
@@ -29,6 +36,7 @@
 #include <qaccel.h>
 #include <qscrollbar.h>
 #include <qlabel.h>
+#include <qlineedit.h>
 #include "QtImageMicrograph.hh"
 #include "QtImageOverviewMicrograph.hh"
 #include "QtFileMenu.hh"
@@ -355,6 +363,7 @@ public slots:
    void slotDrawLastEllipse(int _x, int _y, int _f);
    void slotQuit();
    void slotChangeContrast();
+   void slotChangeCrop();
    void slotChangeCircleRadius();
 signals:
    void signalActiveFamily( int _f );
@@ -383,6 +392,30 @@ private slots:
 };
 
 /** Class to adjust contrast
+*/
+class CropWidget : public QWidget {
+   Q_OBJECT
+public:
+   /** Constructor */
+   CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
+      QWidget *parent=0, const char *name=0, int wflags=0);
+
+   /** Destructor */
+   ~CropWidget();
+private:
+   QtWidgetMicrograph      *__qtwidgetmicrograph;
+   vector < QScrollBar * >  __scroll;
+   vector < QLabel * >      __label;
+   QLineEdit               *__outputNameLineEdit;
+private slots:
+   void scrollValueChanged(int);  
+   void accept();
+   void cancel();
+signals:
+   void new_value(vector<int>);
+};
+
+/** Class to adjust circle radius
 */
 class AdjustCircleRadiustWidget : public QWidget {
    Q_OBJECT
