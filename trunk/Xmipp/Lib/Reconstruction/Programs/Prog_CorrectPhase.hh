@@ -37,9 +37,6 @@ public:
    /// Name of the CTF file
    FileName fn_ctf;
 
-   /// CTF description
-   bool CTF_description_file;
-
    /// Epsilon=minimum CTF value to correct
    double epsilon;
 
@@ -76,14 +73,6 @@ public:
    /** Produce side information.
        The CTF file is read. */
    void produce_side_info();
-
-   /** Exists CTF for this file.
-       Given a filename it returns the CTF file if there exists a CTF file called
-       ctf-<root><num> disregarding the path. This implies that there cannot be
-       two files in different directories with the same filename.
-
-       If no CTF file is found then "" is returned */
-   FileName CTF_filename(const FileName &fn);
 
    /** Correct phase of an image.
        An exception is thrown if the input image is not of the same size

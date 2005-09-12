@@ -287,7 +287,12 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
       if (prm.fn_output!="") Realization.write(prm.fn_output);
    } else {
       FourierMask ctf;
-      if (prm.fn_CTF!="") ctf.read_mask(prm.fn_CTF);
+      if (prm.fn_CTF!="") {
+         ctf.FilterBand=CTF;
+         ctf.ctf.enable_CTFnoise=FALSE;
+         ctf.ctf.read(prm.fn_CTF);
+         ctf.ctf.Produce_Side_Info();
+      }
    
       int Xdim=prm.Xdim, Ydim=prm.Ydim;
       if (Xdim==-1) 
@@ -319,7 +324,10 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
                   rnd_unif(0,360),rnd_unif(0,180),rnd_unif(0,360));
 
          // Apply CTF
-         if (prm.fn_CTF!="") ctf.apply_mask_Space(proj());
+         if (prm.fn_CTF!="") {
+            if (n==0) ctf.generate_mask(proj());
+            ctf.apply_mask_Space(proj());
+         }
 
          // Compute projection area
          proj_area(n)=0;

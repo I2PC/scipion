@@ -28,20 +28,15 @@
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhase_Params::read(int argc, char **argv) {
-   if (check_param(argc,argv,"-ctf_descr")) {
-      fn_ctf=get_param(argc,argv,"-ctf_descr");
-      CTF_description_file=TRUE;
-   } else {
-      fn_ctf=get_param(argc,argv,"-ctf");
-      CTF_description_file=FALSE;
-   }
+   fn_ctf=get_param(argc,argv,"-ctf");
    
    epsilon=AtoF(get_param(argc,argv,"-small","0"));
    string aux; aux=get_param(argc,argv,"-method","");
    if      (aux=="remove")           method=CORRECT_SETTING_SMALL_TO_ZERO;
    else if (aux=="leave" || aux=="") method=CORRECT_LEAVING_SMALL;
    else if (aux=="divide")           method=CORRECT_AMPLIFYING_NOT_SMALL;
-   multiple_CTFs=!Is_FourierImageXmipp(fn_ctf);
+   multiple_CTFs=fn_ctf.get_extension()=="sel";
+   cout << fn_ctf << " " << fn_ctf.get_extension() << endl;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -62,47 +57,31 @@ void CorrectPhase_Params::show() {
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectPhase_Params::usage() {
-   cerr << "   -ctf <Xmipp Fourier file or selfile>: It must not be centered\n"
-        << "  [-small <epsilon=0>]      : Values under epsilon are small\n"
-	<< "  [-method <mth=leave>]     : Valid methods are: remove, leave\n"
-	<< "                              divide\n";
+   cerr << "   -ctf <CTF descr file or selfile> : It must not be centered\n"
+        << "  [-small <epsilon=0>]              : Values under epsilon are small\n"
+	<< "  [-method <mth=leave>]             : Valid methods are: remove, leave\n"
+	<< "                                      divide\n";
    ;
 }
 
 /* Produce Side information ------------------------------------------------ */
 void CorrectPhase_Params::produce_side_info() {
-   if (!multiple_CTFs && !CTF_description_file)
-      ctf.read_mask(fn_ctf);
-   else if (multiple_CTFs) {
-      ctf.FilterShape=ctf.FilterBand=FROM_FILE;
+   ctf.FilterBand=CTF;
+   ctf.ctf.enable_CTFnoise=FALSE;
+   if (multiple_CTFs) {
       SF_CTF.read(fn_ctf);
+      SF_CTF.go_first_ACTIVE();
    } else {
-      ctf.FilterBand=CTF;
       ctf.ctf.read(fn_ctf);
       ctf.ctf.Produce_Side_Info();
    }
 }
 
-/* Look for a CTF file ----------------------------------------------------- */
-FileName CorrectPhase_Params::CTF_filename(const FileName &fn) {
-   SF_CTF.go_first_ACTIVE();
-   FileName searched_fn_root=fn.remove_all_extensions();
-   searched_fn_root=searched_fn_root.remove_directories();
-   while (!SF_CTF.eof()) {
-      FileName fn_CTF=SF_CTF.NextImg();
-      FileName fn_root=fn_CTF.remove_until_prefix("ctf-");
-      fn_root=fn_root.remove_all_extensions();
-      if (fn_root==searched_fn_root) return fn_CTF;
-   }
-   return "";
-}
-
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
 void CorrectPhase_Params::correct(matrix2D< complex<double> > &v) {
-   if (XSIZE(ctf.mask2D)==0 && CTF_description_file)
-      ctf.generate_mask(v); // This is the first time
-                            // that the CTF is applied
+   if (XSIZE(ctf.mask2D)==0 || multiple_CTFs)
+      ctf.generate_mask(v);
    #ifdef DEBUG
       cout << "New image ----------------------------\n";
    #endif
