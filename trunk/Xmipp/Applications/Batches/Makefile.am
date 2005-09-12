@@ -4,6 +4,7 @@ SUBDIRS = Do_Selfile \
 	Iv \
 	Look_at_FFT \
 	PDB2descr \
+	PDBsidechain \
 	Pdb2surface \
 	Showsel \
 	ShowSOM \
