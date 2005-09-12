@@ -505,9 +505,3 @@ t
         MPI_Finalize();	
         return 0 ;
 }
-
-
-
-
-
-
