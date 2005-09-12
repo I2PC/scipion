@@ -466,6 +466,7 @@ bool ImageViewer::showImage()
     QApplication::restoreOverrideCursor();  // restore original cursor
     updateStatus();
 //    setMenuItemFlags();
+    repaint();
     return ok;
 }
 
