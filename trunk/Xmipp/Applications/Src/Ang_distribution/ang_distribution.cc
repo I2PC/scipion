@@ -30,7 +30,7 @@
 #include <XmippData/xmippHistograms.hh>
 #include <XmippInterface/xmippSpider.hh>
 #include <XmippInterface/xmippOpenDXang.hh>
-#include <fstream.h>
+#include <fstream>
 
 /* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
