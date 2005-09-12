@@ -79,6 +79,8 @@ int main (int argc, char *argv[]) {
    double		  total_t;		// Program execution time
    double 		  comms_t_it,aux_t;	// communicattions time in one iteration
    GridVolumeT<int> GVNeq_aux; 			// This is a buffer for the communication
+   matrix1D<int> Ordered_aux;
+	
    int 			  rank, size;	     	// MPI number of proccess and number of proccesses
    
 	
@@ -237,45 +239,38 @@ int main (int argc, char *argv[]) {
 		art_prm.lambda_list(0) = art_prm.lambda(i);
 		
       	        if( art_prm.parallel_mode==Basic_ART_Parameters::pSART ){
-			
-			int numsteps = num_img_node / art_prm.block_size;
 
+			int numsteps = Npart / art_prm.block_size;
+			
+			// could be necessary another step for remaining projections
+			if (( Npart % art_prm.block_size ) != 0) numsteps++;
 			int processed = 0;
-				
+			
 			art_prm.numIMG = art_prm.block_size;
 			
-			art_prm.ordered_list.startingX() = -myFirst;
+			for(int k = 0; k < numsteps ; k++){
 			
-			for(int ns = 0; ns < numsteps ; ns++){
-				if( ns == ( numsteps - 1 ) )
+				if( k == numsteps-1 )
 				{
 					art_prm.numIMG = num_img_node - processed;
 				}
+				
+				art_prm.ordered_list.startingX( ) = -processed; 
 				
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
 
                                 Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
 
-				int blocksize;
-				
-				if( ns < ( numsteps - 1 ) )
-				{
-					art_prm.ordered_list.startingX() -= art_prm.numIMG;
-					processed += art_prm.numIMG;
-					blocksize = art_prm.numIMG * size;
-				}
-				else
-				{
-					blocksize = ( art_prm.numIMG * size ) + remaining;
-				}
+				processed += art_prm.numIMG;			
+
+				int blocksize = art_prm.numIMG * size;
 				
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 				{
 					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
-					//vol_blobs(j)() *= ((double)art_prm.numIMG /(double) blocksize);
 					MPI_Barrier( MPI_COMM_WORLD );
 					aux_comm_t = MPI_Wtime();
 					MPI_Allreduce( MULTIDIM_ARRAY(vol_blobs(j)()), MULTIDIM_ARRAY(vol_blobs_aux(j)()), MULTIDIM_SIZE( vol_blobs(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -306,6 +301,7 @@ int main (int argc, char *argv[]) {
 				{
 					art_prm.numIMG = num_img_node - processed;	
 				}	
+				
 			        /*
 				EXTRA CALCULATIONS FOR BICAV WEIGHTS: Each node computes its own part related to its images
 				and after that send each others their results and sum up them. This part of code has been taken and
@@ -316,10 +312,9 @@ int main (int argc, char *argv[]) {
 
 				// Comprobar si incializa a 0
                                 art_prm.compute_CAV_weights( vol_blobs, art_prm.numIMG );
-t
 				GVNeq_aux = *(art_prm.GVNeq);
 		
- 		 
+		 
 				// All processors send their result and get the other's so all of them
 				// have the weights.
 
@@ -338,15 +333,14 @@ t
 				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_blobs(j)();
 					
-                                Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
-				
+				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+
 				if( ns < ( numsteps - 1 ) )
 				{
 					art_prm.ordered_list.startingX() -= art_prm.numIMG;
 					processed += art_prm.numIMG;
 				}
 		
-			
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
 
@@ -361,11 +355,28 @@ t
 					comms_t_it += aux_t;
 			
 					FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_blobs(j)() )
-				          MULTIDIM_ELEM( vol_blobs(j)(),i) = 
-					  	MULTIDIM_ELEM( vol_aux2(j)(),i) + 
-						MULTIDIM_ELEM( vol_blobs_aux(j)(),i) /  
-						MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
-
+				        if( MULTIDIM_ELEM( GVNeq_aux(j)(),i) == 0 )
+					{
+						if( MULTIDIM_ELEM( vol_blobs_aux(j)(),i) == 0 )
+						{
+							MULTIDIM_ELEM( vol_blobs(j)(),i) = 0;
+						}
+						else
+						{
+							// This case should not happen as this blob 
+							// is not affected by actual projections
+	
+							cerr << "Error with weights, contact developers!" << endl;
+							exit( 0 );
+						}	
+					}
+					else
+					{
+					  	MULTIDIM_ELEM( vol_blobs(j)(),i) = 
+					  		MULTIDIM_ELEM( vol_aux2(j)(),i) + 
+							MULTIDIM_ELEM( vol_blobs_aux(j)(),i) /  
+							MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
+					}
 				}	
 			}
 			art_prm.parallel_mode = Basic_ART_Parameters::pBiCAV; // trick undone
@@ -505,3 +516,9 @@ t
         MPI_Finalize();	
         return 0 ;
 }
+
+
+
+
+
+
