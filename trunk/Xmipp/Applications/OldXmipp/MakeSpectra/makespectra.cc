@@ -200,6 +200,13 @@ inc_int = r3;
 
 long_int = r2-r1;
 
+cout << "rad_min="  << rad_min  << endl
+     << "rad_max="  << rad_max  << endl
+     << "inc_int="  << inc_int  << endl
+     << "long_int=" << long_int << endl
+     << "nnumin="   << nnumin   << endl
+     << "nnumax="   << nnumax   << endl;
+     
 /* ****************  OPENING THE FILES  *********************/
 
 
@@ -324,7 +331,8 @@ while (fgets (linea, 200, file_sel) != NULL)
 	/***** filtra paso bajo la imagen transformada ********/
 
    if (filtra)
-    {   filtra_pb (im_float_2, im_float_1, dim, dim);
+    {   cout << "Filtrado 1\n";
+        filtra_pb (im_float_2, im_float_1, dim, dim);
         for (i = 0; i < dim; i++)    
             for (j = 0; j < dim; j++)
                 im_float_2[i][j] = im_float_1[i][j];
@@ -333,6 +341,7 @@ while (fgets (linea, 200, file_sel) != NULL)
 	/***** filtra en coseno alzado                  *******/
    if (fil_cos)
     {
+	cout << "Filtrado 1\n";
 	/*********** Transformada de Fourier directa **************/
 
         image_fft (im_float_2, dim, dim, DIRECT);
@@ -386,6 +395,11 @@ while (fgets (linea, 200, file_sel) != NULL)
     for (i=0; i<sim; i++)  /**** inicializo a 0 ****/
         res_sim[i]= 0;
 
+    cout << "rad_min=" << rad_min << endl;
+    cout << "rad_max=" << rad_max << endl;
+    cout << "inc_int=" << inc_int << endl;
+    cout << "long_int=" << long_int << endl;
+    
     spectro_m (nombre, rad_min, rad_max, inc_int, long_int, res_sim);
     strcpy (nom_entrada, nombre);
     strcat (nom_entrada, ".spc");
@@ -576,6 +590,7 @@ for(kk=numin1;kk<=numax1;kk++)
             ampcos[j] -= ac;
     }
 }
+
 /***************** Write new spectrum file *************************/
 
 fwrite ((char *)&ir, sizeof (ir), 1, new_esp_file);
@@ -591,6 +606,19 @@ fwrite ((char *)&ampcos[1], sizeof (ampcos[1]), (numax-numin+1)*ir,
 fwrite ((char *)&ampsen[1], sizeof (ampsen[1]), (numax-numin+1)*ir,
                 new_esp_file);
 
+/*
+cout << "ir=" << ir << endl
+     << "numin=" << numin << endl
+     << "numax=" << numax << endl
+     << "x0=" << x0 << endl
+     << "y0=" << y00 << endl
+     << "r1=" << r1 << endl
+     << "r2=" << r2 << endl
+     << "r3=" << r3 << endl;
+for (int i=0; i<(numax-numin+1)*ir; i++) {
+//   cout << "ampcos sin[" << i << "]"
+   cout << ampcos[i+1] << " " << ampsen[i+1]<< endl;
+}*/
 }
 
 /***********************************************************************/
