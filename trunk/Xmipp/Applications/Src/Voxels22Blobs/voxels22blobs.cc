@@ -73,12 +73,12 @@ try {
    if (voxels_to_blobs) {
       vol_voxels.read(fn_in);
       vol_voxels().set_Xmipp_origin();
-      voxels2blobs(&vol_voxels, blob, vol_blobs, grid_type, grid_relative_size,
-         lambda, NULL, NULL, final_error, FALSE, R);
+      voxels2blobs(&(vol_voxels()), blob, vol_blobs, grid_type,
+         grid_relative_size, lambda, NULL, NULL, final_error, FALSE, R);
       vol_blobs.write(fn_out);
    } else {
       vol_blobs.read(fn_in);
-      blobs2voxels(vol_blobs, blob, &vol_voxels);
+      blobs2voxels(vol_blobs, blob, &(vol_voxels()));
       vol_voxels.write(fn_out);
    }
 } catch (Xmipp_error XE) {cout << XE;}
