@@ -77,40 +77,35 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out);
    DATE:          22-8-2001
   
 /**************************************************************************/
-int main(int argc, char **argv) 
-{
+int main(int argc, char **argv) {
    FileName 	fn_1,fn_2,fn_out;		       
    int          operation=0,operand_type1=0,operand_type2=0;
    
-      
    // Obtain command line parameters form the program 
-   try
-   {
+   try {
       // Read the output image filename
-	  fn_out  = get_param(argc,argv,"=");
+      fn_out  = get_param(argc,argv,"=");
       // Check for #, which indicates a binary operation
-	  check_for_operation(argc,argv,"#",fn_1,operand_type1);
+      check_for_operation(argc,argv,"#",fn_1,operand_type1);
   		 		 
-    // Check the operations supported
-	if(check_for_operation(argc,argv,"+",fn_2,operand_type2)) operation=OPERATE_PLUS;
-	else if(check_for_operation(argc,argv,"-",fn_2,operand_type2)) operation=OPERATE_MINUS;
-	else if(check_for_operation(argc,argv,"x",fn_2,operand_type2)) operation=MULTIPLICATION;
-	else if(check_for_operation(argc,argv,"/",fn_2,operand_type2)) operation=DIVISION;
-	else if(check_for_operation(argc,argv,"log10",fn_2,operand_type2)) operation=LOG10;
-	else if(check_for_operation(argc,argv,"sqrt",fn_2,operand_type2)) operation=SQRT;
-	else if(check_for_operation(argc,argv,"slice",fn_2,operand_type2)) operation=SLICE; 
-	else if(check_for_operation(argc,argv,"column",fn_2,operand_type2)) operation=COLUMN; 
-	else if(check_for_operation(argc,argv,"row",fn_2,operand_type2)) operation=ROW; 
-	else if(check_for_operation(argc,argv,"radial_avg",fn_2,operand_type2)) operation=RADIAL_AVG; 
-	else 
-		REPORT_ERROR(1,"No valid operation specified");
-			  
-	compute(operation,operand_type1,operand_type2,fn_1,fn_2,fn_out);
-	  
-   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
-   
+      // Check the operations supported
+      if(check_for_operation(argc,argv,"+",fn_2,operand_type2)) operation=OPERATE_PLUS;
+      else if(check_for_operation(argc,argv,"-",fn_2,operand_type2)) operation=OPERATE_MINUS;
+      else if(check_for_operation(argc,argv,"x",fn_2,operand_type2)) operation=MULTIPLICATION;
+      else if(check_for_operation(argc,argv,"/",fn_2,operand_type2)) operation=DIVISION;
+      else if(check_for_operation(argc,argv,"log10",fn_2,operand_type2)) operation=LOG10;
+      else if(check_for_operation(argc,argv,"sqrt",fn_2,operand_type2)) operation=SQRT;
+      else if(check_for_operation(argc,argv,"slice",fn_2,operand_type2)) operation=SLICE; 
+      else if(check_for_operation(argc,argv,"column",fn_2,operand_type2)) operation=COLUMN; 
+      else if(check_for_operation(argc,argv,"row",fn_2,operand_type2)) operation=ROW; 
+      else if(check_for_operation(argc,argv,"radial_avg",fn_2,operand_type2)) operation=RADIAL_AVG; 
+      else REPORT_ERROR(1,"No valid operation specified");
+   } catch (Xmipp_error XE) {cout << XE; Usage(); return 1;}
+   try {
+      compute(operation,operand_type1,operand_type2,fn_1,fn_2,fn_out);
+   } catch (Xmipp_error XE) {cout << XE; return 2;}
+   return 0;
 }      
-
 
 bool check_for_operation(int argc,char **argv,char *operation,FileName &fn,int &operand_type)
 {
