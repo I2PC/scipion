@@ -49,7 +49,7 @@ public:
 
     /// Produce Plain side information from the Extra parameters
     void produce_Side_Info(const Basic_ART_Parameters &prm,
-       GridVolume &vol_blobs0);
+       GridVolume &vol_basis0);
 };
 
 /** Run a single step of ART.
@@ -71,18 +71,17 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    int sym_no,
    Projection &diff_proj, Projection &corr_proj, Projection alig_proj,
    double &mean_error, int numIMG, double lamdba, int act_proj,
-   const FileName &fn_ctf, bool unmatched, double ray_length,
-   bool print_system_matrix=false);
+   const FileName &fn_ctf);
 
 /** Update residual vector for WLS ART */
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_blobs, 
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis, 
 			    double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /** Finish iterations.
     For WLS: delete residual images
     Else: do nothing. */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Plain_ART_Parameters &eprm, GridVolume &vol_blobs);
+   const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Force the {\it trial} volume to be symmetric. So far only implemented
     for crystals.*/
