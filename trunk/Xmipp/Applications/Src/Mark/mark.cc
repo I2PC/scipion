@@ -28,6 +28,7 @@
 #include <XmippData/xmippArgs.hh>
 #include "qapplication.h"
 #include "QtMainWidgetMark.hh"
+#include "QtWidgetPSD.hh"
 
 /* Prototypes -------------------------------------------------------------- */
 void Usage();
@@ -37,12 +38,19 @@ int main( int argc, char **argv ) {
    FileName fnRaw;
    FileName fnRawTilted;
    bool     reversed;
+   FileName fn_assign_CTF;
+   bool     ctf_mode=false;
 
    // Get input parameters .................................................
    try {
-       fnRaw       = get_param( argc, argv, "-i" );
-       fnRawTilted = get_param( argc, argv, "-tilted", "" );
-       reversed    = check_param( argc, argv, "-reverse_endian");
+       fnRaw         = get_param( argc, argv, "-i" );
+       fnRawTilted   = get_param( argc, argv, "-tilted", "" );
+       reversed      = check_param( argc, argv, "-reverse_endian");
+       fn_assign_CTF = get_param( argc, argv, "-psd", "");
+       if (check_param(argc, argv, "-ctf")) {
+          ctf_mode=true;
+          fn_assign_CTF = get_param( argc, argv, "-ctf");
+       }
    } catch ( Xmipp_error XE ) { cout << XE; Usage(); exit( 1 ); }
 
    try {
@@ -62,6 +70,14 @@ int main( int argc, char **argv ) {
       if ( fnRawTilted == "" ) mainWidget = new QtMainWidgetMark( &m );
       else mainWidget = new QtMainWidgetMark( &m, &mTilted );
       
+      // Check if the PSDs must be shown ...................................
+      if (fn_assign_CTF!="") {
+         QtWidgetPSD PSDshow;
+         if (ctf_mode) PSDshow.set_CTF_mode();
+         PSDshow.set_assign_CTF_file(m,fn_assign_CTF);
+         PSDshow.show();
+      }
+
       // Run application ...................................................
       app.setMainWidget( mainWidget );
       mainWidget->show();
@@ -85,7 +101,9 @@ void Usage() {
         << "   -i <input raw file>                : File with the image\n"
         << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
 	<< "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
-        ;
+        << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
+        << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
+   ;
 }
 
 /* Colimate menu =========================================================== */
