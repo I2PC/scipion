@@ -39,8 +39,7 @@ int main (int argc,char *argv[]) {
    } catch (Xmipp_error &XE) {cout << XE; prog_prm.Usage(); exit(1);}
 
    try {
-   // Really adjust CTF
-     prog_prm.produce_side_info();
+     // Really adjust CTF
      ROUT_Adjust_CTF(prog_prm);
    } catch (Xmipp_error XE) {cout << XE;}
 }
