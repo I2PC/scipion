@@ -34,7 +34,7 @@
 /* ------------------------------------------------------------------------- */
 template <class Extra_ART_Parameters>
 void Basic_ART_Init_history(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, const GridVolume &vol_blobs0) {
+   const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0) {
    
 // Show general information ................................................
    prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
@@ -42,10 +42,8 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
    prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
    prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
-   prm.fh_hist << " Sampling= " << prm.sampling << endl;   
-   prm.fh_hist << " Blobs:         radius=" << prm.blob.radius 
-      << " pixels" << " alpha="
-      << prm.blob.alpha << " order=" << prm.blob.order << endl;
+   prm.fh_hist << " Sampling= " << prm.sampling << endl;
+   prm.fh_hist << prm.basis << endl;
    switch (prm.grid_type) {
       case FCC: prm.fh_hist << " Grid Type: FCC "; break;
       case BCC: prm.fh_hist << " Grid Type: BCC "; break;
@@ -158,7 +156,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    else
       prm.fh_hist << "Starting from a zero volume\n";
 
-   prm.fh_hist << "Grid structure ------\n" << vol_blobs0.grid();
+   prm.fh_hist << "Grid structure ------\n" << vol_basis0.grid();
 
 // Show extra information ..................................................
    prm.fh_hist << "Extra information ------------------------------------------\n";
@@ -171,11 +169,11 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 //#define DEBUG_POCS
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs, int rank) {
+   const Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank) {
    // Some variables .......................................................
    int        ART_numIMG;              // Normalizing factor
    GridVolume *ptr_vol_out;            // Pointer to output volume
-   GridVolume vol_blobs_out;           // Output volume (only useful in SIRT)
+   GridVolume vol_basis_out;           // Output volume (only useful in SIRT)
    VolumeXmipp vol_voxels;             // This one is useful only in the
                                        // case of saving intermidiate volumes
    int Xoutput_volume_size, Youtput_volume_size, Zoutput_volume_size;
@@ -188,7 +186,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    Projection      alig_proj;          // Projection with the correlation
                                        // maps needed for translation aligment				       
    Projection      corr_proj;          // Image with the correction
-                                       // factors for unitary blobs
+                                       // factors for unitary basis
    Projection      diff_proj;          // Difference between the
                                        // theoretical and real image
 
@@ -224,19 +222,19 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       Xoutput_volume_size);
 
    // Noisy reconstruction .................................................
-   GridVolume vol_blobs_noisy; // Output volume (only for ART)
+   GridVolume vol_basis_noisy; // Output volume (only for ART)
    Projection noisy_projection;
    SelFile SF_noise, SF_signal;
    if (prm.noisy_reconstruction) {
-     vol_blobs_noisy=vol_blobs;
-     vol_blobs_noisy.init_zeros();
+     vol_basis_noisy=vol_basis;
+     vol_basis_noisy.init_zeros();
    }
 
    // If SIRT set normalizing factor and create output volume ..............
    if (prm.parallel_mode==Basic_ART_Parameters::SIRT ) {
   	ART_numIMG=prm.numIMG;
-      	vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs 
-	ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
+      	vol_basis_out=vol_basis;         // Copy the structure of vol_basis 
+	ptr_vol_out=&vol_basis_out;      // Pointer to output volume
 	if (prm.variability_analysis) ptr_vol_out->init_zeros();
    } else if ( prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
        prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
@@ -247,17 +245,17 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    // have the reconstruction values. Have a look ar /Applications/Src/MPIArt/mpi_art.cc for
    // an example
       ART_numIMG= 1; 		       
-      ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
-      vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs
+      ptr_vol_out=&vol_basis_out;      // Pointer to output volume
+      vol_basis_out=vol_basis;         // Copy the structure of vol_basis
                                        // and possible initial values
    } else if (prm.eq_mode==CAV) {
       ART_numIMG=1;                    // Normalizing factor = Total no. images
-      ptr_vol_out=&vol_blobs_out;      // Pointer to output volume
-      vol_blobs_out=vol_blobs;         // Copy the structure of vol_blobs
+      ptr_vol_out=&vol_basis_out;      // Pointer to output volume
+      vol_basis_out=vol_basis;         // Copy the structure of vol_basis
                                        // and possible initial values
    } else {
       ART_numIMG=1;                    // No normalizing factor
-      ptr_vol_out=&vol_blobs;          // Output volume is the same as
+      ptr_vol_out=&vol_basis;          // Output volume is the same as
                                        // input one
    }
    // Now iterate ..........................................................
@@ -362,13 +360,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
           // Apply the reconstruction algorithm ............................
       	  // Notice that the following function is extern
-	  ART_single_step(vol_blobs, ptr_vol_out,
+	  ART_single_step(vol_basis, ptr_vol_out,
       	      prm, eprm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
-              prm.ray_length, prm.print_system_matrix);
+	      images, prm.IMG_Inf[iact_proj].fn_ctf);
 
           if (prm.WLS) {
             prm.residual_imgs[iact_proj]=alig_proj;
@@ -378,13 +375,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           global_mean_error += mean_error;
 	  if (prm.noisy_reconstruction) {
 	     double noise_mean_error;
-	     ART_single_step(vol_blobs_noisy, &vol_blobs_noisy,
+	     ART_single_step(vol_basis_noisy, &vol_basis_noisy,
       		 prm, eprm,
         	 theo_proj, noisy_projection, prm.IMG_Inf[iact_proj].sym,
 		 diff_proj,  corr_proj, alig_proj,
         	 noise_mean_error, ART_numIMG, prm.lambda(it),
-		 images, prm.IMG_Inf[iact_proj].fn_ctf, prm.unmatched,
-        	 prm.ray_length, prm.print_system_matrix);
+		 images, prm.IMG_Inf[iact_proj].fn_ctf);
 	  }
           
           // Force symmetry in the volume ..................................
@@ -392,15 +388,15 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           if (prm.sym_each &&
              act_proj%prm.sym_each==0 &&
              (act_proj!=0 || prm.sym_each==1)) {
-             apply_symmetry(vol_blobs,ptr_vol_out,eprm, prm.grid_type);
+             apply_symmetry(vol_basis,ptr_vol_out,eprm, prm.grid_type);
 	     if (prm.noisy_reconstruction)
-		apply_symmetry(vol_blobs_noisy,&vol_blobs_noisy,eprm, prm.grid_type);
+		apply_symmetry(vol_basis_noisy,&vol_basis_noisy,eprm, prm.grid_type);
 	  }
 
           // Apply POCS ....................................................
-	  POCS.apply(vol_blobs,it,images);
+	  POCS.apply(vol_basis,it,images);
 	  if (prm.noisy_reconstruction)
-	     POCS.apply(vol_blobs_noisy,it,images);
+	     POCS.apply(vol_basis_noisy,it,images);
 
           // Variability analysis ..........................................
 	  if (prm.variability_analysis)
@@ -441,17 +437,14 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              corr_proj.write("PPPcorr.xmp");
 	     if(act_proj!=0)
                 alig_proj.write("PPPalign.xmp");
-             vol_blobs.write("PPPblobs.blob");
-             blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D,
+             vol_basis.write("PPPbasis.basis");
+             prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	     cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); cout << endl;
              vol_voxels.write("PPPvol.vol");
 
-	     //VolumeXmipp Vcoefs;
-	     //blobs2space_coefficients(vol_blobs, prm.blob, &Vcoefs);
-	     //Vcoefs.write((string)"PPPblob_coefs.vol");
 	     if (!iv_launched) {
-	        system("xmipp_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -poll &");
+	        system("xmipp_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -dont_apply_geo -poll &");
 		system("xmipp_show -vol PPPvol.vol -poll &");
 		iv_launched=true;
 	     }
@@ -464,9 +457,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     act_proj%prm.save_intermidiate_every==0) {
 	    if (prm.tell&TELL_SAVE_INTERMIDIATE) 
                cerr << "\nSaving intermidiate ...\n"
-                    << "Converting blob volume to voxels ...\n";   
+                    << "Converting basis volume to voxels ...\n";   
             // Save reconstructed volume
-            blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
+            prm.basis.changeToVoxels(vol_basis, &(vol_voxels()), 
                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
                vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
@@ -490,39 +483,32 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Update residual images for WLS
       if (prm.WLS) {
         double kappa=prm.kappa(it);
-        update_residual_vector( prm, vol_blobs, kappa, mean_error_2ndblock, pow_residual_imgs);
+        update_residual_vector( prm, vol_basis, kappa,
+           mean_error_2ndblock, pow_residual_imgs);
       }
 
       // Prepare for next global iteration ---------------------------------
       // Calculate norm and print
       if (rank==-1) {
 	 prm.fh_hist << "Finished - Iteration " << it << endl;
-        if (prm.WLS) {
-	   cerr      <<"   Weighted error: "
-                     << global_mean_error;
-	   cerr      <<"  1st block: "
-	             <<global_mean_error_1stblock;
-	   cerr      <<"  2nd block: "
-	             <<mean_error_2ndblock;
-	   cerr      <<" residual: "
-	             <<pow_residual_imgs<< endl;
-         } else {
-	   cerr      <<"   Global mean squared error: "
-                     << global_mean_error/prm.numIMG<< endl;
-         }
-         if (prm.WLS) {
-	   prm.fh_hist << "   Weighted error: "
-                       << global_mean_error;
-	   prm.fh_hist <<"  1st block: "
-	               <<global_mean_error_1stblock;
-	   prm.fh_hist <<"  2nd block: "
-	               <<mean_error_2ndblock;
-	   prm.fh_hist <<" residual: "
-	               <<pow_residual_imgs<< endl;
-         } else {
-	   prm.fh_hist << "   Global mean squared error: "
-                       << global_mean_error/prm.numIMG<< endl;
-         }
+         if (prm.WLS)
+	    cerr        << "   Weighted error: " << global_mean_error
+	                << " 1st block: "        << global_mean_error_1stblock
+                        << " 2nd block: "        << mean_error_2ndblock
+	                << " residual: "         << pow_residual_imgs << endl;
+         else
+            cerr << "   Global mean squared error: "
+                 <<  global_mean_error/prm.numIMG << endl;
+
+         if (prm.WLS)
+	    prm.fh_hist << "   Weighted error: " << global_mean_error
+	                << " 1st block: "        << global_mean_error_1stblock
+                        << " 2nd block: "        << mean_error_2ndblock
+	                << " residual: "         << pow_residual_imgs << endl;
+         else
+	    prm.fh_hist << "   Global mean squared error: "
+                        << global_mean_error/prm.numIMG << endl;
+
 	 if (POCS.apply_POCS) {
             cerr        << "   POCS Global mean squared error: "
                 	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
@@ -540,16 +526,16 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           prm.parallel_mode==Basic_ART_Parameters::pSART ||
 	  prm.parallel_mode==Basic_ART_Parameters::pCAV ||
 	  prm.eq_mode==CAV )
-          vol_blobs=vol_blobs_out;
+          vol_basis=vol_basis_out;
 
       if (prm.tell&TELL_SAVE_INTERMIDIATE && it!=prm.no_it-1) {
-         if (rank==-1) cerr << "Converting blob volume to voxels ...\n";   
-         blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D, 
+         if (rank==-1) cerr << "Converting basis volume to voxels ...\n";
+         prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
          vol_voxels.write(prm.fn_root+"it"+ItoA(it)+".vol");
 
-         if (prm.tell&TELL_SAVE_BLOBS)
-            vol_blobs.write(prm.fn_root+"it"+ItoA(it)+".blob");
+         if (prm.tell&TELL_SAVE_BASIS)
+            vol_basis.write(prm.fn_root+"it"+ItoA(it)+".basis");
       }
       
       // Check if algorithm must stop via stop_at
@@ -568,7 +554,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    // Save the noisy reconstruction
    if (prm.noisy_reconstruction) {
       VolumeXmipp vol_voxels_noisy;
-      blobs2voxels(vol_blobs_noisy, prm.blob, &vol_voxels_noisy, prm.D, 
+      prm.basis.changeToVoxels(vol_basis_noisy, &(vol_voxels_noisy()), 
          Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       vol_voxels_noisy.write(prm.fn_root+"_noise.vol");
       SF_noise.write(prm.fn_root+"_noise_proj.sel");
@@ -582,24 +568,24 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
    Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
-   GridVolume &vol_blobs) {
+   GridVolume &vol_basis) {
 // Configure time clock
    time_config();
 
 // Produce side information and initial volume
-   prm.produce_Side_Info(vol_blobs);
+   prm.produce_Side_Info(vol_basis);
 //calculate symmetry in produce_Side_Info and exit if wrong sampling
 //printting the right sampling
-   eprm.produce_Side_Info(prm,vol_blobs);
+   eprm.produce_Side_Info(prm,vol_basis);
 
 // Show parameters and initiate history
-   Basic_ART_Init_history(prm, eprm, vol_blobs);
+   Basic_ART_Init_history(prm, eprm, vol_basis);
    
 // Iterations
-   Basic_ART_iterations(prm, eprm, vol_blobs);
+   Basic_ART_iterations(prm, eprm, vol_basis);
    
 // Finish iterations
-   finish_ART_iterations(prm, eprm, vol_blobs);
+   finish_ART_iterations(prm, eprm, vol_basis);
 
 // Write final volume
    int Xoutput_volume_size=(prm.Xoutput_volume_size==0) ?
@@ -608,10 +594,10 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
       prm.projYdim:prm.Youtput_volume_size;
    int Zoutput_volume_size=(prm.Zoutput_volume_size==0) ?
       prm.projXdim:prm.Zoutput_volume_size;
-   blobs2voxels(vol_blobs, prm.blob, &vol_voxels, prm.D,
+   prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
       Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    vol_voxels.write(prm.fn_root+".vol");
-   if (prm.tell&TELL_SAVE_BLOBS) vol_blobs.write(prm.fn_root+".blob");
+   if (prm.tell&TELL_SAVE_BASIS) vol_basis.write(prm.fn_root+".basis");
    prm.fh_hist.close();
 
 }

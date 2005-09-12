@@ -26,18 +26,16 @@
 #  define _BASIC_ART_HH
 
 #include <fstream>
-#include <XmippData/xmippImages.hh>
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippSelFiles.hh>
 #include "../refinement.hh"
 #include "../grids.hh"
 #include "../symmetries.hh"
-#include "../blobs.hh"
+#include "../basis.hh"
 #include "../projection.hh"
 #include "Prog_FourierFilter.hh"
 
 class Recons_info;
-const int BLOB_SUBSAMPLING=10;
 
 /**@name Basic and common ART
     The main difference between ART applied to different cases (single
@@ -65,9 +63,9 @@ public:
    /* User parameters ...................................................... */
    /**@name User parameters */
    //@{
-   /// Blob parameters
-   struct blobtype blob;
-   
+   /// Basis function. By default, blobs
+   Basis basis;
+
    /// Number of iterations
    int no_it;
    
@@ -194,10 +192,10 @@ public:
    bool unmatched;
 
    /** Ray length.
-       Blobs are taken into account only if their distance
+       Basis functions are taken into account only if their distance
        to the projection plane is smaller than this value.
-       This value is expressed in blob.radius units. Set it to
-       -1 to disable it. Set it to 1 (1 blob away maximum) to
+       This value is expressed in basis units. Set it to
+       -1 to disable it. Set it to 1 (1 basis away maximum) to
        interpolate a set of planes). */
    double ray_length;
 
@@ -219,15 +217,15 @@ public:
    /// Noisy reconstruction
    bool noisy_reconstruction;
 
-   #define TELL_IV   		     0x100
-   #define TELL_ONLY_SYM	     0x80
-   #define TELL_USE_INPUT_BLOBVOLUME 0x40
-   #define TELL_SHOW_ERROR           0x20
-   #define TELL_MANUAL_ORDER         0x10
-   #define TELL_SAVE_AT_EACH_STEP    0x8
-   #define TELL_SAVE_INTERMIDIATE    0x4
-   #define TELL_SAVE_BLOBS           0x2
-   #define TELL_STATS                0x1
+   #define TELL_IV   		      0x100
+   #define TELL_ONLY_SYM	      0x80
+   #define TELL_USE_INPUT_BASISVOLUME 0x40
+   #define TELL_SHOW_ERROR            0x20
+   #define TELL_MANUAL_ORDER          0x10
+   #define TELL_SAVE_AT_EACH_STEP     0x8
+   #define TELL_SAVE_INTERMIDIATE     0x4
+   #define TELL_SAVE_BASIS            0x2
+   #define TELL_STATS                 0x1
    /** Debugging level.
        This is a bit valued field, you can set the following bits
        \\TELL_IV: Show intermidiate images if saved,
@@ -235,7 +233,7 @@ public:
                   bar is updated.
        \\TELL_ONLY_SYM: Skip all the extra projections created using the
           samle symmetry
-       \\TELL_USE_INPUT_BLOBVOLUME: This flag causes the program to
+       \\TELL_USE_INPUT_BASISVOLUME: This flag causes the program to
            not resizing the gridvolume. The same as the input one is
 	   used as starting point for the algorithm
        \\TELL_SHOW_ERROR: The program will show the error for each projection
@@ -250,14 +248,14 @@ public:
              PPPtheo          --> Theoretical projection
              PPPread          --> Real projection
              PPPcorr          --> Correction image applied
-             PPPblobs.blob    --> Reconstructed volume in blobs
+             PPPbasis.basis   --> Reconstructed volume in the used basis
              PPPvol.vol       --> Reconstructed volume in voxels
           \end{verbatim}
        \\TELL_SAVE_INTERMIDIATE: At each iteration a voxel (and possibly
-          a blob volume (if the TELL_SAVE_BLOBS flag is set) is stored with
-          the names fn_root"it"it.vol and .blob (for instance,
-          w0001it00.vol and w0001it00.blob).
-       \\TELL_SAVE_BLOBS: Save blob volume at the end and in the
+          a basis volume (if the TELL_SAVE_BASIS flag is set) is stored with
+          the names fn_root"it"it.vol and .basis (for instance,
+          w0001it00.vol and w0001it00.basis).
+       \\TELL_SAVE_BASIS: Save basis volume at the end and in the
           intermidiate iterations (if TELL_SAVE_INTERMIDIATE is set).
        \\TELL_STATS: Show image and volume (only of the first grid, of
           the 1, 2 or 4 possible subgrids) statistics.*/
@@ -282,12 +280,6 @@ public:
    /// Projection Y dimension
    int             projYdim;
    
-   /// Blob footprint
-   ImageOver       blobprint;
-   
-   /// Square of the footprint
-   ImageOver       blobprint2;
-   
    /// File handler for the history file
    ofstream        fh_hist;
    
@@ -304,7 +296,7 @@ public:
    int             trueIMG;
 
    /** Volume deformation matrix.
-       Samples stored in the blob volume really relate to real space using
+       Samples stored in the basis volume really relate to real space using
        this matrix. This means that a sample which is at index (0,1,0) can
        be placed at a space position given by D*(0,1,0)*grid_size, which could
        be for example (0,1.05,0)*grid_size. This is really useful for crystals.
@@ -329,7 +321,7 @@ public:
    int POCS_freq;
 
    /** CAV equation count.
-       This volume contains the number of equations at which each blob
+       This volume contains the number of equations at which each basis
        is involved */
    GridVolumeT<int> *GVNeq;
 
@@ -371,21 +363,21 @@ public:
    #define FULL  1
    /** Produce Initial and Side information for ART.
        This function computes from the ART parameters things like
-       the pojection size, projection order, blobprint, symmetry matrices
+       the pojection size, projection order, symmetry matrices
        list, history handler (don't forget to close it at the end), number
-       of images and initial blob volume.
+       of images, basis side information and initial basis volume.
        
        Note: It is supposed that time has been previously configured with
        time_config().
        
        The info level takes the following values:
-        \\ BASIC: Generate Blob footprints
-	\\ FULL: Generate all the rest neede values.
+        \\ BASIC: Generate basis side information
+	\\ FULL: Generate all the rest needed values.
 	
        The rank is a number idetifying the parallel process. If -1 then
        the algorithm is sequential. If 0 then it is the root process.
        */
-   void produce_Side_Info(GridVolume &vol_blobs0, int level=FULL, int rank=-1);
+   void produce_Side_Info(GridVolume &vol_basis0, int level=FULL, int rank=-1);
 
    /** Compute CAV weights.
        The weights are stored in the GVNeq within this object. If the
@@ -393,7 +385,7 @@ public:
        and the number of equations and unknowns are shown at the end.
        Otherwise nothing is printed (this is the suggested debugging level
        for parallel processing). */
-   void compute_CAV_weights(GridVolume &vol_blobs0, 
+   void compute_CAV_weights(GridVolume &vol_basis0, 
       int numProjs_node, int debug_level=0);
 
    /** Lambda for iteration n (first one is iteration 0).
@@ -474,7 +466,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list);
     \Ref{Basic_ART_Parameters::fh_hist}.*/
 template <class Extra_ART_Parameters>
 void Basic_ART_Init_history(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, const GridVolume &vol_blobs0);
+   const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0);
 
 /** Perform all ART iterations.
     This function performs the iterations according to the ART parameters,
@@ -484,7 +476,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     
     The GridVolume must have as input an initial guess for the solution,
     and when this function finishes, it contains the final solution volume
-    in blobs.
+    in basis.
     
     The rank is the identification number of the process running this function.
     If it is -1, the function is run in seuqential mode. If it is 0, then
@@ -497,18 +489,18 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_blobs, int rank=-1);
+   const Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank=-1);
 
 /** Main Routine for ART.
     Given any set of Art parameters, this function returns the voxel
     volume which is the solution for this set of projections.
-    No initialisation is needed on vol_voxels and vol_blobs, they are resized
+    No initialisation is needed on vol_voxels and vol_basis, they are resized
     to have the same size as the input projections. All output files
     are generated as if the ART program had been called. */
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
     Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
-    GridVolume &vol_blobs);
+    GridVolume &vol_basis);
 
 //@}
 //@}
