@@ -31,12 +31,12 @@
 #include "QtMainWidgetMark.hh"
 #include "XmippData/xmippMicrograph.hh"
 #include "XmippData/xmippFuncs.hh"
-#include "qfiledialog.h"
-#include "qgrid.h"
-#include "qlabel.h"
-#include "qpushbutton.h"
-#include "qmessagebox.h"
-#include "qlineedit.h"
+#include <qfiledialog.h>
+#include <qgrid.h>
+#include <qlabel.h>
+#include <qpushbutton.h>
+#include <qmessagebox.h>
+#include <qlineedit.h>
 
 /* Constructor ------------------------------------------------------------- */
 QtFileMenu::QtFileMenu( QtWidgetMicrograph* _parent) :
