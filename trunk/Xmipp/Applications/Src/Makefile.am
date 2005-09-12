@@ -12,7 +12,7 @@ if BUILD_QT
 if BUILD_OGL
 OPTIONAL_PROGS += Phan3D
 endif
-OPTIONAL_PROGS += Mark Show XMask 
+OPTIONAL_PROGS += Edit Mark Show XMask 
 endif
 
 SUBDIRS = 2DInterpolation \
@@ -76,6 +76,7 @@ SUBDIRS = 2DInterpolation \
 	KerDenSOM \
 	Lattice_vectors \
 	Mask \
+        Markhan \
 	Microscope \
 	MLalign2D \
 	MLalign2D_combine \
@@ -100,6 +101,7 @@ SUBDIRS = 2DInterpolation \
 	Resolution \
 	RmSel \
 	Rotate \
+	RotateDescr \
 	Sammon \
 	Sample_size \
 	Scale \
