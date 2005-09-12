@@ -175,8 +175,6 @@ int main(int argc, char **argv) {
          // Prepare assign CTF parameter file ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
          assign_CTF_prm.selfile_fn=(string)current_dir+"/"+fn_root+".sel";
          assign_CTF_prm.picked_fn=(string)current_dir+"/"+fn_root+".pos";
-         assign_CTF_prm.ARMAfile=fn_root+"_arma";
-         assign_CTF_prm.CTFfile=fn_root+"_ctf";
          assign_CTF_prm.image_fn=current_file;
          assign_CTF_prm.write((string)current_dir+"/"+fn_root+"_assign_CTF.param",
 	    "..");
@@ -191,8 +189,6 @@ int main(int argc, char **argv) {
 	    jdl->add_file_to_input_files(assign_CTF_prm.image_fn);
 	    jdl->add_file_to_input_files(assign_CTF_prm.image_fn+".inf");
 	    jdl->add_file_to_input_files((string)current_dir+"/"+fn_root+"_assign_CTF.param");
-	    jdl->add_file_to_output_wildfiles(assign_CTF_prm.ARMAfile+"*.fft");
-	    jdl->add_file_to_output_wildfiles(assign_CTF_prm.CTFfile+"*.fft");
 	    jdl->add_file_to_output_wildfiles("*model*");
 	    jdl->add_file_to_output_wildfiles("ctf*");
 	    jdl->add_file_to_output_wildfiles("*.param");
