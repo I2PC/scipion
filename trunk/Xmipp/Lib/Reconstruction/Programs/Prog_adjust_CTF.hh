@@ -39,45 +39,29 @@ public:
    FileName             fn_ctf;
    /// Model to which the current one must be similar
    FileName             fn_similar_model;
-   /// Output rootname
-   FileName             fn_outroot;
-   /// Output CTF parameter file
-   FileName             fn_out_CTF_parameters;
    /// CTF amplitude to model
-   FourierMask          ctftomodel;
+   ImageXmipp           ctftomodel;
    /// CTF model
-   XmippCTF             ctfmodel;
+   XmippCTF             initial_ctfmodel;
    /// Show convergence values
    bool                 show_optimization;
    /// Allow astigmatic noise
    bool                 astigmatic_noise;
-   /// Allow autofocus
-   bool                 autofocus;
+   /// X dimension of particle projections (-1=the same as the psd)
+   int			   particle_horizontal; 
+   /// Y dimension of particle projections (-1=the same as the psd)
+   int			   particle_vertical;
    
-   /// Penalty for trespassing CTF in gaussian adjust 
-   double               penalty;
    /// Minimum frequency to adjust 
    double               min_freq;
    /// Maximum frequency to adjust 
    double               max_freq;
-   /// Accuracy. Stop criterion for iterations 
-   double               accuracy;
    /// Sampling rate
    double               Tm;
-   /// Evalaute fitness functions every n pixels, where n comes from evaluation_reduction
-   int                  evaluation_reduction;
-   /// Set of parameters for the complete adjustment of the cTF
+   /// Defocus range
+   double               defocus_range;
+   /// Set of parameters for the complete adjustment of the CTF
    matrix1D<double>     adjust;
-   /// Set of selected parameters to adjust
-   matrix1D<double>     steps;
-   /** Weights of the fitting criterium.
-       \\weight(0)=10 avg L1 2D fit
-       \\weight(1)=10 correlation 2D fit
-       \\weight(2)= 1 sum L1 1D radial fit
-       \\weight(3)=10 max L1 1D radial fit
-       \\weight(4)=10 sum L1 1D derivative radial fit
-       \\weight(5)=10 max L1 1D derivative radial fit */
-   matrix1D<double>     weight;
 public:
    /// Read parameters from file
    void read(const FileName &fn_param) _THROW;
@@ -93,11 +77,15 @@ public:
 
    /// Produce side information
    void produce_side_info();
+
+   /** Generate model at a given size.
+       It is assumed that ROUT_Adjust_CTF has been already run */
+   void generate_model(int Ydim, int Xdim, matrix2D<double> &model);
 };
 
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm);
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone=true);
 //@}
 #endif
