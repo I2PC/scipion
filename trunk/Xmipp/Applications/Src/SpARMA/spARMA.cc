@@ -50,55 +50,40 @@ void Usage(void);
 int main(int argc, char **argv) 
 {
    ARMA_parameters    prm;                    // Parameters for the program
-   double	          dSigma;                 // std. deviation in the ARMA model.    
+   double	      dSigma;                 // std. deviation in the ARMA model.    
    ImageXmipp 	      Img;                    // image where to perform the ARMA model
-   FourierImageXmipp Filter_Out;              // image to store the filter
+   ImageXmipp         Filter_Out;             // image to store the filter
       
    // Obtain command line parameters form the program 
-   try
-   {
+   try {
       prm.read(argc,argv); 	      
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
+   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
    
-   
-   try 
-   {
+   try {
       // read the input image
       Img.read(prm.fn_in);
-     matrix2D<double> ARParameters,MAParameters;
-     // Determine the ARMA model
-	 dSigma=CausalARMA(Img(),prm.N_AR,prm.M_AR,prm.N_MA,prm.M_MA,
-	                                           ARParameters,MAParameters);
-	 cerr << "Generating Fourier mask ...\n";
+      matrix2D<double> ARParameters,MAParameters;
+      // Determine the ARMA model
+      dSigma=CausalARMA(Img(),prm.N_AR,prm.M_AR,prm.N_MA,prm.M_MA,
+         ARParameters,MAParameters);
       // Get the AR filter coeficients in the fourier plane
       ARMAFilter(Img(),Filter_Out(),ARParameters,MAParameters,dSigma);	
       	            
-     
-     cout << "Potencia de ruido " << dSigma << endl;
-/************************************************/
-#ifdef DEBUG
+      #ifdef DEBUG
+         ofstream fichero("prueba.txt");
+         fichero << "AR Parameters" << endl << ARParameters << endl;
+         fichero << "dSigma" << endl << dSigma << endl;
+         fichero << "MA Parameters" << endl << MAParameters << endl;
+         fichero << "Image" << endl << Img() << endl << endl;
+         fichero << "Filter" << endl <<Filter_Out() << endl << endl;
+         fichero.close();
+      #endif
 
-	  ofstream fichero("prueba.txt");
-	  
-      fichero << "AR Parameters" << endl << ARParameters << endl;
-	  fichero << "dSigma" << endl << dSigma << endl;
-	  fichero << "MA Parameters" << endl << MAParameters << endl;
- 	  fichero << "Image" << endl << Img() << endl << endl;
-      fichero << "Filter" << endl <<Filter_Out() << endl << endl;
-	  fichero.close();
-	  
-#endif
-/************************************************/
-
-	  // Write the output filter
+      // Write the output filter
       Filter_Out.write(prm.fn_filter);
    } catch (Xmipp_error XE) {cout << XE; exit(1);}
- 
-
-#undef DEBUG
-
 }       
+#undef DEBUG
 
 /**************************************************************************
 
@@ -116,15 +101,12 @@ void Usage() {
 	     "The ARMA filter can then be applied to a random image to get simulated noise.\n\n"
 	  << "  -i <input file>            : name of the image file to determine the ARMA model\n"
 	  << "  -o <output file>           : Output Xmipp Fourier Image with ARMA filter\n"
-	  << "  -N_AR <N_AR>               : Order of the AR part of the model in Rows direction\n"
+	  << " [-N_AR <N_AR=24>]           : Order of the AR part of the model in Rows direction\n"
 	  << " [-M_AR <M_AR=N_AR>]         : Order of the AR part of the model in Columns direction\n"
-	  << "  -N_MA <N_MA>               : Order of the MA part of the model in Rows direction\n"
+	  << " [-N_MA <N_MA=20>]           : Order of the MA part of the model in Rows direction\n"
 	  << " [-M_MA <M_MA=N_MA>]         : Order of the MA part of the model in Columns direction\n"
-          << " [-tol  <tol=1e-20>]         : SVD tolerance\n"
      ;
 }
-
-
 
 /* Colimate menu =========================================================== */
 /*Colimate:
