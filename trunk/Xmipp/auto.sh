@@ -9,6 +9,7 @@ automake --gnu --add-missing
 autoconf
 
 ./configure
+./configure --disable-static
 make
 make dist
 
