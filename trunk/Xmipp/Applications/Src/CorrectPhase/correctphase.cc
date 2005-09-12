@@ -30,13 +30,11 @@
 class Prog_CorrectPhase_Params: public Prog_parameters {
 public:
    CorrectPhase_Params cpprm;
-   FileName            out_ctf;
 public:
    void read(int argc, char **argv) _THROW {
       Prog_parameters::read(argc,argv);
       cpprm.read(argc,argv);
       cpprm.produce_side_info();
-      out_ctf=get_param(argc,argv,"-output_ctf","");
       allow_time_bar=FALSE;
    }
    
@@ -48,11 +46,6 @@ public:
    void usage() {
       Prog_parameters::usage();
       cpprm.usage();
-      cerr << "  [-output_ctf <Xmipp Fourier file>]: If not given, the \n"
-           << "                              input one is rewritten\n"
-	   << "                              If a selfile is used this\n"
-	   << "                              parameter is used as an output root\n"
-      ;
    }
 };
 
@@ -61,27 +54,14 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    matrix2D< complex<double> > fft;
    FileName       fn_ctf;
    if (eprm->cpprm.multiple_CTFs) {
-      fn_ctf=eprm->cpprm.CTF_filename(img.name());
-      if (img.name().get_number() != fn_ctf.get_number()) {
-         cerr << "Cannot find CTF for image " << img.name() << endl;
-         return FALSE;
-      }
-      eprm->cpprm.ctf.read_mask(fn_ctf);
+      fn_ctf=eprm->cpprm.SF_CTF.NextImg();
+      eprm->cpprm.ctf.ctf.read(fn_ctf);
+      eprm->cpprm.ctf.ctf.Produce_Side_Info();
       cerr << "Correcting " << img.name() << " with " << fn_ctf << endl;
    }
    FourierTransform(img(),fft);
    eprm->cpprm.correct(fft);
    InverseFourierTransform(fft,img());
-
-   // Correct the CTF itself
-   if (eprm->cpprm.multiple_CTFs) {
-      FileName fn_ctf_out;
-      if (eprm->out_ctf=="") fn_ctf_out=fn_ctf;
-      else fn_ctf_out=eprm->out_ctf+ItoA(fn_ctf.get_number(),5)+".fft";
-
-      eprm->cpprm.correct(eprm->cpprm.ctf.mask2D);
-      eprm->cpprm.ctf.write_mask(fn_ctf_out,2);
-   }
    return TRUE;
 }
 
@@ -93,10 +73,4 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 int main (int argc, char **argv) {
    Prog_CorrectPhase_Params prm;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-   if (!prm.cpprm.multiple_CTFs) {
-      // Correct the CTF itself
-      prm.cpprm.correct(prm.cpprm.ctf.mask2D);
-      if (prm.out_ctf=="") prm.cpprm.ctf.write_mask(prm.cpprm.fn_ctf,2);
-      else                 prm.cpprm.ctf.write_mask(prm.out_ctf,2);
-   }
 }
