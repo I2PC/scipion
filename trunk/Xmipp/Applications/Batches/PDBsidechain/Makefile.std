@@ -1,0 +1,5 @@
+######################################################################
+MYSHELL = perl
+PROJ = PDBsidechain
+
+PDBsidechain: batch_PDBsidechain.pl
