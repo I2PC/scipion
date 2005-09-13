@@ -97,7 +97,7 @@ public:
       double retval;
       switch (type) {
          case blobs:  retval=blob.radius; break;
-         case voxels: retval=sqrt(3)*0.5; break;
+         case voxels: retval=sqrt(3.0)*0.5; break;
       }
       return retval;
    }
