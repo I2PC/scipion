@@ -357,7 +357,8 @@ void FourierMask::apply_mask_Space(matrix2D<double> &v) {
    matrix2D< complex<double> > aux2D;
    FourierTransform(v,aux2D);
    if (XSIZE(mask2D)==0) generate_mask(v);
-   aux2D*=mask2D;
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux2D)
+      DIRECT_MAT_ELEM(aux2D,i,j)*=DIRECT_MAT_ELEM(mask2D,i,j);
    InverseFourierTransform(aux2D,v);
 }
 void FourierMask::apply_mask_Space(matrix3D<double> &v) {
