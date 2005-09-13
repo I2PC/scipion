@@ -32,7 +32,7 @@ public:
    double noise_avg, noise_stddev;
    bool   gaussian,  uniform;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       gaussian=uniform=FALSE;
       if (check_param(argc,argv,"-gaussian")) {

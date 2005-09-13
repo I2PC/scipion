@@ -25,7 +25,7 @@
 #include "../Prog_projection_matching.hh"
 
 // Read arguments ==========================================================
-void Prog_projection_matching_prm::read(int argc, char **argv) _THROW  {
+void Prog_projection_matching_prm::read(int argc, char **argv)  {
 
   // Read command line
   if (check_param(argc,argv,"-show_all_options")) { usage(); extended_usage();}
@@ -120,7 +120,7 @@ void Prog_projection_matching_prm::extended_usage() {
 }
 
 // Side info stuff ===================================================================
-void Prog_projection_matching_prm::produce_Side_info() _THROW {
+void Prog_projection_matching_prm::produce_Side_info() {
 
   VolumeXmipp      vol;
   Projection       proj;
@@ -229,7 +229,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 							float &img_rot, float &img_tilt, float &img_psi, 
 							int &opt_dirno, double &opt_psi,
 							double &opt_xoff, double &opt_yoff, 
-							double &maxCC, double &Zscore) _THROW {
+							double &maxCC, double &Zscore) {
 
 
   // Rotational search ====================================================
@@ -317,7 +317,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 }
 
 void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile &DFo, 
-							   double &sumCC) _THROW {
+							   double &sumCC) {
 
 
   ImageXmipp img;

@@ -120,7 +120,7 @@ void Prog_Adjust_Surface_Parameters::usage() const {
 }
 
 /* Produce side information ================================================ */
-void Prog_Adjust_Surface_Parameters::produce_Side_Info() _THROW {
+void Prog_Adjust_Surface_Parameters::produce_Side_Info() {
    surface.read(fn_in_surface); surface().set_Xmipp_origin();
    V.read(fn_vol); V().set_Xmipp_origin();
    if (!given_ztop)    {ztop0    = STARTINGZ(V()); ztopF    = FINISHINGZ(V());}
@@ -191,7 +191,7 @@ void create_surface_mask(const Image *surf, const Volume *V, Volume *Vsurf,
 #define VOL VOLMATRIX(*V)
 double correlate_surface_and_volume_3D(const Image *surf, const Volume *V,
    Volume *Vsurf, int ktop, int kbottom, int direction, int tell)
-   _THROW {
+   {
    double retval=0;
    int   N=0;
 
@@ -259,7 +259,7 @@ double correlate_surface_and_volume_3D(const Image *surf, const Volume *V,
 // 2D correlation mode (Eva's method)
 double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
    Volume *Vsurf, int ktop, int kbottom, int direction, int tell)
-   _THROW {
+   {
    double retval=0;
    int   N=XSIZE(IMGMATRIX(*surf))*YSIZE(IMGMATRIX(*surf));
 
@@ -331,7 +331,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
 double correlate_surface_and_volume_gradients(const Image *surf,
    const Volume *V, Volume *Vsurf, 
    const Vectorial_matrix3D &V_grad, Vectorial_matrix3D & Vsurf_grad,
-   int ktop, int kbottom, int direction, int tell) _THROW {
+   int ktop, int kbottom, int direction, int tell) {
    double retval=0;
    #ifdef _HAVE_INRIA
       // Create surface mask

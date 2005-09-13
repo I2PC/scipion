@@ -48,7 +48,7 @@ void xmippPC::reset(xmippCTVectors const &ts)
 * @param idx The indexes of the vectors to use
 */
 void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
- _THROW {
+ {
 	vector<xmippVector> a;
 	int n=ts.dimension();
 	a.resize(n);
@@ -298,7 +298,7 @@ int xmippPC::Dimension_for_variance(double th_var) {
 }
 
 /* Project ----------------------------------------------------------------- */
-void xmippPC::Project(xmippVector &input, xmippVector &output) _THROW {
+void xmippPC::Project(xmippVector &input, xmippVector &output) {
    if (input.size()!=eigenvec[0].size())
       REPORT_ERROR(1,"PCA_project: vectors are not of the same size");
 

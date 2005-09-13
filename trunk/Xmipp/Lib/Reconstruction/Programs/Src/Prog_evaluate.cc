@@ -161,7 +161,7 @@ ostream & operator << (ostream &out, const Prog_Evaluate_Parameters &prm) {
 
 /* Produce Side information ================================================ */
 void EVALUATE_Side_Info::produce_Side_Info(
-   const Prog_Evaluate_Parameters &prm) _THROW {
+   const Prog_Evaluate_Parameters &prm) {
 
    // Set background mode ..................................................
    if (prm.back_mode==SPHERE_MODE) back_param=prm.back_radius;
@@ -371,7 +371,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 
 /* Show FOMs =============================================================== */
 void show_FOMs(const Prog_Evaluate_Parameters &prm,
-   EVALUATE_Side_Info &side, const EVALUATE_results &results) _THROW {
+   EVALUATE_Side_Info &side, const EVALUATE_results &results) {
 
    // Show Parameters ......................................................
    cout << endl;

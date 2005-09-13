@@ -553,7 +553,7 @@ public:
 
 /** Read from command line.
     An exception is thrown if the read mask is not of an allowed type. */
-    void read(int argc, char **argv) _THROW;
+    void read(int argc, char **argv);
 
 /** Show. */
     void show() const;
@@ -582,6 +582,7 @@ public:
                 type==BLACKMAN_MASK   || type==RAISED_CROWN_MASK ||
                 type==BINARY_WEDGE_MASK)
            return DOUBLE_MASK;
+       return 0;
     }
 
 /** Resize and set Xmipp origin */

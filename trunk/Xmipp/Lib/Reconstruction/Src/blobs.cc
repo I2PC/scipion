@@ -99,7 +99,7 @@ return p;
 }
 
 /* Fourier value of a blob ------------------------------------------------- */
-double kaiser_Fourier_value(double w, double a, double alpha, int m) _THROW {
+double kaiser_Fourier_value(double w, double a, double alpha, int m) {
    if (m!=2)
       REPORT_ERROR(2,"m out of range in kaiser_Fourier_value()");
    double sigma=sqrt(ABS(alpha*alpha-(2*PI*a*w)*(2*PI*a*w)));
@@ -793,7 +793,7 @@ void ART_voxels2blobs_single_step(
    double &mean_error,                 // Output mean error
    double &max_error,                  // Output maximum error in a voxel
    int eq_mode                         // Equation mode
-   ) _THROW {
+   ) {
 
    // Resize output volumes ................................................
    if (read_vol!=NULL) {

@@ -40,7 +40,7 @@ public:
    
    matrix2D<double> A3D;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       fn_in=get_param(argc,argv,"-i");
       fn_out=get_param(argc,argv,"-o","");
       if (fn_out=="") fn_out=fn_in;

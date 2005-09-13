@@ -481,7 +481,7 @@ void project_Volume(
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
 void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
-   double rot, double tilt, double psi) _THROW {
+   double rot, double tilt, double psi) {
    SPEED_UP_temps;
 
    // Initialise projection
@@ -653,7 +653,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
 // Sjors, 16 May 2005
 // This routine may give volumes with spurious high frequencies.....
-void singleWBP(matrix3D<double> &V, Projection &P) _THROW {
+void singleWBP(matrix3D<double> &V, Projection &P) {
    SPEED_UP_temps;
 
    // Compute the distance for this line crossing one voxel

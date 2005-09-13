@@ -69,11 +69,11 @@ public:
    Test_cluster_parameters();
 
    /// Read parameters from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
    
    /** Produce side info.
        The mask is created.*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /// Show parameters. This function calls show_specific
    void show();

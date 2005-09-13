@@ -71,7 +71,7 @@ public:
       
        An exception is thrown if there is no surface specification or if
        there is no phantom and the Z dimension is not given*/
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /** Usage message.
        This function shows the way of introducing this parameters. */
@@ -92,7 +92,7 @@ public:
     want to use one of them set it to NULL, it makes the same effect as 
     covering the whole volume. */
     void create_surface_mask(const Image *top, const Image *bottom,
-       int zdim, Volume *V) _THROW;
+       int zdim, Volume *V);
 
 /** Run surface.
     This function is who really creates the surface for the phantom. It is

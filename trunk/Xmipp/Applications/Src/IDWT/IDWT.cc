@@ -23,7 +23,7 @@
 class IDWT_parameters: public Prog_parameters {
    string IDWT_type;
 public:
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       IDWT_type=get_param(argc,argv,"-type","DAUB12");
       if      (IDWT_type=="DAUB4")  set_DWT_type(DAUB4);

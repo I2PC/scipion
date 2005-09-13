@@ -236,7 +236,7 @@ int exists (const FileName &fn) {
 
 /* Wait until file has a stable size --------------------------------------- */
 void wait_until_stable_size(const FileName &fn,
-   unsigned long time_step) _THROW {
+   unsigned long time_step) {
    if (!exists(fn)) return;
    struct stat info1, info2;
    if (stat(fn.c_str(), &info1))
@@ -257,7 +257,7 @@ void wait_until_stable_size(const FileName &fn,
 
 /* Create empty file ------------------------------------------------------- */
 void create_empty_file(const FileName &fn, size_t size,
-   size_t block_size) _THROW {
+   size_t block_size) {
    unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
       block_size);
    if (buffer==NULL) 
@@ -616,7 +616,7 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 }
 
 // Managing memory ---------------------------------------------------------
-template <class T> void ask_Tvector(T* &v, int nl, int nh) _THROW {
+template <class T> void ask_Tvector(T* &v, int nl, int nh) {
    if (nh-nl+1>1) {
       v=(T *)malloc((unsigned) (nh-nl+1)*sizeof(T));
       if (!v) REPORT_ERROR(1,"allocation failure in vector()");
@@ -632,7 +632,7 @@ template <class T> void free_Tvector(T* &v, int nl, int nh) {
 }
 
 template <class T> void ask_Tmatrix(T ** &m, int nrl, int nrh,
-   int ncl, int nch) _THROW {
+   int ncl, int nch) {
    if (nrh-nrl+1>1 && nch-ncl+1>1) {
       m=(T **) malloc((unsigned) (nrh-nrl+1)*sizeof(T*));
       if (!m) REPORT_ERROR(1,"allocation failure 1 in matrix()");
@@ -656,7 +656,7 @@ template <class T> void free_Tmatrix(T ** &m, int nrl, int nrh,
 }
 
 template <class T> void ask_Tvolume(T *** &m, int nsl, int nsh, int nrl,
-   int nrh, int ncl, int nch) _THROW {
+   int nrh, int ncl, int nch) {
    if (nsh-nsl+1>1 && nrh-nrl+1>1 && nch-ncl+1>1) {
       m=(T ***) malloc((unsigned) (nsh-nsl+1)*sizeof(T**));
       if (!m) REPORT_ERROR(1,"allocation failure 1 in matrix()");
@@ -690,8 +690,7 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
 
 /* Marsaglia, fast random number generator --------------------------------- */
 template <class T>
-  void Marsaglia<T>::Init(const FileName &fn_in, int No_Numbers) _THROW
-  {
+  void Marsaglia<T>::Init(const FileName &fn_in, int No_Numbers) {
    int Type_size;            //sizeof(type)
    
    pointer_in_memory=0;

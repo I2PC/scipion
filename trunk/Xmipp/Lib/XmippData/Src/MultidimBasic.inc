@@ -196,7 +196,7 @@ template <class T>
 
 /* Init random ------------------------------------------------------------- */
 template <class T>
-   void maT::init_random(double op1, double op2, const string &mode) _THROW {
+   void maT::init_random(double op1, double op2, const string &mode) {
       if (mode=="uniform")
          FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
             mi=(T) rnd_unif(op1,op2);
@@ -213,7 +213,7 @@ template <class T>
 //    "gaussian", with avg=op1 and var=op2
 // It is not an error that the vector is empty
 template <class T>
-   void maT::add_noise(double op1, double op2, const string &mode) const _THROW {
+   void maT::add_noise(double op1, double op2, const string &mode) const {
       if (mode=="uniform")
          FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
             mi +=(T) rnd_unif(op1,op2);
@@ -297,7 +297,7 @@ bool operator == (const ma< complex<double> > &op1, const ma< complex<double> > 
 /* Core array by scalar ---------------------------------------------------- */
 template <class T>
 void core_array_by_scalar(const maT &op1, const T &op2,
-   maT &result, char operation) _THROW {
+   maT &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -316,7 +316,7 @@ void core_array_by_scalar(const maT &op1, const T &op2,
 
 template <>
 void core_array_by_scalar< complex<double> >(const maTC &op1,
-   const complex<double> &op2, maTC &result, char operation) _THROW {
+   const complex<double> &op2, maTC &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -336,7 +336,7 @@ void core_array_by_scalar< complex<double> >(const maTC &op1,
 /* Scalar by array --------------------------------------------------------- */
 template <class T>
 void core_scalar_by_array(const T &op1, const maT &op2,
-   maT &result, char operation) _THROW {
+   maT &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -355,7 +355,7 @@ void core_scalar_by_array(const T &op1, const maT &op2,
 
 template <>
 void core_scalar_by_array< complex<double> >(const complex<double> &op1,
-   const maTC &op2, maTC &result, char operation) _THROW {
+   const maTC &op2, maTC &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -374,7 +374,7 @@ void core_scalar_by_array< complex<double> >(const complex<double> &op1,
 /* Array by array ---------------------------------------------------------- */
 template <class T>
 void core_array_by_array(const maT &op1, const maT &op2,
-   maT &result, char operation) _THROW {
+   maT &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':
@@ -398,7 +398,7 @@ void core_array_by_array(const maT &op1, const maT &op2,
 
 template <>
 void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
-   maTC &result, char operation) _THROW {
+   maTC &result, char operation) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
          switch (operation) {
             case '+':

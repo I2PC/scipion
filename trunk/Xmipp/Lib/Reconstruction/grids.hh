@@ -280,7 +280,7 @@ public:
        sg.set_Z(vector_R3(1,1,1)); --> Change grid vectors
        sg.prepare_grid();          --> Now the grid is ready to work
        \end{verbatim} */
-   void prepare_grid() _THROW;
+   void prepare_grid();
    //@}
 
    /**@name System coordinate translation */
@@ -466,7 +466,7 @@ public:
        a simple grid beyond the number of actual simple grids inside the
        complex one.
        \\ Ex: cout << "The first grid in the BCC grid is " << BCC(0); */
-   const SimpleGrid & operator () (int n) const _THROW {
+   const SimpleGrid & operator () (int n) const {
        if (n>LG.size())
           REPORT_ERROR(3002,"The Grid hasn't got so many Simple Grids");
        return LG[n];
@@ -480,7 +480,7 @@ public:
        a simple grid beyond the number of actual simple grids inside the
        complex one.
        \\ Ex: BCC(0).origin=vector_R3(1,1,1); */
-   SimpleGrid& operator () (int n) _THROW {
+   SimpleGrid& operator () (int n) {
        if (n>LG.size())
           REPORT_ERROR(3002,"The Grid hasn't got so many Simple Grids");
        return LG[n];
@@ -883,28 +883,28 @@ public:
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1+V2; */
-   GridVolumeT<T> operator + (const GridVolumeT<T> &GV) _THROW;
+   GridVolumeT<T> operator + (const GridVolumeT<T> &GV);
 
    /** Substract another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1-V2; */
-   GridVolumeT<T> operator - (const GridVolumeT<T> &GV) _THROW;
+   GridVolumeT<T> operator - (const GridVolumeT<T> &GV);
 
    /** Multiply by another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1*V2; */
-   GridVolumeT<T> operator * (const GridVolumeT<T> &GV) _THROW;
+   GridVolumeT<T> operator * (const GridVolumeT<T> &GV);
 
    /** Divide by another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1/V2; */
-   GridVolumeT<T> operator / (const GridVolumeT<T> &GV) _THROW;
+   GridVolumeT<T> operator / (const GridVolumeT<T> &GV);
 
    /** Sum another volume. */
    void operator += (const GridVolumeT<T> &GV);

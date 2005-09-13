@@ -160,11 +160,11 @@ public:
   };
 
   /** Read file. */
-  bool read (const FileName &name) _THROW;
+  bool read (const FileName &name);
 
   /** Write file. Not implemented. */
   void write (const FileName &name="", bool reversed=FALSE,
-	      Image_Type image_type=IBYTE) _THROW
+	      Image_Type image_type=IBYTE)
   {
     REPORT_ERROR (1503, "ImageImagic::write: can't directly save");
   };
@@ -180,7 +180,7 @@ public:
   /** Get Image name */
   const FileName& getImgFname() { parseFname(); return (imgfname); };
   /** Get image number */
-  const int getImgNum() { parseFname(); return (imgnum); };
+  int getImgNum() { parseFname(); return (imgnum); };
   
   virtual void parseFname(); // Not meant to be called directly, but needs to
                              // be kept public so the template can be

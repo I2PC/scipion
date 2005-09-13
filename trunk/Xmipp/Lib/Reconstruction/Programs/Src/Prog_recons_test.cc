@@ -41,7 +41,7 @@
 #include <XmippData/Programs/Prog_range_adjust.hh>
 
 /* Read Reconstruction test parameters from file =========================== */
-void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
+void Recons_test_Parameters::read(const FileName &fn_test_params) {
    FILE    *fh_param;
    string  str;
    char *  auxstr;

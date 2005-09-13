@@ -81,7 +81,7 @@ Example:
 void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
    vector<double> &y, double minscale,
    double maxscale, double scalestep, xmippRBF &RBF,
-   double &error, vector<double> &y_predicted) _THROW;
+   double &error, vector<double> &y_predicted);
 
 /** Predict the values at given points.
     Given the centers, weight and radii this function returns the predicted
@@ -96,7 +96,7 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted)
 
     Look the Mark Orr's function rbf_dm */
 void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
-   xmippCTVectors &X, matrix2D<double> &H) _THROW;
+   xmippCTVectors &X, matrix2D<double> &H);
     
 /** Compute model given a certain scale.
     The selected centers are chosen via the index_out variable.

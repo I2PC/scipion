@@ -58,11 +58,11 @@ ostream& operator << (ostream & ostrm, const matrix3D< complex<double> > &m);
 
 template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
-      bool wrap) _THROW;
+      bool wrap);
 
 template <class T>
    void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
-      int Splinedegree, bool inv, bool wrap, T outside=0) _THROW;
+      int Splinedegree, bool inv, bool wrap, T outside=0);
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -371,7 +371,7 @@ public:
        then 0's are added. An exception is thrown if there is no memory.
        \\Ex: V1.resize(3,3,2);
    */
-   void resize(int Zdim, int Ydim, int Xdim) _THROW {
+   void resize(int Zdim, int Ydim, int Xdim) {
       if (Xdim==XSIZE(*this) && Ydim==YSIZE(*this) &&
           Zdim==ZSIZE(*this)) return;
       if (Xdim<=0 || Ydim<=0 || Zdim<=0) {clear(); return;}
@@ -543,7 +543,7 @@ public:
        (Z,Y,X).
        \\ Ex: V(0,-2,1)=1;
        \\ Ex: val=V(0,-2,1);*/
-   T&   operator () (int k, int i,int j) const _THROW {
+   T&   operator () (int k, int i,int j) const {
         if (k<zinit || k>=zinit+zdim)
            REPORT_ERROR(1203,"Matrix3D::operator (): Matrix3D subscript (k) out of range");
         if (i<yinit || i>=yinit+ydim)
@@ -621,7 +621,7 @@ public:
        cuts and assign in a single step instead of in two steps, as in
        the previous example.
        \\Ex: V.slice(0,m);*/
-   void getSlice(int i, mT &M, char axis='Z') const _THROW;
+   void getSlice(int i, mT &M, char axis='Z') const;
    
    /** Slice access for writing.
        This function sets a matrix corresponding to the choosen
@@ -629,7 +629,7 @@ public:
        physical.
        \\Ex: V.setSlice(1,(V.slice(0)));
        \\--> Copies slice 0 in slice 1 */
-    void setSlice(int i, const mT &v) _THROW;
+    void setSlice(int i, const mT &v);
    //@}
 
    /* Other utilities ------------------------------------------------------ */
@@ -646,7 +646,7 @@ public:
       of the Matrix2D, for which the multiplication is not a component
       by component multiplication but an algebraic one.*/
    friend void array_by_array(const maT &op1, const maT &op2, maT &result,
-      char operation) _THROW {
+      char operation) {
          if (!op1.same_shape(op2))
             REPORT_ERROR(1007,
                (string)"Array_by_array: different shapes ("+operation+")");
@@ -805,7 +805,7 @@ public:
        constants IS_INV, or WRAP.
        \\Ex: matrix2D<double> A(4,4); A.init_identity; apply_geom(V2,A,V1);*/
    friend void apply_geom<>(VT &V2, matrix2D<double> A,
-            const VT &V1, bool inv, bool wrap) _THROW;
+            const VT &V1, bool inv, bool wrap);
 
    /** Apply geom with B-spline interpolation. */
    friend void apply_geom_Bspline<>(VT &V2, matrix2D<double> A,
@@ -1061,7 +1061,7 @@ template <class T>
 template <class T>
 void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
                     matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
-                    const bool &rounding=false) _THROW;
+                    const bool &rounding=false);
 //@}
 //@}
 //@}

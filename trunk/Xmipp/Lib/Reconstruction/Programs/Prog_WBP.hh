@@ -73,7 +73,7 @@ public:
 
 public:
   /// Read arguments from command line
-  void read(int argc, char **argv) _THROW;
+  void read(int argc, char **argv);
 
   /// Show
   void show();

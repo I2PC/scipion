@@ -61,7 +61,7 @@ void Micrograph::clear() {
 
 /* Open micrograph --------------------------------------------------------- */
 void Micrograph::open_micrograph(const FileName &_fn_micrograph,
-   /*bool in_core,*/ bool reversed) _THROW {
+   /*bool in_core,*/ bool reversed) {
    struct stat info;
 
    // Micrograph name
@@ -272,8 +272,7 @@ if(maxval > 32000)
 }
 
 /* Save coordinates to disk ------------------------------------------------ */
-void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
-   _THROW {
+void Micrograph::write_coordinates(int label, const FileName &_fn_coords) {
    ofstream fh;
    if (_fn_coords!="") fn_coords=_fn_coords;
    fh.open(fn_coords.c_str(), ios::out);
@@ -289,8 +288,7 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
 }
 
 /* Read coordinates from disk ---------------------------------------------- */
-void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
-   _THROW {
+void Micrograph::read_coordinates(int label, const FileName &_fn_coords) {
    ifstream  fh;
    int       line_no=0;
    string    line;
@@ -334,7 +332,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, Image &result,
    double Dmin, double Dmax, double scaleX, double scaleY, 
-   bool only_check) _THROW {
+   bool only_check) {
    if (X_window_size==-1 || Y_window_size==-1)
       REPORT_ERROR(1,"Micrograph::scissor: window size not set");
 
@@ -377,7 +375,7 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, const FileName &fn_root,
    int starting_index, const FileName &fn_image, double ang, double tilt,
-   double psi) _THROW {
+   double psi) {
    SelFile SF;
    FileName fn_out;
    ImageXmipp I;
@@ -462,7 +460,7 @@ int Micrograph::search_coord_near(int x, int y, int prec) const {
 }
 
 /* Invalidate a coordinate ------------------------------------------------- */
-void Micrograph::invalidate_coord(int n) _THROW {
+void Micrograph::invalidate_coord(int n) {
    if (n<0 || n>=ParticleNo())
       REPORT_ERROR(1,"Micrograph::invalidate_coord: Index out of range");
    coords[n].valid=FALSE;   

@@ -171,12 +171,12 @@ public:
 
    /** Set shift.
        Set the shift associated to a certain symmetry. */
-   void set_shift(int i, const matrix1D<double> &shift) _THROW;
+   void set_shift(int i, const matrix1D<double> &shift);
 
    /** Add shift.
        Add a shift vector to the shift matrix. An exception is thrown if
        the input vector is not a 3x1 vector.*/
-   void add_shift(const matrix1D<double> &shift) _THROW;
+   void add_shift(const matrix1D<double> &shift);
 
    /** Read a symmetry file into a symmetry list.
        The former symmetry list is overwritten with the new one. All the
@@ -195,7 +195,7 @@ public:
        The chain length is the number of single matrices multiplication of
        which the inserted one is compound.*/
    void add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
-       int chain_length) _THROW;
+       int chain_length);
 
    /** Compute subgroup for this structure.
        After adding or setting a matrix, the subgroup information

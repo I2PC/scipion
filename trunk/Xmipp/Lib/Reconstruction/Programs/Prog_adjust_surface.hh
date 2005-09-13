@@ -139,7 +139,7 @@ public:
        Read phantom file and assign ztop and zbottom if they
        are not assigned by user, ie, set it to zdim. An exception is thrown
        if ztop or zbottom exceeds volume limits*/
-   void produce_Side_Info() _THROW;
+   void produce_Side_Info();
 };
 
 /** Create surface mask.
@@ -162,7 +162,7 @@ public:
     between the input and the mask volumes*/
    double correlate_surface_and_volume_3D(const Image *surf, const Volume *V,
       Volume *Vsurf, int ktop, int kbottom, int direction, int tell=0)
-      _THROW;
+     ;
 
 /** Correlate surface and volume (2D).
     This function constructs a mask volume according to the information
@@ -179,7 +179,7 @@ public:
     thr projection*/
    double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
       Volume *Vsurf, int ktop, int kbottom, int direction, int tell=0)
-      _THROW;
+     ;
 
 /** Correlate surface and volume (gradients).
     The same as above but this time the correlation is perfomed attending
@@ -187,7 +187,7 @@ public:
    double correlate_surface_and_volume_gradients(const Image *surf,
       const Vectorial_matrix3D &V_grad, Vectorial_matrix3D & Vsurf_grad,
       int ktop, int kbottom, int direction, int tell=0)
-      _THROW;
+     ;
 
 /** Run adjust surface.
     Search for the best fit of the surface within the volume */

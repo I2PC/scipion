@@ -27,7 +27,7 @@
 #include <XmippData/xmippArgs.hh>
 
 /* Read parameters --------------------------------------------------------- */
-void Symmetrize_Parameters::read(int argc, char **argv) _THROW {
+void Symmetrize_Parameters::read(int argc, char **argv) {
     fn_in  = get_param(argc,argv,"-i");
     fn_out = get_param(argc,argv,"-o","");
     fn_sym = get_param(argc,argv,"-sym");

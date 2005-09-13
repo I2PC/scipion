@@ -88,10 +88,10 @@ public:
     first line is saved as comment in the header. 5 matrices are created 
     containing the magnitude and phase (spots_abs abd spots_arg), the IQs (IQ),      the background (background) and finally the CTF related stuff (CTF).
     */
-   void read(const FileName &fn) _THROW;
+   void read(const FileName &fn);
 
 /** Write the content of this object to a file.*/
-   void write(const FileName &fn) const _THROW;
+   void write(const FileName &fn) const;
 
 /** Empties actual APH structure. */
    void clear();

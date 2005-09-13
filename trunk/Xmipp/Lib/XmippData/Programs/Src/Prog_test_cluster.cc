@@ -37,7 +37,7 @@ Test_cluster_parameters::Test_cluster_parameters() {
 }
 
 // Read from command line --------------------------------------------------
-void Test_cluster_parameters::read(int argc, char **argv) _THROW {
+void Test_cluster_parameters::read(int argc, char **argv) {
    fn_selfile = get_param(argc,argv,"-i");
    fn_out     = get_param(argc,argv,"-o","");
    mask.read(argc,argv);
@@ -51,7 +51,7 @@ void Test_cluster_parameters::read(int argc, char **argv) _THROW {
 }
 
 // Produce side info -------------------------------------------------------
-void Test_cluster_parameters::produce_side_info() _THROW {
+void Test_cluster_parameters::produce_side_info() {
    SF_in.read(fn_selfile);
    int Xdim, Ydim; SF_in.ImgSize(Ydim,Xdim);
    mask.resize(Ydim,Xdim);

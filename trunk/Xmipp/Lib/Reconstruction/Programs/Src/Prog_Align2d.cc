@@ -32,7 +32,7 @@
 #include <XmippData/xmippFuncs.hh>
 
 // Read arguments ==========================================================
-void Prog_align2d_prm::read(int argc, char **argv) _THROW  {
+void Prog_align2d_prm::read(int argc, char **argv)  {
 
   fn_sel=get_param(argc,argv,"-i");
   SF.read(fn_sel);
@@ -129,7 +129,7 @@ void Prog_align2d_prm::usage() {
 
 // Rotational alignment ========================================================
 bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref, 
-		 const float &max_rot, const float &Rin, const float &Rout, const double &outside) _THROW {
+		 const float &max_rot, const float &Rin, const float &Rout, const double &outside) {
 
   matrix2D<double> Mimg,Maux,A;
   matrix1D<double> corr;
@@ -203,7 +203,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 
 // translational alignment =====================================================
 bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref,const float &max_shift, 
-                                   const double &outside) _THROW {
+                                   const double &outside) {
 
   matrix2D<double> Maux,Mcorr,A;
   int              dim,imax,jmax,i_actual,j_actual,dim2;
@@ -278,7 +278,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 // Complete search alignment ========================================================
 bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
                        const float &max_shift, const float &max_rot, const float &psi_interval, 
-                       const float &Rin, const float &Rout, const double &outside) _THROW{
+                       const float &Rin, const float &Rout, const double &outside){
 
   matrix2D<double> Mimg,Maux,Mcorr,Mref2,A;
   matrix2D<int>    mask;
@@ -347,7 +347,7 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
 }
 
 // PsPc piramidal combination of images ========================================
-void Prog_align2d_prm::do_pspc() _THROW {
+void Prog_align2d_prm::do_pspc() {
 
   int               barf,imgno,nlev,n_piram,nlevimgs;
   float             xshift,yshift,psi,zero=0.;
@@ -446,7 +446,7 @@ void Prog_align2d_prm::do_pspc() _THROW {
 }
 
 // Alignment of all images by iterative refinement  ========================================
-void Prog_align2d_prm::refinement() _THROW {
+void Prog_align2d_prm::refinement() {
 
   int               dim,n_refined,barf;
   float             curr_max_shift,curr_max_rot,xshift,yshift,psi,zero=0.;
@@ -550,7 +550,7 @@ void Prog_align2d_prm::refinement() _THROW {
 }
 
 // Write out results  ========================================================
-void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout) _THROW {
+void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout) {
 
   matrix2D<double> Maux,Mimg;
   matrix2D<int>    mask;
@@ -598,7 +598,7 @@ void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const floa
 }
 
 // Write out results  ========================================================
-void Prog_align2d_prm::align2d() _THROW {
+void Prog_align2d_prm::align2d() {
 
   // Read in all images
   double zero=0.;

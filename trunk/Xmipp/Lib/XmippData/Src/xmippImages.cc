@@ -36,7 +36,7 @@
 /* Input (read) from file specifying its dimensions ------------------------ */
 template <class T>
 bool ImageT<T>::read(const FileName &name, float fIform, int Ydim,
-  int Xdim, bool reversed, Image_Type image_type) _THROW {
+  int Xdim, bool reversed, Image_Type image_type) {
   FILE *fh;
   clear(); 
 
@@ -122,7 +122,7 @@ ImageT<T> *ImageT<T>::LoadImage (FileName name, bool apply_geo)
 
 /* Output (write) ---------------------------------------------------------- */
 template <class T>
-void ImageT<T>::write(FileName name, bool reversed, Image_Type image_type) _THROW {
+void ImageT<T>::write(FileName name, bool reversed, Image_Type image_type) {
   FILE *fp;
   if (name != "") ImageT<T>::rename(name); 
 
@@ -249,7 +249,7 @@ matrix2D<double> ImageXmippT<T>::get_transformation_matrix(bool only_apply_shift
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T>
 bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
-  bool reversed, bool apply_geo, bool only_apply_shifts) _THROW {
+  bool reversed, bool apply_geo, bool only_apply_shifts) {
   FILE *fp;
   bool ret;
 
@@ -289,7 +289,7 @@ bool ImageXmippT<T>::read(const FileName &name, bool skip_type_check,
 
 /* Write Xmipp image ------------------------------------------------------- */
 template <class T>
-void ImageXmippT<T>::write(const FileName &name, bool force_reversed) _THROW {
+void ImageXmippT<T>::write(const FileName &name, bool force_reversed) {
   FILE *fp;
   if (name != "") ImageXmippT<T>::rename(name); 
   if ((fp = fopen(ImageT<T>::fn_img.c_str(), "wb")) == NULL)
@@ -304,7 +304,7 @@ void ImageXmippT<T>::write(const FileName &name, bool force_reversed) _THROW {
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
-   bool reversed) _THROW {
+   bool reversed) {
    FILE *fp; 
    int result;
    headerXmipp header(headerXmipp::IMG_XMIPP);
@@ -323,7 +323,7 @@ int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
 
 /* Is Fourier Xmipp image? ------------------------------------------------- */
 int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check,
-   bool reversed) _THROW {
+   bool reversed) {
    FILE *fp; 
    int result;
    headerXmipp header(headerXmipp::IMG_FOURIER);

@@ -213,7 +213,7 @@ public:
    /** Core array by scalar operation.
        It assumes that the result is already resized. */
    friend void core_array_by_scalar<>(const maT &op1, const T &op2,
-      maT &result, char operation) _THROW;
+      maT &result, char operation);
 
    /// v3=v1+k
    maT operator  + (T op1) const 
@@ -267,7 +267,7 @@ public:
       Although it is supposed to be a hidden function not useable by
       normal programmers.*/
    friend void scalar_by_array(T op1, const maT &op2, maT &result,
-      char operation) _THROW {
+      char operation) {
          result.resize(op2);
          core_scalar_by_array(op1, op2, result, operation);
    }
@@ -275,7 +275,7 @@ public:
    /** Core array by scalar operation.
        It assumes that the result is already resized. */
    friend void core_scalar_by_array<>(const T &op1, const maT &op2,
-      maT &result, char operation) _THROW;
+      maT &result, char operation);
 
   /// v3=k+v2
    friend maT operator  + (T op1, const maT &op2)
@@ -302,7 +302,7 @@ public:
    void core_init() {__m=NULL; __dim=0;}
 
    /// Allocate vector memory
-   void core_allocate(int _dim) _THROW {
+   void core_allocate(int _dim) {
       if (_dim<=0) {clear(); return;}
       __m = new T [_dim];
       if (__m != NULL) __dim = _dim;
@@ -351,7 +351,7 @@ public:
        an exception if there are not enough components in v for this
        array, that is, 1 for vectors, 2 for matrices and 3 for volumes.*/
    // This function must be explictly implemented outside
-   bool outside(const matrix1D<double> &v) const _THROW;
+   bool outside(const matrix1D<double> &v) const;
 
    /** True if this object intersects logically the argument array. */
    // This function must be explictly implemented outside
@@ -362,21 +362,21 @@ public:
        of teh rectangle.*/
    // This function must be explictly implemented outside
    bool intersects(const matrix1D<double> &corner1,
-      const matrix1D<double> &corner2) const _THROW;
+      const matrix1D<double> &corner2) const;
 
    /** True if the given index is in one corner.
        It is understood that one corner in logical coordinates. It throws
        an exception if there are not enough components in v for this
        array, that is, 1 for vectors, 2 for matrices and 3 for volumes. */
    // This function must be explictly implemented outside
-   bool isCorner(const matrix1D<double> &v) _THROW;
+   bool isCorner(const matrix1D<double> &v);
 
    /** True if the given index is in a border
        It is understood that one border in logical coordinates. It throws
        an exception if there are not enough components in v for this
        array, that is, 1 for vectors, 2 for matrices and 3 for volumes. */
    // This function must be explictly implemented outside
-   bool isBorder(const matrix1D<int> &v) _THROW;
+   bool isBorder(const matrix1D<int> &v);
    
    /** Insert a patch in array.
        This function substitutes the array given as argument in this object.
@@ -425,7 +425,7 @@ public:
        \\Ex: v.init_random(0,1,"gaussian");
        \\--> gaussian distribution with 0 mean and stddev=1 */
    void init_random(double op1, double op2,
-       const string &mode="uniform") _THROW;
+       const string &mode="uniform");
 
    /** Add noise to actual values.
        This function add some noise to the actual values of the array
@@ -443,7 +443,7 @@ public:
        \\Ex: v1.add_noise(0,1,"gaussian");
        \\--> gaussian distribution with 0 mean and stddev=1 */
    void add_noise(double op1, double op2,
-       const string &mode="uniform") const _THROW;
+       const string &mode="uniform") const;
 //@}
 
    /* Some operators ------------------------------------------------------- */
@@ -518,7 +518,7 @@ public:
    
    /** Read from an ASCII file.
        The array must be previously resized to the correct size.*/
-   void read(const FileName &fn) _THROW
+   void read(const FileName &fn)
       {ifstream  fh;
       fh.open(fn.c_str(), ios::in);
       if (!fh)
@@ -528,7 +528,7 @@ public:
 
    /** Read from a binary file.
        The array must be previously resized to the correct size.*/
-   void read_binary(const FileName &fn) _THROW
+   void read_binary(const FileName &fn)
       {ifstream  fh;
       fh.open(fn.c_str(), ios::in | ios::binary);
       if (!fh)
@@ -544,7 +544,7 @@ public:
    friend ostream& operator <<<>(ostream& out, const maT &v);
 
    /** Write to an ASCII file. */
-   void write(const FileName &fn) const _THROW
+   void write(const FileName &fn) const
       {ofstream  fh;
       fh.open(fn.c_str(), ios::out);
       if (!fh)
@@ -554,7 +554,7 @@ public:
       fh.close();}
 
    /** Write to a binary file. */
-   void write_binary(const FileName &fn) const _THROW
+   void write_binary(const FileName &fn) const
       {ofstream  fh;
        
       fh.open(fn.c_str(), ios::out | ios::binary);
@@ -718,7 +718,7 @@ public:
        Each component of the result is the maximum of the correspoing
        components of the two input arrays. They must have the same shape, if
        not an exception is thrown */
-   friend void MAXnD(const maT &v1, const maT &v2, maT &result) _THROW
+   friend void MAXnD(const maT &v1, const maT &v2, maT &result)
       {if (!v1.same_shape(v2))
          REPORT_ERROR(1007,"MAX: arrays of different shape");
       result.resize(v1);
@@ -734,7 +734,7 @@ public:
        Each component of the result is the minimum of the correspoing
        components of the two input arrays. They must have the same shape, if
        not an exception is thrown */
-   friend void MINnD(const maT &v1, const maT &v2, maT &result) _THROW
+   friend void MINnD(const maT &v1, const maT &v2, maT &result)
       {if (!v1.same_shape(v2))
          REPORT_ERROR(1007,"MIN: arrays of different shape");
       result.resize(v1);

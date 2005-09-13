@@ -84,7 +84,7 @@ public:
 
 public:
   /// Read arguments from command line
-  void read(int argc, char **argv) _THROW;
+  void read(int argc, char **argv);
   
   /// Show
   void show();
@@ -96,17 +96,17 @@ public:
   void extended_usage();
 
   /** Make shiftmask and calculate nr_psi */
-  void produce_Side_info() _THROW;
+  void produce_Side_info();
 
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
 			    float &img_rot, float &img_tilt, float &img_psi, 
 			    int &opt_dirno, double &opt_psi,
 			    double &opt_xoff, double &opt_yoff, 
-			    double &maxCC, double &Zscore) _THROW;
+			    double &maxCC, double &Zscore);
 
   /** Loop over all images */
-  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC) _THROW;
+  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC);
 
 
 };				    

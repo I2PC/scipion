@@ -79,7 +79,7 @@ ostream & operator << (ostream &out, const Prog_Evaluate_FSCs_Parameters &prm) {
 }
 
 /* Produce side information ================================================ */
-void Prog_Evaluate_FSCs_Parameters::produce_side_info() _THROW {
+void Prog_Evaluate_FSCs_Parameters::produce_side_info() {
    phantom.read(fn_phantom);
    switch (action) {
       case ESTIMATE_SINGLE_FSC:
@@ -184,7 +184,7 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
 }
 
 /* Main routine ============================================================ */
-void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) _THROW {
+void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) {
    matrix1D<double> frequency, FSC, min_FSC, max_FSC, stddev_FSC;
    double avg_resol, stddev_resol, resolution, avg_FSC;
    int i;

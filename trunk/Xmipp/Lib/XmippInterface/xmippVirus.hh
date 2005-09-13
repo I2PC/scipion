@@ -47,7 +47,7 @@ public:
    /** 60 Matrices with the Euler rotations */
    matrix2D<double> E_Matrices[Vir_Eq_Views];
    /** Read an Euler matrix file with the symmetry relationships in a virus */
-   void read(const FileName &fn) _THROW;
+   void read(const FileName &fn);
 };
 //@}
 #endif

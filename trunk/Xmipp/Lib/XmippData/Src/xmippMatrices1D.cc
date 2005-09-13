@@ -57,7 +57,7 @@ template <class T>
 
 /* Outside ----------------------------------------------------------------- */
 template <class T>
-   bool vT::outside(const matrix1D<double> &v) const _THROW {
+   bool vT::outside(const matrix1D<double> &v) const {
    if (XSIZE(v)<1)
       REPORT_ERROR(1,"Outside: index vector has got not enough components");
    return (XX(v)<STARTINGX(*this) || XX(v)>FINISHINGX(*this));
@@ -75,7 +75,7 @@ template <class T>
 
 template <class T>
    bool vT::intersects(const matrix1D<double> &corner1,
-      const matrix1D<double> &corner2) const _THROW {
+      const matrix1D<double> &corner2) const {
        if (XSIZE(corner1)!=1 || XSIZE(corner2)!=1)
           REPORT_ERROR(1002,"intersects 1D: corner sizes are not 1");
        return intersects(XX(corner1),XX(corner2)-XX(corner1));
@@ -92,7 +92,7 @@ template <class T>
 
 /* Corner ------------------------------------------------------------------ */
 template <class T>
-   bool vT::isCorner(const matrix1D<double> &v) _THROW {
+   bool vT::isCorner(const matrix1D<double> &v) {
    if (XSIZE(v)<1)
       REPORT_ERROR(1,"isCorner: index vector has got not enough components");
    return (XX(v)==STARTINGX(*this) || XX(v)==FINISHINGX(*this));
@@ -100,7 +100,7 @@ template <class T>
 
 /* Border ------------------------------------------------------------------ */
 template <class T>
-   bool vT::isBorder(const matrix1D<int> &v) _THROW 
+   bool vT::isBorder(const matrix1D<int> &v) 
 {
    if (XSIZE(v)<1)
       REPORT_ERROR(1,"isBorder: index vector has got not enough components");
@@ -161,7 +161,7 @@ ostream& operator << (ostream& out, const matrix1D< complex<double> >& v) {
 /* Linear initialisation --------------------------------------------------- */
 // It is not an error that the vector is empty
 template <class T>
-   void vT::init_linear(T minF, T maxF, int n, const string &mode) _THROW {
+   void vT::init_linear(T minF, T maxF, int n, const string &mode) {
    double slope;
    int steps;
 
@@ -346,7 +346,7 @@ matrix1D<int> vector_R3(int x, int y, int z) {
 
 /* Are orthogonal ---------------------------------------------------------- */
 int are_orthogonal (matrix1D<double> &v1, matrix1D<double> &v2,
-   matrix1D<double> &v3) _THROW {
+   matrix1D<double> &v3) {
    if (XSIZE(v1)!=3 || XSIZE(v2)!=3 || XSIZE(v3)!=3)
       REPORT_ERROR(1002,"Are orthogonal: Some vector do not belong to R3");
    try{
@@ -361,7 +361,7 @@ int are_orthogonal (matrix1D<double> &v1, matrix1D<double> &v2,
 
 /* Are system? ------------------------------------------------------------- */
 int are_system (matrix1D<double> &v1, matrix1D<double> &v2,
-   matrix1D<double> &v3) _THROW {
+   matrix1D<double> &v3) {
    matrix1D<double> aux(3);
    if (XSIZE(v1)!=3 || XSIZE(v2)!=3 || XSIZE(v3)!=3)
      REPORT_ERROR(1002,"Are orthogonal: Some vector do not belong to R3");
@@ -382,7 +382,7 @@ template <class T>
 
 /* Sort two vectors -------------------------------------------------------- */
 template <class T>
-   void sort_two_vectors(vT &v1, vT &v2) _THROW {
+   void sort_two_vectors(vT &v1, vT &v2) {
    T temp;
    if (XSIZE(v1)!=XSIZE(v2) || STARTINGX(v1)!=STARTINGX(v2))
       REPORT_ERROR(1007, "sort_two_vectors: vectors are not of the same shape");

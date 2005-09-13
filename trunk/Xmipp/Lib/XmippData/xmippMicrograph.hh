@@ -106,7 +106,7 @@ public:
    /** Open micrograph.
        An exception is thrown if the file is not valid. */
    void open_micrograph(const FileName &fn_micrograph, /*bool in_core=FALSE,*/
-      bool reversed=FALSE) _THROW;
+      bool reversed=FALSE);
 
    /** Close micrograpgh.
        After working with the file, you must close it. */
@@ -119,13 +119,13 @@ public:
    string micrograph_name() { return( fn_micrograph ); }
 
    /** Save coordinates to disk. */
-   void write_coordinates(int label, const FileName &fn_coords="") _THROW;
+   void write_coordinates(int label, const FileName &fn_coords="");
 
    /** Read coordinates from disk.
        Coordinates are read into the selected family, the rest of
        families are untouched as well as the coordinates already belonging
        to this family */
-   void read_coordinates(int label, const FileName &fn_coords) _THROW;
+   void read_coordinates(int label, const FileName &fn_coords);
 
    /** Particle number.
        Number of particles in the coordinate list */
@@ -189,7 +189,7 @@ public:
        Returns 0 if an error ocurred and 1 if everything is all right*/
    int scissor(const Particle_coords &P, Image &result,
       double Dmin, double Dmax,
-      double scaleX=1, double scaleY=1, bool only_check=false) _THROW;
+      double scaleX=1, double scaleY=1, bool only_check=false);
 
    /** Access to array of 8 bits. */
    unsigned char * array8() const {return m8;}
@@ -206,7 +206,7 @@ public:
    /** Pixel access for reading.
        These coordinates follow the physical Xmipp \URL[convention]
        {../../../Extra_Docs/Conventions.html} for coordinates */
-   float operator ()(int x, int y) const _THROW {
+   float operator ()(int x, int y) const {
       if (y<0 || y>=Ydim || x<0 || x>=Xdim)
          REPORT_ERROR(1,"Micrograph::(): index out of range");
       if      (__depth== 8) {
@@ -239,7 +239,7 @@ public:
    }
 
    /** Micrograph max min*/
-   void compute_double_minmax(double &Dmin, double &Dmax) const _THROW {
+   void compute_double_minmax(double &Dmin, double &Dmax) const {
       if      (__depth== 8) {
      unsigned char _Max=m8[0];
      unsigned char _min=_Max;
@@ -293,7 +293,7 @@ public:
    }
 
    /** Pixel access for writing. */
-   void set_val(int x, int y, double new_val) _THROW {
+   void set_val(int x, int y, double new_val) {
       if (y<0 || y>=Ydim || x<0 || x>=Xdim)
          REPORT_ERROR(1,"Micrograph::set_val: index out of range");
       if      (__depth== 8) m8[y*Xdim+x]=(unsigned char) new_val;
@@ -317,7 +317,7 @@ public:
        If this angle is 0 no rotation is applied.*/
    void produce_all_images(int label, const FileName &fn_root,
       int starting_index=1, const FileName &fn_image="", double ang=0,
-      double gamma=0., double psi=0.) _THROW;
+      double gamma=0., double psi=0.);
 
    /** Search coordinate near a position.
        By default the precission is set to 3 pixels. The index of the coordinate
@@ -327,7 +327,7 @@ public:
    /** Remove a coordinate from the coordinate list.
        An exception is thrown if the index is out of range within the
        coordinate list */
-   void invalidate_coord(int n) _THROW;
+   void invalidate_coord(int n);
 
    /** Add coordinate.
        It returns the index of the particle added within the coordinate list. */
@@ -338,7 +338,7 @@ public:
 
    /** Access to coordinate structure.
        If the index is out of range then an exception is thrown. */
-   Particle_coords & coord(int n) _THROW {
+   Particle_coords & coord(int n) {
       if (n<0 || n>ParticleNo())
          REPORT_ERROR(1,"Micrograph::coord(): index out of range");
       return coords[n];
@@ -355,7 +355,7 @@ public:
    /** Get a label. 
        An exception is thrown if the index is greater than the
        number of labels */
-   string & get_label(int n) _THROW {
+   string & get_label(int n) {
       if (n<0 || n>LabelNo())
          REPORT_ERROR(1,"Micrograph::get_label(): index out of range");
       return labels[n];

@@ -55,9 +55,9 @@ protected:
     virtual void clear();
     /* Read SOM files and Sel file. */
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0) _THROW;
+       double _minGray=0, double _maxGray=0);
     /* Read only SOM files. */
-    virtual void readSOMFiles(const FileName &_fn_root) _THROW;
+    virtual void readSOMFiles(const FileName &_fn_root);
 
     /* Extract the represented images to a SelFile.
        The selfile is not cleared at the beginning. */

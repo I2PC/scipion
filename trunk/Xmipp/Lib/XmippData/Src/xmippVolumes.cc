@@ -30,7 +30,7 @@
 
 /* Input (read) from file specifying its dimensions ------------------------ */
 template <class T> void VolumeT<T>::read(FileName name,
-  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type) _THROW {
+  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type) {
   FILE *fh;
   clear(); 
   fn_img=name;
@@ -90,7 +90,7 @@ void VolumeT<complex<double> >::read(FILE *fh,
 
 /* Output (write) ---------------------------------------------------------- */
 template <class T> void VolumeT<T>::write(FileName name, bool reversed,
-   Volume_Type volume_type) _THROW {
+   Volume_Type volume_type) {
    FILE *fp;
    if (name != "") rename(name);  
 
@@ -155,7 +155,7 @@ void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
 
 /* Read Xmipp image -------------------------------------------------------- */
 template <class T> void VolumeXmippT<T>::read(const FileName &name,
-  bool skip_type_check, bool force_reversed) _THROW {
+  bool skip_type_check, bool force_reversed) {
   FILE *fp; 
 
   rename(name); 
@@ -177,7 +177,7 @@ template <class T> void VolumeXmippT<T>::read(const FileName &name,
 
 /* Write Xmipp Volume  ------------------------------------------------------- */
 template <class T> void VolumeXmippT<T>::write(const FileName &name,
-  bool force_reversed) _THROW {
+  bool force_reversed) {
   FILE *fp;
   if (name != "") rename(name); 
   if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
@@ -190,8 +190,7 @@ template <class T> void VolumeXmippT<T>::write(const FileName &name,
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
-int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed)
-   _THROW {
+int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {
    FILE *fp; 
    int result=0;
    headerXmipp header(headerXmipp::VOL_XMIPP);
@@ -212,8 +211,7 @@ int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
-int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed)
-   _THROW {
+int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {
    FILE *fp; 
    int result=0;
    headerXmipp header(headerXmipp::VOL_FOURIER);

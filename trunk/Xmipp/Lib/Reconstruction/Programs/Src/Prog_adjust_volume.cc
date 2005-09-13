@@ -28,7 +28,7 @@
 #include <XmippData/xmippArgs.hh>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::read(int argc, char **argv) _THROW {
+void Prog_Adjust_Volume_Parameters::read(int argc, char **argv) {
    fn_vol=get_param(argc,argv,"-i");
    fn_sel=get_param(argc,argv,"-sel");
    fn_out=get_param(argc,argv,"-o","");

@@ -52,7 +52,7 @@ void Tomogram::clear() {
 
 /* Open tomogram --------------------------------------------------------- */
 void Tomogram::open_tomogram(const FileName &_fn_tomogram,
-   bool reversed) _THROW {
+   bool reversed) {
    struct stat info;
 
    // tomogram name
@@ -208,7 +208,7 @@ void Tomogram::close_tomogram() {
 
 /* Get piece --------------------------------------------------------------- */
 void Tomogram::get_piece(matrix1D<int> &r0, matrix1D<int> &length,
-    matrix3D<double> &piece) _THROW {
+    matrix3D<double> &piece) {
     matrix1D<int> rF=r0+length-1;
     cout << r0.transpose() << endl;
     cout << length.transpose() << endl;

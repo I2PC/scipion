@@ -56,16 +56,16 @@ ostream& operator << (ostream & ostrm, const matrix2D< complex<double> > &m);
 template <class T>
    mT mul_elements(const mT &op1, const mT &op2);
 template <class T>
-   void mul_matrix(const mT &op1, const mT &op2, mT &result) _THROW;
+   void mul_matrix(const mT &op1, const mT &op2, mT &result);
 template <class T>
-   void solve (const mT &A, const vT &b, vT &result) _THROW;
+   void solve (const mT &A, const vT &b, vT &result);
 template <class T>
-   void solve (const mT &A, const mT &b, mT &result) _THROW;
+   void solve (const mT &A, const mT &b, mT &result);
 // Use this solve_by_svd function to solve linear systems by singular value decomposition
 // This is indicated for ill-conditioned systems and hard-to-solve problems
 // (But it's slower)
 template <class T>
-   void solve_by_svd(const mT &A, const vT &b, matrix1D<double> &result,double tolerance) _THROW;
+   void solve_by_svd(const mT &A, const vT &b, matrix1D<double> &result,double tolerance);
 template <class T>
    void ludcmp(const mT &A, mT &LU, matrix1D<int> &indx, T &d);
 template <class T>
@@ -381,7 +381,7 @@ public:
 protected:
    /* Operation related ---------------------------------------------------- */
    // Matrix multiplication in a algebraic way
-   friend void mul_matrix<>(const mT &op1, const mT &op2, mT &result) _THROW;
+   friend void mul_matrix<>(const mT &op1, const mT &op2, mT &result);
 
    // The following functions are directly an interface to the Numerical
    // Recipes ones with the same name, but with a better interface
@@ -459,7 +459,7 @@ public:
        a single column. The origin of the vector is set according to
        the one of the matrix.
        \\Ex: matrix1D<double> v; m.to_vector(v);*/
-   void to_vector(vT &op1) const _THROW;
+   void to_vector(vT &op1) const;
    //@}
 
    /* Memory related ------------------------------------------------------- */
@@ -513,7 +513,7 @@ public:
        then 0's are added. An exception is thrown if there is no memory.
        \\Ex: m1.resize(3,2);
    */
-   void resize(int Ydim, int Xdim) _THROW {
+   void resize(int Ydim, int Xdim) {
       if (Xdim==XSIZE(*this) && Ydim==YSIZE(*this)) return;
       if (Xdim<=0 || Ydim<=0)                       {clear(); return;}
 
@@ -670,7 +670,7 @@ public:
        the X position.
        \\ Ex: m(-2,1)=1;
        \\ Ex: val=m(-2,1);*/
-   T&   operator () (int i, int j) const _THROW {
+   T&   operator () (int i, int j) const {
         if (i<yinit || i>=yinit+ydim)
            REPORT_ERROR(1103,"Matrix subscript (i) out of range");
         if (j<xinit || j>=xinit+xdim)
@@ -733,7 +733,7 @@ public:
        row inside matrix, the numbering of the rows is also logical not
        physical.
        \\Ex: vector<double> v; m.getRow(-2,v);*/
-   void getRow(int i, vT &v) const _THROW {
+   void getRow(int i, vT &v) const {
       if (XSIZE(*this)==0 || YSIZE(*this)==0) {v.clear(); return;}
       if (i<STARTINGY(*this) || i>FINISHINGY(*this))
          REPORT_ERROR(1103,"getRow: Matrix subscript (i) greater than matrix dimension");
@@ -753,7 +753,7 @@ public:
        column inside matrix, the numbering of the column is also logical not
        physical.
        \\Ex: vector<double> v; m.getCol(-1, v);*/
-   void getCol(int j, vT &v) const _THROW {
+   void getCol(int j, vT &v) const {
       if (XSIZE(*this)==0 || YSIZE(*this)==0) {v.clear(); return;}
       if (j<STARTINGX(*this) || j>FINISHINGX(*this))
          REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
@@ -774,7 +774,7 @@ public:
        physical.
        \\Ex: m.setRow(-2,m.row(1));
        \\--> Copies row 1 in row -2*/
-   void setRow(int i, const vT &v) _THROW {
+   void setRow(int i, const vT &v) {
       if (XSIZE(*this)==0 || YSIZE(*this)==0)
          REPORT_ERROR(1,"setRow: Target matrix is empty");
       if (i<yinit || i>=yinit+ydim)
@@ -795,7 +795,7 @@ public:
        physical.
        \\Ex: m.setCol(-1,(m.row(1)).transpose());
        \\--> Copies row 1 in column -1*/
-   void setCol(int j, const vT &v) _THROW {
+   void setCol(int j, const vT &v) {
       if (XSIZE(*this)==0 || YSIZE(*this)==0)
          REPORT_ERROR(1,"setCol: Target matrix is empty");
       if (j<xinit || j>=xinit+xdim)
@@ -824,7 +824,7 @@ public:
       of the Matrix2D, for which the multiplication is not a component
       by component multiplication but an algebraic one.*/
    friend void array_by_array(const maT &op1, const maT &op2, maT &result,
-      char operation) _THROW {
+      char operation) {
          if (operation=='*') mul_matrix(op1, op2, result);
          else {
             if (operation=='x') operation='*';
@@ -875,7 +875,7 @@ public:
    /** Determinant of a matrix.
        An exception is thrown if the matrix is not squared or it is empty.
        \\Ex: double det=m.det();*/
-   T det() const _THROW;
+   T det() const;
 
    /** Inverse of a matrix.
        The matrix is inverted using a SVD decomposition.
@@ -890,12 +890,12 @@ public:
        The equation system is defined by Ax=b, it is solved for x.
        Exceptions are thrown if the equation system is not solvable.
        \\Ex: matrix1D<double> x=m.inv();*/
-   friend void solve<>(const mT &A, const vT &b, vT &result) _THROW;
+   friend void solve<>(const mT &A, const vT &b, vT &result);
 
    /** Solve equation system.
        The same as before but now, b is a matrix and so, x is also a matrix.
        A must be a square matrix.*/ 
-   friend void solve<>(const mT &A, const mT &b, mT &result) _THROW;
+   friend void solve<>(const mT &A, const mT &b, mT &result);
 
    /** Put a window to matrix.
        The matrix is windowed within the two positions given to this function.
@@ -1297,7 +1297,7 @@ matrix2D<double> rot2D_matrix(double ang);
     An exception is thrown if the displacement is not a R2 vector.
     \\Ex: m=translation2D_matrix(vector_R2(1,0));
     \\--> Displacement of 1 pixel to the right */
-matrix2D<double> translation2D_matrix(const matrix1D<double> v) _THROW;
+matrix2D<double> translation2D_matrix(const matrix1D<double> v);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis.
     The rotation angle is in degrees, and the rotational axis is
@@ -1323,7 +1323,7 @@ matrix2D<double> translation2D_matrix(const matrix1D<double> v) _THROW;
     [   0     sin(A)  cos(A) ]
     \end{verbatim}
     \\Ex: m=rot3D_matrix(60,'X');*/
-matrix2D<double> rot3D_matrix(double ang, char axis) _THROW;
+matrix2D<double> rot3D_matrix(double ang, char axis);
 
 /** Creates a rotational matrix (4x4) for volumes around any axis.
     The rotation angle is in degrees, and the rotational axis is
@@ -1345,19 +1345,19 @@ matrix2D<double> rot3D_matrix(double ang, const matrix1D<double> &axis);
     
     The returned matrix is such that A*axis=Z, where Z and axis are
     column vectors.*/
-matrix2D<double> align_with_Z(const matrix1D<double> &axis) _THROW;
+matrix2D<double> align_with_Z(const matrix1D<double> &axis);
 
 /** Creates a translational matrix (4x4) for volumes.
     The shift is given as a R3 vector (shift_X, shift_Y, shift_Z);
     An exception is thrown if the displacement is not a R3 vector.
     \\Ex: m=translation3D_matrix(vector_R3(0,0,2));
     \\--> Displacement of 2 pixels down */
-matrix2D<double> translation3D_matrix(const matrix1D<double> &v) _THROW;
+matrix2D<double> translation3D_matrix(const matrix1D<double> &v);
 
 /** Creates a scaling matrix (4x4) for volumes.
     The scaling factors for the different axis must be given as a vector.
     So that, XX(sc)=scale for X axis, YY(sc)=...*/
-matrix2D<double> scale3D_matrix(const matrix1D<double> &sc) _THROW;
+matrix2D<double> scale3D_matrix(const matrix1D<double> &sc);
 
 //@}
 
@@ -1395,7 +1395,7 @@ template <class T>
 template <class T>
 void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
                     matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
-                    const bool &rounding=false) _THROW;
+                    const bool &rounding=false);
 
 /** Solve equation system, nonnegative solution.
     The equation system is defined by Ax=b, it is solved for x.
@@ -1405,7 +1405,7 @@ void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
     
     The norm of the vector Ax-b is returned.*/
 double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
-   matrix1D<double> &result) _THROW;
+   matrix1D<double> &result);
 
 /** Solve equation system, symmetric positive-definite matrix.
     The equation system is defined by Ax=b, it is solved for x.
@@ -1413,7 +1413,7 @@ double solve_nonneg(const matrix2D<double> &A, const matrix1D<double> &b,
     and symmetric. It applies a Cholesky factorization and 
     backsubstitution (see Numerical Recipes). */
 void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
-   matrix1D<double> &result) _THROW;
+   matrix1D<double> &result);
 
 /** Evaluate quadratic form.
     Given x, c and H this function returns the value of the quadratic
@@ -1423,7 +1423,7 @@ void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
     Exceptions are thrown if the vectors and matrices do not have consistent
     dimensions.*/
 void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
-   const matrix2D<double> &H, double &val, matrix1D<double> &grad) _THROW;
+   const matrix2D<double> &H, double &val, matrix1D<double> &grad);
 
 /** Solves Quadratic programming subproblem. 
     \begin{verbatim}

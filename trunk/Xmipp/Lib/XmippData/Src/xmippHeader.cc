@@ -273,7 +273,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
 /* Input (read) *******************************************************/
 
 int headerXmipp::read(const FileName &name, bool skip_type_check,
-  bool force_reversed, bool skip_extra_checkings) _THROW {
+  bool force_reversed, bool skip_extra_checkings) {
   FILE *fp; 
 
    // Clear Header first

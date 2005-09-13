@@ -106,7 +106,7 @@ int SimpleGrid::get_number_of_samples() const {
 }
 
 // Prepare Grid ------------------------------------------------------------
-void SimpleGrid::prepare_grid() _THROW {
+void SimpleGrid::prepare_grid() {
    // Compute matrix for inverse basis conversion
    try {
       inv_basis=basis.inv();
@@ -600,19 +600,19 @@ GridVolumeT<T> operator /(T f, const GridVolumeT<T> &GV) {
    return result;
 
 template <class T> 
-GridVolumeT<T> GridVolumeT<T>::operator + (const GridVolumeT<T> &GV) _THROW
+GridVolumeT<T> GridVolumeT<T>::operator + (const GridVolumeT<T> &GV)
    {GRIDVOL_BY_GRIDVOL('+');}
 
 template <class T> 
-GridVolumeT<T> GridVolumeT<T>::operator - (const GridVolumeT<T> &GV) _THROW
+GridVolumeT<T> GridVolumeT<T>::operator - (const GridVolumeT<T> &GV)
    {GRIDVOL_BY_GRIDVOL('-');}
 
 template <class T> 
-GridVolumeT<T> GridVolumeT<T>::operator * (const GridVolumeT<T> &GV) _THROW
+GridVolumeT<T> GridVolumeT<T>::operator * (const GridVolumeT<T> &GV)
    {GRIDVOL_BY_GRIDVOL('*');}
 
 template <class T> 
-GridVolumeT<T> GridVolumeT<T>::operator / (const GridVolumeT<T> &GV) _THROW
+GridVolumeT<T> GridVolumeT<T>::operator / (const GridVolumeT<T> &GV)
    {GRIDVOL_BY_GRIDVOL('/');}
 
 #define GRIDVOL_BY_GRIDVOLASSIG(op) \

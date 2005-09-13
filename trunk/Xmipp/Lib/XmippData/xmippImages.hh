@@ -209,7 +209,7 @@ public:
        unsigned ints woth 16 bits (I16) and floats (IFLOAT) can be read. 
        \\ Ex: I.read(65,65,"g0ta0001.raw");*/
    bool read(const FileName &name, float fIform, int Ydim, int Xdim,
-      bool reversed=FALSE, Image_Type image_type=IBYTE) _THROW;
+      bool reversed=FALSE, Image_Type image_type=IBYTE);
 
    /** Read image from disk using a file pointer.
        This is the core routine of the previous one. */
@@ -230,7 +230,7 @@ public:
        \\ Ex: I.write() ---> Save
        \\ Ex: I.write("g0ta0001.raw") ---> Save as */
    void write(FileName name = "", bool reversed=FALSE,
-      Image_Type image_type=IBYTE) _THROW;
+      Image_Type image_type=IBYTE);
 
    /** Write image to disk using a file pointer.
        This is the core routine of the previous one. */
@@ -421,7 +421,7 @@ public:
        \\ Ex: IX.read("g1ta0002.spd");*/
    virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
       bool reversed=FALSE, bool apply_geo=FALSE,
-      bool only_apply_shifts=FALSE) _THROW;
+      bool only_apply_shifts=FALSE);
    
    /** Write Xmipp image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -430,8 +430,7 @@ public:
        changed. This is somehow like the "Save as ..." and "Save".
        \\ Ex: IX.write() ---> Save
        \\ Ex: IX.write("g1ta0002.spd") ---> Save as */
-   virtual void write(const FileName &_name = "", bool force_reversed=FALSE)
-      _THROW;
+   virtual void write(const FileName &_name = "", bool force_reversed=FALSE);
    //@}
 
    // Header operations interface ..........................................
@@ -760,11 +759,11 @@ public:
 //@{
 /** True if the given volume is an Xmipp image. */
 int Is_ImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE) _THROW;
+      bool reversed=FALSE);
 
 /** True if the given volume is a Fourier Xmipp image. */
 int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE) _THROW;
+      bool reversed=FALSE);
 
 /** Get size of an image.
     It returns -1 if the given image is not an Xmipp file*/
@@ -911,7 +910,7 @@ public:
        image index (-51,51) (what is returned). Don't be mislead by the
        physical position of the pixel (-51,51) which is (76,178).
        \\ Ex: IO.over2img(y,x,iy,ix); */
-   void over2img(double v, double u,int &iv, int &iu) const _THROW
+   void over2img(double v, double u,int &iv, int &iu) const
       { if (v<overvmin || v>overvmax)
            REPORT_ERROR(1505,"ImgeOver::over2img: v out of range");
         if (u<overumin || u>overumax)
@@ -935,7 +934,7 @@ public:
        "physical" position of the pixel (-51,51) is not the true physical
        one, that would be (76,178).
        \\ Ex: IO.img2over(iv,iu,v,u) */
-   void img2over(int iv, int iu, double &v, double &u) const _THROW
+   void img2over(int iv, int iu, double &v, double &u) const
       { if (iu<0 || iu>XSIZE(img))
            REPORT_ERROR(1505,"ImageOver::img2over: iu out of range");
         if (iv<0 || iv>YSIZE(img))
@@ -961,7 +960,7 @@ public:
        An exception is thrown if you try to access an image outside the
        image.
        \\ Ex: cout << IO(1.34,-0.56) << endl; */
-   double operator () (double v, double u) const _THROW
+   double operator () (double v, double u) const
       { if (v<overvmin || v>overvmax)
            REPORT_ERROR(1505,"ImgeOver::over2img: v out of range");
         if (u<overumin || u>overumax)

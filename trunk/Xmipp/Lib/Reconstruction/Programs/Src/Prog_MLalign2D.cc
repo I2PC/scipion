@@ -25,7 +25,7 @@
 #include "../Prog_MLalign2D.hh"
 
 // Read arguments ==========================================================
-void Prog_MLalign2D_prm::read(int argc, char **argv) _THROW  {
+void Prog_MLalign2D_prm::read(int argc, char **argv)  {
 
 
   // Generate new command line for restart procedure
@@ -218,7 +218,7 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
 }
 
 // Read all input selfiles in memory 
-void Prog_MLalign2D_prm::produce_Side_info() _THROW {
+void Prog_MLalign2D_prm::produce_Side_info() {
 
   FileName fn_img, fn_tmp;
   ImageXmipp img;
@@ -401,7 +401,7 @@ void Prog_MLalign2D_prm::produce_Side_info() _THROW {
 }
 
 // estimate initial noise in fourier_mode
-void Prog_MLalign2D_prm::estimate_initial_sigma2() _THROW {
+void Prog_MLalign2D_prm::estimate_initial_sigma2() {
 
   matrix2D<double> Maux,Mave2;
   matrix2D<complex<double> > Fimg,Faux;
@@ -474,7 +474,7 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2() _THROW {
 
 
 // Generate initial references =============================================
-void Prog_MLalign2D_prm::generate_initial_references() _THROW  {
+void Prog_MLalign2D_prm::generate_initial_references()  {
 
   SelFile SFtmp, SFout;
   ImageXmipp Iave,Itmp;
@@ -511,7 +511,7 @@ void Prog_MLalign2D_prm::generate_initial_references() _THROW  {
 }
 
 // Calculate probability density function of all in-plane transformations phi
-void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
+void Prog_MLalign2D_prm::calculate_pdf_phi() {
 
   double r2,pdfpix,sum;
   P_phi.resize(dim,dim);
@@ -536,7 +536,7 @@ void Prog_MLalign2D_prm::calculate_pdf_phi() _THROW {
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
 void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
-			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW {
+			vector <vector< matrix2D<complex<double> > > > &Fref) {
 
   int r1,r2;
   double AA,stdAA,psi,dum,avg,mean_ref,stddev_ref,dummy;
@@ -612,7 +612,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,bool &also_re
 void Prog_MLalign2D_prm::reverse_rotate_reference(
 	     vector <vector< matrix2D<complex<double> > > > &Fref, 
 	     vector <vector< matrix2D<double> > > &Mref, bool &real_space, 
-	     vector<matrix2D<double > > &Mnew) _THROW {
+	     vector<matrix2D<double > > &Mnew) {
 
   double psi,dum,avg,ang;
   matrix2D<double> Maux,Maux2;
@@ -666,7 +666,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
 // Pre-selection of significant refno and ipsi, based on current optimal translation ====================================
 void Prog_MLalign2D_prm::preselect_significant_model_phi(matrix2D<double> &Mimg, vector<matrix1D<double> > &offsets, 
 							 vector <vector< matrix2D<double > > > &Mref, 
-							 matrix2D<int> &Msignificant) _THROW {
+							 matrix2D<int> &Msignificant) {
 
 
   matrix2D<double> Maux,Maux2,Mdsig(n_ref,nr_psi*nr_flip);
@@ -765,7 +765,7 @@ void Prog_MLalign2D_prm::ML_integrate_FS_model_phi(
 	  matrix2D<double > &sigma2, matrix2D<double> &Mwsum_sigma2, 
 	  vector<double> &sumw, vector<double> &sumw_mirror, 
 	  double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
-	  double &opt_xoff, double &opt_yoff, double &sumw_cv, bool &cv_flag) _THROW {
+	  double &opt_xoff, double &opt_yoff, double &sumw_cv, bool &cv_flag) {
 
   matrix2D<double> Maux,Maux2;
   matrix3D<double> Mweight;
@@ -988,7 +988,7 @@ void Prog_MLalign2D_prm::ML_integrate_model_phi_trans(
 	  double &wsum_sigma_noise, double &wsum_sigma_offset, 
 	  vector<double> &sumw, vector<double> &sumw_mirror, 
 	  double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
-	  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW {
+	  matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) {
 
   matrix2D<double> Maux,Mdzero;
   matrix2D<complex<double> > Fimg, Faux;
@@ -1169,7 +1169,7 @@ void Prog_MLalign2D_prm::LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vect
 						    vector <vector< matrix2D<double> > > &Msum_imgs, 
 						    vector<double> &sumw, vector<double> &sumw_mirror, 
 						    double &maxCC, int &opt_refno, double &opt_psi, 
-						    matrix1D<double> &opt_offsets) _THROW {
+						    matrix1D<double> &opt_offsets) {
 
   matrix2D<double> Maux,Maux2;
   matrix2D<complex<double> > Fimg, Faux;
@@ -1258,7 +1258,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 			  double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
 			  double &sumw_cv, double &wsum_sigma_offset, 
                           vector<double> &sumw, vector<double> &sumw_mirror,
-			  vector<int> &count_defocus) _THROW {
+			  vector<int> &count_defocus) {
 
 
   ImageXmipp img;
@@ -1527,7 +1527,7 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 }
 
 void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF, 
-			 double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv ) _THROW {
+			 double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv ) {
 
   FileName fn_tmp,fn_base;
   matrix1D<double> fracline(3);

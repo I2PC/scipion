@@ -27,7 +27,7 @@
 #include <XmippData/xmippArgs.hh>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Microscope_Parameters::read(int argc, char **argv) _THROW {
+void Prog_Microscope_Parameters::read(int argc, char **argv) {
    Prog_parameters::read(argc,argv);
    fn_ctf=get_param(argc,argv,"-ctf","");
    sigma=AtoF(get_param(argc,argv,"-noise","0"));

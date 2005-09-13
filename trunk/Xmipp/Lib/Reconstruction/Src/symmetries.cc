@@ -240,7 +240,7 @@ void SymList::get_shift(int i, matrix1D<double> &shift) const {
    ZZ(shift)=DIRECT_MAT_ELEM(__shift,i,2);
 }
 
-void SymList::set_shift(int i, const matrix1D<double> &shift) _THROW {
+void SymList::set_shift(int i, const matrix1D<double> &shift) {
    if (XSIZE(shift)!=3)
       REPORT_ERROR(1002,"SymList::add_shift: Shift vector is not 3x1");
    DIRECT_MAT_ELEM(__shift,i,0)=XX(shift);
@@ -248,7 +248,7 @@ void SymList::set_shift(int i, const matrix1D<double> &shift) _THROW {
    DIRECT_MAT_ELEM(__shift,i,2)=ZZ(shift);
 }
 
-void SymList::add_shift(const matrix1D<double> &shift) _THROW {
+void SymList::add_shift(const matrix1D<double> &shift) {
    if (XSIZE(shift)!=3)
       REPORT_ERROR(1002,"SymList::add_shift: Shift vector is not 3x1");
    int i=YSIZE(__shift);
@@ -258,7 +258,7 @@ void SymList::add_shift(const matrix1D<double> &shift) _THROW {
 
 // Add matrix ==============================================================
 void SymList::add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
-   int chain_length) _THROW {
+   int chain_length) {
    if (XSIZE(L)!=4 || YSIZE(L)!=4 || XSIZE(R)!=4 || YSIZE(R)!=4 )
       REPORT_ERROR(1002,"SymList::add_matrix: Transformation matrix is not 4x4");
    if (TrueSymsNo()==SymsNo()) {

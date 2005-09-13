@@ -27,7 +27,7 @@
 #include "../xmippArgs.hh"
 
 /* Common functions -------------------------------------------------------- */
-void Prog_parameters::read(int argc, char **argv) _THROW {
+void Prog_parameters::read(int argc, char **argv) {
       fn_in  = get_param(argc,argv,"-i");
       fn_out = get_param(argc,argv,"-o","");
       oext   = get_param(argc,argv,"-oext","");
@@ -61,7 +61,7 @@ void Prog_parameters::usage() {
    }
 }
 
-void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {
+void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) {
    if (Is_ImageXmipp(fn_in)) {
       ImageXmipp I(fn_in);
       Zdim=1;
@@ -80,7 +80,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW {
    }
 }
 
-int Prog_parameters::get_images_to_process() _THROW {
+int Prog_parameters::get_images_to_process() {
    if (Is_ImageXmipp(fn_in)) return 1;
    else if (Is_VolumeXmipp(fn_in)) return 1;
    else {

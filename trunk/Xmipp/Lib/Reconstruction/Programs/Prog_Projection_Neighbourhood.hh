@@ -58,7 +58,7 @@ public:
 public:
    /// Read argument from command line
    /// Also read document & selection files and symmetry list if any.
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /// Show
    void show();

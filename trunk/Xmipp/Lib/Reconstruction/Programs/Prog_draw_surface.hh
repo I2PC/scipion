@@ -77,7 +77,7 @@ public:
     The given color is assigned to the volumem voxel specified by the
     surface (V(S(i,j),i,j)=color). An exception is thrown if the
     surface is not exactly of the same shape as the volume XY plane. */
-   void draw_surface(Volume *vol, const Image *surf, float color) _THROW;
+   void draw_surface(Volume *vol, const Image *surf, float color);
 
 /** Run draw_surface.
     Produces side information, draw the surface and save output volume*/

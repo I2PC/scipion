@@ -65,7 +65,7 @@ public:
 	    An exception is thrown if the input vectors are not of the same size
 	    as the RM ones.*/
 	    
-        void Project(xmippCTVectors &input, xmippCTVectors &output, int _k) _THROW;
+        void Project(xmippCTVectors &input, xmippCTVectors &output, int _k);
 
 	/** Defines Listener class
   	*/

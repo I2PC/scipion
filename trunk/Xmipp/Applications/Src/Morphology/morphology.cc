@@ -40,7 +40,7 @@ public:
    int count;
    int neig;
 public:
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       if (check_param(argc,argv,"-dil"))     	operation=DILATION;
       if (check_param(argc,argv,"-ero"))     	operation=EROSION;

@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
    Plain_ART_Parameters   eprm;
    Crystal_ART_Parameters crystal_art_prm;
    VolumeXmipp            vol_voxels,vol_voxels_aux;  // Volume to reconstruct
-   GridVolume             vol_blobs;
+   GridVolume             vol_basis;
    int                    crystal_mode;
    MPI_Status		  status;            	// Stores MPI directives status
    int 			  num_img_tot;		// The total amount of images 
@@ -113,10 +113,10 @@ int main (int argc, char *argv[]) {
 	{  	
 		comms_t = 0.0; // Initializes time
 	
-      	 	art_prm.produce_Side_Info(vol_blobs,FULL,rank);
-		eprm.produce_Side_Info(art_prm,vol_blobs);
+      	 	art_prm.produce_Side_Info(vol_basis,FULL,rank);
+		eprm.produce_Side_Info(art_prm,vol_basis);
 	
-		Basic_ART_Init_history(art_prm, eprm, vol_blobs);
+		Basic_ART_Init_history(art_prm, eprm, vol_basis);
 
 		// ordered list must be the same in all nodes
 		aux_comm_t = MPI_Wtime();
@@ -132,11 +132,11 @@ int main (int argc, char *argv[]) {
 		FileName aux = art_prm.fn_root;
 		
 		art_prm.fn_root = art_prm.fn_root+ItoA( rank );
-		art_prm.produce_Side_Info(vol_blobs,FULL,rank);
+		art_prm.produce_Side_Info(vol_basis,FULL,rank);
 		
 		// Restore original filename.
 		art_prm.fn_root = aux;
-		eprm.produce_Side_Info(art_prm,vol_blobs);
+		eprm.produce_Side_Info(art_prm,vol_basis);
 		
 		// ordered list must be the same in all nodes
 		MPI_Bcast( MULTIDIM_ARRAY( art_prm.ordered_list ), MULTIDIM_SIZE( art_prm.ordered_list ), MPI_INT, 0, MPI_COMM_WORLD);
@@ -168,8 +168,8 @@ int main (int argc, char *argv[]) {
 
 	art_prm.no_it = 1;
 
-	GridVolume   vol_blobs_aux = vol_blobs;
-	GridVolume   vol_aux2 = vol_blobs;
+	GridVolume   vol_basis_aux = vol_basis;
+	GridVolume   vol_aux2 = vol_basis;
    	
 	// Print some data
 	if( rank == 0 ){
@@ -212,7 +212,7 @@ int main (int argc, char *argv[]) {
 		*/
 
 		cav_t = MPI_Wtime();
-		art_prm.compute_CAV_weights(vol_blobs,num_img_node);
+		art_prm.compute_CAV_weights(vol_basis,num_img_node);
 		GVNeq_aux = *(art_prm.GVNeq);
 		for ( int n = 0 ; n < (art_prm.GVNeq)->VolumesNo(); n++ ){
 		 	MPI_Barrier( MPI_COMM_WORLD );
@@ -257,10 +257,10 @@ int main (int argc, char *argv[]) {
 				
 				art_prm.ordered_list.startingX( ) = -processed; 
 				
-				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
-					vol_aux2(j)() = vol_blobs(j)();
+				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+					vol_aux2(j)() = vol_basis(j)();
 
-                                Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+                                Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
 				processed += art_prm.numIMG;			
 
@@ -268,16 +268,16 @@ int main (int argc, char *argv[]) {
 				
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
-				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
+				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 				{
-					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+					vol_basis(j)() = vol_basis(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
 					MPI_Barrier( MPI_COMM_WORLD );
 					aux_comm_t = MPI_Wtime();
-					MPI_Allreduce( MULTIDIM_ARRAY(vol_blobs(j)()), MULTIDIM_ARRAY(vol_blobs_aux(j)()), MULTIDIM_SIZE( vol_blobs(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+					MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 					aux_t = MPI_Wtime() - aux_comm_t;
 					comms_t += aux_t;
 					comms_t_it += aux_t;
-					vol_blobs(j)() = vol_aux2(j)() + ( vol_blobs_aux(j)() / (double) blocksize );
+					vol_basis(j)() = vol_aux2(j)() + ( vol_basis_aux(j)() / (double) blocksize );
 				}	
 			}
 	        }
@@ -311,7 +311,7 @@ int main (int argc, char *argv[]) {
 				cav_t = MPI_Wtime();
 
 				// Comprobar si incializa a 0
-                                art_prm.compute_CAV_weights( vol_blobs, art_prm.numIMG );
+                                art_prm.compute_CAV_weights( vol_basis, art_prm.numIMG );
 				GVNeq_aux = *(art_prm.GVNeq);
 		
 		 
@@ -330,10 +330,10 @@ int main (int argc, char *argv[]) {
 				}	
 				cavk_it_t += MPI_Wtime()-cav_t;
 				
-				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
-					vol_aux2(j)() = vol_blobs(j)();
+				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+					vol_aux2(j)() = vol_basis(j)();
 					
-				Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+				Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
 				if( ns < ( numsteps - 1 ) )
 				{
@@ -344,22 +344,22 @@ int main (int argc, char *argv[]) {
 				// All processors send their result and get the other's so all of them
 				// have the same volume for the next step.
 
-				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
+				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 				{
-					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+					vol_basis(j)() = vol_basis(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
 					MPI_Barrier( MPI_COMM_WORLD );
 					aux_comm_t = MPI_Wtime();
-					MPI_Allreduce( MULTIDIM_ARRAY(vol_blobs(j)()), MULTIDIM_ARRAY(vol_blobs_aux(j)()), MULTIDIM_SIZE( vol_blobs(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+					MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 					aux_t = MPI_Wtime() - aux_comm_t;
 					comms_t += aux_t;
 					comms_t_it += aux_t;
 			
-					FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_blobs(j)() )
+					FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_basis(j)() )
 				        if( MULTIDIM_ELEM( GVNeq_aux(j)(),i) == 0 )
 					{
-						if( MULTIDIM_ELEM( vol_blobs_aux(j)(),i) == 0 )
+						if( MULTIDIM_ELEM( vol_basis_aux(j)(),i) == 0 )
 						{
-							MULTIDIM_ELEM( vol_blobs(j)(),i) = 0;
+							MULTIDIM_ELEM( vol_basis(j)(),i) = 0;
 						}
 						else
 						{
@@ -372,9 +372,9 @@ int main (int argc, char *argv[]) {
 					}
 					else
 					{
-					  	MULTIDIM_ELEM( vol_blobs(j)(),i) = 
+					  	MULTIDIM_ELEM( vol_basis(j)(),i) = 
 					  		MULTIDIM_ELEM( vol_aux2(j)(),i) + 
-							MULTIDIM_ELEM( vol_blobs_aux(j)(),i) /  
+							MULTIDIM_ELEM( vol_basis_aux(j)(),i) /  
 							MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
 					}
 				}	
@@ -384,27 +384,27 @@ int main (int argc, char *argv[]) {
 		else if( art_prm.parallel_mode == Basic_ART_Parameters::pCAV){
 		
 			// CAV weights calculations have been done before iterations begin in order to avoid recalculate them
-			for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
-				vol_aux2(j)() = vol_blobs(j)();
+			for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+				vol_aux2(j)() = vol_basis(j)();
 				
-			Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+			Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 				
 			// All processors send their result and get the other's so all of them
 			// have the same volume for the next step.
-			for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
+			for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 			{
-				vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+				vol_basis(j)() = vol_basis(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
 				MPI_Barrier( MPI_COMM_WORLD );
 				aux_comm_t = MPI_Wtime();
-				MPI_Allreduce( MULTIDIM_ARRAY(vol_blobs(j)()), MULTIDIM_ARRAY(vol_blobs_aux(j)()), MULTIDIM_SIZE( vol_blobs(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+				MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 				aux_t = MPI_Wtime() - aux_comm_t;
 				comms_t += aux_t;
 				comms_t_it += aux_t;
 				
-				FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_blobs(j)() )
-				          MULTIDIM_ELEM( vol_blobs(j)(),i) = 
+				FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_basis(j)() )
+				          MULTIDIM_ELEM( vol_basis(j)(),i) = 
 					  	MULTIDIM_ELEM( vol_aux2(j)(),i) + 
-						MULTIDIM_ELEM( vol_blobs_aux(j)(),i) /  
+						MULTIDIM_ELEM( vol_basis_aux(j)(),i) /  
 						MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
 						
 			}	
@@ -413,26 +413,26 @@ int main (int argc, char *argv[]) {
 			if(art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
 			   art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT )
 			{
-				for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
-					vol_aux2(j)() = vol_blobs(j)();
+				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+					vol_aux2(j)() = vol_basis(j)();
 			}
 			
-			Basic_ART_iterations(art_prm, eprm, vol_blobs, rank);
+			Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 		
 			// All processors send their result and get the other's so all of them
 			// have the same volume for the next step.
-			for ( int j = 0 ; j < vol_blobs.VolumesNo() ; j++)
+			for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 			{
 			        // SIRT Alg. needs to store previous results but AVSP doesn't
 				if(art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
 				   art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT )
 				{
-					vol_blobs(j)() = vol_blobs(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+					vol_basis(j)() = vol_basis(j)()-vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
 				}
 				
 				MPI_Barrier( MPI_COMM_WORLD );
 				aux_comm_t = MPI_Wtime();
-				MPI_Allreduce( MULTIDIM_ARRAY(vol_blobs(j)()), MULTIDIM_ARRAY(vol_blobs_aux(j)()), MULTIDIM_SIZE( vol_blobs(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+				MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
 				aux_t = MPI_Wtime() - aux_comm_t;
 				comms_t += aux_t;
@@ -441,17 +441,17 @@ int main (int argc, char *argv[]) {
 				if(art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT )
 				{
 					double norm_value = (double) num_img_tot;
-					vol_blobs(j)() = vol_aux2 (j)() + ( vol_blobs_aux(j)()/ norm_value );			
+					vol_basis(j)() = vol_aux2 (j)() + ( vol_basis_aux(j)()/ norm_value );			
 				}
 				else if( art_prm.parallel_mode == Basic_ART_Parameters::pSIRT )
 				{	
 					double norm_value = (double) num_img_tot * (double)( art_prm.ProjXdim() * art_prm.ProjYdim() );
-					vol_blobs(j)() = vol_aux2 (j)() + ( vol_blobs_aux(j)()/ norm_value );			
+					vol_basis(j)() = vol_aux2 (j)() + ( vol_basis_aux(j)()/ norm_value );			
 				}
 				else // ASS
 				{
-					vol_blobs(j)() = vol_blobs_aux(j)();
-					vol_blobs(j)() /= size; // Non-SIRT Normalization
+					vol_basis(j)() = vol_basis_aux(j)();
+					vol_basis(j)() /= size; // Non-SIRT Normalization
 				}
 			}
 		}
@@ -472,12 +472,12 @@ int main (int argc, char *argv[]) {
 				    art_prm.projYdim:art_prm.Youtput_volume_size;
  				int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
 				    art_prm.projXdim:art_prm.Zoutput_volume_size;
-		 		blobs2voxels(vol_blobs, art_prm.blob, &vol_voxels, art_prm.D, 
+		 		blobs2voxels(vol_basis, art_prm.basis.blob, &vol_voxels, art_prm.D, 
         			Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
         			vol_voxels.write(art_prm.fn_root+"it"+ItoA(i+1)+".vol");
 			
-			        if ((art_prm.tell&TELL_SAVE_BLOBS) && (i < num_iter-1 ))
- 					vol_blobs.write(art_prm.fn_root+"it"+ItoA(i+1)+".blob");
+			        if ((art_prm.tell&TELL_SAVE_BASIS) && (i < num_iter-1 ))
+ 					vol_basis.write(art_prm.fn_root+"it"+ItoA(i+1)+".basis");
 			}
 		}
 	}	
@@ -497,12 +497,12 @@ int main (int argc, char *argv[]) {
  	int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
 	  art_prm.projXdim:art_prm.Zoutput_volume_size;
 			 		
-	blobs2voxels(vol_blobs, art_prm.blob, &vol_voxels, art_prm.D,Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+	blobs2voxels(vol_basis, art_prm.basis.blob, &vol_voxels, art_prm.D,Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
  		
 	vol_voxels.write(art_prm.fn_root+".vol");
 		
-	if (art_prm.tell&TELL_SAVE_BLOBS) 
-	    vol_blobs.write(art_prm.fn_root+".blob");
+	if (art_prm.tell&TELL_SAVE_BASIS) 
+	    vol_basis.write(art_prm.fn_root+".basis");
 
 	art_prm.fh_hist.close();			
    	uswtime( &recons_t );

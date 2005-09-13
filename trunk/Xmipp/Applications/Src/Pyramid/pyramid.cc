@@ -32,7 +32,7 @@ public:
    Toperation operation;
    int levels;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       levels=AtoI(get_param(argc,argv,"-levels","1"));
       if      (check_param(argc,argv,"-expand")) operation=Expand;

@@ -31,7 +31,7 @@ class Prog_CorrectPhase_Params: public Prog_parameters {
 public:
    CorrectPhase_Params cpprm;
 public:
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       cpprm.read(argc,argv);
       cpprm.produce_side_info();

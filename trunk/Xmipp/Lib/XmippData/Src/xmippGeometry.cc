@@ -469,7 +469,7 @@ void Euler_direction2angles(matrix1D<double> &v,
 #define CHECK
 //#define DEBUG
 void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
-   double &gamma) _THROW {
+   double &gamma) {
    double abs_sb, sign_sb;
 
    if (XSIZE(A)!=3 || YSIZE(A)!=3)

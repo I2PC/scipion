@@ -135,7 +135,7 @@ public:
 
 public:
   /// Read arguments from command line
-  void read(int argc, char **argv) _THROW;
+  void read(int argc, char **argv);
   
   /// Show
   void show();
@@ -147,34 +147,34 @@ public:
   void extended_usage(bool ML3D=false);
 
   /// Read input images all in memory
-  void produce_Side_info() _THROW;
+  void produce_Side_info();
 
   /// Read document file with defocus groups
-  void read_defocus_groups() _THROW;
+  void read_defocus_groups();
 
   /// Calculate initial sigma2 from average power spectrum of the
   /// experimental images
-  void estimate_initial_sigma2() _THROW;
+  void estimate_initial_sigma2();
 
   /// Generate initial references from random subset averages
-  void generate_initial_references() _THROW;
+  void generate_initial_references();
 
   /// Calculate probability density distribution for in-plane transformations
-  void calculate_pdf_phi() _THROW;
+  void calculate_pdf_phi();
 
   /// Fill vector of matrices with all rotations of reference
   void rotate_reference(vector<ImageXmipp> &Iref, bool &also_real_space, vector <vector< matrix2D<double> > > &Mref,
-			vector <vector< matrix2D<complex<double> > > > &Fref) _THROW;
+			vector <vector< matrix2D<complex<double> > > > &Fref);
 
   /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
   void reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fnew, 
 				vector <vector< matrix2D<double> > > &Mnew, bool &real_space, 
-				vector<matrix2D<double> > &Mref) _THROW;
+				vector<matrix2D<double> > &Mref);
  
   /// Pre-calculate which model and phi have significant probabilities without taking translations into account!
   void preselect_significant_model_phi(matrix2D<double> &Mimg, vector<matrix1D<double> > &offsets, 
 				       vector <vector< matrix2D<double > > > &Mref, 
-				       matrix2D<int> &Msign) _THROW;
+				       matrix2D<int> &Msign);
 
   /// Calculate weighted ML averages for new model and new model
   /// parameters using fourier-space likelihood functions
@@ -185,7 +185,7 @@ public:
 				 vector<double> &sumw, vector<double> &sumw_mirror, 
 				 double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
 				 double &opt_xoff, double &opt_yoff, 
-				 double &sumw_cv, bool &cv_flag) _THROW;
+				 double &sumw_cv, bool &cv_flag);
 
   /// Calculate weighted ML averages for new model and new model parameters 
   void ML_integrate_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
@@ -194,7 +194,7 @@ public:
 				    double &wsum_sigma_noise, double &wsum_sigma_offset, 
 				    vector<double> &sumw, vector<double> &sumw_mirror, 
 				    double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
-				    matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref) _THROW;
+				    matrix1D<double> &opt_offsets, vector<matrix1D<double> > &opt_offsets_ref);
 
   /// Calculate LSQ averages for new model and new model parameters 
   void LSQ_search_model_phi_trans(matrix2D<double> &Mimg, vector <vector< matrix2D<complex<double> > > > &Fref, 
@@ -202,7 +202,7 @@ public:
 				  vector <vector< matrix2D<double> > > &Msum_imgs, 
 				  vector<double> &sumw, vector<double> &sumw_mirror, 
 				  double &minSQ, int &opt_refno, double &opt_psi, 
-				  matrix1D<double> &opt_offsets) _THROW;
+				  matrix1D<double> &opt_offsets);
 
   /// Integrate over all experimental images
   void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, 
@@ -211,7 +211,7 @@ public:
 			      double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
                               double &sumw_cv, double &wsum_sigma_offset, 
 			      vector<double> &sumw, vector<double> &sumw_mirror,
-			      vector<int> &count_defocus) _THROW;
+			      vector<int> &count_defocus);
 
   /// Update all model parameters
   void update_parameters(vector<matrix2D<double> > &wsum_Mref,
@@ -229,7 +229,7 @@ public:
 
   /// Write out reference images, selfile and logfile
   void write_output_files(const int iter, SelFile &SF, DocFile &DF, 
-			  double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv) _THROW;
+			  double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv);
 
 
 };				    

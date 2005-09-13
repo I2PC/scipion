@@ -89,7 +89,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
 
  */
 void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
-   double rot, double tilt, double psi) _THROW;
+   double rot, double tilt, double psi);
 
 /** Projects a single particle into a voxels volume by updating its components this way:
 
@@ -103,7 +103,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 */	
 	
 
-void singleWBP(matrix3D<double> &V, Projection &P) _THROW;
+void singleWBP(matrix3D<double> &V, Projection &P);
  
 /** Count equations in volume.
    For Component AVeraing (CAV), the number of equations in which

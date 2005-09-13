@@ -112,28 +112,28 @@ int best_prec(float F, int _width);
 /** String (char *) --> Float.
     \\Ex: key=AtoF(first_token(line),1602,"Error reading key"); */
 float AtoF(const char *str, int _errno=2101, string errmsg="Error in AtoF",
-      int exit=0) _THROW;
+      int exit=0);
 
 /** String (Stl) --> Float.
     \\Ex: key=AtoF(str,1602,"Error reading key"); */
 inline float AtoF(const string str, int _errno=2101, string errmsg="Error in AtoF",
-      int exit=0) _THROW {return AtoF(str.c_str(),_errno,errmsg,exit);}
+      int exit=0) {return AtoF(str.c_str(),_errno,errmsg,exit);}
 
 /** String (char *) --> Integer.
     \\Ex: param_no=AtoI(next_token(),1602,"Error reading number parameters")*/
 int   AtoI(const char *str, int _errno=2102, string errmsg="Error in AtoI",
-      int exit=0) _THROW;
+      int exit=0);
 
 /** String (Stl) --> Integer.
     \\Ex: param_no=AtoI(str,1602,"Error reading number parameters")*/
 inline int AtoI(const string str, int _errno=2102, string errmsg="Error in AtoI",
-      int exit=0) _THROW {return AtoI(str.c_str(),_errno,errmsg,exit);}
+      int exit=0) {return AtoI(str.c_str(),_errno,errmsg,exit);}
 
 /** String (char *) --> Long Long Integer.
     \\Ex: param_no=AtoLL(next_token(),1602,"Error reading number
     parameters")*/
 long long AtoLL(const char *str, int _errno=2102, string errmsg="Error in AtoL",
-      int exit=0) _THROW;
+      int exit=0);
 
 /** Float --> String.
     If precision==0 then the precision is automatically computed
@@ -158,7 +158,7 @@ string ItoA(int I, int _width=0, char fill_with='0');
     character.
     \\ Ex: param_no=CtoI(token,1602,"Error reading number parameters")*/
 int   CtoI(const char *str, int _errno=2103, string errmsg="Error in CtoI",
-      int exit=0) _THROW;
+      int exit=0);
 
 /** String --> String with given length.
     The output string will have the information of the input one with the
@@ -169,7 +169,7 @@ string AtoA(const string &str, int _width=0);
 
 /** Check angle.
     If the argument is not "rot", "tilt" nor "psi" an exception is thrown */
-void check_angle_descr(const string &str) _THROW;
+void check_angle_descr(const string &str);
 
 /** To lower.
     All characters between A-Z are brought to a-z. Result is rewritten
@@ -252,7 +252,7 @@ inline char * next_token() {return strtok((char *)NULL," \n");}
        \Ref{first_token}). Further word readings should use the function
        \Ref{read_next_word}. */
    char * first_word(char *str, int _errno=2106, 
-    string errmsg="first word: String not found", int exit = 0) _THROW;
+    string errmsg="first word: String not found", int exit = 0);
 
    /** Get non empty string (string).
        Same as the previous function but for STL strings. */
@@ -303,19 +303,19 @@ void tokenize(const string& str,
 template <class T> 
 void read_float_list(const char *str, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
-   int exit=0) _THROW;
+   int exit=0);
 
 /** list --> STL vector. */
 template <class T> 
 void read_float_list(const string &str, int &i, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
-   int exit=0) _THROW;
+   int exit=0);
 
 /** list --> matrix1D. */
 template <class T> 
 void read_float_list(const char *str, int N, matrix1D<T> &v,
    int _errno=2105, string errmsg="Error reading floating list",
-   int exit=0) _THROW;
+   int exit=0);
 
 
 //@}
@@ -349,7 +349,7 @@ char *get_param(int argc, char **argv, const char *param,
                 const char *option = NULL, 
 	        int _errno=-1, 
 		string errmsg="",
-		int exit = 0) _THROW;
+		int exit = 0);
 
 /** Get 2 float parameters after a flag from the command line.
     An exception is thrown if there are not enough parameters after the flag,
@@ -360,7 +360,7 @@ bool get_2_double_params(int argc, char **argv, const char *param,
    double &v1, double &v2, double v1_def, double v2_def,
    int _errno=2104, 
    string errmsg="",
-   int exit = 0) _THROW;
+   int exit = 0);
 
 /** Get 3 float parameters after a flag from the command line.
     An exception is thrown if there are not enough parameters after the flag,
@@ -372,7 +372,7 @@ bool get_3_double_params(int argc, char **argv, const char *param,
    double v1_def, double v2_def, double v3_def,
    int _errno=2104, 
    string errmsg="",
-   int exit = 0) _THROW;
+   int exit = 0);
 
 /** Get boolean parameters from the command line.
     This function assumes that the command line is structured in such a
@@ -521,7 +521,7 @@ void generate_command_line(const string &command_line, int &argcp,
     string get_param(FILE *fh, const char *param, int skip=0,
        const char *option=NULL, int _errno=-1, 
        string errmsg="",
-       int exit = 0) _THROW;
+       int exit = 0);
 
 /** Check if a parameter is present in a file.
     The same as the previous function, but this function only reports
@@ -535,7 +535,7 @@ void generate_command_line(const string &command_line, int &argcp,
 matrix1D<double> get_vector_param(FILE *fh, const char *param,
    int dim=2, int _errno=-1, 
    string errmsg="",
-   int exit = 0) _THROW;
+   int exit = 0);
 
 //@}
 //@}

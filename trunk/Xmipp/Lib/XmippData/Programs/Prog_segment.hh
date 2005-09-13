@@ -67,7 +67,7 @@ public:
        Read the input volume, and compute the number of voxels
        if not given. An exception is thrown if no way is given to compute
        the voxel mass*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /** Really compute the mask. If a mask name is given then it is 
        written to disk.*/

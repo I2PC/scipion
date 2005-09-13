@@ -68,7 +68,7 @@ void Basis::read(int argc, char **argv) {
    get_param(fh,flag,0,default_value)
 #define CHECK_PARAM(flag) \
    check_param(fh,flag)
-void Basis::read(const FileName &fn) _THROW {
+void Basis::read(const FileName &fn) {
    FILE *fh;
    if ((fh = fopen(fn.c_str(), "r")) == NULL)
       REPORT_ERROR(3005,

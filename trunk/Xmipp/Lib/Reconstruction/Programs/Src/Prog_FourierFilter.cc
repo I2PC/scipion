@@ -62,7 +62,7 @@ FourierMask & FourierMask::operator = (const FourierMask &F) {
 }
 
 /* Read parameters from command line. -------------------------------------- */
-void FourierMask::read(int argc, char **argv) _THROW {
+void FourierMask::read(int argc, char **argv) {
    clear();
 
    // Filter shape .........................................................
@@ -170,7 +170,7 @@ void FourierMask::usage() {
 
 /* Generate mask for a resized image --------------------------------------- */
 template <class T>
-void FourierMask::generate_mask(T &v) _THROW {
+void FourierMask::generate_mask(T &v) {
    int dim=SPACE_DIM(v);
    // Resize Xmipp real mask
    bool copy_from_Xmipp_real_mask=TRUE;
@@ -262,7 +262,7 @@ void FourierMask::generate_mask(T &v) _THROW {
 }
 
 template <class T>
-void FourierMask::generate_CTF_mask(T &v) _THROW {
+void FourierMask::generate_CTF_mask(T &v) {
    STARTINGX(mask2D)=STARTINGY(mask2D)=0;
    int dim=SPACE_DIM(v);
    if (dim!=2)

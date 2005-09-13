@@ -79,19 +79,19 @@
        Converts a Xmipp FFT into a vtkImageData with an FFT.
        An exception is thrown if the input array does not have an even
        dimension on X.*/
-   void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) _THROW;
+   void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval);
    
    /** FFT_Xmipp -> VTK 2D.
        Converts a Xmipp FFT into a vtkImageData with an FFT.
        An exception is thrown if the input array does not have an even
        dimension on X.*/
-   void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW;
+   void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval);
 
    /** FFT_Xmipp -> VTK 3D.
        Converts a Xmipp FFT into a vtkImageData with an FFT.
        An exception is thrown if the input array does not have an even
        dimension on X.*/
-   void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval) _THROW;
+   void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval);
 
    /** VTK -> FFT_Xmipp.
        Converts a vtkImageData with an FFT to an Xmipp FFT */
@@ -109,19 +109,19 @@
        An exception is thrown if the dimensionality of the VTK object
        does not fit into the target Xmipp type.*/
    template <class T, class VTKT>
-      void xmippArray_resize_VTK(matrix1D<T> &retval, VTKT *v) _THROW;
+      void xmippArray_resize_VTK(matrix1D<T> &retval, VTKT *v);
 
    /** Resize a XmippMatrix after a VTK object.
        An exception is thrown if the dimensionality of the VTK object
        does not fit into the target Xmipp type.*/
    template <class T, class VTKT>
-      void xmippArray_resize_VTK(matrix2D<T> &retval, VTKT *v) _THROW;
+      void xmippArray_resize_VTK(matrix2D<T> &retval, VTKT *v);
 
    /** Resize a XmippVolume after a VTK object.
        An exception is thrown if the dimensionality of the VTK object
        does not fit into the target Xmipp type.*/
    template <class T, class VTKT>
-      void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v) _THROW;
+      void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v);
 
    /** Resize a VTK object after another VTK object.*/
    template <class VTKT>
@@ -169,7 +169,7 @@
        If the vector has got more than 3 coordinates, then an exception
        is thrown*/
    inline void VTK_FFT_idx2digfreq(vtkImageData *fft, const matrix1D<int> &idx,
-      matrix1D<double> &freq) _THROW {
+      matrix1D<double> &freq) {
          if (XSIZE(idx)<1 || XSIZE(idx)>3)
             REPORT_ERROR(1,"FFT_idx2digfreq: Index is not of the correct size");
          freq.resize(XSIZE(idx));
@@ -191,7 +191,7 @@
        If the vector has got more than 3 coordinates, then an exception
        is thrown*/
    inline void VTK_digfreq2FFT_idx(vtkImageData *fft, const matrix1D<double> &freq,
-      matrix1D<int> &idx) _THROW {
+      matrix1D<int> &idx) {
          if (XSIZE(freq)<1 || XSIZE(freq)>3)
             REPORT_ERROR(1,"digfreq2FFT_idx: freq is not of the correct size");
          idx.resize(XSIZE(freq));
@@ -248,7 +248,7 @@
    /** Phase of FFT.
        An exception is thrown if the operation is not valid. */
    template <class maT>
-      void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) _THROW;
+      void VTK_FFT_phase(vtkImageData *fft_in, maT &phase);
 
    /** Inverse FFT of a vector/image/volume */
    void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out, bool

@@ -26,7 +26,7 @@
 #include "../xmippVirus.hh"
 #include <XmippData/xmippArgs.hh>
 
-void VirusEulerMatrices::read(const FileName &fn) _THROW {
+void VirusEulerMatrices::read(const FileName &fn) {
    ifstream  fh_Euler;
    int       line_no=0;
    string    line;

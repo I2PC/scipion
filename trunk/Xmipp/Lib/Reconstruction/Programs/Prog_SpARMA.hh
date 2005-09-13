@@ -130,9 +130,9 @@ public:
    /// Read parameters from command line
    void read(int argc, char **argv);
    /// Read parameters from command line
-   void read(const FileName &file) _THROW;
+   void read(const FileName &file);
    /// Write to a file
-   void write(const FileName &fn, bool rewrite=TRUE) _THROW;
+   void write(const FileName &fn, bool rewrite=TRUE);
 };
 
 #endif

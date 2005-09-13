@@ -71,7 +71,7 @@ public:
 
    /** Read parameters from a file.
        An exception is thrown if the file cannot be open */
-   void read(const FileName &fn) _THROW;
+   void read(const FileName &fn);
 
    /** Produce side information.
        You must provide the grid in which this basis function will live */

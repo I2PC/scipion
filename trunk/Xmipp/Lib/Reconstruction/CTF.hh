@@ -156,7 +156,7 @@ public:
        does not want to activate that part and the noise or the CTF
        are removed from the model unless the disable_if_not_K is set
        to FALSE*/
-   void read(const FileName &fn, bool disable_if_not_K=TRUE) _THROW;
+   void read(const FileName &fn, bool disable_if_not_K=TRUE);
    
    /** Write to file.
        An exception is thrown if the file cannot be open.*/

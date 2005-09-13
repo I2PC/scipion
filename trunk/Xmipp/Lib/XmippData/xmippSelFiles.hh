@@ -131,7 +131,7 @@ public:
    /** Read a Selection Line.
        An exception is thrown if the line doesn't meet the Selection
        File specifications. */
-   friend istream& operator >> (istream& o, SelLine &SFL) _THROW;
+   friend istream& operator >> (istream& o, SelLine &SFL);
    //@}
 };
 
@@ -224,7 +224,7 @@ public:
        After reading the selfile pointer is moved to the first ACTIVE
        image. 
        \\Ex: SF.read("g2t.sel"); */
-   void read(const FileName &sel_name, int overrinding=1) _THROW;
+   void read(const FileName &sel_name, int overrinding=1);
    
    /** Append a file from disk to an already read one.
        The old information on the variable is not lost. All lines in
@@ -266,7 +266,7 @@ public:
        this point on the name of the selection file has changed.
        \\Ex: SF.write(); ---> Save
        \\Ex: SF.write("g3t.sel") ---> Save as ... */
-   void write(const FileName &sel_name="") _THROW;
+   void write(const FileName &sel_name="");
    //@}
 
    // Moving the current_line "pointer" ....................................
@@ -403,7 +403,7 @@ public:
        An exception is thrown if the first valid image in the sel file,
        doesn't exist in the disk or it is not a XMIPP image.
        \\ Ex: SF.ImgSize(Ydim,Xdim); */
-   void ImgSize(int &Ydim, int &Xdim) _THROW;
+   void ImgSize(int &Ydim, int &Xdim);
    
    /** Returns the extension of the files inside.
        This function returns the extension of the first active file.*/
@@ -485,7 +485,7 @@ public:
        The current line is still pointing to the same line as it was
        before entering the function.
        \\ Ex: SF.insert("g1ta0000",SelLine::ACTIVE); */
-   void insert(const SelLine &_selline) _THROW;
+   void insert(const SelLine &_selline);
 
    /** Insert a comment before the current line.
        Comments must not start with any special character since a "#" is

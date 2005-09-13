@@ -120,9 +120,9 @@ public:
     First line is skipped. A vector of SPOT structs is created
     with the data, number of epots is in spots_number.
   */
-   void read(const FileName &fn, const int mrc_label ) _THROW;
+   void read(const FileName &fn, const int mrc_label );
 /** write aph-origtiltd like files */   
-   void write(const FileName &fn) const _THROW;
+   void write(const FileName &fn) const;
 /** Empties actual APH structure. */
    void clear();
 /** Move spots from assymetric unit to the plane  h>0

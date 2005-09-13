@@ -39,7 +39,7 @@ public:
    int corner_pad;
 
    
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       init_value=0.;
       wrong_parameters=0;
       average_pad=FALSE;

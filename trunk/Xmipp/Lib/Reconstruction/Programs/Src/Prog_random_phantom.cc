@@ -272,7 +272,7 @@ void generate_realization_of_random_phantom(
 /* Main Random Phantom Routine --------------------------------------------- */
 //#define DEBUG
 void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
-   Phantom &Realization) _THROW {
+   Phantom &Realization) {
 
 // Produce Side Information
    Random_Phantom_Side_Info side;

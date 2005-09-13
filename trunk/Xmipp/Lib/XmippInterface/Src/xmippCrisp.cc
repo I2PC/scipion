@@ -29,7 +29,7 @@
  ***************************************************************************/
 #include "../xmippCrisp.hh"
 
-void CrispVolume::read(const FileName &fn) _THROW {
+void CrispVolume::read(const FileName &fn) {
   FILE *fp; 
 
   // Clear Image first

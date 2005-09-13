@@ -410,7 +410,7 @@ void QtMainWidgetMark::compute_alphas() {
 }
 
 /* Write angles in file ---------------------------------------------------- */
-void QtMainWidgetMark::write_angles() _THROW {
+void QtMainWidgetMark::write_angles() {
    if (!there_is_tilted()) return;
    recalculate_passing_matrix();
    compute_gamma();

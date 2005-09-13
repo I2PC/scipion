@@ -36,10 +36,10 @@ template <class T>
    bool operator == (const maT &op1, const maT &op2);
 template <class T>
    void core_array_by_scalar(const maT &op1, const T &op2,
-      maT &result, char operation) _THROW;
+      maT &result, char operation);
 template <class T>
    void core_scalar_by_array(const T &op1, const maT &op2,
-      maT &result, char operation) _THROW;
+      maT &result, char operation);
 template <class T>
    void core_array_by_array(const maT &op1, const maT &op2,
-      maT &result, char operation) _THROW;
+      maT &result, char operation);

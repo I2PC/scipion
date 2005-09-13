@@ -59,15 +59,15 @@ public:
    Prog_parameters() {oroot=oext=fn_out=fn_in="";
       each_image_produces_an_output=TRUE; allow_time_bar=TRUE; apply_geo=FALSE;}
    /// Read the basic parameters defined for this class
-   virtual void read(int argc, char **argv) _THROW;
+   virtual void read(int argc, char **argv);
    /// Show these parameters
    virtual void show();
    /// Usage
    virtual void usage();
    /// Get input size
-   void get_input_size(int &Zdim, int &Ydim, int &Xdim) _THROW;
+   void get_input_size(int &Zdim, int &Ydim, int &Xdim);
    /// Get the number of images to process
-   int get_images_to_process() _THROW;
+   int get_images_to_process();
 };
 
 #define IMAGE2IMAGE     1

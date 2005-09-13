@@ -557,7 +557,7 @@ template <class T>
 }
 
 // Read from command lines -------------------------------------------------
-void Mask_Params::read(int argc, char **argv) _THROW {
+void Mask_Params::read(int argc, char **argv) {
    int i=position_param(argc,argv,"-center");
    if (i!=-1) {
       if (i+3>=argc)

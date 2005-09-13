@@ -755,7 +755,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
 /* ------------------------------------------------------------------------- */// Based on Spider
 #ifdef NEVER_DEFINED
 void compute_resolution(VolumeXmipp &vol_phantom,
-   VolumeXmipp &vol_recons, double &resolution) _THROW {
+   VolumeXmipp &vol_recons, double &resolution) {
    int tell=1;
    // If the phantom is not saved, save it
    FileName ext=vol_recons.name().get_extension();
@@ -822,7 +822,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 
 // Based on Bsoft
 void compute_resolution(VolumeXmipp &vol_phantom,
-  VolumeXmipp &vol_recons, double &resolution) _THROW {
+  VolumeXmipp &vol_recons, double &resolution) {
    // Prepare volumes to be evaluated
    if (vol_phantom.name()!="")
       system(((string)"ln -s "+vol_phantom.name()+" superfeo.spi").c_str());
@@ -856,7 +856,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 // Based on Bsoft
 double compute_FSC(VolumeXmipp &vol_phantom,
    VolumeXmipp &vol_recons, double sampling_rate,
-   matrix1D<double> &frequency, matrix1D<double> &FSC) _THROW {
+   matrix1D<double> &frequency, matrix1D<double> &FSC) {
    double resolution=-1;
    frequency.clear();
    FSC.clear();

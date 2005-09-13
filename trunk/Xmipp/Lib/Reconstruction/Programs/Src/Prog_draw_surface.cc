@@ -62,7 +62,7 @@ void Prog_Draw_Surface_Parameters::produce_Side_Info() {
 /* Draw surface in volume -------------------------------------------------- */
 #define V VOLMATRIX(*vol)
 #define S IMGMATRIX(*surf)
-void draw_surface(Volume *vol, const Image *surf, float color) _THROW {
+void draw_surface(Volume *vol, const Image *surf, float color) {
    if (XSIZE(V)!=XSIZE(S)         || YSIZE(V)!=YSIZE(S) ||
        STARTINGX(V)!=STARTINGX(S) || STARTINGY(V)!=STARTINGY(S))
        REPORT_ERROR(1,"draw_surface: Volume and surface are of different size");

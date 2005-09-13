@@ -69,7 +69,7 @@ template <class T>
 
 /* Outside ----------------------------------------------------------------- */
 template <class T>
-   bool VT::outside(const matrix1D<double> &v) const _THROW {
+   bool VT::outside(const matrix1D<double> &v) const {
    if (XSIZE(v)<3)
       REPORT_ERROR(1,"Outside: index vector has got not enough components");
    return (XX(v)<STARTINGX(*this) || XX(v)>FINISHINGX(*this) ||
@@ -93,7 +93,7 @@ template <class T>
 
 template <class T>
    bool VT::intersects(const matrix1D<double> &corner1,
-      const matrix1D<double> &corner2) const _THROW {
+      const matrix1D<double> &corner2) const {
        if (XSIZE(corner1)!=2 || XSIZE(corner2)!=2)
           REPORT_ERROR(1002,"intersects 1D: corner sizes are not 1");
        return intersects(XX(corner1),YY(corner1),ZZ(corner1),
@@ -122,7 +122,7 @@ template <class T>
 
 /* Corner ------------------------------------------------------------------ */
 template <class T>
-   bool VT::isCorner(const matrix1D<double> &v) _THROW {
+   bool VT::isCorner(const matrix1D<double> &v) {
    if (XSIZE(v)<3)
       REPORT_ERROR(1,"isCorner: index vector has got not enough components");
    return ((ZZ(v)==STARTINGZ(*this)  && XX(v)==STARTINGX(*this)  && YY(v)==STARTINGY(*this))  ||
@@ -137,7 +137,7 @@ template <class T>
 
 /* Border ------------------------------------------------------------------ */
 template <class T>
-   bool VT::isBorder(const matrix1D<int> &v) _THROW 
+   bool VT::isBorder(const matrix1D<int> &v) 
 {
    if (XSIZE(v)<3)
       REPORT_ERROR(1,"isBorder: index vector has got not enough components");
@@ -419,7 +419,7 @@ template <class T>
 
 /* Get slice --------------------------------------------------------------- */
 template <class T>
-   void VT::getSlice(int k, mT &M, char axis) const _THROW {
+   void VT::getSlice(int k, mT &M, char axis) const {
    if (xdim==0) {M.clear(); return;}   
    switch (axis) {
       case 'Z':
@@ -462,7 +462,7 @@ template <class T>
 
 /* Set slice --------------------------------------------------------------- */
 template <class T>
-   void VT::setSlice(int k, const mT &v) _THROW {
+   void VT::setSlice(int k, const mT &v) {
    if (xdim==0) return;
    if (k<zinit || k>=zinit+zdim)
       REPORT_ERROR(1203,"setSlice: matrix3D subscript (k) out of range");
@@ -541,7 +541,7 @@ template <class T>
 //#define DEBUG
 template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
-      bool wrap) _THROW {
+      bool wrap) {
    int m1, n1, o1, m2, n2, o2;
    double x, y, z, xp, yp, zp;
    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
@@ -706,7 +706,7 @@ template <class T>
 //#define DEBUG
 template <class T>
    void apply_geom_Bspline(VT &V2, matrix2D<double> A, const VT &V1,
-      int Splinedegree, bool inv, bool wrap, T outside) _THROW {
+      int Splinedegree, bool inv, bool wrap, T outside) {
    int m1, n1, o1, m2, n2, o2;
    double x, y, z, xp, yp, zp;
    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
@@ -830,7 +830,7 @@ template <class T>
 template <>
    void apply_geom_Bspline(matrix3D< complex<double> > &M2,
       matrix2D<double> A, const matrix3D< complex<double> > &M1,
-   int Splinedegree, bool inv, bool wrap, complex<double> outside) _THROW {
+   int Splinedegree, bool inv, bool wrap, complex<double> outside) {
    REPORT_ERROR(1,"apply_geom_Bspline: Not yet implemented for complex matrices\n");
 }
 
@@ -1021,7 +1021,7 @@ template <class T>
 template <class T>
 void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
                     matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
-                    const bool &rounding) _THROW
+                    const bool &rounding)
 {
    matrix1D<double> idx(3);
    

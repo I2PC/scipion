@@ -178,7 +178,7 @@ public:
        description), generates a global sphere mask (if necessary)
        and label the phantom volume according to the different
        features. Labelling Xmipp volumes is not implemented yet. */
-   void produce_Side_Info(const Prog_Evaluate_Parameters &prm) _THROW;
+   void produce_Side_Info(const Prog_Evaluate_Parameters &prm);
 };
 
 /** Evaluation result class.
@@ -287,7 +287,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
     to see interactively the voxel values in the phantom and in the
     reconstruction. */
 void show_FOMs(const Prog_Evaluate_Parameters &prm,
-   EVALUATE_Side_Info &side, const EVALUATE_results &results) _THROW;
+   EVALUATE_Side_Info &side, const EVALUATE_results &results);
 
 /** Main Evaluation routine.
     This is the main function of the program Evaluate. It takes a

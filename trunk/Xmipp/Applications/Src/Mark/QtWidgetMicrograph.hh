@@ -348,7 +348,7 @@ public:
    void classify_errors();
    
    // Write all important information for particle selecting to a file
-   void write() _THROW;
+   void write();
    
    // Configure auto
    void configure_auto();

@@ -81,7 +81,7 @@ public:
     containing the magnitude and phase (spots_abs and spots_arg) and the  
     FOMs.
     */
-   void read_from_prepmklcf(const FileName &fn) _THROW;
+   void read_from_prepmklcf(const FileName &fn);
 
 /** Empties actual APH structure. */
    void clear();

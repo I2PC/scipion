@@ -57,7 +57,7 @@ void Prog_IDR_ART_Parameters::read(const FileName &fn) {
    fclose(fh);
 }
 
-void Prog_IDR_ART_Parameters::produce_side_info() _THROW {
+void Prog_IDR_ART_Parameters::produce_side_info() {
    // Generate relaxation parameters
    if (XSIZE(muF_list)==0) mu_list=mu0_list;
    else {

@@ -86,7 +86,7 @@ public:
    Prog_angular_predict_continuous_prm();
 
    /// Read argument from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /// Show
    void show();
@@ -96,13 +96,13 @@ public:
 
    /** Produce side info.
        An exception is thrown if any of the files is not found*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /** Get initial guess of the pose.
        This guess is taken from the input document file. An exception is
        thrown if the initial guess cannot be taken from the file.*/
    void get_initial_guess(double &shiftX, double &shiftY,
-      double &rot, double &tilt, double &psi) _THROW;
+      double &rot, double &tilt, double &psi);
 
    /** Predict angles and shift.
        At the input the pose parameters must have an initial guess of the
@@ -130,7 +130,7 @@ public:
       matrix2D<double> &weight,
       matrix1D<double> &pose_parameters,
       int               max_no_iter=60
-   ) _THROW;
+   );
 
 /* Data structure for Continuous Angular assignment.
     All output vectors, matrices, volumes, ... must be previously

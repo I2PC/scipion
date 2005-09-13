@@ -210,7 +210,7 @@ public:
        \\ Ex: V.read(65,65,65,"art0001.raw");*/
 
    void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=FALSE,
-      Volume_Type volume_type=VBYTE) _THROW;
+      Volume_Type volume_type=VBYTE);
 
    /** Read image from disk using a file pointer.
        This is the core routine of the previous one. */
@@ -225,7 +225,7 @@ public:
        \\ Ex: V.write() ---> Save
        \\ Ex: V.write("art0002.raw") ---> Save as */
    void write(FileName name = "", bool reversed=FALSE,
-      Volume_Type volume_type=VBYTE) _THROW;
+      Volume_Type volume_type=VBYTE);
 
    /** Write image to disk using a file pointer.
        This is the core routine of the previous one. */
@@ -428,7 +428,7 @@ public:
        skip this check and provide the reversed status via force_reversed.
        \\ Ex: VX.read("art0001.vol");*/
    void read(const FileName &_name, bool skip_type_check=FALSE,
-      bool force_reversed=FALSE) _THROW;
+      bool force_reversed=FALSE);
 
    /** Write Xmipp volume to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -439,7 +439,7 @@ public:
        \\ Ex: VX.write("art0002.vol") ---> Save as 
        If force_reversed is TRUE then image is saved in reversed mode,
        if not it is saved in the same mode as it was loaded.*/
-   void write(const FileName &_name = "", bool force_reversed=FALSE) _THROW;
+   void write(const FileName &_name = "", bool force_reversed=FALSE);
    //@}
 
    // Header operations interface ..........................................
@@ -495,12 +495,12 @@ typedef VolumeXmippT<complex<double> > FourierVolumeXmipp;
 /** True if the given volume is an Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
 int Is_VolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
-   bool force_reversed=FALSE) _THROW;
+   bool force_reversed=FALSE);
 
 /** True if the given volume is a Fourier Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
 int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
-   bool force_reversed=FALSE) _THROW;
+   bool force_reversed=FALSE);
 
 /** Get size of a volume.
     It returns -1 if the file is not an Xmipp volume.*/

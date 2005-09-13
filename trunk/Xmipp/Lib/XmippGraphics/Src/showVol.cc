@@ -47,7 +47,7 @@ void ShowVol::initWithFile( int _numRows, int _numCols,
 
 /* Read a Volume ---------------------------------------------------------- */
 void ShowVol::readFile(const FileName &_fn,
-   double _minGray, double _maxGray) _THROW {
+   double _minGray, double _maxGray) {
     FileName aux_fn=_fn;
     clear();
 

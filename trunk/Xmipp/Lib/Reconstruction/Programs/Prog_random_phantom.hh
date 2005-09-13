@@ -120,6 +120,6 @@ void generate_realization_of_random_phantom(
     been given). The realization is also
     returned in the Phantom variable. */
 void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
-   Phantom &Realization) _THROW;
+   Phantom &Realization);
 //@}
 #endif

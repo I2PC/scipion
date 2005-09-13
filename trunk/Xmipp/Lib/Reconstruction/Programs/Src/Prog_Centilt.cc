@@ -25,7 +25,7 @@
 #include "../Prog_Centilt.hh"
 
 // Read arguments ==========================================================
-void Prog_centilt_prm::read(int argc, char **argv) _THROW  {
+void Prog_centilt_prm::read(int argc, char **argv)  {
 
   FileName fn_sel;
 
@@ -86,7 +86,7 @@ void Prog_centilt_prm::usage() {
 }
 
 // Center one tilted image  =====================================================
-bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf) _THROW {
+bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf) {
 
   matrix2D<double> A(3,3),Maux(It()),Mcorr(It());
   int              n_max=-1;
@@ -169,7 +169,7 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
 }
 
 // Main program  ===============================================================
-void Prog_centilt_prm::centilt() _THROW {
+void Prog_centilt_prm::centilt() {
 
   DocFile           DFo;
   FileName          fn_img;

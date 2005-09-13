@@ -28,7 +28,7 @@
 #include <XmippData/xmippFFT.hh>
 
 /* Read -------------------------------------------------------------------- */
-void XmippCTF::read(const FileName &fn, bool disable_if_not_K) _THROW {
+void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
    FILE *fh_param;
    if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
       REPORT_ERROR(1,

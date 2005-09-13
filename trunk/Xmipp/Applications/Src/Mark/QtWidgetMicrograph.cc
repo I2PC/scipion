@@ -1433,7 +1433,7 @@ void QtWidgetMicrograph::classify_errors() {
 }
 
 /* Write to a file --------------------------------------------------------- */
-void QtWidgetMicrograph::write() _THROW {
+void QtWidgetMicrograph::write() {
    // Get the rootname
    bool ok;
    string fn_root=(QInputDialog::getText("Saving model",

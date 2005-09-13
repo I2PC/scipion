@@ -30,7 +30,7 @@ class Markhan_parameters: public Prog_parameters {
 public:
    int symmetry;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       symmetry=AtoI(get_param(argc,argv,"-symorder"));
    }

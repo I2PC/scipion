@@ -57,7 +57,7 @@ protected:
 
     /* Read a volume file */
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0) _THROW;
+       double _minGray=0, double _maxGray=0);
     /* Open a new file.
        The old window and volume parameters must be discarded */
     virtual void openNewFile (const FileName &);

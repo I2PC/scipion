@@ -77,13 +77,13 @@ public:
    /** Read projection parameters from a file.
        An exception is thrown if the file is not found or any of the
        parameters is not found in the right place.*/
-   void read(FileName fn_crystal) _THROW;
+   void read(FileName fn_crystal);
 
    /** Write projection parameters to a file.
        The projection parameters are written into a file wth the same
        structure as always. If the file cannot be openned for output
        an exception is thrown. */
-   void write(FileName fn_crystal) _THROW;
+   void write(FileName fn_crystal);
 };
 
 /* Project as crystal ------------------------------------------------------ */
@@ -108,7 +108,7 @@ void find_crystal_limits(
    const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2, 
    const matrix1D<double> &corner1, const matrix1D<double> &corner2,
    const matrix1D<double> &a, const matrix1D<double> &b,
-   int &iamin, int &iamax, int &ibmin, int &ibmax) _THROW;
+   int &iamin, int &iamax, int &ibmin, int &ibmax);
 
 /** Move following a spiral.
     Starting in a given position this function visits a matrix using

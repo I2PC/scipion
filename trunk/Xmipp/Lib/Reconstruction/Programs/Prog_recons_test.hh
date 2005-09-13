@@ -238,7 +238,7 @@ public:
    FileName fn_smooth_evaluation_mask;
 public:
    /** Read parameters from file. */
-   void read(const FileName &fn_test_params) _THROW;
+   void read(const FileName &fn_test_params);
    
    /** Show parameters */
    friend ostream & operator << (ostream &out, const Recons_test_Parameters

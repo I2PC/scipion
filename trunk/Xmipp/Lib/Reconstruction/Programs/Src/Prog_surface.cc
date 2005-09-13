@@ -26,7 +26,7 @@
 #include "../Prog_surface.hh"
 
 /* Read from command line ================================================== */
-void Prog_Surface_Parameters::read(int argc, char **argv) _THROW {
+void Prog_Surface_Parameters::read(int argc, char **argv) {
    fn_phantom     = get_param(argc, argv, "-i","");
    probe_radius   = AtoF(get_param(argc, argv, "-r","0.5"));
    fn_top         = get_param(argc, argv, "-top","");
@@ -71,7 +71,7 @@ void Prog_Surface_Parameters::produce_Side_Info() {
 /* Create surface mask ===================================================== */
 #define VOL    (*V)()
 void create_surface_mask(const Image *top, const Image *bottom, int zdim,
-   Volume *V) _THROW {
+   Volume *V) {
    const matrix2D<double> *surf;
    if (top!=NULL && bottom!=NULL) {
       if (!SAME_SHAPE2D((*top)(),(*bottom)()))

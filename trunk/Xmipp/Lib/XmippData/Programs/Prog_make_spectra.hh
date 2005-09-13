@@ -51,10 +51,10 @@ public:
    Prog_make_spectra_prm();
 
    /// Read parameters from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
    
    /** Produce side info. */
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /// Show parameters. This function calls show_specific
    void show();

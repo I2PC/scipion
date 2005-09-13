@@ -44,7 +44,7 @@ public:
   int         iter;
   matrix2D< complex<double> > ctfmask;
 
-  void read(int argc, char **argv) _THROW {
+  void read(int argc, char **argv) {
     Prog_parameters::read(argc,argv);
     fn_ctf=get_param(argc,argv,"-ctf");
     iter=AtoI(get_param(argc,argv,"-iter","1000"));

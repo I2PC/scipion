@@ -105,7 +105,7 @@ public:
    void compute_alphas();
    
    // Write angles in file ".ang"
-   void write_angles() _THROW;
+   void write_angles();
    
    // Draw tilt axes in both micrographs
    void draw_axes();

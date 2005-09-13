@@ -170,7 +170,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
 
 // Create empty Spider file ------------------------------------------------
 void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
-   int Xdim, bool reversed, size_t block_size) _THROW {
+   int Xdim, bool reversed, size_t block_size) {
    unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
       block_size);
    if (buffer==NULL) 
@@ -200,7 +200,7 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
 
 // 3D Radon ----------------------------------------------------------------
 void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
-   double Delta_rot, double Delta_tilt, int output_size) _THROW {
+   double Delta_rot, double Delta_tilt, int output_size) {
    if (output_size==-1) output_size=CEIL(1.5*XSIZE(V_in()));
 
    if (V_in.name()=="") V_in.write("superfeo.vol");
@@ -235,7 +235,7 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
 
 // 2D Radon ----------------------------------------------------------------
 void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
-   double Delta_ang, int output_size) _THROW {
+   double Delta_ang, int output_size) {
    if (output_size==-1) output_size=CEIL(1.5*XSIZE(I_in()));
 
    if (I_in.name()=="") I_in.write("superfeo.xmp");
@@ -271,7 +271,7 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
 // Fourier Radon transform -------------------------------------------------
 void Fourier_transform_of_Radon_transform(const FileName &fn_in,
    const FileName &fn_out, double cutoff_freq,
-   double Fermi_temperature) _THROW {
+   double Fermi_temperature) {
    system(((string)"ln -s "+fn_in+" superfeo.fft").c_str());
 
    // Generate spider batch
@@ -313,7 +313,7 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
    double rot0, double rotF, double rot_step,
    double tilt0, double tiltF, double tilt_step,
    double psi0, double psiF, double psi_step,
-   double max_shift) _THROW {
+   double max_shift) {
 
    SelFile SF, SF_kk;
    SF.read(fn_sel);
@@ -431,7 +431,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     const FileName &fn_sel, const FileName &fn_report,
     double tilt_step,
     double max_shift, double shift_step,
-    double first_ring, double last_ring) _THROW {
+    double first_ring, double last_ring) {
     
     SelFile SF, SF_kk;
     SF.read(fn_sel);

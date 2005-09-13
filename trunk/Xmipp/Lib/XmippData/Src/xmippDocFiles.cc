@@ -50,14 +50,14 @@ DocLine& DocLine::operator = (const DocLine &DL) {
    return *this;
 }
 
-double& DocLine::operator [] (int i) _THROW {
+double& DocLine::operator [] (int i) {
    if (i+1>data.size())
       REPORT_ERROR(1604,"Trying to access to non-existing element " +ItoA(i)+
          " of a document line");
    return data[i];
 }
 
-double DocLine::operator [] (int i) const _THROW {
+double DocLine::operator [] (int i) const {
    if (i+1>data.size())
       REPORT_ERROR(1604,"Trying to access to non-existing element " +ItoA(i)+
          " of a document line");
@@ -117,7 +117,7 @@ ostream& operator << (ostream& o, DocLine &DL) {
    return o;
 }
 
-void DocLine::read(istream& in) _THROW {
+void DocLine::read(istream& in) {
    string   line;
    int      key, param_no;
 
@@ -296,7 +296,7 @@ void DocFile::renum() {
 }
 
 /* Read -------------------------------------------------------------------- */
-void DocFile::read(FileName _name, int overriding) _THROW {
+void DocFile::read(FileName _name, int overriding) {
    DocLine   temp;
    ifstream  fh_doc;
    int       line_no=1;
@@ -346,7 +346,7 @@ void DocFile::read(FileName _name, int overriding) _THROW {
 }
 
 /* Write ------------------------------------------------------------------- */
-void DocFile::write(FileName _name) _THROW {
+void DocFile::write(FileName _name) {
    ofstream    fh_doc;
    vector<DocLine>::iterator current = m.begin();
    vector<DocLine>::iterator last    = m.end();
@@ -390,7 +390,7 @@ int DocFile::search_comment(string comment) {
 }
 
 /* For NewXmipp-style docfiles: get the corresponding selfile -------------- */
-void DocFile::get_selfile(SelFile &SF) _THROW {
+void DocFile::get_selfile(SelFile &SF) {
   go_beginning();
   if ((*current_line).Is_comment()) 
     if (strstr(((*current_line).get_text()).c_str(),"Headerinfo")==NULL) 
@@ -442,7 +442,7 @@ int DocFile::get_last_key() {
 }
 
 /* Element access to any line ---------------------------------------------- */
-double DocFile::operator ()(int _key, int i) _THROW {
+double DocFile::operator ()(int _key, int i) {
    vector<DocLine>::iterator aux = find(_key);
    if (aux==m.end())
       REPORT_ERROR(1604,"DocFile::operator(): The given key (" + ItoA(_key) + ") is not in the file");
@@ -451,7 +451,7 @@ double DocFile::operator ()(int _key, int i) _THROW {
 
 /* Getting angles ---------------------------------------------------------- */
 void DocFile::get_angles(int _key, double &rot, double &tilt, double &psi,
-   const string &ang1, const string &ang2, const string &ang3) _THROW {
+   const string &ang1, const string &ang2, const string &ang3) {
    vector<DocLine>::iterator aux = find(_key);
    if (aux==m.end())
       REPORT_ERROR(1604,"DocFile::operator(): The given key (" + ItoA(_key) + ") is not in the file");
@@ -473,7 +473,7 @@ void DocFile::get_angles(int _key, double &rot, double &tilt, double &psi,
 }
 /* Getting angles (second triad) ------------------------------------------- */
 void DocFile::get_angles1(int _key, double &rot, double &tilt, double &psi,
-   const string &ang1, const string &ang2, const string &ang3) _THROW {
+   const string &ang1, const string &ang2, const string &ang3) {
    vector<DocLine>::iterator aux = find(_key);
    if (aux==m.end())
       REPORT_ERROR(1604,"DocFile::operator(): The given key (" + ItoA(_key) + ") is not in the file");
@@ -495,7 +495,7 @@ void DocFile::get_angles1(int _key, double &rot, double &tilt, double &psi,
 }
 /* Getting angles (third triad) ------------------------------------------- */
 void DocFile::get_angles2(int _key, double &rot, double &tilt, double &psi,
-   const string &ang1, const string &ang2, const string &ang3) _THROW {
+   const string &ang1, const string &ang2, const string &ang3) {
    vector<DocLine>::iterator aux = find(_key);
    if (aux==m.end())
       REPORT_ERROR(1604,"DocFile::operator(): The given key (" + ItoA(_key) + ") is not in the file");
@@ -518,7 +518,7 @@ void DocFile::get_angles2(int _key, double &rot, double &tilt, double &psi,
 
 /* Setting angles ---------------------------------------------------------- */
 void DocFile::set_angles(int _key, double rot, double tilt, double psi,
-   const string &ang1, const string &ang2, const string &ang3) _THROW {
+   const string &ang1, const string &ang2, const string &ang3) {
    vector<DocLine>::iterator aux = find(_key);
    if (aux==m.end())
       REPORT_ERROR(1604,"DocFile::operator(): The given key (" + ItoA(_key) + ") is not in the file");
@@ -868,7 +868,7 @@ matrix1D<double> DocFile::row(int _key) {
 }
 
 /* Vector --> Column ------------------------------------------------------- */
-void DocFile::setCol(int _col, matrix1D<double> &v) _THROW {
+void DocFile::setCol(int _col, matrix1D<double> &v)  {
    go_first_data_line();
    
    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++) {

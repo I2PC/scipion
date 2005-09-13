@@ -100,7 +100,7 @@ void Prog_SSNR_prm::usage() const {
 }
 
 // Produce side Info -------------------------------------------------------
-void Prog_SSNR_prm::produce_side_info() _THROW {
+void Prog_SSNR_prm::produce_side_info() {
    if (!radial_avg) {
       if (Is_VolumeXmipp(fn_S)) {
 	 S.read(fn_S); S().set_Xmipp_origin();

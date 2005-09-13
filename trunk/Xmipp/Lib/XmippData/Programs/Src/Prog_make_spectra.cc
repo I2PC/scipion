@@ -33,7 +33,7 @@ Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters() {
 }
 
 // Read from command line --------------------------------------------------
-void Prog_make_spectra_prm::read(int argc, char **argv) _THROW {
+void Prog_make_spectra_prm::read(int argc, char **argv) {
    Prog_parameters::read(argc,argv);
    fn_out=get_param(argc,argv,"-o");
    rot_spt.read(argc,argv);
@@ -41,7 +41,7 @@ void Prog_make_spectra_prm::read(int argc, char **argv) _THROW {
 }
 
 // Produce side info -------------------------------------------------------
-void Prog_make_spectra_prm::produce_side_info() _THROW {
+void Prog_make_spectra_prm::produce_side_info() {
 }
 
 // Show --------------------------------------------------------------------

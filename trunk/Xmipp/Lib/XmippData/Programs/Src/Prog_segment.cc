@@ -68,7 +68,7 @@ void Prog_segment_prm::usage() const {
 }
 
 // Produce side information ================================================
-void Prog_segment_prm::produce_side_info() _THROW {
+void Prog_segment_prm::produce_side_info() {
    V.read(fn_vol);
    double sampling_rate3=sampling_rate*sampling_rate*sampling_rate;
    if (voxel_mass==-1 && !en_threshold) {

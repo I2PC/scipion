@@ -40,7 +40,7 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
 }
 
 /* Read Crystal Projection Parameters ====================================== */
-void Crystal_Projection_Parameters::read(FileName fn_crystal) _THROW {
+void Crystal_Projection_Parameters::read(FileName fn_crystal) {
    FILE    *fh_param;
    char    line[201];
    int     lineNo=0;
@@ -110,7 +110,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) _THROW {
 }
 
 /* Write =================================================================== */
-void Crystal_Projection_Parameters::write(FileName fn_crystal) _THROW {
+void Crystal_Projection_Parameters::write(FileName fn_crystal) {
    FILE *fh_param;
 
    if ((fh_param = fopen(fn_crystal.c_str(), "w")) == NULL)
@@ -295,7 +295,7 @@ void find_crystal_limits(
    const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2, 
    const matrix1D<double> &cell_corner1, const matrix1D<double> &cell_corner2,
    const matrix1D<double> &a, const matrix1D<double> &b,
-   int &iamin, int &iamax, int &ibmin, int &ibmax) _THROW {
+   int &iamin, int &iamax, int &ibmin, int &ibmax) {
    if (a.module()<MIN_MODULE || b.module()<MIN_MODULE) 
       REPORT_ERROR(1,"find_crystal_limits: one of the lattice vectors is "
          "extremely small");

@@ -42,7 +42,7 @@ public:
 
 public:
   Similarity_parameters() {}
-  void read(int argc, char **argv) _THROW {
+  void read(int argc, char **argv) {
     Prog_parameters::read(argc,argv);
     try {
       usemask=false;

@@ -77,11 +77,11 @@ public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
        are not read */
-   void read(const FileName &fn_prm, bool do_not_read_files=FALSE) _THROW;
+   void read(const FileName &fn_prm, bool do_not_read_files=FALSE);
 
    /** Write parameters to file.
        The directory is an option used in the grid. */
-   void write(const FileName &fn_prm, string directory="") _THROW;
+   void write(const FileName &fn_prm, string directory="");
 
    /** PSD averaging within a piece.
        Compute the PSD of a piece by subdividing it in smaller pieces and

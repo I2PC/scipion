@@ -73,7 +73,7 @@ template <class T>
 
 /* Outside ----------------------------------------------------------------- */
 template <class T>
-   bool mT::outside(const matrix1D<double> &v) const _THROW {
+   bool mT::outside(const matrix1D<double> &v) const {
    if (XSIZE(v)<2)
       REPORT_ERROR(1,"Outside: index vector has got not enough components");
    return (XX(v)<STARTINGX(*this) || XX(v)>FINISHINGX(*this) ||
@@ -93,7 +93,7 @@ template <class T>
 
 template <class T>
    bool mT::intersects(const matrix1D<double> &corner1,
-      const matrix1D<double> &corner2) const _THROW {
+      const matrix1D<double> &corner2) const {
        if (XSIZE(corner1)!=2 || XSIZE(corner2)!=2)
           REPORT_ERROR(1002,"intersects 1D: corner sizes are not 1");
        return intersects(XX(corner1),YY(corner1),
@@ -115,7 +115,7 @@ template <class T>
 
 /* Corner ------------------------------------------------------------------ */
 template <class T>
-   bool mT::isCorner(const matrix1D<double> &v) _THROW {
+   bool mT::isCorner(const matrix1D<double> &v) {
    if (XSIZE(v)<2)
       REPORT_ERROR(1,"isCorner: index vector has got not enough components");
    return ((XX(v)==STARTINGX(*this)  && YY(v)==STARTINGY(*this))  ||
@@ -126,7 +126,7 @@ template <class T>
 
 /* Border ------------------------------------------------------------------ */
 template <class T>
-   bool mT::isBorder(const matrix1D<int> &v) _THROW 
+   bool mT::isBorder(const matrix1D<int> &v) 
 {
    if (XSIZE(v)<2)
       REPORT_ERROR(1,"isBorder: index vector has got not enough components");
@@ -235,7 +235,7 @@ template <class T>
 
 /* Make a vector from a matrix --------------------------------------------- */
 template <class T>
-   void mT::to_vector(vT &op1) const _THROW {
+   void mT::to_vector(vT &op1) const {
    // Null matrix => Null vector
    if (XSIZE(*this)==0 || YSIZE(*this)==0) {op1.clear(); return;}
    
@@ -447,7 +447,7 @@ template <class T>
 
 /* Determinant ------------------------------------------------------------- */
 // (see Numerical Recipes, Chapter 2 Section 5)
-template <class T> T mT::det() const _THROW {
+template <class T> T mT::det() const {
    if (xdim==0)
       REPORT_ERROR(1108, "determinant: Matrix is empty");
    if (xdim!=ydim)
@@ -476,7 +476,7 @@ template <class T> T mT::det() const _THROW {
 /* Solve Ax=b -------------------------------------------------------------- */
 // (see Numerical Recipes, Chapter 2 Section 3)
 template <class T>
-   void solve(const mT &A, const vT &b, vT &result) _THROW {
+   void solve(const mT &A, const vT &b, vT &result) {
    if (A.xdim==0)
       REPORT_ERROR(1108, "Solve: Matrix is empty");
    if (A.xdim!=A.ydim)
@@ -498,7 +498,7 @@ template <class T>
 
 template <class T>
    void solve_by_svd(const matrix2D<T> &A, const matrix1D<T> &b,
-                     matrix1D<double> &result,double tolerance) _THROW 
+                     matrix1D<double> &result,double tolerance) 
 {
    if (A.xdim==0)
       REPORT_ERROR(1108, "Solve: Matrix is empty");
@@ -534,7 +534,7 @@ template <class T>
 
 // (see Numerical Recipes, Chapter 2 Section 1)
 template <class T>
-   void solve(const mT &A, const mT &b, mT &result) _THROW {
+   void solve(const mT &A, const mT &b, mT &result) {
    if (A.xdim==0)
       REPORT_ERROR(1108, "Solve: Matrix is empty");
    if (A.xdim!=A.ydim)
@@ -551,7 +551,7 @@ template <class T>
 
 /* Solve Cx=d, nonnegative x */
 double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
-   matrix1D<double> &result) _THROW {
+   matrix1D<double> &result) {
    if (C.xdim==0)
       REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
    if (C.ydim!=d.get_dim())
@@ -579,7 +579,7 @@ double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
 void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
-   matrix1D<double> &result) _THROW {
+   matrix1D<double> &result) {
    matrix2D<double> Ap=A;
    matrix1D<double> p(XSIZE(A));
    result.resize(XSIZE(A));
@@ -1183,7 +1183,7 @@ template <class T>
 /* Matrix by matrix multiplication ----------------------------------------- */
 // xinit and yinit are taken from op1
 template <class T>
-   void mul_matrix(const mT &op1, const mT &op2, mT &result) _THROW {
+   void mul_matrix(const mT &op1, const mT &op2, mT &result) {
    if (XSIZE(op1)!=YSIZE(op2))
       REPORT_ERROR(1102,"Not compatible sizes in matrix multiplication");
    
@@ -1429,7 +1429,7 @@ matrix2D<double> rot2D_matrix(double ang) {
 }
 
 /* Translation 2D ---------------------------------------------------------- */
-matrix2D<double> translation2D_matrix(matrix1D<double> v) _THROW {
+matrix2D<double> translation2D_matrix(matrix1D<double> v) {
    if (v.get_dim()!=2)
       REPORT_ERROR(1002,"Translation2D_matrix: vector is not in R2");
 
@@ -1443,7 +1443,7 @@ matrix2D<double> translation2D_matrix(matrix1D<double> v) _THROW {
 }
 
 /* Rotation 3D around the system axes -------------------------------------- */
-matrix2D<double> rot3D_matrix(double ang, char axis) _THROW {
+matrix2D<double> rot3D_matrix(double ang, char axis) {
    matrix2D<double> result(4,4);
    double cosine, sine;
    
@@ -1482,7 +1482,7 @@ matrix2D<double> rot3D_matrix(double ang, char axis) _THROW {
 }
 
 /* Align a vector with Z axis */
-matrix2D<double> align_with_Z(const matrix1D<double> &axis) _THROW {
+matrix2D<double> align_with_Z(const matrix1D<double> &axis) {
    matrix1D<double>  Axis;
    matrix2D<double>  A(4,4);
 
@@ -1523,7 +1523,7 @@ matrix2D<double> rot3D_matrix(double ang, const matrix1D<double> &axis) {
 }
 
 /* Translation 3D ---------------------------------------------------------- */
-matrix2D<double> translation3D_matrix(const matrix1D<double> &v) _THROW {
+matrix2D<double> translation3D_matrix(const matrix1D<double> &v) {
    if (XSIZE(v)!=3)
       REPORT_ERROR(1002,"Translation3D_matrix: vector is not in R3");
 
@@ -1538,7 +1538,7 @@ matrix2D<double> translation3D_matrix(const matrix1D<double> &v) _THROW {
 }
 
 /* Scale 3D ---------------------------------------------------------------- */
-matrix2D<double> scale3D_matrix(const matrix1D<double> &sc) _THROW {
+matrix2D<double> scale3D_matrix(const matrix1D<double> &sc) {
    if (XSIZE(sc)!=3)
       REPORT_ERROR(1002,"Scale3D_matrix: vector is not in R3");
 
@@ -1566,7 +1566,7 @@ template <class T>
 /* Radial average ---------------------------------------------------------- */
 template <class T>
 void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, const bool &rounding) _THROW
+                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, const bool &rounding)
 {
    matrix1D<double> idx(2);
    
@@ -1636,7 +1636,7 @@ template <class T>
 
 /* Quadratic form ---------------------------------------------------------- */
 void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
-   const matrix2D<double> &H, double &val, matrix1D<double> &grad) _THROW {
+   const matrix2D<double> &H, double &val, matrix1D<double> &grad) {
    if (XSIZE(x)!=XSIZE(c))
       REPORT_ERROR(1102,"Eval_quadratic: Not compatible sizes in x and c");
    if (XSIZE(H)!=XSIZE(x))

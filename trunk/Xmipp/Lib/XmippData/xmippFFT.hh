@@ -64,7 +64,7 @@
        is thrown*/
    template <class T>
    void FFT_idx2digfreq(T &v, const matrix1D<int> &idx,
-      matrix1D<double> &freq) _THROW {
+      matrix1D<double> &freq) {
          if (XSIZE(idx)<1 || XSIZE(idx)>3)
             REPORT_ERROR(1,"FFT_idx2digfreq: Index is not of the correct size");
          freq.resize(XSIZE(idx));
@@ -81,7 +81,7 @@
        is thrown*/
    template <class T>
    void digfreq2FFT_idx(T &v, const matrix1D<double> &freq,
-      matrix1D<int> &idx) _THROW {
+      matrix1D<int> &idx) {
          if (XSIZE(freq)<1 || XSIZE(freq)>3)
             REPORT_ERROR(1,"digfreq2FFT_idx: freq is not of the correct size");
          idx.resize(XSIZE(freq));

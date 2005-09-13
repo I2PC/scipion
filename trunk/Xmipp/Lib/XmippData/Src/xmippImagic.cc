@@ -47,7 +47,7 @@ void ImageImagicT<T>::parseFname()
 }
 
 template <class T>
-bool ImageImagicT<T>::read (const FileName &name) _THROW
+bool ImageImagicT<T>::read (const FileName &name)
 {
   rename (name);
   ImageImagicInfo img_info = ImagicGetImgInfo (getHedFname());
@@ -113,7 +113,7 @@ bool ImageImagicT<T>::read (const FileName &name) _THROW
 }
 
 template <>
-bool ImageImagicT<complex<double> >::read (const FileName &name) _THROW
+bool ImageImagicT<complex<double> >::read (const FileName &name)
 {
   rename (name);
   ImageImagicInfo img_info = ImagicGetImgInfo (getHedFname());

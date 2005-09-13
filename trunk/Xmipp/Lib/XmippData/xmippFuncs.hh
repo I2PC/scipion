@@ -486,12 +486,12 @@ float rnd_log(float a, float b);
    class ReconstructingVolume:
    {
       ...
-      void write(const FileName &fn) const _THROW;
+      void write(const FileName &fn) const;
       ...
    }
    
    // Class implementation
-   void ReconstructingVolume::write(const FileName &fn) const _THROW {
+   void ReconstructingVolume::write(const FileName &fn) const {
       ...
       if (...) REPORT_ERROR(6001,"Volume too small to be stored");
       ...
@@ -529,24 +529,6 @@ float rnd_log(float a, float b);
 
 void _Xmipp_error (const int nerr, const string &what);
 
-#if defined(_NO_EXCEPTION)
-/** Macro which allows a function to manage errors.
-    Any function which might throw an error (in either of the two
-    error management styles), ie, which might call REPORT_ERROR
-    should have this macro on its definition.
-    \\ Ex: void write(const FileName &fn) const _THROW; */
-#define _THROW
-
-/** Show message and either exit or throw an exception.
-    The choice between exitting and throwing the exception is
-    done upon the Xmipp Configuration. The exception thrown
-    is of type Xmipp_error. Remember to include _THROW in the
-    definition of the function.
-    \\ Ex: if (...) REPORT_ERROR(4001,"Number too small");
-    @see Configuration */
-#define REPORT_ERROR(nerr,ErrormMsg) _Xmipp_error(nerr,ErrormMsg)
-#else
-#define _THROW                  throw (Xmipp_error)
 #define REPORT_ERROR(nerr,ErrormMsg) throw Xmipp_error(nerr,ErrormMsg)
 /** Exception class.
     This is the class type for the errors thrown by the routines when the
@@ -565,7 +547,6 @@ void _Xmipp_error (const int nerr, const string &what);
         Xmipp_error(const int nerr, const string &what);
         friend ostream& operator << (ostream& o, Xmipp_error &XE);
    };
-#endif
 //@}
 
 // Handling with filenames -------------------------------------------------
@@ -655,7 +636,7 @@ public:
    FileName get_root() const;
 
    /** Get the base name from a filename.*/
-   string FileName::get_baseName() const;
+   string get_baseName() const;
    
    /** Get the number from a filename.
        If there is no number a -1 is returned.
@@ -761,13 +742,13 @@ int exists(const FileName &fn);
     An exception is throw if the file exists but its size cannot be
     stated.*/
 void wait_until_stable_size(const FileName &fn,
-   unsigned long time_step=250000) _THROW;
+   unsigned long time_step=250000);
 
 /** Write a zero filled file with the desired size.
     The file is written by blocks to speed up, you can modify the block size.
     An exception is thrown if any error happens */
 void create_empty_file(const FileName &fn, size_t size,
-   size_t block_size=102400) _THROW;
+   size_t block_size=102400);
 //@}
 
 /* Time managing ----------------------------------------------------------- */
@@ -1070,7 +1051,7 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 /** Ask memory for any type vector.
     The valid values range from v[nl] to v[nh]. If no memory is available
     an exception is thrown. NULL is returned if nh is not greater than nl*/
-template <class T> void ask_Tvector(T* &v, int nl, int nh) _THROW; 
+template <class T> void ask_Tvector(T* &v, int nl, int nh); 
 
 /** Free memory associated to any type vector.
     After freeing v=NULL*/
@@ -1080,8 +1061,7 @@ template <class T> void free_Tvector(T *&v, int nl, int nh);
     The valid values range from v[nrl][ncl] to v[nrh][nch].
     If no memory is available an exception is thrown. NULL is returned if any
     nh is not greater than its nl*/
-template <class T> void ask_Tmatrix(T** &m, int nrl, int nrh,int ncl, int nch)
-   _THROW; 
+template <class T> void ask_Tmatrix(T** &m, int nrl, int nrh,int ncl, int nch); 
 
 /** Free memory associated to any type matrix.
     After freeing v=NULL*/
@@ -1092,7 +1072,7 @@ template <class T> void free_Tmatrix(T **&v, int nrl, int nrh,int ncl, int nch);
     If no memory is available an exception is thrown. NULL is returned if any
     nh is not greater than its nl. */
 template <class T> void ask_Tvolume(T *** &v, int nsl, int nsh,
-   int nrl, int nrh, int ncl, int nch) _THROW;
+   int nrl, int nrh, int ncl, int nch);
 
 /** Free memory associated to any type volume.
     After freeing v=NULL*/
@@ -1146,7 +1126,7 @@ public:
     Marsaglia(){;}
 
 /** You may use {\tt init} for reading another set of random numbers */
-    void Init(const FileName &fn_in, int No_Numbers) _THROW;
+    void Init(const FileName &fn_in, int No_Numbers);
 
 /** Get a random number from the memory. If you are at the end of the stream
     the pointer will be radomly moved before stracting the number. */

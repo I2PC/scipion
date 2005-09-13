@@ -64,10 +64,10 @@ public:
    matrix1D<double>     adjust;
 public:
    /// Read parameters from file
-   void read(const FileName &fn_param) _THROW;
+   void read(const FileName &fn_param);
    
    /// Write to a file
-   void write(const FileName &fn, bool rewrite=TRUE) _THROW;
+   void write(const FileName &fn, bool rewrite=TRUE);
 
    /// Show parameters
    void show();

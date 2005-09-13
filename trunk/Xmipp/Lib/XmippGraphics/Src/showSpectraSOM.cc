@@ -67,7 +67,7 @@ void ShowSpectraSOM::initWithFile(const FileName &_fn_root,
 
 /* Read a SOM -------------------------------------------------------------- */
 void ShowSpectraSOM::readFile(const FileName &_fn_root,
-   double _minGray, double _maxGray) _THROW {
+   double _minGray, double _maxGray) {
     clear();
     fn              = _fn_root;
     setCaption(fn.c_str());
@@ -75,7 +75,7 @@ void ShowSpectraSOM::readFile(const FileName &_fn_root,
     readDatFile(_fn_root+".cod");
 }
 
-void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) _THROW {
+void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
     FileName fn_class, fn_his, fn_err, fn_inf;
     fn_class=_fn_root+".vs";
     fn_his  =_fn_root+".his";

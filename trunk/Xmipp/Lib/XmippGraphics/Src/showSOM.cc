@@ -62,7 +62,7 @@ void ShowSOM::initWithFile(const FileName &_fn_root) {
 
 /* Read a SOM -------------------------------------------------------------- */
 void ShowSOM::readFile(const FileName &_fn_root,
-   double _minGray, double _maxGray) _THROW {
+   double _minGray, double _maxGray) {
     clear();
     fn              = _fn_root;
     setCaption(fn.c_str());
@@ -70,7 +70,7 @@ void ShowSOM::readFile(const FileName &_fn_root,
     readSelFile(_fn_root+".sel");
 }
 
-void ShowSOM::readSOMFiles(const FileName &_fn_root) _THROW {
+void ShowSOM::readSOMFiles(const FileName &_fn_root) {
     FileName fn_class, fn_his, fn_err, fn_inf;
     fn_class=_fn_root+".vs";
     fn_his  =_fn_root+".his";

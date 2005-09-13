@@ -35,7 +35,7 @@
 //#define DEBUG
 // APH =====================================================================
 void APHFileorigmerg::read(const FileName &fn,
-                                           const int mrc_label) _THROW {
+                                           const int mrc_label) {
    ifstream  fh_aph;
    string    line;
    // Empties current APH File
@@ -96,7 +96,7 @@ void APHFileorigmerg::read(const FileName &fn,
 
 }/*  APHFile::read */
 /* ------------------------------------------------------------------------- */
-void APHFileorigmerg::write(const FileName &fn) const _THROW {
+void APHFileorigmerg::write(const FileName &fn) const {
    ofstream fh;
    fh.open(fn.c_str());
    char aux_char[128];

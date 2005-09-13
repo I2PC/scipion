@@ -66,7 +66,7 @@ public:
 	* @param ts The vectors.
 	* @param idx The indexes of the vectors to use
 	*/
-	void reset(xmippCTVectors const &ts, vector<unsigned> const & idx) _THROW;
+	void reset(xmippCTVectors const &ts, vector<unsigned> const & idx);
 
 	/**
 	* The eigenvectors
@@ -139,7 +139,7 @@ public:
 	    
 	    An exception is thrown if the input vectors are not of the same size
 	    as the PCA ones.*/
-        void Project(xmippVector &input, xmippVector &output) _THROW;
+        void Project(xmippVector &input, xmippVector &output);
 
 	/** Defines Listener class
   	*/

@@ -120,7 +120,7 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
 }
 
 /* Produce Side info ------------------------------------------------------- */
-void Spot2RealSpace2D_Parameters::produce_SideInfo() _THROW {
+void Spot2RealSpace2D_Parameters::produce_SideInfo() {
    
     // Translate symmetry group
     if      (str_symmetry_group=="P1")      {symmetry_group = sym_P1;

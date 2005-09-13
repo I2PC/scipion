@@ -226,7 +226,7 @@ void Basic_ART_Parameters::read(int argc, char **argv) {
 #define GET_VECTOR_PARAM(flag,length) \
    get_vector_param(fh,flag,length)
 // Read from file
-void Basic_ART_Parameters::read(const FileName &fn) _THROW {
+void Basic_ART_Parameters::read(const FileName &fn) {
    FILE *fh;
    if ((fh = fopen(fn.c_str(), "r")) == NULL)
       REPORT_ERROR(3005,

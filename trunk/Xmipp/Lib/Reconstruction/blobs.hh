@@ -135,7 +135,7 @@ double kaiser_proj(double r, double a, double alpha, int m);
     The Fourier Transform can be computed only for blobs with m=2. */
 #define blob_Fourier_val(w, blob) \
    kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
-double kaiser_Fourier_value(double w, double a, double alpha, int m) _THROW;
+double kaiser_Fourier_value(double w, double a, double alpha, int m);
 /** Formula for a volume integral of a blob (n is the blob dimension)
     */
 #define blob_mass(blob) \
@@ -363,6 +363,6 @@ void ART_voxels2blobs_single_step(
    const matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
    const matrix3D<double> *read_vol, matrix3D<double> *corr_vol,
    const matrix3D<double> *mask_vol,
-   double &mean_error, double &max_error, int eq_mode=VARTK) _THROW;
+   double &mean_error, double &max_error, int eq_mode=VARTK);
 //@}
 #endif

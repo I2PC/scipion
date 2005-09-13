@@ -37,7 +37,7 @@
 #endif
 
 // Char --> Float ========================================================
-float AtoF(const char *str, int _errno, string errmsg, int exit) _THROW {
+float AtoF(const char *str, int _errno, string errmsg, int exit) {
    float retval;
    int   ok;
    if (str==NULL)
@@ -47,10 +47,11 @@ float AtoF(const char *str, int _errno, string errmsg, int exit) _THROW {
    if (ok) return retval;
    if (exit) EXIT_ERROR(_errno,errmsg);
    else      REPORT_ERROR(_errno,errmsg);
+   return 0;
 }
 
 // Char --> Integer ========================================================
-int AtoI(const char *str, int _errno, string errmsg, int exit) _THROW {
+int AtoI(const char *str, int _errno, string errmsg, int exit) {
    int retval;
    int   ok;
    if (str==NULL)
@@ -60,10 +61,11 @@ int AtoI(const char *str, int _errno, string errmsg, int exit) _THROW {
    if (ok) return retval;
    if (exit) EXIT_ERROR(_errno,errmsg);
    else      REPORT_ERROR(_errno,errmsg);
+   return 0;
 }
 
 // Char --> Long long Integer ==============================================
-long long AtoLL(const char *str, int _errno, string errmsg, int exit) _THROW {
+long long AtoLL(const char *str, int _errno, string errmsg, int exit) {
    long long int retval;
    int   ok;
    if (str==NULL)
@@ -73,6 +75,7 @@ long long AtoLL(const char *str, int _errno, string errmsg, int exit) _THROW {
    if (ok) return retval;
    if (exit) EXIT_ERROR(_errno,errmsg);
    else      REPORT_ERROR(_errno,errmsg);
+   return 0;
 }
 
 // Best precission =========================================================
@@ -156,7 +159,7 @@ string ItoA(int I, int _width, char fill_with) {
 }
 
 // Character --> Integer ===================================================
-int CtoI(const char *str, int _errno, string errmsg, int exit) _THROW {
+int CtoI(const char *str, int _errno, string errmsg, int exit) {
    char  readval;
    int   ok;
    if (str==NULL)
@@ -166,6 +169,7 @@ int CtoI(const char *str, int _errno, string errmsg, int exit) _THROW {
    if (ok) return readval-48;
    if (exit) EXIT_ERROR(_errno,errmsg);
    else      REPORT_ERROR(_errno,errmsg);
+   return 0;
 }
 
 // String --> String with length ===========================================
@@ -176,7 +180,7 @@ string AtoA(const string &str, int _width) {
 }
 
 // Check angle description =================================================
-void check_angle_descr(const string &str) _THROW {
+void check_angle_descr(const string &str) {
    if (str=="rot")  return;
    if (str=="tilt") return;
    if (str=="psi")  return;
@@ -246,7 +250,7 @@ string next_token(const string &str, int &i) {
 }
 
 // Get word ================================================================
-char *first_word(char *str, int _errno, string errmsg, int exit) _THROW {
+char *first_word(char *str, int _errno, string errmsg, int exit) {
    char *token;
 
 // Get token
@@ -283,7 +287,7 @@ void tokenize(const string& str, vector<string>& tokens,
 // Float list --> Vector ===================================================
 template <class T> 
 void read_float_list(const char *str, int N, vector<T> &v,
-   int _errno, string errmsg, int exit) _THROW {
+   int _errno, string errmsg, int exit) {
    T  valueF;
    char     *token;
 
@@ -312,7 +316,7 @@ void read_float_list(const char *str, int N, vector<T> &v,
 template <class T> 
 void read_float_list(const string &str, int &i, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
-   int exit=0) _THROW {
+   int exit=0) {
    T  valueF;
    string token;
 
@@ -337,7 +341,7 @@ void read_float_list(const string &str, int &i, int N, vector<T> &v,
 // list --> Matrix1D =================================================
 template <class T> 
 void read_float_list(char *str, int N, matrix1D<T> &v,
-   int _errno, string errmsg, int exit) _THROW {
+   int _errno, string errmsg, int exit) {
    T  valueF;
    char *token;
 
@@ -367,7 +371,7 @@ void read_float_list(char *str, int N, matrix1D<T> &v,
 
 // Get parameters from the command line ====================================
 char *get_param(int argc, char **argv, const char *param,
-   const char *option, int _errno, string errmsg, int exit) _THROW {
+   const char *option, int _errno, string errmsg, int exit) {
   int i = 0;
 
   while ((i < argc) && (strcmp(param, argv[i])))
@@ -389,7 +393,7 @@ char *get_param(int argc, char **argv, const char *param,
 // Get 2 parameters ========================================================
 bool get_2_double_params(int argc, char **argv, const char *param,
    double &v1, double &v2, double v1_def, double v2_def,
-   int _errno, string errmsg, int exit) _THROW {
+   int _errno, string errmsg, int exit) {
    bool retval;
    int i=position_param(argc,argv,param);
    if (i!=-1) {
@@ -415,7 +419,7 @@ bool get_2_double_params(int argc, char **argv, const char *param,
 bool get_3_double_params(int argc, char **argv, const char *param,
    double &v1, double &v2, double &v3, 
    double v1_def, double v2_def, double v3_def,
-   int _errno, string errmsg, int exit) _THROW {
+   int _errno, string errmsg, int exit) {
    bool retval;
    int i=position_param(argc,argv,param);
    if (i!=-1) {
@@ -681,7 +685,7 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
 
 // Get "parameter" from file ===============================================
 string get_param(FILE *fh, const char *param, int skip, const char *option,
-   int _errno, string errmsg, int exit) _THROW {
+   int _errno, string errmsg, int exit) {
    long actual_pos=ftell(fh);
    fseek(fh,0,SEEK_SET);
    
@@ -719,6 +723,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
          else      REPORT_ERROR(_errno,errmsg);
       } else return option;
    else return remove_spaces(retval);
+   return "";
 }
 
 // Check "parameter" from file =============================================
@@ -748,7 +753,7 @@ bool check_param(FILE *fh, const char *param) {
 
 // Get vector param from file ==============================================
 matrix1D<double> get_vector_param(FILE *fh, const char *param,
-   int dim, int _errno,  string errmsg, int exit) _THROW {
+   int dim, int _errno,  string errmsg, int exit) {
    int    argcp;
    char **argvp=NULL;
    char  *copy=NULL;
@@ -763,6 +768,7 @@ matrix1D<double> get_vector_param(FILE *fh, const char *param,
       delete copy;
       return retval;
    }
+   return retval;
 }
 
 // Instantiation ===========================================================
@@ -776,10 +782,10 @@ void instantiateArgsTemplate(T t) {
 }
 
 void instantiateArgs() {
-   float f1; 
+   float f1=0; 
    instantiateArgsTemplate(f1);
-   double f2; 
+   double f2=0; 
    instantiateArgsTemplate(f2);
-   int f3; 
+   int f3=0; 
    instantiateArgsTemplate(f3);   
 }

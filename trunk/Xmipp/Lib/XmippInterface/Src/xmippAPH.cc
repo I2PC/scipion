@@ -44,7 +44,7 @@
 #define VERBOSE
 //#define DEBUG
 // APH =====================================================================
-void APHFile2D::read(const FileName &fn) _THROW {
+void APHFile2D::read(const FileName &fn) {
    ifstream  fh_aph;
    int       line_no=1;
    int       hmax=0, kmax=0, hmin=0, kmin=0;
@@ -175,7 +175,7 @@ void APHFile2D::read(const FileName &fn) _THROW {
 }/*  APHFile2D::read */
 
 /* ------------------------------------------------------------------------- */
-void APHFile2D::write(const FileName &fn) const _THROW {
+void APHFile2D::write(const FileName &fn) const {
    ofstream fh;
    fh.open(fn.c_str());
    char aux_char[128];

@@ -98,7 +98,7 @@ public:
    int read(FILE *fp, bool skip_type_check=FALSE, bool reversed=FALSE,
       bool skip_extra_checkings=FALSE);
    int read(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE, bool skip_extra_checkings=FALSE) _THROW;
+      bool reversed=FALSE, bool skip_extra_checkings=FALSE);
    void write(FILE *fp, bool force_reversed=FALSE);
    void write(const FileName &fn, bool force_reversed=FALSE);
 

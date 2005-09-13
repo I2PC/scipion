@@ -100,7 +100,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k){
 
 
 /* Project ----------------------------------------------------------------- */
-void xmippRM::Project(xmippCTVectors &input, xmippCTVectors &output, int _k) _THROW {
+void xmippRM::Project(xmippCTVectors &input, xmippCTVectors &output, int _k) {
 
    // Calculate RM
    calculateRM(input, _k); 

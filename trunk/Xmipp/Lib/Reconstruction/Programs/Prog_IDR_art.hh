@@ -84,7 +84,7 @@ public:
    /** Produce Side Information
        Exceptions are thrown if the number of images in the different
        selfiles do not match */
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /// Show parameters
    void show();
@@ -94,7 +94,7 @@ public:
    
    /** IDR relaxation parameter for iteration n.
        An exception is thrown if no mus are provided. */
-   double mu(int n) _THROW {
+   double mu(int n) {
       int imax=XSIZE(mu_list);
       if (imax==0)
          REPORT_ERROR(1,"IDR_ART: There are no mus\n");

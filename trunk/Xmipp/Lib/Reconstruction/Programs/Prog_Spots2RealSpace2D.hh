@@ -124,7 +124,7 @@ public:
    /** Show parameters. */
    friend ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm);
    /** Produce Side Information */
-   void produce_SideInfo() _THROW;
+   void produce_SideInfo();
 #ifdef NEVERDEFINED
    /** Constructor */
    Spot2RealSpace2D_Parameters()
@@ -181,7 +181,7 @@ public:
    /** Show parameters. */
    friend ostream& operator << (ostream &o, const RealSpace2Spots2D_Parameters &prm);
    /** Produce Side Information */
-   void produce_SideInfo() _THROW;
+   void produce_SideInfo();
 
    /** Constructor */
    RealSpace2Spots2D_Parameters()

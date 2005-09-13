@@ -386,7 +386,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
    the program or reading the output file then -1 is returned.
 */
 void compute_resolution(VolumeXmipp &vol_phantom,
-   VolumeXmipp &vol_recons, double &resolution) _THROW;
+   VolumeXmipp &vol_recons, double &resolution);
 
 /* Compute Fourier Shell Correlation.
    This function is performed via Bsoft. If there is any problem calling
@@ -396,6 +396,6 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 */
 double compute_FSC(VolumeXmipp &vol_phantom,
   VolumeXmipp &vol_recons, double sampling_rate,
-  matrix1D<double> &frequency, matrix1D<double> &FSC) _THROW;
+  matrix1D<double> &frequency, matrix1D<double> &FSC);
 //@}
 #endif

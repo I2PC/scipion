@@ -79,7 +79,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
 /** Create empty Spider file.
     Creates a zero filled spider file with the desired dimension. */
 void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
-   int Xdim, bool reversed=FALSE, size_t block_size=102400) _THROW;
+   int Xdim, bool reversed=FALSE, size_t block_size=102400);
 
 /** 3D Radon transform.
     Creates the 3D radon transform of a volume via Spider.
@@ -95,7 +95,7 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
     The outputis written to file although it is a VolumeXmipp.
 **/
 void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
-   double Delta_rot=2, double Delta_tilt=2, int output_size=-1) _THROW;
+   double Delta_rot=2, double Delta_tilt=2, int output_size=-1);
 
 /** 2D Radon transform.
     Creates the 2D radon transform of an image via Spider.
@@ -112,7 +112,7 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     any of the Xmipp classes.
 **/
 void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
-   double Delta_ang=2, int output_size=-1) _THROW;
+   double Delta_ang=2, int output_size=-1);
 
 /** Fourier Radon transform.
     Makes the Fourier-Radon transform of the volume or image supplied as fn_in.
@@ -123,7 +123,7 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
 */
 void Fourier_transform_of_Radon_transform(const FileName &fn_in,
    const FileName &fn_out, double cutoff_freq,
-   double Fermi_temperature=0.2) _THROW;
+   double Fermi_temperature=0.2);
 
 /** Angular_refinement via Radon.
     The angular refinement process via the Radon transform is performed.
@@ -141,7 +141,7 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     double rot0=0, double rotF=360, double rot_step=2,
     double tilt0=0, double tiltF=90, double tilt_step=2,
     double psi0=0, double psiF=360, double psi_step=2,
-    double max_shift=2) _THROW;
+    double max_shift=2);
 
 /** Angular refinement via Projection Matching. fn_ext is computed as the
     extension of the volume. The files refangles.<fn_ext> and projlist.<fn_ext> are
@@ -155,7 +155,7 @@ void Angular_refinement_Matching(const FileName &fn_vol, const FileName &fn_sel,
     const FileName &fn_report,
     double tilt_step=2,
     double max_shift=2, double shift_step=1,
-    double first_ring=0, double last_ring=-1) _THROW;
+    double first_ring=0, double last_ring=-1);
 
 //@}
 

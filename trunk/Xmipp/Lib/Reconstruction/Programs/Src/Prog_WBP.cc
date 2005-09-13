@@ -25,7 +25,7 @@
 #include "../Prog_WBP.hh"
 
 // Read arguments ==========================================================
-void Prog_WBP_prm::read(int argc, char **argv) _THROW  {
+void Prog_WBP_prm::read(int argc, char **argv)  {
 
   fn_sel=get_param(argc,argv,"-i");
   apply_shifts=!check_param(argc,argv,"-dont_apply_shifts");

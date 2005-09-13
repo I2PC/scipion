@@ -241,7 +241,7 @@ public:
     is chosen giving the modes ENLARGE_MODE or SPHERE_MODE. Depending on
     the mode used the background parameter is understood as the sphere
     radius or as the scaling factor. */
-    Feature *background(int back_mode, double back_param) const _THROW;
+    Feature *background(int back_mode, double back_param) const;
 //@}
 
 /**@name Measures */
@@ -385,14 +385,14 @@ public:
     The common part is the feature type, the behaviour, density and center.
     The description is passed as a line. Exceptions are thrown if the
     description doesn't conform the standard specification.*/
-    void read_common(char *line) _THROW;
+    void read_common(char *line);
 
 /** Read a feature from a file, VIRTUAL!!!.
     The format must be the one given in \Ref{Phantoms}, and each subclass
     must implement its own I/O routines. These routines must fill only the
     non common part of the feature description, but they receive the whole
     line with the description. */
-    virtual void read_specific(char *line) _THROW =0;
+    virtual void read_specific(char *line) =0;
 
 /** Show feature not in the standard format but more informatively.
     This function is based on the cout << ... of each subclass. First
@@ -502,7 +502,7 @@ public:
 /** Read specific description for a sphere.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print sphere in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -596,7 +596,7 @@ public:
 /** Read specific description for a blob.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print blob in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -700,7 +700,7 @@ public:
 /** Read specific description for a cylinder.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print cylinder in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -822,7 +822,7 @@ public:
 /** Read specific description for a double cylinder.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print double cylinder in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -930,7 +930,7 @@ public:
 /** Read specific description for a cube.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print cube in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -1038,7 +1038,7 @@ public:
 /** Read specific description for an ellipsoid.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print ellipsoid in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -1144,7 +1144,7 @@ public:
 /** Read specific description for a cone.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
-    void read_specific(char *line) _THROW;
+    void read_specific(char *line);
 
 /** Print cone in the standard feature format.
     \ See {Feature::feat_printf}, \Ref{Phantoms} */
@@ -1280,7 +1280,7 @@ public:
     
     We recommend apply_scale=false only if you plan to modify the
     description file without producing projections, voxel phantoms, ... */
-    void read(const FileName &fn_phantom, bool apply_scale=true) _THROW;
+    void read(const FileName &fn_phantom, bool apply_scale=true);
 
 /** Show a phantom file.
     The more descriptive format is used instead of the standard Feature format */
@@ -1288,7 +1288,7 @@ public:
 
 /** Write a phantom file in the standard feature format.
     You may rename the file or not giving a different name in the write call. */
-    void write (const FileName &fn_phantom="") _THROW;
+    void write (const FileName &fn_phantom="");
 //@}
 
 /**@name Inside */
@@ -1380,7 +1380,7 @@ public:
     are not INV.
     
     An exception is thrown if the matrix A is not valid.*/
-    void self_apply_geom(const matrix2D<double> &A, int inv) _THROW;
+    void self_apply_geom(const matrix2D<double> &A, int inv);
 
 /** Project phantom from a direction.
     The direction is specified by the 3 Euler angles (as usual, rot=1st,
@@ -1434,7 +1434,7 @@ public:
     of the phantom.
     */
     void surface(double z0, double radius, int direction, Image *P)
-       const _THROW;
+       const;
 //@}
 };
 //@}

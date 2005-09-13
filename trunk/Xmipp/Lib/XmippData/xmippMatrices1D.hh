@@ -324,7 +324,7 @@ public:
        \\--> both are examples of empty column vectors
        \\Ex: matrix1D<int> v1('n');
        \\--> empty row vector */
-   matrix1D(const char column='y') _THROW
+   matrix1D(const char column='y')
       {core_init(); init_shape(column); __spcdim=1;}
 
    /** Dimension constructor.
@@ -337,7 +337,7 @@ public:
        \\--> both are examples of column vectors of dimensions 6
        \\Ex: matrix1D<int> v1('n');
        \\--> empty row vector */
-   matrix1D(int dim, const char column='y') _THROW
+   matrix1D(int dim, const char column='y')
       {core_init(); init_shape(column); resize(dim); __spcdim=1;}
 
    /** Copy constructor.
@@ -369,7 +369,7 @@ public:
        indicated (in the example 6 points).
        \\Ex: v1.init_linear(0,10,6,"steps"); --> v1=[0 2 4 6 8 10] */
    void init_linear(T minF, T maxF, int n=1,
-         const string &mode="incr") _THROW;
+         const string &mode="incr");
 
    /** Zero initialisation with a new dimension.
        \\Ex: v1.init_zeros(6);*/         
@@ -421,7 +421,7 @@ public:
        added at the end. An exception is thrown if there is no memory.
        \\Ex: v1.resize(3);
    */
-   void resize(int Xdim) _THROW {
+   void resize(int Xdim) {
       if (Xdim==XSIZE(*this)) return;
       if (Xdim<=0)           {clear(); return;}
 
@@ -547,7 +547,7 @@ public:
        logical range.
        \\ Ex: v(-2)=1;
        \\ Ex: val=v(-2);*/
-   T&   operator () (int i) const _THROW {
+   T&   operator () (int i) const {
         if (i>=xinit+xdim || i<xinit)
            REPORT_ERROR(1003,"Vector subscript not defined for this vector");
         return MULTIDIM_ELEM(*this,i-STARTINGX(*this));}
@@ -573,7 +573,7 @@ public:
        vector doesn't belong to R2 or R3.
        \\ Ex: v.X()=1;
        \\ Ex: val=v.X();*/
-   T&   X() const _THROW {
+   T&   X() const {
         if (xdim>3 || xdim<=0)
            REPORT_ERROR(1003,"X: Subscript not defined for this dimension");
         return MULTIDIM_ELEM(*this,0);}
@@ -587,7 +587,7 @@ public:
        vector doesn't belong to R2 or R3.
        \\ Ex: v.Y()=1;
        \\ Ex: val=v.Y();*/
-   T&   Y() const _THROW {
+   T&   Y() const {
         if (xdim>3 || xdim<=1)
            REPORT_ERROR(1003,"Y: Subscript not defined for this dimension");
         return MULTIDIM_ELEM(*this,1);}
@@ -601,7 +601,7 @@ public:
        vector doesn't belong to R3.
        \\ Ex: v.Z()=1;
        \\ Ex: val=v.Z();*/
-   T&   Z() const _THROW {
+   T&   Z() const {
         if (xdim!=3)
            REPORT_ERROR(1003,"Z: Subscript not defined for this dimension");
         return MULTIDIM_ELEM(*this,2);}
@@ -637,7 +637,7 @@ public:
       of the Matrix2D, for which the multiplication is not a component
       by component multiplication but an algebraic one.*/
    friend void array_by_array(const maT &op1, const maT &op2, maT &result,
-      char operation) _THROW {
+      char operation) {
          if (!op1.same_shape(op2))
             REPORT_ERROR(1007,
                (string)"Array_by_array: different shapes ("+operation+")");
@@ -776,7 +776,7 @@ matrix1D<int>    vector_R3(int x, int y, int z);
          << dot_product(v1,v1) << endl;
    \end{verbatim}*/
 template <class T> T dot_product(const matrix1D<T> &v1,
-   const matrix1D<T> &v2) _THROW {
+   const matrix1D<T> &v2) {
    if (!v1.same_shape(v2))
       REPORT_ERROR(1002,"Dot product: vectors of different size or shape");
    T accumulate=0;
@@ -798,7 +798,7 @@ template <class T> T dot_product(const matrix1D<T> &v1,
     cout << "X*Y=Z=" << vector_product(X,Y).transpose() << endl;
     \end{verbatim}*/
 template <class T> matrix1D<T> vector_product(const matrix1D<T> &v1, 
-   const matrix1D<T> &v2) _THROW {
+   const matrix1D<T> &v2) {
    if (XSIZE(v1)!=3 || XSIZE(v2)!=3)
       REPORT_ERROR(1002,"Vector_product: vectors are not in R3");
    if (v1.isRow()!=v2.isRow())
@@ -821,7 +821,7 @@ template <class T> matrix1D<T> vector_product(const matrix1D<T> &v1,
     if (are_orthogonal(X,Y,Z)) cout << "Of course, they are orthogonal\n";
     \end{verbatim}*/
 int are_orthogonal(matrix1D<double> &v1, matrix1D<double> &v2,
-    matrix1D<double> &v3) _THROW;
+    matrix1D<double> &v3);
 
 /** True if the three R3 vectors form a coordinate system.
     Three R3 vectors form a coordinate system if they are orthogonal and
@@ -836,7 +836,7 @@ int are_orthogonal(matrix1D<double> &v1, matrix1D<double> &v2,
     if (!are_system(-X,Y,Z)) cout << "But not in this case even if they are orthogonal\n";
     \end{verbatim}*/
 int are_system(matrix1D<double> &v1, matrix1D<double> &v2,
-    matrix1D<double> &v3) _THROW;
+    matrix1D<double> &v3);
 //@}
 
 /* Other useful functions -------------------------------------------------- */
@@ -863,7 +863,7 @@ template <class T>
     for sorting two corners. After calling it you can certainly perform
     a non-empty for (from corner1 to corner2) loop.*/
 template <class T>
-    void sort_two_vectors(vT &v1, vT &v2) _THROW;
+    void sort_two_vectors(vT &v1, vT &v2);
 
 /** Optimize using Powell's method.
     See Numerical Recipes Chapter 10.

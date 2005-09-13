@@ -53,7 +53,7 @@ public:
    SymList SL;
 public:
    /// Read argument from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /// Show
    void show();
@@ -65,7 +65,7 @@ public:
        Read all document files and symmetry list if any.
        
        An exception is thrown if both files are not of the same length*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
    
    /** Second angle set.
        Given two sets of angles, this function modifies set 2 so that

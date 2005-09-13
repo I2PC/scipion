@@ -39,7 +39,7 @@ public:
    
    matrix2D<double> A3D, A2D;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       Euler_mode=Align_mode=Axis_mode=FALSE;
       if (check_param(argc,argv,"-euler")) {

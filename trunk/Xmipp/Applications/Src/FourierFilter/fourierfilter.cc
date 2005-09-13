@@ -37,7 +37,7 @@ public:
    bool        first;
    int         dim;
 public:
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       fmask.read(argc,argv);
       Prog_parameters::read(argc,argv);
       fn_mask=get_param(argc,argv,"-save_mask","");

@@ -687,6 +687,7 @@ double betacf(double a, double b, double x) {
 	if (fabs(az-aold) < (EPS*fabs(az))) return az;
     }
     nrerror("a or b too big, or ITMAX too small in BETACF");
+    return 0;
 }
 #undef ITMAX
 #undef EPS
@@ -700,7 +701,7 @@ void instantiate_recipes() {
 
    int **II1;   
    int *I1;   
-   int i1;
+   int i1=0;
 
    char *C1;
 
@@ -8238,18 +8239,18 @@ void cholsl(double *a, int n, double *p, double *b, double *x) {
 /* Instantiantion ---------------------------------------------------------- */
 template <class T>
    void instantiate_Numerical_T(T t) {
-      T  *a, *d;
-      int n, *indx;
+      T  *a=NULL, *d=NULL;
+      int n=0, *indx=NULL;
       ludcmp(a, n, indx, d);
       lubksb(a, n, indx, d);
       gaussj(a, n, a, n);
 }
 
 void instantiate_Numerical() {
-   short          s; instantiate_Numerical_T(s);
-   char           h; instantiate_Numerical_T(h);
-   int            i; instantiate_Numerical_T(i);
-   float          f; instantiate_Numerical_T(f);
-   double         d; instantiate_Numerical_T(d);
-   long double   ld; instantiate_Numerical_T(ld);
+   short          s=0; instantiate_Numerical_T(s);
+   char           h=0; instantiate_Numerical_T(h);
+   int            i=0; instantiate_Numerical_T(i);
+   float          f=0; instantiate_Numerical_T(f);
+   double         d=0; instantiate_Numerical_T(d);
+   long double   ld=0; instantiate_Numerical_T(ld);
 }

@@ -37,7 +37,7 @@ public:
   float       sam;
 public:
   Resolution_parameters() {}
-  void read(int argc, char **argv) _THROW {
+  void read(int argc, char **argv) {
     Prog_parameters::read(argc,argv);
     fn_ref=get_param(argc,argv,"-ref");
     sam=AtoF(get_param(argc,argv,"-sam"));

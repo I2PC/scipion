@@ -32,7 +32,7 @@
 #include <XmippData/xmippHeader.hh>
 
 /* Read parameters ========================================================= */
-void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _THROW {
+void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) {
    // Read parameters for adjust CTF from input file
    adjust_CTF_prm.read(fn_prm);
    
@@ -75,7 +75,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) _
 
 /* Write parameters ========================================================= */
 void Prog_assign_CTF_prm::write(const FileName &fn_prm,
-   string directory) _THROW {
+   string directory) {
    ofstream fh_param;
    fh_param.open(fn_prm.c_str(),ios::out);
    if (!fh_param)

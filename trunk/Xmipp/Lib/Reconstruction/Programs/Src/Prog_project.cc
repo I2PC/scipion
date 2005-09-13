@@ -70,7 +70,7 @@ int translate_randomness(char * str) {
          +str);
 }
 
-void Projection_Parameters::read(FileName fn_proj_param) _THROW {
+void Projection_Parameters::read(FileName fn_proj_param) {
    FILE    *fh_param;
    char    line[201];
    int     lineNo=0;
@@ -257,7 +257,7 @@ void Projection_Parameters::read(FileName fn_proj_param) _THROW {
 }
 
 /* Write =================================================================== */
-void Projection_Parameters::write(FileName fn_proj_param) _THROW {
+void Projection_Parameters::write(FileName fn_proj_param) {
    FILE *fh_param;
 
    if ((fh_param = fopen(fn_proj_param.c_str(), "w")) == NULL)
@@ -559,7 +559,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
 
 /* Produce Side Information ================================================ */
 void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm)
-   _THROW {
+   {
 // Generate Projection angles
    Assign_angles(DF,prm);
    

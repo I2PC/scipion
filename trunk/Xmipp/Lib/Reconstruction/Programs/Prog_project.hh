@@ -193,13 +193,13 @@ public:
    /** Read projection parameters from a file.
        An exception is thrown if the file is not found or any of the
        parameters is not found in the right place.*/
-   void read(FileName fn_proj_param) _THROW;
+   void read(FileName fn_proj_param);
 
    /** Write projection parameters to a file.
        The projection parameters are written into a file wth the same
        structure as always. If the file cannot be openned for output
        an exception is thrown. */
-   void write(FileName fn_proj_param) _THROW;
+   void write(FileName fn_proj_param);
 };
 
 /** Project program Side information.
@@ -226,7 +226,7 @@ public:
        
        Projection from voxel volumes is not implemented yet and
        an exception is thrown. */
-   void produce_Side_Info(const Projection_Parameters &prm) _THROW;
+   void produce_Side_Info(const Projection_Parameters &prm);
 };
 
 /* Assigning angles -------------------------------------------------------- */

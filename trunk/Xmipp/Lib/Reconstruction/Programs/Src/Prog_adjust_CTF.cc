@@ -174,7 +174,7 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
       global_prm->astigmatic_noise);
 
 /* Read parameters --------------------------------------------------------- */
-void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
+void Adjust_CTF_Parameters::read(const FileName &fn_param) {
    FILE *fh_param; 
    if ((fh_param = fopen(fn_param.c_str(), "r")) == NULL) 
    	 REPORT_ERROR(1,(string)"Prog_Adjust_CTF::read: There is a problem " 
@@ -204,7 +204,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) _THROW {
 
 /* Write to a file --------------------------------------------------------- */
 void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
-   _THROW {
+   {
    ofstream fh_param;
    if (!rewrite) fh_param.open(fn_prm.c_str(),ios::app);
    else          fh_param.open(fn_prm.c_str(),ios::out);

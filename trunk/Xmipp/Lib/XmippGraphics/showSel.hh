@@ -107,10 +107,10 @@ protected:
     /* Read a Selfile.
        It performs some initializatrion and then calls to readSelFile*/
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0) _THROW;
+       double _minGray=0, double _maxGray=0);
     /* Really read a SelFile. */
     virtual void readSelFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0) _THROW;
+       double _minGray=0, double _maxGray=0);
     /* Read a SelFile object */
     virtual void readObject(SelFile &SF,
        double _minGray=0, double _maxGray=0);

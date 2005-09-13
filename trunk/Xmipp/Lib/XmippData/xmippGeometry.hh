@@ -406,7 +406,7 @@ void Euler_direction2angles(matrix1D<double> &v,
     the Euler matrix is truly representing a coordinate system.
     \\Ex: Euler_matrix2angles(Euler, alpha, beta, gamma); */
 void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
-   double &gamma) _THROW;
+   double &gamma);
 
 /** Up-Down projection equivalence.
     As you know a projection view from a point has got its homologous from

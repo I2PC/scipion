@@ -81,9 +81,9 @@ protected:
     /* Read a Dat File.
        First some initialization is done and then it call readDatFile*/
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0) _THROW;
+       double _minGray=0, double _maxGray=0);
    // Really read a Dat file
-   virtual void readDatFile(const FileName &_fn_root) _THROW;
+   virtual void readDatFile(const FileName &_fn_root);
     /* Init from vectors.
        Initialize many variables from the information contained in the
        vectors.*/
@@ -138,7 +138,7 @@ public:
    /** Constructor */
    SpectraFilter(int min, int max, const vector<float> &_x,
       ShowSpectra *show_spectra, 
-      QWidget *parent=0, const char *name=0, int wflags=0) _THROW;
+      QWidget *parent=0, const char *name=0, int wflags=0);
    /** Destructor */
    ~SpectraFilter();
 private:

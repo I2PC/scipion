@@ -106,7 +106,7 @@ public:
    void usage() const;
    
    /// Produce side Info
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /** Estimate SSNR 2D.
        Generate images with the particular SSNR. The output filename

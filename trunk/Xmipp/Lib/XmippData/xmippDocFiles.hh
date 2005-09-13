@@ -90,11 +90,11 @@ public:
        has not been created yet (ie, the vector is smaller) then an
        exception is thrown.
        \\ Ex: DL[3]=3; --> DL[3] must exist!! */
-   double& operator [] (int i) _THROW;
+   double& operator [] (int i);
 
    /** Constant component access.
        The same as the previous function. */
-   double operator [] (int i) const _THROW;
+   double operator [] (int i) const;
 
    /** Set an existing or not component.
        If the Document Line is not large enough to hold the required
@@ -145,7 +145,7 @@ public:
        An exception is thrown if the line doesn't meet the Document
        File specifications. First the line is read in a C way,
        if it fails then the exact Fortran output is tried.*/
-   void read(istream& i) _THROW;
+   void read(istream& i);
 };
 
 /*****************************************************************************/
@@ -250,7 +250,7 @@ public:
        coming from Spider because there might be no space between
        two fields 
        \\Ex: DF.read("angles.doc"); */
-   void read(FileName _name, int overrinding=1) _THROW;
+   void read(FileName _name, int overrinding=1);
 
    /** Append a file from disk to an already read one.
        The old information on the variable is not lost. All lines in
@@ -265,7 +265,7 @@ public:
        The file keys are renumerated before being saved.
        \\Ex: DF.write(); ---> Save
        \\Ex: DF.write("angles3.doc") ---> Save as ... */
-   void write(FileName _name="") _THROW;
+   void write(FileName _name="");
    //@}
    
    // Moving the current_line "pointer" ....................................
@@ -334,7 +334,7 @@ public:
   /**  For NewXmipp-type Docfiles: extract the selfile corresponding
        to the image names in the comments 
        \\Ex: DF.get_selfile(SF); */
-  void get_selfile(SelFile &SF) _THROW;
+  void get_selfile(SelFile &SF);
 
    /** Move "pointer" to a certain line.
        This function searches for the line with the given key, and
@@ -426,29 +426,29 @@ public:
        line. Be careful that the not assigned columns contain garbage and
        should be assigned sooner or later.
        \\ Ex: DF(700,0)=4; */
-   double operator ()(int _key, int i) _THROW;
+   double operator ()(int _key, int i);
 
    /** Get angles on key i.
        You must specify the order in which they are written in the file
        with the labels "rot", "tilt" and "psi" */
    void get_angles(int _key, double &rot, double &tilt, double &psi,
-      const string &ang1, const string &ang2, const string &ang3) _THROW;
+      const string &ang1, const string &ang2, const string &ang3);
    /** Get angles on key i. (second triad of Euler angles)
        You must specify the order in which they are written in the file
        with the labels "rot", "tilt" and "psi" */
    void get_angles1(int _key, double &rot, double &tilt, double &psi,
-      const string &ang1, const string &ang2, const string &ang3) _THROW;
+      const string &ang1, const string &ang2, const string &ang3);
    /** Get angles on key i. (third triad of Euler angles)
        You must specify the order in which they are written in the file
        with the labels "rot", "tilt" and "psi" */
    void get_angles2(int _key, double &rot, double &tilt, double &psi,
-      const string &ang1, const string &ang2, const string &ang3) _THROW;
+      const string &ang1, const string &ang2, const string &ang3);
 
    /** Set angles on key i.
        You must specify the order in which they are written in the file
        with the labels "rot", "tilt" and "psi" */
    void set_angles(int _key, double rot, double tilt, double psi,
-      const string &ang1, const string &ang2, const string &ang3) _THROW;
+      const string &ang1, const string &ang2, const string &ang3);
 
    /** Set a value in the current line.
        This function allows you to set values inside the current
@@ -673,7 +673,7 @@ public:
        A renumeration is performed at the end of the setting, and the
        current line "pointer" is moved to the beginning of the file.
        \\ Ex: DF.set_column(1,tilt_angle); */
-   void setCol(int _col, matrix1D<double> &v) _THROW;
+   void setCol(int _col, matrix1D<double> &v);
 
    /** Apply a function to all data lines within a key range.
        The function must take as input a row double matrix1D and produce another

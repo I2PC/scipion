@@ -177,7 +177,7 @@ class histogram1D: public matrix1D<double> {
     friend ostream& operator << (ostream &o, const histogram1D &hist);
 
     /** Write an histogram to disk. */
-    void write(const FileName &fn) _THROW;
+    void write(const FileName &fn);
     
     /**@name Access functions
        This functions are not very common to use, and they allow access
@@ -460,7 +460,7 @@ class histogram2D: public matrix2D<double> {
     friend ostream& operator << (ostream &o, const histogram2D &hist);
 
     /** Write an histogram to disk. */
-    void write(const FileName &fn) _THROW;
+    void write(const FileName &fn);
     
     /**@name Access functions
        This functions are not very common to use, and they allow access
@@ -562,7 +562,6 @@ template <class T>
 template <class T>
    void compute_hist(const T &v1, const T &v2, histogram2D &hist, 
       double m1, double M1, double m2, double M2, int no_steps1, int no_steps2)
-      _THROW
    {if (!v1.same_shape(v2))
       REPORT_ERROR(1,"compute_hist: v1 and v2 are of different shape");
     hist.init(m1,M1,no_steps1,m2,M2,no_steps2);

@@ -68,14 +68,14 @@ void ShowSpectra::initWithVectors(int _numRows, int _numCols,
 }
 
 /* Read a Spectra ---------------------------------------------------------- */
-void ShowSpectra::readFile(const FileName &_fn, double _minGray, double _maxGray) _THROW {
+void ShowSpectra::readFile(const FileName &_fn, double _minGray, double _maxGray) {
     clear();
     fn = _fn;
     setCaption(fn.c_str());
     readDatFile(_fn);
 }
 
-void ShowSpectra::readDatFile(const FileName &_fn) _THROW {
+void ShowSpectra::readDatFile(const FileName &_fn) {
     ifstream fh_in(_fn.c_str());
     if (!fh_in)
        REPORT_ERROR(1,(string)"ShowSpectra::readFile: Cannot open"+_fn);
@@ -391,7 +391,7 @@ void ShowSpectra::setCommonSpectraOptionsRightclickMenubar() {
 // Spectra filter constructor
 SpectraFilter::SpectraFilter(int min, int max,
    const vector<float> &_x, ShowSpectra *_show_spectra,
-   QWidget *parent, const char *name, int wflags) _THROW:
+   QWidget *parent, const char *name, int wflags):
    QWidget(parent,name,wflags) {
    __N=_x.size();
    __show_spectra=_show_spectra;

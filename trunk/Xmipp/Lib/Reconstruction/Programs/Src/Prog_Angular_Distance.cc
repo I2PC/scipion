@@ -28,7 +28,7 @@
 #include <XmippData/xmippHistograms.hh>
 
 // Read arguments ==========================================================
-void Prog_angular_distance_prm::read(int argc, char **argv) _THROW {
+void Prog_angular_distance_prm::read(int argc, char **argv) {
    fn_ang1=get_param(argc,argv,"-ang1");
    fn_ang2=get_param(argc,argv,"-ang2");
    fn_ang_out=get_param(argc,argv,"-o","");
@@ -59,7 +59,7 @@ void Prog_angular_distance_prm::usage() {
 }
 
 // Produce side information ================================================
-void Prog_angular_distance_prm::produce_side_info() _THROW {
+void Prog_angular_distance_prm::produce_side_info() {
    if (fn_ang1!="") DF1.read(fn_ang1);
    if (fn_ang2!="") DF2.read(fn_ang2);
    if (fn_sym!="") SL.read_sym_file(fn_sym);

@@ -91,7 +91,7 @@ public:
 
    /** Produce side information.
        An exception might be thrown if some data cannot be accessed.*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /** Compute average and stddev of the resolution of a selfile.
        Given a selfile, what is the average resolution (FSC<0.5) in (1/A).
@@ -116,7 +116,7 @@ public:
 /** Main Evaluation FSCs routine.
     This is the main function of the program Evaluate. It takes a
     set of evaluation parameters and returns the results in a structure. */
-void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) _THROW;
+void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm);
 
 //@}
 #endif

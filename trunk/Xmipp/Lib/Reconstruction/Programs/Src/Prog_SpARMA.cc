@@ -42,7 +42,7 @@ void ARMA_parameters::read(int argc, char **argv) {
 }
 
 /* Read parameters from file ----------------------------------------------- */
-void ARMA_parameters::read(const FileName &InputFile) _THROW {
+void ARMA_parameters::read(const FileName &InputFile) {
    // Read the parameters file to get every one
    FILE *file;
    if ((file = fopen(InputFile.c_str(), "r")) == NULL)
@@ -61,7 +61,7 @@ void ARMA_parameters::read(const FileName &InputFile) _THROW {
 }
 
 // Write to a file =========================================================
-void ARMA_parameters::write(const FileName &fn_prm, bool rewrite) _THROW {
+void ARMA_parameters::write(const FileName &fn_prm, bool rewrite) {
    ofstream fh_param;
    if (!rewrite) fh_param.open(fn_prm.c_str(),ios::app);
    else          fh_param.open(fn_prm.c_str(),ios::out);

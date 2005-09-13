@@ -141,7 +141,7 @@ public:
    Prog_angular_predict_prm();
 
    /// Read argument from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /// Show
    void show();
@@ -154,10 +154,10 @@ public:
 
    /** Produce side info.
        An exception is thrown if any of the files is not found*/
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /** Produce library.*/
-   void produce_library() _THROW;
+   void produce_library();
 
    /** Build candidate list.
        Build a candidate list with all possible reference projections
@@ -215,7 +215,7 @@ public:
        returned. The function predict shift and psi angle calls this
        one for evaluating each possible combination.*/
    double predict_rot_tilt_angles(ImageXmipp &I,
-      double &assigned_rot, double &assigned_tilt, int &best_ref_idx) _THROW;
+      double &assigned_rot, double &assigned_tilt, int &best_ref_idx);
 
    /** Predict angles and shift.
        This function searches in the shift-psi space and for each combination

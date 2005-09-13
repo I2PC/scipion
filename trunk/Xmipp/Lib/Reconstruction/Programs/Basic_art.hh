@@ -349,7 +349,7 @@ public:
 
    /** Read parameters from a file.
        An exception is thrown if the file cannot be open */
-   void read(const FileName &fn) _THROW;
+   void read(const FileName &fn);
 
    /** Usage message.
        This function shows the way of introducing the most common parameters. */
@@ -392,7 +392,7 @@ public:
        If the iteration requested is greater than the number of lambdas
        provided then the last lambda in the list is returned. An exception
        is thrown if there are no lambdas in the list. */
-   double lambda(int n) _THROW {
+   double lambda(int n) {
       int imax=XSIZE(lambda_list);
       if (imax==0)
          REPORT_ERROR(1,"Basic_art: There are no lambdas\n");
@@ -404,7 +404,7 @@ public:
        If the iteration requested is greater than the number of lambdas
        provided then the last lambda in the list is returned. An exception
        is thrown if there are no lambdas in the list. */
-   double kappa(int n) _THROW {
+   double kappa(int n) {
       int imax=XSIZE(kappa_list);
       if (imax==0)
          REPORT_ERROR(1,"Basic_art: There are no kappas\n");

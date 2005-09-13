@@ -29,7 +29,7 @@
 #include <XmippData/xmippMasks.hh>
 
 /* Read -------------------------------------------------------------------- */
-void Normalize_parameters::read(int argc, char **argv) _THROW {
+void Normalize_parameters::read(int argc, char **argv) {
    Prog_parameters::read(argc,argv);
 
    // Get normalizing method

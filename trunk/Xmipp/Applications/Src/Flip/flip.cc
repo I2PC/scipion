@@ -33,7 +33,7 @@ public:
    bool flipY;
    bool flipZ;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       flipX=check_param(argc,argv,"-flipX");
       flipY=check_param(argc,argv,"-flipY");

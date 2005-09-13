@@ -123,20 +123,25 @@ void test_training(Recons_test_Parameters &prm, int nvol,
          training_avgs(i), training_devs(i), training_N(i),
          results, training_FOM);
       show_measured_point(fh_hist,prm,i);
-      fh_hist << " ---> " << training_avgs(i) << "+-" << training_devs(i)
-              << " (" << training_N(i) << ")\n";
+      if (!prm.evaluate)
+         fh_hist << " ---> " << training_avgs(i) << "+-" << training_devs(i)
+                 << " (" << training_N(i) << ")";
+      fh_hist << "endl";
       fh_hist.flush();
    }
    fh_hist.close();
 
    // Show results
-   cout << "****************************************************************\n";
-   cout << "Reconstruction test results\n";
-   cout << "****************************************************************\n";
-   for (int i=0; i<TestNo; i++) {
-      show_measured_point(cout,prm,i);
-      cout << " ---> " << training_avgs(i) << "+-" << training_devs(i)
-           << " (" << training_N(i) << ")\n";
+   if (prm.evaluate) {
+      cout << "****************************************************************\n";
+      cout << "Reconstruction test results\n";
+      cout << "****************************************************************\n";
+      for (int i=0; i<TestNo; i++) {
+         show_measured_point(cout,prm,i);
+            cout << " ---> " << training_avgs(i) << "+-" << training_devs(i)
+                 << " (" << training_N(i) << ")";
+         cout << endl;
+      }
    }
 }
 
@@ -163,17 +168,20 @@ void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
       single_measure_on_all_FOMs(prm, i, nvol, foms_mean, foms_stddev,
          results);
       show_measured_point(fh_hist,prm,i); cout << endl;
-      show_stats(fh_hist,i,foms_mean,foms_stddev);
+      if (prm.evaluate)
+         show_stats(fh_hist,i,foms_mean,foms_stddev);
    }
    fh_hist.close();
 
    // Show results
-   cout << "****************************************************************\n";
-   cout << "Reconstruction test results\n";
-   cout << "****************************************************************\n";
-   for (int i=0; i<TestNo; i++) {
-      show_measured_point(cout,prm,i); cout << endl;
-      show_stats(cout,i,foms_mean,foms_stddev);
+   if (prm.evaluate) {
+      cout << "****************************************************************\n";
+      cout << "Reconstruction test results\n";
+      cout << "****************************************************************\n";
+      for (int i=0; i<TestNo; i++) {
+         show_measured_point(cout,prm,i); cout << endl;
+            show_stats(cout,i,foms_mean,foms_stddev);
+      }
    }
 }
 

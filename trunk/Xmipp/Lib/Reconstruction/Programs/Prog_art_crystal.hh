@@ -98,7 +98,7 @@ public:
        defined by argc and argv. An exception might be thrown by any
        of the internal conversions, this would mean that there is
        an error in the command line and you might show a usage message. */
-   void read(int argc, char **argv, Basic_ART_Parameters &prm) _THROW;
+   void read(int argc, char **argv, Basic_ART_Parameters &prm);
 
    /** Usage message.
        This function shows the way of introducing these parameters. */

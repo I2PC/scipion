@@ -89,7 +89,7 @@ ostream& operator << (ostream &o, const histogram1D &hist) {
 }
 
 /* Write to file ----------------------------------------------------------- */
-void histogram1D::write(const FileName &fn) _THROW {
+void histogram1D::write(const FileName &fn) {
    ofstream  fh;
    fh.open(fn.c_str(), ios::out);
    if (!fh)
@@ -282,7 +282,7 @@ ostream& operator << (ostream &o, const histogram2D &hist) {
 }
 
 /* Write to file ----------------------------------------------------------- */
-void histogram2D::write(const FileName &fn) _THROW {
+void histogram2D::write(const FileName &fn) {
    ofstream  fh;
    fh.open(fn.c_str(), ios::out);
    if (!fh)

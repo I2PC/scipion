@@ -114,7 +114,7 @@ public:
 
    /** Read parameters from command line.
        If a CTF description file is provided it is read. */
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
 
    /** Show. */
    void show();
@@ -132,14 +132,14 @@ public:
    
    This function cannot be used to generate CTF masks.*/
    template <class T>
-   void generate_mask(T &v) _THROW;
+   void generate_mask(T &v);
 
    /** Read mask from file. */
    void read_mask(const FileName &fn);
 
    /** Generate CTF mask for images */
    template <class T>
-   void generate_CTF_mask(T &v) _THROW;
+   void generate_CTF_mask(T &v);
 
    /** Flip the phase of an already generated 2D mask.
        Those frequencies that have negative amplitude are flipped. */

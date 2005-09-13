@@ -30,7 +30,7 @@
 #include <XmippData/xmippHeader.hh>
 
 // Read arguments ==========================================================
-void Prog_projection_neighbourhood_prm::read(int argc, char **argv) _THROW {
+void Prog_projection_neighbourhood_prm::read(int argc, char **argv) {
    int i,maxcol;
    fn_sel=get_param(argc,argv,"-i");
    fn_ref=get_param(argc,argv,"-nbh");

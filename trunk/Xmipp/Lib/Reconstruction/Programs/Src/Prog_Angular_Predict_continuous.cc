@@ -49,7 +49,7 @@ Prog_angular_predict_continuous_prm::Prog_angular_predict_continuous_prm() {
 }
 
 // Read arguments ==========================================================
-void Prog_angular_predict_continuous_prm::read(int argc, char **argv) _THROW {
+void Prog_angular_predict_continuous_prm::read(int argc, char **argv) {
    Prog_parameters::read(argc,argv);
    fn_ref=get_param(argc,argv,"-ref");
    fn_ang=get_param(argc,argv,"-ang","");
@@ -91,7 +91,7 @@ void Prog_angular_predict_continuous_prm::usage() {
 }
 
 // Produce side information ================================================
-void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
+void Prog_angular_predict_continuous_prm::produce_side_info() {
    // Read the initial angles
    if (fn_ang!="") DF_initial.read(fn_ang);
    else {
@@ -166,7 +166,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info() _THROW {
 // Predict =================================================================
 void Prog_angular_predict_continuous_prm::get_initial_guess(
    double &shiftX, double &shiftY,
-   double &rot, double &tilt, double &psi) _THROW {
+   double &rot, double &tilt, double &psi) {
    if (DF_initial.eof())
       REPORT_ERROR(1,"Prog_angular_predict_continuous_prm::get_initial_guess:"
          " Not enough angles in the initial angle file");
@@ -233,7 +233,7 @@ double CSTSplineAssignment(
    matrix2D<double> &weight,
    matrix1D<double> &pose_parameters,
    int               max_no_iter
-) _THROW {
+) {
    // Build the parameter structure .........................................
    cstregistrationStruct Data;
    

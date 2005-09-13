@@ -29,7 +29,7 @@
 
 // Read --------------------------------------------------------------------
 void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
-   _THROW {
+   {
    if (!do_not_read_files) {
       fn_micrograph  = get_param(argc,argv,"-i");
       fn_downsampled = get_param(argc,argv,"-o");

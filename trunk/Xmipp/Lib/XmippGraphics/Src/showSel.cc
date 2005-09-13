@@ -101,14 +101,14 @@ void ShowSel::initWithObject(int _numRows, int _numCols,
 
 /* Read a Selfile ---------------------------------------------------------- */
 void ShowSel::readFile(const FileName &_fn, double _minGray, double _maxGray)
-    _THROW {
+    {
     clear();
     fn              = _fn;
     setCaption(fn.c_str());
     readSelFile(_fn, _minGray, _maxGray);
 }
 
-void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray) _THROW {
+void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray) {
     SelFile         SF(_fn);
     annotateTime(_fn);
     readObject(SF, _minGray, _maxGray);

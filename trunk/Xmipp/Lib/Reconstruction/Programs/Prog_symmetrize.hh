@@ -47,7 +47,7 @@ public:
    bool            wrap;
 public:
    /** Read parameters from command line. */
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
    
    /** Usage */
    void usage();

@@ -117,11 +117,11 @@ public:
    Denoising_parameters();
 
    /// Read parameters from command line
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
    
    /** Produce side info.
        The DWT type is translated and set */
-   void produce_side_info() _THROW;
+   void produce_side_info();
 
    /// Show parameters. This function calls show_specific
    void show();
@@ -136,10 +136,10 @@ public:
    void usage_specific();
 
    /// Denoise an image
-   void denoise(matrix2D<double> &img) _THROW;
+   void denoise(matrix2D<double> &img);
    
    /// Denoise a volume
-   void denoise(matrix3D<double> &vol) _THROW;
+   void denoise(matrix3D<double> &vol);
 
    /// Denoise a volume using a precalculated estimate of the bayesian parameters
    void denoise_avg_bayesian(matrix3D<double> &vol);

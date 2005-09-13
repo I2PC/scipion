@@ -72,7 +72,7 @@ public:
 
 public:
    /// Read from file
-   void read(const FileName &fn) _THROW;
+   void read(const FileName &fn);
    /// Show header
    friend ostream & operator << (ostream &out, const CrispVolume &cv);
    /// Write as spider

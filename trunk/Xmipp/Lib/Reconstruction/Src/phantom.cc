@@ -177,7 +177,7 @@ void Oriented_Feature::rotate(const matrix2D<double> &E) {
 /* I/O functions                                                             */
 /* ------------------------------------------------------------------------- */
 /* Read common part of features -------------------------------------------- */
-void Feature::read_common(char *line) _THROW {
+void Feature::read_common(char *line) {
    int        stat;
    char       straux[6];
    Center.resize(3);
@@ -195,7 +195,7 @@ void Feature::read_common(char *line) _THROW {
 }
 
 /* Read a sphere ----------------------------------------------------------- */
-void Sphere::read_specific(char *line) _THROW {
+void Sphere::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf",&radius);
    if (stat!=1)
@@ -204,7 +204,7 @@ void Sphere::read_specific(char *line) _THROW {
 }
 
 /* Read a blob ----------------------------------------------------------- */
-void Blob::read_specific(char *line) _THROW {
+void Blob::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %d",&radius,&alpha,&m);
    if (stat!=3)
@@ -213,7 +213,7 @@ void Blob::read_specific(char *line) _THROW {
 }
 
 /* Read a Cylinder --------------------------------------------------------- */
-void Cylinder::read_specific(char *line) _THROW {
+void Cylinder::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",&xradius,
       &yradius,&height,&rot, &tilt, &psi);
@@ -223,7 +223,7 @@ void Cylinder::read_specific(char *line) _THROW {
 }
  
 /* Read a Double Cylinder -------------------------------------------------- */
-void DCylinder::read_specific(char *line) _THROW {
+void DCylinder::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
       &radius,&height, &separation, &rot, &tilt, &psi);
@@ -233,7 +233,7 @@ void DCylinder::read_specific(char *line) _THROW {
 }
  
 /* Read a Cube ------------------------------------------------------------- */
-void Cube::read_specific(char *line) _THROW {
+void Cube::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
       &xdim,&ydim,&zdim,&rot, &tilt, &psi);
@@ -243,7 +243,7 @@ void Cube::read_specific(char *line) _THROW {
 }
  
 /* Read an Ellipsoid ------------------------------------------------------- */
-void Ellipsoid::read_specific(char *line) _THROW {
+void Ellipsoid::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
       &xradius,&yradius,&zradius,&rot, &tilt, &psi);
@@ -253,7 +253,7 @@ void Ellipsoid::read_specific(char *line) _THROW {
 }
 
 /* Read a Cone ------------------------------------------------------------- */
-void Cone::read_specific(char *line) _THROW {
+void Cone::read_specific(char *line) {
    int stat;
    stat=sscanf(line,"%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf",&radius,&height,
       &rot, &tilt, &psi);
@@ -1217,7 +1217,7 @@ Feature *Feature::encircle(double radius) const {
    return (Feature *)f;
 }
 
-Feature *Feature::background(int back_mode, double back_param) const _THROW {
+Feature *Feature::background(int back_mode, double back_param) const {
    switch(back_mode) {
       case ENLARGE_MODE: return scale(back_param); break;
       case SPHERE_MODE:  return encircle(back_param); break;
@@ -1549,7 +1549,7 @@ double Phantom::volume() const {
 }
 
 /* Read Volume Description ------------------------------------------------- */
-void Phantom::read(const FileName &fn_phantom, bool apply_scale) _THROW {
+void Phantom::read(const FileName &fn_phantom, bool apply_scale) {
 
 FILE *fh_phantom;
 char line[201];
@@ -1649,7 +1649,7 @@ ostream& operator << (ostream &o, const Phantom &P) {
 }
 
 /* Write Volume Description ------------------------------------------------ */
-void Phantom::write(const FileName &fn_phantom) _THROW {
+void Phantom::write(const FileName &fn_phantom) {
 
 FILE *fh_phantom;
 char line[201];
@@ -1742,7 +1742,7 @@ void Phantom::rotate(const matrix2D<double> &E) {
 }
 
 /* Apply geometrical transformatio to a phantom ---------------------------- */
-void Phantom::self_apply_geom(const matrix2D<double> &A, int inv) _THROW {
+void Phantom::self_apply_geom(const matrix2D<double> &A, int inv) {
    if ((XSIZE(A)!=4) || (YSIZE(A)!=4))
       REPORT_ERROR(1102,"Apply_geom3D: geometrical transformation is not 4x4");
    if (A.IsIdent()) return;
@@ -1802,7 +1802,7 @@ void Phantom::project_to(Projection &P, const matrix2D<double> &VP, double    di
 /* Surface ----------------------------------------------------------------- */
 //#define DEBUG
 void Phantom::surface(double z0, double radius, int direction, Image *P)
-   const _THROW {
+   const {
    if (z0!=zdim)
       if (z0<FIRST_XMIPP_INDEX(zdim) || z0>LAST_XMIPP_INDEX(zdim))
          REPORT_ERROR(1,"Phantom::surface: z0 outside phantom");

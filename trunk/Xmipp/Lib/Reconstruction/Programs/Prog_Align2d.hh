@@ -93,7 +93,7 @@ public:
 
 public:
   /// Read argument from command line
-  void read(int argc, char **argv) _THROW;
+  void read(int argc, char **argv);
   
   /// Show
   void show();
@@ -103,27 +103,27 @@ public:
   
   /// Rotational alignment of an image
   bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref, 
-		 const float &max_rot, const float &Rin, const float &Rout, const double &outside=0.) _THROW;
+		 const float &max_rot, const float &Rin, const float &Rout, const double &outside=0.);
 
    /// Translational alignment of an image
-  bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside=0.) _THROW;
+  bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside=0.);
 
   /// Alignment by complete search of rotations and translations
   bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
                        const float &max_shift, const float &max_rot, const float &psi_interval, 
-		       const float &Rin, const float &Rout, const double &outside=0.) _THROW;
+		       const float &Rin, const float &Rout, const double &outside=0.);
 
   /// Piramidal combination of images to construct a reference
-  void do_pspc() _THROW;
+  void do_pspc();
 
   /// Alignment of all images by iterative refinement 
-  void refinement() _THROW;
+  void refinement();
 
   /// Calculate optimal correlation for in document file
-  void calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout) _THROW;
+  void calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout);
 
   /// Main routine
-  void align2d() _THROW;
+  void align2d();
 
 };				    
 //@}

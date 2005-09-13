@@ -73,7 +73,7 @@ public:
 
 public:
    /** Read parameters from command line */
-   void read(int argc, char **argv) _THROW;
+   void read(int argc, char **argv);
    
    /** Produce side information */
    void produce_side_info();

@@ -91,7 +91,7 @@ public:
    /** Read input parameters.
        If do_not_read_files=TRUE then fn_micrograph and 
        fn_downsampled are not read. */
-   void read(int argc, char **argv, bool do_not_read_files=FALSE) _THROW;
+   void read(int argc, char **argv, bool do_not_read_files=FALSE);
    
    /// Usage
    void usage() const;

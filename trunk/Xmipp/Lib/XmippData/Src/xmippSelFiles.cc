@@ -75,7 +75,7 @@ ostream& operator << (ostream& o, SelLine &SFL) {
    return o;
 }
 
-istream& operator >> (istream& o, SelLine &SFL) _THROW {
+istream& operator >> (istream& o, SelLine &SFL) {
    string   line;
    char     img_name[MAX_FILENAME_LENGTH];
    int      no_elements_read;
@@ -191,7 +191,7 @@ void SelFile::clean_comments() {
 }
 
 /* Read -------------------------------------------------------------------- */
-void SelFile::read(const FileName &sel_name, int overriding) _THROW {
+void SelFile::read(const FileName &sel_name, int overriding) {
    SelLine   temp;
    ifstream  fh_sel;
    int       line_no=1;
@@ -255,7 +255,7 @@ void SelFile::merge(const FileName &sel_name) {
 }
 
 /* Write ------------------------------------------------------------------- */
-void SelFile::write(const FileName &sel_name) _THROW {
+void SelFile::write(const FileName &sel_name) {
    ofstream    fh_sel;
    vector<SelLine>::iterator current = text_line.begin();
    vector<SelLine>::iterator last    = text_line.end();
@@ -506,7 +506,7 @@ int SelFile::LineNo() {
 }
 
 /* Image size -------------------------------------------------------------- */
-void SelFile::ImgSize(int &Ydim, int &Xdim) _THROW {
+void SelFile::ImgSize(int &Ydim, int &Xdim) {
    vector<SelLine>::iterator aux=current_line;
    go_first_ACTIVE();
    FileName fn_img=(*current_line).text;
@@ -693,7 +693,7 @@ void SelFile::insert(string img_name, SelLine::Label label) {
 }
 
 /* Insert line before current line ----------------------------------------- */
-void SelFile::insert(const SelLine &_selline) _THROW {
+void SelFile::insert(const SelLine &_selline) {
    if (_selline.line_type!=SelLine::DATALINE &&
        _selline.line_type!=SelLine::COMMENT)
       REPORT_ERROR(1552,"SelFile::insert(SelLine): SelLine type not valid");

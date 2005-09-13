@@ -75,7 +75,7 @@ public:
    /** Open tomogram.
        An exception is thrown if the file is not valid. */
    void open_tomogram(const FileName &fn_tomogram, 
-      bool reversed=FALSE) _THROW;
+      bool reversed=FALSE);
 
    /** Close tomogram.
        After working with the file, you must close it. */
@@ -99,7 +99,7 @@ public:
    /** Pixel access for reading.
        These coordinates follow the physical Xmipp \URL[convention]
        {../../../Extra_Docs/Conventions.html} for coordinates */
-   float operator ()(int x, int y, int z) const _THROW {
+   float operator ()(int x, int y, int z) const {
       if (y<0 || y>=Ydim || x<0 || x>=Xdim || z<0 || z>=Zdim)
          REPORT_ERROR(1,"tomogram::(): index out of range");
       if      (__depth== 8) {
@@ -132,7 +132,7 @@ public:
    }
 
    /** Pixel access for writing. */
-   void set_val(int x, int y, int z, double new_val) _THROW {
+   void set_val(int x, int y, int z, double new_val) {
       if (y<0 || y>=Ydim || x<0 || x>=Xdim || z<0 || z>=Zdim)
          REPORT_ERROR(1,"tomogram::set_val: index out of range");
       if      (__depth== 8) m8[z*XYdim+y*Xdim+x]=(unsigned char) new_val;
@@ -156,7 +156,7 @@ public:
        is returned. If the suggested length is bigger than the tomogram size,
        then an exception is thrown. */
     void get_piece(matrix1D<int> &r0, matrix1D<int> &length,
-       matrix3D<double> &piece) _THROW;
+       matrix3D<double> &piece);
 
     /** Set piece in tomogram.
        This routine does the opposite function than the previous one. The

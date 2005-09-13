@@ -39,7 +39,7 @@ Prog_angular_predict_prm::Prog_angular_predict_prm() {
 }
 
 // Read arguments ==========================================================
-void Prog_angular_predict_prm::read(int argc, char **argv) _THROW {
+void Prog_angular_predict_prm::read(int argc, char **argv) {
    extended_usage=check_param(argc,argv,"-more_help");
    if (extended_usage) REPORT_ERROR(1,"");
    Prog_parameters::read(argc,argv);
@@ -140,7 +140,7 @@ void Prog_angular_predict_prm::more_usage() {
 }
 
 // Produce side information ================================================
-void Prog_angular_predict_prm::produce_side_info() _THROW {
+void Prog_angular_predict_prm::produce_side_info() {
    volume_mode=false;
    
    // Information for the SF_main
@@ -267,7 +267,7 @@ void Prog_angular_predict_prm::produce_side_info() _THROW {
 }
 
 // Produce library -----------------------------------------------------------
-void Prog_angular_predict_prm::produce_library() _THROW {
+void Prog_angular_predict_prm::produce_library() {
    ImageXmipp I;
    int number_of_imgs=SF_ref.ImgNo();
    SF_ref.go_first_ACTIVE();
@@ -376,7 +376,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
 // Predict rot and tilt ----------------------------------------------------
 double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
-   double &assigned_rot, double &assigned_tilt, int &best_ref_idx) _THROW {
+   double &assigned_rot, double &assigned_tilt, int &best_ref_idx) {
    if (XSIZE(I())!=NEXT_POWER_OF_2(XSIZE(I())) ||
        YSIZE(I())!=NEXT_POWER_OF_2(YSIZE(I())))
       REPORT_ERROR(1,"Prog_angular_predict_prm::predict_rot_tilt_angles: "

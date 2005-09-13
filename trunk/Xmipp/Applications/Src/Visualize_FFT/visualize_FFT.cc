@@ -36,7 +36,7 @@ public:
    bool apply_log;
    bool squared;
    bool do_not_center;
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       if      (check_param(argc,argv,"-phase"))      FFT_mode=ONLY_PHASE;
       else if (check_param(argc,argv,"-amplitudes")) FFT_mode=ONLY_AMPLITUDES;

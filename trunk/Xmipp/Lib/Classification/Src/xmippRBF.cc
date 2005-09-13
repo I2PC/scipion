@@ -29,7 +29,7 @@
 
 // Design Matrix -----------------------------------------------------------
 void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r, 
-   xmippCTVectors &X, matrix2D<double> &H) _THROW {
+   xmippCTVectors &X, matrix2D<double> &H) {
    int p=X.size(); // Number of points to evaluate
    int m=C.size(); // Number of centers
    H.init_zeros(p,m);
@@ -61,7 +61,7 @@ void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
 void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
    vector<double> &y, double minscale,
    double maxscale, double scalestep, xmippRBF &RBF,
-   double &error, vector<double> &y_predicted) _THROW {
+   double &error, vector<double> &y_predicted) {
    int p=X.size(); // Number of points to evaluate
    int m=candidate_C.size(); // Number of centers
    if (p==m && m==0) return;

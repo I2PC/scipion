@@ -54,7 +54,7 @@ Denoising_parameters::Denoising_parameters(): Prog_parameters() {
 }
 
 // Read from command line --------------------------------------------------
-void Denoising_parameters::read(int argc, char **argv) _THROW {
+void Denoising_parameters::read(int argc, char **argv) {
    Prog_parameters::read(argc,argv);
    DWT_type=get_param(argc,argv,"-type","DAUB12");
    string aux=get_param(argc,argv,"-denoising","remove_scales");
@@ -88,7 +88,7 @@ void Denoising_parameters::read(int argc, char **argv) _THROW {
 }
 
 // Produce side info -------------------------------------------------------
-void Denoising_parameters::produce_side_info() _THROW {
+void Denoising_parameters::produce_side_info() {
    if      (DWT_type=="DAUB4")  set_DWT_type(DAUB4);
    else if (DWT_type=="DAUB12") set_DWT_type(DAUB12);
    else if (DWT_type=="DAUB20") set_DWT_type(DAUB20);
@@ -173,7 +173,7 @@ void Denoising_parameters::usage_specific() {
 }
 
 // Denoise image -----------------------------------------------------------
-void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
+void Denoising_parameters::denoise(matrix2D<double> &img) {
    if (denoising_type==BAYESIAN && adjust_range) img.range_adjust(0,1);
    if (denoising_type!=SHAH) {
       double size2=log10((double)XSIZE(img))/log10(2.0);
@@ -225,7 +225,7 @@ void Denoising_parameters::denoise(matrix2D<double> &img) _THROW {
 }
 
 // Denoise volume ----------------------------------------------------------
-void Denoising_parameters::denoise(matrix3D<double> &vol) _THROW {
+void Denoising_parameters::denoise(matrix3D<double> &vol) {
    if (denoising_type==SHAH) {
       cerr << "Shah denoising is not implemented for volumes\n";
       return;

@@ -27,7 +27,7 @@
 #include <XmippData/xmippArgs.hh>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::read(int argc, char **argv) _THROW {
+void Prog_Range_adjust_Parameters::read(int argc, char **argv) {
    min_val=AtoF(get_param(argc,argv,"-min"));
    max_val=AtoF(get_param(argc,argv,"-max"));
    sigma=AtoF(get_param(argc,argv,"-noise","0"));

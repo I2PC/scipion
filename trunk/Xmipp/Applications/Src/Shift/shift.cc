@@ -42,7 +42,7 @@ public:
    int              Docfile;
    
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       int i_shift=position_param(argc,argv,"-shift");
       int i_scale=position_param(argc,argv,"-scale");

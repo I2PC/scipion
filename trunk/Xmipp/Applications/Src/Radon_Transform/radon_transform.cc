@@ -38,7 +38,7 @@ public:
    double temperature;
    bool   use_Xmipp;
 
-   void read(int argc, char **argv) _THROW {
+   void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       Delta_rot   = AtoF(get_param(argc,argv,"-delta_rot","2"));
       Delta_tilt  = AtoF(get_param(argc,argv,"-delta_tilt","2"));

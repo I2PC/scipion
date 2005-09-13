@@ -32,7 +32,7 @@
 /* ------------------------------------------------------------------------- */
 /* Read ART parameters ===================================================== */
 void Crystal_ART_Parameters::read(int argc, char **argv,
-                                  Basic_ART_Parameters &prm) _THROW {
+                                  Basic_ART_Parameters &prm) {
     try {
        prm.is_crystal = true;
        a_mag = AtoF(get_param(argc, argv, "-mag_a"));

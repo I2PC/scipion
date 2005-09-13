@@ -167,7 +167,7 @@ template <class T>
    }
 }
 
-void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) _THROW {
+void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) {
 
    if (retval==NULL) retval=vtkImageData::New();
    else retval->Initialize();
@@ -185,7 +185,7 @@ void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) _THR
    }   
 }
 
-void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
+void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) {
    if (retval==NULL) retval=vtkImageData::New();
    else retval->Initialize();
    retval->SetDimensions(XSIZE(v()),YSIZE(v()),1);
@@ -201,7 +201,7 @@ void xmippFFT2VTK(FourierImageXmipp &v, vtkImageData * &retval) _THROW {
    }   
 }
 
-void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval) _THROW
+void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval)
 {
 
    if (retval==NULL) retval=vtkImageData::New();
@@ -222,7 +222,7 @@ void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval) _THROW
 
 /* Xmipp resize after VTK -------------------------------------------------- */
 template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix1D<T> &retval, VTKT *v) _THROW {
+   void xmippArray_resize_VTK(matrix1D<T> &retval, VTKT *v) {
    int dim[3]; v->GetDimensions(dim);
    if (dim[1]!=1 && dim[2]!=1)
       REPORT_ERROR(1,"VTK2xmippVector: VTK image is not a vector");
@@ -236,7 +236,7 @@ template <class T, class VTKT>
 }
 
 template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix2D<T> &retval, VTKT *v) _THROW {
+   void xmippArray_resize_VTK(matrix2D<T> &retval, VTKT *v) {
    int dim[3]; v->GetDimensions(dim);
    if (dim[2]!=1)
       REPORT_ERROR(1,"VTK2xmippMatrix: VTK image is not a matrix");
@@ -250,7 +250,7 @@ template <class T, class VTKT>
 }
 
 template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v) _THROW {
+   void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v) {
    int dim[3]; v->GetDimensions(dim);
    /*
    int scalar_components=v->GetNumberOfScalarComponents();
@@ -550,7 +550,7 @@ void VTK_FFT_magnitude(FourierImageXmipp &fft_in,
 /* This is a very short exercise of implementing a VTK filter. It is
    inspired in vtkImageMagnitude */
 template <class maT>
-   void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) _THROW {
+   void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) {
    // Check validity of operation
    int maxC = fft_in->GetNumberOfScalarComponents();
    if (maxC!=2)
