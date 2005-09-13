@@ -1674,12 +1674,18 @@ char line[201];
 /* Voxel Inside any feature ------------------------------------------------ */
 int Phantom::voxel_inside_any_feat(const matrix1D<double> &r,
    matrix1D<double> &aux1, matrix1D<double> &aux2) const {
-   int inside;
+   int inside, current_i;
+   double current_density;
+   current_i=0;
+   current_density=Background_Density;
    for (int i=0; i<VF.size(); i++) {
       inside=VF[i]->voxel_inside(r, aux1, aux2);
-      if (inside!=0) return i+1;
+      if (inside!=0 && VF[i]->Density>current_density) {
+         current_i=i+1;
+         current_density=VF[i]->Density;
+      }
    }
-   return 0;
+   return current_i;
 }
 
 /* Any feature intersects sphere ------------------------------------------- */
