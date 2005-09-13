@@ -150,8 +150,8 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
       }
 
       // CTF correction
-      correct_phase=check_param(fh_param,"CTF phase method");
-      str=get_param(fh_param,"-method",0,"");
+      correct_phase=check_param(fh_param,"correct CTF phase");
+      str=get_param(fh_param,"CTF phase method",0,"leave");
       if      (str=="remove")           phase_correction_method=CORRECT_SETTING_SMALL_TO_ZERO;
       else if (str=="leave" || str=="") phase_correction_method=CORRECT_LEAVING_SMALL;
       else if (str=="divide")           phase_correction_method=CORRECT_AMPLIFYING_NOT_SMALL;
@@ -166,10 +166,12 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
 
       // Only valid for ART and SIRT
       str=get_param(fh_param,"blob type",0,"big");
-      if      (str=="big")   blob_type=BIG_BLOB;
-      else if (str=="small") blob_type=SMALL_BLOB;
+      if      (str=="big")    blob_type=BIG_BLOB;
+      else if (str=="small")  blob_type=SMALL_BLOB;
+      else if (str=="visual") blob_type=VISUAL_BLOB;
       else    REPORT_ERROR(3007,
          "Recons_test_Parameters::read: unknown blob type, valid types big or small");
+      voxel_basis=check_param(fh_param,"voxel basis");
       stop_at=AtoI(get_param(fh_param,"stop at",0,"0"));
       succesive_params=check_param(fh_param,"succesive parameters");
       POCS_positivity=check_param(fh_param,"POCS positivity");
@@ -239,6 +241,17 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) _THROW {
             else break;
          } while (TRUE);
       }
+      
+      // Tomography
+      tomography=check_param(fh_param,"tomography");
+      
+      // Evaluate
+      evaluate=!check_param(fh_param,"dont evaluate");
+      only_structural=check_param(fh_param,"only structural");
+      fn_alternative_evaluation_phantom=get_param(fh_param,
+         "alternative evaluation phantom",0,"");
+      fn_smooth_evaluation_mask=get_param(fh_param,
+         "smooth evaluation mask",0,"");
    } catch (Xmipp_error XE) {
       cout << XE << endl;
       REPORT_ERROR(3007,(string)"There is an error reading "+fn_test_params);
@@ -335,8 +348,14 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    if (prm.unmatched)
       out << "   Unmatched CTF correction\n";
    if (prm.recons_method==use_ART || prm.recons_method==use_SIRT) {
-      if (prm.blob_type==BIG_BLOB) out << "   Blob type: big\n";
-      else                         out << "   Blob type: small\n";
+      if (!prm.voxel_basis) {
+         switch (prm.blob_type) {
+            case BIG_BLOB:    out << "   Blob type: big\n";    break;
+            case SMALL_BLOB:  out << "   Blob type: small\n";  break;
+            case VISUAL_BLOB: out << "   Blob type: visual\n"; break;
+         }
+      } else
+         out << "   Voxel basis\n";
       out << "   Succesive parameters: "; print(out,prm.succesive_params);
          out << endl;
       if (prm.POCS_positivity) out << "   Positivity constraint allowed\n";
@@ -357,6 +376,14 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
               << " No It0 =" << prm.no_it0[i] 
               << " No ItF =" << prm.no_itF[i] 
               << endl;
+   if (prm.tomography) out << "   Tomography mode\n";
+   if (prm.evaluate)
+      out << "   Evaluation active\n"
+          << "   Alternative evaluation phantom: "
+          << prm.fn_alternative_evaluation_phantom << endl
+          << "   Smooth evaluation mask: "
+          << prm.fn_smooth_evaluation_mask << endl
+      ;
    return out;
 }
 
@@ -373,51 +400,55 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
    for (int k=0; k<sample_size; k++) {
       cout << "Making measure number: " << k+1 << endl;
       single_recons_test(prm, i, nvol, results);
-      if        (training_FOM=="scL20") training_FOMs(k)=results.scL2_FOMs(0);
-      else if   (training_FOM=="scL2")  training_FOMs(k)=results.scL2_FOM;
-      else if   (training_FOM=="scL2w") training_FOMs(k)=results.scL2w_FOM;
-      else if   (training_FOM=="scL10") training_FOMs(k)=results.scL1_FOMs(0);
-      else if   (training_FOM=="scL1")  training_FOMs(k)=results.scL1_FOM;
-      else if   (training_FOM=="scL1w") training_FOMs(k)=results.scL1w_FOM;
-      else if   (training_FOM=="scL21") {
-         matrix1D<double> aux=results.scL2_FOMs; aux.window(1,XSIZE(aux)-1);
-         training_FOMs(k)=aux.compute_avg();
-      } else if (training_FOM=="scL11") {
-         matrix1D<double> aux=results.scL1_FOMs; aux.window(1,XSIZE(aux)-1);
-         training_FOMs(k)=aux.compute_avg();
+      if (prm.evaluate) {
+         if        (training_FOM=="scL20") training_FOMs(k)=results.scL2_FOMs(0);
+         else if   (training_FOM=="scL2")  training_FOMs(k)=results.scL2_FOM;
+         else if   (training_FOM=="scL2w") training_FOMs(k)=results.scL2w_FOM;
+         else if   (training_FOM=="scL10") training_FOMs(k)=results.scL1_FOMs(0);
+         else if   (training_FOM=="scL1")  training_FOMs(k)=results.scL1_FOM;
+         else if   (training_FOM=="scL1w") training_FOMs(k)=results.scL1w_FOM;
+         else if   (training_FOM=="scL21") {
+            matrix1D<double> aux=results.scL2_FOMs; aux.window(1,XSIZE(aux)-1);
+            training_FOMs(k)=aux.compute_avg();
+         } else if (training_FOM=="scL11") {
+            matrix1D<double> aux=results.scL1_FOMs; aux.window(1,XSIZE(aux)-1);
+            training_FOMs(k)=aux.compute_avg();
+         }
+         if (accuracy_mode && k>0) {
+            matrix1D<double> aux=training_FOMs; aux.window(0,k);
+            aux.compute_stats(training_avg, training_stddev, min, max);
+            double t=student_outside_probb(prm.unluckiness,k+1);
+            double estimated_sample_size=
+               t*training_stddev/(prm.accuracy/100*training_avg);
+            cout << "tFOM values=" << aux.transpose() << endl
+                 << estimated_sample_size << " samples will be needed\n";
+            if (sample_size<estimated_sample_size && k==sample_size-1)
+               {sample_size++; training_FOMs.resize(sample_size);}
+         }
       }
       if (nvol!=-1) nvol++;
-      if (accuracy_mode && k>0) {
-         matrix1D<double> aux=training_FOMs; aux.window(0,k);
-         aux.compute_stats(training_avg, training_stddev, min, max);
-         double t=student_outside_probb(prm.unluckiness,k+1);
-         double estimated_sample_size=
-            t*training_stddev/(prm.accuracy/100*training_avg);
-         cout << "tFOM values=" << aux.transpose() << endl
-              << estimated_sample_size << " samples will be needed\n";
-         if (sample_size<estimated_sample_size && k==sample_size-1)
-            {sample_size++; training_FOMs.resize(sample_size);}
-      }
    }
-   training_FOMs.compute_stats(training_avg, training_stddev, min, max);
-   training_N=sample_size;
+   if (prm.evaluate) {
+      training_FOMs.compute_stats(training_avg, training_stddev, min, max);
+      training_N=sample_size;
+   }
 }
 
 /* Make a single measure on all FOMs ======================================= */
 void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
    int &nvol, FOMs &foms_mean, FOMs &foms_stddev, EVALUATE_results &results) {
-   prm.only_structural=FALSE;
-
    FOMs foms(prm.MeasNo);
    for (int k=0; k<XSIZE(foms.scL2); k++) {
       cout << "Making measure number: " << k << endl;
       single_recons_test(prm, i, nvol, results);
       if (nvol!=-1) nvol++;
-      foms.set_FOMs(k,results);
+      if (prm.evaluate) foms.set_FOMs(k,results);
    }
 
-   compute_FOMs_stats(foms,i,foms_mean,foms_stddev);
-   cout << foms;
+   if (prm.evaluate) {
+      compute_FOMs_stats(foms,i,foms_mean,foms_stddev);
+      cout << foms;
+   }
 }
 
 /* Make a single test ====================================================== */
@@ -464,13 +495,19 @@ void single_recons_test(const Recons_test_Parameters &prm,
    Projection Proj;
    SelFile SF;
 
-   if (prm.recons_method!=use_WBP) Prog_proj_prm.fn_sel_file=fn_root+".sel";
-   else Prog_proj_prm.fn_sel_file=fn_root.substr(0,2)+"t.sel";
+   Prog_proj_prm.fn_sel_file=fn_root+".sel";
 
    // Read projection parameters and produce side information
    proj_prm.from_prog_params(Prog_proj_prm);
    if (prm.fn_random_phantom!="") proj_prm.fn_phantom=fn_phantom;
    proj_prm.fn_projection_seed=fn_root;
+   proj_prm.tell=0;
+   if (prm.tomography) {
+      proj_prm.rot_range.ang0=proj_prm.rot_range.angF=rnd_unif(0,360);
+      proj_prm.rot_range.samples=1;
+      proj_prm.rot_range.randomness=ANGLE_RANGE_DETERMINISTIC;
+      // Keep the noise features as they were
+   }
 
    PROJECT_Side_Info side;
    side.produce_Side_Info(proj_prm);
@@ -576,15 +613,9 @@ void single_recons_test(const Recons_test_Parameters &prm,
       correct.epsilon=prm.phase_correction_param;
       correct.produce_side_info();
       ctf=correct.ctf;
-      // Correct images
       correct.correct(SF);
-      // Correct the CTF itself
-      correct.correct(ctf.mask2D);
-      // Save corrected CTF
-      fn_applied_CTF=prm.fn_CTF.insert_before_extension("_phase_corrected");
-      ctf.write_mask(fn_applied_CTF,2);
-   } else
-      fn_applied_CTF=prm.fn_CTF;
+   }
+   fn_applied_CTF=prm.fn_CTF;
 
 // Generate surface --------------------------------------------------------
    Prog_Surface_Parameters prm_surface;
@@ -641,12 +672,26 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.default_values();
       // art_prm.tell |= TELL_SHOW_ERROR;
       // art_prm.tell |= TELL_SAVE_AT_EACH_STEP;
-      if (prm.blob_type==BIG_BLOB) {
-         art_prm.basis.blob.alpha=3.6;
-         art_prm.grid_relative_size=2.26;
-      } else {
-         art_prm.basis.blob.alpha=10.4;
+      if (!prm.voxel_basis)
+         switch (prm.blob_type) {
+            case BIG_BLOB:
+               art_prm.basis.blob.alpha=3.6;
+               art_prm.grid_relative_size=2.26;
+               break;
+            case SMALL_BLOB:
+               art_prm.basis.blob.alpha=10.4;
+               art_prm.grid_relative_size=1.41;
+               break;
+            case VISUAL_BLOB:
+               art_prm.basis.blob.alpha=13.3633;
+               art_prm.basis.blob.radius=2.4;
+               art_prm.grid_relative_size=1.41;
+               break;
+         }
+      else {
          art_prm.grid_relative_size=1.41;
+         art_prm.grid_type=CC;
+         art_prm.basis.type=Basis::voxels;
       }
       art_prm.fn_surface_mask="";
       art_prm.fn_sym="";
@@ -710,7 +755,9 @@ void single_recons_test(const Recons_test_Parameters &prm,
          starting_vol.write(fn_recons_root+"_starting.vol");
 
          cerr << "Converting phantom to basis ...\n";
-         art_prm.basis.changeFromVoxels(starting_vol(), vol_basis, BCC,
+         int grid_type=BCC;
+         if (prm.voxel_basis) grid_type=CC;
+         art_prm.basis.changeFromVoxels(starting_vol(), vol_basis, grid_type,
             art_prm.grid_relative_size, NULL, NULL,
             CEIL(XSIZE(starting_vol())/2));
          art_prm.fn_start=fn_recons_root+"_starting.basis";
@@ -722,6 +769,17 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 // Do not correct 
 	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_basis);
       else {
+         // Generate a selfile with the applied CTF
+      	 SelFile SF_ctf;
+         SF.go_first_ACTIVE();
+         while (!SF.eof()) {
+            SF_ctf.insert(fn_applied_CTF);
+            SF.NextImg();
+         }
+         SF.go_first_ACTIVE();
+         SF_ctf.write(fn_root+"_ctf.sel");
+         
+         // Apply IDR
 	 Prog_IDR_ART_Parameters idr_prm;
 	 idr_prm.art_prm=&art_prm;
       	 idr_prm.idr_iterations=prm.idr_iterations;
@@ -729,7 +787,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       	 idr_prm.dont_rewrite=FALSE;
       	 idr_prm.mu0_list=prm.mu0_list;
       	 idr_prm.muF_list=prm.muF_list;
-      	 idr_prm.fn_ctf=fn_applied_CTF;
+      	 idr_prm.fn_ctf=fn_root+"_ctf.sel";
          idr_prm.max_resolution=prm.max_resolution;
          idr_prm.fn_final_sym=prm.fn_final_sym;
 	 idr_prm.produce_side_info();
@@ -737,23 +795,10 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 fn_recons_root=vol_recons.name().without_extension();
       }
    } else if (prm.recons_method==use_WBP) {
-      // Estaría bien que WBP se tradujese y no hubiese que llamarlo
-      // desde el sistema
-
-      // Change to the old recvol file image format
-      cerr << "Adapting angles to old recvol format ...\n";
-      while (!SF.eof()) {
-         ImageXmipp P;
-         P.read(SF.NextImg());
-         P.old_rot()=-P.rot();
-         P.rot()=0;
-         P.write();
-      }
-      SF.go_first_ACTIVE();
-
-      string command_line=(string)"recvol "+fn_root[0]+fn_root[1]+
-         " "+fn_recons_root+".vol "+ItoA((int)(proj_prm.proj_Xdim/2))+
-         " -t"+FtoA(prm.WBP_threshold[i],0);
+      string command_line=(string)"xmipp_wbp -i "+Prog_proj_prm.fn_sel_file+
+         " -o "+fn_recons_root+".vol "+
+         " -radius "+ItoA((int)(proj_prm.proj_Xdim/2))+
+         " -threshold "+FtoA(prm.WBP_threshold[i],0);
       cerr << "Reconstructing with WBP ...\n";
       system(command_line.c_str());
    } else if (prm.recons_method==use_SIRT_Spider) {
@@ -789,29 +834,46 @@ void single_recons_test(const Recons_test_Parameters &prm,
    }
 
 // Evaluate ----------------------------------------------------------------
-   Prog_Evaluate_Parameters eval_prm;
-   eval_prm.default_values();
-   eval_prm.fit_gray_scales=TRUE;
-   if (prm.only_structural) eval_prm.tell = ONLY_STRUCTURAL;
-   if (prm.fn_random_phantom!="")
-      eval_prm.fn_phantom=fn_phantom;
-   else {
-      eval_prm.fn_phantom=proj_prm.fn_phantom;
-      eval_prm.tell=ONLY_STRUCTURAL;
+   if (prm.evaluate) {
+      Prog_Evaluate_Parameters eval_prm;
+      eval_prm.default_values();
+      eval_prm.fit_gray_scales=TRUE;
+      if (prm.only_structural) eval_prm.tell = ONLY_STRUCTURAL;
+      if (prm.fn_alternative_evaluation_phantom=="") {
+         if (prm.fn_random_phantom!="")
+            eval_prm.fn_phantom=fn_phantom;
+         else {
+            eval_prm.fn_phantom=proj_prm.fn_phantom;
+            eval_prm.tell=ONLY_STRUCTURAL;
+         }
+      } else
+         eval_prm.fn_phantom=prm.fn_alternative_evaluation_phantom;
+      if (prm.fn_smooth_evaluation_mask=="")
+         eval_prm.fn_recons=fn_recons_root+".vol";
+      else {
+         vol_recons.read(fn_recons_root+".vol");
+         VolumeXmipp V_smooth_mask;
+         V_smooth_mask.read(prm.fn_smooth_evaluation_mask);
+         V_smooth_mask().set_Xmipp_origin();
+         vol_recons().set_Xmipp_origin();
+         vol_recons()*=V_smooth_mask();
+         vol_recons.write(fn_recons_root+"_smoothed.vol");
+         eval_prm.fn_recons=fn_recons_root+"_smoothed.vol";
+      }
+      eval_prm.fn_mask=fn_mask;
+      if (fn_mask!="") {
+         // Revert the mask for evaluation
+         VolumeXmipp aux;
+         aux.read(fn_mask);
+         aux()*=-1;
+         aux()+=1;
+         aux.write();
+      }
+      if (prm.global_radius!=-1) eval_prm.global_radius=prm.global_radius;
+      else eval_prm.global_radius=CEIL(proj_prm.proj_Xdim/2);
+      // eval_prm.tell |= SAVE_HISTOGRAMS | SAVE_MAPS | SHOW_PROCESS;
+      eval_prm.tell |= SHOW_PROCESS;
+      cerr << "   Evaluating ...\n";
+      ROUT_Evaluate(eval_prm,results);
    }
-   eval_prm.fn_recons=fn_recons_root+".vol";
-   eval_prm.fn_mask=fn_mask;
-   if (fn_mask!="") {
-      // Revert the mask for evaluation
-      VolumeXmipp aux;
-      aux.read(fn_mask);
-      aux()*=-1;
-      aux()+=1;
-      aux.write();
-   }
-   if (prm.global_radius!=-1) eval_prm.global_radius=prm.global_radius;
-   else eval_prm.global_radius=CEIL(proj_prm.proj_Xdim/2);
-   eval_prm.tell |= SAVE_HISTOGRAMS | SAVE_MAPS | SHOW_PROCESS;
-   cerr << "   Evaluating ...\n";
-   ROUT_Evaluate(eval_prm,results);
 }

@@ -180,8 +180,11 @@ public:
 
    #define BIG_BLOB 1
    #define SMALL_BLOB 2
-   /// Blob type = BIG_BLOB or SMALL_BLOB
+   #define VISUAL_BLOB 3
+   /// Blob type = BIG_BLOB, SMALL_BLOB or VISUAL BLOB
    int blob_type;
+   /// True if voxel basis
+   bool voxel_basis;
    /// Stop at = Number of images after which the algorithm must stop
    int stop_at;
    /// Apply positivity
@@ -222,6 +225,17 @@ public:
    matrix1D<double> muF_list;
    /// Unmatched CTF correction
    bool unmatched;
+
+   /// Tomography
+   bool tomography;
+
+   /// Evaluate
+   bool evaluate;
+   /** Phantom for evaluation.
+       Should be empty if it is the same as the projected phantom. */
+   FileName fn_alternative_evaluation_phantom;
+   /// Smooth mask before evaluation
+   FileName fn_smooth_evaluation_mask;
 public:
    /** Read parameters from file. */
    void read(const FileName &fn_test_params) _THROW;
