@@ -472,7 +472,7 @@ int main (int argc, char *argv[]) {
 				    art_prm.projYdim:art_prm.Youtput_volume_size;
  				int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
 				    art_prm.projXdim:art_prm.Zoutput_volume_size;
-		 		blobs2voxels(vol_basis, art_prm.basis.blob, &vol_voxels, art_prm.D, 
+		 		blobs2voxels(vol_basis, art_prm.basis.blob, &(vol_voxels()), art_prm.D, 
         			Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
         			vol_voxels.write(art_prm.fn_root+"it"+ItoA(i+1)+".vol");
 			
@@ -497,7 +497,7 @@ int main (int argc, char *argv[]) {
  	int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
 	  art_prm.projXdim:art_prm.Zoutput_volume_size;
 			 		
-	blobs2voxels(vol_basis, art_prm.basis.blob, &vol_voxels, art_prm.D,Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+	blobs2voxels(vol_basis, art_prm.basis.blob, &(vol_voxels()), art_prm.D,Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
  		
 	vol_voxels.write(art_prm.fn_root+".vol");
 		
