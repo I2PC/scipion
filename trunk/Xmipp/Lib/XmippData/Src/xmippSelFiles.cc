@@ -162,14 +162,10 @@ ostream& operator << (ostream& o, SelFile &SF) {
 /* Clean ------------------------------------------------------------------- */
 void SelFile::clean() {
    vector<SelLine>::iterator current = text_line.begin();
-   vector<SelLine>::iterator last    = text_line.end();
-   vector<SelLine>::iterator temp;
-   while (current != last) {
+   while (current != text_line.end()) {
       if ((*current).line_type==SelLine::DATALINE &&
          (*current).label==SelLine::DISCARDED) {
-         temp=current; temp++;
          text_line.erase(current);
-         current=temp-1;
       } else current++;
    }
    current_line=text_line.begin();
