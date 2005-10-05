@@ -399,7 +399,7 @@ void DocFile::get_selfile(SelFile &SF) {
   next();
   FileName fn_img;
   while (!eof()) {
-    if ((*current_line).Is_comment()) {
+    if (strstr(((*current_line).get_text()).c_str()," ; ")!=NULL) {
       fn_img=(*current_line).get_text();
       SF.insert(fn_img.without(" ; "));
     }
