@@ -80,9 +80,6 @@ public:
    double rad_gaussian;
    // Sqrt angle in radians
    double rad_sqrt;
-   // square roots of defoci
-   double sqrt_DeltafU;
-   double sqrt_DeltafV;
    /** Standard error of defocus Gaussian function due to chromatic aberration.
        in Amstrong */
    double D;

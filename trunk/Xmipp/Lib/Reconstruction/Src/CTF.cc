@@ -204,10 +204,6 @@ void XmippCTF::Produce_Side_Info() {
    rad_gaussian=DEG2RAD(gaussian_angle);
    rad_sqrt=DEG2RAD(sqrt_angle);
 
-   // ua2=1/(aperture*aperture);
-   sqrt_DeltafU=sqrt(DeltafU);
-   sqrt_DeltafV=sqrt(DeltafV);
-
    // lambda=h/sqrt(2*m*e*kV)
    //    h: Planck constant
    //    m: electron mass
