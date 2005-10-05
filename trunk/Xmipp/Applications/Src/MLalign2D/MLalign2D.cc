@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
-  SelFile SFo,SFa;
+  SelFile SFa;
 
   Prog_MLalign2D_prm prm;
 
@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
       // Check convergence 
       converged=prm.check_convergence(conv);
 
-      if (prm.write_intermediate) 
-	prm.write_output_files(iter,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
+      if (prm.write_intermediate)
+	prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
       else prm.output_to_screen(iter,sumcorr,LL);
       
       if (converged) {
@@ -114,31 +114,6 @@ int main(int argc, char **argv) {
       }
 
     } // end loop iterations
-
-    // Write out converged structures
-    prm.write_output_files(-1,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
-      
-    if (prm.write_docfile) {
-      // Write out docfile with optimal transformation & references
-      fn_img=prm.fn_root+".doc";
-      DFo.write(fn_img);
-    }
-    if (prm.write_selfiles) {
-      // Also write out selfiles of all experimental images, classified according to optimal reference image
-      for (int refno=0;refno<prm.n_ref; refno++) { 
-	DFo.go_beginning();
-	SFo.clear();
-	for (int n=0; n<DFo.dataLineNo(); n++ ) {
-	  DFo.next();
-	  fn_img=((DFo.get_current_line()).get_text()).erase(0,3);
-	  DFo.adjust_to_data_line();
-	  if ((refno+1)==(int)DFo(5)) SFo.insert(fn_img,SelLine::ACTIVE);
-	}
-	fn_tmp=prm.fn_root+"_ref";
-	fn_tmp.compose(fn_tmp,refno+1,"sel");
-	SFo.write(fn_tmp);
-      }
-    }
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 }

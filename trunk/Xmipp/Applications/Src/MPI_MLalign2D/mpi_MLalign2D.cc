@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
-  SelFile SFo,SFa;
+  SelFile SFa;
     
   Prog_MLalign2D_prm prm;
 
@@ -162,13 +162,33 @@ int main(int argc, char **argv) {
 			    sumw,sumw_mirror,sumcorr,sumw_allrefs,
 			    count_defocus);    
 
+      if (prm.write_docfile) {
+	// All nodes write out temporary DFo
+	fn_img.compose(prm.fn_root,rank,"tmpdoc");
+	DFo.write(fn_img);
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+
       // Check convergence 
       converged=prm.check_convergence(conv);
 
       if (rank==0) {
-	if (prm.write_intermediate)
-	  prm.write_output_files(iter,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
-	else prm.output_to_screen(iter,sumcorr,LL);
+	if (prm.write_intermediate) {
+	  if (prm.write_docfile) {
+	    // Write out docfile with optimal transformation & references
+	    DFo.clear();
+	    for (int rank2=0; rank2<size; rank2++) {
+	      fn_img.compose(prm.fn_root,rank2,"tmpdoc");
+	      int ln=DFo.LineNo();
+	      DFo.append(fn_img);
+	      DFo.locate(DFo.get_last_key());
+	      DFo.next();
+	      DFo.remove_current();
+	      system(((string)"rm -f "+fn_img).c_str());
+	    }
+	  }
+	  prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
+	} else prm.output_to_screen(iter,sumcorr,LL);
       }
       
       if (converged) {
@@ -178,66 +198,9 @@ int main(int argc, char **argv) {
 
     } // end loop iterations
 
-
-    // All nodes write out temporary DFo and SFo
-    if (prm.write_docfile) {
-      fn_img.compose(prm.fn_root,rank,"tmpdoc");
-      DFo.write(fn_img);
-    }
-    if (prm.write_selfiles) {
-      for (int refno=0;refno<prm.n_ref; refno++) { 
-	DFo.go_beginning();
-	if (rank==0) DFo.next();
-	SFo.clear();
-	for (int n=0; n<DFo.dataLineNo(); n++ ) {
-	  fn_img=((DFo.get_current_line()).get_text()).erase(0,3);
-	  DFo.adjust_to_data_line();
-	  if ((refno+1)==(int)DFo(5)) SFo.insert(fn_img,SelLine::ACTIVE);
-	  DFo.next();
-	}
-	fn_tmp=prm.fn_root+"_ref";
-	fn_tmp.compose(fn_tmp,refno+1,"");
-	fn_tmp.compose(fn_tmp,rank,"tmpsel");
-	SFo.write(fn_tmp);
-      }
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-
     if (rank==0) {
       // Write out converged structures
-      prm.write_output_files(-1,SFa,DFf,sumw_allrefs,LL,sumcorr,conv);
-      
-      if (prm.write_docfile) {
-	// Write out docfile with optimal transformation & references
-	DFo.clear();
-	for (int rank2=0; rank2<size; rank2++) {
-	  fn_img.compose(prm.fn_root,rank2,"tmpdoc");
-	  int ln=DFo.LineNo();
-	  DFo.append(fn_img);
-	  DFo.locate(DFo.get_last_key());
-	  DFo.next();
-	  DFo.remove_current();
-	  system(((string)"rm -f "+fn_img).c_str());
-	}
-	fn_tmp=prm.fn_root+".doc";
-	DFo.write(fn_tmp);
-      }
-      if (prm.write_selfiles) {
-	// Also write out selfiles of all experimental images, classified according to optimal reference image
-	for (int refno=0;refno<prm.n_ref; refno++) { 
-	  SFo.clear();
-	  for (int rank2=0; rank2<size; rank2++) {
-	    fn_img=prm.fn_root+"_ref";
-	    fn_img.compose(fn_img,refno+1,"");
-	    fn_img.compose(fn_img,rank2,"tmpsel");
-	    SFo.append(fn_img);
-	    system(((string)"rm -f "+fn_img).c_str());
-	  }
-	  fn_tmp=prm.fn_root+"_ref";
-	  fn_tmp.compose(fn_tmp,refno+1,"sel");
-	  SFo.write(fn_tmp);
-	}
-      }
+      prm.write_output_files(-1,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
     }
 
   } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}

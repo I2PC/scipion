@@ -106,6 +106,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv)  {
   fourier_mode=check_param(argc,argv,"-FS");
   fn_sig=get_param(argc,argv,"-Msigma2","");
   fn_cv=get_param(argc,argv,"-cv","");
+  exclude_lowest=AtoI(get_param(argc,argv,"-exclude_lowest","0"));
 
   // Get nr_focus from SelFile
   SelLine SL;
@@ -388,7 +389,8 @@ void Prog_MLalign2D_prm::produce_Side_info() {
     resol_mask.resize(dim,dim);
     Maux.set_Xmipp_origin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux) {
-      if ( ((i*i+j*j) <= (dim*dim/4)) && ((i*i+j*j)>0) ) MAT_ELEM(Maux,i,j)=1.;
+      if ( ((i*i+j*j) <= (dim*dim/4)) && 
+	   ((i*i+j*j)>exclude_lowest*exclude_lowest) ) MAT_ELEM(Maux,i,j)=1.;
       else MAT_ELEM(Maux,i,j)=0.;
     }
     CenterFFT(Maux,false);
@@ -813,7 +815,7 @@ void Prog_MLalign2D_prm::ML_integrate_FS_model_phi(
 	  irot=iflip*nr_psi+ipsi;
 	  diff=0.;
 	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg) {
-	    // Exclude origin and "corners" of FT
+	    // Exclude origin, lowest frequencies and "corners" of FT
 	    if (dMij(resol_mask,i,j)) {
 	      tmpr= (double)dMij(Fimg,i,j).real() - (double)dMij(Fref[refno][ipsi],i,j).real();  
 	      tmpi= (double)dMij(Fimg,i,j).imag() - (double)dMij(Fref[refno][ipsi],i,j).imag();  
@@ -1526,11 +1528,12 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 
 }
 
-void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF, 
+void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF, DocFile &DFo, 
 			 double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv ) {
 
   FileName fn_tmp,fn_base;
   matrix1D<double> fracline(3);
+  SelFile SFo;
   string comment;
  
   DF.clear();
@@ -1586,6 +1589,30 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, DocFile
   DF.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
   fn_tmp=fn_base+".log";
   DF.write(fn_tmp);
+
+  if (write_docfile) {
+    // Write out docfile with optimal transformation & references
+    fn_tmp=fn_root+".doc";
+    DFo.write(fn_tmp);
+  }
+
+  if (write_selfiles) {
+    // Also write out selfiles of all experimental images, 
+    // classified according to optimal reference image
+    for (int refno=0;refno<n_ref; refno++) { 
+      DFo.go_beginning();
+      SFo.clear();
+      for (int n=0; n<DFo.dataLineNo(); n++ ) {
+	DFo.next();
+	fn_tmp=((DFo.get_current_line()).get_text()).erase(0,3);
+	DFo.adjust_to_data_line();
+	if ((refno+1)==(int)DFo(5)) SFo.insert(fn_tmp,SelLine::ACTIVE);
+      }
+      fn_tmp=fn_root+"_ref";
+      fn_tmp.compose(fn_tmp,refno+1,"sel");
+      SFo.write(fn_tmp);
+    }
+  }
 
 }
 

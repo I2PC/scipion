@@ -131,7 +131,10 @@ public:
   vector<matrix1D<double> > Vtrans;
   /** number of defocus groups */
   int nr_focus;
+  /** resolution mask */
   matrix2D<int> resol_mask;
+  /** number of lowest-resolution shells to exclude from fourier-mode */
+  int exclude_lowest;
 
 public:
   /// Read arguments from command line
@@ -228,7 +231,7 @@ public:
   void output_to_screen(int &iter, double &sumcorr, double &LL);
 
   /// Write out reference images, selfile and logfile
-  void write_output_files(const int iter, SelFile &SF, DocFile &DF, 
+  void write_output_files(const int iter, SelFile &SF, DocFile &DF, DocFile &DFo,
 			  double &sumw_allrefs, double &LL, double &avecorr, vector<double> &conv);
 
 
