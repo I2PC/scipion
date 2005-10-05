@@ -363,7 +363,7 @@ int main (int argc, char *argv[]) {
 						}
 						else
 						{
-							// This case should not happen as this blob 
+							// This case should not happen as this element 
 							// is not affected by actual projections
 	
 							cerr << "Error with weights, contact developers!" << endl;
@@ -401,12 +401,30 @@ int main (int argc, char *argv[]) {
 				comms_t += aux_t;
 				comms_t_it += aux_t;
 				
+
 				FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY( vol_basis(j)() )
+				        if( MULTIDIM_ELEM( GVNeq_aux(j)(),i) == 0 ) // Division by 0
+					{
+						if( MULTIDIM_ELEM( vol_basis_aux(j)(),i) == 0 )
+						{
+							MULTIDIM_ELEM( vol_basis(j)(),i) = 0;
+						}
+						else
+						{
+							// This case should not happen as this element 
+							// is not affected by actual projections
+	
+							cerr << "Error with weights, contact developers!" << endl;
+							exit( 0 );
+						}	
+					}
+					else
+					{
 				          MULTIDIM_ELEM( vol_basis(j)(),i) = 
 					  	MULTIDIM_ELEM( vol_aux2(j)(),i) + 
 						MULTIDIM_ELEM( vol_basis_aux(j)(),i) /  
 						MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
-						
+					}
 			}	
 		}
 		else{   // SIRT AND AVSP
