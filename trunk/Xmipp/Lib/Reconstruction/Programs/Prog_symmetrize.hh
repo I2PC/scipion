@@ -27,6 +27,7 @@
 
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippVolumes.hh>
+#include <XmippData/xmippMasks.hh>
 #include "../symmetries.hh"
 
 /**@name Symmetrize Program */
@@ -60,6 +61,10 @@ public:
 /** Really symmetrize.*/
 void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
    bool wrap=TRUE, bool show_progress=FALSE);
+
+/** Really symmetrize using Bsplines */
+void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
+			int Splinedegree, bool wrap, bool do_outside_avg);
 
 /** Main program */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm);

@@ -98,6 +98,50 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
 }
 #undef DEBUG
 
+/* Really symmetrize using Bsplines ------------------------------------------------ */
+//#define DEBUG
+void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
+			int Splinedegree, bool wrap, bool do_outside_avg) {
+
+  matrix2D<double> L(4,4), R(4,4); // A matrix from the list
+  VolumeXmipp V_aux, V_aux2;
+  matrix1D<double> sh(3);
+  double dum,avg=0.;
+
+  if (do_outside_avg) {
+    matrix3D<int> mask;
+    int rad;
+    mask.resize(V_in());
+    mask.set_Xmipp_origin();
+    rad=MIN(V_in().RowNo(),V_in().ColNo());
+    rad=MIN(rad,V_in().SliNo());
+    BinarySphericalMask(mask,rad/2,OUTSIDE_MASK);
+    compute_stats_within_binary_mask(mask,V_in(),dum,dum,avg,dum);
+  }
+
+  V_out=V_in;
+
+  for (int i=0; i<SL.SymsNo(); i++) {
+    SL.get_matrices(i,L,R);
+
+    SL.get_shift(i,sh);
+    R(3,0)=sh(0) * V_aux().ColNo();
+    R(3,1)=sh(1) * V_aux().RowNo();
+    R(3,2)=sh(2) * V_aux().SliNo();
+
+    apply_geom_Bspline(V_aux(),R.transpose(),V_in(),Splinedegree,IS_NOT_INV,wrap,avg);
+    array_by_array(V_out(),V_aux(),V_out(),'+');
+
+#ifdef DEBUG
+    V_aux.write((string)"PPPsym_"+ItoA(i)+".vol");
+#endif
+
+   }
+   array_by_scalar(V_out(),SL.SymsNo()+1.0f,V_out(),'/');
+
+}
+#undef DEBUG
+
 /* Main program ------------------------------------------------------------ */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm) {
    SymList         SL;
