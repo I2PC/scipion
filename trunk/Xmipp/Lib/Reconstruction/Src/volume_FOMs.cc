@@ -818,7 +818,6 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 
 //   system(((string)"rm resolution."+ext).c_str());
 }
-#endif
 
 // Based on Bsoft
 void compute_resolution(VolumeXmipp &vol_phantom,
@@ -852,7 +851,16 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    // Remove intermidiate files
    system("rm superfeo.spi superfeo2.spi superfeo3");
 }
+#endif
 
+// Based on Xmipp
+void compute_resolution(VolumeXmipp &vol_phantom,
+  VolumeXmipp &vol_recons, double &resolution) {
+  matrix1D<double> frequency, FSC;
+  resolution=compute_FSC(vol_phantom,vol_recons,1,frequency,FSC);
+}
+
+#ifdef NEVER_DEFINED
 // Based on Bsoft
 double compute_FSC(VolumeXmipp &vol_phantom,
    VolumeXmipp &vol_recons, double sampling_rate,
@@ -911,15 +919,13 @@ double compute_FSC(VolumeXmipp &vol_phantom,
          if (resolution==-1 && fsc<0.5) resolution=f;
       } while (!fourier_found);
       
-      // Read the FSC
+      // Now copy
       frequency.resize(auxfreq.size());
       FSC.resize(auxfreq.size());
       FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency) {
          frequency(i)=auxfreq[i];
          FSC      (i)=auxFSC [i];
       }
-      
-      // Now copy 
    } catch (Xmipp_error XE) {
       cerr << XE << endl
            << "compute_resolution: Error reading resolution, ignoring it\n";
@@ -931,5 +937,68 @@ double compute_FSC(VolumeXmipp &vol_phantom,
    
    // Remove intermidiate files
    system("rm superfeo.spi superfeo2.spi superfeo3");
+   return resolution;
+}
+#endif
+
+// Based on Xmipp
+double compute_FSC(VolumeXmipp &vol_phantom,
+   VolumeXmipp &vol_recons, double sampling_rate,
+   matrix1D<double> &frequency, matrix1D<double> &FSC) {
+   double resolution=-1;
+   frequency.clear();
+   FSC.clear();
+
+   // Prepare volumes to be evaluated
+   if (vol_phantom.name()!="")
+      system(((string)"ln -s "+vol_phantom.name()+" superfeo.vol").c_str());
+   else vol_phantom.write("superfeo.vol");
+   if (vol_recons.name()!="")
+      system(((string)"ln -s "+vol_recons.name()+" superfeo2.vol").c_str());
+   else vol_recons.write("superfeo2.vol");
+
+   // Run bresolve of bsoft to compute resolution
+   string command=(string)"xmipp_resolution -sam "+FtoA(sampling_rate)+
+      " -ref superfeo.vol -i superfeo2.vol";
+   system(command.c_str());
+   
+   // Process output file
+   ifstream fh_resol;
+   fh_resol.open("superfeo2.vol.frc");
+   if (!fh_resol)
+      REPORT_ERROR(1,
+         "compute_FSC: Cannot open results file from xmipp_resolve");
+   try {
+      string line;
+      // Skip first line
+      getline(fh_resol,line);
+      
+      // Read the rest
+      vector<double> auxfreq, auxFSC;
+      vector<string> tokens;
+      while (getline(fh_resol,line)) {
+         tokenize(line,tokens);
+         double f  =AtoF(tokens[0]);
+         double fsc=AtoF(tokens[1]);
+         auxfreq.push_back(f);
+         auxFSC. push_back(fsc);
+         if (resolution==-1 && fsc<0.5) resolution=f;
+      }
+      
+      // Now copy
+      frequency.resize(auxfreq.size());
+      FSC.resize(auxfreq.size());
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency) {
+         frequency(i)=auxfreq[i];
+         FSC      (i)=auxFSC [i];
+      }
+   } catch (Xmipp_error XE) {
+      cerr << XE << endl
+           << "compute_resolution: Error reading resolution, ignoring it\n";
+   }
+   fh_resol.close();
+   
+   // Remove intermidiate files
+   system("rm superfeo.vol superfeo2.vol superfeo2.vol.frc superfeo2.vol.dpr");
    return resolution;
 }
