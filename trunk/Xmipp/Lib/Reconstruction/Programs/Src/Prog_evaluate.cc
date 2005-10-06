@@ -45,7 +45,7 @@ void stats__1(const matrix1D<double> &v, double &avg, double &stddev) {
    int N=0; avg=stddev=0;
    for (int i=0; i<XSIZE(v); i++)
       if (v(i)!=-1) {N++; avg += v(i); stddev += v(i)*v(i);}
-   if (N!=0) {avg /= N; stddev=sqrt(stddev/N-avg*avg);}
+   if (N!=0) {avg /= N; stddev=sqrt(MAX(0,stddev/N-avg*avg));}
    else {avg=-1; stddev=0;}
 }
 
