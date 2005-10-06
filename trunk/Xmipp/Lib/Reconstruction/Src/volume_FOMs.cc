@@ -133,8 +133,8 @@ void compute_sc_FOMs(
    double phantom_sum =0, recons_sum =0, phantom_recons_sum=0;
    double phantom_sum2=0, recons_sum2=0;
    int    no_samples  =0;
-   double Mp=MINFLOAT,    mp=MAXFLOAT;
-   double Mr=MINFLOAT,    mr=MAXFLOAT;
+   double Mp=-1e30, mp=1e30;
+   double Mr=-1e30, mr=1e30;
    
    FOR_ALL_ELEMENTS_IN_MATRIX3D(L) {
       if (!mi) continue; // If it is not in the mask continue
