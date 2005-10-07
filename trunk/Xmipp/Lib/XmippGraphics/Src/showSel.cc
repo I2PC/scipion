@@ -57,13 +57,10 @@ void ShowSel::initWithFile( int _numRows, int _numCols,
    const FileName &_fn, double _minGray, double _maxGray) {
    init();
    readFile(_fn, _minGray, _maxGray);
-   if (_numRows!=-1 && _numCols!=-1) {
-      NumRows = _numRows;
-      NumCols = _numCols;
-   } else {
-      NumCols=FLOOR(900.0/projXdim);
-      NumRows=FLOOR(700.0/projYdim);
-   }
+   if (_numRows!=-1) NumRows = _numRows;
+   else NumRows=FLOOR(700.0/projYdim);
+   if (_numCols!=-1) NumCols = _numCols;
+   else NumCols=FLOOR(900.0/projXdim);
    initTable();
    initRightclickMenubar();
    repaint();
