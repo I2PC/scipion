@@ -967,7 +967,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
    fh_resol.open("superfeo2.vol.frc");
    if (!fh_resol)
       REPORT_ERROR(1,
-         "compute_FSC: Cannot open results file from xmipp_resolve");
+         "compute_FSC: Cannot open results file from xmipp_resolution");
    try {
       string line;
       // Skip first line
