@@ -411,9 +411,9 @@ void fourier_ring_correlation(matrix2D<T> const &m1, matrix2D<T> const &m2, doub
   matrix2D<T> aux(m1);
   matrix1D<int> origin(3),radial_count;
   matrix1D<double> tmp1,tmp2;
-  matrix1D<complex <double> > tmp3;
   matrix2D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
   matrix2D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  matrix2D <double> realFT1; realFT1.resize(FT1);
   int dim=(int)FT1.RowNo()/2;
   origin.init_zeros();
 
@@ -428,11 +428,10 @@ void fourier_ring_correlation(matrix2D<T> const &m1, matrix2D<T> const &m2, doub
   tmp2.init_zeros();
   radial_average(aux,origin,tmp2,radial_count,TRUE);
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FT1) {
-    dMij(FT1,i,j)=conj(dMij(FT1,i,j))*dMij(FT2,i,j);
+    dMij(realFT1,i,j)=real(conj(dMij(FT1,i,j))*dMij(FT2,i,j));
   }
-  tmp3.init_zeros();
-  radial_average(FT1,origin,tmp3,radial_count,TRUE);
-  FFT_magnitude(tmp3,frc);
+  frc.init_zeros();
+  radial_average(realFT1,origin,frc,radial_count,TRUE);
   frc.resize(dim);
   frc_noise.resize(dim);
   freq.resize(dim);
@@ -458,9 +457,9 @@ void fourier_ring_correlation(matrix3D<T> const &m1, matrix3D<T> const &m2, doub
   matrix3D<T> aux(m1);
   matrix1D<int> origin(3),radial_count;
   matrix1D<double> tmp1,tmp2;
-  matrix1D<complex <double> > tmp3;
   matrix3D<complex <double> > FT1; FourierTransform(m1,FT1); CenterFFT(FT1,true);
   matrix3D<complex <double> > FT2; FourierTransform(m2,FT2); CenterFFT(FT2,true);
+  matrix3D <double> realFT1; realFT1.resize(FT1);
   int dim=(int)FT1.RowNo()/2;
   origin.init_zeros();
 
@@ -475,11 +474,10 @@ void fourier_ring_correlation(matrix3D<T> const &m1, matrix3D<T> const &m2, doub
   tmp2.init_zeros();
   radial_average(aux,origin,tmp2,radial_count,TRUE);
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1) {
-    dVkij(FT1,k,i,j)=conj(dVkij(FT1,k,i,j))*dVkij(FT2,k,i,j);
+    dVkij(realFT1,k,i,j)=real(conj(dVkij(FT1,k,i,j))*dVkij(FT2,k,i,j));
   }
-  tmp3.init_zeros();
-  radial_average(FT1,origin,tmp3,radial_count,TRUE);
-  FFT_magnitude(tmp3,frc);
+  frc.init_zeros();
+  radial_average(realFT1,origin,frc,radial_count,TRUE);
   frc.resize(dim);
   frc_noise.resize(dim);
   freq.resize(dim);
