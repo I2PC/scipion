@@ -68,7 +68,7 @@ void Prog_Random_Phantom_Parameters::usage() {
    cout << "                      greater than d\n";
    cout << "  [-radius r]         feature centers inside an sphere of radius r\n";
    cout << "  [-stats <N=-1>]     Compute family volume statistics with N samples\n";
-   cout << "  [-ctf <Xmipp Fourier Image>] For computing the projection statistics\n";
+   cout << "  [-ctf <CTF description>] For computing the projection statistics\n";
    cout << "  [-Xdim <dim>        For computing the projection statistics\n";
    cout << "  [-Ydim <dim=Xdim>]  For computing the projection statistics\n";
    cout << "  [-target_SNR <SNR>] For computing the noise power needed for this SNR\n";
