@@ -59,7 +59,7 @@ void Normalize_parameters::read(int argc, char **argv) {
 	  mask_prm.allowed_data_types=INT_MASK;
 	  mask_prm.read(argc,argv);
 	} else {
-	  enable_mask=FALSE;
+	  enable_mask=false;
 	  int i=position_param(argc,argv,"-background");
 	  if (i+2>=argc)
 	    REPORT_ERROR(1,"Normalize: Not enough parameters after -background");

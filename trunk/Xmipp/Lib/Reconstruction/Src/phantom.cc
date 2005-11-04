@@ -608,7 +608,7 @@ int Feature::intersects_sphere(const matrix1D<double> &r, double radius,
    matrix1D<double> &aux1, matrix1D<double> &aux2, matrix1D<double> &aux3)
    const {
    double radius2=radius*radius;
-   bool intersects=FALSE;
+   bool intersects=false;
    for (double k=FLOOR(ZZ(r)-radius); k<=CEIL(ZZ(r)+radius) && !intersects; k++)
       for (double i=FLOOR(YY(r)-radius); i<=CEIL(YY(r)+radius) && !intersects; i++)
 	 for (double j=FLOOR(XX(r)-radius); j<=CEIL(XX(r)+radius) && !intersects; j++) {
@@ -1823,7 +1823,7 @@ void Phantom::surface(double z0, double radius, int direction, Image *P)
       if (direction==POS_NEG) k=LAST_XMIPP_INDEX(zdim)+1;
       else                    k=FIRST_XMIPP_INDEX(zdim)-1;
       bool finished;
-      finished=FALSE;
+      finished=false;
 
       #ifdef DEBUG
          cout << "Initial k=" << k << endl;
@@ -1837,26 +1837,26 @@ void Phantom::surface(double z0, double radius, int direction, Image *P)
          #endif
          // If it is inside move a step backward and finish
          if (any_feature_intersects_sphere(r,radius,aux1,aux2,aux3)) {
-            finished=TRUE;
+            finished=true;
             if (direction==POS_NEG) k++; else k--;
          } else {
          // Else, move until you find z0
             if (z0!=zdim)
                if (direction==POS_NEG) {
                   k--;
-                  if (k<z0) {finished=TRUE; k=CEIL(z0);}
+                  if (k<z0) {finished=true; k=CEIL(z0);}
                } else {
                   k++;
-                  if (k>z0) {finished=TRUE; k=FLOOR(z0);}
+                  if (k>z0) {finished=true; k=FLOOR(z0);}
                }
             // or you reach the end of the volume
             else
                if (direction==POS_NEG) {
                   k--;
-                  if (k<FIRST_XMIPP_INDEX(zdim)) {finished=TRUE;}
+                  if (k<FIRST_XMIPP_INDEX(zdim)) {finished=true;}
                } else {
                   k++;
-                  if (k>LAST_XMIPP_INDEX(zdim))  {finished=TRUE;}
+                  if (k>LAST_XMIPP_INDEX(zdim))  {finished=true;}
                }
          }
       }

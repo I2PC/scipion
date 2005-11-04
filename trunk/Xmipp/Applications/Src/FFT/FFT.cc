@@ -29,13 +29,13 @@
 bool process_img(ImageXmipp &img, FourierImageXmipp &IMG,
    const Prog_parameters *prm) {
    FourierTransform(img(), IMG());
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, FourierVolumeXmipp &VOL,
    const Prog_parameters *prm) {
    FourierTransform(vol(), VOL());
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

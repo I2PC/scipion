@@ -75,21 +75,48 @@ void Bilib_DWT(const matrix3D<double> &input,
     type of DWT must be set with set_DWT_type. If isign=1 the direct DWT
     is performed, if isign=-1 the inverse DWT is done*/
 template <class T>
-   void DWT(const matrix1D<T> &v, matrix1D<double> &result, int isign=1);
+   void DWT(const matrix1D<T> &v, matrix1D<double> &result, int isign=1) {
+      unsigned long int nn[1];
+      unsigned long int *ptr_nn=nn-1;
+
+      type_cast(v, result);
+      nn[0] = XSIZE(result);
+      double *ptr_result=MULTIDIM_ARRAY(result)-1;
+      wtn(ptr_result, ptr_nn, 1, isign, pwt);
+   }
 
 /** DWT of a array.
     The output array can be the same as the input one. Previously the
     type of DWT must be set with set_DWT_type. If isign=1 the direct DWT
     is performed, if isign=-1 the inverse DWT is done*/
 template <class T>
-   void DWT(const matrix2D<T> &v, matrix2D<double> &result, int isign=1);
+   void DWT(const matrix2D<T> &v, matrix2D<double> &result, int isign=1) {
+      unsigned long int nn[2];
+      unsigned long int *ptr_nn=nn-1;
+
+      type_cast(v, result);
+      nn[1] = YSIZE(result);
+      nn[0] = XSIZE(result);
+      double *ptr_result=MULTIDIM_ARRAY(result)-1;
+      wtn(ptr_result, ptr_nn, 2, isign, pwt);
+   }
 
 /** DWT of a volume.
     The output vector can be the same as the input one. Previously the
     type of DWT must be set with set_DWT_type. If isign=1 the direct DWT
     is performed, if isign=-1 the inverse DWT is done*/
 template <class T>
-   void DWT(const matrix3D<T> &v, matrix3D<double> &result, int isign=1);
+   void DWT(const matrix3D<T> &v, matrix3D<double> &result, int isign=1) {
+      unsigned long int nn[2];
+      unsigned long int *ptr_nn=nn-1;
+
+      type_cast(v, result);
+      nn[2] = ZSIZE(result);
+      nn[1] = YSIZE(result);
+      nn[0] = XSIZE(result);
+      double *ptr_result=MULTIDIM_ARRAY(result)-1;
+      wtn(ptr_result, ptr_nn, 3, isign, pwt);
+   }
 
 /** IDWT of a vector.
     The output vector can be the
@@ -120,6 +147,9 @@ template <class T>
        matrix2D<double> &result);
 //@}
 
+#define DWT_Imin(s,smax,l) (int)((l=='0')?0:pow(2.0,smax-s-1))
+#define DWT_Imax(s,smax,l) (int)((l=='0')?pow(2.0,smax-s-1)-1:pow(2.0,smax-s)-1)
+
 /** Select Block 1D.
     Given the scale (s=0 is the finest) and the quadrant
     "0"(Lower frequencies) or "1"(Higher frequencies)
@@ -128,7 +158,11 @@ template <class T>
     template <class T>
     void SelectDWTBlock(int scale, const matrix1D<T> &I,
        const string &quadrant,
-       int &x1, int &x2);
+       int &x1, int &x2) {
+         double Nx = Get_Max_Scale(XSIZE(I));
+         I.physical2logical(DWT_Imin(scale,Nx,quadrant[0]),x1);
+         I.physical2logical(DWT_Imax(scale,Nx,quadrant[0]),x2);
+    }
 
 /** Select Block 2D.
     Given the scale (s=0 is the finest) and the quadrant
@@ -139,7 +173,16 @@ template <class T>
     template <class T>
     void SelectDWTBlock(int scale, const matrix2D<T> &I,
        const string &quadrant,
-       int &x1, int &x2, int &y1, int &y2);
+       int &x1, int &x2, int &y1, int &y2) {
+         double Nx = Get_Max_Scale(XSIZE(I));
+         double Ny = Get_Max_Scale(YSIZE(I));
+         x1=DWT_Imin(scale,Nx,quadrant[0]);
+         y1=DWT_Imin(scale,Ny,quadrant[1]);
+         x2=DWT_Imax(scale,Nx,quadrant[0]);
+         y2=DWT_Imax(scale,Ny,quadrant[1]);
+         I.physical2logical(y1,x1,y1,x1);
+         I.physical2logical(y2,x2,y2,x2);
+    }
 
 /** Select Block 3D.
     Given the scale (s=0 is the finest) and the quadrant
@@ -149,7 +192,19 @@ template <class T>
     template <class T>
     void SelectDWTBlock(int scale, const matrix3D<T> &I,
        const string &quadrant,
-       int &x1, int &x2, int &y1, int &y2, int &z1, int &z2);
+       int &x1, int &x2, int &y1, int &y2, int &z1, int &z2) {
+         double Nx = Get_Max_Scale(XSIZE(I));
+         double Ny = Get_Max_Scale(YSIZE(I));
+         double Nz = Get_Max_Scale(ZSIZE(I));
+         x1=DWT_Imin(scale,Nx,quadrant[0]);
+         y1=DWT_Imin(scale,Ny,quadrant[1]);
+         z1=DWT_Imin(scale,Nz,quadrant[2]);
+         x2=DWT_Imax(scale,Nx,quadrant[0]);
+         y2=DWT_Imax(scale,Ny,quadrant[1]);
+         z2=DWT_Imax(scale,Nz,quadrant[2]);
+         I.physical2logical(z1,y1,x1,z1,y1,x1);
+         I.physical2logical(z2,y2,x2,z2,y2,x2);
+    }
 
    /** Get maximum scale.
        This function returns the maximum scale achievable by the 

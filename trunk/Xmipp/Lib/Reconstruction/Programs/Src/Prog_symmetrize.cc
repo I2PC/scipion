@@ -154,7 +154,7 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm) {
    V_in.read(prm.fn_in);
    
    cerr << prm;
-   symmetrize(SL,V_in,V_out,prm.wrap,TRUE);
+   symmetrize(SL,V_in,V_out,prm.wrap,true);
    if (prm.fn_out=="") fn_out=V_in.name(); else fn_out=prm.fn_out;
    V_out.write(fn_out);
 }

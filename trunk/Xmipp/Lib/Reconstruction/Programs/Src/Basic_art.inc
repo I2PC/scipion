@@ -23,11 +23,13 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include "../Basic_art.hh"
 #include "../recons_misc.hh"
 #include "../Prog_symmetrize.hh"
 #include <XmippData/xmippDocFiles.hh>
 #include <XmippData/xmippMasks.hh>
+
+class POCSClass;
+class VariabilityClass;
 
 /* ------------------------------------------------------------------------- */
 /* Init history                                                              */
@@ -169,7 +171,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 //#define DEBUG_POCS
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank) {
+   Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank) {
    // Some variables .......................................................
    int        ART_numIMG;              // Normalizing factor
    GridVolume *ptr_vol_out;            // Pointer to output volume

@@ -47,14 +47,14 @@ int main (int argc,char *argv[]) {
 // Read the command line ---------------------------------------------------
    try {
       if (check_param(argc,argv,"-voxels")) {
-         voxels_to_blobs=TRUE;
+         voxels_to_blobs=true;
          fn_in=get_param(argc,argv,"-voxels");
          grid_relative_size = AtoF(get_param(argc, argv, "-g", "2.26"));
          if      (check_param(argc, argv, "-FCC")) grid_type=FCC;
          else if (check_param(argc, argv, "-CC"))  grid_type=CC;
          else                                      grid_type=BCC;
       } else if (check_param(argc,argv,"-blobs")) {
-         voxels_to_blobs=FALSE;
+         voxels_to_blobs=false;
          fn_in=get_param(argc,argv,"-blobs");
       } else
          REPORT_ERROR(1,"Voxels22blobs: Not recognised input file type");
@@ -74,7 +74,7 @@ try {
       vol_voxels.read(fn_in);
       vol_voxels().set_Xmipp_origin();
       voxels2blobs(&(vol_voxels()), blob, vol_blobs, grid_type,
-         grid_relative_size, lambda, NULL, NULL, final_error, FALSE, R);
+         grid_relative_size, lambda, NULL, NULL, final_error, false, R);
       vol_blobs.write(fn_out);
    } else {
       vol_blobs.read(fn_in);

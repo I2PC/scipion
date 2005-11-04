@@ -1,3 +1,5 @@
+#ifndef _PYRAMIDFILTERS
+   #define _PYRAMIDFILTERS
 /* ----------------------------------------------------------------------------
 	Filename:  	pyramidfilters.h
 	
@@ -97,3 +99,4 @@ extern void PyramidFilterCenteredL2(double g[],long *ng,double h[],long *nh,long
 extern void PyramidFilterCenteredL2Derivate(double g[],long *ng,double h[],long *nh,long Order);
 
 //@}
+#endif

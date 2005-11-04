@@ -1,3 +1,5 @@
+#ifndef _PYRAMIDTOOLS
+   #define _PYRAMIDTOOLS
 /* ----------------------------------------------------------------------------
 	Filename:  	pyramidtools.h
 	
@@ -178,3 +180,4 @@ extern void Expand_1D(
 				);
 						
 //@}
+#endif

@@ -59,15 +59,15 @@ int main(int argc, char **argv) {
             EXIT_ERROR(1,"Histogram: Not enough parameters behind -range\n");
          m=AtoF(argv[i+1]);
          M=AtoF(argv[i+2]);
-         automatic_range=FALSE;
-      } else automatic_range=TRUE;
+         automatic_range=false;
+      } else automatic_range=true;
 
       mask_prm.read(argc,argv); 
    } catch (Xmipp_error Xe) {cout << Xe; Usage(); mask_prm.usage(); exit(1);}
    
    try {
-      if      (Is_ImageXmipp(fn_in))  {image_mode=TRUE;  image.read(fn_in);}
-      else if (Is_VolumeXmipp(fn_in)) {image_mode=FALSE; volume.read(fn_in);}
+      if      (Is_ImageXmipp(fn_in))  {image_mode=true;  image.read(fn_in);}
+      else if (Is_VolumeXmipp(fn_in)) {image_mode=false; volume.read(fn_in);}
       else EXIT_ERROR(1,"Histogram: Input file is not an image nor a volume");
    
    // Compute histogram ----------------------------------------------------

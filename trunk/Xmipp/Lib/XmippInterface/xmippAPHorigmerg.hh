@@ -52,9 +52,9 @@ struct spot{
 //   }	 
   bool operator<(  const spot& B ) const
   {
-      if (h < B.h) return TRUE;
-      if (h== B.h && k < B.k) return TRUE;
-       return FALSE;
+      if (h < B.h) return true;
+      if (h== B.h && k < B.k) return true;
+       return false;
   }
         
  };

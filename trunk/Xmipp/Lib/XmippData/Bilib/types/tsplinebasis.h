@@ -1,3 +1,5 @@
+#ifndef _TSPLINEBASIS
+   #define _TSPLINEBASIS
 /*--------------------------------------------------------------------------*/
 /** Type of spline basis.
     Valid types are BasicSpline, CardinalSpline, DualSpline, and 
@@ -9,4 +11,4 @@ enum TSplineBasis
 	DualSpline,
 	OrthogonalSpline
 };
-
+#endif

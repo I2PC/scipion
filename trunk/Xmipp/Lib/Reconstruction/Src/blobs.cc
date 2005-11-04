@@ -344,7 +344,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
    const SimpleGrid &grid, const struct blobtype &blob,
    matrix3D<double> *vol_voxels, const matrix2D<double> *D=NULL, int istep=50,
    matrix3D<double> *vol_corr=NULL, const matrix3D<double> *vol_mask=NULL,
-   bool FORW=TRUE, int eq_mode=VARTK) {
+   bool FORW=true, int eq_mode=VARTK) {
    matrix2D<double> Dinv;                   // Inverse of D
    matrix1D<double> act_coord(3);           // Coord: Actual position inside
                                             // the voxel volume without deforming
@@ -446,7 +446,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
            } else real_position=act_coord;
 
 	    // These two corners are also real valued
-            process=TRUE;
+            process=true;
 //ROB	    
 //This is OK if blob.radius is in Cartesian space as I think is the case
             V3_PLUS_CT(corner1,real_position,-blob.radius);
@@ -458,12 +458,12 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
                //   box_enclosing(corner1,corner2, *D, corner1, corner2);
             #endif
 
-            if (XX(corner1)>=xF) process=FALSE;
-            if (YY(corner1)>=yF) process=FALSE;
-            if (ZZ(corner1)>=zF) process=FALSE;
-            if (XX(corner2)<=x0) process=FALSE;
-            if (YY(corner2)<=y0) process=FALSE; 
-            if (ZZ(corner2)<=z0) process=FALSE;
+            if (XX(corner1)>=xF) process=false;
+            if (YY(corner1)>=yF) process=false;
+            if (ZZ(corner1)>=zF) process=false;
+            if (XX(corner2)<=x0) process=false;
+            if (YY(corner2)<=y0) process=false; 
+            if (ZZ(corner2)<=z0) process=false;
             #ifdef DEBUG
                if (!process && condition) cout << "   It is outside output volume\n";
             #endif
@@ -471,7 +471,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
                #ifdef DEBUG
         	  if (process && condition) cout << "   It is not interesting\n";
                #endif
-	       process=FALSE;
+	       process=false;
 	    }
 
             #ifdef DEBUG
@@ -775,8 +775,8 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
 /* Voxels -> blobs --------------------------------------------------------- */
 /* This function is very similar to the ART reconstruction process from
    projections, look there for another point of view of the ART process. */
-#define FORWARD  TRUE
-#define BACKWARD FALSE
+#define FORWARD  true
+#define BACKWARD false
 //#define DEBUG
 void ART_voxels2blobs_single_step(
    GridVolume &vol_in,                 // Input solution

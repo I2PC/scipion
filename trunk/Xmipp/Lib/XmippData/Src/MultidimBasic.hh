@@ -48,6 +48,8 @@ public:
                                  // In matrix3D spcdim=3;
 
 /* Methods ================================================================= */
+#define mi MULTIDIM_ELEM(*this,i)
+#define msize MULTIDIM_SIZE(*this)
 public:
 /**@name Statistics functions */
 //@{
@@ -56,20 +58,52 @@ public:
        \\Ex: a.compute_stats();
        cout << "Statistics of variable a "; a.print_stats();
        cout << endl;*/
-   void print_stats(ostream &out=cout) const;
+   void print_stats(ostream &out=cout) const {
+      T min_val, max_val;
+      double avg_val, dev_val;
+      
+      compute_stats(avg_val, dev_val, min_val, max_val);
+
+      out.setf(ios::showpoint); int old_prec=out.precision(7); 
+      out << " min= "; out.width(9); out << min_val;
+      out << " max= "; out.width(9); out << max_val;
+      out << " avg= "; out.width(9); out << avg_val;
+      out << " dev= "; out.width(9); out << dev_val;
+      out.precision(old_prec);
+   }
 
    /** Maximum of the values in the array.
        The returned value is of the same type as the type of the array.
        \\Ex: double maxval=double_array.compute_max();*/
-   T compute_max() const;
+   T compute_max() const {
+      if (__dim<=0) return (T)0;
+      T max_val=MULTIDIM_ELEM(*this,0);
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         if (mi>max_val) max_val=mi;
+      return max_val;
+   }
 
    /** Minimum of the values in the array.
        The returned value is of the same type as the type of the array.
        \\Ex: double minval=double_array.compute_min();*/
-   T compute_min() const;
+   T compute_min() const {
+      if (__dim<=0) return (T)0;
+      T min_val=MULTIDIM_ELEM(*this,0);
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         if (mi<min_val) min_val=mi;
+      return min_val;
+   }
 
    /** Minimum and maximum of the values in the array.*/
-   void compute_double_minmax(double &min, double &max) const;
+   void compute_double_minmax(double &min, double &max) const {
+      min=max=0.0f;
+      if (__dim<=0) return;
+      min=max=(double) MULTIDIM_ELEM(*this,0);
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this) {
+         if (mi<min) min=(double)mi;
+         if (mi>max) max=(double)mi;
+      }
+   }
 
    /** Minimum and maximum within region. The region is specified
        by two corners. */
@@ -79,13 +113,24 @@ public:
    /** Minimum and maximum within region. The region is specified
        by two corners. */
    void compute_double_minmax(double &min, double &max,
-      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const;
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const {
+      matrix1D<double> dcorner1, dcorner2;
+      type_cast(corner1,dcorner1);
+      type_cast(corner2,dcorner2);
+      compute_double_minmax(min,max,dcorner1,dcorner2);
+   }
 
    /** Average of the values in the array.
        The returned value is always double, independently of the type
        of the array.
        \\Ex: double avgval=int_array.compute_avg();*/
-   double compute_avg() const;
+   double compute_avg() const {
+      if (__dim<=0) return 0;
+      double sum=0;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         sum += (double) mi;
+      return sum/msize;
+   }
 
    /** Standard deviation of the values in the array.
        Be careful that the standard deviation and NOT the variance is
@@ -93,17 +138,55 @@ public:
        The returned value is always double, independently of the type
        of the array.
        \\Ex: double devval=int_array.compute_stddev();*/
-   double compute_stddev() const;
+   double compute_stddev() const {
+      if (msize<=0) return 0;
+      double avg=0, stddev=0;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this) {
+         avg    += (double) mi;
+         stddev += (double) mi * (double) mi;
+      }
+      if (msize>1) {
+         avg/=msize;
+         stddev = stddev/msize - avg*avg;
+         stddev*= msize/(msize-1);
+         stddev = sqrt((double)(ABS(stddev))); // Foreseeing numerical
+                                               // instabilities
+      } else stddev=0;
+      return stddev;
+   }
 
    /** Compute statistics.
        The average, standard deviation, minimum and maximum value are
        returned. */
-   void compute_stats(double &avg, double &stddev, T &min, T &max) const;
+   void compute_stats(double &avg, double &stddev, T &min, T &max) const  {
+      avg=0; stddev=0; min=(T)0; max=(T)0;
+      if (msize<=0) return;
+
+      min=max=MULTIDIM_ELEM(*this,0);
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this) {
+         avg    += (double) mi;
+         stddev += (double) mi * (double) mi ;
+         if (mi>max) max=mi;
+         if (mi<min) min=mi;
+      }
+      avg /=msize;
+      if (msize>1) {
+         stddev = stddev/msize - avg*avg;
+         stddev*= msize/(msize-1);
+         stddev = sqrt((double)(ABS(stddev))); // Foreseeing numerical
+                                               // instabilities
+      } else stddev=0;
+   }
    
    /** Compute statistics within region. The region is specified
        by two corners. */
-   void compute_stats(double &avg, double &stddev, T &min, T &max,
-      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const;
+   void compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+      const matrix1D<int> &corner1, const matrix1D<int> &corner2) const{
+      matrix1D<double> dcorner1, dcorner2;
+      type_cast(corner1,dcorner1);
+      type_cast(corner2,dcorner2);
+      compute_stats(avg,stddev,min_val,max_val,dcorner1,dcorner2);
+   }
 
    /** Compute statistics within region. The region is specified
        by two corners. */
@@ -117,7 +200,20 @@ public:
        \\Ex: v.range_adjust(0,1);
        \\The array is now ranging from 0 to 1 */
    // This function must be explictly implemented outside
-   void range_adjust(T minF, T maxF);
+   void range_adjust(T minF, T maxF) {
+      if (msize==0) return;
+      T min0=compute_min();
+      T max0=compute_max();
+
+      // If max0==min0, it means that the vector is a constant one, so the
+      // only possible transformation is to a fixed minF
+      double slope;
+      if (max0!=min0) slope=(double)(maxF-minF)/(double)(max0-min0);
+      else            slope=0;
+
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         mi=minF+(T) (slope * (double) (mi-min0));
+   }
    
    /** Adjust the average and stddev of the array to given values.
        A linear operation is performed on the values of the array such
@@ -126,7 +222,21 @@ public:
        \\Ex: v.statistics_adjust(0,1);
        \\The array has got now 0 mean and stddev=1 */
    // This function must be explictly implemented outside
-   void statistics_adjust(double avgF, double stddevF);
+   void statistics_adjust(double avgF, double stddevF) {
+      double avg0,stddev0;
+      double a,b;
+
+      if (msize==0) return;
+      T min, max;
+      compute_stats(avg0, stddev0, min, max);
+
+      if (stddev0!=0) a=(double)stddevF/(double)stddev0;
+      else         a=0;
+      b=(double)avgF - a*(double)avg0;
+
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         mi = (T) (a*(double)mi+b);
+   }
 //@}
 
 /**@name Arithmethic operations */
@@ -425,7 +535,16 @@ public:
        \\Ex: v.init_random(0,1,"gaussian");
        \\--> gaussian distribution with 0 mean and stddev=1 */
    void init_random(double op1, double op2,
-       const string &mode="uniform");
+       const string &mode="uniform") {
+      if (mode=="uniform")
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            mi=(T) rnd_unif(op1,op2);
+      else if (mode=="gaussian")
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            mi=(T) rnd_gaus(op1,op2);
+      else
+         REPORT_ERROR(1005,(string)"Init_random: Mode not supported ("+mode+")");
+   }
 
    /** Add noise to actual values.
        This function add some noise to the actual values of the array
@@ -443,7 +562,16 @@ public:
        \\Ex: v1.add_noise(0,1,"gaussian");
        \\--> gaussian distribution with 0 mean and stddev=1 */
    void add_noise(double op1, double op2,
-       const string &mode="uniform") const;
+       const string &mode="uniform") const {
+      if (mode=="uniform")
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            mi +=(T) rnd_unif(op1,op2);
+      else if (mode=="gaussian")
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            mi +=(T) rnd_gaus(op1,op2);
+      else
+         REPORT_ERROR(1005,(string)"Add_noise: Mode not supported ("+mode+")");
+   }
 //@}
 
    /* Some operators ------------------------------------------------------- */
@@ -487,7 +615,7 @@ public:
        \Ref{XMIPP_EQUAL_ACCURACY}), origins, and size.
        \\ Ex: if (v1==v2) cout << "v1 and v2 are the same";*/
    bool equal(const maT &op, double accuracy=XMIPP_EQUAL_ACCURACY) const {
-      if (!same_shape(op)) return FALSE;
+      if (!same_shape(op)) return false;
       else return core_equality(op,accuracy);
    }
 
@@ -503,10 +631,10 @@ public:
    /** Core equal.
        This is the equality of the core array. */
    bool core_equality(const maT &op2, double accuracy) const
-      {if (MULTIDIM_SIZE(*this)!=MULTIDIM_SIZE(op2)) return FALSE;
+      {if (MULTIDIM_SIZE(*this)!=MULTIDIM_SIZE(op2)) return false;
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
-          if (ABS(mi-MULTIDIM_ELEM(op2,i))>accuracy) return FALSE;
-      return TRUE;}
+          if (ABS(mi-MULTIDIM_ELEM(op2,i))>accuracy) return false;
+      return true;}
    
    /** Input from input stream.
        Actual size of the array is used to know how many values must be read.
@@ -648,12 +776,53 @@ public:
        \\Ex: v.threshold("range",0,1);
        \\--> v is "saturated" by values 0 and 1, any value outside this range
              will be substituted by its nearest border*/
-   void threshold(const string &type, T a, T b);
+   void threshold(const string &type, T a, T b)  {
+      int mode;
+
+      if      (type == "abs_above") mode=1;
+      else if (type == "abs_below") mode=2;
+      else if (type == "above")     mode=3;
+      else if (type == "below")     mode=4;
+      else if (type == "range")     mode=5;
+      else
+         REPORT_ERROR(1005, (string)"Threshold: mode not supported ("+type+")");
+
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         switch (mode) {
+            case 1: if (ABS(mi)>a) mi=SGN(mi)*b; break;
+            case 2: if (ABS(mi)<a) mi=SGN(mi)*b; break;
+            case 3: if (mi>a)      mi=b; break;
+            case 4: if (mi<a)      mi=b; break;
+            case 5: if      (mi<a) mi=a;
+                    else if (mi>b) mi=b; break;
+         }
+   }
 
    /** Count with threshold.
        This function returns the number of elements meeting the threshold
        condition. */
-   long count_threshold(const string &type, T a, T b);
+   long count_threshold(const string &type, T a, T b)  {
+      int mode;
+
+      if      (type == "abs_above") mode=1;
+      else if (type == "abs_below") mode=2;
+      else if (type == "above")     mode=3;
+      else if (type == "below")     mode=4;
+      else if (type == "range")     mode=5;
+      else
+         REPORT_ERROR(1005, (string)"Threshold: mode not supported ("+type+")");
+
+      long retval=0;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+         switch (mode) {
+            case 1: if (ABS(mi)>a) retval++; break;
+            case 2: if (ABS(mi)<a) retval++; break;
+            case 3: if (mi>a)      retval++; break;
+            case 4: if (mi<a)      retval++; break;
+            case 5: if (mi>=a && mi<=b) retval++; break;
+         }
+      return retval;
+   }
 
    /** Substitute a value by another.
        Substitute an old value by a new one. The accuracy is used to

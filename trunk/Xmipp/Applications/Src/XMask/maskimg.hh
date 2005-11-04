@@ -22,7 +22,8 @@
 #include <qwidget.h>
 #include <qimage.h>
 #include <qpainter.h>
-#include <XmippData/xmippTypes.hh>
+#include <XmippData/xmippSelFiles.hh>
+#include <XmippData/xmippImages.hh>
 
 ///  Ways the training set can be used
 typedef enum {CIRCLE, ELLIPSE,  RECTANGLE, SQUARE, RING, ELLIPRING, RECTFRAME, SQUFRAME} maskType;

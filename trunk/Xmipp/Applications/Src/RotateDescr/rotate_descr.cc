@@ -44,9 +44,9 @@ public:
       fn_in=get_param(argc,argv,"-i");
       fn_out=get_param(argc,argv,"-o","");
       if (fn_out=="") fn_out=fn_in;
-      Euler_mode=Align_mode=Axis_mode=FALSE;
+      Euler_mode=Align_mode=Axis_mode=false;
       if (check_param(argc,argv,"-euler")) {
-         Euler_mode=TRUE;
+         Euler_mode=true;
          int i=position_param(argc,argv,"-euler");
          if (i+3>=argc)
             REPORT_ERROR(1,"Not enough parameters after -euler");
@@ -55,11 +55,11 @@ public:
          psi  = AtoF(argv[i+3]);
          A3D=Euler_rot3D_matrix(rot,tilt,psi);
       } else if (check_param(argc,argv,"-align_with_Z")) {
-         Align_mode=TRUE;
+         Align_mode=true;
          axis=get_vector_param(argc,argv,"-align_with_Z",3);
          A3D=align_with_Z(axis);
       } else {
-         Axis_mode=TRUE;
+         Axis_mode=true;
          if (check_param(argc, argv, "-axis"))
             axis=get_vector_param(argc, argv, "-axis", 3);
          else 

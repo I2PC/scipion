@@ -25,8 +25,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
-#include "../xmippFuncs.hh"
+using namespace std;
+
+#include "NumericalRecipes.hh"
 
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
 void nrerror(char error_text[]) {
@@ -114,142 +117,6 @@ double gasdev(int *idum) {
 		iset=0;
 		return gset;
 	}
-}
-
-/* MATRICES ---------------------------------------------------------------- */
-#define TINY 1.0e-20;
-/* Chapter 2 Section 3: LU DECOMPOSITION */
-template <class T>
-void ludcmp(T *a, int n, int *indx, T *d)
-{
-	int i,imax,j,k;
-	T big,dum,sum,temp;
-	T *vv;
-
-	ask_Tvector(vv,1,n);
-	*d=(T)1.0;
-	for (i=1;i<=n;i++) {
-		big=(T)0.0;
-		for (j=1;j<=n;j++)
-			if ((temp=(T)fabs((double)a[i*n+j])) > big) big=temp;
-		if (big == (T)0.0) nrerror("Singular matrix in routine LUDCMP");
-		vv[i]=(T)1.0/big;
-	}
-	for (j=1;j<=n;j++) {
-		for (i=1;i<j;i++) {
-			sum=a[i*n+j];
-			for (k=1;k<i;k++) sum -= a[i*n+k]*a[k*n+j];
-			a[i*n+j]=sum;
-		}
-		big=(T)0.0;
-		for (i=j;i<=n;i++) {
-			sum=a[i*n+j];
-			for (k=1;k<j;k++)
-				sum -= a[i*n+k]*a[k*n+j];
-			a[i*n+j]=sum;
-			if ( (dum=vv[i]*(T)fabs((double)sum)) >= big) {
-				big=dum;
-				imax=i;
-			}
-		}
-		if (j != imax) {
-			for (k=1;k<=n;k++) {
-				dum=a[imax*n+k];
-				a[imax*n+k]=a[j*n+k];
-				a[j*n+k]=dum;
-			}
-			*d = -(*d);
-			vv[imax]=vv[j];
-		}
-		indx[j]=imax;
-		if (a[j*n+j] == 0.0) a[j*n+j]=(T) TINY;
-		if (j != n) {
-			dum=(T)1.0/(a[j*n+j]);
-			for (i=j+1;i<=n;i++) a[i*n+j] *= dum;
-		}
-	}
-	free_Tvector(vv,1,n);
-}
-
-#undef TINY
-
-/* Chapter 2 Section 3: LU BACKWARD-FORWARD SUBSTITUTION */
-template <class T> void lubksb(T *a, int n, int *indx,T b[])
-{
-	int i,ii=0,ip,j;
-	T sum;
-
-	for (i=1;i<=n;i++) {
-		ip=indx[i];
-		sum=b[ip];
-		b[ip]=b[i];
-		if (ii)
-			for (j=ii;j<=i-1;j++) sum -= a[i*n+j]*b[j];
-		else if (sum) ii=i;
-		b[i]=sum;
-	}
-	for (i=n;i>=1;i--) {
-		sum=b[i];
-		for (j=i+1;j<=n;j++) sum -= a[i*n+j]*b[j];
-		b[i]=sum/a[i*n+i];
-	}
-}
-
-/* Chapter 2, Section 1. Gauss-Jordan equation system resolution ----------- */
-template <class T>
-void gaussj(T *a, int n, T *b, int m)
-{
-    T temp;
-    int *indxc,*indxr,*ipiv;
-    int i,icol,irow,j,k,l,ll;
-    T big,dum;
-    double pivinv;
-
-    ask_Tvector(indxc,1,n);
-    ask_Tvector(indxr,1,n);
-    ask_Tvector(ipiv,1,n);
-    for (j=1;j<=n;j++) ipiv[j]=0;
-    for (i=1;i<=n;i++) {
-	big=(T)0;
-	for (j=1;j<=n;j++)
-	    if (ipiv[j] != 1)
-		for (k=1;k<=n;k++) {
-		    if (ipiv[k] == 0) {
-			if (fabs((double)a[j*n+k]) >= (double) big) {
-			    big=ABS(a[j*n+k]);
-			    irow=j;
-			    icol=k;
-			}
-		    } else if (ipiv[k] > 1) nrerror("GAUSSJ: Singular Matrix-1");
-		}
-	++(ipiv[icol]);
-	if (irow != icol) {
-	    for (l=1;l<=n;l++) SWAP(a[irow*n+l],a[icol*n+l],temp)
-	    for (l=1;l<=m;l++) SWAP(b[irow*n+l],b[icol*n+l],temp)
-	}
-	indxr[i]=irow;
-	indxc[i]=icol;
-	if (a[icol*n+icol] == 0.0) nrerror("GAUSSJ: Singular Matrix-2");
-	pivinv=1.0f/a[icol*n+icol];
-	a[icol*n+icol]=(T)1;
-	for (l=1;l<=n;l++) a[icol*n+l] = (T)(pivinv * a[icol*n+l]);
-	for (l=1;l<=m;l++) b[icol*n+l] = (T)(pivinv * b[icol*n+l]);
-	for (ll=1;ll<=n;ll++)
-	    if (ll != icol) {
-		dum=a[ll*n+icol];
-		a[ll*n+icol]=(T)0;
-		for (l=1;l<=n;l++) a[ll*n+l] -= a[icol*n+l]*dum;
-		for (l=1;l<=m;l++) b[ll*n+l] -= b[icol*n+l]*dum;
-	    }
-    }
-    for (l=n;l>=1;l--) {
-	if (indxr[l] != indxc[l])
-	    for (k=1;k<=n;k++)
-		SWAP(a[k*n+indxr[l]],a[k*n+indxc[l]],temp);
-    }
-    free_Tvector(ipiv,1,n);
-    free_Tvector(indxr,1,n);
-    free_Tvector(indxc,1,n);
 }
 
 /* SORTING ----------------------------------------------------------------- */
@@ -917,10 +784,10 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
 		ibig=0;
 		del=0.0;
 		for (i=1;i<=n;i++) {
-      	             	different_from_0=FALSE; // CO
+      	             	different_from_0=false; // CO
 			for (j=1;j<=n;j++) {
 			    xit[j]=xi[j*n+i];
-			    if (xit[j]!=0) different_from_0=TRUE;
+			    if (xit[j]!=0) different_from_0=true;
 			}
       	             	if (different_from_0) {
 			   fptt=fret;
@@ -1332,7 +1199,7 @@ void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
 	double	c, f, g, h, s;
 	double	x, y, z;
 	long	i, its, j, jj, k, l = 0L, nm = 0L;
-	int     Flag;
+	bool    Flag;
         int     MaxIterations=SVDMAXITER;
 
 	ask_Tvector(rv1,0,Columns*Columns-1);
@@ -1458,11 +1325,11 @@ void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
 	}
 	for (k = Columns - 1L; (0L <= k); k--) {
 		for (its = 1L; (its <= MaxIterations); its++) {
-			Flag = TRUE;
+			Flag = true;
 			for (l = k; (0L <= l); l--) {
 				nm = l - 1L;
 				if ((fabs(rv1[l]) + Norm) == Norm) {
-					Flag = FALSE;
+					Flag = false;
 					break;
 				}
 				if ((fabs(W[nm]) + Norm) == Norm) {
@@ -7808,11 +7675,11 @@ int length,index;
 {
    int i,temp;
 
-   temp=FALSE;
+   temp=0;
    for (i=1; i<=length; i++) {
       if (set[i]==0) break;
       if (set[i]==index) {
-	 temp=TRUE;
+	 temp=1;
 	 return temp;
       }
    }
@@ -8234,23 +8101,4 @@ void cholsl(double *a, int n, double *p, double *b, double *x) {
 		for (sum=x[i],k=i+1;k<=n;k++) sum -= a[k*n+i]*x[k];
 		x[i]=sum/p[i];
 	}
-}
-
-/* Instantiantion ---------------------------------------------------------- */
-template <class T>
-   void instantiate_Numerical_T(T t) {
-      T  *a=NULL, *d=NULL;
-      int n=0, *indx=NULL;
-      ludcmp(a, n, indx, d);
-      lubksb(a, n, indx, d);
-      gaussj(a, n, a, n);
-}
-
-void instantiate_Numerical() {
-   short          s=0; instantiate_Numerical_T(s);
-   char           h=0; instantiate_Numerical_T(h);
-   int            i=0; instantiate_Numerical_T(i);
-   float          f=0; instantiate_Numerical_T(f);
-   double         d=0; instantiate_Numerical_T(d);
-   long double   ld=0; instantiate_Numerical_T(ld);
 }

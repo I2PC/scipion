@@ -75,7 +75,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    }
    img()=result;
    
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -86,7 +86,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       case Pyramid_parameters::Reduce: vol().pyramid_reduce(result,eprm->levels); break;
    }
    vol()=result;
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

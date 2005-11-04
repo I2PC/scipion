@@ -85,7 +85,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
       } else {
          ctf.FilterBand=CTF;
          ctf.ctf.read(fn_ctf);
-         ctf.ctf.enable_CTFnoise=FALSE;
+         ctf.ctf.enable_CTFnoise=false;
          ctf.ctf.Produce_Side_Info();
          aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
          ctf.generate_mask(aux);
@@ -112,7 +112,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
       } else {
          after_ctf.FilterBand=CTF;
          after_ctf.ctf.read(fn_after_ctf);
-         after_ctf.ctf.enable_CTF=FALSE;
+         after_ctf.ctf.enable_CTF=false;
          after_ctf.ctf.Produce_Side_Info();
          aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
          after_ctf.generate_mask(aux);

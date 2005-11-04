@@ -59,7 +59,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Flip_parameters *eprm=(Flip_parameters *) prm;
    if (eprm->flipX) img().self_reverseX();
    if (eprm->flipY) img().self_reverseY();
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -67,7 +67,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    if (eprm->flipX) vol().self_reverseX();
    if (eprm->flipY) vol().self_reverseY();
    if (eprm->flipZ) vol().self_reverseZ();
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

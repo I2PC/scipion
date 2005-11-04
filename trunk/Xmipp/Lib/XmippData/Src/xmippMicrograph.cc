@@ -53,9 +53,9 @@ void Micrograph::clear() {
    m16=NULL;
    um16=NULL;
    m32=NULL;
-   compute_transmitance=FALSE;
-   compute_inverse=FALSE;
-   __scaling_valid=FALSE;
+   compute_transmitance=false;
+   compute_inverse=false;
+   __scaling_valid=false;
    /* __in_core=FALSE;*/
 }
 
@@ -268,7 +268,7 @@ if(maxval > 32000)
    // Compute scaling
    __a=(maxF-minF)/(maxval-minval);
    __b=minF-__a*minval;
-   __scaling_valid=TRUE;
+   __scaling_valid=true;
 }
 
 /* Save coordinates to disk ------------------------------------------------ */
@@ -312,7 +312,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords) {
    fh.open(fn_coords.c_str(), ios::in);
    coords.reserve(line_no);
    struct Particle_coords aux;
-   aux.valid=TRUE;
+   aux.valid=true;
    aux.label=label;
    fh.peek();
    while (!fh.eof()) {
@@ -463,13 +463,13 @@ int Micrograph::search_coord_near(int x, int y, int prec) const {
 void Micrograph::invalidate_coord(int n) {
    if (n<0 || n>=ParticleNo())
       REPORT_ERROR(1,"Micrograph::invalidate_coord: Index out of range");
-   coords[n].valid=FALSE;   
+   coords[n].valid=false;   
 }
 
 /* Add coordinate ---------------------------------------------------------- */
 int Micrograph::add_coord(int x, int y, int label) {
    struct Particle_coords aux;
-   aux.valid=TRUE;
+   aux.valid=true;
    aux.X=x;
    aux.Y=y;
    aux.label=label;
@@ -510,7 +510,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
    if (Mp.depth()!=32) {
       double imin, imax;
       double omin, omax;
-      bool ifirst=TRUE, ofirst=TRUE;
+      bool ifirst=true, ofirst=true;
 
       if (M.depth()!=32)
          scale=(pow(2.0,Mp.depth())-1.0)/(pow(2.0,M.depth())-1.0);
@@ -523,13 +523,13 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
              FOR_ALL_ELEMENTS_IN_MATRIX2D(kernel) {
 	        int j2=intWRAP(j+x,0,xF-1);
 	        int i2=intWRAP(i+y,0,yF-1);
-        	if (ifirst) {imin=imax=M(j2,i2); ifirst=FALSE;}
+        	if (ifirst) {imin=imax=M(j2,i2); ifirst=false;}
         	else {imin=MIN(imin,M(j2,i2)); imax=MAX(imax,M(j2,i2));}
         	pixval += kernel(i,j)*M(j2,i2);
              }
              pixval *= scale;
              if (ii<Ypdim && jj<Xpdim) {
-        	if (ofirst) {omin=omax=pixval; ofirst=FALSE;}
+        	if (ofirst) {omin=omax=pixval; ofirst=false;}
         	else {omin=MIN(omin,pixval); omax=MAX(omax,pixval);}
              }
 	  }

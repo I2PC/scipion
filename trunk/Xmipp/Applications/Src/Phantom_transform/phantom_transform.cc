@@ -45,9 +45,9 @@ public:
    void read(int argc, char **argv) {
       fn_in=get_param(argc,argv,"-i");
       fn_out=get_param(argc,argv,"-o");
-      Euler_mode=Align_mode=Axis_mode=FALSE;
+      Euler_mode=Align_mode=Axis_mode=false;
       if (check_param(argc,argv,"-euler")) {
-         Euler_mode=TRUE;
+         Euler_mode=true;
          int i=position_param(argc,argv,"-euler");
          if (i+3>=argc)
             REPORT_ERROR(1,"Not enough parameters after -euler");
@@ -56,11 +56,11 @@ public:
          psi  = AtoF(argv[i+3]);
          A3D=Euler_rot3D_matrix(rot,tilt,psi);
       } else if (check_param(argc,argv,"-align_with_Z")) {
-         Align_mode=TRUE;
+         Align_mode=true;
          axis=get_vector_param(argc,argv,"-align_with_Z",3);
          A3D=align_with_Z(axis);
       } else if (check_param(argc,argv,"-axis")) {
-         Axis_mode=TRUE;
+         Axis_mode=true;
          axis=get_vector_param(argc, argv, "-axis", 3);
          ang=AtoF(get_param(argc, argv, "-ang"));
          A3D=rot3D_matrix(ang,axis);
@@ -120,7 +120,7 @@ bool process_phantom(const FileName &fn_in, const FileName &fn_out,
    P.read(fn_in,false); // Read phantom without applying scale
    P.self_apply_geom(prm->A3D,IS_NOT_INV);
    P.write(fn_out);
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

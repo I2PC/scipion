@@ -67,7 +67,7 @@ public:
    void read(const FileName &fn_param);
    
    /// Write to a file
-   void write(const FileName &fn, bool rewrite=TRUE);
+   void write(const FileName &fn, bool rewrite=true);
 
    /// Show parameters
    void show();

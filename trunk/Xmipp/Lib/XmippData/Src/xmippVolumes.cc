@@ -28,48 +28,7 @@
 
 #include "../xmippVolumes.hh"
 
-/* Input (read) from file specifying its dimensions ------------------------ */
-template <class T> void VolumeT<T>::read(FileName name,
-  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type) {
-  FILE *fh;
-  clear(); 
-  fn_img=name;
-  if ((fh = fopen(fn_img.c_str(), "rb")) == NULL)
-    REPORT_ERROR(1501,"Volume::read: File " + fn_img + " not found");
-  read(fh, Zdim, Ydim, Xdim, reversed, volume_type);
-
-  fclose(fh);
-}
-  
-template <class T> void VolumeT<T>::read(FILE *fh,
-  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type) {
-  img.resize(Zdim, Ydim,Xdim);
-  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-      switch (volume_type) {
-         case VBYTE:
-            unsigned char u;
-            FREAD (&u, sizeof(unsigned char), 1, fh, reversed);
-            MULTIDIM_ELEM(img,i)=(T)u;
-            break;
-         case VINT:
-            int ii;
-            FREAD (&ii, sizeof(int), 1, fh, reversed);
-            MULTIDIM_ELEM(img,i)=(T)ii;
-            break;
-            //NOTE integers and floats need to be reversed in identical way
-         case V16:
-            unsigned short us;
-            FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
-            MULTIDIM_ELEM(img,i)=(T)us;
-            break;
-         case VFLOAT:
-            float f;
-            FREAD (&f, sizeof(float), 1, fh, reversed);
-            MULTIDIM_ELEM(img,i)=(T)f;
-            break;
-      }
-}
-
+// Specialization for complex numbers --------------------------------------
 template <>
 void VolumeT<complex<double> >::read(FILE *fh,
   int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
@@ -88,57 +47,6 @@ void VolumeT<complex<double> >::read(FILE *fh,
   }
 }
 
-/* Output (write) ---------------------------------------------------------- */
-template <class T> void VolumeT<T>::write(FileName name, bool reversed,
-   Volume_Type volume_type) {
-   FILE *fp;
-   if (name != "") rename(name);  
-
-   if ((fp = fopen(fn_img.c_str(), "wb")) == NULL) {
-     REPORT_ERROR(1503,"Volume::write: File " + fn_img + " cannot be saved");
-   };
-   write(fp, reversed, volume_type);
-   fclose(fp);  
-}
-
-template <class T> void VolumeT<T>::write(FILE *fh, bool reversed,
-   Volume_Type volume_type) {
-   if (XSIZE(img)==0 || YSIZE(img)==0 || ZSIZE(img)==0) return;
-   double a,b;
-   if (volume_type!=VFLOAT) {
-      double min_val, max_val;
-      (*this)().compute_double_minmax(min_val,max_val);
-      if (volume_type==VBYTE) a=255;
-      else                   a=65535;
-      a/=(max_val-min_val);
-      b=min_val;
-   }
-   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-       switch (volume_type) {
-          case VBYTE:
-             unsigned char u;
-             u=(unsigned char) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
-             FWRITE (&u, sizeof(unsigned char), 1, fh, reversed);
-             break;
-          case V16:
-             unsigned short us;
-             us=(unsigned short) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
-             FWRITE (&us, sizeof(unsigned short), 1, fh, reversed);
-             break;
-          case VFLOAT:
-             float f;
-             f=(float) MULTIDIM_ELEM(img,i);
-             FWRITE (&f, sizeof(float), 1, fh, reversed);
-             break;
-          case VINT:
-             int ii;
-             ii=(int) MULTIDIM_ELEM(img,i);
-             FWRITE (&ii, sizeof(int), 1, fh, reversed);
-             break;
-       }
-}
-
-// Specific function to write volumes with complex numbers in them
 template <>
 void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
    Volume_Type volume_type) 
@@ -151,42 +59,6 @@ void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
              FWRITE (&a, sizeof(float), 1, fh, reversed);
              FWRITE (&b, sizeof(float), 1, fh, reversed);
    }
-}
-
-/* Read Xmipp image -------------------------------------------------------- */
-template <class T> void VolumeXmippT<T>::read(const FileName &name,
-  bool skip_type_check, bool force_reversed) {
-  FILE *fp; 
-
-  rename(name); 
-  if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "rb")) == NULL)
-    REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+VolumeT<T>::fn_img+" not found");
-
-  // Read header
-  if (!header.read(fp, skip_type_check, force_reversed))
-     REPORT_ERROR(1502,"VolumeXmipp::read: File " + VolumeT<T>::fn_img +
-        " is not a valid Xmipp file");   
-
-  // Read whole image and close file
-  VolumeT<T>::read(fp, header.iSlices(), header.iYdim(), header.iXdim(),
-     header.reversed(), VFLOAT);
-  fclose(fp);
-
-  header.set_header();  // Set header in a Xmipp consistent state
-}
-
-/* Write Xmipp Volume  ------------------------------------------------------- */
-template <class T> void VolumeXmippT<T>::write(const FileName &name,
-  bool force_reversed) {
-  FILE *fp;
-  if (name != "") rename(name); 
-  if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
-    REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+VolumeT<T>::fn_img +
-       " cannot be written");
-  adjust_header();  
-  header.write(fp, force_reversed);
-  VolumeT<T>::write(fp, header.reversed(), VFLOAT);
-  fclose(fp);  
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
@@ -237,7 +109,7 @@ void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim) {
      REPORT_ERROR(1501,"Is_ImageXmipp: File " + fn + " not found");
 
    // Read header
-   result = header.read(fp, FALSE, FALSE);
+   result = header.read(fp, false, false);
 
    fclose(fp);
    if (result) {
@@ -247,74 +119,4 @@ void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim) {
    } else {
       Zdim=Ydim=Xdim=-1;
    }
-}
-
-template <class T>
-   void instantiate_Volume (VolumeT<T> v) {
-   VolumeT<int>    Vint;
-   VolumeT<double> Vdouble;
-   
-   VolumeT<T>      Va;             // Empty constructor
-   VolumeT<T>      Vb(1,1,1);      // Constructor with size
-   VolumeT<T>      Vc(Vint);       // Copy constructor from int.
-   VolumeT<T>      Vcc(Vdouble);    // Copy constructor from double.
-   matrix3D<double>         r;
-   FileName        aux_fn_img;
-   FILE *fh;
-   VolumeT<T>      Vd(aux_fn_img); // Constructor using filename.
-   
-   Va=Vc; // Assignment from int
-   Va=r;  // Assignment from matrix3D.
-   Vb.rename(aux_fn_img);
-   Vb.clear();
-   Vb.move_origin_to_center();
-   Vb.adapt_to_size(1,1,1);
-   Vb().resize(1,1,1);// Matrix access
-   Vb(0,0,0)=Va(0,0,0);// Voxel access.
-   Vb.name();//Name access
-   cout << Va; //
-   Vb.read(aux_fn_img, 1, 1, 1, (bool) 0,  (Volume_Type) 0);
-   Vb.write(aux_fn_img);// the other read and write are called by this ones
-}
-
-template <class T>
-   void instantiate_VolumeXmipp (VolumeXmippT<T> Vx) {
-   VolumeXmippT<T> VXa;        // Empty constructorx
-   VolumeXmippT<T> VXb(1,1,1); //  Constructor with size.
-   VolumeXmippT<T> VX("1");    // Constructor with filename, read from disk.
-   FileName        aux_fn_img;
-   VolumeXmippT<int>    VXint;
-   VolumeXmippT<double> VXdouble;
-   VolumeXmippT<int>    Vc;    
-   VolumeXmippT<double> Vcc;   
-   VolumeXmippT<T>      Vd(Vx);  // Copy constructor
-   VolumeT<int>         Vint;
-   VolumeT<double>      Vdouble;
-
-   VXa.clear(); 
-   cout << VXa;
-   VXa =VXa;
-   VolumeT<double> V; VXb=V;
-   matrix3D<float> m; VXb=m;
-// I do not know what to do with this
-//   VXa.assign_from(Vint);
-//   VXa.assign_from(Vdouble);
-   VXa.read(aux_fn_img);
-   VXa.write(aux_fn_img);
-   VXa.adjust_header();
-   VXa.clear_header();
-   VXa.rename("");
-   VXa.reversed();
-}
-
-void instantiateVolume() {
-   VolumeT<double>           V1;instantiate_Volume(V1);
-   VolumeT<int>              V2;instantiate_Volume(V2);
-   VolumeT<complex<double> > V3;instantiate_Volume(V3);
-}
-
-void instantiateVolumeXmipp() {
-   VolumeXmippT<double>      V1; instantiate_VolumeXmipp(V1);
-   VolumeXmippT<int>         V2; instantiate_VolumeXmipp(V2);
-   VolumeXmippT<complex<double> > V3; instantiate_VolumeXmipp(V3);
 }

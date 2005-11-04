@@ -1,3 +1,5 @@
+#ifndef _CHANGEBASIS
+   #define _CHANGEBASIS
 /*--------------------------------------------------------------------------*/
 /**@name Spline transform */
 //@{
@@ -52,3 +54,4 @@ extern int		ChangeBasisVolume
 					int		*Status				/* error management */
 				);
 //@}
+#endif

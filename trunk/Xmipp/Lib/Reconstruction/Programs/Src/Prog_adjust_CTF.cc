@@ -195,11 +195,11 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) {
 
    adjust.resize(CTF_PARAMETERS);
    initial_ctfmodel.enable_CTF=initial_ctfmodel.enable_CTFnoise=true;
-   if (fn_similar_model=="") initial_ctfmodel.read(fn_param,FALSE);
-   else                      initial_ctfmodel.read(fn_similar_model,FALSE);
+   if (fn_similar_model=="") initial_ctfmodel.read(fn_param,false);
+   else                      initial_ctfmodel.read(fn_similar_model,false);
    Tm=initial_ctfmodel.Tm; 
    assign_parameters_from_CTF(initial_ctfmodel,VEC_ARRAY(adjust),0,
-      CTF_PARAMETERS, TRUE); 
+      CTF_PARAMETERS, true); 
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -298,7 +298,7 @@ void Adjust_CTF_Parameters::produce_side_info() {
 
 /* Generate model so far ---------------------------------------------------- */
 /* The model is taken from global_adjust and global_ctfmodel is modified */
-void generate_model_so_far(ImageXmipp &I, bool apply_log=FALSE) {
+void generate_model_so_far(ImageXmipp &I, bool apply_log=false) {
    matrix1D<int>    idx(2);  // Indexes for Fourier plane
    matrix1D<double> freq(2); // Frequencies for Fourier plane
 
@@ -988,7 +988,7 @@ void estimate_defoci() {
    if (global_prm->show_optimization)
       cout << "Looking for first defoci ...\n";
    double best_defocusU, best_defocusV, best_error, best_angle;
-   bool first=TRUE;
+   bool first=true;
    int i,j;
    double defocusV, defocusU;
 

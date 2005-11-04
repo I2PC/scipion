@@ -142,7 +142,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       YY(eprm->shift)=eprm->DF_shifts(eprm->colX_shift+1);
       eprm->DF_shifts.next_data_line();
    }
-   else if (eprm->Docfile!=FALSE) {
+   else if (eprm->Docfile!=false) {
       eprm->shift.resize(2); 
       eprm->shift.init_constant(0.);
    } else if (eprm->center_mass) {
@@ -158,7 +158,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       YY(eprm->scale)=eprm->DF_scales(eprm->colX_scale+1);
       eprm->DF_scales.next_data_line();
    }
-   else if (eprm->Docfile!=FALSE || eprm->center_mass){
+   else if (eprm->Docfile!=false || eprm->center_mass){
       eprm->scale.resize(2); 
       eprm->scale.init_constant(1.);
    }
@@ -166,7 +166,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    A(1,1)=YY(eprm->scale);
    if (!eprm->store_in_header) img().self_apply_geom_Bspline(A,3,IS_NOT_INV,eprm->wrap);
    else                        img.set_originOffsets(XX(eprm->shift),YY(eprm->shift));
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -182,7 +182,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       ZZ(eprm->shift)=eprm->DF_shifts(eprm->colX_shift+2);
       eprm->DF_shifts.next_data_line();
    }
-   else if (eprm->Docfile!=FALSE){
+   else if (eprm->Docfile!=false){
       eprm->shift.resize(3); 
       eprm->shift.init_constant(1.);
    }
@@ -199,7 +199,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       ZZ(eprm->scale)=eprm->DF_scales(eprm->colX_scale+2);
       eprm->DF_scales.next_data_line();
    }
-   else if (eprm->Docfile!=FALSE){
+   else if (eprm->Docfile!=false){
       eprm->scale.resize(3); 
       eprm->scale.init_constant(1.);
    }
@@ -207,7 +207,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    A(1,1)=YY(eprm->scale);
    A(2,2)=ZZ(eprm->scale);
    vol().self_apply_geom_Bspline(A,3,IS_NOT_INV,eprm->wrap);
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

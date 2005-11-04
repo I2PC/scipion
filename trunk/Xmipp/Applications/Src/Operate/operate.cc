@@ -132,10 +132,10 @@ bool check_for_operation(int argc,char **argv,char *operation,FileName &fn,int &
 		operand_type=NUMBER;
 	 }
 	 
- 	 return TRUE;
+ 	 return true;
   }
   
-  return FALSE;
+  return false;
   
 }
 
@@ -182,7 +182,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   out.read(fn_2,false,false,true);
 	   double number1=AtoF(fn_1);	      
 	   out() = out() + number1;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -191,7 +191,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,FALSE,FALSE,TRUE);	   
+	   out.read(fn_1,false,false,true);	   
 	   double number2=AtoF(fn_2);   
 	   out() = out() + number2;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -200,8 +200,8 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
+	   out.read(fn_2,false,false,true);
 	   out()=Op1()+out();		 
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -238,7 +238,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   out.read(fn_2,false,false,true);
 	   double number1=AtoF(fn_1);
 	   out()=number1-out();
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -247,7 +247,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_1,false,false,true);
 	   double number2=AtoF(fn_2);
 	   out()=out()-number2;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -256,8 +256,8 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
+	   out.read(fn_2,false,false,true);
 	   out()=Op1()-out();		 
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -294,7 +294,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   out.read(fn_2,false,false,true);
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number1;
@@ -304,7 +304,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_1,false,false,true);
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number2;
@@ -314,8 +314,8 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
+	   out.read(fn_2,false,false,true);
 		    mul_elements(Op1(),out(), out());
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -355,7 +355,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   out.read(fn_2,false,false,true);
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= number1 / out(i,j);
@@ -365,7 +365,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_1,false,false,true);
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= out(i,j) / number2;
@@ -375,8 +375,8 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
-	   out.read(fn_2,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
+	   out.read(fn_2,false,false,true);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=Op1(i,j)/out(i,j);
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -418,7 +418,7 @@ void log10(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp out;	   
-	   out.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_1,false,false,true);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=log10(1+out(i,j));	  
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -439,7 +439,7 @@ void sqrt(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_1,false,false,true);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=sqrt(out(i,j));	  
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -504,7 +504,7 @@ void extract_column(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    {
 	   ImageXmipp  Op1;
 	   ImageXmipp  out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
 	   int number2=AtoI(fn_2);
 	   // If the column requested exists
 	   if(number2>=STARTINGX(Op1()) && number2<=FINISHINGX(Op1()))
@@ -546,7 +546,7 @@ void extract_row(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn
    {
 	   ImageXmipp  Op1;
 	   ImageXmipp  out;
-	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   Op1.read(fn_1,false,false,true);
 	   int number2=AtoI(fn_2);
 	   // If the column requested exists
 	   if(number2>=STARTINGY(Op1()) && number2<=FINISHINGY(Op1()))
@@ -567,7 +567,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp input;
-	   input.read(fn_1,FALSE,FALSE,TRUE); input().set_Xmipp_origin();
+	   input.read(fn_1,false,false,true); input().set_Xmipp_origin();
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;

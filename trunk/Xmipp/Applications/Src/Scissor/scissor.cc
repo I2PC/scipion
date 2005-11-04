@@ -34,8 +34,8 @@ int main (int argc, char **argv) {
    int      Ydim, Xdim;
    int      startN;
    bool     reverse_endian;
-   bool     compute_transmitance=FALSE;
-   bool     compute_inverse=FALSE;
+   bool     compute_transmitance=false;
+   bool     compute_inverse=false;
    double   alpha;
    bool     pair_mode;
    try {

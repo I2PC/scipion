@@ -53,13 +53,13 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       aux+=img().rotate_Bspline(3,360.0/eprm->symmetry*i);
    aux/=eprm->symmetry;
    img()=aux;
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    REPORT_ERROR(1,"xmipp_markhan: This program is not intended for volumes. "
                    "Please use xmipp_symmetrize.");
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

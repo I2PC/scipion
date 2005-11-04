@@ -34,15 +34,15 @@ public:
 
    void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
-      gaussian=uniform=FALSE;
+      gaussian=uniform=false;
       if (check_param(argc,argv,"-gaussian")) {
-         gaussian=TRUE;
+         gaussian=true;
          int i=position_param(argc,argv,"-gaussian");
          if (i+1>=argc) REPORT_ERROR(1,"Not enough parameters after -gaussian");
          noise_stddev=AtoF(argv[i+1]);
          if (i+2<argc) {noise_avg=AtoF(argv[i+2]);} else noise_avg=0;
       } else if (check_param(argc,argv,"-uniform")) {
-         uniform=TRUE;
+         uniform=true;
          int i=position_param(argc,argv,"-uniform");
          if (i+2>=argc) REPORT_ERROR(1,"Not enough parameters after -uniform");
          noise_min=AtoF(argv[i+1]);
@@ -74,7 +74,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
      img().add_noise(eprm->noise_avg, eprm->noise_stddev,"gaussian");
   else if (eprm->uniform)
      img().add_noise(eprm->noise_min, eprm->noise_max,"uniform");
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -83,7 +83,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
      vol().add_noise(eprm->noise_avg, eprm->noise_stddev,"gaussian");
   else if (eprm->uniform)
      vol().add_noise(eprm->noise_min, eprm->noise_max,"uniform");
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

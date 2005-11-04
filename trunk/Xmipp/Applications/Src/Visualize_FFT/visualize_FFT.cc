@@ -82,7 +82,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
          MULTIDIM_ELEM(img(),i)=log10(1+MULTIDIM_ELEM(img(),i));
    if (!eprm->do_not_center) CenterFFT(img(),true);
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -98,7 +98,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
          MULTIDIM_ELEM(vol(),i)=log10(1+MULTIDIM_ELEM(vol(),i));
    if (!eprm->do_not_center) CenterFFT(vol(),true);
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

@@ -127,7 +127,7 @@ void compute_sc_FOMs(
    const Volume *vol_phantom, const Volume *vol_recons,
    const Volume *vol_label, const Volume *vol_mask, int sel_feat,
    double &scL2_FOM, double &scL1_FOM, double &scmu_FOM, double &scdev_FOM,
-   double &scrange_FOM, double &sccorr_FOM, double &scinf_FOM, int tell) {
+   double &scrange_FOM, double &sccorr_FOM, double &scinf_FOM, bool tell) {
 
    double L2_error    =0, L1_error   =0;
    double phantom_sum =0, recons_sum =0, phantom_recons_sum=0;

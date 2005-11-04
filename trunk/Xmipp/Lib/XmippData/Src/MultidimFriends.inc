@@ -43,3 +43,18 @@ template <class T>
 template <class T>
    void core_array_by_array(const maT &op1, const maT &op2,
       maT &result, char operation);
+
+template <>
+ostream& operator << (ostream & ostrm, const maTC &m);
+
+template <>
+void core_array_by_scalar< complex<double> >(const maTC &op1,
+   const complex<double> &op2, maTC &result, char operation);
+
+template <>
+void core_scalar_by_array< complex<double> >(const complex<double> &op1,
+   const maTC &op2, maTC &result, char operation);
+
+template <>
+void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
+   maTC &result, char operation);

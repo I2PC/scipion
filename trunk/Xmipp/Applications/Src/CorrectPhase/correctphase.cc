@@ -35,7 +35,7 @@ public:
       Prog_parameters::read(argc,argv);
       cpprm.read(argc,argv);
       cpprm.produce_side_info();
-      allow_time_bar=FALSE;
+      allow_time_bar=false;
    }
    
    void show() {
@@ -62,12 +62,12 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    FourierTransform(img(),fft);
    eprm->cpprm.correct(fft);
    InverseFourierTransform(fft,img());
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    cerr << "This process is not intended for volumes\n";
-   return FALSE;
+   return false;
 }
 
 int main (int argc, char **argv) {

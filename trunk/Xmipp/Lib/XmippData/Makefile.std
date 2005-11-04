@@ -31,7 +31,7 @@ SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Programs/Src/Prog_normalize.o \
 	   Programs/Src/Prog_range_adjust.o \
 	   Programs/Src/Prog_make_spectra.o \
-           Src/xmippWavelets.o Src/xmippImagic.o \
+           Src/xmippWavelets.o \
            Src/xmippFFT.o Src/xmippTomogram.o
 BILIB_OBJS=Bilib/sources/changebasis.o \
            Bilib/sources/convert.o \

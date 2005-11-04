@@ -152,8 +152,8 @@ public:
        If no K or sqrt_K are given then it is assumed that the user
        does not want to activate that part and the noise or the CTF
        are removed from the model unless the disable_if_not_K is set
-       to FALSE*/
-   void read(const FileName &fn, bool disable_if_not_K=TRUE);
+       to false*/
+   void read(const FileName &fn, bool disable_if_not_K=true);
    
    /** Write to file.
        An exception is thrown if the file cannot be open.*/
@@ -187,7 +187,7 @@ public:
       return SGN(DeltafU)*sqrt(DeltafUp*DeltafUp+DeltafVp*DeltafVp);
    }
 
-   double CTF_at(double X, double Y, bool show=FALSE) const {
+   double CTF_at(double X, double Y, bool show=false) const {
       double pure_CTF;
       if (enable_CTF)      pure_CTF=CTFpure_at(X,Y,show);
       else                 pure_CTF=0;
@@ -196,7 +196,7 @@ public:
    }
 
    /// Compute CTF at (U,V). Continuous frequencies
-   double CTFpure_without_damping_at(double X, double Y, bool show=FALSE) const {
+   double CTFpure_without_damping_at(double X, double Y, bool show=false) const {
       double u2=X*X+Y*Y;
       double u=sqrt(u2);
       double u4=u2*u2;
@@ -218,7 +218,7 @@ public:
    }
 
    /// Compute CTF at (U,V). Continuous frequencies
-   inline double CTFdamping_at(double X, double Y, bool show=FALSE) const {
+   inline double CTFdamping_at(double X, double Y, bool show=false) const {
       double u2=X*X+Y*Y;
       double u=sqrt(u2);
       double u4=u2*u2;
@@ -245,7 +245,7 @@ public:
    }
    
    /// Compute CTF at (U,V). Continuous frequencies
-   inline double CTFpure_at(double X, double Y, bool show=FALSE) const {
+   inline double CTFpure_at(double X, double Y, bool show=false) const {
       double u2=X*X+Y*Y;
       double u=sqrt(u2);
       double u4=u2*u2;
@@ -368,7 +368,7 @@ public:
       matrix2D < complex<double> > &CTF) const;
 
    /** Check physical meaning.
-       TRUE if the CTF parameters have physical meaning.
+       true if the CTF parameters have physical meaning.
        Call this function after producing side information */
    bool physical_meaning();
 };

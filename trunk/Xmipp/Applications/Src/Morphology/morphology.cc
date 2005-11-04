@@ -105,7 +105,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
 
    img()=retval();
    cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -131,7 +131,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 
    vol()=retval();
    cout << "Finally the volume has " << vol().sum() << " voxels set to 1\n";
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

@@ -79,7 +79,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
 /** Create empty Spider file.
     Creates a zero filled spider file with the desired dimension. */
 void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
-   int Xdim, bool reversed=FALSE, size_t block_size=102400);
+   int Xdim, bool reversed=false, size_t block_size=102400);
 
 /** 3D Radon transform.
     Creates the 3D radon transform of a volume via Spider.

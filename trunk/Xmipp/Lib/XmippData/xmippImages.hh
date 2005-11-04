@@ -37,16 +37,30 @@
 #include "xmippFuncs.hh"
 #include "xmippMatrices2D.hh"
 #include "xmippHeader.hh"
+#include "xmippGeometry.hh"
+
 #include <typeinfo> /* because typeid is used */
 #include <complex>
+#include <vector>
+
+#define GCC_VERSION (__GNUC__ * 10000 \
+    + __GNUC_MINOR__ * 100 \
+    + __GNUC_PATCHLEVEL__)
+/* Test for GCC > 3.3.0 */
+#if GCC_VERSION >= 30300
+    #include <sstream>
+#else
+    #include <strstream.h>
+#endif
+
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 // This forward definitions are needed for defining operators functions that
 // use other clases type
 
-
-
+template <class T> class ImageImagicT;
+template <class T> class ImageXmippT;
 
 /* ************************************************************************* */
 /* IMAGES                                                                    */
@@ -74,7 +88,7 @@ typedef enum {IBYTE=1, IFLOAT=2, I16=3} Image_Type;
 
 template <class T> class ImageT {
 protected:
-   FileName          fn_img;              // name of the image
+   FileName     fn_img;              // name of the image
 public:
    matrix2D<T>  img;                 // matrix with the image
 public:
@@ -125,7 +139,7 @@ public:
    /** Rename image.
        Give a new name to the image.
        \\ Ex: I.rename("new_name"); */
-   virtual void rename(FileName newName)   {   fn_img = newName;   }
+   virtual void rename(FileName newName)   {fn_img = newName;}
 
    /** Empty image.
        This function clears the image to a 0x0 image without name.
@@ -209,17 +223,70 @@ public:
        unsigned ints woth 16 bits (I16) and floats (IFLOAT) can be read. 
        \\ Ex: I.read(65,65,"g0ta0001.raw");*/
    bool read(const FileName &name, float fIform, int Ydim, int Xdim,
-      bool reversed=FALSE, Image_Type image_type=IBYTE);
+      bool reversed=false, Image_Type image_type=IBYTE) {
+        FILE *fh;
+        clear(); 
+
+        if ((fh = fopen(name.c_str(), "rb")) == NULL)
+          REPORT_ERROR(1501,"Image::read: File " + name + " not found");
+        bool ret;
+        if ((ret = ImageT<T>::read(fh, fIform, Ydim, Xdim, reversed, image_type)))
+           fn_img=name;
+        fclose(fh);
+        return (ret);
+   }
 
    /** Read image from disk using a file pointer.
        This is the core routine of the previous one. */
-   bool read(FILE * &fh, float fIform, int Ydim, int Xdim, bool reversed, Image_Type image_type);
+   bool read(FILE * &fh, float fIform, int Ydim, int Xdim, bool reversed,
+      Image_Type image_type) {
+        img.resize(Ydim,Xdim);
+
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+            switch (image_type) {
+               case IBYTE:
+                  unsigned char u;
+                  FREAD (&u, sizeof(unsigned char), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=u;
+                  break;
+               case I16:
+                  unsigned short us;
+                  FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=us;
+                  break;
+               case IFLOAT:
+                  float f;
+                  FREAD (&f, sizeof(float), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=f;
+                  break;
+            }
+         return (false);
+   }
 
   // LoadImage is a static function that loads an image file depending on
   // what kind of image type (e.g., Xmipp, Imagic) it is; it returns a
   // pointer to the base Image class.  Caller is responsible for deleting
   // the memory for the object.  Returns NULL on error.
-  static ImageT<T> *LoadImage (FileName name, bool apply_geo=FALSE);
+  static ImageT<T> *LoadImage (FileName name, bool apply_geo=false) {
+     ImageT<T> *ret = NULL;
+     if (name.find (IMAGIC_TAG) != string::npos)
+     {
+       ImageImagicT<T> *i = new ImageImagicT<T>();
+       if (i->read (name))
+         ret = i;
+       else
+         delete i;
+     }
+     else // For now, assume anything else is ImageXmipp type.
+     {
+       ImageXmippT<T> *i = new ImageXmippT<T>();
+       if (i->read (name,false,false,apply_geo,false))
+         ret = i;
+       else
+         delete i;
+     }
+     return (ret);
+  }
 
    /** Write image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -229,14 +296,62 @@ public:
        Valid types are IBYTE, I16, IFLOAT.
        \\ Ex: I.write() ---> Save
        \\ Ex: I.write("g0ta0001.raw") ---> Save as */
-   void write(FileName name = "", bool reversed=FALSE,
-      Image_Type image_type=IBYTE);
+   void write(FileName name = "", bool reversed=false,
+      Image_Type image_type=IBYTE) {
+        FILE *fp;
+        if (name != "") ImageT<T>::rename(name); 
+
+        if ((fp = fopen(fn_img.c_str(), "wb")) == NULL) {
+          REPORT_ERROR(1503,"Image::write: File " + fn_img + " cannot be saved");
+        };
+        ImageT<T>::write(fp, reversed, image_type);
+        fclose(fp);  
+   }
 
    /** Write image to disk using a file pointer.
        This is the core routine of the previous one. */
-   void write(FILE * &fh, bool reversed, Image_Type image_type);
+   void write(FILE * &fh, bool reversed, Image_Type image_type) {
+        if (XSIZE(img)==0 || YSIZE(img)==0) return;
+        double a,b;
+        if (image_type!=IFLOAT) {
+           double min_val, max_val;
+           (*this)().compute_double_minmax(min_val,max_val);
+           if (image_type==IBYTE) a=255;
+           else                   a=65535;
+           a/=(max_val-min_val);
+           b=min_val;
+        }
+
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+            switch (image_type) {
+               case IBYTE:
+                  unsigned char u;
+                  u=(unsigned char) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+                  FWRITE (&u, sizeof(unsigned char), 1, fh, reversed);
+                  break;
+	       case I16:
+	          unsigned short us;	    
+                  us=(unsigned short) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+                  FWRITE (&us, sizeof(unsigned short), 1, fh, reversed);
+                  break;
+               case IFLOAT:
+                  float f;
+                  f=(float) MULTIDIM_ELEM(img,i);
+                  FWRITE (&f, sizeof(float), 1, fh, reversed);
+                  break;
+            }
+   }
    //@}
 };
+
+// Specific function to read images with complex numbers in them
+template <>
+bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
+   int Ydim, int Xdim, bool reversed, Image_Type image_type);
+
+// Specific function to write images with complex numbers in them
+template <>
+void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type);
 
 /**@name Image Speed up macros*/
 //@{
@@ -337,12 +452,12 @@ public:
        ImageXmipp class structure. You have loaded the image at the
        declaration time.
        \\ Ex: ImageXmipp IX("g1ta0001.spd"); */
-   ImageXmippT (FileName _name, bool apply_geo=FALSE):ImageT<T>(_name){
+   ImageXmippT (FileName _name, bool apply_geo=false):ImageT<T>(_name){
      if (typeid(T)==typeid(complex<double>))
         header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex) 
      else if (typeid(T)==typeid(double))
         header.headerType() = headerXmipp::IMG_XMIPP;  // Sets header of type Image_XMipp
-        read(_name,FALSE,FALSE,apply_geo,FALSE);       // Read image from file
+        read(_name,false,false,apply_geo,false);       // Read image from file
    }
    
    /** Copy constructor.
@@ -408,20 +523,56 @@ public:
        If apply_geo and/or only_apply_shifts, the image will be mirrored
          if the img.flip() flag is set to 1.
        If only_apply_shifts is TRUE, then only the shifts of the header are
-         applied (even if apply_geo is FALSE).
-       If apply_geo is TRUE and only_apply_shifts is FALSE, then shifts
+         applied (even if apply_geo is false).
+       If apply_geo is TRUE and only_apply_shifts is false, then shifts
          and in-plane rotation are applied. 
        
-       If skip_type_check is FALSE, then the routine automatically checks
-       the endianness of thee file, and reversed should be set to FALSE.
+       If skip_type_check is false, then the routine automatically checks
+       the endianness of thee file, and reversed should be set to false.
        
        If skip_type_check is TRUE, then the programmer must know whether
        the endian is reversed or not, and provide this information in reversed.
        
        \\ Ex: IX.read("g1ta0002.spd");*/
-   virtual bool read(const FileName &_name, bool skip_type_check=FALSE,
-      bool reversed=FALSE, bool apply_geo=FALSE,
-      bool only_apply_shifts=FALSE);
+   virtual bool read(const FileName &name, bool skip_type_check=false,
+      bool reversed=false, bool apply_geo=false,
+      bool only_apply_shifts=false) {
+        FILE *fp;
+        bool ret;
+
+        ImageXmippT<T>::rename(name);
+        if ((fp = fopen(ImageT<T>::fn_img.c_str(), "rb")) == NULL)
+          REPORT_ERROR(1501,(string)"ImageXmipp::read: File "+ImageT<T>::fn_img+" not found");
+        // Read header
+        if (!header.read(fp, skip_type_check, reversed))
+           REPORT_ERROR(1502,"ImageXmipp::read: File " + ImageT<T>::fn_img +
+              " is not a valid Xmipp file");   
+
+        // Read whole image and close file
+        if ((ret = ImageT<T>::read(fp, header.fIform(), header.iYdim(), header.iXdim(), header.reversed(), IFLOAT)))
+        {
+          if (apply_geo || only_apply_shifts) {
+            // Apply the geometric transformations in the header to the loaded image.
+            // Transform image without wrapping, set new values to first element in the matrix
+            matrix2D<double> A=
+               ImageXmippT<T>::get_transformation_matrix(only_apply_shifts);
+            if (!A.IsIdent())
+               ImageT<T>::img.self_apply_geom_Bspline(
+                  A,3,IS_INV,WRAP);
+          }
+
+          // scale if necessary (check this with Carlos)
+          if ((header.Scale() != 0.) && (header.Scale() != 1.)) {
+            header.set_dimension(header.Ydim()*header.Scale(), header.Xdim()*header.Scale());
+            ImageT<T>::img.self_scale_to_size_Bspline(3,header.iYdim(), header.iXdim());
+          }; 
+
+          header.set_header();  // Set header in a Xmipp consistent state
+
+        }
+        fclose(fp);
+        return (ret);
+   }
    
    /** Write Xmipp image to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -430,7 +581,18 @@ public:
        changed. This is somehow like the "Save as ..." and "Save".
        \\ Ex: IX.write() ---> Save
        \\ Ex: IX.write("g1ta0002.spd") ---> Save as */
-   virtual void write(const FileName &_name = "", bool force_reversed=FALSE);
+   virtual void write(const FileName &name = "", bool force_reversed=false) {
+        FILE *fp;
+        if (name != "") ImageXmippT<T>::rename(name); 
+        if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
+          REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+fn_img +
+             " cannot be written");
+        adjust_header();
+        bool reversed=(force_reversed) ? !header.reversed():header.reversed();
+        header.write(fp, force_reversed);
+        ImageT<T>::write(fp, reversed, IFLOAT);
+        fclose(fp);  
+   }
    //@}
 
    // Header operations interface ..........................................
@@ -466,11 +628,68 @@ public:
    bool reversed() const {return header.reversed();}
 
   /** Get geometric transformation matrix from 2D-image header.  */
-  matrix2D<double> get_transformation_matrix(bool only_apply_shifts=FALSE);
+  matrix2D<double> get_transformation_matrix(bool only_apply_shifts=false) {
+     matrix2D<double>    A(3,3);
+     double psi=realWRAP(header.Psi(),-180,180);
+     double theta=realWRAP(header.Theta(),-180,180);
+
+     A.init_identity();
+
+     /* This is to be compatible with old Xmipp images, that store image
+        translations in another position of the header */
+     ImageXmippT<T>::check_oldxmipp_header();
+
+     if (only_apply_shifts) {
+       Euler_angles2matrix(0.,0.,0.,A);
+       A(0,2)=-header.fXoff();   
+       A(1,2)=-header.fYoff();
+     } else {
+       if (theta==0.) {
+         // For untilted images: apply Euler matrix
+         Euler_angles2matrix (header.Phi(),0.,header.Psi(),A);
+       } else { 
+         // For tilted images: only apply Psi 
+         // Take another_set into account
+         if (theta<0.) {
+	   theta=-theta;
+	   psi=realWRAP(psi-180.,-180,180);
+         }
+         Euler_angles2matrix(0.,0.,psi,A);
+       }
+       A(0,2)=-header.fXoff();   
+       A(1,2)=-header.fYoff();
+     }
+
+     // Also for only_apply_shifts: mirror if necessary!
+     if (header.Flip()==1) {
+       A(0,0)=-A(0,0); 
+       A(0,1)=-A(0,1); 
+     }
+
+     return A;
+  }
 
    /** Check OldXmipp header location for image translation offsets
        If image appears to be in OldXmipp format, copy offsets to NewXmipp header location */
-   void check_oldxmipp_header();
+   void check_oldxmipp_header() {
+     if (header.fXoff()==0. && header.fYoff()==0. && header.fZoff()==0.) {
+       // Might be oldXmipp image header
+       float ang=header.old_rot();   
+       matrix2D<double> mat=header.fGeo_matrix();
+       if (ABS(mat(0,0)-COSD(ang))<XMIPP_EQUAL_ACCURACY &&
+	   ABS(mat(1,1)-COSD(ang))<XMIPP_EQUAL_ACCURACY &&
+	   ABS(mat(0,1)-SIND(ang))<XMIPP_EQUAL_ACCURACY &&
+	   ABS(mat(1,0)+SIND(ang))<XMIPP_EQUAL_ACCURACY &&
+           mat(2,0)!=0. && mat(2,1)!=0. ) {
+         // This indeed seems to be an OldXmipp style header with non-zero offsets
+         cerr << "WARNING%% Copying shifts from old to new header location: "<< (*this).name() <<endl;
+         header.fXoff()=-(float)mat(2,0);
+         header.fYoff()=-(float)mat(2,1);
+         if (XSIZE(ImageT<T>::img)%2==0) header.fXoff()+=0.5;
+         if (YSIZE(ImageT<T>::img)%2==0) header.fYoff()+=0.5;
+       } 
+     } 
+   }
 
    /**@name Origin Offsets
       Origin Offsets Xoff and Yoff are in pixels and do not have to be integer values.*/
@@ -758,12 +977,12 @@ public:
 /**@name Related functions */
 //@{
 /** True if the given volume is an Xmipp image. */
-int Is_ImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE);
+int Is_ImageXmipp(const FileName &fn, bool skip_type_check=false,
+      bool reversed=false);
 
 /** True if the given volume is a Fourier Xmipp image. */
-int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE);
+int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check=false,
+      bool reversed=false);
 
 /** Get size of an image.
     It returns -1 if the given image is not an Xmipp file*/
@@ -1051,7 +1270,388 @@ public:
    //@}
 };
 
-//@Include: xmippImagic.hh
+/****************************************************************************/
+/* IMAGIC IMAGES                                                            */
+/****************************************************************************/
+/**@name IMAGIC Images */
+//@{
+
+/* String that identifies a selline as an Imagic image */
+static const char *IMAGIC_TAG = "imagic:";
+
+/* Extensions for the Imagic header and image files */
+static const char *IMAGIC_HEADER_EXT = "hed";
+static const char *IMAGIC_IMAGE_EXT  = "img";
+
+/* Length of the tag */
+static const short unsigned IMAGIC_TAG_LEN = 7;
+/* Separator character */
+static const char IMAGIC_TAG_SEP = ':';
+
+/* Constants for the offset into the Imagic header file */
+static const unsigned IMAGIC_IFOL_OFFSET=4, IMAGIC_IXLP_OFFSET=48,
+  IMAGIC_IYLP_OFFSET=52, IMAGIC_TYPE_OFFSET=56, IMAGIC_WORD_LEN=4,
+  IMAGIC_RECORD_LEN=1024;
+
+/* Constants defining the Imagic header and some of its fields */
+static const unsigned int IMAGIC_HEADER_BLOCK_SIZE = 256;
+static const unsigned int IMAGIC_IDX_IMN = 0,
+  IMAGIC_IDX_IFOL = 1, IMAGIC_IDX_NHFR = 3,
+  IMAGIC_IDX_NDATE = 5, IMAGIC_IDX_NMONTH = 4, // These seem reversed in the spec
+  IMAGIC_IDX_NYEAR = 6, IMAGIC_IDX_NHOUR = 7,
+  IMAGIC_IDX_NMINUT = 8, IMAGIC_IDX_NSEC = 9,
+  IMAGIC_IDX_NPIX2 = 10, IMAGIC_IDX_NPIXEL = 11,
+  IMAGIC_IDX_IXLP1 = 12, IMAGIC_IDX_IYLP1 = 13,
+  IMAGIC_IDX_TYPE = 14, IMAGIC_IDX_NAME = 29, IMAGIC_IDX_NAMELEN = 80,
+  IMAGIC_IDX_ARCHTYPE = 68;
+
+/** Types of Imagic files.
+    Valid types are IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP.
+*/
+enum ImageImagicType { IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP };
+
+/* structure that holds Imagic image information */
+struct ImageImagicInfo
+{
+  unsigned int num_img;
+  unsigned int xsize, ysize;
+  vector<ImageImagicType> img_types;
+};
+
+/** Imagic Image class */
+template <class T> class ImageImagicT: public ImageT<T>
+{
+public:
+  /** Empty constructor. */
+  ImageImagicT() : ImageT<T>() { name_parsed = false; };
+  /** Constructor with size */
+  ImageImagicT(int Ydim, int Xdim) :
+    ImageT<T>(Ydim, Xdim) { name_parsed = false; };
+  /** Constructor with image name */
+  ImageImagicT(FileName _name) : ImageT<T>(_name) { name_parsed = false; };
+
+  /** Copy constructor */
+  ImageImagicT(const ImageImagicT &I) : ImageT<T>(I)
+  {
+    if ((name_parsed = I.name_parsed))
+    {
+      hedfname = I.hedfname;
+      imgfname = I.imgfname;
+      imgnum = I.imgnum;
+    }
+  };
+
+  /** Rename. */
+  virtual void rename (FileName newName)
+  {
+    if (newName != ImageT<T>::fn_img)
+    {
+      ImageT<T>::rename (newName);
+      name_parsed = false;
+    }
+  };
+  
+  /** Clear */
+  virtual void clear() { ImageT<T>::clear(); name_parsed = false; };
+
+  /** Assignment operator. */
+  ImageImagicT<T>& operator= (const ImageImagicT<T> &I)
+  {
+    if (this != &I)
+    {
+      this->ImageT<T>::operator= (I);
+      if ((name_parsed = I.name_parsed))
+      {
+	hedfname = I.hedfname;
+	imgfname = I.imgfname;
+	imgnum = I.imgnum;
+      }
+    }
+    return (*this);
+  };
+
+  /** Assignment operator. */
+  ImageImagicT<T>& operator= (const ImageT<T> &I)
+  {
+    if (this != &I)
+    {
+      this->ImageT<T>::operator= (I);
+      name_parsed = false;
+    }
+    return (*this);
+  };
+
+  /** Assignment operator */
+  template <class T1>
+  ImageImagicT<T>& operator= (const matrix2D<T1> &m)
+  {
+    if (&ImageT<T>::img != (matrix2D<T> *) &m)
+    {
+      this->ImageT<T>::operator= (m);
+      name_parsed = false;
+    }
+    return (*this);
+  };
+
+  /** Show */
+  friend ostream& operator<< (ostream& out, const ImageImagicT<T> &I)
+  {
+    out << (ImageT<T>&) I;
+    /* COSS: These functions are not defined 
+       out << "IMAGIC header fname: " << get_hedfname() << endl;
+       out << "IMAGIC image fname:  " << get_imgfname() << endl;
+       out << "image number:        " << get_imgnum() << endl;
+    */
+    return (out);
+  };
+
+  /** Read file. */
+  bool read (const FileName &name) {
+     rename (name);
+     ImageImagicInfo img_info = ImagicGetImgInfo (getHedFname());
+
+     FileName img_fname = getImgFname();
+     if (img_fname == "")
+       REPORT_ERROR (1501, "ImageImagic::read: File " + name +
+		     " doesn't seem fit Imagic format");
+     FILE *img_fh;
+     if ((img_fh = fopen (img_fname.c_str(), "rb")) == NULL)
+       REPORT_ERROR (1501,"ImageImagic::read: IMAGIC file " + img_fname +
+		     " not found");
+
+     const int imgnum = getImgNum();
+     const size_t img_offset = img_info.xsize * img_info.ysize;
+     // Read the image data
+     ImageT<T>::img.resize (img_info.ysize, img_info.xsize);
+     const bool reversed = false;
+     switch (img_info.img_types[imgnum])
+     {
+     case IMAGIC_REAL:
+       {
+         float data;
+         const unsigned size = 4;
+         fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
+	   {
+	     FREAD (&data, size, 1, img_fh, reversed);
+	     MULTIDIM_ELEM(ImageT<T>::img,i) = data;
+	   }
+         break;
+       }
+     case IMAGIC_INTG:
+       {
+         short int data;
+         const unsigned size = 2;
+         fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
+	   {
+	     FREAD (&data, size, 1, img_fh, reversed);
+	     MULTIDIM_ELEM(ImageT<T>::img,i) = data;
+	   }
+         break;
+       }
+     case IMAGIC_PACK:
+       {
+         unsigned char data;
+         const unsigned size = 1;
+         fseek (img_fh, imgnum*size*img_offset, SEEK_SET);
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT<T>::img)
+	   {
+	     FREAD (&data, size, 1, img_fh, reversed);
+	     MULTIDIM_ELEM(ImageT<T>::img,i) = data;
+	   }
+         break;
+       }
+     default:
+       REPORT_ERROR(1501,"ImageImagicType not supported for this imgtype!");
+       break;
+     }
+     fclose (img_fh);
+     return (true);
+  }
+
+  /** Write file. Not implemented. */
+  void write (const FileName &name="", bool reversed=FALSE,
+	      Image_Type image_type=IBYTE)
+  {
+    REPORT_ERROR (1503, "ImageImagic::write: can't directly save");
+  };
+  
+  /** Low level write. Not implemented. */
+  void write (FILE * &fh, bool reversed, Image_Type image_type)
+  {
+    REPORT_ERROR (1503, "ImageImagic::write: can't directly save");
+  };
+
+  /** Get Header name. */
+  const FileName& getHedFname() { parseFname(); return (hedfname); };
+  /** Get Image name */
+  const FileName& getImgFname() { parseFname(); return (imgfname); };
+  /** Get image number */
+  int getImgNum() { parseFname(); return (imgnum); };
+  
+  virtual void parseFname() { // Not meant to be called directly, but needs to
+                              // be kept public
+     if (!name_parsed)
+     {
+       hedfname = "";
+       imgfname = "";
+       imgnum = -1;
+       // Look for special IMAGIC format: 'imagic:<hedfile>:<imgnum>'
+       if (ImageT<T>::fn_img.find (IMAGIC_TAG) != string::npos)
+       {
+         const string::size_type imgnumpos = ImageT<T>::fn_img.rfind (IMAGIC_TAG_SEP);
+         if (imgnumpos > IMAGIC_TAG_LEN)
+         {
+	   hedfname = ImageT<T>::fn_img.substr (IMAGIC_TAG_LEN, imgnumpos-IMAGIC_TAG_LEN);
+	   imgfname = hedfname.substitute_extension (IMAGIC_HEADER_EXT,
+						     IMAGIC_IMAGE_EXT);
+	   imgnum = atoi ((ImageT<T>::fn_img.substr (imgnumpos+1)).c_str());
+         }
+       }
+       name_parsed = true;
+     }
+  }
+                        
+
+protected:
+  bool name_parsed;
+  FileName hedfname, imgfname;
+  int imgnum;  
+};
+
+/** Alias for ImageImagic type */
+typedef ImageImagicT<double> ImageImagic;
+
+// Utility functions
+
+/** Creates a string of the format 'imagic:hedfname:num'.
+    suitable for use as an image name. */
+inline string ImagicMakeName (const char *hed_fname, unsigned int imgnum)
+{
+#if GCC_VERSION < 30300
+       char aux[15];
+       ostrstream ss(aux,sizeof(aux));
+#else
+       ostringstream ss;
+#endif
+  ss << IMAGIC_TAG << hed_fname << IMAGIC_TAG_SEP << imgnum;
+  return (ss.str());
+};
+
+/** Looks at an IMAGIC header file for information about
+    the images it contains.*/
+const ImageImagicInfo ImagicGetImgInfo (const FileName &hed_fname);
+
+/** Creates a new Imagic header/image file pair,
+    filling it with the data pointed to by the vector parameter. */
+template <class T>
+bool ImagicWriteImagicFile (const FileName &hed_fname,
+			    const vector<ImageT<T> *> &imgs,
+			    ImageImagicType img_type = IMAGIC_REAL) {
+  const FileName img_fname = hed_fname.substitute_extension (IMAGIC_HEADER_EXT,
+							     IMAGIC_IMAGE_EXT);
+  FILE *imagic_hed = fopen (hed_fname.c_str(), "wb");
+  FILE *imagic_img = fopen (img_fname.c_str(), "wb");
+  if (imagic_hed && imagic_img)
+  {
+    // Write the header information
+    int header_block[IMAGIC_HEADER_BLOCK_SIZE];
+    for (unsigned int imgcount = 0; imgcount < imgs.size(); imgcount++)
+    {
+      const ImageT<T> *image = imgs[imgcount];
+      if (!image)
+      {
+	if (imagic_hed) fclose (imagic_hed);
+	if (imagic_img) fclose (imagic_img);
+	return (false);
+      }
+      memset (header_block, 0, sizeof (header_block));
+      header_block[IMAGIC_IDX_IMN] = imgcount+1;
+      header_block[IMAGIC_IDX_IFOL] = imgs.size()-(imgcount+1);
+      header_block[IMAGIC_IDX_NHFR] = 1;
+      const time_t nowt = time(NULL);
+      const struct tm *nowtm = localtime (&nowt);
+      header_block[IMAGIC_IDX_NMONTH] = nowtm->tm_mon+1;
+      header_block[IMAGIC_IDX_NDATE] = nowtm->tm_mday;
+      header_block[IMAGIC_IDX_NYEAR] = nowtm->tm_year+1900;
+      header_block[IMAGIC_IDX_NHOUR] = nowtm->tm_hour;
+      header_block[IMAGIC_IDX_NMINUT] = nowtm->tm_min;
+      header_block[IMAGIC_IDX_NSEC] = nowtm->tm_sec;
+      header_block[IMAGIC_IDX_NPIX2] = XSIZE((*image)())*YSIZE((*image)());
+      header_block[IMAGIC_IDX_NPIXEL] = header_block[IMAGIC_IDX_NPIX2];
+      header_block[IMAGIC_IDX_IXLP1] = XSIZE((*image)());
+      header_block[IMAGIC_IDX_IYLP1] = YSIZE((*image)());
+      string formatstr;
+      switch (img_type)
+      {
+      case IMAGIC_REAL:
+	formatstr = "REAL";
+	break;
+      case IMAGIC_INTG:
+	formatstr = "INTG";
+	break;
+      case IMAGIC_PACK:
+	formatstr = "PACK";
+	break;
+      case IMAGIC_COMP:
+	formatstr = "COMP";
+	break;
+      }
+      memcpy (&header_block[IMAGIC_IDX_TYPE], formatstr.c_str(), 4);
+      strncpy ((char *) &header_block[IMAGIC_IDX_NAME],
+	       image->name().c_str(), IMAGIC_IDX_NAMELEN);
+#if defined(_LINUX)
+      static const unsigned int ARCH_VAL = 33686018;
+#elif defined(_SUN)
+      static const unsigned int ARCH_VAL = 67372036;
+#else
+      static const unsigned int ARCH_VAL = 33686018;
+#endif
+      // This next line will generate an error if not using linux or sun!
+      header_block[IMAGIC_IDX_ARCHTYPE] = ARCH_VAL;
+
+      fwrite (header_block, sizeof (header_block), 1, imagic_hed);
+      // Write the image data to the .img file
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((*image)())
+	{
+	  switch (img_type)
+	  {
+	  case IMAGIC_REAL:
+	    {
+	      const float p = (float) MULTIDIM_ELEM ((*image)(), i);
+	      FWRITE (&p, sizeof (p), 1, imagic_img, false);
+	      break;
+	    }
+	  case IMAGIC_INTG:
+	    {
+	      const unsigned short p =
+		(unsigned short) MULTIDIM_ELEM ((*image)(), i);
+	      FWRITE (&p, sizeof (p), 1, imagic_img, false);
+	      break;
+	    }
+	  case IMAGIC_PACK:
+	  case IMAGIC_COMP:
+	    // NT: TODO: implement these
+	    fprintf (stderr, "Unsupported format for writeSelFile!\n");
+	    fclose (imagic_hed);
+	    fclose (imagic_img);
+	    return (false);
+	    break;
+	  }
+	}
+    }
+  }
+  if (imagic_hed) fclose (imagic_hed);
+  if (imagic_img) fclose (imagic_img);
+  return (true);
+}
+
+// Specific function to read images with complex numbers in them
+template <>
+   bool ImageImagicT<complex<double> >::read(const FileName &);
+
+//@}
 
 //@}
 #endif

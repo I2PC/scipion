@@ -61,7 +61,7 @@ void Prog_Evaluate_Parameters::default_values() {
    percent_mass   = 99;
    global_radius  = 0;
    fn_mask        = "";
-   fit_gray_scales= FALSE;
+   fit_gray_scales= true;
    RSrot          = 0;
    RStilt         = 0;
 }
@@ -579,13 +579,13 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
          cerr << "Perfoming measure for test number " << k << endl;
          prm.fn_recons=SF.NextImg();
          if (prm.fn_phantom=="") {
-            mathematical_phantom=TRUE;
+            mathematical_phantom=true;
             prm.fn_phantom=prm.fn_recons.without_extension();
             prm.fn_phantom=prm.fn_phantom.without("_wos");
             int i=prm.fn_phantom.find("_idr");
             if (i!=-1) prm.fn_phantom=prm.fn_phantom.replace(i,6,"");
             prm.fn_phantom +=".descr";
-         } else mathematical_phantom=FALSE;
+         } else mathematical_phantom=false;
          if (!SFmask.eof()) prm.fn_mask=SFmask.NextImg();
          else               prm.fn_mask="";
          Evaluate_single_step(prm,results);
@@ -593,7 +593,7 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
          k++;
          if (mathematical_phantom) {
             prm.fn_phantom="";
-            mathematical_phantom=FALSE;
+            mathematical_phantom=false;
          }
       }
       compute_FOMs_stats(foms,0,foms_mean,foms_stddev);

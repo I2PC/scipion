@@ -1,3 +1,5 @@
+#ifndef _LINEARALGEBRA
+   #define _LINEARALGEBRA
 /**@name Linear algebra */
 //@{
 /*--------------------------------------------------------------------------*/
@@ -375,3 +377,4 @@ extern int		VectorSubtract
 					long	Lines				/* height of the vectors */
 				);
 //@}
+#endif

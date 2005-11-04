@@ -95,12 +95,12 @@ public:
    // Input/Output
    
    // reversed is only used in case that the type_check is skipped
-   int read(FILE *fp, bool skip_type_check=FALSE, bool reversed=FALSE,
-      bool skip_extra_checkings=FALSE);
-   int read(const FileName &fn, bool skip_type_check=FALSE,
-      bool reversed=FALSE, bool skip_extra_checkings=FALSE);
-   void write(FILE *fp, bool force_reversed=FALSE);
-   void write(const FileName &fn, bool force_reversed=FALSE);
+   int read(FILE *fp, bool skip_type_check=false, bool reversed=false,
+      bool skip_extra_checkings=false);
+   int read(const FileName &fn, bool skip_type_check=false,
+      bool reversed=false, bool skip_extra_checkings=false);
+   void write(FILE *fp, bool force_reversed=false);
+   void write(const FileName &fn, bool force_reversed=false);
 
    // Other header operators
    
@@ -196,11 +196,25 @@ public:
         \\Ex: header.clear_fFlag_flag(); */
    void clear_fFlag_flag() {header.fFlag=0.f;};
    template <class T>
-      void get_eulerAngles(T &Phi, T &Theta, T &Psi) const;
+      void get_eulerAngles(T &Phi, T &Theta, T &Psi) const {
+        Phi = (T) header.fPhi;
+        Theta = (T) header.fTheta;
+        Psi = (T) header.fPsi;
+      }
+
    template <class T>
-      void get_eulerAngles1(T &Phi1, T &Theta1, T &Psi1) const;
+      void get_eulerAngles1(T &Phi1, T &Theta1, T &Psi1) const {
+        Phi1 = (T) header.fPhi1;
+        Theta1 = (T) header.fTheta1;
+        Psi1 = (T) header.fPsi1;
+      }
+      
    template <class T>
-      void get_eulerAngles2(T &Phi2, T &Theta2, T &Psi2) const;
+      void get_eulerAngles2(T &Phi2, T &Theta2, T &Psi2) const {
+        Phi2 = (T) header.fPhi2;
+        Theta2 = (T) header.fTheta2;
+        Psi2 = (T) header.fPsi2;
+      }
    
    float& Phi() {header.fIangle = 1; return header.fPhi;};          // Set Phi
    float  Phi() const {return header.fPhi;};      // Get Phi

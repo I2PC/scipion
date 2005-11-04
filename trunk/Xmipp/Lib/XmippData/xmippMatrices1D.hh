@@ -38,14 +38,12 @@
 
 #define maT  matrix1D<T>
 #define maT1 matrix1D<T1>
-#define maTC matrix1D<double_complex>
+#define maTC matrix1D< complex<double> >
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
-template <>
-ostream& operator << (ostream & ostrm, const matrix1D< complex<double> > &m);
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -369,7 +367,26 @@ public:
        indicated (in the example 6 points).
        \\Ex: v1.init_linear(0,10,6,"steps"); --> v1=[0 2 4 6 8 10] */
    void init_linear(T minF, T maxF, int n=1,
-         const string &mode="incr");
+         const string &mode="incr") {
+         double slope;
+         int steps;
+
+         if (mode=="incr") {
+            steps=1+(int) FLOOR((double)ABS((maxF-minF))/((double) n));
+            slope=n*SGN(maxF-minF);
+         } else if (mode=="steps") {
+            steps=n;
+            slope=(maxF-minF)/(steps-1);
+         } else 
+            REPORT_ERROR(1005,"Init_linear: Mode not supported ("+mode+")");
+
+         if (steps==0) clear();
+         else {   
+            resize(steps);
+            for (int i=0; i<steps; i++)
+               VEC_ELEM(*this,i)=(T) ((double)minF+slope*i);
+         }
+      }
 
    /** Zero initialisation with a new dimension.
        \\Ex: v1.init_zeros(6);*/         
@@ -402,8 +419,8 @@ public:
        input argument */
    void init_shape(const char column='y')
       {xinit=0; xdim=0;
-       if      (column=='y') row=FALSE;
-       else if (column=='n') row=TRUE;
+       if      (column=='y') row=false;
+       else if (column=='n') row=true;
        else    REPORT_ERROR(1004,"Not recognized type for vector creation");}
 
    /** Copy shape.
@@ -672,7 +689,13 @@ public:
       {vT temp(*this); temp.self_reverse(); return temp;}
    
    /** Reverse vector values, keep in this object */
-   void self_reverse();
+   void self_reverse() {
+      int imax=(int)(XSIZE(*this)-1)/2;
+      for (int i=0; i<=imax; i++) {
+         T aux;
+         SWAP(MULTIDIM_ELEM(*this,i),MULTIDIM_ELEM(*this,XSIZE(*this)-1-i),aux);
+      }
+   }
 
    /** Module of the vector.
        This module is defined as the square root of the sum of the squared
@@ -701,7 +724,22 @@ public:
        Sort in ascending order the vector elements. You can use the "reverse"
        function to sort in descending order.
        \\Ex: v2=v1.sort();*/
-   vT sort() const;
+   vT sort() const {
+      vT temp;
+      matrix1D<double> aux;
+
+      if (XSIZE(*this)==0) return temp;
+
+      // Initialise data
+      type_cast(*this, aux);
+
+      // Sort
+      double * aux_array=aux.adapt_for_numerical_recipes();
+      qcksrt(xdim,aux_array);
+
+      type_cast(aux,temp);
+      return temp;
+   }
    
    /** Gives a vector with the indexes for a sorted vector.
        This function returns the indexes of a sorted vector. The input vector
@@ -710,7 +748,27 @@ public:
        that the lowest value is at index 2, then comes the element at
        index 3, ...
        \\ Ex: v2=v1.index_sort();*/
-   matrix1D<int> index_sort() const;
+   matrix1D<int> index_sort() const {
+      matrix1D<int>   indx;
+      matrix1D<double> temp;
+
+      if (XSIZE(*this)==0) return indx;
+      if (XSIZE(*this)==1) {
+         indx.resize(1); indx(0)=1;
+         return indx;
+      }
+
+      // Initialise data
+      indx.resize(xdim);
+      type_cast(*this,temp);
+
+      // Sort indexes
+      double * temp_array=temp.adapt_for_numerical_recipes();
+      int   * indx_array=indx.adapt_for_numerical_recipes();
+      indexx(xdim,temp_array,indx_array);
+
+      return indx;
+   }
 
    /** Put a window to vector.
        The vector is windowed within the two indexes given to this function.
@@ -721,24 +779,64 @@ public:
        \\--> v1=[-1 0 1 2]; v1.startingX()==-1
        \\Ex: v1.window(-3,1);
        \\--> v1=[0 -2 -1 0 1]; v1.startingX()==-3 */
-   void window(int x0, int xF, T init_value=0);
+   void window(int x0, int xF, T init_value=0) {
+      vT result(xF-x0+1);
+      STARTINGX(result)=x0;
+
+      for (int j=x0; j<=xF; j++)
+          if (j>=STARTINGX(*this) && j<=FINISHINGX(*this))
+                  VEC_ELEM(result,j)=VEC_ELEM(*this,j);
+          else
+                  VEC_ELEM(result,j)=init_value;
+
+      *this=result;
+   }
 
    /** Maximum element.
        This function returns the index of the maximum element of an array.
        array(i). Returns -1 if the array is empty*/
-   void max_index(int &i) const;
+   void max_index(int &imax) const {
+      if (XSIZE(*this)==0) {imax=-1; return;}
+      imax=0;
+      T   max=VEC_ELEM(*this,imax);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
+         if (VEC_ELEM(*this,i)>max) {max=VEC_ELEM(*this,i); imax=i;}
+   }
 
    /** Minimum element.
        This function returns the index of the minimum element of an array.
        array(i). Returns -1 if the array is empty */
-   void min_index(int &i) const;
+   void min_index(int &imin) const {
+      if (XSIZE(*this)==0) {imin=-1; return;}
+      imin=0;
+      T   min=VEC_ELEM(*this,imin);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
+         if (VEC_ELEM(*this,i)<min) {min=VEC_ELEM(*this,i); imin=i;}
+   }
    
    /** Show using gnuplot.
        This function uses gnuplot to plot this vector. You must supply
        the xlabel, ylabel, and title. */
-   void show_with_gnuplot(const string &xlabel, const string &title);
+   void show_with_gnuplot(const string &xlabel, const string &title) {
+      FileName fn_tmp;
+      fn_tmp.init_random(10);
+      write((string)"PPP"+fn_tmp+".txt");
+      ofstream fh_gplot;
+      fh_gplot.open(((string)"PPP"+fn_tmp+".gpl").c_str());
+      if (!fh_gplot)
+         REPORT_ERROR(1,(string)"vector::show_with_gnuplot: Cannot open PPP"+
+            fn_tmp+".gpl for output");
+      fh_gplot << "set xlabel \""+xlabel+"\"\n";
+      fh_gplot << "plot \"PPP"+fn_tmp+".txt\" title \""+title+"\" w l\n";
+      fh_gplot << "pause 300 \"\"\n";
+      fh_gplot.close();
+      system(((string)"(gnuplot PPP"+fn_tmp+".gpl; rm PPP"+fn_tmp+
+         ".txt PPP"+fn_tmp+".gpl) &").c_str());
+   }
    //@}
 };
+
+#include "Src/MultidimFriends_implementation.hh"
 
 /**@name Related functions
    These functions are not methods of matrix1D */
@@ -851,7 +949,12 @@ int are_system(matrix1D<double> &v1, matrix1D<double> &v2,
     \\\ \ \ \ cut_to_common_size(v1,v2);
     \\--> v1 and v2 range from 0 to 2*/
 template <class T>
-   void cut_to_common_size(vT &V1, vT &V2);
+   void cut_to_common_size(vT &V1, vT &V2) {
+      int x0=MAX(STARTINGX(V1) ,STARTINGX(V2));
+      int xF=MIN(FINISHINGX(V1),FINISHINGX(V2));
+      V1.window(x0,xF);
+      V2.window(x0,xF);
+   }
 
 /** Sort two vectors.
     v1 and v2 must be of the same shape, if not an exception is thrown.
@@ -863,7 +966,16 @@ template <class T>
     for sorting two corners. After calling it you can certainly perform
     a non-empty for (from corner1 to corner2) loop.*/
 template <class T>
-    void sort_two_vectors(vT &v1, vT &v2);
+    void sort_two_vectors(vT &v1, vT &v2) {
+      T temp;
+      if (XSIZE(v1)!=XSIZE(v2) || STARTINGX(v1)!=STARTINGX(v2))
+         REPORT_ERROR(1007, "sort_two_vectors: vectors are not of the same shape");
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(v1) {
+         temp=MIN(VEC_ELEM(v1,i),VEC_ELEM(v2,i));
+         VEC_ELEM(v2,i)=MAX(VEC_ELEM(v1,i),VEC_ELEM(v2,i));
+         VEC_ELEM(v1,i)=temp;
+      }
+   }
 
 /** Optimize using Powell's method.
     See Numerical Recipes Chapter 10.
@@ -888,10 +1000,159 @@ template <class T>
     The option show forces the routine to show the convergence path */
 void Powell_optimizer(matrix1D<double> &p, int i0, int n,
    double (*f)(double *x), double ftol, double &fret,
-   int &iter, const matrix1D<double> &steps, bool show=FALSE);
+   int &iter, const matrix1D<double> &steps, bool show=false);
 //@}
 //@}
 //@}
+
+/* Implementations of common routines -------------------------------------- */
+/* Print shape ------------------------------------------------------------- */
+template <class T>
+   void vT::print_shape(ostream &out) const {
+   out << "Size: " << XSIZE(*this)
+       << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+}
+
+/* Get size----------------------------------------------------------------- */
+template <class T>
+   void vT::get_size(int *size) const
+   {size[0]=xdim; size[1]=1; size[2]=1;}
+
+/* Outside ----------------------------------------------------------------- */
+template <class T>
+   bool vT::outside(const matrix1D<double> &v) const {
+   if (XSIZE(v)<1)
+      REPORT_ERROR(1,"Outside: index vector has got not enough components");
+   return (XX(v)<STARTINGX(*this) || XX(v)>FINISHINGX(*this));
+}
+
+template <class T>
+   bool vT::outside(int i) const {
+   return (i<STARTINGX(*this) || i>FINISHINGX(*this));
+}
+
+/* Intersects -------------------------------------------------------------- */
+template <class T>
+   bool vT::intersects(const vT &m) const
+      {return intersects(STARTINGX(m), XSIZE(m)-1);}
+
+template <class T>
+   bool vT::intersects(const matrix1D<double> &corner1,
+      const matrix1D<double> &corner2) const {
+       if (XSIZE(corner1)!=1 || XSIZE(corner2)!=1)
+          REPORT_ERROR(1002,"intersects 1D: corner sizes are not 1");
+       return intersects(XX(corner1),XX(corner2)-XX(corner1));
+}
+
+template <class T>
+   bool vT::intersects(double x0, double xdim) const {
+   SPEED_UP_temps;
+   spduptmp0=MAX(STARTINGX(*this), x0);
+   spduptmp1=MIN(FINISHINGX(*this),x0+xdim);
+   if (spduptmp0>spduptmp1) return false;
+   return true;
+}
+
+/* Corner ------------------------------------------------------------------ */
+template <class T>
+   bool vT::isCorner(const matrix1D<double> &v) {
+   if (XSIZE(v)<1)
+      REPORT_ERROR(1,"isCorner: index vector has got not enough components");
+   return (XX(v)==STARTINGX(*this) || XX(v)==FINISHINGX(*this));
+}
+
+/* Border ------------------------------------------------------------------ */
+template <class T>
+   bool vT::isBorder(const matrix1D<int> &v) 
+{
+   if (XSIZE(v)<1)
+      REPORT_ERROR(1,"isBorder: index vector has got not enough components");
+   return  isBorder(XX(v));
+}
+
+template <class T>
+   bool vT::isBorder(int i) 
+{
+   return (i==STARTINGX(*this)  || i==FINISHINGX(*this));
+}
+
+/* Patch ------------------------------------------------------------------- */
+template <class T>
+   void vT::patch(const vT &patch_array, char operation) {
+      SPEED_UP_temps;
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(patch_array,*this)
+         switch (operation) {
+            case '=': VEC_ELEM(*this,i) =VEC_ELEM(patch_array,i); break;
+            case '+': VEC_ELEM(*this,i)+=VEC_ELEM(patch_array,i); break;
+            case '-': VEC_ELEM(*this,i)-=VEC_ELEM(patch_array,i); break;
+            case '*': VEC_ELEM(*this,i)*=VEC_ELEM(patch_array,i); break;
+            case '/': VEC_ELEM(*this,i)/=VEC_ELEM(patch_array,i); break;
+         }
+}
+
+/* Output stream ----------------------------------------------------------- */
+template <class T>
+   ostream& operator << (ostream& out, const vT& v) {
+   if (MULTIDIM_SIZE(v)==0) out << "NULL vector\n";
+   else {
+      // Look for the exponent
+      vT aux(v); aux.ABSnD();
+      int prec=best_prec(aux.compute_max(),10);
+
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(v) {      
+         if (v.row) out << FtoA((double)VEC_ELEM(v,i),10,prec) << ' ';
+         else       out << FtoA((double)VEC_ELEM(v,i),10,prec) << '\n';
+      }
+   }
+      
+   return out;
+}
+
+/* Statistics in region ---------------------------------------------------- */
+template <class T>
+void vT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(3);
+   double N=0, sum=0, sum2=0;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1,corner2) {
+      sum+=(*this)(r); sum2+=(*this)(r)*(*this)(r); N++;
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+   if (N!=0) {
+      avg=sum/N;
+      stddev=sqrt(sum2/N-avg*avg);
+   } else {avg=stddev=0;}
+}
+
+/* Minimum and maximum in region ------------------------------------------- */
+template <class T>
+void vT::compute_double_minmax(double &min_val, double &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(1);
+   FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1,corner2) {
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+}
+
+/* Center of mass ---------------------------------------------------------- */
+template <class T>
+   void vT::center_of_mass(matrix1D<double> &center, void * mask) {
+      center.init_zeros(1);
+      double mass=0;
+      matrix1D<int> *imask=(matrix1D<int> *) mask;
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(*this) {
+         if (imask==NULL || VEC_ELEM(*imask,i)) {
+            XX(center)+=i*VEC_ELEM(*this,i);
+	    mass+=VEC_ELEM(*this,i);
+      	 }
+      }
+      if (mass!=0) center/=mass;
+   }
+
 #undef maT
 #undef maT1
 #endif

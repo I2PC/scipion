@@ -593,13 +593,30 @@ public:
     void resize(int Zdim, int Ydim, int Xdim);
 /** Resize after a pattern */
 template <class T>
-    void resize(const matrix1D<T> &m);
+    void resize(const matrix1D<T> &m) {
+      switch (datatype()) {
+         case INT_MASK:    imask1D.resize(v); break;
+         case DOUBLE_MASK: dmask1D.resize(v); break;
+      }
+    }
+
 /** Resize after a pattern */
 template <class T>
-    void resize(const matrix2D<T> &m);
+    void resize(const matrix2D<T> &m) {
+      switch (datatype()) {
+         case INT_MASK:    imask2D.resize(m); break;
+         case DOUBLE_MASK: dmask2D.resize(m); break;
+      }
+    }
+
 /** Resize after a pattern */
 template <class T>
-    void resize(const matrix3D<T> &m);
+    void resize(const matrix3D<T> &m) {
+      switch (datatype()) {
+         case INT_MASK:    imask3D.resize(m); break;
+         case DOUBLE_MASK: dmask3D.resize(m); break;
+      }
+    }
 
 /** Generate mask for a resized signal.
     It is supposed that the image is already resized and with its logical
@@ -646,17 +663,47 @@ template <class T>
 /** Apply mask to signal.
     subs_val is the substitute value in case of binary masks*/
 template <class T>
-   void apply_mask(const matrix1D<T> &I, matrix1D<T> &result, T subs_val=0);
+   void apply_mask(const matrix1D<T> &I, matrix1D<T> &result, T subs_val=0) {
+      switch (datatype()) {
+         case INT_MASK:
+            apply_binary_mask(imask1D, I, result, subs_val);
+            break;
+         case DOUBLE_MASK:
+            apply_cont_mask(dmask1D, I, result);
+            break;
+      }
+   }
 
 /** Apply mask to image.
     subs_val is the substitute value in case of binary masks*/
 template <class T>
-   void apply_mask(const matrix2D<T> &I, matrix2D<T> &result, T subs_val=0, const bool &apply_geo=false);
+   void apply_mask(const matrix2D<T> &I, matrix2D<T> &result, T subs_val=0,
+      const bool &apply_geo=false) {
+      switch (datatype()) {
+         case INT_MASK:
+	    if (apply_geo) apply_geo_binary_2D_mask(imask2D,mask_geo);
+            apply_binary_mask(imask2D, I, result, subs_val);
+            break;
+         case DOUBLE_MASK:
+	    if (apply_geo) apply_geo_cont_2D_mask(dmask2D,mask_geo);
+            apply_cont_mask(dmask2D, I, result);
+            break;
+      }
+   }
 
 /** Apply mask to volume.
     subs_val is the substitute value in case of binary masks*/
 template <class T>
-   void apply_mask(const matrix3D<T> &I, matrix3D<T> &result, T subs_val=0);
+   void apply_mask(const matrix3D<T> &I, matrix3D<T> &result, T subs_val=0) {
+      switch (datatype()) {
+         case INT_MASK:
+            apply_binary_mask(imask3D, I, result, subs_val);
+            break;
+         case DOUBLE_MASK:
+            apply_cont_mask(dmask3D, I, result);
+            break;
+      }
+   }
 
 /** Produce vector from signal.
     This function returns a 1D vector with all those points for which
@@ -665,7 +712,37 @@ template <class T>
     already the right size. The input vector is assumed to be of the same size
     as the existing mask.*/
 template <class T>
-   void produce_vector(const matrix1D<T> &I, matrix1D<T> &result);
+   void produce_vector(const matrix1D<T> &I, matrix1D<T> &result) {
+      // Resize the output vector
+      if (XSIZE(result)==0) {
+         int size=0;
+         switch (datatype()) {
+	    case INT_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
+	          if (DIRECT_VEC_ELEM(imask1D,i)>0) size++;
+               break;
+	    case DOUBLE_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
+	          if (DIRECT_VEC_ELEM(dmask1D,i)>0) size++;
+               break;
+         }
+         result.init_zeros(size);
+      }
+
+      int p=0;
+      switch (datatype()) {
+         case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
+	       if (DIRECT_VEC_ELEM(imask1D,i)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_VEC_ELEM(I,i);
+            break;
+         case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
+	       if (DIRECT_VEC_ELEM(dmask1D,i)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_VEC_ELEM(I,i);
+            break;
+      }
+   }
 
 /** Produce vector from image.
     This function returns a 1D vector with all those pixels for which
@@ -674,7 +751,37 @@ template <class T>
     already the right size. The input image is assumed to be of the same size
     as the existing mask.*/
 template <class T>
-   void produce_vector(const matrix2D<T> &I, matrix1D<T> &result);
+   void produce_vector(const matrix2D<T> &I, matrix1D<T> &result) {
+      // Resize the output vector
+      if (XSIZE(result)==0) {
+         int size=0;
+         switch (datatype()) {
+	    case INT_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
+	          if (DIRECT_MAT_ELEM(imask2D,i,j)>0) size++;
+               break;
+	    case DOUBLE_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
+	          if (DIRECT_MAT_ELEM(dmask2D,i,j)>0) size++;
+               break;
+         }
+         result.init_zeros(size);
+      }
+
+      int p=0;
+      switch (datatype()) {
+         case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
+	       if (DIRECT_MAT_ELEM(imask2D,i,j)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+            break;
+         case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
+	       if (DIRECT_MAT_ELEM(dmask2D,i,j)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+            break;
+      }
+   }
 
 /** Produce vector from volume.
     This function returns a 1D vector with all those voxels for which
@@ -683,7 +790,37 @@ template <class T>
     already the right size. The input volume is assumed to be of the same size
     as the existing mask.*/
 template <class T>
-   void produce_vector(const matrix3D<T> &I, matrix1D<T> &result);
+   void produce_vector(const matrix3D<T> &I, matrix1D<T> &result) {
+      // Resize the output vector
+      if (XSIZE(result)==0) {
+         int size=0;
+         switch (datatype()) {
+	    case INT_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
+	          if (DIRECT_MAT_ELEM(imask3D,i,j)>0) size++;
+               break;
+	    case DOUBLE_MASK:
+	       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
+	          if (DIRECT_MAT_ELEM(dmask3D,i,j)>0) size++;
+               break;
+         }
+         result.init_zeros(size);
+      }
+
+      int p=0;
+      switch (datatype()) {
+         case INT_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
+	       if (DIRECT_MAT_ELEM(imask3D,i,j)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+            break;
+         case DOUBLE_MASK:
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
+	       if (DIRECT_MAT_ELEM(dmask3D,i,j)>0)
+	           DIRECT_VEC_ELEM(result,p++)=DIRECT_MAT_ELEM(I,i,j);
+            break;
+      }
+   }
 
 /** Get binary 1D mask. */
 matrix1D<int>    & get_binary_mask1D() {return imask1D;}
@@ -734,7 +871,36 @@ void force_to_be_binary() {
     and the image for those the mask is not 0 are computed.*/
 template <class T>
    void compute_stats_within_binary_mask(const matrix2D<int> &mask,
-      const matrix2D<T> &m, T &min_val, T &max_val, double &avg, double &stddev);
+      const matrix2D<T> &m, T &min_val, T &max_val,
+      double &avg, double &stddev) {
+      SPEED_UP_temps;
+      double sum1=0;
+      double sum2=0;
+      int N=0;
+
+      max_val=min_val=DIRECT_MAT_ELEM(m,0,0);
+
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,m) {
+         if (MAT_ELEM(mask,i,j)!=0) {
+            N++;
+
+            // Minimum and maximum
+            if (MAT_ELEM(m,i,j)<min_val) min_val=MAT_ELEM(m,i,j);
+            if (MAT_ELEM(m,i,j)>max_val) max_val=MAT_ELEM(m,i,j);
+
+            // cumulative sums for average and standard deviation
+            sum1 +=  (double) MAT_ELEM(m,i,j);
+            sum2 += ((double) MAT_ELEM(m,i,j))*((double) MAT_ELEM(m,i,j));
+         }
+      }
+
+      // average and standard deviation
+      avg    = sum1/(double)N;
+      if (N>1)
+         stddev = sqrt(ABS(sum2/N - avg*avg)*N/(N-1));
+      else
+         stddev = 0;
+   }
 
 /** Apply geometric transformation to a binary mask  */
 void apply_geo_binary_2D_mask(matrix2D<int> &mask, const matrix2D<double> &A);
@@ -748,7 +914,16 @@ void apply_geo_cont_2D_mask(matrix2D<double> &mask, const matrix2D<double> &A);
     Only the overlapping values are affected by the mask */
 template <class T>
    void apply_binary_mask(const matrix1D<int> &mask, const matrix1D<T> &m_in,
-      matrix1D<T> &m_out, T subs_val=(T)0);
+      matrix1D<T> &m_out, T subs_val=(T)0) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
+         // If in common with the mask
+         if (i>=STARTINGX(mask) && i<=FINISHINGX(mask))
+             if (VEC_ELEM(mask,i)==0) VEC_ELEM(m_out,i)=subs_val;
+             else                     VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+         // It is not in common, leave the original one
+         else VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+   }
 
 /** Apply continuous mask to an image (1D).
     The image is multiplied by the mask.
@@ -756,7 +931,15 @@ template <class T>
     Only the overlapping values are affected by the mask */
 template <class T>
    void apply_cont_mask(const matrix1D<double> &mask, const matrix1D<T> &m_in,
-      matrix1D<T> &m_out);
+      matrix1D<T> &m_out) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
+         // If in common with the mask
+         if (i>=STARTINGX(mask) && i<=FINISHINGX(mask))
+             VEC_ELEM(m_out,i)=(T) (VEC_ELEM(m_in,i)*VEC_ELEM(mask,i));
+         // It is not in common, leave the original one
+         else VEC_ELEM(m_out,i)=VEC_ELEM(m_in,i);
+   }
 
 /** Apply binary mask to an image (2D).
     The image values for which the input mask is 0 are set to <subs_val>.
@@ -764,7 +947,17 @@ template <class T>
     Only the overlapping values are affected by the mask */
 template <class T>
    void apply_binary_mask(const matrix2D<int> &mask, const matrix2D<T> &m_in,
-      matrix2D<T> &m_out, T subs_val=(T)0);
+      matrix2D<T> &m_out, T subs_val=(T)0) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
+         // If in common with the mask
+         if (i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
+             j>=STARTINGX(mask) && j<=FINISHINGX(mask))
+             if (MAT_ELEM(mask,i,j)==0) MAT_ELEM(m_out,i,j)=subs_val;
+             else                       MAT_ELEM(m_out,i,j)=MAT_ELEM(m_in,i,j);
+         // It is not in common, leave the original one
+         else MAT_ELEM(m_out,i,j)=MAT_ELEM(m_in,i,j);
+   }
 
 /** Apply continuous mask to an image (2D).
     The image is multiplied by the mask.
@@ -772,21 +965,70 @@ template <class T>
     Only the overlapping values are affected by the mask */
 template <class T>
    void apply_cont_mask(const matrix2D<double> &mask, const matrix2D<T> &m_in,
-      matrix2D<T> &m_out);
+      matrix2D<T> &m_out) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
+         // If in common with the mask
+         if (i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
+             j>=STARTINGX(mask) && j<=FINISHINGX(mask))
+             MAT_ELEM(m_out,i,j)=(T) (MAT_ELEM(m_in,i,j)*MAT_ELEM(mask,i,j));
+         // It is not in common, leave the original one
+         else MAT_ELEM(m_out,i,j)=MAT_ELEM(m_in,i,j);
+   }
 
 /** Compute statistics in the active area (3D).
     Only the statistics for values in the overlapping between the mask
     and the volume for those the mask is not 0 are computed.*/
 template <class T>
    void compute_stats_within_binary_mask(const matrix3D<int> &mask,
-      const matrix3D<T> &m, T &min_val, T &max_val, double &avg, double &stddev);
+      const matrix3D<T> &m, T &min_val, T &max_val,
+      double &avg, double &stddev) {
+      SPEED_UP_temps;
+      double sum1=0;
+      double sum2=0;
+      int N=0;
+
+      max_val=min_val=DIRECT_VOL_ELEM(m,0,0,0);
+
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask,m) {
+         if (VOL_ELEM(mask,k,i,j)!=0) {
+            N++;
+
+            // Minimum and maximum
+            if (VOL_ELEM(m,k,i,j)<min_val) min_val=VOL_ELEM(m,k,i,j);
+            if (VOL_ELEM(m,k,i,j)>max_val) max_val=VOL_ELEM(m,k,i,j);
+
+            // cumulative sums for average and standard deviation
+            sum1 +=  (double) VOL_ELEM(m,k,i,j);
+            sum2 += ((double) VOL_ELEM(m,k,i,j))*((double) VOL_ELEM(m,k,i,j));
+         }
+      }
+
+      // average and standard deviation
+      avg    = sum1/(double)N;
+      if (N>1)
+         stddev = sqrt(ABS(sum2/N - avg*avg)*N/(N-1));
+      else
+         stddev = 0;
+      }
 
 /** Apply mask to an volume (3D).
     The volume values for which the input mask is 0 are set to 0. The input
     and output volumes can be the same ones.*/    
 template <class T>
    void apply_binary_mask(const matrix3D<int> &mask, const matrix3D<T> &m_in,
-      matrix3D<T> &m_out, T subs_val=(T)0);
+      matrix3D<T> &m_out, T subs_val=(T)0) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
+         // If in common with the mask
+         if (k>=STARTINGZ(mask) && k<=FINISHINGZ(mask) &&
+             i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
+             j>=STARTINGX(mask) && j<=FINISHINGX(mask))
+             if (VOL_ELEM(mask,k,i,j)==0) VOL_ELEM(m_out,k,i,j)=subs_val;
+             else                         VOL_ELEM(m_out,k,i,j)=VOL_ELEM(m_in,k,i,j);
+         // It is not in common, leave the original one
+         else VOL_ELEM(m_out,k,i,j)=VOL_ELEM(m_in,k,i,j);
+   }
 
 /** Apply continuous mask to an image (3D).
     The image is multiplied by the mask.
@@ -794,7 +1036,17 @@ template <class T>
     Only the overlapping values are affected by the mask */
 template <class T>
    void apply_cont_mask(const matrix3D<double> &mask, const matrix3D<T> &m_in,
-      matrix3D<T> &m_out);
+      matrix3D<T> &m_out) {
+      m_out.resize(m_in);
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
+         // If in common with the mask
+         if (k>=STARTINGZ(mask) && k<=FINISHINGZ(mask) &&
+             i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
+             j>=STARTINGX(mask) && j<=FINISHINGX(mask))
+             VOL_ELEM(m_out,k,i,j)=(T) (VOL_ELEM(m_in,k,i,j)*VOL_ELEM(mask,k,i,j));
+         // It is not in common, leave the original one
+         else VOL_ELEM(m_out,k,i,j)=VOL_ELEM(m_in,k,i,j);
+   }
 
 /** Compute histogram inside mask within its minimum and maximum value (2D).
     Given a matrix as input, this function returns its histogram within
@@ -805,7 +1057,12 @@ template <class T>
     given. */
 template <class T>
    void compute_hist_within_binary_mask(const matrix2D<int> &mask,
-      matrix2D<T> &v, histogram1D &hist, int no_steps);
+      matrix2D<T> &v, histogram1D &hist, int no_steps) {
+      T min_val, max_val;
+      double avg, stddev;
+      compute_stats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
+      compute_hist_within_binary_mask(mask, v, hist, min_val, max_val, no_steps);
+   }
 
 /** Compute histogram inside mask within two values (2D).
     Given a matrix as input, this function returns the histogram of values
@@ -818,7 +1075,13 @@ template <class T>
     given. */
 template <class T>
    void compute_hist_within_binary_mask(const matrix2D<int> &mask,
-      const matrix2D<T> &v, histogram1D &hist, T min, T max, int no_steps);
+      const matrix2D<T> &v, histogram1D &hist, T min, T max, int no_steps) {
+      SPEED_UP_temps;
+      hist.init(min,max,no_steps);
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,v)
+         if (MAT_ELEM(mask,i,j)!=0)
+            hist.insert_value(MAT_ELEM(v,i,j));
+   }
 
 /** Compute histogram inside mask within its minimum and maximum value (3D).
     Given a volume as input, this function returns the histogram of values
@@ -829,7 +1092,12 @@ template <class T>
     given. */
 template <class T>
    void compute_hist_within_binary_mask(const matrix3D<int> &mask,
-      matrix3D<T> &v, histogram1D &hist, int no_steps);
+      matrix3D<T> &v, histogram1D &hist, int no_steps) {
+      T min_val, max_val;
+      double avg, stddev;
+      compute_stats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
+      compute_hist_within_binary_mask(mask, v, hist, min_val, max_val, no_steps);
+   }
 
 /** Compute histogram inside mask within two values (3D).
     Given a volume as input, this function returns the histogram of the
@@ -842,7 +1110,13 @@ template <class T>
     given. */
 template <class T>
    void compute_hist_within_binary_mask(const matrix3D<int> &mask,
-      const matrix3D<T> &v, histogram1D &hist, T min, T max, int no_steps);
+      const matrix3D<T> &v, histogram1D &hist, T min, T max, int no_steps) {
+      SPEED_UP_temps;
+      hist.init(min,max,no_steps);
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask,v)
+         if (VOL_ELEM(mask,k,i,j)!=0)
+            hist.insert_value(VOL_ELEM(v,k,i,j));
+   }
 
 #define COUNT_ABOVE 1
 #define COUNT_BELOW 2
@@ -877,7 +1151,25 @@ template <class T>
     For complex matrices the absolute value is compared. */
 template <class T>
    int count_with_mask(const matrix2D<int> &mask,
-      const matrix2D<T> &m, int mode, double th1, double th2);
+      const matrix2D<T> &m, int mode, double th1, double th2) {
+      SPEED_UP_temps;
+      int N=0;
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,m)
+         if (MAT_ELEM(mask,i,j))
+            switch (mode) {
+               case (COUNT_ABOVE):
+                  if (MAT_ELEM(m,i,j)>=th1) N++;
+                  break;
+               case (COUNT_BELOW):
+                  if (MAT_ELEM(m,i,j)<=th1) N++;
+                  break;
+               case (COUNT_BETWEEN):
+                  if (MAT_ELEM(m,i,j)>=th1 && MAT_ELEM(m,i,j)<=th2) N++;
+                  break;
+            }
+      return N;
+   }
+
 int count_with_mask(const matrix2D<int> &mask,
    const matrix2D< complex<double> > &m, int mode, double th1, double th2);
 
@@ -890,19 +1182,43 @@ int count_with_mask(const matrix2D<int> &mask,
     For complex matrices the absolute value is compared. */
 template <class T>
    int count_with_mask(const matrix3D<int> &mask,
-      const matrix3D<T> &m, int mode, double th1, double th2);
+      const matrix3D<T> &m, int mode, double th1, double th2) {
+      SPEED_UP_temps;
+      int N=0;
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask,m)
+         if (VOL_ELEM(mask,k,i,j))
+            switch (mode) {
+               case (COUNT_ABOVE):
+                  if (VOL_ELEM(m,k,i,j)>=th1) N++;
+                  break;
+               case (COUNT_BELOW):
+                  if (VOL_ELEM(m,k,i,j)<=th1) N++;
+                  break;
+               case (COUNT_BETWEEN):
+                  if (VOL_ELEM(m,k,i,j)>=th1 && VOL_ELEM(m,k,i,j)<=th2) N++;
+                  break;
+            }
+      return N;
+   }
+
 int count_with_mask(const matrix3D<int> &mask,
    const matrix3D< complex<double> > &m, int mode, double th1, double th2);
 
 /** Invert binary mask (2D).
     0's are converted in 1's and viceversa*/
 template <class T>
-   void invert_binary_mask(matrix2D<T> &mask);
+   void invert_binary_mask(matrix2D<T> &mask) {
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
+        MULTIDIM_ELEM(mask,i) = (MULTIDIM_ELEM(mask,i)==1) ? 0:1;
+   }
 
 /** Invert binary mask (3D).
     0's are converted in 1's and viceversa*/
 template <class T>
-   void invert_binary_mask(matrix3D<T> &mask);
+   void invert_binary_mask(matrix3D<T> &mask) {
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
+        MULTIDIM_ELEM(mask,i) = (MULTIDIM_ELEM(mask,i)==1) ? 0:1;
+   }
 
 /** Range adjust within binary mask.
     Make the grey values of m2 fit, in L2 sense, with those in m1. Only the

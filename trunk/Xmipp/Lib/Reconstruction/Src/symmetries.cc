@@ -279,7 +279,7 @@ bool found_not_tried(const matrix2D<int> &tried, int &i, int &j,
    int n=0;
    while (n!=YSIZE(tried)) {
       if (MAT_ELEM(tried,i,j)==0 && !(i>=true_symNo && j>=true_symNo))
-         return TRUE;
+         return true;
       if (i!=n) {
          // Move downwards
          i++;
@@ -288,7 +288,7 @@ bool found_not_tried(const matrix2D<int> &tried, int &i, int &j,
          j--; if (j==-1) {n++; j=n; i=0;}
       }
    }
-   return FALSE;
+   return false;
 }
 
 //#define DEBUG
@@ -315,11 +315,11 @@ void SymList::compute_subgroup(double accuracy) {
 
       // Try to find it in current ones
       bool found;
-      found=FALSE;
+      found=false;
       for (int l=0; l<SymsNo(); l++) {
          get_matrices(l,L1,R1);
          if (newL.equal(L1,accuracy) && newR.equal(R1,accuracy))
-            {found=TRUE; break;}
+            {found=true; break;}
       }
       
       if (!found) {

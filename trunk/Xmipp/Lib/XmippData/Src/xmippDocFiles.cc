@@ -438,7 +438,7 @@ int DocFile::get_last_key() {
       if (last==first) return first_key-1;
       last--;
       if (last->line_type==DocLine::DATALINE) return last->key;
-   } while (TRUE);
+   } while (true);
 }
 
 /* Element access to any line ---------------------------------------------- */

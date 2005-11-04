@@ -9,7 +9,6 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Src/projection.cc \
 	Src/volume_FOMs.cc \
 	Src/radon.cc \
-	Src/Gibbs.cc \
 	Src/directions.cc \
 	Src/basis.cc \
 	Programs/Src/Prog_project.cc \

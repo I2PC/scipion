@@ -161,7 +161,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
      fseek(fp,  0, SEEK_SET);
      // Select type
      int correct_type=0;
-     __reversed=FALSE;
+     __reversed=false;
      #define IS_TYPE(n) \
       (type_table[n][0]==file_type.c[0] && type_table[n][1]==file_type.c[1] && \
          type_table[n][2]==file_type.c[2] && type_table[n][3]==file_type.c[3])
@@ -173,8 +173,8 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          if      (IS_TYPE(i))
             {correct_type=type_table[i][4]; break;}
          else if (IS_REVERSE_TYPE(i))
-            {correct_type=type_table[i][4]; __reversed=TRUE; break;}
-     if (correct_type==0) return FALSE;
+            {correct_type=type_table[i][4]; __reversed=true; break;}
+     if (correct_type==0) return false;
      
      // Now check this machine type
      file_type.f=1; if (IS_REVERSE_TYPE(5)) __reversed=!__reversed;
@@ -184,17 +184,17 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
   if (!__reversed)
        fread(&header, sizeof(headerXmipp::SpiderHeader), 1, fp);
   else {
-       FREAD(&header,             sizeof(float),  36, fp, TRUE);
-       FREAD(&header.fGeo_matrix, sizeof(double),  9, fp, TRUE);
-       FREAD(&header.fAngle1,     sizeof(float),  13, fp, TRUE);
-       FREAD(&header.fNada2,      sizeof(char),  756, fp, TRUE); 
+       FREAD(&header,             sizeof(float),  36, fp, true);
+       FREAD(&header.fGeo_matrix, sizeof(double),  9, fp, true);
+       FREAD(&header.fAngle1,     sizeof(float),  13, fp, true);
+       FREAD(&header.fNada2,      sizeof(char),  756, fp, true); 
   }
 
   unsigned long usfNcol=(unsigned long) header.fNcol;
   unsigned long usfNrow=(unsigned long) header.fNrow;
   unsigned long usfNslice=(unsigned long) header.fNslice;
   unsigned long usfHeader=(unsigned long) get_header_size();
-  if (fstat(fileno(fp), &info)) return FALSE;
+  if (fstat(fileno(fp), &info)) return false;
   
   // CO: Check if it is an "aberrant" image
   if (im==IMG_XMIPP || header.fIform==1)
@@ -207,7 +207,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
        switch (im) {
        case IMG_XMIPP: 
          size = usfHeader + usfNcol*usfNrow*sizeof(float);
-         if ((size != info.st_size) || (header.fIform != 1)) return FALSE;
+         if ((size != info.st_size) || (header.fIform != 1)) return false;
          else if (skip_type_check) header.fIform=1; // This is done to recover
                                                     // files which are not
                                                     // properly converted from
@@ -215,7 +215,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          break;
        case IMG_INT: 
          size = usfHeader + usfNcol*usfNrow*sizeof(float);
-         if ((size != info.st_size) || (header.fIform != 9)) return FALSE;
+         if ((size != info.st_size) || (header.fIform != 9)) return false;
          else if (skip_type_check) header.fIform=9; // This is done to recover
                                                     // files which are not
                                                     // properly converted from
@@ -223,16 +223,16 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          break;
        case VOL_BYTE:
          size = usfNslice*usfNcol*usfNrow*sizeof(float);
-         if ((size != info.st_size)) return FALSE;
+         if ((size != info.st_size)) return false;
          break;
        case VOL_XMIPP: 
          size = usfHeader + usfNslice*usfNcol*usfNrow*sizeof(float);
-         if ((size != info.st_size) || (header.fIform != 3)) return FALSE;
+         if ((size != info.st_size) || (header.fIform != 3)) return false;
          else if (skip_type_check) header.fIform=3;
          break;
        case VOL_INT: 
          size = usfHeader + usfNslice*usfNcol*usfNrow*sizeof(float);
-         if ((size != info.st_size) || (header.fIform != 10)) return FALSE;
+         if ((size != info.st_size) || (header.fIform != 10)) return false;
          else if (skip_type_check) header.fIform=10;
          break;
        case IMG_FOURIER: 
@@ -240,7 +240,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
 				 // The term 2 is to take into account that IMG_FOURIER 
 				 // stores complex numbers with 2 floats for each one.
          if ((size != info.st_size) ||
-             (header.fIform != -5 && header.fIform != -1)) return FALSE;
+             (header.fIform != -5 && header.fIform != -1)) return false;
          else if (skip_type_check) header.fIform=-1;
          break;
        case VOL_FOURIER: 
@@ -248,7 +248,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
 				 // The term 2 is to take into account that VOL_FOURIER 
 				 // stores complex numbers with 2 floats for each one.
          if ((size != info.st_size) ||
-             (header.fIform != -7 && header.fIform != -3)) return FALSE;
+             (header.fIform != -7 && header.fIform != -3)) return false;
          else if (skip_type_check) header.fIform=-3;
          break;
        }    
@@ -267,7 +267,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
   tmpSize -= sizeof(headerXmipp::SpiderHeader);      	      //Decrease the real header  
   for (unsigned i = 0; i < tmpSize/4; i++)
       FREAD(&tmp, sizeof(float), 1, fp, __reversed);
-  return TRUE;
+  return true;
 }
 
 /* Input (read) *******************************************************/
@@ -304,13 +304,13 @@ void headerXmipp::write(FILE *fp, bool force_reversed) {
 
   // Write header
   if (XOR(__reversed,force_reversed)) {
-     __reversed=TRUE;
-     FWRITE(&header,             sizeof(float),  36, fp, TRUE);
-     FWRITE(&header.fGeo_matrix, sizeof(double),  9, fp, TRUE);
-     FWRITE(&header.fAngle1,     sizeof(float),  13, fp, TRUE);
+     __reversed=true;
+     FWRITE(&header,             sizeof(float),  36, fp, true);
+     FWRITE(&header.fGeo_matrix, sizeof(double),  9, fp, true);
+     FWRITE(&header.fAngle1,     sizeof(float),  13, fp, true);
      fwrite(&header.fNada2,      sizeof(char),  756, fp); 
   } else {
-     __reversed=FALSE;
+     __reversed=false;
      fwrite(&header, sizeof(headerXmipp::SpiderHeader), 1, fp);
   }
 
@@ -344,7 +344,7 @@ void headerXmipp::clear() {
   /* Set all header to zero */
   memset(&header, 0, sizeof(headerXmipp::SpiderHeader));    
   set_header(); // Set a consistent header necessary for XMipp
-  __reversed=FALSE;
+  __reversed=false;
 }
 
 /* Set header *******************************************************/
@@ -497,27 +497,6 @@ void headerXmipp::get_originOffsets(float &Xoff, float &Yoff) const{
   Yoff =  header.fYoff;
 }
 
-template <class T>
-   void headerXmipp::get_eulerAngles(T &Phi, T &Theta, T &Psi) const{
-     Phi = (T) header.fPhi;
-     Theta = (T) header.fTheta;
-     Psi = (T) header.fPsi;
-   }
-
-template <class T>
-   void headerXmipp::get_eulerAngles1(T &Phi1, T &Theta1, T &Psi1) const{
-     Phi1 = (T) header.fPhi1;
-     Theta1 = (T) header.fTheta1;
-     Psi1 = (T) header.fPsi1;
-   }
-
-template <class T>
-   void headerXmipp::get_eulerAngles2(T &Phi2, T &Theta2, T &Psi2) const{
-     Phi2 = (T) header.fPhi2;
-     Theta2 = (T) header.fTheta2;
-     Psi2 = (T) header.fPsi2;
-   }
-
 matrix2D<double> headerXmipp::fGeo_matrix() {
    matrix2D<double> retval(3,3);
    retval(0,0)=header.fGeo_matrix[0][0];
@@ -530,16 +509,4 @@ matrix2D<double> headerXmipp::fGeo_matrix() {
    retval(2,1)=header.fGeo_matrix[2][1];
    retval(2,2)=header.fGeo_matrix[2][2];
    return retval;
-}
-
-void instantiate_header() {
-   headerXmipp header;
-   float  f;
-      header.get_eulerAngles(f,f,f);
-      header.get_eulerAngles1(f,f,f);
-      header.get_eulerAngles2(f,f,f);
-   double d;
-      header.get_eulerAngles(d,d,d);
-      header.get_eulerAngles1(d,d,d);
-      header.get_eulerAngles2(d,d,d);
 }

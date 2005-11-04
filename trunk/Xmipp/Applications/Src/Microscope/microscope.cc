@@ -29,12 +29,12 @@
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Prog_Microscope_Parameters *eprm=(Prog_Microscope_Parameters *) prm;
    eprm->apply(img());
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    cerr << "This process is not valid for volumes\n";
-   return FALSE;
+   return false;
 }
 
 int main (int argc, char **argv) {

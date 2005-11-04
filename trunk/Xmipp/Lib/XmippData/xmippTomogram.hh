@@ -75,7 +75,7 @@ public:
    /** Open tomogram.
        An exception is thrown if the file is not valid. */
    void open_tomogram(const FileName &fn_tomogram, 
-      bool reversed=FALSE);
+      bool reversed=false);
 
    /** Close tomogram.
        After working with the file, you must close it. */
@@ -136,9 +136,9 @@ public:
       if (y<0 || y>=Ydim || x<0 || x>=Xdim || z<0 || z>=Zdim)
          REPORT_ERROR(1,"tomogram::set_val: index out of range");
       if      (__depth== 8) m8[z*XYdim+y*Xdim+x]=(unsigned char) new_val;
-      else if (__depth==16 && __is_signed==TRUE) m16[z*XYdim+y*Xdim+x]=
+      else if (__depth==16 && __is_signed) m16[z*XYdim+y*Xdim+x]=
                                                    (short int) new_val;
-      else if (__depth==16 && __is_signed==FALSE) um16[z*XYdim+y*Xdim+x]=
+      else if (__depth==16 && !__is_signed) um16[z*XYdim+y*Xdim+x]=
                                                    (unsigned short int) new_val;
       else if (__depth==32) m32[z*XYdim+y*Xdim+x]=(float) new_val;
       else REPORT_ERROR(1,"tomogram::set_val: depth is not 8, 16 or 32");

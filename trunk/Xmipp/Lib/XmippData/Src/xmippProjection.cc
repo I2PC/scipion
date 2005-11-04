@@ -39,7 +39,7 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 
 /* Read ==================================================================== */
 void Projection::read(const FileName &fn, const bool &apply_shifts)
-   {ImageXmipp::read(fn,FALSE,FALSE,FALSE,apply_shifts);
+   {ImageXmipp::read(fn,false,false,false,apply_shifts);
     Euler_angles2matrix(rot(),tilt(),psi(),euler);
     eulert=euler.transpose();
     euler.getRow(2,direction); direction.self_transpose();}

@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 #include "../Prog_art_crystal.hh"
-#include "Basic_art.inc"
 #include "../Prog_project_crystal.hh"
 
 /* ------------------------------------------------------------------------- */
@@ -328,13 +327,13 @@ void Crystal_ART_Parameters::produce_Side_Info(
 void ART_single_step(
    GridVolume        	   &vol_in,          // Input Reconstructed volume
    GridVolume        	   *vol_out,         // Output Reconstructed volume
-   const Basic_ART_Parameters &prm,          // blob, lambda
-   const Crystal_ART_Parameters &eprm,       // lattice vectors, ...
+   Basic_ART_Parameters    &prm,             // blob, lambda
+   Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
    Projection        	   &theo_proj,       // Projection of the reconstruction
                                              // It is outside to make it visible
                                              // just if it needed for any
                                              // other purpose
-   /*const */Projection  	   &read_proj,       // Real projection
+   Projection  	           &read_proj,       // Real projection
    int sym_no,                               // Symmetry matrix index
    Projection        	   &diff_proj,       // Difference between read and
                                              // theoretical projection
@@ -440,17 +439,6 @@ void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
  symmetrize_crystal_volume(vol_in, eprm.aint, eprm.bint,
                                    eprm.space_group,eprm.unit_cell_mask,
 				   grid_type);
-}
-
-
-
-/* Instantiation of the ART process ---------------------------------------- */
-void instantiate_Crystal_ART() {
-   Basic_ART_Parameters prm;
-   Crystal_ART_Parameters eprm;
-   VolumeXmipp vol_voxels;
-   GridVolume  vol_basis;
-   Basic_ROUT_Art(prm,eprm,vol_voxels,vol_basis);
 }
 
 /* Finish iterations ------------------------------------------------------- */

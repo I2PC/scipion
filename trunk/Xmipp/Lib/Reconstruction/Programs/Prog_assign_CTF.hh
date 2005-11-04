@@ -77,7 +77,7 @@ public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
        are not read */
-   void read(const FileName &fn_prm, bool do_not_read_files=FALSE);
+   void read(const FileName &fn_prm, bool do_not_read_files=false);
 
    /** Write parameters to file.
        The directory is an option used in the grid. */

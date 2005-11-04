@@ -522,7 +522,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm) {
       matrix1D<double> steps(7); steps.init_constant(1);
       int iter=0;
       Powell_optimizer(prm.p, 1, 7, &eval_surface,
-	 0.01, corr, iter, steps, TRUE);
+	 0.01, corr, iter, steps, true);
       best_corr=corr;
       best_ktop=ROUND(prm.p(3)); best_kbottom=ROUND(prm.p(4));
       best_ang=prm.p(2);

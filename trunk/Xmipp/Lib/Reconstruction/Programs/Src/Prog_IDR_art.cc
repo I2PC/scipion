@@ -139,7 +139,7 @@ void Prog_IDR_ART_Parameters::IDR_correction(GridVolume &vol_basis, int it) {
 
       // Read CTF file
       ctf.FilterBand=CTF;
-      ctf.ctf.enable_CTFnoise=FALSE;
+      ctf.ctf.enable_CTFnoise=false;
       ctf.ctf.read(SF_ctf.NextImg());
       ctf.ctf.Produce_Side_Info();
       
@@ -215,17 +215,17 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
       }
 
       // Check if there is postprocessing ..................................
-      bool convert_to_basis=FALSE;
+      bool convert_to_basis=false;
       // Symmetrization
       if (prm.fn_final_sym!="") {
          Symmetrize_Parameters sym_prm;
          sym_prm.fn_in=prm.art_prm->fn_root+".vol";
          sym_prm.fn_out="";
          sym_prm.fn_sym=prm.fn_final_sym;
-         sym_prm.wrap=TRUE;
+         sym_prm.wrap=true;
          ROUT_symmetrize(sym_prm);
          vol_recons.read(prm.art_prm->fn_root+".vol");
-         convert_to_basis=TRUE;
+         convert_to_basis=true;
       }
 
       // Lowpass filtering
@@ -233,7 +233,7 @@ void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons) {
          cerr << "Filtering result ...\n";
          prm.Filter.apply_mask_Space(vol_recons());
 	 vol_recons.write();
-         convert_to_basis=TRUE;
+         convert_to_basis=true;
       }
 
       // Convert to basis

@@ -95,7 +95,7 @@ bool process_img(ImageXmipp &img, const FileName &fn_out,
       img()=RT;
       img.write(fn_out);
    }
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const FileName &fn_out,
@@ -106,7 +106,7 @@ bool process_vol(VolumeXmipp &vol, const FileName &fn_out,
    if (eprm->Fourier)
       Fourier_transform_of_Radon_transform(fn_out,fn_out,
          eprm->low_pass, eprm->temperature);
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

@@ -40,6 +40,13 @@
 
 #include "xmippMatrices1D.hh"
 #include "xmippFuncs.hh"
+#include "Bilib/types/tsplinebasis.h"
+#include "Bilib/types/tboundaryconvention.h"
+#include "Bilib/headers/linearalgebra.h"
+#include "Bilib/headers/changebasis.h"
+#include "Bilib/headers/kernel.h"
+#include "Bilib/headers/pyramidfilters.h"
+#include "Bilib/headers/pyramidtools.h"
 
 #define maT  matrix2D<T>
 #define maT1 matrix2D<T1>
@@ -50,8 +57,6 @@
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
-template <>
-ostream& operator << (ostream & ostrm, const matrix2D< complex<double> > &m);
 
 template <class T>
    mT mul_elements(const mT &op1, const mT &op2);
@@ -439,7 +444,12 @@ public:
        A (dimX x dimY) identity matrix is generated. That is, any element i,j 
        of the matrix such that i = j is equal to 1.
        \\Ex: m.init_identity(2,3);*/
-   void init_identity(int Ydim, int Xdim);
+   void init_identity(int Ydim, int Xdim) {
+      if (Xdim==0 || Ydim==0) {clear(); return;}
+      resize(Ydim,Xdim);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+         DIRECT_MAT_ELEM(*this,i,j)=(T)(i==j);
+   }
    
    /** Zero initialisation with a new dimension.
        Be careful to the size order (Ydim, Xdim).
@@ -452,14 +462,56 @@ public:
        index origins (X or Y) to the same value as the vector, and
        the other set to 0 according to the shape.
        \\Ex: matrix2D<double> m=from_vector(v);*/
-   void from_vector(const vT &op1);
+   void from_vector(const vT &op1) {
+      // Null vector => Null matrix
+      if (XSIZE(op1)==0) {clear(); return;}
+
+      // Look at shape and copy values
+      if (op1.isRow()) {
+         resize(1,XSIZE(op1));
+         for (int j=0; j<XSIZE(op1); j++)
+            DIRECT_MAT_ELEM(*this,0,j)=DIRECT_VEC_ELEM(op1,j);
+         STARTINGX(*this)=STARTINGX(op1);
+         STARTINGY(*this)=0;
+      } else {
+         resize(XSIZE(op1),1);
+         for (int i=0; i<XSIZE(op1); i++)
+            DIRECT_MAT_ELEM(*this,i,0)=DIRECT_VEC_ELEM(op1,i);
+         STARTINGX(*this)=0;
+         STARTINGY(*this)=STARTINGX(op1);
+      }
+   }
    
    /** Makes a vector from a matrix.
        An exception is thrown if the matrix is not a single row or
        a single column. The origin of the vector is set according to
        the one of the matrix.
        \\Ex: matrix1D<double> v; m.to_vector(v);*/
-   void to_vector(vT &op1) const;
+   void to_vector(vT &op1) const {
+      // Null matrix => Null vector
+      if (XSIZE(*this)==0 || YSIZE(*this)==0) {op1.clear(); return;}
+
+      // If matrix is not a vector, produce an error
+      if (XSIZE(*this)!=1 && (YSIZE(*this)!=1))
+         REPORT_ERROR(1102, "To_vector: Matrix cannot be converted to vector");
+
+      // Look at shape and copy values
+      if (YSIZE(*this)==1) {
+         // Row vector
+         op1.resize(XSIZE(*this));
+         for (int j=0; j<XSIZE(*this); j++)
+             DIRECT_VEC_ELEM(op1,j)=DIRECT_MAT_ELEM(*this,0,j);
+         op1.setRow();
+         STARTINGX(op1)=STARTINGX(*this);
+      } else {
+         // Column vector
+         op1.resize(YSIZE(*this));
+         for (int i=0; i<YSIZE(*this); i++)
+            DIRECT_VEC_ELEM(op1,i)=DIRECT_MAT_ELEM(*this,i,0);
+         op1.setCol();
+         STARTINGX(op1)=STARTINGY(*this);
+      }
+   }
    //@}
 
    /* Memory related ------------------------------------------------------- */
@@ -561,7 +613,12 @@ public:
    T * adapt_for_numerical_recipes2() const {return __m-1-XSIZE(*this);}
 
    /** Load from numerical recipes result. */
-   void load_from_numerical_recipes(T **m, int Ydim, int Xdim);
+   void load_from_numerical_recipes(T **m, int Ydim, int Xdim) {
+      resize(Ydim,Xdim);
+      for (int i=1; i<=Ydim; i++)
+         for (int j=1; j<=Xdim; j++)
+            (*this)(i-1,j-1)=m[i][j];
+   }
 
    /** Kill an array produced for numerical recipes.
        The allocated memory is freed. */
@@ -698,19 +755,85 @@ public:
    /** Interpolates the value of the 2D matrix M at the point (x,y).
        Bilinear interpolation.
        (x,y) are in logical coordinates.*/
-   T   interpolated_elem(double x, double y, T outside_value=(T)0);
+   T   interpolated_elem(double x, double y, T outside_value=(T)0) {
+       int x0 = FLOOR(x); double fx = x - x0; int x1 = x0 + 1;
+       int y0 = FLOOR(y); double fy = y - y0; int y1 = y0 + 1;
+
+       T d00 = outside(y0,x0) ? outside_value : MAT_ELEM(*this,y0,x0);
+       T d10 = outside(y1,x0) ? outside_value : MAT_ELEM(*this,y1,x0);
+       T d11 = outside(y1,x1) ? outside_value : MAT_ELEM(*this,y1,x1);
+       T d01 = outside(y0,x1) ? outside_value : MAT_ELEM(*this,y0,x1);
+
+       double d0 = (T) LIN_INTERP(fx, (double)d00, (double)d01);
+       double d1 = (T) LIN_INTERP(fx, (double)d10, (double)d11);    
+       return (T) LIN_INTERP(fy, d0, d1);
+   }
 
    /** Interpolates the value of the 2D matrix M at the point (x,y) knowing
        that this image is a set of B-spline coefficients.
        (x,y) are in logical coordinates.*/
-   T   interpolated_elem_as_Bspline(double x, double y, int Splinedegree=3);
+   T   interpolated_elem_as_Bspline(double x, double y, int SplineDegree=3) {
+       int SplineDegree_1=SplineDegree-1;
+
+       // Logical to physical
+       y-=STARTINGY(*this);
+       x-=STARTINGX(*this);
+
+       int lmax = XSIZE(*this);
+       int mmax = YSIZE(*this);
+       int l1 = CLIP(CEIL(x - SplineDegree_1),0,lmax-1);
+       int l2 = CLIP(l1 + SplineDegree,0,lmax-1);
+       int m1 = CLIP(CEIL(y - SplineDegree_1),0,mmax-1);
+       int m2 = CLIP(m1 + SplineDegree,0,mmax-1);
+       double columns = 0.0;
+       for (int m=m1; m<=m2; m++) {
+           int row_m = XSIZE(*this)*m;
+      	   double rows = 0.0;
+           for (int l=l1; l<=l2; l++) {
+               double xminusl = x-(double)l;
+               double Coeff = (double) __m[row_m+l];
+	       switch (SplineDegree) {
+	          case 2: rows += Coeff * Bspline02(xminusl); break; 
+                  case 3: rows += Coeff * Bspline03(xminusl); break;
+                  case 4: rows += Coeff * Bspline04(xminusl); break;
+                  case 5: rows += Coeff * Bspline05(xminusl); break;
+                  case 6: rows += Coeff * Bspline06(xminusl); break;
+                  case 7: rows += Coeff * Bspline07(xminusl); break;
+                  case 8: rows += Coeff * Bspline08(xminusl); break;
+                  case 9: rows += Coeff * Bspline09(xminusl); break;
+	       }
+           }
+           double yminusm=y-(double)m;
+	   switch (SplineDegree) {
+              case 2: columns += rows * Bspline02(yminusm); break;
+              case 3: columns += rows * Bspline03(yminusm); break;
+              case 4: columns += rows * Bspline04(yminusm); break;
+              case 5: columns += rows * Bspline05(yminusm); break;
+              case 6: columns += rows * Bspline06(yminusm); break;
+              case 7: columns += rows * Bspline07(yminusm); break;
+              case 8: columns += rows * Bspline08(yminusm); break;
+              case 9: columns += rows * Bspline09(yminusm); break;
+	   }
+       }
+       return (T)columns;
+   }
 
    /** Extracts the profile between two points.
        Given two logical indexes, this function returns samples of
        the line that joins them. This is done by bilinear interpolation.
        The number of samples in the line is N. */
    void profile(int x0, int y0, int xF, int yF, int N,
-      matrix1D<double> &profile);
+      matrix1D<double> &profile) {
+      profile.init_zeros(N);
+      double tx_step=(double)(xF-x0)/(N-1);
+      double ty_step=(double)(yF-y0)/(N-1);
+      double tx=x0, ty=y0;
+      for (int i=0; i<N; i++) {
+         profile(i)=interpolated_elem(tx,ty);
+         tx+=tx_step;
+         ty+=ty_step;
+      }
+   }
 
    /** Logical to physical index translation.
        This function returns the physical position of a logical one. See
@@ -840,7 +963,15 @@ public:
        You can use the transpose in as complex expressions as you like. The
        origin of the matrix is not changed.
        \\Ex: m2=m1.transpose();*/
-   mT transpose() const;
+   mT transpose() const {
+      T aux;
+      mT result(XSIZE(*this),YSIZE(*this));
+      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(result)
+         DIRECT_MAT_ELEM(result,i,j)=DIRECT_MAT_ELEM(*this,j,i);
+      STARTINGX(result)=STARTINGX(*this);
+      STARTINGY(result)=STARTINGY(*this);
+      return result;
+   }
    
    /** Reverse matrix values over X axis.
        Maybe better with an example:
@@ -855,7 +986,15 @@ public:
       {mT temp(*this); temp.self_reverseX(); return temp;}
    
    /** Reverse matrix values over X axis, keep in this object. */
-   void self_reverseX();
+   void self_reverseX() {
+      T aux;
+      int jmax=(int)(XSIZE(*this)-1)/2;
+      for (int i=0; i<YSIZE(*this); i++)
+         for (int j=0; j<=jmax; j++) {
+            SWAP(DIRECT_MAT_ELEM(*this,i,j),
+               DIRECT_MAT_ELEM(*this,i,XSIZE(*this)-1-j), aux);
+         }
+   }
    
    /** Reverse matrix values over Y axis.
        Maybe better with an example:
@@ -870,18 +1009,83 @@ public:
       {mT temp(*this); temp.self_reverseY(); return temp;}
 
    /** Reverse matrix values over Y axis, keep in this object. */
-   void self_reverseY();
+   void self_reverseY() {
+      T aux;
+      int imax=(int)(YSIZE(*this)-1)/2;
+      for (int i=0; i<=imax; i++)
+         for (int j=0; j<xdim; j++) {
+            SWAP(DIRECT_MAT_ELEM(*this,i,j),
+               DIRECT_MAT_ELEM(*this,YSIZE(*this)-1-i,j), aux);
+         }
+   }
    
    /** Determinant of a matrix.
        An exception is thrown if the matrix is not squared or it is empty.
        \\Ex: double det=m.det();*/
-   T det() const;
+   T det() const {
+      // (see Numerical Recipes, Chapter 2 Section 5)
+      if (xdim==0)
+         REPORT_ERROR(1108, "determinant: Matrix is empty");
+      if (xdim!=ydim)
+         REPORT_ERROR(1109, "determinant: Matrix is not squared");
+
+      for (int i=0; i<YSIZE(*this); i++) {
+         bool all_zeros=true;
+         for (int j=0; j<XSIZE(*this); j++)
+            if (ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY) {
+	       all_zeros=false; break;
+	    }
+         if (all_zeros) return 0;
+      }
+
+      // Perform decomposition
+      matrix1D<int> indx;
+      T d;
+      mT LU;
+      ludcmp(*this, LU, indx, d);
+
+      // Calculate determinant
+      for (int i=0; i<XSIZE(*this); i++) d *= (T)LU(i,i);
+      return d;
+   }
 
    /** Inverse of a matrix.
        The matrix is inverted using a SVD decomposition.
        In fact the pseudoinverse is returned.
        \\Ex: matrix2D<double> m1_inv; m1.inv(m1_inv);*/
-   void inv(mT &result) const;
+   void inv(mT &result) const  {
+      if (xdim==0)
+         REPORT_ERROR(1108, "Inverse: Matrix is empty");
+
+      // Perform SVD decomposition
+      matrix2D<double> u,v;
+      matrix1D<double> w;
+      svdcmp(*this,u,w,v); //*this=U*W*V^t
+
+      double tol=compute_max()*MAX(XSIZE(*this),YSIZE(*this))*1e-14;
+      result.init_zeros(XSIZE(*this),YSIZE(*this));
+
+      // Compute W^-1
+      bool invertible=false;
+      for (int i=0; i<XSIZE(w); i++) {
+         if (ABS(DIRECT_VEC_ELEM(w,i))>tol) {
+            DIRECT_VEC_ELEM(w,i)=1.0/DIRECT_VEC_ELEM(w,i);
+            invertible=true;
+         } else DIRECT_VEC_ELEM(w,i)=0.0;
+      }
+      if (!invertible) return;
+
+      // Compute V*W^-1
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
+         DIRECT_MAT_ELEM(v,i,j)*=DIRECT_VEC_ELEM(w,j);
+
+      // Compute Inverse
+      for (int i=0; i<XSIZE(*this); i++)
+         for (int j=0; j<YSIZE(*this); j++)
+            for (int k=0; k<XSIZE(*this); k++)
+               DIRECT_MAT_ELEM(result,i,j)+= (T)(
+                  DIRECT_MAT_ELEM(v,i,k)*DIRECT_MAT_ELEM(u,j,k));
+   }
 
    /** Inverse of a matrix.*/
    mT inv() const {mT result; inv(result); return result;}
@@ -911,7 +1115,19 @@ public:
        \end{verbatim}
        \\Ex: m1.window(-1,-1,1,2);
        */
-   void window(int y0, int x0, int yF, int xF, T init_value=0);
+   void window(int y0, int x0, int yF, int xF, T init_value=0) {
+      mT result(yF-y0+1, xF-x0+1);
+      STARTINGY(result)=y0;
+      STARTINGX(result)=x0;
+
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+         if (j>=STARTINGX(*this) && j<=FINISHINGX(*this) &&
+             i>=STARTINGY(*this) && i<=FINISHINGY(*this))
+             MAT_ELEM(result,i,j)=MAT_ELEM(*this,i,j);
+          else
+              MAT_ELEM(result,i,j)=init_value;	  
+      *this=result;
+   }
    //@}
 
    /* Geometrical transformations ------------------------------------------ */
@@ -990,15 +1206,17 @@ public:
       {mT aux; apply_geom_Bspline(aux,A,*this,SplineDegree,inv,wrap,outside);
        *this=aux;}
 
-   #define IS_INV     TRUE
-   #define IS_NOT_INV FALSE
-   #define DONT_WRAP  FALSE
-   #define WRAP       TRUE
+   #define IS_INV     true
+   #define IS_NOT_INV false
+   #define DONT_WRAP  false
+   #define WRAP       true
    
    /** Rotate matrix.
        The angle must be in degrees. The result cannot be this object.
        \\Ex: m1.rotate(60,m2);*/
-   void rotate(double ang, mT &result, bool wrap=DONT_WRAP) const;
+   void rotate(double ang, mT &result, bool wrap=DONT_WRAP) const
+      {matrix2D<double> temp=rot2D_matrix(ang);
+       apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
    
    /** Rotate matrix.
        Same as the previous one. */
@@ -1014,7 +1232,9 @@ public:
        The angle must be in degrees. The result cannot be this object.
        \\Ex: m1.rotate(60,m2);*/
    void rotate_Bspline(int Splinedegree,
-      double ang, mT &result, bool wrap=DONT_WRAP) const;
+      double ang, mT &result, bool wrap=DONT_WRAP) const
+      {matrix2D<double> temp=rot2D_matrix(ang);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
    
    /** Rotate matrix  (using Bspline interpolation).
        Same as the previous one. */
@@ -1031,7 +1251,9 @@ public:
        The result cannot be this object.
        \\Ex: m2=m1.translate(vector_R2(0,2));
        \\--> m1 is shifted 2 pixels down and stored in m2*/
-   void translate(const matrix1D<double> &v, mT &result, bool wrap=WRAP) const;
+   void translate(const matrix1D<double> &v, mT &result, bool wrap=WRAP) const
+      {matrix2D<double> temp=translation2D_matrix(v);
+       apply_geom(result,temp,*this,IS_NOT_INV,wrap);}
    
    /** Translate matrix.
        Same as the previous one. */
@@ -1049,7 +1271,9 @@ public:
        \\Ex: m2=m1.translate(vector_R2(0,2));
        \\--> m1 is shifted 2 pixels down and stored in m2*/
    void translate_Bspline(int Splinedegree,
-      const matrix1D<double> &v, mT &result, bool wrap=WRAP) const;
+      const matrix1D<double> &v, mT &result, bool wrap=WRAP) const
+      {matrix2D<double> temp=translation2D_matrix(v);
+       apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap);}
    
    /** Translate matrix (using Bspline interpolation).
        Same as the previous one. */
@@ -1066,13 +1290,25 @@ public:
    /** Translate center of mass to center.
        If the input has very high values, it is better to rescale it to
        be between 0 and 1. */
-   void self_translate_center_of_mass_to_center(bool wrap=WRAP);
+   void self_translate_center_of_mass_to_center(bool wrap=WRAP) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate(center,wrap);
+   }
 
    /** Translate center of mass to center (using Bspline interpolation).
        If the input has very high values, it is better to rescale it to
        be between 0 and 1. */
    void self_translate_center_of_mass_to_center_Bspline(
-      int Splinedegree, bool wrap=WRAP);
+      int Splinedegree, bool wrap=WRAP) {
+      set_Xmipp_origin();
+      matrix1D<double> center;
+      center_of_mass(center);
+      center*=-1;
+      self_translate_Bspline(Splinedegree,center,wrap);
+   }
 
    /** Scales to a new size.
        The matrix is scaled (resampled) to fill a new size. It is not the
@@ -1080,7 +1316,14 @@ public:
        smaller than the actual one. But the result matrix cannot be
        this object.
        \\Ex: m1.scale_to_size(128,128);*/
-   void scale_to_size(int Ydim,int Xdim, mT &result) const;
+   void scale_to_size(int Ydim,int Xdim, mT &result) const {
+      matrix2D<double> temp(3,3);
+      result.resize(Ydim,Xdim);
+      temp.init_identity();
+      DIRECT_MAT_ELEM(temp,0,0)=(double)Xdim/(double)XSIZE(*this);
+      DIRECT_MAT_ELEM(temp,1,1)=(double)Ydim/(double)YSIZE(*this);
+      apply_geom(result,temp,*this,IS_NOT_INV,WRAP);
+   }
 
    /** Scales to a new size.
        Same as the previous one. */
@@ -1099,7 +1342,14 @@ public:
        this object.
        \\Ex: m1.scale_to_size(128,128);*/
    void scale_to_size_Bspline(int Splinedegree,
-      int Ydim,int Xdim, mT &result) const;
+      int Ydim,int Xdim, mT &result) const {
+      matrix2D<double> temp(3,3);
+      result.resize(Ydim,Xdim);
+      temp.init_identity();
+      DIRECT_MAT_ELEM(temp,0,0)=(double)Xdim/(double)XSIZE(*this);
+      DIRECT_MAT_ELEM(temp,1,1)=(double)Ydim/(double)YSIZE(*this);
+      apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,WRAP);
+   }
 
    /** Scales to a new size (using Bspline interpolation).
        Same as the previous one. */
@@ -1116,38 +1366,143 @@ public:
        of the given size. The last columns and rows are removed if the
        size of the original image is not an exact multiple of the given
        superpixel size */
-   void superpixel_reduce(mT &result, int size=2) const;
+   void superpixel_reduce(mT &result, int size=2) const {
+      result.init_zeros(YSIZE(*this)/size,XSIZE(*this)/size);
+      int size2=size*size;
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(result) {
+         for (int ii=0; ii<size; ii++)
+	    for (int jj=0; jj<size; jj++)
+	       DIRECT_MAT_ELEM(result,i,j)+=
+	          DIRECT_MAT_ELEM(*this,size*i+ii,size*j+jj);
+      	 DIRECT_MAT_ELEM(result,i,j)/=size2;
+      }
+   }
 
    /** Superpixel expand.
        This function copies each pixel to a new image as many times
        as the size of the superpixel. */
-   void superpixel_expand(mT &result, int size=2) const;
+   void superpixel_expand(mT &result, int size=2) const {
+      result.init_zeros(YSIZE(*this)*size,XSIZE(*this)*size);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
+         for (int ii=0; ii<size; ii++)
+	    for (int jj=0; jj<size; jj++)
+	       DIRECT_MAT_ELEM(result,size*i+ii,size*j+jj)=
+	          DIRECT_MAT_ELEM(*this,i,j);
+      }
+   }
 
    /** Reduce the image by 2 using a BSpline pyramid. */
-   void pyramid_reduce(matrix2D<double> &reduced, int levels=1) const;
+   void pyramid_reduce(matrix2D<double> &result, int levels=1) const {
+      matrix2D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      for (int i=0; i<levels; i++) {
+         aux.reduce_Bspline(aux2,3);
+         aux=aux2;
+      }
+      aux2.produce_image_from_spline_coeffs(result,3);
+   }
 
    /** Expand the image by 2 using a BSpline pyramid. */
-   void pyramid_expand(matrix2D<double> &expanded, int levels=1) const;
+   void pyramid_expand(matrix2D<double> &result, int levels=1) const {
+      matrix2D<double> aux, aux2;
+      produce_spline_coeffs(aux,3);
+      cout << levels << endl;
+      for (int i=0; i<levels; i++) {
+         aux.expand_Bspline(aux2,3);
+         aux=aux2;
+      }
+      aux2.produce_image_from_spline_coeffs(result,3);
+   }
 
+   #ifndef DBL_EPSILON
+      #define DBL_EPSILON 1e-50
+   #endif
    /** Produce spline coefficients.*/
    void produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree=3)
-      const;
+      const {
+      coeffs.init_zeros(YSIZE(*this),XSIZE(*this));
+      STARTINGX(coeffs)=STARTINGX(*this);
+      STARTINGY(coeffs)=STARTINGY(*this);
+      int Status;
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(coeffs),
+          XSIZE(*this), YSIZE(*this), 1,
+          CardinalSpline, BasicSpline, SplineDegree,
+          MirrorOffBounds, DBL_EPSILON, &Status);
+      if (Status)
+         REPORT_ERROR(1,"matrix2D::produce_spline_coeffs: Error");
+   }
 
    /** Produce image from B-spline coefficients. */
    void produce_image_from_spline_coeffs(
-      matrix2D<double> &img, int SplineDegree=3) const;
+      matrix2D<double> &img, int SplineDegree=3) const {
+      img.init_zeros(YSIZE(*this),XSIZE(*this));
+      STARTINGX(img)=STARTINGX(*this);
+      STARTINGY(img)=STARTINGY(*this);
+      int Status;
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(img),
+          XSIZE(*this), YSIZE(*this), 1,
+          BasicSpline, CardinalSpline, SplineDegree,
+          MirrorOnBounds, DBL_EPSILON, &Status);
+      if (Status)
+         REPORT_ERROR(1,"matrix2D::produce_spline_img: Error");
+   }
+#undef DBL_EPSILON
 
    /** Expand a set of B-spline coefficients.
        Knowing that this matrix is a set of B-spline coefficients,
        produce the expanded set of B-spline coefficients using the
        two-scale relationship. */
-   void expand_Bspline(matrix2D<double> &expanded, int SplineDegree=3) const;
+   void expand_Bspline(matrix2D<double> &expanded, int SplineDegree=3) const {
+      double   g[200];    /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];    /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      expanded.resize(2*YSIZE(aux),2*XSIZE(aux));
+      Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(expanded), h, nh, IsCentered);
+   }
 
    /** Reduce a set of B-spline coefficients.
        Knowing that this matrix is a set of B-spline coefficients,
        produce the reduced set of B-spline coefficients using the
        two-scale relationship. */
-   void reduce_Bspline(matrix2D<double> &reduced, int SplineDegree=3) const;
+   void reduce_Bspline(matrix2D<double> &reduced, int SplineDegree=3) const {
+      double   g[200];    /* Coefficients of the reduce filter */
+      long     ng;         /* Number of coefficients of the reduce filter */
+      double   h[200];    /* Coefficients of the expansion filter */
+      long     nh;         /* Number of coefficients of the expansion filter */
+      short    IsCentered; /* Equal TRUE if the filter is a centered spline, FALSE otherwise */
+
+      // Get the filter
+      if (GetPyramidFilter( "Centered Spline", SplineDegree,
+            g, &ng, h, &nh, &IsCentered))
+	 REPORT_ERROR(1,"Unable to load the filter coefficients");
+
+      matrix2D<double> aux;
+      type_cast(*this,aux);
+      if (XSIZE(aux)%2!=0 && YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux)-1);
+      else if (YSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)-1,XSIZE(aux));
+      else if (XSIZE(aux)%2!=0)
+          aux.resize(YSIZE(aux)  ,XSIZE(aux)-1);
+      reduced.resize(YSIZE(aux)/2,XSIZE(aux)/2);
+      Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+         MULTIDIM_ARRAY(reduced), g, ng, IsCentered);
+   }
 
    //@}
 
@@ -1159,14 +1514,38 @@ public:
        vector with these values is returned.
        \\Ex:T vector_sum(vT &v) {return v.sum();};
             v1=m.for_all_rows(&vector_sum);*/
-   vT for_all_rows (T (*f)(vT&)) const;
+   vT for_all_rows (T (*f)(vT&)) const  {
+      vT temp;
+      if (XSIZE(*this)==0 || YSIZE(*this)==0) return temp;
+      temp.resize(YSIZE(*this));
+      STARTINGX(temp)=STARTINGY(*this);
+      temp.setCol();
+      for (int i=STARTINGY(*this); i<=FINISHINGY(*this); i++) {
+         vT aux;
+         getRow(i,aux);
+         VEC_ELEM(temp,i)=(*f)(aux);
+      }
+      return temp;
+   }
 
    /** Apply the same scalar function to all columns.
        This function must take a column vector and return a single value, a row
        vector with these values is returned.
        \\Ex:T vector_sum(vT &v) {return v.sum();};
             v1=m.for_all_cols(&vector_sum);*/
-   vT for_all_cols (T (*f)(vT&)) const;
+   vT for_all_cols (T (*f)(vT&)) const {
+      vT temp;
+      if (XSIZE(*this)==0 || YSIZE(*this)==0) return temp;
+      temp.resize(XSIZE(*this));
+      STARTINGX(temp)=STARTINGX(*this);
+      temp.setRow();
+      for (int j=STARTINGX(*this); j<=FINISHINGX(*this); j++) {
+         vT aux;
+         getCol(j,aux);
+         VEC_ELEM(temp,j)=(*f)(aux);
+      }
+      return temp;
+   }
    
    /** Apply the same vectorial function to all rows.
        This function must take a row vector and return a row vector (of the
@@ -1178,7 +1557,14 @@ public:
       {mT aux(*this); aux.for_all_rows(f); return aux;}
 
    /** Apply a vectorial function to all rows, keep in this object. */
-   void for_all_rows (vT (*f)(vT&));
+   void for_all_rows (vT (*f)(vT&)) {
+      if (XSIZE(*this)==0 || YSIZE(*this)==0) return;
+      for (int i=STARTINGY(*this); i<=FINISHINGY(*this); i++) {
+         vT aux;
+         getRow(i,aux);
+         setRow(i,(*f)(aux));
+      }
+   }
 
    /** Apply the same vectorial function to all columns.
        This function must take a columnm vector and return a column vector
@@ -1190,7 +1576,14 @@ public:
       {mT aux(*this); aux.for_all_cols(f); return aux;}
 
    /** Apply a vectorial function to all rows, keep in this object. */
-   void for_all_cols (vT (*f)(vT&));
+   void for_all_cols (vT (*f)(vT&)) {
+      if (XSIZE(*this)==0 || YSIZE(*this)==0) return;
+      for (int j=STARTINGX(*this); j<=FINISHINGX(*this); j++) {
+         vT aux;
+         getCol(j,aux);
+         setCol(j,(*f)(aux));
+      }
+   }
 
    //@}
 
@@ -1213,7 +1606,22 @@ public:
 
    /** Matrix by vector multiplication.
       \\Ex: v2=A*v1;*/
-   vT operator * (const vT &op1) const;
+   vT operator * (const vT &op1) const  {
+      vT result;
+      if (XSIZE(*this)!=XSIZE(op1))
+         REPORT_ERROR(1102,"Not compatible sizes in matrix by vector");
+      if (!op1.isCol())
+         REPORT_ERROR(1102,"Vector is not a column");
+
+      result.init_zeros(YSIZE(*this));
+      for (int i=0; i<YSIZE(*this); i++)
+         for (int j=0; j<XSIZE(op1); j++)
+               DIRECT_VEC_ELEM(result,i) += DIRECT_MAT_ELEM(*this,i,j)*
+                  DIRECT_VEC_ELEM(op1,j);
+      result.setCol();
+      STARTINGX(result)=STARTINGY(*this);
+      return result;
+   }
    //@}
 
    /* Matrix types --------------------------------------------------------- */
@@ -1233,28 +1641,62 @@ public:
    
    /** True if the matrix is diagonal.
        \\Ex: if (m.IsDiagonal()) cout << "The matrix is diagonal\n";*/
-   bool IsDiagonal() const;
+   bool IsDiagonal() const
+      {if (XSIZE(*this)!=YSIZE(*this)) return false;
+       FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+             if (i!=j && ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY)
+                return false;
+       return true;}
 
    /** True if the matrix is scalar.
        A scalar matrix is diagonal and all the values at the diagonal are
        the same*/
-   bool IsScalar() const;
+   bool IsScalar() const
+      {if (!IsDiagonal()) return false;
+       for (int i=1; i<YSIZE(*this); i++)
+          if (ABS(DIRECT_MAT_ELEM(*this,i,i)-DIRECT_MAT_ELEM(*this,0,0))>
+              XMIPP_EQUAL_ACCURACY) return false;
+       return true;}
 
    /** True if the matrix is symmetric.
        \\Ex: if (m.IsSymmetric()) cout << "The matrix is symmetric\n";*/
-   bool IsSymmetric() const;
+   bool IsSymmetric() const
+      {if (XSIZE(*this)!=YSIZE(*this)) return false;
+       for (int i=0; i<YSIZE(*this); i++)
+          for (int j=i+1; j<XSIZE(*this); j++)
+             if (ABS(DIRECT_MAT_ELEM(*this,i,j)-DIRECT_MAT_ELEM(*this,j,i))>
+                 XMIPP_EQUAL_ACCURACY) return false;
+       return true;}
 
    /** True if the matrix is skew-symmetric (anti-symmetric).
        \\Ex: if (m.IsSkewSymmetric()) cout << "The matrix is skewsymmetric\n";*/
-   bool IsSkewSymmetric() const;
+   bool IsSkewSymmetric() const
+      {if (XSIZE(*this)!=YSIZE(*this)) return false;
+       for (int i=0; i<YSIZE(*this); i++)
+          for (int j=i+1; j<XSIZE(*this); j++)
+             if (ABS(DIRECT_MAT_ELEM(*this,i,j)+DIRECT_MAT_ELEM(*this,j,i))>
+                 XMIPP_EQUAL_ACCURACY) return false;
+       return true;}
 
    /** True if the matrix is upper-triangular.
        \\Ex: if (m.IsUpperTriangular()) cout << "The matrix is upper triangular\n";*/
-   bool IsUpperTriangular() const;
+   bool IsUpperTriangular() const
+      {if (XSIZE(*this)!=YSIZE(*this)) return false;
+       for (int i=1; i<YSIZE(*this); i++)
+          for (int j=0; j<i-1; j++)
+             if (ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY)
+                return false;
+       return true;}
 
    /** True if the matrix is lower-triangular.
        \\Ex: if (m.IsLowerTriangular()) cout << "The matrix is lower triangular\n";*/
-   bool IsLowerTriangular() const;
+   bool IsLowerTriangular() const
+      {if (XSIZE(*this)!=YSIZE(*this)) return false;
+       for (int i=1; i<YSIZE(*this); i++)
+          for (int j=i+1; j<XSIZE(*this); j++)
+             if (ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY)
+                return false;
+       return true;}
 
    /** True if the matrix is identity.
        \\Ex: if (m.IsIdent()) cout << "The matrix is identity\n";*/
@@ -1269,14 +1711,46 @@ public:
    /** Maximum element.
        This function returns the index of the maximum element of an array.
        array(i,j). Returns -1 if the array is empty*/
-   void max_index(int &i, int &j) const;
+   void max_index(int &imax, int &jmax) const {
+      if (XSIZE(*this)==0) {imax=jmax=-1; return;}
+      imax=jmax=0;
+      T   max=MAT_ELEM(*this,imax,jmax);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+         if (MAT_ELEM(*this,i,j)>max)
+            {max=MAT_ELEM(*this,i,j); imax=i; jmax=j;}
+   }
 
    /** Minimum element.
        This function returns the index of the minimum element of an array.
        array(i,j). Returns -1 if the array is empty*/
-   void min_index(int &i, int &j) const;
+   void min_index(int &imin, int &jmin) const {
+      if (XSIZE(*this)==0) {imin=jmin=-1; return;}
+      imin=jmin=0;
+      T   min=MAT_ELEM(*this,imin,jmin);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+         if (MAT_ELEM(*this,i,j)>min)
+            {min=MAT_ELEM(*this,i,j); imin=i; jmin=j;}
+   }
    //@}
 };
+
+#include "Src/MultidimFriends_implementation.hh"
+// Special case for complex numbers
+template <>
+complex<double> matrix2D< complex<double> >::interpolated_elem(
+   double x, double y, complex<double> outside_value);
+
+template <>
+void core_array_by_scalar< complex<double> >(const maTC &op1,
+   const complex<double> &op2, maTC &result, char operation);
+
+template <>
+void core_scalar_by_array< complex<double> >(const complex<double> &op1,
+   const maTC &op2, maTC &result, char operation);
+
+template <>
+void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
+   maTC &result, char operation);
 
 /**@name Related functions
    These functions are not methods of matrix1D */
@@ -1375,7 +1849,14 @@ matrix2D<double> scale3D_matrix(const matrix1D<double> &sc);
     \\cut_to_common_size(m1,m2);
     \\--> m1 and m2 range from (0,0)=(y,x) to (2,0) */
 template <class T>
-   void cut_to_common_size(mT &m1, mT &m2);
+   void cut_to_common_size(mT &m1, mT &m2) {
+      int y0=MAX(STARTINGY(V1) ,STARTINGY(V2));
+      int yF=MIN(FINISHINGY(V1),FINISHINGY(V2));
+      int x0=MAX(STARTINGX(V1) ,STARTINGX(V2));
+      int xF=MIN(FINISHINGX(V1),FINISHINGX(V2));
+      V1.window(y0,x0,yF,xF);
+      V2.window(y0,x0,yF,xF);
+   }
 
 /** Does a radial average of a matrix, around the pixel where is the origin.
     A vector is returned where:
@@ -1393,9 +1874,59 @@ template <class T>
        whose distance to the origin is (1.5-2.5)
          - and so on. */
 template <class T>
-void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
-                    matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
-                    const bool &rounding=false);
+   void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
+      matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+      const bool &rounding=false) {
+      matrix1D<double> idx(2);
+
+      /* First determine the maximum distance that one should expect,
+         to set the dimension of the radial average vector */
+      matrix1D<int> distances(4);
+      double y=STARTINGY(m)-YY(center_of_rot);
+      double x=STARTINGX(m)-XX(center_of_rot);
+      distances(0)=(int)floor(sqrt(x*x+y*y));
+      x=FINISHINGX(m)-XX(center_of_rot);
+      y=STARTINGY(m)-YY(center_of_rot);
+      distances(1)=(int)floor(sqrt(x*x+y*y));
+      x=STARTINGX(m)-XX(center_of_rot);
+      y=FINISHINGY(m)-YY(center_of_rot);
+      distances(2)=(int)floor(sqrt(x*x+y*y));
+      x=FINISHINGX(m)-XX(center_of_rot);
+      y=FINISHINGY(m)-YY(center_of_rot);
+      distances(3)=(int)floor(sqrt(x*x+y*y));
+      int dim=(int)CEIL(distances.compute_max())+1;
+      if (rounding) dim++;
+
+      // Define the vectors
+      radial_mean.resize(dim);
+      radial_mean.init_zeros();
+      radial_count.resize(dim);
+      radial_count.init_zeros();   
+
+      /* Perform the radial sum and count pixels that contribute to
+         every distance */
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(m)
+      {
+         YY(idx)=i-YY(center_of_rot);
+	     XX(idx)=j-XX(center_of_rot);
+	     // Determine distance to the center
+	     int distance;
+	     if (rounding) distance=(int)ROUND(idx.module());
+	     else distance=(int)floor(idx.module());
+
+         // Sum te value to the pixels with the same distance  
+	     radial_mean(distance)+=m(i,j);
+	     // Count the pixel
+	     radial_count(distance)++;      	  	  
+      }
+
+      // Perfor the mean
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
+      {
+         radial_mean(i)/=(T)radial_count(i);
+      }
+   }
+
 
 /** Solve equation system, nonnegative solution.
     The equation system is defined by Ax=b, it is solved for x.
@@ -1454,6 +1985,593 @@ void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
 //@}
 //@}
 //@}
+
+/* Implementations of common routines -------------------------------------- */
+/* Print shape ------------------------------------------------------------- */
+template <class T>
+   void mT::print_shape(ostream &out) const {
+   out << "Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
+       << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+       << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+}
+
+/* Get size--- ------------------------------------------------------------- */
+template <class T>
+   void mT::get_size(int *size) const
+   {size[0]=xdim; size[1]=ydim; size[2]=1;}
+
+/* Outside ----------------------------------------------------------------- */
+template <class T>
+   bool mT::outside(const matrix1D<double> &v) const {
+   if (XSIZE(v)<2)
+      REPORT_ERROR(1,"Outside: index vector has got not enough components");
+   return (XX(v)<STARTINGX(*this) || XX(v)>FINISHINGX(*this) ||
+           YY(v)<STARTINGY(*this) || YY(v)>FINISHINGY(*this));
+}
+
+template <class T>
+   bool mT::outside(int i, int j) const {
+   return (j<STARTINGX(*this) || j>FINISHINGX(*this) ||
+           i<STARTINGY(*this) || i>FINISHINGY(*this));
+}
+
+/* Intersects -------------------------------------------------------------- */
+template <class T>
+   bool mT::intersects(const mT &m) const
+      {return intersects(STARTINGX(m), STARTINGY(m), XSIZE(m)-1, YSIZE(m)-1);}
+
+template <class T>
+   bool mT::intersects(const matrix1D<double> &corner1,
+      const matrix1D<double> &corner2) const {
+       if (XSIZE(corner1)!=2 || XSIZE(corner2)!=2)
+          REPORT_ERROR(1002,"intersects 1D: corner sizes are not 1");
+       return intersects(XX(corner1),YY(corner1),
+          XX(corner2)-XX(corner1),YY(corner2)-YY(corner1));
+}
+
+template <class T>
+   bool mT::intersects(double x0, double y0, double xdim, double ydim) const {
+   SPEED_UP_temps;
+   spduptmp0=MAX(STARTINGY(*this), y0);
+   spduptmp1=MIN(FINISHINGY(*this),y0+ydim);
+   if (spduptmp0>spduptmp1) return false;
+
+   spduptmp0=MAX(STARTINGX(*this), x0);
+   spduptmp1=MIN(FINISHINGX(*this),x0+xdim);
+   if (spduptmp0>spduptmp1) return false;
+   return true;
+}
+
+/* Corner ------------------------------------------------------------------ */
+template <class T>
+   bool mT::isCorner(const matrix1D<double> &v) {
+   if (XSIZE(v)<2)
+      REPORT_ERROR(1,"isCorner: index vector has got not enough components");
+   return ((XX(v)==STARTINGX(*this)  && YY(v)==STARTINGY(*this))  ||
+           (XX(v)==STARTINGX(*this)  && YY(v)==FINISHINGY(*this)) ||
+           (XX(v)==FINISHINGX(*this) && YY(v)==STARTINGY(*this))  ||
+           (XX(v)==FINISHINGX(*this) && YY(v)==FINISHINGY(*this)));
+}
+
+/* Border ------------------------------------------------------------------ */
+template <class T>
+   bool mT::isBorder(const matrix1D<int> &v) 
+{
+   if (XSIZE(v)<2)
+      REPORT_ERROR(1,"isBorder: index vector has got not enough components");
+   return  isBorder(YY(v),XX(v));
+}
+
+template <class T>
+   bool mT::isBorder(int i,int j) 
+{
+   return (j==STARTINGX(*this)  || j==FINISHINGX(*this)  ||
+           i==STARTINGY(*this)  || i==FINISHINGY(*this));
+}
+
+/* Patch ------------------------------------------------------------------- */
+template <class T>
+   void mT::patch(const mT &patch_array, char operation) {
+      SPEED_UP_temps;
+      FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(patch_array,*this)
+         switch (operation) {
+            case '=': MAT_ELEM(*this,i,j) =MAT_ELEM(patch_array,i,j); break;
+            case '+': MAT_ELEM(*this,i,j)+=MAT_ELEM(patch_array,i,j); break;
+            case '-': MAT_ELEM(*this,i,j)-=MAT_ELEM(patch_array,i,j); break;
+            case '*': MAT_ELEM(*this,i,j)*=MAT_ELEM(patch_array,i,j); break;
+            case '/': MAT_ELEM(*this,i,j)/=MAT_ELEM(patch_array,i,j); break;
+         }
+}
+
+/* Statistics in region ---------------------------------------------------- */
+template <class T>
+void mT::compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(3);
+   double N=0, sum=0, sum2=0;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      sum+=(*this)(r); sum2+=(*this)(r)*(*this)(r); N++;
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+   if (N!=0) {
+      avg=sum/N;
+      stddev=sqrt(sum2/N-avg*avg);
+   } else {avg=stddev=0;}
+}
+
+/* Minimum and maximum in region ------------------------------------------- */
+template <class T>
+void mT::compute_double_minmax(double &min_val, double &max_val,
+   const matrix1D<double> &corner1, const matrix1D<double> &corner2) const {
+   min_val=max_val=(*this)(corner1);
+   matrix1D<double> r(2);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1,corner2) {
+      if      ((*this)(r)<min_val) min_val=(*this)(r);
+      else if ((*this)(r)>max_val) max_val=(*this)(r);
+   }
+}
+
+/* Center of mass ---------------------------------------------------------- */
+template <class T>
+   void mT::center_of_mass(matrix1D<double> &center, void * mask) {
+      center.init_zeros(2);
+      double mass=0;
+      matrix2D<int> *imask=(matrix2D<int> *) mask;
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(*this) {
+         if (imask==NULL || MAT_ELEM(*imask,i,j)) {
+            XX(center)+=j*MAT_ELEM(*this,i,j);
+            YY(center)+=i*MAT_ELEM(*this,i,j);
+	    mass+=MAT_ELEM(*this,i,j);
+      	 }
+      }
+      if (mass!=0) center/=mass;
+   }
+
+/* Output stream ----------------------------------------------------------- */
+template <class T>
+   ostream& operator << (ostream& ostrm, const mT& v) {
+   if (XSIZE(v)==0 || YSIZE(v)==0)
+      ostrm << "NULL matrix\n";
+   else {
+      ostrm << endl;
+      double max_val=ABS(MULTIDIM_ELEM(v,0));
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
+         max_val=MAX(max_val,ABS(MULTIDIM_ELEM(v,i)));
+      int prec=best_prec(max_val,10);
+
+      for (int i=STARTINGY(v); i<=FINISHINGY(v); i++) {
+         for (int j=STARTINGX(v); j<=FINISHINGX(v); j++) {
+            ostrm << FtoA((double)MAT_ELEM(v,i,j),10,prec) << ' ';
+         }
+         ostrm << endl;
+      }
+   }
+
+   return ostrm;
+}
+
+/* Solve Ax=b -------------------------------------------------------------- */
+// (see Numerical Recipes, Chapter 2 Section 3)
+template <class T>
+   void solve(const mT &A, const vT &b, vT &result) {
+   if (A.xdim==0)
+      REPORT_ERROR(1108, "Solve: Matrix is empty");
+   if (A.xdim!=A.ydim)
+      REPORT_ERROR(1109, "Solve: Matrix is not squared");
+   if (A.xdim!=b.get_dim())
+      REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
+   if (b.isRow())
+      REPORT_ERROR(1107, "Solve: Not correct vector shape");
+
+   // Perform LU decomposition and then solve
+   matrix1D<int> indx;
+   T d;
+   mT LU;
+   ludcmp(A, LU, indx, d);
+   result=b;
+   lubksb(LU, indx, result);
+}
+
+template <class T>
+   void solve_by_svd(const matrix2D<T> &A, const matrix1D<T> &b,
+                     matrix1D<double> &result,double tolerance) {
+   if (A.xdim==0)
+      REPORT_ERROR(1108, "Solve: Matrix is empty");
+   if (A.xdim!=A.ydim)
+      REPORT_ERROR(1109, "Solve: Matrix is not squared");
+   if (A.xdim!=b.get_dim())
+      REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
+   if (b.isRow())
+      REPORT_ERROR(1107, "Solve: Not correct vector shape");
+
+   // First perform de single value decomposition
+   // Xmipp interface that calls to svdcmp of numerical recipes
+   matrix2D<double> u,v;
+   matrix1D<double> w;
+   svdcmp(A,u,w,v);
+   
+   // Here is checked if eigenvalues of the svd decomposition are acceptable
+   // If a value is lower than tolerance, the it's zeroed, as this increases
+   // the precision of the routine. 
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
+      if(w(i)<tolerance) w(i)=0;
+	  
+   // Set size of matrices
+   result.resize(b.get_dim());
+
+   // Xmipp interface that calls to svdksb of numerical recipes
+   matrix1D<double> bd;
+   type_cast(b,bd);
+   svbksb(u,w,v,bd,result);  
+}
+
+// (see Numerical Recipes, Chapter 2 Section 1)
+template <class T>
+   void solve(const mT &A, const mT &b, mT &result) {
+   if (A.xdim==0)
+      REPORT_ERROR(1108, "Solve: Matrix is empty");
+   if (A.xdim!=A.ydim)
+      REPORT_ERROR(1109, "Solve: Matrix is not squared");
+   if (A.ydim!=b.ydim)
+      REPORT_ERROR(1102, "Solve: Different sizes of A and b");
+
+   // Solve
+   result=b;
+   mT Aux=A;
+   gaussj(Aux.adapt_for_numerical_recipes2(),Aux.ydim,
+          result.adapt_for_numerical_recipes2(),b.xdim);
+}
+
+/* Interface to numerical recipes: ludcmp ---------------------------------- */
+template <class T>
+   void ludcmp(const mT &A, mT &LU, matrix1D<int> &indx, T &d) {
+   LU=A;
+   indx.resize(XSIZE(A));
+   ludcmp (LU.adapt_for_numerical_recipes2(),XSIZE(A),
+      indx.adapt_for_numerical_recipes(),&d);
+}
+
+/* Interface to Numerical Recipes: lubksb  --------------------------------- */
+template <class T>
+   void lubksb(const mT &LU, matrix1D<int> &indx, vT &b) {
+   lubksb(LU.adapt_for_numerical_recipes2(),XSIZE(indx),
+      indx.adapt_for_numerical_recipes(),
+      b.adapt_for_numerical_recipes());
+}
+
+/* Interface to Numerical Recipes: svdcmp  --------------------------------- */
+#define VIA_BILIB
+template <class T>
+void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
+               matrix1D<double> &w, matrix2D<double> &v) {
+   // svdcmp only works with double
+   type_cast(a,u);
+   
+   // Set size of matrices
+   w.init_zeros(u.ColNo());
+   v.init_zeros(u.ColNo(),u.ColNo());
+   
+   // Call to the numerical recipes routine
+#ifdef VIA_NR
+   svdcmp(MULTIDIM_ARRAY(u),
+          u.RowNo(),u.ColNo(),
+          MULTIDIM_ARRAY(w),
+          MULTIDIM_ARRAY(v));
+#endif
+#ifdef VIA_BILIB
+   int status;
+   SingularValueDecomposition (MULTIDIM_ARRAY(u),
+          u.RowNo(),u.ColNo(),
+          MULTIDIM_ARRAY(w),
+          MULTIDIM_ARRAY(v),
+	  5000, &status);
+#endif
+}
+#undef VIA_NR
+#undef VIA_BILIB
+
+/* Apply a geometrical transformation -------------------------------------- */
+// It is translated from function transforma in Lib/varios2.c
+// We should check which one performs better.
+//#define DEBUG
+template <class T>
+   void apply_geom(mT &M2,matrix2D<double> A, const mT &M1, bool inv,
+   bool wrap, T outside) {
+   int m1, n1, m2, n2;
+   double x, y, xp, yp;
+   double minxp, minyp, maxxp, maxyp;
+   int   cen_x, cen_y, cen_xp, cen_yp;
+   double wx, wy; // Weights in X,Y directions for bilinear interpolation
+   
+   if ((XSIZE(A)!=3) || (YSIZE(A)!=3))
+      REPORT_ERROR(1102,"Apply_geom: geometrical transformation is not 3x3");
+   if (A.IsIdent())   {M2=M1; return;}
+   if (XSIZE(M1)==0)  {M2.clear(); return;}
+   
+   if (!inv) A=A.inv();
+
+   // For scalings the output matrix is resized outside to the final
+   // size instead of being resized inside the routine with the
+   // same size as the input matrix
+   if (XSIZE(M2)==0) M2.resize(M1);
+   if (outside!=0.) {
+   // Initialise output matrix with value=outside
+     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
+   }
+  
+   // Find center and limits of image
+   cen_y  = (int)(YSIZE(M2)/2);
+   cen_x  = (int)(XSIZE(M2)/2);
+   cen_yp = (int)(YSIZE(M1)/2);
+   cen_xp = (int)(XSIZE(M1)/2);
+   minxp  = -cen_xp;
+   minyp  = -cen_yp;
+   maxxp  = XSIZE(M1)-cen_xp-1;
+   maxyp  = YSIZE(M1)-cen_yp-1;
+   
+   // Now we go from the output image to the input image, ie, for any pixel
+   // in the output image we calculate which are the corresponding ones in
+   // the original image, make an interpolation with them and put this value
+   // at the output pixel
+   //#define DEBUG
+   #ifdef DEBUG
+      cout << "A\n"    << A     << endl
+	   << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
+	   << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
+	   << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
+	   << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n"
+      ;
+   #endif
+      //#undef DEBUG
+   for (int i=0; i<YSIZE(M2); i++) {
+      // Calculate position of the beginning of the row in the output image
+      x= -cen_x;
+      y=i-cen_y;
+      // For OldXmipp origins with even XSIZE & YSIZE:
+      //      x= -cen_x+0.5;
+      //      y=i-cen_y+0.5;
+
+      // Calculate this position in the input image according to the
+      // geometrical transformation
+      // they are related by
+      // coords_output(=x,y) = A * coords_input (=xp,yp)
+      xp=x*dMij(A,0,0) + y*dMij(A,0,1) + dMij(A,0,2);
+      yp=x*dMij(A,1,0) + y*dMij(A,1,1) + dMij(A,1,2);
+     
+      for (int j=0; j<XSIZE(M2); j++) {
+         bool interp;
+         T tmp;
+         
+         #ifdef DEBUG
+         cout << "Computing (" << i << "," << j << ")\n";
+         cout << "   (y, x) =(" << y << "," << x << ")\n"
+              << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         #endif
+
+         // If the point is outside the image, apply a periodic extension
+         // of the image, what exits by one side enters by the other
+         interp=true;
+         if (wrap) {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY)
+		xp=realWRAP(xp, minxp-0.5, maxxp+0.5);
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp-0.5, maxyp+0.5);
+         } else {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=false;
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=false;
+         }
+
+         #ifdef DEBUG
+         cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         cout << "   Interp = " << interp << endl;
+         x++;
+         #endif
+
+         if (interp) {            
+            // Calculate the integer position in input image, be careful
+            // that it is not the nearest but the one at the top left corner
+            // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+            // Calculate also weights for point m1+1,n1+1
+            wx=xp+cen_xp; m1=(int) wx; wx=wx-m1; m2=m1+1;
+            wy=yp+cen_yp; n1=(int) wy; wy=wy-n1; n2=n1+1;
+
+            #ifdef DEBUG
+            cout << "   From (" << n1 << "," << m1 << ") and ("
+                 << n2 << "," << m2 << ")\n";
+            cout << "   wx= " << wx << " wy= " << wy << endl;
+            #endif
+
+            // Perform interpolation
+            // if wx == 0 means that the rightest point is useless for this
+            // interpolation, and even it might not be defined if m1=xdim-1
+            // The same can be said for wy.
+               tmp  = (T) ((1-wy)*(1-wx)*dMij(M1,n1,m1));
+            if (wx!=0 && m2<M1.xdim)
+               tmp += (T) ((1-wy)*   wx *dMij(M1,n1,m2));
+            if (wy!=0 && n2<M1.ydim){
+               tmp += (T) (   wy *(1-wx)*dMij(M1,n2,m1));
+               if (wx!=0 && m2<M1.xdim)
+                  tmp += (T) (wy *   wx *dMij(M1,n2,m2));
+            }
+            dMij(M2,i,j) = tmp;
+
+            #ifdef DEBUG
+            cout << "   val= " << tmp << endl;
+            #endif
+         }
+
+         // Compute new point inside input image
+         xp += dMij(A,0,0);
+         yp += dMij(A,1,0);
+      }
+   }
+}
+#undef DEBUG
+
+/* Apply a geometrical transformation -------------------------------------- */
+// It is translated from function transforma in Lib/varios2.c
+// We should check which one performs better.
+//#define DEBUG
+template <class T>
+   void apply_geom_Bspline(mT &M2,matrix2D<double> A, const mT &M1,
+   int Splinedegree, bool inv, bool wrap, T outside) {
+   int m1, n1, m2, n2;
+   double x, y, xp, yp;
+   double minxp, minyp, maxxp, maxyp;
+   int   cen_x, cen_y, cen_xp, cen_yp;
+   
+   if ((XSIZE(A)!=3) || (YSIZE(A)!=3))
+      REPORT_ERROR(1102,"Apply_geom: geometrical transformation is not 3x3");
+   if (A.IsIdent())   {M2=M1; return;}
+   if (XSIZE(M1)==0)  {M2.clear(); return;}
+   
+   if (!inv) A=A.inv();
+
+   // For scalings the output matrix is resized outside to the final
+   // size instead of being resized inside the routine with the
+   // same size as the input matrix
+   if (XSIZE(M2)==0) M2.resize(M1);
+   // Initialise output matrix with value=outside
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D (M2) { DIRECT_MAT_ELEM(M2,i,j)=outside;}
+  
+   // Find center and limits of image
+   cen_y  = (int)(YSIZE(M2)/2);
+   cen_x  = (int)(XSIZE(M2)/2);
+   cen_yp = (int)(YSIZE(M1)/2);
+   cen_xp = (int)(XSIZE(M1)/2);
+   minxp  = -cen_xp;
+   minyp  = -cen_yp;
+   maxxp  = XSIZE(M1)-cen_xp-1;
+   maxyp  = YSIZE(M1)-cen_yp-1;
+   
+   // Build the B-spline coefficients
+   matrix2D<double> Bcoeffs;
+   M1.produce_spline_coeffs(Bcoeffs,Splinedegree);
+   STARTINGX(Bcoeffs)=(int)minxp;
+   STARTINGY(Bcoeffs)=(int)minyp;
+
+   // Now we go from the output image to the input image, ie, for any pixel
+   // in the output image we calculate which are the corresponding ones in
+   // the original image, make an interpolation with them and put this value
+   // at the output pixel
+   for (int i=0; i<YSIZE(M2); i++) {
+      // Calculate position of the beginning of the row in the output image
+      x= -cen_x;
+      y=i-cen_y;
+
+      // Calculate this position in the input image according to the
+      // geometrical transformation
+      // they are related by
+      // coords_output(=x,y) = A * coords_input (=xp,yp)
+      xp=x*dMij(A,0,0) + y*dMij(A,0,1) + dMij(A,0,2);
+      yp=x*dMij(A,1,0) + y*dMij(A,1,1) + dMij(A,1,2);
+     
+      for (int j=0; j<XSIZE(M2); j++) {
+         bool interp;
+         T tmp;
+         
+         #ifdef DEBUG
+         cout << "Computing (" << i << "," << j << ")\n";
+         cout << "   (y, x) =(" << y << "," << x << ")\n"
+              << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         #endif
+
+         // If the point is outside the image, apply a periodic extension
+         // of the image, what exits by one side enters by the other
+         interp=true;
+         if (wrap) {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY)
+		xp=realWRAP(xp, minxp-0.5, maxxp+0.5);
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) yp=realWRAP(yp, minyp-0.5, maxyp+0.5);
+         } else {
+            if (xp<minxp-XMIPP_EQUAL_ACCURACY ||
+	        xp>maxxp+XMIPP_EQUAL_ACCURACY) interp=false;
+            if (yp<minyp-XMIPP_EQUAL_ACCURACY ||
+	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=false;
+         }
+
+         #ifdef DEBUG
+         cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
+         cout << "   Interp = " << interp << endl;
+         x++;
+         #endif
+
+         if (interp) {            
+            dMij(M2,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
+	       xp,yp,Splinedegree);
+
+            #ifdef DEBUG
+            cout << "   val= " << tmp << endl;
+            #endif
+         }
+
+         // Compute new point inside input image
+         xp += dMij(A,0,0);
+         yp += dMij(A,1,0);
+      }
+   }
+}
+#undef DEBUG
+
+template <>
+   void apply_geom_Bspline(matrix2D< complex<double> > &M2,
+      matrix2D<double> A, const matrix2D< complex<double> > &M1,
+   int Splinedegree, bool inv, bool wrap, complex<double> outside);
+
+template <>
+   void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+      int Ydim,int Xdim, matrix2D< complex<double> > &result) const;
+
+template <> bool matrix2D< complex<double> >::IsDiagonal() const;
+template <> bool matrix2D< complex<double> >::IsScalar() const;
+template <> bool matrix2D< complex<double> >::IsSymmetric() const;
+template <> bool matrix2D< complex<double> >::IsSkewSymmetric() const;
+template <> bool matrix2D< complex<double> >::IsUpperTriangular() const;
+template <> bool matrix2D< complex<double> >::IsLowerTriangular() const;
+
+/* Matrix by matrix multiplication ----------------------------------------- */
+// xinit and yinit are taken from op1
+template <class T>
+   void mul_matrix(const mT &op1, const mT &op2, mT &result) {
+   if (XSIZE(op1)!=YSIZE(op2))
+      REPORT_ERROR(1102,"Not compatible sizes in matrix multiplication");
+   
+   result.init_zeros(YSIZE(op1),XSIZE(op2));
+   for (int i=0; i<YSIZE(op1); i++)
+      for (int j=0; j<XSIZE(op2); j++)
+         for (int k=0; k<XSIZE(op1); k++)
+            DIRECT_MAT_ELEM(result,i,j) += DIRECT_MAT_ELEM(op1,i,k)*
+               DIRECT_MAT_ELEM(op2,k,j);
+   STARTINGY(result)=STARTINGY(op1);
+   STARTINGX(result)=STARTINGX(op1);
+}
+
+/* Vector by matrix multiplication ----------------------------------------- */
+template <class T>
+   vT vT::operator * (const mT &M) {
+   vT result;
+   if (XSIZE(*this)!=YSIZE(M))
+      REPORT_ERROR(1102,"Not compatible sizes in matrix by vector");
+   if (!isRow())
+      REPORT_ERROR(1102,"Vector is not a row");
+   
+   result.init_zeros(XSIZE(M));
+   for (int j=0; j<XSIZE(M); j++)
+      for (int i=0; i<YSIZE(M); i++)
+            DIRECT_VEC_ELEM(result,j) += DIRECT_VEC_ELEM(*this,i) *
+               DIRECT_MAT_ELEM(M,i,j);
+   result.setRow();
+   STARTINGX(result)=STARTINGX(M);
+   return result;
+}
+
 #undef maT
 #undef maT1
 #endif

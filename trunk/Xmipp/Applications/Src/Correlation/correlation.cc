@@ -49,12 +49,12 @@ public:
       docc=true; doeu=true; domi=true;
       fn_ref=get_param(argc,argv,"-ref");
       if (Is_ImageXmipp(fn_ref)) {
-	refI.read(fn_ref,FALSE,FALSE,apply_geo);
+	refI.read(fn_ref,false,false,apply_geo);
 	refI().set_Xmipp_origin();
 	fn_msk=get_param(argc,argv,"-mask","");
 	if (fn_msk!="") {
 	  usemask=true;
-	  MI.read(fn_msk,FALSE,FALSE,apply_geo);
+	  MI.read(fn_msk,false,false,apply_geo);
 	  MI().set_Xmipp_origin();
 	  mask2D.resize(MI());
 	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(MI()) {
@@ -155,9 +155,9 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 
 int main (int argc, char **argv) {
    Similarity_parameters prm;
-   prm.allow_time_bar=FALSE;
-   prm.each_image_produces_an_output=FALSE;
-   prm.apply_geo=TRUE;
+   prm.allow_time_bar=false;
+   prm.each_image_produces_an_output=false;
+   prm.apply_geo=true;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 

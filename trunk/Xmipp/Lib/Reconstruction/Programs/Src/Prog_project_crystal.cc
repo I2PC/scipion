@@ -31,7 +31,7 @@
 Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
    crystal_Xdim=0;
    crystal_Ydim=0;
-   orthogonal=FALSE;
+   orthogonal=false;
    a.clear();
    b.clear();
    Nshift_avg=0;
@@ -457,7 +457,7 @@ void fill_cell_positions(Projection &P,
    r.init_zeros();
    #define INDEX(r) (int)YY(r),(int)XX(r)
    while (!visited.isCorner(r)) {
-      visited(INDEX(r))=TRUE;
+      visited(INDEX(r))=true;
       #ifdef DEBUG
          cout << "   Visiting " << r.transpose() << endl;
       #endif

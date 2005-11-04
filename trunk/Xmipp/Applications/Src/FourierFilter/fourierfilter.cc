@@ -44,7 +44,7 @@ public:
       fn_amplitude=get_param(argc,argv,"-save_amplitude","");
       do_not_center=check_param(argc,argv,"-do_not_center");
       
-      first=TRUE;
+      first=true;
    }
    
    void show() {
@@ -65,22 +65,22 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    FourierFilter_parameters *eprm=(FourierFilter_parameters *) prm;
    matrix2D< complex<double> > fft;
    FourierTransform(img(), fft);
-   if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=FALSE;}
+   if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=false;}
    eprm->fmask.apply_mask_Fourier(fft);
    InverseFourierTransform(fft,img());
    eprm->dim=2;
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    FourierFilter_parameters *eprm=(FourierFilter_parameters *) prm;
    matrix3D< complex<double> > fft;
    FourierTransform(vol(), fft);
-   if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=FALSE;}
+   if (eprm->first) {eprm->fmask.generate_mask(fft); eprm->first=false;}
    eprm->fmask.apply_mask_Fourier(fft);
    InverseFourierTransform(fft,vol());
    eprm->dim=3;
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

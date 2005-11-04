@@ -489,7 +489,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 
 template <class Extra_ART_Parameters>
 void Basic_ART_iterations(Basic_ART_Parameters &prm,
-   const Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank=-1);
+   Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank=-1);
 
 /** Main Routine for ART.
     Given any set of Art parameters, this function returns the voxel
@@ -504,4 +504,6 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
 
 //@}
 //@}
+
+#include "Src/Basic_art.inc"
 #endif

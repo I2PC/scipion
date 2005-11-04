@@ -108,8 +108,8 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
    fh_param << endl;
    fh_param.close();
 
-   adjust_CTF_prm.write(fn_prm,FALSE);
-   ARMA_prm.write(fn_prm,FALSE);
+   adjust_CTF_prm.write(fn_prm,false);
+   ARMA_prm.write(fn_prm,false);
 }
 
 /* Compute PSD by piece averaging ========================================== */

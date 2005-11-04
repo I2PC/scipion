@@ -42,8 +42,8 @@ public:
    void read(int argc, char **argv) {
       init_value=0.;
       wrong_parameters=0;
-      average_pad=FALSE;
-      corner_pad=FALSE;
+      average_pad=false;
+      corner_pad=false;
       
       Prog_parameters::read(argc,argv);
       
@@ -54,13 +54,13 @@ public:
 	 }
       if (check_param(argc,argv,"-corner_pad_value"))
          {
-         corner_pad=TRUE;
+         corner_pad=true;
 	 if (wrong_parameters>0)  wrong_parameters=-1;
 	 else  wrong_parameters=1;
 	 }
       if (check_param(argc,argv,"-average_pad_value"))
          {
-         average_pad=TRUE;
+         average_pad=true;
 	 if (wrong_parameters>0)  wrong_parameters=-1;
 	 else  wrong_parameters=1;
 	 }
@@ -68,7 +68,7 @@ public:
          REPORT_ERROR(1,"incompatible options");
 	 
       if (check_param(argc,argv,"-size")) {
-         size_mode=TRUE;
+         size_mode=true;
          int i=position_param(argc,argv,"-size");
          if (i+2>=argc) {sizeZ=sizeY=sizeX=AtoI(argv[i+1]);}
          else if (i+3>=argc) {sizeZ=sizeY=AtoI(argv[i+2]); sizeX=AtoI(argv[i+1]);}
@@ -82,9 +82,9 @@ public:
          xF=LAST_XMIPP_INDEX(sizeX);
          yF=LAST_XMIPP_INDEX(sizeY);
          zF=LAST_XMIPP_INDEX(sizeZ);
-         physical_coords=FALSE;
+         physical_coords=false;
       } else if (check_param(argc,argv,"-r0")) {
-         size_mode=FALSE;
+         size_mode=false;
          // Get r0
          int i=position_param(argc,argv,"-r0");
          if (i+2>=argc) REPORT_ERROR(1,"Not enough parameters after -r0");
@@ -140,22 +140,22 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
-   if (eprm->average_pad==TRUE)
+   if (eprm->average_pad)
        eprm->init_value=(img()).compute_avg();
-   else if (eprm->corner_pad==TRUE)
+   else if (eprm->corner_pad)
        eprm->init_value=DIRECT_MAT_ELEM(img(),0,0);
    if (!eprm->physical_coords)
       img().window(eprm->y0,eprm->x0,eprm->yF,eprm->xF,eprm->init_value);
    else img().window(STARTINGY(img())+eprm->y0,STARTINGX(img())+eprm->x0,
            STARTINGY(img())+eprm->yF,STARTINGX(img())+eprm->xF,eprm->init_value);
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Window_parameters *eprm=(Window_parameters *) prm;
-   if (eprm->average_pad==TRUE)
+   if (eprm->average_pad)
        eprm->init_value=(vol()).compute_avg();
-   else if (eprm->corner_pad==TRUE)
+   else if (eprm->corner_pad)
        eprm->init_value=DIRECT_VOL_ELEM(vol(),0,0,0);
    if (!eprm->physical_coords)
       vol().window(eprm->z0,eprm->y0,eprm->x0,eprm->zF,eprm->yF,eprm->xF,
@@ -163,7 +163,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    else vol().window(STARTINGZ(vol())+eprm->z0,STARTINGY(vol())+eprm->y0,
       STARTINGX(vol())+eprm->x0,STARTINGZ(vol())+eprm->zF,
       STARTINGY(vol())+eprm->yF,STARTINGX(vol())+eprm->xF,eprm->init_value);
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

@@ -51,7 +51,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
    lambdaF.clear();
    no_it0.clear();
    no_itF.clear();
-   only_structural=FALSE;
+   only_structural=false;
 
    // Open file
    if ((fh_param = fopen(fn_test_params.c_str(), "r")) == NULL)
@@ -105,7 +105,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
       probe_radius=AtoF(get_param(fh_param,"surface top",0,"0.5"));
       str=get_param(fh_param,"surface top",0,"");
       if (str!="") {
-         enable_top_surface=TRUE;
+         enable_top_surface=true;
          top0=AtoF(first_word(str),3007,
             "Recons_test_Parameters::read: top0 is not a true number");
          auxstr=next_token();
@@ -114,11 +114,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
          else 
             topF=AtoF(auxstr,3007,
                "Recons_test_Parameters::read: topF is not a true number");
-      } else enable_top_surface=FALSE;
+      } else enable_top_surface=false;
       
       str=get_param(fh_param,"surface bottom",0,"");
       if (str!="") {
-         enable_bottom_surface=TRUE;
+         enable_bottom_surface=true;
          bottom0=AtoF(first_word(str),3007,
             "Recons_test_Parameters::read: bottom0 is not a true number");
          auxstr=next_token();
@@ -127,7 +127,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
          else 
             bottomF=AtoF(auxstr,3007,
                "Recons_test_Parameters::read: bottomF is not a true number");
-      } else enable_bottom_surface=FALSE;
+      } else enable_bottom_surface=false;
 
       run_also_without_constraints=check_param(fh_param,"run also without constraints");
 
@@ -224,7 +224,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
                REPORT_ERROR(3007,"Recons_test_Parameters::read: There are"
                   " no iterative parameters");
             else break;
-         } while (TRUE);
+         } while (true);
 
       // If WBP, read list of thresholds
       } else if (recons_method==use_WBP) {
@@ -239,7 +239,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
                REPORT_ERROR(3007,"Recons_test_Parameters::read: There are"
                   " no threshold parameters");
             else break;
-         } while (TRUE);
+         } while (true);
       }
       
       // Tomography
@@ -292,12 +292,12 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    out << "   Probe radius: " << prm.probe_radius << endl;
    out << "   Top surface: ";
    if (prm.enable_top_surface)
-      out << "TRUE z0=" << prm.top0 << " zF=" << prm.topF << endl;
-   else out << "FALSE\n";
+      out << "true z0=" << prm.top0 << " zF=" << prm.topF << endl;
+   else out << "false\n";
    out << "   Bottom surface: ";
    if (prm.enable_bottom_surface)
-      out << "TRUE z0=" << prm.bottom0 << " zF=" << prm.bottomF << endl;
-   else out << "FALSE\n";
+      out << "true z0=" << prm.bottom0 << " zF=" << prm.bottomF << endl;
+   else out << "false\n";
    out << "   Start from phantom: "; print(out,prm.start_from_phantom);
       out << endl;
    out << "   Start from lowpass filter: " << prm.starting_low_pass << endl;
@@ -396,7 +396,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
    bool accuracy_mode=prm.MeasNo==-1;
    int sample_size=(accuracy_mode)? 3:prm.MeasNo;
    matrix1D<double> training_FOMs(sample_size);
-   prm.only_structural=TRUE;
+   prm.only_structural=true;
    for (int k=0; k<sample_size; k++) {
       cout << "Making measure number: " << k+1 << endl;
       single_recons_test(prm, i, nvol, results);
@@ -608,7 +608,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
    if (prm.correct_phase) {
       CorrectPhase_Params correct;
       correct.fn_ctf=prm.fn_CTF;
-      correct.multiple_CTFs=FALSE;
+      correct.multiple_CTFs=false;
       correct.method=prm.phase_correction_method;
       correct.epsilon=prm.phase_correction_param;
       correct.produce_side_info();
@@ -632,13 +632,13 @@ void single_recons_test(const Recons_test_Parameters &prm,
       prm_surface.phantom=realization;
       prm_surface.zdim=realization.zdim;
       if (prm.enable_top_surface) {
-         prm_surface.enable_ztop=TRUE;
+         prm_surface.enable_ztop=true;
          prm_surface.ztop=rnd_unif(prm.top0,prm.topF);
          prm_surface.fn_top=fn_recons_root+"_top_surface";
             prm_surface.fn_top.add_extension(fn_ext);
       }
       if (prm.enable_bottom_surface) {
-         prm_surface.enable_zbottom=TRUE;
+         prm_surface.enable_zbottom=true;
          prm_surface.zbottom=rnd_unif(prm.bottom0,prm.bottomF);
          prm_surface.fn_bottom=fn_recons_root+"_bottom_surface";
             prm_surface.fn_bottom.add_extension(fn_ext);
@@ -715,7 +715,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       art_prm.sort_last_N=prm.sort_last_N;
       if (prm.recons_method==use_SIRT)
          art_prm.parallel_mode=Basic_ART_Parameters::SIRT;
-      if (prm.POCS_positivity) art_prm.positivity=TRUE;
+      if (prm.POCS_positivity) art_prm.positivity=true;
       if (prm.unmatched) {
          art_prm.unmatched=true;
          art_prm.fn_ctf=fn_applied_CTF;
@@ -784,7 +784,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 idr_prm.art_prm=&art_prm;
       	 idr_prm.idr_iterations=prm.idr_iterations;
 	 idr_prm.it=0;
-      	 idr_prm.dont_rewrite=FALSE;
+      	 idr_prm.dont_rewrite=false;
       	 idr_prm.mu0_list=prm.mu0_list;
       	 idr_prm.muF_list=prm.muF_list;
       	 idr_prm.fn_ctf=fn_root+"_ctf.sel";
@@ -829,7 +829,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       sym_prm.fn_in=fn_recons_root+".vol";
       sym_prm.fn_out="";
       sym_prm.fn_sym=prm.fn_final_sym;
-      sym_prm.wrap=TRUE;
+      sym_prm.wrap=true;
       ROUT_symmetrize(sym_prm);
    }
 
@@ -837,7 +837,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
    if (prm.evaluate) {
       Prog_Evaluate_Parameters eval_prm;
       eval_prm.default_values();
-      eval_prm.fit_gray_scales=TRUE;
+      eval_prm.fit_gray_scales=true;
       if (prm.only_structural) eval_prm.tell = ONLY_STRUCTURAL;
       if (prm.fn_alternative_evaluation_phantom=="") {
          if (prm.fn_random_phantom!="")

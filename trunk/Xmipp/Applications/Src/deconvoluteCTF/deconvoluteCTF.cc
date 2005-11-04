@@ -50,7 +50,7 @@ public:
     iter=AtoI(get_param(argc,argv,"-iter","1000"));
     ctf.read(fn_ctf);
     ctf.Produce_Side_Info();    
-    first=TRUE;
+    first=true;
   }
   void show() {
     Prog_parameters::show();
@@ -73,7 +73,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    if (eprm->first) {
      eprm->ctf.Generate_CTF(img().RowNo(),img().ColNo(),eprm->ctfmask); 
      eprm->ctfmask.set_Xmipp_origin();
-     eprm->first=FALSE;
+     eprm->first=false;
    }
    fft*=eprm->ctfmask;
    Fnew=fft;
@@ -84,18 +84,19 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
      Fnew+=fft-CCFnew;
    }
    InverseFourierTransform(Fnew,img());
-   return TRUE;
+   return true;
 }
 
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
+   return true;
 }                                                                                                    
 
 int main (int argc, char **argv) {
    deconvoluteCTF_parameters prm;
-   prm.each_image_produces_an_output=TRUE;
+   prm.each_image_produces_an_output=true;
    // Set default action for application of header transformation
-   prm.apply_geo=FALSE;   
+   prm.apply_geo=false;   
    SF_main(argc, argv, &prm, (void*)&process_img, NULL);
 }
                                                                                                                     

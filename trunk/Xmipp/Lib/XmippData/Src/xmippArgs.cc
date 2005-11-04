@@ -192,16 +192,16 @@ string remove_spaces(const string &_str) {
    string retval;
    int first=_str.find_first_not_of("\n \t");
    int last=_str.find_last_not_of("\n \t");
-   bool after_blank=FALSE;
+   bool after_blank=false;
    int imax=_str.length();
    for (int i=first; i<=last; i++) {
       if (_str[i]==' ' || _str[i]=='\n' || _str[i]=='\t') {
          if (!after_blank) retval += _str[i];
-         after_blank=TRUE;
+         after_blank=true;
       }
       else {
          retval += _str[i];
-         after_blank=FALSE;
+         after_blank=false;
       }
    }
    return retval;
@@ -284,91 +284,6 @@ void tokenize(const string& str, vector<string>& tokens,
    }
 }
 
-// Float list --> Vector ===================================================
-template <class T> 
-void read_float_list(const char *str, int N, vector<T> &v,
-   int _errno, string errmsg, int exit) {
-   T  valueF;
-   char     *token;
-
-   token=first_token(str);
-   for (int i=0; i<N; i++) {
-      if (token==NULL) {
-         //CO: Should not report other error than the required one
-	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
-         REPORT_ERROR(_errno,errmsg);
-      }
-
-      #ifndef _NO_EXCEPTION
-         try {
-      #endif
-            valueF=(T) AtoF(token);
-      #ifndef _NO_EXCEPTION
-         }
-         catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
-      #endif
-
-      v.push_back(valueF);
-      if (i!=N-1) token=next_token();
-   }
-}
-
-template <class T> 
-void read_float_list(const string &str, int &i, int N, vector<T> &v,
-   int _errno=2105, string errmsg="Error reading list",
-   int exit=0) {
-   T  valueF;
-   string token;
-
-   token=next_token(str,i);
-   for (int j=0; j<N; j++) {
-      if (token=="") {
-         //CO: Should not report other error than the required one
-	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
-         REPORT_ERROR(_errno,errmsg);
-      }
-
-      try {
-         valueF=(T) AtoF(token.c_str());
-      }
-      catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
-
-      v.push_back(valueF);
-      if (j!=N-1) token=next_token(str,i);
-   }
-}
-
-// list --> Matrix1D =================================================
-template <class T> 
-void read_float_list(char *str, int N, matrix1D<T> &v,
-   int _errno, string errmsg, int exit) {
-   T  valueF;
-   char *token;
-
-   token=first_token(str);
-   for (int i=0; i<N; i++) {
-      if (token==NULL) {
-         //CO: Should not report other error than the required one
-	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
-         REPORT_ERROR(_errno,errmsg);
-      }
-
-      #ifndef _NO_EXCEPTION
-         try {
-      #endif
-            valueF= (T) AtoF(token);
-      #ifndef _NO_EXCEPTION
-         }
-         catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
-      #endif
-
-      DIRECT_VEC_ELEM(v,i)=valueF;
-      if (i!=N-1) token=next_token();
-   }
-}
-
-
-
 // Get parameters from the command line ====================================
 char *get_param(int argc, char **argv, const char *param,
    const char *option, int _errno, string errmsg, int exit) {
@@ -406,11 +321,11 @@ bool get_2_double_params(int argc, char **argv, const char *param,
       }
       v1=AtoF(argv[i+1]);
       v2=AtoF(argv[i+2]);
-      retval=TRUE;
+      retval=true;
    } else {
       v1=v1_def;
       v2=v2_def;
-      retval=FALSE;
+      retval=false;
    }
    return retval;
 }
@@ -433,26 +348,25 @@ bool get_3_double_params(int argc, char **argv, const char *param,
       v1=AtoF(argv[i+1]);
       v2=AtoF(argv[i+2]);
       v3=AtoF(argv[i+3]);
-      retval=TRUE;
+      retval=true;
    } else {
       v1=v1_def;
       v2=v2_def;
       v3=v3_def;
-      retval=FALSE;
+      retval=false;
    }
    return retval;
 }
 
 // Checks if a boolean parameter was included the command line =============
-int check_param(int argc, char **argv, const char *param)
-{
+bool check_param(int argc, char **argv, const char *param) {
   int i = 0;
  
   while ((i < argc) && (strcmp(param, argv[i])!=0))
     i++;
  
-  if (i < argc)  return(TRUE);
-  else           return(FALSE);
+  if (i < argc)  return(true);
+  else           return(false);
 }
 
 // Position of a parameter in the command line =============================
@@ -513,10 +427,10 @@ matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
    }
       
    string vector;
-   bool finished=FALSE;
+   bool finished=false;
    while (!finished) {
       vector += argv[pos];
-      if (vector[vector.length()-1]==']') finished=TRUE;
+      if (vector[vector.length()-1]==']') finished=true;
       if (++pos==argc && !finished) {
          if (_errno==-1) {
             _errno=2104;
@@ -657,7 +571,7 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
    
    char    line[201];
    char   *retval;
-   bool found=FALSE;
+   bool found=false;
 
    // Read lines
    while (fgets (line, 200,fh) != NULL && !found) {
@@ -670,17 +584,17 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
       if (line[i]=='=') {
          line[i]=0;
          if (strcmp(line,param)==0) {
-            retval=line+i+1; found=TRUE; break;
+            retval=line+i+1; found=true; break;
          }
       }
    }
    fseek(fh,actual_pos,SEEK_SET);
-   if (!found) return FALSE;
+   if (!found) return false;
 
    string artificial_line;
    artificial_line=(string)"-"+param+" "+retval;
    generate_command_line(artificial_line, argcp, argvp, copy);
-   return TRUE;
+   return true;
 }
 
 // Get "parameter" from file ===============================================
@@ -691,7 +605,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
    
    char    line[201];
    string  retval;
-   bool found=FALSE;
+   bool found=false;
    int skipped=0;
 
    // Read lines
@@ -707,7 +621,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
       if (line_wo_spaces[i]=='=') {
          line_wo_spaces[i]=0;
          if (strcmp(line_wo_spaces,param)==0) {
-            if (skipped==skip) {retval=line_wo_spaces+i+1; found=TRUE; break;}
+            if (skipped==skip) {retval=line_wo_spaces+i+1; found=true; break;}
             else skipped++;
          }
       }
@@ -732,7 +646,7 @@ bool check_param(FILE *fh, const char *param) {
    fseek(fh,0,SEEK_SET);
    
    char    line[201];
-   bool found=FALSE;
+   bool found=false;
    string retval;
 
    // Read lines
@@ -744,7 +658,7 @@ bool check_param(FILE *fh, const char *param) {
       int i=0; while (line[i]!=0 && line[i]!='=') i++;
       if (line[i]=='=') {
          line[i]=0;
-         if (strcmp(line,param)==0) {retval=line+i+1; found=TRUE; break;}
+         if (strcmp(line,param)==0) {retval=line+i+1; found=true; break;}
       }
    }
    fseek(fh,actual_pos,SEEK_SET);
@@ -769,23 +683,4 @@ matrix1D<double> get_vector_param(FILE *fh, const char *param,
       return retval;
    }
    return retval;
-}
-
-// Instantiation ===========================================================
-template <class T>
-void instantiateArgsTemplate(T t) {
-  vector<T> v1;
-  string line;
-  int i;
-  read_float_list(line.c_str(), 1, v1);
-  read_float_list(line, i, 1, v1);
-}
-
-void instantiateArgs() {
-   float f1=0; 
-   instantiateArgsTemplate(f1);
-   double f2=0; 
-   instantiateArgsTemplate(f2);
-   int f3=0; 
-   instantiateArgsTemplate(f3);   
 }

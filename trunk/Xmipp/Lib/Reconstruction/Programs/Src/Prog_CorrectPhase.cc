@@ -67,7 +67,7 @@ void CorrectPhase_Params::usage() {
 /* Produce Side information ------------------------------------------------ */
 void CorrectPhase_Params::produce_side_info() {
    ctf.FilterBand=CTF;
-   ctf.ctf.enable_CTFnoise=FALSE;
+   ctf.ctf.enable_CTFnoise=false;
    if (multiple_CTFs) {
       SF_CTF.read(fn_ctf);
       SF_CTF.go_first_ACTIVE();

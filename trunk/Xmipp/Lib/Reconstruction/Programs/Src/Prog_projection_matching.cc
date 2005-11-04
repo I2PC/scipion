@@ -339,7 +339,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   SF.go_beginning();
   while ((!SF.eof())) {
     fn_img=SF.NextImg();
-    img.read(fn_img,FALSE,FALSE,FALSE,TRUE);
+    img.read(fn_img,false,false,false,true);
     img().set_Xmipp_origin();
 
     // Perform the projection matching for each image separately

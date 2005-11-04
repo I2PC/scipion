@@ -145,9 +145,9 @@ void compute_integer_lattice(const matrix1D<double> &a,
     sym_no. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    Basic_ART_Parameters &prm, Crystal_ART_Parameters &eprm,
-   Projection &theo_proj, /*const*/ Projection &read_proj, 
+   Projection &theo_proj, Projection &read_proj, 
    int sym_no,
-   Projection &diff_proj, Projection &corr_proj, Projection align_proj,
+   Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
    double &mean_error, int numIMG, double lambda, int act_proj,
    const FileName &fn_ctf);
 
@@ -168,4 +168,5 @@ void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
 		    int grid_type);
 
 //@}
+
 #endif

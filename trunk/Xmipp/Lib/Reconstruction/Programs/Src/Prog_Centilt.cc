@@ -90,7 +90,7 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
 
   matrix2D<double> A(3,3),Maux(It()),Mcorr(It());
   int              n_max=-1;
-  bool             neighbourhood=TRUE;
+  bool             neighbourhood=true;
   int              imax,jmax,i_actual,j_actual,x_zero=1;
   double           maxcorr,xmax,ymax,sumcorr;
   float            xshift,yshift,shift;
@@ -123,9 +123,9 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
 	j_actual = j+jmax;
 	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
 	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
-	  neighbourhood=FALSE;
+	  neighbourhood=false;
 	else if (maxcorr/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
-	    neighbourhood=FALSE;
+	    neighbourhood=false;
       }
   }
 
@@ -160,8 +160,8 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     It.Xoff()+=xshift;
     It.Yoff()+=yshift;
     It.Phi()=Iu.Psi();
-    return TRUE;
-  } else return FALSE;
+    return true;
+  } else return false;
 
   Maux.core_deallocate();
   Mcorr.core_deallocate();

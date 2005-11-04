@@ -74,18 +74,18 @@ int main(int argc, char **argv) {
       }
       int i;
       if ((i=position_param(argc,argv,"-substitute"))!=-1) {
-         enable_substitute=TRUE;
+         enable_substitute=true;
          if (i+2>=argc)
             EXIT_ERROR(1,"Threshold: Not enough parameters behind -substitute\n");
          str_old_val=argv[i+1];
          str_new_val=argv[i+2];
          accuracy=AtoF(get_param(argc,argv,"-accuracy","0"));
-      } else enable_substitute=FALSE;
+      } else enable_substitute=false;
    } catch (Xmipp_error Xe) {cout << Xe; Usage(); exit(1);}
    
    try {
-      if      (Is_ImageXmipp(fn_in))  {image_mode=TRUE;  I.read(fn_in);}
-      else if (Is_VolumeXmipp(fn_in)) {image_mode=FALSE; V.read(fn_in);}
+      if      (Is_ImageXmipp(fn_in))  {image_mode=true;  I.read(fn_in);}
+      else if (Is_VolumeXmipp(fn_in)) {image_mode=false; V.read(fn_in);}
       else EXIT_ERROR(1,"Threshold: Input file is not an image nor a volume");
    
    // Apply substitution ---------------------------------------------------

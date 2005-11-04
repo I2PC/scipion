@@ -136,7 +136,7 @@ try {
    if (prm->fn_out=="") fn_out=prm->fn_in;
    else 		fn_out=prm->fn_out;
    if (Is_ImageXmipp(prm->fn_in)) {
-     img.read(prm->fn_in,FALSE,FALSE,prm->apply_geo); img().set_Xmipp_origin();
+     img.read(prm->fn_in,false,false,prm->apply_geo); img().set_Xmipp_origin();
      switch (operation_mode) {
       case IMAGE2IMAGE:
 	    fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
@@ -242,7 +242,7 @@ try {
             }
 
 	 if (Is_ImageXmipp(fn_read)) {
-	   img.read(fn_read,FALSE,FALSE,prm->apply_geo); img().set_Xmipp_origin();
+	   img.read(fn_read,false,false,prm->apply_geo); img().set_Xmipp_origin();
 	   switch (operation_mode) {
       	       case IMAGE2IMAGE:
 		  fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;

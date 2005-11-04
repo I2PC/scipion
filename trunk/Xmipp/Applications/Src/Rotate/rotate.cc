@@ -41,9 +41,9 @@ public:
 
    void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
-      Euler_mode=Align_mode=Axis_mode=FALSE;
+      Euler_mode=Align_mode=Axis_mode=false;
       if (check_param(argc,argv,"-euler")) {
-         Euler_mode=TRUE;
+         Euler_mode=true;
          int i=position_param(argc,argv,"-euler");
          if (i+3>=argc)
             REPORT_ERROR(1,"Not enough parameters after -euler");
@@ -52,11 +52,11 @@ public:
          psi  = AtoF(argv[i+3]);
          A3D=Euler_rot3D_matrix(rot,tilt,psi);
       } else if (check_param(argc,argv,"-align_with_Z")) {
-         Align_mode=TRUE;
+         Align_mode=true;
          axis=get_vector_param(argc,argv,"-align_with_Z",3);
          A3D=align_with_Z(axis);
       } else {
-         Axis_mode=TRUE;
+         Axis_mode=true;
          if (check_param(argc, argv, "-axis"))
             axis=get_vector_param(argc, argv, "-axis", 3);
          else 
@@ -100,7 +100,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       apply_geom_Bspline(img_out(),eprm->A2D,img(),3,IS_NOT_INV,eprm->wrap);
       img()=img_out();
    }
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
@@ -108,7 +108,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    Volume vol_out;
    apply_geom_Bspline(vol_out(),eprm->A3D,vol(),3,IS_NOT_INV,eprm->wrap);
    vol()=vol_out();
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

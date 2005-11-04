@@ -30,13 +30,13 @@
 bool process_img(FourierImageXmipp &IMG, ImageXmipp &img,
    const Prog_parameters *prm) {
    InverseFourierTransform(IMG(),img());
-   return TRUE;
+   return true;
 }
 
 bool process_vol(FourierVolumeXmipp &VOL, VolumeXmipp &vol, 
    const Prog_parameters *prm) {
    InverseFourierTransform(VOL(),vol());
-   return TRUE;
+   return true;
 }
 
 int main (int argc, char **argv) {

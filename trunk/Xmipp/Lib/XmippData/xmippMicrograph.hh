@@ -106,7 +106,7 @@ public:
    /** Open micrograph.
        An exception is thrown if the file is not valid. */
    void open_micrograph(const FileName &fn_micrograph, /*bool in_core=FALSE,*/
-      bool reversed=FALSE);
+      bool reversed=false);
 
    /** Close micrograpgh.
        After working with the file, you must close it. */
@@ -297,9 +297,9 @@ public:
       if (y<0 || y>=Ydim || x<0 || x>=Xdim)
          REPORT_ERROR(1,"Micrograph::set_val: index out of range");
       if      (__depth== 8) m8[y*Xdim+x]=(unsigned char) new_val;
-      else if (__depth==16 && __is_signed==TRUE) m16[y*Xdim+x]=
+      else if (__depth==16 && __is_signed) m16[y*Xdim+x]=
                                                    (short int) new_val;
-      else if (__depth==16 && __is_signed==FALSE) um16[y*Xdim+x]=
+      else if (__depth==16 && !__is_signed) um16[y*Xdim+x]=
                                                    (unsigned short int) new_val;
       else if (__depth==32) m32[y*Xdim+x]=(float) new_val;
       else REPORT_ERROR(1,"Micrograph::set_val: depth is not 8, 16 or 32");

@@ -323,49 +323,6 @@ void set_DWT_type(int DWT_type) {
    pwtset(DWT_type);
 }
 
-// DWT ---------------------------------------------------------------------
-template <class T>
-   void DWT(const matrix1D<T> &v,
-   matrix1D<double> &result, int isign)
-   {
-   unsigned long int nn[1];
-   unsigned long int *ptr_nn=nn-1;
-
-   type_cast(v, result);
-   nn[0] = XSIZE(result);
-   double *ptr_result=MULTIDIM_ARRAY(result)-1;
-   wtn(ptr_result, ptr_nn, 1, isign, pwt);
-   }
-
-template <class T>
-   void DWT(const matrix2D<T> &v,
-   matrix2D<double> &result, int isign)
-   {
-   unsigned long int nn[2];
-   unsigned long int *ptr_nn=nn-1;
-
-   type_cast(v, result);
-   nn[1] = YSIZE(result);
-   nn[0] = XSIZE(result);
-   double *ptr_result=MULTIDIM_ARRAY(result)-1;
-   wtn(ptr_result, ptr_nn, 2, isign, pwt);
-   }
-
-template <class T>
-   void DWT(const matrix3D<T> &v,
-   matrix3D<double> &result, int isign)
-   {
-   unsigned long int nn[2];
-   unsigned long int *ptr_nn=nn-1;
-
-   type_cast(v, result);
-   nn[2] = ZSIZE(result);
-   nn[1] = YSIZE(result);
-   nn[0] = XSIZE(result);
-   double *ptr_result=MULTIDIM_ARRAY(result)-1;
-   wtn(ptr_result, ptr_nn, 3, isign, pwt);
-   }
-
 // IDWT --------------------------------------------------------------------
 void IDWT(const matrix1D<double> &v, matrix1D<double> &result) {
    DWT(v,result,-1);
@@ -377,29 +334,6 @@ void IDWT(const matrix2D<double> &v, matrix2D<double> &result) {
 
 void IDWT(const matrix3D<double> &v, matrix3D<double> &result) {
    DWT(v,result,-1);
-}
-
-// Instantiation -----------------------------------------------------------
-template <class T>
-   void instantiate_XmippWavelets1(T &t) {
-      matrix1D<T> v1;
-      matrix2D<T> v2;
-      matrix3D<T> v3;
-      matrix1D<double> v1d;
-      matrix2D<double> v2d;
-      matrix3D<double> v3d;
-      DWT(v1,v1d);
-      DWT(v2,v2d);
-      DWT(v3,v3d);
-      int x;
-      SelectDWTBlock(0,v1,"0",x,x);
-      SelectDWTBlock(0,v2,"00",x,x,x,x);
-      SelectDWTBlock(0,v3,"000",x,x,x,x,x,x);
-   }
-
-void instantiate_XmippWavelets() {
-   double d; instantiate_XmippWavelets1(d);
-   int    i; instantiate_XmippWavelets1(i);
 }
 
 // Lowpass DWT -------------------------------------------------------------
@@ -422,48 +356,6 @@ void DWT_lowpass(const matrix2D<double> &v, matrix2D<double> &result) {
 }
 
 // Select block ------------------------------------------------------------
-#define DWT_Imin(s,smax,l) (int)((l=='0')?0:pow(2.0,smax-s-1))
-#define DWT_Imax(s,smax,l) (int)((l=='0')?pow(2.0,smax-s-1)-1:pow(2.0,smax-s)-1)
-template <class T>
-void SelectDWTBlock(int scale, const matrix1D<T> &I,
-const string &quadrant,
-int &x1, int &x2) {   
-   double Nx = Get_Max_Scale(XSIZE(I));
-   I.physical2logical(DWT_Imin(scale,Nx,quadrant[0]),x1);
-   I.physical2logical(DWT_Imax(scale,Nx,quadrant[0]),x2);
-}
-
-template <class T>
-void SelectDWTBlock(int scale, const matrix2D<T> &I,
-const string &quadrant,
-int &x1, int &x2, int &y1, int &y2) {   
-   double Nx = Get_Max_Scale(XSIZE(I));
-   double Ny = Get_Max_Scale(YSIZE(I));
-   x1=DWT_Imin(scale,Nx,quadrant[0]);
-   y1=DWT_Imin(scale,Ny,quadrant[1]);
-   x2=DWT_Imax(scale,Nx,quadrant[0]);
-   y2=DWT_Imax(scale,Ny,quadrant[1]);
-   I.physical2logical(y1,x1,y1,x1);
-   I.physical2logical(y2,x2,y2,x2);
-}
-
-template <class T>
-void SelectDWTBlock(int scale, const matrix3D<T> &I,
-const string &quadrant,
-int &x1, int &x2, int &y1, int &y2, int &z1, int &z2) {   
-   double Nx = Get_Max_Scale(XSIZE(I));
-   double Ny = Get_Max_Scale(YSIZE(I));
-   double Nz = Get_Max_Scale(ZSIZE(I));
-   x1=DWT_Imin(scale,Nx,quadrant[0]);
-   y1=DWT_Imin(scale,Ny,quadrant[1]);
-   z1=DWT_Imin(scale,Nz,quadrant[2]);
-   x2=DWT_Imax(scale,Nx,quadrant[0]);
-   y2=DWT_Imax(scale,Ny,quadrant[1]);
-   z2=DWT_Imax(scale,Nz,quadrant[2]);
-   I.physical2logical(z1,y1,x1,z1,y1,x1);
-   I.physical2logical(z2,y2,x2,z2,y2,x2);
-}
-
 // Quadrant .---------------------------------------------------------------
 string Quadrant2D(int q) {
    switch (q) {

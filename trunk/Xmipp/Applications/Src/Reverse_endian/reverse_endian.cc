@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
      fn_input = get_param(argc,argv,"-i",NULL,1,"Reverse endian: Input file not found");
      fn_out   = get_param(argc,argv,"-o","");
      fn_oext  = get_param(argc,argv,"-oext","");
-     if(check_param(argc,argv,"-force")==TRUE)
-        Force_Reverse_Flag=TRUE;
-      else Force_Reverse_Flag=FALSE;
+     if(check_param(argc,argv,"-force"))
+        Force_Reverse_Flag=true;
+      else Force_Reverse_Flag=false;
      if (Is_ImageXmipp(fn_input) || 
 	      Is_VolumeXmipp(fn_input) ||
 			Is_FourierImageXmipp(fn_input) ) {
@@ -65,14 +65,14 @@ int main(int argc, char **argv) {
    // Mask a single image ---------------------------------------------------
    if(Is_FourierImageXmipp(fn_input)) {
       Fourier_image.read(fn_input);
-      if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      if(Force_Reverse_Flag) image_reversed=true;
       else image_reversed=Fourier_image.reversed();
       if (fn_out=="") Fourier_image.write(fn_input,image_reversed);
       else            Fourier_image.write(fn_out,image_reversed);
 	
 	} else if (Is_ImageXmipp(fn_input)) {
       image.read(fn_input);
-      if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      if(Force_Reverse_Flag==true) image_reversed=true;
       else image_reversed=image.reversed();
       if (fn_out=="") image.write(fn_input,image_reversed);
       else            image.write(fn_out,image_reversed);
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
    // Mask a single volume --------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input);
-      if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      if(Force_Reverse_Flag==true) image_reversed=true;
       else image_reversed=image.reversed();
       if (fn_out=="") volume.write(fn_input,image_reversed);
       else            volume.write(fn_out,image_reversed);
@@ -99,19 +99,19 @@ int main(int argc, char **argv) {
          // Process an image ...............................................
    		if(Is_FourierImageXmipp(fn_in)) {
       		Fourier_image.read(fn_in);
-      		if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+      		if(Force_Reverse_Flag==true) image_reversed=true;
       		else image_reversed=Fourier_image.reversed();
             Fourier_image.write(fn_out,image_reversed);
 
 			} else  if (Is_ImageXmipp(fn_in)) {
             image.read(fn_in);
-            if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+            if(Force_Reverse_Flag==true) image_reversed=true;
             else image_reversed=image.reversed();
             image.write(fn_out,image_reversed);
          // Process a volume ...............................................
          } else if (Is_VolumeXmipp(fn_in)) {
             volume.read(fn_in);
-            if(Force_Reverse_Flag==TRUE) image_reversed=TRUE;
+            if(Force_Reverse_Flag==true) image_reversed=true;
             else image_reversed=image.reversed();
             volume.write(fn_out,image_reversed);
          // Not a Spider file ..............................................

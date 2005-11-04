@@ -25,8 +25,6 @@
 
 #include "../Prog_FourierFilter.hh"
 #include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippFFT.hh>
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippImages.hh>
 
@@ -168,112 +166,6 @@ void FourierMask::usage() {
    ;
 }
 
-/* Generate mask for a resized image --------------------------------------- */
-template <class T>
-void FourierMask::generate_mask(T &v) {
-   int dim=SPACE_DIM(v);
-   // Resize Xmipp real mask
-   bool copy_from_Xmipp_real_mask=TRUE;
-   Mask_Params real_mask;
-   double N1=w1*XSIZE(v);
-   double N2=w2*XSIZE(v);
-   double raised_pixels=raised_w*XSIZE(v);
-
-   // Generate mask
-   switch (FilterBand) {
-      case FROM_FILE:
-         read_mask(fn_mask);
-         copy_from_Xmipp_real_mask=FALSE;
-         break;
-      case LOWPASS:
-         switch (FilterShape) {
-	    case RAISED_COSINE:
-	       real_mask.type=RAISED_COSINE_MASK;
-	       real_mask.mode=INNER_MASK;
-	       real_mask.R1=N1;
-	       real_mask.R2=N1+raised_pixels;
-	       real_mask.x0=real_mask.y0=real_mask.z0=0;
-	       break;
-	    case WEDGE:
-	       real_mask.type=BINARY_WEDGE_MASK;
-	       real_mask.R1=w1;
-	       real_mask.R2=w2;
-	       break;
-	 }
-         break;
-      case HIGHPASS:
-         switch (FilterShape) {
-	    case RAISED_COSINE:
-	       real_mask.type=RAISED_COSINE_MASK;
-	       real_mask.mode=OUTSIDE_MASK;
-	       real_mask.R1=N1-raised_pixels;
-	       real_mask.R2=N1;
-	       real_mask.x0=real_mask.y0=real_mask.z0=0;
-	       break;
-	 }
-         break;
-      case BANDPASS:
-         switch (FilterShape) {
-	    case RAISED_COSINE:
-	       real_mask.type=RAISED_CROWN_MASK;
-	       real_mask.mode=INNER_MASK;
-	       real_mask.R1=N1;
-	       real_mask.R2=N2;
-	       real_mask.x0=real_mask.y0=real_mask.z0=0;
-	       real_mask.pix_width=raised_pixels;
-	       break;
-	 }
-         break;
-      case STOPBAND:
-         switch (FilterShape) {
-	    case RAISED_COSINE:
-	       real_mask.type=RAISED_CROWN_MASK;
-	       real_mask.mode=OUTSIDE_MASK;
-	       real_mask.R1=N1;
-	       real_mask.R2=N2;
-	       real_mask.x0=real_mask.y0=real_mask.z0=0;
-	       real_mask.pix_width=raised_pixels;
-	       break;
-	 }
-         break;
-      case CTF:
-         generate_CTF_mask(v);
-         copy_from_Xmipp_real_mask=FALSE;
-         break;
-   }
-
-   // Copy mask from real Xmipp mask
-   if (copy_from_Xmipp_real_mask) {
-      real_mask.resize(v);
-      if (dim==1) {
-         real_mask.generate_1Dmask();
-         type_cast(real_mask.get_cont_mask1D(),mask1D);
-	 CenterFFT(mask1D,false);
-      } else if (dim==2) {
-         real_mask.generate_2Dmask();
-         type_cast(real_mask.get_cont_mask2D(),mask2D);
-	 CenterFFT(mask2D,false);
-      } else {
-         real_mask.generate_3Dmask();
-         type_cast(real_mask.get_cont_mask3D(),mask3D);
-	 CenterFFT(mask3D,false);
-      }
-   }
-}
-
-template <class T>
-void FourierMask::generate_CTF_mask(T &v) {
-   STARTINGX(mask2D)=STARTINGY(mask2D)=0;
-   int dim=SPACE_DIM(v);
-   if (dim!=2)
-      REPORT_ERROR(1,
-         "generate_CTF_mask is intended only for images");
-   FilterBand=CTF;
-   ctf.Generate_CTF(YSIZE(v),XSIZE(v),mask2D);
-   STARTINGX(mask2D)=STARTINGX(v);
-   STARTINGY(mask2D)=STARTINGY(v);
-}
-
 // Correct phase -----------------------------------------------------------
 void FourierMask::correct_phase() {
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D)
@@ -395,15 +287,4 @@ double FourierMask::mask2D_power(double wmin, double wmax) {
 
    if (N!=0) return retval/N;
    else      return 0;
-}
-
-/* Instantiation ----------------------------------------------------------- */
-void instantiate_FourierFilter() {
-   FourierMask Mask;
-   matrix2D< complex<double> > mc2; Mask.generate_mask(mc2);
-   matrix2D< double          > md2; Mask.generate_mask(md2);
-                                    Mask.generate_CTF_mask(mc2);
-                                    Mask.generate_CTF_mask(md2);
-   matrix3D< complex<double> > mc3; Mask.generate_mask(mc3);
-   matrix3D< double          > md3; Mask.generate_mask(md3);
 }

@@ -15,7 +15,6 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Programs/Src/Prog_range_adjust.cc \
 	Programs/Src/Prog_make_spectra.cc \
 	Src/xmippWavelets.cc \
-	Src/xmippImagic.cc \
 	Src/xmippFFT.cc \
 	Src/xmippTomogram.cc \
 	Bilib/sources/changebasis.cc \
@@ -65,14 +64,16 @@ INCLUDES = -I$(top_srcdir)/Lib \
 	-I$(top_srcdir)/Lib/XmippData/Bilib
 
 EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
-	xmippArgs.hh        xmippImagic.hh      xmippRotationalSpectrum.hh \
+	xmippArgs.hh        xmippRotationalSpectrum.hh \
 	xmippDocFiles.hh    xmippMasks.hh       xmippSelFiles.hh \
+        xmippImagic.hh \
 	xmippFFT.hh         xmippMatrices1D.hh  xmippTomogram.hh \
 	xmippFilters.hh     xmippMatrices2D.hh  xmippTypes.hh \
 	xmippFuncs.hh       xmippMatrices3D.hh  xmippVectorial.hh \
 	xmippGeometry.hh    xmippMicrograph.hh  xmippVolumes.hh \
 	xmippHeader.hh      xmippMorphology.hh  xmippWavelets.hh \
-	xmippHistograms.hh  xmippProgs.hh \
+	xmippHistograms.hh  xmippProgs.hh       xmippMemory.hh \
+        xmippError.hh       xmippMacros.hh      Src/MultidimFriends_implementation.hh \
         Src/MultidimBasic.inc  Src/MultidimFriends.inc \
         Src/MultidimBasic.hh Src/NumericalRecipes.hh \
 	Programs/Prog_denoising.hh     Programs/Prog_range_adjust.hh \

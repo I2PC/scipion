@@ -132,7 +132,7 @@ public:
    /// Read parameters from command line
    void read(const FileName &file);
    /// Write to a file
-   void write(const FileName &fn, bool rewrite=TRUE);
+   void write(const FileName &fn, bool rewrite=true);
 };
 
 #endif

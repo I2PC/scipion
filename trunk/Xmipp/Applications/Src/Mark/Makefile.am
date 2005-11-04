@@ -15,7 +15,7 @@ mark_SOURCES = mark.cc QtColorLabel.cc QtColorLabel_moc.cc \
         QtPopupMenuMark_moc.cc \
         QtWidgetMicrograph.cc QtWidgetMicrograph_moc.cc \
         QtWidgetPSD.cc QtWidgetPSD_moc.cc \
-        ../DownSample/xvsmooth.c
+        ../DownSample/xvsmooth.cc
 
 mark_LDADD = $(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
 	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \

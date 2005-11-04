@@ -32,7 +32,7 @@
 Prog_Random_Phantom_Parameters::Prog_Random_Phantom_Parameters() {
    fn_random=fn_output=fn_CTF="";
    min_vol=0;
-   discrete=FALSE;
+   discrete=false;
    RPP_distance=RPP_radius=-1;
    N_stats=-1;
    target_SNR=-1;
@@ -79,11 +79,11 @@ void Random_Phantom_Side_Info::produce_Side_Info(
    const Prog_Random_Phantom_Parameters &prm) {
 // Read phantom file
    if (Is_VolumeXmipp(prm.fn_random)) {
-      voxel_mode=TRUE;
+      voxel_mode=true;
       VoxelPhantom.read(prm.fn_random);
       VoxelPhantom().set_Xmipp_origin();
    } else {
-      voxel_mode=FALSE;
+      voxel_mode=false;
       Random.read(prm.fn_random);
    
       // Check that it meets the conditions
@@ -289,7 +289,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
       FourierMask ctf;
       if (prm.fn_CTF!="") {
          ctf.FilterBand=CTF;
-         ctf.ctf.enable_CTFnoise=FALSE;
+         ctf.ctf.enable_CTFnoise=false;
          ctf.ctf.read(prm.fn_CTF);
          ctf.ctf.Produce_Side_Info();
       }

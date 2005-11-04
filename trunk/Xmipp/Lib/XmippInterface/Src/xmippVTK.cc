@@ -33,142 +33,7 @@
 #include <vtkImageMagnitude.h>
 #include <vtkImageExtractComponents.h>
 
-/* Xmipp --> VTK ----------------------------------------------------------- */
-#define SET_VTK_TYPE(T,retval) \
-   if      (typeid(T)==typeid(unsigned char)) \
-      retval->SetScalarType(VTK_UNSIGNED_CHAR); \
-   else if (typeid(T)==typeid(short int)) \
-      retval->SetScalarType(VTK_SHORT); \
-   else if (typeid(T)==typeid(int)) \
-      retval->SetScalarType(VTK_INT); \
-   else if (typeid(T)==typeid(float) || typeid(T)==typeid(double)) \
-      retval->SetScalarType(VTK_FLOAT);
-
-#define COPY_VALUES_TO_VTK(T,v,retval, scalarN) \
-   retval->AllocateScalars(); \
-   if (typeid(T)!=typeid(double)) { \
-      T *ptr= (T *) retval->GetScalarPointer(); \
-      for (int i=0; i<MULTIDIM_SIZE(v); i++) \
-      { \
-         *ptr++=MULTIDIM_ELEM(v,i); \
-	 for (int n=1; n<scalarN; n++) *ptr++=0; \
-      } \
-   } \
-   else \
-   { \
-      float *ptr= (float *) retval->GetScalarPointer(); \
-      for (int i=0; i<MULTIDIM_SIZE(v); i++) { \
-         *ptr++=(float)MULTIDIM_ELEM(v,i); \
-	 for (int n=1; n<scalarN; n++) *ptr++=0.0f; \
-      } \
-   }
-
-template <class T, class VTKT>
-   void xmippArray2VTK(const matrix1D<T> &v, VTKT * &retval, int scalarN) {
-   if (retval==NULL) retval=VTKT::New();
-   else retval->Initialize();
-   retval->SetDimensions(XSIZE(v),1,1);
-   retval->SetNumberOfScalarComponents(scalarN);
-   SET_VTK_TYPE(T,retval);
-   COPY_VALUES_TO_VTK(T,v,retval,scalarN);
-   retval->Update();
-}
-
-template <class T, class VTKT>
-   void xmippArray2VTK(const matrix2D<T> &v, VTKT * &retval, int scalarN) {
-   if (retval==NULL) retval=VTKT::New();
-   else retval->Initialize();
-   retval->SetDimensions(XSIZE(v),YSIZE(v),1);
-   retval->SetNumberOfScalarComponents(scalarN);
-   SET_VTK_TYPE(T,retval);
-   COPY_VALUES_TO_VTK(T,v,retval,scalarN);
-   retval->Update();
-}
-
-template <class T, class VTKT>
-   void xmippArray2VTK(const matrix3D<T> &v, VTKT * &retval, int scalarN) {
-   if (retval==NULL) retval=VTKT::New();
-   else retval->Initialize();
-   retval->SetDimensions(XSIZE(v),YSIZE(v),ZSIZE(v));
-   retval->SetNumberOfScalarComponents(scalarN);
-   SET_VTK_TYPE(T,retval);
-   COPY_VALUES_TO_VTK(T,v,retval,scalarN);
-   retval->Update();
-}
-
-template <class T>
-   void shift_for_VTK(matrix1D<T> &v) {
-   int firstX=STARTINGX(v);
-   int finalX=FINISHINGX(v);
-   T aux=v(firstX);
-   for (int j=firstX; j<finalX; j++)
-       v(j)=v(j+1);
-   v(finalX)=(T)aux;
-}
-
-template <class T>
-   void shift_for_VTK(matrix2D<T> &v, char dir) {
-   int firstY=STARTINGY(v);
-   int firstX=STARTINGX(v);
-   int finalY=FINISHINGY(v);
-   int finalX=FINISHINGX(v);
-   if (dir=='y') {
-      for (int j=firstX; j<=finalX; j++) {
-   	  T aux=v(firstY,j);
-   	  for (int i=firstY; i<finalY; i++)
-   	     v(i,j)=v(i+1,j);
-   	  v(finalY,j)=(T)aux;
-      }
-   }
-   if (dir=='x') {
-      for (int i=firstY; i<=finalY; i++) {
-   	  T aux=v(i,firstX);
-   	  for (int j=firstX; j<finalX; j++)
-   	     v(i,j)=v(i,j+1);
-   	  v(i,finalX)=(T)aux;
-      }
-   }
-}
-
-template <class T>
-   void shift_for_VTK(matrix3D<T> &v, char dir) {
-   int firstZ=STARTINGZ(v);
-   int firstY=STARTINGY(v);
-   int firstX=STARTINGX(v);
-   int finalZ=FINISHINGZ(v);
-   int finalY=FINISHINGY(v);
-   int finalX=FINISHINGX(v);
-   if (dir=='z') {
-      for (int i=firstY; i<=finalY; i++)
-	  for (int j=firstX; j<=finalX; j++) {
-   	      T aux=v(firstZ,i,j);
-   	      for (int k=firstZ; k<finalZ; k++)
-   	    	 v(k,i,j)=v(k+1,i,j);
-   	      v(finalZ,i,j)=(T)aux;
-	  }
-   }
-   if (dir=='y') {
-      for (int k=firstZ; k<=finalZ; k++)
-	  for (int j=firstX; j<=finalX; j++) {
-   	      T aux=v(k,firstY,j);
-   	      for (int i=firstY; i<finalY; i++)
-   	    	 v(k,i,j)=v(k,i+1,j);
-   	      v(k,finalY,j)=(T)aux;
-	  }
-   }
-   if (dir=='x') {
-      for (int k=firstZ; k<=finalZ; k++)
-	  for (int i=firstY; i<=finalY; i++) {
-   	      T aux=v(k,i,firstX);
-   	      for (int j=firstX; j<finalX; j++)
-   	    	 v(k,i,j)=v(k,i,j+1);
-   	      v(k,i,finalX)=(T)aux;
-	  }
-   }
-}
-
 void xmippFFT2VTK(matrix1D <complex <double > > &v, vtkImageData * &retval) {
-
    if (retval==NULL) retval=vtkImageData::New();
    else retval->Initialize();
    retval->SetDimensions(XSIZE(v),1,1);
@@ -218,116 +83,6 @@ void xmippFFT2VTK(FourierVolumeXmipp &v, vtkImageData * &retval)
       *ptr++=(v(k,i,j)).real();
 	  *ptr++=(v(k,i,j)).imag(); 
    }   
-}
-
-/* Xmipp resize after VTK -------------------------------------------------- */
-template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix1D<T> &retval, VTKT *v) {
-   int dim[3]; v->GetDimensions(dim);
-   if (dim[1]!=1 && dim[2]!=1)
-      REPORT_ERROR(1,"VTK2xmippVector: VTK image is not a vector");
-   /* CO:
-   int scalar_components=v->GetNumberOfScalarComponents();
-   if (scalar_components!=1)
-      REPORT_ERROR(1,"VTK2xmippVector: VTK image does not contain scalars");
-   */
-
-   retval.resize(dim[0]);
-}
-
-template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix2D<T> &retval, VTKT *v) {
-   int dim[3]; v->GetDimensions(dim);
-   if (dim[2]!=1)
-      REPORT_ERROR(1,"VTK2xmippMatrix: VTK image is not a matrix");
-   /* CO:
-   int scalar_components=v->GetNumberOfScalarComponents();
-   if (scalar_components!=1)
-      REPORT_ERROR(1,"VTK2xmippMatrix: VTK image does not contain scalars");
-   */
-
-   retval.resize(dim[1],dim[0]);
-}
-
-template <class T, class VTKT>
-   void xmippArray_resize_VTK(matrix3D<T> &retval, VTKT *v) {
-   int dim[3]; v->GetDimensions(dim);
-   /*
-   int scalar_components=v->GetNumberOfScalarComponents();
-   if (scalar_components!=1)
-      REPORT_ERROR(1,"VTK2xmippVolume: VTK image does not contain scalars");
-   */
-
-   retval.resize(dim[2],dim[1],dim[0]);
-}
-
-/* VTK --> Xmipp ----------------------------------------------------------- */
-#define COPY_VALUES_FROM_VTK(T,v,retval) \
-   xmippArray_resize_VTK(retval,v); \
-   int VTK_scalar_type=v->GetScalarType(); \
-   unsigned char *uptr=NULL; \
-   short int     *sptr=NULL; \
-   int           *iptr=NULL; \
-   float         *fptr=NULL; \
-   switch (VTK_scalar_type) { \
-      case VTK_UNSIGNED_CHAR: uptr=(unsigned char *) v->GetScalarPointer(); break; \
-      case VTK_SHORT: sptr=(short int *) v->GetScalarPointer(); break; \
-      case VTK_INT: iptr=(int *) v->GetScalarPointer(); break; \
-      case VTK_FLOAT: fptr=(float *) v->GetScalarPointer(); break; \
-   } \
-   for (int i=0; i<MULTIDIM_SIZE(retval); i++) \
-   {\
-   	      switch (VTK_scalar_type) \
-	      { \
-               case VTK_UNSIGNED_CHAR: MULTIDIM_ELEM(retval,i)=(T)*uptr++; break; \
-               case VTK_SHORT:         MULTIDIM_ELEM(retval,i)=(T)*sptr++; break; \
-      	       case VTK_INT:           MULTIDIM_ELEM(retval,i)=(T)*iptr++; break; \
-               case VTK_FLOAT:         MULTIDIM_ELEM(retval,i)=(T)*fptr++; break; \
-          } \
-   } 
-   
-
-template <class T, class VTKT>
-   void VTK2xmippArray(VTKT *v, matrix1D<T> &retval) {
-   retval.clear();
-   if (v==NULL) return;
-   COPY_VALUES_FROM_VTK(T,v,retval);
-}
-
-template <class T, class VTKT>
-   void VTK2xmippArray(VTKT *v, matrix2D<T> &retval) {
-   retval.clear();
-   if (v==NULL) return;
-   COPY_VALUES_FROM_VTK(T,v,retval);
-}
-
-template <class T, class VTKT>
-   void VTK2xmippArray(VTKT *v, matrix3D<T> &retval) {
-   retval.clear();
-   if (v==NULL) return;
-   COPY_VALUES_FROM_VTK(T,v,retval);
-}
-
-/* VTK -> VTK -------------------------------------------------------------- */
-template <class VTKT>
-   void VTK_resize_VTK(VTKT *v_in, VTKT *&v_out, bool change_type, int new_type) {
-   if (v_out==NULL)  v_out=VTKT::New();
-   else              v_out->PrepareForNewData();
-   if (v_in!=NULL) {
-      if (!change_type) v_out->SetScalarType(v_in->GetScalarType());
-      else              v_out->SetScalarType(new_type);
-      v_out->SetNumberOfScalarComponents(v_in->GetNumberOfScalarComponents());
-      v_out->CopyStructure(v_in);
-      v_out->Update();
-   }
-}
-
-template <class VTKT>
-   void VTK2VTK(VTKT *v_in, VTKT *&v_out, bool change_type, int new_type) {
-   if (v_in==NULL) return;
-   VTK_resize_VTK(v_in,v_out,change_type,new_type);
-   v_out->CopyAndCastFrom(v_in,v_in->GetExtent());
-   v_out->Update();
 }
 
 /* Same shape -------------------------------------------------------------- */
@@ -475,50 +230,6 @@ void VTK2xmippFFT(vtkImageData *v, FourierVolumeXmipp &retval)
    }             
 }
 
-/* Show VTK ---------------------------------------------------------------- */
-template <class VTKT>
-   void VTK_print(ostream &out, VTKT *v) {
-   if (v==NULL) {out << "NULL vtkdata\n"; return;}
-   int maxC = v->GetNumberOfScalarComponents();
-
-   // find the region to loop over
-   int *inExt=v->GetExtent();
-   int maxX = inExt[1] - inExt[0];
-   int maxY = inExt[3] - inExt[2]; 
-   int maxZ = inExt[5] - inExt[4];
-
-   // Compute maximum value in the array
-   float *inPtr  = (float *) v->GetScalarPointer();
-   float max_val=ABS(*inPtr);
-   for (int idxZ = 0; idxZ <= maxZ; idxZ++)
-       for (int idxY = 0; idxY <= maxY; idxY++)
-           for (int idxX = 0; idxX <= maxX; idxX++)
-               for (int k=0; k<maxC; k++) {
-                   max_val=MAX(max_val,ABS(*inPtr++));
-               }
-
-   // Show
-   int prec=best_prec(max_val,10);
-   inPtr  = (float *) v->GetScalarPointer();
-   for (int idxZ = 0; idxZ <= maxZ; idxZ++) {
-       out << "Slice " << idxZ << " ----------\n";
-       for (int idxY = 0; idxY <= maxY; idxY++) {
-           for (int idxX = 0; idxX <= maxX; idxX++) {
-               out << "(";
-               for (int k=0; k<maxC; k++) {
-                  float f;
-                  f=(ABS(*inPtr)>XMIPP_EQUAL_ACCURACY)? *inPtr:0;
-                  if (k==maxC-1) out << FtoA(f,10,prec);
-                  else           out << FtoA(f,10,prec) << ",";
-                  inPtr++;
-               }
-               out << ") ";
-           }
-           out << endl;
-       }
-   }
-}
-
 /* FFT --------------------------------------------------------------------- */
 void FFT_VTK(vtkImageData *v_in, vtkImageData * &fft_out,
    bool do_not_center) {
@@ -530,50 +241,12 @@ void FFT_VTK(vtkImageData *v_in, vtkImageData * &fft_out,
 }
 
 /* Magnitude --------------------------------------------------------------- */
-template <class maT>
-   void VTK_FFT_magnitude(vtkImageData *fft_in, maT &mag) {
-      vtkImageMagnitude *mag_filter=vtkImageMagnitude::New();
-      mag_filter->SetInput(fft_in); mag_filter->Update();
-      VTK2xmippArray(mag_filter->GetOutput(),mag);
-      mag_filter->Delete();
-}
-
 void VTK_FFT_magnitude(FourierImageXmipp &fft_in,
    matrix2D<double> &mag, bool do_not_center) {
    vtkImageData *fftI=NULL; xmippFFT2VTK(fft_in,fftI);
    if (!do_not_center) VTK_CenterFFT(fftI);
    VTK_FFT_magnitude(fftI,mag);
    fftI->Delete();
-}
-
-/* Phase ------------------------------------------------------------------- */
-/* This is a very short exercise of implementing a VTK filter. It is
-   inspired in vtkImageMagnitude */
-template <class maT>
-   void VTK_FFT_phase(vtkImageData *fft_in, maT &phase) {
-   // Check validity of operation
-   int maxC = fft_in->GetNumberOfScalarComponents();
-   if (maxC!=2)
-      REPORT_ERROR(1,"FFT_phase: Input array is not a valid FFT");
-   if (fft_in->GetScalarType()!=VTK_FLOAT)
-      REPORT_ERROR(1,"FFT_phase: Input array is not a valid FFT");
-
-   // Resize Output
-   vtkImageData *fft_phase=vtkImageData::New();
-   fft_phase->SetScalarType(VTK_FLOAT);
-   fft_phase->CopyStructure(fft_in);
-   fft_phase->AllocateScalars();
-
-   float *outPtr = (float *) fft_phase->GetScalarPointer();
-   SPEED_UP_vtk;
-   FOR_ALL_ELEMENTS_IN_VTK(fft_in) {
-      *outPtr++=(float) atan2(vtkPtr[1],vtkPtr[0]);
-      vtkPtr+=2;
-   }
- 
-   // Translate to Xmipp
-   VTK2xmippArray(fft_phase,phase);
-   fft_phase->Delete();
 }
 
 /* IFFT -------------------------------------------------------------------- */
@@ -602,43 +275,5 @@ void IFFT_VTK(vtkImageData *fft_in, vtkImageData *&v_out,
    VTK2VTK(real_part->GetOutput(),v_out);
    rfft->Delete();
    real_part->Delete();
-}
-
-/* Instantiate ------------------------------------------------------------- */
-template <class T, class VTKT>
-void instantiate_VTK(T a, VTKT *vtkI) {
-   matrix1D<T> v;
-   matrix2D<T> m;
-   matrix3D<T> V;
-   xmippArray2VTK(v,vtkI);
-   xmippArray2VTK(m,vtkI);
-   xmippArray2VTK(V,vtkI);
-   shift_for_VTK(v);
-   shift_for_VTK(m,'x');
-   shift_for_VTK(V,'x');
-   VTK2xmippArray(vtkI,v);
-   VTK2xmippArray(vtkI,m);
-   VTK2xmippArray(vtkI,V);
-   VTK2VTK(vtkI,vtkI);
-   VTK_print(cout,vtkI);
-}
-
-
-void instantiate_VTK() {
-   vtkImageData        *vtkID;
-   vtkStructuredPoints *vtkSP;
-   unsigned char u; instantiate_VTK(u,vtkID); instantiate_VTK(u,vtkSP);
-   short int     s; instantiate_VTK(s,vtkID); instantiate_VTK(s,vtkSP);
-   int           i; instantiate_VTK(i,vtkID); instantiate_VTK(i,vtkSP);
-   float         f; instantiate_VTK(f,vtkID); instantiate_VTK(f,vtkSP);
-   double        d; instantiate_VTK(d,vtkID); instantiate_VTK(d,vtkSP);
-
-   matrix1D<double> v; VTK_FFT_magnitude(vtkID,v); VTK_FFT_phase(vtkID,v);
-   matrix2D<double> m; VTK_FFT_magnitude(vtkID,m); VTK_FFT_phase(vtkID,m);
-   matrix3D<double> V; VTK_FFT_magnitude(vtkID,V); VTK_FFT_phase(vtkID,V);
-
-   matrix1D< complex<double> > vc; shift_for_VTK(vc);
-   matrix2D< complex<double> > mc; shift_for_VTK(mc,'x');
-   matrix3D< complex<double> > Vc; shift_for_VTK(Vc,'x');
 }
 #endif

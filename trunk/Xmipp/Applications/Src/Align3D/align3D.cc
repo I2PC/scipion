@@ -103,7 +103,7 @@ int main (int argc, char **argv) {
       double best_rot, best_tilt, best_psi;
       double best_sc, best_grey, best_fit, fit;
       matrix1D<double> best_r(3);
-      bool first=TRUE;
+      bool first=true;
       
       // Generate mask
       const matrix3D<int> *mask_ptr;
@@ -202,7 +202,7 @@ int main (int argc, char **argv) {
                    best_fit=fit; best_sc=XX(sc); best_r=r;
                    best_rot=rot; best_tilt=tilt; best_psi=psi;
 		   best_grey=grey;
-		   first=FALSE;
+		   first=false;
                 }
 
                 // Show fit

@@ -46,17 +46,6 @@ using namespace std;
 #include <string>
 #include <limits.h>
 
-#ifndef _CYGWIN
-   #include <values.h>
-#else
-   #ifndef MINFLOAT
-      #define MINFLOAT -1e30
-   #endif
-   #ifndef MAXFLOAT
-      #define MAXFLOAT  1e30
-   #endif
-#endif
-
 // For timing functions
 #include        <unistd.h>
 #include        <sys/times.h>
@@ -66,6 +55,8 @@ using namespace std;
 #endif
 
 #include "Src/NumericalRecipes.hh"
+#include "xmippMacros.hh"
+#include "xmippError.hh"
 
 // Load Xmipp Configuration ------------------------------------------------
 #include "../../xmippConfiguration.inc"
@@ -74,152 +65,9 @@ using namespace std;
 
 /**@name General functions*/
 //@{
-// Constants ---------------------------------------------------------------
-/**@name Constants*/
-//@{
-/// PI = 3.1415926535897931
-#ifndef PI
-#define PI       3.14159265358979323846
-#endif
-
-/// TRUE = 1
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-/// FALSE = 0
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-/// Maximum FileName Length = 128
-#define MAX_FILENAME_LENGTH 128
-
-/** In a comparison if two values are closer than this epsilon
-    they are said to be the same. Actually set to 1e-6*/
-#define XMIPP_EQUAL_ACCURACY 1e-6
-//@}
-
 // Numerical Macros --------------------------------------------------------
 /**@name Numerical functions */
 //@{
-/** Absolute value.
-    Valid for any kind of number (int, short, float, etc)
-    \\ Ex: x=ABS(x); */
-#ifndef ABS
-#define ABS(x)   (((x)>=0)?(x):(-(x)))
-#endif
-
-/** Sign of.
-    Valid for any kind of number (int, short, float, etc). It returns +1 or -1
-    \\ Ex: if (SGN(x)==-1) cout << "x is negative" << endl; */
-#ifndef SGN
-#define SGN(x)   (((x)>=0)?1:-1)
-#endif
-
-/** Sign of, considering 0 as 0.
-    Valid for any kind of number (int, short, float, etc). It returns +1 if
-    the number is positive, -1 if the number is negative, and 0 if the
-    number is 0.
-    \\ Ex: if (SGN0(x)==-1) cout << "x is negative" << endl; */
-#ifndef SGN0
-#define SGN0(x)   (((x)>=0)? (((x)==0)? 0:1) :-1)
-#endif
-
-/** Minimum.
-    Valid for any kind of numbers (int, short, float, etc).
-    \\ Ex: min_val=MIN(x,y); */
-#ifndef MIN
-#define MIN(x,y) (((x)>=(y))?(y):(x))
-#endif
-
-/** Maximum.
-    Valid for any kind of numbers (int, short, float, etc).
-    \\ Ex: max_val=MAX(x,y); */
-#ifndef MAX
-#define MAX(x,y) (((x)>=(y))?(x):(y))
-#endif
-
-/** Round to next integer.
-    Valid for any kind of numbers (int, short, float, etc). The result
-    is of type integer.
-    \\ Ex: a=ROUND(-0.8); ---> a=-1
-    \\ Ex: a=ROUND(-0.2); ---> a= 0
-    \\ Ex: a=ROUND( 0.2); ---> a= 0
-    \\ Ex: a=ROUND( 0.8); ---> a= 1*/
-#ifndef ROUND
-#define ROUND(x) (((x)>0)? (int)((x)+0.5):(int)((x)-0.5))
-#endif
-
-/** Round to next larger integer.
-    Valid for any kind of numbers (int, short, float, etc). The result
-    is of type integer.
-    \\ Ex: a=CEIL(-0.8); ---> a= 0
-    \\ Ex: a=CEIL(-0.2); ---> a= 0
-    \\ Ex: a=CEIL( 0.2); ---> a= 1
-    \\ Ex: a=CEIL( 0.8); ---> a= 1*/
-#define CEIL(x)  (((x)==(int)(x))? (int)(x):(((x)>0)? (int)((x)+1):(int)(x)))
-
-/** Round to next smaller integer.
-    Valid for any kind of numbers (int, short, float, etc). The result
-    is of type integer.
-    \\ Ex: a=FLOOR(-0.8); ---> a= -1
-    \\ Ex: a=FLOOR(-0.2); ---> a= -1
-    \\ Ex: a=FLOOR( 0.2); ---> a= 0
-    \\ Ex: a=FLOOR( 0.8); ---> a= 0*/
-#define FLOOR(x) (((x)==(int)(x))? (int)(x):(((x)>0)? (int)(x):(int)((x)-1)))
-
-/** Return th efractional part of a value.
-    The fractional part of 3.7 is 0.7 and of -3.7 is -0.7. */
-#define FRACTION(x) ((x)-(int)(x)) 
-
-/** Clip in a saturation fashion.
-    CLIP is a macro which acts like a saturation curve, a value x is "clipped"
-    to a range defined by x0 and xF, for example the output values for 
-    the following x and CLIP(x,-2,2) would be
-        x = ... -8 -7 -6 -5 -4 -3 -2 -1 0 1 2 3 4 5 6 7 8 ...
-   output = ... -2 -2 -2 -2 -2 -2 -2 -1 0 1 2 2 2 2 2 2 2 ... */
-#define CLIP(x,x0,xF) (((x)<(x0))? (x0): (((x)>(xF))? (xF):(x)))
-
-/** Wrapping for integers.
-    intWRAP performs a wrapping in the integer set, when the cycle is finsihed
-    it begins again. For example, for intWRAP(x,-2,2) would be
-         x = ... -8 -7 -6 -5 -4 -3 -2 -1  0  1  2  3  4  5  6  7  8 ...
-    output = ...  2 -2 -1  0  1  2 -2 -1  0  1  2 -2 -1  0  1  2 -2 ... */
-#define intWRAP(x,x0,xF) (((x)>=(x0) && (x)<=(xF))? (x): ((x)<(x0))? \
-                     ((x)-(int)(((x)-(x0)+1)/((xF)-(x0)+1)-1)*((xF)-(x0)+1)): \
-                     ((x)-(int)(((x)-(xF)-1)/((xF)-(x0)+1)+1)*((xF)-(x0)+1)))
-
-/** Wrapping for real numbers.
-    realWRAP is used to keep a floating number between a range with a
-    wrapping fashion.
-    For instance, it is used in trigonometry to say that an angle of
-    5*PI is the same as PI, ie, to keep an angle in the range 0...2*PI
-    \\ Ex: Corrected_angle=realWRAP(angle,0,2*PI);*/
-#define realWRAP(x,x0,xF) (((x)>=(x0) && (x)<=(xF))? (x): ((x)<(x0))? \
-                     ((x)-(int)(((x)-(x0))/((xF)-(x0))-1)*((xF)-(x0))): \
-                     ((x)-(int)(((x)-(xF))/((xF)-(x0))+1)*((xF)-(x0))))
-
-/** Degrees to radians.
-   Ex: angle_in_radians=DEG2RAD(ang_in_degrees);*/
-#define DEG2RAD(d)         ((d)*PI/180)
-
-/** Radians to degrees.
-   Ex: angle_in_degrees=RAD2DEG(ang_in_radians);*/
-#define RAD2DEG(r)         ((r)*180/PI)
-
-/** Cosine in degrees.
-   Ex: if (COSD(90)==0) cout << "This is in degrees!\n"; */
-#define COSD(x) cos(PI*(x)/180.)
-
-/** ArcCosine in degrees.
-   Ex: if (ACOSD(0.5)==60) cout << "This is in degrees!\n"; */
-#define ACOSD(x) acos((x))*180./PI
-
-/** Sine in degrees.
-   Ex: if (SIND(90)==1) cout << "This is in degrees!\n"; */
-#define SIND(x) sin(PI*(x)/180.)
-
 /** Tabulated Sinc = SIN(PI*X)/(PI*X)
     A lookup-table with the given sampling rate and range is created.
     Ex: tabsinc TSINC(0.0001,64);
@@ -255,25 +103,6 @@ public:
 
 };
 
-/** ArcSine in degrees.
-   Ex: if (ASIND(0.5)==30.) cout << "This is in degrees!\n"; */
-#define ASIND(x) asin((x))*180./PI
-
-/** SINC function.
-    The sinc function is defined as sin(PI*x)/(PI*x). */
-#define SINC(x) (((x) < 0.0001 && (x) > -0.0001)? 1: sin(PI*(x))/(PI*(x)))
-
-/** Returns next positive power of 2.
-   It is supposed that the given number is positive although it's not
-   needed to be an integer
-   \\ Ex: next_power = NEXT_POWER_OF_2(1000);
-   \\ ---> next_power=1024; */
-#define NEXT_POWER_OF_2(x) pow(2,ceil(log((double)x)/log(2.0)) )
-
-/** Linear interpolation. From low (when a=0) to high (when a=1)
-    The following value is returned (equal to (a*h)+((1-a)*l) */
-#define LIN_INTERP(a,l,h) ((l)+((h)-(l))*(a))
-
 /** Solve second degree equation.
     ax^2+bx+c=0.
     It returns the number of real solutions, 0 if the two roots are complex
@@ -282,10 +111,6 @@ public:
     precission. This is used to avoid dividing by 0.*/
 int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
     float prec=XMIPP_EQUAL_ACCURACY);
-
-/** XOR. 
-    Logical Xor.*/
-#define XOR(a,b) (((a) && !(b)) || (!(a) && (b)))
 
 /** 1D gaussian value.
     This function returns the value of a univariate gaussian
@@ -305,45 +130,87 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 // Miscellaneous -----------------------------------------------------------
 /**@name Miscellaneous */
 //@{
-/** Speed up temporary variables.
-    The following variables are provided:
-    \begin{verbatim}
-    float spduptmp0, spduptmp1, spduptmp2;
-    int   ispduptmp0, ispduptmp1, ispduptmp2,
-          ispduptmp3, ispduptmp4, ispduptmp5;
-    \end{verbatim} */
-#define SPEED_UP_temps \
-    double spduptmp0, spduptmp1, spduptmp2, \
-           spduptmp3, spduptmp4, spduptmp5, \
-           spduptmp6, spduptmp7, spduptmp8; \
-    int   ispduptmp0, ispduptmp1, ispduptmp2, \
-          ispduptmp3, ispduptmp4, ispduptmp5;
-
-/** Swap two values.
-    It uses a temporal variable which must be of the same type as the two
-    parameters */
-#define SWAP(a,b,tmp) {\
-    tmp=a; \
-    a=b; \
-    b=tmp; }
-
-/** Starting point for Xmipp volume/image.
-    Given a size (in some direction), this function returns the first index
-    for a volume/image/array with this size. The formula is 
-    \\-(int)((float)(size)/2.0)*/
-#define FIRST_XMIPP_INDEX(size) -(int)((float)(size)/2.0)
-
-/** Starting point for Xmipp volume/image.
-    Given a size (in some direction), this function returns the first index
-    for a volume/image/array with this size. The formula is 
-    \\FIRST_XMIPP_INDEX(size)+(size)-1*/
-#define LAST_XMIPP_INDEX(size) FIRST_XMIPP_INDEX(size)+(size)-1
-
 /** Print a boolean value. */
 void print(ostream &o, const bool b);
+
 /** Print a value in binary. (So far not instatiate for float/double number)*/
 template <class T>
-void printb(ostream &o,T value);
+void printb(ostream &o,T value) {
+    char buf [CHAR_BIT * sizeof(T) + 1];
+    size_t i;
+
+    for (i = 0; i < CHAR_BIT * sizeof(T); ++i) {
+        buf[i] = '0' + (value & 1);
+        value >>= 1;
+    }
+    buf[i] = 0;
+
+    o << buf;
+}
+//@}
+
+// Complex functions --------------------------------------------------------
+/**@name Complex functions
+//@{
+    /** Real/Imaginary --> Complex.
+        The output array(s) must be already resized*/
+    template <class T>
+       void RealImag2Complex(const T *_real, const T *_imag,
+          complex<double> *_complex, int length) {
+            T *aux_real   =(T *)_real;
+            T *aux_imag   =(T *)_imag;
+            double *aux_complex=(double *)_complex;
+            for (int i=0; i<length; i++) {
+               *aux_complex++=(double)(*aux_real++);
+               *aux_complex++=(double)(*aux_imag++);
+            }
+       }
+
+    /** Amplitude/Phase --> Complex.
+        The output array(s) must be already resized*/
+    template <class T>
+       void AmplPhase2Complex(const T *_ampl, const T *_phase,
+          complex<double> *_complex, int length) {
+            T *aux_ampl   =(T *)_ampl;
+            T *aux_phase  =(T *)_phase;
+            double *aux_complex=(double *)_complex;
+            for (int i=0; i<length; i++) {
+               double ampl =(double)(*aux_ampl++);
+               double phase=(double)(*aux_phase++);
+               *aux_complex++=ampl*cos(phase);
+               *aux_complex++=ampl*sin(phase);
+            }
+       }
+
+    /** Complex --> Real/Imag.
+        The output array(s) must be already resized*/
+    template <class T>
+       void Complex2RealImag(const complex<double> *_complex,
+          T *_real, T *_imag, int length) {
+            T *aux_real   =(T *)_real;
+            T *aux_imag   =(T *)_imag;
+            double *aux_complex=(double *)_complex;
+            for (int i=0; i<length; i++) {
+               *aux_real++=(T)(*aux_complex++);
+               *aux_imag++=(T)(*aux_complex++);
+            }
+       }
+
+    /** Complex --> Amplitude/Phase.
+        The output array(s) must be already resized*/
+    template <class T>
+       void Complex2AmplPhase(const complex<double> *_complex,
+          T *_ampl, T *_phase, int length) {
+            T *aux_ampl   =(T *)_ampl;
+            T *aux_phase  =(T *)_phase;
+            double *aux_complex=(double *)_complex;
+            for (int i=0; i<length; i++) {
+               double re=*aux_complex++;
+               double im=*aux_complex++;
+               *aux_ampl++=sqrt(re*re+im*im);
+               *aux_phase++=atan2(im,re);
+            }
+       }
 //@}
 
 // Random functions --------------------------------------------------------
@@ -465,88 +332,6 @@ float chi2_from_t0(float t0, float degrees_of_freedom);
        << rnd_log(10,1000)
                 << endl; */
 float rnd_log(float a, float b);
-
-//@}
-
-// Error handling ----------------------------------------------------------
-/**@name Error handling
-   The error handling is performed in two different ways depending on the
-   configuration selected for Xmipp in the file xmippConfiguration: a
-   simple error management and a second method based on C++ exceptions.
-   The first method aborts the program with an error code (different for
-   each error) while the second throws an exception which might be caught
-   by an external routine or program.
-   \\
-   \\The prototype definitions in both cases are the same as they are
-   based on some macros which change with the configuration. Here goes
-   a programming example considering both implementations.
-   \\
-   \begin{verbatim}
-   // Class definition
-   class ReconstructingVolume:
-   {
-      ...
-      void write(const FileName &fn) const;
-      ...
-   }
-   
-   // Class implementation
-   void ReconstructingVolume::write(const FileName &fn) const {
-      ...
-      if (...) REPORT_ERROR(6001,"Volume too small to be stored");
-      ...
-   }
-   
-   // Use of this class in an external program
-      ...
-      #ifndef _NO_EXCEPTION
-         try {vol_blobs.write(fn_blobs);}
-         catch (Xmipp_error XE) {
-            cout << XE;
-            cout << "The reconstructed volume is too small to be saved in blobs\n"
-                 << "So, there is no blob version of it at this iteration\n"
-                 << "I go on processing" << endl;
-         }
-      #else
-         vol_blobs.write(fn_blobs);
-      #endif
-      ...
-   \end{verbatim}   
-   You see that the routine implementation is the same in both cases but
-   the external program varies from one to the other as in the exception
-   case we can catch the exception and go on processing, while in the
-   exit mode, the program always is aborted. If you don't put the routine
-   in a try-catch structure and an exception is thrown then a core is
-   generated and the program is automatically aborted.
-   
-   \\ See \URL[Configuration]{../../Extra_Docs/Configuration.html}
-   \\ See \URL[Error Codes]{../../Extra_Docs/error_codes.html} */
-//@{
-/** Show message and exit.
-    This macro shows the given message and exits with the error code.
-    \\ Ex: if (...) EXIT_ERROR(1,"Error 1"); */
-#define EXIT_ERROR(nerr,ErrormMsg) _Xmipp_error(nerr,ErrormMsg) 
-
-void _Xmipp_error (const int nerr, const string &what);
-
-#define REPORT_ERROR(nerr,ErrormMsg) throw Xmipp_error(nerr,ErrormMsg)
-/** Exception class.
-    This is the class type for the errors thrown by the routines when the
-    exception handling mode is active (see Xmipp Configuration for details
-    about enabling the exception handling).
-    @see Configuration
-    @see Error Codes*/
-   class Xmipp_error {
-      public:
-        /** Error code.*/
-        int       __errno;
-        
-        /** Message shown.*/
-        string    msg;
-        
-        Xmipp_error(const int nerr, const string &what);
-        friend ostream& operator << (ostream& o, Xmipp_error &XE);
-   };
 //@}
 
 // Handling with filenames -------------------------------------------------
@@ -861,7 +646,7 @@ void acum_time(TimeStamp *orig, TimeStamp *dest);
     \\Ex: TimeStamp t0; annotate_time(&t0); ...; float elapsed=elapsed_time(t0);
     \\Ex: TimeStamp t0; annotate_time(&t0); ...; float elapsed=elapsed_time(t0,FALSE);
     @see annotate_time */
-float elapsed_time(TimeStamp &time, int _IN_SECS=TRUE);
+float elapsed_time(TimeStamp &time, bool _IN_SECS=true);
 
 /** Show on screen the elapsed time since a given annotation.
     The format of the printing is "Elapsed time: User(13) System(1)" that
@@ -871,7 +656,7 @@ float elapsed_time(TimeStamp &time, int _IN_SECS=TRUE);
     Usually the time is shown in seconds, but you might specify to show it
     in clock ticks setting the variable _IN_SECS to FALSE.
     @see annotate_time */
-void print_elapsed_time(TimeStamp &time, int _IN_SECS=TRUE);
+void print_elapsed_time(TimeStamp &time, bool _IN_SECS=true);
 
 /** Returns the estimated time left to finish.
     To make this estimation the starting time must have been annotated before
@@ -904,8 +689,6 @@ float time_to_go(TimeStamp &time, float fraction_done);
     to progress_bar with the total amount of work just to make sure
     that the printout is pretty enough. */
 void progress_bar(long act_time);
-
-
 
 /** xmippBaseListener
    This class implements the xmipp listener class for notification 
@@ -1033,7 +816,7 @@ void TimeMessage(string message);
     \\ Ex: float f; FREAD(&f,sizeof(float),1,fp);      ---> Normal order
 */
 size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp,
-   bool reverse=FALSE);
+   bool reverse=false);
 
 /** Write to file.
     This function is the same as fread from C, but at the end there is
@@ -1042,42 +825,7 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp,
     \\ Ex: float f; FREAD(&f,sizeof(float),1,fp);      ---> Normal order
 */
 size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
-   bool reverse=FALSE);
-//@}
-
-/* Memory managing --------------------------------------------------------- */
-/**@name Memory managing */
-//@{
-/** Ask memory for any type vector.
-    The valid values range from v[nl] to v[nh]. If no memory is available
-    an exception is thrown. NULL is returned if nh is not greater than nl*/
-template <class T> void ask_Tvector(T* &v, int nl, int nh); 
-
-/** Free memory associated to any type vector.
-    After freeing v=NULL*/
-template <class T> void free_Tvector(T *&v, int nl, int nh); 
-
-/** Ask memory for any type matrix.
-    The valid values range from v[nrl][ncl] to v[nrh][nch].
-    If no memory is available an exception is thrown. NULL is returned if any
-    nh is not greater than its nl*/
-template <class T> void ask_Tmatrix(T** &m, int nrl, int nrh,int ncl, int nch); 
-
-/** Free memory associated to any type matrix.
-    After freeing v=NULL*/
-template <class T> void free_Tmatrix(T **&v, int nrl, int nrh,int ncl, int nch); 
-
-/** Ask memory for any type voliume.
-    The valid values range from v[nsl][nrl][ncl] to v[nsh][nrh][nch].
-    If no memory is available an exception is thrown. NULL is returned if any
-    nh is not greater than its nl. */
-template <class T> void ask_Tvolume(T *** &v, int nsl, int nsh,
-   int nrl, int nrh, int ncl, int nch);
-
-/** Free memory associated to any type volume.
-    After freeing v=NULL*/
-template <class T> void free_Tvolume(T ***&v, int nsl, int nsh,
-   int nrl, int nrh, int ncl, int nch); 
+   bool reverse=false);
 //@}
 
 // More randon functions
@@ -1121,37 +869,125 @@ public:
     Ex: Marsaglia rodalnino("masaglia",1000000,34); 
     M_max (optional) is the magnitude of the maximum value of the 
     random number (exclusive), therefore must be positive*/
-    Marsaglia(const FileName &fn_in, int No_Numbers) 
-                              {Init(fn_in, No_Numbers);}
-    Marsaglia(){;}
+    Marsaglia(const FileName &fn_in, int No_Numbers) {Init(fn_in, No_Numbers);}
+    Marsaglia() {}
 
 /** You may use {\tt init} for reading another set of random numbers */
-    void Init(const FileName &fn_in, int No_Numbers);
+    void Init(const FileName &fn_in, int No_Numbers) {
+      int Type_size;                // sizeof(type)
+
+      pointer_in_memory=0;
+      Number_of_Numbers=No_Numbers; // initialize class variable
+      Type_size=sizeof(T);
+
+      ifstream in(fn_in.c_str());
+      in.seekg(0, ios::end);              // End of file
+      std::streampos sp = in.tellg();     // Size of file
+      if(sp < Number_of_Numbers*Type_size)
+          REPORT_ERROR(1,(string)"Marsaglia::Init: File "+fn_in+"is too small");
+      else {
+         //get a random number to set the file pointer at a random position
+         randomize_random_generator();  // seed the random generator
+
+         random_vector =  new char[(Number_of_Numbers*Type_size)];
+         T_random_vector = (T *) random_vector;
+         in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+                                   (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
+         in.read(random_vector, (Number_of_Numbers*Type_size));
+
+         in.close();
+
+      }
+      if( typeid(float) == typeid(T)) Verify_float(); 
+    }
 
 /** Get a random number from the memory. If you are at the end of the stream
     the pointer will be radomly moved before stracting the number. */
-    T Get_One_Number(void) {
+    T Get_One_Number() {
       if (pointer_in_memory >= Number_of_Numbers)
          pointer_in_memory = (int)FLOOR(rnd_unif(0.f,(float)(Number_of_Numbers-1)));
       return(T_random_vector[pointer_in_memory++]);
     }
+
 /** Calculate random vector log (use only with flloats)*/
-     void Marsaglia_log(void);
+     void Marsaglia_log() {
+        if (typeid(float)!=typeid(T) && typeid(double)!=typeid(T))
+           REPORT_ERROR(1,"Marsaglia: I do not know how to calculate integer logs");
+
+        for(int hh=0; hh< Number_of_Numbers; hh++)
+           if(T_random_vector[hh]==0.) T_random_vector[hh]= -1e+20f;
+           else T_random_vector[hh]=log(T_random_vector[hh]);
+     }
+     
 /** Multiply random vector by constant */
-     void mul(T mul_cte);
+    void mul(T mul_cte) {
+       for (int hh=0; hh< Number_of_Numbers; hh++)
+           T_random_vector[hh] *= mul_cte;
+    }
+
 /** Calculate mod of random vector, only make sense with intgers */
-    void operator &= (T mod_cte);     
+    void operator &= (T mod_cte) {
+       for (int hh=0; hh< Number_of_Numbers; hh++)
+           T_random_vector[hh] &= mod_cte;
+    }
+
 /** Add a constant */
-    void add(T add_cte);     
+    void add(T add_cte) {
+       for (int hh=0; hh< Number_of_Numbers; hh++)
+           T_random_vector[hh] += add_cte;
+    }
+
 /** Set Maximun value (only valid for integers) */
-    void M_max(const FileName &fn_in, T m_max);    
+    void M_max(const FileName &fn_in, T m_max) {
+      int Type_size;                      // sizeof(type)
+      Type_size=sizeof(T);
+
+      ifstream in(fn_in.c_str());
+      in.seekg(0, ios::end);              // End of file
+      std::streampos sp = in.tellg();     // Size of file
+      T power_of_2 =(T)NEXT_POWER_OF_2(m_max);
+      if (power_of_2==m_max)
+         power_of_2=(T)NEXT_POWER_OF_2(m_max+1);
+      T mask=power_of_2-1;  
+      T aux_number;
+      m_max;
+      //get a random number to set the file pointer at a random position
+      in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+         (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
+      for (int ii=0; ii<Number_of_Numbers;) {  
+          aux_number  = T_random_vector[ii];
+          aux_number &= mask;
+          if (aux_number > m_max ||
+              (T_random_vector[ii] <= 0) && (aux_number==0)) {
+              if (in.eof())
+                 in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
+                          (std::streamoff)(Number_of_Numbers*Type_size)) ) ),
+		          ios::beg);
+                 in.read((char*)&(T_random_vector[ii]),Type_size);
+          } else {
+             T_random_vector[ii] = aux_number*(T)SGN(T_random_vector[ii]); 
+             ii++;
+          }
+      }
+      in.close();
+    }
 private:
 /** Be aware that Marsaglia reads blindly the data, therefore if the type
-float is selected several of the "random" numbers may not be valid (the number
-are created from a source of random bits and although 4 random bits are one
-random integer, four random bits may not be a valid float). If Marsaglia is "float" The constructor will run the following function that will fix the problem
- */
-   void Verify_float();
+   float is selected several of the "random" numbers may not be valid (the number
+   are created from a source of random bits and although 4 random bits are one
+   random integer, four random bits may not be a valid float). If Marsaglia is "float" The constructor will run the following function that will fix the problem
+    */
+   void Verify_float() {
+     unsigned int * int_random_vector;
+     long long MaxInteger;
+     if (sizeof(float)!= sizeof(int))
+        REPORT_ERROR(1,"Marsaglia: I do not know how to make the float correction");
+     MaxInteger = (long long)pow(2.0,sizeof(unsigned int)*8.0);
+     int_random_vector = (unsigned int *) random_vector;
+     for (int hh=0; hh< Number_of_Numbers; hh++)
+         T_random_vector[hh]= (T)((double)int_random_vector[hh]/
+                                  (double)MaxInteger);
+   }
 };
 //@}
 

@@ -56,7 +56,7 @@ matrix2D<double> D(4,4);
    // Main program ---------------------------------------------------------
 
   
- if (Is_VolumeXmipp(fn_in)!=TRUE)
+ if (!Is_VolumeXmipp(fn_in))
     {cout << "File: " <<  fn_in<<" is not an Spider volume, bye." 
           << endl; exit(1);}
   V_in.read(fn_in);

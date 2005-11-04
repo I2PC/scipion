@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
       else if (check_param(argc,argv,"-down"))  input_type=DOWNSAMPLED_IMAGES;
       else REPORT_ERROR(1,"No data type for micrographs");
       if (input_type==TIFF_IMAGES || input_type==RAW_IMAGES)
-         down_prm.read(argc,argv,TRUE);
+         down_prm.read(argc,argv,true);
       unzip=check_param(argc,argv,"-unzip");
       grid=check_param(argc,argv,"-grid");
       output_dir=get_param(argc,argv,"-odir");
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 
       // Read input assign_CTF parameters ..................................
       Prog_assign_CTF_prm assign_CTF_prm;
-      assign_CTF_prm.read(fn_params,TRUE);
+      assign_CTF_prm.read(fn_params,true);
       
       // Prepare all batches ...............................................
       int N=0; // number of batches

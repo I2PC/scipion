@@ -53,7 +53,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
          DeltaR=AtoF(get_param(fh_param,"transversal_displace",0,"0"));
          Q0=AtoF(get_param(fh_param,"Q0",0,"0"));
          K=AtoF(get_param(fh_param,"K",0,"0"));
-         if (K==0 && disable_if_not_K) enable_CTF=FALSE;
+         if (K==0 && disable_if_not_K) enable_CTF=false;
       }
       
       if (enable_CTFnoise) {
@@ -75,7 +75,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
 	 sqrt_angle=AtoF(get_param(fh_param,"sqrt_angle",0,"0"));
 	 sqrt_K        =AtoF(get_param(fh_param,"sqrt_K",0,"0"));
          if (gaussian_K==0 && sqrt_K==0 && base_line==0  && disable_if_not_K)
-            enable_CTFnoise=FALSE;
+            enable_CTFnoise=false;
       }
       
    } catch (Xmipp_error XE) {
@@ -167,8 +167,8 @@ ostream & operator << (ostream &out, const XmippCTF &ctf) {
 
 /* Default values ---------------------------------------------------------- */
 void XmippCTF::clear() {
-   enable_CTF=TRUE;
-   enable_CTFnoise=FALSE;
+   enable_CTF=true;
+   enable_CTFnoise=false;
    clear_noise();
    clear_pure_ctf();
 }
@@ -181,8 +181,8 @@ void XmippCTF::clear_noise() {
 
 void XmippCTF::clear_pure_ctf() {
    // aperture=10;
-   enable_CTF=TRUE;
-   enable_CTFnoise=FALSE;
+   enable_CTF=true;
+   enable_CTFnoise=false;
    Tm=2;
    kV=100;
    DeltafU=DeltafV=azimuthal_angle=0;
@@ -331,7 +331,7 @@ bool XmippCTF::physical_meaning() {
          ;
          cout << "CTF_at(0,0)=" << CTF_at(0,0,true) << endl;
       #endif
-   } else retval=TRUE;
+   } else retval=true;
    bool retval2;
    if (enable_CTFnoise) {
       double min_sigma=MIN(sigmaU,sigmaV);
@@ -366,7 +366,7 @@ bool XmippCTF::physical_meaning() {
 	      << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))          << endl
          ;
       #endif
-   } else retval2=TRUE;
+   } else retval2=true;
    #ifdef DEBUG
        cout << "Retval= " << retval << " retval2= " << retval2 << endl;
    #endif

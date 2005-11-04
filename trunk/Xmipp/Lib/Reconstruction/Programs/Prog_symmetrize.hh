@@ -60,7 +60,7 @@ public:
 
 /** Really symmetrize.*/
 void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
-   bool wrap=TRUE, bool show_progress=FALSE);
+   bool wrap=true, bool show_progress=false);
 
 /** Really symmetrize using Bsplines */
 void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,

@@ -209,13 +209,48 @@ public:
        unsigned ints of 16 bits (V16) and floats (VFLOAT) can be read. 
        \\ Ex: V.read(65,65,65,"art0001.raw");*/
 
-   void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=FALSE,
-      Volume_Type volume_type=VBYTE);
+   void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=false,
+      Volume_Type volume_type=VBYTE) {
+        FILE *fh;
+        clear(); 
+        fn_img=name;
+        if ((fh = fopen(fn_img.c_str(), "rb")) == NULL)
+          REPORT_ERROR(1501,"Volume::read: File " + fn_img + " not found");
+        read(fh, Zdim, Ydim, Xdim, reversed, volume_type);
+
+        fclose(fh);
+   }
 
    /** Read image from disk using a file pointer.
        This is the core routine of the previous one. */
    void read(FILE *fh, int Zdim, int Ydim, int Xdim, bool reversed,
-      Volume_Type volume_type);
+      Volume_Type volume_type) {
+        img.resize(Zdim, Ydim,Xdim);
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+            switch (volume_type) {
+               case VBYTE:
+                  unsigned char u;
+                  FREAD (&u, sizeof(unsigned char), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=(T)u;
+                  break;
+               case VINT:
+                  int ii;
+                  FREAD (&ii, sizeof(int), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=(T)ii;
+                  break;
+                  //NOTE integers and floats need to be reversed in identical way
+               case V16:
+                  unsigned short us;
+                  FREAD (&us, sizeof(unsigned short), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=(T)us;
+                  break;
+               case VFLOAT:
+                  float f;
+                  FREAD (&f, sizeof(float), 1, fh, reversed);
+                  MULTIDIM_ELEM(img,i)=(T)f;
+                  break;
+            }
+   }
 
    /** Write Volume to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -224,14 +259,66 @@ public:
        changed. This is somehow like the "Save as ..." and "Save".
        \\ Ex: V.write() ---> Save
        \\ Ex: V.write("art0002.raw") ---> Save as */
-   void write(FileName name = "", bool reversed=FALSE,
-      Volume_Type volume_type=VBYTE);
+   void write(FileName name = "", bool reversed=false,
+      Volume_Type volume_type=VBYTE) {
+         FILE *fp;
+         if (name != "") rename(name);  
+
+         if ((fp = fopen(fn_img.c_str(), "wb")) == NULL) {
+           REPORT_ERROR(1503,"Volume::write: File " + fn_img + " cannot be saved");
+         };
+         write(fp, reversed, volume_type);
+         fclose(fp);  
+   }
 
    /** Write image to disk using a file pointer.
        This is the core routine of the previous one. */
-   void write(FILE *fh, bool reversed, Volume_Type volume_type);
+   void write(FILE *fh, bool reversed, Volume_Type volume_type) {
+         if (XSIZE(img)==0 || YSIZE(img)==0 || ZSIZE(img)==0) return;
+         double a,b;
+         if (volume_type!=VFLOAT) {
+            double min_val, max_val;
+            (*this)().compute_double_minmax(min_val,max_val);
+            if (volume_type==VBYTE) a=255;
+            else                   a=65535;
+            a/=(max_val-min_val);
+            b=min_val;
+         }
+         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+             switch (volume_type) {
+                case VBYTE:
+                   unsigned char u;
+                   u=(unsigned char) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+                   FWRITE (&u, sizeof(unsigned char), 1, fh, reversed);
+                   break;
+                case V16:
+                   unsigned short us;
+                   us=(unsigned short) ROUND(a*(MULTIDIM_ELEM(img,i)-b));
+                   FWRITE (&us, sizeof(unsigned short), 1, fh, reversed);
+                   break;
+                case VFLOAT:
+                   float f;
+                   f=(float) MULTIDIM_ELEM(img,i);
+                   FWRITE (&f, sizeof(float), 1, fh, reversed);
+                   break;
+                case VINT:
+                   int ii;
+                   ii=(int) MULTIDIM_ELEM(img,i);
+                   FWRITE (&ii, sizeof(int), 1, fh, reversed);
+                   break;
+             }
+   }
    //@}
 };
+
+// Specialization for complex numbers
+template <>
+void VolumeT<complex<double> >::read(FILE *fh,
+  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type);
+
+template <>
+void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
+   Volume_Type volume_type);
 
 /**@name Speed up macros*/
 //@{
@@ -427,8 +514,26 @@ public:
        is corrupted although the whole image is still valid. You can
        skip this check and provide the reversed status via force_reversed.
        \\ Ex: VX.read("art0001.vol");*/
-   void read(const FileName &_name, bool skip_type_check=FALSE,
-      bool force_reversed=FALSE);
+   void read(const FileName &name, bool skip_type_check=false,
+      bool force_reversed=false) {
+        FILE *fp; 
+
+        rename(name); 
+        if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "rb")) == NULL)
+          REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+VolumeT<T>::fn_img+" not found");
+
+        // Read header
+        if (!header.read(fp, skip_type_check, force_reversed))
+           REPORT_ERROR(1502,"VolumeXmipp::read: File " + VolumeT<T>::fn_img +
+              " is not a valid Xmipp file");   
+
+        // Read whole image and close file
+        VolumeT<T>::read(fp, header.iSlices(), header.iYdim(), header.iXdim(),
+           header.reversed(), VFLOAT);
+        fclose(fp);
+
+        header.set_header();  // Set header in a Xmipp consistent state
+   }
 
    /** Write Xmipp volume to disk.
        If there is any problem in the writing, an exception is thrown.
@@ -439,7 +544,17 @@ public:
        \\ Ex: VX.write("art0002.vol") ---> Save as 
        If force_reversed is TRUE then image is saved in reversed mode,
        if not it is saved in the same mode as it was loaded.*/
-   void write(const FileName &_name = "", bool force_reversed=FALSE);
+   void write(const FileName &name = "", bool force_reversed=false) {
+        FILE *fp;
+        if (name != "") rename(name); 
+        if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
+          REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+VolumeT<T>::fn_img +
+             " cannot be written");
+        adjust_header();  
+        header.write(fp, force_reversed);
+        VolumeT<T>::write(fp, header.reversed(), VFLOAT);
+        fclose(fp);  
+   }
    //@}
 
    // Header operations interface ..........................................
@@ -494,13 +609,13 @@ typedef VolumeXmippT<complex<double> > FourierVolumeXmipp;
 //@{
 /** True if the given volume is an Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
-int Is_VolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
-   bool force_reversed=FALSE);
+int Is_VolumeXmipp(const FileName &fn, bool skip_type_check=false,
+   bool force_reversed=false);
 
 /** True if the given volume is a Fourier Xmipp volume. See \Ref{volumeXmipp::read}
     for an explanation of skip_type_check and force_reversed.*/
-int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check=FALSE,
-   bool force_reversed=FALSE);
+int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check=false,
+   bool force_reversed=false);
 
 /** Get size of a volume.
     It returns -1 if the file is not an Xmipp volume.*/

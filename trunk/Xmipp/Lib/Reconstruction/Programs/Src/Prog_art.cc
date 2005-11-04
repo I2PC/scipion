@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 #include "../Prog_art.hh"
-#include "Basic_art.inc"
 #include "../Prog_FourierFilter.hh"
 #include <XmippData/xmippWavelets.hh>
 #include <XmippData/Programs/Prog_denoising.hh>
@@ -189,8 +188,8 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 void ART_single_step(
    GridVolume        	   &vol_in,          // Input Reconstructed volume
    GridVolume        	   *vol_out,         // Output Reconstructed volume
-   const Basic_ART_Parameters &prm,          // blob, lambda
-   const Plain_ART_Parameters &eprm,         // In this case, nothing
+   Basic_ART_Parameters    &prm,             // blob, lambda
+   Plain_ART_Parameters    &eprm,            // In this case, nothing
    Projection        	   &theo_proj,       // Projection of the reconstruction
                                              // It is outside to make it visible
                                              // just if it needed for any
@@ -222,7 +221,7 @@ void ART_single_step(
             "only works with blobs");
       // It is a description of the CTF
       ctf.FilterShape=ctf.FilterBand=CTF;
-      ctf.ctf.enable_CTFnoise=FALSE;
+      ctf.ctf.enable_CTFnoise=false;
       ctf.ctf.read(fn_ctf);
       ctf.ctf.Tm/=BLOB_SUBSAMPLING;
       ctf.ctf.Produce_Side_Info();
@@ -360,15 +359,6 @@ void ART_single_step(
    }
 }
 #undef blob
-
-/* Instantiation of the ART process ---------------------------------------- */
-void instantiate_Plain_ART() {
-   Basic_ART_Parameters prm;
-   Plain_ART_Parameters eprm;
-   VolumeXmipp vol_voxels;
-   GridVolume  vol_blobs;
-   Basic_ROUT_Art(prm,eprm,vol_voxels, vol_blobs);
-}
 
 /* Finish iterations ------------------------------------------------------- */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,

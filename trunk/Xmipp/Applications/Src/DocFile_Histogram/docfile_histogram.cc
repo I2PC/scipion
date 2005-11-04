@@ -58,8 +58,8 @@ int main (int argc,char *argv[]) {
             EXIT_ERROR(1,"DocFile Histogram: Not enough parameters behind -range\n");
          m=AtoF(argv[i+1]);
          M=AtoF(argv[i+2]);
-         automatic_range=FALSE;
-      } else automatic_range=TRUE;
+         automatic_range=false;
+      } else automatic_range=true;
        
       StepsNo2=AtoI(get_param(argc,argv,"-steps2","100"));
       if ((i=position_param(argc,argv,"-range2"))!=-1) {
@@ -67,8 +67,8 @@ int main (int argc,char *argv[]) {
             EXIT_ERROR(1,"DocFile Histogram: Not enough parameters behind -range2\n");
          m2=AtoF(argv[i+1]);
          M2=AtoF(argv[i+2]);
-         automatic_range2=FALSE;
-      } else automatic_range2=TRUE;
+         automatic_range2=false;
+      } else automatic_range2=true;
 
       // Check columns are possible
       if (col<0 || col>=DF.FirstLine_ColNo())

@@ -76,30 +76,17 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 void print(ostream &o, const bool b) {
    if (b) o << "TRUE"; else o << "FALSE";
 }
-/* Print a value in binary ------------------------------------------------- */
-template <class T>
-void printb(ostream &o, T value) {
-    char buf [CHAR_BIT * sizeof(T) + 1];
-    size_t i;
-
-    for (i = 0; i < CHAR_BIT * sizeof(T); ++i)
-    {
-        buf[i] = '0' + (value & 1);
-        value >>= 1;
-    }
-    buf[i] = 0;
-
-    o << buf;
-}
 
 /* Random functions -------------------------------------------------------- */
 int idum;
+
 // Uniform distribution ....................................................
 void  init_random_generator(int seed) {
    idum=-1; ran1(&idum);
    if (seed!=-1)
       for (int i=0; i<seed; i++) ran1(&idum);
 }
+
 void  randomize_random_generator(){static  unsigned int seed;
                                    int rand_return;
                                    
@@ -366,12 +353,12 @@ FileName FileName::without_root() const {return without(get_root());}
 // Insert before extension .................................................
 FileName FileName::insert_before_extension(const string &str) const {
    int point=-1;
-   bool done=FALSE;
+   bool done=false;
    do {
       point=find(".",point+1);
-      if (point==-1) {point=length(); done=TRUE;}
-      else if (point==length()-1) done=TRUE;
-      else if ((*this)[point+1]=='.' || (*this)[point+1]=='/') done=FALSE;
+      if (point==-1) {point=length(); done=true;}
+      else if (point==length()-1) done=true;
+      else if ((*this)[point+1]=='.' || (*this)[point+1]=='/') done=false;
       else done=true;
    } while (!done);
    FileName retval=*this;
@@ -456,7 +443,7 @@ void acum_time(TimeStamp *orig, TimeStamp *dest){
 }
 
 // Show elapsed time since last annotation .................................
-void print_elapsed_time(TimeStamp &time, int _IN_SECS) {
+void print_elapsed_time(TimeStamp &time, bool _IN_SECS) {
    TimeStamp now; times(&now);
    float userTime=now.tms_utime - time.tms_utime;
    float sysTime=now.tms_stime - time.tms_stime;
@@ -466,7 +453,7 @@ void print_elapsed_time(TimeStamp &time, int _IN_SECS) {
 }
 
 // Calculate elapsed time since last annotation .............................
-float elapsed_time(TimeStamp &time, int _IN_SECS) {
+float elapsed_time(TimeStamp &time, bool _IN_SECS) {
    TimeStamp now; times(&now);
    float userTime=now.tms_utime - time.tms_utime;
    float sysTime=now.tms_stime - time.tms_stime;
@@ -581,11 +568,11 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse) {
       retval=fread(dest,size,nitems,fp);
    else {
       char *ptr=(char *)dest;
-      bool end=FALSE;
+      bool end=false;
       retval=0;
       for (int n=0; n<nitems; n++) {
          for (int i=size-1; i>=0; i--) {
-             if (fread(ptr+i,1,1,fp)!=1) {end=TRUE; break;}
+             if (fread(ptr+i,1,1,fp)!=1) {end=true; break;}
          }
          if (end) break; else retval++;
          ptr +=size;
@@ -602,305 +589,15 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
       retval=fwrite(src,size,nitems,fp);
    else {
       char *ptr=(char *)src;
-      bool end=FALSE;
+      bool end=false;
       retval=0;
       for (int n=0; n<nitems; n++) {
          for (int i=size-1; i>=0; i--) {
-            if (fwrite(ptr+i,1,1,fp)!=1) {end=TRUE; break;}
+            if (fwrite(ptr+i,1,1,fp)!=1) {end=true; break;}
          }
          if (end) break; else retval++;
          ptr +=size;
       }
    }
    return retval;
-}
-
-// Managing memory ---------------------------------------------------------
-template <class T> void ask_Tvector(T* &v, int nl, int nh) {
-   if (nh-nl+1>1) {
-      v=(T *)malloc((unsigned) (nh-nl+1)*sizeof(T));
-      if (!v) REPORT_ERROR(1,"allocation failure in vector()");
-      v-=nl;
-   } else v=NULL;
-}
-
-template <class T> void free_Tvector(T* &v, int nl, int nh) {
-   if (v!=NULL) {
-      free((char*) (v+nl));
-      v=NULL;
-   }
-}
-
-template <class T> void ask_Tmatrix(T ** &m, int nrl, int nrh,
-   int ncl, int nch) {
-   if (nrh-nrl+1>1 && nch-ncl+1>1) {
-      m=(T **) malloc((unsigned) (nrh-nrl+1)*sizeof(T*));
-      if (!m) REPORT_ERROR(1,"allocation failure 1 in matrix()");
-      m -= nrl;
-
-      for(int i=nrl;i<=nrh;i++) {
-              m[i]=(T *) malloc((unsigned) (nch-ncl+1)*sizeof(T));
-              if (!m[i]) REPORT_ERROR(1,"allocation failure 2 in matrix()");
-              m[i] -= ncl;
-      }
-   } else m=NULL;
-}
-
-template <class T> void free_Tmatrix(T ** &m, int nrl, int nrh,
-   int ncl, int nch) {
-   if (m!=NULL) {
-      for(int i=nrh;i>=nrl;i--) free((char*) (m[i]+ncl));
-      free((char*) (m+nrl));
-      m=NULL;
-   }
-}
-
-template <class T> void ask_Tvolume(T *** &m, int nsl, int nsh, int nrl,
-   int nrh, int ncl, int nch) {
-   if (nsh-nsl+1>1 && nrh-nrl+1>1 && nch-ncl+1>1) {
-      m=(T ***) malloc((unsigned) (nsh-nsl+1)*sizeof(T**));
-      if (!m) REPORT_ERROR(1,"allocation failure 1 in matrix()");
-      m -= nsl;
-
-      for (int k=nsl;k<=nsh;k++) {
-          m[k]=(T **) malloc((unsigned) (nrh-nrl+1)*sizeof(T*));
-          if (!m[k]) REPORT_ERROR(1,"allocation failure 2 in matrix()");
-          m[k] -= nrl;
-
-          for (int i=nrl;i<=nrh;i++) {
-              m[k][i]=(T *) malloc((unsigned) (nch-ncl+1)*sizeof(T));
-              if (!m[k][i]) REPORT_ERROR(1,"allocation failure 2 in matrix()");
-              m[k][i] -= ncl;
-          }
-      }
-   } else m=NULL;
-}
-
-template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
-   int nrl, int nrh, int ncl, int nch) {
-   if (m!=NULL) {
-      for(int k=nsh;k>=nsl;k--) {
-	 for(int i=nrh;i>=nrl;i--) free((char*) (m[k][i]+ncl));
-         free((char*) (m[k]+nrl));
-      }
-      free((char*) (m+nsl));
-      m=NULL;
-   }
-}
-
-/* Marsaglia, fast random number generator --------------------------------- */
-template <class T>
-  void Marsaglia<T>::Init(const FileName &fn_in, int No_Numbers) {
-   int Type_size;            //sizeof(type)
-   
-   pointer_in_memory=0;
-   Number_of_Numbers=No_Numbers; // initializa class variable
-   Type_size=sizeof(T);
-
-   ifstream in(fn_in.c_str());
-   in.seekg(0, ios::end);         // End of file
-   std::streampos sp = in.tellg();     // Size of file
-   if(sp < Number_of_Numbers*Type_size)
-       {
-       REPORT_ERROR(1,(string)"Marsaglia::Init: File "+fn_in+"is too small");
-       }
-   else{
-   //get a random number to set the file pointer at a random position
-   randomize_random_generator();  // seed the random generator
-
-   random_vector =  new char[(Number_of_Numbers*Type_size)];
-   T_random_vector = (T *) random_vector;
-   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
-   in.read(random_vector, (Number_of_Numbers*Type_size));
-
-    in.close();
-   
-   }
-   if( typeid(float) == typeid(T))
-      {
-      Verify_float(); 
-      }
-      
-}
-//--------------------------------------------------------------
-// produce valid random floats instead of random bits
-template <class T>
-  void Marsaglia<T>::Verify_float()
-  {
-  unsigned int * int_random_vector;
-  long long MaxInteger;
-  if(sizeof(float)!= sizeof(int))
-       {
-       cout << "\nMarsaglia: I do not know how to make the float correction\n";
-       exit(0);
-       } 
-  MaxInteger = (long long)pow(2.0,sizeof(unsigned int)*8.0);
-  int_random_vector = (unsigned int *) random_vector;
-     for(int hh=0; hh< Number_of_Numbers; hh++)
-        T_random_vector[hh]= (T)((double)int_random_vector[hh]/
-                                                         (double)MaxInteger);
-  }
-//--------------------------------------------------------------
-// calculate the logarithm. if zero make it small
-template <class T>
-  void Marsaglia<T>::Marsaglia_log(void)
-  {
-   if(typeid(float)!=typeid(T) && typeid(double)!=typeid(T))
-       {
-       cout << "\nMarsaglia: I do not know how to calculate integer logs\n";
-       exit(0);
-       } 
-   
-  for(int hh=0; hh< Number_of_Numbers; hh++)
-     if(T_random_vector[hh]==0.) T_random_vector[hh]= -1e+20f;
-     else T_random_vector[hh]=log(T_random_vector[hh]);
-  }
-//--------------------------------------------------------------
-// Multiply by a constant
-template <class T>
-  void Marsaglia<T>::mul(T mul_cte)
-  {
-   
-  for(int hh=0; hh< Number_of_Numbers; hh++)
-     T_random_vector[hh] *= mul_cte;
-  }
-//--------------------------------------------------------------
-// Multiply by a constant
-template <class T>
-  void Marsaglia<T>::operator &=(T mod_cte)
-  {
-   
-  for(int hh=0; hh< Number_of_Numbers; hh++)
-     T_random_vector[hh] &= mod_cte;
-  }
-//--------------------------------------------------------------
-// Add a constant
-template <class T>
-  void Marsaglia<T>::add(T add_cte)
-  {
-   
-  for(int hh=0; hh< Number_of_Numbers; hh++)
-     T_random_vector[hh] += add_cte;
-  }
-// Fix the maximum value only valid for integers
-template <class T>
-  void Marsaglia<T>::M_max(const FileName &fn_in, T m_max)
-  {
-   int Type_size;                 //sizeof(type)
-   Type_size=sizeof(T);
-
-   ifstream in(fn_in.c_str());
-   in.seekg(0, ios::end);         // End of file
-   std::streampos sp = in.tellg();     // Size of file
-   T power_of_2 =(T)NEXT_POWER_OF_2(m_max);
-   if (power_of_2==m_max)
-      power_of_2=(T)NEXT_POWER_OF_2(m_max+1);
-   T mask=power_of_2-1;  
-   T aux_number;
-   m_max;
-   //get a random number to set the file pointer at a random position
-   in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
-    for(int ii=0; ii<Number_of_Numbers;)
-       {  
-          
-          aux_number  = T_random_vector[ii];
-          aux_number &= mask;
-          if(aux_number > m_max ||/* 
-             aux_number < -m_max  ||*/
-             (T_random_vector[ii] <= 0) && (aux_number==0) )
-             {
-             if(in.eof())
-                 in.seekg((std::streampos) FLOOR ( rnd_unif(0.f,(float) (sp - 
-                                (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
-        
-             in.read((char*)&(T_random_vector[ii]),Type_size);
-             }
-          else
-             {
-             T_random_vector[ii] = aux_number*(T)SGN(T_random_vector[ii]); 
-             ii++;
-             }
-
-       }//end for   
-    
-   in.close();
-         
-  }
-  
-/* Instantiate ------------------------------------------------------------- */
-void instantiante_xmippFuncs() {
-   char           *h, **hh, ***hhh;
-   short int      *s, **ss, ***sss;
-   int            *i, **ii, ***iii;
-   float          *f, **ff, ***fff;
-   double         *d, **dd, ***ddd;
-   long double    *ld,**ldd,***lddd;
-   complex<double> *c, **cc, ***ccc;
-
-   ask_Tvector(h,  1,1);         free_Tvector(h,  1,1);
-   ask_Tmatrix(hh, 1,1,1,1);     free_Tmatrix(hh, 1,1,1,1);
-   ask_Tvolume(hhh,1,1,1,1,1,1); free_Tvolume(hhh,1,1,1,1,1,1);
-   ask_Tvector(s,  1,1);         free_Tvector(s,  1,1);
-   ask_Tmatrix(ss, 1,1,1,1);     free_Tmatrix(ss, 1,1,1,1);
-   ask_Tvolume(sss,1,1,1,1,1,1); free_Tvolume(sss,1,1,1,1,1,1);
-   ask_Tvector(i,  1,1);         free_Tvector(i,  1,1);
-   ask_Tmatrix(ii, 1,1,1,1);     free_Tmatrix(ii, 1,1,1,1);
-   ask_Tvolume(iii,1,1,1,1,1,1); free_Tvolume(iii,1,1,1,1,1,1);
-   ask_Tvector(f,  1,1);         free_Tvector(f,  1,1);
-   ask_Tmatrix(ff, 1,1,1,1);     free_Tmatrix(ff, 1,1,1,1);
-   ask_Tvolume(fff,1,1,1,1,1,1); free_Tvolume(fff,1,1,1,1,1,1);
-   ask_Tvector(d,  1,1);         free_Tvector(d,  1,1);
-   ask_Tmatrix(dd, 1,1,1,1);     free_Tmatrix(dd, 1,1,1,1);
-   ask_Tvolume(ddd,1,1,1,1,1,1); free_Tvolume(ddd,1,1,1,1,1,1);
-   ask_Tvector(ld,  1,1);        free_Tvector(ld,  1,1);
-   ask_Tmatrix(ldd, 1,1,1,1);    free_Tmatrix(ldd, 1,1,1,1);
-   ask_Tvolume(lddd,1,1,1,1,1,1);free_Tvolume(lddd,1,1,1,1,1,1);
-   ask_Tvector(c,  1,1);         free_Tvector(c,  1,1);
-   ask_Tmatrix(cc, 1,1,1,1);     free_Tmatrix(cc, 1,1,1,1);
-   ask_Tvolume(ccc,1,1,1,1,1,1); free_Tvolume(ccc,1,1,1,1,1,1);
-   
-   Marsaglia<float> Random_pool_f("m",1);
-   Random_pool_f.Get_One_Number();
-   Random_pool_f.Marsaglia_log();//omly floats
-   Random_pool_f.mul((float)1.);
-   Random_pool_f.add((float)1.);
-
-   Marsaglia<int> Random_pool_i("m",1);
-   Random_pool_i.Get_One_Number();
-   Random_pool_i.mul((int)1);
-   Random_pool_i.add((int)1);
-   Random_pool_i&=(int)1;//only integers
-   Random_pool_i.M_max("m",(int) 1);//only integers
-
-   Marsaglia<unsigned int> Random_pool_ui("m",1);
-   Random_pool_ui.Get_One_Number();
-   Random_pool_ui.mul((unsigned int)1);
-   Random_pool_ui.add((unsigned int)1);
-   Random_pool_ui&=(unsigned int)1;//only integers
-   Random_pool_ui.M_max("m",(unsigned int) 1);//only integers
-
-   Marsaglia<short int> Random_pool_s("m",1);
-   Random_pool_s.Get_One_Number();
-   Random_pool_s.mul((short int)1);
-   Random_pool_s.add((short int)1);
-   Random_pool_s&=(short int) 1;//only integers
-   Random_pool_s.M_max("m",(short int)1);//only integers
-
-   Marsaglia<unsigned short int> Random_pool_us("m",1);
-   Random_pool_us.Get_One_Number();
-   Random_pool_us.mul((unsigned short int)1);
-   Random_pool_us.add((unsigned short int)1);
-   Random_pool_us&=(unsigned short int)1;//only integers
-   Random_pool_us.M_max("m",(unsigned short int)1);//only integers
-
-   printb(cout, (char)0);
-   printb(cout, (unsigned char)0);
-   printb(cout, (int)0);
-   printb(cout, (unsigned int)0);
-   printb(cout, (long)0);
-   printb(cout, (unsigned long)0);
-   printb(cout, (long long)0);
-   printb(cout, (unsigned long long)0);
 }

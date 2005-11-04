@@ -197,8 +197,8 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
     // Add new rotation to psi only!
     psi+=img.Psi();
     img.Psi()=realWRAP(psi,0.,360.);   
-    return TRUE;
-  } else return FALSE;
+    return true;
+  } else return false;
 }
 
 // translational alignment =====================================================
@@ -229,7 +229,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
   max=MAT_ELEM(Mcorr,imax,jmax);
 
   int              n_max=-1;
-  bool             neighbourhood=TRUE;
+  bool             neighbourhood=true;
   while (neighbourhood) {  
     n_max ++;
     for (int i=-n_max; i <= n_max; i++)
@@ -238,9 +238,9 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 	j_actual = j+jmax;
 	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
 	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
-	  neighbourhood=FALSE;
+	  neighbourhood=false;
 	else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
-	    neighbourhood=FALSE;
+	    neighbourhood=false;
       }
   }
   // We have the neighbourhood => looking for the gravity centre 
@@ -270,8 +270,8 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
     img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
     img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
     img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
-    return TRUE;
-  } else return FALSE;
+    return true;
+  } else return false;
 
 }
 
@@ -341,8 +341,8 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
     img.Yoff()+=xshift*DIRECT_MAT_ELEM(A,1,0)+yshift*DIRECT_MAT_ELEM(A,1,1);
     img.Xoff()=realWRAP(img.Xoff(),(float)-dim/2.,(float)dim/2.);
     img.Yoff()=realWRAP(img.Yoff(),(float)-dim/2.,(float)dim/2.);
-    return TRUE;
-  } else return FALSE;
+    return true;
+  } else return false;
 
 }
 
@@ -363,7 +363,7 @@ void Prog_align2d_prm::do_pspc() {
   // Calculate average image of non-aligned images to center pspc-reference
   ImageXmipp med,sig;
   double min,max;
-  SF.get_statistics(med,sig,min,max,TRUE);
+  SF.get_statistics(med,sig,min,max,true);
   med().set_Xmipp_origin();
 
   // Use piramidal combination of images to construct an initial reference
@@ -636,7 +636,7 @@ void Prog_align2d_prm::align2d() {
 
   // Get Reference (either from file or from piramidal combination of images)
   if (fn_ref!="") {
-    Iref.read(fn_ref,FALSE,FALSE,TRUE);
+    Iref.read(fn_ref,false,false,true);
   } else do_pspc();
 
   // Circular mask around reference image
@@ -677,7 +677,7 @@ void Prog_align2d_prm::align2d() {
   // Calculate average and stddev image and write out
   ImageXmipp med,sig;
   double min,max;
-  SFo.get_statistics(med,sig,min,max,TRUE);
+  SFo.get_statistics(med,sig,min,max,true);
   fn_img=fn_sel.without_extension()+".xmp";
   if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
   fn_img=fn_img.insert_before_extension(".med");

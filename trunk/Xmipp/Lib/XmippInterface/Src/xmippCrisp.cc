@@ -46,20 +46,20 @@ void CrispVolume::read(const FileName &fn) {
   if (strcmp(signature,"SH")!=0)
      REPORT_ERROR(1502,"CrispVolume::read: File " + fn + " is not a valid Crisp file");   
 
-  FREAD(&flags,sizeof(short),  1, fp,TRUE);
-  FREAD(&Adata,sizeof(short),  1, fp,TRUE);
-  FREAD(&Bdata,sizeof(short),  1, fp,TRUE);
-  FREAD(&Cdata,sizeof(short),  1, fp,TRUE);
-  FREAD(&Afile,sizeof(short),  1, fp,TRUE);
-  FREAD(&Bfile,sizeof(short),  1, fp,TRUE);
-  FREAD(&Cfile,sizeof(short),  1, fp,TRUE);
-  FREAD(&Asize,sizeof(short),  1, fp,TRUE);
-  FREAD(&Bsize,sizeof(short),  1, fp,TRUE);
-  FREAD(&Csize,sizeof(short),  1, fp,TRUE);
-  FREAD(&Gamma,sizeof(short),  1, fp,TRUE);
-  FREAD(dummy0,sizeof(short), 20, fp,TRUE);
+  FREAD(&flags,sizeof(short),  1, fp,true);
+  FREAD(&Adata,sizeof(short),  1, fp,true);
+  FREAD(&Bdata,sizeof(short),  1, fp,true);
+  FREAD(&Cdata,sizeof(short),  1, fp,true);
+  FREAD(&Afile,sizeof(short),  1, fp,true);
+  FREAD(&Bfile,sizeof(short),  1, fp,true);
+  FREAD(&Cfile,sizeof(short),  1, fp,true);
+  FREAD(&Asize,sizeof(short),  1, fp,true);
+  FREAD(&Bsize,sizeof(short),  1, fp,true);
+  FREAD(&Csize,sizeof(short),  1, fp,true);
+  FREAD(&Gamma,sizeof(short),  1, fp,true);
+  FREAD(dummy0,sizeof(short), 20, fp,true);
   FREAD(Name,  sizeof(char) , 32, fp);
-  FREAD(dummy1,sizeof(short),208, fp,TRUE);
+  FREAD(dummy1,sizeof(short),208, fp,true);
 
   // Set correct image size readed from header
   V().resize(Cfile, Bfile, Afile);
@@ -69,7 +69,7 @@ void CrispVolume::read(const FileName &fn) {
     for (unsigned y = 0; y <Bfile; y++)
        for (unsigned x = 0; x <Afile; x++) {
          short tmp;
-         FREAD(&tmp,sizeof(short),1,fp,TRUE);
+         FREAD(&tmp,sizeof(short),1,fp,true);
          DIRECT_VOLVOXEL(V,z,y,x)=tmp;
        }
 

@@ -34,12 +34,12 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    img.read(img.name());
    img.set_eulerAngles(rot,tilt,psi);
    img.set_originOffsets(shiftX,shiftY);   
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    cout << "This program is not intended for volumes\n";
-   return FALSE;
+   return false;
 }
 
 int main (int argc, char **argv) {

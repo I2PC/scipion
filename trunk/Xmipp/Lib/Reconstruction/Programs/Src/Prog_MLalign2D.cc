@@ -271,7 +271,7 @@ void Prog_MLalign2D_prm::produce_Side_info() {
   n_ref=0;
   SFr.go_beginning();
   while ((!SFr.eof())) {
-    img.read(SFr.NextImg(),FALSE,FALSE,TRUE,FALSE);
+    img.read(SFr.NextImg(),false,false,true,false);
     img().set_Xmipp_origin();
     Iref.push_back(img);
     Iold.push_back(img);
@@ -1328,7 +1328,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     focus=line.get_number()-1;
 
     fn_img=SF.NextImg();
-    img.read(fn_img,FALSE,FALSE,FALSE,FALSE);
+    img.read(fn_img,false,false,false,false);
     img().set_Xmipp_origin();
 
     // Perform the integration over all shifts for all significant models and phis

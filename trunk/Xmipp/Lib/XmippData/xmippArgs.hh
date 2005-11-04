@@ -303,20 +303,79 @@ void tokenize(const string& str,
 template <class T> 
 void read_float_list(const char *str, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
-   int exit=0);
+   int exit=0) {
+   T  valueF;
+   char     *token;
+
+   token=first_token(str);
+   for (int i=0; i<N; i++) {
+      if (token==NULL) {
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
+         REPORT_ERROR(_errno,errmsg);
+      }
+
+      try {
+         valueF=(T) AtoF(token);
+      }
+      catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
+
+      v.push_back(valueF);
+      if (i!=N-1) token=next_token();
+   }
+}
 
 /** list --> STL vector. */
 template <class T> 
 void read_float_list(const string &str, int &i, int N, vector<T> &v,
    int _errno=2105, string errmsg="Error reading list",
-   int exit=0);
+   int exit=0) {
+   T  valueF;
+   string token;
+
+   token=next_token(str,i);
+   for (int j=0; j<N; j++) {
+      if (token=="") {
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
+         REPORT_ERROR(_errno,errmsg);
+      }
+
+      try {
+         valueF=(T) AtoF(token.c_str());
+      }
+      catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
+
+      v.push_back(valueF);
+      if (j!=N-1) token=next_token(str,i);
+   }
+}
 
 /** list --> matrix1D. */
 template <class T> 
 void read_float_list(const char *str, int N, matrix1D<T> &v,
    int _errno=2105, string errmsg="Error reading floating list",
-   int exit=0);
+   int exit=0) {
+   T  valueF;
+   char *token;
 
+   token=first_token(str);
+   for (int i=0; i<N; i++) {
+      if (token==NULL) {
+         //CO: Should not report other error than the required one
+	 // cout << "Read float list: Number of true parameters doesn't coincide\n";
+         REPORT_ERROR(_errno,errmsg);
+      }
+
+      try {
+         valueF= (T) AtoF(token);
+      }
+      catch (Xmipp_error) {REPORT_ERROR(_errno,errmsg);}
+
+      DIRECT_VEC_ELEM(v,i)=valueF;
+      if (i!=N-1) token=next_token();
+   }
+}
 
 //@}
 
@@ -387,7 +446,7 @@ bool get_3_double_params(int argc, char **argv, const char *param,
         // checks if "-verbose" was supplied in the command line. If -verbose
 	was supplied the function returns TRUE (1), otherwise returns FALSE (0) 
     \end{verbatim}*/
-int check_param(int argc, char **argv, const char *param);
+bool check_param(int argc, char **argv, const char *param);
 
 /** Returns the position where the given parameter is in the command line.
     This function assumes that the command line is structured in such a

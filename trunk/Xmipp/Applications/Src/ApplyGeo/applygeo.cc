@@ -34,16 +34,16 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
      img.psi()=0.; if(img.tilt()==0) img.rot()=0;
      //set angles to zero
      
-     return TRUE;
+     return true;
 }//images end
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
      cerr << "Applygeo does not work with volumes\n";
-     return TRUE;
+     return true;
 }//volume end
 
 int main (int argc, char **argv) {
    Prog_parameters prm;
-   prm.apply_geo=TRUE;
+   prm.apply_geo=true;
    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

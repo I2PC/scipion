@@ -36,12 +36,10 @@
 
 /* Forward declariations --------------------------------------------------- */
 template <class T> class GridVolumeT;
-#ifdef COMPILING_WITH_EGCS
-   template <class T>
-      GridVolumeT<T> operator -(T f, const GridVolumeT<T> &GV);
-   template <class T>
-      GridVolumeT<T> operator /(T f, const GridVolumeT<T> &GV);
-#endif
+template <class T>
+   GridVolumeT<T> operator -(T f, const GridVolumeT<T> &GV);
+template <class T>
+   GridVolumeT<T> operator /(T f, const GridVolumeT<T> &GV);
 template <class T>
    ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
 
@@ -339,7 +337,7 @@ public:
        A point is interesting if it is inside the reconstruction radius.
        In case that this radius is -1, then all points are interesting. */
    bool is_interesting(const matrix1D<double> &uv) const
-      {if (R2==-1) return TRUE;
+      {if (R2==-1) return true;
        else return XX(uv)*XX(uv)+YY(uv)*YY(uv)+ZZ(uv)*ZZ(uv)<R2;}
    //@}
 
@@ -747,7 +745,18 @@ public:
    GridVolumeT(const Grid &_grid) {adapt_to_grid(_grid);}
    
    /** Assignment. */
-   GridVolumeT& operator = (const GridVolumeT& RV);
+   GridVolumeT& operator = (const GridVolumeT& RV) {
+      if (this!=&RV) {
+         clear();
+         G=RV.G;
+         for (int i=0; i<RV.VolumesNo(); i++) {
+             VolumeT<T>  *V=new VolumeT<T>;
+             *V=RV(i);
+             LV.push_back(V);
+         }
+      }
+      return *this;
+   }
 
    /** Destructor. */
    ~GridVolumeT() {clear();}
@@ -761,14 +770,69 @@ public:
        to the volume list according to the number of grids inside the complex
        grid. The size and starting point of the volumes added are
        fixed by the lowest and highest fields of each \Ref{SimpleGrid}. */
-   void adapt_to_grid(const Grid &_grid);
+   void adapt_to_grid(const Grid &_grid) {
+      // Clear old list of volumes
+      LV.clear();
+
+      // Keep the incoming Grid at the same time the old grid is forgotten
+      G=_grid;
+
+      // Generate a volume for each subgrid
+      int                        Zdim,Ydim,Xdim;
+      VolumeT<T> *               Vol_aux;
+      for (int i=0; i<G.GridsNo(); i++) {
+         SimpleGrid & grid=G(i);
+         grid.get_size(Zdim,Ydim,Xdim);
+         Vol_aux=new VolumeT<T>;
+         (*Vol_aux)().resize(Zdim,Ydim,Xdim);  // Using this function
+                                               // after empty creation the volume
+                                               // is zero-valued.
+         STARTINGX((*Vol_aux)())=(int) XX(grid.lowest); // This values are already
+         STARTINGY((*Vol_aux)())=(int) YY(grid.lowest); // integer although they
+         STARTINGZ((*Vol_aux)())=(int) ZZ(grid.lowest); // are stored as float
+         LV.push_back(Vol_aux);
+      }
+   }
 
    /** Resize.
        The grid volume is resized such that the space delimited by the
        two given corners is covered. Overlapping grid points are retained
        while non-overlapping ones are set to 0. */
    void resize(const matrix1D<double> &corner1,
-      const matrix1D<double> &corner2);
+      const matrix1D<double> &corner2) {
+      VolumeT<T> *         Vol_aux;
+      vector<VolumeT<T> *> LV_aux;
+
+      for (int n=0; n<G.GridsNo(); n++) {
+         SimpleGrid &grid=G(n);
+
+         // Resize grid
+         grid.universe2grid(corner1,grid.lowest);  grid.lowest.FLOORnD();
+         grid.universe2grid(corner2,grid.highest); grid.highest.CEILnD();
+
+         // Resize auxiliary volume
+         int Zdim, Ydim, Xdim;
+         grid.get_size(Zdim,Ydim,Xdim);
+         Vol_aux = new VolumeT<T>;
+         (*Vol_aux)().resize(Zdim,Ydim,Xdim);
+         STARTINGX((*Vol_aux)())=(int) XX(grid.lowest); // This values are already
+         STARTINGY((*Vol_aux)())=(int) YY(grid.lowest); // integer although they
+         STARTINGZ((*Vol_aux)())=(int) ZZ(grid.lowest); // are stored as float
+
+         // Copy values in common
+         VolumeT<T> * origin=LV[n];
+         SPEED_UP_temps;
+         FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D
+            (VOLMATRIX(*Vol_aux),VOLMATRIX(*origin)) {
+               VOLVOXEL(*Vol_aux,k,i,j)=VOLVOXEL(*origin,k,i,j);
+         }
+
+         // Extract old volume and push new one
+         delete LV[n];
+         LV_aux.push_back(Vol_aux);
+      }
+      LV=LV_aux;
+   }
 
    /** Resize after a pattern.
        The volume is of the same shape, the grids are copied, and the
@@ -790,7 +854,11 @@ public:
       {for (int i=0; i<VolumesNo(); i++) (*this)(i)().init_zeros();}
    
    /** Clear the volume */
-   void clear();
+   void clear() {
+      for (int i=0; i<VolumesNo(); i++) delete LV[i];
+      LV.clear();
+      G.clear();
+   }
    //@}
 
    /**@name Structure access */
@@ -827,26 +895,38 @@ public:
    /**@name Arithmethic operations */
    //@{
    /**@name Volume by constant */
+   #define GRIDVOLUME_BY_SCALAR(op) \
+      GridVolumeT<T> result; \
+      result.G = G; \
+      result.LV.reserve(VolumesNo()); \
+      for (int i=0; i<VolumesNo(); i++) \
+         array_by_scalar((*this)(i)(),f,result(i)(),op); \
+      return result;
+
    //@{
    /** Sum a constant.
        The constant is added to all simple volumes.
        \\Ex: V2=V1+6; */
-   GridVolumeT<T> operator + (T f) const;
+   GridVolumeT<T> operator + (T f) const
+      {GRIDVOLUME_BY_SCALAR('+');}
 
    /** Substract a constant.
        The constant is substracted from all simple volumes.
        \\Ex: V2=V1-6; */
-   GridVolumeT<T> operator - (T f) const;
+   GridVolumeT<T> operator - (T f) const
+      {GRIDVOLUME_BY_SCALAR('-');}
 
    /** Multiply by a constant.
        The constant is multiplied with all simple volumes.
        \\Ex: V2=V1*6; */
-   GridVolumeT<T> operator * (T f) const;
+   GridVolumeT<T> operator * (T f) const
+      {GRIDVOLUME_BY_SCALAR('*');}
 
    /** Divide by a constant.
        The constant divides all simple volumes.
        \\Ex: V2=V1/6; */
-   GridVolumeT<T> operator / (T f) const;
+   GridVolumeT<T> operator / (T f) const
+      {GRIDVOLUME_BY_SCALAR('/');}
    //@}
 
    /**@name Constant by volume */
@@ -862,61 +942,95 @@ public:
        \\Ex: V2=6*V1; */
    GridVolumeT<T> friend operator * (T f, const GridVolumeT<T> &GV)
        {return GV*f;}
-
-   #ifdef COMPILING_WITH_EGCS
-   /** Substract a constant.
-       The constant is substracted from all simple volumes.
-       \\Ex: V2=6-V1; */
-   GridVolumeT<T> friend operator -<> (T f, const GridVolumeT<T> &GV);
-
-   /** Divide by a constant.
-       The constant is divided by all simple volumes.
-       \\Ex: V2=6/V1; */
-   GridVolumeT<T> friend operator /<> (T f, const GridVolumeT<T> &GV);
-   #endif
    //@}
 
    /**@name Volume by volume */
    //@{
+   #define GRIDVOL_BY_GRIDVOL(op) \
+      GridVolumeT<T> result; \
+      VolumeT<T> * Vol_aux; \
+      \
+      if (VolumesNo()!=GV.VolumesNo()) \
+         REPORT_ERROR(3004,(string)"GridVolume::"+op+": Different number of subvolumes");\
+      \
+      result.G = G;\
+      result.LV.reserve(VolumesNo());\
+      \
+      for (int i=0; i<VolumesNo(); i++) { \
+          try { \
+             Vol_aux = new VolumeT<T>; \
+             array_by_array((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
+             result.LV.push_back(Vol_aux); \
+          } catch (Xmipp_error XE) {\
+             cout << XE; \
+             REPORT_ERROR(3004,(string)"GridVolume::"+op+": Different shape of volume " +\
+                ItoA(i)); \
+          } \
+      } \
+      \
+      return result;
+
    /** Sum another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1+V2; */
-   GridVolumeT<T> operator + (const GridVolumeT<T> &GV);
+   GridVolumeT<T> operator + (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOL('+');}
 
    /** Substract another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1-V2; */
-   GridVolumeT<T> operator - (const GridVolumeT<T> &GV);
+   GridVolumeT<T> operator - (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOL('-');}
 
    /** Multiply by another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1*V2; */
-   GridVolumeT<T> operator * (const GridVolumeT<T> &GV);
+   GridVolumeT<T> operator * (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOL('*');}
 
    /** Divide by another volume.
        The two volumes must be equally the same in shape (size,
        origin, number of simple volumes, ...) if they aren't an
        exception is thrown.
        \\Ex: V3=V1/V2; */
-   GridVolumeT<T> operator / (const GridVolumeT<T> &GV);
+   GridVolumeT<T> operator / (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOL('/');}
+
+   #define GRIDVOL_BY_GRIDVOLASSIG(op) \
+      if (VolumesNo()!=GV.VolumesNo()) \
+         REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different number of subvolumes");\
+      \
+      for (int i=0; i<VolumesNo(); i++) { \
+          try { \
+             array_by_array((*this)(i)(),GV(i)(),(*this)(i)(),op); \
+          } catch (Xmipp_error XE) {\
+             cout << XE; \
+             REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different shape of volume " +\
+                ItoA(i)); \
+          } \
+      }
 
    /** Sum another volume. */
-   void operator += (const GridVolumeT<T> &GV);
+   void operator += (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOLASSIG('+');}
 
    /** Substract another volume.*/
-   void operator -= (const GridVolumeT<T> &GV);
+   void operator -= (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOLASSIG('-');}
 
    /** Multiply by another volume.*/
-   void operator *= (const GridVolumeT<T> &GV);
+   void operator *= (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOLASSIG('*');}
 
    /** Divide by another volume.*/
-   void operator /= (const GridVolumeT<T> &GV);
+   void operator /= (const GridVolumeT<T> &GV)
+      {GRIDVOL_BY_GRIDVOLASSIG('/');}
    //@}
    //@}
    
@@ -952,13 +1066,248 @@ public:
    /** Write grid volume.
        The Filename is compulsory, an exception is thrown if the volume
        is too small to hold the control information of each layer. */
-   void write(const FileName &fn) const;
+   void write(const FileName &fn) const {
+      VolumeXmippT<T>    V;
+      float temp_float;
+      size_t floatsize;
+      const type_info &typeinfoT = typeid(T); // We need to know what kind
+                                              // of variable is T
+      const type_info &typeinfoD = typeid(double); 
+      const type_info &typeinfoI = typeid(int); 
+
+      floatsize= (size_t) sizeof(float);
+
+      if (VolumesNo()==0) return;
+
+      // Create the writing volume ............................................
+      int Zdim=0, Ydim=0, Xdim=0;
+      for (int v=0; v<VolumesNo(); v++) {
+         const VolumeT<T> & this_vol=(*this)(v);
+         Zdim += ZSIZE(this_vol());
+         Ydim=MAX(Ydim,YSIZE(this_vol()));
+         Xdim=MAX(Xdim,XSIZE(this_vol()));
+      }
+
+      // Check if there is enough space for the control slice
+      if (Xdim*Ydim<25) Ydim=(int) CEIL(25.0f/Xdim);
+
+      // A slice is added for control information for each subvolume
+      VOLMATRIX(V).init_zeros(Zdim+VolumesNo(),Ydim,Xdim);
+
+      // Write Grid volume ....................................................
+      #define PACK_DOUBLE(v) \
+         {jj=pos%Xdim; ii=pos/Xdim; pos++; VOLVOXEL(V,sli,ii,jj)=(T)(v);}
+      #define PACK_INT(v) \
+         {jj=pos%Xdim; ii=pos/Xdim; pos++; \
+         temp_float = (float) (v); \
+         memcpy( &(VOLVOXEL(V,sli,ii,jj)) , &temp_float, floatsize); \
+         }
+
+      int sli=0;
+      for (int v=0; v<VolumesNo(); v++) {
+         int pos, ii, jj;           // Position inside the control slice
+         int k,i,j;                 // Auxiliar counters
+
+         // Choose grid and volume
+         const SimpleGrid & this_grid = grid(v);
+         const VolumeT<T> & this_vol = (*this)(v);
+
+         // Store Grid data ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+         pos=0;
+
+         if(typeinfoT==typeinfoD) {
+            for (i=0; i<3; i++)
+               for (j=0; j<3; j++) PACK_DOUBLE(MAT_ELEM(this_grid.basis  ,i,j));
+            for (i=0; i<3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.lowest ,i));
+            for (i=0; i<3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.highest,i));
+                                   PACK_DOUBLE(         this_grid.relative_size);
+            for (i=0; i<3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.origin,i));
+                                   PACK_DOUBLE(         this_grid.R2);
+
+            // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+            PACK_DOUBLE(ZSIZE(this_vol()));
+            PACK_DOUBLE(YSIZE(this_vol()));
+            PACK_DOUBLE(XSIZE(this_vol()));
+            PACK_DOUBLE(STARTINGZ(this_vol()));
+            PACK_DOUBLE(STARTINGY(this_vol()));
+            PACK_DOUBLE(STARTINGX(this_vol()));
+         }
+         else if (typeinfoT==typeinfoI){
+             // We use a trick to save the grid information in the volume
+             // If the following if is true the trick can not be used   
+             if((sizeof(float)!= sizeof(int)))
+                 REPORT_ERROR(1,
+                    "GridVolume is integer and (sizeof(float)!= sizeof(int)");
+
+            for (i=0; i<3; i++)
+               for (j=0; j<3; j++) PACK_INT(MAT_ELEM(this_grid.basis  ,i,j));
+            for (i=0; i<3; i++)    PACK_INT(VEC_ELEM(this_grid.lowest ,i));
+            for (i=0; i<3; i++)    PACK_INT(VEC_ELEM(this_grid.highest,i));
+                                   PACK_INT(         this_grid.relative_size);
+            for (i=0; i<3; i++)    PACK_INT(VEC_ELEM(this_grid.origin,i));
+                                   PACK_INT(         this_grid.R2);
+
+            // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+            PACK_INT(ZSIZE(this_vol()));
+            PACK_INT(YSIZE(this_vol()));
+            PACK_INT(XSIZE(this_vol()));
+            PACK_INT(STARTINGZ(this_vol()));
+            PACK_INT(STARTINGY(this_vol()));
+            PACK_INT(STARTINGX(this_vol()));      
+         }
+         else
+            REPORT_ERROR(1,"GridVolume must be double or int\n");
+
+         sli++;
+
+         // Write the whole volume ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+         for (k=0; k<ZSIZE(VOLMATRIX(this_vol)); k++) {
+            for (i=0; i<YSIZE(VOLMATRIX(this_vol)); i++)
+               for (j=0; j<XSIZE(VOLMATRIX(this_vol)); j++)
+                  DIRECT_VOLVOXEL(V,sli,i,j)=DIRECT_VOLVOXEL(this_vol,k,i,j);
+            sli++;
+         }
+      }
+      #undef PACK_DOUBLE
+      #undef PACK_INT
+
+      // Effectively write the volume .........................................
+      V.write(fn);
+   }
 
    /** Read grid volume.
        The volume is read from a Xmipp volume with a special structure
        at several slices. An exception might be thrown by the
        \Ref{VolumeXmipp::read} routine. */
-   void read(const FileName &fn);
+   void read(const FileName &fn) {
+      VolumeXmippT<T>    V;
+      VolumeT<T>      * sV;
+      SimpleGrid     sG;
+      int            sli=0;
+
+      float temp_float;
+      size_t floatsize;
+      const type_info &typeinfoT = typeid(T); // We need to know what kind
+                                             // of variable is T
+      const type_info &typeinfoD = typeid(double); 
+      const type_info &typeinfoI = typeid(int); 
+
+      floatsize= (size_t) sizeof(float);
+      // We use a trick to save the grid information in the volume
+      // If the following if is true the trick can not be used
+      if(  (typeid(T) == typeid(int)) && (sizeof(float)!= sizeof(int) ) )
+          {
+          cout << "\nError: GridVolume is integer and\n" 
+                  "(sizeof(float)!= sizeof(int)\n";
+          exit(0);
+          }
+
+      // Allocate memory ......................................................
+      sG.basis.resize(3,3);
+      sG.lowest.resize(3);
+      sG.highest.resize(3);
+      sG.origin.resize(3);
+
+      // Read Reconstructing volume from file .................................
+      V.read(fn);
+
+      #define UNPACK_DOUBLE(v,cast) \
+         {jj=pos%VOLMATRIX(V).xdim; ii=pos/VOLMATRIX(V).xdim; pos++; \
+         (v)=(cast)VOLVOXEL(V,sli,ii,jj);}
+      #define UNPACK_INT(v,cast) \
+         {jj=pos%VOLMATRIX(V).xdim; ii=pos/VOLMATRIX(V).xdim; pos++; \
+          memcpy( &temp_float, &(VOLVOXEL(V,sli,ii,jj)),floatsize);\
+         (v)=(cast)temp_float;}
+
+      while (sli<ZSIZE(V())) {
+         int pos, ii, jj;           // Position inside the control slice
+         int k,i,j;                 // Auxiliar counters
+         int            Zdim, Ydim, Xdim;
+         int            Zinit, Yinit, Xinit;
+
+         // Read Grid data ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+         pos=0;
+         if (typeinfoT==typeinfoD) {
+            for (i=0; i<3; i++)
+               for (j=0; j<3; j++) UNPACK_DOUBLE(MAT_ELEM(sG.basis  ,i,j),double);
+            for (i=0; i<3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.lowest ,i),int);
+            for (i=0; i<3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.highest,i),int);
+                                   UNPACK_DOUBLE(         sG.relative_size,double);
+            for (i=0; i<3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.origin,i),double);
+                                   UNPACK_DOUBLE(         sG.R2,double);
+         } else if (typeinfoT==typeinfoI){
+            // We use a trick to save the grid information in the volume
+            // If the following if is true the trick can not be used   
+            if ((sizeof(float)!= sizeof(int)))
+               REPORT_ERROR(1,
+                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
+
+            for (i=0; i<3; i++)
+               for (j=0; j<3; j++) UNPACK_INT(MAT_ELEM(sG.basis  ,i,j),double);
+            for (i=0; i<3; i++)    UNPACK_INT(VEC_ELEM(sG.lowest ,i),int);
+            for (i=0; i<3; i++)    UNPACK_INT(VEC_ELEM(sG.highest,i),int);
+                                   UNPACK_INT(         sG.relative_size,double);
+            for (i=0; i<3; i++)    UNPACK_INT(VEC_ELEM(sG.origin,i),double);
+                                   UNPACK_INT(         sG.R2,double);
+         }      
+         sG.inv_basis=sG.basis.inv();
+
+         // Store Grid in the list of the grid volume
+         G.add_grid(sG);
+
+         // Read Volume Control Information ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+         if (typeinfoT==typeinfoD) {
+             UNPACK_DOUBLE(Zdim,int);
+             UNPACK_DOUBLE(Ydim,int);
+             UNPACK_DOUBLE(Xdim,int);
+             UNPACK_DOUBLE(Zinit,int);
+             UNPACK_DOUBLE(Yinit,int);
+             UNPACK_DOUBLE(Xinit,int);
+         } else if (typeinfoT==typeinfoI) {
+             UNPACK_INT(Zdim,int);
+             UNPACK_INT(Ydim,int);
+             UNPACK_INT(Xdim,int);
+             UNPACK_INT(Zinit,int);
+             UNPACK_INT(Yinit,int);
+             UNPACK_INT(Xinit,int);
+         }
+
+         // Set volume size and origin
+         sV=new VolumeT<T>;
+         VOLMATRIX(*sV).init_zeros(Zdim,Ydim,Xdim);
+         STARTINGZ(VOLMATRIX(*sV))=Zinit;
+         STARTINGY(VOLMATRIX(*sV))=Yinit;
+         STARTINGX(VOLMATRIX(*sV))=Xinit;
+         #ifdef DEBUG
+            cout << "The read grid is \n" << sG;
+            cout << "Volume dimensions: " << Zdim << " x " << Ydim << " x "
+                 << Xdim << endl;
+            cout << "Volume init: " << Zinit << " x " << Yinit << " x "
+                 << Xinit << endl;
+         #endif
+         sli++;
+
+         // Read volume ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+         for (k=0; k<ZSIZE(VOLMATRIX(*sV)); k++) {
+            for (i=0; i<YSIZE(VOLMATRIX(*sV)); i++)
+               for (j=0; j<XSIZE(VOLMATRIX(*sV)); j++) {
+                  #ifdef DEBUG
+                     cout << "Reading from file position (" << sli << "," << i
+                          << "," << j << ") to subvolume position ("
+                          << k << "," << i << "," << j << ")\n";
+                  #endif
+                  DIRECT_VOLVOXEL(*sV,k,i,j)=DIRECT_VOLVOXEL(V,sli,i,j);
+               }
+            sli++;
+         }
+
+         // Store volume in the list
+         LV.push_back(sV);
+      }
+      #undef UNPACK_DOUBLE
+      #undef UNPACK_INT
+   }
+   #undef DEBUG
    
    /** Show volume.
        \\Ex: cout << V; */
@@ -968,4 +1317,18 @@ public:
 //@}
 
 typedef GridVolumeT<double> GridVolume;
+
+// Show a grid volume ------------------------------------------------------
+template <class T>
+ostream& operator << (ostream &o, const GridVolumeT<T> &GV) {
+   o << "Grid Volume -----------\n";
+   o << GV.G;
+   o << "Number of volumes= " << GV.VolumesNo() << endl;
+   for (int i=0; i<GV.VolumesNo(); i++) {
+      o << "Volume " << i << "------------" << endl;
+      o << GV(i)();
+   }
+   return o;
+}
+
 #endif

@@ -42,7 +42,7 @@ public:
     fn_ref=get_param(argc,argv,"-ref");
     sam=AtoF(get_param(argc,argv,"-sam"));
     if (Is_ImageXmipp(fn_ref)) {
-      refI.read(fn_ref,FALSE,FALSE,apply_geo);
+      refI.read(fn_ref,false,false,apply_geo);
       refI().set_Xmipp_origin();
     } else if (Is_VolumeXmipp(fn_ref)) {
       refV.read(fn_ref);
@@ -145,8 +145,8 @@ int main (int argc, char **argv) {
   if (!check_param(argc,argv,"-set_of_images")) {
 
     Resolution_parameters prm;
-    prm.each_image_produces_an_output=FALSE;
-    prm.apply_geo=TRUE;
+    prm.each_image_produces_an_output=false;
+    prm.apply_geo=true;
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 
   } else {

@@ -1,3 +1,5 @@
+#ifndef _TBOUNDARYCONDITIONS
+   #define _TBOUNDARYCONDITIONS
 /*--------------------------------------------------------------------------*/
 /** Type of Boundary Conventions.
     Valid types are AntiMirrorOnBounds, FiniteCoefficientSupport,
@@ -12,3 +14,4 @@ enum TBoundaryConvention
 	Periodic
 };
 
+#endif

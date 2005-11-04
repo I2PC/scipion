@@ -140,7 +140,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask) {
    double mass_min=MULTIDIM_SIZE(V());
    double mass_max=1;
    
-   bool ok=FALSE;
+   bool ok=false;
    if (!en_threshold) {
       // Perform a bracketing search until the mass is 
       // within a 0.1% of the desired mass
@@ -149,17 +149,17 @@ void Prog_segment_prm::segment(VolumeXmipp &mask) {
          double mass_med=segment_threshold(&V,&mask,th_med);
          cout << "Threshold= " << th_med
               << " mass of the main piece= " << mass_med << endl;
-         if (ABS(mass_med-voxel_mass)/voxel_mass<0.001) {ok=TRUE; break;}
+         if (ABS(mass_med-voxel_mass)/voxel_mass<0.001) {ok=true; break;}
          if ((th_max-th_min)/(val_max-val_min)<0.0001) break;
          if (mass_med<voxel_mass) {th_max=th_med; mass_max=mass_med;}
          else                     {th_min=th_med; mass_min=mass_med;}
-      } while (TRUE);
+      } while (true);
    } else {
       // Perform a single thresholding
       double mass_med=segment_threshold(&V,&mask,threshold);
       cout << "Threshold= " << threshold
            << " mass of the main piece= " << mass_med << endl;
-      ok=TRUE;
+      ok=true;
    }
    
    // Save mask if necessary

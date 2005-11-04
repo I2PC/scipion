@@ -33,7 +33,6 @@
 #include "xmippHeader.hh"
 #include "xmippHistograms.hh"
 #include "xmippImages.hh"
-#include "xmippImagic.hh"
 #include "xmippMasks.hh"
 #include "xmippMicrograph.hh"
 #include "xmippMorphology.hh"

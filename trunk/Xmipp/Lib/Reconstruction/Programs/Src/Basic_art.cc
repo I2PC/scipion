@@ -37,16 +37,16 @@ void Basic_ART_Parameters::default_values() {
     fn_start           = "";
     fn_sym             = "";
     force_sym          = 0;
-    do_not_generate_subgroup = FALSE;
-    do_not_use_symproj = FALSE;
+    do_not_generate_subgroup = false;
+    do_not_use_symproj = false;
     fn_surface_mask    = "";
     parallel_mode      = ART;
     block_size	       = 1;
     eq_mode            = ARTK;
-    random_sort        = FALSE;
-    dont_sort          = FALSE;
+    random_sort        = false;
+    dont_sort          = false;
     sort_last_N        = 2;
-    WLS                = FALSE;
+    WLS                = false;
     no_it              = 1;
     kappa_list.resize(1);  kappa_list.init_constant(0.5);
     lambda_list.resize(1); lambda_list.init_constant(0.01);
@@ -75,10 +75,10 @@ void Basic_ART_Parameters::default_values() {
     POCS_freq          = 1;
     
     known_volume       =-1;
-    positivity         =FALSE;
+    positivity         =false;
     unmatched          =false;
     ray_length         =-1;
-    apply_shifts       = TRUE;
+    apply_shifts       = true;
 
     sampling           =1.;
     sym_each           =0;
@@ -509,13 +509,13 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
    if (fn_ctf!="") {
       if (Is_FourierImageXmipp(fn_ctf)) {
          ctf.read_mask(fn_ctf);
-	 multiple_CTFs=FALSE;
+	 multiple_CTFs=false;
       } else {
 	 selctf.read(fn_ctf);
 	 if (selctf.ImgNo()!=selfile.ImgNo())
             REPORT_ERROR(1,"Basic_ART_Parameters: The number of images in "
                "the ctf and original selfiles do not match");
-	 multiple_CTFs=TRUE;
+	 multiple_CTFs=true;
       }
    }
 

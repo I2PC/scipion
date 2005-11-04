@@ -33,7 +33,6 @@
 #include "../xmippFuncs.hh"
 #include "../xmippSelFiles.hh"
 #include "../xmippImages.hh"
-#include "../xmippImagic.hh"
 
 /*****************************************************************************/   
 /* SEL FILE LINE        	             	      	             	     */
@@ -56,10 +55,10 @@ SelLine& SelLine::operator = (const SelLine &SL) {
    return *this;
 }
 
-// Returns FALSE if the comparison is nonsense, ie, if line_types are not the
+// Returns false if the comparison is nonsense, ie, if line_types are not the
 // same or the lines are to be deleted or are not assigned.
-// Returns TRUE if l1<l2 otherwise FALSE
-int operator < (const SelLine &l1, const SelLine &l2) {
+// Returns TRUE if l1<l2 otherwise false
+bool operator < (const SelLine &l1, const SelLine &l2) {
    if      (l1.line_type<l2.line_type) return 1;
    else if (l1.line_type>l2.line_type) return 0;
    else                                return l1.text<l2.text;
@@ -77,7 +76,7 @@ ostream& operator << (ostream& o, SelLine &SFL) {
 
 istream& operator >> (istream& o, SelLine &SFL) {
    string   line;
-   char     img_name[MAX_FILENAME_LENGTH];
+   char     img_name[1024];
    int      no_elements_read;
    int      label;
 

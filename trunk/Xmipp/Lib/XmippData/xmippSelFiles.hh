@@ -113,7 +113,7 @@ public:
        if they are equal if the text of l1 is lesser than the text
        of l2. The order of the line types are NOT_CONSIDERED,
        NOT_ASSIGNED, DATALINE, COMMENT */
-   friend int operator < (const SelLine &l1, const SelLine &l2);
+   friend bool operator < (const SelLine &l1, const SelLine &l2);
 
    // Compare two .sel files
    friend SelFile compare(SelFile &SF1, SelFile &SF2);
@@ -431,7 +431,8 @@ public:
    /** Gets statistics of the active images in the sel file
        it returns the average image, the minimum and maximum.
        \\Ex: SF.get_statistics(aveImg, min, max); */
-   void get_statistics(Image& _ave, Image& _sd, double& _min, double& _max, bool apply_geo=FALSE);
+   void get_statistics(Image& _ave, Image& _sd,
+      double& _min, double& _max, bool apply_geo=false);
 
    //@}
 

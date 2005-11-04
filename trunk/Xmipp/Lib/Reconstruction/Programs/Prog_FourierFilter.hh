@@ -29,6 +29,7 @@
 #include "../CTF.hh"
 #include <XmippData/xmippMatrices3D.hh>
 #include <XmippData/xmippFFT.hh>
+#include <XmippData/xmippMasks.hh>
 
 /**@name Fourier Masks */
 //@{
@@ -132,14 +133,113 @@ public:
    
    This function cannot be used to generate CTF masks.*/
    template <class T>
-   void generate_mask(T &v);
+   void generate_mask(T &v) {
+      int dim=SPACE_DIM(v);
+      // Resize Xmipp real mask
+      bool copy_from_Xmipp_real_mask=true;
+      Mask_Params real_mask;
+      double N1=w1*XSIZE(v);
+      double N2=w2*XSIZE(v);
+      double raised_pixels=raised_w*XSIZE(v);
+
+      // Generate mask
+      switch (FilterBand) {
+         case FROM_FILE:
+            read_mask(fn_mask);
+            copy_from_Xmipp_real_mask=false;
+            break;
+         case LOWPASS:
+            switch (FilterShape) {
+	       case RAISED_COSINE:
+	          real_mask.type=RAISED_COSINE_MASK;
+	          real_mask.mode=INNER_MASK;
+	          real_mask.R1=N1;
+	          real_mask.R2=N1+raised_pixels;
+	          real_mask.x0=real_mask.y0=real_mask.z0=0;
+	          break;
+	       case WEDGE:
+	          real_mask.type=BINARY_WEDGE_MASK;
+	          real_mask.R1=w1;
+	          real_mask.R2=w2;
+	          break;
+	    }
+            break;
+         case HIGHPASS:
+            switch (FilterShape) {
+	       case RAISED_COSINE:
+	          real_mask.type=RAISED_COSINE_MASK;
+	          real_mask.mode=OUTSIDE_MASK;
+	          real_mask.R1=N1-raised_pixels;
+	          real_mask.R2=N1;
+	          real_mask.x0=real_mask.y0=real_mask.z0=0;
+	          break;
+	    }
+            break;
+         case BANDPASS:
+            switch (FilterShape) {
+	       case RAISED_COSINE:
+	          real_mask.type=RAISED_CROWN_MASK;
+	          real_mask.mode=INNER_MASK;
+	          real_mask.R1=N1;
+	          real_mask.R2=N2;
+	          real_mask.x0=real_mask.y0=real_mask.z0=0;
+	          real_mask.pix_width=raised_pixels;
+	          break;
+	    }
+            break;
+         case STOPBAND:
+            switch (FilterShape) {
+	       case RAISED_COSINE:
+	          real_mask.type=RAISED_CROWN_MASK;
+	          real_mask.mode=OUTSIDE_MASK;
+	          real_mask.R1=N1;
+	          real_mask.R2=N2;
+	          real_mask.x0=real_mask.y0=real_mask.z0=0;
+	          real_mask.pix_width=raised_pixels;
+	          break;
+	    }
+            break;
+         case CTF:
+            generate_CTF_mask(v);
+            copy_from_Xmipp_real_mask=false;
+            break;
+      }
+
+      // Copy mask from real Xmipp mask
+      if (copy_from_Xmipp_real_mask) {
+         real_mask.resize(v);
+         if (dim==1) {
+            real_mask.generate_1Dmask();
+            type_cast(real_mask.get_cont_mask1D(),mask1D);
+	    CenterFFT(mask1D,false);
+         } else if (dim==2) {
+            real_mask.generate_2Dmask();
+            type_cast(real_mask.get_cont_mask2D(),mask2D);
+	    CenterFFT(mask2D,false);
+         } else {
+            real_mask.generate_3Dmask();
+            type_cast(real_mask.get_cont_mask3D(),mask3D);
+	    CenterFFT(mask3D,false);
+         }
+      }
+   }
 
    /** Read mask from file. */
    void read_mask(const FileName &fn);
 
    /** Generate CTF mask for images */
    template <class T>
-   void generate_CTF_mask(T &v);
+   void generate_CTF_mask(T &v) {
+      STARTINGX(mask2D)=STARTINGY(mask2D)=0;
+      int dim=SPACE_DIM(v);
+      if (dim!=2)
+         REPORT_ERROR(1,
+            "generate_CTF_mask is intended only for images");
+      FilterBand=CTF;
+      ctf.Generate_CTF(YSIZE(v),XSIZE(v),mask2D);
+      STARTINGX(mask2D)=STARTINGX(v);
+      STARTINGY(mask2D)=STARTINGY(v);
+   }
 
    /** Flip the phase of an already generated 2D mask.
        Those frequencies that have negative amplitude are flipped. */
@@ -152,7 +252,7 @@ public:
    /** Save amplitude as a text file, Indicate
        which is the dimension of the mask to save. */
    void write_amplitude(const FileName &fn, int dim,
-      bool do_not_center=FALSE);
+      bool do_not_center=false);
 
    /** Apply mask (argument is in Fourier space).
        It should have been already generated. The given image is modified.

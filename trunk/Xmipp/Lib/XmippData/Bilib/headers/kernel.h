@@ -1,3 +1,5 @@
+#ifndef _BILIBKERNEL
+   #define _BILIBKERNEL
 /**@name Kernel definition */
 //@{
 /*--------------------------------------------------------------------------*/
@@ -421,3 +423,4 @@ extern double	Sinc
 					double	Argument			/* input */
 				);
 //@}
+#endif
