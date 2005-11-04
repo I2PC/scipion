@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "../Prog_project.hh"
+#include "../../directions.hh"
 #include <XmippData/xmippArgs.hh>
 
 /* Read from command line ================================================== */
@@ -31,6 +32,7 @@ void Prog_Project_Parameters::read(int argc, char **argv) {
    fn_proj_param = get_param(argc, argv, "-i");
    fn_sel_file   = get_param(argc, argv, "-o","");
    fn_crystal    = get_param(argc, argv, "-crystal","");
+   fn_sym        = get_param(argc, argv, "-sym", "");
    only_create_angles=check_param(argc,argv,"-only_create_angles");
    if (check_param(argc,argv,"-show_angles"))
       tell |= TELL_SHOW_ANGLES;
@@ -42,6 +44,7 @@ void Prog_Project_Parameters::usage() {
    printf("project -i <Parameters File> \n"
           "       [-o <sel_file>]\n"
           "       [-show_angles]\n"
+          "       [-sym <sym_file>]\n"
           "       [-only_create_angles]\n"
           "       [-crystal <crystal_parameters_file>]\n");
    printf(
@@ -50,6 +53,8 @@ void Prog_Project_Parameters::usage() {
       "\t                    check the manual for a description of the parameters\n"
       "\t<sel_file>:         This is a selection file with all the generated\n"
       "\t                    projections\n");
+   printf(
+      "\t<sym_file>:         This is a symmetry description file\n");
 }
 
 /* Projection parameters from program parameters =========================== */
@@ -442,6 +447,8 @@ void generate_angles(int ExtProjs, const Angle_range &range,
 }
 
 /* Generate evenly distributed angles ====================================== */
+//#define OLD_EVEN_GENERATION_METHOD
+#ifdef OLD_EVEN_GENERATION_METHOD
 void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
    const Projection_Parameters &prm) {
    // We will run over the tilt angle in a deterministic way
@@ -507,12 +514,16 @@ int count_even_angles(const Projection_Parameters &prm) {
         // add cout << N after N++ in the loop, then it works perfectly
    return N;
 }
+#endif
 
 /* Assign angles =========================================================== */
-int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
+int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
+   const FileName &fn_sym) {
    int ExtProjs=0, IntProjs=0;        // External and internal projections
+   #ifdef OLD_EVEN_GENERATION_METHOD
    int Nrottilt;                      // Number of evenly distributed
       	             	      	      // projections
+   #endif
 
    DF.clear();
    DF.FirstKey()=prm.starting;
@@ -528,8 +539,12 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
       if (prm.rot_range.randomness!=ANGLE_EVENLY)
          IntProjs=Nrot*Ntilt*Npsi;
       else {
-         Nrottilt=count_even_angles(prm);
-         IntProjs=Nrottilt*Npsi;
+         #ifdef OLD_EVEN_GENERATION_METHOD
+            Nrottilt=count_even_angles(prm);
+            IntProjs=Nrottilt*Npsi;
+         #else
+            IntProjs=0;
+         #endif
       }
       DF.append_data_line(IntProjs);  // Create lines for the angles
       if (prm.rot_range.randomness!=ANGLE_EVENLY) {
@@ -537,18 +552,33 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
 	 generate_angles(ExtProjs,prm.tilt_range, DF, 't', prm);
          generate_angles(ExtProjs,prm.psi_range,  DF, 'p', prm);
       } else {
-         generate_even_angles(ExtProjs,Nrottilt,DF,prm);
-         // Clear empty entries
-         DF.go_first_data_line();
-	 vector<int> to_remove;
-	 while (!DF.eof()) {
-            if (DF.get_current_line().get_no_components()==0) 
-               to_remove.push_back(DF.get_current_key());
-	    DF.next_data_line();
-	 }
-	 int imax=to_remove.size();
-	 for (int i=imax-1; i>=0; i--) DF.remove(to_remove[i]);
-	 DF.renum();
+         #ifdef OLD_EVEN_GENERATION_METHOD
+            generate_even_angles(ExtProjs,Nrottilt,DF,prm);
+            // Clear empty entries
+            DF.go_first_data_line();
+	    vector<int> to_remove;
+	    while (!DF.eof()) {
+               if (DF.get_current_line().get_no_components()==0) 
+                  to_remove.push_back(DF.get_current_key());
+	       DF.next_data_line();
+	    }
+	    int imax=to_remove.size();
+	    for (int i=imax-1; i>=0; i--) DF.remove(to_remove[i]);
+	    DF.renum();
+         #else
+            SymList SL;
+            if (fn_sym!="") SL.read_sym_file(fn_sym);
+            DocFile DF_aux;
+            double rot_step_at_equator=(prm.rot_range.angF-prm.rot_range.ang0)/
+               (double)(Nrot-1);
+            make_even_distribution(DF_aux, rot_step_at_equator, SL, true);
+            DF_aux.go_first_data_line();
+	    while (!DF_aux.eof()) {
+               DocLine line=DF_aux.get_current_line();
+               DF.append_line(line);
+	       DF_aux.next_data_line();
+	    }
+         #endif
       }
    }
 
@@ -558,10 +588,10 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm) {
 }
 
 /* Produce Side Information ================================================ */
-void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm)
-   {
+void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
+   const Prog_Project_Parameters &prog_prm) {
 // Generate Projection angles
-   Assign_angles(DF,prm);
+   Assign_angles(DF,prm,prog_prm.fn_sym);
    
 // Load Phantom and set working mode
    if (Is_VolumeXmipp(prm.fn_phantom)) {
@@ -658,7 +688,7 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
    Projection_Parameters proj_prm;
    PROJECT_Side_Info side;
    proj_prm.from_prog_params(prm);
-   side.produce_Side_Info(proj_prm);
+   side.produce_Side_Info(proj_prm,prm);
 
    Crystal_Projection_Parameters crystal_proj_prm;
    if (prm.fn_crystal!="") crystal_proj_prm.read(prm.fn_crystal);

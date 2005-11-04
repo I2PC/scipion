@@ -179,7 +179,9 @@ void Prog_angular_predict_prm::produce_side_info() {
       ;
       fh_proj_param.close();
       fn_ref=(string)"ref"+fn_random+".sel";
-      system(((string)"xmipp_project -i "+fn_proj_param+" -o "+fn_ref).c_str());
+      string command=(string)"xmipp_project -i "+fn_proj_param+" -o "+fn_ref;
+      if (fn_sym!="") command+=(string)" -sym "+fn_sym;
+      system(command.c_str());
       system(((string)"rm -f "+fn_proj_param).c_str());
       fn_ang=(string)"reference"+fn_random+"__movements.txt";
    } else {

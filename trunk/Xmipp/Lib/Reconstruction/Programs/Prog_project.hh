@@ -46,6 +46,8 @@ public:
    /** Filename with the special crystal parameters
       (\Ref{Crystal_Projection_Parameters}) */
    FileName fn_crystal;
+   /// Symmetry file
+   FileName fn_sym;
    /// Only create angles, do not project
    bool only_create_angles;
 
@@ -226,7 +228,8 @@ public:
        
        Projection from voxel volumes is not implemented yet and
        an exception is thrown. */
-   void produce_Side_Info(const Projection_Parameters &prm);
+   void produce_Side_Info(const Projection_Parameters &prm,
+      const Prog_Project_Parameters &prog_prm);
 };
 
 /* Assigning angles -------------------------------------------------------- */

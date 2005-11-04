@@ -510,7 +510,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
    }
 
    PROJECT_Side_Info side;
-   side.produce_Side_Info(proj_prm);
+   side.produce_Side_Info(proj_prm,Prog_proj_prm);
 
    PROJECT_Effectively_project(proj_prm, side, crystal_proj_prm, Proj, SF);
    SF.write(Prog_proj_prm.fn_sel_file);
