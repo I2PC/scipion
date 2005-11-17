@@ -150,19 +150,15 @@ int main (int argc, char *argv[]) {
 	Npart = (int) ((float)num_img_tot / (float)size);
 	remaining = num_img_tot % size;
 
-	num_img_node = Npart;
+	// each process will only see the images it is iterested in.            
+	if( !remaining || rank < remaining)
+        	myFirst = rank * Npart;
+	else                  // for rank >= remaining > 0
+        	myFirst = rank * Npart - (rank - remaining) - 1;
 
-	if( rank < remaining )
-	{
-		num_img_node ++;
-		myFirst = rank * (Npart+1);
-	}
-	else
-	{
-		myFirst = rank * Npart + remaining;
-	}
+     	myLast = myFirst + Npart - 1;
 
-	myLast = myFirst + num_img_node - 1;
+	num_img_node = myLast-myFirst;
 
 	art_prm.ordered_list.startingX() = -myFirst;
 
@@ -243,24 +239,28 @@ int main (int argc, char *argv[]) {
 			int numsteps = Npart / art_prm.block_size;
 			
 			// could be necessary another step for remaining projections
-			if (( Npart % art_prm.block_size ) != 0) numsteps++;
+			if (( Npart % art_prm.block_size ) != 0) 
+				numsteps++;
+				
 			int processed = 0;
 			
 			art_prm.numIMG = art_prm.block_size;
 			
-			for(int k = 0; k < numsteps ; k++){
+			art_prm.ordered_list.startingX( ) = -myFirst;
 			
-				if( k == numsteps-1 )
+			for(int ns = 0; ns < numsteps ; ns++){
+			
+				if( ns == numsteps - 1 )
 				{
 					art_prm.numIMG = num_img_node - processed;
 				}
-				
-				art_prm.ordered_list.startingX( ) = -processed; 
-				
+								
 				for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 					vol_aux2(j)() = vol_basis(j)();
 
                                 Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
+
+				art_prm.ordered_list.startingX( ) -= art_prm.numIMG;
 
 				processed += art_prm.numIMG;			
 
@@ -289,7 +289,10 @@ int main (int argc, char *argv[]) {
 			int numsteps = num_img_node / art_prm.block_size;
 
 			int processed = 0;
-				
+						
+			if(( num_img_node % art_prm.block_size) != 0) 
+				numsteps++;
+	
 			art_prm.numIMG = art_prm.block_size;
 			
 			art_prm.parallel_mode = Basic_ART_Parameters::pCAV; // Another trick
@@ -310,11 +313,9 @@ int main (int argc, char *argv[]) {
 				
 				cav_t = MPI_Wtime();
 
-				// Comprobar si incializa a 0
                                 art_prm.compute_CAV_weights( vol_basis, art_prm.numIMG );
 				GVNeq_aux = *(art_prm.GVNeq);
 		
-		 
 				// All processors send their result and get the other's so all of them
 				// have the weights.
 
@@ -386,7 +387,11 @@ int main (int argc, char *argv[]) {
 			// CAV weights calculations have been done before iterations begin in order to avoid recalculate them
 			for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
 				vol_aux2(j)() = vol_basis(j)();
-				
+			
+			art_prm.numIMG = num_img_node;
+
+			art_prm.ordered_list.startingX() = -myFirst;	
+	
 			Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 				
 			// All processors send their result and get the other's so all of them
@@ -428,6 +433,11 @@ int main (int argc, char *argv[]) {
 			}	
 		}
 		else{   // SIRT AND AVSP
+		
+			art_prm.numIMG = num_img_node;
+			
+			art_prm.ordered_list.startingX() = -myFirst;
+		
 			if(art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
 			   art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT )
 			{
