@@ -44,6 +44,7 @@
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
 #include "Src/MultidimFriends.inc"
+string FtoA(float F, int _width, int _prec);
 
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */

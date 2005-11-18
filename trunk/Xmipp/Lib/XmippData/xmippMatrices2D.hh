@@ -90,6 +90,10 @@ template <class T>
    void apply_geom_Bspline(mT &m2, matrix2D<double> A, const mT &m1,
       int Splinedegree, bool inv, bool wrap, T outside=(T)0);
 
+matrix2D<double> rot2D_matrix(double ang);
+matrix2D<double> translation2D_matrix(const matrix1D<double> v);
+int best_prec(float F, int _width);
+
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
 /* ************************************************************************* */
@@ -1850,12 +1854,12 @@ matrix2D<double> scale3D_matrix(const matrix1D<double> &sc);
     \\--> m1 and m2 range from (0,0)=(y,x) to (2,0) */
 template <class T>
    void cut_to_common_size(mT &m1, mT &m2) {
-      int y0=MAX(STARTINGY(V1) ,STARTINGY(V2));
-      int yF=MIN(FINISHINGY(V1),FINISHINGY(V2));
-      int x0=MAX(STARTINGX(V1) ,STARTINGX(V2));
-      int xF=MIN(FINISHINGX(V1),FINISHINGX(V2));
-      V1.window(y0,x0,yF,xF);
-      V2.window(y0,x0,yF,xF);
+      int y0=MAX(STARTINGY(m1) ,STARTINGY(m2));
+      int yF=MIN(FINISHINGY(m1),FINISHINGY(m2));
+      int x0=MAX(STARTINGX(m1) ,STARTINGX(m2));
+      int xF=MIN(FINISHINGX(m1),FINISHINGX(m2));
+      m1.window(y0,x0,yF,xF);
+      m2.window(y0,x0,yF,xF);
    }
 
 /** Does a radial average of a matrix, around the pixel where is the origin.

@@ -62,6 +62,9 @@
 template <class T> class ImageImagicT;
 template <class T> class ImageXmippT;
 
+/* String that identifies a selline as an Imagic image */
+static const char *IMAGIC_TAG = "imagic:";
+
 /* ************************************************************************* */
 /* IMAGES                                                                    */
 /* ************************************************************************* */
@@ -581,9 +584,9 @@ public:
        changed. This is somehow like the "Save as ..." and "Save".
        \\ Ex: IX.write() ---> Save
        \\ Ex: IX.write("g1ta0002.spd") ---> Save as */
-   virtual void write(const FileName &name = "", bool force_reversed=false) {
+   virtual void write(const FileName &fn_img = "", bool force_reversed=false) {
         FILE *fp;
-        if (name != "") ImageXmippT<T>::rename(name); 
+        if (fn_img != "") ImageXmippT<T>::rename(fn_img); 
         if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
           REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+fn_img +
              " cannot be written");
@@ -1276,9 +1279,6 @@ public:
 /**@name IMAGIC Images */
 //@{
 
-/* String that identifies a selline as an Imagic image */
-static const char *IMAGIC_TAG = "imagic:";
-
 /* Extensions for the Imagic header and image files */
 static const char *IMAGIC_HEADER_EXT = "hed";
 static const char *IMAGIC_IMAGE_EXT  = "img";
@@ -1471,7 +1471,7 @@ public:
   }
 
   /** Write file. Not implemented. */
-  void write (const FileName &name="", bool reversed=FALSE,
+  void write (const FileName &name="", bool reversed=false,
 	      Image_Type image_type=IBYTE)
   {
     REPORT_ERROR (1503, "ImageImagic::write: can't directly save");

@@ -28,6 +28,12 @@
 #include "xmippMatrices3D.hh"
 #include "xmippHistograms.hh"
 
+/*---------------------------------------------------------------------------*/
+/* Forward declarations                                                      */
+/*---------------------------------------------------------------------------*/
+void apply_geo_binary_2D_mask(matrix2D<int> &mask, const matrix2D<double> &A);
+void apply_geo_cont_2D_mask(matrix2D<double> &mask, const matrix2D<double> &A);
+
 /**@name Masks
 */
 //@{
@@ -595,8 +601,8 @@ public:
 template <class T>
     void resize(const matrix1D<T> &m) {
       switch (datatype()) {
-         case INT_MASK:    imask1D.resize(v); break;
-         case DOUBLE_MASK: dmask1D.resize(v); break;
+         case INT_MASK:    imask1D.resize(m); break;
+         case DOUBLE_MASK: dmask1D.resize(m); break;
       }
     }
 

@@ -755,7 +755,7 @@ public:
        physical.
        \\Ex: V.setSlice(1,(V.slice(0)));
        \\--> Copies slice 0 in slice 1 */
-    void setSlice(int i, const mT &v) {
+    void setSlice(int k, const mT &v) {
       if (xdim==0) return;
       if (k<zinit || k>=zinit+zdim)
          REPORT_ERROR(1203,"setSlice: matrix3D subscript (k) out of range");

@@ -35,7 +35,7 @@
 #include "../projection.hh"
 #include "Prog_FourierFilter.hh"
 
-class Recons_info;
+struct Recons_info;
 
 /**@name Basic and common ART
     The main difference between ART applied to different cases (single
@@ -503,6 +503,135 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
     GridVolume &vol_basis);
 
 //@}
+//@}
+
+/**@name Reconstruction Miscellanea */
+//@{
+/**@name Projection sorting */
+//@{
+/** Reconstruction information.
+   This structure contains information for all projections which are
+   going to participate in the reconstruction.
+   This structure has also got
+   information for the symmetry implementation. If there is any symmetry
+   then an entry in this table is created using the same projection name
+   but different symmetry matrices (only the matrix index is annotated
+   in this structure). The Euler angles stored for the symmetrized image
+   are the final ones, ie, the original Euler angles symmetrized according
+   to the symmetry matrix. Then the symmetry identificator kept in this
+   structure is only used to keep some track of what matrix was used to
+   symmetrize.
+*/
+struct Recons_info {
+   /// Projection filename
+   FileName fn_proj;
+   /// CTF filename
+   FileName fn_ctf;
+   /// Rotational angle
+   float  rot;
+   /// Tilting angle
+   float  tilt;
+   /// Psi angle
+   float  psi;
+   /** Symmetry number.
+       This number express to which symmetry matrix this projection
+       is related to (-1: without symmetry, 0: using symmetry matrix 0,
+       1: using symmetry matrix 1 ...) */
+   int    sym;
+   /** Random seed.
+       For the reconstruction of pure noise for VSSNR, all images
+       coming from the same projection by symmetry relationships should
+       have the same random seed. */
+   int    seed;
+}; 
+
+/** Build from a Selection File and a Symmetry List. 
+    The result is stored in the Recons_info array which should point
+    to NULL when it is not initialized. */
+void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
+   const SymList &SL, Recons_info * &IMG_Inf, bool do_not_use_symproj);
+//@}
+
+/* ------------------------------------------------------------------------- */
+/**@name Variability analysis */
+//@{
+/** Variability structure */
+class VariabilityClass {
+public:
+   typedef enum {VAR_none, VAR_measuring, VAR_analyzing} t_VAR_status;
+   t_VAR_status VAR_state;
+   int Zoutput_volume_size;
+   int Youtput_volume_size;
+   int Xoutput_volume_size;
+   Basic_ART_Parameters *prm;
+
+   /// Vector of training vectors
+   vector < matrix3D<double> > VA;
+
+   /// Number of updates so far
+   int N;   
+
+   /// Constructor
+   VariabilityClass(Basic_ART_Parameters *_prm,
+      int _Zoutput_volume_size, int _Youtput_volume_size,
+      int _Xoutput_volume_size);
+
+   /** Start a new ART iteration. */
+   void newIteration();
+   
+   /** Update data with a new volume.
+       The update volume is set to zeros after this function */
+   void newUpdateVolume(GridVolume *ptr_vol_out, Projection &read_proj);
+
+   /** Finish analysis. */
+   void finishAnalysis();
+};
+//@}
+
+/* ------------------------------------------------------------------------- */
+/**@name POCS */
+//@{
+/** POCS structure */
+class POCSClass {
+public:
+   typedef enum {POCS_measuring, POCS_use, POCS_lowering, POCS_N_measure,
+       POCS_N_use} t_POCS_status;
+   t_POCS_status POCS_state;
+   double POCS_avg;
+   double POCS_stddev;
+   double POCS_min;
+   double POCS_max;
+   double POCS_mean_error;
+   double POCS_max_error;
+   double POCS_global_mean_error;
+   int POCS_freq;
+   int POCS_i;
+   int POCS_vec_i;
+   int POCS_used;
+   int POCS_N;
+   int Zoutput_volume_size;
+   int Youtput_volume_size;
+   int Xoutput_volume_size;
+   bool apply_POCS;
+   matrix1D<double> POCS_errors;
+   Basic_ART_Parameters *prm;
+
+   /// Constructor
+   POCSClass(Basic_ART_Parameters *_prm,
+      int _Zoutput_volume_size, int _Youtput_volume_size,
+      int _Xoutput_volume_size);
+   
+   /// Start New ART iteration
+   void newIteration();
+
+   /// Start new Projection
+   void newProjection();
+
+   /// Apply
+   void apply(GridVolume &vol_basis, int it, int images);
+};
+//@}
+
 //@}
 
 #include "Src/Basic_art.inc"

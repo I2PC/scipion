@@ -30,6 +30,8 @@
 
 class POCSClass;
 class VariabilityClass;
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis, 
+   double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /* ------------------------------------------------------------------------- */
 /* Init history                                                              */

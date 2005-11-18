@@ -33,6 +33,19 @@
 
 #define VERBOSE
 //#define DEBUG
+// Show a spot =============================================================
+   ostream &operator<<(ostream &os, const spot &s)
+      {
+      os << "(" << s.h     << "," << s.k <<"," << s.zstar << ") = ";
+      os << "(" << s.amp   << "," << s.phase <<")" << endl;
+      os << "\tFILM= "   << s.FILM   << endl;
+      os << "\tIQ= "     << s.IQ     << endl;
+      os << "\tFLMWGT= " << s.FLMWGT << endl;
+      os << "\tBACK= "   << s.BACK   << endl;
+      os << "\tCTF= "    << s.myCTF    << endl;
+      return os;
+      }
+
 // APH =====================================================================
 void APHFileorigmerg::read(const FileName &fn,
                                            const int mrc_label) {

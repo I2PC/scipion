@@ -485,5 +485,6 @@ void Running_PCA::project(const matrix1D<double> &input,
    for (int j=0; j<J; j++)
       for (int i=0; i<d; i++)
          DIRECT_VEC_ELEM(output,j)+=
-            DIRECT_VEC_ELEM(input,d)*DIRECT_MAT_ELEM(eigenvectors,i,j);
+            (DIRECT_VEC_ELEM(input,i)-DIRECT_VEC_ELEM(current_sample_mean,i))*
+               DIRECT_MAT_ELEM(eigenvectors,i,j);
 }
