@@ -1589,7 +1589,7 @@ char       straux[6];
          stat=sscanf(line, "%d %d %d %lf %lf",&xdim,&ydim,&zdim,
             &Background_Density, &scale);
          if (stat <4)
-            REPORT_ERROR(3003,"Phantom::read: God bless us, check the volume"
+            REPORT_ERROR(3003,"Phantom::read: check the volume"
                " dimensions and global density in volume description file");
          if (stat==4) scale=1;
 	 if (apply_scale) {
