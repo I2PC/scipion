@@ -59,6 +59,77 @@
 	 return 0;
       }
    \end{verbatim}
+   
+   Here is another sample program for generating the CTF, the noise
+   background, the envelope and the power spectrum density
+   
+   \begin{verbatim}
+      #include <Reconstruction/CTF.hh>
+      #include <XmippData/xmippFFT.hh>
+
+      int main(int argc, char **argv) {
+         FileName fn_ctf, fn_root;
+         int Xdim;
+         try {
+            fn_ctf=get_param(argc,argv,"-i");
+            fn_root=get_param(argc,argv,"-o");
+            Xdim=AtoI(get_param(argc,argv,"-xdim"));
+         } catch (Xmipp_error XE) {
+            cerr << XE << endl
+                 << "Usage: produce_imgs \n"
+                 << "         -i <CTF descr file>\n"
+                 << "         -o <filename root>\n"
+                 << "         -xdim <xdim>\n"
+            ;
+            return 1;
+         }
+
+         try {
+            // Read CTF model
+            XmippCTF CTF;
+            CTF.enable_CTF=true;
+            CTF.enable_CTFnoise=true;
+            CTF.read(fn_ctf);
+            CTF.Produce_Side_Info();
+
+            // Produce CTF, background and envelope
+            ImageXmipp Ictf, Ibg, Ienv, Ipsd;
+            Ictf().resize(Xdim,Xdim);
+            Ipsd()=Ienv()=Ibg()=Ictf();
+
+            matrix1D<int>    idx(2);  // Indexes for Fourier plane
+            matrix1D<double> freq(2); // Frequencies for Fourier plane
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(Ictf()) {
+               XX(idx)=j; YY(idx)=i;
+               FFT_idx2digfreq(Ictf(), idx, freq);
+               digfreq2contfreq(freq, freq, CTF.Tm);
+
+               // Background
+               Ibg(i,j)=CTF.CTFnoise_at(XX(freq),YY(freq));
+
+               // Envelope
+               double E=CTF.CTFdamping_at(XX(freq),YY(freq));
+               Ienv(i,j)=Ibg(i,j)+E*E;
+
+               // CTF
+               Ictf(i,j)=CTF.CTFpure_at(XX(freq),YY(freq));
+
+               // Power spectru density
+               Ipsd(i,j)=Ibg(i,j)+Ictf(i,j)*Ictf(i,j);
+            }
+
+            CenterFFT(Ibg() , true); Ibg .write(fn_root+"_bg.xmp");
+            CenterFFT(Ienv(), true); Ienv.write(fn_root+"_env.xmp");
+            CenterFFT(Ictf(), true); Ictf.write(fn_root+"_ctf.xmp");
+            CenterFFT(Ipsd(), true); Ipsd.write(fn_root+"_psd.xmp");
+
+         } catch (Xmipp_error XE) {
+            cout << XE << endl;
+         }
+         return 0;
+      }
+   \end{verbatim}
+
 */
 class XmippCTF {
 public:
