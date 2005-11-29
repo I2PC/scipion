@@ -20,6 +20,7 @@ SUBDIRS = 2DInterpolation \
 	Adapt_for_Spider \
 	Add_noise \
 	Adjust_CTF \
+        Adjust_volume \
 	Adjust_surface \
 	Align3D \
 	Align2D \

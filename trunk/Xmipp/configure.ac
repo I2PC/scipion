@@ -173,6 +173,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Adapt_for_Spider/Makefile \
 	Applications/Src/Add_noise/Makefile \
 	Applications/Src/Adjust_CTF/Makefile \
+	Applications/Src/Adjust_volume/Makefile \
 	Applications/Src/Adjust_surface/Makefile \
 	Applications/Src/Align2D/Makefile \
 	Applications/Src/Align3D/Makefile \
