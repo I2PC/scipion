@@ -17,6 +17,7 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippWavelets.cc \
 	Src/xmippFFT.cc \
 	Src/xmippTomogram.cc \
+        Src/DESolver.cc \
 	Bilib/sources/changebasis.cc \
 	Bilib/sources/convert.cc \
 	Bilib/sources/dft.cc \
@@ -76,6 +77,7 @@ EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
         xmippError.hh       xmippMacros.hh      Src/MultidimFriends_implementation.hh \
         Src/MultidimBasic.inc  Src/MultidimFriends.inc \
         Src/MultidimBasic.hh Src/NumericalRecipes.hh \
+        Src/DESolver.hh \
 	Programs/Prog_denoising.hh     Programs/Prog_range_adjust.hh \
 	Programs/Prog_downsample.hh    Programs/Prog_segment.hh \
 	Programs/Prog_make_spectra.hh  Programs/Prog_test_cluster.hh \
