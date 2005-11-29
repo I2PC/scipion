@@ -293,6 +293,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
 	         A(2,1)*mat_g[k].two;
   }
 
+
   FOR_ALL_ELEMENTS_IN_MATRIX2D(IMG()) {
     y=(float)i; 
     x=(float)j;
@@ -309,7 +310,6 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
     } else {
       MAT_ELEM(IMG(),i,j) /= (weight*factor);
     }
-
   }
 
   // Calculate back-projection with the filtered projection
@@ -322,7 +322,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
 void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol)  {
 
   int               c,nn,imgno;
-  double            rot,tilt,psi,newrot,newtilt,newpsi;
+  double            rot,tilt,psi,newrot,newtilt,newpsi,weight;
   Projection        proj;
   matrix2D<double>  L(4,4), R(4,4);
   Mask_Params       mask_prm;
@@ -345,7 +345,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
   while (!SF.eof()) {
     proj.read(SF.NextImg(),apply_shifts);
     proj().set_Xmipp_origin();
-    if (do_weights) proj()*=proj.weight(); 
+    if (do_weights)  proj()*=proj.weight(); 
     rot=proj.rot();
     tilt=proj.tilt();
     psi=proj.psi();
@@ -364,6 +364,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     Vaux().resize(vol());
     symmetrize(SL,vol,Vaux);
     vol=Vaux;
+    vol()*=(SL.SymsNo()+1);
     mask_prm.mode=INNER_MASK;
     mask_prm.R1=diameter/2.;
     mask_prm.type=BINARY_CIRCULAR_MASK;
