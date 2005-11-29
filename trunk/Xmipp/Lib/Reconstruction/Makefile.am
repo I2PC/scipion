@@ -35,6 +35,7 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_random_phantom.cc \
 	Programs/Src/Prog_microscope.cc \
 	Programs/Src/Prog_adjust_CTF.cc \
+	Programs/Src/Prog_adjust_volume.cc \
 	Programs/Src/Prog_assign_CTF.cc \
 	Programs/Src/Prog_art.cc \
 	Programs/Src/Basic_art.cc \
