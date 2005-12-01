@@ -376,6 +376,9 @@ public:
    /** Returns current line as a Sel Line. */
    const SelLine & current() {return *current_line;}
 
+   /** Another function to get a Sel Line. */
+   void get_current(SelLine & _SL) {_SL=current();}
+
    /** True if the image name is inside the selection file.
        The current line "pointer" is not modified. If an image is
        discarded in the selection file, this function still will say
