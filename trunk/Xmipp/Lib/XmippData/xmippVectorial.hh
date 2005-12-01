@@ -105,38 +105,86 @@ public:
    /** Constant access to X component.
        X components are a matrix3D */
    const matrix3D<double> & X() const {return __X;}
+
    /// Access to X components
    matrix3D<double> & X()             {return __X;}
+
+   /** Get the X components.*/
+   void get_X(matrix3D<double> &_X) {_X=__X;}
+
+   /** Set the X components.*/
+   void set_X(const matrix3D<double> &_X) {__X=_X;}
+
    /// Constant access to Y component.
    const matrix3D<double> & Y() const {return __Y;}
+
    /// Access to Y components
    matrix3D<double> & Y()             {return __Y;}
+
+   /** Get the Y components.*/
+   void get_Y(matrix3D<double> &_Y) {_Y=__Y;}
+
+   /** Set the Y components.*/
+   void set_Y(const matrix3D<double> &_Y) {__Y=_Y;}
+
    /// Constant access to Z component.
    const matrix3D<double> & Z() const {return __Z;}
+
    /// Access to Z components
    matrix3D<double> & Z()             {return __Z;}
 
+   /** Get the Z components.*/
+   void get_Z(matrix3D<double> &_Z) {_Z=__Z;}
+
+   /** Set the Z components.*/
+   void set_Z(const matrix3D<double> &_Z) {__Z=_Z;}
+
    /// Constant access to a particular X component
    double X(int k, int i, int j) const {return VOL_ELEM(__X,k,i,j);}
+
    /// Access to a particular X component
    double & X(int k, int i, int j) {return VOL_ELEM(__X,k,i,j);}
+
+   /** Get the X component at (k,i,j).*/
+   double get_X_component(int k, int i, int j) {return X(k,i,j);}
+
+   /** Set the X component at (k,i,j).*/
+   double set_X_component(int k, int i, int j, double val) {X(k,i,j)=val;}
+
    /// Constant access to a particular Y component
    double Y(int k, int i, int j) const {return VOL_ELEM(__Y,k,i,j);}
+
    /// Access to a particular Y component
    double & Y(int k, int i, int j) {return VOL_ELEM(__Y,k,i,j);}
+
+   /** Get the Y component at (k,i,j).*/
+   double get_Y_component(int k, int i, int j) {return Y(k,i,j);}
+
+   /** Set the Y component at (k,i,j).*/
+   double set_Y_component(int k, int i, int j, double val) {Y(k,i,j)=val;}
+
    /// Constant access to a particular Z component
    double Z(int k, int i, int j) const {return VOL_ELEM(__Z,k,i,j);}
+
    /// Access to a particular Z component
    double & Z(int k, int i, int j) {return VOL_ELEM(__Z,k,i,j);}
+
+   /** Get the Z component at (k,i,j).*/
+   double get_Z_component(int k, int i, int j) {return Z(k,i,j);}
+
+   /** Set the Z component at (k,i,j).*/
+   double set_Z_component(int k, int i, int j, double val) {Z(k,i,j)=val;}
 
    /// Constant access to a particular X component as a multidim array
    double X(int i) const {return MULTIDIM_ELEM(__X,i);}
    /// Access to a particular X component as a multidim array
    double & X(int i) {return MULTIDIM_ELEM(__X,i);}
+
    /// Constant access to a particular Y component as a multidim array
    double Y(int i) const {return MULTIDIM_ELEM(__Y,i);}
    /// Access to a particular Y component as a multidim array
    double & Y(int i) {return MULTIDIM_ELEM(__Y,i);}
+
    /// Constant access to a particular Z component as a multidim array
    double Z(int i) const {return MULTIDIM_ELEM(__Z,i);}
    /// Access to a particular Z component as a multidim array
