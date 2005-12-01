@@ -576,6 +576,9 @@ public:
    /** Get element at i (logical access). */
    T get_elem(int i) const {return (*this)(i);}
 
+   /** Set element at i (logical access). */
+   void set_elem(int i, T val) {(*this)(i)=val;}
+
    /** Matrix element access via double vector.
        Returns the value of a matrix logical position, but this time the
        element position is determined by a R1 vector.
