@@ -53,3 +53,7 @@ Projection & Projection::operator = (const Projection &P) {
    eulert    = P.eulert;
    return *this;
 }
+
+/* Another function for assignment ========================================= */
+void Projection::assign (const Projection &P) {*this=P;}
+

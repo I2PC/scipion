@@ -85,7 +85,10 @@ public:
    void read(const FileName &fn, const bool &apply_shifts=false);
 
    /** Assignment. */
-   Projection & operator = (const Projection &P);    
+   Projection & operator = (const Projection &P);
+
+   /** Another function for assigment.*/
+   void assign (const Projection &P);
 };
 
 //@}

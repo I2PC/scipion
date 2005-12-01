@@ -133,11 +133,18 @@ public:
       {if (this!=&I) {fn_img=I.fn_img;img=I.img;}
        return *this;}
 
+   /** Another function for assignment.*/
+   void assign (const ImageT &I) {*this=I;}
+
    /** Assignment from matrix.*/
    template <class T1>
       ImageT& operator = (const matrix2D<T1> &m)
          {if (&img!=(matrix2D<T> *) &m) {fn_img=""; type_cast(m,img);}
           return *this;}
+
+   /** Another function for assignment from matrix.*/
+   template <class T1>
+      void assign (const matrix2D<T1> &m) {*this=m;}
 
    /** Rename image.
        Give a new name to the image.
@@ -171,7 +178,7 @@ public:
    void adapt_to_size(int Ydim, int Xdim)
       {img.init_zeros(Ydim,Xdim); move_origin_to_center();}
    //@}
-   
+
    /**@name Image access*/
    //@{
    /** 2D Matrix access.
@@ -184,6 +191,12 @@ public:
    virtual matrix2D<T>&  operator () () {return img;}
    virtual const matrix2D<T>&  operator () () const {return img;}
 
+   /** Another function for 2D Matrix access.*/
+   virtual void get_matrix2D(matrix2D<T> &m) {m=img;}
+
+   /** Another function for 2D Matrix access.*/
+   virtual void set_matrix2D(const matrix2D<T> &m) {img=m;}
+
    /** Pixel access.
        This operator is used to access a pixel within the image.
        This is a logical access, so you could access to negative
@@ -193,6 +206,12 @@ public:
                   << I(-3,-3) << endl;
        \\Ex: I(-3,-3)=I(-3,-2); */
    T& operator () (int i, int j) const {return img(i,j);}
+
+   /** Another function for pixel access. */
+   T get_pixel(int i, int j) const {return img(i,j);}
+
+   /** Another function for pixel access. */
+   void set_pixel(int i, int j, T val) const {img(i,j)=val;}
 
    /** Name access.
        This function is used to know the name of the image. It
@@ -472,7 +491,7 @@ public:
        \\Ex: IX.clear();*/
    void clear() {clear_header(); ImageT<T>::clear();}
    //@}
-   
+
    // Overload some operators ..............................................
    /**@name Some operators*/
    //@{
@@ -480,7 +499,7 @@ public:
        \\ Ex: cout << IX; */
    friend ostream& operator << (ostream& out, const ImageXmippT<T> &I)
       {out << (ImageT<T> &) I << I.header; return out;}
-   
+
    /** Assignment from another Xmipp image.
        \\ Ex: ImageXmipp IX1, IX2; IX2=IX1; */
    ImageXmippT<T>& operator= (const ImageXmippT<T> &op1)
@@ -489,7 +508,10 @@ public:
           header = op1.header;
        }
        return *this;}
-   
+
+   /** Another function for assignment from another Xmipp image.*/
+   void assign (const ImageXmippT<T> &op1) {*this=op1;}
+
    /** Assignment from a generic image.
        The Euler angles are set to 0.
        \\Ex: Image I; ImageXmipp IX; IX=I;*/
@@ -501,6 +523,9 @@ public:
       return *this;
    }
 
+   /** Another function for assignment from a generic image.*/
+   void assign (const ImageT<T> &op1) {*this=op1;}
+
    /** Assignment from a matrix.
        The Euler angles are set to 0 and the image filename is set to "".
        \\Ex: matrix2D<int> m; ImageXmipp IX; IX=m; */
@@ -510,7 +535,11 @@ public:
          clear_header(); adjust_header();
          return *this;
       }
-   
+
+   /** Another function for assignment from a matrix.*/
+   template <class T1>
+      void assign (const matrix2D<T1> &op1) {*this=op1;}
+
    /** Assignment from any kind of image.
        \\Ex:ImageOver IO; ImageXmipp IX; IX.assign_from(&IO); */
    void assign_from(ImageT<T> *v) {*this=*v;}
@@ -588,7 +617,7 @@ public:
         FILE *fp;
         if (name != "") ImageXmippT<T>::rename(name); 
         if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
-          REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+fn_img +
+          REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+name +
              " cannot be written");
         adjust_header();
         bool reversed=(force_reversed) ? !header.reversed():header.reversed();
@@ -609,7 +638,7 @@ public:
        Force header to have the dimensions of the image, time, date updated */
    void adjust_header() {
       if (typeid(T)==typeid(complex<double>))
-         header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex) 
+         header.headerType() = headerXmipp::IMG_FOURIER; // Sets header of type Image_Fourier (Complex)
       else if (typeid(T)==typeid(double))
          header.headerType() = headerXmipp::IMG_XMIPP;  // Sets header of type Image_XMipp
       header.set_dimension(YSIZE(ImageT<T>::img), XSIZE(ImageT<T>::img)); // Sets header dimensions     
@@ -715,7 +744,10 @@ public:
    /** Set Xoff
        \\Ex: IX.Xoff()=3.50;*/
    float& Xoff() {return header.fXoff();}
-   
+
+   /** Another function for set Xoff.*/
+   void set_Xoff(float & _Xoff) {header.fXoff()=_Xoff;}
+
    /** Get Xoff.
        \\Ex: cout << "Origin Offset in X-direction: " << IX.Xoff() << endl;*/
    float  Xoff() const {return header.fXoff();}
@@ -725,7 +757,10 @@ public:
    /** Set Yoff
        \\Ex: IX.Yoff()=3.50;*/
    float& Yoff() {return header.fYoff();}
-   
+
+   /** Another function for set Yoff.*/
+   void set_Yoff(float & _Yoff) {header.fYoff()=_Yoff;}
+
    /** Get Yoff.
        \\Ex: cout << "Origin Offset in Y-direction: " << IX.Yoff() << endl;*/
    float  Yoff() const {return header.fYoff();}
@@ -736,7 +771,10 @@ public:
    /** Set weight
        \\Ex: IX.weight()=3.50;*/
    float& weight() {return header.Weight();}
-   
+
+   /** Another function for set weight.*/
+   void set_weight(float & _Weight) {header.Weight()=_Weight;}
+
    /** Get weight.
        \\Ex: cout << "Weight: " << IX.weight() << endl;*/
    float  weight() const {return header.Weight();}
@@ -748,7 +786,10 @@ public:
    /** Set flip
        \\Ex: IX.flip()=1; (flip image), or IX.flip()=0; (do NOT flip image) */
    float& flip() {return header.Flip();}
-   
+
+   /** Another function for set flip.*/
+   void set_flip(float & _Flip) {header.Flip()=_Flip;}
+
    /** Get flip.
        \\Ex: cout << "Flip: " << IX.flip() << endl;*/
    float  flip() const {return header.Flip();}
@@ -769,7 +810,7 @@ public:
    template <class T1>
       void set_eulerAngles(T1 _Phi, T1 _Theta, T1 _Psi)
         {header.set_eulerAngles((float) _Phi, (float) _Theta, (float) _Psi);}
-   
+
    /** Set angles. Spider has three places in which Euler angles
    can be stored. First alternative position
        \\Ex: IX.set_eulerAngles1(30,-10,350); */
@@ -793,14 +834,14 @@ public:
    template <class T1>
       void get_eulerAngles(T1 &_Phi, T1 &_Theta, T1 &_Psi) const
         {header.get_eulerAngles(_Phi, _Theta, _Psi);}
-   
+
    /** Get angles. Spider has three places in which Euler angles
    can be stored. First alternative position
        \\Ex: IX.get_eulerAngles1(phi,theta,psi); */
    template <class T1>
-      void get_eulerAngles1(T1 &_Phi1, T1 &_Theta1, T1 &_Psi1) const 
+      void get_eulerAngles1(T1 &_Phi1, T1 &_Theta1, T1 &_Psi1) const
         {header.get_eulerAngles1(_Phi1, _Theta1, _Psi1);}
-   
+
    /** Get angles. Spider has three places in which Euler angles
    can be stored. Second alternative position
        \\Ex: IX.get_eulerAngles2(phi,theta,psi); */
@@ -811,7 +852,7 @@ public:
    /** How many Euler angles are set?*/
    float Is_flag_set(void) { return(header.Is_flag_set());}
    //@}
-   
+
    /**@name Independently*/
    //@{
    /**@name Old Rotational angle (fAngle1) */
@@ -819,7 +860,9 @@ public:
    /** Set old rotational angle.
        \\Ex: IX.old_rot()=30;*/
    float& old_rot() {return header.old_rot();}
-   
+
+   /** Another function for set old rotational angle.*/
+   void set_old_rot(float & _old_rot) {header.old_rot()=_old_rot;}
    /** Get old rotational angle.
        \\Ex: cout << "First Euler angle " << IX.old_rot() << endl;*/
    float old_rot() const {return header.old_rot();}
@@ -830,7 +873,10 @@ public:
    /** Set Phi.
        \\Ex: IX.Phi()=30;*/
    float& Phi() {return header.Phi();}
-   
+
+   /** Another function for set Phi.*/
+   void set_Phi(float & _Phi) {header.Phi()=_Phi;}
+
    /** Get Phi.
        \\Ex: cout << "First Euler angle " << IX.Phi() << endl;*/
    float  Phi() const {return header.Phi();}
@@ -838,16 +884,21 @@ public:
    /** Set Rotational angle.
        \\Ex: IX.rot()=30;*/
    float& rot() {return header.Phi();}
-   
+
+   /** Another function for set Rotational angle.*/
+   void set_rot(float & _rot) {header.Phi()=_rot;}
+
    /** Get rot.
        \\Ex: cout << "First Euler angle " << IX.rot() << endl;*/
    float  rot() const {return header.Phi();}
 
-
    /** Set Phi1. First alternative phi angle
        \\Ex: IX.Phi1()=30;*/
    float& Phi1() {return header.Phi1();}
-   
+
+   /** Another function for set Phi1.*/
+   void set_Phi1(float & _Phi1) {header.Phi1()=_Phi1;}
+
    /** Get Phi1. First alternative phi angle
        \\Ex: cout << "First Euler angle " << IX.Phi1() << endl;*/
    float  Phi1() const {return header.Phi1();}
@@ -855,7 +906,10 @@ public:
    /** Set 1st Rotational angle. First alternative phi angle
        \\Ex: IX.rot1()=30;*/
    float& rot1() {return header.Phi1();}
-   
+
+   /** Another function for set 1st Rotational angle.*/
+   void set_rot1(float & _rot1) {header.Phi1()=_rot1;}
+
    /** Get rot1. First alternative phi angle
        \\Ex: cout << "First Euler angle " << IX.rot1() << endl;*/
    float  rot1() const {return header.Phi1();}
@@ -864,7 +918,10 @@ public:
    /** Set Phi2. First alternative phi angle
        \\Ex: IX.Phi()=30;*/
    float& Phi2() {return header.Phi2();}
-   
+
+   /** Another function for set Phi2.*/
+   void set_Phi2(float & _Phi2) {header.Phi2()=_Phi2;}
+
    /** Get Phi2. Second alternative phi angle
        \\Ex: cout << "First Euler angle " << IX.Phi2() << endl;*/
    float  Phi2() const {return header.Phi2();}
@@ -872,17 +929,23 @@ public:
    /** Set 2sd Rotational angle. First alternative phi angle
        \\Ex: IX.rot()=30;*/
    float& rot2() {return header.Phi2();}
-   
+
+   /** Another function for set rot2.*/
+   void set_rot2(float & _rot2) {header.Phi2()=_rot2;}
+
    /** Get rot2. Second alternative phi angle
        \\Ex: cout << "First Euler angle " << IX.rot2() << endl;*/
    float  rot2() const {return header.Phi2();}
    //@}
-   
+
    /**@name Tilting */
    //@{
    /** Set Theta.
        \\Ex: IX.Theta()=-10;*/
    float& Theta() {return header.Theta();}
+
+   /** Another function for set Theta.*/
+   void set_Theta(float & _Theta) {header.Theta()=_Theta;}
 
    /** Get Theta.
        \\Ex: cout << "Second Euler angle " << IX.Theta() << endl;*/
@@ -891,6 +954,9 @@ public:
    /** Set Tilting angle.
        \\Ex: IX.tilt()=-10;*/
    float& tilt() {return header.Theta();}
+
+   /** Another function for set Tilting angle.*/
+   void set_tilt(float & _tilt) {header.Theta()=_tilt;}
 
    /** Get Tilting angle.
        \\Ex: cout << "Second Euler angle " << IX.tilt() << endl;*/
@@ -901,6 +967,9 @@ public:
        \\Ex: IX.Theta1()=-10;*/
    float& Theta1() {return header.Theta1();}
 
+   /** Another function for set Theta1.*/
+   void set_Theta1(float &_Theta1) {header.Theta1()=_Theta1;}
+
    /** Get Theta1.
        \\Ex: cout << "Second Euler angle " << IX.Theta1() << endl;*/
    float  Theta1() const {return header.Theta1();}
@@ -908,6 +977,9 @@ public:
    /** Set 1st Tilting angle.
        \\Ex: IX.tilt1()=-10;*/
    float& tilt1() {return header.Theta1();}
+
+   /** Another function for set 1st Tilting angle.*/
+   void set_tilt1(float &_tilt1) {header.Theta1()=_tilt1;}
 
    /** Get 1st Tilting angle.
        \\Ex: cout << "Second Euler angle " << IX.tilt1() << endl;*/
@@ -917,6 +989,9 @@ public:
        \\Ex: IX.Theta2()=-10;*/
    float& Theta2() {return header.Theta2();}
 
+   /** Another function for set Theta2.*/
+   void set_Theta2(float & _Theta2) {header.Theta2()=_Theta2;}
+
    /** Get Theta2.
        \\Ex: cout << "Second Euler angle " << IX.Theta2() << endl;*/
    float  Theta2() const {return header.Theta2();}
@@ -924,6 +999,9 @@ public:
    /** Set 2sd Tilting angle.
        \\Ex: IX.tilt2()=-10;*/
    float& tilt2() {return header.Theta2();}
+
+   /** Another function for set 2sd Tilting angle.*/
+   void set_tilt2(float &_tilt2) {header.Theta2()=_tilt2;}
 
    /** Get 2sd Tilting angle.
        \\Ex: cout << "Second Euler angle " << IX.tilt2() << endl;*/
@@ -935,12 +1013,21 @@ public:
    /** Set Psi.
        \\Ex: IX.Psi()=350;*/
    float& Psi() {return header.Psi();}
+
+   /** Another function for set Psi.*/
+   void set_Psi(float & _Psi) {header.Psi()=_Psi;}
+
    /** Get Psi.
        \\Ex: cout << "Third Euler angle " << IX.psi() << endl;*/
    float  Psi() const {return header.Psi();}
+
    /** Set psi.
        \\Ex: IX.psi()=350;*/
    float& psi() {return header.Psi();}
+
+   /** Another function for set Phi.*/
+   void set_psi(float &_psi) {header.Psi()=_psi;}
+
    /** Get psi.
        \\Ex: cout << "Third Euler angle " << IX.psi() << endl;*/
    float  psi() const {return header.Psi();}
@@ -948,12 +1035,21 @@ public:
    /** Set Psi1.
        \\Ex: IX.Psi1()=350;*/
    float& Psi1() {return header.Psi1();}
+
+   /** Another function for set Psi1.*/
+   void set_Psi1(float & _Psi1) {header.Psi1()=_Psi1;}
+
    /** Get Psi1.
        \\Ex: cout << "Third Euler angle " << IX.psi1() << endl;*/
    float  Psi1() const {return header.Psi1();}
+
    /** Set psi1.
        \\Ex: IX.psi1()=350;*/
    float& psi1() {return header.Psi1();}
+
+   /** Another function for set psi1.*/
+   void set_psi1(float & _psi1) {header.Psi1()=_psi1;}
+
    /** Get psi1.
        \\Ex: cout << "Third Euler angle " << IX.psi1() << endl;*/
    float  psi1() const {return header.Psi1();}
@@ -961,12 +1057,21 @@ public:
    /** Set Psi2.
        \\Ex: IX.Psi2()=350;*/
    float& Psi2() {return header.Psi2();}
+
+   /** Another function for set Psi2.*/
+   void set_Psi2(float & _Psi2) {header.Psi2()=_Psi2;}
+
    /** Get Psi2.
        \\Ex: cout << "Third Euler angle " << IX.psi2() << endl;*/
    float  Psi2() const {return header.Psi2();}
+
    /** Set psi2.
        \\Ex: IX.psi2()=350;*/
    float& psi2() {return header.Psi2();}
+
+   /** Another function for set psi2.*/
+   void set_psi2(float & _psi2) {header.Psi2()=_psi2;}
+
    /** Get psi2.
        \\Ex: cout << "Third Euler angle " << IX.psi2() << endl;*/
    float  psi2() const {return header.Psi2();}
@@ -974,7 +1079,7 @@ public:
    //@}
    //@}
    //@}
-         
+
 };
 
 /**@name Related functions */
