@@ -13,7 +13,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
  * GNU General Public License for more details.                        
- *                                                                     
+ *
  * You should have received a copy of the GNU General Public License   
  * along with this program; if not, write to the Free Software         
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
@@ -467,6 +467,9 @@ public:
        \\Ex: V.startingZ()=0; */
    int& startingZ() {return zinit;}
 
+   /** Another function for setting the Z origin. */
+   void set_startingZ(int _zinit) {zinit=_zinit;}
+
    /** Returns the first valid logical Z index.
        \\Ex: int orgZ=V.startingZ();*/
    int  startingZ() const  {return zinit;}
@@ -482,6 +485,9 @@ public:
        \\Ex: V.startingY=-2; */
    int& startingY() {return yinit;}
 
+   /** Another function for setting the Y origin. */
+   void set_startingY(int _yinit) {yinit=_yinit;}
+
    /** Returns the first valid logical Y index.
        \\Ex: int orgY=V.startingY();*/
    int  startingY() const {return yinit;}
@@ -496,6 +502,9 @@ public:
        convention in C.
        \\Ex: V.startingX=-1; */
    int& startingX() {return xinit;}
+
+   /** Another function for setting the X origin. */
+   void set_startingX(int _xinit) {xinit=_xinit;}
 
    /** Returns the first valid logical X index.
        \\Ex: int orgX=V.startingX();*/
@@ -550,6 +559,12 @@ public:
         if (j<xinit || j>=xinit+xdim)
            REPORT_ERROR(1203,"Matrix3D::operator (): Matrix3D subscript (j) out of range");
         return VOL_ELEM(*this, k,i,j);}
+
+   /** Get the voxel at (k,i,j) (logical access)*/
+   T get_voxel(int k,int i,int j) const {return (*this)(k,i,j);}
+
+   /** Set the voxel at (k,i,j) (logical access)*/
+   void set_voxel(int k,int i,int j, T val) {(*this)(k,i,j)=val;}
 
    /** Volume element access via double vector.
        Returns the value of a matrix logical position, but this time the
