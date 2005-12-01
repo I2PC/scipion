@@ -490,7 +490,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
 /* Create history file handler --------------------------------------------- */
    if (level>=FULL) {
-      fh_hist.open((fn_root+".hist").c_str(),ios::out);
+      fh_hist->open((fn_root+".hist").c_str(),ios::out);
       if (!fh_hist)
 	 REPORT_ERROR(3008,(string)"Produce_Basic_ART_Side_Info: Cannot open file "
             +fn_root+".hist");
@@ -581,7 +581,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
        */
      }
 
-     fh_hist << "WLS-ART% Sum over all weights = "<<sum_weight<<endl;
+     *fh_hist << "WLS-ART% Sum over all weights = "<<sum_weight<<endl;
    }
 
 /* Setting initial volumes ------------------------------------------------- */

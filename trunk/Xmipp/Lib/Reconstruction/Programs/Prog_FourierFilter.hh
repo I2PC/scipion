@@ -110,6 +110,9 @@ public:
    /** Assignment */
    FourierMask & operator = (const FourierMask &F);
 
+   /** Another function for assignment */
+   void assign (const FourierMask &F);
+
    /** Clear */
    void clear();
 

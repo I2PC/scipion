@@ -6,7 +6,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.                                 
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License   
  * along with this program; if not, write to the Free Software         
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
+ * 02111-1307  USA
  *                                                                     
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
@@ -126,6 +126,9 @@ public:
 
 /// Assignment
     Feature & operator = (const Feature &F);
+
+/** Another function for assigmnet.*/
+    void assign (const Feature &F);
 
 /** Rotate the whole feature.
     Rotate this feature using a rotation matrix. The center as well as
@@ -438,6 +441,9 @@ public:
 /// Assigment
    Oriented_Feature & operator = (const Oriented_Feature & OF);
 
+/** Another function for assigment.*/
+   void assign (const Oriented_Feature & OF);
+
 /** Rotate.
     Rotate this feature. The center as well as the feature itself are
     rotated. */
@@ -470,6 +476,9 @@ public:
 /// Assignment
     Sphere & operator = (const Sphere &F);
 
+/** Another function for assignment.*/
+    void assign (const Sphere &F);
+
 /** Speeded up point inside a sphere.
     This function tells you if a point is inside the sphere or not.
     See \Ref{Feature::point_inside} */
@@ -486,6 +495,9 @@ public:
     same as the actual one. The radius is multiplied by the scale factor
     and the maximum distance is recalculated for the new sphere. */
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled sphere.*/
+    void scale(double factor, Feature *_f) const;
 
 /** Intersection of a ray with a sphere.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -562,6 +574,9 @@ public:
 /// Assignment
     Blob & operator = (const Blob &F);
 
+/** Another function for assignment.*/
+    void assign (const Blob &F);
+
 /** Speeded up point inside a blob.
     This function tells you if a point is inside the blob or not.
     See \Ref{Feature::point_inside} */
@@ -574,9 +589,12 @@ public:
 /** Return a scaled Blob.
     The center, density, and behaviour of the new blob is exactly the
     same as the actual one. The radius is multiplied by the scale factor
-    and the maximum distance is recalculated for the new sphere. Alpha 
+    and the maximum distance is recalculated for the new sphere. Alpha
     is kept constant*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled Blob.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with a blob.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -668,6 +686,9 @@ public:
 /// Assignment
     Cylinder & operator = (const Cylinder &F);
 
+/** Another function for assignment.*/
+    void assign (const Cylinder &F);
+
 /** Speeded up point inside a cylinder.
     This function tells you if a point is inside the cylinder or not.
     See \Ref{Feature::point_inside} */
@@ -684,6 +705,9 @@ public:
     same as the actual one. The radius and height are multiplied by the
     scale factor and the maximum distance is recalculated for the new cylinder.*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled cylinder.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with a cylinder.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -788,6 +812,9 @@ public:
 /// Assignment
     DCylinder & operator = (const DCylinder &F);
 
+/** Another function for assignment.*/
+    void assign (const DCylinder &F);
+
 /** Speeded up point inside a double cylinder.
     This function tells you if a point is inside any of the cylinders or not.
     See \Ref{Feature::point_inside} */
@@ -806,6 +833,9 @@ public:
     scale factor and the maximum distance is recalculated for the new
     double cylinder.*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled double cylinder.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with a double cylinder.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -898,6 +928,9 @@ public:
 /// Assignment
     Cube & operator = (const Cube &F);
 
+/** Another function for assignment.*/
+    void assign (const Cube &F);
+
 /** Speeded up point inside a cube.
     This function tells you if a point is inside the cube or not.
     See \Ref{Feature::point_inside} */
@@ -914,6 +947,9 @@ public:
     same as the actual one. The dimensions are multiplied by the
     scale factor and the maximum distance is recalculated for the new cube.*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled cube.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with a cube, NOT IMPLEMENTED!!!.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -1006,6 +1042,9 @@ public:
 /// Assignment
     Ellipsoid & operator = (const Ellipsoid &F);
 
+/** Another function for assignment.*/
+    void assign (const Ellipsoid &F);
+
 /** Speeded up point inside an ellipsoid.
     This function tells you if a point is inside the elliposoid or not.
     See \Ref{Feature::point_inside} */
@@ -1022,6 +1061,9 @@ public:
     same as the actual one. The dimensions are multiplied by the
     scale factor and the maximum distance is recalculated for the new ellipsoid.*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled elliposoid.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with an ellipsoid.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -1112,6 +1154,9 @@ public:
 /// Assignment
     Cone & operator = (const Cone &F);
 
+/** Another function for assignment.*/
+    void assign (const Cone &F);
+
 /** Speeded up point inside a cone.
     This function tells you if a point is inside the cone or not.
     See \Ref{Feature::point_inside} */
@@ -1128,6 +1173,9 @@ public:
     same as the actual one. The radius and height are multiplied by the
     scale factor and the maximum distance is recalculated for the new cone.*/
     Feature *scale(double factor) const;
+
+/** Another function for return a scaled cone.*/
+    void scale(double factor,Feature *_f) const;
 
 /** Intersection of a ray with a cone, NOT IMPLEMENTED!!!!.
     See \Ref{Feature::intersection} to know more about the parameters
@@ -1240,7 +1288,7 @@ public:
     int FeatNo() {return VF.size();}
 
 /** Access to a feature pointer.
-    You can address each one of the features using this operator, 
+    You can address each one of the features using this operator,
     remember that features are numbered as 1, 2, ... FeatNo() */
     Feature * operator ()(int i) {return VF[i-1];}
 
@@ -1255,7 +1303,10 @@ public:
 
 /// Assignment
     Phantom & operator = (const Phantom &P);
-    
+
+/** Another function for assignment.*/
+    void assign (const Phantom &P);
+
 /// Prepare for work.
     void prepare();
     

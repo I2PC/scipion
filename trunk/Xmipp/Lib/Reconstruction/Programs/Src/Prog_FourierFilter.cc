@@ -59,6 +59,9 @@ FourierMask & FourierMask::operator = (const FourierMask &F) {
    return *this;
 }
 
+/* Another function for assignment ----------------------------------------- */
+void FourierMask::assign (const FourierMask &F) {*this=F;}
+
 /* Read parameters from command line. -------------------------------------- */
 void FourierMask::read(int argc, char **argv) {
    clear();

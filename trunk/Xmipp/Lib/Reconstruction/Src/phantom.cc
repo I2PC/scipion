@@ -83,6 +83,8 @@ Feature & Feature::operator = (const Feature &F) {
    return *this;
 }
 
+void Feature::assign (const Feature &F) {*this=F;}
+
 Oriented_Feature & Oriented_Feature::operator = (const Oriented_Feature &OF) {
    if (this==&OF) return *this;
    rot    = OF.rot;
@@ -94,12 +96,16 @@ Oriented_Feature & Oriented_Feature::operator = (const Oriented_Feature &OF) {
    return *this;
 }
 
+void Oriented_Feature::assign (const Oriented_Feature &OF) {*this=OF;}
+
 Sphere & Sphere::operator = (const Sphere &F) {
    if (this==&F) return *this;
    Feature::operator = (F);
    radius = F.radius;
    return *this;
 }
+
+void Sphere::assign (const Sphere &F) {*this=F;}
 
 Blob & Blob::operator = (const Blob &F) {
    if (this==&F) return *this;
@@ -110,6 +116,8 @@ Blob & Blob::operator = (const Blob &F) {
    return *this;
 }
 
+void Blob::assign (const Blob &F) {*this=F;}
+
 Cylinder & Cylinder::operator = (const Cylinder &F) {
    if (this==&F) return *this;
    Oriented_Feature::operator = (F);
@@ -118,6 +126,8 @@ Cylinder & Cylinder::operator = (const Cylinder &F) {
    height  = F.height;
    return *this;
 }
+
+void Cylinder::assign (const Cylinder &F) {*this=F;}
 
 DCylinder & DCylinder::operator = (const DCylinder &F) {
    if (this==&F) return *this;
@@ -128,6 +138,8 @@ DCylinder & DCylinder::operator = (const DCylinder &F) {
    return *this;
 }
 
+void DCylinder::assign (const DCylinder &F) {*this=F;}
+
 Cube & Cube::operator = (const Cube &F) {
    if (this==&F) return *this;
    Oriented_Feature::operator = (F);
@@ -136,6 +148,8 @@ Cube & Cube::operator = (const Cube &F) {
    zdim = F.zdim;
    return *this;
 }
+
+void Cube::assign (const Cube &F) {*this=F;}
 
 Ellipsoid & Ellipsoid::operator = (const Ellipsoid &F) {
    if (this==&F) return *this;
@@ -146,6 +160,8 @@ Ellipsoid & Ellipsoid::operator = (const Ellipsoid &F) {
    return *this;
 }
 
+void Ellipsoid::assign (const Ellipsoid &F) {*this=F;}
+
 Cone & Cone::operator = (const Cone &F) {
    if (this==&F) return *this;
    Oriented_Feature::operator = (F);
@@ -153,6 +169,8 @@ Cone & Cone::operator = (const Cone &F) {
    height     = F.height;
    return *this;
 }
+
+void Cone::assign (const Cone &F) {*this=F;}
 
 /* ------------------------------------------------------------------------- */
 /* Rotation                                                                  */
@@ -1111,6 +1129,8 @@ Feature * Sphere::scale(double factor) const {
    return (Feature *)f;
 }
 
+void Sphere::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale a blob ---------------------------------------------------------- */
 Feature * Blob::scale(double factor) const {
    Blob *f;
@@ -1123,21 +1143,25 @@ Feature * Blob::scale(double factor) const {
    f->prepare();
    return (Feature *)f;
 }
-   
+
+void Blob::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale a cylinder -------------------------------------------------------- */
 Feature * Cylinder::scale(double factor) const {
    Cylinder *f;
    f=new Cylinder;
    COPY_COMMON_PART;
    COPY_ANGLES;
-   
+
    f->xradius      = factor * xradius;
    f->yradius      = factor * yradius;
    f->height       = factor * height;
    f->prepare();
    return (Feature *)f;
 }
-   
+
+void Cylinder::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale a double cylinder ------------------------------------------------- */
 Feature * DCylinder::scale(double factor) const {
    DCylinder *f;
@@ -1149,10 +1173,12 @@ Feature * DCylinder::scale(double factor) const {
    f->height       = factor * height;
    f->separation   = separation - 2*(factor-1)*height;
    f->prepare();
-   
+
    return (Feature *)f;
 }
-   
+
+void DCylinder::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale a cube ------------------------------------------------------------ */
 Feature * Cube::scale(double factor) const {
    Cube *f;
@@ -1166,7 +1192,9 @@ Feature * Cube::scale(double factor) const {
    f->prepare();
    return (Feature *)f;
 }
-   
+
+void Cube::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale an ellipsoid ------------------------------------------------------ */
 Feature * Ellipsoid::scale(double factor) const {
    Ellipsoid *f;
@@ -1180,7 +1208,9 @@ Feature * Ellipsoid::scale(double factor) const {
    f->prepare();
    return (Feature *)f;
 }
-   
+
+void Ellipsoid::scale(double factor, Feature *_f) const {_f=scale(factor);}
+
 /* Scale a cone ------------------------------------------------------------ */
 Feature * Cone::scale(double factor) const {
    Cone *f;
@@ -1193,6 +1223,8 @@ Feature * Cone::scale(double factor) const {
    f->prepare();
    return (Feature *)f;
 }
+
+void Cone::scale(double factor, Feature *_f) const {_f=scale(factor);}
 
 #undef COPY_COMMON_PART
 #undef COPY_ANGLES

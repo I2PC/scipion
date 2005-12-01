@@ -41,98 +41,98 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0) {
    
 // Show general information ................................................
-   prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
-   prm.fh_hist << " Parameters -------------------------------------------------\n";
-   prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
-   prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
-   prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
-   prm.fh_hist << " Sampling= " << prm.sampling << endl;
-   prm.fh_hist << prm.basis << endl;
+   *prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
+   *prm.fh_hist << " Parameters -------------------------------------------------\n";
+   *prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
+   *prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
+   *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
+   *prm.fh_hist << " Sampling= " << prm.sampling << endl;
+   *prm.fh_hist << prm.basis << endl;
    switch (prm.grid_type) {
-      case FCC: prm.fh_hist << " Grid Type: FCC "; break;
-      case BCC: prm.fh_hist << " Grid Type: BCC "; break;
-      case CC:  prm.fh_hist << " Grid Type: CC ";  break;
+      case FCC: *prm.fh_hist << " Grid Type: FCC "; break;
+      case BCC: *prm.fh_hist << " Grid Type: BCC "; break;
+      case CC:  *prm.fh_hist << " Grid Type: CC ";  break;
    }
-   prm.fh_hist << " Ray length: " << prm.ray_length << endl;
-   prm.fh_hist << "\n Radius of the interest sphere= " << prm.R 
+   *prm.fh_hist << " Ray length: " << prm.ray_length << endl;
+   *prm.fh_hist << "\n Radius of the interest sphere= " << prm.R
                << " pixels" << endl;
-   prm.fh_hist << " Grid unit=" << prm.grid_relative_size 
+   *prm.fh_hist << " Grid unit=" << prm.grid_relative_size
                << " pixels" << endl;
-   if (prm.proj_ext==0) prm.fh_hist << " No Projection extension\n";
-   else prm.fh_hist << " Projection extension frame: " << prm.proj_ext
+   if (prm.proj_ext==0) *prm.fh_hist << " No Projection extension\n";
+   else *prm.fh_hist << " Projection extension frame: " << prm.proj_ext
       << " pixels\n";
-   if (prm.Zoutput_volume_size==0) prm.fh_hist << " Output volume size as input images\n";
-   else prm.fh_hist << " Output volume size (ZxYxX): "
+   if (prm.Zoutput_volume_size==0) *prm.fh_hist << " Output volume size as input images\n";
+   else *prm.fh_hist << " Output volume size (ZxYxX): "
       << prm.Zoutput_volume_size << "x" << prm.Youtput_volume_size
       << "x" << prm.Xoutput_volume_size << endl;
-   prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << endl
+   *prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << endl
                << "                No. Iter=" << prm.no_it << endl;
    if (prm.WLS) {
-     prm.fh_hist << " Perform weighted least-squares ART "<< endl;
-     prm.fh_hist << " Iterations:    kappa=" << prm.kappa_list.transpose() << endl
+     *prm.fh_hist << " Perform weighted least-squares ART "<< endl;
+     *prm.fh_hist << " Iterations:    kappa=" << prm.kappa_list.transpose() << endl
                  << "                No. Iter=" << prm.no_it << endl;
    }
-   prm.fh_hist << " Parallel mode: ";
+   *prm.fh_hist << " Parallel mode: ";
    switch (prm.parallel_mode) {
-      case Basic_ART_Parameters::ART:   prm.fh_hist << "ART\n"; break;
-      case Basic_ART_Parameters::SIRT:  prm.fh_hist << "SIRT\n"; break;
-      case Basic_ART_Parameters::pSIRT:  prm.fh_hist << "Parallel SIRT\n"; break;
-      case Basic_ART_Parameters::pfSIRT:  prm.fh_hist << "Parallel False SIRT\n"; break;
+      case Basic_ART_Parameters::ART:   *prm.fh_hist << "ART\n"; break;
+      case Basic_ART_Parameters::SIRT:  *prm.fh_hist << "SIRT\n"; break;
+      case Basic_ART_Parameters::pSIRT:  *prm.fh_hist << "Parallel SIRT\n"; break;
+      case Basic_ART_Parameters::pfSIRT:  *prm.fh_hist << "Parallel False SIRT\n"; break;
       case Basic_ART_Parameters::pSART:
-          prm.fh_hist << "SART, block size=" << prm.block_size << endl;
+          *prm.fh_hist << "SART, block size=" << prm.block_size << endl;
           break;
-      case Basic_ART_Parameters::pAVSP:   prm.fh_hist << "AVSP\n"; break;
+      case Basic_ART_Parameters::pAVSP:   *prm.fh_hist << "AVSP\n"; break;
       case Basic_ART_Parameters::pBiCAV:
-          prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
+          *prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
           break;
-      case Basic_ART_Parameters::pCAV:  prm.fh_hist << "CAV (global algorithm)\n";break;
+      case Basic_ART_Parameters::pCAV:  *prm.fh_hist << "CAV (global algorithm)\n";break;
    }
-   prm.fh_hist << " Equation mode: ";
-   if (prm.eq_mode==CAV) prm.fh_hist << "CAV (Projection update)\n";
-   else if (prm.eq_mode==CAVK) prm.fh_hist << "CAVK\n";
-   else if (prm.eq_mode==CAVARTK) prm.fh_hist << "CAVARTK\n";
-   else prm.fh_hist << "ARTK\n";
-   prm.fh_hist << " Projections: Ydim x Xdim = " << prm.projYdim
+   *prm.fh_hist << " Equation mode: ";
+   if (prm.eq_mode==CAV) *prm.fh_hist << "CAV (Projection update)\n";
+   else if (prm.eq_mode==CAVK) *prm.fh_hist << "CAVK\n";
+   else if (prm.eq_mode==CAVARTK) *prm.fh_hist << "CAVARTK\n";
+   else *prm.fh_hist << "ARTK\n";
+   *prm.fh_hist << " Projections: Ydim x Xdim = " << prm.projYdim
       << " x " << prm.projXdim << endl;
-   prm.fh_hist << " Surface mask: " << prm.fn_surface_mask << endl;
-   prm.fh_hist << " POCS freq: " << prm.POCS_freq << endl;
-   prm.fh_hist << " Known volume: " << prm.known_volume << endl;
-   prm.fh_hist << " Positivity: "; print(prm.fh_hist,prm.positivity);
-   prm.fh_hist << " Apply shifts in images headers: "; print(prm.fh_hist,prm.apply_shifts);
-      prm.fh_hist << endl;
-   prm.fh_hist << " Symmetry file: " << prm.fn_sym << endl;
-   prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections" 
+   *prm.fh_hist << " Surface mask: " << prm.fn_surface_mask << endl;
+   *prm.fh_hist << " POCS freq: " << prm.POCS_freq << endl;
+   *prm.fh_hist << " Known volume: " << prm.known_volume << endl;
+   *prm.fh_hist << " Positivity: "; print(*prm.fh_hist,prm.positivity);
+   *prm.fh_hist << " Apply shifts in images headers: "; print(*prm.fh_hist,prm.apply_shifts);
+      *prm.fh_hist << endl;
+   *prm.fh_hist << " Symmetry file: " << prm.fn_sym << endl;
+   *prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections"
                                                            <<endl;
-   prm.fh_hist << " Maximun absolute tilt angle: " << prm.max_tilt << " degrees" 
+   *prm.fh_hist << " Maximun absolute tilt angle: " << prm.max_tilt << " degrees"
                                                            <<endl;
-   prm.fh_hist << " Generating symmetry group: ";
-       print(prm.fh_hist,!prm.do_not_generate_subgroup); prm.fh_hist << endl;
-   prm.fh_hist << " Do not use symmetrized projections: ";
-       print(prm.fh_hist,!prm.do_not_use_symproj); prm.fh_hist << endl;
-   prm.fh_hist << " Number of total projections (including symmetrized): "
+   *prm.fh_hist << " Generating symmetry group: ";
+       print(*prm.fh_hist,!prm.do_not_generate_subgroup); *prm.fh_hist << endl;
+   *prm.fh_hist << " Do not use symmetrized projections: ";
+       print(*prm.fh_hist,!prm.do_not_use_symproj); *prm.fh_hist << endl;
+   *prm.fh_hist << " Number of total projections (including symmetrized): "
       << prm.numIMG << endl;
-   prm.fh_hist << " Number of different projections: " << prm.trueIMG << endl;
-   prm.fh_hist << " Forcing symmetry: " << prm.force_sym << endl;
-   prm.fh_hist << " Stop at: " << prm.stop_at << endl;
+   *prm.fh_hist << " Number of different projections: " << prm.trueIMG << endl;
+   *prm.fh_hist << " Forcing symmetry: " << prm.force_sym << endl;
+   *prm.fh_hist << " Stop at: " << prm.stop_at << endl;
    if (prm.random_sort)
-       prm.fh_hist << "Random sort" << endl;
+       *prm.fh_hist << "Random sort" << endl;
    else
-       prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
-   prm.fh_hist << " Variability analysis: " << prm.variability_analysis << endl;
+       *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
+   *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << endl;
    if (prm.SL.SymsNo()!=0) {
       matrix2D<double> L(4,4),R(4,4); // A matrix from the list
-      prm.fh_hist << "Symmetry matrices -------\n";
+      *prm.fh_hist << "Symmetry matrices -------\n";
       for (int j=0; j<prm.SL.SymsNo(); j++) {
          prm.SL.get_matrices(j,L,R);
-         prm.fh_hist << "Left  Symmetry matrix " << j << endl << L;
-         prm.fh_hist << "Right Symmetry matrix " << j << endl << R << endl;
+         *prm.fh_hist << "Left  Symmetry matrix " << j << endl << L;
+         *prm.fh_hist << "Right Symmetry matrix " << j << endl << R << endl;
       }
    }
-   prm.fh_hist << " Saving intermidiate at every "
+   *prm.fh_hist << " Saving intermidiate at every "
       << prm.save_intermidiate_every << " projections\n";
    if(prm.ref_trans_step > 0.)
      {
-     prm.fh_hist << " Refine translational alignement after "
+     *prm.fh_hist << " Refine translational alignement after "
                  << prm.ref_trans_after << " projection presentations\n"
 		 << " Maximun allowed shift is: " << prm.ref_trans_step << "\n\n";
      }
@@ -150,21 +150,21 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    }
 
    // Now show
-   prm.fh_hist << " Projection angles -----------------------------------------\n";
-   prm.fh_hist << DF;
-   prm.fh_hist << " -----------------------------------------------------------\n";
+   *prm.fh_hist << " Projection angles -----------------------------------------\n";
+   *prm.fh_hist << DF;
+   *prm.fh_hist << " -----------------------------------------------------------\n";
 
 // Show Initial volume and volume structure ................................
    if (prm.fn_start != "")
-      prm.fh_hist << "Starting from file: " << prm.fn_start << endl;
+      *prm.fh_hist << "Starting from file: " << prm.fn_start << endl;
    else
-      prm.fh_hist << "Starting from a zero volume\n";
+      *prm.fh_hist << "Starting from a zero volume\n";
 
-   prm.fh_hist << "Grid structure ------\n" << vol_basis0.grid();
+   *prm.fh_hist << "Grid structure ------\n" << vol_basis0.grid();
 
 // Show extra information ..................................................
-   prm.fh_hist << "Extra information ------------------------------------------\n";
-   prm.fh_hist << eprm;
+   *prm.fh_hist << "Extra information ------------------------------------------\n";
+   *prm.fh_hist << eprm;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -407,11 +407,11 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     VC.newUpdateVolume(ptr_vol_out,read_proj);
 
           // Show results ..................................................
-          prm.fh_hist << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
+          *prm.fh_hist << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
              << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
           if (POCS.apply_POCS)
-             prm.fh_hist << "\tPOCS:" << POCS.POCS_mean_error;
-          prm.fh_hist << endl;
+             *prm.fh_hist << "\tPOCS:" << POCS.POCS_mean_error;
+          *prm.fh_hist << endl;
           if (prm.tell&TELL_SHOW_ERROR) {
              cout << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
                 << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
@@ -494,7 +494,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Prepare for next global iteration ---------------------------------
       // Calculate norm and print
       if (rank==-1) {
-	 prm.fh_hist << "Finished - Iteration " << it << endl;
+	 *prm.fh_hist << "Finished - Iteration " << it << endl;
          if (prm.WLS)
 	    cerr        << "   Weighted error: " << global_mean_error
 	                << " 1st block: "        << global_mean_error_1stblock
@@ -505,18 +505,18 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                  <<  global_mean_error/prm.numIMG << endl;
 
          if (prm.WLS)
-	    prm.fh_hist << "   Weighted error: " << global_mean_error
+	    *prm.fh_hist << "   Weighted error: " << global_mean_error
 	                << " 1st block: "        << global_mean_error_1stblock
                         << " 2nd block: "        << mean_error_2ndblock
 	                << " residual: "         << pow_residual_imgs << endl;
          else
-	    prm.fh_hist << "   Global mean squared error: "
+	    *prm.fh_hist << "   Global mean squared error: "
                         << global_mean_error/prm.numIMG << endl;
 
 	 if (POCS.apply_POCS) {
             cerr        << "   POCS Global mean squared error: "
                 	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
-            prm.fh_hist << "   POCS Global mean squared error: "
+            *prm.fh_hist << "   POCS Global mean squared error: "
                 	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
 	 }
       }
@@ -602,6 +602,6 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
       Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    vol_voxels.write(prm.fn_root+".vol");
    if (prm.tell&TELL_SAVE_BASIS) vol_basis.write(prm.fn_root+".basis");
-   prm.fh_hist.close();
+   prm.fh_hist->close();
 
 }

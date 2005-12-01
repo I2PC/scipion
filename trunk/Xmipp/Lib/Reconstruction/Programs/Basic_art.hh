@@ -281,7 +281,7 @@ public:
    int             projYdim;
    
    /// File handler for the history file
-   ofstream        fh_hist;
+   ofstream        *fh_hist;
    
    /// Array with all the sorting information for each projection
    Recons_info     *IMG_Inf;
