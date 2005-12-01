@@ -11,7 +11,7 @@
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.                        
  *                                                                     
  * You should have received a copy of the GNU General Public License   
@@ -135,6 +135,9 @@ public:
        Return the list of particles. */
    vector<Particle_coords> & Particles() {return coords;}
 
+   /** Another function for getting the particles.*/
+   void get_Particles(vector<Particle_coords> & _coords) {_coords=coords;}
+
    /** Set window size.
        This window is set upon each coordinate and is used to cut all
        images. */
@@ -194,14 +197,26 @@ public:
    /** Access to array of 8 bits. */
    unsigned char * array8() const {return m8;}
 
+   /** Another function for access to array of 8 bits.*/
+   void get_array8(unsigned char * _m8) {_m8=m8;}
+
    /** Access to array of 16 bits. */
    short int * array16() const {return m16;}
+
+   /** Another function for access to array of 16 bits.*/
+   void get_array16(short int * _m16) {_m16=m16;}
 
    /** Access to unsigned array of 16 bits. */
    unsigned short int * arrayU16() const {return um16;}
 
+   /** Another function for access to unsigned array of 16 bits.*/
+   void get_arrayU16(unsigned short int * _um16) {_um16=um16;}
+
    /** Access to array of 32 bits. */
    float * array32() const {return m32;}
+
+   /** Another function for access to array of 32 bits.*/
+   void get_array32(float * _m32) {_m32=m32;}
 
    /** Pixel access for reading.
        These coordinates follow the physical Xmipp \URL[convention]
@@ -344,6 +359,9 @@ public:
       return coords[n];
    }
 
+   /** Another function for accessing the coordinate structure.*/
+   void get_coord(int n, Particle_coords &_coords) {_coords=coord(n);}
+
    /** Add label.
        The index assigned to the label is returned */
    int add_label(const string &label)
@@ -351,8 +369,8 @@ public:
 
    /** Number of labels. */
    int LabelNo() {return labels.size();}
-   
-   /** Get a label. 
+
+   /** Get a label.
        An exception is thrown if the index is greater than the
        number of labels */
    string & get_label(int n) {
@@ -360,7 +378,10 @@ public:
          REPORT_ERROR(1,"Micrograph::get_label(): index out of range");
       return labels[n];
    }
-   
+
+   /** Another function for get a lebel.*/
+   void get_label(int n, string &_label){_label=get_label(n);}
+
    /** Return micrograph size */
    void size(int &_Xdim, int &_Ydim) const {_Xdim=Xdim; _Ydim=Ydim;}
 };
