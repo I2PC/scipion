@@ -513,15 +513,18 @@ public:
        convention in C.
        \\Ex: v.startingX()=-2; */
    int& startingX() {return xinit;}
-   
+
+   /** Another function for sets the origin. */
+   void set_startingX(int _xinit) {xinit=_xinit;}
+
    /** Returns the first valid logical index.
        \\Ex: int org=v.startingX();*/
    int startingX() const {return xinit;}
-   
+
    /** Returns the last valid logical index.
        \\Ex: int fin=v.finishingX();*/
    int finishingX() const {return xinit+xdim-1;}
-   
+
    /** Returns the vector dimension.
        \\ Ex: int dim=v.get_dim();*/
    int  get_dim() const {return xdim;}
@@ -569,7 +572,10 @@ public:
         if (i>=xinit+xdim || i<xinit)
            REPORT_ERROR(1003,"Vector subscript not defined for this vector");
         return MULTIDIM_ELEM(*this,i-STARTINGX(*this));}
-   
+
+   /** Get element at i (logical access). */
+   T get_elem(int i) const {return (*this)(i);}
+
    /** Matrix element access via double vector.
        Returns the value of a matrix logical position, but this time the
        element position is determined by a R1 vector.
@@ -707,7 +713,7 @@ public:
    /** Angle of the vector.
        Supposing this vector is in R2 this function returns the angle of
        this vector with X axis, ie, atan2(YY(v),XX(v)) */
-   double angle() {return atan2(YY(*this),XX(*this));}
+   double angle() {return atan2((double)YY(*this),(double)XX(*this));}
 
    /** Normalize vector.
        Generate a vector of module 1. This is achieved dividing the
@@ -719,7 +725,7 @@ public:
    /** Normalize this vector, store the result here */
    void self_normalize()
       {double m=module();
-      if (ABS(m)>XMIPP_EQUAL_ACCURACY) *this /= m; else init_zeros();}
+      if (ABS(m)>XMIPP_EQUAL_ACCURACY) *this /= (T)m; else init_zeros();}
    
    /** Sort vector elements.
        Sort in ascending order the vector elements. You can use the "reverse"
