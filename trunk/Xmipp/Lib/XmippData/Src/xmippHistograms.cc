@@ -53,6 +53,10 @@ histogram1D & histogram1D::operator =(const histogram1D &H) {
    return *this;
 }
 
+/* Another function for assignament ---------------------------------------- */
+void histogram1D::assign (const histogram1D &H) {
+   *this=H;
+}
 /* Initialize -------------------------------------------------------------- */
 void histogram1D::init(double min_val, double max_val, int n_steps) {
    hmin=min_val;
@@ -238,6 +242,11 @@ histogram2D & histogram2D::operator = (const histogram2D &H) {
       no_samples  = H.no_samples;
    }
    return *this;
+}
+
+/* Another function for assignment -------------------------------------------------------------- */
+void histogram2D::assign (const histogram2D &H) {
+   *this=H;
 }
 
 /* Initialize -------------------------------------------------------------- */

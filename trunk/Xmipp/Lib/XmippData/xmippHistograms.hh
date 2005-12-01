@@ -104,7 +104,7 @@
    cout << "The effective range goes from " << eff0
         << " to " << effF << endl;
    \end{verbatim}
-   
+
 */
 class histogram1D: public matrix1D<double> {
   public:
@@ -125,14 +125,17 @@ class histogram1D: public matrix1D<double> {
         Makes an exact copy of the given histogram into another histogram.
         \\Ex: histogram1D hist2(hist1); */
     histogram1D(const histogram1D &H) {clear(); *this=H;}
-    
+
     /** Empties an histogram.
         Remember to initialise it before using it again.
         \\Ex: hist.clear(); */
     void clear();
 
-   /** Assignment. */
-   histogram1D & operator = (const histogram1D &H);
+    /** Assignment. */
+    histogram1D & operator = (const histogram1D &H);
+
+    /** Another function for assignament.*/
+    void assign (const histogram1D &H);
 
     /** Initialisation of the histogram.
         This is the operation which allows the histogram to be used.
@@ -250,7 +253,7 @@ template <class T>
     given.
     \\ Ex: histogram1D hist; compute_hist(v,hist,0,1,100); */
 template <class T>
-   void compute_hist(const T &v, histogram1D &hist, 
+   void compute_hist(const T &v, histogram1D &hist,
       double min, double max, int no_steps)
    {hist.init(min,max,no_steps);
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
@@ -274,7 +277,7 @@ template <class T>
    void compute_hist(const matrix3D<T> &v, histogram1D &hist,
       const matrix1D<int> &corner1, const matrix1D<int> &corner2,
       int no_steps=100)
-   {double min, max; 
+   {double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min,max,no_steps);
     matrix1D<int> r(3);
@@ -427,6 +430,9 @@ class histogram2D: public matrix2D<double> {
     /** Assignment. */
     histogram2D & operator = (const histogram2D &H);
 
+    /** Another function for assigment. */
+    void assign (const histogram2D &H);
+    
     /** Initialisation of the histogram.
         This is the operation which allows the histogram to be used.
         This should be performed before inserting any value in it. The
