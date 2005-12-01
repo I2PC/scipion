@@ -674,11 +674,14 @@ public:
        convention in C.
        \\Ex: m.startingY(-2); */
    int& startingY() {return yinit;}
-   
+
+   /** Another function for setting the Y origin. */
+   void set_startingY(int _yinit) {yinit=_yinit;}
+
    /** Returns the first valid logical Y index.
        \\Ex: int orgY=m.startingY();*/
    int startingY() const {return yinit;}
-   
+
    /** Returns the last valid logical Y index.
        \\Ex: int finY=m.finishingY();*/
    int finishingY() const {return yinit+ydim-1;}
@@ -689,6 +692,9 @@ public:
        convention in C.
        \\Ex: m.startingX(-1); */
    int& startingX() {return xinit;}
+
+   /** Another function for setting the X origin. */
+   void set_startingX(int _xinit) {xinit=_xinit;}
 
    /** Returns the first valid logical X index.
        \\Ex: int orgX=m.startingX();*/
@@ -737,7 +743,13 @@ public:
         if (j<xinit || j>=xinit+xdim)
            REPORT_ERROR(1103,"Matrix subscript (j) out of range");
         return MAT_ELEM(*this,i,j);}
-   
+
+   /** Get the pixel at (i,j). Logical access */
+   T get_pixel(int i,int j) const {return (*this)(i,j);}
+
+   /** Set the pixel at (i,j). Logical access */
+   void set_pixel(int i,int j, T val) {(*this)(i,j)=val;}
+
    /** Matrix element access via double vector.
        Returns the value of a matrix logical position, but this time the
        element position is determined by a R2 vector.
@@ -1866,10 +1878,10 @@ template <class T>
     A vector is returned where:
 	 - the first element is the mean of the pixels whose
 	   distance to the origin is (0-1),
-	 - the second element is the mean of the pixels 
+	 - the second element is the mean of the pixels
        whose distance to the origin is (1-2)
-	 - and so on. 
-    A second vector radial_count is returned containing the number of 
+	 - and so on.
+    A second vector radial_count is returned containing the number of
     pixels over which each radial average was calculated.
     if rounding=true, element=round(distance);
          - so the first element is the mean of the voxels whose
@@ -1879,7 +1891,7 @@ template <class T>
          - and so on. */
 template <class T>
    void radial_average(const matrix2D<T> &m, const matrix1D<int> &center_of_rot,
-      matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+      matrix1D<T> &radial_mean, matrix1D<int> &radial_count,
       const bool &rounding=false) {
       matrix1D<double> idx(2);
 
