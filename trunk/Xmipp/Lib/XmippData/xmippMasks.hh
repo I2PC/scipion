@@ -830,16 +830,40 @@ template <class T>
 
 /** Get binary 1D mask. */
 matrix1D<int>    & get_binary_mask1D() {return imask1D;}
+
+/** Set binary 1D mask.*/
+void set_binary_mask1D(matrix1D<int> & _imask1D) {imask1D=_imask1D;}
+
 /** Get continuous 1D mask. */
 matrix1D<double> & get_cont_mask1D()   {return dmask1D;}
+
+/** Set continuous 1D mask.*/
+void set_cont_mask1D(matrix1D<double> & _dmask1D) {dmask1D=_dmask1D;}
+
 /** Get binary 2D mask. */
 matrix2D<int>    & get_binary_mask2D() {return imask2D;}
+
+/** Set binary 2D mask.*/
+void set_binary_mask2D(matrix2D<int> & _imask2D) {imask2D=_imask2D;}
+
 /** Get continuous 2D mask. */
 matrix2D<double> & get_cont_mask2D()   {return dmask2D;}
+
+/** Set continuous 2D mask.*/
+void set_cont_mask2D(matrix2D<double> & _dmask2D) {dmask2D=_dmask2D;}
+
 /** Get binary 3D mask. */
 matrix3D<int>    & get_binary_mask3D() {return imask3D;}
+
+/** Set binary 3D mask.*/
+void set_binary_mask3D(matrix3D<int> & _imask3D) {imask3D=_imask3D;}
+
 /** Get continuous 3D mask. */
 matrix3D<double> & get_cont_mask3D()   {return dmask3D;}
+
+/** Set continuous 3D mask.*/
+void set_cont_mask3D(matrix3D<double> & _dmask3D) {dmask3D=_dmask3D;}
+
 /** Force to be continuous.
     This function is used when you need a binary mask as a double matrix. */
 void force_to_be_continuous() {
