@@ -7,7 +7,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
+ * (at your option) any later version.
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
@@ -593,7 +593,7 @@ public:
    /** Unary plus.
        It is used to build arithmetic expressions.
        \\Ex: v1=+v2;*/
-   maT operator +  () {return this;}
+   maT operator +  () {return *this;}
 
    /** Unary minus.
        It is used to build arithmetic expressions. You can make a minus
@@ -662,7 +662,7 @@ public:
       if (!fh)
          REPORT_ERROR(1,(string)"MultidimArray::read: File "+fn+" not found");
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
-         fh.read(mi, sizeof(T));
+         fh.read((char *) &mi, sizeof(T));
       fh.close();}
 
    /** Output to an output stream.
@@ -684,12 +684,12 @@ public:
    /** Write to a binary file. */
    void write_binary(const FileName &fn) const
       {ofstream  fh;
-       
+
       fh.open(fn.c_str(), ios::out | ios::binary);
       if (!fh)
-         REPORT_ERROR(1,(string)"MultidimArray::write: File "+fn+" not found");      
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this){	  	 	 
-	 fh.write((void *) &mi, sizeof(T));		  	 	 
+         REPORT_ERROR(1,(string)"MultidimArray::write: File "+fn+" not found");
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this){
+	 fh.write((char *) &mi, sizeof(T));		  	 	 
       }
       fh.close();}
 
@@ -748,7 +748,7 @@ public:
        \\--> Now the 1% of the highest values are rejected to compute the
              effective range */
    friend double dissimilarity(maT &op1, maT &op2, double percentil_out)
-      {maT diff; array_by_array(op1,op2,diff,'-'); diff.abs();
+      {maT diff; array_by_array(op1,op2,diff,'-'); diff.ABSnD();
       //*** histogram1D hist; compute_hist(diff,hist,200);
       //return hist.percentil(100-percentil_out);
        return 1;}
