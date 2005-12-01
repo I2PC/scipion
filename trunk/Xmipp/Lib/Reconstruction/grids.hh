@@ -13,11 +13,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
  * GNU General Public License for more details.                        
- *                                                                     
+ *
  * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
+ * 02111-1307  USA
  *                                                                     
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
@@ -191,6 +191,9 @@ public:
    /** Assignment.
        \\ Ex: sg2=sg1; */
    SimpleGrid& operator = (const SimpleGrid &SG);
+
+   /** Another function for assigment.*/
+   void assign (const SimpleGrid &SG);
    //@}
 
    /**@name Grid strcuture */
@@ -254,7 +257,7 @@ public:
       
    /// Set relative_size
    void set_relative_size(double size) {relative_size=size;}
-   
+
    /// Get relative_size
    double get_relative_size() const
       {return (relative_size);}
@@ -469,7 +472,7 @@ public:
           REPORT_ERROR(3002,"The Grid hasn't got so many Simple Grids");
        return LG[n];
    }
-      
+
    /** Get a "pointer" to a simple grid.
        The complex grid is built upon the STL vectors, using this function
        you can access
@@ -483,7 +486,10 @@ public:
           REPORT_ERROR(3002,"The Grid hasn't got so many Simple Grids");
        return LG[n];
    }
-      
+
+   /** Another function for get a "pointer" to a simple grid.*/
+   void get_SimpleGrid (int n,SimpleGrid& G) {G=(*this)(n);}
+
    /** Number of simple grids inside.
        This function returns the number of simple grids inside the complex
        grid.
@@ -505,7 +511,10 @@ public:
        if (&G!=this) LG=G.LG;
        return *this;
    }
-   
+
+   /** Another function for assignment.*/
+   void assign (const Grid &G) {*this=G;}
+
    /** Clear. */
    void clear() {LG.clear();}
 
@@ -758,6 +767,9 @@ public:
       return *this;
    }
 
+   /** Another function for assigment.*/
+   void assign (const GridVolumeT& RV) {*this=RV;}
+
    /** Destructor. */
    ~GridVolumeT() {clear();}
    //@}
@@ -870,7 +882,10 @@ public:
           REPORT_ERROR(3002,"The Grid Volume hasn't got so many Simple Volumes");
        return *(LV[n]);
    }
-   
+
+   /** Another function for access to one of the volumes in the list.*/
+   void get_volume(int n, VolumeT<T> &V) {V=(*this)(n);}
+
    /** Constant access to a volume in the list.
        The first volume is the number 0. */
    const VolumeT<T> & operator () (int n) const {
@@ -884,9 +899,15 @@ public:
        occupies position \it{n} in the volume list. */
   const SimpleGrid & grid(int n) const {return G(n);}
 
+   /** Get simple grid. */
+   void get_SimpleGrid(int n, SimpleGrid &G) {G=grid(n);}
+
    /** Constant access to the whole grid.
        The grid is the whole \Ref{Grid} associated to the volume. */
-  const Grid & grid() const {return G;}
+   const Grid & grid() const {return G;}
+
+   /** Get grid. */
+   void get_Grid(Grid &G) {G=grid();}
 
    /** Number of volumes inside structure. */
    int VolumesNo() const {return LV.size();}
@@ -1072,8 +1093,8 @@ public:
       size_t floatsize;
       const type_info &typeinfoT = typeid(T); // We need to know what kind
                                               // of variable is T
-      const type_info &typeinfoD = typeid(double); 
-      const type_info &typeinfoI = typeid(int); 
+      const type_info &typeinfoD = typeid(double);
+      const type_info &typeinfoI = typeid(int);
 
       floatsize= (size_t) sizeof(float);
 
@@ -1134,7 +1155,7 @@ public:
          }
          else if (typeinfoT==typeinfoI){
              // We use a trick to save the grid information in the volume
-             // If the following if is true the trick can not be used   
+             // If the following if is true the trick can not be used
              if((sizeof(float)!= sizeof(int)))
                  REPORT_ERROR(1,
                     "GridVolume is integer and (sizeof(float)!= sizeof(int)");
@@ -1153,7 +1174,7 @@ public:
             PACK_INT(XSIZE(this_vol()));
             PACK_INT(STARTINGZ(this_vol()));
             PACK_INT(STARTINGY(this_vol()));
-            PACK_INT(STARTINGX(this_vol()));      
+            PACK_INT(STARTINGX(this_vol()));
          }
          else
             REPORT_ERROR(1,"GridVolume must be double or int\n");
@@ -1189,15 +1210,15 @@ public:
       size_t floatsize;
       const type_info &typeinfoT = typeid(T); // We need to know what kind
                                              // of variable is T
-      const type_info &typeinfoD = typeid(double); 
-      const type_info &typeinfoI = typeid(int); 
+      const type_info &typeinfoD = typeid(double);
+      const type_info &typeinfoI = typeid(int);
 
       floatsize= (size_t) sizeof(float);
       // We use a trick to save the grid information in the volume
       // If the following if is true the trick can not be used
       if(  (typeid(T) == typeid(int)) && (sizeof(float)!= sizeof(int) ) )
           {
-          cout << "\nError: GridVolume is integer and\n" 
+          cout << "\nError: GridVolume is integer and\n"
                   "(sizeof(float)!= sizeof(int)\n";
           exit(0);
           }
@@ -1237,7 +1258,7 @@ public:
                                    UNPACK_DOUBLE(         sG.R2,double);
          } else if (typeinfoT==typeinfoI){
             // We use a trick to save the grid information in the volume
-            // If the following if is true the trick can not be used   
+            // If the following if is true the trick can not be used
             if ((sizeof(float)!= sizeof(int)))
                REPORT_ERROR(1,
                   "GridVolume is integer and (sizeof(float)!= sizeof(int)");
@@ -1249,7 +1270,7 @@ public:
                                    UNPACK_INT(         sG.relative_size,double);
             for (i=0; i<3; i++)    UNPACK_INT(VEC_ELEM(sG.origin,i),double);
                                    UNPACK_INT(         sG.R2,double);
-         }      
+         }
          sG.inv_basis=sG.basis.inv();
 
          // Store Grid in the list of the grid volume
@@ -1308,7 +1329,7 @@ public:
       #undef UNPACK_INT
    }
    #undef DEBUG
-   
+
    /** Show volume.
        \\Ex: cout << V; */
    friend ostream& operator <<<> (ostream &o, const GridVolumeT &GV);

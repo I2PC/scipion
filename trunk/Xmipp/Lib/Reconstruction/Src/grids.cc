@@ -79,6 +79,9 @@ SimpleGrid& SimpleGrid::operator = (const SimpleGrid &SG) {
    return *this;
 }
 
+// Another function for assignment -----------------------------------------
+void SimpleGrid::assign (const SimpleGrid &SG) {*this=SG;}
+
 // Number of samples -------------------------------------------------------
 int SimpleGrid::get_number_of_samples() const {
    if (R2==-1) {
