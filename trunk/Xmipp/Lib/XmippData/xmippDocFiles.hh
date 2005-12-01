@@ -139,7 +139,7 @@ public:
    //@}
 
    /** Show a Document Line */
-   friend ostream& operator << (ostream& o, DocLine &DL);
+   friend ostream& operator << (ostream& o, const DocLine &DL);
    
    /** Read a Document Line.
        An exception is thrown if the line doesn't meet the Document
@@ -213,16 +213,22 @@ public:
    /** Assignment.
        \\ Ex: DF2=DF1; */
    DocFile& operator =(const DocFile &DF);
-   
+
+   /** Another function for Assigment. */
+   void assign (const DocFile &DF);
+
    /** Assignment from matrix.
        The old information in the document file is lost.
        \\ Ex: matrix2D<double> A(30,3); A.init_random(0,180); DF=A; */
    DocFile& operator =(const matrix2D<double> &A);
-   
+
+   /** Another function for assignment from matrix. */
+   void assign (const matrix2D<double> &A);
+
    /** Show a document file.
        A new line is printed at the end.
        \\ Ex: cout << DF; */
-   friend ostream& operator << (ostream& o, DocFile &DF);
+   friend ostream& operator << (ostream& o, const DocFile &DF);
 
    /** Show a given line.
        This function shows you the line with the given key, if no key
@@ -403,6 +409,9 @@ public:
        start. No renumeration is performed at this point.
        \\ Ex: DF.FirstKey()=700; */
    int & FirstKey() {return first_key;}
+
+   /** Another function for set first key of the file. */
+   void set_FirstKey(int & _first_key) {first_key=_first_key;}
 
    /** Get the number of the values in the current line.
        If the current line "pointer" is at the end of the file or 

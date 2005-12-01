@@ -7,7 +7,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
+ * (at your option) any later version.
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
@@ -95,7 +95,7 @@ void DocLine::clear() {
    data.clear();
 }
 
-ostream& operator << (ostream& o, DocLine &DL) {
+ostream& operator << (ostream& o, const DocLine &DL) {
    char    aux[30];
    switch (DL.line_type) {
       case (DocLine::DATALINE):
@@ -193,6 +193,11 @@ DocFile& DocFile::operator = (const DocFile &DF) {
    return *this;
 }
 
+/* Another function for assignment ----------------------------------------- */
+void DocFile::assign (const DocFile &DF) {
+   *this=DF;
+}
+
 /* Assignment from matrix -------------------------------------------------- */
 DocFile& DocFile::operator = (const matrix2D<double> &A) {
    clear();
@@ -212,10 +217,15 @@ DocFile& DocFile::operator = (const matrix2D<double> &A) {
    return *this;
 }
 
+/* Another function for assignment from matrix ----------------------------- */
+void DocFile::assign (const matrix2D<double> &A) {
+   *this=A;
+}
+
 /* Show Doc file ----------------------------------------------------------- */
-ostream& operator << (ostream& o, DocFile &DF){
-   vector<DocLine>::iterator current = DF.m.begin();
-   vector<DocLine>::iterator last    = DF.m.end();
+ostream& operator << (ostream& o, const DocFile &DF){
+   vector<DocLine>::const_iterator current = DF.m.begin();
+   vector<DocLine>::const_iterator last    = DF.m.end();
    while (current != last) {
       o << *current;
       current++;
