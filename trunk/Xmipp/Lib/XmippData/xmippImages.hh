@@ -211,7 +211,7 @@ public:
    T get_pixel(int i, int j) const {return img(i,j);}
 
    /** Another function for pixel access. */
-   void set_pixel(int i, int j, T val) const {img(i,j)=val;}
+   void set_pixel(int i, int j, T val) {img(i,j)=val;}
 
    /** Name access.
        This function is used to know the name of the image. It
