@@ -108,11 +108,19 @@ public:
        }
        return *this;}
 
+   /** Another function for assigment.*/
+   template <class Type>
+      void assign (const VolumeT<Type> &V) {*this=V;}
+
    /** Assignment from matrix3D.*/
    template <class Type>
       VolumeT& operator = (const matrix3D<Type> &m)
          {if (&img!=(matrix3D<T> *) &m) {fn_img=""; type_cast(m,img);}
           return *this;}
+
+   /** Aother function for assigment from matrix3D.*/
+   template <class Type>
+      void assign (const matrix3D<Type> &m) {*this=m;}
 
    /** Rename Volume.
        Give a new name to the Volume.
@@ -164,7 +172,13 @@ public:
        \\Ex: V2()=V1()+V2(); */
    matrix3D<T>&  operator () () {return img;}
    const matrix3D<T>&  operator () () const {return img;}
-   
+
+   /** Get matrix3D*/
+   void get_matrix3D(matrix3D<T> & _img) {_img=img;}
+
+   /** Set matrix3D*/
+   void set_matrix3D(const matrix3D<T> & _img) {img=_img;}
+
    /** Voxel access.
        This operator is used to access a voxel within the Volume.
        This is a logical access, so you could access to negative
@@ -175,7 +189,12 @@ public:
        \\Ex: V(2,-3,-3)=V(2,-3,-2); */
    T& operator () (int z, int y, int x) const {return img(z,y,x);}
 
-
+   /** Get voxel */
+   T get_voxel (int z, int y, int x) const {return img(z,y,x);}
+   
+   /** Set voxel */
+   void set_voxel (int z, int y, int x, T val) {img(z,y,x)=val;}
+   
    /** Name access.
        This function is used to know the name of the Volume. It
        cannot be used to assign a new one.
@@ -400,9 +419,9 @@ public:
      else{
      cout << "\nError: VolumeXmipp should be,complex<double>, double or integer\n";
      exit(0);
-     }                                   
+     }
    }
-                                           
+
    /** Constructor with size.
        Creates a 0.0 filled volume of size Zdim x Ydim x Xdim.
        \\ Ex: VolumeXmipp<double> VX(64,64,64); */
@@ -410,10 +429,10 @@ public:
      if(  typeid(T) == typeid(double) )
           header.headerType() = headerXmipp::VOL_XMIPP;
                                         // Sets header of type Image_XMipp
-     else if (typeid(T) == typeid(int) )   
+     else if (typeid(T) == typeid(int) )
           header.headerType() = headerXmipp::VOL_INT;
                                         // Sets header of type Image int
-     else if (typeid(T) == typeid(complex<double>) )  
+     else if (typeid(T) == typeid(complex<double>) )
           header.headerType() = headerXmipp::VOL_FOURIER;
                                         // Sets header of type Image_XMipp (complex)
      else{
@@ -452,14 +471,14 @@ public:
    
    /** Copy constructor.
        \\ Ex: VolumeXmipp<double> VX2(VX1); */
-   VolumeXmippT (VolumeXmippT &I): VolumeT<T>(I) {header = I.header;}
+   VolumeXmippT (const VolumeXmippT &I): VolumeT<T>(I) {header = I.header;}
 
    /** Empty image.
        All information is cleared.
        \\Ex: VX.clear();*/
    void clear() {clear_header(); VolumeT<T>::clear();}
    //@}
-   
+
    // Overload some operators ..............................................
    /**@name Some operators*/
    //@{

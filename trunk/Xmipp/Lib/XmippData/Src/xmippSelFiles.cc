@@ -11,13 +11,13 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
+ * (at your option) any later version.
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
  * GNU General Public License for more details.                        
- *                                                                     
+ *
  * You should have received a copy of the GNU General Public License   
  * along with this program; if not, write to the Free Software         
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
@@ -55,6 +55,8 @@ SelLine& SelLine::operator = (const SelLine &SL) {
    return *this;
 }
 
+void SelLine::assign (const SelLine &SL) {*this=SL;}
+
 // Returns false if the comparison is nonsense, ie, if line_types are not the
 // same or the lines are to be deleted or are not assigned.
 // Returns TRUE if l1<l2 otherwise false
@@ -64,7 +66,7 @@ bool operator < (const SelLine &l1, const SelLine &l2) {
    else                                return l1.text<l2.text;
 }
 
-ostream& operator << (ostream& o, SelLine &SFL) {
+ostream& operator << (ostream& o, const SelLine &SFL) {
    switch (SFL.line_type) {
       case (SelLine::DATALINE):
          o << SFL.text << " " << SFL.label << endl; break;
@@ -147,10 +149,13 @@ SelFile& SelFile::operator = (const SelFile &SF) {
    return *this;
 }
 
+/* Another function for assignment ----------------------------------------- */
+void SelFile::assign (const SelFile &SF) {*this=SF;}
+
 /* Show Sel file ----------------------------------------------------------- */
-ostream& operator << (ostream& o, SelFile &SF) {
-   vector<SelLine>::iterator current = SF.text_line.begin();
-   vector<SelLine>::iterator last    = SF.text_line.end();
+ostream& operator << (ostream& o, const SelFile &SF) {
+   vector<SelLine>::const_iterator current = SF.text_line.begin();
+   vector<SelLine>::const_iterator last    = SF.text_line.end();
    while (current != last) {
       o << *current;
       current++;

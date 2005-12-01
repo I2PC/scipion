@@ -11,7 +11,7 @@
  *                                                                     
  * This program is distributed in the hope that it will be useful,     
  * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.                        
  *                                                                     
  * You should have received a copy of the GNU General Public License   
@@ -80,8 +80,11 @@ public:
    
    /** Assignment. */
    SelLine& operator = (const SelLine &SL);
+
+   /** Another function for assigment.*/
+   void assign (const SelLine &SL);
    //@}
-   
+
    /**@name Structure information */
    //@{
    /// Get text of this line
@@ -126,7 +129,7 @@ public:
    /**@name I/O */
    //@{
    /** Show a Selection Line */
-   friend ostream& operator << (ostream& o, SelLine &SFL);
+   friend ostream& operator << (ostream& o, const SelLine &SFL);
    
    /** Read a Selection Line.
        An exception is thrown if the line doesn't meet the Selection
@@ -205,12 +208,15 @@ public:
    /** Assignment.
        \\ Ex: SF2=SF1; */
    SelFile& operator =(const SelFile &SF);
-   
+
+   /** Another function for assigment.*/
+   void assign (const SelFile &SF);
+
    /** Show a selection file.
        Shows all the lines either they are comments, active images or
        discarded images. A new line is printed at the end.
        \\ Ex: cout << SF; */
-   friend ostream& operator << (ostream& o, SelFile &SF);
+   friend ostream& operator << (ostream& o, const SelFile &SF);
    //@}
 
    // Managing files from disk .............................................
