@@ -282,14 +282,14 @@ public:
                   MULTIDIM_ELEM(img,i)=f;
                   break;
             }
-         return (false);
+         return (true);
    }
 
   // LoadImage is a static function that loads an image file depending on
   // what kind of image type (e.g., Xmipp, Imagic) it is; it returns a
   // pointer to the base Image class.  Caller is responsible for deleting
   // the memory for the object.  Returns NULL on error.
-  static ImageT<T> *LoadImage (FileName name, bool apply_geo=false) {
+  static ImageT<T> *LoadImage (const FileName &name, bool apply_geo=false) {
      ImageT<T> *ret = NULL;
      if (name.find (IMAGIC_TAG) != string::npos)
      {
@@ -302,9 +302,9 @@ public:
      else // For now, assume anything else is ImageXmipp type.
      {
        ImageXmippT<T> *i = new ImageXmippT<T>();
-       if (i->read (name,false,false,apply_geo,false))
+       if (i->read(name,false,false,apply_geo,false))
          ret = i;
-       else
+       else 
          delete i;
      }
      return (ret);
