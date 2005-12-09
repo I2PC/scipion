@@ -706,7 +706,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
    // Set voxels outside interest region to minimum value .................
    double R=vol_blobs.grid(0).get_interest_radius();
    if (R!=-1) {
-      double R2=(R-2)*(R-2);
+      double R2=(R-6)*(R-6);
 
       // Compute minimum value within sphere
       double min_val=VOL_ELEM(*vol_voxels,0,0,0);
@@ -715,7 +715,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
 	    min_val=MIN(min_val,VOL_ELEM(*vol_voxels,k,i,j));
 
       // Substitute minimum value
-      R2=R*R;
+      R2=(R-2)*(R-2);
       FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
          if (j*j+i*i+k*k>=R2)
 	    VOL_ELEM(*vol_voxels,k,i,j)=min_val;
