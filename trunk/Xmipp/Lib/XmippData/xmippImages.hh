@@ -616,7 +616,7 @@ public:
    virtual void write(const FileName &name = "", bool force_reversed=false) {
         FILE *fp;
         if (name != "") ImageXmippT<T>::rename(name); 
-        if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
+        if ((fp = fopen(name.c_str(), "wb")) == NULL)
           REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+name +
              " cannot be written");
         adjust_header();
