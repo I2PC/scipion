@@ -117,7 +117,6 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
   make_even_distribution(DFlib,sampling,SL,true);
   NN=DFlib.LineNo()+1;
   count_imgs.resize(NN);
-
   // Each experimental image contributes to the nearest of these directions
   SF.go_beginning();
   while (!SF.eof()) {
@@ -268,7 +267,6 @@ void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
 
 // Calculate the filter in 2D and apply ======================================
 void Prog_WBP_prm::filter_one_image(Projection &proj)  {
-
   FourierImageXmipp IMG;
   matrix2D<double>  A(3,3);
   float             factor, argum, weight, x, y;
@@ -282,6 +280,13 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
   A=A.inv();
   FourierTransform( proj(), IMG());
   CenterFFT(IMG(),true);
+  #define TEST
+  #ifdef TEST
+  static int ff=0;
+  FileName   fn_tmp;
+  ImageXmipp save;
+  save().resize(IMG());
+  #endif   
 
   // loop over all transformation matrices
   for (int k=0; k<no_mats; k++) {
@@ -304,18 +309,27 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
       // The following line is the most expensive of all...
       weight += mat_g[k].count*TSINC(argum);
     }
-    if (fabs(weight) < threshold) {
+    
+    if (weight < threshold) {
       count_thr++;
       MAT_ELEM(IMG(),i,j) /= (threshold*factor);
     } else {
       MAT_ELEM(IMG(),i,j) /= (weight*factor);
     }
+    #ifdef TEST
+      MAT_ELEM(save(),i,j)=weight;
+    #endif   
   }
 
   // Calculate back-projection with the filtered projection
   CenterFFT(IMG(),false);
   InverseFourierTransform(IMG(), proj());
-
+  #ifdef TEST
+     ff++;
+     fn_tmp="OUT_"+ItoA(ff)+".xmp";
+     save.write(fn_tmp);
+  #endif   
+  #undef TEST
 }
 
 // Calculate the filter in 2D and apply ======================================
@@ -340,6 +354,11 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 
   mat_f=(column*)malloc(no_mats*sizeof(column));
 
+//#define TEST
+#ifdef TEST
+FileName   fn_tmp;
+int i=0;
+#endif   
   SF.go_beginning();
   imgno=0;
   while (!SF.eof()) {
@@ -350,6 +369,13 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     tilt=proj.tilt();
     psi=proj.psi();
     filter_one_image(proj);
+#ifdef TEST
+   i++;
+   fn_tmp="OUT_"+ItoA(i);
+   ImageXmipp save;
+   save()=proj();
+   save.write(fn_tmp);
+#endif   
     simple_backprojection(proj, vol, diameter);
 
     if (verb>0) if (imgno%c==0) progress_bar(imgno);
