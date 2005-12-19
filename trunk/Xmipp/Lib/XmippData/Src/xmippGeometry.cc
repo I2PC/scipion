@@ -404,7 +404,7 @@ void Euler_direction2angles(matrix1D<double> &v,
 
    if( fabs((cb))>0.999847695)/*one degree */
    {
-   cout<< "\nWARMING: Routine Euler_direction2angles is not reliable\n"
+   cout<< "\nWARNING: Routine Euler_direction2angles is not reliable\n"
           "for small tilt angles. Up to 0.001 deg it should be OK\n"
           "for most applications but you never know";
    }
@@ -435,25 +435,25 @@ void Euler_direction2angles(matrix1D<double> &v,
       error = fabs(dot_product(v,v_aux)-1.); 
       alpha=aux_alpha; beta=aux_beta;
       
-      VEC_ELEM(v_aux,0)=sin(beta)*cos(-1.*aux_alpha);
-      VEC_ELEM(v_aux,1)=sin(beta)*sin(-1.*aux_alpha);
-      VEC_ELEM(v_aux,2)=cos(beta);
+      VEC_ELEM(v_aux,0)=sin(aux_beta)*cos(-1.*aux_alpha);
+      VEC_ELEM(v_aux,1)=sin(aux_beta)*sin(-1.*aux_alpha);
+      VEC_ELEM(v_aux,2)=cos(aux_beta);
       newerror = fabs(dot_product(v,v_aux)-1.); 
       if(error>newerror) {alpha = -1.*aux_alpha; 
                           beta  = aux_beta;
 			  error = newerror;}
 
-      VEC_ELEM(v_aux,0)=sin(-beta)*cos(-1.*aux_alpha);
-      VEC_ELEM(v_aux,1)=sin(-beta)*sin(-1.*aux_alpha);
-      VEC_ELEM(v_aux,2)=cos(-beta);
+      VEC_ELEM(v_aux,0)=sin(-aux_beta)*cos(-1.*aux_alpha);
+      VEC_ELEM(v_aux,1)=sin(-aux_beta)*sin(-1.*aux_alpha);
+      VEC_ELEM(v_aux,2)=cos(-aux_beta);
       newerror = fabs(dot_product(v,v_aux)-1.); 
       if(error>newerror) {alpha = -1.*aux_alpha; 
                           beta  = -1.*aux_beta;
 			  error = newerror;}
       
-      VEC_ELEM(v_aux,0)=sin(-beta)*cos(aux_alpha);
-      VEC_ELEM(v_aux,1)=sin(-beta)*sin(aux_alpha);
-      VEC_ELEM(v_aux,2)=cos(-beta);
+      VEC_ELEM(v_aux,0)=sin(-aux_beta)*cos(aux_alpha);
+      VEC_ELEM(v_aux,1)=sin(-aux_beta)*sin(aux_alpha);
+      VEC_ELEM(v_aux,2)=cos(-aux_beta);
       newerror = fabs(dot_product(v,v_aux)-1.); 
       
       if(error>newerror) {alpha = aux_alpha; 
