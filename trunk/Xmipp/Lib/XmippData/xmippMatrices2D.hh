@@ -2291,7 +2291,7 @@ void svdcmp(const matrix2D<T> &a,matrix2D<double> &u,
 /* Apply a geometrical transformation -------------------------------------- */
 // It is translated from function transforma in Lib/varios2.c
 // We should check which one performs better.
-//#define DEBUG
+//#define DEBUG_APPLYGEO
 template <class T>
    void apply_geom(mT &M2,matrix2D<double> A, const mT &M1, bool inv,
    bool wrap, T outside) {
@@ -2332,7 +2332,7 @@ template <class T>
    // the original image, make an interpolation with them and put this value
    // at the output pixel
    //#define DEBUG
-   #ifdef DEBUG
+   #ifdef DEBUG_APPLYGEO
       cout << "A\n"    << A     << endl
 	   << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
 	   << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
@@ -2360,7 +2360,7 @@ template <class T>
          bool interp;
          T tmp;
          
-         #ifdef DEBUG
+         #ifdef DEBUG_APPLYGEO
          cout << "Computing (" << i << "," << j << ")\n";
          cout << "   (y, x) =(" << y << "," << x << ")\n"
               << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
@@ -2382,7 +2382,7 @@ template <class T>
 	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=false;
          }
 
-         #ifdef DEBUG
+         #ifdef DEBUG_APPLYGEO
          cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
          cout << "   Interp = " << interp << endl;
          x++;
@@ -2396,7 +2396,7 @@ template <class T>
             wx=xp+cen_xp; m1=(int) wx; wx=wx-m1; m2=m1+1;
             wy=yp+cen_yp; n1=(int) wy; wy=wy-n1; n2=n1+1;
 
-            #ifdef DEBUG
+            #ifdef DEBUG_APPLYGEO
             cout << "   From (" << n1 << "," << m1 << ") and ("
                  << n2 << "," << m2 << ")\n";
             cout << "   wx= " << wx << " wy= " << wy << endl;
@@ -2416,7 +2416,7 @@ template <class T>
             }
             dMij(M2,i,j) = tmp;
 
-            #ifdef DEBUG
+            #ifdef DEBUG_APPYGEO
             cout << "   val= " << tmp << endl;
             #endif
          }
@@ -2427,7 +2427,7 @@ template <class T>
       }
    }
 }
-#undef DEBUG
+#undef DEBUG_APPLYGEO
 
 /* Apply a geometrical transformation -------------------------------------- */
 // It is translated from function transforma in Lib/varios2.c
@@ -2491,7 +2491,7 @@ template <class T>
          bool interp;
          T tmp;
          
-         #ifdef DEBUG
+         #ifdef DEBUG_APPLYGEO
          cout << "Computing (" << i << "," << j << ")\n";
          cout << "   (y, x) =(" << y << "," << x << ")\n"
               << "   before wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
@@ -2513,7 +2513,7 @@ template <class T>
 	        yp>maxyp+XMIPP_EQUAL_ACCURACY) interp=false;
          }
 
-         #ifdef DEBUG
+         #ifdef DEBUG_APPLYGEO
          cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") " << endl;
          cout << "   Interp = " << interp << endl;
          x++;
@@ -2523,7 +2523,7 @@ template <class T>
             dMij(M2,i,j) = (T)Bcoeffs.interpolated_elem_as_Bspline(
 	       xp,yp,Splinedegree);
 
-            #ifdef DEBUG
+            #ifdef DEBUG_APPLYGEO
             cout << "   val= " << tmp << endl;
             #endif
          }
@@ -2534,7 +2534,7 @@ template <class T>
       }
    }
 }
-#undef DEBUG
+#undef DEBUG_APPLYGEO
 
 template <>
    void apply_geom_Bspline(matrix2D< complex<double> > &M2,
