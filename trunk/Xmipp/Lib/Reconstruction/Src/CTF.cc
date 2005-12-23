@@ -399,8 +399,8 @@ void XmippCTF::force_physical_meaning() {
       if (DeltaR>1000) DeltaR=1000;
       if (Q0<-0.40)    Q0=-0.40;
       if (Q0>0)        Q0=0;
-      if (DeltafU<0)   DeltafU=0;
-      if (DeltafV<0)   DeltafV=0;
+      if (DeltafU>0)   DeltafU=0;
+      if (DeltafV>0)   DeltafV=0;
    }
    if (enable_CTFnoise) {
       double min_sigma=MIN(sigmaU,sigmaV);
