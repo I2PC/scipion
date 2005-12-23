@@ -297,7 +297,7 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
 #undef DEBUG
 
 /* Physical meaning -------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 bool XmippCTF::physical_meaning() {
    bool retval;
    if (enable_CTF) {
