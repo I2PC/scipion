@@ -1,8 +1,8 @@
-bin_PROGRAMS = rm
-rm_SOURCES = rm.cc
-rm_LDADD = $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
+bin_PROGRAMS = random_mapping
+random_mapping_SOURCES = rm.cc
+random_mapping_LDADD = $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
 
-rm_LDFLAGS = @EXEC_TYPE@
+random_mapping_LDFLAGS = @EXEC_TYPE@
 	
 INCLUDES = -I$(top_srcdir)/Lib
