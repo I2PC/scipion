@@ -297,7 +297,7 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
 #undef DEBUG
 
 /* Physical meaning -------------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 bool XmippCTF::physical_meaning() {
    bool retval;
    if (enable_CTF) {
@@ -361,8 +361,8 @@ bool XmippCTF::physical_meaning() {
 	      << "sqrt_K>=0	    &&  		  " << (sqrt_K>=0)				 << endl
 	      << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
 	      << "sqrt_angle>=0     && sqrt_angle<=90     " << (sqrt_angle>=0     && sqrt_angle<=90)     << endl
-	      << "ABS(sigmaU-sigmaV)/min_sigma<3          " << (ABS(sigmaU-sigmaV)/min_sigma<3)          << endl
-	      << "ABS(cU-cV)/min_c<3                      " << (ABS(cU-cV)/min_c<3)                      << endl
+	      << "ABS(sigmaU-sigmaV)/min_sigma<3          " << (ABS(sigmaU-sigmaV)/MAX(min_sigma,1)<3)   << endl
+	      << "ABS(cU-cV)/min_c<3                      " << (ABS(cU-cV)/MAX(min_c,1)<3)               << endl
 	      << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))          << endl
          ;
       #endif
