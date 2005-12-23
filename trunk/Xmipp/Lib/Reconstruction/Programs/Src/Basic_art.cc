@@ -34,6 +34,7 @@
 
 /* Default values ========================================================== */
 void Basic_ART_Parameters::default_values() {
+    fh_hist            = NULL;
     fn_start           = "";
     fn_sym             = "";
     force_sym          = 0;
@@ -490,6 +491,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
 /* Create history file handler --------------------------------------------- */
    if (level>=FULL) {
+      fh_hist=new ofstream;
       fh_hist->open((fn_root+".hist").c_str(),ios::out);
       if (!fh_hist)
 	 REPORT_ERROR(3008,(string)"Produce_Basic_ART_Side_Info: Cannot open file "
