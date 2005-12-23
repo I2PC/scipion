@@ -37,7 +37,7 @@ double CTF_fitness(double *);
 #define BACKGROUND_CTF_PARAMETERS  11
 #define SQRT_CTF_PARAMETERS         5
 #define ENVELOPE_PARAMETERS         8
-#define DEFOCUS_PARAMETERS          3
+#define DEFOCUS_PARAMETERS          5
 #define FIRST_SQRT_PARAMETER       13
 #define FIRST_ENVELOPE_PARAMETER    4
 #define FIRST_DEFOCUS_PARAMETER     0
@@ -991,7 +991,7 @@ void estimate_envelope_parameters() {
 void estimate_defoci() {
    if (global_prm->show_optimization)
       cout << "Looking for first defoci ...\n";
-   double best_defocusU, best_defocusV, best_angle;
+   double best_defocusU, best_defocusV, best_angle, best_K;
    double best_error=global_heavy_penalization*1.1;
    bool first=true;
    int i,j;
@@ -1022,8 +1022,10 @@ void estimate_defoci() {
       }
    }
    
+   double K_so_far=global_ctfmodel.K;
    matrix1D<double> steps(DEFOCUS_PARAMETERS);
    steps.init_constant(1);
+   steps(3)=0; // Do not optimize kV
    for (double defocusStep=initial_defocusStep; defocusStep>=global_prm->defocus_range; defocusStep/=2) {
       error.resize(CEIL((defocusV0-defocusVF)/defocusStep+1),
                     CEIL((defocusU0-defocusUF)/defocusStep+1));
@@ -1042,6 +1044,7 @@ void estimate_defoci() {
                (*global_adjust)(0)=defocusU;
                (*global_adjust)(1)=defocusV;
                (*global_adjust)(2)=angle;
+               (*global_adjust)(4)=K_so_far;
             
                Powell_optimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER+1,
                   DEFOCUS_PARAMETERS, &CTF_fitness,
@@ -1059,14 +1062,16 @@ void estimate_defoci() {
                      best_defocusU=global_ctfmodel.DeltafU;
                      best_defocusV=global_ctfmodel.DeltafV;
                      best_angle=global_ctfmodel.azimuthal_angle;
+		     best_K=global_ctfmodel.K;
                      first=false;
                      if (global_prm->show_optimization)
                         cout << "    (DefocusU,DefocusV)=(" << defocusU << ","
                              << defocusV << "), ang=" << angle
                              << " --> (" << global_ctfmodel.DeltafU << ","
                              << global_ctfmodel.DeltafV << "),"
-                             << global_ctfmodel.azimuthal_angle << " error="
-                             << error(i,j) << endl;
+                             << global_ctfmodel.azimuthal_angle
+			     << " K=" << global_ctfmodel.K
+			     << " error=" << error(i,j) << endl;
                   }
                }
             }
@@ -1117,6 +1122,7 @@ void estimate_defoci() {
    global_ctfmodel.DeltafU=best_defocusU;
    global_ctfmodel.DeltafV=best_defocusV;
    global_ctfmodel.azimuthal_angle=best_angle;
+   global_ctfmodel.K=best_K;
 
    // Keep the result in global_prm->adjust
    global_ctfmodel.force_physical_meaning();
