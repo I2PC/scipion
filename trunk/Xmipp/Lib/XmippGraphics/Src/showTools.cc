@@ -357,11 +357,11 @@ void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output) {
 /* Xmipp image -> Xmipp CTF ------------------------------------------------ */
 void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output) {
    output=input;
-   
    CenterFFT(output,true);
 
    // Prepare left part (ARMA model)
-   double min_val, max_val;
+   double min_val=output(0,0);
+   double max_val=min_val;
    bool first=true;
    for (int i=0; i<YSIZE(output); i++)
       for (int j=0; j<XSIZE(output)/2; j++) {
