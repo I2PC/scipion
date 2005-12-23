@@ -347,8 +347,8 @@ bool XmippCTF::physical_meaning() {
 	  gaussian_angle>=0 && gaussian_angle<=90 &&
 	  sqrt_angle>=0     && sqrt_angle<=90
       ;
-      if (min_sigma>0)   retval2=retval2 && ABS(sigmaU-sigmaV)/min_sigma<3;
-      if (min_c>0)       retval2=retval2 && ABS(cU-cV)/min_c<3;
+      if (min_sigma>0)   retval2=retval2 && ABS(sigmaU-sigmaV)/min_sigma<=3;
+      if (min_c>0)       retval2=retval2 && ABS(cU-cV)/min_c<=3;
       if (gaussian_K!=0) retval2=retval2 && (cU*Tm>=0.01) && (cV*Tm>=0.01);
       #ifdef DEBUG
          cout << *this << endl;
@@ -360,11 +360,13 @@ bool XmippCTF::physical_meaning() {
 	      << "sqU>=0	    && sqV>=0		  " << (sqU>=0  	  && sqV>=0)		 << endl
 	      << "sqrt_K>=0	    &&  		  " << (sqrt_K>=0)				 << endl
 	      << "gaussian_angle>=0 && gaussian_angle<=90 " << (gaussian_angle>=0 && gaussian_angle<=90) << endl
-	      << "sqrt_angle>=0     && sqrt_angle<=90     " << (sqrt_angle>=0     && sqrt_angle<=90)     << endl
-	      << "ABS(sigmaU-sigmaV)/min_sigma<3          " << (ABS(sigmaU-sigmaV)/MAX(min_sigma,1)<3)   << endl
-	      << "ABS(cU-cV)/min_c<3                      " << (ABS(cU-cV)/MAX(min_c,1)<3)               << endl
-	      << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))          << endl
-         ;
+	      << "sqrt_angle>=0     && sqrt_angle<=90     " << (sqrt_angle>=0     && sqrt_angle<=90)     << endl;
+         if (min_sigma>0)
+             cout << "ABS(sigmaU-sigmaV)/min_sigma<=3         " << (ABS(sigmaU-sigmaV)/min_sigma<=3)     << endl;
+         if (min_c>0)
+             cout << "ABS(cU-cV)/min_c<=3                     " << (ABS(cU-cV)/min_c<=3)                 << endl;
+         if (gaussian_K>0)
+	     cout << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm>=0.01) && (cV*Tm>=0.01))      << endl;
       #endif
    } else retval2=true;
    #ifdef DEBUG
@@ -373,3 +375,66 @@ bool XmippCTF::physical_meaning() {
    return retval && retval2;
 }
 #undef DEBUG
+
+/* Force Physical meaning -------------------------------------------------- */
+void XmippCTF::force_physical_meaning() {
+   if (enable_CTF) {
+      if (K<0)         K=0;
+      if (base_line<0) base_line=0;
+      if (kV<50)       kV=50;
+      if (kV>1000)     kV=1000;
+      if (espr<0)      espr=0;
+      if (espr>20)     espr=20;
+      if (ispr<0)      ispr=0;
+      if (ispr>20)     ispr=20;
+      if (Cs<0)        Cs=0;
+      if (Cs>20)       Cs=20;
+      if (Ca<0)        Ca=0;
+      if (Ca>20)       Ca=20;
+      if (alpha<0)     alpha=0;
+      if (alpha>5)     alpha=5;
+      if (DeltaF<0)    DeltaF=0;
+      if (DeltaF>1000) DeltaF=1000;
+      if (DeltaR<0)    DeltaR=0;
+      if (DeltaR>1000) DeltaR=1000;
+      if (Q0<-0.40)    Q0=-0.40;
+      if (Q0>0)        Q0=0;
+      if (DeltafU<0)   DeltafU=0;
+      if (DeltafV<0)   DeltafV=0;
+   }
+   if (enable_CTFnoise) {
+      double min_sigma=MIN(sigmaU,sigmaV);
+      double min_c=MIN(cU,cV);
+      if (gaussian_K<0)      gaussian_K=0;		     
+      if (base_line<0)       base_line=0; 		     
+      if (sigmaU<0)          sigmaU=0;    		     
+      if (sigmaV<0)          sigmaV=0;    		     
+      if (sigmaU>100e3)      sigmaU=100e3;		     
+      if (sigmaV>100e3)      sigmaV=100e3;		     
+      if (cU<0)              cU=0;	     		     
+      if (cV<0)              cV=0;	     		     
+      if (sqU<0)             sqU=0;	     		     
+      if (sqV<0)             sqV=0;
+      if (sqrt_K<0)          sqrt_K=0;
+      if (gaussian_angle<0)  gaussian_angle=0;
+      if (gaussian_angle>90) gaussian_angle=90;
+      if (sqrt_angle<0)      sqrt_angle=0;
+      if (sqrt_angle>90)     sqrt_angle=90;
+      if (min_sigma>0)
+         if (ABS(sigmaU-sigmaV)/min_sigma>3) {
+	    if (sigmaU<sigmaV) sigmaV=3.9*sigmaU;
+	    else               sigmaU=3.9*sigmaV;
+	 }
+      if (min_c>0)
+         if (ABS(cU-cV)/min_c>3) {
+	    if (cU<cV) cV=3.9*cU;
+	    else       cU=3.9*cV;
+	 }
+      if (gaussian_K!=0) {
+         if (cU*Tm<0.01) cU=0.01/Tm;
+         if (cV*Tm<0.01) cV=0.01/Tm;
+      }
+   }
+}
+#undef DEBUG
+

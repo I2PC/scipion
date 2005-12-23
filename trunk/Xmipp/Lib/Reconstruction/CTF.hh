@@ -442,6 +442,9 @@ public:
        true if the CTF parameters have physical meaning.
        Call this function after producing side information */
    bool physical_meaning();
+
+   /** Force physical meaning.*/
+   void force_physical_meaning();
 };
 //@}
 #endif
