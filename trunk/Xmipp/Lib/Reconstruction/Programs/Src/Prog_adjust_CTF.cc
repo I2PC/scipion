@@ -772,6 +772,7 @@ void estimate_background_sqrt_parameters() {
       global_current_penalty=MIN(global_current_penalty, global_penalty);
    }
    // Keep the result in global_prm->adjust
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -906,6 +907,7 @@ void estimate_background_gauss_parameters() {
    global_ctfmodel.gaussian_K=exp(b(0));
 
    // Store the CTF values in global_prm->adjust
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -949,6 +951,7 @@ void estimate_envelope_parameters() {
       global_prm->show_optimization);
 
    // Keep the result in global_prm->adjust
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -973,6 +976,7 @@ void estimate_envelope_parameters() {
       global_current_penalty=MIN(global_current_penalty, global_penalty);
    }
    // Keep the result in global_prm->adjust
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -987,7 +991,8 @@ void estimate_envelope_parameters() {
 void estimate_defoci() {
    if (global_prm->show_optimization)
       cout << "Looking for first defoci ...\n";
-   double best_defocusU, best_defocusV, best_error, best_angle;
+   double best_defocusU, best_defocusV, best_angle;
+   double best_error=global_heavy_penalization*1.1;
    bool first=true;
    int i,j;
    double defocusV, defocusU;
@@ -1021,7 +1026,8 @@ void estimate_defoci() {
    steps.init_constant(1);
    for (double defocusStep=initial_defocusStep; defocusStep>=global_prm->defocus_range; defocusStep/=2) {
       error.resize(CEIL((defocusV0-defocusVF)/defocusStep+1),
-                   CEIL((defocusU0-defocusUF)/defocusStep+1));
+                    CEIL((defocusU0-defocusUF)/defocusStep+1));
+      error.init_constant(global_heavy_penalization);
       if (global_prm->show_optimization)
          cout << "V=["<<defocusV0 << "," << defocusVF << "]\n"
               << "U=["<<defocusU0 << "," << defocusUF << "]\n"
@@ -1113,6 +1119,7 @@ void estimate_defoci() {
    global_ctfmodel.azimuthal_angle=best_angle;
 
    // Keep the result in global_prm->adjust
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -1205,6 +1212,11 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    Powell_optimizer(*global_adjust, FIRST_SQRT_PARAMETER+1,
       BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
       0.01, fitness, iter, steps, global_prm->show_optimization);
+   
+   // Make sure that the model has physical meaning
+   // (In some machines due to numerical imprecission this check is necessary
+   // at the end)
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
@@ -1258,6 +1270,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    Powell_optimizer(*global_adjust, 0+1,
       CTF_PARAMETERS, &CTF_fitness,
       0.01, fitness, iter, steps, global_prm->show_optimization);
+   global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    if (global_prm->show_optimization) {
