@@ -88,8 +88,8 @@ void Prog_MLalign2D_prm::read(int argc, char **argv)  {
   do_mirror=check_param(argc,argv,"-mirror");
   eps=AtoF(get_param(argc,argv,"-eps","5e-5"));
   fn_frac=get_param(argc,argv,"-frac","");
-  write_docfile=check_param(argc,argv,"-output_docfile");
-  write_selfiles=check_param(argc,argv,"-output_selfiles");
+  write_docfile=!check_param(argc,argv,"-dont_output_docfile");
+  write_selfiles=!check_param(argc,argv,"-dont_output_selfiles");
   write_intermediate=!check_param(argc,argv,"-dont_output_intermediate");
   fix_fractions=check_param(argc,argv,"-fix_fractions");
   fix_sigma_offset=check_param(argc,argv,"-fix_sigma_offset");
@@ -125,6 +125,13 @@ void Prog_MLalign2D_prm::show() {
 
   if (verb>0) {
     // To screen
+    cerr << " -----------------------------------------------------------------"<<endl;
+    cerr << " | Read more about this program in the following publications:   |"<<endl;
+    cerr << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |"<<endl;
+    cerr << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |"<<endl;
+    cerr << " |                                                               |"<<endl;
+    cerr << " |  *** Please cite them if this program is of use to you! ***   |"<<endl;
+    cerr << " -----------------------------------------------------------------"<<endl;
     cerr << "--> Maximum-likelihood multi-reference refinement "<<endl; 
     cerr << "  Input images            : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
     cerr << "  Reference images        : "<< fn_ref<<" ("<<SFr.ImgNo()<<")"<<endl;
@@ -193,8 +200,6 @@ void Prog_MLalign2D_prm::usage(bool ML3D) {
   cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
   cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
   if (!ML3D) cerr      << " [ -mirror ]                   : Also check mirror image of each reference \n";
-  cerr << " [ -output_docfile ]           : Write out docfile with most likely angles & translations \n";
-  cerr << " [ -output_selfiles ]          : Write out selfiles with most likely reference assignments \n";
   cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
   if (!ML3D) cerr      << " [ -show_all_options ]         : Show all possible input parameters \n";
 }
@@ -212,6 +217,8 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
   cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
   cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
   cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+  cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
+  cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely reference assignments \n";
   cerr << " [ -LSQ ]                      : Use maximum cross-correlation instead of maximum likelihood target \n";
   cerr << " [ -max_shift <float=5>]       : For LSQ only: maximum allowed shift [pix] \n";
   cerr << endl;
