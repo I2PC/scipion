@@ -70,6 +70,13 @@ public:
    double    Nshift_dev;
    /// Disappearing threshold
    double    disappearing_th;
+   /// file with shifts
+   FileName fn_shift;
+   /// Document File for shifts. Order: H K x_SHIFT y_SHIFT
+   DocFile        DF_shift;     
+   /// is doc file with shifts available
+   bool        DF_shift_bool;     
+
 public:
    /** Empty constructor*/
    Crystal_Projection_Parameters();
@@ -140,6 +147,18 @@ void fill_cell_positions(Projection &P,
    matrix1D<double> &corner1, matrix1D<double> &corner2,
    const Crystal_Projection_Parameters &prm_crystal,
    matrix2D<double> &cell_shiftX, matrix2D<double> &cell_shiftY,
-   matrix2D<int> &cell_inside);
+   matrix2D<int> &cell_inside,   matrix2D<double> &exp_shifts_matrix_X,
+   matrix2D<double> &exp_shifts_matrix_Y);
+
+/** Fill auxiliary matrix with experimental shifts.
+    the values 2D shifts stored in the doc file DF_shift are
+    transfer to two 2D matrices
+
+*/
+   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
+                          matrix2D<int>    &cell_inside,
+			  matrix2D<double> &exp_shifts_matrix_X,
+			  matrix2D<double> &exp_shifts_matrix_Y);
+   
 //@}
 #endif

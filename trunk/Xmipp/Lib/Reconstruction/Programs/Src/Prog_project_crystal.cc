@@ -37,6 +37,8 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
    Nshift_avg=0;
    Nshift_dev=0;
    disappearing_th=0;
+   DF_shift_bool=FALSE;
+   DF_shift.clear();
 }
 
 /* Read Crystal Projection Parameters ====================================== */
@@ -100,9 +102,16 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) {
             orthogonal=(strcmp(first_token(line),"Yes")==0);
             lineNo++;
             break;
+         case 6:
+            // shift file
+            fn_shift=first_word(line);
+	    DF_shift_bool=TRUE;
+            /** if (fn_shift=="NULL") maybe something shouild be checck;**/
+            lineNo++;
+            break;
       } /* switch end */  
    } /* while end */
-   if (lineNo!=6)
+   if (lineNo!=7 && lineNo!=6)
       REPORT_ERROR(3007,(string)"Prog_Project_Crystal::read: I "
          "couldn't read all parameters from file " + fn_crystal);
 
@@ -137,7 +146,10 @@ void Crystal_Projection_Parameters::write(FileName fn_crystal) {
    if (orthogonal) fprintf(fh_param,"Yes\n");
    else            fprintf(fh_param,"No\n");
       
-   fprintf(fh_param,"# Grid relative size\n");
+//   fprintf(fh_param,"# Grid relative size\n");
+
+   fprintf(fh_param,"# File with shifts for each unit cell\n");
+   fprintf(fh_param,"%s",fn_shift.c_str());
       
    fclose(fh_param);
 }
@@ -222,12 +234,25 @@ void project_crystal(Phantom &phantom, Projection &P,
       cout << "corner2 after deformation " << corner2.transpose() << endl;
    #endif
 
-   // Fill a table with all random shifts and rotations
    matrix2D<double> cell_shiftX, cell_shiftY;
    matrix2D<int>    cell_inside;
-   fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
-      prm_crystal, cell_shiftX, cell_shiftY, cell_inside);
+   matrix2D<double> exp_shifts_matrix_X;
+   matrix2D<double> exp_shifts_matrix_Y;
 
+   fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
+      prm_crystal, cell_shiftX, cell_shiftY, cell_inside,
+      exp_shifts_matrix_X, exp_shifts_matrix_Y);
+      
+   // Fill a table with all exp shifts 
+   init_shift_matrix(prm_crystal,cell_inside, exp_shifts_matrix_X,
+                                              exp_shifts_matrix_Y);
+   // add the shifts to the already compute values
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(exp_shifts_matrix_X) {
+	 // Add experimental shifts
+	 cell_shiftX(i,j) += exp_shifts_matrix_X(i,j);
+	 cell_shiftY(i,j) += exp_shifts_matrix_Y(i,j);
+   }
+  
    #ifdef DEBUG
       cout << "Cell inside shape "; cell_inside.print_shape(); cout << endl;
       cout << "Cell inside\n" << cell_inside << endl;
@@ -247,7 +272,7 @@ void project_crystal(Phantom &phantom, Projection &P,
    FOR_ALL_ELEMENTS_IN_MATRIX2D(cell_inside)
 //      if (cell_inside(i,j) && rnd_unif(0,1)<prm_crystal.disappearing_th) {
       if (cell_inside(i,j) ) {
-         // Displace the phantom
+         // Shift the phantom
          // Remind that displacements are defined in the deformed projection
          // that is why they have to be translated to the Universal
          // coordinate system
@@ -406,7 +431,9 @@ void fill_cell_positions(Projection &P,
    const Crystal_Projection_Parameters &prm_crystal,
    matrix2D<double> &cell_shiftX,
    matrix2D<double> &cell_shiftY,
-   matrix2D<int>    &cell_inside) {
+   matrix2D<int>    &cell_inside,
+   matrix2D<double> &exp_shifts_matrix_X,
+   matrix2D<double> &exp_shifts_matrix_Y) {
 
    // Compute crystal limits
    int iamin, iamax, ibmin, ibmax;
@@ -494,12 +521,13 @@ void fill_cell_positions(Projection &P,
 
    // The previous shifts are relative to the final position, now
    // express the real final position
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(visited) {
       if (!cell_shiftX.outside(i,j)) {
          // Move to final position
          cell_shiftX(i,j) += j*XX(aprojd)+i*XX(bprojd);
          cell_shiftY(i,j) += j*YY(aprojd)+i*YY(bprojd);
-
+         	 
          // Check if there is intersection
          matrix1D<double> auxcorner1(2), auxcorner2(2);
          XX(auxcorner1)=XX(corner1)+cell_shiftX(i,j);
@@ -524,3 +552,51 @@ void fill_cell_positions(Projection &P,
       }
    }
 }
+
+/* Fill aux matrix with experimental shifs to add to unit cell 
+   projection********************************************************/
+   
+   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
+                          matrix2D<int>    &cell_inside,
+			  matrix2D<double> &exp_shifts_matrix_X,
+ 			  matrix2D<double> &exp_shifts_matrix_Y)
+  {
+   DocFile        aux_DF_shift;//crystal_param is cont
+   aux_DF_shift=prm_crystal.DF_shift;
+   exp_shifts_matrix_X.resize(cell_inside);  
+   exp_shifts_matrix_X.init_zeros(); 
+   exp_shifts_matrix_Y.resize(cell_inside);  
+   exp_shifts_matrix_Y.init_zeros(); 
+   
+   //#define DEBUG2
+   #ifdef DEBUG2
+   cout << aux_DF_shift;
+   cout << "exp_shifts_matrix_X shape" << endl;
+   exp_shifts_matrix_X.print_shape();
+   cout << endl;
+   #endif
+   #undef DEBUG2 
+   //fill matrix with docfile data
+   aux_DF_shift.go_first_data_line();
+   int max_x, max_y, min_x , min_y;
+   
+   while (!aux_DF_shift.eof()) {
+      //Check that we are not outside the matrix
+      if (!exp_shifts_matrix_X.outside(ROUND(aux_DF_shift(1)),
+                                      ROUND(aux_DF_shift(0)) 
+				     )){
+         exp_shifts_matrix_X(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(4);
+         exp_shifts_matrix_Y(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(5);
+      }		    
+      aux_DF_shift.next_data_line();
+   }
+      //#define DEBUG2
+      #ifdef DEBUG2
+      cout << exp_shifts_matrix_X;
+      #endif
+      #undef DEBUG2 
+   
+   }   
+
