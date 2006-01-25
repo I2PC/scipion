@@ -37,7 +37,7 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
    Nshift_avg=0;
    Nshift_dev=0;
    disappearing_th=0;
-   DF_shift_bool=FALSE;
+   DF_shift_bool=false;
    DF_shift.clear();
 }
 
@@ -105,7 +105,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) {
          case 6:
             // shift file
             fn_shift=first_word(line);
-	    DF_shift_bool=TRUE;
+	    DF_shift_bool=true;
             /** if (fn_shift=="NULL") maybe something shouild be checck;**/
             lineNo++;
             break;
@@ -166,7 +166,7 @@ void project_crystal(Phantom &phantom, Projection &P,
    // Initialize whole crystal projection
    P.adapt_to_size(prm_crystal.crystal_Ydim,prm_crystal.crystal_Xdim);
    
-   // Compute lattice vectors in the compressed projection plane
+   // Compute lattice vectors in the projection plane
    P.set_angles(rot,tilt,psi);
    matrix1D<double> proja=P.euler*prm_crystal.a;
    matrix1D<double> projb=P.euler*prm_crystal.b;
@@ -174,7 +174,7 @@ void project_crystal(Phantom &phantom, Projection &P,
    // Check if orthogonal projections
    // (projXdim,0)'=A*aproj
    // (0,projYdim)'=A*bproj
-   matrix2D<double> Ainv, A;
+   matrix2D<double> Ainv, A,D,Dinv,AuxMat;
    if (prm_crystal.orthogonal) {
       A.resize(2,2);
       A(0,0)= YY(projb)*XSIZE(P()); A(0,1)=-XX(projb)*XSIZE(P());
@@ -183,13 +183,27 @@ void project_crystal(Phantom &phantom, Projection &P,
       M2x2_BY_CT(A,A,nor);
       A.resize(3,3); A(2,2)=1;
       Ainv=A.inv();
+      AuxMat.resize(3,3);
+      //matrix with ceytal vectors
+      AuxMat(0,0)= XX(prm_crystal.a); AuxMat(0,1)= YY(prm_crystal.a); AuxMat(0,2)= 0.;
+      AuxMat(1,0)= XX(prm_crystal.b); AuxMat(1,1)= YY(prm_crystal.b); AuxMat(1,2)= 0.;
+      AuxMat(2,0)= 0.               ; AuxMat(2,1)= 0.               ; AuxMat(2,2)= 1.;
+      D.resize(3,3);
+      D(0,0)= XSIZE(P()); D(0,1)= 0.;	      D(0,2)= 0.;
+      D(1,0)= 0.;	  D(1,1)= YSIZE(P()); D(1,2)= 0.;
+      D(2,0)= 0.;	  D(2,1)= 0.;	      D(2,2)= 1.;
+      D.inv(D);
+      M3x3_BY_M3x3(D,AuxMat,D);
+      Dinv.resize(3,3);
+      Dinv=D.inv();
    } else {
       A.init_identity(3);
       Ainv.init_identity(3);
    }
-
+   //#define DEBUG
    #ifdef DEBUG
       cout << "P shape "; P().print_shape(); cout << endl;
+      cout << "P.euler " << P.euler; cout << endl;
       cout << "rot= " << rot << " tilt= " << tilt << " psi= " << psi << endl;
       cout << "a " << prm_crystal.a.transpose() << endl;
       cout << "b " << prm_crystal.b.transpose() << endl;
@@ -199,6 +213,8 @@ void project_crystal(Phantom &phantom, Projection &P,
            << endl;
       cout << "A\n" << A << endl;
       cout << "Ainv\n" << Ainv << endl;
+      cout << "D\n" << D << endl;
+      cout << "Dinv\n" << Dinv << endl;
    #endif
 
    // Compute aproj and bproj in the deformed projection space
@@ -263,9 +279,29 @@ void project_crystal(Phantom &phantom, Projection &P,
    // Prepare matrices to go from uncompressed space to deformed projection
    matrix2D<double> AE=A*P.euler;   // From uncompressed to deformed
    matrix2D<double> AEinv=AE.inv(); // From deformed to uncompressed
+
+   double density_factor=1.0;
+   if (prm_crystal.orthogonal) {
+   // Remember to compute de density factor
+      matrix1D<double> projection_direction(3);
+      (P.euler).getCol(2,projection_direction);
+      projection_direction.self_transpose();
+      density_factor=(projection_direction*Dinv).module();
+      #ifdef DEBUG
+      cout << "projection_direction" << projection_direction << endl;
+      cout << "projection_direction*A" << projection_direction*A << endl;
+      #endif
+   }
    #ifdef DEBUG
       cout << "X proyectado=" << (AE*vector_R3(1.0,0.0,0.0)).transpose() << endl;
       cout << "Y proyectado=" << (AE*vector_R3(0.0,1.0,0.0)).transpose() << endl;
+      cout << "P.euler_shape="<< endl;
+      (P.euler).print_shape();
+      cout << "P.euler="      << P.euler << endl;
+      cout << "AE="           << AE << endl;
+      cout << "AEinv="        << AEinv << endl;
+      cout << "Ainv="            << Ainv << endl;
+      cout << "density_factor="      << density_factor << endl;
    #endif
 
    // Project all cells
@@ -303,6 +339,8 @@ void project_crystal(Phantom &phantom, Projection &P,
 
          // Project this phantom
          aux.project_to(P, AE,prm_crystal.disappearing_th);
+	 // Multiply by factor 
+	 P()=P()*density_factor;
          #ifdef DEBUG_MORE
             cout << "After Projecting ...\n" << aux << endl;
             P.write("inter");
