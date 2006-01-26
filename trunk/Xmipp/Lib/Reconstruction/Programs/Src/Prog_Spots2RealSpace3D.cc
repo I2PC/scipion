@@ -211,7 +211,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 	 break;    
       default:
          cerr << "\nHORROR: Symmetry not implemented!!!" << endl;
-	 exit(FALSE); 
+	 exit(false); 
          break;
 	   
       }//switch end

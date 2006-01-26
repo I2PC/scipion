@@ -360,10 +360,10 @@ double correlate_surface_and_volume_gradients(const Image *surf,
       matrix1D<double> grad_in_V(3), grad_in_Vsurf(3);
       for (int i=STARTINGY(VOL); i<=FINISHINGY(VOL); i++)
           for (int j=STARTINGX(VOL); j<=FINISHINGX(VOL); j++) {
-              bool surface_found; surface_found=FALSE;
+              bool surface_found; surface_found=false;
               int k;
               for (k=ktop; k<=kbottom; k++)
-                  if (VOLVOXEL(*Vsurf,k,i,j)!=0) {surface_found=TRUE; break;}
+                  if (VOLVOXEL(*Vsurf,k,i,j)!=0) {surface_found=true; break;}
               if  (surface_found) {
                   V_grad.vector_at(k,i,j,grad_in_V);
                   Vsurf_grad.vector_at(k,i,j,grad_in_Vsurf);
