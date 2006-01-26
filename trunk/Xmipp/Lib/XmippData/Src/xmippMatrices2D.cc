@@ -115,7 +115,19 @@ template <>
    void apply_geom_Bspline(matrix2D< complex<double> > &M2,
       matrix2D<double> A, const matrix2D< complex<double> > &M1,
    int Splinedegree, bool inv, bool wrap, complex<double> outside) {
-   REPORT_ERROR(1,"apply_geom_Bspline: Not yet implemented for complex matrices\n");
+    matrix2D<double> re, im, rotre, rotim;
+    double outre,outim;
+    re.resize(YSIZE(M1),XSIZE(M1));
+    im.resize(YSIZE(M1),XSIZE(M1));
+    outre=outside.real();
+    outim=outside.imag();
+    Complex2RealImag(MULTIDIM_ARRAY(M1),
+       MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),MULTIDIM_SIZE(M1));
+    apply_geom_Bspline(rotre,A,re,Splinedegree,inv,wrap,outre);
+    apply_geom_Bspline(rotim,A,im,Splinedegree,inv,wrap,outim);
+    M2.resize(M1);
+    RealImag2Complex(MULTIDIM_ARRAY(rotre),MULTIDIM_ARRAY(rotim),
+                     MULTIDIM_ARRAY(M2),MULTIDIM_SIZE(re));
 }
 
 /* Interface to numerical recipes: svbksb ---------------------------------- */
