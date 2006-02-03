@@ -601,3 +601,18 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
    }
    return retval;
 }
+
+
+/** Conversion little-big endian any size */
+#define ByteSwap5(x) ByteSwap((unsigned char *) &(x),sizeof(x))
+
+void ByteSwap(unsigned char * b, int n)
+{
+   register int i = 0;
+   register int j = n-1;
+   while (i<j)
+   {
+      std::swap(b[i], b[j]);
+      i++, j--;
+   }
+}

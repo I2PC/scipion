@@ -46,6 +46,8 @@ using namespace std;
 #include <stdio.h>
 #include <string>
 #include <limits.h>
+#include <algorithm> //required for std::swap
+
 
 // For timing functions
 #include        <unistd.h>
@@ -991,6 +993,11 @@ private:
    }
 };
 //@}
+/** Conversion little-big endian conversion */
+#define ByteSwap5(x) ByteSwap((unsigned char *) &x,sizeof(x))
+
+void ByteSwap(unsigned char * b, int n);
+
 
 /* End of Xmipp_funcs ------------------------------------------------------ */
 //@}
