@@ -28,6 +28,7 @@
 
 #include "../xmippVolumes.hh"
 
+/*
 // Specialization for complex numbers --------------------------------------
 template <>
 void VolumeT<complex<double> >::read(FILE *fh,
@@ -46,20 +47,10 @@ void VolumeT<complex<double> >::read(FILE *fh,
             MULTIDIM_ELEM(img,i)=c;
   }
 }
+*/
 
-template <>
-void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
-   Volume_Type volume_type) 
-{
-   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-   {
-             float a,b;
-             a=(float) (MULTIDIM_ELEM(img,i)).real();
-             b=(float) (MULTIDIM_ELEM(img,i)).imag();
-             FWRITE (&a, sizeof(float), 1, fh, reversed);
-             FWRITE (&b, sizeof(float), 1, fh, reversed);
-   }
-}
+
+
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {

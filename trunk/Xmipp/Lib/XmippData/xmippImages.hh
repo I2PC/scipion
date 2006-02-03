@@ -366,14 +366,40 @@ public:
    //@}
 };
 
+// Specilization to read/write complex images ------------------------------
 // Specific function to read images with complex numbers in them
 template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
-   int Ydim, int Xdim, bool reversed, Image_Type image_type);
+   int Ydim, int Xdim, bool reversed, Image_Type image_type)
+{
+  img.resize(Ydim,Xdim);
+  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+  {
+        float a,b;
+	// read real part of a complex number
+        FREAD (&a, sizeof(float), 1, fh, reversed);
+	// read imaginary part of a complex number 
+	FREAD (&b, sizeof(float), 1, fh, reversed);
+	// Assign the number
+        complex<double> c(a,b);
+        MULTIDIM_ELEM(img,i)=c;
+  }
+  return (true);
+}
 
 // Specific function to write images with complex numbers in them
 template <>
-void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type);
+void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type)
+{
+  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+  {
+            float a,b;
+            a=(float) (MULTIDIM_ELEM(img,i)).real();
+	        b=(float) (MULTIDIM_ELEM(img,i)).imag();
+            FWRITE (&a, sizeof(float), 1, fh, reversed);
+	        FWRITE (&b, sizeof(float), 1, fh, reversed);
+  }
+}
 
 /**@name Image Speed up macros*/
 //@{

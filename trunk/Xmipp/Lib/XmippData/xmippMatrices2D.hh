@@ -1768,6 +1768,14 @@ template <>
 void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
    maTC &result, char operation);
 
+template <>
+void matrix2D<complex<double> >::produce_spline_coeffs(
+   matrix2D<double> &coeffs, int SplineDegree) const {
+   // *** STILL TO DO
+   cerr << "Spline coefficients of a complex matrix is not implemented\n";
+}
+
+
 /**@name Related functions
    These functions are not methods of matrix1D */
 //@{
@@ -2536,14 +2544,32 @@ template <class T>
 }
 #undef DEBUG_APPLYGEO
 
-template <>
-   void apply_geom_Bspline(matrix2D< complex<double> > &M2,
-      matrix2D<double> A, const matrix2D< complex<double> > &M1,
-   int Splinedegree, bool inv, bool wrap, complex<double> outside);
+/* Interface to numerical recipes: svbksb ---------------------------------- */
+void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
+             matrix1D<double> &b,matrix1D<double> &x) {
+   // Call to the numerical recipes routine. Results will be stored in X
+   svbksb(u.adapt_for_numerical_recipes2(),
+          w.adapt_for_numerical_recipes(),
+          v.adapt_for_numerical_recipes2(),
+          u.RowNo(),u.ColNo(),
+          b.adapt_for_numerical_recipes(),
+          x.adapt_for_numerical_recipes());
+}
 
 template <>
-   void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
-      int Ydim,int Xdim, matrix2D< complex<double> > &result) const;
+void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+   int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
+   matrix2D<double> re, im, scre, scim;
+   re.resize(YSIZE(*this),XSIZE(*this));
+   im.resize(YSIZE(*this),XSIZE(*this));
+   Complex2RealImag(MULTIDIM_ARRAY(*this),
+      MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),MULTIDIM_SIZE(*this));
+   re.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scre);
+   im.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scim);
+   result.resize(Ydim,Xdim);
+   RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
+      MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
+}
 
 template <> bool matrix2D< complex<double> >::IsDiagonal() const;
 template <> bool matrix2D< complex<double> >::IsScalar() const;

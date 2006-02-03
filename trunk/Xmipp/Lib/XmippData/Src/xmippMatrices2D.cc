@@ -130,32 +130,6 @@ template <>
                      MULTIDIM_ARRAY(M2),MULTIDIM_SIZE(re));
 }
 
-/* Interface to numerical recipes: svbksb ---------------------------------- */
-void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
-             matrix1D<double> &b,matrix1D<double> &x) {
-   // Call to the numerical recipes routine. Results will be stored in X
-   svbksb(u.adapt_for_numerical_recipes2(),
-          w.adapt_for_numerical_recipes(),
-          v.adapt_for_numerical_recipes2(),
-          u.RowNo(),u.ColNo(),
-          b.adapt_for_numerical_recipes(),
-          x.adapt_for_numerical_recipes());
-}
-
-template <>
-void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
-   int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
-   matrix2D<double> re, im, scre, scim;
-   re.resize(YSIZE(*this),XSIZE(*this));
-   im.resize(YSIZE(*this),XSIZE(*this));
-   Complex2RealImag(MULTIDIM_ARRAY(*this),
-      MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),MULTIDIM_SIZE(*this));
-   re.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scre);
-   im.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scim);
-   result.resize(Ydim,Xdim);
-   RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
-      MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
-}
 
 /* Is diagonal ------------------------------------------------------------- */
 template <>

@@ -110,10 +110,10 @@ public:
    matrix3D<double> & X()             {return __X;}
 
    /** Get the X components.*/
-   void get_X(matrix3D<double> &_X) {_X=__X;}
+   void get_X(matrix3D<double> &_XXX) {_XXX=__X;}
 
    /** Set the X components.*/
-   void set_X(const matrix3D<double> &_X) {__X=_X;}
+   void set_X(const matrix3D<double> &_XXX) {__X=_XXX;}
 
    /// Constant access to Y component.
    const matrix3D<double> & Y() const {return __Y;}

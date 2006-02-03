@@ -330,14 +330,42 @@ public:
    //@}
 };
 
+
 // Specialization for complex numbers
+
 template <>
 void VolumeT<complex<double> >::read(FILE *fh,
-  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type);
+  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
+{
+  img.resize(Zdim, Ydim,Xdim);
+  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+  {
+            float a,b;
+			// read real part of a complex number
+            FREAD (&a, sizeof(float), 1, fh, reversed);
+			// read imaginary part of a complex number
+			FREAD (&b, sizeof(float), 1, fh, reversed);			
+			// Assign the number
+			complex<double> c(a,b);
+            MULTIDIM_ELEM(img,i)=c;
+  }
+}
+
 
 template <>
 void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
-   Volume_Type volume_type);
+   Volume_Type volume_type) 
+{
+   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+   {
+             float a,b;
+             a=(float) (MULTIDIM_ELEM(img,i)).real();
+             b=(float) (MULTIDIM_ELEM(img,i)).imag();
+             FWRITE (&a, sizeof(float), 1, fh, reversed);
+             FWRITE (&b, sizeof(float), 1, fh, reversed);
+   }
+}
+
 
 /**@name Speed up macros*/
 //@{
