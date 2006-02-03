@@ -29,12 +29,12 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Prog_make_spectra_prm *eprm=
       (Prog_make_spectra_prm *) prm;
    eprm->process_img(img);
-   return TRUE;
+   return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    cout << "This program is not intended for volumes\n";
-   return FALSE;
+   return false;
 }
 
 int main (int argc, char **argv) {
