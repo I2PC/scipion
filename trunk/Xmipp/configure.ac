@@ -229,6 +229,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/KCMeans/Makefile \
 	Applications/Src/KerDenSOM/Makefile \
 	Applications/Src/Lattice_vectors/Makefile \
+	Applications/Src/MakeSpectra/Makefile \
 	Applications/Src/Mark/Makefile \
 	Applications/Src/Markhan/Makefile \
 	Applications/Src/Mask/Makefile \
@@ -286,6 +287,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Tiff2Raw/Makefile \
 	Applications/Src/ToPDB/Makefile \
 	Applications/Src/ToPhantom/Makefile \
+	Applications/Src/Umbend/Makefile \
 	Applications/Src/Visualize_FFT/Makefile \
 	Applications/Src/Vol2Data/Makefile \
 	Applications/Src/VolSampler/Makefile \
@@ -294,6 +296,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Window/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \
+	Applications/Src/_Fourier/Makefile \
 	Makefile \
 	m4/Makefile )
 		

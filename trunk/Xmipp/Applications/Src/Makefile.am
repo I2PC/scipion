@@ -76,6 +76,7 @@ SUBDIRS = 2DInterpolation \
 	KCMeans \
 	KerDenSOM \
 	Lattice_vectors \
+	MakeSpectra
 	Mask \
         Markhan \
 	Microscope \
