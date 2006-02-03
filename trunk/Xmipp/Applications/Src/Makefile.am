@@ -117,6 +117,7 @@ SUBDIRS = 2DInterpolation \
 	Split_selfile \
 	SpAR \
 	SpARMA \
+	Spider22CCP4 \
 	Spots2RealSpace2D \
 	SSNR \
 	Statis \
@@ -126,6 +127,7 @@ SUBDIRS = 2DInterpolation \
 	Threshold \
 	ToPDB \
 	ToPhantom \
+	Umbend \
 	Visualize_FFT \
 	Vol2Data \
 	VolSampler \
@@ -133,5 +135,6 @@ SUBDIRS = 2DInterpolation \
 	Wbp \
 	Window \
 	Window_micrograph \
+	_Fourier \ 
 	$(OPTIONAL_PROGS)
 

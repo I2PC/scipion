@@ -274,6 +274,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/SOM/Makefile \
 	Applications/Src/SpAR/Makefile \
 	Applications/Src/SpARMA/Makefile \
+	Applications/Src/Spider22CCP4/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
 	Applications/Src/Split_selfile/Makefile \
 	Applications/Src/SSNR/Makefile \
@@ -285,6 +286,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Tiff2Raw/Makefile \
 	Applications/Src/ToPDB/Makefile \
 	Applications/Src/ToPhantom/Makefile \
+	Applications/Src/Umbend/Makefile \
 	Applications/Src/Visualize_FFT/Makefile \
 	Applications/Src/Vol2Data/Makefile \
 	Applications/Src/VolSampler/Makefile \
@@ -293,6 +295,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Window/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \
+	Applications/Src/_Fourier/Makefile \
 	Makefile \
 	m4/Makefile )
 		
