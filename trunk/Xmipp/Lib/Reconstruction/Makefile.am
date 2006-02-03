@@ -47,7 +47,7 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_projection_matching.cc
 
 libXmippRecons_Interface_@host_os@_la_SOURCES = Programs/Src/Prog_Spots2RealSpace2D.cc \
-	Src/recons_spider.cc \
+	Src/recons_spider.cc Programs/Src/Prog_Umbend.cc\
 	Programs/Src/Prog_recons_test.cc
 
 libXmippReconsINRIA_@host_os@_la_SOURCES = Programs/Src/Prog_adjust_surface.cc
@@ -93,6 +93,7 @@ EXTRA_DIST = blobs.hh \
 	Programs/Prog_SpARMA.hh \
 	Programs/Prog_Spots2RealSpace2D.hh \
 	Programs/Prog_Spots2RealSpace3D.hh \
+	Programs/Prog_Umbend.hh \
 	Programs/Prog_SSNR.hh \
 	Programs/Prog_surface.hh \
 	Programs/Prog_symmetrize.hh \
