@@ -165,33 +165,33 @@ void CCP4::clear(){
     }
    else{
     my_mrc_header.nx    = I().ColNo();
-    ByteSwap5(my_mrc_header.nx);
+    little22bigendian(my_mrc_header.nx);
     my_mrc_header.mx	= my_mrc_header.nx;
 
     my_mrc_header.ny    = I().RowNo();
-    ByteSwap5(my_mrc_header.ny);
+    little22bigendian(my_mrc_header.ny);
     my_mrc_header.my	= my_mrc_header.ny;
     
     my_mrc_header.nz	= 1;
-    ByteSwap5(my_mrc_header.nz);
+    little22bigendian(my_mrc_header.nz);
     my_mrc_header.mz	= my_mrc_header.nz;
    
     my_mrc_header.mode  = MODE_FLOAT;
-    ByteSwap5((my_mrc_header.mode));
+    little22bigendian((my_mrc_header.mode));
     
     my_mrc_header.mapc  = X_AXIS;
-    ByteSwap5(my_mrc_header.mapc); 
+    little22bigendian(my_mrc_header.mapc); 
     my_mrc_header.mapr  = Y_AXIS;
-    ByteSwap5(my_mrc_header.mapr); 
+    little22bigendian(my_mrc_header.mapr); 
     my_mrc_header.maps  = Z_AXIS;
-    ByteSwap5(my_mrc_header.maps); 
+    little22bigendian(my_mrc_header.maps); 
     
     my_mrc_header.amin = I().compute_min();
-    ByteSwap5(my_mrc_header.amin); 
+    little22bigendian(my_mrc_header.amin); 
     my_mrc_header.amax = I().compute_max();
-    ByteSwap5(my_mrc_header.amax); 
+    little22bigendian(my_mrc_header.amax); 
     my_mrc_header.amean = I().compute_avg();
-    ByteSwap5(my_mrc_header.amean); 
+    little22bigendian(my_mrc_header.amean); 
 
     } 
 }

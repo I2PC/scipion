@@ -604,7 +604,9 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 
 
 /** Conversion little-big endian any size */
-#define ByteSwap5(x) ByteSwap((unsigned char *) &(x),sizeof(x))
+//#define little22bigendian(x) ByteSwap((unsigned char *) &(x),sizeof(x))
+//the prevous define is in the hh file, I leave a commented copy here
+//so the code can be more easily understood
 
 void ByteSwap(unsigned char * b, int n)
 {

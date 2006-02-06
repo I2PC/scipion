@@ -994,7 +994,7 @@ private:
 };
 //@}
 /** Conversion little-big endian conversion */
-#define ByteSwap5(x) ByteSwap((unsigned char *) &x,sizeof(x))
+#define little22bigendian(x) ByteSwap((unsigned char *) &x,sizeof(x))
 
 void ByteSwap(unsigned char * b, int n);
 
