@@ -296,7 +296,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Window/Makefile \
 	Applications/Src/Window_micrograph/Makefile \
 	Applications/Src/XMask/Makefile \
-	Applications/Src/_Fourier/Makefile \
 	Makefile \
 	m4/Makefile )
 		
