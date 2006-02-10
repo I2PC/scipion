@@ -447,8 +447,6 @@ void generate_angles(int ExtProjs, const Angle_range &range,
 }
 
 /* Generate evenly distributed angles ====================================== */
-//#define OLD_EVEN_GENERATION_METHOD
-#ifdef OLD_EVEN_GENERATION_METHOD
 void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
    const Projection_Parameters &prm) {
    // We will run over the tilt angle in a deterministic way
@@ -514,16 +512,13 @@ int count_even_angles(const Projection_Parameters &prm) {
         // add cout << N after N++ in the loop, then it works perfectly
    return N;
 }
-#endif
 
 /* Assign angles =========================================================== */
 int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
    const FileName &fn_sym) {
    int ExtProjs=0, IntProjs=0;        // External and internal projections
-   #ifdef OLD_EVEN_GENERATION_METHOD
    int Nrottilt;                      // Number of evenly distributed
       	             	      	      // projections
-   #endif
 
    DF.clear();
    DF.FirstKey()=prm.starting;
@@ -539,12 +534,11 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
       if (prm.rot_range.randomness!=ANGLE_EVENLY)
          IntProjs=Nrot*Ntilt*Npsi;
       else {
-         #ifdef OLD_EVEN_GENERATION_METHOD
+         if (fn_sym=="") {
             Nrottilt=count_even_angles(prm);
             IntProjs=Nrottilt*Npsi;
-         #else
+         } else
             IntProjs=0;
-         #endif
       }
       DF.append_data_line(IntProjs);  // Create lines for the angles
       if (prm.rot_range.randomness!=ANGLE_EVENLY) {
@@ -552,7 +546,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
 	 generate_angles(ExtProjs,prm.tilt_range, DF, 't', prm);
          generate_angles(ExtProjs,prm.psi_range,  DF, 'p', prm);
       } else {
-         #ifdef OLD_EVEN_GENERATION_METHOD
+         if (fn_sym=="") {
             generate_even_angles(ExtProjs,Nrottilt,DF,prm);
             // Clear empty entries
             DF.go_first_data_line();
@@ -565,7 +559,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
 	    int imax=to_remove.size();
 	    for (int i=imax-1; i>=0; i--) DF.remove(to_remove[i]);
 	    DF.renum();
-         #else
+         } else {
             SymList SL;
             if (fn_sym!="") SL.read_sym_file(fn_sym);
             DocFile DF_aux;
@@ -578,7 +572,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
                DF.append_line(line);
 	       DF_aux.next_data_line();
 	    }
-         #endif
+         }
       }
    }
 
