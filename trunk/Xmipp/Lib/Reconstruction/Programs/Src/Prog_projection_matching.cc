@@ -302,7 +302,8 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
   Mref=ref_img[opt_dirno];
   Mref+=ref_mean[opt_dirno];
-  best_shift(Mimg,Mref,xmax,ymax);
+  if (max_shift>0) best_shift(Mimg,Mref,xmax,ymax);
+  else xmax=ymax=0.;
   if (xmax*xmax+ymax*ymax>max_shift*max_shift) {
     xmax=0.; 
     ymax=0.;
