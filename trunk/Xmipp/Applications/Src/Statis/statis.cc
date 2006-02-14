@@ -32,25 +32,42 @@ public:
    ImageXmipp  sumI, sumI2;
    VolumeXmipp sumV, sumV2;
    int         nI, nV;
-   bool        set_weight;
+   double      sumweight;
+   bool        set_weight,weighted_avg,more_options;
 public:
    Statis_parameters() {nI=nV=0;}
    void final_process();
 
    void read(int argc, char **argv) {
+     more_options=check_param(argc,argv,"-more_options");
      Prog_parameters::read(argc,argv);
      set_weight=check_param(argc,argv,"-set_weight");
+     weighted_avg=check_param(argc,argv,"-weighted_avg");
+     sumweight=0.;
    }
 
    void usage() {
      Prog_parameters::usage();
-     cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
+     cerr << "  [-more_options]           : show additional options\n";
+     if (more_options) {
+       cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
+       cerr << "  [-weighted_avg]           : for 2D-images: use header weights in weighted average calculation\n";
+     }
+     cerr <<endl;
+     cerr << "Purpose: This program allows you to calculate the average and \n"
+          << "         standard deviation of a set of images or volumes \n";
+
    }
+
 };
 
 void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Statis_parameters *eprm=(Statis_parameters *) prm;
    eprm->sumI().resize(img()); eprm->sumI2().resize(img());
+   if (eprm->weighted_avg) {
+     img()*=img.weight();
+     eprm->sumweight+=img.weight();
+   }
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img()) {
       MULTIDIM_ELEM(eprm->sumI(), i) += MULTIDIM_ELEM(img(),i);
       MULTIDIM_ELEM(eprm->sumI2(),i) += MULTIDIM_ELEM(img(),i)*MULTIDIM_ELEM(img(),i);
@@ -77,7 +94,10 @@ void Statis_parameters::final_process() {
          MULTIDIM_ELEM(sumI2(),i) -= MULTIDIM_ELEM(sumI(),i)*MULTIDIM_ELEM(sumI(),i);
          MULTIDIM_ELEM(sumI2(),i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(),i)));
       }
-      if (set_weight) {
+      if (weighted_avg) {
+	sumI()/=sumweight;
+	sumI.weight()=sumweight;
+      } else if (set_weight) {
 	sumI.weight()=(double)nI;
 	cerr << " Setting weight in the header of the average image to "<<ItoA(nI)<<endl;
       }
