@@ -32,9 +32,20 @@ public:
    ImageXmipp  sumI, sumI2;
    VolumeXmipp sumV, sumV2;
    int         nI, nV;
+   bool        set_weight;
 public:
    Statis_parameters() {nI=nV=0;}
    void final_process();
+
+   void read(int argc, char **argv) {
+     Prog_parameters::read(argc,argv);
+     set_weight=check_param(argc,argv,"-set_weight");
+   }
+
+   void usage() {
+     Prog_parameters::usage();
+     cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
+   }
 };
 
 void process_img(ImageXmipp &img, const Prog_parameters *prm) {
@@ -65,6 +76,10 @@ void Statis_parameters::final_process() {
          MULTIDIM_ELEM(sumI2(),i) /= nI;
          MULTIDIM_ELEM(sumI2(),i) -= MULTIDIM_ELEM(sumI(),i)*MULTIDIM_ELEM(sumI(),i);
          MULTIDIM_ELEM(sumI2(),i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(),i)));
+      }
+      if (set_weight) {
+	sumI.weight()=(double)nI;
+	cerr << " Setting weight in the header of the average image to "<<ItoA(nI)<<endl;
       }
       sumI.write(fn_root+".med.xmp");
       sumI2.write(fn_root+".sig.xmp");
