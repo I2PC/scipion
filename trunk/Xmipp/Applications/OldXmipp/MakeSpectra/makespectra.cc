@@ -200,12 +200,14 @@ inc_int = r3;
 
 long_int = r2-r1;
 
+/* 
 cout << "rad_min="  << rad_min  << endl
      << "rad_max="  << rad_max  << endl
      << "inc_int="  << inc_int  << endl
      << "long_int=" << long_int << endl
      << "nnumin="   << nnumin   << endl
      << "nnumax="   << nnumax   << endl;
+*/
      
 /* ****************  OPENING THE FILES  *********************/
 
