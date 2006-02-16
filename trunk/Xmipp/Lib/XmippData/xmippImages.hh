@@ -365,6 +365,14 @@ public:
    }
    //@}
 };
+#ifdef __alpha
+template <>
+bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
+   int Ydim, int Xdim, bool reversed, Image_Type image_type);
+template <>
+void ImageT<complex<double> >::write(FILE * &fh, bool reversed, 
+      Image_Type image_type);
+#else
 
 // Specific function to read images with complex numbers in them
 template <>
@@ -374,6 +382,7 @@ bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
 // Specific function to write images with complex numbers in them
 template <>
 void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type);
+#endif
 
 /**@name Image Speed up macros*/
 //@{
