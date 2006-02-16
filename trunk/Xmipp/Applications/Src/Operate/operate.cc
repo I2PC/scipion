@@ -77,35 +77,40 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out);
    DATE:          22-8-2001
   
 /**************************************************************************/
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
    FileName 	fn_1,fn_2,fn_out;		       
-   int          operation=0,operand_type1=0,operand_type2=0;
+   int          operation=0,operand_type1=0,operand_type2=0,operand_type_input2=0;
    
+      
    // Obtain command line parameters form the program 
-   try {
+   try
+   {
       // Read the output image filename
-      fn_out  = get_param(argc,argv,"=");
+	  fn_out  = get_param(argc,argv,"-o");
       // Check for #, which indicates a binary operation
-      check_for_operation(argc,argv,"#",fn_1,operand_type1);
-  		 		 
-      // Check the operations supported
-      if(check_for_operation(argc,argv,"+",fn_2,operand_type2)) operation=OPERATE_PLUS;
-      else if(check_for_operation(argc,argv,"-",fn_2,operand_type2)) operation=OPERATE_MINUS;
-      else if(check_for_operation(argc,argv,"x",fn_2,operand_type2)) operation=MULTIPLICATION;
-      else if(check_for_operation(argc,argv,"/",fn_2,operand_type2)) operation=DIVISION;
-      else if(check_for_operation(argc,argv,"log10",fn_2,operand_type2)) operation=LOG10;
-      else if(check_for_operation(argc,argv,"sqrt",fn_2,operand_type2)) operation=SQRT;
-      else if(check_for_operation(argc,argv,"slice",fn_2,operand_type2)) operation=SLICE; 
-      else if(check_for_operation(argc,argv,"column",fn_2,operand_type2)) operation=COLUMN; 
-      else if(check_for_operation(argc,argv,"row",fn_2,operand_type2)) operation=ROW; 
-      else if(check_for_operation(argc,argv,"radial_avg",fn_2,operand_type2)) operation=RADIAL_AVG; 
-      else REPORT_ERROR(1,"No valid operation specified");
-   } catch (Xmipp_error XE) {cout << XE; Usage(); return 1;}
-   try {
-      compute(operation,operand_type1,operand_type2,fn_1,fn_2,fn_out);
-   } catch (Xmipp_error XE) {cout << XE; return 2;}
-   return 0;
+	  check_for_operation(argc,argv,"-i",fn_1,operand_type1);  	
+	  		 		 
+    // Check the operations supported
+	if(check_for_operation(argc,argv,"-plus",fn_2,operand_type2)) operation=OPERATE_PLUS;
+	else if(check_for_operation(argc,argv,"-minus",fn_2,operand_type2)) operation=OPERATE_MINUS;
+	else if(check_for_operation(argc,argv,"-mult",fn_2,operand_type2)) operation=MULTIPLICATION;
+	else if(check_for_operation(argc,argv,"-divide",fn_2,operand_type2)) operation=DIVISION;
+	else if(check_param(argc,argv,"-log10")) operation=LOG10;
+	else if(check_param(argc,argv,"-sqrt")) operation=SQRT;
+	else if(check_for_operation(argc,argv,"-slice",fn_2,operand_type2)) operation=SLICE; 
+	else if(check_for_operation(argc,argv,"-column",fn_2,operand_type2)) operation=COLUMN; 
+	else if(check_for_operation(argc,argv,"-row",fn_2,operand_type2)) operation=ROW; 
+	else if(check_param(argc,argv,"-radial_avg")) operation=RADIAL_AVG; 
+	else 
+		REPORT_ERROR(1,"No valid operation specified");
+			  
+	compute(operation,operand_type1,operand_type2,fn_1,fn_2,fn_out);
+	  
+   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
+   
 }      
+
 
 bool check_for_operation(int argc,char **argv,char *operation,FileName &fn,int &operand_type)
 {
@@ -132,10 +137,10 @@ bool check_for_operation(int argc,char **argv,char *operation,FileName &fn,int &
 		operand_type=NUMBER;
 	 }
 	 
- 	 return true;
+ 	 return TRUE;
   }
   
-  return false;
+  return FALSE;
   
 }
 
@@ -157,10 +162,10 @@ void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,Fi
                                   division(operand_type1,operand_type2,fn_1,fn_2,fn_out);
 								  break;
 		case    LOG10:
-                                  log10(operand_type2,fn_2,fn_out);
+                                  log10(operand_type1,fn_1,fn_out);
 								  break;
 		case    SQRT:
-                                  sqrt(operand_type2,fn_2,fn_out);
+                                  sqrt(operand_type1,fn_1,fn_out);
 								  break;
 		case    SLICE:
                                   extract_slice(operand_type1,operand_type2,fn_1,fn_2,fn_out);
@@ -171,9 +176,9 @@ void compute(int operation,int operand_type1,int operand_type2,FileName &fn_1,Fi
 		case    ROW:
                                   extract_row(operand_type1,operand_type2,fn_1,fn_2,fn_out);
 								  break;
-	        case    RADIAL_AVG:
-		                  radial_avg(operand_type2,fn_2,fn_out);
-				                                  break;
+	    case    RADIAL_AVG:
+                                  radial_avg(operand_type1,fn_1,fn_out);
+				                  break;
 	}
 }
 
@@ -182,7 +187,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,false,false,true);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);	      
 	   out() = out() + number1;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -191,7 +196,7 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,false,false,true);	   
+	   out.read(fn_1,FALSE,FALSE,TRUE);	   
 	   double number2=AtoF(fn_2);   
 	   out() = out() + number2;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -200,8 +205,8 @@ void operate_plus(int operand_type1,int operand_type2,FileName &fn_1,FileName &f
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,false,false,true);
-	   out.read(fn_2,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   out()=Op1()+out();		 
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -238,7 +243,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,false,false,true);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);
 	   out()=number1-out();
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -247,7 +252,7 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,false,false,true);
+	   out.read(fn_1,FALSE,FALSE,TRUE);
 	   double number2=AtoF(fn_2);
 	   out()=out()-number2;
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -256,8 +261,8 @@ void operate_minus(int operand_type1,int operand_type2,FileName &fn_1,FileName &
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,false,false,true);
-	   out.read(fn_2,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   out()=Op1()-out();		 
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -294,7 +299,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,false,false,true);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number1;
@@ -304,7 +309,7 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,false,false,true);
+	   out.read(fn_1,FALSE,FALSE,TRUE);
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)*=number2;
@@ -314,8 +319,8 @@ void multiplication(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,false,false,true);
-	   out.read(fn_2,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 		    mul_elements(Op1(),out(), out());
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
 	   out.write(fn_out);
@@ -355,7 +360,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    if(operand_type1==NUMBER && operand_type2==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_2,false,false,true);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
 	   double number1=AtoF(fn_1);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= number1 / out(i,j);
@@ -365,7 +370,7 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    else if(operand_type1==IMAGE && operand_type2==NUMBER)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,false,false,true);
+	   out.read(fn_1,FALSE,FALSE,TRUE);
 	   double number2=AtoF(fn_2);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)= out(i,j) / number2;
@@ -375,8 +380,8 @@ void division(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn_2,
    else if(operand_type1==IMAGE && operand_type2==IMAGE)
    {
 	   ImageXmipp Op1,out;
-	   Op1.read(fn_1,false,false,true);
-	   out.read(fn_2,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
+	   out.read(fn_2,FALSE,FALSE,TRUE);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=Op1(i,j)/out(i,j);
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -418,7 +423,7 @@ void log10(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp out;	   
-	   out.read(fn_1,false,false,true);
+	   out.read(fn_1,FALSE,FALSE,TRUE);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=log10(1+out(i,j));	  
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -439,7 +444,7 @@ void sqrt(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp out;
-	   out.read(fn_1,false,false,true);
+	   out.read(fn_1,FALSE,FALSE,TRUE);
 		  FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                out(i,j)=sqrt(out(i,j));	  
 	   out.set_originOffsets(0.,0.); out.set_eulerAngles(0.,0.,0.);
@@ -504,7 +509,7 @@ void extract_column(int operand_type1,int operand_type2,FileName &fn_1,FileName 
    {
 	   ImageXmipp  Op1;
 	   ImageXmipp  out;
-	   Op1.read(fn_1,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
 	   int number2=AtoI(fn_2);
 	   // If the column requested exists
 	   if(number2>=STARTINGX(Op1()) && number2<=FINISHINGX(Op1()))
@@ -546,7 +551,7 @@ void extract_row(int operand_type1,int operand_type2,FileName &fn_1,FileName &fn
    {
 	   ImageXmipp  Op1;
 	   ImageXmipp  out;
-	   Op1.read(fn_1,false,false,true);
+	   Op1.read(fn_1,FALSE,FALSE,TRUE);
 	   int number2=AtoI(fn_2);
 	   // If the column requested exists
 	   if(number2>=STARTINGY(Op1()) && number2<=FINISHINGY(Op1()))
@@ -567,7 +572,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
    if(operand_type1==IMAGE)
    {
 	   ImageXmipp input;
-	   input.read(fn_1,false,false,true); input().set_Xmipp_origin();
+	   input.read(fn_1,FALSE,FALSE,TRUE); input().set_Xmipp_origin();
 	   matrix1D<int> center(2);
 	   center.init_zeros();
 	   matrix1D<double> radial_mean;
@@ -578,8 +583,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX2D(input()){
               my_rad=(int)ROUND(sqrt((double)(i*i+j*j)));
-	      if (my_rad>XSIZE(radial_mean)-1) my_rad-=1;
-	      MAT_ELEM(input(),i,j)=radial_mean(my_rad);
+	          input(i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
 
@@ -598,8 +602,7 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX3D(input()){
               my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k)));
-	      if (my_rad>XSIZE(radial_mean)-1) my_rad-=1;
-	      VOL_ELEM(input(),k,i,j)=radial_mean(my_rad);
+	          input(k,i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
    }   
@@ -616,14 +619,27 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 /**************************************************************************/
 void Usage() {
      cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
-	   << "Examples of binary operations : \n"	
-	   << "operate # image1.xmp + image2.xmp = image3.xmp\n"
-	   << "operate # image1.xmp + 3 = image3.xmp\n"
-	   << "operate # volume1.vol row 3 = row3.xmp\n"
-	   << "Example of a unary operation : \n"	
-	   << "operate log10 image1.xmp = image3.xmp\n"
-	   << "Currently supported operations : \n"
-	   << "Binary: + - x / slice column row\n"
-	   << "Unary: log10 sqrt radial_avg\n"
-        ;		  
+	   << " Parameters:\n"	
+	   << " -i xmipp image or volume. This is the input for the program. \n"	
+	   << " -o output of the program. An xmipp image or volue. \n"
+	   << "\n"
+	   << " CURRENTLY SUPPORTED OPERATIONS \n"
+	   << "================================\n"
+	   << " -plus <file or value>    Sums two images, volumes or adds a numerical value to an image\n"
+	   << " -minus <file or value>   Substracts two images, volumes or substracts a numerical value to an image\n"
+	   << " -mult <file or value>    Multiplies two images, volumes, or multiplies per a given number\n"
+	   << " -divide <file or value>  Divides two images, volumes, or divides per a given number\n"
+	   << " -log10                   Computes the logarithm of an image\n"
+	   << " -sqrt                    Computes the square root of an image\n"
+	   << " -slice  <value>          Extracts a given slice from a volume\n"
+	   << " -column <value>          Extracts a given column from a image or volume\n"
+	   << " -row    <value>          Extracts a given row from a image or volume\n"
+	   << " -radial_avg              Compute the radial average of an image\n"
+	   << " EXAMPLES \n"
+	   << "==========\n"
+	   << "operate -i image1 -plus image2 -o image3\n"
+	   << "operate -i image1 -mult image2 -o image3\n"
+	   << "operate -i image1 -divide 2 -o image3\n"
+	   << "operate -i image1 -sqrt -o image3\n"
+         ;		  
 } 
