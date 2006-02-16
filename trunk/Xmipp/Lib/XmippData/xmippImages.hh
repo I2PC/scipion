@@ -327,7 +327,7 @@ public:
           REPORT_ERROR(1503,"Image::write: File " + fn_img + " cannot be saved");
         };
         ImageT<T>::write(fp, reversed, image_type);
-        fclose(fp);  
+       fclose(fp);  
    }
 
    /** Write image to disk using a file pointer.
@@ -366,40 +366,14 @@ public:
    //@}
 };
 
-// Specilization to read/write complex images ------------------------------
 // Specific function to read images with complex numbers in them
 template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
-   int Ydim, int Xdim, bool reversed, Image_Type image_type)
-{
-  img.resize(Ydim,Xdim);
-  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-  {
-        float a,b;
-	// read real part of a complex number
-        FREAD (&a, sizeof(float), 1, fh, reversed);
-	// read imaginary part of a complex number 
-	FREAD (&b, sizeof(float), 1, fh, reversed);
-	// Assign the number
-        complex<double> c(a,b);
-        MULTIDIM_ELEM(img,i)=c;
-  }
-  return (true);
-}
+   int Ydim, int Xdim, bool reversed, Image_Type image_type);
 
 // Specific function to write images with complex numbers in them
 template <>
-void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type)
-{
-  FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-  {
-            float a,b;
-            a=(float) (MULTIDIM_ELEM(img,i)).real();
-	        b=(float) (MULTIDIM_ELEM(img,i)).imag();
-            FWRITE (&a, sizeof(float), 1, fh, reversed);
-	        FWRITE (&b, sizeof(float), 1, fh, reversed);
-  }
-}
+void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type);
 
 /**@name Image Speed up macros*/
 //@{
@@ -641,14 +615,14 @@ public:
        \\ Ex: IX.write("g1ta0002.spd") ---> Save as */
    virtual void write(const FileName &name = "", bool force_reversed=false) {
         FILE *fp;
-        if (name != "") ImageXmippT<T>::rename(name); 
-        if ((fp = fopen(name.c_str(), "wb")) == NULL)
+       if (name != "") ImageXmippT<T>::rename(name); 
+        if ((fp = fopen(ImageT<T>::fn_img.c_str(), "wb")) == NULL)
           REPORT_ERROR(1503,(string)"ImageXmipp::write: File "+name +
              " cannot be written");
         adjust_header();
         bool reversed=(force_reversed) ? !header.reversed():header.reversed();
         header.write(fp, force_reversed);
-        ImageT<T>::write(fp, reversed, IFLOAT);
+       ImageT<T>::write(fp, reversed, IFLOAT);
         fclose(fp);  
    }
    //@}
