@@ -397,11 +397,13 @@ while (fgets (linea, 200, file_sel) != NULL)
     for (i=0; i<sim; i++)  /**** inicializo a 0 ****/
         res_sim[i]= 0;
 
+    /*
     cout << "rad_min=" << rad_min << endl;
     cout << "rad_max=" << rad_max << endl;
     cout << "inc_int=" << inc_int << endl;
     cout << "long_int=" << long_int << endl;
-    
+    */
+
     spectro_m (nombre, rad_min, rad_max, inc_int, long_int, res_sim);
     strcpy (nom_entrada, nombre);
     strcat (nom_entrada, ".spc");
