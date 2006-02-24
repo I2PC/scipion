@@ -417,8 +417,20 @@ public:
        Be careful that first number is the Y dimension (number of rows),
        and the second the X dimension (number of columns).
        \\Ex: matrix2D<double> v1(6,3);*/
-   matrix2D(int Ydim, int Xdim)
-      {core_init(); init_shape(); resize(Ydim, Xdim);  __spcdim=2;}
+   matrix2D(int Ydim, int Xdim) {
+      core_init();
+      init_shape();
+      __m = new T[Ydim * Xdim];
+
+      if (__m == NULL)
+         REPORT_ERROR(1001, "Resize: no memory left");
+
+      xdim = Xdim;
+      ydim = Ydim;
+      __dim=xdim*ydim;
+      __spcdim = 2;
+      for (int i=0; i<__dim; i++) __m[i]=0;
+   }
 
    /** Copy constructor.
        The created matrix is a perfect copy of the input matrix but
@@ -1768,22 +1780,25 @@ template <>
 void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
    maTC &result, char operation);
 
+#ifndef __sgi
+template <>
+void matrix2D<complex<double> >::produce_spline_coeffs(
+   matrix2D<double> &coeffs, int SplineDegree) const;
+#else
 template <>
 void matrix2D<complex<double> >::produce_spline_coeffs(
    matrix2D<double> &coeffs, int SplineDegree) const {
    // *** STILL TO DO
    cerr << "Spline coefficients of a complex matrix is not implemented\n";
 }
-
+#endif
 
 /**@name Related functions
    These functions are not methods of matrix1D */
 //@{
 
 /* Geometry ---------------------------------------------------------------- */
-/**@name Geometry
-   These functions allow you to create easily R2 and R3 vectors. You must use
-   all these functions with IS_NOT_INV in \Ref{apply_geom}*/
+/**@name Geometry with matrices */
 //@{
 /** Creates a rotational matrix (3x3) for images.
     The rotation angle is in degrees.
@@ -2544,18 +2559,11 @@ template <class T>
 }
 #undef DEBUG_APPLYGEO
 
-/* Interface to numerical recipes: svbksb ---------------------------------- */
-void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
-             matrix1D<double> &b,matrix1D<double> &x) {
-   // Call to the numerical recipes routine. Results will be stored in X
-   svbksb(u.adapt_for_numerical_recipes2(),
-          w.adapt_for_numerical_recipes(),
-          v.adapt_for_numerical_recipes2(),
-          u.RowNo(),u.ColNo(),
-          b.adapt_for_numerical_recipes(),
-          x.adapt_for_numerical_recipes());
-}
-
+#ifndef __sgi
+template <>
+void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+   int Ydim,int Xdim, matrix2D< complex<double> > &result) const;
+#else
 template <>
 void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
    int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
@@ -2570,6 +2578,7 @@ void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
    RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
       MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
 }
+#endif
 
 template <> bool matrix2D< complex<double> >::IsDiagonal() const;
 template <> bool matrix2D< complex<double> >::IsScalar() const;
