@@ -412,7 +412,7 @@ public:
    void core_init() {__m=NULL; __dim=0;}
 
    /// Allocate vector memory
-   void core_allocate(int _dim) {
+   void core_allocate(long int _dim) {
       if (_dim<=0) {clear(); return;}
       __m = new T [_dim];
       if (__m != NULL) __dim = _dim;
