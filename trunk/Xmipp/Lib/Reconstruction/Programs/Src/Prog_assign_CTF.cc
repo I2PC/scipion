@@ -58,6 +58,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) {
    if (check_param(fh_param,"periodogram"))
         PSD_mode=Periodogram;
    else PSD_mode=ARMA;
+   dont_adjust_CTF      =check_param(fh_param,"dont_adjust_CTF");
 
    if (!do_not_read_files) {
       image_fn          =get_param(fh_param,"image",0);
@@ -104,6 +105,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
                << "Nside_piece=" << Nside_piece << endl;
    }
    if (PSD_mode==Periodogram) fh_param << "Periodogram=yes\n";
+   if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
   
    fh_param << endl;
    fh_param.close();
@@ -158,7 +160,10 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
 
       // Compute the average of all the small pieces and enlarge
       psd/=(Nside_piece*Nside_piece);
+      CenterFFT(piece,true);
       psd.self_scale_to_size_Bspline(3,YSIZE(piece),XSIZE(piece));
+      CenterFFT(piece,false);
+      psd.threshold("below",0,0);
 }
 
 /* Main ==================================================================== */
@@ -327,19 +332,21 @@ void Prog_assign_CTF_prm::process() {
 
          // Estimate the CTF parameters of this piece 
          adjust_CTF_prm.fn_ctf=piece_fn_root+".psd";
-         double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
+         if (!dont_adjust_CTF) {
+            double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
 
-         // If the CTF should be smaller
-         if (particle_vertical!=N_vertical ||
-             particle_horizontal!=N_horizontal) {
-             ImageXmipp ctf_model;
-             adjust_CTF_prm.generate_model(
-                particle_vertical,particle_horizontal, ctf_model());
-             ctf_model.write(piece_fn_root+".ctfmodel");
+            // If the CTF should be smaller
+            if (particle_vertical!=N_vertical ||
+                particle_horizontal!=N_horizontal) {
+                ImageXmipp ctf_model;
+                adjust_CTF_prm.generate_model(
+                   particle_vertical,particle_horizontal, ctf_model());
+                ctf_model.write(piece_fn_root+".ctfmodel");
+            }
+
+            if (compute_at_particle)
+               OutputFile_ctf << piece_fn_root+".ctfmodel" << " 1\n";
          }
-
-         if (compute_at_particle)
-            OutputFile_ctf << piece_fn_root+".ctfmodel" << " 1\n";
       }
 
       // Increment the division counter

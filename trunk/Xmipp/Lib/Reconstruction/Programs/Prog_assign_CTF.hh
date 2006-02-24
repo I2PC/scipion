@@ -73,6 +73,9 @@ public:
    int                     Nside_piece;
    /** PSD_mode */
    TPSD_mode               PSD_mode;
+   /** Don't adjust CTF.
+       That is, only compute the PSD */
+   bool                    dont_adjust_CTF;
 public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
