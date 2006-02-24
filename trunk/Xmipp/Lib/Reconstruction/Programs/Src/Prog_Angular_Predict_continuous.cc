@@ -182,6 +182,7 @@ void Prog_angular_predict_continuous_prm::get_initial_guess(
 double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
    double &shiftX, double &shiftY,
    double &rot, double &tilt, double &psi) {
+
    matrix1D<double> pose(5);
    pose(0)=rot;
    pose(1)=tilt;
@@ -199,6 +200,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
    shiftX =-pose(3); predicted_shiftX[current_image]=shiftX;
    shiftY =-pose(4); predicted_shiftY[current_image]=shiftY;
    current_image++;
+
    return cost;
 }
 
