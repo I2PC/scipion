@@ -141,7 +141,7 @@ void compute_sc_FOMs(
       int f=(int)li;
       if (sel_feat==-1 || f==sel_feat) {
          double diff    = pi-ri;
-         L2_error     += diff*diff/4;
+         L2_error     += diff*diff*0.25;
          L1_error     += ABS(diff);
          phantom_sum  += pi;
          recons_sum   += ri;
