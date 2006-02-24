@@ -376,11 +376,11 @@ public:
       if (Xdim<=0 || Ydim<=0 || Zdim<=0) {clear(); return;}
 
       // Ask for memory   
-      T* new_m=new T [Zdim*Ydim*Xdim];
+      T* new_m=new T [((long int)(Zdim))*((long int)(Ydim))*((long int)(Xdim))];
       if (new_m==NULL) REPORT_ERROR(1001,"Resize: no memory left");
 
       // Copy needed elements, fill with 0 if necessary
-      int YXdim=Ydim*Xdim;
+      long int YXdim=((long int)(Ydim))*((long int)(Xdim));
       for (int k=0; k<Zdim; k++)
          for (int i=0; i<Ydim; i++)
             for (int j=0; j<Xdim; j++) {
