@@ -31,7 +31,7 @@
 
 #include "../xmippImages.hh"
 
-#ifdef __alpha 
+#ifndef __sgi
 // Specific function to read images with complex numbers in them
 template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,

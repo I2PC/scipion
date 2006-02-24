@@ -365,7 +365,7 @@ public:
    }
    //@}
 };
-#ifdef __alpha
+#ifndef __sgi
 template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
    int Ydim, int Xdim, bool reversed, Image_Type image_type);
@@ -373,7 +373,6 @@ template <>
 void ImageT<complex<double> >::write(FILE * &fh, bool reversed, 
       Image_Type image_type);
 #else
-
 // Specific function to read images with complex numbers in them
 template <>
 bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
@@ -407,7 +406,6 @@ void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image
 	      FWRITE (&b, sizeof(float), 1, fh, reversed);
   }
 }
-
 #endif
 
 /**@name Image Speed up macros*/
