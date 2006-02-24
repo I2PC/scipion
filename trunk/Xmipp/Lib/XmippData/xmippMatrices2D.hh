@@ -429,7 +429,7 @@ public:
       ydim = Ydim;
       __dim=xdim*ydim;
       __spcdim = 2;
-      for (int i=0; i<__dim; i++) __m[i]=0;
+      for (long int i=0; i<__dim; i++) __m[i]=0;
    }
 
    /** Copy constructor.

@@ -343,7 +343,7 @@ public:
        if (__m==NULL) REPORT_ERROR(1001,"Resize: no memory left");
        __dim=XSIZE(*this)=dim;
        __spcdim=1;
-       for (int i=0; i<__dim; i++) __m[i]=0;
+       for (long int i=0; i<__dim; i++) __m[i]=0;
    }
 
    /** Copy constructor.
