@@ -28,8 +28,8 @@
 
 #include "../xmippVolumes.hh"
 
-/*
 // Specialization for complex numbers --------------------------------------
+#ifndef __sgi
 template <>
 void VolumeT<complex<double> >::read(FILE *fh,
   int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
@@ -47,10 +47,76 @@ void VolumeT<complex<double> >::read(FILE *fh,
             MULTIDIM_ELEM(img,i)=c;
   }
 }
-*/
 
+template <>
+void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
+   Volume_Type volume_type) 
+{
+   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+   {
+             float a,b;
+             a=(float) (MULTIDIM_ELEM(img,i)).real();
+             b=(float) (MULTIDIM_ELEM(img,i)).imag();
+             FWRITE (&a, sizeof(float), 1, fh, reversed);
+             FWRITE (&b, sizeof(float), 1, fh, reversed);
+   }
+}
+#endif
 
+/* Write as CCP4 ----------------------------------------------------------- */
+void write_as_CCP4(VolumeT<double> *V, const FileName &fn, double Ts) {
+   FILE *fp;
+   if (fn == "")
+      REPORT_ERROR(1,"write_as_CCP4:: Must give a filename");
 
+   if ((fp = fopen(fn.c_str(), "wb")) == NULL)
+     REPORT_ERROR(1503,"write_as_CCP4: File " + fn + " cannot be saved");
+
+   float faux;
+   int iaux;
+   #define WRITE_FAUX fwrite(&faux,sizeof(float),1,fp)
+   #define WRITE_IAUX fwrite(&iaux,sizeof(int),1,fp)
+      
+   iaux=       XSIZE((*V)());     WRITE_IAUX; //  1: NC
+   iaux=       YSIZE((*V)());     WRITE_IAUX; //  2: NR
+   iaux=       ZSIZE((*V)());     WRITE_IAUX; //  3: NS
+   iaux=       2;                 WRITE_IAUX; //  4: Mode=Real Image
+   iaux=       STARTINGX((*V)()); WRITE_IAUX; //  5: NCSTART
+   iaux=       STARTINGY((*V)()); WRITE_IAUX; //  6: NRSTART
+   iaux=       STARTINGZ((*V)()); WRITE_IAUX; //  7: NSSTART
+   iaux=       XSIZE((*V)());     WRITE_IAUX; //  8: NX
+   iaux=       YSIZE((*V)());     WRITE_IAUX; //  9: NY
+   iaux=       ZSIZE((*V)());     WRITE_IAUX; // 10: NZ
+   faux=(float)XSIZE((*V)())*Ts;  WRITE_FAUX; // 11: X length
+   faux=(float)YSIZE((*V)())*Ts;  WRITE_FAUX; // 12: Y length
+   faux=(float)ZSIZE((*V)())*Ts;  WRITE_FAUX; // 13: Z length
+   faux=(float)90.0;              WRITE_FAUX; // 14: Alpha, Cell angle
+                                  WRITE_FAUX; // 15: Beta,  Cell angle
+                                  WRITE_FAUX; // 16: Gamma, Cell angle
+   faux=(float)1.0;               WRITE_FAUX; // 17: MAPC
+   faux=(float)2.0;               WRITE_FAUX; // 18: MAPR
+   faux=(float)3.0;               WRITE_FAUX; // 19: MAPS
+
+   double minval, maxval, avgval, stddev;
+   (*V)().compute_stats(minval, maxval, avgval, stddev);
+   faux=(float)minval;            WRITE_FAUX; // 20: Minimum density value
+   faux=(float)maxval;            WRITE_FAUX; // 21: Maximum density value
+   faux=(float)avgval;            WRITE_FAUX; // 22: Mean density
+   iaux=       1;                 WRITE_IAUX; // 23: Space group number
+   iaux=       0;                 WRITE_IAUX; // 24: Bytes to store symmetry
+   iaux=       0;                 WRITE_IAUX; // 25: Skew flag (no skew)
+   for (int i=26; i<=34; i++)     WRITE_IAUX; // 26-34: Skew matrix
+   for (int i=35; i<=37; i++)     WRITE_IAUX; // 35-37: Skew translation
+   for (int i=38; i<=52; i++)     WRITE_IAUX; // 38-52: Future use
+   char map[5]="MAP "; fwrite(map,1,4,fp);    // 53: "MAP " to identify the file
+   faux=(float)1.0;               WRITE_FAUX; // 54: Machine stamp
+   faux=(float)0.0;               WRITE_FAUX; // 55: RMS deviation
+   iaux=       0;                 WRITE_IAUX; // 56: Number of labels
+   for (int i=57; i<=256; i++)    WRITE_IAUX; // 57-256: Labels
+   
+   V->write(fp, false, VFLOAT);
+   fclose(fp);  
+}
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {

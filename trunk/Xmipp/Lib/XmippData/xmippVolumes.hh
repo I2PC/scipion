@@ -299,7 +299,7 @@ public:
             double min_val, max_val;
             (*this)().compute_double_minmax(min_val,max_val);
             if (volume_type==VBYTE) a=255;
-            else                   a=65535;
+            else                    a=65535;
             a/=(max_val-min_val);
             b=min_val;
          }
@@ -332,7 +332,14 @@ public:
 
 
 // Specialization for complex numbers
-
+#ifndef __sgi
+template <>
+void VolumeT<complex<double> >::read(FILE *fh,
+  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type);
+template <>
+void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
+   Volume_Type volume_type);
+#else 
 template <>
 void VolumeT<complex<double> >::read(FILE *fh,
   int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
@@ -365,7 +372,13 @@ void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
              FWRITE (&b, sizeof(float), 1, fh, reversed);
    }
 }
+#endif
 
+/** Write a volume in CCP4 format.
+    See CCP4 format at http://www.ccp4.ac.uk/dist/html/maplib.html.
+    Ts is the sampling rate in angstroms per pixel*/
+void write_as_CCP4(VolumeT<double> *V, const FileName &fn,
+    double Ts=1);
 
 /**@name Speed up macros*/
 //@{
