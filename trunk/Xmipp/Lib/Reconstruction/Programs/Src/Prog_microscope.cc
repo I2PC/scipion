@@ -87,7 +87,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
          ctf.ctf.read(fn_ctf);
          ctf.ctf.enable_CTFnoise=false;
          ctf.ctf.Produce_Side_Info();
-         aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
+         aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
          ctf.generate_mask(aux);
          if (fn_out_pure_ctf!="")
             ctf.write_mask(fn_out_pure_ctf,2);
@@ -115,7 +115,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
          after_ctf.ctf.enable_CTF=false;
          after_ctf.ctf.read(fn_after_ctf);
          after_ctf.ctf.Produce_Side_Info();
-         aux.resize(Ydim,Xdim); aux.set_Xmipp_origin();
+         aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
          after_ctf.generate_mask(aux);
       }
       #ifdef DEBUG
@@ -140,6 +140,10 @@ void Prog_Microscope_Parameters::produce_side_info() {
 /* Apply ------------------------------------------------------------------- */
 //#define DEBUG
 void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
+   I.set_Xmipp_origin();
+   I.window(FIRST_XMIPP_INDEX(2*Ydim),FIRST_XMIPP_INDEX(2*Xdim),
+            LAST_XMIPP_INDEX (2*Ydim),LAST_XMIPP_INDEX (2*Xdim));
+
    // Add noise before CTF
    matrix2D<double> noisy;
    noisy.resize(I);
@@ -155,7 +159,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
       matrix2D<double> aux;
       ctf.ctf.DeltafU*=rnd_unif(1-defocus_change/100,1+defocus_change/100);
       ctf.ctf.DeltafV*=rnd_unif(1-defocus_change/100,1+defocus_change/100);
-      aux.init_zeros(Ydim,Xdim);
+      aux.init_zeros(2*Ydim,2*Xdim);
       ctf.generate_mask(aux);
       ctf.ctf.DeltafU=ctf.ctf.DeltafU;
       ctf.ctf.DeltafV=ctf.ctf.DeltafV;
@@ -172,5 +176,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
    noisy.init_random(0,sigma_after_CTF,"gaussian");
    if (fn_after_ctf!="") after_ctf.apply_mask_Space(noisy);
    I += noisy;
+   I.window(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
+            LAST_XMIPP_INDEX (Ydim),LAST_XMIPP_INDEX (Xdim));
 }
 #undef DEBUG
