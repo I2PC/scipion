@@ -8,6 +8,7 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Src/phantom.cc \
 	Src/projection.cc \
 	Src/volume_FOMs.cc \
+	Src/volume_labelling.cc \
 	Src/radon.cc \
 	Src/directions.cc \
 	Src/basis.cc \
