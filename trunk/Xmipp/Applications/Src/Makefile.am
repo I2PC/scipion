@@ -30,6 +30,7 @@ SUBDIRS = 2DInterpolation \
 	Angular_predict_continuous \
 	Angular_refinement \
 	ApplyGeo \
+	AppendDocFile \
 	Are_different \
 	Art \
 	Assign_angles \
@@ -118,6 +119,7 @@ SUBDIRS = 2DInterpolation \
 	Split_selfile \
 	SpAR \
 	SpARMA \
+	Spi2CCP4 \
 	Spider22CCP4 \
 	Spots2RealSpace2D \
 	SSNR \
@@ -136,6 +138,5 @@ SUBDIRS = 2DInterpolation \
 	Wbp \
 	Window \
 	Window_micrograph \
-	_Fourier \ 
 	$(OPTIONAL_PROGS)
 
