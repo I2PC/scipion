@@ -10,7 +10,7 @@
 
 AC_INIT
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Xmipp,0.9)
+AM_INIT_AUTOMAKE(Xmipp,1.0)
 AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CPP
@@ -183,6 +183,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Angular_predict_continuous/Makefile \
 	Applications/Src/Angular_refinement/Makefile \
 	Applications/Src/ApplyGeo/Makefile \
+	Applications/Src/AppendDocFile/Makefile \
 	Applications/Src/Are_different/Makefile \
 	Applications/Src/Art/Makefile \
 	Applications/Src/Assign_angles/Makefile \
@@ -275,6 +276,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/SOM/Makefile \
 	Applications/Src/SpAR/Makefile \
 	Applications/Src/SpARMA/Makefile \
+	Applications/Src/Spi2CCP4/Makefile \
 	Applications/Src/Spider22CCP4/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
 	Applications/Src/Split_selfile/Makefile \
