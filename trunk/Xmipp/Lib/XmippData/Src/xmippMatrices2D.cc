@@ -37,6 +37,7 @@
 #undef ma
 #undef maT
 // Special case for complex numbers
+#ifndef __sgi
 template <>
 ostream& operator << (ostream& ostrm, const matrix2D< complex<double> > &v) {
    if (XSIZE(v)==0 || YSIZE(v)==0)
@@ -67,6 +68,41 @@ complex<double> matrix2D< complex<double> >::interpolated_elem(
     complex<double> d0 = LIN_INTERP(fx, d00, d01);
     complex<double> d1 = LIN_INTERP(fx, d10, d11);    
     return LIN_INTERP(fy, d0, d1);
+}
+
+template <>
+void matrix2D<complex<double> >::produce_spline_coeffs(
+   matrix2D<double> &coeffs, int SplineDegree) const {
+   // *** STILL TO DO
+   cerr << "Spline coefficients of a complex matrix is not implemented\n";
+}
+
+template <>
+void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+   int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
+   matrix2D<double> re, im, scre, scim;
+   re.resize(YSIZE(*this),XSIZE(*this));
+   im.resize(YSIZE(*this),XSIZE(*this));
+   Complex2RealImag(MULTIDIM_ARRAY(*this),
+      MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),MULTIDIM_SIZE(*this));
+   re.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scre);
+   im.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scim);
+   result.resize(Ydim,Xdim);
+   RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
+      MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
+}
+#endif
+
+/* Interface to numerical recipes: svbksb ---------------------------------- */
+void svbksb(matrix2D<double> &u,matrix1D<double> &w,matrix2D<double> &v,
+             matrix1D<double> &b,matrix1D<double> &x) {
+   // Call to the numerical recipes routine. Results will be stored in X
+   svbksb(u.adapt_for_numerical_recipes2(),
+          w.adapt_for_numerical_recipes(),
+          v.adapt_for_numerical_recipes2(),
+          u.RowNo(),u.ColNo(),
+          b.adapt_for_numerical_recipes(),
+          x.adapt_for_numerical_recipes());
 }
 
 /* Solve Cx=d, nonnegative x */
