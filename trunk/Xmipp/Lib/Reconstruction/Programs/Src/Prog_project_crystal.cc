@@ -105,8 +105,9 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) {
          case 6:
             // shift file
             fn_shift=first_word(line);
-	    DF_shift_bool=true;
-            /** if (fn_shift=="NULL") maybe something shouild be checck;**/
+            if (strcmp(fn_shift.c_str(),"NULL"))
+	        DF_shift_bool=true;
+	    	
             lineNo++;
             break;
       } /* switch end */  
@@ -314,6 +315,7 @@ void project_crystal(Phantom &phantom, Projection &P,
          // coordinate system
          matrix1D<double> cell_shift(3);
          VECTOR_R3(cell_shift,cell_shiftX(i,j),cell_shiftY(i,j),0.0f);
+	 cell_shift = cell_shift*phantom.param_file_scale;
          #ifdef DEBUG
             cout << "cell_shift on deformed projection plane "
                  << cell_shift.transpose() << endl;
