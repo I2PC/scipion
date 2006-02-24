@@ -32,19 +32,22 @@ int main( int argc, char **argv ) {
   FileName fn_in,fn_out,fn_root;
   SelFile  SFin,SFout,SFtmp,SFtmp2;
   SelLine  line;
+  bool     dont_randomize;
   int N;
 
   try {
     fn_in=get_param(argc,argv,"-i");
     N=AtoI(get_param(argc,argv,"-n","2"));
     fn_root=get_param(argc,argv,"-o","");
+    dont_randomize=check_param(argc,argv,"-dont_randomize");
     if (fn_root=="") fn_root=fn_in.without_extension();
     SFin.read(fn_in);
   }  catch (Xmipp_error) {Usage(); exit(1);}
 
   try {
 
-    SFtmp=SFin.randomize();
+    if (!dont_randomize) SFtmp=SFin.randomize();
+    else                 SFtmp=SFin;
     int Nsub=ROUND((double)SFtmp.ImgNo()/N);
     for (int i=0; i<N; i++) {
       SFout.clear();
