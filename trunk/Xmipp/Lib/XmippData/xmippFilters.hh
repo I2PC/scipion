@@ -914,9 +914,11 @@ void rotational_invariant_moments(const matrix2D<double> &img,
 /** Inertia moments.
     They are measured with respect to the center of the image, and not
     with respect to the center of mass. For an image there are only two
-    inertia moments. */
+    inertia moments. v_out contains the inertia moments while
+    the columns of u contain the directions of the principal axes.*/
 void inertia_moments(const matrix2D<double> &img,
-   const matrix2D<int> *mask, matrix1D<double> &v_out);
+   const matrix2D<int> *mask, matrix1D<double> &v_out,
+   matrix2D<double> &u);
 
 /** Fill a triangle defined by three points.
     The points are supplied as a pointer to three integer positions. They can

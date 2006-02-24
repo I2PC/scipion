@@ -612,7 +612,7 @@ void rotational_invariant_moments(const matrix2D<double> &img,
 /* Inertia moments --------------------------------------------------------- */
 void inertia_moments(const matrix2D<double> &img,
    const matrix2D<int> *mask,
-   matrix1D<double> &v_out) {
+   matrix1D<double> &v_out, matrix2D<double> &u) {
    // Prepare some variables
    double m_11=0, m_02=0, m_20=0;
    double normalize_x=2.0/XSIZE(img);
@@ -637,7 +637,7 @@ void inertia_moments(const matrix2D<double> &img,
    A(0,0)=m_02;
    A(0,1)=A(1,0)=m_11;
    A(1,1)=m_20;
-   matrix2D<double> u,v;
+   matrix2D<double> v;
    svdcmp(A,u,v_out,v);
    v_out=v_out.sort();
 }   
