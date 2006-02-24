@@ -328,7 +328,7 @@ template <class T>
     Look at the documentation of effective_rage.
     */
 template <class T>
-   void reject_outliers(const T &v, double percentil_out=0.25) {
+   void reject_outliers(T &v, double percentil_out=0.25) {
    histogram1D hist;
    compute_hist(v,hist,200);
    double eff0=hist.percentil(percentil_out/2);
