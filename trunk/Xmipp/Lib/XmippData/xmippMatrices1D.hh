@@ -319,11 +319,11 @@ public:
        origin=0, size=0, no statistics, ... You can choose between a column
        vector (by default), or a row one.
        \\Ex: matrix1D<double> v1;
-       \\Ex: matrix1D<double> v1('y');
+       \\Ex: matrix1D<double> v1(true);
        \\--> both are examples of empty column vectors
-       \\Ex: matrix1D<int> v1('n');
+       \\Ex: matrix1D<int> v1(false);
        \\--> empty row vector */
-   matrix1D(const char column='y')
+   matrix1D(bool column=true)
       {core_init(); init_shape(column); __spcdim=1;}
 
    /** Dimension constructor.
@@ -336,8 +336,15 @@ public:
        \\--> both are examples of column vectors of dimensions 6
        \\Ex: matrix1D<int> v1('n');
        \\--> empty row vector */
-   matrix1D(int dim, const char column='y')
-      {core_init(); init_shape(column); resize(dim); __spcdim=1;}
+   matrix1D(int dim, bool column=true) {
+       core_init();
+       init_shape(column);
+       __m=new T [dim];
+       if (__m==NULL) REPORT_ERROR(1001,"Resize: no memory left");
+       __dim=XSIZE(*this)=dim;
+       __spcdim=1;
+       for (int i=0; i<__dim; i++) __m[i]=0;
+   }
 
    /** Copy constructor.
        The created vector is a perfect copy of the input vector but
@@ -418,11 +425,8 @@ public:
    /** Init shape.
        xdim=0, startingx=0. The column or row mode is set according to
        input argument */
-   void init_shape(const char column='y')
-      {xinit=0; xdim=0;
-       if      (column=='y') row=false;
-       else if (column=='n') row=true;
-       else    REPORT_ERROR(1004,"Not recognized type for vector creation");}
+   void init_shape(bool column=true)
+      {xinit=0; xdim=0; row=!column;}
 
    /** Copy shape.
        Copy shape variables from a pattern AND THE ARRAY IS RESIZED */
@@ -853,8 +857,7 @@ public:
 //@{
 
 /* Geometry ---------------------------------------------------------------- */
-/**@name Geometry
-   These functions allow you to create easily R2 and R3 vectors. */
+/**@name Geometry with vectors */
 //@{
 /** Creates vector in R2.
     After this function the vector is (x,y) in R2.
