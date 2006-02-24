@@ -51,6 +51,7 @@ int main (int argc,char *argv[]) {
    DocFile         DF;
    ImageXmipp      img;
    headerXmipp     head;
+   int             levels;
 
 // Check command line options ===========================================
    try {
@@ -59,6 +60,7 @@ int main (int argc,char *argv[]) {
      assign=check_param(argc,argv,"-assign");
      reset=check_param(argc,argv,"-reset");
      round_shifts=check_param(argc,argv,"-round_shifts");
+     levels=AtoI(get_param(argc,argv,"-levels","0"));
      if (!(extract || assign || reset)) REPORT_ERROR(1,"Please specify: -extract, -reset  or -assign");
 
      if (extract) {
@@ -183,6 +185,11 @@ int main (int argc,char *argv[]) {
 	   if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
 	   if (do_weights) weight = DF(ABS(col_weight)-1);
 	   if (do_mirrors) mirror=DF(ABS(col_mirror)-1);
+           // Take into account the difference due to the pyramid
+	   if (levels!=0) {
+	      xshift/=(float)pow(2.0,levels);
+	      yshift/=(float)pow(2.0,levels);
+	   }
 	   // Rounding if necessary
 	   if (round_shifts) {
 	     xshift=(float)ROUND(xshift);
@@ -227,6 +234,11 @@ int main (int argc,char *argv[]) {
 	   if (col_yshift==0 ) yshift=0.; else yshift = DF(ABS(col_yshift)-1)*sign_yshift;
 	   if (do_weights) weight = DF(ABS(col_weight)-1);
 	   if (do_mirrors) mirror=DF(ABS(col_mirror)-1);
+           // Take into account the difference due to the pyramid
+	   if (levels!=0) {
+	      xshift/=(float)pow(2.0,levels);
+	      yshift/=(float)pow(2.0,levels);
+	   }
 	   // Rounding if necessary
 	   if (round_shifts) {
 	     xshift=(float)ROUND(xshift);
@@ -278,5 +290,6 @@ void Usage() {
     printf("       [-weight <col_w=6>] : Set ML-weights (from column number col_w) \n");
     printf("       [-mirror <col_m=7>] : Set mirror-flag (from column col_m) (0=no-flip; 1=flip)\n");
     printf("       [-round_shifts]     : Round shifts to integers for extract/assign \n");
+    printf("       [-levels <n=0>]     : Levels of pyramidal reduction, n=1, 2, ...\n");
     exit(1);
 }
