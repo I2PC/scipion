@@ -153,7 +153,7 @@ void printb(ostream &o,T value) {
 //@}
 
 // Complex functions --------------------------------------------------------
-/**@name Complex functions
+/**@name Complex functions */
 //@{
     /** Real/Imaginary --> Complex.
         The output array(s) must be already resized*/
