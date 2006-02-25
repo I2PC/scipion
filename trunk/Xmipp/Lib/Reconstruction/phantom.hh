@@ -1258,8 +1258,11 @@ public:
    /// Final volume background density
    double          Background_Density;
    
-   /// Current scale
+   /// Has been the  scale applied?
    double          current_scale;
+
+   ///  Param file scale
+   double          param_file_scale;
 
    /// List with the features
    vector<Feature*> VF;
