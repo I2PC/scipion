@@ -28,7 +28,6 @@
 #include <XmippData/xmippGeometry.hh>
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-     cerr << "Inside Image\n";
      //set shifts to zero
      img.Xoff()=0.; img.Yoff()=0.;
      img.psi()=0.; if(img.tilt()==0) img.rot()=0;
