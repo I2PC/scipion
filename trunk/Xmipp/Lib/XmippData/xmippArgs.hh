@@ -109,6 +109,11 @@
 */
 int best_prec(float F, int _width);
 
+/** String (char *) --> Double.
+    \\Ex: key=AtoD(first_token(line),1602,"Error reading key"); */
+double AtoD(const char *str, int _errno=2101, string errmsg="Error in AtoD",
+      int exit=0);
+
 /** String (char *) --> Float.
     \\Ex: key=AtoF(first_token(line),1602,"Error reading key"); */
 float AtoF(const char *str, int _errno=2101, string errmsg="Error in AtoF",

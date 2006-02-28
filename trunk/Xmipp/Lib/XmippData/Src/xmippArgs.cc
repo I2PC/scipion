@@ -25,6 +25,7 @@
 #include "../xmippArgs.hh"
 #include <stdio.h>
 #include <math.h>
+#include <errno.h>
 
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
@@ -35,6 +36,23 @@
 #else
    #include <strstream.h>
 #endif
+
+// Char --> Double ========================================================
+// not a very safe implemenation but standard c function
+// do not retrieve more than 6 significative digits
+double AtoD(const char *str, int _errno, string errmsg, int exit) {
+   double retval;
+   int   ok;
+   if (str==NULL)
+      if (exit) EXIT_ERROR(_errno,errmsg);
+      else      REPORT_ERROR(_errno,errmsg);
+   ok=sscanf(str,"%lf",&retval);
+   if (ok) return retval;
+   if (exit) EXIT_ERROR(_errno,errmsg);
+   else      REPORT_ERROR(_errno,errmsg);
+   return 0;
+}
+
 
 // Char --> Float ========================================================
 float AtoF(const char *str, int _errno, string errmsg, int exit) {
