@@ -836,7 +836,8 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
    
    // Compute the inertia moments
    matrix1D<double> inertia(2);
-   inertia_moments(convex_hull,NULL,inertia);
+   matrix2D<double> inertia_axes;
+   inertia_moments(convex_hull,NULL,inertia,inertia_axes);
    _result(idx_result++)=inertia(0);
    _result(idx_result++)=inertia(1);
 
