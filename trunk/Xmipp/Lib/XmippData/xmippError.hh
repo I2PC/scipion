@@ -26,6 +26,9 @@
 #ifndef _XMIPP_ERROR
    #define _XMIPP_ERROR
 
+#include <string>
+#include <iostream>
+
 // Error handling ----------------------------------------------------------
 /**@name Error handling
    The error handling is performed in two different ways depending on the
@@ -85,7 +88,7 @@
     \\ Ex: if (...) EXIT_ERROR(1,"Error 1"); */
 #define EXIT_ERROR(nerr,ErrormMsg) _Xmipp_error(nerr,ErrormMsg) 
 
-void _Xmipp_error (const int nerr, const string &what);
+void _Xmipp_error (const int nerr, const std::string &what);
 
 #define REPORT_ERROR(nerr,ErrormMsg) throw Xmipp_error(nerr,ErrormMsg)
 /** Exception class.
@@ -100,10 +103,10 @@ void _Xmipp_error (const int nerr, const string &what);
         int       __errno;
         
         /** Message shown.*/
-        string    msg;
+        std::string    msg;
         
-        Xmipp_error(const int nerr, const string &what);
-        friend ostream& operator << (ostream& o, Xmipp_error &XE);
+        Xmipp_error(const int nerr, const std::string &what);
+        friend std::ostream& operator << (std::ostream& o, Xmipp_error &XE);
    };
 //@}
 #endif
