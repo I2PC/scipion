@@ -332,16 +332,8 @@ public:
 
 
 // Specialization for complex numbers
-#ifndef __sgi
 template <>
-void VolumeT<complex<double> >::read(FILE *fh,
-  int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type);
-template <>
-void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
-   Volume_Type volume_type);
-#else 
-template <>
-void VolumeT<complex<double> >::read(FILE *fh,
+inline void VolumeT<complex<double> >::read(FILE *fh,
   int Zdim, int Ydim, int Xdim, bool reversed, Volume_Type volume_type)
 {
   img.resize(Zdim, Ydim,Xdim);
@@ -360,7 +352,7 @@ void VolumeT<complex<double> >::read(FILE *fh,
 
 
 template <>
-void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
+inline void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
    Volume_Type volume_type) 
 {
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
@@ -372,7 +364,6 @@ void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
              FWRITE (&b, sizeof(float), 1, fh, reversed);
    }
 }
-#endif
 
 /** Write a volume in CCP4 format.
     See CCP4 format at http://www.ccp4.ac.uk/dist/html/maplib.html.

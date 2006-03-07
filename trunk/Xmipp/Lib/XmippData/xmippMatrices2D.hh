@@ -1780,18 +1780,12 @@ template <>
 void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
    maTC &result, char operation);
 
-#ifndef __sgi
 template <>
-void matrix2D<complex<double> >::produce_spline_coeffs(
-   matrix2D<double> &coeffs, int SplineDegree) const;
-#else
-template <>
-void matrix2D<complex<double> >::produce_spline_coeffs(
+inline void matrix2D<complex<double> >::produce_spline_coeffs(
    matrix2D<double> &coeffs, int SplineDegree) const {
    // *** STILL TO DO
    cerr << "Spline coefficients of a complex matrix is not implemented\n";
 }
-#endif
 
 /**@name Related functions
    These functions are not methods of matrix1D */
@@ -2559,13 +2553,8 @@ template <class T>
 }
 #undef DEBUG_APPLYGEO
 
-#ifndef __sgi
 template <>
-void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
-   int Ydim,int Xdim, matrix2D< complex<double> > &result) const;
-#else
-template <>
-void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
+inline void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
    int Ydim,int Xdim, matrix2D< complex<double> > &result) const {
    matrix2D<double> re, im, scre, scim;
    re.resize(YSIZE(*this),XSIZE(*this));
@@ -2578,7 +2567,6 @@ void matrix2D< complex<double> >::scale_to_size_Bspline(int Splinedegree,
    RealImag2Complex(MULTIDIM_ARRAY(re),MULTIDIM_ARRAY(im),
       MULTIDIM_ARRAY(result),MULTIDIM_SIZE(re));
 }
-#endif
 
 template <> bool matrix2D< complex<double> >::IsDiagonal() const;
 template <> bool matrix2D< complex<double> >::IsScalar() const;

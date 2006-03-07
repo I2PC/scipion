@@ -365,17 +365,11 @@ public:
    }
    //@}
 };
-#ifndef __sgi
-template <>
-bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
-   int Ydim, int Xdim, bool reversed, Image_Type image_type);
-template <>
-void ImageT<complex<double> >::write(FILE * &fh, bool reversed, 
-      Image_Type image_type);
-#else
+
 // Specific function to read images with complex numbers in them
+// inile to avoid multiple definitions
 template <>
-bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
+inline bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
     int Ydim, int Xdim, bool reversed, Image_Type image_type)
  {
    img.resize(Ydim,Xdim);
@@ -395,7 +389,7 @@ bool ImageT<complex<double> >::read(FILE * &fh, float fIform,
 
 // Specific function to write images with complex numbers in them
 template <>
-void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type)
+inline void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image_type)
 {
   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
   {
@@ -406,7 +400,6 @@ void ImageT<complex<double> >::write(FILE * &fh, bool reversed, Image_Type image
 	      FWRITE (&b, sizeof(float), 1, fh, reversed);
   }
 }
-#endif
 
 /**@name Image Speed up macros*/
 //@{
