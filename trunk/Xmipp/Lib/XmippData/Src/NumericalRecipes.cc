@@ -1812,6 +1812,9 @@ typedef doublereal E_f;	/* real function with -R not specified */
 
 /* undef any lower-case symbols that your C compiler predefines, e.g.: */
 
+/* asolano: confuses Portland Group compiler, doesn't seem to affect anything */
+#define Skip_f2c_Undefs
+
 #ifndef Skip_f2c_Undefs
 #undef cray
 #undef gcos
