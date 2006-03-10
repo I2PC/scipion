@@ -78,5 +78,6 @@ void Usage() {
          << "  [ -n <int=2> ]            : Number of output selfiles\n"
          << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
          << "                              output will be: rootname_<n>.sel\n"
+         << "  [ -dont_randomize ]       : Do not generate random groups\n"
     ;
 }
