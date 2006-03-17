@@ -495,6 +495,12 @@
         }
      }
 
+   /** Signal to noise ratio for 2D, process one image. freq and ssnr
+       must have correct size */
+   void my_ssnr_step(matrix2D< complex<double> > const &AverageImage,
+                     matrix2D< complex<double> > const &FTaverageSubGroup,
+	             matrix1D<double> &ssnr,matrix1D<double> &pixel, int n);
+
    /** Signal to noise ratio for 2D */
    #define NGRUPOS 20
    template <class T>
@@ -565,12 +571,6 @@
                 VEC_ELEM(ssnr,i) = NGRUPOS;
          }
      }
-
-   /** Signal to noise ratio for 2D, process one image. freq and ssnr
-       must have correct size */
-   void my_ssnr_step(matrix2D< complex<double> > const &AverageImage,
-                     matrix2D< complex<double> > const &FTaverageSubGroup,
-	             matrix1D<double> &ssnr,matrix1D<double> &pixel, int n);
 
    /** Series convolution function. Gives the convolution of two series
        given as Xmipp Vectors. Result is stored in result vector.
