@@ -28,7 +28,7 @@
 #define SHOWIMG_H
 
 #include <qwidget.h>
-#include <qmultilinedit.h>
+#include <qmultilineedit.h>
 #include <qimage.h>
 #include <qlabel.h>
 #include <qprinter.h>
