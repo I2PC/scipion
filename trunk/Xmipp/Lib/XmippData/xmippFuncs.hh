@@ -829,6 +829,11 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp,
 */
 size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
    bool reverse=false);
+
+/** Conversion little-big endian */
+#define little22bigendian(x) ByteSwap((unsigned char *) &x,sizeof(x))
+
+void ByteSwap(unsigned char * b, int n);
 //@}
 
 // More randon functions
@@ -993,11 +998,6 @@ private:
    }
 };
 //@}
-/** Conversion little-big endian conversion */
-#define little22bigendian(x) ByteSwap((unsigned char *) &x,sizeof(x))
-
-void ByteSwap(unsigned char * b, int n);
-
 
 /* End of Xmipp_funcs ------------------------------------------------------ */
 //@}
