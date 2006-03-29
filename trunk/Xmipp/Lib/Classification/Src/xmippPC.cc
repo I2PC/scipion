@@ -26,6 +26,9 @@
  ***************************************************************************/
 
 #include <strstream>
+#ifdef __sun
+  #include <ieeefp.h>
+#endif
 #include "../xmippPC.hh"
 #include "../xmippDistances.hh"
 

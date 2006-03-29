@@ -61,6 +61,9 @@
 
 #include <stdio.h>
 #include <math.h>
+#ifdef __sun
+   #include <strings.h>
+#endif
 #include "spider.h"
 #include "groe.h"
 

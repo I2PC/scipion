@@ -28,6 +28,9 @@
 //-----------------------------------------------------------------------------
 
 #include "../xmippFKCN.hh"
+#ifdef __sun
+   #include <ieeefp.h>
+#endif
 
 #pragma warning(disable:4786)
 

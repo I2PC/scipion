@@ -25,7 +25,9 @@
 
 #include "../xmippRM.hh"
 #include "../xmippDistances.hh"
-
+#ifdef __sun
+   #include <ieeefp.h>
+#endif
 
 /**
 * Calculate the Random matrix
