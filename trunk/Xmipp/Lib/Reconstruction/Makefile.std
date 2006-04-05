@@ -41,6 +41,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Src/projection.o Src/volume_FOMs.o Src/radon.o \
            Src/directions.o Src/basis.o \
            Programs/Src/Prog_project.o \
+	   Programs/Src/Prog_break_sym.o \
            Programs/Src/Prog_evaluate.o \
            Programs/Src/Prog_evaluate_FSCs.o \
            Programs/Src/recons_misc.o \
@@ -51,6 +52,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Programs/Src/Prog_Projection_Neighbourhood.o \
 	   Programs/Src/Prog_Align2d.o \
 	   Programs/Src/Prog_MLalign2D.o \
+	   Programs/Src/Prog_Refine3d.o \
 	   Programs/Src/Prog_projection_matching.o \
 	   Programs/Src/Prog_WBP.o \
 	   Programs/Src/Prog_Centilt.o \

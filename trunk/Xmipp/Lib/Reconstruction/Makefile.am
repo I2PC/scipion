@@ -44,6 +44,8 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_Angular_Predict.cc \
 	Programs/Src/Prog_Angular_Predict_continuous.cc \
 	Programs/Src/Prog_MLalign2D.cc \
+	Programs/Src/Prog_Refine3d.cc \
+	Programs/Src/Prog_break_sym.cc \
 	Programs/Src/Prog_WBP.cc \
 	Programs/Src/Prog_projection_matching.cc
 
@@ -84,6 +86,8 @@ EXTRA_DIST = blobs.hh \
 	Programs/Prog_IDR_art.hh \
 	Programs/Prog_microscope.hh \
 	Programs/Prog_MLalign2D.hh \
+	Programs/Prog_Refine3d.hh \
+	Programs/Prog_break_sym.hh \
 	Programs/Prog_project_crystal.hh \
 	Programs/Prog_project.hh \
 	Programs/Prog_projection_matching.hh \
