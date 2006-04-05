@@ -190,6 +190,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Assign_CTF/Makefile \
 	Applications/Src/Assign_multiple_CTFs/Makefile \
 	Applications/Src/BatchSOM/Makefile \
+	Applications/Src/Break_sym/Makefile \
 	Applications/Src/CCP4Spider/Makefile \
 	Applications/Src/Centilt/Makefile \
 	Applications/Src/CodeStatis/Makefile \
@@ -237,9 +238,13 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Microscope/Makefile \
 	Applications/Src/MLalign2D/Makefile \
 	Applications/Src/MLalign2D_combine/Makefile \
+	Applications/Src/MLrefine3D/Makefile \
 	Applications/Src/Morphology/Makefile \
 	Applications/Src/MPIArt/Makefile \
 	Applications/Src/MPI_WBP/Makefile \
+	Applications/Src/MPI_MLalign2D/Makefile \
+	Applications/Src/MPI_MLrefine3D/Makefile \
+	Applications/Src/MPI_Projection_matching/Makefile \
 	Applications/Src/MvSel/Makefile \
 	Applications/Src/Normalize/Makefile \
 	Applications/Src/Operate/Makefile \
