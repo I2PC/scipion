@@ -1,7 +1,7 @@
 OPTIONAL_PROGS =
 
 if BUILD_MPI
-OPTIONAL_PROGS += MPIArt MPI_WBP 
+OPTIONAL_PROGS += MPIArt MPI_WBP MPI_MLalign2D MPI_MLrefine3D MPI_Projection_matching
 endif
 
 if BUILD_TIFF
@@ -37,6 +37,7 @@ SUBDIRS = 2DInterpolation \
 	Assign_CTF \
 	Assign_multiple_CTFs \
 	BatchSOM \
+	Break_sym \
 	CCP4Spider \
 	Centilt \
 	CodeStatis \
@@ -83,6 +84,7 @@ SUBDIRS = 2DInterpolation \
 	Microscope \
 	MLalign2D \
 	MLalign2D_combine \
+	MLrefine3D \
 	Morphology \
 	MvSel \
 	Normalize \
