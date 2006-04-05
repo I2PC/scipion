@@ -1,0 +1,5 @@
+######################################################################
+PROJ = break_sym
+OBJ  = break_sym.o
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 
+
