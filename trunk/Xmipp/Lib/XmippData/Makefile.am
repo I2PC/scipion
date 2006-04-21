@@ -18,6 +18,7 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippFFT.cc \
 	Src/xmippTomogram.cc \
         Src/DESolver.cc \
+	Src/xmippDelTriang.cc \
 	Bilib/sources/changebasis.cc \
 	Bilib/sources/convert.cc \
 	Bilib/sources/dft.cc \
@@ -67,7 +68,7 @@ INCLUDES = -I$(top_srcdir)/Lib \
 EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
 	xmippArgs.hh        xmippRotationalSpectrum.hh \
 	xmippDocFiles.hh    xmippMasks.hh       xmippSelFiles.hh \
-        xmippImagic.hh \
+        xmippImagic.hh      xmippDelTriang.hh\
 	xmippFFT.hh         xmippMatrices1D.hh  xmippTomogram.hh \
 	xmippFilters.hh     xmippMatrices2D.hh  xmippTypes.hh \
 	xmippFuncs.hh       xmippMatrices3D.hh  xmippVectorial.hh \
