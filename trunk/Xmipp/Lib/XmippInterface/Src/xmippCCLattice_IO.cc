@@ -131,14 +131,13 @@ void CCLattice_IO::read(const FileName &fn) {
 		 auxX = AtoD(first_token(line));
 		 auxY = AtoD(next_token());
 		 auxCCcoeff = AtoD(next_token());
-        	 //  if(cc_max<auxCCcoeff) cc_max=auxCCcoeff;
-		 if(auxX != 0 && auxY != 0 && auxCCcoeff>Th){
+        	 if(auxX != 0 && auxY != 0){
 		       MRC_Xcoord.push_back(auxX);
 		       MRC_Ycoord.push_back(auxY);
 		       MRC_CCcoheficiente.push_back(auxCCcoeff);
 		       MRC_Xindex.push_back(x_index);
                        MRC_Yindex.push_back(y_index);
-		   }
+		  }
 	       }
 	    }
 	    catch (Xmipp_error) {
@@ -149,16 +148,18 @@ void CCLattice_IO::read(const FileName &fn) {
    // Close file
    fh_cor.close();
    #undef DEBUG
-//   #define DEBUG
+  // #define DEBUG
    #ifdef DEBUG
    cout << "cor_data vector" << endl;
-   for (int kk = 0; kk < MRC_Xcoord.size(); kk++)
-        cout << MRC_Xindex[kk] << " " 
-	     << MRC_Yindex[kk] << " ";
+   for (int kkk = 0; kkk < MRC_Xcoord.size(); kkk++)
+   {     
+      //cout << MRC_Xindex[kkk] << " " 
+	//     << MRC_Yindex[kkk] << " ";
 
-        cout << setprecision(16) << MRC_Xcoord[kk] << " " 
-	     << setprecision(16) << MRC_Ycoord[kk] << " "
-	     << setprecision(16) << MRC_CCcoheficiente[kk] << endl;   
+//        cout << setprecision(16) << MRC_Xcoord[kkk] << " " 
+	//     << setprecision(16) << MRC_Ycoord[kkk] << " "
+	  cout   << setprecision(16) << MRC_CCcoheficiente[kkk] << endl;   
+	     }
    #endif
    #undef DEBUG
 }/*  CCLattice_IO::read */
@@ -209,26 +210,5 @@ void CCLattice_IO::write(const FileName &fn) {
    fh_cor.close();
  }/*  CCLattice_IO::write */
 
-/////////////////////////////////////////////
-/*Compute diference between ideal red spots and experimental ones */
-   void CCLattice_IO::compute_shifts(vector <double> &X_shift,vector <double> &Y_shift)
-   {
-   double auxX,auxY;
-   
-   for (int kk = 0; kk < MRC_Xcoord.size(); kk++){
-	auxX=MRC_Xcoord[kk] - O[0] - MRC_Xindex[kk]*a(0) - MRC_Yindex[kk]*b(0);
-	auxY=MRC_Ycoord[kk] - O[1] - MRC_Xindex[kk]*a(1) - MRC_Yindex[kk]*b(1);
-	X_shift.push_back(auxX);
-	Y_shift.push_back(auxY);
 
-      }
-
-   #undef DEBUG
-   #define DEBUG
-   #ifdef DEBUG
-   for (int kk = 0; kk < Y_shift.size(); kk++)
-        cout << X_shift[kk] << " " 
-	     << Y_shift[kk] << " " << MRC_CCcoheficiente[kk] << endl;   
-   #endif
-   #undef DEBUG
-  }
+ 
