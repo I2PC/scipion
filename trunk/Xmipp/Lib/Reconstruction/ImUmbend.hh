@@ -49,7 +49,9 @@
 
 /////////////////////////////// DATA TYPES //////////////////////////////
 
+/**@name ImUmbend */
 
+// Struct to store corelation peak related information
 typedef struct{
 	//Lattice indexes
 	int i,j;
@@ -61,6 +63,12 @@ typedef struct{
 	bool Interp;
 }LatPoint;
 
+
+//@{
+// ImUmbend structure ----------------------------------------------------------
+/** ImUmbend class.
+    ImUmbend unbends a 2D crystal image.  
+*/
 
 class ImUmbend
 {
@@ -104,7 +112,7 @@ public:
 
 //////////////////////////// I/O functions
 
-// Read *.cor file
+/** Read *.cor file */
 void ReadMRCCord();
 
 //////////////////////////  Peaks Correspondance
@@ -113,30 +121,31 @@ void PeaksCorresp();
 
 /////////////////////////// Unbending 
 
-//Image Unbending
+/**Image Unbending*/
 void UnBending( );
 
 ///////////////////////////// Interpolation
 
-//Bilinear Interpolation from Regular grid
+/**Bilinear Interpolation from Regular grid*/
 void ShiftsInterpReg(matrix2D <double> & ,matrix2D <double> & ,LatPoint & );
 
-//Linear Interpolation from scattered data set to regular grid
+/**Linear Interpolation from scattered data set to regular grid*/
 void Scattered2Regular(matrix2D <double> & ,matrix2D <double> & ,vector <ITRIANGLE> & );
 
-//Displacement Interpolation
+/**Displacement Interpolation*/
 void ShiftsInterp( LatPoint &, vector <ITRIANGLE> & );
 
 ////////////////////////////  Triangulation
 
-//Lattice Triangulation (using DelTriang.hh)
+/**Lattice Triangulation (using DelTriang.hh)*/
 void LatTriang(vector <ITRIANGLE> & );
 
-// Returns index of triangle in vector LatTri
+/**Returns index of triangle in vector LatTri*/
 int FindNearest(LatPoint &,  vector <ITRIANGLE> & );
 
 };
-   /* Show parameters --------------------------------------------------------- */
+
+/** Show parameters */
    ostream & operator << (ostream &o, const ImUmbend &prm) {
       o << "Input Correlation File      : " << prm.FN_Correlation << endl
         << "Correlation_Peak_Threshold               : " << prm.cc_peak_factor << endl
