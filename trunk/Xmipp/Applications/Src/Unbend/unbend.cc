@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include <XmippData/xmippArgs.hh>
-#include <Reconstruction/Programs/Prog_Umbend.hh>
+#include <Reconstruction/Programs/Prog_Unbend.hh>
 
 void Usage(char *argv[]);
 

@@ -23,8 +23,8 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
-#ifndef _PROG_UMBEND_HH
-#  define _PROG_UMBEND_HH
+#ifndef _PROG_UNBEND_HH
+#  define _PROG_UNBEND_HH
 
 ///////////////////////////// COMMON LIBRARIES /////////////////////////
 #include <XmippData/xmippFuncs.hh>
@@ -35,7 +35,7 @@
 
 //////////////////////////// SPECIFIC LIBRARIES ////////////////////////
 
-#include <Reconstruction/ImUmbend.hh>
+#include <Reconstruction/ImUnbend.hh>
 
 //#include <XmippData/xmippGriddata.hh>
 
