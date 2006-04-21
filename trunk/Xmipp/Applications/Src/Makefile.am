@@ -132,7 +132,7 @@ SUBDIRS = 2DInterpolation \
 	Threshold \
 	ToPDB \
 	ToPhantom \
-	Umbend \
+	Unbend \
 	Visualize_FFT \
 	Vol2Data \
 	VolSampler \
