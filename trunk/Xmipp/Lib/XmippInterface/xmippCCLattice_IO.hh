@@ -87,12 +87,18 @@ public:
     /** Croscorrelation maximun */
    double cc_max;
      
+     
    /** Vectors to store optimal X and Y position plus croos correlation  peaks */
   //Peaks Coord.
+        //High Correlation Peaks
 	vector <double> MRC_Xcoord;
 	vector <double> MRC_Ycoord;
-	vector <int> MRC_Xindex;
-	vector <int> MRC_Yindex;
+        vector <double> MRC_Xindex;
+        vector <double> MRC_Yindex;
+	//Low Correlation Peaks
+	vector <double> MRC_XInterp;
+	vector <double> MRC_YInterp;
+        
   //Cross Correlation
 	vector <double> MRC_CCcoheficiente;
   
@@ -117,8 +123,7 @@ public:
    void write(const FileName &fn);
 
 ////////////////////////////
-/**Compute diference between ideal red spots and experimental ones */
-   void compute_shifts(vector <double> &X_shift,vector <double> &Y_shift);
+
 };
 /* Show parameters --------------------------------------------------------- */
    ostream & operator << (ostream &o, const CCLattice_IO &prm) {
