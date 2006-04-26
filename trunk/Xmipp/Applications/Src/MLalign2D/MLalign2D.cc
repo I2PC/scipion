@@ -33,13 +33,10 @@ int main(int argc, char **argv) {
   double LL,sumw_allrefs,convv,sumcorr;
   bool converged;
   vector<double> conv;
-  double aux,wsum_sigma_noise, wsum_sigma_offset,sumw_cv;
+  double aux,wsum_sigma_noise, wsum_sigma_offset;
   vector<matrix2D<double > > wsum_Mref;
-  vector<ImageXmipp> Ireg;
   vector<double> sumw,sumw_mirror;
   matrix2D<double> P_phi,Mr2,Maux;
-  vector<matrix2D<double> > Mwsum_sigma2;
-  vector<int> count_defocus;
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
   DocFile DFo,DFf;
@@ -50,7 +47,8 @@ int main(int argc, char **argv) {
   // Get input parameters
   try {
     prm.read(argc,argv);
-    // Create references from random subset averages, or read them from selfile
+    prm.show();
+    prm.produce_Side_info();
     if (prm.fn_ref=="") {
       if (prm.n_ref!=0) {
 	prm.generate_initial_references();
@@ -58,49 +56,38 @@ int main(int argc, char **argv) {
 	REPORT_ERROR(1,"Please provide -ref or -nref");
       }
     }
-    if (prm.fourier_mode) prm.estimate_initial_sigma2();
-    prm.produce_Side_info();
-    prm.show();
+    prm.produce_Side_info2();
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
     
   try {
     Maux.resize(prm.dim,prm.dim);
     Maux.set_Xmipp_origin();
-    DFo.reserve(2*prm.SF.ImgNo()+1);
-    DFf.reserve(2*prm.SFr.ImgNo()+4);
-    SFa.reserve(prm.Niter*prm.n_ref);
-    SFa.clear();
 
   // Loop over all iterations
     for (int iter=prm.istart; iter<=prm.Niter; iter++) {
 
-      if (prm.verb>0) cerr << "  multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
+      if (prm.verb>0) cerr << "  Multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
 
       for (int refno=0;refno<prm.n_ref; refno++) prm.Iold[refno]()=prm.Iref[refno]();
 
       DFo.clear();
-      if (prm.LSQ_rather_than_ML) 
+      if (prm.maxCC_rather_than_ML) 
 	DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
       else 
 	DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
 
       // Pre-calculate pdfs
-      if (!prm.LSQ_rather_than_ML) prm.calculate_pdf_phi();
+      if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
 
       // Integrate over all images
-      prm.ML_sum_over_all_images(prm.SF,prm.Iref, 
-				 LL,sumcorr,DFo, 
-				 wsum_Mref,wsum_sigma_noise,Mwsum_sigma2,
-				 sumw_cv,wsum_sigma_offset,sumw,sumw_mirror,
-				 count_defocus); 
+      prm.ML_sum_over_all_images(prm.SF,prm.Iref,LL,sumcorr,DFo,wsum_Mref,
+				 wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
 
       // Update model parameters
-      prm.update_parameters(wsum_Mref,wsum_sigma_noise, Mwsum_sigma2,
-			    sumw_cv, wsum_sigma_offset, 
-			    sumw, sumw_mirror, sumcorr, sumw_allrefs,
-			    count_defocus);    
- 
+      prm.update_parameters(wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,
+			    sumw,sumw_mirror,sumcorr,sumw_allrefs);    
+   
       // Check convergence 
       converged=prm.check_convergence(conv);
 
