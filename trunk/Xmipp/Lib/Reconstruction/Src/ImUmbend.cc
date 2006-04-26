@@ -51,7 +51,7 @@ int LatPtCompare(const void *v1,const void *v2)
 
       return (int)(p1->x - p2->x);
 }
-
+#ifdef NEVERDEFINED
 // Round of a number
 int round(double x)
 {
@@ -61,12 +61,12 @@ int round(double x)
    else return floor(x);
    
 }
+#endif
 //////////////////////////////////////////////////////////////
 //////////////////////////////  I/O FUNCTIONS
 
 void ImUmbend::ReadMRCCord()
 {
-	ExpLat.cc_peak_factor=cc_peak_factor;
 	ExpLat.read(FN_Correlation);
 	
      	return;
@@ -156,8 +156,8 @@ void ImUmbend::UnBending( )
 	// Extend Shifts to Regular Grid (MRC Coordinates)
 	// (Remove it when you find an efficient triangle search)
 	int Nh,Nk;
-	Nk=ceil(min(abs(ExpLat.dim[0]/ExpLat.a(0)),abs(ExpLat.dim[0]/ExpLat.b(0))));
-	Nh=ceil(min(abs(ExpLat.dim[1]/ExpLat.a(1)),abs(ExpLat.dim[1]/ExpLat.b(1))));
+	Nk=(int)ceil(min(abs(ExpLat.dim[0]/ExpLat.a(0)),abs(ExpLat.dim[0]/ExpLat.b(0))));
+	Nh=(int)ceil(min(abs(ExpLat.dim[1]/ExpLat.a(1)),abs(ExpLat.dim[1]/ExpLat.b(1))));
 	matrix2D <double> MatIncrX,MatIncrY;
 	MatIncrX.init_zeros(Nh,Nk);
 	MatIncrY.init_zeros(Nh,Nk);
@@ -244,13 +244,14 @@ void ImUmbend::UnBending( )
 /////////////////////////////////////////////////////
 ////////////////////////// INTERPOLATION
 
-//Bilinear Interpolation from Regular grid
+//Shifts Interpolation from Regular grid
 void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & MatIncrY,LatPoint &TargetPt)
 {
    int i,j;
    float det;
    float Tx,Ty,Ti,Tj,TiM,TjM;
    float A,A1,A2,A3,A4;
+   float ACoeff[4];
    
   
    
@@ -258,8 +259,8 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
    det=ExpLat.a(0)*ExpLat.b(1)-ExpLat.a(1)*ExpLat.b(0);   
    Tx=TargetPt.x;
    Ty=TargetPt.y;
-   j= (int) (ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det; //Coordenada x
-   i= (int) (-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det; //Coordenada y
+   j= (int) ((ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det); //Coordenada x
+   i= (int) ((-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det); //Coordenada y
    
    //Nearest neighbors
    Tj=j*ExpLat.a(0)+i*ExpLat.b(0);
@@ -268,10 +269,12 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
    TiM=(j+1)*ExpLat.a(1)+(i+1)*ExpLat.b(1);
     
    //Area computation (CHOSE INTERPOLATION method here)
-   A1=fabs(Ty-TiM)*fabs(Tx-TjM);
-   A2=fabs(Ty-TiM)*fabs(Tx-Tj);
-   A3=fabs(Ty-Ti)*fabs(Tx-TjM);
-   A4=fabs(Ty-Ti)*fabs(Tx-Tj);
+   
+   Interp2D(Tx,Ty,Ti,Tj,TiM,TjM,ACoeff);
+   A1=ACoeff[0];
+   A2=ACoeff[1];
+   A3=ACoeff[2];
+   A4=ACoeff[3];
    A=A1+A2+A3+A4;
    
    //Shift Interpolation	
@@ -294,7 +297,23 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
     
    
 }
+//2D Interpolation on Square acoording to InterpModel
+void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff)
+{
+ if(strcmp(InterpModel.c_str(),"Bessel")==0){
+      ;
+      }
+ else{
+       ACoeff[0]=fabs(Ty-TiM)*fabs(Tx-TjM);
+       ACoeff[1]=fabs(Ty-TiM)*fabs(Tx-Tj);
+       ACoeff[2]=fabs(Ty-Ti)*fabs(Tx-TjM);
+       ACoeff[3]=fabs(Ty-Ti)*fabs(Tx-Tj);
+      }      
+}
+   
 
+
+///////////////////////////////////////////////////////////////////////////
 //Linear Interpolation from scattered data set to regular grid
 void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> & MatIncrY,vector <ITRIANGLE> &LatTri)
 {
@@ -325,8 +344,8 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
    Tx=INCR_coord[k].x;
    Ty=INCR_coord[k].y;
    //index coordinates in lattice
-   j=  (int) round((ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det); //Coordenada x
-   i= (int) round((-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det); //Coordenada y
+   j=  ROUND(( ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det); //Coordenada x
+   i=  ROUND((-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det); //Coordenada y
    
      
      
@@ -345,7 +364,7 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
 }
 
 
-
+// Displacement Interpolation from Triangulation of Irregular Grid
 void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 {
 	//Interpolation Parameters
