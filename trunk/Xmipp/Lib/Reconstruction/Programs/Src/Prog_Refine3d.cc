@@ -68,7 +68,7 @@ void Prog_Refine3d_prm::read(int argc, char **argv)  {
   tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","90."));
 
   // Checks
-  if (lowpass>0.5) 
+  if (lowpass<=0 || lowpass>0.5) 
     REPORT_ERROR(1,"Digital frequency for filter should be between 0 and 0.5");
 
 }
