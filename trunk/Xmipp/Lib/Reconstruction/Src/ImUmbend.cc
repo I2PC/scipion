@@ -65,10 +65,12 @@ int round(double x)
 //////////////////////////////////////////////////////////////
 //////////////////////////////  I/O FUNCTIONS
 
+
 void ImUmbend::ReadMRCCord()
 {
-	ExpLat.read(FN_Correlation);
-	
+// This is still necessary in order to compile the package... Ask Roberto!
+//	ExpLat.read(FN_Correlation);
+	;
      	return;
 }
 
