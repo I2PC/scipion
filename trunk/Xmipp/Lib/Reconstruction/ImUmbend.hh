@@ -446,10 +446,8 @@ void LatTriang(vector <ITRIANGLE> & );
 /**Returns index of triangle in vector LatTri*/
 int FindNearest(LatPoint &,  vector <ITRIANGLE> & );
 
-};
-
 /** Show parameters */
-   ostream & operator << (ostream &o, const ImUmbend &prm) {
+   friend ostream & operator << (ostream &o, const ImUmbend &prm) {
       o << "Input Correlation File      : " << prm.FN_Correlation << endl
         << "Correlation_Peak_Threshold               : " << prm.cc_peak_factor << endl
 	<< "Input Image           :"<< prm.inImfile<< endl
@@ -457,7 +455,8 @@ int FindNearest(LatPoint &,  vector <ITRIANGLE> & );
       return o;
    };
 
-  
 //@}
+};
+
 
 #endif

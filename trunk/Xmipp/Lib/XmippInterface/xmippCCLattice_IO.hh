@@ -124,9 +124,8 @@ public:
 
 ////////////////////////////
 
-};
 /* Show parameters --------------------------------------------------------- */
-   ostream & operator << (ostream &o, const CCLattice_IO &prm) {
+   friend ostream & operator << (ostream &o, const CCLattice_IO &prm) {
    o << "astar vector              :   " << prm.a << endl
      << "bstar vector              :   " << prm.b << endl
      << "Cristal_dim               :   " << prm.dim[0] << " "
@@ -137,6 +136,7 @@ public:
      
      return o;
    } 
+};
 //@}
 
 #endif
