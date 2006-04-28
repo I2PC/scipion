@@ -1,0 +1,5 @@
+######################################################################
+PROJ = enhance_psd
+OBJ  = enhance_psd.o
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
+
