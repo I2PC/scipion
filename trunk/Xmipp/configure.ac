@@ -211,6 +211,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Draw_surface/Makefile \
 	Applications/Src/DWT/Makefile \
 	Applications/Src/Edit/Makefile \
+	Applications/Src/Enhance_PSD/Makefile \
 	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
 	Applications/Src/Evaluate_FSCs/Makefile \

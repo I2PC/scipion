@@ -58,6 +58,7 @@ SUBDIRS = 2DInterpolation \
 	DownSample \
 	Draw_surface \
 	DWT \
+        Enhance_PSD \
 	Euler \
 	Evaluate \
 	Evaluate_FSCs \

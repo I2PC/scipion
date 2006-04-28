@@ -47,7 +47,8 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_Refine3d.cc \
 	Programs/Src/Prog_break_sym.cc \
 	Programs/Src/Prog_WBP.cc \
-	Programs/Src/Prog_projection_matching.cc
+	Programs/Src/Prog_projection_matching.cc \
+	Programs/Src/Prog_Enhance_PSD.cc
 
 libXmippRecons_Interface_@host_os@_la_SOURCES = Programs/Src/Prog_Spots2RealSpace2D.cc \
 	Src/recons_spider.cc Programs/Src/Prog_Unbend.cc\
@@ -93,6 +94,7 @@ EXTRA_DIST = blobs.hh \
 	Programs/Prog_project_crystal.hh \
 	Programs/Prog_project.hh \
 	Programs/Prog_projection_matching.hh \
+	Programs/Prog_Enhance_PSD.hh \
 	Programs/Prog_Projection_Neighbourhood.hh \
 	Programs/Prog_random_phantom.hh \
 	Programs/Prog_recons_test.hh \
