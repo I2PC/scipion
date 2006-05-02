@@ -351,7 +351,7 @@ void Prog_MLalign2D_prm::produce_Side_info2() {
   // Read optimal origin offsets from fn_doc
   if (fn_doc!="") {
     DF.read(fn_doc);
-    DF.go_beginning();
+    SF.go_beginning();
     while (!SF.eof()) {
       fn_tmp=SF.NextImg();
       if (DF.search_comment(fn_tmp)) {
