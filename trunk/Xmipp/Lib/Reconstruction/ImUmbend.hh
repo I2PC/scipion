@@ -45,7 +45,9 @@
 /////////////////////////// CONSTANTS //////////////////////////////////
 
 #define BORDER_POINT 0
-static double besskernel[] = {0.0046,
+//Bessel Interpolation
+#define SIG 3
+static double B[] = {0.0046,
     0.0046,
     0.0046,
     0.0046,
