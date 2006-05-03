@@ -287,7 +287,6 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
     
    
 }
-<<<<<<< ImUmbend.cc
 //2D Interpolation on Square acoording to InterpModel
 void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff)
 {
