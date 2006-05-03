@@ -64,8 +64,7 @@
     
     
 /////////////////////////////// DATA TYPES //////////////////////////////
-
-   
+ 
 class CCLattice_IO {
 
 
@@ -90,21 +89,15 @@ public:
      
    /** Vectors to store optimal X and Y position plus croos correlation  peaks */
   //Peaks Coord.
-        //High Correlation Peaks
+        //Correlation Peaks
 	vector <double> MRC_Xcoord;
 	vector <double> MRC_Ycoord;
-        vector <double> MRC_Xindex;
-        vector <double> MRC_Yindex;
-	//Low Correlation Peaks
-	vector <double> MRC_XInterp;
-	vector <double> MRC_YInterp;
+        vector <int> MRC_Xindex;
+        vector <int> MRC_Yindex;
         
   //Cross Correlation
 	vector <double> MRC_CCcoheficiente;
   
- /** THRESHOLD OF CROSS-CORRELATION PEAK HEIGHT CALCULATED AS;
-       max of croscorrelation * FACTOR (READ FROM UNIT 5)*/
-   double cc_peak_factor; 
 
 ////////////////////////////////  FUNCTIONS //////////////////////////
   
