@@ -51,26 +51,14 @@ int LatPtCompare(const void *v1,const void *v2)
 
       return (int)(p1->x - p2->x);
 }
-#ifdef NEVERDEFINED
-// Round of a number
-int round(double x)
-{
- 
-   if((x-floor(x))>0.5)
-   return ceil(x);
-   else return floor(x);
-   
-}
-#endif
+
 //////////////////////////////////////////////////////////////
 //////////////////////////////  I/O FUNCTIONS
 
 
 void ImUmbend::ReadMRCCord()
 {
-// This is still necessary in order to compile the package... Ask Roberto!
-//	ExpLat.read(FN_Correlation);
-	;
+	ExpLat.read(FN_Correlation);
      	return;
 }
 
@@ -299,11 +287,56 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
     
    
 }
+<<<<<<< ImUmbend.cc
 //2D Interpolation on Square acoording to InterpModel
 void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff)
 {
+  double R0,h,x0,y0;
+  double Na,Nb;
+  int indR;
+  int Bdim=300;
+  
+ Na=sqrt(ExpLat.a(0)*ExpLat.a(0)+ExpLat.a(1)*ExpLat.a(1));
+ Nb=sqrt(ExpLat.b(0)*ExpLat.b(0)+ExpLat.b(1)*ExpLat.b(1));
+ 
+ h=0.01;
  if(strcmp(InterpModel.c_str(),"Bessel")==0){
-      ;
+      
+      x0=SIG*(Tx-TjM)/Na;
+      y0=SIG*(Ty-TiM)/Nb;
+      R0=sqrt(x0*x0+y0*y0);
+      indR=ROUND(R0/h);
+      if(indR<Bdim)
+        ACoeff[3]=B[indR];
+      else 
+        ACoeff[3]=0;
+      
+      x0=SIG*(Tx-Tj)/Na;
+      y0=SIG*(Ty-TiM)/Nb;
+      R0=sqrt(x0*x0+y0*y0);
+      indR=ROUND(R0/h);
+      if(indR<Bdim)
+        ACoeff[2]=B[indR];
+      else 
+        ACoeff[2]=0;
+	
+      x0=SIG*(Tx-TjM)/Na;
+      y0=SIG*(Ty-Ti)/Nb;
+      R0=sqrt(x0*x0+y0*y0);
+      indR=ROUND(R0/h);
+      if(indR<Bdim)
+        ACoeff[1]=B[indR];
+      else 
+        ACoeff[1]=0;
+      
+      x0=SIG*(Tx-Tj)/Na;
+      y0=SIG*(Ty-Ti)/Nb;
+      R0=sqrt(x0*x0+y0*y0);
+      indR=ROUND(R0/h);
+      if(indR<Bdim)
+        ACoeff[0]=B[indR];
+      else 
+        ACoeff[0]=0;
       }
  else{
        ACoeff[0]=fabs(Ty-TiM)*fabs(Tx-TjM);
@@ -313,7 +346,6 @@ void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM,
       }      
 }
    
-
 
 ///////////////////////////////////////////////////////////////////////////
 //Linear Interpolation from scattered data set to regular grid
