@@ -1,0 +1,5 @@
+######################################################################
+PROJ = exp_shift_computation
+OBJ  = exp_shift_computation.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) \
+       -l$(LIBRECONS_INTERFACE) 

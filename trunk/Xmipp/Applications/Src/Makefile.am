@@ -62,6 +62,7 @@ SUBDIRS = 2DInterpolation \
 	Euler \
 	Evaluate \
 	Evaluate_FSCs \
+	Exp_Shift_Computation \
 	FCMeans \
 	FFT \
 	FindCenter3D \

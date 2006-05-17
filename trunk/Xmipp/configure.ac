@@ -215,6 +215,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
 	Applications/Src/Evaluate_FSCs/Makefile \
+	Applications/Src/Exp_Shift_Computation/Makefile \
 	Applications/Src/FCMeans/Makefile \
 	Applications/Src/FFT/Makefile \
 	Applications/Src/FindCenter3D/Makefile \
