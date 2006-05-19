@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
       }
 
     } // end loop iterations
+    prm.write_output_files(-1,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 }
