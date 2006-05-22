@@ -191,7 +191,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Assign_multiple_CTFs/Makefile \
 	Applications/Src/BatchSOM/Makefile \
 	Applications/Src/Break_sym/Makefile \
-	Applications/Src/CCP4Spider/Makefile \
 	Applications/Src/Centilt/Makefile \
 	Applications/Src/CodeStatis/Makefile \
 	Applications/Src/Combine_stats/Makefile \
