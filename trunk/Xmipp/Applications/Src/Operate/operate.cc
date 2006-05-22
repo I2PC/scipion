@@ -578,11 +578,13 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   matrix1D<double> radial_mean;
 	   matrix1D<int> radial_count;
 	   radial_average(input(),center,radial_mean,radial_count);
-	   radial_mean.write(fn_out);  
-	   
+	   radial_mean.write(fn_out); 
+	    
+		
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX2D(input()){
-              my_rad=(int)ROUND(sqrt((double)(i*i+j*j)));
+//              my_rad=(int)ROUND(sqrt((double)(i*i+j*j))); // bug corrected by JA Velazquez-Muriel
+              my_rad=(int)floor(sqrt((double)(i*i+j*j)));
 	          input(i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
@@ -601,7 +603,8 @@ void radial_avg(int operand_type1,FileName &fn_1,FileName &fn_out)
 	   
 	   int my_rad;
 	   FOR_ALL_ELEMENTS_IN_MATRIX3D(input()){
-              my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k)));
+//              my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k))); // bug corrected by JA Velazquez-Muriel
+              my_rad=(int)floor(sqrt((double)(i*i+j*j+k*k)));
 	          input(k,i,j)=radial_mean(my_rad);
 	   }
 	   input.write(fn_out+".img");
