@@ -38,7 +38,6 @@ SUBDIRS = 2DInterpolation \
 	Assign_multiple_CTFs \
 	BatchSOM \
 	Break_sym \
-	CCP4Spider \
 	Centilt \
 	CodeStatis \
 	Combine_stats \
