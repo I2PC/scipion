@@ -36,7 +36,7 @@ DESolver::~DESolver(void)
 }
 
 void DESolver::Setup(double *min,double *max,
-						int deStrategy,double diffScale,double crossoverProb)
+   int deStrategy,double diffScale,double crossoverProb)
 {
 	int i;
 
@@ -51,6 +51,12 @@ void DESolver::Setup(double *min,double *max,
 			Element(population,i,j) = RandomUniform(min[j],max[j]);
 
 		popEnergy[i] = 1.0E20;
+/*                if (nDim>40) {
+                cout << "Setup: ";
+		for (int j=0; j < nDim; j++)
+			cout << Element(population,i,j) << " ";
+                cout << endl;
+                }*/
 	}
 
 	for (i=0; i < nDim; i++)
@@ -110,7 +116,20 @@ bool DESolver::Solve(int maxGenerations)
 	for (generation=0;(generation < maxGenerations) && !bAtSolution;generation++)
 		for (int candidate=0; candidate < nPop; candidate++)
 		{
+/*                if (nDim>40) {
+                cout << "Candidate: ";
+		for (int j=0; j < nDim; j++)
+			cout << Element(population,candidate,j) << " ";
+                cout << endl;
+                }*/
 			(this->*calcTrialSolution)(candidate);
+/*                if (nDim>40) {
+                cout << "TrialSolution: ";
+		for (int j=0; j < nDim; j++)
+			cout << trialSolution[j] << " ";
+                cout << endl;
+                }
+                cout.flush();*/
 			trialEnergy = EnergyFunction(trialSolution,bAtSolution);
 
 			if (trialEnergy < popEnergy[candidate])
