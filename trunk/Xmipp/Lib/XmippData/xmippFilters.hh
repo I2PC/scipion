@@ -823,6 +823,9 @@ else
 /** Median_filter with a 3x3 window */
     template <class T> 
        void median_filter3x3(matrix2D<T> &m,matrix2D<T> &out) {
+        int backup_startingx=STARTINGX(m);
+        int backup_startingy=STARTINGY(m);
+        STARTINGX(m)=STARTINGY(m)=0;
         matrix1D<T> v1(3),v2(3),v3(3),v4(3);
 	matrix1D<T> v(6); 
 	
@@ -874,6 +877,8 @@ else
 		   }
 		}
 	}
+        STARTINGX(m)=STARTINGX(out)=backup_startingx;
+        STARTINGY(m)=STARTINGY(out)=backup_startingy;
     }
 
 /** Mumford-Shah smoothing.
