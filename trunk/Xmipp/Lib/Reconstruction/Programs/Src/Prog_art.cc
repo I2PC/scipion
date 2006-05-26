@@ -275,7 +275,6 @@ void ART_single_step(
 
    if (fn_ctf!="" && prm.unmatched) {
       ctf.generate_mask(theo_proj());
-      ctf.correct_phase();
       ctf.apply_mask_Space(theo_proj());
    }
 
