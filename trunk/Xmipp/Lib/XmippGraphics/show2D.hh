@@ -87,6 +87,9 @@ public:
     /** Set this image as a Fourier image */
     void set_Fourier_flag() {isFourierImage=true;}
 
+    /** For CTF mode, set assign CTF file. */
+    void setAssignCTFfile(const FileName &_fn_assign);
+
     /** Flag whether or not to apply header transformation **/ 
     bool apply_geo;
  
@@ -131,6 +134,7 @@ protected:
     QLabel     *status;
     QTimer     *timer;
     int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
+    int         recomputectfmodel;
     void	Init();
     bool 	xmipp2Qt(Image& _image, bool treat_differently_left_right=false);
     bool 	Qt2xmipp(QImage &_image);
@@ -148,6 +152,10 @@ protected:
     int 	xir, yir, xfr, yfr, old_xfr, old_yfr; 
     float       spacing;    
     QMultiLineEdit *ed1;
+
+    // Assign CTF file
+    FileName    fn_assign;
+    void        recomputeCTFmodel();
 
 protected slots:
     void	newWindow();

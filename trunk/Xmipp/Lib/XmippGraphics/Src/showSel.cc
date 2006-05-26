@@ -650,3 +650,8 @@ void ShowSel::updateStatus(int i) {
    if (i>listSize) return;
    status->setText(imgnames[i].c_str());
 }
+
+// Set Assign CTF file -----------------------------------------------------
+void ShowSel::setAssignCTFfile(const FileName &_fn_assign) {
+   fn_assign=_fn_assign;
+}

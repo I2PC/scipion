@@ -26,6 +26,7 @@
 
 #include "../show2D.hh"
 #include "../showTools.hh"
+#include "../showAssignCTF.hh"
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippHistograms.hh>
 #include <XmippInterface/xmippVTK.hh>
@@ -79,6 +80,8 @@ void ImageViewer::Init()
     // Add CTF actions
     editctfmodel=options->insertItem( "Edit CTF model");
     options->setItemEnabled(editctfmodel,false);
+    recomputectfmodel=options->insertItem( "Recompute CTF model");
+    options->setItemEnabled(recomputectfmodel,false);
 
     menubar->insertSeparator();
 
@@ -279,6 +282,8 @@ void ImageViewer::doOption(int item)
        string command=(string)"xmipp_edit -i "+fn_param+" &";
        cout << command << endl;
        system(command.c_str());
+    } else if (item == recomputectfmodel) {
+       recomputeCTFmodel();
     }
 }
 
@@ -576,6 +581,8 @@ bool ImageViewer::loadImage( const char *fileName,
                   xmipp2CTF(p(),p());
                   treat_separately_left_right=true;
                   options->setItemEnabled(editctfmodel,true);
+                  if (fn_assign!="")
+                     options->setItemEnabled(recomputectfmodel,true);
                }
                tmpImage()=p();
             } else if (Is_FourierImageXmipp(filename)) {
@@ -953,4 +960,37 @@ void ImageViewer::check_file() {
       repaint();
       updateStatus();
    }
+}
+
+// Set Assign CTF file -----------------------------------------------------
+void ImageViewer::setAssignCTFfile(const FileName &_fn_assign) {
+   fn_assign=_fn_assign;
+}
+
+// Recompute CTF model -----------------------------------------------------
+void ImageViewer::recomputeCTFmodel() {
+   if (fn_assign=="") {
+      QMessageBox::about( this, "Error!", "No Assign CTF file provided\n");
+      return;
+   }
+
+   // Read the Assign CTF parameters
+   Prog_assign_CTF_prm assign_ctf_prm;
+   assign_ctf_prm.read(fn_assign);
+   
+   // Check that selfile mode
+   if (!assign_ctf_prm.selfile_mode) {
+      QMessageBox::about( this, "Error!", "CTF is not computed in selfile mode\n");
+      return;
+   }
+
+   // Get the PSD name
+   FileName fn_root=assign_ctf_prm.selfile_fn.remove_all_extensions();
+   FileName fn_psd;
+   if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+        fn_psd=fn_root+"_ARMAavg.psd";
+   else fn_psd=fn_root+"_Periodogramavg.psd";
+
+   // Show this image in a separate window to select the main parameters
+   AssignCTFViewer *prm_selector=new AssignCTFViewer(fn_psd,assign_ctf_prm);
 }

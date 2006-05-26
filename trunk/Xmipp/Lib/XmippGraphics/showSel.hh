@@ -170,9 +170,7 @@ public:
        SelFile &_SF, const char *_title);
 
     /** For CTF mode, set assign CTF file. */
-    void setAssignCTFfile(const FileName &_fn_assign) {
-       fn_assign=_fn_assign;
-    }
+    void setAssignCTFfile(const FileName &_fn_assign);
 };
 //@}
 #endif
