@@ -229,7 +229,7 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
    __output_scale=1;
    __highpass_cutoff=0.02;
    __reduction=(int)pow(2.0,__output_scale);
-   __particle_radius=25;
+   __particle_radius=110;
    __min_distance_between_particles=2*__particle_radius;
    __Nerror_models=1;
    __mask_size=4*__particle_radius;
@@ -711,14 +711,14 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
 }
 
 /* Build classification vector --------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 bool QtWidgetMicrograph::build_vector(int _x, int _y,
    matrix1D<double> &_result) {
    // First part is the foreground histogram
    // Second part is the background histogram
    // Third part is the radial mass distribution
    // The input image is supposed to be between 0 and bins-1
-   _result.init_zeros(__radial_bins*(__gray_bins-1)+7+(__numax-__numin+1));
+   _result.init_zeros(__radial_bins*(__gray_bins-1)+(__numax-__numin+1));
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
  
    if (STARTINGX(mask)+_x <STARTINGX(__piece) ) return false;
@@ -743,14 +743,10 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
    #endif
 
    matrix1D<int> radial_idx(__radial_bins);
-   matrix2D<double> biggest_component, binary_particle, particle_border;
-   matrix2D<double> convex_hull, convex_hull_border, particle;
-   biggest_component.init_zeros(YSIZE(mask),XSIZE(mask));
-   STARTINGY(biggest_component)=STARTINGY(mask);
-   STARTINGX(biggest_component)=STARTINGX(mask);
-   binary_particle=biggest_component;
-   particle=binary_particle;
-   int th_gray=FLOOR((__gray_bins-1)/3);
+   matrix2D<double> particle;
+   particle.init_zeros(YSIZE(mask),XSIZE(mask));
+   STARTINGY(particle)=STARTINGY(mask);
+   STARTINGX(particle)=STARTINGX(mask);
    
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
       int val=(int)__piece(_y+i,_x+j);
@@ -758,15 +754,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 
       // Classif 1 -> Histogram of the radial bins
       int idx0=(*__mask_classification[0])(i,j);
-      if (idx0!=-1) {
+      if (idx0!=-1)
          (*__radial_val[idx0])(radial_idx(idx0)++)=val;
-      }
 
-      // Biggest connected component
-      if (foreground && val<=th_gray) binary_particle(i,j)=1;
-      
       // Get particle
-      if (foreground)  particle(i,j)=val;
+      if (foreground) particle(i,j)=val;
 
       #ifdef DEBUG
 	 if (debug_go) {
@@ -776,39 +768,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
       #endif
    }
 
-   // Clean the binary particle
-   keep_biggest_component(binary_particle,__th1,4);
-   #ifdef DEBUG
-      savebig()=binary_particle; savebig.write("PPP3.xmp");
-   #endif
-   matrix2D<double> aux;
-   aux.init_zeros(binary_particle);
-   erode2D(binary_particle,aux,8,0,1);
-   #ifdef DEBUG
-      savebig()=aux; savebig.write("PPP31.xmp");
-   #endif
-   keep_biggest_component(aux,__th2,4);
-   #ifdef DEBUG
-      savebig()=aux; savebig.write("PPP32.xmp");
-   #endif
-   dilate2D(aux,binary_particle,8,0,1);
-   #ifdef DEBUG
-      savebig()=binary_particle; savebig.write("PPP33.xmp");
-   #endif
-   remove_small_components(binary_particle,__th3,4);
-
-   // Biggest component
-   biggest_component=binary_particle;
-   keep_biggest_component(biggest_component,__th4,4);
-   fill_binary_object(biggest_component);
-   border(biggest_component,particle_border);
-   remove_small_components(particle_border,__th5);
-
-   // Convex hull
-   random_convex_hull(particle_border,convex_hull,50);
-   border(convex_hull,convex_hull_border);
-   remove_small_components(convex_hull_border,10);
-
    // Compute the histogram of the radial bins and store them
    int idx_result=0;
    for (int i=0; i<__radial_bins; i++) {
@@ -817,29 +776,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
       for (int j=0; j<__gray_bins-1; j++)
          _result(idx_result++)=hist(j);
    }
-
-   // Compute median distance to center
-   matrix1D<double> dist_center;
-   dist_center.init_zeros((int)(convex_hull_border.sum()));
-   int idx=0;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(convex_hull_border)
-      if (convex_hull_border(i,j)) dist_center(idx++)=i*i+j*j;
-   histogram1D hist;
-   compute_hist(dist_center,hist,50);
-   _result(idx_result++)=hist.percentil(40);
-   _result(idx_result++)=hist.percentil(50);
-   _result(idx_result++)=hist.percentil(60);
-
-   // Introduce the size of the biggest component before filling the object
-   _result(idx_result++)=convex_hull.sum();
-   _result(idx_result++)=XSIZE(dist_center);
-   
-   // Compute the inertia moments
-   matrix1D<double> inertia(2);
-   matrix2D<double> inertia_axes;
-   inertia_moments(convex_hull,NULL,inertia,inertia_axes);
-   _result(idx_result++)=inertia(0);
-   _result(idx_result++)=inertia(1);
 
    // Compute the rotational spectrum
    int dr=1;
@@ -859,11 +795,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
       if (debug_go) {
 	 save.write("PPP1.xmp");
 	 savefg.write("PPP2.xmp");
-	 savebig()=binary_particle; savebig.write("PPP4.xmp");
-	 savebig()=biggest_component; savebig.write("PPP5.xmp");
-	 savebig()=particle_border; savebig.write("PPP6.xmp");
-	 savebig()=convex_hull; savebig.write("PPP7.xmp");
-	 savebig()=convex_hull_border; savebig.write("PPP8.xmp");
 	 cout << _result.transpose() << endl;
 	 cout << "Distance=" << __selection_model.distance_to_average(_result);
 	 cout << "Press any key\n"; char c; cin >> c;
