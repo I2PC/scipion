@@ -63,7 +63,10 @@ int main( int argc, char **argv ) {
        else if (check_param(argc,argv,"-spect"))   {mode=MODE_SPECT; ifirst=position_param(argc,argv,"-spect");}
        else if (check_param(argc,argv,"-som"))     {mode=MODE_SOM; ifirst=position_param(argc,argv,"-som");}
        else if (check_param(argc,argv,"-psd"))     {mode=MODE_PSD; ifirst=position_param(argc,argv,"-psd");}
-       else if (check_param(argc,argv,"-ctf"))     {mode=MODE_CTF; ifirst=position_param(argc,argv,"-ctf");}
+       else if (check_param(argc,argv,"-ctf"))     {
+          mode=MODE_CTF; ifirst=position_param(argc,argv,"-ctf");
+          fn_assign=get_param(argc,argv,"-assign","");
+       }
        else if (check_param(argc,argv,"-spectsom")){
           mode=MODE_SPECTSOM; ifirst=position_param(argc,argv,"-spectsom");
 	  fn_dat=get_param(argc,argv,"-din");
@@ -178,6 +181,7 @@ int main( int argc, char **argv ) {
        } else if (mode==MODE_CTF) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
           showimg->apply_geo=false;
+          showimg->setAssignCTFfile(fn_assign);
           showimg->loadImage( argv[i], 0, 0, ImageViewer::CTF_mode );
           showimg->show();
           shown++;
