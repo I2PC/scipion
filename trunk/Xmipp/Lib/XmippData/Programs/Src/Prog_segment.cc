@@ -141,11 +141,12 @@ void Prog_segment_prm::segment(VolumeXmipp &mask) {
    double mass_max=1;
    
    bool ok=false;
+   double th_med;
    if (!en_threshold) {
       // Perform a bracketing search until the mass is 
       // within a 0.1% of the desired mass
       do {
-         double th_med=(th_min+th_max)*0.5;
+         th_med=(th_min+th_max)*0.5;
          double mass_med=segment_threshold(&V,&mask,th_med);
          cout << "Threshold= " << th_med
               << " mass of the main piece= " << mass_med << endl;
@@ -163,6 +164,11 @@ void Prog_segment_prm::segment(VolumeXmipp &mask) {
    }
    
    // Save mask if necessary
-   if (fn_mask!="" && ok) mask.write(fn_mask);
-   if (!ok) cout << "Segment: Cannot find an appropriate threshold\n";
+   if (ok) segment_threshold(&V,&mask,th_med);
+   else {
+      cout << "An exact threshold has not been found using " << th_min
+             << " that produces " << mass_min << " voxels\n";
+      segment_threshold(&V,&mask,th_min);
+   }
+   mask.write(fn_mask);
 }
