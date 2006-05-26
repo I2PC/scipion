@@ -61,8 +61,11 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) {
    dont_adjust_CTF      =check_param(fh_param,"dont_adjust_CTF");
 
    if (!do_not_read_files) {
-      image_fn          =get_param(fh_param,"image",0);
-      selfile_fn        =get_param(fh_param,"selfile",0,"");
+      image_fn          =get_param(fh_param,"image",0,"");
+         selfile_mode=image_fn=="";
+      if (selfile_mode) micrograph_averaging=true;
+      if (selfile_mode) selfile_fn=get_param(fh_param,"selfile",0);
+      else              selfile_fn=get_param(fh_param,"selfile",0,"");
       picked_fn         =get_param(fh_param,"picked",0,"");
       FileName fn_root  =image_fn.without_extension();
       if (PSD_mode==ARMA) PSDfn_root=fn_root+"_ARMA";
@@ -87,8 +90,9 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
    bool remove_directories=directory!="";
    if (!remove_directories) aux=image_fn;
    else                     aux=directory+"/"+image_fn.remove_directories();
-   fh_param << "image="                << aux                  << endl
-            << "N_horizontal="         << N_horizontal         << endl
+   if (!selfile_mode)
+      fh_param << "image="                << aux                  << endl;
+   fh_param << "N_horizontal="         << N_horizontal         << endl
             << "N_vertical="           << N_vertical           << endl
             << "particle_horizontal="  << particle_horizontal  << endl
             << "particle_vertical="    << particle_vertical    << endl;
@@ -179,17 +183,22 @@ void Prog_assign_CTF_prm::process() {
    if (selfile_fn!="") SF.read(selfile_fn);
 
    // Open the selfile for the CTFs, if there is a selfile of particles
-   FileName fn_root=image_fn.remove_all_extensions();
+   FileName fn_root;
+   if (!selfile_mode) fn_root=image_fn.remove_all_extensions();
+   else               fn_root=selfile_fn.remove_all_extensions();
    ofstream OutputFile_ctf;
    if (selfile_fn!="") OutputFile_ctf.open(
       (selfile_fn.without_extension()+".ctf.sel").c_str());
 
    // Open the micograph
    Micrograph M_in;
-   M_in.open_micrograph(image_fn,reversed);
-   int bits=M_in.depth();
+   int bits; // Micrograph depth
    int Ydim, Xdim; // Micrograph dimensions
-   M_in.size(Xdim, Ydim);
+   if (!selfile_mode) {
+      M_in.open_micrograph(image_fn,reversed);
+      bits=M_in.depth();
+      M_in.size(Xdim, Ydim);
+   }
 
    // Compute the number of divisions --------------------------------------
    int div_Number=0;
@@ -222,10 +231,12 @@ void Prog_assign_CTF_prm::process() {
       if (particle_horizontal<=0||particle_vertical<=0)
          SF.ImgSize(particle_vertical,particle_horizontal);
    } else if (micrograph_averaging) {
-      // If averaging, allow overlap among pieces
-      div_NumberX=CEIL((double)Xdim/(N_horizontal/2))-1;
-      div_NumberY=CEIL((double)Ydim/(N_vertical  /2))-1;
-      div_Number=div_NumberX*div_NumberY;
+      if (!selfile_mode) {
+         // If averaging, allow overlap among pieces
+         div_NumberX=CEIL((double)Xdim/(N_horizontal/2))-1;
+         div_NumberY=CEIL((double)Ydim/(N_vertical  /2))-1;
+         div_Number=div_NumberX*div_NumberY;
+      } else div_Number=SF.ImgNo();
     } else {
       // If not averaging, do not allow overlap
       div_NumberX=CEIL((double)Xdim/N_horizontal);
@@ -271,21 +282,30 @@ void Prog_assign_CTF_prm::process() {
          if (i>Ydim-N_horizontal) i=Ydim-N_horizontal-1;
          if (j>Xdim-N_vertical)   j=Xdim-N_vertical-1;
       } else {
-         int Xstep=N_horizontal, Ystep=N_vertical;
-         if (micrograph_averaging) {Xstep/=2; Ystep/=2;}
-         i=((N-1)/div_NumberX)*Ystep;
-         j=((N-1)%div_NumberX)*Xstep;
+         if (!selfile_mode) {
+            int Xstep=N_horizontal, Ystep=N_vertical;
+            if (micrograph_averaging) {Xstep/=2; Ystep/=2;}
+            i=((N-1)/div_NumberX)*Ystep;
+            j=((N-1)%div_NumberX)*Xstep;
+         }
       }
       
       // test if the full piece is inside the micrograph
-      if (i+N_vertical>Ydim)   i=Ydim-N_vertical;
-      if (j+N_horizontal>Xdim) j=Xdim-N_horizontal;
+      if (!selfile_mode) {
+         if (i+N_vertical>Ydim)   i=Ydim-N_vertical;
+         if (j+N_horizontal>Xdim) j=Xdim-N_horizontal;
+      }
       
       // Extract micrograph piece ..........................................
       matrix2D<double> piece(N_vertical,N_horizontal);
-      for (int k=0; k<YSIZE(piece); k++)
-          for (int l=0; l<XSIZE(piece); l++)
-              piece(k,l)=M_in(j+l,i+k);
+      if (!selfile_mode) {
+         for (int k=0; k<YSIZE(piece); k++)
+             for (int l=0; l<XSIZE(piece); l++)
+                 piece(k,l)=M_in(j+l,i+k);
+      } else {
+         ImageXmipp I; I.read(SF.get_current_file());
+         piece=I();
+      }
       piece.statistics_adjust(0,1);
 
       // Estimate the power spectrum .......................................
@@ -350,8 +370,8 @@ void Prog_assign_CTF_prm::process() {
       }
 
       // Increment the division counter
-      N++;
-      progress_bar(N);
+      progress_bar(++N);
+      if (selfile_mode) SF.NextImg();
    }
    M_in.close_micrograph();
    progress_bar(div_Number);
@@ -380,31 +400,38 @@ void Prog_assign_CTF_prm::process() {
    if (!compute_at_particle && selfile_fn!="") {
       // Process the Selfile
       SF.go_beginning();
-      PosFile.close();
-      PosFile.open(picked_fn.c_str());
-      if (!PosFile)
-         REPORT_ERROR(1,(string)"Prog_assign_CTF_prm::process: Could not open "+
-            picked_fn+" for reading");
+      if (!selfile_mode) {
+         PosFile.close();
+         PosFile.open(picked_fn.c_str());
+         if (!PosFile)
+            REPORT_ERROR(1,(string)"Prog_assign_CTF_prm::process: Could not open "+
+               picked_fn+" for reading");
+      }
       while (!SF.eof()) {  
-         string line;
-         getline(PosFile,line);
-         while (line[0]=='#') getline(PosFile,line);
-         if (SF.Is_ACTIVE()) {
-            if (!micrograph_averaging) {
-               // Read coordinates of the particle
-               float fX, fY; sscanf(line.c_str(),"%f %f",&fX,&fY);
-               int Y = (int) fY;
-               int X = (int) fX;
+         if (!selfile_mode) {
+            string line;
+            getline(PosFile,line);
+            while (line[0]=='#') getline(PosFile,line);
+            if (SF.Is_ACTIVE()) {
+               if (!micrograph_averaging) {
+                  // Read coordinates of the particle
+                  float fX, fY; sscanf(line.c_str(),"%f %f",&fX,&fY);
+                  int Y = (int) fY;
+                  int X = (int) fX;
 
-               // Decide which is its piece
-               int idx_X=FLOOR((double)X/N_horizontal);
-               int idx_Y=FLOOR((double)Y/N_vertical);
-               int idx_piece=idx_Y*div_NumberX+idx_X+1;
-               OutputFile_ctf << PSDfn_root+ItoA(idx_piece,5)+".ctfmodel"
-                              << " 1\n";
-            } else
-               OutputFile_ctf << fn_avg.without_extension()+".ctfmodel"
-                              << " 1\n";
+                  // Decide which is its piece
+                  int idx_X=FLOOR((double)X/N_horizontal);
+                  int idx_Y=FLOOR((double)Y/N_vertical);
+                  int idx_piece=idx_Y*div_NumberX+idx_X+1;
+                  OutputFile_ctf << PSDfn_root+ItoA(idx_piece,5)+".ctfmodel"
+                                 << " 1\n";
+               } else
+                  OutputFile_ctf << fn_avg.without_extension()+".ctfmodel"
+                                 << " 1\n";
+            }
+         } else {
+            OutputFile_ctf << fn_avg.without_extension()+".ctfmodel"
+                           << " 1\n";
          }
          SF.next();
       }

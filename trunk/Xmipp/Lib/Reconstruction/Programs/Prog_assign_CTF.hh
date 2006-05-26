@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.uam.es)
+ *              Carlos Oscar Sánchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -76,6 +77,12 @@ public:
    /** Don't adjust CTF.
        That is, only compute the PSD */
    bool                    dont_adjust_CTF;
+public:
+   /** Selfile mode.
+       If image_fn finishes in .sel, then the selfile_mode is on,
+       otherwise is off */
+   bool                    selfile_mode;
+
 public:
    /** Read parameters from file.
        If do_not_read_files is TRUE then all FileNames parameters
