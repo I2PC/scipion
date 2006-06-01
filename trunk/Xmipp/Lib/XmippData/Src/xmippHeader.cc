@@ -126,6 +126,7 @@ void headerXmipp::print_hard(ostream &o) const {
 }
    
 /* Input (read) *******************************************************/
+//#define DEBUG
 int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
    bool skip_extra_checkings) {
   float tmp;
@@ -168,6 +169,9 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
      #define IS_REVERSE_TYPE(n) \
       (type_table[n][0]==file_type.c[3] && type_table[n][1]==file_type.c[2] && \
          type_table[n][2]==file_type.c[1] && type_table[n][3]==file_type.c[0])
+     #ifdef DEBUG
+        cout << "Checking correct type\n";
+     #endif
    
      for (int i=0; i<TYPE_TABLE_SIZE; i++)
          if      (IS_TYPE(i))
@@ -175,6 +179,9 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
          else if (IS_REVERSE_TYPE(i))
             {correct_type=type_table[i][4]; __reversed=true; break;}
      if (correct_type==0) return false;
+     #ifdef DEBUG
+        cout << "OK\n";
+     #endif
      
      // Now check this machine type
      file_type.f=1; if (IS_REVERSE_TYPE(5)) __reversed=!__reversed;
@@ -194,7 +201,13 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
   unsigned long usfNrow=(unsigned long) header.fNrow;
   unsigned long usfNslice=(unsigned long) header.fNslice;
   unsigned long usfHeader=(unsigned long) get_header_size();
+  #ifdef DEBUG
+     cout << "Getting Status information\n";
+  #endif
   if (fstat(fileno(fp), &info)) return false;
+  #ifdef DEBUG
+     cout << "OK\n";
+  #endif
   
   // CO: Check if it is an "aberrant" image
   if (im==IMG_XMIPP || header.fIform==1)
@@ -204,9 +217,21 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
   
   // Extra checkings
   if (!skip_extra_checkings) {
+       #ifdef DEBUG
+          cout << "Checking size\n";
+       #endif
        switch (im) {
        case IMG_XMIPP: 
          size = usfHeader + usfNcol*usfNrow*sizeof(float);
+         #ifdef DEBUG
+            cout << "usfHeader=    " << usfHeader     << endl
+	         << "usfNcol=      " << usfNcol       << endl
+	         << "usfNrow=      " << usfNrow       << endl
+		 << "computed size=" << size          << endl
+		 << "file size=    " << info.st_size  << endl
+		 << "header.fIform=" << header.fIform << endl
+	    ;
+         #endif
          if ((size != info.st_size) || (header.fIform != 1)) return false;
          else if (skip_type_check) header.fIform=1; // This is done to recover
                                                     // files which are not
@@ -251,7 +276,10 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
              (header.fIform != -7 && header.fIform != -3)) return false;
          else if (skip_type_check) header.fIform=-3;
          break;
-       }    
+       }
+       #ifdef DEBUG
+          cout << "OK\n";
+       #endif
      }
 
   /* This is Spider stuff, it's an acient trick.
@@ -269,6 +297,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
       FREAD(&tmp, sizeof(float), 1, fp, __reversed);
   return true;
 }
+#undef DEBUG
 
 /* Input (read) *******************************************************/
 
