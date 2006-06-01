@@ -338,12 +338,38 @@ int line_plane_intersection(const matrix1D<double> normal_plane,
 
 /** Euler angles --> "Euler" matrix.
     This function returns the transformation matrix associated to the
-    3 given Euler angles (in degrees). The returned matrix is the
-    following one:
-    \begin{verbatim}
-    alpha, first rotation around Z (right-hand thumb along axis)
-    beta, second rotation around Y (right-hand thumb along axis)
-    gamma, third rotation around Z (right-hand thumb too)
+    3 given Euler angles (in degrees).
+    
+    Given two coordinate systems: {\it O} and {\it N} related by the matrix 
+    {\bf M}= {\bf R}g{\bf R}b{\bf R}a (By related we mean that a point with
+    coordinates (x,y,z) in the system of coodinates {\it O} have 
+    coordinates (x',y',z')^t={\bf M}(x,y,z)^t in {\it N})
+    
+    where {\bf R}a, {\bf R}b and {\bf R}g are:
+    
+\begin{verbatim}
+         cos a    sin a   0 
+    Ra= -sin a    cos a   0
+           0        0     1
+	  
+        cos b      0    -sin b 
+    Rb=   0        1       0
+        sin b      0     cos b
+
+         cos g    sin g   0 
+    Rg= -sin g    cos g   0
+           0        0     1
+\end{verbatim}
+
+    then {\it O} will overlap {\it N} if we appy the matrix {\bf M}^-1. That is,
+    if the following rotations are performed:
+    First a rotation of angle g arround the z axis, then a rotation of angle b
+    around the new y axis and finally a rotation around the new z axis of angle
+    a.
+
+    The returned matrix is:
+    
+\begin{verbatim}
 
     ca = cos(alpha); cb = cos(beta); cg = cos(gamma);
     sa = sin(alpha); sb = sin(beta); sg = sin(gamma);
@@ -353,24 +379,9 @@ int line_plane_intersection(const matrix1D<double> normal_plane,
     A(0,0) =  cg*cc-sg*sa; A(0,1) =  cg*cs+sg*ca; A(0,2) = -cg*sb;
     A(1,0) = -sg*cc-cg*sa; A(1,1) = -sg*cs+cg*ca; A(1,2) = sg*sb;
     A(2,0) =  sc;          A(2,1) =  ss;          A(2,2) = cb;
-    \end{verbatim}
-    In the Euler matrix, the rows define a coordinate system for the
-    rotated volume, inside the volume this coordinate system is still
-    (1,0,0), (0,1,0) and (0,0,1), but in the universal coordinate system
-    the directions of these 3 vectors are defined by the rows of the
-    mentioned Euler matrix respectively. Notice that these 3 vectors are
-    the result of rotating the original universal coordinate system
-    as a block following the instructions given by the 3 Euler angles.
+   
+\end{verbatim}
 
-    This matrix can be used to relate both coordinate systems, the
-    universal one and another defined within an object which is rotated
-    after these angles
-    \begin{verbatim}
-       Rv=Euler*Ru
-    \end{verbatim}
-    that means that a universal vector (Ru) is seen in the volume coordinate
-    system as Rv.
-    
     As an implementation note you might like to know that this function
     calls always to matrix2D::resize */
 void Euler_angles2matrix(double alpha, double beta, double gamma,
