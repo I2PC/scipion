@@ -384,7 +384,7 @@ int line_plane_intersection(const matrix1D<double> normal_plane,
 
     As an implementation note you might like to know that this function
     calls always to matrix2D::resize */
-void Euler_angles2matrix(double alpha, double beta, double gamma,
+void Euler_angles2matrix(double a, double b, double g,
    matrix2D<double> &A);
    
 /** Let be two volumes f and g related by g(x,y,z) = f(D(x,y,z)) (where D is a
