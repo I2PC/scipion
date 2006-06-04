@@ -40,7 +40,6 @@ LIBDIRS         = Src Programs/Src
 SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
 	   Src/projection.o Src/volume_FOMs.o Src/radon.o \
            Src/directions.o Src/basis.o \
-	   Src/ImUmbend.o \
            Programs/Src/Prog_project.o \
 	   Programs/Src/Prog_break_sym.o \
            Programs/Src/Prog_evaluate.o \
@@ -74,7 +73,9 @@ SRC_OBJS_INRIA = Programs/Src/Prog_adjust_surface.o
 SRC_OBJS_INTERFACE = Programs/Src/Prog_Spots2RealSpace2D.o \
            Programs/Src/Prog_Spots2RealSpace3D.o \
 	   Programs/Src/Prog_Unbend.o \
-           Src/recons_spider.o  Programs/Src/Prog_recons_test.o 
+           Src/recons_spider.o  Programs/Src/Prog_recons_test.o \
+           Src/ImUmbend.o 
+
 
 
 # Main Action = Build library ----------------------------------------------
