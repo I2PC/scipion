@@ -49,15 +49,27 @@ CCP4 mrcimage;
    }
    catch (Xmipp_error XE) {cout << XE; Usage();}
   
-   ImageXmipp  I;
+   ImageXmipp   I;
+   VolumeXmipp  V;
    try {
       if(Is_ImageXmipp(fn_in)){
 	 I.read(fn_in);
 	 mrcimage.write(fn_out,I,reverse_endian);
 	 }
+      else if(Is_VolumeXmipp(fn_in)){
+	 V.read(fn_in);
+	 mrcimage.write(fn_out,V,reverse_endian);
+	 }
       else{
-	 mrcimage.read(fn_in,I,reverse_endian);
-	 I.write(fn_out);
+         mrcimage.read_header_from_file(fn_in, reverse_endian);
+         if(mrcimage.my_mrc_header.nz>1){
+	    mrcimage.read(fn_in,V,reverse_endian);
+	    V.write(fn_out);
+	    }
+	 else{
+	    mrcimage.read(fn_in,I,reverse_endian);
+	    I.write(fn_out);
+	    }
 	 }
    } catch (Xmipp_error XE) {cout << XE;}
    
