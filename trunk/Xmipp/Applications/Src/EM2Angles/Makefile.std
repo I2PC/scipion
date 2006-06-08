@@ -1,0 +1,5 @@
+######################################################################
+PROJ = EM2Angles
+OBJ  = EM2Angles.o
+LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) \
+       -l$(LIBRECONS_INTERFACE) 

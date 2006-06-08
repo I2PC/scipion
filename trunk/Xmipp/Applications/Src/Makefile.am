@@ -57,6 +57,7 @@ SUBDIRS = 2DInterpolation \
 	DownSample \
 	Draw_surface \
 	DWT \
+	EM2Angles \
         Enhance_PSD \
 	Euler \
 	Evaluate \
