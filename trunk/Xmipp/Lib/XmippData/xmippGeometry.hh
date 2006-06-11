@@ -339,49 +339,10 @@ int line_plane_intersection(const matrix1D<double> normal_plane,
 /** Euler angles --> "Euler" matrix.
     This function returns the transformation matrix associated to the
     3 given Euler angles (in degrees).
+
+    Euler angles and Euler matrix definition may be found     
+    \URL[here]{../Extra_Docs/Euler_angles2matrixB.html}
     
-    Given two coordinate systems: {\it O} and {\it N} related by the matrix 
-    {\bf M}= {\bf R}g{\bf R}b{\bf R}a (By related we mean that a point with
-    coordinates (x,y,z) in the system of coodinates {\it O} have 
-    coordinates (x',y',z')^t={\bf M}(x,y,z)^t in {\it N})
-    
-    where {\bf R}a, {\bf R}b and {\bf R}g are:
-    
-\begin{verbatim}
-         cos a    sin a   0 
-    Ra= -sin a    cos a   0
-           0        0     1
-	  
-        cos b      0    -sin b 
-    Rb=   0        1       0
-        sin b      0     cos b
-
-         cos g    sin g   0 
-    Rg= -sin g    cos g   0
-           0        0     1
-\end{verbatim}
-
-    then {\it O} will overlap {\it N} if we appy the matrix {\bf M}^-1. That is,
-    if the following rotations are performed:
-    First a rotation of angle g arround the z axis, then a rotation of angle b
-    around the new y axis and finally a rotation around the new z axis of angle
-    a.
-
-    The returned matrix is:
-    
-\begin{verbatim}
-
-    ca = cos(alpha); cb = cos(beta); cg = cos(gamma);
-    sa = sin(alpha); sb = sin(beta); sg = sin(gamma);
-    cc = cb*ca; cs = cb*sa;
-    sc = sb*ca; ss = sb*sa;
-
-    A(0,0) =  cg*cc-sg*sa; A(0,1) =  cg*cs+sg*ca; A(0,2) = -cg*sb;
-    A(1,0) = -sg*cc-cg*sa; A(1,1) = -sg*cs+cg*ca; A(1,2) = sg*sb;
-    A(2,0) =  sc;          A(2,1) =  ss;          A(2,2) = cb;
-   
-\end{verbatim}
-
     As an implementation note you might like to know that this function
     calls always to matrix2D::resize */
 void Euler_angles2matrix(double a, double b, double g,
