@@ -138,7 +138,7 @@ public:
   /** Limited search range for projection directions */
   double search_rot;
   /** Save memory options */
-  bool save_mem1, save_mem2;
+  bool save_mem1, save_mem2, save_mem3;
   /** Vectors to store old phi, theta, xoff and yoff for all images */
   vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
 
