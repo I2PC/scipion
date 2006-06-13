@@ -103,6 +103,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv)  {
   max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
   save_mem1=check_param(argc,argv,"-save_memA");
   save_mem2=check_param(argc,argv,"-save_memB");
+  save_mem3=check_param(argc,argv,"-save_memC");
   search_shift=AtoF(get_param(argc,argv,"-search_shift","999."));
   fn_doc=get_param(argc,argv,"-doc","");
 
@@ -161,7 +162,10 @@ void Prog_MLalign2D_prm::show(bool ML3D) {
     if (save_mem1) 
       cerr << "  -> Save_memory A: recalculate real-space rotations in -fast"<<endl;
     if (save_mem2) 
-      cerr << "  -> Save_memory B: limit translations to 3 sigma_offset "<<endl;
+      cerr << "  -> Save_memory B: limit translations to 3 sigma_offset "<<endl;   
+    if (save_mem3)
+      cerr << "  -> Save_memory C: do not store rotated references; rotate experimental image instead "<<endl;
+
 
     // Hidden stuff
     if (!write_intermediate) {
@@ -249,29 +253,51 @@ void Prog_MLalign2D_prm::produce_Side_info() {
   nr_exp_images=SF.ImgNo();
 
   // Set nr_psi & nr_flip and construct flipping matrices
-  psi_max=90.;
-  nr_psi=CEIL(psi_max/psi_step);
-  psi_step=psi_max/nr_psi; 
-  nr_flip=nr_nomirror_flips=4;
-  // 0, 90, 180 & 270 degree flipping, as well as mirror 
-  A.init_identity();
-  F.push_back(A);
-  A(0,0)=0.; A(1,1)=0.; A(1,0)=1.; A(0,1)=-1;
-  F.push_back(A);
-  A(0,0)=-1.; A(1,1)=-1.; A(1,0)=0.; A(0,1)=0;
-  F.push_back(A);
-  A(0,0)=0.; A(1,1)=0.; A(1,0)=-1.; A(0,1)=1;
-  F.push_back(A);
-  if (do_mirror) {
-    nr_flip=8;
-    A.init_identity(); A(0,0)=-1;
+  if (save_mem3) {
+    nr_psi=1;
+    nr_flip=nr_nomirror_flips=CEIL(360./psi_step);
+    psi_step=360./nr_psi;
+    // store all rotation (and mirror) matrices
+    FOR_ALL_FLIPS() {
+      double ang =(double)(iflip*360./nr_flip)+SMALLANGLE;
+      A=rot2D_matrix(ang);
+      F.push_back(A);
+    }
+    if (do_mirror) {
+      FOR_ALL_FLIPS() {
+        double ang =(double)(iflip*360./nr_flip);
+        A=rot2D_matrix(ang);
+        A(0,0)*=-1.;
+        A(0,1)*=-1.;
+        F.push_back(A);
+      }
+      nr_flip*=2;
+    }
+  } else {
+    psi_max=90.;
+    nr_psi=CEIL(psi_max/psi_step);
+    psi_step=psi_max/nr_psi; 
+    nr_flip=nr_nomirror_flips=4;
+    // 0, 90, 180 & 270 degree flipping, as well as mirror 
+    A.init_identity();
     F.push_back(A);
-    A(0,0)=0.; A(1,1)=0.; A(1,0)=1.; A(0,1)=1;
+    A(0,0)=0.; A(1,1)=0.; A(1,0)=1.; A(0,1)=-1;
     F.push_back(A);
-    A(0,0)=1.; A(1,1)=-1.; A(1,0)=0.; A(0,1)=0;
+    A(0,0)=-1.; A(1,1)=-1.; A(1,0)=0.; A(0,1)=0;
     F.push_back(A);
-    A(0,0)=0.; A(1,1)=0.; A(1,0)=-1.; A(0,1)=-1;
+    A(0,0)=0.; A(1,1)=0.; A(1,0)=-1.; A(0,1)=1;
     F.push_back(A);
+    if (do_mirror) {
+      nr_flip=8;
+      A.init_identity(); A(0,0)=-1;
+      F.push_back(A);
+      A(0,0)=0.; A(1,1)=0.; A(1,0)=1.; A(0,1)=1;
+      F.push_back(A);
+      A(0,0)=1.; A(1,1)=-1.; A(1,0)=0.; A(0,1)=0;
+      F.push_back(A);
+      A(0,0)=0.; A(1,1)=0.; A(1,0)=-1.; A(0,1)=-1;
+      F.push_back(A);
+    }
   }
 
   // Set some stuff for maxCC-mode
@@ -337,7 +363,7 @@ void Prog_MLalign2D_prm::produce_Side_info2() {
     img.read(SFr.NextImg(),false,false,true,false);
     img().set_Xmipp_origin();
     Iref.push_back(img);
-    Iold.push_back(img);
+    if (!save_mem3) Iold.push_back(img);
     // Default start is all equal model fractions
     alpha_k.push_back((double)1/SFr.ImgNo());
     Iref[refno].weight()=alpha_k[refno]*(double)nr_exp_images;
@@ -1380,7 +1406,10 @@ void Prog_MLalign2D_prm::maxCC_search_complete(matrix2D<double> &Mimg,
                  -(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],0,1);
   opt_offsets(1)=-(double)ioptx*DIRECT_MAT_ELEM(F[ioptflip],1,0)
                  -(double)iopty*DIRECT_MAT_ELEM(F[ioptflip],1,1);
-  opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
+  if (save_mem3)
+    opt_psi=-ioptflip*360./nr_flip-SMALLANGLE;
+  else
+    opt_psi=-psi_step*(ioptflip*nr_psi+ioptpsi)-SMALLANGLE;
 
   // Store sums of the aligned images
   Mimg.translate(opt_offsets,Maux,true);
@@ -1469,7 +1498,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 
     fn_img=SF.NextImg();
     fn_trans=fn_img.remove_directories();
-    fn_trans="offsets/"+fn_trans+".off";
+    fn_trans=fn_root+"_offsets/"+fn_trans+".off";
 
     img.read(fn_img,false,false,false,false);
     img().set_Xmipp_origin();
@@ -1481,7 +1510,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 
     // Read optimal offsets for all references from disc
     if (fast_mode || limit_trans) {
-      if (imgno==0) system(((string)"mkdir -p offsets").c_str());
+      if (imgno==0) system(((string)"mkdir -p "+fn_root+"_offsets").c_str());
       if (exists(fn_trans)) {
 	have_offsets=true;
 	read_offsets(fn_trans,allref_offsets);
