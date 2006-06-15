@@ -1516,6 +1516,7 @@ Phantom::Phantom() {
    Background_Density = 0;
    fn="";
    current_scale=1;
+   phantom_scale=1.;
 }
 
 void Phantom::clear() {
@@ -1533,6 +1534,7 @@ Phantom & Phantom::operator = (const Phantom &P) {
    xdim=P.xdim;
    ydim=P.ydim;
    zdim=P.zdim;
+   phantom_scale=P.phantom_scale;
    Background_Density=P.Background_Density;
    Sphere     *sph;
    Blob       *blo;
@@ -1669,6 +1671,7 @@ char       straux[6];
          VF.push_back(feat);
    }
    fclose(fh_phantom);
+   phantom_scale=scale;
 }
 
 /* Show whole phantom ------------------------------------------------------ */
@@ -1676,6 +1679,7 @@ ostream& operator << (ostream &o, const Phantom &P) {
    cout << "Phantom ---------------------------------------\n";
    cout << "Dimensions: " << P.xdim << " x " << P.ydim << " x " << P.zdim << endl;
    cout << "Background density: " << P.Background_Density << endl;
+   cout << "phantom_scale : " << P.phantom_scale << endl;
    for (int i=0; i<P.VF.size(); i++) o << P.VF[i];
    return o;
 }

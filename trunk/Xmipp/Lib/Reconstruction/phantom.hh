@@ -1264,6 +1264,9 @@ public:
    ///  Param file scale
    double          param_file_scale;
 
+   ///  Param file scale
+   double          phantom_scale;
+
    /// List with the features
    vector<Feature*> VF;
 public:
