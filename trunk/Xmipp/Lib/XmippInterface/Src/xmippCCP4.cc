@@ -70,6 +70,32 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed) {
    fclose(fp);
 }
 
+void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed) {
+   FILE *fp;
+
+   //fill mrc header and reverse if needed
+   fill_header_from_xmippvolume(V, reversed);
+   
+   //open file
+   if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
+     REPORT_ERROR(1503,"CCP4::write: File " + fn_out + " cannot be saved");
+
+   //write header. note that FWRITE can not be used because 
+   //floats and longs are invoved
+   if(fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
+                            SIZEOF_MRC_HEADER)
+     REPORT_ERROR(1503,"CCP4::write: Header of file " + fn_out + " cannot be saved");
+
+   //data, 
+   float f; //only float are suported
+   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V()){
+      f=(float) MULTIDIM_ELEM(V(),i);
+      FWRITE (&f, sizeof(float), 1, fp, reversed);
+      }
+   
+   fclose(fp);
+}
+
 /* ------------------------------------------------------------------------- */
 void CCP4::read(const FileName &fn_in, 
                       ImageXmipp &I, bool reversed) {
@@ -142,6 +168,78 @@ void CCP4::read(const FileName &fn_in,
 }
 
 /* ------------------------------------------------------------------------- */
+void CCP4::read(const FileName &fn_in, 
+                      VolumeXmipp &V, bool reversed) {
+
+   FILE *fp;
+   read_header_from_file(fn_in, reversed);
+   //
+   //open file
+   if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
+     REPORT_ERROR(1503,"CCP4::read: File " + fn_in + " cannot be read");
+
+   V().resize(my_mrc_header.nz,my_mrc_header.ny, my_mrc_header.nx);
+  //MRC data is made by
+   int mode_size;
+   switch ( my_mrc_header.mode ) {
+   case MODE_BYTE:
+     mode_size = sizeof(unsigned char);
+     break;
+   case MODE_SHORT:
+     mode_size = sizeof(short int);
+     break;
+   case MODE_FLOAT:
+     mode_size = sizeof(float);
+     break;
+   default:
+     REPORT_ERROR(1503,"CCP4::read: I do not know how to read this mrc file \
+     format, try the reverse_endian flag");
+     break;
+   }
+      
+
+   // Get header size
+   struct stat info;
+   if (fstat(fileno(fp), &info)) 
+      EXIT_ERROR(1,(string)"CCP4: Cannot get size of "+fn_in);
+   int header_size=info.st_size-my_mrc_header.nx*
+                                my_mrc_header.ny*
+				my_mrc_header.nz*mode_size;
+
+   // Skip header
+   fseek(fp,header_size,SEEK_SET);
+
+   switch ( my_mrc_header.mode ) {
+   case MODE_BYTE:
+      unsigned char c;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V()) {
+	 fread(&c, sizeof(unsigned char), 1, fp);
+	 MULTIDIM_ELEM(V(),i)=(double)c;
+      }
+      break;
+   case MODE_SHORT:
+      short int si;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V()) {
+	 FREAD(&si, sizeof(short int), 1, fp,reversed);
+	 MULTIDIM_ELEM(V(),i)=(double)si;
+      }
+      break;
+   case MODE_FLOAT:
+      float f;
+      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V()) {
+	 FREAD(&f, sizeof(float), 1, fp, reversed);
+	 MULTIDIM_ELEM(V(),i)=(double)f;
+      }
+     break;
+   default:
+     REPORT_ERROR(1503,"CCP4::read: I do not know how to read this mrc file format");
+     break;
+   }
+   fclose(fp);
+}
+
+
+/* ------------------------------------------------------------------------- */
 void CCP4::clear(){
    memset(&my_mrc_header, '\0', SIZEOF_MRC_HEADER);
 } /*clear*/
@@ -152,30 +250,40 @@ void CCP4::clear(){
    void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed){
     clear();
    if(reversed==false){
-    my_mrc_header.nx	= my_mrc_header.mx = I().ColNo();
-    my_mrc_header.ny	= my_mrc_header.my = I().RowNo();
-    my_mrc_header.nz	= my_mrc_header.mz = 1;
+    my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = I().ColNo();
+    my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = I().RowNo();
+    my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = 1;
     my_mrc_header.mode  = MODE_FLOAT;
     my_mrc_header.mapc  = X_AXIS; 
     my_mrc_header.mapr  = Y_AXIS; 
     my_mrc_header.maps  = Z_AXIS; 
+    my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
+    my_mrc_header.nystart = -1 * int(my_mrc_header.ny/2);
+    my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
     my_mrc_header.amin  = (float)(I().compute_min()); 
     my_mrc_header.amax  = (float)(I().compute_max()); 
     my_mrc_header.amean = (float)(I().compute_avg()); 
-    }
+   }
    else{
     my_mrc_header.nx    = I().ColNo();
     little22bigendian(my_mrc_header.nx);
-    my_mrc_header.mx	= my_mrc_header.nx;
+    my_mrc_header.xlen = my_mrc_header.mx	= my_mrc_header.nx;
 
     my_mrc_header.ny    = I().RowNo();
     little22bigendian(my_mrc_header.ny);
-    my_mrc_header.my	= my_mrc_header.ny;
+    my_mrc_header.ylen = my_mrc_header.my	= my_mrc_header.ny;
     
     my_mrc_header.nz	= 1;
     little22bigendian(my_mrc_header.nz);
-    my_mrc_header.mz	= my_mrc_header.nz;
+    my_mrc_header.zlen = my_mrc_header.mz	= my_mrc_header.nz;
    
+    my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
+    little22bigendian(my_mrc_header.nxstart);
+    my_mrc_header.nystart = -1 * int(my_mrc_header.ny/2);
+    little22bigendian(my_mrc_header.nystart);
+    my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
+    little22bigendian(my_mrc_header.nzstart);
+
     my_mrc_header.mode  = MODE_FLOAT;
     little22bigendian((my_mrc_header.mode));
     
@@ -194,7 +302,70 @@ void CCP4::clear(){
     little22bigendian(my_mrc_header.amean); 
 
     } 
+    my_mrc_header.alpha = my_mrc_header.beta = my_mrc_header.gamma =90;
 }
+
+/* ------------------------------------------------------------------------- */
+/** Fill mrc header from xmipp image. */
+   void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed){
+    clear();
+   if(reversed==false){
+    my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().ColNo();
+    my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().RowNo();
+    my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().SliNo();
+    my_mrc_header.mode  = MODE_FLOAT;
+    my_mrc_header.mapc  = X_AXIS; 
+    my_mrc_header.mapr  = Y_AXIS; 
+    my_mrc_header.maps  = Z_AXIS; 
+    my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
+    my_mrc_header.nystart = -1 * int(my_mrc_header.ny/2);
+    my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
+    my_mrc_header.amin  = (float)(V().compute_min()); 
+    my_mrc_header.amax  = (float)(V().compute_max()); 
+    my_mrc_header.amean = (float)(V().compute_avg()); 
+   }
+   else{
+    my_mrc_header.nx    = V().ColNo();
+    little22bigendian(my_mrc_header.nx);
+    my_mrc_header.xlen = my_mrc_header.mx	= my_mrc_header.nx;
+
+    my_mrc_header.ny    = V().RowNo();
+    little22bigendian(my_mrc_header.ny);
+    my_mrc_header.ylen = my_mrc_header.my	= my_mrc_header.ny;
+    
+    my_mrc_header.nz	= V().SliNo();
+    little22bigendian(my_mrc_header.nz);
+    my_mrc_header.zlen = my_mrc_header.mz	= my_mrc_header.nz;
+   
+    my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
+    little22bigendian(my_mrc_header.nxstart);
+    my_mrc_header.nystart = -1 * int(my_mrc_header.ny/2);
+    little22bigendian(my_mrc_header.nystart);
+    my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
+    little22bigendian(my_mrc_header.nzstart);
+
+    my_mrc_header.mode  = MODE_FLOAT;
+    little22bigendian((my_mrc_header.mode));
+    
+    my_mrc_header.mapc  = X_AXIS;
+    little22bigendian(my_mrc_header.mapc); 
+    my_mrc_header.mapr  = Y_AXIS;
+    little22bigendian(my_mrc_header.mapr); 
+    my_mrc_header.maps  = Z_AXIS;
+    little22bigendian(my_mrc_header.maps); 
+    
+    my_mrc_header.amin = V().compute_min();
+    little22bigendian(my_mrc_header.amin); 
+    my_mrc_header.amax = V().compute_max();
+    little22bigendian(my_mrc_header.amax); 
+    my_mrc_header.amean = V().compute_avg();
+    little22bigendian(my_mrc_header.amean); 
+
+    } 
+    my_mrc_header.alpha = my_mrc_header.beta = my_mrc_header.gamma =90;
+}
+
+
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from mrc file. */
    void CCP4::read_header_from_file(const FileName &fn_in, bool reversed){

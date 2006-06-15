@@ -32,8 +32,10 @@
 
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices2D.hh>
+#include <XmippData/xmippMatrices3D.hh>
 #include <XmippData/xmippGeometry.hh>
 #include <XmippData/xmippImages.hh>
+#include <XmippData/xmippVolumes.hh>
 #include <sys/stat.h>
 
 /**@name cp4 Files */
@@ -140,14 +142,26 @@ public:
 /** write a ccp4 2D file*/
    void write(const FileName &fn_out, const ImageXmipp &I, bool reversed=false);
 
+/** write a ccp4 3D file*/
+   void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed=false);
+
 /** read  a ccp4 2D file*/
    void read (const FileName &fn_out,  ImageXmipp &I, bool reversed=false);
+
+/** read  a ccp4 3D file*/
+   void read (const FileName &fn_out,  VolumeXmipp &V, bool reversed=false);
 
 /** Empties actual my_mrc_header structure. */
    void clear();
 
-/** Fill mrc header from xmipp image. */
+/** Fill mrc header from 2D xmipp image. */
    void fill_header_from_xmippimage(ImageXmipp I, bool reversed=false);
+
+/** Fill mrc header from 3D xmipp image. */
+   void fill_header_from_xmippvolume(VolumeXmipp I, bool reversed=false);
+
+/** Fill mrc header from 3D xmipp image. */
+   void fill_header_from_xmippimage(VolumeXmipp V, bool reversed=false);
 
 /** Fill mrc header from mrc file. */
    void CCP4::read_header_from_file(const FileName &fn_in, bool reversed=false);
