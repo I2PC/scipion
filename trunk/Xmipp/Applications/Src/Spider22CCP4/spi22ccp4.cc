@@ -45,10 +45,10 @@ CCP4 mrcimage;
    try {
        fn_in  = get_param(argc, argv, "-i");
        fn_out = get_param(argc, argv, "-o");
-       reverse_endian=check_param(argc,argv,"-reverse_endian");
+//       reverse_endian=check_param(argc,argv,"-reverse_endian");
    }
-   catch (Xmipp_error XE) {cout << XE; Usage();}
-  
+   catch (Xmipp_error XE) {cout << XE; Usage();exit(1);}
+   reverse_endian = false;
    ImageXmipp   I;
    VolumeXmipp  V;
    try {
