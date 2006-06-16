@@ -42,7 +42,7 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
 }
 
 /* Read Crystal Projection Parameters ====================================== */
-void Crystal_Projection_Parameters::read(FileName fn_crystal) {
+void Crystal_Projection_Parameters::read(FileName fn_crystal,double scale) {
    FILE    *fh_param;
    char    line[201];
    int     lineNo=0;
@@ -64,31 +64,33 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal) {
             crystal_Ydim=AtoI(next_token(),3007,
                "Prog_Project_Crystal::read: Error in Crystal Y dimension");
             lineNo++;
+	    crystal_Xdim = ROUND(scale*crystal_Xdim);
+	    crystal_Ydim = ROUND(scale*crystal_Ydim);
             break;
          case 1:
             a.resize(3);
-            XX(a)=AtoF(first_token(line),3007,
+            XX(a)=scale*AtoF(first_token(line),3007,
                "Prog_Project_Crystal::read: Error in X component of a");
-            YY(a)=AtoF(next_token(),3007,
+            YY(a)=scale*AtoF(next_token(),3007,
                "Prog_Project_Crystal::read: Error in Y component of a");
             ZZ(a)=0;
             lineNo++;
             break;
          case 2:
             b.resize(3);
-            XX(b)=AtoF(first_token(line),3007,
+            XX(b)=scale*AtoF(first_token(line),3007,
                "Prog_Project_Crystal::read: Error in X component of b");
-            YY(b)=AtoF(next_token(),3007,
+            YY(b)=scale*AtoF(next_token(),3007,
                "Prog_Project_Crystal::read: Error in Y component of b");
             ZZ(b)=0;
             lineNo++;
             break;
          case 3:
-           Nshift_dev=AtoF(first_word(line),3007,
+           Nshift_dev=scale*AtoF(first_word(line),3007,
               "Prog_Project_Parameters::read: Error in magnitude shift noise");
            auxstr=next_token();
 	   if (auxstr!=NULL)
-              Nshift_avg=AtoF(auxstr,3007,
+              Nshift_avg=scale*AtoF(auxstr,3007,
                  "Prog_Project_Parameters::read: Error in magnitude shift bias");
 	   else Nshift_avg=0;
            lineNo++;
@@ -163,7 +165,12 @@ void project_crystal(Phantom &phantom, Projection &P,
    PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
    float rot, float tilt, float psi) {
    SPEED_UP_temps;
-
+   //Scale crystal output
+//   int aux_crystal_Ydim = ROUND(prm_crystal.crystal_Ydim
+//   			   *phantom.phantom_scale);
+//   int aux_crystal_Xdim = ROUND(prm_crystal.crystal_Xdim
+//                                       *phantom.phantom_scale);
+   
    // Initialize whole crystal projection
    P.adapt_to_size(prm_crystal.crystal_Ydim,prm_crystal.crystal_Xdim);
    
@@ -315,7 +322,8 @@ void project_crystal(Phantom &phantom, Projection &P,
          // coordinate system
          matrix1D<double> cell_shift(3);
          VECTOR_R3(cell_shift,cell_shiftX(i,j),cell_shiftY(i,j),0.0f);
-	 cell_shift = cell_shift*phantom.phantom_scale;
+	 //SHIFT still pending
+	 //cell_shift = cell_shift*phantom.phantom_scale;
          #ifdef DEBUG
             cout << "cell_shift on deformed projection plane "
                  << cell_shift.transpose() << endl;

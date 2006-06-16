@@ -685,7 +685,8 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
    side.produce_Side_Info(proj_prm,prm);
 
    Crystal_Projection_Parameters crystal_proj_prm;
-   if (prm.fn_crystal!="") crystal_proj_prm.read(prm.fn_crystal);
+   if (prm.fn_crystal!="") crystal_proj_prm.read(prm.fn_crystal,
+                              (side.phantom_descr).phantom_scale);
 
    int ProjNo=0;
    if (!prm.only_create_angles) {

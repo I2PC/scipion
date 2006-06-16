@@ -84,7 +84,7 @@ public:
    /** Read projection parameters from a file.
        An exception is thrown if the file is not found or any of the
        parameters is not found in the right place.*/
-   void read(FileName fn_crystal);
+   void read(FileName fn_crystal, double scale=1.0);
 
    /** Write projection parameters to a file.
        The projection parameters are written into a file wth the same
