@@ -304,7 +304,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 	 //pero Z!!!!!!!!!!!!!!!!!!!
 	 cell_shiftZ(i,j) += ZZ(temp_vect);
    }
-   #define DEBUG
+   //#define DEBUG
    #ifdef DEBUG
       cout << "Cell inside shape "; cell_inside.print_shape(); cout << endl;
       cout << "Cell inside\n" << cell_inside << endl;
