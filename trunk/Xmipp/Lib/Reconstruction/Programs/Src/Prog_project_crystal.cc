@@ -258,35 +258,61 @@ void project_crystal(Phantom &phantom, Projection &P,
       cout << "corner2 after deformation " << corner2.transpose() << endl;
    #endif
 
-   matrix2D<double> cell_shiftX, cell_shiftY;
+   matrix2D<double> cell_shiftX, cell_shiftY, cell_shiftZ;
    matrix2D<int>    cell_inside;
    matrix2D<double> exp_shifts_matrix_X;
    matrix2D<double> exp_shifts_matrix_Y;
+   matrix2D<double> exp_shifts_matrix_Z;
 
    fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
-      prm_crystal, cell_shiftX, cell_shiftY, cell_inside,
-      exp_shifts_matrix_X, exp_shifts_matrix_Y);
+      prm_crystal, cell_shiftX, cell_shiftY, cell_shiftZ, cell_inside,
+      exp_shifts_matrix_X, exp_shifts_matrix_Y,exp_shifts_matrix_Z);
       
    // Fill a table with all exp shifts 
    init_shift_matrix(prm_crystal,cell_inside, exp_shifts_matrix_X,
-                                              exp_shifts_matrix_Y);
+                                              exp_shifts_matrix_Y,
+					      exp_shifts_matrix_Z,
+					      phantom.phantom_scale
+					      );
+   // Prepare matrices to go from uncompressed space to deformed projection
+   matrix2D<double> AE=A*P.euler;   // From uncompressed to deformed
+   matrix2D<double> AEinv=AE.inv(); // From deformed to uncompressed
    // add the shifts to the already compute values
+   matrix1D<double> temp_vect(3);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(exp_shifts_matrix_X) {
+         //these experimental shift are in phantom
+	 //coordinates, not into the projection
+	 //plane, so before adding them we need to project
+  	    temp_vect=AE*vector_R3(exp_shifts_matrix_X(i,j),
+		  	           exp_shifts_matrix_Y(i,j),
+			           exp_shifts_matrix_Z(i,j));
+	//#define DEBUG5
+	#ifdef DEBUG5
+	    if(i>0) exp_shifts_matrix_Z(i,j)=65;
+	    else  exp_shifts_matrix_Z(i,j)=0;
+	    temp_vect=AE*vector_R3(exp_shifts_matrix_X(i,j),
+			           exp_shifts_matrix_Y(i,j),
+	   		           exp_shifts_matrix_Z(i,j));
+	#endif
+	#undef DEBUG5
+				
 	 // Add experimental shifts
-	 cell_shiftX(i,j) += exp_shifts_matrix_X(i,j);
-	 cell_shiftY(i,j) += exp_shifts_matrix_Y(i,j);
+	 //so far temp_vect(i,j) = exp_shifts_matrix_Z(i,j);
+	 cell_shiftX(i,j) += XX(temp_vect);
+	 cell_shiftY(i,j) += YY(temp_vect);
+	 //entiendo que x e y deban estar en el plano de la proyeccion
+	 //pero Z!!!!!!!!!!!!!!!!!!!
+	 cell_shiftZ(i,j) += ZZ(temp_vect);
    }
-  
+   #define DEBUG
    #ifdef DEBUG
       cout << "Cell inside shape "; cell_inside.print_shape(); cout << endl;
       cout << "Cell inside\n" << cell_inside << endl;
       cout << "Cell shiftX\n" << cell_shiftX << endl;
       cout << "Cell shiftY\n" << cell_shiftY << endl;
+      cout << "Cell shiftZ\n" << cell_shiftZ << endl;
    #endif
-
-   // Prepare matrices to go from uncompressed space to deformed projection
-   matrix2D<double> AE=A*P.euler;   // From uncompressed to deformed
-   matrix2D<double> AEinv=AE.inv(); // From deformed to uncompressed
+   //#undef DEBUG
 
    double density_factor=1.0;
    if (prm_crystal.orthogonal) {
@@ -321,7 +347,7 @@ void project_crystal(Phantom &phantom, Projection &P,
          // that is why they have to be translated to the Universal
          // coordinate system
          matrix1D<double> cell_shift(3);
-         VECTOR_R3(cell_shift,cell_shiftX(i,j),cell_shiftY(i,j),0.0f);
+         VECTOR_R3(cell_shift,cell_shiftX(i,j),cell_shiftY(i,j),cell_shiftZ(i,j));
 	 //SHIFT still pending
 	 //cell_shift = cell_shift*phantom.phantom_scale;
          #ifdef DEBUG
@@ -479,9 +505,11 @@ void fill_cell_positions(Projection &P,
    const Crystal_Projection_Parameters &prm_crystal,
    matrix2D<double> &cell_shiftX,
    matrix2D<double> &cell_shiftY,
+   matrix2D<double> &cell_shiftZ,
    matrix2D<int>    &cell_inside,
    matrix2D<double> &exp_shifts_matrix_X,
-   matrix2D<double> &exp_shifts_matrix_Y) {
+   matrix2D<double> &exp_shifts_matrix_Y,
+   matrix2D<double> &exp_shifts_matrix_Z) {
 
    // Compute crystal limits
    int iamin, iamax, ibmin, ibmax;
@@ -509,6 +537,8 @@ void fill_cell_positions(Projection &P,
    cell_shiftX.init_zeros(ibmax-ibmin+1,iamax-iamin+1);
    STARTINGX(cell_shiftX)=iamin; STARTINGY(cell_shiftX)=ibmin;
    cell_shiftY.init_zeros(cell_shiftX);
+   //in this routine cell_shiftZ is set to zero and nothing else 
+   cell_shiftZ.init_zeros(cell_shiftX);
    cell_inside.init_zeros(ibmax-ibmin+1,iamax-iamin+1);
    STARTINGX(cell_inside)=iamin; STARTINGY(cell_inside)=ibmin;
 
@@ -607,7 +637,9 @@ void fill_cell_positions(Projection &P,
    void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
                           matrix2D<int>    &cell_inside,
 			  matrix2D<double> &exp_shifts_matrix_X,
- 			  matrix2D<double> &exp_shifts_matrix_Y)
+			  matrix2D<double> &exp_shifts_matrix_Y,
+ 			  matrix2D<double> &exp_shifts_matrix_Z,
+			  double phantom_scale)
   {
    DocFile        aux_DF_shift;//crystal_param is cont
    aux_DF_shift=prm_crystal.DF_shift;
@@ -615,6 +647,8 @@ void fill_cell_positions(Projection &P,
    exp_shifts_matrix_X.init_zeros(); 
    exp_shifts_matrix_Y.resize(cell_inside);  
    exp_shifts_matrix_Y.init_zeros(); 
+   exp_shifts_matrix_Z.resize(cell_inside);  
+   exp_shifts_matrix_Z.init_zeros(); 
    
    //#define DEBUG2
    #ifdef DEBUG2
@@ -626,7 +660,7 @@ void fill_cell_positions(Projection &P,
    #undef DEBUG2 
    //fill matrix with docfile data
    aux_DF_shift.go_first_data_line();
-   int max_x, max_y, min_x , min_y;
+   int max_x, max_y, max_z, min_x , min_y, min_z;
    
    while (!aux_DF_shift.eof()) {
       //Check that we are not outside the matrix
@@ -637,12 +671,16 @@ void fill_cell_positions(Projection &P,
                             =aux_DF_shift(4);
          exp_shifts_matrix_Y(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
                             =aux_DF_shift(5);
+         exp_shifts_matrix_Z(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(6)*phantom_scale;
       }		    
       aux_DF_shift.next_data_line();
    }
       //#define DEBUG2
       #ifdef DEBUG2
-      cout << exp_shifts_matrix_X;
+      cout << "exp_shifts_matrix_X" << exp_shifts_matrix_X;
+      cout << "exp_shifts_matrix_Y" << exp_shifts_matrix_Y;
+      cout << "exp_shifts_matrix_Z" << exp_shifts_matrix_Z;
       #endif
       #undef DEBUG2 
    

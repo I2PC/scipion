@@ -685,8 +685,38 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
    side.produce_Side_Info(proj_prm,prm);
 
    Crystal_Projection_Parameters crystal_proj_prm;
-   if (prm.fn_crystal!="") crystal_proj_prm.read(prm.fn_crystal,
-                              (side.phantom_descr).phantom_scale);
+
+   if (prm.fn_crystal!="") {
+       crystal_proj_prm.read(prm.fn_crystal,
+                            (side.phantom_descr).phantom_scale);
+       // if not null read doc file with unitcell shift
+       // format h, k, shift_X shift_Y shift_Z
+       if (crystal_proj_prm.DF_shift_bool==true)
+            crystal_proj_prm.DF_shift.read(crystal_proj_prm.fn_shift);
+           (crystal_proj_prm.DF_shift).go_first_data_line();
+           double my_scale = (side.phantom_descr).phantom_scale;
+	   double my_aux;
+	   while (!(crystal_proj_prm.DF_shift).eof()) {
+	      //Check that we are not outside the matrix
+	      my_aux=(crystal_proj_prm.DF_shift)(2) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(2, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(3) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(3, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(4) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(4, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(5) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(5, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(6) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(6, my_aux);
+	      (crystal_proj_prm.DF_shift).next_data_line();
+	   }
+       }
+   //#define DEBUG1
+   #ifdef DEBUG1
+       if (crystal_proj_prm.DF_shift_bool==true)
+           crystal_proj_prm.DF_shift.write("BEBUG1_shifts");
+   #endif
+   #undef DEBUG1
 
    int ProjNo=0;
    if (!prm.only_create_angles) {
