@@ -315,7 +315,7 @@ void project_crystal(Phantom &phantom, Projection &P,
          // coordinate system
          matrix1D<double> cell_shift(3);
          VECTOR_R3(cell_shift,cell_shiftX(i,j),cell_shiftY(i,j),0.0f);
-	 cell_shift = cell_shift*phantom.param_file_scale;
+	 cell_shift = cell_shift*phantom.phantom_scale;
          #ifdef DEBUG
             cout << "cell_shift on deformed projection plane "
                  << cell_shift.transpose() << endl;
