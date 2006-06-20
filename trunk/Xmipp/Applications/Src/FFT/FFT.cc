@@ -29,6 +29,10 @@
 bool process_img(ImageXmipp &img, FourierImageXmipp &IMG,
    const Prog_parameters *prm) {
    FourierTransform(img(), IMG());
+   //copy angle information
+   double phi,theta,psi;
+   img.get_eulerAngles(phi,theta,psi);
+   IMG.set_eulerAngles(phi,theta,psi);
    return true;
 }
 
