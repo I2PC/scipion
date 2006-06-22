@@ -226,7 +226,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 
 
 void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
-							float &img_rot, float &img_tilt, float &img_psi, 
+							float img_rot, float img_tilt, float img_psi, 
 							int &opt_dirno, double &opt_psi,
 							double &opt_xoff, double &opt_yoff, 
 							double &maxCC, double &Zscore) {
