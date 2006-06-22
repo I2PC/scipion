@@ -2317,6 +2317,7 @@ template <class T>
    double minxp, minyp, maxxp, maxyp;
    int   cen_x, cen_y, cen_xp, cen_yp;
    double wx, wy; // Weights in X,Y directions for bilinear interpolation
+   int Xdim, Ydim;
    
    if ((XSIZE(A)!=3) || (YSIZE(A)!=3))
       REPORT_ERROR(1102,"Apply_geom: geometrical transformation is not 3x3");
@@ -2343,12 +2344,13 @@ template <class T>
    minyp  = -cen_yp;
    maxxp  = XSIZE(M1)-cen_xp-1;
    maxyp  = YSIZE(M1)-cen_yp-1;
-   
+   Xdim   = XSIZE(M1);
+   Ydim   = YSIZE(M1);
    // Now we go from the output image to the input image, ie, for any pixel
    // in the output image we calculate which are the corresponding ones in
    // the original image, make an interpolation with them and put this value
    // at the output pixel
-   //#define DEBUG
+   //#define DEBUG_APPLYGEO
    #ifdef DEBUG_APPLYGEO
       cout << "A\n"    << A     << endl
 	   << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
@@ -2357,7 +2359,7 @@ template <class T>
 	   << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n"
       ;
    #endif
-      //#undef DEBUG
+   //#undef DEBUG_APPLYGEO
    for (int i=0; i<YSIZE(M2); i++) {
       // Calculate position of the beginning of the row in the output image
       x= -cen_x;
@@ -2412,7 +2414,11 @@ template <class T>
             // Calculate also weights for point m1+1,n1+1
             wx=xp+cen_xp; m1=(int) wx; wx=wx-m1; m2=m1+1;
             wy=yp+cen_yp; n1=(int) wy; wy=wy-n1; n2=n1+1;
-
+            // m2 and n2 can be out by 1 so wrap must be check here
+            if (wrap) {
+	       if(m2>=Xdim) m2=0;
+	       if(n2>=Ydim) n2=0;
+            }
             #ifdef DEBUG_APPLYGEO
             cout << "   From (" << n1 << "," << m1 << ") and ("
                  << n2 << "," << m2 << ")\n";
