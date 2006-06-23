@@ -36,6 +36,7 @@ void Prog_projection_matching_crystal_prm::read(int argc, char **argv)  {
   rot_distance  = AtoF(get_param(argc,argv,   "-rot_distance","0."));
   tilt_distance = AtoF(get_param(argc,argv,   "-tilt_distance","0."));
   shift_distance  = AtoF(get_param(argc,argv, "-shift_distance","0."));
+  scale_distance  = AtoF(get_param(argc,argv, "-scale_distance","0."));
   psi_sampling  = AtoF(get_param(argc,argv,   "-psi_sam","1."));
   if ( shift_sampling==0. ) 
     REPORT_ERROR(1," shift_sampling must be inizialized!");
@@ -43,6 +44,8 @@ void Prog_projection_matching_crystal_prm::read(int argc, char **argv)  {
     REPORT_ERROR(1," psi_sampling must be inizialized!");
   max_shift  = AtoF(get_param(argc,argv, "-max_shift","0."));
   shift_sampling  = AtoF(get_param(argc,argv, "-shift_sam","1."));
+  scale_sampling  = AtoF(get_param(argc,argv, "-scale_sam","1."));
+  modify_header   = !check_param(argc,argv,"-dont_modify_header");
 
 }
 
@@ -60,6 +63,7 @@ void Prog_projection_matching_crystal_prm::usage() {
        << "   -tilt_distance degrees : tilt_distance to experimental \
        proj\n"
        << "   -max_shift double      : maximun allowed shift in pixels \n"
+       << " [ -dont_modify_header ]       : Do not store alignment parameters in the image headers \n";
        ;
 }
 
@@ -71,11 +75,13 @@ void Prog_projection_matching_crystal_prm::show() {
     cerr << "  Output rootname             : "<< fn_root<<endl;
     cerr << "  Psi distance                : "<< psi_distance<<endl;
     cerr << "  Shift distance              : "<< shift_distance<<endl;
+    cerr << "  Scale distance              : "<< scale_distance<<endl;
     cerr << "  Rot distance                : "<< rot_distance<<endl;
     cerr << "  Tilt distance               : "<< tilt_distance<<endl;
     cerr << "  Psi number samples          : "<< psi_sampling<<endl;
     cerr << "  Shift number samples        : "<< shift_sampling<<endl;
-    cerr << "  Maximum allowed shift       : "<< max_shift<<endl;
+    cerr << "  Scale number samples        : "<< scale_sampling<<endl;
+    cerr << "  Do not modify the image headers (only output docfile): "<< !modify_header<<endl;
 
     cerr << " ================================================================="<<endl;
 } 
@@ -150,10 +156,16 @@ for (int jj=0 ; jj<shift_vector.size(); jj++)
 
 
 void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double> &Mexp,
-							float img_rot, float img_tilt, float img_psi, 
-							int &opt_dirno, double &opt_psi,
-							double &opt_xoff, double &opt_yoff, 
-							double &maxCC, double &Zscore) {
+							float img_rot, 
+							float img_tilt,
+						        float img_psi, 
+							float img_scale,
+							int &opt_dirno, 
+							double &opt_psi,
+							double &opt_scale,
+							double &opt_xoff,
+							double &opt_yoff, 
+							double &maxCC) {
 
 
   // Rotational search ====================================================
@@ -183,56 +195,75 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
   max_psi=img_psi+psi_distance;
   if (psi_sampling==1) increment_psi=0;
   else increment_psi=2*psi_distance/(psi_sampling-1);
+  double min_scale,max_scale,increment_scale,my_scale;
+  min_scale=img_scale-scale_distance;
+  max_scale=img_scale+scale_distance;
+  if (scale_sampling==1) increment_scale=0;
+  else increment_scale=2*scale_distance/(scale_sampling-1);
   double dim2=dim*dim;
-  matrix2D<double> psi_mat, shift_mat;
+  matrix2D<double> my_geom_mat, shift_mat;
+  //PSI LOOP
   for (int ipsi=0; ipsi<psi_sampling; ipsi++ ) 
      {
      my_psi=min_psi+increment_psi*(double)ipsi;
-     psi_mat=rot2D_matrix(my_psi);
+     Euler_angles2matrix(0.,0.,my_psi,my_geom_mat);
+     //my_geom_mat=rot2D_matrix(my_psi);
      //Mimg=Maux.rotate(my_psi,WRAP);
+     //SHIFT LOOP
      for (int ishift=0; ishift<shift_vector.size(); ishift++ ){ 
-        psi_mat(0,2)=XX(shift_vector[ishift]);
-        psi_mat(1,2)=YY(shift_vector[ishift]);
-        apply_geom_Bspline(Mimg,psi_mat,Maux,3,IS_NOT_INV,true,(double)0.);
-	ipp=ref_img.begin();
-	for (int dir_counter=0; dir_counter<nr_dir; dir_counter++ ) 
-            {
-            Mref=*(ipp); ipp++;
-            // For some strange reason I need to access the vector via its pointer
-            // otherwise it goes 50x slower on jumilla (Alpha-Unix)
+        my_geom_mat(0,2)= -XX(shift_vector[ishift]);
+        my_geom_mat(1,2)= -YY(shift_vector[ishift]);
+        //SCALE LOOP
+	for (int iscale=0; iscale<scale_sampling; iscale++ ) 
+	   {
+	   my_scale=min_scale+increment_scale*(double)iscale;
+           my_geom_mat *= my_scale;
+           apply_geom_Bspline(Mimg,my_geom_mat,Maux,3,IS_INV,true,(double)0.);
+	   ipp=ref_img.begin();
+           //ROT-TILT LOOP (ref projections)
+	   for (int dir_counter=0; dir_counter<nr_dir; dir_counter++ ) 
+               {
+               Mref=*(ipp); ipp++;
+               // For some strange reason I need to access the vector via its pointer
+               // otherwise it goes 50x slower on jumilla (Alpha-Unix)
 
-	    if ( (ABS(realWRAP(ref_tilt[dir_counter]-img_tilt,-180.,180.))<=
-	              tilt_distance) &&
-		 (ABS(realWRAP(ref_rot [dir_counter]-img_rot,-180.,180.))<=
-	              rot_distance) ){
-		 thisCC=0.;
-		 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
-		   thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
-		   }//FOR_ALL
-		 thisCC/=ref_stddev[dir_counter]*stddev_img*dim2;
-        	 //#define DEBUG
-        	 #ifdef DEBUG
-		 xmax = XX(shift_vector[ishift]);
-		 ymax = YY(shift_vector[ishift]);
-		 cout <<  SFref.get_file_number(dir_counter)<< 
-	                           " rot= "  << ref_rot[dir_counter]  << 
-	                           " tilt= " << ref_tilt[dir_counter] << 
-				   " psi= "  << my_psi <<" CC= "<<thisCC<<endl;
-				   " xmax= "  << xmax <<" ymax= "<<ymax<<endl;
-		 #endif
-		 #undef DEBUG
-		 if (thisCC>maxCC) {
-   		    xmax = XX(shift_vector[ishift]);
-		    ymax = YY(shift_vector[ishift]);
-		    maxCC=thisCC;
-		    opt_psi=my_psi;
-		    opt_dirno=dir_counter;
-                    opt_xoff=-xmax*COSD(opt_psi)-ymax*SIND(opt_psi);
-                    opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
-                    }//if (thisCC>maxCC)
+	       if ( (ABS(realWRAP(ref_tilt[dir_counter]-img_tilt,-180.,180.))<=
+	        	 tilt_distance) &&
+		    (ABS(realWRAP(ref_rot [dir_counter]-img_rot,-180.,180.))<=
+	        	 rot_distance) ){
+		    thisCC=0.;
+		    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
+		      thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
+		      }//FOR_ALL
+		    thisCC/=ref_stddev[dir_counter]*stddev_img*dim2;
+        	    //#define DEBUG
+        	    #ifdef DEBUG
+		    xmax = XX(shift_vector[ishift])*my_scale;
+		    ymax = YY(shift_vector[ishift])*my_scale;
+		    cout <<  SFref.get_file_number(dir_counter)<< 
+	                              " rot= "  << ref_rot[dir_counter]  << 
+	                              " tilt= " << ref_tilt[dir_counter] << 
+				      " psi= "  << my_psi <<" CC= "<<thisCC<<endl;
+				      " xmax= "  << xmax <<" ymax= "<<ymax<<endl;
+				      " scale= " << my_scale <<endl;
+		    #endif
+		    #undef DEBUG
+		    if (thisCC>maxCC) {
+   		       xmax = XX(shift_vector[ishift])*my_scale;
+		       ymax = YY(shift_vector[ishift])*my_scale;
+		       maxCC=thisCC;
+		       opt_psi=my_psi;
+		       opt_scale=my_scale;
+		       opt_dirno=dir_counter;
+                       opt_xoff =   xmax;
+                       opt_yoff =   ymax;
+                       // opt_xoff =   xmax*COSD(opt_psi)+ymax*SIND(opt_psi);
+                       // opt_yoff =  -xmax*SIND(opt_psi)+ymax*COSD(opt_psi);
+                      }//if (thisCC>maxCC)
 
-		 }//if ( (ABS(real
-	    }//for dir_counter
+		    }//if ( (ABS(real
+	       }//for dir_counter
+          }//for iscale
        }// for ishift
      }//for ipsi
      
@@ -240,7 +271,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
 
 	 
 	 
-  #define DEBUG
+  //#define DEBUG
   #ifdef DEBUG
   cout <<  SFref.get_file_number(opt_dirno)<< 
 	          " rot= "  << ref_rot[opt_dirno]  << 
@@ -248,6 +279,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
 		  " psi= "  << opt_psi <<
                   " opt_xoff= "  << opt_xoff <<
   		  " opt_yoff= "  << opt_yoff <<
+  		  " opt_scale= "  << opt_scale <<
 		  " CC= "<<maxCC<<endl;
   #endif
   #undef DEBUG
@@ -265,11 +297,12 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
 							   double &sumCC) {
   // Loop over all images
   int imgno=0,nn;
-  double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
+  double opt_psi,opt_scale,opt_xoff,opt_yoff,maxCC,Zscore;
   int opt_dirno;
   ImageXmipp img;
   FileName fn_img,fn_tmp;
   sumCC=0.;
+  matrix1D<double> dataline(8);  
 
   // Initialize
   nn=SFexp.ImgNo();
@@ -279,44 +312,15 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
   while ((!SFexp.eof())) {
     imgno++;
     fn_img=SFexp.NextImg();
+    //last true means shift are applied but not psi
     img.read(fn_img,false,false,false,true);
     img().set_Xmipp_origin();
     // Perform the projection matching for each image separately
-    PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),
-			 opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC,Zscore);
-    }
+    // NOTE (float)1. should be the scale but since
+    // scale field in the image is not reliable a put 1
+    PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),(float)1.,
+			 opt_dirno,opt_psi,opt_scale,opt_xoff,opt_yoff,maxCC);
        
-
-#ifdef NEVERDEFINED
-  ImageXmipp img;
-  FourierImageXmipp IMG;
-  matrix1D<double> dataline(8);  
-  double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
-
-  if (verb>0) cerr << "--> Projection matching ... "<<endl;
-
-  // Initialize
-  nn=SF.ImgNo();
-  if (verb>0) init_progress_bar(nn);
-  c=MAX(1,nn/60);
-  
-  // Loop over all images
-  sumCC=0.;
-  imgno=0;
-  SF.go_beginning();
-  while ((!SF.eof())) {
-    fn_img=SF.NextImg();
-    if(fourier_input){
-       IMG.read(fn_img); IMG().set_Xmipp_origin();
-    }
-    else{//apply only shifts              **
-       img.read(fn_img,false,false,false,true);
-       img().set_Xmipp_origin();
-    }
-       
-    // Perform the projection matching for each image separately
-    PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),
-			 opt_dirno,opt_psi,opt_xoff,opt_yoff,maxCC,Zscore);
 
     opt_xoff+=img.Xoff();
     opt_yoff+=img.Yoff();
@@ -325,11 +329,11 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
     dataline(0)=ref_rot[opt_dirno];      // rot
     dataline(1)=ref_tilt[opt_dirno];     // tilt
     dataline(2)=opt_psi;                 // psi
-    dataline(3)=opt_xoff;                // Xoff
-    dataline(4)=opt_yoff;                // Yoff
-    dataline(5)=opt_dirno+1;             // optimal direction number
-    dataline(6)=maxCC;                   // maximum CC
-    dataline(7)=Zscore;                   // maximum CC
+    dataline(3)=opt_scale;               // scale
+    dataline(4)=opt_xoff;                // Xoff
+    dataline(5)=opt_yoff;                // Yoff
+    dataline(6)=opt_dirno+1;             // optimal direction number
+    dataline(7)=maxCC;                   // maximum CC
     DFo.append_comment(img.name());
     DFo.append_data_line(dataline);
 
@@ -339,19 +343,16 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
       img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
       img.set_originOffsets(opt_xoff,opt_yoff);
       img.write(fn_img);
-    }
+      }
 
-    if (verb>0) if (imgno%c==0) progress_bar(imgno);
-    imgno++;
-  }
+    progress_bar(imgno);
+    }// while ((!SFexp.eof()))
 
-  if (verb>0) progress_bar(nn);
-  if (verb>0) cerr << " ================================================================="<<endl;
+  progress_bar(nn);
 
   // free memory
   free(ref_mean);
   free(ref_rot);
   free(ref_tilt);
   ref_img.clear();
-#endif
 }

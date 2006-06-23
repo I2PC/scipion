@@ -58,6 +58,7 @@ public:
   double rot_distance;
   double tilt_distance;
   double shift_sampling,shift_distance ;
+  double scale_sampling,scale_distance ;
   /** Number of projection directions */
   int nr_dir;
   /** Vector with reference library projections */
@@ -70,6 +71,8 @@ public:
   vector <matrix1D<double> >shift_vector;
   /** Maximum allowed shift */
   double max_shift;
+  /** Flag whether to store optimal transformations in the image headers */
+  bool modify_header;
 #ifdef NEVERDEFINE
   vector<matrix2D<double> >::iterator idirno;
   /** Number of steps to sample in-plane rotation in 90 degrees */
@@ -78,8 +81,6 @@ public:
       1: gives progress bar (=default)
       0: gives no output to screen at all */
   int verb;
-  /** Flag whether to store optimal transformations in the image headers */
-  bool modify_header;
   /** Flag whether to output reference projections, selfile and docfile */
   bool output_refs;
   /** Flag whether to input files are in Fourier, so far it is 
@@ -108,9 +109,10 @@ public:
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
 			    float img_rot, float img_tilt, float img_psi, 
-			    int &opt_dirno, double &opt_psi,
+			    float scale,
+			    int &opt_dirno, double &opt_psi,double &opt_scale,
 			    double &opt_xoff, double &opt_yoff, 
-			    double &maxCC, double &Zscore);
+			    double &maxCC);
   /// Read arguments from command line
   void read(int argc, char **argv);
   /// Show

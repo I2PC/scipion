@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
   try {
 
      DFo.clear();
-     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), maxCC (7), Z-score (8)");
+     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), \
+scale(4), Xoff (5), Yoff (6), Refno (7), maxCC (8)");
 
     // Process all images
     prm.PM_loop_over_all_images(DFo,sumCC);
