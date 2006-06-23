@@ -1,0 +1,4 @@
+######################################################################
+PROJ = projection_matching_crystal
+OBJ  = projection_matching_crystal.o
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 
