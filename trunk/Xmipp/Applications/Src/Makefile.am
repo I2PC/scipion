@@ -1,7 +1,7 @@
 OPTIONAL_PROGS =
 
 if BUILD_MPI
-OPTIONAL_PROGS += MPIArt MPI_WBP MPI_MLalign2D MPI_MLalign3D MPI_MLrefine3D MPI_Projection_matching
+OPTIONAL_PROGS += MPIArt MPI_WBP MPI_MLalign2D MPI_MLrefine3D MPI_Projection_matching
 endif
 
 if BUILD_TIFF
@@ -86,7 +86,6 @@ SUBDIRS = 2DInterpolation \
 	Microscope \
 	MLalign2D \
 	MLalign2D_combine \
-	MLalign3D \
 	MLrefine3D \
 	Morphology \
 	MvSel \
