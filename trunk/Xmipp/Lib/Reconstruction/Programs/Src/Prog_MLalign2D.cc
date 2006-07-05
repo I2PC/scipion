@@ -1446,7 +1446,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   double opt_psi,opt_flip,maxcorr;
   double opt_xoff, opt_yoff;
   int c,nn,imgno,opt_refno;
-  bool have_offsets=false,fill_real_space,fill_fourier_space;
+  bool fill_real_space,fill_fourier_space;
 
   // Generate (FT of) each rotated version of all references 
   if ( limit_trans || (maxCC_rather_than_ML && !(search_shift>0.)) ) {
@@ -1511,20 +1511,13 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     // Read optimal offsets for all references from disc
     if (fast_mode || limit_trans) {
       if (imgno==0) system(((string)"mkdir -p "+fn_root+"_offsets").c_str());
-      if (exists(fn_trans)) {
-	have_offsets=true;
-	read_offsets(fn_trans,allref_offsets);
-      } else {
+      if (exists(fn_trans)) read_offsets(fn_trans,allref_offsets);
+      else {
 	int itot=n_ref*2;
 	if (do_mirror) itot*=2;
 	allref_offsets.resize(itot);
-	if (zero_offsets) {
-	  have_offsets=true;
-	  for (int i=0; i<itot; i++) allref_offsets[i]=0.;
-	} else {
-	  have_offsets=false;
-	  for (int i=0; i<itot; i++) allref_offsets[i]=-999.;
-	}
+	if (zero_offsets) for (int i=0; i<itot; i++) allref_offsets[i]=0.;
+	else for (int i=0; i<itot; i++) allref_offsets[i]=-999.;
       }	
     }
 
@@ -1546,9 +1539,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     } else if (limit_trans) {
       // B. Use a maximum-likelihood target function in real space
       //    with limited translational searches
-
-      if (!have_offsets) 
-	REPORT_ERROR(1,(string)"Prog_MLalign2D_prm: Cannot find offsets-file: "+fn_trans);
 
       ML_integrate_locally(img(),Mref,Msum_imgs,wsum_sigma_noise,wsum_sigma_offset,
 			   sumw,sumw_mirror,LL,maxcorr,opt_refno,opt_psi,
