@@ -79,8 +79,8 @@ int main (int argc, char **argv) {
 	    REPORT_ERROR(1,(string)"Scissor: Cannot open file"+fn_ang);
 	 string aux;
 	 getline(fh_ang,aux);
-	 double alpha_u, alpha_t;
-	 fh_ang >> alpha_u >> alpha_t;
+	 double alpha_u, alpha_t, tilt_angle;
+	 fh_ang >> alpha_u >> alpha_t >> tilt_angle;
 	 fh_ang.close();
 	 
 	 // Generate the images for the untilted image
@@ -102,7 +102,7 @@ int main (int argc, char **argv) {
 	 mt.add_label("");
 	 mt.set_transmitance_flag(compute_transmitance);
 	 mt.set_inverse_flag(compute_inverse);
-	 mt.produce_all_images(0,fn_root_tilted,startN,"",alpha_t);
+	 mt.produce_all_images(0,fn_root_tilted,startN,"",0.,tilt_angle,alpha_t);
 	 mt.close_micrograph();
       }
    } catch (Xmipp_error XE) {cout << XE;}
