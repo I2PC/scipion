@@ -1,8 +1,15 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:
  *
+ * Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * and
+ * 
+ * Slavica Jonic (slavica.jonic@impmc.jussieu.fr)
+ * UPMC, Paris 6
+ *
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +50,14 @@ void Prog_Enhance_PSD_Parameters::read(int argc, char **argv) {
 /* Usage ------------------------------------------------------------------- */
 void Prog_Enhance_PSD_Parameters::usage() {
    Prog_parameters::usage();
-   cerr << "  [-dont_center]            : By default, it is assumed that the \n"
+   cerr << "  [-dont_center]            : By default, it is assumed that the image\n"
         << "                              needs to be centered\n"
 	<< "  [-dont_log]               : Don't take log10 before working\n"
 	<< "  [-f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5\n"
 	<< "  [-f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5\n"
 	<< "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
-	<< "  [-m1 <freq_low=0.025>]    : Low freq. for mask\n"
-	<< "  [-m2 <freq_high=0.2>      : High freq. for mask\n"
+	<< "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
+	<< "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n"
    ;
 }
 
@@ -81,13 +88,13 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD) {
    matrix2D<double> aux;
    median_filter3x3(PSD,aux);
    PSD=aux;
-   if (center) CenterFFT(PSD,false);
+   CenterFFT(PSD,false);
 
    // Reject other outliers
    reject_outliers(PSD,2);
 
    // Band pass filter
-   if (center) CenterFFT(PSD,true);
+   CenterFFT(PSD,true);
    FourierMask Filter;
    Filter.FilterShape=RAISED_COSINE;
    Filter.FilterBand=BANDPASS;
@@ -98,7 +105,7 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD) {
    Filter.generate_mask(PSD);
    Filter.apply_mask_Space(PSD);
    STARTINGX(PSD)=STARTINGY(PSD)=0;
-   if (center) CenterFFT(PSD,false);
+   CenterFFT(PSD,false);
 
    // Mask the input PSD
    matrix2D<int> mask; mask.resize(PSD);
@@ -126,6 +133,6 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD) {
       else mask(i,j)=1;
    }
 
-   if (center) CenterFFT(PSD,true);
+   CenterFFT(PSD,true);
 }
 #undef DEBUG
