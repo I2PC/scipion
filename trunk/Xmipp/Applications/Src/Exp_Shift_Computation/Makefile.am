@@ -8,3 +8,5 @@ exp_shift_computation_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@h
 exp_shift_computation_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib
+EXTRA_DIST = exp_shift_computation.hh
+
