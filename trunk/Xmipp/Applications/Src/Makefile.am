@@ -57,7 +57,7 @@ SUBDIRS = 2DInterpolation \
 	DownSample \
 	Draw_surface \
 	DWT \
-	EM2Angles \
+        EM2Angles \
         Enhance_PSD \
 	Euler \
 	Evaluate \
@@ -92,6 +92,7 @@ SUBDIRS = 2DInterpolation \
 	Normalize \
 	Operate \
 	PCA \
+        PDBPhantom \
 	Phantom_transform \
 	Project \
 	Projection_Neighbourhood \
