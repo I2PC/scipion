@@ -10,6 +10,7 @@ autoconf
 
 ./configure
 ./configure --disable-static
+./configure --enable-debug --enable-profiling
 make
 make dist
 
