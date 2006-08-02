@@ -43,6 +43,7 @@ ostream & operator << (ostream &o, const Plain_ART_Parameters &eprm) {
 /* ------------------------------------------------------------------------- */
 /* Process correction                                                        */
 /* ------------------------------------------------------------------------- */
+//#define DEBUG
 void process_correction(Projection &corr_proj) {
    // Mask correction
    int Rmin=CEIL(MIN(XSIZE(corr_proj()),YSIZE(corr_proj()))/2);
@@ -58,14 +59,19 @@ void process_correction(Projection &corr_proj) {
    denoiser.produce_side_info();
    matrix2D<double> denoised=corr_proj();
    denoiser.denoise(denoised);
-   ImageXmipp save; save()=corr_proj(); save.write("PPPbefore.xmp");
+   #ifdef DEBUG
+      ImageXmipp save; save()=corr_proj(); save.write("PPPbefore.xmp");
+   #endif
    if (denoised(0,0)==denoised(0,0))
       // This condition is not true if there are NaNs
       corr_proj()=denoised;
-   save()=corr_proj(); save.write("PPPafter.xmp");
-   cout << "Press\n";
-   char c; cin >> c;
+   #ifdef DEBUG
+      save()=corr_proj(); save.write("PPPafter.xmp");
+      cout << "Press\n";
+      char c; cin >> c;
+   #endif
 }
+#undef DEBUG
 
 /* ------------------------------------------------------------------------- */
 /* Update residual vector for WLS                                            */
@@ -343,7 +349,7 @@ void ART_single_step(
    }
    
    // Denoising of the correction image
-   //process_correction(corr_proj);
+   if (prm.denoise) process_correction(corr_proj);
 
    // Backprojection of correction plane ......................................
    project_Volume(*vol_out,prm.basis,theo_proj,

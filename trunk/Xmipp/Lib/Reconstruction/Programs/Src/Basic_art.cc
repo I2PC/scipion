@@ -78,6 +78,7 @@ void Basic_ART_Parameters::default_values() {
     known_volume       =-1;
     positivity         =false;
     unmatched          =false;
+    denoise            =false;
     ray_length         =-1;
     apply_shifts       = true;
 
@@ -104,6 +105,7 @@ void Basic_ART_Parameters::default_values() {
     fn_sel             =      GET_PARAM(         "i"                    ); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
+    denoise            =      CHECK_PARAM(       "denoise"              );  \
     if (CHECK_PARAM("o")) \
          fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
@@ -278,6 +280,7 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-o name]             name of output files, extensions are added"
      << "\n   [-CTF name]           name of a sel file or a file with a CTF"
      << "\n   [-unmatched]          apply unmatched forward/backward projectors"
+     << "\n   [-denoise]            Denoise difference image before backprojecting"
      << "\n   [-start basisvolume]  Start from basisvolume"
      << "\n   [-sym symmfile]       Use a symmetry file"
      << "\n   [-sym_each n]         Force the reconstruction to be symmetric"

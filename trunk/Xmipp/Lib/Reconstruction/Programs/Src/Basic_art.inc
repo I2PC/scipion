@@ -46,6 +46,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    *prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
    *prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
    *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
+   *prm.fh_hist << " Denoise: " << prm.denoise << endl;
    *prm.fh_hist << " Sampling= " << prm.sampling << endl;
    *prm.fh_hist << prm.basis << endl;
    switch (prm.grid_type) {

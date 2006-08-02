@@ -191,6 +191,9 @@ public:
    /// Apply unmatched projectors to correct for the CTF
    bool unmatched;
 
+   /// Denoise difference images before backprojecting
+   bool denoise;
+
    /** Ray length.
        Basis functions are taken into account only if their distance
        to the projection plane is smaller than this value.
