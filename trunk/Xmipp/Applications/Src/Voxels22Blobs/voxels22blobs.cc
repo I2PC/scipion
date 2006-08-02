@@ -49,7 +49,7 @@ int main (int argc,char *argv[]) {
       if (check_param(argc,argv,"-voxels")) {
          voxels_to_blobs=true;
          fn_in=get_param(argc,argv,"-voxels");
-         grid_relative_size = AtoF(get_param(argc, argv, "-g", "2.26"));
+         grid_relative_size = AtoF(get_param(argc, argv, "-g", "1.41"));
          if      (check_param(argc, argv, "-FCC")) grid_type=FCC;
          else if (check_param(argc, argv, "-CC"))  grid_type=CC;
          else                                      grid_type=BCC;
@@ -63,7 +63,7 @@ int main (int argc,char *argv[]) {
       final_error        = AtoF(get_param(argc, argv, "-final_error","0.01"));
       blob.radius        = AtoF(get_param(argc, argv, "-r",    "2"    ));
       blob.order         = AtoI(get_param(argc, argv, "-m",    "2"    ));
-      blob.alpha         = AtoF(get_param(argc, argv, "-a",    "3.6"  ));
+      blob.alpha         = AtoF(get_param(argc, argv, "-a",    "10.4"  ));
       R                  = AtoF(get_param(argc, argv, "-R",    "-1"   ));
    } catch (Xmipp_error &XE) {cout << XE; Usage(); exit(1);}
 try {
@@ -92,9 +92,9 @@ void Usage() {
         << "    -o <file_out>                     : of the opposite type\n"
         << "   [-r <blob radius=2>]               : blob radius\n"
         << "   [-m <blob order=2>]                : blob derivative order\n"
-        << "   [-a <blob alpha=3.6>]              : controls smoothness\n"
+        << "   [-a <blob alpha=10.4>]             : controls smoothness\n"
         << "Only if voxels:\n"
-        << "   [-g <grid_relative_size=2.26>]     : size between grid samples\n"
+        << "   [-g <grid_relative_size=1.41>]     : size between grid samples\n"
         << "   [-FCC | -CC]                       : by default, BCC grid\n"
         << "   [-l <lambda=0.05>]                 : convergence rate\n"
         << "   [-final_error <error=0.01>]        : minimum change percentage\n"
