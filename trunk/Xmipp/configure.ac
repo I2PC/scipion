@@ -52,6 +52,23 @@ if test $use_debug = yes; then
 	CXXFLAGS=$CXXFLAGS" -g"
 fi
 
+# If --enable-profiling , -p compiler flag
+# will be enabled.
+
+AC_ARG_ENABLE([profiling],
+  AC_HELP_STRING([--enable-profiling], [Enable the use of profiling capabilities.]),
+  [use_profiling=$enableval], [use_profiling=no])
+
+if test $use_profiling = no; then
+	CFLAGS=`echo $CFLAGS | sed 's/\-pg //pg'`
+	CXXFLAGS=`echo $CXXFLAGS | sed 's/\-pg //pg'`
+fi
+
+if test $use_debug = yes; then
+	CFLAGS=$CFLAGS" -pg"
+	CXXFLAGS=$CXXFLAGS" -pg"
+fi
+
 AC_ARG_ENABLE([static-exec],
   AC_HELP_STRING([--enable-static-exec], [Enables static executables building]),
   [build_static_exec=$enableval], [build_static_exec=no])
@@ -210,7 +227,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Draw_surface/Makefile \
 	Applications/Src/DWT/Makefile \
 	Applications/Src/Edit/Makefile \
-	Applications/Src/EM2Angles/Makefile \
+        Applications/Src/EM2Angles/Makefile \
 	Applications/Src/Enhance_PSD/Makefile \
 	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
@@ -251,6 +268,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Normalize/Makefile \
 	Applications/Src/Operate/Makefile \
 	Applications/Src/PCA/Makefile \
+	Applications/Src/PDBPhantom/Makefile \
 	Applications/Src/Phan3D/Makefile \
 	Applications/Src/Phantom_transform/Makefile \
 	Applications/Src/Project/Makefile \
