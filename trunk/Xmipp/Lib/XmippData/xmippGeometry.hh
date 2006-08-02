@@ -190,9 +190,15 @@ double point_line_distance_3D(const matrix1D<double> &p,
     Let a plane in 3-D be specified by the point a and the perpendicular vector v,
     this fuction returns the minimum distance of this plane to the point p.
      */
-double point_plane_distance_3D(const matrix1D<double> &p, 
+inline double point_plane_distance_3D(const matrix1D<double> &p, 
                                const matrix1D<double> &a,
-			       const matrix1D<double> &v);
+			       const matrix1D<double> &v)
+{
+static matrix1D<double> p_a(3);
+V3_MINUS_V3(p_a,p,a); 
+return (dot_product(p_a,v)/v.module());
+}			      
+                               
 /** Least-squares-fit a plane to an arbitrary number of (x,y,z) points
     PLane described as Ax + By + C = z
     Returns -1  if  A²+B²+C² <<1

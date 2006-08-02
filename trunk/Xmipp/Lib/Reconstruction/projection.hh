@@ -195,22 +195,28 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
    double ray_length) {
    matrix1D<double> zero(3);                // Origin (0,0,0) 
-   matrix1D<double> prjPix(3);              // Position of the pixel within the
+   static matrix1D<double> prjPix(3);       // Position of the pixel within the
                                             // projection
-   matrix1D<double> prjX(3);                // Coordinate: Projection of the
-   matrix1D<double> prjY(3);                // 3 grid vectors
-   matrix1D<double> prjZ(3);
-   matrix1D<double> prjOrigin(3);           // Coordinate: Where in the 2D
+   static matrix1D<double> prjX(3);         // Coordinate: Projection of the
+   static matrix1D<double> prjY(3);         // 3 grid vectors
+   static matrix1D<double> prjZ(3);
+   static matrix1D<double> prjOrigin(3);    // Coordinate: Where in the 2D
                                             // projection plane the origin of
                                             // the grid projects
-   matrix1D<double> prjDir(3);              // Projection direction
+   static matrix1D<double> prjDir(3);       // Projection direction
 
-   matrix1D<double> actprj(3);              // Coord: Actual position inside
+   static matrix1D<double> actprj(3);       // Coord: Actual position inside
                                             // the projection plane
-   matrix1D<double> beginZ(3);              // Coord: Plane coordinates of the
+   static matrix1D<double> beginZ(3);       // Coord: Plane coordinates of the
                                             // projection of the 3D point
                                             // (z0,YY(lowest),XX(lowest))
-   matrix1D<double> beginY(3);              // Coord: Plane coordinates of the
+   static matrix1D<double> univ_beginY(3);  // Coord: coordinates of the
+                                            // grid point
+                                            // (z0,y0,XX(lowest))
+   static matrix1D<double> univ_beginZ(3);  // Coord: coordinates of the
+                                            // grid point
+                                            // (z0,YY(lowest),XX(lowest))
+   static matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
                                             // projection of the 3D point
                                             // (z0,y0,XX(lowest))
    double XX_footprint_size;                // The footprint is supposed
@@ -272,6 +278,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
       YY_footprint_size = XX_footprint_size = CEIL(basis.max_length());
       Usampling = Vsampling = 0;
    }
+   XX_footprint_size+=XMIPP_EQUAL_ACCURACY;
+   YY_footprint_size+=XMIPP_EQUAL_ACCURACY;
 
    // Project the whole grid ...............................................
    // Corner of the plane defined by Z. These coordinates try to be within
@@ -324,18 +332,30 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    }
    #endif
 
-   matrix1D<double> grid_index(3), univ_position(3);
+   // Compute the grid lattice vectors in space ............................
+   static matrix2D<double> grid_basis(3,3);
+   grid_basis=grid.basis*grid.relative_size;
+   static matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
+   static matrix1D<double> gridY(3);  // in universal coordinates
+   static matrix1D<double> gridZ(3);
+   grid_basis.getCol(0,gridX);
+   grid_basis.getCol(1,gridY);
+   grid_basis.getCol(2,gridZ);
+
+   univ_beginZ=XX(grid.lowest)*gridX + YY(grid.lowest)*gridY +
+               ZZ(grid.lowest)*gridZ + grid.origin;
+
+   static matrix1D<double> univ_position(3);
    int number_of_basis=0;
    for (k=ZZ_lowest; k<=ZZ_highest; k++) {
       // Corner of the row defined by Y
       beginY=beginZ;
+      univ_beginY=univ_beginZ;
       for (i=YY_lowest; i<=YY_highest; i++) {
          // First point in the row
 	 actprj=beginY;
+         univ_position=univ_beginY;
 	 for (j=XX_lowest; j<=XX_highest; j++) {
-	    VECTOR_R3(grid_index,j,i,k);
-	    grid.grid2universe(grid_index,univ_position);
-            
             // Ray length interesting
             bool ray_length_interesting=true;
             if (ray_length!=-1)
@@ -362,10 +382,10 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                #endif
 
                // Search for integer corners for this basis
-               XX_corner1=CEIL (MAX(x0,XX(actprj)-XX_footprint_size-XMIPP_EQUAL_ACCURACY));
-               YY_corner1=CEIL (MAX(y0,YY(actprj)-YY_footprint_size-XMIPP_EQUAL_ACCURACY));
-               XX_corner2=FLOOR(MIN(xF,XX(actprj)+XX_footprint_size+XMIPP_EQUAL_ACCURACY));
-               YY_corner2=FLOOR(MIN(yF,YY(actprj)+YY_footprint_size+XMIPP_EQUAL_ACCURACY));
+               XX_corner1=CEIL (MAX(x0,XX(actprj)-XX_footprint_size));
+               YY_corner1=CEIL (MAX(y0,YY(actprj)-YY_footprint_size));
+               XX_corner2=FLOOR(MIN(xF,XX(actprj)+XX_footprint_size));
+               YY_corner2=FLOOR(MIN(yF,YY(actprj)+YY_footprint_size));
 
                #ifdef DEBUG
                if (condition) {
@@ -530,10 +550,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 
             // Prepare for next iteration
             V2_PLUS_V2(actprj, actprj, prjX);
+            V3_PLUS_V3(univ_position, univ_position, gridX);
       	 }
          V2_PLUS_V2(beginY, beginY, prjY);
+         V3_PLUS_V3(univ_beginY, univ_beginY, gridY);
       }
       V2_PLUS_V2(beginZ, beginZ, prjZ);
+      V3_PLUS_V3(univ_beginZ, univ_beginZ, gridZ);
    }
 }
 
@@ -565,7 +588,7 @@ void project_Volume(
    if (FORW) {
       proj.reset(Ydim,Xdim);
       proj.set_angles(rot,tilt,psi);
-      norm_proj().resize(proj());
+      norm_proj().copy_shape(proj());
       norm_proj().init_zeros();
    }
    

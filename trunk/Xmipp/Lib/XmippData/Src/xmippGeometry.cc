@@ -49,7 +49,7 @@ void Uproject_to_plane(const matrix1D<double> &point,
 /* Project a point to a plane ---------------------------------------------- */
 void Uproject_to_plane(const matrix1D<double> &r,
    double rot, double tilt, double psi, matrix1D<double> &result) {
-   matrix2D<double> euler;
+   static matrix2D<double> euler(3,3);
    Euler_angles2matrix(rot, tilt, psi, euler);
    Uproject_to_plane(r,euler,result);
 }
@@ -112,16 +112,6 @@ V3_MINUS_V3(p_a,p,a);
 return (vector_product(p_a,v).module()/v.module());
 }			      
 
-/* Point to plane distance ------------------------------------------------- */
-double point_plane_distance_3D(const matrix1D<double> &p, 
-                               const matrix1D<double> &a,
-			       const matrix1D<double> &v)
-			      
-{
-matrix1D<double> p_a(3);
-V3_MINUS_V3(p_a,p,a); 
-return (dot_product(p_a,v)/v.module());
-}			      
 /* Least-squares-fit a plane to an arbitrary number of (x,y,z) points
     PLane described as Ax + By + C  = z
     where D = -1
@@ -356,7 +346,7 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
    double ca, sa, cb, sb, cg, sg;
    double cc, cs, sc, ss;
    
-   A.resize(3,3);
+   if (XSIZE(A)!=3 || YSIZE(A)!=3) A.resize(3,3);
    alpha = DEG2RAD(alpha);
    beta  = DEG2RAD(beta);
    gamma = DEG2RAD(gamma);

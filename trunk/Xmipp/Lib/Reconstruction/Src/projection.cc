@@ -734,13 +734,3 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
       project_SimpleGrid(GVNeq(i),GVNeq.grid(i),basis,
          read_proj, read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }
-
-/* Instantiation ----------------------------------------------------------- */
-void instatiate_projection() {
-   GridVolumeT<int>    GVi;
-   GridVolumeT<double> GVd;
-   Projection          proj;
-   Basis               basis;
-   project_Volume(GVi,basis,proj,proj,30,30,0,0,0,FORWARD,ARTK);
-   project_Volume(GVd,basis,proj,proj,30,30,0,0,0,FORWARD,ARTK);
-}
