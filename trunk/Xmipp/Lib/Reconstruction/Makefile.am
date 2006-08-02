@@ -48,7 +48,8 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_break_sym.cc \
 	Programs/Src/Prog_WBP.cc \
 	Programs/Src/Prog_projection_matching.cc \
-	Programs/Src/Prog_Enhance_PSD.cc
+	Programs/Src/Prog_Enhance_PSD.cc \
+	Programs/Src/Prog_PDBPhantom.cc
 
 libXmippRecons_Interface_@host_os@_la_SOURCES = Programs/Src/Prog_Spots2RealSpace2D.cc \
 	Src/recons_spider.cc Programs/Src/Prog_Unbend.cc\
@@ -107,6 +108,7 @@ EXTRA_DIST = blobs.hh \
 	Programs/Prog_surface.hh \
 	Programs/Prog_symmetrize.hh \
 	Programs/Prog_WBP.hh \
+	Programs/Prog_PDBPhantom.hh \
 	Programs/recons_misc.hh \
 	Programs/Src/Basic_art.inc \
 	projection.hh \
