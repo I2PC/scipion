@@ -16,7 +16,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <stdio.h>
-#include <malloc.h>
+#ifndef HAVE_MALLOC_H
+   #include <stdlib.h>
+#else
+   #include <malloc.h>
+#endif
 #include "typedefs.h"
 #include "convert.h"
 #include "recline.h"
