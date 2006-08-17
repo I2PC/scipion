@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 #include "../xmippFuncs.hh"
+#include "../xmippArgs.hh"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -256,6 +257,28 @@ void create_empty_file(const FileName &fn, size_t size,
        fwrite( buffer, sizeof(unsigned char), block_size, fd);
    fwrite(buffer, sizeof(unsigned char), size%block_size, fd);
    fclose(fd);
+}
+
+/* Get the Xmipp Base directory -------------------------------------------- */
+FileName xmippBaseDir() {
+   string path=getenv("PATH");
+   vector<string> directories;
+   int number_directories=splitString(path, ":", directories);
+   if (number_directories==0)
+      REPORT_ERROR(1,"xmippBaseDir::Cannot find Xmipp Base directory");
+   bool found=false;
+   int i;
+   for (i=0; i<number_directories; i++) {
+      FileName fn=directories[i]+"/xmipp_art";
+      FILE *aux;
+      if ((aux = fopen (fn.c_str(), "r")) != NULL) {
+         fclose (aux);
+         found=true;
+         break;
+      }
+   }
+   if (found) return directories[i].substr(0,directories[i].length()-4);
+   else REPORT_ERROR(1,"xmippBaseDir::Cannot find Xmipp Base directory");
 }
 
 // Constructor with root, number and extension .............................
