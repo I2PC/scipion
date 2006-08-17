@@ -162,10 +162,72 @@ void least_squares_plane_fit(  const vector<fit_point> & IN_points,
     plane_b = (E*I*J + F*F*K - D*I*K + D*H*L - F*(H*J + E*L)) / denom;
     // Z axis intercept
     plane_c = (F*G*J - E*H*J - E*F*K + D*H*K + E*E*L - D*G*L) / denom;
-
 }
 
-			       
+/* Bspline fitting --------------------------------------------------------- */
+/* See http://en.wikipedia.org/wiki/Weighted_least_squares */
+void Bspline_model_fitting(const vector<fit_point> &IN_points,
+    int SplineDegree, int l0, int lF, int m0, int mF,
+    double h_x, double h_y, double x0, double y0,
+    Bspline_model &result) {
+    // Initialize model
+    result.l0=l0;
+    result.lF=lF;
+    result.m0=m0;
+    result.mF=mF;
+    result.x0=x0;
+    result.y0=y0;
+    result.SplineDegree=SplineDegree;
+    result.h_x=h_x;
+    result.h_y=h_y;
+    result.c_ml.init_zeros(mF-m0+1,lF-l0+1);
+    STARTINGY(result.c_ml)=m0;
+    STARTINGX(result.c_ml)=l0;
+    
+    // Modify the list of points to include the weight
+    int Npoints=IN_points.size();
+    vector<fit_point> AUX_points=IN_points;
+    for (int i=0; i<Npoints; ++i) {
+       double sqrt_w=sqrt(AUX_points[i].w);
+       AUX_points[i].x*=sqrt_w;
+       AUX_points[i].y*=sqrt_w;
+       AUX_points[i].z*=sqrt_w;
+    }
+    
+    // Now solve the normal linear regression problem
+    // Ax=B
+    // A=system matrix
+    // x=B-spline coefficients
+    // B=vector of measured values
+    int Ncoeff=YSIZE(result.c_ml)*XSIZE(result.c_ml);
+    matrix2D<double> A(Npoints,Ncoeff);
+    matrix1D<double> B(Npoints);
+    for (int i=0; i<Npoints; ++i) {
+       B(i)=AUX_points[i].z;
+       double xarg=(AUX_points[i].x-x0)/h_x;
+       double yarg=(AUX_points[i].y-y0)/h_y;
+       for (int m=m0; m<=mF; ++m)
+          for (int l=l0; l<=lF; ++l) {
+             double coeff;
+	     switch (SplineDegree) {
+	        case 2: coeff=Bspline02(xarg-l)*Bspline02(yarg-m); break; 
+	        case 3: coeff=Bspline03(xarg-l)*Bspline03(yarg-m); break; 
+	        case 4: coeff=Bspline04(xarg-l)*Bspline04(yarg-m); break; 
+	        case 5: coeff=Bspline05(xarg-l)*Bspline05(yarg-m); break; 
+	        case 6: coeff=Bspline06(xarg-l)*Bspline06(yarg-m); break; 
+	        case 7: coeff=Bspline07(xarg-l)*Bspline07(yarg-m); break; 
+	        case 8: coeff=Bspline08(xarg-l)*Bspline08(yarg-m); break; 
+	        case 9: coeff=Bspline09(xarg-l)*Bspline09(yarg-m); break; 
+	     }
+             A(i,(m-m0)*XSIZE(result.c_ml)+l-l0)=coeff;
+          }
+    }
+    
+    matrix1D<double> x=(A.transpose()*A).inv()*(A.transpose()*B);
+    for (int m=m0; m<=mF; ++m)
+       for (int l=l0; l<=lF; ++l)
+          result.c_ml(m,l)=x((m-m0)*XSIZE(result.c_ml)+l-l0);
+}      
 
 /* Rectangle enclosing ----------------------------------------------------- */
 void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
@@ -235,9 +297,23 @@ void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
    VECTOR_R3(v,XX_vF,YY_vF,ZZ_vF); DEFORM_AND_CHOOSE_CORNERS3D;
 }
 
+/* Point inside polygon ---------------------------------------------------- */
+bool point_inside_polygon(const vector< matrix1D<double> > &polygon,
+   const matrix1D<double> &point) {
+   int i, j;
+   bool retval=false;
+   for (i = 0, j = polygon.size()-1; i < polygon.size(); j = i++) {
+     if ((((YY(polygon[i])<=YY(point)) && (YY(point)< YY(polygon[j]))) ||
+          ((YY(polygon[j])<=YY(point)) && (YY(point)< YY(polygon[i])))) &&
+         (XX(point)<(XX(polygon[j]) - XX(polygon[i])) *
+            (YY(point) - YY(polygon[i]))/
+               (YY(polygon[j]) - YY(polygon[i]))+ XX(polygon[i])))
+       retval=!retval;
+   }
+   return retval;
+}
 
-
-/* Line Plane Intersection ---------------------------------------------- */
+/* Line Plane Intersection ------------------------------------------------- */
 /*Let ax+by+cz+D=0 the equation of your plane
 (if your plane is defined by a normal vector N + one point M, then
 (a,b,c) are the coordinates of the normal N, and d is calculated by using

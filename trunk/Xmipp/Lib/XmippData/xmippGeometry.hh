@@ -39,17 +39,6 @@
 #endif
 #include <vector>
 #include <iostream>
-struct fit_point{
-   double x;
-   double y;
-   double z;
-   double w;} ;
-/*   
-ostream &operator<<(ostream &os, const fit_point &s)
-   {
-   os << "(" << s.x << "," << s.y <<"," << s.z << ") " << s.w << endl;      
-   }
-*/
 /**@name Geometry
    \begin{description}
    \item[Geometrical Operations]
@@ -199,11 +188,22 @@ V3_MINUS_V3(p_a,p,a);
 return (dot_product(p_a,v)/v.module());
 }			      
                                
+/** Structure of the points to do model fitting. */
+struct fit_point {
+   /// x coordinate
+   double x;
+   /// y coordinate
+   double y;
+   /// z coordinate, assumed to be a function of x and y
+   double z;
+   /// Weight of the point in the Least-Squares problem
+   double w;
+};
+
 /** Least-squares-fit a plane to an arbitrary number of (x,y,z) points
-    PLane described as Ax + By + C = z
-    Returns -1  if  A²+B²+C² <<1
+    Plane described as Ax + By + C = z
     
-    Points are defined using the stuct
+    Points are defined using the struct
         \\Ex:
     \begin{verbatim}
     struct fit_point{
@@ -218,7 +218,109 @@ void least_squares_plane_fit(  const vector<fit_point> &IN_points,
                                double &plane_A,
 			       double &plane_B,
 			       double &plane_C);
-         
+
+/** Bspline model class.
+    When you fit a Bspline model this is the type returned. You can use
+    it to evaluate it anywhere.
+    
+    The model is f(x,y)=sum_{l=l0}^{lF} {sum_{m=m0}^{mF}
+    {c_{ml}Beta_n((x-x0)/h_x-l) Beta_n((y-y0)/h_y-m) } }. The parameter n is the
+    Bspline degree. l0, lF, m0 and mF are the Bspline indexes. hx and hy are
+    related to the extent of the Bspline.
+*/
+class Bspline_model {
+public:
+    /// l0
+    int l0;
+    /// lF;
+    int lF;
+    /// m0
+    int m0;
+    /// mF;
+    int mF;
+    
+    /// x0
+    double x0;
+    /// y0
+    double y0;
+    
+    /// Order of the Bspline
+    int SplineDegree;
+    
+    /// Scale X
+    double h_x;
+    /// Scale Y
+    double h_y;
+    
+    /** Bspline coefficients, c_{ml}.
+        The logical indexes of this matrix go from Y=[m0...mF] and
+        X=[l0...lF] */
+    matrix2D<double> c_ml;
+
+    /// Evaluate the model at the point (x,y)
+    inline double evaluate(double x, double y) const {
+       int SplineDegree_1=SplineDegree-1;
+       double x_arg=(x-x0)/h_x;
+       double y_arg=(y-y0)/h_y;
+
+       int l1 = CLIP(CEIL(x_arg - SplineDegree_1),l0,lF);
+       int l2 = CLIP(l1 + SplineDegree,l0,lF);
+       int m1 = CLIP(CEIL(y_arg - SplineDegree_1),m0,mF);
+       int m2 = CLIP(m1 + SplineDegree,m0,mF);
+       double columns = 0.0;
+       for (int m=m1; m<=m2; m++) {
+      	   double rows = 0.0;
+           for (int l=l1; l<=l2; l++) {
+               double xminusl = x_arg-(double)l;
+               double Coeff = c_ml(m,l);
+	       switch (SplineDegree) {
+	          case 2: rows += Coeff * Bspline02(xminusl); break; 
+                  case 3: rows += Coeff * Bspline03(xminusl); break;
+                  case 4: rows += Coeff * Bspline04(xminusl); break;
+                  case 5: rows += Coeff * Bspline05(xminusl); break;
+                  case 6: rows += Coeff * Bspline06(xminusl); break;
+                  case 7: rows += Coeff * Bspline07(xminusl); break;
+                  case 8: rows += Coeff * Bspline08(xminusl); break;
+                  case 9: rows += Coeff * Bspline09(xminusl); break;
+	       }
+           }
+           double yminusm=y_arg-(double)m;
+	   switch (SplineDegree) {
+              case 2: columns += rows * Bspline02(yminusm); break;
+              case 3: columns += rows * Bspline03(yminusm); break;
+              case 4: columns += rows * Bspline04(yminusm); break;
+              case 5: columns += rows * Bspline05(yminusm); break;
+              case 6: columns += rows * Bspline06(yminusm); break;
+              case 7: columns += rows * Bspline07(yminusm); break;
+              case 8: columns += rows * Bspline08(yminusm); break;
+              case 9: columns += rows * Bspline09(yminusm); break;
+	   }
+       }
+       return columns;
+    }
+};
+
+/** Least-squares fit of a B-spline 2D model.
+    For fitting a set of values that are distributed between
+    (x0,y0) and (xF,yF) with a cubic Bspline centered on each corner,
+    the right call is 
+    \begin{verbatim}
+       Bspline_model model;
+       Bspline_model_fitting(list_of_points, 3, -1, 2, -1, 2,
+          xF-x0, yF-y0, x0, y0, model);
+    \end{verbatim}
+    
+    Once the model is returned you can evaluate it at any point simply
+    by 
+    \begin{verbatim}
+       model.evaluate(x,y);
+    \end{verbatim}
+*/
+void Bspline_model_fitting(const vector<fit_point> &IN_points,
+    int SplineDegree, int l0, int lF, int m0, int mF,
+    double h_x, double h_y, double x0, double y0,
+    Bspline_model &result);
+
 /** Rectangle which encloses a deformed rectangle.
     Given a rectangle characterized by the top-left corner and the right-bottom
     corner, and given a matrix after which the rectangle is deformed. Which
@@ -249,60 +351,66 @@ void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
     const matrix2D<double> &V, matrix1D<double> &corner1,
     matrix1D<double> &corner2);
 
-/**  Line Plane Intersection 
-Let ax+by+cz+D=0 be the equation of your plane
-(if your plane is defined by a normal vector N + one point M, then
-(a,b,c) are the coordinates of the normal N, and d is calculated by using
-the coordinates of M in the above equation).
+/** Point inside polygon.
+    Given a polygon described by a list of points (the last one and the
+    first one must be the same), determine whether another point is inside
+    the polygon or not. */
+bool point_inside_polygon(const vector< matrix1D<double> > &polygon,
+    const matrix1D<double> &point);
 
-Let your line be defined by one point P(d,e,f) and a vector V(u,v,w), the
-points on your line are those which verify
+/** Line Plane Intersection 
+    Let ax+by+cz+D=0 be the equation of your plane
+    (if your plane is defined by a normal vector N + one point M, then
+    (a,b,c) are the coordinates of the normal N, and d is calculated by using
+    the coordinates of M in the above equation).
 
-x=d+lu
-y=e+lv
-z=f+lw
-where l takes all real values.
+    Let your line be defined by one point P(d,e,f) and a vector V(u,v,w), the
+    points on your line are those which verify
 
-for this point to be on the plane, you have to have
+    x=d+lu
+    y=e+lv
+    z=f+lw
+    where l takes all real values.
 
-ax+by+cz+D=0, so,
+    for this point to be on the plane, you have to have
 
-a(d+lu)+b(e+lv)+c(f+lw)+D=0
-that is
+    ax+by+cz+D=0, so,
 
-l(au+bv+cw)=-(ad+be+cf+D)
+    a(d+lu)+b(e+lv)+c(f+lw)+D=0
+    that is
 
-note that, if au+bv+cw=0, then your line is either in the plane, or
-parallel to it... otherwise you get the value of l, and the intersection
-has coordinates:
-x=d+lu
-y=e+lv
-z=f+lw
-where
+    l(au+bv+cw)=-(ad+be+cf+D)
 
-l = -(ad+be+cf+D)/(au+bv+cw)
+    note that, if au+bv+cw=0, then your line is either in the plane, or
+    parallel to it... otherwise you get the value of l, and the intersection
+    has coordinates:
+    x=d+lu
+    y=e+lv
+    z=f+lw
+    where
 
-a= XX(normal_plane);
-b= YY(normal_plane);
-c= ZZ(normal_plane);
-D= intersection_point;
+    l = -(ad+be+cf+D)/(au+bv+cw)
 
-d=XX(point_line)
-e=YY(point_line)
-f=ZZ(point_line)
+    a= XX(normal_plane);
+    b= YY(normal_plane);
+    c= ZZ(normal_plane);
+    D= intersection_point;
 
-u=XX(vector_line);
-v=YY(vector_line);
-w=ZZ(vector_line);
+    d=XX(point_line)
+    e=YY(point_line)
+    f=ZZ(point_line)
 
-XX(intersection_point)=x;
-YY(intersection_point)=y;
-ZZ(intersection_point)=z;
+    u=XX(vector_line);
+    v=YY(vector_line);
+    w=ZZ(vector_line);
 
-return 0 if sucessful
-return -1 if line paralell to plane
-return +1 if line in the plane
+    XX(intersection_point)=x;
+    YY(intersection_point)=y;
+    ZZ(intersection_point)=z;
 
+    return 0 if sucessful
+    return -1 if line paralell to plane
+    return +1 if line in the plane
 */
 int line_plane_intersection(const matrix1D<double> normal_plane,
                          const matrix1D<double> vector_line, 
