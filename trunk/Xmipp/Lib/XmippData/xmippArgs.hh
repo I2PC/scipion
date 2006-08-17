@@ -225,6 +225,13 @@ void remove_quotes(char **_str);
    For C++, there is anothere way. You supply a string object and a vector
    of strings is returned with all the elements.*/
 //@{
+   /** Split a STL string given some delimiter.
+       Returns a the number of tokens found. The tokens are in the variable
+       results.*/
+int splitString(const string& input, 
+    const string& delimiter, vector<string>& results, 
+    bool includeEmpties=false);
+
    /** Returns first token (char *).
        \\Ex: char line[80]; ...; cout << "First  word: "
              << first_token(line) << endl;*/
