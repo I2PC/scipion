@@ -27,14 +27,17 @@
    #define _XMIPP_MACROS
 
 #ifndef _CYGWIN
-   #include <values.h>
-#else
-   #ifndef MINFLOAT
-      #define MINFLOAT -1e30
+   #ifdef __APPLE__
+      #include <limits.h>
+   #else
+      #include <values.h>
    #endif
-   #ifndef MAXFLOAT
-      #define MAXFLOAT  1e30
-   #endif
+#endif
+#ifndef MINFLOAT
+   #define MINFLOAT -1e30
+#endif
+#ifndef MAXFLOAT
+   #define MAXFLOAT  1e30
 #endif
 
 //@name Macros */
