@@ -769,3 +769,35 @@ void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color) {
           img(y,myx)=color;
     }
 }
+
+/* Local thresholding ------------------------------------------------------ */
+void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
+   matrix2D<int> &result, matrix2D<int> *mask) {
+   // Convolve the input image with the kernel
+   matrix2D<double> convolved;
+   convolved.init_zeros(img);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved) {
+      if (mask!=NULL)
+         if (!(*mask)(i,j)) continue;
+      int ii0=MAX(STARTINGY (convolved),FLOOR(i-dimLocal));
+      int jj0=MAX(STARTINGX (convolved),FLOOR(j-dimLocal));
+      int iiF=MIN(FINISHINGY(convolved),CEIL(i+dimLocal));
+      int jjF=MIN(FINISHINGX(convolved),CEIL(j+dimLocal));
+      double N=0;
+      for (int ii=ii0; ii<=iiF; ii++)
+         for (int jj=jj0; jj<=jjF; jj++) {
+            if (mask==NULL) {convolved(i,j)+=img(ii,jj); ++N;}
+            else if ((*mask)(i,j)) {convolved(i,j)+=img(ii,jj); ++N;}
+         }
+      if (N!=0) convolved(i,j)/=N;
+   }
+
+   // Substract the original from the convolved image and threshold
+   result.copy_shape(img);
+   result.init_zeros();
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved) {
+      if (mask!=NULL)
+         if (!(*mask)(i,j)) continue;
+      if (img(i,j)-convolved(i,j)>C) result(i,j)=1;
+   }
+}

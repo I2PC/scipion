@@ -929,5 +929,20 @@ void inertia_moments(const matrix2D<double> &img,
     The points are supplied as a pointer to three integer positions. They can
     be negative. */
 void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color);
+
+/** Local thresholding.
+    This function implements the local thresholding as described in
+    http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm. A mask
+    can be supplied to limit the image area.
+    
+    The procedure employed is the following:
+    - Convolving the image with the statistical operator,
+      i.e. the mean or median (the size of the convolution kernel is dimLocal)
+    - Subtracting the original from the convolved image. 
+    - Thresholding the difference image with C. 
+    - Inverting the thresholded image.
+*/
+void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
+    matrix2D<int> &result, matrix2D<int> *mask=NULL);
 //@}
 #endif
