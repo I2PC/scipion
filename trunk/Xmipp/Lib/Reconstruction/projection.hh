@@ -92,9 +92,6 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
     The projection itself, from now on, will keep the Euler angles.
-    
-    An exception is thrown if the SPIDER environment variable is not set 
-
  */
 void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double rot, double tilt, double psi);
@@ -187,6 +184,7 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
 
 //#define DEBUG_LITTLE
 //#define DEBUG
+const int ART_PIXEL_SUBSAMPLING=2;
 
 template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
@@ -373,7 +371,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
         	  printf("\nProjecting grid coord (%d,%d,%d) ",j,i,k);
         	  cout << "Vol there = " << VOLVOXEL(vol,k,i,j) << endl;
 		  printf(" 3D universal position (%f,%f,%f) \n",
-		     ZZ(univ_position),YY(univ_position),XX(univ_position));
+		     XX(univ_position),YY(univ_position),ZZ(univ_position));
         	  cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << endl;
 		  matrix1D<double> aux;
 		  Uproject_to_plane(univ_position, proj.euler, aux);
@@ -396,9 +394,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                }
                #endif
 
-               // If the two corners haven't collapsed into a line or a point
-               // This happens if the basis falls outside the projection plane
-               if (XX_corner1<XX_corner2 && YY_corner1<YY_corner2) {
+               // Check if the basis falls outside the projection plane
+               // COSS: I have changed here
+               if (XX_corner1<=XX_corner2 && YY_corner1<=YY_corner2) {
         	  // Compute the index of the basis for corner1
                   if (basis.type==Basis::blobs)
 		     OVER2IMG(basis.blobprint,(double)YY_corner1-YY(actprj),
@@ -447,24 +445,81 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                               a2=IMGPIXEL(basis.blobprint2,foot_V,foot_U);
                            } else {
                               // Projection of other bases
-                              // Get the pixel in universal coordinates
-                              SPEED_UP_temps;
-                              VECTOR_R3(prjPix,x,y,0);
-                              // Express the point in a local coordinate system
-                              M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
-                              #ifdef DEBUG
-                                 if (condition)
-                                    cout << " in volume coord ("
-                                         << prjPix.transpose() << ")";
-                              #endif
-                              V3_MINUS_V3(prjPix,prjPix,univ_position);
-                              #ifdef DEBUG
-                                 if (condition)
-                                    cout << " in voxel coord ("
-                                         << prjPix.transpose() << ")";
-                              #endif
-                              a=basis.projection_at(prjDir,prjPix);
-                              a2=a*a;
+                              // If the basis is big enough, then
+                              // it is not necessary to integrate at several
+                              // places. Big enough is being greater than
+                              // 1.41 which is the maximum separation
+                              // between two pixels
+                              if (XX_footprint_size>1.41) {
+                                 // Get the pixel in universal coordinates
+                                 SPEED_UP_temps;
+                                 VECTOR_R3(prjPix,x,y,0);
+                                 // Express the point in a local coordinate system
+                                 M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
+                                 #ifdef DEBUG
+                                    if (condition)
+                                       cout << " in volume coord ("
+                                            << prjPix.transpose() << ")";
+                                 #endif
+                                 V3_MINUS_V3(prjPix,prjPix,univ_position);
+                                 #ifdef DEBUG
+                                    if (condition)
+                                       cout << " in voxel coord ("
+                                            << prjPix.transpose() << ")";
+                                 #endif
+                                 a=basis.projection_at(prjDir,prjPix);
+                                 a2=a*a;
+                              } else {
+                                 // If the basis is too small (of the
+                                 // range of the voxel), then it is
+                                 // necessary to sample in a few places
+                                 const double p0=1.0/(2*ART_PIXEL_SUBSAMPLING)-0.5;
+                                 const double pStep=1.0/ART_PIXEL_SUBSAMPLING;
+                                 const double pAvg=1.0/(ART_PIXEL_SUBSAMPLING*ART_PIXEL_SUBSAMPLING);
+                                 int ii, jj;
+                                 double px, py;
+                                 a=0;
+                                 #ifdef DEBUG
+                                    if (condition) cout << endl;
+                                 #endif
+                                 for (ii=0, px=p0; ii<ART_PIXEL_SUBSAMPLING; ii++, px+=pStep)
+                                    for (jj=0, py=p0; jj<ART_PIXEL_SUBSAMPLING; jj++, py+=pStep) {
+                                       #ifdef DEBUG
+                                          if (condition)
+                                             cout << "    subsampling (" << ii << ","
+                                                  << jj << ") ";
+                                       #endif
+                                       SPEED_UP_temps;
+                                       // Get the pixel in universal coordinates
+                                       VECTOR_R3(prjPix,x+px,y+py,0);
+                                       // Express the point in a local coordinate system
+                                       M3x3_BY_V3x1(prjPix,proj.eulert,prjPix);
+                                       #ifdef DEBUG
+                                          if (condition)
+                                             cout << " in volume coord ("
+                                                  << prjPix.transpose() << ")";
+                                       #endif
+                                       V3_MINUS_V3(prjPix,prjPix,univ_position);
+                                       #ifdef DEBUG
+                                          if (condition)
+                                             cout << " in voxel coord ("
+                                                  << prjPix.transpose() << ")";
+                                       #endif
+                                       a+=basis.projection_at(prjDir,prjPix);
+                                       #ifdef DEBUG
+                                          if (condition)
+                                             cout << " partial a="
+                                                  << basis.projection_at(prjDir,prjPix)
+                                                  << endl;
+                                       #endif
+                                    }
+                                 a*=pAvg;
+                                 a2=a*a;
+                                 #ifdef DEBUG
+                                    if (condition)
+                                       cout << "   Finally ";
+                                 #endif
+                              }
                            }
                         }
                 	#ifdef DEBUG
