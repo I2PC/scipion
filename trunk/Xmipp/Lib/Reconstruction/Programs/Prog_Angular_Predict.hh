@@ -172,7 +172,7 @@ public:
 
    /** Refine candidate list via correlation. Given a projection image and the
        list of alive candidates, this function correlates the input image with
-       all alive candidates and leave to pass on ly th% of the images.
+       all alive candidates and leave to pass only th% of the images.
        
        m is the subband being studied*/
    void refine_candidate_list_with_correlation(int m, 
