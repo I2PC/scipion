@@ -33,7 +33,6 @@
 #include <Reconstruction/projection.hh>
 #include <Reconstruction/directions.hh>
 #include <Reconstruction/symmetries.hh>
-#include <malloc.h>
 
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ ) 
@@ -100,7 +99,7 @@ public:
 
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
-			    float img_rot, float img_tilt, float img_psi, 
+			    float &img_rot, float &img_tilt, float &img_psi, 
 			    int &opt_dirno, double &opt_psi,
 			    double &opt_xoff, double &opt_yoff, 
 			    double &maxCC, double &Zscore);
