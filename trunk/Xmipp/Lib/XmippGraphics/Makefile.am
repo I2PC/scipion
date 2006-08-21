@@ -8,7 +8,8 @@ libXmippGraphics_@host_os@_la_SOURCES = Src/showTools.cc      showTools_moc.cc \
 	Src/showSpectra.cc    showSpectra_moc.cc \
 	Src/showSOM.cc        showSOM_moc.cc \
 	Src/showSpectraSOM.cc showSpectraSOM_moc.cc \
-	Src/showAssignCTF.cc  showAssignCTF_moc.cc
+	Src/showAssignCTF.cc  showAssignCTF_moc.cc \
+        Src/showPlotter.cc    showPlotter_moc.cc
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 LIBADD = @QT_LIBS@
@@ -33,10 +34,14 @@ showSpectraSOM_moc.cc : showSpectraSOM.hh
 	@QT_MOC@ showSpectraSOM.hh -o showSpectraSOM_moc.cc
 showAssignCTF_moc.cc : showAssignCTF.hh
 	@QT_MOC@ showAssignCTF.hh -o showAssignCTF_moc.cc
+showPlotter_moc.cc : showPlotter.hh
+	@QT_MOC@ showPlotter.hh -o showPlotter_moc.cc
 
 EXTRA_DIST = show2D.hh   showSOM.hh      showSpectraSOM.hh  showTools.hh \
 	showSel.hh  showSpectra.hh  showTable.hh       showVol.hh \
-        showAssignCTF.hh
+        showAssignCTF.hh showPlotter.hh \
+        images/filesave20.png images/zoomin20.png images/zoomout20.png \
+        images/filesave.png images/zoomin.png images/zoomout.png
 
 docs:
 	@echo "Creating documentation in XmippInterface ..."

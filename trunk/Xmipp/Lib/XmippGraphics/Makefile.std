@@ -28,7 +28,8 @@ SRC_OBJS = Src/showTools.o      showTools.moc \
 	   Src/showSpectra.o    showSpectra.moc \
 	   Src/showSOM.o        showSOM.moc \
 	   Src/showSpectraSOM.o showSpectraSOM.moc \
-	   Src/showAssignCTF.o  showAssignCTF.moc
+	   Src/showAssignCTF.o  showAssignCTF.moc \
+           Src/showPlotter.o    showPlotter.moc
 
 # Main Action = Built library ----------------------------------------------
 .SUFFIXES: .moc .cc .hh .c
