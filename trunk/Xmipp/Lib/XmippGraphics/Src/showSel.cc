@@ -257,11 +257,15 @@ const char * ShowSel::cellLabel(int i) const {
    if (load_mode==CTF_mode) {
       // Get the defocus parameters from the ctfparam file
       FileName fn_param=imgnames[i].without_extension()+".ctfparam";
-      XmippCTF ctf; ctf.read(fn_param,false);
-      string defocus_val=ItoA(ROUND(MIN(ctf.DeltafU,ctf.DeltafV)),6)+" "+
-                         ItoA(ROUND(MAX(ctf.DeltafU,ctf.DeltafV)),6)+" "+
-                         ItoA(ABS(ROUND(ctf.DeltafU-ctf.DeltafV)));
-      return defocus_val.c_str();
+      try {
+         XmippCTF ctf; ctf.read(fn_param,false);
+         string defocus_val=ItoA(ROUND(MIN(ctf.DeltafU,ctf.DeltafV)),6)+" "+
+                            ItoA(ROUND(MAX(ctf.DeltafU,ctf.DeltafV)),6)+" "+
+                            ItoA(ABS(ROUND(ctf.DeltafU-ctf.DeltafV)));
+         return defocus_val.c_str();
+      } catch (Xmipp_error XE) {
+         return ((string)"Cannot open "+fn_param).c_str();
+      }
    }
    else
       switch (labeltype) {
@@ -592,7 +596,14 @@ void ShowSel::recomputeCTFmodel() {
 
    // Read the Assign CTF parameters
    Prog_assign_CTF_prm assign_ctf_prm;
-   assign_ctf_prm.read(fn_assign);
+   try {
+      assign_ctf_prm.read(fn_assign);
+   } catch (Xmipp_error XE) {
+      cout << XE;
+      cout << "It seems that " << fn_assign << " is not the parameter file"
+           << " that you used to estimate the CTFs\n";
+      return;
+   }
    
    // Get the PSD name
    FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
