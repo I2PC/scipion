@@ -36,7 +36,11 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <malloc.h>
+#ifndef __APPLE__
+   #include <malloc.h>
+#else
+   #include <stdlib.h>
+#endif
 #include <string.h>
 #include "groe.h"
 #define MAX_HARMONIC 51   /* Max. no of harmonics accepted */

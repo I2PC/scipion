@@ -47,7 +47,11 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <malloc.h>
+#ifndef __APPLE__
+   #include <malloc.h>
+#else
+   #include <stdlib.h>
+#endif
 #include <stdio.h>
 #include "spider.h"
 #include "groe.h"

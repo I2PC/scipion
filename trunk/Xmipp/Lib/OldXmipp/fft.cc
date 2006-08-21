@@ -66,12 +66,8 @@
 
 #include <math.h>
 #include <stdio.h>
-#if TURBO
-#  include <alloc.h>
-#  include <mem.h>
-#elif MSC
-#  include <malloc.h>
-#  include <memory.h>
+#ifndef __APPLE__
+   #include <malloc.h>
 #endif
 #include "spider.h"
 #include "groe.h"

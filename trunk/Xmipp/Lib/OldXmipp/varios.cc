@@ -49,21 +49,18 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-#ifdef _PARAMID
-#include <types.h> 
-#else
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/stat.h>
 #include <memory.h> 
-#include <malloc.h> 
+#ifndef __APPLE__
+   #include <malloc.h>
+#else
+   #include <stdlib.h>
 #endif
 
 #include <stdio.h>
 #include <math.h>
-#ifdef __sun
-   #include <strings.h>
-#endif
 #include "spider.h"
 #include "groe.h"
 

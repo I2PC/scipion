@@ -40,7 +40,9 @@ using namespace std;
 // MAXDOUBLE
 #include <limits.h>
 #ifndef _CYGWIN
-   #include <values.h>
+   #ifndef __APPLE__
+      #include <values.h>
+   #endif
 #endif
 
 #ifndef MAXFLOAT

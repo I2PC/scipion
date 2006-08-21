@@ -24,13 +24,16 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <malloc.h>
+#ifndef __APPLE__
+   #include <malloc.h>
+#else
+   #include <stdlib.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "spider.h"
 #include "groe.h"
-
 
 /***************************************************************
  This routine normalizes the corelation of two images in such
