@@ -978,18 +978,17 @@ void ImageViewer::recomputeCTFmodel() {
    Prog_assign_CTF_prm assign_ctf_prm;
    assign_ctf_prm.read(fn_assign);
    
-   // Check that selfile mode
-   if (!assign_ctf_prm.selfile_mode) {
-      QMessageBox::about( this, "Error!", "CTF is not computed in selfile mode\n");
-      return;
-   }
-
    // Get the PSD name
-   FileName fn_root=assign_ctf_prm.selfile_fn.remove_all_extensions();
    FileName fn_psd;
-   if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-        fn_psd=fn_root+"_ARMAavg.psd";
-   else fn_psd=fn_root+"_Periodogramavg.psd";
+   if (assign_ctf_prm.selfile_mode) {
+      FileName fn_root;
+      fn_root=assign_ctf_prm.selfile_fn.remove_all_extensions();
+      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+           fn_psd=fn_root+"_ARMAavg.psd";
+      else fn_psd=fn_root+"_Periodogramavg.psd";
+   } else {
+      fn_psd=((FileName) filename).remove_all_extensions()+".psd";
+   }
 
    // Show this image in a separate window to select the main parameters
    AssignCTFViewer *prm_selector=new AssignCTFViewer(fn_psd,assign_ctf_prm);
