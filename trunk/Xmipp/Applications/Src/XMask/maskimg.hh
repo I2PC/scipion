@@ -26,7 +26,8 @@
 #include <XmippData/xmippImages.hh>
 
 ///  Ways the training set can be used
-typedef enum {CIRCLE, ELLIPSE,  RECTANGLE, SQUARE, RING, ELLIPRING, RECTFRAME, SQUFRAME} maskType;
+typedef enum {CIRCLE, ELLIPSE,  RECTANGLE, SQUARE, RING, ELLIPRING,
+              RECTFRAME, SQUFRAME, POLYGON} maskType;
 
 /**@name maskFigure*/
 //@{
@@ -1277,8 +1278,244 @@ public:
 
 };
 
+/**@name maskEllipse*/
+//@{
+/**
+ * This class implements circle figure to b used as mask.
+ * It is used for generating geometric masks.
+ */
+class maskPolygon: public maskFigure
+{
+public:
 
+     /** maskPolygon constructor
+     *   @param _cx: X-coordinate
+     *   @param _cy: Y-coordinate
+     */
+     maskPolygon(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskFigure(_paintDevice, _pixmap, _width, _height) {
+        close_polygon=false;
+     }; 
 
+     /** Moves the figure
+     *   @param _cx: new X-coordinate
+     *   @param _cy: new Y-coordinate
+     */
+     virtual bool move(int _cx, int _cy) {
+       if (list_of_points.size()==0) return true;
+       cout << "Is this ever called? Contact coss@cnb.uam.es\n";
+     };
+
+     /** Moves the figure to the left one pixel
+     */
+     virtual bool moveLeft() {
+       if (list_of_points.size()==0) return true;
+       if (XX(top_left_corner)>0) {
+          old_top_left_corner=top_left_corner;
+          old_bottom_right_corner=bottom_right_corner;
+          for (int i=0; i<list_of_points.size(); i++)
+             --XX(list_of_points[i]);
+          --XX(top_left_corner);
+          --XX(bottom_right_corner);
+          paint();
+          return true;
+       } else return false;
+     };     
+
+     /** Moves the figure up one pixel
+     */
+     virtual bool moveUp() {
+       if (list_of_points.size()==0) return true;
+       if (YY(top_left_corner)>0) {
+          old_top_left_corner=top_left_corner;
+          old_bottom_right_corner=bottom_right_corner;
+          for (int i=0; i<list_of_points.size(); i++)
+             --YY(list_of_points[i]);
+          --YY(top_left_corner);
+          --YY(bottom_right_corner);
+          paint();
+          return true;
+       } else return false;
+     };     
+
+     /** Moves the figure to the right one pixel
+     */
+     virtual bool moveRight() {
+       if (list_of_points.size()==0) return true;
+       if (XX(bottom_right_corner)<width) {
+          old_top_left_corner=top_left_corner;
+          old_bottom_right_corner=bottom_right_corner;
+          for (int i=0; i<list_of_points.size(); i++)
+             ++XX(list_of_points[i]);
+          ++XX(top_left_corner);
+          ++XX(bottom_right_corner);
+          paint();
+          return true;
+       } else return false;
+     };     
+
+     /** Moves the figure down one pixel
+     */
+     virtual bool moveDown() {
+       if (list_of_points.size()==0) return true;
+       if (YY(bottom_right_corner)<height) {
+          old_top_left_corner=top_left_corner;
+          old_bottom_right_corner=bottom_right_corner;
+          for (int i=0; i<list_of_points.size(); i++)
+             ++YY(list_of_points[i]);
+          ++YY(top_left_corner);
+          ++YY(bottom_right_corner);
+          paint();
+          return true;
+       } else return false;
+     };     
+
+     /** Decreases the width one pixel
+     */
+     virtual bool decreaseWidth() {
+        cout << "Resizing is not available for polygons\n";
+        return true;
+     };
+
+     /** Decreases the height one pixel
+     */
+     virtual bool decreaseHeight() {
+        cout << "Resizing is not available for polygons\n";
+        return true;
+     };
+
+     /** Increases the width one pixel
+     */
+     virtual bool increaseWidth() {
+        cout << "Resizing is not available for polygons\n";
+        return true;
+     };
+
+     /** Increases the height one pixel
+     */
+     virtual bool increaseHeight() {
+        cout << "Resizing is not available for polygons\n";
+        return true;
+     };
+
+     /** Add point to the polygon */
+     void add_point(int x, int y) {
+        if (close_polygon) return;
+        old_top_left_corner=top_left_corner;
+        old_bottom_right_corner=bottom_right_corner;
+        list_of_points.push_back(vector_R2(x,y));
+        if (list_of_points.size()>1) {
+           XX(top_left_corner)=MIN(XX(top_left_corner),x);
+           YY(top_left_corner)=MIN(YY(top_left_corner),y);
+           XX(bottom_right_corner)=MAX(XX(bottom_right_corner),x);
+           YY(bottom_right_corner)=MAX(YY(bottom_right_corner),y);
+        } else {
+           top_left_corner=vector_R2(x,y);
+           bottom_right_corner=vector_R2(x,y);
+           old_top_left_corner=top_left_corner;
+           old_bottom_right_corner=bottom_right_corner;
+        }
+        paint();
+     }
+
+     /** Close polygon */
+     void closePolygon() {
+        close_polygon=true;
+        list_of_points.push_back(list_of_points[0]);
+        paint();
+     }
+
+     /** Move point of the polygon */
+     void move_point(int x, int y) {
+        if (close_polygon || list_of_points.size()<=1) return;
+        old_top_left_corner=top_left_corner;
+        old_bottom_right_corner=bottom_right_corner;
+        int imax=list_of_points.size();
+        XX(list_of_points[imax-1])=x;
+        YY(list_of_points[imax-1])=y;
+        XX(top_left_corner)=MIN(XX(top_left_corner),x);
+        YY(top_left_corner)=MIN(YY(top_left_corner),y);
+        XX(bottom_right_corner)=MAX(XX(bottom_right_corner),x);
+        YY(bottom_right_corner)=MAX(YY(bottom_right_corner),y);
+        paint();
+     }
+
+     /** Clear all points */
+     void clear_all_points() {
+        int imax=list_of_points.size();
+        if (imax==0 || close_polygon) return;
+        if (imax>1) {
+           QPoint point((int)XX(old_top_left_corner), (int)YY(old_top_left_corner));
+           QRect rect((int)XX(old_top_left_corner)-2, (int)YY(old_top_left_corner)-2,
+              (int)(XX(old_bottom_right_corner)-XX(old_top_left_corner))+4,
+              (int)(YY(old_bottom_right_corner)-YY(old_top_left_corner))+4);
+           drawPixmap(point, (*pixmap), rect);
+        }
+        list_of_points.clear();
+     }
+
+     /** Resizes the figure
+     *   @param _width: new width
+     *   @param _height: new height
+     */
+     virtual void resize(int _width, int _height) {
+        maskFigure::resize(_width, _height);        
+        double factor=(double)_width/(double)width;
+        for (int i=0; i<list_of_points.size(); i++)
+           list_of_points[i]*factor;
+        old_top_left_corner=top_left_corner;
+        old_bottom_right_corner=bottom_right_corner;
+        height = _height; width = _width;
+	paint();
+     };
+
+     /** Paints the figure (virtual method)
+     *   
+     */
+     virtual void paint() {
+       if (list_of_points.size()==0) return;
+       maskFigure::paint();
+       int imax=list_of_points.size();
+       if (imax>1) {
+          QPoint point((int)XX(old_top_left_corner), (int)YY(old_top_left_corner));
+          QRect rect((int)XX(old_top_left_corner), (int)YY(old_top_left_corner),
+             (int)(XX(old_bottom_right_corner)-XX(old_top_left_corner)),
+             (int)(YY(old_bottom_right_corner)-YY(old_top_left_corner)));
+          drawPixmap(point, (*pixmap), rect);
+       }
+       drawPoint((int)XX(list_of_points[0]),(int)YY(list_of_points[0]));
+       for (int i=1; i<imax; i++)
+          drawLine((int)XX(list_of_points[i-1]),(int)YY(list_of_points[i-1]),
+             (int)XX(list_of_points[i]),(int)YY(list_of_points[i]));
+       old_top_left_corner=top_left_corner;
+       old_bottom_right_corner=bottom_right_corner;
+     }
+
+     /** this method returns true if the point passed as parameter is inside the circle
+     *   @param _cx: X xoordinate of the point to test
+     *   @param _cy: X xoordinate of the point to test
+     */
+     virtual bool isIn(int _cx, int _cy) {
+        if (!close_polygon) return false;
+        else return point_inside_polygon(list_of_points,vector_R2(_cx,_cy));
+     };
+
+     /** Prints mask parameters (virtual)*/
+     virtual void print(float scalex, float scaley) {
+        cout << "List of points\n";
+       for (int i=0; i<list_of_points.size(); i++)
+          cout << "Point " << i << " (X,Y)=("
+               << XX(list_of_points[i])/scalex << ","
+               << YY(list_of_points[i])/scaley << ")\n";
+     }
+     	
+protected:
+   vector< matrix1D<double> > list_of_points;
+   matrix1D<double>           top_left_corner;
+   matrix1D<double>           bottom_right_corner;
+   matrix1D<double>           old_top_left_corner;
+   matrix1D<double>           old_bottom_right_corner;
+   bool                       close_polygon;
+};
 
 /**@name maskImg*/
 //@{
@@ -1310,7 +1547,7 @@ protected:
     void	paintEvent( QPaintEvent * );
     void	resizeEvent( QResizeEvent * );
     void	mousePressEvent( QMouseEvent * );
-    void	mouseReleaseEvent( QMouseEvent * );
+    void	mouseDoubleClickEvent( QMouseEvent * );
     void	mouseMoveEvent( QMouseEvent * );
     void 	keyPressEvent( QKeyEvent* );
 
@@ -1331,7 +1568,8 @@ private:
     QPopupMenu *savepixmap;
     QWidget    *helpmsg;
     QLabel     *status;
-    int         circle, rect, ellip, squ, ring, ellipring, rectframe, squframe, si; // Menu item ids
+    int         circle, rect, ellip, squ, ring, ellipring, rectframe,
+                squframe, si, polygon; // Menu item ids
     void	Init();
     bool 	xmipp2Qt(Image &_image);
     bool 	Qt2xmipp(QImage _image);
