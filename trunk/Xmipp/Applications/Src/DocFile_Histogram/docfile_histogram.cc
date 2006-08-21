@@ -43,12 +43,14 @@ int main (int argc,char *argv[]) {
    histogram1D      hist;
    histogram2D      hist2;
    matrix1D<double> C,C2;
+   double           percentil;
 
 // Check the command line ==================================================
    try {
       int i;
       DF.read(get_param(argc,argv,"-i"));
       fn_out=get_param(argc,argv,"-o","");
+      percentil=AtoF(get_param(argc,argv,"-percentil","50"));
       col=AtoI(get_param(argc,argv,"-col","0"));
       col2=AtoI(get_param(argc,argv,"-col2","-1"));
 
@@ -95,6 +97,8 @@ int main (int argc,char *argv[]) {
               << " Steps: " << StepsNo << endl;
 	 C.compute_stats(avg,stddev,dummy,dummy);
 	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
+         cerr << "Percentil (" << percentil << "): "
+	      << hist.percentil(percentil) << endl;
          if (fn_out!="") hist.write(fn_out);
          else            cout << hist;
                  
@@ -141,6 +145,7 @@ void Usage() {
            "      [-range <m> <M>]             : range for the first column\n"
            "                                     by default, it is automatic\n"
            "      [-steps <N=100>]             : number of subdivisions for column 1\n"
+	   "      [-percentil <p=50>]          : Only for 1D histograms\n"
            "      [-col2 <n>]                  : if specified, then a 2D histogram\n"
            "                                     is calculated\n"
            "      [-range2 <m> <M>]            : range for the second column\n"
