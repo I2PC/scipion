@@ -84,6 +84,12 @@ public:
        double _minGray=0, double _maxGray=0,
        TLoadMode load_mode=ImageViewer::Normal_mode );
     
+    /** Load matrix.
+        Load the image from a matrix provided */
+    bool loadMatrix(matrix2D<double> &_matrix,
+       double _minGray=0, double _maxGray=0,
+       TLoadMode load_mode=ImageViewer::Normal_mode );
+        
     /** Set this image as a Fourier image */
     void set_Fourier_flag() {isFourierImage=true;}
 
@@ -93,6 +99,20 @@ public:
     /** Flag whether or not to apply header transformation **/ 
     bool apply_geo;
  
+    /** Draw a line between two points */
+    void drawLine(int x1, int y1, int x2, int y2);
+    
+    /** Draw a line with a given angle (degrees) */
+    void drawAngle(double angle);
+
+    /** Get Pixmap size.
+        This is the size of the window being currently represented,
+        taking into account the zoom factor. */
+    void getPixmapSize(int &width, int &height) {
+       width=pmScaled.size().width();
+       height=pmScaled.size().height();
+    }
+
 protected:
     virtual void paintEvent( QPaintEvent * );
     void	resizeEvent( QResizeEvent * );
@@ -143,7 +163,6 @@ protected:
     void	updateStatus();
     bool 	reconvertImage();
     void        refineProfileLine();
-    void        drawLine(int x1, int y1, int x2, int y2);
     int		pickx, picky;
     bool	may_be_other;
     static 	ImageViewer* other;

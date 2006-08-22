@@ -624,10 +624,38 @@ bool ImageViewer::loadImage( const char *fileName,
     return ok;
 }
 
-/*****************************************/
+bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
+   double _minGray, double _maxGray, TLoadMode _load_mode) {
+   load_mode=_load_mode;
+   bool ok = FALSE;
+   static bool message_shown=false;
+   bool treat_separately_left_right=false;
+   if ( XSIZE(_matrix)==0 ) return false;
+    
+   Image tmpImage;
+   isFourierImage=false;
+   if (load_mode==ImageViewer::PSD_mode) {
+      // It is only the ARMA model
+      xmipp2PSD(_matrix,_matrix);
+   } else if (load_mode==ImageViewer::CTF_mode) {
+      // It is ARMA and CTF together
+      xmipp2CTF(_matrix,_matrix);
+      treat_separately_left_right=true;
+      options->setItemEnabled(editctfmodel,true);
+   }
+   tmpImage()=_matrix;
 
-bool ImageViewer::reconvertImage()
-{
+   tmpImage().set_Xmipp_origin();
+   minGray=_minGray;
+   maxGray=_maxGray;
+   ok = xmipp2Qt(tmpImage,treat_separately_left_right);
+    
+   if (ok) ok = showImage();
+   return ok;
+}
+
+/*****************************************/
+bool ImageViewer::reconvertImage() {
     bool success = FALSE;
 
     if ( image.isNull() ) return FALSE;
@@ -869,6 +897,38 @@ void ImageViewer::drawLine(int x1, int y1, int x2, int y2) {
    painter.setBrush( brush );
    painter.setRasterOp(XorROP);
    painter.drawLine(x1, y1, x2, y2);
+}
+
+void ImageViewer::drawAngle(double angle) {
+   double angle_rad=DEG2RAD(angle);
+
+   // Get image dimensions
+   int Xdim, Ydim;
+   getPixmapSize(Xdim,Ydim);
+   
+   // Compute image center
+   int xc = Xdim/2;
+   int yc = Ydim/2;
+   
+   // Compute line
+   int x0, y0, xF, yF;
+   if (ABS(angle)<=45) {
+      x0=Xdim;
+      y0=(int)(yc-(x0-xc)*tan(angle_rad));
+      xF=0;
+      yF=Ydim-y0;
+   } else {
+      if (SGN(angle)>0) {
+         y0=0;
+         yF=Ydim;
+      } else {
+         yF=0; //-45...-90
+         y0=Ydim;
+      }
+      x0=(int)(xc+(yc-y0)*tan(PI/2-angle_rad));
+      xF=Xdim-x0 ;
+   }
+   drawLine(x0,y0,xF,yF);
 }
 
 /****************************************************/
