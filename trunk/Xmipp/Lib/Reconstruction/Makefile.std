@@ -67,6 +67,7 @@ SRC_OBJS = Src/grids.o Src/blobs.o Src/symmetries.o Src/phantom.o \
            Programs/Src/Prog_SSNR.o \
 	   Programs/Src/Prog_Angular_Predict.o \
            Programs/Src/Prog_Angular_Predict_continuous.o \
+	   Programs/Src/Prog_Angular_Predict_Tomography.o \
 	   Programs/Src/Prog_adjust_volume.o \
            Programs/Src/Prog_Enhance_PSD.o \
            Programs/Src/Prog_PDBPhantom.o

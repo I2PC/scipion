@@ -43,6 +43,7 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_SSNR.cc \
 	Programs/Src/Prog_Angular_Predict.cc \
 	Programs/Src/Prog_Angular_Predict_continuous.cc \
+	Programs/Src/Prog_Angular_Predict_Tomography.cc \
 	Programs/Src/Prog_MLalign2D.cc \
 	Programs/Src/Prog_Refine3d.cc \
 	Programs/Src/Prog_break_sym.cc \
