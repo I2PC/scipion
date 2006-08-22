@@ -145,6 +145,19 @@ Plotter::Plotter(QWidget *parent, const char *name) :QMainWindow(parent,name) {
    show();
 }
 
+/* Destructor -------------------------------------------------------------- */
+Plotter::~Plotter() {
+   delete locationLabelX;
+   delete locationLabelY;
+   delete formulaLabel;
+   delete modLabel;
+   delete zoomInButton;
+   delete zoomOutButton;
+   delete saveButton;
+   curveMap.clear();
+   curveActive.clear();
+}
+
 /* Zoom -------------------------------------------------------------------- */
 /* The zoom stack is represented by two member variables
    zoomStack holds the different zoom settings as vector<PlotSettings>
@@ -541,8 +554,9 @@ void Plotter::drawCurves(QPainter *painter) {
    QPen pen1 (red,   1, SolidLine);
    QPen pen2 (blue , 1, DotLine);
    QPen pen3 (green, 1, DashLine); 
+   QPen pen4 (black, 1, DashDotLine); 
 
-   QPen penForIds[3] = {pen1,pen2,pen3};
+   QPen penForIds[4] = {pen1,pen2,pen3,pen4};
    PlotSettings settings = zoomStack[curZoom];
 
    // Set the clip region as a rectangle that 
@@ -575,7 +589,7 @@ void Plotter::drawCurves(QPainter *painter) {
          }
          
          points.truncate(numPoints);
-         painter->setPen(penForIds[(uint) id % 3]);
+         painter->setPen(penForIds[(uint) id % 4]);
          painter->drawPolyline(points);
    }
 
@@ -621,4 +635,19 @@ void Plotter::saveToFile() {
        fileName = fileName.right(length-lastSlashPos-1);
        pixmap.save(fileName,"png");
     }
+}
+
+// Set plot settings -------------------------------------------------------
+void Plotter::setPlotSettings(const PlotSettings &new_settings) {
+   zoomStack.clear();
+   curZoom=0;
+   zoomStack.push_back(new_settings);
+   update();
+}
+
+// Copy --------------------------------------------------------------------
+void Plotter::copy(const Plotter &plotter) {
+   curveMap=plotter.curveMap;
+   curveActive=plotter.curveActive;
+   setPlotSettings(plotter.zoomStack[0]);
 }

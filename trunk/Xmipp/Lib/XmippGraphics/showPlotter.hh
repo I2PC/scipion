@@ -120,9 +120,12 @@ public:
 class Plotter :public QMainWindow {
    Q_OBJECT
 public:
-   /** Empty constructor*/
+   /** Empty constructor */
    Plotter(QWidget *parent =0, const char *name =0);
 
+   /** Destructor */
+   ~Plotter();
+   
    /** Assign a new curve to the plotter.
        It needs an ID for the curve and a matrix1D with the curve.
        it will be assigned to CurveMap and shown in the plotter.*/
@@ -146,6 +149,12 @@ public:
    
    /** Set active state of the given curve */
    void setActiveState(int id, bool new_state) {curveActive[id]=new_state;}
+
+   /** Set plotsettings */
+   void setPlotSettings(const PlotSettings &new_settings);
+   
+   /** Copy from another Plotter */
+   void copy(const Plotter &plotter);
 public slots:
    void zoomIn();
    void zoomOut();
