@@ -1,0 +1,4 @@
+######################################################################
+PROJ = angular_predict_tomography
+OBJ  = angular_predict_tomography.o
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
