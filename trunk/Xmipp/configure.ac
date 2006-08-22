@@ -198,6 +198,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Angular_distance/Makefile \
 	Applications/Src/Angular_predict/Makefile \
 	Applications/Src/Angular_predict_continuous/Makefile \
+	Applications/Src/Angular_predict_tomography/Makefile \
 	Applications/Src/Angular_refinement/Makefile \
 	Applications/Src/ApplyGeo/Makefile \
 	Applications/Src/AppendDocFile/Makefile \
@@ -216,6 +217,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Correlation/Makefile \
 	Applications/Src/CpSel/Makefile Applications/Src/Create_phantom/Makefile \
 	Applications/Src/CTF_profile/Makefile \
+	Applications/Src/CTFViewer/Makefile \
 	Applications/Src/deconvoluteCTF/Makefile \
 	Applications/Src/Data2Img/Makefile \
 	Applications/Src/Data2Vol/Makefile \

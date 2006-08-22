@@ -12,7 +12,7 @@ if BUILD_QT
 if BUILD_OGL
 OPTIONAL_PROGS += Phan3D
 endif
-OPTIONAL_PROGS += Edit Mark Show XMask 
+OPTIONAL_PROGS += CTFViewer Edit Mark Show XMask
 endif
 
 SUBDIRS = 2DInterpolation \
@@ -28,6 +28,7 @@ SUBDIRS = 2DInterpolation \
 	Angular_distance \
 	Angular_predict \
 	Angular_predict_continuous \
+	Angular_predict_tomography \
 	Angular_refinement \
 	ApplyGeo \
 	AppendDocFile \
