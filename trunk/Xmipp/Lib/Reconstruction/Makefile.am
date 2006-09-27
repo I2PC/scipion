@@ -77,6 +77,7 @@ EXTRA_DIST = blobs.hh \
 	Programs/Prog_Align2d.hh \
 	Programs/Prog_Angular_Distance.hh \
 	Programs/Prog_Angular_Predict_continuous.hh \
+	Programs/Prog_Angular_Predict_Tomography.hh \
 	Programs/Prog_Angular_Predict.hh \
 	Programs/Prog_art_crystal.hh \
 	Programs/Prog_art.hh \
