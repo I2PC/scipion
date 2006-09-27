@@ -431,8 +431,13 @@ FileName FileName::remove_until_prefix(const string &str) const {
 }
 
 // Remove directories ......................................................
-FileName FileName::remove_directories() const {
+FileName FileName::remove_directories(int keep) const {
    int last_slash=rfind("/");
+   int tokeep=keep;
+   while (tokeep>0) {
+     last_slash=rfind("/",last_slash-1);
+     tokeep--;
+   }
    if (last_slash==-1) return *this;
    else                return substr(last_slash+1,length()-last_slash);
 }

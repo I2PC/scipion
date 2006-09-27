@@ -514,8 +514,9 @@ public:
        yields image00001.fft. If the prefix is not found nothing is done.*/
    FileName remove_until_prefix(const string &str) const;
 
-   /** Remove all directories. */
-   FileName remove_directories() const;
+   /** Remove all directories. 
+       Or if keep>0, then keep the lowest keep directories*/
+   FileName remove_directories(int keep=0) const;
 //@}
 };
 
