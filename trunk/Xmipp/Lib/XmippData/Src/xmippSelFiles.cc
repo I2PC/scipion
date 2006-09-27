@@ -702,6 +702,9 @@ void SelFile::insert(const SelLine &_selline) {
 	 _selline.label!=SelLine::ACTIVE)
       REPORT_ERROR(1552,"SelFile::insert(SelLine): SelLine label not valid");
 
+   // Sjors 18sep06: added next line
+   if (_selline.label!=SelLine::DISCARDED) no_imgs++;
+ 
    // Insert and updates current_line
    current_line=text_line.insert(current_line,_selline);
    current_line++;
