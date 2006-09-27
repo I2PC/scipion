@@ -95,7 +95,7 @@ public:
 
    /// Get number of this line
    int get_number() {return number;}
-   
+  
    /** True if current line is a comment. */
    int Is_comment() {return line_type==COMMENT;}
 
@@ -107,6 +107,10 @@ public:
        The comment text is not touched. The valid types are DATALINE,
        COMMENT, NOT_ASSIGNED, and NOT_CONSIDERED. */
    void set_type(Line_Type _line_type) {line_type=_line_type;}
+
+   /// Set number of this line
+   void set_number(int _nn) {number=_nn;}
+
    //@}
 
    /**@name Useful operations */
