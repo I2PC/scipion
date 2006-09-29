@@ -82,9 +82,9 @@ CCP4 mrcimage;
 void Usage () {
   printf (
      "Usage: ccp42spi [Purpose and Parameters]"
-     "\nPurpose: Convert from a 3D CCP4 images to Xmipp ones"
-     "\n    -i    file_in        input CCP4 file"
-     "\n    -o    file_out       output Xmipp file"
+     "\nPurpose: Convert between CCP4 (map) and Spider/Xmipp format"
+     "\n    -i    file_in        input CCP4/Xmipp file (2D or 3D)"
+     "\n    -o    file_out       output Xmipp/CCP4 file"
      "\n   [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n");
 }
