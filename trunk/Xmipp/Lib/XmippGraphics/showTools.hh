@@ -199,5 +199,12 @@ void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output);
 void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output); 
 //@}
 
+/**@name Misc */
+//@{
+/** Return a QPixmap with the file provided.
+    Function taken from qt/src/kernel/qpixmap.cpp for compatibility reasons. */
+QPixmap xmipp_qPixmapFromMimeSource(const QString &abs_name);
+//@}
+
 //@}
 #endif

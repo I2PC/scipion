@@ -26,6 +26,7 @@
  ***************************************************************************/
 
 #include "../showPlotter.hh"
+#include "../showTools.hh"
 #include <qpainter.h>
 #include <qfiledialog.h>
 #include <qstyle.h>
@@ -103,25 +104,25 @@ Plotter::Plotter(QWidget *parent, const char *name) :QMainWindow(parent,name) {
     
    // Add XmippGraphics/images to the MIME Path
    QMimeSourceFactory::defaultFactory()->addFilePath(
-      xmippBaseDir()+"/Lib/XmippGraphics/images");
+      (xmippBaseDir()+"/Lib/XmippGraphics/images").c_str());
 
    // Initialize save button
    saveButton = new QToolButton (this);
-   saveButton->setIconSet(QPixmap::fromMimeSource("filesave20.png"));
+   saveButton->setIconSet(xmipp_qPixmapFromMimeSource("filesave20.png"));
    saveButton->adjustSize();
    saveButton->setFixedSize(15,15);
    connect( saveButton, SIGNAL( clicked() ),this, SLOT( saveToFile() ) );
       
    //Buttons to zoomin&out 
    zoomInButton = new QToolButton(this);
-   zoomInButton->setIconSet(QPixmap::fromMimeSource("zoomin20.png"));
+   zoomInButton->setIconSet(xmipp_qPixmapFromMimeSource("zoomin20.png"));
    zoomInButton->adjustSize();
    zoomInButton->setFixedSize(20,20);
    zoomInButton->hide(); 
    connect(zoomInButton, SIGNAL(clicked()),this, SLOT(zoomIn()));
    
    zoomOutButton = new QToolButton(this);
-   zoomOutButton ->setIconSet(QPixmap::fromMimeSource("zoomout20.png"));
+   zoomOutButton ->setIconSet(xmipp_qPixmapFromMimeSource("zoomout20.png"));
    zoomOutButton->adjustSize();
    zoomOutButton->setFixedSize(20,20);
    zoomOutButton->hide(); 
@@ -300,16 +301,20 @@ void Plotter::resizeEvent(QResizeEvent *)  {
 void Plotter::mousePressEvent(QMouseEvent *event) {
     if (event->button() == LeftButton) {
        rubberBandIsShown = true;
-       rubberBandRect.setTopLeft(event->pos());
-       rubberBandRect.setBottomRight(event->pos());
+       rubberBandRect.setLeft(event->pos().x());
+       rubberBandRect.setTop(event->pos().y());
+       rubberBandRect.setRight(event->pos().x());
+       rubberBandRect.setBottom(event->pos().y());
        updateRubberBandRegion();
        setCursor(crossCursor); // and we change the cursor to a crosshair
     }
     
     if (event->button() == RightButton) {
        setCursor(crossCursor); // and we change the cursor to a crosshair
-       rubberBandRect.setTopLeft(event->pos());// in the cursor position
-       rubberBandRect.setBottomRight(event->pos());
+       rubberBandRect.setLeft(event->pos().x());
+       rubberBandRect.setTop(event->pos().y());
+       rubberBandRect.setRight(event->pos().x());
+       rubberBandRect.setBottom(event->pos().y());
        updateRubberBandRegion();       
     }
 }
@@ -319,7 +324,8 @@ void Plotter::mousePressEvent(QMouseEvent *event) {
    right button is pressed. */
 void Plotter::mouseMoveEvent(QMouseEvent *event) {
    updateRubberBandRegion(); //we repaint the rubber band in the new position
-   rubberBandRect.setBottomRight(event->pos());
+   rubberBandRect.setRight(event->pos().x());
+   rubberBandRect.setBottom(event->pos().y());
    updateRubberBandRegion();
    
    QRect rect = rubberBandRect.normalize();

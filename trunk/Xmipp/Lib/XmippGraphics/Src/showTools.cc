@@ -25,7 +25,10 @@
  ***************************************************************************/
 
 #include "../showTools.hh"
+#include <qdragobject.h>
+#include <qfile.h>
 #include <qlayout.h>
+#include <qmime.h>
 #include <qpushbutton.h>
 #include <qtooltip.h> 
 #include <XmippData/xmippFFT.hh>
@@ -385,4 +388,18 @@ void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output) {
    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
       if (j<XSIZE(output)/2) output(i,j)=left(i,j);
       else                   output(i,j)=ABS(output(i,j));
+}
+
+/* Pixmap from MIME source ------------------------------------------------- */
+QPixmap xmipp_qPixmapFromMimeSource( const QString &abs_name )
+{
+    const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( abs_name );
+    if ( !m ) {
+	if ( QFile::exists( abs_name ) )
+	    return QPixmap( abs_name );
+	return QPixmap();
+    }
+    QPixmap pix;
+    QImageDrag::decode( m, pix );
+    return pix;
 }
