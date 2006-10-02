@@ -50,9 +50,9 @@ class Prog_Refine3d_prm {
 
 public:
   // Filename for reference volume, symmetry file and output rootname
-  FileName fn_sel, fn_vol, fn_sym, fn_root, fn_solv, fn_iter;
-  // Selfile with experimental images and reference volumes
-  SelFile SF, SFvol;
+  FileName fn_sel, fn_vol, fn_sym, fn_root, fn_solv, fn_iter, fn_symmask;
+  // Selfile with reference volumes
+  SelFile SFvol;
   // Number of volumes to refine
   int Nvols;
   // vector with integers which projections are valid for which volume
@@ -65,12 +65,6 @@ public:
   double eps;
   // Angular sampling interval (degree)
   double angular;
-  // Low-pass filter digital frequency
-  double lowpass;
-  // Radius for masking of volume 
-  double mask_radius;
-  // Initial estimate for maximum resolution
-  double ini_maxres;
    /// File handler for the history file
   ofstream fh_hist;
   // Use WBP instead of WLS-ART for reconstruction in ML
@@ -81,7 +75,7 @@ public:
 public:
 
   /// Read additional arguments for 3D-process from command line
-  void read(int argc, char **argv) ;
+  void read(int &argc, char ** &argv) ;
 
   /// Usage
   void usage();
@@ -98,6 +92,9 @@ public:
 
   /// After reconstruction update reference volume selfile
   void remake_SFvol(int iter, bool rewrite=false) ;
+
+  /// Merge MLalign2D classification selfiles into volume classes
+  void concatenate_selfiles(int iter);
 
   /// Maksing, filtering etc. of the volume
   void post_process_volumes(int argc, char **argv) ;

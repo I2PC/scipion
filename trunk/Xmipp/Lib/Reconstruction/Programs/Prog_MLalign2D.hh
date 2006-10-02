@@ -75,7 +75,7 @@ public:
   /** Number of iterations to be performed */
   int Niter;
   /** dimension of the images */
-  int dim, dim2;
+  int dim, dim2, hdim;
   /** Number of steps to sample in-plane rotation in 90 degrees */
   int nr_psi;
   /** Number of operations in "flip-array" (depending on do_mirror) */
@@ -141,11 +141,13 @@ public:
   bool save_mem1, save_mem2, save_mem3;
   /** Vectors to store old phi, theta, xoff and yoff for all images */
   vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
+  /** Number of subdirectories to keep for unique offsets filenames */
+  int offsets_keepdir;
 
 
 public:
   /// Read arguments from command line
-  void read(int argc, char **argv);
+  void read(int argc, char **argv, bool ML3D=false);
   
   /// Show
   void show(bool ML3D=false);
@@ -159,6 +161,9 @@ public:
   /// Setup lots of stuff
   void produce_Side_info();
 
+  /// Generate initial references from random subset averages
+  void generate_initial_references();
+
   /// Read reference images in memory & set offset vectors
   /// (This produce_side_info is Selfile-dependent!)
   void produce_Side_info2();
@@ -166,10 +171,7 @@ public:
   /// Read and write optimal translations to disc 
   /// (not to store them all in memory)
   void write_offsets(FileName fn, vector<double> &data);
-  void read_offsets(FileName fn, vector<double> &data);
-
-  /// Generate initial references from random subset averages
-  void generate_initial_references();
+  bool read_offsets(FileName fn, vector<double> &data);
 
   /// Calculate probability density distribution for in-plane transformations
   void calculate_pdf_phi();
@@ -275,7 +277,7 @@ public:
   void output_to_screen(int &iter, double &sumcorr, double &LL);
 
   /// Write out reference images, selfile and logfile
-  void write_output_files(const int iter, SelFile &SF, DocFile &DF, DocFile &DFo,
+  void write_output_files(const int iter, DocFile &DFo,
 			  double &sumw_allrefs, double &LL, double &avecorr, 
 			  vector<double> &conv);
 

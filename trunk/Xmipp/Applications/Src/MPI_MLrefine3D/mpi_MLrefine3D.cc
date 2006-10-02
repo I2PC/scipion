@@ -37,10 +37,10 @@ int main(int argc, char **argv) {
   vector<matrix2D<double> >   wsum_Mref;
   vector<double>              sumw,sumw_mirror;
   matrix2D<double>            P_phi,Mr2,Maux,Maux2;
-  FileName                    fn_doc,fn_sel,fn_iter,fn_tmp;
+  FileName                    fn_doc,fn_sel,fn_tmp;
   matrix1D<double>            oneline(0);
-  DocFile                     DFo,DFf;
-  SelFile                     SFo,SFa;
+  DocFile                     DFo;
+  SelFile                     SFo;
 
   Prog_Refine3d_prm           prm;
   Prog_MLalign2D_prm          ML2D_prm;
@@ -54,13 +54,13 @@ int main(int argc, char **argv) {
 
   // Get input parameters
   try {
+
     // Read command line
     prm.read(argc,argv);
 
     // Check that there are enough computing nodes
     if (prm.Nvols>size) 
       REPORT_ERROR(1,"MPI_MLrefine3D requires that you use more CPUs than reference volumes");
-    fn_iter=prm.fn_root+"_it";
 
     // Write starting volumes to disc with correct name for iteration loop
     if (rank==0) {
@@ -70,29 +70,29 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Read and set general MLalign2D-stuff
-    ML2D_prm.read(argc,argv);
-    ML2D_prm.SF=prm.SF;
+    ML2D_prm.read(argc,argv,true);
+    if (rank!=0) ML2D_prm.verb=prm.verb=0;
     if (!check_param(argc,argv,"-psi_step")) ML2D_prm.psi_step=prm.angular;
     ML2D_prm.fn_root=prm.fn_root;
     ML2D_prm.fast_mode=true;
     ML2D_prm.do_mirror=true;
+    ML2D_prm.save_mem2=true;
     ML2D_prm.write_docfile=true;
-    ML2D_prm.write_selfiles=false;
+    ML2D_prm.write_selfiles=true;
+    ML2D_prm.write_intermediate=true;
     ML2D_prm.fn_ref=prm.fn_root+"_lib.sel";
     prm.project_reference_volume(ML2D_prm.SFr,rank);
     MPI_Barrier(MPI_COMM_WORLD);
-    if (rank!=0) ML2D_prm.verb=prm.verb=0;
 
     // All nodes produce general side-info
     ML2D_prm.produce_Side_info();
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Select only relevant part of selfile for this rank
-    prm.SF.mpi_select_part(rank,size,num_img_tot);
-    ML2D_prm.SF=prm.SF;
+    ML2D_prm.SF.mpi_select_part(rank,size,num_img_tot);
 
     // All nodes read node-specific side-info into memory
-    ML2D_prm.produce_Side_info2();    
+    ML2D_prm.produce_Side_info2();
     ML2D_prm.Iold.clear(); // To save memory
 
     // Some output to screen
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
       if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
 
       // Integrate over all images
-      ML2D_prm.ML_sum_over_all_images(prm.SF,ML2D_prm.Iref,LL,sumcorr,DFo,wsum_Mref,
+      ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF,ML2D_prm.Iref,LL,sumcorr,DFo,wsum_Mref,
 				      wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
 
       // Here MPI_allreduce of all weighted sums, LL, etc.
@@ -164,24 +164,19 @@ int main(int argc, char **argv) {
 
       // Only the master outputs intermediate files
       if (rank==0) {
-	if (ML2D_prm.write_intermediate) {
-	  DFo.clear();
-	  for (int rank2=0; rank2<size; rank2++) {
-	    fn_tmp.compose(prm.fn_root,rank2,"tmpdoc");
-	    DFo.append(fn_tmp);
-	    DFo.locate(DFo.get_last_key());
-	    DFo.next();
-	    DFo.remove_current();
-	    system(((string)"rm -f "+fn_tmp).c_str());
-	  }
-	  ML2D_prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
-	} else ML2D_prm.output_to_screen(iter,sumcorr,LL);
-	if (ML2D_prm.maxCC_rather_than_ML) 
-	  prm.fh_hist << " Average maxCC = "<<sumcorr<<endl;
-	else prm.fh_hist << " LL = "<<LL<<" sigma_noise= "<<ML2D_prm.sigma_noise<<endl;
-	
-      }
+	DFo.clear();
+	for (int rank2=0; rank2<size; rank2++) {
+	  fn_tmp.compose(prm.fn_root,rank2,"tmpdoc");
+	  DFo.append(fn_tmp);
+	  DFo.locate(DFo.get_last_key());
+	  DFo.next();
+	  DFo.remove_current();
+	  system(((string)"rm -f "+fn_tmp).c_str());
+	}
+	ML2D_prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
+	prm.concatenate_selfiles(iter);
 
+      }
       MPI_Barrier(MPI_COMM_WORLD);
 
       // Reconstruct the new reference volumes also in parallel
@@ -191,7 +186,7 @@ int main(int argc, char **argv) {
       MPI_Barrier(MPI_COMM_WORLD);
 
       // Update filenames in SFvol
-      prm.remake_SFvol(iter);
+      prm.remake_SFvol(iter,false);
 
       // Only the master does post-processing (i.e. sequentially)
       if (rank==0) {

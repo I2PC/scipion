@@ -26,7 +26,9 @@
 
 
 // Read ===================================================================
-void Prog_Refine3d_prm::read(int argc, char **argv)  {
+void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
+
+  bool do_restart=false;
 
   if (check_param(argc,argv,"-show_all_ML_options")) {
     Prog_MLalign2D_prm ML_prm;
@@ -38,38 +40,89 @@ void Prog_Refine3d_prm::read(int argc, char **argv)  {
     exit(0);
   }
 
+  // Generate new command line for restart procedure
+  if (check_param(argc,argv,"-restart")) {
+    string   comment,cline="";
+    DocFile  DFi;
+    FileName fn_tmp;
+  
+    do_restart=true;
+    DFi.read(get_param(argc,argv,"-restart"));
+    DFi.go_beginning();
+    comment=(DFi.get_current_line()).get_text();
+    if (strstr(comment.c_str(),"MLalign2D-logfile")==NULL) {
+      cerr << "Error!! Docfile is not of MLalign2D-logfile type. "<<endl;
+      exit(1);
+    } else {
+      char *copy;
+      copy=NULL; 
+      DFi.next();    
+      // get new part of command line (with -istart)
+      comment=(DFi.get_current_line()).get_text();
+      DFi.next();
+      // get original command line
+      cline=(DFi.get_current_line()).get_text();
+      comment=comment+cline;
+      // regenerate command line
+      generate_command_line(comment,argc,argv,copy);
+      // Get number of volumes and names to generate SFvol
+      fn_root=get_param(argc,argv,"-o","MLrefine3D");
+      fn_vol=get_param(argc,argv,"-vol");
+      istart=AtoI(get_param(argc,argv,"-istart"));
+      if (Is_VolumeXmipp(fn_vol)) {
+	SFvol.reserve(1);
+	SFvol.insert(fn_vol);
+      } else {
+	SFvol.read(fn_vol);
+      }
+      Nvols=SFvol.ImgNo();
+      SFvol.clear();
+      SFvol.go_beginning();
+      for (int ivol=0; ivol<Nvols; ivol++) {
+	fn_tmp=fn_root+"_it";
+	fn_tmp.compose(fn_tmp,istart-1,"");
+	if (Nvols>1) {
+	  fn_tmp+="_vol";
+	  fn_tmp.compose(fn_tmp,ivol+1,"");
+	}
+	fn_tmp+=".vol";
+	SFvol.insert(fn_tmp);
+      }
+      fn_vol=fn_root+"_it";
+      fn_vol.compose(fn_vol,istart-1,"");
+      fn_vol+="_restart.sel";
+      SFvol.write(fn_vol);
+    }
+  }
+   
   //Read Refine3d parameters
   fn_sel=get_param(argc,argv,"-i");
-  SF.read(fn_sel);
   fn_root=get_param(argc,argv,"-o","MLrefine3D");
-  fn_vol=get_param(argc,argv,"-vol");
-  // Fill volume selfile
-  if (Is_VolumeXmipp(fn_vol)) {
-    SFvol.reserve(1);
-    SFvol.insert(fn_vol);
-  } else {
-    SFvol.read(fn_vol);
+  if (!do_restart) {
+    // Fill volume selfile
+    fn_vol=get_param(argc,argv,"-vol");
+    if (Is_VolumeXmipp(fn_vol)) {
+      SFvol.reserve(1);
+      SFvol.insert(fn_vol);
+    } else {
+      SFvol.read(fn_vol);
+    }
+    Nvols=SFvol.ImgNo();
   }
-  Nvols=SFvol.ImgNo();
 
   angular=AtoF(get_param(argc,argv,"-ang","10"));
   fn_sym=get_param(argc,argv,"-sym","");
-  lowpass=AtoF(get_param(argc,argv,"-filter","-1"));
-  mask_radius=AtoF(get_param(argc,argv,"-mask_radius","-1"));
   eps=AtoF(get_param(argc,argv,"-eps","5e-5"));
   verb=AtoI(get_param(argc,argv,"-verb","1"));
   Niter=AtoI(get_param(argc,argv,"-iter","100"));
-
-  // Hidden for now
   istart=AtoI(get_param(argc,argv,"-istart","1"));
-  fn_solv=get_param(argc,argv,"-solvent","");
-  do_wbp=check_param(argc,argv,"-WBP");
   tilt_range0=AtoF(get_param(argc,argv,"-tilt0","0."));
   tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","90."));
+  fn_symmask=get_param(argc,argv,"-sym_mask","");
 
-  // Checks
-  if (lowpass>0.5) 
-    REPORT_ERROR(1,"Digital frequency for filter should be between 0 and 0.5");
+  // Hidden for now
+  fn_solv=get_param(argc,argv,"-solvent","");
+  do_wbp=check_param(argc,argv,"-WBP");
 
 }
 // Usage ===================================================================
@@ -85,8 +138,9 @@ void Prog_Refine3d_prm::usage() {
        << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
        << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
        << " [ -sym <symfile> ]            : Enforce symmetry \n"
-       << " [ -mask_radius <rad.=-1> ]    : Radius for masking volume \n"
-       << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
+       << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
+       << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
+       << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
        << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
        << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
 
@@ -98,7 +152,7 @@ void Prog_Refine3d_prm::show() {
     // To screen
     cerr << " -----------------------------------------------------------------"<<endl;
     cerr << " | Read more about this program in the following publication:    |"<<endl;
-    cerr << " |  Scheres ea. (2006) in preparation ...                        |"<<endl;
+    cerr << " |  Scheres ea. (2006)  to appear in Nature Methods              |"<<endl;
     cerr << " |                                                               |"<<endl;
     cerr << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
@@ -109,16 +163,14 @@ void Prog_Refine3d_prm::show() {
       cerr << "  Selfile with references  : "<<fn_vol<<endl;
       cerr << "    with # of volumes      : "<<Nvols<<endl;
     }
-    cerr << "  Experimental images:     : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
+    cerr << "  Experimental images:     : "<< fn_sel<<endl;
     cerr << "  Angular sampling rate    : "<< angular<<endl;
     if (fn_sym!="")
     cerr << "  Symmetry file:           : "<< fn_sym<<endl;
+    if (fn_symmask!="")
+    cerr << "  Local symmetry mask      : "<< fn_symmask<<endl;
     cerr << "  Output rootname          : "<< fn_root<<endl;
     cerr << "  Convergence criterion    : "<< eps<<endl;
-    if (lowpass>0) 
-    cerr << "  Low-pass filter          : "<< lowpass<<endl;
-    if (mask_radius>0) 
-    cerr << "  Mask radius              : "<< mask_radius<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     cerr << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
     if (do_wbp)
@@ -132,22 +184,18 @@ void Prog_Refine3d_prm::show() {
 
     fh_hist << " -----------------------------------------------------------------"<<endl;
     fh_hist << " | Read more about this program in the following publication:    |"<<endl;
-    fh_hist << " |  Scheres ea. (2006) in preparation ...                        |"<<endl;
+    fh_hist << " |  Scheres ea. (2006)  to appear in Nature Methods              |"<<endl;
     fh_hist << " |                                                               |"<<endl;
     fh_hist << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     fh_hist << " -----------------------------------------------------------------"<<endl;
     fh_hist << "--> Maximum-likelihood multi-reference 3D-refinement"<<endl;
     fh_hist << "  Initial reference volume : "<< fn_vol<<endl;
-    fh_hist << "  Experimental images:     : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
+    fh_hist << "  Experimental images:     : "<< fn_sel<<endl;
     fh_hist << "  Angular sampling rate    : "<< angular<<endl;
     if (fn_sym!="")
     fh_hist << "  Symmetry file:           : "<< fn_sym<<endl;
     fh_hist << "  Output rootname          : "<< fn_root<<endl;
     fh_hist << "  Convergence criterion    : "<< eps<<endl;
-    if (lowpass>0) 
-    fh_hist << "  Low-pass filter          : "<< lowpass<<endl;
-    if (mask_radius>0) 
-    fh_hist << "  Mask radius              : "<< mask_radius<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     fh_hist << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
     if (do_wbp)
@@ -169,7 +217,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
   double                        rot,tilt,psi=0.;
   int                           nvol,nl,nr_dir;
 
-  if (fn_sym!="") SL.read_sym_file(fn_sym);
+  if (fn_sym!="" && fn_symmask=="") SL.read_sym_file(fn_sym);
   make_even_distribution(DFlib,angular,SL,false);
   // Select use-provided tilt range
   if (tilt_range0>0. || tilt_rangeF<90.) {
@@ -290,6 +338,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     // Read ART parameters from command line & I/O with outer loop of Refine3d
     art_prm.read(argc, argv);
     art_prm.WLS=true;
+    if (fn_symmask!="") art_prm.fn_sym="";
     if (!check_param(argc,argv,"-n")) 
       art_prm.no_it=10;
     if (!check_param(argc,argv,"-l")) {
@@ -314,7 +363,6 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 
     // read command line (fn_sym, angular etc.)
     wbp_prm.read(argc, argv);
-    if (mask_radius>0) wbp_prm.diameter=(int)mask_radius*2;
     wbp_prm.fn_sel=fn_insel;
     wbp_prm.do_weights=true;
     wbp_prm.do_all_matrices=true;
@@ -371,19 +419,41 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite) {
 
 }
 
+// Concatenate hard-classification MLalign2D selfiles ===========================
+void Prog_Refine3d_prm::concatenate_selfiles(int iter) {
+
+  FileName fn_tmp, fn_class;
+
+  if (Nvols>1) {
+    for (int volno=0; volno<Nvols; volno++) {
+      fn_class=fn_root+"_it";
+      fn_class.compose(fn_class,iter,"");
+      fn_class+="_class";
+      fn_class.compose(fn_class,volno+1,"sel");
+      system(((string)"rm -f "+fn_class).c_str());
+      for (int nr=eachvol_start[volno]; nr<=eachvol_end[volno]; nr++) {
+	fn_tmp=fn_root+"_ref";
+	fn_tmp.compose(fn_tmp,nr+1,"sel");
+	system(((string)"cat "+fn_tmp+" >> "+fn_class).c_str());
+	system(((string)"rm -f "+fn_tmp).c_str());
+      }
+    }
+  }
+
+}
 
 // Modify reference volume ======================================================
 void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 
   Mask_Params            mask_prm;
   FileName               fn_vol,fn_tmp;
-  VolumeXmipp            vol,Vaux;
+  VolumeXmipp            vol,Vaux,Vsymmask;
   SymList                SL;
   matrix3D<int>          mask3D;
-  double                 avg,dummy;
+  double                 avg,dummy,in,out;
   int                    dim;
 
-  if ( (fn_sym!="") || (fn_solv!="") || (mask_radius>0) || (lowpass>0) ) {
+  if ( (fn_sym!="") || (fn_solv!="") ) {
     SFvol.go_beginning();
     while (!SFvol.eof()) {
       // Read corresponding volume from disc
@@ -398,10 +468,24 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
       // Symmetrize if requested
       if (fn_sym!="") {
 	Vaux().resize(vol());
-	SL.read_sym_file(fn_sym);
-	symmetrize(SL,vol,Vaux);
-	vol=Vaux;
-	Vaux.clear();
+        SL.read_sym_file(fn_sym);
+        symmetrize(SL,vol,Vaux);
+        // Read local symmetry mask if requested
+        if (fn_symmask!="") {
+          Vsymmask.read(fn_symmask);
+          Vsymmask().set_Xmipp_origin();
+          if (Vsymmask().compute_max()>1. || Vsymmask().compute_min()<0.)
+            REPORT_ERROR(1,"ERROR: sym_mask should have values between 0 and 1!");
+          FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsymmask()) {
+            in=dVkij(Vsymmask(),k,i,j);
+            out=1.-in;
+            dVkij(vol(),k,i,j)=out*dVkij(vol(),k,i,j)+in*dVkij(Vaux(),k,i,j);
+          }
+          Vsymmask.clear();
+        } else {
+          vol=Vaux;
+        }
+        Vaux.clear();
       }
 
       // Solvent flattening if requested
@@ -418,28 +502,6 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(solv()) {
 	  dVkij(vol(),k,i,j)-=dVkij(solv(),k,i,j)*(dVkij(vol(),k,i,j)-solvavg);
 	}
-      }
-
-      // Masking out the parts outside the inner sphere
-      if (mask_radius>0) {
-	mask_prm.mode=OUTSIDE_MASK;
-	mask_prm.R1=mask_radius;
-	mask_prm.type=BINARY_CIRCULAR_MASK;
-	mask_prm.generate_3Dmask(vol());
-	compute_stats_within_binary_mask(mask_prm.imask3D,vol(),dummy,dummy,avg,dummy);
-	mask_prm.mode=INNER_MASK;
-	mask_prm.generate_3Dmask(vol());
-	mask_prm.apply_mask(vol(),vol(),avg);
-      }
-
-      // Filtering the volume
-      if (lowpass>0) {
-	FourierMask fmask;
-	fmask.raised_w=0.02;
-	fmask.FilterShape=RAISED_COSINE;
-	fmask.FilterBand=LOWPASS;
-	fmask.w1=lowpass;
-	fmask.apply_mask_Space(vol());
       }
 
       // (Re-) write post-processed volume to disc
@@ -459,15 +521,19 @@ bool Prog_Refine3d_prm::check_convergence(int iter)  {
   Mask_Params            mask_prm;
   matrix3D<int>          mask3D;
   double                 signal,change;
-  int                    volno=0,dim;
+  int                    dim;
   bool                   converged=true;
 
   if (verb>0) cerr << "--> checking convergence "<<endl;
 
-  SFvol.go_beginning();
-  while (!SFvol.eof()) {
+  for (int volno=0; volno<Nvols; volno++) {
     // Read corresponding volume from disc
-    fn_vol=SFvol.NextImg();
+    fn_vol=fn_root+"_it";
+    fn_vol.compose(fn_vol,iter,"");
+    if (Nvols>1) {
+      fn_vol+="_vol";
+      fn_vol.compose(fn_vol,volno+1,"vol");
+    } else fn_vol+=".vol";
     vol.read(fn_vol);
     vol().set_Xmipp_origin();
     dim=vol().RowNo();
@@ -501,7 +567,6 @@ bool Prog_Refine3d_prm::check_convergence(int iter)  {
 	fh_hist << "Relative signal change volume = " <<change/signal<<endl;
       }
     }
-    volno++;
   }
 
   return converged;

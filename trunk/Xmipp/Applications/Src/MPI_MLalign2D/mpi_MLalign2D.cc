@@ -41,8 +41,7 @@ int main(int argc, char **argv) {
   matrix2D<double> P_phi,Mr2,Maux,Maux2;
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
-  DocFile DFo,DFf;
-  SelFile SFa;
+  DocFile DFo;
   // For parallelization
   int rank, size, num_img_tot;
   bool converged;
@@ -60,13 +59,13 @@ int main(int argc, char **argv) {
       if (proc==rank) prm.read(argc,argv);
       MPI_Barrier(MPI_COMM_WORLD);
     }
-
-    // Some output to screen
-    if (rank==0) prm.show();
-    else  prm.verb=0;
+    if (rank!=0) prm.verb=0;
 
     // All nodes produce general side-info
     prm.produce_Side_info();
+    
+    // Some output to screen
+    if (rank==0) prm.show();
 
     // Create references from random subset averages, or read them from selfile
     if (prm.fn_ref=="") {
@@ -143,6 +142,10 @@ int main(int argc, char **argv) {
       prm.update_parameters(wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,
 			    sumw,sumw_mirror,sumcorr,sumw_allrefs);    
   
+      // Check convergence 
+      converged=prm.check_convergence(conv);
+
+      // Write out intermediate files
       if (prm.write_docfile) {
 	// All nodes write out temporary DFo
 	fn_img.compose(prm.fn_root,rank,"tmpdoc");
@@ -150,9 +153,6 @@ int main(int argc, char **argv) {
       }
       MPI_Barrier(MPI_COMM_WORLD);
   
-      // Check convergence 
-      converged=prm.check_convergence(conv);
-
       if (rank==0) {
 	if (prm.write_intermediate) {
 	  if (prm.write_docfile) {
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 	      system(((string)"rm -f "+fn_img).c_str());
 	    }
 	  }
-	  prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
+	  prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
 	} else prm.output_to_screen(iter,sumcorr,LL);
       }
 

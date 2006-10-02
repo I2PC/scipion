@@ -34,13 +34,11 @@ int main(int argc, char **argv) {
   vector<double>              conv;
   double                      aux,wsum_sigma_noise, wsum_sigma_offset;
   vector<matrix2D<double> >   wsum_Mref;
-  vector<ImageXmipp>          Ireg;
   vector<double>              sumw,sumw_cv,sumw_mirror;
   matrix2D<double>            P_phi,Mr2;
-  FileName                    fn_doc,fn_sel,fn_iter,fn_tmp;
+  FileName                    fn_doc,fn_sel,fn_tmp;
   matrix1D<double>            oneline(0);
-  DocFile                     DFo,DFf;
-  SelFile                     SFa;
+  DocFile                     DFo;
  
   Prog_Refine3d_prm           prm;
   Prog_MLalign2D_prm          ML2D_prm;
@@ -50,30 +48,28 @@ int main(int argc, char **argv) {
 
     // Read command line
     prm.read(argc,argv);
-    fn_iter=prm.fn_root+"_it";
     prm.show();
     // Write starting volume(s) to disc with correct name for iteration loop
     prm.remake_SFvol(prm.istart-1,true);
 
     // Read MLalign2D-stuff
-    ML2D_prm.read(argc,argv);
+    ML2D_prm.read(argc,argv,true);
     if (!check_param(argc,argv,"-psi_step")) ML2D_prm.psi_step=prm.angular;
     ML2D_prm.fn_root=prm.fn_root;
     ML2D_prm.fast_mode=true;
     ML2D_prm.do_mirror=true;
+    ML2D_prm.save_mem2=true;
     ML2D_prm.write_docfile=true;
-    ML2D_prm.write_selfiles=false;
+    ML2D_prm.write_selfiles=true;
+    ML2D_prm.write_intermediate=true;
     ML2D_prm.fn_ref=prm.fn_root+"_lib.sel";
     // Project volume and read lots of stuff into memory
     prm.project_reference_volume(ML2D_prm.SFr);
-    ML2D_prm.SF=prm.SF;
-
     ML2D_prm.produce_Side_info();
     ML2D_prm.produce_Side_info2();    
     ML2D_prm.show(true);
 
     // Initialize some stuff
-    DFf.reserve(2*ML2D_prm.SFr.ImgNo()+4);
     for (int refno=0; refno<ML2D_prm.n_ref; refno++) conv.push_back(-1.);
     ML2D_prm.Iold.clear(); // To save memory
 
@@ -90,7 +86,6 @@ int main(int argc, char **argv) {
 	prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
       }
 
-      DFo.reserve(2*prm.SF.ImgNo()+1);
       DFo.clear();
       if (ML2D_prm.maxCC_rather_than_ML) 
 	DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
@@ -101,20 +96,16 @@ int main(int argc, char **argv) {
       if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
 
       // Integrate over all images
-      ML2D_prm.ML_sum_over_all_images(prm.SF,ML2D_prm.Iref,LL,sumcorr,DFo,wsum_Mref,
+      ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF,ML2D_prm.Iref,LL,sumcorr,DFo,wsum_Mref,
 				      wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
 	
       // Update model parameters
       ML2D_prm.update_parameters(wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,
 				 sumw,sumw_mirror,sumcorr,sumw_allrefs); 
 
-      if (ML2D_prm.write_intermediate) 
-	ML2D_prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
-      else ML2D_prm.output_to_screen(iter,sumcorr,LL);
-      if (ML2D_prm.maxCC_rather_than_ML) 
-	prm.fh_hist << " Average maxCC = "<<sumcorr<<endl;
-      else
-	prm.fh_hist << " LL = "<<LL<<" sigma_noise= "<<ML2D_prm.sigma_noise<<endl;
+      // Write intermediate output files
+      ML2D_prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
+      prm.concatenate_selfiles(iter);
 
       // Reconstruct new volumes from the reference images
       for (volno=0; volno<prm.Nvols; volno++)
@@ -130,10 +121,10 @@ int main(int argc, char **argv) {
       if (prm.check_convergence(iter)) {
 	converged=1;
 	if (prm.verb>0) cerr <<"--> Optimization converged!"<<endl;
-      } 
+      }
 
       // Re-project volumes
-      if (!converged) {
+      if (!converged && iter+1<=prm.Niter) {
 	prm.project_reference_volume(ML2D_prm.SFr);
 	// Read new references from disc (I could just as well keep them in memory, maybe...)
 	ML2D_prm.SFr.go_beginning();

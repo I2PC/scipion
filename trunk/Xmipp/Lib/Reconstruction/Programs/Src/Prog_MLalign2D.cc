@@ -25,7 +25,7 @@
 #include "../Prog_MLalign2D.hh"
 
 // Read arguments ==========================================================
-void Prog_MLalign2D_prm::read(int argc, char **argv)  {
+void Prog_MLalign2D_prm::read(int argc, char ** argv, bool ML3D)  {
 
 
   // Generate new command line for restart procedure
@@ -46,28 +46,33 @@ void Prog_MLalign2D_prm::read(int argc, char **argv)  {
       int nmax=DFi.dataLineNo();
       SFr.reserve(nmax);
       copy=NULL; 
-      DFi.next();    
-      fn_sel=DFi.name();
-      fn_sel=fn_sel.without_extension()+"_restart.sel";
-      comment=" -frac "+DFi.name()+" -ref "+fn_sel;
+      DFi.next();
+      comment=" -frac "+DFi.name();
+      if (!ML3D) {
+	fn_sel=DFi.name();
+	fn_sel=fn_sel.without_extension()+"_restart.sel";
+	comment+=" -ref "+fn_sel;
+      } 
       comment+=(DFi.get_current_line()).get_text();
       DFi.next();
       cline=(DFi.get_current_line()).get_text();
       comment=comment+cline;
       generate_command_line(comment,argc,argv,copy);
-      // Read images names from restart file
-      DFi.next();
-      while (n<nmax) {
-	n++;
+      if (!ML3D) {
+	// Read images names from restart file
 	DFi.next();
-	if (DFi.get_current_line().Is_comment()) fn_sel=((DFi.get_current_line()).get_text()).erase(0,3);
-	SFr.insert(fn_sel,SelLine::ACTIVE);
-	DFi.adjust_to_data_line();
+	while (n<nmax) {
+	  n++;
+	  DFi.next();
+	  if (DFi.get_current_line().Is_comment()) fn_sel=((DFi.get_current_line()).get_text()).erase(0,3);
+	  SFr.insert(fn_sel,SelLine::ACTIVE);
+	  DFi.adjust_to_data_line();
+	}
+	fn_sel=DFi.name();
+	fn_sel=fn_sel.without_extension()+"_restart.sel";
+	SFr.write(fn_sel);
+	SFr.clear();
       }
-      fn_sel=DFi.name();
-      fn_sel=fn_sel.without_extension()+"_restart.sel";
-      SFr.write(fn_sel);
-      SFr.clear();
     }
   } else {
     for (int i=1; i<argc; i++) {
@@ -99,7 +104,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv)  {
   maxCC_rather_than_ML=check_param(argc,argv,"-maxCC");
   fast_mode=check_param(argc,argv,"-fast");
   C_fast=AtoF(get_param(argc,argv,"-C","1e-12"));
-  search_shift=AtoF(get_param(argc,argv,"-search_shift","3"));
   max_shift=AtoF(get_param(argc,argv,"-max_shift","-1"));
   save_mem1=check_param(argc,argv,"-save_memA");
   save_mem2=check_param(argc,argv,"-save_memB");
@@ -231,26 +235,65 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D) {
 // all processors! (in contrast to produce_Side_info2)
 void Prog_MLalign2D_prm::produce_Side_info() {
 
-  FileName                    fn_img, fn_tmp, fn_base;
+  FileName                    fn_img,fn_tmp,fn_base,fn_tmp2;
   ImageXmipp                  img;
   FourierImageXmipp           fourimg;
-  XmippCTF                    ctf;
   SelLine                     SL;
   SelFile                     SFtmp;
   matrix1D<double>            offsets(2);
-  matrix2D<double>            A(3,3),Maux,Maux2,decctf;
-  matrix2D<complex<double> >  Faux,ctfmask;
+  matrix2D<double>            A(3,3),Maux,Maux2;
   vector<int>                 tmppointp,tmppointp_nolow,tmppointi,tmppointj;
+  bool                        uniqname,nomoredirs;
   float                       xx,yy;
   double                      av,psi;
   int                         im,jm;
 
   // Get image size
   SF.ImgSize(dim,dim);
+  hdim=dim/2;
   dim2=dim*dim;
 
   // Get total number of images
   nr_exp_images=SF.ImgNo();
+
+  // Get number of references
+  if (fn_ref!="") {
+    if (Is_ImageXmipp(fn_ref)) n_ref=1;
+    else  {
+      SFr.read(fn_ref);
+      n_ref=SFr.ImgNo();
+    }
+  }
+
+  // Check the uniqueness of all filenames (for names of temporary offsets files)
+  uniqname=false;
+  nomoredirs=false;
+  offsets_keepdir=0;
+  while ( (uniqname==false) && (nomoredirs==false) ) {
+    SF.go_beginning();
+    SFtmp.clear();
+    while (!SF.eof()) {
+      fn_tmp=SF.NextImg();
+      fn_tmp2=fn_tmp.remove_directories(offsets_keepdir);
+      if (fn_tmp==fn_tmp2) nomoredirs=true;
+      SFtmp.insert(fn_tmp2);
+    }
+    SFtmp.sort_by_filenames();
+    SFtmp.go_beginning();
+    uniqname=true;
+    while (!SFtmp.eof()) {
+      fn_tmp=SFtmp.NextImg();
+      fn_tmp2=SFtmp.NextImg();
+      if (fn_tmp==fn_tmp2) {
+	uniqname=false;
+	offsets_keepdir++;
+	break;
+      }
+    }
+  }
+  SFtmp.clear();
+  if (!uniqname) 
+    REPORT_ERROR(1,"Prog_MLalign2D_prm: Provide a selfile with unique image names (preferably all in one directory)");
 
   // Set nr_psi & nr_flip and construct flipping matrices
   if (save_mem3) {
@@ -336,6 +379,48 @@ void Prog_MLalign2D_prm::produce_Side_info() {
 
 }
 
+// Generate initial references =============================================
+void Prog_MLalign2D_prm::generate_initial_references()  {
+
+  SelFile SFtmp, SFout;
+  ImageXmipp Iave,Itmp;
+  double dummy;
+  FileName fn_tmp;
+
+  // Make random subsets and calculate average images
+  if (verb>0) {
+    cerr << "  Generating initial references by averaging over random subsets" <<endl;
+    init_progress_bar(n_ref);
+  }
+  SFtmp=SF.randomize();
+  int Nsub=ROUND((double)SFtmp.ImgNo()/n_ref);
+  for (int refno=0; refno<n_ref; refno++) {
+    SFout.clear();
+    SFout.reserve(Nsub);
+    SFtmp.go_beginning();
+    SFtmp.jump_lines(Nsub*refno);
+    if (refno==n_ref-1) Nsub=SFtmp.ImgNo()-refno*Nsub;
+    for (int nn=0; nn<Nsub; nn++) {
+      SFout.insert(SFtmp.current());
+      SFtmp.NextImg();
+    }
+    SFout.get_statistics(Iave,Itmp,dummy,dummy);
+    fn_tmp=fn_root+"_it";
+    fn_tmp.compose(fn_tmp,0,"");
+    fn_tmp=fn_tmp+"_ref";
+    fn_tmp.compose(fn_tmp,refno+1,"");
+    fn_tmp=fn_tmp+".xmp";
+    Iave.write(fn_tmp);
+    SFr.insert(fn_tmp,SelLine::ACTIVE);
+    if (verb>0) progress_bar(refno);
+  }
+  if (verb>0) progress_bar(n_ref);
+  fn_ref=fn_root+"_it";
+  fn_ref.compose(fn_ref,0,"sel");
+  SFr.write(fn_ref);
+
+}
+
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
 // same for all processors! (in contrast to produce_Side_info)
@@ -348,7 +433,6 @@ void Prog_MLalign2D_prm::produce_Side_info2() {
   FileName                  fn_tmp;
   ImageXmipp                img;
   matrix1D<double>          offsets(2);
-  vector<double>            dum;
 
   // Read in all reference images in memory
   if (Is_ImageXmipp(fn_ref)) {
@@ -413,7 +497,7 @@ void Prog_MLalign2D_prm::produce_Side_info2() {
   }
   DF.clear();
 
-  // read in model fractions if given on command line (else uniform distribution)
+  // read in model fractions if given on command line
   if (fn_frac!="") {
     DF.read(fn_frac);
     DF.go_first_data_line();
@@ -441,8 +525,17 @@ void Prog_MLalign2D_prm::write_offsets(FileName fn, vector<double> &data) {
   int itot;
 
   fh.open((fn).c_str(),ios::out);
-  if (!fh)
-    REPORT_ERROR(3008,(string)"Prog_MLalign2D_prm: Cannot write file: "+fn);
+  if (!fh) {
+    fh.clear();
+    // Create the directory if it does not exist yet, and try again
+    string dirname;
+    int last_slash=((string)fn).rfind("/");
+    dirname=((string)fn).erase(last_slash);
+    if (!exists(dirname)) system(((string)"mkdir -p "+dirname).c_str());
+    fh.open((fn).c_str(),ios::out);
+    if (!fh) 
+      REPORT_ERROR(3008,(string)"Prog_MLalign2D_prm: Cannot write file: "+fn);
+  }
   
   itot=data.size();
   fh<<itot<<"\n";
@@ -454,78 +547,36 @@ void Prog_MLalign2D_prm::write_offsets(FileName fn, vector<double> &data) {
 
 }
 
-void Prog_MLalign2D_prm::read_offsets(FileName fn, vector<double> &data) {
+bool Prog_MLalign2D_prm::read_offsets(FileName fn, vector<double> &data) {
 
   ifstream fh;
   int ii,itot,nr_off,itoth,nr_offh;
   double remain;
   vector<double> data1;
 
-  if (do_mirror) nr_off=n_ref*4;
-  else nr_off=n_ref*2;
-
-  fh.open((fn).c_str(),ios::in);
-  if (!fh)
-    REPORT_ERROR(3008,(string)"Prog_MLalign2D_prm: Cannot read file: "+fn);
-  fh>>itot;
-
-  if (itot!=nr_off) 
-    REPORT_ERROR(1,"Prog_MLalign2D_prm: invalid offsets-file for this run!");
-
-  data.clear();
-  data.resize(itot);
-  for (int i=0; i<itot; i+=2) {
-    fh>>data[i];
-    fh>>data[i+1];
-  }
-
-  fh.close();
-}
-
-
-
-// Generate initial references =============================================
-void Prog_MLalign2D_prm::generate_initial_references()  {
-
-  SelFile SFtmp, SFout;
-  ImageXmipp Iave,Itmp;
-  matrix2D<complex<double> > Faux;
-  double dummy;
-  FileName fn_tmp;
-  SelLine line;
-  int focus;
-
-  // Make random subsets and calculate average images
-  if (verb>0) {
-    cerr << "  Generating initial references by averaging over random subsets" <<endl;
-    init_progress_bar(n_ref);
-  }
-  SFtmp=SF.randomize();
-  int Nsub=ROUND((double)SFtmp.ImgNo()/n_ref);
-  for (int refno=0; refno<n_ref; refno++) {
-    SFout.clear();
-    SFout.reserve(Nsub);
-    SFtmp.go_beginning();
-    SFtmp.jump_lines(Nsub*refno);
-    if (refno==n_ref-1) Nsub=SFtmp.ImgNo()-refno*Nsub;
-    for (int nn=0; nn<Nsub; nn++) {
-      SFout.insert(SFtmp.current());
-      SFtmp.NextImg();
+  if (!exists(fn)) return false;
+  else {
+    fh.open((fn).c_str(),ios::in);
+    if (!fh) return false;
+    else {
+      fh>>itot;
+      if (do_mirror) nr_off=n_ref*4;
+      else nr_off=n_ref*2;
+      if (itot!=nr_off) {
+	fh.close();
+	return false;
+      } else {
+        data.clear();
+        data.resize(itot);
+        for (int i=0; i<itot; i+=2) {
+          fh>>data[i];
+          fh>>data[i+1];
+        }
+	fh.close(); 
+	return true;
+      }
     }
-    SFout.get_statistics(Iave,Itmp,dummy,dummy);
-    fn_tmp=fn_root+"_it";
-    fn_tmp.compose(fn_tmp,0,"");
-    fn_tmp=fn_tmp+"_ref";
-    fn_tmp.compose(fn_tmp,refno+1,"");
-    fn_tmp=fn_tmp+".xmp";
-    Iave.write(fn_tmp);
-    SFr.insert(fn_tmp,SelLine::ACTIVE);
-    if (verb>0) progress_bar(refno);
   }
-  if (verb>0) progress_bar(n_ref);
-  fn_ref=fn_root+"_it";
-  fn_ref.compose(fn_ref,0,"sel");
-  SFr.write(fn_ref);
 
 }
 
@@ -577,10 +628,10 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,
   // prepare masks
   mask.resize(dim,dim);
   mask.set_Xmipp_origin();
-  BinaryCircularMask(mask,dim/2,INNER_MASK);
+  BinaryCircularMask(mask,hdim,INNER_MASK);
   omask.resize(dim,dim);
   omask.set_Xmipp_origin();
-  BinaryCircularMask(omask,dim/2,OUTSIDE_MASK);
+  BinaryCircularMask(omask,hdim,OUTSIDE_MASK);
 
   FOR_ALL_MODELS() {
     Mref.push_back(dumM);
@@ -643,10 +694,10 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
   Mnew.clear();
   mask.resize(dim,dim);
   mask.set_Xmipp_origin();
-  BinaryCircularMask(mask,dim/2,INNER_MASK);
+  BinaryCircularMask(mask,hdim,INNER_MASK);
   omask.resize(dim,dim);
   omask.set_Xmipp_origin();
-  BinaryCircularMask(omask,dim/2,OUTSIDE_MASK);
+  BinaryCircularMask(omask,hdim,OUTSIDE_MASK);
 
   FOR_ALL_MODELS() {
     Maux.init_zeros();
@@ -1347,7 +1398,7 @@ void Prog_MLalign2D_prm::maxCC_search_complete(matrix2D<double> &Mimg,
   Maux.set_Xmipp_origin();
   Maux2.resize(dim,dim);
   Maux2.set_Xmipp_origin();
-  Faux.resize((int)(dim/2)+1,dim);
+  Faux.resize(hdim+1,dim);
   sigma_noise2=sigma_noise*sigma_noise;
   matrix2D<int> shiftmask;
 
@@ -1471,7 +1522,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   Msum_imgs.clear();
   sumw.clear();
   sumw_mirror.clear();
-  Fdzero.resize((int)(dim/2)+1,dim);
+  Fdzero.resize(hdim+1,dim);
   Mdzero.resize(dim,dim);
   Mdzero.set_Xmipp_origin();
   LL=0.;
@@ -1497,7 +1548,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
   while ((!SF.eof())) {
 
     fn_img=SF.NextImg();
-    fn_trans=fn_img.remove_directories();
+    fn_trans=fn_img.remove_directories(offsets_keepdir);
     fn_trans=fn_root+"_offsets/"+fn_trans+".off";
 
     img.read(fn_img,false,false,false,false);
@@ -1510,15 +1561,14 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
 
     // Read optimal offsets for all references from disc
     if (fast_mode || limit_trans) {
-      if (imgno==0) system(((string)"mkdir -p "+fn_root+"_offsets").c_str());
-      if (exists(fn_trans)) read_offsets(fn_trans,allref_offsets);
-      else {
-	int itot=n_ref*2;
-	if (do_mirror) itot*=2;
-	allref_offsets.resize(itot);
-	if (zero_offsets) for (int i=0; i<itot; i++) allref_offsets[i]=0.;
-	else for (int i=0; i<itot; i++) allref_offsets[i]=-999.;
-      }	
+      if (!read_offsets(fn_trans,allref_offsets)) {
+        int itot=n_ref*2;
+        if (do_mirror) itot*=2;
+        allref_offsets.clear();
+        allref_offsets.resize(itot);
+        if (zero_offsets) for (int i=0; i<itot; i++) allref_offsets[i]=0.;
+        else for (int i=0; i<itot; i++) allref_offsets[i]=-999.;
+      }
     }
 
     // Read optimal orientations from memory
@@ -1698,18 +1748,18 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 
 }
 
-void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF, 
-					    DocFile &DF, DocFile &DFo, 
+void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo, 
 					    double &sumw_allrefs, double &LL, double &avecorr, 
 					    vector<double> &conv) {
 
-  FileName fn_tmp,fn_base,fn_tmp2;
-  matrix1D<double> fracline(3);
-  SelFile SFo,SFc;
-  string comment;
+  FileName          fn_tmp,fn_base,fn_tmp2;
+  matrix1D<double>  fracline(3);
+  SelFile           SFo,SFc;
+  DocFile           DFl;
+  string            comment;
  
-  DF.clear();
-  SF.clear();
+  DFl.clear();
+  SFo.clear();
   SFc.clear();
 
   fn_base=fn_root;
@@ -1724,31 +1774,31 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, SelFile &SF,
     fn_tmp.compose(fn_tmp,refno+1,"");
     fn_tmp=fn_tmp+".xmp";
     Iref[refno].write(fn_tmp);
-    SF.insert(fn_tmp,SelLine::ACTIVE);
+    SFo.insert(fn_tmp,SelLine::ACTIVE);
     fracline(0)=alpha_k[refno];
     fracline(1)=mirror_fraction[refno];
     fracline(2)=1000*conv[refno]; // Output 1000x the change for precision
-    DF.insert_comment(fn_tmp);
-    DF.insert_data_line(fracline);
+    DFl.insert_comment(fn_tmp);
+    DFl.insert_data_line(fracline);
   }
 
   // Write out sel & log-file
   fn_tmp=fn_base+".sel";
-  SF.write(fn_tmp);
+  SFo.write(fn_tmp);
 
-  DF.go_beginning();
+  DFl.go_beginning();
   comment="MLalign2D-logfile: Number of images= "+FtoA(sumw_allrefs);
   if (maxCC_rather_than_ML) comment+=" <CC>= "+FtoA(avecorr,10,5);
   else { 
     comment+=" LL= "+FtoA(LL,10,5)+" <Pmax/sumP>= "+FtoA(avecorr,10,5);
-    DF.insert_comment(comment);
+    DFl.insert_comment(comment);
     comment="-noise "+FtoA(sigma_noise,10,7)+" -offset "+FtoA(sigma_offset,10,7)+" -istart "+ItoA(iter+1);
   }
-  DF.insert_comment(comment);
-  DF.insert_comment(cline);
-  DF.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
+  DFl.insert_comment(comment);
+  DFl.insert_comment(cline);
+  DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
   fn_tmp=fn_base+".log";
-  DF.write(fn_tmp);
+  DFl.write(fn_tmp);
 
   if (write_docfile) {
     // Write out docfile with optimal transformation & references

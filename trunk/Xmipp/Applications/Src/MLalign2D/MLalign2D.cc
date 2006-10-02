@@ -39,16 +39,15 @@ int main(int argc, char **argv) {
   matrix2D<double> P_phi,Mr2,Maux;
   FileName fn_img,fn_tmp;
   matrix1D<double> oneline(0);
-  DocFile DFo,DFf;
-  SelFile SFa;
+  DocFile DFo;
 
   Prog_MLalign2D_prm prm;
 
   // Get input parameters
   try {
     prm.read(argc,argv);
-    prm.show();
     prm.produce_Side_info();
+    prm.show();
     if (prm.fn_ref=="") {
       if (prm.n_ref!=0) {
 	prm.generate_initial_references();
@@ -92,7 +91,7 @@ int main(int argc, char **argv) {
       converged=prm.check_convergence(conv);
 
       if (prm.write_intermediate)
-	prm.write_output_files(iter,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
+	prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
       else prm.output_to_screen(iter,sumcorr,LL);
       
       if (converged) {
@@ -101,7 +100,7 @@ int main(int argc, char **argv) {
       }
 
     } // end loop iterations
-    prm.write_output_files(-1,SFa,DFf,DFo,sumw_allrefs,LL,sumcorr,conv);
+    prm.write_output_files(-1,DFo,sumw_allrefs,LL,sumcorr,conv);
 
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 }
