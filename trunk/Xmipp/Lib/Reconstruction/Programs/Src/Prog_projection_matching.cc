@@ -290,8 +290,8 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 	  opt_psi=psi;
 	  opt_dirno=dirno;
 	}
-	ipp++;
       }
+      ipp++;
     }
   }
                                                                                 
