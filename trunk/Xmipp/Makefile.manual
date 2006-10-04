@@ -1,7 +1,7 @@
 ############################################################################
 #                                                                          #
 #                          Makefile for XMIPP                              #
-#                               May  2004                                  #
+#                               Oct. 2006                                  #
 #                                                                          #
 ############################################################################
 
@@ -67,13 +67,6 @@ QTLIBS        = -lqt
 HAVE_TIFF     = YES
   XMIPP_TIFFLIBDIR = /usr/lib
   XMIPP_TIFFINCDIR = /usr/include
-
-# OpenGL is used for for the graphical program to create 3D-phantom
-# Affected programs: xmipp_phan3D
-HAVE_OPENGL    = NO
-XMIPP_GLINCDIR = /usr/include/GL
-XMIPP_GLLIBDIR = /usr/lib
-LIBGL          = -lGL -lGLU
 
 # MPI is used for parallelisation of computational intensive algorithms
 # Affected programs: xmipp_MPI_art, xmipp_MPI_wbp
@@ -304,10 +297,6 @@ Makefiles:
 	@echo "XMIPP_VTKQTDIR  = $(XMIPP_VTKQTDIR)"    >> local_def
 	@echo "XMIPP_MPIDIR    = $(XMIPP_MPIDIR)"      >> local_def
 	@echo "LIBVTK          = $(LIBVTK)"            >> local_def
-	@echo "HAVE_OPENGL     = $(HAVE_OPENGL)"       >> local_def
-	@echo "XMIPP_GLINCDIR  = $(XMIPP_GLINCDIR)"    >> local_def
-	@echo "XMIPP_GLLIBDIR  = $(XMIPP_GLLIBDIR)"    >> local_def
-	@echo "LIBGL           = $(LIBGL)"             >> local_def
 	@echo "HAVE_COLIMATE   = $(HAVE_COLIMATE)"     >> local_def
 	@echo "HAVE_INRIA      = $(HAVE_INRIA)"        >> local_def
 	@echo "HAVE_TIFF       = $(HAVE_TIFF)"         >> local_def
