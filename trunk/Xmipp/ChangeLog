@@ -1,34 +1,5 @@
-2005-07-08  gettextize  <bug-gnu-gettext@gnu.org>
+0.9.1
 
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2005-07-07  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2005-07-06  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2005-02-07  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2004-10-19  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2004-03-18  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2004-03-05  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (EXTRA_DIST): Add config.rpath.
-
-2003-11-10  gettextize  <bug-gnu-gettext@gnu.org>
-
-	* Makefile.am (SUBDIRS): Add m4.
-	(EXTRA_DIST): Add config.rpath mkinstalldirs.
-	* configure.in (AC_OUTPUT): Add po/Makefile.in,
-
+- corrected template specialization bug
+- corected xmippError includes
+- correct compilation in PGI compilers

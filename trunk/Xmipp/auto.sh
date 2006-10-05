@@ -1,7 +1,5 @@
-# As developer
-# Packages needed: gettext, gettext-devel, automake, autoconf
+# Bootstrap script
 
-gettextize --force --copy
 aclocal -I m4
 autoheader
 libtoolize --force --copy
@@ -9,12 +7,6 @@ automake --gnu --add-missing
 autoconf
 
 ./configure
-./configure --disable-static
-./configure --enable-debug --enable-profiling
+#./configure --disable-static --enable-debug --enable-profiling
 make
 make dist
-
-# As user:
-# 
-# ./configure
-# make
