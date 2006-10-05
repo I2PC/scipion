@@ -119,10 +119,15 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
   tilt_range0=AtoF(get_param(argc,argv,"-tilt0","0."));
   tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","90."));
   fn_symmask=get_param(argc,argv,"-sym_mask","");
+  lowpass=AtoF(get_param(argc,argv,"-filter","-1"));
+  wlsart_no_start=check_param(argc,argv,"-nostart");
 
   // Hidden for now
   fn_solv=get_param(argc,argv,"-solvent","");
   do_wbp=check_param(argc,argv,"-WBP");
+
+  // Checks
+  if (lowpass>0.5) REPORT_ERROR(1,"Digital frequency for low-pass filter should be smaller than 0.5");
 
 }
 // Usage ===================================================================
@@ -137,7 +142,9 @@ void Prog_Refine3d_prm::usage() {
        << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
        << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
        << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
+       << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
        << " [ -sym <symfile> ]            : Enforce symmetry \n"
+       << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
        << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
        << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
        << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
@@ -171,8 +178,12 @@ void Prog_Refine3d_prm::show() {
     cerr << "  Local symmetry mask      : "<< fn_symmask<<endl;
     cerr << "  Output rootname          : "<< fn_root<<endl;
     cerr << "  Convergence criterion    : "<< eps<<endl;
+    if (lowpass>0) 
+    cerr << "  Low-pass filter          : "<< lowpass<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     cerr << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
+    if (wlsart_no_start)
+    cerr << "  -> Start wlsART reconstructions from all-zero volumes "<<endl;
     if (do_wbp)
     cerr << "  -> Use weighted back-projection instead of ART for reconstruction"<<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
@@ -196,8 +207,12 @@ void Prog_Refine3d_prm::show() {
     fh_hist << "  Symmetry file:           : "<< fn_sym<<endl;
     fh_hist << "  Output rootname          : "<< fn_root<<endl;
     fh_hist << "  Convergence criterion    : "<< eps<<endl;
+    if (lowpass>0) 
+    fh_hist << "  Low-pass filter          : "<< lowpass<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     fh_hist << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
+    if (wlsart_no_start)
+    fh_hist << "  -> Start wlsART reconstructions from all-zero volumes "<<endl;
     if (do_wbp)
     fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction"<<endl;
     fh_hist << " -----------------------------------------------------------------"<<endl;
@@ -352,7 +367,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     art_prm.fn_sel=fn_insel;
     art_prm.fn_root=fn_tmp;
     art_prm.tell=TELL_SAVE_BASIS;
-    art_prm.fn_start=fn_blob;
+    if (!wlsart_no_start) art_prm.fn_start=fn_blob;
     // Reconstruct using weighted least-squares ART
     Basic_ROUT_Art(art_prm,dummy,new_vol,new_blobs);
 
@@ -453,7 +468,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
   double                 avg,dummy,in,out;
   int                    dim;
 
-  if ( (fn_sym!="") || (fn_solv!="") ) {
+  if ( (fn_sym!="") || (fn_solv!="") || (lowpass>0) ) {
     SFvol.go_beginning();
     while (!SFvol.eof()) {
       // Read corresponding volume from disc
@@ -502,6 +517,16 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(solv()) {
 	  dVkij(vol(),k,i,j)-=dVkij(solv(),k,i,j)*(dVkij(vol(),k,i,j)-solvavg);
 	}
+      }
+
+      // Filtering the volume
+      if (lowpass>0) {
+	FourierMask fmask;
+	fmask.raised_w=0.02;
+	fmask.FilterShape=RAISED_COSINE;
+	fmask.FilterBand=LOWPASS;
+	fmask.w1=lowpass;
+	fmask.apply_mask_Space(vol());
       }
 
       // (Re-) write post-processed volume to disc

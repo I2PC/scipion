@@ -69,8 +69,12 @@ public:
   ofstream fh_hist;
   // Use WBP instead of WLS-ART for reconstruction in ML
   bool do_wbp;
+  // Low-pass filter digital frequency
+  double lowpass;
   // For user-provided tilt range
   double tilt_range0, tilt_rangeF;
+  // Do not use a starting volume in wlsART reconstruction
+  bool wlsart_no_start;
 
 public:
 
