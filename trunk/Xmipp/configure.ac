@@ -10,7 +10,7 @@
 
 AC_INIT
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Xmipp,0.9.1)
+AM_INIT_AUTOMAKE(Xmipp,0.9.2)
 AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CPP
@@ -25,7 +25,7 @@ AC_LANG(C++)
 
 AC_PREFIX_DEFAULT(`pwd`)
 
-# xmipp_ string is prepended by default to installed xmipp programs. It can be 
+# xmipp_ string is prepended by default to installed xmipp programs. It can be
 # changed using --program-prefix=your_string
 
 if test "x$program_prefix" = xNONE; then
@@ -110,7 +110,7 @@ AM_CONDITIONAL(BUILD_MPI, test x"$USE_MPI" = xtrue )
 
 # checking for Qt
 # If Qt is present then set HAVE_QT to 1 in config.h file
-# else print error and exit 
+# else print error and exit
 BNV_HAVE_QT
 AM_CONDITIONAL(BUILD_QT, test x"$have_qt" = xyes )
 
@@ -121,35 +121,7 @@ else
 	AC_MSG_RESULT([WARNING!!!: Qt Not found, Qt capabilities will be disabled.])
 fi
 
-#checking for OpenGL
-MDL_HAVE_OPENGL
-
-if test -z "$GL_LIBS"
-then
-	AC_MSG_RESULT([WARNING!!!: GL libs not found, OpenGL disabled.])
-else
-	if test -z "$GL_CFLAGS"
-	then
-		AC_MSG_RESULT([WARNING!!!: GL headers not found, OpenGL disabled.])
-	else
-		AC_MSG_RESULT([OpenGL flags: $GL_CFLAGS])
-		AC_MSG_RESULT([OpenGL libs: $GL_LIBS])
-	fi
-fi
-
-AC_ARG_ENABLE([GL],
-  AC_HELP_STRING([--disable-GL], [Disable GL programs]),
-  [case "${enableval}" in
-     yes) USE_GL=true ;;
-      no) USE_GL=false ;;
-       *) AC_MSG_ERROR(bad value ${enableval} for --disable-GL) ;;
-   esac], [USE_GL=true])
-
-AM_CONDITIONAL(BUILD_OGL, test -n "$GL_LIBS")
-AM_CONDITIONAL(BUILD_OGL, test -n "$GL_CFLAGS")
-AM_CONDITIONAL(BUILD_OGL, test x"$USE_GL" = xtrue)
-
-# Checks for the presence of some system libs 
+# Checks for the presence of some system libs
 
 AC_CHECK_LIB(Xext, main)
 AC_CHECK_LIB(Xt, main)
@@ -271,7 +243,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Operate/Makefile \
 	Applications/Src/PCA/Makefile \
 	Applications/Src/PDBPhantom/Makefile \
-	Applications/Src/Phan3D/Makefile \
 	Applications/Src/Phantom_transform/Makefile \
 	Applications/Src/Project/Makefile \
 	Applications/Src/Projection_Neighbourhood/Makefile \
@@ -326,4 +297,4 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/XMask/Makefile \
 	Makefile \
 	m4/Makefile )
-		
+

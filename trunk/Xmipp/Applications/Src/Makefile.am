@@ -5,13 +5,10 @@ OPTIONAL_PROGS += MPIArt MPI_WBP MPI_MLalign2D MPI_MLrefine3D MPI_Projection_mat
 endif
 
 if BUILD_TIFF
-OPTIONAL_PROGS += Tiff2Raw 
+OPTIONAL_PROGS += Tiff2Raw
 endif
 
 if BUILD_QT
-if BUILD_OGL
-OPTIONAL_PROGS += Phan3D
-endif
 OPTIONAL_PROGS += CTFViewer Edit Mark Show XMask
 endif
 
