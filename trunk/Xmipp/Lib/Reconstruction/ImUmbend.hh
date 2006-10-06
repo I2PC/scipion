@@ -1,29 +1,29 @@
 /***************************************************************************
  *
  * Authors:     Debora Gil
-                Roberto Marabini 
+                Roberto Marabini
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
- 
+
 #ifndef _IMUMBEND_HH
 #  define _IMUMBEND_HH
 
@@ -369,47 +369,47 @@ typedef struct{
 //@{
 // ImUmbend structure ----------------------------------------------------------
 /** ImUmbend class.
-    ImUmbend unbends a 2D crystal image.  
+    ImUmbend unbends a 2D crystal image.
 */
 
 class ImUmbend
 {
 
  public:
-   
+
    //////////////////////////////// Umbend Input Parameters
    /** Input file (MRC cor) */
-   FileName FN_Correlation;   
+   FileName FN_Correlation;
    /** Input Image ( SPI file) */
    char * inImfile;
    /** Output Image **/
    char * outImfile;
-   
+
    /** THRESHOLD OF CROSS-CORRELATION PEAK HEIGHT CALCULATED AS;
        max of croscorrelation * FACTOR (READ FROM UNIT 5)*/
    double cc_peak_factor;
-   
+
    /** Interpolation Model for Extension of Experimental Shifts to whole crystal image*/
    string  InterpModel;
-   
-  //////////////////////////////// Umbend Variables 
-  
+
+  //////////////////////////////// Umbend Variables
+
   /** Experimental Lattice and Peaks Coordinates */
    CCLattice_IO ExpLat;
-  
+
 
   /**  Experimental Displacements */
   vector <LatPoint> INCR_coord;
 
-   
+
   /** Crystal Image  */
   ImageXmipp    inIm,outIm;
 
 ////////////////////////////////  FUNCTIONS //////////////////////////
-   
+
 public:
 
-////////////////////////////  Constructors 
+////////////////////////////  Constructors
 
 
 
@@ -423,7 +423,7 @@ void ReadMRCCord();
 /**Compute diference between ideal red spots and experimental ones */
 void PeaksCorresp();
 
-/////////////////////////// Unbending 
+/////////////////////////// Unbending
 
 /**Image Unbending*/
 void UnBending( );
@@ -433,7 +433,7 @@ void UnBending( );
 /** Shifts Interpolation from Regular grid*/
 void ShiftsInterpReg(matrix2D <double> & ,matrix2D <double> & ,LatPoint & );
 /** 2D Interpolation on Square acoording to InterpModel*/
-void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff);
+void Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff);
 
 /**Linear Interpolation from scattered data set to regular grid*/
 void Scattered2Regular(matrix2D <double> & ,matrix2D <double> & ,vector <ITRIANGLE> & );

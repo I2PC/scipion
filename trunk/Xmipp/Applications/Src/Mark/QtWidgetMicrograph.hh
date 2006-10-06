@@ -8,21 +8,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef __QT_WIDGET_MICROGRAPH_HH__
@@ -43,7 +43,7 @@
 #include <XmippData/xmippMasks.hh>
 #include <vector>
 
-/* Forward declarations ---------------------------------------------------- */ 
+/* Forward declarations ---------------------------------------------------- */
 class QtMainWidgetMark;
 class QtImageMicrograph;
 class QtPopupMenuMark;
@@ -62,7 +62,7 @@ public:
 
    // Print
    friend ostream & operator << (ostream &_out, const Particle &_p);
-   
+
    // Read
    void read(istream &_in, int _vec_size);
 };
@@ -97,46 +97,46 @@ public:
 
    // Build average and sigma
    void build_model();
-   
+
    // Well posed. The model is well posed if the determinant of the covariance
    // matrix is different from zero
    bool well_posed() {
       __well_posed=(XSIZE(__sigma)>0)?(__sigma.det()>1e-1):false;
       return __well_posed;
    }
-   
+
    // Compute the largest distance within the example set
    void compute_largest_distance();
-   
+
    // Distance between two vectors
    double distance(const matrix1D<double> &my_X, const matrix1D<double> &my_Y);
 
    // Distance between a vector and the average
    double distance_to_average(const matrix1D<double> &my_X)
       {return distance(__avg,my_X);}
-   
+
    // Euclidean distance between a vector and the average
    double euclidean_distance_to_average(const matrix1D<double> &my_X);
-   
+
    // Print
    friend ostream & operator << (ostream &_out, const Classification_model &_m);
-   
+
    // Read
    friend istream & operator >> (istream &_in, Classification_model &_m);
-   
+
    // Print model
    void print_model(ostream &_out);
 };
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtWidgetMicrograph : public QWidget {   
+class QtWidgetMicrograph : public QWidget {
    Q_OBJECT
-   
+
 private:
    Micrograph                *__m;
    QtFiltersController       *__filtersController;
-   int                        __activeFamily;   
-   QMenuBar                  *__menuBar;      
+   int                        __activeFamily;
+   QMenuBar                  *__menuBar;
    QtImageMicrograph         *__mImage;
    QtImageOverviewMicrograph *__mImageOverview;
    QVBoxLayout               *__gridLayout;
@@ -188,17 +188,17 @@ private:
 
 public:
    // Constructor
-   QtWidgetMicrograph( QtMainWidgetMark *_mainWidget, 
+   QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
                        QtFiltersController *_f,
                        Micrograph *_m = NULL );
    ~QtWidgetMicrograph();
-   
+
    // Set Micrograph
    void setMicrograph( Micrograph *_m );
-   
+
    // Get Micrograph
    Micrograph *getMicrograph() { return( __m ); }
-      
+
    // Set this as tilted micrograph
    void setTilted() {__tilted=TRUE; __mImage->setTilted();}
 
@@ -207,44 +207,44 @@ public:
 
    // Get filters controller
    QtFiltersController *getFiltersController() { return(__filtersController); }
-   
+
    // Get active family
    int activeFamily() { return( __activeFamily); }
-   
+
    // Get overview
    QtImageOverviewMicrograph *overview() { return( __mImageOverview ); }
-   
+
    // Get Image
-   QtImageMicrograph *image() { return( __mImage ); }   
-   
+   QtImageMicrograph *image() { return( __mImage ); }
+
    // Get Filemenu
    QtFileMenu *file_menu() {return __file_menu;}
-   
+
    // Add menu item
    void addMenuItem( const char *_msg, const QtPopupMenuMark *_item ) {
        __menuBar->insertItem( _msg, (QPopupMenu*)_item );
    }
-   
+
    // Draw axis
    void draw_axis(double _ang)
       {__mImageOverview->enableAxis(); __mImageOverview->draw_axis(_ang);}
-   
+
    // Open menu.
    // Add your menus to this function
    void openMenus();
-   
+
    // Change contrast
    void changeContrast(int _mingray, int _maxgray, float _gamma);
-   
+
    // Change contrast
    void changeCircleRadius(float _circle_radius);
 
-   // Repaint 
+   // Repaint
    void repaint( int t=FALSE );
-   
+
    // Learn particles
    void learnParticles();
-   
+
    // Build Selection model. The selection model is made up of the training
    // and the automatically selected particles.
    void buildSelectionModel();
@@ -257,7 +257,7 @@ public:
 
    // Build vectors
    void buildVectors(vector<int> &_idx, Classification_model &_model);
-   
+
    // Build classfication vector
    // x,y are in the coordinate system of the piece (that might be
    // a reduced version of a piece in the micrograph)
@@ -280,7 +280,7 @@ public:
    // need to be shifted in order to fit with the required size.
    bool get_corner_piece(int _top, int _left, int _skip_y,
       int &_next_skip_x,int &_next_skip_y,int &_next_top,int &_next_left);
-   
+
    // Denoise, reject outliers and equalize histogram
    // Returns true, if successful. False if unsuccessful (skip this piece)
    // Usually, it is unsuccessful if the denoising fails to work because
@@ -290,7 +290,7 @@ public:
    //To get the neighbours of the particle at position (x,y) in the micrograph
    // (with actual coordinates in the piece posx,posy)
    // and their positions in the piece image
-   void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index,
+   void find_nbr(vector<int> &_idx, int _index,
       int _x, int _y,
       int _posx, int _posy, matrix1D<char> &_visited,
       vector< matrix1D<int> > &_nbr);
@@ -334,22 +334,22 @@ public:
    // Delete particle.
    // The input index is the index of the moved particle in the micrograph list
    void delete_particle(int _idx);
-   
+
    // Rebuild the automatic vectors that have been moved
    void rebuild_moved_automatic_vectors();
 
    // load models
    void loadModels();
-   
+
    // Save models
    void saveModels();
-   
+
    // Classify errors
    void classify_errors();
-   
+
    // Write all important information for particle selecting to a file
    void write();
-   
+
    // Configure auto
    void configure_auto();
 
@@ -376,7 +376,7 @@ class AdjustContrastWidget : public QWidget {
    Q_OBJECT
 public:
    /** Constructor */
-   AdjustContrastWidget(int min, int max, float gamma, 
+   AdjustContrastWidget(int min, int max, float gamma,
       QtWidgetMicrograph *_qtwidgetmicrograph,
       QWidget *parent=0, const char *name=0, int wflags=0);
 private:
@@ -388,7 +388,7 @@ private:
    QLabel     	      *__label_max;
    QLabel     	      *__label_gamma;
 private slots:
-   void scrollValueChanged(int);  
+   void scrollValueChanged(int);
 };
 
 /** Class to adjust contrast
@@ -408,7 +408,7 @@ private:
    vector < QLabel * >      __label;
    QLineEdit               *__outputNameLineEdit;
 private slots:
-   void scrollValueChanged(int);  
+   void scrollValueChanged(int);
    void accept();
    void cancel();
 signals:
@@ -421,16 +421,16 @@ class AdjustCircleRadiustWidget : public QWidget {
    Q_OBJECT
 public:
    /** Constructor */
-   AdjustCircleRadiustWidget(int min, int max, int start_with, 
+   AdjustCircleRadiustWidget(int min, int max, int start_with,
       QtWidgetMicrograph *_qtwidgetmicrograph,
       QWidget *parent=0, const char *name=0, int wflags=0);
 private:
    QtWidgetMicrograph *__qtwidgetmicrograph;
    QScrollBar 	      *__scroll_radius;
-   QLabel     	      *__label_radius;   
+   QLabel     	      *__label_radius;
 
 private slots:
-   void scrollValueChanged(int);  
+   void scrollValueChanged(int);
 };
 
 #endif

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -63,9 +63,9 @@
 class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xmippVector, xmippLabel>
 {
  public:
-  
-    vector< vector <unsigned> > classifVectors;	
-    vector< double > aveDistances;	
+
+    vector< vector <unsigned> > classifVectors;
+    vector< double > aveDistances;
 
 
   /**
@@ -116,7 +116,7 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
    * @param _is  The input stream
    * @exception  runtime_error  If there are problems with the stream
    */
-  xmippCB(istream& _is); 
+  xmippCB(istream& _is);
 
   /**
    * Virtual destructor needed
@@ -150,7 +150,7 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
    * @param _ts  Sample list to classify
    */
 
-  virtual void classify(const xmippCTVectors* _ts); 
+  virtual void classify(const xmippCTVectors* _ts);
 
 
   /**
@@ -191,7 +191,7 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
    * Standard output for a code book
    * @param _os The output stream
    */
-  virtual void printSelf(ostream& _os) const; 
+  virtual void printSelf(ostream& _os) const;
 
   /**
    * Standard input for a code book
@@ -200,7 +200,7 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
   virtual void readSelf (istream& _is, long _dim=-1, long _size=-1);
 
   /**
-   * Saves the xmippCodeBook class into a stream. 
+   * Saves the xmippCodeBook class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -208,36 +208,36 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
 
 
   /**
-   * Loads the xmippCodeBook class from a stream. 
+   * Loads the xmippCodeBook class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   virtual void loadObject(istream& _is);
 
-  /** 
-   *	Normalize all features in the codebook 
+  /**
+   *	Normalize all features in the codebook
    * 	@param _varStats The normalization information
    */
 
-  virtual void xmippCB::Normalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
-
-
-  /** 
-   *	UnNormalize all features in the codebook 
-   * 	@param _varStats The normalization information
-   */
-
-  virtual void xmippCB::unNormalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
+  virtual void Normalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
 
 
   /**
-   * Prints the histogram values of each codevector. 
+   *	UnNormalize all features in the codebook
+   * 	@param _varStats The normalization information
+   */
+
+  virtual void unNormalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
+
+
+  /**
+   * Prints the histogram values of each codevector.
    * @param _os  The the output stream
    */
   virtual void printHistogram(ostream& _os) const;
 
   /**
-   * Prints the Average Quantization Error of each codevector. 
+   * Prints the Average Quantization Error of each codevector.
    * @param _os  The the output stream
    */
   virtual void printQuantError(ostream& _os) const;
@@ -245,13 +245,13 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
 
 protected:
 
-  /** 
+  /**
    * Reads the classif vectors from a stream.
    * @param _is  The input stream
    */
     void readClassifVectors(istream& _is);
 
-  /** 
+  /**
    * Writes the classif vectors to a stream
    * @param _os  The output stream
    */

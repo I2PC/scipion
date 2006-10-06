@@ -1,27 +1,27 @@
 /***************************************************************************
  *
- * Authors:     DEbora gil 
+ * Authors:     DEbora gil
  *              Roberto Marabini
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /*****************************************************************************/
 /* APH Files: MRC                                                            */
@@ -57,7 +57,7 @@
 #define MODE_SHORT_COMPLEX  3
 #define MODE_FLOAT_COMPLEX  4
 
-/* 
+/*
  * Axis.
  */
 #define X_AXIS 1
@@ -128,16 +128,16 @@ typedef struct MRCheader
 
                                     /* 10 text labels of 80 characters each. */
     char        labels[MRC_NUM_LABELS][MRC_LABEL_SIZE+1];
-    
-} MRC_HEADER;   
+
+} MRC_HEADER;
 
 class CCP4 {
 public:
-   /** Estructure with ccp4 header 
+   /** Estructure with ccp4 header
         copied from ccp4 code */
    MRC_HEADER my_mrc_header;
 
-   
+
 public:
 /** write a ccp4 2D file*/
    void write(const FileName &fn_out, const ImageXmipp &I, bool reversed=false);
@@ -164,7 +164,7 @@ public:
    void fill_header_from_xmippimage(VolumeXmipp V, bool reversed=false);
 
 /** Fill mrc header from mrc file. */
-   void CCP4::read_header_from_file(const FileName &fn_in, bool reversed=false);
+   void read_header_from_file(const FileName &fn_in, bool reversed=false);
 };
 
 

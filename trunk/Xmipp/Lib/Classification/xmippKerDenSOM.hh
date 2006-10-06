@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -56,9 +56,9 @@ class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
    * @param _epsilon    Stopping criterion
    * @param _nSteps     Number of training steps
    */
-  xmippKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps, 
+  xmippKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
   		double _epsilon, unsigned long _nSteps)
-  : xmippBaseAlgo<xmippFuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps), 
+  : xmippBaseAlgo<xmippFuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
     epsilon(_epsilon), somNSteps(_nSteps) {};
 
   /**
@@ -87,7 +87,7 @@ class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
 
   /**
    * Trains the KerDenSOM
-   * @param _som  The KerDenSom to train           
+   * @param _som  The KerDenSom to train
    * @param _ts   The training set
    * @param _update True if uses _som as starting point for training.
    * @param _sigma If update = true, uses this sigma for the training.
@@ -124,7 +124,7 @@ class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
    double epsilon;      // Stopping criterion Error < epsilon
    unsigned long somNSteps;   // number of steps
 
-   
+
    // Internal Scratch
 
    unsigned numNeurons;
@@ -133,15 +133,15 @@ class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
    vector < vector<double> > tmpMap;
    vector<double> tmpD, tmpD1, tmpDens, tmpV;
 
-    
+
   /** Declaration of virtual method */
    virtual void train (xmippFuzzyMap& _som, const TS& _examples) const {};
 
   /* Declaration of abstract methods */
 
    // Update Us
-   virtual double updateU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha) = 0;   	
-   
+   virtual double updateU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha) = 0;
+
    // Estimate Sigma II
    virtual double updateSigmaII(xmippFuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha) = 0;
 
@@ -153,25 +153,25 @@ class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
 
 
    /* Some other common methods */
-   
-   // Update Code vectors   
+
+   // Update Code vectors
    virtual void updateV(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma);
 
    // Main iterations
-   virtual double mainIterations(xmippFuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg);   	
+   virtual double mainIterations(xmippFuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg);
 
    // Special Initialization of the Us
-   virtual void xmippKerDenSOM::initU(xmippFuzzyMap* _som);   
+   virtual void initU(xmippFuzzyMap* _som);
 
-   // Special initialization of Code vectors   
+   // Special initialization of Code vectors
    virtual void updateV1(xmippFuzzyMap* _som, const TS* _examples);
 
-   // Special initialization of Membership Matrix   
+   // Special initialization of Membership Matrix
    virtual void updateU1(xmippFuzzyMap* _som, const TS* _examples);
 
    // Estimate Sigma I
    virtual double updateSigmaI(xmippFuzzyMap* _som, const TS* _examples);
- 
+
    // Some printing methods.
    void showX(const TS* _ts);
    void showV(xmippFuzzyMap* _som);
