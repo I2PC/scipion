@@ -398,10 +398,11 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
 
 
 // Displacement Interpolation from Triangulation of Irregular Grid
+// Border values are set to nearest neighbour
 void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 {
 	//Interpolation Parameters
-        int Tind;  
+        int Tind, Ptind;  
 	int n;
         float w[3],del;
 	float x[3],y[3],Incrx[3],Incry[3];
@@ -418,7 +419,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 	
 	        
                 //find nearest Triangle
-		Tind=FindNearest(TargetPt, LatTri);
+		Tind=FindNearestTri(TargetPt, LatTri);
 		#ifdef TIMES
                 times(&after);
 		cout << "Triang. search time " << after.tms_utime-before.tms_utime << endl;
@@ -461,8 +462,10 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 		}
 		else
 		{
-		 TargetPt.Incrx=BORDER_POINT;
-		 TargetPt.Incry=BORDER_POINT;
+		 //Use nearest neighbour interpolation 
+		 Ptind=FindNearestPt(TargetPt);
+		 TargetPt.Incrx=INCR_coord[Ptind].Incrx;
+		 TargetPt.Incry=INCR_coord[Ptind].Incry;
 		}
 }
 
@@ -534,7 +537,7 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
 
 /////////////////// Computation of Nearest Triangl. to TargetPt
 // Returns index of triangle in vector LatTri
-int ImUmbend::FindNearest(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
+int ImUmbend::FindNearestTri(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 {
 
 	int k,Vind,t;
@@ -574,4 +577,32 @@ int ImUmbend::FindNearest(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 	}
 
    return -1;
+}
+
+/////////////////// Computation of Nearest Point to TargetPt
+// Returns index of nearest Vertex in vector INCR_coord
+int ImUmbend::FindNearestPt(LatPoint &TargetPt)
+{
+    int k,indMin;
+    int N=INCR_coord.size();
+    float Dist,MinDist;
+    
+    MinDist=-1;
+    
+     //Nearest Pt is the one achieving minimum distance
+    for(k=0;k<N;k++)
+    {
+         //Distance Computation
+         Dist=(TargetPt.x-INCR_coord[k].x)*(TargetPt.x-INCR_coord[k].x)+(TargetPt.y-INCR_coord[k].y)*(TargetPt.y-INCR_coord[k].y);
+	 if(Dist<MinDist)
+	 {
+	   MinDist=Dist;
+	   indMin=k;
+	  }
+
+    }
+   
+    
+    return indMin;
+    
 }
