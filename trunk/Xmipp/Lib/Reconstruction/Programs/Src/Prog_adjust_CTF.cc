@@ -443,7 +443,7 @@ void Adjust_CTF_Parameters::generate_model(int Ydim, int Xdim,
    global_ctfmodel.Produce_Side_Info();
 
    FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
-      if (j>Xdim/2) continue;
+      if (j>=Xdim/2) continue;
       
       XX(idx)=j; YY(idx)=i;
       FFT_idx2digfreq(model, idx, freq);
