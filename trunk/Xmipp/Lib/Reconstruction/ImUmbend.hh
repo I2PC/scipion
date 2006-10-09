@@ -446,8 +446,11 @@ void ShiftsInterp( LatPoint &, vector <ITRIANGLE> & );
 void LatTriang(vector <ITRIANGLE> & );
 
 /**Returns index of triangle in vector LatTri*/
-int FindNearest(LatPoint &,  vector <ITRIANGLE> & );
+int FindNearestTri(LatPoint &,  vector <ITRIANGLE> & );
 
+/** Returns index of nearest Vertex in vector INCR_coord*/
+int FindNearestPt(LatPoint &);
+///////////////////////////  I/O
 /** Show parameters */
    friend ostream & operator << (ostream &o, const ImUmbend &prm) {
       o << "Input Correlation File      : " << prm.FN_Correlation << endl
