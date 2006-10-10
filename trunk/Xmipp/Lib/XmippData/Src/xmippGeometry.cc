@@ -457,13 +457,19 @@ void Euler_direction(double alpha, double beta, double gamma,
 /* Euler direction2angles ------------------------------- */
 //gamma is useless but I keep it for simmetry
 //with Euler_direction
-void Euler_direction2angles(matrix1D<double> &v,
+void Euler_direction2angles(matrix1D<double> &v0,
    double &alpha, double &beta, double &gamma) {
    double abs_ca, abs_sa, sb, cb;
    double aux_alpha;
    double aux_beta;
    double error, newerror;
    matrix1D<double> v_aux;
+   matrix1D<double> v;
+
+   //if not normalized do it so
+   v.resize(3);
+   v=v0;
+   v=v.normalize();
 
    v_aux.resize(3);
    cb=VEC_ELEM(v,2);
