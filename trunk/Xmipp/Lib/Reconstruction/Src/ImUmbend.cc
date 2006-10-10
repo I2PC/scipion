@@ -283,8 +283,34 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
      #endif
      #undef DEBUG
     }   
-   
-    
+    else if( (MatIncrX.outside(i+1,j)) &&
+             (MatIncrX.outside(i,j+1)) &&
+             (MatIncrX.outside(i+1,j+1))
+           )
+         {
+         TargetPt.Incrx=MatIncrX(i,j);
+         TargetPt.Incry=MatIncrY(i,j);
+         }
+     else if( (MatIncrX.outside(i+1,j)) &&
+              (MatIncrX.outside(i+1,j+1))
+            )
+         {
+         A3=A4=0;A=A1+A2+A3+A4;
+         TargetPt.Incrx=A1*MatIncrX(i,j)+A2*MatIncrX(i,j+1);
+         TargetPt.Incrx=TargetPt.Incrx/A;
+         TargetPt.Incry=A1*MatIncrY(i,j)+A2*MatIncrY(i,j+1);
+         TargetPt.Incry=TargetPt.Incry/A;
+         }
+     else if( (MatIncrX.outside(i,j+1)) &&
+              (MatIncrX.outside(i+1,j+1))
+      )
+         {
+         A2=A4=0;A=A1+A2+A3+A4;
+         TargetPt.Incrx=A1*MatIncrX(i,j)+A3*MatIncrX(i+1,j);
+         TargetPt.Incrx=TargetPt.Incrx/A;
+         TargetPt.Incry=A1*MatIncrY(i,j)+A3*MatIncrY(i+1,j);
+         TargetPt.Incry=TargetPt.Incry/A;
+         }
    
 }
 //2D Interpolation on Square acoording to InterpModel
