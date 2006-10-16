@@ -67,6 +67,8 @@ public:
    double               f1;
    /// Enhancement filter high freq
    double               f2;
+   /// Weight of the enhanced image
+   double               enhanced_weight;
    
    /// Set of parameters for the complete adjustment of the CTF
    matrix1D<double>     adjust;

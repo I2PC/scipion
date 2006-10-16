@@ -206,6 +206,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) {
    // Enhance parameters
    f1=AtoF(get_param(fh_param,"enhance_min_freq",0,"0.02")); 
    f2=AtoF(get_param(fh_param,"enhance_max_freq",0,"0.15")); 
+   enhanced_weight=AtoF(get_param(fh_param,"enhance_max_freq",0,"5")); 
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -292,6 +293,7 @@ void Adjust_CTF_Parameters::produce_side_info() {
    prm.mask_w2=0.5;
    enhanced_ctftomodel()=ctftomodel();
    prm.apply(enhanced_ctftomodel());
+   enhanced_ctftomodel()*=enhanced_weight;
    CenterFFT(enhanced_ctftomodel(),false);
    
    // Resize the frequency
@@ -617,8 +619,6 @@ double CTF_fitness(double *p) {
                   dist*=global_current_penalty;
                break;
             case 3:
-               //dist=-enhanced_ctf*(ctf_without_damping*ctf_without_damping);
-               //break;
             case 4:
                if (envelope>XMIPP_EQUAL_ACCURACY)
                   dist=ABS(ctf2-ctf2_th)/(envelope*envelope);
@@ -1034,7 +1034,7 @@ void estimate_defoci() {
 
    double defocusV0=-1e3, defocusU0=-1e3;
    double defocusVF=-100e3, defocusUF=-100e3;
-   double initial_defocusStep=16e3;
+   double initial_defocusStep=8e3;
    matrix2D<double> error;
    
    // Check if there is no initial guess
