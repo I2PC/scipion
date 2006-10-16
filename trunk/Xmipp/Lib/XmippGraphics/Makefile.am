@@ -1,15 +1,25 @@
 lib_LTLIBRARIES = libXmippGraphics_@host_os@.la
 
-libXmippGraphics_@host_os@_la_SOURCES = Src/showTools.cc      showTools_moc.cc \
-	Src/show2D.cc         show2D_moc.cc \
-	Src/showTable.cc      showTable_moc.cc \
-	Src/showSel.cc        showSel_moc.cc \
-	Src/showVol.cc        showVol_moc.cc \
-	Src/showSpectra.cc    showSpectra_moc.cc \
-	Src/showSOM.cc        showSOM_moc.cc \
-	Src/showSpectraSOM.cc showSpectraSOM_moc.cc \
-	Src/showAssignCTF.cc  showAssignCTF_moc.cc \
-        Src/showPlotter.cc    showPlotter_moc.cc
+libXmippGraphics_@host_os@_la_SOURCES = Src/showTools.cc \
+	Src/show2D.cc          \
+	Src/showTable.cc       \
+	Src/showSel.cc         \
+	Src/showVol.cc         \
+	Src/showSpectra.cc     \
+	Src/showSOM.cc         \
+	Src/showSpectraSOM.cc  \
+	Src/showAssignCTF.cc   \
+        Src/showPlotter.cc
+nodist_libXmippGraphics_@host_os@_la_SOURCES = showTools_moc.cc \
+	show2D_moc.cc \
+	showTable_moc.cc \
+	showSel_moc.cc \
+	showVol_moc.cc \
+	showSpectra_moc.cc \
+	showSOM_moc.cc \
+	showSpectraSOM_moc.cc \
+	showAssignCTF_moc.cc \
+        showPlotter_moc.cc
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 LIBADD = @QT_LIBS@

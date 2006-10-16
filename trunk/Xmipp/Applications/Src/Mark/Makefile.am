@@ -1,21 +1,35 @@
 bin_PROGRAMS = mark
-mark_SOURCES = mark.cc QtColorLabel.cc QtColorLabel_moc.cc \
-	QtDialogFamilies.cc QtDialogFamilies_moc.cc \
-	QtDialogProperties.cc QtDialogProperties_moc.cc \
-	QtFileMenu.cc QtFileMenu_moc.cc \
-        QtFilter.cc QtFilter_moc.cc \
-        QtFilterMenu.cc QtFilterMenu_moc.cc \
-        QtFiltersController.cc QtFiltersController_moc.cc \
-        QtImage.cc QtImage_moc.cc \
+mark_SOURCES = mark.cc QtColorLabel.cc \
+	QtDialogFamilies.cc \
+	QtDialogProperties.cc \
+	QtFileMenu.cc \
+        QtFilter.cc \
+        QtFilterMenu.cc \
+        QtFiltersController.cc \
+        QtImage.cc \
         QtImageConverter.cc \
-        QtImageMicrograph.cc QtImageMicrograph_moc.cc \
-        QtImageOverviewMicrograph.cc QtImageOverviewMicrograph_moc.cc \
-        QtMainWidgetMark.cc QtMainWidgetMark_moc.cc \
-        QtAutoMenu.cc QtAutoMenu_moc.cc \
-        QtPopupMenuMark_moc.cc \
-        QtWidgetMicrograph.cc QtWidgetMicrograph_moc.cc \
-        QtWidgetPSD.cc QtWidgetPSD_moc.cc \
+        QtImageMicrograph.cc \
+        QtImageOverviewMicrograph.cc \
+        QtMainWidgetMark.cc \
+        QtAutoMenu.cc \
+        QtWidgetMicrograph.cc \
+        QtWidgetPSD.cc \
         ../DownSample/xvsmooth.cc
+nodist_mark_SOURCES = QtColorLabel_moc.cc \
+	QtDialogFamilies_moc.cc \
+	QtDialogProperties_moc.cc \
+	QtFileMenu_moc.cc \
+        QtFilter_moc.cc \
+        QtFilterMenu_moc.cc \
+        QtFiltersController_moc.cc \
+        QtImage_moc.cc \
+        QtImageMicrograph_moc.cc \
+        QtImageOverviewMicrograph_moc.cc \
+        QtMainWidgetMark_moc.cc \
+        QtAutoMenu_moc.cc \
+        QtPopupMenuMark_moc.cc \
+        QtWidgetMicrograph_moc.cc \
+        QtWidgetPSD_moc.cc
 
 mark_LDADD = $(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
 	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \

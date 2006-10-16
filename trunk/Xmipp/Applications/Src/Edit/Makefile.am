@@ -1,5 +1,6 @@
 bin_PROGRAMS = edit
-edit_SOURCES = edit.cc textedit.cc textedit_moc.cc
+edit_SOURCES = edit.cc textedit.cc
+nodist_edit_SOURCES = textedit_moc.cc
 
 edit_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
 	

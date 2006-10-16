@@ -1,5 +1,6 @@
 bin_PROGRAMS = ctfviewer
-ctfviewer_SOURCES = ctfviewer.cc ctfviewer_module.cc ctfviewer_module_moc.cc
+ctfviewer_SOURCES = ctfviewer.cc ctfviewer_module.cc
+nodist_ctfviewer_SOURCES = ctfviewer_module_moc.cc
 
 ctfviewer_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
                   $(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \

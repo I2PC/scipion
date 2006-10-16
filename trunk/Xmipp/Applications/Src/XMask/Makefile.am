@@ -1,7 +1,7 @@
 bin_PROGRAMS = xmask
 xmask_SOURCES = xmask.cc \
-	maskimg.cc \
-	maskimg_moc.cc
+	maskimg.cc
+nodist_xmask_SOURCES = maskimg_moc.cc
 
 xmask_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
 	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
