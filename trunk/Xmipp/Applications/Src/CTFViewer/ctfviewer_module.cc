@@ -314,7 +314,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     show();
     setCaption("Options");
     if (fn_ctfparam != "") {
-       selectedFile->setText(fn_ctfparam);
+       selectedFile->setText(fn_ctfparam.c_str());
        fn_root=fn_ctfparam.without_extension();
        openFile();
    }
