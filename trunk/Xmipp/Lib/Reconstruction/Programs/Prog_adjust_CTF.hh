@@ -41,6 +41,8 @@ public:
    FileName             fn_similar_model;
    /// CTF amplitude to model
    ImageXmipp           ctftomodel;
+   /// CTF amplitude to model
+   ImageXmipp           enhanced_ctftomodel;
    /// CTF model
    XmippCTF             initial_ctfmodel;
    /// Show convergence values
@@ -60,6 +62,12 @@ public:
    double               Tm;
    /// Defocus range
    double               defocus_range;
+   
+   /// Enhancement filter low freq
+   double               f1;
+   /// Enhancement filter high freq
+   double               f2;
+   
    /// Set of parameters for the complete adjustment of the CTF
    matrix1D<double>     adjust;
 public:

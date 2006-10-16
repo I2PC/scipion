@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include "../Prog_adjust_CTF.hh"
+#include "../Prog_Enhance_PSD.hh"
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippHistograms.hh>
 
@@ -70,6 +71,7 @@ int                    global_evaluation_reduction;
 
 // CTF model and noise model
 XmippCTF               global_ctfmodel;
+XmippCTF               global_ctfmodel_defoci;
 
 // Maximum of the gaussian
 double                 global_max_gauss_freq; 
@@ -200,6 +202,10 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) {
    Tm=initial_ctfmodel.Tm; 
    assign_parameters_from_CTF(initial_ctfmodel,VEC_ARRAY(adjust),0,
       CTF_PARAMETERS, true); 
+   
+   // Enhance parameters
+   f1=AtoF(get_param(fh_param,"enhance_min_freq",0,"0.02")); 
+   f2=AtoF(get_param(fh_param,"enhance_max_freq",0,"0.15")); 
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -223,6 +229,8 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
    if (!astigmatic_noise)  fh_param    << "radial_noise=yes\n";
    fh_param << "particle_horizontal="  << particle_horizontal     << endl;
    fh_param << "particle_vertical="    << particle_vertical       << endl;
+   fh_param << "enhance_min_freq="     << f1                      << endl
+            << "enhance_max_freq="     << f2                      << endl;
 
    fh_param << initial_ctfmodel << endl;
    fh_param.close();
@@ -239,6 +247,8 @@ void Adjust_CTF_Parameters::show() {
         << "Defocus range:      " << defocus_range       << endl
         << "Particle horizontal:" << particle_horizontal << endl
         << "Particle vertical:  " << particle_vertical   << endl
+        << "Enhance min freq:   " << f1                  << endl
+        << "Enhance max freq:   " << f2                  << endl
 	<< "Starting:\n"          << initial_ctfmodel    << endl
     ;
 }
@@ -260,6 +270,8 @@ void Adjust_CTF_Parameters::Usage() {
         << "   [radial_noise=yes|no]       : By default, noise is astigmatic\n"
         << "   [particle_horizontal=-1]    : By default, the same X size as the PSD\n"
         << "   [particle_vertical=-1]      : By default, the same Y size as the PSD\n"
+        << "   [enhance_min_freq=<f=0.02>] : Normalized to 0.5\n"
+        << "   [enhance_max_freq=<f=0.2>]  : Normalized to 0.5\n"
    ;
 }
 
@@ -268,6 +280,19 @@ void Adjust_CTF_Parameters::produce_side_info() {
    // Read the CTF file, supposed to be the uncentered squared amplitudes
    ctftomodel.read(fn_ctf);
    f=&(ctftomodel());
+   
+   // Enhance PSD
+   Prog_Enhance_PSD_Parameters prm;
+   prm.center=true;
+   prm.take_log=true;
+   prm.filter_w1=f1;
+   prm.filter_w2=f2;
+   prm.decay_width=0.02;
+   prm.mask_w1=0.01;
+   prm.mask_w2=0.5;
+   enhanced_ctftomodel()=ctftomodel();
+   prm.apply(enhanced_ctftomodel());
+   CenterFFT(enhanced_ctftomodel(),false);
    
    // Resize the frequency
    global_x_digfreq.init_zeros(YSIZE(*f),XSIZE(*f)/2);
@@ -330,12 +355,12 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log=false) {
    }
 }
 
-/* Save intermidiate results ----------------------------------------------- */
+/* Save intermediate results ----------------------------------------------- */
 /* First call to generate model so far and then save the image, and a couple
    of cuts along X and Y.
    
    This function returns the fitting error.*/
-void save_intermidiate_results(const FileName &fn_root, bool
+void save_intermediate_results(const FileName &fn_root, bool
    generate_profiles=true) {
    
    ofstream plotX, plotY, plot_radial;
@@ -371,11 +396,11 @@ void save_intermidiate_results(const FileName &fn_root, bool
    plotY.open((fn_root+"Y.txt").c_str());
    plot_radial.open((fn_root+"_radial.txt").c_str());
    if (!plotX)
-      REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
+      REPORT_ERROR(1,"save_intermediate_results::Cannot open plot file for writing\n");
    if (!plotY)
-      REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
+      REPORT_ERROR(1,"save_intermediate_results::Cannot open plot file for writing\n");
    if (!plot_radial)
-      REPORT_ERROR(1,"save_intermidiate_results::Cannot open plot file for writing\n");
+      REPORT_ERROR(1,"save_intermediate_results::Cannot open plot file for writing\n");
    plotX << "# freq_dig freq_angstrom background ctf2\n";
    plotY << "# freq_dig freq_angstrom background ctf2\n";
    plot_radial << "# freq_dig freq_angstrom background ctf2\n";
@@ -526,6 +551,12 @@ double CTF_fitness(double *p) {
       if (global_show>=2) cout << "Does not have physical meaning\n";
       return global_heavy_penalization;
    }
+   if (global_action>3 && (
+      ABS(global_ctfmodel.DeltafU-global_ctfmodel_defoci.DeltafU)>8000 ||
+      ABS(global_ctfmodel.DeltafV-global_ctfmodel_defoci.DeltafV)>8000)) {
+      if (global_show>=2) cout << "Too large defocus\n";
+      return global_heavy_penalization;
+   }
       
    // Now the 2D error
    double distsum=0;
@@ -569,6 +600,7 @@ double CTF_fitness(double *p) {
          
          // Compute distance
          double ctf2=DIRECT_MAT_ELEM(*f,i,j);
+         double enhanced_ctf=DIRECT_MAT_ELEM(global_prm->enhanced_ctftomodel(),i,j);
          double dist;
          switch (global_action) {
             case 0:
@@ -585,10 +617,13 @@ double CTF_fitness(double *p) {
                   dist*=global_current_penalty;
                break;
             case 3:
+               //dist=-enhanced_ctf*(ctf_without_damping*ctf_without_damping);
+               //break;
             case 4:
                if (envelope>XMIPP_EQUAL_ACCURACY)
                   dist=ABS(ctf2-ctf2_th)/(envelope*envelope);
                else dist=ABS(ctf2-ctf2_th);
+               dist+=-enhanced_ctf*(ctf_without_damping*ctf_without_damping);
                   // This expression comes from mapping any value so that
                   // bg becomes 0, and bg+envelope^2 becomes 1
                   // This is the transformation
@@ -611,7 +646,7 @@ double CTF_fitness(double *p) {
    if (global_show>=2) {
       cout << "Fitness=" << retval << endl;
       if (global_show==3) {
-         save_intermidiate_results("PPP");
+         save_intermediate_results("PPP");
          cout << "Press any key\n"; char c; cin >> c;
       }
    }
@@ -735,7 +770,7 @@ void estimate_background_sqrt_parameters() {
 
    if (global_prm->show_optimization) {
       cout << "First SQRT Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step01_first_sqrt_fit");
+      save_intermediate_results("step01_first_sqrt_fit");
    }
    
    // Now optimize .........................................................
@@ -777,7 +812,7 @@ void estimate_background_sqrt_parameters() {
 
    if (global_prm->show_optimization) {
       cout << "Best penalized SQRT Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step02_best_penalized_sqrt_fit");
+      save_intermediate_results("step02_best_penalized_sqrt_fit");
    }
 
    center_optimization_focus(false,true,1.5);
@@ -912,7 +947,7 @@ void estimate_background_gauss_parameters() {
 
    if (global_prm->show_optimization) {
       cout << "First Background Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step03_first_background_fit");
+      save_intermediate_results("step03_first_background_fit");
    }
 
    center_optimization_focus(false,true,1.5);
@@ -956,7 +991,7 @@ void estimate_envelope_parameters() {
 
    if (global_prm->show_optimization) {
       cout << "Best envelope Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step05_best_envelope_fit");
+      save_intermediate_results("step05_best_envelope_fit");
    }
 
    // Optimize with penalization
@@ -981,7 +1016,7 @@ void estimate_envelope_parameters() {
 
    if (global_prm->show_optimization) {
       cout << "Best envelope Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step06_best_penalized_envelope_fit");
+      save_intermediate_results("step06_best_penalized_envelope_fit");
    }
 }
 #undef DEBUG
@@ -1026,7 +1061,7 @@ void estimate_defoci() {
    matrix1D<double> steps(DEFOCUS_PARAMETERS);
    steps.init_constant(1);
    steps(3)=0; // Do not optimize kV
-   for (double defocusStep=initial_defocusStep; defocusStep>=global_prm->defocus_range; defocusStep/=2) {
+   for (double defocusStep=initial_defocusStep; defocusStep>=MIN(8000,global_prm->defocus_range); defocusStep/=2) {
       error.resize(CEIL((defocusV0-defocusVF)/defocusStep+1),
                     CEIL((defocusU0-defocusUF)/defocusStep+1));
       error.init_constant(global_heavy_penalization);
@@ -1087,6 +1122,8 @@ void estimate_defoci() {
                else if (errmax==global_heavy_penalization) errmax=error(ii,jj);
                else if (error(ii,jj)>errmax) errmax=error(ii,jj);
          }
+      if (global_prm->show_optimization)
+         cout << "Error matrix\n" << error << endl;
 
       // Find those defoci which are within a 10% of the maximum
       if (global_show>=2) cout << "Range=" << errmax-errmin << endl;
@@ -1098,7 +1135,7 @@ void estimate_defoci() {
                cout << i << "," << j << " " << error(i,j) << " " << defocusU << " " << defocusV << endl
                     << best_defocusUmin << " " << best_defocusUmax << endl
                     << best_defocusVmin << " " << best_defocusVmax << endl;
-            if ((error(i,j)-errmin)/(errmax-errmin)<=0.1) {
+            if (ABS(error(i,j)-errmin)/ABS(errmax-errmin)<=0.1) {
                if (defocusV<best_defocusVmin) best_defocusVmin=defocusV;
                if (defocusU<best_defocusUmin) best_defocusUmin=defocusU;
                if (defocusV>best_defocusVmax) best_defocusVmax=defocusV;
@@ -1127,10 +1164,28 @@ void estimate_defoci() {
    // Keep the result in global_prm->adjust
    global_ctfmodel.force_physical_meaning();
    COPY_ctfmodel_TO_CURRENT_GUESS;
+   global_ctfmodel_defoci=global_ctfmodel;
 
    if (global_prm->show_optimization) {
       cout << "First defocus Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step07_first_defocus_fit");
+      save_intermediate_results("step07_first_defocus_fit");
+      global_prm->enhanced_ctftomodel.write("step07_enhanced_PSD.xmp");
+      ImageXmipp save, save2, save3;
+      save().resize(YSIZE(global_w_digfreq),XSIZE(global_w_digfreq));
+      save2().resize(save());
+      save3().resize(save());
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(save()) {
+         save(i,j)=global_prm->enhanced_ctftomodel(i,j);
+         double f_x=DIRECT_MAT_ELEM(global_x_contfreq,i,j);
+         double f_y=DIRECT_MAT_ELEM(global_y_contfreq,i,j);
+         double ctf_without_damping=global_ctfmodel.CTFpure_without_damping_at(f_x,f_y);
+         save2(i,j)=ctf_without_damping*ctf_without_damping;
+         save3(i,j)=-global_prm->enhanced_ctftomodel(i,j)*
+            ctf_without_damping*ctf_without_damping;
+      }
+      save.write("step07_enhanced_PSD.xmp");
+      save2.write("step07_fitted_CTF.xmp");
+      save3.write("step07_superposition.xmp");
    }
 }
 #undef DEBUG
@@ -1163,7 +1218,7 @@ void test() {
            << (*f)(0,j) << endl;
    }
 
-   save_intermidiate_results("PPP");
+   save_intermediate_results("PPP");
    cout << "Press any key\n"; char c; cin >> c;
 }
 
@@ -1227,7 +1282,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
 
    if (global_prm->show_optimization) {
       cout << "Best background Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step04_best_background_fit");
+      save_intermediate_results("step04_best_background_fit");
    }
 
    /************************************************************************
@@ -1281,7 +1336,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
 
    if (global_prm->show_optimization) {
       cout << "Best fast Fit:\n" << global_ctfmodel << endl;
-      save_intermidiate_results("step08_best_fast_fit");
+      save_intermediate_results("step08_best_fast_fit");
    }
    
    #ifdef NEVER_DEFINED
@@ -1293,7 +1348,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
 
       if (global_prm->show_optimization) {
          cout << "Best fast Fit:\n" << global_ctfmodel << endl;
-         save_intermidiate_results("step09_best_fit");
+         save_intermediate_results("step09_best_fit");
       }
    #endif
    
@@ -1302,7 +1357,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    /************************************************************************/
    FileName fn_root=prm.fn_ctf.without_extension();
    global_action=5;
-   save_intermidiate_results(fn_root,false);
+   save_intermediate_results(fn_root,false);
    global_ctfmodel.write(fn_root+".ctfparam");
    
    return 0.0;
