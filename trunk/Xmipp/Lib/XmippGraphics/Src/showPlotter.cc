@@ -94,7 +94,7 @@ Plotter::Plotter(QWidget *parent, const char *name) :QMainWindow(parent,name) {
 
    // It makes the layout manager responsible for the widget willing to
    // grow or shrink
-   setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+   setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
    
    // Makes the widget accept focus by clicking or by pressing Tab
    setFocusPolicy(StrongFocus);
@@ -349,11 +349,13 @@ void Plotter::mouseMoveEvent(QMouseEvent *event) {
    if (event->state() & LeftButton) {
       // Repaint the rubber band in the new position
       updateRubberBandRegion(); 
-      rubberBandRect.setBottomRight(event->pos());
+      rubberBandRect.setRight(event->pos().x());
+      rubberBandRect.setBottom(event->pos().y());
       updateRubberBandRegion();
    }
    if (event->state() & RightButton) {
-      rubberBandRect.setBottomRight(event->pos());
+      rubberBandRect.setRight(event->pos().x());
+      rubberBandRect.setBottom(event->pos().y());
       updateRubberBandRegion();
    }
 }
