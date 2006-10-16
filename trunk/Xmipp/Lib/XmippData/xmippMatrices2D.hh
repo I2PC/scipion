@@ -783,7 +783,7 @@ public:
    /** Interpolates the value of the 2D matrix M at the point (x,y).
        Bilinear interpolation.
        (x,y) are in logical coordinates.*/
-   T   interpolated_elem(double x, double y, T outside_value=(T)0) {
+   T   interpolated_elem(double x, double y, T outside_value=(T)0) const {
        int x0 = FLOOR(x); double fx = x - x0; int x1 = x0 + 1;
        int y0 = FLOOR(y); double fy = y - y0; int y1 = y0 + 1;
 
@@ -800,7 +800,7 @@ public:
    /** Interpolates the value of the 2D matrix M at the point (x,y) knowing
        that this image is a set of B-spline coefficients.
        (x,y) are in logical coordinates.*/
-   T   interpolated_elem_as_Bspline(double x, double y, int SplineDegree=3) {
+   T   interpolated_elem_as_Bspline(double x, double y, int SplineDegree=3) const {
        int SplineDegree_1=SplineDegree-1;
 
        // Logical to physical
@@ -851,7 +851,7 @@ public:
        the line that joins them. This is done by bilinear interpolation.
        The number of samples in the line is N. */
    void profile(int x0, int y0, int xF, int yF, int N,
-      matrix1D<double> &profile) {
+      matrix1D<double> &profile) const {
       profile.init_zeros(N);
       double tx_step=(double)(xF-x0)/(N-1);
       double ty_step=(double)(yF-y0)/(N-1);
@@ -1766,7 +1766,7 @@ public:
 // Special case for complex numbers
 template <>
 complex<double> matrix2D< complex<double> >::interpolated_elem(
-   double x, double y, complex<double> outside_value);
+   double x, double y, complex<double> outside_value) const;
 
 template <>
 void core_array_by_scalar< complex<double> >(const maTC &op1,
