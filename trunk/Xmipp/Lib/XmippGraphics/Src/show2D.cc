@@ -29,7 +29,8 @@
 #include "../showAssignCTF.hh"
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippHistograms.hh>
-#include <XmippInterface/xmippVTK.hh>
+#include <XmippData/xmippFFT.hh>
+#include <Reconstruction/Programs/Prog_Enhance_PSD.hh>
 #include <qmenubar.h>
 #include <qfiledialog.h>
 #include <qmessagebox.h>
@@ -82,6 +83,8 @@ void ImageViewer::Init()
     options->setItemEnabled(editctfmodel,false);
     recomputectfmodel=options->insertItem( "Recompute CTF model");
     options->setItemEnabled(recomputectfmodel,false);
+    enhancePSD=options->insertItem( "Enhance PSD");
+    options->setItemEnabled(enhancePSD,false);
 
     menubar->insertSeparator();
 
@@ -284,6 +287,36 @@ void ImageViewer::doOption(int item)
        system(command.c_str());
     } else if (item == recomputectfmodel) {
        recomputeCTFmodel();
+    } else if (item == enhancePSD) {
+       ScrollParam* param_window;
+       vector<float> min, max;
+          min.push_back(0.01); max.push_back(0.5);
+          min.push_back(0.01); max.push_back(0.5);
+          min.push_back(0.01); max.push_back(0.1);
+          min.push_back(0.01); max.push_back(0.5);
+          min.push_back(0.01); max.push_back(0.5);
+       vector<float> initial_value;
+          initial_value.push_back(0.01);
+          initial_value.push_back(0.2);
+          initial_value.push_back(0.02);
+          initial_value.push_back(0.01);
+          initial_value.push_back(0.5);
+       vector<char *> prm_name;
+          prm_name.push_back("Filter w1");
+          prm_name.push_back("Filter w2");
+          prm_name.push_back("Filter decay");
+          prm_name.push_back("Mask w1");
+          prm_name.push_back("Mask w2");
+       param_window = new ScrollParam(min,max,initial_value,prm_name,
+          "Enhance PSD", 0, "new window", WDestructiveClose,2);
+
+       // Connect its output to my input (set_spacing)
+       connect(param_window, SIGNAL(new_value(vector<float>)),
+               this,         SLOT(runEnhancePSD(vector<float>)) );
+
+       // Show
+       param_window->setFixedSize(200,175);
+       param_window->show();
     }
 }
 
@@ -576,11 +609,13 @@ bool ImageViewer::loadImage( const char *fileName,
                if (load_mode==ImageViewer::PSD_mode) {
                   // It is only the ARMA model
                   xmipp2PSD(p(),p());
+                  options->setItemEnabled(enhancePSD,true);
                } else if (load_mode==ImageViewer::CTF_mode) {
                   // It is ARMA and CTF together
                   xmipp2CTF(p(),p());
                   treat_separately_left_right=true;
                   options->setItemEnabled(editctfmodel,true);
+                  options->setItemEnabled(enhancePSD,true);
                   if (fn_assign!="")
                      options->setItemEnabled(recomputectfmodel,true);
                }
@@ -637,11 +672,13 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
    if (load_mode==ImageViewer::PSD_mode) {
       // It is only the ARMA model
       xmipp2PSD(_matrix,_matrix);
+      options->setItemEnabled(enhancePSD,true);
    } else if (load_mode==ImageViewer::CTF_mode) {
       // It is ARMA and CTF together
       xmipp2CTF(_matrix,_matrix);
       treat_separately_left_right=true;
       options->setItemEnabled(editctfmodel,true);
+      options->setItemEnabled(enhancePSD,true);
    }
    tmpImage()=_matrix;
 
@@ -1052,4 +1089,37 @@ void ImageViewer::recomputeCTFmodel() {
 
    // Show this image in a separate window to select the main parameters
    AssignCTFViewer *prm_selector=new AssignCTFViewer(fn_psd,assign_ctf_prm);
+}
+
+// Run Enhance PSD ---------------------------------------------------------
+void ImageViewer::runEnhancePSD(vector<float> enhance_prms) {
+   Prog_Enhance_PSD_Parameters prm;
+   prm.center=true;
+   prm.take_log=true;
+   prm.filter_w1=enhance_prms[0];
+   prm.filter_w2=enhance_prms[1];
+   prm.decay_width=enhance_prms[2];
+   prm.mask_w1=enhance_prms[3];
+   prm.mask_w2=enhance_prms[4];
+
+   ImageXmipp I, Iaux; I.read(filename);
+   if (load_mode==ImageViewer::CTF_mode) {
+      Iaux()=I();
+      // Copy the right part from the left part
+      for (int i=0; i<YSIZE(I()); i++)
+         for (int j=0; j<XSIZE(I())/2; j++)
+            I(i,j)=I(i,XSIZE(I())-1-j);
+   }
+   prm.apply(I());
+   if (load_mode==ImageViewer::CTF_mode) {
+      CenterFFT(I(),true);
+      // Copy the right part from the original image
+      for (int i=0; i<YSIZE(I()); i++)
+         for (int j=0; j<XSIZE(I())/2; j++)
+            I(i,j)=ABS(Iaux(i,j));
+      CenterFFT(I(),false);
+   }
+   I().set_Xmipp_origin();
+   xmipp2Qt(I,load_mode==ImageViewer::CTF_mode);
+   showImage();
 }

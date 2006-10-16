@@ -154,7 +154,7 @@ protected:
     QLabel     *status;
     QTimer     *timer;
     int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
-    int         recomputectfmodel;
+    int         recomputectfmodel, enhancePSD;
     void	Init();
     bool 	xmipp2Qt(Image& _image, bool treat_differently_left_right=false);
     bool 	Qt2xmipp(QImage &_image);
@@ -175,6 +175,9 @@ protected:
     // Assign CTF file
     FileName    fn_assign;
     void        recomputeCTFmodel();
+
+public slots:
+    void runEnhancePSD(vector<float> enhance_prms);
 
 protected slots:
     void	newWindow();
