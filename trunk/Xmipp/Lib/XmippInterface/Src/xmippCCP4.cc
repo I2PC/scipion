@@ -106,7 +106,8 @@ void CCP4::read(const FileName &fn_in,
    //open file
    if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
      REPORT_ERROR(1503,"CCP4::read: File " + fn_in + " cannot be read");
-
+   if (my_mrc_header.mode!=2)
+      REPORT_ERROR(1503,"Only float mode is implemented");
    I().resize(my_mrc_header.ny, my_mrc_header.nx);
   //MRC data is made by
    int mode_size;
@@ -380,7 +381,6 @@ void CCP4::clear(){
    FREAD(&(my_mrc_header.ny), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.nz), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.mode), sizeof(int), 1, fp, reversed); 
-
    fclose(fp);   
 }
 
