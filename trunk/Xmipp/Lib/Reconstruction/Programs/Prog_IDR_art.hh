@@ -29,57 +29,36 @@
 #include "Prog_art.hh"
 #include "Prog_FourierFilter.hh"
 
-/**@name IDR with ART */
+/**@name IDR */
 //@{
 /* IDR Parameters ---------------------------------------------------------- */
 /** IDR Parameters. */
 class Prog_IDR_ART_Parameters {
 public:
-   /// ART Basic parameters
-   Basic_ART_Parameters *art_prm;
-   /// Number of IDR iterations
-   int                  idr_iterations;
-   /// Dont rewrite projections
-   bool                 dont_rewrite;
-   /// Only reproject
-   FileName             fn_basis_volume;
-   /// List of relaxation parameters: left border
-   matrix1D<double>     mu0_list;
-   /// List of relaxation parameters: right border
-   matrix1D<double>     muF_list;
-   /// List of relaxation parameters
-   matrix1D<double>     mu_list;
-   /// CTF filename
-   FileName             fn_ctf;
-   /// Iteration number
-   int                  it;
-   /** Maximum resolution.
-       If distinct than -1 volumes are filtered at each step to this frequency. */
-   double               max_resolution;
-   /** Symmetry file.
-       If provided then volumes are symmetrized after every step. */
-   FileName             fn_final_sym;
+   /// Selfile with experimental images
+   FileName fn_exp;
+   /// Reference volume
+   FileName fn_vol;
+   /// Selfile with CTFs
+   FileName fn_ctf;
+   /// File output rootname
+   FileName fn_root;
+   /// Relaxation factor
+   double mu;
 
    /// Side Info: CTF
    FourierMask          ctf;
    /// Side info: Original set of images
-   SelFile              SF_original;
-   /// Side info: Current set of images
-   SelFile              SF_current;
+   SelFile              SF_exp;
+   /// Side info: New set of images
+   SelFile              SF_new;
    /// Side info: set of CTFs (maybe it is not necessary)
    SelFile              SF_ctf;
-   /// Side info: Root name of the original set of images
-   FileName             fn_root;
-   /// Side Info: Basis volume
-   GridVolume           vol_basis;
-   /// Side Info: Lowpass filter
-   FourierMask          Filter;
+   /// Side Info: volume
+   VolumeXmipp          V;
 public:
-   /// Empty creator
-   Prog_IDR_ART_Parameters(): art_prm(NULL) {};
-
-   /// Read parameters from file
-   void read(const FileName &fn);
+   /// Read parameters from the command line
+   void read(int argc, char **argv);
    
    /** Produce Side Information
        Exceptions are thrown if the number of images in the different
@@ -92,26 +71,10 @@ public:
    /// Usage
    void Usage();
    
-   /** IDR relaxation parameter for iteration n.
-       An exception is thrown if no mus are provided. */
-   double mu(int n) {
-      int imax=XSIZE(mu_list);
-      if (imax==0)
-         REPORT_ERROR(1,"IDR_ART: There are no mus\n");
-      if (n>=imax) return mu_list(imax-1);
-      else         return mu_list(n);
-   }
-
    /** IDR correction.
-       Given the reconstructed basis volume and the iteration step
-       this routine change the current set of images to a new set
-       rewriting or not the current set of images.
+       This function process all images in the selfile.
    */
-   void IDR_correction(GridVolume &vol_basis, int it);
+   void IDR_correction();
 };
-
-/** Core of the IDR-ART routine.
-    This is the routine which does everything except the TRUE IDR correction. */
-void Basic_ROUT_IDR_Art(Prog_IDR_ART_Parameters &prm, VolumeXmipp &vol_recons);
 //@}
 #endif

@@ -35,13 +35,8 @@ int main (int argc, char *argv[]) {
 
 // Read Art Parameters
    try {
-      idr_art_prm.read(get_param(argc,argv,"-i"));
+      idr_art_prm.read(argc,argv);
    } catch (Xmipp_error &XE) {
-      cout << XE;
-      cerr << "Purpose: Reconstruct and correct CTF\n"
-           << "Usage: idr_art -i <parameter file>\n"
-	   << "   With the following parameters inside\n"
-	   << "-------------------------------------------------------------\n";
       idr_art_prm.Usage();
       exit(1);
    }
@@ -49,7 +44,8 @@ int main (int argc, char *argv[]) {
 // Call main ART routine
    try {
       idr_art_prm.produce_side_info();
-      Basic_ROUT_IDR_Art(idr_art_prm,vol_recons);
+      idr_art_prm.IDR_correction();
    } catch (Xmipp_error XE) {cout << XE; exit(1);}
+   return 0;
 }
 
