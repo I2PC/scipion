@@ -35,9 +35,10 @@
 #include <qkeycode.h>
 #include <qapplication.h>
 #include <qtimer.h>
-#include <XmippData/xmippImages.hh>
 #include <sys/stat.h>
+#include <XmippData/xmippImages.hh>
 #include <XmippData/xmippFFT.hh>
+#include "showTools.hh"
 
 /**@name Show 2D*/
 //@{
