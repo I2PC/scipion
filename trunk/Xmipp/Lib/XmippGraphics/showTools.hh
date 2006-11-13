@@ -109,10 +109,13 @@ public:
     void init(vector<float> &min, vector<float> &max,
        vector<float> &initial_value, vector<char *> &prm_name,
        char *caption, int precision=2);
+   
+   /** Get current values. */
+   vector<float> getCurrentValues();
 private:
    vector<float>     value;
    vector<QLabel *>  value_lab;   // label for the current value of the slider
-   vector<QScrollBar *> scroll;      // sliders
+   vector<QScrollBar *> scroll;   // sliders
    int       my_precision;
 private slots:
    void scrollValueChanged(int);

@@ -143,12 +143,17 @@ ScrollParam::~ScrollParam() {
    }
 }
 
-void ScrollParam::scrollValueChanged(int v){
+vector<float> ScrollParam::getCurrentValues() {
    for (int i=0; i<value.size(); i++) {
-      v=scroll[i]->value();
+      int v=scroll[i]->value();
       value[i] = (float)v/my_precision;
       value_lab[i]->setNum(value[i]);
    }
+   return value;
+}
+
+void ScrollParam::scrollValueChanged(int v){
+   getCurrentValues();
    emit new_value( value[0] );
    emit new_value( value );
 }
