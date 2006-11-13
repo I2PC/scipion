@@ -73,6 +73,28 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
       (yp/sigmaY)*(yp/sigmaY)));
 }
 
+/* Integrate --------------------------------------------------------------- */
+double integrateNewtonCotes(double (*f)(double),
+   double a, double b, int N) {
+   if (N<2 || N>9) REPORT_ERROR(1,"integrateNewtonCotes: N must be greater than 1");
+   double h=(b-a)/(N-1);
+   matrix1D<double> fx(N);
+   for (int i=0; i<N; i++) fx(i)=(*f)(a+i*h);
+   switch (N) {
+      case 2: return h/2*(fx(0)+fx(1));
+      case 3: return h/3*(fx(0)+4*fx(1)+fx(2));
+      case 4: return h*3.0/8.0*((fx(0)+fx(3))+3*(fx(1)+fx(2)));
+      case 5: return h*2.0/45.0*(7*(fx(0)+fx(4))+32*(fx(1)+fx(3))+12*fx(2));
+      case 6: return h*5.0/288.0*(19*(fx(0)+fx(5))+75*(fx(1)+fx(4))+50*(fx(2)+fx(3)));
+      case 7: return h/140.0*(41*(fx(0)+fx(6))+216*(fx(1)+fx(5))+27*(fx(2)+fx(4))+
+                        272*fx(3));
+      case 8: return h*7.0/17280.0*(751*(fx(0)+fx(7))+3577*(fx(1)+fx(6))+1323*(fx(2)+fx(5))+
+                        2989*(fx(3)+fx(4)));
+      case 9: return 4.0/14175.0*h*(989*(fx(0)+fx(8))+5888*(fx(1)+fx(7))+
+                 -928*(fx(2)+fx(6))+10496*(fx(3)+fx(5))-4540*fx(4));
+   }
+}
+
 /* Print a boolean value --------------------------------------------------- */
 void print(ostream &o, const bool b) {
    if (b) o << "TRUE"; else o << "FALSE";

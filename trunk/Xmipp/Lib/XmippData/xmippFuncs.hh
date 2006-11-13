@@ -128,6 +128,11 @@ double gaussian1D(double x, double sigma, double mu=0);
     to be independent*/
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
    double ang, double muX=0, double muY=0);
+
+/** Integrate a function using Newton-Cotes formula.
+    Estimate the integral of a function between a and b using N points. */
+double integrateNewtonCotes(double (*f)(double),
+   double a, double b, int N);
 //@}
 
 // Miscellaneous -----------------------------------------------------------
