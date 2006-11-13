@@ -699,9 +699,9 @@ void blobs2voxels(const GridVolume &vol_blobs,
    }
    
    // Now normalise the resulting volume ..................................
-   double norm=sum_blob_Grid(blob,vol_blobs.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
+   double inorm=1.0/sum_blob_Grid(blob,vol_blobs.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
-      VOL_ELEM(*vol_voxels,k,i,j) /= norm;
+      VOL_ELEM(*vol_voxels,k,i,j) *= inorm;
 
    // Set voxels outside interest region to minimum value .................
    double R=vol_blobs.grid(0).get_interest_radius();
