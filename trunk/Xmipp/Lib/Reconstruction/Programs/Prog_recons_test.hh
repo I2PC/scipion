@@ -217,12 +217,8 @@ public:
    double phase_correction_param;
    /// Correct amplitude via IDR
    bool correct_amplitude;
-   /// Number of IDR steps
-   int idr_iterations;
-   /// List of relaxation parameters for IDR: left border
-   matrix1D<double> mu0_list;
-   /// List of relaxation parameters for IDR: right border
-   matrix1D<double> muF_list;
+   /// IDR relaxation factor
+   double mu;
    /// Unmatched CTF correction
    bool unmatched;
 

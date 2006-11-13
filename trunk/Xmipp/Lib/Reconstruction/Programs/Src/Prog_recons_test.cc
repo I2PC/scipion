@@ -157,11 +157,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
       else if (str=="divide")           phase_correction_method=CORRECT_AMPLIFYING_NOT_SMALL;
       phase_correction_param=AtoF(get_param(fh_param,"CTF phase small",0,"0"));
       correct_amplitude=check_param(fh_param,"correct CTF amplitude");
-      idr_iterations=AtoI(get_param(fh_param,"idr_iterations",0,"1"));
-      mu0_list=get_vector_param(fh_param,"mu",-1);
-      if (XSIZE(mu0_list)==0)
-	 {mu0_list.resize(1); mu0_list.init_constant(1);}
-      muF_list=get_vector_param(fh_param,"muF",-1);
+      mu=AtoF(get_param(fh_param,"mu",0,"1.8"));
       unmatched=check_param(fh_param,"unmatched");
 
       // Only valid for ART and SIRT
@@ -342,9 +338,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    
    if (prm.correct_amplitude)
       out << "   Correcting CTF amplitude\n"
-          << "   No. IDR iterations: " << prm.idr_iterations << endl
-	  << "   IDR relaxation parameters FROM: " << prm.mu0_list.transpose() << endl
-	  << "                               TO: " << prm.muF_list.transpose() << endl;
+	  << "   IDR relaxation factor: " << prm.mu << endl;
    if (prm.unmatched)
       out << "   Unmatched CTF correction\n";
    if (prm.recons_method==use_ART || prm.recons_method==use_SIRT) {
@@ -781,17 +775,14 @@ void single_recons_test(const Recons_test_Parameters &prm,
          
          // Apply IDR
 	 Prog_IDR_ART_Parameters idr_prm;
-	 idr_prm.art_prm=&art_prm;
-      	 idr_prm.idr_iterations=prm.idr_iterations;
-	 idr_prm.it=0;
-      	 idr_prm.dont_rewrite=false;
-      	 idr_prm.mu0_list=prm.mu0_list;
-      	 idr_prm.muF_list=prm.muF_list;
+      	 idr_prm.mu=prm.mu;
       	 idr_prm.fn_ctf=fn_root+"_ctf.sel";
-         idr_prm.max_resolution=prm.max_resolution;
-         idr_prm.fn_final_sym=prm.fn_final_sym;
+         idr_prm.fn_exp=Prog_proj_prm.fn_sel_file;
+         idr_prm.fn_vol=vol_recons.name();
+         idr_prm.fn_root=fn_root+"_idr";
 	 idr_prm.produce_side_info();
-	 Basic_ROUT_IDR_Art(idr_prm, vol_recons);
+         idr_prm.IDR_correction();
+         
 	 fn_recons_root=vol_recons.name().without_extension();
       }
    } else if (prm.recons_method==use_WBP) {
