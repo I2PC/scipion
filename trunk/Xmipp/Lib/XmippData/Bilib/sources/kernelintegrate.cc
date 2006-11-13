@@ -346,7 +346,7 @@ extern double	Bspline03Integrate
 
 	double	a;
 
-/**/DEBUG_WRITE_ENTERING(Bspline02Integrate,
+/**/DEBUG_WRITE_ENTERING(Bspline03Integrate,
 /**/	"About to integrate a B-spline of degree 3")
 
 	a = fabs(Argument);
