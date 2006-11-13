@@ -296,7 +296,7 @@ void ImageViewer::doOption(int item)
           min.push_back(0.01); max.push_back(0.5);
           min.push_back(0.01); max.push_back(0.5);
        vector<float> initial_value;
-          initial_value.push_back(0.01);
+          initial_value.push_back(0.02);
           initial_value.push_back(0.2);
           initial_value.push_back(0.02);
           initial_value.push_back(0.01);
@@ -317,6 +317,7 @@ void ImageViewer::doOption(int item)
        // Show
        param_window->setFixedSize(200,175);
        param_window->show();
+       runEnhancePSD(initial_value);
     }
 }
 
