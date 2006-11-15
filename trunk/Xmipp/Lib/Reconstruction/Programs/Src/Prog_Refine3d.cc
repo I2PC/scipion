@@ -443,7 +443,7 @@ void Prog_Refine3d_prm::concatenate_selfiles(int iter) {
     for (int volno=0; volno<Nvols; volno++) {
       fn_class=fn_root+"_it";
       fn_class.compose(fn_class,iter,"");
-      fn_class+="_class";
+      fn_class+="_class_vol";
       fn_class.compose(fn_class,volno+1,"sel");
       system(((string)"rm -f "+fn_class).c_str());
       for (int nr=eachvol_start[volno]; nr<=eachvol_end[volno]; nr++) {
