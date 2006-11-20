@@ -413,7 +413,6 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log=false) {
    This function returns the fitting error.*/
 void save_intermediate_results(const FileName &fn_root, bool
    generate_profiles=true) {
-   
    ofstream plotX, plotY, plot_radial;
    ImageXmipp save;
    generate_model_so_far(save,false);
@@ -424,14 +423,15 @@ void save_intermediate_results(const FileName &fn_root, bool
       save_ctf()=global_prm->ctftomodel();
 
       // Substract the background from the PSD
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(save_ctf()) {
-         double f_x=DIRECT_MAT_ELEM(global_x_contfreq,i,j);
-         if (f_x<0) {
-            double f_y=DIRECT_MAT_ELEM(global_y_contfreq,i,j);
-            double bg=global_ctfmodel.CTFnoise_at(f_x,f_y);
-            save_ctf(i,j)-=bg;
-         }
-      }
+      for (int i=0; i<YSIZE(global_x_contfreq); i++)
+	 for (int j=0; j<XSIZE(global_x_contfreq); j++) {
+            double f_x=DIRECT_MAT_ELEM(global_x_contfreq,i,j);
+            if (f_x<0) {
+               double f_y=DIRECT_MAT_ELEM(global_y_contfreq,i,j);
+               double bg=global_ctfmodel.CTFnoise_at(f_x,f_y);
+               save_ctf(i,j)-=bg;
+            }
+	 }
 
       // Copy the model
       FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
