@@ -48,6 +48,12 @@ void Normalize_parameters::read(int argc, char **argv) {
    // Normalizing a volume
    normalizing_vol=check_param(argc,argv,"-vol");
 
+   // Remove dust particles?
+   remove_black_dust=check_param(argc,argv,"-remove_black_dust");
+   remove_white_dust=check_param(argc,argv,"-remove_white_dust");
+   thresh_black_dust=AtoF(get_param(argc,argv,"-thr_black_dust","-3.5"));
+   thresh_white_dust=AtoF(get_param(argc,argv,"-thr_white_dust","3.5"));
+
    apply_geo=false;
    // Get background mask
    if (!normalizing_vol) {
@@ -73,8 +79,8 @@ void Normalize_parameters::read(int argc, char **argv) {
 	}
 	produce_side_info();
 
-	 // Default is to apply inverse transformation from image header to the mask
-	 apply_geo=!check_param(argc,argv,"-dont_apply_geo");
+	 // Default is NOT to apply inverse transformation from image header to the mask
+	 apply_geo=check_param(argc,argv,"-apply_geo");
       } else
          background_mode=NONE;
 
@@ -146,7 +152,10 @@ void Normalize_parameters::show() {
                          break;
          }
       }
+      if (remove_black_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_black_dust)<<endl;  
+      if (remove_white_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_white_dust)<<endl;   
    }
+
    if (normalizing_method==NEWXMIPP && enable_mask) mask_prm.show();
 }
 
@@ -165,6 +174,10 @@ void Normalize_parameters::usage() {
         << "   -background circle <r> | : Circular background outside radius=r\n"
         << "   -mask <options>]           Use an alternative type of background mask\n"
         << "                               (see xmipp_mask for options) \n"
+        << "  [-remove_black_dust]      : Remove black dust particles \n"
+        << "  [-remove_white_dust]      : Remove white dust particles \n"
+        << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
+        << "  [-thr_white_dust=3.5]     : Sigma threshold for white dust particles \n"
 	<< "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
    ;
 }
@@ -184,6 +197,23 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp &img) {
 /* Apply ------------------------------------------------------------------- */
 void Normalize_parameters::apply(Image *img) {
    double a, b;
+   if (remove_black_dust||remove_white_dust) {
+     double avg, stddev, min, max, zz;
+     (*img)().compute_stats(avg, stddev, min, max);
+
+     if ((min-avg)/stddev<thresh_black_dust && remove_black_dust) { 
+       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D((*img)()) {
+	 zz=(dMij((*img)(),i,j)-avg)/stddev;
+	 if (zz < thresh_black_dust) dMij((*img)(),i,j)=avg;
+       }
+     }
+     if ((max-avg)/stddev>thresh_white_dust && remove_white_dust) {
+       FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D((*img)()) {
+	 zz=(dMij((*img)(),i,j)-avg)/stddev;
+	 if (zz > thresh_white_dust) dMij((*img)(),i,j)=avg;
+       }
+     }
+   }
    switch (normalizing_method) {
       case OLDXMIPP:
          normalize_OldXmipp(img);

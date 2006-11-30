@@ -65,6 +65,11 @@ public:
    double                bF;
    /** Lower limit of b in y=ax+b */
    double                b0;
+   /** Flags for remving balck/white spots due to dust */
+   bool                  remove_black_dust, remove_white_dust;
+   /** Threshold for removing black/white (dust) spots */
+   double                thresh_black_dust,thresh_white_dust;
+
 public:
    matrix2D<int>         bg_mask;
    bool                  apply_geo;
