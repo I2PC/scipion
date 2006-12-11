@@ -119,6 +119,7 @@ SUBDIRS = 2DInterpolation \
 	Shift \
 	Skew \
 	SOM \
+	Sort_junk \
 	Split_selfile \
 	SpAR \
 	SpARMA \
