@@ -799,7 +799,16 @@ public:
 
    /** Interpolates the value of the 2D matrix M at the point (x,y) knowing
        that this image is a set of B-spline coefficients.
-       (x,y) are in logical coordinates.*/
+       (x,y) are in logical coordinates.
+       
+       To interpolate using splines you must first produce the Bspline
+       coefficients. An example to interpolate an image at (0.5,0.5)
+       using splines would be:
+       \begin{verbatim}
+       matrix2D<double> Bspline_coeffs;
+       myImage.produce_spline_coeffs(Bspline_coeffs, 3);
+       interpolated_value=Bspline_coeffs.interpolated_elem_as_Bspline(0.5,0.5,3);
+       \end{verbatim}*/
    T   interpolated_elem_as_Bspline(double x, double y, int SplineDegree=3) const {
        int SplineDegree_1=SplineDegree-1;
 
@@ -1445,7 +1454,12 @@ public:
    #ifndef DBL_EPSILON
       #define DBL_EPSILON 1e-50
    #endif
-   /** Produce spline coefficients.*/
+   /** Produce spline coefficients.
+       This function produces a set of Bspline coefficients that interpolate
+       well this matrix. The coefficients have the same shape as this
+       matrix. To use the coefficients for interpolation see
+       the function interpolated_elem_as_Bspline.
+       */
    void produce_spline_coeffs(matrix2D<double> &coeffs, int SplineDegree=3)
       const {
       coeffs.init_zeros(YSIZE(*this),XSIZE(*this));
