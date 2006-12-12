@@ -50,6 +50,13 @@ public:
    bool     en_threshold;
    /// Threshold
    double   threshold;
+
+  /// From here on by Sjors
+  // Create probabilistic solvent mask
+  bool do_prob;
+  /// radius for B.C. Wang-like smoothing procedure
+  int wang_radius;
+
 public:
    // Input volume
    VolumeXmipp V;
@@ -72,6 +79,7 @@ public:
    /** Really compute the mask. If a mask name is given then it is 
        written to disk.*/
    void segment(VolumeXmipp &mask);
+
 };
 //@}
 #endif
