@@ -34,7 +34,7 @@ int main( int argc, char **argv ) {
   SelLine  line;
   bool     dont_randomize;
   int N;
-
+  
   try {
     fn_in=get_param(argc,argv,"-i");
     N=AtoI(get_param(argc,argv,"-n","2"));
@@ -45,18 +45,42 @@ int main( int argc, char **argv ) {
   }  catch (Xmipp_error) {Usage(); exit(1);}
 
   try {
-
     if (!dont_randomize) SFtmp=SFin.randomize();
     else                 SFtmp=SFin;
-    int Nsub=ROUND((double)SFtmp.ImgNo()/N);
-    for (int i=0; i<N; i++) {
+    int Num_images=(int)SFtmp.ImgNo();
+    int Num_groups=N;
+    if(Num_groups>Num_images) Num_images=Num_groups;        
+
+    int Nsub_=(int)Num_images/N;
+    int Nres_=Num_images%N;
+    
+    int arr_groups[Num_groups];
+    
+    int i,j;
+       
+    for(i=0;i<(Num_groups-Nres_);i++)
+    {
+    	arr_groups[i]=Nsub_;
+    }       
+ 
+    for(j=i;j<Num_groups;j++)
+    {
+        arr_groups[j]=Nsub_+1;	
+    }
+    int acum=0;
+    for(i=0;i<Num_groups;i++) 
+    {
+    	acum=arr_groups[i]+acum;
+    } 
+    
+    SFtmp.go_beginning();
+    for(i=0;i<Num_groups;i++)
+    {
       SFout.clear();
-      SFout.reserve(Nsub);
-      SFtmp.go_beginning();
-      SFtmp.jump_lines(Nsub*i);
-      if (i==N-1) Nsub=SFtmp.ImgNo()-i*Nsub;
-      for (int nn=0; nn<Nsub; nn++) {
-	SFout.insert(SFtmp.current());
+      SFout.reserve(arr_groups[i]);
+      for(j=0;j<arr_groups[i];j++)
+      {
+      	SFout.insert(SFtmp.current());
 	SFtmp.NextImg();
       }
       SFtmp2=SFout.sort_by_filenames();
@@ -66,8 +90,7 @@ int main( int argc, char **argv ) {
       fn_out+=".sel";
       SFout.write(fn_out);
     }
-
-
+    
   } catch (Xmipp_error) {cerr <<"ERROR, exiting..."<<endl; exit(1);}
 
 }
