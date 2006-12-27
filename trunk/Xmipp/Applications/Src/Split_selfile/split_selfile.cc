@@ -49,7 +49,7 @@ int main( int argc, char **argv ) {
     else                 SFtmp=SFin;
     int Num_images=(int)SFtmp.ImgNo();
     int Num_groups=N;
-    if(Num_groups>Num_images) Num_images=Num_groups;        
+    if(Num_groups>Num_images) Num_groups=Num_images;        
 
     int Nsub_=(int)Num_images/N;
     int Nres_=Num_images%N;
@@ -67,11 +67,6 @@ int main( int argc, char **argv ) {
     {
         arr_groups[j]=Nsub_+1;	
     }
-    int acum=0;
-    for(i=0;i<Num_groups;i++) 
-    {
-    	acum=arr_groups[i]+acum;
-    } 
     
     SFtmp.go_beginning();
     for(i=0;i<Num_groups;i++)
