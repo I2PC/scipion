@@ -159,7 +159,7 @@ void Prog_Refine3d_prm::show() {
     // To screen
     cerr << " -----------------------------------------------------------------"<<endl;
     cerr << " | Read more about this program in the following publication:    |"<<endl;
-    cerr << " |  Scheres ea. (2006)  to appear in Nature Methods              |"<<endl;
+    cerr << " |  Scheres ea. (2006) Nature Methods  4, 27-29                  |"<<endl;
     cerr << " |                                                               |"<<endl;
     cerr << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
@@ -195,7 +195,7 @@ void Prog_Refine3d_prm::show() {
 
     fh_hist << " -----------------------------------------------------------------"<<endl;
     fh_hist << " | Read more about this program in the following publication:    |"<<endl;
-    fh_hist << " |  Scheres ea. (2006)  to appear in Nature Methods              |"<<endl;
+    fh_hist << " |  Scheres ea. (2006) Nature Methods 4, 27-29                   |"<<endl;
     fh_hist << " |                                                               |"<<endl;
     fh_hist << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     fh_hist << " -----------------------------------------------------------------"<<endl;
