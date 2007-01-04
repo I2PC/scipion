@@ -122,8 +122,10 @@ void make_even_distribution(DocFile &DF, double sampling,
       append=true;
       DF.go_first_data_line();
       while (!DF.eof()) {
-	if (!directions_are_unique(rot,tilt,DF(0),DF(1),rot_sam,tilt_sam,SL,include_mirror)) 
+	if (!directions_are_unique(rot,tilt,DF(0),DF(1),rot_sam,tilt_sam,SL,include_mirror)) {
 	  append=false;
+	  break;
+	}
 	DF.next_data_line();
       }
       if (append) {
