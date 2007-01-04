@@ -44,7 +44,7 @@ class Prog_projection_matching_prm {
 public:
 
   /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_vol,fn_root,fn_sym,fn_ref;
+  FileName fn_vol,fn_root,fn_sym,fn_ref,fn_ang;
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
@@ -72,8 +72,8 @@ public:
   double sampling;
   /** Maximum allowed shift */
   double max_shift;
-  /** Maximum allowed angular search ranges */
-  double rot_range, tilt_range, psi_range;
+  /** Maximum allowed angular search ranges for rot and tilt */
+  double ang_search;
   /** Mask for shifts */
   matrix2D<int> rotmask;
   /** Number of white pixels in rotmask */
