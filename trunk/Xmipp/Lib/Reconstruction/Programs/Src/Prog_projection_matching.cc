@@ -174,6 +174,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
       make_even_distribution(DF,sampling,SL,true);
       // 2. Get all angles from all experimental images
       double act_rot_range, ref_rot,ref_tilt,img_rot,img_tilt;
+      int nn,c;
       SF.go_beginning();
       DFi.clear();
       DF2.clear();
@@ -186,7 +187,11 @@ void Prog_projection_matching_prm::produce_Side_info() {
       }
       // 3. Check which angles of DF to use
       if (verb>0) cerr << "--> Selecting relevant library projection directions ..."<<endl;
-      if (verb>0) init_progress_bar(DF.dataLineNo());
+      if (verb>0) {
+	nn=DF.dataLineNo();
+	init_progress_bar(nn);
+	c=MAX(1,nn/60);
+      }
       DF.go_first_data_line();
       int ii=0;
       while (!DF.eof()) {
@@ -214,10 +219,10 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	  DF2.append_data_line(dataline);
 	}
 	ii++;
-	if (verb>0) progress_bar(ii);
+	if (verb>0) if (ii%c==0) progress_bar(ii);
 	DF.next_data_line();
       }
-      if (verb>0) progress_bar(DF.dataLineNo());
+      if (verb>0) progress_bar(nn);
       DF=DF2;
       DF2.clear();
     } else if (fn_ang!="") {
