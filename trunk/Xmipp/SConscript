@@ -1,0 +1,1023 @@
+# vi:syntax=python
+
+Import('env')
+
+# Required for custom functions
+import os
+
+def AddMatchingFiles((pattern, blacklist, sources), directory, files):
+    ''' Callback, adds all matching files in dir '''
+    import fnmatch
+    for file in fnmatch.filter(files, pattern):
+        if file not in blacklist:
+           # DBG print 'Adding ' + os.path.join(directory, file)
+           sources.append(os.path.join(directory, file))
+
+def Glob(dir, pattern, blacklist):
+    ''' Custom made globbing '''
+    import os
+    sources = []
+    os.path.walk(dir, AddMatchingFiles, (pattern, blacklist, sources))
+    return sources
+
+def AddLastSlash(string):
+    ''' Low trick for correct parsing of paths '''
+    if string[len(string)-1] != '/':
+        string = string + '/'
+    return string
+
+def AddBatch(name, basedir, extension = ''):
+    # setup
+    basedir = AddLastSlash(basedir)
+    fullname = env['prepend'] + name
+    binprefix = os.path.join(env['prefix'], 'bin')
+
+    # action
+    command = env.Command(os.path.join(basedir, fullname),
+        os.path.join(basedir, 'batch_' + name + extension), [Copy('$TARGET',
+        '$SOURCE'), Chmod('$TARGET', 0755)])
+
+    # alias
+    alias = env.Alias(fullname, command)
+    install = env.Install(binprefix, command)
+    env.Alias(fullname, install)
+    env.Default(alias)
+
+# FIXME default parameters' issue
+def AddProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
+    includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
+    ''' add a new program to the build list '''
+    # setup
+    basedir = AddLastSlash(basedir)
+    fullname = env['prepend'] + name
+    sources = Glob(basedir, sources_pattern, skip_list)
+    binprefix = os.path.join(env['prefix'], 'bin')
+
+    # action
+    program = env.Program(os.path.join(basedir, fullname), sources,
+        CPPPATH = includes, LIBPATH = libpath, LIBS = libs, CXXFLAGS = cxxflags,
+        LINKFLAGS = linkflags)
+
+    # alias
+    alias = env.Alias(fullname, program)
+    install = env.Install(binprefix, program)
+    env.Alias(fullname, install)
+    env.Default(alias)
+
+def AddMPIProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
+    includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
+
+    # setup
+    basedir = AddLastSlash(basedir)
+    fullname = env['prepend'] + name
+    sources = Glob(basedir, sources_pattern, skip_list)
+    binprefix = os.path.join(env['prefix'], 'bin')
+
+    # action
+    program = env.Program(os.path.join(basedir, fullname), sources,
+        CC = env['MPI_CC'], CXX = env['MPI_CXX'], CPPPATH = includes +
+        [env['MPI_INCLUDE']], LIBPATH = libpath + [env['MPI_LIBDIR']], LIBS =
+        libs + [env['MPI_LIB']], CXXFLAGS = cxxflags, LINKFLAGS = linkflags)
+
+    # alias
+    alias = env.Alias(fullname, program)
+    install = env.Install(binprefix, program)
+    env.Alias(fullname, install)
+    env.Default(alias)
+
+def AddLibrary(name, basedir, sources_pattern, skip_list, includes):
+
+    # setup
+    basedir = AddLastSlash(basedir)
+    sources = Glob(basedir, sources_pattern, skip_list)
+    libprefix = os.path.join(env['prefix'], 'lib')
+
+    # separate local and global includes
+    for x in includes:
+        if x[0] != '#':
+            includes[includes.index(x)] = basedir + x
+
+    # action
+    # FIXME Exclusive may not be what users want
+    if int(env['static']):
+        library = env.StaticLibrary(basedir + name, sources, CPPPATH=includes)
+    else:
+        library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes)
+
+    # alias
+    alias = env.Alias(name, library)
+    install = env.Install(libprefix, library)
+    env.Alias(name, install)
+    env.Default(alias)
+
+# XmippData
+AddLibrary('XmippData', 'Lib/XmippData', '*.cc', ['xmippImagic.cc'], ['#Lib',
+    'Bilib/headers', 'Bilib/types', 'Bilib'])
+
+# Reconstruction
+# FIXME the sources for the three libraries are mixed
+Recons_explicit = ['grids.cc',
+    'blobs.cc',
+    'symmetries.cc',
+    'phantom.cc',
+    'projection.cc',
+    'volume_FOMs.cc',
+    'volume_labelling.cc',
+    'radon.cc',
+    'directions.cc',
+    'basis.cc',
+    'Prog_project.cc',
+    'Prog_evaluate.cc',
+    'Prog_evaluate_FSCs.cc',
+    'recons_misc.cc',
+    'Prog_project_crystal.cc',
+    'Prog_surface.cc',
+    'Prog_euler.cc',
+    'Prog_draw_surface.cc',
+    'Prog_symmetrize.cc',
+    'Prog_Angular_Distance.cc',
+    'Prog_Align2d.cc',
+    'Prog_Projection_Neighbourhood.cc',
+    'Prog_Centilt.cc',
+    'CTF.cc',
+    'refinement.cc',
+    'Prog_FourierFilter.cc',
+    'Prog_IDR_art.cc',
+    'Prog_CorrectPhase.cc',
+    'Prog_SpAR.cc',
+    'Prog_art_crystal.cc',
+    'Prog_SpARMA.cc',
+    'Prog_random_phantom.cc',
+    'Prog_microscope.cc',
+    'Prog_adjust_CTF.cc',
+    'Prog_adjust_volume.cc',
+    'Prog_assign_CTF.cc',
+    'Prog_art.cc',
+    'Basic_art.cc',
+    'Prog_SSNR.cc',
+    'Prog_Angular_Predict.cc',
+    'Prog_Angular_Predict_continuous.cc',
+    'Prog_Angular_Predict_Tomography.cc',
+    'Prog_MLalign2D.cc',
+    'Prog_Refine3d.cc',
+    'Prog_break_sym.cc',
+    'Prog_WBP.cc',
+    'Prog_projection_matching.cc',
+    'Prog_Enhance_PSD.cc',
+    'Prog_PDBPhantom.cc']
+
+ReconsInterface_explicit = ['Prog_Spots2RealSpace2D.cc',
+    'recons_spider.cc',
+    'Prog_Unbend.cc',
+    'ImUmbend.cc',
+    'Prog_recons_test.cc']
+
+ReconsINRIA_explicit = ['Prog_adjust_surface.cc']
+
+# Common unused sources for the three libraries
+Recons_unused = ['Gibbs.cc', 'Prog_projection_matching_crystal.cc',
+    'Prog_Spots2RealSpace3D.cc']
+
+# Recons
+AddLibrary('XmippRecons', 'Lib/Reconstruction', '*.cc', ReconsInterface_explicit
+    + ReconsINRIA_explicit + Recons_unused,  ['#Lib'])
+
+# ReconsInterface
+AddLibrary('XmippRecons_Interface', 'Lib/Reconstruction', '*.cc',
+    Recons_explicit + ReconsINRIA_explicit + Recons_unused, ['#Lib'])
+
+# ReconsINRIA
+AddLibrary('XmippReconsINRIA', 'Lib/Reconstruction', '*.cc', Recons_explicit +
+    ReconsInterface_explicit + Recons_unused, ['#Lib'])
+
+# Classification
+AddLibrary('XmippClassif', 'Lib/Classification', '*.cc', [], ['#Lib'])
+
+# Interface
+AddLibrary('XmippInterface', 'Lib/XmippInterface', '*.cc', [], ['#Lib'])
+
+# OldXmipp
+AddLibrary('OldXmipp', 'Lib/OldXmipp', '*.cc', ['autovec.cc', 'cenpar.cc',
+    'fft2d.cc', 'gaussj.cc', 'plano.cc', 'recipe.cc', 'rutinclus.cc',
+    'rutinrot.cc'], ['#Lib'])
+
+# INRIA
+AddLibrary('INRIA', 'Other_packages/LibINRIA', '*.cc', [], [])
+
+# MakeSpectra
+AddProgram('makespectra', 'Applications/OldXmipp/MakeSpectra', '*.cc', [],
+    ['Lib', 'LibOldXmipp'], ['Lib/XmippData', 'Lib/OldXmipp'], ['XmippData',
+    'OldXmipp'], [], [])
+
+# FindSCenter
+AddProgram('findcenter', 'Applications/OldXmipp/FindSCenter', '*.cc', [],
+    ['Lib'], ['Lib/XmippData', 'Lib/OldXmipp'], ['XmippData', 'OldXmipp'], [],
+    [])
+
+# Src (apps)
+
+# 2DInterpolation
+AddProgram('2Dinterpolation', 'Applications/Src/2DInterpolation', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# 3DInterpolation
+AddProgram('3Dinterpolation', 'Applications/Src/3DInterpolation', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Adapt_for_Spider
+AddProgram('adapt_for_spider', 'Applications/Src/Adapt_for_Spider', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'], ['XmippInterface',
+    'XmippData'])
+
+# Add_noise
+AddProgram('add_noise', 'Applications/Src/Add_noise', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Adjust_CTF
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('adjust_CTF', 'Applications/Src/Adjust_CTF', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Adjust_surface
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('adjust_surface', 'Applications/Src/Adjust_surface', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippReconsINRIA', 'XmippRecons', 'XmippData'])
+
+# Adjust_volume
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('adjust_volume', 'Applications/Src/Adjust_volume', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippInterface', 'XmippData'])
+
+# Align2D
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('align2d', 'Applications/Src/Align2D', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Align3D
+AddProgram('align3D', 'Applications/Src/Align3D', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Ang_distribution
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('ang_distribution', 'Applications/Src/Ang_distribution', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'], ['XmippInterface',
+    'XmippData'])
+
+# Angular_distance
+AddProgram('angular_distance', 'Applications/Src/Angular_distance', '*.cc',
+    [], ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Angular_predict
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('angular_predict', 'Applications/Src/Angular_predict', '*.cc',
+    [], ['Lib'], ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
+    'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
+    'XmippInterface'])
+
+# Angular_predict_continuous
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('angular_predict_continuous',
+    'Applications/Src/Angular_predict_continuous', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
+    'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
+    'XmippInterface'])
+
+# Angular_predict_tomography
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('angular_predict_tomography',
+    'Applications/Src/Angular_predict_tomography', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
+    'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
+    'XmippInterface'])
+
+# Angular_refinement
+AddProgram('angular_refinement', 'Applications/Src/Angular_refinement',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippData'])
+
+# ApplyGeo
+AddProgram('applygeo', 'Applications/Src/ApplyGeo', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# AppendDocFile
+AddProgram('appenddocfile', 'Applications/Src/AppendDocFile', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Are_different
+AddProgram('are_different', 'Applications/Src/Are_different', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Art
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('art', 'Applications/Src/Art', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Assign_angles
+AddProgram('assign_angles', 'Applications/Src/Assign_angles', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Assign_CTF
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('assign_CTF', 'Applications/Src/Assign_CTF', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Assign_multiple_CTFs
+AddProgram('assign_multiple_CTFs', 'Applications/Src/Assign_multiple_CTFs',
+    '*.cc', [], ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData',
+    'Lib/XmippInterface'], ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# BatchSOM
+AddProgram('batchsom', 'Applications/Src/BatchSOM', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
+    ['-Wno-deprecated'])
+
+# Break_sym
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('break_sym', 'Applications/Src/Break_sym', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Centilt
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('centilt', 'Applications/Src/Centilt', '*.cc', [], ['Lib'],
+    ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# CodeStatis
+AddProgram('codestatis', 'Applications/Src/CodeStatis', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'], ['-Wno-deprecated'])
+
+# Combine_stats
+AddProgram('combine_stats', 'Applications/Src/Combine_stats', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Compare_Selfiles
+AddProgram('compare_selfiles', 'Applications/Src/Compare_Selfiles', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# CorrectPhase
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('correctphase', 'Applications/Src/CorrectPhase', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Correlation
+AddProgram('correlation', 'Applications/Src/Correlation', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# CpSel
+AddProgram('cpsel', 'Applications/Src/CpSel', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Create_phantom
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('create_phantom', 'Applications/Src/Create_phantom', '*.cc', [],
+    ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction', 'Lib/XmippInterface'],
+    ['XmippData', 'XmippRecons', 'XmippInterface'])
+
+# CTF_profile
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('CTF_profile', 'Applications/Src/CTF_profile', '*.cc', [],
+    ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction', 'Lib/XmippInterface'],
+    ['XmippData', 'XmippRecons', 'XmippInterface'])
+
+# Data2Img
+AddProgram('data2img', 'Applications/Src/Data2Img', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# Data2Vol
+AddProgram('data2vol', 'Applications/Src/Data2Vol', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# deconvoluteCTF
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('deconvoluteCTF', 'Applications/Src/deconvoluteCTF', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Deform
+AddProgram('deform', 'Applications/Src/Deform', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# Denoising
+AddProgram('denoising', 'Applications/Src/Denoising', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Denoising_micrograph
+AddProgram('denoising_micrograph', 'Applications/Src/Denoising_micrograph',
+    '*.cc', [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# DocFile_Histogram
+AddProgram('docfile_histogram', 'Applications/Src/DocFile_Histogram', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# DownSample
+AddProgram('downsample', 'Applications/Src/DownSample', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# FIXME This hack is required for program Mark
+if int(env['gui']):
+    # object file needed by two targets
+    if int(env['static']):
+        obj_DownSample = StaticObject('Applications/Src/DownSample/xvsmooth.cc')
+    else:
+        obj_DownSample = SharedObject('Applications/Src/DownSample/xvsmooth.cc')
+
+# Draw_surface
+AddProgram('draw_surface', 'Applications/Src/Draw_surface', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+# DWT
+AddProgram('DWT', 'Applications/Src/DWT/', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# EM2Angles
+AddProgram('EM2Angles', 'Applications/Src/EM2Angles', '*.cc', [],
+    ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+    ['XmippRecons', 'XmippRecons_Interface', 'XmippData', 'XmippInterface'])
+
+# Enhance_PSD
+# Draw_surface
+AddProgram('enhance_psd', 'Applications/Src/Enhance_PSD', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Euler
+AddProgram('euler', 'Applications/Src/Euler', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Evaluate
+AddProgram('evaluate', 'Applications/Src/Evaluate', '*.cc', ['adjust.cc'],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Evaluate_FSCs
+AddProgram('evaluate_FSCs', 'Applications/Src/Evaluate_FSCs', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Exp_Shift_Computation
+AddProgram('exp_shift_computation', 'Applications/Src/Exp_Shift_Computation',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippRecons_Interface',
+    'XmippData'])
+
+# FCMeans
+AddProgram('fcmeans', 'Applications/Src/FCMeans', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# FFT
+AddProgram('FFT', 'Applications/Src/FFT', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# FindCenter3D
+AddProgram('findcenter3D', 'Applications/Src/FindCenter3D', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# FKCN
+AddProgram('fkcn', 'Applications/Src/FKCN', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# Flip
+AddProgram('flip', 'Applications/Src/Flip', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# FourierFilter
+AddProgram('fourierfilter', 'Applications/Src/FourierFilter', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# FSOM
+AddProgram('fsom', 'Applications/Src/FSOM', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
+    ['-Wno-deprecated'])
+
+# Headerinfo
+AddProgram('headerinfo', 'Applications/Src/Headerinfo', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Histogram
+AddProgram('histogram', 'Applications/Src/Histogram', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# IDR_ART
+AddProgram('idr_art', 'Applications/Src/IDR_ART', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# IDWT
+AddProgram('IDWT', 'Applications/Src/IDWT', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# IFFT
+AddProgram('IFFT', 'Applications/Src/IFFT', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'],
+    ['XmippInterface','XmippData'])
+
+# Img2Data
+AddProgram('img2data', 'Applications/Src/Img2Data', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Infogeo
+AddProgram('infogeo', 'Applications/Src/Infogeo', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# KCMeans
+AddProgram('kcmeans', 'Applications/Src/KCMeans', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
+    ['-Wno-deprecated'])
+
+# KerDenSOM
+AddProgram('kerdensom', 'Applications/Src/KerDenSOM', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
+    ['-Wno-deprecated'])
+
+# Lattice_vectors
+AddProgram('lattice_vectors', 'Applications/Src/Lattice_vectors', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# MakeSpectra
+AddProgram('make_spectra', 'Applications/Src/MakeSpectra', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Mask
+AddProgram('mask', 'Applications/Src/Mask', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Markhan
+AddProgram('markhan', 'Applications/Src/Markhan', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Microscope
+AddProgram('microscope', 'Applications/Src/Microscope', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# MLalign2D
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('MLalign2D', 'Applications/Src/MLalign2D', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# MLalign2D_combine
+AddProgram('MLalign2D_combine', 'Applications/Src/MLalign2D_combine', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# MLrefine3D
+AddProgram('MLrefine3D', 'Applications/Src/MLrefine3D', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Morphology
+AddProgram('morphology', 'Applications/Src/Morphology', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# MvSel
+AddProgram('mvsel', 'Applications/Src/MvSel', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Normalize
+AddProgram('normalize', 'Applications/Src/Normalize', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Operate
+AddProgram('operate', 'Applications/Src/Operate', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# PCA
+AddProgram('pca', 'Applications/Src/PCA', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# PDBPhantom
+AddProgram('pdbphantom', 'Applications/Src/PDBPhantom', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Phantom_transform
+AddProgram('phantom_transform', 'Applications/Src/Phantom_transform', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Project
+AddProgram('project', 'Applications/Src/Project', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Projection_Neighbourhood
+AddProgram('projection_neighbourhood',
+    'Applications/Src/Projection_Neighbourhood', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Projection_matching
+AddProgram('projection_matching', 'Applications/Src/Projection_matching',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# ProjectPCA
+AddProgram('projectpca', 'Applications/Src/ProjectPCA', '*.cc', [], ['Lib'],
+    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
+
+# Pyramid
+AddProgram('pyramid', 'Applications/Src/Pyramid', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Radon_Transform
+AddProgram('radon_transform', 'Applications/Src/Radon_Transform',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# RandomMapping
+AddProgram('random_mapping', 'Applications/Src/RandomMapping', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'])
+
+# Random_phantom
+AddProgram('random_phantom', 'Applications/Src/Random_phantom',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Range_adjust
+AddProgram('range_adjust', 'Applications/Src/Range_adjust', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Raw22spi
+AddProgram('raw22spi', 'Applications/Src/Raw22spi', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Recons_test
+AddProgram('recons_test', 'Applications/Src/Recons_test',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons',
+    'XmippData'])
+
+# Reverse_endian
+AddProgram('reverse_endian', 'Applications/Src/Reverse_endian', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Resolution
+AddProgram('resolution', 'Applications/Src/Resolution', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# RmSel
+AddProgram('rmsel', 'Applications/Src/RmSel', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Rotate
+AddProgram('rotate', 'Applications/Src/Rotate', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# RotateDescr
+AddProgram('rotate_descr', 'Applications/Src/RotateDescr',
+    '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
+    'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Sammon
+AddProgram('sammon', 'Applications/Src/Sammon', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'])
+
+# Sample_size
+AddProgram('sample_size', 'Applications/Src/Sample_size', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Scale
+AddProgram('scale', 'Applications/Src/Scale', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Scissor
+AddProgram('scissor', 'Applications/Src/Scissor', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Segment
+AddProgram('segment', 'Applications/Src/Segment', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Select_Images
+AddProgram('select_images', 'Applications/Src/Select_Images', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# SelStats
+AddProgram('sel_stats', 'Applications/Src/SelStats', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Separate_Objects
+AddProgram('separate_objects', 'Applications/Src/Separate_Objects', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Shift
+AddProgram('shift', 'Applications/Src/Shift', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Skew
+AddProgram('skew', 'Applications/Src/Skew', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# SOM
+AddProgram('som', 'Applications/Src/SOM', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'], ['-Wno-deprecated'])
+
+# Sort_junk
+AddProgram('sort_junk', 'Applications/Src/Sort_junk', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Split_selfile
+AddProgram('split_selfile', 'Applications/Src/Split_selfile', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# SpAR
+AddProgram('spar', 'Applications/Src/SpAR', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# SpARMA
+AddProgram('spARMA', 'Applications/Src/SpARMA', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+# Spider22CCP4
+AddProgram('spi22ccp4', 'Applications/Src/Spider22CCP4', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Spots2RealSpace2D
+AddProgram('spots2realspace', 'Applications/Src/Spots2RealSpace2D', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'],
+    ['-Wno-deprecated'])
+
+# SSNR
+AddProgram('ssnr', 'Applications/Src/SSNR', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Statis
+AddProgram('statis', 'Applications/Src/Statis', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Surface
+AddProgram('surface', 'Applications/Src/Surface', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Symmetrize
+AddProgram('symmetrize', 'Applications/Src/Symmetrize', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Threshold
+AddProgram('threshold', 'Applications/Src/Threshold', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# ToPDB
+AddProgram('toPDB', 'Applications/Src/ToPDB', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'])
+
+# ToPhantom
+AddProgram('toPhantom', 'Applications/Src/ToPhantom', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'])
+
+# Unbend
+AddProgram('unbend', 'Applications/Src/Unbend', '*.cc',
+    [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Visualize_FFT
+AddProgram('visualize_FFT', 'Applications/Src/Visualize_FFT', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Vol2Data
+AddProgram('vol2data', 'Applications/Src/Vol2Data', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# VolSampler
+AddProgram('volsampler', 'Applications/Src/VolSampler', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Voxels22Blobs
+AddProgram('voxels22blobs', 'Applications/Src/Voxels22Blobs', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Wbp
+AddProgram('wbp', 'Applications/Src/Wbp', '*.cc', [],
+    ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Window
+AddProgram('window', 'Applications/Src/Window', '*.cc', [], ['Lib'],
+    ['Lib/XmippData'], ['XmippData'])
+
+# Window_micrograph
+AddProgram('window_micrograph', 'Applications/Src/Window_micrograph', '*.cc',
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+# Batches (apps)
+# NOTE PDBsidechain is in the only one in perl
+AddBatch('do_selfile', 'Applications/Batches/Do_Selfile')
+AddBatch('gnuplot_mplot', 'Applications/Batches/Gnuplot_mplot')
+AddBatch('gnuplot_mprint', 'Applications/Batches/Gnuplot_mprint')
+AddBatch('iv', 'Applications/Batches/Iv')
+AddBatch('look_at_FFT', 'Applications/Batches/Look_at_FFT')
+AddBatch('PDB2descr', 'Applications/Batches/PDB2descr')
+AddBatch('PDBsidechain', 'Applications/Batches/PDBsidechain', '.pl')
+AddBatch('pdb2surface', 'Applications/Batches/Pdb2surface')
+AddBatch('showsel', 'Applications/Batches/Showsel')
+AddBatch('showsom', 'Applications/Batches/ShowSOM')
+AddBatch('showspectra', 'Applications/Batches/ShowSpectra')
+AddBatch('showspectsom', 'Applications/Batches/ShowSpectraSOM')
+
+# MPI
+if int(env['mpi']):
+
+    # MPIArt
+    AddMPIProgram('mpi_art', 'Applications/Src/MPIArt', '*.cc', [], ['Lib'],
+        ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
+        ['XmippRecons', 'XmippData', 'XmippInterface'])
+
+    # MPI_WBP
+    AddMPIProgram('mpi_wbp', 'Applications/Src/MPI_WBP', '*.cc', [], ['Lib'],
+        ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
+
+    # MPI_MLalign2D
+    AddMPIProgram('mpi_MLalign2D', 'Applications/Src/MPI_MLalign2D', '*.cc', [],
+        ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons',
+        'XmippData'])
+
+    # MPI_MLrefine3D
+    AddMPIProgram('mpi_MLrefine3D', 'Applications/Src/MPI_MLrefine3D', '*.cc',
+        [], ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons',
+        'XmippData'])
+
+    # MPI_Projection_matching
+    AddMPIProgram('mpi_projection_matching',
+        'Applications/Src/MPI_Projection_matching', '*.cc', [], ['Lib'],
+        ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
+
+# TIFF
+# Tiff2Raw
+if int(env['tiff']):
+    AddProgram('tiff2raw', 'Applications/Src/Tiff2Raw', '*.cc', [], ['Lib'],
+        [], ['tiff'])
+
+# QT
+if int(env['gui']):
+    envQT = env.Copy()
+    envQT.Tool('qt')
+
+    # Once again, just in case, Copy() does not work too well
+    envQT.Replace(QT_LIB = env['QT_LIB'])
+
+    # QT_AUTOSCAN does not work because .hh and .cc are not in the same dir
+    envQT.SetDefault(QT_AUTOSCAN = 0)
+
+    def AddQtProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
+        mocs = [], includes = [], libpath =[], libs = [], cxxflags = [],
+        linkflags = []):
+
+        # setup
+        basedir = AddLastSlash(basedir)
+        fullname = env['prepend'] + name
+        binprefix =  os.path.join(env['prefix'], 'bin')
+
+        extra = []
+        for i in mocs:
+            extra.append(envQT.Moc(basedir + i))
+
+        sources = Glob(basedir, sources_pattern, skip_list)
+
+        program = envQT.Program(basedir + env['prepend'] + name, sources +
+            extra, CPPPATH = envQT['CPPPATH'] + includes, LIBPATH =
+            envQT['LIBPATH'] + libpath, LIBS = envQT['LIBS'] + libs, CXXFLAGS =
+            cxxflags, LINKFLAGS = linkflags)
+
+        # alias
+        alias = env.Alias(fullname, program)
+        install = env.Install(binprefix, program)
+        env.Alias(fullname, install)
+        env.Default(alias)
+
+    # XmippGraphics
+    # FIXME an AddQtLibrary function does not worth the cost, right?
+    graphics_name = 'XmippGraphics'
+    graphics_basedir = AddLastSlash('Lib/XmippGraphics')
+
+    # FIXME Yes, it is UGLY but it works...
+    graphics_mocs = []
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showTools.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'show2D.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showTable.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showSel.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showVol.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showSpectra.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showSOM.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showSpectraSOM.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showAssignCTF.hh'))
+    graphics_mocs.append(envQT.Moc(graphics_basedir + 'showPlotter.hh'))
+
+    # NOTE Our glob scans everything, *including* the generated files
+    graphics_blacklist  = [
+    'moc_showTools.cc',
+    'moc_show2D.cc',
+    'moc_showTable.cc',
+    'moc_showSel.cc',
+    'moc_showVol.cc',
+    'moc_showSpectra.cc',
+    'moc_showSOM.cc',
+    'moc_showSpectraSOM.cc',
+    'moc_showAssignCTF.cc',
+    'moc_showPlotter.cc'
+    ]
+    graphics_sources = Glob(graphics_basedir, '*.cc', graphics_blacklist)
+    graphics_cpppath = envQT['CPPPATH'] + ['Lib']
+    graphics_objects = []
+    for i in graphics_sources:
+        graphics_objects.append(i)
+    if int(env['static']):
+        graphics = envQT.StaticLibrary(graphics_basedir + graphics_name,
+            graphics_sources, CPPPATH = graphics_cpppath)
+    else:
+        graphics = envQT.SharedLibrary(graphics_basedir + graphics_name,
+            graphics_objects + graphics_mocs , CPPPATH = graphics_cpppath)
+
+    graphics_alias = env.Alias(graphics_name, graphics)
+    graphics_install = env.Install(os.path.join(env['prefix'], 'lib'),
+graphics)
+    env.Alias(graphics_name, graphics_install)
+    env.Default(graphics_alias)
+
+    # Edit
+    AddQtProgram('edit', 'Applications/Src/Edit', '*.cc', ['moc_textedit.cc'],
+    [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
+
+    # CTF Viewer
+    AddQtProgram('ctfviewer', 'Applications/Src/CTFViewer', '*.cc',
+    ['moc_ctfviewer_module.cc'], [], ['Lib'], ['Lib/XmippData',
+    'Lib/XmippGraphics', 'Lib/Classification', 'Lib/Reconstruction'],
+    ['XmippData', 'XmippGraphics', 'XmippClassif', 'XmippRecons'])
+
+    # Mark
+    # FIXME obj_DownSample is required. cannot use AddQtProgram
+    mark_blacklist = [
+    'moc_QtAutoMenu.cc',
+    'moc_QtColorLabel.cc',
+    'moc_QtDialogFamilies.cc',
+    'moc_QtDialogProperties.cc',
+    'moc_QtFileMenu.cc',
+    'moc_QtFilter.cc',
+    'moc_QtFilterMenu.cc',
+    'moc_QtFiltersController.cc',
+    'moc_QtImage.cc',
+    'moc_QtImageMicrograph.cc',
+    'moc_QtImageOverviewMicrograph.cc',
+    'moc_QtMainWidgetMark.cc',
+    'moc_QtPopupMenuMark.cc',
+    'moc_QtWidgetMicrograph.cc',
+    'moc_QtWidgetPSD.cc'
+    ]
+    mark_basedir = AddLastSlash('Applications/Src/Mark')
+
+    mark_mocs = []
+    mark_mocs.append(envQT.Moc(mark_basedir + 'QtPopupMenuMark.hh'))
+    mark_sources = Glob(mark_basedir, '*.cc', mark_blacklist)
+    mark_cpppath = envQT['CPPPATH'] + ['Lib']
+    mark_libpath = envQT['LIBPATH'] + ['Lib/XmippInterface', 'Lib/XmippGraphics'
+        , 'Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData']
+    mark_libs = envQT['LIBS'] + ['XmippInterface', 'XmippGraphics',
+        'XmippRecons', 'XmippClassif', 'XmippData']
+    mark_prog = envQT.Program(mark_basedir + env['prepend'] + 'mark',
+        mark_sources + mark_mocs +
+        obj_DownSample, CPPPATH = mark_cpppath,
+        LIBPATH = mark_libpath, LIBS = mark_libs)
+    mark_alias = env.Alias(env['prepend'] + 'mark', mark_prog)
+    mark_install = env.Install(os.path.join(env['prefix'],
+        'bin'), mark_prog)
+    env.Alias(env['prepend'] + 'mark', mark_install)
+    env.Default(mark_alias)
+
+    # Show
+    AddQtProgram('show', 'Applications/Src/Show', '*.cc', [], [], ['Lib'],
+        ['Lib/Classification', 'Lib/XmippGraphics', 'Lib/Reconstruction',
+        'Lib/XmippData'], ['XmippClassif', 'XmippGraphics', 'XmippRecons',
+        'XmippData'])
+
+    # XMask
+    AddQtProgram('xmask', 'Applications/Src/XMask', '*.cc', ['moc_maskimg.cc'],
+        [], ['Lib'], ['Lib/XmippData', 'Lib/Classification'], ['XmippData',
+        'XmippClassif'])
+

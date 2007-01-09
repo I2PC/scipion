@@ -1,4 +1,5 @@
-# This script reads a PDB file and creates a .descr file that
+#!/usr/bin/perl
+## This script reads a PDB file and creates a .descr file that
 # can be used with create_phantom, project, etc. Each atom is replaced
 # by a blob. Hidrogen atoms are not counted
 

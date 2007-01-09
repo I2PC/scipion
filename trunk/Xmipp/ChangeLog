@@ -1,5 +1,17 @@
+1.1
+
+- New program: xmipp_MLrefine3D
+- New program: xmipp_sort_junk
+- New building system based on SCons (under testing)
+- Cleaned up CVS hierarchy
+- Added .cvsignore file
+- Cleaned auto.sh
+- Improved xmipp_slip_selfile
+- ...
+
 0.9.1
 
 - corrected template specialization bug
 - corected xmippError includes
 - correct compilation in PGI compilers
+- ...
