@@ -101,7 +101,7 @@ void CCP4::read(const FileName &fn_in,
                       ImageXmipp &I, bool reversed) {
 
    FILE *fp;
-   read_header_from_file(fn_in, reversed);
+   reversed=read_header_from_file(fn_in, reversed);
    //
    //open file
    if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
@@ -173,7 +173,7 @@ void CCP4::read(const FileName &fn_in,
                       VolumeXmipp &V, bool reversed) {
 
    FILE *fp;
-   read_header_from_file(fn_in, reversed);
+   reversed=read_header_from_file(fn_in, reversed);
    //
    //open file
    if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
@@ -250,6 +250,24 @@ void CCP4::clear(){
 /** Fill mrc header from xmipp image. */
    void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed){
     clear();
+    if(IsLittleEndian())
+       {
+       (my_mrc_header.machst)[0]  = 0x4 << 2; 
+       (my_mrc_header.machst)[0] += 0x4 ; 
+       (my_mrc_header.machst)[1]  = 0x4 << 2; 
+       (my_mrc_header.machst)[1] += 0x4 ;
+       }
+    else /*Big Endian*/
+       {
+       (my_mrc_header.machst)[0]  = 0x1 << 2; 
+       (my_mrc_header.machst)[0] += 0x1 ; 
+       (my_mrc_header.machst)[1]  = 0x1 << 2; 
+       (my_mrc_header.machst)[1] += 0x1 ;
+       }
+   (my_mrc_header.map)[0]='M';
+   (my_mrc_header.map)[1]='A';
+   (my_mrc_header.map)[2]='P';
+   (my_mrc_header.map)[3]=' ';
    if(reversed==false){
     my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = I().ColNo();
     my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = I().RowNo();
@@ -263,8 +281,8 @@ void CCP4::clear(){
     my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
     my_mrc_header.amin  = (float)(I().compute_min()); 
     my_mrc_header.amax  = (float)(I().compute_max()); 
-    my_mrc_header.amean = (float)(I().compute_avg()); 
-   }
+    my_mrc_header.amean = (float)(I().compute_avg());
+  }
    else{
     my_mrc_header.nx    = I().ColNo();
     little22bigendian(my_mrc_header.nx);
@@ -310,6 +328,10 @@ void CCP4::clear(){
 /** Fill mrc header from xmipp image. */
    void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed){
     clear();
+   (my_mrc_header.map)[0]='M';
+   (my_mrc_header.map)[1]='A';
+   (my_mrc_header.map)[2]='P';
+   (my_mrc_header.map)[3]=' ';
    if(reversed==false){
     my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().ColNo();
     my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().RowNo();
@@ -318,12 +340,29 @@ void CCP4::clear(){
     my_mrc_header.mapc  = X_AXIS; 
     my_mrc_header.mapr  = Y_AXIS; 
     my_mrc_header.maps  = Z_AXIS; 
+    my_mrc_header.alpha = 
+    my_mrc_header.beta  = 
+    my_mrc_header.gamma = 90.;
     my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
     my_mrc_header.nystart = -1 * int(my_mrc_header.ny/2);
     my_mrc_header.nzstart = -1 * int(my_mrc_header.nz/2);
     my_mrc_header.amin  = (float)(V().compute_min()); 
     my_mrc_header.amax  = (float)(V().compute_max()); 
     my_mrc_header.amean = (float)(V().compute_avg()); 
+    if(IsLittleEndian())
+       {
+       (my_mrc_header.machst)[0]  = 0x4 << 4; 
+       (my_mrc_header.machst)[0] += 0x4 ; 
+       (my_mrc_header.machst)[1]  = 0x4 << 4; 
+       (my_mrc_header.machst)[1] += 0x4 ;
+       }
+    else /*Big Endian*/
+       {
+       (my_mrc_header.machst)[0]  = 0x1 << 4; 
+       (my_mrc_header.machst)[0] += 0x1 ; 
+       (my_mrc_header.machst)[1]  = 0x1 << 4; 
+       (my_mrc_header.machst)[1] += 0x1 ;
+       }
    }
    else{
     my_mrc_header.nx    = V().ColNo();
@@ -354,6 +393,13 @@ void CCP4::clear(){
     little22bigendian(my_mrc_header.mapr); 
     my_mrc_header.maps  = Z_AXIS;
     little22bigendian(my_mrc_header.maps); 
+
+    my_mrc_header.alpha = 
+    my_mrc_header.beta  = 
+    my_mrc_header.gamma = 90.;
+    little22bigendian(my_mrc_header.alpha); 
+    little22bigendian(my_mrc_header.beta); 
+    little22bigendian(my_mrc_header.gamma); 
     
     my_mrc_header.amin = V().compute_min();
     little22bigendian(my_mrc_header.amin); 
@@ -362,25 +408,54 @@ void CCP4::clear(){
     my_mrc_header.amean = V().compute_avg();
     little22bigendian(my_mrc_header.amean); 
 
+    if(IsLittleEndian())
+       {
+       (my_mrc_header.machst)[0]  = 0x1 << 4; 
+       (my_mrc_header.machst)[0] += 0x1 ; 
+       (my_mrc_header.machst)[1]  = 0x1 << 4; 
+       (my_mrc_header.machst)[1] += 0x1 ;
+       }
+    else /*Big Endian*/
+       {
+       (my_mrc_header.machst)[0]  = 0x4 << 4; 
+       (my_mrc_header.machst)[0] += 0x4 ; 
+       (my_mrc_header.machst)[1]  = 0x4 << 4; 
+       (my_mrc_header.machst)[1] += 0x4 ;
+       }
+
     } 
-    my_mrc_header.alpha = my_mrc_header.beta = my_mrc_header.gamma =90;
 }
 
 
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from mrc file. */
-   void CCP4::read_header_from_file(const FileName &fn_in, bool reversed){
+   bool CCP4::read_header_from_file(const FileName &fn_in, bool reversed){
     clear();
     FILE *fp;
     //open file
     if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
       REPORT_ERROR(1503,"CCP4::read_header_from_file: File " + fn_in + " cannot be saved");
 
+   fseek(fp,0xd0,SEEK_SET);
+   FREAD(&(my_mrc_header.map), sizeof(unsigned char), 4, fp, reversed); 
+   FREAD(&(my_mrc_header.machst), sizeof(unsigned char), 4, fp, reversed); 
+   
    // Get  size
+   if ((my_mrc_header.machst)[0] == ((0x1 << 4) + 0x1) &&
+        IsLittleEndian() && 
+        reversed==FALSE)
+       reversed=TRUE;
+    else if ((my_mrc_header.machst)[0] == ((0x4 << 4) + 0x4) &&
+        IsBigEndian() && 
+        reversed==FALSE)
+       reversed=TRUE;
+   fseek(fp,0x00,SEEK_SET);
    FREAD(&(my_mrc_header.nx), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.ny), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.nz), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.mode), sizeof(int), 1, fp, reversed); 
-   fclose(fp);   
+
+   fclose(fp);
+   return(reversed);   
 }
 

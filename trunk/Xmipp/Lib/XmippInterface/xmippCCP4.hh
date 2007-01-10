@@ -36,6 +36,7 @@
 #include <XmippData/xmippGeometry.hh>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippVolumes.hh>
+#include <XmippData/Bilib/configs.h>
 #include <sys/stat.h>
 
 /**@name cp4 Files */
@@ -45,7 +46,7 @@
     */
 
 #define MRC_LABEL_SIZE      80
-#define MRC_USER            29
+#define MRC_USER            28
 #define MRC_NUM_LABELS      10
 
 /*
@@ -118,8 +119,29 @@ typedef struct MRCheader
 
     int         nsymbt;             /* Number of bytes used for storing   */
                                     /* symmetry operators. */
-
     unsigned long  user[MRC_USER];  /* For user - all set to zero by default. */
+    char        map[4];              /* Char string 'MAP ' to identify file type */
+    char        machst[4];           /* Machine stamp indicating the machine type
+			               which wrote file
+                                       The machine stamp is a 32-bit 
+                                       quantity containing a set of four 
+                                       `nibbles' (half-bytes)---only half 
+                                       the space is used. Each nibble is 
+                                       a number specifying the representation 
+                                       of (in C terms) double (d) , float (f), 
+                                       int (i) and unsigned char (c) types.
+                                        Thus each stamp is of the form 
+                                        0xdfic0000. The values for the 
+                                        floating point nibbles may be taken 
+                                        from the list (following HDF):
+                                       1 	Big-endian ieee
+                                       2 	VAX
+                                       3 	Cray
+                                       4 	Little-endian ieee
+                                       5 	Convex native
+                                       6 	Fijitsu VP
+                                       */
+                        
 
     float       xorigin;            /* X origin. */
     float       yorigin;            /* Y origin. */
@@ -163,8 +185,12 @@ public:
 /** Fill mrc header from 3D xmipp image. */
    void fill_header_from_xmippimage(VolumeXmipp V, bool reversed=false);
 
-/** Fill mrc header from mrc file. */
-   void read_header_from_file(const FileName &fn_in, bool reversed=false);
+/** Fill mrc header from mrc file. 
+    Returns tre is either reversed is true or the native endianess is
+    different from the one used to store the data.
+
+    */
+   bool CCP4::read_header_from_file(const FileName &fn_in, bool reversed=false);
 };
 
 
