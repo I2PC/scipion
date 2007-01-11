@@ -190,7 +190,7 @@ public:
     different from the one used to store the data.
 
     */
-   bool CCP4::read_header_from_file(const FileName &fn_in, bool reversed=false);
+   bool read_header_from_file(const FileName &fn_in, bool reversed=false);
 };
 
 
