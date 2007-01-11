@@ -843,6 +843,13 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 #define little22bigendian(x) ByteSwap((unsigned char *) &x,sizeof(x))
 
 void ByteSwap(unsigned char * b, int n);
+
+/** Returns 1 if machine is big endian else 0*/
+int IsBigEndian(void);
+
+/** Returns 1 if machine is little endian else 0*/
+int IsLittleEndian(void);
+
 //@}
 
 // More randon functions

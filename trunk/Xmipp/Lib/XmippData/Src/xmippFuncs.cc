@@ -668,3 +668,21 @@ void ByteSwap(unsigned char * b, int n)
       i++, j--;
    }
 }
+
+/** Returns 1 if machine is little endian else 0*/
+
+ int IsLittleEndian (void)
+{
+   static const unsigned long ul = 0x00000001;
+
+   return ((int) (*((unsigned char *) &ul)));
+}
+
+/** Returns 1 if machine is big endian else 0*/
+
+ int IsBigEndian (void)
+{
+   static const unsigned long ul = 0x01000000;
+
+   return ((int) (*((unsigned char *) &ul)));
+}
