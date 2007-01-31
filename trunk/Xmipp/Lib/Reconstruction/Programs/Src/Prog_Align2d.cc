@@ -236,7 +236,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
       for (int j=-n_max; j <= n_max; j++) {   
 	i_actual = i+imax;
 	j_actual = j+jmax;
-	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
+	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() || 
 	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
 	  neighbourhood=false;
 	else if (max/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
