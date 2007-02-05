@@ -1,0 +1,410 @@
+/***************************************************************************
+ *
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
+ ***************************************************************************/
+
+#include "../splines.hh"
+
+/* Bspline03 by a LUT ------------------------------------------------------ */
+double Bspline03LUT(double x) {
+   static bool firstCall=true;
+   static matrix1D<double> table(BSPLINE03_SUBSAMPLING);
+   static const double deltax=2.0/BSPLINE03_SUBSAMPLING;
+   static const double ideltax=1.0/deltax;
+   if (firstCall) {
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(table)
+         table(i)=Bspline03(i*deltax);
+      firstCall=false;
+   }
+   x=ABS(x);
+   int i=ROUND(x*ideltax);
+   if (i>=XSIZE(table)) return 0;
+   else return table(i);
+}
+
+/* Sum spline on a grid ---------------------------------------------------- */
+double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid) {
+   SPEED_UP_temps;
+   matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
+   double         actual_radius;
+   int	         i, j, k;
+   double        sum=0.0;
+
+// Compute the limits of the spline in the grid coordinate system
+   grid.universe2grid(vector_R3(-2.0,-2.0,-2.0),corner1);
+   grid.universe2grid(vector_R3( 2.0, 2.0, 2.0),corner2);
+
+// Compute the sum in the points inside the grid
+// The integer part of the vectors is taken for not picking points
+// just in the border of the spline, which we know they are 0.
+   for (i= (int)corner1.X(); i<=(int)corner2.X(); i++) 
+      for (j= (int)corner1.Y(); j<=(int)corner2.Y(); j++) 
+         for (k= (int)corner1.Z(); k<=(int)corner2.Z(); k++) {
+            VECTOR_R3(gr,i,j,k);
+            grid.grid2universe(gr,ur);
+	    sum += spatial_Bspline03(ur);
+         }
+   return sum;
+}
+
+double sum_spatial_Bspline03_Grid(const Grid &grid) {
+   double sum=0;
+   for (int i=0; i<grid.GridsNo(); i++)
+      sum += sum_spatial_Bspline03_SimpleGrid(grid(i));
+   return sum;
+}
+
+/* Line integral through a spline ------------------------------------------ */
+static matrix1D<double> global_r;
+static matrix1D<double> global_u;
+static matrix1D<double> global_aux(3);
+double spatial_Bspline03_integralf(double alpha) {
+   XX(global_aux)=XX(global_r)+alpha*XX(global_u);
+   YY(global_aux)=YY(global_r)+alpha*YY(global_u);
+   ZZ(global_aux)=ZZ(global_r)+alpha*ZZ(global_u);
+   return spatial_Bspline03LUT(global_aux);
+}
+
+double spatial_Bspline03_integral(const matrix1D<double> &r,
+   const matrix1D<double> &u, double alpha0, double alphaF) {
+   global_r=r;
+   global_u=u;
+   return integrateNewtonCotes(&spatial_Bspline03_integralf,alpha0,alphaF,9);
+}
+
+/* This is very similar to the projection of a voxel volume from -2 to 2.
+   The code is taken from the function project_Volume of Src/projection.cc */
+//#define DEBUG
+double spatial_Bspline03_proj(
+   const matrix1D<double> &r, const matrix1D<double> &u) {
+   // Avoids divisions by zero and allows orthogonal rays computation
+   static matrix1D<double> ur(3);
+   if(XX(u)==0) XX(ur)=XMIPP_EQUAL_ACCURACY; else XX(ur)=XX(u);
+   if(YY(u)==0) YY(ur)=XMIPP_EQUAL_ACCURACY; else YY(ur)=YY(u);
+   if(ZZ(u)==0) ZZ(ur)=XMIPP_EQUAL_ACCURACY; else ZZ(ur)=ZZ(u);
+
+   // Some precalculated variables
+   double x_sign = SGN(XX(ur));
+   double y_sign = SGN(YY(ur));
+   double z_sign = SGN(ZZ(ur));
+   
+   // Compute the minimum and maximum alpha for the ray
+   double alpha_xmin=(-2-XX(r))/XX(ur);
+   double alpha_xmax=( 2-XX(r))/XX(ur);
+   double alpha_ymin=(-2-YY(r))/YY(ur);
+   double alpha_ymax=( 2-YY(r))/YY(ur);
+   double alpha_zmin=(-2-ZZ(r))/ZZ(ur);
+   double alpha_zmax=( 2-ZZ(r))/ZZ(ur);
+
+   double alpha_min =MAX(MIN(alpha_xmin,alpha_xmax),
+                         MIN(alpha_ymin,alpha_ymax));
+          alpha_min =MAX(alpha_min,MIN(alpha_zmin,alpha_zmax));
+   double alpha_max =MIN(MAX(alpha_xmin,alpha_xmax),
+                         MAX(alpha_ymin,alpha_ymax));
+          alpha_max =MIN(alpha_max,MAX(alpha_zmin,alpha_zmax));
+   if (alpha_max-alpha_min<XMIPP_EQUAL_ACCURACY) return 0.0;
+	
+   #ifdef DEBUG
+      cout << "Pixel:  " << r.transpose() << endl
+           << "Dir:    " << ur.transpose() << endl
+           << "Alpha x:" << alpha_xmin << " " << alpha_xmax << endl
+           << "        " << (r+alpha_xmin*ur).transpose() << endl
+           << "        " << (r+alpha_xmax*ur).transpose() << endl
+           << "Alpha y:" << alpha_ymin << " " << alpha_ymax << endl
+           << "        " << (r+alpha_ymin*ur).transpose() << endl
+           << "        " << (r+alpha_ymax*ur).transpose() << endl
+           << "Alpha z:" << alpha_zmin << " " << alpha_zmax << endl
+           << "        " << (r+alpha_zmin*ur).transpose() << endl
+           << "        " << (r+alpha_zmax*ur).transpose() << endl
+           << "alpha  :" << alpha_min  << " " << alpha_max  << endl
+           << endl;
+   #endif
+
+   // Compute the first point in the volume intersecting the ray
+   static matrix1D<double> v(3);
+   V3_BY_CT(v,ur,alpha_min);
+   V3_PLUS_V3(v,r,v);
+
+   #ifdef DEBUG
+      cout << "First entry point: " << v.transpose() << endl;
+      cout << "   Alpha_min: " << alpha_min << endl;
+   #endif
+   
+   // Follow the ray
+   double alpha=alpha_min;
+   double ray_sum=0;
+   do {  
+      double alpha_x = (XX(v)+x_sign-XX(r))/XX(ur);
+      double alpha_y = (YY(v)+y_sign-YY(r))/YY(ur);
+      double alpha_z = (ZZ(v)+z_sign-ZZ(r))/ZZ(ur);
+      
+      // Which dimension will ray move next step into?, it isn't neccesary to be only
+      // one. 
+      double diffx = ABS(alpha-alpha_x);
+      double diffy = ABS(alpha-alpha_y);
+      double diffz = ABS(alpha-alpha_z);
+      double diff_alpha = MIN(MIN(diffx,diffy),diffz);
+      ray_sum+=spatial_Bspline03_integral(r,ur,alpha,alpha+diff_alpha);
+
+      // Update alpha and the next entry point
+      if(ABS(diff_alpha-diffx)<=XMIPP_EQUAL_ACCURACY) alpha=alpha_x;
+      if(ABS(diff_alpha-diffy)<=XMIPP_EQUAL_ACCURACY) alpha=alpha_y;
+      if(ABS(diff_alpha-diffz)<=XMIPP_EQUAL_ACCURACY) alpha=alpha_z;
+      XX(v)+=diff_alpha*XX(ur);
+      YY(v)+=diff_alpha*YY(ur);
+      ZZ(v)+=diff_alpha*ZZ(ur);
+
+      #ifdef DEBUG
+         cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
+              << " " << alpha_z << " ---> " << alpha << endl;
+
+         cout << "    Next entry point: " << v.transpose() << endl
+              << "    diff_alpha: " << diff_alpha << endl
+              << "    ray_sum: " << ray_sum << endl
+              << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
+              endl;
+
+      #endif
+   } while ((alpha_max-alpha)>XMIPP_EQUAL_ACCURACY);
+   return ray_sum;
+}
+#undef DEBUG
+
+/* Splines -> Voxels for a SimpleGrid -------------------------------------- */
+void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
+   const SimpleGrid &grid,
+   matrix3D<double> *vol_voxels,
+   const matrix3D<double> *vol_mask=NULL) {
+   matrix1D<double> act_coord(3);           // Coord: Actual position inside
+                                            // the voxel volume without deforming
+   matrix1D<double> beginZ(3);              // Coord: Voxel coordinates of the
+                                            // blob at the 3D point
+                                            // (z0,YY(lowest),XX(lowest))
+   matrix1D<double> beginY(3);              // Coord: Voxel coordinates of the
+                                            // blob at the 3D point
+                                            // (z0,y0,XX(lowest))
+   matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
+                                            // blob in the voxel volume
+   matrix1D<double> gcurrent(3);            // Position in g of current point
+   double        intx, inty, intz;          // Nearest integer voxel
+   int           i,j,k;                     // Index within the blob volume
+   bool          process;                   // True if this blob has to be
+                                            // processed
+   SPEED_UP_temps;
+   double spline_radius=2*sqrt(3.0);
+
+   // Some aliases
+   #define x0 STARTINGX(*vol_voxels)
+   #define xF FINISHINGX(*vol_voxels)
+   #define y0 STARTINGY(*vol_voxels)
+   #define yF FINISHINGY(*vol_voxels)
+   #define z0 STARTINGZ(*vol_voxels)
+   #define zF FINISHINGZ(*vol_voxels)
+
+   #ifdef DEBUG
+      bool condition=true;
+      (*vol_voxels)().print_shape(); cout << endl;
+      cout << "x0= " << x0 << " xF= " << xF << endl;
+      cout << "y0= " << y0 << " yF= " << yF << endl;
+      cout << "z0= " << z0 << " zF= " << zF << endl;
+      cout << grid;
+   #endif
+
+   // Convert the whole grid ...............................................
+   // Corner of the plane defined by Z. These coordinates are in the
+   // universal coord. system
+   grid.grid2universe(grid.lowest, beginZ);
+
+   matrix1D<double> grid_index(3);
+   for (k=(int) ZZ(grid.lowest); k<=(int) ZZ(grid.highest); k++) {
+      // Corner of the row defined by Y
+      beginY=beginZ;
+      for (i=(int) YY(grid.lowest); i<=(int) YY(grid.highest); i++) {
+         // First point in the row
+	 act_coord=beginY;
+	 for (j=(int) XX(grid.lowest); j<=(int) XX(grid.highest); j++) {
+	    VECTOR_R3(grid_index,j,i,k);
+            #ifdef DEBUG
+	       if (condition) {
+        	  printf("Dealing spline at (%d,%d,%d) = %f\n", j,i,k,VOL_ELEM(vol_splines,k,i,j));
+        	  cout << "Center of the blob      "
+                       << act_coord.transpose() << endl;
+	       }
+            #endif
+
+	    // These two corners are also real valued
+            process=true;
+            if (XX(act_coord)>=xF) process=false;
+            if (YY(act_coord)>=yF) process=false;
+            if (ZZ(act_coord)>=zF) process=false;
+            if (XX(act_coord)<=x0) process=false;
+            if (YY(act_coord)<=y0) process=false; 
+            if (ZZ(act_coord)<=z0) process=false;
+            #ifdef DEBUG
+               if (!process && condition) cout << "   It is outside output volume\n";
+            #endif
+	    if (!grid.is_interesting(act_coord)) {
+               #ifdef DEBUG
+        	  if (process && condition) cout << "   It is not interesting\n";
+               #endif
+	       process=false;
+	    }
+
+            if (process) {
+               V3_PLUS_CT(corner1,act_coord,-spline_radius);
+               V3_PLUS_CT(corner2,act_coord, spline_radius);
+               #ifdef DEBUG
+	          if (condition) {
+        	     cout << "Corner 1 for this point " << corner1.transpose() << endl;
+        	     cout << "Corner 2 for this point " << corner2.transpose() << endl;
+	          }
+               #endif
+
+               // Clip the corners to the volume borders
+	       XX(corner1)=ROUND(CLIP(XX(corner1),x0,xF));
+	       YY(corner1)=ROUND(CLIP(YY(corner1),y0,yF));
+	       ZZ(corner1)=ROUND(CLIP(ZZ(corner1),z0,zF));
+	       XX(corner2)=ROUND(CLIP(XX(corner2),x0,xF));
+	       YY(corner2)=ROUND(CLIP(YY(corner2),y0,yF));
+	       ZZ(corner2)=ROUND(CLIP(ZZ(corner2),z0,zF));
+               #ifdef DEBUG
+	          if (condition) {
+                     cout << "Clipped and rounded Corner 1 " << corner1.transpose() << endl;
+                     cout << "Clipped and rounded Corner 2 " << corner2.transpose() << endl;
+      	          }
+               #endif
+
+	       // Effectively convert
+	       for (intz=ZZ(corner1); intz<=ZZ(corner2); intz++)
+	          for (inty=YY(corner1); inty<=YY(corner2); inty++)
+	             for (intx=XX(corner1); intx<=XX(corner2); intx++) {
+                        int iz=(int)intz, iy=(int)inty, ix=(int)intx;
+                        if (vol_mask!=NULL)
+                           if (!VOL_ELEM(*vol_mask,iz,iy,ix)) continue;
+
+                        // Compute the spline value at this point
+                        VECTOR_R3(gcurrent, intx, inty, intz);
+                        V3_MINUS_V3(gcurrent,act_coord,gcurrent);
+                        double spline_value=spatial_Bspline03(gcurrent);
+                        #ifdef DEBUG_MORE
+			   if (condition) {
+                              cout << "At (" << intx << ","
+                                   << inty << "," << intz << ") value="
+                                   << spline_value;
+                              cout.flush();
+			   }
+                        #endif
+
+                        // Add at that position the corresponding spline value
+                        VOL_ELEM(*vol_voxels,iz,iy,ix) +=
+                              VOL_ELEM(vol_splines,k,i,j)*spline_value;
+                        #ifdef DEBUG_MORE
+			   if (condition) {
+                              cout << " adding " << VOL_ELEM(vol_splines,k,i,j)
+			           << " * " << value_spline << " = "
+				   << VOL_ELEM(vol_splines,k,i,j)*
+                                      value_spline << endl;
+                              cout.flush();
+			   }
+                        #endif
+                     }
+            }
+
+            // Prepare for next iteration
+            XX(act_coord)=XX(act_coord)+grid.relative_size*MAT_ELEM(grid.basis,0,0);
+            YY(act_coord)=YY(act_coord)+grid.relative_size*MAT_ELEM(grid.basis,1,0);
+            ZZ(act_coord)=ZZ(act_coord)+grid.relative_size*MAT_ELEM(grid.basis,2,0);
+      	 }
+         XX(beginY)=XX(beginY)+grid.relative_size*MAT_ELEM(grid.basis,0,1);
+         YY(beginY)=YY(beginY)+grid.relative_size*MAT_ELEM(grid.basis,1,1);
+         ZZ(beginY)=ZZ(beginY)+grid.relative_size*MAT_ELEM(grid.basis,2,1);
+      }
+      XX(beginZ)=XX(beginZ)+grid.relative_size*MAT_ELEM(grid.basis,0,2);
+      YY(beginZ)=YY(beginZ)+grid.relative_size*MAT_ELEM(grid.basis,1,2);
+      ZZ(beginZ)=ZZ(beginZ)+grid.relative_size*MAT_ELEM(grid.basis,2,2);
+   }
+}
+#undef x0
+#undef y0
+#undef z0
+#undef xF
+#undef yF
+#undef zF
+#undef DEBUG
+#undef DEBUG_MORE
+
+/* Splines -> Voxels for a Grid -------------------------------------------- */
+//#define DEBUG      
+void spatial_Bspline032voxels(const GridVolume &vol_splines,
+   matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim) {
+   // Resize and set starting corner .......................................
+   if (Zdim==0 || Ydim==0 || Xdim==0) {
+      matrix1D<double> size=vol_splines.grid(0).highest-
+         vol_splines.grid(0).lowest;
+      matrix1D<double> corner=vol_splines.grid(0).lowest;
+      (*vol_voxels).init_zeros(CEIL(ZZ(size)),CEIL(YY(size)),CEIL(XX(size)));
+      (*vol_voxels).startingX()=FLOOR(XX(corner));
+      (*vol_voxels).startingY()=FLOOR(YY(corner));
+      (*vol_voxels).startingZ()=FLOOR(ZZ(corner));
+   } else {
+      (*vol_voxels).init_zeros(Zdim,Ydim,Xdim);
+      (*vol_voxels).set_Xmipp_origin();
+   }
+
+   // Convert each subvolume ...............................................
+   for (int i=0; i<vol_splines.VolumesNo(); i++) {
+      spatial_Bspline032voxels_SimpleGrid(vol_splines(i)(),vol_splines.grid(i),
+         vol_voxels);
+      #ifdef DEBUG
+	 cout << "Spline grid no " << i << " stats: "; vol_splines(i)().print_stats(); cout << endl;
+         cout << "So far vol stats: "; (*vol_voxels).print_stats(); cout << endl;
+         VolumeXmipp save; save()=*vol_voxels;
+         save.write((string)"PPPvoxels"+ItoA(i));
+      #endif
+   }
+   
+   // Now normalise the resulting volume ..................................
+   double inorm=1.0/sum_spatial_Bspline03_Grid(vol_splines.grid());
+   FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+      VOL_ELEM(*vol_voxels,k,i,j)*=inorm;
+
+   // Set voxels outside interest region to minimum value .................
+   double R=vol_splines.grid(0).get_interest_radius();
+   if (R!=-1) {
+      double R2=(R-6)*(R-6);
+
+      // Compute minimum value within sphere
+      double min_val=VOL_ELEM(*vol_voxels,0,0,0);
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+         if (j*j+i*i+k*k<=R2-4)
+	    min_val=MIN(min_val,VOL_ELEM(*vol_voxels,k,i,j));
+
+      // Substitute minimum value
+      R2=(R-2)*(R-2);
+      FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+         if (j*j+i*i+k*k>=R2)
+	    VOL_ELEM(*vol_voxels,k,i,j)=min_val;
+   }
+}
+#undef DEBUG
+
