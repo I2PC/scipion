@@ -196,7 +196,7 @@ public:
    void assign (const SimpleGrid &SG);
    //@}
 
-   /**@name Grid strcuture */
+   /**@name Grid structure */
    //@{
    /** Set X vector of the grid.
        \\Ex: matrix1D<double> X=vector_R3(1,0,0); sg.set_X(X); */
