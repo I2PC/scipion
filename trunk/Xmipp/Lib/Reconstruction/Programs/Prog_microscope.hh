@@ -41,11 +41,9 @@ public:
    /// Low pass frequency before CTF
    double   low_pass_before_CTF;
    /// Filename with the root squared spectrum for noise after CTF
-   FileName fn_after_ctf;
+   bool     after_ctf_noise;
    /// Defocus change (%)
    double   defocus_change;
-   /// Filename to write the pure CTF
-   FileName fn_out_pure_ctf;
 public:
    /// CTF
    FourierMask ctf;

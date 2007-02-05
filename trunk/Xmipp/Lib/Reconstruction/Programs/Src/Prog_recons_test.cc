@@ -90,7 +90,6 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
       defocus_change=AtoF(get_param(fh_param,"defocus change",0,"0"));
       sigma=AtoF(get_param(fh_param,"noise stddev",0,"0"));
       low_pass_before_CTF=AtoF(get_param(fh_param,"noise lowpass before CTF",0,"0"));
-      fn_after_CTF=get_param(fh_param,"noise spectrum after CTF",0,"");
       
       w_hp=AtoF(get_param(fh_param,"highpass cutoff",0,"0"));
       if (w_hp<0 || w_hp>0.5) w_hp=0;
@@ -283,7 +282,6 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
    out << "   Defocus change: " << prm.defocus_change << endl;
    out << "   Noise stddev: " << prm.sigma << endl;
    out << "   Noise lowpass before CTF: " << prm.low_pass_before_CTF << endl;
-   out << "   Noise spectrum after CTF: " << prm.fn_after_CTF << endl;
    out << "   High pass cutoff: " << prm.w_hp << endl;
    out << "   Probe radius: " << prm.probe_radius << endl;
    out << "   Top surface: ";
@@ -513,14 +511,14 @@ void single_recons_test(const Recons_test_Parameters &prm,
 // Adding microscope effect ------------------------------------------------
    if (prm.sigma!=0 ||
        prm.low_pass_before_CTF!=0 ||
-       prm.fn_CTF!="" || prm.fn_after_CTF!="") {
+       prm.fn_CTF!="") {
          Prog_Microscope_Parameters prm_micro;
          prm_micro.fn_in=Prog_proj_prm.fn_sel_file;
 	 prm_micro.fn_ctf=prm.fn_CTF;
          prm_micro.defocus_change=prm.defocus_change;
 	 prm_micro.sigma=prm.sigma;
 	 prm_micro.low_pass_before_CTF=prm.low_pass_before_CTF;
-	 prm_micro.fn_after_ctf=prm.fn_after_CTF;
+	 prm_micro.after_ctf_noise=true;
 	 prm_micro.produce_side_info();
 	 
       	 cerr << "Applying microscope simulation ...\n";

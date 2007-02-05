@@ -32,9 +32,8 @@ void Prog_Microscope_Parameters::read(int argc, char **argv) {
    fn_ctf=get_param(argc,argv,"-ctf","");
    sigma=AtoF(get_param(argc,argv,"-noise","0"));
    low_pass_before_CTF=AtoF(get_param(argc,argv,"-low_pass","0"));
-   fn_after_ctf=get_param(argc,argv,"-after_ctf","");
+   after_ctf_noise=check_param(argc,argv,"-after_ctf_noise");
    defocus_change=AtoF(get_param(argc,argv,"-defocus_change","0"));
-   fn_out_pure_ctf=get_param(argc,argv,"-out_pure_ctf","");
    
    produce_side_info();
 }
@@ -42,15 +41,11 @@ void Prog_Microscope_Parameters::read(int argc, char **argv) {
 /* Usage ------------------------------------------------------------------- */
 void Prog_Microscope_Parameters::usage() {
    Prog_parameters::usage();
-   cerr << "  [-ctf <CTF file>]         : a Xmipp Fourier Image or a CTF description\n"
+   cerr << "  [-ctf <CTF descr>]        : a CTF description\n"
         << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
 	<< "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
         << "  [-noise <stddev=0>]       : noise to be added\n"
-	<< "  [-after_ctf <spectrum>]   : a Xmipp Fourier Image or a CTF description with\n"
-	<< "                              the root squared spectrum of noise\n"
-	<< "                              after the CTF\n"
-        << "  [-out_pure_ctf <filename>]: If provided the pure CTF component will\n"
-        << "                              be written in this file\n"
+	<< "  [-after_ctf_noise]        : generate noise after the CTF\n"
    ;
 }
 
@@ -62,9 +57,8 @@ void Prog_Microscope_Parameters::show() {
         << "Noise before: " << sigma_before_CTF << endl
 	<< "Noise after: " << sigma_after_CTF << endl
 	<< "Low pass freq: " << low_pass_before_CTF << endl
-	<< "After CTF noise spectrum: " << fn_after_ctf << endl
+	<< "After CTF noise: " << after_ctf_noise << endl
         << "Defocus change: " << defocus_change << endl
-        << "Output Pure CTF: " << fn_out_pure_ctf << endl
    ;
 }
 
@@ -79,19 +73,12 @@ void Prog_Microscope_Parameters::produce_side_info() {
    double before_power=0, after_power=0;
    
    if (fn_ctf!="") {
-      if (Is_FourierImageXmipp(fn_ctf)) {
-         ctf.read_mask(fn_ctf);
-         ctf.resize_mask(Ydim,Xdim);
-      } else {
-         ctf.FilterBand=CTF;
-         ctf.ctf.read(fn_ctf);
-         ctf.ctf.enable_CTFnoise=false;
-         ctf.ctf.Produce_Side_Info();
-         aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
-         ctf.generate_mask(aux);
-         if (fn_out_pure_ctf!="")
-            ctf.write_mask(fn_out_pure_ctf,2);
-      }
+      ctf.FilterBand=CTF;
+      ctf.ctf.read(fn_ctf);
+      ctf.ctf.enable_CTFnoise=false;
+      ctf.ctf.Produce_Side_Info();
+      aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
+      ctf.generate_mask(aux);
 
       #ifdef DEBUG
 	 ctf.write_amplitude("PPP.xmp");
@@ -105,19 +92,14 @@ void Prog_Microscope_Parameters::produce_side_info() {
       lowpass.w1=low_pass_before_CTF;
    }   
 
-   if (fn_after_ctf!="") {
-      if (Is_FourierImageXmipp(fn_ctf)) {
-         after_ctf.read_mask(fn_after_ctf);
-         after_ctf.resize_mask(Ydim,Xdim);
-      } else {
-         after_ctf.FilterBand=CTF;
-	 after_ctf.ctf.enable_CTFnoise=true;
-         after_ctf.ctf.enable_CTF=false;
-         after_ctf.ctf.read(fn_after_ctf);
-         after_ctf.ctf.Produce_Side_Info();
-         aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
-         after_ctf.generate_mask(aux);
-      }
+   if (after_ctf_noise) {
+      after_ctf.FilterBand=CTF;
+      after_ctf.ctf.enable_CTFnoise=true;
+      after_ctf.ctf.enable_CTF=false;
+      after_ctf.ctf.read(fn_ctf);
+      after_ctf.ctf.Produce_Side_Info();
+      aux.resize(2*Ydim,2*Xdim); aux.set_Xmipp_origin();
+      after_ctf.generate_mask(aux);
       #ifdef DEBUG
 	 after_ctf.write_amplitude("PPPafter.xmp");
       #endif
@@ -174,7 +156,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I) {
 
    // Add noise after CTF
    noisy.init_random(0,sigma_after_CTF,"gaussian");
-   if (fn_after_ctf!="") after_ctf.apply_mask_Space(noisy);
+   if (after_ctf_noise) after_ctf.apply_mask_Space(noisy);
    I += noisy;
    I.window(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
             LAST_XMIPP_INDEX (Ydim),LAST_XMIPP_INDEX (Xdim));

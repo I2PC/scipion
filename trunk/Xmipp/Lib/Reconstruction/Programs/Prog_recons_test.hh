@@ -72,9 +72,6 @@ public:
    /// Lowpass filter noise before CTF
    double low_pass_before_CTF;
 
-   /// Noise root squared spectrum after CTF
-   FileName fn_after_CTF;
-
    /// High pass filter cutoff
    double w_hp;
 
