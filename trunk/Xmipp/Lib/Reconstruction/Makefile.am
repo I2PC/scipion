@@ -4,6 +4,7 @@ lib_LTLIBRARIES = libXmippRecons_@host_os@.la \
 
 libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Src/blobs.cc \
+        Src/splines.cc \
 	Src/symmetries.cc \
 	Src/phantom.cc \
 	Src/projection.cc \
@@ -66,6 +67,7 @@ EXTRA_DIST = blobs.hh \
 	CTF.hh \
 	directions.hh \
         basis.hh \
+	splines.hh \
 	ImUmbend.hh \
 	Gibbs.hh \
 	grids.hh \
