@@ -62,6 +62,9 @@ public:
    double               Tm;
    /// Defocus range
    double               defocus_range;
+
+   /// Initial Chromatic aberration
+   double               initial_Ca;
    
    /// Enhancement filter low freq
    double               f1;
