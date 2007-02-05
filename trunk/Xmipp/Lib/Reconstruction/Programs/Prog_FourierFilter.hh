@@ -73,7 +73,9 @@ public:
    #define STOPBAND      4
    #define CTF           5
    #define WEDGE         7
-   /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE, FROM_FILE */
+   #define GAUSSIAN      8
+   /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE,
+      GAUSSIAN, FROM_FILE */
    int FilterBand;
    
    /** Cut frequency for Low and High pass filters, first freq for bandpass.
@@ -164,6 +166,11 @@ public:
 	          real_mask.type=BINARY_WEDGE_MASK;
 	          real_mask.R1=w1;
 	          real_mask.R2=w2;
+	          break;
+	       case GAUSSIAN:
+	          real_mask.type=GAUSSIAN_MASK;
+	          real_mask.sigma=N1;
+	          real_mask.x0=real_mask.y0=real_mask.z0=0;
 	          break;
 	    }
             break;

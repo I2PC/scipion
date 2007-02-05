@@ -85,6 +85,9 @@ void FourierMask::read(int argc, char **argv) {
       w2=AtoF(argv[i+3]);
       FilterShape=WEDGE;
       FilterBand=LOWPASS;
+   } else if (strcmp(argv[i+1],"gaussian")==0) {
+      FilterShape=GAUSSIAN;
+      FilterBand=LOWPASS;
    } else if (strcmp(argv[i+1],"ctf")==0) {
       if (i+2>=argc)
          REPORT_ERROR(3000,"FourierMask: CTF needs a CTF file");
@@ -129,27 +132,30 @@ void FourierMask::show() {
    } else {
      cout << "Filter Band: ";
      switch (FilterBand) {
-     case LOWPASS:  cout << "Lowpass before " << w1 << endl;  break;
-     case HIGHPASS: cout << "Highpass after " << w1 << endl; break;
-     case BANDPASS: cout << "Bandpass between " << w1 << " and " << w2 << endl;
-       break;
-     case STOPBAND: cout << "Stopband between " << w1 << " and " << w2 << endl;
-         break;
-     case CTF:      cout << "CTF\n";      break;
-     case FROM_FILE: cout <<"From file " << fn_mask << endl; break;
+	case LOWPASS:  cout << "Lowpass before " << w1 << endl;  break;
+	case HIGHPASS: cout << "Highpass after " << w1 << endl; break;
+	case BANDPASS: cout << "Bandpass between " << w1 << " and " << w2 << endl;
+	  break;
+	case STOPBAND: cout << "Stopband between " << w1 << " and " << w2 << endl;
+            break;
+	case CTF:      cout << "CTF\n";      break;
+	case FROM_FILE: cout <<"From file " << fn_mask << endl; break;
      }
      cout << "Filter Shape: ";
      switch (FilterShape) {
-     case RAISED_COSINE:
-       cout << "Raised cosine with " << raised_w
-	    << " raised frequencies\n";
-       break;
-     case CTF:
-       cout << "CTF\n" << ctf;
-       break;
-     case FROM_FILE:
-       cout << "From file " << fn_mask << endl;
-       break;
+	case RAISED_COSINE:
+	  cout << "Raised cosine with " << raised_w
+	       << " raised frequencies\n";
+	  break;
+	case GAUSSIAN:
+	  cout << "Gaussian\n";
+	  break;
+	case CTF:
+	  cout << "CTF\n" << ctf;
+	  break;
+	case FROM_FILE:
+	  cout << "From file " << fn_mask << endl;
+	  break;
      }
    }
 }
@@ -163,6 +169,7 @@ void FourierMask::usage() {
         << "   -fourier_mask <file>              : Provide a Fourier file\n"
         << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
         << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
+	<< "   -fourier_mask gaussian            : sigma=<w1>\n"
         << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
         << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
         << "                                       are taken in Angstroms\n"
