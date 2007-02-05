@@ -356,7 +356,7 @@ void ART_single_step(
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
       prm.GVNeq,NULL,prm.ray_length);
-
+   
    // Remove footprints if necessary
    if (remove_footprints) {
       delete footprint;
