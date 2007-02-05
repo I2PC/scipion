@@ -555,8 +555,8 @@ void CTFViewer::getCTFcurve(const string &type, int angle,
        // Check if logarithm
        if (TenLog->isOn()) data(i,1)=10*log10(data(i,1));
        i++;
+       if (i==Nsamples) break;
     }
-    
 }
 
 // Set Experimental image --------------------------------------------------
@@ -594,6 +594,7 @@ void CTFViewer::getExperimentalCurve(int angle, matrix2D<double> &data,
        data(i,0)=t*1.0/(XSIZE(I())*sampling_rate);
        data(i,1)=I().interpolated_elem(t*cos_ang,t*sin_ang); 
        if (TenLog->isOn()) data(i,1)=10*log10(data(i,1));
+       if (i==Nmax) break;
     }
 }
 
