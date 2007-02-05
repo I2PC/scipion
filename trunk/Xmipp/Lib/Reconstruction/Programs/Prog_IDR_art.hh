@@ -45,6 +45,8 @@ public:
    FileName fn_root;
    /// Relaxation factor
    double mu;
+   /// Adjust gray levels
+   bool adjust_gray_levels;
 
    /// Side Info: CTF
    FourierMask          ctf;

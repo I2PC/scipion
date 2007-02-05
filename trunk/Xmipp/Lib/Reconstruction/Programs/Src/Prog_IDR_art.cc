@@ -31,6 +31,7 @@ void Prog_IDR_ART_Parameters::read(int argc, char **argv) {
    fn_ctf=get_param(argc,argv,"-ctf");
    fn_root=get_param(argc,argv,"-o");
    mu=AtoF(get_param(argc,argv,"-mu","1.8"));
+   adjust_gray_levels=check_param(argc,argv,"-adjust_gray_levels");
 }
 
 void Prog_IDR_ART_Parameters::produce_side_info() {
@@ -48,7 +49,10 @@ void Prog_IDR_ART_Parameters::show() {
         << "Input volume: " << fn_vol << endl
         << "CTF Selfile: " << fn_ctf << endl
         << "Relaxation factor: " << mu << endl
-        << "Output rootname: " << fn_root << endl;
+        << "Output rootname: " << fn_root << endl
+	<< "Adjust gray levels: " << adjust_gray_levels << endl
+   ;
+	
 }
 
 void Prog_IDR_ART_Parameters::Usage() {
@@ -58,6 +62,7 @@ void Prog_IDR_ART_Parameters::Usage() {
         << "   -ctf <selfile>       : Selfile with the CTFs (no phase flipping)\n"
         << "   -o <rootname>        : Output rootname\n"
         << "  [-mu <mu=1.8>]        : Relaxation factor\n"
+	<< "  [-adjust_gray_levels] : Adjust gray levels\n"
    ;
 }
 
@@ -106,6 +111,13 @@ void Prog_IDR_ART_Parameters::IDR_correction() {
       // Center the all images
       Ireal().set_Xmipp_origin();
       Itheo().set_Xmipp_origin();
+
+      // If adjust gray levels
+      if (adjust_gray_levels) {
+	 double avg, stddev, min_val, max_val;
+	 Ireal().compute_stats(avg, stddev, min_val, max_val);
+	 Itheo().statistics_adjust(avg, stddev);
+      }
 
       // Apply IDR process
       FOR_ALL_ELEMENTS_IN_MATRIX2D(Ireal())
