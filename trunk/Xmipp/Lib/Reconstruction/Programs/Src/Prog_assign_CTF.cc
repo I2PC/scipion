@@ -350,23 +350,25 @@ void Prog_assign_CTF_prm::process() {
 
          psd.write(piece_fn_root+".psd");
 
-         // Estimate the CTF parameters of this piece 
-         adjust_CTF_prm.fn_ctf=piece_fn_root+".psd";
-         if (!dont_adjust_CTF) {
-            double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
+      	 if (!dont_adjust_CTF) {
+            // Estimate the CTF parameters of this piece 
+            adjust_CTF_prm.fn_ctf=piece_fn_root+".psd";
+            if (!dont_adjust_CTF) {
+               double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
 
-            // If the CTF should be smaller
-            if (particle_vertical!=N_vertical ||
-                particle_horizontal!=N_horizontal) {
-                ImageXmipp ctf_model;
-                adjust_CTF_prm.generate_model(
-                   particle_vertical,particle_horizontal, ctf_model());
-                ctf_model.write(piece_fn_root+".ctfmodel");
+               // If the CTF should be smaller
+               if (particle_vertical!=N_vertical ||
+                   particle_horizontal!=N_horizontal) {
+                   ImageXmipp ctf_model;
+                   adjust_CTF_prm.generate_model(
+                      particle_vertical,particle_horizontal, ctf_model());
+                   ctf_model.write(piece_fn_root+".ctfmodel");
+               }
+
+               if (compute_at_particle)
+        	  OutputFile_ctf << piece_fn_root+".ctfmodel" << " 1\n";
             }
-
-            if (compute_at_particle)
-               OutputFile_ctf << piece_fn_root+".ctfmodel" << " 1\n";
-         }
+	 }
       }
 
       // Increment the division counter
@@ -381,23 +383,25 @@ void Prog_assign_CTF_prm::process() {
       psd_avg()/=div_Number;
       psd_avg.write(fn_avg);
 
-      // Estimate the CTF parameters
-      cerr << "Adjusting CTF model to the PSD ...\n";
-      adjust_CTF_prm.fn_ctf=fn_avg;
-      double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
+      if (!dont_adjust_CTF) {
+	 // Estimate the CTF parameters
+	 cerr << "Adjusting CTF model to the PSD ...\n";
+	 adjust_CTF_prm.fn_ctf=fn_avg;
+	 double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
 
-      // If the CTF should be smaller
-      if (particle_vertical!=N_vertical ||
-          particle_horizontal!=N_horizontal) {
-          ImageXmipp ctf_model;
-          adjust_CTF_prm.generate_model(
-                particle_vertical,particle_horizontal, ctf_model());
-          ctf_model.write(fn_avg.without_extension()+".ctfmodel");
+	 // If the CTF should be smaller
+	 if (particle_vertical!=N_vertical ||
+             particle_horizontal!=N_horizontal) {
+             ImageXmipp ctf_model;
+             adjust_CTF_prm.generate_model(
+                   particle_vertical,particle_horizontal, ctf_model());
+             ctf_model.write(fn_avg.without_extension()+".ctfmodel");
+	 }
       }
    }
 
    // Assign a CTF to each particle ----------------------------------------
-   if (!compute_at_particle && selfile_fn!="") {
+   if (!compute_at_particle && selfile_fn!="" && !dont_adjust_CTF) {
       // Process the Selfile
       SF.go_beginning();
       if (!selfile_mode) {
