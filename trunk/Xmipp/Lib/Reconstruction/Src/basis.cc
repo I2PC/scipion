@@ -48,6 +48,7 @@ void Basis::set_default() {
    blob.order         = AtoI(GET_PARAM_WITH_DEF("m",         "2"         )); \
    blob.alpha         = AtoF(GET_PARAM_WITH_DEF("a",         "10.4"      )); \
    if (CHECK_PARAM("voxels")) type=voxels; \
+   if (CHECK_PARAM("splines")) type=splines; \
    if (CHECK_PARAM("small_blobs")) { \
       blob.alpha=10.4; blob.radius=2; blob.order=2; \
    } \
@@ -91,6 +92,8 @@ void Basis::usage() const {
         << "\n   [-visual_blobs]          or blobs optimal for direct visualization"
         << "\nFor voxels"
         << "\n   [-voxels]\n"
+        << "\nFor splines"
+        << "\n   [-splines]\n"
    ;
 }
 
@@ -104,14 +107,20 @@ void Basis::set_sampling_rate(double _Tm) {
 
 // Produce side information ------------------------------------------------
 void Basis::produce_side_info(const Grid &grid) {
-   footprint_blob (blobprint, blob, BLOB_SUBSAMPLING);
-   double sum_on_grid=sum_blob_Grid(blob,grid,D);
-   blobprint()  /= sum_on_grid;
-   blobprint2()  = blobprint();
-   blobprint2() *= blobprint();
+   switch (type) {
+      case (blobs): 
+         footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
+         sum_on_grid=sum_blob_Grid(blob,grid,D);
+         blobprint()  /= sum_on_grid;
+         blobprint2()  = blobprint();
+         blobprint2() *= blobprint();
+         break;
+      case (voxels):  sum_on_grid=1; break;
+      case (splines): sum_on_grid=sum_spatial_Bspline03_Grid(grid); break;
+   }
 
    #ifdef DEBUG
-      cout << "Sum of a blob on the grid=" << sum_on_grid << endl;
+      cout << "Sum of a basis on the grid=" << sum_on_grid << endl;
       cout << "D\n" << D << endl;
       ImageXmipp save; save()=blobprint(); save.write("footprint.xmp");
    #endif
@@ -128,6 +137,9 @@ ostream & operator << (ostream & out, const Basis &basis) {
          break;
       case Basis::voxels:
          out << "Voxels\n";
+         break;
+      case Basis::splines:
+         out << "Splines\n";
          break;
    }
    return out;
@@ -153,6 +165,9 @@ void Basis::changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
             FINISHINGZ(*vol_voxels)+Zdim-ZSIZE(*vol_voxels)-zdiff,
             FINISHINGY(*vol_voxels)+Ydim-YSIZE(*vol_voxels)-ydiff,
             FINISHINGX(*vol_voxels)+Xdim-XSIZE(*vol_voxels)-xdiff);
+         break;
+      case splines:
+         spatial_Bspline032voxels(vol_basis, vol_voxels, Zdim, Ydim, Xdim);
          break;
    }   
 }
@@ -185,6 +200,9 @@ void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
          if (vol_mask!=NULL)
             FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels)
                if ((*vol_mask)(k,i,j)==0) vol_basis(0)(k,i,j)=0;
+         break;
+      case splines:
+         /* TODO */
          break;
    }
 }

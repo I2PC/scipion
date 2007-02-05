@@ -272,7 +272,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
       YY_footprint_size = basis.blobprint.vmax();
       Usampling         = basis.blobprint.Ustep();
       Vsampling         = basis.blobprint.Vstep();
-   } else if (basis.type==Basis::voxels) {
+   } else if (basis.type==Basis::voxels || basis.type==Basis::splines) {
       YY_footprint_size = XX_footprint_size = CEIL(basis.max_length());
       Usampling = Vsampling = 0;
    }

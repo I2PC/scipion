@@ -27,10 +27,12 @@
    #define _BASIS_HH
 
 #include "blobs.hh"
+#include "splines.hh"
 #include <XmippData/xmippImages.hh>
 
 const int BLOB_SUBSAMPLING=10;
 const int PIXEL_SUBSAMPLING=1;
+const int SPLINE_SUBSAMPLING=1;
 
 /**@name Basis function
     This class defines the basis function to use for the reconstruction.
@@ -41,7 +43,7 @@ const int PIXEL_SUBSAMPLING=1;
 class Basis {
 public:
    /// Type of basis function
-   typedef enum {blobs, voxels} t_basis_function;
+   typedef enum {blobs, voxels, splines} t_basis_function;
 
    /// Basis function to use
    t_basis_function type;
@@ -96,8 +98,9 @@ public:
    double max_length() const {
       double retval;
       switch (type) {
-         case blobs:  retval=blob.radius; break;
-         case voxels: retval=sqrt(3.0)*0.5; break;
+         case blobs:   retval=blob.radius; break;
+         case voxels:  retval=sqrt(3.0)*0.5; break;
+         case splines: retval=sqrt(3.0)*2.0; break;
       }
       return retval;
    }
@@ -119,7 +122,6 @@ public:
       const matrix3D<double> *vol_mask,
       const matrix2D<double> *D, double R) const;
        
-
    /** Basis value at a given point. */
    double value_at(const matrix1D<double> &r) const {
       double module_r, retval;
@@ -132,6 +134,13 @@ public:
             if (-0.5<=XX(r) && XX(r)<0.5 && 
                 -0.5<=YY(r) && YY(r)<0.5 &&
                 -0.5<=ZZ(r) && ZZ(r)<0.5) retval=1.0;
+            else retval=0.0;
+            break;
+         case (splines):
+            if (-2<=XX(r) && XX(r)<2 && 
+                -2<=YY(r) && YY(r)<2 &&
+                -2<=ZZ(r) && ZZ(r)<2)
+                retval=spatial_Bspline03LUT(r);
             else retval=0.0;
             break;
       }
@@ -162,6 +171,9 @@ public:
                }
             retval*=pAvg;
             break;
+         case (splines):
+            retval=spatial_Bspline03_proj(r,u);
+            break;
       }
       return retval;
    }
@@ -172,7 +184,10 @@ public:
    /// Square of the footprint
    ImageOver       blobprint2;
    
-   /// Auxiliary vectors to compute projections
+   /// Sum of the basis on the grid points
+   double          sum_on_grid;
+
+   /// Auxiliary vector to compute projections
    matrix1D<double> aux;
 };
 //@}

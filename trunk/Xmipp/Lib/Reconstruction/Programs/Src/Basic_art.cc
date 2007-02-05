@@ -168,6 +168,10 @@ void Basic_ART_Parameters::default_values() {
        grid_relative_size=1; \
        grid_type=CC; \
     } \
+    if (CHECK_PARAM("splines")) { \
+       grid_relative_size=1; \
+       grid_type=CC; \
+    } \
     \
     print_system_matrix=CHECK_PARAM("print_system_matrix"); \
     if (CHECK_PARAM("show_error"))        tell |= TELL_SHOW_ERROR; \
