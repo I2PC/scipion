@@ -25,6 +25,8 @@
 
 /* INCLUDES ---------------------------------------------------------------- */
 #include <vector>
+#include <iomanip>
+#include <sstream>
 #include <XmippData/xmippArgs.hh>
 #include <XmippData/xmippImages.hh>
 #include <XmippData/xmippSelFiles.hh>
@@ -190,12 +192,14 @@ int main(int argc, char **argv) {
        if (allDFs[n].get_current_line().Is_comment()) line=((allDFs[n].get_current_line()).get_text()).erase(0,3);
        else REPORT_ERROR(1,"MLalign2D-log files does not have expected format");
        generate_command_line(line,argcp,argvp,copyp);
-       noise+=weight*AtoF(get_param(argcp,argvp,"-noise"));
-       offset+=weight*AtoF(get_param(argcp,argvp,"-offset"));
+       noise+=weight*AtoF(get_param(argcp,argvp,"-noise"))*AtoF(get_param(argcp,argvp,"-noise"));
+       offset+=weight*AtoF(get_param(argcp,argvp,"-offset"))*AtoF(get_param(argcp,argvp,"-offset"));
        istart=AtoI(get_param(argcp,argvp,"-istart"));
      } 
      noise/=sumweight;
+     noise=sqrt(noise);
      offset/=sumweight;
+     offset=sqrt(offset);
      R/=sumweight;
      DFo.go_beginning();
      DFo.remove_current();
