@@ -162,10 +162,12 @@ public:
 
 public:
 /** write a ccp4 2D file*/
-   void write(const FileName &fn_out, const ImageXmipp &I, bool reversed=false);
+   void write(const FileName &fn_out, const ImageXmipp &I, bool reversed=false,
+                                 double x_length=0., double y_length=0., double z_length=0.);
 
 /** write a ccp4 3D file*/
-   void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed=false);
+   void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed=false,
+                                 double x_length=0., double y_length=0., double z_length=0.);
 
 /** read  a ccp4 2D file*/
    void read (const FileName &fn_out,  ImageXmipp &I, bool reversed=false);
@@ -177,13 +179,12 @@ public:
    void clear();
 
 /** Fill mrc header from 2D xmipp image. */
-   void fill_header_from_xmippimage(ImageXmipp I, bool reversed=false);
+   void fill_header_from_xmippimage(ImageXmipp I, bool reversed=false,
+                                 double x_length=0., double y_length=0., double z_length=0.);
 
 /** Fill mrc header from 3D xmipp image. */
-   void fill_header_from_xmippvolume(VolumeXmipp I, bool reversed=false);
-
-/** Fill mrc header from 3D xmipp image. */
-   void fill_header_from_xmippimage(VolumeXmipp V, bool reversed=false);
+   void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed=false,
+                                 double x_length=0., double y_length=0., double z_length=0.);
 
 /** Fill mrc header from mrc file. 
     Returns tre is either reversed is true or the native endianess is

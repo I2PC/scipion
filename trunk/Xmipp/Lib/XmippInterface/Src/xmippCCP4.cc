@@ -44,11 +44,12 @@
 //#define DEBUG
 
 /* ------------------------------------------------------------------------- */
-void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed) {
+void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
+                                 double x_length, double y_length, double z_length) {
    FILE *fp;
 
    //fill mrc header and reverse if needed
-   fill_header_from_xmippimage(I, reversed);
+   fill_header_from_xmippimage(I, reversed,x_length,y_length,z_length);
    
    //open file
    if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
@@ -70,11 +71,12 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed) {
    fclose(fp);
 }
 
-void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed) {
+void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed,
+                                 double x_length, double y_length, double z_length) {
    FILE *fp;
 
    //fill mrc header and reverse if needed
-   fill_header_from_xmippvolume(V, reversed);
+   fill_header_from_xmippvolume(V, reversed,x_length,y_length,z_length);
    
    //open file
    if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
@@ -248,7 +250,8 @@ void CCP4::clear(){
 
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
-   void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed){
+   void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
+                                 double x_length, double y_length, double z_length) {
     clear();
     if(IsLittleEndian())
        {
@@ -272,6 +275,10 @@ void CCP4::clear(){
     my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = I().ColNo();
     my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = I().RowNo();
     my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = 1;
+    if(x_length!=0) my_mrc_header.xlen = x_length;
+    if(y_length!=0) my_mrc_header.ylen = y_length;
+    if(z_length!=0) my_mrc_header.zlen = z_length;
+    
     my_mrc_header.mode  = MODE_FLOAT;
     my_mrc_header.mapc  = X_AXIS; 
     my_mrc_header.mapr  = Y_AXIS; 
@@ -295,6 +302,10 @@ void CCP4::clear(){
     my_mrc_header.nz	= 1;
     little22bigendian(my_mrc_header.nz);
     my_mrc_header.zlen = my_mrc_header.mz	= my_mrc_header.nz;
+
+    if(x_length!=0) {my_mrc_header.xlen = x_length; little22bigendian(my_mrc_header.xlen);}
+    if(y_length!=0) {my_mrc_header.ylen = y_length; little22bigendian(my_mrc_header.ylen);}
+    if(z_length!=0) {my_mrc_header.zlen = z_length; little22bigendian(my_mrc_header.zlen);}
    
     my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
     little22bigendian(my_mrc_header.nxstart);
@@ -326,7 +337,8 @@ void CCP4::clear(){
 
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
-   void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed){
+   void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
+                                    double x_length, double y_length, double z_length) {
     clear();
    (my_mrc_header.map)[0]='M';
    (my_mrc_header.map)[1]='A';
@@ -336,6 +348,9 @@ void CCP4::clear(){
     my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().ColNo();
     my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().RowNo();
     my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().SliNo();
+    if(x_length!=0) my_mrc_header.xlen = x_length;
+    if(y_length!=0) my_mrc_header.ylen = y_length;
+    if(z_length!=0) my_mrc_header.zlen = z_length;
     my_mrc_header.mode  = MODE_FLOAT;
     my_mrc_header.mapc  = X_AXIS; 
     my_mrc_header.mapr  = Y_AXIS; 
@@ -376,6 +391,10 @@ void CCP4::clear(){
     my_mrc_header.nz	= V().SliNo();
     little22bigendian(my_mrc_header.nz);
     my_mrc_header.zlen = my_mrc_header.mz	= my_mrc_header.nz;
+
+    if(x_length!=0) {my_mrc_header.xlen = x_length; little22bigendian(my_mrc_header.xlen);}
+    if(y_length!=0) {my_mrc_header.ylen = y_length; little22bigendian(my_mrc_header.ylen);}
+    if(z_length!=0) {my_mrc_header.zlen = z_length; little22bigendian(my_mrc_header.zlen);}
    
     my_mrc_header.nxstart = -1 * int(my_mrc_header.nx/2);
     little22bigendian(my_mrc_header.nxstart);

@@ -38,6 +38,9 @@ int main (int argc, char *argv[]) {
 /* Input Parameters ======================================================== */
 FileName       fn_in;    // input file
 FileName       fn_out;   // output file
+double         x_length=0;  // Cell Dimensions (Angstroms) for x-axis
+double         y_length=0;  // Cell Dimensions (Angstroms) for y-axis
+double         z_length=0;  // Cell Dimensions (Angstroms) for z-axis
 bool           reverse_endian;
 CCP4 mrcimage;
 
@@ -45,19 +48,28 @@ CCP4 mrcimage;
    try {
        fn_in  = get_param(argc, argv, "-i");
        fn_out = get_param(argc, argv, "-o");
-       reverse_endian=check_param(argc,argv,"-reverse_endian");
+       if(check_param(argc, argv, "-x_length")){
+          y_length=x_length=AtoF(get_param(argc, argv, "-x_length"));
+	  z_length=1;
+	  }
+       if(check_param(argc, argv, "-y_length"))
+          y_length=AtoF(get_param(argc, argv, "-y_length"));
+       if(check_param(argc, argv, "-z_length"))
+          z_length=AtoF(get_param(argc, argv, "-z_length"));
+      reverse_endian=check_param(argc,argv,"-reverse_endian");
    }
    catch (Xmipp_error XE) {cout << XE; Usage();exit(1);}
    ImageXmipp   I;
    VolumeXmipp  V;
+   
    try {
-      if(Is_ImageXmipp(fn_in)){
+      if(Is_ImageXmipp(fn_in)){//is this a spider image
 	 I.read(fn_in);
-	 mrcimage.write(fn_out,I,reverse_endian);
+	 mrcimage.write(fn_out,I,reverse_endian,x_length,y_length,z_length);
 	 }
-      else if(Is_VolumeXmipp(fn_in)){
+      else if(Is_VolumeXmipp(fn_in)){//is this a spider volume
 	 V.read(fn_in);
-	 mrcimage.write(fn_out,V,reverse_endian);
+	 mrcimage.write(fn_out,V,reverse_endian,x_length,y_length,z_length);
 	 }
       else{
          mrcimage.read_header_from_file(fn_in, reverse_endian);
@@ -84,6 +96,9 @@ void Usage () {
      "\nPurpose: Convert between CCP4 (map) and Spider/Xmipp format"
      "\n    -i    file_in        input CCP4/Xmipp file (2D or 3D)"
      "\n    -o    file_out       output Xmipp/CCP4 file"
-     "\n   [-reverse_endian]     by default, output has the same endiannes as input"
+     "\n    [-x_length  length] Cell Dimensions (Angstroms) for x-axis"
+     "\n    [-y_length  length] Cell Dimensions (Angstroms) for y-axis. By default y_length=x_length"
+     "\n    [-z_length  length] Cell Dimensions (Angstroms) for z-axis. By default z_length=1"
+     "\n    [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n");
 }
