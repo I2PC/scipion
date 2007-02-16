@@ -1,4 +1,4 @@
-/** defgroup MultidimMacros Macros for all multidimensional arrays
+/** @defgroup MultidimMacros Macros for all multidimensional arrays
  * 
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
