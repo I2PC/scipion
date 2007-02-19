@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <XmippData/xmippFuncs.hh>
 #include <XmippData/xmippMatrices1D.hh>
+#include <XmippData/xmippGeometry.hh>
 /**@name openDXang */
 //@{
 /**  openDXang: 
@@ -43,7 +44,7 @@ class openDXang {
   private:
     ofstream fh_out_header;
     ofstream fh_out_data;
-    
+    FileName openDXangname;
     int number_of_elements; 
     
   public:
