@@ -666,7 +666,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
 	{
 		dMij(aux, i, j) *= realWRAP(RAD2DEG(
 			(atan2(dMij(FT1, i, j).imag(), dMij(FT1, i, j).real())) -
-			(atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real())),
+			(atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real()))),
 			-180, 180);
 		
 		dMij(aux, i, j) *= realWRAP(RAD2DEG(
@@ -886,7 +886,7 @@ void series_convolution(matrix1D< T >& series1,
 	result.resize(series1);
 	
 	// Fourier Transform the two series
-	matrix1D< complex< double> > FFT1
+	matrix1D< complex< double> > FFT1;
 	FourierTransform(series1, FFT1);
 	
 	matrix1D< complex< double > > FFT2;
