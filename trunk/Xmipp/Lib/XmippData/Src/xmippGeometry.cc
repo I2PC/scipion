@@ -488,10 +488,6 @@ void Euler_direction2angles(matrix1D<double> &v0,
       aux_beta=acos(cb); /* beta between 0 and PI */
 
 
-      if(aux_beta>PI/2) aux_beta -= PI; /* beta between -Pi/2 
-                                       and PI/2 */
-      if(aux_beta< (-PI/2)) aux_beta += PI; /* this should never 
-                                happend but who knows*/
       sb = sin(aux_beta);
 
       abs_ca = fabs(VEC_ELEM(v,0))/sb;
