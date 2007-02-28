@@ -43,7 +43,7 @@ def AddBatch(name, basedir, extension = ''):
     env.Alias(fullname, install)
     env.Default(alias)
 
-# FIXME default parameters' issue
+# FIXME default parameters' order
 def AddProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
     includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
     ''' add a new program to the build list '''
@@ -52,6 +52,13 @@ def AddProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
+
+    # FIXME Shouldn't env[] variables be honored?
+    includes += env['CPPPATH']
+    libpath += env['LIBPATH']
+    libs += env['LIBS']
+    cxxflags += env['CXXFLAGS']
+    linkflags += env['LINKFLAGS']
 
     # action
     program = env.Program(os.path.join(basedir, fullname), sources,
@@ -73,6 +80,13 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
 
+    # FIXME Shouldn't env[] variables be honored?
+    includes += env['CPPPATH']
+    libpath += env['LIBPATH']
+    libs += env['LIBS']
+    cxxflags += env['CXXFLAGS']
+    linkflags += env['LINKFLAGS']
+
     # action
     program = env.Program(os.path.join(basedir, fullname), sources,
         CC = env['MPI_CC'], CXX = env['MPI_CXX'], CPPPATH = includes +
@@ -91,6 +105,9 @@ def AddLibrary(name, basedir, sources_pattern, skip_list, includes):
     basedir = AddLastSlash(basedir)
     sources = Glob(basedir, sources_pattern, skip_list)
     libprefix = os.path.join(env['prefix'], 'lib')
+
+    # FIXME Shouldn't env[] variables be honored?
+    includes += env['CPPPATH']
 
     # separate local and global includes
     for x in includes:
@@ -894,6 +911,13 @@ if int(env['gui']):
         basedir = AddLastSlash(basedir)
         fullname = env['prepend'] + name
         binprefix =  os.path.join(env['prefix'], 'bin')
+    
+        # FIXME Shouldn't env[] variables be honored?
+        includes += env['CPPPATH']
+        libpath += env['LIBPATH']
+        libs += env['LIBS']
+        cxxflags += env['CXXFLAGS']
+        linkflags += env['LINKFLAGS']
 
         extra = []
         for i in mocs:
