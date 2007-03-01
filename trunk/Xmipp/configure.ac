@@ -156,6 +156,10 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Batches/ShowSOM/Makefile \
 	Applications/Batches/ShowSpectra/Makefile \
 	Applications/Batches/ShowSpectraSOM/Makefile \
+	Applications/Batches/mlf_align2d/Makefile \
+	Applications/Batches/mpi_mlf_align2d/Makefile \
+	Applications/Batches/mlf_refine3d/Makefile \
+	Applications/Batches/mpi_mlf_refine3d/Makefile \
 	Applications/Src/Makefile \
 	Applications/Src/2DInterpolation/Makefile \
 	Applications/Src/3DInterpolation/Makefile \
@@ -230,12 +234,14 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Mask/Makefile \
 	Applications/Src/Microscope/Makefile \
 	Applications/Src/MLalign2D/Makefile \
+	Applications/Src/MLalign3D/Makefile \
 	Applications/Src/MLalign2D_combine/Makefile \
 	Applications/Src/MLrefine3D/Makefile \
 	Applications/Src/Morphology/Makefile \
 	Applications/Src/MPIArt/Makefile \
 	Applications/Src/MPI_WBP/Makefile \
 	Applications/Src/MPI_MLalign2D/Makefile \
+	Applications/Src/MPI_MLalign3D/Makefile \
 	Applications/Src/MPI_MLrefine3D/Makefile \
 	Applications/Src/MPI_Projection_matching/Makefile \
 	Applications/Src/MvSel/Makefile \
