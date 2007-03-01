@@ -28,8 +28,16 @@
 // Read ===================================================================
 void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
 
+  // This flag is set with scripts, so that for the user the
+  // mlf_align2d and the ml_align2d are distinct programs 
+  fourier_mode=check_param(argc,argv,"-MLF");
+
   bool do_restart=false;
 
+  if (check_param(argc,argv,"-more_options")) { 
+    if (fourier_mode) { MLF_usage(); extended_usage(); }
+    else { usage(); extended_usage(); }
+  }
   if (check_param(argc,argv,"-show_all_ML_options")) {
     Prog_MLalign2D_prm ML_prm;
     ML_prm.extended_usage(true);
@@ -66,7 +74,8 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
       // regenerate command line
       generate_command_line(comment,argc,argv,copy);
       // Get number of volumes and names to generate SFvol
-      fn_root=get_param(argc,argv,"-o","MLrefine3D");
+      if (fourier_mode) fn_root=get_param(argc,argv,"-o","mlf3d");
+      else fn_root=get_param(argc,argv,"-o","ml3d");
       fn_vol=get_param(argc,argv,"-vol");
       istart=AtoI(get_param(argc,argv,"-istart"));
       if (Is_VolumeXmipp(fn_vol)) {
@@ -125,21 +134,51 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
   // Hidden for now
   fn_solv=get_param(argc,argv,"-solvent","");
   do_wbp=check_param(argc,argv,"-WBP");
+  do_prob_solvent=check_param(argc,argv,"-prob_solvent");
+  threshold_solvent=AtoF(get_param(argc,argv,"-threshold_solvent","999"));
+  do_deblob_solvent=check_param(argc,argv,"-deblob_solvent");
+  dilate_solvent=AtoI(get_param(argc,argv,"-dilate_solvent","0"));
 
   // Checks
   if (lowpass>0.5) REPORT_ERROR(1,"Digital frequency for low-pass filter should be smaller than 0.5");
 
 }
+
 // Usage ===================================================================
 void Prog_Refine3d_prm::usage() {
-  cerr << "Usage:  Refine3d [options] "<<endl;
+  cerr << "Usage:  ml_refine3d [options] "<<endl;
   cerr << "   -i <selfile>                : Selfile with input images \n"
        << "   -vol <volume/selfile>       : Initial reference volume \n"
        << "                               :  OR selfile with multiple reference volumes\n"
-       << " [ -o <root=\"MLrefine3D\"> ]    : Output rootname \n"
+       << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
        << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
        << " [ -iter <int=100> ]           : Maximum number of iterations \n"
-       << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
+       << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
+
+}
+
+// MLF Usage =================================================================
+void Prog_Refine3d_prm::MLF_usage() {
+  cerr << "Usage:  mlf_refine3d [options] "<<endl;
+  cerr << "   -i <selfile>                : Selfile of selfiles with input images per defocus group \n"
+       << "   -ctfs <selfile>             : Selfile of CTF parameters files for each defocus group \n"
+       << "   -vol <volume/selfile>       : Initial reference volume \n"
+       << "                               :  OR selfile with multiple reference volumes\n"
+       << " [ -o <root=\"mlf\"> ]           : Output rootname \n"
+       << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
+       << " [ -iter <int=100> ]           : Maximum number of iterations \n"
+       << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n"
+       << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n"
+       << " [ -ctf_affected_refs ]        : Use this if the references are not CTF-deconvoluted \n"
+       << " [ -low <pix=0> ]              : Exclude lowest freq. Fourier pixels from P-calculations (in pixels) \n"
+       << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
+
+}
+
+// Extended usage =============================================================
+void Prog_Refine3d_prm::extended_usage() {
+  cerr << "Additional options: "<<endl;
+  cerr << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
        << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
        << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
        << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
@@ -150,8 +189,10 @@ void Prog_Refine3d_prm::usage() {
        << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
        << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
        << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
-
+  cerr<<endl;
+  exit(1);
 }
+
 // Show ======================================================================
 void Prog_Refine3d_prm::show() {
 
@@ -159,7 +200,10 @@ void Prog_Refine3d_prm::show() {
     // To screen
     cerr << " -----------------------------------------------------------------"<<endl;
     cerr << " | Read more about this program in the following publication:    |"<<endl;
-    cerr << " |  Scheres ea. (2006) Nature Methods  4, 27-29                  |"<<endl;
+    if (fourier_mode) 
+      cerr << " |  Scheres ea. (2007)  in preparation                           |"<<endl;
+    else
+      cerr << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |"<<endl;
     cerr << " |                                                               |"<<endl;
     cerr << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
@@ -186,6 +230,8 @@ void Prog_Refine3d_prm::show() {
     cerr << "  -> Start wlsART reconstructions from all-zero volumes "<<endl;
     if (do_wbp)
     cerr << "  -> Use weighted back-projection instead of ART for reconstruction"<<endl;
+    if (do_prob_solvent)
+    cerr << "  -> Perform probabilistic solvent flattening" <<endl;
     cerr << " -----------------------------------------------------------------"<<endl;
 
     // Also open and fill history file
@@ -195,7 +241,10 @@ void Prog_Refine3d_prm::show() {
 
     fh_hist << " -----------------------------------------------------------------"<<endl;
     fh_hist << " | Read more about this program in the following publication:    |"<<endl;
-    fh_hist << " |  Scheres ea. (2006) Nature Methods 4, 27-29                   |"<<endl;
+    if (fourier_mode) 
+      fh_hist << " |  Scheres ea. (2007)  in preparation                           |"<<endl;
+    else
+      fh_hist << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |"<<endl;
     fh_hist << " |                                                               |"<<endl;
     fh_hist << " |    *** Please cite it if this program is of use to you! ***   |"<<endl;
     fh_hist << " -----------------------------------------------------------------"<<endl;
@@ -215,6 +264,8 @@ void Prog_Refine3d_prm::show() {
     fh_hist << "  -> Start wlsART reconstructions from all-zero volumes "<<endl;
     if (do_wbp)
     fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction"<<endl;
+    if (do_prob_solvent)
+    fh_hist << "  -> Perform probabilistic solvent flattening" <<endl;
     fh_hist << " -----------------------------------------------------------------"<<endl;
 
   }
@@ -305,20 +356,47 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
 
 }
 
+// Make noise images for 3D SSNR calculation ===================================
+void Prog_Refine3d_prm::make_noise_images(vector<ImageXmipp> &Iref) {
+
+  ImageXmipp img;
+  FileName   fn_img;
+  SelFile    SFt;
+
+  SFt.clear();
+  for (int i=0; i<Iref.size(); i++) {
+    img=Iref[i];
+    img().init_zeros();
+    img().add_noise(0,1,"gaussian");
+    if (Iref[i].weight()>1.) img()/=sqrt(Iref[i].weight());
+    fn_img=fn_root+"_noise";
+    fn_img.compose(fn_img,i,"xmp");
+    img.write(fn_img);
+    SFt.insert(fn_img);
+  }
+  fn_img=fn_root+"_noise.sel";
+  SFt.write(fn_img);
+
+}
+
 // Reconstruction using the ML-weights ==========================================
 void Prog_Refine3d_prm::reconstruction(int argc, char **argv, 
-				       int iter, int volno) {
+				       int iter, int volno, int noise) {
 
   VolumeXmipp            new_vol;
   FileName               fn_tmp,fn_insel,fn_blob;
   SelFile                SFall,SFone;
 
-  fn_tmp=fn_root+"_it";
-  fn_tmp.compose(fn_tmp,iter,"");
-  if (iter>1) {
-    fn_blob=fn_root+"_it";
-    fn_blob.compose(fn_blob,iter-1,"");
-  } else fn_blob="";
+  if (noise==1) fn_tmp=fn_root+"_noise";
+  else if (noise==2) fn_tmp=fn_root+"_cref";
+  else {
+    fn_tmp=fn_root+"_it";
+    fn_tmp.compose(fn_tmp,iter,"");
+    if (iter>1) {
+      fn_blob=fn_root+"_it";
+      fn_blob.compose(fn_blob,iter-1,"");
+    } else fn_blob="";
+  }
 
   // Setup selfile for reconstruction
   fn_insel=fn_tmp+".sel";
@@ -366,8 +444,13 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     }
     art_prm.fn_sel=fn_insel;
     art_prm.fn_root=fn_tmp;
-    art_prm.tell=TELL_SAVE_BASIS;
-    if (!wlsart_no_start) art_prm.fn_start=fn_blob;
+    if ( noise==1 ||noise==2) {
+      art_prm.fn_start="";
+      art_prm.tell=false;
+    } else if (!wlsart_no_start) {
+      art_prm.tell=TELL_SAVE_BASIS;
+      art_prm.fn_start=fn_blob;
+    }
     // Reconstruct using weighted least-squares ART
     Basic_ROUT_Art(art_prm,dummy,new_vol,new_blobs);
 
@@ -393,7 +476,148 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 
 }
 
-void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite) {
+void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int iter) {
+
+  SelFile                     SFnoise;
+  matrix2D<complex<double> >  Faux;
+  headerXmipp                 head;
+  VolumeXmipp                 vol,nvol;
+  FileName                    fn_tmp,fn_tmp2;
+  matrix1D<double>            alpha_signal,alpha_noise,input_signal,avg_alphaS,avg_alphaN;
+  matrix2D<double>            alpha_T,alpha_N,Msignal,Maux,Mone,mask;
+  Projection                  proj;
+  int                         c,dim;
+  double                      ssnr,issnr,alpha,resol,volweight,sum;
+  matrix1D<int>               center(2),radial_count;
+
+  // Read in noise reconstruction and calculate alpha's
+  SFnoise.read(fn_root+"_noise.sel");
+  SFnoise.ImgSize(dim,dim);
+
+  center.init_zeros();
+  proj().resize(dim,dim);
+  proj().set_Xmipp_origin();
+  mask.resize(dim,dim);
+  mask.set_Xmipp_origin();
+  RaisedCosineMask(mask,dim/2-2,dim/2);
+
+  if (verb>0) {
+    cerr << "--> calculating 3D-SSNR ..."<<endl;
+    init_progress_bar(SFnoise.ImgNo());
+  }
+
+  for (int volno=0; volno<Nvols; volno++) {
+    
+    fn_tmp=fn_root+"_noise";
+    fn_tmp2=fn_root+"_cref";
+    if (Nvols>1) {
+      fn_tmp+="_vol";
+      fn_tmp.compose(fn_tmp,volno+1,"");
+      fn_tmp2+="_vol";
+      fn_tmp2.compose(fn_tmp2,volno+1,"");
+    }
+    fn_tmp+=".vol";
+    fn_tmp2+=".vol";
+    nvol.read(fn_tmp);
+    vol.read(fn_tmp2);
+    nvol().set_Xmipp_origin();
+    vol().set_Xmipp_origin();
+    Mone.resize(dim,dim);
+    Mone.init_constant(1./(double)(dim*dim));
+    Mone.set_Xmipp_origin();
+    SFnoise.go_beginning();
+
+    c=0;
+    volweight=0.;
+    for (int nr=eachvol_start[volno]; nr<=eachvol_end[volno]; nr++) {
+      SFnoise.go_beginning();
+      SFnoise.jump_lines(nr);
+      head.read(SFnoise.get_current_file());
+      // alpha denominator
+      if (c==0) alpha_N=Mone*head.Weight();
+      else alpha_N+=Mone*head.Weight();
+      // alpha nominator
+      project_Volume(nvol(),proj,dim,dim,head.Phi(),head.Theta(),head.Psi());
+      apply_cont_mask(mask,proj(),proj());
+      FourierTransform(proj(),Faux);
+      FFT_magnitude(Faux,Maux);
+      CenterFFT(Maux,true);
+      Maux.set_Xmipp_origin();
+      Maux*=Maux;
+      if (c==0) alpha_T=Maux*head.Weight();
+      else alpha_T+=Maux*head.Weight();
+      // input signal
+      project_Volume(vol(),proj,dim,dim,head.Phi(),head.Theta(),head.Psi());
+      apply_cont_mask(mask,proj(),proj());
+      FourierTransform(proj(),Faux);
+      FFT_magnitude(Faux,Maux);
+      CenterFFT(Maux,true);
+      Maux.set_Xmipp_origin();
+      Maux*=Maux;
+      if (c==0) Msignal=Maux*head.Weight();
+      else Msignal+=Maux*head.Weight();
+      volweight+=head.Weight();
+      c++;
+      if (c%MAX(1,SFnoise.ImgNo()/60)==0 && verb>0 ) progress_bar(c);
+    }
+
+    alpha_T.set_Xmipp_origin();
+    alpha_N.set_Xmipp_origin();
+    Msignal.set_Xmipp_origin();
+    alpha_signal.init_zeros();
+    alpha_noise.init_zeros();
+    input_signal.init_zeros();
+    radial_average(alpha_T,center,alpha_signal,radial_count,true);
+    radial_average(alpha_N,center,alpha_noise,radial_count,true);
+    radial_average(Msignal,center,input_signal,radial_count,true);
+    input_signal/=volweight;
+
+    // Calculate spectral_signal =input_signal/alpha!!
+    // Also store averages of alphaN and alphaS for output
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_signal) {
+      dVi(input_signal,i)=dVi(input_signal,i)*dVi(alpha_noise,i)/dVi(alpha_signal,i);
+    }
+    if (volno==0) {
+      spectral_signal=input_signal;
+      avg_alphaN=alpha_noise;
+      avg_alphaS=alpha_signal;
+    } else {
+      spectral_signal+=input_signal;
+      avg_alphaN+=alpha_noise;
+      avg_alphaS+=alpha_signal;
+    }
+  }
+  if (verb>0) progress_bar(SFnoise.ImgNo());  
+  spectral_signal/=(double)Nvols;
+  avg_alphaN/=(double)Nvols;
+  avg_alphaS/=(double)Nvols;
+
+  if (verb>0) {
+    fn_tmp=fn_root+"_it";
+    fn_tmp.compose(fn_tmp,iter,"3dssnr");
+    ofstream out(fn_tmp.c_str(), ios::out);
+    out  << "#        signal    1/alpha    alpha-S    alpha-N"<<endl;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(spectral_signal) {
+      if (i>0 && i<dim/2) {
+	out.width(5);
+	out  << ItoA(i);
+	out.width(10);
+	out <<  FtoA(VEC_ELEM(spectral_signal,i));
+	out.width(10);
+	out <<  FtoA(VEC_ELEM(avg_alphaN,i)/VEC_ELEM(avg_alphaS,i));
+	out.width(10);
+	out <<  FtoA(VEC_ELEM(avg_alphaS,i));
+	out.width(10);
+	out <<  FtoA(VEC_ELEM(avg_alphaN,i));
+	out << endl;
+      }
+    }
+    out.close();
+  }
+
+}
+
+void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise) {
 
   FileName               fn_tmp,fn_tmp2;
   int                    volno=0;
@@ -431,27 +655,54 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite) {
   } else {
     SFvol.insert(fn_tmp+".vol");
   }
+  if (include_noise) {
+    fn_tmp=fn_root+"_noise";
+    if (Nvols>1) {
+      fn_tmp+="_vol";
+      volno=0;
+      while (volno<Nvols) {
+	fn_tmp2.compose(fn_tmp,volno+1,"vol");
+	SFvol.insert(fn_tmp2);
+	volno++;
+      } 
+    } else {
+      SFvol.insert(fn_tmp+".vol");
+    }
+    // Besides noise volumes, also include cref volumes
+    fn_tmp=fn_root+"_cref";
+    if (Nvols>1) {
+      fn_tmp+="_vol";
+      volno=0;
+      while (volno<Nvols) {
+	fn_tmp2.compose(fn_tmp,volno+1,"vol");
+	SFvol.insert(fn_tmp2);
+	volno++;
+      } 
+    } else {
+      SFvol.insert(fn_tmp+".vol");
+    }
+  }
 
 }
 
-// Concatenate hard-classification MLalign2D selfiles ===========================
+// Concatenate MLalign2D selfiles ==============================================
 void Prog_Refine3d_prm::concatenate_selfiles(int iter) {
 
   FileName fn_tmp, fn_class;
 
-  if (Nvols>1) {
-    for (int volno=0; volno<Nvols; volno++) {
-      fn_class=fn_root+"_it";
-      fn_class.compose(fn_class,iter,"");
-      fn_class+="_class_vol";
-      fn_class.compose(fn_class,volno+1,"sel");
-      system(((string)"rm -f "+fn_class).c_str());
-      for (int nr=eachvol_start[volno]; nr<=eachvol_end[volno]; nr++) {
-	fn_tmp=fn_root+"_ref";
-	fn_tmp.compose(fn_tmp,nr+1,"sel");
-	system(((string)"cat "+fn_tmp+" >> "+fn_class).c_str());
-	system(((string)"rm -f "+fn_tmp).c_str());
-      }
+  // Concatenate all hard-classification selfiles
+  // Only after an iteration has been performed, and thus rewrite==false...
+  for (int volno=0; volno<Nvols; volno++) {
+    fn_class=fn_root+"_it";
+    fn_class.compose(fn_class,iter,"");
+    fn_class+="_class_vol";
+    fn_class.compose(fn_class,volno+1,"sel");
+    system(((string)"rm -f "+fn_class).c_str());
+    for (int nr=eachvol_start[volno]; nr<=eachvol_end[volno]; nr++) {
+      fn_tmp=fn_root+"_ref";
+      fn_tmp.compose(fn_tmp,nr+1,"sel");
+      system(((string)"cat "+fn_tmp+" >> "+fn_class).c_str());
+      system(((string)"rm -f "+fn_tmp).c_str());
     }
   }
 
@@ -460,15 +711,17 @@ void Prog_Refine3d_prm::concatenate_selfiles(int iter) {
 // Modify reference volume ======================================================
 void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 
-  Mask_Params            mask_prm;
+  Prog_segment_prm       segm_prm;
   FileName               fn_vol,fn_tmp;
-  VolumeXmipp            vol,Vaux,Vsymmask;
+  VolumeXmipp            vol,Vaux,Vsymmask,Vsolv;
   SymList                SL;
   matrix3D<int>          mask3D;
   double                 avg,dummy,in,out;
   int                    dim;
 
-  if ( (fn_sym!="") || (fn_solv!="") || (lowpass>0) ) {
+  if ( (fn_sym!="") || (lowpass>0) ||
+       (fn_solv!="") || (do_prob_solvent) || (threshold_solvent!=999) ) {
+
     SFvol.go_beginning();
     while (!SFvol.eof()) {
       // Read corresponding volume from disc
@@ -503,22 +756,6 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
         Vaux.clear();
       }
 
-      // Solvent flattening if requested
-      if (fn_solv!="") {
-	VolumeXmipp solv;
-	solv.read(fn_solv);
-	solv()=1.-solv();
-	double solvavg=0.,sumsolv=0.;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol()) {
-	  solvavg+=dVkij(solv(),k,i,j)*dVkij(vol(),k,i,j);
-	  sumsolv+=dVkij(solv(),k,i,j);
-	}
-	solvavg/=sumsolv;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(solv()) {
-	  dVkij(vol(),k,i,j)-=dVkij(solv(),k,i,j)*(dVkij(vol(),k,i,j)-solvavg);
-	}
-      }
-
       // Filtering the volume
       if (lowpass>0) {
 	FourierMask fmask;
@@ -527,6 +764,89 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 	fmask.FilterBand=LOWPASS;
 	fmask.w1=lowpass;
 	fmask.apply_mask_Space(vol());
+      }
+
+      // Different types of solvent flattening
+      if ( do_prob_solvent || (fn_solv!="") || (threshold_solvent!=999) ) {
+	if (do_prob_solvent) {
+	  // A. Probabilistic solvent flattening
+	  // Write already processed volume to disc (for segment program)
+	  vol.write(fn_vol);
+	  segm_prm.read(argc,argv);
+	  segm_prm.fn_vol=fn_vol;
+	  segm_prm.fn_mask=fn_vol+".solv";
+	  segm_prm.do_prob=true;
+	  cerr << segm_prm;
+	  fh_hist<< segm_prm;
+	  segm_prm.produce_side_info();
+	  segm_prm.segment(Vsolv);
+	} else if (threshold_solvent!=999) {
+	  // B. Perform flooding and separate_objects-like solvent mask
+	  Vsolv=vol;
+	  Vsolv().threshold("below",threshold_solvent,0.);
+	  // The following is because binarize() seems buggy
+	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsolv()) {
+	    if (dVkij(Vsolv(),k,i,j)!=0.) dVkij(Vsolv(),k,i,j)=1.;
+	  }
+	} else if (fn_solv!="") {
+	  // C. Read user-provided solvent mask from disc
+	  Vsolv.read(fn_solv);
+	  if (Vsolv().compute_max()>1. || Vsolv().compute_min()<0.)
+	    REPORT_ERROR(1,"ERROR: solvent mask should have values between 0 and 1!");
+	}
+	// Binarize Vsolv, avoiding buggy Vsolv().binarize()
+	if (do_deblob_solvent || dilate_solvent>0) {
+	  Vsolv().threshold("below",0.5,0.);
+	  // The following is because binarize() seems buggy
+	  FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsolv()) {
+	    if (dVkij(Vsolv(),k,i,j)!=0.) dVkij(Vsolv(),k,i,j)=1.;
+	  }
+	}
+	if (do_deblob_solvent) {
+	  int object_no, maxo;
+	  double nr_vox, max_vox=0.;
+	  VolumeXmipp label;
+	  object_no=label_volume(Vsolv(),label());
+	  max_vox=0;
+	  for (int o=0; o<=object_no; o++) {
+	    Vaux()=label();
+	    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vaux()) {
+	      Vaux(k,i,j)=Vaux(k,i,j)==o;
+	    }
+	    nr_vox=Vaux().sum();
+	    if (o!=0 && (nr_vox>max_vox)) {
+	      max_vox=nr_vox;
+	      maxo=o;
+	      Vsolv()=Vaux();
+	    }
+	  }
+	  label.clear();
+	}
+	// Dilate solvent mask (only for binary masks)
+	// Dilate several times, result is summed iteratively 
+	if (dilate_solvent>0) {
+	  VolumeXmipp Vsum;
+	  Vsum()=Vsolv();
+	  for (int i=0; i<dilate_solvent; i++) {
+	    dilate3D(Vsolv(),Vaux(),18,0,1);
+	    Vsum()=Vsum()+Vaux();
+	    Vsolv()=Vaux();
+	  }
+	  Vsum()/=(double)(dilate_solvent+1);
+	  Vsolv()=Vsum();
+	  Vsum.clear();
+	}
+	// Apply solvent mask
+	Vsolv()=1.-Vsolv();
+	double solvavg=0.,sumsolv=0.;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol()) {
+	  solvavg+=dVkij(Vsolv(),k,i,j)*dVkij(vol(),k,i,j);
+	  sumsolv+=dVkij(Vsolv(),k,i,j);
+	}
+	solvavg/=sumsolv;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsolv()) {
+	  dVkij(vol(),k,i,j)-=dVkij(Vsolv(),k,i,j)*(dVkij(vol(),k,i,j)-solvavg);
+	}
       }
 
       // (Re-) write post-processed volume to disc

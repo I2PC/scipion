@@ -31,6 +31,8 @@
 #include <XmippData/xmippVolumes.hh>
 #include <XmippData/xmippFilters.hh>
 #include <XmippData/xmippMasks.hh>
+#include <XmippData/xmippMorphology.hh>
+#include <XmippData/Programs/Prog_segment.hh>
 #include "Reconstruction/grids.hh"
 #include "Reconstruction/symmetries.hh"
 #include "Reconstruction/blobs.hh"
@@ -75,14 +77,31 @@ public:
   double tilt_range0, tilt_rangeF;
   // Do not use a starting volume in wlsART reconstruction
   bool wlsart_no_start;
+  // Threshold for flooding-like solvent mask
+  double threshold_solvent;
+  // Do Wang/Terwilliger-like probabilistic solvent flattening
+  bool do_prob_solvent;
+  // Do separate_object-like selection of largest connected volume in
+  // binarized solvent mask
+  bool do_deblob_solvent;
+  // Dilate (binarized) solvent mask?
+  int dilate_solvent;
+  // Use MLF mode
+  bool fourier_mode;
 
 public:
 
   /// Read additional arguments for 3D-process from command line
   void read(int &argc, char ** &argv) ;
 
-  /// Usage
+  /// ML Usage
   void usage();
+
+  /// MLF Usage
+  void MLF_usage();
+
+  /// Additional options
+  void extended_usage();
 
   /// Show
   void show();
@@ -90,12 +109,18 @@ public:
   /// Project the reference volume in evenly sampled directions
   void project_reference_volume(SelFile &SFlib, int rank=0) ;
 
+  /// (For mpi-version only:) calculate noise averages and write to disc
+  void make_noise_images(vector<ImageXmipp> &Iref) ;
+
   /// reconstruction by (weighted ART) or WBP
   void reconstruction(int argc, char **argv, 
-		      int iter, int volno);
+		      int iter, int volno, int noise=0);
+
+ /// Calculate 3D SSNR according to Unser ea. (2005)
+  void calculate_3DSSNR(matrix1D<double> &spectral_signal, int iter);
 
   /// After reconstruction update reference volume selfile
-  void remake_SFvol(int iter, bool rewrite=false) ;
+  void remake_SFvol(int iter, bool rewrite=false, bool include_noise=false) ;
 
   /// Merge MLalign2D classification selfiles into volume classes
   void concatenate_selfiles(int iter);

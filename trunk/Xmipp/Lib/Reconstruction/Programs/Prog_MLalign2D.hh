@@ -49,7 +49,7 @@
 class Prog_MLalign2D_prm {
 public:
   /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_ref,fn_root,fn_frac,fn_sig,fn_doc,fn_ctf;
+  FileName fn_sel,fn_ref,fn_root,fn_frac,fn_sig,fn_doc,fn_ctf,fn_oext;
   /** If true: use maximum cross-correlation instead of maximum likelihood target */
   bool maxCC_rather_than_ML;
   /** Command line */
@@ -110,14 +110,14 @@ public:
   /** vector for flipping (i.e. 90/180-degree rotations) matrices */
   vector<matrix2D<double> > F;
   /** Vector for images to hold references (new & old) */
-  vector <ImageXmipp> Iref, Iold;
+  vector <ImageXmipp> Iref, Iold, Ictf;
   /** Matrices for calculating PDF of (in-plane) translations */
   matrix2D<double> P_phi, Mr2;
   /** Fast mode */
   bool fast_mode;
   /** Fast mode */
   double C_fast;
-  /** Very crude origin pixel atrifact correction */
+  /** Very crude origin pixel artifact correction */
   bool do_esthetics;
   /** Maximum shift to be trusted */
   double max_shift;
@@ -143,7 +143,46 @@ public:
   vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
   /** Number of subdirectories to keep for unique offsets filenames */
   int offsets_keepdir;
+  /** Flag for using ML3D */
+  bool do_ML3D;
+  /** Flag for generation of initial models from random subsets */
+  bool do_generate_refs;
+  /** Flag whether to write offsets to disc */
+  bool do_write_offsets;
+  /** Vector to store optimal origin offsets (if not written to disc) */
+  vector<vector<double> > imgs_offsets;
 
+  /// FOR FOURIER_MODE
+  /** If true: use fourier instead of real space maximum likelihood target */
+  bool fourier_mode;
+  /** Pixel size in Angstroms */
+  double sampling;
+  /** Vector with number of images per defocuss group (fourier_mode) */
+  vector<int> count_defocus;
+  /** Flag whether the phases of the experimental images are flipped already */
+  bool phase_flipped;
+  /** Matrix with resolution value at each Fourier pixel */
+  matrix2D<int> Mresol;
+  /** Vectors with sigma2 (for each defocus group) */
+  vector<matrix1D<double> > Vsig, Vctf, Vdec;
+  /** pointers for the different ctf-matrices */
+  vector<int> pointer_ctf,pointer_i,pointer_j,pointer_sigctf;
+  /** Number of elements in pointers for the different ctf-matrices */
+  int nr_pointer_ctf,nr_pointer_sigctf;
+  /** Multiplicative factor for SSNR */
+  double reduce_snr;
+  /** number of defocus groups */
+  int nr_focus;
+  /** low and high resolution cutoffs for fourier-mode (in Fourier pixels) */
+  int lowres_limit, highres_limit;
+  /** Number of Fourier rings to include above SNR<1 */
+  int increase_highres_limit;
+  /** Do not multiply signal with CTF in the first iteration */
+  bool first_iter_noctf;
+
+  /// IN DEVELOPMENT
+  /// Deterministic annealing
+  double anneal, anneal_step;
 
 public:
   /// Read arguments from command line
@@ -152,8 +191,11 @@ public:
   /// Show
   void show(bool ML3D=false);
 
-  /// Usage
+  /// Usage for ML mode
   void usage();
+
+  /// Usage for MLF mode
+  void MLF_usage();
 
   /// Extended Usage
   void extended_usage(bool ML3D=false);
@@ -161,12 +203,20 @@ public:
   /// Setup lots of stuff
   void produce_Side_info();
 
+  /// Calculate initial sigma2 from average power spectrum of the
+  /// experimental images
+  void estimate_initial_sigma2();
+
+  /// Calculate Wiener filter for defocus series as defined by Frank
+  /// (2nd ed. formula 2.32b on p.60)
+  void calculate_wiener_defocus_series(matrix1D<double> &spectral_signal, int iter);
+
   /// Generate initial references from random subset averages
   void generate_initial_references();
 
   /// Read reference images in memory & set offset vectors
   /// (This produce_side_info is Selfile-dependent!)
-  void produce_Side_info2();
+  void produce_Side_info2(int nr_vols=1);
 
   /// Read and write optimal translations to disc 
   /// (not to store them all in memory)
@@ -222,6 +272,19 @@ public:
 				   vector<vector<matrix2D<double> > > &Mimg_trans,
 				   matrix2D<int> &Moffsets, matrix2D<int> &Moffsets_mirror);
 
+  /// fast MLF integration...
+  void MLF_integrate_locally(matrix2D<double> &Mimg, int focus, bool apply_ctf,
+			    vector<vector<matrix2D<complex<double> > > > &Fref,
+			    vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
+			    vector <vector< matrix2D<complex<double> > > > &Fwsum_ctfimgs,
+			    matrix2D<double> &Mwsum_sigma2,
+			    double &wsum_sigma_offset, vector<double> &sumw, 
+			    vector<double> &sumw_mirror, 
+			    double &LL, double &fracweight, double &mindiff2, int &opt_refno, 
+			    double &opt_psi, matrix1D<double> &opt_offsets, 
+			    vector<double> &opt_offsets_ref,
+			    vector<double > &pdf_directions);
+
   // ML-integration over limited translations,
   // and with -fast way of selection significant rotations
   void ML_integrate_locally(matrix2D<double> &Mimg, 
@@ -229,7 +292,7 @@ public:
 			    vector <vector< matrix2D<double> > > &Mwsum_imgs, 
 			    double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			    vector<double> &sumw, vector<double> &sumw_mirror, 
-			    double &LL, double &fracweight, 
+			    double &LL, double &fracweight, double &wdiff2,
 			    int &opt_refno, double &opt_psi, 
 			    matrix1D<double> &opt_offsets, 
 			    vector<double> &opt_offsets_ref,
@@ -242,7 +305,8 @@ public:
 			     vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
 			     double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			     vector<double> &sumw, vector<double> &sumw_mirror, 
-			     double &LL, double &fracweight, int &opt_refno, double &opt_psi, 
+			     double &LL, double &fracweight, double &wdiff2, 
+			     int &opt_refno, double &opt_psi, 
 			     matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
 			     vector<double > &pdf_directions);
 
@@ -258,17 +322,22 @@ public:
 			     vector<double> &pdf_directions);
 
   /// Integrate over all experimental images
-  void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, 
+  void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter, 
 			      double &LL, double &sumcorr, DocFile &DFo, 
 			      vector<matrix2D<double> > &wsum_Mref,
-			      double &wsum_sigma_noise, double &wsum_sigma_offset, 
+			      vector<matrix2D<double> > &wsum_ctfMref,
+			      double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
+			      double &wsum_sigma_offset, 
 			      vector<double> &sumw, vector<double> &sumw_mirror);
 
   /// Update all model parameters
   void update_parameters(vector<matrix2D<double> > &wsum_Mref,
-			 double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			 vector<double> &sumw, vector<double> &sumw_mirror, 
-			 double &sumcorr, double &sumw_allrefs);
+			 vector<matrix2D<double> > &wsum_ctfMref,
+			 double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
+			 double &wsum_sigma_offset, vector<double> &sumw, 
+			 vector<double> &sumw_mirror, 
+			 double &sumcorr, double &sumw_allrefs,
+			 matrix1D<double> &spectral_signal);
 
   /// check convergence
   bool check_convergence(vector<double> &conv);
