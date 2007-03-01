@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
   double                      aux;
   matrix2D<double>            Maux;
   FileName                    fn_tmp;
-  DocFile                     DFo;
   SelFile                     SFo;
 
   Prog_Refine3d_prm           prm;
