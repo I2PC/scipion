@@ -29,15 +29,12 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
 
-  int                         iter,c,nn,imgno,volno,opt_refno,converged=0;;
-  double                      LL,sumw_allrefs,convv,sumcorr;
+  int                         c,iter,volno,converged=0;;
+  double                      LL,sumw_allrefs,convv,sumcorr,wsum_sigma_noise, wsum_sigma_offset;
   vector<double>              conv;
-  double                      aux,wsum_sigma_noise, wsum_sigma_offset;
-  vector<matrix2D<double> >   wsum_Mref;
+  vector<matrix2D<double> >   wsum_Mref,wsum_ctfMref,Mwsum_sigma2;
   vector<double>              sumw,sumw_cv,sumw_mirror;
-  matrix2D<double>            P_phi,Mr2;
-  FileName                    fn_doc,fn_sel,fn_tmp;
-  matrix1D<double>            oneline(0);
+  matrix1D<double>            spectral_signal;
   DocFile                     DFo;
  
   Prog_Refine3d_prm           prm;
@@ -66,14 +63,20 @@ int main(int argc, char **argv) {
     // Project volume and read lots of stuff into memory
     prm.project_reference_volume(ML2D_prm.SFr);
     ML2D_prm.produce_Side_info();
-    ML2D_prm.produce_Side_info2();    
+    if (ML2D_prm.fourier_mode) ML2D_prm.estimate_initial_sigma2();
+    ML2D_prm.produce_Side_info2(prm.Nvols);    
     ML2D_prm.show(true);
 
     // Initialize some stuff
     for (int refno=0; refno<ML2D_prm.n_ref; refno++) conv.push_back(-1.);
     ML2D_prm.Iold.clear(); // To save memory
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {
+    cout << XE; 
+    if (prm.fourier_mode) prm.MLF_usage();
+    else prm.usage(); 
+    exit(0);
+  }
     
   try {
 
@@ -96,26 +99,45 @@ int main(int argc, char **argv) {
       if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
 
       // Integrate over all images
-      ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF,ML2D_prm.Iref,LL,sumcorr,DFo,wsum_Mref,
-				      wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
+      ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF,ML2D_prm.Iref,iter,
+				      LL,sumcorr,DFo,wsum_Mref,wsum_ctfMref,
+				      wsum_sigma_noise,Mwsum_sigma2,
+				      wsum_sigma_offset,sumw,sumw_mirror); 
 	
       // Update model parameters
-      ML2D_prm.update_parameters(wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,
-				 sumw,sumw_mirror,sumcorr,sumw_allrefs); 
+      ML2D_prm.update_parameters(wsum_Mref,wsum_ctfMref,
+				 wsum_sigma_noise,Mwsum_sigma2,
+				 wsum_sigma_offset,sumw,
+				 sumw_mirror,sumcorr,sumw_allrefs,
+				 spectral_signal);    
 
       // Write intermediate output files
       ML2D_prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
       prm.concatenate_selfiles(iter);
 
+      // Write noise images to disc
+      if (ML2D_prm.fourier_mode) prm.make_noise_images(ML2D_prm.Iref);
+
       // Reconstruct new volumes from the reference images
       for (volno=0; volno<prm.Nvols; volno++)
-	prm.reconstruction(argc, argv, iter, volno);
+	prm.reconstruction(argc, argv, iter, volno, 0);
+      if (ML2D_prm.fourier_mode) {
+	prm.make_noise_images(ML2D_prm.Iref);
+	for (volno=0; volno<prm.Nvols; volno++)
+	  prm.reconstruction(argc, argv, iter, volno, 1);
+      }
 
       // Update the reference volume selection file
-      prm.remake_SFvol(iter,false);
-
-      // Mask (and filter) the volumes
+      // and post-process the volumes (for -FS also the noise volumes!)
+      prm.remake_SFvol(iter,false,ML2D_prm.fourier_mode);
       prm.post_process_volumes(argc, argv);
+      prm.remake_SFvol(iter,false,false);
+
+      // Calculate 3D-SSNR and new Wiener filters
+      if (ML2D_prm.fourier_mode) {
+	prm.calculate_3DSSNR(spectral_signal,iter);
+	ML2D_prm.calculate_wiener_defocus_series(spectral_signal,iter);
+      }
 
       // Check convergence 
       if (prm.check_convergence(iter)) {
@@ -140,7 +162,13 @@ int main(int argc, char **argv) {
     } // end loop iterations
 
     if (!converged && prm.verb>0) cerr <<"--> Optimization was stopped before convergence was reached!"<<endl;
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {
+    cout << XE; 
+    if (prm.fourier_mode) prm.MLF_usage();
+    else prm.usage(); 
+    exit(0);
+  }
+
 }
 
 

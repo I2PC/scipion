@@ -33,21 +33,25 @@ int main(int argc, char **argv) {
   double LL,sumw_allrefs,convv,sumcorr;
   bool converged;
   vector<double> conv;
-  double aux,wsum_sigma_noise, wsum_sigma_offset;
-  vector<matrix2D<double > > wsum_Mref;
+  double aux,wsum_sigma_noise,wsum_sigma_offset;
+  vector<matrix2D<double > > wsum_Mref,wsum_ctfMref;
   vector<double> sumw,sumw_mirror;
   matrix2D<double> P_phi,Mr2,Maux;
+  vector<matrix2D<double> > Mwsum_sigma2;
   FileName fn_img,fn_tmp;
-  matrix1D<double> oneline(0);
+  matrix1D<double> oneline(0),spectral_signal;
   DocFile DFo;
 
   Prog_MLalign2D_prm prm;
-
+  
   // Get input parameters
   try {
     prm.read(argc,argv);
     prm.produce_Side_info();
     prm.show();
+
+    if (prm.fourier_mode) prm.estimate_initial_sigma2();
+
     if (prm.fn_ref=="") {
       if (prm.n_ref!=0) {
 	prm.generate_initial_references();
@@ -55,9 +59,15 @@ int main(int argc, char **argv) {
 	REPORT_ERROR(1,"Please provide -ref or -nref");
       }
     }
+
     prm.produce_Side_info2();
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {
+    cout << XE; 
+    if (prm.fourier_mode) prm.MLF_usage();
+    else prm.usage(); 
+    exit(0);
+  }
     
   try {
     Maux.resize(prm.dim,prm.dim);
@@ -80,29 +90,49 @@ int main(int argc, char **argv) {
       if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
 
       // Integrate over all images
-      prm.ML_sum_over_all_images(prm.SF,prm.Iref,LL,sumcorr,DFo,wsum_Mref,
-				 wsum_sigma_noise,wsum_sigma_offset,sumw,sumw_mirror); 
+      prm.ML_sum_over_all_images(prm.SF,prm.Iref,iter,
+				 LL,sumcorr,DFo,wsum_Mref,wsum_ctfMref,
+				 wsum_sigma_noise,Mwsum_sigma2,
+				 wsum_sigma_offset,sumw,sumw_mirror); 
 
       // Update model parameters
-      prm.update_parameters(wsum_Mref,wsum_sigma_noise,wsum_sigma_offset,
-			    sumw,sumw_mirror,sumcorr,sumw_allrefs);    
-   
+      prm.update_parameters(wsum_Mref,wsum_ctfMref,
+			    wsum_sigma_noise,Mwsum_sigma2,
+			    wsum_sigma_offset,sumw,
+			    sumw_mirror,sumcorr,sumw_allrefs,
+			    spectral_signal);    
+
       // Check convergence 
       converged=prm.check_convergence(conv);
 
       if (prm.write_intermediate)
 	prm.write_output_files(iter,DFo,sumw_allrefs,LL,sumcorr,conv);
       else prm.output_to_screen(iter,sumcorr,LL);
-      
+ 
+      // Calculate new wiener filters
+      if (prm.fourier_mode) prm.calculate_wiener_defocus_series(spectral_signal,iter);
+
       if (converged) {
-	if (prm.verb>0) cerr <<" Optimization converged!"<<endl;
-	break;
+	if (prm.anneal-1.<1e-5) {
+	  if (prm.verb>0) cerr <<" Optimization converged!"<<endl;
+	  break;
+	} else {
+	  prm.anneal-=prm.anneal_step;
+	  if (prm.verb>0) cerr <<" Lowering annealing parameter to "<<prm.anneal<<endl;
+	} 
+
       }
 
     } // end loop iterations
     prm.write_output_files(-1,DFo,sumw_allrefs,LL,sumcorr,conv);
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {
+    cout << XE; 
+    if (prm.fourier_mode) prm.MLF_usage();
+    else prm.usage(); 
+    exit(0);
+  }
+
 }
 
 
