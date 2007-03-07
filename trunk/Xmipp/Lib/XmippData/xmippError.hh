@@ -101,7 +101,7 @@
  *     EXIT_ERROR(1, "Error 1");
  * @endcode
  */
-#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg) 
+#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg)
 
 // TODO Document
 void _Xmipp_error(const int nerr, const std::string& what);
@@ -115,16 +115,16 @@ void _Xmipp_error(const int nerr, const std::string& what);
  * exception handling mode is active (see Xmipp Configuration for details about
  * enabling the exception handling). 
  */
- 
+
 class Xmipp_error
 {
 public:
     /** Error code */
     int __errno;
-    
+
     /** Message shown */
     std::string msg;
-    
+
     Xmipp_error(const int nerr, const std::string& what);
     friend std::ostream& operator<<(std::ostream& o, Xmipp_error& XE);
 };

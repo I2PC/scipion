@@ -74,14 +74,14 @@ private:
 public:
     /// @defgroup DocLineConstructors Constructors for Document Lines
     /// @ingroup DocLines
-   
+
     /** Empty Constructor
      * @ingroup DocLineConstructors
      * 
      * The document line is created with no type (neither comment or data). You
      * must use the function set_type to assign a type
      */
-    DocLine() : line_type(NOT_ASSIGNED) {};
+    DocLine() : line_type(NOT_ASSIGNED) {}
 
     /** Copy constructor
      * @ingroup DocLineConstructors
@@ -95,7 +95,7 @@ public:
 
     /// @defgroup DocLineAccess Component access
     /// @ingroup DocLines
-   
+
     /** Set existing components.
      * @ingroup DocLineAccess
      * 
@@ -124,8 +124,8 @@ public:
      * then it is resized
      */
     void set(int i, double val);
-    
-    
+
+
     /** Set a vector (matrix1D) as Document line
      * @ingroup DocFileAccess
      * 
@@ -137,19 +137,25 @@ public:
 
     /// @defgroup DocLineStructure Structure information
     /// @ingroup DocLines
-    
+
     /** Get text of this line
      * @ingroup DocLineStructure
      * 
      * The text is only valid for comment lines
      */
-    string get_text() { return text; }
-       
+    string get_text()
+    {
+        return text;
+    }
+
     /** Get the key of this line
      * @ingroup DocLineStructure
      */
-    int get_key() { return key; }
-        
+    int get_key()
+    {
+        return key;
+    }
+
     /** Get the number of components
      * @ingroup DocFileStructure
      * 
@@ -162,22 +168,28 @@ public:
         else
             return -1;
     }
-    
+
     /** Empty the document line
      * @ingroup DocFileStructure
      */
     void clear();
-          
+
     /** True if current line is a comment
      * @ingroup DocFileStructure
      */
-    int Is_comment() { return line_type == COMMENT; }
-           
+    int Is_comment()
+    {
+        return line_type == COMMENT;
+    }
+
     /** True if current line is a comment
      * @ingroup DocFileStructure
      */
-    int Is_data() { return line_type == DATALINE; }
-            
+    int Is_data()
+    {
+        return line_type == DATALINE;
+    }
+
     /** Set type
      * @ingroup DocFileStructure
      *
@@ -185,8 +197,11 @@ public:
      * lost. The comment text is not touched. The valid types are
      * DATALINE, COMMENT, NOT_ASSIGNED, and NOT_CONSIDERED.
      */
-    void set_type(Line_Type _line_type) { line_type = _line_type; }
-             
+    void set_type(Line_Type _line_type)
+    {
+        line_type = _line_type;
+    }
+
     /** Show a Document Line
      * TODO document
      */
@@ -227,11 +242,11 @@ class DocFile
 
     // TODO document
     vector< DocLine >::iterator find(int _key);
-     
+
 public:
     /// @defgroup DocFileConstructor DocFile constructors
     /// @ingroup DocFiles
-    
+
     /** Empty constructor
      * @ingroup DocFileConstructor
      */
@@ -239,7 +254,7 @@ public:
     {
         current_line = m.begin();
     }
-        
+
     /** Constructor with filename, read from disk
      * @ingroup DocFileConstructor
      * 
@@ -250,7 +265,11 @@ public:
      * DocFile DF("angles.doc");
      * @endcode
      */
-    DocFile(FileName doc_name) { first_key = 1; read(doc_name); }
+    DocFile(FileName doc_name)
+    {
+        first_key = 1;
+        read(doc_name);
+    }
 
     /** Copy constructor
      * @ingroup DocFileConstructor
@@ -260,7 +279,7 @@ public:
      * @endcode
      */
     DocFile(const DocFile& DF);
-     
+
     /** Empties the object
      * @ingroup DocFileConstructor
      * 
@@ -269,7 +288,7 @@ public:
      * @endcode
      */
     void clear();
-      
+
     /** Reserve for N entries
      * @ingroup DocFileConstructor
      * 
@@ -278,11 +297,15 @@ public:
      * 
      * The current line is set to the beginning of the docfile
      */
-    void reserve(int N) { m.reserve(N); current_line = m.begin(); }
-    
+    void reserve(int N)
+    {
+        m.reserve(N);
+        current_line = m.begin();
+    }
+
     /// @defgroup DocFileOperator DocFile operators
     /// @ingroup DocFiles
-    
+
     /** Assignment
      * @ingroup DocFileOperator
      * 
@@ -290,7 +313,7 @@ public:
      * DF2 = DF1;
      * @endcode
      */
-    DocFile& operator =(const DocFile &DF);
+    DocFile& operator=(const DocFile &DF);
 
     /** Another function for assigment
      * @ingroup DocFileOperator
@@ -314,7 +337,7 @@ public:
      * @ingroup DocFileCOprator
      */
     void assign(const matrix2D< double >& A);
-    
+
     /** Show a document file
      * @ingroup DocFileOperator
      * 
@@ -325,7 +348,7 @@ public:
      * @endcode
      */
     friend ostream& operator<<(ostream& o, const DocFile& DF);
-    
+
     /** Show a given line
      * @ingroup DocFileOperator
      * 
@@ -339,15 +362,15 @@ public:
      * @endcode
      */
     void show_line(ostream& o, int key=-1);
-    
+
     /** Show everything in a document file
      * @ingroup DocFileOperator
      */
     void debug();
-    
+
     /// @defgroup DocFileDisk Managing files in disk
     /// @ingroup DocFiles
-    
+
     /** Read a file from disk
      * @ingroup DocFileDisk
      * 
@@ -376,8 +399,11 @@ public:
      * DF.append("angles2.doc");
      * @endcode
      */
-    void append(FileName _name) {read(_name,0);}
-   
+    void append(FileName _name)
+    {
+        read(_name,0);
+    }
+
     /** Write a document file to disk
      * @ingroup DocFileDisk
      * 
@@ -394,7 +420,7 @@ public:
 
     /// @defgroup DocFilePointer Moving the current line pointer
     /// @ingroup DocFiles
-    
+
     /** Go to the beginning of the file
      * @ingroup DocFilePointer
      * 
@@ -405,8 +431,11 @@ public:
      * DF.go_beginning();
      * @endcode
      */
-    void go_beginning() { current_line = m.begin(); }
-    
+    void go_beginning()
+    {
+        current_line = m.begin();
+    }
+
     /** Go to the first data line
      * @ingroup DocFilePointer
      * 
@@ -416,8 +445,12 @@ public:
      * DF.go_first_data_line();
      * @endcode
      */
-    void go_first_data_line() { go_beginning(); adjust_to_data_line(); }
-    
+    void go_first_data_line()
+    {
+        go_beginning();
+        adjust_to_data_line();
+    }
+
     /** Adjust pointer to a data line
      * @ingroup DocFilePointer
      * 
@@ -429,7 +462,7 @@ public:
      * @endcode
      */
     void adjust_to_data_line();
-    
+
     /** Moves pointer to next line
      * @ingroup DocFilePointer
      * 
@@ -439,7 +472,11 @@ public:
      * DF.next();
      * @endcode
      */
-    void next() { if (current_line != m.end()) current_line++; }
+    void next()
+    {
+        if (current_line != m.end())
+            current_line++;
+    }
 
     /** Moves pointer to previous line
      * @ingroup DocFilePointer
@@ -455,7 +492,7 @@ public:
         if (current_line != m.begin())
             current_line--;
     }
-    
+
     /** Moves pointer to next data line
      * @ingroup DocFilePointer
      * 
@@ -464,7 +501,10 @@ public:
      * DF.next_data_line();
      * @endcode
      */
-    void next_data_line() { jump(1); }
+    void next_data_line()
+    {
+        jump(1);
+    }
 
     /** Jump over a number of data lines
      * @ingroup DocFilePointer
@@ -480,7 +520,7 @@ public:
      * @endcode
      */
     void jump(int how_many);
-   
+
     /** Move "pointer" to a certain line
      * @ingroup DocFilePointer
      * 
@@ -493,8 +533,11 @@ public:
      * DF.search(700);
      * @endcode
      */
-    void search(int _key) { current_line = find(_key); }
-    
+    void search(int _key)
+    {
+        current_line = find(_key);
+    }
+
     /** Search the entire file for the given comment
      * @ingroup DocFilePointer
      * 
@@ -508,7 +551,7 @@ public:
      */
     int search_comment(string comment);
 
-    /** Extract the comment's images' SelFile 
+    /** Extract the comment's images' SelFile
      * @ingroup DocFilePointer
      * 
      * For NewXmipp-type Docfiles only
@@ -543,16 +586,22 @@ public:
      *     cout << "The document file is over\n";
      * @endcode
      */
-    int eof() { return current_line == m.end(); }
-    
+    int eof()
+    {
+        return current_line == m.end();
+    }
+
     /// @defgroup DocFileInfo Getting information
     /// @ingroup DocFiles
-    
+
     /** Returns the name of the file
      * @ingroup DocFileInfo
      */
-    string name() const { return fn_doc; }
-    
+    string name() const
+    {
+        return fn_doc;
+    }
+
     /** True if the key is inside the document file
      * @ingroup DocFileInfo
      * 
@@ -563,15 +612,18 @@ public:
      *     std::cout << "key 700 exists in the document file" << std::endl;
      * @endcode
      */
-    int exists(int _key) { return find(_key) != m.end(); }
-    
+    int exists(int _key)
+    {
+        return find(_key) != m.end();
+    }
+
     /** Number of columns of the first data line
      * @ingroup DocFileInfo
      * 
      * The current line "pointer" is not modified.
      */
     int FirstLine_ColNo();
-    
+
     /** Number of data lines inside a document file
      * @ingroup DocFileInfo
      * 
@@ -580,7 +632,10 @@ public:
      * std::cout << " data lines" << std::endl;
      * @endcode
      */
-    int dataLineNo() { return no_lines; }
+    int dataLineNo()
+    {
+        return no_lines;
+    }
 
     /** Returns the number of lines within a file
      * @ingroup DocFileInfo
@@ -593,8 +648,11 @@ public:
      * std::cout << " lines in this file" << std::endl;
      * @endcode
      */
-    int LineNo() { return m.size(); }
-   
+    int LineNo()
+    {
+        return m.size();
+    }
+
     /** Get last key of the current file
      * @ingroup DocFileInfo
      * 
@@ -605,7 +663,7 @@ public:
      * @endcode
      */
     int get_last_key();
-    
+
     /** Get the key of the current line
      * @ingroup DocFileInfo
      * 
@@ -616,8 +674,11 @@ public:
      * current_key = DF.get_current_key();
      * @endcode
      */
-    int get_current_key() { return (*current_line).key; }
-    
+    int get_current_key()
+    {
+        return (*current_line).key;
+    }
+
     /** Get first key of the file
      * @ingroup DocFileInfo
      * 
@@ -628,8 +689,11 @@ public:
      * std::cout << "First key : " << DF.FirstKey() << std::endl;
      * @endcode
      */
-    int FirstKey() const { return first_key; }
-    
+    int FirstKey() const
+    {
+        return first_key;
+    }
+
     /** Set first key of the file
      * @ingroup DocFileInfo
      * 
@@ -641,13 +705,19 @@ public:
      * DF.FirstKey()=700;
      * @endcode
      */
-    int& FirstKey() { return first_key; }
-    
+    int& FirstKey()
+    {
+        return first_key;
+    }
+
     /** Another function for set first key of the file
      * @ingroup DocFileInfo
      */
-    void set_FirstKey(int& _first_key) { first_key = _first_key; }
-    
+    void set_FirstKey(int& _first_key)
+    {
+        first_key = _first_key;
+    }
+
     /** Get the number of the values in the current line
      * @ingroup DocFileInfo
      * 
@@ -658,8 +728,11 @@ public:
      * valNo = DF.get_current_valNo();
      * @endcode
      */
-    int get_current_valNo() { return (*current_line).data.size(); }
-    
+    int get_current_valNo()
+    {
+        return (*current_line).data.size();
+    }
+
     /** Constant access to a value in the current line
      * @ingroup DocFileInfo
      * 
@@ -671,8 +744,11 @@ public:
      * std::cout << DF(0) << std::endl;
      * @endcode
      */
-    double operator()(int i) const { return (*current_line)[i]; }
-    
+    double operator()(int i) const
+    {
+        return (*current_line)[i];
+    }
+
     /** Constant access to a value in the current line
      * @ingroup DocFileInfo
      * 
@@ -695,9 +771,9 @@ public:
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-     void get_angles(int _key, double& rot, double& tilt, double& psi,
-        const string& ang1, const string& ang2, const string& ang3);
-    
+    void get_angles(int _key, double& rot, double& tilt, double& psi,
+                    const string& ang1, const string& ang2, const string& ang3);
+
     /** Get angles on key i (second triad of Euler angles)
      * @ingroup DocFileInfo
      * 
@@ -705,17 +781,19 @@ public:
      * labels "rot", "tilt" and "psi"
      */
     void get_angles1(int _key, double& rot, double& tilt, double& psi,
-        const string& ang1, const string& ang2, const string& ang3);
-        
+                     const string& ang1, const string& ang2,
+                     const string& ang3);
+
     /** Get angles on key i (third triad of Euler angles)
      * @ingroup DocFileInfo
      * 
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-    void get_angles2(int _key, double& rot, double& tilt, double& psi, 
-        const string& ang1, const string& ang2, const string& ang3);
-        
+    void get_angles2(int _key, double& rot, double& tilt, double& psi,
+                     const string& ang1, const string& ang2,
+                     const string& ang3);
+
     /** Set angles on key i
      * @ingroup DocFileInfo
      * 
@@ -723,8 +801,8 @@ public:
      * labels "rot", "tilt" and "psi"
      */
     void set_angles(int _key, double rot, double tilt, double psi, const string&
-        ang1, const string& ang2, const string& ang3);
-    
+                    ang1, const string& ang2, const string& ang3);
+
     /** Set a value in the current line
      * @ingroup DocFileInfo
      * 
@@ -743,7 +821,7 @@ public:
      * @endcode
      */
     void set(int i, double val);
-    
+
     /** Set a value in the given line
      * @ingroup DocFileInfo
      * 
@@ -764,11 +842,14 @@ public:
     /** Returns current line as a Document line
      * @ingroup DocFileInfo
      */
-    DocLine get_current_line() { return *current_line; }
-    
+    DocLine get_current_line()
+    {
+        return *current_line;
+    }
+
     /// @defgroup DocFileModify Modifying the document file
     /// @ingroup DocFiles
-    
+
     /** Renumerate keys
      * @ingroup DocFileModify
      * 
@@ -780,7 +861,7 @@ public:
      * @endcode
      */
     void renum();
-    
+
     /** Removes a line or several lines from the document file
      * @ingroup DocFileModify
      * 
@@ -825,7 +906,7 @@ public:
      * @endcode
      */
     int insert_data_line(int no_lines_to_insert=1);
-    
+
     /** Insert a data line before current line
      * @ingroup DocFileModify
      * 
@@ -866,7 +947,7 @@ public:
      * @endcode
      */
     void insert_comment(string comment);
-    
+
     /** Insert a document line before the current line
      * @ingroup DocFileModify
      * 
@@ -898,7 +979,7 @@ public:
      * @endcode
      */
     int append_data_line(int no_lines_to_append=1);
-    
+
     /** Append a data line at the end of the file
      * @ingroup DocFileModify
      * 
@@ -914,33 +995,34 @@ public:
      * @endcode
      */
     int append_data_line(const matrix1D< double >& v);
-    
+
     /** Append angles
      * @ingroup DocFileModify
      * 
      * You must specify the order with "rot","tilt", or "psi"
      */
     int append_angles(double rot, double tilt, double psi, const string& ang1,
-        const string& ang2, const string& ang3);
-        
+                      const string& ang2, const string& ang3);
+
     /** Append angles. Using 2 triads of Euler angles
      * @ingroup DocFileModify
      * 
      * You must specify the order with "rot","tilt", or "psi"
      */
     int append_angles(double rot,  double tilt,  double psi, double rot1, double
-        tilt1, double psi1, const string& ang1, const string& ang2, const
-        string& ang3);
-        
+                      tilt1, double psi1, const string& ang1, const string&
+                      ang2, const string& ang3);
+
     /** Append angles. Using three triads of Euler angles
      * @ingroup DocFileModify
      * 
      * You must specify the order with "rot","tilt", or "psi"
      */
-    int append_angles(double rot,  double tilt,  double psi, double rot1,
-        double tilt1, double psi1, double rot2, double tilt2, double psi2, 
-        const string& ang1, const string& ang2, const string& ang3);
-        
+    int append_angles(double rot, double tilt, double psi, double rot1,
+                      double tilt1, double psi1, double rot2, double tilt2,
+                      double psi2, const string& ang1, const string& ang2,
+                      const string& ang3);
+
     /** Append a comment at the end of the file
      * @ingroup DocFileModify
      * 
@@ -953,7 +1035,7 @@ public:
      * @endcode
      */
     void append_comment(const string& comment);
-    
+
     /** Append a document line at the end of the file
      * @ingroup DocFileModify
      * 
@@ -967,7 +1049,7 @@ public:
      * @endcode
      */
     int append_line(DocLine& DL);
-    
+
     /** Deletes all comments from the document file
      * @ingroup DocFileModify
      * 
@@ -978,10 +1060,10 @@ public:
      * @endcode
      */
     void clean_comments();
-    
+
     /// @defgroup DocFileHelpul Helpful functions
     /// @ingroup DocFiles
-    
+
     /** Alter order in document file
      * @ingroup DocFileHelpful
      * 
@@ -996,7 +1078,7 @@ public:
      * @endcode
      */
     DocFile randomize();
-    
+
     /** Discard randomly N lines
      * @ingroup DocFileHelpful
      * 
@@ -1011,7 +1093,7 @@ public:
      * @endcode
      */
     DocFile random_discard(int N);
-    
+
     /** Column to vector
      * @ingroup DocFileHelpful
      * 
@@ -1027,7 +1109,7 @@ public:
      * @endcode
      */
     matrix1D< double > col(int _col);
-    
+
     /** Row to vector
      * @ingroup DocFileHelpful
      * 
@@ -1040,7 +1122,7 @@ public:
      * @endcode
      */
     matrix1D< double > row(int _key);
-    
+
     /** Vector to column.
      * @ingroup DocFileHelpful
      * 
@@ -1058,7 +1140,7 @@ public:
      * @endcode
      */
     void setCol(int _col, matrix1D< double >& v);
-    
+
     /** Apply a function to all data lines within a key range
      * @ingroup DocFileHelpful
      * 
@@ -1090,8 +1172,8 @@ public:
      * @endcode
      */
     void for_all_lines(void (*f) (const matrix1D< double >&, matrix1D< double >&
-        ), int key0=-1, int keyF=-1);
-        
+                                 ), int key0=-1, int keyF=-1);
+
     /** Apply a function to a data line with a given key
      * @ingroup DocFileHelpful
      * 
@@ -1106,9 +1188,12 @@ public:
      * @endcode
      */
     void for_one_line(void (*f) (const matrix1D< double >&, matrix1D< double >&)
-        , int key0) { for_all_lines(f, key0, key0); }
-        
-   
+                      , int key0)
+    {
+        for_all_lines(f, key0, key0);
+    }
+
+
     /** Apply a function to a column between a given key range
      * @ingroup DocFileHelpful
      * 
@@ -1134,8 +1219,8 @@ public:
      * DF.for_column(&adjust_angle, 1, 30, 40);
      * @endcode
      */
-     void for_column(double (*f) (double), int _col=-1, int _key0=-1, int
-        _keyF=-1);
+    void for_column(double (*f) (double), int _col=-1, int _key0=-1, int
+                    _keyF=-1);
 };
 
 /** Read Document File with Euler angles
@@ -1158,8 +1243,8 @@ public:
  * @endcode
  */
 int read_Euler_document_file(FileName fn, string ang1, string ang2, string ang3,
-    DocFile& DF);
-    
+                             DocFile& DF);
+
 /** Select images from a selfile meeting some condition
  * @ingroup DocFileHelpful
  * 
@@ -1173,6 +1258,6 @@ int read_Euler_document_file(FileName fn, string ang1, string ang2, string ang3,
  * number of data linea in the DocFile match.
  */
 void select_images(DocFile& DF, SelFile& SF, int col, bool en_limit0, double
-    limit0, bool en_limitF, double limitF);
+                   limit0, bool en_limitF, double limitF);
 
 #endif
