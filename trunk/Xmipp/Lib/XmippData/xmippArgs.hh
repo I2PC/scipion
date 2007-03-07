@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
- 
+
 #ifndef XMIPPARGS_HH
 #define XMIPPARGS_HH
 
@@ -133,7 +133,7 @@ int best_prec(float F, int _width);
  * @endcode
  */
 double AtoD(const char* str, int _errno=2101, string errmsg="Error in AtoD",
-    int exit=0);
+            int exit=0);
 
 /** String (char*)to float conversion
  * @ingroup TypeConversions
@@ -143,7 +143,7 @@ double AtoD(const char* str, int _errno=2101, string errmsg="Error in AtoD",
  * @endcode
  */
 float AtoF(const char* str, int _errno=2101, string errmsg="Error in AtoF",
-    int exit=0);
+           int exit=0);
 
 /** String (STL) to float conversion
  * @ingroup TypeConversions
@@ -153,8 +153,10 @@ float AtoF(const char* str, int _errno=2101, string errmsg="Error in AtoF",
  * @endcode
  */
 inline float AtoF(const string str, int _errno=2101, string
-    errmsg="Error in AtoF", int exit=0) { return AtoF(str.c_str(), _errno,
-    errmsg, exit); }
+                  errmsg="Error in AtoF", int exit=0)
+{
+    return AtoF(str.c_str(), _errno, errmsg, exit);
+}
 
 /** String (char*) to integer conversion
  * @ingroup TypeConversions
@@ -163,8 +165,8 @@ inline float AtoF(const string str, int _errno=2101, string
  * int param_no = AtoI(next_token(), 1602, "Error reading number parameters")
  * @endcode
  */
- int AtoI(const char* str, int _errno=2102, string errmsg="Error in AtoI", int
-    exit=0);
+int AtoI(const char* str, int _errno=2102, string errmsg="Error in AtoI", int
+         exit=0);
 
 /** String (STL) to integer conversion
  * @ingroup TypeConversions
@@ -174,8 +176,11 @@ inline float AtoF(const string str, int _errno=2101, string
  * @endcode
  */
 inline int AtoI(const string str, int _errno=2102, string
-    errmsg="Error in AtoI", int exit=0) { return AtoI(str.c_str(), _errno,
-    errmsg, exit); }
+                errmsg="Error in AtoI", int exit=0)
+{
+    return AtoI(str.c_str(), _errno,
+                errmsg, exit);
+}
 
 /** String (char*) to long long integer conversion
  * @ingroup TypeConversions
@@ -186,7 +191,7 @@ inline int AtoI(const string str, int _errno=2102, string
  * @endcode
  */
 long long AtoLL(const char *str, int _errno=2102, string errmsg="Error in AtoL",
-    int exit=0);
+                int exit=0);
 
 /** Float to string conversion
  * @ingroup TypeConversions
@@ -228,7 +233,7 @@ string ItoA(int I, int _width=0, char fill_with='0');
  * @endcode
  */
 int CtoI(const char* str, int _errno=2103, string errmsg="Error in CtoI", int
-    exit=0);
+         exit=0);
 
 /** String to string with given length conversion
  * @ingroup TypeConversions
@@ -308,7 +313,7 @@ void remove_quotes(char** _str);
  * For STL there is another way. You supply a string object and a vector of
  * strings is returned with all the elements
  */
- 
+
 
 /** Split a STL string given some delimiter
  * @ingroup Tokenization
@@ -316,8 +321,8 @@ void remove_quotes(char** _str);
  * Returns a the number of tokens found. The tokens are in the variable results.
  */
 int splitString(const string& input, const string& delimiter, vector< string >&
-    results, bool includeEmpties=false);
-    
+                results, bool includeEmpties=false);
+
 /** Returns first token (char*)
  * @ingroup Tokenization
  * 
@@ -327,7 +332,10 @@ int splitString(const string& input, const string& delimiter, vector< string >&
  * std::cout << "First  word: " << first_token(line) << std::endl;
  * @endcode
  */
-inline char* first_token(const char* str) { return strtok((char*) str, " \n"); }
+inline char* first_token(const char* str)
+{
+    return strtok((char*) str, " \n");
+}
 
 /** Returns first token (STL)
  * @ingroup Tokenization
@@ -338,8 +346,10 @@ inline char* first_token(const char* str) { return strtok((char*) str, " \n"); }
  * std::cout << "First  word: " << first_token(line) << std::endl;
  * @endcode
  */
-inline char* first_token(const string& str) { return strtok((char*) str.c_str(),
-    " \n"); }
+inline char* first_token(const string& str)
+{
+    return strtok((char*) str.c_str(), " \n");
+}
 
 /** Returns next token
  * @ingroup Tokenization
@@ -359,7 +369,10 @@ inline char* first_token(const string& str) { return strtok((char*) str.c_str(),
  * std::cout << "Second  word: " << next_token(line) << std::endl;
  * @endcode
  */
-inline char* next_token() { return strtok((char*) NULL, " \n"); }
+inline char* next_token()
+{
+    return strtok((char*) NULL, " \n");
+}
 
 /** Returns next token
  * @ingroup Tokenization
@@ -379,7 +392,7 @@ string next_token(const string& str, int& i);
  * Further word readings should use the function read_next_word
  */
 char* first_word(char* str, int _errno=2106, string
-    errmsg="first word: String not found", int exit=0);
+                 errmsg="first word: String not found", int exit=0);
 
 /** Get non empty string (STL)
  * @ingroup Tokenization
@@ -387,8 +400,10 @@ char* first_word(char* str, int _errno=2106, string
  * Same as the previous function but for STL strings
  */
 inline char* first_word(string& str, int _errno=2106, string
-    errmsg="first word: String not found", int exit=0){ return
-    first_word((char*) str.c_str(), _errno, errmsg, exit); }
+                        errmsg="first word: String not found", int exit=0)
+{
+    return first_word((char*) str.c_str(), _errno, errmsg, exit);
+}
 
 /** Get next non empty string
  * @ingroup Tokenization
@@ -397,13 +412,16 @@ inline char* first_word(string& str, int _errno=2106, string
  * error produced if the word is empty
  */
 inline char* next_word(int _errno=2106, string
-    errmsg="next word: String not found", int exit=0) { return
-    first_word((char*) NULL, _errno, errmsg, exit);}
+                       errmsg="next word: String not found", int exit=0)
+{
+    return
+        first_word((char*) NULL, _errno, errmsg, exit);
+}
 
 // TODO Document
 /// @ingroup Tokenization
 void tokenize(const string& str, vector< string >& tokens, const string&
-    delimiters=" \t");
+              delimiters=" \t");
 
 /** @defgroup ReadLists Read lists
  * @ingroup Arguments
@@ -438,11 +456,11 @@ void tokenize(const string& str, vector< string >& tokens, const string&
  */
 template<typename T>
 void read_float_list(const char* str, int N, vector< T >& v, int _errno=2105,
-    string errmsg="Error reading list", int exit=0)
+                     string errmsg="Error reading list", int exit=0)
 {
     T  valueF;
     char* token;
-    
+
     token = first_token(str);
     for (int i=0; i<N; i++)
     {
@@ -453,7 +471,7 @@ void read_float_list(const char* str, int N, vector< T >& v, int _errno=2105,
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         try
         {
             valueF = (T) AtoF(token);
@@ -462,9 +480,9 @@ void read_float_list(const char* str, int N, vector< T >& v, int _errno=2105,
         {
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         v.push_back(valueF);
-        
+
         if (i != N-1)
             token = next_token();
     }
@@ -475,11 +493,12 @@ void read_float_list(const char* str, int N, vector< T >& v, int _errno=2105,
  */
 template<typename T>
 void read_float_list(const string& str, int& i, int N, vector< T >& v, int
-    _errno=2105, string errmsg="Error reading list", int exit=0)
+                     _errno=2105, string errmsg="Error reading list",
+                     int exit=0)
 {
     T  valueF;
     string token;
-    
+
     token = next_token(str, i);
     for (int j=0; j<N; j++)
     {
@@ -490,7 +509,7 @@ void read_float_list(const string& str, int& i, int N, vector< T >& v, int
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         try
         {
             valueF = (T) AtoF(token.c_str());
@@ -499,9 +518,9 @@ void read_float_list(const string& str, int& i, int N, vector< T >& v, int
         {
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         v.push_back(valueF);
-        
+
         if (j != N-1)
             token = next_token(str, i);
     }
@@ -510,13 +529,13 @@ void read_float_list(const string& str, int& i, int N, vector< T >& v, int
 /** List to matrix1D
  * @ingroup ReadLists
  */
-template<typename T> 
+template<typename T>
 void read_float_list(const char* str, int N, matrix1D< T >& v, int _errno=2105,
-    string errmsg="Error reading floating list", int exit=0)
+                     string errmsg="Error reading floating list", int exit=0)
 {
     T  valueF;
     char* token;
-    
+
     token = first_token(str);
     for (int i=0; i<N; i++)
     {
@@ -527,7 +546,7 @@ void read_float_list(const char* str, int N, matrix1D< T >& v, int _errno=2105,
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         try
         {
             valueF= (T) AtoF(token);
@@ -536,7 +555,7 @@ void read_float_list(const char* str, int N, matrix1D< T >& v, int _errno=2105,
         {
             REPORT_ERROR(_errno, errmsg);
         }
-        
+
         DIRECT_VEC_ELEM(v, i) = valueF;
         if (i != N-1)
             token = next_token();
@@ -578,7 +597,7 @@ void read_float_list(const char* str, int N, matrix1D< T >& v, int _errno=2105,
  * @endcode
  */
 char* get_param(int argc, char** argv, const char* param, const char*
-    option=NULL, int _errno=-1, string errmsg="", int exit = 0);
+                option=NULL, int _errno=-1, string errmsg="", int exit = 0);
 
 /** Get two float parameters after a flag from the command line.
  * @ingroup CommandLineFunctions
@@ -589,8 +608,8 @@ char* get_param(int argc, char** argv, const char* param, const char*
  * found
  */
 bool get_2_double_params(int argc, char** argv, const char* param, double& v1,
-    double& v2, double v1_def, double v2_def, int _errno=2104, string errmsg="",
-    int exit = 0);
+                         double& v2, double v1_def, double v2_def,
+                         int _errno=2104, string errmsg="", int exit = 0);
 
 /** Get 3 float parameters after a flag from the command line
  * @ingroup CommandLineFunctions
@@ -601,9 +620,10 @@ bool get_2_double_params(int argc, char** argv, const char* param, double& v1,
  * found
  */
 bool get_3_double_params(int argc, char** argv, const char* param, double& v1,
-    double& v2, double& v3, double v1_def, double v2_def, double v3_def,
-    int _errno=2104, string errmsg="", int exit=0);
-    
+                         double& v2, double& v3, double v1_def, double v2_def,
+                         double v3_def, int _errno=2104, string errmsg="",
+                         int exit=0);
+
 /** Get boolean parameters from the command line
  * @ingroup CommandLineFunctions
  * 
@@ -676,8 +696,9 @@ int component_no(const string& str);
  * flag then no brackets are needed
  */
 matrix1D<double> get_vector_param(int argc, char** argv, const char* param, int
-    dim=2, int _errno=-1, string errmsg="", int exit=0);
-    
+                                  dim=2, int _errno=-1, string errmsg="",
+                                  int exit=0);
+
 /** Get specific command line
  * @ingroup CommandLineFunctions
  * 
@@ -711,8 +732,8 @@ matrix1D<double> get_vector_param(int argc, char** argv, const char* param, int
  * 
  * If the program name is not found or the corresponding brackets then argcp==0
  */
-void specific_command_line(const string &prog_name, int argc, char **argv,
-    int &argcp, char ***argvp);
+void specific_command_line(const string &prog_name, int argc, char** argv,
+                           int &argcp, char*** argvp);
 
 /** Generate argc and argv for a string
  * @ingroup CommandLineFunctions
@@ -751,8 +772,8 @@ void specific_command_line(const string &prog_name, int argc, char **argv,
  * @endcode
  */
 void generate_command_line(const string& command_line, int& argcp, char**&
-    argvp, char*& copy);
-    
+                           argvp, char*& copy);
+
 /** Generate articial command line from a file
  * @ingroup CommandLineFunctions
  * 
@@ -763,8 +784,8 @@ void generate_command_line(const string& command_line, int& argcp, char**&
  * Returns TRUE if the parameter is found in the file, and FALSE if it is not
  */
 bool generate_command_line(FILE* fh, const char* param, int& argcp, char**&
-    argvp, char*& copy);
-    
+                           argvp, char*& copy);
+
 /** Get parameter from file
  * @ingroup CommandLineFunctions
  * 
@@ -786,8 +807,8 @@ bool generate_command_line(FILE* fh, const char* param, int& argcp, char**&
  * the command line get_param
  */
 string get_param(FILE* fh, const char* param, int skip=0, const char*
-    option=NULL, int _errno=-1, string errmsg="", int exit=0);
-    
+                 option=NULL, int _errno=-1, string errmsg="", int exit=0);
+
 /** Check if a parameter is present in a file
  * @ingroup CommandLineFunctions
  * 
@@ -804,7 +825,7 @@ bool check_param(FILE* fh, const char* param);
  * The same as before but reading is done from a file
  */
 matrix1D< double > get_vector_param(FILE* fh, const char* param, int dim=2,
-    int _errno=-1, string errmsg="", int exit = 0);
-
+                                    int _errno=-1, string errmsg="",
+                                    int exit=0);
 
 #endif
