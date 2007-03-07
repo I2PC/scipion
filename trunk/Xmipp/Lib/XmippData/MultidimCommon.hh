@@ -105,9 +105,9 @@ void type_cast(const maT& v1, maT1& v2)
         v2.clear();
         return;
     }
-    
+
     v2.resize(v1);
-    
+
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v2)
-            MULTIDIM_ELEM(v2, i) = (T1) MULTIDIM_ELEM(v1, i);
+        MULTIDIM_ELEM(v2, i) = (T1) MULTIDIM_ELEM(v1, i);
 }
