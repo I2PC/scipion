@@ -1,0 +1,4 @@
+#!/bin/sh
+xmipp_MLalign2D -MLF "$@"
+
+
