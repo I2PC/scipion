@@ -339,10 +339,6 @@ void Prog_MLalign2D_prm::produce_Side_info() {
     }
   }
 
-  // Randomize order of selfile to have optimal parallelization behaviour
-  SFpart=SF.randomize();
-  SF=SFpart;
-
   // Get image sizes and total number of images
   SF.ImgSize(dim,dim);
   hdim=dim/2;
@@ -2614,7 +2610,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
       imgs_oldtheta[imgno]=Iref[opt_refno].Theta();
     }
 
-    // Output docfile 
+    // Output odcfile 
     sumcorr+=maxcorr;
     if (write_docfile) {
       opt_flip=0.;
