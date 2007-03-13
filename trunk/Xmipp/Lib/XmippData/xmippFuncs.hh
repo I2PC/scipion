@@ -1183,6 +1183,7 @@ int IsBigEndian(void);
 
 /** Returns 1 if machine is little endian else 0
  * @ingroup LittleBigEndian
+ *  little-endian format (sometimes called the Intel format 
  */
 int IsLittleEndian(void);
 
