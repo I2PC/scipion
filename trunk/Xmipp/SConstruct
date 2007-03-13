@@ -80,6 +80,7 @@ if int(env['static']):
     env.Append(CXXFLAGS = '$STATIC_FLAG')
     env.Append(LINKFLAGS = '$STATIC_FLAG')
 
+
 # verbosity (for $SCONS_VERSION < 0.96.2 option has no effect)
 if int(env['quiet']):
     env['CCCOMSTR'] = 'Compiling $SOURCE'
@@ -202,6 +203,7 @@ else:
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
 
     # TIFF
+    # TODO Add include/lib directories to search path (Jumilla)
     if int(env['tiff']):
         if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
             'TIFFGetVersion();', 0):
