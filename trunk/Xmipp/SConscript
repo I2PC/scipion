@@ -765,6 +765,12 @@ AddProgram('spar', 'Applications/Src/SpAR', '*.cc', [], ['Lib'],
 AddProgram('spARMA', 'Applications/Src/SpARMA', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
+
+# Spi22em
+AddProgram('spi22em', 'Applications/Src/Spi22em', '*.cc', [], ['Lib'],
+    ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
+
 # Spider22CCP4
 AddProgram('spi22ccp4', 'Applications/Src/Spider22CCP4', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],

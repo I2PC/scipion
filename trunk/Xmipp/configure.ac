@@ -279,6 +279,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Sort_junk/Makefile \
 	Applications/Src/SpAR/Makefile \
 	Applications/Src/SpARMA/Makefile \
+        Applications/Src/Spi22em/Makefile \
         Applications/Src/Spider22CCP4/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
 	Applications/Src/Split_selfile/Makefile \
