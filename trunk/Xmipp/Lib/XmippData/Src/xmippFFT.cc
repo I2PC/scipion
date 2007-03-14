@@ -166,6 +166,125 @@ void InverseFourierTransformHalf(const matrix2D< complex<double> > &in,
   out.set_Xmipp_origin();
 }
 
+/* FFT shifts ------------------------------------------------------------ */
+void ShiftFFT(matrix1D< complex< double > >& v,
+	      double xshift)
+{
+    double dotp,a,b,c,d,ac,bd,ab_cd;
+    double xxshift=xshift/(double)XSIZE(v);
+    for (int j=0; j<XSIZE(v); j++)
+    {
+	dotp=-2*PI*((double)(j)*xxshift);
+	a=cos(dotp);
+	b=sin(dotp);
+	c=(v).__m[j].real();
+	d=(v).__m[j].imag();
+	ac=a*c;
+	bd=b*d;
+	ab_cd=(a+b)*(c+d); // (ab_cd-ac-bd = ad+bc : but needs 4 multiplications)
+	(v).__m[j]=complex<double>(ac-bd,ab_cd-ac-bd);
+    }
+}
+
+void ShiftFFT(matrix2D< complex< double > >& v,
+	      double xshift, double yshift) 
+{
+    double dotp,a,b,c,d,ac,bd,ab_cd;
+    double xxshift=xshift/(double)XSIZE(v);
+    double yyshift=yshift/(double)YSIZE(v);
+    for (int i=0; i<YSIZE(v); i++)
+    {
+	for (int j=0; j<XSIZE(v); j++)
+	{
+	    dotp=-2*PI*((double)(j)*xxshift+(double)(i)*yyshift);
+	    a=cos(dotp);
+	    b=sin(dotp);
+	    c=(v).__m[(i)*XSIZE(v)+(j)].real();
+	    d=(v).__m[(i)*XSIZE(v)+(j)].imag();
+	    ac=a*c;
+	    bd=b*d;
+	    ab_cd=(a+b)*(c+d);
+	    (v).__m[(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
+	}
+    }
+}
+
+void ShiftFFT(matrix3D< complex< double > >& v,
+	      double xshift, double yshift, double zshift) 
+{
+    double dotp,a,b,c,d,ac,bd,ab_cd;
+    double xxshift=xshift/(double)XSIZE(v);
+    double yyshift=yshift/(double)YSIZE(v);
+    double zzshift=zshift/(double)ZSIZE(v);
+    for (int k=0; k<ZSIZE(v); k++)
+    {
+	for (int i=0; i<YSIZE(v); i++)
+	{
+	    for (int j=0; j<XSIZE(v); j++)
+	    {
+		dotp=-2*PI*((double)(j)*xxshift+(double)(i)*yyshift+(double)(k)*zzshift);
+		a=cos(dotp);
+		b=sin(dotp);
+		c=(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].real();
+		d=(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].imag();
+		ac=a*c;
+		bd=b*d;
+		ab_cd=(a+b)*(c+d);
+		(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
+	    }
+	}
+    }
+}
+
+/* Position origin at center ----------------------------------------------- */
+void CenterOriginFFT(matrix1D< complex< double > >& v, bool forward) 
+{
+    double xshift=-(double)(int)(XSIZE(v)/2);
+    if (forward) 
+    {
+	ShiftFFT(v,xshift);
+	CenterFFT(v,forward);
+    }
+    else 
+    {
+	CenterFFT(v,forward);
+	ShiftFFT(v,-xshift);
+    }
+}
+
+void CenterOriginFFT(matrix2D< complex< double > >& v, bool forward) 
+{
+    double xshift=-(double)(int)(XSIZE(v)/2);
+    double yshift=-(double)(int)(YSIZE(v)/2);
+    if (forward) 
+    {
+	ShiftFFT(v,xshift,yshift);
+	CenterFFT(v,forward);
+    }
+    else 
+    {
+	CenterFFT(v,forward);
+	ShiftFFT(v,-xshift,-yshift);
+    }
+}
+
+void CenterOriginFFT(matrix3D< complex< double > >& v, bool forward) 
+{
+    double xshift=-(double)(int)(XSIZE(v)/2);
+    double yshift=-(double)(int)(YSIZE(v)/2);
+    double zshift=-(double)(int)(ZSIZE(v)/2);
+    if (forward) 
+    {
+	ShiftFFT(v,xshift,yshift,zshift);
+	CenterFFT(v,forward);
+    }
+    else 
+    {
+	CenterFFT(v,forward);
+	ShiftFFT(v,-xshift,-yshift,-zshift);
+    }
+}
+
 /* FFT Magnitude 1D. ------------------------------------------------------- */
 void FFT_magnitude(const matrix1D< complex<double> > &v,
    matrix1D<double> &mag) {

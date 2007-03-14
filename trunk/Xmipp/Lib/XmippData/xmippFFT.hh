@@ -406,6 +406,54 @@ void CenterFFT(matrix3D< T >& v, bool forward)
         }
 }
 
+/** FFT shift 1D
+ * @ingroup FourierOperations
+ * 
+ * Calculates the Fourier Transform of the shifted real-space vector
+ * by phase shifts in Fourier space
+ */
+void ShiftFFT(matrix1D< complex< double > >& v,
+	      double xshift); 
+
+/** FFT shift 2D
+ * @ingroup FourierOperations
+ * 
+ * Calculates the Fourier Transform of the shifted real-space vector
+ * by phase shifts in Fourier space
+ */
+void ShiftFFT(matrix2D< complex< double > >& v,
+	      double xshift, double yshift); 
+
+/** FFT shift 3D
+ * @ingroup FourierOperations
+ * 
+ * Calculates the Fourier Transform of the shifted real-space vector
+ * by phase shifts in Fourier space
+ */
+void ShiftFFT(matrix3D< complex< double > >& v,
+	      double xshift, double yshift, double zshift); 
+
+/** Place the origin of the 1D FFT at the center of the vector and back
+ * @ingroup FourierOperations
+ * 
+ * Changes the real and the fourier space origin
+ */
+void CenterOriginFFT(matrix1D< complex< double > >& v, bool forward);
+
+/** Place the origin of the 2D FFT at the center of the image and back
+ * @ingroup FourierOperations
+ * 
+ * Changes the real and the fourier space origin
+ */
+void CenterOriginFFT(matrix2D< complex< double > >& v, bool forward);
+
+/** Place the origin of the 3D FFT at the center of the volume and back
+ * @ingroup FourierOperations
+ * 
+ * Changes the real and the fourier space origin
+ */
+void CenterOriginFFT(matrix3D< complex< double > >& v, bool forward);
+
 /** FFT Magnitude 1D
  * @ingroup FourierOperations
  */
