@@ -123,6 +123,7 @@ SUBDIRS = 2DInterpolation \
 	Split_selfile \
 	SpAR \
 	SpARMA \
+	Spi22em \
 	Spider22CCP4 \
 	Spots2RealSpace2D \
 	SSNR \
