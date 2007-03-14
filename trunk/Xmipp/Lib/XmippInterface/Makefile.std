@@ -42,7 +42,7 @@ SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
                  Src/xmippCrisp.o Src/xmippVrml.o  Src/xmippOpenDX.o \
 		 Src/xmippAPH3D.o Src/xmippAPHorigmerg.o \
 		 Src/xmippJDL.o Src/xmippOpenDXang.o Src/xmippCCLattice_IO.o \
-		 Src/xmippCCP4.o
+		 Src/xmippCCP4.o Src/xmippEM.o
 SRC_OBJS_INRIA = Src/xmippINRIA.o
 SRC_OBJS_VTK   = Src/xmippVTK.o
 

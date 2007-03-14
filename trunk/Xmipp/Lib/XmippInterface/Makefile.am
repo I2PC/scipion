@@ -13,7 +13,8 @@ libXmippInterface_@host_os@_la_SOURCES = Src/xmippAPH.cc \
 	Src/xmippAPH3D.cc \
 	Src/xmippAPHorigmerg.cc \
 	Src/xmippCCLattice_IO.cc \
-	Src/xmippCCP4.cc
+	Src/xmippCCP4.cc \
+	Src/xmippEM.cc
 
 libXmippInterfaceINRIA_@host_os@_la_SOURCES = Src/xmippINRIA.cc
 
@@ -22,7 +23,7 @@ libXmippInterfaceVTK_@host_os@_la_SOURCES   = Src/xmippVTK.cc
 EXTRA_DIST = xmippAPH3D.hh        xmippCrisp.hh  xmippOpenDX.hh  xmippVrml.hh \
 	xmippAPH.hh          xmippINRIA.hh  xmippSpider.hh  xmippVTK.hh \
 	xmippAPHorigmerg.hh  xmippJDL.hh    xmippVirus.hh xmippOpenDXang.hh \
-	xmippCCLattice_IO.hh xmippCCP4.hh
+	xmippCCLattice_IO.hh xmippCCP4.hh xmippEM.hh
 
 
 #libXmippInterfaceVTK_la_LIBADD = /usr/local/lib/vtk/libvtkCommon.a \
