@@ -453,20 +453,26 @@ void save_intermediate_results(const FileName &fn_root, bool
        global_prm->particle_vertical==-1) {
       save_ctf()=global_prm->ctftomodel();
 
+      int Ydim=YSIZE(save_ctf());
+      int Xdim=XSIZE(save_ctf());
+      
+      #ifdef NEVER_DEFINED
       // Substract the background from the PSD
-      for (int i=0; i<YSIZE(global_x_contfreq); i++)
-	 for (int j=0; j<XSIZE(global_x_contfreq); j++) {
-            double f_x=DIRECT_MAT_ELEM(global_x_contfreq,i,j);
-            if (f_x<0) {
-               double f_y=DIRECT_MAT_ELEM(global_y_contfreq,i,j);
-               double bg=global_ctfmodel.CTFnoise_at(f_x,f_y);
-               save_ctf(i,j)-=bg;
-            }
-	 }
+      matrix1D<int> idx(2);
+      matrix1D<double> freq(2);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(save_ctf()) {
+         XX(idx)=j; YY(idx)=i;
+         FFT_idx2digfreq(*f, idx, freq);
+         digfreq2contfreq(freq, freq, global_prm->Tm);
+         double bg=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
+         save_ctf(i,j)-=bg;
+      }
+      #endif
 
       // Copy the model
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
-         save_ctf(i,j)=save(i,j);
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(save_ctf())
+         if ((i<Ydim/2 && j<Xdim/2) || (i>=Ydim/2 && j>=Xdim/2))
+            save_ctf(i,j)=save(i,j);
    } else
       global_prm->generate_model(
          global_prm->particle_vertical,global_prm->particle_horizontal,
@@ -544,7 +550,7 @@ void Adjust_CTF_Parameters::generate_model(int Ydim, int Xdim,
    matrix1D<int>    idx(2);  // Indexes for Fourier plane
    matrix1D<double> freq(2); // Frequencies for Fourier plane
 
-   // The right part is the scaled PSD
+   // Copy the PSD
    model=*f;
 
    // Scale and remove negative values because of the interpolation
@@ -552,19 +558,19 @@ void Adjust_CTF_Parameters::generate_model(int Ydim, int Xdim,
    FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
       if (model(i,j)<0) model(i,j)=0;
  
-   // The left part is the CTF model
+   // Generate the CTF model
    assign_CTF_from_parameters(VEC_ARRAY(*global_adjust),global_ctfmodel,
       0,ALL_CTF_PARAMETERS,global_prm->astigmatic_noise);
    global_ctfmodel.Produce_Side_Info();
 
    FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
-      if (j>=Xdim/2) continue;
-      
-      XX(idx)=j; YY(idx)=i;
-      FFT_idx2digfreq(model, idx, freq);
-      digfreq2contfreq(freq, freq, global_prm->Tm);
-      
-      model(i,j)=global_ctfmodel.CTFpure_at(XX(freq),YY(freq));
+      if ((j>=Xdim/2 && i>=Ydim/2) || (j<Xdim/2 && i<Ydim/2)) {
+	 XX(idx)=j; YY(idx)=i;
+	 FFT_idx2digfreq(model, idx, freq);
+	 digfreq2contfreq(freq, freq, global_prm->Tm);
+
+	 model(i,j)=global_ctfmodel.CTFpure_at(XX(freq),YY(freq));
+      }
    }
 }
 
@@ -1243,7 +1249,8 @@ void estimate_envelope_parameters() {
    global_ctfmodel.alpha           = 0.0;
    global_ctfmodel.DeltaF          = 0.0;
    global_ctfmodel.DeltaR          = 0.0;
-   global_ctfmodel.Q0              = 0.0;
+   if (global_prm->initial_ctfmodel.Q0!=0)
+      global_ctfmodel.Q0=global_prm->initial_ctfmodel.Q0;
    COPY_ctfmodel_TO_CURRENT_GUESS;
 
    // Now optimize the envelope
@@ -1560,6 +1567,8 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    if (prm.initial_ctfmodel.K==0) {
       global_ctfmodel.kV              = prm.initial_ctfmodel.kV;
       global_ctfmodel.Cs              = prm.initial_ctfmodel.Cs;
+      if (prm.initial_ctfmodel.Q0!=0)
+         global_ctfmodel.Q0=prm.initial_ctfmodel.Q0;
       estimate_envelope_parameters();
    } else {
       global_ctfmodel.K               = prm.initial_ctfmodel.K;
@@ -1593,6 +1602,8 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    steps.init_constant(1);
    steps(3)=0; // kV
    steps(5)=0; // The spherical aberration (Cs) is not optimized
+   if (prm.initial_ctfmodel.Q0!=0)
+      steps(12)=0; // Q0
    if (!global_prm->astigmatic_noise)
       steps(16)=steps(17)=steps(20)=steps(21)=steps(23)=0;
    Powell_optimizer(*global_adjust, 0+1,
@@ -1616,6 +1627,8 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone) {
    steps.init_constant(1);
    steps(3)=0; // kV
    steps(5)=0; // The spherical aberration (Cs) is not optimized
+   if (prm.initial_ctfmodel.Q0!=0)
+      steps(12)=0; // Q0
    if (!global_prm->astigmatic_noise)
       steps(16)=steps(17)=steps(20)=steps(21)=steps(23)=steps(26)=
       steps(27)=steps(29)=0;
