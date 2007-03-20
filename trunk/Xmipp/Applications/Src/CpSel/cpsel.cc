@@ -92,13 +92,12 @@ try {
       // Get file  
       SelLine line= SF.current();
       if (line.Is_data()) { 		//The SelLine is not a comment
-       if(line.get_label()==SelLine::DISCARDED) continue;
-       FileName in_name = line.get_text();       
-       comStr = "cp " + org_path + in_name + " " + dest_path;      
-       
-       if (!system(comStr.c_str())) 
-	   cout << " file " << org_path << in_name << " copied to " << dest_path << endl;
-      }
+       if (SF.Is_ACTIVE()){
+          FileName in_name = line.get_text();       
+          comStr = "cp " + org_path + in_name + " " + dest_path;      
+          system(comStr.c_str()) ;
+       }//if getlabel
+      }//if isdata
       SF.next();
    }  // while 
  
