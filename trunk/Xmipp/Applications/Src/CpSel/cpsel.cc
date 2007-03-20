@@ -87,13 +87,17 @@ try {
   }
 
    SelFile SF(sel_file);
+   SelFile SF_out;
    string comStr;
    while (!SF.eof()) {
       // Get file  
       SelLine line= SF.current();
       if (line.Is_data()) { 		//The SelLine is not a comment
        if (SF.Is_ACTIVE()){
-          FileName in_name = line.get_text();       
+          FileName in_name = line.get_text();
+          string pathname = line.get_text();
+          string myfilename=pathname.substr(pathname.rfind("/")+1,string::npos);
+          SF_out.insert(myfilename,SelLine::ACTIVE);
           comStr = "cp " + org_path + in_name + " " + dest_path;      
           system(comStr.c_str()) ;
        }//if getlabel
@@ -101,10 +105,8 @@ try {
       SF.next();
    }  // while 
  
-
    // now copy sel file
-   comStr = "cp " + sel_file + " " + dest_path; 		 
-   system(comStr.c_str()); 
+   SF_out.write(sel_file.remove_directories());
    exit(0);
 } catch (Xmipp_error XE) {cout << XE;}
 
