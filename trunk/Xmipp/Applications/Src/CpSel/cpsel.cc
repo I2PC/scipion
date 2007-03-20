@@ -92,6 +92,7 @@ try {
       // Get file  
       SelLine line= SF.current();
       if (line.Is_data()) { 		//The SelLine is not a comment
+       if(line.get_label()==SelLine::DISCARDED) continue;
        FileName in_name = line.get_text();       
        comStr = "cp " + org_path + in_name + " " + dest_path;      
        
