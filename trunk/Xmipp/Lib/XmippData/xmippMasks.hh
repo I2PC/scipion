@@ -800,7 +800,7 @@ public:
 
     /** Generate mask for an image following a pattern
      */
-    template<typenmae T>
+    template<typename T>
     void generate_3Dmask(const matrix3D< T >& m)
     {
         resize(m);
