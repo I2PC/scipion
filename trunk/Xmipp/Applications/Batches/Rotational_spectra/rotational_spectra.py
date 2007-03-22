@@ -150,7 +150,8 @@ class rotational_spectra_class:
        self.myBase_FileName = (os.path.splitext(str(SelFileName)))[0] 
        self.myAbsolute_Root_Path= os.path.dirname(self._SelFileName)+'/'
 
-       self.init_log_system()
+       self.mylog=self.init_log_system(self.myAbsolute_Root_Path,
+                                       self._Base_WorkDirectory)
        if (DO_DELETE_WORKING_DIRECTORY): 
           self.delete_working_directory()
        self.create_working_directory()
@@ -176,7 +177,7 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    #create log file and initialize log system
    #------------------------------------------------------------------------
-   def init_log_system(self):
+   def init_log_system(self,myAbsolute_Root_Path,_Base_WorkDirectory):
        import os, sys
        import logging
        import socket
@@ -184,20 +185,20 @@ class rotational_spectra_class:
            more info at:
           http://webmaster.iu.edu/tool_guide_info/python/lib/module-logging.html
        """
-       LogName = self.myAbsolute_Root_Path + 'Logs/'
+       LogName = myAbsolute_Root_Path + 'Logs/'
        if ( not os.path.exists(LogName ) ):
                 os.makedirs(LogName)
        LogName += (os.path.splitext(str(sys.argv[0])))[0]
        LogName += '_'
-       LogName += self._Base_WorkDirectory
+       LogName += _Base_WorkDirectory
        LogName += '.log'
 
-       self.mylog = logging.getLogger(str(sys.argv[0]))
+       mylog = logging.getLogger(str(sys.argv[0]))
        hdlr = logging.FileHandler(LogName)
        formatter = logging.Formatter('%(levelname)s (%(lineno)d) %(message)s (%(asctime)s)')
        hdlr.setFormatter(formatter)
-       self.mylog.addHandler(hdlr) 
-       self.mylog.setLevel(logging.INFO)
+       mylog.addHandler(hdlr) 
+       mylog.setLevel(logging.INFO)
 
        # append a line with user, machine and date
        myusername = str(os.environ.get('USERNAME'))
@@ -209,7 +210,9 @@ class rotational_spectra_class:
        event += myusername + '@' 
        event += myhost + ':' 
        event += mypwd 
-       self.mylog.info(event)
+       mylog.info(event)
+       
+       return mylog
 
    #------------------------------------------------------------------------
    #delete_working directory
@@ -219,7 +222,7 @@ class rotational_spectra_class:
        import shutil
        print '*********************************************************************'
        print '* Delete working directory tree'
-       self.mylog.info("command:\tDelete working directory tree")
+       self.mylog.info("Delete working directory tree")
        
        if os.path.exists(self._WorkDirectory):
           shutil.rmtree(self._WorkDirectory)
@@ -230,7 +233,7 @@ class rotational_spectra_class:
        import os
        print '*********************************************************************'
        print '* Create working directory'
-       self.mylog.info("command:\tCreate working directory")
+       self.mylog.info("Create working directory")
        
        if not os.path.exists(_WorkDirectory):
           os.makedirs(_WorkDirectory)
@@ -245,19 +248,19 @@ class rotational_spectra_class:
       command = 'xmipp_cpsel ' + self._SelFileName + ' ./'
       print '* ',command
       os.system(command)
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       print '*********************************************************************'
       print '*  create selfile'
       command = 'rm *sel; xmipp_do_selfile  \"*\" | grep -v \".sel \"> ' + os.path.basename(self._SelFileName)
       print '* ',command
       os.system(command)
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       print '*********************************************************************'
       print '*  computing initial reference using statis'
       command = 'xmipp_statis -i ' + os.path.basename(self._SelFileName)
       print '* ',command
       os.system(command)
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       
       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
       print '*********************************************************************'
@@ -269,7 +272,7 @@ class rotational_spectra_class:
               ' -ref ' + selfile_without_ext + '.med.xmp' +\
               ' '  + self._Align2DExtraCommand
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       os.system(command)
       if self._DisplayResults==True:
          command='xmipp_show -sel '+ os.path.basename(self._SelFileName)
@@ -277,13 +280,13 @@ class rotational_spectra_class:
          print '* ',command
          print '* You may consider removing bad images'
          print ' double click them and sale sel file as DISCARTED'
-         self.mylog.info("command:\t"+command)
+         self.mylog.info(command)
          os.system(command)
       if self._DisplayResults==True:
          command='xmipp_show -img '+ selfile_without_ext + '.med.xmp'
          print '*********************************************************************'
          print '* ',command
-         self.mylog.info("command:\t"+command)
+         self.mylog.info(command)
          os.system(command)
       print "\n"
 
@@ -308,7 +311,7 @@ class rotational_spectra_class:
               ' -low ' + str(self._OuterRadius+2) + ' -high ' + str(self._OuterRadius+5)
               
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       program = os.popen(command,"r")
       data = program.read()
       print data
@@ -327,7 +330,7 @@ class rotational_spectra_class:
       command='xmipp_applygeo'+ \
               ' -i ' +os.path.basename(self._SelFileName) 
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       program = os.system(command)     
 
    #------------------------------------------------------------------------
@@ -358,7 +361,7 @@ class rotational_spectra_class:
       command='xmipp_reverse_endian'+ \
               ' -i ' + os.path.basename(self._SelFileName) 
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       program = os.system(command)     
 
    #------------------------------------------------------------------------
@@ -378,7 +381,7 @@ class rotational_spectra_class:
               ' -r1 '  + str(self._InnerRadius) +   ' -r2 '   + str(self._OuterRadius) 
               
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       program = os.system(command)     
       if(self._DisplayResults==True):
           print '*********************************************************************'
@@ -388,7 +391,7 @@ class rotational_spectra_class:
           command='xmipp_show'+ \
                   ' -spect ' + spectraFileName 
           print '* ',command
-          self.mylog.info("command:\t"+command)
+          self.mylog.info(command)
           program = os.system(command)     
 
   
@@ -407,7 +410,7 @@ class rotational_spectra_class:
               ' -cout ' + kerdensom_out  + \
               ' '  + self._KerdensonExtraCommand
       print '* ',command
-      self.mylog.info("command:\t"+command)
+      self.mylog.info(command)
       os.system(command)
       if self._DisplayResults==True:
          command='xmipp_show -spectsom ' + \
@@ -415,7 +418,7 @@ class rotational_spectra_class:
                   ' -din ' + spectraFileName
          print '*********************************************************************'
          print '* ',command
-         self.mylog.info("command:\t"+command)
+         self.mylog.info(command)
          os.system(command)
       print "\n"
 
@@ -423,7 +426,10 @@ class rotational_spectra_class:
    #clean and close everything
    #------------------------------------------------------------------------
    def close(self):
-      print "Script finished"
+         message="Script finished"
+         print '*********************************************************************'
+         print '* ',message
+         self.mylog.info(message)
       
 
 #
