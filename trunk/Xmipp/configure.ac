@@ -145,17 +145,9 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/OldXmipp/FindSCenter/Makefile \
 	Applications/Batches/Makefile \
 	Applications/Batches/Do_Selfile/Makefile \
-	Applications/Batches/Gnuplot_mplot/Makefile \
-	Applications/Batches/Gnuplot_mprint/Makefile \
-	Applications/Batches/Iv/Makefile \
-	Applications/Batches/Look_at_FFT/Makefile \
 	Applications/Batches/PDB2descr/Makefile \
 	Applications/Batches/Pdb2surface/Makefile \
 	Applications/Batches/PDBsidechain/Makefile \
-	Applications/Batches/Showsel/Makefile \
-	Applications/Batches/ShowSOM/Makefile \
-	Applications/Batches/ShowSpectra/Makefile \
-	Applications/Batches/ShowSpectraSOM/Makefile \
 	Applications/Batches/mlf_align2d/Makefile \
 	Applications/Batches/mpi_mlf_align2d/Makefile \
 	Applications/Batches/mlf_refine3d/Makefile \
@@ -205,7 +197,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Draw_surface/Makefile \
 	Applications/Src/DWT/Makefile \
 	Applications/Src/Edit/Makefile \
-        Applications/Src/EM2Angles/Makefile \
+	Applications/Src/EM2Angles/Makefile \
 	Applications/Src/Enhance_PSD/Makefile \
 	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
@@ -279,15 +271,14 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Sort_junk/Makefile \
 	Applications/Src/SpAR/Makefile \
 	Applications/Src/SpARMA/Makefile \
-        Applications/Src/Spi22em/Makefile \
-        Applications/Src/Spider22CCP4/Makefile \
+	Applications/Src/Spi22em/Makefile \
+	Applications/Src/Spider22CCP4/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
 	Applications/Src/Split_selfile/Makefile \
 	Applications/Src/SSNR/Makefile \
 	Applications/Src/Statis/Makefile \
 	Applications/Src/Surface/Makefile \
 	Applications/Src/Symmetrize/Makefile \
-	Applications/Src/Taxa_tilt/Makefile \
 	Applications/Src/Threshold/Makefile \
 	Applications/Src/Tiff2Raw/Makefile \
 	Applications/Src/ToPDB/Makefile \

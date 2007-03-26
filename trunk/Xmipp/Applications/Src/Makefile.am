@@ -130,7 +130,6 @@ SUBDIRS = 2DInterpolation \
 	Statis \
 	Surface \
 	Symmetrize \
-	Taxa_tilt \
 	Threshold \
 	ToPDB \
 	ToPhantom \

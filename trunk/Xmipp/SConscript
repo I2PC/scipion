@@ -464,7 +464,6 @@ AddProgram('EM2Angles', 'Applications/Src/EM2Angles', '*.cc', [],
     ['XmippRecons', 'XmippRecons_Interface', 'XmippData', 'XmippInterface'])
 
 # Enhance_PSD
-# Draw_surface
 AddProgram('enhance_psd', 'Applications/Src/Enhance_PSD', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
@@ -853,17 +852,17 @@ AddProgram('window_micrograph', 'Applications/Src/Window_micrograph', '*.cc',
 # Batches (apps)
 # NOTE PDBsidechain is in the only one in perl
 AddBatch('do_selfile', 'Applications/Batches/Do_Selfile')
-AddBatch('gnuplot_mplot', 'Applications/Batches/Gnuplot_mplot')
-AddBatch('gnuplot_mprint', 'Applications/Batches/Gnuplot_mprint')
-AddBatch('iv', 'Applications/Batches/Iv')
-AddBatch('look_at_FFT', 'Applications/Batches/Look_at_FFT')
+#AddBatch('gnuplot_mplot', 'Applications/Batches/Gnuplot_mplot')
+#AddBatch('gnuplot_mprint', 'Applications/Batches/Gnuplot_mprint')
+#AddBatch('iv', 'Applications/Batches/Iv')
+#AddBatch('look_at_FFT', 'Applications/Batches/Look_at_FFT')
 AddBatch('PDB2descr', 'Applications/Batches/PDB2descr')
 AddBatch('PDBsidechain', 'Applications/Batches/PDBsidechain', '.pl')
 AddBatch('pdb2surface', 'Applications/Batches/Pdb2surface')
-AddBatch('showsel', 'Applications/Batches/Showsel')
-AddBatch('showsom', 'Applications/Batches/ShowSOM')
-AddBatch('showspectra', 'Applications/Batches/ShowSpectra')
-AddBatch('showspectsom', 'Applications/Batches/ShowSpectraSOM')
+#AddBatch('showsel', 'Applications/Batches/Showsel')
+#AddBatch('showsom', 'Applications/Batches/ShowSOM')
+#AddBatch('showspectra', 'Applications/Batches/ShowSpectra')
+#AddBatch('showspectsom', 'Applications/Batches/ShowSpectraSOM')
 
 # MPI
 if int(env['mpi']):
@@ -917,7 +916,7 @@ if int(env['gui']):
         basedir = AddLastSlash(basedir)
         fullname = env['prepend'] + name
         binprefix =  os.path.join(env['prefix'], 'bin')
-    
+
         # FIXME Shouldn't env[] variables be honored?
         includes += env['CPPPATH']
         libpath += env['LIBPATH']
