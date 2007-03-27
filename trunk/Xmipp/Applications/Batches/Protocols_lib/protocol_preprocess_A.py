@@ -18,26 +18,30 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # All filenames.tif on which to perform preprocessing
-ALLMICROGRAPHS="./*.tif"
+AllMicrographs="./*.tif"
+# {expert} Root directory name for this project:
+ProjectDir="/home2/bioinfo/scheres/work/protocols"
+# {expert} Directory name for logfiles:
+LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} Tiff2Raw
 #------------------------------------------------------------------------------------------------
 # Perform tiff2raw conversion?
-DO_TIF2RAW=False
+DoTif2Raw=True
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
 # Perform downsampling?
-DO_DOWNSAMPLE=True
+DoDownSample=True
 # Downsampling factor 
-DOWN=3
+Down=3
 #------------------------------------------------------------------------------------------------
 # {section} Power Spectral Density estimation
 #------------------------------------------------------------------------------------------------
 # Perform power spectral density estimation?
-DO_PSDESTIMATE=False
+DoEstimatePSD=True
 # Visualize estimated power spectral densities?
-DO_SHOWPSD=True
+DoVisualizePSD=True
 #------------------------------------------------------------------------------------------------
 # Particle picking
 #------------------------------------------------------------------------------------------------
@@ -48,13 +52,6 @@ DO_SHOWPSD=True
 # (Don't forget to save regularly, and always before closing the program!)
 #
 # Afterwards, you may use part B of this script to continue your pre-processing
-#
-#
-# {expert} Log File Directory
-LogPath="Logs"
-#
-# {expert} Log File Name (.log will be added)
-LogFileName="G40P"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -64,31 +61,35 @@ LogFileName="G40P"
 class preprocess_A_class:
 
 	#init variables
-	def __init__(self,ALLMICROGRAPHS,
-		     DO_TIF2RAW,
-		     DO_DOWNSAMPLE,
-		     DOWN,
-		     DO_PSDESTIMATE,
-		     DO_SHOWPSD,
-		     LogPath='Logs',
-		     LogName='logfile',
-		     debug='off',
-		     theSmtpLocalServer='mail.cnb.uam.es'
-		     ):
+	def __init__(self,
+                     AllMicrographs,
+                     ProjectDir,
+                     LogDir,
+		     DoTif2Raw,
+		     DoDownSample,
+		     Down,
+		     DoEstimatePSD,
+		     DoVisualizePSD):
 	     
 		import os
 		import sys
 		import string
-		import log
+                import log
 
-		self.ALLMICROGRAPHS=ALLMICROGRAPHS
-		self.DO_TIF2RAW=DO_TIF2RAW
-		self.DO_DOWNSAMPLE=DO_DOWNSAMPLE
-		self.DOWN=DOWN
-		self.DO_PSDESTIMATE=DO_PSDESTIMATE
-		self.DO_SHOWPSD=DO_SHOWPSD
-		self.log = log.logpyl(LogPath,LogName,'off')                  
-
+                sys.path.append(os.getcwd()+'/'+'../') # add default search path
+                self.AllMicrographs=AllMicrographs
+                self.ProjectDir=ProjectDir
+                self.LogDir=LogDir
+		self.DoTif2Raw=DoTif2Raw
+		self.DoDownSample=DoDownSample
+		self.Down=Down
+		self.DoEstimatePSD=DoEstimatePSD
+		self.DoVisualizePSD=DoVisualizePSD
+		self.log=log.init_log_system(self.ProjectDir,
+                                             self.LogDir,
+                                             sys.argv[0],
+                                             '.')
+                
 		# Execute program
 		self.process_all_micrographs()
 
@@ -97,9 +98,9 @@ class preprocess_A_class:
 		oname=self.shortname+'/'+self.shortname+'.raw'
 		print '*********************************************************************'
 		print '*  Generating RAW for micrograph: '+self.name
-		command='xmipp_tiff2raw '+self.name+' '+oname
+		command='xmipp_tiff2raw '+self.filename+' '+oname
 		print '* ',command
-		self.log.add("command\t:",command)
+		self.log.info(command)
 		os.system(command)
     
 	def perform_downsample(self):
@@ -108,9 +109,9 @@ class preprocess_A_class:
 		oname=self.shortname+'/'+self.downname+'.raw'
 		print '*********************************************************************'
 		print '*  Downsampling micrograph: '+iname
-		command='xmipp_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.DOWN)+' -kernel rectangle '+str(self.DOWN)+' '+str(self.DOWN)
+		command='xmipp_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
 		print '* ',command
-		self.log.add("command\t:",command)
+		self.log.info(command)
 		os.system(command )
 
 	def perform_psdestimate(self):
@@ -131,7 +132,7 @@ class preprocess_A_class:
 		FILE.close()
 		command='xmipp_assign_CTF -i '+pname
 		print '* ',command
-		self.log.add("command\t:",command)
+		self.log.info(command)
 		os.system(command )
 		oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
 		self.psdselfile.append(oname+' 1 \n')
@@ -144,7 +145,7 @@ class preprocess_A_class:
 		FILE.writelines(self.psdselfile)
 		command='xmipp_show -psdsel all_psds.sel &'
 		print '* ',command
-		self.log.add("command\t:",command)
+		self.log.info(command)
 		os.system(command )
     
 	def process_all_micrographs(self):
@@ -152,42 +153,40 @@ class preprocess_A_class:
 		import glob
 		print '*********************************************************************'
 		print '*  Pre-processing the following micrographs: '
-		for self.filename in glob.glob(self.ALLMICROGRAPHS):
+		for self.filename in glob.glob(self.AllMicrographs):
 			(self.filepath, self.name) = os.path.split(self.filename)
 			print '*  '+self.name
 
 		self.psdselfile = []
-		for self.filename in glob.glob(self.ALLMICROGRAPHS):
+		for self.filename in glob.glob(self.AllMicrographs):
 			(self.filepath, self.name) = os.path.split(self.filename)
 
 			self.shortname=self.name.replace ( '.tif', '' )
-			self.downname='down'+str(self.DOWN)+'_'+self.shortname
+			self.downname='down'+str(self.Down)+'_'+self.shortname
 
-			if (os.path.exists(self.shortname)==False):
-				self.log.add("command\t:",command)
-				os.system('mkdir '+self.shortname)
+                        if not os.path.exists(self.shortname):
+                            os.makedirs(self.shortname)
 
-			if (self.DO_TIF2RAW):
-				self.perform_tif2raw()
+			if (self.DoTif2Raw):
+                            self.perform_tif2raw()
 
-			if (self.DO_DOWNSAMPLE):
-				self.perform_downsample()
+			if (self.DoDownSample):
+                            self.perform_downsample()
 
-			if(os.path.exists(self.shortname+'/'+self.downname+'.raw')==False):
-				self.downname=self.shortname
+                        if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
+                            self.downname=self.shortname
 
-			if (self.DO_PSDESTIMATE):
-				self.perform_psdestimate()
+			if (self.DoEstimatePSD):
+                            self.perform_psdestimate()
 
-		if (self.DO_SHOWPSD):
+		if (self.DoVisualizePSD):
 		    self.visualize_psds()
 
-		print '*  Done pre-processing all'
-		print '*********************************************************************'
-
-	
 	def close(self):
-		self.log.close()
+                message=" Done pre-processing all"
+		print '* ',message
+		print '*********************************************************************'
+                self.log.info(message)
 #		
 # Main
 #     
@@ -195,17 +194,14 @@ if __name__ == '__main__':
 
    	# create preprocess_A_class object
 
-	preprocessA=preprocess_A_class(ALLMICROGRAPHS,\
-				       DO_TIF2RAW,\
-				       DO_DOWNSAMPLE,\
-				       DOWN,\
-				       DO_PSDESTIMATE,\
-				       DO_SHOWPSD,\
-				       LogPath,\
-				       LogFileName,\
-				       'off',\
-				       'mail.cnb.uam.es'\
-				       )
+	preprocessA=preprocess_A_class(AllMicrographs,
+                                       ProjectDir,
+                                       LogDir,
+				       DoTif2Raw,
+				       DoDownSample,
+				       Down,
+				       DoEstimatePSD,
+				       DoVisualizePSD)
 
 	# close 
 	preprocessA.close()
