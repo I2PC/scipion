@@ -80,6 +80,12 @@ public:
   int nr_pixels_rotmask;
   /** Inner and outer radii to limit the rotational search */
   double Ri, Ro;
+    /** Flag to write class averages and class selfiles (one class for
+     * each projection direction) */
+    bool output_classes;
+    /** Vector with all running class averages */
+    vector<ImageXmipp> class_avgs;
+    vector<SelFile> class_selfiles;
 
 public:
   /// Read arguments from command line
@@ -108,5 +114,7 @@ public:
   void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC);
 
 
+    /** Write to disc all class averages and selfiles */
+    void write_classes();
 };				    
 //@}
