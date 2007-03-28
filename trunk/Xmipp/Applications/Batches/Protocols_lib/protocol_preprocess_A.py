@@ -136,13 +136,14 @@ class preprocess_A_class:
 		os.system(command )
 		oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
 		self.psdselfile.append(oname+' 1 \n')
-		
+                FILE = open("all_psds.sel","w")
+		FILE.writelines(self.psdselfile)
+		FILE.close()
+
 	def visualize_psds(self):
 		import os
 		print '*********************************************************************'
 		print '*  Visualizing all PSDs: '
-		FILE = open("all_psds.sel","w")
-		FILE.writelines(self.psdselfile)
 		command='xmipp_show -psdsel all_psds.sel &'
 		print '* ',command
 		self.log.info(command)
