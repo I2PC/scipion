@@ -11,14 +11,13 @@ class automated_gui_class:
                  scriptname):
 
         self.scriptname=scriptname
-        self.MakeGui()
-        
-    def MakeGui(self):
         self.master=Tk()
         self.expert_mode=False
         self.is_setupgui=False
+        
         self.ScriptRead()
         self.ScriptParseVariables()
+        self.SetupGuiParameters()
         self.GuiFill()
         
     def ScriptRead(self):
@@ -31,7 +30,7 @@ class automated_gui_class:
             if line=="":
                 print "Error, this file does not have a {end-of-header} label"
                 sys.exit()
-            if "{is-setup}" in line:
+            if "{setup-" in line:
                 self.is_setupgui=True
             self.script_header_lines.append(line)
             if "{end-of-header}" in line:
@@ -71,6 +70,15 @@ class automated_gui_class:
                 if "{expert}" in comment:
                     isexpert="expert"
                     comment=comment.replace ('{expert}', '' )
+                elif "{setup-pre}" in comment:
+                    isexpert="setup-pre"
+                    comment=comment.replace ('{setup-pre}', '' )
+                elif "{setup-2d}" in comment:
+                    isexpert="setup-2d"
+                    comment=comment.replace ('{setup-2d}', '' )
+                elif "{setup-3d}" in comment:
+                    isexpert="setup-3d"
+                    comment=comment.replace ('{setup-3d}', '' )
                 else:
                     isexpert="normal"
         if (i-j>1):
@@ -121,7 +129,62 @@ class automated_gui_class:
                 self.variables[args[0]].append(isexpert)
 
 
-    def GuiFillProtocolVariables(self):
+    def SetupGuiParameters(self):
+        if (self.is_setupgui):
+            self.guiwidth=680
+            self.guiheight=350
+            self.columnspantextlabel=2
+            self.columntextentry=2
+            self.column_pre=0
+            self.column_2d=1
+            self.column_3d=2
+        else:
+            self.guiwidth=600
+            self.guiheight=650
+            self.columnspantextlabel=3
+            self.columntextentry=3
+
+    def GuiFill(self):
+                       
+        # Stuff to make the scrollbars work
+        vscrollbar = AutoScrollbar(self.master)
+        vscrollbar.grid(row=0, column=1, sticky=N+S)
+        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky=E+W)
+        canvas = Canvas(self.master,
+                        width=self.guiwidth,
+                        height=self.guiheight,
+                        yscrollcommand=vscrollbar.set,
+                        xscrollcommand=hscrollbar.set)
+        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+        vscrollbar.config(command=canvas.yview)
+        hscrollbar.config(command=canvas.xview)
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
+        self.frame = Frame(canvas)
+        self.frame.rowconfigure(1, weight=1)
+        self.frame.columnconfigure(1, weight=1)
+
+        # Fill the entire GUI
+        if (self.is_setupgui):
+            self.FillSetupGui()
+        else:
+            self.FillProtocolGui()
+        
+        # Launch the window
+        canvas.create_window(0, 0, anchor=NW, window=self.frame)
+        self.frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+
+        # Remove expert options in normal mode
+        if (self.expert_mode==False):
+            for w in self.widgetexpertlist:
+                w.grid_remove()  
+
+        self.master.mainloop()
+
+
+    def FillProtocolGui(self):
 
         # Script title
         headertext="GUI for Xmipp "
@@ -162,25 +225,37 @@ class automated_gui_class:
         self.GuiAddRestProtocolButtons()
 
 
-    def GuiFillSetupVariables(self):
+    def FillSetupGui(self):
 
-        # Script title
-        headertext="GUI for Xmipp Protocols"
-        self.GuiAddSection(headertext,1)
         self.which_setup=StringVar()
+        
+        # Add labels for different protocol categories
+        self.GuiAddSection("Which Xmipp protocol do you want to run?",1)
+        row=(self.frame.grid_size()[1]+1)
+        self.row_pre=row
+        self.row_2d=row
+        self.row_3d=row
+        self.l=Label(self.frame, text="Preprocessing", fg="blue", width=30)
+        self.l.grid(row=row, column=self.column_pre,columnspan=1, sticky=E)
+        self.l=Label(self.frame, text="2D analysis", fg="blue", width=30)
+        self.l.grid(row=row, column=self.column_2d,columnspan=1, sticky=E)
+        self.l=Label(self.frame, text="3D analysis", fg="blue", width=30)
+        self.l.grid(row=row, column=self.column_3d,columnspan=1, sticky=E)
 
         # Add all the variables in the script header
         self.widgetexpertlist=[]
         for var in self.vfields:
             if (self.variables[var][1]=="Section"):
-                self.GuiAddSection(self.variables[var][0],2)
+                self.GuiAddSection(self.variables[var][0],1)
             elif (self.variables[var][1]=="String"):
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
                                      self.variables[var][2],
                                      self.variables[var][4])
             elif (self.variables[var][1]=="Boolean"):
-                self.GuiAddLaunchButton(self.variables[var][3],var)
+                self.GuiAddLaunchButton(self.variables[var][3],
+                                        var,
+                                        self.variables[var][4])
             else:
                 print "ERROR",self.variables[var][1]," variable type not recognized"
                 exit
@@ -188,46 +263,6 @@ class automated_gui_class:
         # Add bottom row buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
         self.GuiAddRestSetupButtons()
-
-    def GuiFill(self):
-                       
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(self.master)
-        vscrollbar.grid(row=0, column=1, sticky=N+S)
-        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E+W)
-        canvas = Canvas(self.master,
-                        width=550,
-                        height=650,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-        vscrollbar.config(command=canvas.yview)
-        hscrollbar.config(command=canvas.xview)
-        self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(canvas)
-        self.frame.rowconfigure(1, weight=1)
-        self.frame.columnconfigure(1, weight=1)
-
-        # Fill the entire GUI
-        if (self.is_setupgui):
-            self.GuiFillSetupVariables()
-        else:
-            self.GuiFillProtocolVariables()
-        
-        # Launch the window
-        canvas.create_window(0, 0, anchor=NW, window=self.frame)
-        self.frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
-
-        # Remove expert options in normal mode
-        if (self.expert_mode==False):
-            for w in self.widgetexpertlist:
-                w.grid_remove()  
-
-        self.master.mainloop()
-
 
     def GuiAddSection(self,label,size):
         row=(self.frame.grid_size()[1]+1)
@@ -243,11 +278,23 @@ class automated_gui_class:
             self.l1.grid(row=row, column=0,columnspan=3,sticky=E)
             self.l2.grid(row=row+1, column=0,columnspan=3,sticky=E)
 
-    def GuiAddLaunchButton(self,label,value):
-        row=(self.frame.grid_size()[1]+1)
-        self.bGet = Radiobutton(self.frame, text=label, variable=self.which_setup,
+    def GuiAddLaunchButton(self,label,value,expert):
+        if (expert=="setup-pre"):
+            column=self.column_pre
+            self.row_pre+=1
+            row=self.row_pre
+        elif (expert=="setup-2d"):
+            column=self.column_2d
+            self.row_2d+=1
+            row=self.row_2d
+        elif (expert=="setup-3d"):
+            column=self.column_3d
+            self.row_3d+=1
+            row=self.row_3d
+
+        self.bGet = Radiobutton(self.frame, text=label, variable=self.which_setup, width=30,
                                 value=value,  indicatoron=0, command=self.GuiLanchSetup)
-        self.bGet.grid(row=row,columnspan=5)
+        self.bGet.grid(row=row,column=column)
 
     def GuiPositionLabel(self,label,default,variable,expert):
         row=(self.frame.grid_size()[1]+1)
@@ -256,7 +303,8 @@ class automated_gui_class:
         else:
             self.l=Label(self.frame, text=label)
         self.l.configure(wraplength=350)
-        self.l.grid(row=row, column=0,columnspan=3, sticky=E)
+        self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
+            
         return row,self.l
 
     def GuiAddBooleanEntry(self,label,default,variable,expert):
@@ -279,7 +327,7 @@ class automated_gui_class:
         self.e = Entry(self.frame, text=label, textvariable=variable)
         self.e.delete(0, END) 
         self.e.insert(0,default)
-        self.e.grid(row=row, column=3,columnspan=2,sticky=W+E)
+        self.e.grid(row=row, column=self.columntextentry,columnspan=1,sticky=W+E)
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.e)
@@ -367,16 +415,18 @@ class automated_gui_class:
         print "Launching protocol ..."
         setup=protocol_setup.setup_protocols_class(protocol_setup.ProjectDir,
                                                    protocol_setup.LogDir,
+                                                   protocol_setup.ImagesDir,
+                                                   protocol_setup.PreProcessDir,
+                                                   protocol_setup.ML2DDir,
+                                                   protocol_setup.RotSpectraDir,
+                                                   protocol_setup.RCTDir,
                                                    protocol_setup.DoSetupPreProcessA,
                                                    protocol_setup.DoSetupPreProcessB,
-                                                   protocol_setup.PreProcessDir,
-                                                   protocol_setup.ImagesDir,
                                                    protocol_setup.DoSetupML2D,
                                                    protocol_setup.DoSetupKerdensom,
-                                                   protocol_setup.ML2DDir,
                                                    protocol_setup.DoSetupRotSpectra,
-                                                   protocol_setup.RotSpectraDir,
-                                                   self.which_setup.get())
+                                                   protocol_setup.DoSetupRCT,
+                                                   self.which_setup.get())       
         
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):

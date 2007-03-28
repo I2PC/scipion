@@ -13,7 +13,22 @@
 #
 # Author: Sjors Scheres, March 2007
 #------------------------------------------------------------------------
-# {is-setup} Parameters
+# Choose the protocol(s) you want to setup:
+#------------------------------------------------------------------------
+# {setup-pre} part A: preprocess micrographs
+DoSetupPreProcessA=False
+# {setup-pre} part B: preprocess particles
+DoSetupPreProcessB=False
+# {setup-2d} Maximum-likelihood refinement
+DoSetupML2D=False
+# {setup-2d} kerdenSOM classification 
+DoSetupKerdensom=False
+# {setup-2d} Rotational spectra classification
+DoSetupRotSpectra=False
+# {setup-3d} Random Conical Tilt reconstruction
+DoSetupRCT=False
+#------------------------------------------------------------------------
+# {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
 ProjectDir="/home/scheres/work/protocols"
@@ -27,16 +42,8 @@ ImagesDir="Images"
 ML2DDir="Analyse2d"
 # {expert} Directory name for rotational spectra classification:
 RotSpectraDir="Rotspectra"
-# Micrograph preprocessing (part A)
-DoSetupPreProcessA=False
-# Micrograph preprocessing (part B)
-DoSetupPreProcessB=False
-# ML2D multi-reference alignment
-DoSetupML2D=False
-# 2D kerdenSOM classification 
-DoSetupKerdensom=False
-# Rotational spectra classification
-DoSetupRotSpectra=False
+# {expert} Directory name for Random Conical Tilt reconstruction:
+RCTDir="RCT"
 #
 #
 #------------------------------------------------------------------------------------------------
@@ -50,81 +57,84 @@ class setup_protocols_class:
         def __init__(self,
                      ProjectDir,
                      LogDir,
+                     ImagesDir,
+                     PreProcessDir,
+                     ML2DDir,
+                     RotSpectraDir,
+                     RCTDir,
                      DoSetupPreProcessA,
                      DoSetupPreProcessB,
-                     PreProcessDir,
-                     ImagesDir,
                      DoSetupML2D,
                      DoSetupKerdensom,
-                     ML2DDir,
                      DoSetupRotSpectra,
-                     RotSpectraDir,
+                     DoSetupRCT,
                      AutoLaunch):
 
             import os
-            import sys
-            import string
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
+            self.ImagesDir=ImagesDir
+            self.PreProcessDir=PreProcessDir
+            self.ML2DDir=ML2DDir
+            self.RotSpectraDir=RotSpectraDir
+            self.RCTDir=RCTDir
+
             self.DoSetupPreProcessA=DoSetupPreProcessA
             self.DoSetupPreProcessB=DoSetupPreProcessB
-            self.PreProcessDir=PreProcessDir
-            self.ImagesDir=ImagesDir
             self.DoSetupML2D=DoSetupML2D
             self.DoSetupKerdensom=DoSetupKerdensom
-            self.ML2DDir=ML2DDir
             self.DoSetupRotSpectra=DoSetupRotSpectra
-            self.RotSpectraDir=RotSpectraDir
+            self.DoSetupRCT=DoSetupRCT
+
             self.AutoLaunch=AutoLaunch
-            
             self.SYSTEMSCRIPTDIR="/home/scheres/Xmipp/Applications/Batches/Protocols_lib"
+
+            # Which scripts and which directories to use
             self.library={}
-            self.library['DoSetupPreProcessA']=[self.ProjectDir+'/'+self.PreProcessDir,
-                                              'protocol_preprocess_A.py']
-            self.library['DoSetupPreProcessB']=[self.ProjectDir+'/'+self.PreProcessDir,
-                                              'protocol_preprocess_A.py']
-            self.library['DoSetupML2D']=[self.ProjectDir+'/'+self.ML2DDir,
-                                              'protocol_ML2D.py']
-            self.library['DoSetupKerdensom']=[self.ProjectDir+'/'+self.ML2DDir,
+            self.library['DoSetupPreProcessA']=[self.DoSetupPreProcessA,
+                                                self.PreProcessDir,
+                                                'protocol_preprocess_A.py']
+            self.library['DoSetupPreProcessB']=[self.DoSetupPreProcessB,
+                                                self.PreProcessDir,
+                                                'protocol_preprocess_B.py']
+            self.library['DoSetupML2D']=[self.DoSetupML2D,
+                                         self.ML2DDir,
+                                         'protocol_ML2D.py']
+            self.library['DoSetupKerdensom']=[self.DoSetupKerdensom,
+                                              self.ML2DDir,
                                               'protocol_kerdensom.py']
-            self.library['DoSetupRotSpectra']=[self.ProjectDir+'/'+self.RotSpectraDir,
-                                              'protocol_rotspectra.py']
-            # For automated editing of default directories
+            self.library['DoSetupRotSpectra']=[self.DoSetupRotSpectra,
+                                               self.RotSpectraDir,
+                                               'protocol_rotspectra.py']
+            self.library['DoSetupRCT']=[self.DoSetupRCT,
+                                        self.RCTDir,
+                                        'protocol_RCT.py']
+
+            # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
                               "LogDir":self.LogDir,
                               "PreProcessDir":self.PreProcessDir,
                               "ImagesDir":self.ImagesDir,
                               "ML2DDir":self.ML2DDir,
-                              "RotSpectraDir":self.RotSpectraDir}
+                              "RotSpectraDir":self.RotSpectraDir,
+                              "RCTDir":self.RCTDir}
+            
 
-            # Execute program
-            self.perform_setup()
-
-        def perform_setup(self):
-
-            import os
-
+            # Perform the actual setup:
             if (self.AutoLaunch!=""):
-                self.setup_protocol(self.library[self.AutoLaunch][0],
-                                    self.library[self.AutoLaunch][1])
-
-            if (self.DoSetupPreProcessA):
-                self.setup_protocol(self.library[DoSetupPreProcessA][0],
-                                    self.library[DoSetupPreProcessA][1])
-            if (self.DoSetupPreProcessB):
-                self.setup_protocol(self.library[DoSetupPreProcessB][0],
-                                    self.library[DoSetupPreProcessB][1])
-            if (self.DoSetupML2D):
-                self.setup_protocol(self.library[DoSetupML2D][0],
-                                    self.library[DoSetupML2D][1])
-            if (self.DoSetupKerdensom):
-                self.setup_protocol(self.library[DoSetupKerdensom][0],
-                                    self.library[DoSetupKerdensom][1])
-            if (self.DoSetupRotSpectra):
-                self.setup_protocol(self.library[DoSetupRotSpectra][0],
-                                    self.library[DoSetupRotSpectra][1])
-
+                # A. Setup from GUI (Autolaunch)
+                # This will copy the (modified) protocol script to the corresponding directory
+                # and will automatically launch the GUI for this protocol
+                self.setup_protocol(self.library[self.AutoLaunch][1],
+                                    self.library[self.AutoLaunch][2])
+            else:
+                # B. Setup from this script:
+                # This will only copy the (modified) protocol script to the corresponding directory
+                for var in self.library:
+                    if (self.library[var][0]):
+                        self.setup_protocol(self.library[var][1],
+                                            self.library[var][2])
 
         def modify_script_header(self,src):
 
@@ -166,9 +176,10 @@ class setup_protocols_class:
         def setup_protocol(self,dir,script):
             import os
             import shutil
+
+            dir=self.ProjectDir+'/'+dir
             if not os.path.exists(dir):
                 os.makedirs(dir)
-
             src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
             dst=str(dir)+"/"+str(script)
             if os.path.exists(dst):
@@ -179,9 +190,11 @@ class setup_protocols_class:
             fh.writelines(text)
             fh.close()
 
-            os.chdir(dir)
-            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+dst+' &'
-            os.system(command)
+            if (self.AutoLaunch!=""):
+                os.chdir(dir)
+                command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+dst+' &'
+                os.system(command)
+                os.chdir(self.ProjectDir)
 
 
 	def close(self):
@@ -196,14 +209,16 @@ if __name__ == '__main__':
     AutoLaunch=""
     setup=setup_protocols_class(ProjectDir,
                                 LogDir,
+                                ImagesDir,
+                                PreProcessDir,
+                                ML2DDir,
+                                RotSpectraDir,
+                                RCTDir,
                                 DoSetupPreProcessA,
                                 DoSetupPreProcessB,
-                                PreProcessDir,
-                                ImagesDir,
                                 DoSetupML2D,
                                 DoSetupKerdensom,
-                                ML2DDir,
                                 DoSetupRotSpectra,
-                                RotSpectraDir,
+                                DoSetupRCT,
                                 AutoLaunch)
     setup.close()
