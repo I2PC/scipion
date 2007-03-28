@@ -34,8 +34,10 @@ int main(int argc, char **argv) {
   int rank, size,num_img_tot;
 
   double                        aux,sumCC;
-  FileName                      fn_img,fn_tmp;
+  matrix2D<double>              Maux;              
+  FileName                      fn_img,fn_tmp,fn_base;
   DocFile                       DFo;
+  SelFile                       SFo;
   Prog_projection_matching_prm  prm;
 
   // Init Parallel interface		
@@ -71,6 +73,27 @@ int main(int argc, char **argv) {
     sumCC=aux;
     if (prm.verb>0) cerr << " Average maxCC = "<<sumCC/num_img_tot<<endl;
 
+    if (prm.output_classes) 
+    {    
+	// Do MPI_Allreduce of the averages (and their weight)
+	// And write out temporary selfiles
+	Maux.resize(prm.dim,prm.dim);
+	Maux.set_Xmipp_origin();
+	fn_base.compose(prm.fn_root,rank,"");
+	for (int dirno=0; dirno<prm.nr_dir; dirno++) 
+	{
+	    MPI_Allreduce(MULTIDIM_ARRAY(prm.class_avgs[dirno]()),
+			  MULTIDIM_ARRAY(Maux),
+			  MULTIDIM_SIZE(prm.class_avgs[dirno]()),
+			  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	    prm.class_avgs[dirno]()=Maux;
+	    double weight=prm.class_avgs[dirno].weight();
+	    MPI_Allreduce(&weight,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	    prm.class_avgs[dirno].weight()=aux;
+	    fn_img.compose(fn_base,dirno,"tmpsel");
+	    prm.class_selfiles[dirno].write(fn_img);
+	}
+    }
 
      // All nodes write out temporary DFo
     fn_img.compose(prm.fn_root,rank,"tmpdoc");
@@ -94,6 +117,23 @@ int main(int argc, char **argv) {
       DFo.write(fn_tmp);
     }
 
+    // Master writes out all class averages and combines all selfiles
+    if (prm.output_classes && rank==0) 
+    {
+	for (int dirno=0; dirno<prm.nr_dir; dirno++) 
+	{
+	    SFo.clear();
+	    for (int rank2=0; rank2<size; rank2++) 
+	    {
+		fn_base.compose(prm.fn_root,rank2,"");
+		fn_img.compose(fn_base,dirno,"tmpsel");
+		SFo.append(fn_img);
+		system(((string)"rm -f "+fn_img).c_str());
+	    }
+	    prm.class_selfiles[dirno]=SFo;
+	}
+	prm.write_classes();
+    }
 
   } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
 

@@ -58,6 +58,8 @@ int main(int argc, char **argv) {
     fn_tmp=prm.fn_root+".doc";
     DFo.write(fn_tmp);
 
+    if (prm.output_classes) prm.write_classes();
+
   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
 
 }
