@@ -82,6 +82,7 @@ void Prog_WBP_prm::usage() {
   cerr << " [ -threshold <float=0.005> ]  : Lower (relative) threshold for filter values \n";
   cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
   cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
+  cerr << " [ -weight]                    : Use weights stored in image headers \n";
   cerr << " [ -dont_apply_shifts ]        : dont apply origin offsets as stored in the image headers\n";
   cerr << " -----------------------------------------------------------------"<<endl;
 
@@ -210,7 +211,6 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
 
   // Adjust relative threshold
   threshold*=totimgs;
-
 }
 
 // Simple backprojection of a single image
@@ -282,13 +282,14 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
   CenterFFT(IMG(),true);
 
   // loop over all transformation matrices
-  for (int k=0; k<no_mats; k++) {
-    mat_f[k].zero=A(0,0)*mat_g[k].zero+
-                  A(1,0)*mat_g[k].one+
-                  A(2,0)*mat_g[k].two; 
-    mat_f[k].one=A(0,1)*mat_g[k].zero+
-                 A(1,1)*mat_g[k].one+
-	         A(2,1)*mat_g[k].two;
+  for (int k=0; k<no_mats; k++) 
+  {
+      mat_f[k].zero=A(0,0)*mat_g[k].zero+
+	            A(1,0)*mat_g[k].one+
+	            A(2,0)*mat_g[k].two; 
+      mat_f[k].one=A(0,1)*mat_g[k].zero+
+	           A(1,1)*mat_g[k].one+
+	           A(2,1)*mat_g[k].two;
   }
 
 
@@ -302,7 +303,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
       // The following line is the most expensive of all...
       weight += mat_g[k].count*TSINC(argum);
     }
-    
+
     if (weight < threshold) {
       count_thr++;
       MAT_ELEM(IMG(),i,j) /= (threshold*factor);
