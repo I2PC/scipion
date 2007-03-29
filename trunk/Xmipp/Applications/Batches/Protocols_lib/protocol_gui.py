@@ -405,18 +405,18 @@ class automated_gui_class:
         self.GuiExecute()
         
     def GuiExecute(self):
-        print "Executing..."
+        print "* Executing..."
         os.system('python '+self.scriptname+' &')
         
     def GuiSave(self):
-        print "Saving..."
+        print "* Saving..."
         self.ScriptWrite()
 
     def GuiLanchSetup(self):
         import protocol_setup
-        print "Saving setup ..."
+        print "* Saving setup ..."
         self.ScriptWrite()
-        print "Launching protocol ..."
+        print "* Launching protocol ..."
         command='python '+str(self.scriptname)+' '+str(self.which_setup.get())+' &'
         os.system(command)
        

@@ -232,7 +232,7 @@ class setup_protocols_class:
             dst=str(directory)+"/"+str(script)
             if os.path.exists(dst):
                 src=dst
-                print "File "+dst+" already existed (now updated)"
+                print "* File "+dst+" already existed (now updated)"
 
             text=self.modify_script_header(src)
             fh=open(dst,'w')
@@ -247,8 +247,7 @@ class setup_protocols_class:
 
 
 	def close(self):
-                message=" Done setting up!"
-		print '* ',message
+		print '* Done setting up!'
 		print '*********************************************************************'
 #
 # Main

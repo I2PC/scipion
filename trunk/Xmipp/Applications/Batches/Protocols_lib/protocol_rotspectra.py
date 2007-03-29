@@ -200,14 +200,14 @@ class rotational_spectra_class:
    def execute_align2d(self):
       import os,SelFiles
       print '*********************************************************************'
-      print '*  copying images to working directory ...'
+      print '* Copying images to working directory ...'
       mysel=SelFiles.selfile()
       mysel.read(self._SelFileName)
       newsel=mysel.copy_sel('.')
       newsel.write(os.path.basename(self._SelFileName))
 
       print '*********************************************************************'
-      print '*  computing initial reference using statis'
+      print '* Computing initial reference using statis'
       command = 'xmipp_statis -i ' + os.path.basename(self._SelFileName)
       print '* ',command
       os.system(command)
@@ -215,7 +215,7 @@ class rotational_spectra_class:
       
       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
       print '*********************************************************************'
-      print '*  align translationally and rotationally a set of 2D-images'
+      print '* Aligning translationally and rotationally a set of 2D-images'
       command='xmipp_align2d'+ \
               ' -i '  + os.path.basename(self._SelFileName) + \
               ' -Ri ' + str(self._InnerRadius) + \
@@ -249,7 +249,7 @@ class rotational_spectra_class:
       import os, string,spider_header
       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
       print '*********************************************************************'
-      print '*  Look for the position of the center of symmetry of an image.'
+      print '* Looking for the position of the center of symmetry ...'
       filename=selfile_without_ext + '.med.xmp'
       myheader=spider_header.spiderheader(filename)
       ncolumns=myheader.nx
@@ -278,7 +278,7 @@ class rotational_spectra_class:
    def execute_apply_geo(self):
       import os
       print '*********************************************************************'
-      print '*  Applying geometrical  information in the headers. Needed for makespectra'
+      print '* Applying geometrical  information in the headers. Needed for makespectra'
       command='xmipp_applygeo'+ \
               ' -i ' +os.path.basename(self._SelFileName) 
       print '* ',command
@@ -311,7 +311,7 @@ class rotational_spectra_class:
    def execute_reverse_endian(self):
       import os
       print '*********************************************************************'
-      print '*  Change endian format. Needed for makespectra'
+      print '* Changing endian format. Needed for makespectra'
       command='xmipp_reverse_endian'+ \
               ' -i ' + os.path.basename(self._SelFileName) 
       print '* ',command
@@ -324,7 +324,7 @@ class rotational_spectra_class:
    def execute_spectra(self):
       import os, string
       print '*********************************************************************'
-      print '*  Compute rotational power spectra'
+      print '* Computing rotational power spectra'
       selFileName=os.path.basename(self._SelFileName)
       outFileName=(os.path.splitext(selFileName))[0] + '.sim'
       command='xmipp_makespectra'+ \
@@ -339,7 +339,7 @@ class rotational_spectra_class:
       program = os.system(command)     
       if(self._DisplayResults==True):
           print '*********************************************************************'
-          print '*  Display spectra'
+          print '* Display spectra'
           selFileName=os.path.basename(self._SelFileName)
           spectraFileName=(os.path.splitext(selFileName))[0] + '.sim'
           command='xmipp_show'+ \
@@ -358,7 +358,7 @@ class rotational_spectra_class:
       selFileName=os.path.basename(self._SelFileName)
       spectraFileName=(os.path.splitext(selFileName))[0] + '.sim'
       print '*********************************************************************'
-      print '*  compute kerdensom'
+      print '* Computing kerdensom ...'
       kerdensom_out='kerd'
       command='xmipp_kerdensom'+ ' -din '  + spectraFileName + \
               ' -cout ' + kerdensom_out  + \
@@ -385,7 +385,7 @@ class rotational_spectra_class:
    #clean and close everything
    #------------------------------------------------------------------------
    def close(self):
-         message="Script finished"
+         message="* Script finished!"
          print '*********************************************************************'
          print '* ',message
          self.mylog.info(message)
