@@ -200,9 +200,9 @@ class rotational_spectra_class:
    def execute_align2d(self):
       import os,SelFiles
       print '*********************************************************************'
-      print '*  cp images to working directory'
+      print '*  copying images to working directory ...'
       mysel=SelFiles.selfile()
-      mysel.read(os.path.basename(self._SelFileName))
+      mysel.read(self._SelFileName)
       newsel=mysel.copy_sel('.')
       newsel.write(os.path.basename(self._SelFileName))
 
