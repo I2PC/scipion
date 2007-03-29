@@ -33,7 +33,7 @@ SetupRCT=False
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} multi-resolution refinement
+# {setup-3d} Wavelet refinement
 SetupWavelet=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
@@ -56,7 +56,7 @@ RCTDir="RCT"
 ML3DDir="ML3D"
 # {expert} Directory name for projection matching refinement:
 ProjMatchDir="ProjMatching"
-# {expert} Directory name for multi-resoluion refinement:
+# {expert} Directory name for Wavelet refinement:
 WaveletDir="Wavelet"
 #
 #
@@ -246,9 +246,6 @@ class setup_protocols_class:
                 os.chdir(self.ProjectDir)
 
 
-	def close(self):
-		print '* Done setting up!'
-		print '*********************************************************************'
 #
 # Main
 #
@@ -282,4 +279,3 @@ if __name__ == '__main__':
                                 WaveletDir,
                                 AutoLaunch)
 
-    setup.close()

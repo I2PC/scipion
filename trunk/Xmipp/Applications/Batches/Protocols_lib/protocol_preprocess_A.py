@@ -19,6 +19,8 @@
 #------------------------------------------------------------------------------------------------
 # All filenames.tif on which to perform preprocessing
 AllMicrographs="./*.tif"
+# Output selfile with preprocessed micrographs
+MicrographSelfile="all_micrographs.sel"
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -63,6 +65,7 @@ class preprocess_A_class:
 	#init variables
 	def __init__(self,
                      AllMicrographs,
+                     MicrographSelfile,
                      ProjectDir,
                      LogDir,
 		     DoTif2Raw,
@@ -77,6 +80,7 @@ class preprocess_A_class:
                 import log
 
                 self.AllMicrographs=AllMicrographs
+                self.MicrographSelfile=MicrographSelfile
                 self.ProjectDir=ProjectDir
                 self.LogDir=LogDir
 		self.DoTif2Raw=DoTif2Raw
@@ -143,21 +147,57 @@ class preprocess_A_class:
 		import os
 		print '*********************************************************************'
 		print '*  Visualizing all PSDs: '
-		command='xmipp_show -psdsel all_psds.sel &'
+		command='xmipp_show -psdsel all_psds.sel'
 		print '* ',command
+                print '* You may select bad micrographs and save them as discarded.'
+                print '* Make sure to use save this file again as "all_psds.sel'
+                print '* This way, the discarded micrographs will no longer be processed!'
 		self.log.info(command)
 		os.system(command )
     
+        def append_micrograph_selfile(self):
+            name=self.shortname+'/'+self.downname+'.raw'
+            self.micselfile.append(name+' 1 \n')
+            FILE = open(self.MicrographSelfile,'w')
+            FILE.writelines(self.micselfile)
+            FILE.close()
+
+        def update_micrograph_selfile(self):
+            fh=open(self.MicrographSelfile,'r')
+            miclines=fh.readlines()
+            fh.close()
+            fh=open('all_psds.sel','r')
+            psdlines=fh.readlines()
+            fh.close()
+            if (len(miclines)!=len(psdlines)):
+                message='Error: all_psds.sel and '+str(self.MicrographSelfile)+' are of unequal length'
+                self.log.error(message)
+                print '* ',message
+                sys.exit()
+            else:
+                newlines=[]
+                for i in range(len(miclines)):
+                    args1=miclines[i].split(' ')
+                    args2=psdlines[i].split(' ')
+                    newlines.append(args1[0]+' '+args2[1])
+                fh=open(self.MicrographSelfile,'w')
+                fh.writelines(newlines)
+                fh.close()
+                message='Updated '+str(self.MicrographSelfile)
+                print '* ',message
+                self.log.info(message)
+
 	def process_all_micrographs(self):
 		import os
 		import glob
 		print '*********************************************************************'
-		print '*  Pre-processing the following micrographs: '
+		print '*  Processing the following micrographs: '
 		for self.filename in glob.glob(self.AllMicrographs):
 			(self.filepath, self.name) = os.path.split(self.filename)
 			print '*  '+self.name
 
 		self.psdselfile = []
+                self.micselfile = []
 		for self.filename in glob.glob(self.AllMicrographs):
 			(self.filepath, self.name) = os.path.split(self.filename)
 
@@ -179,8 +219,11 @@ class preprocess_A_class:
 			if (self.DoEstimatePSD):
                             self.perform_psdestimate()
 
+                        self.append_micrograph_selfile()
+
 		if (self.DoVisualizePSD):
 		    self.visualize_psds()
+                    self.update_micrograph_selfile()
 
 	def close(self):
                 message=" Done pre-processing all"
@@ -195,6 +238,7 @@ if __name__ == '__main__':
    	# create preprocess_A_class object
 
 	preprocessA=preprocess_A_class(AllMicrographs,
+                                       MicrographSelfile,
                                        ProjectDir,
                                        LogDir,
 				       DoTif2Raw,

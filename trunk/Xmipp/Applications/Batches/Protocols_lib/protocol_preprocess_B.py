@@ -20,8 +20,8 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# All filenames on which to perform preprocessing
-AllMicrographs='/home/bioinfo/scheres/work/ml2d/MCM/topviews_cryo/micrographs/*.tif'
+# Selfile with micrographs on which to perform processing
+MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -63,7 +63,7 @@ DoEstimateCTF=True
 Voltage=200
 # Spherical aberration
 SphericalAberration=2.26
-# Sampling rate after downsampling (in Ang./pix.)
+# Pixel size in the particles (in Angstrom/pixel)
 Sampling=2.8
 # Amplitude Contrast
 AmplitudeContrast=0.1
@@ -95,7 +95,7 @@ class preprocess_B_class:
 
 	#init variables
 	def __init__(self,
-                     AllMicrographs,
+                     MicrographSelfile,
                      ProjectDir,
                      LogDir,
                      DoExtract,
@@ -125,7 +125,7 @@ class preprocess_B_class:
             sys.path.append(scriptdir) # add default search path
             import log,protocol_preprocess_A
         
-            self.AllMicrographs=AllMicrographs
+            self.MicrographSelfile=MicrographSelfile
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
             self.DoExtract=DoExtract
@@ -364,11 +364,9 @@ class preprocess_B_class:
         def process_all_micrographs(self):
             import os
             import glob
+            import SelFiles
             print '*********************************************************************'
-            print '*  Pre-processing the following micrographs: '
-            for self.filename in glob.glob(self.AllMicrographs):
-                (self.filepath, self.name) = os.path.split(self.filename)
-                print '*  '+self.name
+            print '*  Pre-processing micrographs in '+str(self.MicrographSelfile)
 
             dirname=self.ProjectDir+'/'+self.ImagesDir
             if not os.path.exists(dirname):
@@ -377,27 +375,27 @@ class preprocess_B_class:
 	    self.ctfselfile = []
             self.allselfile = []
             self.allctflibfile = []
-            for self.filename in glob.glob(self.AllMicrographs):
-                (self.filepath, self.name) = os.path.split(self.filename)
+            mysel=SelFiles.selfile()
+            mysel.read(self.MicrographSelfile)
+            for line in mysel.sellines:
+                name,state=line[:-1].split(" ")
+                self.shortname,self.downname=os.path.split(name)
+                self.downname=self.downname.replace('.raw','')
 
-                self.shortname=self.name.replace ( '.tif', '' )
-                self.downname='down'+str(self.Down)+'_'+self.shortname
-                if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
-                    self.downname=self.shortname
+                if not '-1' in state:
+                    if (self.check_have_marked()):
+                        if (self.DoExtract):
+                            self.perform_extract(self.DoPhaseFlipping)
 
-                if (self.check_have_marked()):
-                    if (self.DoExtract):
-                        self.perform_extract(self.DoPhaseFlipping)
-
-                    # Normalize before phase flipping to remove dust particles
-                    if (self.DoNormalize):
-                        self.perform_normalize()
+                            # Normalize before phase flipping to remove dust particles
+                        if (self.DoNormalize):
+                            self.perform_normalize()
                                   
-                    if (self.DoEstimateCTF):
-                        self.perform_ctfestimate()
+                        if (self.DoEstimateCTF):
+                            self.perform_ctfestimate()
 
-                    if (self.DoPhaseFlipping):
-                        self.perform_phaseflip()
+                        if (self.DoPhaseFlipping):
+                            self.perform_phaseflip()
 
             if (self.DoVisualizeCTF):
                 self.visualize_ctfs()
@@ -418,7 +416,7 @@ if __name__ == '__main__':
 
    	# create preprocess_B_class object
 
-	preprocessB=preprocess_B_class(AllMicrographs,
+	preprocessB=preprocess_B_class(MicrographSelfile,
                                        ProjectDir,
                                        LogDir,
                                        DoExtract,

@@ -251,7 +251,7 @@ class automated_gui_class:
         self.widgetexpertlist=[]
         for var in self.vfields:
             if (self.variables[var][1]=="Section"):
-                self.GuiAddSection(self.variables[var][0],1)
+                self.GuiAddSection(self.variables[var][0],2)
             elif (self.variables[var][1]=="String"):
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],

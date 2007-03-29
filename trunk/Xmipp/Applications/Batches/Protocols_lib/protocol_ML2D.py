@@ -21,7 +21,9 @@ WorkingDir="ML3ref"
 DoDeleteWorkingDir=True
 # Batch submission command (use "" to launch without batch submission):
 """ This will depend on your queueing system., ask your system administrator...
-    If you dont use a queueing system, type: LaunchParallelScript=""
+
+    Examples: LaunchJobCommand=\"bsub -q 1day\"
+      or, if you do not use a queueing system: LaunchJobCommand=\"\"
 """
 LaunchJobCommand="" 
 # {expert} Root directory name for this project:
@@ -153,6 +155,7 @@ class ML2D_class:
         print '*********************************************************************'
         print '*  Executing MLalign2D program :' 
         params= ' -i '    + str(self.InSelFile) + \
+                ' -o '    + str(self.WorkingDir) + \
                 ' -nref ' + str(self.NumberOfReferences)
         if (self.DoFast):
             params+= ' -fast '
@@ -175,7 +178,7 @@ class ML2D_class:
         # Visualize class averages:
         import glob
         import os
-        selfiles=glob.glob('ml2d_it?????.sel')
+        selfiles=glob.glob(str(self.WorkingDir)+'_it?????.sel')
         if len(selfiles)==0:
             print "No selfiles yet. Visualize after job completion..."
         else:
