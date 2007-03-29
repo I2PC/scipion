@@ -11,7 +11,7 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
     LogName = projectdir + '/' + logdir + '/'
     if not os.path.exists(LogName):
         os.makedirs(LogName)
-    LogName += scriptname,replace('.py','')
+    LogName += scriptname.replace('.py','')
     if not (WorkDirectory=="." or WorkDirectory=='.'):
         LogName += '_'
         LogName += WorkDirectory
