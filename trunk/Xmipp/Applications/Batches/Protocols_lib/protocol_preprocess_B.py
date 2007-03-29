@@ -120,9 +120,9 @@ class preprocess_B_class:
                      DoVisualizeSorting,
                      ):
 	     
+            import os,sys
             scriptdir=os.path.expanduser('~')+'/scripts/'
             sys.path.append(scriptdir) # add default search path
-            import os,sys
             import log,protocol_preprocess_A
         
             self.AllMicrographs=AllMicrographs

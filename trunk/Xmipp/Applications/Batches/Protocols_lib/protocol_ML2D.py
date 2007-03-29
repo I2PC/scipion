@@ -105,9 +105,9 @@ class ML2D_class:
                  LaunchJobCommand,
                  ParallelScript):
 	     
+        import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import os,sys,shutil
         import log
 
         self.WorkingDir=WorkingDir

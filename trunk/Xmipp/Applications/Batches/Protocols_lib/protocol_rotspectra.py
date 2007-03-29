@@ -123,9 +123,9 @@ class rotational_spectra_class:
                 _LogDir
                 ):
 
+       import os,sys
        scriptdir=os.path.expanduser('~')+'/scripts/'
        sys.path.append(scriptdir) # add default search path
-       import os,sys
        import log
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory

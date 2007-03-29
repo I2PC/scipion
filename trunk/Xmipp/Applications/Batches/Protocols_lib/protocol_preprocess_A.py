@@ -71,9 +71,9 @@ class preprocess_A_class:
 		     DoEstimatePSD,
 		     DoVisualizePSD):
 	     
+		import os,sys
                 scriptdir=os.path.expanduser('~')+'/scripts/'
                 sys.path.append(scriptdir) # add default search path
-		import os,sys
                 import log
 
                 self.AllMicrographs=AllMicrographs
