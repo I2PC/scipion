@@ -27,7 +27,7 @@
 # Selfile with the input images:
 """ The name of this file will be used as a seed for all new files
 """
-SelFileName='../all.sel'
+SelFileName='../all_images.sel'
 # Working directory: 
 WorkDirectory='test1'
 # Delete working directory if it already exists?
@@ -55,6 +55,7 @@ OuterRadius=12
 Align2DIterNr=4
 # {expert} Additional align2d parameters
 """ For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
+
   Examples:
   Align2DExtraCommand=\"-trans_only  -filter 10 -sampling 2 -max_shift 2 -max_rot 3\"
   Align2DExtraCommand=\"-max_shift 2 -max_rot 3\"
@@ -121,11 +122,11 @@ class rotational_spectra_class:
                 _ProjectDir,
                 _LogDir
                 ):
-       import os
-       import sys
+
+       scriptdir=os.path.expanduser('~')+'/scripts/'
+       sys.path.append(scriptdir) # add default search path
+       import os,sys
        import log
-       import logging
-       sys.path.append(os.getcwd()+'/'+'../Python')#add default search path
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
        self._SelFileName=os.path.abspath(str(_SelFileName))
@@ -197,19 +198,14 @@ class rotational_spectra_class:
    #execute_align2d
    #------------------------------------------------------------------------
    def execute_align2d(self):
-      import os
+      import os,SelFiles
       print '*********************************************************************'
       print '*  cp images to working directory'
-      command = 'xmipp_cpsel ' + self._SelFileName + ' ./'
-      print '* ',command
-      os.system(command)
-      self.mylog.info(command)
-      print '*********************************************************************'
-      print '*  create selfile'
-      command = 'rm *sel; xmipp_do_selfile  \"*\" | grep -v \".sel \"> ' + os.path.basename(self._SelFileName)
-      print '* ',command
-      os.system(command)
-      self.mylog.info(command)
+      mysel=SelFiles.selfile()
+      mysel.read(os.path.basename(self._SelFileName))
+      newsel=mysel.copy_sel('.')
+      newsel.write(os.path.basename(self._SelFileName))
+
       print '*********************************************************************'
       print '*  computing initial reference using statis'
       command = 'xmipp_statis -i ' + os.path.basename(self._SelFileName)
@@ -296,7 +292,9 @@ class rotational_spectra_class:
       import SelFiles,spider_header,os
       print '*********************************************************************'
       print '*  check if images are in native endian (spectra preprocesing)'
-      mysel=SelFiles.selfile(os.path.basename(self._SelFileName))
+      mysel=SelFiles.selfile()
+      #mysel=SelFiles.selfile()
+      mysel.read(os.path.basename(self._SelFileName))
       filename,state=mysel.find_first_active_image()
       myheader=spider_header.spiderheader(filename)
       if( myheader.check_endianess()):

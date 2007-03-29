@@ -10,6 +10,8 @@ class automated_gui_class:
     def __init__(self,
                  scriptname):
 
+        self.SYSTEMSCRIPTDIR=os.path.expanduser('~')+'/scripts/'
+
         self.scriptname=scriptname
         self.master=Tk()
         self.expert_mode=False
@@ -412,22 +414,12 @@ class automated_gui_class:
 
     def GuiLanchSetup(self):
         import protocol_setup
+        print "Saving setup ..."
+        self.ScriptWrite()
         print "Launching protocol ..."
-        setup=protocol_setup.setup_protocols_class(protocol_setup.ProjectDir,
-                                                   protocol_setup.LogDir,
-                                                   protocol_setup.ImagesDir,
-                                                   protocol_setup.PreProcessDir,
-                                                   protocol_setup.ML2DDir,
-                                                   protocol_setup.RotSpectraDir,
-                                                   protocol_setup.RCTDir,
-                                                   protocol_setup.DoSetupPreProcessA,
-                                                   protocol_setup.DoSetupPreProcessB,
-                                                   protocol_setup.DoSetupML2D,
-                                                   protocol_setup.DoSetupKerdensom,
-                                                   protocol_setup.DoSetupRotSpectra,
-                                                   protocol_setup.DoSetupRCT,
-                                                   self.which_setup.get())       
-        
+        command='python '+str(self.scriptname)+' '+str(self.which_setup.get())+' &'
+        os.system(command)
+       
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -440,5 +432,6 @@ class AutoScrollbar(Scrollbar):
 
 if __name__ == '__main__':
 
+    import sys
     args=sys.argv[1]
     automated_gui=automated_gui_class(args)

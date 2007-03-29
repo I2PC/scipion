@@ -99,12 +99,10 @@ class kerdensom_class:
                  KerdensomExtraParams,
                  DoVisualizeSOM ):
 
-        import os
-        import sys
-        import string
+        scriptdir=os.path.expanduser('~')+'/scripts/'
+        sys.path.append(scriptdir) # add default search path
+        import os,sys,shutil
         import log
-        import shutil
-
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir

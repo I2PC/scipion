@@ -12,7 +12,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working directory:
-WorkingDir="ML2ref"
+WorkingDir="ML3ref"
 # Batch submission command (use "" to launch without batch submission):
 """ This will depend on your queueing system., ask your system administrator...
     If you dont use a queueing system, type: LaunchParallelScript=""
@@ -34,9 +34,9 @@ DoML2D=False
 """
 DoDeleteWorkingDir=True
 # Selection file with all images:
-InSelFile="../all.sel"
+InSelFile="../all_images.sel"
 # Number of references (or classes) to be used:
-NumberOfReferences=1
+NumberOfReferences=3
 # Also include mirror transformation in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness
      and may fall either face-up or face-down on the grid
@@ -105,14 +105,11 @@ class ML2D_class:
                  LaunchJobCommand,
                  ParallelScript):
 	     
-        import os
-        import sys
-        import string
+        scriptdir=os.path.expanduser('~')+'/scripts/'
+        sys.path.append(scriptdir) # add default search path
+        import os,sys,shutil
         import log
-        import shutil
 
-
-        sys.path.append(os.getcwd()+'/'+'../') # add default search path
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.InSelFile=os.path.abspath(str(InSelFile))

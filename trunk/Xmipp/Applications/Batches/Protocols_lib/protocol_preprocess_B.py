@@ -21,7 +21,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # All filenames on which to perform preprocessing
-AllMicrographs='*.tif'
+AllMicrographs='/home/bioinfo/scheres/work/ml2d/MCM/topviews_cryo/micrographs/*.tif'
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -38,7 +38,7 @@ PosFile="raw.Common.pos"
 Size=64
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Name for output selfile
+# {expert} Selfile with all particles (is placed in ProjectDir)
 OutSelFile="all_images.sel"
 #------------------------------------------------------------------------------------------------
 # {section} Normalization
@@ -69,7 +69,7 @@ Sampling=2.8
 AmplitudeContrast=0.1
 # Visualize CTF-estimation?
 DoVisualizeCTF=True
-# {expert} Name for output selfile with CTFmodels for all images
+# {expert} Selfile with CTFs for all particles (is placed in ProjectDir)
 OutCTFSelFile="all_images_ctf.sel"
 #------------------------------------------------------------------------------------------------
 # {section} Phase correction
@@ -120,13 +120,11 @@ class preprocess_B_class:
                      DoVisualizeSorting,
                      ):
 	     
-            import os
-            import sys
-            import string
-            import protocol_preprocess_A
-            import log
+            scriptdir=os.path.expanduser('~')+'/scripts/'
+            sys.path.append(scriptdir) # add default search path
+            import os,sys
+            import log,protocol_preprocess_A
         
-            sys.path.append(os.getcwd()+'/'+'../') # add default search path
             self.AllMicrographs=AllMicrographs
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -227,7 +225,8 @@ class preprocess_B_class:
             fh=open(posname, 'w')
 	    fh.writelines(newpos)
 	    fh.close()
-            fh=open(self.OutSelFile, 'w')
+            outselfname=self.ProjectDir+'/'+self.OutSelFile
+            fh=open(outselfname, 'w')
 	    fh.writelines(self.allselfile)
 	    fh.close()
 
@@ -267,7 +266,8 @@ class preprocess_B_class:
             os.system(command )
 
             # Add entry to the ctfselfile (for visualization of all CTFs)
-            oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel'
+            currdir=os.getcwd()
+            oname=currdir+'/'+self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel'
             self.ctfselfile.append(oname+' 1 \n')
 
             # Move ctf.sel file into subdirectory
@@ -278,7 +278,8 @@ class preprocess_B_class:
             fh=open(ctfname2,'r')
             text = fh.readlines()
 	    fh.close()
-            fh=open(self.OutCTFSelFile,'a')
+            outctfselname=self.ProjectDir+'/'+OutCTFSelFile
+            fh=open(outctfselname,'a')
             fh.writelines(text)
             fh.close()
 

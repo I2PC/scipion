@@ -15,35 +15,49 @@
 #------------------------------------------------------------------------
 # Choose the protocol(s) you want to setup:
 #------------------------------------------------------------------------
-# {setup-pre} part A: preprocess micrographs
-DoSetupPreProcessA=False
-# {setup-pre} part B: preprocess particles
-DoSetupPreProcessB=False
-# {setup-2d} Maximum-likelihood refinement
-DoSetupML2D=False
+# {setup-pre} Preprocess micrographs
+SetupPreProcessA=False
+# {setup-pre} Manual particle selection
+SetupParticlePick=False
+# {setup-pre} Preprocess particles
+SetupPreProcessB=False
+# {setup-2d} ML2D classification
+SetupML2D=False
 # {setup-2d} kerdenSOM classification 
-DoSetupKerdensom=False
+SetupKerdensom=False
 # {setup-2d} Rotational spectra classification
-DoSetupRotSpectra=False
-# {setup-3d} Random Conical Tilt reconstruction
-DoSetupRCT=False
+SetupRotSpectra=False
+# {setup-3d} Random Conical Tilt
+SetupRCT=False
+# {setup-3d} ML3D classification
+SetupML3D=False
+# {setup-3d} Projection matching refinement
+SetupProjMatch=False
+# {setup-3d} multi-resolution refinement
+SetupWavelet=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home/scheres/work/protocols"
+ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 # {expert} Directory name for preprocessing:
 PreProcessDir="Preprocessing"
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Directory name for 2D alignment and classification:
-ML2DDir="Analyse2d"
+# {expert} Directory name for ML2D classification:
+ML2DDir="ML2D"
 # {expert} Directory name for rotational spectra classification:
 RotSpectraDir="Rotspectra"
 # {expert} Directory name for Random Conical Tilt reconstruction:
 RCTDir="RCT"
+# {expert} Directory name for ML3D classification:
+ML3DDir="ML3D"
+# {expert} Directory name for projection matching refinement:
+ProjMatchDir="ProjMatching"
+# {expert} Directory name for multi-resoluion refinement:
+WaveletDir="Wavelet"
 #
 #
 #------------------------------------------------------------------------------------------------
@@ -55,6 +69,16 @@ RCTDir="RCT"
 class setup_protocols_class:
        #init variables
         def __init__(self,
+                     SetupPreProcessA,
+                     SetupParticlePick,
+                     SetupPreProcessB,
+                     SetupML2D,
+                     SetupKerdensom,
+                     SetupRotSpectra,
+                     SetupRCT,
+                     SetupML3D,
+                     SetupProjMatch,
+                     SetupWavelet,
                      ProjectDir,
                      LogDir,
                      ImagesDir,
@@ -62,15 +86,23 @@ class setup_protocols_class:
                      ML2DDir,
                      RotSpectraDir,
                      RCTDir,
-                     DoSetupPreProcessA,
-                     DoSetupPreProcessB,
-                     DoSetupML2D,
-                     DoSetupKerdensom,
-                     DoSetupRotSpectra,
-                     DoSetupRCT,
+                     ML3DDir,
+                     ProjMatchDir,
+                     WaveletDir,
                      AutoLaunch):
 
-            import os
+            import os,sys
+
+            self.SetupPreProcessA=SetupPreProcessA
+            self.SetupParticlePick=SetupParticlePick
+            self.SetupPreProcessB=SetupPreProcessB
+            self.SetupML2D=SetupML2D
+            self.SetupKerdensom=SetupKerdensom
+            self.SetupRotSpectra=SetupRotSpectra
+            self.SetupRCT=SetupRCT
+            self.SetupML3D=SetupML3D
+            self.SetupProjMatch=SetupProjMatch
+            self.SetupWavelet=SetupWavelet
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -79,37 +111,48 @@ class setup_protocols_class:
             self.ML2DDir=ML2DDir
             self.RotSpectraDir=RotSpectraDir
             self.RCTDir=RCTDir
-
-            self.DoSetupPreProcessA=DoSetupPreProcessA
-            self.DoSetupPreProcessB=DoSetupPreProcessB
-            self.DoSetupML2D=DoSetupML2D
-            self.DoSetupKerdensom=DoSetupKerdensom
-            self.DoSetupRotSpectra=DoSetupRotSpectra
-            self.DoSetupRCT=DoSetupRCT
+            self.ML3DDir=ML3DDir
+            self.ProjMatchDir=ProjMatchDir
+            self.WaveletDir=WaveletDir
 
             self.AutoLaunch=AutoLaunch
-            self.SYSTEMSCRIPTDIR="/home/scheres/Xmipp/Applications/Batches/Protocols_lib"
+
+            scriptdir=os.path.expanduser('~')+'/scripts/'
+            sys.path.append(scriptdir) # add default search path
+            self.SYSTEMSCRIPTDIR=scriptdir
 
             # Which scripts and which directories to use
             self.library={}
-            self.library['DoSetupPreProcessA']=[self.DoSetupPreProcessA,
+            self.library['SetupPreProcessA']=[self.SetupPreProcessA,
                                                 self.PreProcessDir,
                                                 'protocol_preprocess_A.py']
-            self.library['DoSetupPreProcessB']=[self.DoSetupPreProcessB,
+            self.library['SetupParticlePick']=[self.SetupParticlePick,
+                                                self.PreProcessDir,
+                                                'protocol_particle_pick.py']
+            self.library['SetupPreProcessB']=[self.SetupPreProcessB,
                                                 self.PreProcessDir,
                                                 'protocol_preprocess_B.py']
-            self.library['DoSetupML2D']=[self.DoSetupML2D,
+            self.library['SetupML2D']=[self.SetupML2D,
                                          self.ML2DDir,
                                          'protocol_ML2D.py']
-            self.library['DoSetupKerdensom']=[self.DoSetupKerdensom,
+            self.library['SetupKerdensom']=[self.SetupKerdensom,
                                               self.ML2DDir,
                                               'protocol_kerdensom.py']
-            self.library['DoSetupRotSpectra']=[self.DoSetupRotSpectra,
+            self.library['SetupRotSpectra']=[self.SetupRotSpectra,
                                                self.RotSpectraDir,
                                                'protocol_rotspectra.py']
-            self.library['DoSetupRCT']=[self.DoSetupRCT,
+            self.library['SetupRCT']=[self.SetupRCT,
                                         self.RCTDir,
                                         'protocol_RCT.py']
+            self.library['SetupML3D']=[self.SetupML3D,
+                                        self.ML3DDir,
+                                        'protocol_ML3D.py']
+            self.library['SetupProjMatch']=[self.SetupProjMatch,
+                                        self.ProjMatchDir,
+                                        'protocol_projmatch.py']
+            self.library['SetupWavelet']=[self.SetupWavelet,
+                                        self.WaveletDir,
+                                        'protocol_wavelet.py']
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -118,7 +161,11 @@ class setup_protocols_class:
                               "ImagesDir":self.ImagesDir,
                               "ML2DDir":self.ML2DDir,
                               "RotSpectraDir":self.RotSpectraDir,
-                              "RCTDir":self.RCTDir}
+                              "RCTDir":self.RCTDir,
+                              "ML3DDir":self.ML3DDir,
+                              "ProjMatchDir":self.ProjMatchDir,
+                              "WaveletDir":self.WaveletDir,
+                              }
             
 
             # Perform the actual setup:
@@ -173,16 +220,18 @@ class setup_protocols_class:
                 header_lines=newheader_lines
             return header_lines+body_lines
 
-        def setup_protocol(self,dir,script):
+        def setup_protocol(self,directory,script):
             import os
             import shutil
 
-            dir=self.ProjectDir+'/'+dir
-            if not os.path.exists(dir):
-                os.makedirs(dir)
+            os.chdir(self.ProjectDir)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+                
             src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
-            dst=str(dir)+"/"+str(script)
+            dst=str(directory)+"/"+str(script)
             if os.path.exists(dst):
+                src=dst
                 print "File "+dst+" already existed (now updated)"
 
             text=self.modify_script_header(src)
@@ -191,8 +240,8 @@ class setup_protocols_class:
             fh.close()
 
             if (self.AutoLaunch!=""):
-                os.chdir(dir)
-                command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+dst+' &'
+                os.chdir(directory)
+                command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+str(script)+' &'
                 os.system(command)
                 os.chdir(self.ProjectDir)
 
@@ -206,19 +255,32 @@ class setup_protocols_class:
 #
 if __name__ == '__main__':
 
-    AutoLaunch=""
-    setup=setup_protocols_class(ProjectDir,
+    import sys
+    if (len(sys.argv) < 2):
+        AutoLaunch=""
+    else:
+        AutoLaunch=sys.argv[1]
+
+    setup=setup_protocols_class(SetupPreProcessA,
+                                SetupParticlePick,
+                                SetupPreProcessB,
+                                SetupML2D,
+                                SetupKerdensom,
+                                SetupRotSpectra,
+                                SetupRCT,
+                                SetupML3D,
+                                SetupProjMatch,
+                                SetupWavelet,
+                                ProjectDir,
                                 LogDir,
                                 ImagesDir,
                                 PreProcessDir,
                                 ML2DDir,
                                 RotSpectraDir,
                                 RCTDir,
-                                DoSetupPreProcessA,
-                                DoSetupPreProcessB,
-                                DoSetupML2D,
-                                DoSetupKerdensom,
-                                DoSetupRotSpectra,
-                                DoSetupRCT,
+                                ML3DDir,
+                                ProjMatchDir,
+                                WaveletDir,
                                 AutoLaunch)
+
     setup.close()
