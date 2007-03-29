@@ -11,8 +11,14 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working directory:
+# Selfile with the input images (relative path from ProjectDir):
+InSelFile="all_images.sel"
+# Working subdirectory:
 WorkingDir="ML3ref"
+# Delete working subdirectory if it already exists?
+""" The directory will not be deleted when only visualizing! 
+"""
+DoDeleteWorkingDir=True
 # Batch submission command (use "" to launch without batch submission):
 """ This will depend on your queueing system., ask your system administrator...
     If you dont use a queueing system, type: LaunchParallelScript=""
@@ -29,12 +35,6 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # Perform 2D maximum-likelihood refinement?
 DoML2D=False
-# Delete working directory if it already exists?
-""" The directory will not be deleted when only visualizing! 
-"""
-DoDeleteWorkingDir=True
-# Selection file with all images:
-InSelFile="../all_images.sel"
 # Number of references (or classes) to be used:
 NumberOfReferences=3
 # Also include mirror transformation in the alignment?
@@ -88,12 +88,12 @@ class ML2D_class:
 
     #init variables
     def __init__(self,
+                 InSelFile,
                  WorkingDir,
                  DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
                  DoML2D,
-                 InSelFile,
                  NumberOfReferences,
                  DoMirror,
                  DoFast,
@@ -112,7 +112,7 @@ class ML2D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.InSelFile=os.path.abspath(str(InSelFile))
+        self.InSelFile=self.ProjectDir+'/'+str(InSelFile)
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
@@ -225,12 +225,12 @@ if __name__ == '__main__':
 
     # create ML2D_class object
 
-    ML2D=ML2D_class(WorkingDir,
+    ML2D=ML2D_class(InSelFile,
+                    WorkingDir,
                     DoDeleteWorkingDir,
                     ProjectDir,
                     LogDir,
                     DoML2D,
-                    InSelFile,
                     NumberOfReferences,
                     DoMirror,
                     DoFast,

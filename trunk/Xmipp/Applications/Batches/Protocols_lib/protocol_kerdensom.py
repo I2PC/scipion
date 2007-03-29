@@ -11,11 +11,17 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working directory:
+# Working subdirectory:
 WorkingDir="SOM_ML1ref_ref1"
+# Delete working subdirectory if it already exists?
+""" The directory will not be deleted when only visualizing! 
+"""
+DoDeleteWorkingDir=True
 # Batch submission command (use "" to launch without batch submission):
 """ This will depend on your queueing system., ask your system administrator...
-    If you dont use a queueing system, type: LaunchParallelScript=""
+
+    Examples: LaunchJobCommand=\"bsub -q 1day\"
+      or, if you do not use a queueing system: LaunchJobCommand=\"\"
 """
 LaunchJobCommand="" 
 # {expert} Root directory name for this project:
@@ -27,7 +33,7 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} MLalign2D parameters
 #------------------------------------------------------------------------------------------------
-# Directory where you have ran MLalign2D:
+# Subdirectory where you have previously ran ML2D classification:
 ML2DWorkingDir="ML2ref"
 # The number of the class to use:
 ML2DReferenceNr=1
@@ -36,21 +42,21 @@ ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
 # Design your mask graphically? (Save as name below!)
 DoXmask=True
-# Name of the mask:
+# Name of the mask (inside the working subdirectory):
 MaskFileName="mask.msk"
 #------------------------------------------------------------------------------------------------
 # {section} kerdenSOM parameters
 #------------------------------------------------------------------------------------------------
 # Perform self-organizing map calculation?
-DoSOM=False
+DoSOM=True
 # Name of Output SOM:
-""" Existing files with this name will be deleted!
+""" Existing files with this name will be delete!
 """
 SomName="som"
 # X-dimension of the self-organizing map:
-SomXdim=7
+SomXdim=10
 # Y-dimension of the self-organizing map:
-SomYdim=7
+SomYdim=5
 # Initial regularization factor:
 """ The kerdenSOM algorithm anneals from an initial high regularization factor
     to a final lower one, in a user-defined number of steps.
@@ -69,8 +75,8 @@ KerdensomExtraParams=""
 #------------------------------------------------------------------------------------------------
 # {section} Analysis of results
 #------------------------------------------------------------------------------------------------
-# Visualize the SOM?
-DoVisualizeSOM=False
+# Visualize the SOM? (Perform this only after job completion!)
+DoVisualizeSOM=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -81,45 +87,46 @@ class kerdensom_class:
 
     #init variables
     def __init__(self,
-                 WorkingDir,
-                 LaunchJobCommand,
-                 ProjectDir,
-                 LogDir,
-                 ML2DWorkingDir,
-                 ML2DReferenceNr,
-                 DoXmask,
-                 MaskFileName,
-                 DoSOM,
-                 SomName,
-                 SomXdim,
-                 SomYdim,
-                 SomReg0,
-                 SomReg1,
-                 SomSteps,
-                 KerdensomExtraParams,
-                 DoVisualizeSOM ):
+                 _WorkingDir,
+                 _DoDeleteWorkingDir,
+                 _LaunchJobCommand,
+                 _ProjectDir,
+                 _LogDir,
+                 _ML2DWorkingDir,
+                 _ML2DReferenceNr,
+                 _DoXmask,
+                 _MaskFileName,
+                 _DoSOM,
+                 _SomName,
+                 _SomXdim,
+                 _SomYdim,
+                 _SomReg0,
+                 _SomReg1,
+                 _SomSteps,
+                 _KerdensomExtraParams,
+                 _DoVisualizeSOM ):
 
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self.WorkingDir=WorkingDir
-        self.ProjectDir=ProjectDir
-        self.LaunchJobCommand=LaunchJobCommand
-        self.ML2DWorkingDir='../'+ML2DWorkingDir
-        self.ML2DReferenceNr=ML2DReferenceNr
-        self.DoXmask=DoXmask
-        self.MaskFileName=MaskFileName
-        self.DoSOM=DoSOM
-        self.SomName=SomName
-        self.SomXdim=SomXdim
-        self.SomYdim=SomYdim
-        self.SomReg0=SomReg0
-        self.SomReg1=SomReg1
-        self.SomSteps=SomSteps
-        self.KerdensomExtraParams=KerdensomExtraParams
-        self.DoVisualizeSOM=DoVisualizeSOM
+        self.WorkingDir=_WorkingDir
+        self.ProjectDir=_ProjectDir
+        self.LaunchJobCommand=_LaunchJobCommand
+        self.ML2DWorkingDir='../'+_ML2DWorkingDir
+        self.ML2DReferenceNr=_ML2DReferenceNr
+        self.DoXmask=_DoXmask
+        self.MaskFileName=_MaskFileName
+        self.DoSOM=_DoSOM
+        self.SomName=_SomName
+        self.SomXdim=_SomXdim
+        self.SomYdim=_SomYdim
+        self.SomReg0=_SomReg0
+        self.SomReg1=_SomReg1
+        self.SomSteps=_SomSteps
+        self.KerdensomExtraParams=_KerdensomExtraParams
+        self.DoVisualizeSOM=_DoVisualizeSOM
         
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -128,11 +135,21 @@ class kerdensom_class:
                                      self.WorkingDir)
                 
         # Delete working directory if it exists, make a new one, and go there
+        if (_DoDeleteWorkingDir and (_DoSOM or _DoXmask) ): 
+            if os.path.exists(self.WorkingDir):
+                shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
-
-        # Execute MLalign2D in the working directory
         os.chdir(self.WorkingDir)
+
+        # Check whether ML2D working subdirectory
+        if not os.path.exists(self.ML2DWorkingDir):
+            message=" Error: ML2D directory "+self.ML2DWorkingDir+" does not exists!"
+            print '* '+message
+            self.log.error(message)
+            sys.exit()
+            
+        # Execute MLalign2D in the working directory
         self.execute_whole_protocol()
 
         # Return to parent dir
@@ -271,6 +288,7 @@ if __name__ == '__main__':
     # create kerdensom_class object
 
     kerdensom=kerdensom_class(WorkingDir,
+                              DoDeleteWorkingDir,
                               LaunchJobCommand,
                               ProjectDir,
                               LogDir,

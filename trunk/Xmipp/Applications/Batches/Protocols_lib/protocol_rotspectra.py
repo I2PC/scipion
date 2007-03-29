@@ -24,13 +24,13 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# Selfile with the input images:
+# Selfile with the input images (relative path from ProjectDir):
 """ The name of this file will be used as a seed for all new files
 """
-SelFileName='../all_images.sel'
-# Working directory: 
+SelFileName='all_images.sel'
+# Working subdirectory: 
 WorkDirectory='test1'
-# Delete working directory if it already exists?
+# Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=True
 # Display all intermediate results?
 """ Images will be displayed after alignment, average, makespectra and kendersom...
@@ -45,11 +45,11 @@ LogDir="Logs"
 #-----------------------------------------------------------------------------
 # Perform 2D pre-alignment?
 DoAlign2D=True
-# Inner radius for rotational correlation (also used by findcenter):
+# Inner radius for rotational correlation (also used to make spectra):
 """ These values are in pixels from the image center
 """
 InnerRadius=3
-# Outer radius for rotational correlation (also used by findcenter):
+# Outer radius for rotational correlation (also used to make spectra):
 OuterRadius=12
 # Number of align2d iterations to perform:
 Align2DIterNr=4
@@ -73,11 +73,19 @@ DoFindCenter=True
 #-----------------------------------------------------------------------------
 # Perform Rotational Spectra calculation?
 DoMakeSpectra=True
+# Name of the output file:
+""" Existing files with this name will be deleted!
+"""
+SpectraName="spectra.sim"
 #-----------------------------------------------------------------------------
 # {section} Kerdensom 
 #-----------------------------------------------------------------------------
 # Perform kerdensom calculation?
 DoKerdensom=True
+# Name of Output SOM:
+""" Existing files with this name will be deleted!
+"""
+SomName="som"
 # X-dimension of the self-organizing map:
 SomXdim=7
 # Y-dimension of the self-organizing map:
@@ -106,21 +114,28 @@ class rotational_spectra_class:
    #init variables
    
    def __init__(self,
-                _WorkDirectory,
                 _SelFileName,
+                _WorkDirectory,
+                _DoDeleteWorkingDir,
                 _DisplayResults,
+                _ProjectDir,
+                _LogDir,
+                _DoAlign2D,
                 _InnerRadius,
                 _OuterRadius,
                 _Align2DIterNr,
                 _Align2DExtraCommand,
+                _DoFindCenter,
+                _DoMakeSpectra,
+                _SpectraName,
+                _DoKerdensom,
+                _SomName,
                 _SomXdim,
                 _SomYdim,
                 _SomReg0,
                 _SomReg1,
                 _SomSteps,                
                 _KerdensomExtraCommand,
-                _ProjectDir,
-                _LogDir
                 ):
 
        import os,sys
@@ -129,13 +144,15 @@ class rotational_spectra_class:
        import log
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       self._SelFileName=os.path.abspath(str(_SelFileName))
+       self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
        self._DisplayResults=_DisplayResults
        self._InnerRadius=_InnerRadius
        self._OuterRadius=_OuterRadius
        self._Align2DIterNr=_Align2DIterNr
        self._Align2DExtraCommand=_Align2DExtraCommand
        self._Reverseendian=1
+       self._SpectraName=_SpectraName
+       self._SomName=_SomName
        self._SomXdim=_SomXdim
        self._SomYdim=_SomYdim
        self._SomReg0=_SomReg0
@@ -148,26 +165,27 @@ class rotational_spectra_class:
                                       sys.argv[0],
                                       _WorkDirectory)
 
-       if (DoDeleteWorkingDir): 
+       if (_DoDeleteWorkingDir): 
           self.delete_working_directory()
        self.create_working_directory()
 
        #change to working dir
        os.chdir(self._WorkDirectory)
 
-       if (DoAlign2D):
+       if (_DoAlign2D):
           self.execute_align2d()
 
-       if (DoFindCenter):
+       if (_DoFindCenter):
           self.execute_findcenter()
        
-       if (DoMakeSpectra):
+       if (_DoMakeSpectra):
            if(self.true_if_file_is_NOT_in_native_endian()):
               self.execute_reverse_endian()
            self.execute_apply_geo()
            self.execute_spectra()
-       if (DoKerdensom):
-          self.execute_KerDenSOM()
+       if (_DoKerdensom):
+           self.delete_existing_som()
+           self.execute_KerDenSOM()
        self.close()
   
    #------------------------------------------------------------------------
@@ -227,15 +245,13 @@ class rotational_spectra_class:
       self.mylog.info(command)
       os.system(command)
       if self._DisplayResults==True:
-         command='xmipp_show -sel '+ os.path.basename(self._SelFileName)
+         command='xmipp_show -sel '+ os.path.basename(self._SelFileName)+' &'
          print '*********************************************************************'
          print '* ',command
-         print '* You may consider removing bad images'
-         print ' double click them and save sel file as DISCARTED'
          self.mylog.info(command)
          os.system(command)
       if self._DisplayResults==True:
-         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp'
+         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp &'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -323,13 +339,15 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def execute_spectra(self):
       import os, string
+      if (os.path.exists(self._SpectraName)):
+          os.remove(self._SpectraName)
       print '*********************************************************************'
       print '* Computing rotational power spectra'
       selFileName=os.path.basename(self._SelFileName)
       outFileName=(os.path.splitext(selFileName))[0] + '.sim'
       command='xmipp_makespectra'+ \
               ' -sel ' + selFileName + \
-              ' -out ' + outFileName + \
+              ' -out ' + str(self._SpectraName) + \
               ' -x0 '  + str(self.xOffset) + \
               ' -y0 '  + str(self.yOffset) + \
               ' -r1 '  + str(self._InnerRadius) +   ' -r2 '   + str(self._OuterRadius) 
@@ -341,14 +359,30 @@ class rotational_spectra_class:
           print '*********************************************************************'
           print '* Display spectra'
           selFileName=os.path.basename(self._SelFileName)
-          spectraFileName=(os.path.splitext(selFileName))[0] + '.sim'
           command='xmipp_show'+ \
-                  ' -spect ' + spectraFileName 
+                  ' -spect ' + str(self._SpectraName)+' &'
           print '* ',command
           self.mylog.info(command)
           program = os.system(command)     
 
   
+   #------------------------------------------------------------------------
+   # f a SOM exists with SomName, delete all related files
+   #------------------------------------------------------------------------
+   def delete_existing_som(self):
+       import os
+       # delete existing files with this somname
+       if (os.path.exists(self._SomName+'.sel')):
+           print 'Deleting existing som...'
+           command= 'xmipp_rmsel '+self._SomName+'.sel \n'
+           print '* ',command
+           self.log.info(command)
+           os.system(command)
+           command= 'rm -f '+self._SomName+'.* '+self._SomName+'_* \n'
+           print '* ',command
+           self.log.info(command)
+           os.system(command)
+
    #------------------------------------------------------------------------
    #execute_KerDenSOM
    #------------------------------------------------------------------------
@@ -356,12 +390,10 @@ class rotational_spectra_class:
       import os
 
       selFileName=os.path.basename(self._SelFileName)
-      spectraFileName=(os.path.splitext(selFileName))[0] + '.sim'
       print '*********************************************************************'
       print '* Computing kerdensom ...'
-      kerdensom_out='kerd'
-      command='xmipp_kerdensom'+ ' -din '  + spectraFileName + \
-              ' -cout ' + kerdensom_out  + \
+      command='xmipp_kerdensom'+ ' -verb 1 -din '  + str(self._SpectraName) + \
+              ' -cout ' + str(self._SomName)  + \
               ' -xdim ' + str(self._SomXdim) + \
               ' -ydim ' + str(self._SomYdim) + \
               ' -reg0 ' + str(self._SomReg0) + \
@@ -373,8 +405,8 @@ class rotational_spectra_class:
       os.system(command)
       if self._DisplayResults==True:
          command='xmipp_show -spectsom ' + \
-                  kerdensom_out + \
-                  ' -din ' + spectraFileName
+                  str(self._SomName) + \
+                  ' -din ' + str(self._SpectraName) + ' &'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -401,20 +433,28 @@ if __name__ == '__main__':
    
    #init variables
    
-   myspectra=rotational_spectra_class(WorkDirectory,
-                                      SelFileName,
+   myspectra=rotational_spectra_class(SelFileName,
+                                      WorkDirectory,
+                                      DoDeleteWorkingDir,
                                       DisplayResults,
+                                      ProjectDir,
+                                      LogDir,
+                                      DoAlign2D,
                                       InnerRadius,
                                       OuterRadius,
                                       Align2DIterNr,
                                       Align2DExtraCommand,
+                                      DoFindCenter,
+                                      DoMakeSpectra,
+                                      SpectraName,
+                                      DoKerdensom,
+                                      SomName,
                                       SomXdim,
                                       SomYdim,
                                       SomReg0,
                                       SomReg1,
                                       SomSteps,                
                                       KerdensomExtraCommand,
-                                      ProjectDir,
-                                      LogDir )
+                                      )
 
     

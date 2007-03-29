@@ -141,7 +141,7 @@ class automated_gui_class:
             self.column_2d=1
             self.column_3d=2
         else:
-            self.guiwidth=600
+            self.guiwidth=620
             self.guiheight=650
             self.columnspantextlabel=3
             self.columntextentry=3
@@ -192,6 +192,9 @@ class automated_gui_class:
         headertext="GUI for Xmipp "
         programname=sys.argv[1]
         headertext+=programname.replace('.py','')
+        self.GuiAddSection(headertext,0)
+
+        headertext="Executed in directory: "+str(os.getcwd())
         self.GuiAddSection(headertext,1)
 
         # Add all the variables in the script header
@@ -220,7 +223,7 @@ class automated_gui_class:
                                      self.variables[var][4])
             else:
                 print "ERROR",self.variables[var][1]," variable type not recognized"
-                exit
+                sys.exit()
 
         # Add bottom row buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
@@ -232,7 +235,7 @@ class automated_gui_class:
         self.which_setup=StringVar()
         
         # Add labels for different protocol categories
-        self.GuiAddSection("Which Xmipp protocol do you want to run?",1)
+        self.GuiAddSection("Which Xmipp protocol do you want to run?",0)
         row=(self.frame.grid_size()[1]+1)
         self.row_pre=row
         self.row_2d=row
@@ -260,7 +263,7 @@ class automated_gui_class:
                                         self.variables[var][4])
             else:
                 print "ERROR",self.variables[var][1]," variable type not recognized"
-                exit
+                sys.exit()
 
         # Add bottom row buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
@@ -269,9 +272,14 @@ class automated_gui_class:
     def GuiAddSection(self,label,size):
         row=(self.frame.grid_size()[1]+1)
         line="-----------------------------------------------------------"
+        if size==0:
+            self.l1=Label(self.frame, text=label, font=("Helvetica", 18), fg="blue")
+            self.l2=Label(self.frame, text=line, font=("Helvetica", 18), fg="blue")
+            self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
+            self.l2.grid(row=row+1, column=0,columnspan=5,sticky=EW)
         if size==1:
-            self.l1=Label(self.frame, text=label, font=("Helvetica", 16), fg="blue")
-            self.l2=Label(self.frame, text=line, font=("Helvetica", 16), fg="blue")
+            self.l1=Label(self.frame, text=label, font=("Helvetica", 14), fg="blue")
+            self.l2=Label(self.frame, text="", font=("Helvetica", 14), fg="blue")
             self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
             self.l2.grid(row=row+1, column=0,columnspan=5,sticky=EW)
         if size==2:
