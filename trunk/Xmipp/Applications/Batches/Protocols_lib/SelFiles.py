@@ -14,7 +14,9 @@ class selfile:
        lines=fh.readlines()
        self.sellines=[]
        for line in lines:
-           self.sellines.append(line[:-1].split(" "))
+           args=line.split()
+           if (len(args)>1):
+               self.sellines.append([args[0],args[1]])
        fh.close()
 
    # Fills selfile content
@@ -27,8 +29,8 @@ class selfile:
 
    # Prints all lines to screen
    def printlines(self):
-       for name,state in self.sellines:
-           print name,state
+       for args in self.sellines:
+           print args
 
    # Writes selfile to disc
    def write(self,selfilename):
@@ -131,9 +133,32 @@ class selfile:
        newsel.set(newlines)
        return newsel
 
+   # Given two pattern selfiles with equal file order (pattern1,pattern2)
+   # and a selfile that is a subset of pattern1,
+   # return a selfile that is the corresponding subset from pattern2
+   def make_corresponding_subset(self,pattern1,pattern2):
+       
+       newlines=[]
+       for name,state in self.sellines:
+           for i in range(len(pattern1.sellines)):
+               name1,state1=pattern1.sellines[i]
+               if (name1==name):
+                   name2,state2=pattern2.sellines[i]
+                   newlines.append([name2,state])
+       newsel=selfile()
+       newsel.set(newlines)
+       return newsel
+
+
 if __name__ == '__main__':
    mysel=selfile()
    mysel.read('test.sel')
+   pat1=selfile()
+   pat2=selfile()
+   pat1.read('unt.sel')
+   pat2.read('til.sel')
+   newsel=mysel.make_corresponding_subset(pat1,pat2)
+   newsel.printlines()
 #   newsel=mysel.copy_sel('images')
 #   newsel.printlines()
 #   newsel=newsel.replace_string('xmp','app')
