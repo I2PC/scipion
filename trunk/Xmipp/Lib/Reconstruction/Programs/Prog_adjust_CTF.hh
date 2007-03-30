@@ -43,6 +43,8 @@ public:
    ImageXmipp           ctftomodel;
    /// CTF amplitude to model
    ImageXmipp           enhanced_ctftomodel;
+   /// CTF amplitude to model
+   ImageXmipp           enhanced_ctftomodel_fullsize;
    /// CTF model
    XmippCTF             initial_ctfmodel;
    /// Show convergence values
@@ -50,9 +52,7 @@ public:
    /// Allow astigmatic noise
    bool                 astigmatic_noise;
    /// X dimension of particle projections (-1=the same as the psd)
-   int			   particle_horizontal; 
-   /// Y dimension of particle projections (-1=the same as the psd)
-   int			   particle_vertical;
+   int			ctfmodelSize; 
    
    /// Minimum frequency to adjust 
    double               min_freq;
@@ -91,9 +91,13 @@ public:
    /// Produce side information
    void produce_side_info();
 
-   /** Generate model at a given size.
+   /** Generate half-plane model at a given size.
        It is assumed that ROUT_Adjust_CTF has been already run */
-   void generate_model(int Ydim, int Xdim, matrix2D<double> &model);
+   void generate_model_halfplane(int Ydim, int Xdim, matrix2D<double> &model);
+
+   /** Generate quadrant model at a given size.
+       It is assumed that ROUT_Adjust_CTF has been already run */
+   void generate_model_quadrant(int Ydim, int Xdim, matrix2D<double> &model);
 };
 
 /** Core of the Adjust CTF routine.

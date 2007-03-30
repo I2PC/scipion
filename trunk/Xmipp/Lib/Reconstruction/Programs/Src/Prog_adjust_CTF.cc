@@ -221,9 +221,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param) {
    defocus_range=AtoF(get_param(fh_param,"defocus_range",0,"8000")); 
    initial_Ca=AtoF(get_param(fh_param,"initial_Ca",0,"2")); 
    
-   particle_horizontal=AtoI(get_param(fh_param,"particle_horizontal",0,"-1"));
-   particle_vertical  =AtoI(get_param(fh_param,"particle_vertical",  0,"-1"));
-   if (particle_vertical==-1) particle_vertical=particle_horizontal;
+   ctfmodelSize=AtoI(get_param(fh_param,"ctfmodelSize",0,"128"));
 
    adjust.resize(ALL_CTF_PARAMETERS);
    initial_ctfmodel.enable_CTF=initial_ctfmodel.enable_CTFnoise=true;
@@ -267,8 +265,7 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
    fh_param << "initial_Ca="           << initial_Ca              << endl;
    if (show_optimization)  fh_param    << "show_optimization=yes\n";
    if (!astigmatic_noise)  fh_param    << "radial_noise=yes\n";
-   fh_param << "particle_horizontal="  << particle_horizontal     << endl;
-   fh_param << "particle_vertical="    << particle_vertical       << endl;
+   fh_param << "ctfmodelSize="         << ctfmodelSize            << endl;
    fh_param << "enhance_min_freq="     << f1                      << endl
             << "enhance_max_freq="     << f2                      << endl
 	    << "enhance_weight="       << enhanced_weight         << endl;
@@ -287,8 +284,7 @@ void Adjust_CTF_Parameters::show() {
         << "Radial noise:       " << !astigmatic_noise   << endl
         << "Defocus range:      " << defocus_range       << endl
 	<< "Initial Ca:         " << initial_Ca          << endl
-        << "Particle horizontal:" << particle_horizontal << endl
-        << "Particle vertical:  " << particle_vertical   << endl
+        << "ctfmodelSize:       " << ctfmodelSize        << endl
         << "Enhance min freq:   " << f1                  << endl
         << "Enhance max freq:   " << f2                  << endl
 	<< "Starting:\n"          << initial_ctfmodel    << endl
@@ -312,8 +308,7 @@ void Adjust_CTF_Parameters::Usage() {
 	<< "   [defocus_range=<D=8000>]    : Defocus range\n"  
 	<< "   [initial_Ca=<Ca=2>]         : Chromatic aberration\n"  
         << "   [radial_noise=yes|no]       : By default, noise is astigmatic\n"
-        << "   [particle_horizontal=-1]    : By default, the same X size as the PSD\n"
-        << "   [particle_vertical=-1]      : By default, the same Y size as the PSD\n"
+        << "   [ctfmodelSize=128]          : Size for the ctfmodel\n"
         << "   [enhance_min_freq=<f=0.02>] : Normalized to 0.5\n"
         << "   [enhance_max_freq=<f=0.15>]  : Normalized to 0.5\n"
 	<< "   [enhance_weight=<w=5>]      : Weight of the enhanced term\n"
@@ -363,19 +358,25 @@ void Adjust_CTF_Parameters::produce_side_info() {
       global_w_count(r)++;
    }
 
-   // Enhance PSD
+   // Enhance PSD for ctfmodels
    Prog_Enhance_PSD_Parameters prm;
    prm.center=true;
    prm.take_log=true;
-   prm.filter_w1=f1;
-   prm.filter_w2=f2;
+   prm.filter_w1=0.02;
+   prm.filter_w2=0.2;
    prm.decay_width=0.02;
    prm.mask_w1=0.01;
    prm.mask_w2=0.5;
    enhanced_ctftomodel()=ctftomodel();
    prm.apply(enhanced_ctftomodel());
-   
-   // Take only one half
+   CenterFFT(enhanced_ctftomodel(),false);
+   enhanced_ctftomodel_fullsize()=enhanced_ctftomodel();
+
+   // Enhance PSD for optimization
+   prm.filter_w1=f1;
+   prm.filter_w2=f2;
+   enhanced_ctftomodel()=ctftomodel();
+   prm.apply(enhanced_ctftomodel());
    CenterFFT(enhanced_ctftomodel(),false);
    enhanced_ctftomodel().resize(global_w_digfreq);
    
@@ -449,35 +450,14 @@ void save_intermediate_results(const FileName &fn_root, bool
    generate_model_so_far(save,false);
    
    ImageXmipp save_ctf;
-   if (global_prm->particle_horizontal==-1 &&
-       global_prm->particle_vertical==-1) {
-      save_ctf()=global_prm->ctftomodel();
-
-      int Ydim=YSIZE(save_ctf());
-      int Xdim=XSIZE(save_ctf());
-      
-      #ifdef NEVER_DEFINED
-      // Substract the background from the PSD
-      matrix1D<int> idx(2);
-      matrix1D<double> freq(2);
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(save_ctf()) {
-         XX(idx)=j; YY(idx)=i;
-         FFT_idx2digfreq(*f, idx, freq);
-         digfreq2contfreq(freq, freq, global_prm->Tm);
-         double bg=global_ctfmodel.CTFnoise_at(XX(freq),YY(freq));
-         save_ctf(i,j)-=bg;
-      }
-      #endif
-
-      // Copy the model
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(save_ctf())
-         if ((i<Ydim/2 && j<Xdim/2) || (i>=Ydim/2 && j>=Xdim/2))
-            save_ctf(i,j)=save(i,j);
-   } else
-      global_prm->generate_model(
-         global_prm->particle_vertical,global_prm->particle_horizontal,
-         save_ctf());
-   save_ctf.write(fn_root+".ctfmodel");
+   global_prm->generate_model_halfplane(
+      global_prm->ctfmodelSize,global_prm->ctfmodelSize,
+      save_ctf());
+   save_ctf.write(fn_root+".ctfmodel_halfplane");
+   global_prm->generate_model_quadrant(
+      global_prm->ctfmodelSize,global_prm->ctfmodelSize,
+      save_ctf());
+   save_ctf.write(fn_root+".ctfmodel_quadrant");
    
    if (!generate_profiles) return;
    plotX.open((fn_root+"X.txt").c_str());
@@ -545,24 +525,25 @@ void save_intermediate_results(const FileName &fn_root, bool
 }
 
 /* Generate model at a given size ------------------------------------------ */
-void Adjust_CTF_Parameters::generate_model(int Ydim, int Xdim,
+void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
    matrix2D<double> &model) {
    matrix1D<int>    idx(2);  // Indexes for Fourier plane
    matrix1D<double> freq(2); // Frequencies for Fourier plane
 
    // Copy the PSD
-   model=*f;
+   model=global_prm->enhanced_ctftomodel_fullsize();
 
    // Scale and remove negative values because of the interpolation
    model.self_scale_to_size_Bspline(3,Ydim,Xdim);
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
-      if (model(i,j)<0) model(i,j)=0;
+   model.range_adjust(0,1);
  
    // Generate the CTF model
    assign_CTF_from_parameters(VEC_ARRAY(*global_adjust),global_ctfmodel,
       0,ALL_CTF_PARAMETERS,global_prm->astigmatic_noise);
    global_ctfmodel.Produce_Side_Info();
-
+   // Write the two model quadrants
+   double minval=1e38;
+   double maxval=-1e38;
    FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
       if ((j>=Xdim/2 && i>=Ydim/2) || (j<Xdim/2 && i<Ydim/2)) {
 	 XX(idx)=j; YY(idx)=i;
@@ -570,8 +551,59 @@ void Adjust_CTF_Parameters::generate_model(int Ydim, int Xdim,
 	 digfreq2contfreq(freq, freq, global_prm->Tm);
 
 	 model(i,j)=global_ctfmodel.CTFpure_at(XX(freq),YY(freq));
+         model(i,j)*=model(i,j);
+	 minval=MIN(minval,model(i,j));
+	 maxval=MAX(maxval,model(i,j));
       }
    }
+
+   // Normalize the CTF model
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
+      if ((j>=Xdim/2 && i>=Ydim/2) || (j<Xdim/2 && i<Ydim/2)) {
+         model(i,j)=(model(i,j)-minval)/(maxval-minval);
+      }
+   }
+   CenterFFT(model,true);
+}
+
+void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
+   matrix2D<double> &model) {
+   matrix1D<int>    idx(2);  // Indexes for Fourier plane
+   matrix1D<double> freq(2); // Frequencies for Fourier plane
+   
+   // The right part is the scaled PSD
+   model=global_prm->enhanced_ctftomodel_fullsize();
+   
+   // Scale and remove negative values because of the interpolation
+   model.self_scale_to_size_Bspline(3,Ydim,Xdim);
+   model.range_adjust(0,1);
+   
+   // The left part is the CTF model
+   assign_CTF_from_parameters(VEC_ARRAY(*global_adjust),global_ctfmodel,
+      0,CTF_PARAMETERS,global_prm->astigmatic_noise);
+   global_ctfmodel.Produce_Side_Info();
+
+   double minval=1e38;
+   double maxval=-1e38;
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
+      if (j>=Xdim/2) continue;
+   
+      XX(idx)=j; YY(idx)=i;
+      FFT_idx2digfreq(model, idx, freq);
+      digfreq2contfreq(freq, freq, global_prm->Tm);
+   
+      model(i,j)=global_ctfmodel.CTFpure_at(XX(freq),YY(freq));
+      model(i,j)*=model(i,j);
+      minval=MIN(minval,model(i,j));
+      maxval=MAX(maxval,model(i,j));
+   }
+
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(model) {
+      if (j>=Xdim/2) continue;
+      model(i,j)=(model(i,j)-minval)/(maxval-minval);
+   }
+
+   CenterFFT(model,true);
 }
 
 /* CTF fitness ------------------------------------------------------------- */
