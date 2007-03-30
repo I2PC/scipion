@@ -189,8 +189,7 @@ void AssignCTFViewer::okToProceed() {
       << "defocusU=            " << current_prm[2]*1000              << endl
       << "defocusV=            " << current_prm[3]*1000              << endl
       << "azimuthal_angle=     " << current_prm[4]                   << endl
-      << "particle_horizontal= " << assign_ctf_prm.particle_horizontal << endl
-      << "particle_vertical=   " << assign_ctf_prm.particle_vertical   << endl
+      << "ctfmodelSize=        " << assign_ctf_prm.adjust_CTF_prm.ctfmodelSize      << endl
    ;
 
    fh_adjust_param.close();
