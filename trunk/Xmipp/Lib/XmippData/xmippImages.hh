@@ -387,18 +387,24 @@ public:
      * The element size can be adjusted so that raw images of bytes (IBYTE),
      * unsigned ints woth 16 bits (I16) and floats (IFLOAT) can be read.
      * 
+     * The headersize parameter can be used to read raw images
+     * preceded by a header. This is the normal image format of many
+     * image processing packages.
+     *
      * @code
      * I.read(65, 65, "g0ta0001.raw");
      * @endcode
      */
     bool read(const FileName& name, float fIform, int Ydim, int Xdim,
-              bool reversed=false, Image_Type image_type=IBYTE)
+              bool reversed=false, Image_Type image_type=IBYTE,
+	      int header_size=0)
     {
         FILE* fh;
         clear();
 
         if ((fh = fopen(name.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501, "Image::read: File " + name + " not found");
+        fseek(fh,header_size,SEEK_SET);
             
         bool ret;
         if ((ret = ImageT<  T>::read(fh, fIform, Ydim, Xdim, reversed,
