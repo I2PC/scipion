@@ -166,6 +166,29 @@ void BlackmanMask(matrix2D<double> &mask, int mode, double x0, double y0) {
    }
 }
 
+void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw) {
+   // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
+   Deltaw*=PI;
+
+   // Design Kaiser window
+   double A=-20*log10(delta);
+   int    M=CEIL((A-8)/(2.285*Deltaw));
+   double beta;
+   if (A>50) beta=0.1102*(A-8.7);
+   else if (A>=21) beta=0.5842*pow(A-21,0.4)+0.07886*(A-21);
+   else beta=0;
+   
+   // "Draw" Kaiser window
+   mask.resize(2*M+1,2*M+1);
+   mask.set_Xmipp_origin();
+   double iI0Beta=1.0/bessi0(beta);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
+      double r=sqrt(i*i+j*j);
+      if (r<=M)
+         mask(i,j)=bessi0(beta*sqrt(1-(r/M)*(r/M)))*iI0Beta;
+   }
+}
+
 void SincMask(matrix2D<double> &mask,
    double omega, int mode, double x0, double y0) {
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
@@ -220,6 +243,39 @@ void SincBlackmanMask(matrix2D<double> &mask,
 
    // Create a Sinc mask of that size
    EVALUATE_POWER_OF_SINCBLACKMAN2D(N12,P12);
+}
+
+void SincKaiserMask(matrix2D<double> &mask,
+   double omega, double delta, double Deltaw) {
+   matrix2D<double> kaiser;
+   KaiserMask(kaiser,delta,Deltaw);
+   mask.resize(kaiser); mask.set_Xmipp_origin();
+   SincMask(mask,omega,INNER_MASK,0,0);
+   mask *= kaiser;
+}
+
+void SeparableSincKaiserMask(matrix2D<double> &mask,
+   double omega, double delta, double Deltaw) {
+   // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
+   Deltaw*=PI;
+
+   // Design Kaiser window
+   double A=-20*log10(delta);
+   int    M=CEIL((A-8)/(2.285*Deltaw));
+   double beta;
+   if (A>50) beta=0.1102*(A-8.7);
+   else if (A>=21) beta=0.5842*pow(A-21,0.4)+0.07886*(A-21);
+   else beta=0;
+   
+   // "Draw" Separable Kaiser Sinc window
+   mask.resize(2*M+1,2*M+1);
+   mask.set_Xmipp_origin();
+   double iI0Beta=1.0/bessi0(beta);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
+      mask(i,j)=SINC(omega*i)*SINC(omega*j)*
+         bessi0(beta*sqrt(1-(i/M)*(i/M)))*iI0Beta*
+         bessi0(beta*sqrt(1-(j/M)*(j/M)))*iI0Beta;
+   }
 }
 
 void mask2D_4neig(matrix2D<int> &mask, int value, int center)
