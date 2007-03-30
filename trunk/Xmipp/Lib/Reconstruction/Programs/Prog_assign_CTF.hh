@@ -49,10 +49,6 @@ public:
    int                     N_horizontal;
    /// Y dimension of micrograph pieces
    int                     N_vertical;
-   /// X dimension of particle projections
-   int			   particle_horizontal; 
-   /// Y dimension of particle projections
-   int			   particle_vertical;
    /// Selfile with all projections
    FileName                selfile_fn;
    /// Position file

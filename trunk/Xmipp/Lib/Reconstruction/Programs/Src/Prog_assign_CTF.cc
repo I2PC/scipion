@@ -46,10 +46,6 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) {
    N_horizontal      =AtoI(get_param(fh_param,"N_horizontal",0));
    N_vertical        =AtoI(get_param(fh_param,"N_vertical",0,"-1"));
    if (N_vertical==-1) N_vertical=N_horizontal;
-   particle_horizontal=AtoI(get_param(fh_param,"particle_horizontal",0,"-1"));
-   if (particle_horizontal==-1) particle_horizontal=N_horizontal;
-   particle_vertical =AtoI(get_param(fh_param,"particle_vertical",0,"-1"));
-   if (particle_vertical==-1) particle_vertical=particle_horizontal;
 
    compute_at_particle  =check_param(fh_param,"compute_at_particle");
    micrograph_averaging =check_param(fh_param,"micrograph_averaging");
@@ -93,9 +89,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
    if (!selfile_mode)
       fh_param << "image="                << aux                  << endl;
    fh_param << "N_horizontal="         << N_horizontal         << endl
-            << "N_vertical="           << N_vertical           << endl
-            << "particle_horizontal="  << particle_horizontal  << endl
-            << "particle_vertical="    << particle_vertical    << endl;
+            << "N_vertical="           << N_vertical           << endl;
    if (!remove_directories) aux=selfile_fn;
    else                     aux=directory+"/"+selfile_fn.remove_directories();
    fh_param << "selfile="              << aux                  << endl;
@@ -226,10 +220,6 @@ void Prog_assign_CTF_prm::process() {
               << "I cannot go any further sorry\n";
          exit(1);
       }
-
-      // Find out the particle dimensions
-      if (particle_horizontal<=0||particle_vertical<=0)
-         SF.ImgSize(particle_vertical,particle_horizontal);
    } else if (micrograph_averaging) {
       if (!selfile_mode) {
          // If averaging, allow overlap among pieces
@@ -355,18 +345,8 @@ void Prog_assign_CTF_prm::process() {
             adjust_CTF_prm.fn_ctf=piece_fn_root+".psd";
             if (!dont_adjust_CTF) {
                double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
-
-               // If the CTF should be smaller
-               if (particle_vertical!=N_vertical ||
-                   particle_horizontal!=N_horizontal) {
-                   ImageXmipp ctf_model;
-                   adjust_CTF_prm.generate_model(
-                      particle_vertical,particle_horizontal, ctf_model());
-                   ctf_model.write(piece_fn_root+".ctfmodel");
-               }
-
                if (compute_at_particle)
-        	  OutputFile_ctf << piece_fn_root+".ctfmodel" << " 1\n";
+        	  OutputFile_ctf << piece_fn_root+".ctfmodel_halfplane" << " 1\n";
             }
 	 }
       }
@@ -388,15 +368,6 @@ void Prog_assign_CTF_prm::process() {
 	 cerr << "Adjusting CTF model to the PSD ...\n";
 	 adjust_CTF_prm.fn_ctf=fn_avg;
 	 double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
-
-	 // If the CTF should be smaller
-	 if (particle_vertical!=N_vertical ||
-             particle_horizontal!=N_horizontal) {
-             ImageXmipp ctf_model;
-             adjust_CTF_prm.generate_model(
-                   particle_vertical,particle_horizontal, ctf_model());
-             ctf_model.write(fn_avg.without_extension()+".ctfmodel");
-	 }
       }
    }
 
@@ -427,14 +398,14 @@ void Prog_assign_CTF_prm::process() {
                   int idx_X=FLOOR((double)X/N_horizontal);
                   int idx_Y=FLOOR((double)Y/N_vertical);
                   int idx_piece=idx_Y*div_NumberX+idx_X+1;
-                  OutputFile_ctf << PSDfn_root+ItoA(idx_piece,5)+".ctfmodel"
+                  OutputFile_ctf << PSDfn_root+ItoA(idx_piece,5)+".ctfmodel_halfplane"
                                  << " 1\n";
                } else
-                  OutputFile_ctf << fn_avg.without_extension()+".ctfmodel"
+                  OutputFile_ctf << fn_avg.without_extension()+".ctfmodel_halfplane"
                                  << " 1\n";
             }
          } else {
-            OutputFile_ctf << fn_avg.without_extension()+".ctfmodel"
+            OutputFile_ctf << fn_avg.without_extension()+".ctfmodel_halfplane"
                            << " 1\n";
          }
          SF.next();
