@@ -226,15 +226,21 @@ public:
        
        The element size can be adjusted so that raw images of bytes (VBYTE),
        unsigned ints of 16 bits (V16) and floats (VFLOAT) can be read. 
+
+       The headersize parameter can be used to read raw volumes
+       preceded by a header. This is the normal image format of many
+       image processing packages.
+
        \\ Ex: V.read(65,65,65,"art0001.raw");*/
 
    void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=false,
-      Volume_Type volume_type=VBYTE) {
+      Volume_Type volume_type=VBYTE, int header_size=0) {
         FILE *fh;
         clear(); 
         fn_img=name;
         if ((fh = fopen(fn_img.c_str(), "rb")) == NULL)
           REPORT_ERROR(1501,"Volume::read: File " + fn_img + " not found");
+        fseek(fh,header_size,SEEK_SET);
         read(fh, Zdim, Ydim, Xdim, reversed, volume_type);
 
         fclose(fh);
