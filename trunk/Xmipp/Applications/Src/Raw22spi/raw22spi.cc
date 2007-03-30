@@ -29,8 +29,8 @@
 
 /* Prototypes -============================================================= */
 void Usage (char **argv);
-void raw22spi (const FileName &, const FileName &, char, int, int, int, bool,
-   bool); 
+void raw22spi (const FileName &, const FileName &, char, int, int, int, int,
+   bool, bool); 
 
 int main (int argc, char *argv[]) {
 /* Input Parameters ======================================================== */
@@ -41,6 +41,7 @@ string 	       sel_ext;  // extension for output files in selection file.
 char	       raw_type = 'b';
 int            Zdim, Ydim, Xdim;
 int 	       size_arg;
+int            header_size;
 bool           generate_inf;
 bool           reverse_endian;
 
@@ -90,6 +91,7 @@ Zdim=Ydim=Xdim=0;
 	  Xdim=AtoI(get_param(fh_inf,"Xdim"));
 	  fclose(fh_inf);
        }
+       header_size=AtoI(get_param(argc,argv,"-header","0"));
        if (argc == 1) {Usage(argv);}
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
@@ -102,7 +104,7 @@ try {
    SelFile SF(sel_file);
    FileName SF_out_name;
    SF_out_name = sel_file.without_extension().add_prefix("out_");
-   SF_out_name += sel_file.get_extension();
+   SF_out_name += (string)"."+sel_file.get_extension();
    SelFile SF_out;
    SF_out.clear();
    while (!SF.eof()) {
@@ -113,8 +115,8 @@ try {
        FileName out_name = in_name.without_extension();
        out_name=out_name.add_extension(sel_ext);
        SF_out.insert(out_name,(SelLine::Label)label);
-       raw22spi(in_name,out_name,raw_type,Zdim,Ydim,Xdim,generate_inf,
-          reverse_endian);
+       raw22spi(in_name,out_name,raw_type,header_size,Zdim,Ydim,Xdim,
+          generate_inf,reverse_endian);
       }
       else if (line.Is_comment()){
         SF_out.insert(line);
@@ -126,7 +128,7 @@ try {
  //input/output are single files
  
  else if (check_param(argc, argv,"-i") && check_param(argc, argv,"-o")){
-   raw22spi(fn_in,fn_out,raw_type,Zdim,Ydim,Xdim,generate_inf,
+   raw22spi(fn_in,fn_out,raw_type,header_size,Zdim,Ydim,Xdim,generate_inf,
       reverse_endian);
  }
  
@@ -159,6 +161,7 @@ void Usage (char **argv) {
      "\n   [-16]                 raw file is read/written in 16-bit integers"
      "\n   [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n"
+     "\n   [-header size=0]      Valid for raw to Xmipp conversions\n"
      "\n   [-s Zdim Ydim Xdim]   Z,Y,X dimensions for input files."
      "\n			 For 2D raw images set the Zdim to 1"
      "\n   [-is_micrograph]      If this flag is provided the size is taken"
@@ -166,8 +169,8 @@ void Usage (char **argv) {
      ,argv[0]);
 }
 void raw22spi (const FileName &fn_in, const FileName &fn_out,
-     char raw_type, int Zdim,  int Ydim, int Xdim, bool generate_inf,
-     bool reverse_endian) {
+     char raw_type, int header_size, int Zdim,  int Ydim, int Xdim,
+     bool generate_inf, bool reverse_endian) {
 
  VolumeXmipp    Vx;
  ImageXmipp     Ix;
@@ -208,18 +211,18 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
    else if (Zdim==1) {
       Image *I=&Ix; // This is a trick for the compiler
       switch (raw_type) {
-         case 'b': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IBYTE); break;
-	 case 'h': I->read(fn_in,0,Ydim,Xdim,reverse_endian,I16); break;
-         case 'f': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IFLOAT); break;
+         case 'b': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IBYTE,header_size); break;
+	 case 'h': I->read(fn_in,0,Ydim,Xdim,reverse_endian,I16,header_size); break;
+         case 'f': I->read(fn_in,0,Ydim,Xdim,reverse_endian,IFLOAT,header_size); break;
       }
       Ix.write(fn_out);
    // Raw Volume --> Xmipp Volume
    } else {
       Volume *V=&Vx; // This is a trick for the compiler
       switch (raw_type) {
-         case 'b': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VBYTE); break;
-	 case 'h': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,V16); break;
-         case 'f': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VFLOAT); break;
+         case 'b': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VBYTE,header_size); break;
+	 case 'h': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,V16,header_size); break;
+         case 'f': V->read(fn_in,Zdim,Ydim,Xdim,reverse_endian,VFLOAT,header_size); break;
       }
       Vx.write(fn_out);
    }
