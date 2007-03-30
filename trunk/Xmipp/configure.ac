@@ -195,7 +195,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/DocFile_Histogram/Makefile \
 	Applications/Src/DownSample/Makefile \
 	Applications/Src/Draw_surface/Makefile \
-	Applications/Src/DWT/Makefile \
 	Applications/Src/Edit/Makefile \
 	Applications/Src/EM2Angles/Makefile \
 	Applications/Src/Enhance_PSD/Makefile \
@@ -204,7 +203,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Evaluate_FSCs/Makefile \
 	Applications/Src/Exp_Shift_Computation/Makefile \
 	Applications/Src/FCMeans/Makefile \
-	Applications/Src/FFT/Makefile \
 	Applications/Src/FindCenter3D/Makefile \
 	Applications/Src/FKCN/Makefile \
 	Applications/Src/Flip/Makefile \
@@ -213,8 +211,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Headerinfo/Makefile \
 	Applications/Src/Histogram/Makefile \
 	Applications/Src/IDR_ART/Makefile \
-	Applications/Src/IDWT/Makefile \
-	Applications/Src/IFFT/Makefile \
 	Applications/Src/Img2Data/Makefile \
 	Applications/Src/Infogeo/Makefile \
 	Applications/Src/KCMeans/Makefile \
