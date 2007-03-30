@@ -149,6 +149,21 @@ class selfile:
        newsel.set(newlines)
        return newsel
 
+   # Given two  selfiles s1 and s2 create s1 U s2
+   # the order will e first entry of s1 then first entry of s2 etc..
+   #same size for s1 and s2 is assumed
+   def intercalate_union(self,selfile2):
+       
+       newlines=[]
+       i=0
+       for name1,state1 in self.sellines:
+               name2,state2=selfile2.sellines[i]
+               newlines.append([name1,state1])
+               newlines.append([name2,state2])
+               i = i+1
+       newsel=selfile()
+       newsel.set(newlines)
+       return newsel
 
 if __name__ == '__main__':
    mysel=selfile()
