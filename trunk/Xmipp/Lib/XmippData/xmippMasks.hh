@@ -184,6 +184,14 @@ void RaisedCrownMask(matrix2D< double >& mask,
 void BlackmanMask(matrix2D< double >& mask, int mode=INNER_MASK,
                   double x0=0, double y0=0);
 
+/** 2D Kaiser window
+ * @ingroup Masks2D
+ *  The mask is resized.
+ *  delta=ripple (in natural units) in the pass band.
+ *  Deltaw=transition bandwidth (normalized to 1.0).
+ */
+void KaiserMask(matrix2D<double> &mask, double delta=0.01, double Deltaw=1.0/12.0);
+
 /** Creates a 2D sinc mask for already sized masks
  * @ingroup Masks2D
  * 
@@ -208,6 +216,24 @@ void SincMask(matrix2D< double >& mask,
 void SincBlackmanMask(matrix2D< double >& mask,
                       double omega, double power_percentage,
                       int mode=INNER_MASK, double x0=0, double y0=0);
+
+/** Creates a 2D radial-sinc-kaiser mask, the mask is resized.
+ * @ingroup Masks2D
+ *  This function returns a sinc mask windowed by a Kaiser window.
+ *  delta=ripple (in natural units) in the pass band.
+ *  Deltaw=transition bandwidth (normalized to 1).
+ */
+void SincKaiserMask(matrix2D<double> &mask, 
+   double omega, double delta=0.01, double Deltaw=1.0/12.0);
+
+/** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
+ * @ingroup Masks2D
+ *  This function returns a sinc mask windowed by a Kaiser window.
+ *  delta=ripple (in natural units) in the pass band.
+ *  Deltaw=transition bandwidth (normalized to 1).
+ */
+void SeparableSincKaiserMask(matrix2D<double> &mask, 
+   double omega, double delta=0.01, double Deltaw=1.0/12.0);
 
 /** Creates a 3x3 mask with value (1 by default) for those 4-neighbours of the
  * central point (0 otherwise).
