@@ -561,6 +561,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 	     int i2=intWRAP(i+y,0,yF-1);
              pixval += kernel(i,j)*M(j2,i2);
 	  }
+	 
           if (ii<Ypdim && jj<Xpdim) 
 	     if (Mp.depth()!=32) Mp.set_val(jj,ii,FLOOR(a*(pixval*scale+b)));
 	     else Mp.set_val(jj,ii,pixval);
