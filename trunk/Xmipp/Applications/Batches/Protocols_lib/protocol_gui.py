@@ -61,7 +61,9 @@ class automated_gui_class:
         fh.close()        
 
     def ScriptParseComments(self,i):
+        import string
         found_comment=False
+        morehelp=[]
         j=i
         # comment will be the first line above the i^th line that begins with a "#"
         while not found_comment:
@@ -84,21 +86,18 @@ class automated_gui_class:
                 else:
                     isexpert="normal"
         if (i-j>1):
-            line="-----------------------------------------------------------\n"
-            self.morehelp+=line
-            self.morehelp+=comment
-            self.morehelp+=line
             while (j<i-1):
                 j=j+1
-                self.morehelp+=self.script_header_lines[j]
+                morehelp+=self.script_header_lines[j]
 
-        return comment,isexpert
+        morehelp=string.join(morehelp,'')
+        morehelp=morehelp.replace('\"\"\"','')
+        return comment,isexpert,morehelp
         
 
     def ScriptParseVariables(self):
         self.variables={}
         self.vfields=[]
-        self.morehelp=""
 
         for i in range(len(self.script_header_lines)):
             # Get section headers
@@ -126,9 +125,10 @@ class automated_gui_class:
                     newvar=StringVar()
                     self.variables[args[0]].append(newvar)
             
-                comment,isexpert=self.ScriptParseComments(i)
+                comment,isexpert,morehelp=self.ScriptParseComments(i)
                 self.variables[args[0]].append(comment)
                 self.variables[args[0]].append(isexpert)
+                self.variables[args[0]].append(morehelp)
 
 
     def SetupGuiParameters(self):
@@ -188,6 +188,8 @@ class automated_gui_class:
 
     def FillProtocolGui(self):
 
+        self.morehelp=StringVar()
+
         # Script title
         headertext="GUI for Xmipp "
         programname=sys.argv[1]
@@ -206,21 +208,16 @@ class automated_gui_class:
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
                                      self.variables[var][2],
-                                     self.variables[var][4])
+                                     self.variables[var][4],
+                                     self.variables[var][5])
             elif (self.variables[var][1]=="Boolean"):
                 newvar=BooleanVar()
                 self.variables[var].append(newvar)
                 self.GuiAddBooleanEntry(self.variables[var][3],
                                         self.variables[var][0],
                                         self.variables[var][2],
-                                        self.variables[var][4])
-            elif (self.variables[var][1]=="FileName"):
-                newvar=StringVar()
-                self.variables[var].append(newvar)
-                self.GuiAddFileNameEntry(self.variables[var][3],
-                                     self.variables[var][0],
-                                     self.variables[var][2],
-                                     self.variables[var][4])
+                                        self.variables[var][4],
+                                        self.variables[var][5])
             else:
                 print "ERROR",self.variables[var][1]," variable type not recognized"
                 sys.exit()
@@ -256,7 +253,8 @@ class automated_gui_class:
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
                                      self.variables[var][2],
-                                     self.variables[var][4])
+                                     self.variables[var][4],
+                                     self.variables[var][5])
             elif (self.variables[var][1]=="Boolean"):
                 self.GuiAddLaunchButton(self.variables[var][3],
                                         var,
@@ -306,19 +304,24 @@ class automated_gui_class:
                                 value=value,  indicatoron=0, command=self.GuiLanchSetup)
         self.bGet.grid(row=row,column=column)
 
-    def GuiPositionLabel(self,label,default,variable,expert):
+    def GuiPositionLabel(self,label,default,variable,expert,morehelp):
         row=(self.frame.grid_size()[1]+1)
         if (expert=="expert"):
-            self.l=Label(self.frame, text=label,bg="yellow")
+            bg="yellow"
         else:
-            self.l=Label(self.frame, text=label)
+            bg="white"
+        if (morehelp!=""):
+            self.l=Radiobutton(self.frame,text=label,variable=self.morehelp, bg=bg,
+                               value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
+        else:
+            self.l=Label(self.frame, text=label, bg=bg)
         self.l.configure(wraplength=350)
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
             
         return row,self.l
 
-    def GuiAddBooleanEntry(self,label,default,variable,expert):
-        row,self.l=self.GuiPositionLabel(label,default,variable,expert)
+    def GuiAddBooleanEntry(self,label,default,variable,expert,morehelp):
+        row,self.l=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.r1 = Radiobutton(self.frame, text="Yes", variable=variable, value=True)
         self.r1.grid(row=row, column=3)
         self.r2 = Radiobutton(self.frame, text="No", variable=variable, value=False)
@@ -332,8 +335,8 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.r1)
             self.widgetexpertlist.append(self.r2)
 
-    def GuiAddTextEntry(self,label,default,variable,expert):
-        row,self.l=self.GuiPositionLabel(label,default,variable,expert)
+    def GuiAddTextEntry(self,label,default,variable,expert,morehelp):
+        row,self.l=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.e = Entry(self.frame, text=label, textvariable=variable)
         self.e.delete(0, END) 
         self.e.insert(0,default)
@@ -427,6 +430,13 @@ class automated_gui_class:
         print "* Launching protocol ..."
         command='python '+str(self.scriptname)+' '+str(self.which_setup.get())+' &'
         os.system(command)
+       
+    def GuiShowMoreHelp(self):
+        import tkMessageBox
+        message=str(self.morehelp.get())
+        print message
+        tkMessageBox.showinfo('More Help',message)
+        
        
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
