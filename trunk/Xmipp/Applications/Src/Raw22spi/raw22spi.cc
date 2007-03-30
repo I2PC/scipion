@@ -161,7 +161,7 @@ void Usage (char **argv) {
      "\n   [-16]                 raw file is read/written in 16-bit integers"
      "\n   [-reverse_endian]     by default, output has the same endiannes as input"
      "\n                         use this option to change endianness\n"
-     "\n   [-header size=0]      Valid for raw to Xmipp conversions\n"
+     "\n   [-header size h=0]    Valid for raw to Xmipp conversions\n"
      "\n   [-s Zdim Ydim Xdim]   Z,Y,X dimensions for input files."
      "\n			 For 2D raw images set the Zdim to 1"
      "\n   [-is_micrograph]      If this flag is provided the size is taken"
