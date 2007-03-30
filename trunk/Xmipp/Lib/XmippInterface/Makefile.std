@@ -2,16 +2,13 @@
 ifeq ($(MACHINE),CYGWIN)
     LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).dll
     LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).dll
-    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).dll
     EXTRACC_FLAGS = 
     EXTRALINK_FLAGS = -Wl,--out-implib=$(LIBINTERFACE).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
     EXTRALINK_INRIA_FLAGS = -Wl,--out-implib=$(LIBINTERFACEINRIA).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a ../libINRIA.dll.a
-    EXTRALINK_VTK_FLAGS = -Wl,--out-implib=$(LIBINTERFACEVTK).a -Wl,--no-whole-archive ../libXmipp_$(XMIPP_PREFIX)$(MACHINE).dll.a
-    EXTRA_RM = $(LIBINTERFACE).a $(LIBINTERFACEINRIA).a $(LIBINTERFACEVTK).a
+    EXTRA_RM = $(LIBINTERFACE).a $(LIBINTERFACEINRIA).a
 else
     LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).so
     LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).so
-    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).so
     EXTRACC_FLAGS = -fPIC
     EXTRALINK_FLAGS = 
     EXTRALINK_INTERFACE_FLAGS =
@@ -21,7 +18,6 @@ endif
 ifeq ($(STATIC),YES)
     LIBINTERFACE      = ../libXmippInterface_$(XMIPP_PREFIX)$(MACHINE).a
     LIBINTERFACEINRIA = ../libXmippInterfaceINRIA_$(XMIPP_PREFIX)$(MACHINE).a
-    LIBINTERFACEVTK   = ../libXmippInterfaceVTK_$(XMIPP_PREFIX)$(MACHINE).a
     EXTRACC_FLAGS = 
     EXTRALINK_FLAGS = 
     EXTRALINK_INTERFACE_FLAGS =
@@ -29,14 +25,12 @@ ifeq ($(STATIC),YES)
     EXTRA_RM = 
     COMMANDONE = $(AR) $(LIBINTERFACE) $(SRC_OBJS)
     COMMANDTWO = $(AR) $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA)
-    COMMANDTHR = $(AR) $(LIBINTERFACEVTK) $(SRC_OBJS_VTK)  
 else 
     COMMANDONE = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACE) $(SRC_OBJS) $(EXTRALINK_FLAGS) ;
     COMMANDTWO = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEINRIA) $(SRC_OBJS_INRIA) $(EXTRALINK_INRIA_FLAGS) ; 
-    COMMANDTHR = $(CCLIB) $(LINKERFLAGS) -shared -o $(LIBINTERFACEVTK) $(SRC_OBJS_VTK) $(EXTRALINK_VTK_FLAGS) ;
 endif
 
-LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA) $(LIBINTERFACEVTK)
+LIBPROJ           = $(LIBINTERFACE) $(LIBINTERFACEINRIA)
 
 SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
                  Src/xmippCrisp.o Src/xmippVrml.o  Src/xmippOpenDX.o \
@@ -44,7 +38,6 @@ SRC_OBJS       = Src/xmippAPH.o Src/xmippSpider.o Src/xmippVirus.o \
 		 Src/xmippJDL.o Src/xmippOpenDXang.o Src/xmippCCLattice_IO.o \
 		 Src/xmippCCP4.o Src/xmippEM.o
 SRC_OBJS_INRIA = Src/xmippINRIA.o
-SRC_OBJS_VTK   = Src/xmippVTK.o
 
 # Main Action = Built library ----------------------------------------------
 all:  $(LIBPROJ)
@@ -60,11 +53,6 @@ $(LIBINTERFACEINRIA): $(SRC_OBJS_INRIA)
 	@rm -f $(LIBINTERFACEINRIA)
 	@$(COMMANDTWO)
 
-$(LIBINTERFACEVTK): $(SRC_OBJS_VTK)
-	@echo "Creating library XmippInterface VTK Library ..."
-	@rm -f $(LIBINTERFACEVTK)
-	@$(COMMANDTHR)
-
 # Makefiles ----------------------------------------------------------------
 Makefiles:
 	@$(MAKE) depend
@@ -77,7 +65,7 @@ Makefiles:
 # Cleaning -----------------------------------------------------------------
 clean:
 	@echo "Removing in XmippInterface library ..."
-	@rm -f $(SRC_OBJS) $(SRC_OBJS_INRIA) $(SRC_OBJS_VTK) $(EXTRA_RM)
+	@rm -f $(SRC_OBJS) $(SRC_OBJS_INRIA) $(EXTRA_RM)
 	@rm -f $(LIBPROJ)
 
 # DistCleaning -------------------------------------------------------------
@@ -98,4 +86,3 @@ depend:
 	@echo "Creating dependencies for XmippInterface/Src ..."
 	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS) | sed -e's/\.o/\.cc/g'`
 	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS_INRIA) | sed -e's/\.o/\.cc/g'`
-	@makedepend $(DEPENDDIRS) -I$(XMIPPDIR)/Lib `echo $(SRC_OBJS_VTK) | sed -e's/\.o/\.cc/g'`
