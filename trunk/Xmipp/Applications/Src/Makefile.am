@@ -54,7 +54,6 @@ SUBDIRS = 2DInterpolation \
 	DocFile_Histogram \
 	DownSample \
 	Draw_surface \
-	DWT \
         EM2Angles \
         Enhance_PSD \
 	Euler \
@@ -62,7 +61,6 @@ SUBDIRS = 2DInterpolation \
 	Evaluate_FSCs \
 	Exp_Shift_Computation \
 	FCMeans \
-	FFT \
 	FindCenter3D \
 	FKCN \
 	Flip \
@@ -71,8 +69,6 @@ SUBDIRS = 2DInterpolation \
 	Headerinfo \
 	Histogram \
 	IDR_ART \
-	IDWT \
-	IFFT \
 	Img2Data \
 	Infogeo \
 	KCMeans \
