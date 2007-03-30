@@ -11,7 +11,10 @@ class selfile:
    # Reads selfile from disc
    def read(self,selfilename):
        fh=open(selfilename,'r')
-       self.sellines=fh.readlines()
+       lines=fh.readlines()
+       self.sellines=[]
+       for line in lines:
+           self.sellines.append(line[:-1].split(" "))
        fh.close()
 
    # Fills selfile content
@@ -24,13 +27,17 @@ class selfile:
 
    # Prints all lines to screen
    def printlines(self):
-       for line in self.sellines:
-           print line[:-1]
+       for name,state in self.sellines:
+           print name,state
 
    # Writes selfile to disc
    def write(self,selfilename):
+       lines=[]
+       for name,state in self.sellines:
+           newline=name+' '+state+'\n'
+           lines.append(newline)
        fh=open(selfilename,'w')
-       fh.writelines(self.sellines)
+       fh.writelines(lines)
        fh.close()
 
    # Finds first active image and returns name and state
@@ -38,8 +45,7 @@ class selfile:
    def find_first_active_image(self):
        dname=''
        dstate='-1'
-       for line in self.sellines:
-           name,state=line[:-1].split(" ")
+       for name,state in self.sellines:
            if state=='1':
                return name,state
        return dname,dstate
@@ -47,9 +53,9 @@ class selfile:
    # Adds 1 directory at the beginning of the path
    def add_1directory_begin(self,directory):
        newlines=[]
-       for line in self.sellines:
-           line=directory+'/'+line
-           newlines.append(line)
+       for name,state in self.sellines:
+           name=directory+'/'+name
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
@@ -57,14 +63,14 @@ class selfile:
    # Adds 1 directory at the end of the path
    def add_1directory_end(self,directory):
        newlines=[]
-       for line in self.sellines:
-           parts=line.split('/')
+       for name,state in self.sellines:
+           parts=name.split('/')
            name=parts[-1]
            parts.pop()
            parts.append(directory)
            parts.append(name)
-           line= '/'.join(parts)
-           newlines.append(line)
+           name= '/'.join(parts)
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
@@ -72,12 +78,12 @@ class selfile:
    # Removes N directories from beginning of path
    def remove_Ndirectories_begin(self,N):
        newlines=[]
-       for line in self.sellines:
-           parts=line.split('/')
+       for name,state in self.sellines:
+           parts=name.split('/')
            for i in range(N):
                parts.pop(0)
-           line= '/'.join(parts)
-           newlines.append(line)
+           name= '/'.join(parts)
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
@@ -85,24 +91,24 @@ class selfile:
    # Removes N directories from end of path
    def remove_Ndirectories_end(self,N):
        newlines=[]
-       for line in self.sellines:
-           parts=line.split('/')
-           name=parts[-1]
+       for name,state in self.sellines:
+           parts=name.split('/')
+           img=parts[-1]
            for i in range(N+1):
                parts.pop()
-           parts.append(name)
-           line= '/'.join(parts)
-           newlines.append(line)
+           parts.append(img)
+           name= '/'.join(parts)
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
 
-   # Replaces "strin" with "strout"
+   # Replaces "strin" with "strout" in name
    def replace_string(self,strin,strout):
        newlines=[]
-       for line in self.sellines:
-           line=line.replace(strin,strout)
-           newlines.append(line)
+       for name,state in self.sellines:
+           name=name.replace(strin,strout)
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
@@ -116,12 +122,11 @@ class selfile:
        newlines=[]
        if not os.path.exists(directory):
            os.makedirs(directory)
-       for line in self.sellines:
-           name,state=line[:-1].split(" ")
+       for name,state in self.sellines:
            shutil.copy(name,directory)
            parts=name.split('/')
-           line=directory+'/'+parts[-1]+' 1\n'
-           newlines.append(line)
+           name=directory+'/'+parts[-1]
+           newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
@@ -129,7 +134,10 @@ class selfile:
 if __name__ == '__main__':
    mysel=selfile()
    mysel.read('test.sel')
-   newsel=mysel.copy_sel('images')
-   newsel.write('new.sel')
+#   newsel=mysel.copy_sel('images')
+#   newsel.printlines()
+#   newsel=newsel.replace_string('xmp','app')
+#   newsel.printlines()
+#   newsel.write('new.sel')
    name,state=mysel.find_first_active_image()
    print name, state
