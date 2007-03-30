@@ -1,0 +1,6 @@
+xmipp_project -i random_projection.param -o g0ta.sel
+xmipp_headerinfo -reset -i g0ta.sel
+xmipp_angular_predict -i g0ta.sel -ref Volumen-ccp4-35A_64_center.vol -oang angles.txt -proj_step 10
+xmipp_art -i g0ta.sel -l 0.1 -show_error -o without_shift -sym symmetry.txt
+xmipp_angular_predict -i g0ta.sel -ref Volumen-ccp4-35A_64_center.vol -oang angles2.txt -max_shift_change 10 -proj_step 7
+xmipp_art -i g0ta.sel -l 0.1 -show_error -o with_shift -sym symmetry.txt
