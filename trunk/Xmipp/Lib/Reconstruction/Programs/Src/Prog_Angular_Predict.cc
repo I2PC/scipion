@@ -65,7 +65,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) {
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
    search5D=check_param(argc,argv,"-5D");
-   produce_side_info();
+   if (((string)argv[0]).find("mpirun")!=-1) produce_side_info();
 }
 
 // Show ====================================================================
@@ -140,11 +140,11 @@ void Prog_angular_predict_prm::more_usage() {
 }
 
 // Produce side information ================================================
-void Prog_angular_predict_prm::produce_side_info() {
+void Prog_angular_predict_prm::produce_side_info(int rank) {
    volume_mode=false;
    
    // Information for the SF_main
-   allow_time_bar=(tell==0);
+   allow_time_bar=(tell==0 && rank==0);
 
    // Read input reference image names
    if (Is_VolumeXmipp(fn_ref)) {

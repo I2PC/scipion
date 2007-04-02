@@ -153,8 +153,9 @@ public:
    void more_usage();
 
    /** Produce side info.
-       An exception is thrown if any of the files is not found*/
-   void produce_side_info();
+       An exception is thrown if any of the files is not found.
+       In parallel execution, the rank=0 creates the projections.*/
+   void produce_side_info(int rank=0);
 
    /** Produce library.*/
    void produce_library();
