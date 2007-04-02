@@ -11,9 +11,9 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Selfile with all untilted images: (in ProjectDir)
-UntiltedSelFile="all_untilted_images.sel"
+UntiltedSelFile="untSelect.sel"
 # Selfile with all tilted images: (in ProjectDir)
-TiltedSelFile="all_tilted_images.sel"
+TiltedSelFile="tilSelect.sel"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
@@ -21,7 +21,7 @@ WorkingDir="test1"
 """
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored in $ProjectDir/$LogDir
 """
@@ -30,11 +30,11 @@ LogDir="Logs"
 # {section} Previous ML2D classification (WITHOUT INCLUDING MIRRORS!)
 #------------------------------------------------------------------------------------------------
 # Directory of previous ML2D-classification on the untilted images (from ProjectDir)
-PreviousML2DDir="ML2D/ML5ref"
+PreviousML2DDir="ML2D/ML3ref"
 # {expert} Rootname for ML2D run (only provide if different from its working directory)
 PreviousML2DRoot=""
 # Which of these classes do you want to reconstruct? (Separate numbers by comma's)
-SelectClasses="1,2,6,7"
+SelectClasses="1,2"
 #------------------------------------------------------------------------------------------------
 # {section} Prepare image headers
 #------------------------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ DoUseCosineStretching=True
 # {section} Reconstruction for each of the classes
 #------------------------------------------------------------------------------------------------
 # Perform 3D-reconstructions with ART?
-DoArtReconstruct=True
+DoArtReconstruct=False
 # Relaxation parameter for ART reconstruction:
 ArtLambda=0.2
 # {expert} Additional ART parameters
@@ -85,7 +85,6 @@ class RCT_class:
                  TiltedSelFile,
                  WorkingDir,
                  DoDeleteWorkingDir,
-                 LaunchJobCommand,
                  ProjectDir,
                  LogDir,
                  PreviousML2DDir,
@@ -131,7 +130,7 @@ class RCT_class:
                                      self.WorkingDir)
                 
         # Delete working directory if it exists, make a new one, and go there
-        if (DoDeleteWorkingDir and (DoML2D or ): 
+        if (DoDeleteWorkingDir): 
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
@@ -163,6 +162,7 @@ class RCT_class:
         import SelFiles
         self.untiltclasslist={}
 
+        print '*********************************************************************'
 
         # Make a directory for the local copies of all relevant images
         if not os.path.exists('local_images'):
@@ -172,7 +172,7 @@ class RCT_class:
         if self.PreviousML2DRoot=="":
             head,tail=os.path.split(os.path.normpath(self.PreviousML2DDir))
             self.PreviousML2DRoot=tail
-        ml2d_abs_rootname=self.ProjectDir+'/'+self.PreviousML2DDir+'/'+self.PreviousML2DRoot
+        ml2d_abs_rootname=self.PreviousML2DDir+'/'+self.PreviousML2DRoot
         
         # Check whether the ML2D run has written docfiles already
         docfiles=glob.glob(ml2d_abs_rootname+'_it?????.doc')
@@ -195,7 +195,7 @@ class RCT_class:
                 unt_selfile=os.path.basename(unt_selfile)
                 refavg=os.path.basename(refavg)
                 til_selfile=self.make_tilted_selfile(unt_selfile)
-                self.untiltclasslist[ref].append(unt_selfile)
+                self.untiltclasslist[ref]=[unt_selfile,]
                 self.untiltclasslist[ref].append(refavg)
                 self.untiltclasslist[ref].append(til_selfile)
                 # Make a local copy of the images
@@ -221,7 +221,7 @@ class RCT_class:
         pat2.read(self.TiltedSelFile)
         unt.read(name_unt_sel)
         til=unt.make_corresponding_subset(pat1,pat2)
-        name_til_sel=name_unt.sel.replace('.sel','_tilted.sel')
+        name_til_sel=name_unt_sel.replace('.sel','_tilted.sel')
         til.write(name_til_sel)
         return name_til_sel
         
@@ -230,7 +230,7 @@ class RCT_class:
         import SelFiles
 
         print '*********************************************************************'
-        print '*  Re-aligning each class with align2d to set image headers correctly' 
+        print '*  Re-aligning untilted images of each class to set image headers'
         # Loop over all selected untilted classes
         for ref in self.untiltclasslist:
 
@@ -327,7 +327,6 @@ if __name__ == '__main__':
                   TiltedSelFile,
                   WorkingDir,
                   DoDeleteWorkingDir,
-                  LaunchJobCommand,
                   ProjectDir,
                   LogDir,
                   PreviousML2DDir,
