@@ -42,17 +42,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
 
 int main (int argc, char **argv) {
    Prog_angular_predict_prm prm;
-   if (!check_param(argc,argv,"-grid")) {
-      // Run locally
-      SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-      prm.finish_processing();
-   } else {
-      // Run in grid
-      int Nproc=AtoI(get_param(argc,argv,"-grid"));
-      prm.read(argc,argv);
-      SelFile SF_in; SF_in.read(prm.fn_in);
-      vector<SelFile> SFs; SF_in.split_in_N(Nproc,SFs);
-      /* COSS: not finished */
-   }
+   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+   prm.finish_processing();
    return 0;
 }
