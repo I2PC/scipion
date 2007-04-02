@@ -29,12 +29,12 @@ def launch_parallel_job(mpiprogramname,
     os.chmod(scriptname,0777)
     if (LaunchJobCommand==""):
         command=scriptname
-        if RunInBackground==False:
+        if RunInBackground==True:
            command = command + ' &'
         command = command + '\n'    
     else:
         command=LaunchJobCommand + ' ' + scriptname
-        if RunInBackground==False:
+        if RunInBackground==True:
            command = command + ' &'
         command = command + '\n'    
     print '* ',command
