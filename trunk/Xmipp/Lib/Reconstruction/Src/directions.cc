@@ -137,6 +137,27 @@ void make_even_distribution(DocFile &DF, double sampling,
     }
   }
 
+
+}
+
+void limit_tilt_range(DocFile &DF, double tilt_range0, double tilt_rangeF) {
+
+    // Select use-provided tilt range
+    double tilt;
+    DocLine DL;
+    DocFile Dt;
+    DF.go_first_data_line();
+    while (!DF.eof()) {
+	DL=DF.get_current_line();
+	tilt=DF(1);
+	if (tilt>=tilt_range0 && tilt<=tilt_rangeF) {
+	    Dt.append_line(DL);
+	}
+	DF.next_data_line();	
+    }
+    DF=Dt;
+    Dt.clear();
+
 }
 
 

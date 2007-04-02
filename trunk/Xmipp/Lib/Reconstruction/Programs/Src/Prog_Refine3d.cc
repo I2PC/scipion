@@ -285,6 +285,8 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
 
   if (fn_sym!="" && fn_symmask=="") SL.read_sym_file(fn_sym);
   make_even_distribution(DFlib,angular,SL,false);
+  if (tilt_range0>0. || tilt_rangeF<90.) 
+      limit_tilt_range(DFlib,tilt_range0,tilt_rangeF);
   // Select use-provided tilt range
   if (tilt_range0>0. || tilt_rangeF<90.) {
     DocLine DL;

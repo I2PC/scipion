@@ -72,6 +72,8 @@ public:
   double sampling;
   /** Maximum allowed shift */
   double max_shift;
+    /** For user-provided tilt range */
+  double tilt_range0, tilt_rangeF;
   /** Maximum allowed angular search ranges for rot and tilt */
   double ang_search;
   /** Mask for shifts */

@@ -46,6 +46,9 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   modify_header=!check_param(argc,argv,"-dont_modify_header");
   fn_ref=get_param(argc,argv,"-ref","");
   output_classes=check_param(argc,argv,"-output_classes");
+  tilt_range0=AtoF(get_param(argc,argv,"-tilt0","0."));
+  tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","180."));
+
   // Checks
   if (fn_ref=="" && fn_vol=="") 
     REPORT_ERROR(1," Provide either -vol or -ref!");
@@ -73,19 +76,28 @@ void Prog_projection_matching_prm::show() {
     if (ang_search>0) {
       cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<endl;
     }
-    if (fn_sym!="") {
-      cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<endl;
+    if (tilt_range0>0. || tilt_rangeF<180.)
+    {
+	cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
     }
-    if (fn_ang!="") {
-      cerr << "  -> Document file with angles for projection library: "<<fn_ang<<endl;
+    if (fn_sym!="") 
+    {
+	cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<endl;
     }
-    if (!modify_header) {
-      cerr << "  -> Do not modify the image headers (only output docfile)"<<endl;
+    if (fn_ang!="") 
+    {
+	cerr << "  -> Document file with angles for projection library: "<<fn_ang<<endl;
     }
-    if (output_refs) {
-      cerr << "  -> Output library projections, sel and docfile"<<endl;
+    if (!modify_header) 
+    {
+	cerr << "  -> Do not modify the image headers (only output docfile)"<<endl;
     }
-    if (output_classes) {
+    if (output_refs) 
+    {
+	cerr << "  -> Output library projections, sel and docfile"<<endl;
+    }
+    if (output_classes) 
+    {
 	cerr << "  -> Output class averages and selfiles for each projection direction "<<endl;
     }
 
@@ -108,6 +120,8 @@ void Prog_projection_matching_prm::usage() {
 void Prog_projection_matching_prm::extended_usage() {
   cerr << "Additional options: \n"
        << " [ -ang_search <float=-1> ]    : Maximum change in rot & tilt  (+/- degrees) \n"
+       << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
+       << " [ -tiltF <float=180.> ]       : Higher-value for restricted tilt angle search \n"
        << " [ -Ri <float=0> ]             : Inner radius to limit rotational search \n"
        << " [ -Ro <float=dim/2> ]         : Outer radius to limit rotational search \n"
        << " [ -sym <symfile> ]            : Limit angular search to asymmetric part \n"
@@ -185,10 +199,13 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	{
 	    // ignore -sym or -ref option and use -sam to generate all projections on the Ewald sphere
 	    // then select only those that are within the search_ranges of all experimental projections
+	    // THIS CODE IS AT LEAST SLOPPY...
       
 	    // 1. Create even distribution over the entire Ewald sphere
 	    if (verb>0) cerr << "--> Making even distribution on entire Ewald sphere "<<endl;
 	    make_even_distribution(DF,sampling,SL,true);
+	    if (tilt_range0>0. || tilt_rangeF<180.) 
+		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
 	    // 2. Get all angles from all experimental images
 	    double act_rot_range, ref_rot,ref_tilt,img_rot,img_tilt;
 	    int nn,c;
@@ -262,6 +279,8 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    // Create evenly-distributed reference projection angles
 	    if (verb>0) cerr << "--> Making even angular distribution ..."<<endl;
 	    make_even_distribution(DF,sampling,SL,true);
+	    if (tilt_range0>0. || tilt_rangeF<180.) 
+		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
 	}
 
 	// At this point we have a docfile with all projection directions
@@ -510,10 +529,11 @@ void Prog_projection_matching_prm::write_classes()
 {
 
     FileName fn_base,fn_img,fn_sel;
-    SelFile SF;
+    SelFile SF,SF2;
 
     fn_base=fn_root+"_class";
     SF.clear();
+    SF2.clear();
     FOR_ALL_DIRECTIONS() {
 	fn_img.compose(fn_base,dirno+1,"xmp");
 	SF.insert(fn_img);
