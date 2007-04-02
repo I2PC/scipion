@@ -17,8 +17,6 @@ TiltedSelFile="tilSelect.sel"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
-""" The directory will not be deleted when only visualizing! 
-"""
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
@@ -30,7 +28,7 @@ LogDir="Logs"
 # {section} Previous ML2D classification (WITHOUT INCLUDING MIRRORS!)
 #------------------------------------------------------------------------------------------------
 # Directory of previous ML2D-classification on the untilted images (from ProjectDir)
-PreviousML2DDir="ML2D/ML3ref"
+PreviousDirML2D="ML2D/ML3ref"
 # {expert} Rootname for ML2D run (only provide if different from its working directory)
 PreviousML2DRoot=""
 # Which of these classes do you want to reconstruct? (Separate numbers by comma's)
@@ -64,13 +62,14 @@ ArtAdditionalParams=""
 # Perform 3D-reconstructions with WBP?
 DoWbpReconstruct=True
 # Threshold parameter for WBP-reconstruction:
+""" Higher values give lower resolution reconstruction (but possibly less noisy)
+    For RCT reconstructions, values of 0.01-0.1 could be suitable
+"""
 WbpThreshold=0.02
 # {expert} Additional WBP parameters
 """ See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp
 """
 WbpAdditionalParams=""
-# Display all 3D-reconstructions?
-DisplayVolumes=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -87,7 +86,7 @@ class RCT_class:
                  DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
-                 PreviousML2DDir,
+                 PreviousDirML2D,
                  SelectClasses,
                  DoSetHeadersUntilted,
                  DoSetHeadersTilted,
@@ -99,9 +98,7 @@ class RCT_class:
                  ArtAdditionalParams,
                  DoWbpReconstruct,
                  WbpThreshold,
-                 WbpAdditionalParams,
-                 DisplayVolumes
-                 ):
+                 WbpAdditionalParams):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -112,7 +109,7 @@ class RCT_class:
         self.ProjectDir=ProjectDir
         self.UntiltedSelFile=self.ProjectDir+'/'+UntiltedSelFile
         self.TiltedSelFile=self.ProjectDir+'/'+TiltedSelFile
-        self.PreviousML2DDir=self.ProjectDir+'/'+PreviousML2DDir
+        self.PreviousDirML2D=self.ProjectDir+'/'+PreviousDirML2D
         self.PreviousML2DRoot=PreviousML2DRoot
         self.SelectClasses=SelectClasses
         self.DoCenterTilted=DoCenterTilted
@@ -170,9 +167,9 @@ class RCT_class:
 
         # Set self.PreviousML2DRoot to the ML2D Working dir if empty
         if self.PreviousML2DRoot=="":
-            head,tail=os.path.split(os.path.normpath(self.PreviousML2DDir))
+            head,tail=os.path.split(os.path.normpath(self.PreviousDirML2D))
             self.PreviousML2DRoot=tail
-        ml2d_abs_rootname=self.PreviousML2DDir+'/'+self.PreviousML2DRoot
+        ml2d_abs_rootname=self.PreviousDirML2D+'/'+self.PreviousML2DRoot
         
         # Check whether the ML2D run has written docfiles already
         docfiles=glob.glob(ml2d_abs_rootname+'_it?????.doc')
@@ -329,7 +326,7 @@ if __name__ == '__main__':
                   DoDeleteWorkingDir,
                   ProjectDir,
                   LogDir,
-                  PreviousML2DDir,
+                  PreviousDirML2D,
                   SelectClasses,
                   DoSetHeadersUntilted,
                   DoSetHeadersTilted,
@@ -341,8 +338,7 @@ if __name__ == '__main__':
                   ArtAdditionalParams,
                   DoWbpReconstruct,
                   WbpThreshold,
-                  WbpAdditionalParams,
-                  DisplayVolumes)
+                  WbpAdditionalParams)
 
     # close 
     RCT.close()
