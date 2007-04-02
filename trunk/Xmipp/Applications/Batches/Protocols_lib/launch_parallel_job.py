@@ -4,7 +4,8 @@ def launch_parallel_job(mpiprogramname,
                         LaunchJobCommand,
                         log,
                         MyNumberOfCPUs,
-                        MyMachineFile):
+                        MyMachineFile,
+                        WorkingDir):
     import os
     fh=open(ParallelScript,'r')
     lines=fh.readlines()
