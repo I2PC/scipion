@@ -1,7 +1,6 @@
     def launch_parallel_job(mpiprogramname,
                             params,
                             ParallelScript,
-                            mpi_script_name,
                             LaunchJobCommand,
                             log,
                             MyNumberOfCPUs,
