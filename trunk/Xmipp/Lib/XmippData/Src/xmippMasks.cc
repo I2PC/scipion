@@ -183,7 +183,7 @@ void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw) {
    mask.set_Xmipp_origin();
    double iI0Beta=1.0/bessi0(beta);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
-      double r=sqrt(i*i+j*j);
+      double r=sqrt((double)(i*i+j*j));
       if (r<=M)
          mask(i,j)=bessi0(beta*sqrt(1-(r/M)*(r/M)))*iI0Beta;
    }
@@ -273,8 +273,8 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
    double iI0Beta=1.0/bessi0(beta);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
       mask(i,j)=SINC(omega*i)*SINC(omega*j)*
-         bessi0(beta*sqrt(1-(i/M)*(i/M)))*iI0Beta*
-         bessi0(beta*sqrt(1-(j/M)*(j/M)))*iI0Beta;
+         bessi0(beta*sqrt((double)(1-(i/M)*(i/M))))*iI0Beta*
+         bessi0(beta*sqrt((double)(1-(j/M)*(j/M))))*iI0Beta;
    }
 }
 
