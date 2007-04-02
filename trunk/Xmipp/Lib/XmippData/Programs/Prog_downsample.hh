@@ -62,10 +62,11 @@ public:
    /// Gaussian sigma
    double   sigma;
    
-   /// Sinc power_percentage
-   double   power_percentage;
-   /// Sinc reduction factor
-   double sinc_reduction;
+   /// delta
+   double   delta;
+   
+   /// Deltaw
+   double   Deltaw;
    
    /// Rectangular X size
    int      Xrect;

@@ -72,14 +72,14 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
             REPORT_ERROR(1,"Downsample: Not enough parameters after sinc");
          if (Xstep!=Ystep)
             REPORT_ERROR(1,"Downsample: You cannot apply different steps in this mode");
-         power_percentage=AtoF(argv[i+2]);
-	 sinc_reduction=AtoF(argv[i+3]);
+         delta=AtoF(argv[i+2]);
+         Deltaw=AtoF(argv[i+3]);
       } else
          REPORT_ERROR(1,"Downsample: Unknown kernel mode");
    } else {
       kernel_mode=KER_SINC;
-      power_percentage=95;
-      sinc_reduction=40;
+      delta=0.02;
+      Deltaw=1.0/10.0;
    }
    reversed=check_param(argc,argv,"-reverse_endian");
 }
@@ -93,7 +93,7 @@ void Prog_downsample_prm::usage() const {
         << "  [-kernel circle    <r>]\n"
         << "  [-kernel gaussian  <r> <sigma>]\n"
         << "  [-kernel pick]\n"
-        << "  [-kernel sinc <power_percentage> <sinc_reduction>]\n"
+        << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
 	<< "  [-reverse_endian]       : Reverse endian\n"
    ;
 }
@@ -121,7 +121,7 @@ string Prog_downsample_prm::command_line() const {
          retval+=(string)"pick";
          break;
       case KER_SINC:
-         retval+=(string)"sinc"+FtoA(power_percentage)+" "+FtoA(sinc_reduction)+" ";
+         retval+=(string)"sinc"+FtoA(delta)+" "+FtoA(Deltaw)+" ";
          break;
    }
    return retval;
@@ -151,12 +151,18 @@ void Prog_downsample_prm::generate_kernel() {
          kernel.resize(1,1); kernel.init_constant(1);
          break;
       case KER_SINC:
-         SincBlackmanMask(kernel,(1.0/Xstep)*(1-sinc_reduction/100),
-	    power_percentage);
+         SeparableSincKaiserMask(kernel,(1.0/Xstep),
+	    delta,Deltaw);
          break;
    }
    kernel.set_Xmipp_origin();
-   kernel /=sqrt(kernel.sum2());
+   // Keep energy constant
+   // kernel /=sqrt(kernel.sum2());
+   // Keep average value constant
+   kernel/=kernel.sum();
+   ImageXmipp save;
+   save()=kernel;
+   save.write("PPPkernel.xmp");
 }
 
 // Create output inf file --------------------------------------------------
