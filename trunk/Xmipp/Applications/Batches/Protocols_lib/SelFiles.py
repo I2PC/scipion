@@ -176,7 +176,7 @@ class selfile:
    # Given two  selfiles s1 and s2 create s1 U s2
    # the order will e first entry of s1 then first entry of s2 etc..
    #same size for s1 and s2 is assumed
-   def intercalate_union(self,selfile2,selfile3):
+   def intercalate_union_3(self,selfile2,selfile3):
        
        newlines=[]
        i=0
