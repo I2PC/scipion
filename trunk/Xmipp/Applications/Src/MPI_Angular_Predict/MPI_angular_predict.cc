@@ -1,8 +1,10 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.uam.es)
+ *              Carlos Óscar Sánchez Sorzano (coss.eps@ceu.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ * Lab. de Bioingeniería, Univ. San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,92 +26,109 @@
  ***************************************************************************/
 
 #include <Reconstruction/Programs/Prog_Angular_Predict.hh>
-#include <XmippData/xmippImages.hh>
 #include <mpi.h>
 
 int main (int argc, char **argv) {
-SelFile ImagesFile;
-FileName fn_sym;
-int MyFirst, MyLast;	// First and last file to process each node
-Prog_angular_predict_prm prm;
-double shiftX, shiftY, psi, rot, tilt;
-int remaining;
-int Npart;
-int rank, size, Img_Nbr, myFirst, myLast;
-MPI_Status  status;            	// Stores MPI directives status
-double buff[8];
-   		   	
-	MPI_Init(&argc, &argv);
-   	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
-   	
-	prm.produce_side_info();
-	ImagesFile.read( prm.fn_in );
-	Img_Nbr = prm.get_images_to_process();
-	
-//	Npart = (int) ceil ((float)Img_Nbr / (float)size);
-	Npart = (int) ((float)Img_Nbr / (float)size);
+   // Initialize MPI
+   int rank, NProcessors;
+   MPI_Init(&argc, &argv);
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
 
-	remaining = Img_Nbr % size;
-	
-	if( !remaining || rank < remaining)
-        	myFirst = rank * Npart;
-	else                  // for rank >= remaining > 0
-        	myFirst = rank * Npart - (rank - remaining) - 1;
+   Prog_angular_predict_prm prm;
+   try {
+      // Read input parameters
+      prm.read(argc,argv);
+   } catch (Xmipp_error XE) {
+      if (rank==0) {
+	 cout << XE;
+	 prm.usage();
+      }
+      exit(1);
+   }
 
-     	myLast = myFirst + Npart - 1;
-	
-	int p = (prm.predicted_rot).size();	
-   	 
-	if(rank == 0)
-	{	
-  		matrix1D<double> v(7);
- 		DocFile DF;
-   		DF.reserve(p+1);
-   		DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Corr");		
-		
-		int to_save = Img_Nbr;
-		while( to_save > 0)
-		{
-			MPI_Recv( buff, 8, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-			   	
-      			v(0) = buff[ 0 ];
-      			v(1) = buff[ 1 ];
-      			v(2) = buff[ 2 ];
-      			v(3) = buff[ 3 ];
-      			v(4) = buff[ 4 ];
-      			v(5) = buff[ 5 ];
-		
-			// position in the file
-			int position = (int)buff[ 6 ];
-			DF.go_first_data_line();
-			DF.jump( position );
-	      		DF.insert_data_line(v);	
-			to_save --;	
-		}	
-		DF.write(prm.fn_out_ang);
-	}
-	else
-	{
-		ImageXmipp image;
-		ImagesFile.go_beginning();
-		ImagesFile.jump(MyFirst); 
-		for( int i = MyFirst; i <= MyLast; i++)
-		{
-			image.read(ImagesFile.get_current_file());
-			double corr = prm.predict_angles( image, shiftX, shiftY, rot, tilt, psi);
-			buff[0] = prm.predicted_rot[i];
-      			buff[1] = prm.predicted_tilt[i];
-      			buff[2] = prm.predicted_psi[i];
-      			buff[3] = prm.predicted_shiftX[i];
-      			buff[4] = prm.predicted_shiftY[i];
-      			buff[5] = prm.predicted_corr[i];
-			buff[6] = i;
-			MPI_Send(buff, 8, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD );
-   			ImagesFile.next();
-		}
-	}
-	
-        MPI_Finalize();	
-        return 0 ;
+   try {
+      // Rank 0 creates projections
+      char fn_random[10];
+      if (rank==0) {
+         prm.produce_side_info(0);
+         strcpy(fn_random,prm.fn_random.c_str());
+      }
+      MPI_Bcast(fn_random, strlen(fn_random)+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+      // Now all the ranks except 0 produce their own info
+      if (rank!=0) {
+         prm.fn_ref=(string)"ref"+fn_random+".sel";
+	 prm.fn_ang=(string)"reference"+fn_random+"__movements.txt";
+         prm.produce_side_info(0);
+      }
+
+      // Divide the selfile in chunks
+      int imgNbr = prm.get_images_to_process();
+      int Nchunk = (int) ((float)imgNbr/(float)(NProcessors-1));
+      int myFirst=(rank-1)*Nchunk;
+      int myLast=rank*Nchunk-1;
+      if (rank==NProcessors-1) myLast=imgNbr-1;
+      
+      // Make the alignment, rank=0 receives all the assignments
+      // The rest of the ranks compute the angular parameters for their
+      // assigned images
+      double v[7];
+      if (rank==0) {	
+	 int toGo=imgNbr;
+	 MPI_Status status;
+	 while( toGo > 0) {
+	    MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
+	       MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	    int i=(int)v[0];
+	    prm.predicted_rot[i]=v[1];
+	    prm.predicted_tilt[i]=v[2];
+	    prm.predicted_psi[i]=v[3];
+	    prm.predicted_shiftX[i]=v[4];
+	    prm.predicted_shiftY[i]=v[5];
+	    prm.predicted_corr[i]=v[6];
+	    toGo--;	
+	 }
+      } else {
+         SelFile SF_in(prm.fn_in);
+	 SF_in.go_beginning();
+	 SF_in.jump(myFirst);
+	 init_progress_bar(myLast-myFirst+1);
+	 for (int i=myFirst; i<=myLast; i++) {
+	    // Read image and estimate angular parameters
+            ImageXmipp I;
+	    I.read(SF_in.NextImg(),false,false,false);
+	    I().set_Xmipp_origin();
+	    double shiftX, shiftY, psi, rot, tilt;
+	    prm.predict_angles(I,shiftX, shiftY, rot, tilt, psi);
+	    double corr=prm.predicted_corr[i-myFirst];
+	    
+	    // Rewrite the image header if necessary
+	    if (!prm.dont_modify_header) {
+	       I.read(I.name());
+	       I.set_eulerAngles(rot,tilt,psi);
+	       I.set_originOffsets(shiftX,shiftY);
+	       I.write();
+	    }
+
+      	    // Send the alignment parameters to the master
+	    v[0]=i;
+	    v[1]=rot;
+	    v[2]=tilt;
+	    v[3]=psi;
+	    v[4]=shiftX;
+	    v[5]=shiftY;
+	    v[6]=corr;
+	    MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	    progress_bar(i-myFirst+1);
+	 }
+      }
+      progress_bar(myLast-myFirst+1);
+
+      MPI_Finalize();	
+      if (rank==0) prm.finish_processing();
+      return 0 ;
+   } catch (Xmipp_error XE) {
+      cout << XE << endl;
+   }
 }

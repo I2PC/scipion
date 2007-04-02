@@ -1,6 +1,6 @@
 ######################################################################
+PROJ = MPI_angular_predict
 NEEDS_MPI = true
 
-PROJ = MPI_angular_predict
 OBJ  = MPI_angular_predict.o
 LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
