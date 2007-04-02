@@ -380,7 +380,6 @@ lib_download:
 	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i GL   >  inter
 	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i qt   >> inter
 	@-ldd Applications/Src/Mark/$(XMIPP_PREFIX)mark | grep -i stdc >> inter
-	@-ldd Applications/Src/FFT/$(XMIPP_PREFIX)FFT   | grep -i vtk | grep -v XmippInterface >> inter
 	@awk '{n=split($$0,w,"=>"); print w[n]}' < inter > inter2
 	@if [ $(MACHINE) = LINUX7 ] ; \
 	   then awk '{n=split($$0,w," "); print w[1]}' < inter2 > inter3 ; mv -f inter3 inter2 ; \
