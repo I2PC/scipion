@@ -174,7 +174,7 @@ public:
   /** number of defocus groups */
   int nr_focus;
   /** low and high resolution cutoffs for fourier-mode (in Fourier pixels) */
-  int lowres_limit, highres_limit;
+  int lowres_limit, highres_limit, ini_highres_limit;
   /** Number of Fourier rings to include above SNR<1 */
   int increase_highres_limit;
   /** Do not multiply signal with CTF in the first iteration */

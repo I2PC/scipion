@@ -124,6 +124,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)  {
     fn_root=get_param(argc,argv,"-o","mlf2d");
     search_shift=AtoF(get_param(argc,argv,"-search_shift","3"));
     lowres_limit=AtoI(get_param(argc,argv,"-low","0"));
+    ini_highres_limit=AtoI(get_param(argc,argv,"-ini_high","-1"));
     phase_flipped=!check_param(argc,argv,"-not_phase_flipped");
     reduce_snr=AtoF(get_param(argc,argv,"-reduce_snr","1"));
     first_iter_noctf=check_param(argc,argv,"-ctf_affected_refs");
@@ -252,6 +253,7 @@ void Prog_MLalign2D_prm::MLF_usage() {
   cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
   cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
   cerr << " [ -low <pix=0> ]              : Exclude lowest freq. Fourier pixels from P-calculations (in pixels) \n";
+  cerr << " [ -ini_high <pix=0> ]         : Exclude highest freq. Fourier pixels during first iteration (in pixels) \n";
   cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -687,6 +689,9 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(matrix1D<double> &spect
       // For start from already CTF-deconvoluted references:
       if ( (iter==istart-1) && !first_iter_noctf) 
 	dVi(Vsnr[ifocus],irr)*=dVi(Vavgctf2,irr);
+      // Take ini_highres_limit into account
+      if ( (iter==istart-1) && (ini_highres_limit>0) && (irr>ini_highres_limit))  
+	dVi(Vsnr[ifocus],irr)=0.;
       // Subtract 1 according Unser et al.
       dVi(Vsnr[ifocus],irr)=MAX(0.,dVi(Vsnr[ifocus],irr)-1.);
       // Prevent spurious high-frequency significant SNRs from random averages
@@ -1368,7 +1373,7 @@ void Prog_MLalign2D_prm::Fourier_translate2D(const matrix2D<complex<double> > &F
 					     matrix2D<complex<double> > &Fimg_shift) {
 
   double xx,yy,xxshift,yyshift,dotp;
-  double a,b,c,d,ac,bd,ab_cd,real,imag;
+  double a,b,c,d,ac,bd,ab_cd;
   int ii;
   xxshift=-trans(0)/(double)dim;
   yyshift=-trans(1)/(double)dim;
