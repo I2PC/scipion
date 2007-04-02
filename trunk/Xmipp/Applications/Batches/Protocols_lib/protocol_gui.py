@@ -98,6 +98,7 @@ class automated_gui_class:
     def ScriptParseVariables(self):
         self.variables={}
         self.vfields=[]
+        self.have_analyse_results=False
 
         for i in range(len(self.script_header_lines)):
             # Get section headers
@@ -114,6 +115,8 @@ class automated_gui_class:
                   and self.script_header_lines[i][0]!="\t"
                   and self.script_header_lines[i][0]!=" "):
                 args=self.script_header_lines[i].split("=")
+                if (args[0]=="AnalysisScript"):
+                    self.have_analyse_results=True;
                 self.variables[args[0]]=[args[1][:-1],]
                 self.vfields.append(args[0])
                 if ("True" in args[1]) or ("False" in args[1]):
@@ -141,7 +144,7 @@ class automated_gui_class:
             self.column_2d=1
             self.column_3d=2
         else:
-            self.guiwidth=620
+            self.guiwidth=700
             self.guiheight=650
             self.columnspantextlabel=3
             self.columntextentry=3
@@ -230,7 +233,8 @@ class automated_gui_class:
     def FillSetupGui(self):
 
         self.which_setup=StringVar()
-        
+        self.morehelp=StringVar()
+      
         # Add labels for different protocol categories
         self.GuiAddSection("Which Xmipp protocol do you want to run?",0)
         row=(self.frame.grid_size()[1]+1)
@@ -283,8 +287,8 @@ class automated_gui_class:
         if size==2:
             self.l1=Label(self.frame, text=label, fg="blue")
             self.l2=Label(self.frame, text=line, fg="blue")
-            self.l1.grid(row=row, column=0,columnspan=3,sticky=E)
-            self.l2.grid(row=row+1, column=0,columnspan=3,sticky=E)
+            self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
+            self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
 
     def GuiAddLaunchButton(self,label,value,expert):
         if (expert=="setup-pre"):
@@ -310,22 +314,22 @@ class automated_gui_class:
             bg="yellow"
         else:
             bg="white"
-        if (morehelp!=""):
-            self.l=Radiobutton(self.frame,text=label,variable=self.morehelp, bg=bg,
-                               value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
-        else:
-            self.l=Label(self.frame, text=label, bg=bg)
+        self.l=Label(self.frame, text=label, bg=bg)
         self.l.configure(wraplength=350)
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
+        self.r=Radiobutton(self.frame,text="More help",variable=self.morehelp, bg=bg,
+                           value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
+        if (morehelp!=""):
+            self.r.grid(row=row, column=self.columntextentry+2, sticky=W)
             
-        return row,self.l
+        return row,self.l,self.r
 
     def GuiAddBooleanEntry(self,label,default,variable,expert,morehelp):
-        row,self.l=self.GuiPositionLabel(label,default,variable,expert,morehelp)
+        row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.r1 = Radiobutton(self.frame, text="Yes", variable=variable, value=True)
-        self.r1.grid(row=row, column=3)
+        self.r1.grid(row=row, column=self.columntextentry)
         self.r2 = Radiobutton(self.frame, text="No", variable=variable, value=False)
-        self.r2.grid(row=row, column=4)
+        self.r2.grid(row=row, column=self.columntextentry+1)
         if (default=="True"):
             self.r1.select()
         else:
@@ -334,16 +338,18 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.r1)
             self.widgetexpertlist.append(self.r2)
+            self.widgetexpertlist.append(self.r)
 
     def GuiAddTextEntry(self,label,default,variable,expert,morehelp):
-        row,self.l=self.GuiPositionLabel(label,default,variable,expert,morehelp)
+        row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.e = Entry(self.frame, text=label, textvariable=variable)
         self.e.delete(0, END) 
         self.e.insert(0,default)
-        self.e.grid(row=row, column=self.columntextentry,columnspan=1,sticky=W+E)
+        self.e.grid(row=row, column=self.columntextentry,columnspan=2,sticky=W+E)
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.e)
+            self.widgetexpertlist.append(self.r)
 
     def GuiBrowseWindow(self):
         import tkFileDialog
@@ -369,10 +375,6 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.b)
 
     def GuiAddRestProtocolButtons(self):
-        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
-        self.bGet.grid(row=self.buttonrow,column=4)
-        self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
-        self.bGet.grid(row=self.buttonrow,column=3)
         if (self.expert_mode==True):
             text2=" Hide expert options "
         else:
@@ -380,9 +382,15 @@ class automated_gui_class:
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
         self.bGet.grid(row=self.buttonrow,column=0)
         self.button = Button(self.frame, text="QUIT", command=self.master.quit)
-        self.button.grid(row=self.buttonrow,column=2)
-        self.but = Button(self.frame, text="More Help", command=self.PrintHelp)
-        self.but.grid(row=self.buttonrow,column=1)
+        self.button.grid(row=self.buttonrow,column=1)
+
+        if (self.have_analyse_results):
+            self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
+            self.bGet.grid(row=self.buttonrow,column=2)
+        self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
+        self.bGet.grid(row=self.buttonrow,column=3)
+        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
+        self.bGet.grid(row=self.buttonrow,column=4)
 
     def GuiAddRestSetupButtons(self):
         if (self.expert_mode==True):
@@ -393,9 +401,6 @@ class automated_gui_class:
         self.bGet.grid(row=self.buttonrow,column=0)
         self.button = Button(self.frame, text="QUIT", command=self.master.quit)
         self.button.grid(row=self.buttonrow,column=2)
-
-    def PrintHelp(self):
-        print self.morehelp
 
     def GuiTockleExpertMode(self):
         if (self.expert_mode==True):
@@ -411,6 +416,13 @@ class automated_gui_class:
         else:
             self.GuiAddRestProtocolButtons()
 
+    def AnalyseResults(self):
+        print "* Analyzing..."
+        command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+                 self.variables["WorkingDir"][0]+'/'+self.variables["AnalysisScript"][0]+' &'
+        print command
+        os.system(command)
+         
     def GuiSaveExecute(self):
         self.GuiSave()
         self.GuiExecute()
