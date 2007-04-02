@@ -17,9 +17,8 @@ def launch_parallel_job(mpiprogramname,
         line=line.replace('MyMachineFile' ,str(MyMachineFile))
         if len(line)>0:
            newlines+=line 
-    print newlines
+    # ParallelScript should end either in \ or without newline
     line="`which "+ str(mpiprogramname)+"` "+params
-    print line
     newlines+=line
     scriptname=str(WorkingDir)+'/'+mpiprogramname+'.script'
     fh.close()
