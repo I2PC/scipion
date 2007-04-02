@@ -70,6 +70,10 @@ WbpThreshold=0.02
 """ See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp
 """
 WbpAdditionalParams=""
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_rct.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -98,7 +102,8 @@ class RCT_class:
                  ArtAdditionalParams,
                  DoWbpReconstruct,
                  WbpThreshold,
-                 WbpAdditionalParams):
+                 WbpAdditionalParams,
+                 AnalysisScript):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -119,6 +124,7 @@ class RCT_class:
         self.ArtAdditionalParams=ArtAdditionalParams
         self.WbpThreshold=WbpThreshold
         self.WbpAdditionalParams=WbpAdditionalParams
+        self.AnalysisScript=AnalysisScript
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -178,7 +184,6 @@ class RCT_class:
             print '* ',message
             self.log.error(message)
             sys.exit()
-            print "No ML2D selfiles yet. Continue Visualize after job completion..."
         else:
             # Loop over all classes selected for 3D-reconstruction
             lastitername=docfiles[-1].replace('.doc','')
@@ -338,7 +343,8 @@ if __name__ == '__main__':
                   ArtAdditionalParams,
                   DoWbpReconstruct,
                   WbpThreshold,
-                  WbpAdditionalParams)
+                  WbpAdditionalParams,
+                  AnalysisScript)
 
     # close 
     RCT.close()
