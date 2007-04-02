@@ -23,6 +23,14 @@ class selfile:
    def set(self,lines):
        self.sellines=lines
 
+   # counts number of active entries in selfile
+   def length(self):
+       i=0
+       state=-1
+       for name,state in self.sellines: 
+           if state=='1': i = i + 1
+       return i
+       
    # Appends selfile content
    def append(self,lines):
        self.sellines+=lines
@@ -160,6 +168,24 @@ class selfile:
                name2,state2=selfile2.sellines[i]
                newlines.append([name1,state1])
                newlines.append([name2,state2])
+               i = i+1
+       newsel=selfile()
+       newsel.set(newlines)
+       return newsel
+
+   # Given two  selfiles s1 and s2 create s1 U s2
+   # the order will e first entry of s1 then first entry of s2 etc..
+   #same size for s1 and s2 is assumed
+   def intercalate_union(self,selfile2,selfile3):
+       
+       newlines=[]
+       i=0
+       for name1,state1 in self.sellines:
+               name2,state2=selfile2.sellines[i]
+               name3,state3=selfile3.sellines[i]
+               newlines.append([name1,state1])
+               newlines.append([name2,state2])
+               newlines.append([name3,state3])
                i = i+1
        newsel=selfile()
        newsel.set(newlines)
