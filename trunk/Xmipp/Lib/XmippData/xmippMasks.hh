@@ -190,7 +190,8 @@ void BlackmanMask(matrix2D< double >& mask, int mode=INNER_MASK,
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
  */
-void KaiserMask(matrix2D<double> &mask, double delta=0.01, double Deltaw=1.0/12.0);
+void KaiserMask(matrix2D<double> &mask, double delta=0.01,
+                double Deltaw=1.0/12.0);
 
 /** Creates a 2D sinc mask for already sized masks
  * @ingroup Masks2D
@@ -224,7 +225,7 @@ void SincBlackmanMask(matrix2D< double >& mask,
  *  Deltaw=transition bandwidth (normalized to 1).
  */
 void SincKaiserMask(matrix2D<double> &mask, 
-   double omega, double delta=0.01, double Deltaw=1.0/12.0);
+                    double omega, double delta=0.01, double Deltaw=1.0/12.0);
 
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
  * @ingroup Masks2D
@@ -233,7 +234,8 @@ void SincKaiserMask(matrix2D<double> &mask,
  *  Deltaw=transition bandwidth (normalized to 1).
  */
 void SeparableSincKaiserMask(matrix2D<double> &mask, 
-   double omega, double delta=0.01, double Deltaw=1.0/12.0);
+                             double omega, double delta=0.01,
+			     double Deltaw=1.0/12.0);
 
 /** Creates a 3x3 mask with value (1 by default) for those 4-neighbours of the
  * central point (0 otherwise).
