@@ -1,7 +1,13 @@
 OPTIONAL_PROGS =
 
 if BUILD_MPI
-OPTIONAL_PROGS += MPIArt MPI_WBP MPI_MLalign2D MPI_MLrefine3D MPI_Projection_matching
+OPTIONAL_PROGS += MPIArt \
+		  MPI_Angular_Predict \
+		  MPI_Angular_Predict_Continuous \
+		  MPI_MLalign2D \
+		  MPI_MLrefine3D \
+		  MPI_Projection_matching \
+                  MPI_WBP
 endif
 
 if BUILD_TIFF

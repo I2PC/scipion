@@ -855,6 +855,16 @@ if int(env['mpi']):
         ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
         ['XmippRecons', 'XmippData', 'XmippInterface'])
 
+    # MPI_Angular_Predict
+    AddMPIProgram('mpi_angular_predict', 'Applications/Src/MPI_Angular_Predict', '*.cc', [], ['Lib'],
+        ['Lib/Reconstruction', 'Lib/XmippData'],
+        ['XmippRecons', 'XmippData'])
+
+    # MPI_Angular_Predict_Continuous
+    AddMPIProgram('mpi_angular_predict_continuous', 'Applications/Src/MPI_Angular_Predict_Continuous', '*.cc', [], ['Lib'],
+        ['Lib/Reconstruction', 'Lib/XmippData'],
+        ['XmippRecons', 'XmippData'])
+
     # MPI_WBP
     AddMPIProgram('mpi_wbp', 'Applications/Src/MPI_WBP', '*.cc', [], ['Lib'],
         ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])

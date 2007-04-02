@@ -226,10 +226,12 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/MLrefine3D/Makefile \
 	Applications/Src/Morphology/Makefile \
 	Applications/Src/MPIArt/Makefile \
-	Applications/Src/MPI_WBP/Makefile \
+	Applications/Src/MPI_Angular_Predict/Makefile \
+	Applications/Src/MPI_Angular_Predict_Continuous/Makefile \
 	Applications/Src/MPI_MLalign2D/Makefile \
 	Applications/Src/MPI_MLrefine3D/Makefile \
 	Applications/Src/MPI_Projection_matching/Makefile \
+	Applications/Src/MPI_WBP/Makefile \
 	Applications/Src/MvSel/Makefile \
 	Applications/Src/Normalize/Makefile \
 	Applications/Src/Operate/Makefile \
