@@ -454,10 +454,6 @@ AddProgram('draw_surface', 'Applications/Src/Draw_surface', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
-# DWT
-AddProgram('DWT', 'Applications/Src/DWT/', '*.cc', [], ['Lib'],
-    ['Lib/XmippData'], ['XmippData'])
-
 # EM2Angles
 AddProgram('EM2Angles', 'Applications/Src/EM2Angles', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
@@ -493,10 +489,6 @@ AddProgram('exp_shift_computation', 'Applications/Src/Exp_Shift_Computation',
 AddProgram('fcmeans', 'Applications/Src/FCMeans', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
-# FFT
-AddProgram('FFT', 'Applications/Src/FFT', '*.cc', [], ['Lib'],
-    ['Lib/XmippData'], ['XmippData'])
-
 # FindCenter3D
 AddProgram('findcenter3D', 'Applications/Src/FindCenter3D', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
@@ -531,15 +523,6 @@ AddProgram('histogram', 'Applications/Src/Histogram', '*.cc', [], ['Lib'],
 AddProgram('idr_art', 'Applications/Src/IDR_ART', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
-
-# IDWT
-AddProgram('IDWT', 'Applications/Src/IDWT', '*.cc', [], ['Lib'],
-    ['Lib/XmippData'], ['XmippData'])
-
-# IFFT
-AddProgram('IFFT', 'Applications/Src/IFFT', '*.cc', [],
-    ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'],
-    ['XmippInterface','XmippData'])
 
 # Img2Data
 AddProgram('img2data', 'Applications/Src/Img2Data', '*.cc', [], ['Lib'],
