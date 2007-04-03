@@ -6,7 +6,7 @@
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
 #  - 3D refinement by standard projection matching
-#  - 3D refinement by a multi-resolution wavelet approach
+#  - 3D high resolution reconstruction
 #
 # Example use:
 # ./setup_protocols.py
@@ -33,13 +33,13 @@ SetupRCT=False
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} Wavelet refinement
-SetupWavelet=False
+# {setup-3d} High Resolution reconstruction
+SetupHighRes3D=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir="/home/coss/CTD_LTA"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 # {expert} Directory name for preprocessing:
@@ -56,8 +56,8 @@ RCTDir="RCT"
 ML3DDir="ML3D"
 # {expert} Directory name for projection matching refinement:
 ProjMatchDir="ProjMatching"
-# {expert} Directory name for Wavelet refinement:
-WaveletDir="Wavelet"
+# {expert} Directory name for HighRes3D:
+HighRes3DDir="HighRes3D"
 #
 #
 #------------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupWavelet,
+                     SetupHighRes3D,
                      ProjectDir,
                      LogDir,
                      ImagesDir,
@@ -88,7 +88,7 @@ class setup_protocols_class:
                      RCTDir,
                      ML3DDir,
                      ProjMatchDir,
-                     WaveletDir,
+                     HighRes3DDir,
                      AutoLaunch):
 
             import os,sys
@@ -102,7 +102,7 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupWavelet=SetupWavelet
+            self.SetupHighRes3D=SetupHighRes3D
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -113,7 +113,7 @@ class setup_protocols_class:
             self.RCTDir=RCTDir
             self.ML3DDir=ML3DDir
             self.ProjMatchDir=ProjMatchDir
-            self.WaveletDir=WaveletDir
+            self.HighRes3DDir=HighRes3DDir
 
             self.AutoLaunch=AutoLaunch
 
@@ -150,9 +150,9 @@ class setup_protocols_class:
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         self.ProjMatchDir,
                                         'protocol_projmatch.py']
-            self.library['SetupWavelet']=[self.SetupWavelet,
-                                        self.WaveletDir,
-                                        'protocol_wavelet.py']
+            self.library['SetupHighRes3D']=[self.SetupHighRes3D,
+                                        self.HighRes3DDir,
+                                        'protocol_highres3D.py']
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -164,7 +164,7 @@ class setup_protocols_class:
                               "RCTDir":self.RCTDir,
                               "ML3DDir":self.ML3DDir,
                               "ProjMatchDir":self.ProjMatchDir,
-                              "WaveletDir":self.WaveletDir,
+                              "HighRes3DDir":self.HighRes3DDir,
                               }
             
 
@@ -266,7 +266,7 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupWavelet,
+                                SetupHighRes3D,
                                 ProjectDir,
                                 LogDir,
                                 ImagesDir,
@@ -276,6 +276,6 @@ if __name__ == '__main__':
                                 RCTDir,
                                 ML3DDir,
                                 ProjMatchDir,
-                                WaveletDir,
+                                HighRes3DDir,
                                 AutoLaunch)
 
