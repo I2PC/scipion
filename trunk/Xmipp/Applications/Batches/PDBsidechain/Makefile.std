@@ -2,4 +2,4 @@
 MYSHELL = perl
 PROJ = extract_sidechain_from_pdb
 
-PDBsidechain: batch_extract_sidechain_from_pdb.pl
+extract_sidechain_from_pdb: batch_extract_sidechain_from_pdb.pl
