@@ -70,8 +70,9 @@ WbpThreshold=0.02
 """ See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp
 """
 WbpAdditionalParams=""
+#------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
+""" This variable serves only for GUI-assisted visualization of the results
 """
 AnalysisScript="visualize_rct.py"
 #------------------------------------------------------------------------------------------------
@@ -102,8 +103,7 @@ class RCT_class:
                  ArtAdditionalParams,
                  DoWbpReconstruct,
                  WbpThreshold,
-                 WbpAdditionalParams,
-                 AnalysisScript):
+                 WbpAdditionalParams):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -124,7 +124,6 @@ class RCT_class:
         self.ArtAdditionalParams=ArtAdditionalParams
         self.WbpThreshold=WbpThreshold
         self.WbpAdditionalParams=WbpAdditionalParams
-        self.AnalysisScript=AnalysisScript
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -297,23 +296,6 @@ class RCT_class:
             self.log.info(command)
             os.system(command)
 
-    def visualize_volumes(self):
-        import os
-        for ref in self.untiltclasslist:
-            til_selfile=self.untiltclasslist[ref][2]
-            artname='art_'+til_selfile.replace('.sel','.vol')
-            wbpname='wbp_'+til_selfile.replace('.sel','.vol')
-            if os.path.exists(artname):
-                command='xmipp_show -vol '+artname+' '+artname+'x &'
-                print '* ',command
-                self.log.info(command)
-                os.system(command)
-            if os.path.exists(wbpname):
-                command='xmipp_show -vol '+wbpname+' '+wbpname+'x &'
-                print '* ',command
-                self.log.info(command)
-                os.system(command)
-        
     def close(self):
         message='Done!'
         print '*',message
@@ -343,8 +325,7 @@ if __name__ == '__main__':
                   ArtAdditionalParams,
                   DoWbpReconstruct,
                   WbpThreshold,
-                  WbpAdditionalParams,
-                  AnalysisScript)
+                  WbpAdditionalParams)
 
     # close 
     RCT.close()
