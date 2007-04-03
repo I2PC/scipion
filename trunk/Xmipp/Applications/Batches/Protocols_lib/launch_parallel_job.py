@@ -10,18 +10,8 @@ def launch_job(DoParallel,
                MyMachineFile,
                ScriptName,
                RunInBackground=True):
-    import os
 
-    if not DoParallel:
-        command=programname+' '+params
-        if RunInBackground==True:
-            command = command + ' &'
-        command = command + '\n'    
-
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-    else:
+    if DoParallel:
         launch_parallel_job(mpiprogramname,
                             params,
                             ParallelScript,
@@ -31,7 +21,23 @@ def launch_job(DoParallel,
                             MyMachineFile,
                             ScriptName,
                             RunInBackground)
+    else:
+        launch_sequential_job(programname,
+                              params,
+                              RunInBackground)
         
+def launch_sequential_job(programname,
+                          params,
+                          RunInBackground=True):
+
+    command=programname+' '+params
+    if RunInBackground==True:
+        command += ' &'
+    command += '\n'    
+    print '* ',command
+    self.log.info(command)
+    os.system(command)
+   
 
 def launch_parallel_job(mpiprogramname,
                         params,
@@ -42,6 +48,7 @@ def launch_parallel_job(mpiprogramname,
                         MyMachineFile,
                         ScriptName,
                         RunInBackground=True):
+
     import os
 
     fh=open(ParallelScript,'r')
@@ -51,7 +58,7 @@ def launch_parallel_job(mpiprogramname,
         line=line.replace('MyNumberOfCPUs',str(MyNumberOfCPUs))
         line=line.replace('MyMachineFile' ,str(MyMachineFile))
         if len(line)>0:
-           newlines+=line 
+           newlines+=line
     # ParallelScript should end either in \ or without newline
     line="`which "+ str(mpiprogramname)+"` "+params
     newlines+=line
