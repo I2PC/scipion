@@ -3,7 +3,12 @@ import sys
 import os
 import string
 from Tkinter import *
- 
+""" Guidelines for header formatting:
+
+    to be added...
+    IMPORTANT: all lines in comments between 3x\" should start with a space, a tab or a \n
+
+"""
 # Create a GUI automatically from a script
 class automated_gui_class:
 
@@ -419,7 +424,7 @@ class automated_gui_class:
     def AnalyseResults(self):
         print "* Analyzing..."
         command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
-                 self.variables["WorkingDir"][0]+'/'+self.variables["AnalysisScript"][0]+' &'
+                 self.variables["AnalysisScript"][0]+' &'
         print command
         os.system(command)
          
