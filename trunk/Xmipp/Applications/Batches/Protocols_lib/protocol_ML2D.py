@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
-# using maximum-likelihood principles
+# using maximum-likelihood principles, according to:
+# - Scheres et al. (2005) J.Mol.Biol 348, 139-149
+# - Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244
 #
 # Example use:
 # ./protocol_ML2D.py
@@ -152,6 +154,7 @@ class ML2D_class:
 
     def execute_MLalign2D(self):
         import os
+        import launch_parallel_job
         print '*********************************************************************'
         print '*  Executing MLalign2D program :' 
         params= ' -i '    + str(self.InSelFile) + \
@@ -163,16 +166,20 @@ class ML2D_class:
             params+= ' -mirror '
         # By default, do not write offsets for 2D alignments...
         # This will affect -restart, but that falls outside the scope of the protocol anyway
-        params+=' '+ExtraParamsMLalign2D
+        params+=' '+self.ExtraParamsMLalign2D
         params+=' -dont_write_offsets'
 
-        if not self.DoParallel:
-            command=str(self.LaunchJobCommand)+' xmipp_MLalign2D '+params+' & \n'
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
-        else:
-            self.launch_parallel_job("xmipp_mpi_MLalign2D",params)
+        launch_parallel_job.launch_job(self.DoParallel,
+                                       "xmipp_MLalign2D",
+                                       "xmipp_mpi_MLalign2D",
+                                       params,
+                                       self.ParallelScript,
+                                       self.LaunchJobCommand,
+                                       self.log,
+                                       self.MyNumberOfCPUs,
+                                       self.MyMachineFile,
+                                       self.WorkingDir,
+                                       False)
 
     def visualize_ML2D(self):
         # Visualize class averages:
@@ -196,31 +203,11 @@ class ML2D_class:
             for line in loglines:
                 print line[:-1]
 
-    def launch_parallel_job(self,mpiprogramname,params):
-        import os
-        fh=open(self.ParallelScript,'r')
-        lines=fh.readlines()
-        newlines=[]
-        for line in lines:
-            line=line.replace('MyNumberOfCPUs',str(self.MyNumberOfCPUs))
-            line=line.replace('MyMachineFile',str(self.MyMachineFile))
-            newlines+=line
-        line="`which "+ str(mpiprogramname)+"` "+params
-        newlines+=line
-        scriptname=str(self.WorkingDir)+'.script'
-        fh=open(scriptname,'w')
-        fh.writelines(newlines)
-        os.chmod(scriptname,0777)
-        if (self.LaunchJobCommand==""):
-            command=scriptname+' & \n' 
-        else:
-            command=self.LaunchJobCommand + ' ' + scriptname + ' & \n' 
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-          
     def close(self):
+        message='Done!'
+        print '*',message
         print '*********************************************************************'
+
 #		
 # Main
 #     
