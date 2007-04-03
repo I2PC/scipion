@@ -1,3 +1,38 @@
+# The job should be launched from the working directory!
+def launch_job(DoParallel,
+               programname,
+               mpiprogramname,
+               params,
+               ParallelScript,
+               LaunchJobCommand,
+               log,
+               MyNumberOfCPUs,
+               MyMachineFile,
+               ScriptName,
+               RunInBackground=True):
+    import os
+
+    if not DoParallel:
+        command=programname+' '+params
+        if RunInBackground==True:
+            command = command + ' &'
+        command = command + '\n'    
+
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+    else:
+        launch_parallel_job(mpiprogramname,
+                            params,
+                            ParallelScript,
+                            LaunchJobCommand,
+                            log,
+                            MyNumberOfCPUs,
+                            MyMachineFile,
+                            ScriptName,
+                            RunInBackground)
+        
+
 def launch_parallel_job(mpiprogramname,
                         params,
                         ParallelScript,
@@ -5,7 +40,7 @@ def launch_parallel_job(mpiprogramname,
                         log,
                         MyNumberOfCPUs,
                         MyMachineFile,
-                        WorkingDir,
+                        ScriptName,
                         RunInBackground=True):
     import os
 
@@ -20,7 +55,7 @@ def launch_parallel_job(mpiprogramname,
     # ParallelScript should end either in \ or without newline
     line="`which "+ str(mpiprogramname)+"` "+params
     newlines+=line
-    scriptname=str(WorkingDir)+'/'+mpiprogramname+'.script'
+    scriptname=ScriptName+'.script'
     fh.close()
     fh=open(scriptname,'w')
     fh.writelines(newlines)
