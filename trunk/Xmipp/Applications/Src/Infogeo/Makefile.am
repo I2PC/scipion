@@ -1,8 +1,5 @@
-bin_PROGRAMS = infogeo
-infogeo_SOURCES = infogeo.cc
-infogeo_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-
-infogeo_LDFLAGS = @EXEC_TYPE@
-
+bin_PROGRAMS = header_print
+header_print_SOURCES = infogeo.cc
+header_print_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+header_print_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
-

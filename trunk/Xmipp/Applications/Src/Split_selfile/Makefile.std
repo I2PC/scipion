@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = split_selfile
+PROJ = selfile_split
 OBJ  = split_selfile.o
 LIBS = -l$(LIBXMIPP)
 

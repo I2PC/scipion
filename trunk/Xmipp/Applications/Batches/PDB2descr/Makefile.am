@@ -1,8 +1,6 @@
-bin_SCRIPTS = PDB2descr
+bin_SCRIPTS = convert_pdb2descr
 
-PDB2descr: batch_PDB2descr
-	echo "#!$(PERL_PATH)" > aux_script
-	cat batch_PDB2descr >> aux_script
-	mv aux_script PDB2descr
+convert_pdb2descr: batch_convert_pdb2descr
+	cp batch_convert_pdb2descr convert_pdb2descr
 
-EXTRA_DIST = batch_PDB2descr
+EXTRA_DIST = batch_convert_pdb2descr

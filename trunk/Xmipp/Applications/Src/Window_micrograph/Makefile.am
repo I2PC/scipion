@@ -1,7 +1,7 @@
-bin_PROGRAMS = window_micrograph
-window_micrograph_SOURCES = window_micrograph.cc
-window_micrograph_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+bin_PROGRAMS = micrograph_window
+micrograph_window_SOURCES = window_micrograph.cc
+micrograph_window_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
-window_micrograph_LDFLAGS = @EXEC_TYPE@
+micrograph_window_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib

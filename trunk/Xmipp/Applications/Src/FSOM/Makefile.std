@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = fsom
+PROJ = classify_fsom
 OBJ  = fsom.o
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

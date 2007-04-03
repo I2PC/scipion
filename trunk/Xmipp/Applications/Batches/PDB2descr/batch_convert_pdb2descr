@@ -42,25 +42,25 @@ $atom_number=0.;
 
 while ( $tmp = <INFILE> ) {
   @separated  = split (/ +/,$tmp);
-  if ($separated[0] =~ ATOM && $separated[2] !~ H) {   
+  if ($separated[0] =~ ATOM && $separated[2] !~ H) {
 	$atom_number++;
         $X_center += substr( $tmp, 30, 8 );
         $Y_center += substr( $tmp, 38, 8 );
         $Z_center += substr( $tmp, 46, 8 );
-	      
+	
   }
 }
 seek(INFILE,0,0);
 
-$X_center /= $atom_number;      
-$Y_center /= $atom_number;      
+$X_center /= $atom_number;
+$Y_center /= $atom_number;
 $Z_center /= $atom_number;
 
 # Compute maximum distance from center -------------------------------------
 $max_dist = 0;
 while ( $tmp = <INFILE> ) {
   @separated  = split (/ +/,$tmp);
-  if ($separated[0] =~ ATOM && $separated[2] !~ H) {   
+  if ($separated[0] =~ ATOM && $separated[2] !~ H) {
         $X = substr( $tmp, 30, 8 );
         $Y = substr( $tmp, 38, 8 );
         $Z = substr( $tmp, 46, 8 );
@@ -76,16 +76,16 @@ $max_dist=int(2*$max_dist+0.5)+1;
 # Write Xmipp file ---------------------------------------------------------
 # Write header
 open(OUTFILE,">$ARGV[1]");
-printf OUTFILE "#Phantom Xdim Ydim Zdim Background_density scale\n";    
+printf OUTFILE "#Phantom Xdim Ydim Zdim Background_density scale\n";
 printf OUTFILE "          %d  %d  %d           0.0    %f\n",
    $max_dist,$max_dist,$max_dist,1.0/$sampling_rate;
-printf OUTFILE "#Type <+/=> <den>    <x0>     <y0>     <z0>    <radius>  <alpha>   <order>\n";    
-printf OUTFILE "#\n";    
+printf OUTFILE "#Type <+/=> <den>    <x0>     <y0>     <z0>    <radius>  <alpha>   <order>\n";
+printf OUTFILE "#\n";
 
 # Write all atoms
 while ( $tmp = <INFILE> ) {
   @separated  = split (/ +/,$tmp);
-  if ($separated[0]  =~ATOM && $separated[2] !~ H) {   
+  if ($separated[0]  =~ATOM && $separated[2] !~ H) {
      printf OUTFILE "blo    +     1.0 ";
      printf OUTFILE "% .2f ", substr( $tmp, 30, 8 ) - $X_center;
      printf OUTFILE "% .2f ", substr( $tmp, 38, 8 ) - $Y_center;

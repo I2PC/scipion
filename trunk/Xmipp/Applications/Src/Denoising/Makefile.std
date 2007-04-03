@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = denoising
+PROJ = denoise
 OBJ  = denoising.o
 LIBS = -l$(LIBXMIPP)

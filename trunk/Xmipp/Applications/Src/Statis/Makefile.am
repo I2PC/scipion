@@ -1,8 +1,5 @@
-bin_PROGRAMS = statis
-statis_SOURCES = statis.cc
-statis_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-
-statis_LDFLAGS = @EXEC_TYPE@
-
+bin_PROGRAMS = average
+average_SOURCES = statis.cc
+average_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+average_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
-

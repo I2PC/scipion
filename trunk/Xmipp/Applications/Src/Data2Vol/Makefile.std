@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = data2vol
+PROJ = convert_data2vol
 OBJ  = data2vol.o
 LIBS = -l$(LIBXMIPP) -l$(LIBCLASSIF)

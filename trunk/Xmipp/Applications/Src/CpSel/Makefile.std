@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = cpsel
+PROJ = selfile_copy
 OBJ  = cpsel.o
 LIBS = -l$(LIBXMIPP)
 

@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = pyramid
+PROJ = scale_pyramid
 OBJ  = pyramid.o
 LIBS = -l$(LIBXMIPP)
 

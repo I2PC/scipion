@@ -1,4 +1,4 @@
  ######################################################################
-PROJ = raw22spi
+PROJ = convert_raw22spi
 OBJ  = raw22spi.o
 LIBS = -l$(LIBXMIPP)

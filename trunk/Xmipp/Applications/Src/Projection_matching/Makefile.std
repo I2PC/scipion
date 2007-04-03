@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = projection_matching
+PROJ = angular_projection_matching
 OBJ  = projection_matching.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

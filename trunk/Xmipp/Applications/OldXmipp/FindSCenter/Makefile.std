@@ -1,4 +1,4 @@
-PROJ = findcenter
+PROJ = find_center2d
 OBJ  = findcenter.o \
        findc.o
 LIBS = -l$(LIBOLDXMIPP) -l$(LIBXMIPP)

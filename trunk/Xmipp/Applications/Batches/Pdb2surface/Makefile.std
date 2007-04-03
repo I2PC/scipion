@@ -1,4 +1,4 @@
 ######################################################################
 MYSHELL = sh
-PROJ = pdb2surface
+PROJ = convert_pdb2surface
 

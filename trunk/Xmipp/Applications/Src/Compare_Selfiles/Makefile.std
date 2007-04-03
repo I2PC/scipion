@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = compare_selfiles
+PROJ = selfile_compare
 OBJ  = compare_selfiles.o
 LIBS = -l$(LIBXMIPP)
 

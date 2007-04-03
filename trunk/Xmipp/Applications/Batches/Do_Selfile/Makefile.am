@@ -1,8 +1,6 @@
-bin_SCRIPTS = do_selfile
+bin_SCRIPTS = selfile_create
 
-do_selfile: 
-	echo "#!$(SH_PATH)" > aux_script
-	cat batch_do_selfile >> aux_script
-	mv aux_script do_selfile
+selfile_create:
+	cp batch_selfile_create selfile_create
 
-EXTRA_DIST = batch_do_selfile
+EXTRA_DIST = batch_selfile_create

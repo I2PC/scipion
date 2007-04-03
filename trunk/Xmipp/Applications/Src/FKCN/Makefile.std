@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = fkcn
+PROJ = classify_fkcn
 OBJ  = fkcn.o
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

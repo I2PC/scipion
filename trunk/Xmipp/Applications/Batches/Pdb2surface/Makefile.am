@@ -1,8 +1,6 @@
-bin_SCRIPTS = pdb2surface
+bin_SCRIPTS = convert_pdb2surface
 
-pdb2surface: 
-	echo "#!$(SH_PATH)" > aux_script
-	cat batch_pdb2surface >> aux_script
-	mv aux_script pdb2surface
+convert_pdb2surface:
+	cp batch_convert_pdb2surface pdb2surface
 
-EXTRA_DIST = batch_pdb2surface
+EXTRA_DIST = batch_convert_pdb2surface

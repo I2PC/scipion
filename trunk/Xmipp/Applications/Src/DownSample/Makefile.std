@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = downsample
+PROJ = micrograph_downsample
 OBJ  = downsample.o xvsmooth.o
 LIBS = -l$(LIBXMIPP)
 

@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = deform
+PROJ = crystal_shear
 OBJ  = deform.o
 LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

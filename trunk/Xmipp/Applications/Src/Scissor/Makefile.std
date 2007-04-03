@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = scissor
+PROJ = micrograph_scissor
 OBJ  = scissor.o
 LIBS = -l$(LIBXMIPP)
 

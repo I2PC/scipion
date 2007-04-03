@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = visualize_FFT
+PROJ = fourier_transform
 OBJ  = visualize_FFT.o
 LIBS = -l$(LIBXMIPP)

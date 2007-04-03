@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = volsampler
+PROJ = convert_vol2pseudo
 OBJ  = volsampler.o
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

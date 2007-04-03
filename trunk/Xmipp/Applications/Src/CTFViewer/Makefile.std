@@ -1,6 +1,6 @@
 ######################################################################
 ifeq ($(HAVE_QT),YES)
-   PROJ = ctfviewer
+   PROJ = ctf_view
 endif
 OBJ  = 	ctfviewer.o \
         ctfviewer_module.o ctfviewer_module.moc

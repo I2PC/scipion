@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = statis
+PROJ = average
 OBJ  = statis.o
 LIBS = -l$(LIBXMIPP)
 

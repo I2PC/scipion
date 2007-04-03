@@ -1,8 +1,6 @@
-bin_SCRIPTS = PDBsidechain
+bin_SCRIPTS = extract_sidechain_from_pdb
 
-PDBsidechain: batch_PDBsidechain.pl
-	echo "#!$(PERL_PATH)" > aux_script
-	cat batch_PDBsidechain.pl >> aux_script
-	mv aux_script PDBsidechain
+extract_sidechain_from_pdb: batch_extract_sidechain_from_pdb.pl
+	cp batch_extract_sidechain_from_pdb.pl extract_sidechain_from_pdb
 
-EXTRA_DIST = batch_PDBsidechain.pl
+EXTRA_DIST = batch_extract_sidechain_from_pdb.pl

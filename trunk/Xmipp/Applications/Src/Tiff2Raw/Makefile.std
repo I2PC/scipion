@@ -1,6 +1,6 @@
 ######################################################################
 ifeq ($(HAVE_TIFF),YES)
-   PROJ = tiff2raw
+   PROJ = convert_tiff2raw
 endif
 OBJ  = tiff2raw.o
 LIBS = -ltiff

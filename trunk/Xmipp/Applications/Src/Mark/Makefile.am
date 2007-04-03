@@ -1,44 +1,48 @@
-bin_PROGRAMS = mark
-mark_SOURCES = mark.cc QtColorLabel.cc \
+bin_PROGRAMS = micrograph_mark
+micrograph_mark_SOURCES = \
+	mark.cc \
+	QtColorLabel.cc \
 	QtDialogFamilies.cc \
 	QtDialogProperties.cc \
 	QtFileMenu.cc \
-        QtFilter.cc \
-        QtFilterMenu.cc \
-        QtFiltersController.cc \
-        QtImage.cc \
-        QtImageConverter.cc \
-        QtImageMicrograph.cc \
-        QtImageOverviewMicrograph.cc \
-        QtMainWidgetMark.cc \
-        QtAutoMenu.cc \
-        QtWidgetMicrograph.cc \
-        QtWidgetPSD.cc \
-        ../DownSample/xvsmooth.cc
-nodist_mark_SOURCES = QtColorLabel_moc.cc \
+	QtFilter.cc \
+	QtFilterMenu.cc \
+	QtFiltersController.cc \
+	QtImage.cc \
+	QtImageConverter.cc \
+	QtImageMicrograph.cc \
+	QtImageOverviewMicrograph.cc \
+	QtMainWidgetMark.cc \
+	QtAutoMenu.cc \
+	QtWidgetMicrograph.cc \
+	QtWidgetPSD.cc \
+	../DownSample/xvsmooth.cc
+
+nodist_micrograph_mark_SOURCES = \
+	QtColorLabel_moc.cc \
 	QtDialogFamilies_moc.cc \
 	QtDialogProperties_moc.cc \
 	QtFileMenu_moc.cc \
-        QtFilter_moc.cc \
-        QtFilterMenu_moc.cc \
-        QtFiltersController_moc.cc \
-        QtImage_moc.cc \
-        QtImageMicrograph_moc.cc \
-        QtImageOverviewMicrograph_moc.cc \
-        QtMainWidgetMark_moc.cc \
-        QtAutoMenu_moc.cc \
-        QtPopupMenuMark_moc.cc \
-        QtWidgetMicrograph_moc.cc \
-        QtWidgetPSD_moc.cc
+	QtFilter_moc.cc \
+	QtFilterMenu_moc.cc \
+	QtFiltersController_moc.cc \
+	QtImage_moc.cc \
+	QtImageMicrograph_moc.cc \
+	QtImageOverviewMicrograph_moc.cc \
+	QtMainWidgetMark_moc.cc \
+	QtAutoMenu_moc.cc \
+	QtPopupMenuMark_moc.cc \
+	QtWidgetMicrograph_moc.cc \
+	QtWidgetPSD_moc.cc
 
-mark_LDADD = $(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
+micrograph_mark_LDADD = \
+	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
 	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \
 	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-        $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
-	
+	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
+	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
-mark_LDFLAGS = @QT_LIBS@ 
+micrograph_mark_LDFLAGS = @QT_LIBS@
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 
@@ -75,9 +79,21 @@ QtWidgetMicrograph_moc.cc : QtWidgetMicrograph.hh
 QtWidgetPSD_moc.cc : QtWidgetPSD.hh
 	@QT_MOC@ QtWidgetPSD.hh -o QtWidgetPSD_moc.cc
 
-EXTRA_DIST = QtAutoMenu.hh          QtFilter.hh             QtImageMicrograph.hh \
-	QtColorLabel.hh        QtFilterMenu.hh         QtImageOverviewMicrograph.hh \
-	QtDialogFamilies.hh    QtFiltersController.hh  QtMainWidgetMark.hh \
-	QtDialogProperties.hh  QtImageConverter.hh     QtPopupMenuMark.hh \
-	QtFileMenu.hh          QtImage.hh              QtWidgetMicrograph.hh \
-        QtWidgetPSD.hh
+EXTRA_DIST = \
+	QtAutoMenu.hh \
+	QtFilter.hh \
+	QtImageMicrograph.hh \
+	QtColorLabel.hh \
+	QtFilterMenu.hh \
+	QtImageOverviewMicrograph.hh \
+	QtDialogFamilies.hh \
+	QtFiltersController.hh \
+	QtMainWidgetMark.hh \
+	QtDialogProperties.hh \
+	QtImageConverter.hh \
+	QtPopupMenuMark.hh \
+	QtFileMenu.hh \
+	QtImage.hh \
+	QtWidgetMicrograph.hh \
+	QtWidgetPSD.hh
+

@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = SSNR
+PROJ = resolution_ssnr
 OBJ  = SSNR.o
 LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

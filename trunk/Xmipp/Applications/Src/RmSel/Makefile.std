@@ -1,5 +1,5 @@
 #######################################################################
-PROJ = rmsel
+PROJ = selfile_delete
 OBJ  = rmsel.o
 LIBS = -l$(LIBXMIPP)
 

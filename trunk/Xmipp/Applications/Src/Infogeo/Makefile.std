@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = infogeo
+PROJ = header_print
 OBJ  = infogeo.o
 LIBS = -l$(LIBXMIPP)
 

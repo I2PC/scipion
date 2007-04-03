@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = img2data
+PROJ = convert_img2data
 OBJ  = img2data.o
 LIBS = -l$(LIBXMIPP)

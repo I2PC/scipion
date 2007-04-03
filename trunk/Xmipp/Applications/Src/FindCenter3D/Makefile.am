@@ -1,7 +1,5 @@
-bin_PROGRAMS = findcenter3D
-findcenter3D_SOURCES = findcenter3D.cc
-findcenter3D_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-
-findcenter3D_LDFLAGS = @EXEC_TYPE@
-
+bin_PROGRAMS = find_center3d
+find_center3d_SOURCES = findcenter3D.cc
+find_center3d_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+find_center3d_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib

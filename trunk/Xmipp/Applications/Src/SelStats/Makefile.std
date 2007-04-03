@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = sel_stats	
+PROJ = selfile_statistics
 OBJ  = sel_stats.o
 LIBS = -l$(LIBXMIPP)
 

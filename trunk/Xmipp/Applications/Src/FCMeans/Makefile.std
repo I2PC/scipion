@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = fcmeans
+PROJ = classify_fcmeans
 OBJ  = fcmeans.o
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

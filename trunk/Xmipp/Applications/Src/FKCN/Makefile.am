@@ -1,9 +1,7 @@
-bin_PROGRAMS = fkcn
-fkcn_SOURCES = fkcn.cc
-fkcn_LDADD = $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
+bin_PROGRAMS = classify_fkcn
+classify_fkcn_SOURCES = fkcn.cc
+classify_fkcn_LDADD = \
+	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-
-fkcn_LDFLAGS = @EXEC_TYPE@
-	
+classify_fkcn_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
-

@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = sammon
+PROJ = classify_sammon_projection
 OBJ  = sammon.o
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

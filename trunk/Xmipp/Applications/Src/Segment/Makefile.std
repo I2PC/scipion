@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = segment
+PROJ = volume_segment
 OBJ  = segment.o
 LIBS = -l$(LIBXMIPP)
 

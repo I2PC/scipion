@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = mpi_MLrefine3D
+PROJ = mpi_ml_refine3d
 NEEDS_MPI = true
 
 OBJ  = mpi_MLrefine3D.o

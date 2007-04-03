@@ -1,4 +1,4 @@
 ######################################################################
 MYSHELL = sh
-PROJ = do_selfile
+PROJ = selfile_create
 

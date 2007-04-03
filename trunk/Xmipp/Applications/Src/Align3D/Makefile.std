@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = align3D
+PROJ = align_volumes
 OBJ  = align3D.o
 LIBS = -l$(LIBXMIPP)
 

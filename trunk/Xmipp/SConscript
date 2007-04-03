@@ -227,7 +227,7 @@ AddProgram('makespectra', 'Applications/OldXmipp/MakeSpectra', '*.cc', [],
     'OldXmipp'], [], [])
 
 # FindSCenter
-AddProgram('findcenter', 'Applications/OldXmipp/FindSCenter', '*.cc', [],
+AddProgram('find_center2d', 'Applications/OldXmipp/FindSCenter', '*.cc', [],
     ['Lib'], ['Lib/XmippData', 'Lib/OldXmipp'], ['XmippData', 'OldXmipp'], [],
     [])
 
@@ -264,7 +264,7 @@ AddProgram('adjust_surface', 'Applications/Src/Adjust_surface', '*.cc', [],
 
 # Adjust_volume
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('adjust_volume', 'Applications/Src/Adjust_volume', '*.cc', [],
+AddProgram('adjust_volume_grey_levels', 'Applications/Src/Adjust_volume', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippInterface', 'XmippData'])
 
@@ -275,12 +275,12 @@ AddProgram('align2d', 'Applications/Src/Align2D', '*.cc', [], ['Lib'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # Align3D
-AddProgram('align3D', 'Applications/Src/Align3D', '*.cc', [], ['Lib'],
+AddProgram('align_volumes', 'Applications/Src/Align3D', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Ang_distribution
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('ang_distribution', 'Applications/Src/Ang_distribution', '*.cc',
+AddProgram('angular_distribution_show', 'Applications/Src/Ang_distribution', '*.cc',
     [], ['Lib'], ['Lib/XmippInterface', 'Lib/XmippData'], ['XmippInterface',
     'XmippData'])
 
@@ -291,14 +291,14 @@ AddProgram('angular_distance', 'Applications/Src/Angular_distance', '*.cc',
 
 # Angular_predict
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('angular_predict', 'Applications/Src/Angular_predict', '*.cc',
+AddProgram('angular_discrete_assign', 'Applications/Src/Angular_predict', '*.cc',
     [], ['Lib'], ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
     'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
     'XmippInterface'])
 
 # Angular_predict_continuous
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('angular_predict_continuous',
+AddProgram('angular_continuous_assign',
     'Applications/Src/Angular_predict_continuous', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
     'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
@@ -306,7 +306,7 @@ AddProgram('angular_predict_continuous',
 
 # Angular_predict_tomography
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('angular_predict_tomography',
+AddProgram('angular_assign_from_tomogram',
     'Applications/Src/Angular_predict_tomography', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData',
     'Lib/XmippInterface'], ['XmippRecons', 'XmippClassif', 'XmippData',
@@ -318,11 +318,11 @@ AddProgram('angular_refinement', 'Applications/Src/Angular_refinement',
     ['XmippInterface', 'XmippData'])
 
 # ApplyGeo
-AddProgram('applygeo', 'Applications/Src/ApplyGeo', '*.cc', [], ['Lib'],
+AddProgram('header_apply', 'Applications/Src/ApplyGeo', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # AppendDocFile
-AddProgram('appenddocfile', 'Applications/Src/AppendDocFile', '*.cc', [],
+AddProgram('docfile_append', 'Applications/Src/AppendDocFile', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Are_different
@@ -341,7 +341,7 @@ AddProgram('assign_angles', 'Applications/Src/Assign_angles', '*.cc', [],
 
 # Assign_CTF
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('assign_CTF', 'Applications/Src/Assign_CTF', '*.cc', [], ['Lib'],
+AddProgram('ctf_estimate_from_micrograph', 'Applications/Src/Assign_CTF', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
@@ -351,9 +351,9 @@ AddProgram('assign_multiple_CTFs', 'Applications/Src/Assign_multiple_CTFs',
     'Lib/XmippInterface'], ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # BatchSOM
-AddProgram('batchsom', 'Applications/Src/BatchSOM', '*.cc', [], ['Lib'],
-    ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
-    ['-Wno-deprecated'])
+AddProgram('classify_batch_som', 'Applications/Src/BatchSOM', '*.cc', [],
+    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+    'XmippData'], ['-Wno-deprecated'])
 
 # Break_sym
 # FIXME XmippInterface is required, although it was not present in autoools
@@ -363,7 +363,7 @@ AddProgram('break_sym', 'Applications/Src/Break_sym', '*.cc', [], ['Lib'],
 
 # Centilt
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('centilt', 'Applications/Src/Centilt', '*.cc', [], ['Lib'],
+AddProgram('align_tilt_pairs', 'Applications/Src/Centilt', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
@@ -376,12 +376,12 @@ AddProgram('combine_stats', 'Applications/Src/Combine_stats', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Compare_Selfiles
-AddProgram('compare_selfiles', 'Applications/Src/Compare_Selfiles', '*.cc',
+AddProgram('selfile_compare', 'Applications/Src/Compare_Selfiles', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # CorrectPhase
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('correctphase', 'Applications/Src/CorrectPhase', '*.cc', [],
+AddProgram('correct_phase', 'Applications/Src/CorrectPhase', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
@@ -391,27 +391,27 @@ AddProgram('correlation', 'Applications/Src/Correlation', '*.cc', [],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # CpSel
-AddProgram('cpsel', 'Applications/Src/CpSel', '*.cc', [], ['Lib'],
+AddProgram('selfile_copy', 'Applications/Src/CpSel', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Create_phantom
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('create_phantom', 'Applications/Src/Create_phantom', '*.cc', [],
+AddProgram('phantom_create', 'Applications/Src/Create_phantom', '*.cc', [],
     ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction', 'Lib/XmippInterface'],
     ['XmippData', 'XmippRecons', 'XmippInterface'])
 
 # CTF_profile
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('CTF_profile', 'Applications/Src/CTF_profile', '*.cc', [],
+AddProgram('ctf_profile', 'Applications/Src/CTF_profile', '*.cc', [],
     ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction', 'Lib/XmippInterface'],
     ['XmippData', 'XmippRecons', 'XmippInterface'])
 
 # Data2Img
-AddProgram('data2img', 'Applications/Src/Data2Img', '*.cc', [], ['Lib'],
+AddProgram('convert_data2img', 'Applications/Src/Data2Img', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # Data2Vol
-AddProgram('data2vol', 'Applications/Src/Data2Vol', '*.cc', [], ['Lib'],
+AddProgram('convert_data2vol', 'Applications/Src/Data2Vol', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # deconvoluteCTF
@@ -421,16 +421,16 @@ AddProgram('deconvoluteCTF', 'Applications/Src/deconvoluteCTF', '*.cc', [],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # Deform
-AddProgram('deform', 'Applications/Src/Deform', '*.cc', [],
+AddProgram('crystal_shear', 'Applications/Src/Deform', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # Denoising
-AddProgram('denoising', 'Applications/Src/Denoising', '*.cc', [], ['Lib'],
+AddProgram('denoise', 'Applications/Src/Denoising', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Denoising_micrograph
-AddProgram('denoising_micrograph', 'Applications/Src/Denoising_micrograph',
+AddProgram('micrograph_denoise', 'Applications/Src/Denoising_micrograph',
     '*.cc', [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # DocFile_Histogram
@@ -438,7 +438,7 @@ AddProgram('docfile_histogram', 'Applications/Src/DocFile_Histogram', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # DownSample
-AddProgram('downsample', 'Applications/Src/DownSample', '*.cc',
+AddProgram('micrograph_downsample', 'Applications/Src/DownSample', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # FIXME This hack is required for program Mark
@@ -460,7 +460,7 @@ AddProgram('EM2Angles', 'Applications/Src/EM2Angles', '*.cc', [],
     ['XmippRecons', 'XmippRecons_Interface', 'XmippData', 'XmippInterface'])
 
 # Enhance_PSD
-AddProgram('enhance_psd', 'Applications/Src/Enhance_PSD', '*.cc', [],
+AddProgram('psd_enhance', 'Applications/Src/Enhance_PSD', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -470,7 +470,7 @@ AddProgram('euler', 'Applications/Src/Euler', '*.cc', [],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Evaluate
-AddProgram('evaluate', 'Applications/Src/Evaluate', '*.cc', ['adjust.cc'],
+AddProgram('foms_evaluate', 'Applications/Src/Evaluate', '*.cc', ['adjust.cc'],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -486,28 +486,28 @@ AddProgram('exp_shift_computation', 'Applications/Src/Exp_Shift_Computation',
     'XmippData'])
 
 # FCMeans
-AddProgram('fcmeans', 'Applications/Src/FCMeans', '*.cc', [], ['Lib'],
+AddProgram('classify_fcmeans', 'Applications/Src/FCMeans', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # FindCenter3D
-AddProgram('findcenter3D', 'Applications/Src/FindCenter3D', '*.cc', [],
+AddProgram('find_center3D', 'Applications/Src/FindCenter3D', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # FKCN
-AddProgram('fkcn', 'Applications/Src/FKCN', '*.cc', [], ['Lib'],
+AddProgram('classify_fkcn', 'Applications/Src/FKCN', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # Flip
-AddProgram('flip', 'Applications/Src/Flip', '*.cc', [], ['Lib'],
+AddProgram('mirror', 'Applications/Src/Flip', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # FourierFilter
-AddProgram('fourierfilter', 'Applications/Src/FourierFilter', '*.cc', [],
+AddProgram('fourier_filter', 'Applications/Src/FourierFilter', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # FSOM
-AddProgram('fsom', 'Applications/Src/FSOM', '*.cc', [], ['Lib'],
+AddProgram('classify_fsom', 'Applications/Src/FSOM', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
     ['-Wno-deprecated'])
 
@@ -520,30 +520,30 @@ AddProgram('histogram', 'Applications/Src/Histogram', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # IDR_ART
-AddProgram('idr_art', 'Applications/Src/IDR_ART', '*.cc', [],
+AddProgram('idr', 'Applications/Src/IDR_ART', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Img2Data
-AddProgram('img2data', 'Applications/Src/Img2Data', '*.cc', [], ['Lib'],
+AddProgram('convert_img2data', 'Applications/Src/Img2Data', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Infogeo
-AddProgram('infogeo', 'Applications/Src/Infogeo', '*.cc', [], ['Lib'],
+AddProgram('header_print', 'Applications/Src/Infogeo', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # KCMeans
-AddProgram('kcmeans', 'Applications/Src/KCMeans', '*.cc', [], ['Lib'],
+AddProgram('classify_kcmeans', 'Applications/Src/KCMeans', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
     ['-Wno-deprecated'])
 
 # KerDenSOM
-AddProgram('kerdensom', 'Applications/Src/KerDenSOM', '*.cc', [], ['Lib'],
+AddProgram('classify_kerdensom', 'Applications/Src/KerDenSOM', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'],
     ['-Wno-deprecated'])
 
 # Lattice_vectors
-AddProgram('lattice_vectors', 'Applications/Src/Lattice_vectors', '*.cc', [],
+AddProgram('crystal_lattice_vectors', 'Applications/Src/Lattice_vectors', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # MakeSpectra
@@ -559,23 +559,23 @@ AddProgram('markhan', 'Applications/Src/Markhan', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Microscope
-AddProgram('microscope', 'Applications/Src/Microscope', '*.cc', [],
+AddProgram('phantom_simulate_microscope', 'Applications/Src/Microscope', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # MLalign2D
 # FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('MLalign2D', 'Applications/Src/MLalign2D', '*.cc', [],
+AddProgram('ml_align2d', 'Applications/Src/MLalign2D', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # MLalign2D_combine
-AddProgram('MLalign2D_combine', 'Applications/Src/MLalign2D_combine', '*.cc',
+AddProgram('ml_align2d_combine', 'Applications/Src/MLalign2D_combine', '*.cc',
     [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # MLrefine3D
-AddProgram('MLrefine3D', 'Applications/Src/MLrefine3D', '*.cc',
+AddProgram('ml_refine3d', 'Applications/Src/MLrefine3D', '*.cc',
     [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -584,7 +584,7 @@ AddProgram('morphology', 'Applications/Src/Morphology', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # MvSel
-AddProgram('mvsel', 'Applications/Src/MvSel', '*.cc', [], ['Lib'],
+AddProgram('selfile_move', 'Applications/Src/MvSel', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Normalize
@@ -596,11 +596,11 @@ AddProgram('operate', 'Applications/Src/Operate', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # PCA
-AddProgram('pca', 'Applications/Src/PCA', '*.cc', [], ['Lib'],
+AddProgram('classify_pca', 'Applications/Src/PCA', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # PDBPhantom
-AddProgram('pdbphantom', 'Applications/Src/PDBPhantom', '*.cc', [],
+AddProgram('convert_pdb2vol', 'Applications/Src/PDBPhantom', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -615,22 +615,23 @@ AddProgram('project', 'Applications/Src/Project', '*.cc', [],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Projection_Neighbourhood
-AddProgram('projection_neighbourhood',
+AddProgram('angular_neighbourhood',
     'Applications/Src/Projection_Neighbourhood', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Projection_matching
-AddProgram('projection_matching', 'Applications/Src/Projection_matching',
+AddProgram('angular_projectin_matching',
+    'Applications/Src/Projection_matching',
     '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
     'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # ProjectPCA
-AddProgram('projectpca', 'Applications/Src/ProjectPCA', '*.cc', [], ['Lib'],
+AddProgram('classify_project_pca', 'Applications/Src/ProjectPCA', '*.cc', [], ['Lib'],
     ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif', 'XmippData'])
 
 # Pyramid
-AddProgram('pyramid', 'Applications/Src/Pyramid', '*.cc', [], ['Lib'],
+AddProgram('scale_pyramid', 'Applications/Src/Pyramid', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Radon_Transform
@@ -644,7 +645,7 @@ AddProgram('random_mapping', 'Applications/Src/RandomMapping', '*.cc', [],
     'XmippData'])
 
 # Random_phantom
-AddProgram('random_phantom', 'Applications/Src/Random_phantom',
+AddProgram('create_random_phantom', 'Applications/Src/Random_phantom',
     '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
     'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -653,7 +654,7 @@ AddProgram('range_adjust', 'Applications/Src/Range_adjust', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Raw22spi
-AddProgram('raw22spi', 'Applications/Src/Raw22spi', '*.cc', [], ['Lib'],
+AddProgram('convert_raw22spi', 'Applications/Src/Raw22spi', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Recons_test
@@ -671,7 +672,7 @@ AddProgram('resolution', 'Applications/Src/Resolution', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # RmSel
-AddProgram('rmsel', 'Applications/Src/RmSel', '*.cc', [],
+AddProgram('selfile_delete', 'Applications/Src/RmSel', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Rotate
@@ -684,7 +685,7 @@ AddProgram('rotate_descr', 'Applications/Src/RotateDescr',
     'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Sammon
-AddProgram('sammon', 'Applications/Src/Sammon', '*.cc', [],
+AddProgram('classify_sammon_projection', 'Applications/Src/Sammon', '*.cc', [],
     ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
     'XmippData'])
 
@@ -697,19 +698,19 @@ AddProgram('scale', 'Applications/Src/Scale', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Scissor
-AddProgram('scissor', 'Applications/Src/Scissor', '*.cc', [],
+AddProgram('micrograph_scissor', 'Applications/Src/Scissor', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Segment
-AddProgram('segment', 'Applications/Src/Segment', '*.cc', [],
+AddProgram('volume_segment', 'Applications/Src/Segment', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Select_Images
-AddProgram('select_images', 'Applications/Src/Select_Images', '*.cc', [],
+AddProgram('selfile_select', 'Applications/Src/Select_Images', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # SelStats
-AddProgram('sel_stats', 'Applications/Src/SelStats', '*.cc', [],
+AddProgram('selfile_statistics', 'Applications/Src/SelStats', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Separate_Objects
@@ -726,7 +727,7 @@ AddProgram('skew', 'Applications/Src/Skew', '*.cc', [], ['Lib'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # SOM
-AddProgram('som', 'Applications/Src/SOM', '*.cc', [],
+AddProgram('classify_som', 'Applications/Src/SOM', '*.cc', [],
     ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
     'XmippData'], ['-Wno-deprecated'])
 
@@ -735,7 +736,7 @@ AddProgram('sort_junk', 'Applications/Src/Sort_junk', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Split_selfile
-AddProgram('split_selfile', 'Applications/Src/Split_selfile', '*.cc',
+AddProgram('selfile_split', 'Applications/Src/Split_selfile', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # SpAR
@@ -754,23 +755,23 @@ AddProgram('spi22em', 'Applications/Src/Spi22em', '*.cc', [], ['Lib'],
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Spider22CCP4
-AddProgram('spi22ccp4', 'Applications/Src/Spider22CCP4', '*.cc', [], ['Lib'],
+AddProgram('convert_spi22ccp4', 'Applications/Src/Spider22CCP4', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Spots2RealSpace2D
-AddProgram('spots2realspace', 'Applications/Src/Spots2RealSpace2D', '*.cc',
+AddProgram('crystal_aph2img', 'Applications/Src/Spots2RealSpace2D', '*.cc',
     [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'],
     ['-Wno-deprecated'])
 
 # SSNR
-AddProgram('ssnr', 'Applications/Src/SSNR', '*.cc', [], ['Lib'],
+AddProgram('resolution_ssnr', 'Applications/Src/SSNR', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Statis
-AddProgram('statis', 'Applications/Src/Statis', '*.cc',
+AddProgram('average', 'Applications/Src/Statis', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Surface
@@ -788,12 +789,12 @@ AddProgram('threshold', 'Applications/Src/Threshold', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # ToPDB
-AddProgram('toPDB', 'Applications/Src/ToPDB', '*.cc', [],
+AddProgram('convert_data2pdb', 'Applications/Src/ToPDB', '*.cc', [],
     ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
     'XmippData'])
 
 # ToPhantom
-AddProgram('toPhantom', 'Applications/Src/ToPhantom', '*.cc', [],
+AddProgram('convert_data2descr', 'Applications/Src/ToPhantom', '*.cc', [],
     ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
     'XmippData'])
 
@@ -803,24 +804,24 @@ AddProgram('unbend', 'Applications/Src/Unbend', '*.cc',
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Visualize_FFT
-AddProgram('visualize_FFT', 'Applications/Src/Visualize_FFT', '*.cc',
+AddProgram('fourier_tranform', 'Applications/Src/Visualize_FFT', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Vol2Data
-AddProgram('vol2data', 'Applications/Src/Vol2Data', '*.cc',
+AddProgram('convert_vol2data', 'Applications/Src/Vol2Data', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # VolSampler
-AddProgram('volsampler', 'Applications/Src/VolSampler', '*.cc',
+AddProgram('convert_vol2pseudo', 'Applications/Src/VolSampler', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Voxels22Blobs
-AddProgram('voxels22blobs', 'Applications/Src/Voxels22Blobs', '*.cc', [],
+AddProgram('convert_voxels22blobs', 'Applications/Src/Voxels22Blobs', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Wbp
-AddProgram('wbp', 'Applications/Src/Wbp', '*.cc', [],
+AddProgram('reconstruct_wbp', 'Applications/Src/Wbp', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -829,23 +830,15 @@ AddProgram('window', 'Applications/Src/Window', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Window_micrograph
-AddProgram('window_micrograph', 'Applications/Src/Window_micrograph', '*.cc',
+AddProgram('micrograph_window', 'Applications/Src/Window_micrograph', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Batches (apps)
 # NOTE PDBsidechain is in the only one in perl
-AddBatch('do_selfile', 'Applications/Batches/Do_Selfile')
-#AddBatch('gnuplot_mplot', 'Applications/Batches/Gnuplot_mplot')
-#AddBatch('gnuplot_mprint', 'Applications/Batches/Gnuplot_mprint')
-#AddBatch('iv', 'Applications/Batches/Iv')
-#AddBatch('look_at_FFT', 'Applications/Batches/Look_at_FFT')
-AddBatch('PDB2descr', 'Applications/Batches/PDB2descr')
-AddBatch('PDBsidechain', 'Applications/Batches/PDBsidechain', '.pl')
-AddBatch('pdb2surface', 'Applications/Batches/Pdb2surface')
-#AddBatch('showsel', 'Applications/Batches/Showsel')
-#AddBatch('showsom', 'Applications/Batches/ShowSOM')
-#AddBatch('showspectra', 'Applications/Batches/ShowSpectra')
-#AddBatch('showspectsom', 'Applications/Batches/ShowSpectraSOM')
+AddBatch('selfile_create', 'Applications/Batches/Do_Selfile')
+AddBatch('convert_pdb2descr', 'Applications/Batches/PDB2descr')
+AddBatch('extract_sidechain_from_pdb', 'Applications/Batches/PDBsidechain', '.pl')
+AddBatch('convert_pdb2surface', 'Applications/Batches/Pdb2surface')
 
 # MPI
 if int(env['mpi']):
@@ -870,24 +863,24 @@ if int(env['mpi']):
         ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
 
     # MPI_MLalign2D
-    AddMPIProgram('mpi_MLalign2D', 'Applications/Src/MPI_MLalign2D', '*.cc', [],
+    AddMPIProgram('mpi_ml_align2d', 'Applications/Src/MPI_MLalign2D', '*.cc', [],
         ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons',
         'XmippData'])
 
     # MPI_MLrefine3D
-    AddMPIProgram('mpi_MLrefine3D', 'Applications/Src/MPI_MLrefine3D', '*.cc',
+    AddMPIProgram('mpi_ml_refine3d', 'Applications/Src/MPI_MLrefine3D', '*.cc',
         [], ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons',
         'XmippData'])
 
     # MPI_Projection_matching
-    AddMPIProgram('mpi_projection_matching',
+    AddMPIProgram('mpi_angular_projection_matching',
         'Applications/Src/MPI_Projection_matching', '*.cc', [], ['Lib'],
         ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
 
 # TIFF
 # Tiff2Raw
 if int(env['tiff']):
-    AddProgram('tiff2raw', 'Applications/Src/Tiff2Raw', '*.cc', [], ['Lib'],
+    AddProgram('convert_tiff2raw', 'Applications/Src/Tiff2Raw', '*.cc', [], ['Lib'],
         [], ['tiff'])
 
 # QT
@@ -988,7 +981,7 @@ graphics)
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
     # CTF Viewer
-    AddQtProgram('ctfviewer', 'Applications/Src/CTFViewer', '*.cc',
+    AddQtProgram('ctf_view', 'Applications/Src/CTFViewer', '*.cc',
     ['moc_ctfviewer_module.cc'], [], ['Lib'], ['Lib/XmippData',
     'Lib/XmippGraphics', 'Lib/Classification', 'Lib/Reconstruction'],
     ['XmippData', 'XmippGraphics', 'XmippClassif', 'XmippRecons'])
@@ -1022,14 +1015,14 @@ graphics)
         , 'Lib/Reconstruction', 'Lib/Classification', 'Lib/XmippData']
     mark_libs = envQT['LIBS'] + ['XmippInterface', 'XmippGraphics',
         'XmippRecons', 'XmippClassif', 'XmippData']
-    mark_prog = envQT.Program(mark_basedir + env['prepend'] + 'mark',
+    mark_prog = envQT.Program(mark_basedir + env['prepend'] + 'micrograph_mark',
         mark_sources + mark_mocs +
         obj_DownSample, CPPPATH = mark_cpppath,
         LIBPATH = mark_libpath, LIBS = mark_libs)
-    mark_alias = env.Alias(env['prepend'] + 'mark', mark_prog)
+    mark_alias = env.Alias(env['prepend'] + 'micrograph_mark', mark_prog)
     mark_install = env.Install(os.path.join(env['prefix'],
         'bin'), mark_prog)
-    env.Alias(env['prepend'] + 'mark', mark_install)
+    env.Alias(env['prepend'] + 'micrograph_mark', mark_install)
     env.Default(mark_alias)
 
     # Show
@@ -1039,7 +1032,7 @@ graphics)
         'XmippData'])
 
     # XMask
-    AddQtProgram('xmask', 'Applications/Src/XMask', '*.cc', ['moc_maskimg.cc'],
+    AddQtProgram('design_mask', 'Applications/Src/XMask', '*.cc', ['moc_maskimg.cc'],
         [], ['Lib'], ['Lib/XmippData', 'Lib/Classification'], ['XmippData',
         'XmippClassif'])
 

@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = mvsel
+PROJ = selfile_move
 OBJ  = mvsel.o
 LIBS = -l$(LIBXMIPP)
 

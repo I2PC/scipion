@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = microscope
+PROJ = phantom_simulate_microscope
 OBJ  = microscope.o
 LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

@@ -1,9 +1,5 @@
-bin_PROGRAMS = compare_selfiles
-compare_selfiles_SOURCES = compare_selfiles.cc
-compare_selfiles_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
-	
-	
-compare_selfiles_LDFLAGS = @EXEC_TYPE@
-
+bin_PROGRAMS = selfile_compare
+selfile_compare_SOURCES = compare_selfiles.cc
+selfile_compare_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+selfile_compare_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
-

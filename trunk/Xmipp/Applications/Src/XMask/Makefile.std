@@ -1,10 +1,10 @@
 ######################################################################
 ifeq ($(HAVE_QT),YES)
-   PROJ =  xmask
+   PROJ = design_mask
 endif
 OBJ  =  xmask.o \
 	maskimg.o maskimg.moc
-        
+
 LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)  $(QTLIBS)
 EXTRA_INCLUDE_DIRS = -I$(XMIPP_QTDIR)/include
 EXTRA_LIB_DIRS     = -L$(XMIPP_QTDIR)/lib

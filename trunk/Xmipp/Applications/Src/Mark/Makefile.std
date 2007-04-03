@@ -1,6 +1,6 @@
 ######################################################################
 ifeq ($(HAVE_QT),YES)
-   PROJ = mark
+   PROJ = micrograph_mark
 endif
 OBJ  = 	mark.o \
         QtColorLabel.o QtColorLabel.moc \

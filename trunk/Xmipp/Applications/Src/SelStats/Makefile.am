@@ -1,8 +1,5 @@
-bin_PROGRAMS = sel_stats
-sel_stats_SOURCES = sel_stats.cc
-sel_stats_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-
-sel_stats_LDFLAGS = @EXEC_TYPE@
-
+bin_PROGRAMS = selfile_statistics
+selfile_statistics_SOURCES = sel_stats.cc
+selfile_statistics_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+selfile_statistics_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
-

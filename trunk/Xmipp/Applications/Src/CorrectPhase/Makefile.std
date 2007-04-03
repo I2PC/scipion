@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = correctphase
+PROJ = correct_phase
 OBJ  = correctphase.o
 LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

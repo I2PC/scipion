@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = lattice_vectors
+PROJ = crystal_lattice_vectors
 OBJ  = lattice_vectors.o
 LIBS = -l$(LIBXMIPP)
 

@@ -1,9 +1,8 @@
-bin_PROGRAMS = correctphase
-correctphase_SOURCES = correctphase.cc
-correctphase_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
-
-correctphase_LDFLAGS = @EXEC_TYPE@
-	
+bin_PROGRAMS = correct_phase
+correct_phase_SOURCES = correctphase.cc
+correct_phase_LDADD = \
+	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
+	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+correct_phase_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib
 

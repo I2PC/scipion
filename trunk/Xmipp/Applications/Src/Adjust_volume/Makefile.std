@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = adjust_volume
+PROJ = adjust_volume_grey_levels
 OBJ  = adjust_volume.o
 LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
 

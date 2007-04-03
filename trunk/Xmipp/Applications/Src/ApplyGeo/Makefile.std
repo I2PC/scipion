@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = applygeo
+PROJ = header_apply
 OBJ  = applygeo.o
 LIBS = -l$(LIBXMIPP)
 
