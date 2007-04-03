@@ -34,7 +34,7 @@ LogDir="Logs"
 # {section} MLalign2D parameters
 #------------------------------------------------------------------------------------------------
 # Subdirectory where you have previously ran ML2D classification:
-ML2DWorkingDir="ML2ref"
+ML2DWorkingDir="ML5ref"
 # The number of the class to use:
 ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
@@ -279,7 +279,10 @@ class kerdensom_class:
 
           
     def close(self):
+        message='Done!'
+        print '*',message
         print '*********************************************************************'
+        
 #		
 # Main
 #     
