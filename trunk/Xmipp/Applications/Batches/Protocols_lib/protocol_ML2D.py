@@ -78,10 +78,10 @@ MyMachineFile="/home2/bioinfo/scheres/machines.dat"
 """
 ParallelScript="/home2/bioinfo/scheres/submit_mpi_job.sh"
 #------------------------------------------------------------------------------------------------
-# {section} Analysis of results
-#------------------------------------------------------------------------------------------------
-# Visualize class averages and show logfile? (Perform this only after job completion!)
-DoVisualizeML2D=False
+# {expert} Analysis of results
+""" This variable serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_ML2D.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -101,7 +101,6 @@ class ML2D_class:
                  NumberOfReferences,
                  DoMirror,
                  DoFast,
-                 DoVisualizeML2D,
                  ExtraParamsMLalign2D,
                  DoParallel,
                  MyNumberOfCPUs,
@@ -145,9 +144,6 @@ class ML2D_class:
         if (DoML2D):
             self.execute_MLalign2D()
 
-        if (DoVisualizeML2D):
-            self.visualize_ML2D()
-
         # Return to parent dir
         os.chdir(os.pardir)
 
@@ -173,12 +169,9 @@ class ML2D_class:
                                        "xmipp_MLalign2D",
                                        "xmipp_mpi_MLalign2D",
                                        params,
-                                       self.ParallelScript,
-                                       self.LaunchJobCommand,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
-                                       self.WorkingDir,
                                        False)
 
     def visualize_ML2D(self):
@@ -224,7 +217,6 @@ if __name__ == '__main__':
                     NumberOfReferences,
                     DoMirror,
                     DoFast,
-                    DoVisualizeML2D,
                     ExtraParamsMLalign2D,
                     DoParallel,
                     MyNumberOfCPUs,
