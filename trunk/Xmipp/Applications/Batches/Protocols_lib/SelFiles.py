@@ -31,6 +31,10 @@ class selfile:
            if state=='1': i = i + 1
        return i
        
+   # Insert an image "name" with state "state" in the selfile
+   def insert(self,name,state):
+       self.sellines.append([name,state])
+
    # Appends selfile content
    def append(self,lines):
        self.sellines+=lines
