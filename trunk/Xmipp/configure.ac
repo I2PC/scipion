@@ -112,6 +112,8 @@ AM_CONDITIONAL(BUILD_MPI, test x"$USE_MPI" = xtrue )
 # If Qt is present then set HAVE_QT to 1 in config.h file
 # else print error and exit
 BNV_HAVE_QT
+#QTLIBEXT=so
+#AM_PATH_QT([3.3.0], $QTLIBEXT, have_qt=yes, have_qt=no)
 AM_CONDITIONAL(BUILD_QT, test x"$have_qt" = xyes )
 
 if have_qt=yes
@@ -135,6 +137,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Lib/Makefile \
 	Lib/XmippData/Makefile \
 	Lib/Reconstruction/Makefile \
+	Lib/ReconstructionMPI/Makefile \
 	Lib/Classification/Makefile \
 	Lib/XmippInterface/Makefile \
 	Lib/OldXmipp/Makefile \
@@ -232,6 +235,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/MPI_MLrefine3D/Makefile \
 	Applications/Src/MPI_Projection_matching/Makefile \
 	Applications/Src/MPI_WBP/Makefile \
+	Applications/Src/MPI_Run/Makefile \
 	Applications/Src/MvSel/Makefile \
 	Applications/Src/Normalize/Makefile \
 	Applications/Src/Operate/Makefile \
