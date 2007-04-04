@@ -7,7 +7,8 @@ OPTIONAL_PROGS += MPIArt \
 		  MPI_MLalign2D \
 		  MPI_MLrefine3D \
 		  MPI_Projection_matching \
-                  MPI_WBP
+                  MPI_WBP \
+                  MPI_Run
 endif
 
 if BUILD_TIFF
