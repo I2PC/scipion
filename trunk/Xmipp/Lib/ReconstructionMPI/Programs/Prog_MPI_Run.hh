@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:    Roberto Marabini
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -28,6 +28,7 @@
 #include <fstream>
 #include <iostream>
 #include <XmippData/xmippFuncs.hh>
+#include <mpi.h>
 using namespace std;
 
 /**@name MPI_Run program */
@@ -40,13 +41,17 @@ public:
    FileName fn_commands;
    
    /** Number of Procesors **/
-   int np;
+   int nprocs;
    
-   /** Machinefile name (file with working node)
-
+   /** computing node number. Master=0 */
+   int rank;
+   
+   /** status after am MPI call */
+   MPI_Status status;
+   
 public:
    /** Empty constructor */
-   Prog_MPI_Run_Parameters();
+   Prog_MPI_Run_Parameters(int argc, char **argv);
 
    /** Read from a command line.
        An exception might be thrown by any of the internal conversions,
@@ -63,6 +68,9 @@ public:
    
    /** Run. */
    void run();
+ 
+   /** a short function to print a message and exit */
+   void error_exit(char * msg);
 };
 //@}
 #endif
