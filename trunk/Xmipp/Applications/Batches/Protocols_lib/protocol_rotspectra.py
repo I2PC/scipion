@@ -27,7 +27,7 @@
 # Selfile with the input images (relative path from ProjectDir):
 """ The name of this file will be used as a seed for all new files
 """
-SelFileName='all_images.sel'
+SelFileName='100.sel'
 # Working subdirectory: 
 WorkDirectory='test1'
 # Delete working subdirectory if it already exists?
@@ -37,7 +37,7 @@ DoDeleteWorkingDir=True
 """
 DisplayResults=True
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir="/home/roberto2/Test/Para_Roberto/"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 #-----------------------------------------------------------------------------
@@ -64,12 +64,12 @@ Align2DIterNr=4
 """
 Align2DExtraCommand=""
 #-----------------------------------------------------------------------------
-# {section} Findcenter
+# {section} Find_center
 #-----------------------------------------------------------------------------
 # Perform search for symmetry center?
 DoFindCenter=True
 #-----------------------------------------------------------------------------
-# {section} Makespectra
+# {section} Make_spectra
 #-----------------------------------------------------------------------------
 # Perform Rotational Spectra calculation?
 DoMakeSpectra=True
@@ -78,7 +78,7 @@ DoMakeSpectra=True
 """
 SpectraName="spectra.sim"
 #-----------------------------------------------------------------------------
-# {section} Kerdensom 
+# {section} classify_kerdensom 
 #-----------------------------------------------------------------------------
 # Perform kerdensom calculation?
 DoKerdensom=True
@@ -139,7 +139,7 @@ class rotational_spectra_class:
                 ):
 
        import os,sys
-       scriptdir=os.path.expanduser('~')+'/scripts/'
+       scriptdir=os.path.expanduser('~')+'/trunk/Xmipp/Applications/Batches/Protocols_lib/'
        sys.path.append(scriptdir) # add default search path
        import log
 
@@ -225,8 +225,8 @@ class rotational_spectra_class:
       newsel.write(os.path.basename(self._SelFileName))
 
       print '*********************************************************************'
-      print '* Computing initial reference using statis'
-      command = 'xmipp_statis -i ' + os.path.basename(self._SelFileName)
+      print '* Computing initial reference using average'
+      command = 'xmipp_average -i ' + os.path.basename(self._SelFileName)
       print '* ',command
       os.system(command)
       self.mylog.info(command)
@@ -271,7 +271,7 @@ class rotational_spectra_class:
       ncolumns=myheader.nx
       nrows=myheader.ny
       nslices=myheader.nz
-      command='xmipp_findcenter'+ \
+      command='xmipp_find_center2d'+ \
               ' -img ' + filename + \
               ' -x0 '  + str((ncolumns-1)/2) + \
               ' -y0 '  + str((nrows   -1)/2) + \
@@ -295,7 +295,7 @@ class rotational_spectra_class:
       import os
       print '*********************************************************************'
       print '* Applying geometrical  information in the headers. Needed for makespectra'
-      command='xmipp_applygeo'+ \
+      command='xmipp_header_apply'+ \
               ' -i ' +os.path.basename(self._SelFileName) 
       print '* ',command
       self.mylog.info(command)
@@ -345,9 +345,9 @@ class rotational_spectra_class:
       print '* Computing rotational power spectra'
       selFileName=os.path.basename(self._SelFileName)
       outFileName=(os.path.splitext(selFileName))[0] + '.sim'
-      command='xmipp_makespectra'+ \
-              ' -sel ' + selFileName + \
-              ' -out ' + str(self._SpectraName) + \
+      command='xmipp_make_spectra'+ \
+              ' -i ' + selFileName + \
+              ' -o ' + str(self._SpectraName) + \
               ' -x0 '  + str(self.xOffset) + \
               ' -y0 '  + str(self.yOffset) + \
               ' -r1 '  + str(self._InnerRadius) +   ' -r2 '   + str(self._OuterRadius) 
@@ -374,7 +374,7 @@ class rotational_spectra_class:
        # delete existing files with this somname
        if (os.path.exists(self._SomName+'.sel')):
            print 'Deleting existing som...'
-           command= 'xmipp_rmsel '+self._SomName+'.sel \n'
+           command= 'xmipp_selfile_delete '+self._SomName+'.sel \n'
            print '* ',command
            self.log.info(command)
            os.system(command)
@@ -392,7 +392,7 @@ class rotational_spectra_class:
       selFileName=os.path.basename(self._SelFileName)
       print '*********************************************************************'
       print '* Computing kerdensom ...'
-      command='xmipp_kerdensom'+ ' -verb 1 -din '  + str(self._SpectraName) + \
+      command='xmipp_classify_kerdensom'+ ' -verb 1 -din '  + str(self._SpectraName) + \
               ' -cout ' + str(self._SomName)  + \
               ' -xdim ' + str(self._SomXdim) + \
               ' -ydim ' + str(self._SomYdim) + \
