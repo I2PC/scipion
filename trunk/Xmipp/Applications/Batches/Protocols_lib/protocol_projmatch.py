@@ -17,15 +17,13 @@
 
 #-----------------------------------------------------------------------------
 # {expert} Root directory name for this project:
-"""
-All Paths should be relative to this directory
+""" All Paths should be relative to this directory
 """
 ProjectDir="/home/roberto2/Test/PARA_Roberto"
 
 # Selfile with the input images:
-"""
-Absolute paths are required in self file, self file localtion relative to 
-ProjectDir
+""" Absolute paths are required in self file, self file localtion relative to 
+    ProjectDir
 """
 SelFileName='../all.sel.new'
 
@@ -41,53 +39,56 @@ LogDir="Logs"
 # Reference file name (3D map)
 ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
 
+#DEPRECATED
 # Batch submission command (use "" to launch without batch submission):
-""" This will depend on your queueing system., ask your system administrator...
-
-    Examples: LaunchJobCommand=\"bsub -q 1day\"
-      or, if you do not use a queueing system: LaunchJobCommand=\"\"
-"""
-LaunchJobCommand="" 
+#""" This will depend on your queueing system., ask your system administrator...
+#
+#    Examples: LaunchJobCommand=\"bsub -q 1day\"
+#      or, if you do not use a queueing system: LaunchJobCommand=\"\"
+#"""
+#LaunchJobCommand="" 
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel? (see Expert options)
+# Use multiple processors in parallel?
 DoParallel=True
 # Number of processors to use:
-MyNumberOfCPUs=2
-# {expert} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
+NumberOfCPUs=3
+# A list of all available CPUs (the MPI-machinefile):
+""" Depending on your system, your standard script to launch MPI-jobs 
+    may require this
 """
-MyMachineFile="/home/roberto2/bin/machines.dat"
-# {expert} Standard script to launch MPI-jobs:
-""" This will also depend on your system...
-    The simplest script consists of the following two lines:
-
-    #!/usr/bin/env sh
-    `which mpirun` -np MyNumberOfCPUs -machinefile MyMachineFile \
-
-    Note that the next line with the xmipp_mpi_MLalign2D command will be
-    generated automatically, and the variables MyNumberOfCPUs and MyMachineFile
-    will be replaced by the corresponding values given here above.
-    More scripts for different batch systems can be found at:
-    [Wiki link]
-"""
-ParallelScript="/home/roberto2/bin/mpi.sh"
+MachineFile="/home/roberto2/bin/machines.dat"
+#DEPRECATED
+### {expert} Standard script to launch MPI-jobs:
+##""" This will also depend on your system...
+##    The simplest script consists of the following two lines:
+##
+##    #!/usr/bin/env sh
+##    `which mpirun` -np MyNumberOfCPUs -machinefile MyMachineFile \
+##
+##    Note that the next line with the xmipp_mpi_MLalign2D command will be
+##    generated automatically, and the variables MyNumberOfCPUs and MyMachineFile
+##    will be replaced by the corresponding values given here above.
+##    More scripts for different batch systems can be found at:
+##    [Wiki link]
+##"""
+##ParallelScript="/home/roberto2/bin/mpi.sh"
 
 #-----------------------------------------------------------------------------
 # {section} Mask
 #-----------------------------------------------------------------------------
 # Mask Reference volume
 """ Masking the reference volume will increase the signal to noise ratio.
-Do not provide a very tight mask.
+    Do not provide a very tight mask.
 """
 DoMask=True
 
 #show masked volume
-"""Masked volume will be shown.
+""" Masked volume will be shown.
 """
-DisplayMask=True
+DisplayMask=False
 
 #binary mask-file used to mask reference volume
 MaskFileName='circular_mask.msk'
@@ -102,7 +103,7 @@ MaskFileName='circular_mask.msk'
 DoProjectionMatching=True
 
 #show masked volume
-"""show average of projections.
+""" Show average of projections.
 """
 DisplayProjectionMatching=True
 
@@ -147,7 +148,7 @@ InnerRadius=0
 # Outer radius for rotational correlation
 OuterRadius=18
 # Number of align2d iterations to perform:
-Align2DIterNr=4
+Align2DIterNr=1
 # {expert} Additional align2d parameters
 """ For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 
@@ -169,20 +170,18 @@ DoReconstruction=False
 DisplayReconstruction=True
 
 # {expert} Additional reconstruction parameters
-""" 
-  eamples go here
+""" examples go here
 """
 ReconstructionExtraCommand=""#"-max_shift 2 -max_rot 10"
 
 #reconstructiom method
-"""
-wbp/Art
+""" wbp/Art
 """
 ReconstructionMethod="xmipp_wbp"
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-# {end-of-header} do not change anything bellow this line unless you know what you are doing
+# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
 class projection_matching_class:
 
@@ -217,9 +216,7 @@ class projection_matching_class:
                 _LogDir,
                 _DoParallel,
                 _MyNumberOfCPUs,
-                _MyMachineFile,
-                _LaunchJobCommand,
-                _ParallelScript
+                _MyMachineFile
                 ):
        import os,sys
        scriptdir=os.path.expanduser('~')+'/trunk/Xmipp/Applications/Batches/Protocols_lib'
@@ -252,8 +249,6 @@ class projection_matching_class:
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
        self._MyMachineFile=_MyMachineFile
-       self._ParallelScript=_ParallelScript
-       self._LaunchJobCommand=_LaunchJobCommand
       
        self._iteration_number=0
        #name of the masked volume
@@ -322,28 +317,28 @@ class projection_matching_class:
                                       self._DoParallel,
                                       self._MyNumberOfCPUs,
                                       self._MyMachineFile,
-                                      self._ParallelScript,
-                                      self._LaunchJobCommand,
                                       self._WorkDirectory
                                       )
        else:
           self._mylog.info("Skipped ProjectionMatching") 
-#
-#                       
-#       from protocol_projmatch_align2D import execute_align2d
-#       if (_DoAlign2D):
-#          execute_align2d(self._mylog,
-#                          self._InnerRadius,
-#                          self._OuterRadius,
-#                          self._Align2DIterNr,
-#                          self._Align2DExtraCommand,
-#                          self._OutputRootName,
-#                          self._iteration_number,
-#                          self._DisplayAlign2D)
-#       else:
-#          self._mylog.info("Skipped Align2D") 
-#
-#        
+
+                       
+       if (_DoAlign2D):
+          execute_align2d(self._mylog,
+                          self._InnerRadius,
+                          self._OuterRadius,
+                          self._Align2DIterNr,
+                          self._Align2DExtraCommand,
+                          self._OutputRootName,
+                          self._iteration_number,
+                          self._DoParallel,
+                          self._MyNumberOfCPUs,
+                          self._MyMachineFile,
+                          self._DisplayAlign2D)
+       else:
+          self._mylog.info("Skipped Align2D") 
+
+        
 ##       from protocol_projmatch_Reconstruction import execute_Reconstruction
 ##       if (_DoReconstruction):
 ##          execute_Reconstruction(self._mylog,
@@ -442,8 +437,6 @@ def execute_projection_matching(_mylog,
                                 _DoParallel,
                                 _MyNumberOfCPUs,
                                 _MyMachineFile,
-                                _ParallelScript,
-                                _LaunchJobCommand,
                                 _WorkDirectory):
                                            
    _mylog.debug("execute_projection_matching")
@@ -464,23 +457,17 @@ def execute_projection_matching(_mylog,
               ' -output_refs -output_classes ' + \
               ' '              + _ProjMatchingExtra
    # -dont_modify_header          
-   if  _DoParallel==False:
-      command='xmipp_projection_matching ' + parameters
-      # -dont_modify_header 
-      print '* ',command
-      _mylog.info(command)
-      os.system(command)
-   else:
-      import launch_parallel_job  
-      launch_parallel_job.launch_parallel_job('xmipp_mpi_projection_matching',
-                          parameters,
-                          _ParallelScript,
-                          _LaunchJobCommand,
-                          _mylog,
-                          _MyNumberOfCPUs,
-                          _MyMachineFile,
-                          _WorkDirectory,
-                          False)
+   import launch_parallel_job
+   RunInBackground=False
+   launch_parallel_job.launch_job(
+                       _DoParallel,
+                       'xmipp_angular_projection_matching',
+                       'xmipp_mpi_angular_projection_matching',
+                       parameters,
+                       _mylog,
+                       _MyNumberOfCPUs,
+                       _MyMachineFile,
+                       RunInBackground)
    
    if _DisplayProjectionMatching==True:
       classes_sel_file=SelFiles.selfile()
@@ -490,6 +477,98 @@ def execute_projection_matching(_mylog,
       newsel=library_sel_file.intercalate_union(classes_sel_file)
       compare_sel_file=_OutputRootName+'_compare.sel'
       newsel.write(compare_sel_file)
+      command='xmipp_show -sel '+ compare_sel_file +' &'
+      #NOTE, selection will be made in next showsel
+      print '*********************************************************************'
+      print '* ',command
+      _mylog.info(command) 
+      os.system(command)
+
+#------------------------------------------------------------------------
+#execute_align2d
+#read all class*.sel files
+#align then with the class*.xmp images
+#save in class*_aligned.xmp
+#------------------------------------------------------------------------
+#it must be possible to select in the show program
+#may be select and then intersection of two self files?
+def execute_align2d(_mylog,
+                    _InnerRadius,
+                    _OuterRadius,
+                    _Align2DIterNr,
+                    _Align2DExtraCommand,
+                    _OutputRootName,
+                    _iteration_number,
+                    _DoParallel,
+                    _MyNumberOfCPUs,
+                    _MyMachineFile,
+                    _DisplayAlign2D
+                    ):
+                    
+   #if secuential execute orden if not store it in a file
+   import tempfile
+   if _DoParallel:
+        fh=tempfile.NamedTemporaryFile()
+   _mylog.debug("execute_align2d")
+   import os,SelFiles, glob,shutil
+   class_sel_pattern = _OutputRootName+'_class[0-9]*.sel'
+   _mylog.debug("class_sel_pattern: " + class_sel_pattern)
+   aux_sel_file=SelFiles.selfile()
+   for class_selfile in glob.glob(class_sel_pattern):
+      reference=class_selfile.replace('.sel','.xmp')
+      aux_sel_file.read(class_selfile)
+      if (aux_sel_file.length()<2):
+         aux_file_name1 = class_selfile.replace('.sel','.xmp') 
+         aux_file_name2 = class_selfile.replace('.sel','.med.xmp')
+         if _DoParallel:
+            _mylog.debug(command)
+            fh.writelines("cp " + aux_file_name1 + " " + aux_file_name2)
+         else:  
+            shutil.copy(aux_file_name1,aux_file_name2)
+            _mylog.info("cp " + aux_file_name1 + " " + aux_file_name2)
+      else:
+         print '*********************************************************************'
+         print '* Aligning translationally each class'
+         command='xmipp_align2d'+ \
+                 ' -i '  + class_selfile + \
+                 ' -Ri ' +   str(_InnerRadius) + \
+                 ' -Ro ' +   str(_OuterRadius) +\
+                 ' -iter ' + str(_Align2DIterNr) +\
+                 ' -ref ' + reference +\
+                 ' '  + _Align2DExtraCommand
+         print '* ',command
+         if _DoParallel:
+            fh.writelines(command+"\n")
+            _mylog.debug(command)
+         else:  
+            os.system(command)
+            _mylog.info(command)
+   if _DoParallel:
+       parameters="-i " + fh.name
+       _mylog.info("xmipp_mpi_run" + command)
+       import launch_parallel_job
+       RunInBackground=False
+       launch_parallel_job.launch_parallel_job(
+                           'xmipp_mpi_run',
+                           parameters,
+                           _mylog,
+                           _MyNumberOfCPUs,
+                           _MyMachineFile,
+                           RunInBackground)
+   #create sel fil with 3 entries, class, average with and withour aligment
+   if _DisplayAlign2D==True:
+      classes_sel_file=SelFiles.selfile()
+      classes_sel_file.read(_OutputRootName+'_classes.sel')
+      _mylog.debug('classes_sel_file= ' + _OutputRootName + '_classes.sel')
+      library_sel_file=SelFiles.selfile()
+      library_sel_file.read(_OutputRootName+'_lib.sel')
+      _mylog.debug('library_sel_file= ' + _OutputRootName+'_lib.sel')
+      aling_2D_sel_file=classes_sel_file.replace_string('xmp','med.xmp')
+      newsel=library_sel_file.intercalate_union_3(classes_sel_file,
+                                                aling_2D_sel_file)
+      compare_sel_file=_OutputRootName+'_compare_align2D.sel'
+      newsel.write(compare_sel_file)
+      _mylog.debug('compare_sel_file= ' + compare_sel_file)
       command='xmipp_show -sel '+ compare_sel_file +' &'
       print '*********************************************************************'
       print '* ',command
@@ -538,8 +617,6 @@ if __name__ == '__main__':
                 ProjectDir,
                 LogDir,
                 DoParallel,
-                MyNumberOfCPUs,
-                MyMachineFile,
-                LaunchJobCommand,
-                ParallelScript
+                NumberOfCPUs,
+                MachineFile
                 )
