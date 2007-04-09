@@ -1214,77 +1214,86 @@ matrix1D< double > DocFile::col(int c)
     return result;
 }
 
-/* Row --> Vector ---------------------------------------------------------- */
-matrix1D<double> DocFile::row(int _key) {
-   matrix1D<double> result;
-   vector<DocLine>::iterator aux = find(_key);
-   if (aux==m.end()) return result;
+matrix1D< double > DocFile::row(int k)
+{
+    matrix1D< double > result;
+    std::vector< DocLine >::iterator it = find(k);
+    if (it == m.end())
+        return result;
 
-   result.resize((*aux).data.size());
-   result.setRow();
-   for (int i=0; i<result.xdim; i++)
-       VEC_ELEM(result,i)=(*aux).data[i];
+    result.resize(it->data.size());
+    result.setRow();
+
+    for (int i=0; i<result.xdim; i++)
+        VEC_ELEM(result, i) = it->data[i];
 
    return result;
 }
 
-/* Vector --> Column ------------------------------------------------------- */
-void DocFile::setCol(int _col, matrix1D<double> &v)  {
-   go_first_data_line();
+void DocFile::setCol(int c, matrix1D< double >& v)
+{
+    go_first_data_line();
 
-   for (int i=STARTINGX(v); i<=FINISHINGX(v); i++) {
-      set(_col,VEC_ELEM(v,i));
-      next_data_line();
-   }
-   renum();
+    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+    {
+        set(c, VEC_ELEM(v, i));
+        next_data_line();
+    }
+    renum();
 
-   if (v.get_dim()<m.size())
-      REPORT_ERROR(1605,"DocFile::setCol: Column assignment not complete");
+    if (v.get_dim() < m.size())
+        REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 
-/* For all ----------------------------------------------------------------- */
-void DocFile::for_all_lines(
-   void (*f)(const matrix1D<double> &, matrix1D<double> &),
-   int key0, int keyF) {
-   int current_key;
+void DocFile::for_all_lines(void (*f) (const matrix1D< double >&,
+    matrix1D< double >&), int key0, int keyF)
+{
+    int current_key;
 
-   // Look for starting point
-   if (key0!=-1) locate(key0);
-   else          go_beginning();
+    // Look for starting point
+    if (key0 != -1)
+        locate(key0);
+    else
+        go_beginning();
 
-   // While not at the end do
-   // Notice that the key range termination condition is inside the loop
-   while (!eof()) {
-      // Out of range?
-      current_key=get_current_key();
-      if (keyF!=-1 && current_key>keyF) break;
+    // While not at the end do
+    // Notice that the key range termination condition is inside the loop
+    while (!eof())
+    {
+        // Out of range?
+        current_key = get_current_key();
+        if (keyF != -1 && current_key > keyF)
+            break;
 
-      // If current line is a data line
-      if (current_key!=0) {
-         // Get current data line, transform it and insert it before
-         // the current position
-         matrix1D<double> v_in=row(current_key);
-         matrix1D<double> v_out;
-         f(v_in,v_out);
-         insert_data_line(v_out);
+        // If current line is a data line
+        if (current_key != 0)
+        {
+            // Get current data line, transform it and insert it before
+            // the current position
+            matrix1D< double > v_in = row(current_key);
+            matrix1D< double > v_out;
 
-         // Besides removing the current line, the following removing moves
-         // the current line pointer to the next line (either it is
-         // a comment or a data line). That is why an adjust to next
-         // data line is needed
-         remove_current();
-         adjust_to_data_line();
+            f(v_in, v_out);
+            insert_data_line(v_out);
 
-         // This renumeration is needed because after the insertion the
-         // number of lines has been increased by 1, and later a line
-         // has been removed leaving a "hole" in the file.
-         renum();
-      } else
-         // Move to next data line
-         next_data_line();
-   }
-   renum();
-   go_beginning();
+            // Besides removing the current line, the following removing moves
+            // the current line pointer to the next line (either it is
+            // a comment or a data line). That is why an adjust to next
+            // data line is needed
+            remove_current();
+            adjust_to_data_line();
+
+            // This renumeration is needed because after the insertion the
+            // number of lines has been increased by 1, and later a line
+            // has been removed leaving a "hole" in the file.
+            renum();
+        }
+        else
+            // Move to next data line
+            next_data_line();
+    }
+    renum();
+    go_beginning();
 }
 
 /* For a column ------------------------------------------------------------ */

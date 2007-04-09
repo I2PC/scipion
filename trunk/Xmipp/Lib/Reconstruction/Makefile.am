@@ -1,10 +1,12 @@
-lib_LTLIBRARIES = libXmippRecons_@host_os@.la \
+lib_LTLIBRARIES = \
+	libXmippRecons_@host_os@.la \
 	libXmippRecons_Interface_@host_os@.la \
 	libXmippReconsINRIA_@host_os@.la
 
-libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
+libXmippRecons_@host_os@_la_SOURCES = \
+	Src/grids.cc \
 	Src/blobs.cc \
-        Src/splines.cc \
+	Src/splines.cc \
 	Src/symmetries.cc \
 	Src/phantom.cc \
 	Src/projection.cc \
@@ -53,20 +55,23 @@ libXmippRecons_@host_os@_la_SOURCES = Src/grids.cc \
 	Programs/Src/Prog_Enhance_PSD.cc \
 	Programs/Src/Prog_PDBPhantom.cc
 
-libXmippRecons_Interface_@host_os@_la_SOURCES = Programs/Src/Prog_Spots2RealSpace2D.cc \
-	Src/recons_spider.cc Programs/Src/Prog_Unbend.cc\
+libXmippRecons_Interface_@host_os@_la_SOURCES = \
+	Programs/Src/Prog_Spots2RealSpace2D.cc \
+	Src/recons_spider.cc \
+	Programs/Src/Prog_Unbend.cc\
 	Src/ImUmbend.cc \
 	Programs/Src/Prog_recons_test.cc
 
-libXmippReconsINRIA_@host_os@_la_SOURCES = Programs/Src/Prog_adjust_surface.cc
-
+libXmippReconsINRIA_@host_os@_la_SOURCES = \
+	Programs/Src/Prog_adjust_surface.cc
 
 INCLUDES = -I$(top_srcdir)/Lib
 
-EXTRA_DIST = blobs.hh \
+EXTRA_DIST = \
+	blobs.hh \
 	CTF.hh \
 	directions.hh \
-        basis.hh \
+	basis.hh \
 	splines.hh \
 	ImUmbend.hh \
 	Gibbs.hh \

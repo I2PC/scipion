@@ -160,6 +160,8 @@ if env.GetOption('clean'):
     if 'distclean' in COMMAND_LINE_TARGETS:
         print '* Deleting configuration ...'
         Execute(Delete(base_dir))
+        Execute(Delete('./bin'))
+        Execute(Delete('./lib'))
 else:
     print '* Configuring  ...'
     config_dir = base_dir + 'config.tests'

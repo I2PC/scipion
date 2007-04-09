@@ -1,14 +1,28 @@
 lib_LTLIBRARIES = libXmippData_@host_os@.la
 
-libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Src/xmippArgs.cc \
-	Src/xmippMatrices1D.cc Src/xmippMatrices2D.cc \
-	Src/xmippMatrices3D.cc Src/xmippSelFiles.cc Src/xmippHistograms.cc \
-	Src/xmippHeader.cc Src/xmippImages.cc Src/xmippVolumes.cc \
-	Src/xmippDocFiles.cc Src/xmippGeometry.cc Src/xmippProjection.cc \
-	Src/xmippProgs.cc Src/xmippMasks.cc Src/xmippMicrograph.cc \
-	Src/xmippFilters.cc Src/xmippMorphology.cc \
+libXmippData_@host_os@_la_SOURCES = \
+	Src/NumericalRecipes.cc \
+	Src/xmippFuncs.cc \
+	Src/xmippArgs.cc \
+	Src/xmippMatrices1D.cc \
+	Src/xmippMatrices2D.cc \
+	Src/xmippMatrices3D.cc \
+	Src/xmippSelFiles.cc \
+	Src/xmippHistograms.cc \
+	Src/xmippHeader.cc \
+	Src/xmippImages.cc \
+	Src/xmippVolumes.cc \
+	Src/xmippDocFiles.cc \
+	Src/xmippGeometry.cc \
+	Src/xmippProjection.cc \
+	Src/xmippProgs.cc \
+	Src/xmippMasks.cc \
+	Src/xmippMicrograph.cc \
+	Src/xmippFilters.cc \
+	Src/xmippMorphology.cc \
 	Src/xmippRotationalSpectrum.cc \
-	Programs/Src/Prog_downsample.cc Programs/Src/Prog_segment.cc \
+	Programs/Src/Prog_downsample.cc \
+	Programs/Src/Prog_segment.cc \
 	Programs/Src/Prog_denoising.cc \
 	Programs/Src/Prog_test_cluster.cc \
 	Programs/Src/Prog_normalize.cc \
@@ -17,7 +31,7 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Src/xmippWavelets.cc \
 	Src/xmippFFT.cc \
 	Src/xmippTomogram.cc \
-        Src/DESolver.cc \
+	Src/DESolver.cc \
 	Src/xmippDelTriang.cc \
 	Bilib/sources/changebasis.cc \
 	Bilib/sources/convert.cc \
@@ -58,57 +72,105 @@ libXmippData_@host_os@_la_SOURCES = Src/NumericalRecipes.cc Src/xmippFuncs.cc Sr
 	Bilib/sources/wavelet.cc \
 	Bilib/sources/waveletfiltersfract.cc \
 	Bilib/sources/waveletfilters.cc \
-	Bilib/sources/wavelettools.cc 	
-		
-INCLUDES = -I$(top_srcdir)/Lib \
+	Bilib/sources/wavelettools.cc
+
+INCLUDES = \
+	-I$(top_srcdir)/Lib \
 	-I$(top_srcdir)/Lib/XmippData/Bilib/headers \
 	-I$(top_srcdir)/Lib/XmippData/Bilib/types \
 	-I$(top_srcdir)/Lib/XmippData/Bilib
 
-EXTRA_DIST = MultidimCommon.hh   xmippImages.hh      xmippProjection.hh \
-	xmippArgs.hh        xmippRotationalSpectrum.hh \
-	xmippDocFiles.hh    xmippMasks.hh       xmippSelFiles.hh \
-        xmippImagic.hh      xmippDelTriang.hh\
-	xmippFFT.hh         xmippMatrices1D.hh  xmippTomogram.hh \
-	xmippFilters.hh     xmippMatrices2D.hh  xmippTypes.hh \
-	xmippFuncs.hh       xmippMatrices3D.hh  xmippVectorial.hh \
-	xmippGeometry.hh    xmippMicrograph.hh  xmippVolumes.hh \
-	xmippHeader.hh      xmippMorphology.hh  xmippWavelets.hh \
-	xmippHistograms.hh  xmippProgs.hh       xmippMemory.hh \
-        xmippError.hh       xmippMacros.hh      Src/MultidimFriends_implementation.hh \
-        Src/MultidimBasic.inc  Src/MultidimFriends.inc \
-        Src/MultidimBasic.hh Src/NumericalRecipes.hh \
-        Src/DESolver.hh \
-	Programs/Prog_denoising.hh     Programs/Prog_range_adjust.hh \
-	Programs/Prog_downsample.hh    Programs/Prog_segment.hh \
-	Programs/Prog_make_spectra.hh  Programs/Prog_test_cluster.hh \
+EXTRA_DIST = \
+	MultidimCommon.hh \
+	xmippImages.hh \
+	xmippProjection.hh \
+	xmippArgs.hh \
+	xmippRotationalSpectrum.hh \
+	xmippDocFiles.hh \
+	xmippMasks.hh \
+	xmippSelFiles.hh \
+	xmippImagic.hh \
+	xmippDelTriang.hh \
+	xmippFFT.hh \
+	xmippMatrices1D.hh \
+	xmippTomogram.hh \
+	xmippFilters.hh \
+	xmippMatrices2D.hh \
+	xmippTypes.hh \
+	xmippFuncs.hh \
+	xmippMatrices3D.hh \
+	xmippVectorial.hh \
+	xmippGeometry.hh \
+	xmippMicrograph.hh \
+	xmippVolumes.hh \
+	xmippHeader.hh \
+	xmippMorphology.hh \
+	xmippWavelets.hh \
+	xmippHistograms.hh \
+	xmippProgs.hh \
+	xmippMemory.hh \
+	xmippError.hh \
+	xmippMacros.hh \
+	Src/MultidimFriends_implementation.hh \
+	Src/MultidimBasic.inc \
+	Src/MultidimFriends.inc \
+	Src/MultidimBasic.hh \
+	Src/NumericalRecipes.hh \
+	Src/DESolver.hh \
+	Programs/Prog_denoising.hh \
+	Programs/Prog_range_adjust.hh \
+	Programs/Prog_downsample.hh \
+	Programs/Prog_segment.hh \
+	Programs/Prog_make_spectra.hh \
+	Programs/Prog_test_cluster.hh \
 	Programs/Prog_normalize.hh \
-        Bilib/configs.h \
-	Bilib/headers/changebasis.h      Bilib/headers/kerneldiff.h \
-	Bilib/headers/convert.h          Bilib/headers/kernel.h \
-	Bilib/headers/debug.h            Bilib/headers/kernelintegrate.h \
-	Bilib/headers/dft.h              Bilib/headers/linearalgebra.h \
-	Bilib/headers/dht.h              Bilib/headers/messagedisplay.h \
-	Bilib/headers/error.h            Bilib/headers/minmax.h \
-	Bilib/headers/findroot.h         Bilib/headers/morphology.h \
-	Bilib/headers/firconvolve.h      Bilib/headers/movingaverage.h \
-	Bilib/headers/flip.h             Bilib/headers/polynomial.h \
-	Bilib/headers/fold.h             Bilib/headers/positivepower.h \
-	Bilib/headers/fourierconvolve.h  Bilib/headers/pyramidfilters.h \
-	Bilib/headers/geometry.h         Bilib/headers/pyramidtools.h \
-	Bilib/headers/getpoles.h         Bilib/headers/round.h \
-	Bilib/headers/getputd.h          Bilib/headers/swap.h \
-	Bilib/headers/getput.h           Bilib/headers/timestamp.h \
-	Bilib/headers/gradient.h         Bilib/headers/traceline.h \
-	Bilib/headers/histogram.h        Bilib/headers/waveletfiltersfract.h \
-	Bilib/headers/iirconvolve.h      Bilib/headers/waveletfilters.h \
-	Bilib/headers/interpolate.h      Bilib/headers/wavelet.h \
-	Bilib/headers/kerneldiff1.h      Bilib/headers/wavelettools.h \
-	Bilib/headers/kerneldiff2.h      Bilib/headers/window.h \
-        Bilib/types/tboundaryconvention.h \
-        Bilib/types/tsplinebasis.h \
-        Bilib/types/ttimestamp.h \
-        Bilib/types/ttraceline.h
+	Bilib/configs.h \
+	Bilib/headers/changebasis.h \
+	Bilib/headers/kerneldiff.h \
+	Bilib/headers/convert.h \
+	Bilib/headers/kernel.h \
+	Bilib/headers/debug.h \
+	Bilib/headers/kernelintegrate.h \
+	Bilib/headers/dft.h \
+	Bilib/headers/linearalgebra.h \
+	Bilib/headers/dht.h \
+	Bilib/headers/messagedisplay.h \
+	Bilib/headers/error.h \
+	Bilib/headers/minmax.h \
+	Bilib/headers/findroot.h \
+	Bilib/headers/morphology.h \
+	Bilib/headers/firconvolve.h \
+	Bilib/headers/movingaverage.h \
+	Bilib/headers/flip.h \
+	Bilib/headers/polynomial.h \
+	Bilib/headers/fold.h \
+	Bilib/headers/positivepower.h \
+	Bilib/headers/fourierconvolve.h \
+	Bilib/headers/pyramidfilters.h \
+	Bilib/headers/geometry.h \
+	Bilib/headers/pyramidtools.h \
+	Bilib/headers/getpoles.h \
+	Bilib/headers/round.h \
+	Bilib/headers/getputd.h \
+	Bilib/headers/swap.h \
+	Bilib/headers/getput.h \
+	Bilib/headers/timestamp.h \
+	Bilib/headers/gradient.h \
+	Bilib/headers/traceline.h \
+	Bilib/headers/histogram.h \
+	Bilib/headers/waveletfiltersfract.h \
+	Bilib/headers/iirconvolve.h \
+	Bilib/headers/waveletfilters.h \
+	Bilib/headers/interpolate.h \
+	Bilib/headers/wavelet.h \
+	Bilib/headers/kerneldiff1.h \
+	Bilib/headers/wavelettools.h \
+	Bilib/headers/kerneldiff2.h \
+	Bilib/headers/window.h \
+	Bilib/types/tboundaryconvention.h \
+	Bilib/types/tsplinebasis.h \
+	Bilib/types/ttimestamp.h \
+	Bilib/types/ttraceline.h
 
 docs:
 	@echo "Creating documentation in XmippData ..."

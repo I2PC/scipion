@@ -1,7 +1,9 @@
-lib_LTLIBRARIES = libXmippInterface_@host_os@.la \
+lib_LTLIBRARIES = \
+	libXmippInterface_@host_os@.la \
 	libXmippInterfaceINRIA_@host_os@.la
 
-libXmippInterface_@host_os@_la_SOURCES = Src/xmippAPH.cc \
+libXmippInterface_@host_os@_la_SOURCES = \
+	Src/xmippAPH.cc \
 	Src/xmippSpider.cc \
 	Src/xmippVirus.cc \
 	Src/xmippCrisp.cc \
@@ -15,12 +17,24 @@ libXmippInterface_@host_os@_la_SOURCES = Src/xmippAPH.cc \
 	Src/xmippCCP4.cc \
 	Src/xmippEM.cc
 
-libXmippInterfaceINRIA_@host_os@_la_SOURCES = Src/xmippINRIA.cc
+libXmippInterfaceINRIA_@host_os@_la_SOURCES = \
+	Src/xmippINRIA.cc
 
-EXTRA_DIST = xmippAPH3D.hh        xmippCrisp.hh  xmippOpenDX.hh  xmippVrml.hh \
-	xmippAPH.hh          xmippINRIA.hh  xmippSpider.hh \
-	xmippAPHorigmerg.hh  xmippJDL.hh    xmippVirus.hh xmippOpenDXang.hh \
-	xmippCCLattice_IO.hh xmippCCP4.hh xmippEM.hh
+EXTRA_DIST = \
+	xmippAPH3D.hh \
+	xmippCrisp.hh \
+	xmippOpenDX.hh \
+	xmippVrml.hh \
+	xmippAPH.hh \
+	xmippINRIA.hh \
+	xmippSpider.hh \
+	xmippAPHorigmerg.hh \
+	xmippJDL.hh \
+	xmippVirus.hh \
+	xmippOpenDXang.hh \
+	xmippCCLattice_IO.hh \
+	xmippCCP4.hh \
+	xmippEM.hh
 
 INCLUDES = -I$(top_srcdir)/Lib
 
