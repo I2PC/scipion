@@ -1,9 +1,9 @@
 /** @defgroup MultidimMacros Macros for all multidimensional arrays
- * 
+ *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
  * checking on the correctness of the operation you are performing.
- * 
+ *
  * Speed comes from three facts: first, they are macros and no function call is
  * performed (although most of the critical functions are inline functions),
  * there is no checking on the correctness of the operation (it could be wrong
@@ -12,27 +12,27 @@
  * temporary vectors
  */
 
-/** Access to dimension (size)
+/** Access to dimension (size).
  * @ingroup MultidimMacros
  */
 #ifndef MULTIDIM_SIZE
 #define MULTIDIM_SIZE(v) ((v).__dim)
 #endif
 
-/** Dimension of the space in which it is defined (1D, 2D or 3D)
+/** Dimension of the space in which it is defined (1D, 2D or 3D).
  * @ingroup MultidimMacros
  */
 #ifndef SPACE_DIM
 #define SPACE_DIM(v) ((v).__spcdim)
 #endif
 
-/** For all elements in the array
+/** For all elements in the array.
  * @ingroup MultidimMacros
- * 
+ *
  * This macro is used to generate loops for the array in an easy manner. It
  * defines an internal index 'i' which ranges the array using its physical
  * definition
- * 
+ *
  * @code
  * FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
  *     std::cout << MULTIDIM_ELEM(v, i) << " ";
@@ -43,13 +43,13 @@
     for (int i=0; i<(v).__dim; i++)
 #endif
 
-/** For all elements in the array (pointer version)
+/** For all elements in the array (pointer version).
  * @ingroup MultidimMacros
- * 
+ *
  * This macro is used to generate loops for the array in an easy manner. It
  * uses an external pointer 'ptr' which ranges the array using its physical
  * definition
- * 
+ *
  * @code
  * T* ptr;
  * FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr(v)
@@ -61,12 +61,12 @@
     for (int i=0, ptr=__m; i<(v).__dim; i++, ptr++)
 #endif
 
-/** Vector element: Physical access
+/** Vector element: Physical access.
  * @ingroup MultidimMacros
- * 
+ *
  * Be careful because this is physical access, usually vectors follow the C
  * convention of starting index==0
- * 
+ *
  * @code
  * MULTIDIM_ELEM(v, 0) = 1;
  * val = MULTIDIM_ELEM(v, 0);
@@ -76,11 +76,11 @@
 #define MULTIDIM_ELEM(v, i) ((v).__m[(i)])
 #endif
 
-/** Array access
+/** Array access.
  * @ingroup MultidimMacros
- * 
+ *
  * This macro gives you access to the array (T *)
- * 
+ *
  * @code
  * std::cout << "This is an int *" << MULTIDIM_ARRAY(v) << std::endl;
  * @endcode
@@ -91,9 +91,9 @@
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
 
-/** Conversion from one type to another
+/** Conversion from one type to another.
  * @ingroup MultidimFunctions
- * 
+ *
  * If we have an integer vector and we need a double one, we can use this
  * function. The conversion is done through a type casting of each element
  */

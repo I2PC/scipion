@@ -6,337 +6,472 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-/*****************************************************************************/
-/* SEL FILES                                                                 */
-/*****************************************************************************/
-#ifndef _XMIPPSELFILES_HH
-   #define _XMIPPSELFILES_HH
+#ifndef XMIPPSELFILES_H
+#define XMIPPSELFILES_H
 
 #include <string>
 #include <vector>
+
 #include "xmippFuncs.hh"
 #include "xmippImages.hh"
 
-// Possible labels for images inside a .Sel file
-// Forward declarations ====================================================
+// Forward declaration
 class SelFile;
 
-/**@name Selection Files */
-//@{
+/// @defgroup SelFiles Selection files
 
-/*****************************************************************************/
-/* LINE OF A SEL FILE                                                        */
-/*****************************************************************************/
 /** Line of a selection file.
-    The selection file is a collection of (STL list) of Selection
-    Lines. This class needn't be accessed in common programs since the
-    SelFile class offers most of the used functions. However, the
-    class is shown in case you may need to access specifically to any
-    of the Selection Line functions alone. The SelLines can be either
-    comments or data line, they might be of other internal used types
-    (not assigned or to be discarded), but you may assume that if a
-    line is not a comment nor a data line then it can be skipped.
-*/
-class SelLine {
+ * @ingroup SelFiles
+ *
+ * The selection file is a collection of (STL list) of Selection Lines. This
+ * class needn't be accessed in common programs since the SelFile class offers
+ * most of the used functions. However, the class is shown in case you may need
+ * to access specifically to any of the Selection Line functions alone. The
+ * SelLines can be either comments or data line, they might be of other
+ * internal used types (not assigned or to be discarded), but you may assume
+ * that if a line is not a comment nor a data line then it can be skipped.
+ */
+class SelLine
+{
 public:
-   typedef enum {DISCARDED=-1, ACTIVE=1} Label;
-   typedef enum {NOT_CONSIDERED=-1, NOT_ASSIGNED=0, DATALINE=1, COMMENT=2}
-      Line_Type;
+    typedef enum
+    {
+        DISCARDED = -1,
+        ACTIVE = 1
+    } Label;
+
+    typedef enum
+    {
+        NOT_CONSIDERED = -1,
+        NOT_ASSIGNED = 0,
+        DATALINE = 1,
+        COMMENT = 2
+    } Line_Type;
 
 private:
-   Line_Type line_type;
-   string text;                           // if a comment, the whole line
-                                          // if a file, the filename only
-   Label label;                           // if a file, the label associated
-   int number;                            // if a file, the original number
+    Line_Type line_type;
+    std::string text;
+    Label label;
+    int number;
 
-   friend class SelFile;
+    friend class SelFile;
+
 public:
-   /**@name Constructors */
-   //@{
-   /** Empty Constructor.
-       The selection line is created with no type (neither comment or data).
-       You must use the function \Ref{set_type} to assign a type. */
-   SelLine(): line_type(NOT_ASSIGNED) {};
-   
-   /** Copy constructor. */
-   SelLine(const SelLine &l);
-   
-   /** Assignment. */
-   SelLine& operator = (const SelLine &SL);
+    /// @defgroup SelFilesConstructors Constructors
+    /// @ingroup SelFiles
 
-   /** Another function for assigment.*/
-   void assign (const SelLine &SL);
-   //@}
+    /** Empty Constructor.
+     * @ingroup SelFilesConstructors
+     *
+     * The selection line is created with no type (neither comment or data).
+     * You must use the function @p set_type to assign a type.
+     */
+    SelLine() : line_type(NOT_ASSIGNED) {}
 
-   /**@name Structure information */
-   //@{
-   /// Get text of this line
-   string get_text() {return text;}
-   
-   /// Get label of this line
-   short get_label() {return label;}
+    /** Copy constructor.
+     * @ingroup SelFilesConstructors
+     */
+    SelLine(const SelLine& line);
 
-   /// Get number of this line
-   int get_number() {return number;}
-  
-   /** True if current line is a comment. */
-   int Is_comment() {return line_type==COMMENT;}
+    /** Assignment.
+     * @ingroup SelFilesConstructors
+     */
+    SelLine& operator=(const SelLine& line);
 
-   /** True if current line is a comment. */
-   int Is_data() {return line_type==DATALINE;}
+    /** Another function for assigment.
+     * @ingroup SelFilesConstructors
+     */
+    void assign(const SelLine& line);
 
-   /** Set type.
-       Only the comment flag is set, the possible data is not lost.
-       The comment text is not touched. The valid types are DATALINE,
-       COMMENT, NOT_ASSIGNED, and NOT_CONSIDERED. */
-   void set_type(Line_Type _line_type) {line_type=_line_type;}
+    /// @defgroup SelFilesStructure Structure information
+    /// @ingroup SelFiles
 
-   /// Set number of this line
-   void set_number(int _nn) {number=_nn;}
+    /** Get text of this line.
+     * @ingroup SelFilesStructure
+     */
+    std::string get_text() { return text; }
 
-   //@}
+    /** Get label of this line.
+     * @ingroup SelFilesStructure
+     */
+    short get_label() { return label; }
 
-   /**@name Useful operations */
-   //@{
-   /** l1<l2.
-       l1 is lesser than l2 if line_type(l1)<line_type(l2) or
-       if they are equal if the text of l1 is lesser than the text
-       of l2. The order of the line types are NOT_CONSIDERED,
-       NOT_ASSIGNED, DATALINE, COMMENT */
-   friend bool operator < (const SelLine &l1, const SelLine &l2);
+    /** Get number of this line.
+     * @ingroup SelFilesStructure
+     */
+    int get_number() { return number; }
 
-   // Compare two .sel files
-   friend SelFile compare(SelFile &SF1, SelFile &SF2);
-   
-   // Find an image inside a list
-   friend vector<SelLine>::iterator find(vector<SelLine> &text,
-      string &img_name);
-   //@}
-   
-   /**@name I/O */
-   //@{
-   /** Show a Selection Line */
-   friend ostream& operator << (ostream& o, const SelLine &SFL);
-   
-   /** Read a Selection Line.
-       An exception is thrown if the line doesn't meet the Selection
-       File specifications. */
-   friend istream& operator >> (istream& o, SelLine &SFL);
-   //@}
+    /** True if current line is a comment.
+     * @ingroup SelFilesStructure
+     */
+    int Is_comment() { return line_type == COMMENT; }
+
+    /** True if current line is data.
+     * @ingroup SelFilesStructure
+     */
+    int Is_data() { return line_type == DATALINE; }
+
+    /** Set type.
+     * @ingroup SelFilesStructure
+     *
+     * Only the comment flag is set, the possible data is not lost. The comment
+     * text is not touched. The valid types are DATALINE, COMMENT, NOT_ASSIGNED,
+     * and NOT_CONSIDERED.
+     */
+    void set_type(Line_Type type) { line_type = type; }
+
+    /** Set number of this line.
+     * @ingroup SelFilesStructure
+     */
+    void set_number(int n) { number = n; }
+
+    /// @defgroup SelFilesOperations Useful operations
+    /// @ingroup SelFiles
+
+    /** Lesser than.
+     * @ingroup SelFilesOperations
+     *
+     * l1 is lesser than l2 if line_type(l1)<line_type(l2) or if they are equal
+     * if the text of l1 is lesser than the text of l2. The order of the line
+     * types are NOT_CONSIDERED, NOT_ASSIGNED, DATALINE, COMMENT
+     */
+    friend bool operator<(const SelLine& l1, const SelLine& l2);
+
+    /** Compare two SelFiles.
+     * @ingroup SelFilesOperations
+     */
+    friend SelFile compare(SelFile& SF1, SelFile& SF2);
+
+    /** Find an image inside a list.
+     * @ingroup SelFilesOperations
+     */
+    friend std::vector< SelLine >::iterator find(std::vector< SelLine >& text,
+        string& img_name);
+
+    /// @defgroup SelFilesIO I/O
+    /// @ingroup SelFiles
+
+    /** Show a SelLine.
+     * @ingroup SelFilesIO
+     */
+    friend std::ostream& operator<<(std::ostream& o, const SelLine& line);
+
+    /** Read a Selection Line.
+     * @ingroup SelFilesIO
+     *
+     * An exception is thrown if the line doesn't meet the SelFile
+     * specifications.
+     */
+    friend std::istream& operator>>(std::istream& i, SelLine& lin);
 };
 
-/*****************************************************************************/
-/* SEL FILE                                                                  */
-/*****************************************************************************/
-/** Selection Files.
-   The sel file is an object which keeps in memory all the information
-   associated to a .sel file (see \Ref{Selection Files} for detailed information
-   about the file structure). With respect to the object structure you can
-   think of the selection file as a file loaded in memory with an internal
-   "pointer" (in fact is an STL iterator) pointing to
-   the current line considered at this moment. You can move forward
-   this pointer or set it to the beginning of the file, jump over any
-   number of images with a certain label. There are only two valid labels:
-   ACTIVE and DISCARDED.
-*/   
-class SelFile {
-   // Structure ------------------------------------------------------------
-   FileName                  fn_sel;        // Filename of the .sel
-   vector<SelLine>           text_line;     // The whole file is inside
-   int                       no_imgs;       // Number of valid images inside
-   vector<SelLine>::iterator current_line;  // "pointer" to current line
-                                            // within file
+/** Selection File.
+ * @ingroup SelFiles
+ *
+ * The SelFile is an object which keeps in memory all the information
+ * associated to a @p .sel file.
+ */
+class SelFile
+{
+    // Filename of the .sel
+    FileName fn_sel;
 
-   // Private procedures ---------------------------------------------------
-   vector<SelLine>::iterator find(        // "pointer" to that image inside
-      string img_name);                   // .sel file. If the image is not
-                                          // there then a "pointer" to past-
-                                          // last element is returned
-   void adjust_to_label                   // given any current_line position
-      (SelLine::Label label);             // this function moves until
-                                          // the next entry with the label
-                                          // selected. If label==0 then to
-                                          // the next not DISCARDED
+    // The whole file is inside
+    std::vector< SelLine > text_line;
+
+    // Number of valid images
+    int no_imgs;
+
+    // Pointer to current line
+    std::vector< SelLine >::iterator current_line;
+
+    std::vector< SelLine >::iterator find(std::string img_name);
+    void adjust_to_label(SelLine::Label label);
 
 public:
-   // Procedures -----------------------------------------------------------
-   /**@name Constructors*/
-   //@{
-   /** Empty constructor.
-       There is no file associated yet.
-       \\Ex: SelFile SF; */
-   SelFile();
-   
-   /** Constructor with filename, read from disk.
-       The given name is loaded (method read) as a selection file.
-       \\Ex: SelFile SF("g1t.sel");
-       @see read*/
-   SelFile(FileName sel_name) {read(sel_name);}
-   
-   /** Copy constructor.
-       \\Ex: SelFile SF2(SF1); */
-   SelFile(const SelFile &SF);
 
-   /** Reserve memory for N entries.
-       It doesn't matter if entries are comments or data. It
-       is very important to reserve memory if you don't want a
-       memory explosion. The current line is set to the beginning of the
-       selfile*/
-   void reserve(int N) {text_line.reserve(N); current_line=text_line.begin();}
+    /** Empty constructor.
+     * @ingroup SelFilesConstructors
+     *
+     * There is no file associated yet.
+     *
+     * @code
+     * SelFile sel;
+     * @endcode
+     */
+    SelFile();
 
-   /** Empties the object.
-       \\Ex: SF.clear(); */
-   void clear();
-   //@}
+    /** Constructor with filename, read from disk.
+     * @ingroup SelFilesConstructors
+     *
+     * The given name is loaded (method @p read) as a selection file.
+     *
+     * @code
+     * SelFile sel("g1t.sel");
+     * @endcode
+     */
+    SelFile(FileName name) { read(name); }
 
-   // Some basic operators ..................................................
-   /**@name Some operators*/
-   //@{
-   /** Assignment.
-       \\ Ex: SF2=SF1; */
-   SelFile& operator =(const SelFile &SF);
+    /** Copy constructor.
+     * @ingroup SelFilesConstructors
+     *
+     * @code
+     * SelFile sel2(sel1);
+     * @endcode
+     */
+    SelFile(const SelFile& sel);
 
-   /** Another function for assigment.*/
-   void assign (const SelFile &SF);
+    /** Reserve memory for N entries.
+     * @ingroup SelFilesConstructors
+     *
+     * It doesn't matter if entries are comments or data. The current line is
+     * set to the beginning of the SelFile
+     */
+    void reserve(int n) { text_line.reserve(n); current_line =
+        text_line.begin(); }
 
-   /** Show a selection file.
-       Shows all the lines either they are comments, active images or
-       discarded images. A new line is printed at the end.
-       \\ Ex: cout << SF; */
-   friend ostream& operator << (ostream& o, const SelFile &SF);
-   //@}
+    /** Empties the object.
+     * @ingroup SelFilesConstructors
+     *
+     * @code
+     * sel.clear();
+     * @endcode
+     */
+    void clear();
 
-   // Managing files from disk .............................................
-   /**@name Managing files in disk*/
-   //@{
-   /** Read a file from disk.
-       The old information on the variable is overwritten. An exception
-       is thrown if the file doesn't exist. Lines which do not fit the
-       comment structure or the "image-label" structure are ignored.
-       The image name is limited to MAX_FILENAME_LENGTH characters.
-       After reading the selfile pointer is moved to the first ACTIVE
-       image. 
-       \\Ex: SF.read("g2t.sel"); */
-   void read(const FileName &sel_name, int overrinding=1);
-   
-   /** Append a file from disk to an already read one.
-       The old information on the variable is not lost. All lines in
-       the selection file to be read are appened at the end of the
-       already read one without any kind of check.
-       \\ Ex: SF.read("g1t.sel"); SF.append("g2t.sel"); */
-   void append(const FileName &sel_name) {read(sel_name,0);}
-   
-   /** Merge a file from disk with an already read one.
-       All lines (except the comments) in the selection file to be read
-       are either added at the end of the already read one if they
-       are not present at them, either ignored if they are already
-       present, or marked with a comment if the corresponding
-       image name is present in both files but with different labels
-       (active, discarded), in this case the image remain active
-       but a comment in the preceeding line informs you of the situation.
-       \\Ex: SF.read("g1t.sel"); SF.merge("g2t.sel"); */
-   void merge(const FileName &sel_name);
-   
-   /** Merge this file with another selfile. */
-   void merge(SelFile &SF);
+    /// @defgroup SelFilesOperators Some operators
+    /// @ingroup SelFiles
 
-   /** Merge two already read files.
-       \\ Ex: SF1.read("g1t.sel"); SF2.merge("g2t.sel"); SF1=SF1+SF2; */
-   SelFile  operator +(SelFile &SF);
-   
-   /** Split this file into two random halfes */
-   void split_in_two(SelFile &SF1,SelFile &SF2);
+    /** Assignment.
+     * @ingroup SelFilesOperators
+     *
+     * @code
+     * SelFile sel2 = sel1;
+     * @endcode
+     */
+    SelFile& operator=(const SelFile& sel);
 
-   /** Split this file into N random parts of approximately the same size. */
-   void split_in_N(int N, vector<SelFile> &SF);
+    /** Another function for assigment.
+     * @ingroup SelFilesOperators
+     */
+    void assign(const SelFile& sel);
 
-  /** For MPI-parallelized runs: select relevant part of selfile for
-      that rank */
-  void mpi_select_part(int rank, int size, int &num_img_tot);
+    /** Show a selection file.
+     * @ingroup SelFilesOperators
+     *
+     * Shows all the lines either they are comments, active images or discarded
+     * images. A new line is printed at the end.
+     *
+     * @code
+     * std::cout << sel;
+     * @endcode
+     */
+    friend std::ostream& operator<<(std::ostream& o, const SelFile& sel);
 
-   /** Write a selection file to disk.
-       If you give a name then it becomes like a "Save as ..." and from
-       this point on the name of the selection file has changed.
-       \\Ex: SF.write(); ---> Save
-       \\Ex: SF.write("g3t.sel") ---> Save as ... */
-   void write(const FileName &sel_name="");
-   //@}
+    /// @defgroup SelFilesDisk Managing files in disk
+    /// @ingroup SelFiles
 
-   // Moving the current_line "pointer" ....................................
-   /**@name Moving the current line "pointer"
-      See the get information section to know how to extract the information
-      from the current selected line */
-   //@{
-   /** Go to the beginning of the file.
-       Moves the pointer to the first line of the file either it is
-       a comment, an active image or a discarded one.
-       \\Ex: SF.go_beginning(); */
-   void go_beginning() {current_line=text_line.begin();}
-   
-   /** Go to the first ACTIVE image.
-       Moves the pointer to the first active image in the file.
-       \\Ex: SF.go_first_ACTIVE(); */
-   void go_first_ACTIVE() {go_beginning(); adjust_to_label(SelLine::ACTIVE);}
-   
-   /** Returns the name of the next image with a certain label.
-       The default label is ACTIVE, ie, by default this function returns
-       the name of the next ACTIVE image. But you can give as label
-       DISCARDED and the fucntion will return the name of the next DISCARDED
-       image starting at the current position of the current_line "pointer".
-       If the file is at the end of the selection file, "" is returned.
-       After this function the "pointer" is actually pointing to the next
-       line following the returned image name.
-       \\ Ex: fn=SF.NextImg(); ---> Next active image
-       \\ Ex: fn=SF.NextImg(SelLine::DISCARDED); ---> Next discarded image */
-   string NextImg(SelLine::Label label=SelLine::ACTIVE);
-   
-   /** Move the current pointer to the next image, disregarding its label.
-       It doesn't matter if next image is ACTIVE or DISCARDED, this function
-       moves the current pointer to it.
-       \\ Ex: 
-       \begin{verbatim}
-       SF.go_beginning();
-       while (!SF.eof()) {
-          cout << SF.current();
-          SF.next();
-       }
-       \end{verbatim} */
-   void next() {current_line++;}
+    /** Read a file from disk.
+     * @ingroup SelFilesDisk
+     *
+     * The old information on the variable is overwritten. An exception is
+     * thrown if the file doesn't exist. Lines which do not fit the comment
+     * structure or the "image-label" structure are ignored. The image name is
+     * limited to MAX_FILENAME_LENGTH characters. After reading the selfile
+     * pointer is moved to the first ACTIVE image.
+     *
+     * @code
+     * sel.read("g2t.sel");
+     * @endcode
+     */
+    void read(const FileName& name, int overrinding=1);
 
-   /** Jump over a number of lines with a given label.
-       Starting from the current_line "pointer" this function skips 
-       a given number of entries with a certain label. For instance,
-       jump over 1 active image is to jump to the next active image.
-       Jump over 2 active images is to jump to the next of the next
-       active image, and so on. You can give as label DISCARDED, too.
-       The number of images to jump must always be positive, the jumpings
-       cannot be done backwards.
-       \\Ex: SF.jump(2); ---> Jump over 2 active images
-       \\Ex: SF.jump(2,SelLine::ACTIVE); ---> The same
-       \\Ex: SF.jump(2,SelLine::DISCARDED) ---> Jump over 2 discarded images
-       @see get_current_file */
-   void jump(int how_many, SelLine::Label label=SelLine::ACTIVE);
-   /** Jump over a number of lines disregarding the label.
-       returns false if the end of the line is reached before the number of requested line jumps */
-   bool jump_lines(int how_many);
-   
+    /** Append a file from disk to an already read one.
+     * @ingroup SelFilesDisk
+     *
+     * The old information on the variable is not lost. All lines in the
+     * selection file to be read are appened at the end of the already read one
+     * without any kind of check.
+     *
+     * @code
+     * sel.read("g1t.sel");
+     * sel.append("g2t.sel");
+     * @endcode
+     */
+    void append(const FileName& name) { read(name, 0); }
+
+    /** Merge a file from disk with an already read one.
+     * @ingroup SelFilesDisk
+     *
+     * All lines (except the comments) in the selection file to be read are
+     * either added at the end of the already read one if they are not present
+     * at them, either ignored if they are already present, or marked with a
+     * comment if the corresponding image name is present in both files but
+     * with different labels (active, discarded), in this case the image
+     * remains active but a comment in the preceeding line informs you of the
+     * situation.
+     *
+     * @code
+     * sel.read("g1t.sel");
+     * sel.merge("g2t.sel");
+     * @endcode
+     */
+    void merge(const FileName& name);
+
+    /** Merge this file with another selfile.
+     * @ingroup SelFilesDisk
+     */
+    void merge(SelFile& sel);
+
+    /** Merge two already read files.
+     * @ingroup SelFilesDisk
+     *
+     * @code
+     * sel1.read("g1t.sel");
+     * sel2.merge("g2t.sel");
+     * sel1 = sel1 + sel2;
+     * @endcode
+     */
+    SelFile operator+(SelFile& sel);
+
+    /** Split this file into two random halves.
+     * @ingroup SelFilesDisk
+     */
+    void split_in_two(SelFile& sel1, SelFile& sel2);
+
+    /** Split this file into N random parts of approximately the same size.
+     * @ingroup SelFilesDisk
+     */
+    void split_in_N(int N, std::vector< SelFile >& parts);
+
+    /** For MPI-parallelized runs: select relevant part of selfile for that
+     * rank.
+     * @ingroup SelFilesDisk
+     */
+    void mpi_select_part(int rank, int size, int& num_img_tot);
+
+    /** Write a selection file to disk.
+     * @ingroup SelFilesDisk
+     *
+     * If you give a name then it becomes like a "Save as ..." and from this
+     * point on the name of the selection file has changed.
+     *
+     * @code
+     * sel.write(); // Save
+     * sel.write("g3t.sel"); // Save as ...
+     * @endcode
+     */
+    void write(const FileName& sel_name="");
+
+    /// @defgroup SelFilesPointer  Moving the current line "pointer"
+    /// @ingroup SelFiles
+
+    /** Go to the beginning of the file.
+     * @ingroup SelFilesPointer
+     *
+     * Moves the pointer to the first line of the file either it is a comment,
+     * an active image or a discarded one.
+     *
+     * @code
+     * sel.go_beginning();
+     * @endcode
+     */
+    void go_beginning() { current_line = text_line.begin(); }
+
+    /** Go to the first ACTIVE image.
+     * @ingroup SelFilesPointer
+     *
+     * Moves the pointer to the first active image in the file.
+     *
+     * @code
+     * sel.go_first_ACTIVE();
+     * @endcode
+     */
+    void go_first_ACTIVE()
+    {
+        go_beginning();
+        adjust_to_label(SelLine::ACTIVE);
+    }
+
+    /** Returns the name of the next image with a certain label.
+     * @ingroup SelFilesPointer
+     *
+     * The default label is ACTIVE, ie, by default this function returns the
+     * name of the next ACTIVE image. But you can give as label DISCARDED and
+     * the function will return the name of the next DISCARDED image starting
+     * at the current position of the current_line "pointer". If the file is at
+     * the end of the selection file, "" is returned. After this function the
+     * "pointer" is actually pointing to the next line following the returned
+     * image name.
+     *
+     * @code
+     * name = sel.NextImg();  // Next active image
+     * name = sel.NextImg(SelLine::DISCARDED); // Next discarded image
+     * @endcode
+     */
+    std::string NextImg(SelLine::Label label=SelLine::ACTIVE);
+
+    /** Move the current pointer to the next image, disregarding its label.
+     * @ingroup SelFilesPointer
+     *
+     * It doesn't matter if next image is ACTIVE or DISCARDED, this function
+     * moves the current pointer to it.
+     *
+     * @code
+     * sel.go_beginning();
+     * while (!sel.eof())
+     * {
+     *     std::cout << sel.current();
+     *     sel.next();
+     * }
+     * @endcode
+     */
+    void next() { current_line++; }
+
+    /** Jump over a number of lines with a given label.
+     * @ingroup SelFilesPointer
+     *
+     * Starting from the current_line "pointer" this function skips a given
+     * number of entries with a certain label. For instance, jump over 1 active
+     * image is to jump to the next active image. Jump over 2 active images is
+     * to jump to the next of the next active image, and so on. You can give as
+     * label DISCARDED, too. The number of images to jump must always be
+     * positive, the jump cannot be done backwards.
+     *
+     * @code
+     * sel.jump(2); // Jump over 2 active images
+     * sel.jump(2, SelLine::ACTIVE); // The same
+     * sel.jump(2, SelLine::DISCARDED) // Jump over 2 discarded images
+     * @endcode
+     */
+    void jump(int count, SelLine::Label label=SelLine::ACTIVE);
+
+    /** Jump over a number of lines disregarding the label.
+     * @ingroup SelFilesPointer
+     *
+     * Returns false if the end of the line is reached before the number of
+     * requested line jumps
+     */
+    bool jump_lines(int count);
+
+
+
    /** Move "pointer" to a certain image filename.
        This function searches for an image name within the file, and
        locate the current line "pointer" pointing to that line. If
@@ -391,7 +526,7 @@ public:
              selection file\n"; */
    int exists(string img_name)
        {return find(img_name)!=text_line.end();}
-   
+
    /** Number of images inside a selection file with a certain label.
        This function returns the number of images inside the
        selection file with a given label. By default this label
@@ -406,32 +541,32 @@ public:
        within a file.
        \\ Ex: cout << "There are " << SF.LineNo() << " lines in this file\n"; */
    int LineNo();
-   
+
    /** Returns the size of the images inside.
        The filenames within a selection file are supposed to be for
        SPIDER images, this function opens one of the images (an active one)
        and returns the size of that image, supposed to be the same for
        the rest of the images in the selection file.
-       
+
        An exception is thrown if the first valid image in the sel file,
        doesn't exist in the disk or it is not a XMIPP image.
        \\ Ex: SF.ImgSize(Ydim,Xdim); */
    void ImgSize(int &Ydim, int &Xdim);
-   
+
    /** Returns the extension of the files inside.
        This function returns the extension of the first active file.*/
    FileName FileExtension();
-   
+
    /** Returns the maximum length of an active filename inside the selfile.
        The current pointer is not moved. */
    int MaxFileNameLength();
 
    /** Get the filename of the current line.
-       If the current line "pointer" is at the end of the file or 
+       If the current line "pointer" is at the end of the file or
        is pointing to a comment then "" is returned.
        \\Ex: fn=SF.get_current_file(); */
    string get_current_file();
-   
+
    // Get current line
    SelLine get_current_line() {return *current_line;}
 
@@ -440,7 +575,7 @@ public:
        of ACTIVE files, then "" is returned.
        \\Ex: fn=SF.get_file_number(i); */
    string get_file_number(int i);
-   
+
    /** Gets statistics of the active images in the sel file
        it returns the average image, the minimum and maximum.
        \\Ex: SF.get_statistics(aveImg, min, max); */
@@ -459,14 +594,14 @@ public:
        line is now the following line.
        \\ Ex: SF.remove("g1ta0001"); */
    void remove(string img_name);
-   
+
    /** Removes actual line.
        This function removes the current line, either it is a comment or
        an image. The current line "pointer" is moved to the following
        line in the file.
        \\ Ex: SF.remove_current(); */
    void remove_current();
-   
+
    /** Set label of an image.
        This function searches for an image inside the selection file and
        sets its label to the given label. If the image is not found in
@@ -508,12 +643,12 @@ public:
        before entering the function.
        \\ Ex: SF.insert_comment("This is a comment"); */
    void insert_comment(string comment);
-   
+
    /** Deletes all DISCARDED images from the selection file.
        The current line "pointer" is moved to the beginning of the file.
        \\Ex: SF.clean(); */
    void clean();
-   
+
    /** Deletes all comments from the selection file.
        The current line "pointer" is moved to the beginning of the file.
        \\Ex: SF.clean_comments(); */
@@ -530,7 +665,7 @@ public:
        is placed at the beginning of the file.
        \\ Ex: SF2=SF1.sort_by_filenames(); */
    SelFile sort_by_filenames();
-   
+
    /** Alter order in sel file.
        A new selection file with all the images of the actual object
        (either they are active or discarded) is created, but this
@@ -540,7 +675,7 @@ public:
        is placed at the beginning of the file.
        \\ SF2=SF1.randomize(); */
    SelFile randomize();
-   
+
    /** Discard randomly N images.
        A set of N images are discarded from the actual selection file.
        If N is equal or greater than the actual number of images
@@ -581,7 +716,7 @@ public:
                 A()=A().reverseY();
                 A.save(_fn_out);
              }
-             
+
              ...
              SF.for_all(&function1);               --> Same I/O image, apply
                                                    --> only to ACTIVE images
