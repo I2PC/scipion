@@ -1296,79 +1296,93 @@ void DocFile::for_all_lines(void (*f) (const matrix1D< double >&,
     go_beginning();
 }
 
-/* For a column ------------------------------------------------------------ */
-void DocFile::for_column(double (*f)(double), int _col, int _key0, int _keyF) {
-   current_line=m.begin();
-   vector<DocLine>::iterator last=m.end();
+void DocFile::for_column(double (*f)(double), int c, int key0, int keyF)
+{
+    current_line = m.begin();
+    std::vector< DocLine >::iterator last = m.end();
 
-   while (current_line!=last) {
-      if ((*current_line).line_type==DocLine::DATALINE)
-         if (_col==-1)
-            for (int i=0; i<(*current_line).data.size(); i++)
-                (*current_line).data[i]=f((*current_line).data[i]);
-         else
-            if (_col<(*current_line).data.size() &&
-                (_key0==-1 || (*current_line).key>=_key0) &&
-                (_keyF==-1 || (*current_line).key<=_keyF))
-                   (*current_line).data[_col]=f((*current_line).data[_col]);
-      current_line++;
-   }
-   renum();
-   go_beginning();
+    while (current_line != last)
+    {
+        if (current_line->line_type == DocLine::DATALINE)
+            if (c == -1)
+                for (int i=0; i<current_line->data.size(); i++)
+                    current_line->data[i] = f(current_line->data[i]);
+            else if (c < current_line->data.size() &&
+                (key0 == -1 || current_line->key >= key0) &&
+                (keyF == -1 || current_line->key <= keyF))
+                    current_line->data[c] = f(current_line->data[c]);
+
+        current_line++;
+    }
+    renum();
+    go_beginning();
 }
 
-/* Read document file with Euler angles ------------------------------------ */
-int read_Euler_document_file(FileName fn, string ang1, string ang2,
-    string ang3, DocFile &DF) {
-      DocFile DFaux(fn);
-      DocLine DL1, DL2;
+int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
+    std::string ang3, DocFile& doc)
+{
+    DocFile aux(name);
+    DocLine line1, line2;
 
-      // Set DL2 as a data line and go to the beginning of file
-      DL2.set_type(DocLine::DATALINE);
-      DFaux.go_beginning();
+    // Set line2 as a data line and go to the beginning of file
+    line2.set_type(DocLine::DATALINE);
+    aux.go_beginning();
 
-      // Macro to assign the angle from DL1 in the correcto place of DL2
-      // The angle order in DL2 is (rot, tilt, psi)
-      #define assign_in_correct_place_of_DL2(angle_descr,angle_index) \
-         switch (angle_descr[0]) { \
-            case ('r'): DL2.set(0,DL1[angle_index]); break; \
-            case ('t'): DL2.set(1,DL1[angle_index]); break; \
-            case ('p'): DL2.set(2,DL1[angle_index]); break; \
-         }
+    // Macro to assign the angle from line1 in the correct place of line2
+    // The angle order in line2 is (rot, tilt, psi)
+    #define assign_in_correct_place_of_line2(angle_descr,angle_index) \
+        switch (angle_descr[0]) \
+        { \
+            case ('r'): line2.set(0, line1[angle_index]); break; \
+            case ('t'): line2.set(1, line1[angle_index]); break; \
+            case ('p'): line2.set(2, line1[angle_index]); break; \
+        }
 
-      // Read the whole file
-      while (!DFaux.eof()) {
-         DL1=DFaux.get_current_line();
+    // Read the whole file
+    while (!aux.eof())
+    {
+        line1 = aux.get_current_line();
 
-         // If DL1 type is neither DATALINE nor COMMENT the line is skipped!!
-         if (DL1.Is_data()) {
+        // If line1 type is neither DATALINE nor COMMENT the line is skipped!!
+        if (line1.Is_data())
+        {
             // Reorder the angles and insert
-            assign_in_correct_place_of_DL2(ang1,0);
-            assign_in_correct_place_of_DL2(ang2,1);
-            assign_in_correct_place_of_DL2(ang3,2);
-            DF.append_line(DL2);
-         } else if (DL1.Is_comment())
+            assign_in_correct_place_of_line2(ang1, 0);
+            assign_in_correct_place_of_line2(ang2, 1);
+            assign_in_correct_place_of_line2(ang3, 2);
+
+            doc.append_line(line2);
+
+         }
+         else if (line1.Is_comment())
             // Insert the comment
-            DF.append_line(DL1);
+            doc.append_line(line1);
 
-         // Next line
-         DFaux.next();
-      }
+        // Next line
+        aux.next();
+    }
 
-      return DF.dataLineNo();
+    return doc.dataLineNo();
 }
 
-/* Select images ----------------------------------------------------------- */
-void select_images(DocFile &DF, SelFile &SF, int col,
-   bool en_limit0, double limit0, bool en_limitF, double limitF) {
-   SF.go_beginning();
-   DF.go_first_data_line();
-   while (!SF.eof()) {
-      if (SF.Is_ACTIVE()) {
-         if (en_limit0 && DF(col)<limit0) SF.set_current(SelLine::DISCARDED);
-         if (en_limitF && DF(col)>limitF) SF.set_current(SelLine::DISCARDED);
-      }
-      SF.next();
-      DF.next_data_line();
-   }
+void select_images(DocFile& doc, SelFile& sel, int col, bool en_limit0,
+    double limit0, bool en_limitF, double limitF)
+{
+    sel.go_beginning();
+    doc.go_first_data_line();
+
+    while (!sel.eof())
+    {
+        if (sel.Is_ACTIVE())
+        {
+            if (en_limit0 && doc(col) < limit0)
+                sel.set_current(SelLine::DISCARDED);
+
+            if (en_limitF && doc(col) > limitF)
+                sel.set_current(SelLine::DISCARDED);
+        }
+
+        sel.next();
+        doc.next_data_line();
+    }
 }
