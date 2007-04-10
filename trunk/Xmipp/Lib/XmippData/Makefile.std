@@ -20,7 +20,7 @@ endif
 
 SRC_OBJS = Src/NumericalRecipes.o Src/xmippFuncs.o Src/xmippArgs.o\
            Src/xmippDelTriang.o\
-           Src/xmippMatrices1D.o Src/xmippMatrices2D.o \
+           Src/xmippMatrices1D.o Src/xmippMatrices2D.o Src/xmippIntegration.o  \
            Src/xmippMatrices3D.o Src/xmippSelFiles.o Src/xmippHistograms.o \
            Src/xmippHeader.o Src/xmippImages.o Src/xmippVolumes.o \
            Src/xmippDocFiles.o Src/xmippGeometry.o Src/xmippProjection.o \
