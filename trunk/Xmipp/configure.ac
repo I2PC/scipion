@@ -186,6 +186,8 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Compare_Selfiles/Makefile \
 	Applications/Src/CorrectPhase/Makefile \
 	Applications/Src/Correlation/Makefile \
+	Applications/Src/Create_surface/Makefile \
+	Applications/Src/Integration/Makefile \
 	Applications/Src/CpSel/Makefile Applications/Src/Create_phantom/Makefile \
 	Applications/Src/CTF_profile/Makefile \
 	Applications/Src/CTFViewer/Makefile \
