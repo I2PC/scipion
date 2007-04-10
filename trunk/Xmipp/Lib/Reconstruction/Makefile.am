@@ -53,7 +53,8 @@ libXmippRecons_@host_os@_la_SOURCES = \
 	Programs/Src/Prog_WBP.cc \
 	Programs/Src/Prog_projection_matching.cc \
 	Programs/Src/Prog_Enhance_PSD.cc \
-	Programs/Src/Prog_PDBPhantom.cc
+	Programs/Src/Prog_PDBPhantom.cc \
+	Programs/Src/Prog_create_surface.cc
 
 libXmippRecons_Interface_@host_os@_la_SOURCES = \
 	Programs/Src/Prog_Spots2RealSpace2D.cc \
@@ -118,6 +119,7 @@ EXTRA_DIST = \
 	Programs/Prog_symmetrize.hh \
 	Programs/Prog_WBP.hh \
 	Programs/Prog_PDBPhantom.hh \
+	Programs/Prog_create_surface.hh \
 	Programs/recons_misc.hh \
 	Programs/Src/Basic_art.inc \
 	projection.hh \
