@@ -301,6 +301,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	{
 	    img().resize(dim,dim);
 	    img().set_Xmipp_origin();
+	    img.clear_header();
 	}
 
 	if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
@@ -323,6 +324,8 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    if (output_classes)
 	    {
 		class_avgs.push_back(img);
+		img.rot()=ref_rot[nr_dir];
+		img.tilt()=ref_tilt[nr_dir];
 		class_selfiles.push_back(emptySF);
 	    }
 	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
@@ -501,11 +504,11 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     }
     if (output_classes)
     {
-	A.init_identity();
-	Euler_angles2matrix(0., 0.,opt_psi , A);
-	A(0, 2) = -opt_xoff;
-	A(1, 2) = -opt_yoff;
-	img().self_apply_geom_Bspline(A, 3, IS_INV,WRAP);
+	// Re-read image to get the untransformed image matrix again
+	img.read(fn_img);
+	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
+	img.set_originOffsets(opt_xoff,opt_yoff);
+	img().self_apply_geom_Bspline(img.get_transformation_matrix(),3,IS_INV,WRAP);
 	class_avgs[opt_dirno]()+=img();
 	class_avgs[opt_dirno].weight()+=1.;
 	class_selfiles[opt_dirno].insert(img.name());
