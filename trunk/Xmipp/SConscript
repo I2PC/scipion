@@ -530,6 +530,18 @@ AddProgram('phantom_create', 'Applications/Src/Create_phantom', '*.cc', [],
     ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction'],
     ['XmippData', 'XmippRecons'])
 
+# Create_surface
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('create_surface', 'Applications/Src/Create_surface', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'],
+    ['XmippData', 'XmippRecons', 'XmippInterface'])
+
+# Integration
+# FIXME XmippInterface is required, although it was not present in autoools
+AddProgram('Integration', 'Applications/Src/Integration', '*.cc', [],
+    ['Lib'], ['Lib/XmippData'],
+    ['XmippData'])
+
 # CTF_profile
 AddProgram('ctf_profile', 'Applications/Src/CTF_profile', '*.cc', [],
     ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction'],
