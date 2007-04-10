@@ -21,13 +21,6 @@ WorkingDir="ML3ref"
 """ The directory will not be deleted when only visualizing! 
 """
 DoDeleteWorkingDir=True
-# Batch submission command (use "" to launch without batch submission):
-""" This will depend on your queueing system., ask your system administrator...
-
-    Examples: LaunchJobCommand=\"bsub -q 1day\"
-      or, if you do not use a queueing system: LaunchJobCommand=\"\"
-"""
-LaunchJobCommand="" 
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -59,12 +52,36 @@ ExtraParamsMLalign2D=""
 DoParallel=False
 # Number of processors to use:
 MyNumberOfCPUs=10
-# {expert} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
+# A list of all available CPUs (the MPI-machinefile):
+""" Depending on your system, this file may be required. If not, just leave this entry blank.
+    If your job submission system uses an environment variable, just type it here with the leading $
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
-# {expert} Standard script to launch MPI-jobs:
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_rct.py"
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+
+#
+# This script ignores the following entries, which only serve for
+# GUI-assisted job submission and analysis ...
+#
+# {gui-submission} Command to launch jobs:
+""" For example:
+     * bsub -q 1day_parallel
+     * llsubmit standard_script.cmd
+"""
+SubmissionCommand="bsub -q 1day_parallel"
+# {gui-submission} Standard script to launch jobs:
 """ This will also depend on your system...
+    If your system does not require a script for job submission, leave this field blank
+    
     The simplest script consists of the following two lines:
 
     #!/usr/bin/env sh
@@ -76,18 +93,13 @@ MyMachineFile="/home2/bioinfo/scheres/machines.dat"
     More scripts for different batch systems can be found at:
     [Wiki link]
 """
-ParallelScript="/home2/bioinfo/scheres/submit_mpi_job.sh"
+SubmissionScript="/home2/bioinfo/scheres/submit_mpi_job.sh"
+
+
+
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
-""" This variable serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript="visualize_ML2D.py"
+# {end-of-header}
 #------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-# {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
-#------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
-#
 class ML2D_class:
 
     #init variables
@@ -104,9 +116,7 @@ class ML2D_class:
                  ExtraParamsMLalign2D,
                  DoParallel,
                  MyNumberOfCPUs,
-                 MyMachineFile,
-                 LaunchJobCommand,
-                 ParallelScript):
+                 MyMachineFile):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -123,8 +133,6 @@ class ML2D_class:
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
         self.MyMachineFile=MyMachineFile
-        self.LaunchJobCommand=LaunchJobCommand
-        self.ParallelScript=ParallelScript
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -220,9 +228,7 @@ if __name__ == '__main__':
                     ExtraParamsMLalign2D,
                     DoParallel,
                     MyNumberOfCPUs,
-                    MyMachineFile,
-                    LaunchJobCommand,
-                    ParallelScript)
+                    MyMachineFile)
     # close 
     ML2D.close()
 
