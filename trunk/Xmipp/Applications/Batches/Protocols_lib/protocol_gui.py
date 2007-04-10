@@ -27,6 +27,21 @@ class automated_gui_class:
         self.SetupGuiParameters()
         self.GuiFill()
         
+    def SetupGuiParameters(self):
+        if (self.is_setupgui):
+            self.guiwidth=680
+            self.guiheight=350
+            self.columnspantextlabel=2
+            self.columntextentry=2
+            self.column_pre=0
+            self.column_2d=1
+            self.column_3d=2
+        else:
+            self.guiwidth=630
+            self.guiheight=650
+            self.columnspantextlabel=3
+            self.columntextentry=3
+
     def ScriptRead(self):
         fh=open(self.scriptname,'r')
         self.script_header_lines=[]
@@ -139,21 +154,6 @@ class automated_gui_class:
                 self.variables[args[0]].append(morehelp)
 
 
-    def SetupGuiParameters(self):
-        if (self.is_setupgui):
-            self.guiwidth=680
-            self.guiheight=350
-            self.columnspantextlabel=2
-            self.columntextentry=2
-            self.column_pre=0
-            self.column_2d=1
-            self.column_3d=2
-        else:
-            self.guiwidth=700
-            self.guiheight=650
-            self.columnspantextlabel=3
-            self.columntextentry=3
-
     def GuiFill(self):
                        
         # Stuff to make the scrollbars work
@@ -193,25 +193,27 @@ class automated_gui_class:
 
         self.master.mainloop()
 
-
     def FillProtocolGui(self):
 
+        import os,sys
         self.morehelp=StringVar()
 
         # Script title
         headertext="GUI for Xmipp "
-        programname=sys.argv[1]
+        programname=os.path.basename(sys.argv[1])
         headertext+=programname.replace('.py','')
-        self.GuiAddSection(headertext,0)
-
+        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="blue")
         headertext="Executed in directory: "+str(os.getcwd())
-        self.GuiAddSection(headertext,1)
+        self.l2=Label(self.frame, text=headertext, font=("Helvetica", 14), fg="blue")
+        self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
+        self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
+        self.Addseperator(2)
 
         # Add all the variables in the script header
         self.widgetexpertlist=[]
         for var in self.vfields:
             if (self.variables[var][1]=="Section"):
-                self.GuiAddSection(self.variables[var][0],2)
+                self.GuiAddSection(self.variables[var][0])
             elif (self.variables[var][1]=="String"):
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
@@ -233,7 +235,6 @@ class automated_gui_class:
         # Add bottom row buttons
         self.buttonrow=(self.frame.grid_size()[1]+1)
         self.GuiAddRestProtocolButtons()
-
 
     def FillSetupGui(self):
 
@@ -276,24 +277,22 @@ class automated_gui_class:
         self.buttonrow=(self.frame.grid_size()[1]+1)
         self.GuiAddRestSetupButtons()
 
-    def GuiAddSection(self,label,size):
+    def GuiAddSection(self,label):
         row=(self.frame.grid_size()[1]+1)
         line="-----------------------------------------------------------"
-        if size==0:
-            self.l1=Label(self.frame, text=label, font=("Helvetica", 18), fg="blue")
-            self.l2=Label(self.frame, text=line, font=("Helvetica", 18), fg="blue")
-            self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
-            self.l2.grid(row=row+1, column=0,columnspan=5,sticky=EW)
-        if size==1:
-            self.l1=Label(self.frame, text=label, font=("Helvetica", 14), fg="blue")
-            self.l2=Label(self.frame, text="", font=("Helvetica", 14), fg="blue")
-            self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
-            self.l2.grid(row=row+1, column=0,columnspan=5,sticky=EW)
-        if size==2:
-            self.l1=Label(self.frame, text=label, fg="blue")
-            self.l2=Label(self.frame, text=line, fg="blue")
-            self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
-            self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
+        self.l1=Label(self.frame, text=label, fg="blue")
+        self.l2=Label(self.frame, text=line, fg="blue")
+        self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
+        self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
+
+    def Addseperator(self,row):
+        
+        self.l1=Label(self.frame,text="")
+        self.l1.grid(row=row)
+        self.l2=Frame(self.frame, height=2, bd=1, bg="blue",relief=RIDGE)
+        self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel+3,sticky=EW)
+        self.l3=Label(self.frame,text="")
+        self.l3.grid(row=row+2)
 
     def GuiAddLaunchButton(self,label,value,expert):
         if (expert=="setup-pre"):
@@ -316,13 +315,12 @@ class automated_gui_class:
     def GuiPositionLabel(self,label,default,variable,expert,morehelp):
         row=(self.frame.grid_size()[1]+1)
         if (expert=="expert"):
-            bg="yellow"
-        else:
-            bg="white"
-        self.l=Label(self.frame, text=label, bg=bg)
+            self.l=Label(self.frame, text=label, bg="yellow")
+        else: 
+            self.l=Label(self.frame, text=label)
         self.l.configure(wraplength=350)
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
-        self.r=Radiobutton(self.frame,text="More help",variable=self.morehelp, bg=bg,
+        self.r=Radiobutton(self.frame,text="What's this?",variable=self.morehelp,
                            value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
         if (morehelp!=""):
             self.r.grid(row=row, column=self.columntextentry+2, sticky=W)
@@ -380,22 +378,36 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.b)
 
     def GuiAddRestProtocolButtons(self):
+        self.Addseperator(self.buttonrow)
         if (self.expert_mode==True):
             text2=" Hide expert options "
         else:
             text2="Show expert options"
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow,column=0)
+        self.bGet.grid(row=self.buttonrow+3,column=0)
         self.button = Button(self.frame, text="QUIT", command=self.master.quit)
-        self.button.grid(row=self.buttonrow,column=1)
+        self.button.grid(row=self.buttonrow+3,column=1)
 
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
-            self.bGet.grid(row=self.buttonrow,column=2)
+            self.bGet.grid(row=self.buttonrow+3,column=2)
         self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
-        self.bGet.grid(row=self.buttonrow,column=3)
+        self.bGet.grid(row=self.buttonrow+3,column=3)
         self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
-        self.bGet.grid(row=self.buttonrow,column=4)
+        self.bGet.grid(row=self.buttonrow+3,column=4)
+
+        # Job submission command option
+        self.jobsubmission=StringVar()
+        morehelp="The job submission command for your queueing system. (e.g. bsub -q 1week)\n"
+        morehelp+="Leave empty to submit directly."
+        self.l=Label(self.frame, text="Job submission command")
+        self.l.configure(wraplength=350)
+        self.l.grid(row=self.buttonrow+4, column=0,columnspan=self.columnspantextlabel, sticky=E)
+        self.r=Radiobutton(self.frame,text="What's this?",variable=self.morehelp,
+                           value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
+        self.r.grid(row=self.buttonrow+4, column=self.columntextentry+2, sticky=W)
+        self.e = Entry(self.frame, text="", textvariable=self.jobsubmission)
+        self.e.grid(row=self.buttonrow+4, column=self.columntextentry,columnspan=2,sticky=W+E)
 
     def GuiAddRestSetupButtons(self):
         if (self.expert_mode==True):
@@ -430,12 +442,10 @@ class automated_gui_class:
          
     def GuiSaveExecute(self):
         self.GuiSave()
-        self.GuiExecute()
-        
-    def GuiExecute(self):
-        print "* Executing..."
-        os.system('python '+self.scriptname+' &')
-        
+        command=self.jobsubmission.get()+" python "+self.scriptname+' &'
+        print "* Executing job with: "+command
+        os.system(command)
+                
     def GuiSave(self):
         print "* Saving..."
         self.ScriptWrite()
@@ -453,8 +463,7 @@ class automated_gui_class:
         message=str(self.morehelp.get())
         print message
         tkMessageBox.showinfo('More Help',message)
-        
-       
+
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
