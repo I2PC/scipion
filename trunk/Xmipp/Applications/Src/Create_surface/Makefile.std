@@ -1,0 +1,5 @@
+######################################################################
+PROJ = create_surface
+OBJ  = create_surface.o
+LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)
+
