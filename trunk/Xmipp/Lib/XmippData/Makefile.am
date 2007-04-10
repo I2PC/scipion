@@ -6,6 +6,7 @@ libXmippData_@host_os@_la_SOURCES = \
 	Src/xmippArgs.cc \
 	Src/xmippMatrices1D.cc \
 	Src/xmippMatrices2D.cc \
+	Src/xmippIntegration.cc \
 	Src/xmippMatrices3D.cc \
 	Src/xmippSelFiles.cc \
 	Src/xmippHistograms.cc \
@@ -91,6 +92,7 @@ EXTRA_DIST = \
 	xmippSelFiles.hh \
 	xmippImagic.hh \
 	xmippDelTriang.hh \
+	xmippIntegration.hh \
 	xmippFFT.hh \
 	xmippMatrices1D.hh \
 	xmippTomogram.hh \
