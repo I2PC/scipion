@@ -23,6 +23,12 @@ class selfile:
    def set(self,lines):
        self.sellines=lines
 
+   # Returns the size [xdim,ydim] of the images inside the selfile
+   def imgSize(self):
+      import spider_header
+      header=spider_header.spiderheader((self.find_first_active_image())[0])
+      return header.nx,header.ny
+
    # counts number of active entries in selfile
    def length(self):
        i=0
@@ -149,7 +155,6 @@ class selfile:
    # and a selfile that is a subset of pattern1,
    # return a selfile that is the corresponding subset from pattern2
    def make_corresponding_subset(self,pattern1,pattern2):
-       
        newlines=[]
        for name,state in self.sellines:
            for i in range(len(pattern1.sellines)):
@@ -165,7 +170,6 @@ class selfile:
    # the order will e first entry of s1 then first entry of s2 etc..
    #same size for s1 and s2 is assumed
    def intercalate_union(self,selfile2):
-       
        newlines=[]
        i=0
        for name1,state1 in self.sellines:
@@ -181,7 +185,6 @@ class selfile:
    # the order will e first entry of s1 then first entry of s2 etc..
    #same size for s1 and s2 is assumed
    def intercalate_union_3(self,selfile2,selfile3):
-       
        newlines=[]
        i=0
        for name1,state1 in self.sellines:
