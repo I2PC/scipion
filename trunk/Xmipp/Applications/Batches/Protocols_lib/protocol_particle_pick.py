@@ -72,7 +72,7 @@ class particle_pick_class:
             self.prepare_have_picked()
 
             for micrograph,state in self.mysel.sellines:
-                if not '-1' in state:
+                if (state.find('-1') == -1):
                     self.update_have_picked()
                     if not (self.have_already_picked(micrograph)):
                         self.perform_picking(micrograph)
@@ -89,7 +89,7 @@ class particle_pick_class:
                     micrograph,state=line[:-1].split(" ")
                     downname=os.path.basename(micrograph)
                     downname=downname.replace('.raw','')
-                    if not '-1' in state:
+                    if (state.find('-1') == -1):
                         self.havepickedlines.append('# Finished picking '+micrograph+'?\n')
                         self.havepickedlines.append('Done_'+downname+'=False\n')
                 self.havepickedlines.append('# {end-of-header} \n')
@@ -116,9 +116,9 @@ class particle_pick_class:
             downname=downname.replace('.raw','')
             pattern='Done_'+downname
             for line in self.havepickedlines:
-                if pattern in line:
+                if (line.find(pattern) > -1):
                     args=line.split('=')
-                    if 'True' in (args[1]):
+                    if (args[1].find('True') > -1):
                         return True
                     else:
                         return False

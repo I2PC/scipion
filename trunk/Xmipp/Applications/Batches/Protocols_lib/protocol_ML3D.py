@@ -64,7 +64,7 @@ NumberOfIterations=25
     Dont give anything, if no symmetry is present
 """
 SymmetryFile=""
-# {expert} Additional xmipp_MLalign2D parameters:
+# {expert} Additional xmipp_ml_refine3d parameters:
 ExtraParamsMLrefine3D=""
 # {expert} Selfile with user-provided seeds (from ProjectDir):
 """ This option is NOT recommended!
@@ -72,37 +72,17 @@ ExtraParamsMLrefine3D=""
 """
 SeedsSelfile=""
 #------------------------------------------------------------------------------------------------
-# {section} Job submission issues
+# {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Batch submission command (use "" to launch without batch submission):
-""" This will depend on your queueing system., ask your system administrator...
-
-    Examples: LaunchJobCommand=\"bsub -q 1day\"
-      or, if you do not use a queueing system: LaunchJobCommand=\"\"
-"""
-LaunchJobCommand="" 
 # Use multiple processors in parallel? (see Expert options)
 DoParallel=False
 # Number of processors to use:
 MyNumberOfCPUs=10
-# {expert} A list of all available CPUs (the MPI-machinefile):
+# A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
-# {expert} Standard script to launch MPI-jobs:
-""" This will also depend on your system...
-    The simplest script consists of the following two lines:
-
-    #!/usr/bin/env sh
-    `which mpirun` -np MyNumberOfCPUs -machinefile MyMachineFile ~/machines.dat \
-
-    Note that the next line with the xmipp_mpi_MLalign2D command will be
-    generated automatically, and the variables MyNumberOfCPUs and MyMachineFile
-    will be replaced by the corresponding values given here above.
-    More scripts for different batch systems can be found at:
-    [Wiki link]
-"""
-ParallelScript="/home2/bioinfo/scheres/submit_mpi_job.sh"
+#------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
@@ -134,11 +114,9 @@ class ML2D_class:
                  SymmetryFile,
                  ExtraParamsMLrefine3D,
                  SeedsSelfile,
-                 LaunchJobCommand,
                  DoParallel,
                  MyNumberOfCPUs,
-                 MyMachineFile,
-                 ParallelScript):
+                 MyMachineFile):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -163,8 +141,6 @@ class ML2D_class:
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
         self.MyMachineFile=MyMachineFile
-        self.LaunchJobCommand=LaunchJobCommand
-        self.ParallelScript=ParallelScript
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -213,15 +189,12 @@ class ML2D_class:
         params+=' -dont_modify_header -output_classes'
                 
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_projection_matching",
-                                       "xmipp_mpi_projection_matching",
+                                       "xmipp_angular_projection_matching",
+                                       "xmipp_mpi_angular_projection_matching",
                                        params,
-                                       self.ParallelScript,
-                                       self.LaunchJobCommand,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
-                                       self.WorkingDir,
                                        False)
 
         # Followed by a weighted back-projection reconstruction
@@ -235,15 +208,12 @@ class ML2D_class:
             param+= ' -sym '+str(self.SymmetryFile)
            
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_wbp",
-                                       "xmipp_mpi_wbp",
+                                       "xmipp_reconstruct_wbp",
+                                       "xmipp_mpi_reconstruct_wbp",
                                        params,
-                                       self.ParallelScript,
-                                       self.LaunchJobCommand,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
-                                       self.WorkingDir,
                                        False)
 
         return outname
@@ -258,7 +228,7 @@ class ML2D_class:
         newsel=SelFiles.selfile()
 
         # Split selfiles
-        command='xmipp_split_selfile -o seeds_split'+ \
+        command='xmipp_selfile_split -o seeds_split'+ \
                  ' -i ' + str(self.InSelFile) + \
                  ' -n ' + str(self.NumberOfReferences) +' \n'
         print '* ',command
@@ -314,7 +284,7 @@ class ML2D_class:
         import launch_parallel_job
 
         print '*********************************************************************'
-        print '*  Executing MLrefine3D program :' 
+        print '*  Executing ml_refine3d program :' 
         params= ' -i '    + str(inselfile) + \
                 ' -o '    + str(outname) + \
                 ' -vol '  + str(volname) + \
@@ -326,15 +296,12 @@ class ML2D_class:
         params+=' '+extraparam
 
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_MLrefine3D",
-                                       "xmipp_mpi_MLrefine3D",
+                                       "xmipp_ml_refine3d",
+                                       "xmipp_mpi_ml_refine3d",
                                        params,
-                                       self.ParallelScript,
-                                       self.LaunchJobCommand,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
-                                       self.WorkingDir,
                                        False)
 
     def close(self):

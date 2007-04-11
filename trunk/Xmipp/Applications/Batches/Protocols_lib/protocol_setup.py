@@ -41,7 +41,7 @@ SetupHighRes3D=False
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home/scheres/work/protocols"
+ProjectDir="/home/scheres/Xmipp/Applications/Batches/Protocols_lib"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 # {expert} Directory name for preprocessing:
@@ -199,7 +199,7 @@ class setup_protocols_class:
                     print "Error, this file does not have a {end-of-header} label"
                     sys.exit()
                 header_lines.append(line)
-                if "{end-of-header}" in line:
+                if (line.find('{end-of-header}') > -1):
                     isheader=True
 
             body_lines=fh.readlines()
@@ -209,11 +209,11 @@ class setup_protocols_class:
             for dir in self.DEFAULTDIRS:
                 newheader_lines=[]
                 for line in header_lines:
-                    if ((not line[0]=="#" and
-                         not line[0]==" " and
-                         not line[0]=="\t" and
-                         not line[0]=="\n" and
-                         not line[0]=="\"") and (dir in line)):
+                    if ( (not line[0]=="#" and
+                          not line[0]==" " and
+                          not line[0]=="\t" and
+                          not line[0]=="\n" and
+                          not line[0]=="\"") and (line.find(dir) > -1) ):
                         args=line.split("=")
                         lineb=str(args[0])+'=\"'+self.DEFAULTDIRS[dir]+'\"\n'
                     else:

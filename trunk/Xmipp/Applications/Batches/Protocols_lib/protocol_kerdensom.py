@@ -24,7 +24,7 @@ ProjectDir="/home2/bioinfo/scheres/work/protocols"
 """
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
-# {section} MLalign2D parameters
+# {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
 # Subdirectory where you have previously ran ML2D classification:
 ML2DWorkingDir="ML2ref"
@@ -38,11 +38,11 @@ DoXmask=True
 # Name of the mask (inside the working subdirectory):
 MaskFileName="mask.msk"
 #------------------------------------------------------------------------------------------------
-# {section} kerdenSOM parameters
+# {section} classify_kerdensom parameters
 #------------------------------------------------------------------------------------------------
 # Perform self-organizing map calculation?
 DoSOM=True
-# Name of Output SOM:
+# Name of output map:
 """ Existing files with this name will be delete!
 """
 SomName="som"
@@ -61,7 +61,7 @@ SomReg0=1000
 SomReg1=1000
 # Number of steps to lower the regularization factor:
 SomSteps=1
-# {expert} Additional kerdenSOM parameters:
+# {expert} Additional classify_kerdensom parameters:
 """ For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraParams=""
@@ -221,14 +221,14 @@ class kerdensom_class:
     def execute_xmask(self,selfile):
         import os
 
-        command='xmipp_xmask -sel '+str(selfile) + ' \n'
+        command='xmipp_mask_design -sel '+str(selfile) + ' \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
 
     def execute_img2data(self,selfile,maskname,outname):
         import os
-        command='xmipp_img2data -sel '+ str(selfile) + \
+        command='xmipp_convert_img2data -sel '+ str(selfile) + \
                  ' -mname '+ str(maskname) + \
                  ' -fname '+ str(outname) + ' \n'
         print '* ',command
@@ -237,7 +237,7 @@ class kerdensom_class:
 
     def execute_data2img(self,iname,maskname):
         import os
-        command='xmipp_data2img -iname '+ str(iname) + \
+        command='xmipp_convert_data2img -iname '+ str(iname) + \
                  ' -mname '+ str(maskname) + ' \n'
         print '* ',command
         self.log.info(command)
@@ -248,7 +248,7 @@ class kerdensom_class:
         # delete existing files with this somname
         if (os.path.exists(somname+'.sel')):
             print 'Deleting existing som...'
-            command= 'xmipp_rmsel '+somname+'.sel \n'
+            command= 'xmipp_selfile_delete '+somname+'.sel \n'
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -262,7 +262,7 @@ class kerdensom_class:
         
         print '*********************************************************************'
         print '*  Executing kerdenSOM program :' 
-        command= 'xmipp_kerdensom'+ ' -din ' + str(datafile) + \
+        command= 'xmipp_classify_kerdensom'+ ' -din ' + str(datafile) + \
                  ' -cout ' + str(somname)  + \
                  ' -xdim ' + str(self.SomXdim) + \
                  ' -ydim ' + str(self.SomYdim) + \

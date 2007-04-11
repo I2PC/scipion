@@ -44,16 +44,7 @@ Down=3
 DoEstimatePSD=True
 # Visualize estimated power spectral densities?
 DoVisualizePSD=True
-#------------------------------------------------------------------------------------------------
-# Particle picking
-#------------------------------------------------------------------------------------------------
-# This step needs to be performed manually.
-# In each of the subdirectories created by this script, type:
-# xmipp_mark -i downX_YYYY.raw &
-# Save the coordinates of the manually picked particles in these sub-directories
-# (Don't forget to save regularly, and always before closing the program!)
 #
-# Afterwards, you may use part B of this script to continue your pre-processing
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -101,7 +92,7 @@ class preprocess_A_class:
 		oname=self.shortname+'/'+self.shortname+'.raw'
 		print '*********************************************************************'
 		print '*  Generating RAW for micrograph: '+self.name
-		command='xmipp_tiff2raw '+self.filename+' '+oname
+		command='xmipp_convert_tiff2raw '+self.filename+' '+oname
 		print '* ',command
 		self.log.info(command)
 		os.system(command)
@@ -112,7 +103,7 @@ class preprocess_A_class:
 		oname=self.shortname+'/'+self.downname+'.raw'
 		print '*********************************************************************'
 		print '*  Downsampling micrograph: '+iname
-		command='xmipp_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+		command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
 		print '* ',command
 		self.log.info(command)
 		os.system(command )
@@ -133,7 +124,7 @@ class preprocess_A_class:
 		FILE = open(pname,"w")
 		FILE.writelines(paramlist)
 		FILE.close()
-		command='xmipp_assign_CTF -i '+pname
+		command='xmipp_ctf_estimate_from_micrograph -i '+pname
 		print '* ',command
 		self.log.info(command)
 		os.system(command )

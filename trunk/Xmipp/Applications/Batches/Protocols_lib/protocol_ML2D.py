@@ -28,7 +28,7 @@ ProjectDir="/home2/bioinfo/scheres/work/protocols"
 """
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
-# {section} MLalign2D parameters
+# {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
 # Perform 2D maximum-likelihood refinement?
 DoML2D=False
@@ -43,7 +43,7 @@ DoMirror=False
 """ See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244
 """
 DoFast=True
-# {expert} Additional xmipp_MLalign2D parameters:
+# {expert} Additional xmipp_ml_align2d parameters:
 ExtraParamsMLalign2D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -61,7 +61,7 @@ MyMachineFile="/home2/bioinfo/scheres/machines.dat"
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_rct.py"
+AnalysisScript="visualize_ML2D.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -127,7 +127,7 @@ class ML2D_class:
         import os
         import launch_parallel_job
         print '*********************************************************************'
-        print '*  Executing MLalign2D program :' 
+        print '*  Executing ml_align2d program :' 
         params= ' -i '    + str(self.InSelFile) + \
                 ' -o '    + str(self.WorkingDir) + \
                 ' -nref ' + str(self.NumberOfReferences)
@@ -141,8 +141,8 @@ class ML2D_class:
         params+=' -dont_write_offsets'
 
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_MLalign2D",
-                                       "xmipp_mpi_MLalign2D",
+                                       "xmipp_ml_align2d",
+                                       "xmipp_mpi_ml_align2d",
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,

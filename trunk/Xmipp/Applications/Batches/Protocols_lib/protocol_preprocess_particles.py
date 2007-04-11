@@ -77,7 +77,7 @@ OutCTFSelFile="all_images_ctf.sel"
 # Perform CTF-phase flipping?
 DoPhaseFlipping=True
 #------------------------------------------------------------------------------------------------
-# {section} Sort junk
+# {section} Particle sorting
 #------------------------------------------------------------------------------------------------
 # Perform particle sorting to identify junk particles?
 DoSorting=True
@@ -188,7 +188,7 @@ class preprocess_particles_class:
                 os.makedirs(imgsubdir)
 
 	    # perform scissor operation
-            command='xmipp_scissor -i '+iname+' -pos '+posname+' -root '+rootname+' -Xdim '+str(size)+'|grep "corresponding image is set to blank"> '+logname
+            command='xmipp_micrograph_scissor -i '+iname+' -pos '+posname+' -root '+rootname+' -Xdim '+str(size)+'|grep "corresponding image is set to blank"> '+logname
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -213,7 +213,7 @@ class preprocess_particles_class:
             newpos.append(positions[0])
             for i in range(len(text)):
                 args=text[i].split(' ')
-                if '-1' in args[1]:
+                if args[1].find('-1') > -1):
                     os.remove(args[0])
                 else:
                     newtext.append(text[i])
@@ -260,7 +260,7 @@ class preprocess_particles_class:
             fh=open(pname,"w")
             fh.writelines(paramlist)
             fh.close()
-            command='xmipp_assign_CTF -i '+pname
+            command='xmipp_ctf_estimate_from_micrograph -i '+pname
             print '* ',command
             self.log.info(command)
             os.system(command )
@@ -326,7 +326,7 @@ class preprocess_particles_class:
             # Perform phase flipping operation
             print '*********************************************************************'
             print '*  Flipping phases for images in: '+selname
-            command='xmipp_correctphase -i '+selname+' -ctf '+ctfparam
+            command='xmipp_ctf_correct_phase -i '+selname+' -ctf '+ctfparam
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -350,7 +350,7 @@ class preprocess_particles_class:
             import os
             print '*********************************************************************'
             print '*  Sorting images to identify junk particles in: '+self.OutSelFile
-            command='xmipp_sort_junk -i '+self.OutSelFile
+            command='xmipp_sort_by_statistics -i '+self.OutSelFile
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -382,7 +382,7 @@ class preprocess_particles_class:
                 self.shortname,self.downname=os.path.split(name)
                 self.downname=self.downname.replace('.raw','')
 
-                if not '-1' in state:
+                if (state.find('-1') < 0):
                     if (self.check_have_marked()):
                         if (self.DoExtract):
                             self.perform_extract(self.DoPhaseFlipping)
