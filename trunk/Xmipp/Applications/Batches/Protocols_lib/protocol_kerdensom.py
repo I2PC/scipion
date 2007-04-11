@@ -12,18 +12,11 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
-WorkingDir="SOM_ML1ref_ref1"
+WorkingDir="SOM_ML2ref_ref1"
 # Delete working subdirectory if it already exists?
 """ The directory will not be deleted when only visualizing! 
 """
 DoDeleteWorkingDir=True
-# Batch submission command (use "" to launch without batch submission):
-""" This will depend on your queueing system., ask your system administrator...
-
-    Examples: LaunchJobCommand=\"bsub -q 1day\"
-      or, if you do not use a queueing system: LaunchJobCommand=\"\"
-"""
-LaunchJobCommand="" 
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -34,7 +27,7 @@ LogDir="Logs"
 # {section} MLalign2D parameters
 #------------------------------------------------------------------------------------------------
 # Subdirectory where you have previously ran ML2D classification:
-ML2DWorkingDir="ML5ref"
+ML2DWorkingDir="ML2ref"
 # The number of the class to use:
 ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
@@ -65,18 +58,20 @@ SomYdim=5
 """
 SomReg0=1000
 # Final regularization factor:
-SomReg1=200
+SomReg1=1000
 # Number of steps to lower the regularization factor:
-SomSteps=5
+SomSteps=1
 # {expert} Additional kerdenSOM parameters:
 """ For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraParams=""
-#------------------------------------------------------------------------------------------------
-# {section} Analysis of results
-#------------------------------------------------------------------------------------------------
-# Visualize the SOM? (Perform this only after job completion!)
+# Visualize the SOM after job completion?
 DoVisualizeSOM=True
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_kerdensom.py"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -89,7 +84,6 @@ class kerdensom_class:
     def __init__(self,
                  _WorkingDir,
                  _DoDeleteWorkingDir,
-                 _LaunchJobCommand,
                  _ProjectDir,
                  _LogDir,
                  _ML2DWorkingDir,
@@ -113,7 +107,6 @@ class kerdensom_class:
 
         self.WorkingDir=_WorkingDir
         self.ProjectDir=_ProjectDir
-        self.LaunchJobCommand=_LaunchJobCommand
         self.ML2DWorkingDir='../'+_ML2DWorkingDir
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
@@ -156,40 +149,75 @@ class kerdensom_class:
         os.chdir(os.pardir)
 
 
+    def make_local_copy_of_images(self):
+
+        import os,glob
+        import SelFiles
+
+        # Make a directory for the local copies of all relevant images
+        if not os.path.exists('local_images'):
+            os.makedirs('local_images')
+
+        # Check whether the ML2D run has written docfiles already
+        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it?????.doc')
+        if len(docfiles)==0:
+            message='No ML2D docfiles yet. Continue script after ML2D job completion... '
+            print '* ',message
+            self.log.error(message)
+            sys.exit()
+        else:
+            # Copy relevant selfile and images of ML2DDir to WorkingDir/local_images
+            lastitername=docfiles[-1].replace('.doc','')
+            splits=lastitername.split('_it')
+            ml2d_abs_rootname=splits[0]
+            self.classselfile=ml2d_abs_rootname+'_ref'+str(self.ML2DReferenceNr).zfill(5)+'.sel'
+            # Make a local copy of the images
+            message='Making a local copy of the images in '+str(self.classselfile)
+            print '* ',message
+            self.log.info(message)
+            mysel=SelFiles.selfile()
+            mysel.read(self.classselfile)
+            newsel=mysel.copy_sel('local_images')
+            self.classselfile=os.path.basename(self.classselfile)
+            newsel.write(self.classselfile)
+            # Make a local copy of the (partial) docfile
+            self.make_local_copy_docfile(mysel,newsel)
+
+    def make_local_copy_docfile(self,oldsel,newsel):
+
+        import os,glob
+        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it?????.doc')
+        docfile=docfiles[-1]
+        fh=open(docfile,'r')
+        doclines=fh.readlines()
+        newdoc=[]
+        newdoc.append(doclines[0])
+        
+        for name,state in oldsel.sellines:
+            for i in range(len(doclines)):
+                if name in doclines[i]:
+                    splits=doclines[i].split()
+                    name=os.path.basename(splits[1])
+                    newname=' ; local_images/'+name+'\n'
+                    newdoc.append(newname)
+                    newdoc.append(doclines[i+1])
+                    i=i+1
+                    break
+
+        self.docfilename='ml2d_ref'+str(self.ML2DReferenceNr).zfill(5)+'.doc'
+        fh=open(self.docfilename,'w')
+        fh.writelines(newdoc)
+        fh.close()
+
     def assign_header(self):
         import os
         import glob
 
-        docfiles=glob.glob(self.ML2DWorkingDir+'/ml2d_it?????.doc')
-        docfile=docfiles[-1]
-        command='xmipp_headerinfo -assign -i '+docfile+' -mirror \n'
+        command='xmipp_headerinfo -assign -i '+self.docfilename+' -mirror \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
 
-    def reset_header(self):
-        import os
-        import glob
-        
-        selfiles=glob.glob(self.ML2DWorkingDir+'/ml2d_ref?????.sel')
-        allimages=[]
-        for selfile in selfiles:
-            fh=open(selfile,'r')
-            allimages+=fh.readlines()
-            fh.close()
-        fh=open('tmp.sel','w')
-        fh.writelines(allimages)
-        fh.close()
-        command='xmipp_headerinfo -reset -i tmp.sel'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-        command='rm -f tmp.sel'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-     
-        
     def execute_xmask(self,selfile):
         import os
 
@@ -257,27 +285,22 @@ class kerdensom_class:
 
     def execute_whole_protocol(self):
         
-        import os
+        import os,glob
 
+        self.make_local_copy_of_images()
         self.assign_header()
       
-        classselfile=self.ML2DWorkingDir+'/ml2d_ref'+ str(self.ML2DReferenceNr).zfill(5) +'.sel'
-
         if (self.DoXmask):
-            self.execute_xmask(classselfile)
+            self.execute_xmask(self.classselfile)
 
         if (self.DoSOM):
             self.delete_existing_som(self.SomName)
-            self.execute_img2data(classselfile,self.MaskFileName,'data.dat')
+            self.execute_img2data(self.classselfile,self.MaskFileName,'data.dat')
             self.execute_kerdensom('data.dat',self.SomName)
             self.execute_data2img(str(self.SomName)+'.cod',self.MaskFileName)
+            if (self.DoVisualizeSOM):
+                self.visualize_SOM(self.SomName)
 
-        if (self.DoVisualizeSOM):
-            self.visualize_SOM(self.SomName)
-            
-        self.reset_header()
-
-          
     def close(self):
         message='Done!'
         print '*',message
@@ -292,7 +315,6 @@ if __name__ == '__main__':
 
     kerdensom=kerdensom_class(WorkingDir,
                               DoDeleteWorkingDir,
-                              LaunchJobCommand,
                               ProjectDir,
                               LogDir,
                               ML2DWorkingDir,
