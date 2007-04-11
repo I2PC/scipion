@@ -100,7 +100,7 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cc', skip_list = [],
     env.Default(alias)
 
 # COSS wanted an explicit list...
-def AddLibrary(name, basedir, sources, includes):
+def AddMPILibrary(name, basedir, sources, includes):
 
     # setup
     basedir = AddLastSlash(basedir)
@@ -123,11 +123,6 @@ def AddLibrary(name, basedir, sources, includes):
         [env['MPI_INCLUDE']],
         CC = env['MPI_CC'], CXX = env['MPI_CXX'], LIBPATH = [env['MPI_LIBDIR']],
         LIBS = [env['MPI_LIB']])
-
-    # alias
-    alias = env.Alias(fullname, program)
-    install = env.Install(binprefix, program)
-
     else:
         library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes +
         [env['MPI_INCLUDE']],
@@ -140,7 +135,7 @@ def AddLibrary(name, basedir, sources, includes):
     env.Alias(name, install)
     env.Default(alias)
 
-def AddMPILibrary(name, basedir, sources, includes):
+def AddLibrary(name, basedir, sources, includes):
 
     # setup
     basedir = AddLastSlash(basedir)
