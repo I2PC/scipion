@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
-# General script (part A) for Xmipp-based pre-processing of single-particles: 
-#  - tif2raw conversion, 
-#  - downsampling
-#  - power spectral density (PSD) estimation on the micrograph
+# General script (part A) for Xmipp-based manual particle picking
 #
-# For each file <micrograph>.tif given on the command line,
-#  this script will perform the requested operations below.
-# For each micrograph a subdirectory will be created
+# For each micrograph in the MicrographSelfile, this program will launch
+# the xmipp_mark program 
+# A graphical interface exists to identify micrographs that have been finished
 #
 # Example use:
-# ./xmipp_preprocess_A.py *.tif
+# python xmipp_particle_pick.py &
 #
 # Author: Sjors Scheres, March 2007
 #
@@ -74,8 +71,7 @@ class particle_pick_class:
             # Prepare have_picked.py file
             self.prepare_have_picked()
 
-            for line in self.mysel.sellines:
-                micrograph,state=line[:-1].split(" ")
+            for micrograph,state in self.mysel.sellines:
                 if not '-1' in state:
                     self.update_have_picked()
                     if not (self.have_already_picked(micrograph)):

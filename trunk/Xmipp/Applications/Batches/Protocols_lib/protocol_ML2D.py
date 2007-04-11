@@ -67,39 +67,6 @@ AnalysisScript="visualize_rct.py"
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-
-#
-# This script ignores the following entries, which only serve for
-# GUI-assisted job submission and analysis ...
-#
-# {gui-submission} Command to launch jobs:
-""" For example:
-     * bsub -q 1day_parallel
-     * llsubmit standard_script.cmd
-"""
-SubmissionCommand="bsub -q 1day_parallel"
-# {gui-submission} Standard script to launch jobs:
-""" This will also depend on your system...
-    If your system does not require a script for job submission, leave this field blank
-    
-    The simplest script consists of the following two lines:
-
-    #!/usr/bin/env sh
-    `which mpirun` -np MyNumberOfCPUs -machinefile MyMachineFile ~/machines.dat \
-
-    Note that the next line with the xmipp_mpi_MLalign2D command will be
-    generated automatically, and the variables MyNumberOfCPUs and MyMachineFile
-    will be replaced by the corresponding values given here above.
-    More scripts for different batch systems can be found at:
-    [Wiki link]
-"""
-SubmissionScript="/home2/bioinfo/scheres/submit_mpi_job.sh"
-
-
-
-#------------------------------------------------------------------------------------------------
-# {end-of-header}
-#------------------------------------------------------------------------------------------------
 class ML2D_class:
 
     #init variables
