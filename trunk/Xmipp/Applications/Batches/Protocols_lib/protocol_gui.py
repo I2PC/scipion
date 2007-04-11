@@ -153,6 +153,9 @@ class automated_gui_class:
                 self.variables[args[0]].append(isexpert)
                 self.variables[args[0]].append(morehelp)
 
+        if self.is_setupgui:
+            # Set PWD as default for ProjectDir
+            self.variables['ProjectDir'][0]='\"'+str(os.getcwd())+'\"'
 
     def GuiFill(self):
                        
@@ -202,9 +205,9 @@ class automated_gui_class:
         headertext="GUI for Xmipp "
         programname=os.path.basename(sys.argv[1])
         headertext+=programname.replace('.py','')
-        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="blue")
+        self.l1=Label(self.frame, text=headertext, fg="blue")
         headertext="Executed in directory: "+str(os.getcwd())
-        self.l2=Label(self.frame, text=headertext, font=("Helvetica", 14), fg="blue")
+        self.l2=Label(self.frame, text=headertext, fg="blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
         self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
         self.Addseperator(2)
@@ -237,7 +240,6 @@ class automated_gui_class:
         self.GuiAddRestProtocolButtons()
 
     def FillSetupGui(self):
-
         self.which_setup=StringVar()
         self.morehelp=StringVar()
       
@@ -291,7 +293,6 @@ class automated_gui_class:
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
 
     def Addseperator(self,row):
-        
         self.l1=Label(self.frame,text="")
         self.l1.grid(row=row)
         self.l2=Frame(self.frame, height=2, bd=1, bg="blue",relief=RIDGE)
@@ -439,6 +440,7 @@ class automated_gui_class:
             self.GuiAddRestProtocolButtons()
 
     def AnalyseResults(self):
+        self.GuiSave()
         print "* Analyzing..."
         command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
                  self.variables["AnalysisScript"][0]+' &'
