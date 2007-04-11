@@ -61,9 +61,7 @@ def launch_parallel_job(mpiprogramname,
         nr_cpus=MyNumberOfCPUs
 	machineParam=' -machinefile ' + machinefile
 
-    command='mpirun -np ' + str(nr_cpus)
-    if not machinefile=="":
-        command+=' -machinefile ' + machinefile
+    command='mpirun -np ' + str(nr_cpus)+machineParam
     command+=' `which '+ str(mpiprogramname) +'` ' + params
 
     if RunInBackground==True:
