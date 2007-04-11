@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = skew
+PROJ = crystal_skew
 OBJ  = skew.o
 LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

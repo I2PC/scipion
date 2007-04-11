@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = break_sym
+PROJ = break_symmetry
 OBJ  = break_sym.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP) 
+LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
 

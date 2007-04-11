@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = mpi_wbp
+PROJ = mpi_reconstruct_wbp
 NEEDS_MPI = true
 
 OBJ  = mpi_wbp.o

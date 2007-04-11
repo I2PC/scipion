@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = recons_test
+PROJ = phantom_test_reconstruction
 OBJ  = recons_test.o
-LIBS =  -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS_INTERFACE) -l$(LIBRECONS)  -l$(LIBXMIPP) 
+LIBS =  -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS_INTERFACE) -l$(LIBRECONS)  -l$(LIBXMIPP)
 

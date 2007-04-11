@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = spi22em
+PROJ = convert_spi22em
 OBJ  = spi22em.o
 LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) \
        -l$(LIBRECONS_INTERFACE)

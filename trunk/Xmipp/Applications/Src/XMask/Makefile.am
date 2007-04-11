@@ -1,13 +1,14 @@
-bin_PROGRAMS = design_mask
-design_mask_SOURCES = xmask.cc \
+bin_PROGRAMS = mask_design
+mask_design_SOURCES = xmask.cc \
 	maskimg.cc
-nodist_design_mask_SOURCES = maskimg_moc.cc
+nodist_mask_design_SOURCES = maskimg_moc.cc
 
-design_mask_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
+mask_design_LDADD = \
+	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
 	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
 	@QT_LIBS@
 
-design_mask_LDFLAGS =
+mask_design_LDFLAGS =
 
 INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
 

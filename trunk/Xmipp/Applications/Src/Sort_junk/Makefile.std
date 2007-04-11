@@ -1,4 +1,4 @@
 ######################################################################
-PROJ = sort_junk
+PROJ = sort_by_statistics
 OBJ  = sort_junk.o
 LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)

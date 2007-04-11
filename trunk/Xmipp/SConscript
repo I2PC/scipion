@@ -143,6 +143,7 @@ DataSources = [
     'Src/xmippHistograms.cc',
     'Src/xmippHeader.cc',
     'Src/xmippImages.cc',
+    'Src/xmippIntegration.cc',
     'Src/xmippVolumes.cc',
     'Src/xmippDocFiles.cc',
     'Src/xmippGeometry.cc',
@@ -235,6 +236,7 @@ ReconsSources = [
     'Programs/Src/Prog_Align2d.cc',
     'Programs/Src/Prog_Projection_Neighbourhood.cc',
     'Programs/Src/Prog_Centilt.cc',
+    'Programs/Src/Prog_create_surface',
     'Src/CTF.cc',
     'Src/refinement.cc',
     'Programs/Src/Prog_FourierFilter.cc',
@@ -367,9 +369,9 @@ AddLibrary('INRIA', 'Other_packages/LibINRIA', INRIASources, [])
 # --- Programs
 
 # MakeSpectra
-AddProgram('makespectra', 'Applications/OldXmipp/MakeSpectra', '*.cc', [],
-    ['Lib', 'LibOldXmipp'], ['Lib/XmippData', 'Lib/OldXmipp'], ['XmippData',
-    'OldXmipp'], [], [])
+#AddProgram('makespectra', 'Applications/OldXmipp/MakeSpectra', '*.cc', [],
+#    ['Lib', 'LibOldXmipp'], ['Lib/XmippData', 'Lib/OldXmipp'], ['XmippData',
+#    'OldXmipp'], [], [])
 
 # FindSCenter
 AddProgram('find_center2d', 'Applications/OldXmipp/FindSCenter', '*.cc', [],
@@ -489,7 +491,7 @@ AddProgram('classify_batch_som', 'Applications/Src/BatchSOM', '*.cc', [],
     'XmippData'], ['-Wno-deprecated'])
 
 # Break_sym
-AddProgram('break_sym', 'Applications/Src/Break_sym', '*.cc', [], ['Lib'],
+AddProgram('break_symmetry', 'Applications/Src/Break_sym', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons', 'XmippData'])
 
@@ -500,8 +502,8 @@ AddProgram('align_tilt_pairs', 'Applications/Src/Centilt', '*.cc', [], ['Lib'],
 
 # CodeStatis
 # FIXME -Wno-deprecated
-AddProgram('codestatis', 'Applications/Src/CodeStatis', '*.cc', [], ['Lib'],
-    ['Lib/XmippData'], ['XmippData'], ['-Wno-deprecated'])
+#AddProgram('codestatis', 'Applications/Src/CodeStatis', '*.cc', [], ['Lib'],
+#    ['Lib/XmippData'], ['XmippData'], ['-Wno-deprecated'])
 
 # Combine_stats
 AddProgram('combine_stats', 'Applications/Src/Combine_stats', '*.cc', [],
@@ -531,14 +533,14 @@ AddProgram('phantom_create', 'Applications/Src/Create_phantom', '*.cc', [],
     ['XmippData', 'XmippRecons'])
 
 # Create_surface
-# FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('create_surface', 'Applications/Src/Create_surface', '*.cc', [],
-    ['Lib'], ['Lib/XmippData'],
-    ['XmippData', 'XmippRecons', 'XmippInterface'])
+# FIXME Testing...
+AddProgram('crystal_create_surface', 'Applications/Src/Create_surface', '*.cc', [],
+    ['Lib'], ['Lib/XmippData', 'Lib/Reconstrunction'],
+    ['XmippData', 'XmippRecons'])
 
 # Integration
-# FIXME XmippInterface is required, although it was not present in autoools
-AddProgram('Integration', 'Applications/Src/Integration', '*.cc', [],
+# FIXME Testing...
+AddProgram('integration', 'Applications/Src/Integration', '*.cc', [],
     ['Lib'], ['Lib/XmippData'],
     ['XmippData'])
 
@@ -595,7 +597,7 @@ AddProgram('draw_surface', 'Applications/Src/Draw_surface', '*.cc', [],
     ['XmippRecons', 'XmippData', 'XmippInterface'])
 
 # EM2Angles
-AddProgram('EM2Angles', 'Applications/Src/EM2Angles', '*.cc', [],
+AddProgram('crystal_euler2mrc', 'Applications/Src/EM2Angles', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData', 'Lib/XmippInterface'],
     ['XmippRecons', 'XmippRecons_Interface', 'XmippData', 'XmippInterface'])
 
@@ -661,7 +663,7 @@ AddProgram('histogram', 'Applications/Src/Histogram', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # IDR_ART
-AddProgram('idr', 'Applications/Src/IDR_ART', '*.cc', [],
+AddProgram('ctf_correct_idr', 'Applications/Src/IDR_ART', '*.cc', [],
     ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -782,9 +784,9 @@ AddProgram('radon_transform', 'Applications/Src/Radon_Transform',
     'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # RandomMapping
-AddProgram('random_mapping', 'Applications/Src/RandomMapping', '*.cc', [],
-    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
-    'XmippData'])
+#AddProgram('random_mapping', 'Applications/Src/RandomMapping', '*.cc', [],
+#    ['Lib'], ['Lib/Classification', 'Lib/XmippData'], ['XmippClassif',
+#    'XmippData'])
 
 # Random_phantom
 AddProgram('phantom_create_random', 'Applications/Src/Random_phantom',
@@ -800,7 +802,7 @@ AddProgram('convert_raw22spi', 'Applications/Src/Raw22spi', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Recons_test
-AddProgram('recons_test', 'Applications/Src/Recons_test',
+AddProgram('phantom_test_reconstruction', 'Applications/Src/Recons_test',
     '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
     'Lib/XmippData'], ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons',
     'XmippData'])
@@ -822,9 +824,9 @@ AddProgram('rotate', 'Applications/Src/Rotate', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # RotateDescr
-AddProgram('rotate_descr', 'Applications/Src/RotateDescr',
-    '*.cc', [], ['Lib'], ['Lib/Reconstruction',
-    'Lib/XmippData'], ['XmippRecons', 'XmippData'])
+#AddProgram('rotate_descr', 'Applications/Src/RotateDescr',
+#    '*.cc', [], ['Lib'], ['Lib/Reconstruction',
+#    'Lib/XmippData'], ['XmippRecons', 'XmippData'])
 
 # Sammon
 AddProgram('classify_sammon_projection', 'Applications/Src/Sammon', '*.cc', [],
@@ -864,7 +866,7 @@ AddProgram('shift', 'Applications/Src/Shift', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Skew
-AddProgram('skew', 'Applications/Src/Skew', '*.cc', [], ['Lib'],
+AddProgram('crystal_skew', 'Applications/Src/Skew', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -875,7 +877,7 @@ AddProgram('classify_som', 'Applications/Src/SOM', '*.cc', [],
     'XmippData'], ['-Wno-deprecated'])
 
 # Sort_junk
-AddProgram('sort_junk', 'Applications/Src/Sort_junk', '*.cc', [], ['Lib'],
+AddProgram('sort_by_statistics', 'Applications/Src/Sort_junk', '*.cc', [], ['Lib'],
     ['Lib/XmippData'], ['XmippData'])
 
 # Split_selfile
@@ -893,7 +895,7 @@ AddProgram('spARMA', 'Applications/Src/SpARMA', '*.cc', [], ['Lib'],
     ['XmippInterface', 'XmippRecons', 'XmippData'])
 
 # Spi22em
-AddProgram('spi22em', 'Applications/Src/Spi22em', '*.cc', [], ['Lib'],
+AddProgram('convert_spi22em', 'Applications/Src/Spi22em', '*.cc', [], ['Lib'],
     ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -943,7 +945,7 @@ AddProgram('convert_data2descr', 'Applications/Src/ToPhantom', '*.cc', [],
     'XmippData'])
 
 # Unbend
-AddProgram('unbend', 'Applications/Src/Unbend', '*.cc',
+AddProgram('crystal_unbend', 'Applications/Src/Unbend', '*.cc',
     [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -1005,7 +1007,7 @@ if int(env['mpi']):
         ['XmippRecons', 'XmippData'])
 
     # MPI_WBP
-    AddMPIProgram('mpi_wbp', 'Applications/Src/MPI_WBP', '*.cc', [], ['Lib'],
+    AddMPIProgram('mpi_reconstruct_wbp', 'Applications/Src/MPI_WBP', '*.cc', [], ['Lib'],
         ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
 
     # MPI_MLalign2D
@@ -1178,7 +1180,7 @@ graphics)
         'XmippData'])
 
     # XMask
-    AddQtProgram('design_mask', 'Applications/Src/XMask', '*.cc', ['moc_maskimg.cc'],
+    AddQtProgram('mask_design', 'Applications/Src/XMask', '*.cc', ['moc_maskimg.cc'],
         [], ['Lib'], ['Lib/XmippData', 'Lib/Classification'], ['XmippData',
         'XmippClassif'])
 

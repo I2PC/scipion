@@ -1,10 +1,11 @@
-bin_PROGRAMS = recons_test
-recons_test_SOURCES = recons_test.cc
-recons_test_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_Interface_@host_os@.la \
+bin_PROGRAMS = phantom_test_reconstruction
+phantom_test_reconstruction_SOURCES = recons_test.cc
+phantom_test_reconstruction_LDADD = \
+	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_Interface_@host_os@.la \
 	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
 	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
-recons_test_LDFLAGS = @EXEC_TYPE@
-	
+phantom_test_reconstruction_LDFLAGS = @EXEC_TYPE@
+
 INCLUDES = -I$(top_srcdir)/Lib

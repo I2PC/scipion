@@ -1,8 +1,8 @@
-bin_PROGRAMS = break_sym
-break_sym_SOURCES = break_sym.cc
-break_sym_LDADD = \
+bin_PROGRAMS = break_symmetry
+break_symmetry_SOURCES = break_sym.cc
+break_symmetry_LDADD = \
 	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
 	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
-break_sym_LDFLAGS = @EXEC_TYPE@
+break_symmetry_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/Lib

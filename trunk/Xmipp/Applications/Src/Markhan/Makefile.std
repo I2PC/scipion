@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = markhan
+PROJ = try_symmetry
 OBJ  = markhan.o
 LIBS = -l$(LIBXMIPP)
 

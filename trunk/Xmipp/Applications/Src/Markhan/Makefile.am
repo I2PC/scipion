@@ -1,8 +1,8 @@
-bin_PROGRAMS = markhan
-markhan_SOURCES = markhan.cc
-markhan_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+bin_PROGRAMS = try_symmetry
+try_symmetry_SOURCES = markhan.cc
+try_symmetry_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
 
-markhan_LDFLAGS = @EXEC_TYPE@
+try_symmetry_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/Lib
 

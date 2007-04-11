@@ -1,6 +1,6 @@
 ######################################################################
 ifeq ($(HAVE_QT),YES)
-   PROJ = design_mask
+   PROJ = mask_design
 endif
 OBJ  =  xmask.o \
 	maskimg.o maskimg.moc
