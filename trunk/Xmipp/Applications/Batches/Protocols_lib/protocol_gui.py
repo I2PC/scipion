@@ -29,7 +29,7 @@ class automated_gui_class:
         
     def SetupGuiParameters(self):
         if (self.is_setupgui):
-            self.guiwidth=680
+            self.guiwidth=650
             self.guiheight=350
             self.columnspantextlabel=2
             self.columntextentry=2
@@ -37,7 +37,7 @@ class automated_gui_class:
             self.column_2d=1
             self.column_3d=2
         else:
-            self.guiwidth=630
+            self.guiwidth=600
             self.guiheight=650
             self.columnspantextlabel=3
             self.columntextentry=3
@@ -172,8 +172,8 @@ class automated_gui_class:
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(0, weight=1)
         self.frame = Frame(canvas)
-        self.frame.rowconfigure(1, weight=1)
-        self.frame.columnconfigure(1, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
 
         # Fill the entire GUI
         if (self.is_setupgui):
@@ -241,8 +241,13 @@ class automated_gui_class:
         self.which_setup=StringVar()
         self.morehelp=StringVar()
       
+        # Script title
+        headertext="Which Xmipp protocol do you want to run?"
+        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="blue")
+        self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
+        self.Addseperator(2)
+
         # Add labels for different protocol categories
-        self.GuiAddSection("Which Xmipp protocol do you want to run?",0)
         row=(self.frame.grid_size()[1]+1)
         self.row_pre=row
         self.row_2d=row
@@ -258,7 +263,7 @@ class automated_gui_class:
         self.widgetexpertlist=[]
         for var in self.vfields:
             if (self.variables[var][1]=="Section"):
-                self.GuiAddSection(self.variables[var][0],2)
+                self.GuiAddSection(self.variables[var][0])
             elif (self.variables[var][1]=="String"):
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
