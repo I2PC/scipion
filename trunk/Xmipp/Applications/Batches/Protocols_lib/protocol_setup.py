@@ -237,7 +237,6 @@ class setup_protocols_class:
                     src=dst
                     print "* File "+dst+" already existed (now updated)"
 
-                print src,dst,directory
                 text=self.modify_script_header(src)
                 fh=open(dst,'w')
                 fh.writelines(text)
