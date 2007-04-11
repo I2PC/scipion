@@ -271,7 +271,7 @@ ReconsSources = [
     'Programs/Src/Prog_Align2d.cc',
     'Programs/Src/Prog_Projection_Neighbourhood.cc',
     'Programs/Src/Prog_Centilt.cc',
-    'Programs/Src/Prog_create_surface',
+    'Programs/Src/Prog_create_surface.cc',
     'Src/CTF.cc',
     'Src/refinement.cc',
     'Programs/Src/Prog_FourierFilter.cc',
@@ -575,14 +575,8 @@ AddProgram('phantom_create', 'Applications/Src/Create_phantom', '*.cc', [],
 # Create_surface
 # FIXME Testing...
 AddProgram('crystal_create_surface', 'Applications/Src/Create_surface', '*.cc', [],
-    ['Lib'], ['Lib/XmippData', 'Lib/Reconstrunction'],
+    ['Lib'], ['Lib/XmippData', 'Lib/Reconstruction'],
     ['XmippData', 'XmippRecons'])
-
-# Integration
-# FIXME Testing...
-AddProgram('integration', 'Applications/Src/Integration', '*.cc', [],
-    ['Lib'], ['Lib/XmippData'],
-    ['XmippData'])
 
 # CTF_profile
 AddProgram('ctf_profile', 'Applications/Src/CTF_profile', '*.cc', [],
