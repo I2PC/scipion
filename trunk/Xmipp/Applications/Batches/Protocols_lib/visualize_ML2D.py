@@ -5,13 +5,13 @@
 # Example use:
 # python visualize_ML2D.py
 #
+# This script requires that protocol_ML2D.py is in the current directory
+#
 # Author: Sjors Scheres, March 2007
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working subdirectory:
-WorkingDir="ML2ref"
 # Visualize last iterations class averages and output logfile to screen?
 DoShowLastIter=True
 # Visualize the class averages of all iterations in matrix-view?
@@ -29,7 +29,6 @@ class visualize_ML2D_class:
 
     #init variables
     def __init__(self,
-                 WorkingDir,
                  DoShowLastIter,
                  DoMatrixAllIter,
                  DoShowStatsAllIter):
@@ -39,7 +38,9 @@ class visualize_ML2D_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self.WorkingDir=WorkingDir
+        # import corresponding protocol
+        import protocol_ML2D
+        self.WorkingDir=protocol_ML2D.WorkingDir
 
         os.chdir(self.WorkingDir)
         if (DoShowLastIter):
@@ -122,8 +123,7 @@ class visualize_ML2D_class:
 if __name__ == '__main__':
 
     # create ML2D_class object
-    visualize_ML2D=visualize_ML2D_class(WorkingDir,
-                                        DoShowLastIter,
+    visualize_ML2D=visualize_ML2D_class(DoShowLastIter,
                                         DoMatrixAllIter,
                                         DoShowStatsAllIter)
     # close 

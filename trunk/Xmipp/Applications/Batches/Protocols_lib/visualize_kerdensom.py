@@ -5,16 +5,13 @@
 # Example use:
 # python visualize_kerdensom.py
 #
+# This script requires that protocol_kerdensom.py is in the current directory
 #
 # Author: Sjors Scheres, March 2007
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working subdirectory:
-WorkingDir="SOM_ML2ref_ref1"
-# Name of the self-organizing map:
-SomName="som"
 # Visualize the self-organizing map?
 DoShowSOM=True
 # Output the som infofile to screen?
@@ -29,8 +26,6 @@ class visualize_kerdensom_class:
 
     #init variables
     def __init__(self,
-                 WorkingDir,
-                 SomName,
                  DoShowSOM,
                  DoShowInfFile):
 	     
@@ -39,8 +34,11 @@ class visualize_kerdensom_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self.WorkingDir=WorkingDir
-        self.SomName=SomName
+        # import corresponding protocol
+        import protocol_kerdensom
+
+        self.WorkingDir=protocol_kerdensom.WorkingDir
+        self.SomName=protocol_kerdensom.SomName
 
         os.chdir(self.WorkingDir)
         if (DoShowSOM):
@@ -75,9 +73,7 @@ class visualize_kerdensom_class:
 if __name__ == '__main__':
 
     # create kerdensom_class object
-    visualize_kerdensom=visualize_kerdensom_class(WorkingDir,
-                                                  SomName,
-                                                  DoShowSOM,
+    visualize_kerdensom=visualize_kerdensom_class(DoShowSOM,
                                                   DoShowInfFile)
     # close 
     visualize_kerdensom.close()
