@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------
 # General script to setup standard Xmipp protocols
-#  - preprocessing (parts A & B) 
+#  - Preprocessing of micrographs
+#  - Manual particle picking
+#  - Preprocessing of extracted particles
 #  - 2D image alignment and classification (by ml2d & kerdenSOM)
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
@@ -16,11 +18,11 @@
 # Choose the protocol(s) you want to setup:
 #------------------------------------------------------------------------
 # {setup-pre} Preprocess micrographs
-SetupPreProcessA=False
+SetupPreProcessMicrographs=False
 # {setup-pre} Manual particle selection
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
-SetupPreProcessB=False
+SetupPreProcessParticles=False
 # {setup-2d} ML2D classification
 SetupML2D=False
 # {setup-2d} kerdenSOM classification 
@@ -69,9 +71,9 @@ HighRes3DDir="HighRes3D"
 class setup_protocols_class:
        #init variables
         def __init__(self,
-                     SetupPreProcessA,
+                     SetupPreProcessMicrographs,
                      SetupParticlePick,
-                     SetupPreProcessB,
+                     SetupPreProcessParticles,
                      SetupML2D,
                      SetupKerdensom,
                      SetupRotSpectra,
@@ -93,9 +95,9 @@ class setup_protocols_class:
 
             import os,sys
 
-            self.SetupPreProcessA=SetupPreProcessA
+            self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
             self.SetupParticlePick=SetupParticlePick
-            self.SetupPreProcessB=SetupPreProcessB
+            self.SetupPreProcessParticles=SetupPreProcessParticles
             self.SetupML2D=SetupML2D
             self.SetupKerdensom=SetupKerdensom
             self.SetupRotSpectra=SetupRotSpectra
@@ -123,15 +125,15 @@ class setup_protocols_class:
 
             # Which scripts and which directories to use
             self.library={}
-            self.library['SetupPreProcessA']=[self.SetupPreProcessA,
+            self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
                                                 self.PreProcessDir,
-                                                ['protocol_preprocess_A.py']]
+                                                ['protocol_preprocess_micrographs.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
                                                 self.PreProcessDir,
                                                 ['protocol_particle_pick.py']]
-            self.library['SetupPreProcessB']=[self.SetupPreProcessB,
+            self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
                                                 self.PreProcessDir,
-                                                ['protocol_preprocess_B.py']]
+                                                ['protocol_preprocess_particles.py']]
             self.library['SetupML2D']=[self.SetupML2D,
                                          self.ML2DDir,
                                          ['protocol_ML2D.py','visualize_ML2D.py']]
@@ -261,9 +263,9 @@ if __name__ == '__main__':
     else:
         AutoLaunch=sys.argv[1]
 
-    setup=setup_protocols_class(SetupPreProcessA,
+    setup=setup_protocols_class(SetupPreProcessMicrographs,
                                 SetupParticlePick,
-                                SetupPreProcessB,
+                                SetupPreProcessParticles,
                                 SetupML2D,
                                 SetupKerdensom,
                                 SetupRotSpectra,
