@@ -52,10 +52,10 @@ class automated_gui_class:
             if line=="":
                 print "Error, this file does not have a {end-of-header} label"
                 sys.exit()
-            if "{setup-" in line:
+            if not (line.find('{setup-') == -1):
                 self.is_setupgui=True
             self.script_header_lines.append(line)
-            if "{end-of-header}" in line:
+            if not (line.find('{end-of-header}') == -1):
                 isheader=True
 
         self.script_body_lines=fh.readlines()
@@ -91,16 +91,16 @@ class automated_gui_class:
             if (self.script_header_lines[j][0]=='#'):
                 found_comment=True
                 comment=self.script_header_lines[j][1:]
-                if "{expert}" in comment:
+                if not (comment.find('{expert}') == -1):
                     isexpert="expert"
                     comment=comment.replace ('{expert}', '' )
-                elif "{setup-pre}" in comment:
+                elif not (comment.find('{setup-pre}') == -1):
                     isexpert="setup-pre"
                     comment=comment.replace ('{setup-pre}', '' )
-                elif "{setup-2d}" in comment:
+                elif not (comment.find('{setup-2d}') == -1):
                     isexpert="setup-2d"
                     comment=comment.replace ('{setup-2d}', '' )
-                elif "{setup-3d}" in comment:
+                elif not (comment.find('{setup-3d}') == -1):
                     isexpert="setup-3d"
                     comment=comment.replace ('{setup-3d}', '' )
                 else:
@@ -122,7 +122,7 @@ class automated_gui_class:
 
         for i in range(len(self.script_header_lines)):
             # Get section headers
-            if ("{section}" in self.script_header_lines[i]):
+            if not (self.script_header_lines[i].find('{section}') == -1):
                 section=self.script_header_lines[i][1:].replace('{section}','')
                 args=self.script_header_lines[i].split("}")
                 self.variables[section]=[section[:-1],]
@@ -139,7 +139,8 @@ class automated_gui_class:
                     self.have_analyse_results=True;
                 self.variables[args[0]]=[args[1][:-1],]
                 self.vfields.append(args[0])
-                if ("True" in args[1]) or ("False" in args[1]):
+                if (not (args[1].find('True') == -1)) or \
+                   (not (args[1].find('False') == -1)):
                     self.variables[args[0]].append("Boolean")
                     newvar=BooleanVar()                    
                     self.variables[args[0]].append(newvar)
