@@ -464,7 +464,7 @@ AddProgram('are_different', 'Applications/Src/Are_different', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Art
-AddProgram('art', 'Applications/Src/Art', '*.cc', [], ['Lib'],
+AddProgram('reconstruct_art', 'Applications/Src/Art', '*.cc', [], ['Lib'],
     ['Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons', 'XmippData'])
 
@@ -512,7 +512,7 @@ AddProgram('selfile_compare', 'Applications/Src/Compare_Selfiles', '*.cc',
     [], ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # CorrectPhase
-AddProgram('correct_phase', 'Applications/Src/CorrectPhase', '*.cc', [],
+AddProgram('ctf_correct_phase', 'Applications/Src/CorrectPhase', '*.cc', [],
     ['Lib'], ['Lib/Reconstruction', 'Lib/XmippData'],
     ['XmippRecons', 'XmippData'])
 
@@ -787,7 +787,7 @@ AddProgram('random_mapping', 'Applications/Src/RandomMapping', '*.cc', [],
     'XmippData'])
 
 # Random_phantom
-AddProgram('create_random_phantom', 'Applications/Src/Random_phantom',
+AddProgram('phantom_create_random', 'Applications/Src/Random_phantom',
     '*.cc', [], ['Lib'], ['Lib/XmippInterface', 'Lib/Reconstruction',
     'Lib/XmippData'], ['XmippInterface', 'XmippRecons', 'XmippData'])
 
@@ -810,7 +810,7 @@ AddProgram('reverse_endian', 'Applications/Src/Reverse_endian', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # Resolution
-AddProgram('resolution', 'Applications/Src/Resolution', '*.cc', [],
+AddProgram('resolution_fsc', 'Applications/Src/Resolution', '*.cc', [],
     ['Lib'], ['Lib/XmippData'], ['XmippData'])
 
 # RmSel

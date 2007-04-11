@@ -1,5 +1,5 @@
 ######################################################################
-PROJ = resolution
+PROJ = resolution_fsc
 OBJ  = resolution.o
 LIBS = -l$(LIBXMIPP)
 
