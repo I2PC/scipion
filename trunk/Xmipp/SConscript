@@ -119,6 +119,46 @@ def AddLibrary(name, basedir, sources, includes):
     # action
     # FIXME Exclusive may not be what users want
     if int(env['static']):
+        library = env.StaticLibrary(basedir + name, sources, CPPPATH=includes +
+        [env['MPI_INCLUDE']],
+        CC = env['MPI_CC'], CXX = env['MPI_CXX'], LIBPATH = [env['MPI_LIBDIR']],
+        LIBS = [env['MPI_LIB']])
+
+    # alias
+    alias = env.Alias(fullname, program)
+    install = env.Install(binprefix, program)
+
+    else:
+        library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes +
+        [env['MPI_INCLUDE']],
+        CC = env['MPI_CC'], CXX = env['MPI_CXX'], LIBPATH = [env['MPI_LIBDIR']],
+        LIBS = [env['MPI_LIB']])
+
+    # alias
+    alias = env.Alias(name, library)
+    install = env.Install(libprefix, library)
+    env.Alias(name, install)
+    env.Default(alias)
+
+def AddMPILibrary(name, basedir, sources, includes):
+
+    # setup
+    basedir = AddLastSlash(basedir)
+    libprefix = os.path.join(env['prefix'], 'lib')
+    for x in sources:
+        sources[sources.index(x)] = basedir + x
+
+    # FIXME Shouldn't env[] variables be honored?
+    includes += env['CPPPATH']
+
+    # separate local and global includes
+    for x in includes:
+        if x[0] != '#':
+            includes[includes.index(x)] = basedir + x
+
+    # action
+    # FIXME Exclusive may not be what users want
+    if int(env['static']):
         library = env.StaticLibrary(basedir + name, sources, CPPPATH=includes)
     else:
         library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes)
@@ -290,7 +330,7 @@ AddLibrary('XmippReconsINRIA', 'Lib/Reconstruction', ReconsINRIASources,
 
 # ReconstrunctionMPI
 ReconstructionMPISources = ['Programs/Src/Prog_MPI_Run.cc']
-AddLibrary('XmippReconsMPI', 'Lib/ReconstructionMPI',
+AddMPILibrary('XmippReconsMPI', 'Lib/ReconstructionMPI',
     ReconstructionMPISources, ['#Lib'])
 
 # Classification
