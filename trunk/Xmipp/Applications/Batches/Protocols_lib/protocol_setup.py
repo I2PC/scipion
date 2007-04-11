@@ -39,7 +39,7 @@ SetupHighRes3D=False
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home/coss/CTD_LTA"
+ProjectDir="/home/scheres/work/protocols"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 # {expert} Directory name for preprocessing:
@@ -125,34 +125,34 @@ class setup_protocols_class:
             self.library={}
             self.library['SetupPreProcessA']=[self.SetupPreProcessA,
                                                 self.PreProcessDir,
-                                                'protocol_preprocess_A.py']
+                                                ['protocol_preprocess_A.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
                                                 self.PreProcessDir,
-                                                'protocol_particle_pick.py']
+                                                ['protocol_particle_pick.py']]
             self.library['SetupPreProcessB']=[self.SetupPreProcessB,
                                                 self.PreProcessDir,
-                                                'protocol_preprocess_B.py']
+                                                ['protocol_preprocess_B.py']]
             self.library['SetupML2D']=[self.SetupML2D,
                                          self.ML2DDir,
-                                         'protocol_ML2D.py']
+                                         ['protocol_ML2D.py','visualize_ML2D.py']]
             self.library['SetupKerdensom']=[self.SetupKerdensom,
                                               self.ML2DDir,
-                                              'protocol_kerdensom.py']
+                                              ['protocol_kerdensom.py','visualize_kerdensom.py']]
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
                                                self.RotSpectraDir,
-                                               'protocol_rotspectra.py']
+                                               ['protocol_rotspectra.py','visualize_rotspectra.py']]
             self.library['SetupRCT']=[self.SetupRCT,
                                         self.RCTDir,
-                                        'protocol_RCT.py']
+                                        ['protocol_rct.py','visualize_rct.py']]
             self.library['SetupML3D']=[self.SetupML3D,
                                         self.ML3DDir,
-                                        'protocol_ML3D.py']
+                                        ['protocol_ML3D.py','visualize_ML3D.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         self.ProjMatchDir,
-                                        'protocol_projmatch.py']
+                                        ['protocol_projmatch.py','visualize_projmatch.py']]
             self.library['SetupHighRes3D']=[self.SetupHighRes3D,
                                         self.HighRes3DDir,
-                                        'protocol_highres3D.py']
+                                        ['protocol_highres3D.py','visualize_highres3D.py']]
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -220,7 +220,7 @@ class setup_protocols_class:
                 header_lines=newheader_lines
             return header_lines+body_lines
 
-        def setup_protocol(self,directory,script):
+        def setup_protocol(self,directory,scripts):
             import os
             import shutil
 
@@ -228,17 +228,21 @@ class setup_protocols_class:
             if not os.path.exists(directory):
                 os.makedirs(directory)
                 
-            src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
-            dst=str(directory)+"/"+str(script)
-            if os.path.exists(dst):
-                src=dst
-                print "* File "+dst+" already existed (now updated)"
+            for script in scripts:
+                src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
+                dst=str(directory)+"/"+str(script)
+                if os.path.exists(dst):
+                    src=dst
+                    print "* File "+dst+" already existed (now updated)"
 
-            text=self.modify_script_header(src)
-            fh=open(dst,'w')
-            fh.writelines(text)
-            fh.close()
+                print src,dst,directory
+                text=self.modify_script_header(src)
+                fh=open(dst,'w')
+                fh.writelines(text)
+                fh.close()
 
+            # Only auto-launch the first script
+            script=scripts[0]
             if (self.AutoLaunch!=""):
                 os.chdir(directory)
                 command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+str(script)+' &'
