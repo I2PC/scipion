@@ -288,6 +288,11 @@ AddLibrary('XmippRecons_Interface', 'Lib/Reconstruction',
 AddLibrary('XmippReconsINRIA', 'Lib/Reconstruction', ReconsINRIASources,
     ['#Lib'])
 
+# ReconstrunctionMPI
+ReconstructionMPISources = ['Programs/Src/Prog_MPI_Run.cc']
+AddLibrary('XmippReconsMPI', 'Lib/ReconstructionMPI',
+    ReconstructionMPISources, ['#Lib'])
+
 # Classification
 ClassificationSources = [
     'Src/xmippCTVectors.cc',
@@ -1024,6 +1029,11 @@ if int(env['mpi']):
     AddMPIProgram('mpi_angular_projection_matching',
         'Applications/Src/MPI_Projection_matching', '*.cc', [], ['Lib'],
         ['Lib/Reconstruction', 'Lib/XmippData'], ['XmippRecons', 'XmippData'])
+
+    # MPI_Run
+    AddMPIProgram('mpi_run', 'Applications/Src/MPI_Run', '*.cc', [], ['Lib'],
+        ['Lib/XmippData', 'Lib/ReconstructionMPI'], ['XmippData',
+        'XmippReconsMPI'])
 
 # TIFF
 # Tiff2Raw
