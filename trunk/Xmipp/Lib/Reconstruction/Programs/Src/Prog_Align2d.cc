@@ -681,6 +681,7 @@ void Prog_align2d_prm::align2d() {
   fn_img=fn_sel.without_extension()+".xmp";
   if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
   fn_img=fn_img.insert_before_extension(".med");
+  med.weight()=SFo.LineNo();
   med.write(fn_img);
   fn_img=fn_sel.without_extension()+".xmp";
   if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
