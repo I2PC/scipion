@@ -137,7 +137,7 @@ void Prog_projection_matching_prm::extended_usage() {
 void Prog_projection_matching_prm::produce_Side_info() {
 
     VolumeXmipp      vol;
-    ImageXmipp       img;
+    ImageXmipp       img,empty;
     Projection       proj;
     DocFile          DF,DFi,DF2;
     SelFile          SFr,emptySF;
@@ -158,6 +158,13 @@ void Prog_projection_matching_prm::produce_Side_info() {
     BinaryCrownMask(rotmask,Ri,Ro,INNER_MASK);
     nr_pixels_rotmask=(int)rotmask.sum();
 
+    // Initialize empty image
+    if (output_classes) 
+    {
+	empty().resize(dim,dim);
+	empty().set_Xmipp_origin();
+	empty.clear_header();
+    }
     // Read symmetry file into memory
     if (fn_sym!="") 
     { 
@@ -189,6 +196,13 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    ref_stddev[nr_dir]=stddev_ref;
 	    ref_mean[nr_dir]=mean_ref;
 	    nr_dir++;
+	    if (output_classes)
+	    {
+		empty.rot()=proj.rot();
+		empty.tilt()=proj.tilt();
+		class_avgs.push_back(empty);
+		class_selfiles.push_back(emptySF);
+	    }
 	}
     } 
     else 
@@ -297,13 +311,6 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	SFr.go_beginning();
 	DF.go_beginning();
 
-	if (output_classes) 
-	{
-	    img().resize(dim,dim);
-	    img().set_Xmipp_origin();
-	    img.clear_header();
-	}
-
 	if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
 	if (verb>0) init_progress_bar(nl);
 
@@ -323,9 +330,9 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    }
 	    if (output_classes)
 	    {
-		class_avgs.push_back(img);
-		img.rot()=ref_rot[nr_dir];
-		img.tilt()=ref_tilt[nr_dir];
+		empty.rot()=DF(0);
+		empty.tilt()=DF(1);
+		class_avgs.push_back(empty);
 		class_selfiles.push_back(emptySF);
 	    }
 	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
@@ -542,11 +549,6 @@ void Prog_projection_matching_prm::write_classes()
 	SF.insert(fn_img);
 	fn_sel.compose(fn_base,dirno+1,"sel");
 	class_avgs[dirno]()/=class_avgs[dirno].weight();
-	class_avgs[dirno].Phi()=ref_rot[dirno];
-	class_avgs[dirno].Theta()=ref_tilt[dirno];
-	class_avgs[dirno].Psi()=0.;
-	class_avgs[dirno].Xoff()=0.;
-	class_avgs[dirno].Yoff()=0.;
 	class_avgs[dirno].write(fn_img);
 	class_selfiles[dirno].write(fn_sel);
     }
