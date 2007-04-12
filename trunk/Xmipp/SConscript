@@ -324,9 +324,10 @@ AddLibrary('XmippReconsINRIA', 'Lib/Reconstruction', ReconsINRIASources,
     ['#Lib'])
 
 # ReconstrunctionMPI
-ReconstructionMPISources = ['Programs/Src/Prog_MPI_Run.cc']
-AddMPILibrary('XmippReconsMPI', 'Lib/ReconstructionMPI',
-    ReconstructionMPISources, ['#Lib'])
+if int(env['mpi']):
+    ReconstructionMPISources = ['Programs/Src/Prog_MPI_Run.cc']
+    AddMPILibrary('XmippReconsMPI', 'Lib/ReconstructionMPI',
+        ReconstructionMPISources, ['#Lib'])
 
 # Classification
 ClassificationSources = [
@@ -1067,8 +1068,8 @@ if int(env['mpi']):
 # TIFF
 # Tiff2Raw
 if int(env['tiff']):
-    AddProgram('convert_tiff2raw', 'Applications/Src/Tiff2Raw', '*.cc', [], ['Lib'],
-        [], ['tiff'])
+    AddProgram('convert_tiff2raw', 'Applications/Src/Tiff2Raw', '*.cc', [], ['Lib',
+    env['TIFF_INCLUDE']], [env['TIFF_LIBDIR']], ['tiff'])
 
 # QT
 if int(env['gui']):

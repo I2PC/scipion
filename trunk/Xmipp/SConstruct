@@ -33,6 +33,8 @@ opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
 opts.Add(BoolOption('quiet', 'Hide command line?', 'yes'))
 opts.Add(BoolOption('tiff', 'Build the Tiff programs?', 'yes'))
+opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
+opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
 
 opts.Add(BoolOption('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
@@ -60,7 +62,8 @@ if int(env['debug']):
         env['strip'] = 0
 else:
     # "safe" optimization
-    env.Append(CXXFLAGS = ['-O2', '-fomit-frame-pointer'])
+    #env.Append(CXXFLAGS = ['-O2', '-fomit-frame-pointer'])
+    env.Append(CXXFLAGS = ['-O2'])
 
 # strip?
 if int(env['strip']):
@@ -79,7 +82,6 @@ env['STATIC_FLAG'] = '-static'
 if int(env['static']):
     env.Append(CXXFLAGS = '$STATIC_FLAG')
     env.Append(LINKFLAGS = '$STATIC_FLAG')
-
 
 # verbosity (for $SCONS_VERSION < 0.96.2 option has no effect)
 if int(env['quiet']):
@@ -102,6 +104,7 @@ if int(env['quiet']):
     env.Doxygen('Doxyfile')
 '''
 
+# distribution
 ''' FIXME Testing, not ready for production
 env['DISTTAR_FORMAT'] = 'bz2'
 env.Append(DISTTAR_EXCLUDEEXTS = ['.o', '.os', '.so', '.a', '.dll', '.cc',
@@ -196,7 +199,7 @@ else:
 
         if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h', 'c++',
         'QApplication qapp(0,0);', 0):
-            print ' * Did not find QT. Disabling ...'
+            print '* Did not find QT. Disabling ...'
             env['gui'] = 0
 
         envQT = confQT.Finish()
@@ -207,10 +210,19 @@ else:
     # TIFF
     # TODO Add include/lib directories to search path (Jumilla)
     if int(env['tiff']):
+        # Temporarily add Tiff headers/libraries
+        lastLIBPATH = env['LIBPATH']
+        lastCPPPATH = env['CPPPATH']
+        env.Append(LIBPATH = env['TIFF_LIBDIR'], CPPPATH = env['TIFF_INCLUDE'])
+
         if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
             'TIFFGetVersion();', 0):
             print '* Did not find TIFF library. Disabling ...'
             env['tiff'] = 0
+
+        # Restore previous conditions
+        env.Replace(LIBPATH = lastLIBPATH)
+        env.Replace(CPPPATH = lastCPPPATH)
 
     # MPI
     if int(env['mpi']):
