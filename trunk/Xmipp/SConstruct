@@ -38,12 +38,11 @@ opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
 
 opts.Add(BoolOption('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
-opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpicxx')
+opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
-# FIXME Using '$PWD' did not work, so...
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 opts.Update(env)
 
@@ -74,7 +73,7 @@ if int(env['warn']):
     env.Append(CXXFLAGS = ['-Wall'])
 else:
     env.Append(CXXFLAGS = ['-w'])
-    # TODO linker warnings too, what's the flag?
+    # TODO suppress linker warnings too, what's the flag?
     # env.Append(LINKFLAGS = ['-Wl,'])
 
 # static?
@@ -108,7 +107,7 @@ if int(env['quiet']):
 ''' FIXME Testing, not ready for production
 env['DISTTAR_FORMAT'] = 'bz2'
 env.Append(DISTTAR_EXCLUDEEXTS = ['.o', '.os', '.so', '.a', '.dll', '.cc',
-    '.cache', '. pyc', '. cvsignore', '.dblite', '.log', '.cvsignore', '.bz2'],
+    '.cache', '.pyc', '.cvsignore', '.dblite', '.log', '.bz2'],
 DISTTAR_EXCLUDEDIRS = ['CVS', '.svn', '.sconf_temp', 'dist']
 )
 disttar = env.DistTar(os.path.join(base_dir, 'Xmipp-1.1'), [env.Dir('#')])
@@ -208,7 +207,6 @@ else:
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
 
     # TIFF
-    # TODO Add include/lib directories to search path (Jumilla)
     if int(env['tiff']):
         # Temporarily add Tiff headers/libraries
         lastLIBPATH = env['LIBPATH']
