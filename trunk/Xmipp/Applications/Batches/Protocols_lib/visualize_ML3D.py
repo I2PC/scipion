@@ -13,7 +13,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Visualize volumes in slices along Z?
-VisualizeVolZ=True
+VisualizeVolZ=False
 # Visualize volumes in slices along X?
 VisualizeVolX=False
 # Visualize volumes in slices along Y?
@@ -28,32 +28,32 @@ MatrixWidth=10
 # {section} Visualization of seeds preparation steps
 #------------------------------------------------------------------------------------------------
 # Visualize the library projections and the averages of the grey-scale correction?
-DoVisualizeMatrixCorrectReference=False
+DoVisualizeMatrixCorrectReference=True
 # Visualize the grey-scale corrected reference volume?
 DoVisualizeCorrectReference=True
 # Visualize the low-pass filtered reference volume?
-DoVisualizeFilteredReference=False
+DoVisualizeFilteredReference=True
 # Visualize the library projections and the averages of the seed generation runs?
-DoVisualizeMatrixSeeds=False
+DoVisualizeMatrixSeeds=True
 # Visualize the generated seeds?
-DoVisualizeGeneratedSeeds=False
+DoVisualizeGeneratedSeeds=True
 #------------------------------------------------------------------------------------------------
 # {section} Visualization of ML3D iterations
 #------------------------------------------------------------------------------------------------
 # Which iterations to visualize? (Separate numbers by comma's)
-SelectIterations="1,2"
+SelectIterations="2"
 # Visualize the reference volumes for the given iterations?
-VisualizeML3DReferences=False
+VisualizeML3DReferences=True
 # Visualize weighted 2D-averages?
-VisualizeML3DAvgs=False
+VisualizeML3DAvgs=True
 # Output to screen the number of particles that change optimal orientation/class?
 """ As described in Scheres et al. (2007) Nature Methods, 4, 27-29 
 """
-DoShowMovingParticles=False
+DoShowMovingParticles=True
 # Output overall statistics of all iterations to screen?
-DoShowStatsAllIter=False
+DoShowStatsAllIter=True
 # Visualize matrixview of library projections and weighted averages of the last iteration?
-VisualizeMatrixLastIter=False
+VisualizeMatrixLastIter=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -97,6 +97,7 @@ class visualize_ML3D_class:
 
         self.VisualizeML3DReferences=VisualizeML3DReferences
         self.VisualizeML3DAvgs=VisualizeML3DAvgs
+        self.SelectIterations=SelectIterations
         self.VisualizeMatrixLastIter=VisualizeMatrixLastIter;
         self.DoShowMovingParticles=DoShowMovingParticles
         self.DoShowStatsAllIter=DoShowStatsAllIter
@@ -148,10 +149,18 @@ class visualize_ML3D_class:
 
 
     def visualize_ML3D_iterations(self):
-        print 'todo'
+        import os,glob
+        iters=self.SelectIterations.split(',')
+        for iter in iters:
+            if (self.VisualizeML3DAvgs):
+                selfiles=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.sel')
+                for selfile in selfiles:
+                    self.ShowSelfiles.append(selfile)
 
-        if (self.VisualizeMatrixLastIter):
-            self.visualize_matrix_last_iter()
+            if (self.VisualizeML3DReferences):
+                volumes=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.vol')
+                for volume in volumes:
+                    self.ShowVolumes.append(volume)
 
     def visualize_ML3D_overall(self):
 
@@ -160,7 +169,9 @@ class visualize_ML3D_class:
         
         if (self.DoShowStatsAllIter):
             self.show_statistics_alliter()
-        
+
+        if (self.VisualizeMatrixLastIter):
+            self.visualize_matrix_last_iter()
         
     def visualize_matrix_last_iter(self):
         import os,glob
@@ -191,14 +202,12 @@ class visualize_ML3D_class:
                 print logfile,words1[6],words1[7],words1[8],words1[9],\
                       words2[1],words2[2],words2[3],words2[4]
 
-
-    
     def show_moving_particles(self):
         import os,glob
         docfiles=glob.glob('RunML3D/ml3d_it?????.doc')
         if os.path.exists('moving_particles.dat'):
             os.remove('moving_particles.dat')
-        print 'todo'
+        print 'The output of moving particles remains to be added to this script...'
 
     def join_selfiles(self,selfile1,selfile2,newselfile):
         import SelFiles
@@ -208,7 +217,6 @@ class visualize_ML3D_class:
         sel2.read(selfile2)
         newsel=sel1.intercalate_union(sel2)
         newsel.write(newselfile)
-
 
     def show_last_iter(self):
         # Visualize class averages:
