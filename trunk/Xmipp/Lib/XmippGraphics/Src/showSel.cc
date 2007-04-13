@@ -56,6 +56,7 @@ void ShowSel::clear() {
 void ShowSel::initWithFile( int _numRows, int _numCols,
    const FileName &_fn, double _minGray, double _maxGray) {
    init();
+   selfile_fn=_fn;
    readFile(_fn, _minGray, _maxGray);
    if (_numRows!=-1) NumRows = _numRows;
    else NumRows=FLOOR(700.0/projYdim);
@@ -69,6 +70,7 @@ void ShowSel::initWithFile( int _numRows, int _numCols,
 void ShowSel::initWithFile( int _numRows, int _numCols,
    const FileName &_fn, TLoadMode _load_mode) {
    init();
+   selfile_fn=_fn;
    load_mode=_load_mode;
    NumRows = _numRows;
    NumCols = _numCols;
@@ -219,6 +221,8 @@ void ShowSel::setFileRightclickMenubar() {
          this, SLOT(saveSelFileActive()));
       fileSave->insertItem( "In a new sel file...",
          this, SLOT(saveSelFileNew()));
+      fileSave->insertItem( "Overwrite selfile with active images",
+         this, SLOT(saveSelFileNewOverwrite()));
       file->insertItem( "&Save Selected Images in a Sel File", fileSave);
    menubar->insertItem( "&File", file );
 }
@@ -423,26 +427,47 @@ void ShowSel::saveSelFileNew() {
    else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
+/* This function saves a  sel file with the selected images as active.
+   It does not ask for filename, it overwrites present selfile*/
+void ShowSel::saveSelFileNewOverwrite() {
+   SelFile SFNew;
+   bool saveFile=false;
+   for (int i=0; i<listSize; i++) {
+      if (cellMarks[i]) {
+   	 saveFile=true;
+   	 SFNew.insert(imgnames[i],SelLine::ACTIVE);
+      }
+   }
+   if (saveFile) writeSelFile(SFNew,true);
+   else QMessageBox::about( this, "Error!", "No images selected\n");
+}
+
 /* Save a Selfile.
    Make all possible checkings */
-void ShowSel::writeSelFile(SelFile &_SF) {
-   QString newfilename = QFileDialog::getSaveFileName(
-      QString::null, "*.sel", this, "Sel files");
-   if (!newfilename.isEmpty() ) {
-      QFileInfo fi(newfilename);
-      if (fi.extension(false) != "sel") {
-   	 if ( QMessageBox::information( this, "Showsel application",
-   		"The file has no ""sel"" extension. add it? ", 
-   		"Yes", "No") == 0) newfilename += ".sel";
-      }
-      fi.setFile(newfilename);
-      if (fi.exists())
-   	 if ( QMessageBox::information( this, "Showsel application",
-   		"The file already exist. Overwrite?", 
-   		"Yes", "No") == 0) _SF.write((string)  ((const char *)newfilename));
-   	 else QMessageBox::about( this, "Warning!", "Saving aborted\n");			   
-      else _SF.write((string)  ((const char *)newfilename));
-   } else  QMessageBox::about( this, "Warning!", "Saving aborted\n");
+void ShowSel::writeSelFile(SelFile &_SF, bool overwrite) {
+   
+   if (overwrite)
+      _SF.write((string)  ((const char *)selfile_fn.c_str()));
+   else
+   {
+      QString newfilename = QFileDialog::getSaveFileName(
+         selfile_fn.c_str(), "*.sel", this, "Sel files");
+      if (!newfilename.isEmpty() ) {
+         QFileInfo fi(newfilename);
+         if (fi.extension(false) != "sel") {
+   	    if ( QMessageBox::information( this, "Showsel application",
+   		   "The file has no ""sel"" extension. add it? ", 
+   		   "Yes", "No") == 0) newfilename += ".sel";
+         }
+         fi.setFile(newfilename);
+         if (fi.exists())
+   	    if ( QMessageBox::information( this, "Showsel application",
+   		   "The file already exist. Overwrite?", 
+   		   "Yes", "No") == 0) _SF.write((string)  ((const char *)newfilename));
+   	    else QMessageBox::about( this, "Warning!", "Saving aborted\n");			   
+         else _SF.write((string)  ((const char *)newfilename));
+      } else  QMessageBox::about( this, "Warning!", "Saving aborted\n");
+   }    
 }
 
 // Change options ----------------------------------------------------------
