@@ -13,6 +13,8 @@
 # Example use:
 # ./setup_protocols.py
 #
+# {please cite} The Xmipp team (2007) Nature Protocols, xx,xx-xx
+#
 # Author: Sjors Scheres, March 2007
 #------------------------------------------------------------------------
 # Choose the protocol(s) you want to setup:
