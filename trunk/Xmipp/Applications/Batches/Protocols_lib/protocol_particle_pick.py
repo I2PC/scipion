@@ -14,8 +14,16 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# All filenames.tif on which to perform preprocessing
+# Selfile with all micrographs to pick particles from (in current dir):
 MicrographSelfile="all_micrographs.sel"
+# Is this a list of untilted-tilted pairs?
+""" True for RCT-processing. In that case, provide a 3-column selfile as follows:
+    untilted_pair1.raw tilted_pair1.raw 1
+    untilted_pair2.raw tilted_pair2.raw 1
+    etc...
+    Where 1 in the third column means active pair, and -1 means inactive pair
+"""
+IsPairList=False
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
@@ -33,6 +41,7 @@ class particle_pick_class:
 	#init variables
 	def __init__(self,
                      MicrographSelfile,
+                     IsPairList,
                      DoUseGui,
                      ProjectDir,
                      LogDir):
@@ -44,6 +53,7 @@ class particle_pick_class:
                 import log
 
                 self.MicrographSelfile=MicrographSelfile
+                self.IsPairList=IsPairList
                 self.ProjectDir=ProjectDir
                 self.LogDir=LogDir
                 self.DoUseGui=DoUseGui
@@ -63,19 +73,43 @@ class particle_pick_class:
             print '*  Perform manual particle picking for micrographs in: '+str(self.MicrographSelfile)
             print '*'
             print '* DONT FORGET TO SAVE YOUR COORDINATES REGULALRLY, AND ALWAYS BEFORE CLOSING!'
+            if (self.IsPairList):
+                print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
             print '*'
 
-            # Read selfile with all micrographs to process
-            self.mysel=SelFiles.selfile()
-            self.mysel.read(self.MicrographSelfile)
-            # Prepare have_picked.py file
-            self.prepare_have_picked()
+            if not self.IsPairList:
+                self.mysel=SelFiles.selfile()
+                self.mysel.read(self.MicrographSelfile)
+                self.prepare_have_picked()
+                
+                for micrograph,state in self.mysel.sellines:
+                    if (state.find('-1') == -1):
+                        self.update_have_picked()
+                        if not (self.have_already_picked(micrograph)):
+                            self.perform_picking(micrograph)
 
-            for micrograph,state in self.mysel.sellines:
-                if (state.find('-1') == -1):
-                    self.update_have_picked()
-                    if not (self.have_already_picked(micrograph)):
-                        self.perform_picking(micrograph)
+            else:
+                fh=open(self.MicrographSelfile,'r')
+                self.pairlines=fh.readlines()
+                fh.close()
+                words=self.pairlines[0].split()
+                if (len(words)<3):
+                    message='Error: Selfile is not a pairlist file!'
+                    print '*',message
+                    self.log.error(message)
+                    sys.exit()
+                else:
+                    self.prepare_have_picked()
+                    
+                for line in self.pairlines:
+                    words=line.split()
+                    untilted=os.path.basename(words[0])
+                    tilted=words[1]
+                    state=words[2]
+                    if (state.find('-1') == -1):
+                        self.update_have_picked()
+                        if not (self.have_already_picked(untilted)):
+                            self.perform_picking_pair(untilted,tilted)
 
         def prepare_have_picked(self):
             import os
@@ -85,13 +119,21 @@ class particle_pick_class:
                 self.havepickedlines=[]
                 self.havepickedlines.append('#!/usr/bin/env python \n')
                 self.havepickedlines.append('# {section} Select Yes when you have finished a micrograph, and Save \n')
-                for line in self.mysel.sellines:
-                    micrograph,state=line[:-1].split(" ")
-                    downname=os.path.basename(micrograph)
-                    downname=downname.replace('.raw','')
-                    if (state.find('-1') == -1):
-                        self.havepickedlines.append('# Finished picking '+micrograph+'?\n')
-                        self.havepickedlines.append('Done_'+downname+'=False\n')
+                if not self.IsPairList:
+                    for line in self.mysel.sellines:
+                        micrograph,state=line[:-1].split(" ")
+                        downname=os.path.basename(micrograph)
+                        downname=downname.replace('.raw','')
+                        self.append_line_have_picked(self,downname,state)
+                else:
+                    for line in self.pairlines:
+                        words=line.split()
+                        untilted=os.path.basename(words[0])
+                        untilted=untilted.replace('.raw','')
+                        tilted=words[1]
+                        state=words[2]
+                        self.append_line_have_picked(self,untilted,state)
+   
                 self.havepickedlines.append('# {end-of-header} \n')
                 fh.writelines(self.havepickedlines)
                 fh.close()
@@ -104,6 +146,14 @@ class particle_pick_class:
                 print '* Edit manually the have_picked.py file to tell the program '
                 print '* with which micrographs you have finished '
             
+        def append_line_have_picked(self,name,state):
+            if (state.find('-1') == -1):
+                if (self.IsPairList):
+                    self.havepickedlines.append('# Finished picking pair with '+name+'?\n')
+                else:
+                    self.havepickedlines.append('# Finished picking micrograph '+name+'?\n')
+                self.havepickedlines.append('Done_'+name+'=False\n')
+
         def update_have_picked(self):
             self.havepickedlines=[]
             fh=open('have_picked.py','r')
@@ -137,6 +187,18 @@ class particle_pick_class:
             os.system(command)
             os.chdir(os.pardir)
 
+
+        def perform_picking_pair(self,untilted,tilted):
+            import os
+            directory,uname=os.path.split(untilted)
+            tname='../'+tilted
+            os.chdir(directory)
+            command='xmipp_mark -i '+uname+' -tilted '+tname
+            print '* ',command
+            self.log.info(command)
+            os.system(command)
+            os.chdir(os.pardir)
+
 	def close(self):
                 message=" You have done picking all particles! :-)"
 		print '* ',message
@@ -150,6 +212,7 @@ if __name__ == '__main__':
    	# create preprocess_A_class object
 
 	particle_pick=particle_pick_class(MicrographSelfile,
+                                          IsPairList,
                                           DoUseGui,
                                           ProjectDir,
                                           LogDir)
