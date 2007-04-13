@@ -17,15 +17,15 @@ def visualize_volumes(Names,ShowSliceZ,ShowSliceX,ShowSliceY,ShowChimera):
                 if (ShowChimera):
                     chimera_command+='spider:'+name+' '
 
-            if (ShowSliceZ or ShowSliceX or ShowSliceY): 
-                xmipp_command+=' &'
-                print '* ',xmipp_command
-                os.system(xmipp_command)
+        if (ShowSliceZ or ShowSliceX or ShowSliceY): 
+            xmipp_command+=' &'
+            print '* ',xmipp_command
+            os.system(xmipp_command)
 
-            if (ShowChimera):
-                chimera_command+=' &'
-                print '* ',chimera_command
-                os.system(chimera_command)
+        if (ShowChimera):
+            chimera_command+=' &'
+            print '* ',chimera_command
+            os.system(chimera_command)
 
 def visualize_images(Names,AreSelFiles=False,SelFileWidth="",SelFileHeight=""):
     import os
