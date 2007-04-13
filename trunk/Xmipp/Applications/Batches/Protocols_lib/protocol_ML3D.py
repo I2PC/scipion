@@ -14,9 +14,9 @@
 # Selfile with the input images (relative path from ProjectDir):
 InSelFile="200.sel"
 # Initial single reference map (relative path from ProjectDir):
-InitialReference="RCT/test1/wbp_ML3ref_ref00001_tilted.vol.sc32"
+InitialReference=""
 # Working subdirectory:
-WorkingDir="test3"
+WorkingDir="test1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
@@ -31,7 +31,7 @@ LogDir="Logs"
 # Correct the absolute grey-scale of the initial reference map?
 """ The probabilities are based on squared differences, so that the absolute grey scale is important.
 """
-DoCorrectGreyScale=True
+DoCorrectGreyScale=False
 # {expert} Angular sampling for a quick projection matching to obtain right grey scale
 """ As the resolution of the intial reference should be low, this sampling can be relatively crude, e.g. 15
 """
@@ -46,7 +46,7 @@ WbpThreshold=0.02
 # Low-pass filter the initial reference?
 """ It is highly recommended to low-pass filter your initial reference volume as much as you can.
 """
-DoLowPassFilterReference=True
+DoLowPassFilterReference=False
 # Resolution of the low-pass filter (in Angstroms):
 LowPassFilter=50
 # Pixel size (in Angstroms):
@@ -55,7 +55,7 @@ PixelSize=2.8
 # {section} Seed generation
 #------------------------------------------------------------------------------------------------
 # Generate seeds from a single initial reference map?
-DoGenerateSeeds=True
+DoGenerateSeeds=False
 # Number of seeds to be generated (and later on used in ML3D-classification):
 NumberOfReferences=2
 #------------------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ DoML3DClassification=True
 """
 AngularSampling=30
 # Number of ML3D iterations to perform:
-NumberOfIterations=2
+NumberOfIterations=3
 # Symmetry description file (relative path from ProjectDir):
 """ See WIKI link for a description of the symmetry file format
     dont give anything, if no symmetry is present
@@ -78,10 +78,11 @@ SymmetryFile="6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
 ExtraParamsMLrefine3D="-l 0.3 -k 0.5 -n 2"
 # {expert} Selfile with user-provided seeds (relative path from ProjectDir):
-""" This option is NOT recommended!
+""" It is NOT recommended to generate your own seeds...
+    But you may use this option to provide the seeds from a previous run
     The seeds should already be on the correct absolute greyscale!
 """
-SeedsSelfile=""
+SeedsSelfile="ML3D/test3/ml3d_seeds.sel"
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -141,8 +142,10 @@ class ML3D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
-        # STILL SORT OUT ABS PATHS FOR THIS ONE!!
-        self.InitialReference=ProjectDir+'/'+InitialReference
+        if (InitialReference==""):
+            self.InitialReference=""
+        else:
+            self.InitialReference=ProjectDir+'/'+InitialReference
         if (SeedsSelfile==""):
             self.SeedsSelfile=""
         else:
@@ -175,6 +178,8 @@ class ML3D_class:
         # Execute MLalign2D in the working directory
         os.chdir(self.WorkingDir)
 
+        self.copy_initial_refs()
+        
         if DoCorrectGreyScale:
             self.correct_greyscale()
 
@@ -190,6 +195,31 @@ class ML3D_class:
         # Return to parent dir
         os.chdir(os.pardir)
 
+    # Make a copy of the initial references:
+    def copy_initial_refs(self):
+        import os,shutil
+        if os.path.exists(self.InitialReference):
+            shutil.copy(self.InitialReference,'initial_reference.vol')
+        if os.path.exists(self.SeedsSelfile):
+            fh=open(self.SeedsSelfile,'r')
+            lines=fh.readlines()
+            fh.close()
+            i = 0
+            newlines=[]
+            for line in lines:
+                i = i + 1
+                oname='initial_seed'+str(i).zfill(5)+'.vol'
+                words=line.split()
+                if words[0][0]=="/":
+                    shutil.copy(words[0],oname)
+                else:
+                    dirname=os.path.dirname(self.SeedsSelfile)
+                    iname=dirname+'/'+words[0]
+                    shutil.copy(iname,oname)
+                newlines.append(oname+' 1\n')
+            fh=open('ml3d_seeds.sel','w')
+            fh.writelines(newlines)
+            fh.close()
 
     # Crude correction of grey-scale, by performing a single iteration of projection matching and wbp
     def correct_greyscale(self):
@@ -321,14 +351,9 @@ class ML3D_class:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        outname=dirname+'ml3d'
-        if self.SeedsSelfile=="":
-            volname='ml3d_seeds.sel'
-        else:
-            volname=self.SeedsSelfile
         self.execute_MLrefine3D(self.InSelFile,
-                                outname,
-                                volname,
+                                dirname+'ml3d',
+                                'ml3d_seeds.sel',
                                 self.AngularSampling,
                                 self.NumberOfIterations,
                                 self.SymmetryFile,
