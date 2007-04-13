@@ -14,7 +14,7 @@
 # Selfile with the input images (relative path from ProjectDir):
 InSelFile="200.sel"
 # Initial single reference map (relative path from ProjectDir):
-InitialReference=""
+InitialReference="RCT/test1/wbp_ML3ref_ref00001_tilted.vol.sc32"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
@@ -46,18 +46,24 @@ WbpThreshold=0.02
 # Low-pass filter the initial reference?
 """ It is highly recommended to low-pass filter your initial reference volume as much as you can.
 """
-DoLowPassFilterReference=False
+DoLowPassFilterReference=True
 # Resolution of the low-pass filter (in Angstroms):
 LowPassFilter=50
 # Pixel size (in Angstroms):
-PixelSize=2.8
+PixelSize=5.6
 #------------------------------------------------------------------------------------------------
 # {section} Seed generation
 #------------------------------------------------------------------------------------------------
-# Generate seeds from a single initial reference map?
-DoGenerateSeeds=False
+# Generate unbiased seeds from a single initial reference map?
+DoGenerateSeeds=True
 # Number of seeds to be generated (and later on used in ML3D-classification):
 NumberOfReferences=2
+# Alternatively, provide selfile with user-defined seeds (relative path from ProjectDir):
+""" Automated (unbiased!) seed generation is highly recommended...
+    But you may use this option to provide the seeds from a previous run
+    The seeds should already be on the correct absolute greyscale!
+"""
+SeedsSelfile=""
 #------------------------------------------------------------------------------------------------
 # {section} ML3D-classification parameters
 #------------------------------------------------------------------------------------------------
@@ -69,7 +75,7 @@ DoML3DClassification=True
 """
 AngularSampling=30
 # Number of ML3D iterations to perform:
-NumberOfIterations=3
+NumberOfIterations=1
 # Symmetry description file (relative path from ProjectDir):
 """ See WIKI link for a description of the symmetry file format
     dont give anything, if no symmetry is present
@@ -77,12 +83,6 @@ NumberOfIterations=3
 SymmetryFile="6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
 ExtraParamsMLrefine3D="-l 0.3 -k 0.5 -n 2"
-# {expert} Selfile with user-provided seeds (relative path from ProjectDir):
-""" It is NOT recommended to generate your own seeds...
-    But you may use this option to provide the seeds from a previous run
-    The seeds should already be on the correct absolute greyscale!
-"""
-SeedsSelfile="ML3D/test3/ml3d_seeds.sel"
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -142,6 +142,7 @@ class ML3D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
+        self.DoGenerateSeeds=DoGenerateSeeds
         if (InitialReference==""):
             self.InitialReference=""
         else:
@@ -200,7 +201,7 @@ class ML3D_class:
         import os,shutil
         if os.path.exists(self.InitialReference):
             shutil.copy(self.InitialReference,'initial_reference.vol')
-        if os.path.exists(self.SeedsSelfile):
+        if (self.DoGenerateSeeds==False):
             fh=open(self.SeedsSelfile,'r')
             lines=fh.readlines()
             fh.close()
@@ -322,7 +323,7 @@ class ML3D_class:
         elif os.path.exists(corrvol):
             reference=corrvol
         else:
-            reference=self.InitialReference
+            reference='initial_reference.vol'
 
         # Launch MLrefine3D with output to subdirectories
         for i in range(self.NumberOfReferences):
