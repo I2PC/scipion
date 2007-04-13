@@ -5,15 +5,27 @@
 # Example use:
 # ./visualize_rct.py
 #
+# This script requires that protocol_rct.py is in the current directory
+#
 # Author: Sjors Scheres, March 2007
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working subdirectory:
-WorkingDir="test1"
 # For which classes do you want to perform the visualization?
 SelectClasses="1,2"
+# Visualize volumes in slices along Z?
+VisualizeVolZ=False
+# Visualize volumes in slices along X?
+VisualizeVolX=False
+# Visualize volumes in slices along Y?
+VisualizeVolY=False
+# Visualize volumes in UCSF Chimera?
+""" For this to work, you need to have chimera installed!
+"""
+VisualizeVolChimera=True
+# {expert} Width of selfile visualizations (preferably an even value):
+MatrixWidth=10
 #------------------------------------------------------------------------------------------------
 # {section} Step-by-step visualization
 #------------------------------------------------------------------------------------------------
@@ -23,88 +35,74 @@ VisualizeUntiltedAverages=True
 VisualizeUntiltedImages=True
 # Visualize aligned tilted images?
 VisualizeTiltedImages=True
-# Visualize ART reconstructions in slices along Z?
-VisualizeArtVolZ=True
-# Visualize ART reconstructions in slices along X?
-VisualizeArtVolX=True
-# Visualize WBP reconstructions in slices along Z?
-VisualizeWbpVolZ=True
-# Visualize WBP reconstructions in slices along X?
-VisualizeWbpVolX=True
+# Visualize ART reconstructions?
+VisualizeArtVols=True
+# Visualize WBP reconstructions?
+VisualizeWbpVols=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+import protocol_rct
+#
 class visualize_RCT_class:
 
     #init variables
     def __init__(self,
-                 WorkingDir,
                  SelectClasses,
+                 VisualizeVolZ,
+                 VisualizeVolX,
+                 VisualizeVolY,
+                 VisualizeVolChimera,
+                 MatrixWidth,
                  VisualizeUntiltedAverages,
                  VisualizeUntiltedImages,
                  VisualizeTiltedImages,
-                 VisualizeArtVolZ,
-                 VisualizeArtVolX,
-                 VisualizeWbpVolZ,
-                 VisualizeWbpVolX):
+                 VisualizeArtVols,
+                 VisualizeWbpVols):
 	     
         import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        
-        print '*  cd '+str(WorkingDir)
-        os.chdir(WorkingDir)
+        import visualization
+     
+        print '*  cd '+str(protocol_rct.WorkingDir)
+        os.chdir(protocol_rct.WorkingDir)
+        ShowVolumes=[]
+        ShowSelfiles=[]
+        ShowImages=[]
 
         refs=SelectClasses.split(',')
         for ref in refs:
 
-            basename='*_ref'+str(ref).zfill(5)
+            basename='rct_ref'+str(ref).zfill(5)
             if VisualizeUntiltedAverages:
-                imgname=self.getname(basename+'.med.xmp')
-                command='xmipp_show -img '+imgname+' &'
-                print '* ',command
-                os.system(command)
+                ShowImages.append(basename+'_untilted.med.xmp')
 
             if VisualizeUntiltedImages:
-                selname=self.getname(basename+'.sel')
-                command='xmipp_show -sel '+selname+' &'
-                print '* ',command
-                os.system(command)
+                ShowSelfiles.append(basename+'_untilted.sel')
 
             if VisualizeTiltedImages:
-                selname=self.getname(basename+'_tilted.sel')
-                command='xmipp_show -sel '+selname+' &'
-                print '* ',command
-                os.system(command)
+                ShowSelfiles.append(basename+'_tilted.sel')
 
-            if VisualizeArtVolZ:
-                volname=self.getname('art_'+basename+'_tilted.vol')
-                command='xmipp_show -vol '+volname+' &'
-                print '* ',command
-                os.system(command)
+            if VisualizeArtVols:
+                ShowVolumes.append('art_'+basename+'_tilted.vol')
 
-            if VisualizeArtVolX:
-                volname=self.getname('art_'+basename+'_tilted.vol')
-                command='xmipp_show -vol '+volname+'x &'
-                print '* ',command
-                os.system(command)
+            if VisualizeWbpVols:
+                ShowVolumes.append('wbp_'+basename+'_tilted.vol')
 
-            if VisualizeWbpVolZ:
-                volname=self.getname('wbp_'+basename+'_tilted.vol')
-                command='xmipp_show -vol '+volname+' &'
-                print '* ',command
-                os.system(command)
+        visualization.visualize_volumes(ShowVolumes,
+                                        VisualizeVolZ,
+                                        VisualizeVolX,
+                                        VisualizeVolY,
+                                        VisualizeVolChimera)
 
-            if VisualizeWbpVolX:
-                volname=self.getname('wbp_'+basename+'_tilted.vol')
-                command='xmipp_show -vol '+volname+'x &'
-                print '* ',command
-                os.system(command)
+        visualization.visualize_images(ShowSelfiles,True,MatrixWidth)
 
-                
+        visualization.visualize_images(ShowImages)
+ 
         # Return to parent dir
         print '*  cd ..'
         os.chdir(os.pardir)
@@ -129,13 +127,15 @@ class visualize_RCT_class:
 #     
 if __name__ == '__main__':
 
-    visualize_RCT=visualize_RCT_class(WorkingDir,
-                                      SelectClasses,
+    visualize_RCT=visualize_RCT_class(SelectClasses,
+                                      VisualizeVolZ,
+                                      VisualizeVolX,
+                                      VisualizeVolY,
+                                      VisualizeVolChimera,
+                                      MatrixWidth,
                                       VisualizeUntiltedAverages,
                                       VisualizeUntiltedImages,
                                       VisualizeTiltedImages,
-                                      VisualizeArtVolZ,
-                                      VisualizeArtVolX,
-                                      VisualizeWbpVolZ,
-                                      VisualizeWbpVolX)
+                                      VisualizeArtVols,
+                                      VisualizeWbpVols)
     visualize_RCT.close()

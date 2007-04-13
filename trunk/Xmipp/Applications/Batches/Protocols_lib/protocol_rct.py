@@ -166,10 +166,6 @@ class RCT_class:
 
         print '*********************************************************************'
 
-        # Make a directory for the local copies of all relevant images
-        if not os.path.exists('local_images'):
-            os.makedirs('local_images')
-
         # Set self.PreviousML2DRoot to the ML2D Working dir if empty
         if self.PreviousML2DRoot=="":
             head,tail=os.path.split(os.path.normpath(self.PreviousDirML2D))
@@ -190,26 +186,26 @@ class RCT_class:
             for ref in refs:
                 # Copy selfile and average image of ML2DDir to WorkingDir
                 unt_selfile=ml2d_abs_rootname+'_ref'+str(ref).zfill(5)+'.sel'
+                local_unt_selfile='rct_ref'+str(ref).zfill(5)+'_untilted.sel'
                 refavg=lastitername+'_ref'+str(ref).zfill(5)+'.xmp'
-                shutil.copy(unt_selfile,'.')
-                shutil.copy(refavg,'.')
-                unt_selfile=os.path.basename(unt_selfile)
-                refavg=os.path.basename(refavg)
-                til_selfile=self.make_tilted_selfile(unt_selfile)
-                self.untiltclasslist[ref]=[unt_selfile,]
-                self.untiltclasslist[ref].append(refavg)
-                self.untiltclasslist[ref].append(til_selfile)
+                local_refavg='rct_ref'+str(ref).zfill(5)+'_untilted_avg.xmp'
+                shutil.copy(unt_selfile,local_unt_selfile)
+                shutil.copy(refavg,local_refavg)
+                local_til_selfile=self.make_tilted_selfile(local_unt_selfile)
+                self.untiltclasslist[ref]=[local_unt_selfile,]
+                self.untiltclasslist[ref].append(local_refavg)
+                self.untiltclasslist[ref].append(local_til_selfile)
                 # Make a local copy of the images
-                message='Making a local copy of the images in '+unt_selfile+' and '+til_selfile
+                message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
                 print '* ',message
                 self.log.info(message)
                 mysel=SelFiles.selfile()
-                mysel.read(unt_selfile)
-                newsel=mysel.copy_sel('local_images')
-                newsel.write(unt_selfile)
-                mysel.read(til_selfile)
-                newsel=mysel.copy_sel('local_images')
-                newsel.write(til_selfile)
+                mysel.read(local_unt_selfile)
+                newsel=mysel.copy_sel('local_untilted_images')
+                newsel.write(local_unt_selfile)
+                mysel.read(local_til_selfile)
+                newsel=mysel.copy_sel('local_tilted_images')
+                newsel.write(local_til_selfile)
                  
     # This routine makes the corresponding selfile of the subset with tilted images
     # using the subset selfile of untilted images, and the original UntiltedSelFile & TiltedSelFile
@@ -222,7 +218,7 @@ class RCT_class:
         pat2.read(self.TiltedSelFile)
         unt.read(name_unt_sel)
         til=unt.make_corresponding_subset(pat1,pat2)
-        name_til_sel=name_unt_sel.replace('.sel','_tilted.sel')
+        name_til_sel=name_unt_sel.replace('_untilted.sel','_tilted.sel')
         til.write(name_til_sel)
         return name_til_sel
         
@@ -252,7 +248,8 @@ class RCT_class:
             unt_selfile=self.untiltclasslist[ref][0]
             til_selfile=self.untiltclasslist[ref][2]
             docfile=til_selfile.replace('.sel','.doc')
-            command='xmipp_align_tilt_pairs -u '+unt_selfile+\
+#            command='xmipp_align_tilt_pairs -u '+unt_selfile+\
+            command='xmipp_centilt -u '+unt_selfile+\
                      ' -t '+til_selfile+\
                      ' -doc '+docfile+\
                      ' -max_shift '+str(self.CenterMaxShift)
@@ -270,7 +267,8 @@ class RCT_class:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','')
             outname='art_'+outname
-            command='xmipp_reconstruct_art -i ' + til_selfile + \
+#            command='xmipp_reconstruct_art -i ' + til_selfile + \
+            command='xmipp_art -i ' + til_selfile + \
                      ' -o ' + outname + \
                      ' -l ' + str(self.ArtLambda)
             if not self.ArtAdditionalParams=="":
@@ -286,8 +284,9 @@ class RCT_class:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','.vol')
             outname='wbp_'+outname
-            command='xmipp_reconstruct_wbp -i ' + til_selfile + \
-                     ' -o ' + outname + \
+#            command='xmipp_reconstruct_wbp -i ' + til_selfile + \ 
+            command='xmipp_wbp -i ' + til_selfile + \
+                    ' -o ' + outname + \
                      ' -threshold ' + str(self.WbpThreshold)
             if not self.WbpAdditionalParams=="":
                 command+=' '+str(self.WbpAdditionalParams)
