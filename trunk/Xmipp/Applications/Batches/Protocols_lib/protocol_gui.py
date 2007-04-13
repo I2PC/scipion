@@ -21,6 +21,8 @@ class automated_gui_class:
         self.master=Tk()
         self.expert_mode=False
         self.is_setupgui=False
+        self.have_publication=False
+        self.publications=[]
         
         self.ScriptRead()
         self.ScriptParseVariables()
@@ -52,10 +54,10 @@ class automated_gui_class:
             if line=="":
                 print "Error, this file does not have a {end-of-header} label"
                 sys.exit()
-            if (line.find('{setup-') > -1):
+            if "{setup-" in line:
                 self.is_setupgui=True
             self.script_header_lines.append(line)
-            if (line.find('{end-of-header}') > -1):
+            if "{end-of-header}" in line:
                 isheader=True
 
         self.script_body_lines=fh.readlines()
@@ -82,8 +84,9 @@ class automated_gui_class:
 
     def ScriptParseComments(self,i):
         import string
-        found_comment=False
+
         morehelp=[]
+        found_comment=False
         j=i
         # comment will be the first line above the i^th line that begins with a "#"
         while not found_comment:
@@ -91,16 +94,16 @@ class automated_gui_class:
             if (self.script_header_lines[j][0]=='#'):
                 found_comment=True
                 comment=self.script_header_lines[j][1:]
-                if (comment.find('{expert}') > -1):
+                if "{expert}" in comment:
                     isexpert="expert"
                     comment=comment.replace ('{expert}', '' )
-                elif (comment.find('{setup-pre}') > -1):
+                elif "{setup-pre}" in comment:
                     isexpert="setup-pre"
                     comment=comment.replace ('{setup-pre}', '' )
-                elif (comment.find('{setup-2d}') > -1):
+                elif "{setup-2d}" in comment:
                     isexpert="setup-2d"
                     comment=comment.replace ('{setup-2d}', '' )
-                elif (comment.find('{setup-3d}') > -1):
+                elif "{setup-3d}" in comment:
                     isexpert="setup-3d"
                     comment=comment.replace ('{setup-3d}', '' )
                 else:
@@ -122,12 +125,17 @@ class automated_gui_class:
 
         for i in range(len(self.script_header_lines)):
             # Get section headers
-            if (self.script_header_lines[i].find('{section}') > -1):
+            if ("{section}" in self.script_header_lines[i]):
                 section=self.script_header_lines[i][1:].replace('{section}','')
                 args=self.script_header_lines[i].split("}")
                 self.variables[section]=[section[:-1],]
                 self.vfields.append(section)
                 self.variables[section].append("Section")
+            # Get corresponding publication
+            if ("{please cite}" in self.script_header_lines[i]):
+                self.have_publication=True
+                self.publications.append(self.script_header_lines[i][1:].replace('{please cite}',''))
+            
             # Get a variable
             elif (self.script_header_lines[i][0]!="#"
                   and self.script_header_lines[i][0]!="\n"
@@ -139,8 +147,7 @@ class automated_gui_class:
                     self.have_analyse_results=True;
                 self.variables[args[0]]=[args[1][:-1],]
                 self.vfields.append(args[0])
-                if (args[1].find('True') > -1) or \
-                   (args[1].find('False') > -1):
+                if ("True" in args[1]) or ("False" in args[1]):
                     self.variables[args[0]].append("Boolean")
                     newvar=BooleanVar()                    
                     self.variables[args[0]].append(newvar)
@@ -205,13 +212,19 @@ class automated_gui_class:
         # Script title
         headertext="GUI for Xmipp "
         programname=os.path.basename(sys.argv[1])
-        headertext+=programname.replace('.py','')
-        self.l1=Label(self.frame, text=headertext, fg="blue")
-        headertext="Executed in directory: "+str(os.getcwd())
-        self.l2=Label(self.frame, text=headertext, fg="blue")
+        headertext+=programname.replace('.py','')+'\n'
+        headertext+="Executed in directory: "+str(os.getcwd())
+        self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
-        self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
-        self.Addseperator(2)
+        if (self.have_publication):
+            headertext="If you publish results obtained with this protocol, please cite:"
+            for pub in self.publications:
+                headertext+='\n'+pub.replace('\n','')
+            self.l2=Label(self.frame, text=headertext, fg="dark green")
+            self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
+            self.Addseparator(2)
+        else:
+            self.Addseparator(1)
 
         # Add all the variables in the script header
         self.widgetexpertlist=[]
@@ -246,20 +259,20 @@ class automated_gui_class:
       
         # Script title
         headertext="Which Xmipp protocol do you want to run?"
-        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="blue")
+        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
-        self.Addseperator(2)
+        self.Addseparator(2)
 
         # Add labels for different protocol categories
         row=(self.frame.grid_size()[1]+1)
         self.row_pre=row
         self.row_2d=row
         self.row_3d=row
-        self.l=Label(self.frame, text="Preprocessing", fg="blue", width=30)
+        self.l=Label(self.frame, text="Preprocessing", fg="medium blue", width=30)
         self.l.grid(row=row, column=self.column_pre,columnspan=1, sticky=E)
-        self.l=Label(self.frame, text="2D analysis", fg="blue", width=30)
+        self.l=Label(self.frame, text="2D analysis", fg="medium blue", width=30)
         self.l.grid(row=row, column=self.column_2d,columnspan=1, sticky=E)
-        self.l=Label(self.frame, text="3D analysis", fg="blue", width=30)
+        self.l=Label(self.frame, text="3D analysis", fg="medium blue", width=30)
         self.l.grid(row=row, column=self.column_3d,columnspan=1, sticky=E)
 
         # Add all the variables in the script header
@@ -288,15 +301,15 @@ class automated_gui_class:
     def GuiAddSection(self,label):
         row=(self.frame.grid_size()[1]+1)
         line="-----------------------------------------------------------"
-        self.l1=Label(self.frame, text=label, fg="blue")
-        self.l2=Label(self.frame, text=line, fg="blue")
+        self.l1=Label(self.frame, text=label, fg="medium blue")
+        self.l2=Label(self.frame, text=line, fg="medium blue")
         self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
 
-    def Addseperator(self,row):
+    def Addseparator(self,row):
         self.l1=Label(self.frame,text="")
         self.l1.grid(row=row)
-        self.l2=Frame(self.frame, height=2, bd=1, bg="blue",relief=RIDGE)
+        self.l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel+3,sticky=EW)
         self.l3=Label(self.frame,text="")
         self.l3.grid(row=row+2)
@@ -385,7 +398,7 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.b)
 
     def GuiAddRestProtocolButtons(self):
-        self.Addseperator(self.buttonrow)
+        self.Addseparator(self.buttonrow)
         if (self.expert_mode==True):
             text2=" Hide expert options "
         else:
