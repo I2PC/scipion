@@ -3,10 +3,49 @@ import sys
 import os
 import string
 from Tkinter import *
-""" Guidelines for header formatting:
+""" Guidelines for python script header formatting:
 
-    to be added...
-    IMPORTANT: all lines in comments between 3x\" should start with a space, a tab or a \n
+The idea of the GUI class is that it provides a graphical editor of
+only the variables contained in the header of a python script, and
+that it can also be used to launch the script.
+
+Usage:
+  python protocol_gui.py script.py
+
+Where the header of script.py should be organized as follows:
+
+Obligatory:
+    * Include a {end-of-header} label at the end of the header
+    * Variable declaration (visible in GUI): Variablename=XXX
+          o If XXX is True or False, the variable is considered as a
+            Boolean (yes/no button in GUI)
+          o If XXX starts with \" or \', the variable is considered as
+            a string (text field in GUI)
+          o If XXX is a number, the variable is considered as a number
+            (text field in GUI) 
+    * The first single comment line above each variable (starting with a #)
+      will be displayed in the GUI, as a label left from the variable entry field
+
+    * More detailed help for each variable can be placed between the comment
+      line and the variable declaration line using \""" ...\""".
+      This text will become visible in the GUI by pressing a -what's this?-
+      button, at the right side of the variable entry field.
+      !!!NOTE that the first character in newlines within these comments
+      should start with spaces or a tab!!!
+    * An {expert} label on the comment line (#) marks the option as -expert-
+      (by default not shown in the GUI, unless you press the -show expert options-
+      button, at the left side of the variable entry field. Then, they will be
+      shown in yellow.
+
+Optional:
+
+    * A {please cite} label on a comment line (starting with a #) will display
+      a message at the top of the protocol stating -If you publish results obtained with
+      this protocol, please cite-, followed by the text on rest of the comment line.
+      If more than one citation lines are present, they will all be displayed.
+      DONT use very long citations, as this will results in an ugly gui.
+    * Include a {section} label on a comment line (starting with a #) to separate
+      variables by a blue line + the corresponding title in the GUI 
 
 """
 # Create a GUI automatically from a script
@@ -259,7 +298,7 @@ class automated_gui_class:
       
         # Script title
         headertext="Which Xmipp protocol do you want to run?"
-        self.l1=Label(self.frame, text=headertext, font=("Helvetica", 18), fg="medium blue")
+        self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
         self.Addseparator(2)
 
@@ -438,6 +477,12 @@ class automated_gui_class:
         self.bGet.grid(row=self.buttonrow,column=0)
         self.button = Button(self.frame, text="QUIT", command=self.master.quit)
         self.button.grid(row=self.buttonrow,column=2)
+        if (self.have_publication):
+            headertext="Read more about Xmipp protocols in:"
+            for pub in self.publications:
+                headertext+='\n'+pub.replace('\n','')
+            self.l2=Label(self.frame, text=headertext, fg="dark green")
+            self.l2.grid(row=self.buttonrow+1, column=0,columnspan=5,sticky=EW)
 
     def GuiTockleExpertMode(self):
         if (self.expert_mode==True):
