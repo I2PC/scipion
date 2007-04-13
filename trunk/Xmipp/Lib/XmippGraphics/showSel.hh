@@ -57,6 +57,8 @@ public:
 protected:
     // Filenames within the Selfile
     FileName   *imgnames;
+    // Sel file name. Used by the save routine
+    FileName selfile_fn; 
     // Selstatus of those files
     bool       *selstatus;
     // Kind of label: there are two types
@@ -91,7 +93,7 @@ protected:
     virtual void compute_global_normalization_params();
     /* Write SelFile, opens a GUI for the file selection and checks if the
        output filename exists. If it does, it asks for confirmation.*/
-    virtual void writeSelFile(SelFile &_SF);
+    virtual void writeSelFile(SelFile &_SF,bool overwrite=false);
     /* Cell label depending on labeltype */
     virtual const char* cellLabel(int i) const;
     /* Initialize right click menubar */
@@ -136,7 +138,9 @@ protected slots:
     virtual void saveSelFileActive();
     /* Save marked projections in a new Selfile as Active */
     virtual void saveSelFileNew();
-    /* Show Average and Stddev images */
+     /* Save marked projections in a new Selfile as Active */
+    virtual void saveSelFileNewOverwrite();
+   /* Show Average and Stddev images */
     virtual void showStats();
     /* Show statistics of the SelFile */
     virtual void showSelStats();
