@@ -517,9 +517,7 @@ class automated_gui_class:
         self.ScriptWrite()
 
     def GuiLanchSetup(self):
-        import protocol_setup
-        print "* Saving setup ..."
-        self.ScriptWrite()
+        self.GuiSave()
         print "* Launching protocol ..."
         command='python '+str(self.scriptname)+' '+str(self.which_setup.get())+' &'
         os.system(command)
