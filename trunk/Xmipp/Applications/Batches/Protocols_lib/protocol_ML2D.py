@@ -2,8 +2,8 @@
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
 # using maximum-likelihood principles, according to:
-# - Scheres et al. (2005) J.Mol.Biol 348, 139-149
-# - Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244
+# {please cite} Scheres et al. (2005) J.Mol.Biol 348, 139-149 
+# {please cite} Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244 (fast version)
 #
 # Example use:
 # ./protocol_ML2D.py
