@@ -119,8 +119,8 @@ class automated_gui_class:
 
         fh.writelines(linesb)
         fh.writelines(self.script_body_lines)
-        fh.close()        
-
+        fh.close() 
+        os.chmod(self.scriptname,0755)
     def ScriptParseComments(self,i):
         import string
 
