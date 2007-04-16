@@ -1,9 +1,0 @@
-######################################################################
-ifeq ($(HAVE_INRIA),YES)
-   PROJ = adjust_surface
-endif
-OBJ  = adjust_surface.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP_INTERFACE_INRIA) \
-       -l$(LIBRECONS) -l$(LIBRECONS_INRIA) \
-       -l$(LIBXMIPP) -lINRIA
-EXTRA_LIB_DIRS = -L$(XMIPP_INRIADIR)

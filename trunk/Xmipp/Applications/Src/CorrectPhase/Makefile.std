@@ -1,5 +1,0 @@
-######################################################################
-PROJ = ctf_correct_phase
-OBJ  = correctphase.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
-

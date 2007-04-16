@@ -1,4 +1,0 @@
-######################################################################
-PROJ = reconstruct_wbp
-OBJ  = wbp.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

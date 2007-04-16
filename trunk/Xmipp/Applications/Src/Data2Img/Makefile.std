@@ -1,4 +1,0 @@
-######################################################################
-PROJ = convert_data2img
-OBJ  = data2img.o
-LIBS = -l$(LIBXMIPP) -l$(LIBCLASSIF)

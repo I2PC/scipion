@@ -1,4 +1,0 @@
-######################################################################
-PROJ = micrograph_window
-OBJ  = window_micrograph.o
-LIBS = -l$(LIBXMIPP)

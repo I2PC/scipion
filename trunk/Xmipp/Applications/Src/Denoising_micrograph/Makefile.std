@@ -1,4 +1,0 @@
-######################################################################
-PROJ = micrograph_denoise
-OBJ  = denoising_micrograph.o
-LIBS = -l$(LIBXMIPP)

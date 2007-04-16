@@ -1,5 +1,0 @@
-######################################################################
-PROJ = phantom_transform
-OBJ  = phantom_transform.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
-

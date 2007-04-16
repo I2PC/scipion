@@ -1,5 +1,0 @@
-######################################################################
-PROJ = reverse_endian
-OBJ  = reverse_endian.o
-LIBS = -l$(LIBXMIPP)
-

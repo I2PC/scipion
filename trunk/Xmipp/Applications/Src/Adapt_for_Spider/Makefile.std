@@ -1,5 +1,0 @@
-######################################################################
-PROJ = adapt_for_spider
-OBJ  = adapt_for_spider.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)
-

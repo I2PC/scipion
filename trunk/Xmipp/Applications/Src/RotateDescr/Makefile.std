@@ -1,4 +1,0 @@
-######################################################################
-PROJ = rotate_descr
-OBJ  = rotate_descr.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

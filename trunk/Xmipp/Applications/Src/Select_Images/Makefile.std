@@ -1,4 +1,0 @@
-######################################################################
-PROJ = selfile_select
-OBJ  = select_images.o
-LIBS = -l$(LIBXMIPP)

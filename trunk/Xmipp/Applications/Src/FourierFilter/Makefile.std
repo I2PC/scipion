@@ -1,5 +1,0 @@
-######################################################################
-PROJ = fourier_filter
-OBJ  = fourierfilter.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)
-

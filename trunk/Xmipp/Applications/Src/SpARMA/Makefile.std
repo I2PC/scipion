@@ -1,4 +1,0 @@
-######################################################################
-PROJ = spARMA
-OBJ  = spARMA.o
-LIBS = -l$(LIBRECONS)  -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)

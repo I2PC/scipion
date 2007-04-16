@@ -1,6 +1,0 @@
-######################################################################
-PROJ = MPI_angular_predict_continuous
-NEEDS_MPI = true
-
-OBJ  = MPI_angular_predict_continuous.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

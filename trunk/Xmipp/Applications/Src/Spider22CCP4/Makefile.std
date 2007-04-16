@@ -1,6 +1,0 @@
-######################################################################
-PROJ = spi22ccp4
-OBJ  = spi22ccp4.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) \
-       -l$(LIBRECONS_INTERFACE)
-

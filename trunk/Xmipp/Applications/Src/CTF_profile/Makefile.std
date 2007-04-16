@@ -1,4 +1,0 @@
-######################################################################
-PROJ = ctf_profile
-OBJ  = CTF_profile.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

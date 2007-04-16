@@ -1,4 +1,0 @@
-######################################################################
-PROJ = ctf_estimate_from_micrograph
-OBJ  = assign_CTF.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

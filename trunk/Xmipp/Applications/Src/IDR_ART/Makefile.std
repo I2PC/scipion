@@ -1,4 +1,0 @@
-######################################################################
-PROJ = ctf_correct_idr
-OBJ  = idr_art.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)

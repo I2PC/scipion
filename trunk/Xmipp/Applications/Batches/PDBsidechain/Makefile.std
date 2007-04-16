@@ -1,5 +1,0 @@
-######################################################################
-MYSHELL = perl
-PROJ = extract_sidechain_from_pdb
-
-extract_sidechain_from_pdb: batch_extract_sidechain_from_pdb.pl

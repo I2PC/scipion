@@ -1,5 +1,0 @@
-######################################################################
-PROJ = crystal_unbend
-OBJ  = unbend.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP) \
-       -l$(LIBRECONS_INTERFACE)

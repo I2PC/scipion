@@ -1,4 +1,0 @@
-######################################################################
-PROJ = adjust_CTF
-OBJ  = adjust_CTF.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

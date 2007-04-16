@@ -1,4 +1,0 @@
-######################################################################
-PROJ = classify_kerdensom
-OBJ  = kerdensom.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

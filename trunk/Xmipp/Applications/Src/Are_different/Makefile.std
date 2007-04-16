@@ -1,5 +1,0 @@
-######################################################################
-PROJ = are_different
-OBJ  = are_different.o
-LIBS = -l$(LIBXMIPP)
-

@@ -1,4 +1,0 @@
-######################################################################
-PROJ = phantom_create_random
-OBJ  = random_phantom.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

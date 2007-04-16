@@ -1,4 +1,0 @@
-######################################################################
-PROJ = convert_data2pdb
-OBJ  = toPDB.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

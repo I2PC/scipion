@@ -1,5 +1,0 @@
-######################################################################
-PROJ = align_tilt_pairs
-OBJ  = centilt.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
-

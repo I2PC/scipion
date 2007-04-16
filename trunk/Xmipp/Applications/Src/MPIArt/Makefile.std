@@ -1,6 +1,0 @@
-######################################################################
-PROJ = mpi_art
-NEEDS_MPI = true
-
-OBJ  = mpi_art.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

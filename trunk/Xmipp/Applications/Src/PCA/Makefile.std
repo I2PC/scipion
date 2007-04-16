@@ -1,4 +1,0 @@
-######################################################################
-PROJ = classify_pca
-OBJ  = pca.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

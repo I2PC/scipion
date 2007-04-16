@@ -1,4 +1,0 @@
-######################################################################
-PROJ = classify_kcmeans
-OBJ  = kcmeans.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

@@ -1,5 +1,0 @@
-######################################################################
-PROJ = deconvoluteCTF
-OBJ  = deconvoluteCTF.o
-LIBS =  -l$(LIBRECONS) -l$(LIBXMIPP)
-

@@ -1,3 +1,0 @@
-PROJ = makespectra
-OBJ  = makespectra.o
-LIBS = -l$(LIBOLDXMIPP) -l$(LIBXMIPP)

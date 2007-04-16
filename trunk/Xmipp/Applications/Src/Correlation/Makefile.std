@@ -1,4 +1,0 @@
-######################################################################
-PROJ = correlation
-OBJ  = correlation.o
-LIBS = -l$(LIBXMIPP_INTERFACE) -l$(LIBRECONS) -l$(LIBXMIPP)

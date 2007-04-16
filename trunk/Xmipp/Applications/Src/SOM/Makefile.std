@@ -1,4 +1,0 @@
-######################################################################
-PROJ = classify_som
-OBJ  = som.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)

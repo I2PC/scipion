@@ -1,6 +1,0 @@
-######################################################################
-PROJ = mpi_ml_refine3d
-NEEDS_MPI = true
-
-OBJ  = mpi_MLrefine3D.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)

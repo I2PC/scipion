@@ -1,4 +1,0 @@
-######################################################################
-PROJ = range_adjust
-OBJ  = range_adjust.o
-LIBS = -l$(LIBXMIPP)

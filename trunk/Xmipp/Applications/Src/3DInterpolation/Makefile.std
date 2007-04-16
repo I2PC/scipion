@@ -1,4 +1,0 @@
-######################################################################
-PROJ = 3Dinterpolation
-OBJ  = 3Dinterpolation.o
-LIBS = -l$(LIBXMIPP)

@@ -1,4 +1,0 @@
-######################################################################
-PROJ = reconstruct_art
-OBJ  = art.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

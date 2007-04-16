@@ -1,5 +1,0 @@
-######################################################################
-PROJ = docfile_histogram
-OBJ  = docfile_histogram.o
-LIBS = -l$(LIBXMIPP)
-

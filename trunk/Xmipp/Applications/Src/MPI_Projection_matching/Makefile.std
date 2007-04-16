@@ -1,6 +1,0 @@
-######################################################################
-PROJ = mpi_angular_projection_matching
-NEEDS_MPI = true
-
-OBJ  = mpi_projection_matching.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)

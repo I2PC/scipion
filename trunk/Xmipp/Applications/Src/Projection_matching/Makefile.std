@@ -1,4 +1,0 @@
-######################################################################
-PROJ = angular_projection_matching
-OBJ  = projection_matching.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

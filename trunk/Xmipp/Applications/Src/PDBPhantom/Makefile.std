@@ -1,4 +1,0 @@
-######################################################################
-PROJ = convert_pdb2vol
-OBJ  = pdbphantom.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

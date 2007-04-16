@@ -1,5 +1,0 @@
-######################################################################
-PROJ = spar
-OBJ  = spar.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP_INTERFACE) -l$(LIBXMIPP)
-

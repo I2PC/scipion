@@ -1,6 +1,0 @@
-######################################################################
-PROJ = mpi_run
-NEEDS_MPI = true
-
-OBJ  = mpi_run.o
-LIBS = -l$(LIBXMIPP) -l$(LIBRECONS)

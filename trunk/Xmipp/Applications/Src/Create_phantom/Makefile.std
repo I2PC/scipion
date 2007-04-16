@@ -1,4 +1,0 @@
-######################################################################
-PROJ = phantom_create
-OBJ  = create_phantom.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)

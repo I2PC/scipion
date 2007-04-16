@@ -1,5 +1,0 @@
-######################################################################
-PROJ = ml_refine3d
-OBJ  = MLrefine3D.o
-LIBS = -l$(LIBRECONS) -l$(LIBXMIPP)
-

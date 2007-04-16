@@ -1,4 +1,0 @@
-######################################################################
-PROJ = classify_batch_som
-OBJ  = batchsom.o
-LIBS = -l$(LIBCLASSIF) -l$(LIBXMIPP)
