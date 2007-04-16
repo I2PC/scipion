@@ -15,29 +15,29 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# Selfile with the input images:
-""" Absolute paths are required in self file, self file localtion relative to 
-    ProjectDir
-"""
-SelFileName='../all.sel'
-
-# Working directory: 
-WorkDirectory='Test'
-
-
-# Delete working directory if it already exists?
-DoDeleteWorkingDir=True
-
-# {expert} Directory name for logfiles:
-LogDir="Logs"
-
-# {expert} Root directory name for this project:
+# Root directory name for this project:
 """ All Paths should be relative to this directory
 """
 ProjectDir="/home/roberto2/Test/PARA_Roberto"
 
-# Reference file name (3D map)
-ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
+# Selfile with the input images:
+""" Absolute paths are required in self file but the self file localtion 
+    is relative  to ProjectDir
+"""
+SelFileName='../all.sel'
+
+# Working directory: 
+""" Relateive path to ProjectDir
+"""
+WorkDirectory='Test'
+
+# Delete working directory?
+DoDeleteWorkingDir=True
+
+# {expert} Directory name for logfiles:
+""" Relative path to ProjectDir
+"""
+LogDir="Logs"
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -47,8 +47,8 @@ DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=2
 # A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs 
-    may require this
+""" List with all working nodes (computer names) that are going
+    to be used for computation. ABSOLUTE PATH
 """
 MachineFile="/home/roberto2/bin/machines.dat"
 
@@ -61,10 +61,16 @@ MachineFile="/home/roberto2/bin/machines.dat"
 """
 DoMask=True
 
-#show masked volume
-""" Masked volume will be shown.
+# Reference file name (3D map)
+""" Relative path to ProjectDir
 """
-DisplayMask=False
+ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
+
+#show masked volume
+""" Masked volume will be shown. Do not set ths option to true for
+    non iterative processing (jobs sent to queues)
+"""
+DisplayMask=True
 
 #binary mask-file used to mask reference volume
 MaskFileName='circular_mask.msk'
@@ -76,8 +82,9 @@ MaskFileName='circular_mask.msk'
 # Projection Matching
 DoProjectionMatching=True
 
-#show masked volume
-""" Show average of projections.
+#Show projection maching library and classes
+""" Show average of projections. Do not set ths option to true for
+    non iterative processing (jobs sent to queues)
 """
 DisplayProjectionMatching=True
 
@@ -86,6 +93,9 @@ AngSamplingRateDeg=20
 
 #Maximum change in origin offset (+/- pixels)
 MaxChangeOffset=10
+
+#restrict search by tilt angle
+DoRetricSearchbyTiltAngle=True
 
 #Lower-value for restricted tilt angle search
 Tilt0=40
@@ -100,7 +110,10 @@ TiltF=140
 Symfile="../P6.sym"
 
 #extra options for Projection_Maching
-#ProjMatchingExtra=""
+""" IF you want to use your only references use the -ref option here,
+    references name should be proj_match_lib00001.proj
+"""
+ProjMatchingExtra=""
 
 #-----------------------------------------------------------------------------
 # {section} Align2d
@@ -108,8 +121,11 @@ Symfile="../P6.sym"
 # Perform 2D alignment?
 DoAlign2D=True
 
-#display align2d results
-DisplayAlign2D=False
+#Display align2d results
+""" Show aligned classes. Do not set ths option to true for
+    non iterative processing (jobs sent to queues)
+"""
+DisplayAlign2D=True
 
 # Inner radius for rotational correlation:
 """ These values are in pixels from the image center
@@ -151,10 +167,17 @@ ReconstructionMethod="wbp"
 
 
 #-----------------------------------------------------------------------------
-# Restore original Header
+# {section} Cleaning temporal files and Reseting origial data
 #-----------------------------------------------------------------------------
 # Restore original Header?
 DoRestoreOriginalHeader=False
+
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_projmatch.py"
+
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -171,6 +194,7 @@ class projection_matching_class:
                 _DoProjectionMatching,
                 _DisplayProjectionMatching,
                 _AngSamplingRateDeg,
+                _DoRetricSearchbyTiltAngle,
                 _Tilt0,
                 _TiltF,
                 _ProjMatchingExtra,
@@ -209,6 +233,7 @@ class projection_matching_class:
        self._DoProjectionMatching=_DoProjectionMatching
        self._DisplayProjectionMatching=_DisplayProjectionMatching
        self._AngSamplingRateDeg=str(_AngSamplingRateDeg)
+       self._DoRetricSearchbyTiltAngle=_DoRetricSearchbyTiltAngle
        self._Tilt0=_Tilt0
        self._TiltF=_TiltF
        self._ProjMatchingExtra=_ProjMatchingExtra
@@ -310,6 +335,7 @@ class projection_matching_class:
                                       self._SelFileName,
                                       self._Proj_Maching_Output_Root_Name, 
                                       self._AngSamplingRateDeg,
+                                      self._DoRetricSearchbyTiltAngle,
                                       self._Tilt0,
                                       self._TiltF,
                                       self._InnerRadius,
@@ -444,6 +470,7 @@ def execute_projection_matching(_mylog,
                                 _SelFileName,
                                 _Proj_Maching_Output_Root_Name,    
                                 _AngSamplingRateDeg,
+                                _DoRetricSearchbyTiltAngle,
                                 _Tilt0,
                                 _TiltF,
                                 _Ri,
@@ -471,9 +498,14 @@ def execute_projection_matching(_mylog,
               ' -vol '         + Reference_Vol + \
               ' -o '           + _Proj_Maching_Output_Root_Name      + \
               ' -sam '         + _AngSamplingRateDeg  + \
-              ' -max_shift '   + _MaxChangeOffset     + \
+              ' -max_shift '   + _MaxChangeOffset
+  
+  if _DoRetricSearchbyTiltAngle:
+     parameters=  parameters                           + \
               ' -tilt0 '       + str(_Tilt0)        + \
-              ' -tiltF '       + str(_TiltF)        + \
+              ' -tiltF '       + str(_TiltF)
+  
+  parameters=  parameters                           + \
               ' -Ri '          + str(_Ri)           + \
               ' -Ro '          + str(_Ro)           + \
               ' -output_refs -output_classes ' + \
@@ -724,6 +756,7 @@ if __name__ == '__main__':
                 DoProjectionMatching,
                 DisplayProjectionMatching,
                 AngSamplingRateDeg,
+                DoRetricSearchbyTiltAngle,
                 Tilt0,
                 TiltF,
                 ProjMatchingExtra,
