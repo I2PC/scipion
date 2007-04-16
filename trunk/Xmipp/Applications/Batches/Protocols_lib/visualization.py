@@ -48,5 +48,34 @@ def visualize_images(Names,AreSelFiles=False,SelFileWidth="",SelFileHeight=""):
         command+=' &'
         print '* ',command
         os.system(command)
-
+        
+#use gnuplot from python
+import os
+class gnuplot:
+    def __init__(self,persistent):
+        gnuplot_base="gnuplot"
+        if persistent:
+           gnuplot_base="gnuplot -persist"
+        self.session = os.popen(gnuplot_base,"w")
+    def __del__(self):
+        print "closing gnuplot session..."
+        self.session.close()
+    def send(self, cmd):
+        self.session.write(cmd+'\n')
+        self.session.flush() 
+    def plot_xy_file(self,DataFile,
+                          Title="",
+                          X_Label="x",
+                          Y_Label="y"):
+       """ plots a file using gnuplot
+           data file may have comments (line starting with #)
+       """
+       print DataFile
+       print Title
+       print X_Label
+       print Y_Label
+       self.send(" set title '"+Title+"'")   
+       self.send(" set xlabel '"+X_Label+"'")   
+       self.send(" set ylabel '"+Y_Label+"'")   
+       self.send(" plot '" + DataFile + "' with lines")   
 
