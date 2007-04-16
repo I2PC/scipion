@@ -79,3 +79,26 @@ class gnuplot:
        self.send(" set ylabel '"+Y_Label+"'")   
        self.send(" plot '" + DataFile + "' with lines")   
 
+    def plot_xy1y2_file(self,DataFile,
+                             Title="",
+                             titley1="",
+                             titley2="",
+                             X_Label="x",
+                             Y_Label="y"):
+       """ plots a file using gnuplot
+           file is format is
+           x1 y11 y12
+           x2 y21 y22
+           ...
+       """
+       print DataFile
+       print Title
+       print X_Label
+       print Y_Label
+       self.send(" set title '"+Title+"'")   
+       self.send(" set xlabel '"+X_Label+"'")   
+       self.send(" set ylabel '"+Y_Label+"'")   
+       self.send(" plot '" + DataFile + "'using 1:2 title '"+\
+                                        titley1+"' with lines")   
+       self.send(" replot '" + DataFile + "'using 1:3 title '"+\
+                                        titley2+"' with lines")   
