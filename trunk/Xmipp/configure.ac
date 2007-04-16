@@ -10,7 +10,7 @@
 
 AC_INIT
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Xmipp,1.1)
+AM_INIT_AUTOMAKE(Xmipp,1.2)
 AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CPP
@@ -144,9 +144,9 @@ AC_OUTPUT( Other_packages/Makefile \
 	Lib/XmippGraphics/Makefile \
 	Applications/Makefile \
 	Applications/OldXmipp/Makefile \
-	Applications/OldXmipp/MakeSpectra/Makefile \
 	Applications/OldXmipp/FindSCenter/Makefile \
 	Applications/Batches/Makefile \
+    Applications/Batches/backwards/Makefile \
 	Applications/Batches/Do_Selfile/Makefile \
 	Applications/Batches/PDB2descr/Makefile \
 	Applications/Batches/Pdb2surface/Makefile \
@@ -156,13 +156,8 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Batches/mlf_refine3d/Makefile \
 	Applications/Batches/mpi_mlf_refine3d/Makefile \
 	Applications/Src/Makefile \
-	Applications/Src/2DInterpolation/Makefile \
-	Applications/Src/3DInterpolation/Makefile \
-	Applications/Src/Adapt_for_Spider/Makefile \
 	Applications/Src/Add_noise/Makefile \
-	Applications/Src/Adjust_CTF/Makefile \
 	Applications/Src/Adjust_volume/Makefile \
-	Applications/Src/Adjust_surface/Makefile \
 	Applications/Src/Align2D/Makefile \
 	Applications/Src/Align3D/Makefile \
 	Applications/Src/Ang_distribution/Makefile \
@@ -170,27 +165,21 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Angular_predict/Makefile \
 	Applications/Src/Angular_predict_continuous/Makefile \
 	Applications/Src/Angular_predict_tomography/Makefile \
-	Applications/Src/Angular_refinement/Makefile \
 	Applications/Src/ApplyGeo/Makefile \
 	Applications/Src/AppendDocFile/Makefile \
-	Applications/Src/Are_different/Makefile \
 	Applications/Src/Art/Makefile \
-	Applications/Src/Assign_angles/Makefile \
 	Applications/Src/Assign_CTF/Makefile \
-	Applications/Src/Assign_multiple_CTFs/Makefile \
 	Applications/Src/BatchSOM/Makefile \
 	Applications/Src/Break_sym/Makefile \
 	Applications/Src/Centilt/Makefile \
-	Applications/Src/CodeStatis/Makefile \
-	Applications/Src/Combine_stats/Makefile \
 	Applications/Src/Compare_Selfiles/Makefile \
 	Applications/Src/CorrectPhase/Makefile \
 	Applications/Src/Correlation/Makefile \
 	Applications/Src/Create_surface/Makefile \
-	Applications/Src/CpSel/Makefile Applications/Src/Create_phantom/Makefile \
+	Applications/Src/CpSel/Makefile \
+	Applications/Src/Create_phantom/Makefile \
 	Applications/Src/CTF_profile/Makefile \
 	Applications/Src/CTFViewer/Makefile \
-	Applications/Src/deconvoluteCTF/Makefile \
 	Applications/Src/Data2Img/Makefile \
 	Applications/Src/Data2Vol/Makefile \
 	Applications/Src/Deform/Makefile \
@@ -198,14 +187,10 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Denoising_micrograph/Makefile \
 	Applications/Src/DocFile_Histogram/Makefile \
 	Applications/Src/DownSample/Makefile \
-	Applications/Src/Draw_surface/Makefile \
 	Applications/Src/Edit/Makefile \
 	Applications/Src/EM2Angles/Makefile \
 	Applications/Src/Enhance_PSD/Makefile \
-	Applications/Src/Euler/Makefile \
 	Applications/Src/Evaluate/Makefile \
-	Applications/Src/Evaluate_FSCs/Makefile \
-	Applications/Src/Exp_Shift_Computation/Makefile \
 	Applications/Src/FCMeans/Makefile \
 	Applications/Src/FindCenter3D/Makefile \
 	Applications/Src/FKCN/Makefile \
@@ -248,8 +233,6 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Projection_matching/Makefile \
 	Applications/Src/ProjectPCA/Makefile \
 	Applications/Src/Pyramid/Makefile \
-	Applications/Src/Radon_Transform/Makefile \
-	Applications/Src/RandomMapping/Makefile \
 	Applications/Src/Random_phantom/Makefile \
 	Applications/Src/Range_adjust/Makefile \
 	Applications/Src/Raw22spi/Makefile \
@@ -258,9 +241,7 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Resolution/Makefile \
 	Applications/Src/RmSel/Makefile \
 	Applications/Src/Rotate/Makefile \
-	Applications/Src/RotateDescr/Makefile \
 	Applications/Src/Sammon/Makefile \
-	Applications/Src/Sample_size/Makefile \
 	Applications/Src/Scale/Makefile \
 	Applications/Src/Scissor/Makefile \
 	Applications/Src/Segment/Makefile \
@@ -272,15 +253,12 @@ AC_OUTPUT( Other_packages/Makefile \
 	Applications/Src/Skew/Makefile \
 	Applications/Src/SOM/Makefile \
 	Applications/Src/Sort_junk/Makefile \
-	Applications/Src/SpAR/Makefile \
-	Applications/Src/SpARMA/Makefile \
 	Applications/Src/Spi22em/Makefile \
 	Applications/Src/Spider22CCP4/Makefile \
 	Applications/Src/Spots2RealSpace2D/Makefile \
 	Applications/Src/Split_selfile/Makefile \
 	Applications/Src/SSNR/Makefile \
 	Applications/Src/Statis/Makefile \
-	Applications/Src/Surface/Makefile \
 	Applications/Src/Symmetrize/Makefile \
 	Applications/Src/Threshold/Makefile \
 	Applications/Src/Tiff2Raw/Makefile \

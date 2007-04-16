@@ -1,8 +1,7 @@
-bin_SCRIPTS = mpi_mlf_refine3d
+dist_bin_SCRIPTS = mpi_mlf_refine3d
 
-mpi_mlf_refine3d: 
-	echo "#!$(SH_PATH)" > aux_script
-	cat batch_mpi_mlf_refine3d >> aux_script
-	mv aux_script mpi_mlf_refine3d
+CLEANFILES = $(dist_bin_SCRIPTS)
 
-EXTRA_DIST = batch_mpi_mlf_refine3d
+mpi_mlf_refine3d:
+	cp batch_mpi_mlf_refine3d mpi_mlf_refine3d
+	chmod +x mpi_mlf_refine3d

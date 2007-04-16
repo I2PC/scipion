@@ -1,14 +1,15 @@
 OPTIONAL_PROGS =
 
 if BUILD_MPI
-OPTIONAL_PROGS += MPIArt \
-		  MPI_Angular_Predict \
-		  MPI_Angular_Predict_Continuous \
-		  MPI_MLalign2D \
-		  MPI_MLrefine3D \
-		  MPI_Projection_matching \
-                  MPI_WBP \
-                  MPI_Run
+OPTIONAL_PROGS += \
+	MPIArt \
+	MPI_Angular_Predict \
+	MPI_Angular_Predict_Continuous \
+	MPI_MLalign2D \
+	MPI_MLrefine3D \
+	MPI_Projection_matching \
+	MPI_WBP \
+	MPI_Run
 endif
 
 if BUILD_TIFF
@@ -16,16 +17,17 @@ OPTIONAL_PROGS += Tiff2Raw
 endif
 
 if BUILD_QT
-OPTIONAL_PROGS += CTFViewer Edit Mark Show XMask
+OPTIONAL_PROGS += \
+	CTFViewer \
+	Edit \
+	Mark \
+	Show \
+	XMask
 endif
 
-SUBDIRS = 2DInterpolation \
-	3DInterpolation \
-	Adapt_for_Spider \
+SUBDIRS = \
 	Add_noise \
-	Adjust_CTF \
-        Adjust_volume \
-	Adjust_surface \
+	Adjust_volume \
 	Align3D \
 	Align2D \
 	Ang_distribution \
@@ -33,19 +35,13 @@ SUBDIRS = 2DInterpolation \
 	Angular_predict \
 	Angular_predict_continuous \
 	Angular_predict_tomography \
-	Angular_refinement \
 	ApplyGeo \
 	AppendDocFile \
-	Are_different \
 	Art \
-	Assign_angles \
 	Assign_CTF \
-	Assign_multiple_CTFs \
 	BatchSOM \
 	Break_sym \
 	Centilt \
-	CodeStatis \
-	Combine_stats \
 	Compare_Selfiles \
 	CorrectPhase \
 	Correlation \
@@ -54,19 +50,14 @@ SUBDIRS = 2DInterpolation \
 	CTF_profile \
 	Data2Img \
 	Data2Vol \
-	deconvoluteCTF \
 	Deform \
 	Denoising \
 	Denoising_micrograph \
 	DocFile_Histogram \
 	DownSample \
-	Draw_surface \
-        EM2Angles \
-        Enhance_PSD \
-	Euler \
+	EM2Angles \
+	Enhance_PSD \
 	Evaluate \
-	Evaluate_FSCs \
-	Exp_Shift_Computation \
 	FCMeans \
 	FindCenter3D \
 	FKCN \
@@ -83,7 +74,7 @@ SUBDIRS = 2DInterpolation \
 	Lattice_vectors \
 	MakeSpectra \
 	Mask \
-        Markhan \
+	Markhan \
 	Microscope \
 	MLalign2D \
 	MLalign2D_combine \
@@ -93,16 +84,13 @@ SUBDIRS = 2DInterpolation \
 	Normalize \
 	Operate \
 	PCA \
-        PDBPhantom \
+	PDBPhantom \
 	Phantom_transform \
 	Project \
 	Projection_Neighbourhood \
 	Projection_matching \
 	ProjectPCA \
 	Pyramid \
-	Radon_Transform \
-	RandomMapping \
-	Random_phantom \
 	Range_adjust \
 	Raw22spi \
 	Recons_test \
@@ -110,9 +98,7 @@ SUBDIRS = 2DInterpolation \
 	Resolution \
 	RmSel \
 	Rotate \
-	RotateDescr \
 	Sammon \
-	Sample_size \
 	Scale \
 	Scissor \
 	Segment \
@@ -124,14 +110,11 @@ SUBDIRS = 2DInterpolation \
 	SOM \
 	Sort_junk \
 	Split_selfile \
-	SpAR \
-	SpARMA \
 	Spi22em \
 	Spider22CCP4 \
 	Spots2RealSpace2D \
 	SSNR \
 	Statis \
-	Surface \
 	Symmetrize \
 	Threshold \
 	ToPDB \

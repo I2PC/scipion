@@ -1,6 +1,8 @@
-bin_SCRIPTS = extract_sidechain_from_pdb
+dist_bin_SCRIPTS = extract_sidechain_from_pdb
 
-extract_sidechain_from_pdb: batch_extract_sidechain_from_pdb.pl
+CLEANFILES = $(dist_bin_SCRIPTS)
+
+extract_sidechain_from_pdb:
 	cp batch_extract_sidechain_from_pdb.pl extract_sidechain_from_pdb
+	chmod +x extract_sidechain_from_pdb
 
-EXTRA_DIST = batch_extract_sidechain_from_pdb.pl

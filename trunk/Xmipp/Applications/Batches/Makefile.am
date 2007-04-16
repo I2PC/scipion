@@ -1,4 +1,6 @@
-SUBDIRS = Do_Selfile \
+SUBDIRS = \
+	backwards \
+	Do_Selfile \
 	PDB2descr \
 	PDBsidechain \
 	Pdb2surface \

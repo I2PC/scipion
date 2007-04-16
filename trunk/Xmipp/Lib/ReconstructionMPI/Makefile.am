@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libXmippReconsMPI_@host_os@.la 
+lib_LTLIBRARIES = libXmippReconsMPI_@host_os@.la
 
 libXmippReconsMPI_@host_os@_la_SOURCES = Programs/Src/Prog_MPI_Run.cc
 

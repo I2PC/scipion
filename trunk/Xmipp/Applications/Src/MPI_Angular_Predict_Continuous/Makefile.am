@@ -7,7 +7,6 @@ mpi_angular_predict_continuous_LDADD = \
 
 CC=@MPICXX@
 CXX=@MPICXX@
-AM_CXXFLAGS=-w $(AM_CXXFLAGS)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
 mpi_angular_predict_continuous_LDFLAGS = @EXEC_TYPE@

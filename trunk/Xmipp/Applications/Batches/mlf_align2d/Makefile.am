@@ -1,8 +1,8 @@
-bin_SCRIPTS = mlf_align2d
+dist_bin_SCRIPTS = mlf_align2d
 
-mlf_align2d: 
-	echo "#!$(SH_PATH)" > aux_script
-	cat batch_mlf_align2d >> aux_script
-	mv aux_script mlf_align2d
+CLEANFILES = $(dist_bin_SCRIPTS)
 
-EXTRA_DIST = batch_mlf_align2d
+mlf_align2d:
+	cp batch_mlf_align2d mlf_align2d
+	chmod +x mlf_align2d
+

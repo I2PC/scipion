@@ -1,1 +1,1 @@
-SUBDIRS = MakeSpectra FindSCenter
+SUBDIRS = FindSCenter
