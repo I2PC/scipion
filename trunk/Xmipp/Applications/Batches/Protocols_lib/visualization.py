@@ -52,7 +52,7 @@ def visualize_images(Names,AreSelFiles=False,SelFileWidth="",SelFileHeight=""):
 #use gnuplot from python
 import os
 class gnuplot:
-    def __init__(self,persistent):
+    def __init__(self,persistent=True):
         gnuplot_base="gnuplot"
         if persistent:
            gnuplot_base="gnuplot -persist"
