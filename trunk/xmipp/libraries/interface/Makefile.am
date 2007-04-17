@@ -1,42 +1,42 @@
 lib_LTLIBRARIES = \
-	libXmippInterface_@host_os@.la \
-	libXmippInterfaceINRIA_@host_os@.la
+	libXmippInterface.la \
+	libXmippInterfaceINRIA.la
 
-libXmippInterface_@host_os@_la_SOURCES = \
-	Src/xmippAPH.cc \
-	Src/xmippSpider.cc \
-	Src/xmippVirus.cc \
-	Src/xmippCrisp.cc \
-	Src/xmippVrml.cc \
-	Src/xmippOpenDX.cc \
-	Src/xmippOpenDXang.cc \
-	Src/xmippJDL.cc \
-	Src/xmippAPH3D.cc \
-	Src/xmippAPHorigmerg.cc \
-	Src/xmippCCLattice_IO.cc \
-	Src/xmippCCP4.cc \
-	Src/xmippEM.cc
+libXmippInterface_la_SOURCES = \
+	aph3d.cpp \
+	aph.cpp \
+	aph_origmerg.cpp \
+	cc_lattice_io.cpp \
+	ccp4.cpp \
+	crisp.cpp \
+	em.cpp \
+	jdl.cpp \
+	opendxang.cpp \
+	opendx.cpp \
+	spider.cpp \
+	virus.cpp \
+	vrml.cpp
 
-libXmippInterfaceINRIA_@host_os@_la_SOURCES = \
-	Src/xmippINRIA.cc
+libXmippInterfaceINRIA_la_SOURCES = \
+	inria.cpp
 
 EXTRA_DIST = \
-	xmippAPH3D.hh \
-	xmippCrisp.hh \
-	xmippOpenDX.hh \
-	xmippVrml.hh \
-	xmippAPH.hh \
-	xmippINRIA.hh \
-	xmippSpider.hh \
-	xmippAPHorigmerg.hh \
-	xmippJDL.hh \
-	xmippVirus.hh \
-	xmippOpenDXang.hh \
-	xmippCCLattice_IO.hh \
-	xmippCCP4.hh \
-	xmippEM.hh
+	aph3d.h \
+	aph.h \
+	aph_origmerg.h \
+	cc_lattice_io.h \
+	ccp4.h \
+	crisp.h \
+	em.h \
+	inria.h \
+	jdl.h \
+	opendxang.h \
+	opendx.h \
+	spider.h \
+	virus.h \
+	vrml.h
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 
 docs:
 	@echo "Creating documentation in XmippInterface ..."

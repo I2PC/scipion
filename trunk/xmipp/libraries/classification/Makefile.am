@@ -1,54 +1,54 @@
-lib_LTLIBRARIES = libXmippClassif_@host_os@.la
+lib_LTLIBRARIES = libXmippClassif.la
 
-libXmippClassif_@host_os@_la_SOURCES = \
-	Src/xmippCTVectors.cc \
-	Src/xmippCodeBook.cc \
-	Src/xmippFuzzyCodeBook.cc \
-	Src/xmippDistances.cc \
-	Src/xmippSammon.cc \
-	Src/xmippFCMeans.cc \
-	Src/xmippMap.cc \
-	Src/xmippSOM.cc \
-	Src/xmippFKCN.cc \
-	Src/xmippFuzzySOM.cc \
-	Src/xmippKerDenSOM.cc \
-	Src/xmippBatchSOM.cc \
-	Src/xmippUmatrix.cc \
-	Src/xmippPlanes.cc \
-	Src/xmippTStudentKerDenSOM.cc \
-	Src/xmippGaussianKerDenSOM.cc \
-	Src/xmippPC.cc \
-	Src/xmippRBF.cc \
-	Src/xmippRM.cc
+libXmippClassif_la_SOURCES = \
+	batch_som.cpp \
+	code_book.cpp \
+	distance.cpp \
+	fcmeans.cpp \
+	fkcn.cpp \
+	fuzzy_code_book.cpp \
+	fuzzy_som.cpp \
+	gaussian_kerdensom.cpp \
+	kerdensom.cpp \
+	map.cpp \
+	pca.cpp \
+	plane.cpp \
+	rbf.cpp \
+	rm.cpp \
+	sammon.cpp \
+	som.cpp \
+	training_vector.cpp \
+	tstudent_kerdensom.cpp \
+	umatrix.cpp
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 
 EXTRA_DIST = \
-	xmippBaseAlgo.hh \
-	xmippFKCN.hh \
-	xmippRM.hh \
-	xmippBatchSOM.hh \
-	xmippFuzzyCodeBook.hh \
-	xmippSammon.hh \
-	xmippCDataTypes.hh \
-	xmippFuzzySOM.hh \
-	xmippSOM.hh \
-	xmippCDSet.hh \
-	xmippGaussianKerDenSOM.hh \
-	xmippTStudentKerDenSOM.hh \
-	xmippCodeBook.hh \
-	xmippKerDenSOM.hh \
-	xmippUmatrix.hh \
-	xmippCTSet.hh \
-	xmippMap.hh \
-	xmippUniform.hh \
-	xmippCTVectors.hh \
-	xmippPC.hh \
-	xmippVectorOps.hh \
-	xmippDistances.hh \
-	xmippPlanes.hh \
-	xmippFCMeans.hh \
-	xmippRBF.hh
+	base_algorithm.h \
+	batch_som.h \
+	code_book.h \
+	data_set.h \
+	data_types.h \
+	distance.h \
+	fcmeans.h \
+	fkcn.h \
+	fuzzy_code_book.h \
+	fuzzy_som.h \
+	gaussian_kerdensom.h \
+	kerdensom.h \
+	map.h \
+	pca.h \
+	plane.h \
+	rbf.h \
+	rm.h \
+	sammon.h \
+	som.h \
+	training_set.h \
+	training_vector.h \
+	tstudent_kerdensom.h \
+	umatrix.h \
+	uniform.h \
+	vector_ops.h
 
 docs:
 	@echo "Creating documentation in Classification ..."

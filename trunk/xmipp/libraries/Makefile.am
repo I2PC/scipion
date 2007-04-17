@@ -1,15 +1,20 @@
 OPTIONAL_LIBS =
 
 if BUILD_QT
-OPTIONAL_LIBS += XmippGraphics
+OPTIONAL_LIBS += graphics
 endif
 
 if BUILD_MPI
-OPTIONAL_LIBS += ReconstructionMPI
+OPTIONAL_LIBS += reconstruction_mpi
 endif
 
-SUBDIRS = XmippData Reconstruction Classification XmippInterface \
-	   OldXmipp $(OPTIONAL_LIBS)
+SUBDIRS = \
+	data \
+	reconstruction \
+	classification \
+	interface \
+	legacy \
+	$(OPTIONAL_LIBS)
 
 docs:
 	for dir in $(SUBDIRS); do cd $$dir; $(MAKE) docs; cd ..; done

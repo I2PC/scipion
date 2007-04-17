@@ -1,6 +1,6 @@
-lib_LTLIBRARIES = libXmippReconsMPI_@host_os@.la
+lib_LTLIBRARIES = libXmippReconsMPI.la
 
-libXmippReconsMPI_@host_os@_la_SOURCES = Programs/Src/Prog_MPI_Run.cc
+libXmippReconsMPI_la_SOURCES = mpi_run.cpp
 
 CC=@MPICXX@
 CXX=@MPICXX@
@@ -9,9 +9,9 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $
 mpi_run_LDFLAGS = @EXEC_TYPE@
 
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 
-EXTRA_DIST = Programs/Prog_MPI_Run.hh
+EXTRA_DIST = mpi_run.h
 
 docs:
 	@echo "Creating documentation in Reconstruction ..."

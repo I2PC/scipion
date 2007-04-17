@@ -1,23 +1,30 @@
-lib_LTLIBRARIES = \
-	libOldXmipp_@host_os@.la
+lib_LTLIBRARIES = libXmippLegacy.la
 
-libOldXmipp_@host_os@_la_SOURCES = \
-	cabecero.cc \
-	varios.cc \
-	varios2.cc \
-	varios3.cc \
-	dimension.cc \
-	floatnat.cc \
-	iocabecero.cc \
-	usages.cc \
-	fft.cc \
-	fftmod.cc \
-	fftn.cc \
-	allfft.cc \
-	filtros.cc \
-	specmod.cc
+libOldXmipp_la_SOURCES = \
+	allfft.cpp \
+	autovec.cpp \
+	cabecero.cpp \
+	cenpar.cpp \
+	dimension.cpp \
+	fft2d.cpp \
+	fft.cpp \
+	fftmod.cpp \
+	fftn.cpp \
+	filtros.cpp \
+	floatnat.cpp \
+	gaussj.cpp \
+	iocabecero.cpp \
+	plano.cpp \
+	recipe.cpp \
+	rutinclus.cpp \
+	rutinrot.cpp \
+	specmod.cpp \
+	usages.cpp \
+	varios2.cpp \
+	varios3.cpp \
+	varios.cpp
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 
 EXTRA_DIST = \
 	fftn.h \
