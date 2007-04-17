@@ -1,8 +1,7 @@
 bin_PROGRAMS = separate_objects
-separate_objects_SOURCES = separate_objects.cc
-separate_objects_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+separate_objects_SOURCES = main.cpp
+separate_objects_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 
 separate_objects_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
-
+INCLUDES = -I$(top_srcdir)/libraries

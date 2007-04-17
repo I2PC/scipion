@@ -1,9 +1,9 @@
 bin_PROGRAMS = ctf_correct_phase
-ctf_correct_phase_SOURCES = correctphase.cc
+ctf_correct_phase_SOURCES = main.cpp
 ctf_correct_phase_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 ctf_correct_phase_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 

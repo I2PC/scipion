@@ -1,16 +1,19 @@
 bin_PROGRAMS = ctf_view
-ctf_view_SOURCES = ctfviewer.cc ctfviewer_module.cc
-nodist_ctf_view_SOURCES = ctfviewer_module_moc.cc
-ctf_view_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
-	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \
-	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la
+ctf_view_SOURCES = main.cpp module.cpp
+nodist_ctf_view_SOURCES = module_moc.cpp
+
+ctf_view_LDADD = \
+	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la
+
 ctf_view_LDFLAGS = @QT_LIBS@
-INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+INCLUDES = -I$(top_srcdir)/libraries @QT_CXXFLAGS@
 
-MOSTLYCLEANFILES = *_moc.cc
+MOSTLYCLEANFILES = *_moc.cpp
 
-ctfviewer_module_moc.cc :
-	@QT_MOC@ ctfviewer_module.hh -o ctfviewer_module_moc.cc
+module_moc.cpp :
+	@QT_MOC@ module.h -o module_moc.cpp
 
-EXTRA_DIST = ctfviewer_module.hh
+EXTRA_DIST = module.h

@@ -1,7 +1,8 @@
 bin_PROGRAMS = classify_fsom
-classify_fsom_SOURCES = fsom.cc
+classify_fsom_SOURCES = main.cpp
 classify_fsom_LDADD = \
-	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
+
 classify_fsom_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

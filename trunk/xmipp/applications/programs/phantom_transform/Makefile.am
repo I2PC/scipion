@@ -1,10 +1,9 @@
 bin_PROGRAMS = phantom_transform
-phantom_transform_SOURCES = phantom_transform.cc
-phantom_transform_LDADD = $(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
+phantom_transform_SOURCES = main.cpp
+phantom_transform_LDADD = \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 phantom_transform_LDFLAGS = @EXEC_TYPE@
-	
-INCLUDES = -I$(top_srcdir)/Lib
 
-
+INCLUDES = -I$(top_srcdir)/libraries

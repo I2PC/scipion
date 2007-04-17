@@ -1,8 +1,8 @@
 bin_PROGRAMS = mpi_angular_projection_matching
-mpi_angular_projection_matching_SOURCES = mpi_projection_matching.cc
+mpi_angular_projection_matching_SOURCES = main.cpp
 mpi_angular_projection_matching_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la \
 	@MPILIBS@
 
 CC=@MPICXX@
@@ -11,4 +11,4 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $
 
 mpi_angular_projection_matching_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

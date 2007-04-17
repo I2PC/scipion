@@ -1,8 +1,8 @@
 bin_PROGRAMS = mpi_ml_align2d
-mpi_ml_align2d_SOURCES = mpi_MLalign2D.cc
+mpi_ml_align2d_SOURCES = main.cpp
 mpi_ml_align2d_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la \
 	@MPILIBS@
 
 CC=@MPICXX@
@@ -11,4 +11,4 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $
 
 mpi_ml_align2d_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

@@ -26,10 +26,10 @@ OPTIONAL_PROGS += \
 endif
 
 SUBDIRS = \
-	Add_noise \
-	Adjust_volume \
+	add_noise \
+	adjust_volume_grey_levels \
 	Align3D \
-	Align2D \
+	align2D \
 	Ang_distribution \
 	Angular_distance \
 	Angular_predict \

@@ -1,10 +1,10 @@
 bin_PROGRAMS = angular_distance
-angular_distance_SOURCES = angular_distance.cc
+angular_distance_SOURCES = main.cpp
 angular_distance_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 angular_distance_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 

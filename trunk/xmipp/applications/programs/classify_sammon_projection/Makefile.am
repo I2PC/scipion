@@ -1,7 +1,8 @@
 bin_PROGRAMS = classify_sammon_projection
-classify_sammon_projection_SOURCES = sammon.cc
+classify_sammon_projection_SOURCES = main.cpp
 classify_sammon_projection_LDADD = \
-	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
+
 classify_sammon_projection_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

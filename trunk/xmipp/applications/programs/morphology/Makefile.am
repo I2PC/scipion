@@ -1,9 +1,9 @@
 bin_PROGRAMS = morphology
-morphology_SOURCES = morphology.cc
-morphology_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
+morphology_SOURCES = main.cpp
+morphology_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 
 morphology_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 
 

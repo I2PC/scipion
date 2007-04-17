@@ -1,99 +1,114 @@
 bin_PROGRAMS = micrograph_mark
 micrograph_mark_SOURCES = \
-	mark.cc \
-	QtColorLabel.cc \
-	QtDialogFamilies.cc \
-	QtDialogProperties.cc \
-	QtFileMenu.cc \
-	QtFilter.cc \
-	QtFilterMenu.cc \
-	QtFiltersController.cc \
-	QtImage.cc \
-	QtImageConverter.cc \
-	QtImageMicrograph.cc \
-	QtImageOverviewMicrograph.cc \
-	QtMainWidgetMark.cc \
-	QtAutoMenu.cc \
-	QtWidgetMicrograph.cc \
-	QtWidgetPSD.cc \
-	../DownSample/xvsmooth.cc
+	main.cpp \
+	color_label.cpp \
+	dialog_families.cpp \
+	dialog_properties.cpp \
+	file_menu.cpp \
+	filter.cpp \
+	filter_menu.cpp \
+	filters_controller.cpp \
+	image.cpp \
+	image_converter.cpp \
+	image_icrograph.cpp \
+	image_overview_micrograph.cpp \
+	main_widget_mark.cpp \
+	auto_menu.cpp \
+	widget_micrograph.cpp \
+	widget_psd.cpp \
+	../micrograph_downsample/xvsmooth.cpp
+	## FIXME This is a bad, bad practice..
 
 nodist_micrograph_mark_SOURCES = \
-	QtColorLabel_moc.cc \
-	QtDialogFamilies_moc.cc \
-	QtDialogProperties_moc.cc \
-	QtFileMenu_moc.cc \
-	QtFilter_moc.cc \
-	QtFilterMenu_moc.cc \
-	QtFiltersController_moc.cc \
-	QtImage_moc.cc \
-	QtImageMicrograph_moc.cc \
-	QtImageOverviewMicrograph_moc.cc \
-	QtMainWidgetMark_moc.cc \
-	QtAutoMenu_moc.cc \
-	QtPopupMenuMark_moc.cc \
-	QtWidgetMicrograph_moc.cc \
-	QtWidgetPSD_moc.cc
+	color_label_moc.cpp \
+	dialog_families_moc.cpp \
+	dialog_properties_moc.cpp \
+	file_menu_moc.cpp \
+	filter_moc.cpp \
+	filter_menu_moc.cpp \
+	filters_controller_moc.cpp \
+	image_moc.cpp \
+	image_micrograph_moc.cpp \
+	image_overview_micrograph_moc.cpp \
+	main_widget_mark_moc.cpp \
+	auto_menu_moc.cpp \
+	popup_menu_mark_moc.cpp \
+	widget_micrograph_moc.cpp \
+	widget_psd_moc.cpp
 
 micrograph_mark_LDADD = \
-	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 micrograph_mark_LDFLAGS = @QT_LIBS@
 
-INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+INCLUDES = -I$(top_srcdir)/librairies @QT_CXXFLAGS@
 
-MOSTLYCLEANFILES = *_moc.cc
+MOSTLYCLEANFILES = *_moc.cpp
 
-QtAutoMenu_moc.cc : QtAutoMenu.hh
-	@QT_MOC@ QtAutoMenu.hh -o QtAutoMenu_moc.cc
-QtColorLabel_moc.cc : QtColorLabel.hh
-	@QT_MOC@ QtColorLabel.hh -o QtColorLabel_moc.cc
-QtDialogFamilies_moc.cc : QtDialogFamilies.hh
-	@QT_MOC@ QtDialogFamilies.hh -o QtDialogFamilies_moc.cc
-QtDialogProperties_moc.cc : QtDialogProperties.hh
-	@QT_MOC@ QtDialogProperties.hh -o QtDialogProperties_moc.cc
-QtFileMenu_moc.cc : QtFileMenu.hh
-	@QT_MOC@ QtFileMenu.hh -o QtFileMenu_moc.cc
-QtFilter_moc.cc : QtFilter.hh
-	@QT_MOC@ QtFilter.hh -o QtFilter_moc.cc
-QtFilterMenu_moc.cc : QtFilterMenu.hh
-	@QT_MOC@ QtFilterMenu.hh -o QtFilterMenu_moc.cc
-QtFiltersController_moc.cc : QtFiltersController.hh
-	@QT_MOC@ QtFiltersController.hh -o QtFiltersController_moc.cc
-QtImage_moc.cc : QtImage.hh
-	@QT_MOC@ QtImage.hh -o QtImage_moc.cc
-QtImageMicrograph_moc.cc : QtImageMicrograph.hh
-	@QT_MOC@ QtImageMicrograph.hh -o QtImageMicrograph_moc.cc
-QtImageOverviewMicrograph_moc.cc : QtImageOverviewMicrograph.hh
-	@QT_MOC@ QtImageOverviewMicrograph.hh -o QtImageOverviewMicrograph_moc.cc
-QtMainWidgetMark_moc.cc : QtMainWidgetMark.hh
-	@QT_MOC@ QtMainWidgetMark.hh -o QtMainWidgetMark_moc.cc
-QtPopupMenuMark_moc.cc : QtPopupMenuMark.hh
-	@QT_MOC@ QtPopupMenuMark.hh -o QtPopupMenuMark_moc.cc
-QtWidgetMicrograph_moc.cc : QtWidgetMicrograph.hh
-	@QT_MOC@ QtWidgetMicrograph.hh -o QtWidgetMicrograph_moc.cc
-QtWidgetPSD_moc.cc : QtWidgetPSD.hh
-	@QT_MOC@ QtWidgetPSD.hh -o QtWidgetPSD_moc.cc
+auto_menu_moc.cpp : auto_menu.h
+	@QT_MOC@ auto_menu.h -o auto_menu_moc.cpp
+
+color_label_moc.cpp : color_label.h
+	@QT_MOC@ color_label.h -o color_label_moc.cpp
+
+dialog_families_moc.cpp : dialog_families.h
+	@QT_MOC@ dialog_families.h -o dialog_families_moc.cpp
+
+dialog_properties_moc.cpp : dialog_properties.h
+	@QT_MOC@ dialog_properties.h -o dialog_properties_moc.cpp
+
+file_menu_moc.cpp : file_menu.h
+	@QT_MOC@ file_menu.h -o file_menu_moc.cpp
+
+filter_moc.cpp : filter.h
+	@QT_MOC@ filter.h -o filter_moc.cpp
+
+filter_menu_moc.cpp : filter_menu.h
+	@QT_MOC@ filter_menu.h -o filter_menu_moc.cpp
+
+filters_controller_moc.cpp : filters_controller.h
+	@QT_MOC@ filters_controller.h -o filters_controller_moc.cpp
+
+image_moc.cpp : image.h
+	@QT_MOC@ image.h -o image_moc.cpp
+
+image_micrograph_moc.cpp : image_micrograph.h
+	@QT_MOC@ image_micrograph.h -o image_micrograph_moc.cpp
+
+image_overview_micrograph_moc.cpp : image_overview_micrograph.h
+	@QT_MOC@ image_overviewM_micrograph.h -o image_overview_micrograph_moc.cpp
+
+main_widget_mark_moc.cpp : main_widget_mark.h
+	@QT_MOC@ main_widget_mark.h -o main_widget_mark_moc.cpp
+
+popup_menu_mark_moc.cpp : popup_menu_mark.h
+	@QT_MOC@ popup_menu_mark.h -o popup_menu_mark_moc.cpp
+
+widget_micrograph_moc.cpp : widget_micrograph.h
+	@QT_MOC@ widget_micrograph.h -o widget_micrograph_moc.cpp
+
+widgetPSD_moc.cpp : widget_psd.h
+	@QT_MOC@ widget_psd.h -o widget_psd_moc.cpp
 
 EXTRA_DIST = \
-	QtAutoMenu.hh \
-	QtFilter.hh \
-	QtImageMicrograph.hh \
-	QtColorLabel.hh \
-	QtFilterMenu.hh \
-	QtImageOverviewMicrograph.hh \
-	QtDialogFamilies.hh \
-	QtFiltersController.hh \
-	QtMainWidgetMark.hh \
-	QtDialogProperties.hh \
-	QtImageConverter.hh \
-	QtPopupMenuMark.hh \
-	QtFileMenu.hh \
-	QtImage.hh \
-	QtWidgetMicrograph.hh \
-	QtWidgetPSD.hh
+	autoMenu.h \
+	filter.h \
+	image_micrograph.h \
+	color_label.h \
+	filter_menu.h \
+	image_overview_micrograph.h \
+	dialog_families.h \
+	filters_controller.h \
+	main_widget_mark.h \
+	dialog_properties.h \
+	image_converter.h \
+	popup_menu_mark.h \
+	file_menu.h \
+	image.h \
+	widget_micrograph.h \
+	widget_psd.h
 

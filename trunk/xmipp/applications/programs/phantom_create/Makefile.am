@@ -1,8 +1,8 @@
 bin_PROGRAMS = phantom_create
-phantom_create_SOURCES = create_phantom.cc
+phantom_create_SOURCES = main.cpp
 phantom_create_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 phantom_create_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

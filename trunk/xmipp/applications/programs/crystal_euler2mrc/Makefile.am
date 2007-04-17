@@ -1,11 +1,11 @@
 bin_PROGRAMS = crystal_euler2mrc
-crystal_euler2mrc_SOURCES = EM2Angles.cc
+crystal_euler2mrc_SOURCES = main.cpp
 crystal_euler2mrc_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_Interface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons_Interface.la \
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 crystal_euler2mrc_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

@@ -1,9 +1,7 @@
 bin_PROGRAMS = window
-window_SOURCES = window.cc
-window_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+window_SOURCES = main.cpp
+window_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 
 window_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
-
-
+INCLUDES = -I$(top_srcdir)/libraries

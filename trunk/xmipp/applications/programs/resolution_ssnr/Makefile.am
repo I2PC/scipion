@@ -1,7 +1,8 @@
 bin_PROGRAMS = resolution_ssnr
-resolution_ssnr_SOURCES = SSNR.cc
+resolution_ssnr_SOURCES = main.cpp
 resolution_ssnr_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
+
 resolution_ssnr_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

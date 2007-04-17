@@ -1,8 +1,8 @@
 bin_PROGRAMS = align_tilt_pairs
-align_tilt_pairs_SOURCES = centilt.cc
+align_tilt_pairs_SOURCES = main.cpp
 align_tilt_pairs_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 align_tilt_pairs_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

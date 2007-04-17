@@ -1,20 +1,19 @@
 bin_PROGRAMS = mask_design
-mask_design_SOURCES = xmask.cc \
-	maskimg.cc
-nodist_mask_design_SOURCES = maskimg_moc.cc
+mask_design_SOURCES = main.cpp maskimg.cpp
+nodist_mask_design_SOURCES = maskimg_moc.cpp
 
 mask_design_LDADD = \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
-	$(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
+	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
 	@QT_LIBS@
 
 mask_design_LDFLAGS =
 
-INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+INCLUDES = -I$(top_srcdir)/libraries @QT_CXXFLAGS@
 
-maskimg_moc.cc :
-	@QT_MOC@ maskimg.hh -o maskimg_moc.cc
+maskimg_moc.cpp :
+	@QT_MOC@ maskimg.h -o maskimg_moc.cpp
 
-MOSTLYCLEANFILES = *_moc.cc
+MOSTLYCLEANFILES = *_moc.cpp
 
-EXTRA_DIST = maskimg.hh
+EXTRA_DIST = maskimg.h

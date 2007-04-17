@@ -1,9 +1,10 @@
 bin_PROGRAMS = crystal_aph2img
-crystal_aph2img_SOURCES = spots2realspace.cc
+crystal_aph2img_SOURCES = main.cpp
 crystal_aph2img_LDADD = \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_Interface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons_Interface.la \
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
+
 crystal_aph2img_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

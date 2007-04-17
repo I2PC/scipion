@@ -1,8 +1,9 @@
 bin_PROGRAMS = spi22ccp4
-spi22ccp4_SOURCES = spi22ccp4.cc
+spi22ccp4_SOURCES = main.cpp
 spi22ccp4_LDADD =  \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_Interface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
-INCLUDES = -I$(top_srcdir)/Lib
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons_Interface.la \
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
+
+INCLUDES = -I$(top_srcdir)/libraries

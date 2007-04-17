@@ -1,7 +1,6 @@
 bin_PROGRAMS = micrograph_downsample
-micrograph_downsample_SOURCES = downsample.cc xvsmooth.cc
-micrograph_downsample_LDADD = \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+micrograph_downsample_SOURCES = main.cpp xvsmooth.cpp
+micrograph_downsample_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 micrograph_downsample_LDFLAGS = @EXEC_TYPE@
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 EXTRA_DIST = xvsmooth.h

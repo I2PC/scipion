@@ -1,16 +1,15 @@
 bin_PROGRAMS = edit
-edit_SOURCES = edit.cc textedit.cc
-nodist_edit_SOURCES = textedit_moc.cc
+edit_SOURCES = main.cpp textedit.cpp
+nodist_edit_SOURCES = textedit_moc.cpp
 
-edit_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la 
-	
-edit_LDFLAGS = @QT_LIBS@ 
+edit_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
+edit_LDFLAGS = @QT_LIBS@
 
-INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+INCLUDES = -I$(top_srcdir)/libraries @QT_CXXFLAGS@
 
-MOSTLYCLEANFILES = *_moc.cc
+MOSTLYCLEANFILES = *_moc.cpp
 
-textedit_moc.cc : 
-	@QT_MOC@ textedit.hh -o textedit_moc.cc
+textedit_moc.cpp :
+	@QT_MOC@ textedit.h -o textedit_moc.cpp
 
-EXTRA_DIST = textedit.hh
+EXTRA_DIST = textedit.h

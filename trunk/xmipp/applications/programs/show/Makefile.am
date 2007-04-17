@@ -1,13 +1,14 @@
 bin_PROGRAMS = show
-show_SOURCES = show.cc
-show_LDADD = $(top_srcdir)/Lib/Classification/libXmippClassif_@host_os@.la \
-	$(top_srcdir)/Lib/XmippGraphics/libXmippGraphics_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
+show_SOURCES = main.cpp
+show_LDADD = \
+	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la \
 	@QT_LIBS@
 
-show_LDFLAGS = 
+show_LDFLAGS =
 
-INCLUDES = -I$(top_srcdir)/Lib @QT_CXXFLAGS@
+INCLUDES = -I$(top_srcdir)/libraries @QT_CXXFLAGS@
 
-MOSTLYCLEANFILES = *_moc.cc
+MOSTLYCLEANFILES = *_moc.cpp

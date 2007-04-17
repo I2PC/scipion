@@ -1,7 +1,8 @@
 bin_PROGRAMS = mpi_run
-mpi_run_SOURCES = mpi_run.cc
-mpi_run_LDADD = $(top_srcdir)/Lib/ReconstructionMPI/libXmippReconsMPI_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la \
+mpi_run_SOURCES = main.cpp
+mpi_run_LDADD = \
+	$(top_srcdir)/libraries/reconstructionMPI/libXmippReconsMPI.la \
+	$(top_srcdir)/libraries/data/libXmippData.la \
 	@MPILIBS@
 
 CC=@MPICXX@
@@ -10,4 +11,4 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $
 
 mpi_run_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries

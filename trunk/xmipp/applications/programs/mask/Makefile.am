@@ -1,9 +1,8 @@
 bin_PROGRAMS = mask
-mask_SOURCES = mask.cc
-mask_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+mask_SOURCES = main.cpp
+mask_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 
 mask_LDFLAGS = @EXEC_TYPE@
 
-
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
 

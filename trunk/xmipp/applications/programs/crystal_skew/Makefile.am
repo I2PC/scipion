@@ -1,10 +1,10 @@
 bin_PROGRAMS = crystal_skew
-crystal_skew_SOURCES = skew.cc
+crystal_skew_SOURCES = main.cpp
 crystal_skew_LDADD = \
-	$(top_srcdir)/Lib/XmippInterface/libXmippInterface_@host_os@.la \
-	$(top_srcdir)/Lib/Reconstruction/libXmippRecons_@host_os@.la \
-	$(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
+	$(top_srcdir)/libraries/data/libXmippData.la
 
 crystal_skew_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
