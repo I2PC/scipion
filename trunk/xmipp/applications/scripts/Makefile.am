@@ -1,9 +1,9 @@
 SUBDIRS = \
 	backwards \
-	Do_Selfile \
-	PDB2descr \
-	PDBsidechain \
-	Pdb2surface \
+	selfile_create \
+	convert_pdb2descr \
+	extract_sidechain_from_pdb \
+	convert_pdb2surface \
 	mlf_align2d \
 	mlf_refine3d \
 	mpi_mlf_align2d \
