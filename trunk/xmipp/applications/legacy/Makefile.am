@@ -1,1 +1,1 @@
-SUBDIRS = FindSCenter
+SUBDIRS = find_center2d

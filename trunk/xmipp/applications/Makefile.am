@@ -1,1 +1,1 @@
-SUBDIRS = OldXmipp Src Batches
+SUBDIRS = legacy programs scripts
