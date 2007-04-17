@@ -1,11 +1,11 @@
-lib_LTLIBRARIES = libINRIA_@host_os@.la
+lib_LTLIBRARIES = libINRIA.la
 
-libINRIA_@host_os@_la_SOURCES = \
-	Src/convert.cc \
-	Src/curvature.cc \
-	Src/extrema.cc \
-	Src/recbuffer.cc \
-	Src/recline.cc
+libINRIA_la_SOURCES = \
+	convert.cc \
+	curvature.cc \
+	extrema.cc \
+	recbuffer.cc \
+	recline.cc
 
 EXTRA_DIST = \
 	convert.h \
