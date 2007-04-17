@@ -1,7 +1,7 @@
 bin_PROGRAMS = headerinfo
-headerinfo_SOURCES = headerinfo.cc
-headerinfo_LDADD = $(top_srcdir)/Lib/XmippData/libXmippData_@host_os@.la
+headerinfo_SOURCES = main.cpp
+headerinfo_LDADD = $(top_srcdir)/libraries/data/libXmippData.la
 
 headerinfo_LDFLAGS = @EXEC_TYPE@
 
-INCLUDES = -I$(top_srcdir)/Lib
+INCLUDES = -I$(top_srcdir)/libraries
