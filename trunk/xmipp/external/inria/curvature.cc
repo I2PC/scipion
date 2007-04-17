@@ -1,8 +1,8 @@
-#include "../extrema.h"
+#include "extrema.h"
 
 static int _VERBOSE_ = 0;
 
-/* 
+/*
  * epsilon value to select gradient extrema candidates
  */
 static double _EPSILON_NORM_ = 0.5;
@@ -31,14 +31,14 @@ int partial_derivative_3D( void *bufferIn,
   char *proc="Extract_Gradient_Maxima_3D";
   /*
    * auxiliary buffer
-   */ 
+   */
   float *tmpBuffer = (float*)NULL;
   float *bufferZsmoothed = (float*)NULL;
   float *bufferZderivated = (float*)NULL;
   /*
    * Pointers
    */
-  /* 
+  /*
    * gx[0] points toward the X gradient of the current slice
    * gx[0] points toward the X gradient of the next slice
    */
@@ -53,7 +53,7 @@ int partial_derivative_3D( void *bufferIn,
    * norme[1] points toward the gradient modulus of the current slice
    * norme[2] points toward the gradient modulus of the next slice
    */
-  float *norme[3] = { (float*)NULL, (float*)NULL, (float*)NULL }; 
+  float *norme[3] = { (float*)NULL, (float*)NULL, (float*)NULL };
   float *sliceZsmoothed = (float*)NULL;
   float *pt = (float*)NULL;
   /*
@@ -70,7 +70,7 @@ int partial_derivative_3D( void *bufferIn,
    */
   int z, dimxXdimy;
 
-  /* 
+  /*
    * We check the buffers' dimensions.
    */
   if ( (bufferDims[0] <= 0) || (bufferDims[1] <= 0) || (bufferDims[2] <= 0) ) {
@@ -98,7 +98,7 @@ int partial_derivative_3D( void *bufferIn,
   sliceDims[0] = bufferDims[0];
   sliceDims[1] = bufferDims[1];
   sliceDims[2] = 1;
-  
+
   /*
    * test of the coefficients
    */
@@ -108,12 +108,12 @@ int partial_derivative_3D( void *bufferIn,
       fprintf( stderr, " Error in %s: negative coefficient's value.\n", proc );
     return( EXIT_ON_FAILURE );
   }
-  
-  /* 
+
+  /*
    * Allocation of auxiliary buffers.
    *
    * We need a 3D buffer for the Z component of the
-   * gradient, plus a 3D buffer for the 3D buffer 
+   * gradient, plus a 3D buffer for the 3D buffer
    * smoothed along Z, plus 7 2D buffers for the
    * X component of the gradient in both the current
    * and the next slices, idem for the Y component,
@@ -130,7 +130,7 @@ int partial_derivative_3D( void *bufferIn,
   if ( tmpBuffer == (float*)NULL ) {
     if ( _VERBOSE_ > 0 ) {
       fprintf( stderr, " Fatal error in %s:", proc );
-      fprintf( stderr, " unable to allocate auxiliary buffer.\n" );      
+      fprintf( stderr, " unable to allocate auxiliary buffer.\n" );
     }
     return( EXIT_ON_FAILURE );
   }
@@ -141,7 +141,7 @@ int partial_derivative_3D( void *bufferIn,
   norme[0] = gy[1] + dimxXdimy;
   norme[1] = norme[0] + dimxXdimy;
   norme[2] = norme[1] + dimxXdimy;
-  
+
   bufferZsmoothed = (float*)malloc( bufferDims[2] * dimxXdimy * sizeof( float ) );
   if ( bufferZsmoothed == (float*)NULL ) {
     if ( _VERBOSE_ > 0 ) {
@@ -151,7 +151,7 @@ int partial_derivative_3D( void *bufferIn,
     free( tmpBuffer );
     return( EXIT_ON_FAILURE );
   }
-  
+
   if ( typeOut == FLOAT ) {
   /* Daba warning porque c++ prohibe la asignacion de void * */
   /*  bufferZderivated = bufferOut;*/
@@ -168,8 +168,8 @@ int partial_derivative_3D( void *bufferIn,
       return( EXIT_ON_FAILURE );
     }
   }
-  
-  /* 
+
+  /*
    * Computation of the Z component of the gradient.
    * Computation of the input buffer smoothed along Z.
    */
@@ -187,14 +187,14 @@ int partial_derivative_3D( void *bufferIn,
     if ( typeOut != FLOAT ) free( bufferZderivated );
     return( EXIT_ON_SUCCESS );
   }
-				     
+				
   /*
    * conversion of the buffer bufferZderivated of type FLOAT
    * into the buffer bufferOut.
    */
-  
+
   if (typeOut != FLOAT ) {
-    ConvertBuffer( bufferZderivated, FLOAT, 
+    ConvertBuffer( bufferZderivated, FLOAT,
 		   bufferOut, typeOut, bufferDims[2]*dimxXdimy);
   }
 

@@ -1,9 +1,9 @@
-/* 
+/*
  * Copyright INRIA
  * Author Gregoire Malandain (greg@sophia.inria.fr)
  * Date: June, 9 1998
  */
-#include "../recbuffer.h"
+#include "recbuffer.h"
 
 static int _VERBOSE_ = 0;
 
@@ -24,8 +24,8 @@ int RecursiveFilterOnBuffer( void *bufferIn,
   register int dimx, dimxXdimy;
   int dimy, dimz;
   register int x, y, z;
-  /* 
-   *obviously, we need to perform the computation 
+  /*
+   *obviously, we need to perform the computation
    * with float or double values. For this reason,
    * we allocate an auxiliary buffer if the output buffer
    * is not of type float or double.
@@ -68,8 +68,8 @@ int RecursiveFilterOnBuffer( void *bufferIn,
   double *theLinePlusBorder = (double*)NULL;
   double *resLinePlusBorder = (double*)NULL;
 
-  
-  /* 
+
+  /*
    * We check the buffers' dimensions.
    */
   dimx = bufferDims[0];   dimy = bufferDims[1];   dimz = bufferDims[2];
@@ -88,7 +88,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     return( EXIT_ON_FAILURE );
   }
 
-  /* 
+  /*
    * May we use the buffer bufferOut as the bufferResult?
    * If its type is FLOAT or DOUBLE, then yes.
    * If not, we have to allocate an auxiliary buffer.
@@ -105,8 +105,8 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     }
     typeResult = FLOAT;
   }
-  
-  /* 
+
+  /*
    * May we consider the buffer bufferIn as the bufferToBeProcessed?
    * If its type is FLOAT or DOUBLE, then yes.
    * If not, we convert it into the buffer bufferResult, and this
@@ -144,7 +144,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     return( EXIT_ON_FAILURE );
   }
   /*
-   * Allocations of work arrays. 
+   * Allocations of work arrays.
    * We will use them to process each line.
    */
   theLine = (double*)malloc( 3 * maxLengthline * sizeof(double) );
@@ -174,7 +174,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     if ( _VERBOSE_ != 0 )
       fprintf( stderr, " %s: processing along X.\n", proc );
     InitRecursiveCoefficients( (double)filterCoefs[0], filterType, derivatives[0] );
-    
+
     r64firstPoint = (r64*)bufferToBeProcessed;
     r32firstPoint = (r32*)bufferToBeProcessed;
 
@@ -193,7 +193,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     for ( y=0; y<dimy; y++ ) {
       /*
        * Acquiring a X line.
-       */ 
+       */
       dbl_pt1 = theLinePlusBorder;
       switch ( typeToBeProcessed ) {
       case DOUBLE :
@@ -219,7 +219,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
        * Processing the line.
        */
       if ( RecursiveFilter1D( theLine, resLine, tmpLine, resLine, lengthX ) == 0 ) {
-	if ( _VERBOSE_ != 0 ) 
+	if ( _VERBOSE_ != 0 )
 	  fprintf(stderr," Error in %s: unable to process X line (y=%d,z=%d).\n", proc, y, z);
 	if ( (typeOut != FLOAT) && (typeOut != DOUBLE) )
 	  free( bufferResult );
@@ -241,16 +241,16 @@ int RecursiveFilterOnBuffer( void *bufferIn,
 	  *r32firstPointResult = (r32)(*dbl_pt1);
       }
     }
-    
+
     /*
      * The next buffer to be processed is the buffer
      * bufferResult.
      */
     bufferToBeProcessed = bufferResult;
     typeToBeProcessed = typeResult;
-  
+
   } /* end of Processing along X. */
-  
+
   /*
    * Processing along Y.
    */
@@ -260,7 +260,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     if ( _VERBOSE_ != 0 )
       fprintf( stderr, " %s: processing along Y.\n", proc );
     InitRecursiveCoefficients( (double)filterCoefs[1], filterType, derivatives[1] );
-    
+
     r64firstPoint = (r64*)bufferToBeProcessed;
     r32firstPoint = (r32*)bufferToBeProcessed;
 
@@ -280,7 +280,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
       for ( x=0; x<dimx; x++ ) {
       /*
        * Acquiring a Y line.
-       */ 
+       */
 	dbl_pt1 = theLinePlusBorder;
 	switch ( typeToBeProcessed ) {
 	case DOUBLE :
@@ -312,7 +312,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
 	 * Processing the line.
 	 */
 	if ( RecursiveFilter1D( theLine, resLine, tmpLine, resLine, lengthY ) == 0 ) {
-	  if ( _VERBOSE_ != 0 ) 
+	  if ( _VERBOSE_ != 0 )
 	    fprintf(stderr," Error in %s: unable to process Y line (x=%d,z=%d).\n", proc, x, z);
 	  if ( (typeOut != FLOAT) && (typeOut != DOUBLE) )
 	    free( bufferResult );
@@ -362,16 +362,16 @@ int RecursiveFilterOnBuffer( void *bufferIn,
 	r32firstPointResult += offsetNextFirstPoint;
       }
     }
-    
+
     /*
      * The next buffer to be processed is the buffer
      * bufferResult.
      */
     bufferToBeProcessed = bufferResult;
     typeToBeProcessed = typeResult;
-  
+
   } /* end of Processing along Y. */
-  
+
 
   /*
    * Processing along Z.
@@ -382,7 +382,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     if ( _VERBOSE_ != 0 )
       fprintf( stderr, " %s: processing along Z.\n", proc );
     InitRecursiveCoefficients( (double)filterCoefs[2], filterType, derivatives[2] );
-    
+
     r64firstPoint = (r64*)bufferToBeProcessed;
     r32firstPoint = (r32*)bufferToBeProcessed;
 
@@ -403,7 +403,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
     for ( x=0; x<dimx; x++ ) {
       /*
        * Acquiring a Z line.
-       */ 
+       */
       dbl_pt1 = theLinePlusBorder;
       switch ( typeToBeProcessed ) {
       case DOUBLE :
@@ -435,14 +435,14 @@ int RecursiveFilterOnBuffer( void *bufferIn,
        * Processing the line.
        */
       if ( RecursiveFilter1D( theLine, resLine, tmpLine, resLine, lengthZ ) == 0 ) {
-	if ( _VERBOSE_ != 0 ) 
+	if ( _VERBOSE_ != 0 )
 	  fprintf(stderr," Error in %s: unable to process Z line (x=%d,y=%d).\n", proc, x, y);
 	if ( (typeOut != FLOAT) && (typeOut != DOUBLE) )
 	  free( bufferResult );
 	free( (void*)theLine );
 	return( EXIT_ON_FAILURE );
       }
-      
+
       /*
        * Copy the result into the buffer bufferResult.
        */
@@ -461,7 +461,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
       }
     }
   } /* end of Processing along Z. */
-  
+
 
 
 
@@ -476,7 +476,7 @@ int RecursiveFilterOnBuffer( void *bufferIn,
   if ( (typeOut != FLOAT) && (typeOut != DOUBLE) )
     free( bufferResult );
   free( (void*)theLine );
-  
+
   return( EXIT_ON_SUCCESS );
 }
 
