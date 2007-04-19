@@ -12,7 +12,7 @@
 #if !defined(_DESOLVER_H)
 #define _DESOLVER_H
 
-#include "../xmippMatrices1D.hh"
+#include "matrix1d.h"
 
 #define stBest1Exp			0
 #define stRand1Exp			1
@@ -96,7 +96,7 @@ private:
 	void RandToBest1Bin(int candidate);
 	void Best2Bin(int candidate);
 	void Rand2Bin(int candidate);
-        
+
 };
 double EnergyFunctionGrad(double *);
 

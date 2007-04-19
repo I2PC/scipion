@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /*****************************************************************************/
 /* APH Files: MRC                                                            */
@@ -28,13 +28,16 @@
 
 #ifndef _XMIPP_APHorigmerg_HH
    #define _XMIPP_APHorigmerg_HH
+
+#include <data/funcs.h>
+#include <data/matrix3d.h>
+#include <data/geometry.h>
+#include <reconstruction/symmetries.h>
+
 #include <vector>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <Reconstruction/symmetries.hh>
 #include <iostream>
 #include <algorithm>
+
 struct spot{
    int h;
    int k;
@@ -49,20 +52,20 @@ struct spot{
 //   spot& operator= (const spot& B)  {
 //      h = B.h;
 //      k = B.k;
-//   }	 
+//   }	
   bool operator<(  const spot& B ) const
   {
       if (h < B.h) return true;
       if (h== B.h && k < B.k) return true;
        return false;
   }
-        
+
  };
 
    ostream &operator<<(ostream &os, const spot &s);
 
 // function for sorting elements in ascending order
-//  bool operator<(  spot A, spot B ) 
+//  bool operator<(  spot A, spot B )
 //  {
 //      if (A.h < B.h) return TRUE;
 //      if (A.k < B.k) return TRUE;
@@ -73,7 +76,7 @@ struct spot{
 //@{
 /** APH2D Files.
     This is a class to read APH files  produced by the MRC's program
-    origtiltd. 
+    origtiltd.
     \begin{verbatim}
          1
     0   1 -0.0018    1916.8 -163.6      5  1 1.00000      67.7  0.000
@@ -93,8 +96,8 @@ public:
 //   struct spot  * aph_data_array[];
 #ifdef REMOVE //No needed since we use a vector v.size()
    /** number of spots */
-   int spots_number;   
-#endif   
+   int spots_number;
+#endif
    /** max h*/
    int max_h;
    /** min h*/
@@ -111,27 +114,27 @@ public:
     with the data, number of epots is in spots_number.
   */
    void read(const FileName &fn, const int mrc_label );
-/** write aph-origtiltd like files */   
+/** write aph-origtiltd like files */
    void write(const FileName &fn) const;
 /** Empties actual APH structure. */
    void clear();
 /** Move spots from assymetric unit to the plane  h>0
     those points that do not fit in the plane are ignored
-    Will be used in the future. Need a,b magnitude (real space A) 
+    Will be used in the future. Need a,b magnitude (real space A)
     taxa,tilt.anglefrom a to  (radians), */
-   void unasymmetrization(const double a_mag,   const  double b_mag, 
+   void unasymmetrization(const double a_mag,   const  double b_mag,
                           const double mrc_taxa,const  double mrc_tilt,
 			  const double a_b_ang, const  int symmetry_group,
                           matrix2D<int> &Counter);
-/** Unsymmetrice for P222_1 symmetry, should be called only by 
+/** Unsymmetrice for P222_1 symmetry, should be called only by
 unasymmetrization*/
-void unsymmetrice_P222_1(const double a_mag,    const double b_mag, 
+void unsymmetrice_P222_1(const double a_mag,    const double b_mag,
                          const double mrc_taxa, const double mrc_tilt,
 			 const double a_b_ang,  const int symmetry_group,
                          matrix2D<int> &Counter);
-/** Compute value of Z coordinate for a given taxa,tilt pair 
+/** Compute value of Z coordinate for a given taxa,tilt pair
     */
-void compute_Z(double a_mag, double b_mag, 
+void compute_Z(double a_mag, double b_mag,
                double mrc_taxa, double mrc_tilt,
 	       double a_b_ang, double &h_contrib, double &k_contrib);
 };

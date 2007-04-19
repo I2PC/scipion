@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* VOLUMES                                                                   */
@@ -40,10 +40,10 @@
 #include <math.h>
 #include <complex>
 
-#include "xmippMatrices1D.hh"
-#include "xmippMatrices2D.hh"
-#include "xmippFuncs.hh"
-#include "xmippArgs.hh"
+#include "matrix1d.h"
+#include "matrix2d.h"
+#include "funcs.h"
+#include "args.h"
 
 #define maT  matrix3D<T>
 #define maT1 matrix3D<T1>
@@ -53,7 +53,7 @@
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
-#include "Src/MultidimFriends.inc"
+#include "multidim_friends.inc"
 
 template <class T>
    void apply_geom(VT &V2, matrix2D<double> A, const VT &V1, bool inv,
@@ -144,7 +144,7 @@ template <class T>
     (int) ZZ(corner1) to (int)ZZ(corner2),
     (int) YY(corner1) to (int)YY(corner2), (int) XX(corner1) to
     (int) XX(corner2) (included limits) respectively. Notice that corner1
-    and corner2 need only be matrix1D. 
+    and corner2 need only be matrix1D.
     \\Ex:
     \begin{verbatim}
     matrix1D<double> corner1(3), corner2(3), r(3);
@@ -234,9 +234,9 @@ template <class T>
 //@}
 
 /// Template class for Xmipp volumes
-#include "MultidimCommon.hh"
+#include "multidim_common.h"
 template <class T> class matrix3D {
-#include "Src/MultidimBasic.hh"
+#include "multidim_basic.h"
 /**@name Common functions to all multidimensional arrays
    A set of methods are always the same for any multidimensional array.
    Have a look on the more detailed structure. */
@@ -275,7 +275,7 @@ public:
        origin=0, size=0, no statistics, ...
        \\Ex: matrix3D<double> V1;*/
    matrix3D() {core_init(); init_shape(); __spcdim=3;}
-   
+
    /** Dimension constructor.
        The dimension constructor creates a volume with memory associated
        (but not assigned to anything, could be full of garbage)
@@ -296,13 +296,13 @@ public:
    // Destructor
    ~matrix3D() {core_deallocate();}
    //@}
-   
+
    /* Initialisation ------------------------------------------------------- */
    /**@name Initialisation*/
    //@{
    /** Zero initialisation with a new dimension.
        Be careful to the size order (Zdim, Ydim, Xdim).
-       \\Ex: v1.init_zeros(6,3);*/         
+       \\Ex: v1.init_zeros(6,3);*/
    void init_zeros(int Zdim, int Ydim, int Xdim)
          {resize(Zdim,Ydim,Xdim); init_constant((T)0);}
    //@}
@@ -322,7 +322,7 @@ public:
        (0, 0,-1) (0, 0,0) (0, 0,1)
        (0, 1,-1) (0, 1,0) (0, 1,1)
        (0, 2,-1) (0, 2,0) (0, 2,1)]
-       
+
       Slice 1
       [(1,-2,-1) (1,-2,0) (1,-2,1)
        (1,-1,-1) (1,-1,0) (1,-1,1)
@@ -345,7 +345,7 @@ public:
                for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
                   VOL_ELEM(V,k,i,j) += 1;
       \end{verbatim}*/
-      
+
    //@{
    /** Init shape.
        ydim,xdim=0, startingy,startingx=0.*/
@@ -375,7 +375,7 @@ public:
           Zdim==ZSIZE(*this)) return;
       if (Xdim<=0 || Ydim<=0 || Zdim<=0) {clear(); return;}
 
-      // Ask for memory   
+      // Ask for memory
       T* new_m=new T [((long int)(Zdim))*((long int)(Ydim))*((long int)(Xdim))];
       if (new_m==NULL) REPORT_ERROR(1001,"Resize: no memory left");
 
@@ -453,7 +453,7 @@ public:
        whose x indexes go from -1 to 1, if we move the origin to 4, then
        the x indexes go from 3 to 5. This is very useful for convolution
        operations where you only need to move the logical starting of the
-       array. 
+       array.
        See \Ref{FIRST_XMIPP_INDEX} */
    void move_origin_to(int k, int i, int j) {
       zinit=k+FIRST_XMIPP_INDEX(zdim);
@@ -531,14 +531,14 @@ public:
    /** Returns X dimension.
        \\Ex: int Xdim=V.ColNo();*/
    int  ColNo() const {return xdim;}
-   
+
    /** Same shape.
        Returns true if this object has got the same shape (origin and
        size) than the argument*/
    bool same_shape(const VT &op) const
       {return SAME_SHAPE3D(*this,op);}
    //@}
-      
+
    /* Information Extraction ----------------------------------------------- */
    /**@name Memory access
       This functions allows you to access to the matrix elements.*/
@@ -646,7 +646,7 @@ public:
         	        double xminusl = x-(double)l;
         	        double Coeff = (double) __m[row_m+l];
 		        switch (SplineDegree) {
-			   case 2: xsum += Coeff * Bspline02(xminusl); break; 
+			   case 2: xsum += Coeff * Bspline02(xminusl); break;
                 	   case 3: xsum += Coeff * Bspline03(xminusl); break;
                 	   case 4: xsum += Coeff * Bspline04(xminusl); break;
                 	   case 5: xsum += Coeff * Bspline05(xminusl); break;
@@ -691,7 +691,7 @@ public:
    void logical2physical(int k_log, int i_log, int j_log,
        int &k_phys, int &i_phys, int &j_phys) const
        {k_phys=k_log-zinit; i_phys=i_log-yinit; j_phys=j_log-xinit;}
-   
+
    /** Physical to logical index translation.
        This function returns the logical position of a physical one. See
        \URL[Conventions]{../../../Extra_Docs/Conventions.html}
@@ -715,7 +715,7 @@ public:
        \\Ex: matrix2D<double> m=V.slice(0);*/
    mT  getSlice(int i, char axis='Z') const
        {mT temp; getSlice(i,temp,axis); return temp;}
-   
+
    /** Slice access for reading.
        This function returns a slice (a matrix) corresponding to the choosen
        slice inside matrix, the numbering of the slices is also logical not
@@ -724,7 +724,7 @@ public:
        the previous example.
        \\Ex: V.slice(0,m);*/
    void getSlice(int k, mT &M, char axis='Z') const {
-      if (xdim==0) {M.clear(); return;}   
+      if (xdim==0) {M.clear(); return;}
       switch (axis) {
          case 'Z':
             if (k<zinit || k>=zinit+zdim)
@@ -763,7 +763,7 @@ public:
             REPORT_ERROR(1205,(string)"Slice: not supported axis "+axis);
       }
    }
-   
+
    /** Slice access for writing.
        This function sets a matrix corresponding to the choosen
        slice inside volume, the numbering of the slices is also logical not
@@ -792,7 +792,7 @@ public:
       perform much faster than calls to the corresponding operators.
       Although it is supposed to be a hidden function not useable by
       normal programmers.
-      
+
       It must be implemented in every Matrix module, this is so because
       of the Matrix2D, for which the multiplication is not a component
       by component multiplication but an algebraic one.*/
@@ -836,7 +836,7 @@ public:
             }
       STARTINGX(*this)=-FINISHINGX(*this);
    }
-   
+
    /** Reverse matrix values over Y axis.
        Maybe better with an example:
 
@@ -865,7 +865,7 @@ public:
             }
       STARTINGY(*this)=-FINISHINGY(*this);
    }
-   
+
    /** Reverse matrix values over Z axis.
        Maybe better with an example:
 
@@ -894,7 +894,7 @@ public:
             }
       STARTINGZ(*this)=-FINISHINGZ(*this);
    }
-   
+
    /** Put a window to volume.
        The volume is windowed within the two positions given to this function.
        Indexes always refer to logical indexes. If a position is outside the
@@ -946,17 +946,17 @@ public:
        The result is stored in V2 (it cannot be the same as the input volume).
        An exception is thrown if the
        transformation matrix is not 4x4.
-	   
-	   Structure of the transformation matrix: It should have the following 
+	
+	   Structure of the transformation matrix: It should have the following
 	   components
 	   r11 r12 r13 x
 	   r21 r22 r23 y
 	   r31 r32 r33 z
 	   0   0   0   1
 	   where (x,y,z) is the translation desired, and Rij are the components of
-	   the rotation matrix R. If you want to apply a scaling factor to the 
-	   transformation, then multiply r11, r22 and r33 by it. 
-	   
+	   the rotation matrix R. If you want to apply a scaling factor to the
+	   transformation, then multiply r11, r22 and r33 by it.
+	
        The result volume is resized to the same dimensions as V1 if V2 is empty
        (0x0) at the beginning, if it is not, ie, if V2 has got some size
        then only those values in the volume are filled, this is very
@@ -981,7 +981,7 @@ public:
        the matrix is inversed. If you are to do many "rotations" then
        some time is spent in inverting the matrix. Normally the
        matrix is the normal one.
-       
+
        There is something else to tell about the geometrical tranformation.
        The value of the voxel in the output volume is computed via
        bilinear interpolation in the input volume. If any of the voxels
@@ -992,7 +992,7 @@ public:
        voxel in the left hand is used. The same is appliable to top-bottom.
        Usually wrap mode is off. Wrap mode is interesting for translations
        but not for rotations, for example.
-       
+
        The inverse mode and wrapping mode should be taken by default by the
        routine, g++ seems to have problems with template functions outside
        a class with default parameters. So, I'm sorry, you will have to
@@ -1005,7 +1005,7 @@ public:
 
    /** Apply geom with B-spline interpolation. */
    friend void apply_geom_Bspline<>(VT &V2, matrix2D<double> A,
-       const VT &V1, int Splinedegree, bool inv, bool wrap, 
+       const VT &V1, int Splinedegree, bool inv, bool wrap,
        T outside);
 
    /** Self apply geom.
@@ -1064,7 +1064,7 @@ public:
 
    /** Rotate a volume around any axis (Bspline).*/
    void rotate_Bspline(int Splinedegree, double ang,
-      const matrix1D<double> &axis, VT &result, 
+      const matrix1D<double> &axis, VT &result,
       bool wrap=DONT_WRAP, T outside=0) const
       {matrix2D<double> temp=rot3D_matrix(ang,axis);
        apply_geom_Bspline(result,temp,*this,Splinedegree,IS_NOT_INV,wrap,outside);}
@@ -1143,7 +1143,7 @@ public:
 
    /** Scales to a new size.
        The volume is scaled (resampled) to fill a new size. It is not the
-       same as "window" in this same class. The size can be larger or 
+       same as "window" in this same class. The size can be larger or
        smaller than the actual one.
        \\Ex: V2=V1.scale_to_size(128,128,128);*/
    void scale_to_size(int Zdim, int Ydim, int Xdim, VT &result) const
@@ -1381,7 +1381,7 @@ public:
 
 };
 
-#include "Src/MultidimFriends_implementation.hh"
+#include "multidim_friends_implementation.h"
 
 template <>
 void core_array_by_scalar< complex<double> >(const maTC &op1,
@@ -1429,20 +1429,20 @@ template <class T>
     A vector radial_mean is returned where:
 	 - the first element is the mean of the voxels whose
 	   distance to the origin is (0-1),
-	 - the second element is the mean of the voxels 
+	 - the second element is the mean of the voxels
        whose distance to the origin is (1-2)
-	 - and so on. 
-    A second vector radial_count is returned containing the number of 
+	 - and so on.
+    A second vector radial_count is returned containing the number of
     voxels over which each radial average was calculated.
-    Sjors nov2003: if rounding=true, element=round(distance); 
+    Sjors nov2003: if rounding=true, element=round(distance);
          - so the first element is the mean of the voxels whose
 	   distance to the origin is (0.5-1.5),
-	 - the second element is the mean of the voxels 
+	 - the second element is the mean of the voxels
        whose distance to the origin is (1.5-2.5)
 	 - and so on. */
 template <class T>
 void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
-   matrix1D<T> &radial_mean, matrix1D<int> &radial_count, 
+   matrix1D<T> &radial_mean, matrix1D<int> &radial_count,
    const bool &rounding=false) {
       matrix1D<double> idx(3);
 
@@ -1488,7 +1488,7 @@ void radial_average(const matrix3D<T> &m, const matrix1D<int> &center_of_rot,
          if (rounding) distance=(int)ROUND(idx.module());
          else distance=(int)floor(idx.module());
 
-         // Sum te value to the pixels with the same distance  
+         // Sum te value to the pixels with the same distance
          radial_mean(distance)+=m(k,i,j);
          // Count the pixel
          radial_count(distance)++;
@@ -1562,7 +1562,7 @@ template <class T>
    spduptmp0=MAX(STARTINGZ(*this), z0);
    spduptmp1=MIN(FINISHINGZ(*this),z0+zdim);
    if (spduptmp0>spduptmp1) return false;
-   
+
    spduptmp0=MAX(STARTINGY(*this), y0);
    spduptmp1=MIN(FINISHINGY(*this),y0+ydim);
    if (spduptmp0>spduptmp1) return false;
@@ -1590,7 +1590,7 @@ template <class T>
 
 /* Border ------------------------------------------------------------------ */
 template <class T>
-   bool VT::isBorder(const matrix1D<int> &v) 
+   bool VT::isBorder(const matrix1D<int> &v)
 {
    if (XSIZE(v)<3)
       REPORT_ERROR(1,"isBorder: index vector has got not enough components");
@@ -1598,7 +1598,7 @@ template <class T>
 }
 
 template <class T>
-   bool VT::isBorder(int k,int i,int j) 
+   bool VT::isBorder(int k,int i,int j)
 {
    return (j==STARTINGX(*this)  || j==FINISHINGX(*this)  ||
            k==STARTINGZ(*this)  || k==FINISHINGZ(*this)  ||
@@ -1621,7 +1621,7 @@ template <class T>
 
 /* Output stream ----------------------------------------------------------- */
 template <class T>
-   ostream& operator << (ostream& ostrm, const VT& v) {   
+   ostream& operator << (ostream& ostrm, const VT& v) {
    if (v.xdim==0)
       ostrm << "NULL matrix3D\n";
    else
@@ -1630,7 +1630,7 @@ template <class T>
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
          max_val=MAX(max_val,ABS(MULTIDIM_ELEM(v,i)));
       int prec=best_prec(max_val,10);
-      
+
       for (int k=STARTINGZ(v); k<=FINISHINGZ(v); k++) {
          ostrm << "Slice No. " << k << endl;
          for (int i=STARTINGY(v); i<=FINISHINGY(v); i++) {
@@ -1640,7 +1640,7 @@ template <class T>
             ostrm << endl;
          }
       }
-      
+
    return ostrm;
 }
 
@@ -1656,21 +1656,21 @@ template <class T>
    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
    int   cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
    double wx, wy, wz; // Weights in X,Y,Z directions for bilinear interpolation
-   
+
    if ((XSIZE(A)!=4) || (YSIZE(A)!=4))
       REPORT_ERROR(1102,"Apply_geom3D: geometrical transformation is not 4x4");
    if (A.IsIdent()) {V2=V1; return;}
    if (XSIZE(V1)==0)  {V2.clear(); return;}
-   
+
    if (!inv) A=A.inv();
-   
+
    if (XSIZE(V2)==0) V2.resize(V1);
-   
+
    // For scalings the output matrix is resized outside to the final
    // size instead of being resized inside the routine with the
    // same size as the input matrix
    if (XSIZE(V2)==0) V2.resize(V1);
-   
+
    // Find center of matrix3D
    cen_z  =(int)(V2.zdim/2);
    cen_y  =(int)(V2.ydim/2);
@@ -1695,12 +1695,12 @@ template <class T>
            << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
       ;
    #endif
-    
+
    // Now we go from the output matrix3D to the input matrix3D, ie, for any voxel
    // in the output matrix3D we calculate which are the corresponding ones in
    // the original matrix3D, make an interpolation with them and put this value
    // at the output voxel
-   
+
    // V2 is not initialised to 0 because all its pixels are rewritten
    for (int k=0; k<V2.zdim; k++)
       for (int i=0; i<V2.ydim; i++) {
@@ -1751,7 +1751,7 @@ template <class T>
 	           zp>maxzp+XMIPP_EQUAL_ACCURACY) interp=false;
             }
 
-            if (interp) {            
+            if (interp) {
                // Calculate the integer position in input volume, be careful
                // that it is not the nearest but the one at the top left corner
                // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
@@ -1759,7 +1759,7 @@ template <class T>
                wx=xp+cen_xp; m1=(int) wx; wx=wx-m1; m2=m1+1;
                wy=yp+cen_yp; n1=(int) wy; wy=wy-n1; n2=n1+1;
                wz=zp+cen_zp; o1=(int) wz; wz=wz-o1; o2=o1+1;
-	       
+	
 	       #ifdef DEBUG
 		  if (show_debug) {
         	     cout << "After wrapping(xp,yp,zp)= "
@@ -1767,7 +1767,7 @@ template <class T>
 	             cout << "(m1,n1,o1)-->(m2,n2,o2)="
 			  << "(" << m1 << "," << n1 << "," << o1 << ") "
 			  << "(" << m2 << "," << n2 << "," << o2 << ")\n";
-		     cout << "(wx,wy,wz)=" 
+		     cout << "(wx,wy,wz)="
 			  << "(" << wx << "," << wy << "," << wz << ")\n";
 		  }
 	       #endif
@@ -1820,21 +1820,21 @@ template <class T>
    double x, y, z, xp, yp, zp;
    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
    int   cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
-   
+
    if ((XSIZE(A)!=4) || (YSIZE(A)!=4))
       REPORT_ERROR(1102,"Apply_geom3D: geometrical transformation is not 4x4");
    if (A.IsIdent()) {V2=V1; return;}
    if (XSIZE(V1)==0)  {V2.clear(); return;}
-   
+
    if (!inv) A=A.inv();
-   
+
    if (XSIZE(V2)==0) V2.resize(V1);
-   
+
    // For scalings the output matrix is resized outside to the final
    // size instead of being resized inside the routine with the
    // same size as the input matrix
    if (XSIZE(V2)==0) V2.resize(V1);
-   
+
    // Find center of matrix3D
    cen_z  =(int)(V2.zdim/2);
    cen_y  =(int)(V2.ydim/2);
@@ -1859,7 +1859,7 @@ template <class T>
            << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
       ;
    #endif
-    
+
    // Build the B-spline coefficients
    matrix3D<double> Bcoeffs;
    V1.produce_spline_coeffs(Bcoeffs,Splinedegree);
@@ -1871,7 +1871,7 @@ template <class T>
    // in the output matrix3D we calculate which are the corresponding ones in
    // the original matrix3D, make an interpolation with them and put this value
    // at the output voxel
-   
+
    // V2 is not initialised to 0 because all its pixels are rewritten
    for (int k=0; k<V2.zdim; k++)
       for (int i=0; i<V2.ydim; i++) {

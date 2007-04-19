@@ -6,70 +6,70 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
-#include <Classification/xmippCTVectors.hh>
+#include <data/args.h>
+#include <data/image.h>
+#include <classification/training_vector.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <algorithm>
-#include <math.h>
 
 int main(int argc, char **argv) {
-  FILE *fp; 
+  FILE *fp;
   float T;
   float tmpR;
 //  char *fname, *iname, *bmname, *imgName, *ext;
   FileName fname, iname, bmname, imgName, ext;
   string selname, basename;
   ImageXmipp mask;
-  vector < vector <float> > dataPoints;   
-  vector < string > labels;   
+  vector < vector <float> > dataPoints;
+  vector < string > labels;
   bool nomask = false;
   bool noBB = true;
   FileName  tmpN;
   int rows, cols;
-      
+
 
   // Read arguments
-  
-  try { 
+
+  try {
 
     fname = get_param(argc, argv, "-iname");
 
-    basename = fname.get_baseName();    
+    basename = fname.get_baseName();
     selname = basename + (string) ".sel";
-    
+
     selname = get_param(argc, argv, "-sel", selname.c_str());
     imgName = get_param(argc, argv, "-imgName", basename.c_str());
     ext = get_param(argc, argv, "-ext", "spi");
     bmname = get_param(argc, argv, "-mname", "mask.spi");
     if (check_param(argc, argv, "-nomask")) {
-      nomask = true; 
+      nomask = true;
       rows = AtoI(get_param(argc, argv, "-rows"));
-      cols = AtoI(get_param(argc, argv, "-cols"));      
+      cols = AtoI(get_param(argc, argv, "-cols"));
     }
-    if (check_param(argc, argv, "-noBB")) 
-      noBB = true; 
-  } 
+    if (check_param(argc, argv, "-noBB"))
+      noBB = true;
+  }
   catch (Xmipp_error) {
     cout << "data2img: Convert a data set into a set of images" << endl;
     cout << "Usage:" << endl;
@@ -87,17 +87,17 @@ int main(int argc, char **argv) {
 
   cout << "Given parameters are: " << endl;
   cout << "sel = " << selname << endl;
-  if (!nomask) 
+  if (!nomask)
      cout << "mname = " << bmname << endl;
   else {
       cout << "No mask is going to be used" << endl;
       cout << "Number of rows of the generated images: " << rows << endl;
       cout << "Number of columns of the generated images: " << cols << endl;
   }
-//  if (!noBB) 
+//  if (!noBB)
 //     cout << "Generated images will be inside the mask's bounding box" << endl;
   cout << "iname = " << fname << endl;
-  cout << "imgName = " << imgName << endl;  
+  cout << "imgName = " << imgName << endl;
 
   // Read spider mask
    if (!nomask) {
@@ -106,16 +106,16 @@ int main(int argc, char **argv) {
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
 	if (noBB)
-            mask().set_Xmipp_origin();   // sets origin at the center of the mask.        
+            mask().set_Xmipp_origin();   // sets origin at the center of the mask.
    	cout << mask;		     // Output Volumen Information
-   } 
+   }
 
    int minXPixel =32000, maxXPixel = 0; int minYPixel = 32000, maxYPixel = 0;
    int NewXDim, NewYDim;
    if ((!noBB) && (!nomask)) {
-      cout << endl << "Calculating the mask's minimum bounding box...." << endl; 
+      cout << endl << "Calculating the mask's minimum bounding box...." << endl;
         for (int y = 0; y < mask().RowNo(); y++)
-          for (int x = 0; x < mask().ColNo(); x++) {        
+          for (int x = 0; x < mask().ColNo(); x++) {
 	     // Checks if pixel is zero (it's outside the binary mask)
 	     if (mask(y,x) != 0) {
 	        if (y < minYPixel) minYPixel = y;
@@ -123,15 +123,15 @@ int main(int argc, char **argv) {
 	        if (y > maxYPixel) maxYPixel = y;
 	        if (x > maxXPixel) maxXPixel = x;
 	     }
-          } // for x      
+          } // for x
 	  NewXDim = (maxXPixel -minXPixel) +  1;
 	  NewYDim = (maxYPixel -minYPixel) +  1;
 	  cout << "minX = " << minXPixel << " maxX = " << maxXPixel << " DimX = " << NewXDim << endl;
 	  cout << "minY = " << minYPixel << " maxY = " << maxYPixel << " DimY= " << NewYDim << endl;
-          mask().move_origin_to(minYPixel + NewYDim/2, minXPixel + NewXDim/2);   // sets origin at the center of the mask.        
+          mask().move_origin_to(minYPixel + NewYDim/2, minXPixel + NewXDim/2);   // sets origin at the center of the mask.
    }
-   
-   cout << endl << "Reading input file...." << endl; 
+
+   cout << endl << "Reading input file...." << endl;
 
    ifstream iStream(fname.c_str());
    if (!iStream) {
@@ -140,59 +140,59 @@ int main(int argc, char **argv) {
    }
    xmippCTVectors ts(0, true);
    iStream >> ts;
-  
+
    FILE  *fout;
    fout = fopen(selname.c_str(), "w");
    if( fout == NULL ) {
     cerr << argv[0] << ": can't open file " << selname << endl;
-    exit(EXIT_FAILURE);   
+    exit(EXIT_FAILURE);
    }
 
    if (nomask && (rows*cols != ts.theItems[0].size())) {
       cerr << argv[0] << ": Images size doesn't coincide with data file " << endl;
-      exit(EXIT_FAILURE);        
+      exit(EXIT_FAILURE);
    }
 
    cout << "generating images......" << endl;
-   
-   for (int i = 0; i < ts.size(); i++) {      
+
+   for (int i = 0; i < ts.size(); i++) {
       ImageXmipp image;
-      if (nomask) 
-      	  image().resize(rows, cols);   // creates image              
+      if (nomask)
+      	  image().resize(rows, cols);   // creates image
       else {
           if (noBB)
-      	    image().resize(mask());         // creates image      
-	  else 
+      	    image().resize(mask());         // creates image
+	  else
 	    image().resize(NewYDim, NewXDim);
       }
-      image().set_Xmipp_origin();       // sets origin at the center of the image.        
+      image().set_Xmipp_origin();       // sets origin at the center of the image.
       int counter = 0;
       double minVal = MAXFLOAT;
       for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-        for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {        
+        for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {
 	// Checks if pixel is different from zero (it's inside the binary mask)
-	   if (!noBB || nomask || mask(y,x) != 0) {    
-	        image(y,x) = (double) ts.theItems[i][counter];         
+	   if (!noBB || nomask || mask(y,x) != 0) {
+	        image(y,x) = (double) ts.theItems[i][counter];
 		if (ts.theItems[i][counter] < minVal)
 		   minVal = ts.theItems[i][counter];
 		counter++;
 	   }
-      } // for x      
+      } // for x
       if (!nomask && noBB) {
         for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-          for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {        
+          for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {
 	     // Checks if pixel is zero (it's outside the binary mask)
-	     if (nomask || mask(y,x) == 0) 
-	        image(y,x) = (double) minVal;         
-          } // for x      
+	     if (nomask || mask(y,x) == 0)
+	        image(y,x) = (double) minVal;
+          } // for x
       } // if nomask.
 
-      tmpN = (string) imgName + ItoA(i) + (string) "." + (string) ext; 
+      tmpN = (string) imgName + ItoA(i) + (string) "." + (string) ext;
       image.write(tmpN);
-      fprintf(fout, "%s 1 \n", tmpN.c_str());      
+      fprintf(fout, "%s 1 \n", tmpN.c_str());
    }
    fclose(fout);      // close output file
    exit(0);
-} 
+}
 
 

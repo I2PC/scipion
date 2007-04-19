@@ -6,30 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _REFINEMENT_HH
 #define _REFINEMENT_HH
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include "projection.hh"
+
+#include <data/image.h>
+#include <data/volume.h>
+#include <data/funcs.h>
+#include <data/matrix2d.h>
+
+#include "projection.h"
 
 /**@name Shift refinement */
 //@{
@@ -39,26 +41,26 @@
 void calculate_and_find_correlation_max_proj( Projection const &proj1,
                                              Projection const &proj2,
                                             Projection & proj_tmp,
-                                            double &shift_X, double &shift_Y, 
+                                            double &shift_X, double &shift_Y,
                             	            double const max_step,
 					    int ref_trans_after, int act_proj);
-					  
+					
 /**Correlates two matrices  and finds the maximun of the correlation matrix.
-   This center may not be at  an integer position. 
+   This center may not be at  an integer position.
    The routine works as follows:
-   \begin{enumerate} 
+   \begin{enumerate}
    \item Search for the maximun with pixel acuraccy inside the window
-   \item Calculate the gravity centre of the corelation 
+   \item Calculate the gravity centre of the corelation
          in a neighborhood such as maximum/sqrt(2) > value
    \item Look for the gravity centre in this neighborhood
    \end{enumerate}
-   {\bf Note:} The neighborhood is circular   
-*/ 	 
+   {\bf Note:} The neighborhood is circular
+*/ 	
 template <class T>
-void calculate_and_find_correlation_max_mat( matrix2D<T> const &mat1, 
+void calculate_and_find_correlation_max_mat( matrix2D<T> const &mat1,
                                               matrix2D<T> const &mat2,
                                               matrix2D<T> & mat_temp,
-                                             double &shift_X, double &shift_Y, 
+                                             double &shift_X, double &shift_Y,
                             	             double const max_step) {
 
           //WRAP is OK for crystal but may be not for single particles
@@ -74,12 +76,12 @@ void calculate_and_find_correlation_max_mat( matrix2D<T> const &mat1,
           matrix2D<int> window(2*max_step_int+1,2*max_step_int+1);
           window.set_Xmipp_origin();
 
-          T temp_max= -100000000; 
-          SPEED_UP_temps;//speedup temporal variables 
+          T temp_max= -100000000;
+          SPEED_UP_temps;//speedup temporal variables
 
           //******* search for the maximun with pixel acuraccy **************/
           FOR_ALL_ELEMENTS_IN_MATRIX2D(window) {
-	        if(temp_max<mat_temp(i,j)) 
+	        if(temp_max<mat_temp(i,j))
         	       {
 		       temp_max= mat_temp(i,j);
 		       imax=i; jmax=j;
@@ -112,13 +114,13 @@ void calculate_and_find_correlation_max_mat( matrix2D<T> const &mat1,
                          if (temp_max/1.414 > mat_temp(i_actual,j_actual))
                              stop_loop = true;
 		     }
-		     else 
+		     else
 		     {
 		         stop_loop = true;
 		         cout << "\nWarning(calculate_and_find_correlation_max_mat)"
 		              << "\n some points neede to determine the maxima"
 			      << "\n are not available"<<endl;
-		     }    
+		     }
                  }
          }
 
@@ -131,7 +133,7 @@ void calculate_and_find_correlation_max_mat( matrix2D<T> const &mat1,
       /*** We have the neighborhood => looking for the gravity centre ***/
 
           double jj_max ;
-          double ii_max ; 
+          double ii_max ;
           double sum_corr ;
           //n_max and radius has been calculated above
           jj_max=ii_max=sum_corr=0.;

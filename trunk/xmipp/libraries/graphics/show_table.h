@@ -11,21 +11,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef TABLE_H
@@ -34,15 +34,16 @@
 #include <qglobal.h>
 #include <qtable.h>
 #include <qlabel.h>
-#include <iostream>
 #include <qpainter.h>
 #include <qpopupmenu.h>
 #include <qtimer.h>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <list>
 
+#include <data/funcs.h>
+#include <data/matrix2d.h>
+#include <data/selfile.h>
+
+#include <iostream>
+#include <list>
 
 /**@name Show Tables*/
 //@{
@@ -64,7 +65,7 @@ protected:
 
     // Filename of the file being represented
     FileName    fn;
-    
+
     // If the file changes and this flag is set, the representation
     // must change
     bool        check_file_change;
@@ -72,8 +73,8 @@ protected:
     time_t      modification_time;
     // Timer to check the modification of the file
     QTimer     *timer;
-    
-    // Array with the marks (red squares) of each cell    
+
+    // Array with the marks (red squares) of each cell
     bool       *cellMarks;
     // Array with pointer to the pixmaps of each cell
     QPixmap   **content;
@@ -135,7 +136,7 @@ protected:
     /* Set all information to NULL, 0, ... No check is done
        wether pointers must be deleted or not */
     virtual void init();
-    
+
     /* Delete pointers and then calls to init() */
     virtual void clear();
     /* Ask for memory for contents and cellMarks. They are initialized.
@@ -149,7 +150,7 @@ protected:
     virtual void initTable();
     /* Form the right click menu bar */
     virtual void initRightclickMenubar()=0;
-    
+
     /* Insert help and Quit in the right click menu bar*/
     void insertGeneralItemsInRightclickMenubar();
     /* Change a boolean option */

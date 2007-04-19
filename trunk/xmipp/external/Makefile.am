@@ -1,1 +1,1 @@
-SUBDIRS = inria
+SUBDIRS = bilib inria

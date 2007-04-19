@@ -9,24 +9,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippVolumes.hh"
+#include "volume.h"
 
 /* Write as CCP4 ----------------------------------------------------------- */
 void write_as_CCP4(VolumeT<double> *V, const FileName &fn, double Ts) {
@@ -41,7 +41,7 @@ void write_as_CCP4(VolumeT<double> *V, const FileName &fn, double Ts) {
    int iaux;
    #define WRITE_FAUX fwrite(&faux,sizeof(float),1,fp)
    #define WRITE_IAUX fwrite(&iaux,sizeof(int),1,fp)
-      
+
    iaux=       XSIZE((*V)());     WRITE_IAUX; //  1: NC
    iaux=       YSIZE((*V)());     WRITE_IAUX; //  2: NR
    iaux=       ZSIZE((*V)());     WRITE_IAUX; //  3: NS
@@ -78,14 +78,14 @@ void write_as_CCP4(VolumeT<double> *V, const FileName &fn, double Ts) {
    faux=(float)0.0;               WRITE_FAUX; // 55: RMS deviation
    iaux=       0;                 WRITE_IAUX; // 56: Number of labels
    for (int i=57; i<=256; i++)    WRITE_IAUX; // 57-256: Labels
-   
+
    V->write(fp, false, VFLOAT);
-   fclose(fp);  
+   fclose(fp);
 }
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {
-   FILE *fp; 
+   FILE *fp;
    int result=0;
    headerXmipp header(headerXmipp::VOL_XMIPP);
    headerXmipp header1(headerXmipp::VOL_INT);
@@ -106,7 +106,7 @@ int Is_VolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check, bool force_reversed) {
-   FILE *fp; 
+   FILE *fp;
    int result=0;
    headerXmipp header(headerXmipp::VOL_FOURIER);
 
@@ -122,7 +122,7 @@ int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check, bool force_r
 
 /* Get Volume size ---------------------------------------------------------- */
 void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim) {
-   FILE *fp; 
+   FILE *fp;
    int result;
    headerXmipp header(headerXmipp::VOL_XMIPP);
 

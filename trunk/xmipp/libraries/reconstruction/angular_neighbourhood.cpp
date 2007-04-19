@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_Projection_Neighbourhood.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippHeader.hh>
+#include "angular_neighbourhood.h"
+
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/image.h>
+#include <data/header.h>
 
 // Read arguments ==========================================================
 void Prog_projection_neighbourhood_prm::read(int argc, char **argv) {
@@ -56,7 +57,7 @@ void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_o
    while (!SF_in.eof()) {
      headerXmipp H;
      H.read(SF_in.NextImg());
-     H.get_eulerAngles(phi,theta,psi);  
+     H.get_eulerAngles(phi,theta,psi);
      DF_out.append_angles(phi,theta,psi,"rot","tilt","psi");
      i++;
      if (i%10==0) progress_bar(i);
@@ -95,7 +96,7 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
    double ang_dist;
    double psi1=0.;
    double psi2=0.;
-   
+
    for (int i=0; i<imax; i++) {
       double rot2p, tilt2p, psi2p;
       if (i==0) {rot2p=rot2; tilt2p=tilt2; psi2p=psi2;}
@@ -114,7 +115,7 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
       diff_tilt=ABS(realWRAP(diff_tilt,-180,180));
       ang_dist=sqrt((diff_rot*diff_rot)+(diff_tilt*diff_tilt));
       if (ang_dist<best_ang_dist) {
-	best_rot2=rot2p; best_tilt2=tilt2p; 
+	best_rot2=rot2p; best_tilt2=tilt2p;
 	best_ang_dist=ang_dist;
       }
       Euler_another_set(rot2p,tilt2p,psi2p,rot2p,tilt2p,psi2p);
@@ -124,9 +125,9 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
       diff_tilt=ABS(realWRAP(diff_tilt,-180,180));
       ang_dist=sqrt((diff_rot*diff_rot)+(diff_tilt*diff_tilt));
       if (ang_dist<best_ang_dist) {
-	best_rot2=rot2p; best_tilt2=tilt2p; 
-	best_ang_dist=ang_dist; 
-      }      
+	best_rot2=rot2p; best_tilt2=tilt2p;
+	best_ang_dist=ang_dist;
+      }
    }
    rot2=best_rot2;
    tilt2=best_tilt2;
@@ -166,10 +167,10 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood() {
 	SF1.jump(DF1.get_current_key()-1);
 	selline=SF1.current();
 	SF_out.insert(selline);
-      }      
+      }
       // Move to next data line
       DF1.next_data_line();
-    } 
+    }
     // finished reading all particles for this neighbourhood
     i++;
     FileName fn_sel_out;

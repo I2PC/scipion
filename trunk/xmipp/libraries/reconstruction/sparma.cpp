@@ -1,38 +1,39 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *              Javier Ángel Velázquez Muriel (javi@cnb.uam.es)
+ *              Javier ï¿½ngel Velï¿½zquez Muriel (javi@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_SpARMA.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh> // auto_correlation_matrix()
-#include <XmippData/xmippFilters.hh>
+#include "sparma.h"
+
+#include <data/args.h>
+#include <data/fft.h>
+#include <data/filters.h>
 
 /* Read parameters from command line --------------------------------------- */
 void ARMA_parameters::read(int argc, char **argv) {
       fn_in     = get_param(argc,argv,"-i");
-      fn_filter = get_param(argc,argv,"-o");                 
+      fn_filter = get_param(argc,argv,"-o");
       N_AR         = AtoI(get_param(argc,argv,"-N_AR","24"));
       M_AR         = AtoI(get_param(argc,argv,"-M_AR","0"));
          if (M_AR==0) M_AR=N_AR;
@@ -48,9 +49,9 @@ void ARMA_parameters::read(const FileName &InputFile) {
    if ((file = fopen(InputFile.c_str(), "r")) == NULL)
    	 REPORT_ERROR(1,(string)"ARMA_parameters::read: There is a problem "
             "opening the file "+InputFile);
-			  	         
+			  	
       fn_in        = get_param(file,"image", 0,"");
-      fn_filter    = get_param(file,"ARMAfile",0,"");                 
+      fn_filter    = get_param(file,"ARMAfile",0,"");
       N_AR         = AtoI(get_param(file,"N_AR",0,"24"));
       M_AR         = AtoI(get_param(file,"M_AR",0,"0"));
          if (M_AR==0) M_AR=N_AR;
@@ -81,14 +82,14 @@ void ARMA_parameters::write(const FileName &fn_prm, bool rewrite) {
    fh_param << endl;
    fh_param.close();
 }
-      	 	  	  
+      	 	  	
 // First quadrant neighbours -----------------------------------------------
 void First_Quadrant_Neighbors(int N, int M,matrix2D<double> &Neighbors) {
    long NumberOfPoints=(N+1)*M;
-   int n;  
+   int n;
    Neighbors.resize(NumberOfPoints,3);
-   
-   n=0; // Number of neighbors found so far. 
+
+   n=0; // Number of neighbors found so far.
 
    for (int p=N; p>=0; p--)
    {
@@ -104,10 +105,10 @@ void First_Quadrant_Neighbors(int N, int M,matrix2D<double> &Neighbors) {
 // Second quadrant neighbours ----------------------------------------------
 void Second_Quadrant_Neighbors(int N, int M,matrix2D<double> &Neighbors) {
    long NumberOfPoints=N*(M+1);
-   int n;  
+   int n;
    Neighbors.resize(NumberOfPoints,3);
-   
-   n=0; // Number of neighbors found so far. 
+
+   n=0; // Number of neighbors found so far.
 
    for (int p=N; p>=1; p--)
    {
@@ -126,7 +127,7 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    int N_MA, int M_MA, matrix2D<double> &ARParameters,
    matrix2D<double> &MAParameters) {
    double dSigma; // To store de sigma coeficient of the model
-    
+
    // Calculate the autocorrelation matrix
    matrix2D<double> R;
    auto_correlation_matrix(Img,R);
@@ -140,12 +141,12 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    matrix2D<double> N3;
 
    // Assign the support region for the AR part of the model (N1)
-   First_Quadrant_Neighbors(N_AR,M_AR,ARParameters); 
+   First_Quadrant_Neighbors(N_AR,M_AR,ARParameters);
    // Assign the support region for the MA part of the model (N2)
-   Second_Quadrant_Neighbors(N_MA,M_MA,MAParameters); 
+   Second_Quadrant_Neighbors(N_MA,M_MA,MAParameters);
    // Assign the support region for the AR equations (N3)
-   // Here is the same of N1, but it hasn´t to be
-   First_Quadrant_Neighbors(N_AR,M_AR,N3); 
+   // Here is the same of N1, but it hasnï¿½t to be
+   First_Quadrant_Neighbors(N_AR,M_AR,N3);
 
    long NumberOfARParameters=ARParameters.RowNo();
    long NumberOfMAParameters=MAParameters.RowNo();
@@ -158,27 +159,27 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    STARTINGX(Indep_terms)=0;
 
    ARcoeficients.resize(NumberOfARParameters);
-   STARTINGX(ARcoeficients)=0;   
-   
+   STARTINGX(ARcoeficients)=0;
+
    // Generate matrix (eq stands for equation number and co for coeficents)
    for (long eq=0 ; eq<NumberOfARParameters; eq++) {
       // take the independet term from the correlation matrix (or calculate it
       // if it was not calculated before).
-      int l=(int)N3(eq,0);	  
+      int l=(int)N3(eq,0);	
       int m=(int)N3(eq,1);
       Indep_terms(eq)=MAT_ELEM(R,l,m);
-   
+
       // take the coeficients
       for (long co=0 ; co<NumberOfARParameters; co++) {
 	 // Take the pertinent coeficient form the correlation matrix (or calculate it)
-	 int alpha1= (int)(N3(eq,0) - ARParameters(co,0)); 
+	 int alpha1= (int)(N3(eq,0) - ARParameters(co,0));
 	 int alpha2= (int)(N3(eq,1) - ARParameters(co,1));
-	 int beta1 = (int)(N3(eq,0) + ARParameters(co,0)); 
+	 int beta1 = (int)(N3(eq,0) + ARParameters(co,0));
 	 int beta2 = (int)(N3(eq,1) + ARParameters(co,1));
-         MAT_ELEM(Coeficients,eq,co)= R(alpha1,alpha2) + R(beta1,beta2);					 
-      }  
+         MAT_ELEM(Coeficients,eq,co)= R(alpha1,alpha2) + R(beta1,beta2);					
+      }
    }
-   
+
    /**********************************************************************/	
    // Solve the equation system to determine the AR model coeficients and sigma.
    /**********************************************************************/
@@ -193,13 +194,13 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
    /**********************************************************************/
    double dSum=0;
    for (long n=0 ; n<NumberOfARParameters; n++) {
-      int p=(int)ARParameters(n,0);	  
+      int p=(int)ARParameters(n,0);	
       int q=(int)ARParameters(n,1);
       dSum+=MAT_ELEM(ARParameters,n,2) * MAT_ELEM(R,p,q);
    }
 
    // And calculate sigma
-   dSigma=(MAT_ELEM(R,0,0)-2*dSum); 
+   dSigma=(MAT_ELEM(R,0,0)-2*dSum);
    double idSigma=1.0/dSigma;
 	
    /**********************************************************************/
@@ -214,25 +215,25 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
        for (long m=0 ; m<NumberOfARParameters; m++) {
 	   double ARm0=MAT_ELEM(ARParameters,m,0);
 	   double ARm1=MAT_ELEM(ARParameters,m,1);
-    	   int alpha1= (int)(MAn0 - ARm0); 
+    	   int alpha1= (int)(MAn0 - ARm0);
 	   int alpha2= (int)(MAn1 - ARm1);
-           int beta1 = (int)(MAn0 + ARm0); 
+           int beta1 = (int)(MAn0 + ARm0);
 	   int beta2 = (int)(MAn1 + ARm1);
 	   dSum += MAT_ELEM(ARParameters,m,2) * (
 	       MAT_ELEM(R,alpha1,alpha2) + MAT_ELEM(R,beta1,beta2));
 	   }
- 
-       int p=(int)MAn0;	  
+
+       int p=(int)MAn0;	
        int q=(int)MAn1;
        MAT_ELEM(MAParameters,n,2)=(MAT_ELEM(R,p,q)-dSum)*idSigma;
-   }	      
+   }	
 
    // return the sigma coeficient
    return dSigma;
 }
 
 // Compute the ARMA Filter -------------------------------------------------
-void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter, 
+void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
    matrix2D<double> &ARParameters, matrix2D<double> &MAParameters,
    double dSigma) {
    bool apply_final_median_filter=false;
@@ -243,9 +244,9 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
    Filter.init_zeros();
 
    // Compute the filter (only half the values are computed)
-   // The other half is computed based in symmetry. 
+   // The other half is computed based in symmetry.
    int sizeX=Img.ColNo();
-   int sizeY=Img.RowNo();   
+   int sizeY=Img.RowNo();
    long NumberOfMAParameters=MAParameters.RowNo();
    long NumberOfARParameters=ARParameters.RowNo();
    matrix2D<int> iMAParameters(NumberOfMAParameters,2),
@@ -263,11 +264,11 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
 	  // Compute dDigitalFreq
 	  XX(dDigitalFreq)=j/(double)sizeX;
 	  YY(dDigitalFreq)=i/(double)sizeY;
-	  
+	
           // Compute B
           double B=0;
           for (long n=0 ; n<NumberOfMAParameters; n++) {
-             int p=DIRECT_MAT_ELEM(iMAParameters,n,0);   
+             int p=DIRECT_MAT_ELEM(iMAParameters,n,0);
              int q=DIRECT_MAT_ELEM(iMAParameters,n,1);
              B+=DIRECT_MAT_ELEM(MAParameters,n,2)*2*
 	        cos((-2)*PI*(p*YY(dDigitalFreq)+q*XX(dDigitalFreq)));
@@ -277,7 +278,7 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
           // Compute A
           double A=0;
           for (long n=0 ; n<NumberOfARParameters; n++) {
-              int p=DIRECT_MAT_ELEM(iARParameters,n,0);          
+              int p=DIRECT_MAT_ELEM(iARParameters,n,0);
               int q=DIRECT_MAT_ELEM(iARParameters,n,1);
               A+=DIRECT_MAT_ELEM(ARParameters,n,2)*2*
 	           cos((-2)*PI*(p*YY(dDigitalFreq)+q*XX(dDigitalFreq)));
@@ -297,7 +298,7 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
           //else {val=abs(sqrt(complex<double>(val2,0)));}
 	  Filter(sizeY-1-i,sizeX-1-j)=Filter(i,j)=ABS(val2);
        }
-   
+
    // Apply final median filter
    if (apply_final_median_filter) {
       matrix2D<double> aux;

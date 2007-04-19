@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
@@ -61,10 +61,10 @@ public:
    void print_stats(ostream &out=cout) const {
       T min_val, max_val;
       double avg_val, dev_val;
-      
+
       compute_stats(avg_val, dev_val, min_val, max_val);
 
-      out.setf(ios::showpoint); int old_prec=out.precision(7); 
+      out.setf(ios::showpoint); int old_prec=out.precision(7);
       out << " min= "; out.width(9); out << min_val;
       out << " max= "; out.width(9); out << max_val;
       out << " avg= "; out.width(9); out << avg_val;
@@ -177,7 +177,7 @@ public:
                                                // instabilities
       } else stddev=0;
    }
-   
+
    /** Compute statistics within region. The region is specified
        by two corners. */
    void compute_stats(double &avg, double &stddev, T &min_val, T &max_val,
@@ -214,7 +214,7 @@ public:
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
          mi=minF+(T) (slope * (double) (mi-min0));
    }
-   
+
    /** Adjust the average and stddev of the array to given values.
        A linear operation is performed on the values of the array such
        that after it, the average and standard deviation of the array
@@ -301,12 +301,12 @@ public:
       These operations are between an array and a scalar (of the same type as
       the array). The result must
       have been defined to be of the same type as the operands.
-      
+
       In this kind of operations each element of array 1 is operated with the
       given constant. The result has also got the same
       shape as the input array and its former content is lost
       */
-      
+
    //@{
    /** This function must take one vector and a constant, and operate
       element by element according to the operation required. This is the
@@ -326,7 +326,7 @@ public:
       maT &result, char operation);
 
    /// v3=v1+k
-   maT operator  + (T op1) const 
+   maT operator  + (T op1) const
       {maT temp; array_by_scalar(*this,op1,temp,'+'); return temp;}
    /// v3=v1-k
    maT operator  - (T op1) const
@@ -364,7 +364,7 @@ public:
       and an array. The result must
       have been defined to be of the same type as the operand. The
       former content of the result array is lost after the operation.
-      
+
       In this kind of operations the constant is operated with each element
       of array 2. The result has also got the same
       shape as the input array and its former content is lost
@@ -487,7 +487,7 @@ public:
        array, that is, 1 for vectors, 2 for matrices and 3 for volumes. */
    // This function must be explictly implemented outside
    bool isBorder(const matrix1D<int> &v);
-   
+
    /** Insert a patch in array.
        This function substitutes the array given as argument in this object.
        It works with logical indexes, only the overlapping area is
@@ -496,7 +496,7 @@ public:
    // This function must be explictly implemented outside
    void patch(const maT &patch_array, char operation='=');
 //@}
-   
+
    /* Initialisation ------------------------------------------------------- */
 /**@name Initialisation */
 //@{
@@ -515,7 +515,7 @@ public:
    void init_zeros(const maT &op) {resize(op); init_constant((T)0);}
 
    /** Initialize to zeros with current size.
-       All values are set to 0. The current size and origin are kept. 
+       All values are set to 0. The current size and origin are kept.
        It is not an error if the array is empty, then nothing is done.
        \\Ex: v.init_zeros();*/
    void init_zeros() {init_constant((T)0);}
@@ -635,7 +635,7 @@ public:
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
           if (ABS(mi-MULTIDIM_ELEM(op2,i))>accuracy) return false;
       return true;}
-   
+
    /** Input from input stream.
        Actual size of the array is used to know how many values must be read.
        \\Ex: v.resize(3); cin >> v;*/
@@ -643,7 +643,7 @@ public:
    friend istream& operator >> (istream& in, maT &v)
       {FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) in >> MULTIDIM_ELEM(v,i);
       return in;}
-   
+
    /** Read from an ASCII file.
        The array must be previously resized to the correct size.*/
    void read(const FileName &fn)
@@ -689,7 +689,7 @@ public:
       if (!fh)
          REPORT_ERROR(1,(string)"MultidimArray::write: File "+fn+" not found");
       FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this){
-	 fh.write((char *) &mi, sizeof(T));		  	 	 
+	 fh.write((char *) &mi, sizeof(T));		  	 	
       }
       fh.close();}
 
@@ -704,7 +704,7 @@ public:
        system(((string)"xmipp_edit -i "+fn_random+" -remove &").c_str());
     }
 //@}
- 
+
    /* Iterator ------------------------------------------------------------- */
 /**@name Iterators
    Iterators are functions which could be applied to all elements, or
@@ -723,7 +723,7 @@ public:
       {maT temp; temp.resize(*this);
        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this) mi=(*f)(mi);
        return temp;}
-      
+
    /** Apply a function to each element and store in this same object */
    void for_all(T (*f)(T))
       {FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this) mi=(*f)(mi);}
@@ -955,7 +955,7 @@ public:
      {maT temp(a); temp.self_log10(); return temp;}
 
    /** Compute center of mass.
-       If a mask is provided it must be of the same dimension of the object 
+       If a mask is provided it must be of the same dimension of the object
        and of type int (i.e., matrix2D<int> *). Only those logical indexes
        within the object whose mask value is 1 (also in logical indexes)
        are taken into account.*/

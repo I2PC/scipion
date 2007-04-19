@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
 // xmippUmatrix.cc: Unified Distance Matrix (Umatrix)
 //-----------------------------------------------------------------------------
 
-#include <Classification/xmippUmatrix.hh> 
+#include "umatrix.h"
 
 /**
 *   Same as () operator.
@@ -72,29 +72,29 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
   bool bx, by, bz;
   xmippFeature dx, dy, dz1, dz2, dz;
   unsigned i, j;
-  
+
 
   // Check Maps dimensions
 
   if ((out.height() != 2*in.height()-1) || (out.width() != 2*in.width()-1))
     throw invalid_argument("xmippUmatrix: Invalid Umatrix dimensions. (OutMap should be 2*InMap - 1)");
-      
+
 
   // Set calibrated tag.
-  
+
   if (in.calibrated())
     out.calibrated(true);
 
-  // Calculate UMatrix 
-  
+  // Calculate UMatrix
+
   if (in.layout() == "RECT")
 
-    // rectangular topology 
+    // rectangular topology
     {
       for (j=0; j< in.height(); j++)
 	for (i=0; i< in.width(); i++)
 	  {
-	  	    	    
+	  	    	
 	    bx=false; by=false; bz=false;
 	    if (i<(in.width()-1))
 	      {
@@ -112,18 +112,18 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 		dz2 = eDist(in.itemAtPos(SomPos(i, j + 1)), in.itemAtPos(SomPos(i + 1, j)));
 		bz=true;
 	      }
-	      
+	
 	    dz = (dz1/sqrt((xmippFeature) 2.0)+ dz2/sqrt((xmippFeature) 2.0))/2;
-	    
+	
 	    if (bx)
 	      out.itemAtPos(SomPos(2*i+1, 2*j))[0] = dx;
 	    if (by)
 	      out.itemAtPos(SomPos(2*i, 2*j+1))[0] = dy;
 	    if (bz)
 	      out.itemAtPos(SomPos(2*i+1, 2*j+1))[0] = dz;
-	  } // for i 
+	  } // for i
     } // if Layout
-  else 
+  else
     /* hexagonal topology */
     {
       for (j=0; j< in.height(); j++)
@@ -143,10 +143,10 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 		  dy = eDist(in.itemAtPos(SomPos(i, j)), in.itemAtPos(SomPos(i, j + 1)));
 		  by=true;
 		} else {
-		  if (i > 0) { 
+		  if (i > 0) {
 		    dy = eDist(in.itemAtPos(SomPos(i, j)), in.itemAtPos(SomPos(i - 1, j + 1)));
 		    by=true;
-		  }  
+		  }
 		}
 	      }
 
@@ -157,34 +157,34 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 		  dz = eDist(in.itemAtPos(SomPos(i, j)), in.itemAtPos(SomPos(i, j + 1)));
 		  bz=true;
 		} else {
-		  if (i < (in.width()-1)) { 
+		  if (i < (in.width()-1)) {
 		    dz = eDist(in.itemAtPos(SomPos(i, j)), in.itemAtPos(SomPos(i + 1, j + 1)));
 		    bz=true;
-		  }  
+		  }
 		}
 	      }
 
-                         
+
 	    if (bx)
 	      out.itemAtPos(SomPos(2*i+1, 2*j))[0] = dx;
 
 	    if (by) {
 	      if (j%2)
 		out.itemAtPos(SomPos(2*i, 2*j+1))[0] = dy;
-	      else  
+	      else
 		out.itemAtPos(SomPos(2*i-1, 2*j+1))[0] = dy;
 	    }
 
 	    if (bz) {
 	      if (j%2)
 		out.itemAtPos(SomPos(2*i+1, 2*j+1))[0] = dz;
-	      else  
+	      else
 		out.itemAtPos(SomPos(2*i, 2*j+1))[0] = dz;
 	    }
-		   
+		
 
-	  } // for i 
-  
+	  } // for i
+
     } // Else
 
 
@@ -193,9 +193,9 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 
     if (in.layout() == "RECT")
 
-    // Rectangular Topology 
+    // Rectangular Topology
     {
-  
+
       /* medians of the 4-neighborhood */
       for (j=0; j< out.height(); j+=2)
 	for (i=0; i< out.width(); i+=2) {
@@ -206,7 +206,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = (v[1] + v[2])/2.0;
 	  } else if(j==0 && i>0 && i<out.width()-1) {
 	    /* in the upper edge */
@@ -214,7 +214,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[1];
 	  } else if(j==out.height()-1 && i>0 && i<out.width()-1) {
 	    /* in the lower edge */
@@ -222,7 +222,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[1];
 	  } else if(i==0 && j>0 && j<out.height()-1) {
 	    /* in the left edge */
@@ -230,7 +230,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[1];
 	  } else if(i==out.width()-1 && j>0 && j<out.height()-1) {
 	    /* in the right edge */
@@ -238,32 +238,32 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[1];
 	  } else if(i==0 && j==0)
 	    /* the upper left-hand corner */
 	    out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i+1, j))[0] +
-					      out.itemAtPos(SomPos(i, j+1))[0])/2.0; 
+					      out.itemAtPos(SomPos(i, j+1))[0])/2.0;
 	  else if(i==out.width()-1 && j==0) {
 	    /* the upper right-hand corner */
 	    out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i-1, j))[0] +
-					      out.itemAtPos(SomPos(i, j+1))[0])/2.0; 
+					      out.itemAtPos(SomPos(i, j+1))[0])/2.0;
 	  } else if(i==0 && j==out.height()-1) {
 	    /* the lower left-hand corner */
 	    out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i+1, j))[0] +
-					      out.itemAtPos(SomPos(i, j-1))[0])/2.0; 
+					      out.itemAtPos(SomPos(i, j-1))[0])/2.0;
 	  } else if(i==out.width()-1 && j==out.height()-1) {
 	    /* the lower right-hand corner */
 	    out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i-1, j))[0] +
-					      out.itemAtPos(SomPos(i, j-1))[0])/2.0; 
+					      out.itemAtPos(SomPos(i, j-1))[0])/2.0;
 	  }
 
 	  if (in.calibrated())
 	    out.targetAtPos(SomPos(i, j)) = in.targetAtPos(SomPos(i/2, j/2));
-	} // for i 
-    } else 
+	} // for i
+    } else
       // Hexagonal Topology
-   
+
       {
 
 	for (j=0; j< out.height(); j+=2)
@@ -285,7 +285,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
 	      }
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = (v[2] + v[3])/2.0;
 	    } else if(j==0 && i>0 && i<out.width()-1) {
 	      /* in the upper edge */
@@ -294,7 +294,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = (v[1] + v[2])/2.0;
 	    } else if(j==out.height()-1 && i>0 && i<out.width()-1) {
 	      /* in the lower edge */
@@ -308,7 +308,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j-1))[0]);
 	      }
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = (v[1] + v[2])/2.0;
 	    } else if(i==0 && j>0 && j<out.height()-1) {
 	      /* in the left edge */
@@ -317,14 +317,14 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	      if(!(j%4)) {
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[1];
 	      } else {
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[2];
 	      }
 	    } else if(i==out.width()-1 && j>0 && j<out.height()-1) {
@@ -334,59 +334,59 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 	      if(j%4) {
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[1];
 	      } else {
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i-1, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[2];
 	      }
 	    } else if(i==0 && j==0)
 	      /* the upper left-hand corner */
 	      out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i+1, j))[0] +
-						out.itemAtPos(SomPos(i, j+1))[0])/2.0; 
+						out.itemAtPos(SomPos(i, j+1))[0])/2.0;
 	    else if(i==out.width()-1 && j==0) {
 	      /* the upper right-hand corner */
 	      vector<xmippFeature> v;
 	      v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[1];
 	    } else if(i==0 && j==out.height()-1) {
 	      /* the lower left-hand corner */
 	      if(!(j%4))
 		out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i+1, j))[0] +
-						  out.itemAtPos(SomPos(i, j-1))[0])/2.0; 
+						  out.itemAtPos(SomPos(i, j-1))[0])/2.0;
 	      else {
 		vector<xmippFeature> v;
 		v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j-1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[1];
 	      }
 	    } else if(i==out.width()-1 && j==out.height()-1) {
 	      /* the lower right-hand corner */
 	      if(j%4)
 		out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i-1, j))[0] +
-						  out.itemAtPos(SomPos(i, j-1))[0])/2.0; 
+						  out.itemAtPos(SomPos(i, j-1))[0])/2.0;
 	      else {
 		vector<xmippFeature> v;
 		v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j-1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i-1, j-1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[1];
 	      }
 	    }
 	
 	    if (in.calibrated())
 	      out.targetAtPos(SomPos(i, j)) = in.targetAtPos(SomPos(i/2, j/2));
-	  } // for i 
+	  } // for i
 
       } // else
 
@@ -395,7 +395,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 
   xmippFeature Max = -MAXFLOAT;
   xmippFeature Min = MAXFLOAT;
-  
+
   for (i=0;i<out.width();i++)
     for (j=0;j<out.height();j++)
       {
@@ -414,8 +414,8 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 
 
   // Smooth map depending of the type of smoothing
-  
-  
+
+
   if (smooth == MEDIAN)
     medianSmoothing(out);
   else if (smooth == AVERAGE)
@@ -430,7 +430,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 void xmippUmatrix::medianSmoothing (Out& out) const
 {
   unsigned i, j;
-  
+
     /* rectangular topology */
     if (out.layout() == "RECT")
       {
@@ -443,7 +443,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if(i && (i<out.width()-1) && !j) {
 	      vector<xmippFeature> v;
@@ -451,7 +451,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if (!i && j&& (j<out.height()-1)) {
 	      vector<xmippFeature> v;
@@ -459,7 +459,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if ( i && (i < out.width()-1)&& (j==out.height()-1)) {
 	      vector<xmippFeature> v;
@@ -467,7 +467,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if ( j && (j < out.height()-1)&& (i==out.width()-1)) {
 	      vector<xmippFeature> v;
@@ -476,7 +476,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    }
 
@@ -484,28 +484,28 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	v.push_back(out.itemAtPos(SomPos(1, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, out.height()-2))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(0, out.height()-1))[0] = v[1];
 
-        v.clear(); 
+        v.clear();
 	v.push_back(out.itemAtPos(SomPos(out.width()-2, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, out.height()-2))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0] = v[1];
 
-        v.clear(); 
+        v.clear();
 	v.push_back(out.itemAtPos(SomPos(out.width()-2, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, 1))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(out.width()-1, 0))[0] = v[1];
 
-        v.clear(); 
+        v.clear();
 	v.push_back(out.itemAtPos(SomPos(1, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, 1))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, 0))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(0, 0))[0] = v[1];
 
       }
@@ -526,7 +526,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[3];
 	      } else if((j%4)==2) {
 		vector<xmippFeature> v;
@@ -537,7 +537,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[3];
 	      } else if((j%4)==3) {
 		vector<xmippFeature> v;
@@ -548,7 +548,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[3];
 	      }  else if((j%4)==0) {
 		vector<xmippFeature> v;
@@ -559,9 +559,9 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 		v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 		v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 		v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-		sort(v.begin(), v.end());  
+		sort(v.begin(), v.end());
 		out.itemAtPos(SomPos(i, j))[0] = v[3];
-	      }		  
+	      }		
 	    }
 	/* north border */
 	j=0;
@@ -572,7 +572,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	  v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	  v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 	  v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	  sort(v.begin(), v.end());  
+	  sort(v.begin(), v.end());
 	  out.itemAtPos(SomPos(i, j))[0] = v[2];
 	}
 	/*south border*/
@@ -585,7 +585,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[2];
 	  } else if((j%4)==2) {
 	    vector<xmippFeature> v;
@@ -594,7 +594,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[2];
 	  } else if((j%4)==3) {
 	    vector<xmippFeature> v;
@@ -603,7 +603,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[2];
 	  }  else if((j%4)==0) {
 	    vector<xmippFeature> v;
@@ -612,9 +612,9 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	    v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	    v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
-	    sort(v.begin(), v.end());  
+	    sort(v.begin(), v.end());
 	    out.itemAtPos(SomPos(i, j))[0] = v[2];
-	  }		 
+	  }		
 	}
 	/*east border*/
 	i=out.width()-1;
@@ -627,7 +627,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if((j%4)==2) {
 	      vector<xmippFeature> v;
@@ -635,7 +635,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if((j%4)==3) {
 	      vector<xmippFeature> v;
@@ -644,7 +644,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i-1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    }  else if((j%4)==0) {
 	      vector<xmippFeature> v;
@@ -654,7 +654,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i-1, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[3];
 	    }
 	  }
@@ -670,7 +670,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    } else if((j%4)==2) {
 	      vector<xmippFeature> v;
@@ -680,7 +680,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[3];
 	    } else if((j%4)==3) {
 	      vector<xmippFeature> v;
@@ -689,7 +689,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
 	    }  else if((j%4)==0) {
 	      vector<xmippFeature> v;
@@ -697,11 +697,11 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	      v.push_back(out.itemAtPos(SomPos(i, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i+1, j))[0]);
 	      v.push_back(out.itemAtPos(SomPos(i, j+1))[0]);
-	      sort(v.begin(), v.end());  
+	      sort(v.begin(), v.end());
 	      out.itemAtPos(SomPos(i, j))[0] = v[2];
-	    }		  
+	    }		
 	  }
-      
+
 
 	/*Corners*/
 
@@ -709,7 +709,7 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	v.push_back(out.itemAtPos(SomPos(1, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, 1))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(0, 0))[0] = v[1];
 
         v.clear();
@@ -717,21 +717,21 @@ void xmippUmatrix::medianSmoothing (Out& out) const
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, 1))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-2, 0))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-2, 1))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(out.width()-1, 0))[0] = v[2];
 
         v.clear();
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-1, out.height()-2))[0]);
 	v.push_back(out.itemAtPos(SomPos(out.width()-2, out.height()-1))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0] = v[1];
 
         v.clear();
 	v.push_back(out.itemAtPos(SomPos(0, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(1, out.height()-1))[0]);
 	v.push_back(out.itemAtPos(SomPos(0, out.height()-2))[0]);
-	sort(v.begin(), v.end());  
+	sort(v.begin(), v.end());
 	out.itemAtPos(SomPos(0, out.height()-1))[0] = v[1];
       }
 
@@ -745,7 +745,7 @@ void xmippUmatrix::averageSmoothing (Out& out) const
 {
 
   unsigned i, j;
-  
+
     /* rectangular topology */
     if (out.layout() == "RECT")
       {
@@ -788,7 +788,7 @@ void xmippUmatrix::averageSmoothing (Out& out) const
 	out.itemAtPos(SomPos(0, out.height()-1))[0] = (out.itemAtPos(SomPos(1, out.height()-1))[0] +
 						       out.itemAtPos(SomPos(0, out.height()-1))[0] +
 						       out.itemAtPos(SomPos(0, out.height()-2))[0])/3.0;
-      
+
 	out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0] = (out.itemAtPos(SomPos(out.width()-2, out.height()-1))[0] +
 								   out.itemAtPos(SomPos(out.width()-1, out.height()-1))[0] +
 								   out.itemAtPos(SomPos(out.width()-1, out.height()-2))[0])/3.0;
@@ -843,7 +843,7 @@ void xmippUmatrix::averageSmoothing (Out& out) const
 						  out.itemAtPos(SomPos(i+1, j))[0] +
 						  out.itemAtPos(SomPos(i-1, j+1))[0] +
 						  out.itemAtPos(SomPos(i, j+1))[0])/7.0;
-	      }		  
+	      }		
 	    }
 	/* north border */
 	j=0;
@@ -880,7 +880,7 @@ void xmippUmatrix::averageSmoothing (Out& out) const
 					      out.itemAtPos(SomPos(i-1, j))[0] +
 					      out.itemAtPos(SomPos(i, j))[0] +
 					      out.itemAtPos(SomPos(i+1, j))[0])/5.0;
-	  }		 
+	  }		
 	}
 	/*east border*/
 	i=out.width()-1;
@@ -941,12 +941,12 @@ void xmippUmatrix::averageSmoothing (Out& out) const
      	    				        out.itemAtPos(SomPos(i, j))[0] +
      	    				        out.itemAtPos(SomPos(i+1, j))[0] +
      	    				        out.itemAtPos(SomPos(i, j+1))[0])/4.0;
-	    }		  
+	    }		
 	  }
-    
+
 
 	/*Corners*/
-      
+
 	out.itemAtPos(SomPos(0, 0))[0] = (out.itemAtPos(SomPos(1, 0))[0] +
 					  out.itemAtPos(SomPos(0, 0))[0] +
 					  out.itemAtPos(SomPos(0, 1))[0])/3.0;

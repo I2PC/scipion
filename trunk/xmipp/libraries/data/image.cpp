@@ -12,29 +12,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippImages.hh"
+#include "image.h"
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
    bool reversed) {
-   FILE *fp; 
+   FILE *fp;
    int result;
    headerXmipp header(headerXmipp::IMG_XMIPP);
 
@@ -46,14 +46,14 @@ int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
    result = header.read(fp, skip_type_check, reversed);
 
    fclose(fp);
-   
+
    return result;
 }
 
 /* Is Fourier Xmipp image? ------------------------------------------------- */
 int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check,
    bool reversed) {
-   FILE *fp; 
+   FILE *fp;
    int result;
    headerXmipp header(headerXmipp::IMG_FOURIER);
 
@@ -65,13 +65,13 @@ int Is_FourierImageXmipp(const FileName &fn, bool skip_type_check,
    result = header.read(fp, skip_type_check, reversed);
 
    fclose(fp);
-   
+
    return result;
 }
 
 /* Get Image size ---------------------------------------------------------- */
 void GetXmippImageSize(const FileName &fn, int &Ydim, int &Xdim) {
-   FILE *fp; 
+   FILE *fp;
    int result;
    headerXmipp header(headerXmipp::IMG_XMIPP);
 
@@ -92,12 +92,12 @@ void GetXmippImageSize(const FileName &fn, int &Ydim, int &Xdim) {
 }
 
 /* Convert a Xmipp Image into  a Fourier Xmipp Image -------------------------------*/
-// A simple copy of real numbers is done 
+// A simple copy of real numbers is done
 void ImageXmipp_to_FourierImageXmipp(ImageXmipp &I,FourierImageXmipp &F)
 {
     // Adjust the size of the Fourier Image
     F().resize(I().RowNo(),I().ColNo());
-    // And copy 
+    // And copy
  	FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
 	{
 	    F(i,j)=I(i,j);
@@ -105,12 +105,12 @@ void ImageXmipp_to_FourierImageXmipp(ImageXmipp &I,FourierImageXmipp &F)
 }
 
 /* Convert a Fourier Xmipp Image  into a Xmipp Image -------------------------------*/
-// A simple copy of real parts is done 
+// A simple copy of real parts is done
 void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp &F,ImageXmipp &I)
 {
     // Adjust the size of the Fourier Image
     I().resize(F().RowNo(),F().ColNo());
-    // And copy 
+    // And copy
  	FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
 	{
 	    I(i,j)=F(i,j).real();
@@ -140,7 +140,7 @@ void ImageOver::window(int _v0, int _u0, int _vF, int _uF) {
    overumin=_u0;
    overvmax=_vF;
    overumax=_uF;
-   
+
    int newYdim=(_vF-_v0)*vistep+1;
    int newXdim=(_uF-_u0)*uistep+1;
    img.set_Xmipp_origin();
@@ -156,7 +156,7 @@ void ImageOver::clear() {
    overumin=overumax=0;
    vistep=uistep=0;
    Image::clear();
-}   
+}
 
 // Generate the normal image by averaging ----------------------------------
 void ImageOver::downsample(Image *I) const {

@@ -6,23 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../xmippArgs.hh"
+#include "args.h"
+
 #include <stdio.h>
 #include <math.h>
 #include <errno.h>
@@ -100,7 +101,7 @@ long long AtoLL(const char *str, int _errno, string errmsg, int exit) {
 int best_prec(float F, int _width) {
    // If it is 0
    if (F==0) return 1;
-   
+
    // Otherwise
    int exp=FLOOR(log10(ABS(F)));
    int advised_prec;
@@ -111,7 +112,7 @@ int best_prec(float F, int _width) {
       advised_prec=_width+(exp-1)-3;
       if (advised_prec<=0) advised_prec=-1;
    }
-      
+
    if (advised_prec<0) advised_prec=-1; // Choose exponential format
    return advised_prec;
 }
@@ -135,7 +136,7 @@ string FtoA(float F, int _width, int _prec) {
       outs << F << ends;
    #else
       outs << F;
-   #endif 
+   #endif
    #if GCC_VERSION < 30300
       return (string)aux;
    #else
@@ -149,7 +150,7 @@ string FtoA(float F, int _width, int _prec) {
 // Integer --> String ======================================================
 string ItoA(int I, int _width, char fill_with) {
    char aux[15];
-   
+
    // Check width
    int width=_width;
    int Iaux=ABS(I);
@@ -159,7 +160,7 @@ string ItoA(int I, int _width, char fill_with) {
          Iaux/=10;
 	 width++;
       } while (Iaux!=0);
-   
+
    // Fill the number with the fill character
    for (int i=0; i<width; i++) aux[i]=fill_with;
 
@@ -271,7 +272,7 @@ int splitString(const string& input, const string& delimiter,
             if (i==positions.size())
                s=input.substr(offset);
             else if (i>0)
-               s=input.substr(positions[i-1]+sizeS2, 
+               s=input.substr(positions[i-1]+sizeS2,
                               positions[i]-positions[i-1]-sizeS2);
         }
         if (includeEmpties || s.size()>0) results.push_back(s);
@@ -392,7 +393,7 @@ bool get_2_double_params(int argc, char **argv, const char *param,
 
 // Get 3 parameters ========================================================
 bool get_3_double_params(int argc, char **argv, const char *param,
-   double &v1, double &v2, double &v3, 
+   double &v1, double &v2, double &v3,
    double v1_def, double v2_def, double v3_def,
    int _errno, string errmsg, int exit) {
    bool retval;
@@ -421,10 +422,10 @@ bool get_3_double_params(int argc, char **argv, const char *param,
 // Checks if a boolean parameter was included the command line =============
 bool check_param(int argc, char **argv, const char *param) {
   int i = 0;
- 
+
   while ((i < argc) && (strcmp(param, argv[i])!=0))
     i++;
- 
+
   if (i < argc)  return(true);
   else           return(false);
 }
@@ -432,10 +433,10 @@ bool check_param(int argc, char **argv, const char *param) {
 // Position of a parameter in the command line =============================
 int position_param(int argc, char **argv, const char *param) {
   int i = 0;
- 
+
   while ((i < argc) && (strcmp(param, argv[i])))
     i++;
- 
+
   if (i < argc-1) return  i;
   else            return -1;
 }
@@ -452,7 +453,7 @@ int component_no(const string &str) {
 
 // Get float vector ========================================================
 matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
-   int dim, int _errno, 
+   int dim, int _errno,
    string errmsg,
    int exit) {
    matrix1D<double> aux;
@@ -485,7 +486,7 @@ matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
          else      REPORT_ERROR(_errno,errmsg);
       }
    }
-      
+
    string vector;
    bool finished=false;
    while (!finished) {
@@ -527,7 +528,7 @@ matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
       end_copy=vector.find(',',start_copy);
       // Store number
       aux(i)=AtoF(vector.substr(start_copy,end_copy));
-      
+
       // Prepare for next iteration
       i++;
       start_copy=end_copy+1;
@@ -549,14 +550,14 @@ void specific_command_line(const string &prog_name, int argc, char **argv,
       else i++;
    // If not found, exit
    if (i==argc) {argcp=0; return;}
-   
+
    // Check that following token is '('
    i++; if (i==argc || strcmp(argv[i],"(")!=0) {argcp=0; return;}
 
    // The specific command line starts here
    *argvp=&argv[i];
    argcp=1;
-   
+
    // Look for ')'
    i++; if (i==argc){argcp=0; return;}
    while (i<argc) {
@@ -590,7 +591,7 @@ void generate_command_line(const string &command_line, int &argcp,
       i++;
    }
    L=i; copy[L]='\0';
-   
+
    // Now count how many different words are there
    int words;
    int state;
@@ -605,7 +606,7 @@ void generate_command_line(const string &command_line, int &argcp,
          state=OUTSIDE_WORD;
       i++;
    }
-   
+
    // Resize argv and cut words
    argvp = new char *[words+1];
    argvp[0]=new char[6]; strcpy(argvp[0],"autom");
@@ -628,7 +629,7 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
    char ** &argvp, char* &copy) {
    long actual_pos=ftell(fh);
    fseek(fh,0,SEEK_SET);
-   
+
    char    line[201];
    char   *retval;
    bool found=false;
@@ -639,7 +640,7 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
       if (line[0]=='#')  continue;
       if (line[0]==';')  continue;
       if (line[0]=='\n') continue;
-      
+
       int i=0; while (line[i]!=0 && line[i]!='=') i++;
       if (line[i]=='=') {
          line[i]=0;
@@ -662,7 +663,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
    int _errno, string errmsg, int exit) {
    long actual_pos=ftell(fh);
    fseek(fh,0,SEEK_SET);
-   
+
    char    line[201];
    string  retval;
    bool found=false;
@@ -674,7 +675,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
       if (line[0]=='#')  continue;
       if (line[0]==';')  continue;
       if (line[0]=='\n') continue;
-      
+
       int i=0; char *line_wo_spaces=line;
       while (*line_wo_spaces==' ' || *line_wo_spaces=='\t') line_wo_spaces++;
       while (line_wo_spaces[i]!=0 && line_wo_spaces[i]!='=') i++;
@@ -704,7 +705,7 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
 bool check_param(FILE *fh, const char *param) {
    long actual_pos=ftell(fh);
    fseek(fh,0,SEEK_SET);
-   
+
    char    line[201];
    bool found=false;
    string retval;
@@ -714,7 +715,7 @@ bool check_param(FILE *fh, const char *param) {
       if (line[0]==0)    continue;
       if (line[0]=='#')  continue;
       if (line[0]=='\n') continue;
-      
+
       int i=0; while (line[i]!=0 && line[i]!='=') i++;
       if (line[i]=='=') {
          line[i]=0;
@@ -731,7 +732,7 @@ matrix1D<double> get_vector_param(FILE *fh, const char *param,
    int    argcp;
    char **argvp=NULL;
    char  *copy=NULL;
-   matrix1D<double> retval; 
+   matrix1D<double> retval;
    if (!generate_command_line(fh, param, argcp, argvp, copy))
       if (dim==-1) return retval;
       else if (exit) EXIT_ERROR(_errno,errmsg);

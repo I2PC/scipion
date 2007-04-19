@@ -7,43 +7,43 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_create_surface.hh"
-#include "../Prog_FourierFilter.hh"
-#include "../../blobs.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <fstream>
-#include <XmippData/xmippDocFiles.hh>
-#include <iostream.h>
-#include <XmippData/xmippIntegration.hh>
-#include <XmippData/xmippError.hh>
+#include "crystal_create_surface.h"
+#include "fourier_filter.h"
+#include "blobs.h"
 
+#include <data/args.h>
+#include <data/fft.h>
+#include <data/funcs.h>
+#include <data/docfile.h>
+#include <data/integration.h>
+#include <data/error.h>
+
+#include <fstream>
 
 /* Default constructor ------------------------------------------------------- */
-Prog_create_surface::Prog_create_surface() 
+Prog_create_surface::Prog_create_surface()
 {
    fn_in="";
    init_random_generator(); // random initializate
-   a.resize(2);	     	    	     
-   b.resize(2);	     	    	     
+   a.resize(2);	     	    	
+   b.resize(2);	     	    	
 }
 
 
@@ -59,7 +59,7 @@ void Prog_create_surface::read(int argc, char **argv) {
    fn_in=get_param(argc,argv,"-i");
    fn_out=get_param(argc,argv,"-o","");
    option=get_param(argc,argv,"-f",""); // 1:parabole, 2:cosine
-   if (fn_out=="") fn_out=fn_in.without_extension()+".out";  
+   if (fn_out=="") fn_out=fn_in.without_extension()+".out";
 }
 
 void Prog_create_surface::read_input_file() {
@@ -84,7 +84,7 @@ void Prog_create_surface::read_input_file() {
                "Prog_Project_Parameters::read: Error in lattice vector a");
             lineNo=1;
 	    break;
-     case 1:	    
+     case 1:	
             b.X()=AtoF(first_token(line),3007,
                "Prog_Project_Parameters::read: Error in lattice vector b");
             b.Y()=AtoF(next_token(),3007,
@@ -104,8 +104,8 @@ void Prog_create_surface::read_input_file() {
             kmax=AtoI(next_token(),3007,
                "Prog_Project_Parameters::read: Error in the index kmin of the lattice");
             lineNo=4;
-	  break;      
-      } /* switch end */  
+	  break;
+      } /* switch end */
    } /* while end */
    if (lineNo!=4)
       REPORT_ERROR(3007,(string)"Prog_Project_Parameters::read: I "
@@ -150,7 +150,7 @@ Func2 parabole; //parabole surface
 //*
 //For each (h,k) point we calculate its "lattice" vector
 //*
-vec=h*a+k*b;	  
+vec=h*a+k*b;	
 
 //*
 //setting of constants and variables depending on the surface implemented
@@ -163,7 +163,7 @@ vec=h*a+k*b;
  	   		cosine.cte1=fabs(cteA*cteA*cteB*cteB*vx*vx);
 	   		cosine.cte2=fabs(cteB*vx);
 	   		cosine.contribution_x=fabs(vx*vx);
-		} else if (option.compare("parabole")==0){ 
+		} else if (option.compare("parabole")==0){
 			coordx=vec.module();
 			normalized_vec=vec.normalize();	
 			parabole.Aperture=0.001;
@@ -179,15 +179,15 @@ uplimit=fabs(10*coordx);
 lowlimit=0;
 middle=(uplimit+lowlimit)/2;
 inte_high=middle;
-cont=0;	   
-    while(1) { 
+cont=0;	
+    while(1) {
 	   		//*		
 			// Calculate the integral over a parabolic or cosine surface
 			//*
 			if  (option.compare("cosine")==0){
 				Trapeze Trap(cosine,cosine.x,inte_low,inte_high);
             	integralt= Trap();
-			} else if (option.compare("parabole")==0) { 
+			} else if (option.compare("parabole")==0) {
 				Trapeze Trap(parabole,parabole.x,inte_low,inte_high);
             	integralt= Trap();	
 			}
@@ -199,7 +199,7 @@ cont=0;
 				lowlimit= lowlimit + (uplimit-lowlimit)/2;
 				uplimit = uplimit;
 				middle  = lowlimit + (uplimit-lowlimit)/2;
-			} else { 
+			} else {
 				lowlimit= lowlimit;
 				uplimit = lowlimit + (uplimit-lowlimit)/2;
 				middle  = lowlimit + (uplimit-lowlimit)/2;
@@ -223,11 +223,11 @@ cont=0;
  		normal_vec.X() =-cteA*cteB*sin(cteB*result.cox_real) ;	
  		normal_vec.Y() =0 ;	
  		normal_vec.Z() =-1 ;	
- 		normal_vec=normal_vec.normalize(); 
+ 		normal_vec=normal_vec.normalize();
 		result.Nx=normal_vec.X();
 		result.Ny=normal_vec.Y();
 		result.Nz=normal_vec.Z();
-	} else if (option.compare("parabole")==0){ 
+	} else if (option.compare("parabole")==0){
 		// coordinates in the plane surface 		
 		result.cox_ideal=vec.X();
 		result.coy_ideal=vec.Y();
@@ -240,7 +240,7 @@ cont=0;
  		normal_vec.X() =2.*parabole.Aperture*result.cox_real ;	
  		normal_vec.Y() =2.*parabole.Aperture*result.coy_real ;	
  		normal_vec.Z() =-1 ;	
- 		normal_vec=normal_vec.normalize(); 
+ 		normal_vec=normal_vec.normalize();
 		result.Nx=normal_vec.X();
 		result.Ny=normal_vec.Y();
 		result.Nz=normal_vec.Z();
@@ -250,7 +250,7 @@ cont=0;
 
 /* Run --------------------------------------------------------------------- */
 void Prog_create_surface::run() {
-   
+
 double x_des=0, y_des=0, z_des=0.0; //Noise parameters (u and std)
 double x_nor_des=0, y_nor_des=0, z_nor_des=0.0; //Noise parameters (u and std)
 matrix1D<double> data_line(10);
@@ -261,9 +261,9 @@ DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
 
 for (int h=hmin; h<=hmax; h++) {
 	for (int k=kmin; k<=kmax; k++){	
-	 
+	
 	 maping_function(a, b, h, k, result);
- 	       
+ 	
      data_line(0)=h; // h
 	 data_line(1)=k; // k
 	 data_line(2)=result.cox_ideal; // x
@@ -277,5 +277,5 @@ for (int h=hmin; h<=hmax; h++) {
 	 DF_report_standard.append_data_line(data_line);	
       }
    }
-  	 DF_report_standard.write(fn_out);	   
+  	 DF_report_standard.write(fn_out);	
 }

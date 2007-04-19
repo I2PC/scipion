@@ -6,8 +6,7 @@ CC=@MPICXX@
 CXX=@MPICXX@
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
-mpi_run_LDFLAGS = @EXEC_TYPE@
-
+## mpi_run_LDFLAGS = @EXEC_TYPE@
 
 INCLUDES = -I$(top_srcdir)/libraries
 

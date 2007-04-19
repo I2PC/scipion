@@ -5,6 +5,7 @@ show_LDADD = \
 	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/external/bilib/libBilib.la \
 	@QT_LIBS@
 
 show_LDFLAGS =

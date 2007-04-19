@@ -6,36 +6,38 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippMasks.hh>
-#include <Reconstruction/projection.hh>
-#include <Reconstruction/directions.hh>
-#include <Reconstruction/symmetries.hh>
+
+#include <data/fft.h>
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/image.h>
+#include <data/filters.h>
+#include <data/mask.h>
+
+#include "projection.h"
+#include "directions.h"
+#include "symmetries.h"
 
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
-#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ ) 
+#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
 /**@name projection_matching */
 //@{
@@ -92,7 +94,7 @@ public:
 public:
   /// Read arguments from command line
   void read(int argc, char **argv);
-  
+
   /// Show
   void show();
 
@@ -107,9 +109,9 @@ public:
 
   /** Actual projection matching for one image */
   void PM_process_one_image(matrix2D<double> &Mexp,
-			    float &img_rot, float &img_tilt, float &img_psi, 
+			    float &img_rot, float &img_tilt, float &img_psi,
 			    int &opt_dirno, double &opt_psi,
-			    double &opt_xoff, double &opt_yoff, 
+			    double &opt_xoff, double &opt_yoff,
 			    double &maxCC, double &Zscore);
 
   /** Loop over all images */
@@ -118,5 +120,5 @@ public:
 
     /** Write to disc all class averages and selfiles */
     void write_classes();
-};				    
+};				
 //@}

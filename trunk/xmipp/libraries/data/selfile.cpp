@@ -10,31 +10,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
  *
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>
-#include "../xmippFuncs.hh"
-#include "../xmippSelFiles.hh"
-#include "../xmippImages.hh"
 
-/*****************************************************************************/   
+#include "funcs.h"
+#include "selfile.h"
+#include "image.h"
+
+/*****************************************************************************/
 /* SEL FILE LINE        	             	      	             	     */
 /*****************************************************************************/
 /* Copy Constructor */
@@ -112,7 +113,7 @@ istream& operator >> (istream& o, SelLine &SFL) {
    return o;
 }
 
-/*****************************************************************************/   
+/*****************************************************************************/
 /* SEL FILE     	      	             	      	             	     */
 /*****************************************************************************/
 /* Constructor ------------------------------------------------------------- */
@@ -195,10 +196,10 @@ void SelFile::read(const FileName &sel_name, int overriding) {
    SelLine   temp;
    ifstream  fh_sel;
    int       line_no=1;
-   
+
    // Empties current SelFile
    if (overriding) clear();
-   
+
    // Open file
    if (sel_name.find (IMAGIC_TAG) == 0) {
       // Read Imagic selfile
@@ -238,11 +239,11 @@ void SelFile::read(const FileName &sel_name, int overriding) {
           line_no++;
           fh_sel.peek();
       }
-     
+
       // Close file
       fh_sel.close();
    }
-   
+
    // Set "pointer" to the beginning of the file
    if (overriding) fn_sel=sel_name;
    go_first_ACTIVE();
@@ -259,7 +260,7 @@ void SelFile::write(const FileName &sel_name) {
    ofstream    fh_sel;
    vector<SelLine>::iterator current = text_line.begin();
    vector<SelLine>::iterator last    = text_line.end();
-   
+
    if (strcmp(sel_name.c_str(),"")!=0) fn_sel=sel_name;
       // Don't use sel_name=="" because it wastes memory
 
@@ -286,7 +287,7 @@ void SelFile::write(const FileName &sel_name) {
 
       // Read each line and keep it in the list of the SelFile object
       while (current != last) fh_sel << *(current++);
-     
+
       // Close file
       fh_sel.close();
    }
@@ -306,7 +307,7 @@ void SelFile::merge(SelFile &SF) {
    while (current != last) {
       if ((*current).line_type!=SelLine::DATALINE) {current++; continue;}
       if ((found=find((*current).text))==text_line.end()) {
-         // New image not found in the whole Sel File. 
+         // New image not found in the whole Sel File.
          // Add it if it is not discarded
          if ((*current).label!=SelLine::DISCARDED) {
             text_line.push_back(*current);
@@ -351,7 +352,7 @@ void SelFile::split_in_two(SelFile &SF1,SelFile &SF2) {
     if (i<half) SF1.insert(SFtmp.current());
     else SF2.insert(SFtmp.current());
     if (i<N-1) SFtmp.NextImg();
-  }  
+  }
   SFtmp=SF1.sort_by_filenames();
   SF1=SFtmp;
   SFtmp=SF2.sort_by_filenames();
@@ -367,22 +368,22 @@ void SelFile::split_in_N(int N, vector<SelFile> &SF) {
   SFtmp.go_beginning();
   int Nimg=SFtmp.ImgNo();
   SF.clear();
-  
+
   // Create space for all SelFiles
   for (int n=0; n<N; n++) {
      SelFile *ptr_SF=new SelFile;
      ptr_SF->reserve(CEIL(Nimg/N));
      SF.push_back(*ptr_SF);
   }
-  
-  // Distribute images  
+
+  // Distribute images
   int n=0;
   for (int i=0;i<Nimg; i++) {
     SF[n].insert(SFtmp.current());
     n=(n+1)%N;
     if (i<Nimg-1) SFtmp.NextImg();
   }
-  
+
   // Sort the Selfiles
   for (int n=0; n<N; n++)
      SF[n]=SF[n].sort_by_filenames();
@@ -467,7 +468,7 @@ vector<SelLine>::iterator find(vector<SelLine> &text, string &img_name) {
 /* Find an image (inside the Sel File) ------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
 // *** THIS SHOULD USE THE PREVIOUS FUNCTION BUT I CANNOT MAKE IT TO COMPILE
-vector<SelLine>::iterator SelFile::find(string img_name) 
+vector<SelLine>::iterator SelFile::find(string img_name)
 {
    vector<SelLine>::iterator current = text_line.begin();
    vector<SelLine>::iterator last    = text_line.end();
@@ -527,7 +528,7 @@ void SelFile::ImgSize(int &Ydim, int &Xdim) {
       Xdim=img().xdim;
    } else
       REPORT_ERROR(1,"SelFile::ImgSize: First Active file is not an image");
-      
+
   current_line=aux;
 }
 
@@ -544,20 +545,20 @@ FileName SelFile::FileExtension() {
 /* Statistics -------------------------------------------------------------- */
 void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
    double& _max, bool apply_geo) {
-   _min = MAXFLOAT; _max = 0; bool first = true; int n = 0;   
+   _min = MAXFLOAT; _max = 0; bool first = true; int n = 0;
    // Calculate Mean
    go_beginning();
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        Image *image = Image::LoadImage(image_name,apply_geo); // reads image 
-        double min, max, avg, stddev;      
+        Image *image = Image::LoadImage(image_name,apply_geo); // reads image
+        double min, max, avg, stddev;
         (*image)().compute_stats(avg, stddev, min, max);
-        if (_min > min) _min = min;  
-        if (_max < max) _max = max; 
-        if (first) {    
+        if (_min > min) _min = min;
+        if (_max < max) _max = max;
+        if (first) {
            _ave = *image;
-	   first = false;	 
+	   first = false;	
         } else {
            _ave() += (*image)();
 	}
@@ -566,22 +567,22 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
    }
    if (n > 0)
       _ave() /= n;
-   _sd = _ave;  
+   _sd = _ave;
    _sd().init_zeros();
    // Calculate SD
-   go_beginning(); 
+   go_beginning();
    while ((!eof())) {
         string image_name = NextImg();
 	if (image_name == "") continue;
-        Image *image = Image::LoadImage (image_name,apply_geo); // reads image 
+        Image *image = Image::LoadImage (image_name,apply_geo); // reads image
         Image tmpImg;
-        tmpImg() = (((*image)() - _ave()));   
-        tmpImg() *= tmpImg();       
+        tmpImg() = (((*image)() - _ave()));
+        tmpImg() *= tmpImg();
         _sd() += tmpImg();
 	delete image;
    }
    _sd() /= (n-1);
-   _sd().SQRTnD(); 
+   _sd().SQRTnD();
 }
 
 
@@ -686,7 +687,7 @@ void SelFile::insert(string img_name, SelLine::Label label) {
    temp.text=img_name;
    temp.label=label;
    if (label!=SelLine::DISCARDED) no_imgs++;
-   
+
    // Insert and updates current_line
    current_line=text_line.insert(current_line,temp);
    current_line++;
@@ -704,7 +705,7 @@ void SelFile::insert(const SelLine &_selline) {
 
    // Sjors 18sep06: added next line
    if (_selline.label!=SelLine::DISCARDED) no_imgs++;
- 
+
    // Insert and updates current_line
    current_line=text_line.insert(current_line,_selline);
    current_line++;
@@ -716,7 +717,7 @@ void SelFile::insert_comment(string comment) {
    temp.line_type=SelLine::COMMENT;
    temp.text="# " + comment;
    temp.label=SelLine::DISCARDED;
-   
+
    // Insert and updates current_line
    current_line=text_line.insert(current_line,temp);
    current_line++;
@@ -757,7 +758,7 @@ SelFile SelFile::randomize() {
 SelFile SelFile::random_discard(int N) {
    SelFile  result;
    int      i, j, rnd_indx;
-   
+
    SelLine::Label label=SelLine::ACTIVE;
    result=*this;
    N=min(N,no_imgs);
@@ -769,10 +770,10 @@ SelFile SelFile::random_discard(int N) {
       // Discard that image
       (*(result.current_line)).label=SelLine::DISCARDED;
 
-      // Decrease the number of images such that next time 
+      // Decrease the number of images such that next time
       result.no_imgs--;
    }
-   
+
    result.go_beginning();
    return result;
 }
@@ -787,13 +788,13 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
    SelLine           temp;
    int               SF1_discarded=0, SF2_discarded=0;
    char              str[10];
-   
+
    // Search in File 1
    vector<SelLine>::iterator current = SF1.text_line.begin();
    vector<SelLine>::iterator last    = SF1.text_line.end();
    vector<SelLine>::iterator last_SF = SF2.text_line.end();
    vector<SelLine>::iterator found;
-   
+
    while (current != last) {
       // Skip if not active
       if ((*current).line_type!=SelLine::DATALINE) {current++; continue;}
@@ -807,13 +808,13 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
          if      ((*found).label==SelLine::DISCARDED)
                      only_in_SF1.push_back(*current);
          else        in_both.push_back(*current);
-      current++;      
+      current++;
    }
-   
+
    // Search in File 2
    current = SF2.text_line.begin();
    last    = SF2.text_line.end();
-   
+
    while (current != last) {
       // Skip if not active
       if ((*current).line_type!=SelLine::DATALINE) {current++; continue;}
@@ -826,7 +827,7 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
       only_in_SF2.push_back(*current);
       current++;
    }
-   
+
    // Write Statistics
    temp.line_type=SelLine::COMMENT;
    temp.label=SelLine::DISCARDED;
@@ -867,7 +868,7 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
    last    = in_both.end();
    while (current != last)
       result.text_line.push_back(*current++);
-  
+
    // Write files only in Sel File 1
    temp.text="";
    result.text_line.push_back(temp);
@@ -877,7 +878,7 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
    last    = only_in_SF1.end();
    while (current != last)
       result.text_line.push_back(*current++);
-  
+
    // Write files only in Sel File 2
    temp.text="";
    result.text_line.push_back(temp);
@@ -892,7 +893,7 @@ SelFile compare(SelFile &SF1, SelFile &SF2) {
    result.no_imgs=in_both.size() +
       only_in_SF1.size() + only_in_SF2.size();
    result.current_line=result.text_line.begin();
-  
+
    return result;
 }
 

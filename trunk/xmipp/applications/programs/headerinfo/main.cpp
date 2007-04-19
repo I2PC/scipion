@@ -6,29 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-/* PROTOTYPES -------------------------------------------------------------- */
+#include <data/args.h>
+#include <data/image.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+
 void Usage();
 
 #define PLUS  1.
@@ -86,7 +85,7 @@ int main (int argc,char *argv[]) {
 	 col_xshift=AtoI(argv[i+4]);
 	 col_yshift=AtoI(argv[i+5]);
 
-	 // Check colum signs 
+	 // Check colum signs
 	 if (col_rot<0) sign_rot=MINUS;
 	 if (col_tilt<0) sign_tilt=MINUS;
 	 if (col_psi<0) sign_psi=MINUS;
@@ -209,7 +208,7 @@ int main (int argc,char *argv[]) {
 	     cout << endl;
 	   }
 	   img.write(fn_img);
-	   
+	
 	   //Move to next line in SF and document file
 	   SF.NextImg();
 	   DF.next();
@@ -244,7 +243,7 @@ int main (int argc,char *argv[]) {
 	     xshift=(float)ROUND(xshift);
 	     yshift=(float)ROUND(yshift);
 	   }
-	   
+	
 	   // Assign angles
 	   img.set_eulerAngles(rot,tilt,psi);
 	   img.set_originOffsets(xshift,yshift);
@@ -262,7 +261,7 @@ int main (int argc,char *argv[]) {
        }
        if (!verb) cerr <<" done"<<endl;
      }
-     
+
    } catch (Xmipp_error XE) {cout << XE;}
 }
 

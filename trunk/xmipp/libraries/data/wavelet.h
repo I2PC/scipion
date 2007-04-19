@@ -8,21 +8,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* WAVELETS                                                                  */
@@ -30,8 +30,8 @@
 #ifndef _XMIPPWAVELETS_HH
    #define _XMIPPWAVELETS_HH
 
-#include "xmippMatrices3D.hh"
-#include "Src/NumericalRecipes.hh"
+#include "matrix3d.h"
+#include "numerical_recipes.h"
 
 /**@name Wavelets */
 //@{
@@ -49,7 +49,7 @@
     if iterations is 1, then it must be a multiple of 2. If iterations is 2,
     then it must be a multiple of 4. If itereations if 3, then it must be
     a multiple of 8. And so on.
-    
+
     If the isign=-1 then the inverse wavelet transform is perdormed*/
 void Bilib_DWT(const matrix1D<double> &input,
    matrix1D<double> &result, int iterations, int isign=1);
@@ -207,7 +207,7 @@ template <class T>
     }
 
    /** Get maximum scale.
-       This function returns the maximum scale achievable by the 
+       This function returns the maximum scale achievable by the
        DWT transform of a given size.*/
    inline int Get_Max_Scale(int size) {return ROUND(log10((double)size) / log10(2.0));}
 
@@ -257,7 +257,7 @@ template <class T>
        greater than the absolute value of the coefficient, that coefficient
        is set to 0. */
    void soft_thresholding(matrix3D<double> &I, double th);
-   
+
    /** Adaptive soft thresholding 2D.
        Chang, Yu, Betterli. IEEE Int. Conf. Image Processing*/
    void adaptive_soft_thresholding(matrix2D<double> &I, int scale);
@@ -270,7 +270,7 @@ template <class T>
        Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
        is applied up to the scale given.
        SNR0 is the smallest SNR and SNRF is the largest SNR.
-       
+
        This function returns the estimated coefficients for S and N at
        each scale. If denoise is set to false, then S and N coefficients
        are estimated but they are not applied to the image.*/
@@ -287,7 +287,7 @@ template <class T>
        Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure
        is applied up to the scale given.
        SNR0 is the smallest SNR and SNRF is the largest SNR.
-       
+
        This function returns the estimated coefficients for S and N at
        each scale. If denoise is set to false, then S and N coefficients
        are estimated but they are not applied to the image.*/

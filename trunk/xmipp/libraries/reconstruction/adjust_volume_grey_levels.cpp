@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_adjust_volume.hh"
-#include <Reconstruction/projection.hh>
-#include <XmippData/xmippArgs.hh>
+#include "adjust_volume_grey_levels.h"
+#include "projection.h"
+
+#include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::read(int argc, char **argv) {
@@ -64,7 +65,7 @@ void Prog_Adjust_Volume_Parameters::produce_side_info() {
    VolumeXmipp IV; IV.read(fn_vol);
    V=IV();
    V.set_Xmipp_origin();
-   
+
    // Read input selfile
    SF.read(fn_sel);
 }
@@ -96,20 +97,20 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b) {
       double x=rnd_unif(0,1);
       if (x>probb_eval) continue;
       N++;
-      
+
       ImageXmipp I; I.read(fn);
       I().set_Xmipp_origin();
-   
-      // Project the auxiliary volume in the same direction 
+
+      // Project the auxiliary volume in the same direction
       Projection P;
       project_Volume(aux,P,YSIZE(I()),XSIZE(I()),
          I.rot(),I.tilt(),I.psi());
-      
+
       // Compute the difference
       matrix2D<double> diff;
       diff=I()-P();
       retval+=diff.sum2();
-      
+
       #ifdef DEBUG
          I.write("PPPexp.xmp");
 	 I()=P(); I.write("PPPtheo.xmp");
@@ -130,7 +131,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
    int imgno=SF.ImgNo();
    init_progress_bar(imgno);
    int i=0;
-   
+
    int projXdim, projYdim;
    while (!SF.eof()) {
       // Read image
@@ -138,7 +139,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
       ImageXmipp I; I.read(fn);
       projXdim=XSIZE(I());
       projYdim=YSIZE(I());
-      
+
       // Compute the image statistics
       double avg, stddev, min, max;
       I().compute_stats(avg, stddev, min, max);
@@ -146,14 +147,14 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
       sum+=avg;
       sum2+=stddev*stddev;
       N+=Ni;
-      
+
       // End of loop
       i++;
       if (i%10==0) progress_bar(i);
    }
    progress_bar(imgno);
    cout << endl;
-   
+
    // Statistics of the volume
    double avg0, stddev0, min0, max0;
    V.compute_stats(avg0, stddev0, min0, max0);
@@ -184,7 +185,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
    double a=stddevF/stddev0;
    double b=avgF-a*avg0;
    cout << "First Linear transformation: y=" << a << "*x+"  << b << endl;
-   
+
    // Optimize
    if (optimize) {
       matrix1D<double> p(2), steps(2);
@@ -196,7 +197,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
       Powell_optimizer(p,1,2,&projection_mismatching,ftol,fret,iter,steps,true);
       a=p(0); b=p(1);
    }
-   
+
    // Apply the transformation
    out=V;
    FOR_ALL_ELEMENTS_IN_MATRIX3D(V) out(k,i,j)=a*V(k,i,j)+b;

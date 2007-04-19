@@ -7,24 +7,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../xmippMorphology.hh"
-#include "../xmippFilters.hh"
+#include "morphology.h"
+#include "filters.h"
+
 #include <vector>
 
 /* Dilate/Erode 2D steps --------------------------------------------------- */
@@ -119,7 +120,7 @@ void closing2D(const matrix2D<double> &in,matrix2D<double> &out, int neig,
   for (i=0;i<size;i++){ // erode
    erode2D_step(tmp,out,neig,count);
    tmp=out;
-  }  
+  }
 }
 
 void opening2D(const matrix2D<double> &in,matrix2D<double> &out, int neig,
@@ -131,7 +132,7 @@ void opening2D(const matrix2D<double> &in,matrix2D<double> &out, int neig,
   for (i=0;i<size;i++){ // erode
    erode2D_step(tmp,out,neig,count);
    tmp=out;
-  }  
+  }
   for (i=0;i<size;i++){ //dilate
    dilate2D_step(tmp,out,neig,count);
    tmp=out;
@@ -216,7 +217,7 @@ void random_convex_hull(const matrix2D<double> &img, matrix2D<double> &hull,
       tx[0]=full_tx[i]; ty[0]=full_ty[i];
       tx[1]=full_tx[j]; ty[1]=full_ty[j];
       tx[2]=full_tx[k]; ty[2]=full_ty[k];
-      
+
       // Fill the triangle
       fill_triangle(hull, tx, ty, 1);
    }
@@ -261,7 +262,7 @@ void dilate3D_step(const matrix3D<double> &in,matrix3D<double> &out, int neig,
 	   out(k,i,j)=1;
 	   }
 	 }
-	 
+	
        }
        else {
          out(k,i,j)=in(k,i,j);
@@ -279,7 +280,7 @@ void erode3D_step(const matrix3D<double> &in,matrix3D<double> &out, int neig,
        if (in(k,i,j)==1) {
          // 6-environment
 	 out(k,i,j)=1;
-	 
+	
          sum = (int) (in(k-1,i,j)+in(k+1,i,j)+in(k,i-1,j)+in(k,i+1,j)
 	             +in(k,i,j-1)+in(k,i,j+1));
          if ((6-sum) > count) { //change the value to background
@@ -296,7 +297,7 @@ void erode3D_step(const matrix3D<double> &in,matrix3D<double> &out, int neig,
 	 else if (neig==26){ //26-environment
 	   sum = (int) (sum + in(k-1,i,j-1)+in(k-1,i,j+1)+in(k+1,i,j-1)+in(k+1,i,j+1)+
 	                      in(k,i+1,j+1)+in(k,i+1,j-1)+in(k,i-1,j+1)+in(k,i-1,j-1)+
-			      in(k-1,i+1,j)+in(k-1,i-1,j)+in(k+1,i+1,j)+in(k+1,i-1,j)+	   
+			      in(k-1,i+1,j)+in(k-1,i-1,j)+in(k+1,i+1,j)+in(k+1,i-1,j)+	
 	   		      in(k-1,i+1,j+1)+in(k-1,i+1,j-1)+
 	   		      in(k-1,i-1,j+1)+in(k-1,i-1,j-1)+
 	   		      in(k+1,i+1,j+1)+in(k+1,i+1,j-1)+
@@ -306,14 +307,14 @@ void erode3D_step(const matrix3D<double> &in,matrix3D<double> &out, int neig,
 	     out(k,i,j)=0;
 	   }
 	 }
-	 
+	
        }
        else {
          out(k,i,j)=in(k,i,j);
        }
        sum=0;
       }
-      
+
 }
 
 /* Dilate/Erode 3D --------------------------------------------------------- */
@@ -339,7 +340,7 @@ void erode3D(const matrix3D<double> &in,matrix3D<double> &out, int neig, int cou
    erode3D_step(tmp,out,neig,count);
    tmp=out;
   }
-  
+
 }
 
 /* Opening/Closing 3D ------------------------------------------------------ */
@@ -356,7 +357,7 @@ void closing3D(const matrix3D<double> &in,matrix3D<double> &out, int neig,
   for (i=0;i<size;i++){ // erode
    erode3D_step(tmp,out,neig,count);
    tmp=out;
-  }  
+  }
 }
 
 void opening3D(const matrix3D<double> &in,matrix3D<double> &out, int neig,
@@ -368,7 +369,7 @@ void opening3D(const matrix3D<double> &in,matrix3D<double> &out, int neig,
   for (i=0;i<size;i++){ // erode
    erode3D_step(tmp,out,neig,count);
    tmp=out;
-  }  
+  }
   for (i=0;i<size;i++){ //dilate
    dilate3D_step(tmp,out,neig,count);
    tmp=out;

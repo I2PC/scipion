@@ -7,32 +7,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtMainWidgetMark.hh"
-#include "QtWidgetMicrograph.hh"
-#include "QtImageOverviewMicrograph.hh"
-#include "QtDialogFamilies.hh"
-#include "QtFiltersController.hh"
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippSelFiles.hh>
+#include "main_widget_mark.h"
+#include "widget_micrograph.h"
+#include "image_overview_micrograph.h"
+#include "dialog_families.h"
+#include "filters_controller.h"
+
+#include <data/matrix2d.h>
+#include <data/geometry.h>
+#include <data/selfile.h>
+
 #include <qaccel.h>
 
 /* Constructor ------------------------------------------------------------- */
@@ -69,23 +70,23 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
    __untilted_generated=false;
 
    __gridLayout         = new QGridLayout( this, 1, 2, 0 );
-   __filtersController  = new QtFiltersController( this , _m);   
-   
+   __filtersController  = new QtFiltersController( this , _m);
+
    __mWidget            = new QtWidgetMicrograph( this, __filtersController );
    if ( _mTilted == NULL ) __mTiltedWidget = NULL;
    else {
       __mTiltedWidget = new QtWidgetMicrograph( this, __filtersController );
       __mTiltedWidget->setTilted();
    }
-   
+
    __familyDialog       = new QtDialogFamilies( this );
    __familyDialog->setCaption( "Families" );
    __familyDialog->show();
-     
+
    __ctrlPlus    = new QAccel( this );
    __ctrlMinus   = new QAccel( this );
    __otherCtrl   = new QAccel( this );
-   
+
    connect( __familyDialog, SIGNAL(signalActiveFamily(int)),
             __mWidget, SLOT(slotActiveFamily(int)) );
    connect( __mWidget, SIGNAL(signalAddFamily(const char*)),
@@ -99,18 +100,18 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                              __mWidget, SLOT(slotQuit(void)) );
    __otherCtrl->connectItem( __otherCtrl->insertItem(Key_S+CTRL, 201),
                              this, SLOT(slotSaveCoords(void)) );
-   
+
    if ( _mTilted != NULL ) {
       connect( __familyDialog, SIGNAL(signalActiveFamily(int)),
                __mTiltedWidget, SLOT(slotActiveFamily(int)) );
       connect( __mTiltedWidget, SIGNAL(signalAddFamily(const char*)),
                __familyDialog, SLOT(slotAddFamily(const char*)) );
 
-      __ctrlPlus->connectItem( 200, __mTiltedWidget->image(), 
+      __ctrlPlus->connectItem( 200, __mTiltedWidget->image(),
                                SLOT(slotZoomIn(void)) );
-      __ctrlMinus->connectItem( 201, __mTiltedWidget->image(), 
+      __ctrlMinus->connectItem( 201, __mTiltedWidget->image(),
                                 SLOT(slotZoomOut(void)) );
-      
+
       connect( (QObject*)__mWidget->overview(),
                SIGNAL(signalActualizeOtherOverview(int,int)),
       	       this,
@@ -120,7 +121,7 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                SIGNAL(signalActualizeOtherOverview(int,int)),
                (QObject*)__mWidget->overview(),
                SLOT(slotActualizeOtherOverview(int,int)) );
-      */ 
+      */
 
       connect( (QObject*)__mTiltedWidget->image(),
                SIGNAL(signalRepaint(void)),
@@ -136,7 +137,7 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                this,
                SLOT(slotAddCoordUntilted(int,int,int)) );
       */
-      
+
       connect( (QObject*)__mWidget->image(),
                SIGNAL(signalDeleteMarkOther(int)),
                (QObject*)__mTiltedWidget,
@@ -145,7 +146,7 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                SIGNAL(signalDeleteMarkOther(int)),
                (QObject*)__mWidget,
                SLOT(slotDeleteMarkOther(int)) );
-      
+
       connect( (QObject*)__mWidget->image(),
                SIGNAL(signalChangeFamilyOther(int,int)),
                (QObject*)__mTiltedWidget,
@@ -154,7 +155,7 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
                SIGNAL(signalChangeFamilyOther(int,int)),
                (QObject*)__mWidget,
                SLOT(slotChangeFamilyOther(int,int)) );
-      
+
       connect( (QObject*)__mWidget->image(),
                SIGNAL(signalRecalculateTiltMatrix()),
                this,
@@ -162,23 +163,23 @@ QtMainWidgetMark::QtMainWidgetMark( Micrograph *_m, Micrograph *_mTilted ) {
       connect( (QObject*)__mTiltedWidget->image(),
                SIGNAL(signalRecalculateTiltMatrix()),
                this,
-               SLOT(slotRecalculateTiltMatrix()) );      
+               SLOT(slotRecalculateTiltMatrix()) );
    }
-      
+
    __mWidget->setMicrograph( _m );
    __familyDialog->setMicrograph( _m );
    if ( _mTilted != NULL ) {
       __mTiltedWidget->setMicrograph( _mTilted );
       __familyDialog->setTiltedMicrograph( _mTilted );
    }
-   
+
    if ( _mTilted == NULL ) {
      __gridLayout->addMultiCellWidget( __mWidget, 0, 0, 0, 1 );
    } else {
       __gridLayout->addWidget( __mWidget, 0, 0 );
       __gridLayout->addWidget( __mTiltedWidget, 0, 1 );
    }
-      
+
    // Passing matrix initialization
    __Au.init_zeros(3,3);
    __Bt.init_zeros(3,3);
@@ -205,7 +206,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
    #ifdef _DEBUG
       cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
            << T.Y << ")\n";
-      cout << "A at input" << __Au << "B at input" << __Bt;   
+      cout << "A at input" << __Au << "B at input" << __Bt;
    #endif
    // Adjust untilted dependent matrix
    __Au(0,0)+=U.X*U.X  ; __Au(0,1)+=U.X*U.Y  ; __Au(0,2)+=U.X;
@@ -218,7 +219,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
    __Bt(2,0)+=T.X      ; __Bt(2,1)+=T.Y      ; __Bt(2,2) =__Au(2,2);
 
    #ifdef _DEBUG
-      cout << "A at output" << __Au << "B at output" << __Bt;   
+      cout << "A at output" << __Au << "B at output" << __Bt;
    #endif
 }
 
@@ -271,10 +272,10 @@ void QtMainWidgetMark::pass_to_tilted( int _muX, int _muY,
       #ifdef _DEBUG
          cout << "Output=" << m.transpose() << endl;
       #endif
-      
+
       _mtX=(int)XX(m);
       _mtY=(int)YY(m);
-   } else { _mtX = _muX; _mtY = _muY; } 
+   } else { _mtX = _muX; _mtY = _muY; }
    if (_update_passing_matrix) {
       Particle_coords T, U;
       U.X=_muX; U.Y=_muY;
@@ -344,10 +345,10 @@ void QtMainWidgetMark::compute_gamma() {
                Mt->coord(k).Y-Mt->coord(i).Y);
             double tilted_area=ABS(dot_product(ijt,ikt)/*/2*/);
             if (tilted_area<MIN_AREA) continue; // For numerical stability
-            if (tilted_area>MAX_AREA) continue; // micrograph are not perfect 
+            if (tilted_area>MAX_AREA) continue; // micrograph are not perfect
 	                                        // sheets so avoid
 						// very far away particles
-           
+
             // Now we know that tilted_area=untilted_area*cos(gamma)
 	    if (tilted_area>untilted_area) continue; // There are user errors
 	                                             // In the point selection
@@ -469,7 +470,7 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
 
 void QtMainWidgetMark::slotAddCoordTilted( int _muX, int _muY, int _f ) {
    int mtX, mtY;
-   
+
    pass_to_tilted( _muX, _muY, mtX, mtY, true);
    cout << "     --> in the tilted image (" << mtX << "," << mtY << ")\n";
    __mTiltedWidget->getMicrograph()->add_coord( mtX, mtY, _f );
@@ -482,10 +483,10 @@ void QtMainWidgetMark::slotAddCoordTilted( int _muX, int _muY, int _f ) {
 
 void QtMainWidgetMark::slotAddCoordUntilted( int _mtX, int _mtY, int _f ) {
    int muX, muY;
-   
+
    pass_to_untilted( _mtX, _mtY, muX, muY);
    __mWidget->getMicrograph()->add_coord( muX, muY, _f );
-   
+
 // CO:   __mTiltedWidget->slotDrawEllipse(_mtX, _mtY, _f);
    __mWidget->slotDrawEllipse(muX, muY, _f);
 }

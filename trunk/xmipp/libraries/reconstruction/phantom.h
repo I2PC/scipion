@@ -7,20 +7,20 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
  * 02111-1307  USA
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* PHANTOMS                                                                  */
@@ -30,10 +30,12 @@
    #define _PHANTOM_HH
 
 #include <vector>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <Reconstruction/blobs.hh>
-#include "projection.hh"
+
+#include <data/image.h>
+#include <data/volume.h>
+
+#include "blobs.h"
+#include "projection.h"
 
 /**@name Phantoms
     Phantoms are mathematical description of volumes such that in the
@@ -43,7 +45,7 @@
     background and the phantom size. A feature is a cone, a box, a cylinder,
     or any other geometrical figure described by its parameters and not
     as a volume with voxels at a given value.
-    
+
     The file format generated and accepted by this library is the following:
     \begin{verbatim}
     "#Phantom Xdim Ydim Zdim Background density [scale factor]\n"
@@ -68,7 +70,7 @@
     features might be negative, and they represent mathematical positions
     in R3. The phantom dimension, instead, define the phantom in this case
     to go from -32 to 31, in this R3 space.
-    
+
     If the scale factor, which by default is 1, is not unity then the whole
     phantom is scaled (0.5 means to its half and 1.5 enlarged by one half)
     just after reading it.
@@ -134,7 +136,7 @@ public:
     Rotate this feature using a rotation matrix. The center as well as
     the feature itself is rotated. */
     virtual void rotate(const matrix2D<double> &E);
-    
+
 /** Rotate only the center.
     Rotate the center of this feature only around the phantom center*/
     virtual void rotate_center(const matrix2D<double> &E);
@@ -159,11 +161,11 @@ public:
         {matrix1D<double> aux(3); return point_inside(r,aux);}
 
 /** Speeded up density inside a feature, VIRTUAL!!.
-    This function MUST be implemented for each subclass with NON constant 
+    This function MUST be implemented for each subclass with NON constant
     density as blobs and tells you if
     a point is inside the feature or not plus give you information about
      the density of the feature at that point. If the point is inside returns 1
-    multiplied by the density of the NORMALIZED feature and if not, returns 0. 
+    multiplied by the density of the NORMALIZED feature and if not, returns 0.
     The point is given in the vector r, and aux
     is an auxiliar vector with dimension 3 (must be externally resized)
     used to do some computations. This auxiliar vector must be supplied in
@@ -188,9 +190,9 @@ public:
        {matrix1D<double> aux1(3), aux2(3); return voxel_inside(r,aux1,aux2);}
 
 /** A voxel is compound of 8 subvoxels. This function returns the number
-    of subvoxel centers falling inside the feature multiplied by the normalized 
+    of subvoxel centers falling inside the feature multiplied by the normalized
     feature density. That is, the value of the density is always 1 at the origin
-    The voxel size is supposed to be 1, and r is the center of the voxel 
+    The voxel size is supposed to be 1, and r is the center of the voxel
     in R3. This speeded up function needs
     two vectors with dimension 3 externally resized. */
 
@@ -253,7 +255,7 @@ public:
     This function returns the length of the intersection between the ray
     defined by its direction and a passing point and the actual feature
     (whose center and dimensions are known by itself).
-    
+
     r and u are auxiliar vectors of dimension 3, they must be supplied in
     order to gain speed. r is the passing point expressed in the
     feature coordinate system, and u is the direction in the same
@@ -297,7 +299,7 @@ public:
     from the value of 4 points near the pixel, you can modify the subsampling
     value (actually 2x2=4) by changing a constant at the beginning of the
     function.
-    
+
     The matrix VP (3x3) is used to define how to relate a point in the 3D
     universal coordinate to the projection plane. So a point ru in the
     universal coordinate system, projects to VP*r. PV must be the inverse
@@ -331,12 +333,12 @@ public:
     you may change this colour, set a new global density and draw the
     volume with this given density. This option is useful to generate easily
     a labelled volume.
-    
+
     The Add-Assign behaviour is the one of the feature if the colour is
     internally defined, or Assign if the colour is externally given.
     In the assign behaviour a voxel value is assigned to the volume if the
     voxel there is smaller than the value we pretend to assign.
-    
+
     A voxel is drawn with a colour proportional to the number of vertices
     inside the features.
     The volume is not cleaned at the beginning.
@@ -485,7 +487,7 @@ public:
     int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside an Sphere.
-    This function tells you the density of the sphere at point r  
+    This function tells you the density of the sphere at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
@@ -599,7 +601,7 @@ public:
 /** Intersection of a ray with a blob.
     See \Ref{Feature::intersection} to know more about the parameters
     meaning. */
-//ROB pending    
+//ROB pending
     double intersection(const matrix1D<double> &direction,
        const matrix1D<double> &passing_point,
        matrix1D<double> &r, matrix1D<double> &u) const;
@@ -651,7 +653,7 @@ public:
     (the base is of radius "radius"), and the cylinder is defined between
     "-height/2" to "+height/2". Then the cylinder is rotated after the
     three Euler angles.
-    
+
     A point (r) in the universal coordinate system, where cylinders are defined
     in general, can be expressed (rp) with respect to a system where the cylinder
     is centered at the origin, its radius and height are unity and its base is
@@ -695,11 +697,11 @@ public:
     int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside an cylinder.
-    This function tells you the density of the cylinder at point r  
+    This function tells you the density of the cylinder at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
-    
+
 /** Return a scaled cylinder.
     The center, density, angles and behaviour of the new cylinder is exactly the
     same as the actual one. The radius and height are multiplied by the
@@ -768,7 +770,7 @@ public:
     "-height/2" to "+height/2" starting from their own centers.
     Then the cylinders, as a block, are rotated after the
     three Euler angles.
-    
+
     A point (r) in the universal coordinate system, where cylinders are defined
     in general, can be expressed (rp) with respect to a system where the FIRST
     cylinder is centered at the origin, its radius is unity and its base is
@@ -821,7 +823,7 @@ public:
    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside a double cylinder.
-    This function tells you the density of the double cylinder at point r  
+    This function tells you the density of the double cylinder at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
@@ -893,7 +895,7 @@ public:
     after the
     three Euler angles. The corresponding Euler matrix is stored in the
     field "euler" while its inverse is in "eulert".
-    
+
     A point (r) in the universal coordinate system, where cubes are defined
     in general, can be expressed (rp) with respect to a system where the cube
     is centered at the origin, all its dimensions are unity and its axes
@@ -937,7 +939,7 @@ public:
    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside an Cube.
-    This function tells you the density of the cube at point r  
+    This function tells you the density of the cube at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
@@ -962,7 +964,7 @@ public:
     This function returns xdim*ydim*zdim.
     See \Ref{Feature::volume} */
     double volume() const {return xdim*ydim*zdim;}
-    
+
 /** Read specific description for a cube.
     An exception is thrown if the line doesn't conform the standard
     specification. See \Ref{Feature::read_specific} */
@@ -1007,7 +1009,7 @@ public:
     is rotated after the
     three Euler angles. The corresponding Euler matrix is stored in the
     field "euler" while its inverse is in "eulert".
-    
+
     A point (r) in the universal coordinate system, where elliposids are defined
     in general, can be expressed (rp) with respect to a system where the ellipsoid
     is centered at the origin, all its radii are unity and its axes
@@ -1051,7 +1053,7 @@ public:
     int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside a Ellipsoid.
-    This function tells you the density of the ellipsoid at point r  
+    This function tells you the density of the ellipsoid at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
@@ -1121,7 +1123,7 @@ public:
     "-height/2" to "+height/2". Then the cone is rotated after the
     three Euler angles. The corresponding Euler matrix is stored in the
     field "euler" while its inverse is in "eulert".
-    
+
     A point (r) in the universal coordinate system, where cones are defined
     in general, can be expressed (rp) with respect to a system where the cone
     is centered at the origin, its radius and height is unity and its base is
@@ -1163,7 +1165,7 @@ public:
     int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
 
 /** Density inside a cone.
-    This function tells you the density of the cone at point r  
+    This function tells you the density of the cone at point r
     for constant valued features is trivial*/
     double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
            {return (1.);}
@@ -1230,7 +1232,7 @@ public:
     reconstruction programs as the features classes themselves haven't
     got enough information to generate the final volume. The file format
     to generate the phantom is described in the previous page (\Ref{Phantoms}).
-    
+
     This class is thought to be filled from a file, and doesn't give
     many facilities to update it from program. This is something
     to do.
@@ -1257,7 +1259,7 @@ public:
 
    /// Final volume background density
    double          Background_Density;
-   
+
    /// Has been the  scale applied?
    double          current_scale;
 
@@ -1315,7 +1317,7 @@ public:
 
 /// Prepare for work.
     void prepare();
-    
+
 /// Return the maximum distance of any feature to the volume center
     double max_distance() const;
 
@@ -1327,14 +1329,14 @@ public:
 //@{
 /** Read a phantom file.
     The file must accomplish the structure given in \Ref{Phantoms}.
-    
+
     If you don't apply the scale then all spatial coordinates are
     expressed in the given scale units. I.e., if the scale is 0.25 that
     means that every voxel in the voxel phantom represent 4 length units
     (usually Angstroms). If the scale is applied, then coordinates are
     expressed in voxel edge units. Otherwise, coordinates are expressed
     in length units (usually Angstroms).
-    
+
     We recommend apply_scale=false only if you plan to modify the
     description file without producing projections, voxel phantoms, ... */
     void read(const FileName &fn_phantom, bool apply_scale=true);
@@ -1357,7 +1359,7 @@ public:
     This function returns the first feature of the list containing the voxel.
     Features are numbered as 1, 2, ...
     If the voxel is not in any feature the function returns 0.
-    
+
     aux1 and aux2, are two vectors of dimension 3. They must be supplied
     in order to gain speed in the calculations. This is very useful
     when checking if many voxels are inside any feature. See also
@@ -1435,7 +1437,7 @@ public:
     xmippMatrix2D. The inv argument is either IS_INV or IS_NOT_INV.
     Matrices coming out from xmippGeometry for rotations, shifts, ...
     are not INV.
-    
+
     An exception is thrown if the matrix A is not valid.*/
     void self_apply_geom(const matrix2D<double> &A, int inv);
 
@@ -1481,12 +1483,12 @@ public:
     and viceversa). If rays reach point z0
     and the phantom is not reached the surface for that point is z0,
     otherwise it is the z of the last voxel which is still outside the phantom.
-    
+
     This function throws an exception if z0 is outside the volume definition.
     If z0 is equal to zdim then it is not used.
-    
+
     The radius is the probe radius for the surface generation.
-    
+
     If the output image is not resized, it is resized to the Y and X dimensions
     of the phantom.
     */

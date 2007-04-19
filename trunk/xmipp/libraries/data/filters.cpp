@@ -6,39 +6,39 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippFilters.hh"
-#include "../xmippFFT.hh"
-#include<list>
+#include "filters.h"
+#include "fft.h"
+#include <list>
 
 /* Substract background ---------------------------------------------------- */
 void substract_background_plane(Image *I) {
    matrix2D<double> A(3,3);
    matrix1D<double> x(3), b(3);
-   
+
    // Solve the plane 'x'
    A.init_zeros(); b.init_zeros();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*I)) {
       A(0,0) += j*j;    A(0,1) +=j*i;    A(0,2) +=j;
       A(1,0)  = A(0,1); A(1,1) +=i*i;    A(1,2) +=i;
       A(2,0)  = A(0,2); A(2,1)  =A(1,2); A(2,2) +=1;
-      b(0)   += j*IMGPIXEL(*I,i,j);   
+      b(0)   += j*IMGPIXEL(*I,i,j);
       b(1)   += i*IMGPIXEL(*I,i,j);
       b(2)   +=IMGPIXEL(*I,i,j);
    }
@@ -61,10 +61,10 @@ void contrast_enhancement(Image *I) {
 {
    list<int> iNeighbours;       /* A list for neighbour pixels */
    int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
-   
+
    /* First task is copying the input image into the output one */
    I_out=I_in;
-   
+
    /**** Then the region growing is done ****/
    /* Insert at the beginning of the list the seed coordinates */
    iNeighbours.push_front(j);
@@ -72,7 +72,7 @@ void contrast_enhancement(Image *I) {
 
    /* Fill the seed coordinates */
    MAT_ELEM(I_out,i,j)=filling_colour;
-   
+
    while(!iNeighbours.empty())
    {
       matrix1D<double> r(2);
@@ -106,7 +106,7 @@ void contrast_enhancement(Image *I) {
 	 CHECK_POINT(iCurrenti+1,iCurrentj-1);
 	 CHECK_POINT(iCurrenti+1,iCurrentj+1);
       }
-   }             
+   }
 }
 
 /* Region growing for volumes ----------------------------------------------- */
@@ -116,32 +116,32 @@ void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
 {
    list<int> iNeighbours;       /* A list for neighbour voxels */
    int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
-   
+
    /* First task is copying the input volume into the output one */
    V_out=V_in;
-   
+
    /**** Then the region growing is done in output volume ****/
    /* Insert at the beginning of the list the seed coordinates */
    iNeighbours.push_front(j);
    iNeighbours.push_front(i);
    iNeighbours.push_front(k);
-   
+
    /* Fill the seed coordinates */
    VOL_ELEM(V_out,k,i,j)=filling_colour;
-   
+
    while(!iNeighbours.empty())
    {
       matrix1D<double> r(3);
 
       /* Take the current pixel to explore */
       iCurrentk=iNeighbours.front();
-      iNeighbours.pop_front();     
+      iNeighbours.pop_front();
       iCurrenti=iNeighbours.front();
       iNeighbours.pop_front();
       iCurrentj=iNeighbours.front();
       iNeighbours.pop_front();
 
-      /* a macro for doing exploration of a voxel. If the voxel has a value 
+      /* a macro for doing exploration of a voxel. If the voxel has a value
       lower than stop_colour, its filled with filling colour and added to the
       list for exploring its neighbours */
       #define CHECK_POINT_3D(k,i,j) \
@@ -184,7 +184,7 @@ void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
       CHECK_POINT_3D(iCurrentk+1,iCurrenti+1,iCurrentj+1);
       CHECK_POINT_3D(iCurrentk+1,iCurrenti+1,iCurrentj-1);
       CHECK_POINT_3D(iCurrentk+1,iCurrenti+1,iCurrentj+1);
-   }             
+   }
 }
 
 /* Label image ------------------------------------------------------------ */
@@ -249,7 +249,7 @@ void keep_biggest_component(matrix2D<double> &I, double percentage,
       nbest--;
       explained+=nlabel(best(nbest));
    }
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(label) {
       bool among_the_best=false;
       for (int n=nbest; n<imax+1; n++)
@@ -280,7 +280,7 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
    matrix2D<double> Mcorr;
 
    correlation_matrix(I1,I2,Mcorr);
- 
+
    /*
      Warning: for masks with a small number of non-zero pixels, this routine is NOT reliable...
      Anyway, maybe using a mask is not a good idea at al...
@@ -289,12 +289,12 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
    // Adjust statistics within shiftmask to average 0 and stddev 1
    if (mask!=NULL) {
       if ((*mask).sum()<2) {
-        shiftX = shiftY = 0.; 
+        shiftX = shiftY = 0.;
         return;
-      } else { 
+      } else {
 	compute_stats_within_binary_mask(*mask,Mcorr,dummy,dummy,avecorr,stdcorr);
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
-	  if (MAT_ELEM(*mask,i,j)) 
+	  if (MAT_ELEM(*mask,i,j))
 	    MAT_ELEM(Mcorr,i,j)=(MAT_ELEM(Mcorr,i,j)-avecorr)/stdcorr;
 	  else MAT_ELEM(Mcorr,i,j)=0.;
       }
@@ -372,10 +372,10 @@ void Fourier_Bessel_decomposition(const matrix2D<double> &img_in,
                  h=2*PI/ntot;
                  coefca=h/PI/2.;
      }
-     
+
      matrix1D<double> sine(CEIL(my5));
      FOR_ALL_ELEMENTS_IN_MATRIX1D(sine) sine(i)=sin((i+1)*h);
-     
+
    }
 }
 
@@ -386,7 +386,7 @@ void harmonic_decomposition(const matrix2D<double> &img_in,
 
 /* Shah energy ------------------------------------------------------------- */
 /* This function computes the current functional energy */
-double Shah_energy(const matrix2D<double> &img, 
+double Shah_energy(const matrix2D<double> &img,
    const matrix2D<double> &surface_strength,
    const matrix2D<double> &edge_strength,
    double K, const matrix1D<double> &W) {
@@ -394,7 +394,7 @@ double Shah_energy(const matrix2D<double> &img,
    int Xdim1 = XSIZE(img) - 1;
 
    double Kinv = 1.0/K;
-   
+
    /* Calculate surface energy */
    double E1 = 0.0, E2 = 0.0, E3 = 0.0, E4 = 0.0;
    for (int i=1; i<Ydim1; i++)
@@ -419,11 +419,11 @@ double Shah_energy(const matrix2D<double> &img,
 }
 
 /* Update Surface Shah ----------------------------------------------------- */
-/* This routine performs one update to the edge estimate based     
-   on a finite differences solution to the following equation:     
-       0 = dE/df = dF/df - d(dF/dfx)/dx - d(dF/dfy)/dy                 
+/* This routine performs one update to the edge estimate based
+   on a finite differences solution to the following equation:
+       0 = dE/df = dF/df - d(dF/dfx)/dx - d(dF/dfy)/dy
            + dd(dF/dfxx)/dxx + dd(dF/dfxy)/dxy + dd(dF/dfyy)/dyy */
-double Update_surface_Shah(matrix2D<double> &img, 
+double Update_surface_Shah(matrix2D<double> &img,
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    const matrix1D<double> &W) {
    double Diff = 0.0, Norm=0.0;
@@ -464,7 +464,7 @@ double Update_surface_Shah(matrix2D<double> &img,
 	    F=(Constant + Neighbors) / Central;
 	 F=CLIP(F,0,1);
 
-	 // Compute the difference. 
+	 // Compute the difference.
 	 Diff += ABS(dMij(surface_strength,i,j) - F);
 	 Norm += ABS(dMij(surface_strength,i,j));
 
@@ -475,10 +475,10 @@ double Update_surface_Shah(matrix2D<double> &img,
 }
 
 /* Update Edge Shah -------------------------------------------------------- */
-/* This routine performs one update to the edge estimate based	 
+/* This routine performs one update to the edge estimate based	
    on a finite differences solution to the following equation:
    0 = dE/ds = dF/ds - d(dF/dsx)/dx - d(dF/dsy)/dy */
-double Update_edge_Shah(matrix2D<double> &img, 
+double Update_edge_Shah(matrix2D<double> &img,
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    double K, const matrix1D<double> &W) {
    double Diff = 0.0, Norm=0.0;
@@ -508,7 +508,7 @@ double Update_edge_Shah(matrix2D<double> &img,
 	 else if (S > 1) dMij(edge_strength,i,j)=(dMij(edge_strength,i,j)+1)/2;
 	 else		 dMij(edge_strength,i,j)=S;
 
-	 // Compute the difference. 
+	 // Compute the difference.
 	 Diff += ABS(dMij(edge_strength,i,j)-Old_edge_strength);
 	 Norm += ABS(Old_edge_strength);
       }
@@ -517,7 +517,7 @@ double Update_edge_Shah(matrix2D<double> &img,
 
 /* Smoothing Shah ---------------------------------------------------------- */
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
-void Smoothing_Shah(matrix2D<double> &img, 
+void Smoothing_Shah(matrix2D<double> &img,
    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
    const matrix1D<double> &W, int OuterLoops, int InnerLoops,
    int RefinementLoops, bool adjust_range) {
@@ -539,13 +539,13 @@ void Smoothing_Shah(matrix2D<double> &img,
           for (int j=0; j<InnerLoops; j++)
              diffsurface=
 	        Update_surface_Shah(img,surface_strength,edge_strength,W);
-	     
+	
           /* Iteratively update edge estimate */
 	  double diffedge;
           for (int j=0; j<InnerLoops; j++)
              diffedge=
 	        Update_edge_Shah(img,surface_strength,edge_strength,k,W);
-	     	     
+	     	
           /* Calculate new functional energy */
           double energy=Shah_energy(img,surface_strength,edge_strength,k,W);
 	  /* cout << " Energy " << energy
@@ -580,7 +580,7 @@ void rotational_invariant_moments(const matrix2D<double> &img,
    }
    //m_11/=m_00; m_02/=m_00; m_20/=m_00;
    //m_12/=m_00; m_21/=m_00; m_03/=m_00; m_30/=m_00;
-   
+
    // Compute high-level rotational invariant moments
    v_out.resize(5);
    v_out( 0)= m_20+m_02;
@@ -607,7 +607,7 @@ void rotational_invariant_moments(const matrix2D<double> &img,
 	     	  3*(m_30+m_12)*(m_30+m_12)
 		   -(m_21+m_03)*(m_21+m_03));
 */
-}   
+}
 
 /* Inertia moments --------------------------------------------------------- */
 void inertia_moments(const matrix2D<double> &img,
@@ -629,7 +629,7 @@ void inertia_moments(const matrix2D<double> &img,
       double dy2=dy*dy;
       m_11+=val*dx*dy;  m_02+=val*dy2;    m_20+=val*dx2;
    }
-   
+
    // Compute the eigen values of the inertia matrix
    // [m_02 m_11
    //  m_11 m_20]
@@ -640,7 +640,7 @@ void inertia_moments(const matrix2D<double> &img,
    matrix2D<double> v;
    svdcmp(A,u,v_out,v);
    v_out=v_out.sort();
-}   
+}
 
 /* Fill triangle ----------------------------------------------------------- */
 void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color) {

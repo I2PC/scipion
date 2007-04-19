@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /***************************************************************************
  I have change the names of the functions to allow the integration with
@@ -29,9 +29,9 @@
  not be a power of 2
  Now, the programs that need to perform the fft call image_fft and volume_fft
  which are defined in allfft.c
- The routines defined in this file (fft.c) are used only if the data have 
+ The routines defined in this file (fft.c) are used only if the data have
  dimensions that are a power of 2
- 
+
  Monica Chagoyen
 ****************************************************************************/
 /***************************************************************************/
@@ -64,16 +64,17 @@
 #define SQRT2 1.41421356
 #define MAX_LEN 1024
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+
 #ifndef __APPLE__
    #include <malloc.h>
 #endif
+
 #include "spider.h"
 #include "groe.h"
-#include <string.h>
-#include <stdlib.h>
-
 
 /***************************************************************************/
 

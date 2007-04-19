@@ -6,25 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #include <stdio.h>
-#include "../symmetries.hh"
+
+#include "symmetries.h"
 
 // Read Symmetry file ======================================================
 // crystal symmetry matices from http://cci.lbl.gov/asu_gallery/
@@ -37,7 +38,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    int  fold;
    matrix2D<double> L(4,4), R(4,4);
    matrix1D<double> axis(3), shift(3);
-   
+
    // Open file ---------------------------------------------------------
    if ((fpoii = fopen (fn_sym.c_str(), "r")) == NULL)
       REPORT_ERROR(3005,(string)"SymList::read_sym_file:Can't open file: "
@@ -48,10 +49,10 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    true_symNo=0;
    // count number of axis and mirror planes. It will help to identify
    // the crystallographic symmetry
-   
+
    int no_axis, no_mirror_planes;
    no_axis= no_mirror_planes= 0;
-   
+
    while (fgets (line, 79, fpoii) != NULL) {
       if (line[0]==';' || line[0]=='#' || line[0]=='\0') continue;
       auxstr = first_token(line);
@@ -61,7 +62,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
          continue;
       }
       if (strcmp(auxstr,"rot_axis")==0) {
-         auxstr=next_token(); fold=AtoI(auxstr); 
+         auxstr=next_token(); fold=AtoI(auxstr);
 	 true_symNo += (fold-1); no_axis++;
       } else if (strcmp(auxstr,"mirror_plane")==0) {true_symNo++;
                                                     no_mirror_planes++;}
@@ -174,17 +175,17 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    if (accuracy>0) compute_subgroup(accuracy);
 
    //possible crystallographic symmetry
-   if(no_axis==0 && no_mirror_planes== 0 && 
+   if(no_axis==0 && no_mirror_planes== 0 &&
       true_symNo==7 && space_group==sym_P42_12)
          space_group=sym_P42_12;
-   else if(no_axis==0 && no_mirror_planes== 0 && 
+   else if(no_axis==0 && no_mirror_planes== 0 &&
       true_symNo==3 && space_group==sym_P2_122)
          space_group=sym_P2_122;
-   else if(no_axis==0 && no_mirror_planes== 0 && 
+   else if(no_axis==0 && no_mirror_planes== 0 &&
       true_symNo==3 && space_group==sym_P22_12)
          space_group=sym_P22_12;
-   // P4 and P6	 
-   else if (no_axis==1 && no_mirror_planes== 0 && 
+   // P4 and P6	
+   else if (no_axis==1 && no_mirror_planes== 0 &&
             fabs(R(2,2)-1.) < XMIPP_EQUAL_ACCURACY &&
 	    fabs(R(0,0) - R(1,1)) < XMIPP_EQUAL_ACCURACY &&
 	    fabs(R(0,1) + R(1,0)) < XMIPP_EQUAL_ACCURACY )
@@ -196,16 +197,16 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 	       case(3):
                   space_group=sym_P4;
 		  break;
-              default: 
+              default:
                  space_group=sym_undefined;
 		 break;
 	       }//switch end
-	    }//end else if (no_axis==1 && no_mirror_planes== 0 
-   else if (no_axis==0 && no_mirror_planes== 0) 
+	    }//end else if (no_axis==1 && no_mirror_planes== 0
+   else if (no_axis==0 && no_mirror_planes== 0)
          space_group=sym_P1;
-   else 
-         space_group=sym_undefined;	 
-   
+   else
+         space_group=sym_undefined;	
+
 }
 
 // Get matrix ==============================================================
@@ -304,7 +305,7 @@ void SymList::compute_subgroup(double accuracy) {
 
       // Form new symmetry matrices
       // if (__chain_length(i)+__chain_length(j)>__sym_elements+2) continue;
-      
+
       get_matrices(i,L1,R1);
       get_matrices(j,L2,R2);
       newL=L1*L2;
@@ -321,7 +322,7 @@ void SymList::compute_subgroup(double accuracy) {
          if (newL.equal(L1,accuracy) && newR.equal(R1,accuracy))
             {found=true; break;}
       }
-      
+
       if (!found) {
          #ifdef DEBUG
             cout << "Matrix size " << XSIZE(tried) << " "
@@ -335,7 +336,7 @@ void SymList::compute_subgroup(double accuracy) {
       }
    }
 }
-   /** Guess Crystallographic space group.  
+   /** Guess Crystallographic space group.
        Return the  \URL[space group]{
        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
        far it has only been implemented for P1 (1), P2_122 (17) ,
@@ -345,9 +346,9 @@ void SymList::compute_subgroup(double accuracy) {
 int  SymList::crystallographic_space_group (double mag_a,double mag_b,
 				     double ang_a2b_deg) const
 {
-    
+
     switch(space_group){
-       case sym_undefined: 
+       case sym_undefined:
        case sym_P1: return(space_group);
        case sym_P4:
 	 if ( fabs((mag_a - mag_b)) >XMIPP_EQUAL_ACCURACY ||
@@ -386,7 +387,7 @@ int  SymList::crystallographic_space_group (double mag_a,double mag_b,
            cerr << "\nWARNING: P1 is assumed\n";
 	   return(sym_P1);
 	   }
-	 else  return(space_group); 
+	 else  return(space_group);
 	 break;
        default:
          cerr << "\n Congratulations: you have found a bug in the\n"
@@ -395,13 +396,13 @@ int  SymList::crystallographic_space_group (double mag_a,double mag_b,
 	      << "the symmetry info" << endl;
 	 exit(0);
 	 break;
-       }//switch(space_group)  end 
+       }//switch(space_group)  end
 
 }//crystallographic_space_group end
 
 // Symmetrize_crystal_vectors==========================================
 //A note: Please realize that we are not repeating code here.
-//The class SymList deals with symmetries when expressed in 
+//The class SymList deals with symmetries when expressed in
 //Cartesian space, that is the basis is orthonormal. Here
 //we describe symmetries in the crystallographic way
 //that is, the basis and the crystal vectors are the same.
@@ -411,7 +412,7 @@ int  SymList::crystallographic_space_group (double mag_a,double mag_b,
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
 
-void symmetrize_crystal_vectors(matrix1D<double> &aint, 
+void symmetrize_crystal_vectors(matrix1D<double> &aint,
 			      matrix1D<double> &bint,
 			      matrix1D<double> &shift,
 			      int space_group,
@@ -445,14 +446,14 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=   XX(eprm_bint);
                       YY(bint)=                   YY(eprm_bint);
               break;
-	    case(0):  XX(aint)= - XX(eprm_aint);  
+	    case(0):  XX(aint)= - XX(eprm_aint);
                       YY(aint)=                 - YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);   
+		      XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
               break;
-	    case(1):  XX(aint)= - XX(eprm_aint);  
+	    case(1):  XX(aint)= - XX(eprm_aint);
                       YY(aint)=                 + YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);  
+		      XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 + YY(eprm_bint);
 		    VECTOR_R3(shift, 0.5,0.0,0.0);
               break;
@@ -462,7 +463,7 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 		      YY(bint)=                 - YY(eprm_bint);
 		    VECTOR_R3(shift, 0.5,0.0,0.0);
 	      break;
-	   }//switch P2_122 end   
+	   }//switch P2_122 end
       break;
      case(sym_P22_12):
            switch(sym_no)
@@ -472,14 +473,14 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=   XX(eprm_bint);
                       YY(bint)=                   YY(eprm_bint);
               break;
-	    case(0):  XX(aint)= - XX(eprm_aint);  
+	    case(0):  XX(aint)= - XX(eprm_aint);
                       YY(aint)=                 - YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);   
+		      XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
               break;
-	    case(1):  XX(aint)=   XX(eprm_aint);  
+	    case(1):  XX(aint)=   XX(eprm_aint);
                       YY(aint)=                 - YY(eprm_aint);
-		      XX(bint)=   XX(eprm_bint);  
+		      XX(bint)=   XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
 		    VECTOR_R3(shift, 0.0,0.5,0.0);
               break;
@@ -489,12 +490,12 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 		      YY(bint)=                  YY(eprm_bint);
 		    VECTOR_R3(shift,0.0,0.5,0.0);
 	      break;
-	   }//switch P22_12 end   
+	   }//switch P22_12 end
       break;
 
      case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n"; exit(1);
         break;
-     case(sym_P4):       
+     case(sym_P4):
            switch(sym_no)
 	   {
 	    case(-1): XX(aint)=   XX(eprm_aint);
@@ -502,14 +503,14 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=   XX(eprm_bint);
                       YY(bint)=                   YY(eprm_bint);
               break;
-	    case(0):  XX(aint)=                 - YY(eprm_aint);  
+	    case(0):  XX(aint)=                 - YY(eprm_aint);
                       YY(aint)=   XX(eprm_aint);
-		      XX(bint)=                 - YY(eprm_bint);  
+		      XX(bint)=                 - YY(eprm_bint);
                       YY(bint)=   XX(eprm_bint);
               break;
-	    case(1):  XX(aint)= - XX(eprm_aint);  
+	    case(1):  XX(aint)= - XX(eprm_aint);
                       YY(aint)=                 - YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);   
+		      XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
               break;
 	    case(2):  XX(aint)=                   YY(eprm_aint);
@@ -517,7 +518,7 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=                   YY(eprm_bint);
                       YY(bint)= - XX(eprm_bint);
               break;
-	   }//switch P4 end   
+	   }//switch P4 end
         break;
      case(sym_P422):     REPORT_ERROR(1,"Group P422 not implemented");
         break;
@@ -529,24 +530,24 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=   XX(eprm_bint);
                       YY(bint)=                   YY(eprm_bint);
               break;
-	    case(0):  XX(aint)= - XX(eprm_aint);  
+	    case(0):  XX(aint)= - XX(eprm_aint);
                       YY(aint)=                 - YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);   
+		      XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
               break;
 	    case(1):  XX(aint)=                 + YY(eprm_aint);
                       YY(aint)= + XX(eprm_aint);
-		      XX(bint)=                 + YY(eprm_bint);  
+		      XX(bint)=                 + YY(eprm_bint);
                       YY(bint)= + XX(eprm_bint);
               break;
-	    case(2):  XX(aint)=                 - YY(eprm_aint);  
+	    case(2):  XX(aint)=                 - YY(eprm_aint);
                       YY(aint)= - XX(eprm_aint);
-		      XX(bint)=                 - YY(eprm_bint);   
+		      XX(bint)=                 - YY(eprm_bint);
                       YY(bint)= - XX(eprm_bint);
               break;
-	    case(3):  XX(aint)=                 + YY(eprm_aint);  
+	    case(3):  XX(aint)=                 + YY(eprm_aint);
                       YY(aint)= - XX(eprm_aint);
-		      XX(bint)=                 + YY(eprm_bint);  
+		      XX(bint)=                 + YY(eprm_bint);
                       YY(bint)= - XX(eprm_bint);
 		    VECTOR_R3(shift, 0.5, 0.5,0);
             break;
@@ -556,15 +557,15 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 		      YY(bint)= + XX(eprm_bint);
 		    VECTOR_R3(shift,0.5,0.5,0);
 	      break;
-	    case(5):  XX(aint)= - XX(eprm_aint);  
+	    case(5):  XX(aint)= - XX(eprm_aint);
 		      YY(aint)=		        + YY(eprm_aint);
-		      XX(bint)= - XX(eprm_bint);   
+		      XX(bint)= - XX(eprm_bint);
 		      YY(bint)=		        + YY(eprm_bint);
 		    VECTOR_R3(shift,0.5,0.5,0);
 	    break;
-	    case(6):  XX(aint)= + XX(eprm_aint);  
+	    case(6):  XX(aint)= + XX(eprm_aint);
 		      YY(aint)=		        - YY(eprm_aint);
-		      XX(bint)= + XX(eprm_bint);   
+		      XX(bint)= + XX(eprm_bint);
 		      YY(bint)=		        - YY(eprm_bint);
 		  VECTOR_R3(shift,0.5,0.5,0);
 	    break;
@@ -573,14 +574,14 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 		       "in symmetrize_crystal_vectors, bye"<<endl; exit(1);
       break;
 
-    
-	   }//switch P4212 end   
+
+	   }//switch P4212 end
         break;
      case(sym_P3):       cerr << "\n Group P3 not implemented\n"; exit(1);
         break;
      case(sym_P312):     cerr << "\n Group P312 not implemented\n"; exit(1);
         break;
-     case(sym_P6): 
+     case(sym_P6):
            switch(sym_no)
 	   {
 	    case(-1): XX(aint)=   XX(eprm_aint);
@@ -588,14 +589,14 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)=   XX(eprm_bint);
                       YY(bint)=                   YY(eprm_bint);
               break;
-	    case(0):  XX(aint)=   XX(eprm_aint) - YY(eprm_aint);  
+	    case(0):  XX(aint)=   XX(eprm_aint) - YY(eprm_aint);
                       YY(aint)=   XX(eprm_aint);
-		      XX(bint)=   XX(eprm_bint) - YY(eprm_bint);  
+		      XX(bint)=   XX(eprm_bint) - YY(eprm_bint);
                       YY(bint)=   XX(eprm_bint);
               break;
-	    case(1):  XX(aint)=                 - YY(eprm_aint);  
+	    case(1):  XX(aint)=                 - YY(eprm_aint);
                       YY(aint)=   XX(eprm_aint) - YY(eprm_aint);
-		      XX(bint)=                 - YY(eprm_bint);   
+		      XX(bint)=                 - YY(eprm_bint);
                       YY(bint)=   XX(eprm_bint) - YY(eprm_bint);
               break;
 	    case(2):  XX(aint)= - XX(eprm_aint);
@@ -603,24 +604,24 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
                       XX(bint)= - XX(eprm_bint);
                       YY(bint)=                 - YY(eprm_bint);
               break;
-	    case(3):  XX(aint)= - XX(eprm_aint) + YY(eprm_aint);  
+	    case(3):  XX(aint)= - XX(eprm_aint) + YY(eprm_aint);
                       YY(aint)= - XX(eprm_aint);
-		      XX(bint)= - XX(eprm_bint) + YY(eprm_bint);  
+		      XX(bint)= - XX(eprm_bint) + YY(eprm_bint);
                       YY(bint)= - XX(eprm_bint);
               break;
-	    case(4):  XX(aint)=                 + YY(eprm_aint);  
+	    case(4):  XX(aint)=                 + YY(eprm_aint);
                       YY(aint)= - XX(eprm_aint) + YY(eprm_aint);
-		      XX(bint)=                 + YY(eprm_bint);   
+		      XX(bint)=                 + YY(eprm_bint);
                       YY(bint)= - XX(eprm_bint) + YY(eprm_bint);
               break;
-	   }//switch P6 end   
+	   }//switch P6 end
         break;
 
      case(sym_P622):     cerr << "\n Group P622 not implemented\n"; exit(1);
         break;
      }
-			      
-}//symmetrize_crystal_vectors end			         
+			
+}//symmetrize_crystal_vectors end			
 
 #define Symmetrize_Vol(X) {\
              for (int i=0; i<vol_in.VolumesNo(); i++)\
@@ -632,11 +633,11 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
 void symmetrize_crystal_volume(GridVolume &vol_in,
-                              const matrix1D<double> &eprm_aint, 
+                              const matrix1D<double> &eprm_aint,
 			      const matrix1D<double> &eprm_bint,
 			      int eprm_space_group,
 			      const matrix2D<int> &mask, int grid_type){
-//SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER 
+//SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
 //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
    switch(eprm_space_group)
      {
@@ -651,15 +652,15 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
         break;
      case(sym_P222):     cerr << "\n Group P222 not implemented\n"; exit(1);
         break;
-     case(sym_P2_122):   
+     case(sym_P2_122):
         Symmetrize_Vol(symmetry_P2_122)//already has ;
         break;
-     case(sym_P22_12):   
+     case(sym_P22_12):
         Symmetrize_Vol(symmetry_P22_12)//already has ;
         break;
      case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n"; exit(1);
         break;
-     case(sym_P4):       
+     case(sym_P4):
 	Symmetrize_Vol(symmetry_P4)//already has ;
         break;
      case(sym_P422):     cerr << "\n Group P422 not implemented\n"; exit(1);
@@ -671,15 +672,15 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
         break;
      case(sym_P312):     cerr << "\n Group P312 not implemented\n"; exit(1);
         break;
-     case(sym_P6): 
+     case(sym_P6):
 	Symmetrize_Vol(symmetry_P6)//already has ;
         break;
      case(sym_P622):     cerr << "\n Group P622 not implemented\n"; exit(1);
         break;
      }
-    		  
+    		
 
-}//symmetrize_crystal_vectors end			         
+}//symmetrize_crystal_vectors end			
 #define put_inside(j,j_min,j_max,jint)  \
    if( (j) < (j_min) ) { (j) = (j) + (jint);}\
    else if( (j) > (j_max) ) { (j) = (j) - (jint);};
@@ -687,7 +688,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
      void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
-				const matrix1D<double> &eprm_aint, 
+				const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type)
@@ -704,13 +705,13 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    //to calculate the -z slice
    if(ABS(ZZ_lowest) >ABS(ZZ_highest) ) ZZ_lowest= -(ZZ_highest);
    else ZZ_highest= ABS(ZZ_lowest);
-   
+
    while(1)
      {
       if(mask(0,XX_lowest)==0) XX_lowest++;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -721,7 +722,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(0,XX_highest)==0) XX_highest--;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -732,7 +733,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_lowest,0)==0) YY_lowest++;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -743,12 +744,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_highest,0)==0) YY_highest--;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
-	 
+	
      }
 
 
@@ -765,26 +766,26 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int XXaint_2, YYbint_2;
    XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
    int xx,yy,zz;
-   
-   if( ABS(XX_lowest) > ABS(XX_highest)) 
+
+   if( ABS(XX_lowest) > ABS(XX_highest))
        { minX=XX_lowest; maxX=0;}
-   else 
+   else
        { minX=0; maxX=XX_highest;}
-   if( ABS(YY_lowest) > ABS(YY_highest)) 
+   if( ABS(YY_lowest) > ABS(YY_highest))
        { minY=YY_lowest; maxY=0;}
-   else 
+   else
        { minY=0; maxY=YY_highest;}
-   if( ABS(ZZ_lowest) > ABS(ZZ_highest)) 
+   if( ABS(ZZ_lowest) > ABS(ZZ_highest))
        { minZ=ZZ_lowest; maxZ=0;}
-   else 
+   else
        { minZ=0; maxZ=ZZ_highest;}
 
    //FCC non supported yet
-   if(volume_no==1 && grid_type==FCC)   
+   if(volume_no==1 && grid_type==FCC)
       {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
-       
-   for (z=minZ;z<=maxZ;z++) 
-     for (y=minY;y<=maxY;y++) 
+
+   for (z=minZ;z<=maxZ;z++)
+     for (y=minY;y<=maxY;y++)
        for (x=minX;x<=maxX;x++) {
 	   //sym=-1---------------------------------------------------------
            if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
@@ -802,9 +803,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }	     
+	      }	
            x0=xx;y0=yy;z0=zz;
-	   
+	
 	   //sym=1----------------------------------------------------------
 	   xx = XXaint_2-x; yy= y; zz= -z;
 //	   xx = -x; yy= -y+YYbint_2; zz= -z;
@@ -817,7 +818,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=1 end	     
+	      }//sym=1 end	
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
@@ -832,16 +833,16 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=2 end	      	      	       
+	      }//sym=2 end	      	      	
            x2=xx;y2=yy;z2=zz;
 
-           //only the first simple grid center and the origen is the same 
-	   //point. 
+           //only the first simple grid center and the origen is the same
+	   //point.
 //	   if(volume_no==1)
 //	   {
 // 	    switch (grid_type) {
 //		case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
-//		case BCC: x0--;y0--;               z1--; 
+//		case BCC: x0--;y0--;               z1--;
 //		          x2--;y2--;z2--;     y3--;
 //			  x4--;          x5--;     z5--;
 //			       y6--;z6--;
@@ -850,8 +851,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 //	     }
 //	   }
 
-           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
-           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) =
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2))/4.0;
 	   }//for end
@@ -859,7 +860,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
      void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
-				const matrix1D<double> &eprm_aint, 
+				const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type)
@@ -876,13 +877,13 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    //to calculate the -z slice
    if(ABS(ZZ_lowest) >ABS(ZZ_highest) ) ZZ_lowest= -(ZZ_highest);
    else ZZ_highest= ABS(ZZ_lowest);
-   
+
    while(1)
      {
       if(mask(0,XX_lowest)==0) XX_lowest++;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -893,7 +894,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(0,XX_highest)==0) XX_highest--;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -904,7 +905,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_lowest,0)==0) YY_lowest++;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
@@ -915,12 +916,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_highest,0)==0) YY_highest--;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P2_122, while(1)" << endl;
 	 exit(0);
 	 }
-	 
+	
      }
 
 
@@ -937,26 +938,26 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int XXaint_2, YYbint_2;
    XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
    int xx,yy,zz;
-   
-   if( ABS(XX_lowest) > ABS(XX_highest)) 
+
+   if( ABS(XX_lowest) > ABS(XX_highest))
        { minX=XX_lowest; maxX=0;}
-   else 
+   else
        { minX=0; maxX=XX_highest;}
-   if( ABS(YY_lowest) > ABS(YY_highest)) 
+   if( ABS(YY_lowest) > ABS(YY_highest))
        { minY=YY_lowest; maxY=0;}
-   else 
+   else
        { minY=0; maxY=YY_highest;}
-   if( ABS(ZZ_lowest) > ABS(ZZ_highest)) 
+   if( ABS(ZZ_lowest) > ABS(ZZ_highest))
        { minZ=ZZ_lowest; maxZ=0;}
-   else 
+   else
        { minZ=0; maxZ=ZZ_highest;}
 
    //FCC non supported yet
-   if(volume_no==1 && grid_type==FCC)   
+   if(volume_no==1 && grid_type==FCC)
       {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
-       
-   for (z=minZ;z<=maxZ;z++) 
-     for (y=minY;y<=maxY;y++) 
+
+   for (z=minZ;z<=maxZ;z++)
+     for (y=minY;y<=maxY;y++)
        for (x=minX;x<=maxX;x++) {
 	   //sym=-1---------------------------------------------------------
            if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
@@ -974,9 +975,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }	     
+	      }	
            x0=xx;y0=yy;z0=zz;
-	   
+	
 	   //sym=1----------------------------------------------------------
 //	   xx = XXaint_2-x; yy= y; zz= -z;
 	   xx = x; yy= -y+YYbint_2; zz= -z;
@@ -989,7 +990,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=1 end	     
+	      }//sym=1 end	
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
@@ -1004,16 +1005,16 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=2 end	      	      	       
+	      }//sym=2 end	      	      	
            x2=xx;y2=yy;z2=zz;
 
-           //only the first simple grid center and the origen is the same 
-	   //point. 
+           //only the first simple grid center and the origen is the same
+	   //point.
 //	   if(volume_no==1)
 //	   {
 // 	    switch (grid_type) {
 //		case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
-//		case BCC: x0--;y0--;               z1--; 
+//		case BCC: x0--;y0--;               z1--;
 //		          x2--;y2--;z2--;     y3--;
 //			  x4--;          x5--;     z5--;
 //			       y6--;z6--;
@@ -1022,15 +1023,15 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 //	     }
 //	   }
 
-           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
-           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) =
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2))/4.0;
 	   }//for end
 }//symmetryP2_122 end	
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
      void symmetry_P4(Volume &vol, const SimpleGrid &grid,
-                      const matrix1D<double> &eprm_aint, 
+                      const matrix1D<double> &eprm_aint,
 		      const matrix1D<double> &eprm_bint,
 		      const matrix2D<int> &mask, int volume_no, int grid_type)
 {
@@ -1040,13 +1041,13 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int ZZ_highest=(int) ZZ(grid.highest);
    int YY_highest=FINISHINGY(mask);
    int XX_highest=FINISHINGX(mask);
-   
+
    while(1)
      {
       if(mask(0,XX_lowest)==0) XX_lowest++;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P4, while(1)" << endl;
 	 exit(0);
@@ -1057,7 +1058,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(0,XX_highest)==0) XX_highest--;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P4, while(1)" << endl;
 	 exit(0);
@@ -1068,7 +1069,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_lowest,0)==0) YY_lowest++;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P4, while(1)" << endl;
 	 exit(0);
@@ -1079,12 +1080,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_highest,0)==0) YY_highest--;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P4, while(1)" << endl;
 	 exit(0);
 	 }
-	 
+	
      }
 
 //   int ZZ_lowest =(int) ZZ(grid.lowest);
@@ -1107,23 +1108,23 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int XXaint_2, YYbint_2;
    XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
    int xx,yy,zz;
-   
-   if( ABS(XX_lowest) > ABS(XX_highest)) 
+
+   if( ABS(XX_lowest) > ABS(XX_highest))
        { minX=XX_lowest; maxX=0;}
-   else 
+   else
        { minX=0; maxX=XX_highest;}
-   if( ABS(YY_lowest) > ABS(YY_highest)) 
+   if( ABS(YY_lowest) > ABS(YY_highest))
        { minY=YY_lowest; maxY=0;}
-   else 
+   else
        { minY=0; maxY=YY_highest;}
 
    minZ=ZZ_lowest;
    maxZ=ZZ_highest;
    //FCC non supported yet
-   if(volume_no==1 && grid_type==FCC)   
+   if(volume_no==1 && grid_type==FCC)
       {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
-   for (z=minZ;z<=maxZ;z++) 
-     for (y=minY;y<=maxY;y++) 
+   for (z=minZ;z<=maxZ;z++)
+     for (y=minY;y<=maxY;y++)
        for (x=minX;x<=maxX;x++) {
 	   //sym=-1---------------------------------------------------------
            if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1131,8 +1132,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 
 	   //sym=0 ---------------------------------------------------------
 	   xx =-y; yy= x; zz=z;
-           //only the first simple grid center and the origen is the same 
-	   //point. 
+           //only the first simple grid center and the origen is the same
+	   //point.
 	   if(volume_no==1) {xx--;}
 	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
 	      {
@@ -1142,9 +1143,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }	     
+	      }	
            x0=xx;y0=yy;z0=zz;
-	   
+	
 	   //sym=1----------------------------------------------------------
 	   xx = -x; yy= -y; zz= z;
 	   if(volume_no==1) {xx--;yy--;}
@@ -1156,7 +1157,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=1 end	     
+	      }//sym=1 end	
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
@@ -1170,11 +1171,11 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=2 end	     
+	      }//sym=2 end	
            x2=xx;y2=yy;z2=zz;
 
-           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
-           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) =
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2) )/4.0;
 	   }//for end
@@ -1183,7 +1184,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 /* Symmetrizes a simple grid with P4212 symmetry--------------------------*/
 
      void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
-				const matrix1D<double> &eprm_aint, 
+				const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type)
@@ -1200,13 +1201,13 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    //to calculate the -z slice
    if(ABS(ZZ_lowest) >ABS(ZZ_highest) ) ZZ_lowest= -(ZZ_highest);
    else ZZ_highest= ABS(ZZ_lowest);
-   
+
    while(1)
      {
       if(mask(0,XX_lowest)==0) XX_lowest++;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1217,7 +1218,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(0,XX_highest)==0) XX_highest--;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1228,7 +1229,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_lowest,0)==0) YY_lowest++;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1239,12 +1240,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_highest,0)==0) YY_highest--;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
 	 }
-	 
+	
      }
 
 //   int ZZ_lowest =(int) ZZ(grid.lowest);
@@ -1271,26 +1272,26 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int XXaint_2, YYbint_2;
    XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
    int xx,yy,zz;
-   
-   if( ABS(XX_lowest) > ABS(XX_highest)) 
+
+   if( ABS(XX_lowest) > ABS(XX_highest))
        { minX=XX_lowest; maxX=0;}
-   else 
+   else
        { minX=0; maxX=XX_highest;}
-   if( ABS(YY_lowest) > ABS(YY_highest)) 
+   if( ABS(YY_lowest) > ABS(YY_highest))
        { minY=YY_lowest; maxY=0;}
-   else 
+   else
        { minY=0; maxY=YY_highest;}
-   if( ABS(ZZ_lowest) > ABS(ZZ_highest)) 
+   if( ABS(ZZ_lowest) > ABS(ZZ_highest))
        { minZ=ZZ_lowest; maxZ=0;}
-   else 
+   else
        { minZ=0; maxZ=ZZ_highest;}
 
    //FCC non supported yet
-   if(volume_no==1 && grid_type==FCC)   
+   if(volume_no==1 && grid_type==FCC)
       {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
-       
-   for (z=minZ;z<=maxZ;z++) 
-     for (y=minY;y<=maxY;y++) 
+
+   for (z=minZ;z<=maxZ;z++)
+     for (y=minY;y<=maxY;y++)
        for (x=minX;x<=maxX;x++) {
 	   //sym=-1---------------------------------------------------------
            if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1307,9 +1308,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }	     
+	      }	
            x0=xx;y0=yy;z0=zz;
-	   
+	
 	   //sym=1----------------------------------------------------------
 	   xx =y; yy=x; zz= -z;//I think z-- is always inside the grid
 	                       //we do not need to check
@@ -1322,7 +1323,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=1 end	     
+	      }//sym=1 end	
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
@@ -1336,7 +1337,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=2 end	     
+	      }//sym=2 end	
            x2=xx;y2=yy;z2=zz;
 
 	   //sym=3----------------------------------------------------------
@@ -1350,7 +1351,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=3 end	     
+	      }//sym=3 end	
            x3=xx;y3=yy;z3=zz;
 
 	   //sym=4----------------------------------------------------------
@@ -1364,7 +1365,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=4 end	     
+	      }//sym=4 end	
            x4=xx;y4=yy;z4=zz;
 	   //sym=5----------------------------------------------------------
 	   xx = -x+XXaint_2; yy= +y+YYbint_2; zz= -z;
@@ -1377,7 +1378,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=5 end	     
+	      }//sym=5 end	
            x5=xx;y5=yy;z5=zz;
 
 	   //sym=6----------------------------------------------------------
@@ -1391,16 +1392,16 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=6 end	      	      	       
+	      }//sym=6 end	      	      	
            x6=xx;y6=yy;z6=zz;
 
-           //only the first simple grid center and the origen is the same 
-	   //point. 
+           //only the first simple grid center and the origen is the same
+	   //point.
 //	   if(volume_no==1)
 //	   {
 // 	    switch (grid_type) {
 //		case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
-//		case BCC: x0--;y0--;               z1--; 
+//		case BCC: x0--;y0--;               z1--;
 //		          x2--;y2--;z2--;     y3--;
 //			  x4--;          x5--;     z5--;
 //			       y6--;z6--;
@@ -1409,10 +1410,10 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 //	     }
 //	   }
 
-           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
-           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
-           VOLVOXEL(vol,z3,y3,x3) = VOLVOXEL(vol,z4,y4,x4) = 
-           VOLVOXEL(vol,z5,y5,x5) = VOLVOXEL(vol,z6,y6,x6) = 
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) =
+           VOLVOXEL(vol,z3,y3,x3) = VOLVOXEL(vol,z4,y4,x4) =
+           VOLVOXEL(vol,z5,y5,x5) = VOLVOXEL(vol,z6,y6,x6) =
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2) +
 	   VOLVOXEL(vol,z3,y3,x3) + VOLVOXEL(vol,z4,y4,x4) +
@@ -1421,7 +1422,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 }//symmetryP42_12 end				
 /* Symmetrizes a simple grid with P6 symmetry-----------------------------*/
      void symmetry_P6(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint, 
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type)
@@ -1434,13 +1435,13 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int YY_highest=FINISHINGY(mask);
    int XX_highest=FINISHINGX(mask);
 
-   
+
    while(1)
      {
       if(mask(0,XX_lowest)==0) XX_lowest++;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1451,7 +1452,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(0,XX_highest)==0) XX_highest--;
       else
          break;
-      if(XX_lowest==XX_highest) 
+      if(XX_lowest==XX_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1462,7 +1463,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_lowest,0)==0) YY_lowest++;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
@@ -1473,12 +1474,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
       if(mask(YY_highest,0)==0) YY_highest--;
       else
          break;
-      if(YY_lowest==YY_highest) 
+      if(YY_lowest==YY_highest)
          {
 	 cerr << "Error in symmetry_P42_12, while(1)" << endl;
 	 exit(0);
 	 }
-	 
+	
      }
 
 //   int ZZ_lowest =(int) ZZ(grid.lowest);
@@ -1503,27 +1504,27 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
    int XXaint_2, YYbint_2;
    XXaint_2 = XXaint/2; YYbint_2 = YYbint/2;
    int xx,yy,zz;
-   
-   if( ABS(XX_lowest) > ABS(XX_highest)) 
+
+   if( ABS(XX_lowest) > ABS(XX_highest))
        { minX=XX_lowest; maxX=0;}
-   else 
+   else
        { minX=0; maxX=XX_highest;}
    //P6 is tricky. I have decide to apply it to half the volume
    //instead of to 1 sizth. I think the amount of ifs that I save
    //are worth this larger loop
-   
+
    minY=YY_lowest;
    maxY=YY_highest;
 
-   minZ=ZZ_lowest; 
+   minZ=ZZ_lowest;
    maxZ=ZZ_highest;
 
    //FCC non supported yet
-   if(volume_no==1 && grid_type==FCC)   
+   if(volume_no==1 && grid_type==FCC)
       {cerr<< "\nSimetries using FCC not implemented\n";exit(1);}
-       
-   for (z=minZ;z<=maxZ;z++) 
-     for (y=minY;y<=maxY;y++) 
+
+   for (z=minZ;z<=maxZ;z++)
+     for (y=minY;y<=maxY;y++)
        for (x=minX;x<=maxX;x++) {
 	   //sym=-1---------------------------------------------------------
            if (!MAT_ELEM(mask,y,x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1539,9 +1540,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }	     
+	      }	
            x0=xx;y0=yy;z0=zz;
-	   
+	
 	   //sym=1----------------------------------------------------------
 	   xx = -y; yy= x - y; zz= z;
 	   if (!MAT_ELEM(mask,yy,xx) || mask.outside(yy,xx) )
@@ -1552,7 +1553,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=1 end	     
+	      }//sym=1 end	
            x1=xx;y1=yy;z1=zz;
 
 	   //sym=2----------------------------------------------------------
@@ -1565,7 +1566,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=2 end	     
+	      }//sym=2 end	
            x2=xx;y2=yy;z2=zz;
 
 	   //sym=3----------------------------------------------------------
@@ -1578,7 +1579,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=3 end	     
+	      }//sym=3 end	
            x3=xx;y3=yy;z3=zz;
 
 	   //sym=4----------------------------------------------------------
@@ -1591,14 +1592,14 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	          cerr << "ERROR in symmetry_P function"
 		       << "after correction spot is still"
 		       << "outside mask\a"<<endl;
-	      }//sym=4 end	     
+	      }//sym=4 end	
            x4=xx;y4=yy;z4=zz;
 
 	   if(volume_no==1)
 	   {
  	    switch (grid_type) {
 		case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
-	  //there is no way to reinforce P6 in the second grid without 
+	  //there is no way to reinforce P6 in the second grid without
 	  //interpolation. This is the best we can do.
 		case BCC: x1=x0=x;y1=y0=y;
 		          x2=x3=x4= -x-1;y2=y3=y4= -y-1;
@@ -1608,9 +1609,9 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 	   }
 
 
-           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =  
-           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) = 
-           VOLVOXEL(vol,z3,y3,x3) = VOLVOXEL(vol,z4,y4,x4) = 
+           VOLVOXEL(vol,z ,y ,x ) = VOLVOXEL(vol,z0,y0,x0) =
+           VOLVOXEL(vol,z1,y1,x1) = VOLVOXEL(vol,z2,y2,x2) =
+           VOLVOXEL(vol,z3,y3,x3) = VOLVOXEL(vol,z4,y4,x4) =
 	  (VOLVOXEL(vol,z ,y ,x ) + VOLVOXEL(vol,z0,y0,x0) +
 	   VOLVOXEL(vol,z1,y1,x1) + VOLVOXEL(vol,z2,y2,x2) +
 	   VOLVOXEL(vol,z3,y3,x3) + VOLVOXEL(vol,z4,y4,x4))/6.0;

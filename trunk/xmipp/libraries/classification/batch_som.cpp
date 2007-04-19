@@ -28,8 +28,7 @@
  Implements Kohonen Self-Organizing Feature Maps by using Batch SOM
 -----------------------------------------------------------------------------*/
 
-#include <Classification/xmippBatchSOM.hh>
-
+#include "batch_som.h"
 
  /**
   * Construct a BatchSOM from the code vectors in a stream

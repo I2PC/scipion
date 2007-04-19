@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include <math.h>
 #include <stdio.h>
@@ -29,7 +29,7 @@
 
 using namespace std;
 
-#include "NumericalRecipes.hh"
+#include "numerical_recipes.h"
 
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
 void nrerror(char error_text[]) {
@@ -226,7 +226,7 @@ void qcksrt(int n, double arr[])
 double bessj0(double x) {
   double ax,z;
   double xx,y,ans,ans1,ans2;
-  
+
   if ((ax=fabs(x)) < 8.0) {
     y=x*x;
     ans1=57568490574.0+y*(-13362590354.0+
@@ -566,8 +566,8 @@ void instantiate_recipes() {
    double **FF1;
    double *F1;
 
-   int **II1;   
-   int *I1;   
+   int **II1;
+   int *I1;
    int i1=0;
 
    char *C1;
@@ -685,7 +685,7 @@ double brent(double ax, double bx, double cx, double (*f)(double), double tol,
    b=(ax > cx ? ax : cx);
    x=w=v=bx;
    fw=fv=fx=(*f)(x);
-   for (iter=1;iter<=ITMAX;iter++) { 
+   for (iter=1;iter<=ITMAX;iter++) {
       xm=0.5*(a+b); tol2=2.0*(tol1=tol*fabs(x)+ZEPS);
       if (fabs(x-xm) <= (tol2-0.5*(b-a))) {*xmin=x; return fx;}
       if (fabs(e) > tol1) {
@@ -707,13 +707,13 @@ double brent(double ax, double bx, double cx, double (*f)(double), double tol,
       fu=(*f)(u);
       if (fu <= fx) {
 	 if (u >= x) a=x; else b=x;
-	 SHFT(v,w,x,u) 
+	 SHFT(v,w,x,u)
 	 SHFT(fv,fw,fx,fu)
       } else {
 	 if (u < x) a=u; else b=u;
 	 if (fu <= fw || w == x) { v=w; w=u; fv=fw; fw=fu; }
 	 else if (fu <= fv || v == x || v == w) { v=u; fv=fu; }
-      } 
+      }
    }
    nrerror("Too many iterations in brent");
    *xmin=x;
@@ -853,15 +853,15 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
    double x[5];
    double rnorm;
    int i;
-   
+
    int success=nnls(a,3,5,b,x,&rnorm,NULL,NULL,NULL);
    printf("success=%d\n",success);
    printf("rnorm=%d\n",rnorm);
    for (i=0; i<5; i++)
       printf("%f\n",x[i]);
-   
+
    In this case: x=0 2.666 0 0 0.111
-   
+
    This program resolves A^t*x=b subject to x>=0.
    In terms of basis vectors, the rows of A are the basis axes, b is
    the vector we want to represent in the subspace spanned by the rows of A
@@ -979,7 +979,7 @@ int _nnls_h12(
  */
 int nnls(
   double *a, int m, int n,
-  /* On entry, a[n][m] contains the m by n matrix A. On exit, a[][] contains 
+  /* On entry, a[n][m] contains the m by n matrix A. On exit, a[][] contains
      the product matrix Q*A, where Q is an m by n orthogonal matrix generated
      implicitly by this function.*/
   double *b,
@@ -1167,7 +1167,7 @@ int nnlsWght(int N, int M, double *A, double *b, double *weight)
     if(weight[m]<=1.0e-20) w[m]=0.0;
     else w[m]=sqrt(weight[m]);
   }
- 
+
   /* Multiply rows of matrix A and elements of vector b with weights*/
   for(m=0; m<M; m++) {
     for(n=0; n<N; n++) {
@@ -1469,7 +1469,7 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
 	ask_Tvector(indx,1,m+1);
 	ask_Tvector(a,1,(m+1)*(m+1));
 	ask_Tvector(b,1,m+1);
-	// Set up the normal equations of the desired least-squares fit. 
+	// Set up the normal equations of the desired least-squares fit.
 	for (ipj=0;ipj<=(m << 1);ipj++)
 	{
 		sum=(ipj ? 0.0 : 1.0);
@@ -1493,10 +1493,10 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
    		fac=1.0;
    		for (mm=1;mm<=m;mm++) sum += b[mm+1]*(fac *= k);
    		kk=((np-k) % np)+1; // Store in wrap-around order.
-		c[kk]=sum;   
+		c[kk]=sum;
    	}
 	
-    free_Tvector(b,1,m+1);   
+    free_Tvector(b,1,m+1);
     free_Tvector(a,1,(m+1)*(m+1));
     free_Tvector(indx,1,m+1);
 }
@@ -1518,11 +1518,11 @@ double gLgeps=-1.e0;
 extern int nstop;
 
 /* CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-                     !!!! NOTICE !!!! 
+                     !!!! NOTICE !!!!
 
-1. The routines contained in this file are due to Prof. K.Schittkowski 
+1. The routines contained in this file are due to Prof. K.Schittkowski
     of the University of Bayreuth, Germany (modification of routines
-    due to Prof. MJD Powell at the University of Cambridge).  They can 
+    due to Prof. MJD Powell at the University of Cambridge).  They can
     be freely distributed.
 
 2. A few minor modifications were performed at the University of
@@ -1542,13 +1542,13 @@ extern int nstop;
 
    QL0001 SOLVES THE QUADRATIC PROGRAMMING PROBLEM
 
-   MINIMIZE        .5*X'*C*X + D'*X 
+   MINIMIZE        .5*X'*C*X + D'*X
    SUBJECT TO      A(J)*X  +  B(J)   =  0  ,  J=1,...,ME
                    A(J)*X  +  B(J)  >=  0  ,  J=ME+1,...,M
                    XL  <=  X  <=  XU
 
 HERE C MUST BE AN N BY N SYMMETRIC AND POSITIVE MATRIX, D AN N-DIMENSIONAL
-VECTOR, A AN M BY N MATRIX AND B AN M-DIMENSIONAL VECTOR. THE ABOVE 
+VECTOR, A AN M BY N MATRIX AND B AN M-DIMENSIONAL VECTOR. THE ABOVE
 SITUATION IS INDICATED BY IWAR(1)=1. ALTERNATIVELY, I.E. IF IWAR(1)=0,
 THE OBJECTIVE FUNCTION MATRIX CAN ALSO BE PROVIDED IN FACTORIZED FORM.
 IN THIS CASE, C IS AN UPPER TRIANGULAR MATRIX.
@@ -1559,33 +1559,33 @@ BY A MODIFICATION OF AN ALGORITHM PROPOSED BY POWELL (1983).
 
 USAGE:
 
-      QL0001(M,ME,MMAX,N,NMAX,MNN,C,D,A,B,XL,XU,X,U,IOUT,IFAIL,IPRINT, 
-             WAR,LWAR,IWAR,LIWAR) 
+      QL0001(M,ME,MMAX,N,NMAX,MNN,C,D,A,B,XL,XU,X,U,IOUT,IFAIL,IPRINT,
+             WAR,LWAR,IWAR,LIWAR)
 
 
-   DEFINITION OF THE PARAMETERS: 
+   DEFINITION OF THE PARAMETERS:
 
-   M :        TOTAL NUMBER OF CONSTRAINTS. 
+   M :        TOTAL NUMBER OF CONSTRAINTS.
    ME :       NUMBER OF EQUALITY CONSTRAINTS.
-   MMAX :     ROW DIMENSION OF A. MMAX MUST BE AT LEAST ONE AND GREATER 
+   MMAX :     ROW DIMENSION OF A. MMAX MUST BE AT LEAST ONE AND GREATER
               THAN M.
    N :        NUMBER OF VARIABLES.
    NMAX :     ROW DIMENSION OF C. NMAX MUST BE GREATER OR EQUAL TO N.
-   MNN :      MUST BE EQUAL TO M + N + N. 
+   MNN :      MUST BE EQUAL TO M + N + N.
    C(NMAX,NMAX): OBJECTIVE FUNCTION MATRIX WHICH SHOULD BE SYMMETRIC AND
               POSITIVE DEFINITE. IF IWAR(1) = 0, C IS SUPPOSED TO BE THE
               CHOLESKEY-FACTOR OF ANOTHER MATRIX, I.E. C IS UPPER
               TRIANGULAR.
    D(NMAX) :  CONTAINS THE CONSTANT VECTOR OF THE OBJECTIVE FUNCTION.
-   A(MMAX,NMAX): CONTAINS THE DATA MATRIX OF THE LINEAR CONSTRAINTS. 
-   B(MMAX) :  CONTAINS THE CONSTANT DATA OF THE LINEAR CONSTRAINTS. 
+   A(MMAX,NMAX): CONTAINS THE DATA MATRIX OF THE LINEAR CONSTRAINTS.
+   B(MMAX) :  CONTAINS THE CONSTANT DATA OF THE LINEAR CONSTRAINTS.
    XL(N),XU(N): CONTAIN THE LOWER AND UPPER BOUNDS FOR THE VARIABLES.
    X(N) :     ON RETURN, X CONTAINS THE OPTIMAL SOLUTION VECTOR.
-   U(MNN) :   ON RETURN, U CONTAINS THE LAGRANGE MULTIPLIERS. THE FIRST 
+   U(MNN) :   ON RETURN, U CONTAINS THE LAGRANGE MULTIPLIERS. THE FIRST
               M POSITIONS ARE RESERVED FOR THE MULTIPLIERS OF THE M
               LINEAR CONSTRAINTS AND THE SUBSEQUENT ONES FOR THE
-              MULTIPLIERS OF THE LOWER AND UPPER BOUNDS. ON SUCCESSFUL 
-              TERMINATION, ALL VALUES OF U WITH RESPECT TO INEQUALITIES 
+              MULTIPLIERS OF THE LOWER AND UPPER BOUNDS. ON SUCCESSFUL
+              TERMINATION, ALL VALUES OF U WITH RESPECT TO INEQUALITIES
               AND BOUNDS SHOULD BE GREATER OR EQUAL TO ZERO.
    IOUT :     INTEGER INDICATING THE DESIRED OUTPUT UNIT NUMBER, I.E.
               ALL WRITE-STATEMENTS START WITH 'WRITE(IOUT,... '.
@@ -1604,9 +1604,9 @@ USAGE:
    IWAR(LIWAR): INTEGER WORKING ARRAY. THE LENGTH LIWAR SHOULD BE AT
               LEAST N.
               IF IWAR(1)=0 INITIALLY, THEN THE CHOLESKY DECOMPOSITION
-              WHICH IS REQUIRED BY THE DUAL ALGORITHM TO GET THE FIRST 
+              WHICH IS REQUIRED BY THE DUAL ALGORITHM TO GET THE FIRST
               UNCONSTRAINED MINIMUM OF THE OBJECTIVE FUNCTION, IS
-              PERFORMED INTERNALLY. OTHERWISE, I.E. IF IWAR(1)=1, THEN 
+              PERFORMED INTERNALLY. OTHERWISE, I.E. IF IWAR(1)=1, THEN
               IT IS ASSUMED THAT THE USER PROVIDES THE INITIAL FAC-
               TORIZATION BY HIMSELF AND STORES IT IN THE UPPER TRIAN-
               GULAR PART OF THE ARRAY C.
@@ -1878,7 +1878,7 @@ blocks was no longer available. Thus an additional variable, eps1,
 was added to the parameter list to account for this.
 */
 /* umd */
-/* 
+/*
 Two alternative definitions are provided in order to give ANSI
 compliance.
 */
@@ -1889,7 +1889,7 @@ int ql0001_(int *m,int *me,int *mmax,int *n,int *nmax,int *mnn,
             int *iprint,double *war,int *lwar,int *iwar,int *liwar,
             double *eps1)
 #else
-/* Subroutine */ 
+/* Subroutine */
 int ql0001_(m, me, mmax, n, nmax, mnn, c, d, a, b, xl, xu, x,
 	 u, iout, ifail, iprint, war, lwar, iwar, liwar, eps1)
 integer *m, *me, *mmax, *n, *nmax, *mnn;
@@ -2159,7 +2159,7 @@ int ql0002_(integer *n,integer *m,integer *meq,integer *mmax,
             doublereal *diag, doublereal *w,
             integer *lw)
 #else
-/* Subroutine */ int ql0002_(n, m, meq, mmax, mn, mnn, nmax, lql, a, b, grad, 
+/* Subroutine */ int ql0002_(n, m, meq, mmax, mn, mnn, nmax, lql, a, b, grad,
 	g, xl, xu, x, nact, iact, maxit, vsmall, info, diag, w, lw)
 integer *n, *m, *meq, *mmax, *mn, *mnn, *nmax;
 logical *lql;
@@ -2358,7 +2358,7 @@ L45:
 /* Computing MIN */
 	    d__1 = w[id], d__2 = g[j + j * g_dim1];
 	    ga = -min(d__1,d__2);
-	    gb = (d__1 = w[id] - g[j + j * g_dim1], abs(d__1)) + (d__2 = g[i 
+	    gb = (d__1 = w[id] - g[j + j * g_dim1], abs(d__1)) + (d__2 = g[i
 		    + j * g_dim1], abs(d__2));
 	    if (gb > zero) {
 /* Computing 2nd power */
@@ -3665,7 +3665,7 @@ struct _parameter {
 	double *mult;
         void *cd;      /* Client data pointer */
 };
- 
+
 struct _violation {    /* SIP      */
 	int type;
 	int index;
@@ -3799,7 +3799,7 @@ void 	grcnfd();
 #ifdef __STDC__
 static void 	
 cfsqp1(int,int,int,int,int,int,int,int,int,int,int *,int,
-       int,int,int,double,double,int *,int *,struct _parameter *, 
+       int,int,int,double,double,int *,int *,struct _parameter *,
        struct _constraint *,struct _objective *,double *,
        void (*)(int,int,double *,double *,void *),
        void (*)(int,int,double *,double *,void *),
@@ -3812,7 +3812,7 @@ check(int,int,int,int *,int,int,int,int,int,int,int,int *,double,
       double,struct _parameter *);
 static void	
 initpt(int,int,int,int,int,int,int,struct _parameter *,
-       struct _constraint *,void (*)(int,int,double *,double *,void *), 
+       struct _constraint *,void (*)(int,int,double *,double *,void *),
        void (*)(int,int,double *,double *,
                 void (*)(int,int,double *,double *,void *),void *));
 static void 	
@@ -3850,7 +3850,7 @@ out(int,int,int,int,int,int,int,int,int,int,int,int *,double *,
     struct _constraint *,struct _objective *,double,
     double,double,double,double,int);
 static void	
-update_omega(int,int,int,int *,int,int,int,int,double,double, 
+update_omega(int,int,int,int *,int,int,int,int,double,double,
              struct _constraint *,struct _objective *,double *,
              struct _violation *,void (*)(int,int,double *,double *,
              void *),void (*)(int,int,double *,double *,void *),
@@ -3871,7 +3871,7 @@ static void	update_omega();
 #endif
 
 #ifdef __STDC__
-static void 
+static void
 dealloc(int,int,double *,int *,int *,struct _constraint *cs,
              struct _parameter *);
 #else
@@ -3887,9 +3887,9 @@ cfsqp(int nparam,int nf,int nfsr,int nineqn,int nineq,int neqn,
       double *x,double *f,double *g,double *lambda,
       void (*obj)(int, int, double *, double *,void *),
       void (*constr)(int,int,double *,double *,void *),
-      void (*gradob)(int,int,double *,double *, 
+      void (*gradob)(int,int,double *,double *,
                      void (*)(int,int,double *,double *,void *),void *),
-      void (*gradcn)(int,int,double *,double *, 
+      void (*gradcn)(int,int,double *,double *,
                      void (*)(int,int,double *,double *,void *),void *),
       void *cd)
 #else
@@ -3906,214 +3906,214 @@ void    *cd;
 #endif
 
 /*---------------------------------------------------------------------
-* Brief specification of various arrays and parameters in the calling   
-* sequence. See manual for a more detailed description.                 
-*                                                                       
-* nparam : number of variables                                          
+* Brief specification of various arrays and parameters in the calling
+* sequence. See manual for a more detailed description.
+*
+* nparam : number of variables
 * nf     : number of objective functions (count each set of sequentially
-*          related objective functions once)			        
-* nfsr   : number of sets of sequentially related objectives (possibly  
-*          zero)						        
-* nineqn : number of nonlinear inequality constraints                   
-* nineq  : total number of inequality constraints                       
-* neqn   : number of nonlinear equality constraints                     
-* neq    : total number of equality constraints                         
-* ncsrl  : number of sets of linear sequentially related inequality     
-*          constraints                 				        
-* ncsrn  : number of sets of nonlinear sequentially related inequality  
-*          constraints              				        
-* mesh_pts : array of integers giving the number of actual objectives/  
-*            constraints in each sequentially related objective or      
-*	     constraint set. The order is as follows:		        
-*	     (i) objective sets, (ii) nonlinear constraint sets,        
-*            (iii) linear constraint sets. If one or no sequentially    
-*            related constraint or objectives sets are present, the     
-*            user may simply pass the address of an integer variable    
-*            containing the appropriate number (possibly zero).	        
-* mode   : mode=CBA specifies job options as described below:           
-*          A = 0 : ordinary minimax problems                            
-*            = 1 : ordinary minimax problems with each individual       
-*                  function replaced by its absolute value, ie,         
-*                  an L_infty problem                                   
-*          B = 0 : monotone decrease of objective function              
-*                  after each iteration                                 
-*            = 1 : monotone decrease of objective function after        
-*                  at most four iterations                              
-*          C = 1 : default operation.				        
-*            = 2 : requires that constraints always be evaluated        
-*                  before objectives during the line search.            
-* iprint : print level indicator with the following options-            
-*          iprint=0: no normal output, only error information           
-*                    (this option is imposed during phase 1)            
-*          iprint=1: a final printout at a local solution               
-*          iprint=2: a brief printout at the end of each iteration      
-*          iprint=3: detailed infomation is printed out at the end      
-*                    of each iteration (for debugging purposes)         
-*          For iprint=2 or 3, the information may be printed at         
-*          iterations that are multiples of 10, instead of every        
-*          iteration. This may be done by adding the desired number     
-*          of iterations to skip printing to the desired iprint value   
-*          as specified above. e.g., sending iprint=23 would give       
-*          the iprint=3 information once every 20 iterations.           
-* miter  : maximum number of iterations allowed by the user to solve    
-*          the problem                                                  
-* inform : status report at the end of execution                        
-*          inform= 0:normal termination                                 
-*          inform= 1:no feasible point found for linear constraints     
-*          inform= 2:no feasible point found for nonlinear constraints  
-*          inform= 3:no solution has been found in miter iterations     
-*          inform= 4:stepsize smaller than machine precision before     
-*                    a successful new iterate is found                  
-*          inform= 5:failure in attempting to construct d0              
-*          inform= 6:failure in attempting to construct d1              
-*          inform= 7:inconsistent input data                            
-*	   inform= 8:new iterate essentially identical to previous      
-*		     iterate, though stopping criterion not satisfied.  
+*          related objective functions once)			
+* nfsr   : number of sets of sequentially related objectives (possibly
+*          zero)						
+* nineqn : number of nonlinear inequality constraints
+* nineq  : total number of inequality constraints
+* neqn   : number of nonlinear equality constraints
+* neq    : total number of equality constraints
+* ncsrl  : number of sets of linear sequentially related inequality
+*          constraints                 				
+* ncsrn  : number of sets of nonlinear sequentially related inequality
+*          constraints              				
+* mesh_pts : array of integers giving the number of actual objectives/
+*            constraints in each sequentially related objective or
+*	     constraint set. The order is as follows:		
+*	     (i) objective sets, (ii) nonlinear constraint sets,
+*            (iii) linear constraint sets. If one or no sequentially
+*            related constraint or objectives sets are present, the
+*            user may simply pass the address of an integer variable
+*            containing the appropriate number (possibly zero).	
+* mode   : mode=CBA specifies job options as described below:
+*          A = 0 : ordinary minimax problems
+*            = 1 : ordinary minimax problems with each individual
+*                  function replaced by its absolute value, ie,
+*                  an L_infty problem
+*          B = 0 : monotone decrease of objective function
+*                  after each iteration
+*            = 1 : monotone decrease of objective function after
+*                  at most four iterations
+*          C = 1 : default operation.				
+*            = 2 : requires that constraints always be evaluated
+*                  before objectives during the line search.
+* iprint : print level indicator with the following options-
+*          iprint=0: no normal output, only error information
+*                    (this option is imposed during phase 1)
+*          iprint=1: a final printout at a local solution
+*          iprint=2: a brief printout at the end of each iteration
+*          iprint=3: detailed infomation is printed out at the end
+*                    of each iteration (for debugging purposes)
+*          For iprint=2 or 3, the information may be printed at
+*          iterations that are multiples of 10, instead of every
+*          iteration. This may be done by adding the desired number
+*          of iterations to skip printing to the desired iprint value
+*          as specified above. e.g., sending iprint=23 would give
+*          the iprint=3 information once every 20 iterations.
+* miter  : maximum number of iterations allowed by the user to solve
+*          the problem
+* inform : status report at the end of execution
+*          inform= 0:normal termination
+*          inform= 1:no feasible point found for linear constraints
+*          inform= 2:no feasible point found for nonlinear constraints
+*          inform= 3:no solution has been found in miter iterations
+*          inform= 4:stepsize smaller than machine precision before
+*                    a successful new iterate is found
+*          inform= 5:failure in attempting to construct d0
+*          inform= 6:failure in attempting to construct d1
+*          inform= 7:inconsistent input data
+*	   inform= 8:new iterate essentially identical to previous
+*		     iterate, though stopping criterion not satisfied.
 *          inform= 9:penalty parameter too large, unable to satisfy
 *                    nonlinear equality constraint
-* bigbnd : plus infinity                                                
-* eps    : stopping criterion. Execution stopped when the norm of the   
-*          Newton direction vector is smaller than eps                  
-* epseqn : tolerance of the violation of nonlinear equality constraints 
-*          allowed by the user at an optimal solution                   
-* udelta : perturbation size in computing gradients by finite           
-*          difference. The actual perturbation is determined by         
-*          sign(x_i) X max{udelta, rteps X max{1, |x_i|}} for each      
-*          component of x, where rteps is the square root of machine    
-*          precision. 						        
-* bl     : array of dimension nparam,containing lower bound of x        
-* bu     : array of dimension nparam,containing upper bound of x        
-* x      : array of dimension nparam,containing initial guess in input  
-*          and final iterate at the end of execution                    
-* f      : array of dimension sufficient enough to hold the value of    
-*          all regular objective functions and the value of all         
-*          members of the sequentially related objective sets.          
-*          (dimension must be at least 1)			        
-* g      : array of dimension sufficient enough to hold the value of    
-*          all regular constraint functions and the value of all        
-*          members of the sequentially related constraint sets.         
-*          (dimension must be at least 1)			        
-* lambda : array of dimension nparam+dim(f)+dim(g), containing        
-*          Lagrange multiplier values at x in output. (A concerns the   
-*          mode, see above). The first nparam positions contain the     
-*          multipliers associated with the simple bounds, the next      
-*          dim(g) positions contain the multipliers associated with     
-*          the constraints. The final dim(f) positions contain the      
-*          multipliers associated with the objective functions. The     
-*          multipliers are in the order they were specified in the      
-*          user-defined objective and constraint functions.	        
-* obj    : Pointer to function that returns the value of objective      
-*          functions, one upon each call                                
-* constr : Pointer to function that returns the value of constraints    
-*          one upon each call                                           
-* gradob : Pointer to function that computes gradients of f,            
-*          alternatively it can be replaced by grobfd to compute        
-*          finite difference approximations                             
-* gradcn : Pointer to function that computes gradients of g,            
-*          alternatively it can be replaced by grcnfd to compute        
-*          finite difference approximations                             
+* bigbnd : plus infinity
+* eps    : stopping criterion. Execution stopped when the norm of the
+*          Newton direction vector is smaller than eps
+* epseqn : tolerance of the violation of nonlinear equality constraints
+*          allowed by the user at an optimal solution
+* udelta : perturbation size in computing gradients by finite
+*          difference. The actual perturbation is determined by
+*          sign(x_i) X max{udelta, rteps X max{1, |x_i|}} for each
+*          component of x, where rteps is the square root of machine
+*          precision. 						
+* bl     : array of dimension nparam,containing lower bound of x
+* bu     : array of dimension nparam,containing upper bound of x
+* x      : array of dimension nparam,containing initial guess in input
+*          and final iterate at the end of execution
+* f      : array of dimension sufficient enough to hold the value of
+*          all regular objective functions and the value of all
+*          members of the sequentially related objective sets.
+*          (dimension must be at least 1)			
+* g      : array of dimension sufficient enough to hold the value of
+*          all regular constraint functions and the value of all
+*          members of the sequentially related constraint sets.
+*          (dimension must be at least 1)			
+* lambda : array of dimension nparam+dim(f)+dim(g), containing
+*          Lagrange multiplier values at x in output. (A concerns the
+*          mode, see above). The first nparam positions contain the
+*          multipliers associated with the simple bounds, the next
+*          dim(g) positions contain the multipliers associated with
+*          the constraints. The final dim(f) positions contain the
+*          multipliers associated with the objective functions. The
+*          multipliers are in the order they were specified in the
+*          user-defined objective and constraint functions.	
+* obj    : Pointer to function that returns the value of objective
+*          functions, one upon each call
+* constr : Pointer to function that returns the value of constraints
+*          one upon each call
+* gradob : Pointer to function that computes gradients of f,
+*          alternatively it can be replaced by grobfd to compute
+*          finite difference approximations
+* gradcn : Pointer to function that computes gradients of g,
+*          alternatively it can be replaced by grcnfd to compute
+*          finite difference approximations
 * cd     : Void pointer that may be used by the user for the passing of
 *          "client data" (untouched by CFSQP)
-*                                                                       
-*---------------------------------------------------------------------- 
-*                                                                       
-*                                                                       
-*                       CFSQP  Version 2.5b                             
-*								        
-*                  Craig Lawrence, Jian L. Zhou                         
-*                         and Andre Tits                                
-*                  Institute for Systems Research                       
-*                               and                                     
-*                Electrical Engineering Department                      
-*                     University of Maryland                            
-*                     College Park, Md 20742                            
-*                                                                       
-*                            June, 1997                                
-*                                                                       
-*                                                                       
-*  The purpose of CFSQP is to solve general nonlinear constrained       
-*  minimax optimization problems of the form                            
-*                                                                       
-*   (A=0 in mode)     minimize    max_i f_i(x)   for i=1,...,n_f        
-*                        or                                             
-*   (A=1 in mode)     minimize    max_j |f_i(x)|   for i=1,...,n_f      
-*                       s.t.      bl   <= x <=  bu                      
-*                                 g_j(x) <= 0,   for j=1,...,nineqn     
-*                                 A_1 x - B_1 <= 0                      
-*                                                                       
-*                                 h_i(x)  = 0,   for i=1,...,neqn       
-*                                 A_2 x - B_2  = 0                      
-*                                                                       
-* CFSQP is also able to efficiently handle problems with large sets of  
-* sequentially related objectives or constraints, see the manual for    
-* details.							        
-*                                                                       
-*                                                                       
-*                  Conditions for External Use                          
-*                  ===========================                          
-*                                                                       
-*   1. The CFSQP routines may not be distributed to third parties.      
-*      Interested parties should contact the authors directly.          
-*   2. If modifications are performed on the routines, these           
+*
+*----------------------------------------------------------------------
+*
+*
+*                       CFSQP  Version 2.5b
+*								
+*                  Craig Lawrence, Jian L. Zhou
+*                         and Andre Tits
+*                  Institute for Systems Research
+*                               and
+*                Electrical Engineering Department
+*                     University of Maryland
+*                     College Park, Md 20742
+*
+*                            June, 1997
+*
+*
+*  The purpose of CFSQP is to solve general nonlinear constrained
+*  minimax optimization problems of the form
+*
+*   (A=0 in mode)     minimize    max_i f_i(x)   for i=1,...,n_f
+*                        or
+*   (A=1 in mode)     minimize    max_j |f_i(x)|   for i=1,...,n_f
+*                       s.t.      bl   <= x <=  bu
+*                                 g_j(x) <= 0,   for j=1,...,nineqn
+*                                 A_1 x - B_1 <= 0
+*
+*                                 h_i(x)  = 0,   for i=1,...,neqn
+*                                 A_2 x - B_2  = 0
+*
+* CFSQP is also able to efficiently handle problems with large sets of
+* sequentially related objectives or constraints, see the manual for
+* details.							
+*
+*
+*                  Conditions for External Use
+*                  ===========================
+*
+*   1. The CFSQP routines may not be distributed to third parties.
+*      Interested parties should contact the authors directly.
+*   2. If modifications are performed on the routines, these
 *      modifications will be communicated to the authors.  The
 *      modified routines will remain the sole property of the authors.
-*   3. Due acknowledgment  must be  made of the  use of the CFSQP       
-*      routines in research  reports  or  publications.  Whenever       
-*      such reports are released for public access, a copy should       
-*      be forwarded to the authors.				        
-*   4. The CFSQP  routines  may  only  be  used  for research and       
-*      development, unless it has been agreed  otherwise with the       
-*      authors in writing.					        
-*                                                                      
-* Copyright (c) 1993-1997 by Craig T. Lawrence, Jian L. Zhou, and 
-*                         Andre L. Tits        
-* All Rights Reserved.                                                  
-*                                                                       
-*                                                                       
-* Enquiries should be directed to:                                      
-*                                                                       
-*      Prof. Andre L. Tits                                              
-*      Electrical Engineering Dept.                                     
-*      and Systems Research Center                                      
-*      University of Maryland                                           
-*      College Park, Md 20742                                           
-*      U. S. A.                                                         
-*                                                                       
-*      Phone : 301-405-3669                                             
-*      Fax   : 301-405-6707                                             
-*      E-mail: andre@eng.umd.edu                                        
-*                                                                       
-*  References:                                                          
-*  [1] E. Panier and A. Tits, `On Combining Feasibility, Descent and    
-*      Superlinear Convergence In Inequality Constrained Optimization', 
-*      Mathematical Programming, Vol. 59(1993), 261-276.                
-*  [2] J. F. Bonnans, E. Panier, A. Tits and J. Zhou, `Avoiding the     
-*      Maratos Effect by Means of a Nonmonotone Line search: II.        
-*      Inequality Problems - Feasible Iterates', SIAM Journal on        
-*      Numerical Analysis, Vol. 29, No. 4, 1992, pp. 1187-1202.         
-*  [3] J.L. Zhou and A. Tits, `Nonmonotone Line Search for Minimax      
-*      Problems', Journal of Optimization Theory and Applications,      
-*      Vol. 76, No. 3, 1993, pp. 455-476.                               
-*  [4] C.T. Lawrence, J.L. Zhou and A. Tits, `User's Guide for CFSQP 
-*      Version 2.5: A C Code for Solving (Large Scale) Constrained 
-*      Nonlinear (Minimax) Optimization Problems, Generating Iterates 
-*      Satisfying All Inequality Constraints,' Institute for        
-*      Systems Research, University of Maryland,Technical Report        
-*      TR-94-16r1, College Park, MD 20742, 1997.                     
-*  [5] C.T. Lawrence and A.L. Tits, `Nonlinear Equality Constraints     
-*      in Feasible Sequential Quadratic Programming,' Optimization 
+*   3. Due acknowledgment  must be  made of the  use of the CFSQP
+*      routines in research  reports  or  publications.  Whenever
+*      such reports are released for public access, a copy should
+*      be forwarded to the authors.				
+*   4. The CFSQP  routines  may  only  be  used  for research and
+*      development, unless it has been agreed  otherwise with the
+*      authors in writing.					
+*
+* Copyright (c) 1993-1997 by Craig T. Lawrence, Jian L. Zhou, and
+*                         Andre L. Tits
+* All Rights Reserved.
+*
+*
+* Enquiries should be directed to:
+*
+*      Prof. Andre L. Tits
+*      Electrical Engineering Dept.
+*      and Systems Research Center
+*      University of Maryland
+*      College Park, Md 20742
+*      U. S. A.
+*
+*      Phone : 301-405-3669
+*      Fax   : 301-405-6707
+*      E-mail: andre@eng.umd.edu
+*
+*  References:
+*  [1] E. Panier and A. Tits, `On Combining Feasibility, Descent and
+*      Superlinear Convergence In Inequality Constrained Optimization',
+*      Mathematical Programming, Vol. 59(1993), 261-276.
+*  [2] J. F. Bonnans, E. Panier, A. Tits and J. Zhou, `Avoiding the
+*      Maratos Effect by Means of a Nonmonotone Line search: II.
+*      Inequality Problems - Feasible Iterates', SIAM Journal on
+*      Numerical Analysis, Vol. 29, No. 4, 1992, pp. 1187-1202.
+*  [3] J.L. Zhou and A. Tits, `Nonmonotone Line Search for Minimax
+*      Problems', Journal of Optimization Theory and Applications,
+*      Vol. 76, No. 3, 1993, pp. 455-476.
+*  [4] C.T. Lawrence, J.L. Zhou and A. Tits, `User's Guide for CFSQP
+*      Version 2.5: A C Code for Solving (Large Scale) Constrained
+*      Nonlinear (Minimax) Optimization Problems, Generating Iterates
+*      Satisfying All Inequality Constraints,' Institute for
+*      Systems Research, University of Maryland,Technical Report
+*      TR-94-16r1, College Park, MD 20742, 1997.
+*  [5] C.T. Lawrence and A.L. Tits, `Nonlinear Equality Constraints
+*      in Feasible Sequential Quadratic Programming,' Optimization
 *      Methods and Software, Vol. 6, March, 1996, pp. 265-282.
-*  [6] J.L. Zhou and A.L. Tits, `An SQP Algorithm for Finely 
+*  [6] J.L. Zhou and A.L. Tits, `An SQP Algorithm for Finely
 *      Discretized Continuous Minimax Problems and Other Minimax
-*      Problems With Many Objective Functions,' SIAM Journal on 
+*      Problems With Many Objective Functions,' SIAM Journal on
 *      Optimization, Vol. 6, No. 2, May, 1996, pp. 461--487.
-*  [7] C. T. Lawrence and A. L. Tits, `Feasible Sequential Quadratic  
-*      Programming for Finely Discretized Problems from SIP,' 
-*      To appear in R. Reemtsen, J.-J. Ruckmann (eds.): Semi-Infinite 
+*  [7] C. T. Lawrence and A. L. Tits, `Feasible Sequential Quadratic
+*      Programming for Finely Discretized Problems from SIP,'
+*      To appear in R. Reemtsen, J.-J. Ruckmann (eds.): Semi-Infinite
 *      Programming, in the series Nonconcex Optimization and its
 *      Applications. Kluwer Academic Publishers, 1997.
-*                                                                       
-*********************************************************************** 
+*
+***********************************************************************
 */
 {
    int	i,ipp,j,ncnstr,nclin,nctotl,nob,nobL,modem,nn,
@@ -4125,7 +4125,7 @@ void    *cd;
    struct _constraint *cs;      /* pointer to array of constraints */
    struct _objective  *ob;      /* pointer to array of objectives  */
    struct _parameter  *param;   /* pointer to parameter structure  */
-   struct _parameter  _param;  
+   struct _parameter  _param;
 
    /*     Make adjustments to parameters for SIP constraints       */
    glob_info.tot_actf_sip = glob_info.tot_actg_sip = 0;
@@ -4136,7 +4136,7 @@ void    *cd;
    nf=nf-nfsr;
    nfsip1=nfsr;
    nfsr=0;
-   for (i=1; i<=nfsip1; i++) 
+   for (i=1; i<=nfsip1; i++)
       nfsr=nfsr+mesh_pts[i];
    nf=nf+nfsr;
    nineqn=nineqn-ncsrn;
@@ -4167,7 +4167,7 @@ void    *cd;
    _param.bu=make_dv(nparam);
    _param.mult=make_dv(nparam+1);
    param=&_param;
-   
+
    /*   Initialize, compute the machine precision, etc.	  */
    bl=bl-1; bu=bu-1; x=x-1;
    for (i=1; i<=nparam; i++) {
@@ -4226,7 +4226,7 @@ void    *cd;
    feasbl=TRUE;
    prnt=FALSE;
    nppram=nparam+1;
-   
+
    /*-----------------------------------------------------*/
    /*   Check whether x is within bounds		  */
    /*-----------------------------------------------------*/
@@ -4308,9 +4308,9 @@ L510:
 	    ob[nob].val=cs[i].val;
 	    gmax=DMAX1(gmax,ob[nob].val);
 	 }
-	 for (i=1; i<=nineq-nineqn; i++) 
+	 for (i=1; i<=nineq-nineqn; i++)
 	    indxcn[i]=nineqn+i;
-	 for (i=1; i<=neq-neqn; i++) 
+	 for (i=1; i<=neq-neqn; i++)
 	    indxcn[i+nineq-nineqn]=nineq+neqn+i;
          goto L605;
       }
@@ -4335,7 +4335,7 @@ L510:
    }
    for (i=1; i<=nineq-nineqn; i++)
       indxcn[i+nn]=nineqn+i;
-   for (i=1; i<=neq-neqn; i++) 
+   for (i=1; i<=neq-neqn; i++)
       indxcn[i+nineq+neqn]=nineq+neqn+i;
    glob_info.ncallg+=neqn;
 
@@ -4372,7 +4372,7 @@ L605:
 	    "inequality constraints and linear equality constraints:\n");
 	    sbout1(glob_prnt.io,nparam,"                    ",
 		dummy,param->x,2,1);
-	    
+	
 	 }
 	 if (glob_prnt.info!=0 || !prnt || !feasb) {
 	    fprintf(glob_prnt.io,
@@ -4427,9 +4427,9 @@ L910:
    lenw=2*nppram*nppram+10*nppram+6*(ncnstr+DMAX1(nobL,1)+1);
    glob_info.M=4;
    if (modem==1 && nn==0) glob_info.M=3;
-   
+
    param->x[nparam+1]=gmax;
-   if (feasb) { 
+   if (feasb) {
       for (i=1; i<=neqn; i++) {
 	 if (cs[i+nineq].val>0.e0) signeq[i]=-1.e0;
 	 else signeq[i]=1.e0;
@@ -4437,7 +4437,7 @@ L910:
    }
    if (!feasb) {
       ncsipl1=ncsrl;
-      ncsipn1=0; 
+      ncsipn1=0;
       nfsip1=ncsrn;
       mesh_pts1=&mesh_pts[nfsr];
    } else {
@@ -4453,7 +4453,7 @@ L910:
    nrowa=DMAX1(ncnstr+DMAX1(nobL,1),1);
    w=make_dv(lenw);
    iw=make_iv(leniw);
- 
+
    cfsqp1(miter,nparam,nob,nobL,nfsip1,nineqn,neq,neqn,ncsipl1,ncsipn1,
           mesh_pts1,ncnstr,nctotl,nrowa,feasb,epskt,epseqn,indxob,
           indxcn,param,cs,ob,signeq,obj,constr,gradob,gradcn);
@@ -4555,7 +4555,7 @@ struct _parameter  *param;
 
 
 #ifdef __STDC__
-static void 
+static void
 dealloc1(int,int,double **,double **,double **,double *,double *,
          double *,double *,double *,double *,double *,double *,
          double *,double *,double *,double *,int *,int *,int *);
@@ -4572,9 +4572,9 @@ cfsqp1(int miter,int nparam,int nob,int nobL,int nfsip,int nineqn,
        struct _constraint *cs, struct _objective *ob,
        double *signeq,void (*obj)(int,int,double *,double *,void *),
        void (*constr)(int,int,double *,double *,void *),
-       void (*gradob)(int,int,double *,double *, 
+       void (*gradob)(int,int,double *,double *,
                   void (*)(int,int,double *,double *,void *),void *),
-       void (*gradcn)(int,int,double *,double *, 
+       void (*gradcn)(int,int,double *,double *,
                   void (*)(int,int,double *,double *,void *),void *))
 #else
 static void
@@ -4633,7 +4633,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
    nrst=glob_prnt.ipd=0;
    dummy=0.e0;
    scvneq=0.e0;
-   steps=0.e0; 
+   steps=0.e0;
    sktnom=0.e0;
    d0nm=0.e0;
    if (glob_prnt.iter==0) diagnl(nparam,1.e0,hess);
@@ -4648,7 +4648,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
    glob_info.ncallf=0;
    nstop=1;
    nfs=0;
-   if (glob_info.mode!=0) 
+   if (glob_info.mode!=0)
       nfs=glob_info.M;
    if (feasb) {
       nn=nineqn+neqn;
@@ -4675,7 +4675,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
    }
    nullvc(nparam,grdpsf);
    psf=0.e0;
-   if (feasb && neqn!=0) 
+   if (feasb && neqn!=0)
       resign(nparam,neqn,&psf,grdpsf,penp,cs,signeq,12,12);
    fmax=-bgbnd;
    for (i=1; i<=nob; i++) {
@@ -4741,7 +4741,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
    /*----------------------------------------------------------*
     *              Main loop of the algorithm                  *
     *----------------------------------------------------------*/
-   
+
    nstop=1;
    for (;;) {
       out(miter,nparam,nob,nobL,nfsip,nineqn,nn,nineqn,ncnst1,
@@ -4765,7 +4765,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
       }
       if (!feasb && glob_prnt.iprint==0) glob_prnt.iter++;
       /*   Update the SIP constraint set Omega_k  */
-      if ((ncsipl+ncsipn)!=0 || nfsip) 
+      if ((ncsipl+ncsipn)!=0 || nfsip)
 	 update_omega(nparam,ncsipl,ncsipn,mesh_pts,nineqn,nob,nobL,
                       nfsip,steps,fmax,cs,ob,param->x,viol,
 		      constr,obj,gradob,gradcn,param->cd,feasb);
@@ -4794,7 +4794,7 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
       if (nstop==0 || glob_info.mode==0) continue;
       if (d0nm>dbar) Ck=DMAX1(0.5e0*Ck,Cbar);
       if (d0nm<=dbar && glob_log.dlfeas) Ck=Ck;
-      if (d0nm<=dbar && !glob_log.dlfeas && 
+      if (d0nm<=dbar && !glob_log.dlfeas &&
           !glob_log.rhol_is1) Ck=10.e0*Ck;
    }
 }
@@ -4946,7 +4946,7 @@ static void
 initpt(int nparam,int nnl,int neq,int neqn,int nclin,int nctotl,
        int nrowa,struct _parameter *param,struct _constraint *cs,
        void (*constr)(int,int,double *,double *,void *),
-       void (*gradcn)(int,int,double *,double *, 
+       void (*gradcn)(int,int,double *,double *,
                   void (*)(int,int,double *,double *,void *),void *))
 #else
 static void
@@ -4976,7 +4976,7 @@ void    (* constr)(),(* gradcn)();
    for (i=1; i<=nclin; i++) {
       glob_grd.valnom=cs[i].val;
       j=i+nnl;
-      if (j<=glob_info.nnineq) 
+      if (j<=glob_info.nnineq)
          gradcn(nparam,j,(param->x)+1,cs[i].grad+1,constr,param->cd);
       else gradcn(nparam,j+neqn,(param->x)+1,cs[i].grad+1,constr,
                   param->cd);
@@ -5002,7 +5002,7 @@ void    (* constr)(),(* gradcn)();
    temp1=neq-neqn;
    htemp=convert(hess,nparam,nparam);
    atemp=convert(a,nrowa,nparam);
-   
+
    ql0001_(&nclin,&temp1,&nrowa,&nparam,&nparam,&mnn,(htemp+1),
 	   (cvec+1),(atemp+1),(bj+1),(bl+1),(bu+1),(x+1),(clamda+1),
 	   &iout,&infoql,&zero,(w+1),&lenw,(iw+1),&leniw,
@@ -5044,7 +5044,7 @@ void    (* constr)(),(* gradcn)();
 
 
 #ifdef __STDC__
-static void 
+static void
 update_omega(int nparam,int ncsipl,int ncsipn,int *mesh_pts,
         int nineqn,int nob,int nobL,int nfsip,double steps,
         double fmax,struct _constraint *cs,struct _objective *ob,
@@ -5081,12 +5081,12 @@ void    *cd;
    if (glob_prnt.iter%glob_prnt.iter_mod) display=FALSE;
    else display=TRUE;
    /* Clear previous constraint sets                   */
-   for (i=1; i<=ncsipl; i++) 
+   for (i=1; i<=ncsipl; i++)
       cs[nineq-ncsipl+i].act_sip=FALSE;
-   for (i=1; i<=ncsipn; i++) 
+   for (i=1; i<=ncsipn; i++)
       cs[nineqn-ncsipn+i].act_sip=FALSE;
    /* Clear previous objective sets                    */
-   for (i=nob-nfsip+1; i<=nob; i++) 
+   for (i=nob-nfsip+1; i<=nob; i++)
       ob[i].act_sip=FALSE;
 
    /*--------------------------------------------------*/
@@ -5099,7 +5099,7 @@ void    *cd;
 	 for (j=1; j<=mesh_pts[glob_info.nfsip+i]; j++) {
 	    offset++;
 	    if (j==1) {
-	       if (cs[offset].val >= -epsilon && 
+	       if (cs[offset].val >= -epsilon &&
                    cs[offset].val>=cs[offset+1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
@@ -5111,7 +5111,7 @@ void    *cd;
 	          continue;
 	       }
 	    } else if (j==mesh_pts[glob_info.nfsip+i]) {
-	       if (cs[offset].val >= -epsilon && 
+	       if (cs[offset].val >= -epsilon &&
                    cs[offset].val>cs[offset-1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
@@ -5124,7 +5124,7 @@ void    *cd;
 	       }
 	    } else {
 	       if (cs[offset].val >= -epsilon && cs[offset].val >
-	           cs[offset-1].val && cs[offset].val >= 
+	           cs[offset-1].val && cs[offset].val >=
                    cs[offset+1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
@@ -5171,15 +5171,15 @@ void    *cd;
 	 for (j=1; j<=mesh_pts[index]; j++) {
 	    offset++;
 	    if (j==1) {
-	       if (cs[offset].val >= -epsilon && 
+	       if (cs[offset].val >= -epsilon &&
                    cs[offset].val>=cs[offset+1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
 	          continue;
 	       }
-	    } else 
+	    } else
               if (j==mesh_pts[index]) {
-	       if (cs[offset].val >= -epsilon && 
+	       if (cs[offset].val >= -epsilon &&
                    cs[offset].val>cs[offset-1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
@@ -5187,7 +5187,7 @@ void    *cd;
 	       }
 	    } else {
 	       if (cs[offset].val >= -epsilon && cs[offset].val >
-	           cs[offset-1].val && cs[offset].val >= 
+	           cs[offset-1].val && cs[offset].val >=
                    cs[offset+1].val) {
 	          cs[offset].act_sip=TRUE;
 	          glob_info.tot_actg_sip++;
@@ -5205,7 +5205,7 @@ void    *cd;
    /* Include some extra points during 1st iteration        */
    /* (gradients are already evaluated for first iteration) */
    /* Current heuristics: maximizers and end-points.        */
-   if (glob_log.first) { 
+   if (glob_log.first) {
       if (feasb) {
          offset=nineqn-ncsipn;
          for (i=1; i<=glob_info.ncsipn; i++) {
@@ -5268,7 +5268,7 @@ void    *cd;
 	 glob_info.tot_actg_sip++;
       }
    }
-   if (glob_prnt.iprint>=2 && display) 
+   if (glob_prnt.iprint>=2 && display)
       fprintf(glob_prnt.io," |Xi_k| for g %26d\n",
               glob_info.tot_actg_sip);
 
@@ -5276,7 +5276,7 @@ void    *cd;
       cs[nineq-ncsipl+i].d1bind=FALSE;
    for (i=1; i<=ncsipn; i++)
       cs[nineqn-ncsipn+i].d1bind=FALSE;
-   
+
    /*---------------------------------------------------------*/
    /* Update Objective Set Omega_k				      */
    /*---------------------------------------------------------*/
@@ -5404,12 +5404,12 @@ void    *cd;
       /* If necessary, append omega_bar			         */
       if (steps<1.e0 && viol->type==OBJECT) {
 	 i=viol->index;
-	 if (!ob[i].act_sip) { 
+	 if (!ob[i].act_sip) {
 	    ob[i].act_sip=TRUE;
 	    glob_info.tot_actf_sip++;
 	 }
       }
-      if (glob_prnt.iprint>=2 && display) 
+      if (glob_prnt.iprint>=2 && display)
          fprintf(glob_prnt.io," |Omega_k| for f %26d\n",
               glob_info.tot_actf_sip);
    }
@@ -5423,13 +5423,13 @@ void    *cd;
 
 
 #ifdef __STDC__
-static void 
+static void
 dqp(int,int,int,int,int,int,int,int,int,int,int,int,int,
     int,int,int *,struct _parameter *,double *,int,
     struct _objective *,double,double *,struct _constraint *,
     double **,double *,double *,double *,double *,
     double **,double **,double *,double,int);
-static void 
+static void
 di1(int,int,int,int,int,int,int,int,int,int,int,int,int *,
     int,struct _parameter *,double *,struct _objective *,
     double,double *,struct _constraint *,double *,
@@ -5507,7 +5507,7 @@ void    (* obj)(),(* constr)();
    nrowa0=DMAX1(nclin0,1);
    for (i=1; i<=ncnstr; i++) {
       if (feasb) {
-         if (i>nineqn && i<=glob_info.nnineq) 
+         if (i>nineqn && i<=glob_info.nnineq)
 	    iskip[glob_info.nnineq+2-i]=i;
 	 iw[i]=i;
       } else {
@@ -5568,7 +5568,7 @@ void    (* obj)(),(* constr)();
       dx=sqrt(scaprd(nparam,param->x,param->x));
       dmx=DMAX1(dx,1.e0);
       if (*d0nm>dmx) {
-         for (i=1; i<=nparam; i++) 
+         for (i=1; i<=nparam; i++)
             di[i]=di[i]*dmx/(*d0nm);
          *d0nm=dmx;
       }
@@ -5596,13 +5596,13 @@ void    (* obj)(),(* constr)();
       if (ncnstr!=0) {
 	  fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
                   "           for g    ",cs[1].mult);
-	  for (j=2; j<=ncnstr; j++) 
+	  for (j=2; j<=ncnstr; j++)
 	     fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",cs[j].mult);
       }
       if (nobL>1) {
 	  fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
                   "           for f    ",ob[1].mult);
-	  for (j=2; j<=nob; j++) 
+	  for (j=2; j<=nob; j++)
 	     fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",ob[j].mult);
       }
       return;
@@ -5612,7 +5612,7 @@ void    (* obj)(),(* constr)();
       sbout1(glob_prnt.io,0,"d0norm              ",*d0nm,adummy,1,2);
       sbout1(glob_prnt.io,0,"ktnorm              ",*sktnom,adummy,1,2);
    }
-   if (neqn!=0 && *d0nm<=DMIN1(0.5e0*epskt,(0.1e-1)*glob_grd.rteps) 
+   if (neqn!=0 && *d0nm<=DMIN1(0.5e0*epskt,(0.1e-1)*glob_grd.rteps)
         && *scvneq>epseqn) {
       /* d0 is "zero", but equality constraints not satisfied  */
       glob_log.d0_is0 = TRUE;
@@ -5701,7 +5701,7 @@ void    (* obj)(),(* constr)();
 	       rhol=1.e0;
 	       glob_log.rhol_is1=TRUE;
 	       break;
-            }   
+            }
 	    rhol=DMAX1(rhol,-temp1/temp2);
 	    if (temp2<0.e0 && rhol<1.e0) continue;
 	    rhol=1.e0;
@@ -5764,7 +5764,7 @@ L310:
 	    return;
 	 }
 	 glob_log.local=FALSE;
-	 if (rho!=rhog && nn!=0) 
+	 if (rho!=rhog && nn!=0)
 	    for (i=1; i<=nparam; i++)
 		di[i]=(1-rhog)*cvec[i]+rhog*d[i];
 	 dnm=sqrt(scaprd(nparam,di,di));
@@ -5778,8 +5778,8 @@ L310:
    }
    if (rho !=0.e0) *grdftd=slope(nob,nobL,neqn,nparam,feasb,ob,
 				grdpsf,di,d,*fmax,theta,0,bl,1);
-   if (glob_info.mode!=1 || rho!=rhog) 
-      for (i=1; i<=nparam; i++) 
+   if (glob_info.mode!=1 || rho!=rhog)
+      for (i=1; i<=nparam; i++)
 	 bu[i]=param->x[i]+di[i];
    x_is_new=TRUE;
    if (rho!=rhog) ncg=0;
@@ -5805,7 +5805,7 @@ L310:
 	 temp1=dnm*sqrt(scaprd(nparam,tempv,tempv));
 	 temp2=cs[kk].mult;
       }
-      if (temp2!=0.e0 || cs[kk].val >= (-0.2e0*temp1) || 
+      if (temp2!=0.e0 || cs[kk].val >= (-0.2e0*temp1) ||
            kk>glob_info.nnineq) {
 	 ninq++;
 	 iw[ninq]=kk;
@@ -5830,10 +5830,10 @@ L310:
       iskip[*iskp]=kk;
       j--;
    }
-   if ((neqn!=0)&&(feasb)) 
+   if ((neqn!=0)&&(feasb))
       resign(nparam,neqn,psf,grdpsf,penp,cs,signeq,10,20);
    ninq-=neq;
-   /*  if (!feasb) ninq+=neqn;   BUG???   */              
+   /*  if (!feasb) ninq+=neqn;   BUG???   */
    if (ncg!=0) for (i=1; i<=ncg; i++) {
       iw[i]=iact[i];
       istore[iact[i]]=1;
@@ -5937,7 +5937,7 @@ L1110:
       free_dv(adummy);
       return;
    }
-   if (dnmtil!=0.e0) 
+   if (dnmtil!=0.e0)
       for (i=1; i<=nineqn+nob; i++)
 	 istore[i]=0;
    if (glob_prnt.iprint<3 || !display) {
@@ -6025,7 +6025,7 @@ struct  _parameter  *param;
    /* Assign objectives for QP					    */
    /*---------------------------------------------------------------*/
    if (nobL==1) {
-      for (i=1; i<=nparam; i++) 
+      for (i=1; i<=nparam; i++)
 	 cvec[i]=cvec[i]+ob[1].grad[i];
    } else if (nobL>1) {
       numf_used=nob-nfsip+glob_info.tot_actf_sip;
@@ -6080,8 +6080,8 @@ struct  _parameter  *param;
    /*  Save multipliers from the computation of d0                  */
    /*---------------------------------------------------------------*/
    nullvc(nqpram,param->mult);
-   if (ncsipl+ncsipn) 
-      for (i=1; i<=ncnstr; i++) 
+   if (ncsipl+ncsipn)
+      for (i=1; i<=ncnstr; i++)
 	 cs[i].mult=0.e0;
    if (nfsip)
       for (i=1; i<=nob; i++) {
@@ -6125,7 +6125,7 @@ static void
 di1(int nparam,int nqpram,int nob,int nobL,int nfsip,int nineqn,
     int neq,int neqn,int ncnstr,int ncsipl,int ncsipn,
     int nrowa,int *infoqp,int mode,struct _parameter *param,
-    double *d0,struct _objective *ob,double fmax,double 
+    double *d0,struct _objective *ob,double fmax,double
     *grdpsf,struct _constraint *cs,double *cvec,double *bl,double *bu,
     double *clamda,double **hess1,double *x,double steps)
 #else
@@ -6146,7 +6146,7 @@ struct _parameter  *param;
    int *iw_hold;
    double x0i,eta,*atemp,*htemp,**a,*bj;
 
-   if ((ncsipl+ncsipn)!=0) 
+   if ((ncsipl+ncsipn)!=0)
       nrowa=nrowa-(ncsipl+ncsipn)+glob_info.tot_actg_sip;
    if (nfsip) {
       if (nobL>nob) nrowa=nrowa-2*nfsip+2*glob_info.tot_actf_sip;
@@ -6178,7 +6178,7 @@ struct _parameter  *param;
 	 cs[jj].act_sip) {
          k++;
          bj[k]=-cs[jj].val;
-         for (j=1; j<=nparam; j++) 
+         for (j=1; j<=nparam; j++)
             a[k][j]=-cs[jj].grad[j];
          a[k][nqpram]=0.e0;
          if ((i>(neq-neqn) && i<=neq) || i>ii) a[k][nqpram]=1.e0;
@@ -6204,7 +6204,7 @@ struct _parameter  *param;
       if (nob==0) {
          k++;
          bj[k]=fmax;
-         for (j=1; j<=nparam; j++) 
+         for (j=1; j<=nparam; j++)
             a[k][j]=grdpsf[j];
 	 a[k][nqpram]=1.e0;
       }
@@ -6296,8 +6296,8 @@ void    *cd;
    else display=TRUE;
    if (glob_prnt.iprint >= 3 && display)
       sbout1(glob_prnt.io,0,"directional deriv   ",grdftd,*(adummy+1),
-             1,2);   
-   w[1]=*fM;  
+             1,2);
+   w[1]=*fM;
    for (;;) {
       reform=TRUE;
       if (glob_prnt.iprint >= 3 && display)
@@ -6345,7 +6345,7 @@ void    *cd;
          *iskp=0;
       }
 
-      /* Refine the upper bound using the linear SI constraints not 
+      /* Refine the upper bound using the linear SI constraints not
          in Omega_k */
       if (!sipldone) {
 	 for (i=jj; i<=ncsipl; i++) {
@@ -6369,7 +6369,7 @@ void    *cd;
          sipldone=TRUE;
       }
       if (nn==0) goto L310;
-      
+
       /* Check nonlinear constraints                            */
       if (!glob_log.local && fbind) goto L315;
       do {
@@ -6461,7 +6461,7 @@ L315:    if (fdone) break;
 	       if (ob[ii].val>tolfe) reform=FALSE;
 	       if (i==1 && glob_prnt.iprint>2 && display)
 	 	 fprintf(glob_prnt.io,
-                     "\t\t\t trial objectives   %d \t %22.14e\n", 
+                     "\t\t\t trial objectives   %d \t %22.14e\n",
                      indxob[ii],ob[ii].val);
 	       if (i!=1 && glob_prnt.iprint>2 && display)
                  fprintf(glob_prnt.io,
@@ -6485,7 +6485,7 @@ L315:    if (fdone) break;
 		  }
 		  goto L1110;
 	       }
-	       if (nobL==nob || (-fii-*psf)<=(*fMp+prod)) 
+	       if (nobL==nob || (-fii-*psf)<=(*fMp+prod))
                   continue;
 	       fbind=TRUE;
 	       shift(nob,ii,&iact[nn]);
@@ -6544,11 +6544,11 @@ L1110:
 L1120:
       itry++;
       if (glob_info.modec==2) fbind=FALSE;
-      if (*steps >= 1.e0) 
+      if (*steps >= 1.e0)
 	 for (i=1; i<=nob+nineqn; i++)
 	    istore[i]=0;
       *steps=*steps*0.5e0;
-      if (*steps<glob_grd.epsmac) break; 
+      if (*steps<glob_grd.epsmac) break;
    }
    glob_prnt.info=4;
    nstop=0;
@@ -6558,7 +6558,7 @@ L1500:
    for (i=1; i<=nob+nineqn; i++)
       istore[i]=0;
    return;
-}  
+}
 /******************************************************************/
 /*   CFSQP : Update the Hessian matrix using BFGS formula with    */
 /*           Powell's modification.                               */
@@ -6611,11 +6611,11 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
       computing d0 */
 
    if (!glob_log.get_ne_mult) {
-      if (feasb && nstop && !neqn) 
+      if (feasb && nstop && !neqn)
          if ((fabs(w[1]-fmax) <= objeps) ||
              (fabs(w[1]-fmax) <= objrep*fabs(w[1]))) nstop=0;
       if (!nstop) {
-         for (i=1; i<= nparam; i++) 
+         for (i=1; i<= nparam; i++)
 	    param->x[i]=xnew[i];
          x_is_new=TRUE;
          return;
@@ -6633,10 +6633,10 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
    nullvc(nparam,eta);
    for (j=1; j<=2; j++) {
       nullvc(nparam, gamma);
-      if (nobL>1) { 
+      if (nobL>1) {
 	 for (i=1; i<=nparam; i++) {
 	    hd[i]=0.e0;
-	    for (k=1; k<=nob; k++) 
+	    for (k=1; k<=nob; k++)
 		hd[i]=hd[i]+ob[k].grad[i]*ob[k].mult;
 	 }
       }
@@ -6685,7 +6685,7 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
          }
          for (i=1; i<=nob; i++) {
 	    glob_grd.valnom=ob[i].val;
-	    if ((i<=nob-nfsip)||(i>nob-nfsip && 
+	    if ((i<=nob-nfsip)||(i>nob-nfsip &&
                 ((ob[i].mult !=0.e0)||(ob[i].mult_L !=0.e0)))) {
                if (feasb)
                   gradob(nparam,i,xnew+1,ob[i].grad+1,obj,param->cd);
@@ -6705,11 +6705,11 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
             (*nrst)++;
             for (i=1; i<=nparam; i++) {
 	       gamma[i]=gamma[i]-delta[i];
-               delta[i]=xnew[i]-param->x[i];  
+               delta[i]=xnew[i]-param->x[i];
 	    }
             matrvc(nparam,nparam,hess,delta,hd);
             dhd=scaprd(nparam,delta,hd);
-	    if (sqrt(scaprd(nparam,delta,delta)) <= glob_grd.epsmac) { 
+	    if (sqrt(scaprd(nparam,delta,delta)) <= glob_grd.epsmac) {
 	      /* xnew too close to x!! */
 	      nstop=0;
 	      glob_prnt.info=8;
@@ -6797,7 +6797,7 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
       for (i=2; i<=mnm; i++) {
 	 if (neqn != 0) {
 	    psfnew=0.e0;
-	    for (j=1; j<=neqn; j++) 
+	    for (j=1; j<=neqn; j++)
 	       psfnew=psfnew+gm[(i-1)*neqn +j]*penp[j];
 	 }
 	 *fM=DMAX1(*fM, span[i]);
@@ -6835,13 +6835,13 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
    if (ncnstr != 0) {
       fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
               "            for g   ",cs[1].mult);
-      for (j=2; j<=ncnstr; j++) 
+      for (j=2; j<=ncnstr; j++)
 	 fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",cs[j].mult);
    }
    if (nobL > 1) {
       fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
               "            for f   ",ob[1].mult);
-      for (j=2; j<=nob; j++) 
+      for (j=2; j<=nob; j++)
 	 fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",ob[j].mult);
    }
    for (i=1; i<=nparam; i++) {
@@ -6890,7 +6890,7 @@ struct  _objective  *ob;
       glob_prnt.iter++;
       goto L9000;
    }
-   if ((glob_prnt.info>0 && glob_prnt.info<3) || glob_prnt.info==7) 
+   if ((glob_prnt.info>0 && glob_prnt.info<3) || glob_prnt.info==7)
       goto L120;
    if (glob_prnt.iprint==1 && nstop!=0) {
       glob_prnt.iter++;
@@ -6910,7 +6910,7 @@ struct  _objective  *ob;
 		else gmax=fabs(ob[++offset].val);
 		for (j=2; j<=mesh_pts[i]; j++) {
 		   offset++;
-		   if (nob==nobL && ob[offset].val>gmax) 
+		   if (nob==nobL && ob[offset].val>gmax)
                       gmax=ob[offset].val;
 		   else if (nob!=nobL && fabs(ob[offset].val)>gmax)
 		      gmax=fabs(ob[offset].val);
@@ -6926,7 +6926,7 @@ struct  _objective  *ob;
       if (ncnstr==0) fprintf(glob_prnt.io,"\n");
       else {
          fprintf(glob_prnt.io," constraints\n");
-         for (i=1; i<=nineqn-ncsipn; i++) 
+         for (i=1; i<=nineqn-ncsipn; i++)
             fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
          if (ncsipn) {
 	    offset=nineqn-ncsipn;
@@ -6939,7 +6939,7 @@ struct  _objective  *ob;
                fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
 	    }
          }	
-         for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++) 
+         for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++)
             fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
          if (ncsipl) {
             offset=glob_info.nnineq-ncsipl;
@@ -6954,7 +6954,7 @@ struct  _objective  *ob;
                fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
 	    }
          }	
-         for (i=glob_info.nnineq+1; i<=ncnstr; i++) 
+         for (i=glob_info.nnineq+1; i<=ncnstr; i++)
             fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
       }
       if (ncnstr!=0) fprintf(glob_prnt.io,"\n");
@@ -7000,7 +7000,7 @@ struct  _objective  *ob;
 		else gmax=fabs(ob[++offset].val);
 		for (j=2; j<=mesh_pts[i]; j++) {
 		   offset++;
-		   if (nob==nobL && ob[offset].val>gmax) 
+		   if (nob==nobL && ob[offset].val>gmax)
                       gmax=ob[offset].val;
 		   else if (nob!=nobL && fabs(ob[offset].val)>gmax)
 		      gmax=fabs(ob[offset].val);
@@ -7011,11 +7011,11 @@ struct  _objective  *ob;
    }
    if (glob_info.mode==1 && glob_prnt.iter>1 && display)
       sbout1(glob_prnt.io,0,"objective max4      ",fM,adummy,1,1);
-   if (nob>1 && display) 
+   if (nob>1 && display)
       sbout1(glob_prnt.io,0,"objmax              ",fmax,adummy,1,1);
    if (ncnstr != 0 && display ) {
       fprintf(glob_prnt.io," constraints\n");
-      for (i=1; i<=nineqn-ncsipn; i++) 
+      for (i=1; i<=nineqn-ncsipn; i++)
          fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
       if (ncsipn) {
 	 offset=nineqn-ncsipn;
@@ -7028,7 +7028,7 @@ struct  _objective  *ob;
             fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
 	 }
       }	
-      for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++) 
+      for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++)
          fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
       if (ncsipl) {
 	 offset=glob_info.nnineq-ncsipl;
@@ -7044,11 +7044,11 @@ struct  _objective  *ob;
             fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
 	 }
       }	
-      for (i=glob_info.nnineq+1; i<=ncnstr; i++) 
+      for (i=glob_info.nnineq+1; i<=ncnstr; i++)
          fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
       if (feasb) {
          SNECV=0.e0;
-         for (i=glob_info.nnineq+1; i<=glob_info.nnineq+nn-nineqn; i++) 
+         for (i=glob_info.nnineq+1; i<=glob_info.nnineq+nn-nineqn; i++)
 	    SNECV=SNECV+fabs(cs[i].val);
          if (glob_prnt.initvl==0 && (nn-nineqn)!=0)
 	    sbout1(glob_prnt.io,0,"SNECV               ",
@@ -7212,7 +7212,7 @@ void   *cd;
 /*      nullvc        resign        sbout1                  */
 /*      sbout2        shift         slope                   */
 /*      fuscmp        indexs        element                 */
-/************************************************************/    
+/************************************************************/
 
 
 #ifdef __STDC__
@@ -7221,7 +7221,7 @@ static void fool(double, double, double *);
 static void fool();
 #endif
 
-/************************************************************/   
+/************************************************************/
 /*    Set a=diag*I, a diagonal matrix                       */
 /************************************************************/
 
@@ -7311,10 +7311,10 @@ struct _constraint *cs;
    return;
 }
 
-/**************************************************************/    
+/**************************************************************/
 /*   Extract a column vector from a matrix                    */
 /**************************************************************/
-   
+
 #ifdef __STDC__
 static double *colvec(double **a,int col,int nrows)
 #else
@@ -7368,7 +7368,7 @@ double x,y,*z;
    return;
 }
 
-/**********************************************************/ 
+/**********************************************************/
 /*    Computes the machine precision                      */
 /**********************************************************/
 
@@ -7385,7 +7385,7 @@ static double small()
    } while (z>1.e0);
    return tsmall*two*two;
 }
-   
+
 /**********************************************************/
 /*     Compares value with threshold to see if exceeds    */
 /**********************************************************/
@@ -7420,7 +7420,7 @@ int i,nfs;
    while (mm>nfs) mm -= nfs;
    return mm;
 }
-   
+
 /*********************************************************/
 /*     Copies matrix a to matrix b                       */
 /*********************************************************/
@@ -7463,7 +7463,7 @@ int la,na;
 
    for (i=1; i<=la; i++) {
       yi=0.e0;
-      for (j=1; j<=na; j++) 
+      for (j=1; j<=na; j++)
          yi=yi + a[i][j]*x[j];
       y[i]=yi;
    }
@@ -7490,7 +7490,7 @@ double *x;
 }
 
 /*********************************************************/
-/*   job1=10: g*signeq,   job1=11: gradg*signeq,         */   
+/*   job1=10: g*signeq,   job1=11: gradg*signeq,         */
 /*                        job1=12: job1=10&11            */
 /*   job1=20: do not change sign                         */
 /*   job2=10: psf,        job2=11: grdpsf,               */
@@ -7499,11 +7499,11 @@ double *x;
 /*********************************************************/
 
 #ifdef __STDC__
-static void 
+static void
 resign(int n,int neqn,double *psf,double *grdpsf,double *penp,
        struct _constraint *cs,double *signeq,int job1,int job2)
 #else
-static void 
+static void
 resign(n,neqn,psf,grdpsf,penp,cs,signeq,job1,job2)
 int job1,job2,n,neqn;
 double *psf,*grdpsf,*penp,*signeq;
@@ -7519,7 +7519,7 @@ struct _constraint *cs;
                                     signeq[i]*cs[i+nineq].val;
       if (job2==10 || job2==12) *psf=*psf+cs[i+nineq].val*penp[i];
       if (job1==10 || job1==20) continue;
-      for (j=1; j<=n; j++) 
+      for (j=1; j<=n; j++)
 	 cs[i+nineq].grad[j]=cs[i+nineq].grad[j]*signeq[i];
    }
    if (job2==10 || job2==20) return;
@@ -7535,7 +7535,7 @@ struct _constraint *cs;
 /**********************************************************/
 
 #ifdef __STDC__
-static void 
+static void
 sbout1(FILE *io,int n,char *s1,double z,double *z1,int job,int level)
 #else
 static void sbout1(io,n,s1,z,z1,job,level)
@@ -7560,14 +7560,14 @@ char *s1;
       if (level == 2) fprintf(io," \t\t\t\t\t\t %22.14e\n",z1[j]);
    }
    return;
-}   
+}
 
 /*********************************************************/
 /*      Write output to file                             */
 /*********************************************************/
 
 #ifdef __STDC__
-static void 
+static void
 sbout2(FILE *io,int n,int i,char *s1,char *s2,double *z)
 #else
 static void sbout2(io,n,i,s1,s2,z)
@@ -7580,7 +7580,7 @@ char *s1,*s2;
    int j;
 
    fprintf(io,"\t\t\t %8s %5d %1s\t %22.14e\n",s1,i,s2,z[1]);
-   for (j=2; j<=n; j++) 
+   for (j=2; j<=n; j++)
       fprintf(io,"\t\t\t\t\t\t %22.14e\n",z[j]);
    return;
 }
@@ -7601,7 +7601,7 @@ int n,ii,*iact;
    if (ii == iact[1]) return;
    for (j=1; j<=n; j++) {
       if (ii != iact[j]) continue;
-      for (k=j; k>=2; k--) 
+      for (k=j; k>=2; k--)
          iact[k]=iact[k-1];
       break;
    }
@@ -7615,12 +7615,12 @@ int n,ii,*iact;
 /****************************************************************/
 
 #ifdef __STDC__
-static double 
+static double
 slope(int nob,int nobL,int neqn,int nparam,int feasb,
       struct _objective *ob,double *grdpsf,double *x,double *y,
       double fmax,double theta,int job,double *prev,int old)
 #else
-static double 
+static double
 slope(nob,nobL,neqn,nparam,feasb,ob,grdpsf,x,y,fmax,theta,job,
       prev,old)
 int nob,nobL,neqn,nparam,job,feasb,old;
@@ -7724,7 +7724,7 @@ int len;
 /*************************************************************/
 /*     Create integer vector                                 */
 /*************************************************************/
-   
+
 #ifdef __STDC__
 static int *
 make_iv(int len)
@@ -7744,7 +7744,7 @@ int len;
    }
    return --v;
 }
-   
+
 /*************************************************************/
 /*     Create a double precision matrix                      */
 /*************************************************************/

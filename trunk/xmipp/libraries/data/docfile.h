@@ -29,9 +29,9 @@
 #include <vector>
 #include <string>
 
-#include "xmippMatrices1D.hh"
-#include "xmippMatrices2D.hh"
-#include "xmippSelFiles.hh"
+#include "matrix1d.h"
+#include "matrix2d.h"
+#include "selfile.h"
 
 // Forward declaration
 class DocFile;

@@ -9,8 +9,10 @@
 *****************************************************************************/
 
 #include <qapplication.h>
-#include "textedit.hh"
-#include <XmippData/xmippArgs.hh>
+
+#include "textedit.h"
+
+#include <data/args.h>
 
 void usage() {
    cerr << "edit\n"
@@ -22,14 +24,14 @@ void usage() {
 int main( int argc, char ** argv ) {
     int ifirst;
     bool remove;
-    
+
     try {
        ifirst=position_param(argc,argv,"-i");
        if (ifirst==-1 && argc!=1) REPORT_ERROR(1,"Edit: Cannot find -i");
        remove=check_param(argc,argv,"-remove");
     } catch (Xmipp_error XE) {cout << XE; usage(); exit(1);}
-    
-    
+
+
     QApplication a( argc, argv );
     TextEdit * mw = new TextEdit( 0, "TextEdit" );
     if (remove) mw->setRemoveFlag();

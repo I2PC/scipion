@@ -7,37 +7,39 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showTools.hh"
+#include "show_tools.h"
+
 #include <qdragobject.h>
 #include <qfile.h>
 #include <qlayout.h>
 #include <qmime.h>
 #include <qpushbutton.h>
-#include <qtooltip.h> 
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippArgs.hh>
+#include <qtooltip.h>
+
+#include <data/fft.h>
+#include <data/histogram.h>
+#include <data/args.h>
 
 ScrollParam::ScrollParam(float min , float max, float initial_value,
    char* prm_name, char *caption, QWidget *parent, const char *name,
-   int wFlags, int precision  ) : 
+   int wFlags, int precision  ) :
    QWidget( parent, name, wFlags ) {
    vector<float> vmin; vmin.push_back(min);
    vector<float> vmax; vmax.push_back(max);
@@ -48,7 +50,7 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
 
 ScrollParam::ScrollParam(vector<float> &min , vector<float> &max,
    vector<float> &initial_value, vector<char *> &prm_name,
-   char *caption, QWidget *parent, const char *name, int wFlags, int precision  ) : 
+   char *caption, QWidget *parent, const char *name, int wFlags, int precision  ) :
    QWidget( parent, name, wFlags ) {
    init(min,max,initial_value,prm_name,caption,precision);
 }
@@ -62,19 +64,19 @@ void ScrollParam::init(vector<float> &min, vector<float> &max,
 
    // Set precision
    my_precision = (int)pow ((double)10,(double)precision);
-   
+
    // Create a layout to position the widgets
    QBoxLayout *Layout = new QVBoxLayout( this, 10 );
    QGridLayout *grid = new QGridLayout( 3+min.size(), 5 );
    Layout->addLayout( grid, 5 );
 
    // Title
-   QLabel *title= new QLabel( this, "title" );    
+   QLabel *title= new QLabel( this, "title" );
    title->setFont( QFont("times",14,QFont::Bold) );
    title->setText( caption );
    title->setFixedSize(title->sizeHint());
    grid->addMultiCellWidget( title, 0, 0, 0, 2);
-    
+
    // Add all parameters
    value=initial_value;
    for (int i=0; i<min.size(); i++) {
@@ -83,34 +85,34 @@ void ScrollParam::init(vector<float> &min, vector<float> &max,
       value[i]    = (float) initial_value[i]*my_precision;
 
       // Add Parameter name
-      QLabel     *lab1= new QLabel( this, "lab1" );    
+      QLabel     *lab1= new QLabel( this, "lab1" );
       lab1->setFont( QFont("times",12,QFont::Bold) );
       lab1->setText( prm_name[i] );
       lab1->setFixedSize(lab1->sizeHint());
       grid->addWidget( lab1, i+1, 0, AlignLeft );
-      
+
       // Add range
-      QLabel     *lab2= new QLabel( this, "lab2" );    
+      QLabel     *lab2= new QLabel( this, "lab2" );
       lab2->setFont( QFont("times",12) );
       lab2->setText( ((string)"["+FtoA(min[i],0)+","+FtoA(max[i],0)+"]").c_str() );
       lab2->setFixedSize(lab2->sizeHint());
       grid->addWidget( lab2, i+1, 1, AlignCenter );
-      
+
       // Add Scroll Bar
       QScrollBar  *scroll_aux= new QScrollBar(tmp_min, tmp_max, 1, 1, (int)value[i], QScrollBar::Horizontal,this,"scroll");
-      scroll_aux->setFixedWidth(100); 
+      scroll_aux->setFixedWidth(100);
       scroll_aux->setFixedHeight(15);
       grid->addMultiCellWidget( scroll_aux, i+1, i+1, 2, 3);
       scroll.push_back(scroll_aux);
 
       // Label for the current value
       QLabel * value_lab_aux;
-      value_lab_aux= new QLabel( this, "value_lab" );        
+      value_lab_aux= new QLabel( this, "value_lab" );
       value_lab_aux->setFont( QFont("times",12) );
       value_lab_aux->setNum( value[i]/my_precision );
       grid->addWidget( value_lab_aux, i+1, 4, AlignLeft);
       value_lab.push_back(value_lab_aux);
-   
+
       connect( scroll_aux, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)) );
    }
 
@@ -118,20 +120,20 @@ void ScrollParam::init(vector<float> &min, vector<float> &max,
    QPushButton *close;
    close = new QPushButton( this, "close" );   // create button 1
    close->setFont( QFont("times",12,QFont::Bold) );
-   close->setText( "Close" );    
+   close->setText( "Close" );
    close->setFixedSize( close->sizeHint());
-   grid->addWidget( close, 1+min.size(), 0, AlignVCenter ); 
+   grid->addWidget( close, 1+min.size(), 0, AlignVCenter );
    QToolTip::add( close, "Close the window" );
    connect( close, SIGNAL(clicked()), SLOT(slot_close_clicked()) );
-   
-   // OK button 
+
+   // OK button
    QPushButton *do_it;
    do_it = new QPushButton( this, "do_it" );   // create button 3
    do_it->setFont( QFont("times",12,QFont::Bold) );
    do_it->setText( "Ok" );
    do_it->setFixedHeight( do_it->sizeHint().height());
    do_it->setFixedWidth(80);
-   grid->addWidget( do_it, 1+min.size(), 3, AlignVCenter ); 
+   grid->addWidget( do_it, 1+min.size(), 3, AlignVCenter );
    QToolTip::add( do_it, "Commit action" );
    connect( do_it, SIGNAL(clicked()), SLOT(slot_ok_clicked()) );
 }
@@ -167,12 +169,12 @@ void ScrollParam::slot_ok_clicked() {
    emit new_value( value[0] );
    emit new_value( value );
    emit signal_ok_clicked();
-   close();  
+   close();
 }
 
 
 ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
-   char *caption, QWidget *parent, const char *name, int wFlags ) : 
+   char *caption, QWidget *parent, const char *name, int wFlags ) :
    QWidget( parent, name, wFlags ) {
    float my_precision=0;
    int tmp_min=(int) 0;
@@ -194,7 +196,7 @@ ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
    Layout->addLayout( grid, 5 );
 
    //title
-   QLabel     *title= new QLabel( this, "title" );    
+   QLabel     *title= new QLabel( this, "title" );
    title->setFont( QFont("times",14,QFont::Bold) );
    title->setText( "FFT show mode" );
    title->setFixedSize(title->sizeHint());
@@ -205,26 +207,26 @@ ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
       button.push_back(new QRadioButton(list_values[i].c_str(),this,"radiobutton"));
       if (i==initial_value) button[i]->setChecked(true);
       connect(  button[i], SIGNAL(toggled(bool)), this, SLOT(exclusiveValueChanged()) );
-      grid->addMultiCellWidget( button[i], 2+i, 2+i, 0, 2);                       
+      grid->addMultiCellWidget( button[i], 2+i, 2+i, 0, 2);
    }
-    
+
    //Close Button
    QPushButton *close;
    close = new QPushButton( this, "close" );   // create button 1
    close->setFont( QFont("times",12,QFont::Bold) );
-   close->setText( "Close" );    
+   close->setText( "Close" );
    close->setFixedSize( close->sizeHint());
-   grid->addWidget( close, 3+list_values.size(), 0, AlignVCenter ); 
+   grid->addWidget( close, 3+list_values.size(), 0, AlignVCenter );
    QToolTip::add( close, "Close the window" );
    connect( close, SIGNAL(clicked()), SLOT(but_close_clicked()) );
-       
+
    QPushButton *do_it;
    do_it = new QPushButton( this, "do_it" );   // create button 3
    do_it->setFont( QFont("times",12,QFont::Bold) );
    do_it->setText( "Ok" );
    do_it->setFixedHeight( do_it->sizeHint().height());
    do_it->setFixedWidth(80);
-   grid->addWidget( do_it, 3+list_values.size(), 2, AlignVCenter ); 
+   grid->addWidget( do_it, 3+list_values.size(), 2, AlignVCenter );
    QToolTip::add( do_it, "Commit action" );
    connect( do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()) );
 }
@@ -235,7 +237,7 @@ void ExclusiveParam::but_close_clicked() {close();}
 
 void ExclusiveParam::but_ok_clicked() {
    emit new_value( value );
-   close();  
+   close();
 }
 
 void ExclusiveParam::exclusiveValueChanged() {
@@ -269,8 +271,8 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
    for (int i = 0; i < 256; i++) {
      QColor c;
      c.setRgb(i,i,i);
-     _qimage.setColor(i, c.rgb());   
-   }  
+     _qimage.setColor(i, c.rgb());
+   }
 
    const matrix2D<double> &xmatrix=_ximage();
    int xdim=XSIZE(xmatrix);
@@ -302,7 +304,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
             if (DIRECT_MAT_ELEM(xmatrix,i,j)>max_val)
                max_val=DIRECT_MAT_ELEM(xmatrix,i,j);
          }
-      
+
       double a;
       if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
          a=1.0;
@@ -324,7 +326,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
             if (DIRECT_MAT_ELEM(xmatrix,i,j)>max_val)
                max_val=DIRECT_MAT_ELEM(xmatrix,i,j);
          }
-      
+
       if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
          a=1.0;
       else
@@ -345,7 +347,7 @@ void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
    QImage tmpImage;
    xmipp2Qt(xmippImage,tmpImage,_minScale,_maxScale,_m,_M,
       treat_separately_left_right);
-   pixmap->convertFromImage(tmpImage, 0); 
+   pixmap->convertFromImage(tmpImage, 0);
 }
 
 /* Xmipp image -> Xmipp PSD ------------------------------------------------ */
@@ -375,7 +377,7 @@ void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output) {
       for (int j=0; j<XSIZE(output)/2; j++) {
          if (output(i,j)>XMIPP_EQUAL_ACCURACY &&
              (output(i,j)<min_val || first)) min_val=output(i,j);
-         if (output(i,j)>XMIPP_EQUAL_ACCURACY && 
+         if (output(i,j)>XMIPP_EQUAL_ACCURACY &&
              (output(i,j)>max_val || first)) {
              max_val=output(i,j); first=false;
          }

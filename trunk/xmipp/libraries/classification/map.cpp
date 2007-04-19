@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -28,12 +28,9 @@
 // Implements Self-Organizing Maps of the type used by Kohonen algorithms.
 //-----------------------------------------------------------------------------
 
+#include "map.h"
 
-#include "../xmippMap.hh"
-#include <XmippData/xmippArgs.hh>
-
-//-----------------------------------------------------------------------------
-
+#include <data/args.h>
 
 
   /**
@@ -85,16 +82,16 @@
 
   /**
    * Constructs a SOM with initial code vectors taken randomly from
-   * the training file. 
+   * the training file.
    * @param _layout  Type of layout
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
-   * @param _ts	     Training set; will be used to get initial values   
+   * @param _ts	     Training set; will be used to get initial values
    * @param _use_rand_cvs  Use random code vector pixel values
    */
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
-   University of California, Los Angeles   
+   University of California, Los Angeles
 */
   xmippMap::xmippMap(const string& _layout,  unsigned _width,
          const unsigned& _height, const xmippCTVectors& _ts,
@@ -119,7 +116,7 @@
    * @exception  runtime_error  If there are problems with the stream
    */
   xmippMap::xmippMap(istream& _is, bool _cv) : xmippCB(false)
-  {  
+  {
     somLayout = NULL;
     if (_cv)
     	readSelf(_is);
@@ -233,13 +230,13 @@
 
     return targetAt( (somWidth * _pos.second) + _pos.first );
   };
-   
+
 
   /**
    * Returns a const target of a code vector given its position
    * @param _pos  The position of the code vector
    */
-  const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const 
+  const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const
   {
     if (!calibrated())
     {
@@ -258,7 +255,7 @@
 
     return targetAt( (somWidth * _pos.second) + _pos.first );
   };
-   
+
 
 
   /**
@@ -348,21 +345,21 @@
    */
   void xmippMap::readSelf (istream& _is)
   {
-     clear(); 
-     int dim; string layout, str; 
-     _is >> dim; 
+     clear();
+     int dim; string layout, str;
+     _is >> dim;
      _is >> layout;
      tolower(layout);
-     
+
      if (layout == "hexa") {
 	HEXALayout *tmpLayout = new HEXALayout();
 	somLayout = tmpLayout;
      } else {
 	RECTLayout *tmpLayout = new RECTLayout();
 	somLayout = tmpLayout;
-     }     
-     _is >> somWidth;  
-     _is >> somHeight;  
+     }
+     _is >> somWidth;
+     _is >> somHeight;
      /* IT DOESN'T WORK PROPERLY
      str = ItoA(dim);
      str += " ";
@@ -373,11 +370,11 @@
      */
      xmippCB::readSelf(_is,dim,somWidth*somHeight);
 
-/*  IT DOESN'T WORK PROPERLY   
-    
-     _is >> somWidth;  
-     _is >> somHeight;  
-     
+/*  IT DOESN'T WORK PROPERLY
+
+     _is >> somWidth;
+     _is >> somHeight;
+
    char aux[128];
      strstream ostr(aux,sizeof(aux));
      ostr << dim << " " << (somWidth*somHeight) << " " <<
@@ -389,27 +386,27 @@
 
 
   /**
-   * Saves the xmippMap class into a stream. 
+   * Saves the xmippMap class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
   void xmippMap::saveObject(ostream& _os) const
   {
     _os << somLayout->id() << " " << somWidth << " " << somHeight << endl;
-    writeClassifVectors(_os); 
+    writeClassifVectors(_os);
     xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
   };
 
 
   /**
-   * Loads the xmippMap class from a stream. 
+   * Loads the xmippMap class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   void xmippMap::loadObject(istream& _is)
   {
      clear();
-     string layout; 
+     string layout;
      _is >> layout;
      if (layout == "HEXA") {
 	HEXALayout *tmpLayout = new HEXALayout();
@@ -417,10 +414,10 @@
      } else {
 	RECTLayout *tmpLayout = new RECTLayout();
 	somLayout = tmpLayout;
-     }     
-     _is >> somWidth;  
-     _is >> somHeight;  
-     readClassifVectors(_is); 
+     }
+     _is >> somWidth;
+     _is >> somHeight;
+     readClassifVectors(_is);
      xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
   };
 
@@ -462,7 +459,7 @@
       for (unsigned i=0 ; i<_som->size() ; i++)
       {
         if (isIn(_center, _som->indexToPos(i), _radius))
-	{ 
+	{
           neig.push_back(i);
 	}
       }
@@ -479,7 +476,7 @@
      * @param _radius  Radius of neighbohood
      */
     bool Layout::isIn(const SomPos& _center, const SomPos& _v,
-		double _radius) const 
+		double _radius) const
     {
      	return (dist(_center, _v) <= _radius);
     };
@@ -495,14 +492,14 @@
 
 
   /**
-   * Returns the distance between two vectors in their given position 
+   * Returns the distance between two vectors in their given position
    * @param _center  Position of the center of neighborhood
    * @param _v       Position of the code vector
    */
 
-   double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const 
+   double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const
    {
-   	return ((double) sqrt((double)(_center.first - _v.first)*(_center.first - _v.first) + 
+   	return ((double) sqrt((double)(_center.first - _v.first)*(_center.first - _v.first) +
            (_center.second - _v.second)*(_center.second - _v.second)));	   	
    };
 
@@ -571,18 +568,18 @@
 	 }
 	 if ( _som->height() == 1 || _som->width() == 1)
 	 	return (kk/2.0);
-	 else  
+	 else
 	 	return (kk/4.0);
     }
 
 
   /**
-   * Returns the distance between two vectors in their given position 
+   * Returns the distance between two vectors in their given position
    * @param _center  Position of the center of neighborhood
    * @param _v       Position of the code vector
    */
 
-   double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const 
+   double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const
    {
   	double ret, diff;
   	diff = _center.first - _v.first;
@@ -686,7 +683,7 @@
 	 }
 	 if (_som->width() == 1 || _som->height() == 1)
 	 	return (kk/2.0);
-	 else 
+	 else
 	 	return (kk/6.0);
     }
 
@@ -718,16 +715,16 @@
 
   /**
    * Constructs a Fuzzy SOM with initial code vectors taken randomly from
-   * the training file. 
+   * the training file.
    * @param _layout  Type of layout
    * @param _width   Width of the output plane
    * @param _height  Height of the output plane
-   * @param _ts	     Training set; will be used to get initial values   
+   * @param _ts	     Training set; will be used to get initial values
    * @param _use_rand_cvs  Use random code vector pixel values
    */
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
-   University of California, Los Angeles   
+   University of California, Los Angeles
 */
   xmippFuzzyMap::xmippFuzzyMap(const string& _layout,  unsigned _width,
          const unsigned& _height, const xmippCTVectors& _ts,
@@ -746,7 +743,7 @@
   /**
    * Construct a SOM from the code vectors in a stream
    * @param _is  The stream
-   * @param _size Size of code vectors (number of data points)   
+   * @param _size Size of code vectors (number of data points)
    * @exception  runtime_error  If there are problems with the stream
    */
   xmippFuzzyMap::xmippFuzzyMap(istream& _is, const unsigned _size, bool _cv) : xmippFCB(false)
@@ -800,7 +797,7 @@
    * @param _aveVector: returns the average vector
    */
   void xmippFuzzyMap::localAve(const SomPos& _center, vector<double>& _aveVector) const {
- 	somLayout->localAve(this, _center, _aveVector);    
+ 	somLayout->localAve(this, _center, _aveVector);
   };
 
 
@@ -883,13 +880,13 @@
 
     return targetAt( (somWidth * _pos.second) + _pos.first );
   };
-   
+
 
   /**
    * Returns a const target of a code vector given its position
    * @param _pos  The position of the code vector
    */
-  const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const 
+  const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const
   {
     if (!calibrated())
     {
@@ -908,7 +905,7 @@
 
     return targetAt( (somWidth * _pos.second) + _pos.first );
   };
-   
+
 
 
   /**
@@ -976,7 +973,7 @@
    */
   SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
   {
-    return codVecPos(fuzzyTest(_in));  
+    return codVecPos(fuzzyTest(_in));
   };
 
 
@@ -990,17 +987,17 @@
 	       somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << endl;
     	writeItems(_os);
   };
- 
-  
+
+
   /**
    * Standard input for a Fuzzy SOM
    * @param _is The input stream
    */
   void xmippFuzzyMap::readSelf (istream& _is, const unsigned _size)
   {
-     clear(); 
-     int dim; string layout, str; 
-     _is >> dim; 
+     clear();
+     int dim; string layout, str;
+     _is >> dim;
      _is >> layout;
      if (layout == "HEXA") {
 	HEXALayout *tmpLayout = new HEXALayout();
@@ -1008,43 +1005,43 @@
      } else {
 	RECTLayout *tmpLayout = new RECTLayout();
 	somLayout = tmpLayout;
-     }          
-     _is >> somWidth;  
-     _is >> somHeight;  
+     }
+     _is >> somWidth;
+     _is >> somHeight;
      str = ItoA(dim);
      str += " ";
      str += ItoA(somWidth*somHeight);
      str += " ";
      for (int i = str.size() - 1; i >= 0; i--)
-	 if (_is) _is.putback((char) str[i]);       
+	 if (_is) _is.putback((char) str[i]);
      xmippFCB::readSelf(_is, _size);
 
   };
 
 
   /**
-   * Saves the xmippFuzzyMap class into a stream. 
+   * Saves the xmippFuzzyMap class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
   void xmippFuzzyMap::saveObject(ostream& _os) const
   {
     _os << somLayout->id() << " " << somWidth << " " << somHeight << endl;
-    writeClassifVectors(_os); 
+    writeClassifVectors(_os);
     writeMembership(_os);
     xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
   };
 
 
   /**
-   * Loads the xmippFuzzyMap class from a stream. 
+   * Loads the xmippFuzzyMap class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   void xmippFuzzyMap::loadObject(istream& _is)
   {
      clear();
-     string layout; 
+     string layout;
      _is >> layout;
      if (layout == "HEXA") {
 	HEXALayout *tmpLayout = new HEXALayout();
@@ -1052,10 +1049,10 @@
      } else {
 	RECTLayout *tmpLayout = new RECTLayout();
 	somLayout = tmpLayout;
-     }     
-     _is >> somWidth;  
-     _is >> somHeight;  
-     readClassifVectors(_is); 
+     }
+     _is >> somWidth;
+     _is >> somHeight;
+     readClassifVectors(_is);
      readMembership(_is);
      xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
   };

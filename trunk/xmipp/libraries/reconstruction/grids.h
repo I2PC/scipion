@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * You should have received a copy of the GNU General Public License   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
  * 02111-1307  USA
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* GRIDS                                                                     */
@@ -28,11 +28,12 @@
 
 #ifndef _GRIDS_HH
 #   define _GRIDS_HH
+
 #include <vector>
 
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippArgs.hh>
+#include <data/volume.h>
+#include <data/geometry.h>
+#include <data/args.h>
 
 /* Forward declariations --------------------------------------------------- */
 template <class T> class GridVolumeT;
@@ -54,7 +55,7 @@ template <class T>
     ones are only collections of simple grids. Usual grids as BCC
     (Body Centered Cubic) or FCC (Face Centered Cubic),
     can be expressed as the superposition of two CC (Cubic) grids.
-    
+
     It is important to notice that the existence of this class makes
     the reconstruction algorithms independent from the underlying
     grid, incrementing the reusability of the code.
@@ -71,7 +72,7 @@ template <class T>
     and highest indexes within the grid (these two last parameters set the
     grid size and the space where the grid is defined). There will be
     volume elements at each point of the grid.
-    
+
     The concept of a simple grid is the following: you are defining a
     coordinate system (translated, rotated and whatever you like with
     respect to the Universal Coordinate System, and inside this system
@@ -79,7 +80,7 @@ template <class T>
     valid only in a "box" of the space. A "box" is quoted as because
     it is a parallelepiped defined by this coordinate system axes, and
     not by the Universal axes.
-    
+
     So to define the simple grid you must address the following topics:
     \begin{description}
     \item[Coordinate system]
@@ -89,7 +90,7 @@ template <class T>
        restricted to be orthogonal, normal, or whatever. You can specify
        any R3 vectors with the only condition that the range of the
        matrix formed by the 3 is not 0.
-       
+
        When a basis function is placed at position (-1,1,2) in the
        grid coordinate system, it is really placed at (-X+Y+2Z)+origin
        in the
@@ -98,7 +99,7 @@ template <class T>
        e3(=z) of the Universal Coordinate System). This is true
        only if the measuring unit is 1, see the Measuring unit section
        to know exactly where the samples is placed in space.
-       
+
        The origin of the grid is the position in the Universal coordinate
        system of the (0,0,0) sample inside the grid, ie, where is the
        grid sample (0,0,0) in the universal coordinate system?
@@ -108,7 +109,7 @@ template <class T>
        we have a sample at position (-1,1,2) but the measuring
        unit instead of being 1 is 2. Then the sample really is at
        2(-X+Y+2Z)+origin in the Universal Coordinate System.
-       
+
        This measuring unit is controlled in the class by the public
        variable \Ref{relative_size}.
     \item[Size]
@@ -120,7 +121,7 @@ template <class T>
        Universal Coordinate System between
        (-X-Y-Z)*relative_size to (X+Y+Z)*relative_size.
     \end{description}
-    
+
     This is the default grid after creation:
     \begin{verbatim}
        (e1,e2,e3) vectors
@@ -129,13 +130,13 @@ template <class T>
        lowest    = (-5,-5,-5)
        highest   = ( 5, 5, 5)
     \end{verbatim}
-    
+
     It should be convenient that you modify these parameters at your
     convinience. And after setting them PREPARE!! the grid to be used
     with the function \Ref{SimpleGrid::prepare_grid}. There are several public
     variables which you might directly modify, namely, \Ref{origin},
     \Ref{relative_size}, \Ref{lowest}, and \Ref{highest}.
-    
+
 */
 class SimpleGrid {
 /* Structure --------------------------------------------------------------- */
@@ -163,7 +164,7 @@ public:
        at the origin. If this radius is -1, then this feature is not used
        and the reconstruction is done all over the cube. */
    double R2;
-   
+
 /* Protoypes --------------------------------------------------------------- */
 public:
    /**@name Constructors */
@@ -174,7 +175,7 @@ public:
        which grid is).
        \\ Ex: SimpleGrid sg; */
    SimpleGrid();
-   
+
    /** Copy constructor.
        This constructor builds an exact copy of the simple grid.
        \\ Ex: SimpleGrid sg2(sg1); */
@@ -201,11 +202,11 @@ public:
    /** Set X vector of the grid.
        \\Ex: matrix1D<double> X=vector_R3(1,0,0); sg.set_X(X); */
    void set_X(const matrix1D<double> &v) {basis.setCol(0,v);}
-   
+
    /** Set Y vector of the grid.
        \\Ex: matrix1D<double> Y=vector_R3(0,1,0); sg.set_Y(Y); */
    void set_Y(const matrix1D<double> &v) {basis.setCol(1,v);}
-   
+
    /** Set Z vector of the grid.
        \\Ex: matrix1D<double> Z=vector_R3(1,1,1); sg.set_Z(Z); */
    void set_Z(const matrix1D<double> &v) {basis.setCol(2,v);}
@@ -225,7 +226,7 @@ public:
    /** Get grid number of samples in each direction.
        This function returns the number of samples on each direction,
        this number of samples can be used to resize a volume which might
-       hold a grid like this one. The number of samples is computed as 
+       hold a grid like this one. The number of samples is computed as
        highest-lowest+1.
        \\ Ex: Build a volume able to hold this grid
        \begin{verbatim}
@@ -241,7 +242,7 @@ public:
       Ydim=(int) (YY(highest)-YY(lowest))+1;
       Xdim=(int) (XX(highest)-XX(lowest))+1;
    }
-   
+
    /** Get number of samples.
       This function returns the number of samples within the grid.
       If the grid has a radius of interest, then only those samples
@@ -250,18 +251,18 @@ public:
 
    /// Set reconstruction radius
    void set_interest_radius(double _R) {if (_R==-1) R2=-1; else R2=_R*_R;}
-   
+
    /// Get reconstruction radius
    double get_interest_radius() const
       {if (R2==-1) return R2; else return sqrt(R2);}
-      
+
    /// Set relative_size
    void set_relative_size(double size) {relative_size=size;}
 
    /// Get relative_size
    double get_relative_size() const
       {return (relative_size);}
-      
+
    //@}
 
    /**@name Grid Tools */
@@ -312,7 +313,7 @@ public:
        to the one of the grid. Ie, it gives the position in the grid system
        of a point in the universe. Notice that this time the position in the
        grid needs not to be "integer".
-       
+
        The operation performed is
        \begin{verbatim}
        return inv_basis*(uv-origin)/relative_size;
@@ -361,14 +362,14 @@ public:
    void Gproject_to_plane(const matrix1D<double> &gr,
       double rot, double tilt, double psi, matrix1D<double> &result) const
       {grid2universe(gr,result);Uproject_to_plane(result,rot,tilt,psi,result);}
-   
+
    /** Project a grid vector onto a plane (Euler matrix).
        This function does the same as the preceeding one, but it accepts
        an Euler matrix, this might help you to save time when making
        the projection of a whole volume.
        See \URL[Uproject_to_plane]{Uproject_to_plane.3.html} for more
        information.
-       \\ Ex: 
+       \\ Ex:
        \begin{verbatim}
        matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
        matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),euler);
@@ -390,7 +391,7 @@ public:
        direction is projected onto the given plane. See
        \URL[Uproject_to_plane]{Uproject_to_plane.2.html} for more
        information about the projection process.
-       
+
        The direction can be seen then as the free vector associated to
        a given vector in the grid. It can also be seen as the translation
        to the universal coordinate system of the grid vector when the
@@ -400,7 +401,7 @@ public:
        \begin{verbatim}
        Udirection=grid2universe(gr)-origin;
        \end{verbatim}
-       
+
        This function can be used, for instance, to compute the projections
        of the grid axes onto the projection plane. */
    void Gdir_project_to_plane(const matrix1D<double> &gr,
@@ -439,9 +440,9 @@ public:
           o << "Complex Grid -------------------------------------\n";
           for (int i=0; i<grid.GridsNo(); i++) o << grid(i);
           return o;
-       }    
+       }
     \end{verbatim}
-    
+
     Initially the complex grid is empty, and you must fill it adding new
     simple grids to it with the function \Ref{Grid::add_grid}. The simple
     grids must be prepared to work before entering into the complex one.
@@ -458,7 +459,7 @@ public:
        (see \Ref{SimpleGrid::prepare_grid}). See class documentation for
        an example of use. */
    void add_grid(const SimpleGrid &SG) {LG.push_back(SG);}
-   
+
    /** Get a constant "pointer" to a simple grid.
        The complex grid is built upon the STL vectors, using this function
        you can access (constant access, you cannot modify the simple grid)
@@ -503,7 +504,7 @@ public:
        o << "Complex Grid -------------------------------------\n";
        for (int i=0; i<grid.GridsNo(); i++) o << grid(i);
        return o;
-   }    
+   }
 
    /** Assignment.
        \\ Ex: Grid BCC2=BCC1; */
@@ -564,7 +565,7 @@ public:
     grid. It might be that due to the relative size you are including more
     points in the universal grid that needed. Look at the following example,
     imagine that you have a relative size of 2.75 and that you want a cubic
-    grid between (-1,-1,-1) and (1,1,1) (in the universal coord. system), 
+    grid between (-1,-1,-1) and (1,1,1) (in the universal coord. system),
     with origin at (0,0,0); then the smallest cubic grid that includes the
     corners is also defined between (-1,-1,-1) and (1,1,1) in the grid
     system, but in the universal system these points corresponds to
@@ -585,14 +586,14 @@ SimpleGrid Create_CC_grid(double relative_size,
     relative_size:   specified
     origin:          ROUNDnD((corner1+corner2)/2)
     \end{verbatim}
-    
+
     That is to say, the origin of the grid is at its center, lowest and
     highest indexes are nearly symmetrical (lowest=-highest). The possible
     asymetries come from the ROUNDnD in the origin calculation.
 */
 Grid Create_CC_grid(double relative_size,
    const matrix1D<double> &corner1, const matrix1D<double> &corner2);
-   
+
 /** Create a CC grid as a Complex grid (size).
     This function makes a call to the previous one with
     \begin{verbatim}
@@ -601,14 +602,14 @@ Grid Create_CC_grid(double relative_size,
     relative_size:   specified
     origin:          vector_R3((int)(Xdim/2.0),(int)(Ydim/2.0),(int)(Zdim/2.0))
     \end{verbatim}
-    
+
     That is to say, the origin of the grid is at its center, corner1
     and corner2 are chosen such that from corner1 to corner2 (both included)
     there are exactly (Xdim,Ydim,Zdim) samples in the universal grid. The
     resulting volume is symmetrical (corner1=-corner2) if the sizes are odd
     in all directions, and is not if the sizes are even.
 */
-Grid Create_CC_grid(double relative_size, 
+Grid Create_CC_grid(double relative_size,
    int Zdim, int Ydim, int Xdim);
 
 /** Create a BCC grid as a Complex grid (two corners).
@@ -675,7 +676,7 @@ Grid Create_FCC_grid(double relative_size,
 /** Create a simple grid fitting the given sphere.
     Not all index combinations are within the sphere, so attention
     must be  paid whether a certain point is within it or not.
-    
+
     The formula for the grid limits are computed as
     \begin{verbatim}
        XX(highest)=CEIL((R/relative_size)/X.module());
@@ -729,7 +730,7 @@ Grid Create_FCC_grid(double relative_size, double R);
     is why this Grid Volumes are compound of a list of volumes. The first
     volume of the grid volume should contain the coefficients for the first
     grid in the list of grids, and so on.
-    
+
 */
 template <class T> class GridVolumeT {
 // Structure ---------------------------------------------------------------
@@ -746,13 +747,13 @@ public:
 
    /** Copy constructor. */
    GridVolumeT(const GridVolumeT &_RV) {*this=_RV;}
-   
+
    /** Create using a grid as pattern and basis.
        Create the grid volume using this grid as pattern. This function calls
        \Ref{adapt_to_grid}, so look at there to know exactly what is
        performed */
    GridVolumeT(const Grid &_grid) {adapt_to_grid(_grid);}
-   
+
    /** Assignment. */
    GridVolumeT& operator = (const GridVolumeT& RV) {
       if (this!=&RV) {
@@ -864,7 +865,7 @@ public:
    /** Set to zero with the actual size and origin. */
    void init_zeros()
       {for (int i=0; i<VolumesNo(); i++) (*this)(i)().init_zeros();}
-   
+
    /** Clear the volume */
    void clear() {
       for (int i=0; i<VolumesNo(); i++) delete LV[i];
@@ -1054,7 +1055,7 @@ public:
       {GRIDVOL_BY_GRIDVOLASSIG('/');}
    //@}
    //@}
-   
+
    /**@name I/O
       The reconstructing volume is stored in the
       \URL[Xmipp format]{../../../Extra_Docs/FileFormats.html}. Although it

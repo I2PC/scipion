@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_segment.hh"
-#include "../../xmippArgs.hh"
-#include "../../xmippMorphology.hh"
-#include "../../xmippFilters.hh"
+#include "volume_segment.h"
+#include "args.h"
+#include "morphology.h"
+#include "filters.h"
 
 // Read arguments ==========================================================
 void Prog_segment_prm::read(int argc, char **argv) {
@@ -100,14 +100,14 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
    (*V_out)()=(*V_in)();
    (*V_out)().threshold("below",threshold,threshold);
    (*V_out)().binarize(threshold);
-   
+
    #ifdef DEBUG
       cout << threshold << endl;
       VolumeXmipp save; save()=(*V_in)(); save.write("PPP0.vol");
       save()=(*V_out)(); save.write("PPP1.vol");
    #endif
-   
-      if (!do_prob) { 
+
+      if (!do_prob) {
 	// Apply morphological opening to input volume
 	aux().resize((*V_out)());
 	opening3D((*V_out)(), aux(),18,0,1);
@@ -166,7 +166,7 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius) {
 	    }
 	  }
 	}
-      }    
+      }
     }
     if (sumw>0.) VOL_ELEM((*V_out)(),k,i,j)/=sumw;
     else VOL_ELEM((*V_out)(),k,i,j)=0.;
@@ -177,7 +177,7 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius) {
 
 void probabilistic_solvent(Volume *V_in, Volume *V_out) {
 
-  // Calculate mean and sigma for protein and solvent regions 
+  // Calculate mean and sigma for protein and solvent regions
   // according to the traditional segmentation
   double Np,sump,sum2p,Ns,sums,sum2s;
   double avgp,sigp,avgs,sigs,aux,solv_frac,prot_frac;
@@ -188,7 +188,7 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out) {
 
   Np=sump=sum2p=Ns=sums=sum2s=0.;
   FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)()) {
-    aux=VOL_ELEM((*V_in)(),k,i,j); 
+    aux=VOL_ELEM((*V_in)(),k,i,j);
     if (VOL_ELEM((*V_out)(),k,i,j)<0.5) {
       sums+=aux; sum2s+=aux*aux; Ns+=1.;
     } else {
@@ -196,13 +196,13 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out) {
     }
   }
   if (Np>0. && Ns>0.) {
-    avgs=sums/Ns; 
+    avgs=sums/Ns;
     sigs=sum2s/Ns-avgs*avgs;
-    avgp=sump/Np; 
+    avgp=sump/Np;
     sigp=sum2p/Np-avgp*avgp;
     prot_frac=Np/(Np+Ns);
     solv_frac=1.-prot_frac;
-  } else { 
+  } else {
     REPORT_ERROR(1,"Prog_segment_prm: empty solvent or protein region");
   }
 
@@ -226,10 +226,10 @@ void Prog_segment_prm::segment(VolumeXmipp &mask) {
    th_max=val_max;
    double mass_min=MULTIDIM_SIZE(V());
    double mass_max=1;
-   
+
    bool ok=false;
    if (!en_threshold) {
-     // Perform a bracketing search until the mass is 
+     // Perform a bracketing search until the mass is
      // within a 0.1% of the desired mass
      do {
        double th_med=(th_min+th_max)*0.5;

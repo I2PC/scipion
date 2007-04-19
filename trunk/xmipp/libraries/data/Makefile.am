@@ -13,7 +13,6 @@ libXmippData_la_SOURCES = \
 	header.cpp \
 	histogram.cpp \
 	image.cpp \
-	imagic.cpp \
 	integration.cpp \
 	make_spectra.cpp \
 	mask.cpp \
@@ -34,53 +33,15 @@ libXmippData_la_SOURCES = \
 	tomogram.cpp \
 	volume.cpp \
 	volume_segment.cpp \
-	wavelet.cpp \
-	$(top_srcdir)/external/bilib/sources/changebasis.cc \
-	$(top_srcdir)/external/bilib/sources/convert.cc \
-	$(top_srcdir)/external/bilib/sources/dft.cc \
-	$(top_srcdir)/external/bilib/sources/dht.cc \
-	$(top_srcdir)/external/bilib/sources/findroot.cc \
-	$(top_srcdir)/external/bilib/sources/firconvolve.cc \
-	$(top_srcdir)/external/bilib/sources/flip.cc \
-	$(top_srcdir)/external/bilib/sources/fold.cc \
-	$(top_srcdir)/external/bilib/sources/fourierconvolve.cc \
-	$(top_srcdir)/external/bilib/sources/geometry.cc \
-	$(top_srcdir)/external/bilib/sources/getpoles.cc \
-	$(top_srcdir)/external/bilib/sources/getput.cc \
-	$(top_srcdir)/external/bilib/sources/getputd.cc \
-	$(top_srcdir)/external/bilib/sources/gradient.cc \
-	$(top_srcdir)/external/bilib/sources/histogram.cc \
-	$(top_srcdir)/external/bilib/sources/iirconvolve.cc \
-	$(top_srcdir)/external/bilib/sources/interpolate.cc \
-	$(top_srcdir)/external/bilib/sources/kernel.cc \
-	$(top_srcdir)/external/bilib/sources/kerneldiff1.cc \
-	$(top_srcdir)/external/bilib/sources/kerneldiff2.cc \
-	$(top_srcdir)/external/bilib/sources/kerneldiff.cc \
-	$(top_srcdir)/external/bilib/sources/kernelintegrate.cc \
-	$(top_srcdir)/external/bilib/sources/linearalgebra.cc \
-	$(top_srcdir)/external/bilib/sources/minmax.cc \
-	$(top_srcdir)/external/bilib/sources/morphology.cc \
-	$(top_srcdir)/external/bilib/sources/movingaverage.cc \
-	$(top_srcdir)/external/bilib/sources/polynomial.cc \
-	$(top_srcdir)/external/bilib/sources/positivepower.cc \
-	$(top_srcdir)/external/bilib/sources/pyramidfilters.cc \
-	$(top_srcdir)/external/bilib/sources/pyramidtools.cc \
-	$(top_srcdir)/external/bilib/sources/round.cc \
-	$(top_srcdir)/external/bilib/sources/swap.cc \
-	$(top_srcdir)/external/bilib/sources/timestamp.cc \
-	$(top_srcdir)/external/bilib/sources/traceline.cc \
-	$(top_srcdir)/external/bilib/sources/window.cc \
-	$(top_srcdir)/external/bilib/sources/messagedisplay.cc \
-	$(top_srcdir)/external/bilib/sources/sources/wavelet.cc \
-	$(top_srcdir)/external/bilib/sources/waveletfiltersfract.cc \
-	$(top_srcdir)/external/bilib/sources/waveletfilters.cc \
-	$(top_srcdir)/external/bilib/sources/wavelettools.cc
+	wavelet.cpp
 
 INCLUDES = \
 	-I$(top_srcdir)/libraries \
 	-I$(top_srcdir)/external/bilib/headers \
 	-I$(top_srcdir)/external/bilib/types \
 	-I$(top_srcdir)/external/bilib
+
+LDADD = $(top_srcdir)/external/bilib/libBilib.la
 
 EXTRA_DIST = \
 	args.h \
@@ -126,54 +87,7 @@ EXTRA_DIST = \
 	vectorial.h \
 	volume.h \
 	volume_segment.h \
-	wavelet.h \
-	$(top_srcdir)/external/bilib/configs.h \
-	$(top_srcdir)/external/bilib/headers/changebasis.h \
-	$(top_srcdir)/external/bilib/headers/kerneldiff.h \
-	$(top_srcdir)/external/bilib/headers/convert.h \
-	$(top_srcdir)/external/bilib/headers/kernel.h \
-	$(top_srcdir)/external/bilib/headers/debug.h \
-	$(top_srcdir)/external/bilib/headers/kernelintegrate.h \
-	$(top_srcdir)/external/bilib/headers/dft.h \
-	$(top_srcdir)/external/bilib/headers/linearalgebra.h \
-	$(top_srcdir)/external/bilib/headers/dht.h \
-	$(top_srcdir)/external/bilib/headers/messagedisplay.h \
-	$(top_srcdir)/external/bilib/headers/error.h \
-	$(top_srcdir)/external/bilib/headers/minmax.h \
-	$(top_srcdir)/external/bilib/headers/findroot.h \
-	$(top_srcdir)/external/bilib/headers/morphology.h \
-	$(top_srcdir)/external/bilib/headers/firconvolve.h \
-	$(top_srcdir)/external/bilib/headers/movingaverage.h \
-	$(top_srcdir)/external/bilib/headers/flip.h \
-	$(top_srcdir)/external/bilib/headers/polynomial.h \
-	$(top_srcdir)/external/bilib/headers/fold.h \
-	$(top_srcdir)/external/bilib/headers/positivepower.h \
-	$(top_srcdir)/external/bilib/headers/fourierconvolve.h \
-	$(top_srcdir)/external/bilib/headers/pyramidfilters.h \
-	$(top_srcdir)/external/bilib/headers/geometry.h \
-	$(top_srcdir)/external/bilib/headers/pyramidtools.h \
-	$(top_srcdir)/external/bilib/headers/getpoles.h \
-	$(top_srcdir)/external/bilib/headers/round.h \
-	$(top_srcdir)/external/bilib/headers/getputd.h \
-	$(top_srcdir)/external/bilib/headers/swap.h \
-	$(top_srcdir)/external/bilib/headers/getput.h \
-	$(top_srcdir)/external/bilib/headers/timestamp.h \
-	$(top_srcdir)/external/bilib/headers/gradient.h \
-	$(top_srcdir)/external/bilib/headers/traceline.h \
-	$(top_srcdir)/external/bilib/headers/histogram.h \
-	$(top_srcdir)/external/bilib/headers/waveletfiltersfract.h \
-	$(top_srcdir)/external/bilib/headers/iirconvolve.h \
-	$(top_srcdir)/external/bilib/headers/waveletfilters.h \
-	$(top_srcdir)/external/bilib/headers/interpolate.h \
-	$(top_srcdir)/external/bilib/headers/wavelet.h \
-	$(top_srcdir)/external/bilib/headers/kerneldiff1.h \
-	$(top_srcdir)/external/bilib/headers/wavelettools.h \
-	$(top_srcdir)/external/bilib/headers/kerneldiff2.h \
-	$(top_srcdir)/external/bilib/headers/window.h \
-	$(top_srcdir)/external/bilib/types/tboundaryconvention.h \
-	$(top_srcdir)/external/bilib/types/tsplinebasis.h \
-	$(top_srcdir)/external/bilib/types/ttimestamp.h \
-	$(top_srcdir)/external/bilib/types/ttraceline.h
+	wavelet.h
 
 docs:
 	@echo "Creating documentation in XmippData ..."

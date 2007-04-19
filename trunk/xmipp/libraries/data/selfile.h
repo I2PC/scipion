@@ -28,8 +28,8 @@
 #include <string>
 #include <vector>
 
-#include "xmippFuncs.hh"
-#include "xmippImages.hh"
+#include "funcs.h"
+#include "image.h"
 
 // Forward declaration
 class SelFile;

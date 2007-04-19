@@ -27,19 +27,14 @@
 #ifndef _IMUMBEND_HH
 #  define _IMUMBEND_HH
 
-///////////////////////////// COMMON LIBRARIES /////////////////////////
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippProjection.hh>
-#include <XmippInterface/xmippAPHorigmerg.hh>
-#include <XmippData/xmippMacros.hh>
-
-//////////////////////////// SPECIFIC LIBRARIES ////////////////////////
-
-#include <XmippInterface/xmippCCLattice_IO.hh>
-//#include <../Tools.h>
-#include <XmippData/xmippDelTriang.hh>
+#include <data/funcs.h>
+#include <data/matrix2d.h>
+#include <data/image.h>
+#include <data/projection.h>
+#include <interface/aph_origmerg.h>
+#include <data/macros.h>
+#include <interface/cc_lattice_io.h>
+#include <data/del_triang.h>
 
 
 /////////////////////////// CONSTANTS //////////////////////////////////

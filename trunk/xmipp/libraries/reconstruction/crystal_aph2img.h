@@ -6,31 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_SPOTS2REALSPACE2D_HH
 #  define _PROG_SPOTS2REALSPACE2D_HH
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippProjection.hh>
-#include <XmippInterface/xmippAPHorigmerg.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippMatrices1D.hh>
+#include <data/funcs.h>
+#include <data/matrix2d.h>
+#include <data/projection.h>
+#include <data/selfile.h>
+#include <data/matrix1d.h>
+#include <interface/aph_origmerg.h>
 
 /**@name Spots <-->Real Space 2D program */
 //@{
@@ -43,7 +43,7 @@ class Spot2RealSpace2D_Parameters {
 public:
    /** Input file (MRC aph)
    */
-   FileName        fnaph_in;    
+   FileName        fnaph_in;
    /** output file (Spider real space)
    */
    FileName        fn_out;
@@ -52,27 +52,27 @@ public:
    int             maxIQ;
    /** No. of unit cells along the X axis.
    */
-   int             NoCells_X;       
+   int             NoCells_X;
    /** No. of unit cells along the Y axis.
    */
    int             NoCells_Y;
    /** Move the phase origin (degrees)
    */
-   matrix1D<double> Phase_Shift; 
+   matrix1D<double> Phase_Shift;
    /** Keep contrast.
        If FALSE then the image is contrast is reversed.
    */
-   int             KeepContrast;  
+   int             KeepContrast;
    /** number of samples in Real space  (X)
    */
-   int             CellXdim; 
+   int             CellXdim;
    /** number of samples in Real space  (Y)
    */
    int             CellYdim;
    /** Amplitud factor. The magnitude of the Fourier transform will be divided
-   by this guy.  It can be calculated from the output of the MRC program 
+   by this guy.  It can be calculated from the output of the MRC program
    origtilt
-   */   
+   */
    float           Scale_Factor;
    /** Sampling Rate in the different micrographies */
    double SamplingRate;
@@ -84,7 +84,7 @@ public:
 #ifdef NEVERDEFINED
    /** vector perpendicular to projection plane */
    matrix1D<double> v_perpendicular_proj_plane;
-#endif   
+#endif
 public:
    /* Side information */
    /** This image APH */
@@ -101,8 +101,8 @@ public:
    double          tilt;
    /** Psi angle */
    double          psi;
-   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS 
-    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN 
+   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS
+    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN
     BY ASTAR TO BSTAR BEING POSITIVE.*/
    double          taxa;
    /** angle between a and b (real space and degrees) */
@@ -118,7 +118,7 @@ public:
    /** MRC micrograph label. If label= -1 -> wildcard */
    int             mrc_label;
 public:
-   /** This routine reads the parameters, supplied by the user, from a file. 
+   /** This routine reads the parameters, supplied by the user, from a file.
    */
    void read_from_file(const FileName &fnprm);
    /** Show parameters. */
@@ -151,7 +151,7 @@ public:
    FileName        fn_in;
    /** Output file (MRC aph)
    */
-   FileName        fnaph_out;    
+   FileName        fnaph_out;
 public:
    /* Side information */
    /** This image APH */
@@ -168,14 +168,14 @@ public:
    double          psi;
    /** MRC micrograph label. If label= -1 -> wildcard */
    int             mrc_label;
-   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS 
-    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN 
+   /** taxa angle,  CONVENTION FOR MEASURING TILT AXIS TO ASTAR IS
+    THAT THE ANGLE IS FROM TILTAXIS TO ASTAR IN THE DIRECTION GIVEN
     BY ASTAR TO BSTAR BEING POSITIVE.*/
    double          taxa;
    /** Tilt angle following MRC conventions*/
    double          mrc_tilt;
 public:
-   /** This routine reads the parameters, supplied by the user, from a file. 
+   /** This routine reads the parameters, supplied by the user, from a file.
    */
    void read_from_file(const FileName &fnprm);
    /** Show parameters. */
@@ -187,7 +187,7 @@ public:
    RealSpace2Spots2D_Parameters()
    {
     vector_a.resize(2);
-    vector_b.resize(2);    
+    vector_b.resize(2);
    }
 
 };

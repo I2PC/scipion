@@ -6,34 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippHistograms.hh>
+#include <data/args.h>
+#include <data/image.h>
+#include <data/volume.h>
+#include <data/mask.h>
+#include <data/histogram.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
    VolumeXmipp     volume;
    ImageXmipp      image;
@@ -46,7 +43,7 @@ int main(int argc, char **argv) {
    histogram1D     hist;
    #define         V VOLMATRIX(volume)
    #define         I IMGMATRIX(image)
-   
+
    // Read arguments --------------------------------------------------------
    try {
       fn_in      = get_param(argc,argv,"-i");
@@ -62,30 +59,30 @@ int main(int argc, char **argv) {
          automatic_range=false;
       } else automatic_range=true;
 
-      mask_prm.read(argc,argv); 
+      mask_prm.read(argc,argv);
    } catch (Xmipp_error Xe) {cout << Xe; Usage(); mask_prm.usage(); exit(1);}
-   
+
    try {
       if      (Is_ImageXmipp(fn_in))  {image_mode=true;  image.read(fn_in);}
       else if (Is_VolumeXmipp(fn_in)) {image_mode=false; volume.read(fn_in);}
       else EXIT_ERROR(1,"Histogram: Input file is not an image nor a volume");
-   
+
    // Compute histogram ----------------------------------------------------
       if (image_mode) {
          I.set_Xmipp_origin();
          mask_prm.generate_2Dmask(I);
          const matrix2D<int> & mask2D=mask_prm.get_binary_mask2D();
-         if (automatic_range)         
+         if (automatic_range)
             compute_hist_within_binary_mask(mask2D, I, hist, StepsNo);
-         else 
+         else
             compute_hist_within_binary_mask(mask2D, I, hist, m, M, StepsNo);
       } else {
          V.set_Xmipp_origin();
          mask_prm.generate_3Dmask(V);
          const matrix3D<int> & mask3D=mask_prm.get_binary_mask3D();
-         if (automatic_range)         
+         if (automatic_range)
             compute_hist_within_binary_mask(mask3D, V, hist, StepsNo);
-         else 
+         else
             compute_hist_within_binary_mask(mask3D, V, hist, m, M, StepsNo);
       }
 

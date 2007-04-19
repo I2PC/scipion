@@ -22,17 +22,19 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippProjection.hh>
-#include <Reconstruction/projection.hh>
-#include <Reconstruction/directions.hh>
-#include <Reconstruction/Programs/Prog_symmetrize.hh>
+
+#include <data/fft.h>
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/image.h>
+#include <data/filters.h>
+#include <data/projection.h>
+
+#include <reconstruction/projection.h>
+#include <reconstruction/directions.h>
+#include <reconstruction/symmetrize.h>
 
 typedef struct Column {double zero; double one; double two; double count;} column;
 
@@ -87,18 +89,18 @@ public:
   /// Fill array with transformation matrices needed for arbitrary geometry filter
   void get_all_matrices(SelFile &SF) ;
 
-  /// Fill array with transformation matrices for representative 
+  /// Fill array with transformation matrices for representative
   /// evenly sampled projection directions
   void get_sampled_matrices(SelFile &SF) ;
 
   // Simple (i.e. unfiltered) backprojection of a single image
-  void simple_backprojection(Projection &img, VolumeXmipp &vol, 
+  void simple_backprojection(Projection &img, VolumeXmipp &vol,
 			     int diameter) ;
 
   // Calculate the filter and apply it to a projection
   void filter_one_image(Projection &proj);
 
-  // Calculate the filter for arbitrary tilt geometry in 2D and apply 
+  // Calculate the filter for arbitrary tilt geometry in 2D and apply
   void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
 
 };

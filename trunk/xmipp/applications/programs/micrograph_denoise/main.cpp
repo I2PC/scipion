@@ -6,26 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMicrograph.hh>
-#include <XmippData/Programs/Prog_denoising.hh>
+#include <data/args.h>
+#include <data/micrograph.h>
+#include <data/denoise.h>
 
 void Usage();
 
@@ -73,7 +73,7 @@ int main (int argc, char **argv) {
       fh_inf << "# Pixel depth\n";
       fh_inf << "bitspersample=" << bits << endl;
       fh_inf.close();
-      
+
       // Compute maximum and minimum of input micrograph
       cerr << "Scaling input micrograph ...\n";
       double min_val=M_in(0,0), max_val=min_val;
@@ -94,7 +94,7 @@ int main (int argc, char **argv) {
          overlapping=2*prm.Shah_outer;
       int Xpieces=CEIL((double)Xdim/(window_size-overlapping));
       int Ypieces=CEIL((double)Ydim/(window_size-overlapping));
-      
+
       matrix2D<double> img;
       cerr << "Denoising micrograph ...\n";
       init_progress_bar(Ypieces*Xpieces);
@@ -113,28 +113,28 @@ int main (int argc, char **argv) {
 	       jF=Xdim-1;
 	       j0=jF-window_size+1; if (j0<0) j0=0;
 	    }
-	    
+	
       	    #ifdef DEBUG
 	       cout << "(I,J)=(" << I << "," << J << ") (i0,j0)=("
 	            << i0 << "," << j0 << ") (iF,jF)=("
 		    << iF << "," << jF << ")\n";
       	    #endif
-	    
+	
       	    // Read piece from file
       	    img.resize(iF-i0+1,jF-j0+1);
 	    for (int i=i0; i<=iF; i++)
         	for (int j=j0; j<=jF; j++)
 		    img(i-i0,j-j0)=a*(M_in(j,i)-min_val);
-	    
+	
 	    // Denoise
 	    prm.denoise(img);
-	    
+	
 	    // Save image to file
 	    int i0p=(I==0)?i0:i0+overlapping/2;
 	    int j0p=(J==0)?j0:j0+overlapping/2;
 	    int iFp=(I==Ypieces-1)?iF:iF-overlapping/2;
 	    int jFp=(J==Xpieces-1)?jF:jF-overlapping/2;
-	    
+	
 	    for (int i=i0p; i<=iFp; i++)
         	for (int j=j0p; j<=jFp; j++) {
 		    M_out.set_val(j,i,img(i-i0,j-j0));
@@ -143,7 +143,7 @@ int main (int argc, char **argv) {
 	    progress_bar(N);
 	 }
       progress_bar(Ypieces*Xpieces);
-      
+
       // Close
       M_out.close_micrograph();
       M_in.close_micrograph();

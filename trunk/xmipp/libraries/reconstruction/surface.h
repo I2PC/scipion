@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_SURFACE_HH
 #  define _PROG_SURFACE_HH
 
-#include <XmippData/xmippFuncs.hh>
-#include <Reconstruction/phantom.hh>
+#include <data/funcs.h>
+#include <reconstruction/phantom.h>
 
 /**@name Surface program */
 //@{
@@ -53,7 +53,7 @@ public:
    /// Filename of bottom surface
    FileName fn_bottom;
    /// Filename of output mask
-   FileName fn_mask;   
+   FileName fn_mask;
    /**@name Side parameters */
    //@{
    /// Phantom
@@ -68,7 +68,7 @@ public:
        An exception might be thrown by any of the internal conversions,
        this would mean that there is an error in the command line and you
        might show a usage message.
-      
+
        An exception is thrown if there is no surface specification or if
        there is no phantom and the Z dimension is not given*/
    void read(int argc, char **argv);
@@ -87,9 +87,9 @@ public:
     An exception is thrown if the two surfaces are not of the same shape.
     The output volume is resized to the image shape plus the zdim information,
     and the Xmipp origin is set on the Z direction.
-    
+
     This function needs that both surfaces are non empty, if you don't
-    want to use one of them set it to NULL, it makes the same effect as 
+    want to use one of them set it to NULL, it makes the same effect as
     covering the whole volume. */
     void create_surface_mask(const Image *top, const Image *bottom,
        int zdim, Volume *V);

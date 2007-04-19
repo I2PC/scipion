@@ -21,7 +21,7 @@
 typedef unsigned char byte;
 
 byte *SmoothResize(byte *srcpic8, int swide, int shigh,
-   int dwide, int dhigh, 
+   int dwide, int dhigh,
    byte *rmap, byte *gmap, byte *bmap,
    byte *rdmap, byte *gdmap, byte *bdmap, int maplen);
 #endif

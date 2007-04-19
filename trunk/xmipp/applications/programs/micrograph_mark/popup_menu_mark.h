@@ -20,8 +20,7 @@
 #ifndef __QT_POPUP_MENU_MARK_HH__
 #define __QT_POPUP_MENU_MARK_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "qpopupmenu.h"
+#include <qpopupmenu.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
@@ -29,12 +28,12 @@ class QtWidgetMicrograph;
 /* Virtual class for Mark menus -------------------------------------------- */
 class QtPopupMenuMark : public QPopupMenu {
    Q_OBJECT
-      
+
 public:
    // Constructor. Set reference to main_widget
-   QtPopupMenuMark( QtWidgetMicrograph *_parent ) : 
+   QtPopupMenuMark( QtWidgetMicrograph *_parent ) :
       QPopupMenu( (QWidget*)_parent ) {}
-   
+
 public slots:
 };
 

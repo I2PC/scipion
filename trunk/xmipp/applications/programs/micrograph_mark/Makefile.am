@@ -10,7 +10,7 @@ micrograph_mark_SOURCES = \
 	filters_controller.cpp \
 	image.cpp \
 	image_converter.cpp \
-	image_icrograph.cpp \
+	image_micrograph.cpp \
 	image_overview_micrograph.cpp \
 	main_widget_mark.cpp \
 	auto_menu.cpp \
@@ -41,11 +41,16 @@ micrograph_mark_LDADD = \
 	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/classification/libXmippClassif.la \
-	$(top_srcdir)/libraries/data/libXmippData.la
+	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/external/bilib/libBilib.la
 
 micrograph_mark_LDFLAGS = @QT_LIBS@
 
-INCLUDES = -I$(top_srcdir)/librairies @QT_CXXFLAGS@
+## FIXME Same as above
+INCLUDES = \
+	-I$(top_srcdir)/libraries \
+	-I../micrograph_downsample \
+	@QT_CXXFLAGS@
 
 MOSTLYCLEANFILES = *_moc.cpp
 
@@ -80,7 +85,7 @@ image_micrograph_moc.cpp : image_micrograph.h
 	@QT_MOC@ image_micrograph.h -o image_micrograph_moc.cpp
 
 image_overview_micrograph_moc.cpp : image_overview_micrograph.h
-	@QT_MOC@ image_overviewM_micrograph.h -o image_overview_micrograph_moc.cpp
+	@QT_MOC@ image_overview_micrograph.h -o image_overview_micrograph_moc.cpp
 
 main_widget_mark_moc.cpp : main_widget_mark.h
 	@QT_MOC@ main_widget_mark.h -o main_widget_mark_moc.cpp
@@ -91,7 +96,7 @@ popup_menu_mark_moc.cpp : popup_menu_mark.h
 widget_micrograph_moc.cpp : widget_micrograph.h
 	@QT_MOC@ widget_micrograph.h -o widget_micrograph_moc.cpp
 
-widgetPSD_moc.cpp : widget_psd.h
+widget_psd_moc.cpp : widget_psd.h
 	@QT_MOC@ widget_psd.h -o widget_psd_moc.cpp
 
 EXTRA_DIST = \

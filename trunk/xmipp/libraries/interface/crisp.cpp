@@ -2,38 +2,35 @@
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
-/***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../xmippCrisp.hh"
+
+#include "crisp.h"
 
 void CrispVolume::read(const FileName &fn) {
-  FILE *fp; 
+  FILE *fp;
 
   // Clear Image first
-  V().clear(); 
+  V().clear();
   name=fn;
 
   // Open file
@@ -44,7 +41,7 @@ void CrispVolume::read(const FileName &fn) {
   char signature[2];
   fread(signature,sizeof(char),2, fp);
   if (strcmp(signature,"SH")!=0)
-     REPORT_ERROR(1502,"CrispVolume::read: File " + fn + " is not a valid Crisp file");   
+     REPORT_ERROR(1502,"CrispVolume::read: File " + fn + " is not a valid Crisp file");
 
   FREAD(&flags,sizeof(short),  1, fp,true);
   FREAD(&Adata,sizeof(short),  1, fp,true);

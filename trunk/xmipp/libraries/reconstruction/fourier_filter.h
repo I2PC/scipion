@@ -6,30 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _FOURIER_FILTER_HH
    #define _FOURIER_FILTER_HH
 
-#include "../CTF.hh"
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippMasks.hh>
+#include "ctf.h"
+
+#include <data/matrix3d.h>
+#include <data/fft.h>
+#include <data/mask.h>
 
 /**@name Fourier Masks */
 //@{
@@ -66,7 +67,7 @@ public:
    /** Shape of the decay in the filter.
       Valid types are RAISED_COSINE, FROM_FILE. */
    int FilterShape;
-   
+
    #define LOWPASS       1
    #define HIGHPASS      2
    #define BANDPASS      3
@@ -77,14 +78,14 @@ public:
    /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE,
       GAUSSIAN, FROM_FILE */
    int FilterBand;
-   
+
    /** Cut frequency for Low and High pass filters, first freq for bandpass.
        Normalized to 1/2*/
    double w1;
-   
+
    /** Second frequency for bandpass and stopband. Normalized to 1/2 */
    double w2;
-   
+
    /** Pixels around the central frequency for the raised cosine */
    double raised_w;
 
@@ -93,13 +94,13 @@ public:
 
    /** CTF parameters. */
    XmippCTF ctf;
-   
+
    /** Mask1D */
    matrix1D< complex<double> > mask1D;
-   
+
    /** Mask2D */
    matrix2D< complex<double> > mask2D;
-   
+
    /** Mask3D */
    matrix3D< complex<double> > mask3D;
 public:
@@ -132,10 +133,10 @@ public:
    It is supposed that the image is already resized and with its logical
    origin set. If the filter is a CTF it must be already read and prepared
    in the ctf variable.
-   
+
    The dimension is 1, 2 or 3 depending it is a signal,
    an image or a volume.
-   
+
    This function cannot be used to generate CTF masks.*/
    template <class T>
    void generate_mask(T &v) {
@@ -294,7 +295,7 @@ public:
    /** Resize fourier mask to a desired scale. */
    void resize_mask(int Zdim, int Ydim, int Xdim);
 
-   /** Mask power. Return the power of the Fourier Image contained in mask 
+   /** Mask power. Return the power of the Fourier Image contained in mask
    within the given frequencies. */
    double mask2D_power(double wmin=0, double wmax=1);
 };

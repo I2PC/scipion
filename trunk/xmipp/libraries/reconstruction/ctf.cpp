@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../CTF.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh>
+#include "ctf.h"
+
+#include <data/args.h>
+#include <data/fft.h>
 
 /* Read -------------------------------------------------------------------- */
 void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
@@ -55,7 +56,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
          K=AtoF(get_param(fh_param,"K",0,"0"));
          if (K==0 && disable_if_not_K) enable_CTF=false;
       }
-      
+
       if (enable_CTFnoise) {
 	 base_line     =AtoF(get_param(fh_param,"base_line",0,"0"));
 
@@ -92,14 +93,14 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K) {
 	    disable_if_not_K)
             enable_CTFnoise=false;
       }
-      
+
    } catch (Xmipp_error XE) {
       cout << XE << endl;
       REPORT_ERROR(1,(string)"There is an error reading "+fn);
    }
    fclose(fh_param);
 }
-   
+
 /* Write ------------------------------------------------------------------- */
 void XmippCTF::write(const FileName &fn) {
    ofstream fh_param;
@@ -236,7 +237,7 @@ void XmippCTF::Produce_Side_Info() {
    //    e: electron charge
    // lambda=0.387832/sqrt(kV*(1.+0.000978466*kV)); // Hewz: Angstroms
    lambda=12.3/sqrt(local_kV*(1.+local_kV*1e-6)); // ICE
-   
+
    // Phase shift for spherical aberration
    // X(u)=-PI*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
    // ICE: X(u)=-PI/2*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
@@ -460,15 +461,15 @@ void XmippCTF::force_physical_meaning() {
       double min_c=MIN(cU,cV);
       double min_sigma2=MIN(sigmaU2,sigmaV2);
       double min_c2=MIN(cU2,cV2);
-      if (base_line<0)        base_line=0; 		     
-      if (gaussian_K<0)       gaussian_K=0;		     
-      if (sigmaU<0)           sigmaU=0;    		     
-      if (sigmaV<0)           sigmaV=0;    		     
-      if (sigmaU>100e3)       sigmaU=100e3;		     
-      if (sigmaV>100e3)       sigmaV=100e3;		     
-      if (cU<0)               cU=0;	     		     
-      if (cV<0)               cV=0;	     		     
-      if (sqU<0)              sqU=0;	     		     
+      if (base_line<0)        base_line=0; 		
+      if (gaussian_K<0)       gaussian_K=0;		
+      if (sigmaU<0)           sigmaU=0;    		
+      if (sigmaV<0)           sigmaV=0;    		
+      if (sigmaU>100e3)       sigmaU=100e3;		
+      if (sigmaV>100e3)       sigmaV=100e3;		
+      if (cU<0)               cU=0;	     		
+      if (cV<0)               cV=0;	     		
+      if (sqU<0)              sqU=0;	     		
       if (sqV<0)              sqV=0;
       if (sqrt_K<0)           sqrt_K=0;
       if (gaussian_K2<0)      gaussian_K2=0;

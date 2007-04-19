@@ -6,32 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <stdio.h>
+#include <data/mask.h>
+#include <data/matrix2d.h>
+#include <data/args.h>
+#include <data/selfile.h>
+#include <data/volume.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
+#include <cstdio>
+
 void Usage();
 
 #define COUNT_ELEMENTS(mask,m,elem_type) \
@@ -80,7 +79,7 @@ int main(int argc, char **argv) {
    int             max_length=0;
    #define V VOLMATRIX(volume)
    #define I IMGMATRIX(image)
-   
+
    // Read arguments --------------------------------------------------------
    try {
       fn_input     = get_param(argc,argv,"-i",NULL,1,"Mask: Input file not found");
@@ -89,10 +88,10 @@ int main(int argc, char **argv) {
       save_mask    = check_param(argc,argv,"-save_mask");
       count_above  = check_param(argc,argv,"-count_above");
       apply_geo    = !check_param(argc,argv,"-dont_apply_geo");
-      if (count_above) 
+      if (count_above)
          th_above  = AtoF(get_param(argc,argv,"-count_above"));
       count_below  = check_param(argc,argv,"-count_below");
-      if (count_below) 
+      if (count_below)
          th_below  = AtoF(get_param(argc,argv,"-count_below"));
       create_mask  = check_param(argc,argv,"-create_mask");
       if (create_mask) {
@@ -104,7 +103,7 @@ int main(int argc, char **argv) {
       str_subs_val=get_param(argc,argv,"-substitute","0");
 
       count = count_below || count_above;
-   } 
+   }
    catch (Xmipp_error XE) {cout << XE; Usage(); mask_prm.usage(); exit(1);}
 
    try {
@@ -136,7 +135,7 @@ int main(int argc, char **argv) {
          } else
             cerr << "Cannot count pixels with a continuous mask\n";
       }
-      
+
    // Mask a single volume --------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input); volume().set_Xmipp_origin();
@@ -165,12 +164,12 @@ int main(int argc, char **argv) {
 
       SF_in.read(fn_input);
       SF_out.clear();
-      
+
       // Initialise progress bar
       time_config();
       int i=0; if (!count) init_progress_bar(SF_in.ImgNo());
-      
-      // Get maximum filename size 
+
+      // Get maximum filename size
       if (count) max_length=SF_in.MaxFileNameLength();
 
       // Process all selfile
@@ -240,7 +239,7 @@ int main(int argc, char **argv) {
       mask_prm.write_2Dmask("mask2D");
       mask_prm.write_3Dmask("mask3D");
    }
-   
+
    } catch (Xmipp_error XE) {cout << XE;}
    exit(0);
 } //main

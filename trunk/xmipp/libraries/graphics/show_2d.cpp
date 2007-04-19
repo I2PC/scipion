@@ -7,35 +7,38 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../show2D.hh"
-#include "../showTools.hh"
-#include "../showAssignCTF.hh"
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippFFT.hh>
-#include <Reconstruction/Programs/Prog_Enhance_PSD.hh>
+#include "show_2d.h"
+#include "show_tools.h"
+#include "show_ctf_estimate.h"
+
+#include <data/funcs.h>
+#include <data/histogram.h>
+#include <data/fft.h>
+#include <reconstruction/psd_enhance.h>
+
 #include <qmenubar.h>
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qpainter.h>
-#include <string.h> 
+
+#include <cstring>
 
 /****************************************************/
 
@@ -51,14 +54,14 @@ void ImageViewer::Init()
 {
     minGray=maxGray=0;
     fft_show_mode=0;
-   
+
     pickx = -1;
     alloc_context = 0;
     down = false;
     spacing = 1;
 
-    menubar = new QPopupMenu(); 
-    
+    menubar = new QPopupMenu();
+
     file = new QPopupMenu();
     menubar->insertItem( "&File", file );
     file->insertItem( "New window", this,  SLOT(newWindow()));
@@ -73,7 +76,7 @@ void ImageViewer::Init()
     menubar->insertItem( "&Options", options );
     ss = options->insertItem( "Set Spacing" );
     ravg = options->insertItem( "Radial average" );
-    line_setup = options->insertItem ( "Line setup" ); 
+    line_setup = options->insertItem ( "Line setup" );
     profile = options->insertItem( "Profile" );
     sfft = options->insertItem( "Set FFT show mode" );
     options->setItemEnabled(sfft,false);
@@ -106,7 +109,7 @@ void ImageViewer::Init()
 
     xi=yi=xf=yf=0;
     setMouseTracking( TRUE );
-    
+
     if (check_file_change) {
         timer = new QTimer( this );
         connect( timer, SIGNAL(timeout()), this, SLOT(check_file()) );
@@ -116,7 +119,7 @@ void ImageViewer::Init()
 
 
 /****************************************************/
-ImageViewer::ImageViewer( const char *name, bool _check_file_change): 
+ImageViewer::ImageViewer( const char *name, bool _check_file_change):
       QWidget( NULL, name, QWidget::WDestructiveClose ),
       filename( 0 ),
       helpmsg( 0 )
@@ -216,13 +219,13 @@ void ImageViewer::generateFFTImage(matrix2D<double> &out) {
        }
        if (val<min_positive || first) {min_positive=val; first=false;}
     }
-    
+
     // Substitute 0s by something a little bit smaller
     if (fft_show_mode==0) {
        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Isubs)
 	  if (MULTIDIM_ELEM(Isubs,i)==1) MULTIDIM_ELEM(out,i)=min_positive-1;
     }
-    
+
     out.set_Xmipp_origin();
 }
 
@@ -260,7 +263,7 @@ void ImageViewer::doOption(int item)
        list_values.push_back("abs(z)^2");
        list_values.push_back("phase(z)");
 
-       param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode", 
+       param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode",
           0, "new window", WDestructiveClose);
        connect( param_window, SIGNAL(new_value(int)), this, SLOT(set_fft_show_mode(int)) );
        param_window->setFixedSize(250,200);
@@ -346,7 +349,7 @@ void ImageViewer::refineProfileLine() {
    // Show
    param_window->setFixedSize(200,300);
    param_window->show();
-   
+
    // Repaint and draw the old line
    repaint();
    drawLine(xir,yir,xfr,yfr);
@@ -357,17 +360,17 @@ void ImageViewer::set_profile_line(vector<float> prm) {
    yi=(int)prm[1];
    xf=(int)prm[2];
    yf=(int)prm[3];
-   
+
    // Remove current drawn line
    drawLine(xir,yir,xfr,yfr);
-   
+
    // Convert coordinates to real coordinates
    int h = height() - status->height();
    xir=ROUND((double) xi*width()/image.width());
    yir=ROUND((double) yi*h      /image.height());
    xfr=ROUND((double) xf*width()/image.width());
    yfr=ROUND((double) yf*h      /image.height());
-   
+
    // Draw the new line
    drawLine(xir,yir,xfr,yfr);
 }
@@ -419,7 +422,7 @@ void ImageViewer::saveImage( int item )
 	    ImageXmipp tmpImage; tmpImage()=xmippImage();
  	    // Saves Xmipp Image
 	    tmpImage.rename((string) ((const char *)savefilename));
-            tmpImage.write(); 
+            tmpImage.write();
 
 	  } catch (Xmipp_error) {
 	      char *helptext = "Invalid image type";
@@ -428,8 +431,8 @@ void ImageViewer::saveImage( int item )
     	      helpmsg->show();
     	      helpmsg->raise();
 	  }
-    }    
-    
+    }
+
 }
 
 
@@ -445,7 +448,7 @@ void ImageViewer::newWindow()
   This function is the slot for processing the Open menu item.
 */
 void ImageViewer::openFile()
-{  
+{
     QString newfilename = QFileDialog::getOpenFileName();
     if ( !newfilename.isEmpty() ) {
 	loadImage( newfilename ) ;
@@ -477,7 +480,7 @@ bool ImageViewer::showImage()
     QApplication::setOverrideCursor( waitCursor ); // this might take time
     pickx = -1;
     ok = reconvertImage();
-    if ( ok ) {     
+    if ( ok ) {
 	setCaption( filename );			// set window caption
         int w = pm.width();
     	int h = pm.height();
@@ -516,16 +519,16 @@ bool ImageViewer::xmipp2Qt(Image& _image, bool treat_differently_left_right )
 {
     bool ok = FALSE;
 		
-    try { 
+    try {
       xmippImage = _image;
       // Take the one in showTools
       if (minGray==0 && maxGray==0)
-	 ::xmipp2Qt(_image,image,0,255,0,0,treat_differently_left_right); 
+	 ::xmipp2Qt(_image,image,0,255,0,0,treat_differently_left_right);
       else
 	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray,
             treat_differently_left_right);
       xmippFlag = 0;	 	// Sets flag = Xmipp image.
-      ok = TRUE; 
+      ok = TRUE;
     } catch (Xmipp_error) {
       ok = FALSE;
       char *helptext = "Error converting xmipp to Qt";
@@ -534,7 +537,7 @@ bool ImageViewer::xmipp2Qt(Image& _image, bool treat_differently_left_right )
       helpmsg->show();
       helpmsg->raise();
     }
-  
+
     return ok;
 }
 
@@ -545,13 +548,13 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
     bool ok = FALSE;
     // try to read image from standard format.
 		
-    try { 
-      image = _image;      
+    try {
+      image = _image;
       image.setNumColors(256);
 
       ::Qt2xmipp(_image,xmippImage); // Take the one in showTools
       xmippFlag = 0;	 	// Sets flag = Xmipp image.
-      
+
       ok = TRUE;
 
     } catch (Xmipp_error) {
@@ -562,7 +565,7 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
       helpmsg->show();
       helpmsg->raise();
     }
-  
+
     return ok;
 }
 
@@ -579,7 +582,7 @@ bool ImageViewer::Qt2xmipp( QImage &_image )
 */
 
 bool ImageViewer::loadImage( const char *fileName,
-   double _minGray, double _maxGray, TLoadMode _load_mode ) 
+   double _minGray, double _maxGray, TLoadMode _load_mode )
 {
     filename = fileName;
     load_mode=_load_mode;
@@ -590,10 +593,10 @@ bool ImageViewer::loadImage( const char *fileName,
     if ( filename ) {
 	
 	// try to read image from standard format.	
-	if (image.load(filename, 0)) ok = Qt2xmipp(image);	  
+	if (image.load(filename, 0)) ok = Qt2xmipp(image);	
 	
 	if (!ok) {
-          try { 
+          try {
  	    // reads Xmipp Image
             Image tmpImage;
 	    if (!imagic) wait_until_stable_size(filename);
@@ -629,7 +632,7 @@ bool ImageViewer::loadImage( const char *fileName,
 	       generateFFTImage(tmpImage());
 	       options->setItemEnabled(sfft,true);
 	    } else REPORT_ERROR(1,"ImageViewer::loadImage: Unknown format");
-            
+
 	    tmpImage().set_Xmipp_origin();
 	    minGray=_minGray;
 	    maxGray=_maxGray;
@@ -646,8 +649,8 @@ bool ImageViewer::loadImage( const char *fileName,
 	    }
 	  }
 	}
-    }   
-    
+    }
+
     if (ok) {
        ok = showImage();
        struct stat info;
@@ -656,7 +659,7 @@ bool ImageViewer::loadImage( const char *fileName,
           modification_time=0;
        } else modification_time=info.st_mtime;
     }
-    
+
     return ok;
 }
 
@@ -667,7 +670,7 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
    static bool message_shown=false;
    bool treat_separately_left_right=false;
    if ( XSIZE(_matrix)==0 ) return false;
-    
+
    Image tmpImage;
    isFourierImage=false;
    if (load_mode==ImageViewer::PSD_mode) {
@@ -687,7 +690,7 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
    minGray=_minGray;
    maxGray=_maxGray;
    ok = xmipp2Qt(tmpImage,treat_separately_left_right);
-    
+
    if (ok) ok = showImage();
    return ok;
 }
@@ -793,21 +796,21 @@ bool ImageViewer::convertEvent( QMouseEvent* e, int& x, int& y)
 
 void ImageViewer::mousePressEvent( QMouseEvent *e ) {
     QPoint clickedPos = e->pos();		// extract pointer position
-    if (e->button() == RightButton) { 
+    if (e->button() == RightButton) {
       menubar->exec(clickedPos);
       down = false;
     } else {
-    	if (!down) {    
+    	if (!down) {
   	   if (convertEvent(e,xi, yi)) {
 	      repaint();
-	      xir = e->x();   
-	      yir = e->y(); 
+	      xir = e->x();
+	      yir = e->y();
 	      old_xfr = xir;
-	      old_yfr = yir;  
-    	      down = true;  
+	      old_yfr = yir;
+    	      down = true;
 	   }
     	}
-    }      
+    }
 }
 
 /****************************************************/
@@ -815,13 +818,13 @@ void ImageViewer::mousePressEvent( QMouseEvent *e ) {
 void ImageViewer::mouseReleaseEvent( QMouseEvent *e ) {
     if (down) {
   	if (convertEvent(e,xf,yf)) {
-	   xfr = e->x();   
+	   xfr = e->x();
 	   yfr = e->y();
            drawLine(xir,yir, old_xfr, old_yfr);
            drawLine(xir,yir, xfr, yfr);
            old_xfr=xfr;
            old_yfr=yfr;
-       	   float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi)); 
+       	   float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi));
 	   QString message;
 	   message.sprintf("Distance: %.3f Angstroms", distance*spacing);
 	   status->setText(message);
@@ -847,7 +850,7 @@ void ImageViewer::mouseMoveEvent( QMouseEvent *e ) {
             old_yfr=yfr;
 
  	    QString message;
-            float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi));     
+            float distance = sqrt ((double) (xf-xi)*(xf-xi) + (yf-yi)*(yf-yi));
             message.sprintf("Distance: %.3f Angstroms", distance*spacing);
 	    status->setText(message);
 	 }
@@ -863,26 +866,26 @@ void ImageViewer::keyPressEvent( QKeyEvent* e ) {
 	   menubar->exec();
 	   break;
 	case Key_R:
-             if (e->state() == ControlButton) {	// If 'Ctrol R' key, 
-  		  xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner        
+             if (e->state() == ControlButton) {	// If 'Ctrol R' key,
+  		  xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
 	     }
 	     break;
 	case Key_Q:
-             if (e->state() == ControlButton) {	// If 'Ctrol Q' key, 
+             if (e->state() == ControlButton) {	// If 'Ctrol Q' key,
   		  exit(0); // Terminate program
 	     }
 	     break;
 	case Key_O:				// Xmipp origin
-             if (e->state() == ControlButton) {	// If 'Ctrol N' key, 
-  		  xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.        
+             if (e->state() == ControlButton) {	// If 'Ctrol N' key,
+  		  xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.
 	     }
 	     break;
 	case Key_N:				// Natural size (original size)
-             if (e->state() == ControlButton) {	// If 'Ctrol N' key, 
-    		  resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());	         
+             if (e->state() == ControlButton) {	// If 'Ctrol N' key,
+    		  resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());	
 	     }
 	     break;
-	case Key_M:     
+	case Key_M:
 	case Key_Minus:				// Half size
              if (e->state() == ControlButton) {	// If 'Ctrol-' key,
                   // Aspect ratio of the original image
@@ -894,7 +897,7 @@ void ImageViewer::keyPressEvent( QKeyEvent* e ) {
 	     break;
 	case Key_P:
 	case Key_Plus:				// Double size
-             if (e->state() == ControlButton) {	// If 'Ctrol+' key, 
+             if (e->state() == ControlButton) {	// If 'Ctrol+' key,
                   double ratio_original=(double)xmippImage().ColNo()/xmippImage().RowNo();
                   int new_width=width()*2;
                   int new_height=ROUND(new_width/ratio_original);
@@ -902,9 +905,9 @@ void ImageViewer::keyPressEvent( QKeyEvent* e ) {
 	     }
 	     break;
 	case Key_A:    				// Aspect ratio
-             if (e->state() == ControlButton) {	// If 'Ctrol+' key, 
-	          double ratio = (double) xmippImage().ColNo()/ (double) xmippImage().RowNo();		  
-    		  resize(width(), (int) (width()/ratio + status->height()));	         
+             if (e->state() == ControlButton) {	// If 'Ctrol+' key,
+	          double ratio = (double) xmippImage().ColNo()/ (double) xmippImage().RowNo();		
+    		  resize(width(), (int) (width()/ratio + status->height()));	
 	     }
 	     break;
 	default:				// If not an interesting key,
@@ -931,7 +934,7 @@ void ImageViewer::drawLine(int x1, int y1, int x2, int y2) {
    QPainter painter(this);
    QBrush brush( NoBrush );
    QPen myPen(red, 3);
-   painter.setPen( myPen );      
+   painter.setPen( myPen );
    painter.setBrush( brush );
    painter.setRasterOp(XorROP);
    painter.drawLine(x1, y1, x2, y2);
@@ -943,11 +946,11 @@ void ImageViewer::drawAngle(double angle) {
    // Get image dimensions
    int Xdim, Ydim;
    getPixmapSize(Xdim,Ydim);
-   
+
    // Compute image center
    int xc = Xdim/2;
    int yc = Ydim/2;
-   
+
    // Compute line
    int x0, y0, xF, yF;
    if (ABS(angle)<=45) {
@@ -1075,7 +1078,7 @@ void ImageViewer::recomputeCTFmodel() {
    // Read the Assign CTF parameters
    Prog_assign_CTF_prm assign_ctf_prm;
    assign_ctf_prm.read(fn_assign);
-   
+
    // Get the PSD name
    FileName fn_psd;
    if (assign_ctf_prm.selfile_mode) {

@@ -8,36 +8,37 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtWidgetMicrograph.hh"
-#include "QtFilterMenu.hh"
-#include "QtAutoMenu.hh"
-#include "QtImageMicrograph.hh"
-#include "QtImageOverviewMicrograph.hh"
-#include <XmippData/xmippMicrograph.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippMorphology.hh>
-#include <XmippData/xmippRotationalSpectrum.hh>
-#include <XmippData/Programs/Prog_denoising.hh>
-#include <Reconstruction/Programs/Prog_FourierFilter.hh>
+#include "widget_micrograph.h"
+#include "filter_menu.h"
+#include "auto_menu.h"
+#include "image_micrograph.h"
+#include "image_overview_micrograph.h"
+
+#include <data/micrograph.h>
+#include <data/args.h>
+#include <data/filters.h>
+#include <data/morphology.h>
+#include <data/rotational_spectrum.h>
+#include <data/denoise.h>
+#include <reconstruction/fourier_filter.h>
+
 #include <qinputdialog.h>
 #include <qmessagebox.h>
 #include <qlabel.h>
@@ -58,7 +59,7 @@ ostream & operator << (ostream &_out, const Particle &_p) {
 }
 
 void Particle::read(istream &_in, int _vec_size) {
-   _in >> x >> y 
+   _in >> x >> y
        >> idx
        >> status
        >> dist;
@@ -95,12 +96,12 @@ void Classification_model::build_model() {
       __training_particle.at(0).dist=0;
       return;
    }
-   
+
    // Compute the average
    __avg.init_zeros(XSIZE(__training_particle.at(0).vec));
-   for (int i=0; i<N; i++) __avg+=__training_particle.at(i).vec; 
+   for (int i=0; i<N; i++) __avg+=__training_particle.at(i).vec;
    __avg/=N;
-   
+
    // Compute the covariance
    __sigma.init_zeros(XSIZE(__avg),XSIZE(__avg));
    for(int i=0;i<N;i++){
@@ -109,7 +110,7 @@ void Classification_model::build_model() {
       __sigma+=(X*X.transpose());
    }
    __sigma/=N-1;
-   
+
    __well_posed=well_posed();
    if (__well_posed) __sigma_inv=__sigma.inv();
    else {
@@ -120,9 +121,9 @@ void Classification_model::build_model() {
       for (int i=0; i<XSIZE(__sigma); i++)
          __sigma_inv(i,i)=1/__sigma(i,i);
    }
-   
+
    //compute the distance of each training vector from average
-   for(int i=0;i<N;i++){    
+   for(int i=0;i<N;i++){
       __training_particle.at(i).dist=distance_to_average(
                                       __training_particle.at(i).vec);
    }
@@ -161,7 +162,7 @@ void Classification_model::compute_largest_distance() {
    histogram1D hist;
    compute_hist(dist,hist,50);
    __largest_distance=hist.percentil(90);
-   
+
    #ifdef DEBUG
       cout << "Largest distance = " << __largest_distance << endl;
    #endif
@@ -197,7 +198,7 @@ istream & operator >> (istream &_in, Classification_model &_m) {
        P->read(_in,vec_size);
        _m.add_particle(*P);
    }
-   
+
    return _in;
 }
 
@@ -209,9 +210,9 @@ void Classification_model::print_model(ostream &_out) {
 }
 
 /* Constructor ------------------------------------------------------------- */
-QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget, 
-                                        QtFiltersController *_f, 
-                                        Micrograph *_m ) : 
+QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
+                                        QtFiltersController *_f,
+                                        Micrograph *_m ) :
    QWidget( (QWidget*) _mainWidget ) {
    __filtersController = _f;
    __m              = NULL;
@@ -248,14 +249,14 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
       __mImageOverview->setWidgetMicrograph(this);
    __file_menu      = NULL;
    __ellipse_radius = 5;
-   
+
    __mImage->setFiltersController( _f );
    __mImageOverview->setFiltersController( _f );
-        
+
    connect( __mImageOverview, SIGNAL(signalSetCoords(int, int)),
             __mImage, SLOT(slotSetCoords(int, int)) );
    connect( __mImage, SIGNAL(signalSetCoords(int, int)),
-            __mImageOverview, SLOT(slotSetCoords(int, int)) );   
+            __mImageOverview, SLOT(slotSetCoords(int, int)) );
    connect( __mImage, SIGNAL(signalSetWidthHeight(int, int)),
             __mImageOverview, SLOT(slotSetWidthHeight(int, int)) );
    connect( __mImage, SIGNAL(signalRepaint( void )),
@@ -268,12 +269,12 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
             __mImageOverview, SLOT(slotRepaint( void )) );
    connect( __mImage, SIGNAL(signalAddCoordOther( int, int, int )),
             this, SLOT(slotDrawEllipse( int,int,int )) );
-      
+
    connect( this, SIGNAL(signalActiveFamily(int)),
             __mImage, SLOT(slotActiveFamily(int)) );
    connect( this, SIGNAL(signalActiveFamily(int)),
             __mImageOverview, SLOT(slotActiveFamily(int)) );
-   
+
    QAccel *ctrl = new QAccel( this );
    ctrl->connectItem( ctrl->insertItem(Key_G+CTRL, 200),
                              this, SLOT(slotChangeContrast(void)) );
@@ -282,12 +283,12 @@ QtWidgetMicrograph::QtWidgetMicrograph( QtMainWidgetMark *_mainWidget,
                               this, SLOT(slotChangeCircleRadius(void)) );
 
    setMicrograph( _m );
-   
+
    __mImage->show();
    __gridLayout->setMenuBar( __menuBar );
    __gridLayout->addWidget( __mImageOverview );
-   
-   openMenus();   
+
+   openMenus();
 }
 
 QtWidgetMicrograph::~QtWidgetMicrograph() {
@@ -303,17 +304,17 @@ void QtWidgetMicrograph::setMicrograph( Micrograph *_m ) {
       __m = _m;
       __mImage->setMicrograph( _m );
       __mImageOverview->setMicrograph( _m );
-   }   
+   }
 }
 
 /* Open menus -------------------------------------------------------------- */
 void QtWidgetMicrograph::openMenus() {
    __file_menu = new QtFileMenu( this );
    connect( __mImage, SIGNAL(signalAddCoordOther(int,int,int)),
-            __file_menu, SLOT(slotCoordChange()) );   
+            __file_menu, SLOT(slotCoordChange()) );
 
    QtFilterMenu *filterMenu = new QtFilterMenu( this );
-   
+
    QtAutoMenu *autoMenu = new QtAutoMenu( this );
 
    addMenuItem( "&File", (QtPopupMenuMark *)(__file_menu) );
@@ -322,13 +323,13 @@ void QtWidgetMicrograph::openMenus() {
 
    connect( __file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)) );
-   
+
    connect( (QObject*)filterMenu, SIGNAL(signalAdjustContrast()),
-            this, SLOT(slotChangeContrast(void)) );   
+            this, SLOT(slotChangeContrast(void)) );
    connect( (QObject*)filterMenu, SIGNAL(signalCrop()),
-            this, SLOT(slotChangeCrop(void)) );   
+            this, SLOT(slotChangeCrop(void)) );
    connect( (QObject*)filterMenu, SIGNAL(signalAddFilter()),
-            (QObject*)__filtersController, SLOT(slotAddFilter()) );   
+            (QObject*)__filtersController, SLOT(slotAddFilter()) );
    connect( (QObject*)filterMenu, SIGNAL(signalCleanFilters()),
             (QObject*)__filtersController, SLOT(slotCleanFilters()) );
    connect( (QObject*)filterMenu, SIGNAL(signalCleanFilters()),
@@ -341,16 +342,16 @@ void QtWidgetMicrograph::openMenus() {
 void QtWidgetMicrograph::learnParticles() {
    cerr<<"\n------------------Learning Phase---------------------------\n";
    createMask();
-   
+
    vector<int> all_idx;
    int num_part=__m->ParticleNo();
-   for (int i=0; i<num_part; i++) 
+   for (int i=0; i<num_part; i++)
       if (__m->coord(i).valid && __m->coord(i).label!=__auto_label)
          all_idx.push_back(i);
    buildVectors(all_idx,__training_model);
    buildSelectionModel();
    __learn_particles_done=true;
-   
+
    classify_errors();
 }
 
@@ -380,18 +381,18 @@ bool sort_criteria(const Particle &p1, const Particle &p2) {
 void QtWidgetMicrograph::automaticallySelectParticles() {
    if (XSIZE(__selection_model.__sigma_inv)==0) return;
    cerr<<"------------------Automatic Phase---------------------------"<<endl;
-   
+
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
 
    //get the threshold distance
    double threshold=__selection_model.__largest_distance;
-   
+
    //define a vector to store automatically selected particles
    vector< Particle > candidate_vec, all_vec;
-   
+
    //top,left corner of the piece
    int top=0,left=0,next_top=0,next_left=0;
-   
+
    //If the piece available is small then include the scanned part
    //because we need bigger image for denoising but for scanning
    //particles we skip the already scanned part
@@ -406,7 +407,7 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
 	      << " skip y,x=" << next_skip_y << "," << next_skip_x
               << " next=" << next_top << "," << next_left << endl;
       #endif
-      
+
       // Get a piece and prepare it
       if (!prepare_piece()) {
 	 top=next_top;
@@ -424,7 +425,7 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
       int posx=0,next_posx=0,posy=0,next_posy=0;
       next_posx=posx=skip_x+XSIZE(mask)/2;
       next_posy=posy=skip_y+YSIZE(mask)/2;
-     
+
       #ifdef DEBUG_MORE
 	 cerr << "Skip(y,x)=" << skip_y << "," << skip_x << endl;
       #endif
@@ -476,7 +477,7 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
          #ifdef DEBUG_MORE
 	    cerr << endl;
 	 #endif
-	 
+	
 	 // Go to next scanning position
 	 posx=next_posx;
 	 posy=next_posy;
@@ -493,27 +494,27 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
    #ifdef DEBUG
       //int iall_scanned=add_family(all_vec,"all_scanned");
       //__m->write_coordinates(iall_scanned, __m->micrograph_name()+
-      //   ".all_scanned.pos"); 
+      //   ".all_scanned.pos");
       int iinitial    =add_family(candidate_vec,"initial");
       __m->write_coordinates(iinitial, __m->micrograph_name()+
          ".initial.pos");
    #endif
-   
+
    // Reject manually selected particles
    reject_previously_selected(__training_model,candidate_vec);
    reject_previously_selected(__auto_model,candidate_vec);
 
    //sort the particles in order of increasing distance
    sort(candidate_vec.begin(),candidate_vec.end(),sort_criteria);
-   
+
    // reject the candidates that are pointing to the same particle
    int Nalive=reject_within_distance(candidate_vec,__particle_radius,false);
    cout << "Nalive=" << Nalive << endl;
-   
+
    // reject the candidates that are two close to each other
    Nalive=reject_within_distance(candidate_vec,__min_distance_between_particles,true);
    cout << "Nalive=" << Nalive << endl;
-   
+
    //insert selected particles in the result
    int imax=candidate_vec.size();
    int Nmax=FLOOR(Nalive*__keep);
@@ -522,16 +523,16 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
       if (candidate_vec.at(i).status==1) {
          // Get the distance of the vector to the training set
          double dist_to_training;
-	 if (__use_euclidean_distance_for_errors) 
+	 if (__use_euclidean_distance_for_errors)
 	    dist_to_training=__selection_model.euclidean_distance_to_average(
 	       candidate_vec.at(i).vec);
 	 else
 	    dist_to_training=candidate_vec.at(i).dist;
-	    
+	
 	 bool is_error=false;
          for (int j=0; j<__Nerror_models && !is_error; j++) {
 	    double dist_to_error_j;
-	    if (__use_euclidean_distance_for_errors) 
+	    if (__use_euclidean_distance_for_errors)
 	       dist_to_error_j=__error_model.at(j).euclidean_distance_to_average(
 	          candidate_vec.at(i).vec);
 	    else
@@ -539,7 +540,7 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
 	          candidate_vec.at(i).vec);
 	    if (dist_to_error_j<dist_to_training) is_error=true;
 	 }
-	 
+	
 	 if (!is_error) {
             __auto_model.add_particle(candidate_vec.at(i));
 	    n++;
@@ -551,7 +552,7 @@ void QtWidgetMicrograph::automaticallySelectParticles() {
       }
 
    cerr<<"Number of automatically selected particles = " << n <<endl;
-   
+
    __auto_label=add_family(__auto_model.__training_particle,"auto");
 
    __autoselection_done=true;
@@ -575,7 +576,7 @@ int QtWidgetMicrograph::add_family(vector<Particle> &_list,
 /* Create mask for learning particles -------------------------------------- */
 void QtWidgetMicrograph::createMask() {
    if (XSIZE(__mask.get_binary_mask2D())!=0) return;
-   
+
    int xsize=__mask_size/__reduction;
    int ysize=xsize;
    int radius=__particle_radius/__reduction;
@@ -586,7 +587,7 @@ void QtWidgetMicrograph::createMask() {
    __mask.resize(xsize,ysize);
    __mask.generate_2Dmask();
    __mask.get_binary_mask2D().set_Xmipp_origin();
-   
+
    classifyMask();
 }
 
@@ -615,7 +616,7 @@ void QtWidgetMicrograph::classifyMask() {
       double radius=sqrt((double)(i*i+j*j));
       double angle=atan2((double)i,(double)j);
       if (angle<0) angle+=2*PI;
-      
+
       // Classif1 is the classification for the radial mass distribution
       if (radius<max_radius) {
 	 int radius_idx;
@@ -626,14 +627,14 @@ void QtWidgetMicrograph::classifyMask() {
       }
    }
    __mask_classification.push_back(classif1);
-   
+
    // Create the holders for the radius values in classif1
    for (int i=0; i<__radial_bins; i++) {
        matrix1D<int> *aux=new matrix1D<int>;
        aux->init_zeros(Nrad(i));
        __radial_val.push_back(aux);
    }
-   
+
    #ifdef DEBUG
       ImageXmipp save;
       type_cast(*classif1,save()); save.write("PPPclassif1.xmp");
@@ -652,7 +653,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
    matrix1D<char> visited(num_part);
    while(visited.sum()<num_part){
       int part_i=0;
-      
+
       // get the first un-visited particle in the array
       while(visited(part_i)==1) part_i++;
       if (part_i>=num_part) break;
@@ -662,7 +663,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
       int part_idx=_idx.at(part_i);
       int x=__m->coord(part_idx).X;
       int y=__m->coord(part_idx).Y;
-      
+
       int posx, posy;
       get_centered_piece(x,y,posx,posy);
 
@@ -681,7 +682,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
 	 p.idx=part_idx;
 	 p.vec=v;
 	 p.status=1;
-	 p.dist=0.0;	 
+	 p.dist=0.0;	
 	 __model.add_particle(p);
       }
 
@@ -703,7 +704,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
 	    p.idx=part_idx;
 	    p.vec=v;
 	    p.status=1;
-	    p.dist=0.0;	 
+	    p.dist=0.0;	
 	    __model.add_particle(p);
 	 }
       }
@@ -720,12 +721,12 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
    // The input image is supposed to be between 0 and bins-1
    _result.init_zeros(__radial_bins*(__gray_bins-1)+(__numax-__numin+1));
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
- 
+
    if (STARTINGX(mask)+_x <STARTINGX(__piece) ) return false;
    if (STARTINGY(mask)+_y <STARTINGY(__piece) ) return false;
    if (FINISHINGX(mask)+_x>FINISHINGX(__piece)) return false;
    if (FINISHINGY(mask)+_y>FINISHINGY(__piece)) return false;
-   
+
    #ifdef DEBUG
       bool debug_go=false;
       ImageXmipp save, savefg, savebig;
@@ -747,7 +748,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
    particle.init_zeros(YSIZE(mask),XSIZE(mask));
    STARTINGY(particle)=STARTINGY(mask);
    STARTINGX(particle)=STARTINGX(mask);
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
       int val=(int)__piece(_y+i,_x+j);
       bool foreground=mask(i,j);
@@ -805,7 +806,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 #undef DEBUG
 
 /* Get piece --------------------------------------------------------------- */
-// to get the piece containing (x,y) of size xsize,ysize 
+// to get the piece containing (x,y) of size xsize,ysize
 // return the position of x,y in the piece in posx,posy
 void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
    int &_posx,int &_posy) {
@@ -818,15 +819,15 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
    int maxx, maxy; __m->size(maxx,maxy);
    _posx=ROUND(__piece_xsize/2);
    _posy=ROUND(__piece_ysize/2);
-   
+
    // boundry adjustments
    if(startx<0){
-      _posx+=startx; 
+      _posx+=startx;
       startx=0;
       endx=__piece_xsize-1;
    }
    if(starty<0){
-      _posy+=starty; 
+      _posy+=starty;
       starty=0;
       endy=__piece_ysize-1;
    }
@@ -840,7 +841,7 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
       endy=maxy-1;
       starty=endy-__piece_ysize;
    }
-   
+
    //read the matrix from the micrograph
    for(int i=0;i<__piece_ysize;i++)
       for(int j=0;j<__piece_xsize;j++)
@@ -855,7 +856,7 @@ bool QtWidgetMicrograph::get_corner_piece(
    int maxx,maxy; __m->size(maxx,maxy);
 
    if(maxx<_left+__piece_xsize || maxy<_top+__piece_ysize) return false;
-   
+
 #ifdef NEVER_DEFINED
    _skip_x=_skip_y=0;
    _next_left=_left+__piece_xsize-__piece_overlap;
@@ -877,14 +878,14 @@ bool QtWidgetMicrograph::get_corner_piece(
    }else{
       _next_top=_top;
    }
-   
+
    if((_next_top+__piece_ysize>=maxy) &&
       (maxy-_next_top>=YSIZE(mask)*__reduction)){
       _skip_y=_next_top+__piece_ysize-maxy;
       _next_top-=_skip_y;
    }
 #endif
-   
+
    _next_skip_x=_next_skip_y=0;
    bool increase_Y=false;
    if (_left+__piece_xsize!=maxx) {
@@ -896,11 +897,11 @@ bool QtWidgetMicrograph::get_corner_piece(
       _next_left=0;
       increase_Y=true;
    }
-   
+
    if (increase_Y) {
       if (_top+__piece_ysize!=maxy) {
 	 _next_top=_top+__piece_ysize-__piece_overlap;
-	 if (_next_top+__piece_ysize>=maxy) 
+	 if (_next_top+__piece_ysize>=maxy)
             _next_top=maxy-__piece_ysize;
       } else {
          _next_top=maxy;
@@ -921,7 +922,7 @@ bool QtWidgetMicrograph::get_corner_piece(
    for(int i=0;i<__piece_ysize;i++)
       for(int j=0;j<__piece_xsize;j++)
       	 __piece(i,j)=(*__m)(_left+j,_top+i);
-   return true;     
+   return true;
 }
 
 
@@ -937,7 +938,7 @@ bool QtWidgetMicrograph::prepare_piece() {
    Filter.generate_mask(__piece);
    Filter.apply_mask_Space(__piece);
    STARTINGX(__piece)=STARTINGY(__piece)=0;
-   
+
    // Denoise the piece
    Denoising_parameters denoiser;
    denoiser.denoising_type=Denoising_parameters::BAYESIAN;
@@ -964,15 +965,15 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
    int piece_xsize=XSIZE(__piece);
    int piece_ysize=YSIZE(__piece);
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
-   
+
    //if all the particles are visited
    if(_visited.sum()==XSIZE(_visited)) return;
-   	 
+   	
    int current_part=_index+1;
    int current_part_idx=_idx.at(current_part);
    _nbr.clear(); _nbr.reserve(XSIZE(_visited));
-   
-   int top=CEIL((double)_y/__reduction)-_posy;      
+
+   int top=CEIL((double)_y/__reduction)-_posy;
    int left=CEIL((double)_x/__reduction)-_posx;
    int bottom=top+FLOOR((double)piece_ysize/__reduction);
    int right=left+FLOOR((double)piece_xsize/__reduction);
@@ -983,9 +984,9 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
       //find the next unvisited particle
       while(_visited(current_part)) current_part++;
       current_part_idx=_idx.at(current_part);
-      
+
       //check if it is neighbour or not
-      int nx=ROUND((double)__m->coord(current_part_idx).X/__reduction); 
+      int nx=ROUND((double)__m->coord(current_part_idx).X/__reduction);
       int ny=ROUND((double)__m->coord(current_part_idx).Y/__reduction);
       if((nx-xmask2>left) &&
          (ny-ymask2>top) &&
@@ -1007,15 +1008,15 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
 bool QtWidgetMicrograph::get_next_scanning_pos(
    int &_x,int &_y, int _skip_x, int _skip_y) {
    const matrix2D<int> &mask=__mask.get_binary_mask2D();
-   if(_x+XSIZE(mask)/2>=XSIZE(__piece) || 
+   if(_x+XSIZE(mask)/2>=XSIZE(__piece) ||
       _y+YSIZE(mask)/2>=YSIZE(__piece)) return false;
 
    if(_x==0 && _y==0){
       _x=_skip_x+XSIZE(mask)/2;
       _y=_skip_y+YSIZE(mask)/2;
    }else{
-      int nextx=_x+XSIZE(mask)-__particle_overlap/__reduction; // COSS: he añadido __reduction
-      int nexty=_y+YSIZE(mask)-__particle_overlap/__reduction; // COSS: he añadido __reduction
+      int nextx=_x+XSIZE(mask)-__particle_overlap/__reduction; // COSS: he aï¿½adido __reduction
+      int nexty=_y+YSIZE(mask)-__particle_overlap/__reduction; // COSS: he aï¿½adido __reduction
       if(nextx+(XSIZE(mask)/2)>=XSIZE(__piece)){
 	 if(nexty+(YSIZE(mask)/2)>=YSIZE(__piece)){
 	    _x=nextx; _y=nexty;
@@ -1031,7 +1032,7 @@ bool QtWidgetMicrograph::get_next_scanning_pos(
 }
 
 /* Filter particles --------------------------------------------------------*/
-//To calculate the euclidean distance between to points  
+//To calculate the euclidean distance between to points
 double dist_euc(const Particle &p1,const Particle &p2) {
    return sqrt((double)(p1.x-p2.x)*(p1.x-p2.x)+(double)(p1.y-p2.y)*(p1.y-p2.y));
 }
@@ -1093,7 +1094,7 @@ void QtWidgetMicrograph::refine_center(Particle &my_P) {
 	    if (dist_left<best_dist) {best_dist=dist_left; source=0;}
 	 }
       }
-      
+
       // Check at right
       xpos=current_x+1;
       if (previous_direction!=1 && xpos<=XSIZE(__piece)-XSIZE(mask)/2) {
@@ -1185,20 +1186,20 @@ void QtWidgetMicrograph::loadModels() {
          fn_root+".param for input" << endl;
       return;
    }
-   fh_params >> dummy >> __gray_bins             	  
-             >> dummy >> __radial_bins           	  
-	     >> dummy >> __keep                  	  
-	     >> dummy >> __piece_xsize           	  
-	     >> dummy >> __piece_ysize           	  
-	     >> dummy >> __particle_radius       	  
-	     >> dummy >> __min_distance_between_particles 
-             >> dummy >> __output_scale                   
-	     >> dummy >> __reduction                      
-	     >> dummy >> __piece_overlap                  
+   fh_params >> dummy >> __gray_bins             	
+             >> dummy >> __radial_bins           	
+	     >> dummy >> __keep                  	
+	     >> dummy >> __piece_xsize           	
+	     >> dummy >> __piece_ysize           	
+	     >> dummy >> __particle_radius       	
+	     >> dummy >> __min_distance_between_particles
+             >> dummy >> __output_scale
+	     >> dummy >> __reduction
+	     >> dummy >> __piece_overlap
 	     >> dummy >> __particle_overlap
 	     >> dummy >> __numin
 	     >> dummy >> __numax
-	     >> dummy >> __Nerror_models                  
+	     >> dummy >> __Nerror_models
    ;
    fh_params.close();
 
@@ -1209,7 +1210,7 @@ void QtWidgetMicrograph::loadModels() {
    __mask.get_binary_mask2D().set_Xmipp_origin();
    __mask_size=XSIZE(__mask.get_binary_mask2D())*__reduction;
    classifyMask();
- 
+
    // Load training vectors
    ifstream fh_training;
    fh_training.open((fn_root+".training").c_str());
@@ -1218,7 +1219,7 @@ void QtWidgetMicrograph::loadModels() {
          fn_root+".training"+" for input");
    fh_training >> __training_loaded_model;
    fh_training.close();
-   
+
    // Load auto vectors
    ifstream fh_auto;
    fh_auto.open((fn_root+".auto").c_str());
@@ -1227,10 +1228,10 @@ void QtWidgetMicrograph::loadModels() {
          fn_root+".auto"+" for input");
    fh_auto >> __auto_loaded_model;
    fh_auto.close();
-   
+
    // Build the selection model
    buildSelectionModel();
-   
+
    // Load error vectors
    for (int i=0; i<__Nerror_models; i++) {
       Classification_model error;
@@ -1248,7 +1249,7 @@ void QtWidgetMicrograph::loadModels() {
       fh_error.close();
       __error_model.at(i).build_model();
       __use_euclidean_distance_for_errors|=!__error_model.at(i).well_posed();
-   }   
+   }
 
    // Particles have not been learnt but loaded from a file
    __learn_particles_done=false;
@@ -1259,13 +1260,13 @@ void QtWidgetMicrograph::saveModels() {
    if (__autoselection_done)
       __m->write_coordinates(__auto_label, __m->micrograph_name()+
          ".auto.pos");
-   
+
    // Rebuild automatic vectors that have been moved
    rebuild_moved_automatic_vectors();
-   
+
    // Classify errors
    classify_errors();
-   
+
    // Write results to a file
    write();
 }
@@ -1282,7 +1283,7 @@ void QtWidgetMicrograph::rebuild_moved_automatic_vectors() {
       }
    Classification_model rebuilt_vectors;
    buildVectors(indexes_to_rebuild_in_micrograph,rebuilt_vectors);
-   
+
    // Update the vectors in auto_vec
    imax=indexes_to_rebuild.size();
    for (int i=0; i<imax; i++) {
@@ -1303,7 +1304,7 @@ void QtWidgetMicrograph::classify_errors() {
 	 __error_model.push_back(error);
       }
    }
-   
+
    // Assign randomly the errors to the models
    int imax=__error_index.size();
    for (int i=0; i<imax; i++)
@@ -1321,7 +1322,7 @@ void QtWidgetMicrograph::classify_errors() {
    bool change;
    do {
       change=false;
-      
+
       // Compute the average and covariance of each class
       __use_euclidean_distance_for_errors=false;
       for (int i=0; i<__Nerror_models; i++) {
@@ -1341,7 +1342,7 @@ void QtWidgetMicrograph::classify_errors() {
 	    int source=-1;
 	    for (int j=0; j<__Nerror_models; j++) {
                  double dist;
-		 if (__use_euclidean_distance_for_errors) 
+		 if (__use_euclidean_distance_for_errors)
 		    dist=__error_model.at(j).euclidean_distance_to_average(current_vec);
 		 else
 		    dist=__error_model.at(j).distance_to_average(current_vec);
@@ -1398,7 +1399,7 @@ void QtWidgetMicrograph::write() {
 	     << "Nerror_models=                  " << __Nerror_models                  << endl
    ;
    fh_params.close();
-   
+
    // Save training vectors
    Classification_model aux_model;
    aux_model=__training_model;
@@ -1410,7 +1411,7 @@ void QtWidgetMicrograph::write() {
          fn_root+".training"+" for output");
    fh_training << aux_model << endl;
    fh_training.close();
-   
+
    // Save auto vectors
    aux_model=__auto_model;
    aux_model.import_particles(__auto_loaded_model);
@@ -1421,7 +1422,7 @@ void QtWidgetMicrograph::write() {
          fn_root+".auto"+" for output");
    fh_auto << aux_model << endl;
    fh_auto.close();
-   
+
    // Save error vectors
    ofstream fh_error;
    for (int i=0; i<__Nerror_models; i++) {
@@ -1431,7 +1432,7 @@ void QtWidgetMicrograph::write() {
             fn_root+".error"+ItoA(i,1)+" for output");
       fh_error << __error_model.at(i) << endl;
       fh_error.close();
-   }   
+   }
 }
 
 /* Configure auto ---------------------------------------------------------- */
@@ -1504,7 +1505,7 @@ void QtWidgetMicrograph::configure_auto() {
 
       QPushButton okButton( "Ok", &qgrid );
       QPushButton cancelButton( "Cancel", &qgrid );
-  
+
       connect( &okButton, SIGNAL(clicked(void)),
                &setPropertiesDialog, SLOT(accept(void)) );
       connect( &cancelButton, SIGNAL(clicked(void)),
@@ -1624,7 +1625,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     Layout->addLayout( grid, 5 );
 
     // Minimum
-    QLabel     *label_min= new QLabel( this, "label" );    
+    QLabel     *label_min= new QLabel( this, "label" );
     label_min->setFont( QFont("times",12,QFont::Bold) );
     label_min->setText( "Minimum" );
     label_min->setFixedSize(label_min->sizeHint());
@@ -1632,20 +1633,20 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __scroll_min= new QScrollBar(0, 255, 1, 1, min,
        QScrollBar::Horizontal,this,"scroll");
-    __scroll_min->setFixedWidth(100); 
-    __scroll_min->setFixedHeight(15); 
+    __scroll_min->setFixedWidth(100);
+    __scroll_min->setFixedHeight(15);
     grid->addWidget( __scroll_min, 0, 1, AlignCenter );
     connect( __scroll_min, SIGNAL(valueChanged(int)),
        SLOT(scrollValueChanged(int)) );
 
-    __label_min= new QLabel( this, "label" );	 
+    __label_min= new QLabel( this, "label" );	
     __label_min->setFont( QFont("courier",14) );
     __label_min->setText( ItoA(min,3).c_str() );
     __label_min->setFixedSize(__label_min->sizeHint());
     grid->addWidget( __label_min, 0, 2, AlignCenter );
 
     // Maximum
-    QLabel     *label_max= new QLabel( this, "label" );    
+    QLabel     *label_max= new QLabel( this, "label" );
     label_max->setFont( QFont("times",12,QFont::Bold) );
     label_max->setText( "Maximum" );
     label_max->setFixedSize(label_max->sizeHint());
@@ -1653,20 +1654,20 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __scroll_max= new QScrollBar(0, 255, 1, 1, max,
        QScrollBar::Horizontal,this,"scroll");
-    __scroll_max->setFixedWidth(100); 
-    __scroll_max->setFixedHeight(15); 
+    __scroll_max->setFixedWidth(100);
+    __scroll_max->setFixedHeight(15);
     grid->addWidget( __scroll_max, 1, 1, AlignCenter );
     connect( __scroll_max, SIGNAL(valueChanged(int)),
        SLOT(scrollValueChanged(int)) );
 
-    __label_max= new QLabel( this, "label" );	 
+    __label_max= new QLabel( this, "label" );	
     __label_max->setFont( QFont("courier",14) );
     __label_max->setText( ItoA(max,3).c_str() );
     __label_max->setFixedSize(__label_max->sizeHint());
     grid->addWidget( __label_max, 1, 2, AlignCenter );
 
     // Gamma
-    QLabel     *label_gamma= new QLabel( this, "label" );    
+    QLabel     *label_gamma= new QLabel( this, "label" );
     label_gamma->setFont( QFont("times",12,QFont::Bold) );
     label_gamma->setText( "Gamma" );
     label_gamma->setFixedSize(label_gamma->sizeHint());
@@ -1674,13 +1675,13 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __scroll_gamma= new QScrollBar(0, 40, 1, 1, (int)(10*gamma),
        QScrollBar::Horizontal,this,"scroll");
-    __scroll_gamma->setFixedWidth(100); 
-    __scroll_gamma->setFixedHeight(15); 
+    __scroll_gamma->setFixedWidth(100);
+    __scroll_gamma->setFixedHeight(15);
     grid->addWidget( __scroll_gamma, 2, 1, AlignCenter );
     connect( __scroll_gamma, SIGNAL(valueChanged(int)),
        SLOT(scrollValueChanged(int)) );
 
-    __label_gamma= new QLabel( this, "label" );    
+    __label_gamma= new QLabel( this, "label" );
     __label_gamma->setFont( QFont("courier",14) );
     __label_gamma->setText( FtoA(gamma,3,2).c_str() );
     __label_gamma->setFixedSize(__label_gamma->sizeHint());
@@ -1705,7 +1706,7 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
    __qtwidgetmicrograph=_qtwidgetmicrograph;
    int Xdim, Ydim;
    __qtwidgetmicrograph->getMicrograph()->size(Xdim,Ydim);
-   
+
    // Set this window caption
    setCaption( "Crop micrograph" );
 
@@ -1726,30 +1727,30 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
    for (int i=0; i<min.size(); i++) {
 
       // Add Parameter name
-      QLabel     *lab1= new QLabel( this, "lab1" );    
+      QLabel     *lab1= new QLabel( this, "lab1" );
       lab1->setFont( QFont("times",12,QFont::Bold) );
       lab1->setText( prm_name[i] );
       lab1->setFixedSize(lab1->sizeHint());
       grid->addWidget( lab1, i, 0, AlignLeft );
-      
+
       // Add Scroll Bar
       QScrollBar  *scroll_aux= new QScrollBar(min[i], max[i], 1, 50, (int)init_value[i], QScrollBar::Horizontal,this,"scroll");
-      scroll_aux->setFixedWidth(100); 
+      scroll_aux->setFixedWidth(100);
       scroll_aux->setFixedHeight(15);
       grid->addWidget( scroll_aux, i, 1, AlignCenter );
       __scroll.push_back(scroll_aux);
 
       // Label for the current value
       QLabel * value_lab_aux;
-      value_lab_aux= new QLabel( this, "value_lab" );        
+      value_lab_aux= new QLabel( this, "value_lab" );
       value_lab_aux->setFont( QFont("times",12) );
       value_lab_aux->setNum( init_value[i] );
       grid->addWidget( value_lab_aux, i, 2, AlignLeft);
       __label.push_back(value_lab_aux);
-   
+
       connect( scroll_aux, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)) );
    }
-   
+
    // Layout the output name
    QLabel     *lab2= new QLabel( this, "lab2" );
    lab2->setFont( QFont("times",12,QFont::Bold) );
@@ -1763,19 +1764,19 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
    QPushButton *cancel;
    cancel = new QPushButton( this, "cancel" );   // create button 1
    cancel->setFont( QFont("times",12,QFont::Bold) );
-   cancel->setText( "Cancel" );    
+   cancel->setText( "Cancel" );
    cancel->setFixedSize( cancel->sizeHint());
-   grid->addWidget( cancel, min.size()+2, 0, AlignVCenter ); 
+   grid->addWidget( cancel, min.size()+2, 0, AlignVCenter );
    connect( cancel, SIGNAL(clicked()), this, SLOT(cancel()) );
-   
-   // OK button 
+
+   // OK button
    QPushButton *do_it;
    do_it = new QPushButton( this, "do_it" );   // create button 3
    do_it->setFont( QFont("times",12,QFont::Bold) );
    do_it->setText( "Ok" );
    do_it->setFixedHeight( do_it->sizeHint().height());
    do_it->setFixedWidth(80);
-   grid->addWidget( do_it, min.size()+2, 2, AlignVCenter ); 
+   grid->addWidget( do_it, min.size()+2, 2, AlignVCenter );
    connect( do_it, SIGNAL(clicked()), this, SLOT(accept()) );
 
    __qtwidgetmicrograph->overview()->init_crop_area();
@@ -1797,19 +1798,19 @@ void CropWidget::scrollValueChanged(int new_val) {
       int v=__scroll[i]->value();
       value.push_back(ROUND((float)v));
    }
-   
+
    // Check value validity
    value[0]=MIN(value[0],value[2]);
    value[2]=MAX(value[0],value[2]);
    value[1]=MIN(value[1],value[3]);
    value[3]=MAX(value[1],value[3]);
-   
+
    // Set these values
    for (int i=0; i<__label.size(); i++) {
        __label[i]->setNum(value[i]);
        __scroll[i]->setValue(value[i]);
    }
-   
+
    emit new_value(value);
 }
 
@@ -1819,7 +1820,7 @@ void CropWidget::accept() {
    vector<int> value;
    for (int i=0; i<__label.size(); i++)
       value.push_back(__scroll[i]->value());
-   
+
    // Get output image
    string fn_out=__outputNameLineEdit->text().ascii();
    if (fn_out=="") {
@@ -1827,8 +1828,8 @@ void CropWidget::accept() {
          "The output image is empty\n Cropping is not carried out\n");
       close();
       return;
-   } 
-   
+   }
+
    // Do the cropping
    int w=value[2]-value[0];
    int h=value[3]-value[1];
@@ -1852,7 +1853,7 @@ void CropWidget::cancel() {
 
 /* AdjustCircleWidget ------------------------------------------------------ */
 // Constructor
-AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max, 
+AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
   int start_with, QtWidgetMicrograph *_qtwidgetmicrograph,
    QWidget *parent, const char *name, int wflags):
    QWidget(parent,name,wflags) {
@@ -1869,7 +1870,7 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     Layout->addLayout( grid );
 
     // Radius
-    QLabel     *label_radius= new QLabel( this, "label" );    
+    QLabel     *label_radius= new QLabel( this, "label" );
     label_radius->setFont( QFont("times",12,QFont::Bold) );
     label_radius->setText( "Radius" );
     label_radius->setFixedSize(label_radius->sizeHint());
@@ -1877,13 +1878,13 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
 
     __scroll_radius= new QScrollBar(0, 255, 1,10,start_with,
        QScrollBar::Horizontal,this,"scroll");
-    __scroll_radius->setFixedWidth(100); 
-    __scroll_radius->setFixedHeight(15); 
+    __scroll_radius->setFixedWidth(100);
+    __scroll_radius->setFixedHeight(15);
     grid->addWidget( __scroll_radius, 0, 1, AlignCenter );
     connect( __scroll_radius, SIGNAL(valueChanged(int)),
        SLOT(scrollValueChanged(int)) );
-   
-    __label_radius= new QLabel( this, "label" );	 
+
+    __label_radius= new QLabel( this, "label" );	
     __label_radius->setFont( QFont("courier",14) );
     __label_radius->setText( ItoA(start_with,3).c_str() );
     __label_radius->setFixedSize(__scroll_radius->sizeHint());

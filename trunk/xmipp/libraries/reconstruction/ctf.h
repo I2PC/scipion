@@ -6,33 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _CTF_HH
    #define _CTF_HH
 
-#include <XmippData/xmippImages.hh>
+#include <data/image.h>
 
 /**@name CTF Correction */
 //@{
 /** CTF class.
     Here goes how to compute the radial average of a parametric CTF:
-    
+
     \begin{verbatim}
       #include <Reconstruction/CTF.hh>
 
@@ -59,10 +59,10 @@
 	 return 0;
       }
    \end{verbatim}
-   
+
    Here is another sample program for generating the CTF, the noise
    background, the envelope and the power spectrum density
-   
+
    \begin{verbatim}
       #include <Reconstruction/CTF.hh>
       #include <XmippData/xmippFFT.hh>
@@ -239,11 +239,11 @@ public:
        are removed from the model unless the disable_if_not_K is set
        to false*/
    void read(const FileName &fn, bool disable_if_not_K=true);
-   
+
    /** Write to file.
        An exception is thrown if the file cannot be open.*/
    void write(const FileName &fn);
-   
+
    /// Usage
    void Usage();
 
@@ -255,10 +255,10 @@ public:
 
    /// Clear noise
    void clear_noise();
-   
+
    /// Clear pure CTF
    void clear_pure_ctf();
-   
+
    /// Produce Side information
    void Produce_Side_Info();
 
@@ -328,7 +328,7 @@ public:
       }
       return -K*E;
    }
-   
+
    /// Compute CTF at (U,V). Continuous frequencies
    inline double CTFpure_at(double X, double Y, bool show=false) const {
       double u2=X*X+Y*Y;
@@ -370,7 +370,7 @@ public:
    inline double CTFnoise_at(double X, double Y, bool show=false) const {
       double ellipsoid_ang, ellipsoid_ang2, ellipsoid_sqrt_ang;
       if (ABS(X)<XMIPP_EQUAL_ACCURACY &&
-          ABS(Y)<XMIPP_EQUAL_ACCURACY) 
+          ABS(Y)<XMIPP_EQUAL_ACCURACY)
 	  ellipsoid_sqrt_ang=ellipsoid_ang=ellipsoid_ang2=0;
       else {
          double yx_ang=atan2(Y,X);

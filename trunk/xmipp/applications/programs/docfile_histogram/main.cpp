@@ -5,32 +5,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippDocFiles.hh>
+#include <data/args.h>
+#include <data/histogram.h>
+#include <data/docfile.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main (int argc,char *argv[]) {
    DocFile          DF;
    FileName         fn_out;
@@ -62,7 +59,7 @@ int main (int argc,char *argv[]) {
          M=AtoF(argv[i+2]);
          automatic_range=false;
       } else automatic_range=true;
-       
+
       StepsNo2=AtoI(get_param(argc,argv,"-steps2","100"));
       if ((i=position_param(argc,argv,"-range2"))!=-1) {
          if (i+2>=argc)
@@ -101,7 +98,7 @@ int main (int argc,char *argv[]) {
 	      << hist.percentil(percentil) << endl;
          if (fn_out!="") hist.write(fn_out);
          else            cout << hist;
-                 
+
       // 2D histograms -----------------------------------------------------
       } else {
          C=DF.col(col);

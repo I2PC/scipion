@@ -7,31 +7,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef __APPLE__
    #include <malloc.h>
 #else
-   #include <stdlib.h>
+   #include <cstdlib>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+
 #include "spider.h"
 #include "groe.h"
 
@@ -133,12 +135,12 @@ if(matriz[0][0]==1.0 &&
    matriz[2][0]==0.0 &&
    matriz[0][1]==0.0 &&
    matriz[1][1]==1.0 &&
-   matriz[2][1]==0.0 
-   ) 
+   matriz[2][1]==0.0
+   )
 {
-for (i = 0; i < fil; i++)    
+for (i = 0; i < fil; i++)
     for (j = 0; j < col; j++)
-        im_out[i][j] = im_in[i][j]; 
+        im_out[i][j] = im_in[i][j];
 return;
 
 }

@@ -7,27 +7,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #include <fstream>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippInterface/xmippSpider.hh>
-#include "../recons_spider.hh"
+
+#include <data/docfile.h>
+#include <interface/spider.h>
+
+#include "recons_spider.h"
 
 // SIRT --------------------------------------------------------------------
 void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
@@ -51,7 +53,7 @@ void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
       if (!fh_batch)
          REPORT_ERROR(3005,(string)"single_recons_test:: Could not open "
 	    "the file "+full_fn_batch+" for output");
-      
+
       SF.go_first_ACTIVE();
       fh_batch << "bp rp\n";
       fh_batch << SF.get_current_file() << endl;
@@ -67,7 +69,7 @@ void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
       fh_batch << "en\n";
       fh_batch.close();
 
-      // Call Spider 
+      // Call Spider
       string command_line=(string)"spider "+fn_ext+" "+fn_batch;
       cerr << "Reconstructing with SIRT Spider ...\n";
       system(command_line.c_str());

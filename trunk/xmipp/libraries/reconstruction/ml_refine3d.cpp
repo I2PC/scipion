@@ -6,35 +6,36 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_Refine3d.hh"
+
+#include "ml_refine3d.h"
 
 
 // Read ===================================================================
 void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
 
   // This flag is set with scripts, so that for the user the
-  // mlf_align2d and the ml_align2d are distinct programs 
+  // mlf_align2d and the ml_align2d are distinct programs
   fourier_mode=check_param(argc,argv,"-MLF");
 
   bool do_restart=false;
 
-  if (check_param(argc,argv,"-more_options")) { 
+  if (check_param(argc,argv,"-more_options")) {
     if (fourier_mode) { MLF_usage(); extended_usage(); }
     else { usage(); extended_usage(); }
   }
@@ -53,7 +54,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
     string   comment,cline="";
     DocFile  DFi;
     FileName fn_tmp;
-  
+
     do_restart=true;
     DFi.read(get_param(argc,argv,"-restart"));
     DFi.go_beginning();
@@ -63,8 +64,8 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
       exit(1);
     } else {
       char *copy;
-      copy=NULL; 
-      DFi.next();    
+      copy=NULL;
+      DFi.next();
       // get new part of command line (with -istart)
       comment=(DFi.get_current_line()).get_text();
       DFi.next();
@@ -103,7 +104,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)  {
       SFvol.write(fn_vol);
     }
   }
-   
+
   //Read Refine3d parameters
   fn_sel=get_param(argc,argv,"-i");
   fn_root=get_param(argc,argv,"-o","MLrefine3D");
@@ -200,7 +201,7 @@ void Prog_Refine3d_prm::show() {
     // To screen
     cerr << " -----------------------------------------------------------------"<<endl;
     cerr << " | Read more about this program in the following publication:    |"<<endl;
-    if (fourier_mode) 
+    if (fourier_mode)
       cerr << " |  Scheres ea. (2007)  in preparation                           |"<<endl;
     else
       cerr << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |"<<endl;
@@ -222,7 +223,7 @@ void Prog_Refine3d_prm::show() {
     cerr << "  Local symmetry mask      : "<< fn_symmask<<endl;
     cerr << "  Output rootname          : "<< fn_root<<endl;
     cerr << "  Convergence criterion    : "<< eps<<endl;
-    if (lowpass>0) 
+    if (lowpass>0)
     cerr << "  Low-pass filter          : "<< lowpass<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     cerr << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
@@ -241,7 +242,7 @@ void Prog_Refine3d_prm::show() {
 
     fh_hist << " -----------------------------------------------------------------"<<endl;
     fh_hist << " | Read more about this program in the following publication:    |"<<endl;
-    if (fourier_mode) 
+    if (fourier_mode)
       fh_hist << " |  Scheres ea. (2007)  in preparation                           |"<<endl;
     else
       fh_hist << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |"<<endl;
@@ -256,7 +257,7 @@ void Prog_Refine3d_prm::show() {
     fh_hist << "  Symmetry file:           : "<< fn_sym<<endl;
     fh_hist << "  Output rootname          : "<< fn_root<<endl;
     fh_hist << "  Convergence criterion    : "<< eps<<endl;
-    if (lowpass>0) 
+    if (lowpass>0)
     fh_hist << "  Low-pass filter          : "<< lowpass<<endl;
     if (tilt_range0>0. || tilt_rangeF<90.)
     fh_hist << "  Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
@@ -274,7 +275,7 @@ void Prog_Refine3d_prm::show() {
 
 // Projection of the reference (blob) volume =================================
 void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
-  
+
   VolumeXmipp                   vol;
   SymList                       SL;
   DocFile                       DFlib;
@@ -285,7 +286,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
 
   if (fn_sym!="" && fn_symmask=="") SL.read_sym_file(fn_sym);
   make_even_distribution(DFlib,angular,SL,false);
-  if (tilt_range0>0. || tilt_rangeF<90.) 
+  if (tilt_range0>0. || tilt_rangeF<90.)
       limit_tilt_range(DFlib,tilt_range0,tilt_rangeF);
   // Select use-provided tilt range
   if (tilt_range0>0. || tilt_rangeF<90.) {
@@ -340,7 +341,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank) {
     }
     eachvol_end.push_back(nr_dir-1);
     nvol++;
-  }  
+  }
   if (verb>0 && rank==0) {
     progress_bar(nl);
     cerr << " -----------------------------------------------------------------"<<endl;
@@ -382,7 +383,7 @@ void Prog_Refine3d_prm::make_noise_images(vector<ImageXmipp> &Iref) {
 }
 
 // Reconstruction using the ML-weights ==========================================
-void Prog_Refine3d_prm::reconstruction(int argc, char **argv, 
+void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 				       int iter, int volno, int noise) {
 
   VolumeXmipp            new_vol;
@@ -434,14 +435,14 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     art_prm.read(argc, argv);
     art_prm.WLS=true;
     if (fn_symmask!="") art_prm.fn_sym="";
-    if (!check_param(argc,argv,"-n")) 
+    if (!check_param(argc,argv,"-n"))
       art_prm.no_it=10;
     if (!check_param(argc,argv,"-l")) {
-      art_prm.lambda_list.resize(1); 
+      art_prm.lambda_list.resize(1);
       art_prm.lambda_list.init_constant(0.2);
     }
     if (!check_param(argc,argv,"-k")) {
-      art_prm.kappa_list.resize(1); 
+      art_prm.kappa_list.resize(1);
       art_prm.kappa_list.init_constant(0.5);
     }
     art_prm.fn_sel=fn_insel;
@@ -509,7 +510,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int 
   }
 
   for (int volno=0; volno<Nvols; volno++) {
-    
+
     fn_tmp=fn_root+"_noise";
     fn_tmp2=fn_root+"_cref";
     if (Nvols>1) {
@@ -589,7 +590,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int 
       avg_alphaS+=alpha_signal;
     }
   }
-  if (verb>0) progress_bar(SFnoise.ImgNo());  
+  if (verb>0) progress_bar(SFnoise.ImgNo());
   spectral_signal/=(double)Nvols;
   avg_alphaN/=(double)Nvols;
   avg_alphaS/=(double)Nvols;
@@ -643,7 +644,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
       volno++;
     }
   }
-  
+
   // Update selection file for reference volumes
   SFvol.clear();
   if (Nvols>1) {
@@ -653,7 +654,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
       fn_tmp2.compose(fn_tmp,volno+1,"vol");
       SFvol.insert(fn_tmp2);
       volno++;
-    } 
+    }
   } else {
     SFvol.insert(fn_tmp+".vol");
   }
@@ -666,7 +667,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
 	fn_tmp2.compose(fn_tmp,volno+1,"vol");
 	SFvol.insert(fn_tmp2);
 	volno++;
-      } 
+      }
     } else {
       SFvol.insert(fn_tmp+".vol");
     }
@@ -679,7 +680,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
 	fn_tmp2.compose(fn_tmp,volno+1,"vol");
 	SFvol.insert(fn_tmp2);
 	volno++;
-      } 
+      }
     } else {
       SFvol.insert(fn_tmp+".vol");
     }
@@ -825,7 +826,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 	  label.clear();
 	}
 	// Dilate solvent mask (only for binary masks)
-	// Dilate several times, result is summed iteratively 
+	// Dilate several times, result is summed iteratively
 	if (dilate_solvent>0) {
 	  VolumeXmipp Vsum;
 	  Vsum()=Vsolv();
@@ -853,7 +854,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv) {
 
       // (Re-) write post-processed volume to disc
       vol.write(fn_vol);
-      
+
     }
     if (verb>0) cerr << " -----------------------------------------------------------------"<<endl;
   }

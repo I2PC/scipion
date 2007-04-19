@@ -6,25 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_art_crystal.hh"
-#include "../Prog_project_crystal.hh"
+#include "art_crystal.h"
+#include "project_crystal.h"
 
 /* ------------------------------------------------------------------------- */
 /* Crystal ART Parameters                                                    */
@@ -45,18 +45,18 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
        //DISCLAMER: I know this 0 and 90 degrees cases are rather silly but
        //when debuging is so good that 90 is 90 and not 90.000001
        //NOTE:ang_x2a_deg is applied ONLY in the final volume
-       //when moving from basis to voxels 
+       //when moving from basis to voxels
 
        XX(avox) = a_mag; YY(avox) = 0.;
 
-       if(ang_a2b_deg == 90.) 
+       if(ang_a2b_deg == 90.)
           {
-          XX(bvox) = 0; 
+          XX(bvox) = 0;
           YY(bvox) = b_mag;
 	  }
        else
           {
-          XX(bvox) = b_mag*COSD(ang_a2b_deg); 
+          XX(bvox) = b_mag*COSD(ang_a2b_deg);
           YY(bvox) = b_mag*SIND(ang_a2b_deg);
 	  }
     } catch (Xmipp_error XE) {throw(XE);}
@@ -93,10 +93,10 @@ ostream & operator << (ostream &o, const Crystal_ART_Parameters &eprm) {
 /* Compute integer lattice ================================================= */
 /* Compute integer lattice ================================================= */
 void compute_integer_lattice(const matrix1D<double> &a,
-                             const matrix1D<double> &b, 
+                             const matrix1D<double> &b,
 			     double a_mag_grid, double b_mag_grid,
 			     double ang_a2b_deg,
-			     matrix1D<double> &aint, 
+			     matrix1D<double> &aint,
 			     matrix1D<double> &bint,
                              matrix2D<double> &D,
 			     int space_group) {
@@ -107,7 +107,7 @@ void compute_integer_lattice(const matrix1D<double> &a,
    aint.resize(2);bint.resize(2);
    XX(aint) = ROUND(a_mag_grid); YY(aint) = 0.;
    XX(bint) = 0.0;          YY(bint) = ROUND(b_mag_grid);
-   
+
    //different crystalline grids impose different restrictions
    //on the grid, we will check them here but only if the user
    //has provided a symmetry file
@@ -115,7 +115,7 @@ void compute_integer_lattice(const matrix1D<double> &a,
    if (space_group!=sym_undefined){
 
    switch(space_group){
-      
+
        case sym_P1: break;// no check needed
        case sym_P2_122://XX(aint) and YY(aint) should be even
          if(XX(aint)!=2*(int)(XX(aint)/2) ||
@@ -124,7 +124,7 @@ void compute_integer_lattice(const matrix1D<double> &a,
 	     cout << "\nLattice connstrains for P2_122 are not satisficed"
 	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
 		 << "\nPlease modify the parmeters and try again" << endl;
-	     exit(0);	 	    
+	     exit(0);	 	
 	    }
 	 break;
        case sym_P22_12://XX(aint) and YY(aint) should be even
@@ -134,7 +134,7 @@ void compute_integer_lattice(const matrix1D<double> &a,
 	     cout << "\nLattice connstrains for P22_12 are not satisficed"
 	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
 		 << "\nPlease modify the parmeters and try again" << endl;
-	     exit(0);	 	    
+	     exit(0);	 	
 	    }
 	 break;
        case sym_P42_12://XX(aint) and YY(aint) should be even
@@ -144,10 +144,10 @@ void compute_integer_lattice(const matrix1D<double> &a,
 	     cout << "\nLattice connstrains for P4212 are not satisficed"
 	         << "\nRound[mag_a/(sampling*grid_size)] must be even"
 		 << "\nPlease modify the parmeters and try again" << endl;
-	     exit(0);	 	    
+	     exit(0);	 	
 	    }
 	 break;
-       case sym_P4:	 
+       case sym_P4:	
        case sym_P6:break;// no check needed
        default:
          cerr << "\n Congratulations: you have found a bug in the\n"
@@ -156,11 +156,11 @@ void compute_integer_lattice(const matrix1D<double> &a,
 	      <<  endl;
 	 exit(0);
 	 break;
-       }//switch(space_group)  end 
+       }//switch(space_group)  end
 
    }//if (prm.fn_sym!="")
 
-   
+
    // Converting matrix
    // a=D*aint
    // b=D*bint
@@ -195,7 +195,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
        space_group=prm.SL.crystallographic_space_group(a_mag,b_mag,
                                                        ang_a2b_deg);
    else
-       space_group= sym_P1;						       
+       space_group= sym_P1;						
 
    // Integer lattice vectors ----------------------------------------------
    matrix2D<double> D;
@@ -215,7 +215,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    prm.Dinv=new matrix2D<double>;
    *(prm.Dinv)=prm.D->inv();
    prm.basis.set_D(prm.D);
-   
+
    // Unit cell mask within volume -----------------------------------------
    // Compute the 4 parallelogram corners
    matrix1D<double> c1= ai+bi;
@@ -224,7 +224,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
    matrix1D<double> c4=-c2;
    matrix1D<double> c1c3=c1-c3; // These extra variables are needed because
    matrix1D<double> c2c4=c2-c4; // the compiler messes up
-   
+
    // Resize unit cell mask
    // The unit mask is a little bigger to avoid the possibility of losing
    // any basis due to a too tight mask.
@@ -270,7 +270,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
       #ifdef DEBUG_A_LOT
          cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
               << sgn[2] << sgn[3] << endl;
-      #endif      
+      #endif
 
       // Now check if point is inside
       int inside_table[4][4]={
@@ -292,7 +292,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
              unit_cell_mask(i,j)=1;
              #ifdef DEBUG_A_LOT
                 cout << "    Inside\n";
-             #endif      
+             #endif
              break;
           }
    }
@@ -373,44 +373,44 @@ void ART_single_step(
 
 //   #define DEBUG_SHIFT
    #ifdef DEBUG_SHIFT
-   matrix2D<double> A(3,3); 
+   matrix2D<double> A(3,3);
    A.init_identity();
    dMij(A,0,2)=  8;
    dMij(A,1,2)=  -5;
-   cout << "A" << A; 
+   cout << "A" << A;
    //move read_proj
    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
        dMij(theo_proj(),i,j)=dMij(read_proj(),i,j);
    apply_geom(IMGMATRIX(read_proj),A,IMGMATRIX(theo_proj),IS_NOT_INV,WRAP);
    #endif
    #undef DEBUG_SHIFT
-   if( prm.ref_trans_after != -1    && 
+   if( prm.ref_trans_after != -1    &&
        imagen_no>prm.ref_trans_after && imagen_no!=0 )
    {
    calculate_and_find_correlation_max_proj( read_proj, theo_proj,
                                            alig_proj,
-                                           shift_X, shift_Y, 
+                                           shift_X, shift_Y,
                             	           prm.ref_trans_step,
 					   prm.ref_trans_after,
 					   imagen_no);
 
    // Apply correction
-   matrix2D<double> Correction(3,3); 
+   matrix2D<double> Correction(3,3);
    alig_proj().resize(read_proj());
    Correction.init_identity();
-   
+
    dMij(Correction,0,2)=  - shift_X;
    dMij(Correction,1,2)=  - shift_Y;
-   //copy theo_proj to a temporal matrix   
+   //copy theo_proj to a temporal matrix
    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
        dMij(alig_proj(),i,j)=dMij(read_proj(),i,j);
    apply_geom(IMGMATRIX(read_proj),Correction,IMGMATRIX(alig_proj),IS_NOT_INV,WRAP);
-   }					   
+   }					
 // Now compute differences .................................................
-   double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
+   double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1
    mean_error=0;
    diff_proj().resize(read_proj());
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj)) {
    // Compute difference image and error
       IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
@@ -466,7 +466,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
    VECTOR_R2(corner2,
       LAST_XMIPP_INDEX(prm.Xoutput_volume_size),
       LAST_XMIPP_INDEX(prm.Youtput_volume_size));
-   
+
    matrix1D<double> zero(2); VECTOR_R2(zero,0,0);
    int a0, aF, b0, bF;
    // How many lattice units fit inside the output volume

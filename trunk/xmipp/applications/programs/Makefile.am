@@ -29,7 +29,7 @@ SUBDIRS = \
 	add_noise \
 	adjust_volume_grey_levels \
 	align_volumes \
-	align2D \
+	align2d \
 	angular_distribution_show \
 	angular_distance \
 	angular_discrete_assign \

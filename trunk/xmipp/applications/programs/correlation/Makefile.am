@@ -3,7 +3,8 @@ correlation_SOURCES = main.cpp
 correlation_LDADD = \
 	$(top_srcdir)/libraries/data/libXmippData.la \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
-	$(top_srcdir)/libraries/interface/libXmippInterface.la
+	$(top_srcdir)/libraries/interface/libXmippInterface.la \
+	$(top_srcdir)/external/bilib/libBilib.la
 
 correlation_LDFLAGS = @EXEC_TYPE@
 

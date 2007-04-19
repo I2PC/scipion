@@ -7,26 +7,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                      <                               
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *                                      <
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippEM.hh"
+#include "em.h"
+
 #include <fstream>
 #include <iomanip>
+
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
    + __GNUC_PATCHLEVEL__)
@@ -44,24 +46,24 @@ void EM::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed) {
 
    //fill em header and reverse if needed
    fill_header_from_xmippvolume(V, reversed);
-   
+
    //open file
    if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
      REPORT_ERROR(1503,"EM::write: File " + fn_out + " cannot be saved");
 
-   //write header. note that FWRITE can not be used because 
+   //write header. note that FWRITE can not be used because
    //floats and longs are invoved
    if(fwrite(&my_em_header, sizeof(char), SIZEOF_EM_HEADER, fp) !=
                             SIZEOF_EM_HEADER)
      REPORT_ERROR(1503,"EM::write: Header of file " + fn_out + " cannot be saved");
 
-   //data, 
+   //data,
    float f; //only floats are suported
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V()){
      f=(float) MULTIDIM_ELEM(V(),i);
      FWRITE (&f, sizeof(float), 1, fp, reversed);
    }
-   
+
    fclose(fp);
 }
 
@@ -106,7 +108,7 @@ void EM::read(const FileName &fn_in,VolumeXmipp &V, bool reversed) {
 
    // Get header size
    struct stat info;
-   if (fstat(fileno(fp), &info)) 
+   if (fstat(fileno(fp), &info))
       EXIT_ERROR(1,(string)"EM: Cannot get size of "+fn_in);
    int header_size=info.st_size-my_em_header.nx*
                                 my_em_header.ny*
@@ -171,9 +173,9 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed) {
 
   clear();
   my_em_header.mode  = MODE_FLOAT;
-  if(IsLittleEndian()) 
+  if(IsLittleEndian())
     my_em_header.machine=6;
-  else 
+  else
     my_em_header.machine=3;
   if( reversed==false ){
     my_em_header.nx = V().ColNo();
@@ -198,14 +200,14 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed) {
     if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
       REPORT_ERROR(1503,"EM::read_header_from_file: File " + fn_in + " cannot be read");
 
-   FREAD(&(my_em_header.machine), 1, 1, fp, FALSE); 
-   FREAD(&(my_em_header.general_use), 1, 1, fp, FALSE); 
-   FREAD(&(my_em_header.not_used), 1, 1, fp, FALSE); 
-   FREAD(&(my_em_header.mode), 1, 1, fp, FALSE); 
+   FREAD(&(my_em_header.machine), 1, 1, fp, FALSE);
+   FREAD(&(my_em_header.general_use), 1, 1, fp, FALSE);
+   FREAD(&(my_em_header.not_used), 1, 1, fp, FALSE);
+   FREAD(&(my_em_header.mode), 1, 1, fp, FALSE);
 
    if (my_em_header.machine != 6 && IsLittleEndian() && reversed==FALSE)
      reversed=TRUE;
-   else if (my_em_header.machine == 6 && IsBigEndian() && reversed==FALSE) 
+   else if (my_em_header.machine == 6 && IsBigEndian() && reversed==FALSE)
      reversed=TRUE;
 
    FREAD(&(my_em_header.nx), 4, 1, fp, reversed);
@@ -213,6 +215,6 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed) {
    FREAD(&(my_em_header.nz), 4, 1, fp, reversed);
    fclose(fp);
 
-   return(reversed);   
+   return(reversed);
 }
 

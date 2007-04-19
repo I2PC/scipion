@@ -29,8 +29,8 @@
 #include <cstdio>
 #include <vector>
 
-#include "xmippFuncs.hh"
-#include "xmippMatrices1D.hh"
+#include "funcs.h"
+#include "matrix1d.h"
 
 /** @defgroup Arguments Arguments parsing.
  *

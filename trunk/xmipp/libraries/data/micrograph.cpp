@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippMicrograph.hh"
-#include "../xmippArgs.hh"
-#include "../xmippSelFiles.hh"
-#include "../xmippMasks.hh"
-#include "../xmippGeometry.hh"
+#include "micrograph.h"
+#include "args.h"
+#include "selfile.h"
+#include "mask.h"
+#include "geometry.h"
+
 #include <fstream>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -91,7 +92,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
       if(check_param(fh_inf,"offset"))
 	 __offset=AtoI(get_param(fh_inf,"offset"));
       else
-	 __offset=0;   
+	 __offset=0;
       if (check_param(fh_inf,"is_signed"))
 	 __is_signed=(get_param(fh_inf,"is_signed")=="true" ||
                       get_param(fh_inf,"is_signed")=="TRUE");
@@ -176,7 +177,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
           aux_ptr=(char *)um16;
 	  aux_ptr+=__offset;
 	  um16=(unsigned short int *) aux_ptr;
-	  } 
+	  }
          /* } else {
             m16=new short int (Ydim*Xdim*__depth/8);
             int length=Ydim*Xdim*__depth/8;
@@ -251,8 +252,8 @@ void Micrograph::compute_8_bit_scaling() {
          else if (tmp>maxval) maxval=tmp;
 /*
 if(maxval > 32000)
-  cout << "(i,j) max min valuefloat value" << i << " " << j 
-     << " " << maxval << " " << minval << " "<< tmp 
+  cout << "(i,j) max min valuefloat value" << i << " " << j
+     << " " << maxval << " " << minval << " "<< tmp
      << " " << (*this)(j,i) << endl;
 */
       }
@@ -292,7 +293,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords) {
    ifstream  fh;
    int       line_no=0;
    string    line;
-   
+
    fn_coords=_fn_coords;
    fh.open(fn_coords.c_str(), ios::in);
    if (!fh)
@@ -331,7 +332,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords) {
 
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, Image &result,
-   double Dmin, double Dmax, double scaleX, double scaleY, 
+   double Dmin, double Dmax, double scaleX, double scaleY,
    bool only_check) {
    if (X_window_size==-1 || Y_window_size==-1)
       REPORT_ERROR(1,"Micrograph::scissor: window size not set");
@@ -354,13 +355,13 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
 	       if(compute_transmitance){
 		  if((*this)(j,i)<1)
 		     temp = (*this)(j,i);
-		  else   
+		  else
 		     temp = log10((double)(*this)(j,i));
 		  if(compute_inverse)
 		     result(i-i0,j-j0)= (Dmax-temp)/range;
-		  else  
+		  else
 		     result(i-i0,j-j0)= (temp-Dmin)/range;
-		  }   
+		  }
 	        else{
 		   if(compute_inverse)
 	                result(i-i0,j-j0)= (Dmax-(*this)(j,i))/range;
@@ -368,7 +369,7 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
 	                result(i-i0,j-j0)= (*this)(j,i);
 	        }
 	     }
-      }	     	  
+      }	     	
    return retval;
 }
 
@@ -390,15 +391,15 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
       M->set_transmitance_flag(compute_transmitance);
       M->set_inverse_flag(compute_inverse);
    }
-   
+
    // Set scale for particles
    int MXdim, MYdim, thisXdim, thisYdim;
    M->size(MXdim, MYdim);
    this->size(thisXdim, thisYdim);
    double scaleX=(double)MXdim/thisXdim;
    double scaleY=(double)MYdim/thisYdim;
-   
-   // Compute max and minimum if compute_transmitance 
+
+   // Compute max and minimum if compute_transmitance
    // or compute_inverse flags are ON
    double Dmax, Dmin;
    if(compute_transmitance || compute_inverse){
@@ -420,7 +421,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
 	   << "   applying apropriate rotation\n";
    int i=starting_index;
    int nmax=ParticleNo();
-   for (int n=0; n<nmax; n++) 
+   for (int n=0; n<nmax; n++)
       if (coords[n].valid && coords[n].label==label) {
          fn_out.compose(fn_root,i++,"xmp");
          if (!M->scissor(coords[n],(Image &) I, Dmin, Dmax, scaleX, scaleY)) {
@@ -441,7 +442,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
       SF.write(fn_micrograph.remove_directories()+".sel");
       write_coordinates(label,fn_micrograph+".pos");
    }
-   
+
    // Free source image??
    if (fn_image!="") {
       M->close_micrograph();
@@ -463,7 +464,7 @@ int Micrograph::search_coord_near(int x, int y, int prec) const {
 void Micrograph::invalidate_coord(int n) {
    if (n<0 || n>=ParticleNo())
       REPORT_ERROR(1,"Micrograph::invalidate_coord: Index out of range");
-   coords[n].valid=false;   
+   coords[n].valid=false;
 }
 
 /* Add coordinate ---------------------------------------------------------- */
@@ -497,7 +498,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
    int y0=0;
    int xF=Xdim;
    int yF=Ydim;
-   
+
    double pixval;
    int ii, y, jj, x;
    time_config();
@@ -561,8 +562,8 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 	     int i2=intWRAP(i+y,0,yF-1);
              pixval += kernel(i,j)*M(j2,i2);
 	  }
-	 
-          if (ii<Ypdim && jj<Xpdim) 
+	
+          if (ii<Ypdim && jj<Xpdim)
 	     if (Mp.depth()!=32) Mp.set_val(jj,ii,FLOOR(a*(pixval*scale+b)));
 	     else Mp.set_val(jj,ii,pixval);
        }
@@ -649,13 +650,13 @@ void normalize_ramp(Image *I, const matrix2D<int> &bg_mask) {
       onepoint.z=MAT_ELEM((*I)(),i,j);
       onepoint.w=1.;
       allpoints.push_back(onepoint);
-    }    
+    }
   }
   least_squares_plane_fit(allpoints,pA,pB,pC);
   // Substract the plane from the image
   FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)()) {
     MAT_ELEM((*I)(),i,j)-=pA*j+pB*i+pC;
-  }  
+  }
   // Divide by the remaining std.dev. in the background region
   compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
 				   stddevbg);

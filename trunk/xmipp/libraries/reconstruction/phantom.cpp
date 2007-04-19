@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 //Fri Nov 19 13:22:15 EST 1999 subsampling strategy modified (R.Marabini)
 /* ------------------------------------------------------------------------- */
@@ -28,8 +28,10 @@
 /* ------------------------------------------------------------------------- */
 
 #include <stdio.h>
-#include "../phantom.hh"
-#include <XmippData/xmippGeometry.hh>
+
+#include "phantom.h"
+
+#include <data/geometry.h>
 
 /* ######################################################################### */
 /* Features                                                                  */
@@ -239,7 +241,7 @@ void Cylinder::read_specific(char *line) {
       REPORT_ERROR(3003,(string)"Error when reading a cylinder:"+line);
    prepare();
 }
- 
+
 /* Read a Double Cylinder -------------------------------------------------- */
 void DCylinder::read_specific(char *line) {
    int stat;
@@ -249,7 +251,7 @@ void DCylinder::read_specific(char *line) {
       REPORT_ERROR(3003,(string)"Error when reading a double cylinder:"+line);
    prepare();
 }
- 
+
 /* Read a Cube ------------------------------------------------------------- */
 void Cube::read_specific(char *line) {
    int stat;
@@ -259,7 +261,7 @@ void Cube::read_specific(char *line) {
       REPORT_ERROR(3003,(string)"Error when reading a cube"+line);
    prepare();
 }
- 
+
 /* Read an Ellipsoid ------------------------------------------------------- */
 void Ellipsoid::read_specific(char *line) {
    int stat;
@@ -279,7 +281,7 @@ void Cone::read_specific(char *line) {
       REPORT_ERROR(3003,(string)"Error when reading a cone"+line);
    prepare();
 }
- 
+
 /* Show an sphere ---------------------------------------------------------- */
 void  Sphere::feat_printf(FILE *fh) const {
    fprintf(fh,"sph    %c     %1.4f    % 7.2f   % 7.2f    % 7.2f    % 7.2f\n",
@@ -440,7 +442,7 @@ ostream& operator << (ostream &o, const Cone &f) {
   if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= radius*radius)\
       return 1;\
   return 0;}
-  
+
 /* Point inside a sphere --------------------------------------------------- */
 int Sphere::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const {
 DEF_Sph_Blob_point_inside
@@ -577,13 +579,13 @@ int Feature::voxel_inside(const matrix1D<double> &r, matrix1D<double> &aux1,
 }
 /* voxel_inside_by_normalized_density ------------------------------------*/
 double Feature::voxel_inside_by_normalized_density(
-                             const matrix1D<double> &r, 
+                             const matrix1D<double> &r,
 			     matrix1D<double> &aux1,
    matrix1D<double> &aux2) const {
 #ifdef NEVER
    if(Type=="blo")
      {
-cout << "den=" <<   density_inside(r, aux2) << endl;  
+cout << "den=" <<   density_inside(r, aux2) << endl;
      return(density_inside(r, aux2));
      }
    else
@@ -617,7 +619,7 @@ cout << "den=" <<   density_inside(r, aux2) << endl;
                                    *density_inside(r, aux2); // 100
    DEBUG_SHOW;
    return inside;
-     
+
 }
 #undef DEBUG
 
@@ -675,7 +677,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour) {
    int               add;
    double             inside;
    double             final_colour;
-   
+
    if (colour_mode==INTERNAL) {final_colour=Density; add=Add_Assign=='+';}
    else                       {final_colour=colour;  add=0;}
 
@@ -718,7 +720,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour) {
 void Feature::sketch_in(Volume *V, double colour) {
    matrix1D<double>   aux1(3),aux2(3), corner1(3), corner2(3), r(3);
    int               inside;
-      
+
    corners(V,corner1,corner2);
    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1,corner2) {
       inside=voxel_inside(r,aux1,aux2);
@@ -793,7 +795,7 @@ double Blob::intersection(
    V3_BY_CT(u, direction, 1/radius);
    return intersection_unit_sphere(u,r)/norm;
 #endif
-   return(kaiser_proj(point_line_distance_3D(Center,passing_point,direction), 
+   return(kaiser_proj(point_line_distance_3D(Center,passing_point,direction),
                       radius,alpha, m));
 
 }
@@ -872,7 +874,7 @@ double DCylinder::intersection(
    YY(r) /= radius;
    ZZ(r) /= height;
    double i2=intersection_unit_cylinder(u,r);
-   
+
    return (i1+i2)/norm;
 }
 
@@ -891,14 +893,14 @@ double Cube::intersection(
    XX(r) /= xdim;
    YY(r) /= ydim;
    ZZ(r) /= zdim;
-   
+
    // Express also the direction in the cube coordinate system
    // and normalise to a unit cube
    M3x3_BY_V3x1(u,euler,direction);
    XX(u) /= xdim;
    YY(u) /= ydim;
    ZZ(u) /= zdim;
-   
+
    return intersection_unit_cube(u,r)/norm;
 }
 
@@ -917,14 +919,14 @@ double Ellipsoid::intersection(
    XX(r) /= xradius;
    YY(r) /= yradius;
    ZZ(r) /= zradius;
-   
+
    // Express also the direction in the ellipsoid coordinate system
    // and normalise to a unit sphere
    M3x3_BY_V3x1(u,euler,direction);
    XX(u) /= xradius;
    YY(u) /= yradius;
    ZZ(u) /= zradius;
-   
+
    return intersection_unit_sphere(u,r)/norm;
 }
 
@@ -965,7 +967,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
 
 //   matrix1D<double> origin_debug(3);
 //   Uproject_to_plane(Center,P.direction,0,origin_debug);
-   
+
 //#define DEBUG_LITTLE
    #ifdef DEBUG_LITTLE
       cout << "Actual feature\n"     << this << endl;
@@ -978,7 +980,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
       cout << "origin              " << origin.transpose() << endl;
 //      cout << "origin_debug (Univ.coord) " << origin_debug.transpose() << endl;
    #endif
-/*   
+/*
    // Step 2). Express this projected center in the projection coord system
    M3x3_BY_V3x1(origin_debug,P.euler,origin_debug);
 //   if (A!=NULL) M2x2_BY_V2x1(origin,*A,origin_);
@@ -986,7 +988,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
       cout << "origin (Proj.coord) " << origin_debug.transpose() << endl;
    #endif
 */
-   
+
    // Find limits for projection ...........................................
    // Choose corners for the projection of this feature. It is supposed
    // to have at the worst case a projection of size max_distance
@@ -1047,7 +1049,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
    // Check if there is something to project
    if (XX(corner1)==XX(corner2)) return;
    if (YY(corner1)==YY(corner2)) return;
-   
+
    // Study the projection for each point in the projection plane ..........
    // (u,v) are in the deformed projection plane (if any deformation)
    for (int v=(int)YY(corner1); v<=(int)YY(corner2); v++)
@@ -1073,13 +1075,13 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
 //               if (Ainv!=NULL) M2x2_BY_V2x1(act,*Ainv,act);
 //               M3x3_BY_V3x1(act,P.eulert,act);
                M3x3_BY_V3x1(act,PV,act);
-               
+
                // Compute the intersection of a ray which passes through
                // this point and its direction is perpendicular to the
                // projection plane
                double possible_length=intersection(direction,act);
                if (possible_length>0) length += possible_length;
-               
+
                #ifdef DEBUG_EVEN_MORE
                cout << "Averaging at (" << actu << "," << actv << ")\n";
                cout << "   which in univ. coords is " << act.transpose() << endl;
@@ -1095,7 +1097,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
          cout << "Final value added at position (" << u << "," << v << ")="
               << length << endl;
          #endif
-         
+
          // Add at the correspondant pixel the found intersection ,,,,,,,,,,
          IMGPIXEL(P,v,u) += length*Density;
        }
@@ -1236,16 +1238,16 @@ void Cone::scale(double factor, Feature *_f) const {_f=scale(factor);}
 Feature *Feature::encircle(double radius) const {
    Sphere *f;
    f=new Sphere;
-   
+
    if (radius==0) radius=1.5*max_distance;
-   
+
    f->Type         = "sph";
    f->Add_Assign   = Add_Assign;
    f->Density      = Density;
    f->Center       = Center;
    f->max_distance = radius;
    f->radius       = radius;
-   
+
    return (Feature *)f;
 }
 
@@ -1486,11 +1488,11 @@ void Feature::mean_variance_in_plane(Volume *V, double z, double &mean,
    double sum2=0;
    double no_points=0;
    matrix1D<double> r(3), aux1(3), aux2(3);
-   
+
    mean=0;
    var=0;
    if (z<STARTINGZ(VOLMATRIX(*V)) || z>FINISHINGZ(VOLMATRIX(*V))) return;
-   
+
    ZZ(r)=z;
    for (YY(r)=STARTINGY(VOLMATRIX(*V)); YY(r)<=FINISHINGY(VOLMATRIX(*V)); YY(r)++)
       for (XX(r)=STARTINGX(VOLMATRIX(*V)); XX(r)<=FINISHINGX(VOLMATRIX(*V)); XX(r)++) {
@@ -1610,7 +1612,7 @@ char       straux[6];
       REPORT_ERROR(3003,(string)"Phantom::read: Cannot open the phantom file: "
          +fn_phantom);
     fn = fn_phantom;
- 
+
 // Read the file
    while (fgets (line, 200,fh_phantom ) != NULL) {
       if (line[0]==0) continue;
@@ -1811,7 +1813,7 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
 }
 #undef DEBUG
 
-void Phantom::project_to(Projection &P, 
+void Phantom::project_to(Projection &P,
    double rot, double tilt, double psi, const matrix2D<double> *A) const {
    P.set_angles(rot,tilt,psi);
 
@@ -1828,11 +1830,11 @@ void Phantom::project_to(Projection &P, const matrix2D<double> &VP, double    di
    matrix2D<double> PV=VP.inv();
 
    // Project all features
-   for (int i=0; i<VF.size(); i++) 
+   for (int i=0; i<VF.size(); i++)
       {
       if(rnd_unif(0,1)<disappearing_th)
          VF[i]->project_to(P,VP,PV);
-      }  
+      }
 }
 
 /* Surface ----------------------------------------------------------------- */
@@ -1896,7 +1898,7 @@ void Phantom::surface(double z0, double radius, int direction, Image *P)
                }
          }
       }
-      
+
       IMGPIXEL(*P,i,j)=k;
    }
 }

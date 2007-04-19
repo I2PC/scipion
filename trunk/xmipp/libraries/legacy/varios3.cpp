@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /**************************************************************************/
@@ -45,23 +45,27 @@
 /**************************************************************************/
 
 #include <fcntl.h>
+#include <unistd.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #ifndef __APPLE__
    #include <malloc.h>
 #else
-   #include <stdlib.h>
+   #include <cstdlib>
 #endif
-#include <stdio.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+
 #include "spider.h"
 #include "groe.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <math.h>
-#include <string.h>
 
 /***************************************************************
-   This function read/write a slice of a volume  from/to the 
+   This function read/write a slice of a volume  from/to the
  file handled by "handle", depending on the value of the flag
  "rdwr".
    The slice's dimensions are "row x col" and its kind is indicated
@@ -235,8 +239,8 @@ free(volumen);
 /***************************************************************
    This function read/write the volume "volumen" from/to the file
  called "name", depending on the value of the flag "rdwr".
- The volume's dimensions are "capas x fil x col" and its kind is 
- indicated in "format", that is, the volume could be a 
+ The volume's dimensions are "capas x fil x col" and its kind is
+ indicated in "format", that is, the volume could be a
  three-dimensional array of chars ("format" values NATURAL)
  or of floats ("format" values FLOATFMT or SPIDER).
    For reading and writing this function calls to "capa_io" which
@@ -252,13 +256,13 @@ free(volumen);
 int volume_io (char ***volumen, int capas, int fil, int col, char *name,
      int rdwr, int format,int norma)
 
-{    
+{
      int handle, oflag, pmode, i;
      int  headrec;    /* more spider header fun               */
      int NORMwr=0;                   /* Flags for normalized volume          */
      int NORMrd=0;                   /* (one for writing , one for reading)  */
 
-      
+
 if (capas <= 0 || fil <= 0 || col <= 0)
     return ERROR;   /* Allowed range: 1..? */
 
@@ -282,7 +286,7 @@ switch (rdwr) {
 
 if( (format == FLOATFMT) && (norma==TRUE) ){
       if(rdwr==READING) NORMrd=1;
-      else NORMwr=1; 
+      else NORMwr=1;
  }
 
 
@@ -293,11 +297,11 @@ if ((handle = open (name, oflag, pmode)) == -1)
 
 		/********       THE HEADER      *************/
 
-if ((format == FLOATFMT) || (format == FOURIER) ) 
+if ((format == FLOATFMT) || (format == FOURIER) )
   {
         i= sizeof(CABECERO);
         cabecero.fNlabel = (float)((int)(256/col+1));
-        cabecero.fLabrec=(float) ceil((float)256/col);   
+        cabecero.fLabrec=(float) ceil((float)256/col);
 
 	if(rdwr == WRITING)
          {
@@ -314,10 +318,10 @@ if ((format == FLOATFMT) || (format == FOURIER) )
                   cabecero.fNrec= cabecero.fNrow+1;
                   headrec = headrec + 1;
                   }
-                else 
-                  cabecero.fNrec=cabecero.fNrow; 
-                   
-                cabecero.fLabbyt = (float) headrec * cabecero.fNsam * 4 ; 
+                else
+                  cabecero.fNrec=cabecero.fNrow;
+
+                cabecero.fLabbyt = (float) headrec * cabecero.fNsam * 4 ;
                 cabecero.fLenbyt = (float) cabecero.fNsam * 4;
                 i=(int)cabecero.fNsam*(int)cabecero.fLabrec*4;
                 Tiempo(); /*calculate time & date and store them in the header*/         }

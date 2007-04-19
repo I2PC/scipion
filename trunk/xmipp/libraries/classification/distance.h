@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -32,15 +32,12 @@
 
 #pragma warning(disable:4786)
 
-//-----------------------------------------------------------------------------
-
-#include <math.h>              // sqrt, fabs
+#include <cmath>              // sqrt, fabs
 #include <stdexcept>           // runtime_error
 #include <numeric>             // accumulate
-#include "xmippCDataTypes.hh"
-#include "xmippVectorOps.hh"
 
-//-----------------------------------------------------------------------------
+#include "data_types.h"
+#include "vector_ops.h"
 
 /**
  * Euclidean distance.
@@ -64,7 +61,7 @@ xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2);
 
 /**@name Distance class*/
 //@{
-/** 
+/**
  * This class defines an abstract interface for distances
  * Type T must have all arithmetic operations, specially - and conversion
  * to xmippFeature
@@ -73,9 +70,9 @@ class xmippDistance {
  public:
   xmippDistance() {}
   virtual ~xmippDistance(){}
-  
+
   /// Returns the distance between the two vectors
-  virtual xmippFeature operator()(const xmippVector& _v1, 
+  virtual xmippFeature operator()(const xmippVector& _v1,
 				const xmippVector& _v2) = 0;
 };
 //@}

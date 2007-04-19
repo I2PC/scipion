@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -28,11 +28,10 @@
 // Implements Smoothly Distributed Kernel Probability Density Estimator Self-Organizing Map
 // This is an abstract base class for different variants of the KerDenSOM algorithm
 //-----------------------------------------------------------------------------
+
 #include <fstream>
-#include "../xmippKerDenSOM.hh"
 
-
-//-----------------------------------------------------------------------------
+#include "kerdensom.h"
 
   /**
    * Sets the number of training steps
@@ -68,7 +67,7 @@
 	// Defines verbosity level
         int verbosity = listener->getVerbosity();
         if (verbosity) {
-  	  listener->OnReportOperation((string) "\nEstimating quantization error....\n");  
+  	  listener->OnReportOperation((string) "\nEstimating quantization error....\n");
           listener->OnInitOperation(_examples.size());
 	}
 
@@ -107,15 +106,15 @@
 	for (j = 0; j < dim; j++) tmpMap[cc][j] = 0.;
 	if (_reg != 0)
 	  tmpDens[cc] = _reg*_som->getLayout().numNeig(_som, (SomPos) _som->indexToPos(cc));
-	else 
-	  tmpDens[cc] = 0.;  
+	else
+	  tmpDens[cc] = 0.;
      	for(vv = 0; vv < numVectors; vv++) {
      	   double tmpU = (double) _som->memb[vv][cc];
-     	   tmpDens[cc] += tmpU; 
+     	   tmpDens[cc] += tmpU;
      	   for (j = 0; j < dim; j++) {
 	     tmpMap[cc][j] += (double)((double) tmpU*(double)(_examples->theItems[vv][j]));
 	   }
-     	}    
+     	}
      }
 
 
@@ -127,13 +126,13 @@
      while (( convergence > 1e-5 ) && (t2 < 100)) {
         t2++; stopError2 = 0; stopError1 = 0;
         for(cc = 0; cc < numNeurons; cc++) {
-	     if (_reg != 0) 
+	     if (_reg != 0)
                _som->localAve(_som->indexToPos(cc), tmpV);
              for (j = 0; j < dim; j++) {
 		double tmpU = (tmpMap[cc][j] + tmpV[j]*_reg)/tmpDens[cc];
 		stopError1 += fabs((double)(_som->theItems[cc][j]) - tmpU);
 		stopError2 += fabs(tmpU);
-		_som->theItems[cc][j] = (xmippFeature) tmpU;  
+		_som->theItems[cc][j] = (xmippFeature) tmpU;
 	     }
 	} // for
 	convergence = stopError1/stopError2;
@@ -141,17 +140,17 @@
 
 
   }
-  
+
 
 //-----------------------------------------------------------------------------
 
    // Main iterations
   double xmippKerDenSOM::mainIterations(xmippFuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg) {
-    	int verbosity = listener->getVerbosity();  
+    	int verbosity = listener->getVerbosity();
         double stopError = 1e10, alpha, ts2;
 	int iter = 0;
 	if (somNSteps == 0) return stopError;
-      	if (verbosity == 1 || verbosity == 3)    
+      	if (verbosity == 1 || verbosity == 3)
            listener->OnInitOperation(somNSteps);
 	do {
 	     iter++;
@@ -160,7 +159,7 @@
              stopError = fabs(_sigma/ts2-1.);
 	     _sigma = ts2;
              updateV(_som, _examples, _reg);
-	     if (verbosity == 1 || verbosity == 3)    
+	     if (verbosity == 1 || verbosity == 3)
       	  	listener->OnProgress(iter);
              if (verbosity >= 2) {
 	       char s[100];
@@ -168,7 +167,7 @@
   	       listener->OnReportOperation((string) s);
 	     }
 	} while ((stopError > epsilon) && (iter < somNSteps));
-      	if (verbosity == 1 || verbosity == 3)    
+      	if (verbosity == 1 || verbosity == 3)
       	 listener->OnProgress(somNSteps);
 	return stopError;
   }   	
@@ -180,7 +179,7 @@
   double xmippKerDenSOM::updateSigmaI(xmippFuzzyMap* _som, const TS* _examples) {
      double r, t = 0;
      int vv, cc, j;
-     
+
      // Computing Sigma (Part I)	
      for(vv = 0; vv < numVectors; vv++) {
      	for (cc = 0; cc < numNeurons; cc++ ) {
@@ -188,7 +187,7 @@
      	   for (j = 0; j < dim; j++)
 	     r += ((double)(_examples->theItems[vv][j]) - (double)(_som->theItems[cc][j]))*((double)(_examples->theItems[vv][j]) - (double)(_som->theItems[cc][j]));
 	   t += r*(double)(_som->memb[vv][cc]);
-     	}    
+     	}
      }
      return (double) (t/(double)(numVectors*dim));
   }   	
@@ -213,17 +212,17 @@
 	tmpDens[cc] = 0.0;
      	for(vv = 0; vv < numVectors; vv++) {
      	   double tmpU = (double)(_som->memb[vv][cc]);
-     	   tmpDens[cc] += tmpU; 
+     	   tmpDens[cc] += tmpU;
      	   for (j = 0; j < dim; j++) {
 	     tmpMap[cc][j] += (double)((double) tmpU*(double)(_examples->theItems[vv][j]));
 	   }
-     	}    
+     	}
      }
 
      for(cc = 0; cc < numNeurons; cc++) {
      	  for (j = 0; j < dim; j++) {
      	     double tmpU = tmpMap[cc][j]/tmpDens[cc];
-     	     _som->theItems[cc][j] = (xmippFeature) tmpU;  
+     	     _som->theItems[cc][j] = (xmippFeature) tmpU;
      	  }
      } // for
 
@@ -235,29 +234,29 @@
    * Special Initialization of Membership Matrix (Fuzzy c-means style)
    */
   void xmippKerDenSOM::updateU1(xmippFuzzyMap* _som, const TS* _examples) {
-  
+
       double auxProd, auxDist, tmp;
       int k, j, i;
-      
+
       // Update Membership matrix
-      for (k = 0; k < numVectors; k++ ) {     
+      for (k = 0; k < numVectors; k++ ) {
         auxProd = 1;
-	for(j=0; j< numNeurons; j++) 
+	for(j=0; j< numNeurons; j++)
 	  auxProd *= (double) eDist( _som->theItems[j], _examples->theItems[k] );
-	  
-	if (auxProd == 0.) { // Apply k-means criterion (Data-CB) must be > 0 
-	  for ( j = 0; j < numNeurons; j ++ ) 
+	
+	if (auxProd == 0.) { // Apply k-means criterion (Data-CB) must be > 0
+	  for ( j = 0; j < numNeurons; j ++ )
 	    if (eDist( _som->theItems[j], _examples->theItems[k] ) == 0.) _som->memb[k][j] = 1.0;
 	    else _som->memb[k][j] =  0.0;
 	} else {
 	  for ( i = 0; i < numNeurons; i ++ ) {
             auxDist = 0;
 	    for ( j = 0; j < numNeurons; j ++ ) {
-	      tmp = eDist( _som->theItems[i], _examples->theItems[k] ) / 
+	      tmp = eDist( _som->theItems[i], _examples->theItems[k] ) /
 	      	    eDist( _som->theItems[j], _examples->theItems[k] );
 	      auxDist += pow(tmp, 2);
 	    } // for j
-	    _som->memb[k][i] =  (xmippFeature) 1.0/auxDist; 
+	    _som->memb[k][i] =  (xmippFeature) 1.0/auxDist;
 	  } // for i	
 	} // if auxProd
       } // for k
@@ -300,28 +299,28 @@
     xmippVector VV;
     VV.resize(dim, 0.0);
     xmippFuzzyMap tmpSOM(*_som);
-    TS tmpTS(*_examples);    
+    TS tmpTS(*_examples);
     num = 0;
 
     for (vv = 0; vv < numVectors; vv++ ) {
        for (j = 0; j < dim; j++) VV[j] = 0.0;
        for (cc = 0; cc < numNeurons; cc++ ) {
-          for (j = 0; j < dim; j++) 
+          for (j = 0; j < dim; j++)
 	     VV[j] += (_examples->theItems[vv][j]-_som->theItems[cc][j])*_som->memb[vv][cc];
        }
-       for (j = 0; j < dim; j++) 
-	  num += VV[j]*VV[j];	       	  
-    }  
-    
-    init_random_generator();    
+       for (j = 0; j < dim; j++)
+	  num += VV[j]*VV[j];	       	
+    }
+
+    init_random_generator();
     for (vv = 0; vv < numVectors; vv++ ) {
-       for (j = 0; j < dim; j++)       
-	  tmpTS.theItems[vv][j] += rnd_gaus()*_dataSD; 
-    }  
+       for (j = 0; j < dim; j++)
+	  tmpTS.theItems[vv][j] += rnd_gaus()*_dataSD;
+    }
     updateV(&tmpSOM, &tmpTS, _reg);
     den = 0.0;
 
-    init_random_generator();    
+    init_random_generator();
     for (vv = 0; vv < numVectors; vv++ ) {
        for (j = 0; j < dim; j++) VV[j] = 0.0;
        for (cc = 0; cc < numNeurons; cc++ ) {
@@ -329,14 +328,14 @@
 	     VV[j] += (tmpTS.theItems[vv][j]- tmpSOM.theItems[cc][j] - _examples->theItems[vv][j] + _som->theItems[cc][j])*_som->memb[vv][cc];
        }
        r = 0.;
-       for (j = 0; j < dim; j++) 
-	  r += VV[j]*rnd_gaus()*_dataSD;	   
-       den += r*r;      	  
-    }  
+       for (j = 0; j < dim; j++)
+	  r += VV[j]*rnd_gaus()*_dataSD;	
+       den += r*r;      	
+    }
     if (den != 0)
     	return (double) num/den;
     else
-        return 0.;    
+        return 0.;
   }
 
 //-----------------------------------------------------------------------------
@@ -347,7 +346,7 @@
 //-----------------------------------------------------------------------------
 
   /**
-   * Shows the data 
+   * Shows the data
    */
 
 void xmippKerDenSOM::showX(const TS* _ts) {
@@ -355,7 +354,7 @@ void xmippKerDenSOM::showX(const TS* _ts) {
   for (int i = 0; i < _ts->size(); i++) {
      for (int j = 0; j < _ts->theItems[0].size(); j++) {
        cout << i + 1 << "  " << j + 1 << "  " << _ts->theItems[i][j] << endl;
-     }  
+     }
   }
 }
 
@@ -377,7 +376,7 @@ void xmippKerDenSOM::showV(xmippFuzzyMap* _som) {
 
 //-----------------------------------------------------------------------------
   /**
-   * Shows the U ("Membership") 
+   * Shows the U ("Membership")
    */
 
 void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts) {
@@ -393,12 +392,12 @@ void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts) {
 
 //-----------------------------------------------------------------------------
   /**
-   * Prints the Us ("Membership") 
+   * Prints the Us ("Membership")
    */
 
 void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname) {
 
-   FILE* F=fopen(_fname.c_str(),"w"); 
+   FILE* F=fopen(_fname.c_str(),"w");
    if (F == NULL) {
      return;
    }
@@ -425,7 +424,7 @@ void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname
      fprintf(F, "\n");	
     }
   }
-  
+
   fclose(F);
 
 }

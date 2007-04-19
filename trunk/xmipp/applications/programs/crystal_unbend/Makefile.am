@@ -4,7 +4,8 @@ crystal_unbend_LDADD = \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons_Interface.la \
 	$(top_srcdir)/libraries/interface/libXmippInterface.la \
-	$(top_srcdir)/libraries/data/libXmippData.la
+	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/external/bilib/libBilib.la
 
 crystal_unbend_LDFLAGS = @EXEC_TYPE@
 

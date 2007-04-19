@@ -1,32 +1,31 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar Sánchez Sorzano      coss@cnb.uam.es
+ * Authors:    Carlos Oscar Sï¿½nchez Sorzano      coss@cnb.uam.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 //Sun Nov 14 22:07:48 EST 1999: added discrete option (R. Marabini)
 
-#include <Reconstruction/Programs/Prog_random_phantom.hh>
+#include <reconstruction/phantom_create_random.h>
 
-/* Program ================================================================= */
 int main (int argc,char **argv ) {
 // Parameters
    Prog_Random_Phantom_Parameters prog_prm;
@@ -54,7 +53,7 @@ int main (int argc,char **argv ) {
       PARAMETER DEFINITIONS {
         $PHANTOM_FAMILY {
 	   label="Phantom Family Description";
-	   help="Input: This file has got a complex structure, better see 
+	   help="Input: This file has got a complex structure, better see
                  the Web help";
 	   type=file existing;
 	}

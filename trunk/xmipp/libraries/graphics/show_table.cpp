@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Alberto Pascual Montano (pascual@cnb.uam.es)
- *              Carlos Oscar Sánchez Sorzano (coss@cnb.uam.es)
+ *              Carlos Oscar Sï¿½nchez Sorzano (coss@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -11,42 +11,44 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /* FALTA:
-	10- Cambiar el tamaño del grid por menu
+	10- Cambiar el tamaï¿½o del grid por menu
         11- Agregar una barra de estado para ver los pixeles originales...
 	12- Arreglar el escalado cuando la normalizacion es global...
 */
 
-#include "../showTable.hh"
-#include "../show2D.hh"
+#include "show_table.h"
+#include "show_2d.h"
+
 #include <qpainter.h>
 #include <qkeycode.h>
 #include <qscrollbar.h>
 #include <qmessagebox.h>
 #include <qmenubar.h>
 #include <qfiledialog.h>
+#include <qfontdialog.h>
+#include <qcolordialog.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <qfontdialog.h>
-#include <qcolordialog.h>
 
 /* Constructor/Destructor -------------------------------------------------- */
 ShowTable::ShowTable() {
@@ -76,7 +78,7 @@ void ShowTable::init() {
     menubar         = NULL;
     status          = NULL;
     QFont tmpFont("Fixed", 12);
-    fontColor       = white; 
+    fontColor       = white;
     content_queue.clear();
 }
 
@@ -139,7 +141,7 @@ void ShowTable::initTable() {
        maxCols=numCols;
        maxRows=CEIL((double)listSize/numCols);
     }
-    
+
     setBackgroundMode( PaletteBase );	   // set widgets background
     setSelectionMode(QTable::NoSelection); // do not accept Qt managed selections
     setReadOnly(true);
@@ -193,7 +195,7 @@ void ShowTable::changeFont() {
 }
 
 /* Init Rightclick menubar ------------------------------------------------- */
-void ShowTable::insertGeneralItemsInRightclickMenubar() {    
+void ShowTable::insertGeneralItemsInRightclickMenubar() {
     //Colors................................................................
     QPopupMenu* colorMenu = new QPopupMenu();
        colorMenu->insertItem( "&Font color", this, SLOT(changeFontColor()));
@@ -213,7 +215,7 @@ void ShowTable::insertGeneralItemsInRightclickMenubar() {
 
 /* Change boolean option --------------------------------------------------- */
 void ShowTable::changeBoolOption(int _mi, int _mic) {
-    bool show=options->isItemEnabled(_mi); 
+    bool show=options->isItemEnabled(_mi);
     if (show) {
        options->setItemEnabled(_mi,  false);
        options->setItemEnabled(_mic, true);
@@ -252,7 +254,7 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
    int h = rowHeight( row );		       // height of cell in pixels
    int x2 = w - 1;
    int y2 = h - 1;
-   
+
    // Draw frame
    if ( cellMarks[i] ) { // if the cell is marked
      QPen pen;
@@ -298,12 +300,12 @@ void ShowTable::scale_and_normalize(matrix2D<double> &I, bool normalize,
        // recompute the min and max values for this image
        double min_val, max_val, slope;
        I.compute_double_minmax(min_val, max_val);
-       if (minPixel !=maxPixel) 
+       if (minPixel !=maxPixel)
 	  slope=(double)(255)/(double)(maxPixel-minPixel);
-       else            
+       else
 	  slope=0;
-       minGray = (int) (slope * (double) (min_val-minPixel));  
-       maxGray = (int) (slope * (double) (max_val-minPixel));  
+       minGray = (int) (slope * (double) (min_val-minPixel));
+       maxGray = (int) (slope * (double) (max_val-minPixel));
     }
 }
 
@@ -313,7 +315,7 @@ void ShowTable::changeMark(int row, int col) {
     updateCell( row, col ); // show new current cell
 }
 
-void ShowTable::changeScale(double newScale) {  
+void ShowTable::changeScale(double newScale) {
     if (newScale==currScale) return;
     currScale=newScale;
     clearContents();
@@ -325,10 +327,10 @@ void ShowTable::contentsMouseDoubleClickEvent(  int row, int col, int button,
     const QPoint & mousePos ) {changeMark(row,col);}
 
 void ShowTable::contentsMousePressEvent(  int row, int col, int button,
-    const QPoint & mousePos  ) 
+    const QPoint & mousePos  )
      {
       setCurrentCell(row,col);
-      if( button==RightButton) menubar->exec(mousePos);           
+      if( button==RightButton) menubar->exec(mousePos);
      }
 
 void ShowTable::keyPressEvent( QKeyEvent* e ) {
@@ -339,18 +341,18 @@ void ShowTable::keyPressEvent( QKeyEvent* e ) {
 	case Key_Space:
 	   changeMark(currentRow(), currentColumn());
 	   break;
-	case Key_M:     
+	case Key_M:
 	case Key_Minus:
-            if (e->state() == ControlButton)	// If 'Ctrol+'-key, 
-               if (currScale > 10) changeScale(currScale-10);	     
+            if (e->state() == ControlButton)	// If 'Ctrol+'-key,
+               if (currScale > 10) changeScale(currScale-10);	
 	     break;
 	case Key_P:
 	case Key_Plus:
-            if (e->state() == ControlButton)	// If 'Ctrol+'-key, 
+            if (e->state() == ControlButton)	// If 'Ctrol+'-key,
 	        changeScale(currScale+10);
 	     break;
 	case Key_Q:
-             if (e->state() == ControlButton)	// If 'Ctrol Q' key, 
+             if (e->state() == ControlButton)	// If 'Ctrol Q' key,
   		  exit(0); // Terminate program
 	     break;
 	default:
@@ -360,7 +362,7 @@ void ShowTable::keyPressEvent( QKeyEvent* e ) {
 }
 
 /* Open File --------------------------------------------------------------- */
-void ShowTable::GUIopenFile() {  
+void ShowTable::GUIopenFile() {
     QString newfilename = QFileDialog::getOpenFileName( QString::null, "*", this, "Sel files");
     if ( !newfilename.isEmpty() )
        openNewFile((string)  ((const char *)newfilename));
@@ -404,8 +406,8 @@ void ShowTable::showStats(SelFile &SF, bool apply_geo) {
     try {
        Image _ave, _sd;
        double _minPixel, _maxPixel;
-       SF.go_beginning(); 
-       SF.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);  
+       SF.go_beginning();
+       SF.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);
        ImageViewer *wavg = new ImageViewer(&_ave,"Average Image");
        ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
        wavg->show();

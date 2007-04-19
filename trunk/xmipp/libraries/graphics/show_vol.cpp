@@ -7,25 +7,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showVol.hh"
-#include "../showTools.hh"
+#include "show_vol.h"
+#include "show_tools.h"
 
 /* Initialize with a volume file.------------------------------------------- */
 void ShowVol::initWithFile( int _numRows, int _numCols,
@@ -62,7 +62,7 @@ void ShowVol::readFile(const FileName &_fn,
     V.read(aux_fn);
     setCaption(fn.c_str());
     annotateTime(aux_fn);
-    
+
     V().set_Xmipp_origin();
     if (_minGray==0 && _maxGray==0)
        V().compute_double_minmax(minPixel,maxPixel);
@@ -85,13 +85,13 @@ void ShowVol::initTable() {
    ShowTable::initTable();
    setFocusPolicy( NoFocus ); // no keyboard focus is accepted
    // Really set size
-   setMaximumSize(maxWidth,maxHeight);    
+   setMaximumSize(maxWidth,maxHeight);
    resize(maxWidth,maxHeight);
 }
 
 /* Init Rightclick menubar ------------------------------------------------- */
-void ShowVol::initRightclickMenubar() {    
-   menubar = new QPopupMenu(); 
+void ShowVol::initRightclickMenubar() {
+   menubar = new QPopupMenu();
 
    // File ................................................................
    QPopupMenu * file = new QPopupMenu();

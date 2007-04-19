@@ -6,32 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 // This program "unskrew" a volume produced by the MRC package
 // (An converted to Spider format)
 
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippArgs.hh>
-#include <stdio.h>
+#include <data/volume.h>
+#include <data/image.h>
+#include <data/args.h>
+
+#include <cstdio>
 
 struct TransfMat {
-    float Sx,           /* Scale: Scale factor for X axis. */ 
+    float Sx,           /* Scale: Scale factor for X axis. */
           Hy,    	/* Shear: transform along X axis. */
           Tx;    	/* Translation: Offset in X axis. */
     };                  /* Structure for Transformation Matrix. */
@@ -48,12 +49,12 @@ int main (int argc, char **argv) {
    VolumeXmipp     	volume_out;
    int 			nx, ny, nz, newnx;
    struct TransfMat 	transformatrix;      /* Transformation Matrix. */
-   float            	sheartransY;         /* Shear and Translation factors 
+   float            	sheartransY;         /* Shear and Translation factors
                                                 for row <y>. */
    int 			skewnx;              /* Nx of skewed & scaled image. */
    int			z,y;
    int			i;
-   
+
    // Get command line parameters ------------------------------------------
    try {
       fn_input     = get_param(argc,argv,"-i","");
@@ -75,7 +76,7 @@ int main (int argc, char **argv) {
    else {
       cout << "\n Can not read file: " << fn_input << endl;
    }
-   
+
    /* Checking out the value of gamma. */
    if(gamma == 90){
        printf("\n Skew angle = 90 degrees. No skewing applied.\n\n");
@@ -86,7 +87,7 @@ int main (int argc, char **argv) {
        exit(1);
        }
 
-   // Computing Transformation Matrix. 
+   // Computing Transformation Matrix.
    nz=ZSIZE(VOLMATRIX(volume_in));
    ny=YSIZE(VOLMATRIX(volume_in));
    nx=XSIZE(VOLMATRIX(volume_in));
@@ -99,11 +100,11 @@ int main (int argc, char **argv) {
        exit(1);
        }
 
-   // Computing Dimensions of new image. 
+   // Computing Dimensions of new image.
    newnx = (int)(nx * transformatrix.Sx + ny * fabsf(transformatrix.Hy));
    if(newnx%2) newnx++;                  /* Even number of columns is wanted. */
 
-   // output volume 
+   // output volume
    VOLMATRIX(volume_out).resize(maxz-minz+1,ny,newnx);
    cout << " Skewing file with gama= " << gamma << endl;
 
@@ -124,11 +125,11 @@ int main (int argc, char **argv) {
 	     for(skewx=skewx1; skewx<=skewxn; skewx++){
 		 x = (skewx - sheartransY) / Sx;
 		 xa = (int)floor(x); xb = (int)ceil(x);
-		 if(xa == xb) 
+		 if(xa == xb)
         	     VOLVOXEL(volume_out,z-minz,y,skewx) = VOLVOXEL(volume_in,z,y,xa);
-		 else 
-        	     VOLVOXEL(volume_out,z-minz,y,skewx) = Interpo(x, xa, xb, 
-	                                        	     VOLVOXEL(volume_in,z,y,xa), 
+		 else
+        	     VOLVOXEL(volume_out,z-minz,y,skewx) = Interpo(x, xa, xb,
+	                                        	     VOLVOXEL(volume_in,z,y,xa),
 							     VOLVOXEL(volume_in,z,y,xb));
 		 }
 
@@ -138,11 +139,11 @@ int main (int argc, char **argv) {
 		for(skewx=skewx0; skewx<skewx1; skewx++){
 		   x = (skewx - sheartransY) / Sx;
 		   xa = (int)floor(x); xb = (int)ceil(x);
-		   if(xa == xb) 
+		   if(xa == xb)
 		     VOLVOXEL(volume_out,z-minz,y,skewx) = VOLVOXEL(volume_in,z,y,xa);
-		   else 
-		     VOLVOXEL(volume_out,z-minz,y,skewx) = Interpo(x, xa, xb, 
-	  					      VOLVOXEL(volume_in,z,y,nx-1), 
+		   else
+		     VOLVOXEL(volume_out,z-minz,y,skewx) = Interpo(x, xa, xb,
+	  					      VOLVOXEL(volume_in,z,y,nx-1),
 	        				      VOLVOXEL(volume_in,z,y,0));
 		}
 		if(skewx0)
@@ -172,10 +173,10 @@ int main (int argc, char **argv) {
 void Usage (char *argv[]) {
     cout << "Purpose:\n";
     cout << "    Skew (undeform) a volume\n";
-    
+
     cout << "Usage:" << argv[0] <<" -i filename -o filename -gamma skew_amgle_degrees -zmin Zmin -zmax Zmax" << endl << endl;
     cout << endl;
-    
+
     exit(1);
 
 }

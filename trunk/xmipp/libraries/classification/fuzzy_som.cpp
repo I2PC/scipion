@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -28,7 +28,8 @@
 // Implements Smoothly Distributed Fuzzy c-means Self-Organizing Map
 //-----------------------------------------------------------------------------
 
-#include "../xmippFuzzySOM.hh"
+#include "fuzzy_som.h"
+
 #ifdef __sun
    #include <ieeefp.h>
 #endif
@@ -44,7 +45,7 @@
 //-----------------------------------------------------------------------------
   /**
    * Sets the Intial Fuzzy membership
-   * @param _m0  
+   * @param _m0
    */
   void xmippFuzzySOM::initialFuzzzyMembership(const double& _m0) { m0 = _m0; };
 
@@ -52,7 +53,7 @@
 //-----------------------------------------------------------------------------
   /**
    * Sets the Final Fuzzy membership
-   * @param _m1  
+   * @param _m1
    */
   void xmippFuzzySOM::finalFuzzzyMembership(const double& _m1) { m1 = _m1; };
 
@@ -68,7 +69,7 @@
 //-----------------------------------------------------------------------------
   /**
    * Sets the Regularization Constant
-   * @param _reg  
+   * @param _reg
    */
   void xmippFuzzySOM::regularization(const double& _reg) { reg = _reg;};
 
@@ -76,7 +77,7 @@
 //-----------------------------------------------------------------------------
   /**
    * Trains the Fuzzy SOM
-   * @param _som  The fuzzy som to train           
+   * @param _som  The fuzzy som to train
    * @param _ts   The training set
    */
   void xmippFuzzySOM::train (xmippFuzzyMap& _som, const TS& _examples)
@@ -96,27 +97,27 @@
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-  	listener->OnReportOperation((string) "\nTraining Fuzzy SOM....\n");  
+  	listener->OnReportOperation((string) "\nTraining Fuzzy SOM....\n");
 
     // Deterministic annealing step
     if (annSteps) {
 
-      for (int i = 0; i <  _examples.size(); i++) 
-        for (int j = 0; j < _som.size(); j++) 
+      for (int i = 0; i <  _examples.size(); i++)
+        for (int j = 0; j < _som.size(); j++)
           _som.memb[i][j] = 0.;
 
       if (verbosity)
-  	listener->OnReportOperation((string) "\nDeterministic annealing steps....\n");  
-      if (verbosity == 1 || verbosity == 3)    
+  	listener->OnReportOperation((string) "\nDeterministic annealing steps....\n");
+      if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(annSteps);
-    
+
       double fuzz;
       for (int iter =0; iter < annSteps; iter++) {
-      
+
          fuzz = m0-iter*(m0-m1)/(annSteps-1);
          stopError = updateU(_som, _examples, fuzz);
          updateV(_som, _examples, fuzz);	
-	 if (verbosity == 1 || verbosity == 3)    
+	 if (verbosity == 1 || verbosity == 3)
       	  listener->OnProgress(iter);
          if (verbosity >= 2) {
 	   char s[100];
@@ -124,22 +125,22 @@
   	   listener->OnReportOperation((string) s);
          }	
       }
-      if (verbosity == 1 || verbosity == 3)    
+      if (verbosity == 1 || verbosity == 3)
       	 listener->OnProgress(annSteps);
     }
- 
-    
-    // Fixed steps
-    
 
-    for (int i = 0; i <  _examples.size(); i++) 
-      for (int j = 0; j < _som.size(); j++) 
+
+    // Fixed steps
+
+
+    for (int i = 0; i <  _examples.size(); i++)
+      for (int j = 0; j < _som.size(); j++)
          _som.memb[i][j] = 0.;
-    
+
 
     if (verbosity)
-      listener->OnReportOperation((string) "\nFinal steps....\n");  
-    if (verbosity == 1 || verbosity == 3)    
+      listener->OnReportOperation((string) "\nFinal steps....\n");
+    if (verbosity == 1 || verbosity == 3)
       listener->OnInitOperation(somNSteps);
 
     unsigned t = 0;  // Iteration index
@@ -149,7 +150,7 @@
       stopError = updateU(_som, _examples, m1);
       updateV(_som, _examples, m1);
       t++;
-      if (verbosity == 1 || verbosity == 3)    
+      if (verbosity == 1 || verbosity == 3)
       	listener->OnProgress(t);
       if (verbosity >= 2) {
 	char s[100];
@@ -157,7 +158,7 @@
   	listener->OnReportOperation((string) s);
       }	
     } // while
-    if (verbosity == 1 || verbosity == 3)    
+    if (verbosity == 1 || verbosity == 3)
       listener->OnProgress(somNSteps);
 
 
@@ -166,8 +167,8 @@
     tmpMap.clear();
     tmpD.clear();
 
-  }; 
-  
+  };
+
 
 //-----------------------------------------------------------------------------
   /**
@@ -181,7 +182,7 @@
 	// Defines verbosity level
         int verbosity = listener->getVerbosity();
         if (verbosity) {
-  	  listener->OnReportOperation((string) "\nEstimating quantization error....\n");  
+  	  listener->OnReportOperation((string) "\nEstimating quantization error....\n");
           listener->OnInitOperation(_examples.size());
 	}
 
@@ -213,12 +214,12 @@
 
     unsigned i, j, k;
     double var = 0;
-    double auxDist, auxProd, auxExp;    
+    double auxDist, auxProd, auxExp;
 
-    auxExp = 1./(_m-1.);  
+    auxExp = 1./(_m-1.);
     // Update Membership matrix
 
-    for (k = 0; k < numVectors; k++ ) {     
+    for (k = 0; k < numVectors; k++ ) {
       auxProd = 0;
       for ( i = 0; i < numNeurons; i ++ ) {
           auxDist = 0;
@@ -229,7 +230,7 @@
           if (auxDist < MAXZERO) auxDist = MAXZERO;
           auxProd += (double) 1./auxDist;
           tmpD[i] = auxDist;
-      }    
+      }
       for (j = 0; j < numNeurons; j ++ ) {
           double tmp =  1./(auxProd*tmpD[j]);
           var += fabs((double)(_som.memb[k][j]) - tmp);
@@ -261,11 +262,11 @@
 	tmpDens[cc] = reg;
      	for(vv = 0; vv < numVectors; vv++) {
      	   double tmpU = (double) pow((double)(_som.memb[vv][cc]), (double)_m);
-     	   tmpDens[cc] += tmpU; 
+     	   tmpDens[cc] += tmpU;
      	   for (j = 0; j < dim; j++) {
 	     tmpMap[cc][j] += (double)((double) tmpU*(double)(_examples.theItems[vv][j]));
 	   }
-     	}    
+     	}
      }
 
 
@@ -280,10 +281,10 @@
 	    if (reg != 0)
                _som.localAve(_som.indexToPos(cc), tmpV);
              for (j = 0; j < dim; j++) {
-	        tmpV[j] *= reg; 
+	        tmpV[j] *= reg;
 		double tmpU = (tmpMap[cc][j] + tmpV[j])/tmpDens[cc];
 		stopError2 += fabs((double)(_som.theItems[cc][j]) - tmpU);
-		_som.theItems[cc][j] = (xmippFeature) tmpU;  
+		_som.theItems[cc][j] = (xmippFeature) tmpU;
 	     }
 	} // for
 	stopError2 /= (double) (numNeurons*dim);
@@ -313,18 +314,18 @@
 	   _fidelity += t1*t;
 	}
     }
-    _fidelity /= t2; 
+    _fidelity /= t2;
     _penalty = 0;
-    
+
     if (reg != 0) {
       for (cc = 0; cc < numNeurons; cc++ ) {
          _som.localAve(_som.indexToPos(cc), tmpV);
          for (j = 0; j < dim; j++) {
-            _penalty += (_som.theItems[cc][j] - tmpV[j])*(_som.theItems[cc][j] - tmpV[j]); 
+            _penalty += (_som.theItems[cc][j] - tmpV[j])*(_som.theItems[cc][j] - tmpV[j]);
          }
       }
       _penalty /= (double) (numNeurons);
-    }  
+    }
 
     return (_fidelity - _reg*_penalty);
   }
@@ -336,7 +337,7 @@ void xmippFuzzySOM::showX(const TS& _ts) {
   for (int i = 0; i < _ts.size(); i++) {
      for (int j = 0; j < _ts.theItems[0].size(); j++) {
        cout << i + 1 << "  " << j + 1 << "  " << _ts.theItems[i][j] << endl;
-     }  
+     }
   }
 }
 

@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /***********************************************************************/
@@ -32,8 +32,10 @@
 /******************** Basic type definitions ***************************/
 #ifndef H_GROE
 #define H_GROE
+
 #include "spider.h"
-#include <stdio.h>
+
+#include <cstdio>
 
 typedef unsigned char  BYTE;       /*** Only this and float are used ***/
 typedef unsigned short UWORD;
@@ -102,7 +104,7 @@ typedef float          ** float_image;
 #define CENTRADA(veces)     (veces*2)      /*** Centrada "veces" veces ***/
 #define GIRADA(veces)     (veces*2+1)      /*** Girada "veces" veces   ***/
 
- 
+
 #define MAX_GREY 247.
 
 /*** Funtions in cabecero.c **/
@@ -111,28 +113,28 @@ typedef float          ** float_image;
 #define Formato( a, b, c) SPIDheader( a,&b,&c )
 
 extern CABECERO cabecero;
- 
+
 /**
-	Funtions in cabecero.c : 
+	Funtions in cabecero.c :
 **/
 
   int SPIDheader(char *,int *, int *);
   int BYTEheader(char *,int ,int);
   int SPIDvolum(char *,int *,int *,int *);
   int BYTEvolum(char *,int,int ,int);
- 
+
   void header_geo(double matriz[3][3],float *,int);
   int IsInfogeo(double matriz[3][3]);
   void ceroCabecero(void);
   void identMatrix( double matrix[3][3]);
   void defaultHeader(void);
- 
+
   void normalize_io( float **,int ,char *);
   void norm_of_volume(float ***,int ,char *);
   void normImg(float **,int,int,float *,float *);
   void normVol(float ***,int,int,int,float *, float *);
-/** 
-	Funtions in varios.c : 
+/**
+	Funtions in varios.c :
 **/
   int image_io (char **,char **,int,int,char *,int,int,int);
   void **imalloc (int, int, int);
@@ -143,14 +145,14 @@ extern CABECERO cabecero;
   void Tiempo(void);
   void Cabecera(void);
   float ScanfMejorFloat (void);
-/** 
-	Funtions en varios2.c : 
+/**
+	Funtions en varios2.c :
 **/
   void cornor(float **, int, int, float **, int, int, double);
   void transforma (float **,float **,int,int,double matriz[3][3]);
   void compon (double m1[3][3], double m2[3][3], double m3[3][3]);
 /**
-	Funtions en varios3.c : 
+	Funtions en varios3.c :
 **/
   int capa_io (char **,int,int,int,int,int);
   void ***trialloc (int ,int ,int ,int );
@@ -159,15 +161,15 @@ extern CABECERO cabecero;
   int volume_io (char ***,int,int,int,char *,int,int,int);
   void vox_4_a_1 (float ***, BYTE ***, int);
   void vox_1_a_4 (float ***, BYTE ***, int);
-/** 
-	Funtions in dimension.c : 
+/**
+	Funtions in dimension.c :
 **/
   int Count_element( FILE *,char *,int,int);
   int  First_name( FILE *,char *,int,int);
   int Get_dimension( char *, int *, int *);
   int Get_Vol_dimension(char *, int *, int *, int *);
 /**
-	Funtions in floatnat.c : 
+	Funtions in floatnat.c :
 **/
   void oraCharoraFloat(BYTE **,float **,int,int,int);
   void volCharvolFloat(BYTE ***,float ***,int,int,int,int);
@@ -190,7 +192,7 @@ extern CABECERO cabecero;
   void getDate(char *, char *);
   void getNameAbs(char *, char *);
 /**
-	Funtion in fft.c 
+	Funtion in fft.c
 **/
   void fftcol (float **,int,float **,int,int,int,int );
   int image_fft (float **, int , int , int);
@@ -201,18 +203,18 @@ extern CABECERO cabecero;
   int fft_pow2 (float **x, int row, int col, int kind);
   int vfft_pow2 (float ***vol, int sli, int row, int col, int kind);
 /**
-	Funtions in fftmod.c 
+	Funtions in fftmod.c
 **/
   float  fmodulo(float,float);
   int fast_fourier_trans_img(float **,int,int);
 /**
-	Funtions in filtros.c 
+	Funtions in filtros.c
 **/
   void filtra_pb (float **, float **, int, int);
   void cos_alz (float **, int, int, int, int, int);
 
 /**
-	Funtions in specmod.c 
+	Funtions in specmod.c
 **/
 void spectro_m (char *nom, float xr1, float xr2, float xdr, float xr,
                 float *result);

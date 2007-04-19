@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippGraphics/show2D.hh>
-#include <XmippGraphics/showSel.hh>
-#include "QtWidgetPSD.hh"
+#include <graphics/show_2d.h>
+#include <graphics/show_selfile.h>
+
+#include "widget_psd.h"
 
 // Set the assign CTF file -------------------------------------------------
 void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
@@ -35,20 +36,20 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
    fn_assign_CTF=_fn_assign_CTF;
    assign_ctf_prm.read(fn_assign_CTF);
    FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
-   
+
    // Check if the CTF is computed at each particle
    if (assign_ctf_prm.compute_at_particle) {
       cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
               "for individual particles. See file " << fn_assign_CTF << endl;
       return;
    }
-   
+
    // Generate a random selfile
    FileName fn_random; fn_random.init_random(15);
    fn_random=(string)"PPP"+fn_random+".sel";
    files_to_remove.push_back(fn_random);
 
-   // To shape the selfile   
+   // To shape the selfile
    int div_NumberX, div_NumberY;
 
    // Check if it is a micrograph average
@@ -82,7 +83,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
       div_NumberX=CEIL((double)Xdim/assign_ctf_prm.N_horizontal);
       div_NumberY=CEIL((double)Ydim/assign_ctf_prm.N_vertical  );
    }
-   
+
    // Show the selfile
    ShowSel *showsel = new ShowSel;
    showsel->apply_geo=false;

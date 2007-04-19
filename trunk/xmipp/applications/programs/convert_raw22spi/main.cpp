@@ -6,34 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippVolumes.hh>
+#include <data/args.h>
+#include <data/selfile.h>
+#include <data/volume.h>
 
-/* Prototypes -============================================================= */
 void Usage (char **argv);
 void raw22spi (const FileName &, const FileName &, char, int, int, int, int,
-   bool, bool); 
+   bool, bool);
 
 int main (int argc, char *argv[]) {
-/* Input Parameters ======================================================== */
 FileName       fn_in;    // input file
 FileName       fn_out;   // output file
 FileName       sel_file; // selection file
@@ -53,26 +51,26 @@ Zdim=Ydim=Xdim=0;
 	 if (check_param(argc, argv, "-sel")||check_param(argc, argv, "-oext")) {
          EXIT_ERROR(1,"Raw22spi: -i option is not compatible with -sel or -oext");
 	 }
-       } 
+       }
        if (check_param(argc, argv, "-o")){
          fn_out = get_param(argc, argv, "-o");
 	 if (check_param(argc, argv, "-sel")||check_param(argc, argv, "-oext")) {
          EXIT_ERROR(1,"Raw22spi: -o option is not compatible with -sel or -oext");
 	 }
-       } 
+       }
        if (check_param(argc, argv, "-sel")){
          sel_file = get_param(argc, argv, "-sel");
 	 sel_ext  = get_param(argc, argv, "-oext");
-         if (check_param(argc, argv, "-i")||check_param(argc, argv, "-o")){ 
-          /*error cause -sel is not compatible with -i -o*/ 
+         if (check_param(argc, argv, "-i")||check_param(argc, argv, "-o")){
+          /*error cause -sel is not compatible with -i -o*/
 	 EXIT_ERROR(1,"Raw22spi: -sel option is not compatible with -i or -o");
          }
        }
 
-       if (check_param(argc, argv, "-f"))  raw_type='f'; 
+       if (check_param(argc, argv, "-f"))  raw_type='f';
        if (check_param(argc, argv, "-16")) raw_type='h';
-       
-       if (check_param(argc, argv, "-s")){ 
+
+       if (check_param(argc, argv, "-s")){
          size_arg = position_param(argc, argv, "-s");
          if (size_arg+3>=argc) EXIT_ERROR(1,"Not enough parameters behind -s");
          Zdim= AtoI(argv[size_arg+1]);
@@ -122,16 +120,16 @@ try {
         SF_out.insert(line);
       }
       SF.next();
-   }  // while 
+   }  // while
    SF_out.write(SF_out_name); //write output sel file
  }
  //input/output are single files
- 
+
  else if (check_param(argc, argv,"-i") && check_param(argc, argv,"-o")){
    raw22spi(fn_in,fn_out,raw_type,header_size,Zdim,Ydim,Xdim,generate_inf,
       reverse_endian);
  }
- 
+
 } catch (Xmipp_error XE) {cout << XE;}
    exit(0);
 } //main
@@ -144,14 +142,14 @@ void Usage (char **argv) {
      "Usage: %s [Purpose and Parameters]"
      "\nPurpose: Convert from a 2d/3d raw images to Xmipp ones (and viceversa)"
      "\n        Input/Output can be either a single file or a set of them "
-     "\n        (specified in a 'sel' file)"           
+     "\n        (specified in a 'sel' file)"
      "\nParameter Values: (note space before value)"
      "\nI/O parameters"
      "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
      "\n    -i    file_in        input raw or Xmipp file"
      "\n    -o    file_out       output Xmipp or raw file"
      "\n   [-generate_inf]       only valid if the output is a raw image"
-     "\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"     
+     "\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"
      "\n    -sel  input_file     input sel file"
      "\n    -oext input_file     extension for the output files if the input"
      "\n			 files were specified in a sel file"
@@ -196,7 +194,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
       }
       if (generate_inf) {
          ofstream fh((fn_out+".inf").c_str());
-	 if (!fh) 
+	 if (!fh)
 	    REPORT_ERROR(1,"Cannot create output .inf file");
 	 fh << "# Image width\n";
 	 fh << "Xdim=" << XSIZE(Ix()) << endl;
@@ -206,7 +204,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
 	 fh << "bitspersample=" << bits << endl;
 	 fh.close();
       }
-   }   
+   }
    // Raw image --> Xmipp Image
    else if (Zdim==1) {
       Image *I=&Ix; // This is a trick for the compiler
@@ -240,7 +238,7 @@ void raw22spi (const FileName &fn_in, const FileName &fn_out,
                       [-f] [-s $ZDIM $YDIM $XDIM]
         + multiple: xmipp_raw22spi -sel $SELFILE_IN -osel $OEXT
                       OPT(-f) OPT(-s)
-      } 
+      }
       PARAMETER DEFINITIONS {
         $FILE_IN {
 	   label="Input File";

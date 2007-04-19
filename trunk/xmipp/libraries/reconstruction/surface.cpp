@@ -6,24 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_surface.hh"
+#include "surface.h"
 
 /* Read from command line ================================================== */
 void Prog_Surface_Parameters::read(int argc, char **argv) {
@@ -47,7 +47,7 @@ void Prog_Surface_Parameters::read(int argc, char **argv) {
 /* Usage =================================================================== */
 void Prog_Surface_Parameters::usage() const {
    cout << "\nUsage:\n";
-   cout << "surface\n" 
+   cout << "surface\n"
         << "  [-i <Phantom file>]             : Phantom description file\n"
         << "  [-o <volume_mask>]              : Output mask\n"
 	<< "  [-r <probe_radius=0.5>]         : Probe radius for surface generation\n"
@@ -105,7 +105,7 @@ void create_surface_mask(const Image *top, const Image *bottom, int zdim,
 /* Create surface ========================================================== */
 void ROUT_surface(Prog_Surface_Parameters &prm) {
    ImageXmipp top_surface, bottom_surface;
-   
+
    // Create surfaces from a phantom ---------------------------------------
    if (prm.fn_phantom!="") {
       // Create top surface

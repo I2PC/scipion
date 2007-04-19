@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /****************************************************************************/
@@ -36,13 +36,14 @@
 
 /********************** Include's and macro definitions *********************/
 
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <OldXmipp/spider.h>
-#include <OldXmipp/groe.h>
-#include <XmippData/xmippArgs.hh>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
+
+#include <legacy/spider.h>
+#include <legacy/groe.h>
+#include <data/args.h>
 
 //CABECERO cabecero;
 
@@ -99,7 +100,7 @@ main (int argc, char **argv)
 
 if (check_param(argc, argv, "-img"))
    ent = (char*) get_param(argc, argv, "-img", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -112,7 +113,7 @@ strcpy (nom_imagen, ent);
 
 if (check_param(argc, argv, "-x0"))
   tmp = (char*) get_param(argc, argv, "-x0", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -121,7 +122,7 @@ xc0 = atof(tmp);
 
 if (check_param(argc, argv, "-y0"))
   tmp = (char*) get_param(argc, argv, "-y0", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -133,7 +134,7 @@ yc0++;
 
 if (check_param(argc, argv, "-low"))
   tmp = (char*) get_param(argc, argv, "-low", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -141,7 +142,7 @@ else
 rbajo = atof(tmp);
 if (check_param(argc, argv, "-high"))
   tmp = (char*) get_param(argc, argv, "-high", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -153,7 +154,7 @@ ralto = atof(tmp);
 
 if (check_param(argc, argv, "-r1"))
   tmp = (char*) get_param(argc, argv, "-r1", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);
@@ -162,7 +163,7 @@ r1 = atof(tmp);
 
 if (check_param(argc, argv, "-r2"))
   tmp = (char*) get_param(argc, argv, "-r2", "");
-else    
+else
  {  printf ("Error in the arguments");
     Usage(argv[0]);
     exit(1);

@@ -6,36 +6,34 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippInterface/xmippSpider.hh>
-#include <XmippInterface/xmippOpenDXang.hh>
+#include <data/args.h>
+#include <data/selfile.h>
+#include <data/geometry.h>
+#include <data/histogram.h>
+#include <interface/spider.h>
+#include <interface/opendxang.h>
+
 #include <fstream>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main (int argc,char *argv[]) {
    string          ang1="rot",ang2="tilt",ang3="psi";
    DocFile         angles;
@@ -47,7 +45,7 @@ int main (int argc,char *argv[]) {
    float           tilt_view;
    int             up_down_correction, colw;
    bool            solid_sphere;
-   
+
 
 // Check the command line ==================================================
    try {
@@ -120,34 +118,34 @@ int main (int argc,char *argv[]) {
    v_ang.reserve(AngleNo);
    for (int i=0; i<AngleNo; i++) {
        matrix1D<double> aux(3);
-       matrix1D<double> aux_ang(6); 
-       
-       
+       matrix1D<double> aux_ang(6);
+
+
        GET_ANGLES(i+1);
        Euler_direction(rot, tilt, psi, aux);
        v.push_back(aux);
-        
-       
+
+
        aux_ang=vector_R3(rot,tilt,psi);
        v_ang.push_back(aux_ang);
-       
+
    }
-   
+
  //Show distribution with OpenDx ==============================================
  openDXang DX;
  DX.openDXangFile(fn_DX);
-  
+
  for (int i=0; i<AngleNo; i++) {
-             
+
 	
        DX.Add_Item(v_ang[i]);
    }
- 
+
 
 // Compute histogram of distances =============================================
    if (fn_hist!="") {
       matrix1D<double> dist;
-        
+
       #define di VEC_ELEM(dist,i)
       #define dj VEC_ELEM(dist,j)
 
@@ -176,9 +174,9 @@ int main (int argc,char *argv[]) {
       for (int i=0; i<AngleNo; i++) dist_hist.insert_value(di);
       dist_hist.write(fn_hist);
    }
-   
 
-   
+
+
 // Show distribution as triangles ==========================================
    if (fn_ps!="") {
       ofstream fh_ps;
@@ -253,7 +251,7 @@ int main (int argc,char *argv[]) {
           TO_PS(XX(pp),YY(pp));
           fh_ps << "newpath\n";
           fh_ps << XX(pp) << " " << YY(pp) << " moveto\n";
-          
+
           Uproject_to_plane(p2,euler_view,pp);
           TO_PS(XX(pp),YY(pp));
           fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
@@ -375,7 +373,7 @@ void Usage() {
             OPT(-up_down_correction) {label= "Up-Down correction";}
       }
    }
-   
+
    MENU Ang_distribution {
       "I/O Parameters"
       $ANGFILE

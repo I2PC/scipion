@@ -1,28 +1,29 @@
 /***************************************************************************
  *
- * Authors:    Roberto Marabini           
+ * Authors:    Roberto Marabini
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_projection_matching_crystal.hh"
+
+#include "projection_matching_crystal.h"
 
 // Read arguments ==========================================================
 void Prog_projection_matching_crystal_prm::read(int argc, char **argv)  {
@@ -38,9 +39,9 @@ void Prog_projection_matching_crystal_prm::read(int argc, char **argv)  {
   shift_distance  = AtoF(get_param(argc,argv, "-shift_distance","0."));
   scale_distance  = AtoF(get_param(argc,argv, "-scale_distance","0."));
   psi_sampling  = AtoF(get_param(argc,argv,   "-psi_sam","1."));
-  if ( shift_sampling==0. ) 
+  if ( shift_sampling==0. )
     REPORT_ERROR(1," shift_sampling must be inizialized!");
-  if ( psi_sampling==0.) 
+  if ( psi_sampling==0.)
     REPORT_ERROR(1," psi_sampling must be inizialized!");
   max_shift  = AtoF(get_param(argc,argv, "-max_shift","0."));
   shift_sampling  = AtoF(get_param(argc,argv, "-shift_sam","1."));
@@ -84,12 +85,12 @@ void Prog_projection_matching_crystal_prm::show() {
     cerr << "  Do not modify the image headers (only output docfile): "<< !modify_header<<endl;
 
     cerr << " ================================================================="<<endl;
-} 
+}
 
 // Side info stuff ===================================================================
 void Prog_projection_matching_crystal_prm::produce_Side_info() {
   Projection       proj;
-    
+
   SFref.go_beginning();
   double           mean_ref,stddev_ref,dummy,psi=0.;
   // Read projections from selfile
@@ -128,16 +129,16 @@ void Prog_projection_matching_crystal_prm::produce_Side_info() {
   if (shift_sampling==1) increment_shift=0;
   else increment_shift=2*shift_distance/(shift_sampling-1);
 
-  for (int ishift_x=0; ishift_x<shift_sampling; ishift_x++ ) 
+  for (int ishift_x=0; ishift_x<shift_sampling; ishift_x++ )
      for (int ishift_y=0; ishift_y<shift_sampling; ishift_y++ ){
         my_shift2= (min_shift+increment_shift*(double)ishift_x) *
 	           (min_shift+increment_shift*(double)ishift_x) +
-	           (min_shift+increment_shift*(double)ishift_y) * 
+	           (min_shift+increment_shift*(double)ishift_y) *
 		   (min_shift+increment_shift*(double)ishift_y);
         if( my_shift2 > shift_distance2 )
 	        continue;
-	XX(v_aux) = min_shift+increment_shift*(double)ishift_x;	   
-	YY(v_aux) = min_shift+increment_shift*(double)ishift_y;	   
+	XX(v_aux) = min_shift+increment_shift*(double)ishift_x;	
+	YY(v_aux) = min_shift+increment_shift*(double)ishift_y;	
         shift_vector.push_back(v_aux);
       }
 
@@ -156,15 +157,15 @@ for (int jj=0 ; jj<shift_vector.size(); jj++)
 
 
 void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double> &Mexp,
-							float img_rot, 
+							float img_rot,
 							float img_tilt,
-						        float img_psi, 
+						        float img_psi,
 							float img_scale,
-							int &opt_dirno, 
+							int &opt_dirno,
 							double &opt_psi,
 							double &opt_scale,
 							double &opt_xoff,
-							double &opt_yoff, 
+							double &opt_yoff,
 							double &maxCC) {
 
 
@@ -176,7 +177,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
   bool search;
   vector<matrix2D<double> >::iterator ipp;
 
-  maxCC=-99.e99; 
+  maxCC=-99.e99;
   Mimg.resize(dim,dim);
   Mimg.set_Xmipp_origin();
   Mref.resize(dim,dim);
@@ -188,7 +189,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
   Maux=Mexp;
   Mexp.compute_stats(mean_img,stddev_img,dummy,dummy);
   Maux-=mean_img;
-  
+
   //compute psi range
   double min_psi,max_psi,increment_psi,my_psi;
   min_psi=img_psi-psi_distance;
@@ -203,25 +204,25 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
   double dim2=dim*dim;
   matrix2D<double> my_geom_mat, shift_mat;
   //PSI LOOP
-  for (int ipsi=0; ipsi<psi_sampling; ipsi++ ) 
+  for (int ipsi=0; ipsi<psi_sampling; ipsi++ )
      {
      my_psi=min_psi+increment_psi*(double)ipsi;
      Euler_angles2matrix(0.,0.,my_psi,my_geom_mat);
      //my_geom_mat=rot2D_matrix(my_psi);
      //Mimg=Maux.rotate(my_psi,WRAP);
      //SHIFT LOOP
-     for (int ishift=0; ishift<shift_vector.size(); ishift++ ){ 
+     for (int ishift=0; ishift<shift_vector.size(); ishift++ ){
         my_geom_mat(0,2)= -XX(shift_vector[ishift]);
         my_geom_mat(1,2)= -YY(shift_vector[ishift]);
         //SCALE LOOP
-	for (int iscale=0; iscale<scale_sampling; iscale++ ) 
+	for (int iscale=0; iscale<scale_sampling; iscale++ )
 	   {
 	   my_scale=min_scale+increment_scale*(double)iscale;
            my_geom_mat *= my_scale;
            apply_geom_Bspline(Mimg,my_geom_mat,Maux,3,IS_INV,true,(double)0.);
 	   ipp=ref_img.begin();
            //ROT-TILT LOOP (ref projections)
-	   for (int dir_counter=0; dir_counter<nr_dir; dir_counter++ ) 
+	   for (int dir_counter=0; dir_counter<nr_dir; dir_counter++ )
                {
                Mref=*(ipp); ipp++;
                // For some strange reason I need to access the vector via its pointer
@@ -240,9 +241,9 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
         	    #ifdef DEBUG
 		    xmax = XX(shift_vector[ishift])*my_scale;
 		    ymax = YY(shift_vector[ishift])*my_scale;
-		    cout <<  SFref.get_file_number(dir_counter)<< 
-	                              " rot= "  << ref_rot[dir_counter]  << 
-	                              " tilt= " << ref_tilt[dir_counter] << 
+		    cout <<  SFref.get_file_number(dir_counter)<<
+	                              " rot= "  << ref_rot[dir_counter]  <<
+	                              " tilt= " << ref_tilt[dir_counter] <<
 				      " psi= "  << my_psi <<" CC= "<<thisCC<<endl;
 				      " xmax= "  << xmax <<" ymax= "<<ymax<<endl;
 				      " scale= " << my_scale <<endl;
@@ -266,16 +267,16 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
           }//for iscale
        }// for ishift
      }//for ipsi
-     
+
   // Interpolated translational search for optimal angles ===================================
 
-	 
-	 
+	
+	
   //#define DEBUG
   #ifdef DEBUG
-  cout <<  SFref.get_file_number(opt_dirno)<< 
-	          " rot= "  << ref_rot[opt_dirno]  << 
-	          " tilt= " << ref_tilt[opt_dirno] << 
+  cout <<  SFref.get_file_number(opt_dirno)<<
+	          " rot= "  << ref_rot[opt_dirno]  <<
+	          " tilt= " << ref_tilt[opt_dirno] <<
 		  " psi= "  << opt_psi <<
                   " opt_xoff= "  << opt_xoff <<
   		  " opt_yoff= "  << opt_yoff <<
@@ -286,14 +287,14 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
   //#define DEBUG
   #ifdef DEBUG
   FileName fn_tmp;
-  ImageXmipp save; 
+  ImageXmipp save;
   save()=Mimg;
   fn_tmp.compose("tmp",ipsi,"xmp");
   save.write(fn_tmp);
   #endif
   #undef DEBUG
-} 
-void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo, 
+}
+void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo,
 							   double &sumCC) {
   // Loop over all images
   int imgno=0,nn;
@@ -302,12 +303,12 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
   ImageXmipp img;
   FileName fn_img,fn_tmp;
   sumCC=0.;
-  matrix1D<double> dataline(8);  
+  matrix1D<double> dataline(8);
 
   // Initialize
   nn=SFexp.ImgNo();
   init_progress_bar(nn);
-  
+
   SFexp.go_beginning();
   while ((!SFexp.eof())) {
     imgno++;
@@ -320,7 +321,7 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images( DocFile &DFo
     // scale field in the image is not reliable a put 1
     PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),(float)1.,
 			 opt_dirno,opt_psi,opt_scale,opt_xoff,opt_yoff,maxCC);
-       
+
 
     opt_xoff+=img.Xoff();
     opt_yoff+=img.Yoff();

@@ -7,29 +7,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <stdio.h>
-#include <math.h>
-#include <groe.h>
-#include <spider.h>
+#include <cstdio>
+#include <cmath>
 #include <values.h>
 
+#include "groe.h"
+#include "spider.h"
 
 #ifdef __STDC__
   int Resta_Plano(unsigned char ** , int , int, unsigned int);
@@ -45,7 +45,7 @@ int Resta_Plano(unsigned char **Image , int rows,int cols,unsigned int io_Size)
 double x2,xy,x,y2,y,xz,yz,z,n,det,deta,detb,detc, i_rxi_r, i_r,j_c;
 double rctr,cctr;
 int i,j;
-double ch; 
+double ch;
 double  f , ImagTemp, max, min ;
 int tipo=NATURAL;
 int temp;
@@ -66,7 +66,7 @@ if (rctr == 0 || cctr == 0)
 
 n = rows*cols;
 
-switch ( tipo) 
+switch ( tipo)
 	{
 	case NATURAL :
           for (i=0; i<rows; i++)
@@ -75,7 +75,7 @@ switch ( tipo)
               i_rxi_r = i_r * i_r;
               for (j=0; j<cols; j++)
                 {
-                  temp=(int) ((j+i*cols +1)/io_Size) ; 
+                  temp=(int) ((j+i*cols +1)/io_Size) ;
 		  ch=(double ) Image[temp][j+i*cols+1 -temp*io_Size-1];
 		  j_c = j - cctr;
                   x  += j_c;
@@ -97,7 +97,7 @@ switch ( tipo)
               i_r     = i - rctr;
               i_rxi_r = i_r * i_r;
               for (j=0; j<cols; j++)
-                {  
+                {
 	
                 	  /* poner las lineas para el caso FLOAT  */
 
@@ -113,7 +113,7 @@ switch ( tipo)
                 }
             }
         break;
-               
+
 
         default:
 	fprintf(stderr,"Unkown data storage type\n");
@@ -139,12 +139,12 @@ min = MAXDOUBLE;
 
 for (i=0; i<rows; i++)
 	{
-	for (j=0; j<cols; j++)   
-	  { 
+	for (j=0; j<cols; j++)
+	  {
            temp=(int) ((j+i*cols+1)/io_Size) ;
 	   ImagTemp=(double)(Image[temp][j+i*cols+1 -temp*io_Size-1]) -                             (double)(1*(a*j + b*i + c));
            min=(min>=ImagTemp)* ImagTemp+(min<ImagTemp)*min;
-           max=(max<=ImagTemp)* ImagTemp+(max>ImagTemp)*max;        
+           max=(max<=ImagTemp)* ImagTemp+(max>ImagTemp)*max;
 	  }
 	}
 for (i=0; i<rows; i++)

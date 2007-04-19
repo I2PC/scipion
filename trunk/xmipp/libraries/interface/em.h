@@ -23,18 +23,21 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/Bilib/configs.h>
+
+#include <data/funcs.h>
+#include <data/matrix3d.h>
+#include <data/geometry.h>
+#include <data/volume.h>
+
+#include <bilib/configs.h>
+
 #include <sys/stat.h>
 
 /**@name EM Files */
 //@{
 /** EM Files.
     This is a class to read/write EM-format volume files as produced
-    by the EM-toolbox 
+    by the EM-toolbox
 */
 
 #define EM_COMMENT_SIZE    80
@@ -78,7 +81,7 @@ typedef struct EMheader
   unsigned long   ny;                       /* Number of columns Y  */
   unsigned long   nz;                       /* Number of columns Z (slowest) */
 
-  unsigned char   comment[EM_COMMENT_SIZE]; /* User comment */   
+  unsigned char   comment[EM_COMMENT_SIZE]; /* User comment */
   unsigned long   user[EM_USER_INTS];       /* For user - all set to zero by default. */
   unsigned char   user_data[EM_USER_DATA];  /* User data  */
 
@@ -104,7 +107,7 @@ public:
 /** Fill EM header from 3D xmipp image. */
    void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed=false);
 
-/** Fill EM header from EM file. 
+/** Fill EM header from EM file.
     Returns true if either reversed is true or the native endianess is
     different from the one used to store the data.
     */

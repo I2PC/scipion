@@ -20,17 +20,16 @@
 #ifndef __QT_FILTER_MENU_HH__
 #define __QT_FILTER_MENU_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtPopupMenuMark.hh"
+#include "popup_menu_mark.h"
 
-/* Forward declarations ---------------------------------------------------- */ 
+/* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 
 /* Filter menu for Mark ---------------------------------------------------- */
 class QtFilterMenu : public QtPopupMenuMark {
    // For accepting signals and slots
    Q_OBJECT
-   
+
 public:
    // Constructor
    QtFilterMenu( QtWidgetMicrograph* _parent );

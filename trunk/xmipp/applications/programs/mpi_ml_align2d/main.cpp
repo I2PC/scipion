@@ -1,33 +1,32 @@
 /***************************************************************************
  *
- * Authors: Sjors Scheres (scheres@cnb.uam.es)   
+ * Authors: Sjors Scheres (scheres@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <Reconstruction/Programs/Prog_MLalign2D.hh> 
+#include <reconstruction/ml_align2d.h>
+
 #include <mpi.h>
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
 
   Prog_MLalign2D_prm prm;
@@ -49,15 +48,15 @@ int main(int argc, char **argv) {
   bool converged;
 
   // Init Parallel interface		
-  MPI_Init(&argc, &argv);  
+  MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-   
+
   // Get input parameters
   try {
-    
+
     // Read subsequently to avoid problems in restart procedure
-    for (int proc=0; proc<size; proc++) {    
+    for (int proc=0; proc<size; proc++) {
       if (proc==rank) prm.read(argc,argv);
       MPI_Barrier(MPI_COMM_WORLD);
     }
@@ -65,7 +64,7 @@ int main(int argc, char **argv) {
 
     // All nodes produce general side-info
     prm.produce_Side_info();
-    
+
     // Some output to screen
     if (rank==0) prm.show();
 
@@ -94,14 +93,14 @@ int main(int argc, char **argv) {
     prm.produce_Side_info2();
     MPI_Barrier(MPI_COMM_WORLD);
 
-  } catch (Xmipp_error XE) { 
+  } catch (Xmipp_error XE) {
     if (rank==0) {
-      cout << XE; 
+      cout << XE;
       if (prm.fourier_mode) prm.MLF_usage();
       else prm.usage();
-    } 
+    }
     MPI_Finalize(); exit(1);
-  } 
+  }
 
   try {
     Maux.resize(prm.dim,prm.dim);
@@ -130,7 +129,7 @@ int main(int argc, char **argv) {
       prm.ML_sum_over_all_images(prm.SF,prm.Iref,iter,
 				 LL,sumcorr,DFo,wsum_Mref,wsum_ctfMref,
 				 wsum_sigma_noise,Mwsum_sigma2,
-				 wsum_sigma_offset,sumw,sumw_mirror); 
+				 wsum_sigma_offset,sumw,sumw_mirror);
 
       // Here MPI_allreduce of all wsums,LL and sumcorr !!!
       MPI_Allreduce(&LL,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -141,7 +140,7 @@ int main(int argc, char **argv) {
       wsum_sigma_noise=aux;
       MPI_Allreduce(&wsum_sigma_offset,&aux,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
       wsum_sigma_offset=aux;
-      for (int refno=0;refno<prm.n_ref; refno++) { 
+      for (int refno=0;refno<prm.n_ref; refno++) {
 	MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),MULTIDIM_ARRAY(Maux),
 		      MULTIDIM_SIZE(wsum_Mref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	wsum_Mref[refno]=Maux;
@@ -156,7 +155,7 @@ int main(int argc, char **argv) {
 			MULTIDIM_SIZE(Mwsum_sigma2[ifocus]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	  Mwsum_sigma2[ifocus]=Maux;
 	}
-	for (int refno=0;refno<prm.n_ref; refno++) { 
+	for (int refno=0;refno<prm.n_ref; refno++) {
 	  MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]),MULTIDIM_ARRAY(Maux),
 			MULTIDIM_SIZE(wsum_ctfMref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	  wsum_ctfMref[refno]=Maux;
@@ -168,9 +167,9 @@ int main(int argc, char **argv) {
 			    wsum_sigma_noise,Mwsum_sigma2,
 			    wsum_sigma_offset,sumw,
 			    sumw_mirror,sumcorr,sumw_allrefs,
-			    spectral_signal);    
+			    spectral_signal);
 
-      // Check convergence 
+      // Check convergence
       converged=prm.check_convergence(conv);
 
       // Write out intermediate files
@@ -180,7 +179,7 @@ int main(int argc, char **argv) {
 	DFo.write(fn_img);
       }
       MPI_Barrier(MPI_COMM_WORLD);
-  
+
       if (rank==0) {
 	if (prm.write_intermediate) {
 	  if (prm.write_docfile) {
@@ -212,14 +211,14 @@ int main(int argc, char **argv) {
 
     } // end loop iterations
 
-  } catch (Xmipp_error XE) { 
+  } catch (Xmipp_error XE) {
     if (rank==0) {
-      cout << XE; 
+      cout << XE;
       if (prm.fourier_mode) prm.MLF_usage();
       else prm.usage();
-    } 
+    }
     MPI_Finalize(); exit(1);
-  } 
+  }
 
   MPI_Finalize();	
   return 0;

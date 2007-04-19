@@ -6,39 +6,39 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippRBF.hh"
+#include "rbf.h"
 
 #define Vij(v,i,j) v.itemAt(i)[j]
 
 // Design Matrix -----------------------------------------------------------
-void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r, 
+void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
    xmippCTVectors &X, matrix2D<double> &H) {
    int p=X.size(); // Number of points to evaluate
    int m=C.size(); // Number of centers
    H.init_zeros(p,m);
 
    if (p==m && m==0) return;
-   if (X.dimension()!=C.dimension()) 
+   if (X.dimension()!=C.dimension())
       REPORT_ERROR(1,"RBF_design_matrix: Input vectors not of the "
          "same size");
-   if (X.dimension()!=XSIZE(r)) 
+   if (X.dimension()!=XSIZE(r))
       REPORT_ERROR(1,"RBF_design_matrix: Input radius not of the "
          "same size than the input vector");
    int vsize=X.dimension();
@@ -47,8 +47,8 @@ void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
           // Compute distance between the given point and the center
 	  double z=0;
 	  for (int l=0; l<vsize; l++) {
-	     //cout << "X(" << i << "," << l << ")=" << Vij(X,i,l) << " " 
-	     //     << "C(" << j << "," << l << ")=" << Vij(C,j,l) << " " 
+	     //cout << "X(" << i << "," << l << ")=" << Vij(X,i,l) << " "
+	     //     << "C(" << j << "," << l << ")=" << Vij(C,j,l) << " "
 	     //	    << "r=" << r(l) << endl;
 	     z+=(Vij(X,i,l)-Vij(C,j,l))*(Vij(X,i,l)-Vij(C,j,l))/(r(l)*r(l));
 	  }
@@ -65,11 +65,11 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
    int p=X.size(); // Number of points to evaluate
    int m=candidate_C.size(); // Number of centers
    if (p==m && m==0) return;
-   if (X.dimension()!=candidate_C.dimension()) 
+   if (X.dimension()!=candidate_C.dimension())
       REPORT_ERROR(1,"RBF_train_best_scale: Input vectors not of the "
          "same size");
 
-   // Select the default radius 
+   // Select the default radius
    int vsize=X.dimension();
    RBF.r.resize(vsize);
    matrix1D<double> maxX(vsize), minX(vsize);
@@ -81,13 +81,13 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
            minX(l)=MIN(minX(l),Vij(X,i,l));
        }
    RBF.r=maxX-minX;
-   
+
    // Compute model for each scale
    double  aux_error, best_error=1e38;
    vector<int> aux_idx, best_idx;
    matrix1D<double> aux_r, best_r;
    matrix1D<double> aux_w, best_w;
-   
+
    for (double scale=minscale; scale<=maxscale; scale+=scalestep) {
       aux_r=RBF.r; aux_r*=scale;
       RBF_train(candidate_C, X, y, RBF.r, scale, aux_idx, aux_r, aux_w,
@@ -99,7 +99,7 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
 	 best_error = aux_error;
       }
    }
-   
+
    RBF.r=best_r;
    RBF.w=best_w;
 
@@ -129,7 +129,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
    vector<double> &y, matrix1D<double> &r, double scale,
    vector<int> &idx_out, matrix1D<double> &r_out,
    matrix1D<double> &w_out, double &error) {
-   
+
    int d=X.dimension();   // Dimension of vectors
    int p=X.size();        // Number of points
    int M=C.size();        // Number of centers
@@ -146,8 +146,8 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
    for (int i=0; i<p; i++) yy+=y[i]*y[i];
    double sse=yy;
    idx_out.clear();
-   double lam=1e-9;   
-   
+   double lam=1e-9;
+
    matrix2D<double> Hm, Hn, Fm, U;
    matrix1D<double> Hy, FmFm, Fty, err, hh, aux1D;
    double fy, ff, msc, min_msc;
@@ -157,12 +157,12 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
    Hm.init_zeros(YSIZE(F),M);
    Hn.init_zeros(YSIZE(F),M);
    Hy.init_zeros(M);
-   hh.resize(M); 
+   hh.resize(M);
    U.init_zeros(M,M);
 
    while (!finished) {
       m++; // Increment the number of regressors
-      
+
       if (m==1) {
          // It is the first regressor ......................................
 	 // Compute the change in the cost function due to the
@@ -177,13 +177,13 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 	    Fty(j)+=F(i,j)*y[i];
 	 }
 	 err.init_zeros(XSIZE(F));
-      	 FOR_ALL_ELEMENTS_IN_MATRIX1D(err) 
+      	 FOR_ALL_ELEMENTS_IN_MATRIX1D(err)
 	    err(i)=Fty(i)*Fty(i)*(2*lam+FF(i))/((lam+FF(i))*(lam+FF(i)));
 
       	 // Select the maximum
 	 int jmax; err.max_index(jmax);
 	 idx_out.push_back(jmax);
-	 
+	
 	 // Initialize Hm, the current orthogonalised design matrix
 	 // and Hn, the same but with normalised columns
 	 // MATLAB: f=F(:,j)
@@ -202,7 +202,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 	 for (int i=0; i<YSIZE(F); i++) Hn(i,m-1)/=ff;
 	 Hy(m-1)=fy;
 	 hh(m-1)=ff;
-	 
+	
       	 // Initialize Fm ready for the second iteration
 	 // MATLAB: Fm=F-Hn*(Hm'*F);
 	 // MATLAB: FmFm=sum(Fm.*Fm,1);
@@ -219,7 +219,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
       	 FmFm.init_zeros(XSIZE(F)); // Squared sum of Fm by rows
 	 FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
 	    FmFm(j)+=Fm(i,j)*Fm(i,j);
-	 
+	
 	 // Initialize Upper triangular matrix U
 	 // MATLAB: U=1
 	 U(0,0)=1;
@@ -238,7 +238,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 	 err.resize(XSIZE(Fm)); err.init_constant(1);
 	 for (int i=0; i<imax; i++)
 	    err(idx_out[i])=0;
-      	 FOR_ALL_ELEMENTS_IN_MATRIX1D(err) 
+      	 FOR_ALL_ELEMENTS_IN_MATRIX1D(err)
 	    if (err(i))
 	       err(i)=Fty(i)*Fty(i)*(2*lam+FmFm(i))/((lam+FmFm(i))*(lam+FmFm(i)));
 
@@ -248,7 +248,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 	 #ifdef DEBUG
             cout << "j=" << jmax+1 << endl;
 	 #endif
-	 
+	
 	 // Collect next columns of Hm and Hn
 	 // MATLAB: f=F(:,j)
 	 // MATLAB: ff=f'*f;
@@ -361,7 +361,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
    U.resize(m,m);
    hh.resize(m);
    Hy.resize(m);
-   
+
    // Weight vector
    FOR_ALL_ELEMENTS_IN_MATRIX1D(Hy) Hy(i)/=lam+hh(i);
    w_out=U.inv()*Hy;
@@ -382,7 +382,7 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X,
    int p=X.size();
    y_predicted.resize(p);
    for (int i=0; i<p; i++) y_predicted[i]=0;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(H) 
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
       y_predicted[i]+=H(i,j)*RBF.w(j);
 }
 

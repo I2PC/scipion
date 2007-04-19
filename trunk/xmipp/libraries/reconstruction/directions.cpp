@@ -6,37 +6,38 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <Reconstruction/directions.hh>
 
-// Check whether projection directions are unique ================================= 
+#include "directions.h"
+
+// Check whether projection directions are unique =================================
 bool directions_are_unique(double rot,  double tilt,
-			   double rot2, double tilt2, 
+			   double rot2, double tilt2,
 			   double rot_limit, double tilt_limit,
 			   SymList &SL, bool include_mirrors) {
-  
+
   bool are_unique=true;
   double rot2p,tilt2p,psi2p, psi2=0.;
   double diff_rot,diff_tilt;
   matrix2D<double>  L(4,4), R(4,4);
-  
+
   for (int isym=0; isym<=SL.SymsNo(); isym++) {
-    
+
     if (isym==0) {rot2p=rot2; tilt2p=tilt2; psi2p=psi2;}
     else {
       SL.get_matrices(isym-1,L,R);
@@ -79,7 +80,7 @@ double distance_directions(double rot1, double tilt1,
   diff_rot=ABS(realWRAP(rot1-rot2,-180,180));
   diff_tilt=ABS(realWRAP(tilt1-tilt2,-180,180));
   dist=sqrt((diff_rot*diff_rot)+(diff_tilt*diff_tilt));
-  
+
   Euler_another_set(rot2,tilt2,0.,rot2p,tilt2p,psi2p);
   diff_rot=ABS(realWRAP(rot1-rot2p,-180,180));
   diff_tilt=ABS(realWRAP(tilt1-tilt2p,-180,180));
@@ -101,7 +102,7 @@ double distance_directions(double rot1, double tilt1,
 
 }
 // Fill DF with evenly distributed rot & tilt =================================
-void make_even_distribution(DocFile &DF, double sampling, 
+void make_even_distribution(DocFile &DF, double sampling,
 			    SymList &SL, bool include_mirror) {
 
   int rot_nstep,tilt_nstep=ROUND(180./sampling)+1;

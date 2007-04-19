@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECT_CRYSTAL_HH
    #define _PROG_PROJECT_CRYSTAL_HH
@@ -29,7 +29,7 @@ class Projection_Parameters;
 class PROJECT_Side_Info;
 class Crystal_Projection_Parameters;
 
-#include "Prog_project.hh"
+#include "project.h"
 
 /**@name Crystals
 */
@@ -43,9 +43,9 @@ class Crystal_Projection_Parameters;
     the same file format, for doing so you must first introduce the
     right values in the class fields, and the call to the procedure
     write.
-    
+
     A crystal is supposed to have two lattice vectors: a and b as follows
-    
+
      ^ b
      |
      |
@@ -73,9 +73,9 @@ public:
    /// file with shifts
    FileName fn_shift;
    /// Document File for shifts. Order: H K x_SHIFT y_SHIFT z_SHIFT
-   DocFile        DF_shift;     
+   DocFile        DF_shift;
    /// is doc file with shifts available
-   bool        DF_shift_bool;     
+   bool        DF_shift_bool;
 
 public:
    /** Empty constructor*/
@@ -112,7 +112,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     vectors, unit cell and projection size such that the unit cell intersects
     the projection. */
 void find_crystal_limits(
-   const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2, 
+   const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
    const matrix1D<double> &corner1, const matrix1D<double> &corner2,
    const matrix1D<double> &a, const matrix1D<double> &b,
    int &iamin, int &iamax, int &ibmin, int &ibmax);
@@ -120,7 +120,7 @@ void find_crystal_limits(
 /** Move following a spiral.
     Starting in a given position this function visits a matrix using
     an spiral like this
-    
+
                         DCBA
                         E329
                         F418
@@ -156,12 +156,12 @@ void fill_cell_positions(Projection &P,
     transfer to two 2D matrices
 
 */
-   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
+   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
                           matrix2D<int>    &cell_inside,
 			  matrix2D<double> &exp_shifts_matrix_X,
 			  matrix2D<double> &exp_shifts_matrix_Y,
 			  matrix2D<double> &exp_shifts_matrix_Z,
 			  double param_file_scale);
-   
+
 //@}
 #endif

@@ -25,10 +25,11 @@
 #ifndef _PROG_PROJECTION_NEIGHBOURHOOD
    #define _PROG_PROJECTION_NEIGHBOURHOOD
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <Reconstruction/symmetries.hh>
+#include <data/funcs.h>
+#include <data/docfile.h>
+#include <data/selfile.h>
+
+#include "symmetries.h"
 
 /**@name Projection Neighbourhood */
 //@{

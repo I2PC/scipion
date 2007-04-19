@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -31,12 +31,8 @@
 #ifndef XMIPPFUZZYSOM_H
 #define XMIPPFUZZYSOM_H
 
-#include "xmippBaseAlgo.hh"
-#include "xmippMap.hh"
-
-
-//---------------------------------------------------------------------------
-
+#include "base_algorithm.h"
+#include "map.h"
 
 /**@name Smoothly Distributed Fuzzy c-means Self-Organizing Map algorithm*/
 //@{
@@ -56,9 +52,9 @@ class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
    * @param _epsilon    Stopping criterion
    * @param _nSteps     Number of training steps
    */
-  xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps, 
+  xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
   		double _reg, double _epsilon, unsigned long _nSteps)
-  : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps), 
+  : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
     reg(_reg), epsilon(_epsilon), somNSteps(_nSteps) {};
 
   /**
@@ -74,14 +70,14 @@ class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
 
   /**
    * Sets the Initial Fuzzy membership
-   * @param _m0  
+   * @param _m0
    */
   void initialFuzzzyMembership(const double& _m0);
 
 
   /**
    * Sets the Final Fuzzy membership
-   * @param _m1  
+   * @param _m1
    */
   void finalFuzzzyMembership(const double& _m1);
 
@@ -96,14 +92,14 @@ class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
 
   /**
    * Sets the Regularization Constant
-   * @param _reg  
+   * @param _reg
    */
   void regularization(const double& _reg);
 
 
   /**
    * Trains the Fuzzy SOM
-   * @param _som  The som to train           
+   * @param _som  The som to train
    * @param _examples   The training set
    */
   virtual void train (xmippFuzzyMap& _som, const TS& _examples);
@@ -136,12 +132,12 @@ class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
 
    double updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m);   	
 
-   // Update Fuzzy Code vectors   
+   // Update Fuzzy Code vectors
    void updateV(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
 
    // Local Average of the code vectors
    void LocalAve(xmippFuzzyMap& _som, xmippVector& tmpV, int tmpi, int tmpj);
-   
+
    // Internal Scratch
 
    unsigned numNeurons;
@@ -156,7 +152,7 @@ void showV(xmippFuzzyMap& _som);
 
 void showU(xmippFuzzyMap& _som, const TS& _ts);
 
-    
+
 };
 //@}
 

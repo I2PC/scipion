@@ -6,33 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippSelFiles.hh>
+#include <data/volume.h>
+#include <data/image.h>
+#include <data/args.h>
+#include <data/selfile.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
    FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
    SelFile         SF;
@@ -50,7 +47,7 @@ int main(int argc, char **argv) {
      zdim=AtoI(get_param(argc,argv,"-zdim","0"));
      ydim=AtoI(get_param(argc,argv,"-ydim","0"));
      xdim=AtoI(get_param(argc,argv,"-xdim"));
-     
+
      if (ydim==0) ydim=xdim;
      if (zdim==0) zdim=xdim;
    }
@@ -63,7 +60,7 @@ int main(int argc, char **argv) {
       image().self_scale_to_size_Bspline(3,ydim, xdim);
       if (fn_out=="") image.write(fn_input);
       else            image.write(fn_out);
-      
+
    // Scale a single volume ------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input);
@@ -74,7 +71,7 @@ int main(int argc, char **argv) {
    // Mask a selection file ------------------------------------------------
    } else {
       SF.read(fn_input);
-      
+
       // Initialise progress bar
       time_config();
       int i=0; init_progress_bar(SF.ImgNo());
@@ -108,7 +105,7 @@ int main(int argc, char **argv) {
 void Usage() {
     cerr << "Purpose:\n";
     cerr << "    Scale images/volumes to a given size\n";
-    
+
     cerr << "Usage: scale <parameters>\n"
          << "   -i <image or volume> [-o <image_out or volume_out]\n"
          << "   -i <selfile> [-oext <output extension>]\n"

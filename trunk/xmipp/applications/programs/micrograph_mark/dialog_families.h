@@ -21,7 +21,7 @@
 #define __QT_DIALOG_FAMILIES_HH__
 
 /* Includes ---------------------------------------------------------------- */
-#include "qdialog.h"
+#include <qdialog.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QListBox;
@@ -30,7 +30,7 @@ class QVBox;
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtDialogFamilies : public QDialog {   
+class QtDialogFamilies : public QDialog {
    Q_OBJECT
 
 private:
@@ -42,16 +42,16 @@ private:
 
 public:
    // Constructor
-   QtDialogFamilies( QWidget *_parent=0, const char *_name=0, 
+   QtDialogFamilies( QWidget *_parent=0, const char *_name=0,
                      bool _modal=FALSE, WFlags _f=0 );
    ~QtDialogFamilies();
-   
+
    // Set the micrograph
    void setMicrograph( Micrograph *_m );
    void setTiltedMicrograph( Micrograph *_mTilted );
-   
+
    int findFamily( const char *_familyName );
-      
+
 public slots:
    void slotAddFamily();
    void slotAddFamily( const char *_familyName );

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
 // xmippFuzzyCodeBook.hh
@@ -33,35 +33,31 @@
 // To avoid problems with long template names
 #pragma warning(disable:4786)
 
-//-----------------------------------------------------------------------------
-
-#include "xmippCodeBook.hh"
-
-//-----------------------------------------------------------------------------
+#include "code_book.h"
 
 /**@name Fuzzy Code Book*/
 //@{
 /**
- * This class implements an specific Data Structure for Fuzzy 
- * algorithms. It inherits fron xmippCB, so this Data Structure is basically 
+ * This class implements an specific Data Structure for Fuzzy
+ * algorithms. It inherits fron xmippCB, so this Data Structure is basically
  * a codebook with a Fuzzy-membership Matrix.
- * Some of the methods from xmippCB are redefined. 
+ * Some of the methods from xmippCB are redefined.
  */
 class xmippFCB : public xmippCB
 {
  public:
-  
-  typedef vector< vector< xmippFeature > > MM;       
+
+  typedef vector< vector< xmippFeature > > MM;
   /// Alias for Membership Matrix
-  //typedef xmippCTSet<vector<xmippFeature>,xmippLabel> TS;  // Alias for a Training set 
-  typedef xmippCTVectors TS;  
-  /// Alias for a Training set 
-  typedef xmippCTSet<vector<xmippFeature>, xmippFeature> FV;    
-  /// Alias for Fuzzy vectors 
-   
+  //typedef xmippCTSet<vector<xmippFeature>,xmippLabel> TS;  // Alias for a Training set
+  typedef xmippCTVectors TS;
+  /// Alias for a Training set
+  typedef xmippCTSet<vector<xmippFeature>, xmippFeature> FV;
+  /// Alias for Fuzzy vectors
+
    // Fuzzy membership matrix
-      MM memb;  
-  
+      MM memb;
+
   /**
    * Default constructor
    * @param _calib     Calibrated or not, that is, a CB with class labels or not
@@ -69,21 +65,21 @@ class xmippFCB : public xmippCB
   xmippFCB(const bool& _calib = false) : xmippCB(_calib) {};
 
 
-   
+
   /**
    * Constructor.
    * Constructs a fuzzy codebook with initial code vectors filled with zero.
    * @param _n       Number of code vectors
    * @param _size    Size of code vectors
-   * @param _data    Size of the training set   
+   * @param _data    Size of the training set
    * @param _cal     Calibrated or not, that is, a CB with class labels or not
-     It calls Base Class constructor (xmippCB) 
+     It calls Base Class constructor (xmippCB)
    */
-   
+
 
   xmippFCB (unsigned _n, unsigned _size, unsigned _data, bool _cal = false );
 
-   
+
   /**
    * Constructor.
    * Constructs a fuzzy codebook with random initial code vectors.
@@ -93,9 +89,9 @@ class xmippFCB : public xmippCB
    * @param _lower   Lower value for random elements
    * @param _upper   Upper value for random elements
    * @param _cal     Calibrated or not, that is, a CB with class labels or not
-     It calls Base Class constructor (xmippCB) 
+     It calls Base Class constructor (xmippCB)
    */
-   
+
   xmippFCB (unsigned _n, unsigned _size, unsigned _data, double _lower = 0, double _upper = 1, bool _cal = false );
 
   /**
@@ -105,7 +101,7 @@ class xmippFCB : public xmippCB
    * @param _n       Number of vectors
    * @param _ts	     Training set; will be used to get initial values
    * @param _use_rand_cvs  Use random code vectors (inherited from base class)
-     It calls Base Class constructor (xmippCB) 
+     It calls Base Class constructor (xmippCB)
    */
 
   xmippFCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs=false);
@@ -117,17 +113,17 @@ class xmippFCB : public xmippCB
    */
 
   xmippFCB(istream& _is, const unsigned _size = 0);
-  
+
   /**
-   * Virtual destructor 
+   * Virtual destructor
    */
 
   virtual ~xmippFCB() {};
 
-  
+
  /** Fuctions to access the Fuzzy Membership Matrix
- */ 
-  
+ */
+
   /**
    * Returns a const reference to the specified item
    * @param _ci  cluster index
@@ -142,7 +138,7 @@ class xmippFCB : public xmippCB
    * @param _di  data index
    * @exception out_of_range If _i is out of range
    */
-  xmippFeature& membAt ( unsigned _di, unsigned _ci); 
+  xmippFeature& membAt ( unsigned _di, unsigned _ci);
 
 
   /**
@@ -155,8 +151,8 @@ class xmippFCB : public xmippCB
   /**
    * Returns the code vector that represents the input in the codebook
    * @param _in  Sample to classify
-     Note: The difference between Fuzzy codevector and non-Fuzzy 
-     codevector is that the best (winner) is estimated using the 
+     Note: The difference between Fuzzy codevector and non-Fuzzy
+     codevector is that the best (winner) is estimated using the
      fuzzy membership matrix.
    */
   virtual xmippVector& fuzzyTest(unsigned _in) const;
@@ -164,8 +160,8 @@ class xmippFCB : public xmippCB
   /**
    * Returns the index to the code vector that represents the input in the codebook
    * @param _in  Sample to classify
-     Note: The difference between Fuzzy codevector and non-Fuzzy 
-     codevector is that the best (winner) is estimated using the 
+     Note: The difference between Fuzzy codevector and non-Fuzzy
+     codevector is that the best (winner) is estimated using the
      fuzzy membership matrix.
    */
   virtual unsigned fuzzyTestIndex(unsigned _in) const;
@@ -203,7 +199,7 @@ class xmippFCB : public xmippCB
    * In this case, it uses the Fuzzy Memberships to make the assignments
    * @param _ts  Sample list to classify
    */
-  virtual void classify(const xmippCTVectors* _ts); 
+  virtual void classify(const xmippCTVectors* _ts);
 
    /**
    * Hard partition the Fuzzy membership matrix
@@ -236,7 +232,7 @@ class xmippFCB : public xmippCB
 
 
   /**
-   * Saves the xmippFuzzyCodeBook class into a stream. 
+   * Saves the xmippFuzzyCodeBook class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -244,7 +240,7 @@ class xmippFCB : public xmippCB
 
 
   /**
-   * Loads the xmippFuzzyCodeBook class from a stream. 
+   * Loads the xmippFuzzyCodeBook class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
@@ -260,17 +256,17 @@ class xmippFCB : public xmippCB
   virtual void readSelf(istream& _is, const unsigned _size = 0);
 
   /**
-   * Prints the density values of each Fuzzy codevector. 
+   * Prints the density values of each Fuzzy codevector.
    * @param _os  The the output stream
    */
   virtual void printDensity(ostream& _os) const;
 
 
  private:
- 
-   // Dimensions of the membership matrix   
+
+   // Dimensions of the membership matrix
       unsigned numClusters, numVectors;
-    
+
 };
 //@}
 

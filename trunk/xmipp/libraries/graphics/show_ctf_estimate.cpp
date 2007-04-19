@@ -6,24 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showAssignCTF.hh"
+#include "show_ctf_estimate.h"
+
 #include <qpainter.h>
 
 // Constructor -------------------------------------------------------------
@@ -35,7 +36,7 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
    fn_psd=_fn_psd;
    if (assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.K==0)
       assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.K=1;
-   
+
    // Open a window for the scroll parameters ..............................
    vector<float> min, max, initial_value;
    vector<char *> prm_name;
@@ -85,7 +86,7 @@ void AssignCTFViewer::set_prm(vector<float> new_prm) {
    // If there is a change of min, max freq
    if (current_prm[0]!=new_prm[0] || current_prm[1]!=new_prm[1])
       updateMask(new_prm);
-   
+
    // If there is a change of defocus or angle
    if (current_prm[2]!=new_prm[2] || current_prm[3]!=new_prm[3] ||
        current_prm[4]!=new_prm[4]) {
@@ -128,7 +129,7 @@ void AssignCTFViewer::drawFirstZero(vector<float> &prm) {
    QPainter painter(this);
    QBrush brush( NoBrush );
    QPen myPen(red, 3);
-   painter.setPen( myPen );      
+   painter.setPen( myPen );
    painter.setBrush( brush );
    painter.setRasterOp(XorROP);
 
@@ -193,7 +194,7 @@ void AssignCTFViewer::okToProceed() {
    ;
 
    fh_adjust_param.close();
-   
+
    // Recompute the model
    system(((string)"( xmipp_adjust_CTF -i "+fn_random+" ; rm "+fn_random+" ) &").c_str());
 

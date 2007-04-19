@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef XMIPPIMAGIC_HH
@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "xmippImages.hh"
+#include "image.h"
 
 #define GCC_VERSION (__GNUC__ * 10000 \
     + __GNUC_MINOR__ * 100 \
@@ -61,7 +61,7 @@ static const char IMAGIC_TAG_SEP = ':';
 
 /** Types of Imagic files
  * @ingroup Imagic
- * 
+ *
  * Valid types are IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP.
  */
 enum ImageImagicType { IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP };
@@ -73,7 +73,7 @@ struct ImageImagicInfo
 {
     unsigned int num_img;
     unsigned int xsize, ysize;
-    vector< ImageImagicType > img_types;
+    std::vector< ImageImagicType > img_types;
 };
 
 /** Imagic Image class
@@ -89,14 +89,14 @@ public:
     {
         name_parsed = false;
     }
-    
+
     /** Constructor with size
      */
     ImageImagicT(int Ydim, int Xdim) : ImageT< T >(Ydim, Xdim)
     {
         name_parsed = false;
     }
-    
+
     /** Constructor with image name
      */
     ImageImagicT(FileName _name) : ImageT< T >(_name)
@@ -182,13 +182,13 @@ public:
     friend ostream& operator<<(ostream& out, const ImageImagicT< T >& I)
     {
         out << (ImageT< T >&) I;
-        
+
         /* COSS: These functions are not defined
            out << "IMAGIC header fname: " << get_hedfname() << endl;
            out << "IMAGIC image fname:  " << get_imgfname() << endl;
            out << "image number:        " << get_imgnum() << endl;
         */
-        
+
         return (out);
     }
 
@@ -203,7 +203,7 @@ public:
         if (img_fname == "")
             REPORT_ERROR (1501, "ImageImagic::read: File " + name +
                           " doesn't seem fit Imagic format");
-        
+
         FILE* img_fh;
         if ((img_fh = fopen(img_fname.c_str(), "rb")) == NULL)
             REPORT_ERROR (1501, "ImageImagic::read: IMAGIC file " + img_fname +
@@ -211,7 +211,7 @@ public:
 
         const int imgnum = getImgNum();
         const size_t img_offset = img_info.xsize * img_info.ysize;
-        
+
         // Read the image data
         ImageT< T >::img.resize(img_info.ysize, img_info.xsize);
         const bool reversed = false;
@@ -263,7 +263,7 @@ public:
     }
 
     /** Write file
-     * 
+     *
      * FIXME Not implemented
      */
     void write(const FileName& name="", bool reversed=FALSE,
@@ -273,7 +273,7 @@ public:
     }
 
     /** Low level write
-     * 
+     *
      * FIXME Not implemented
      */
     void write(FILE*& fh, bool reversed, Image_Type image_type)
@@ -288,7 +288,7 @@ public:
         parseFname();
         return (hedfname);
     }
-    
+
     /** Get Image name
      */
     const FileName& getImgFname()
@@ -296,7 +296,7 @@ public:
         parseFname();
         return (imgfname);
     }
-    
+
     /** Get image number
      */
     int getImgNum()
@@ -314,7 +314,7 @@ public:
             hedfname = "";
             imgfname = "";
             imgnum = -1;
-            
+
             // Look for special IMAGIC format: 'imagic:<hedfile>:<imgnum>'
             if (ImageT< T >::fn_img.find(IMAGIC_TAG) != string::npos)
             {

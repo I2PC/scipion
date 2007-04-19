@@ -20,14 +20,13 @@
 #ifndef __QT_IMAGE_MICROGRAPH_HH__
 #define __QT_IMAGE_MICROGRAPH_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtImage.hh"
+#include "image.h"
 
 /* Forward declarations ---------------------------------------------------- */
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtImageMicrograph : public QtImage {   
+class QtImageMicrograph : public QtImage {
    Q_OBJECT
 public:
    float   __ellipse_radius;
@@ -47,7 +46,7 @@ public:
    void movingMark( int _coord ) { __movingMark = _coord; }
    void drawEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
    void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
-   
+
 protected:
    void loadImage();
    void loadSymbols();
@@ -58,7 +57,7 @@ public slots:
    void slotDeleteMarkOther( int _coord );
    void slotChangeFamilyOther( int _coord, int _f );
    void slotZoomIn();
-   void slotZoomOut();   
+   void slotZoomOut();
 
 signals:
    void signalSetWidthHeight( int _w, int _h );

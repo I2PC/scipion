@@ -20,10 +20,10 @@
 #ifndef __QT_FILTERS_CONTROLLER_HH__
 #define __QT_FILTERS_CONTROLLER_HH__
 
-/* Includes ---------------------------------------------------------------- */
 #include <vector>
-#include "qwidget.h"
-#include <XmippData/xmippMicrograph.hh>
+#include <qwidget.h>
+
+#include <data/micrograph.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QImage;
@@ -33,14 +33,14 @@ class QListBox;
 
 /* Filters generic class --------------------------------------------------- */
 class QtFiltersController : public QWidget {
-   Q_OBJECT   
-   
+   Q_OBJECT
+
 private:
    vector<QtFilter*>  __filterList;
    QDialog           *__addFilterDialog;
    QListBox          *__listFilters;
    const Micrograph  *__M;
-   
+
    enum filters {
       invertContrastFilter,
       enhanceContrastFilter,
@@ -49,7 +49,7 @@ private:
       lowpassFilter,
       highpassFilter
    };
-   
+
 public:
    // Constructor
    QtFiltersController( QWidget * _parent, const Micrograph *_M );

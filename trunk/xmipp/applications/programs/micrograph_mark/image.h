@@ -20,27 +20,27 @@
 #ifndef __QT_IMAGE_HH__
 #define __QT_IMAGE_HH__
 
-/* Includes ---------------------------------------------------------------- */
 #include <qwidget.h>
 #include <qimage.h>
-#include "QtColorLabel.hh"
-#include "QtFiltersController.hh"
 
-/* Forward declarations ---------------------------------------------------- */ 
+#include "color_label.h"
+#include "filters_controller.h"
+
+/* Forward declarations ---------------------------------------------------- */
 class QImage;
 class Micrograph;
 class QtWidgetMicrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtImage : public QWidget {   
+class QtImage : public QWidget {
    Q_OBJECT
-   
+
 private:
    QImage              *__img;
    Micrograph          *__m;
    QtFiltersController *__filtersController;
    QtWidgetMicrograph  *__wm;
-   
+
    int        	        __mingray;
    int        	        __maxgray;
    float      	        __gamma;
@@ -48,27 +48,27 @@ public:
    // Constructor
    QtImage( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );
    ~QtImage();
-   
+
    // Set the micrograph
    void setMicrograph( Micrograph *_m );
-   
+
    // Set the widget micrograph
    void setWidgetMicrograph( QtWidgetMicrograph *_wm );
-   
+
    // Set the filters controller
    void setFiltersController( QtFiltersController *_f );
-   
+
    // Get coordinates
    void getCoordinates( int &_x, int &_y ) { _x = (int)(__x*__zoom); _y = (int)(__y*__zoom); }
    void setCoordinates( int _x, int _y ) { emit signalSetCoords( _x, _y ); }
-   
+
    // Tilt axis
    void enableAxis() {__enable_axis=TRUE;}
    virtual void draw_axis(double _ang) {};
-   
+
    // Change Image contrast
    void changeContrast(int _mingray, int _maxgray, float _gamma);
-protected:   
+protected:
    int               __x, __y;
    static double     __zoom;
    int               __activeFamily;
@@ -85,7 +85,7 @@ protected:
    virtual void loadImage()=0;
    virtual void loadSymbols()=0;
    virtual void applyFilters(QtFiltersController *_f, QImage *_img)=0;
-      
+
    // Get the micrograph
    Micrograph *getMicrograph() { return( __m ); }
    // Get the widget micrograph
@@ -98,12 +98,12 @@ protected:
 public slots:
    void slotRepaint()          { repaint( FALSE ); }
    void slotActiveFamily( int _f );
-   void slotSetCoords( int _x, int _y );   
+   void slotSetCoords( int _x, int _y );
 
 signals:
-   void signalRepaint();   
+   void signalRepaint();
    void signalSetCoords( int _x, int _y );
-      
+
 protected:
    void resizeEvent( QResizeEvent * );
    void paintEvent( QPaintEvent * );

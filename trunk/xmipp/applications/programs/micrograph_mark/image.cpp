@@ -7,28 +7,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtImage.hh"
-#include "QtMainWidgetMark.hh"
-#include "QtFiltersController.hh"
-#include "XmippData/xmippMicrograph.hh"
+#include "image.h"
+#include "main_widget_mark.h"
+#include "filters_controller.h"
+
+#include <data/micrograph.h>
+
 #include <qpainter.h>
 #include <qimage.h>
 
@@ -63,7 +64,7 @@ QtImage::QtImage( QWidget *_parent, const char *_name, WFlags _f ) :
    __img               = new QImage( size(), 8, 256 );
    __activeFamily      = -1;
    __paint             = new QPainter( this );
-      
+
    __mingray=0;
    __maxgray=255;
    __gamma=1;
@@ -114,17 +115,17 @@ void QtImage::slotSetCoords( int _x, int _y ) {
 void QtImage::resizeEvent( QResizeEvent * ) {
    __img->reset();
    __img->create( size(), 8, 256 );
-   
+
    for( int i = 0; i < 256; i++ ) __img->setColor( i, qRgb( i, i, i ) );
 }
 
 /* Paint the micrograph ---------------------------------------------------- */
 void QtImage::paintEvent( QPaintEvent * ) {
    loadImage();
-   
+
    if ( __filtersController != NULL )
       applyFilters( __filtersController,__img );
-   
+
    __paint->drawImage( 0, 0, *__img );
    loadSymbols();
    draw_axis(__axis_ang);
@@ -135,7 +136,7 @@ void QtImage::changeContrast(int _mingray, int _maxgray, float _gamma) {
    __mingray=_mingray;
    __maxgray=_maxgray;
    __gamma  =_gamma;
-   
+
    if (__mingray < __maxgray) {
       float a =255.0/(__maxgray-__mingray);
       float ap=1.0  /(__maxgray-__mingray);

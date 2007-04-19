@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _XMIPPPROG_HH
 #   define _XMIPPPROG_HH
 
-#include "xmippImages.hh"
-#include "xmippVolumes.hh"
+#include "image.h"
+#include "volume.h"
 
 /**@name Programs
     Here you will find some routines which might help you to write programs
@@ -36,7 +36,7 @@
 */
 //@{
 /** Virtual Program parameters class.
-    Program parameters must be a class inheriting from this class. 
+    Program parameters must be a class inheriting from this class.
     Here you are an example \Ref{SF_main}*/
 class Prog_parameters {
 public:
@@ -88,12 +88,12 @@ public:
     and for selection files, he must supply an output extension). If an error
     occurs, the routine shows the error message and exits 1, ie, the program
     is aborted.
-    
+
     Here you have an example of programming and calling use.
     \begin{verbatim}
-add_noise.cc:    
-    
-    #include <XmippData/xmippTypes.hh> 
+add_noise.cc:
+
+    #include <XmippData/xmippTypes.hh>
 
     class Add_noise_parameters: public Prog_parameters {
     public:
@@ -109,7 +109,7 @@ add_noise.cc:
          {cerr << "   -noise_avg <avg>         : Gaussian noise average\n"
                << "   -noise_stddev <stddev>   : Gaussian standard deviation\n";}
     };
-    
+
     bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       Add_noise_parameters *eprm=(Add_noise_parameters *) prm;
       img().add_noise(eprm->noise_avg, eprm->noise_stddev);
@@ -129,19 +129,19 @@ add_noise.cc:
        SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
     }
     \end{verbatim}
-    
+
     You would have to compile it
     \begin{verbatim}
     XmippCompile add_noise.cc
     \end{verbatim}
-    
+
     And now use it!!
     \begin{verbatim}
     1: add_noise -i g0ta00001.xmp                   -noise_stddev 0.1
     2: add_noise -i g0ta00001.xmp -o g0ta00001.pmx  -noise_stddev 0.1
     3: add_noise -i g0t.sel                         -noise_stddev 0.1
     4: add_noise -i g0t.sel       -oext pmx         -noise_stddev 0.1
-    \end{verbatim}    
+    \end{verbatim}
 
     Example 1 changes the angles of a single image and store the result
     in the same image, while example 2 stores it in a different one.
@@ -152,7 +152,7 @@ add_noise.cc:
     The operation mode determines how the program works. There are five
     valid modes: IMAGE2IMAGE, FOURIER2FOURIER, IMAGE2FOURIER, FOURIER2IMAGE,
     IMAGE2FILE, FILE2FILE.
-    
+
     If the input and output types are the same the image is rewritten in
     the input argument of the function
     \\ Ex: process_img(ImageXmipp &i, Prog_parameters *prm)
@@ -163,7 +163,7 @@ add_noise.cc:
           Prog_parameters *prm)
 
     If the program mode is FILE2FILE then the process function must be of
-    the form: bool process(const FileName &fn_in, const FileName &fn_out, 
+    the form: bool process(const FileName &fn_in, const FileName &fn_out,
     const Prog_parameters *prm); and it must return true if the file
     was successfully processed. This function must be provided as the
     process_img function to SF_main, the process_vol can be set to NULL.

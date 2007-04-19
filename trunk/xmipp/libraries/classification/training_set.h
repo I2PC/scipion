@@ -6,23 +6,22 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-
 
 //-----------------------------------------------------------------------------
 // xmippCTSet.hh
@@ -32,29 +31,30 @@
 #ifndef XMIPPTS_H
 #define XMIPPTS_H
 
-#include <ctype.h>    		
+#include <cctype>
 #include <vector>
-#include <map>	  
-#include <sstream>  	
-#include <stdexcept>  		
-#include "xmippCDataTypes.hh"
-#include "xmippVectorOps.hh"
-#include <XmippData/xmippArgs.hh>
+#include <map>
+#include <sstream>
+#include <stdexcept>
 
+#include "data_types.h"
+#include "vector_ops.h"
+
+#include <data/args.h>
 
 /**@name Training Sets*/
 //@{
 /**
- * Generic training sets. 
- * This is the parent class for all possible training sets that can be used by 
- * the classification algorithms. It provides the library with the basic 
+ * Generic training sets.
+ * This is the parent class for all possible training sets that can be used by
+ * the classification algorithms. It provides the library with the basic
  * functionality of training vectors.
  * This a template class that takes as input the type of the training vectors
  * and the type of the target variable (for supervised analysis)
  * \\The following example shows the declaration of a training set
  * formed by a vector of doubles and a target variable of type string. 	
  * \\
- * \\xmippCTSet<double, string> myTS; 
+ * \\xmippCTSet<double, string> myTS;
  */
 template<class Item, class Target>
 class xmippCTSet
@@ -81,7 +81,7 @@ class xmippCTSet
    * @param _calib: True if the trainign set is calibrated (labeled)
    * @param _n: Number of items that the trained set should contain
    */
-  xmippCTSet(const bool& _calib = true, unsigned _n = 0) 
+  xmippCTSet(const bool& _calib = true, unsigned _n = 0)
    :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0) {
    };
 
@@ -97,7 +97,7 @@ class xmippCTSet
   };
 
   /**
-   * Virtual destructor 
+   * Virtual destructor
    */
   virtual ~xmippCTSet() {};
 
@@ -138,7 +138,7 @@ class xmippCTSet
   splitIt beginSubset ( unsigned _um )  {
     return splitTrainingSet.lower_bound( _um );
   }
-  
+
   /// Returns an iterator to the end of the subset
   splitIt  endSubset ( unsigned _um )   {
     return splitTrainingSet.upper_bound(  _um );
@@ -176,15 +176,15 @@ class xmippCTSet
 
 	if (_idx > theItems.size())
 	    return false;
-    
+
 	theItems.erase(theItems.begin() + _idx);
 	if (isCalibrated)
 		theTargets.erase(theTargets.begin() + _idx);
 
 	return true;
   };
-  
-  
+
+
   /**
    * Returns the number of items in the training set
    */
@@ -192,7 +192,7 @@ class xmippCTSet
   {
     return theItems.size();
   };
-  
+
 
   /**
    * Returns a const reference to the specified target
@@ -223,7 +223,7 @@ class xmippCTSet
    * @param _i  The index
    * @exception out_of_range   If _i is out of range
    */
-  Target& targetAt ( unsigned _i) 
+  Target& targetAt ( unsigned _i)
   {
     if (_i>=size())
     {
@@ -234,8 +234,8 @@ class xmippCTSet
 
     return theTargets[_i];
   };
-  
-  
+
+
 
   /**
    * Returns a const reference to the specified item
@@ -268,12 +268,12 @@ class xmippCTSet
     {
       string msg;
       msg = "Out of range. No item at position " + ItoA(_i);
-      throw out_of_range(msg);      
+      throw out_of_range(msg);
     }
 
     return theItems[_i];
   };
-  
+
 
 
   /**
@@ -314,22 +314,22 @@ class xmippCTSet
    * NOTE: This method is empty, it should be defined.
    */
   virtual void readSelf(istream& _is) {};
-  
+
 
   /**
-   * Saves the class into a stream. 
+   * Saves the class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
   virtual void saveObject(ostream& _os) const
   {
     writeCalibrated(_os);
-    writeItems(_os, true);    
+    writeItems(_os, true);
   };
 
 
   /**
-   * Loads the class from a stream. 
+   * Loads the class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
@@ -342,7 +342,7 @@ class xmippCTSet
       readItems(_is);
   };
 
-  
+
   /**
    * Returns the number of different classes in the (calibrated) training set
    * @exception runtime_error  If the training set is not calibrated
@@ -478,7 +478,7 @@ class xmippCTSet
 				  msg = "Error reading the item";
 				  throw runtime_error(msg);
 			  }
-			  
+			
 			  if (_is)
 			  {
 				  theItems.push_back(item);
@@ -494,7 +494,7 @@ class xmippCTSet
 						// check for next line "<"
 						 if (c == '<')
 							target = Target();
-						 else 
+						 else
 						    if (_is)
 						    	_is >> target;
 						    else
@@ -506,10 +506,10 @@ class xmippCTSet
 				  		  msg = "Error reading the item";
 				  		  throw runtime_error(msg);
 					  }
-					  
+					
 					  theTargets.push_back(target);
 				  }
-				  else 
+				  else
 					  theTargets.push_back(Target());
 			  }
 			  else
@@ -546,9 +546,9 @@ class xmippCTSet
     typename vector<Target>::const_iterator j;
     for (i=theItems.begin(), j=theTargets.begin() ; i<theItems.end() ;
          i++, j++)
-    {   
-      
-      if (_delim) 
+    {
+
+      if (_delim)
       	_os << *i;
       else {
       	for (int d = 0; d < (*i).size(); d++) {
@@ -556,14 +556,14 @@ class xmippCTSet
 	   if (d != (*i).size()-1) _os << " ";
 	}
       }	
-     
-/*      if (isCalibrated) {     
+
+/*      if (isCalibrated) {
         if ((*j == " " || *j == "") && _delim)
 	   _os << "|";
         else	
           _os << " " << *j;
       }*/
-      if (isCalibrated)     
+      if (isCalibrated)
           _os << " " << *j;
 
       _os << endl;

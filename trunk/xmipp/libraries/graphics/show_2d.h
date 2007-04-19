@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef SHOWIMG_H
@@ -35,17 +35,20 @@
 #include <qkeycode.h>
 #include <qapplication.h>
 #include <qtimer.h>
+
 #include <sys/stat.h>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippFFT.hh>
-#include "showTools.hh"
+
+#include <data/image.h>
+#include <data/fft.h>
+
+#include "show_tools.h"
 
 /**@name Show 2D*/
 //@{
 
 /** ImageViewer.
     This class is in the one in charge of opening a window with the 2D image.
-    
+
     Example of use:
     \begin{verbatim}
        ImageViewer *showimg = new ImageViewer(argv[i], poll);
@@ -65,7 +68,7 @@ public:
 
     /** Empty constructor. */
     ImageViewer( const char *name=0, bool _check_file_change=false);
-    
+
     /** Constructor with a pointer to an Image */
     ImageViewer( Image *_image=0, const char *name=0);
 
@@ -84,25 +87,25 @@ public:
     bool loadImage( const char *fileName,
        double _minGray=0, double _maxGray=0,
        TLoadMode load_mode=ImageViewer::Normal_mode );
-    
+
     /** Load matrix.
         Load the image from a matrix provided */
     bool loadMatrix(matrix2D<double> &_matrix,
        double _minGray=0, double _maxGray=0,
        TLoadMode load_mode=ImageViewer::Normal_mode );
-        
+
     /** Set this image as a Fourier image */
     void set_Fourier_flag() {isFourierImage=true;}
 
     /** For CTF mode, set assign CTF file. */
     void setAssignCTFfile(const FileName &_fn_assign);
 
-    /** Flag whether or not to apply header transformation **/ 
+    /** Flag whether or not to apply header transformation **/
     bool apply_geo;
- 
+
     /** Draw a line between two points */
     void drawLine(int x1, int y1, int x2, int y2);
-    
+
     /** Draw a line with a given angle (degrees) */
     void drawAngle(double angle);
 
@@ -151,7 +154,7 @@ protected:
     QPopupMenu *options;
     QPopupMenu *saveimage;
     QWidget    *helpmsg;
-    QPrinter   *printer;    
+    QPrinter   *printer;
     QLabel     *status;
     QTimer     *timer;
     int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
@@ -169,8 +172,8 @@ protected:
     static 	ImageViewer* other;
     bool 	down;
     int 	xi, yi, xf, yf;
-    int 	xir, yir, xfr, yfr, old_xfr, old_yfr; 
-    float       spacing;    
+    int 	xir, yir, xfr, yfr, old_xfr, old_yfr;
+    float       spacing;
     QMultiLineEdit *ed1;
 
     // Assign CTF file

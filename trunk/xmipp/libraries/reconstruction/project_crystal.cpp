@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_project_crystal.hh"
-#include "../Prog_art_crystal.hh"
-#include <XmippData/xmippArgs.hh>
+#include "project_crystal.h"
+#include "art_crystal.h"
+
+#include <data/args.h>
 
 /* Empty constructor ======================================================= */
 Crystal_Projection_Parameters::Crystal_Projection_Parameters() {
@@ -112,7 +113,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal,double scale) {
 	    	
             lineNo++;
             break;
-      } /* switch end */  
+      } /* switch end */
    } /* while end */
    if (lineNo!=7 && lineNo!=6)
       REPORT_ERROR(3007,(string)"Prog_Project_Crystal::read: I "
@@ -141,19 +142,19 @@ void Crystal_Projection_Parameters::write(FileName fn_crystal) {
    fprintf(fh_param,"%f ",Nshift_dev);
    if (Nshift_avg!=0) fprintf(fh_param,"%f \n",Nshift_avg);
    else fprintf(fh_param,"\n");
-   
+
    fprintf(fh_param,"# Disappearing threshold\n");
    fprintf(fh_param,"%f\n",disappearing_th);
-      
+
    fprintf(fh_param,"# Orthogonal Projections\n");
    if (orthogonal) fprintf(fh_param,"Yes\n");
    else            fprintf(fh_param,"No\n");
-      
+
 //   fprintf(fh_param,"# Grid relative size\n");
 
    fprintf(fh_param,"# File with shifts for each unit cell\n");
    fprintf(fh_param,"%s",fn_shift.c_str());
-      
+
    fclose(fh_param);
 }
 
@@ -170,15 +171,15 @@ void project_crystal(Phantom &phantom, Projection &P,
 //   			   *phantom.phantom_scale);
 //   int aux_crystal_Xdim = ROUND(prm_crystal.crystal_Xdim
 //                                       *phantom.phantom_scale);
-   
+
    // Initialize whole crystal projection
    P.adapt_to_size(prm_crystal.crystal_Ydim,prm_crystal.crystal_Xdim);
-   
+
    // Compute lattice vectors in the projection plane
    P.set_angles(rot,tilt,psi);
    matrix1D<double> proja=P.euler*prm_crystal.a;
    matrix1D<double> projb=P.euler*prm_crystal.b;
-   
+
    // Check if orthogonal projections
    // (projXdim,0)'=A*aproj
    // (0,projYdim)'=A*bproj
@@ -267,8 +268,8 @@ void project_crystal(Phantom &phantom, Projection &P,
    fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
       prm_crystal, cell_shiftX, cell_shiftY, cell_shiftZ, cell_inside,
       exp_shifts_matrix_X, exp_shifts_matrix_Y,exp_shifts_matrix_Z);
-      
-   // Fill a table with all exp shifts 
+
+   // Fill a table with all exp shifts
    init_shift_matrix(prm_crystal,cell_inside, exp_shifts_matrix_X,
                                               exp_shifts_matrix_Y,
 					      exp_shifts_matrix_Z,
@@ -359,7 +360,7 @@ void project_crystal(Phantom &phantom, Projection &P,
             cout << "cell_shift on real space "
                  << cell_shift.transpose() << endl;
          #endif
-         
+
          Phantom aux;
          aux=phantom;
          // Now the cell shift is defined in the uncompressed space
@@ -375,7 +376,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 
          // Project this phantom
          aux.project_to(P, AE,prm_crystal.disappearing_th);
-	 // Multiply by factor 
+	 // Multiply by factor
 	 P()=P()*density_factor;
          #ifdef DEBUG_MORE
             cout << "After Projecting ...\n" << aux << endl;
@@ -391,14 +392,14 @@ void project_crystal(Phantom &phantom, Projection &P,
 /* Find crystal limits ----------------------------------------------------- */
 #define MIN_MODULE 1e-2
 void find_crystal_limits(
-   const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2, 
+   const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
    const matrix1D<double> &cell_corner1, const matrix1D<double> &cell_corner2,
    const matrix1D<double> &a, const matrix1D<double> &b,
    int &iamin, int &iamax, int &ibmin, int &ibmax) {
-   if (a.module()<MIN_MODULE || b.module()<MIN_MODULE) 
+   if (a.module()<MIN_MODULE || b.module()<MIN_MODULE)
       REPORT_ERROR(1,"find_crystal_limits: one of the lattice vectors is "
          "extremely small");
-   
+
    // Compute area to cover
    double x0=XX(proj_corner1)+XX(cell_corner1);
    double y0=YY(proj_corner1)+YY(cell_corner1);
@@ -417,7 +418,7 @@ void find_crystal_limits(
    M2x2_BY_V2x1(r,Ainv,r);
    iamin=FLOOR(XX(r)); iamax=CEIL(XX(r));
    ibmin=FLOOR(YY(r)); ibmax=CEIL(YY(r));
-   
+
    #define CHANGE_COORDS_AND_CHOOSE_CORNERS2D \
       M2x2_BY_V2x1(r,Ainv,r); \
       iamin=MIN(FLOOR(XX(r)),iamin); iamax=MAX(CEIL(XX(r)),iamax); \
@@ -431,16 +432,16 @@ void find_crystal_limits(
 /* Move following spiral --------------------------------------------------- */
 /* Given a cell, we study the cells in the inmidiate surrounding, this gives
    a structure of the like
-   
+
    xxx
    xXx
    xxx
-   
+
    We will mean by . a non-visited cell, by x a visited one and by o the
    following cell we should visit  given this structure. To identify
    structures we will use the sum of visited cells in rows and columns. The
    following patterns define the spiral movement:
-   
+
    .o.0 ...0 ...0 .xx2 .xx2 xx.2 xo.1 .o.0 ...0
    .x.1 ox.1 .xx2 .xx2 .xo1 xxo2 xx.2 xx.2 ox.1
    ...0 .x.1 .ox1 .o.0 ...0 ...0 ...0 xx.2 xx.2 etc
@@ -523,7 +524,7 @@ void fill_cell_positions(Projection &P,
       cout << "bprojd=" << bproj.transpose() << endl;
       cout << iamin << " " << iamax << " " << ibmin << " " << ibmax << endl;
    #endif
-   
+
    // Compute weight table in the undeformed space
    matrix2D<double> weight(3,3);
    STARTINGX(weight)=-1; STARTINGY(weight)=-1;
@@ -537,7 +538,7 @@ void fill_cell_positions(Projection &P,
    cell_shiftX.init_zeros(ibmax-ibmin+1,iamax-iamin+1);
    STARTINGX(cell_shiftX)=iamin; STARTINGY(cell_shiftX)=ibmin;
    cell_shiftY.init_zeros(cell_shiftX);
-   //in this routine cell_shiftZ is set to zero and nothing else 
+   //in this routine cell_shiftZ is set to zero and nothing else
    cell_shiftZ.init_zeros(cell_shiftX);
    cell_inside.init_zeros(ibmax-ibmin+1,iamax-iamin+1);
    STARTINGX(cell_inside)=iamin; STARTINGY(cell_inside)=ibmin;
@@ -591,7 +592,7 @@ void fill_cell_positions(Projection &P,
       // Move to next position
       move_following_spiral(r,visited);
    }
-   
+
    #ifdef DEBUG
       cout << "Cell shift X without absolute displacements" << cell_shiftX;
       cout << "Cell shift Y without absolute displacements" << cell_shiftY;
@@ -605,18 +606,18 @@ void fill_cell_positions(Projection &P,
          // Move to final position
          cell_shiftX(i,j) += j*XX(aprojd)+i*XX(bprojd);
          cell_shiftY(i,j) += j*YY(aprojd)+i*YY(bprojd);
-         	 
+         	
          // Check if there is intersection
          matrix1D<double> auxcorner1(2), auxcorner2(2);
          XX(auxcorner1)=XX(corner1)+cell_shiftX(i,j);
          YY(auxcorner1)=YY(corner1)+cell_shiftY(i,j);
          XX(auxcorner2)=XX(corner2)+cell_shiftX(i,j);
          YY(auxcorner2)=YY(corner2)+cell_shiftY(i,j);
-         
+
          cell_inside(i,j)=P().intersects(auxcorner1,auxcorner2);
 //TEMPORAL FIX FOR PHANTOM AS BIG AS THE WHOLE CRYSTAL
          cell_inside(i,j)=1;
-//ROBERTO         
+//ROBERTO
          #ifdef DEBUG
             cout << "(i,j)=(" << i << "," << j << ")\n";
             cout << "   Projection shape "; P().print_shape(); cout << endl;
@@ -631,10 +632,10 @@ void fill_cell_positions(Projection &P,
    }
 }
 
-/* Fill aux matrix with experimental shifs to add to unit cell 
+/* Fill aux matrix with experimental shifs to add to unit cell
    projection********************************************************/
-   
-   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
+
+   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
                           matrix2D<int>    &cell_inside,
 			  matrix2D<double> &exp_shifts_matrix_X,
 			  matrix2D<double> &exp_shifts_matrix_Y,
@@ -643,13 +644,13 @@ void fill_cell_positions(Projection &P,
   {
    DocFile        aux_DF_shift;//crystal_param is cont
    aux_DF_shift=prm_crystal.DF_shift;
-   exp_shifts_matrix_X.resize(cell_inside);  
-   exp_shifts_matrix_X.init_zeros(); 
-   exp_shifts_matrix_Y.resize(cell_inside);  
-   exp_shifts_matrix_Y.init_zeros(); 
-   exp_shifts_matrix_Z.resize(cell_inside);  
-   exp_shifts_matrix_Z.init_zeros(); 
-   
+   exp_shifts_matrix_X.resize(cell_inside);
+   exp_shifts_matrix_X.init_zeros();
+   exp_shifts_matrix_Y.resize(cell_inside);
+   exp_shifts_matrix_Y.init_zeros();
+   exp_shifts_matrix_Z.resize(cell_inside);
+   exp_shifts_matrix_Z.init_zeros();
+
    //#define DEBUG2
    #ifdef DEBUG2
    cout << aux_DF_shift;
@@ -657,15 +658,15 @@ void fill_cell_positions(Projection &P,
    exp_shifts_matrix_X.print_shape();
    cout << endl;
    #endif
-   #undef DEBUG2 
+   #undef DEBUG2
    //fill matrix with docfile data
    aux_DF_shift.go_first_data_line();
    int max_x, max_y, max_z, min_x , min_y, min_z;
-   
+
    while (!aux_DF_shift.eof()) {
       //Check that we are not outside the matrix
       if (!exp_shifts_matrix_X.outside(ROUND(aux_DF_shift(1)),
-                                      ROUND(aux_DF_shift(0)) 
+                                      ROUND(aux_DF_shift(0))
 				     )){
          exp_shifts_matrix_X(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
                             =aux_DF_shift(4);
@@ -673,7 +674,7 @@ void fill_cell_positions(Projection &P,
                             =aux_DF_shift(5);
          exp_shifts_matrix_Z(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
                             =aux_DF_shift(6)*phantom_scale;
-      }		    
+      }		
       aux_DF_shift.next_data_line();
    }
       //#define DEBUG2
@@ -682,7 +683,7 @@ void fill_cell_positions(Projection &P,
       cout << "exp_shifts_matrix_Y" << exp_shifts_matrix_Y;
       cout << "exp_shifts_matrix_Z" << exp_shifts_matrix_Z;
       #endif
-      #undef DEBUG2 
-   
-   }   
+      #undef DEBUG2
+
+   }
 

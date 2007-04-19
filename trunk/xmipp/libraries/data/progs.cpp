@@ -6,25 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../xmippProgs.hh"
-#include "../xmippSelFiles.hh"
-#include "../xmippArgs.hh"
+#include "progs.h"
+#include "selfile.h"
+#include "args.h"
 
 /* Common functions -------------------------------------------------------- */
 void Prog_parameters::read(int argc, char **argv) {
@@ -41,7 +41,7 @@ void Prog_parameters::read(int argc, char **argv) {
 
 void Prog_parameters::show() {
    cout << "Input File: " << fn_in << endl;
-   if (apply_geo && !Is_VolumeXmipp(fn_in)) 
+   if (apply_geo && !Is_VolumeXmipp(fn_in))
      cout << "Applying transformation stored in header of 2D-image"<< endl;
    if (each_image_produces_an_output) {
       if (fn_out!="") cout << "Output File: " << fn_out << endl;
@@ -130,7 +130,7 @@ try {
    if (!exists(prm->fn_in))
       EXIT_ERROR(1,(string)argv[0]+": "+prm->fn_in+" doesn't exist");
    bool success;
-   
+
    // For single image .....................................................
    FileName fn_out;
    if (prm->fn_out=="") fn_out=prm->fn_in;
@@ -212,13 +212,13 @@ try {
    // For a selection file .................................................
       SF_in.read(prm->fn_in);
       SF_out.clear();
-      
+
       // Initialise progress bar
       time_config();
       int i=0;
       if (prm->allow_time_bar) init_progress_bar(SF_in.ImgNo());
       int istep=CEIL((double)SF_in.ImgNo()/60.0);
-      
+
       // Process all selfile
       while (!SF_in.eof()) {
          FileName fn_read;

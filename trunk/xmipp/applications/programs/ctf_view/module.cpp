@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Javier Rodríguez Fernández (javrodri@gmail.com)
+ * Authors:     Javier Rodrï¿½guez Fernï¿½ndez (javrodri@gmail.com)
  *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -8,24 +8,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "ctfviewer_module.hh"
+#include "module.h"
+
 #include <qgroupbox.h>
 #include <qhbox.h>
 #include <qfiledialog.h>
@@ -48,15 +49,15 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     QGroupBox *GroupA = new QGroupBox ("Delta fU",this);
     GroupA->setGeometry(10,10,130,50);
     GroupA->show();
-    
+
     QHBox *hboxA = new QHBox(GroupA);
     hboxA->setCaption("Enter value for DfU");
     hboxA->setMargin(6);
     hboxA->setSpacing(6);
     hboxA->setGeometry (5, 15, 120, 30);
     hboxA->show();
-    
-    lineEditDfU = new QLineEdit (hboxA);   
+
+    lineEditDfU = new QLineEdit (hboxA);
     lineEditDfU->setGeometry(1,1,44,30);
     lineEditDfU->setAlignment(Qt::AlignRight);
     lineEditDfU->setText("");
@@ -64,19 +65,19 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
 
     connect(lineEditDfU,SIGNAL(returnPressed()),
        this, SLOT (changeMainCTFVariables()));
-      
+
     // Group B
     QGroupBox *GroupB = new QGroupBox ("Delta fV",this);
-    GroupB->setGeometry(140,10,130,50);    
+    GroupB->setGeometry(140,10,130,50);
     GroupB->show();
-    
+
     QHBox *hboxB = new QHBox(GroupB);
     hboxB->setCaption("Enter value for DfV");
     hboxB->setMargin(6);
     hboxB->setSpacing(6);
     hboxB->setGeometry (5, 15, 120, 30);
     hboxB->show();
-    
+
     lineEditDfV = new QLineEdit (hboxB);
     lineEditDfV->setAlignment(Qt::AlignRight);
     lineEditDfV->setEnabled(false);
@@ -86,16 +87,16 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
 
     // Group C
     QGroupBox *GroupC = new QGroupBox ("Azimuthal Angle",this);
-    GroupC->setGeometry(10,70,130,50);    
+    GroupC->setGeometry(10,70,130,50);
     GroupC->show();
-    
+
     QHBox *hboxC = new QHBox(GroupC);
     hboxC->setCaption("Enter value for Azimuthal Angle");
     hboxC->setMargin(6);
     hboxC->setSpacing(6);
     hboxC->setGeometry (5, 15, 120, 30);
     hboxC->show();
-    
+
     lineEditAzi = new QLineEdit (hboxC);
     lineEditAzi->setAlignment(Qt::AlignRight);
 
@@ -103,7 +104,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditAzi->setEnabled(false);
     connect(lineEditAzi,SIGNAL(returnPressed()),
        this, SLOT(changeMainCTFVariables()));
-    
+
     // Combobox to select variable
     SelecVar = new QComboBox(this);
     SelecVar->setGeometry(140,65,140,25);
@@ -132,9 +133,9 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     SelecVar->insertItem("sqrt Witdh V",-20);                 //sqV
     SelecVar->insertItem("sqrt angle",-21);                   //sqrt_angle
     SelecVar->insertItem("Global Base Line",-22);             //base_line
-    
+
     connect(SelecVar, SIGNAL(activated(int)), this, SLOT(setVar(int)));
-    
+
     lineEditVar = new QLineEdit(this);
     lineEditVar->setGeometry(145,90,130,20);
 
@@ -142,29 +143,29 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditVar->show();
     lineEditVar->setEnabled(false);
     connect(lineEditVar, SIGNAL(returnPressed()),this, SLOT(changeVar()));	
-    
+
     // Plot settings
     QGroupBox *GroupSet = new QGroupBox ("Plot Settings",this);
     GroupSet->setGeometry(10,130,260,130);
     GroupSet->show();
-    
+
     QLabel *ValueMaxX = new QLabel("Max X",GroupSet);
     ValueMaxX->setGeometry(15,20,40,20);
     ValueMaxX->show();
 
     lineEditMaxX = new QLineEdit (GroupSet);
     lineEditMaxX->setAlignment(Qt::AlignRight);
-    
+
     lineEditMaxX->setText("");
     lineEditMaxX->setGeometry(55,20,60,20);
     lineEditMaxX->setEnabled(false);
     QObject::connect(lineEditMaxX, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-        
+
     QLabel *ValueMaxY = new QLabel("Max Y",GroupSet);
     ValueMaxY->setGeometry(125,20,40,20);
     ValueMaxY->show();
-      
+
     lineEditMaxY = new QLineEdit (GroupSet);
     lineEditMaxY->setAlignment(Qt::AlignRight);
     lineEditMaxY->setText("");
@@ -172,7 +173,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMaxY->setEnabled(false);
     QObject::connect(lineEditMaxY, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-    
+
     QLabel *ValueXTicks= new QLabel("XTicks",GroupSet);
     ValueXTicks->setGeometry(15,60,40,20);
     ValueXTicks->show();
@@ -184,11 +185,11 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditXTicks->setEnabled(false);
     QObject::connect(lineEditXTicks, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-    
+
     QLabel *ValueYTicks= new QLabel("YTicks",GroupSet);
     ValueYTicks->setGeometry(125,60,40,20);
     ValueYTicks->show();
-    
+
     lineEditYTicks = new QLineEdit (GroupSet);
     lineEditYTicks->setAlignment(Qt::AlignRight);
     lineEditYTicks->setText("");
@@ -196,11 +197,11 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditYTicks->setEnabled(false);
     QObject::connect(lineEditYTicks, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-    
+
     QLabel *ValueMinX= new QLabel("MinX",GroupSet);
     ValueMinX->setGeometry(15,100,40,20);
     ValueMinX->show();
-    
+
     lineEditMinX = new QLineEdit (GroupSet);
     lineEditMinX->setAlignment(Qt::AlignRight);
     lineEditMinX->setText("");
@@ -208,7 +209,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMinX->setEnabled(false);
     QObject::connect(lineEditMinX, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-    
+
     QLabel *ValueMinY= new QLabel("MinY",GroupSet);
     ValueMinY->setGeometry(125,100,40,20);
     ValueMinY->show();
@@ -220,37 +221,37 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMinY->setEnabled(false);
     QObject::connect(lineEditMinY, SIGNAL(returnPressed()),
        this,SLOT(setPlotSettings()));
-    
+
     // Radio buttons
     QGroupBox *GroupRadio = new QGroupBox ("View Options",this);
     GroupRadio->setGeometry(10,270,260,110);
     GroupRadio->show();
-    
+
     ShowDamping = new QRadioButton("Show Damping",GroupRadio);
     ShowDamping->setGeometry(10,15,200,20);
     ShowDamping->show();
     ShowDamping->setChecked(true);
     ShowDamping->setEnabled(false);
     connect(ShowDamping,SIGNAL(clicked()),this,SLOT(refreshCurves()));
-    
+
     ShowBackground = new QRadioButton("Show Background (Noise)",GroupRadio);
     ShowBackground->setGeometry(10,35,200,20);
     ShowBackground->show();
     ShowBackground->setChecked(true);
     ShowBackground->setEnabled(false);
     connect(ShowBackground,SIGNAL(clicked()),this,SLOT(refreshCurves()));
-    
+
     ShowCTF = new QRadioButton("Show CTF",GroupRadio);
     ShowCTF->setGeometry(10,55,100,20);
-    ShowCTF->show();   
+    ShowCTF->show();
     ShowCTF->setChecked(true);
     ShowCTF->setEnabled(false);
     connect(ShowCTF,SIGNAL(clicked()),this,SLOT(refreshCurves()));
-    
+
     QLabel *ValueAngle = new QLabel("Angle (In Degrees)",GroupRadio);
     ValueAngle->setGeometry(60,80,100,20);
     ValueAngle->show();
-        
+
     spinBoxAngle= new QSpinBox (GroupRadio);
     spinBoxAngle->setRange(-90,90);
     spinBoxAngle->setLineStep(1);
@@ -259,18 +260,18 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     spinBoxAngle->show();
     spinBoxAngle->setEnabled(false);
     connect(spinBoxAngle,SIGNAL(valueChanged(int)),this, SLOT(drawAngle()));
-    
+
     TenLog = new QRadioButton("10 Log (x)",GroupRadio);
     TenLog->setGeometry(155,15,20,20);
     TenLog->show();
     TenLog->setChecked(false);
     TenLog->setEnabled(false);
     connect(TenLog,SIGNAL(clicked()),this,SLOT(recomputeCurves()));
-    
+
     QLabel *LabTenLog = new QLabel("10Log10(x)",GroupRadio);
     LabTenLog->setGeometry(175,10,70,30);
     LabTenLog->show();
-    
+
     ShowExperimental = new QRadioButton("Show Experimental",GroupRadio);
     ShowExperimental->setGeometry(110,55,125,20);
     ShowExperimental->show();
@@ -282,25 +283,25 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     QGroupBox *InputFile = new QGroupBox ("Input file",this);
     InputFile->setGeometry(10,390,260,70);
     InputFile->show();
-    
+
     getFile = new QPushButton ("&Browse",InputFile);
     getFile->setGeometry(195,14,50,25);
     getFile->show();
     connect(getFile,SIGNAL(clicked()),this,SLOT(selectFile()));
-    
+
     selectedFile = new QLineEdit("",InputFile);
     selectedFile->setGeometry(10,15,180,20);
     selectedFile->show();
-    
-    // Quit    
+
+    // Quit
     quitButton = new QPushButton("&Quit",this);
-    connect(quitButton, SIGNAL(clicked()), qApp, SLOT(quit())); 
+    connect(quitButton, SIGNAL(clicked()), qApp, SLOT(quit()));
     quitButton->setGeometry(185,465,90,31);
     quitButton->show();
 
     // Photo
     photoButton = new QPushButton("&Photo",this);
-    connect(photoButton, SIGNAL(clicked()), this, SLOT(photo())); 
+    connect(photoButton, SIGNAL(clicked()), this, SLOT(photo()));
     photoButton->setGeometry(95,465,90,31);
     photoButton->show();
     photoButton->setEnabled(false);
@@ -331,12 +332,12 @@ void CTFViewer::photo() {
 // Reset plot settings -----------------------------------------------------
 void CTFViewer::reset() {
     plotter.setPlotSettings(firstSettings);
-    lineEditMaxX->setText(QString::number(firstSettings.maxX,'f',3)); 
-    lineEditMaxY->setText(QString::number(firstSettings.maxY,'f',3)); 
-    lineEditMinX->setText(QString::number(firstSettings.minX,'f',3)); 
-    lineEditMinY->setText(QString::number(firstSettings.minY,'f',3)); 
-    lineEditYTicks->setText(QString::number(firstSettings.numYTicks)); 
-    lineEditXTicks->setText(QString::number(firstSettings.numXTicks)); 
+    lineEditMaxX->setText(QString::number(firstSettings.maxX,'f',3));
+    lineEditMaxY->setText(QString::number(firstSettings.maxY,'f',3));
+    lineEditMinX->setText(QString::number(firstSettings.minX,'f',3));
+    lineEditMinY->setText(QString::number(firstSettings.minY,'f',3));
+    lineEditYTicks->setText(QString::number(firstSettings.numYTicks));
+    lineEditXTicks->setText(QString::number(firstSettings.numXTicks));
     refreshCurves();
 }
 
@@ -372,25 +373,25 @@ void CTFViewer::openFile() {
    firstSettings = plotter.zoomStack[plotter.curZoom];
 
    // Enable all LineEdits and other widgets
-   lineEditDfU->setText(QString::number(ctf.DeltafU,'f',6)); 
+   lineEditDfU->setText(QString::number(ctf.DeltafU,'f',6));
    lineEditDfU->setEnabled(true);
-   lineEditDfV->setText(QString::number(ctf.DeltafV,'f',6)); 
+   lineEditDfV->setText(QString::number(ctf.DeltafV,'f',6));
    lineEditDfV->setEnabled(true);
    lineEditAzi->setText(QString::number(ctf.azimuthal_angle,'f',6));
    lineEditAzi->setEnabled(true);
    lineEditVar->setText(QString::number(ctf.Tm,'f',6));
    lineEditVar->setEnabled(true);
-   lineEditMaxX->setText(QString::number(firstSettings.maxX,'f',3)); 
+   lineEditMaxX->setText(QString::number(firstSettings.maxX,'f',3));
    lineEditMaxX->setEnabled(true);
-   lineEditMaxY->setText(QString::number(firstSettings.maxY,'f',3)); 
+   lineEditMaxY->setText(QString::number(firstSettings.maxY,'f',3));
    lineEditMaxY->setEnabled(true);
-   lineEditMinX->setText(QString::number(firstSettings.minX,'f',3)); 
+   lineEditMinX->setText(QString::number(firstSettings.minX,'f',3));
    lineEditMinX->setEnabled(true);
-   lineEditMinY->setText(QString::number(firstSettings.minY,'f',3)); 
+   lineEditMinY->setText(QString::number(firstSettings.minY,'f',3));
    lineEditMinY->setEnabled(true);
-   lineEditYTicks->setText(QString::number(firstSettings.numYTicks)); 
+   lineEditYTicks->setText(QString::number(firstSettings.numYTicks));
    lineEditYTicks->setEnabled(true);
-   lineEditXTicks->setText(QString::number(firstSettings.numXTicks)); 
+   lineEditXTicks->setText(QString::number(firstSettings.numXTicks));
    lineEditXTicks->setEnabled(true);
    spinBoxAngle->setEnabled(true);
    ShowCTF->setEnabled(true);
@@ -408,7 +409,7 @@ void CTFViewer::changeVar() {
    double val = lineEditVar->text().toDouble(&Ok);
    if (!Ok) return;
    switch (SelecVar->currentItem()) {
-      case  0: ctf.Tm=val;           break; 
+      case  0: ctf.Tm=val;           break;
       case  1: ctf.kV=val;           break;
       case  2: ctf.Cs=val;           break;
       case  3: ctf.Ca=val;           break;
@@ -492,7 +493,7 @@ void CTFViewer::drawAngle() {
    imageViewer->drawAngle(angle);
    first_time_in_this_function=false;
    old_angle=angle;
-   
+
    recomputeCurves();
 }
 
@@ -592,7 +593,7 @@ void CTFViewer::getExperimentalCurve(int angle, matrix2D<double> &data,
     int i=0;
     for (double t=0; t<t_max; t+=Ts, i++) {
        data(i,0)=t*1.0/(XSIZE(I())*sampling_rate);
-       data(i,1)=I().interpolated_elem(t*cos_ang,t*sin_ang); 
+       data(i,1)=I().interpolated_elem(t*cos_ang,t*sin_ang);
        if (TenLog->isOn()) data(i,1)=10*log10(data(i,1));
        if (i==Nmax) break;
     }
@@ -602,14 +603,14 @@ void CTFViewer::getExperimentalCurve(int angle, matrix2D<double> &data,
 void CTFViewer::generate_ctfmodel() {
    ctf.Produce_Side_Info();
 
-   // Get the image size from the .ctfmodel 
+   // Get the image size from the .ctfmodel
    ImageXmipp model;
    model.read(fn_root+".ctfmodel");
    int Ydim=YSIZE(model());
    int Xdim=XSIZE(model());
-   
+
    // Now read the .psd and rescale it to the size of the ctfmodel
-   // Remove artifactual (due to interpolation) negative values 
+   // Remove artifactual (due to interpolation) negative values
    model.read(fn_root+".psd");
    model().self_scale_to_size_Bspline(3,Ydim,Xdim);
    FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
@@ -622,7 +623,7 @@ void CTFViewer::generate_ctfmodel() {
       if (j>Xdim/2) continue;
       XX(idx)=j; YY(idx)=i;
       FFT_idx2digfreq(model(), idx, freq);
-      digfreq2contfreq(freq, freq, ctf.Tm);   
+      digfreq2contfreq(freq, freq, ctf.Tm);
       model(i,j)=ctf.CTFpure_at(XX(freq),YY(freq));
    }
 
@@ -637,7 +638,7 @@ void CTFViewer::generate_ctfmodel() {
 void CTFViewer::keyPressEvent(QKeyEvent *event) {
    switch ( event->key()) {
       case Key_Q:
-         if (event->state() == ControlButton) // If 'Ctrol Q' key, 
+         if (event->state() == ControlButton) // If 'Ctrol Q' key,
   	    exit(0);
          break;
    }

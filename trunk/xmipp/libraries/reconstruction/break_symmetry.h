@@ -6,37 +6,39 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippMasks.hh>
-#include "Reconstruction/symmetries.hh"
-#include "Reconstruction/projection.hh"
-#include "Reconstruction/directions.hh"
-#include <Reconstruction/Programs/Prog_WBP.hh>
-#include <Reconstruction/Programs/Prog_symmetrize.hh>
-#include <vector>
 
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/image.h>
+#include <data/volume.h>
+#include <data/filters.h>
+#include <data/mask.h>
+
+#include "symmetries.h"
+#include "projection.h"
+#include "directions.h"
+#include "reconstruct_wbp.h"
+#include "symmetrize.h"
+
+#include <vector>
 
 /**@name Break_Sym */
 //@{
@@ -60,7 +62,7 @@ public:
   int Niter, istart;
   // Convergence check
   double eps;
-  // Radius for masking of volume 
+  // Radius for masking of volume
   double mask_radius;
   // File handler for the history file
   ofstream fh_hist;
@@ -68,7 +70,7 @@ public:
   vector<matrix3D<double> > vols;
   // Mask
   VolumeXmipp mask;
-  
+
 public:
 
   /// Read additional arguments for 3D-process from command line

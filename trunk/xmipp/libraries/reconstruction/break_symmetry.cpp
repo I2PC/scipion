@@ -6,23 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_break_sym.hh"
+
+#include "break_symmetry.h"
 
 
 // Read ===================================================================
@@ -102,7 +103,7 @@ void Prog_Break_Sym_prm::show() {
     cerr << " Symmetry file:           : "<< fn_sym<<endl;
     cerr << " Output rootname          : "<< fn_root<<endl;
     cerr << " Convergence criterion    : "<< eps<<endl;
-    if (mask_radius>0) 
+    if (mask_radius>0)
     cerr << " Mask radius              : "<< mask_radius<<endl;
     cerr << " ================================================================="<<endl;
 
@@ -124,7 +125,7 @@ void Prog_Break_Sym_prm::show() {
     fh_hist << " Symmetry file:           : "<< fn_sym<<endl;
     fh_hist << " Output rootname          : "<< fn_root<<endl;
     fh_hist << " Convergence criterion    : "<< eps<<endl;
-    if (mask_radius>0) 
+    if (mask_radius>0)
     fh_hist << " Mask radius              : "<< mask_radius<<endl;
     fh_hist << " ================================================================="<<endl;
 
@@ -133,14 +134,14 @@ void Prog_Break_Sym_prm::show() {
 }
 
 // Projection of the reference (blob) volume =================================
-void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol, 
+void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
 					   int &opt_sym, double &maxcorr) {
 
    double rot,tilt,psi,newrot,newtilt,newpsi;
    double Xsq,Asq,corr;
    double opt_rot,opt_tilt,opt_psi;
    Projection proj,projmask;
-   matrix2D<double> L(4,4), R(4,4); 
+   matrix2D<double> L(4,4), R(4,4);
 
    rot=img.rot();
    tilt=img.tilt();
@@ -158,7 +159,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
      projmask().set_Xmipp_origin();
      projmask().init_constant(1.);
    }
-   
+
    // Pre-calculate Xsq:
    Xsq=0.;
    FOR_ALL_ELEMENTS_IN_MATRIX2D(img()) {
@@ -269,7 +270,7 @@ void Prog_Break_Sym_prm::process_selfile(SelFile &SF, vector<SelFile> &SFout, do
 
 
 // Reconstruction using the ML-weights ==========================================
-void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF, 
+void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
 					int iter, int volno) {
 
   VolumeXmipp            new_vol;
@@ -281,7 +282,7 @@ void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
   if (Nvols>1) {
     fn_tmp+="_vol";
     fn_tmp.compose(fn_tmp,volno+1,"");
-  } 
+  }
   fn_insel=fn_tmp+".sel";
   SF.write(fn_insel);
 
@@ -291,7 +292,7 @@ void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
   // read command line (fn_sym, angular etc.)
   wbp_prm.read(argc, argv);
   if (mask_radius>0) wbp_prm.diameter=(int)mask_radius*2;
-  
+
   wbp_prm.fn_sel=fn_insel;
   wbp_prm.fn_sym="";
   wbp_prm.show();

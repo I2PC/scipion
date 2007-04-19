@@ -6,31 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../recons_misc.hh"
-#include "../Prog_symmetrize.hh"
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippMasks.hh>
+#include "recons_misc.h"
+#include "symmetrize.h"
+
+#include <data/docfile.h>
+#include <data/mask.h>
 
 class POCSClass;
 class VariabilityClass;
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis, 
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
    double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /* ------------------------------------------------------------------------- */
@@ -39,7 +40,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 template <class Extra_ART_Parameters>
 void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0) {
-   
+
 // Show general information ................................................
    *prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
    *prm.fh_hist << " Parameters -------------------------------------------------\n";
@@ -183,13 +184,13 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                        // case of saving intermidiate volumes
    int Xoutput_volume_size, Youtput_volume_size, Zoutput_volume_size;
    double aux_tilt;
-   
+
    // Projection related ...................................................
    Projection      read_proj;          // Projection read from file
    Projection      theo_proj;          // Projection from the
                                        // reconstruction
    Projection      alig_proj;          // Projection with the correlation
-                                       // maps needed for translation aligment				       
+                                       // maps needed for translation aligment				
    Projection      corr_proj;          // Image with the correction
                                        // factors for unitary basis
    Projection      diff_proj;          // Difference between the
@@ -238,18 +239,18 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    // If SIRT set normalizing factor and create output volume ..............
    if (prm.parallel_mode==Basic_ART_Parameters::SIRT ) {
   	ART_numIMG=prm.numIMG;
-      	vol_basis_out=vol_basis;         // Copy the structure of vol_basis 
+      	vol_basis_out=vol_basis;         // Copy the structure of vol_basis
 	ptr_vol_out=&vol_basis_out;      // Pointer to output volume
 	if (prm.variability_analysis) ptr_vol_out->init_zeros();
    } else if ( prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
        prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
        prm.parallel_mode==Basic_ART_Parameters::pSART ||
-       prm.parallel_mode==Basic_ART_Parameters::pCAV ) 
+       prm.parallel_mode==Basic_ART_Parameters::pCAV )
    {
    // In those cases, normalization must be done at the top level program once we
    // have the reconstruction values. Have a look ar /Applications/Src/MPIArt/mpi_art.cc for
    // an example
-      ART_numIMG= 1; 		       
+      ART_numIMG= 1; 		
       ptr_vol_out=&vol_basis_out;      // Pointer to output volume
       vol_basis_out=vol_basis;         // Copy the structure of vol_basis
                                        // and possible initial values
@@ -267,7 +268,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    TimeStamp time0;                    // For measuring the elapsed time
    annotate_time(&time0);
    int images=0;
-   double mean_error_2ndblock,pow_residual_imgs; 
+   double mean_error_2ndblock,pow_residual_imgs;
    bool iv_launched=false;
     for (int it = 0; it < prm.no_it; it++) {
       // Initialisation of some variables
@@ -279,11 +280,11 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	 cerr << "Running iteration " << it << " with lambda= " << prm.lambda(it)<< "\n" << endl;
 	 if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
       }
-      
+
       // For each projection -----------------------------------------------
       for (int act_proj = 0; act_proj < prm.numIMG ; act_proj++) {
           POCS.newProjection();
-  
+
           // Select next projection ........................................
           int iact_proj; // Index inside the sorting information for act_proj
           if (prm.tell&TELL_MANUAL_ORDER) {
@@ -297,7 +298,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              }
              iact_proj=0;
              while (iact_proj<prm.numIMG) {
-                if (prm.IMG_Inf[iact_proj].fn_proj.get_number()==proj_number && 
+                if (prm.IMG_Inf[iact_proj].fn_proj.get_number()==proj_number &&
                     prm.IMG_Inf[iact_proj].sym==sym_number) break;
                 iact_proj++;
              }
@@ -309,7 +310,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
           read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
-          
+
       	  // If noisy reconstruction
 	  if (prm.noisy_reconstruction) {
 	     init_random_generator(prm.IMG_Inf[iact_proj].seed);
@@ -327,13 +328,13 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		SF_signal.insert(read_proj.name());
 	     }
 	  }
- 
+
           //skipping if  tilt greater than max_tilt
           //tilt is inbetween 0 and 360
           aux_tilt=read_proj.tilt();
           if((aux_tilt > prm.max_tilt && aux_tilt < 180.-prm.max_tilt) ||
              (aux_tilt > prm.max_tilt + 180 && aux_tilt < 360.-prm.max_tilt)) {
-              cerr << "Skipping Proj no: " << iact_proj 
+              cerr << "Skipping Proj no: " << iact_proj
 		             << "tilt=" << read_proj.tilt()  << endl;
 		        continue;
           }
@@ -348,16 +349,16 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     noisy_projection().resize(read_proj());
 	  }
 
-         //Skip if desired	  
+         //Skip if desired	
           if (prm.tell&TELL_ONLY_SYM)
 	     if( prm.IMG_Inf[iact_proj].sym != -1) {
-		cerr << "Skipping Proj no: " << iact_proj 
-		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym 
+		cerr << "Skipping Proj no: " << iact_proj
+		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym
 		     <<  endl;
 		continue;
 	     } else
-		cerr << "NO Skipping Proj no: " << iact_proj 
-		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym 
+		cerr << "NO Skipping Proj no: " << iact_proj
+		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym
 		     <<  endl;
 		
           // For wlsART: use alig_proj for residual image!!
@@ -367,7 +368,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       	  // Notice that the following function is extern
 	  ART_single_step(vol_basis, ptr_vol_out,
       	      prm, eprm,
-              theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj, 
+              theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj,
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
 	      images, prm.IMG_Inf[iact_proj].fn_ctf);
@@ -387,7 +388,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
         	 noise_mean_error, ART_numIMG, prm.lambda(it),
 		 images, prm.IMG_Inf[iact_proj].fn_ctf);
 	  }
-          
+
           // Force symmetry in the volume ..................................
           // so far only crystallographic
           if (prm.sym_each &&
@@ -436,7 +437,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       	     cout << "Stats PPPtheo.xmp: "; theo_proj().print_stats(); cout << endl;
       	     cout << "Stats PPPread.xmp: "; read_proj().print_stats(); cout << endl;
       	     cout << "Stats PPPcorr.xmp: "; corr_proj().print_stats(); cout << endl;
-             diff_proj.write("PPPdiff.xmp"); 
+             diff_proj.write("PPPdiff.xmp");
              theo_proj.write("PPPtheo.xmp");
              read_proj.write("PPPread.xmp");
              corr_proj.write("PPPcorr.xmp");
@@ -460,11 +461,11 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	 if ((prm.tell&TELL_SAVE_INTERMIDIATE | prm.tell&TELL_IV) &&
              prm.save_intermidiate_every!=0 &&
 	     act_proj%prm.save_intermidiate_every==0) {
-	    if (prm.tell&TELL_SAVE_INTERMIDIATE) 
+	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
                cerr << "\nSaving intermidiate ...\n"
-                    << "Converting basis volume to voxels ...\n";   
+                    << "Converting basis volume to voxels ...\n";
             // Save reconstructed volume
-            prm.basis.changeToVoxels(vol_basis, &(vol_voxels()), 
+            prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
                vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
@@ -525,9 +526,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Convert volume and write if not last iteration
       // If in SIRT mode move the volume to the reference one
       if ((prm.parallel_mode==Basic_ART_Parameters::SIRT
-             && !prm.variability_analysis)|| 
-          prm.parallel_mode==Basic_ART_Parameters::pSIRT || 
-          prm.parallel_mode==Basic_ART_Parameters::pfSIRT || 
+             && !prm.variability_analysis)||
+          prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
+          prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
           prm.parallel_mode==Basic_ART_Parameters::pSART ||
 	  prm.parallel_mode==Basic_ART_Parameters::pCAV ||
 	  prm.eq_mode==CAV )
@@ -542,7 +543,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          if (prm.tell&TELL_SAVE_BASIS)
             vol_basis.write(prm.fn_root+"it"+ItoA(it)+".basis");
       }
-      
+
       // Check if algorithm must stop via stop_at
       if (images==prm.stop_at) break;
    }
@@ -552,14 +553,14 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       cout << "\nTime of " << prm.no_it << " iterations: \n";
       print_elapsed_time(time0);
    }
-   
+
    // Finish variability analysis
    VC.finishAnalysis();
 
    // Save the noisy reconstruction
    if (prm.noisy_reconstruction) {
       VolumeXmipp vol_voxels_noisy;
-      prm.basis.changeToVoxels(vol_basis_noisy, &(vol_voxels_noisy()), 
+      prm.basis.changeToVoxels(vol_basis_noisy, &(vol_voxels_noisy()),
          Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       vol_voxels_noisy.write(prm.fn_root+"_noise.vol");
       SF_noise.write(prm.fn_root+"_noise_proj.sel");
@@ -585,10 +586,10 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
 
 // Show parameters and initiate history
    Basic_ART_Init_history(prm, eprm, vol_basis);
-   
+
 // Iterations
    Basic_ART_iterations(prm, eprm, vol_basis);
-   
+
 // Finish iterations
    finish_ART_iterations(prm, eprm, vol_basis);
 

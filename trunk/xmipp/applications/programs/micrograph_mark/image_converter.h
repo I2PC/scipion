@@ -20,8 +20,8 @@
 #ifndef __QT_IMAGE_CONVERTER_HH__
 #define __QT_IMAGE_CONVERTER_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include <XmippData/xmippImages.hh>
+#include <data/image.h>
+
 #include <qimage.h>
 
 /*  --------------------------------------------------- */
@@ -32,7 +32,7 @@ public:
 
    // qt to xmipp converter
    Image *qt2xmipp( QImage *qtImg );
-   
+
    // xmipp to qt converter
    QImage *xmipp2qt( Image *xmippImg );
 };

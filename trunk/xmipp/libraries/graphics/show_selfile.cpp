@@ -7,29 +7,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showSel.hh"
-#include "../show2D.hh"
-#include "../showTools.hh"
-#include "../showAssignCTF.hh"
-#include <Reconstruction/Programs/Prog_assign_CTF.hh>
-#include <XmippData/xmippArgs.hh>
+#include "show_selfile.h"
+#include "show_2d.h"
+#include "show_tools.h"
+#include "show_ctf_estimate.h"
+
+#include <reconstruction/ctf_estimate_from_micrograph.h>
+
+#include <data/args.h>
 #include <qmessagebox.h>
 #include <qfiledialog.h>
 
@@ -164,14 +166,14 @@ void ShowSel::initTable() {
    ShowTable::initTable();
    setFocusPolicy( StrongFocus ); // keyboard focus is accepted
    // Really set size
-   setMaximumSize(maxWidth,maxHeight);    
+   setMaximumSize(maxWidth,maxHeight);
    resize(maxWidth,maxHeight);
 }
 
 /* Init Rightclick menubar ------------------------------------------------- */
-void ShowSel::initRightclickMenubar() {    
-   menubar = new QPopupMenu(); 
-   setFileRightclickMenubar(); 
+void ShowSel::initRightclickMenubar() {
+   menubar = new QPopupMenu();
+   setFileRightclickMenubar();
 
    // Options .............................................................
    options =  new QPopupMenu();
@@ -189,24 +191,24 @@ void ShowSel::initRightclickMenubar() {
    options->insertItem( "View average and SD Images", this,  SLOT(showStats()));
    options->insertItem( "Show Sel Statistics", this,  SLOT(showSelStats()));
    options->insertSeparator();
-   
+
    // Show this image
    options->insertItem( "Reload all", this, SLOT(reloadAll()));
    options->insertItem( "Show this image separately", this, SLOT(showThisImage()));
    options->insertSeparator();
-   
+
    // Recalculate CTF model
    if (load_mode==CTF_mode) {
       options->insertItem( "Edit CTF model", this, SLOT(editCTFmodel()));
       options->insertItem( "Recompute CTF model", this, SLOT(recomputeCTFmodel()));
       options->insertSeparator();
-      
+
       options->setItemEnabled(mi_imgAsLabels,false);
       options->setItemEnabled(mi_selAsLabels,false);
    }
-   
+
    // Form the menu
-   menubar->insertItem( "&Options", options );    
+   menubar->insertItem( "&Options", options );
    menubar->insertSeparator();
    insertGeneralItemsInRightclickMenubar();
 }
@@ -332,10 +334,10 @@ void ShowSel::resizeEvent(QResizeEvent *event) {
       int Ydim=(event->size().height()-4-status->height())/NumRows;
       for (int i=0; i<NumCols; i++) setColumnWidth(i,Xdim);
       for (int i=0; i<NumRows; i++) setRowHeight(i,Ydim);
-      
+
       // Reset all flags so that images are reloaded
       clearContents();
-      
+
       // Repaint
       maxWidth=NumCols*Xdim+4;
       maxHeight=NumRows*Ydim+4;
@@ -357,7 +359,7 @@ void ShowSel::insert_content_in_queue(int i) {
    }
    if (found) content_queue.erase(ptr);
    content_queue.push_back(i);
-   
+
    // If the queue is longer than 3 times the visible area then remove some
    // images
    if (jmax+1>2*NumRows*NumCols) {
@@ -397,7 +399,7 @@ void ShowSel::saveSelFileDiscarded() {
    else QMessageBox::about( this, "Error!", "No images selected\n");
 }
 
-/* This function saves the sel file with the selected images as active and 
+/* This function saves the sel file with the selected images as active and
   the rest of the sel file as discarded. */
 void ShowSel::saveSelFileActive() {
    SelFile SFNew;
@@ -445,7 +447,7 @@ void ShowSel::saveSelFileNewOverwrite() {
 /* Save a Selfile.
    Make all possible checkings */
 void ShowSel::writeSelFile(SelFile &_SF, bool overwrite) {
-   
+
    if (overwrite)
       _SF.write((string)  ((const char *)selfile_fn.c_str()));
    else
@@ -456,23 +458,23 @@ void ShowSel::writeSelFile(SelFile &_SF, bool overwrite) {
          QFileInfo fi(newfilename);
          if (fi.extension(false) != "sel") {
    	    if ( QMessageBox::information( this, "Showsel application",
-   		   "The file has no ""sel"" extension. add it? ", 
+   		   "The file has no ""sel"" extension. add it? ",
    		   "Yes", "No") == 0) newfilename += ".sel";
          }
          fi.setFile(newfilename);
          if (fi.exists())
    	    if ( QMessageBox::information( this, "Showsel application",
-   		   "The file already exist. Overwrite?", 
+   		   "The file already exist. Overwrite?",
    		   "Yes", "No") == 0) _SF.write((string)  ((const char *)newfilename));
-   	    else QMessageBox::about( this, "Warning!", "Saving aborted\n");			   
+   	    else QMessageBox::about( this, "Warning!", "Saving aborted\n");			
          else _SF.write((string)  ((const char *)newfilename));
       } else  QMessageBox::about( this, "Warning!", "Saving aborted\n");
-   }    
+   }
 }
 
 // Change options ----------------------------------------------------------
-void ShowSel::changeNormalize() {  
-    bool indivNorm = options->isItemEnabled(mi_Individual_norm); 
+void ShowSel::changeNormalize() {
+    bool indivNorm = options->isItemEnabled(mi_Individual_norm);
     if (indivNorm) {
        options->setItemEnabled(mi_Individual_norm, false);
        options->setItemEnabled(mi_Global_norm, true);
@@ -494,7 +496,7 @@ void ShowSel::changeLabels()     {
 }
 
 // Show statistics ---------------------------------------------------------
-void ShowSel::showStats() {  
+void ShowSel::showStats() {
     SelFile SFNew;
     for (int i=0; i<listSize; i++)
         if (cellMarks[i])
@@ -505,22 +507,22 @@ void ShowSel::showStats() {
 
 // Show Sel Stats ----------------------------------------------------------
 void ShowSel::showSelStats() {
-   int total = 0; 
+   int total = 0;
    int active = 0;
    int discarded = 0;
    int commented = 0;
    SelFile SF(fn);
    while (!SF.eof()) {
-      // Get file  
+      // Get file
          if (SF.Is_ACTIVE())
 	    active++;
 	 else if (SF.Is_DISCARDED())
 	    discarded++;
 	 else if (SF.Is_COMMENT())
-	    commented++;   
+	    commented++;
       SF.next();
       total++;
-   }  // while 
+   }  // while
    QString tmpS, Str1;
    Str1 = "Sel File Name : ";
    Str1 += fn.c_str();
@@ -583,7 +585,7 @@ void ShowSel::editCTFmodel() {
    // Read the Assign CTF parameters
    Prog_assign_CTF_prm assign_ctf_prm;
    assign_ctf_prm.read(fn_assign);
-   
+
    // Check if the CTF is computed at each particle
    FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
    FileName fn_param;
@@ -629,7 +631,7 @@ void ShowSel::recomputeCTFmodel() {
            << " that you used to estimate the CTFs\n";
       return;
    }
-   
+
    // Get the PSD name
    FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
    FileName fn_psd;
@@ -657,16 +659,16 @@ void ShowSel::recomputeCTFmodel() {
 }
 
 // Unselect/Select all -----------------------------------------------------
-void ShowSel::SelectAll() {  
-   for (int i = 0; i < listSize; i++) 
+void ShowSel::SelectAll() {
+   for (int i = 0; i < listSize; i++)
       if (!cellMarks[i]) {
          cellMarks[i] = true;
          updateCellIdx(i);
       }
 }
 
-void ShowSel::unSelectAll() {  
-   for (int i = 0; i < listSize; i++) 
+void ShowSel::unSelectAll() {
+   for (int i = 0; i < listSize; i++)
       if (cellMarks[i]) {
          cellMarks[i] = false;
          updateCellIdx(i);

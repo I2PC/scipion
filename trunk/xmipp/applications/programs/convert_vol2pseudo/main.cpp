@@ -6,54 +6,53 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippArgs.hh>
+#include <data/volume.h>
+#include <data/args.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <algorithm>
-#include <math.h>
 
-
-typedef vector< vector< float > > coordinates;   
+typedef vector< vector< float > > coordinates;
 
 int main(int argc, char **argv) {
-  FILE *fp; 
+  FILE *fp;
   float T;
   float tmpR;
   char *fname, *vname, *bmname, *vmname;
   float minVoxel, maxVoxel, slope;
   float minCoord, maxCoord;
-  int tmpCoord; 
+  int tmpCoord;
   VolumeXmipp mask/*, vol_mask*/;
-  coordinates randomCoord;   
+  coordinates randomCoord;
   bool sampling = true;
   bool nomask = false;
   bool FourD = false;
   int npoints;
-      
+
 
   // Read arguments
-  
-  try { 
+
+  try {
     vname = get_param(argc, argv, "-vname");
     T = AtoF(get_param(argc, argv, "-T", "2"));
     fname = get_param(argc, argv, "-fname", "out.dat");
@@ -62,13 +61,13 @@ int main(int argc, char **argv) {
     minCoord = AtoF(get_param(argc, argv, "-minCoord", "0"));
     maxCoord = AtoF(get_param(argc, argv, "-maxCoord", "10"));
     if (!check_param(argc, argv, "-sampling"))
-     sampling = false; 
+     sampling = false;
     if (check_param(argc, argv, "-nomask"))
-     nomask = true; 
+     nomask = true;
     if (check_param(argc, argv, "-4"))
-     FourD = true; 
+     FourD = true;
     npoints = AtoI(get_param(argc, argv, "-npoints", "100000"));
-  } 
+  }
   catch (Xmipp_error) {
     cout << "Usage:" << endl;
     cout << "-vname         : Input Volume file name" << endl;
@@ -84,7 +83,7 @@ int main(int argc, char **argv) {
     cout << "[-4]           : Set if the dataset will be 4-dimensional (default: false)" << endl;
     exit(1);
    }
-    
+
 
   cout << "Given parameters are: " << endl;
   cout << "vname = " << vname << endl;
@@ -97,7 +96,7 @@ int main(int argc, char **argv) {
   cout << "T = " << T << endl;
   if (sampling) {
     cout << "Sampling method is used to generate the dataset" << endl;
-    cout << "number of points = " << npoints << endl;    
+    cout << "number of points = " << npoints << endl;
   } else {
     cout << "Exhaustive method is used to generate the dataset" << endl;
     cout << "minCoord = " << minCoord << endl;
@@ -105,7 +104,7 @@ int main(int argc, char **argv) {
   }
   if (FourD)
     cout << "Dataset will be 4-Dimensional" << endl;
-  
+
 
   // Read spider volumen
 
@@ -119,64 +118,64 @@ int main(int argc, char **argv) {
    	cout << endl << "reading mask " << bmname << "......" << endl << endl;
    	mask.read(bmname);        // Reads the mask
    	cout << mask;		  // Output Volumen Information
-   } 
+   }
 
 
   // Extract the data
-  
-  V().set_Xmipp_origin();          // sets origin at the center of the volume.        
-  mask().set_Xmipp_origin();   	   // sets origin at the center of the mask.        
+
+  V().set_Xmipp_origin();          // sets origin at the center of the volume.
+  mask().set_Xmipp_origin();   	   // sets origin at the center of the mask.
   VolumeXmipp vol_mask(V);
 
 //  vol_mask().resize(V());   	   // Resizes volumen_mask.
-  vol_mask().set_Xmipp_origin();   // sets origin at the center of the volumen mask.        
-  
+  vol_mask().set_Xmipp_origin();   // sets origin at the center of the volumen mask.
+
 
   cout << endl << "Finding minimum and maximum......" << endl;
 
   // Find Minimum and Maximum density values inside the mask.
-  
-  minVoxel = MAXFLOAT; maxVoxel = -MAXFLOAT;   
-  for (int z = STARTINGZ(V()); z <= FINISHINGZ(V()); z++) {  
+
+  minVoxel = MAXFLOAT; maxVoxel = -MAXFLOAT;
+  for (int z = STARTINGZ(V()); z <= FINISHINGZ(V()); z++) {
     for (int y = STARTINGY(V()); y <= FINISHINGY(V()); y++)
-      for (int x = STARTINGX(V()); x <= FINISHINGX(V()); x++) {        
+      for (int x = STARTINGX(V()); x <= FINISHINGX(V()); x++) {
 	  if (nomask || VOLVOXEL(mask, z, y, x) != 0) {
 	     if (VOLVOXEL(V, z, y, x) > maxVoxel)
 	       maxVoxel = VOLVOXEL(V, z, y, x);
 	     if (VOLVOXEL(V, z, y, x) < minVoxel)
 	       minVoxel = VOLVOXEL(V, z, y, x);
-	  } // if      
+	  } // if
       } // for x
   } // for z
 
   cout << endl << "minimum: " << minVoxel << endl << "maximum: " << maxVoxel << endl;
 
-  
+
   // Generates coordinates (data points)
 
   cout << endl << "Generating coordinates......" << endl;
 
-  if (!sampling)     
+  if (!sampling)
   	cout << endl << "using exhaustive generation......" << endl;
 
   for (int z = STARTINGZ(V()); z <= FINISHINGZ(V()); z++)
     for (int y = STARTINGY(V()); y <= FINISHINGY(V()); y++)
-      for (int x = STARTINGX(V()); x <= FINISHINGX(V()); x++) {        
+      for (int x = STARTINGX(V()); x <= FINISHINGX(V()); x++) {
 
 	// Checks if voxel is different from zero (it's inside the binary mask)
 
-           bool cond; 
+           bool cond;
 	   if (!nomask)
 	      cond = VOLVOXEL(mask, z, y, x) != 0;
 	   else
-	      cond = true;   
-	   if (cond && (VOLVOXEL(V, z, y, x) > T)) {             
+	      cond = true;
+	   if (cond && (VOLVOXEL(V, z, y, x) > T)) {
 	
 	      VOLVOXEL(vol_mask, z, y, x) = VOLVOXEL(V, z, y, x);
 
-             if (!sampling) {	   	     
-	     	// Lineary transform the density into "number of coordinates" 
-	     
+             if (!sampling) {	   	
+	     	// Lineary transform the density into "number of coordinates"
+	
 	        if (FourD) {
       	           vector <float> v;
                	   v.push_back(x);
@@ -185,16 +184,16 @@ int main(int argc, char **argv) {
                	   v.push_back((float)VOLVOXEL(V, z, y, x));
       	       	   randomCoord.push_back(v);
 		} else { // !FourD
-             	   if (minVoxel !=maxVoxel) 
+             	   if (minVoxel !=maxVoxel)
 	       		slope=(double)(maxCoord-minCoord)/(double)(maxVoxel-minVoxel);
-     	     	   else            
+     	     	   else
 	       		slope=0;
-   
-             	   tmpCoord = (int) (minCoord + (slope * (double) (VOLVOXEL(V, z, y, x)-minVoxel)));  
-	     	           
+
+             	   tmpCoord = (int) (minCoord + (slope * (double) (VOLVOXEL(V, z, y, x)-minVoxel)));
+	     	
 	     	   // Saves the coordinates proportional to the density of the voxel.
-	     
-	     	   for (unsigned i = 0; i < tmpCoord; i++) {	       
+	
+	     	   for (unsigned i = 0; i < tmpCoord; i++) {	
       	       		vector <float> v;
                		v.push_back(x);
                		v.push_back(y);
@@ -207,9 +206,9 @@ int main(int argc, char **argv) {
 	     	// If sampling, then normalize the masked volume (devide by
 		// maxdensity)
 	      	VOLVOXEL(vol_mask, z, y, x) /= maxVoxel;				
-	     }  
- 
-	   } else { // if VOLVOXEL	   
+	     }
+
+	   } else { // if VOLVOXEL	
 	       VOLVOXEL(vol_mask, z, y, x) = 0;		
 	   }
 
@@ -233,31 +232,31 @@ int main(int argc, char **argv) {
 	    if (FourD)
               v.push_back((float)VOLVOXEL(vol_mask, Z, Y, X));
       	    randomCoord.push_back(v);
-	  }         
-      }	      
+	  }
+      }	
 
       cout << endl << "Saving masked volumen......" << endl;
       if (!nomask)
-      	vol_mask.write(vmname); 
+      	vol_mask.write(vmname);
 
       cout << endl << "Saving coordinates at random......" << endl;
 
-      fp=fopen(fname,"w");      
+      fp=fopen(fname,"w");
       if (FourD)
         fprintf(fp, "4 %d\n", randomCoord.size()); // 4-dimensional
-      else 
+      else
         fprintf(fp, "3 %d\n", randomCoord.size()); // 3-dimensional
       if (!sampling)
-      	random_shuffle(randomCoord.begin(), randomCoord.end());  
-      for (unsigned i=0; i < randomCoord.size(); i++) 
-        if (FourD)     
+      	random_shuffle(randomCoord.begin(), randomCoord.end());
+      for (unsigned i=0; i < randomCoord.size(); i++)
+        if (FourD)
           fprintf(fp, "%d  %d %d %3.2f \n", (int) randomCoord[i][0], (int) randomCoord[i][1], (int) randomCoord[i][2], randomCoord[i][3]);
 	else
           fprintf(fp, "%d  %d %d \n", (int) randomCoord[i][0], (int) randomCoord[i][1], (int) randomCoord[i][2]);
 	
      fclose(fp);    // close file
-     
+
      exit(0);
-} 
+}
 
 

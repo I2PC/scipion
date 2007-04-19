@@ -7,24 +7,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showSpectraSOM.hh"
+#include "show_spectra_som.h"
+
 #include <qmessagebox.h>
 
 // Init/Clear -------------------------------------------------------------- */
@@ -53,13 +54,13 @@ void ShowSpectraSOM::initWithFile(const FileName &_fn_root,
    const FileName &_fn_dat) {
    init();
    readFile(_fn_root);
-   
+
    ifstream fh_in(_fn_dat.c_str());
    if (!fh_in)
       REPORT_ERROR(1,(string)"ShowSpectra::readFile: Cannot open"+_fn_dat);
    Vdat=new xmippCTVectors(fh_in);
    fh_in.close();
-   
+
    initTable();
    initRightclickMenubar();
    repaint();
@@ -81,7 +82,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
     fn_his  =_fn_root+".his";
     fn_err  =_fn_root+".err";
     fn_inf  =_fn_root+".inf";
-    
+
     // Read histogram
     if (exists(fn_his)) {
      	ifstream fh_his(fn_his.c_str());
@@ -91,7 +92,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
 	   int imax=ts.size();
      	   hisAssigned = new string[imax];
      	   for (int i=0; i<imax; i++)
-               hisAssigned[i] = ts.theTargets[i];		   
+               hisAssigned[i] = ts.theTargets[i];		
    	}
 	fh_his.close();
     }
@@ -105,7 +106,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
 	   int imax=ts.size();
      	   cv_errors = new string[imax];
      	   for (int i=0; i<imax; i++)
-               cv_errors[i] = ts.theTargets[i];		   
+               cv_errors[i] = ts.theTargets[i];		
    	}
 	fh_err.close();
     }
@@ -124,7 +125,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
         }
         fh_inf.close();
     }
-    
+
     // Read codevectors
     if (exists(fn_class)) {
        ifstream fh_class(fn_class.c_str());
@@ -132,7 +133,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
       	  string line, fn;
           int dim;
 	  string topol, neigh;
-          fh_class >> dim >> topol >> NumCols >> NumRows >> neigh; 
+          fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
 	  listSize = NumCols*NumRows;
 	  if (listSize==0)
 	     REPORT_ERROR(1,"ShowSpectraSOM::readFile: Input file is empty");
@@ -169,9 +170,9 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
 	       fh_class >> col >> row >> tmp;
 	       getline(fh_class, line);
 	       int i=row*NumCols+col;
-	       SFcv[i].push_back(first_token(line)); 
+	       SFcv[i].push_back(first_token(line));
 	       SFcvs[i].push_back(j);
-               j++; 
+               j++;
 	  }
        }
        fh_class.close();
@@ -180,7 +181,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root) {
 
 /* Initialize right click menubar ------------------------------------------ */
 void ShowSpectraSOM::initRightclickMenubar() {
-   menubar = new QPopupMenu(); 
+   menubar = new QPopupMenu();
    QPopupMenu * file = new QPopupMenu();
       file->insertItem( "Open...", this,  SLOT(GUIopenFile()));
       file->insertItem( "Save assigned images in a sel file...",
@@ -216,7 +217,7 @@ void ShowSpectraSOM::initRightclickMenubar() {
    options->insertSeparator();
 
    // Insert options the menu
-   menubar->insertItem( "&Options", options );    
+   menubar->insertItem( "&Options", options );
    menubar->insertSeparator();
 
    // Inser Help and Quit
@@ -249,11 +250,11 @@ void ShowSpectraSOM::extractRepresented(xmippCTVectors &_v_represented) {
      if (cellMarks[i]) {
          int jmax=SFcvs[i].size();
 	 for (int j=0; j<jmax; j++) {
-            _v_represented.theItems[myIndex] = Vdat->theItems[(SFcvs[i])[j]]; 
-            _v_represented.theTargets[myIndex] = Vdat->theTargets[(SFcvs[i])[j]]; 
+            _v_represented.theItems[myIndex] = Vdat->theItems[(SFcvs[i])[j]];
+            _v_represented.theTargets[myIndex] = Vdat->theTargets[(SFcvs[i])[j]];
             myIndex++;
          }
-     } 
+     }
 }
 
 /* Save assigned images ---------------------------------------------------- */
@@ -339,7 +340,7 @@ void ShowSpectraSOM::showRepresentedSpectra() {
 }
 
 /* Show error spectrum ----------------------------------------------------- */
-void ShowSpectraSOM::showErrorSpectrum() {  
+void ShowSpectraSOM::showErrorSpectrum() {
    // Extract represented vectors
    xmippCTVectors V_represented(0,true);
    int row=currentRow();
@@ -348,7 +349,7 @@ void ShowSpectraSOM::showErrorSpectrum() {
    int i=indexOf(row,col);
    int represented_images=SFcvs[i].size();
    if (represented_images==0) {
-      QMessageBox::about( this, 
+      QMessageBox::about( this,
          "Error!", "This vector does not represent any spectrum\n");
       return;
    }
@@ -356,8 +357,8 @@ void ShowSpectraSOM::showErrorSpectrum() {
    V_represented.theItems.resize(represented_images);
    V_represented.theTargets.resize(represented_images);
    for (int j=0; j<represented_images; j++) {
-      V_represented.theItems[j] = Vdat->theItems[(SFcvs[i])[j]]; 
-      V_represented.theTargets[j] = Vdat->theTargets[(SFcvs[i])[j]]; 
+      V_represented.theItems[j] = Vdat->theItems[(SFcvs[i])[j]];
+      V_represented.theTargets[j] = Vdat->theTargets[(SFcvs[i])[j]];
    }
 
    // Get Avg
@@ -370,7 +371,7 @@ void ShowSpectraSOM::showErrorSpectrum() {
    int jmax=myVect->theItems[0].size();
    for (int j=0; j<jmax; j++)
       myVect->theItems[0][j]-=V->theItems[i][j];
-   
+
    // Represent
    ShowSpectra *myST = new ShowSpectra;
    myST->initWithVectors(1, 1, myVect, "Error spectrum of the represented spectra");

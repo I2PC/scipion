@@ -8,29 +8,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                      <                               
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *                                      <
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippAPH.hh"
-#include <Reconstruction/symmetries.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
+#include "aph.h"
+
+#include <reconstruction/symmetries.h>
+#include <data/args.h>
+#include <data/image.h>
+
 #include <fstream>
 #include <iomanip>
+
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
    + __GNUC_PATCHLEVEL__)
@@ -49,10 +52,10 @@ void APHFile2D::read(const FileName &fn) {
    int       line_no=1;
    int       hmax=0, kmax=0, hmin=0, kmin=0;
    string    line;
-   
+
    // Empties current APH File
    clear();
-   
+
    // Open file
    fh_aph.open(fn.c_str(), ios::in);
    if (!fh_aph)
@@ -93,11 +96,11 @@ void APHFile2D::read(const FileName &fn) {
       }
       line_no++;
    }/* while */
-   #ifdef DEBUG   
+   #ifdef DEBUG
    cout << "hmax: " << hmax <<" kmax: " << kmax <<endl;
    cout << "hmin: " << hmin <<" kmin: " << kmin <<endl;
-   #endif      
-     
+   #endif
+
    // Ask for memory
    spots_l.init_zeros(kmax-kmin+1,hmax-hmin+1);
       STARTINGX(spots_l)=hmin; STARTINGY(spots_l)=kmin;
@@ -137,7 +140,7 @@ void APHFile2D::read(const FileName &fn) {
 	    string aux;
 	    aux=next_token(line,i);
 	    if (first) {l_is_present=(aux!=""); first=false;}
-	    
+	
 	    if (l_is_present) {
 	       a6 = AtoF(aux);
                spots_l(k,h)    = a1;
@@ -158,7 +161,7 @@ void APHFile2D::read(const FileName &fn) {
 	 cout << " " << h << " "<< k << " "<< a1 << " "<< a2 << " ";
 	 cout << a3 << " "<< a4 << " "<< a5 << " "<< a6<< endl;
 	 #endif
-//	 #undef DEBUG 
+//	 #undef DEBUG
  	 }
      }
       catch (Xmipp_error XE) {
@@ -170,7 +173,7 @@ void APHFile2D::read(const FileName &fn) {
    }/* while */
    // Close file
    fh_aph.close();
-   
+
    fn_aph=fn;
 }/*  APHFile2D::read */
 
@@ -182,8 +185,8 @@ void APHFile2D::write(const FileName &fn) const {
    if (!fh)
       REPORT_ERROR(1,(string)"APHFile2D::write: Cannot open "+
          fn+" for output");
-   
-   fh << setfill('0') << setw(4) << label << " " 
+
+   fh << setfill('0') << setw(4) << label << " "
       << XX(astar) << " " << YY(astar) << " "
       << XX(bstar) << " " << YY(bstar) << " "
       << Xdim << " " << Ydim << " " << sampling_rate << endl;
@@ -229,24 +232,24 @@ void Euler_to_MRC(double rot, double tilt, double psi,
    else if(rot<PI*2.)    *mrc_taxa=PI*5./2-rot;
    else
      {cerr <<"\nHORROR: (Euler_to_MRC) Can't find taxa\n)"; exit(1);}
-   if((rot <PI/2+0.1   && rot >PI/2-.1)|| 
+   if((rot <PI/2+0.1   && rot >PI/2-.1)||
       (rot <PI*3/2+0.1 && rot >PI*3/2-.1)||
-      (rot <0.1)|| 
+      (rot <0.1)||
       (rot >(PI*2)-.1))
       cerr <<"\nWARMING, rot close 0,90,270 or 360 degrees, conversion not reliable\n";
-   
 
-   if      ( (SGN(tilt)== +1) &&  (rot<=PI*3./2. && rot >PI/2.)) 
+
+   if      ( (SGN(tilt)== +1) &&  (rot<=PI*3./2. && rot >PI/2.))
       { cout <<"one\n";*mrc_tilt = -tilt;}//nrg
-   else if ( (SGN(tilt)== -1) &&  (rot>PI*3./2.)) 
+   else if ( (SGN(tilt)== -1) &&  (rot>PI*3./2.))
       { cout <<"two\n"; *mrc_tilt = tilt;}//neg
-   else if ( (SGN(tilt)== -1) &&  (rot<=PI/2.  )) 
+   else if ( (SGN(tilt)== -1) &&  (rot<=PI/2.  ))
       { cout <<"three\n";   *mrc_tilt = tilt;}//neg
-   else if ( (SGN(tilt)== +1) &&  (rot>PI*3./2.)) 
+   else if ( (SGN(tilt)== +1) &&  (rot>PI*3./2.))
       { cout <<"four\n"; *mrc_tilt = tilt;}//plus
-   else if ( (SGN(tilt)== -1) &&  (rot<=PI*3./2. && rot >PI/2.)) 
+   else if ( (SGN(tilt)== -1) &&  (rot<=PI*3./2. && rot >PI/2.))
       { cout <<"five\n"; *mrc_tilt = -tilt;}//plus
-   else if ( (SGN(tilt)== +1) &&  (rot<=PI/2.  )) 
+   else if ( (SGN(tilt)== +1) &&  (rot<=PI/2.  ))
       { cout <<"six\n";   *mrc_tilt = +tilt;} //plu
    else
      {cerr <<"\nHORROR: (Euler_to_MRC) Can't find tilt\n)"; exit(1);}
@@ -255,8 +258,8 @@ void Euler_to_MRC(double rot, double tilt, double psi,
 //cout << "\nDEBUG tilt: " << tilt<<endl;
 //cout << "\nDEBUG psi: " << psi<<endl;
 //cout << "\nDEBUG *mrc_tilt: " << *mrc_tilt<<endl;
-        
-}		  
+
+}		
 
 /*----transform Xmipp Euler angles into MRC angles *--------------*/
 void MRC_to_Euler(double  mrc_taxa, double  mrc_tilt,
@@ -268,11 +271,11 @@ void MRC_to_Euler(double  mrc_taxa, double  mrc_tilt,
    else if(mrc_taxa<PI*3./2.) {*rot=PI*3./2-mrc_taxa; *tilt= - mrc_tilt;}
    else
      {cerr <<"\nHORROR: (MRC_to_Euler) taxa bigger than 180\n)"; exit(1);}
-   if(*tilt !=0 && ((mrc_taxa <PI/2+0.1   && mrc_taxa >PI/2-.1)|| 
+   if(*tilt !=0 && ((mrc_taxa <PI/2+0.1   && mrc_taxa >PI/2-.1)||
                    (mrc_taxa <PI+0.1 && mrc_taxa >PI-.1)||
                    (mrc_taxa <0.1)))
       cerr <<"\nWARNING, taxa close 0,90 or 180 degrees, conversion not reliable\n";
-}		  
+}		
 
 void APHFile2D::copy_reflection(int h, int k, int new_h, int new_k,
    double new_l, bool conjugate, int sign) {
@@ -294,7 +297,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
    int new_hmin=MIN(-FINISHINGX(spots_abs),STARTINGX(spots_abs) );
    int new_kmax=MAX(-STARTINGY(spots_abs) ,FINISHINGY(spots_abs));
    int new_hmax=MAX(-STARTINGX(spots_abs) ,FINISHINGX(spots_abs));
-   
+
    spots_l   .window(new_kmin,new_hmin,new_kmax,new_hmax);
    spots_abs .window(new_kmin,new_hmin,new_kmax,new_hmax);
    spots_arg .window(new_kmin,new_hmin,new_kmax,new_hmax);
@@ -309,7 +312,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 
    // Generate symmetrical points
    // Symmetrical points are generated through the multiplication
-   //                               [R[0] R[2]  0    0 R[5]] 
+   //                               [R[0] R[2]  0    0 R[5]]
    //                               [R[1] R[3]  0    0 R[6]]
    // [h' k' l' A' ph']=[h k l A ph][ 0    0   R[4]  0  0  ]
    //                               [ 0    0    0    1  0  ]
@@ -337,14 +340,14 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 		  R1.R2:[-1 0 0 -1  1 0    0  1] -> (-h,-k, l)=(h,k,l)
 		  R1.R3:[-1 0 0  1 -1 0 -180  1] -> (-h, k,-l)=(h,k,l)*(-1)^h
 	       R1.R2.R3:[-1 0 0  1  1 0 -180 -1] -> (-h, k, l)=conj(h,k,l)*(-1)^h
-		     
+		
 		     The special cases of this group are
 		     Real         Imag
 		     ----         ----
 		     (0,2n,l)     (0,2n+1,l)
 		     (h,k,0)
 		     (h,0,l)
-		     
+		
 		     I will only use those restrictions valid for all l.
 		  */
                   if ((h==0 && k%2==0) || (k==0)) {
@@ -359,11 +362,11 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group) {
 		     } else if(l_is_present) {
 		        spots_arg(k,h)=0;
                         spots_arg(k,h)=0;
-		     }		     
+		     }		
 		  }
-// (h,k,0)== real missing		  
+// (h,k,0)== real missing		
 		  double l=spots_l(k,h);
-		  
+		
 	          //copy_reflection( h, k,-h,-k,-l,true,0); visited(-k,-h)=1;
 		  if (mode==0) {
 	             //1:copy_reflection( h, k,-h, k, l,true,h); visited( k,-h)=1;

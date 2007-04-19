@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef XMIPPFFT_H
@@ -28,12 +28,12 @@
 
 #include <complex>
 
-#include "xmippMatrices1D.hh"
-#include "xmippMatrices2D.hh"
-#include "xmippMatrices3D.hh"
+#include "matrix1d.h"
+#include "matrix2d.h"
+#include "matrix3d.h"
 
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippFuncs.hh>
+#include "selfile.h"
+#include "funcs.h"
 
 /** @defgroup Fourier Fourier transforms */
 
@@ -43,7 +43,7 @@
 
 /** Index to frequency
  * @ingroup FourierConverters
- * 
+ *
  * Given an index and a size of the FFT, this function returns the corresponding
  * digital frequency (-1/2 to 1/2)
  */
@@ -53,7 +53,7 @@
 
 /** Frequency to index (int)
  * @ingroup FourierConverters
- * 
+ *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
  * integer index
  */
@@ -63,7 +63,7 @@
 
 /** Frequency to index (double)
  * @ingroup FourierConverters
- * 
+ *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
  * double index
  */
@@ -72,7 +72,7 @@
 
 /** Index to frequency
  * @ingroup FourierConverters
- * 
+ *
  * This function can be used with vectors of any size (1,2,3). The Digital
  * spectrum is limited between -1/2 and 1/2. If the vector has got more than 3
  * coordinates, then an exception is thrown
@@ -94,9 +94,10 @@ void FFT_idx2digfreq(T& v, const matrix1D< int >& idx, matrix1D< double >& freq)
 
 /** Frequency to index
  * @ingroup FourierConverters
- * 
+ *
  * This function can be used with vectors of any size (1,2,3). The Digital
- * spectrum is limited between -1/2 and 1/2. If the vector has got more than 3
+ * spectrum is lim:confirm bd
+ * ited between -1/2 and 1/2. If the vector has got more than 3
  * coordinates, then an exception is thrown
  */
 template<typename T>
@@ -116,7 +117,7 @@ void digfreq2FFT_idx(T& v, const matrix1D< double >& freq, matrix1D< int >& idx)
 
 /** Digital to Continuous frequency
  * @ingroup FourierConverters
- * 
+ *
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
  */
@@ -128,7 +129,7 @@ inline void digfreq2contfreq(const matrix1D< double >& digfreq,
 
 /** Continuous to Digital frequency
  * @ingroup FourierConverters
- * 
+ *
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
  */
@@ -408,48 +409,48 @@ void CenterFFT(matrix3D< T >& v, bool forward)
 
 /** FFT shift 1D
  * @ingroup FourierOperations
- * 
+ *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix1D< complex< double > >& v,
-	      double xshift); 
+	      double xshift);
 
 /** FFT shift 2D
  * @ingroup FourierOperations
- * 
+ *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix2D< complex< double > >& v,
-	      double xshift, double yshift); 
+	      double xshift, double yshift);
 
 /** FFT shift 3D
  * @ingroup FourierOperations
- * 
+ *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix3D< complex< double > >& v,
-	      double xshift, double yshift, double zshift); 
+	      double xshift, double yshift, double zshift);
 
 /** Place the origin of the 1D FFT at the center of the vector and back
  * @ingroup FourierOperations
- * 
+ *
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(matrix1D< complex< double > >& v, bool forward);
 
 /** Place the origin of the 2D FFT at the center of the image and back
  * @ingroup FourierOperations
- * 
+ *
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(matrix2D< complex< double > >& v, bool forward);
 
 /** Place the origin of the 3D FFT at the center of the volume and back
  * @ingroup FourierOperations
- * 
+ *
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(matrix3D< complex< double > >& v, bool forward);
@@ -492,7 +493,7 @@ void FFT_phase(const matrix3D< complex< double > >& v,
 
 /** Autocorrelation function of an Xmipp matrix
  * @ingroup FourierOperations
- * 
+ *
  * Fast calcuation of the autocorrelation matrix of a given one using Fast
  * Fourier Transform. (Using the correlation theorem)
  */
@@ -516,7 +517,7 @@ void auto_correlation_matrix(matrix2D< T > const & Img, matrix2D< double >& R)
 
 /** Autocorrelation function of an Xmipp matrix
  * @ingroup FourierOperations
- * 
+ *
  * Fast calcuation of the correlation matrix on two matrices using Fast Fourier
  * Transform. (Using the correlation theorem). The output matrix must be already
  * resized
@@ -805,7 +806,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
 
 /** SSNR step
  * @ingroup FourierOperations
- * 
+ *
  * Signal to noise ratio for 2D, process one image. freq and ssnr must have
  * correct size
  */
@@ -908,14 +909,14 @@ void my_ssnr(matrix2D< T > const & AverageImage,
 
 /** Series convolution function.
  * @ingroup FourierOperations
- * 
+ *
  * Gives the convolution of two series given as Xmipp Vectors. Result is stored
  * in result vector. Fast calcuation of the convolution result using Fast
  * Fourier Transform. If FullConvolution -set by default to FALSE- is TRUE the
  * full convolution series is returned. Otherwise the convolution vector refers
  * only to the valid values, whose number is the greater dimension of the two
  * series.
- * 
+ *
  * Note: Complex numbers are allowed
  */
 template<typename T>
@@ -978,22 +979,22 @@ void series_convolution(matrix1D< T >& series1,
 
 /** Numerical_derivative
  * @ingroup FourierOperations
- * 
+ *
  * This function computes the numerical derivative of a matrix in Y direction
  * (rows) or X direction (columns) of a given matrix, using a Savitzky-Golay
  * filter on every row or column, and then convolving.
- * 
+ *
  * Input matrix is M, result is stored in D, direction can have values of 'x' or
  *  'y'. Order is the derivative order. Window size and polynomial order are
  * parameters for the Savitzky-Golay filter that define the number of points
  * forward (+window_size) and backward (-window_size) considered to calculate
  * the filter, and the degree of the polynomial to interpolate these values,
  * respectively.
- * 
+ *
  * Default values are window_size=2 and polynomial_order=4, which are equivalent
  * to a 5-point algorithm to calculate the derivate and give good results. But
- * they can be changed provided that polynomial_order <= 2*window_size. 
- * 
+ * they can be changed provided that polynomial_order <= 2*window_size.
+ *
  * As one can expect, the values of the matrix in a border of size window_size
  * are not accurate ones, as there aren't enough points to perform the
  * estimation. As a rule of thumb, the greater the window, the more the

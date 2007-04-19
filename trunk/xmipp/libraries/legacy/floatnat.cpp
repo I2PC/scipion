@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
@@ -36,22 +36,22 @@
    ************************************************************************/
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+
 #include "spider.h"
 #include "groe.h"
 
-
 /***************************************************************
- 
+
 This routine converts the a char matrix into a float matrix.
 
-   INPUT : 
+   INPUT :
            - a "fil x col" matrix of floats or chars
            - the input data type : "form_entrada" (f/n)
-           
-   OUTPUT: 
+
+   OUTPUT:
            - a "fil x col" matrix of floats or chars, depending
              on "form_entrada".
  ***************************************************************/
@@ -66,7 +66,7 @@ void oraCharoraFloat(BYTE **img_nat,float **img_flo,int form_entrada,int fil,int
   float float_max, float_min;
   double escala;
   double fmedia, fsigma;
- 
+
  if(form_entrada==NATURAL)
    form='n';
  else
@@ -99,11 +99,11 @@ void oraCharoraFloat(BYTE **img_nat,float **img_flo,int form_entrada,int fil,int
          break;
 
       case 'n':
-         
+
          size= fil*col;
          for (i=0; i <fil; i++)    /***** Calculo de media y sigma *****/
             for (j=0; j < col; j++)
-             { 
+             {
                 aux = img_nat[i][j];
                 suma1 += aux;
                 suma2 += aux*aux;
@@ -120,7 +120,7 @@ void oraCharoraFloat(BYTE **img_nat,float **img_flo,int form_entrada,int fil,int
                 img_flo[i][j] =(float)( (img_nat[i][j]-fmedia)/fsigma );
           }
          break;
-   
+
   }
 }
 
@@ -191,7 +191,7 @@ for (i = 0;i < nrow2; i++)
 
    if "form_entrada" is FLOATFMT  (floats)
 
-     INPUT :  a "fil x col" matrix of floats. 
+     INPUT :  a "fil x col" matrix of floats.
 
      OUTPUT:  a "fil x col" long array of chars.
 
@@ -202,20 +202,20 @@ for (i = 0;i < nrow2; i++)
      OUTPUT:  a "fil x col" long array of chars.
 
  If you're not using a table with the pixel value in a ColorMap,
- that is "xcolors" and "invxcolors", then you must call this 
+ that is "xcolors" and "invxcolors", then you must call this
  routine with NULL values in the last two arguments.
 
  ***************************************************************/
 void mFloat_tira( float **img_flo,unsigned char *tira,int fil,int col,                            int form_entrada,unsigned long *xcolors,
                   unsigned long *invxcolors)
 {
- 
+
  int i,j,k;
  unsigned char pixel;
  int aux;
  int char_max=0, char_min=255;
  double suma1=0, suma2=0;
- float float_max,float_min; 
+ float float_max,float_min;
  float escala;
  float fsize;
  double fmedia, fsigma;
@@ -223,7 +223,7 @@ void mFloat_tira( float **img_flo,unsigned char *tira,int fil,int col,          
  switch(form_entrada)
   {
      case FLOATFMT:
-         if(((int)cabecero.fImami)!=1.) 
+         if(((int)cabecero.fImami)!=1.)
           {
              float_max = -1e36;
              float_min = 1e36;
@@ -244,7 +244,7 @@ void mFloat_tira( float **img_flo,unsigned char *tira,int fil,int col,          
           {
             escala=0.;
           }
-         else 
+         else
             escala = MAX_GREY/(float_max - float_min);
          for(i=0,k=0; i<fil; i++)
          for(j=0; j<col; j++)
@@ -256,7 +256,7 @@ void mFloat_tira( float **img_flo,unsigned char *tira,int fil,int col,          
             }
             k++;
           }
-          
+
          break;
 
      case NATURAL:
@@ -296,7 +296,7 @@ void mFloat_tira( float **img_flo,unsigned char *tira,int fil,int col,          
 /***************************************************************
  This fantastic routine loads an array of char into a matrix
  of chars. Easy!
- ***************************************************************/ 
+ ***************************************************************/
 void tira_matriz(unsigned char *tira,unsigned char **matriz,int nrow,int ncol)
 {
  register int i,f,c;
@@ -310,10 +310,10 @@ void tira_matriz(unsigned char *tira,unsigned char **matriz,int nrow,int ncol)
 }
 
 /***************************************************************
- And this one loads a "nrow x ncol" matrix into an array of 
+ And this one loads a "nrow x ncol" matrix into an array of
  chars using a table of pixel values in a ColorMap.
  If you don't have such table ( you're lucky ) you can use
- this routine calling it with NULL value in the xcolors and invxcolors 
+ this routine calling it with NULL value in the xcolors and invxcolors
  arguments.
  ***************************************************************/
 void matriz_tira(unsigned char **matriz,unsigned char *tira,
@@ -393,14 +393,14 @@ void matriz_tira(unsigned char **matriz,unsigned char *tira,
 
 /***************************************************************
  This routine convert the data when the input and output are
- volumes. 
+ volumes.
 
    INPUT :
            - a "slice x fil x col" volume of floats or chars
            - the input data type : "form_entrada"
 
    OUTPUT:
-           - a "slice x fil x col" volume of floats or chars, 
+           - a "slice x fil x col" volume of floats or chars,
              depending on "form_entrada".
  ***************************************************************/
 void volCharvolFloat(BYTE ***vol_nat,float ***vol_flo, int form_entrada,
@@ -438,7 +438,7 @@ void volCharvolFloat(BYTE ***vol_nat,float ***vol_flo, int form_entrada,
            for (j=0; j <fil ; j++)
              for (k=0; k <col; k++)
               {
-                f=vol_flo[i][j][k] =(float)( (vol_nat[i][j][k]-fmedia)/fsigma); 
+                f=vol_flo[i][j][k] =(float)( (vol_nat[i][j][k]-fmedia)/fsigma);
                 if( f>float_max) float_max=f;
                 else if( f<float_min) float_min=f;
               }
@@ -447,7 +447,7 @@ void volCharvolFloat(BYTE ***vol_nat,float ***vol_flo, int form_entrada,
          cabecero.fSig = 1.;
          cabecero.fAv  = 0.;
          cabecero.fFmax=float_max;
-         cabecero.fFmin=float_min; 
+         cabecero.fFmin=float_min;
 
          break;
 

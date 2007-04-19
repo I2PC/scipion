@@ -6,39 +6,40 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_recons_test.hh"
+#include "phantom_test_reconstruction.h"
 
-#include "../Prog_random_phantom.hh"
-#include "../Prog_project.hh"
-#include "../Prog_art.hh"
-#include "../Prog_surface.hh"
-#include "../Prog_symmetrize.hh"
-#include "../Prog_FourierFilter.hh"
-#include "../../recons_spider.hh"
-#include "../Prog_CorrectPhase.hh"
-#include "../Prog_IDR_art.hh"
-#include "../Prog_microscope.hh"
-#include <XmippData/Programs/Prog_segment.hh>
-#include <XmippData/xmippMorphology.hh>
-#include <XmippData/Programs/Prog_normalize.hh>
-#include <XmippData/Programs/Prog_range_adjust.hh>
+#include "phantom_create_random.h"
+#include "project.h"
+#include "reconstruct_art.h"
+#include "surface.h"
+#include "symmetrize.h"
+#include "fourier_filter.h"
+#include "recons_spider.h"
+#include "ctf_correct_phase.h"
+#include "ctf_correct_idr.h"
+#include "phantom_simulate_microscope.h"
+
+#include <data/volume_segment.h>
+#include <data/morphology.h>
+#include <data/normalize.h>
+#include <data/range_adjust.h>
 
 /* Read Reconstruction test parameters from file =========================== */
 void Recons_test_Parameters::read(const FileName &fn_test_params) {
@@ -73,7 +74,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
             "reconstruction mode " + str + " not supported");
       random_sort=check_param(fh_param,"random sort");
       sort_last_N=AtoI(get_param(fh_param,"sort last",0,"2"));
-         
+
       // Several filenames and parameters
       fn_random_phantom=get_param(fh_param,"phantom family",0,"",
          3007,"Recons_test_Parameters::read: Random Phantom filename not found");
@@ -90,7 +91,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
       defocus_change=AtoF(get_param(fh_param,"defocus change",0,"0"));
       sigma=AtoF(get_param(fh_param,"noise stddev",0,"0"));
       low_pass_before_CTF=AtoF(get_param(fh_param,"noise lowpass before CTF",0,"0"));
-      
+
       w_hp=AtoF(get_param(fh_param,"highpass cutoff",0,"0"));
       if (w_hp<0 || w_hp>0.5) w_hp=0;
 
@@ -110,11 +111,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
          auxstr=next_token();
          // Is it a range?
          if (auxstr==NULL) topF=top0;
-         else 
+         else
             topF=AtoF(auxstr,3007,
                "Recons_test_Parameters::read: topF is not a true number");
       } else enable_top_surface=false;
-      
+
       str=get_param(fh_param,"surface bottom",0,"");
       if (str!="") {
          enable_bottom_surface=true;
@@ -123,7 +124,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
          auxstr=next_token();
          // Is it a range?
          if (auxstr==NULL) bottomF=bottom0;
-         else 
+         else
             bottomF=AtoF(auxstr,3007,
                "Recons_test_Parameters::read: bottomF is not a true number");
       } else enable_bottom_surface=false;
@@ -236,10 +237,10 @@ void Recons_test_Parameters::read(const FileName &fn_test_params) {
             else break;
          } while (true);
       }
-      
+
       // Tomography
       tomography=check_param(fh_param,"tomography");
-      
+
       // Evaluate
       evaluate=!check_param(fh_param,"dont evaluate");
       only_structural=check_param(fh_param,"only structural");
@@ -313,7 +314,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
 	 case MICHAEL:       out << "Michael\n"; break;
 	 case NONE:          out << "None\n"; break;
       }
-      if (prm.normalizing_method==NEWXMIPP || 
+      if (prm.normalizing_method==NEWXMIPP ||
 	  prm.normalizing_method==NEWXMIPP2 ||
 	  prm.normalizing_method==NEAR_OLDXMIPP ||
 	  prm.normalizing_method==MICHAEL)
@@ -333,7 +334,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
             break;
       }
    }
-   
+
    if (prm.correct_amplitude)
       out << "   Correcting CTF amplitude\n"
 	  << "   IDR relaxation factor: " << prm.mu << endl;
@@ -365,8 +366,8 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm) {
       for (int i=0; i<prm.lambda0.size(); i++)
           out << "   Lambda0=" << prm.lambda0[i]
               << " LambdaF=" << prm.lambdaF[i]
-              << " No It0 =" << prm.no_it0[i] 
-              << " No ItF =" << prm.no_itF[i] 
+              << " No It0 =" << prm.no_it0[i]
+              << " No ItF =" << prm.no_itF[i]
               << endl;
    if (prm.tomography) out << "   Tomography mode\n";
    if (prm.evaluate)
@@ -451,7 +452,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
    Projection_Parameters          proj_prm;
    Crystal_Projection_Parameters  crystal_proj_prm;
 
-   
+
    Prog_proj_prm.fn_proj_param=prm.fn_proj_params;
    proj_prm.from_prog_params(Prog_proj_prm);
    if (prm.fn_crystal!="") crystal_proj_prm.read(prm.fn_crystal);
@@ -466,14 +467,14 @@ void single_recons_test(const Recons_test_Parameters &prm,
    Prog_Random_Phantom_Parameters rp_prm;
    Phantom realization;
    FileName fn_phantom;
-   
+
    if (prm.fn_random_phantom!="") {
       rp_prm.fn_random=prm.fn_random_phantom;
       fn_phantom=rp_prm.fn_output=fn_recons_root+".descr";
       rp_prm.min_vol=0;
 
       ROUT_random_phantom(rp_prm,realization);
-   } else 
+   } else
       fn_phantom=prm.fn_voxel_phantom;
 
 // Read phantom in memory? -------------------------------------------------
@@ -520,7 +521,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	 prm_micro.low_pass_before_CTF=prm.low_pass_before_CTF;
 	 prm_micro.after_ctf_noise=true;
 	 prm_micro.produce_side_info();
-	 
+	
       	 cerr << "Applying microscope simulation ...\n";
 	 init_progress_bar(SF.ImgNo());
 	 int i=0;
@@ -758,7 +759,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
       }
 
       if (!prm.correct_amplitude)
-	 // Do not correct 
+	 // Do not correct
 	 Basic_ROUT_Art(art_prm,plain_art_prm,vol_recons, vol_basis);
       else {
          // Generate a selfile with the applied CTF
@@ -770,7 +771,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
          }
          SF.go_first_ACTIVE();
          SF_ctf.write(fn_root+"_ctf.sel");
-         
+
          // Apply IDR
 	 Prog_IDR_ART_Parameters idr_prm;
       	 idr_prm.mu=prm.mu;
@@ -780,7 +781,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
          idr_prm.fn_root=fn_root+"_idr";
 	 idr_prm.produce_side_info();
          idr_prm.IDR_correction();
-         
+
 	 fn_recons_root=vol_recons.name().without_extension();
       }
    } else if (prm.recons_method==use_WBP) {

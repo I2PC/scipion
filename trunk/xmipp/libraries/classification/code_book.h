@@ -30,20 +30,15 @@
 #ifndef XMIPPCODEBOOK_H
 #define XMIPPCODEBOOK_H
 
-//-----------------------------------------------------------------------------
-
 #include <sstream>
 #include <map>
 
-#include "xmippCDSet.hh"
-#include "xmippCDataTypes.hh"
-#include "xmippCTVectors.hh"
-#include "xmippVectorOps.hh"
-#include "xmippDistances.hh"
-#include "xmippUniform.hh"
-
-//-----------------------------------------------------------------------------
-
+#include "data_set.h"
+#include "data_types.h"
+#include "training_vector.h"
+#include "vector_ops.h"
+#include "distance.h"
+#include "uniform.h"
 
 /**@name Code Book*/
 //@{

@@ -1,33 +1,32 @@
 /***************************************************************************
  *
- * Authors: Sjors Scheres (scheres@cnb.uam.es)   
+ * Authors: Sjors Scheres (scheres@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <Reconstruction/Programs/Prog_Refine3d.hh> 
+#include <reconstruction/ml_refine3d.h>
+
 #include <mpi.h>
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
 
   int                         c,iter,volno,converged=0;;
@@ -37,7 +36,7 @@ int main(int argc, char **argv) {
   vector<double>              sumw,sumw_cv,sumw_mirror;
   matrix1D<double>            spectral_signal;
   DocFile                     DFo;
- 
+
   // For parallelization
   int rank, size, num_img_tot;
   double                      aux;
@@ -49,7 +48,7 @@ int main(int argc, char **argv) {
   Prog_MLalign2D_prm          ML2D_prm;
 
   // Init Parallel interface		
-  MPI_Init(&argc, &argv);  
+  MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Status status;
@@ -81,7 +80,7 @@ int main(int argc, char **argv) {
     ML2D_prm.fn_ref=prm.fn_root+"_lib.sel";
 
     // Check that there are enough computing nodes
-    if (prm.Nvols>size) 
+    if (prm.Nvols>size)
       REPORT_ERROR(1,"mpi_MLrefine3D requires that you use more CPUs than reference volumes");
     if (ML2D_prm.fourier_mode && 3*prm.Nvols>size)
       REPORT_ERROR(1,"mpi_mlf_refine3d requires that you use three times more CPUs than reference volumes");
@@ -105,15 +104,15 @@ int main(int argc, char **argv) {
     // Some output to screen
     if (rank==0) ML2D_prm.show(true);
 
-  } catch (Xmipp_error XE) { 
+  } catch (Xmipp_error XE) {
     if (rank==0) {
-      cout << XE; 
+      cout << XE;
       if (prm.fourier_mode) prm.MLF_usage();
       else prm.usage();
-    } 
+    }
     MPI_Finalize(); exit(1);
-  } 
-    
+  }
+
   try {
     // Initialize some additional stuff
     Maux.resize(ML2D_prm.dim,ML2D_prm.dim);
@@ -133,9 +132,9 @@ int main(int argc, char **argv) {
       DFo.clear();
       conv.clear();
       if (rank==0) {
-	if (ML2D_prm.maxCC_rather_than_ML) 
+	if (ML2D_prm.maxCC_rather_than_ML)
 	  DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-	else 
+	else
 	  DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
       }
 
@@ -146,7 +145,7 @@ int main(int argc, char **argv) {
       ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF,ML2D_prm.Iref,iter,
 				      LL,sumcorr,DFo,wsum_Mref,wsum_ctfMref,
 				      wsum_sigma_noise,Mwsum_sigma2,
-				      wsum_sigma_offset,sumw,sumw_mirror); 
+				      wsum_sigma_offset,sumw,sumw_mirror);
 
       // Here MPI_allreduce of all weighted sums, LL, etc.
       // All nodes need the answer to calculate internally
@@ -165,13 +164,13 @@ int main(int argc, char **argv) {
                         MULTIDIM_SIZE(Mwsum_sigma2[ifocus]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
           Mwsum_sigma2[ifocus]=Maux;
         }
-	for (int refno=0;refno<ML2D_prm.n_ref; refno++) { 
+	for (int refno=0;refno<ML2D_prm.n_ref; refno++) {
 	  MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]),MULTIDIM_ARRAY(Maux),
 			MULTIDIM_SIZE(wsum_ctfMref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	  wsum_ctfMref[refno]=Maux;
 	}
       }
-      for (int refno=0;refno<ML2D_prm.n_ref; refno++) { 
+      for (int refno=0;refno<ML2D_prm.n_ref; refno++) {
 	MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),MULTIDIM_ARRAY(Maux),
 		      MULTIDIM_SIZE(wsum_Mref[refno]),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	wsum_Mref[refno]=Maux;
@@ -186,13 +185,13 @@ int main(int argc, char **argv) {
 				 wsum_sigma_noise,Mwsum_sigma2,
 				 wsum_sigma_offset,sumw,
 				 sumw_mirror,sumcorr,sumw_allrefs,
-				 spectral_signal);    
+				 spectral_signal);
 
       // All nodes write out temporary DFo
       fn_tmp.compose(prm.fn_root,rank,"tmpdoc");
       DFo.write(fn_tmp);
       MPI_Barrier(MPI_COMM_WORLD);
-      
+
       // Only the master outputs intermediate files
       if (rank==0) {
 	DFo.clear();
@@ -213,15 +212,15 @@ int main(int argc, char **argv) {
       MPI_Barrier(MPI_COMM_WORLD);
 
       // Reconstruct the new reference volumes also in parallel
-      // Assume that the number of processors is larger than the 
+      // Assume that the number of processors is larger than the
       // number of volumes to reconstruct ...
       if (rank<prm.Nvols)
         // new reference reconstruction
         prm.reconstruction(argc, argv, iter, rank, 0);
-      else if (ML2D_prm.fourier_mode && rank>=prm.Nvols && rank<2*prm.Nvols) 
+      else if (ML2D_prm.fourier_mode && rank>=prm.Nvols && rank<2*prm.Nvols)
 	// noise reconstruction
 	prm.reconstruction(argc, argv, iter, rank%prm.Nvols, 1);
-      else if (ML2D_prm.fourier_mode && rank>=2*prm.Nvols && rank<3*prm.Nvols) 
+      else if (ML2D_prm.fourier_mode && rank>=2*prm.Nvols && rank<3*prm.Nvols)
 	// ctf-corrupted reconstruction
 	prm.reconstruction(argc, argv, iter, rank%prm.Nvols, 2);
       MPI_Barrier(MPI_COMM_WORLD);
@@ -236,11 +235,11 @@ int main(int argc, char **argv) {
 	// Calculate 3D-SSNR
 	if (ML2D_prm.fourier_mode) prm.calculate_3DSSNR(spectral_signal,iter);
 
-	// Check convergence 
+	// Check convergence
 	if (prm.check_convergence(iter)) {
 	  converged=1;
 	  if (prm.verb>0) cerr <<"--> Optimization converged!"<<endl;
-	} 
+	}
 
       }
 
@@ -251,7 +250,7 @@ int main(int argc, char **argv) {
 
       // Update filenames in SFvol (now without noise volumes!)
       prm.remake_SFvol(iter,false,false);
-      if (ML2D_prm.fourier_mode) 
+      if (ML2D_prm.fourier_mode)
 	ML2D_prm.calculate_wiener_defocus_series(spectral_signal,iter);
 
       if (!converged && iter+1<=prm.Niter) {
@@ -266,21 +265,21 @@ int main(int argc, char **argv) {
 	  c++;
 	}
       }
-     
+
       iter++;
     } // end loop iterations
 
-    if (!converged && prm.verb>0) 
+    if (!converged && prm.verb>0)
       cerr <<"--> Optimization was stopped before convergence was reached!"<<endl;
 
-  } catch (Xmipp_error XE) { 
+  } catch (Xmipp_error XE) {
     if (rank==0) {
-      cout << XE; 
+      cout << XE;
       if (prm.fourier_mode) prm.MLF_usage();
       else prm.usage();
-    } 
+    }
     MPI_Finalize(); exit(1);
-  } 
+  }
 
   MPI_Finalize();	
   return 0;

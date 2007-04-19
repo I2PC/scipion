@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippTomogram.hh"
-#include "../xmippArgs.hh"
-#include "../xmippVolumes.hh"
+#include "tomogram.h"
+#include "args.h"
+#include "volume.h"
+
 #include <fstream>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -83,7 +84,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
       if(check_param(fh_inf,"offset"))
 	 __offset=AtoI(get_param(fh_inf,"offset"));
       else
-	 __offset=0;   
+	 __offset=0;
       if (check_param(fh_inf,"is_signed"))
 	 __is_signed=(get_param(fh_inf,"is_signed")=="true" ||
                       get_param(fh_inf,"is_signed")=="TRUE");
@@ -158,7 +159,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
           aux_ptr=(char *)um16;
 	  aux_ptr+=__offset;
 	  um16=(unsigned short int *) aux_ptr;
-	  } 
+	  }
          break;
       case 32:
       	    // Map file in memory
@@ -219,7 +220,7 @@ void Tomogram::get_piece(matrix1D<int> &r0, matrix1D<int> &length,
     cout << r0.transpose() << endl;
     if (XX(r0)<0 || YY(r0)<0 || ZZ(r0)<0)
        REPORT_ERROR(1,"Tomogram::get_piece: piece does not fit into tomogram");
-    
+
     piece.resize(ZZ(length),YY(length),XX(length));
     int k,i,j,kp,ip,jp;
     for (kp=ZZ(r0), k=0; k<ZSIZE(piece); k++, kp++)

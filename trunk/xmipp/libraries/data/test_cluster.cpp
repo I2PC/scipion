@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_test_cluster.hh"
-#include <XmippData/Src/NumericalRecipes.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippMasks.hh>
+#include "test_cluster.h"
+#include "numerical_recipes.h"
+#include "args.h"
+#include "histogram.h"
+#include "mask.h"
 
 // Empty constructor -------------------------------------------------------
 Test_cluster_parameters::Test_cluster_parameters() {
@@ -56,7 +56,7 @@ void Test_cluster_parameters::produce_side_info() {
    int Xdim, Ydim; SF_in.ImgSize(Ydim,Xdim);
    mask.resize(Ydim,Xdim);
    mask.generate_2Dmask();
-   
+
    if (distance==MAHALANOBIS) build_covariance_matrix();
 }
 
@@ -82,7 +82,7 @@ void Test_cluster_parameters::usage() {
 	 << "  [-dist <distance=mahalanobis>]:"
 	 << "                     : Valid distances are euclidean, correlation, mahalanobis\n"
     ;
-    mask.usage();	 
+    mask.usage();	
 }
 
 // Build covariance matrix -------------------------------------------------
@@ -96,19 +96,19 @@ void Test_cluster_parameters::build_covariance_matrix() {
       FileName fn_img=SF_in.NextImg();
       ImageXmipp I; I.read(fn_img);
       mask.produce_vector(I(),v);
-      
+
       if (first) {
          covariance.init_zeros(XSIZE(v),XSIZE(v));
 	 mean.init_zeros(XSIZE(v));
 	 first=false;
       }
-      
+
       mean+=v;
       N++;
    }
    if (N==0) return;
    mean/=N;
-   
+
    // Compute the covariance
    SF_in.go_first_ACTIVE();
    while (!SF_in.eof()) {
@@ -117,15 +117,15 @@ void Test_cluster_parameters::build_covariance_matrix() {
       ImageXmipp I; I.read(fn_img);
       mask.produce_vector(I(),v);
       v=-mean;
-      
+
       // v*v' (compute only the upper triangle)
-      for (int i=0; i<XSIZE(v); i++) 
+      for (int i=0; i<XSIZE(v); i++)
          for (int j=i; j<XSIZE(v); j++) {
 	    covariance(i,j)+=v(i)*v(j);
 	 }
    }
    covariance/=N;
-   for (int i=0; i<YSIZE(covariance); i++) 
+   for (int i=0; i<YSIZE(covariance); i++)
       for (int j=i+1; j<XSIZE(covariance); j++)
 	 covariance(j,i)=covariance(i,j);
 }
@@ -149,7 +149,7 @@ void Test_cluster_parameters::test_cluster() {
           fnj=SF_in.get_file_number(j);
           ImageXmipp Ij; Ij.read(fnj);
           matrix1D<double> vj; mask.produce_vector(Ij(),vj);
-	  
+	
           // Prepare the vectors for the distance computation
 	  double avgi, avgj, stddevi, stddevj, dummy;
 	  switch (distance) {
@@ -169,13 +169,13 @@ void Test_cluster_parameters::test_cluster() {
 		vj=covariance*vj;
 	        break;
 	  }
-	  
+	
           double dist=0;
           for (int k=0; k<XSIZE(vi); k++)
 	     dist+=vi(k)*vj(k);
 	  dist/=XSIZE(vi);
 	  dij(p++)=dist;
-	  
+	
           // Check if the correlation is significative
 	  if (distance==CORRELATION) {
              // D. Sheskin
@@ -186,26 +186,26 @@ void Test_cluster_parameters::test_cluster() {
 	     float t=(float)(dist*sqrt(df/(1-dist*dist)));
 	     float p_val=student_up_to_t0(t,df);
 	     if (p_val>0.95) significative++;
-	     
+	
 	     if (dist>=0) positive++;
 	  }
-	  
+	
 	  if (p%50==0) progress_bar(p);
        }
    }
    progress_bar(XSIZE(dij));
 
-   // Compute the histogram   
+   // Compute the histogram
    histogram1D hist;
    compute_hist(dij,hist,100);
    if (fn_out=="") cout << hist;
    else            hist.write(fn_out);
-   
+
    // Show the number of significative correlations
    if (distance==CORRELATION) {
       cout << "There are " << significative << " correlations out of "
            << XSIZE(dij) << " that are significantly greater than 0\n";
-	   
+	
       int expected=XSIZE(dij)/2;
       double chi2=(positive-expected)*(positive-expected)/expected+
                   (XSIZE(dij)-positive-expected)*(XSIZE(dij)-positive-expected)/expected;
@@ -213,7 +213,7 @@ void Test_cluster_parameters::test_cluster() {
       cout << chi2 << " " << p_val << endl;
       if (p_val<0.05) {
          // It is significant
-	 if (positive>expected) 
+	 if (positive>expected)
 	    cout << "There is a significantly positive correlation: "
 	         << positive << " out of " << XSIZE(dij) << endl;
 	 else

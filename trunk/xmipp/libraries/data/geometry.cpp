@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #include <iostream>
 #include <math.h>
 
-#include "../xmippGeometry.hh"
-#include "../xmippFuncs.hh"
+#include "geometry.h"
+#include "funcs.h"
 
 /* ######################################################################### */
 /* Geometrical Operations                                                    */
@@ -37,7 +37,7 @@
 void Uproject_to_plane(const matrix1D<double> &point,
    const matrix1D<double> &direction, double distance,
    matrix1D<double> &result) {
-   
+
    if (XSIZE(result)!=3) result.resize(3);
    double xx=distance-(XX(point)*XX(direction)+YY(point)*YY(direction)+
                       ZZ(point)*ZZ(direction));
@@ -72,10 +72,10 @@ double spherical_distance(const matrix1D<double> &r1, const matrix1D<double> &r2
 }
 /* Point to line distance -------------------------------------------------- */
 
-double point_line_distance_3D(const matrix1D<double> &p, 
+double point_line_distance_3D(const matrix1D<double> &p,
                               const matrix1D<double> &a,
 			      const matrix1D<double> &v)
-			      
+			
 {
 #ifdef NEVEREVER
 double f,g,t;
@@ -98,27 +98,27 @@ x=(XX(x1)-XX(x0)+(XX(x2)-XX(x1))*t);
 y=(YY(x1)-YY(x0)+(YY(x2)-YY(x1))*t);
 z=(ZZ(x1)-ZZ(x0)+(ZZ(x2)-ZZ(x1))*t);
 
-r=x*x+y*y+z*z; 
+r=x*x+y*y+z*z;
 if(r<0)
   {
   cout << "Horror: The distance of a line to a point can not be negative"
        << "Congratulation you have found a bug in Xmipp."<< endl;
-  exit(0);     
+  exit(0);
   }
 #endif
 matrix1D<double> p_a(3);
 
-V3_MINUS_V3(p_a,p,a); 
+V3_MINUS_V3(p_a,p,a);
 return (vector_product(p_a,v).module()/v.module());
-}			      
+}			
 
 /* Least-squares-fit a plane to an arbitrary number of (x,y,z) points
     PLane described as Ax + By + C  = z
     where D = -1
     Returns -1  if  A²+B²+C² <<1
      */
-     
-void least_squares_plane_fit(  const vector<fit_point> & IN_points, 
+
+void least_squares_plane_fit(  const vector<fit_point> & IN_points,
                                double &plane_a,
 			       double &plane_b,
 			       double &plane_c)
@@ -183,7 +183,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
     result.c_ml.init_zeros(mF-m0+1,lF-l0+1);
     STARTINGY(result.c_ml)=m0;
     STARTINGX(result.c_ml)=l0;
-    
+
     // Modify the list of points to include the weight
     int Npoints=IN_points.size();
     vector<fit_point> AUX_points=IN_points;
@@ -193,7 +193,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
        AUX_points[i].y*=sqrt_w;
        AUX_points[i].z*=sqrt_w;
     }
-    
+
     // Now solve the normal linear regression problem
     // Ax=B
     // A=system matrix
@@ -210,24 +210,24 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
           for (int l=l0; l<=lF; ++l) {
              double coeff;
 	     switch (SplineDegree) {
-	        case 2: coeff=Bspline02(xarg-l)*Bspline02(yarg-m); break; 
-	        case 3: coeff=Bspline03(xarg-l)*Bspline03(yarg-m); break; 
-	        case 4: coeff=Bspline04(xarg-l)*Bspline04(yarg-m); break; 
-	        case 5: coeff=Bspline05(xarg-l)*Bspline05(yarg-m); break; 
-	        case 6: coeff=Bspline06(xarg-l)*Bspline06(yarg-m); break; 
-	        case 7: coeff=Bspline07(xarg-l)*Bspline07(yarg-m); break; 
-	        case 8: coeff=Bspline08(xarg-l)*Bspline08(yarg-m); break; 
-	        case 9: coeff=Bspline09(xarg-l)*Bspline09(yarg-m); break; 
+	        case 2: coeff=Bspline02(xarg-l)*Bspline02(yarg-m); break;
+	        case 3: coeff=Bspline03(xarg-l)*Bspline03(yarg-m); break;
+	        case 4: coeff=Bspline04(xarg-l)*Bspline04(yarg-m); break;
+	        case 5: coeff=Bspline05(xarg-l)*Bspline05(yarg-m); break;
+	        case 6: coeff=Bspline06(xarg-l)*Bspline06(yarg-m); break;
+	        case 7: coeff=Bspline07(xarg-l)*Bspline07(yarg-m); break;
+	        case 8: coeff=Bspline08(xarg-l)*Bspline08(yarg-m); break;
+	        case 9: coeff=Bspline09(xarg-l)*Bspline09(yarg-m); break;
 	     }
              A(i,(m-m0)*XSIZE(result.c_ml)+l-l0)=coeff;
           }
     }
-    
+
     matrix1D<double> x=(A.transpose()*A).inv()*(A.transpose()*B);
     for (int m=m0; m<=mF; ++m)
        for (int l=l0; l<=lF; ++l)
           result.c_ml(m,l)=x((m-m0)*XSIZE(result.c_ml)+l-l0);
-}      
+}
 
 /* Rectangle enclosing ----------------------------------------------------- */
 void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
@@ -237,7 +237,7 @@ void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
    matrix1D<double> v(2);
    corner1.resize(2);
    corner2.resize(2);
-   
+
    // Store values for reusing input as output vectors
    double XX_v0=XX(v0);
    double YY_v0=YY(v0);
@@ -267,7 +267,7 @@ void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
    matrix1D<double> v(3);
    corner1.resize(3);
    corner2.resize(3);
-   
+
    // Store values for reusing input as output vectors
    double XX_v0=XX(v0);
    double YY_v0=YY(v0);
@@ -371,21 +371,21 @@ TEST data (1)
 
    point_line  = (1,2,3)
    vector_line = (2,3,4)
-   
+
    normal_line= (5,6,7)
    point_plane_at_x_y_zero = 0
-   
+
    Point of interesection (-0.35714,-0.035714,0.28571
 TEST data (2)
    Same but change
-   vector_line = (-1.2,1.,0.) 
+   vector_line = (-1.2,1.,0.)
 TEST data (3)
    Same but change
-   vector_line = (-1.2,1.,0.) 
+   vector_line = (-1.2,1.,0.)
    point_line  = (0,0,0)
 */
 int line_plane_intersection(const matrix1D<double> normal_plane,
-                            const matrix1D<double> vector_line, 
+                            const matrix1D<double> vector_line,
 			    matrix1D<double> &intersection_point,
                             const matrix1D<double> point_line,
 			    double point_plane_at_x_y_zero){
@@ -397,15 +397,15 @@ int line_plane_intersection(const matrix1D<double> normal_plane,
       intersection_point= point_line+vector_line;
       if ( ABS(dot_product(intersection_point,normal_plane)+
                                   point_plane_at_x_y_zero)<XMIPP_EQUAL_ACCURACY)
-          return(1);				  
+          return(1);				
       else
-          return(-1);				  
-    
+          return(-1);				
+
       }
-    //compute intersection  
+    //compute intersection
     l= -1.0* dot_product(point_line,normal_plane)+
                                   point_plane_at_x_y_zero;
-    l /=  dot_product(	normal_plane,vector_line);			  
+    l /=  dot_product(	normal_plane,vector_line);			
 
     intersection_point = point_line +l * vector_line;
     return(0);
@@ -421,17 +421,17 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
    matrix2D<double> &A) {
    double ca, sa, cb, sb, cg, sg;
    double cc, cs, sc, ss;
-   
+
    if (XSIZE(A)!=3 || YSIZE(A)!=3) A.resize(3,3);
    alpha = DEG2RAD(alpha);
    beta  = DEG2RAD(beta);
    gamma = DEG2RAD(gamma);
-   
+
    ca = cos(alpha); cb = cos(beta); cg = cos(gamma);
    sa = sin(alpha); sb = sin(beta); sg = sin(gamma);
    cc = cb*ca; cs = cb*sa;
    sc = sb*ca; ss = sb*sa;
-      
+
    A(0,0) =  cg*cc-sg*sa; A(0,1) =  cg*cs+sg*ca; A(0,2) = -cg*sb;
    A(1,0) = -sg*cc-cg*sa; A(1,1) = -sg*cs+cg*ca; A(1,2) = sg*sb;
    A(2,0) =  sc;          A(2,1) =  ss;          A(2,2) = cb;
@@ -442,15 +442,15 @@ void Euler_direction(double alpha, double beta, double gamma,
    matrix1D<double> &v) {
    double ca, sa, cb, sb;
    double cc, cs, sc, ss;
-   
+
    v.resize(3);
    alpha = DEG2RAD(alpha);
    beta  = DEG2RAD(beta);
-   
+
    ca = cos(alpha); cb = cos(beta);
    sa = sin(alpha); sb = sin(beta);
    sc = sb*ca; ss = sb*sa;
-      
+
    VEC_ELEM(v,0)=sc;      VEC_ELEM(v,1)=ss;      VEC_ELEM(v,2)=cb;
 }
 
@@ -500,38 +500,38 @@ void Euler_direction2angles(matrix1D<double> &v0,
       VEC_ELEM(v_aux,1)=sin(aux_beta)*sin(aux_alpha);
       VEC_ELEM(v_aux,2)=cos(aux_beta);
 
-      error = fabs(dot_product(v,v_aux)-1.); 
+      error = fabs(dot_product(v,v_aux)-1.);
       alpha=aux_alpha; beta=aux_beta;
-      
+
       VEC_ELEM(v_aux,0)=sin(aux_beta)*cos(-1.*aux_alpha);
       VEC_ELEM(v_aux,1)=sin(aux_beta)*sin(-1.*aux_alpha);
       VEC_ELEM(v_aux,2)=cos(aux_beta);
-      newerror = fabs(dot_product(v,v_aux)-1.); 
-      if(error>newerror) {alpha = -1.*aux_alpha; 
+      newerror = fabs(dot_product(v,v_aux)-1.);
+      if(error>newerror) {alpha = -1.*aux_alpha;
                           beta  = aux_beta;
 			  error = newerror;}
 
       VEC_ELEM(v_aux,0)=sin(-aux_beta)*cos(-1.*aux_alpha);
       VEC_ELEM(v_aux,1)=sin(-aux_beta)*sin(-1.*aux_alpha);
       VEC_ELEM(v_aux,2)=cos(-aux_beta);
-      newerror = fabs(dot_product(v,v_aux)-1.); 
-      if(error>newerror) {alpha = -1.*aux_alpha; 
+      newerror = fabs(dot_product(v,v_aux)-1.);
+      if(error>newerror) {alpha = -1.*aux_alpha;
                           beta  = -1.*aux_beta;
 			  error = newerror;}
-      
+
       VEC_ELEM(v_aux,0)=sin(-aux_beta)*cos(aux_alpha);
       VEC_ELEM(v_aux,1)=sin(-aux_beta)*sin(aux_alpha);
       VEC_ELEM(v_aux,2)=cos(-aux_beta);
-      newerror = fabs(dot_product(v,v_aux)-1.); 
-      
-      if(error>newerror) {alpha = aux_alpha; 
+      newerror = fabs(dot_product(v,v_aux)-1.);
+
+      if(error>newerror) {alpha = aux_alpha;
                           beta  = -1.*aux_beta;
 			  error = newerror;}
   }/*else 1 end*/
    gamma = 0.;
-   beta  = RAD2DEG(beta);   
+   beta  = RAD2DEG(beta);
    alpha = RAD2DEG(alpha);
-}/*Eulerdirection2angles end*/			   
+}/*Eulerdirection2angles end*/			
 
 /* Matrix --> Euler angles ------------------------------------------------- */
 #define CHECK
@@ -554,7 +554,7 @@ void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
       else
          sign_sb = (sin(gamma)>0) ? SGN(A(1,2)):-SGN(A(1,2));
       beta  = atan2(sign_sb*abs_sb,A(2,2));
-   } else { 
+   } else {
       if (SGN(A(2,2))>0) {
          // Let's consider the matrix as a rotation around Z
          alpha = 0;
@@ -579,7 +579,7 @@ void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
          cout << "Euler_matrix2angles: I have computed angles "
             " which doesn't match with the original matrix\n";
          cout << "Original matrix\n" << A;
-         cout << "Computed angles alpha=" << alpha << " beta=" << beta 
+         cout << "Computed angles alpha=" << alpha << " beta=" << beta
               << " gamma=" << gamma << endl;
          cout << "New matrix\n" << Ap;
          cout << "---\n";
@@ -614,7 +614,7 @@ void Euler_matrix2angles(matrix2D<double> A, double *alpha, double *beta,
    } else
       EXIT_ERROR(1,"Don't know how to extract angles");
 
-   if (abs_sb>FLT_EPSILON) {    
+   if (abs_sb>FLT_EPSILON) {
       *beta  = atan2(abs_sb,A(2,2));
       *alpha = atan2(A(2,1)/abs_sb, A(2,0)/abs_sb);
       *gamma = atan2(A(1,2)/abs_sb,-A(0,2)/abs_sb);
@@ -623,7 +623,7 @@ void Euler_matrix2angles(matrix2D<double> A, double *alpha, double *beta,
       *beta  = 0;
       *gamma = atan2(A(1,0),A(0,0));
    }
-   
+
    *gamma = rad2deg(*gamma);
    *beta  = rad2deg(*beta);
    *alpha = rad2deg(*alpha);
@@ -632,16 +632,16 @@ void Euler_matrix2angles(matrix2D<double> A, double *alpha, double *beta,
 void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
    double &new_rot, double &new_tilt, double &new_psi,  matrix2D<double> &D)
 {
-   int i; 
+   int i;
    matrix1D<double> w(3);
    matrix1D<double> new_w(3);
    matrix2D<double> D_1(3,3);
 
    double module;
    double newrot, newtilt, newpsi;
-   
-   //if D has not inverse we are not in business   
-   try{ 
+
+   //if D has not inverse we are not in business
+   try{
      D_1=D.inv();
    } catch(Xmipp_error &XE){
      cout << XE;
@@ -659,9 +659,9 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
    new_w =  (matrix1D<double>)((D_1*w)/((D_1*w).module()));
    new_tilt= SGN(new_tilt)*fabs(ACOSD(VEC_ELEM(new_w,2)));
    new_psi = psi;
-   
+
    // so, for small tilt the value of the rot is not realiable
-   // doubleo overcome this problem I first calculate the rot for 
+   // doubleo overcome this problem I first calculate the rot for
    // any arbitrary large tilt angle and the right rotation
    // and then I calculate the new tilt.
    // Please notice that the new_rotation is not a funcion of
@@ -763,14 +763,14 @@ double intersection_unit_sphere(
    double B=XX(r)*XX(u)+YY(r)*YY(u)+ZZ(r)*ZZ(u);
    double C=XX(r)*XX(r)+YY(r)*YY(r)+ZZ(r)*ZZ(r)-1.0;
    double B2_AC=B*B-A*C;
-   
+
    // A degenerate case?
    if (A==0) {
       if (B==0) return -1; // The ellipsoid doesn't intersect
       return 0;            // The ellipsoid is tangent at t=-C/2B
    }
    if (B2_AC<0) return -1;
-   
+
    // A normal intersection
    B2_AC=sqrt(B2_AC);
    double t1=(-B-B2_AC)/A;  // The two parameters within the line for
@@ -787,26 +787,26 @@ double intersection_unit_cylinder(
    double A=XX(u)*XX(u)+YY(u)*YY(u);
    double B=XX(r)*XX(u)+YY(r)*YY(u);
    double C=XX(r)*XX(r)+YY(r)*YY(r)-1;
-   
+
    double B2_AC=B*B-A*C;
    if      (A==0)    {
       if (C>0) return 0;       // Paralell ray outside the cylinder
       else     return 1/ZZ(u); // return height
    } else if (B2_AC<0) return 0;
    B2_AC=sqrt(B2_AC);
-   
+
    // Points at intersection
    double t1=(-B - B2_AC)/A;
    double t2=(-B + B2_AC)/A;
    double z1 = ZZ(r) + t1 * ZZ(u);
    double z2 = ZZ(r) + t2 * ZZ(u);
-   
+
    // Check position of the intersecting points with respect to
    // the finite cylinder, if any is outside correct it to the
    // right place in the top or bottom of the cylinder
    if (ABS(z1)>=0.5) t1=(SGN(z1)*0.5-ZZ(r))/ZZ(u);
    if (ABS(z2)>=0.5) t2=(SGN(z2)*0.5-ZZ(r))/ZZ(u);
-   
+
    return ABS(t1-t2);
 }
 
@@ -843,7 +843,7 @@ double intersection_unit_cube(
       t=( 0.5-ZZ(r))/ZZ(u); ASSIGN_IF_GOOD_ONE;
       t=(-0.5-ZZ(r))/ZZ(u); ASSIGN_IF_GOOD_ONE;
    }
-   
+
    if (found_t==2) return ABS(t1-t2);
    else            return 0;
 }

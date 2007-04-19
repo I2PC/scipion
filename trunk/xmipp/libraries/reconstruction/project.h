@@ -6,32 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECTION_HH
 #  define _PROG_PROJECTION_HH
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippProjection.hh>
-#include "../phantom.hh"
-#include "../projection.hh"
-#include "Prog_project_crystal.hh"
+#include <data/funcs.h>
+#include <data/docfile.h>
+#include <data/selfile.h>
+#include <data/projection.h>
+
+#include "phantom.h"
+#include "projection.h"
+#include "project_crystal.h"
 
 /**@name Projection program */
 //@{
@@ -137,12 +138,12 @@ public:
    int      starting;
    /// Extension for projection filenames. This is optional
    string   fn_projection_extension;
-   
+
    /// Projection Xdim
    int      proj_Xdim;
    /// Projection Ydim
    int      proj_Ydim;
-   
+
    /// Debugging level. See \Ref{Prog_Project_Parameters::tell}
    int tell;
    //@}
@@ -212,7 +213,7 @@ public:
 class PROJECT_Side_Info {
 public:
    /// Document File for the projecting angles. Order: rot, tilt, psi
-   DocFile        DF;     
+   DocFile        DF;
    /// Projecting from a voxel volume?
    int            voxel_mode;
    /// Phantom Xmipp volume
@@ -225,7 +226,7 @@ public:
        program parameters. Basically it loads the phantom, sets
        the phantom mode to voxel or mathemattical description and
        generates or read the projection angles.
-       
+
        Projection from voxel volumes is not implemented yet and
        an exception is thrown. */
    void produce_Side_Info(const Projection_Parameters &prm,
@@ -234,7 +235,7 @@ public:
 
 /* Assigning angles -------------------------------------------------------- */
 /** Assign angles from the projection parameters to a Document file.
-    Given a set of projection parameters this function returns a 
+    Given a set of projection parameters this function returns a
     document file with a set of angles according to the specifications.
     The order in the output document file is rotational, tilting and
     psi angle.
@@ -242,7 +243,7 @@ public:
     The assignment can be done from another document file (with any
     angle order) or internally generated according to the ranges defined
     in the parameters.
-    
+
     The total number of angles is returned. The Document File is cleared,
     the first key in the document file is the starting key of the
     projection set. The current line of the document file is set to
@@ -270,7 +271,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     of projections according to the projecting parameters defined (see
     \Ref{Prog_Project_Parameters} to know more about how to specify
     everything). The projections are written to disk.
-    
+
     The Projection field will keep
     at the end the last projection, this is useful in case you want
     to project only one image, although it is also written to disk.

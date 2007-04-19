@@ -66,7 +66,9 @@ libXmippRecons_Interface_la_SOURCES = \
 libXmippReconsINRIA_la_SOURCES = \
 	adjust_surface.cpp
 
-INCLUDES = -I$(top_srcdir)/libraries
+INCLUDES = \
+	-I$(top_srcdir)/libraries \
+	-I$(top_srcdir)/external
 
 EXTRA_DIST = \
 	adjust_ctf.h \

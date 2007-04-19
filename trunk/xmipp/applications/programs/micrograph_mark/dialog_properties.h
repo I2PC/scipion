@@ -20,8 +20,7 @@
 #ifndef __QT_DIALOG_PROPERTIES_HH__
 #define __QT_DIALOG_PROPERTIES_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "qdialog.h"
+#include <qdialog.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QListBox;
@@ -31,7 +30,7 @@ class Micrograph;
 class QtWidgetMicrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtDialogProperties : public QDialog {   
+class QtDialogProperties : public QDialog {
    Q_OBJECT
 
 private:
@@ -47,15 +46,15 @@ private:
 public:
    // Constructor
    QtDialogProperties( Micrograph *_m, QtWidgetMicrograph *_wm,
-                       int _coord, QWidget *_parent=0, 
+                       int _coord, QWidget *_parent=0,
                        const char *_name=0, bool _modal=FALSE, WFlags _f=0 );
    ~QtDialogProperties();
-         
+
 public slots:
    void slotChangeFamily( int _f );
    void slotDeleteMark();
    void slotMoveMark();
-   
+
 signals:
    void signalDeleteMarkOther( int _coord );
    void signalChangeFamilyOther( int _coord, int _f );

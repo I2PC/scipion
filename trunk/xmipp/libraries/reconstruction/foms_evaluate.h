@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_EVALUATE_HH
 #  define _PROG_EVALUATE_HH
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include "../phantom.hh"
+#include <data/funcs.h>
+#include <data/volume.h>
+
+#include "phantom.h"
 
 /**@name Evaluation program */
 //@{
@@ -165,7 +166,7 @@ public:
    double             back_param;
 #define XMIPP_PHANTOM 1
 #define MATH_PHANTOM  2
-   /** Phantom description. 
+   /** Phantom description.
        Flag to indicate if the phantom has been given with a mathematical
        description or a Xmipp volume. It can only take two values:
        XMIPP_PHANTOM or MATH_PHANTOM */
@@ -253,7 +254,7 @@ public:
    /// global: Radon Transform FOM
    double           drrt_FOM;
    //@}
-   
+
    /**@name Distance based FOMs */
    //@{
    /// global: blurring distance
@@ -268,7 +269,7 @@ public:
     are returned in a structure because they are too many. You may
     cause this function to output some information about the process
     using the \Ref{Prog_Evaluate_Parameters::tell} variable.
-    
+
     If you set the following flags then these other files are created:
     \begin{verbatim}
     SHOW_PROCESS     -->

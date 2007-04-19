@@ -20,10 +20,9 @@
 #ifndef __QT_AUTO_MENU_HH__
 #define __QT_AUTO_MENU_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtPopupMenuMark.hh"
+#include "popup_menu_mark.h"
 
-/* Forward declarations ---------------------------------------------------- */ 
+/* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 
 /* File menu for Mark ------------------------------------------------------ */
@@ -41,13 +40,13 @@ public slots:
 
    // Load models of particles
    void slotLoadModels();
- 
+
    // Learn particles
    void slotLearnParticles();
- 
+
    // Automatically select particles
    void slotAutoSelectParticles();
- 
+
    // Save models of particles
    void slotSaveModels();
 signals:

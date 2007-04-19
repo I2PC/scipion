@@ -6,29 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_RECONS_TEST_HH
 #  define _PROG_RECONS_TEST_HH
 
 #include <vector>
 
-#include <XmippData/xmippFuncs.hh>
-#include "Prog_evaluate.hh"
+#include <data/funcs.h>
+
+#include "foms_evaluate.h"
 
 /**@name Recons_test program */
 //@{
@@ -38,13 +39,13 @@ class Recons_test_Parameters {
 public:
    /// Random phantom description filename
    FileName fn_random_phantom;
-   
+
    /// Phantom volume in voxels
    FileName fn_voxel_phantom;
-   
+
    /// Projection parameters filename
    FileName fn_proj_params;
-   
+
    /// Crystal parameters
    FileName fn_crystal;
 
@@ -56,7 +57,7 @@ public:
 
    /// Force symmetry
    int      force_sym;
-   
+
    /// Final symmetry file. At the end of the reconstruction process
    FileName fn_final_sym;
 
@@ -81,7 +82,7 @@ public:
    #define use_SIRT_Spider 4
    /// Reconstruction mode: use_ART, use_SIRT, use_WBP or use_SIRT_Spider
    int recons_method;
-   
+
    /// Random sort of projections (TRUE or FALSE)?
    bool random_sort;
 
@@ -90,10 +91,10 @@ public:
 
    /// Initial Relaxation parameter (valid for ART and SIRT)
    vector<double> lambda0;
-   
+
    /// Final Relaxation parameter (valid for ART and SIRT)
    vector<double> lambdaF;
-   
+
    /// Initial Number of iterations (valid for ART and SIRT)
    vector<int> no_it0;
 
@@ -122,13 +123,13 @@ public:
        then the measure number is used instead of this criterion.
        This option is only valid for training */
    float accuracy;
-   
+
    /** Admitted unluckiness.
        Probability with which we admit an unlucky selection of samples.
        Typical value 0.01, that means that 1 of every 100 trials we
        will have a measure which is not within a 2% of the true value. */
    float unluckiness;
-   
+
    // True if only structural consistency should be evaluated.
    // This value is set by the single measure functions. Programmer
    // should not care about it
@@ -136,7 +137,7 @@ public:
 
    /// Global radius for evaluation
    double global_radius;
-   
+
    /// Probe radius for surface generation
    double probe_radius;
    /// Enable top surface
@@ -166,7 +167,7 @@ public:
    /// Starting filter (in digital freq.)
    double starting_low_pass;
 
-   /// Starting noise 
+   /// Starting noise
    double starting_noise;
 
    /// Mass constraint
@@ -192,7 +193,7 @@ public:
    /** Enable normalization. The following parameters are useless if this
        flag is off */
    bool enable_normalization;
-   
+
    /// Average of a in y=ax+b
    double a_avg;
    /// Stddev of a in y=ax+b
@@ -232,7 +233,7 @@ public:
 public:
    /** Read parameters from file. */
    void read(const FileName &fn_test_params);
-   
+
    /** Show parameters */
    friend ostream & operator << (ostream &out, const Recons_test_Parameters
       &prm);
@@ -250,11 +251,11 @@ public:
     is increased. If you set it to -1 then this option is not used and
     volumes from different experiments are all written with the same
     name.
-    
+
     training_N contains the number of samples used for tFOM approximation,
     if prm.MeasNo is different from -1, then training_N=prm.MeasNo. Else,
     the number of samples is dynamically calcultaed for the accuracy selected
-    
+
     Valid FOMs: scL1, scL11, scL10, scL2, scL21, scL20, scL1w, scL2w*/
 void single_measure_on_FOM(Recons_test_Parameters &prm,
    int i, int &nvol,
@@ -273,7 +274,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
     is increased. If you set it to -1 then this option is not used and
     volumes from different experiments are all written with the same
     name.
-    
+
     See \Ref{FOM_ARGS} */
 void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     int &nvol, FOMs &foms_mean, FOMs &foms_stddev, EVALUATE_results &results);
@@ -285,7 +286,7 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     EVALUATE_results structure. In the case of SIRT and ART the index i
     indicates which (lambda,no_it) combination is taken from
     the list.
-    
+
     If the projection root name is g0tA, this function generates the
     following files and using nvol:
     \begin{verbatim}
@@ -301,7 +302,7 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     g0tA.sel             --> Selection file for the projections
     g0tA.vol             --> reconstruction
     \end{verbatim}
-    
+
     In the case of SIRT of Spider a Spider batch file (b73.xmp) is created,
     and the convention of names are
     */

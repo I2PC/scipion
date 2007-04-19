@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -28,8 +28,7 @@
 // Implements Kohonen Self-Organizing Feature Maps
 //-----------------------------------------------------------------------------
 
-#include "../xmippSOM.hh"
-
+#include "som.h"
 
  /**
   * Construct a SOM from the code vectors in a stream
@@ -62,7 +61,7 @@
 
   /**
    * Trains the SOM
-   * @param _som  The som to train           
+   * @param _som  The som to train
    * @param _ts   The training set
    */
   void xmippSOM::train (xmippMap& _som, xmippCTVectors& _ts) const
@@ -71,8 +70,8 @@
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-  	listener->OnReportOperation((string) "Training Kohonen SOM....\n");  
-    if (verbosity == 1 || verbosity == 3)    
+  	listener->OnReportOperation((string) "Training Kohonen SOM....\n");
+    if (verbosity == 1 || verbosity == 3)
       listener->OnInitOperation(somNSteps);
 
 
@@ -91,7 +90,7 @@
 	     {
                SomIn& v = _som.theItems[*it];
 	       for (unsigned j = 0; j < v.size(); j++)
-               	  v[j] += ((*i)[j] - v[j]) * somAlpha(t, somNSteps);	   
+               	  v[j] += ((*i)[j] - v[j]) * somAlpha(t, somNSteps);	
 	     }	
 	} else { // Gaussian
            // update all neighborhood convoluted by a gaussian
@@ -99,17 +98,17 @@
 	   double alpha = somAlpha(t, somNSteps);
       	   for (unsigned it=0 ; it<_som.size(); it++)
       	   {
-	       double dist = _som.neighDist(_som.codVecPos(theBest), _som.indexToPos(it)); 		   
-               double alp = alpha*(double) exp((double) (-dist * dist / (2.0 * radius * radius)));	   
+	       double dist = _som.neighDist(_som.codVecPos(theBest), _som.indexToPos(it)); 		
+               double alp = alpha*(double) exp((double) (-dist * dist / (2.0 * radius * radius)));	
                SomIn& v = _som.theItems[it];
 	       for (unsigned j = 0; j < v.size(); j++)
-               	  v[j] += ((*i)[j] - v[j]) * alp;	   
+               	  v[j] += ((*i)[j] - v[j]) * alp;	
       	   }	
 	} // else
 
       } // for examples
-     
-      	if (verbosity == 1 || verbosity == 3)    
+
+      	if (verbosity == 1 || verbosity == 3)
       		listener->OnProgress(t);
       	if (verbosity >= 2) {
 	   char s[100];
@@ -119,11 +118,11 @@
     } // while t < somSteps
 
 
-    if (verbosity == 1 || verbosity == 3)    
+    if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
-    
-  }; 
-  
+
+  };
+
 
   /**
    * Tests the SOM
@@ -136,7 +135,7 @@
 	// Defines verbosity level
         int verbosity = listener->getVerbosity();
         if (verbosity) {
-  	  listener->OnReportOperation((string) "Estimating quantization error....\n");  
+  	  listener->OnReportOperation((string) "Estimating quantization error....\n");
           listener->OnInitOperation(_examples.size());
 	}
 
@@ -173,14 +172,14 @@
   * Standard output for a SOM algorithm
   * @param _os The output stream
   */
-  void xmippSOM::printSelf(ostream& _os) const 
+  void xmippSOM::printSelf(ostream& _os) const
   {
       _os << (int) somNeigh << endl;
       _os << somNSteps << endl;
       somAlpha.printSelf(_os);
       somRadius.printSelf(_os);
   };
-  
+
   /**
   * Standard input for a som algorithm
   * @param _is The input stream
@@ -192,7 +191,7 @@
 	  {
 		if (_is)
 			_is >> (int&) somNeigh;
-		if(_is) 
+		if(_is)
 			_is >> somNSteps;
 		somAlpha.readSelf(_is);
 		somRadius.readSelf(_is);
@@ -204,12 +203,12 @@
 		  msg << e.what() << endl << "Error reading the SOM algorithm";
 		  throw runtime_error(msg.str());
 	  }
-	  
+	
   };
-  
+
 
   /**
-   * Saves the xmippSOM class into a stream. 
+   * Saves the xmippSOM class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -217,7 +216,7 @@
 
 
   /**
-   * Loads the xmippSOM class from a stream. 
+   * Loads the xmippSOM class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
@@ -252,12 +251,12 @@
   * Standard output for a Descent class
   * @param _os The output stream
   */
-  void Descent::printSelf(ostream& _os) const 
+  void Descent::printSelf(ostream& _os) const
   {
       _os << initial << endl;
       _os << final << endl;
   };
-  
+
   /**
   * Standard input for a Descent class
   * @param _is The input stream
@@ -268,7 +267,7 @@
 	  {
 		if (_is)
 			_is >> initial;
-		if(_is) 
+		if(_is)
 			_is >> final;
 	  }
       catch (exception& e)
@@ -277,12 +276,12 @@
 		  msg << e.what() << endl << "Error reading Descent class";
 		  throw runtime_error(msg.str());
 	  }
-	  
+	
   };
-  
-  
+
+
   /**
-   * Saves the Descent class into a stream. 
+   * Saves the Descent class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -290,9 +289,9 @@
 
 
   /**
-   * Loads the Descent class from a stream. 
+   * Loads the Descent class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   void Descent::loadObject(istream& _is) { readSelf(_is); }
-  
+

@@ -6,32 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ================================================================ */
-#include <XmippData/Programs/Prog_downsample.hh>
-#include <XmippData/xmippArgs.hh>
+#include <data/micrograph_downsample.h>
+#include <data/args.h>
+
 #include "xvsmooth.h"
 
-/* Prototypes ============================================================== */
 void Usage(const Prog_downsample_prm &prm);
 
-/* Main program ============================================================ */
 int main(int argc, char **argv) {
    Prog_downsample_prm prm;
    bool                smooth;
@@ -54,7 +52,7 @@ int main(int argc, char **argv) {
          byte rgb[256]; for (int i=0; i<256; i++) rgb[i]=i;
          byte *result = SmoothResize((byte *) (prm.M.array8()),
             prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
-            rgb, rgb, rgb, rgb, rgb, rgb, 256); 
+            rgb, rgb, rgb, rgb, rgb, rgb, 256);
          for (int i=0; i<prm.Ypdim; i++)
              for (int j=0; j<prm.Xpdim; j++)
                  Mp.set_val(j,i,result[i*prm.Xpdim+j]);
@@ -86,7 +84,7 @@ void Usage(const Prog_downsample_prm &prm) {
          + usual: xmipp_downsample -i $FILEIN -o $FILEOUT
                   [-output_bits $OBITS $OBITS_LIST]
                    -Xstep $XSTEP [-Ystep $YSTEP]
-                  [-smooth] 
+                  [-smooth]
                   [-kernel $KERNEL $KERNEL_LIST
                      [$YDIM $XDIM] [$R] [$SIGMA] [$POWER]]
       }

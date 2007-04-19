@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /*****************************************************************************/
 /* Variable and prototype definitions for the Numerical Core                 */
@@ -28,9 +28,9 @@
 #ifndef _NUMERICAL_HH
 #   define _NUMERICAL_HH
 
-#include "../xmippMemory.hh"
-#include "../xmippMacros.hh"
-#include "../xmippError.hh"
+#include "memory.h"
+#include "macros.h"
+#include "error.h"
 
 // Utilities --------------------------------------------------------------
 void nrerror(char error_text[]);
@@ -89,7 +89,7 @@ int nnls(double *a, int m, int n, double *b, double *x,
 int nnlsWght(int N, int M, double *A, double *b, double *weight);
 
 // CFSQP -------------------------------------------------------------------
-// These routines are from 
+// These routines are from
 // http://www.aemtechnology.com/aemdesign/downloadfsqp.htm
 // They implement the CFSQP algorithm
 /* Declare and initialize user-accessible flag indicating    */

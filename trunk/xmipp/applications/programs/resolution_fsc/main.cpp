@@ -7,27 +7,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippSelFiles.hh>
+#include <data/progs.h>
+#include <data/args.h>
+#include <data/fft.h>
+#include <data/selfile.h>
 
 class Resolution_parameters: public Prog_parameters {
 public:
@@ -80,7 +80,7 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    fn_frc=img.name()+".frc";
    ofstream out(fn_dpr.c_str(), ios::out);
    ofstream out2(fn_frc.c_str(), ios::out);
-   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl;
    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
      if (i>0) {
@@ -117,7 +117,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    fn_frc=vol.name()+".frc";
    ofstream out(fn_dpr.c_str(), ios::out);
    ofstream out2(fn_frc.c_str(), ios::out);
-   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+   out  << "# Resol. [1/Ang]   DPR [deg]"<<endl;
    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {
      if (i>0) {
@@ -169,8 +169,8 @@ int main (int argc, char **argv) {
       SF1.get_statistics(I1,Id,dummy,dummy,apply_geo);
       SF2.get_statistics(I2,Id,dummy,dummy,apply_geo);
       It().set_Xmipp_origin();
-      I1().set_Xmipp_origin();  
-      I2().set_Xmipp_origin();  
+      I1().set_Xmipp_origin();
+      I2().set_Xmipp_origin();
 
       fourier_ring_correlation(I1(),I2(),sam,freq,frc,frc_noise);
       differential_phase_residual(I1(),I2(),sam,freq,dpr);
@@ -188,7 +188,7 @@ int main (int argc, char **argv) {
       ofstream out(fn_dpr.c_str(), ios::out);
       ofstream out2(fn_frc.c_str(), ios::out);
       ofstream out3(fn_ssnr.c_str(), ios::out);
-      out  << "# Resol. [1/Ang]   DPR [deg]"<<endl; 
+      out  << "# Resol. [1/Ang]   DPR [deg]"<<endl;
       out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise"<<endl;
       out3 << "# Resol. [1/Ang]       SSNR          #Pixels"<<endl;
       FOR_ALL_ELEMENTS_IN_MATRIX1D(freq) {

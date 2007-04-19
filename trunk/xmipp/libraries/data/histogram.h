@@ -7,45 +7,45 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef XMIPPHISTOGRAMS_H
 #define XMIPPHISTOGRAMS_H
 
-#include "xmippMatrices1D.hh"
-#include "xmippMatrices2D.hh"
-#include "xmippMatrices3D.hh"
+#include "matrix1d.h"
+#include "matrix2d.h"
+#include "matrix3d.h"
 
 /// @defgroup Histograms
 
 /** Histograms with 1 parameter
  * @ingroup Histograms
- * 
+ *
  * This class of histograms are the usual ones where we want to count the number
  * of elements within a certain range of a variable, then we make the histogram
  * of that variable. The range is divided into small subranges within which the
  * values will be grouped. Any value outside the global range will not be
  * counted in the histogram.
- * 
+ *
  * To see exactly which is the division between subranges let's have a look on
  * the following example where an histogram between 0 and 2 is computed with
  * 5 steps.
- * 
+ *
  * @code
  * [......)                        [.......]
  * [      )                        [       ]
@@ -58,44 +58,44 @@
  * |---------|---------|---------|---------|
  * 0.0       0.5       1.0       1.5       2.0
  * @endcode
- * 
+ *
  * The border points are 0.0, 0.4, 0.8, 1.2, 1.6 and 2.0. The brackets and
  * parenthesis try to represent where the border point belongs to, and the
  * numbers within the bars are the index of each bar whithin the histogram. The
  * height of each bar is the number of times that a value within that subrange
  * has been inserted. Be careful that this is not a probability density function
  * (pdf), to be so it should be divided by the total number of values inserted.
- * 
+ *
  * The following example shows how to work with the histograms. In it we will
  * compute which is the central range within which the 95% of the values of a
  * matrix are comprised. This example could be even simplified by using the
  * function compute_hist but it has been kept like this to show the idea behind
  * the histograms
- * 
+ *
  * @code
  * // Variable definition
  * histogram1D hist;
  * matrix2D A(50, 50);
  * double min_val, max_val;
  * double eff0, effF;
- * 
+ *
  * // Matrix initialisation
  * A.init_random(0, 100);
- * 
+ *
  * // Histogram initialisation
  * min_val = A.min();
  * max_val = A.max();
  * hist.init(min_val, max_val, 200);
- * 
+ *
  * // Histogram computation
  * for (int i=STARTINGY(A); i<=FINISHINGY(A); i++)
  *     for (int j=STARTINGX(A); j<=FINISHINGX(A); j++)
  *         hist.insert_value(MAT_ELEM(A,i,j));
- * 
+ *
  * // Effective range computation
  * eff0 = hist.percentil(2.5);
  * effF = hist.percentil(97.5);
- * 
+ *
  * cout << "The effective range goes from " << eff0
  *     << " to " << effF << endl;
  * @endcode
@@ -110,10 +110,10 @@ public:
     int no_samples; // No. of points inside the histogram
 
     /** Empty constructor
-     * 
+     *
      * Creates an empty histogram. Before using it you must
      * initialise it with init.
-     * 
+     *
      * @code
      * histogram1D hist;
      * @endcode
@@ -124,9 +124,9 @@ public:
     }
 
     /** Copy constructor
-     * 
+     *
      * Makes an exact copy of the given histogram into another histogram.
-     * 
+     *
      * @code
      * histogram1D hist2(hist1);
      * @endcode
@@ -138,9 +138,9 @@ public:
     }
 
     /** Empties an histogram
-     * 
+     *
      * Remember to initialise it before using it again.
-     * 
+     *
      * @code
      * hist.clear();
      * @endcode
@@ -154,14 +154,14 @@ public:
     void assign(const histogram1D& H);
 
     /** Initialisation of the histogram
-     * 
+     *
      * This is the operation which allows the histogram to be used. This should
      * be performed before inserting any value in it. The information given to
      * this initialisation is the range within which the values will be counted,
      * and the number of steps (discrete bars) in this range. If the value is
      * outside this range it will not be taken into account although we have
      * asked for its insertion in the histogram.
-     * 
+     *
      * @code
      * hist.init(-3, 3, 100);
      * // 100 steps in the range -3...3
@@ -170,12 +170,12 @@ public:
     void init(double min_val, double max_val, int n_steps);
 
     /** Insert a value within histogram
-     * 
+     *
      * The right interval is chosen according to the initialisation of the
      * histogram and the count of elements in that interval is incremented by 1.
      * If the value lies outside the global range of the histogram nothing is
      * done.
-     * 
+     *
      * @code
      * hist.insert_value(3);
      * @endcode
@@ -183,13 +183,13 @@ public:
     void insert_value(double val);
 
     /** Returns the percentil value
-     * 
+     *
      * This function returns the value within the range for which a given
      * percent mass of the total number of elements are below it. For instance,
      * if we have 120 values distributed between 0 and 45, and we ask for the
      * percentil of 60%, the returned value is that within 0 and 45 for which
      * 120 * 0.6 = 72 elements are smaller than it.
-     * 
+     *
      * @code
      * percentil60=hist.percentil(60);
      * @endcode
@@ -197,13 +197,13 @@ public:
     double percentil(double percent_mass);
 
     /** Mass below
-     * 
+     *
      * Returns the number of points which are below a certain value
      */
     double mass_below(double value);
 
     /** Mass above
-     * 
+     *
      * Returns the number of points which are above a certain value
      */
     double mass_above(double value)
@@ -212,7 +212,7 @@ public:
     }
 
     /** Show an histogram
-     * 
+     *
      * The first column is the value associated to each histogram measure. The
      * second one is the histogram measure.
      */
@@ -224,19 +224,19 @@ public:
 
     /** @defgroup HistogramAccess Access functions
      * @ingroup Histograms
-     * 
+     *
      * This functions are not very common to use, and they allow access to the
      * histogram elements or the histogram itself as a vector of doubles which
      * we can work with.
      */
-     
+
     /** Value --> Index
      * @ingroup HistogramAccess
-     * 
+     *
      * Given a value it returns the code of the interval where it should be
      * counted. If it is outside the global range of the histogram it returns
      * -1
-     * 
+     *
      * @code
      * hist.val2index(12.3, interval_for_it);
      * @endcode
@@ -247,18 +247,18 @@ public:
             i = stepNo() - 1;
         else
             i = (int) FLOOR((v - hmin) / step_size);
-            
+
         if (i<0 || i>=stepNo())
             i = -1;
     }
 
     /** Index --> Value
      * @ingroup HistogramAccess
-     * 
+     *
      * Given the code of one interval, this function returns the value of its
      * starting point (its left border point). If the intervals are defined as
      * [a,b), this function returns a.
-     * 
+     *
      * @code
      * hist.index2val(0, beginning_of_interval_0);
      * @endcode
@@ -270,7 +270,7 @@ public:
 
     /** Minimum value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Minimum value for histogram " << hist.min() << endl;
      * @endcode
@@ -282,7 +282,7 @@ public:
 
     /** Maximum value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Maximum value for histogram " << hist.max() << endl;
      * @endcode
@@ -294,7 +294,7 @@ public:
 
     /** Step size for the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Step size of the histogram " << hist.step() << endl;
      * @endcode
@@ -306,7 +306,7 @@ public:
 
     /** Number of steps in the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "No. Steps in the histogram " << hist.stepNo() << endl;
      * @endcode
@@ -318,7 +318,7 @@ public:
 
     /** Number of samples introduced in the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;
      * @endcode
@@ -334,12 +334,12 @@ public:
 
 /** Compute histogram of a vector within its minimum and maximum value
  * @ingroup HistogramFunctions1D
- * 
+ *
  * Given an array as input, this function returns its histogram within the
  * minimum and maximum of the array, in this way all the values in the array are
  * counted. The array can be of any numerical type (short int, int, double, ...)
  * and dimension. The number of steps must always be given.
- * 
+ *
  * @code
  * histogram1D hist;
  * compute_hist(v, hist, 100);
@@ -355,13 +355,13 @@ void compute_hist(T& array, histogram1D& hist, int no_steps)
 
 /** Compute histogram of the array within two values
  * @ingroup HistogramFunctions1D
- * 
+ *
  * Given a array as input, this function returns its histogram within two
  * values, the array values outside this range are not counted. This can be used
  * to avoid the effect of outliers which causes a "compression" in the
  * histogram. The array can be of any numerical type (short int, int, double,
  * ...). The number of steps must always be given.
- * 
+ *
  * @code
  * histogram1D hist;
  * compute_hist(v, hist, 0, 1, 100);
@@ -377,7 +377,7 @@ void compute_hist(const T& v, histogram1D& hist,
 
 /** Compute histogram within a region
  * @ingroup HistogramFunctions1D
- * 
+ *
  * The region is defined by its corners
  */
 template<typename T>
@@ -389,7 +389,7 @@ void compute_hist(const matrix2D< T >& v, histogram1D& hist,
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min,max,no_steps);
-    
+
     matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
         hist.insert_value(v(r));
@@ -397,7 +397,7 @@ void compute_hist(const matrix2D< T >& v, histogram1D& hist,
 
 /** Compute histogram within a region 3D
  * @ingroup HistogramFunctions1D
- * 
+ *
  * The region is defined by the corners (k0, i0, j0) and (kF, iF, jF).
  */
 template<typename T>
@@ -409,7 +409,7 @@ void compute_hist(const matrix3D< T >& v, histogram1D& hist,
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
-    
+
     matrix1D< int >r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
         hist.insert_value(v(r));
@@ -417,7 +417,7 @@ void compute_hist(const matrix3D< T >& v, histogram1D& hist,
 
 /** Compute the detectability error between two pdf's
  * @ingroup HistogramFunctions1D
- * 
+ *
  * The input histograms are expressed as probability density functions
  * representing two different objects with the same parameter of variation, for
  * instance, the protein and background both defined by a grey-level. The first
@@ -430,7 +430,7 @@ void compute_hist(const matrix3D< T >& v, histogram1D& hist,
  * and viceversa. This function allows you to compute this probability error
  * when the two histograms are provided. Be careful that this probability
  * usually has got a very low value.
- * 
+ *
  * @code
  * detect_error = detectability_error(hist1, hist2);
  * @endcode
@@ -439,7 +439,7 @@ double detectability_error(const histogram1D& h1, const histogram1D& h2);
 
 /** Returns the effective range of a multidimensional array
  * @ingroup HistogramFunctions1D
- * 
+ *
  * The effective range is defined as the difference of those two values
  * comprising a given central percentage of the array histogram. This function
  * is used to compute the range removing outliers. The default central
@@ -447,11 +447,11 @@ double detectability_error(const histogram1D& h1, const histogram1D& h2);
  * of values in the array decreases. For the default, for instance, the 0.125%
  * of the smaller values are left out as well as the 0.125% of the higher
  * values. The range is given always as a double number.
- * 
+ *
  * @code
  * double range = v.effective_range();
  * // range for the 99.75% of the mass
- * 
+ *
  * double range = v.effective_range(1);
  * // range for the 99% of the mass
  * @endcode
@@ -468,7 +468,7 @@ double effective_range(const T& v, double percentil_out=0.25)
 
 /** Clips the array values within the effective range
  * @ingroup HistogramFunctions1D
- * 
+ *
  * Look at the documentation of effective_rage
  */
 template<typename T>
@@ -478,7 +478,7 @@ void reject_outliers(T& v, double percentil_out=0.25)
     compute_hist(v, hist, 200);
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100-percentil_out / 2);
-    
+
     // FIXME No words for this...
     #define vi MULTIDIM_ELEM(v, i)
 
@@ -492,7 +492,7 @@ void reject_outliers(T& v, double percentil_out=0.25)
 
 /** Histogram equalization and re-quantization
  * @ingroup HistogramFunctions1D
- * 
+ *
  * This function equalizes the histogram of the input multidimensional array,
  * and re-quantize the input array to a specified number of bins. The output
  * array is defined between 0 and bins-1.
@@ -507,30 +507,30 @@ void histogram_equalization(T& v, int bins=8)
     // Compute the distribution function of the pdf
     matrix1D< double > norm_sum(hist_steps);
     norm_sum(0) = hist(0);
-    
+
     for(int i=1; i<hist_steps; i++)
         norm_sum(i) = norm_sum(i-1) + hist(i);
-    
+
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
     matrix1D< double > div(bins-1);
     int index = 0;
-    
+
     for(int current_bin=1; current_bin<bins; current_bin++)
     {
         double current_value = (double) current_bin / bins;
-        
+
         while (norm_sum(index)<current_value)
             index++;
-        
+
         hist.index2val((double) index, div(current_bin-1));
     }
 
     // requantize and equalize histogram
     // FIXME Oh, my, again...
     #define vi MULTIDIM_ELEM(v, i)
-    
+
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
         if (vi<div(0))
             vi = 0;
@@ -539,10 +539,10 @@ void histogram_equalization(T& v, int bins=8)
         else
         {
             index = 0;
-            
+
             while(vi>div(index))
                 index++;
-            
+
             vi=index;
         }
     #undef vi
@@ -550,7 +550,7 @@ void histogram_equalization(T& v, int bins=8)
 
 /** Histograms with 2 parameters
  * @ingroup Histograms
- * 
+ *
  * The histogram with 2 parameters can be regarded as an approximation to the
  * joint probability density function of two variables (just dividing the
  * histogram by its total mass). Ie, the 2D histogram is the count of times that
@@ -560,12 +560,12 @@ void histogram_equalization(T& v, int bins=8)
  * interesting and we could plot how many projections are there with first angle
  * equal to 45º and second equal to 0º, and so on covering the whole range for
  * each angle.
- * 
+ *
  * The 2D histogram is defined, as in the 1D case, by the respective ranges for
  * the two variables and the number of intervals on each range. The distribution
  * and limits of intervals are just the 2D extension of the graph shown in
  * histograms 1D.
- * 
+ *
  */
 class histogram2D : public matrix2D< double >
 {
@@ -580,10 +580,10 @@ public:
     int no_samples; // No. of points inside the histogram
 
     /** Empty constructor
-     * 
+     *
      * Creates an empty histogram. Before using it you must initialise it with
      * init
-     * 
+     *
      * @code
      * histogram2D hist;
      * @endcode
@@ -594,9 +594,9 @@ public:
     }
 
     /** Copy constructor
-     * 
+     *
      * Makes an exact copy of the given histogram into another histogram.
-     * 
+     *
      * @code
      * histogram2D hist2(hist1);
      * @endcode
@@ -607,9 +607,9 @@ public:
     }
 
     /** Empties an histogram
-     * 
+     *
      * Remember to initialise it before using it again.
-     * 
+     *
      * @code
      * hist.clear();
      * @endcode
@@ -619,20 +619,20 @@ public:
     /** Assignment.
      */
     histogram2D& operator=(const histogram2D& H);
-    
+
     /** Another function for assigment.
      */
     void assign(const histogram2D& H);
 
     /** Initialisation of the histogram
-     * 
+     *
      * This is the operation which allows the histogram to be used. This should
      * be performed before inserting any value in it. The information given to
      * this initialisation is the range for each variable within which the
      * values will be counted, and the number of steps (discrete bars) in these
      * ranges.If the value is outside the defined ranges it will not be taken
      * into account although we have asked for its insertion in the histogram.
-     * 
+     *
      * @code
      * hist.init(0, 90, 100, 0, 360, 200);
      * // 100 steps in the range V=0...90 and 200 steps for U=0...360
@@ -642,7 +642,7 @@ public:
               double jmin_val, double jmax_val, int jn_steps);
 
     /** Insert a value within histogram
-     * 
+     *
      * The right interval is chosen according to the initialisation of the
      * histogram and the count of elements in that interval is incremented by 1.
      * If the value lies outside the global range of the histogram nothing is
@@ -650,7 +650,7 @@ public:
      * two variables in our example of the projection at with first Euler
      * angle=45 and second=0, the insertion of this projection in the 2D
      * histogram would be like in the following example.
-     * 
+     *
      * @code
      * hist.insert_value(45, 0);
      * @endcode
@@ -658,7 +658,7 @@ public:
     void insert_value(double v, double u);
 
     /** Show an histogram
-     * 
+     *
      * The first column and second column are the (X,Y) coordinates of each
      * histogram measure. The third one is the histogram measure.
      */
@@ -670,22 +670,22 @@ public:
 
     /** @defgroup HistogramAccess Access functions
      * @ingroup Histograms
-     * 
+     *
      * This functions are not very common to use, and they allow access to the
      * histogram elements or the histogram itself as a matrix of doubles which
      * we can work with.
      */
-    
+
     /** Value --> Index
      * @ingroup HistogramAccess
-     * 
+     *
      * Given two values for the two variables it returns the code of the
      * interval where it should be counted. If it is outside the global range of
      * the histogram it returns -1 for that variable (i or j). The following
      * example tells you that the interval corresponding to (45,0) is that with
      * code (i,j), i.e, you could access to hist()(i,j) to know how many
      * projections are there in the same interval as this projection.
-     * 
+     *
      * @code
      * hist.val2index(45, 0, i, j);
      * @endcode
@@ -696,27 +696,27 @@ public:
             i = IstepNo() - 1;
         else
             i = (int) FLOOR((v-imin) / istep_size);
-            
+
         if (u==jmax)
             j = JstepNo() - 1;
-            
+
         j = (int) FLOOR((u-jmin) / jstep_size);
-        
+
         if (i<0 || i>=IstepNo())
             i = -1;
-            
+
         if (j<0 || j>=JstepNo())
             j = -1;
     }
 
     /** Index --> Value
      * @ingroup HistogramAccess
-     * 
+     *
      * Given the code of one interval, this function returns the value of its
      * starting point (its left-top border point, ie, its lowest corner). If the
      * intervals are defined as [v0,vF) and [u0,uF), this function returns the
      * point (v0,u0)
-     * 
+     *
      * @code
      * hist.index2val(5, 1, v, u);
      * @endcode
@@ -729,7 +729,7 @@ public:
 
     /** Minimum i value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Minimum value for histogram " << hist.Imin() << endl;
      * @endcode
@@ -741,7 +741,7 @@ public:
 
     /** Maximum i value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Maximum value for histogram " << hist.Imax() << endl;
      * @endcode
@@ -753,7 +753,7 @@ public:
 
     /** Step size in i for the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Step size of the histogram " << hist.Istep() << endl;
      * @endcode
@@ -765,7 +765,7 @@ public:
 
     /** Number of steps in i in the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "No. Steps in the histogram " << hist.IstepNo() << endl;
      * @endcode
@@ -777,7 +777,7 @@ public:
 
     /** Minimum j value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Minimum value for histogram " << hist.Jmin() << endl;
      * @endcode
@@ -789,7 +789,7 @@ public:
 
     /** Maximum j value where the histogram is defined
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Maximum value for histogram " << hist.Jmax() << endl;
      * @endcode
@@ -801,7 +801,7 @@ public:
 
     /** Step size in j for the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "Step size of the histogram " << hist.Jstep() << endl;
      * @endcode
@@ -813,7 +813,7 @@ public:
 
     /** Number of steps in j in the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "No. Steps in the histogram " << hist.JstepNo() << endl;
      * @endcode
@@ -825,7 +825,7 @@ public:
 
     /** Number of samples introduced in the histogram
      * @ingroup HistogramAccess
-     * 
+     *
      * @code
      * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;
      * @endcode
@@ -838,7 +838,7 @@ public:
 
 /** @defgroup HistogramFunctions2D Functions related to histograms 2D
  * @ingroup Histograms
- * 
+ *
  * The vectors can be of any numerical type (short int, int, double, ...), but
  * both of the same type. Vectors must be of the same shape, the first element
  * of v1 and the first of v2 define the position were the first point will be
@@ -846,10 +846,10 @@ public:
  * elements of v1 and v2 serve as coordinates within the histogram. The number
  * of steps must always be given.
  */
- 
+
 /** Compute histogram of two arrays within their minimum and maximum values
  * @ingroup HistogramFunctions2D
- * 
+ *
  * Given two arrays as input, this function returns their joint histogram within
  * the minimum and maximum of the arrays, in this way all the values in the
  * arrays are counted. Both arrays must have the same shape
@@ -860,16 +860,16 @@ void compute_hist(const T& v1, const T& v2,
 {
     double min1, max1;
     v1.compute_double_minmax(min1, max1);
-    
+
     double min2, max2;
     v2.compute_double_minmax(min2, max2);
-    
+
     compute_hist(v1, v2, hist, min1, max1, min2, max2, no_steps1, no_steps2);
 }
 
 /** Compute histogram of two arrays within given values
  * @ingroup HistogramFunctions2D
- * 
+ *
  * Given two arrays as input, this function returns their joint histogram
  * within the specified values, all the values lying outside are not counted
  */
@@ -880,9 +880,9 @@ void compute_hist(const T& v1, const T& v2, histogram2D& hist,
 {
     if (!v1.same_shape(v2))
         REPORT_ERROR(1, "compute_hist: v1 and v2 are of different shape");
-        
+
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
-    
+
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v1)
         hist.insert_value(MULTIDIM_ELEM(v1, i), MULTIDIM_ELEM(v2, i));
 }

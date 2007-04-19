@@ -6,42 +6,42 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippVolumes.hh>
+#include <data/args.h>
+#include <data/matrix3d.h>
+#include <data/matrix2d.h>
+#include <data/geometry.h>
+#include <data/volume.h>
 
 void Usage(char *argv[]);
 
 int main (int argc, char **argv) {
 FileName       fn_in;     // input file
 FileName       fn_out;    // output file
-double d00, d01, d10, d11; 
+double d00, d01, d10, d11;
 
 VolumeXmipp    V_in, V_out;
 matrix2D<double> D(4,4);
 
    D.init_zeros();
    D(0,0) = D(1,1) = D(2,2) = D(3,3) = 1.0f;
-   
+
    // Get command line parameters ------------------------------------------
    try {
       D(0,0) = AtoF(get_param(argc, argv, "-d00","1.0"));
@@ -55,14 +55,14 @@ matrix2D<double> D(4,4);
    cout << "Matrix D: \n" << D;
    // Main program ---------------------------------------------------------
 
-  
+
  if (!Is_VolumeXmipp(fn_in))
-    {cout << "File: " <<  fn_in<<" is not an Spider volume, bye." 
+    {cout << "File: " <<  fn_in<<" is not an Spider volume, bye."
           << endl; exit(1);}
   V_in.read(fn_in);
-  
+
   apply_geom(V_out.img, D, V_in.img, IS_INV,DONT_WRAP);
-  V_out.write(fn_out);            
+  V_out.write(fn_out);
   exit(0);
 }
 
@@ -87,7 +87,7 @@ void Usage (char *argv[]) {
       OPEN MENU menu_deform;
       COMMAND LINES {
          +usual: xmipp_deform -i $FILE_IN -o $FILE_OUT
-                    -d00 $D00 -d01 $D01 -d10 $D10 -d11 $D11 
+                    -d00 $D00 -d01 $D01 -d10 $D10 -d11 $D11
       }
       PARAMETER DEFINITIONS {
          $FILE_IN  {label="Input volume"; type=file existing;}

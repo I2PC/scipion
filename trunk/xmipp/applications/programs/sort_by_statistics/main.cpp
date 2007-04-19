@@ -22,15 +22,13 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippArgs.hh>
+
+#include <data/image.h>
+#include <data/fft.h>
+#include <data/args.h>
+
 #include <vector>
 
-/**************************************************************************
-        Prototypes
-/**************************************************************************/
-      
 class sort_junk_parameters {
 
 public:
@@ -42,11 +40,11 @@ public:
   double sig_sigquad,avg_sigquad,sig_meanquad, avg_meanquad;
   double avg_ampl2_1,avg_ampl2_2,avg_ampl2_3,avg_ampl2_4;
   double sig_ampl2_1,sig_ampl2_2,sig_ampl2_3,sig_ampl2_4;
-  vector<FileName> names; 
+  vector<FileName> names;
   matrix1D<double> zscore;
   vector<vector<double> > values;
   FileName fn_out;
-                                                                         
+
 public:
   sort_junk_parameters() {}
 
@@ -76,7 +74,7 @@ public:
     matrix1D<double> rmean_ampl2;
     center.init_zeros();
 
-    if (do_means && !do_values) 
+    if (do_means && !do_values)
       cerr<< " Processing training set ..."<<endl;
     else
       cerr<< " Sorting particle set ..."<<endl;
@@ -107,16 +105,16 @@ public:
       avg_ampl2_3=sig_ampl2_3=0.;
       avg_ampl2_4=sig_ampl2_4=0.;
     }
-    
+
     imgno=0;
     while (!SF.eof()) {
       fn=SF.NextImg();
       img.read(fn);
       img().set_Xmipp_origin();
-      
+
       // Overall statistics
       img().compute_stats(mean,stddev,minval,maxval);
-      
+
       // Number of low or high-valued pixels
       nhighpix=nlowpix=0.;
       nradhigh=nradlow=0.;
@@ -126,7 +124,7 @@ public:
 	if (dMij(img(),i,j)>stddev) nradhigh+=dMij(Mrad,i,j);
 	if (dMij(img(),i,j)<-stddev) nradlow+=dMij(Mrad,i,j);
       }
-      
+
       // Quadrant statistics
       quadrant_stats(img,sum_quadsig,sum2_quadsig, sum_quadmean,sum2_quadmean);
 
@@ -190,13 +188,13 @@ public:
 	values[imgno].push_back(ampl2_3);
 	values[imgno].push_back(ampl2_4);
       }
-      
+
       if (imgno%c==0) progress_bar(imgno);
       imgno++;
-      
+
     }
     progress_bar(nr_imgs);
-    
+
     if (do_means) {
       // Finish  average and standard deviation calculations
       avg_mean/=(double)nr_imgs;
@@ -268,16 +266,16 @@ public:
 	  values[imgno][9]+values[imgno][10]+values[imgno][11]+
 	  values[imgno][12]+values[imgno][13];
       }
-    }  
+    }
   }
 
-  void quadrant_stats(ImageXmipp &img, 
-		      double &sum_quadsig, double &sum2_quadsig, 
+  void quadrant_stats(ImageXmipp &img,
+		      double &sum_quadsig, double &sum2_quadsig,
 		      double &sum_quadmean, double &sum2_quadmean) {
 
     double mean, stddev,minval,maxval;
     matrix1D<int> corner1(2), corner2(2);
-    
+
     sum_quadsig=sum2_quadsig=0.;
     sum_quadmean=sum2_quadmean=0.;
     XX(corner1)=STARTINGX(img());    YY(corner1)=STARTINGY(img());
@@ -308,7 +306,7 @@ public:
     sum_quadmean+=mean;
     sum2_quadsig+=stddev*stddev;
     sum_quadsig+=stddev;
-    
+
     sum_quadsig/=4.;
     sum2_quadsig=sqrt(sum2_quadsig/4.-sum_quadsig*sum_quadsig);
     sum_quadmean/=4.;
@@ -329,7 +327,7 @@ int main(int argc, char **argv) {
   matrix1D<int> sorted;
   FileName fn,fn_train;
   ofstream fh_zsum,fh_zind;
-  
+
   sort_junk_parameters prm;
 
   try {
@@ -373,10 +371,10 @@ int main(int argc, char **argv) {
 	    <<" "<<prm.values[isort][11]
 	    <<" "<<prm.values[isort][12]
 	    <<" "<<prm.values[isort][13]<<endl;
-  }  
+  }
   fh_zsum.close();
   fh_zind.close();
   fn=prm.fn_out+".sel";
   SFout.write(fn);
-  
+
 }

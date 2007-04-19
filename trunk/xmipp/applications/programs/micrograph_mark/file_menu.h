@@ -20,18 +20,18 @@
 #ifndef __QT_FILE_MENU_HH__
 #define __QT_FILE_MENU_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtPopupMenuMark.hh"
+#include "popup_menu_mark.h"
+
 #include <qradiobutton.h>
 
-/* Forward declarations ---------------------------------------------------- */ 
+/* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 
 /* File menu for Mark ------------------------------------------------------ */
 class QtFileMenu : public QtPopupMenuMark {
    // For accepting signals and slots
    Q_OBJECT
-   
+
    // Coordinates have been saved
    bool __coordinates_are_saved;
 public:
@@ -42,19 +42,19 @@ public:
 public slots:
    // Load coords
    void slotLoadCoords();
-   
+
    // Save coords
    void slotSaveCoords();
-      
+
    // Generate images
    void slotGenerateImages();
-   
+
    // Save angles
    void slotSaveAngles();
-      
+
    // Quit
    void slotQuit();
-   
+
    // Coordinates changed
    void slotCoordChange() {__coordinates_are_saved=FALSE;}
 signals:

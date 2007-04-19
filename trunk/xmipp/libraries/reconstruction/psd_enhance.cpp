@@ -6,34 +6,35 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * and
- * 
+ *
  * Slavica Jonic (slavica.jonic@impmc.jussieu.fr)
  * UPMC, Paris 6
  *
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_Enhance_PSD.hh"
-#include "../Prog_FourierFilter.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFilters.hh>
+#include "psd_enhance.h"
+#include "fourier_filter.h"
+
+#include <data/args.h>
+#include <data/filters.h>
 
 /* Read parameters --------------------------------------------------------- */
 void Prog_Enhance_PSD_Parameters::read(int argc, char **argv) {
@@ -80,7 +81,7 @@ void Prog_Enhance_PSD_Parameters::show() {
 void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD) {
    // Take the logarithm
    if (take_log)
-      FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD) 
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
          PSD(i,j)=log10(1+PSD(i,j));
 
    // Remove single outliers

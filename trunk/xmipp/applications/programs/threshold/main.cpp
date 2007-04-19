@@ -6,29 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippArgs.hh>
+#include <data/volume.h>
+#include <data/image.h>
+#include <data/args.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
 #define SET_SUBS_VAL(I, subs_val, str_subs_val) \
@@ -36,7 +34,6 @@ void Usage();
    else if (str_subs_val=="max") subs_val=I.compute_max(); \
    else                          subs_val=AtoF(str_subs_val);
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
    VolumeXmipp     V, Vdist, Vlabel;
    ImageXmipp      I;
@@ -51,7 +48,7 @@ int main(int argc, char **argv) {
    double          new_val,     old_val;
    string          str_new_val, str_old_val;
    double          accuracy;
-   
+
    // Read arguments --------------------------------------------------------
    try {
       fn_in      = get_param(argc,argv,"-i");
@@ -82,12 +79,12 @@ int main(int argc, char **argv) {
          accuracy=AtoF(get_param(argc,argv,"-accuracy","0"));
       } else enable_substitute=false;
    } catch (Xmipp_error Xe) {cout << Xe; Usage(); exit(1);}
-   
+
    try {
       if      (Is_ImageXmipp(fn_in))  {image_mode=true;  I.read(fn_in);}
       else if (Is_VolumeXmipp(fn_in)) {image_mode=false; V.read(fn_in);}
       else EXIT_ERROR(1,"Threshold: Input file is not an image nor a volume");
-   
+
    // Apply substitution ---------------------------------------------------
       if (enable_substitute)
          if (image_mode) {
@@ -127,7 +124,7 @@ int main(int argc, char **argv) {
          if (image_mode) I().binarize(th);
          else            V().binarize(th);
 
-   // Write output volume --------------------------------------------------         
+   // Write output volume --------------------------------------------------
       if (image_mode) I.write(fn_out);
       else            V.write(fn_out);
    } catch (Xmipp_error Xe) {cout << Xe;}

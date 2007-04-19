@@ -6,34 +6,36 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _BASIC_ART_HH
 #  define _BASIC_ART_HH
 
 #include <fstream>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include "../refinement.hh"
-#include "../grids.hh"
-#include "../symmetries.hh"
-#include "../basis.hh"
-#include "../projection.hh"
-#include "Prog_FourierFilter.hh"
+
+#include <data/volume.h>
+#include <data/selfile.h>
+
+#include "refinement.h"
+#include "grids.h"
+#include "symmetries.h"
+#include "basis.h"
+#include "projection.h"
+#include "fourier_filter.h"
 
 struct Recons_info;
 
@@ -45,7 +47,7 @@ struct Recons_info;
     in the Basic_art module. These common tasks are based on the existence
     of an extra_parameter structure containing all the specific information
     for the ART process.
-    
+
     The user interface program should make a call to the \Ref{Basic_ROUT_Art}
     routine with the corresponding extra_parameter structure.
 */
@@ -68,26 +70,26 @@ public:
 
    /// Number of iterations
    int no_it;
-   
+
    /// Relaxation parameter
    matrix1D<double> lambda_list;
-   
+
    /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
        for parallel computation. This variable establish the way that particles are
        divided into blocks for parallel processing. If sequential
        processing is wanted, set it to ART or SIRT. This is the default.
-       
+
        \\Ex: parallel_mode=Basic_ART_Parameters::ART*/
    t_parallel_mode parallel_mode;
-   
+
    /// Number of projections for each parallel block
    int block_size;
-   
+
    /** Valid mdoes are ARTK, CAVK and CAV.
        This is the mode of updating a single projection, it has nothing
        to do with the global ART or SIRT mode */
    int eq_mode;
-   
+
    /// True if random sort of projections
    bool random_sort;
 
@@ -105,10 +107,10 @@ public:
 
    /** Vector containing all residual images for wlsART */
    vector<Projection> residual_imgs;
- 
+
    /** Sum ML-weight of all projections*/
    double sum_weight;
- 
+
    /// Relative size for the grid
    double grid_relative_size;
 
@@ -140,14 +142,14 @@ public:
 
    /// Sampling rate
    double sampling;
-   
+
    /// File containing symmetries
    FileName fn_sym;
 
    /// Inpose simetry each sym_each iterations (iteration=projection)
    /// deafult is 0
    int sym_each;
-   
+
    /// Skip projection with absolute tilt angle greater than max_tilt
    /// deafult is infinite
    double max_tilt;
@@ -157,13 +159,13 @@ public:
 
    /// Refine the translation alignement after n projection presentations
    double ref_trans_step;
-   
+
    /// Force the reconstruction to be symmetric this number of times
    int force_sym;
 
    /// Do not generate symmetry subgroup
    bool do_not_generate_subgroup;
-   
+
    /// Do not use symmetrized projections
    bool do_not_use_symproj;
 
@@ -172,16 +174,16 @@ public:
 
    /// Selection file with all images to process
    FileName fn_sel;
-   
+
    /// Root of output filenames
    FileName fn_root;
-   
+
    /// Grid volume as initial guess
    FileName fn_start;
-   
+
    /// Stop after this number of images, if 0 then don't use
    int stop_at;
-   
+
    /// Known volume. If -1, not applied.
    double known_volume;
 
@@ -213,7 +215,7 @@ public:
 
    /// Is this a crystal 0 means NO 1 YES
    bool is_crystal;
-   
+
    /// Variability analysis
    bool variability_analysis;
 
@@ -276,25 +278,25 @@ public:
    //@{
    /// A list with the symmetry matrices
    SymList         SL;
-   
+
    /// Projection X dimension
    int             projXdim;
 
    /// Projection Y dimension
    int             projYdim;
-   
+
    /// File handler for the history file
    ofstream        *fh_hist;
-   
+
    /// Array with all the sorting information for each projection
    Recons_info     *IMG_Inf;
-   
+
    /// Order in which projections will be presented to algorithm
    matrix1D<int>   ordered_list;
-   
+
    /// Total number of images to process (taking symmetries into account)
    int             numIMG;
-   
+
    /// Number of different images (without symmetries)
    int             trueIMG;
 
@@ -317,7 +319,7 @@ public:
    /** Surface mask.
        The volume is supposed to be 0 where the mask is 1. */
    VolumeXmipp *surface_mask;
-   
+
    /** POCS frequency.
        POCS restrictions are imposed every (this value) projections.
        By default, 1*/
@@ -328,7 +330,7 @@ public:
        is involved */
    GridVolumeT<int> *GVNeq;
 
-   /// CTF 
+   /// CTF
    FourierMask ctf;
 
    /// multiple CTF mode
@@ -369,10 +371,10 @@ public:
        the pojection size, projection order, symmetry matrices
        list, history handler (don't forget to close it at the end), number
        of images, basis side information and initial basis volume.
-       
+
        Note: It is supposed that time has been previously configured with
        time_config().
-       
+
        The info level takes the following values:
         \\ BASIC: Generate basis side information
 	\\ FULL: Generate all the rest needed values.
@@ -388,7 +390,7 @@ public:
        and the number of equations and unknowns are shown at the end.
        Otherwise nothing is printed (this is the suggested debugging level
        for parallel processing). */
-   void compute_CAV_weights(GridVolume &vol_basis0, 
+   void compute_CAV_weights(GridVolume &vol_basis0,
       int numProjs_node, int debug_level=0);
 
    /** Lambda for iteration n (first one is iteration 0).
@@ -414,7 +416,7 @@ public:
       if (n>=imax) return kappa_list(imax-1);
       else         return kappa_list(n);
    }
-   
+
    /** Returns X dimension for projections under use. */
    int ProjXdim();
 
@@ -433,10 +435,10 @@ public:
    perpendicular one is chosen. The remaining set of images are compared
    to this two images and the most perpendicular one to the former two
    is chosen, and so on until no image is left in the set.
-   
+
    If the result in ordered list is 4, 70, 54, 203, 1, 0, ... it means
    that the first image is the number 4, then goes the 70, then the 54, ...
-   
+
    If N!=-1 then the product is done only with the last N images. A very
    useful value is N=2*/
 void sort_perpendicular (int numIMG, Recons_info *IMG_Inf,
@@ -452,7 +454,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list);
 //@}
 
 /**@name Template routines
-   The Template routines try to help you to write an ART process, 
+   The Template routines try to help you to write an ART process,
    they go from writing the parameters used to provide the framework for
    the ART process. There are some routines you should provide from
    outside. Take \Ref{Plain ART} as an example. */
@@ -464,7 +466,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list);
     the side information. At the end the routine makes a call to the
     operator << of the Extra_ART_Parameters to show the specific part
     of the History.
-    
+
     Basic_ART_Parameters is not constant since things are written in
     \Ref{Basic_ART_Parameters::fh_hist}.*/
 template <class Extra_ART_Parameters>
@@ -476,15 +478,15 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     it needs the side information to be fully computed. It throws
     a lot of information to the screen and to the history file (side.fh_hist),
     specially this one must exist.
-    
+
     The GridVolume must have as input an initial guess for the solution,
     and when this function finishes, it contains the final solution volume
     in basis.
-    
+
     The rank is the identification number of the process running this function.
     If it is -1, the function is run in seuqential mode. If it is 0, then
     it is the root process.
-    
+
     See the \Ref{Basic_ART_Parameters} for more information
     about how to generate the iterations.
 */
@@ -546,9 +548,9 @@ struct Recons_info {
        coming from the same projection by symmetry relationships should
        have the same random seed. */
    int    seed;
-}; 
+};
 
-/** Build from a Selection File and a Symmetry List. 
+/** Build from a Selection File and a Symmetry List.
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
 void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
@@ -572,7 +574,7 @@ public:
    vector < matrix3D<double> > VA;
 
    /// Number of updates so far
-   int N;   
+   int N;
 
    /// Constructor
    VariabilityClass(Basic_ART_Parameters *_prm,
@@ -581,7 +583,7 @@ public:
 
    /** Start a new ART iteration. */
    void newIteration();
-   
+
    /** Update data with a new volume.
        The update volume is set to zeros after this function */
    void newUpdateVolume(GridVolume *ptr_vol_out, Projection &read_proj);
@@ -623,7 +625,7 @@ public:
    POCSClass(Basic_ART_Parameters *_prm,
       int _Zoutput_volume_size, int _Youtput_volume_size,
       int _Xoutput_volume_size);
-   
+
    /// Start New ART iteration
    void newIteration();
 
@@ -637,5 +639,6 @@ public:
 
 //@}
 
-#include "Src/Basic_art.inc"
+#include "basic_art.inc"
+
 #endif

@@ -22,15 +22,12 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-                                                                                
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippFilters.hh>
- 
- 
-/* PROTOTYPES -------------------------------------------------------------- */
+
+#include <data/progs.h>
+#include <data/args.h>
+#include <data/mask.h>
+#include <data/filters.h>
+
 class Similarity_parameters: public Prog_parameters {
 public:
   FileName    fn_ref,fn_msk;
@@ -81,7 +78,7 @@ public:
       if (check_param(argc,argv,"-cc")) {domi=false; doeu=false; doco=false;}
       if (check_param(argc,argv,"-mi")) {docc=false; doeu=false; doco=false;}
       if (check_param(argc,argv,"-eu")) {domi=false; docc=false; doco=false;}
-      
+
    } catch (Xmipp_error XE) {cout << XE; usage(); exit(1);}
   }
 
@@ -101,11 +98,11 @@ public:
     cerr << "  [-mi ]                    : Only calculate mutual information\n";
   }
 };
-                                                                                                   
+
 
 void process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Similarity_parameters *eprm=(Similarity_parameters *) prm;
-                                                                                                   
+
    double co,cc,eu,mi;
    if (!eprm->usemask) {
      if (eprm->doco) co=correlation(eprm->refI(),img());

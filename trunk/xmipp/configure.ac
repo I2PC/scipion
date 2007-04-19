@@ -134,6 +134,7 @@ AC_CHECK_LIB(pthread, main)
 
 AC_OUTPUT( \
     external/Makefile \
+	external/bilib/Makefile \
 	external/inria/Makefile \
 	libraries/Makefile \
 	libraries/data/Makefile \
@@ -149,7 +150,7 @@ AC_OUTPUT( \
 	applications/scripts/Makefile \
     applications/scripts/backwards/Makefile \
 	applications/scripts/selfile_create/Makefile \
-	applications/scripts/convert_pdbdescr/Makefile \
+	applications/scripts/convert_pdb2descr/Makefile \
 	applications/scripts/convert_pdb2surface/Makefile \
 	applications/scripts/extract_sidechain_from_pdb/Makefile \
 	applications/scripts/mlf_align2d/Makefile \
@@ -159,119 +160,121 @@ AC_OUTPUT( \
 	applications/programs/Makefile \
 	applications/programs/add_noise/Makefile \
 	applications/programs/adjust_volume_grey_levels/Makefile \
-	applications/programs/align_volumes/Makefile \
-	applications/programs/align2D/Makefile \
-	applications/programs/angular_distribution_show/Makefile \
-	applications/programs/angular_distance/Makefile \
-	applications/programs/angular_discrete_assign/Makefile \
-	applications/programs/angular_continuous_assign/Makefile \
-	applications/programs/angular_assign_for_tomogram/Makefile \
-	applications/programs/header_apply/Makefile \
-	applications/programs/docfile_append/Makefile \
-	applications/programs/reconstruct_art/Makefile \
-	applications/programs/ctf_estimate_from_micrograph/Makefile \
-	applications/programs/classify_batch_som/Makefile \
-	applications/programs/break_symmetry/Makefile \
+	applications/programs/align2d/Makefile \
 	applications/programs/align_tilt_pairs/Makefile \
-	applications/programs/selfile_compare/Makefile \
-	applications/programs/ctf_correct_phase/Makefile \
-	applications/programs/correlation/Makefile \
-	applications/programs/selfile_copy/Makefile \
-	applications/programs/phantom_create/Makefile \
-	applications/programs/ctf_profile/Makefile \
-	applications/programs/convert_data2img/Makefile \
-	applications/programs/convert_data2vol/Makefile \
-	applications/programs/crystal_shear/Makefile \
-	applications/programs/denoise/Makefile \
-	applications/programs/micrograph_denoise/Makefile \
-	applications/programs/docfile_histogram/Makefile \
-	applications/programs/micrograph_downsample/Makefile \
-	applications/programs/crystal_euler2mrc/Makefile \
-	applications/programs/psd_enhance/Makefile \
-	applications/programs/foms_evaluate/Makefile \
+	applications/programs/align_volumes/Makefile \
+	applications/programs/angular_assign_for_tomogram/Makefile \
+	applications/programs/angular_continuous_assign/Makefile \
+	applications/programs/angular_discrete_assign/Makefile \
+	applications/programs/angular_distance/Makefile \
+	applications/programs/angular_distribution_show/Makefile \
+	applications/programs/angular_neighbourhood/Makefile \
+	applications/programs/angular_projection_matching/Makefile \
+	applications/programs/average/Makefile \
+	applications/programs/break_symmetry/Makefile \
+	applications/programs/classify_batch_som/Makefile \
 	applications/programs/classify_fcmeans/Makefile \
-	applications/programs/find_center3d/Makefile \
 	applications/programs/classify_fkcn/Makefile \
-	applications/programs/mirror/Makefile \
-	applications/programs/fourier_filter/Makefile \
 	applications/programs/classify_fsom/Makefile \
-	applications/programs/headerinfo/Makefile \
-	applications/programs/histogram/Makefile \
-	applications/programs/ctf_correct_idr/Makefile \
-	applications/programs/convert_img2data/Makefile \
-	applications/programs/header_print/Makefile \
 	applications/programs/classify_kcmeans/Makefile \
 	applications/programs/classify_kerdensom/Makefile \
+	applications/programs/classify_pca/Makefile \
+	applications/programs/classify_project_pca/Makefile \
+	applications/programs/classify_sammon_projection/Makefile \
+	applications/programs/classify_som/Makefile \
+	applications/programs/convert_data2descr/Makefile \
+	applications/programs/convert_data2img/Makefile \
+	applications/programs/convert_data2pdb/Makefile \
+	applications/programs/convert_data2vol/Makefile \
+	applications/programs/convert_img2data/Makefile \
+	applications/programs/convert_pdb2vol/Makefile \
+	applications/programs/convert_raw22spi/Makefile \
+	applications/programs/convert_spi22ccp4/Makefile \
+	applications/programs/convert_spi22em/Makefile \
+	applications/programs/convert_tiff2raw/Makefile \
+	applications/programs/convert_vol2data/Makefile \
+	applications/programs/convert_vol2pseudo/Makefile \
+	applications/programs/convert_voxels22blobs/Makefile \
+	applications/programs/correlation/Makefile \
+	applications/programs/crystal_aph2img/Makefile \
+	applications/programs/crystal_create_surface/Makefile \
+	applications/programs/crystal_euler2mrc/Makefile \
 	applications/programs/crystal_lattice_vectors/Makefile \
+	applications/programs/crystal_shear/Makefile \
+	applications/programs/crystal_skew/Makefile \
+	applications/programs/crystal_unbend/Makefile \
+	applications/programs/ctf_correct_idr/Makefile \
+	applications/programs/ctf_correct_phase/Makefile \
+	applications/programs/ctf_estimate_from_micrograph/Makefile \
+	applications/programs/ctf_profile/Makefile \
+	applications/programs/ctf_view/Makefile \
+	applications/programs/denoise/Makefile \
+	applications/programs/docfile_append/Makefile \
+	applications/programs/docfile_histogram/Makefile \
+	applications/programs/edit/Makefile \
+	applications/programs/find_center3d/Makefile \
+	applications/programs/foms_evaluate/Makefile \
+	applications/programs/fourier_filter/Makefile \
+	applications/programs/fourier_transform/Makefile \
+	applications/programs/header_apply/Makefile \
+	applications/programs/headerinfo/Makefile \
+	applications/programs/header_print/Makefile \
+	applications/programs/histogram/Makefile \
 	applications/programs/make_spectra/Makefile \
 	applications/programs/mask/Makefile \
-	applications/programs/try_symmetry/Makefile \
-	applications/programs/phantom_simulate_microscope/Makefile \
+	applications/programs/mask_design/Makefile \
+	applications/programs/micrograph_denoise/Makefile \
+	applications/programs/micrograph_downsample/Makefile \
+	applications/programs/micrograph_mark/Makefile \
+	applications/programs/micrograph_scissor/Makefile \
+	applications/programs/micrograph_window/Makefile \
+	applications/programs/mirror/Makefile \
 	applications/programs/ml_align2d/Makefile \
 	applications/programs/ml_align2d_combine/Makefile \
 	applications/programs/ml_refine3d/Makefile \
 	applications/programs/morphology/Makefile \
-	applications/programs/selfile_move/Makefile \
+	applications/programs/mpi_angular_continuous_assign/Makefile \
+	applications/programs/mpi_angular_discrete_assign/Makefile \
+	applications/programs/mpi_angular_projection_matching/Makefile \
+	applications/programs/mpi_art/Makefile \
+	applications/programs/mpi_ml_align2d/Makefile \
+	applications/programs/mpi_ml_refine3d/Makefile \
+	applications/programs/mpi_reconstruct_wbp/Makefile \
+	applications/programs/mpi_run/Makefile \
 	applications/programs/normalize/Makefile \
 	applications/programs/operate/Makefile \
-	applications/programs/classify_pca/Makefile \
-	applications/programs/convert_pdb2vol/Makefile \
+	applications/programs/phantom_create/Makefile \
+	applications/programs/phantom_create_random/Makefile \
+	applications/programs/phantom_simulate_microscope/Makefile \
+	applications/programs/phantom_test_reconstruction/Makefile \
 	applications/programs/phantom_transform/Makefile \
 	applications/programs/project/Makefile \
-	applications/programs/angular_neighbourhood/Makefile \
-	applications/programs/angular_projection_matching/Makefile \
-	applications/programs/classify_project_pca/Makefile \
-	applications/programs/scale_pyramid/Makefile \
+	applications/programs/psd_enhance/Makefile \
 	applications/programs/range_adjust/Makefile \
-	applications/programs/convert_raw22spi/Makefile \
-	applications/programs/phantom_test_reconstruction/Makefile \
-	applications/programs/reverse_endian/Makefile \
+	applications/programs/reconstruct_art/Makefile \
+	applications/programs/reconstruct_wbp/Makefile \
 	applications/programs/resolution_fsc/Makefile \
-	applications/programs/selfile_delete/Makefile \
+	applications/programs/resolution_ssnr/Makefile \
+	applications/programs/reverse_endian/Makefile \
 	applications/programs/rotate/Makefile \
-	applications/programs/classify_sammon_projection/Makefile \
 	applications/programs/scale/Makefile \
-	applications/programs/micrograph_scissor/Makefile \
-	applications/programs/volume_segment/Makefile \
+	applications/programs/scale_pyramid/Makefile \
+	applications/programs/selfile_compare/Makefile \
+	applications/programs/selfile_copy/Makefile \
+	applications/programs/selfile_delete/Makefile \
+	applications/programs/selfile_move/Makefile \
 	applications/programs/selfile_select/Makefile \
+	applications/programs/selfile_split/Makefile \
 	applications/programs/selfile_statistics/Makefile \
 	applications/programs/separate_objects/Makefile \
 	applications/programs/shift/Makefile \
-	applications/programs/crystal_skew/Makefile \
-	applications/programs/classify_som/Makefile \
+	applications/programs/show/Makefile \
 	applications/programs/sort_by_statistics/Makefile \
-	applications/programs/selfile_split/Makefile \
-	applications/programs/convert_spi22em/Makefile \
-	applications/programs/convert_spi22ccp4/Makefile \
-	applications/programs/crystal_aph2img/Makefile \
-	applications/programs/resolution_ssnr/Makefile \
-	applications/programs/average/Makefile \
 	applications/programs/symmetrize/Makefile \
 	applications/programs/threshold/Makefile \
-	applications/programs/convert_data2pdb/Makefile \
-	applications/programs/convert_data2descr/Makefile \
-	applications/programs/crystal_unbend/Makefile \
-	applications/programs/fourier_transform/Makefile \
-	applications/programs/convert_vol2data/Makefile \
-	applications/programs/convert_vol2pseudo/Makefile \
-	applications/programs/convert_voxels22blobs/Makefile \
-	applications/programs/reconstruct_wbp/Makefile \
+	applications/programs/try_symmetry/Makefile \
+	applications/programs/volume_segment/Makefile \
 	applications/programs/window/Makefile \
-	applications/programs/micrograph_window/Makefile \
-	applications/programs/ctf_view/Makefile \
-	applications/programs/edit/Makefile \
-	applications/programs/micrograph_mark/Makefile \
-	applications/programs/show/Makefile \
-	applications/programs/mask_design/Makefile \
-	applications/programs/convert_tiff2raw/Makefile \
-	applications/programs/mpi_art/Makefile \
-	applications/programs/mpi_angular_discrete_assign/Makefile \
-	applications/programs/mpi_angular_continuous_assign/Makefile \
-	applications/programs/mpi_ml_align2d/Makefile \
-	applications/programs/mpi_ml_refine3d/Makefile \
-	applications/programs/mpi_angular_projection_matching/Makefile \
-	applications/programs/mpi_reconstruct_wbp/Makefile \
-	applications/programs/mpi_run/Makefile \
 	Makefile \
 	m4/Makefile )
 

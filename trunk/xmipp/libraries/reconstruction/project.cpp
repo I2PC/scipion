@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_project.hh"
-#include "../../directions.hh"
-#include <XmippData/xmippArgs.hh>
+#include "project.h"
+#include "directions.h"
+
+#include <data/args.h>
 
 /* Read from command line ================================================== */
 void Prog_Project_Parameters::read(int argc, char **argv) {
@@ -252,7 +253,7 @@ void Projection_Parameters::read(FileName fn_proj_param) {
 	   else Ncenter_avg=0;
            lineNo=12;
            break;
-      } /* switch end */  
+      } /* switch end */
    } /* while end */
    if (lineNo!=12)
       REPORT_ERROR(3007,(string)"Prog_Project_Parameters::read: I "
@@ -287,7 +288,7 @@ void Projection_Parameters::write(FileName fn_proj_param) {
       "%d %d\n",proj_Ydim, proj_Xdim);
    fprintf(fh_param,
       "#\n");
-   
+
    fprintf(fh_param,
       "# Angle Definitions ---------------------------------------------\n");
    if (fn_angle!="") {
@@ -368,7 +369,7 @@ void Projection_Parameters::write(FileName fn_proj_param) {
    fprintf(fh_param,"%f ",Ncenter_dev);
    if (Ncenter_avg!=0) fprintf(fh_param,"%f \n",Ncenter_avg);
    else fprintf(fh_param,"\n");
-   
+
    fclose(fh_param);
 }
 
@@ -395,7 +396,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
       case ANGLE_RANGE_RANDOM_GROUPS: limit=range.samples; break;
       case ANGLE_RANGE_RANDOM       : limit=Nrot*Ntilt*Npsi; break;
    }
-   
+
    // Which column to write in the document file ...........................
    switch(ang_name) {
       case 'r': idx=0; break;
@@ -419,7 +420,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
 	       case 't': ang=RAD2DEG(acos(rnd_unif(unif_min,unif_max))); break;
 	    }
        }
-          
+
 
        // Copy this angle to those projections belonging to this group .....
        // If there is any group
@@ -552,7 +553,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
             DF.go_first_data_line();
 	    vector<int> to_remove;
 	    while (!DF.eof()) {
-               if (DF.get_current_line().get_no_components()==0) 
+               if (DF.get_current_line().get_no_components()==0)
                   to_remove.push_back(DF.get_current_key());
 	       DF.next_data_line();
 	    }
@@ -586,7 +587,7 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
    const Prog_Project_Parameters &prog_prm) {
 // Generate Projection angles
    Assign_angles(DF,prm,prog_prm.fn_sym);
-   
+
 // Load Phantom and set working mode
    if (Is_VolumeXmipp(prm.fn_phantom)) {
       phantom_vol.read(prm.fn_phantom);
@@ -608,7 +609,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
    cerr << "Projecting ...\n";
    if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
    SF.reserve(side.DF.dataLineNo());
-   
+
    DocFile DF_movements;
    DF_movements.append_comment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
    matrix1D<double> movements(8);
@@ -625,7 +626,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
       movements(0) = rot  = side.DF(0);
       movements(1) = tilt = side.DF(1);
       movements(2) = psi  = side.DF(2);
-      
+
       // Choose Center displacement ........................................
       double shiftX=rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
       double shiftY=rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
@@ -650,7 +651,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
             // Project mathematical volume as a crystal
             project_crystal(aux,proj,prm,side,prm_crystal,rot,tilt,psi);
       }
-            
+
       // Add noise in angles and voxels ....................................
       rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
       tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
@@ -660,21 +661,21 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
       movements(5) = psi-movements(2);
       proj.set_eulerAngles(rot,tilt,psi);
       IMGMATRIX(proj).add_noise(prm.Npixel_avg, prm.Npixel_dev,"gaussian");
-      
+
       // Save ..............................................................
       proj.write(fn_proj);
       NumProjs++;
       SF.insert(fn_proj,SelLine::ACTIVE);
       DF_movements.append_data_line(movements);
-      
+
       side.DF.next_data_line();
    }
    if (!(prm.tell&TELL_SHOW_ANGLES)) progress_bar(side.DF.dataLineNo());
-   
+
    DF_movements.write(prm.fn_projection_seed+"_movements.txt");
    return NumProjs;
 }
-    
+
 /* ROUT_project ============================================================ */
 int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
    randomize_random_generator();

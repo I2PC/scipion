@@ -7,28 +7,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef SHOWSPECTRASOM_H
 #define SHOWSPECTRASOM_H
 
-#include "showSpectra.hh"
-#include "showSOM.hh"
+#include "show_spectra.h"
+#include "show_som.h"
 
 /* COSS: This code is exactly the same as the one of ShowSOM but I haven't
          been capable of writing a class derived from ShowSOM and ShowSpectra.
@@ -40,7 +40,7 @@
 class ShowSpectraSOM: public ShowSpectra {
    Q_OBJECT;
 public:
-   // Apply geometric transformation when showing average & stddev of original 
+   // Apply geometric transformation when showing average & stddev of original
    // images and to compute the error image
    bool        apply_geo;
 protected:
@@ -56,7 +56,7 @@ protected:
    string  *cv_errors;
    // Info file
    QString infStr;
-   
+
     /* Initialization.
        Sets SFcv = NULL; and then calls to ShowSel::init() */
     virtual void init();

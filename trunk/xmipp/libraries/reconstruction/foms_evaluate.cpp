@@ -6,28 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include "../Prog_evaluate.hh"
-#include "../../volume_FOMs.hh"
+
+#include <data/args.h>
+#include <data/histogram.h>
+#include <data/mask.h>
+#include <data/selfile.h>
+
+#include "foms_evaluate.h"
+#include "volume_foms.h"
 
 #include <fstream>
 
@@ -171,7 +173,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
    fn_root=prm.fn_recons.without_extension();
    vol_recons.read(prm.fn_recons);
    vol_recons.move_origin_to_center();
-   
+
    // Read phantom and label ...............................................
    if (Is_VolumeXmipp(prm.fn_phantom)) {
       descr_mode=XMIPP_PHANTOM;
@@ -188,7 +190,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
       num_feat=phantom_descr.FeatNo();
       descr_mode=MATH_PHANTOM;
    }
-   
+
    // Check that both dimensions are equal .................................
    if ((vol_phantom().SliNo()!=vol_recons().SliNo()) ||
        (vol_phantom().RowNo()!=vol_recons().RowNo()) ||
@@ -198,11 +200,11 @@ void EVALUATE_Side_Info::produce_Side_Info(
           vol_phantom().RowNo() << " x " << vol_phantom().ColNo() << endl;
        cout << "Reconstruction: " << vol_recons().SliNo() << " x " <<
           vol_recons().RowNo() << " x " << vol_recons().ColNo() << endl;
-      
+
        cut_to_common_size(vol_phantom(),vol_recons());
        cout << "Cutting to common size " << vol_phantom().SliNo() << " x " <<
           vol_phantom().RowNo() << " x " << vol_phantom().ColNo() << endl;
-       
+
        cut_to_common_size(vol_label(),vol_recons());
    }
 
@@ -410,7 +412,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
    cout << "Recons  Stats: \n";
    cout << "   "; side.vol_recons().print_stats(); cout << endl;
    cout << "    range=" << max-min << endl; cout << endl;
-   
+
    // Show Structural consistency ..........................................
    printf("scL2        FOM:%f\n",results.scL2_FOM);
    printf("scL1        FOM:%f\n",results.scL1_FOM);
@@ -422,7 +424,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
    printf("sccorr      FOM:%f\n",results.sccorr_FOM);
    printf("scinf       FOM:%f\n",results.scinf_FOM);
    printf("resolution  FOM:%f\n",results.resol_FOM);
-   
+
    printf("\tFEATURE   scL2     scL1     scmu     scdev   scrange  sccorr    scinf \n");
    printf("\t------- -------- -------- -------- -------- -------- -------- --------\n");
    for (int i=0; i<=side.num_feat; i++) {
@@ -452,17 +454,17 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
    // Show Directional FOMs ................................................
    cout << "Directional ------------------------------------------------\n";
    printf("scrt        FOM:%f\n",results.drrt_FOM);
-   
+
    // Show Distance FOMs ...................................................
    cout << "Distance based ---------------------------------------------\n";
    printf("scbl        FOM:%f\n",results.dsbl_FOM);
    printf("scad        FOM:%f\n",results.dsad_FOM);
    }
-   
+
    // Save maps ............................................................
    if (prm.tell&SAVE_MAPS) {
       VolumeXmipp save, error;
-      
+
       // Save generated phantom
       cerr << "Saving generated phantom ...\n";
       side.vol_phantom.write(side.fn_root+"_eval_phantom.vol");
@@ -480,13 +482,13 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
       if (side.descr_mode==MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
       cerr << "Saving difference map ...\n";
       save.write(side.fn_root+"_eval_difference_map.vol");
-      
+
       // Save a map of quadratic errors
       save()=error()=error()*error();
       if (side.descr_mode==MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
       cerr << "Saving quadratic errors ...\n";
       save.write(side.fn_root+"_eval_quadratic_map.vol");
-      
+
       // Save a absolute difference map
       save()=ABSnD(side.vol_phantom()-side.vol_recons());
       if (side.descr_mode==MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
@@ -520,14 +522,14 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
       int sel_feat=0;
       string fn_out;
       ofstream fh_out;
-      
+
       cout << "Name of the filename to dump values: ";
       cin >> fn_out;
       fh_out.open(fn_out.c_str(), ios::out);
       if (!fh_out)
          REPORT_ERROR(3005,(string)"Evaluate show: Could not open " + fn_out
             + " for output");
-      
+
       while (sel_feat!=1000) {
          cout << "What feature do you want to see (" << -side.num_feat << ","
               << side.num_feat << ") (1000=finish): ";
@@ -559,7 +561,7 @@ void Evaluate_single_step(const Prog_Evaluate_Parameters &prm,
 
 // Compute FOMs
    compute_FOMs(prm, side, results);
-   
+
 // Show results
    show_FOMs(prm, side, results);
 }
@@ -689,14 +691,14 @@ void compute_FOMs_stats(const FOMs &foms, int i, FOMs &fmean, FOMs &fstddev) {
    stats__1(foms.scmu1,avg,stddev);    fmean.scmu1(i)   = avg; fstddev.scmu1(i)   = stddev;
    stats__1(foms.scdev1,avg,stddev);   fmean.scdev1(i)  = avg; fstddev.scdev1(i)  = stddev;
    stats__1(foms.scrange1,avg,stddev); fmean.scrange1(i)= avg; fstddev.scrange1(i)= stddev;
-  
+
    stats__1(foms.hsvr,avg,stddev);     fmean.hsvr(i)    = avg; fstddev.hsvr(i)    = stddev;
    stats__1(foms.hsmu,avg,stddev);     fmean.hsmu(i)    = avg; fstddev.hsmu(i)    = stddev;
    stats__1(foms.hsbr,avg,stddev);     fmean.hsbr(i)    = avg; fstddev.hsbr(i)    = stddev;
    stats__1(foms.hsdt,avg,stddev);     fmean.hsdt(i)    = avg; fstddev.hsdt(i)    = stddev;
-  
+
    stats__1(foms.drrt,avg,stddev);     fmean.drrt(i)    = avg; fstddev.drrt(i)    = stddev;
-  
+
    stats__1(foms.dsbl,avg,stddev);     fmean.dsbl(i)    = avg; fstddev.dsbl(i)    = stddev;
    stats__1(foms.dsad,avg,stddev);     fmean.dsad(i)    = avg; fstddev.dsad(i)    = stddev;
 }
@@ -704,7 +706,7 @@ void compute_FOMs_stats(const FOMs &foms, int i, FOMs &fmean, FOMs &fstddev) {
 /* Show ==================================================================== */
 ostream & operator << (ostream &out, const FOMs &foms) {
    out << "All results in all tests\n";
-   out << "--------------------------------------------------\n";   
+   out << "--------------------------------------------------\n";
    out << "scL2\n"     << foms.scL2.transpose()     << endl;
    out << "scL1\n"     << foms.scL1.transpose()     << endl;
    out << "scL2w\n"    << foms.scL2w.transpose()    << endl;
@@ -725,14 +727,14 @@ ostream & operator << (ostream &out, const FOMs &foms) {
    out << "scmu1\n"    << foms.scmu1.transpose()    << endl;
    out << "scdev1\n"   << foms.scdev1.transpose()   << endl;
    out << "scrange1\n" << foms.scrange1.transpose() << endl;
-  
+
    out << "hsvr\n"    << foms.hsvr.transpose()    << endl;
    out << "hsmu\n"    << foms.hsmu.transpose()    << endl;
    out << "hsbr\n"    << foms.hsbr.transpose()    << endl;
    out << "hsdt\n"    << foms.hsdt.transpose()    << endl;
-  
+
    out << "drrt\n"    << foms.drrt.transpose()    << endl;
-  
+
    out << "dsbl\n"    << foms.dsbl.transpose()    << endl;
    out << "dsad\n"    << foms.dsad.transpose()    << endl;
    out << "--------------------------------------------------\n";

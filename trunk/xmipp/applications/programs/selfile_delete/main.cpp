@@ -6,25 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippSelFiles.hh>
-#include <stdlib.h>
+#include <data/selfile.h>
+
+#include <cstdlib>
 
 /* Prototypes -============================================================= */
 
@@ -40,14 +41,14 @@ FileName       sel_file;   // selection file
    try {
        if (argc != 2) {Usage(argv); exit(0);} else {
        		sel_file = argv[1];
-       }       
+       }
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
 
 try {
 
 /* Perform copy or move =================================================== */
-  
+
   // Finds last slash
   string org_path;
   int break_point = -1;
@@ -57,7 +58,7 @@ try {
 	break;
     }
   }
-  
+
   // Copy only the path  	
   if (break_point >=0) {
     org_path.resize(break_point+1);
@@ -68,23 +69,23 @@ try {
    SelFile SF(sel_file);
    string comStr;
    while (!SF.eof()) {
-      // Get file  
+      // Get file
       SelLine line= SF.current();
       if (line.Is_data()) { 		//The SelLine is not a comment
-       FileName in_name = line.get_text();       
-       comStr = "rm " + org_path + in_name;       	       
-       
-       if (!system(comStr.c_str())) 
+       FileName in_name = line.get_text();
+       comStr = "rm " + org_path + in_name;       	
+
+       if (!system(comStr.c_str()))
 	   cout << " file " << org_path << in_name << " removed " << endl;
       }
       SF.next();
-   }  // while 
- 
-   	   
+   }  // while
+
+   	
    // now remove sel file
-   comStr = "rm " + sel_file;			 
-   system(comStr.c_str()); 
-   
+   comStr = "rm " + sel_file;			
+   system(comStr.c_str());
+
 } catch (Xmipp_error XE) {cout << XE;}
    exit(0);
 } //main
@@ -99,12 +100,12 @@ void Usage (char **argv) {
      "\nParameter Values: (note space before value)"
      "\nI/O parameters"
      "\n    input_file    input sel file"
-     "\n  "     
+     "\n  "
      "\nExample: "
      "\n    rmsel c3u.sel "
      "\n    (will remove all images in c3u.sel file ) "
-          
-     "\n"      
+
+     "\n"
      ,argv[0]);
 }
 

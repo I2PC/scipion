@@ -6,26 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_downsample.hh"
-#include "../../xmippArgs.hh"
-#include "../../xmippMasks.hh"
+#include "micrograph_downsample.h"
+#include "args.h"
+#include "mask.h"
 
 // Read --------------------------------------------------------------------
 void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
@@ -131,7 +131,7 @@ string Prog_downsample_prm::command_line() const {
 void Prog_downsample_prm::generate_kernel() {
    // Integer Kernel
    matrix2D<int>    ikernel;
-   
+
    switch (kernel_mode) {
       case KER_RECTANGLE:
          kernel.resize(Yrect,Xrect); kernel.init_constant(1);

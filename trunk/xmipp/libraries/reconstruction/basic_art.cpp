@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
@@ -29,8 +29,8 @@
    in the Basic_art.inc file and must be included in each specific
    implementation (single particles, crystals, ...) */
 
-#include "../Basic_art.hh"
-#include "../recons_misc.hh"
+#include "basic_art.h"
+#include "recons_misc.h"
 
 /* Default values ========================================================== */
 void Basic_ART_Parameters::default_values() {
@@ -66,7 +66,7 @@ void Basic_ART_Parameters::default_values() {
     is_crystal         = false;
     variability_analysis=false;
     noisy_reconstruction=false;
-    
+
     IMG_Inf            = NULL;
     D                  = NULL;
     Dinv               = NULL;
@@ -74,7 +74,7 @@ void Basic_ART_Parameters::default_values() {
 
     surface_mask       = NULL;
     POCS_freq          = 1;
-    
+
     known_volume       =-1;
     positivity         =false;
     unmatched          =false;
@@ -208,7 +208,7 @@ void Basic_ART_Parameters::read(int argc, char **argv) {
        basis.set_sampling_rate(sampling);
        grid_relative_size /= sampling;
        if (R != -1.) R /= sampling;
-       ref_trans_step /= sampling;	     
+       ref_trans_step /= sampling;	
     }
     if (CHECK_PARAM("output_size")) {
        int i=position_param(argc,argv,"-output_size");
@@ -341,7 +341,7 @@ void Basic_ART_Parameters::usage_more() {
      << "\n   [-R interest_sphere=-1] Radius of the interest sphere"
      << "\n   [-ext proj_ext=0]     projection extension"
      << "\n   [-output_size Zsize Ysize Xsize] output volume size in PIXELS\n"
-     << "\n   [-sampling=1]         sampling rate,  affects to -r, -g, -R and" 
+     << "\n   [-sampling=1]         sampling rate,  affects to -r, -g, -R and"
      << "\n                          -ref_trans_step"
      << "\n                         Also to -mod_a and mod_b when processing"
      << "\n                         crystals"
@@ -381,7 +381,7 @@ void sort_perpendicular (int numIMG, Recons_info *IMG_Inf,
    matrix2D<double> v(numIMG,3);
    matrix2D<double> euler;
    matrix1D<double> product(numIMG);
-   
+
    // Initialisation
    ordered_list.resize(numIMG);
    for (i=0; i<numIMG; i++) {
@@ -397,12 +397,12 @@ void sort_perpendicular (int numIMG, Recons_info *IMG_Inf,
       Euler_angles2matrix(IMG_Inf[i].rot,IMG_Inf[i].tilt,0.f,euler);
       euler.getRow(2,z); v.setRow(i,z);
    }
-   
+
    // Choose randomly a projection as the first one to be presented
    i=(int)rnd_unif(0,numIMG);
    VEC_ELEM(chosen,i)=1;
    VEC_ELEM(ordered_list,0)=i;
-   
+
    // Choose the rest of projections
    cerr << "Sorting projections ...\n";
    init_progress_bar(numIMG-1);
@@ -424,11 +424,11 @@ void sort_perpendicular (int numIMG, Recons_info *IMG_Inf,
        // Store the chosen vector and mark it as chosen
        VEC_ELEM(ordered_list,i)=min_prod_proj;
        VEC_ELEM(chosen,min_prod_proj)=1;
-       
+
        // The progress bar is updated only every 10 images
        if (i%10==0) progress_bar(i);
    }
-   
+
    // A final call to progress bar to finish a possible small piece
    progress_bar(numIMG-1);
    cout << endl;
@@ -451,7 +451,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
    // Initialisation
    ordered_list.resize(numIMG);
    chosen.init_zeros(numIMG);
-   
+
    cerr << "Randomizing projections ...\n";
    init_progress_bar(numIMG-1);
    int ptr=0;
@@ -476,7 +476,7 @@ void sort_randomly (int numIMG, matrix1D<int> &ordered_list) {
       // The progress bar is updated only every 10 images
       if (i%10==0) progress_bar(i);
    }
-   
+
    // A final call to progress bar to finish a possible small piece
    progress_bar(numIMG-1);
    cout << endl;
@@ -550,11 +550,11 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
       build_recons_info(selfile,selctf,fn_ctf,SL,IMG_Inf,do_not_use_symproj);
 
       if (!(tell&TELL_MANUAL_ORDER))
-	 if (parallel_mode==SIRT || 
+	 if (parallel_mode==SIRT ||
 	 	parallel_mode==pSIRT ||
-		parallel_mode==pfSIRT || 
-		parallel_mode==pCAV || 
-	 	eq_mode==CAV || 
+		parallel_mode==pfSIRT ||
+		parallel_mode==pCAV ||
+	 	eq_mode==CAV ||
 	 	rank > 0 || dont_sort )
 				   no_sort(numIMG,ordered_list);
 	 else if (random_sort)     sort_randomly(numIMG,ordered_list);
@@ -584,7 +584,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
        /*
        read_proj().init_zeros();
        fn_resi+="."+fn_root+"_residual";
-       if (IMG_Inf[iact_proj].sym>-1) 
+       if (IMG_Inf[iact_proj].sym>-1)
 	 fn_resi+=ItoA(IMG_Inf[iact_proj].sym);
        read_proj.write(fn_resi);
        */
@@ -602,7 +602,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 	    Grid grid_basis;
       	    if (R==-1) {
 	       matrix1D<double> corner;
-	       if (Zoutput_volume_size==0) 
+	       if (Zoutput_volume_size==0)
         	  corner=vector_R3((double)projXdim/2, (double)projXdim/2,
 		     (double)projXdim/2);
 	       else
@@ -615,7 +615,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         	  it there is a basis center as near the border as possible. */
 	       corner=corner+proj_ext/*CO: -blob.radius/2*/;
 	       switch (grid_type) {
-        	  case (CC): 
+        	  case (CC):
         	     grid_basis=Create_CC_grid(grid_relative_size,-corner,corner);
         	     break;
         	  case (FCC):
@@ -627,7 +627,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 	       }
 	    } else {
 	       switch (grid_type) {
-        	  case (CC): 
+        	  case (CC):
         	     grid_basis=Create_CC_grid(grid_relative_size,R);
         	     break;
         	  case (FCC):
@@ -655,12 +655,12 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 #undef DEBUG
 
 /* Count number of equations for CAV --------------------------------------- */
-void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0, 
+void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
    int numProjs_node, int debug_level) {
    if (GVNeq==NULL) GVNeq=new GridVolumeT<int>;
    GVNeq->resize(vol_basis0);
    GVNeq->init_zeros();
-   
+
    Projection read_proj;
    if (debug_level>0) {
       cerr << "Counting equations ...\n";
@@ -680,7 +680,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
 
        count_eqs_in_projection(*GVNeq, basis, read_proj);
 
-       if (debug_level>0 && 
+       if (debug_level>0 &&
            act_proj%MAX(1,numIMG/60)==0) progress_bar(act_proj);
    }
    if (debug_level>0) {

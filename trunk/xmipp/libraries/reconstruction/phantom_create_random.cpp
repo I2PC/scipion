@@ -6,27 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 //Sun Nov 14 22:07:48 EST 1999: added binary option (R. Marabini)
 
-#include "../Prog_random_phantom.hh"
-#include <XmippData/xmippHistograms.hh>
-#include "../Prog_FourierFilter.hh"
+#include "phantom_create_random.h"
+#include "fourier_filter.h"
+
+#include <data/histogram.h>
 
 /* Empty constructor ======================================================= */
 Prog_Random_Phantom_Parameters::Prog_Random_Phantom_Parameters() {
@@ -85,7 +86,7 @@ void Random_Phantom_Side_Info::produce_Side_Info(
    } else {
       voxel_mode=false;
       Random.read(prm.fn_random);
-   
+
       // Check that it meets the conditions
       if (Random.FeatNo()%2!=0)
          EXIT_ERROR(1,(string)"Random_phantom: The number of features in "+
@@ -116,14 +117,14 @@ void generate_realization_of_random_phantom(
    int loop_conunter;
 // double distance2;
 // distance2 *= fabs(prm.RPP_distance);
-    
+
    // Global characteristics ...............................................
    Realization.clear();
    Realization.xdim               = side.Random.xdim;
    Realization.ydim               = side.Random.ydim;
    Realization.zdim               = side.Random.zdim;
    Realization.Background_Density = side.Random.Background_Density;
-   
+
    randomize_random_generator();
    for (int i=1; i<=side.Random.FeatNo(); i+=2) {
        // side.Random sphere ...............................................
@@ -233,37 +234,37 @@ void generate_realization_of_random_phantom(
 
        for (j=1; j<=Realization.FeatNo(); j++)
            {
-           if(Realization(j)->Density != (-0.)) 
+           if(Realization(j)->Density != (-0.))
               {
-               if( ((feat_aux->Center - Realization(j)->Center).module() 
-                                                       < prm.RPP_distance) 
+               if( ((feat_aux->Center - Realization(j)->Center).module()
+                                                       < prm.RPP_distance)
                                                        && prm.RPP_distance > 0)
 
                  Valid_Feature=0;
                if(feat_aux->Center.module() > prm.RPP_radius &&
-                                          prm.RPP_radius > 0) 
+                                          prm.RPP_radius > 0)
                  Valid_Feature=0;
               }
            }
        if(loop_conunter > MAX_LOOP_NUMBER)
           {
           cout << "\nOh My Dear after " << MAX_LOOP_NUMBER  << " iterations"
-               << "\nI simply can not get a correct feature" 
+               << "\nI simply can not get a correct feature"
                << "\nConsider relaxing the constraints" << endl;
-          cout << "The troublesome feature is no: "<<i/2 << 
-                  "(first one is 0)"<< feat_aux <<endl;     
+          cout << "The troublesome feature is no: "<<i/2 <<
+                  "(first one is 0)"<< feat_aux <<endl;
           Valid_Feature=1;
           }
-       loop_conunter++;   
+       loop_conunter++;
 
-       } while ((feat_aux->volume()<prm.min_vol && 
+       } while ((feat_aux->volume()<prm.min_vol &&
                 prm.min_vol!=0) || (Valid_Feature==0));
        feat=feat_aux;
 
        // Copy common characteristics ......................................
        if (prm.discrete) feat->Density=rint(feat->Density);
        feat->Add_Assign = side.Random(i)->Add_Assign;
-       
+
        // Store this feature ...............................................
        Realization.add(feat);
    }
@@ -277,7 +278,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 // Produce Side Information
    Random_Phantom_Side_Info side;
    side.produce_Side_Info(prm);
-   
+
    if (prm.N_stats==-1) {
       if (side.voxel_mode)
          REPORT_ERROR(1,"Random_phantom: Cannot generate a random realization"
@@ -293,9 +294,9 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
          ctf.ctf.read(prm.fn_CTF);
          ctf.ctf.Produce_Side_Info();
       }
-   
+
       int Xdim=prm.Xdim, Ydim=prm.Ydim;
-      if (Xdim==-1) 
+      if (Xdim==-1)
          if (!side.voxel_mode) Xdim=side.Random.xdim;
          else                  Xdim=XSIZE(side.VoxelPhantom());
       if (Ydim==-1) Ydim=Xdim;
@@ -314,7 +315,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 	 if (!side.voxel_mode) volume(n)=Realization.volume();
          else volume(n)=
                  side.VoxelPhantom().count_threshold("above",0,0);
-         
+
          // Compute projection
          if (!side.voxel_mode)
             Realization.project_to(proj, Ydim, Xdim,

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Jorge García de la Nava Ruiz (gdl@ac.uma.es)
+ * Authors:     Jorge Garcï¿½a de la Nava Ruiz (gdl@ac.uma.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *              Alberto Pascual Montano (pascual@cnb.uam.es)
  *
@@ -8,30 +8,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #include <strstream>
+
 #ifdef __sun
   #include <ieeefp.h>
 #endif
-#include "../xmippPC.hh"
-#include "../xmippDistances.hh"
 
+#include "pca.h"
+#include "distance.h"
 
 /**
 * Calculate the eigenval/vecs
@@ -60,8 +61,8 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	{
 
     	if (verbosity)
-  		listener->OnReportOperation((string) "Normalizing....\n");  
-        if (verbosity == 1)    
+  		listener->OnReportOperation((string) "Normalizing....\n");
+        if (verbosity == 1)
            listener->OnInitOperation(n);
 	
 		//Get the mean of the given cluster of vectors
@@ -76,13 +77,13 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 				}
 			}
 			mean.push_back(sum/l);
-			if (verbosity == 1)    
+			if (verbosity == 1)
       			   listener->OnProgress(k);
 		}
-	        if (verbosity == 1)    
+	        if (verbosity == 1)
       	          listener->OnProgress(n);
 
-                if (verbosity == 1)    
+                if (verbosity == 1)
                   listener->OnInitOperation(n);
 		for(int i=0;i<n;i++){
 			for(int j=0;j<=i;j++){
@@ -99,10 +100,10 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 				if(l) a[i][j]=a[j][i]=sum/l;
 				else a[i][j]=a[j][i]=0;
 			}
-	        	if (verbosity == 1)    
+	        	if (verbosity == 1)
       	          		listener->OnProgress(i);
 		}
-	        if (verbosity == 1)    
+	        if (verbosity == 1)
       	          listener->OnProgress(n);
 
 //		for(int i=0;i<n;i++)
@@ -131,13 +132,13 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	int nrot=0;
 
     	if (verbosity)
-  		listener->OnReportOperation((string) "Diagonalizing matrix....\n");  
-        if (verbosity == 1)    
+  		listener->OnReportOperation((string) "Diagonalizing matrix....\n");
+        if (verbosity == 1)
            listener->OnInitOperation(50);
 
 	//Jacobi method (it=iterationn number)
 	for(int it=1;it<=50;it++){
-      	    	if ((verbosity == 1) && (it ==1))    
+      	    	if ((verbosity == 1) && (it ==1))
       			listener->OnProgress(0);
 	
 		xmippFeature tresh;
@@ -163,7 +164,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 					v[k]=t;
 				}
 			}
-      			if (verbosity == 1)    
+      			if (verbosity == 1)
           			listener->OnProgress(50);
 			return;
 		}
@@ -229,12 +230,12 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 	    z[ip] = 0.0;
 		}
 		
-      	    if (verbosity == 1)    
+      	    if (verbosity == 1)
       		listener->OnProgress(it-1);
 		
 	}//for it
 	
-      	if (verbosity == 1)    
+      	if (verbosity == 1)
           listener->OnProgress(50);
 	
 
@@ -245,12 +246,12 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 void xmippPC::prepare_for_correlation() {
    int nmax=D;
    int dmax=mean.size();
-   
+
    // Initialize
    prod_ei_mean.resize(nmax);
    prod_ei_ei.resize(nmax);
    avg_ei.resize(nmax);
-   
+
    // Compute products <ei,ei>, <ei,mean>
    for (int n=0; n<nmax; n++) {
       prod_ei_ei[n]=prod_ei_mean[n]=avg_ei[n]=0;
@@ -291,7 +292,7 @@ int xmippPC::Dimension_for_variance(double th_var) {
    double sum=0;
    th_var/=100;
    for (int i=0; i<imax; i++) sum+=eigenval[i];
-   
+
    double explained=0;
    int i=0;
    do {
@@ -349,7 +350,7 @@ istream& operator >> (istream &in, xmippPC &PC) {
    PC.set_Dimension(D);
    PC.eigenval.resize(D);
    PC.eigenvec.resize(D);
-   
+
    int size;
    getline(in,read_line);
    sscanf(read_line.c_str(),"Mean vector: (%d) --->",&size);
@@ -358,7 +359,7 @@ istream& operator >> (istream &in, xmippPC &PC) {
    istrstream istr1(read_line.c_str());
    for (int j=0; j<size; j++)
       istr1 >> PC.mean[j];
-   
+
    for (int i=0; i<D; i++) {
       getline(in,read_line);
       float f;
@@ -428,27 +429,27 @@ void Running_PCA::new_sample(const matrix1D<double> &sample) {
    // Re-estimate sample mean
    sum_all_samples+=sample;
    current_sample_mean=sum_all_samples/n;
-   
+
    // Estimate eigenvectors
    matrix1D<double> un=sample; un.row=false;
    for (int j=0; j<J; j++) {
       if (n<=j+1) {
          // If there are not enough samples to estimate this eigenvector, then
          // skip it
-         double norm=un.module(); 
+         double norm=un.module();
          if (norm>XMIPP_EQUAL_ACCURACY) un/=norm;
          eigenvectors.setCol(j,un);
       } else {
          // If there are enough samples
          // Substract the sample mean to have a zero-mean vector
          if (j==0) un-=current_sample_mean;
-         
+
          // Compute the scale of this vector as the dot product
          // between un and the current eigenvector estimate
          double scale=0;
          for (int i=0; i<d; i++)
             scale+=DIRECT_VEC_ELEM(un,i)*DIRECT_MAT_ELEM(eigenvectors,i,j);
-         
+
          // Re-estimate the eigenvector
          double norm2=0;
          double w1=(double)(n-1.0)/n;
@@ -460,20 +461,20 @@ void Running_PCA::new_sample(const matrix1D<double> &sample) {
              norm2+=DIRECT_MAT_ELEM(eigenvectors,i,j)*
                     DIRECT_MAT_ELEM(eigenvectors,i,j);
          }
-         
+
          // Renormalize
          if (norm2>XMIPP_EQUAL_ACCURACY) {
             double norm=sqrt(norm2);
             for (int i=0; i<d; i++) DIRECT_MAT_ELEM(eigenvectors,i,j)/=norm;
          }
-         
+
          // Project un onto the space spanned by this eigenvector
          double project=0;
          for (int i=0; i<d; i++)
             project+=DIRECT_VEC_ELEM(un,i)*DIRECT_MAT_ELEM(eigenvectors,i,j);
          for (int i=0; i<d; i++)
             DIRECT_VEC_ELEM(un,i)-=project*DIRECT_MAT_ELEM(eigenvectors,i,j);
-         
+
          // Update the variance of this vector
          sum_proj (j)+=project;
          sum_proj2(j)+=project*project;

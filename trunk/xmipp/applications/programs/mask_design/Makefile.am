@@ -5,6 +5,7 @@ nodist_mask_design_SOURCES = maskimg_moc.cpp
 mask_design_LDADD = \
 	$(top_srcdir)/libraries/data/libXmippData.la \
 	$(top_srcdir)/libraries/classification/libXmippClassif.la \
+	$(top_srcdir)/external/bilib/libBilib.la \
 	@QT_LIBS@
 
 mask_design_LDFLAGS =

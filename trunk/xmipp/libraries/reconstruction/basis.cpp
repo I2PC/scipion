@@ -6,24 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../basis.hh"
+#include "basis.h"
 
 // Set default -------------------------------------------------------------
 void Basis::set_default() {
@@ -108,7 +108,7 @@ void Basis::set_sampling_rate(double _Tm) {
 // Produce side information ------------------------------------------------
 void Basis::produce_side_info(const Grid &grid) {
    switch (type) {
-      case (blobs): 
+      case (blobs):
          footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
          sum_on_grid=sum_blob_Grid(blob,grid,D);
          blobprint()  /= sum_on_grid;
@@ -169,7 +169,7 @@ void Basis::changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
       case splines:
          spatial_Bspline032voxels(vol_basis, vol_voxels, Zdim, Ydim, Xdim);
          break;
-   }   
+   }
 }
 
 // Change from voxels ------------------------------------------------------
@@ -189,7 +189,7 @@ void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
       case voxels:
          VECTOR_R3(corner1,STARTINGX(vol_voxels),
             STARTINGY(vol_voxels),STARTINGZ(vol_voxels));
-         VECTOR_R3(corner2,FINISHINGX(vol_voxels), 
+         VECTOR_R3(corner2,FINISHINGX(vol_voxels),
              FINISHINGY(vol_voxels), FINISHINGZ(vol_voxels));
          grid=Create_CC_grid(1,corner1,corner2);
          vol_basis.adapt_to_grid(grid);
@@ -206,4 +206,4 @@ void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
          break;
    }
 }
-   
+

@@ -14,32 +14,34 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include "tiffio.h"
 #include <iostream>
+
+#include "tiffio.h"
 
 using namespace std;
 
@@ -82,9 +84,9 @@ int initFile( char *filename, size_t len ) {
 //
 */
 void rawWriteTile(
-   unsigned char* raw_buf, unsigned char* tif_buf, 
+   unsigned char* raw_buf, unsigned char* tif_buf,
    unsigned int x, unsigned int y,
-   unsigned int imageWidth, unsigned int imageLength, 
+   unsigned int imageWidth, unsigned int imageLength,
    unsigned int tileWidth, unsigned int tileLength,
    unsigned short bitsPerSample, unsigned short imageSampleFormat,
    int byte_swapped,
@@ -97,19 +99,19 @@ void rawWriteTile(
    unsigned short int  uiVal;
    short int            iVal;
    unsigned char ucVal;
-   
+
    unsigned char * aux_pointer;
-   
+
    uiVal=0;iVal=0;ucVal=0;
 
-   
+
    if ( x_max > imageWidth )  x_max = imageWidth;
    if ( y_max > imageLength ) y_max = imageLength;
    if(bitsPerSample==16){
       if(imageSampleFormat==SAMPLEFORMAT_INT) aux_pointer=(unsigned char *)&iVal;
       else aux_pointer=(unsigned char *)&uiVal;
    }
-      
+
    for ( j = y; j < y_max; j++ )
        for ( i = x; i < x_max; i++) {
             switch (bitsPerSample) {
@@ -121,31 +123,31 @@ void rawWriteTile(
                   break;
                case 16:
 	          if(imageSampleFormat==SAMPLEFORMAT_INT){
-		       
+		
                        if (!byte_swapped){
 		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2];
 			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
-		       }  
+		       }
                        else{
 		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
 			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2];
-		       }  
+		       }
                        if ((double)iVal<minval) minval=(double)iVal;
                        else if ((double)iVal>maxval) maxval=(double)iVal;
-		  }          
+		  }
 	          else{
-		       
+		
                        if (!byte_swapped){
 		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2];
 			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
-		       }  
+		       }
                        else{
 		          aux_pointer[0]=tif_buf[((j-y)*tileWidth+(i-x))*2+1];
 			  aux_pointer[1]=tif_buf[((j-y)*tileWidth+(i-x))*2];
-		       }  
+		       }
                        if ((double)uiVal<minval) minval=(double)uiVal;
                        else if ((double)uiVal>maxval) maxval=(double)uiVal;
-	          }          
+	          }
                   raw_buf[(j*imageWidth + i)*2]   = aux_pointer[0];
                   raw_buf[(j*imageWidth + i)*2+1] = aux_pointer[1];
                   break;
@@ -163,9 +165,9 @@ void rawWriteTile(
 //
 */
 void rawWriteLine(
-   unsigned char* raw_buf, unsigned char* tif_buf, 
+   unsigned char* raw_buf, unsigned char* tif_buf,
    unsigned int y,
-   unsigned int imageWidth, unsigned int imageLength, 
+   unsigned int imageWidth, unsigned int imageLength,
    unsigned short bitsPerSample, unsigned short imageSampleFormat,
    int byte_swapped,
    char * zsMinval, char * zsMaxval) {
@@ -175,11 +177,11 @@ void rawWriteLine(
    unsigned short int  uiVal;
    short int            iVal;
    unsigned char ucVal;
-   
+
    unsigned char * aux_pointer;
 
    uiVal=0;iVal=0;ucVal=0;
-   
+
    if(bitsPerSample==16){
       if(imageSampleFormat==SAMPLEFORMAT_INT) aux_pointer=(unsigned char *)&iVal;
       else aux_pointer=(unsigned char *)&uiVal;
@@ -197,26 +199,26 @@ void rawWriteLine(
                    if (!byte_swapped){
 		      aux_pointer[0]=tif_buf[x*2];
 		      aux_pointer[1]=tif_buf[x*2+1];
-		   }  
+		   }
                    else{
 		      aux_pointer[0]=tif_buf[x*2+1];
 		      aux_pointer[1]=tif_buf[x*2];
-		   }  
+		   }
                    if ((double)iVal<minval) minval=(double)iVal;
                    else if ((double)iVal>maxval) maxval=(double)iVal;
-	      }          
+	      }
 	      else{
                    if (!byte_swapped){
 		      aux_pointer[0]=tif_buf[x*2];
 		      aux_pointer[1]=tif_buf[x*2+1];
-		   }  
+		   }
                    else{
 		      aux_pointer[0]=tif_buf[x*2+1];
 		      aux_pointer[1]=tif_buf[x*2];
-		   }  
+		   }
                    if ((double)uiVal<minval) minval=(double)uiVal;
                    else if ((double)uiVal>maxval) maxval=(double)uiVal;
-	      }          
+	      }
               raw_buf[(y*imageWidth+x)*2]   = aux_pointer[0];
               raw_buf[(y*imageWidth+x)*2+1] = aux_pointer[1];
               break;
@@ -293,14 +295,14 @@ int main(int argc, char *argv[])
       exit (-1);
   }
   byte_swapped=TIFFIsByteSwapped( tif );
-  
+
   /* Calculates the TIFF image size */
   len = (imageLength * imageWidth * bitsPerSample * samplesPerPixel)/8;
   initFile( argv[2], len );
 
   /* Mapping from file to memory (it will save primary memory) */
   raw_fd  = open( argv[2], O_RDWR );
-  raw_buf = (unsigned char*)mmap( NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, 
+  raw_buf = (unsigned char*)mmap( NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED,
                                                                                                                                   raw_fd, 0 );
   /* Writes the TIFF image properties to the .inf file */
   inf     = fopen( strcat( argv[2], ".inf" ), "w" );
@@ -319,7 +321,7 @@ int main(int argc, char *argv[])
      for ( y = 0; y < imageLength; y +=tileLength )
 	 for ( x = 0; x < imageWidth; x += tileWidth ) {
         	 TIFFReadTile( tif, tif_buf, x, y, 0, 0 );
-        	 rawWriteTile( raw_buf, tif_buf, x, y, 
+        	 rawWriteTile( raw_buf, tif_buf, x, y,
                     imageWidth, imageLength,
                     tileWidth, tileLength,
                     bitsPerSample, imageSampleFormat,
@@ -330,7 +332,7 @@ int main(int argc, char *argv[])
    else{
       for (y = 0; y < imageLength; y++){
          TIFFReadScanline(tif, tif_buf, y);
-         rawWriteLine( raw_buf, tif_buf, y, 
+         rawWriteLine( raw_buf, tif_buf, y,
             imageWidth, imageLength,
             bitsPerSample, imageSampleFormat,
 	    byte_swapped,
@@ -349,7 +351,7 @@ int main(int argc, char *argv[])
       fprintf( inf, "# Signed short?\nis_signed=TRUE\n");
    else
       fprintf( inf, "# Signed short?\nis_signed=FALSE\n");
-   
+
    fclose( inf );
    return 0;
 }

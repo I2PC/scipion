@@ -7,30 +7,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippGraphics/show2D.hh>
-#include <XmippGraphics/showSel.hh>
-#include <XmippGraphics/showVol.hh>
-#include <XmippGraphics/showSpectra.hh>
-#include <XmippGraphics/showSOM.hh>
-#include <XmippGraphics/showSpectraSOM.hh>
+#include <data/args.h>
+#include <graphics/show_2d.h>
+#include <graphics/show_selfile.h>
+#include <graphics/show_vol.h>
+#include <graphics/show_spectra.h>
+#include <graphics/show_som.h>
+#include <graphics/show_spectra_som.h>
+
 #include <qapplication.h>
 
 void Usage();
@@ -165,7 +166,7 @@ int main( int argc, char **argv ) {
 	     case MODE_SOM: break;
 	     case MODE_SPECTSOM: break;
 	  }
-       } 
+       }
        if (mode==MODE_IMG) {
           ImageViewer *showimg = new ImageViewer(argv[i], poll);
           showimg->apply_geo=apply_geo;
@@ -232,7 +233,7 @@ int main( int argc, char **argv ) {
           shown++;
        }
    }
-   
+
    if (!shown) return 0;
 
    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));

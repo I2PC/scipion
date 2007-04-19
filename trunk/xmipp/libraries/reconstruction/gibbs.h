@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* FCC_GRIDS                                                                 */
@@ -28,16 +28,20 @@
 
 #ifndef _GIBBS_HH
 #   define _GIBBS_HH
+
 #include <vector>
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippInterface/xmippOpenDX.hh>
-#include <XmippInterface/xmippVrml.hh>
-#include "grids.hh"
+#include <data/funcs.h>
+#include <data/volume.h>
+#include <data/geometry.h>
+#include <data/args.h>
+#include <interface/opendx.h>
+#include <interface/vrml.h>
+
+#include "grids.h"
+
 #include <stdlib.h>
+
 /**@name FCC_Grids
     This class contains the basic bricks to work with Gibbs prios in a FCC grid.
     This class is based in the Gridvolume and Grid classes and whenever possible
@@ -48,9 +52,9 @@
 //A few defines
 #define FCC_no_VOLUMES    1//This may be helpfull if we define the fcc
                            //as four sc
-#define FCC_NEIGHBORS    12  
+#define FCC_NEIGHBORS    12
 #define NEIGHBORS_IN     13// # neighbors including itself
-#define RANDOM_NUMBER_POOL_SIZE 10000000 //200000 
+#define RANDOM_NUMBER_POOL_SIZE 10000000 //200000
 #define DIF_CONF_EXT 0x2000// number of different clicks=2^13
 #define DIF_CONF 0x4000// 2*number of different clicks
                        // the extra ones are for filling valid positions with
@@ -60,7 +64,7 @@
 #define PASSMASKBITS   0x0fffff
 #define REMASKBIT        0x200000
 #define PASSREMASKBITS   0x1fffff
-#define PRECISION 100.//Maximum number of decimal in user defined 
+#define PRECISION 100.//Maximum number of decimal in user defined
                          // constant iCo_Border, iCo_homo, iBeta;
 /** FCC-Grids class.
 */
@@ -79,7 +83,7 @@ public:
    // these point to their respectibe volumes, in the a
    VolumeT<T> *  _FCC_Click;
    // The easiest way to generate a gridvolume is through a grid.
-   Grid FCC_grid; 
+   Grid FCC_grid;
    //inicializate the volume with...
    typedef enum { ZERO = 0, ONE    = 1,
                   TWO  = 2, RANDOM = -1,
@@ -92,12 +96,12 @@ public:
    Marsaglia<float> float_Random_pool;//statistics
 
    typedef enum { OUTSIDE= -2,
-                  NON_VALID = -1, 
+                  NON_VALID = -1,
                   BORDER  = 1,
                   HOMOGENEOUS  = 2} ClickMode;
    typedef enum { MY_TRUE= 1,
                   MY_FALSE = 0} MY_SWITCH;
-                  
+
    ClickMode Click_Table[DIF_CONF];
    int EnergyChange[DIF_CONF][NEIGHBORS_IN];
    int ClickChange[DIF_CONF][NEIGHBORS_IN];
@@ -114,7 +118,7 @@ private:
    matrix1D<double> FCC_Vectors_RS[FCC_NEIGHBORS+1];
    // Number of valid points (points insside radius R)
    int iNumber_of_points_inside_sphere;
-//   // Number of  points with valid cliques 
+//   // Number of  points with valid cliques
 //   int iNumber_of_valid_points_with_valid_cliques;
 //    ^This is iValid_clicks. we do not need it in advance
    // Number of homogeneous clicks
@@ -142,10 +146,10 @@ public:
    ~FCC_Gibs()
    {fh_out.close();}
 
-/** Initialice the class (create a grid, a volume and initialize 
+/** Initialice the class (create a grid, a volume and initialize
     vectors related with the position of the neighbors */
-    
-   void Init(double relative_size, double R, 
+
+   void Init(double relative_size, double R,
                               FileName Random_Number_File,
                               InitMode initmode) {
           GridVolumeT<T> temporal_gridvolume;
@@ -169,7 +173,7 @@ public:
           //Open history file
           FCC_Gibs<T>::fh_out.open((fn_out_seed+".hist").c_str() , ios::out);
           //save some info
-          FCC_Gibs<T>::fh_out 
+          FCC_Gibs<T>::fh_out
             << "iCte_homo: "          << FCC_Gibs<T>::iCte_homo << endl
             << "iCte_Border: "        << FCC_Gibs<T>::iCte_Border << endl
             << "iBeta: "              << FCC_Gibs<T>::iBeta << endl
@@ -189,7 +193,7 @@ public:
           try {
               //select dinamic range for the different random pools
               //Spell positions
-              //As soon as we know the number of points inside the 
+              //As soon as we know the number of points inside the
               //sphere Int_Random_pool will be reinizializated.
               FCC_Gibs<T>::Int_Random_pool.Init(Random_Number_File,
                                              RANDOM_NUMBER_POOL_SIZE);
@@ -207,12 +211,12 @@ public:
 
           //fill the volume with the initial value
           if(initmode == FCC_Gibs<T>::RANDOM)
-           {//init with integer random numbers between 0 an 1     
+           {//init with integer random numbers between 0 an 1
                      FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(* _FCC))
                         {
-                        VOLVOXEL((*_FCC),k,i,j) = 
+                        VOLVOXEL((*_FCC),k,i,j) =
                                       (Int_Random_pool.Get_One_Number() & 1) ;
-                        }               
+                        }
            }// if end
           else if(initmode == FCC_Gibs<T>::FROM_FILE)
                {
@@ -220,9 +224,9 @@ public:
 	       temporal_FCC = &temporal_gridvolume(0);
                      FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(* _FCC))
                         {
-                        VOLVOXEL((*_FCC),k,i,j) = 
+                        VOLVOXEL((*_FCC),k,i,j) =
                                    (VOLVOXEL((*temporal_FCC),k,i,j) & PASSMASKBITS) ;
-                        }               
+                        }
 
 	       }
           else{
@@ -231,9 +235,9 @@ public:
                  constant=(T)0;                 // does not work,  I do not know why.
              else if(initmode==FCC_Gibs<T>::ONE)
                  constant=(T)1;
-             else if(initmode==FCC_Gibs<T>::TWO) 
+             else if(initmode==FCC_Gibs<T>::TWO)
                  constant=(T)2;
-             else 
+             else
                  REPORT_ERROR(1,(string)"FCC_grid::Init:Wrong Initmode code");
              FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(* FCC_Gibs<T>::_FCC))
                 VOLVOXEL((*FCC_Gibs<T>::_FCC),k,i,j) = constant;
@@ -257,8 +261,8 @@ public:
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
           cout << "\n\tPLOT_SINGLEPOINT enabled\n";
          openDX DX_r,DX_g,DX_b;
-         DX_r.openDXFile( (string) "SINGLEPOINT_DEBUG_red.dx" );   
-         DX_b.openDXFile( (string) "SINGLEPOINT_DEBUG_blue.dx" );   
+         DX_r.openDXFile( (string) "SINGLEPOINT_DEBUG_red.dx" );
+         DX_b.openDXFile( (string) "SINGLEPOINT_DEBUG_blue.dx" );
 
          //print grid in blue
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
@@ -266,7 +270,7 @@ public:
       //cout <<  VOLVOXEL((*_FCC),k,i,j) << endl;
 
               if( VOLVOXEL((*_FCC),k,i,j) == 0)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -274,12 +278,12 @@ public:
                                                   XYZ);
                  DX_r.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
 
          FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( VOLVOXEL((*_FCC),k,i,j) == 1)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -287,14 +291,14 @@ public:
                                                   XYZ);
                  DX_b.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
       }
       #endif
       #endif
       #undef SINGLEPOINT
       #undef PLOT_SINGLEPOINT
       //#define TWOPLANES
-      #ifdef TWOPLANES     
+      #ifdef TWOPLANES
       /**/
       //VOLVOXEL((*FCC_Gibs<T>::_FCC0),0,0,0) = 0;
       { matrix1D<double> aux_matrix, aux_matrix2;
@@ -304,7 +308,7 @@ public:
               aux_matrix2=vector_R3(0.,1.,1.);//one vector
       //            _FCC  = &gridvolume(0);
                      FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
-                     {  
+                     {
                         gridvolume.grid(jj).grid2universe(vector_R3( (double)j,
                                                                (double)i,
                                                                (double)k),
@@ -312,19 +316,19 @@ public:
                         _dot_product=
                                    dot_product(aux_matrix2,aux_matrix);
                         if(_dot_product> (+0.1))// should be integer except
-                                            // for rounding errors      
+                                            // for rounding errors
                                   VOLVOXEL((*_FCC),k,i,j) = 0x0;
       //cout << "(x,y,z)= " << j << " " << i << " " << k << " "  << _dot_product << endl;
-      //cout << aux_matrix.transpose() << aux_matrix2.transpose()<<endl <<endl;   
-                     }   
-      }                  
+      //cout << aux_matrix.transpose() << aux_matrix2.transpose()<<endl <<endl;
+                     }
+      }
       /**/
       #endif
       #undef TWOPLANES
 
 
           //alloc space and fill table with the auxiliar vectors
-          //these vectors connect each grid point with their neighbours      
+          //these vectors connect each grid point with their neighbours
           InitNeighVector();
       //#define BORDERCLICK_DEBGU
       #ifdef BORDERCLICK_DEBGU
@@ -365,15 +369,15 @@ public:
           //Fill gridvolumewithClicks with Click values
           FillauxGridVolumewithClicks();
           //Klick change due to spell change in klick k
-          ClickChangeDueSpellChange();    
+          ClickChangeDueSpellChange();
           //Energy change due to spell change in klick k
           EnergyChangeDueSpellChange();
           //Write initial state in history file
           fh_out << "BEFORE FIRST ITERATION ";
-          FCC_Gibs<T>::Print_System_State(FCC_Gibs<T>::fh_out); 
+          FCC_Gibs<T>::Print_System_State(FCC_Gibs<T>::fh_out);
 
       }
-/**  Initialice a table containing all valid clicks. 
+/**  Initialice a table containing all valid clicks.
       A Click is a valid one when:
       \begin{itemize}
       \item Is all 0's or all 1's
@@ -381,7 +385,7 @@ public:
       then all those points which doc product positive are 1, all those
        points with product negative are 0 and at least one of the points with
         dot product zero is equal to the point at the origin.
-       \end{itemize} 
+       \end{itemize}
        The total number of valid click is 72+2
       */
    void GenerateValidClicks(void) {
@@ -391,38 +395,38 @@ public:
        for(int hh=DIF_CONF_EXT; hh < DIF_CONF ; hh++)
           Click_Table[hh]=FCC_Gibs<T>::NON_VALID;// fake clicks for outside of the
                                                  // mask elements
-       int center_hh;                                          
+       int center_hh;
        for(int hh=0; hh < DIF_CONF_EXT ; hh++){
           center_hh= hh & (1 << FCC_NEIGHBORS);
           Click_Table[hh]=FCC_Gibs<T>::NON_VALID;
           for(int ii=0; ii < FCC_NEIGHBORS; ii++)
              {
-             valid_hh_10=0;// counter for points with dot product different from zero 
+             valid_hh_10=0;// counter for points with dot product different from zero
              valid_hh_1=0; // counter for points with dot product equal to zero
              for(int jj=0; jj < FCC_NEIGHBORS; jj++)
                 {
                 _dot_product= dot_product(FCC_Vectors_RS[ii],FCC_Vectors_RS[jj]);
 
-                if(_dot_product > XMIPP_EQUAL_ACCURACY ) 
+                if(_dot_product > XMIPP_EQUAL_ACCURACY )
                   {
                   if( ((hh & (1 << jj)) == 0 && (hh & (1 << ii)) ==0) ||
                       ((hh & (1 << jj)) != 0 && (hh & (1 << ii)) !=0)    )
                          valid_hh_10++;
-                  }       
-                else if (_dot_product > -XMIPP_EQUAL_ACCURACY )               
+                  }
+                else if (_dot_product > -XMIPP_EQUAL_ACCURACY )
                   {
                   if( (hh & (1 << jj)) == 0 && (center_hh ==0) ||
                       (hh & (1 << jj)) != 0 && (center_hh !=0)    )
                       valid_hh_1=1;
                   }
-                else 
+                else
                 {
                   if( ((hh & (1 << jj)) == 0 && (hh & (1 << ii)) !=0) ||
                       ((hh & (1 << jj)) != 0 && (hh & (1 << ii)) ==0)    )
                          valid_hh_10++;
                  }
 
-           if (valid_hh_10==10 && valid_hh_1>=1) 
+           if (valid_hh_10==10 && valid_hh_1>=1)
               {
               Click_Table[hh]=FCC_Gibs<T>::BORDER;
               ii=jj=FCC_NEIGHBORS;
@@ -433,12 +437,12 @@ public:
 
 
         }// hh end
-        Click_Table[0x0]=FCC_Gibs<T>::HOMOGENEOUS;  
-        Click_Table[0x1fff]=FCC_Gibs<T>::HOMOGENEOUS;  
+        Click_Table[0x0]=FCC_Gibs<T>::HOMOGENEOUS;
+        Click_Table[0x1fff]=FCC_Gibs<T>::HOMOGENEOUS;
 
       //-----------------------
       //Only DEBUG code bellow
-      //-----------------------        
+      //-----------------------
 
       //#define   GenerateValidClicks_DEBUG
       #ifdef GenerateValidClicks_DEBUG
@@ -449,7 +453,7 @@ public:
                 cout << hh << endl;
 
           char fh_FileName[32];
-          matrix1D<double>  type_cast_matrix;     
+          matrix1D<double>  type_cast_matrix;
           matrix1D<double> RGB=vector_R3(1.,0.,0.);
           matrix1D<double> XYZ;
           int ii;
@@ -459,7 +463,7 @@ public:
               ii=-1;
               if(Click_Table[hh]==FCC_Gibs<T>::NON_VALID)   continue;
               sprintf(fh_FileName,"klick_%04x.wrl",hh);
-              VrmlFile  *_VRML = new VrmlFile((string)fh_FileName);   
+              VrmlFile  *_VRML = new VrmlFile((string)fh_FileName);
               RGB=vector_R3(1.,0.,0.);
               XYZ=vector_R3(0.,0.,0.);
               _VRML->Sphere( XYZ,RGB,0.05);
@@ -470,11 +474,11 @@ public:
                       type_cast(FCC_Vectors_RS[jj],type_cast_matrix);
                       _VRML->Add_sphere(type_cast_matrix);
                       }
-                  else ii=jj;    
+                  else ii=jj;
                   }
               RGB=vector_R3(0.,0.,1.);
               if(ii != -1)
-                {           
+                {
                   type_cast(FCC_Vectors[ii],XYZ);
                  _VRML->Sphere( XYZ,RGB,0.0525);
                  for(int jj=0; jj < NEIGHBORS_IN ; jj++)
@@ -485,8 +489,8 @@ public:
                          _VRML->Add_sphere(type_cast_matrix);
                          }
                      }
-                }     
-              //mark center 
+                }
+              //mark center
               RGB=vector_R3(0.,1.,0.);
               XYZ=vector_R3(0.,0.,0.08);
               _VRML->Sphere( XYZ,RGB,0.02);
@@ -499,11 +503,11 @@ public:
 
 /**   I do not have time to check if a point is inside or outside the volume
       so I alloc memory for a volume bigger than needed so all the access to
-       memory position are always valid. This extra points are marked with 
+       memory position are always valid. This extra points are marked with
        a 1 in the bit 15*/
    void CreateMask(void) {
       double R;
-      matrix1D<double>  distance_vector;     
+      matrix1D<double>  distance_vector;
       int flag;
 
 
@@ -512,7 +516,7 @@ public:
 
       FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
           {
-                                              //x,y,z 
+                                              //x,y,z
           FCC_grid(0).grid2universe(vector_R3((double)j,
                                               (double)i,
                                               (double)k),
@@ -520,7 +524,7 @@ public:
 
            if( distance_vector.module()>R )
                             //z,y,x
-              VOLVOXEL((*_FCC),k,i,j) = (MASKBIT + 
+              VOLVOXEL((*_FCC),k,i,j) = (MASKBIT +
                                 (VOLVOXEL((*_FCC),k,i,j)&PASSMASKBITS));
             else
               {//check that all the neigh are inside the matrix
@@ -532,18 +536,18 @@ public:
                                                 i+YY(FCC_Vectors[ii]),
                                                 j+XX(FCC_Vectors[ii]) ) )
                          {
-                         VOLVOXEL((*_FCC),k,i,j) = (MASKBIT + 
+                         VOLVOXEL((*_FCC),k,i,j) = (MASKBIT +
                                   (VOLVOXEL((*_FCC),k,i,j)&PASSMASKBITS));
       //cout << "OUT: " << j+XX(FCC_Vectors[ii]) << " "
       //                << i+YY(FCC_Vectors[ii]) << " "
       //                << k+ZZ(FCC_Vectors[ii]) << endl;
                          flag=1;
                          break;
-                         }         
+                         }
 
                  }
-               if(flag!=1)  
-                  iNumber_of_points_inside_sphere++;   
+               if(flag!=1)
+                  iNumber_of_points_inside_sphere++;
               }
           }// FOR ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
 
@@ -558,37 +562,37 @@ public:
          matrix1D<double> RGB=vector_R3(0.,0.,1.);
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
 
-         VrmlFile _VRML( (string) "CreateMask_DEBUG.wrl" );   
+         VrmlFile _VRML( (string) "CreateMask_DEBUG.wrl" );
          //print grid in blue
          _VRML.Sphere( XYZ,RGB,0.05);
          FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==0)
                  continue;
-                                                  //x,y,z 
+                                                  //x,y,z
               FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
                                                   (double)k),
                                                   XYZ);
-      //       cout << XYZ.transpose() << " " <<vector_R3(j,i,k).transpose() << endl; 
+      //       cout << XYZ.transpose() << " " <<vector_R3(j,i,k).transpose() << endl;
               _VRML.Add_sphere(XYZ);
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
-          RGB=vector_R3(1.,0.,0.);       
-          XYZ=vector_R3(0.,0.,0.);//reset 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
+          RGB=vector_R3(1.,0.,0.);
+          XYZ=vector_R3(0.,0.,0.);//reset
          _VRML.Sphere( XYZ,RGB,0.05);
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==0)
                  {
-                                                     //x,y,z 
+                                                     //x,y,z
               FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
                                                   (double)k),
                                                   XYZ);
               _VRML.Add_sphere(XYZ);
-                 }                 
+                 }
 
-              }//FOR_ALL_ELEMENTS_IN_MATRIX3D        
+              }//FOR_ALL_ELEMENTS_IN_MATRIX3D
          //mark center with grey sphere
       //   RGB=vector_R3(.2,.2,.2);
       //   XYZ=vector_R3(0.0,0.,0.);
@@ -601,21 +605,21 @@ public:
 
       }
 
-   
+
 /**   Only point with a complete neighbourh will be used to compute the energy
       This mask marks all this points that do NOT have a complete neighbour.
       The mask makes the bit 16 of the volume equal to 1 */
    void Create_Second_Mask(void) {
       double R;
-      matrix1D<double>  distance_vector;     
+      matrix1D<double>  distance_vector;
 
       //iNumber_of_valid_points_with_valid_cliques=0;
 
       R= gridvolume.grid(0).get_interest_radius()+XMIPP_EQUAL_ACCURACY;
       FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
-          { 
+          {
           for (int ii=0; ii<FCC_NEIGHBORS+1; ii++)
-             {  
+             {
              FCC_grid(0).grid2universe(vector_R3((double)j,
                                                  (double)i,
                                                  (double)k),
@@ -628,11 +632,11 @@ public:
                   VOLVOXEL((*_FCC),k,i,j) = (REMASKBIT +
                                     (VOLVOXEL((*_FCC),k,i,j)&PASSREMASKBITS));
 
-                  break;                  
+                  break;
                   }//if end
-      //        if(ii==FCC_NEIGHBORS)    
+      //        if(ii==FCC_NEIGHBORS)
       //           iNumber_of_valid_points_with_valid_cliques++;
-               }//for ii               
+               }//for ii
             }// FOR ALL
 
       //----
@@ -643,7 +647,7 @@ public:
       {
       //print neigh positions and create and wrl
           cout << "\n\tSecondMask_DEBUG enabled\n";
-         VrmlFile _VRML( (string) "SecondMask_DEBUG.wrl" );   
+         VrmlFile _VRML( (string) "SecondMask_DEBUG.wrl" );
          matrix1D<double> RGB=vector_R3(0.,0.,1.);
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
 
@@ -652,7 +656,7 @@ public:
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==MASKBIT)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -660,15 +664,15 @@ public:
                                                   XYZ);
                  _VRML.Add_sphere(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
-          RGB=vector_R3(0.,1.,0.);       
-          XYZ=vector_R3(0.,0.,0.);//reset 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
+          RGB=vector_R3(0.,1.,0.);
+          XYZ=vector_R3(0.,0.,0.);//reset
          _VRML.Sphere( XYZ,RGB,0.05);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & REMASKBIT) ==REMASKBIT
                && (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) !=MASKBIT )
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -676,24 +680,24 @@ public:
                                                   XYZ);
                  _VRML.Add_sphere(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
-          RGB=vector_R3(1.,0.,0.);       
-          XYZ=vector_R3(0.,0.,0.);//reset 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
+          RGB=vector_R3(1.,0.,0.);
+          XYZ=vector_R3(0.,0.,0.);//reset
          _VRML.Sphere( XYZ,RGB,0.05);
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==0
                 &&(VOLVOXEL((*_FCC),k,i,j) & REMASKBIT) ==0)
                  {
-                                                     //x,y,z 
+                                                     //x,y,z
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                      (double)i,
                                                      (double)k),
                                                      XYZ);
                  _VRML.Add_sphere(XYZ);
-                 }         
+                 }
 
-              }//FOR_ALL_ELEMENTS_IN_MATRIX3D        
+              }//FOR_ALL_ELEMENTS_IN_MATRIX3D
          //mark center with grey sphere
           _VRML.Axis(2.,0.01);
 
@@ -707,15 +711,15 @@ public:
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
           cout << "\n\tSecondMask_DX_DEBUG enabled\n";
          openDX DX_r,DX_g,DX_b;
-         DX_r.openDXFile( (string) "SecondMask_DX_DEBUG_red.dx" );   
-         DX_g.openDXFile( (string) "SecondMask_DX_DEBUG_green.dx" );   
-         DX_b.openDXFile( (string) "SecondMask_DX_DEBUG_blue.dx" );   
+         DX_r.openDXFile( (string) "SecondMask_DX_DEBUG_red.dx" );
+         DX_g.openDXFile( (string) "SecondMask_DX_DEBUG_green.dx" );
+         DX_b.openDXFile( (string) "SecondMask_DX_DEBUG_blue.dx" );
 
          //print grid in blue
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==MASKBIT)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -723,7 +727,7 @@ public:
                                                   XYZ);
                  DX_b.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
 
 
 
@@ -731,7 +735,7 @@ public:
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & REMASKBIT) ==REMASKBIT
                && (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) !=MASKBIT )
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -739,21 +743,21 @@ public:
                                                   XYZ);
                  DX_g.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
               {
               if( (VOLVOXEL((*_FCC),k,i,j) & MASKBIT) ==0
                 &&(VOLVOXEL((*_FCC),k,i,j) & REMASKBIT) ==0)
                  {
-                                                     //x,y,z 
+                                                     //x,y,z
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                      (double)i,
                                                      (double)k),
                                                      XYZ);
                  DX_r.Add_Item(XYZ);
-                 }                 
+                 }
 
-              }//FOR_ALL_ELEMENTS_IN_MATRIX3D        
+              }//FOR_ALL_ELEMENTS_IN_MATRIX3D
          //mark center with grey sphere
       }
       #endif
@@ -762,7 +766,7 @@ public:
 
       }
 
-   
+
 /**    To speed up the process the coordinates of the valid points are stored            (all the valid coordinates, even without valid click go here) */
    void Alloc_and_Fill_valid_coordinates_vector(void) {
       //alloc memory
@@ -771,7 +775,7 @@ public:
          {
          cerr << "ERROR: allocating memory for valid_coordinates\n"
               << "Volume to big?" <<endl; exit(0);
-         }             
+         }
       //fill it
       int icounter=0;
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
@@ -789,7 +793,7 @@ public:
               << "\nicounter="<< icounter <<endl
               << "\niNumber_of_points_inside_sphere=" <<
                   iNumber_of_points_inside_sphere;
-         }     
+         }
 
       //#define Alloc_and_Fill_valid_coordinates_vector_before
       #ifdef Alloc_and_Fill_valid_coordinates_vector_before
@@ -813,7 +817,7 @@ public:
       for(int ii=0; ii<iNumber_of_points_inside_sphere; ii++)
          {
               random1=Int_Random_pool.Get_One_Number();
-              random2=Int_Random_pool.Get_One_Number(); 
+              random2=Int_Random_pool.Get_One_Number();
               ZZ=valid_coordinates[3*random1+0];
               YY=valid_coordinates[3*random1+1];
               XX=valid_coordinates[3*random1+2];
@@ -844,12 +848,12 @@ public:
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
           cout << "\nAlloc_and_Fill_valid_coordinates_vector_after_DX enabled\n";
          openDX DX_r,DX_g,DX_b;
-         DX_r.openDXFile( (string) "alloc_and_fill.dx" );   
+         DX_r.openDXFile( (string) "alloc_and_fill.dx" );
 
          //print grid in red
       for(int ii=0; ii<iNumber_of_points_inside_sphere; ii++)
               {
-                                                  //x,y,z 
+                                                  //x,y,z
                FCC_grid(0).grid2universe(vector_R3(
                                                   (double)valid_coordinates[3*ii+2],
                                                   (double)valid_coordinates[3*ii+1],
@@ -857,17 +861,17 @@ public:
                                                   XYZ);
                  DX_r.Add_Item(XYZ);
               }
-      }        
+      }
       #endif// Alloc_and_Fill_valid_coordinates_vector_after_DX
       #undef Alloc_and_Fill_valid_coordinates_vector_after_DX
 
       }
 
 
-/**   Check if the point is the center of a valid Click 
+/**   Check if the point is the center of a valid Click
       It the point do not have 12 neighbours it returns OUTSIDE,
       If the point is the center of a valid click it returns either
-      HOMOGENEOUS, BORDER or NON_VALID (that is neither HOMOGENEOUS nor 
+      HOMOGENEOUS, BORDER or NON_VALID (that is neither HOMOGENEOUS nor
       BORDER*/
    int IsThisValidClick(int j, int i, int k) //x y z
       {
@@ -875,14 +879,14 @@ public:
       int ii=WhatClickIsThis(  k, i, j);
       if(ii == FCC_Gibs<T>::OUTSIDE)
          return (FCC_Gibs<T>::OUTSIDE);
-      else   
+      else
          return( Click_Table[ii] );//either border, homogeneous or nonvalid
 
       }//end IsThisValidClick
 
-/**   Check if the point is the center of a valid Click 
+/**   Check if the point is the center of a valid Click
       It the point do not have 12 neighbours it returns OUTSIDE,
-      If the point is the center of a valid click it returns the 
+      If the point is the center of a valid click it returns the
       click code*/
    int WhatClickIsThis(int j, int i, int k) //x y z
       {
@@ -890,8 +894,8 @@ public:
 
           if(  (VOLVOXEL( *FCC_Gibs<T>::_FCC,k,i,j) & REMASKBIT)==REMASKBIT )
              return (FCC_Gibs<T>::OUTSIDE);    //z,y,x
-          neigh_value = 
-      //this should match FCC_Vectors      
+          neigh_value =
+      //this should match FCC_Vectors
               ((VOLVOXEL((*_FCC),k+0,i+0,j+0) & 0x1) << 0xc) +
 
               ((VOLVOXEL((*_FCC),k+1,i+0,j+0) & 0x1) << 0x0) +
@@ -912,7 +916,7 @@ public:
       return(neigh_value);
 
       }
-   
+
 /** Count clicks of each type, So long homogeneous or border */
    void Count_clicks_of_each_type(void) {
         int click_code;
@@ -920,16 +924,16 @@ public:
 
         try {
       //          _FCC   = &gridvolume(0);
-                FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC)){          
+                FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC)){
                    click_code=IsThisValidClick(k,i,j);
-                   if(click_code!=FCC_Gibs<T>::OUTSIDE) iValid_clicks++; 
+                   if(click_code!=FCC_Gibs<T>::OUTSIDE) iValid_clicks++;
                    if(click_code==FCC_Gibs<T>::HOMOGENEOUS){
                        iHomo_clicks++;
                        }
                    else if(click_code==FCC_Gibs<T>::BORDER)
-                       iBorder_clicks++;    
+                       iBorder_clicks++;
                }//FOR_ALL
-          }//try                
+          }//try
           catch (Xmipp_error &XE) {
           cout << XE << endl;
        }//upper program should handle this
@@ -943,22 +947,22 @@ public:
                    (long int)iCte_homo   * (long int)iHomo_clicks;
    Total_Energy *= (long int) iBeta;
    }
-/** Fill auxiliar Grid volume with the value of the clicks centered on 
+/** Fill auxiliar Grid volume with the value of the clicks centered on
     each point (of the principal grid volume */
    void FillauxGridVolumewithClicks(void) {
         try {
                 FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC_Click)){
 
-                   VOLVOXEL((*_FCC_Click),k,i,j) =  
+                   VOLVOXEL((*_FCC_Click),k,i,j) =
                                 WhatClickIsThis(k,i,j);
                    if (VOLVOXEL((*_FCC_Click),k,i,j)==FCC_Gibs<T>::OUTSIDE)
-                       VOLVOXEL((*_FCC_Click),k,i,j)=0x2000;  
+                       VOLVOXEL((*_FCC_Click),k,i,j)=0x2000;
                                  // 0x2000 is a click that is not changed
                                  // by the update click mechanism
                                  // in a valid click
 
       //#define ONE_POINT_DEBUG
-      #ifdef ONE_POINT_DEBUG                           
+      #ifdef ONE_POINT_DEBUG
       if(VOLVOXEL((*_FCC_Click),k,i,j)!=0x2000 && VOLVOXEL((*_FCC_Click),k,i,j)!=0)
       {
       cout << k << " " << i << " "<< j <<"\t\t" ;
@@ -968,7 +972,7 @@ public:
       #endif
       #undef ONE_POINT_DEBUG
                }//FOR_ALL
-          }//try                
+          }//try
           catch (Xmipp_error &XE) {
           cout << XE << endl;
        }//upper program should handle this
@@ -979,14 +983,14 @@ public:
          matrix1D<double> XYZ=vector_R3(0.,0.,0.);
           cout << "\n\tFillauxGridVolumewithClicks_DEBUG enabled\n";
          openDX DX_r,DX_g,DX_b;
-         DX_r.openDXFile( (string) "FillauxGridVolumewithClicks_DEBUG_red.dx" );   
-         DX_b.openDXFile( (string) "FillauxGridVolumewithClicks_DEBUG_blue.dx" );   
+         DX_r.openDXFile( (string) "FillauxGridVolumewithClicks_DEBUG_red.dx" );
+         DX_b.openDXFile( (string) "FillauxGridVolumewithClicks_DEBUG_blue.dx" );
 
          //print grid in blue
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC_Click))
               {
               if( VOLVOXEL((*_FCC_Click),k,i,j) !=0x2000)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -994,14 +998,14 @@ public:
                                                   XYZ);
                  DX_r.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
 
 
 
         FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC_Click))
               {
               if( VOLVOXEL((*_FCC_Click),k,i,j) ==0x2000)
-                                                  //x,y,z 
+                                                  //x,y,z
                  {
                  FCC_grid(0).grid2universe(vector_R3((double)j,
                                                   (double)i,
@@ -1009,7 +1013,7 @@ public:
                                                   XYZ);
                  DX_b.Add_Item(XYZ);
                  }
-          }//FOR_ALL_ELEMENTS_IN_MATRIX3D 
+          }//FOR_ALL_ELEMENTS_IN_MATRIX3D
       }
       #endif
       #undef FillauxGridVolumewithClicks_DEBUG
@@ -1017,7 +1021,7 @@ public:
       }
 
 /** Store the user provided parameters as integers */
-   void Set_User_Parameters(int homo, int border, int beta, 
+   void Set_User_Parameters(int homo, int border, int beta,
                             long int nu_iter, FileName fh_out_name,
 			                       FileName fn_initfile)
    {
@@ -1061,9 +1065,9 @@ public:
       //         printb(cout,ClickChange[hh][ii]); cout << " ";
                  cout << ClickChange[hh][ii] << " ";
                }
-          cout << endl;     
+          cout << endl;
           }
-      #endif// PRINT_CLICKCHANGETABLE_DEBUG   
+      #endif// PRINT_CLICKCHANGETABLE_DEBUG
       #undef PRINT_CLICKCHANGETABLE_DEBUG
 
       }
@@ -1080,7 +1084,7 @@ public:
           for(int jj=0; jj < NEIGHBORS_IN ; jj++)
              EnergyChange[hh][jj]=0x0;   // > 0x1fff
        for(int hh=0; hh < DIF_CONF_EXT ; hh++){
-      // cout << endl << hh << "\t"; 
+      // cout << endl << hh << "\t";
            for(int jj=0; jj < NEIGHBORS_IN ; jj++){
                if(Click_Table[hh]==FCC_Gibs<T>::NON_VALID)
                                             //either border, homogeneous or nonvalid
@@ -1094,9 +1098,9 @@ public:
                      {
                      cout << "ERROR1: If you see this line something is going"
                           << "wrong in the routine EnergyChangeDueSpellChange" <<endl;
-                     exit(1);     
+                     exit(1);
                      }//end else a
-               }//end else b  
+               }//end else b
                if(Click_Table[ClickChange[hh][jj]]==FCC_Gibs<T>::NON_VALID)
                   ;
                else{//b
@@ -1108,10 +1112,10 @@ public:
                      {
                      cout << "ERROR2: If you see this line something is going"
                           << "wrong in the routine EnergyChangeDueSpellChange" <<endl;
-                     exit(1);     
+                     exit(1);
                      }//end else a
-               }//end else b          
-      // cout << EnergyChange[hh][jj] << "\t"; 
+               }//end else b
+      // cout << EnergyChange[hh][jj] << "\t";
              } // end for(int jj=0; jj < DIF_CONF ; jj++)
          } // end for(int hh=0; hh < DIF_CONF ; hh++){
 
@@ -1127,9 +1131,9 @@ public:
       //         printb(cout,ClickChange[hh][ii]); cout << " ";
                  cout << EnergyChange[hh][ii] << " ";
                }
-          cout << endl;     
+          cout << endl;
           }
-      #endif// ENERGY_CHANGE_DUE_TO_SPELL_CHANGE_DEBUG   
+      #endif// ENERGY_CHANGE_DUE_TO_SPELL_CHANGE_DEBUG
       #undef ENERGY_CHANGE_DUE_TO_SPELL_CHANGE_DEBUG
 
       }
@@ -1189,20 +1193,20 @@ public:
 
           cout << k << " " << i << " "<< j <<": "<< energy_change;
       //    FCC_Gibs<T>::Calculate_Total_Energy();// Count_clicks_of_each_type   called from
-                                        // Calculate_Total_Energy  
-      //    FCC_Gibs<T>::Print_System_State(cout); 
+                                        // Calculate_Total_Energy
+      //    FCC_Gibs<T>::Print_System_State(cout);
       }
-      #endif// GET_ENERGY_CHANGE   
+      #endif// GET_ENERGY_CHANGE
       #undef GET_ENERGY_CHANGE
           return(energy_change);
 
       }
-   
+
 /** Get iNumber_of_points_inside_sphere */
     int Get_iNumber_of_points_inside_sphere(void)
      { return(iNumber_of_points_inside_sphere);}
 /** Update volume grid with clicks */
-   void Set_Click_Change(int k, int i, int j) //z y x   
+   void Set_Click_Change(int k, int i, int j) //z y x
       {
 
             VOLVOXEL(*FCC_Gibs<T>::_FCC_Click,k+0,i+0,j+0) ^= 0x1000;
@@ -1238,10 +1242,10 @@ public:
             << endl;
        exit (1);
       }
-   FCC_Gibs<T>::fh_out << line ; 
+   FCC_Gibs<T>::fh_out << line ;
    }
 /** Count Number of spells with value n */
-   int Count_Number_Spells_Value_n (T n) 
+   int Count_Number_Spells_Value_n (T n)
       {
         int n_counter=0;
 
@@ -1249,7 +1253,7 @@ public:
            if ( (VOLVOXEL((*FCC_Gibs<T>::_FCC),k,i,j)&PASSMASKBITS)==n
                 && (VOLVOXEL((*FCC_Gibs<T>::_FCC),k,i,j)&MASKBIT)!=MASKBIT)
                  n_counter++;
-        return(n_counter);           
+        return(n_counter);
 
       }
 
@@ -1259,21 +1263,21 @@ public:
     fh_out << "AFTER LAST ITERATION ";
 //    fh_out << Get_Total_energy() << endl;
     Calculate_Total_Energy();
-    Print_System_State(FCC_Gibs<T>::fh_out); 
+    Print_System_State(FCC_Gibs<T>::fh_out);
     Remove_Mask();
     gridvolume.write((fn_out_seed+".fcc").c_str());
     }
 /** Copy volume to auxiliar volume, Remove Mask and save aux gridvolume */
     void Save_debug_gridvolume(void)
     {
-    static int priv_counter=0;    
+    static int priv_counter=0;
 //    Copy_to_Gridvolume_debug_and_Remove_Mask();
     Copy_to_Gridvolume_debug();
     gridvolume_debug.write((fn_out_seed+ItoA(priv_counter++,4)+".fcc").c_str());
     }
 
 /** Get Total Energy */
-   long int Get_Total_energy(void) {return (Total_Energy);}   
+   long int Get_Total_energy(void) {return (Total_Energy);}
 /** Update Total Energy */
    void Update_Total_energy(int energy_change) {Total_Energy += energy_change;}  /** Remove gridvolume mask */
    void Remove_Mask(void)
@@ -1285,7 +1289,7 @@ public:
       }
 
 /** auxiliar function to save intermediate results. */
-   void Copy_to_Gridvolume_debug(void) 
+   void Copy_to_Gridvolume_debug(void)
       {
 
         _aux_FCC = &gridvolume_debug(0);
@@ -1293,7 +1297,7 @@ public:
                 VOLVOXEL((*FCC_Gibs<T>::_aux_FCC),k,i,j) =
                 VOLVOXEL((*FCC_Gibs<T>::_FCC),k,i,j) & 0x1;
 
-      }   
+      }
 
 /** Get Beta value */
    int Get_Beta(void) { return(iBeta);}
@@ -1301,38 +1305,38 @@ public:
    int Get_Cte_homo(void) { return(iCte_homo);}
 #ifdef NEVERDEFINED//a
 /** Count Number of spells */
-   void Count_Number_Spells(void); 
+   void Count_Number_Spells(void);
 
 //DEBUG FUNCTIONS
 
-#endif//if NEVERDEFINED//a     
+#endif//if NEVERDEFINED//a
 void Print_System_State(ostream &o){
  o << "\nSYSTEM STATE"
-   << "\n  iHomo_clicks= " << iHomo_clicks  
+   << "\n  iHomo_clicks= " << iHomo_clicks
    << "\n  iBorder_clicks=   " << iBorder_clicks
-   << "\n  iValid_clicks=    " << iValid_clicks 
-   << "\n  iNumber_of_points_inside_sphere= " 
+   << "\n  iValid_clicks=    " << iValid_clicks
+   << "\n  iNumber_of_points_inside_sphere= "
                               << iNumber_of_points_inside_sphere
-//   << "\n iNumber_of_valid_points_with_valid_cliques= " 
+//   << "\n iNumber_of_valid_points_with_valid_cliques= "
 //                              << iNumber_of_valid_points_with_valid_cliques
    << "\n  Total_Energy= " << Total_Energy  << endl;
    }
 void Print_All_Clicks(void){
           FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(* _FCC_Click))
              if(  (VOLVOXEL( *_FCC,k,i,j) & REMASKBIT)!=REMASKBIT )
-                cout << k << "\t" << i << "\t" << j 
+                cout << k << "\t" << i << "\t" << j
                      << "\t" << VOLVOXEL((*_FCC_Click),k,i,j) << endl;
 
    }
 
 private:
 
-/**  Alloc space and fill table with the auxiliar vectors called 
-     FCC_Vectors. These vectors connect each grid point with their 
+/**  Alloc space and fill table with the auxiliar vectors called
+     FCC_Vectors. These vectors connect each grid point with their
      neighbours */
-     
+
      void InitNeighVector(void) {
-          matrix1D<double>  type_cast_matrix;     
+          matrix1D<double>  type_cast_matrix;
           //alloc space for auxiliar vector
           //these vectors conect each grid point with their neighbours
           for(int ii=0; ii< FCC_NEIGHBORS+1; ii++)
@@ -1378,7 +1382,7 @@ private:
       {
       //print neigh positions and create and wrl
       //the printed data is in index not real space coordinates
-          matrix1D<double>  matrix_aux;     
+          matrix1D<double>  matrix_aux;
           type_cast(FCC_Vectors[0],type_cast_matrix);
           FCC_grid(0).grid2universe(type_cast_matrix, matrix_aux);
           matrix1D<double> RGB=vector_R3(0.,0.,1.);
@@ -1388,15 +1392,15 @@ private:
           for(int ii=0; ii< FCC_NEIGHBORS+1; ii++)
               cout << FCC_Gibs<T>::FCC_Vectors[ii].transpose() << endl;
 
-          VrmlFile _VRML( (string) "InitNeighVector_DEBUG1.wrl" );   
+          VrmlFile _VRML( (string) "InitNeighVector_DEBUG1.wrl" );
           _VRML.Sphere( XYZ,RGB,0.05);
           for(int ii=0; ii< FCC_NEIGHBORS+1; ii++)
               {
               type_cast(FCC_Vectors[ii],type_cast_matrix);
               FCC_grid(0).grid2universe(type_cast_matrix, matrix_aux);
               _VRML.Add_sphere(matrix_aux);
-              }//for(int ii=0; ii< FCC_NEIGHBORS; ii++)        
-         //mark center 
+              }//for(int ii=0; ii< FCC_NEIGHBORS; ii++)
+         //mark center
           RGB=vector_R3(1.,0.,0.);
           XYZ=vector_R3(0.,0.,0.08);
           _VRML.Sphere( XYZ,RGB,0.02);
@@ -1412,18 +1416,18 @@ private:
           for(int ii=0; ii< FCC_NEIGHBORS+1; ii++)
               cout << FCC_Gibs<T>::FCC_Vectors_RS[ii].transpose() << endl;
 
-          matrix1D<double>  matrix_aux;     
+          matrix1D<double>  matrix_aux;
           matrix1D<double> RGB=vector_R3(1.,0.,0.);
           matrix1D<double> XYZ=matrix_aux;
-          VrmlFile _VRML( (string) "InitNeighVector_DEBUG2.wrl" );   
+          VrmlFile _VRML( (string) "InitNeighVector_DEBUG2.wrl" );
           RGB=vector_R3(1.,0.,0.);
           XYZ=vector_R3(0.,0.,0.);
           _VRML.Sphere( XYZ,RGB,0.05);
           for(int ii=0; ii< FCC_NEIGHBORS+1; ii++)
               {
               _VRML.Add_sphere(FCC_Vectors_RS[ii]);
-               }//for(int ii=0; ii< FCC_NEIGHBORS_RS; ii++)        
-         //mark center 
+               }//for(int ii=0; ii< FCC_NEIGHBORS_RS; ii++)
+         //mark center
           RGB=vector_R3(0.,0.,1.);
           XYZ=vector_R3(0.,0.,0.08);
           _VRML.Sphere( XYZ,RGB,0.02);

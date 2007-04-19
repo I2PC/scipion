@@ -36,7 +36,9 @@ EXTRA_DIST = \
 	virus.h \
 	vrml.h
 
-INCLUDES = -I$(top_srcdir)/libraries
+INCLUDES = \
+	-I$(top_srcdir)/libraries \
+	-I$(top_srcdir)/external
 
 docs:
 	@echo "Creating documentation in XmippInterface ..."

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /*****************************************************************************/
 /* INTERACTION WITH SPIDER                                                   */
@@ -29,11 +29,11 @@
 #ifndef _XMIPP_SPIDER_HH
    #define _XMIPP_SPIDER_HH
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
+#include <data/funcs.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/volume.h>
+#include <data/image.h>
 
 /**@name Spider */
 //@{
@@ -44,13 +44,13 @@ void generate_Spider_count(int imax, DocFile &DF_out);
 /** From a Xmipp selfile to Spider selfile.
     Comments are lost. A Spider Selfile is created in which the -1
     of the Xmipp Selfiles are translated into 0.
-    
+
     Set new_style to produce the new style of Spider selfiles.*/
 void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style);
 
 /** Extract angles from a SelFile and store them in a DocFile.
     You can specify the order of the angle extraction by default
-    (rot, tilt, psi). 
+    (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void extract_angles(SelFile &SF_in, DocFile &DF_out,
    const string &ang1="rot", const string &ang2="tilt",
@@ -59,7 +59,7 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
 #ifdef NEVERDEFINED
 /** Extract angles from a Docfile and store them in a SelFile.
     You can specify the order of the angle extraction by default
-    (rot, tilt, psi). 
+    (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void write_angles(SelFile &SF_out, DocFile &DF_in,
    const string &ang1="rot", const string &ang2="tilt",
@@ -85,13 +85,13 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
     Creates the 3D radon transform of a volume via Spider.
     An exception is thrown if some intermidiate files (b01.vol, superfeo.vol,
     superfeo2.vol) cannot be created.
-    
+
     The Delta_rot and tilt are the sampling rates in the rot and tilt space
     measured in degrees.
-    
+
     The output_size is the size of the output Radon transform. If it is -1
     then it is 1.5*XSIZE(Vol_in).
-    
+
     The outputis written to file although it is a VolumeXmipp.
 **/
 void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
@@ -101,13 +101,13 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     Creates the 2D radon transform of an image via Spider.
     An exception is thrown if some intermidiate files (b01.xmp, superfeo.xmp,
     superfeo2.xmp) cannot be created.
-    
+
     The Delta_ang is the sampling rate in the angular space
     measured in degrees.
-    
+
     The output_size is the size of the output Radon transform. If it is -1
     then it is 1.5*XSIZE(Vol_in).
-    
+
     The output is written to file as it cannot be held by
     any of the Xmipp classes.
 **/
@@ -128,7 +128,7 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
 /** Angular_refinement via Radon.
     The angular refinement process via the Radon transform is performed.
     All refinements are considered as subsearches within the given range.
-    The default range (0,360),(0,90),(0,360) covers the whole 
+    The default range (0,360),(0,90),(0,360) covers the whole
     projection space.
 
     Input files must be Fourier Radon transforms of the input images.

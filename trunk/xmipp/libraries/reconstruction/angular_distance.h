@@ -25,9 +25,10 @@
 #ifndef _PROG_ANGULAR_DISTANCE
    #define _PROG_ANGULAR_DISTANCE
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <Reconstruction/symmetries.hh>
+#include <data/funcs.h>
+#include <data/docfile.h>
+
+#include "symmetries.h"
 
 /**@name Angular Distance */
 //@{

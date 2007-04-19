@@ -6,31 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ALIGN2D
    #define _PROG_ALIGN2D
 
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippImages.hh>
+#include <data/fft.h>
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/docfile.h>
+#include <data/selfile.h>
+#include <data/image.h>
+
 #include <vector>
 
 /**@name Align2D */
@@ -83,9 +84,9 @@ public:
   // SelFile images
   SelFile SF;
   // Stack of input images
-  vector<ImageXmipp>  images;  
+  vector<ImageXmipp>  images;
   // Stack of optimal correlations for all images
-  vector<double>  corr;  
+  vector<double>  corr;
   // Boolean for successful alignment of image
   vector<bool>  success;
   // Image holding current reference
@@ -94,29 +95,29 @@ public:
 public:
   /// Read argument from command line
   void read(int argc, char **argv);
-  
+
   /// Show
   void show();
 
   /// Usage
   void usage();
-  
+
   /// Rotational alignment of an image
-  bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref, 
+  bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 		 const float &max_rot, const float &Rin, const float &Rout, const double &outside=0.);
 
    /// Translational alignment of an image
   bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside=0.);
 
   /// Alignment by complete search of rotations and translations
-  bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref, 
-                       const float &max_shift, const float &max_rot, const float &psi_interval, 
+  bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref,
+                       const float &max_shift, const float &max_rot, const float &psi_interval,
 		       const float &Rin, const float &Rout, const double &outside=0.);
 
   /// Piramidal combination of images to construct a reference
   void do_pspc();
 
-  /// Alignment of all images by iterative refinement 
+  /// Alignment of all images by iterative refinement
   void refinement();
 
   /// Calculate optimal correlation for in document file
@@ -125,6 +126,6 @@ public:
   /// Main routine
   void align2d();
 
-};				    
+};				
 //@}
 #endif

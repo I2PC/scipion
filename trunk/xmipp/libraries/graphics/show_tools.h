@@ -7,25 +7,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _SHOWTOOLS_H
 #define _SHOWTOOLS_H
+
 #include <qwidget.h>
 #include <qlabel.h>
 #include <qscrollbar.h>
@@ -33,7 +34,9 @@
 #include <qpixmap.h>
 #include <qradiobutton.h>
 #include <qtextedit.h>
-#include <XmippData/xmippImages.hh>
+
+#include <data/image.h>
+
 #include <vector>
 #include <string>
 
@@ -42,9 +45,9 @@
 
 /**Scroll param class.
     This class opens a window for asking for the Scroll parameter.
-    It emits a signal called new_value(float). (precision is the number of 
+    It emits a signal called new_value(float). (precision is the number of
     digits used by the mantise)
-    
+
     An example of use of this class with a single parameter is
     \begin{verbatim}
       // Create window
@@ -53,14 +56,14 @@
          0, "new window", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
-      connect( param_window, SIGNAL(new_value(float)), 
+      connect( param_window, SIGNAL(new_value(float)),
                this,         SLOT(set_spacing(float)));
 
       // Show
       param_window->setFixedSize(250,150);
       param_window->show();
     \end{verbatim}
-    
+
     With two parameters
     \begin{verbatim}
       // Create window
@@ -86,7 +89,7 @@
     \end{verbatim}
 */
 class ScrollParam : public QWidget
-{ 
+{
   Q_OBJECT
 public:
     /** Constructor for a single scroll.
@@ -109,7 +112,7 @@ public:
     void init(vector<float> &min, vector<float> &max,
        vector<float> &initial_value, vector<char *> &prm_name,
        char *caption, int precision=2);
-   
+
    /** Get current values. */
    vector<float> getCurrentValues();
 private:
@@ -120,7 +123,7 @@ private:
 private slots:
    void scrollValueChanged(int);
    void slot_close_clicked();
-   void slot_ok_clicked();   
+   void slot_ok_clicked();
 signals:
    /** Signal emitted when the value is changed*/
    void new_value(float);
@@ -135,7 +138,7 @@ signals:
 /**Exclusive param class.
     This class opens a window for asking for a exclusive parameter.
     It emits a signal called new_value(int) with the selected value
-    
+
     An example of use of this class is
     \begin{verbatim}
        vector<string> list_values;
@@ -143,11 +146,11 @@ signals:
        list_values.push_back("Option 2");
       // Create window
       ExclusiveParam* param_window=
-           new ExclusiveParam(list_values, parameter, "Set this exclusive parameter", 
+           new ExclusiveParam(list_values, parameter, "Set this exclusive parameter",
              0, "new window", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
-      connect( param_window, SIGNAL(new_value(int)), 
+      connect( param_window, SIGNAL(new_value(int)),
                this,         SLOT(set_spacing(int)));
 
       // Show
@@ -156,12 +159,12 @@ signals:
     \end{verbatim}
 */
 class ExclusiveParam : public QWidget
-{ 
+{
   Q_OBJECT
 public:
     /** Constructor.
         Provide the min_value, max_value, caption and initial_value.*/
-    ExclusiveParam( vector<string> &list_values, int initial_value, 
+    ExclusiveParam( vector<string> &list_values, int initial_value,
        char *caption, QWidget *parent = 0,
        const char *name = 0, int wFlags=0 );
     ~ExclusiveParam();
@@ -171,7 +174,7 @@ private:
    vector< QRadioButton *> button;
 private slots:
    void but_close_clicked();
-   void but_ok_clicked();   
+   void but_ok_clicked();
    void exclusiveValueChanged();
 signals:
    /** Signal emitted when the value is changed*/
@@ -195,11 +198,11 @@ void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
 
 /** Xmipp image -> Xmipp PSD.
     The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output); 
+void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output);
 
 /** Xmipp image -> Xmipp CTF.
     The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output); 
+void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output);
 //@}
 
 /**@name Misc */

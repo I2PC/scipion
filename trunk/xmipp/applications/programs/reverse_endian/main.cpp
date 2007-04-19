@@ -6,33 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippSelFiles.hh>
+#include <data/args.h>
+#include <data/volume.h>
+#include <data/image.h>
+#include <data/selfile.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
    FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
    SelFile         SF;
@@ -49,7 +46,7 @@ int main(int argc, char **argv) {
      if(check_param(argc,argv,"-force"))
         Force_Reverse_Flag=true;
       else Force_Reverse_Flag=false;
-     if (Is_ImageXmipp(fn_input) || 
+     if (Is_ImageXmipp(fn_input) ||
 	      Is_VolumeXmipp(fn_input) ||
 			Is_FourierImageXmipp(fn_input) ) {
        SF.insert(fn_input,SelLine::ACTIVE);
@@ -57,7 +54,7 @@ int main(int argc, char **argv) {
      } else  {
        SF.read(fn_input);
      }
-   } 
+   }
    catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
 
 
@@ -76,7 +73,7 @@ int main(int argc, char **argv) {
       else image_reversed=image.reversed();
       if (fn_out=="") image.write(fn_input,image_reversed);
       else            image.write(fn_out,image_reversed);
-      
+
    // Mask a single volume --------------------------------------------------
    } else if (Is_VolumeXmipp(fn_input)) {
       volume.read(fn_input);
@@ -88,7 +85,7 @@ int main(int argc, char **argv) {
    // Mask a selection file ------------------------------------------------
    } else {
       SF.read(fn_input);
-      
+
       // Initialise progress bar
       time_config();
       int i=0; init_progress_bar(SF.ImgNo());
@@ -132,7 +129,7 @@ void Usage() {
     cerr << "    Reverse the little/big endian status of the input files\n"
          << "    Floats are written in the native format for the machine running\n"
          << "    the program\n";
-    
+
     cerr << "Usage: reverse_endian <parameters>\n"
          << "   -i <image or volume> [-o <image_out or volume_out]\n"
          << "   -i <selfile> [-oext <output extension>]\n"
@@ -151,7 +148,7 @@ void Usage() {
       COMMAND LINES {
 	+ usual: xmipp_reverse_endian
                      #include "prog_line.mnu"
-      } 
+      }
       PARAMETER DEFINITIONS {
          #include "prog_vars.mnu"
       }

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -31,9 +31,8 @@
 #ifndef XMIPPSOM_H
 #define XMIPPSOM_H
 
-#include "xmippBaseAlgo.hh"
-#include "xmippMap.hh"
-
+#include "base_algorithm.h"
+#include "map.h"
 
 //---------------------------------------------------------------------------
 // Class Descent
@@ -73,8 +72,8 @@
     * Standard output for a Descent class
     * @param _os The output stream
     */
-    virtual void printSelf(ostream& _os) const; 
-  
+    virtual void printSelf(ostream& _os) const;
+
     /**
     * Standard input for a Descent class
     * @param _is The input stream
@@ -82,7 +81,7 @@
     virtual void readSelf (istream& _is);
 
   /**
-   * Saves the Descent class into a stream. 
+   * Saves the Descent class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -90,7 +89,7 @@
 
 
   /**
-   * Loads the Descent class from a stream. 
+   * Loads the Descent class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
@@ -107,7 +106,7 @@
 	  _desc.printSelf(_os);
 	  return _os;
     };
-  
+
     /**
     * Standard input for a Descent class
     * @param _is The input stream
@@ -168,13 +167,13 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
    * @param _alpha  alpha(t)
    */
   void alpha(Descent _alpha);
-  
+
   /**
    * Sets the radius descent function
    * @param _radius  radius(t)
    */
   void radius(Descent _radius);
-  
+
   /**
    * Sets the number of training steps
    * @param _nSteps  Number of training steps
@@ -184,7 +183,7 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
 
   /**
    * Trains the SOM
-   * @param _som  The som to train           
+   * @param _som  The som to train
    * @param _ts   The training set
    */
   virtual void train (xmippMap& _som, xmippCTVectors& _ts) const;
@@ -203,13 +202,13 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
    */
 
    virtual void clear();
-  
+
   /**
   * Standard output for a SOM algorithm
   * @param _os The output stream
   */
   virtual void printSelf(ostream& _os) const;
-  
+
   /**
   * Standard input for a SOM algorithm
   * @param _is The input stream
@@ -217,7 +216,7 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
   virtual void readSelf (istream& _is);
 
   /**
-   * Saves the xmippSOM class into a stream. 
+   * Saves the xmippSOM class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -225,12 +224,12 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
 
 
   /**
-   * Loads the xmippSOM class from a stream. 
+   * Loads the xmippSOM class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   virtual void loadObject(istream& _is);
-  
+
   /**
   * Standard output for a som algorithm
   * @param _os   The output stream
@@ -241,7 +240,7 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
 	  _som.printSelf(_os);
 	  return _os;
   };
-  
+
   /**
   * Standard input for a som algorithm
   * @param _is The input stream
@@ -276,12 +275,12 @@ class xmippSOM : public xmippBaseAlgo<xmippMap>
  private:
  /*
    * Trains the SOM (never used)
-   * @param _som  The som to train           
+   * @param _som  The som to train
    * @param _ts   The training set
    */
   virtual void train (xmippMap& _som, const TS& _ts) const {};
 
-   
+
 };
 
 //@}

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../xmippDelTriang.hh"
+#include "del_triang.h"
 
 #define FALSE 0;
 #define TRUE 1;

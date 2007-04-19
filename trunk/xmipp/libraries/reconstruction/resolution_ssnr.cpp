@@ -6,28 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_SSNR.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippProjection.hh>
-#include <XmippData/xmippFFT.hh>
-#include <Reconstruction/projection.hh>
+#include "resolution_ssnr.h"
+
+#include <data/args.h>
+#include <data/projection.h>
+#include <data/fft.h>
+
+#include <reconstruction/projection.h>
 
 // Read parameters from command line ---------------------------------------
 void Prog_SSNR_prm::read(int argc, char **argv) {
@@ -42,7 +44,7 @@ void Prog_SSNR_prm::read(int argc, char **argv) {
          fn_VSSNR=get_param(argc,argv,"-VSSNR");
          fn_out_images=get_param(argc,argv,"-oimages","");
       }
-   } else 
+   } else
       fn_VSSNR=get_param(argc,argv,"-VSSNR");
    ring_width=AtoF(get_param(argc,argv,"-ring","4"));
    Tm=AtoF(get_param(argc,argv,"-sampling_rate","1"));
@@ -96,7 +98,7 @@ void Prog_SSNR_prm::usage() const {
         << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
 	<< "  [-min_power <th=1e-10>]: Minimum power\n"
         << "  [-o <SSNR file=\"\">]    : Output file\n"
-   ; 
+   ;
 }
 
 // Produce side Info -------------------------------------------------------
@@ -163,7 +165,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
       Is.read(SF_S.NextImg()); Is().set_Xmipp_origin();
       In.read(SF_N.NextImg()); In().set_Xmipp_origin();
       Inp()=In();
-      
+
       Projection Iths, Ithn;
       if (XSIZE(S())!=0) {
 	 project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
@@ -174,7 +176,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
          Iths.read(SF_Sth.NextImg());
          Ithn.read(SF_Nth.NextImg());
       }
-      
+
       #ifdef DEBUG
          ImageXmipp save;
 	 save()=Is();   save.write("PPPread_signal.xmp");
@@ -182,7 +184,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
 	 save()=Iths(); save.write("PPPtheo_signal.xmp");
 	 save()=Ithn(); save.write("PPPtheo_noise.xmp");
       #endif
-      
+
       Is()-=Iths();
       In()-=Ithn();
 
@@ -190,7 +192,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
       matrix2D< complex<double> > FFT_Iths; FourierTransform(Iths(),FFT_Iths);
       matrix2D< complex<double> > FFT_In;   FourierTransform(In  (),FFT_In  );
       matrix2D< complex<double> > FFT_Ithn; FourierTransform(Ithn(),FFT_Ithn);
-      
+
       #ifdef DEBUG
          ImageXmippT < complex<double> > savec;
 	 savec()=FFT_Is;   savec.write("PPPFFTread_signal.xmp");
@@ -283,7 +285,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
    N_SSNR1D=N_S21D/N_N21D;
    N_S21D/=K1D;
    N_N21D/=K1D;
-   
+
    output.resize(XSIZE(S_SSNR1D),9);
    int imax=0;
    FOR_ALL_ELEMENTS_IN_MATRIX1D(S_SSNR1D) {
@@ -304,7 +306,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output) {
       imax++;
    }
    output.resize(imax,9);
-   
+
    // Produce VSSNR ........................................................
    if (dim==2) {
       cerr << "Interpolating the VSSNR ...\n";

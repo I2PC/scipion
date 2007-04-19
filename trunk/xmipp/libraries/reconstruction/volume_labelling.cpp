@@ -6,24 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../phantom.hh"
-#include "../volume_labelling.hh"
+
+#include "phantom.h"
+#include "volume_labelling.h"
 
 /* Label a volume from a description file ---------------------------------- */
 int Labels_from_description(Phantom &phantom, Volume *vol_label)
@@ -35,7 +36,7 @@ int Labels_from_description(Phantom &phantom, Volume *vol_label)
 }
 
 /* Label a volume from growing voxels -------------------------------------- */
-// Esta función hay que acabarla
+// Esta funciï¿½n hay que acabarla
 int Labels_from_growing(Volume *phantom, Volume *vol_label)
 {
    vol_label->adapt_to_size((*phantom)().zdim,(*phantom)().ydim,
@@ -52,7 +53,7 @@ void Labels_from_growing(matrix3D<float> *vol, matrix3D<short> *vol_label,
 
    int     i,j,k;                      /* X,Y,Z indices inside volume        */
    short   next_label=1;               /* Next label to use when labelling   */
-   
+
     for (k=0; k<vol->zdim; k++)
         for (j=0; j<vol->ydim; j++)
             for (i=0; i<vol->xdim; i++) {
@@ -76,7 +77,7 @@ void Labels_from_growing(matrix3D<float> *vol, matrix3D<short> *vol_label,
 /* ------------------------------------------------------------------------- */
 /* Grow Voxel                                                                */
 /* ------------------------------------------------------------------------- */
-/* This function takes a voxel, labels it and studies the labels of the 
+/* This function takes a voxel, labels it and studies the labels of the
    voxels in its surroundings. A prerrequisite to this routine is that
    the entering voxel is greater than 0 (a real density) and it has not
    been already labelled */
@@ -92,7 +93,7 @@ void grow_voxel(matrix3D<short> *vol_label, matrix3D<float> *vol_phantom,
    int ileft,iright;    /* limits for x-axis */
    int jleft,jright;    /* limits for y-axis */
    int kupper,klower;   /* limits for z-axis */
-   
+
    /* Assign label ...................................................... */
    (*vol_label).m[k0][j0][i0]=label;
    #ifdef DEBUG_NEIGHBOURS
@@ -119,7 +120,7 @@ void grow_voxel(matrix3D<short> *vol_label, matrix3D<float> *vol_phantom,
                if ((*vol_phantom).m[k][j][i]==0.0) continue;
                if ((*vol_label).m[k][j][i]!=0)     continue;
                grow_voxel(vol_label, vol_phantom, k,j,i,label,level+1);
-           }   
+           }
 
 }
 

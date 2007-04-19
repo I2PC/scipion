@@ -6,23 +6,23 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../grids.hh"
+#include "grids.h"
 
 #include <stdio.h>
 #include <string.h> // for memcpy
@@ -127,7 +127,7 @@ void Grid::voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
    const matrix2D<double> *V) const {
    matrix1D<double> SGcorner1(3), SGcorner2(3);     // Subgrid corners
    SPEED_UP_temps;
-   
+
    // Look for the lowest and highest volume coordinate
    Gcorner1.resize(3);  // lowest and highest coord.
    Gcorner2.resize(3);
@@ -187,7 +187,7 @@ void Grid::voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
 SimpleGrid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
    const matrix1D<double> &corner2, const matrix1D<double> &origin) {
    SimpleGrid    grid;
-   
+
    // The vectors of the grid are the default ones of (1,0,0), (0,1,0),
    // and (0,0,1), and its inverse matrix is already computed
    grid.relative_size = relative_size;
@@ -196,7 +196,7 @@ SimpleGrid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
    // Compute the lowest and highest indexes inside the grid
    grid.universe2grid(corner1,grid.lowest);  grid.lowest.FLOORnD();
    grid.universe2grid(corner2,grid.highest); grid.highest.CEILnD();
-   
+
    grid.R2=-1;
    return grid;
 }
@@ -206,7 +206,7 @@ Grid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
    const matrix1D<double> &corner2) {
    Grid            result;
    SimpleGrid      aux_grid;
-   
+
    matrix1D<double> origin=(corner1+corner2)/2; origin.ROUNDnD();
    aux_grid=Create_CC_grid(relative_size,corner1,corner2,origin);
    result.add_grid(aux_grid);
@@ -216,7 +216,7 @@ Grid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
 Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim) {
    Grid            result;
    SimpleGrid      aux_grid;
-   
+
    matrix1D<double> origin=
       vector_R3((double)FLOOR(Xdim/2.0),(double)FLOOR(Ydim/2.0),
          (double)FLOOR(Zdim/2.0));
@@ -233,7 +233,7 @@ Grid Create_BCC_grid(double relative_size, const matrix1D<double> &corner1,
    Grid             result;
    SimpleGrid       aux_grid;
    matrix1D<double> origin=(corner1+corner2)/2; origin.ROUNDnD();
-   
+
    //Even Slice
    //    0 1 2 3 4 5 6 7 8 9 10 11 12 (Col)
    //  0 A   A   A   A   A   A     A
@@ -267,11 +267,11 @@ Grid Create_BCC_grid(double relative_size, const matrix1D<double> &corner1,
    // 11   B   B   B   B   B    B
    // 12
    //(Row)
-   
+
    // Grid A
    aux_grid=Create_CC_grid(relative_size,corner1,corner2,origin);
    result.add_grid(aux_grid);
-   
+
    // Grid B
    origin=origin+relative_size/2*vector_R3(1.,1.,1.);
    aux_grid=Create_CC_grid(relative_size,corner1,corner2,origin);
@@ -289,7 +289,7 @@ Grid Create_FCC_grid(double relative_size, const matrix1D<double> &corner1,
    matrix1D<double> aux_origin;
    matrix1D<double> cornerb;
    matrix1D<double> origin=(corner1+corner2)/2; origin.ROUNDnD();
-   
+
    //Even Slice
    //    0 1 2 3 4 5 6 7 8 9 10 11 12 (Col)
    //  0 A   A   A   A   A   A     A
@@ -323,7 +323,7 @@ Grid Create_FCC_grid(double relative_size, const matrix1D<double> &corner1,
    // 11 D   D   D   D   D   D     D
    // 12   C   C   C   C   C    C
    //(Row)
-   
+
    // Grid A
    aux_grid=Create_CC_grid(relative_size,corner1,corner2,origin);
    result.add_grid(aux_grid);
@@ -342,7 +342,7 @@ Grid Create_FCC_grid(double relative_size, const matrix1D<double> &corner1,
    aux_origin=origin+relative_size/2*vector_R3(1.,1.,0.);
    aux_grid=Create_CC_grid(relative_size,corner1,cornerb,aux_origin);
    result.add_grid(aux_grid);
-   
+
    return result;
 }
 #undef MULTIPLY_CC_GRID_BY_TWO
@@ -400,7 +400,7 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
 Grid Create_CC_grid(double relative_size, double R) {
    Grid            result;
    SimpleGrid      aux_grid;
-   
+
    matrix1D<double> origin(3); origin.init_zeros();
    matrix1D<double> x(3), y(3), z(3);
    VECTOR_R3(x,1,0,0);
@@ -415,7 +415,7 @@ Grid Create_CC_grid(double relative_size, double R) {
 Grid Create_BCC_grid(double relative_size, double R) {
    Grid            result;
    SimpleGrid      aux_grid;
-   
+
    matrix1D<double> origin(3); origin.init_zeros();
    matrix1D<double> x(3), y(3), z(3);
    VECTOR_R3(x,0.5,0.5,-0.5);
@@ -430,7 +430,7 @@ Grid Create_BCC_grid(double relative_size, double R) {
 Grid Create_FCC_grid(double relative_size, double R) {
    Grid            result;
    SimpleGrid      aux_grid;
-   
+
    matrix1D<double> origin(3); origin.init_zeros();
    matrix1D<double> x(3), y(3), z(3);
    VECTOR_R3(x,0.5,0.5,0);

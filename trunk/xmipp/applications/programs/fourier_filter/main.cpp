@@ -6,26 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <Reconstruction/Programs/Prog_FourierFilter.hh>
+#include <data/progs.h>
+#include <data/args.h>
+#include <reconstruction/fourier_filter.h>
 
 class FourierFilter_parameters: public Prog_parameters {
 public:
@@ -33,7 +33,7 @@ public:
    FileName    fn_mask;
    FileName    fn_amplitude;
    bool        do_not_center;
-   
+
    bool        first;
    int         dim;
 public:
@@ -43,10 +43,10 @@ public:
       fn_mask=get_param(argc,argv,"-save_mask","");
       fn_amplitude=get_param(argc,argv,"-save_amplitude","");
       do_not_center=check_param(argc,argv,"-do_not_center");
-      
+
       first=true;
    }
-   
+
    void show() {
       Prog_parameters::show();
       fmask.show();
@@ -120,5 +120,5 @@ int main (int argc, char **argv) {
       OPT($FN_AMPL)
       OPT(-do_not_center)
       #include "fourier_menu.mnu"
-   }     
+   }
 */

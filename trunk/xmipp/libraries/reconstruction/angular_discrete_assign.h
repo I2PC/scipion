@@ -6,31 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ANGULAR_PREDICT
    #define _PROG_ANGULAR_PREDICT
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <Classification/xmippPC.hh>
-#include "Prog_Angular_Distance.hh"
-#include "../symmetries.hh"
+#include <data/funcs.h>
+#include <data/progs.h>
+#include <data/selfile.h>
+#include <classification/pca.h>
+
+#include "angular_distance.h"
+#include "symmetries.h"
 
 #include <map>
 #include <algorithm>
@@ -163,8 +164,8 @@ public:
    /** Build candidate list.
        Build a candidate list with all possible reference projections
        which are not further than the maximum allowed change from
-       the given image. 
-       
+       the given image.
+
        The list size is the total number of reference images. For each
        image the list is true if it is still a candidate.*/
    void build_ref_candidate_list(const ImageXmipp &I,
@@ -174,9 +175,9 @@ public:
    /** Refine candidate list via correlation. Given a projection image and the
        list of alive candidates, this function correlates the input image with
        all alive candidates and leave to pass only th% of the images.
-       
+
        m is the subband being studied*/
-   void refine_candidate_list_with_correlation(int m, 
+   void refine_candidate_list_with_correlation(int m,
       matrix1D<double> &dwt, vector<bool> &candidate_list,
       vector<double> &cumulative_corr,
       matrix1D<double> &x_power,
@@ -188,7 +189,7 @@ public:
    double evaluate_candidates(const vector<double> &vscore,
       const vector<int> &candidate_idx, vector<double> &candidate_rate,
       double weight);
-   
+
    /** Group views.
        The input images are supposed to be ordered by rate.
        The groups are also sorted by rate. */

@@ -14,6 +14,7 @@
 #include <qmainwindow.h>
 #include <qmap.h>
 #include <qaccel.h>
+
 #include <vector>
 
 class QAction;

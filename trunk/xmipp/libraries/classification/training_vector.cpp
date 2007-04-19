@@ -6,37 +6,36 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
 // xmippCTVectors.cc
 //-----------------------------------------------------------------------------
 
+#include "training_vector.h"
 
-#include "../xmippCTVectors.hh"
-#include <XmippData/xmippArgs.hh>
+#include <data/args.h>
 
-//-----------------------------------------------------------------------------
 
 /**
  * TrainingSet for xmippCTVectors
  */
- 
+
 
   /**
    * Constructs a training set given a stream
@@ -65,13 +64,13 @@
    * @param op1 xmippCTVectors
    */
     xmippCTVectors::xmippCTVectors (const xmippCTVectors &op1) {
-    
+
 			calibrated(op1.calibrated());
 
 			for (int i = 0; i < op1.size(); i++)
 				if (calibrated())
 					add(op1.itemAt(i), op1.targetAt(i));
-				else 
+				else
 					add(op1.itemAt(i));
 
 			normalized = op1.normalized;
@@ -80,13 +79,13 @@
 	
 	
 
-    
-  /** 
+
+  /**
    * Returns amount of features
    */
   unsigned xmippCTVectors::featureSize() const { return itemAt(0).size();};
 
-  /** 
+  /**
    * Returns dimension (the same as above)
    */
   unsigned xmippCTVectors::dimension() const { return itemAt(0).size();};
@@ -106,9 +105,9 @@
    * @param _os The output stream
    * @param _ts  The training set to be printed
    */
-  void xmippCTVectors::printSelf(ostream& _os) const 
+  void xmippCTVectors::printSelf(ostream& _os) const
     {
-        _os << dimension() << " " << theItems.size() << endl; 
+        _os << dimension() << " " << theItems.size() << endl;
 	xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
     };
 
@@ -117,7 +116,7 @@
    * @param _is The input stream
    * @param _ts  The training set to be read
    * @exception  runtime_error  If there are problems with the stream
-   */ 
+   */
   void xmippCTVectors::readSelf (istream& _is)
   {
     #ifndef _NO_EXCEPTION
@@ -128,16 +127,16 @@
       string line;
 
       // Determines the number of rows and columns in the training set
-      
-      long dim, size;       
-      _is >> dim; 
+
+      long dim, size;
+      _is >> dim;
       _is >> line;
       if (!sscanf(line.c_str(),"%ld",&size)) {
          int x, y;
 	 _is >> x;
 	 _is >> y;
 	 size = x*y;
-      } 
+      }
       getline(_is, line);
       theItems.resize(size);
       theTargets.resize(size);
@@ -146,7 +145,7 @@
     	 vector<xmippFeature> v;
          v.resize(dim);
          for (int j=0; j < dim; j++){
-	    xmippFeature var;  
+	    xmippFeature var;
 	    _is >> var;
 	    v[j] = var;
 	 }
@@ -168,7 +167,7 @@
 
 
   /**
-   * Saves the class into a stream. 
+   * Saves the class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
@@ -180,26 +179,26 @@
 	for (int i = 0; i < varStats.size(); i++) {
 	   _os << varStats[i].mean << endl;
 	   _os << varStats[i].sd << endl;
-	}  
+	}
      xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
   };
 
 
   /**
-   * Loads the class from a stream. 
+   * Loads the class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   void xmippCTVectors::loadObject(istream& _is)
   {
      clear();
-     int dim; 
-    _is >> dim; 
-    _is >> normalized; 
+     int dim;
+    _is >> dim;
+    _is >> normalized;
     if (normalized)
        varStats.clear();
        varStats.resize(dim);
-       for (int i = 0; i < varStats.size(); i++) {		   
+       for (int i = 0; i < varStats.size(); i++) {		
     	  _is >> varStats[i].mean;
     	  _is >> varStats[i].sd;
        }
@@ -215,7 +214,7 @@
 
   void xmippCTVectors::deleteVariable(int _var)
     {
-      for(unsigned int it = 0; it < size(); it++) 
+      for(unsigned int it = 0; it < size(); it++)
         itemAt(it).erase(itemAt(it).begin() + _var);
     };
 
@@ -225,7 +224,7 @@
    * @param op1 xmippCTVectors
    */
   xmippCTVectors& xmippCTVectors::operator= (const xmippCTVectors &op1) {
-    
+
 		// This avoids memory leakage in assignments like v=v
 		if (&op1!=this) {
 		
@@ -234,7 +233,7 @@
 			for (int i = 0; i < op1.size(); i++)
 				if (calibrated())
 					add(op1.itemAt(i), op1.targetAt(i));
-				else 
+				else
 					add(op1.itemAt(i));
 			
 			normalized = op1.normalized;
@@ -267,30 +266,30 @@
   */
 
   bool xmippCTVectors::insertRowFrom(xmippCTVectors& _ts, unsigned int _idx) {
-  	  
+  	
   	  // just some validation, but not complete
 
-  	  if ( ((&_ts == this) || (_idx > _ts.size())) || 
+  	  if ( ((&_ts == this) || (_idx > _ts.size())) ||
   		  (itemAt(0).size() != _ts.itemAt(0).size()) )
   		  return false;
 
   	  if (calibrated())
   		  add(_ts.itemAt(_idx), _ts.targetAt(_idx));
-  	  else 
+  	  else
   		  add(_ts.itemAt(_idx));
   	  return true;
-  	  
+  	
   }
 
   /** Delete a row from a TS.
   * @param _idx   row to be deleted
   */
   bool xmippCTVectors::deleteRow(unsigned int _idx) {
-  	  return remove(_idx);    
+  	  return remove(_idx);
   }
- 
 
-  /** 
+
+  /**
    * Normalize all features in the training set
    * @param _i  The index to the feature
    */
@@ -315,12 +314,12 @@
 	mean /= (xmippFeature) nn;
 
 	// Then calculates SD
-	xmippFeature sd = 0; 
+	xmippFeature sd = 0;
 	for(int it = 0; it < size(); it++) {
 		if (!isnan(itemAt(it)[_i]))
 			sd += (itemAt(it)[_i]-mean)*(itemAt(it)[_i]-mean);
 	}
-	sd = sqrt(sd/ (xmippFeature) (nn-1)); 
+	sd = sqrt(sd/ (xmippFeature) (nn-1));
 
 	// Now normalize the variable
 	if (sd != 0) {
@@ -335,7 +334,7 @@
   }
 
 
-  /** 
+  /**
    *	Normalize all features in the training set
    */
 
@@ -348,10 +347,10 @@
   }
 
 
-  /** 
+  /**
    *	UnNormalize all features in the training set
    */
-  
+
   void xmippCTVectors::unNormalize() {
 	for(unsigned it = 0; it < size(); it++) {
 		for (unsigned i = 0; i < itemAt(0).size(); i++) {
@@ -364,7 +363,7 @@
   }
 
 
-  /** 
+  /**
    *	returns normalized variable in the original scale
    */
 
@@ -394,7 +393,7 @@
 	   return t;
   }
 
-  /** 
+  /**
    * Returns TRUE if recordset is normalized.
    */
 
@@ -403,7 +402,7 @@
   }
 
 
- /** 
+ /**
    * Returns a const reference to the normalization vector
  */
 /*  const vector<xmippCTVectors::statsStruct>& xmippCTVectors::getNormalizationInfo() const {
@@ -411,7 +410,7 @@
   };*/
 
 
-  /** 
+  /**
    * Calcualtes the average and SD of a feature in the training set
    * @param _i  The index to the feature
    */
@@ -436,15 +435,15 @@
 	_mean /= (xmippFeature) nn;
 
 	// Then calculates SD
-	_sd = 0; 
+	_sd = 0;
 	for(int it = 0; it < size(); it++) {
 		if (!isnan(itemAt(it)[_i]))
 			_sd += (itemAt(it)[_i]-_mean)*(itemAt(it)[_i]-_mean);
 	}
-	_sd = sqrt(_sd/ (xmippFeature) (nn-1)); 
+	_sd = sqrt(_sd/ (xmippFeature) (nn-1));
   }
 
-  /** 
+  /**
    *	Returns a vector containing the average (item 0) and SD (item 1)
    */
 
@@ -454,7 +453,7 @@
 	myStatVector.theItems[0].resize(itemAt(0).size(), 0);
 	myStatVector.theItems[1].resize(itemAt(0).size(), 0);
 	myStatVector.theTargets.resize(2);
-	for (unsigned i = 0; i < itemAt(0).size(); i++) 
+	for (unsigned i = 0; i < itemAt(0).size(); i++)
 		getFeatureStats(i, myStatVector.theItems[0][i], myStatVector.theItems[1][i]);
         myStatVector.theTargets[0] = "Average ";       		
         myStatVector.theTargets[1] = "SD ";       	

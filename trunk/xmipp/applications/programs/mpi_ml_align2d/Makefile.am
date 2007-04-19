@@ -3,6 +3,7 @@ mpi_ml_align2d_SOURCES = main.cpp
 mpi_ml_align2d_LDADD = \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/external/bilib/libBilib.la \
 	@MPILIBS@
 
 CC=@MPICXX@

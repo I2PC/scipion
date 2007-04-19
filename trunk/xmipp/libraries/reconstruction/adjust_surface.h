@@ -6,29 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ADJUST_SURFACE_HH
 #  define _PROG_ADJUST_SURFACE_HH
 
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippVectorial.hh>
+#include <data/image.h>
+#include <data/volume.h>
+#include <data/funcs.h>
+#include <data/vectorial.h>
 
 /**@name Adjust Surface program */
 //@{
@@ -151,11 +151,11 @@ public:
     This function constructs a mask volume according to the information
     given by mask. Then the correlation is computed of the two volumes
     between the two heights given. The correlation coefficient is returned.
-    
+
     The direction indicates in which direction the volume mask will be
     extended from the surface, it can take TOP2BOTTOM or BOTTOM2TOP. An
     exception is thrown if non of these directions is specified.
-    
+
     tell can take the MANUAL_ORDER flag, then the intermidiate volumes
     are written as PPPsurface.vol with the generated volumetric surface
     mask and PPPsign.vol with the differences in the interest planes
@@ -168,11 +168,11 @@ public:
     This function constructs a mask volume according to the information
     given by mask. Then the correlation is computed of the two volumes
     between the two heights given. The correlation coefficient is returned.
-    
+
     The direction indicates in which direction the volume mask will be
     extended from the surface, it can take TOP2BOTTOM or BOTTOM2TOP. An
     exception is thrown if non of these directions is specified.
-    
+
     tell can take the MANUAL_ORDER flag, then the intermidiate projection
     are written as PPPsurface.img with the projection of the interest region
     and PPPsign.img with the differences between the input surface and

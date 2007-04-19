@@ -6,39 +6,42 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <XmippData/xmippFFT.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippMasks.hh>
-#include <Reconstruction/CTF.hh>
+
+#include <data/fft.h>
+#include <data/args.h>
+#include <data/funcs.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/image.h>
+#include <data/geometry.h>
+#include <data/filters.h>
+#include <data/mask.h>
+
+#include "ctf.h"
+
 #include <vector>
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)
-#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ ) 
+#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
 #define FOR_ALL_LIMITED_TRANSLATIONS() for (int itrans=0; itrans<nr_trans; itrans++)
-#define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++) 
+#define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++)
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLVALUE 1e-4
 #define SMALLANGLE 1.75
@@ -187,7 +190,7 @@ public:
 public:
   /// Read arguments from command line
   void read(int argc, char **argv, bool ML3D=false);
-  
+
   /// Show
   void show(bool ML3D=false);
 
@@ -218,7 +221,7 @@ public:
   /// (This produce_side_info is Selfile-dependent!)
   void produce_Side_info2(int nr_vols=1);
 
-  /// Read and write optimal translations to disc 
+  /// Read and write optimal translations to disc
   /// (not to store them all in memory)
   void write_offsets(FileName fn, vector<double> &data);
   bool read_offsets(FileName fn, vector<double> &data);
@@ -227,15 +230,15 @@ public:
   void calculate_pdf_phi();
 
   /// Fill vector of matrices with all rotations of reference
-  void rotate_reference(vector<ImageXmipp> &Iref, 
-			bool fill_real_space, 
-			bool fill_fourier_space, 
+  void rotate_reference(vector<ImageXmipp> &Iref,
+			bool fill_real_space,
+			bool fill_fourier_space,
 			vector <vector< matrix2D<double> > > &Mref,
 			vector <vector< matrix2D<complex<double> > > > &Fref);
 
   /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-  void reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fnew, 
-				vector <vector< matrix2D<double> > > &Mnew, bool real_space, 
+  void reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fnew,
+				vector <vector< matrix2D<double> > > &Mnew, bool real_space,
 				vector<matrix2D<double> > &Mref);
 
   /// Calculate which references have projection directions close to
@@ -243,21 +246,21 @@ public:
   void preselect_directions(float &phi, float &theta,
 			    vector<double> &pdf_directions);
 
-  /// Pre-calculate which model and phi have significant probabilities 
+  /// Pre-calculate which model and phi have significant probabilities
   /// without taking translations into account!
-  void preselect_significant_model_phi(matrix2D<double> &Mimg, vector<double> &offsets, 
-				       vector <vector< matrix2D<double > > > &Mref, 
+  void preselect_significant_model_phi(matrix2D<double> &Mimg, vector<double> &offsets,
+				       vector <vector< matrix2D<double > > > &Mref,
 				       matrix2D<int> &Msignificant,
 				       vector<double > &pdf_directions);
 
   // Calculate the FT of a translated matrix using a phase shift in
   // Fourier space
-  void Fourier_translate2D(const matrix2D<complex<double> > &Fimg, 
+  void Fourier_translate2D(const matrix2D<complex<double> > &Fimg,
 			   int focus, matrix1D<double> &trans,
 			   matrix2D<complex<double> > &Fimg_shift);
 
   // If not determined yet: search optimal offsets using maxCC
-  // Then for all optimal translations, calculate all translated FTs 
+  // Then for all optimal translations, calculate all translated FTs
   // for each of the flipped variants
   void calculate_fourier_offsets(matrix2D<double> &Mimg, int focus,
 				 vector <vector< matrix2D<complex<double> > > > &Fref,
@@ -278,64 +281,64 @@ public:
 			    vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
 			    vector <vector< matrix2D<complex<double> > > > &Fwsum_ctfimgs,
 			    matrix2D<double> &Mwsum_sigma2,
-			    double &wsum_sigma_offset, vector<double> &sumw, 
-			    vector<double> &sumw_mirror, 
-			    double &LL, double &fracweight, double &mindiff2, int &opt_refno, 
-			    double &opt_psi, matrix1D<double> &opt_offsets, 
+			    double &wsum_sigma_offset, vector<double> &sumw,
+			    vector<double> &sumw_mirror,
+			    double &LL, double &fracweight, double &mindiff2, int &opt_refno,
+			    double &opt_psi, matrix1D<double> &opt_offsets,
 			    vector<double> &opt_offsets_ref,
 			    vector<double > &pdf_directions);
 
   // ML-integration over limited translations,
   // and with -fast way of selection significant rotations
-  void ML_integrate_locally(matrix2D<double> &Mimg, 
-			    vector <vector< matrix2D<double> > > &Mref, 
-			    vector <vector< matrix2D<double> > > &Mwsum_imgs, 
-			    double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			    vector<double> &sumw, vector<double> &sumw_mirror, 
+  void ML_integrate_locally(matrix2D<double> &Mimg,
+			    vector <vector< matrix2D<double> > > &Mref,
+			    vector <vector< matrix2D<double> > > &Mwsum_imgs,
+			    double &wsum_sigma_noise, double &wsum_sigma_offset,
+			    vector<double> &sumw, vector<double> &sumw_mirror,
 			    double &LL, double &fracweight, double &wdiff2,
-			    int &opt_refno, double &opt_psi, 
-			    matrix1D<double> &opt_offsets, 
+			    int &opt_refno, double &opt_psi,
+			    matrix1D<double> &opt_offsets,
 			    vector<double> &opt_offsets_ref,
 			    vector<double> &pdf_directions);
 
   /// ML-integration over all (or -fast) translations
-  void ML_integrate_complete(matrix2D<double> &Mimg, 
-			     vector <vector< matrix2D<complex<double> > > > &Fref, 
+  void ML_integrate_complete(matrix2D<double> &Mimg,
+			     vector <vector< matrix2D<complex<double> > > > &Fref,
 			     matrix2D<int> &Msignificant,
-			     vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs, 
-			     double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			     vector<double> &sumw, vector<double> &sumw_mirror, 
-			     double &LL, double &fracweight, double &wdiff2, 
-			     int &opt_refno, double &opt_psi, 
+			     vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
+			     double &wsum_sigma_noise, double &wsum_sigma_offset,
+			     vector<double> &sumw, vector<double> &sumw_mirror,
+			     double &LL, double &fracweight, double &wdiff2,
+			     int &opt_refno, double &opt_psi,
 			     matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
 			     vector<double > &pdf_directions);
 
-  /// Calculate maxCC averages for new model and new model parameters 
-  void maxCC_search_complete(matrix2D<double> &Mimg, 
-			     vector <vector< matrix2D<complex<double> > > > &Fref, 
-			     vector <vector< matrix2D<double> > > &Mref, 
-			     double &max_shift, 
-			     vector <vector< matrix2D<double> > > &Msum_imgs, 
-			     vector<double> &sumw, vector<double> &sumw_mirror, 
-			     double &minSQ, int &opt_refno, double &opt_psi, 
+  /// Calculate maxCC averages for new model and new model parameters
+  void maxCC_search_complete(matrix2D<double> &Mimg,
+			     vector <vector< matrix2D<complex<double> > > > &Fref,
+			     vector <vector< matrix2D<double> > > &Mref,
+			     double &max_shift,
+			     vector <vector< matrix2D<double> > > &Msum_imgs,
+			     vector<double> &sumw, vector<double> &sumw_mirror,
+			     double &minSQ, int &opt_refno, double &opt_psi,
 			     matrix1D<double> &opt_offsets,
 			     vector<double> &pdf_directions);
 
   /// Integrate over all experimental images
-  void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter, 
-			      double &LL, double &sumcorr, DocFile &DFo, 
+  void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
+			      double &LL, double &sumcorr, DocFile &DFo,
 			      vector<matrix2D<double> > &wsum_Mref,
 			      vector<matrix2D<double> > &wsum_ctfMref,
-			      double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
-			      double &wsum_sigma_offset, 
+			      double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2,
+			      double &wsum_sigma_offset,
 			      vector<double> &sumw, vector<double> &sumw_mirror);
 
   /// Update all model parameters
   void update_parameters(vector<matrix2D<double> > &wsum_Mref,
 			 vector<matrix2D<double> > &wsum_ctfMref,
-			 double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2, 
-			 double &wsum_sigma_offset, vector<double> &sumw, 
-			 vector<double> &sumw_mirror, 
+			 double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2,
+			 double &wsum_sigma_offset, vector<double> &sumw,
+			 vector<double> &sumw_mirror,
 			 double &sumcorr, double &sumw_allrefs,
 			 matrix1D<double> &spectral_signal);
 
@@ -347,7 +350,7 @@ public:
 
   /// Write out reference images, selfile and logfile
   void write_output_files(const int iter, DocFile &DFo,
-			  double &sumw_allrefs, double &LL, double &avecorr, 
+			  double &sumw_allrefs, double &LL, double &avecorr,
 			  vector<double> &conv);
 
 };

@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _volume_FOMs_HH
    #define _volume_FOMs_HH
 
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippImages.hh>
-#include "phantom.hh"
+#include <data/volume.h>
+#include <data/image.h>
+
+#include "phantom.h"
 
 /**@name Figures of merit
    Local FOM functions return also a vector with the local error or
@@ -39,7 +40,7 @@
     The volume label must have for each voxel to which feature it belongs
     to. It is supposed that there is no intersection between features and
     the labelling code must be:
-    \begin{verbatim} 
+    \begin{verbatim}
               0         --> background
               1         --> feature 1
               2         --> feature 2
@@ -48,7 +49,7 @@
     \end{verbatim}
     feat_voxels contains the result with indexes 0 ... FeatNo().
     See also \Ref{Phantom::label}. */
-void compute_voxels_in_feat(Volume *vol_label, 
+void compute_voxels_in_feat(Volume *vol_label,
    matrix1D<double> &feat_voxels);
 
 /** Show voxel values in feat.
@@ -71,21 +72,21 @@ void show_voxels_in_feat(const Volume *vol_phantom,
 
 /** Compute structural consistency for a single feature.
     Under this function several measures are performed over the volume.
-    
-    The scL2_FOM is a squared error measure and it is defined as 
+
+    The scL2_FOM is a squared error measure and it is defined as
     \begin{verbatim}
                         1   1
     scL2_FOM(f) = 1 - ---- sum 1/2(p(i)-r(i))²
                       N(f) N(f)
     \end{verbatim}
-    
+
     The scL1_FOM is an absolute error measure defined as
     \begin{verbatim}
                         1   1
     scL1_FOM(f) = 1 - ---- sum 1/2|p(i)-r(i)|
                       N(f) N(f)
     \end{verbatim}
-    
+
     The scmu_FOM measures the difference between the mean value within
     the feature in the phantom and in the reconstruction.
     \begin{verbatim}
@@ -93,26 +94,26 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     scmu_FOM(f) = 1 - ---- | p(f).avg() - r(f).avg() |
                         2
     \end{verbatim}
-    
+
     The scdev_FOM measures the difference between the standard deviation
     value within the feature in the phantom and in the reconstruction.
     \begin{verbatim}
     scdev_FOM(f) = 1 - | p(f).stddev() - r(f).stddev() |
     \end{verbatim}
-    
+
     The scrange_FOM is the difference between the ranges in the phantom
     and the reconstruction.
     \begin{verbatim}
     scrange_FOM(f) = 1 - 1/2(|p(f).max()-r(f).max()| + |p(f).min()-r(f).min()|)
     \end{verbatim}
-    
+
     The sccorr_FOM is the correlation between the phantom and the reconstruction.
     \begin{verbatim}
                       1   1   	             	      	          1         1
     sccorr_FOM(f) = ---- sum (p(i)-p(f).avg())(r(i)-r(f).avg())/(sum (p(i)-p(f).avg())²*sum (r(i)-r(f).avg())²)
     \end{verbatim}  N(f) N(f)					 N(f)	   N(f)
-    
-    The mutual information is defined as 
+
+    The mutual information is defined as
     \begin{verbatim}
                         I(x,y)
     scinf_FOM(x,y) = -----------      I(x) = -sum(p(i)*log(p(i)))
@@ -122,7 +123,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     These calculations will be carried out only on those voxels which are
     labelled as 'f'. If f=-1 the they are carried out over the whole volume.
     If a voxel is outside the mask, then it is not taken into account.
-    
+
     Activate the tell flag (TRUE or FALSE) if you want the routine to show
     all data known about the structure */
 void compute_sc_FOMs(
@@ -159,15 +160,15 @@ void compute_sc_FOMs(
     in the lower cyilinder, r2 is a plane in the reconstruction in the
     upper cylinder and r3 is in between both cylinders. p1, p2 and p3 are
     the same planes but in the phantom.
-    
+
     Only those voxels within the planes which intersect with at least
     one corner the phantom are taken into account.
-    
+
     The returned vector (hsvr_FOMs), as always, starts at 0 (background),
     1 (feature 1),
     ... num_feat, and keeps the hsvr_FOM values for each object. If the
     object is not a double cylinder then the hsvr_FOM is -1.
-    
+
     The final hsvr_FOM is the average of the hsvr_FOM for all the existing
     double cylinders.
     \\========================================================================
@@ -178,11 +179,11 @@ void compute_sc_FOMs(
     between the phantom and the reconstruction.
     \begin{verbatim}
     hsmu_FOM(f)=1-|confidence(phantom)-confidence(recons)|
-    
+
     confidence(recons)=erf(zr/sqrt(2))
-    
+
     erf(x)=(2 / sqrt(pi)) integral{0 to x} of (e ** -t **2)  dt
-    
+
     zr=ABS(mrf-mrb)/sqrt(vrf/Nf+vrb/Nb)
     \end{verbatim}
     where mrf and mrb are the mean of the reconstruction in the foreground
@@ -191,30 +192,30 @@ void compute_sc_FOMs(
     the foreground and background. Only the inner foreground (defined
     as a feature with the same shape but with a factor scale of 1/3) is
     considered for the foreground statistics.
-    
+
     I have modified the functional such that what is returned is the
     difference between the two z's.
     \begin{verbatim}
     hsmu_FOM(f)=z(phantom)-z(recons)
     \end{verbatim}
-    In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);    
+    In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);
     \\The final hsmu_FOM is the average of all the feature hsmu_FOMs
     \\========================================================================
     \\The border separability measures the separability between the
     histograms within and outside the feature near the border. For doing so,
     the mean separability between the background and the outer foreground
-    (defined as a feature with the same shape in the region between a scale 
+    (defined as a feature with the same shape in the region between a scale
     factor of 2/3 and 1).
     \begin{verbatim}
     zr=ABS(mro-mrb)/sqrt(vro/No+vrb/Nb)
-    
+
     hsbr_FOM(f)=z(phantom)-z(recons)
     \end{verbatim}
-    In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);    
+    In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);
     \\========================================================================
     \\The detectability error measures which is the intersection area between
     the two histograms in the phantom and the reconstruction. The FOM is
-    defined as 
+    defined as
     \begin{verbatim}
     hsdt_FOM(f) = 1- |dt_err(phantom)-dt_err(recons)|;
     \end{verbatim}
@@ -231,7 +232,7 @@ void compute_sc_FOMs(
                    Nb             Nf
     \end{verbatim}
     he this value was thresholded and all features above the threshold
-    gave 1 point and features below the threshold 0 points.    
+    gave 1 point and features below the threshold 0 points.
 
     The value of z is shown in the tell mode.
     \\========================================================================
@@ -252,7 +253,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
 /** Compute directional FOMs.
     The directional FOMs are defined along the line specified by rot and
     psi (1st and 2nd Euler angles respectively).
-    
+
     The result is stored as a matrix1D<double>
 
     The directional FOMs are computed in two steps:
@@ -261,18 +262,18 @@ void compute_hs_FOMs(Volume *vol_phantom,
        2) With the plane at this position, the FOM is measured.
     \end{verbatim}
     The rotation of the volume gives another volume of the same dimensions.
-    
+
     The two FOMs considered here are the Radon and the Slice histogram FOMs.
 
     If a voxel is outside the mask, then it is not taken into account.
-    
+
     ========================================================================
     \\The Radon Transform is defined as the sum of the voxels in the
     Z=constant
     planes of the volume in step 2. The Radon Transform (divided by Xdim*Ydim,
     that is the number of voxels contributing to the sum) is returned
     in a vector which is defined from STARTINGZ(Vol) to FINISHINGZ(vol).
-    
+
     ========================================================================
     \\The slice histograms are the histograms for the slices of the
     reconstruction at step 2. The histograms of the phantom are not
@@ -284,7 +285,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     taken into account. So the range for these histograms is from
     max_background to the maximum value within the volume divided into
     no_steps intervals.
-    
+
     The resulting image has got a row of values (the histogram of that
     slice) for each slice, and rows are numbered after the height of the
     plane with respect to the center of the volume (be sure that the center
@@ -313,7 +314,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     then the distance is 0.
     The distance is measure as the euclidean distance between the two
     voxel centers.
-    
+
     If a voxel is outside the mask, then it is not taken into account.
     Its distance is -1.
 */
@@ -341,9 +342,9 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     voxel (see \Ref{compute_distance_map} to know how this distance is
     defined), and pi and ri are the phantom and reconstruction values
     at that voxel respectively.
-    
+
     Notice that the blurring distance is returned and not its inverse.
-    
+
     ========================================================================
     \\ The appearance distance try to show up the new masses appearing in the
     reconstruction which were not in the phantom, for this reason
@@ -378,7 +379,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
    This function is performed via Spider. If spider is not found then -1
    is returned. If the flag SHOW_PROCESS of tell is set the file with
    the resolution analysis is shown.
-   
+
    An exception is thrown if SPIDER environment variable cannot be found.
 */
 /* Compute resolution.

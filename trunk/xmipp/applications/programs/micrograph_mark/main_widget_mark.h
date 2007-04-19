@@ -7,32 +7,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef __QT_MAIN_WIDGET_MARK_HH__
 #define __QT_MAIN_WIDGET_MARK_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "qwidget.h"
-#include "qlayout.h"
-#include "XmippData/xmippMicrograph.hh"
+#include <qwidget.h>
+#include <qlayout.h>
 
-/* Forward declarations ---------------------------------------------------- */ 
+#include <data/micrograph.h>
+
+/* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 class QtDialogFamilies;
 class QtFiltersController;
@@ -41,8 +41,8 @@ class QAccel;
 /* Main mark widget -------------------------------------------------------- */
 class QtMainWidgetMark : public QWidget {
    // For accepting signals and slots
-   Q_OBJECT   
-   
+   Q_OBJECT
+
 private:
    QtWidgetMicrograph  *__mWidget;
    QtWidgetMicrograph  *__mTiltedWidget;
@@ -52,7 +52,7 @@ private:
    QAccel              *__ctrlMinus;
    QAccel              *__otherCtrl;
    QtFiltersController *__filtersController;
-   
+
    // For tilted-untilted correspondance
    matrix2D<double>    __Au;     // Untilted "positions"
    matrix2D<double>    __Bt;     // Tilted   "positions"
@@ -79,7 +79,7 @@ public:
 
    // Add point to least squares matrices
    void add_point(const Particle_coords &U, const Particle_coords &T);
-   
+
    // Add point to least squares matrices and solve for the Passing matrix
    void adjust_passing_matrix(const Particle_coords &U,
       const Particle_coords &T);
@@ -87,14 +87,14 @@ public:
    /* Recalculate Passing matrix.
       This is only needed when a particle is moved */
    void recalculate_passing_matrix();
-   
+
    // Pass from untilted to tilted
    void pass_to_tilted(int _muX, int _muY, int &_mtX, int &_mtY,
       bool _update_passing_matrix);
-   
+
    // Pass from tilted to untilted
    void pass_to_untilted(int _mtX, int _mtY, int &_muX, int &_muY);
-   
+
    // Can use passing matrix?
    bool can_use_passing_matrix() {return __Nu>3;}
 
@@ -103,10 +103,10 @@ public:
 
    // Compute alphas
    void compute_alphas();
-   
+
    // Write angles in file ".ang"
    void write_angles();
-   
+
    // Draw tilt axes in both micrographs
    void draw_axes();
 
@@ -121,7 +121,7 @@ public:
 
    // True if there is a tilted micrograph
    bool there_is_tilted() const {return __mTiltedWidget!=NULL;}
-   
+
    // The main widget is informed when each of the micrographs
    // has generated its set of values. When both micrographs
    // generated the images, the selfiles are compared to remove

@@ -7,42 +7,42 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
   /* **********************************************************************
 
-     This file contains the routines that get the image and volume 
-     dimensions from the header, and other functions for read the 
+     This file contains the routines that get the image and volume
+     dimensions from the header, and other functions for read the
      file names from the selecction files.
 
    ************************************************************************/
 
+#include <cstring>
+#include <cstdio>
 
-#include <string.h>
-#include <stdio.h>
 #include "spider.h"
 #include "groe.h"
 
 
 /***************************************************************
- This function counts the number of files to process in the 
- selecction file pointed by "fil_entrada". A file will be 
+ This function counts the number of files to process in the
+ selecction file pointed by "fil_entrada". A file will be
  processed if its field value in the selecction file is > "flagVal".
  The first file name is copied in "name".
  Finally, it returns the number of counted files.
@@ -73,7 +73,7 @@ int Count_element( FILE *fil_entrada, char *name,int flagVal,int size)
 
 
 /***************************************************************
- This function looks in the selecction file for the first file 
+ This function looks in the selecction file for the first file
  name which has a field value > "flagVal".
  The file name is copied to "name" and returns '1'. If no file
  name is found, returns '0'.
@@ -88,7 +88,7 @@ int  First_name( FILE *fil_entrada, char *name,int flagVal,int size)
 
   while( (fgets (linea, 80, fil_entrada) != NULL) && numI!=1 )
   {
-    if ((i=sscanf (linea, "%s %d",nom_img, &valido) )> size ||i==0) 
+    if ((i=sscanf (linea, "%s %d",nom_img, &valido) )> size ||i==0)
       continue;
    if (valido <= flagVal)
       continue;
@@ -122,7 +122,7 @@ int Get_dimension( char *nom_entrada, int *fil, int *col)
   if( i==0)
    {
      fprintf(stdout,"\n Error: %s not a SPIDER file\n",nom_entrada);
-     return(0); 
+     return(0);
    }
 
   return(1);

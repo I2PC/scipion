@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /**************************************************************************/
@@ -45,22 +45,23 @@
 /*                  Juan P. Secilla    IBM/MSC   Nov/86                   */
 /**************************************************************************/
 
-#include <time.h>
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
 #include <fcntl.h>
-#include <stdlib.h>
-
 #include <unistd.h>
-#include <sys/types.h> 
+#include <memory.h>
+
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <memory.h> 
+
 #ifndef __APPLE__
    #include <malloc.h>
 #else
-   #include <stdlib.h>
+   #include <cstdlib>
 #endif
 
-#include <stdio.h>
-#include <math.h>
 #include "spider.h"
 #include "groe.h"
 
@@ -123,12 +124,12 @@ void vuelta2_imagen( char ** image, int rows, int cols, int format )
 	int i, j;
 	char **imagen_alreves;
 
-	if ( (imagen_alreves = imalloc(rows, cols, format) ) == NULL) {  
+	if ( (imagen_alreves = imalloc(rows, cols, format) ) == NULL) {
         	puts("\n Error : no puedo almacenar memoria ");
         	puts(" para hacer la conversion al i860 ");
                exit (1);
 	}
- 
+
 	for ( i=0 ; i<rows;i++) {
 		for ( j=0; j<cols*sizeof(float) ; j+=sizeof(float)) {
 			imagen_alreves[i][j]   = image [i][j+3];
@@ -151,14 +152,14 @@ void vuelta2_imagen( char ** image, int rows, int cols, int format )
  called "name", depending on the value of the flag "rdwr".
  The image's dimensions are "row x col" and its kind is indicated
  in "format", that is, the image could be a matrix of chars
- ("format" values NATURAL) or a matrix of floats ("format" values 
+ ("format" values NATURAL) or a matrix of floats ("format" values
  FLOATFMT or SPIDER).
-   If you want translate and rotate the image using its header 
- information, you need another matrix (with the same format and 
+   If you want translate and rotate the image using its header
+ information, you need another matrix (with the same format and
  dimensions) to load this "changes", and it'll be the parameter
- "image_geo". 
-   But if you don't want aplicate this geometric information to 
- the image, or you have a NATURAL image,  you must call this 
+ "image_geo".
+   But if you don't want aplicate this geometric information to
+ the image, or you have a NATURAL image,  you must call this
  function passing the NULL value to this parameter, as:
 
        image_io ( myimage, NULL, row,col, filename,.......)
@@ -169,11 +170,11 @@ void vuelta2_imagen( char ** image, int rows, int cols, int format )
  "norma", and '0' or 'FALSE' in other case.
    We recommend use normalized images, that is, with average=0 and
  standard desviation = 1.
- ***************************************************************/    
+ ***************************************************************/
 
 int image_io (char **image,char **image_geo,int row,int col,char *name,
               int rdwr,int format,int norma)
-              
+
                     /* If it is not a natural format image, a cast has      */
                     /* been previously done by the calling routine          */
     /*  name       :   File name                                            */
@@ -276,7 +277,7 @@ if ((fichero = open (name, oflag , pmode)) == -1)
 }
 
 /* THE HEADER*/
-if ((format == FLOATFMT) || (format == FOURIER) ) 
+if ((format == FLOATFMT) || (format == FOURIER) )
   {
       i= sizeof(CABECERO);
       cabecero.fNlabel = (float)((int)(256/col+1));
@@ -297,9 +298,9 @@ if ((format == FLOATFMT) || (format == FOURIER) )
                     cabecero.fNrec= cabecero.fNrow+1;
                     headrec = headrec + 1;
                     }
-              else 
-                    cabecero.fNrec=cabecero.fNrow; 
-                   
+              else
+                    cabecero.fNrec=cabecero.fNrow;
+
               /*cabecero.fLabbyt = (float) headrec * cabecero.fNsam * 4 ; */
               cabecero.fLabbyt = cabecero.fNsam*cabecero.fLabrec*4;
               cabecero.fLenbyt = (float) cabecero.fNsam * 4;
@@ -328,7 +329,7 @@ if ((format == FLOATFMT) || (format == FOURIER) )
          }
 
 	if(rdwr == READING) {
-#ifdef _PARAMID 
+#ifdef _PARAMID
 		vuelta_cabecero( );
 #endif
 		lseek(fichero,col*(int)cabecero.fLabrec*4,SEEK_SET);
@@ -350,7 +351,7 @@ for (j = 0; j < no_blocks; j++)          /* Read all the blocks of 32000  */
     if (rdwr == WRITING)                 /* Copy rows to temp. buffer     */
         for (k = 0; k < n_block; k++, i++, aux_ptr += size)
             memcpy (aux_ptr, image [i], size);
- 
+
    switch (rdwr) {
        case READING:
           if (read(fichero, temp_buffer, io_size) != io_size)
@@ -707,7 +708,7 @@ void Tiempo(void)
 {
      time_t lTiempo;
      struct tm *tmTiempoGreng;
-     
+
 
      time(&lTiempo);
      tmTiempoGreng=localtime(&lTiempo);

@@ -6,33 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
 // xmippCB.cc
 //-----------------------------------------------------------------------------
 
-
-//-----------------------------------------------------------------------------
-
-#include "../xmippCodeBook.hh"
-
-//-----------------------------------------------------------------------------
+#include "code_book.h"
 
 /**
  * This class implements a codebook.
@@ -114,7 +109,7 @@
 
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
-   University of California, Los Angeles   
+   University of California, Los Angeles
 */
 
   xmippCB::xmippCB (unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs)
@@ -231,7 +226,7 @@
    * Fills the classifVectors with the list of the best input vectors associated to it.
    * @param _ts  Sample list to classify
    */
-  void xmippCB::classify(const xmippCTVectors* _ts) 
+  void xmippCB::classify(const xmippCTVectors* _ts)
   {
     	classifVectors.clear(); // clear previous classification.
     	classifVectors.resize(size());
@@ -241,11 +236,11 @@
 	  classifVectors[testIndex(_ts->theItems[j])].push_back(j);
 
 	for (unsigned i=0 ; i< size() ; i++) {
-	  double aveDist = 0; 
+	  double aveDist = 0;
 	  for (unsigned j=0 ; j< classifVectors[i].size() ; j++)
 	     aveDist += (double) eDist(theItems[i], _ts->theItems[classifVectors[i][j]]);
-	  if (classifVectors[i].size() != 0)   
-	     aveDist /= (double) classifVectors[i].size();   
+	  if (classifVectors[i].size() != 0)
+	     aveDist /= (double) classifVectors[i].size();
 	  aveDistances[i] = (double) aveDist;
 	}
 	
@@ -253,7 +248,7 @@
 
 
   /**
-   * Prints the histogram values of each Fuzzy codevector. 
+   * Prints the histogram values of each Fuzzy codevector.
    * @param _os  The the output stream
    */
   void xmippCB::printHistogram(ostream& _os) const
@@ -262,10 +257,10 @@
      for (int j = 0; j < size(); j++)
        _os << j << " " << classifSizeAt(j) << endl;
   };
-  
+
 
   /**
-   * Prints the Average Quantization Error of each codevector. 
+   * Prints the Average Quantization Error of each codevector.
    * @param _os  The the output stream
    */
   void xmippCB::printQuantError(ostream& _os) const
@@ -314,7 +309,7 @@
   {
     return theTargets[testIndex(_in)];
   };
-  
+
 
   /**
    * Calibrates the code book
@@ -322,7 +317,7 @@
    * @param _def  Default target for non-calibrated vectors
    * @exception runtime_error  If the training set is not calibrated
    */
-  void xmippCB::calibrate (xmippCTVectors& _ts, 
+  void xmippCB::calibrate (xmippCTVectors& _ts,
 			  xmippLabel _def)
   {
     // set the default label
@@ -352,7 +347,7 @@
    * Standard output for a codebook
    * @param _os The output stream
    */
-  void xmippCB::printSelf(ostream& _os) const 
+  void xmippCB::printSelf(ostream& _os) const
   {
 	xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
   };
@@ -372,7 +367,7 @@
       string line;
 
       // Determines the number of rows and columns in the training set
-      
+
       long dim, size;
       if (_dim==-1) {
 	 _is >> dim;
@@ -389,12 +384,12 @@
       getline(_is, line);
       theItems.resize(size);
       theTargets.resize(size);
-      
+
       for (int i = 0; i < size; i++) {
     	 vector<xmippFeature> v;
          v.resize(dim);
          for (int j=0; j < dim; j++){
-	    xmippFeature var;  
+	    xmippFeature var;
 	    _is >> var;
 	    v[j] = var;
 	 }
@@ -414,7 +409,7 @@
   };
 
 
-  /** 
+  /**
    * Reads the classif vectors from a stream.
    * @param _is  The input stream
    */
@@ -423,51 +418,51 @@
     	    _is >> dim;
     	    classifVectors.resize(dim);
     	    for (int i = 0; i < classifVectors.size(); i++)
-    		    _is >> classifVectors[i];  
+    		    _is >> classifVectors[i];
     }
 
 
-  /** 
+  /**
    * Writes the classif vectors to a stream
    * @param _os  The output stream
    */
     void xmippCB::writeClassifVectors(ostream& _os) const {
     	    _os << classifVectors.size() << endl;
     	    for (int i = 0; i < classifVectors.size(); i++)
-    		    _os << classifVectors[i] << endl;  
+    		    _os << classifVectors[i] << endl;
     }
 
 
   /**
-   * Saves the xmippCB class into a stream. 
+   * Saves the xmippCB class into a stream.
    * this method can be used to save the status of the class.
    * @param _os The output stream
    */
   void xmippCB::saveObject(ostream& _os) const
   {
-    writeClassifVectors(_os); 
+    writeClassifVectors(_os);
     xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
   };
 
 
   /**
-   * Loads the xmippCB class from a stream. 
+   * Loads the xmippCB class from a stream.
    * this method can be used to load the status of the class.
    * @param _is The output stream
    */
   void xmippCB::loadObject(istream& _is)
   {
      clear();
-     readClassifVectors(_is); 
+     readClassifVectors(_is);
      xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
   };
 
 
-  /** 
-   *	UnNormalize all features in the codebook 
+  /**
+   *	UnNormalize all features in the codebook
    * 	@param _varStats The normalization information
    */
-  
+
   void xmippCB::unNormalize(const vector<xmippCTVectors::statsStruct>&  _varStats) {
         if (_varStats.size() != theItems[0].size()) {
 		ostringstream msg;
@@ -483,11 +478,11 @@
   }
 
 
-  /** 
-   *	Normalize all features in the codebook 
+  /**
+   *	Normalize all features in the codebook
    * 	@param _varStats The normalization information
    */
-  
+
   void xmippCB::Normalize(const vector<xmippCTVectors::statsStruct>&  _varStats) {
         if (_varStats.size() != theItems[0].size()) {
 		ostringstream msg;

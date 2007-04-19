@@ -7,30 +7,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #include <malloc.h>
-#include <string.h>
-#include <groe.h>
+
+#include "groe.h"
 
 #ifdef __STDC__
   void centrado_t (float **, float **, int,float **,float **);
@@ -85,7 +85,7 @@ image_fft(fuIm1, dim2, dim2, DIRECT);
         /******* Cross corelation ****************/
 
 for (i=0; i < dim2; i++)
-    for (j=0; j <= dim; j++)      
+    for (j=0; j <= dim; j++)
     {   real1 = fuIm1[i][2*j];
         imag1 = fuIm1[i][2*j+1];
         real2 = fuIm2[i][2*j];
@@ -109,7 +109,7 @@ busca_maximos (fuIm1, dim+1,dim+1, maxi, imax, jmax, 4);
        /******* Calculate the gravity centre of the corelation        ****/
        /******* in a neighbourhood such as  maximum/sqrt(2) > value   ****/
 
-n_max = -1;  
+n_max = -1;
 para_gravedad = FALSE;
 while (!para_gravedad)
 {   n_max ++;
@@ -131,7 +131,7 @@ for (i=(-n_max); i <= n_max; i++)
     for (j=(-n_max); j <= n_max; j++)
     {   i_actual = i+imax[0];
         j_actual = j+jmax[0];
-        if (i_actual >= 0 && j_actual >= 0 && 
+        if (i_actual >= 0 && j_actual >= 0 &&
             i_actual < dim+1 && j_actual < dim+1)
         {   yy_max += i_actual*fuIm1[i_actual][j_actual];
             xx_max += j_actual*fuIm1[i_actual][j_actual];
@@ -142,10 +142,10 @@ xx_max /= sum_corr; /***This is the gravity centre ***/
 yy_max /= sum_corr;
 
         /******* Displace the image  with xx_max, yy_max ******/
-xx_max -= dim/2;          /*** Centre the origin  ****/ 
+xx_max -= dim/2;          /*** Centre the origin  ****/
 yy_max -= dim/2;
 
-temporal[0][0] = 1;     
+temporal[0][0] = 1;
 temporal[0][1] = 0;
 temporal[0][2] = 0;
 temporal[1][0] = 0;

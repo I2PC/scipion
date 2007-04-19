@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _DOWNSAMPLE
    #define _DOWNSAMPLE
 
-   #include "../xmippFuncs.hh"
-   #include "../xmippMicrograph.hh"
+#include "funcs.h"
+#include "micrograph.h"
 
 /**@name Downsample */
 //@{
@@ -36,10 +36,10 @@ class Prog_downsample_prm {
 public:
    /// Input micrograph
    FileName fn_micrograph;
-   
+
    /// Output micrograph
    FileName fn_downsampled;
-   
+
    /// Xstep
    int      Xstep;
    /// Ystep
@@ -55,19 +55,19 @@ public:
        Valid modes are KER_RECTANGLE, KER_CIRCLE, KER_GAUSSIAN
        KER_PICK and KER_SINC */
    int      kernel_mode;
-   
+
    /// Circle radius
    double   r;
-   
+
    /// Gaussian sigma
    double   sigma;
-   
+
    /// delta
    double   delta;
-   
+
    /// Deltaw
    double   Deltaw;
-   
+
    /// Rectangular X size
    int      Xrect;
    /// Rectangular Y size
@@ -90,22 +90,22 @@ public:
    int Xpdim, Ypdim;
 public:
    /** Read input parameters.
-       If do_not_read_files=TRUE then fn_micrograph and 
+       If do_not_read_files=TRUE then fn_micrograph and
        fn_downsampled are not read. */
    void read(int argc, char **argv, bool do_not_read_files=false);
-   
+
    /// Usage
    void usage() const;
-   
+
    /// Produce command line parameters
    string command_line() const;
-   
+
    /// Generate kernel
    void generate_kernel();
 
    /// Open input micrograph
    void open_input_micrograph();
-   
+
    /// Close input micrograph
    void close_input_micrograph();
 

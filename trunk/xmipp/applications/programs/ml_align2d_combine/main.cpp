@@ -6,36 +6,34 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
 #include <vector>
 #include <iomanip>
 #include <sstream>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippDocFiles.hh>
- 
-/* PROTOTYPES -------------------------------------------------------------- */
+
+#include <data/args.h>
+#include <data/image.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
   FileName     fn_logsel,fn_sel,fn_oroot,fn_img,fn_img2,fn_tmp;
   ImageXmipp   img,sumimg;
@@ -57,7 +55,7 @@ int main(int argc, char **argv) {
      SFlog.read(fn_logsel);
      fn_oroot   = get_param(argc,argv,"-o","");
      if (fn_oroot=="") fn_oroot=fn_logsel.without_extension()+".log";
-   } 
+   }
    catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
 
    try {
@@ -176,7 +174,7 @@ int main(int argc, char **argv) {
      // Calculate weighted average of the parameters in the MLalign2D-log file header
      noise=0.;
      offset=0.;
-     LL=0.; 
+     LL=0.;
      R=0.;
      for (n=0; n<nlog; n++) {
 
@@ -195,7 +193,7 @@ int main(int argc, char **argv) {
        noise+=weight*AtoF(get_param(argcp,argvp,"-noise"))*AtoF(get_param(argcp,argvp,"-noise"));
        offset+=weight*AtoF(get_param(argcp,argvp,"-offset"))*AtoF(get_param(argcp,argvp,"-offset"));
        istart=AtoI(get_param(argcp,argvp,"-istart"));
-     } 
+     }
      noise/=sumweight;
      noise=sqrt(noise);
      offset/=sumweight;

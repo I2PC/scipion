@@ -6,24 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../splines.hh"
+#include "splines.h"
 
 /* Bspline03 by a LUT ------------------------------------------------------ */
 double Bspline03LUT(double x) {
@@ -57,8 +57,8 @@ double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid) {
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the spline, which we know they are 0.
-   for (i= (int)corner1.X(); i<=(int)corner2.X(); i++) 
-      for (j= (int)corner1.Y(); j<=(int)corner2.Y(); j++) 
+   for (i= (int)corner1.X(); i<=(int)corner2.X(); i++)
+      for (j= (int)corner1.Y(); j<=(int)corner2.Y(); j++)
          for (k= (int)corner1.Z(); k<=(int)corner2.Z(); k++) {
             VECTOR_R3(gr,i,j,k);
             grid.grid2universe(gr,ur);
@@ -107,7 +107,7 @@ double spatial_Bspline03_proj(
    double x_sign = SGN(XX(ur));
    double y_sign = SGN(YY(ur));
    double z_sign = SGN(ZZ(ur));
-   
+
    // Compute the minimum and maximum alpha for the ray
    double alpha_xmin=(-2-XX(r))/XX(ur);
    double alpha_xmax=( 2-XX(r))/XX(ur);
@@ -149,17 +149,17 @@ double spatial_Bspline03_proj(
       cout << "First entry point: " << v.transpose() << endl;
       cout << "   Alpha_min: " << alpha_min << endl;
    #endif
-   
+
    // Follow the ray
    double alpha=alpha_min;
    double ray_sum=0;
-   do {  
+   do {
       double alpha_x = (XX(v)+x_sign-XX(r))/XX(ur);
       double alpha_y = (YY(v)+y_sign-YY(r))/YY(ur);
       double alpha_z = (ZZ(v)+z_sign-ZZ(r))/ZZ(ur);
-      
+
       // Which dimension will ray move next step into?, it isn't neccesary to be only
-      // one. 
+      // one.
       double diffx = ABS(alpha-alpha_x);
       double diffy = ABS(alpha-alpha_y);
       double diffz = ABS(alpha-alpha_z);
@@ -258,7 +258,7 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
             if (YY(act_coord)>=yF) process=false;
             if (ZZ(act_coord)>=zF) process=false;
             if (XX(act_coord)<=x0) process=false;
-            if (YY(act_coord)<=y0) process=false; 
+            if (YY(act_coord)<=y0) process=false;
             if (ZZ(act_coord)<=z0) process=false;
             #ifdef DEBUG
                if (!process && condition) cout << "   It is outside output volume\n";
@@ -354,7 +354,7 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
 #undef DEBUG_MORE
 
 /* Splines -> Voxels for a Grid -------------------------------------------- */
-//#define DEBUG      
+//#define DEBUG
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
    matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim) {
    // Resize and set starting corner .......................................
@@ -382,7 +382,7 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
          save.write((string)"PPPvoxels"+ItoA(i));
       #endif
    }
-   
+
    // Now normalise the resulting volume ..................................
    double inorm=1.0/sum_spatial_Bspline03_Grid(vol_splines.grid());
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)

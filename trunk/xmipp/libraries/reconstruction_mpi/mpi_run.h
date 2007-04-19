@@ -6,29 +6,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _Prog_MPI_Run_HH
 #define _Prog_MPI_Run_HH
 
 #include <fstream>
 #include <iostream>
-#include <XmippData/xmippFuncs.hh>
+
+#include <data/funcs.h>
+
 #include <mpi.h>
+
 using namespace std;
 
 /**@name MPI_Run program */
@@ -39,16 +42,16 @@ class Prog_MPI_Run_Parameters {
 public:
    /** PDB file */
    FileName fn_commands;
-   
+
    /** Number of Procesors **/
    int nprocs;
-   
+
    /** computing node number. Master=0 */
    int rank;
-   
+
    /** status after am MPI call */
    MPI_Status status;
-   
+
 public:
    /** Empty constructor */
    Prog_MPI_Run_Parameters(int argc, char **argv);
@@ -65,10 +68,10 @@ public:
 
    /** Show parameters. */
    void show();
-   
+
    /** Run. */
    void run();
- 
+
    /** a short function to print a message and exit */
    void error_exit(char * msg);
 };

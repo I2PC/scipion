@@ -32,12 +32,8 @@
 #ifndef XMIPPKERDENSOM_H
 #define XMIPPKERDENSOM_H
 
-#include "xmippBaseAlgo.hh"
-#include "xmippMap.hh"
-
-
-//---------------------------------------------------------------------------
-
+#include "base_algorithm.h"
+#include "map.h"
 
 /**@name Smoothly Distributed Kernel Probability Density Estimator Self Organizing Map*/
 //@{

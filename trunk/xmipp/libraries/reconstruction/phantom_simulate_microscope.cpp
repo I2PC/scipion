@@ -6,25 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_microscope.hh"
-#include <XmippData/xmippArgs.hh>
+#include "phantom_simulate_microscope.h"
+
+#include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
 void Prog_Microscope_Parameters::read(int argc, char **argv) {
@@ -34,7 +35,7 @@ void Prog_Microscope_Parameters::read(int argc, char **argv) {
    low_pass_before_CTF=AtoF(get_param(argc,argv,"-low_pass","0"));
    after_ctf_noise=check_param(argc,argv,"-after_ctf_noise");
    defocus_change=AtoF(get_param(argc,argv,"-defocus_change","0"));
-   
+
    produce_side_info();
 }
 
@@ -71,7 +72,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
    matrix2D<double> aux;
 
    double before_power=0, after_power=0;
-   
+
    if (fn_ctf!="") {
       ctf.FilterBand=CTF;
       ctf.ctf.read(fn_ctf);
@@ -90,7 +91,7 @@ void Prog_Microscope_Parameters::produce_side_info() {
       lowpass.FilterBand=LOWPASS;
       lowpass.FilterShape=RAISED_COSINE;
       lowpass.w1=low_pass_before_CTF;
-   }   
+   }
 
    if (after_ctf_noise) {
       after_ctf.FilterBand=CTF;

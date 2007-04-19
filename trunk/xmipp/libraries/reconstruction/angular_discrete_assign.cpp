@@ -6,32 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_Angular_Predict.hh"
-#include "../Prog_FourierFilter.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippWavelets.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippFilters.hh>
+#include "angular_discrete_assign.h"
+#include "fourier_filter.h"
+
+#include <data/args.h>
+#include <data/docfile.h>
+#include <data/histogram.h>
+#include <data/geometry.h>
+#include <data/wavelet.h>
+#include <data/mask.h>
+#include <data/filters.h>
 
 // Empty constructor =======================================================
 Prog_angular_predict_prm::Prog_angular_predict_prm() {
@@ -142,7 +143,7 @@ void Prog_angular_predict_prm::more_usage() {
 // Produce side information ================================================
 void Prog_angular_predict_prm::produce_side_info(int rank) {
    volume_mode=false;
-   
+
    // Information for the SF_main
    allow_time_bar=(tell==0 && rank==0);
 
@@ -189,7 +190,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
          REPORT_ERROR(1,"Prog_angular_predict_prm::produce_side_info:"
 	    " using a reference selfile you must supply -ang option");
    }
-   
+
    SF_ref.read(fn_ref);
    int refYdim, refXdim;
    SF_ref.ImgSize(refYdim, refXdim);
@@ -214,7 +215,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
       tilt[i]=DF(1); // Tilting angle
       i++; DF.next_data_line();
    }
-   
+
    // Resize the predicted vectors
    int number_of_images=get_images_to_process();
    current_img=0;
@@ -225,7 +226,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
    predicted_shiftX.resize(number_of_images);
    predicted_shiftY.resize(number_of_images);
    predicted_corr.resize(number_of_images);
-   
+
    // Build mask for subbands
    int Ydim, Xdim;
    SF_ref.ImgSize(Ydim,Xdim);
@@ -235,7 +236,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
    if (smax==-1) smax=Get_Max_Scale(Ydim)-3;
    SBNo=(smax-smin+1)*3+1;
    SBsize.resize(SBNo);
-   
+
    Mask_Params Mask(INT_MASK);
    Mask.type=BINARY_DWT_CIRCULAR_MASK;
    Mask.R1=CEIL((double)Xdim/2.0);
@@ -248,7 +249,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
    	 Mask.smin=s; Mask.smax=s;
 	 Mask.quadrant=Quadrant2D(q);
 	 Mask.generate_2Dmask();
-         
+
 	 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask.imask2D)
 	    if (DIRECT_MAT_ELEM(Mask.imask2D,i,j))
                {Mask_no(i,j)=m; SBsize(m)++;}
@@ -256,10 +257,10 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
 	 m++;
       }
    }
-   
+
    // Produce library
    produce_library();
-   
+
    // Save a little space
    SF_ref.clear();
 
@@ -290,7 +291,7 @@ void Prog_angular_predict_prm::produce_library() {
    while (!SF_ref.eof()) {
       I.read(SF_ref.NextImg(),false,false,true,true);
       library_name.push_back(I.name());
-      
+
       // Make and distribute its DWT coefficients in the different PCA bins
       I().statistics_adjust(0,1);
       DWT(I(),I());
@@ -342,7 +343,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
    matrix1D<double> &x_power, vector<double> &sumxy,
    double th) {
    histogram1D hist;
-   hist.init(-1,1,201);   
+   hist.init(-1,1,201);
 
    int dimp=SBsize(m);
    int imax=candidate_list.size();
@@ -370,7 +371,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
    for (int i=0; i<imax; i++)
       if (candidate_list[i] && cumulative_corr[i]<corr_th)
          candidate_list[i]=false;
-	 
+	
    // Show the percentil used
    if (tell & TELL_ROT_TILT)
       cout << "# Percentil " << corr_th << endl << endl;
@@ -411,7 +412,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
          for (int mp=m; mp<SBNo; mp++) x_power(mp)+=coef2;
       }
    }
-   
+
    // Measure correlation for all possible PCAs
    // These variables are used to compute the correlation at a certain
    // scale
@@ -452,7 +453,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
             if (cumulative_corr[i]==cumulative_corr[best_i])
 	       {best_i=i; selected--;}
    }
-   
+
    // Free asked memory
    for (int m=0; m<SBNo; m++) delete Idwt[m];
 
@@ -475,7 +476,7 @@ double Prog_angular_predict_prm::evaluate_candidates(
       if (vscore[i] <min_score ) min_score =vscore [i];
       if (vscore[i] >max_score ) max_score =vscore [i];
    }
-   
+
    // Divide the correlation segment in as many pieces as candidates
    double score_step=(max_score-min_score)/10;
 
@@ -502,11 +503,11 @@ double Prog_angular_predict_prm::evaluate_candidates(
 //#define DEBUG
 void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
    const vector<double> &vtilt, const vector<double> &vpsi,
-   const vector<int> &best_idx, const vector<int> &candidate_idx, 
+   const vector<int> &best_idx, const vector<int> &candidate_idx,
    vector< vector<int> > &groups) {
    for (int j=0; j<best_idx.size(); j++) {
-      int i=candidate_idx[best_idx[j]];  
-      #ifdef DEBUG    
+      int i=candidate_idx[best_idx[j]];
+      #ifdef DEBUG
          cout << "Looking for a group for image " << best_idx[j] << endl;
       #endif
       double roti=vrot[i];
@@ -531,7 +532,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
       }
 
       if (!assigned) {
-         #ifdef DEBUG    
+         #ifdef DEBUG
             cout << "Creating a new group\n";
          #endif
          // Create a new group with the first item in the list
@@ -539,7 +540,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 	 group.push_back(best_idx[j]);
 	 groups.push_back(group);
       } else {
-         #ifdef DEBUG    
+         #ifdef DEBUG
             cout << "Assigning to group " << g << endl;
          #endif
          // Insert the image in the fitting group
@@ -562,10 +563,10 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 // Pick view -----------------------------------------------------------------
 int Prog_angular_predict_prm::pick_view(int method,
    vector< vector<int> > &groups,
-   vector<double> &vscore, 
-   vector<double> &vrot, 
-   vector<double> &vtilt, 
-   vector<double> &vpsi, 
+   vector<double> &vscore,
+   vector<double> &vrot,
+   vector<double> &vtilt,
+   vector<double> &vpsi,
    const vector<int> &best_idx,
    const vector<int> &candidate_idx, const vector<double> &candidate_rate) {
 
@@ -663,7 +664,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    ImageXmipp Ip;
    Ip=I;
    matrix1D<double> shift(2);
-   
+
    // Get the 2D alignment shift
    double Xoff, Yoff;
    if (!dont_apply_geo) {
@@ -677,13 +678,13 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    if (max_psi_change==-1) {psi0=-180; psiF=180-psi_step;}
    else {psi0=I.psi()-max_psi_change; psiF=I.psi()+max_psi_change;}
    double R2=max_shift_change*max_shift_change;
-   
+
    // Search in the psi-shift space
    int N_trials=0;
    vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr,
                   vproj_error, vproj_compact, vang_jump, vscore;
    vector<int>    vref_idx;
-   
+
    double backup_max_shift_change=max_shift_change;
    if (!search5D) max_shift_change=0;
 
@@ -693,7 +694,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             if ((shiftX-Xoff)*(shiftX-Xoff)+(shiftY-Yoff)*(shiftY-Yoff)>R2) continue;
             for (double psi=psi0; psi<=psiF; psi+=psi_step) {
 	          N_trials++;
-                  
+
       	          // Shift image if necessary
                   if (shiftX==0 && shiftY==0) Ip()=I();
 	          else {
@@ -767,12 +768,12 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       // Compute extrema of correlation
       if (vcorr[i]<min_corr) min_corr=vcorr[i];
       if (vcorr[i]>max_corr) max_corr=vcorr[i];
-   
+
       // Compute extrema of projection error
       if (vproj_compact[i]<min_proj_compact) min_proj_compact=vproj_compact[i];
       if (vproj_compact[i]>max_proj_compact) max_proj_compact=vproj_compact[i];
    }
-   
+
    // Score each projection
    double corr_step=max_corr-min_corr;
    double proj_error_step=max_proj_error-min_proj_error;
@@ -792,7 +793,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 	      << " proj_compact= " << vproj_compact[i]
               << " refidx= "       << vref_idx[i]
               << " ang_jump= "     << vang_jump[i]
-	      << endl; 
+	      << endl;
    }
 
    // Is the psi range circular?
@@ -859,7 +860,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 //   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
    for (int j=0; j<jmax; j++) score(j)=vscore[candidate_local_maxima[j]];
    matrix1D<int> idx_score=score.index_sort();
-   
+
    if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS)) {
       cout << I.name() << endl;  cout.flush();
       for (int j=0; j<jmax; j++) {
@@ -879,7 +880,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       }
       cout << endl; cout.flush();
    }
-   
+
    // Consider the top
    int jtop=jmax-1;
    vector<int> best_idx;
@@ -907,13 +908,13 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
       group_views(vrot,vtilt,vpsi,best_idx,candidate_local_maxima,groups);
       if (tell & TELL_PSI_SHIFT)
          cout << "Partition: " << groups << endl;
-      
+
       // Pick the best image from the groups
       jbest=pick_view(pick,groups,vscore,vrot,vtilt,vpsi,
          best_idx,candidate_local_maxima,candidate_rate);
       ibest=candidate_local_maxima[jbest];
    }
-   
+
    // Is it a 3D+2D search?
    if (!search5D) {
       ImageXmipp Iref; Iref.read(library_name[vref_idx[ibest]]);
@@ -940,7 +941,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    best_shiftY = vshiftY[ibest];
    best_score  = vscore[ibest];
    best_rate   = candidate_rate[jbest];
-   
+
    if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS)) {
       cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
            << " tilt=" << I.tilt() << endl;
@@ -984,7 +985,7 @@ void Prog_angular_predict_prm::finish_processing() {
       DF.append_data_line(v);
    }
    DF.write(fn_out_ang);
-   
+
    if (volume_mode) {
       system(((string)"xmipp_rmsel "+fn_ref+" > /dev/null").c_str());
       system(((string)"rm -f "+fn_ang).c_str());

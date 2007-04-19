@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippInterface/xmippAPH.hh>
-#include "../Prog_Spots2RealSpace2D.hh"
-#include "../Prog_art_crystal.hh"
+#include <data/args.h>
+#include <data/geometry.h>
+#include <interface/aph.h>
+
+#include "crystal_aph2img.h"
+#include "art_crystal.h"
 
 #define GCC_VERSION (__GNUC__ * 10000 \
    + __GNUC_MINOR__ * 100 \
@@ -48,9 +49,9 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
       REPORT_ERROR(3005,
          (string)"Spot2RealSpace2D_Parameters::read: There is a problem "
          "opening the file "+fnprm);
-         
+
    try {
-#ifdef REMOVE   
+#ifdef REMOVE
       fnaph_ref=get_param(fh_param,"APH Ref file",0,"",
          3007,"Spot2RealSpace2D_Parameters::: APH Ref File not found");
 #endif
@@ -121,7 +122,7 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
 
 /* Produce Side info ------------------------------------------------------- */
 void Spot2RealSpace2D_Parameters::produce_SideInfo() {
-   
+
     // Translate symmetry group
     if      (str_symmetry_group=="P1")      {symmetry_group = sym_P1;
                                              a_b_ang = 0;}//not sure about this
@@ -149,9 +150,9 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo() {
 #ifdef REMOVE
     // Undo moving spots to asymmetryc unit
     aph_file.unasymmetrization( a_mag,  b_mag, taxa,  mrc_tilt,
-			       symmetry_group);   
-#endif   
-#ifdef DEBUG   
+			       symmetry_group);
+#endif
+#ifdef DEBUG
     ImageXmipp save;
     save()=aph_file.spots_abs; save.write("Spots_ABS0.xmp");
     save()=aph_file.spots_arg; save.write("Spots_ARG0.xmp");
@@ -219,14 +220,14 @@ void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
 	         +imag(MAT_ELEM(FT,K,L))*sin(wK+wl*L);
             }
          }
-      }  
+      }
    }
    progress_bar(YSIZE(I));
    I /= (double)(xdim*ydim);
 }
 
 /* Main routine for transforming ------------------------------------------- */
-void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm, 
+void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    Projection &prj) {
    int h,k;
    //symmery should be reforced after APPLYYING SHIFT
@@ -238,7 +239,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    // plane (only for aph with z*) or not
    // if data is P1, all point should be OK if not several should
    // not belong to the plane.
-   
+
    // Apply phase shift
    // Up to here angles are in degrees
    // When copied to FT convert degrees to radians
@@ -248,29 +249,29 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
 	  h = (prm.aph_file.aph_data_vector[i]).h;
 	  k = (prm.aph_file.aph_data_vector[i]).k;
 	  ((prm.aph_file).aph_data_vector[i]).phase  =
-              ((prm.aph_file).aph_data_vector[i]).phase + phase_shift + 
+              ((prm.aph_file).aph_data_vector[i]).phase + phase_shift +
               k*(YY(prm.Phase_Shift)) +
               h*(XX(prm.Phase_Shift));
       }
    // Move all the reflections to the same plane
-   #define DEBUG   
+   #define DEBUG
    #ifdef DEBUG
    (prm.aph_file).write("IN1");
    #endif
-   #undef DEBUG   
+   #undef DEBUG
 
 
 
    if (prm.generate_symmetrical_reflections)
-      ((prm.aph_file).unasymmetrization)( prm.a_mag,    prm.b_mag, 
+      ((prm.aph_file).unasymmetrization)( prm.a_mag,    prm.b_mag,
                                           prm.taxa,     prm.mrc_tilt,
 			                  prm.a_b_ang,  prm.symmetry_group,
-					  prm.Counter);   
-   #define DEBUG   
+					  prm.Counter);
+   #define DEBUG
    #ifdef DEBUG
    (prm.aph_file).write("OUT1");
    #endif
-   #undef DEBUG   
+   #undef DEBUG
    //alloc a 2D matrix and transfer data
    // Resize and symmetrize Fourier Transform
    #define DEBUG
@@ -297,7 +298,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
               (prm.aph_file.aph_data_vector[i]).amp!=0) {
 	 h = (prm.aph_file.aph_data_vector[i]).h;
 	 k = (prm.aph_file.aph_data_vector[i]).k;
-	      
+	
 	 MAT_ELEM(FT, k, h) = polar((prm.aph_file.aph_data_vector[i]).amp,
                             DEG2RAD((prm.aph_file.aph_data_vector[i]).phase));
  	 MAT_ELEM(FT,-k,-h) = conj(MAT_ELEM(FT, k, h));
@@ -311,8 +312,8 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
    }
    IDFT(FT,prj(),prm.CellYdim,prm.CellXdim);
    prj() *= prm.Scale_Factor;
-//ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION    
-   
+//ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION
+
    // Any repetition?
    prj().resize(prm.CellYdim*prm.NoCells_Y, prm.CellXdim*prm.NoCells_X);
    for (int I=0; I<prm.NoCells_Y; I++)
@@ -329,7 +330,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
 }
 
 /* Main routine for transforming ------------------------------------------- */
-void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm, 
+void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
    Projection &prj) {
    //show parameters
    cout << prm;
@@ -350,7 +351,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
      spot tmp_spot;
      int my_counter_spot=1;
      int my_counter_film=1;
-	 
+	
      matrix1D<double> normal_plane(3);
      matrix1D<double> aux_vector(3);
      int DoesIntersect;
@@ -369,10 +370,10 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
      Vp=(vp.transpose()).inv();//ap*,bp* column vector
 
 //     normal_plane=E2D.Col(2);
-     
+
      FOR_ALL_ELEMENTS_IN_MATRIX2D(FT) {
 //     if(j==0 && i==1) {cout << "EXTRA" << abs(MAT_ELEM(FT,i,j));}
-//     else continue;  
+//     else continue;
 	 tmp_spot.amp	     = abs(MAT_ELEM(FT,i,j));
          if(tmp_spot.amp<0.0001) continue;
          tmp_spot.h	     = j; //x
@@ -388,11 +389,11 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 	 // compute z*
 	 // from euler angles get normal vector
 	 // compute intersección central plane with drid line
-//tenemos que calcular los vectores de red en espacio real y quitar  el 128	 
+//tenemos que calcular los vectores de red en espacio real y quitar  el 128	
 //	 DoesIntersect=line_plane_intersection(normal_plane,
 //                           vector_R3(0.,0.,1.),
 //                           intersection_point,
-//                           vector_R3((double)tmp_spot.h/128., 
+//                           vector_R3((double)tmp_spot.h/128.,
 //			   (double)tmp_spot.k/128.,0.),
 //			   0.
 //			   );
@@ -401,7 +402,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //	     cerr << "ERROR: plane and line does not intersec" << endl;
 //	     exit(1);
 //	     }
-//         tmp_spot.zstar      = ZZ(intersection_point); 
+//         tmp_spot.zstar      = ZZ(intersection_point);
          aux_vector = vector_R3((double)tmp_spot.h,
 	                        (double)tmp_spot.k,0.);//h
 	 Vp.resize(3,3);
@@ -425,9 +426,9 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
          #endif
      }//rellenar las estructura de aph
       // sort values
-      sort(prm.aph_file.aph_data_vector.begin(), 
+      sort(prm.aph_file.aph_data_vector.begin(),
            prm.aph_file.aph_data_vector.end());
-     //salvar el fichero aph  
+     //salvar el fichero aph
      (prm.aph_file).write(prm.fnaph_out);
 
 }
@@ -439,7 +440,7 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
       REPORT_ERROR(3005,
          (string)"RealSpace2Spots2D_Parameters::read: There is a problem "
          "opening the file "+fnprm);
-         
+
    try {
       fn_in=get_param(fh_param,"INput file",0,NULL,
          3007,"RealSpace2Spots2D_Parameters::read: Input File not found");
@@ -529,16 +530,16 @@ void DFT(const matrix2D<double> &I, matrix2D< complex<double> > &FT)
 	       myimag = MAT_ELEM(I,k,l)*sin(wK+wl*L);
   	       MAT_ELEM(FT,K,L) += complex<double>(myreal,0);
 	       MAT_ELEM(FT,K,L) -= complex<double>(0,myimag);
-//cout << k << " " << l << "  " << K << " " << L 
-//     << " " << MAT_ELEM(I,k,l) << " " 
+//cout << k << " " << l << "  " << K << " " << L
+//     << " " << MAT_ELEM(I,k,l) << " "
 //     << myreal << " " << myimag << endl;
 //cout << MAT_ELEM(FT,K,L) << endl;
              }
          }
-      }  
+      }
    }
-//cout << I; 
-//cout << FT; 
+//cout << I;
+//cout << FT;
    progress_bar(YSIZE(I));
-   
+
  }

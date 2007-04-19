@@ -6,23 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_projection_matching.hh"
+
+#include "angular_projection_matching.h"
 
 // Read arguments ==========================================================
 void Prog_projection_matching_prm::read(int argc, char **argv)  {
@@ -50,7 +51,7 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","180."));
 
   // Checks
-  if (fn_ref=="" && fn_vol=="") 
+  if (fn_ref=="" && fn_vol=="")
     REPORT_ERROR(1," Provide either -vol or -ref!");
   if (fn_ang!="" && ang_search>0)
     REPORT_ERROR(1," option -ang and -ang_search are incompatible!");
@@ -68,9 +69,9 @@ void Prog_projection_matching_prm::show() {
     cerr << "  Reference volume        : "<< fn_vol<<endl;
     cerr << "  Output rootname         : "<< fn_root<<endl;
     cerr << "  Angular sampling rate   : "<< sampling <<endl;
-    if (Ri>0) 
+    if (Ri>0)
     cerr << "  Inner radius rot-search : "<<Ri<<endl;
-    if (Ro>0) 
+    if (Ro>0)
     cerr << "  Outer radius rot-search : "<<Ro<<endl;
     cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
     if (ang_search>0) {
@@ -80,30 +81,30 @@ void Prog_projection_matching_prm::show() {
     {
 	cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
     }
-    if (fn_sym!="") 
+    if (fn_sym!="")
     {
 	cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<endl;
     }
-    if (fn_ang!="") 
+    if (fn_ang!="")
     {
 	cerr << "  -> Document file with angles for projection library: "<<fn_ang<<endl;
     }
-    if (!modify_header) 
+    if (!modify_header)
     {
 	cerr << "  -> Do not modify the image headers (only output docfile)"<<endl;
     }
-    if (output_refs) 
+    if (output_refs)
     {
 	cerr << "  -> Output library projections, sel and docfile"<<endl;
     }
-    if (output_classes) 
+    if (output_classes)
     {
 	cerr << "  -> Output class averages and selfiles for each projection direction "<<endl;
     }
 
     cerr << " ================================================================="<<endl;
   }
-} 
+}
 
 // Usage ===================================================================
 void Prog_projection_matching_prm::usage() {
@@ -149,7 +150,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 
     // Set nr_psi
     nr_psi=CEIL(360./sampling);
- 
+
     // Create rotational-search mask
     rotmask.resize(dim,dim);
     rotmask.set_Xmipp_origin();
@@ -159,19 +160,19 @@ void Prog_projection_matching_prm::produce_Side_info() {
     nr_pixels_rotmask=(int)rotmask.sum();
 
     // Initialize empty image
-    if (output_classes) 
+    if (output_classes)
     {
 	empty().resize(dim,dim);
 	empty().set_Xmipp_origin();
 	empty.clear_header();
     }
     // Read symmetry file into memory
-    if (fn_sym!="") 
-    { 
+    if (fn_sym!="")
+    {
 	SL.read_sym_file(fn_sym);
     }
 
-    if (fn_ref!="") 
+    if (fn_ref!="")
     // Read projections from selfile
     {
 	SFr.read(fn_ref);
@@ -183,7 +184,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	ref_stddev=(double*)malloc(nl*sizeof(double));
 	SFr.go_beginning();
 	nr_dir=0;
-	while (!SFr.eof()) 
+	while (!SFr.eof())
 	{
 	    proj.read(SFr.NextImg());
 	    proj().set_Xmipp_origin();
@@ -204,21 +205,21 @@ void Prog_projection_matching_prm::produce_Side_info() {
 		class_selfiles.push_back(emptySF);
 	    }
 	}
-    } 
-    else 
+    }
+    else
     // Generate reference projections from sampling
     {
 
-	if (ang_search>=0) 
+	if (ang_search>=0)
 	{
 	    // ignore -sym or -ref option and use -sam to generate all projections on the Ewald sphere
 	    // then select only those that are within the search_ranges of all experimental projections
 	    // THIS CODE IS AT LEAST SLOPPY...
-      
+
 	    // 1. Create even distribution over the entire Ewald sphere
 	    if (verb>0) cerr << "--> Making even distribution on entire Ewald sphere "<<endl;
 	    make_even_distribution(DF,sampling,SL,true);
-	    if (tilt_range0>0. || tilt_rangeF<180.) 
+	    if (tilt_range0>0. || tilt_rangeF<180.)
 		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
 	    // 2. Get all angles from all experimental images
 	    double act_rot_range, ref_rot,ref_tilt,img_rot,img_tilt;
@@ -226,7 +227,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    SF.go_beginning();
 	    DFi.clear();
 	    DF2.clear();
-	    while (!SF.eof()) 
+	    while (!SF.eof())
 	    {
 		proj.read(SF.NextImg());
 		dataline(0)=proj.rot();
@@ -236,7 +237,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    }
 	    // 3. Check which angles of DF to use
 	    if (verb>0) cerr << "--> Selecting relevant library projection directions ..."<<endl;
-	    if (verb>0) 
+	    if (verb>0)
 	    {
 		nn=DF.dataLineNo();
 		init_progress_bar(nn);
@@ -244,30 +245,30 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    }
 	    DF.go_first_data_line();
 	    int ii=0;
-	    while (!DF.eof()) 
+	    while (!DF.eof())
 	    {
 		ref_rot=DF(0);
 		ref_tilt=DF(1);
 		// act_rot_range is tilt-angle dependent!
-		if (ref_tilt>0 && ref_tilt<180) 
-		    act_rot_range=ang_search/sin(DEG2RAD(ref_tilt)); 
-		else 
+		if (ref_tilt>0 && ref_tilt<180)
+		    act_rot_range=ang_search/sin(DEG2RAD(ref_tilt));
+		else
 		    act_rot_range=361.;
 		bool search=false;
 		DFi.go_first_data_line();
-		while (!DFi.eof()) 
+		while (!DFi.eof())
 		{
 		    img_rot=DFi(0);
 		    img_tilt=DFi(1);
-		    if ( ABS(realWRAP(img_rot-ref_rot,-180.,180.)) <= act_rot_range && 
-			 ABS(realWRAP(img_tilt-ref_tilt,-180.,180.)) <= ang_search ) 
+		    if ( ABS(realWRAP(img_rot-ref_rot,-180.,180.)) <= act_rot_range &&
+			 ABS(realWRAP(img_tilt-ref_tilt,-180.,180.)) <= ang_search )
 		    {
 			search=true;
 			break;
 		    }
 		    DFi.next_data_line();
 		}
-		if (search) 
+		if (search)
 		{
 		    dataline(0)=ref_rot;
 		    dataline(1)=ref_tilt;
@@ -281,19 +282,19 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    if (verb>0) progress_bar(nn);
 	    DF=DF2;
 	    DF2.clear();
-	} 
-	else if (fn_ang!="") 
+	}
+	else if (fn_ang!="")
 	// Generate reference projections from docfile
 	{
 	    DF.read(fn_ang);
-	} 
-	else 
+	}
+	else
 	// Generate reference projections from even distribution
 	{
 	    // Create evenly-distributed reference projection angles
 	    if (verb>0) cerr << "--> Making even angular distribution ..."<<endl;
 	    make_even_distribution(DF,sampling,SL,true);
-	    if (tilt_range0>0. || tilt_rangeF<180.) 
+	    if (tilt_range0>0. || tilt_rangeF<180.)
 		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
 	}
 
@@ -317,12 +318,12 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	fn_refs=fn_root+"_lib";
 	DF.adjust_to_data_line();
 	nr_dir=0;
-	while (!DF.eof()) 
+	while (!DF.eof())
 	{
 	    ref_rot[nr_dir]=DF(0);
 	    ref_tilt[nr_dir]=DF(1);
 	    project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
-	    if (output_refs) 
+	    if (output_refs)
 	    {
 		fn_tmp.compose(fn_refs,nr_dir+1,"proj");
 		proj.write(fn_tmp);
@@ -344,7 +345,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    nr_dir++;
 	    if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
 	}
-	if (output_refs) 
+	if (output_refs)
 	{
 	    fn_tmp=fn_refs+".doc";
 	    DF.write(fn_tmp);
@@ -361,9 +362,9 @@ void Prog_projection_matching_prm::produce_Side_info() {
 
 
 void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
-							float &img_rot, float &img_tilt, float &img_psi, 
+							float &img_rot, float &img_tilt, float &img_psi,
 							int &opt_dirno, double &opt_psi,
-							double &opt_xoff, double &opt_yoff, 
+							double &opt_xoff, double &opt_yoff,
 							double &maxCC, double &Zscore) {
 
 
@@ -375,7 +376,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   bool search;
   vector<matrix2D<double> >::iterator ipp;
 
-  maxCC=-99.e99; 
+  maxCC=-99.e99;
   Mimg.resize(dim,dim);
   Mimg.set_Xmipp_origin();
   Mref.resize(dim,dim);
@@ -401,9 +402,9 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
       Mref=*(ipp);
       if (ang_search >0) {
 	// act_rot_range is tilt-angle dependent!
-	if (ref_tilt[dirno]>0 && ref_tilt[dirno]<180) act_rot_range=ang_search/sin(DEG2RAD(ref_tilt[dirno])); 
+	if (ref_tilt[dirno]>0 && ref_tilt[dirno]<180) act_rot_range=ang_search/sin(DEG2RAD(ref_tilt[dirno]));
 	else act_rot_range=361.;
-	if ( ABS(realWRAP(img_rot-ref_rot[dirno],-180.,180.)) > act_rot_range || 
+	if ( ABS(realWRAP(img_rot-ref_rot[dirno],-180.,180.)) > act_rot_range ||
 	     ABS(realWRAP(img_tilt-ref_tilt[dirno],-180.,180.)) > ang_search ) search=false;
       }
       if (search) {
@@ -426,7 +427,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
       ipp++;
     }
   }
-                                                                                
+
   // Calculate Z-score on rotational permutations
   Zscore=(maxCC-aveCC)/(sqrt(varCC));
 
@@ -436,14 +437,14 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   if (max_shift>0) best_shift(Mimg,Mref,xmax,ymax);
   else xmax=ymax=0.;
   if (xmax*xmax+ymax*ymax>max_shift*max_shift) {
-    xmax=0.; 
+    xmax=0.;
     ymax=0.;
-  } 
+  }
   opt_xoff=-xmax*COSD(opt_psi)-ymax*SIND(opt_psi);
   opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
 
   // Calculate optimal correlation coefficient
-  Mimg=Mimg.translate(vector_R2(-xmax,-ymax)); 
+  Mimg=Mimg.translate(vector_R2(-xmax,-ymax));
   Mimg-=mean_img;
   maxCC=0.;
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
@@ -453,7 +454,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
 }
 
-void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile &DFo, 
+void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile &DFo,
 							   double &sumCC) {
 
 
@@ -470,7 +471,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   nn=SF.ImgNo();
   if (verb>0) init_progress_bar(nn);
   c=MAX(1,nn/60);
-  
+
   // Loop over all images
   sumCC=0.;
   imgno=0;
@@ -499,9 +500,9 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     DFo.append_comment(img.name());
     DFo.append_data_line(dataline);
 
-    
 
-    if (modify_header) 
+
+    if (modify_header)
     {
 	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
@@ -535,7 +536,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   free(ref_tilt);
   ref_img.clear();
 }
-void Prog_projection_matching_prm::write_classes() 
+void Prog_projection_matching_prm::write_classes()
 {
 
     FileName fn_base,fn_img,fn_sel;

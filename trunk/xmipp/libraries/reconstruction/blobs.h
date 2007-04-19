@@ -6,29 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _BLOBS_HH
    #define _BLOBS_HH
-   #include "grids.hh"
-   #include <XmippData/xmippImages.hh>
-   #include <XmippData/xmippVolumes.hh>
-   
+
+#include "grids.h"
+
+#include <data/image.h>
+#include <data/volume.h>
+
 /* ========================================================================= */
 /* BLOBS                                                                     */
 /* ========================================================================= */
@@ -44,7 +46,7 @@
     containing all we need to know about the blob. As a type definition,
     we can work with several kind of blobs in the same program at the same
     time.
-    
+
     The common way of defining a blob is as follows:
     \begin{verbatim}
     struct blobtype blob;                  // Definition of the blob
@@ -52,11 +54,11 @@
     blob.order  = 2;                       // Order of the Bessel function
     blob.alpha  = 3.6;                     // Smoothness parameter
     \end{verbatim}
-    
+
     Sometimes it is useful to plot any quantity related to the blobs. In the
     following example you have how to plot their Fourier transform in the
     continuous frequency space.
-    
+
     \begin{verbatim}
       #include <Reconstruction/blobs.hh>
       #include <XmippData/xmippArgs.hh>
@@ -82,7 +84,7 @@ struct blobtype {
 
    /// Derivation order and Bessel function order
    int   order;
-   
+
    /// Smoothness parameter
    double alpha;
 };
@@ -128,10 +130,10 @@ double kaiser_proj(double r, double a, double alpha, int m);
 /** Fourier transform of a blob.
     This function returns the value of the Fourier transform of the blob
     at a given frequency (w). This frequency must be normalized by the
-    sampling rate. For instance, for computing the Fourier Transform of 
+    sampling rate. For instance, for computing the Fourier Transform of
     a blob at 1/Ts (Ts in Amstrongs) you must provide the frequency Tm/Ts,
     where Tm is the sampling rate.
-    
+
     The Fourier Transform can be computed only for blobs with m=2. */
 #define blob_Fourier_val(w, blob) \
    kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
@@ -142,10 +144,10 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m);
     basvolume(blob.radius, blob.alpha, blob.order,3)
 double  basvolume (double a, double alpha, int m, int n);
 
-/** Limit (z->0) of (1/z)^n I_n(z) (needed by basvolume)*/    
+/** Limit (z->0) of (1/z)^n I_n(z) (needed by basvolume)*/
 double in_zeroarg(int n);
 
-/** Limit (z->0) of (1/z)^(n+1/2) I_(n+1/2) (z) (needed by basvolume)*/    
+/** Limit (z->0) of (1/z)^(n+1/2) I_(n+1/2) (z) (needed by basvolume)*/
 double inph_zeroarg(int n);
 
 /** Bessel function I_(n+1/2) (x),  n = 0, 1, 2, ... */
@@ -193,7 +195,7 @@ double optimal_FCC_grid_relative_size(struct blobtype b);
     that frequency and then the blob with less
     computational cost is returned. m=2 always. The resolution criterion
     is given by w (remind that this w=Tm*w(cont)).
-    
+
     If there is no blob meeting the specification then alpha=a=-1.*/
 blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
    double a_0, double a_F, double inc_a, double w, double *target_att,
@@ -241,14 +243,14 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
     blob.radius = 2;
     blob.order  = 2;
     blob.alpha  = 3.6;
-    
+
     // Grid definition
     Grid BCCgrid;
     BCCgrid=BCC_grid(1.41,vector_R3(-5,-5,-5),vector_R3( 5, 5, 5));
-    
+
     cout << "The sum of a single blob over the grid is " <<
          << sum_blob_grid(blob, BCCgrid);
-    \end{verbatim}    
+    \end{verbatim}
 
    D is a 3x3 matrix specifying a volume deformation. It means that the
    sample at logical position (i,j,k) is really placed at space position
@@ -280,7 +282,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
     \end{verbatim}
     where SGcorner1(i) and SGcorner2(i) are the lowest and highest corners
     of each subgrid. These corners are expressed in Universal coordinates.
-   
+
    This quantity is then enlarged to be an integer voxel position and to take
    into account that the former computed Gcorner1 and 2 are the furthest
    centers of blobs, ie, there will be voxels even further affected by these
@@ -289,11 +291,11 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
    Gcorner1 = CEILnD (Gcorner1 - blob.radius);
    Gcorner2 = FLOORnD(Gcorner2 + blob.radius);
    \end{verbatim}
-   
+
    However, you might give a size, usually set to 0, i.e., no external size.
    If no size is provided a size is produced such that all blob centers
    fit into the output volume.
-   
+
    D is a 3x3 matrix specifying a volume deformation. It means that the
    sample at logical position (i,j,k) is really placed at space position
    D*(i,j,k)'.
@@ -316,15 +318,15 @@ void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype
     This applies the whole ART process.
     You can set a debugging level by setting the flag SHOW_CONVERSION in the
     tell argument.
-    
+
     If the mask is NULL then it is assumed that all voxels in the input
     voxel volume must be adjusted by the blobs. If the input voxel volume
     is NULL the it is assumed that it is equal to 0 and only those
     corresponding to the 1 positions within the mask must be adjusted.
-    
+
     R is the interest radius. If it is -1 two superimposed grids are created,
     otherwise a single grid with tilted axis is.
-    
+
     Valid grid types are defined in \Ref{Some useful grids}*/
 void voxels2blobs(const matrix3D<double> *vol_voxels,
    const struct blobtype &blob, GridVolume &vol_blobs,
@@ -346,15 +348,15 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
     applied to the blob volume. The read volume is the one to reproduce
     with blobs and the mask volume is used to select only one region to
     adjust.
-    
+
     If the mask is NULL then it is assumed that all voxels in the input
     voxel volume must be adjusted by the blobs. If the input voxel volume
     is NULL the it is assumed that it is equal to 0 and only those
     corresponding to the 1 positions within the mask must be adjusted.
     An exception is thrown if the mask and voxels volume are both NULL.
-    
+
     Then mean and maximum error commited for each blob are returned.
-    
+
     Valid eq_modes are
      \\VARTK:     ART by blocks for volumes.
      \\VMAXARTK:  update with the maximum update.*/

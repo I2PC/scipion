@@ -8,21 +8,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _XMIPPVOLUMES_H
@@ -35,9 +35,10 @@
 #include <iostream>
 #include <stdio.h>
 #include <typeinfo>
-#include "xmippFuncs.hh"
-#include "xmippMatrices3D.hh"
-#include "xmippHeader.hh"
+
+#include "funcs.h"
+#include "matrix3d.h"
+#include "header.h"
 
 /* ************************************************************************* */
 /* VOLUMES                                                                   */
@@ -47,7 +48,7 @@
 typedef enum {VBYTE=1, VFLOAT=2, VINT=3, VUCHAR=4, V16=5} Volume_Type;
 
 /** Basic Volume Class.
-    The volume class is a general class which only contains 
+    The volume class is a general class which only contains
     the volume itself and a filename for it. It has got a float matrix3D as
     member, and basically all operations between volumes are based on that
     class.
@@ -60,7 +61,7 @@ typedef enum {VBYTE=1, VFLOAT=2, VINT=3, VUCHAR=4, V16=5} Volume_Type;
 
     See \Ref{Logical and physical access} for a detailed information
     about the voxel accessing, and the conventions used in the volume
-    definition. 
+    definition.
 */
 template <class T> class VolumeT {
 public:
@@ -82,20 +83,20 @@ public:
    VolumeT(int Zdim, int Ydim, int Xdim){
      img.resize(Zdim,Ydim,Xdim);
      fn_img="";
-   };            
-   
+   };
+
    /** Constructor using filename.
        The name for the Volume is assigned but no load is performed.
        The Volume content is empty, ie, with size 0x0x0.
        Ex: VolumeT<double> V("art0001.vol"); */
    VolumeT(FileName _name) {fn_img=_name;}
-   
+
    /** Copy constructor.
        \\Ex: VolumeT<double> V2(V1); */
    template <class Type>
       VolumeT(const VolumeT<Type> &I) {*this=I;}
    //@}
-   
+
    /**@name Some operations*/
    //@{
    /** Assignment.
@@ -160,7 +161,7 @@ public:
       move_origin_to_center();
    }
    //@}
-   
+
    /**@name Image access*/
    //@{
    /** 3D Matrix access.
@@ -191,10 +192,10 @@ public:
 
    /** Get voxel */
    T get_voxel (int z, int y, int x) const {return img(z,y,x);}
-   
+
    /** Set voxel */
    void set_voxel (int z, int y, int x, T val) {img(z,y,x)=val;}
-   
+
    /** Name access.
        This function is used to know the name of the Volume. It
        cannot be used to assign a new one.
@@ -205,7 +206,7 @@ public:
        Shows name and size */
    friend ostream & operator << (ostream &out, const VolumeT<T> &V)
       {out << "Volume Name   : " << V.fn_img << endl
-           << "dimensions   : " << V.img.SliNo() << " x " 
+           << "dimensions   : " << V.img.SliNo() << " x "
            << V.img.RowNo() << " x " << V.img.ColNo()
            << "  (slices x rows x columns)" << endl;
       return out;}
@@ -217,15 +218,15 @@ public:
    /** Read Volume from disk, given the Volume's dimensions.
        If the Volume doesn't exist at the given path then an exception is
        thrown.
-       
+
        The reversed flag indicates if the elements in element_size
        must be read in a reversed way.
-       
+
        Elements are supposed to be in the following order (y,x)=
        (0,0)(0,1)(0,2), ..., (0,Xdim-1), (1,0), (1,1), ...
-       
+
        The element size can be adjusted so that raw images of bytes (VBYTE),
-       unsigned ints of 16 bits (V16) and floats (VFLOAT) can be read. 
+       unsigned ints of 16 bits (V16) and floats (VFLOAT) can be read.
 
        The headersize parameter can be used to read raw volumes
        preceded by a header. This is the normal image format of many
@@ -236,7 +237,7 @@ public:
    void read(FileName name, int Zdim, int Ydim, int Xdim, bool reversed=false,
       Volume_Type volume_type=VBYTE, int header_size=0) {
         FILE *fh;
-        clear(); 
+        clear();
         fn_img=name;
         if ((fh = fopen(fn_img.c_str(), "rb")) == NULL)
           REPORT_ERROR(1501,"Volume::read: File " + fn_img + " not found");
@@ -287,13 +288,13 @@ public:
    void write(FileName name = "", bool reversed=false,
       Volume_Type volume_type=VBYTE) {
          FILE *fp;
-         if (name != "") rename(name);  
+         if (name != "") rename(name);
 
          if ((fp = fopen(fn_img.c_str(), "wb")) == NULL) {
            REPORT_ERROR(1503,"Volume::write: File " + fn_img + " cannot be saved");
          };
          write(fp, reversed, volume_type);
-         fclose(fp);  
+         fclose(fp);
    }
 
    /** Write image to disk using a file pointer.
@@ -359,7 +360,7 @@ inline void VolumeT<complex<double> >::read(FILE *fh,
 
 template <>
 inline void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
-   Volume_Type volume_type) 
+   Volume_Type volume_type)
 {
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
    {
@@ -423,7 +424,7 @@ void write_as_CCP4(VolumeT<double> *V, const FileName &fn,
     the programmer and must be set through object functions, in this way
     the coherence in the header is assured. See File Formats for
     more information about the Spider format.
-    
+
     In principle, the volume starts at voxel (0,0) but this can be modified
     for any other logical access. See class \Ref{Volume} for more information.
 
@@ -476,10 +477,10 @@ public:
      else{
      cout << "\nError: VolumeXmipp should be double or integer\n";
      exit(0);
-     }                                   
-     
-     header.set_dimension(Ydim, Xdim);                 // Sets header dimensions     
-     header.Slices() = Zdim;                 	       // Sets header Slices 
+     }
+
+     header.set_dimension(Ydim, Xdim);                 // Sets header dimensions
+     header.Slices() = Zdim;                 	       // Sets header Slices
      header.set_header(); 			       // Initialize header
      header.set_time();				       // Set time and date	
      header.set_date();
@@ -494,19 +495,19 @@ public:
      if(  typeid(T) == typeid(double) )
           header.headerType() = headerXmipp::VOL_XMIPP;
                                         // Sets header of type Image_XMipp
-     else if (typeid(T) == typeid(int) )   
+     else if (typeid(T) == typeid(int) )
           header.headerType() = headerXmipp::VOL_INT;
                                         // Sets header of type Image int
-     else if (typeid(T) == typeid(complex<double>) )   
+     else if (typeid(T) == typeid(complex<double>) )
           header.headerType() = headerXmipp::VOL_FOURIER;
                                         // Sets header of type Image_XMipp (complex)
      else{
        cout << "\nError: VolumeXmipp should be double or integer\n";
        exit(0);
-     }                                   
+     }
      read(_name);  			  	       // Read image from file
    }
-   
+
    /** Copy constructor.
        \\ Ex: VolumeXmipp<double> VX2(VX1); */
    VolumeXmippT (const VolumeXmippT &I): VolumeT<T>(I) {header = I.header;}
@@ -554,7 +555,7 @@ public:
       }
 
    /** Assignment from any kind of volume.*/
-   //Ex:Volume<double> VO; VolumeXmipp VX; VX.assign_from(&VO); 
+   //Ex:Volume<double> VO; VolumeXmipp VX; VX.assign_from(&VO);
    template <class Type>
       void assign_from(VolumeT<Type> *v) {*this=*v;}
    //@}
@@ -564,7 +565,7 @@ public:
    //@{
    /** Read Xmipp volume from disk.
        If the volume doesn't exist at the given path then an exception is
-       thrown.        
+       thrown.
        The type check is a test performed on input image to check
        if it comes from a big or little endian machine. It is done
        over the \Ref{xmippHeader} field fIform. Sometimes, this value
@@ -573,16 +574,16 @@ public:
        \\ Ex: VX.read("art0001.vol");*/
    void read(const FileName &name, bool skip_type_check=false,
       bool force_reversed=false) {
-        FILE *fp; 
+        FILE *fp;
 
-        rename(name); 
+        rename(name);
         if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "rb")) == NULL)
           REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+VolumeT<T>::fn_img+" not found");
 
         // Read header
         if (!header.read(fp, skip_type_check, force_reversed))
            REPORT_ERROR(1502,"VolumeXmipp::read: File " + VolumeT<T>::fn_img +
-              " is not a valid Xmipp file");   
+              " is not a valid Xmipp file");
 
         // Read whole image and close file
         VolumeT<T>::read(fp, header.iSlices(), header.iYdim(), header.iXdim(),
@@ -598,24 +599,24 @@ public:
        when it was read. From this point the filename of the volume has
        changed. This is somehow like the "Save as ..." and "Save".
        \\ Ex: VX.write() ---> Save
-       \\ Ex: VX.write("art0002.vol") ---> Save as 
+       \\ Ex: VX.write("art0002.vol") ---> Save as
        If force_reversed is TRUE then image is saved in reversed mode,
        if not it is saved in the same mode as it was loaded.*/
    void write(const FileName &name = "", bool force_reversed=false) {
         FILE *fp;
-        if (name != "") rename(name); 
+        if (name != "") rename(name);
         if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
           REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+VolumeT<T>::fn_img +
              " cannot be written");
-        adjust_header();  
+        adjust_header();
         header.write(fp, force_reversed);
         VolumeT<T>::write(fp, header.reversed(), VFLOAT);
-        fclose(fp);  
+        fclose(fp);
    }
    //@}
 
    // Header operations interface ..........................................
-   // These are the only access to the header allowed 
+   // These are the only access to the header allowed
    /**@name Header access*/
    //@{
    /** Adjust header.
@@ -624,15 +625,15 @@ public:
       if(typeid(T) == typeid(double) )
            header.headerType() = headerXmipp::VOL_XMIPP;
                                          // Sets header of type Image_XMipp
-      else if (typeid(T) == typeid(int) )   
+      else if (typeid(T) == typeid(int) )
            header.headerType() = headerXmipp::VOL_INT;
                                          // Sets header of type Image int
-      else if (typeid(T) == typeid(complex<double>) )   
+      else if (typeid(T) == typeid(complex<double>) )
            header.headerType() = headerXmipp::VOL_FOURIER;
 
-      header.set_dimension(YSIZE(VolumeT<T>::img), XSIZE(VolumeT<T>::img)); // Sets header dimensions     
-      header.Slices() = ZSIZE(VolumeT<T>::img);     // Sets header Slices 
-      header.set_time();			    // Set time and date 
+      header.set_dimension(YSIZE(VolumeT<T>::img), XSIZE(VolumeT<T>::img)); // Sets header dimensions
+      header.Slices() = ZSIZE(VolumeT<T>::img);     // Sets header Slices
+      header.set_time();			    // Set time and date
       header.set_date();
       header.set_title(VolumeT<T>::fn_img);         // Set title
       header.set_header(); 			    // Initialize header

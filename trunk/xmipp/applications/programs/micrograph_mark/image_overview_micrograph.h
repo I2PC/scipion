@@ -20,20 +20,19 @@
 #ifndef __QT_IMAGE_OVERVIEW_MICROGRAPH_HH__
 #define __QT_IMAGE_OVERVIEW_MICROGRAPH_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtImage.hh"
+#include "image.h"
 
 /* Forward declarations ---------------------------------------------------- */
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtImageOverviewMicrograph : public QtImage {   
+class QtImageOverviewMicrograph : public QtImage {
    Q_OBJECT
-         
+
 private:
    double  __w, __h;
    int     __x0_crop, __y0_crop, __xF_crop, __yF_crop;
-   
+
 public:
    // Constructor
    QtImageOverviewMicrograph( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );
@@ -42,18 +41,18 @@ public:
    void setMicrograph( Micrograph *_m );
    void drawEllipse(int _x, int _y, int _color);
    void draw_axis(double _ang);
-   
+
    // Crop area
    void init_crop_area();
    void finish_crop_area();
-   
+
 protected:
    // Coordinate transformations
-   void micrographToOverview( const int _x, const int _y, 
+   void micrographToOverview( const int _x, const int _y,
                               int &_rx, int &_ry );
    void overviewToMicrograph( const int _x, const int _y,
                               int &_rx, int &_ry );
-   void exact_micrographToOverview( const int _x, const int _y, 
+   void exact_micrographToOverview( const int _x, const int _y,
                               double &_rx, double &_ry );
    void exact_overviewToMicrograph( const int _x, const int _y,
                               double &_rx, double &_ry );

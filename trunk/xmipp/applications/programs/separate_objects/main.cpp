@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFilters.hh>
+#include <data/image.h>
+#include <data/volume.h>
+#include <data/args.h>
+#include <data/filters.h>
 
 void Usage();
 
@@ -37,7 +37,7 @@ int main (int argc, char *argv[]) {
    FileName fn_in, fn_root;
    bool invert;
    double min_size;
-   
+
 
    // Get input parameters .................................................
    try {
@@ -47,7 +47,7 @@ int main (int argc, char *argv[]) {
       min_size  = AtoF(get_param(argc,argv,"-min_size","0"));
       if (fn_root=="") fn_root=fn_in.get_root();
    } catch (Xmipp_error XE) {cout << XE; Usage(); exit(0);}
-   
+
    // Process ..............................................................
    try {
       double number_elements;
@@ -64,11 +64,11 @@ int main (int argc, char *argv[]) {
                if (invert) I(i,j)=1-I(i,j);
             }
 	    number_elements=I().sum();
-	    if (number_elements>min_size) {	       
+	    if (number_elements>min_size) {	
                fn_out.compose(fn_root,o,fn_ext);
                I.write(fn_out);
 	    }
-	    
+	
             cout << "Image number " << o << " contains " << number_elements
                  << " pixels set to 1\n";
          }
@@ -82,18 +82,18 @@ int main (int argc, char *argv[]) {
                if (invert) V(k,i,j)=1-V(k,i,j);
             }
 	    number_elements=V().sum();
-	    if (number_elements>min_size) {	       
+	    if (number_elements>min_size) {	
                fn_out.compose(fn_root,o,fn_ext);
                V.write(fn_out);
 	    }
-	    
+	
             cout << "Volume number " << o << " contains " << number_elements
                  << " voxels set to 1\n";
          }
       } else {
         REPORT_ERROR(1,"Separate_objects: Input file is not Spider\n");
       }
-   } catch (Xmipp_error XE) {cout << XE;}   
+   } catch (Xmipp_error XE) {cout << XE;}
 }
 
 /* Usage ------------------------------------------------------------------- */

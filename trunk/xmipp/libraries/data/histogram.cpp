@@ -7,28 +7,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
 
-#include "../xmippHistograms.hh"
+#include "histogram.h"
 
 /* ------------------------------------------------------------------------- */
 /* HISTOGRAMS 1D                                                             */
@@ -116,7 +116,7 @@ double histogram1D::percentil(double percent_mass) {
    // Check it is a correct mass
    if (percent_mass>100)
       REPORT_ERROR(2001,"Asked for a percentil greater than 100");
-   
+
    // Trivial cases
    if (percent_mass==0)   return(hmin);
    if (percent_mass==100) return(hmax);
@@ -129,7 +129,7 @@ double histogram1D::percentil(double percent_mass) {
       if (VEC_ELEM(*this,i)>0) N_diff_from_0++;
       i++;
    }
-   
+
    // If the sum is just the one we want OK
    if   (acc==required_mass) percentil_i=i;
    // If there is only one sample different from 0
@@ -146,7 +146,7 @@ double histogram1D::percentil(double percent_mass) {
 	 percentil_i=i+(required_mass-acc)/(double) VEC_ELEM(*this,i); */
       percentil_i=i-1;
    }
-   
+
    // Now translate from index to range
    index2val(percentil_i,ret_val);
    return ret_val;
@@ -183,12 +183,12 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2) {
    double error=0;
    int   ih1, ih2;               // Indexes within the histograms
    double p1, p2;                 // Probability associated
-   
+
    // Find global range
    hmin=MAX(h1.hmin,h2.hmin);
    hmax=MIN(h1.hmax,h2.hmax);
    step=MIN(h1.step_size,h2.step_size)/2;
-   
+
    // Go over the range computing the errors
    v=hmin;
    int N=0;
@@ -205,7 +205,7 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2) {
          else       error += p1;
       v += step; N++;
    }
-   
+
    // Normalise such that the result is the area of a probability function
    error *= step/(hmax-hmin);
    error /= N;
@@ -261,7 +261,7 @@ void histogram2D::init(double imin_val, double imax_val, int in_steps,
    jmin=jmin_val;
    jmax=jmax_val;
    jstep_size = (double) (jmax_val-jmin_val) / (double) jn_steps;
-   
+
    init_zeros(in_steps,jn_steps);
    no_samples=0;
 }

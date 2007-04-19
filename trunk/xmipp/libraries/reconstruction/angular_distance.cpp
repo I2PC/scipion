@@ -6,26 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_Angular_Distance.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippHistograms.hh>
+#include "angular_distance.h"
+
+#include <data/args.h>
+#include <data/histogram.h>
 
 // Read arguments ==========================================================
 void Prog_angular_distance_prm::read(int argc, char **argv) {
@@ -116,7 +117,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
       #endif
    }
    axes_dist/=N;
-   
+
    #ifdef DEBUG
       cout << "-->" << axes_dist << endl;
    #endif
@@ -157,7 +158,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
          best_rot2=rot2p; best_tilt2=tilt2p; best_psi2=psi2p;
 	 best_ang_dist=ang_dist;
       }
-      
+
       if (check_mirrors) {
          Euler_up_down(rot2p,tilt2p,psi2p,rot2p,tilt2p,psi2p);
          double ang_dist_mirror=second_angle_set(rot1,tilt1,psi1,rot2p,tilt2p,psi2p,
@@ -184,20 +185,20 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 double Prog_angular_distance_prm::compute_distance() {
    DocFile DF_out;
    double dist=0;
-   
+
    DF1.go_first_data_line();
    DF2.go_first_data_line();
    DF_out.reserve(DF1.dataLineNo());
-   
+
    int dim=DF1.FirstLine_ColNo();
    matrix1D<double> aux(16);
    matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
    rot_diff.resize(DF1.dataLineNo());
    tilt_diff.resize(rot_diff);
    psi_diff.resize(rot_diff);
-   vec_diff.resize(rot_diff);   
-   X_diff.resize(rot_diff);   
-   Y_diff.resize(rot_diff);   
+   vec_diff.resize(rot_diff);
+   X_diff.resize(rot_diff);
+   Y_diff.resize(rot_diff);
 
    // Build output comment
    DF_out.append_comment("            rot1       rot2    diff_rot     tilt1      tilt2    diff_tilt    psi1       psi2     diff_psi   ang_dist      X1         X2        Xdiff       Y1          Y2       Ydiff");
@@ -220,7 +221,7 @@ double Prog_angular_distance_prm::compute_distance() {
       else        {X1=X2=0;}
       if (dim>=5) {Y1=DF1(4); Y2=DF2(4);}
       else        {Y1=Y2=0;}
-      
+
       // Bring both angles to a normalized set
       rot1=realWRAP(rot1,-180,180);
       tilt1=realWRAP(tilt1,-180,180);
@@ -243,7 +244,7 @@ double Prog_angular_distance_prm::compute_distance() {
       vec_diff(i)=distp;
       X_diff(i)=X1-X2;
       Y_diff(i)=Y1-Y2;
-      
+
       // Fill the output result
       aux(0)=rot1;  aux(1)=rot2p;  aux(2)=rot_diff(i);
       aux(3)=tilt1; aux(4)=tilt2p; aux(5)=tilt_diff(i);
@@ -260,7 +261,7 @@ double Prog_angular_distance_prm::compute_distance() {
       i++;
    }
    dist/=i;
-   
+
    if (fn_ang_out!="") {
       DF_out.write(fn_ang_out+"_merge.txt");
       histogram1D hist;

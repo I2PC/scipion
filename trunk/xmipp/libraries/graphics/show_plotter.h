@@ -8,34 +8,36 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef SHOWPLOTTER_H
 #define SHOWPLOTTER_H
 
 #include <vector>
+
 #include <qevent.h>
 #include <qlabel.h>
 #include <qmainwindow.h>
 #include <qpixmap.h>
-#include <qtoolbutton.h> 
+#include <qtoolbutton.h>
 #include <qwidget.h>
-#include <XmippData/xmippMatrices2D.hh>
+
+#include <data/matrix2d.h>
 
 /**@name Show Plotter */
 //@{
@@ -45,7 +47,7 @@
 */
 class PlotSettings {
 public:
-   /// Minimum value showed in X axis  
+   /// Minimum value showed in X axis
    double minX;
    /// Maximum value showed in X axis
    double maxX;
@@ -54,9 +56,9 @@ public:
        if numXTicks is 5, plotter will draw 6 ticks marks */
    int numXTicks;
 
-   /// Minimum value showed in Y axis  
+   /// Minimum value showed in Y axis
    double minY;
-   /// Maximum value showed in Y axis  
+   /// Maximum value showed in Y axis
    double maxY;
    /** Number of Yticks.
        By convention numXTicks are off by one,
@@ -69,10 +71,10 @@ public:
    double posY;
 public:
    /** Empty Constructor */
-   PlotSettings();  
+   PlotSettings();
 public:
    // Internal functions
-   // Function to scroll settings, when we move through the plotter 
+   // Function to scroll settings, when we move through the plotter
    void scroll(int dx, int dy);
 
    // Function to set nice values at the axis
@@ -84,7 +86,7 @@ public:
    // Y range
    double spanY() const {return maxY - minY;}
 
-   // Procedure to take nice values for the different Ticks of the axis and 
+   // Procedure to take nice values for the different Ticks of the axis and
    // for the min and max values of the axis.
    void adjustAxis(double &min, double &max);
 };
@@ -93,7 +95,7 @@ public:
     It may receive a matrix2D object or two matrices 1D;
     It has some utilities like ZoomIn & Out, move through it, save plotter as
     .png image.
-    
+
     An example of use is provided by:
     \begin{verbatim}
          #include <XmippGraphics/showPlotter.hh>
@@ -104,7 +106,7 @@ public:
                // Data to plot
                matrix1D<double> y;
                y.init_linear(1,100);
-               
+
                // Setup the interface
                QApplication app(argc,argv);
                Plotter plotter;
@@ -125,12 +127,12 @@ public:
 
    /** Destructor */
    ~Plotter();
-   
+
    /** Assign a new curve to the plotter.
        It needs an ID for the curve and a matrix1D with the curve.
        it will be assigned to CurveMap and shown in the plotter.*/
    void setCurveData(int id, const matrix1D<double> &Y);
-   
+
    /** Assign a new curve to the plotter. */
    void setCurveData(int id, const matrix1D<double> &X,
       const matrix1D<double> &Y);
@@ -138,7 +140,7 @@ public:
    /** Assign a new curve to the plotter.
        The first column is assumed to be the X axis and the second column
        the Y axis.
-   */       
+   */
    void setCurveData(int id, const matrix2D<double> &data);
 
    /** Delete a curve from our plotter. */
@@ -146,13 +148,13 @@ public:
 
    /** Refresh pixmap */
    void refreshPixmap();
-   
+
    /** Set active state of the given curve */
    void setActiveState(int id, bool new_state) {curveActive[id]=new_state;}
 
    /** Set plotsettings */
    void setPlotSettings(const PlotSettings &new_settings);
-   
+
    /** Copy from another Plotter */
    void copy(const Plotter &plotter);
 public slots:
@@ -174,7 +176,7 @@ public:
    void keyPressEvent(QKeyEvent *event);
    void wheelEvent(QWheelEvent *event);
    void mouseMoveStatus(QMouseEvent *event);
-       
+
    // Status bar related
    void updateCellIndicators(double x,double y);
    void updateModLabel(const QString & message);
@@ -190,7 +192,7 @@ public:
 
    // Drawing
    QSize minimumSizeHint() const;
-   QSize sizeHint() const;       
+   QSize sizeHint() const;
    void drawGrid(QPainter *painter);
    void updateRubberBandRegion();
    void refreshCurves();

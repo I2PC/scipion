@@ -6,24 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../projection.hh"
+#include "projection.h"
 
 #define x0   STARTINGX(IMGMATRIX(proj))
 #define xF   FINISHINGX(IMGMATRIX(proj))
@@ -42,7 +42,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    // Initialise projection
    P.reset(Ydim, Xdim);
    P.set_angles(rot,tilt,psi);
-  
+
    // Compute the distance for this line crossing one voxel
    int x_0=STARTINGX(V), x_F=FINISHINGX(V);
    int y_0=STARTINGY(V), y_F=FINISHINGY(V);
@@ -51,7 +51,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    // Distances in X and Y between the center of the projection pixel begin
    // computed and each computed ray
    double step= 1.0/3.0;
-    
+
    // Avoids divisions by zero and allows orthogonal rays computation
    if(XX(P.direction)==0) XX(P.direction)=XMIPP_EQUAL_ACCURACY;
    if(YY(P.direction)==0) YY(P.direction)=XMIPP_EQUAL_ACCURACY;
@@ -64,20 +64,20 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
    double half_x_sign = 0.5 * x_sign;
    double half_y_sign = 0.5 * y_sign;
    double half_z_sign = 0.5 * z_sign;
-   
+
    matrix2D<double> &mP=P();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mP) {
-      matrix1D<double> r_p(3); // r_p are the coordinates of the 
+      matrix1D<double> r_p(3); // r_p are the coordinates of the
                                // pixel being projected in the
                                // coordinate system attached to the
                                // projection
       matrix1D<double> p1(3);  // coordinates of the pixel in the
       			       // universal space
       double ray_sum=0.0;      // Line integral value
-      
+
       // Computes 4 different rays for each pixel.
-      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++) { 
-	// universal coordinate system                        
+      for(int rays_per_pixel = 0; rays_per_pixel<4; rays_per_pixel++) {
+	// universal coordinate system
 	switch(rays_per_pixel){
 		case 0:	VECTOR_R3(r_p,j-step,i-step,0);
 			break;
@@ -143,27 +143,27 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
            cout << "   First index: " << idx.transpose() << endl;
            cout << "   Alpha_min: " << alpha_min << endl;
 	#endif
-   
+
 	// Follow the ray
 	double alpha=alpha_min;
-	do {  
+	do {
 	   #ifdef DEBUG
 	   	cout << " \n\nCurrent Value: " << V(ZZ(idx),YY(idx),XX(idx)) << endl;
 	   #endif
-	   
+	
 	   double alpha_x = (XX(idx)+half_x_sign-XX(p1))/XX(P.direction);
            double alpha_y = (YY(idx)+half_y_sign-YY(p1))/YY(P.direction);
            double alpha_z = (ZZ(idx)+half_z_sign-ZZ(p1))/ZZ(P.direction);
 
 	   // Which dimension will ray move next step into?, it isn't neccesary to be only
-	   // one. 
+	   // one.
 	   double diffx = ABS(alpha-alpha_x);
 	   double diffy = ABS(alpha-alpha_y);
 	   double diffz = ABS(alpha-alpha_z);
-	  
+	
 	   double diff_alpha = MIN(MIN(diffx,diffy),diffz);
 
-	   ray_sum+= diff_alpha * V(ZZ(idx),YY(idx),XX(idx)); 
+	   ray_sum+= diff_alpha * V(ZZ(idx),YY(idx),XX(idx));
 	
 	   if(ABS(diff_alpha-diffx) <=XMIPP_EQUAL_ACCURACY){
 		  alpha = alpha_x; XX(idx)+=x_sign;
@@ -174,15 +174,15 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 	   if(ABS(diff_alpha-diffz) <=XMIPP_EQUAL_ACCURACY){
 		  alpha = alpha_z; ZZ(idx)+=z_sign;
 	   }
-    
+
 	   #ifdef DEBUG
               cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
                    << " " << alpha_z << " ---> " << alpha << endl;
-           
+
 	      XX(v)+=diff_alpha*XX(P.direction);
               YY(v)+=diff_alpha*YY(P.direction);
               ZZ(v)+=diff_alpha*ZZ(P.direction);
-    
+
 	      cout << "    Next entry point: " << v.transpose() << endl
                    << "    Index: " << idx.transpose() << endl
                    << "    diff_alpha: " << diff_alpha << endl
@@ -219,7 +219,7 @@ void singleWBP(matrix3D<double> &V, Projection &P) {
    // Distances in X and Y between the center of the projection pixel begin
    // computed and each computed ray
    double step= 1.0/3.0;
-    
+
    // Avoids divisions by zero and allows orthogonal rays computation
    if(XX(P.direction)==0) XX(P.direction)=XMIPP_EQUAL_ACCURACY;
    if(YY(P.direction)==0) YY(P.direction)=XMIPP_EQUAL_ACCURACY;
@@ -232,17 +232,17 @@ void singleWBP(matrix3D<double> &V, Projection &P) {
    double half_x_sign = 0.5 * x_sign;
    double half_y_sign = 0.5 * y_sign;
    double half_z_sign = 0.5 * z_sign;
-   
+
    matrix2D<double> &mP=P();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mP) {
-      matrix1D<double> r_p(3); // r_p are the coordinates of the 
+      matrix1D<double> r_p(3); // r_p are the coordinates of the
                                // pixel being projected in the
                                // coordinate system attached to the
                                // projection
       matrix1D<double> p1(3);  // coordinates of the pixel in the
       			       // universal space
       double ray_sum=0.0;      // Line integral value
-      
+
       // Computes 4 different rays for each pixel.
      VECTOR_R3(r_p,j,i,0);		
 
@@ -286,7 +286,7 @@ void singleWBP(matrix3D<double> &V, Projection &P) {
 
      // Follow the ray
      double alpha=alpha_min;
-     do {  
+     do {
 	#ifdef DEBUG
 	     cout << " \n\nCurrent Value: " << V(ZZ(idx),YY(idx),XX(idx)) << endl;
 	#endif
@@ -296,7 +296,7 @@ void singleWBP(matrix3D<double> &V, Projection &P) {
         double alpha_z = (ZZ(idx)+half_z_sign-ZZ(p1))/ZZ(P.direction);
 
 	// Which dimension will ray move next step into?, it isn't neccesary to be only
-	// one. 
+	// one.
 	double diffx = ABS(alpha-alpha_x);
 	double diffy = ABS(alpha-alpha_y);
 	double diffz = ABS(alpha-alpha_z);
@@ -330,7 +330,7 @@ void singleWBP(matrix3D<double> &V, Projection &P) {
 // The projection plane is supposed to pass through the Universal coordinate
 // origin
 
-/* Algorithm 
+/* Algorithm
 Compute Eg, proj(ai), proj(bi) and A
 Compute prjX, prjY, prjZ and prjO which are the projections of the origin
    and grid axes
@@ -421,7 +421,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
    // Compute the deformed direction of projection .........................
    matrix2D<double> Eulerg;
    Eulerg=proj.euler*D;
-   
+
    // Compute deformation in the projection space ..........................
    // The following two vectors are defined in the deformed volume space
    VECTOR_R3(actprj,XX(aint),YY(aint),0);
@@ -449,7 +449,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
    // the universal grid.
    // Be careful that these grid vectors are defined in the deformed
    // volume space, and the projection are defined in the deformed
-   // projections, 
+   // projections,
    VECTOR_R3(actprj,1,0,0);
       grid.Gdir_project_to_plane(actprj, Eulerg, prjX);
    VECTOR_R3(actprj,0,1,0);
@@ -578,7 +578,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                YY_corner1=CEIL (YY(defactprj)-YY(deffootprint_size));
                XX_corner2=FLOOR(XX(defactprj)+XX(deffootprint_size));
                YY_corner2=FLOOR(YY(defactprj)+YY(deffootprint_size));
-	       
+	
                #ifdef DEBUG
                   cout << "  k= " << k << " i= " << i << " j= " << j << endl;
                   cout << "  Actual position: " << actprj.transpose() << endl;
@@ -609,7 +609,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 		     M2x2_BY_V2x1(rc,Ainv,r);
 		     OVER2IMG(basis.blobprint,yc-YY(actprj), xc-XX(actprj),
 		        foot_V, foot_U);
-                     
+
                      #ifdef DEBUG
                         cout << "    Studying: " << r.transpose()
                              << "--> " << rc.transpose()
@@ -627,7 +627,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                         cout << "      After wrapping " << xw << " " << yw << endl;
                         cout << "      Value added = " << VOLVOXEL(vol,k,i,j) *
                            IMGPIXEL(basis.blobprint,foot_V,foot_U) << " Blob value = "
-                           << IMGPIXEL(basis.blobprint,foot_V,foot_U) 
+                           << IMGPIXEL(basis.blobprint,foot_V,foot_U)
                            << " Blob^2 " << IMGPIXEL(basis.blobprint2,foot_V,foot_U)
                            << endl;
                         cout.flush();
@@ -712,7 +712,7 @@ void project_Crystal_Volume(
       proj.set_angles(rot,tilt,psi);
       norm_proj().resize(proj());
    }
-   
+
    // Project each subvolume
    for (int i=0; i<vol.VolumesNo(); i++) {
       project_Crystal_SimpleGrid(vol(i),vol.grid(i),basis,

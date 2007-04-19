@@ -1,31 +1,32 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.uam.es)
- *              Carlos Óscar Sánchez Sorzano (coss.eps@ceu.es)
+ *              Carlos ï¿½scar Sï¿½nchez Sorzano (coss.eps@ceu.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- * Lab. de Bioingeniería, Univ. San Pablo CEU
+ * Lab. de Bioingenierï¿½a, Univ. San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <Reconstruction/Programs/Prog_Angular_Predict.hh>
+#include <reconstruction/angular_discrete_assign.h>
+
 #include <mpi.h>
 
 int main (int argc, char **argv) {
@@ -69,7 +70,7 @@ int main (int argc, char **argv) {
       int myFirst=(rank-1)*Nchunk;
       int myLast=rank*Nchunk-1;
       if (rank==NProcessors-1) myLast=imgNbr-1;
-      
+
       // Make the alignment, rank=0 receives all the assignments
       // The rest of the ranks compute the angular parameters for their
       // assigned images
@@ -102,7 +103,7 @@ int main (int argc, char **argv) {
 	    double shiftX, shiftY, psi, rot, tilt;
 	    prm.predict_angles(I,shiftX, shiftY, rot, tilt, psi);
 	    double corr=prm.predicted_corr[i-myFirst];
-	    
+	
 	    // Rewrite the image header if necessary
 	    if (!prm.dont_modify_header) {
 	       I.read(I.name());

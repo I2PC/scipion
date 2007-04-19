@@ -7,28 +7,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_PDBPhantom.hh"
-#include "../Prog_FourierFilter.hh"
-#include "../../blobs.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippFFT.hh>
+#include "convert_pdb2vol.h"
+#include "fourier_filter.h"
+#include "blobs.h"
+
+#include <data/args.h>
+#include <data/fft.h>
+
 #include <fstream>
 
 /* Empty constructor ------------------------------------------------------- */
@@ -49,7 +51,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters() {
    periodic_table(4,0)=0.98; periodic_table(4,1)=31; // Phosphorus
    periodic_table(5,0)=0.88; periodic_table(5,1)=32; // Sulfur
    periodic_table(6,0)=1.56; periodic_table(6,1)=55.85; // Iron
-   // Correct the atom weights by the blob weight   
+   // Correct the atom weights by the blob weight
    for (int i=0; i<YSIZE(periodic_table); i++) {
       periodic_table(i,1)/=
          basvolume(periodic_table(i,0)/highTs,blob.alpha,blob.order,3);
@@ -118,14 +120,14 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry() {
    limit0.init_constant( 1e30);
    limitF.init_constant(-1e30);
    double total_mass=0;
-   
+
    // Open the file
    ifstream fh_pdb;
    fh_pdb.open(fn_pdb.c_str());
    if (!fh_pdb)
       REPORT_ERROR(1,(string)"Prog_PDBPhantom_Parameters::protein_geometry:"
          "Cannot open "+fn_pdb+" for reading");
-   
+
    // Process all lines of the fileñ
    while (!fh_pdb.eof()) {
       // Read a ATOM line
@@ -134,7 +136,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry() {
       if (line=="") continue;
       string kind=first_token(line);
       if (kind!="ATOM") continue;
-      
+
       // Extract atom type and position
       // Typical line:
       // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
@@ -146,7 +148,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry() {
       double x=AtoF(next_token());
       double y=AtoF(next_token());
       double z=AtoF(next_token());
-      
+
       // Update center of mass and limits
       if      (x<XX(limit0)) XX(limit0)=x;
       else if (x>XX(limitF)) XX(limitF)=x;
@@ -170,7 +172,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry() {
    XX(limit)=MAX(ABS(XX(limit0)),ABS(XX(limitF)));
    YY(limit)=MAX(ABS(YY(limit0)),ABS(YY(limitF)));
    ZZ(limit)=MAX(ABS(ZZ(limit0)),ABS(ZZ(limitF)));
-   
+
    // Update output size if necessary
    if (output_dim==-1) {
       int max_dim=MAX(CEIL(ZZ(limit)*2/Ts)+5,CEIL(YY(limit)*2/Ts)+5);
@@ -178,7 +180,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry() {
       output_dim=(int)NEXT_POWER_OF_2(max_dim);
       cout << "Setting output_dim to " << output_dim << endl;
    }
-   
+
    // Close file
    fh_pdb.close();
 }
@@ -191,14 +193,14 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate() {
                       (int)NEXT_POWER_OF_2(output_dim/highTs));
    Vhigh().set_Xmipp_origin();
    cout << "The highly sampled volume is of size " << XSIZE(Vhigh()) << endl;
-   
+
    // Fill the volume with the different atoms
    ifstream fh_pdb;
    fh_pdb.open(fn_pdb.c_str());
    if (!fh_pdb)
       REPORT_ERROR(1,(string)"Prog_PDBPhantom_Parameters::protein_geometry:"
          "Cannot open "+fn_pdb+" for reading");
-   
+
    // Process all lines of the file
    while (!fh_pdb.eof()) {
       // Read an ATOM line
@@ -207,7 +209,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate() {
       if (line=="") continue;
       string kind=first_token(line);
       if (kind!="ATOM") continue;
-      
+
       // Extract atom type and position
       // Typical line:
       // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
@@ -219,13 +221,13 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate() {
       double x=AtoF(next_token());
       double y=AtoF(next_token());
       double z=AtoF(next_token());
-      
+
       // Correct position
       matrix1D<double> r(3);
       VECTOR_R3(r,x,y,z);
       r-=center_of_mass;
       r/=highTs;
-      
+
       // Characterize atom
       double weight, radius;
       atom_description(atom_type,weight,radius);
@@ -238,7 +240,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate() {
       int iF=MIN(CEIL (YY(r)+radius),FINISHINGY(Vhigh()));
       int j0=MAX(FLOOR(XX(r)-radius),STARTINGX (Vhigh()));
       int jF=MIN(CEIL (XX(r)+radius),FINISHINGX(Vhigh()));
-      
+
       // Fill the volume with this atom
       for (int k=k0; k<=kF; k++)
          for (int i=i0; i<=iF; i++)
@@ -285,14 +287,14 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate() {
       Vlow().set_Xmipp_origin();
       Vlow.write("PPPlow_after_filtering.vol");
    #endif
-   
+
    // Now scale using Bsplines
    int new_output_dim=CEIL(XSIZE(Vlow())*current_Ts/Ts);
    Vlow().scale_to_size_Bspline(3,new_output_dim,new_output_dim,new_output_dim,
       Vhigh());
    Vlow()=Vhigh();
    Vlow().set_Xmipp_origin();
-   
+
    // Return to the desired size
    Vlow().window(FIRST_XMIPP_INDEX(output_dim),FIRST_XMIPP_INDEX(output_dim),
                  FIRST_XMIPP_INDEX(output_dim),LAST_XMIPP_INDEX (output_dim),

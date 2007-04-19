@@ -6,25 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_symmetrize.hh"
-#include <XmippData/xmippArgs.hh>
+#include "symmetrize.h"
+
+#include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
 void Symmetrize_Parameters::read(int argc, char **argv) {
@@ -152,7 +153,7 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm) {
    double accuracy=(prm.do_not_generate_subgroup)?-1:1e-6;
    SL.read_sym_file(prm.fn_sym,accuracy);
    V_in.read(prm.fn_in);
-   
+
    cerr << prm;
    symmetrize(SL,V_in,V_out,prm.wrap,true);
    if (prm.fn_out=="") fn_out=V_in.name(); else fn_out=prm.fn_out;

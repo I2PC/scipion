@@ -6,25 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMicrograph.hh>
+#include <data/args.h>
+#include <data/micrograph.h>
+
 void Usage();
 
 int main (int argc, char **argv) {
@@ -62,7 +63,7 @@ int main (int argc, char **argv) {
       M_in.size(Xdim, Ydim);
       if (Xdim<Xpdim || Ydim<Ypdim)
          REPORT_ERROR(1,"Window_Micrograph: Cannot make micrograph bigger\n");
-      
+
 
       // Create output image
       create_empty_file(fn_out,Ypdim*Xpdim*bits/8);
@@ -81,13 +82,13 @@ int main (int argc, char **argv) {
       fh_inf << "# Pixel depth\n";
       fh_inf << "bitspersample=" << bits << endl;
       fh_inf.close();
-      
+
       // Really window
       M_out.open_micrograph(fn_out);
       for (int i=0; i<Ypdim; i++)
           for (int j=0; j<Xpdim; j++)
 	      M_out.set_val(j,i,M_in(j+j0,i+i0));
-      
+
       // Close
       M_out.close_micrograph();
       M_in.close_micrograph();

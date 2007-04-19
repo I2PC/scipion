@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /**********************************************************************/
@@ -34,15 +34,18 @@
 /**********************************************************************/
 /**********************************************************************/
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
+
 #ifndef __APPLE__
    #include <malloc.h>
 #else
-   #include <stdlib.h>
+   #include <cstdlib>
 #endif
-#include <string.h>
+
 #include "groe.h"
+
 #define MAX_HARMONIC 51   /* Max. no of harmonics accepted */
 #define eprintf(x) printf(x);fflush(stdout);
 #define eprintf2(x,y) printf(x,y);fflush(stdout);
@@ -254,9 +257,9 @@ for (k = 1; k <= nvez; k++)
          fprintf (prt, "\n%2d ", i1);
          for (j = k1; j <= k2; j++)
          {    fprintf (prt, "%9.0f ", erp[i][j]);
-              if (j == k1)                    // para el .SIM 
+              if (j == k1)                    // para el .SIM
                   result[i-j1] = erp[i][j]/10000;
-                                  // para que salga bien con formato 5.2f 
+                                  // para que salga bien con formato 5.2f
          }
     }
     fprintf (prt, "\n\n#   Whole energy of the non-null components\n#   ");

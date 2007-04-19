@@ -6,25 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_make_spectra.hh"
-#include <XmippData/xmippArgs.hh>
+#include "make_spectra.h"
+#include "args.h"
 
 // Empty constructor -------------------------------------------------------
 Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters() {
@@ -79,7 +79,7 @@ void Prog_make_spectra_prm::process_img(ImageXmipp &img) {
 void Prog_make_spectra_prm::finish_processing() {
    ofstream fh_out;
    fh_out.open(fn_out.c_str());
-   
+
    if (!fh_out)
       REPORT_ERROR(1,(string)"Prog_make_spectra_prm::finish_processing: "
          "Cannot open"+fn_out+" for output");

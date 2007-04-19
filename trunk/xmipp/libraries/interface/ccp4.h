@@ -30,13 +30,15 @@
 #ifndef _XVMRC_H
    #define _XVMRC_H
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/Bilib/configs.h>
+#include <data/funcs.h>
+#include <data/matrix2d.h>
+#include <data/matrix3d.h>
+#include <data/geometry.h>
+#include <data/image.h>
+#include <data/volume.h>
+
+#include <bilib/configs.h>
+
 #include <sys/stat.h>
 
 /**@name cp4 Files */
@@ -123,16 +125,16 @@ typedef struct MRCheader
     char        map[4];              /* Char string 'MAP ' to identify file type */
     char        machst[4];           /* Machine stamp indicating the machine type
 			               which wrote file
-                                       The machine stamp is a 32-bit 
-                                       quantity containing a set of four 
-                                       `nibbles' (half-bytes)---only half 
-                                       the space is used. Each nibble is 
-                                       a number specifying the representation 
-                                       of (in C terms) double (d) , float (f), 
+                                       The machine stamp is a 32-bit
+                                       quantity containing a set of four
+                                       `nibbles' (half-bytes)---only half
+                                       the space is used. Each nibble is
+                                       a number specifying the representation
+                                       of (in C terms) double (d) , float (f),
                                        int (i) and unsigned char (c) types.
-                                        Thus each stamp is of the form 
-                                        0xdfic0000. The values for the 
-                                        floating point nibbles may be taken 
+                                        Thus each stamp is of the form
+                                        0xdfic0000. The values for the
+                                        floating point nibbles may be taken
                                         from the list (following HDF):
                                        1 	Big-endian ieee
                                        2 	VAX
@@ -141,7 +143,7 @@ typedef struct MRCheader
                                        5 	Convex native
                                        6 	Fijitsu VP
                                        */
-                        
+
 
     float       xorigin;            /* X origin. */
     float       yorigin;            /* Y origin. */
@@ -186,7 +188,7 @@ public:
    void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed=false,
                                  double x_length=0., double y_length=0., double z_length=0.);
 
-/** Fill mrc header from mrc file. 
+/** Fill mrc header from mrc file.
     Returns tre is either reversed is true or the native endianess is
     different from the one used to store the data.
 

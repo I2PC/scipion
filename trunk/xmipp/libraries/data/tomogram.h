@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _XMIPPTOMOGRAM_H
@@ -29,8 +29,8 @@
 /* ************************************************************************* */
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
-#include "xmippFuncs.hh"
-#include "xmippMatrices3D.hh"
+#include "funcs.h"
+#include "matrix3d.h"
 
 /* ************************************************************************* */
 /* TOMOGRAM                                                               */
@@ -40,7 +40,7 @@
 
 /** Tomogram class.
     This class manages a large tomogram on disk. The volume is not loaded
-    into memory, that should avoid memory problems 
+    into memory, that should avoid memory problems
 */
 class Tomogram {
 protected:
@@ -74,13 +74,13 @@ public:
 
    /** Open tomogram.
        An exception is thrown if the file is not valid. */
-   void open_tomogram(const FileName &fn_tomogram, 
+   void open_tomogram(const FileName &fn_tomogram,
       bool reversed=false);
 
    /** Close tomogram.
        After working with the file, you must close it. */
    void close_tomogram();
-   
+
    /** tomogram filename. */
    string tomogram_name() { return( fn_tomogram ); }
 
@@ -147,7 +147,7 @@ public:
    /** Return tomogram size */
    void size(int &_Xdim, int &_Ydim, int &_Zdim) const
       {_Xdim=Xdim; _Ydim=Ydim; _Zdim=Zdim;}
-   
+
    /** Get piece of tomogram.
        The suggested initial point (r0) and length are provided. If the piece
        fits into the tomogram, the suggested initial point and length are

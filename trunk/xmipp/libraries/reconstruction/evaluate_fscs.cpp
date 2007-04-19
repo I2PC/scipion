@@ -6,27 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include "../Prog_evaluate_FSCs.hh"
-#include "../../volume_FOMs.hh"
+#include <data/args.h>
+#include <data/selfile.h>
+
+#include "evaluate_fscs.h"
+#include "volume_foms.h"
 
 #include <fstream>
 
@@ -56,7 +57,7 @@ void Prog_Evaluate_FSCs_Parameters::usage() {
         << "  [-sampling_rate <Tm=1>]         : Angstroms/pixel\n"
         << "  [-estimate_average_resolution]  : provide a selfile for -r\n"
         << "  [-estimate_average_FSC]         : provide a selfile for -r\n"
-        << "  [-compare_two_sets <selfile>]   : second set of volumes\n"         
+        << "  [-compare_two_sets <selfile>]   : second set of volumes\n"
    ;
 }
 
@@ -101,7 +102,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
    double &avg_resol, double &stddev_resol, matrix1D<double> &resol) {
    SF_recons.go_first_ACTIVE();
    resol.init_zeros(SF_recons.ImgNo());
-   
+
    matrix1D<double> frequency, FSC;
    int i=0;
    cerr << "Estimating average resolution ...\n";
@@ -125,7 +126,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
    matrix1D<double> &max_FSC) {
    SF_recons.go_first_ACTIVE();
    int N=SF_recons.ImgNo();
-   
+
    matrix1D<double> FSC;
    int n=0;
    cerr << "Estimating average FSC ...\n";
@@ -152,7 +153,7 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
    SF_recons.go_first_ACTIVE();
    SF_recons2.go_first_ACTIVE();
    int N=SF_recons.ImgNo();
-   
+
    VolumeXmipp reconstruction2;
    matrix1D<double> FSC1, FSC2;
    int n=0;
@@ -192,12 +193,12 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) {
 
    switch (prm.action) {
       // Estimate single FSC
-      case ESTIMATE_SINGLE_FSC: 
+      case ESTIMATE_SINGLE_FSC:
          resolution=compute_FSC(prm.phantom,prm.reconstruction,
             prm.sampling_rate, frequency, FSC);
          cout << "The resolution (FSC<0.5) of this volume is "
               << resolution << endl;
-         
+
          // Compute the average FSC until the resolution
          avg_FSC=0;
          i=0;
@@ -205,7 +206,7 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm) {
          if (i!=0) avg_FSC/=i;
          cout << "The average FSC until the resolution is "
               << avg_FSC << endl;
-         
+
          // Write the FSC
          fh_out.open(prm.fn_out.c_str());
          if (!fh_out)

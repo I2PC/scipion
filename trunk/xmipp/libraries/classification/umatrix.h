@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -30,13 +30,11 @@
 #ifndef XMIPPUMATRIX_H
 #define XMIPPUMATRIX_H
 
-//-----------------------------------------------------------------------------
+#include <vector>
+#include <stdexcept>
 
-#include <vector>                            // vector
-#include <stdexcept>              	     // invalid_argument
-#include <Classification/xmippDistances.hh>  // eDist
-#include <Classification/xmippMap.hh>        // xmippMap
-
+#include "distance.h"
+#include "map.h"
 
 //-----------------------------------------------------------------------------
 /// xmippUmatrix: Unified Distance Matrix (Umatrix)
@@ -62,7 +60,7 @@ class xmippUmatrix
 
   /** Umatrix constructor
   *   @param _sm: Defines the smoothing mode: NONE, MEDIAN or AVERAGE
-  *   
+  *
   */
   xmippUmatrix(smoothMode _sm = NONE):smooth(_sm){};
 
@@ -88,15 +86,15 @@ class xmippUmatrix
   *   Gets the Umatrix but removing a list of variables from the analysis.
   *   It takes a SOM as input and returns the calculated Umatrix
   */
- 
+
   void getUmatrix (const In& in, Out& out, const vector<unsigned>& _varsOut) const;
 
-  
- private:  
-  
+
+ private:
+
   smoothMode smooth;          // Type of smoothing filter
-  
-  // Smoothing functions 
+
+  // Smoothing functions
   void medianSmoothing (Out& out) const;
   void averageSmoothing (Out& out) const;
 

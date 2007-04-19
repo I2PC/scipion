@@ -6,29 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _BASIS_HH
    #define _BASIS_HH
 
-#include "blobs.hh"
-#include "splines.hh"
-#include <XmippData/xmippImages.hh>
+#include "blobs.h"
+#include "splines.h"
+
+#include <data/image.h>
 
 const int BLOB_SUBSAMPLING=10;
 const int PIXEL_SUBSAMPLING=1;
@@ -53,7 +54,7 @@ public:
 
    /// Blob parameters
    struct blobtype blob;
-   
+
    /** Volume deformation matrix.
        See the documentation of Basic_ART_Parameters for further explanation. */
    matrix2D<double> *D;
@@ -112,7 +113,7 @@ public:
        size and the basis volume is in the center. */
    void changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
       int Zdim, int Ydim, int Xdim) const;
-   
+
    /** Change basis from voxels.
        A voxel volume is provided, then the output vol_basis will be shaped
        to represent this voxel volume. If the volume is already in voxels, then
@@ -121,7 +122,7 @@ public:
       GridVolume &vol_basis, int grid_type, double grid_relative_size,
       const matrix3D<double> *vol_mask,
       const matrix2D<double> *D, double R) const;
-       
+
    /** Basis value at a given point. */
    double value_at(const matrix1D<double> &r) const {
       double module_r, retval;
@@ -131,13 +132,13 @@ public:
             retval=blob_val(module_r,blob);
             break;
          case (voxels):
-            if (-0.5<=XX(r) && XX(r)<0.5 && 
+            if (-0.5<=XX(r) && XX(r)<0.5 &&
                 -0.5<=YY(r) && YY(r)<0.5 &&
                 -0.5<=ZZ(r) && ZZ(r)<0.5) retval=1.0;
             else retval=0.0;
             break;
          case (splines):
-            if (-2<=XX(r) && XX(r)<2 && 
+            if (-2<=XX(r) && XX(r)<2 &&
                 -2<=YY(r) && YY(r)<2 &&
                 -2<=ZZ(r) && ZZ(r)<2)
                 retval=spatial_Bspline03LUT(r);
@@ -146,7 +147,7 @@ public:
       }
       return retval;
    }
-   
+
    /** Projection at a given direction (u) with a given point (r). */
    double projection_at(const matrix1D<double> &u, const matrix1D<double> &r)
       const {
@@ -180,10 +181,10 @@ public:
 public:
    /// Blob footprint
    ImageOver       blobprint;
-   
+
    /// Square of the footprint
    ImageOver       blobprint2;
-   
+
    /// Sum of the basis on the grid points
    double          sum_on_grid;
 

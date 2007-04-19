@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef XMIPPFUNCS_H
@@ -47,9 +47,9 @@ using namespace std;
 #include <time.h>
 #endif
 
-#include "Src/NumericalRecipes.hh"
-#include "xmippMacros.hh"
-#include "xmippError.hh"
+#include "numerical_recipes.h"
+#include "macros.h"
+#include "error.h"
 
 // FIXME local paths in includes is not recommended. The file could be removed.
 #include "../../xmippConfiguration.inc"
@@ -61,9 +61,9 @@ using namespace std;
 
 /** Tabulated Sinc = SIN(PI*X)/(PI*X)
  * @ingroup NumericalFunctions
- * 
+ *
  * A lookup-table with the given sampling rate and range is created.
- * 
+ *
  * @code
  * tabsinc TSINC(0.0001,64);
  * if (TSINC(1)==0)
@@ -116,9 +116,9 @@ public:
 
 /** Solve second degree equation
  * @ingroup NumericalFunctions
- * 
+ *
  *  ax^2+bx+c=0
- * 
+ *
  * It returns the number of real solutions, 0 if the two roots are complex
  * and -1 if the equation is impossible to satisfy (Ex: 7=0). A number is said
  * to be 0 if its absolute magnitude is smaller than precision. This is used to
@@ -129,7 +129,7 @@ int solve_2nd_degree_eq(float a, float b, float c, float& x1, float& x2,
 
 /** 1D gaussian value
  * @ingroup NumericalFunctions
- * 
+ *
  * This function returns the value of a univariate gaussian function at the
  * point x.
  */
@@ -137,7 +137,7 @@ double gaussian1D(double x, double sigma, double mu=0);
 
 /** 2D gaussian value
  * @ingroup NumericalFunctions
- * 
+ *
  * This function returns the value of a multivariate (2D) gaussian function at
  * the point (x,y) when the X axis of the gaussian is rotated ang
  * (counter-clockwise) radians (the angle is positive when measured from the
@@ -148,7 +148,7 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 
 /** Integrate a function using Newton-Cotes formula
  * @ingroup NumericalFunctions
- * 
+ *
  * Estimate the integral of a function between a and b using N points.
  */
 double integrateNewtonCotes(double (*f) (double), double a, double b, int N);
@@ -164,7 +164,7 @@ void print(ostream& o, const bool b);
 
 /** Print a value in binary
  * @ingroup MiscellaneousFunctions
- * 
+ *
  * So far not instatiate for float/double number
  */
 template<typename T>
@@ -188,7 +188,7 @@ void printb(ostream& o,T value)
 
 /** Real/Imaginary --> Complex
  * @ingroup ComplexFunctions
- * 
+ *
  * The output array(s) must be already resized.
  */
 template<typename T>
@@ -198,7 +198,7 @@ void RealImag2Complex(const T* _real, const T* _imag,
     T* aux_real = (T*) _real;
     T* aux_imag = (T*) _imag;
     double* aux_complex = (double*) _complex;
-    
+
     for (int i=0; i<length; i++)
     {
         *aux_complex++ = (double) (*aux_real++);
@@ -208,7 +208,7 @@ void RealImag2Complex(const T* _real, const T* _imag,
 
 /** Amplitude/Phase --> Complex
  * @ingroup ComplexFunctions
- * 
+ *
  * The output array(s) must be already resized.
  */
 template<typename T>
@@ -218,7 +218,7 @@ void AmplPhase2Complex(const T* _ampl, const T* _phase,
     T* aux_ampl = (T*) _ampl;
     T* aux_phase = (T*) _phase;
     double* aux_complex = (double*) _complex;
-    
+
     for (int i=0; i<length; i++)
     {
         double ampl = (double) (*aux_ampl++);
@@ -230,7 +230,7 @@ void AmplPhase2Complex(const T* _ampl, const T* _phase,
 
 /** Complex --> Real/Imag
  * @ingroup ComplexFunctions
- * 
+ *
  * The output array(s) must be already resized.
  */
 template<typename T>
@@ -240,7 +240,7 @@ void Complex2RealImag(const complex< double >* _complex,
     T* aux_real = (T*) _real;
     T* aux_imag = (T*) _imag;
     double* aux_complex = (double*) _complex;
-    
+
     for (int i=0; i<length; i++)
     {
         *aux_real++ = (T) (*aux_complex++);
@@ -250,7 +250,7 @@ void Complex2RealImag(const complex< double >* _complex,
 
 /** Complex --> Amplitude/Phase
  * @ingroup ComplexFunctions
- * 
+ *
  * The output array(s) must be already resized.
  */
 template<typename T>
@@ -260,7 +260,7 @@ void Complex2AmplPhase(const complex< double >* _complex,
     T* aux_ampl = (T*) _ampl;
     T* aux_phase = (T*) _phase;
     double* aux_complex = (double*) _complex;
-    
+
     for (int i=0; i<length; i++)
     {
         double re = *aux_complex++;
@@ -272,20 +272,20 @@ void Complex2AmplPhase(const complex< double >* _complex,
 
 /** @defgroup RandomFunctions Random functions
  * @ingroup GeneralFunctions
- * 
+ *
  * These functions allow you to work in an easier way with the random functions
  * of the Numerical Recipes. Only an uniform and a gaussian random number
  * generators have been implemented. In fact only a uniform generator exists and
  * the gaussian one is based on a call to it. For this reason, if you initialize
  * the gaussian random generator, you are also initialising the uniform one.
- * 
+ *
  * Here goes an example for uniform random numbers to show how to use this set
  * of functions.
- * 
+ *
  * @code
  * // Initialise according to the clock
  * randomize_random_generator();
- * 
+ *
  * // Show 10 random numbers between -1 and 1
  * for (int i=0; i<10; i++)
  *     cout << rnd_unif(-1,1) << endl;
@@ -294,10 +294,10 @@ void Complex2AmplPhase(const complex< double >* _complex,
 
 /** Reset uniform random generator to a known point
  * @ingroup RandomFunctions
- * 
+ *
  * If you initialize the random generator with this function each time, then the
  * same random sequence will be generated
- * 
+ *
  * @code
  * init_rnd_unif();
  * init_rnd_unif(17891)
@@ -307,11 +307,11 @@ void init_random_generator(int seed=-1);
 
 /** Reset uniform random generator according to the clock
  * @ingroup RandomFunctions
- * 
+ *
  * This time the initialisation itself assures a random sequence different each
  * time the program is run. Be careful not to run the program twice within the
  * same second as the initialisation will be the same for both runs.
- * 
+ *
  * @code
  * rnd_rnd_unif();
  * @endcode
@@ -320,7 +320,7 @@ void randomize_random_generator();
 
 /** Produce a uniform random number between 0 and 1
  * @ingroup RandomFunctions
- * 
+ *
  * @code
  * cout << "This random number should be between 0 and 1: " << rnd_unif()
  * << endl;
@@ -330,7 +330,7 @@ float rnd_unif();
 
 /** Produce a uniform random number between a and b
  * @ingroup RandomFunctions
- * 
+ *
  * @code
  * cout << "This random number should be between 0 and 10: " << rnd_unif(0,10)
  * << endl;
@@ -340,7 +340,7 @@ float rnd_unif(float a, float b);
 
 /** Produce a gaussian random number with mean 0 and standard deviation 1
  * @ingroup RandomFunctions
- * 
+ *
  * @code
  * cout << "This random number should follow N(0,1): " << rnd_gaus()
  * << endl;
@@ -350,7 +350,7 @@ float rnd_gaus();
 
 /** Produce a gaussian random number with mean a and standard deviation b
  * @ingroup RandomFunctions
- * 
+ *
  * @code
  * cout << "This random number should follow N(1,4): " << rnd_gaus(1,2)
  * << endl;
@@ -360,7 +360,7 @@ float rnd_gaus(float a, float b);
 
 /** Gaussian area from -x0 to x0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
@@ -368,7 +368,7 @@ float gaus_within_x0(float x0, float mean=0, float stddev=1);
 
 /** Gaussian area outisde -x0 to x0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
@@ -376,7 +376,7 @@ float gaus_outside_x0(float x0, float mean=0, float stddev=1);
 
 /** Gaussian area from -inf to x0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
@@ -384,7 +384,7 @@ float gaus_up_to_x0(float x0, float mean=0, float stddev=1);
 
 /** Gaussian area from x0 to inf
  * @ingroup RandomFunctions
- * 
+ *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
@@ -392,7 +392,7 @@ float gaus_from_x0(float x0, float mean=0, float stddev=1);
 
 /** t0 for a given two-sided probability
  * @ingroup RandomFunctions
- * 
+ *
  * This function returns t0 such that the student probability outside t0 is
  * equal to p
  */
@@ -400,7 +400,7 @@ float student_outside_probb(float p, float degrees_of_freedom);
 
 /** student area from -t0 to t0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
  */
@@ -408,7 +408,7 @@ float student_within_t0(float t0, float degrees_of_freedom);
 
 /** student area outisde -t0 to t0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
  */
@@ -416,7 +416,7 @@ float student_outside_t0(float t0, float degrees_of_freedom);
 
 /** student area from -inf to t0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
  */
@@ -424,7 +424,7 @@ float student_up_to_t0(float t0, float degrees_of_freedom);
 
 /** student area from t0 to inf
  * @ingroup RandomFunctions
- * 
+ *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
  */
@@ -432,7 +432,7 @@ float student_from_t0(float t0, float degrees_of_freedom);
 
 /** chi2 area from -inf to t0
  * @ingroup RandomFunctions
- * 
+ *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
  */
@@ -440,7 +440,7 @@ float chi2_up_to_t0(float t0, float degrees_of_freedom);
 
 /** chi2 area from t0 to inf
  * @ingroup RandomFunctions
- * 
+ *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
  */
@@ -448,11 +448,11 @@ float chi2_from_t0(float t0, float degrees_of_freedom);
 
 /** Produce a log uniform random number between a and b
  * @ingroup RandomFunctions
- * 
+ *
  * Watch out that the following inequation must hold 0<a<=b.
- * 
+ *
  * @code
- * cout << "This random number should be between 1 and 1000: " 
+ * cout << "This random number should be between 1 and 1000: "
  * << rnd_log(10,1000)<< endl;
  * @endcode
  */
@@ -460,29 +460,29 @@ float rnd_log(float a, float b);
 
 /** @defgroup Filenames Filename handling
  * @ingroup GeneralFunctions
- * 
+ *
  * Filenames are something very common in any package, so it might be worthy to
  * devote some effort to make easier their manipulation. In filename conventions
  * you have a detailed explanation of the Filenames dealed. Here you are some
  * examples of what you can do with this class
- * 
+ *
  * @code
  * FileName fn_vol;
  * FileName fn_root;
  * VolumeXmipp vol_voxels;
- * 
+ *
  * // Read Volume name
  * fn_vol = argv[1]; // Suppose you give a more complex parameter reading.
  *                   // What we intend to have with this line, is something
  *                   // like fn_vol="art00001.vol"
  * fn_root = fn_vol.without_extension();
- * 
+ *
  * // Read volume
  * vol_voxels.read(fn_vol);
- * 
+ *
  * // Process volume
  * ...
- * 
+ *
  * // Write volume at iteration 1, with a name in the fashion
  * // "art_it1_00001.voxels"
  * vol_voxels.write(fn_root.get_root() + "_it" + ItoA(1) + "_" +
@@ -492,7 +492,7 @@ float rnd_log(float a, float b);
 
 /** Filenames
  * @ingroup Filenames
- * 
+ *
  * This class allows you a lot of usual and common manipulations with filenames.
  * See filename conventions for a detailed explanation of the Filenames dealed
  * here, although most of the functions work with the more general model
@@ -503,13 +503,13 @@ class FileName: public string
 public:
     /// @defgroup FilenameConstructors Filename constructors
     /// @ingroup Filenames
-    
+
     /** Empty constructor
      * @ingroup FilenameConstructors
-     * 
+     *
      * The empty constructor is inherited from the string class, so an empty
      * FileName is equal to "".
-     * 
+     *
      * @code
      * FileName fn_blobs;
      * @endcode
@@ -518,12 +518,12 @@ public:
 
     /** Constructor from string
      * @ingroup FilenameConstructors
-     * 
+     *
      * The constructor from a string allows building complex expressions based
      * on the string class. Notice that in the following example the type
      * casting to string is very important, if not, the operation is just a
      * pointer movement instead of a string concatenation.
-     * 
+     *
      * @code
      * FileName fn_blobs((string) "art00001" + ".blobs");
      * @endcode
@@ -544,9 +544,9 @@ public:
 #ifdef NEVER_DEFINED
     /** Constructor from root, number and extension
      * @ingroup FilenameConstructors
-     * 
+     *
      * The number and extension are optional.
-     * 
+     *
      * @code
      * FileName fn_proj("g1ta00001.xmp"); // fn_proj = "g1ta00001.xmp"
      * FileName fn_proj("g1ta",1,"xmp"); // fn_proj = "g1ta00001.xmp"
@@ -561,21 +561,21 @@ public:
 
     /** Constructor from root and extension
      * @ingroup FilenameConstructors
-     * 
+     *
      * None of the parameters is optional
-     * 
+     *
      * @code
      * FileName fn_proj("g1ta00001", "xmp"); // fn_proj = "g1ta00001.xmp"
      * @endcode
      */
     FileName(const char* str, const string& ext): string(str + ext) {}
-    
+
     /// @defgroup FilenameComposing Composing/Decomposing the filename
     /// @ingroup Filenames
-    
+
     /** Compose from root, number and extension
      * @ingroup FilenameComposing
-     * 
+     *
      * @code
      * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta00001.xmp"
      * @endcode
@@ -584,7 +584,7 @@ public:
 
     /** Get the root from a filename
      * @ingroup FilenameComposing
-     * 
+     *
      * @code
      * FileName fn_root, fn_proj("g1ta00001");
      * fn_root = fn_proj.get_root();
@@ -599,9 +599,9 @@ public:
 
     /** Get the number from a filename
      * @ingroup FilenameComposing
-     * 
+     *
      * If there is no number a -1 is returned.
-     * 
+     *
      * @code
      * FileName proj("g1ta00001");
      * int num = proj.get_number();
@@ -611,10 +611,10 @@ public:
 
     /** Get the last extension from filename
      * @ingroup FilenameComposing
-     * 
+     *
      * The extension is returned without the dot. If there is no extension "" is
      * returned.
-     * 
+     *
      * @code
      * string ext = fn_proj.get_extension();
      * @endcode
@@ -623,23 +623,23 @@ public:
 
     /** Random name
      * @ingroup FilenameComposing
-     * 
+     *
      * Generate a random name of the desired length.
      */
     void init_random(int length);
 
     /// @defgroup FilenameManipulators Filename manipulators
     /// @ingroup Filenames
-    
+
     /** Add string at the beginning
      * @ingroup FilenameManipulators
-     * 
+     *
      * If there is a path then the prefix is added after the path.
-     * 
+     *
      * @code
      * fn_proj = "imgs/g1ta00001";
      * fn_proj.add_prefix("h"); // fn_proj == "imgs/hg1ta00001"
-     * 
+     *
      * fn_proj = "g1ta00001";
      * fn_proj.add_prefix("h"); // fn_proj == "hg1ta00001"
      * @endcode
@@ -648,10 +648,10 @@ public:
 
     /** Add extension at the end.
      * @ingroup FilenameManipulators
-     * 
+     *
      * The "." is added. If teh input extension is "" then the same name is
      * returned, with nothing added.
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001";
      * fn_proj.add_extension("xmp"); // fn_proj == "g1ta00001.xmp"
@@ -661,11 +661,11 @@ public:
 
     /** Remove last extension, if any
      * @ingroup FilenameManipulators
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001.xmp";
      * fn_proj = fn_proj.without_extension(); // fn_proj == "g1ta00001"
-     * 
+     *
      * fn_proj = "g1ta00001";
      * fn_proj = fn_proj.without_extension(); // fn_proj == "g1ta00001"
      * @endcode
@@ -674,11 +674,11 @@ public:
 
     /** Remove the root
      * @ingroup FilenameManipulators
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001.xmp";
      * fn_proj = fn_proj.without_root(); // fn_proj == "00001.xmp"
-     * 
+     *
      * fn_proj = "g1ta00001";
      * fn_proj = fn_proj.without_root(); // fn_proj == "00001"
      */
@@ -686,14 +686,14 @@ public:
 
     /** Insert before first extension
      * @ingroup FilenameManipulators
-     * 
+     *
      * If there is no extension, the insertion is performed at the end.
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001.xmp";
      * fn_proj = fn_proj.insert_before_extension("pp");
      * // fn_proj == "g1ta00001pp.xmp"
-     * 
+     *
      * fn_proj = "g1ta00001";
      * fn_proj = fn_proj.insert_before_extension("pp");
      * // fn_proj=="g1ta00001pp"
@@ -703,11 +703,11 @@ public:
 
     /** Remove a certain extension
      * @ingroup FilenameManipulators
-     * 
+     *
      * It doesn't matter if there are several extensions and the one to be
      * removed is in the middle. If the given extension is not present in the
      * filename nothing is done.
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001.xmp.bak";
      * fn_proj = fn_proj.remove_extension("xmp");
@@ -723,15 +723,15 @@ public:
 
     /** Substitute ext1 by ext2
      * @ingroup FilenameManipulators
-     * 
+     *
      * It doesn't matter if ext1 is in the middle of several extensions. If ext1
      * is not present in the filename nothing is done.
-     * 
+     *
      * @code
      * fn_proj = "g1ta00001.xmp.bak";
      * fn_proj = fn_proj.substitute_extension("xmp", "bor");
      * // fn_proj == "g1ta00001.bor.bak"
-     * 
+     *
      * fn_proj = "g1ta00001.xmp.bak";
      * fn_proj = fn_proj.substitute_extension("tob", "bor");
      * // fn_proj=="g1ta00001.xmp.bak"
@@ -741,15 +741,15 @@ public:
 
     /** Without a substring
      * @ingroup FilenameManipulators
-     * 
+     *
      * If the substring is not present the same FileName is returned, if it is
      * there the substring is removed.
      */
     FileName without(const string& str) const;
-    
+
     /** Remove until prefix
      * @ingroup FilenameManipulators
-     * 
+     *
      * Remove the starting string until the given prefix, inclusively. For
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
      * image00001.fft. If the prefix is not found nothing is done.
@@ -758,7 +758,7 @@ public:
 
     /** Remove all directories
      * @ingroup FilenameManipulators
-     * 
+     *
      * Or if keep>0, then keep the lowest keep directories
      */
     FileName remove_directories(int keep=0) const;
@@ -766,7 +766,7 @@ public:
 
 /** True if the file exists in the current directory
  * @ingroup Filenames
- * 
+ *
  * @code
  * if (exists("g1ta00001"))
  *     cout << "The file exists" << endl;
@@ -776,10 +776,10 @@ int exists(const FileName& fn);
 
 /** Waits until the given filename has a stable size
  * @ingroup Filenames
- * 
+ *
  * The stable size is defined as having the same size within two samples
  * separated by time_step (microsecs).
- * 
+ *
  * An exception is throw if the file exists but its size cannot be stated.
  */
 void wait_until_stable_size(const FileName& fn,
@@ -787,7 +787,7 @@ void wait_until_stable_size(const FileName& fn,
 
 /** Write a zero filled file with the desired size.
  * @ingroup Filenames
- * 
+ *
  * The file is written by blocks to speed up, you can modify the block size.
  * An exception is thrown if any error happens
  */
@@ -801,7 +801,7 @@ FileName xmippBaseDir();
 
 /** @defgroup TimeManaging Time managing
  * @ingroup GeneralFunctions
- * 
+ *
  * These functions are used to make time measures of the algorithms. If you know
  * the total amount of work to do then some estimation can be done about how
  * much time is left before finishing. The time functions are very machine
@@ -809,37 +809,37 @@ FileName xmippBaseDir();
  * but if still programs do not work, you may configure Xmipp to avoid these
  * time measurements, functions are then substituted by null functions doing
  * nothing.
- * 
+ *
  * @code
  * // Variable declaration
  * TimeStamp t0;
- * 
+ *
  * // Beginning of the program
  * time_config();
  * ...
- * 
+ *
  * annotate_time(&t0);
  * // Part to be measured
  * ...
- * 
+ *
  * // End of part to be measured
  * print_elapsed_time(t0);
  * @endcode
- * 
+ *
  * While for an estimation of time to go you can make it in two ways:  one
  * analytical, and another graphical.
- * 
+ *
  * Analytical:
- * 
+ *
  * @code
  * // Variable declaration
  * TimeStamp t0;
  * float to_go;
- * 
+ *
  * // Beginning of the program
  * time_config();
  * ...
- * 
+ *
  * annotate_time(&t0);
  * // Part to be measured
  * for (int i=0; i<60; i++)
@@ -850,25 +850,25 @@ FileName xmippBaseDir();
  *     cout << "I think you will be here " << to_go << "seconds more\n";
  * }
  * @endcode
- * 
+ *
  * Graphical:
  * @code
  * // Beginning of the program
  * time_config();
  * ...
- * 
+ *
  * // Init the progress bar with the total amount of work to do
  * // It is very important that there is no print out to stdout but
  * // the progress bar
  * init_progress_bar(60);
- * 
+ *
  * // Part to be measured
  * for (int i=0; i<60; i++)
  * {
  *     ...
  *     progress_bar(i+1);
  * }
- * 
+ *
  * // In this case the following call is useless since it has been
  * // already done in the loop, but there are cases where a final call
  * // with the total amount of work is not performed and although the
@@ -887,10 +887,10 @@ typedef struct tms TimeStamp; // Renaming of the time structure
 
 /** Read the system clock frequency
  * @ingroup TimeManaging
- * 
+ *
  * This operation is needed only once in a program always we want to have a time
  * measure, or an estimation of remaining time.
- * 
+ *
  * @code
  * time_config();
  * @endcode
@@ -899,9 +899,9 @@ void time_config();
 
 /** Annotate actual time
  * @ingroup TimeManaging
- * 
+ *
  * This annotation is used later to compute the elapsed time.
- * 
+ *
  * @code
  * TimeStamp t0;
  * annotate_time(&t0);
@@ -911,7 +911,7 @@ void annotate_time(TimeStamp* time);
 
 /** Acumulate time
  * @ingroup TimeManaging
- * 
+ *
  * Initially dest_time should be set to orig time. Then you acumulate succesive
  * times calling this function (Destination time=destination_time + (now -
  * original time)) and finally the elapsed time is the dest time minus the first
@@ -921,18 +921,18 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
 
 /** Compute elapsed time since a given annotation
  * @ingroup TimeManaging
- * 
+ *
  * Given an annotation of time, this function computes the time elapsed since
  * then in seconds. The annotation is not modified. Usually the time is shown in
  * seconds, but you might specify to show it in clock ticks setting the variable
  * _IN_SECS to FALSE.
- * 
+ *
  * @code
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
  * float elapsed = elapsed_time(t0);
- * 
+ *
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
@@ -943,18 +943,18 @@ float elapsed_time(TimeStamp& time, bool _IN_SECS=true);
 
 /** Show on screen the elapsed time since a given annotation
  * @ingroup TimeManaging
- * 
+ *
  * The format of the printing is "Elapsed time: User(13) System(1)" that means
  * that the user has used 13 seconds and the system 1, a total of 14 seconds
  * since the last annotation in this TimeStamp variable.
- * 
+ *
  * @code
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
  * print_elapsed_time(t0);
  * @endcode
- * 
+ *
  * Usually the time is shown in seconds, but you might specify to show it in
  * clock ticks setting the variable _IN_SECS to FALSE.
  */
@@ -962,7 +962,7 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS=true);
 
 /** Returns the estimated time left to finish
  * @ingroup TimeManagement
- * 
+ *
  * To make this estimation the starting time must have been annotated before and
  * the fraction of the total amount of work must be estimated by the programmer.
  * See Time managing for an example.
@@ -971,7 +971,7 @@ float time_to_go(TimeStamp& time, float fraction_done);
 
 /** Initialise the progress bar
  * @ingroup TimeManagement
- * 
+ *
  * The progress bar is initialised to count for a total amount of work. For
  * instance, if we are to do something 60 times, the progress bar should be
  * initialised to that value. At the same time the bar is printed with the
@@ -979,7 +979,7 @@ float time_to_go(TimeStamp& time, float fraction_done);
  * slash is the elapsed time since initialisation of the progress bar, while the
  * second number is the estimation of total time that this task will take. See
  * Time managing for a more detailed example.
- * 
+ *
  * @code
  * init_progress_bar(60);
  * @endcode
@@ -988,15 +988,15 @@ float time_to_go(TimeStamp& time, float fraction_done);
 
 /** Update progress bar
  * @ingroup TimeManaging
- * 
+ *
  * With this function you can change the already done amount of work, if
  * something is to be done 60 times and now we have already done 13 then we
  * could tell this to the progress bar with
- * 
+ *
  * @code
  * progress_bar(13);
  * @endcode
- * 
+ *
  * The information that this thing was to be done 60 times was given at the
  * initialisation of the progress bar. It is very important that during the use
  * of the progress bar, nobody prints anything to stdout as it is being used by
@@ -1007,7 +1007,7 @@ void progress_bar(long act_time);
 
 /** xmippBaseListener
  * @ingroup TimeManaging
- * 
+ *
  * This class implements the xmipp listener class for notification of progress
  * status and other operations. It is an abstract class that contains base
  * functions useful for implementation of customer-design notification classes.
@@ -1019,32 +1019,32 @@ public :
     xmippBaseListener(): verbosity(0), cancel(false) {}
 
     /** Initialize progress bar.
-     * 
+     *
      * _est_it: Defines the estimated number of iterations
-     * 
+     *
      * This method will initialize the progress bar with the number of estimated
      * iterations.
      */
     virtual void OnInitOperation(unsigned long _est_it) = 0;
 
     /** Shows a message indicating the operation in progress
-     * 
+     *
      * Class inheriting from this abstract class can output this message in the
      * way they want.
-     * 
+     *
      * _rsop: string message
      */
     virtual void OnReportOperation(const string& _rsOp) = 0;
 
     /** Show a bar with the progress in time
-     * 
+     *
      * When the input is negative then we are setting the progress bar, this
      * will be the total of elements to process. Afterwards the call to this
      * routine must be in ascending order, ie, 0, 1, 2, ... No. elements
-     * 
+     *
      * Class inheriting from this base class can define their own progress bar
      * here.
-     * 
+     *
      * _it: iteration number
      */
     virtual void OnProgress(unsigned long _it) = 0;
@@ -1064,9 +1064,9 @@ public :
     };
 
     /** This method returns true if a cancel command was set
-     * 
+     *
      * It can be used to check whether an external event is trying to cancel any
-     * operation. Inside an algorithm you can can this method to check if a 
+     * operation. Inside an algorithm you can can this method to check if a
      * cancel operation was requested.
      */
     virtual const bool& OnUserCancel() const
@@ -1080,7 +1080,7 @@ public :
     {
         return cancel;
     };
-    
+
 private:
     unsigned verbosity;
     bool cancel;
@@ -1089,7 +1089,7 @@ private:
 
 /** xmippTextualListener
  * @ingroup TimeManaging
- * 
+ *
  * This class implements the xmipp classical textual listener class for
  * notification of progress status. It inherits from xmippBaseListener.
  */
@@ -1098,16 +1098,16 @@ class xmippTextualListener: public xmippBaseListener
 public :
 
     /** Initialize progress bar
-     * 
+     *
      * _est_it: Defines the estimated number of iterations
-     * 
+     *
      * This method will initialize the progress bar with the number of estimated
      * iterations.
      */
     virtual void OnInitOperation(unsigned long _est_it);
 
     /** Show a textual bar with the progress in time
-     * 
+     *
      * When the input is negative then we are setting the progress bar, this
      * will be the total of elements to process. Afterwards the call to this
      * routine must be in ascending order, ie, 0, 1, 2, ... No. elements
@@ -1117,7 +1117,7 @@ public :
     virtual void OnProgress(unsigned long _it);
 
     /** Shows a message indicating the operation
-     * 
+     *
      * _rsop: string message
      */
     virtual void OnReportOperation(const string& _rsOp);
@@ -1125,11 +1125,11 @@ public :
 
 /** Shows a message and the time it was produced
  * @ingroup TimeManaging
- * 
+ *
  * The format of the printing is "14:11:32 (12) => Hello, world", ie, The
  * message "Hello, world" was produced at 14:11:32 o'clock of the day 12. This
  * function needs not to read the time configuration (see time_config).
- * 
+ *
  * @code
  * TimeMessage("Hello, world");
  * @endcode
@@ -1138,21 +1138,21 @@ void TimeMessage(string message);
 
 /** @defgroup LittleBigEndian Little/Big endian
  * @ingroup GeneralFunctions
- * 
+ *
  * These set of functions helps you to deal with the little/big endian
  * problems.
  */
 
 /** Read from file
  * @ingroup LittleBigEndian
- * 
+ *
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
- * 
+ *
  * @code
  * float f;
  * FREAD(&f, sizeof(float), 1, fp, TRUE); // Reverse order
- * 
+ *
  * float f;
  * FREAD(&f, sizeof(float), 1, fp); // Normal order
  * @endcode
@@ -1162,7 +1162,7 @@ size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
 
 /** Write to file
  * @ingroup LittleBigEndian
- * 
+ *
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
  */
@@ -1183,7 +1183,7 @@ int IsBigEndian(void);
 
 /** Returns 1 if machine is little endian else 0
  * @ingroup LittleBigEndian
- *  little-endian format (sometimes called the Intel format 
+ *  little-endian format (sometimes called the Intel format
  */
 int IsLittleEndian(void);
 
@@ -1193,25 +1193,25 @@ int IsLittleEndian(void);
 
 /** Marsaglia
  * @ingroup Marsaglia
- * 
+ *
  * This class has been designed for those programs that  have to have a large
  * set of random numbers but do not have time to generate them properly on the
  * fly. The idea is to have  a large file with lots of random numbers in it and
  * to store some of them in memory and retrieve (from memory), as many times as
  * needed, in a random fashion.
- * 
+ *
  * As source of the numbers I recomend the "Marsaglia's Random Number CDROM"
  * available, for free, at your favorite web site. (Search for it in any search
  * engine  and you will get tons of hits.) The following is from the CD
  * description:
- * 
+ *
  * "This CDROM will contain 4.8 billion random bits. They were produced by a
  * combination of several of the best deterministic random number generators
  * (RNG's), together with three sources of white noise, as well as black noise
  * (from a rap music digital recording). My intent is to provide an unassailable
  * source for those who absolutely positively have to have a large, reliable set
  * of random numbers for serious simulation (Monte Carlo) studies."
- * 
+ *
  * When the random numbers are floats, by default they are in the interval [0,1]
  */
 template<typename T>
@@ -1224,15 +1224,15 @@ private:
     FileName fn_rand;
     long vector_size;
     long Number_of_Numbers;
-    
+
 public:
     /** Constructor
      * @ingroup Marsaglia
-     * 
+     *
      * @code
      * Marsaglia rodalnino("masaglia", 1000000, 34);
      * @endcode
-     * 
+     *
      * M_max (optional) is the magnitude of the maximum value of the random
      * number (exclusive), therefore must be positive
      */
@@ -1240,7 +1240,7 @@ public:
     {
         Init(fn_in, No_Numbers);
     }
-    
+
     // TODO Document
     Marsaglia() {}
 
@@ -1280,7 +1280,7 @@ public:
 
     /** Get a random number from the memory
      * @ingroup Marsaglia
-     * 
+     *
      * If you are at the end of the stream the pointer will be radomly moved
      * before stracting the number.
      */
@@ -1352,7 +1352,7 @@ public:
         T mask = power_of_2 - 1;
         T aux_number;
         m_max;
-        
+
         // get a random number to set the file pointer at a random position
         in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float) (sp -
             (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
@@ -1377,12 +1377,12 @@ public:
         }
         in.close();
     }
-    
+
 private:
     /** Vrify float
      * @ingroup Marsaglia
-     * 
-     * Be aware that Marsaglia reads blindly the data, therefore if the type 
+     *
+     * Be aware that Marsaglia reads blindly the data, therefore if the type
      * float is selected several of the "random" numbers may not be valid (the
      * number are created from a source of random bits and although 4 random
      * bits are one random integer, four random bits may not be a valid float).

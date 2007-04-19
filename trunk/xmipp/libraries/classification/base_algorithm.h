@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
@@ -34,9 +34,10 @@
 
 #include <iostream>
 
-#include "xmippCTSet.hh"  		// training set
-#include "xmippCDSet.hh"
-#include <XmippData/xmippFuncs.hh>      // For listener
+#include "training_set.h"
+#include "data_set.h"
+
+#include <data/funcs.h>
 
 //-----------------------------------------------------------------------------
 
@@ -48,11 +49,11 @@
  * 2) an apply method that accepts an example and classifies it
  */
 
-template<class DSClass> 
+template<class DSClass>
 class xmippBaseAlgo
 {
  public:
-  
+
   typedef DSClass DS;
   typedef typename DS::TS TS;
 
@@ -61,7 +62,7 @@ class xmippBaseAlgo
    * @param _ID an ID string unique for each algorithm class
    */
   xmippBaseAlgo( const string& _ID = ""): ID( _ID ) {};
-  
+
   /**
    * Destructor.
    * The default destructor
@@ -75,7 +76,7 @@ class xmippBaseAlgo
    * @param _examples  A training set with the training examples.
    */
   virtual void train(DS& _ds, const TS& _examples) const {};
-  
+
   /**
    * Method to train the algorithm.
    * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
@@ -83,7 +84,7 @@ class xmippBaseAlgo
    * @param _examples  A training set with the training examples.
    */
   virtual void train(DS& _ds, TS& _examples) const {};
-  
+
   /**
    * Method to test the algorithm.
    * Note that this method is pure virtual, so it must be defined in every xmipp descendant class.
@@ -95,20 +96,20 @@ class xmippBaseAlgo
    */
   virtual double test(const DS& _ds, const TS& _examples) const = 0;
 
-  /** Print itself on standard output     
+  /** Print itself on standard output
    */
   virtual void printSelf( ostream& _os ) const {
     _os << "xmippBaseAlgo" << endl;	// to identify it as an algorith
     _os << ID << endl;
   };
 
-  /** Set ID (returns a const reference to the ID) 
+  /** Set ID (returns a const reference to the ID)
   */
   virtual const string& setID() const {
       return ID;
   };
 
-  /** Set ID (returns a non-const reference to the ID) 
+  /** Set ID (returns a non-const reference to the ID)
   */
   virtual string& setID() {
       return ID;
@@ -121,7 +122,7 @@ class xmippBaseAlgo
 
  protected:
   string ID;// algorithm ID, an unique name to recognize the algorithm
-  xmippBaseListener* listener;   // Listener class   
+  xmippBaseListener* listener;   // Listener class
 
 };
 

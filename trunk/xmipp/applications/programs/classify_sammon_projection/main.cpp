@@ -6,35 +6,36 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 // to avoid warnings with long class names
 #pragma warning(disable:4786)
 
 #include <fstream>
-#include <XmippData/xmippArgs.hh>
-#include <Classification/xmippCTVectors.hh>
-#include <Classification/xmippSammon.hh>
+
+#include <data/args.h>
+#include <classification/training_vector.h>
+#include <classification/sammon.h>
 
 /**
  * This test only reads a training set from a file and prints it
  */
- 
+
 //-----------------------------------------------------------------------------
 
 typedef xmippSammon Sammon;
@@ -46,8 +47,8 @@ void Usage (char **argv);
 //-----------------------------------------------------------------------------
 
 int main(int argc, char** argv)
-{  
-  
+{
+
 /* Input Parameters ======================================================== */
 FileName       fn_in;    	// input file
 FileName       fn_out;   	// output file
@@ -63,16 +64,16 @@ bool           norm = 1;	// Normalize?
        if (check_param(argc, argv, "-din"))
          fn_in = get_param(argc, argv, "-din");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-cout"))
           fn_out = get_param(argc, argv, "-cout");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        dim= AtoI(get_param(argc, argv, "-dim", "2"));
        iter= AtoI(get_param(argc, argv, "-iter", "100000"));
@@ -83,14 +84,14 @@ bool           norm = 1;	// Normalize?
        else
           norm = false;
 
-       
+
        if (argc == 1) {Usage(argv);}
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
 
 
   cout << endl << "Reading file " << fn_in << "....." << endl;
-  
+
   ifstream inStream(fn_in.c_str());
   if (!inStream) {
       cerr << argv[0] << ": can't open file " << fn_in << endl;
@@ -101,7 +102,7 @@ bool           norm = 1;	// Normalize?
 /* Some validations ===================================================== */
 
   Sammon::In in(0, true);
-  try 
+  try
     {
       inStream >> in;
     }
@@ -110,17 +111,17 @@ bool           norm = 1;	// Normalize?
       cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << endl;
       exit(EXIT_FAILURE);
     }
-  
+
    if (dim < 0 || dim >= in.theItems[0].size()) {
 	cerr << argv[0] << ": invalid value for dim " << dim << endl;
 	  exit(EXIT_FAILURE);
    }
-    
+
    if (iter < 1) {
      cerr << argv[0] << ": invalid value for iter " << iter << endl;
      exit(EXIT_FAILURE);
    }
-   
+
    if (verb < 0 || verb > 2) {
      cerr << argv[0] << ": invalid value for verbosity " << verb << endl;
      exit(EXIT_FAILURE);
@@ -129,7 +130,7 @@ bool           norm = 1;	// Normalize?
 /* Real stuff ============================================================== */
 
 
-  cout << "Parameters used: " << endl;  
+  cout << "Parameters used: " << endl;
   cout << "Input data file : " << fn_in << endl;
   cout  << "Output file : " << fn_out <<  ".sam" << endl;
   cout << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
@@ -142,7 +143,7 @@ bool           norm = 1;	// Normalize?
 
   if (norm) {
      cout << "Normalizing....." << endl;
-     in.normalize();  		    // Normalize input data        
+     in.normalize();  		    // Normalize input data
   }	
   Sammon::Out out(in.theItems[0].size()); // create output data set
   Sammon sammon(dim, iter,0.3);	        // Crate algorithm
@@ -152,16 +153,16 @@ bool           norm = 1;	// Normalize?
   sammon(in, out);			// do mapping
 
   cout << "Saving mapped data in " << fn_out << ".sam....." << endl;
-  
-  tmpN = fn_out.c_str() + (string) ".sam"; 
+
+  tmpN = fn_out.c_str() + (string) ".sam";
   ofstream outStream(tmpN.c_str());
   outStream << out;
   outStream.flush();
   xmippFeature stress = sammon.getStress();
   cout << "Sammon stress (Distance error) : " << stress << endl;
-  
-  cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;  
-  tmpN = fn_out.c_str() + (string) ".inf"; 
+
+  cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
+  tmpN = fn_out.c_str() + (string) ".inf";
   ofstream infS(tmpN.c_str());
   infS << "Sammon algorithm" << endl << endl;
   infS << "Input data file : " << fn_in << endl;
@@ -176,11 +177,11 @@ bool           norm = 1;	// Normalize?
      infS << "Input data not normalized" << endl;
   infS << "Total number of iterations = " << iter << endl;
   infS << "Sammon stress (mapping error) : " <<  stress << endl;
-  infS.flush();    
+  infS.flush();
 
-  
+
   return 0;
-    
+
 }
 
 
@@ -192,18 +193,18 @@ void Usage (char **argv) {
      "\nUsage: %s [Purpose and Parameters]"
      "\nPurpose: Non-linear mapping of high dimensional input space"
      "\n	 into a low-dimensional one"
-     "\n"           
+     "\n"
      "\nParameter Values: (note space before value)"
      "\n"
      "\n    -din  file_in        input data file"
      "\n    -cout file_out       output data file (mapped data)"
-     "\n    -dim  dimension      dimension of the output space (default = 2)"     
-     "\n    -iter iterations  	 number of iterations (default = 100000)"     
-     "\n    -norm   	 	 Normalize training data (default: No)"     
-     "\n    -verb verbosity  	 information level while running: "     
-     "\n    			 0: No information (default)"     
-     "\n    			 1: Progress bar"     
-     "\n    			 2: sammon stress (distance error)"     
+     "\n    -dim  dimension      dimension of the output space (default = 2)"
+     "\n    -iter iterations  	 number of iterations (default = 100000)"
+     "\n    -norm   	 	 Normalize training data (default: No)"
+     "\n    -verb verbosity  	 information level while running: "
+     "\n    			 0: No information (default)"
+     "\n    			 1: Progress bar"
+     "\n    			 2: sammon stress (distance error)"
      "\n			 \n"
      ,argv[0]);
 }

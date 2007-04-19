@@ -6,35 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* INCLUDES ---------------------------------------------------------------- */
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <stdio.h>
+#include <data/volume.h>
+#include <data/args.h>
+#include <data/mask.h>
+#include <data/filters.h>
+#include <data/geometry.h>
 
-/* PROTOTYPES -------------------------------------------------------------- */
+#include <cstdio>
+
 void Usage();
 
-/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv) {
    FileName        fn_input;
    Mask_Params     mask_prm(INT_MASK);
@@ -72,7 +70,7 @@ int main(int argc, char **argv) {
 	step_tilt=5;
      }
      mask_prm.read(argc,argv);
-   } 
+   }
    catch (Xmipp_error XE) {cout << XE; Usage(); mask_prm.usage(); exit(1);}
 
    // Find Center and symmetry elements ------------------------------------
@@ -87,10 +85,10 @@ int main(int argc, char **argv) {
       matrix1D<double> center_of_mass;
       volume().center_of_mass(center_of_mass,&mask_prm.get_binary_mask3D());
       cout << "Center of mass (X,Y,Z)= " << center_of_mass.transpose() << endl;
-      
+
       // Move origin to that center of mass
       volume().self_translate(-center_of_mass,DONT_WRAP);
-      
+
       // Look for the rotational symmetry axis
       if (rot_sym>1) {
          double best_corr=0, best_rot=rot0-step_rot, best_tilt=tilt0-step_tilt;
@@ -108,7 +106,7 @@ int main(int argc, char **argv) {
 		 matrix1D<double> sym_axis(3);
 		 Euler.getRow(2,sym_axis);
 		 sym_axis.self_transpose();
-		 
+		
 		 // Symmetrize along this axis
 		 volume_sym()=volume();
 		 for (int n=1; n<rot_sym; n++) {
@@ -118,7 +116,7 @@ int main(int argc, char **argv) {
 		       DONT_WRAP);
 		    volume_sym()+=volume_aux();
 		 }
-		 
+		
 		 // Measure correlation
 		 double corr=correlation_index(volume(),volume_sym(),
 		    &mask_prm.get_binary_mask3D());
@@ -127,7 +125,7 @@ int main(int argc, char **argv) {
 		     best_rot=rot;
 		     best_tilt=tilt;
 		  }
-		  
+		
 		  // progress bar
 		  if ((i++)%MAX(maxsteps/60,1)==0) progress_bar(i);
 	     }
@@ -148,7 +146,7 @@ void Usage() {
     cerr << "Purpose:\n";
     cerr << "    Finds the 3D center of mass within a mask\n"
          << "    and a symmetry rotational axis passing through that center\n";
-    
+
     cerr << "Usage: findcenter3D [options]" << endl
          << "    -i <volume>                         : volume to process\n"
 	 << "   [-rot_sym <n=0>]                     : order of the rotational axis\n"

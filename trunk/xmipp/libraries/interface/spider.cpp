@@ -7,27 +7,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippSpider.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippGeometry.hh>
+#include "spider.h"
+
+#include <data/args.h>
+#include <data/image.h>
+#include <data/geometry.h>
 
 // Generate Count File -----------------------------------------------------
 void generate_Spider_count(int imax, DocFile &DF_out) {
@@ -109,11 +110,11 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
    const string &ang3="psi") {
    double rot, tilt, psi;
    int FirstLine_ColNo;
-   
+
    check_angle_descr(ang1);
    check_angle_descr(ang2);
    check_angle_descr(ang3);
-   
+
 //   cout << "FirstLine_ColNo" << DF_in.FirstLine_ColNo();
 
    int i=0;
@@ -128,16 +129,16 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
       if(FirstLine_ColNo >=3){
          DF_in.get_angles(i+1, rot, tilt, psi, ang1, ang2, ang3);
          P.set_eulerAngles(rot,tilt,psi);
-      }   
+      }
       if(FirstLine_ColNo >=6){
          DF_in.get_angles1(i+1, rot, tilt, psi, ang1, ang2, ang3);
          P.set_eulerAngles1(rot,tilt,psi);
-      }   
+      }
       if(FirstLine_ColNo >=9){
          DF_in.get_angles2(i+1, rot, tilt, psi, ang1, ang2, ang3);
          P.set_eulerAngles2(rot,tilt,psi);
-      }   
-      
+      }
+
       P.write(P.name());
       i++;
       if (i%10==0) progress_bar(i);
@@ -163,7 +164,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
       cout << "Renaming " << fn_in << " as " << fn_out << endl;
       string command=(string)"cp "+fn_in+" "+fn_out;
       system(command.c_str());
-      
+
       counter++;
    }
 }
@@ -173,7 +174,7 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
    int Xdim, bool reversed, size_t block_size) {
    unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
       block_size);
-   if (buffer==NULL) 
+   if (buffer==NULL)
       REPORT_ERROR(1,"create_empty_Spider_file: No memory left");
    FILE * fd = fopen(fn.c_str(), "w");
    if (fd==NULL)
@@ -224,7 +225,7 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
       << "en\n"
    ;
    spider_batch.close();
-   
+
    char *spider_prog=getenv("SPIDER");
    if (spider_prog==NULL)
       REPORT_ERROR(1,"Project:: The environment variable SPIDER is not set");
@@ -417,7 +418,7 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
       data_line(3)=DF_report(4); // X
       data_line(4)=DF_report(5); // Y
       data_line(5)=DF_report(0); // Correlation
-    
+
       DF_report.next_data_line();
       DF_report_standard.append_comment(SF.NextImg());
       DF_report_standard.append_data_line(data_line);
@@ -432,7 +433,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     double tilt_step,
     double max_shift, double shift_step,
     double first_ring, double last_ring) {
-    
+
     SelFile SF, SF_kk;
     SF.read(fn_sel);
     FileName fn_ext=fn_vol.get_extension();
@@ -440,7 +441,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     GetXmippVolumeSize(fn_vol, Zdim, Ydim, Xdim);
 
     if (last_ring<0) last_ring=(int)(Xdim/2)-5;
- 
+
     // Rename input images
     rename_for_Spider(SF, SF_kk, "kk",fn_ext);
     SF_kk.go_first_ACTIVE();
@@ -587,7 +588,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
    DocFile apmq((string)"apmq."+fn_ext);
    DocFile DF_report_standard;
    DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
-   
+
    matrix1D<double> data_line(6);
    SF.go_first_ACTIVE();
    while (!apmq.eof()) {
@@ -606,7 +607,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
       if (mirror)
          Euler_mirrorY(data_line(0),data_line(1),data_line(2),
 	    data_line(0),data_line(1),data_line(2));
-      
+
       DF_report_standard.append_comment(SF.NextImg());
       DF_report_standard.append_data_line(data_line);
       apmq.next_data_line();

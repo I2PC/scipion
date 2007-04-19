@@ -6,27 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_Angular_Predict_Tomography.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <Reconstruction/projection.hh>
+#include "angular_assign_for_tomogram.h"
+#include "projection.h"
+
+#include <data/args.h>
+#include <data/docfile.h>
+
 #include <algorithm>
 
 // Empty constructor =======================================================
@@ -107,7 +109,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
          double theo_avg, theo_stddev, min_val, max_val;
          theo().compute_stats(theo_avg, theo_stddev, min_val, max_val);
          theo()-=theo_avg;
-         
+
          // Compare it to all possible rotations and shifts of the experimental
          // image
          ImageXmipp Ip;
@@ -142,7 +144,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
 	             Ip().self_rotate(psi+2, DONT_WRAP);
 	             Ip().self_rotate(-2,DONT_WRAP);
                   }
-                  
+
                   // Compute the correlation index
                   double read_avg, read_stddev;
                   Ip().compute_stats(read_avg, read_stddev, min_val, max_val);
@@ -151,7 +153,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                      correlation_index+=(Ip(i,j)-read_avg)*theo(i,j);
                   correlation_index/=XSIZE(Ip())*YSIZE(Ip());
                   correlation_index/=read_stddev*theo_stddev;
-                  
+
                   // Keep the value
                   Alignment A;
                   A.rot=rot;
@@ -160,7 +162,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                   A.x=x;
                   A.y=y;
                   A.corr=correlation_index;
-                  
+
                   if (A>best_psi_alignment || first_psi) {
                      first_psi=false;
                      best_psi_alignment=A;
@@ -183,7 +185,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
       }
 
    sort(list_of_alignments.begin(),list_of_alignments.end());
-   
+
    // Select best alignment
    int imax=list_of_alignments.size()-1;
    assigned_rot=list_of_alignments[imax].rot;

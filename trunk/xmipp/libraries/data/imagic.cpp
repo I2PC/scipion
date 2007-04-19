@@ -2,7 +2,7 @@
  * xmippImagic.cc - source file for ImageImagicT<T> class
  */
 
-#include "../xmippImagic.hh"
+#include "imagic.h"
 
 /* Constants for the offset into the Imagic header file */
 static const unsigned IMAGIC_IFOL_OFFSET=4, IMAGIC_IXLP_OFFSET=48,

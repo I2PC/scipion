@@ -6,24 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "maskimg.hh"
+#include "maskimg.h"
+
 #include <qapplication.h>
 #include <qimage.h>
 #include <qwindowdefs.h>
@@ -33,9 +34,8 @@
 #include <qimageio.h>
 #endif
 
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippArgs.hh>
-
+#include <data/funcs.h>
+#include <data/args.h>
 
 int main( int argc, char **argv )
 {
@@ -50,15 +50,15 @@ int main( int argc, char **argv )
   bool sdflag = false;
   bool apply_geo;
 
-  try {     
+  try {
     if (check_param(argc, argv, "-sel"))
     	selname = get_param(argc, argv, "-sel");
-    else 
+    else
     	imgname = get_param(argc, argv, "-img");
     if (check_param(argc, argv, "-sd"))
-     sdflag = true; 
+     sdflag = true;
     apply_geo=!check_param(argc, argv, "-dont_apply_geo");
-  } 
+  }
   catch (Xmipp_error) {
     cout << "Xmask: Creates a mask using a Graphical User Interface" << endl;
     cout << "Usage:" << endl;
@@ -77,14 +77,14 @@ int main( int argc, char **argv )
 	    w->show();
    } else {
         cout << "Calculating average and SD images from sel file......" << endl;
-  	SelFile SF((FileName) selname); 
+  	SelFile SF((FileName) selname);
 	Image ave, sd;
 	double min, max;
-	SF.get_statistics(ave, sd, min, max, apply_geo); 
+	SF.get_statistics(ave, sd, min, max, apply_geo);
 	maskImg* w;
-	if (sdflag) 
+	if (sdflag)
 	   w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
-	else    
+	else
 	   w = new maskImg(NULL, &ave, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
 	w->apply_geo=apply_geo;
 	w->show();

@@ -27,8 +27,8 @@
 #include <sstream>
 #include <cstdio>
 
-#include "../xmippDocFiles.hh"
-#include "../xmippArgs.hh"
+#include "docfile.h"
+#include "args.h"
 
 DocLine::DocLine(const DocLine& line)
 {

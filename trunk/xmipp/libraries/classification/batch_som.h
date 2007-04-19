@@ -31,14 +31,9 @@
 #ifndef XMIPPBATCHSOM_H
 #define XMIPPBATCHSOM_H
 
-#include "xmippBaseAlgo.hh"
-#include "xmippMap.hh"
-#include "xmippSOM.hh"
-
-
-
-//---------------------------------------------------------------------------
-
+#include "base_algorithm.h"
+#include "map.h"
+#include "som.h"
 
 /**@name Batch training of Kohonen SOM algorithm*/
 //@{

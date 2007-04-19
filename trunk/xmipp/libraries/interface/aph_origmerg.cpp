@@ -7,27 +7,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 //#include <vector>
 
-#include "../xmippAPHorigmerg.hh"
-#include <XmippData/xmippArgs.hh>
+#include "aph_origmerg.h"
+
+#include <data/args.h>
+
 #include <fstream>
 #include <iomanip>
 
@@ -69,7 +71,7 @@ void APHFileorigmerg::read(const FileName &fn,
       try {
          line_no++;
          getline(fh_aph,line);
-         if(line.size()==0) continue;	 
+         if(line.size()==0) continue;	
 	 h = tmp_spot.h	      = AtoI(first_token(line));
 	 k = tmp_spot.k	      = AtoI(next_token());
 	 tmp_spot.zstar       = AtoF(next_token());
@@ -81,7 +83,7 @@ void APHFileorigmerg::read(const FileName &fn,
 	 tmp_spot.BACK	      = AtoF(next_token());
 	 tmp_spot.myCTF	      = AtoF(next_token());
          if (mrc_label >= 0 && (FILM != mrc_label))
-	     continue; 
+	     continue;
 	 aph_data_vector.push_back(tmp_spot);
 	 max_h=MAX(max_h,h);
 	 max_k=MAX(max_k,k);
@@ -93,14 +95,14 @@ void APHFileorigmerg::read(const FileName &fn,
       }
    }/* while */
 
-//   #define DEBUG_max   
-   #ifdef DEBUG_max   
+//   #define DEBUG_max
+   #ifdef DEBUG_max
    cout << "max_h: " << max_h <<" max_k: " << max_k << endl;
    cout << "min_h: " << min_h <<" min_k: " << min_k << endl;
    cout << "Number Spots: " << aph_data_vector.size()<< endl;
-   #endif      
+   #endif
    #undef DEBUG_max
-   
+
    // remember to clear if you need to reread the file
    fh_aph.close();
    //fh_aph.clear();
@@ -117,7 +119,7 @@ void APHFileorigmerg::write(const FileName &fn) const {
    if (!fh)
       REPORT_ERROR(1,(string)"APHFileorigmerg::write: Cannot open "+
          fn+" for output");
-   
+
    if(read_mrc_label== -1)
       fh << setfill('0') << setw(4) << 9999 << endl;
    else
@@ -153,26 +155,26 @@ void APHFileorigmerg::clear(){
 
 /** Move spots from assymetric unit to the plane  h>0
     those points that do not fit in the plane are ignored
-    Will be used in the future. Need a,b magnitude (real space A) 
+    Will be used in the future. Need a,b magnitude (real space A)
     taxa,tilt.anglefrom a to  (radians).
-    
+
     Generate symmetrical points:
     Symmetrical points are generated through the multiplication
     \begin{verbatim}
-   				  [R[0] R[2]  0    0 R[5]] 
+   				  [R[0] R[2]  0    0 R[5]]
    				  [R[1] R[3]  0    0 R[6]]
     [h' k' l' A' ph']=[h k l A ph][ 0	 0   R[4]  0  0  ]
    				  [ 0	 0    0    1  0  ]
    				  [ 0	 0    0    0 R[7]]
     \end{verbatim}
-   
+
     These R matrices are obtained for each crystallographic group
     They can be easily obtaine from  origtiltd.for (MRC source code)
    */
-   void APHFileorigmerg::unasymmetrization(const double a_mag,const  double b_mag, 
+   void APHFileorigmerg::unasymmetrization(const double a_mag,const  double b_mag,
                           const double mrc_taxa,const  double mrc_tilt,
 			  const double a_b_ang,const  int symmetry_group,
-                          matrix2D<int> &Counter)   
+                          matrix2D<int> &Counter)
   {
    int ksize=MAX(ABS(min_k),ABS(max_k));
    int hsize=MAX(ABS(min_h),ABS(max_h));
@@ -183,23 +185,23 @@ void APHFileorigmerg::clear(){
    if(read_mrc_label<0)
       REPORT_ERROR(1601,"APHFileorigmerg::unasymmetrization: Not implemented for several micrographs");
    switch( symmetry_group )
-     {  
+     {
  	
         case sym_P1     :	//Nothing to do here
-	   break;			 
+	   break;			
         case sym_P2_122 :     // must do P22_12 but I do not think
 	                      // it will be used but for debuging (ROB april
 			      // 2005)
-	   unsymmetrice_P222_1( a_mag,  b_mag, 
+	   unsymmetrice_P222_1( a_mag,  b_mag,
                                 mrc_taxa,  mrc_tilt,
-			        a_b_ang,  symmetry_group, Counter); 
+			        a_b_ang,  symmetry_group, Counter);
 	   break;
-        default         : 
+        default         :
 	   cerr << "APHFileorigmerg::unasymmetrization:" << endl;
-	   cerr << "\t\tsymmetry " << symmetry_group << " not implemented" 
+	   cerr << "\t\tsymmetry " << symmetry_group << " not implemented"
 	        << endl;
            exit(1);
-     }  
+     }
   }//unasymmetrization end
 /////////////////////////////////////////////////////////////////////////
 
@@ -225,8 +227,8 @@ void APHFileorigmerg::clear(){
 
        I will only use those restrictions valid for all l.
     */
-   
-void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag, 
+
+void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag,
                                const double mrc_taxa,const  double mrc_tilt,
 			       const double a_b_ang,const  int symmetry_group,
 			       matrix2D<int> &Counter)
@@ -235,9 +237,9 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
    spot first,second,third,fourth;
    spot aux_spot;
    double diff_z[4];
-   // NOTE: TAXA TILT ARE IN RADIANS BUT PHASE IS IN DEG, 
+   // NOTE: TAXA TILT ARE IN RADIANS BUT PHASE IS IN DEG,
    // Compute Z
-   
+
    double h_contrib,  k_contrib, minimun_diff;
    int winner;
    int h,k;
@@ -245,14 +247,14 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
 	      a_b_ang,  h_contrib,  k_contrib);
 
    //Search for -IQ and invert contrast
-   for(int line_no = (aph_data_vector.size()-1); 
+   for(int line_no = (aph_data_vector.size()-1);
            line_no >=0; line_no--){
       if((aph_data_vector[line_no]).IQ < 0){
           (aph_data_vector[line_no]).h *= -1;
           (aph_data_vector[line_no]).k *= -1;
           (aph_data_vector[line_no]).zstar *= -1.0;
           (aph_data_vector[line_no]).phase *= -1.0;
-      }	  
+      }	
    }
    //h=0 is an special case even if the original values of k
    //were negative that information is lost for ever
@@ -264,8 +266,8 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
    /////////////////////
 
    //Now we should loop through all the data and see if there are
-   //spots with two values asigned   
-   for(int line_no=0; line_no < (aph_data_vector.size()-1); 
+   //spots with two values asigned
+   for(int line_no=0; line_no < (aph_data_vector.size()-1);
            line_no++){
       k = (aph_data_vector[line_no]).k;
       h = (aph_data_vector[line_no]).h;
@@ -280,26 +282,26 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
    MAT_ELEM(Counter,0,1)=1111;
    #endif
    #undef DEBUGCounter
-   
+
 //   #define DEBUGCounter1
    #ifdef DEBUGCounter1
-   cout << Counter;   
+   cout << Counter;
    #endif
    #undef DEBUGCounter1
 
-   //For all those positions with two points the value of Z should allow us to 
+   //For all those positions with two points the value of Z should allow us to
    //relocate them. OF course this is not valid for mrc_tilt=0
-   
+
    //Special case mrc_tilt=0
    if(mrc_tilt==0){
-//      for(int line_no = 0; 
+//      for(int line_no = 0;
 //           line_no < aph_data_vector.size(); line_no++){
-      for(int line_no = (aph_data_vector.size()-1); 
+      for(int line_no = (aph_data_vector.size()-1);
               line_no >=0; line_no--){
 	 //if Counter=1 there is no way to decide the origin of this point
 	 //h must be positive because we are in P2221
 	 //so apply R3. (Note, we will never recover h<0)
-	 
+	
 	 //I am assuming that the spot that should is the first in the aph file
 	 //since it is more likelly that k < 0
 	 //Once one spot is modified I do not want to modify its pair
@@ -307,26 +309,26 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
          h = (aph_data_vector[line_no]).h;
 	 if ( MAT_ELEM(Counter, k, h)> 1){
              (aph_data_vector[line_no]).k  *= -1;
-	     (aph_data_vector[line_no]).phase   = 
+	     (aph_data_vector[line_no]).phase   =
 	                           -1.* (aph_data_vector[line_no]).phase+
-	                          180.0*k;			       
+	                          180.0*k;			
              MAT_ELEM(Counter, k, h) -= 1;	
 	     //#define DEBUGTILTZERO
 	     #ifdef  DEBUGTILTZERO
 	     cout << (aph_data_vector[line_no]);
 	     #endif
 	     #undef DEBUGTILTZERO
-	 }//if ( MAT_ELEM(Counter, k, h)> 1){   
+	 }//if ( MAT_ELEM(Counter, k, h)> 1){
       }//for(int line_no
    }//mrc_tilt==0
    //warp the phase (this should go at the end
-   for(int line_no = (aph_data_vector.size()-1); 
+   for(int line_no = (aph_data_vector.size()-1);
            line_no >=0; line_no--)
-      (aph_data_vector[line_no]).phase = 
+      (aph_data_vector[line_no]).phase =
                realWRAP((aph_data_vector[line_no]).phase,-180.,180.);
 
 #ifdef NEVERDEFINED
-   for(int line_no = (aph_data_vector.size()-1); 
+   for(int line_no = (aph_data_vector.size()-1);
            line_no >=0; line_no--){
       first = aph_data_vector[line_no];
       //IS h positive?
@@ -358,31 +360,31 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
 	 third.h  *= -1;third.zstar  *= -1.;
 	 fourth.phase  = -1.*fourth.phase-180.0*fourth.k;
 	 fourth.h *= -1;
-      }      
+      }
 //      #define DEBUG
       #ifdef DEBUG
-      cout << "Theorical_Z 1 =" << first.h  *  h_contrib + 
+      cout << "Theorical_Z 1 =" << first.h  *  h_contrib +
                                  first.k  *  k_contrib << endl;
       cout << first ;
-      cout << "Theorical_Z 2=" << second.h  *  h_contrib + 
+      cout << "Theorical_Z 2=" << second.h  *  h_contrib +
                                  second.k  *  k_contrib << endl;
       cout << second ;
-      cout << "Theorical_Z 3=" << third.h  *  h_contrib + 
+      cout << "Theorical_Z 3=" << third.h  *  h_contrib +
                                  third.k  *  k_contrib << endl;
       cout << third ;
-      cout << "Theorical_Z 4=" << fourth.h  *  h_contrib + 
+      cout << "Theorical_Z 4=" << fourth.h  *  h_contrib +
                                  fourth.k  *  k_contrib << endl;
       cout << fourth ;
       #endif
       #undef DEBUG
-      // Select  right point 
-      diff_z[0]=(ABS(first.zstar- (first.h  *  h_contrib + 
+      // Select  right point
+      diff_z[0]=(ABS(first.zstar- (first.h  *  h_contrib +
                                          first.k  *  k_contrib)));
-      diff_z[1]=(ABS(second.zstar-(second.h * h_contrib + 
+      diff_z[1]=(ABS(second.zstar-(second.h * h_contrib +
                                          second.k * k_contrib)));
-      diff_z[2]=(ABS(third.zstar- (third.h  * h_contrib + 
+      diff_z[2]=(ABS(third.zstar- (third.h  * h_contrib +
                                          third.k  * k_contrib)));
-      diff_z[3]=(ABS(fourth.zstar-(fourth.h * h_contrib + 
+      diff_z[3]=(ABS(fourth.zstar-(fourth.h * h_contrib +
                                          fourth.k * k_contrib)));
       minimun_diff = diff_z[0]; aux_spot=first;
       if (minimun_diff > diff_z[1]) {aux_spot=second;
@@ -405,7 +407,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
 	      //if IQ positive h must be positive and z=0
 	      //so I must apply R3 (o R3 .R2) (h , -k, l,am,180*k-ph
 	      //otherwise R1 . R3 (-h,k,-l,Am -180k +ph)
-//cout << "(h,k,aux_spot.IQ) " << h << " " << k << " " << aux_spot.IQ << endl;	      
+//cout << "(h,k,aux_spot.IQ) " << h << " " << k << " " << aux_spot.IQ << endl;	
 		 if(aux_spot.IQ>0){
         	    aux_spot.k  *= -1;
 		    aux_spot.phase   = -1.*aux_spot.phase+
@@ -415,7 +417,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag,const  double b_mag
         	    aux_spot.h  *= -1;
 		    aux_spot.phase   = aux_spot.phase -
 	                	      180.0*aux_spot.k;
-        	 } 
+        	 }
 		 //have no idea what will happend when h and k < 0
 		MAT_ELEM(Counter, k, h) -= 1;
 		if ( MAT_ELEM(Counter, aux_spot.k, aux_spot.h) >2)
@@ -433,21 +435,21 @@ cout << "Selected point: " << aph_data_vector[line_no];
       #ifdef DEBUG
       cout << "diff_z[0]" << diff_z[0] << " diff_z[1]" << diff_z[1] << endl;
       cout << "diff_z[2]" << diff_z[2] << " diff_z[3]" << diff_z[3] << endl;
-      
-      cout << "diff_z[0] again " <<first.zstar- (first.h  *  h_contrib + 
+
+      cout << "diff_z[0] again " <<first.zstar- (first.h  *  h_contrib +
                                          first.k  *  k_contrib) <<endl;
       //cout << aph_data_vector[line_no] ;
       #endif
       #undef DEBUG
    }//for line_no
    //#define DEBUG
-#endif//NEVERDEEFINED   
-}//unsymmetrice_P222_1			       
-void APHFileorigmerg::compute_Z(double a_mag, double b_mag, 
+#endif//NEVERDEEFINED
+}//unsymmetrice_P222_1			
+void APHFileorigmerg::compute_Z(double a_mag, double b_mag,
                double mrc_taxa, double mrc_tilt,
 	       double a_b_ang, double & h_contrib, double & k_contrib)
-	       
-{   
+	
+{
     if(mrc_tilt==0) {h_contrib = k_contrib = 0.0;return;}
     //Not sure this will work with non square or hexagonal crystal
     // mod_a, mod_b, a_b_angle in real space
@@ -455,7 +457,7 @@ void APHFileorigmerg::compute_Z(double a_mag, double b_mag,
     double mod_bstar_in_A =1./b_mag;
     mod_astar_in_A /=sin(PI-a_b_ang);//angle in reciprocal space -> Pi-angle
     mod_bstar_in_A /=sin(PI-a_b_ang);//angle in reciprocal space
-    
+
     double taxb = mrc_taxa + a_b_ang; // angle from tilt axis to bstar
     //astar and bstar component perpendicular to tilt axis
     double per_tilt_a = mod_astar_in_A * sin(mrc_taxa);
@@ -477,6 +479,6 @@ void APHFileorigmerg::compute_Z(double a_mag, double b_mag,
     z_star = k_contrib;
     cout << " z(hk 01) " <<  z_star << endl;
     #endif
-    #undef DEBUG    
+    #undef DEBUG
 
-}//compute_Z  
+}//compute_Z

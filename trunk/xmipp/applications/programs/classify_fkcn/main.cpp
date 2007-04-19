@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 // To avoid problems with long template names
 #pragma warning(disable:4786)
 
 #include <fstream>
-#include <Classification/xmippFKCN.hh>
+
+#include <classification/fkcn.h>
 
 /* Prototypes -============================================================= */
 
@@ -58,16 +59,16 @@ bool 	       saveClusters = false;    // Save clusters in separate files
        if (check_param(argc, argv, "-din"))
          fn_in = get_param(argc, argv, "-din");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-cout"))
           fn_out = get_param(argc, argv, "-cout");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-cvin"))
        	  cb_in = get_param(argc, argv, "-cvin");
@@ -75,31 +76,31 @@ bool 	       saveClusters = false;    // Save clusters in separate files
        if (check_param(argc, argv, "-c"))
 	 c= AtoI(get_param(argc, argv, "-c"));
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-saveclusters"))
           saveClusters = true;
        else saveClusters = false;
-       
+
        m = AtoF(get_param(argc, argv, "-m", "2.0"));
        eps = AtoF(get_param(argc, argv, "-eps", "1e-7"));
        iter = AtoI(get_param(argc, argv, "-iter", "1000"));
        verb = AtoI(get_param(argc, argv, "-verb", "0"));
-       
+
        if (check_param(argc, argv, "-norm"))
           norm = true;
        else
           norm = false;
 
        if (argc == 1) {Usage(argv);}
-       
+
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
 
 /* Some validations ===================================================== */
-  
+
     if ( c <= 1 ) {
       cerr << "Number of clusters c = " << c << " must be > 1" << endl;
       exit(EXIT_FAILURE);
@@ -114,7 +115,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
      cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << endl;
      exit(EXIT_FAILURE);
    }
-   
+
    if (verb < 0 || verb > 2) {
      cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << endl;
      exit(EXIT_FAILURE);
@@ -138,11 +139,11 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    else
      cout << "Do not normalize input data " << endl;
 
-   
+
 /* Open training vector ================================================= */
 
   cout << endl << "Reading file " << fn_in << "....." << endl;
-  
+
   ifstream inStream(fn_in.c_str());
   if (!inStream) {
       cerr << argv[0] << ": can't open file " << fn_in << endl;
@@ -150,7 +151,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
   }
 
   xmippCTVectors ts(0, true);
-  try 
+  try
     {
       inStream >> ts;
     }
@@ -159,7 +160,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
       cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << endl;
       exit(EXIT_FAILURE);
     }
-    
+
     if ( c >= ts.size()) {
       cerr << "Number of clusters c = " << c << " must be < " << ts.size() << endl;
       exit(EXIT_FAILURE);
@@ -172,21 +173,21 @@ bool 	       saveClusters = false;    // Save clusters in separate files
  try {
    if (norm) {
    	cout << "Normalizing....." << endl;
-   	ts.normalize();  		    // Normalize input data        
+   	ts.normalize();  		    // Normalize input data
    }	
    xmippFKCN thisFKCN(m, eps, iter);        // Creates Fuzzy Kohonen Clustering Algorithm
 
 	
    xmippFCB* thisFCB; 	
    if (cb_in != "") {
-        cout << "Reading fuzzy cluster centers file " << cb_in << "....." << endl;   
+        cout << "Reading fuzzy cluster centers file " << cb_in << "....." << endl;
         ifstream codeStream(cb_in.c_str());
         if (!codeStream) {
           cerr << argv[0] << ": can't open file " << cb_in << endl;
           exit(EXIT_FAILURE);
         }
 	thisFCB = new xmippFCB(codeStream, ts.size()); // Reads FuzzyCodeBook from file
-   } else    
+   } else
 	thisFCB = new xmippFCB(c, ts); // initialize Fuzzy codebook randomly
 
    xmippTextualListener myListener;	    // Define the listener class
@@ -206,7 +207,7 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    cout << "Calibrating....." << endl;
    thisFCB->fuzzyCalibrate(ts);
 
-  // Shows Validity functionals (If applicable) 
+  // Shows Validity functionals (If applicable)
 
   xmippFeature F = thisFKCN.F(*thisFCB);
   xmippFeature H = thisFKCN.H(*thisFCB);
@@ -221,43 +222,43 @@ bool 	       saveClusters = false;    // Save clusters in separate files
 
    // assign data to clusters according to fuzzy threshold
    if (saveClusters) {
-   	cout << "Saving clusters assigments ....." << endl;  
+   	cout << "Saving clusters assigments ....." << endl;
    	for (unsigned i= 0; i < thisFCB->size(); i++) {
-		tmpN = fn_out.c_str() + (string) "."  + ItoA(i); 
+		tmpN = fn_out.c_str() + (string) "."  + ItoA(i);
    		ofstream cStream(tmpN.c_str());
 		for (int j = 0; j < thisFCB->classifAt(i).size(); j++)
    			cStream << thisFCB->classifAt(i)[j] << endl;
-   		cStream.flush();    
+   		cStream.flush();
    	}
    }
 
   // save .his file (Histogram)
-   cout << "Saving clusters histogram file as " << fn_out << ".his ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".his"; 
+   cout << "Saving clusters histogram file as " << fn_out << ".his ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".his";
    ofstream hisStream(tmpN.c_str());
    thisFCB->printHistogram(hisStream);
-   hisStream.flush();    
+   hisStream.flush();
 
    // save .err file (Average Quantization Error)
-   cout << "Saving cluster centers average quantization error file as " << fn_out << ".err ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".err"; 
+   cout << "Saving cluster centers average quantization error file as " << fn_out << ".err ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".err";
    ofstream errStream(tmpN.c_str());
    thisFCB->printQuantError(errStream);
-   errStream.flush();    
- 
+   errStream.flush();
+
    // save .vs file to be compatible with SOM_PAK
-   cout << "Saving visual file as " << fn_out << ".vs ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".vs"; 
+   cout << "Saving visual file as " << fn_out << ".vs ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".vs";
    ofstream vsStream(tmpN.c_str());
    vsStream << ts.theItems[0].size() << " " << "FKCN" << " " << thisFCB->membClusters() << " 1" << " gaussian" << endl;
    for (int i= 0; i < ts.size(); i++) {
    	int j = thisFCB->fuzzyWinner(i);
    	vsStream << j << " 0 " << thisFCB->memb[i][j] << " " << ts.theTargets[i] << endl;
-   }   
-   vsStream.flush();    
+   }
+   vsStream.flush();
 
-   cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".inf"; 
+   cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".inf";
    ofstream infS(tmpN.c_str());
    infS << "Fuzzy Kohonen Clustering Network Algorithm (FKCN)" << endl << endl;
    infS << "Input data file : " << fn_in << endl;
@@ -283,23 +284,23 @@ bool 	       saveClusters = false;    // Save clusters in separate files
    infS << "Partition entropy (min) (H) : " << H << endl;
    infS << "Non-Fuzzy Index (max) (NFI) : " << NFI << endl;
    infS << "Compactness and Separation index (min) (S) : " << S << endl;
-   infS.flush();    
-  
+   infS.flush();
+
   if (norm) {
    	cout << "Denormalizing cluster centers....." << endl;
-   	thisFCB->unNormalize(ts.getNormalizationInfo()); // de-normalize cluster centers        
+   	thisFCB->unNormalize(ts.getNormalizationInfo()); // de-normalize cluster centers
   }	
 
-  cout << "Saving cluster centers in " << fn_out << ".cod....." << endl;  
-  tmpN = fn_out.c_str() + (string) ".cod"; 
+  cout << "Saving cluster centers in " << fn_out << ".cod....." << endl;
+  tmpN = fn_out.c_str() + (string) ".cod";
   ofstream outStream(tmpN.c_str());
   outStream << ts.theItems[0].size() << " " << thisFCB->size() << endl;
   outStream << *thisFCB;
-  outStream.flush();    
+  outStream.flush();
 
 
    delete thisFCB;
- 
+
  } catch ( const exception& e ) {
     cout << e.what() << endl;
  }
@@ -314,22 +315,22 @@ void Usage (char **argv) {
   printf (
      "\nUsage: %s [Purpose and Parameters]"
      "\nPurpose: Fuzzy partition (clustering) using Fuzzy Kohonen Clustering Algorithm"
-     "\n"           
+     "\n"
      "\nParameter Values: (note space before value)"
      "\n"
      "\n    -din  file_in        Input data file"
      "\n    -cout file_out       Base name for output data files "
      "\n    -cvin   file_in      Cluster centers input file"
-     "\n    -saveclusters    	 Save clusters in separate files (Default = No)"     
+     "\n    -saveclusters    	 Save clusters in separate files (Default = No)"
      "\n    -c    Clusters 	 Number of clusters"
      "\n    -m    Fuzzy constant Fuzzy constant (default = 2.0)"
      "\n    -eps  Epsilon 	 Stopping criteria (default = 1e-7)"
-     "\n    -iter iterations  	 Number of iterations (default = 1000)"     
-     "\n    -norm   	 	 Normalize training data (default: No)"     
-     "\n    -verb verbosity  	 Information level while running: "     
-     "\n    			 0: No information (default)"     
-     "\n    			 1: Progress bar"     
-     "\n    			 2: Changes between iterations"     
+     "\n    -iter iterations  	 Number of iterations (default = 1000)"
+     "\n    -norm   	 	 Normalize training data (default: No)"
+     "\n    -verb verbosity  	 Information level while running: "
+     "\n    			 0: No information (default)"
+     "\n    			 1: Progress bar"
+     "\n    			 2: Changes between iterations"
      "\n			 \n"
      ,argv[0]);
 }

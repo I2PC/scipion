@@ -11,26 +11,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showSOM.hh"
-#include "../show2D.hh"
-#include <Classification/xmippCTVectors.hh>
+#include "show_som.h"
+#include "show_2d.h"
+
+#include <classification/training_vector.h>
+
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 
@@ -76,7 +78,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
     fn_his  =_fn_root+".his";
     fn_err  =_fn_root+".err";
     fn_inf  =_fn_root+".inf";
-    
+
     // Read histogram
     if (exists(fn_his)) {
      	ifstream fh_his(fn_his.c_str());
@@ -86,7 +88,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
 	   int imax=ts.size();
      	   hisAssigned = new string[imax];
      	   for (int i=0; i<imax; i++)
-               hisAssigned[i] = ts.theTargets[i];		   
+               hisAssigned[i] = ts.theTargets[i];		
    	}
 	fh_his.close();
     }
@@ -100,7 +102,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
 	   int imax=ts.size();
      	   cv_errors = new string[imax];
      	   for (int i=0; i<imax; i++)
-               cv_errors[i] = ts.theTargets[i];		   
+               cv_errors[i] = ts.theTargets[i];		
    	}
 	fh_err.close();
     }
@@ -119,7 +121,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
         }
         fh_inf.close();
     }
-    
+
     // Read codevectors
     if (exists(fn_class)) {
        ifstream fh_class(fn_class.c_str());
@@ -127,7 +129,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
       	  string line, fn;
           int dim;
 	  string topol, neigh;
-          fh_class >> dim >> topol >> NumCols >> NumRows >> neigh; 
+          fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
 	  listSize = NumCols*NumRows;
 	  if (listSize==0)
 	     REPORT_ERROR(1,"ShowSOM::readFile: Input file is empty");
@@ -162,7 +164,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
 	       fh_class >> col >> row >> tmp;
 	       getline(fh_class, line);
 	       int i=row*NumCols+col;
-	       SFcv[i].insert(first_token(line),SelLine::ACTIVE); 
+	       SFcv[i].insert(first_token(line),SelLine::ACTIVE);
 	  }
        }
        fh_class.close();
@@ -171,7 +173,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root) {
 
 /* Initialize right click menubar ------------------------------------------ */
 void ShowSOM::initRightclickMenubar() {
-   menubar = new QPopupMenu(); 
+   menubar = new QPopupMenu();
    QPopupMenu * file = new QPopupMenu();
       file->insertItem( "Open...", this,  SLOT(GUIopenFile()));
       file->insertItem( "Save assigned images in a sel file...",
@@ -207,7 +209,7 @@ void ShowSOM::initRightclickMenubar() {
    options->insertSeparator();
 
    // Insert options the menu
-   menubar->insertItem( "&Options", options );    
+   menubar->insertItem( "&Options", options );
    menubar->insertSeparator();
 
    // Inser Help and Quit
@@ -256,7 +258,7 @@ void ShowSOM::saveAssignedSeparately()
       if (fi.exists() &&
 	  (QMessageBox::information (this, "File Exists",
 				     "File " + newfilename +
-				     " already exists. Overwrite?", 
+				     " already exists. Overwrite?",
 				     "Yes", "No") != 0))
       {
 	QMessageBox::about (this, "Warning!",
@@ -403,7 +405,7 @@ void ShowSOM::showRepresentedSel() {
 }
 
 /* Show error image -------------------------------------------------------- */
-void ShowSOM::showErrorImage() {  
+void ShowSOM::showErrorImage() {
     int row=currentRow();
     int col=currentColumn();
     if (row<0 || col<0) return;
@@ -415,8 +417,8 @@ void ShowSOM::showErrorImage() {
        // Compute the average of the images assigned to that cell
        Image _ave, _sd;
        double _minPixel, _maxPixel;
-       SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel,apply_geo);  
-       
+       SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel,apply_geo);
+
        // Load the cell code vector
        Image *image = Image::LoadImage (imgnames[i]), error_image;
        if (!image)

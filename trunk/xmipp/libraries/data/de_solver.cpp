@@ -1,5 +1,5 @@
-#include <memory.h>
-#include "DESolver.hh"
+#include "memory.h"
+#include "de_solver.h"
 
 #define Element(a,b,c)  a[b*nDim+c]
 #define RowVector(a,b)  (&a[b*nDim])

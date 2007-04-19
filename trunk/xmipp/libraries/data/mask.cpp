@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippMasks.hh"
-#include "../xmippArgs.hh"
-#include "../xmippImages.hh"
-#include "../xmippVolumes.hh"
-#include "../xmippWavelets.hh"
+#include "mask.h"
+#include "args.h"
+#include "image.h"
+#include "volume.h"
+#include "wavelet.h"
 
 /*---------------------------------------------------------------------------*/
 /* 1D Masks                                                                  */
@@ -44,7 +44,7 @@ void RaisedCosineMask(matrix1D<double> &mask,
    }
 }
 
-void RaisedCrownMask(matrix1D<double> &mask, 
+void RaisedCrownMask(matrix1D<double> &mask,
    double r1, double r2, double pix_width, int mode, double x0) {
    RaisedCosineMask(mask,r1-pix_width,r1+pix_width, OUTSIDE_MASK, x0);
    matrix1D<double> aux; aux.resize(mask);
@@ -78,7 +78,7 @@ void BinaryCircularMask(matrix2D<int> &mask,
 	 double r2=(XX(r)-XX(center))*(XX(r)-XX(center))+ \
             (YY(r)-YY(center))*(YY(r)-YY(center)); \
 	 MAT_ELEM(mask,YY(r),XX(r))=(r2<=radius2); \
-      }         
+      }
 void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
    int smin, int smax, const string &quadrant) {
    double radius2=radius*radius/(4*(smin+1));
@@ -90,7 +90,7 @@ void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
 	 DWTCIRCULAR2D_BLOCK(s,"01");
 	 DWTCIRCULAR2D_BLOCK(s,"10");
 	 DWTCIRCULAR2D_BLOCK(s,"11");
-      } else 
+      } else
 	 DWTCIRCULAR2D_BLOCK(s,quadrant);
       radius2/=4;
    }
@@ -109,7 +109,7 @@ void BinaryCrownMask(matrix2D<int> &mask,
    }
 }
 
-void BinaryFrameMask(matrix2D<int> &mask, 
+void BinaryFrameMask(matrix2D<int> &mask,
    int Xrect, int Yrect, int mode, double x0, double y0) {
    mask.init_zeros();
    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask) {
@@ -144,7 +144,7 @@ void RaisedCosineMask(matrix2D<double> &mask,
    }
 }
 
-void RaisedCrownMask(matrix2D<double> &mask, 
+void RaisedCrownMask(matrix2D<double> &mask,
    double r1, double r2, double pix_width, int mode, double x0, double y0) {
    RaisedCosineMask(mask,r1-pix_width,r1+pix_width, OUTSIDE_MASK, x0, y0);
    matrix2D<double> aux; aux.resize(mask);
@@ -177,7 +177,7 @@ void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw) {
    if (A>50) beta=0.1102*(A-8.7);
    else if (A>=21) beta=0.5842*pow(A-21,0.4)+0.07886*(A-21);
    else beta=0;
-   
+
    // "Draw" Kaiser window
    mask.resize(2*M+1,2*M+1);
    mask.set_Xmipp_origin();
@@ -220,7 +220,7 @@ void SincBlackmanMask(matrix2D<double> &mask,
    EVALUATE_POWER_OF_SINCBLACKMAN2D(N1,P1); P=P1;
    EVALUATE_POWER_OF_SINCBLACKMAN2D(N2,P2);
    power_percentage/=100;
-   
+
    // Find size for that power percentage
    bool end=FALSE;
    while (!end) {
@@ -228,7 +228,7 @@ void SincBlackmanMask(matrix2D<double> &mask,
 
       N12=ROUND((N1+N2)/2);
       EVALUATE_POWER_OF_SINCBLACKMAN2D(N12,P12);
-   
+
       if (ABS(P12/P-power_percentage)<0.01) end=TRUE;
       else if (N1==N2 || N1==N2+1) end=TRUE;
       else {
@@ -266,7 +266,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
    if (A>50) beta=0.1102*(A-8.7);
    else if (A>=21) beta=0.5842*pow(A-21,0.4)+0.07886*(A-21);
    else beta=0;
-   
+
    // "Draw" Separable Kaiser Sinc window
    mask.resize(2*M+1,2*M+1);
    mask.set_Xmipp_origin();
@@ -280,20 +280,20 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
 
 void mask2D_4neig(matrix2D<int> &mask, int value, int center)
 {
-   mask.resize(3,3);   
+   mask.resize(3,3);
    mask.init_zeros();
    mask(0,1)=mask(1,0)=mask(1,2)=mask(2,1)=value;
    mask(1,1)=center;
-   
+
 }
 void mask2D_8neig(matrix2D<int> &mask, int value1, int value2, int center)
 {
-   mask.resize(3,3);   
+   mask.resize(3,3);
    mask.init_zeros();
    mask(0,1)=mask(1,0)=mask(1,2)=mask(2,1)=value1;
    mask(0,0)=mask(0,2)=mask(2,0)=mask(2,2)=value2;
    mask(1,1)=center;
-   
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -321,7 +321,7 @@ void BinarySphericalMask(matrix3D<int> &mask,
             (YY(r)-YY(center))*(YY(r)-YY(center))+ \
 	    (ZZ(r)-ZZ(center))*(ZZ(r)-ZZ(center)); \
 	 VOL_ELEM(mask,ZZ(r),YY(r),XX(r))=(r2<=radius2); \
-      }         
+      }
 void BinaryDWTSphericalMask(matrix3D<int> &mask, double radius,
    int smin, int smax, const string &quadrant) {
    mask.init_zeros();
@@ -369,7 +369,7 @@ void BinaryCylinderMask(matrix3D<int> &mask,
    }
 }
 
-void BinaryFrameMask(matrix3D<int> &mask, 
+void BinaryFrameMask(matrix3D<int> &mask,
    int Xrect, int Yrect, int Zrect, int mode, double x0, double y0, double z0) {
    mask.init_zeros();
    FOR_ALL_ELEMENTS_IN_MATRIX3D(mask) {
@@ -393,12 +393,12 @@ void BinaryConeMask(matrix3D<int> &mask, double theta, int mode) {
 
 }
 
-void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF, 
+void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF,
 		     matrix2D<double> A) {
 
   double xp,yp,zp;
   double tg0,tgF,limx0,limxF;
-  
+
   tg0=-tan(PI*(-90.-thetaF)/180.);
   tgF=-tan(PI*(90.-theta0)/180.);
 
@@ -442,7 +442,7 @@ void RaisedCosineMask(matrix3D<double> &mask,
    }
 }
 
-void RaisedCrownMask(matrix3D<double> &mask, 
+void RaisedCrownMask(matrix3D<double> &mask,
    double r1, double r2, double pix_width, int mode, double x0, double y0,
    double z0) {
    RaisedCosineMask(mask,r1-pix_width,r1+pix_width, OUTSIDE_MASK, x0, y0, z0);
@@ -500,7 +500,7 @@ void mask3D_6neig(matrix3D<int> &mask, int value, int center)
   mask.init_zeros();
   mask(1,1,1)=center;
   mask(1,1,0)=mask(1,1,2)=mask(0,1,1)=mask(2,1,1)=mask(1,0,1)=mask(1,2,1)=value;
-  
+
 }
 
 void mask3D_18neig(matrix3D<int> &mask, int value1, int value2,int center)
@@ -514,7 +514,7 @@ void mask3D_18neig(matrix3D<int> &mask, int value1, int value2,int center)
   mask(0,1,0)=mask(0,0,1)=mask(0,1,2)=mask(0,2,1)=value2;
   mask(1,0,0)=mask(1,2,0)=mask(1,0,2)=mask(1,2,2)=value2;
   mask(2,1,0)=mask(2,0,1)=mask(2,1,2)=mask(2,2,1)=value2;
-  
+
 
 }
 void mask3D_26neig(matrix3D<int> &mask, int value1, int value2, int value3,
@@ -532,7 +532,7 @@ void mask3D_26neig(matrix3D<int> &mask, int value1, int value2, int value3,
   //Vertex neighbors
   mask(0,0,0)=mask(0,0,2)=mask(0,2,0)=mask(0,2,2)=value3;
   mask(2,0,0)=mask(2,0,2)=mask(2,2,0)=mask(2,2,2)=value3;
-  
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -839,7 +839,7 @@ void Mask_Params::usage() const {
            << "   |-mask wedge <th0> <thF>  : 3D missing-wedge mask for data \n"
            << "                               collected between tilting angles \n"
            << "                               th0 and thF (around the Y-axis) \n"
-           << "   |-mask <binary file>      : Read from file\n"   
+           << "   |-mask <binary file>      : Read from file\n"
       ;
    if (allowed_data_types & DOUBLE_MASK)
       cerr << "   |-mask gaussian <sigma>   : 2D or 3D gaussian\n"
@@ -1098,7 +1098,7 @@ void range_adjust_within_mask(const matrix2D<double> *mask,
       A(1,0)=A(0,1);
    }
    b=A.inv()*b;
-   
+
    // Apply to m2
    FOR_ALL_ELEMENTS_IN_MATRIX2D(m2) m2(i,j)=b(0)*m2(i,j)+b(1);
 }
@@ -1131,7 +1131,7 @@ void range_adjust_within_mask(const matrix3D<double> *mask,
       A(1,0)=A(0,1);
    }
    b=A.inv()*b;
-   
+
    // Apply to m2
    FOR_ALL_ELEMENTS_IN_MATRIX3D(m2) m2(k,i,j)=b(0)*m2(k,i,j)+b(1);
 }

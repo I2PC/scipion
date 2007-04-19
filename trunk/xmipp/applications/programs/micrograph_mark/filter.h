@@ -20,10 +20,10 @@
 #ifndef __QT_FILTER_HH__
 #define __QT_FILTER_HH__
 
-/* Includes ---------------------------------------------------------------- */
-#include <XmippData/xmippMicrograph.hh>
-#include <XmippData/xmippImages.hh>
-#include <Reconstruction/Programs/Prog_FourierFilter.hh>
+#include <data/micrograph.h>
+#include <data/image.h>
+#include <reconstruction/fourier_filter.h>
+
 #include <qstring.h>
 
 /* Filters generic class --------------------------------------------------- */
@@ -38,7 +38,7 @@ protected:
 public:
    // Constructor
    QtFilter(const Micrograph *_M);
-   
+
    // Apply the filter
    virtual void apply( Image *_img )=0;
 };

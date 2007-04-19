@@ -7,28 +7,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef SHOWSPECTRA_H
 #define SHOWSPECTRA_H
 
-#include "showSel.hh"
-#include <Classification/xmippCTVectors.hh>
+#include "show_selfile.h"
+
+#include <classification/training_vector.h>
+
 #include <qscrollbar.h>
 #include <qlabel.h>
 
@@ -41,7 +43,7 @@ class ShowSpectra: public ShowSel {
 protected:
    // Vectors to represent
    xmippCTVectors *V;
-   
+
    // Axes offset within cell frame
    int offX, offY;
    // Spacing between X ticks
@@ -116,7 +118,7 @@ protected slots:
     // Change Font
     virtual void changeFont();
     // Change ticks spacing
-    virtual void changeXstep();    
+    virtual void changeXstep();
     // returns spacing from scroll window
     virtual void set_spacing(vector<float> prm);
 
@@ -137,7 +139,7 @@ class SpectraFilter : public QWidget {
 public:
    /** Constructor */
    SpectraFilter(int min, int max, const vector<float> &_x,
-      ShowSpectra *show_spectra, 
+      ShowSpectra *show_spectra,
       QWidget *parent=0, const char *name=0, int wflags=0);
    /** Destructor */
    ~SpectraFilter();
@@ -151,7 +153,7 @@ private:
    QLabel     **__label_max;
 private slots:
    void but_ok_clicked();
-   void scrollValueChanged(int);  
+   void scrollValueChanged(int);
 };
 
 //@}

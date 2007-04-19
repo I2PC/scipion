@@ -1,4 +1,4 @@
-SUBDIRS = m4 Other_packages Lib Applications
+SUBDIRS = m4 external libraries applications
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = xmippConfiguration.inc SConstruct SConscript scons

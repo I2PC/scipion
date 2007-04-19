@@ -6,56 +6,56 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /* @defgroup HeaderOperations
- * 
+ *
  * Valid operations:
- * 
+ *
  * @code
  * headerXMipp A(IMG_XMIPP); // Creates an XMipp Image header
  * headerXMipp A(VOL_XMIPP); // Creates an XMipp volume header
- * 
+ *
  * A.rename("newName"); // Renames the header title
- * 
+ *
  * A.write(fp); // Writes current header to disk
  * A.read(fp); // Loads a header from disk
- * 
+ *
  * A.clear(); // Clears the header
- * 
+ *
  * cout << A; // Prints information in the header
- * 
+ *
  * set_eulerAngles(25, 40, 50); // Sets Euler Angles
  * get_eulerAngles(Phi, Theta, Psi); // Gets Euler Angles
- * 
+ *
  * // Gets Euler Angles stored in alternate location 1
  * get_eulerAngles1(Phi1, Theta1, Psi1);
- * 
+ *
  * // Gets Euler Angles stored in alternate location 2
  * get_eulerAngles2(Phi2, Theta2, Psi2);
- * 
+ *
  * clear_fFlag_flag(); // Clears fFlag flag
- * 
+ *
  * rotAngle() = 30; // Sets Rotation Angle to 30
  * get_title(); // Gets the title
  * get_time(); // Gets the time of creation
  * get_date(); // Gets the date of creation
- * 
+ *
  */
 
 #ifndef XMIPPHEADER_H
@@ -64,12 +64,12 @@
 #include <iostream>
 #include <cstdio>
 
-#include "xmippFuncs.hh"
-#include "xmippMatrices2D.hh"
+#include "funcs.h"
+#include "matrix2d.h"
 
 /** Header
  * @ingroup HeaderOperations
- * 
+ *
  * The header class is a general class which only contains general information
  * for the Xmipp image.
  */
@@ -107,13 +107,13 @@ public:
     {
         return im;
     }
-    
+
     // Get type of header
     initMode headerType() const
     {
         return im;
     }
-    
+
     void clear();
     void set_header(); // Sets a consistent header
 
@@ -122,7 +122,7 @@ public:
     {
         return __reversed;
     }
-    
+
     bool& reversed()
     {
         return __reversed;
@@ -141,18 +141,18 @@ public:
     {
         return header.fNrow;
     }
-    
+
     // Get Ydim
     int iYdim() const
     {
         return (int) header.fNrow;
     }
-    
+
     float& Xdim()
     {
         return header.fNcol;
     }
-    
+
     // Get Xdim
     int  iXdim() const
     {
@@ -164,20 +164,20 @@ public:
     {
         return header.fNslice;
     }
-    
+
     // Get Slices
     float Slices()  const
     {
         return header.fNslice;
     }
-        
+
     // Get Slices
     int iSlices() const
     {
         return (int) header.fNslice;
     }
-    
-    
+
+
     int iZdim()   const
     {
         return (int) header.fNslice;
@@ -188,19 +188,19 @@ public:
     {
         return header.fAngle1;
     }
-    
+
     // Get Rot. Angle
     float& old_rot()
     {
         return header.fAngle1;
     }
-    
+
     // Scale
     float  Scale() const
     {
         return header.fScale;
     }
-    
+
     // Get Scale
     float& Scale()
     {
@@ -212,17 +212,17 @@ public:
     {
         return header.Flip;
     }
-    
+
     float& Flip()
     {
         return header.Flip;
     }
-    
+
     float Weight() const
     {
         return header.Weight;
     }
-    
+
     float& Weight()
     {
         return header.Weight;
@@ -233,162 +233,162 @@ public:
     {
         return header.fNrec;
     }
-    
+
     float& fNrec()
     {
         return header.fNrec;
     }
-    
+
     float fNlabel() const
     {
         return header.fNlabel;
     }
-    
+
     float& fNlabel()
     {
         return header.fNlabel;
     }
-    
+
     float fIform() const
     {
         return header.fIform;
     }
-    
+
     float& fIform()
     {
         return header.fIform;
     }
-    
+
     float fImami() const
     {
         return header.fImami;
     }
-    
+
     float& fImami()
     {
         return header.fImami;
     }
-    
+
     float fFmax() const
     {
         return header.fFmax;
     }
-    
+
     float& fFmax()
     {
         return header.fFmax;
     }
-    
+
     float fFmin() const
     {
         return header.fFmin;
     }
-    
+
     float& fFmin()
     {
         return header.fFmin;
     }
-    
+
     float fAv() const
     {
         return header.fAv;
     }
-    
+
     float& fAv()
     {
         return header.fAv;
     }
-    
+
     float fSig() const
     {
         return header.fSig;
     }
-    
+
     float& fSig()
     {
         return header.fSig;
     }
-    
+
     float fIhist()  const
     {
         return header.fIhist;
     }
-    
+
     float& fIhist()
     {
         return header.fIhist;
     }
-    
+
     float fLabrec() const
     {
         return header.fLabrec;
     }
-    
+
     float& fLabrec()
     {
         return header.fLabrec;
     }
-    
+
     float fIangle() const
     {
         return header.fIangle;
     }
-    
+
     float& fIangle()
     {
         return header.fIangle;
     }
-    
+
     float fXoff() const
     {
         return header.fXoff;
     }
-    
+
     float& fXoff()
     {
         return header.fXoff;
     }
-    
+
     float fYoff() const
     {
         return header.fYoff;
     }
-    
+
     float& fYoff()
     {
         return header.fYoff;
     }
-    
+
     float fZoff() const
     {
         return header.fZoff;
     }
-    
+
     float& fZoff()
     {
         return header.fZoff;
     }
-    
+
     float fLabbyt() const
     {
         return header.fLabbyt;
     }
-    
+
     float& fLabbyt()
     {
         return header.fLabbyt;
     }
-    
+
     float fLenbyt() const
     {
         return header.fLenbyt;
     }
-    
+
     float& fLenbyt()
     {
         return header.fLenbyt;
     }
-    
+
     matrix2D< double > fGeo_matrix();
 
     // Origin offsets
@@ -399,22 +399,22 @@ public:
     void set_eulerAngles(float Phi, float Theta, float Psi);
     void set_eulerAngles1(float Phi1, float Theta1, float Psi1);
     void set_eulerAngles2(float Phi2, float Theta2, float Psi2);
-    
+
     /** Clears fFlag flag.
-     * 
+     *
      * The number of triads of Euler angles stored in the header (up to three)
      * is stored here. set_eulerAngles2 makes fFlag=2, set_eulerAngles1 makes
      * fFlag=max(fFlag, 1), set_eulerAngles does not change fFlag
-     * 
+     *
      * @code
-     * header.clear_fFlag_flag(); 
+     * header.clear_fFlag_flag();
      * @endcode
      */
     void clear_fFlag_flag()
     {
         header.fFlag=0.f;
     }
-    
+
     template<typename T>
     void get_eulerAngles(T& Phi, T& Theta, T& Psi) const
     {
@@ -444,12 +444,12 @@ public:
         header.fIangle = 1;
         return header.fPhi;
     }
-    
+
     float Phi() const
     {
         return header.fPhi;
     }
-    
+
     float& Theta()
     {
         header.fIangle = 1;
@@ -466,7 +466,7 @@ public:
         header.fIangle = 1;
         return header.fPsi;
     }
- 
+
     float Psi() const
     {
         return header.fPsi;
@@ -482,7 +482,7 @@ public:
     {
         return header.fPhi1;
     }
- 
+
     float& Theta1()
     {
         header.fFlag = 1.f;
@@ -564,16 +564,16 @@ private:
         // (=1 FOR AN IMAGE)  FOR NEW LONG LABEL
         // FORMAT THE VALUE OF NSLICE STORED IN
         // THE FILE IS NEGATIVE.
-        
+
         /* 2 */
         float fNrow; // NUMBER OF ROWS PER SLICE (Y)
-        
+
         /* 3 */
         float fNrec; // TOTAL NUMBER OF RECORDS (SEE NOTE #3).
-        
+
         /* 4 */
         float fNlabel; // AUXILIARY NUMBER TO COMPUTE TOTAL NUMBER OF RECS
-        
+
         /* 5 */
         float fIform; // FILE TYPE SPECIFIER.
         // +3 FOR A 3-D FILE  (FLOAT)
@@ -586,88 +586,88 @@ private:
         // +9 FOR A 2-D INT IMAGE FILE
         // 10 FOR A 3-D INT IMAGE FILE
         // 11 FOR A 2-D EIGHT BIT COLOR IMAGE FILE
-        
+
         /* 6 */
         float fImami; // MAXIMUM/MINIMUM FLAG. IS SET AT 0 WHEN THE
         // FILE IS CREATED, AND AT 1 WHEN THE MAXIMUM AND
         // MINIMUM HAVE BEEN COMPUTED, AND HAVE BEEN STORED
         // INTO THIS LABEL RECORD (SEE FOLLOWING WORDS)
-        
+
         /* 7 */
         float fFmax; // MAXIMUM VALUE
-        
+
         /* 8 */
         float fFmin; // MINIMUM VALUE
-        
+
         /* 9 */
         float fAv; // AVERAGE VALUE
-        
+
         /* 10*/
         float fSig; // STANDARD DEVIATION. A VALUE OF -1. INDICATES
         // THAT SIG HAS NOT BEEN COMPUTED PREVIOUSLY.
-        
+
         /* 11*/
         float fIhist; // FLAG INDICATING IF THE HISTOGRAM HAS BE
         // COMPUTED. NOT USED IN 3D FILES!
-        
+
         /* 12*/
         float fNcol; // NUMBER OF PIXELS PER LINE (Columns X)
-        
+
         /* 13*/
         float fLabrec; // NUMBER OF LABEL RECORDS IN FILE HEADER
-        
+
         /* 14*/
         float fIangle; // FLAG THAT TILT ANGLES HAVE BEEN FILLED
-        
+
         /* 15*/
         float fPhi; // EULER: ROTATIONAL ANGLE
-        
+
         /* 16*/
         float fTheta; // EULER: TILT ANGLE
-        
+
         /* 17*/
         float fPsi; // EULER: PSI  = TILT ANGLE
-        
+
         /* 18*/
         float fXoff; // X TRANSLATION
-        
+
         /* 19*/
         float fYoff; // Y TRANSLATION
-        
+
         /* 20*/
         float fZoff; // Z TRANSLATION
-        
+
         /* 21*/
         float fScale; // SCALE
-        
+
         /* 22*/
         float fLabbyt; // TOTAL NUMBER OF BYTES IN LABEL
-        
+
         /* 23*/
         float fLenbyt; // RECORD LENGTH IN BYTES
         char  fNada[24]; // this is a spider incongruence
-        
+
         /* 30*/
         float fFlag; // THAT ANGLES ARE SET. 1 = ONE ADDITIONAL
         //	ROTATION IS PRESENT, 2 = ADDITIONAL ROTATION
         // THAT PRECEEDS THE ROTATION THAT WAS STORED IN
         // 15 FOR DETAILS SEE MANUAL CHAPTER VOCEUL.MAN
-        
+
         /* 31*/
         float fPhi1;
-        
-        /* 32*/        
+
+        /* 32*/
         float fTheta1;
-        
+
         /* 33*/
         float fPsi1;
-        
+
         /* 34*/
         float fPhi2;
-        
+
         /* 35*/
         float fTheta2;
-        
+
         /* 36*/
         float fPsi2;
 
@@ -696,11 +696,11 @@ private:
         /*212-214*/
         char szIDat[12]; // LOGICAL * 1 ARRAY DIMENSIONED 10, CONTAINING
         // THE DATE OF CREATION (10 CHARS)
-        
+
         /*215-216*/
         char szITim[8]; // LOGICAL * 1 ARRAY DIMENSIONED 8, CONTAINING
         // THE TIME OF CREATION (8 CHARS)
-        
+
         /*217-256*/
         char szITit[160]; // LOGICAL * 1 ARRAY DIMENSIONED 160
     }

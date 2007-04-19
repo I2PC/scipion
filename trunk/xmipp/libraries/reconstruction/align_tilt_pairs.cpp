@@ -6,23 +6,23 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_Centilt.hh"
+#include "align_tilt_pairs.h"
 
 // Read arguments ==========================================================
 void Prog_centilt_prm::read(int argc, char **argv)  {
@@ -35,7 +35,7 @@ void Prog_centilt_prm::read(int argc, char **argv)  {
   // Selfile with tilted images
   fn_sel=get_param(argc,argv,"-t");
   SFt.read(fn_sel);
-  if (SFu.ImgNo()!=SFt.ImgNo()) 
+  if (SFu.ImgNo()!=SFt.ImgNo())
     REPORT_ERROR(1,"Unequal number of active images in untilted and tilted selfiles");
   // Extension if not to overwrite input images
   oext=get_param(argc,argv,"-oext","");
@@ -55,17 +55,17 @@ void Prog_centilt_prm::read(int argc, char **argv)  {
 void Prog_centilt_prm::show() {
     cerr << " Selfile untilted images              : "<<  SFu.name()<<endl;
     cerr << " Selfile tilted images                : "<<  SFt.name()<<endl;
-  if (oext!="") 
+  if (oext!="")
     cerr << " Output extension for tilted images   : "<< oext<<endl;
-  if (max_shift!=0) 
+  if (max_shift!=0)
     cerr << " Discard images that shift more than  : "<<max_shift<<endl;
-  if (fn_doc!="") 
+  if (fn_doc!="")
     cerr << " Output document file (tilted images) : "<<fn_doc<<endl;
   if (force_x_zero)
     cerr << " Force x-shift to be zero "<<endl;
-  if (!do_stretch) 
+  if (!do_stretch)
     cerr << " Skip cosine stretching "<<endl;
-  if (!do_center) 
+  if (!do_center)
     cerr << " Skip centering "<<endl;
 
 }
@@ -115,37 +115,37 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
   Mcorr.max_index(imax,jmax);
   maxcorr=MAT_ELEM(Mcorr,imax,jmax);
 
-  while (neighbourhood) {  
+  while (neighbourhood) {
     n_max ++;
     for (int i=-n_max; i <= n_max; i++)
-      for (int j=-n_max*x_zero; j <= n_max*x_zero; j++) {   
+      for (int j=-n_max*x_zero; j <= n_max*x_zero; j++) {
 	i_actual = i+imax;
 	j_actual = j+jmax;
-	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() && 
-	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() ) 
+	if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() &&
+	    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX() )
 	  neighbourhood=false;
 	else if (maxcorr/1.414 > MAT_ELEM(Mcorr,i_actual,j_actual))
 	    neighbourhood=false;
       }
   }
 
-  // We have the neighbourhood => looking for the gravity centre 
+  // We have the neighbourhood => looking for the gravity centre
   xmax = ymax = sumcorr = 0.;
   for (int i=-n_max; i <= n_max; i++)
     for (int j=-n_max; j <= n_max; j++) {
       i_actual = i+imax;
       j_actual = j+jmax;
-      if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() && 
+      if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() &&
           i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX() ) {
 	ymax += i_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
 	xmax += j_actual*MAT_ELEM(Mcorr,i_actual,j_actual);
 	sumcorr += MAT_ELEM(Mcorr,i_actual,j_actual);
-      } 
+      }
     }
   xmax /= sumcorr; ymax /= sumcorr;
   xshift=(float)-xmax; yshift=(float)-ymax;
 
-  // Calculate correlation coefficient 
+  // Calculate correlation coefficient
   A.init_identity();
   A(0,2)=-xshift;
   A(1,2)=-yshift;
@@ -197,7 +197,7 @@ void Prog_centilt_prm::centilt() {
     SFt.go_beginning();
     SFu.jump(imgno);
     SFt.jump(imgno-n_discarded);
-    // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis) 
+    // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
     Iu.read(SFu.get_current_file());
     Iu().set_Xmipp_origin();
     Euler_angles2matrix (Iu.Phi(),0.,0.,A);

@@ -1,32 +1,32 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *              Pedro A. de Alarcón (pedro@cnb.uam.es)
+ *              Pedro A. de Alarcï¿½n (pedro@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMorphology.hh>
+#include <data/progs.h>
+#include <data/args.h>
+#include <data/morphology.h>
 
 class Morphology_parameters: public Prog_parameters {
 public:
@@ -35,7 +35,7 @@ public:
    #define OPENING   	  3
    #define CLOSING        4
    int operation;
-   
+
    int size;
    int count;
    int neig;
@@ -46,12 +46,12 @@ public:
       if (check_param(argc,argv,"-ero"))     	operation=EROSION;
       if (check_param(argc,argv,"-clo"))     	operation=CLOSING;
       if (check_param(argc,argv,"-ope"))     	operation=OPENING;
-      
+
       size=AtoI(get_param(argc,argv,"-size","1"));
       neig=AtoI(get_param(argc,argv,"-neig","-1"));
       count=AtoI(get_param(argc,argv,"-count","0"));
    }
-   
+
    void show() {
       Prog_parameters::show();
       cout << "Performing a ";
@@ -81,7 +81,7 @@ public:
    }
 };
 
-   
+
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Morphology_parameters *eprm=(Morphology_parameters *) prm;
    if (eprm->neig==-1) eprm->neig=8;
@@ -171,7 +171,7 @@ int main (int argc, char **argv) {
 	       "18" {$NEIG=18;}
 	       "26" {$NEIG=26;}
 	    };
-	    
+	
 	 }
 	 $SIZE {type=float; label="Structuring box size"; by default=1;}
 	 $COUNT {type=natural;

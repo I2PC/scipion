@@ -12,25 +12,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippAPH3D.hh"
-#include <XmippData/xmippArgs.hh>
+#include "aph3d.h"
+
+#include <data/args.h>
+
 #include <fstream>
 
 #define VERBOSE
@@ -42,7 +44,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn) {
    int       hmax=0, kmax=0, lmax=0, hmin=0, kmin=0,lmin=0;
    string    line;
    int       h,k,l;
-      
+
    // Empties current APH File
    clear();
    // Open file
@@ -74,14 +76,14 @@ cout << "gamma: " << gamma << endl;
 cout << "c: " << c << endl;
 cout << "resolution: " << resolution << endl;
 cout << "Amp_Scale: " << Amp_Scale << endl;
-#endif   
+#endif
 #undef DEBUG_read
 
    // look for the begining of the data
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
-         if(string::npos != 
+         if(string::npos !=
 	    line.find("   H   K   L      A      P     FOM*100         REJECTS"))
 	    break;
       }
@@ -92,7 +94,7 @@ cout << "Amp_Scale: " << Amp_Scale << endl;
 
    // look for maximun and minimum
    line_no=1;
-   
+
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
@@ -120,7 +122,7 @@ Space_Group=0;
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
-         if(string::npos != 
+         if(string::npos !=
 	    line.find(" * Space Group ="))
 	    {Space_Group = AtoI(line.c_str()+16);break; }
       }
@@ -128,17 +130,17 @@ Space_Group=0;
          cout << "3Daph File reading error an error\n";
       }
    }/* while */
-   
+
 if(Space_Group==0)
       REPORT_ERROR(1601,"aphFile::read: File "+fn+" Space Group not found");
 
-   #define DEBUG_max   
-   #ifdef DEBUG_max   
+   #define DEBUG_max
+   #ifdef DEBUG_max
    cout << "hmax: " << hmax <<" kmax: " << kmax << " lmax: " << lmax << endl;
    cout << "hmin: " << hmin <<" kmin: " << kmin << " lmin: " << lmin << endl;
-   #endif      
+   #endif
    #undef DEBUG_max
-     
+
    // Ask for memory
    spots_abs.init_zeros(lmax-lmin+1,kmax-kmin+1,hmax-hmin+1);
       STARTINGX(spots_abs)=hmin; STARTINGY(spots_abs)=kmin;
@@ -159,7 +161,7 @@ if(Space_Group==0)
    while (!fh_aph.eof()) {
       try {
          getline(fh_aph,line);
-         if(string::npos != 
+         if(string::npos !=
 	    line.find("   H   K   L      A      P     FOM*100         REJECTS"))
 	    break;
       }
@@ -185,12 +187,12 @@ if(Space_Group==0)
          {
 	 case(1):
 	    break;
-	 case(90)://P4212   
+	 case(90)://P4212
 	   if(h>k || h<0 || l< 0)
 	      {cerr << "\nHORROR reflection outside the assymetric unit\n"
 	            << "(h,k,l)=" << h <<" " << k << " " <<l <<endl;
 	       exit(1);
-	   break;    
+	   break;
 	      }
 	 }//switch end
       }
@@ -202,7 +204,7 @@ if(Space_Group==0)
    }/* while */
    // Close file
    fh_aph.close();
-   
+
    fn_aph=fn;
 
 }/*  APHFile2D::read */

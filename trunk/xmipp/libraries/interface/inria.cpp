@@ -2,39 +2,36 @@
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
-/***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippINRIA.hh"
+#include "inria.h"
+
 #ifdef _HAVE_INRIA
 #include <typedefs.h>
 #include <extrema.h>
 #include <recline.h>
 
-#include <XmippData/xmippVolumes.hh>
+#include <data/volume.h>
 
 /* Derivative -------------------------------------------------------------- */
 void compute_derivative(const matrix3D<double> &in_vol,
@@ -44,7 +41,7 @@ void compute_derivative(const matrix3D<double> &in_vol,
    int borderLengths[3]={1,1,1};
    recursiveFilterType filterType=ALPHA_DERICHE;
    float filterCoefs[3];
-   filterCoefs[0] = filterCoefs[1] = filterCoefs[2] = sigma; 
+   filterCoefs[0] = filterCoefs[1] = filterCoefs[2] = sigma;
    int Dims[3];
    Dims[2]= ZSIZE(in_vol);
    Dims[1]= YSIZE(in_vol);

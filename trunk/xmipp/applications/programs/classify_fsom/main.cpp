@@ -6,34 +6,35 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
-   University of California, Los Angeles   
+   University of California, Los Angeles
 */
 
 // To avoid problems with long template names
 #pragma warning(disable:4786)
 
 #include <fstream>
-#include <Classification/xmippFuzzySOM.hh>
+
+#include <classification/fuzzy_som.h>
 
 /* Prototypes -============================================================= */
 
@@ -56,7 +57,7 @@ unsigned       iter = 1000;	// Iteration number
 unsigned       verb = 0;	// Verbosity level
 bool           norm = 1;	// Normalize?
 unsigned       xdim;		// X-dimension (-->)
-unsigned       ydim;		// Y-dimension 
+unsigned       ydim;		// Y-dimension
 double	       m0 = 2.0;	// Initial m
 double         m1 = 1.01;	// Final m
 double         reg;		// Regularization (smoothness) parameter
@@ -71,16 +72,16 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
        if (check_param(argc, argv, "-din"))
          fn_in = get_param(argc, argv, "-din");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-cout"))
           fn_out = get_param(argc, argv, "-cout");
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-cvin"))
        	  cb_in = get_param(argc, argv, "-cvin");
@@ -89,16 +90,16 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
        if (check_param(argc, argv, "-xdim"))
 	 xdim= AtoI(get_param(argc, argv, "-xdim"));
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-ydim"))
 	 ydim= AtoI(get_param(argc, argv, "-ydim"));
        else {
-         Usage(argv); 
+         Usage(argv);
 	 exit(EXIT_FAILURE);
-       } 
+       }
 
        if (check_param(argc, argv, "-hexa")) {
        	  if (check_param(argc, argv, "-rect")) {
@@ -108,7 +109,7 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
 	  layout = "HEXA";
        } else if (check_param(argc, argv, "-rect"))
           layout = "RECT";
-         
+
        m0 =  AtoF(get_param(argc, argv, "-m0", "2.0"));
        m1 =  AtoF(get_param(argc, argv, "-m1", "1.01"));
        reg =  AtoF(get_param(argc, argv, "-reg", "0.5"));
@@ -122,7 +123,7 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
        else norm = false;
 
        annSteps = AtoI(get_param(argc, argv, "-steps", "1000"));
-       
+
        if (check_param(argc, argv, "-saveclusters"))
           saveClusters = true;
        else saveClusters = false;
@@ -132,19 +133,19 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
        else use_rand_cvs = false;
 
        if (argc == 1) {Usage(argv);}
-       
+
    }
    catch (Xmipp_error XE) {cout << XE; Usage(argv);}
 
 
 /* Some validations ===================================================== */
-  
+
 
    if (iter < 1) {
      cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << endl;
      exit(EXIT_FAILURE);
    }
-   
+
    if (verb < 0 || verb > 2) {
      cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << endl;
      exit(EXIT_FAILURE);
@@ -174,7 +175,7 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
      cerr << argv[0] << ": invalid value for smoothness parameter (must be > 0): " << reg << endl;
      exit(EXIT_FAILURE);
    }
-   
+
    if (xdim < 1) {
      cerr << argv[0] << ": invalid value for xdim (must be > 1): " << xdim << endl;
      exit(EXIT_FAILURE);
@@ -219,7 +220,7 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
 /* Open training vector ================================================= */
 
   cout << endl << "Reading file " << fn_in << "....." << endl;
-  
+
   ifstream inStream(fn_in.c_str());
   if (!inStream) {
       cerr << argv[0] << ": can't open file " << fn_in << endl;
@@ -227,7 +228,7 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
   }
 
   xmippCTVectors ts(0, true);
-  try 
+  try
     {
       inStream >> ts;
     }
@@ -245,28 +246,28 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
 
    if (norm) {
    	cout << "Normalizing....." << endl;
-   	ts.normalize();  		    // Normalize input data        
+   	ts.normalize();  		    // Normalize input data
    }	
 
    xmippFuzzyMap *myMap;
-   
+
    if (cb_in != "") {
-        cout << "Reading fuzzy codevectors file " << cb_in << "....." << endl;   
+        cout << "Reading fuzzy codevectors file " << cb_in << "....." << endl;
         ifstream codeStream(cb_in.c_str());
         if (!codeStream) {
           cerr << argv[0] << ": can't open file " << cb_in << endl;
           exit(EXIT_FAILURE);
         }
 	myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
-   } else    
+   } else
         myMap = new xmippFuzzyMap(layout, xdim, ydim, ts, use_rand_cvs);
 
-   
+
    xmippFuzzySOM *thisSOM;
    if (fn_algo_in == "") {
    	thisSOM = new xmippFuzzySOM(m0, m1, annSteps, reg, eps, iter);    // Creates FSOM Algorithm
    } else {
-        cout << "Reading algorithm file " << fn_algo_in << "....." << endl << endl;   
+        cout << "Reading algorithm file " << fn_algo_in << "....." << endl << endl;
         ifstream algoStream(fn_algo_in.c_str());
         if (!algoStream) {
           cerr << argv[0] << ": can't open file " << fn_algo_in << endl;
@@ -305,12 +306,12 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
    cout << "Calibrating....." << endl;
    myMap->calibrate(ts);
 
-  /******************************************************* 
-      Saving all kind of Information 
+  /*******************************************************
+      Saving all kind of Information
   *******************************************************/
 
-   cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".inf"; 
+   cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".inf";
    ofstream infS(tmpN.c_str());
    infS << "Fuzzy SOM algorithm" << endl << endl;
    infS << "Input data file : " << fn_in << endl;
@@ -340,64 +341,64 @@ bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
    infS << "Stopping criteria (eps) = " << eps << endl;
    infS << "Quantization error : " <<  dist << endl;
    infS << "Functional : " <<  functional << " (fidelity = " << fidelity << " penalty = " << penalty << " )" << endl << endl;
-   infS.flush();    
+   infS.flush();
 
    // assign data to clusters according to fuzzy threshold
    if (saveClusters) {
-   	cout << "Saving neurons assigments ....." << endl;  
+   	cout << "Saving neurons assigments ....." << endl;
    	for (unsigned i= 0; i < myMap->size(); i++) {
-		tmpN = fn_out.c_str() + (string) "."  + ItoA(i); 
+		tmpN = fn_out.c_str() + (string) "."  + ItoA(i);
    		ofstream cStream(tmpN.c_str());
 		for (int j = 0; j < myMap->classifAt(i).size(); j++)
    			cStream << myMap->classifAt(i)[j] << endl;
-   		cStream.flush();    
+   		cStream.flush();
    	}
    }
 
    // save .vs file to be compatible with SOM_PAK
-   cout << "Saving visual file as " << fn_out << ".vs ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".vs"; 
+   cout << "Saving visual file as " << fn_out << ".vs ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".vs";
    ofstream vsStream(tmpN.c_str());
    vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " gaussian" << endl;
    for (int i= 0; i < ts.size(); i++) {
    	int j = myMap->fuzzyWinner(i);
    	vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << myMap->memb[i][j] << " " << ts.theTargets[i] << endl;
-   }   
-   vsStream.flush();    
+   }
+   vsStream.flush();
 
 
    // save .his file (Histogram)
-   cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".his"; 
+   cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".his";
    ofstream hisStream(tmpN.c_str());
    myMap->printHistogram(hisStream);
-   hisStream.flush();    
+   hisStream.flush();
 
    // save .err file (Average Quantization Error)
-   cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".err"; 
+   cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".err";
    ofstream errStream(tmpN.c_str());
    myMap->printQuantError(errStream);
-   errStream.flush();    
+   errStream.flush();
 
    if (norm) {
    	cout << "Denormalizing code vectors....." << endl;
-   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors        
+   	myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors
    }	
 
-   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;  
-   tmpN = fn_out.c_str() + (string) ".cod"; 
+   cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;
+   tmpN = fn_out.c_str() + (string) ".cod";
    ofstream codS(tmpN.c_str());
    codS << *myMap;
-   codS.flush();    
+   codS.flush();
 
 
    cout << endl;
-   
+
    delete myMap;
    delete thisSOM;
 
-   
+
  } catch ( const exception& e ) {
     cout << e.what() << endl;
  }
@@ -412,28 +413,28 @@ void Usage (char **argv) {
   printf (
      "\nUsage: %s [Purpose and Parameters]"
      "\nPurpose: Fuzzy Self-Organizing Feature Map"
-     "\n"           
+     "\n"
      "\nParameter Values: (note space before value)"
      "\n"
      "\n    -din    file_in           Input data file"
      "\n    -cout   file_out          Base name for output data files "
      "\n    -cvin   file_in           Codevectors input file"
-     "\n    -saveclusters    	      save clusters in separate files (Default = No)"     
+     "\n    -saveclusters    	      save clusters in separate files (Default = No)"
      "\n    -xdim   H-dimension	      Horizontal size of the map"
      "\n    -ydim   V-dimension       Vertical size of the map"
-     "\n    -hexa    	   	      Hexagonal topology"     
-     "\n    -rect    	   	      Rectangular topology (default)"     
-     "\n    -steps  steps    	      Deterministic annealing steps (default = 1000)"     
+     "\n    -hexa    	   	      Hexagonal topology"
+     "\n    -rect    	   	      Rectangular topology (default)"
+     "\n    -steps  steps    	      Deterministic annealing steps (default = 1000)"
      "\n    -m0     Initial m         Initial Fuzzy constant (default = 2)"
-     "\n    -m1     Final m 	      Final Fuzzy constant (default = 1.02)"     
-     "\n    -reg    smoothness        Smoothness factor (default = 0.5)"     
+     "\n    -m1     Final m 	      Final Fuzzy constant (default = 1.02)"
+     "\n    -reg    smoothness        Smoothness factor (default = 0.5)"
      "\n    -eps    Epsilon 	      Stopping criteria (default = 1e-7)"
-     "\n    -iter   iterations        Number of iterations (default = 1000)"     
-     "\n    -norm            	      Normalize training data (default)"     
-     "\n    -verb   verbosity         Information level while running: "     
-     "\n    			      0: No information (default)"     
-     "\n    			      1: Progress bar"     
-     "\n    			      2: Code vectors change between iterations"     
+     "\n    -iter   iterations        Number of iterations (default = 1000)"
+     "\n    -norm            	      Normalize training data (default)"
+     "\n    -verb   verbosity         Information level while running: "
+     "\n    			      0: No information (default)"
+     "\n    			      1: Progress bar"
+     "\n    			      2: Code vectors change between iterations"
      "\n    -randomcodevectors        Use truly randomized codevectors (default: FALSE)"
      "\n			   \n"
      ,argv[0]);

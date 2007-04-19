@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippDocFiles.hh>
-#include <XmippData/xmippGeometry.hh>
+#include <data/progs.h>
+#include <data/args.h>
+#include <data/docfile.h>
+#include <data/geometry.h>
 
 class Shift_Scale_parameters: public Prog_parameters {
 public:
@@ -40,14 +40,14 @@ public:
    int              colX_shift;
    int              colX_scale;
    int              Docfile;
-   
+
 
    void read(int argc, char **argv) {
       Prog_parameters::read(argc,argv);
       int i_shift=position_param(argc,argv,"-shift");
       int i_scale=position_param(argc,argv,"-scale");
       center_mass=check_param(argc,argv,"-center_mass");
-      
+
       if (i_shift==-1 && i_scale==-1 && !center_mass)
          REPORT_ERROR(1,"Shift_Scale:: Cannot find -shift or -scale");
       else if (ABS(i_shift-i_scale)<=1 && !center_mass)
@@ -62,7 +62,7 @@ public:
 	    // if(colX_shift<0)
             //   REPORT_ERROR(1,"colX_shift must be no less than 3");
 	 } else colX_shift= -1;
-         
+
          if(i_scale>0){
             DF_scales.read(argv[i_scale+1]);
   	    colX_scale=AtoI(get_param(argc,argv,"-colX_scale","5"));
@@ -88,11 +88,11 @@ public:
                shift.init_zeros(my_dim);
  	 if (!check_param(argc,argv,"-scale"))
           {scale.resize(my_dim); scale.init_constant(1);}
-      }	 
+      }	
       wrap=!check_param(argc,argv,"-dont_wrap");
       store_in_header=check_param(argc,argv,"-store_in_header");
    }
-   
+
    void show() {
       Prog_parameters::show();
       if (wrap) cout << "Wrapping image/volume\n";
@@ -134,7 +134,7 @@ public:
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
    Shift_Scale_parameters *eprm=(Shift_Scale_parameters *) prm;
-   matrix2D<double> A(3,3); A.init_identity(); 
+   matrix2D<double> A(3,3); A.init_identity();
 
    if (eprm->DF_shifts.name()!=""){
       eprm->shift.resize(2);
@@ -143,7 +143,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       eprm->DF_shifts.next_data_line();
    }
    else if (eprm->Docfile!=false) {
-      eprm->shift.resize(2); 
+      eprm->shift.resize(2);
       eprm->shift.init_constant(0.);
    } else if (eprm->center_mass) {
       img().center_of_mass(eprm->shift);
@@ -159,7 +159,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
       eprm->DF_scales.next_data_line();
    }
    else if (eprm->Docfile!=false || eprm->center_mass){
-      eprm->scale.resize(2); 
+      eprm->scale.resize(2);
       eprm->scale.init_constant(1.);
    }
    A(0,0)=XX(eprm->scale);
@@ -170,11 +170,11 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   matrix2D<double> A(4,4); A.init_identity(); 
+   matrix2D<double> A(4,4); A.init_identity();
    Shift_Scale_parameters *eprm=(Shift_Scale_parameters *) prm;
 //   if (eprm->DF_shifts.name()=="")
 //        ;//shift is already filled
-//   else 
+//   else
   if (eprm->DF_shifts.name()!=""){
       eprm->shift.resize(3);
       XX(eprm->shift)=eprm->DF_shifts(eprm->colX_shift);
@@ -183,7 +183,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       eprm->DF_shifts.next_data_line();
    }
    else if (eprm->Docfile!=false){
-      eprm->shift.resize(3); 
+      eprm->shift.resize(3);
       eprm->shift.init_constant(1.);
    }
    A(0,3)=XX(eprm->shift);
@@ -191,7 +191,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
    A(2,3)=ZZ(eprm->shift);
 //   if(eprm->scale.get_dim()>1)
 //      ;//scale already filled
-//   else 
+//   else
    if (eprm->DF_scales.name()!=""){
       eprm->scale.resize(3);
       XX(eprm->scale)=eprm->DF_scales(eprm->colX_scale);
@@ -200,7 +200,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
       eprm->DF_scales.next_data_line();
    }
    else if (eprm->Docfile!=false){
-      eprm->scale.resize(3); 
+      eprm->scale.resize(3);
       eprm->scale.init_constant(1.);
    }
    A(0,0)=XX(eprm->scale);

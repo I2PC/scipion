@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Author:     Javier Rodríguez Fernández (javrodri@gmail.com)
+ * Author:     Javier Rodrï¿½guez Fernï¿½ndez (javrodri@gmail.com)
  *             Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -8,41 +8,43 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showPlotter.hh"
-#include "../showTools.hh"
+#include "show_plotter.h"
+#include "show_tools.h"
+
 #include <qpainter.h>
 #include <qfiledialog.h>
 #include <qstyle.h>
 #include <qstatusbar.h>
 #include <qmime.h>
 #include <qapplication.h>
-#include <math.h>
+
+#include <cmath>
 
 /* Empty constructor ------------------------------------------------------- */
 PlotSettings::PlotSettings() {
-    minX = 0.0; 
-    maxX = 0.2; 
+    minX = 0.0;
+    maxX = 0.2;
     numXTicks = 5;
-    
-    minY = 0.0;  
-    maxY = 0.2;  
+
+    minY = 0.0;
+    maxY = 0.2;
     numYTicks = 5;
 }
 
@@ -53,7 +55,7 @@ void PlotSettings::scroll(int dx,int dy) {
    double stepX = spanX() / numXTicks;
    minX += dx*stepX;
    maxX += dx*stepX;
-   
+
    double stepY = spanY() / numYTicks;
    minY += dy*stepY;
    maxY += dy*stepY;
@@ -74,34 +76,34 @@ void PlotSettings::adjustAxis(double &min,double &max) {
     // this to take the decimal logarithm of the gross step, to be nice for
     double step = pow(10,floor(log10(grossStep)));
     // the user, for ex. gross Step = 236, log 236 = 2.37291...,
-    // we round it down to 2, and obtain 10²=100, as the candidate.
+    // we round it down to 2, and obtain 10ï¿½=100, as the candidate.
     // and calculate the other two candidates ex. 5*100=500 and 2*100=200
     if      (5*step < grossStep)  step *=5;
     else if (2*step < grossStep)  step *=2;
-    
+
     // Obtained by rounding the original min down to the nearest multiple
     // of the step
     min = floor(min/step) * step;
-    // rounding up to the nearest multiple of the step. 
-    max = ceil(max/step) * step; 
+    // rounding up to the nearest multiple of the step.
+    max = ceil(max/step) * step;
 }
 
 /*****************************************************************************/
 /* Empty constructor ------------------------------------------------------- */
 Plotter::Plotter(QWidget *parent, const char *name) :QMainWindow(parent,name) {
    // To use white component to provide easy printing
-   setBackgroundMode(PaletteBase); 
+   setBackgroundMode(PaletteBase);
 
    // It makes the layout manager responsible for the widget willing to
    // grow or shrink
    setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
-   
+
    // Makes the widget accept focus by clicking or by pressing Tab
    setFocusPolicy(StrongFocus);
 
    // Initially there is no rubber band
    rubberBandIsShown= false;
-    
+
    // Add XmippGraphics/images to the MIME Path
    QMimeSourceFactory::defaultFactory()->addFilePath(
       (xmippBaseDir()+"/Lib/XmippGraphics/images").c_str());
@@ -112,26 +114,26 @@ Plotter::Plotter(QWidget *parent, const char *name) :QMainWindow(parent,name) {
    saveButton->adjustSize();
    saveButton->setFixedSize(15,15);
    connect( saveButton, SIGNAL( clicked() ),this, SLOT( saveToFile() ) );
-      
-   //Buttons to zoomin&out 
+
+   //Buttons to zoomin&out
    zoomInButton = new QToolButton(this);
    zoomInButton->setIconSet(xmipp_qPixmapFromMimeSource("zoomin20.png"));
    zoomInButton->adjustSize();
    zoomInButton->setFixedSize(20,20);
-   zoomInButton->hide(); 
+   zoomInButton->hide();
    connect(zoomInButton, SIGNAL(clicked()),this, SLOT(zoomIn()));
-   
+
    zoomOutButton = new QToolButton(this);
    zoomOutButton ->setIconSet(xmipp_qPixmapFromMimeSource("zoomout20.png"));
    zoomOutButton->adjustSize();
    zoomOutButton->setFixedSize(20,20);
-   zoomOutButton->hide(); 
+   zoomOutButton->hide();
    connect(zoomOutButton, SIGNAL(clicked()),this, SLOT(zoomOut()));
 
    //Number of posible zooms
    zoomStack.resize(1);
-   curZoom=0; 
-   zoomStack[curZoom] = PlotSettings(); 
+   curZoom=0;
+   zoomStack[curZoom] = PlotSettings();
 
    // Create status bar
    createStatusBar();
@@ -171,7 +173,7 @@ Plotter::~Plotter() {
 void Plotter::zoomOut() {
     if (curZoom>0) {
        --curZoom;
-       zoomOutButton->setEnabled (curZoom >0); 
+       zoomOutButton->setEnabled (curZoom >0);
        zoomInButton->setEnabled(true);
        zoomInButton->show();
        refreshCurves();
@@ -183,7 +185,7 @@ void Plotter::zoomOut() {
 void Plotter::zoomIn() {
     if (curZoom<1) {
        ++curZoom;
-       zoomInButton->setEnabled(curZoom == 0); 
+       zoomInButton->setEnabled(curZoom == 0);
        zoomOutButton->setEnabled(true);
        zoomOutButton->show();
        refreshCurves();
@@ -213,9 +215,9 @@ void Plotter::setCurveData(int id, const matrix1D<double> &X,
 }
 
 void Plotter::setCurveData(int id, const matrix2D<double> &data) {
-    curveMap[id]=data;   
+    curveMap[id]=data;
     curveActive[id]=true;
-    
+
     // Determine the bounding box of this data
     double data_minX, data_maxX, data_minY, data_maxY;
     data_minX=data_maxX=data(0,0);
@@ -239,7 +241,7 @@ void Plotter::setCurveData(int id, const matrix2D<double> &data) {
        zoomStack[curZoom].maxY=MAX(zoomStack[curZoom].maxY,data_maxY);
     }
     zoomStack[curZoom].adjust();
-    
+
     refreshCurves();
 }
 
@@ -269,17 +271,17 @@ void Plotter::paintEvent(QPaintEvent *event) {
        bitBlt(this, rects[i].topLeft(),&pixmap,rects[i]);
        // (dest, destPos, source widget, sourceRect->
        // rectangle in the source that should be copied)
-       
+
     QPainter painter(this);
-    
+
     if (rubberBandIsShown) {
        // Ensure good contrast with the white background.
        painter.setPen(colorGroup().dark());
        painter.drawRect(rubberBandRect.normalize());
     }
-    
+
     if (hasFocus())
-       style().drawPrimitive (QStyle::PE_FocusRect, &painter, 
+       style().drawPrimitive (QStyle::PE_FocusRect, &painter,
           rect(), colorGroup(), QStyle::Style_FocusAtBorder,
           colorGroup().dark());
 }
@@ -308,14 +310,14 @@ void Plotter::mousePressEvent(QMouseEvent *event) {
        updateRubberBandRegion();
        setCursor(crossCursor); // and we change the cursor to a crosshair
     }
-    
+
     if (event->button() == RightButton) {
        setCursor(crossCursor); // and we change the cursor to a crosshair
        rubberBandRect.setLeft(event->pos().x());
        rubberBandRect.setTop(event->pos().y());
        rubberBandRect.setRight(event->pos().x());
        rubberBandRect.setBottom(event->pos().y());
-       updateRubberBandRegion();       
+       updateRubberBandRegion();
     }
 }
 
@@ -327,7 +329,7 @@ void Plotter::mouseMoveEvent(QMouseEvent *event) {
    rubberBandRect.setRight(event->pos().x());
    rubberBandRect.setBottom(event->pos().y());
    updateRubberBandRegion();
-   
+
    QRect rect = rubberBandRect.normalize();
    rect.moveBy(-Margin, -Margin);
 
@@ -342,13 +344,13 @@ void Plotter::mouseMoveEvent(QMouseEvent *event) {
    Possettings.adjust();
    Possettings.posX = (prevPosSettings.minX) + rect.left()   * dx;
    Possettings.posY = (prevPosSettings.maxY) - rect.bottom() * dy;
-       
+
    updateCellIndicators(Possettings.posX,Possettings.posY);
-   
+
    //When the user moves the cursor while holding the left button
    if (event->state() & LeftButton) {
       // Repaint the rubber band in the new position
-      updateRubberBandRegion(); 
+      updateRubberBandRegion();
       rubberBandRect.setRight(event->pos().x());
       rubberBandRect.setBottom(event->pos().y());
       updateRubberBandRegion();
@@ -381,18 +383,18 @@ void Plotter::updateModLabel(const QString & message) {
 
 /* Mouse release event ----------------------------------------------------- */
 void Plotter::mouseReleaseEvent(QMouseEvent *event) {
-   if (event->button() == LeftButton) {  
+   if (event->button() == LeftButton) {
       //When the user releases the button we erase the rubberband
       rubberBandIsShown = false;
       updateRubberBandRegion();
       //Restore the standard arrow cursor
       unsetCursor();
-       
+
       QRect rect = rubberBandRect.normalize();
-      /* If the rubberband is at least 4x4, we perform the zoom, 
-          If it is smaller, it's likely that the user clicked the 
+      /* If the rubberband is at least 4x4, we perform the zoom,
+          If it is smaller, it's likely that the user clicked the
  .       widget by mistake or to give focus, so we do nothing */
-      if (rect.width()<4 || rect.height()<4) return;   
+      if (rect.width()<4 || rect.height()<4) return;
 
       rect.moveBy(-Margin, -Margin);
       PlotSettings prevSettings = zoomStack [curZoom];
@@ -404,7 +406,7 @@ void Plotter::mouseReleaseEvent(QMouseEvent *event) {
       settings.minY  = prevSettings.maxY - dy * rect.bottom();
       settings.maxY  = prevSettings.maxY - dy * rect.top();
       settings.adjust();
-       
+
       zoomStack.resize(curZoom + 1);
       zoomStack.push_back(settings);
       zoomIn();
@@ -413,7 +415,7 @@ void Plotter::mouseReleaseEvent(QMouseEvent *event) {
    if (event->button() == RightButton){
       QRect rect = rubberBandRect.normalize();
       rect.moveBy(-Margin, -Margin);
-       
+
       PlotSettings prevPosSettings = zoomStack [curZoom];
       PlotSettings Possettings;
       double dx = prevPosSettings.spanX() / (width() -2 * Margin);
@@ -425,7 +427,7 @@ void Plotter::mouseReleaseEvent(QMouseEvent *event) {
       Possettings.adjust();
       Possettings.posX  = prevPosSettings.minX + rect.left()   * dx;
       Possettings.posY  = prevPosSettings.maxY - rect.bottom() * dy;
-       
+
       updateCellIndicators(Possettings.posX,Possettings.posY);
       unsetCursor();
    }
@@ -440,10 +442,10 @@ void Plotter::mouseReleaseEvent(QMouseEvent *event) {
    - Up    Arrow  : Move up
    - Down  Arrow  : Move down */
 void Plotter::keyPressEvent(QKeyEvent *event) {
-   PlotSettings Settings = zoomStack [curZoom];       
+   PlotSettings Settings = zoomStack [curZoom];
    switch ( event->key()) {
       case Key_Q:
-         if (event->state() == ControlButton) // If 'Ctrol Q' key, 
+         if (event->state() == ControlButton) // If 'Ctrol Q' key,
   	    exit(0); // Terminate program
          break;
       case Key_Plus:
@@ -481,9 +483,9 @@ void Plotter::keyPressEvent(QKeyEvent *event) {
 /* Event to control mouse wheel to perform zoom */
 void Plotter::wheelEvent(QWheelEvent * event) {
    //delta() returns the distance the wheel was rotated in eights of degree
-   int numDegrees = event->delta() / 8; 
+   int numDegrees = event->delta() / 8;
    int numTicks = numDegrees / 15; //mice tipically work in steps of 15 degrees
-    
+
    if (event->orientation() == Horizontal)
       zoomStack[curZoom].scroll(numTicks,0);
    else
@@ -502,7 +504,7 @@ void Plotter::updateRubberBandRegion() {
 
 /* Refresh pixmap ---------------------------------------------------------- */
 void Plotter::refreshPixmap() {
-    pixmap.resize(size()); // Resize the pixmap to the same size as the widget 
+    pixmap.resize(size()); // Resize the pixmap to the same size as the widget
     pixmap.fill(this,0,0); // Fill it with the widget erase color
     QPainter painter(&pixmap,this); //To draw on the pixmap
     drawGrid(&painter); // to perform the drawing
@@ -518,10 +520,10 @@ void Plotter::drawGrid(QPainter *painter) {
     QPen light;
     light.setColor(white);
     quiteDark.setColor(black);
-    
+
     for(int i =0;i<=settings.numXTicks;i++) {
         int x = rect.left() + (i * (rect.width()-1) / settings.numXTicks);
-        
+
         painter->setPen(quiteDark);
         painter->drawLine(x,rect.top(),x,rect.bottom());
         painter->drawLine(x,rect.bottom(),x,rect.bottom() + 5);
@@ -535,7 +537,7 @@ void Plotter::drawGrid(QPainter *painter) {
         /* COSS: This is showing the inverse of the X axis. Valid only for
                  Fourier plots*/
         /*
-        double uplabel; 
+        double uplabel;
         if (label > 0.001) uplabel = 1/label;
         else uplabel = 0;
 
@@ -561,18 +563,18 @@ void Plotter::drawGrid(QPainter *painter) {
 void Plotter::drawCurves(QPainter *painter) {
    QPen pen1 (red,   1, SolidLine);
    QPen pen2 (blue , 1, DotLine);
-   QPen pen3 (green, 1, DashLine); 
-   QPen pen4 (black, 1, DashDotLine); 
+   QPen pen3 (green, 1, DashLine);
+   QPen pen4 (black, 1, DashDotLine);
 
    QPen penForIds[4] = {pen1,pen2,pen3,pen4};
    PlotSettings settings = zoomStack[curZoom];
 
-   // Set the clip region as a rectangle that 
+   // Set the clip region as a rectangle that
    // contains the curves, so it will ignore drawing operations outside
    // the area
    QRect rect(Margin ,Margin , width()-2 *Margin, height() -2*Margin);
-   painter->setClipRect(rect.x() +1,rect.y()+1,rect.width() -2, rect.height()-2); 
-   
+   painter->setClipRect(rect.x() +1,rect.y()+1,rect.width() -2, rect.height()-2);
+
    map <int, matrix2D<double> > ::const_iterator it = curveMap.begin();
    while(it != curveMap.end()) {
       // The first member of the it value gives us the ID
@@ -595,7 +597,7 @@ void Plotter::drawCurves(QPainter *painter) {
             if (fabs(x)<32768 && fabs(y)<32768)
                points[numPoints++] = QPoint((int)x,(int)y);
          }
-         
+
          points.truncate(numPoints);
          painter->setPen(penForIds[(uint) id % 4]);
          painter->drawPolyline(points);
@@ -607,7 +609,7 @@ void Plotter::drawCurves(QPainter *painter) {
 }
 
 void Plotter::refreshCurves() {
-   // Resize the pixmap to have the same size as the widget 
+   // Resize the pixmap to have the same size as the widget
    pixmap.resize(size());
    pixmap.fill(this,0,0); //and fill it with the widget erase color
    QPainter painter(&pixmap,this); //To draw on the pixmap
@@ -620,21 +622,21 @@ void Plotter::createStatusBar() {
    locationLabelX = new QLabel("X Value",this);
    locationLabelX->setAlignment(AlignHCenter);
    locationLabelX->setMinimumSize(locationLabelX->sizeHint());
-   
+
    locationLabelY = new QLabel("Y Value",this);
    locationLabelY->setAlignment(AlignHCenter);
    locationLabelY->setMinimumSize(locationLabelY->sizeHint());
-   
+
    statusBar()->addWidget(locationLabelX);
    statusBar()->addWidget(locationLabelY);
    statusBar()->addWidget(saveButton);
 }
 
-void Plotter::saveToFile() {       
+void Plotter::saveToFile() {
    int lastSlashPos;
    int length;
    FileName file;
-   
+
    QString fileName = QFileDialog::getSaveFileName("","*.png",this);
    if (!fileName.isEmpty()) {
        length = fileName.length();

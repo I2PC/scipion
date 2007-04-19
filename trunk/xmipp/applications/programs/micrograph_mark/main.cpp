@@ -7,33 +7,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include <XmippData/xmippArgs.hh>
-#include "qapplication.h"
-#include "QtMainWidgetMark.hh"
-#include "QtWidgetPSD.hh"
+#include <data/args.h>
 
-/* Prototypes -------------------------------------------------------------- */
+#include <qapplication.h>
+
+#include "main_widget_mark.h"
+#include "widget_psd.h"
+
 void Usage();
 
-/* Main -------------------------------------------------------------------- */
 int main( int argc, char **argv ) {
    FileName fnRaw;
    FileName fnRawTilted;
@@ -55,21 +54,21 @@ int main( int argc, char **argv ) {
 
    try {
       Micrograph m, mTilted;
-      
+
       m.open_micrograph( fnRaw, reversed );
       m.compute_8_bit_scaling();
       if ( fnRawTilted != "" ) {
          mTilted.open_micrograph( fnRawTilted, reversed );
 	 mTilted.compute_8_bit_scaling();
       }
-      
+
       // Configure application .............................................
       QApplication app( argc, argv );
       QtMainWidgetMark *mainWidget;
-      
+
       if ( fnRawTilted == "" ) mainWidget = new QtMainWidgetMark( &m );
       else mainWidget = new QtMainWidgetMark( &m, &mTilted );
-      
+
       // Check if the PSDs must be shown ...................................
       if (fn_assign_CTF!="") {
          QtWidgetPSD PSDshow;
@@ -81,7 +80,7 @@ int main( int argc, char **argv ) {
       // Run application ...................................................
       app.setMainWidget( mainWidget );
       mainWidget->show();
-      
+
       app.exec();
 
       // Finish ............................................................

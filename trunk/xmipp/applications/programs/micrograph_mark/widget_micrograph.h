@@ -28,7 +28,6 @@
 #ifndef __QT_WIDGET_MICROGRAPH_HH__
 #define __QT_WIDGET_MICROGRAPH_HH__
 
-/* Includes ---------------------------------------------------------------- */
 #include <qwidget.h>
 #include <qpainter.h>
 #include <qlayout.h>
@@ -37,10 +36,13 @@
 #include <qscrollbar.h>
 #include <qlabel.h>
 #include <qlineedit.h>
-#include "QtImageMicrograph.hh"
-#include "QtImageOverviewMicrograph.hh"
-#include "QtFileMenu.hh"
-#include <XmippData/xmippMasks.hh>
+
+#include "image_micrograph.h"
+#include "image_overview_micrograph.h"
+#include "file_menu.h"
+
+#include <data/mask.h>
+
 #include <vector>
 
 /* Forward declarations ---------------------------------------------------- */

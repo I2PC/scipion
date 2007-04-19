@@ -7,31 +7,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../showSpectra.hh"
+#include "show_spectra.h"
+#include "show_tools.h"
+
 #include <qcolordialog.h>
 #include <qfontdialog.h>
 #include <qmessagebox.h>
 #include <qlayout.h>
 #include <qpushbutton.h>
-#include <qtooltip.h> 
-#include "../showTools.hh"
+#include <qtooltip.h>
 
 /* Init/Clear data --------------------------------------------------------- */
 void ShowSpectra::init() {
@@ -43,7 +44,7 @@ void ShowSpectra::init() {
     axisColor = white;
     curveColor = white;
     QFont tmpFont("Clean", 6);
-    axisFont = tmpFont; 
+    axisFont = tmpFont;
     ShowSel::init();
 }
 
@@ -112,9 +113,9 @@ void ShowSpectra::initFromVectors() {
 }
 
 /* Init Rightclick menubar ------------------------------------------------- */
-void ShowSpectra::initRightclickMenubar() {    
-   menubar = new QPopupMenu(); 
-   setFileRightclickMenubar(); 
+void ShowSpectra::initRightclickMenubar() {
+   menubar = new QPopupMenu();
+   setFileRightclickMenubar();
 
    // Options .............................................................
    options =  new QPopupMenu();
@@ -127,9 +128,9 @@ void ShowSpectra::initRightclickMenubar() {
    options->insertItem( "View average and SD Images",  this,  SLOT(showStats()));
    options->insertItem( "Show average and SD Spectra", this,  SLOT(showSpectraStats()));
    options->insertSeparator();
-    
+
    // Insert options the menu
-   menubar->insertItem( "&Options", options );    
+   menubar->insertItem( "&Options", options );
    menubar->insertSeparator();
 
    // Inser Help and Quit
@@ -145,7 +146,7 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
    if (i >= listSize) return;
    int N=V->theItems[i].size();
 
-   if (indexOf(row,col) >= listSize) return; 
+   if (indexOf(row,col) >= listSize) return;
    QPixmap background( columnWidth(col), rowHeight(row) );
    background.fill(backColor);
    p->drawPixmap(0, 0, background);
@@ -171,9 +172,9 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
 
    // Calculate slope and intersection of linear transformation
    double slope=0;
-   if (myMinValue !=myMaxValue) 
+   if (myMinValue !=myMaxValue)
       slope=(scprojXdim-2*offX)/(myMaxValue-myMinValue);
-  
+
    // Paint X axis .........................................................
    QPen pen(axisColor);
    p->setPen(pen);
@@ -205,7 +206,7 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col,const QRect & cr,
          else	     tmpS.setNum((myMinValue+l*((myMaxValue-myMinValue)/3.0)), 'f', 2);
          p->drawText(2, (int) (scprojYdim-offY-(l*((scprojYdim-2*offY)/3.0))), tmpS);
       }
-      
+
       // Draw Y grid lines
       if (!options->isItemEnabled(mi_showgrid))
          p->drawLine(offX, (int) (scprojYdim-offY-(l*((scprojYdim-2*offY)/3.0))),
@@ -278,7 +279,7 @@ void ShowSpectra::changeYlegend() {changeBoolOption(mi_showYlegend, mi_hideYlege
 void ShowSpectra::showSpectraStats() {
    long counter=0;
    // get number of marked spectra
-   for (long i = 0; i<listSize; i++) if (cellMarks[i]) counter++; 
+   for (long i = 0; i<listSize; i++) if (cellMarks[i]) counter++;
    if (counter < 2)
        QMessageBox::about( this, "Error!", "No enough spectra selected\n");
    else {
@@ -288,13 +289,13 @@ void ShowSpectra::showSpectraStats() {
        long myIndex = 0;
        for (long i=0; i<listSize; i++)
    	 if (cellMarks[i]) {
-            mySpectra.theItems[myIndex] = V->theItems[i]; 
-            mySpectra.theTargets[myIndex] = V->theTargets[i]; 
+            mySpectra.theItems[myIndex] = V->theItems[i];
+            mySpectra.theTargets[myIndex] = V->theTargets[i];
             myIndex++;
-         } 
+         }
 
        xmippCTVectors *myVect = new xmippCTVectors(0, true);
-       *myVect = mySpectra.getStatVector();  
+       *myVect = mySpectra.getStatVector();
        ShowSpectra *myST = new ShowSpectra;
        myST->initWithVectors(1, 2, myVect, "Average and SD");
        myST->show();
@@ -398,19 +399,19 @@ SpectraFilter::SpectraFilter(int min, int max,
 
    // Allocate memory
    __current_values=new float[__N];
-   if (!__current_values) 
+   if (!__current_values)
       REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
    __scroll_min=new QScrollBar *[__N];
-   if (!__scroll_min) 
+   if (!__scroll_min)
       REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
    __scroll_max=new QScrollBar *[__N];
-   if (!__scroll_max) 
+   if (!__scroll_max)
       REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
    __label_min=new QLabel *[__N];
-   if (!__label_min) 
+   if (!__label_min)
       REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
    __label_max=new QLabel *[__N];
-   if (!__label_max) 
+   if (!__label_max)
       REPORT_ERROR(1,"SpectraFilter: Cannot allocate memory");
 
     // Set this window caption
@@ -424,14 +425,14 @@ SpectraFilter::SpectraFilter(int min, int max,
     Layout->addLayout( grid, 5 );
 
     // Label
-    QLabel     *label_min= new QLabel( this, "label" );    
+    QLabel     *label_min= new QLabel( this, "label" );
     label_min->setFont( QFont("times",12,QFont::Bold) );
     label_min->setText( "Minimum value" );
     label_min->setFixedSize(label_min->sizeHint());
     grid->addWidget( label_min, 0, 1, AlignCenter );
 
     // Label
-    QLabel     *label_max= new QLabel( this, "label" );    
+    QLabel     *label_max= new QLabel( this, "label" );
     label_max->setFont( QFont("times",12,QFont::Bold) );
     label_max->setText( "Maximum value" );
     label_max->setFixedSize(label_max->sizeHint());
@@ -439,9 +440,9 @@ SpectraFilter::SpectraFilter(int min, int max,
 
     // Create all sliders
     for (int i=0; i<__N; i++) {
-    
+
        // Label
-       __label_min[i]= new QLabel( this, "label" );    
+       __label_min[i]= new QLabel( this, "label" );
        __label_min[i]->setFont( QFont("courier",14) );
        __label_min[i]->setText( ItoA(min,3).c_str() );
        __label_min[i]->setFixedSize(__label_min[i]->sizeHint());
@@ -450,14 +451,14 @@ SpectraFilter::SpectraFilter(int min, int max,
        //Scroll Bar
        __scroll_min[i]= new QScrollBar(min, max, 1, 1, min,
           QScrollBar::Horizontal,this,"scroll");
-       __scroll_min[i]->setFixedWidth(100); 
-       __scroll_min[i]->setFixedHeight(15); 
+       __scroll_min[i]->setFixedWidth(100);
+       __scroll_min[i]->setFixedHeight(15);
        grid->addWidget( __scroll_min[i], i+1, 1, AlignCenter );
        connect( __scroll_min[i], SIGNAL(valueChanged(int)),
                                  SLOT(scrollValueChanged(int)) );
 
        // Label
-       QLabel     *label= new QLabel( this, "label" );    
+       QLabel     *label= new QLabel( this, "label" );
        label->setFont( QFont("times",12) );
        label->setText( ((string)"Harmonic "+ItoA(i+1,2)).c_str() );
        label->setFixedSize(label->sizeHint());
@@ -466,14 +467,14 @@ SpectraFilter::SpectraFilter(int min, int max,
        //Scroll Bar
        __scroll_max[i]= new QScrollBar(min, max, 1, 1, max,
           QScrollBar::Horizontal,this,"scroll");
-       __scroll_max[i]->setFixedWidth(100); 
-       __scroll_max[i]->setFixedHeight(15); 
+       __scroll_max[i]->setFixedWidth(100);
+       __scroll_max[i]->setFixedHeight(15);
        grid->addWidget( __scroll_max[i], i+1, 3, AlignCenter );
        connect( __scroll_max[i], SIGNAL(valueChanged(int)),
                                  SLOT(scrollValueChanged(int)) );
 
        // Label
-       __label_max[i]= new QLabel( this, "label" );    
+       __label_max[i]= new QLabel( this, "label" );
        __label_max[i]->setFont( QFont("courier",14) );
        __label_max[i]->setText( ItoA(max,3).c_str() );
        __label_max[i]->setFixedSize(__label_max[i]->sizeHint());
@@ -487,7 +488,7 @@ SpectraFilter::SpectraFilter(int min, int max,
     do_it->setFont( QFont("times",12,QFont::Bold) );
     do_it->setText( "Filter" );
     do_it->setFixedSize( do_it->sizeHint());
-    grid->addWidget( do_it, __N+1, 0, AlignCenter ); 
+    grid->addWidget( do_it, __N+1, 0, AlignCenter );
     QToolTip::add( do_it, "Select Spectra according to filter" );
     connect( do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()) );
 }

@@ -6,65 +6,65 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <Classification/xmippCTVectors.hh>
+#include <data/args.h>
+#include <data/volume.h>
+#include <classification/training_vector.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <algorithm>
-#include <math.h>
 
 int main(int argc, char **argv) {
-  FILE *fp; 
+  FILE *fp;
   float T;
   float tmpR;
   char *fname, *iname, *bmname, *imgName, *ext;
   string selname;
   VolumeXmipp mask;
-  vector < vector <float> > dataPoints;   
-  vector < string > labels;   
+  vector < vector <float> > dataPoints;
+  vector < string > labels;
   bool nomask = false;
   bool noBB = true;
   FileName  tmpN;
   int rows, cols, planes;
-      
+
 
   // Read arguments
-  
-  try { 
+
+  try {
     selname = get_param(argc, argv, "-sel");
     fname = get_param(argc, argv, "-iname", "out.dat");
     imgName = get_param(argc, argv, "-imgName", "img");
     ext = get_param(argc, argv, "-ext", "spi");
     bmname = get_param(argc, argv, "-mname", "mask.spi");
     if (check_param(argc, argv, "-nomask")) {
-      nomask = true; 
+      nomask = true;
       rows = AtoI(get_param(argc, argv, "-rows"));
-      cols = AtoI(get_param(argc, argv, "-cols"));      
-      planes = AtoI(get_param(argc, argv, "-planes"));      
+      cols = AtoI(get_param(argc, argv, "-cols"));
+      planes = AtoI(get_param(argc, argv, "-planes"));
     }
-    if (check_param(argc, argv, "-noBB")) 
-      noBB = true; 
-  } 
+    if (check_param(argc, argv, "-noBB"))
+      noBB = true;
+  }
   catch (Xmipp_error) {
     cout << "data2img: Convert a data set into a set of volumes" << endl;
     cout << "Usage:" << endl;
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 
   cout << "Given parameters are: " << endl;
   cout << "sel = " << selname << endl;
-  if (!nomask) 
+  if (!nomask)
      cout << "mname = " << bmname << endl;
   else {
       cout << "No mask is going to be used" << endl;
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
       cout << "Number of planes of the generated volumes: " << planes << endl;
   }
   cout << "iname = " << fname << endl;
-  cout << "imgName = " << imgName << endl;  
+  cout << "imgName = " << imgName << endl;
 
   // Read spider mask
    if (!nomask) {
@@ -100,11 +100,11 @@ int main(int argc, char **argv) {
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
 	//if (noBB)
-           mask().set_Xmipp_origin();   // sets origin at the center of the mask.        
+           mask().set_Xmipp_origin();   // sets origin at the center of the mask.
    	cout << mask;		     // Output Volumen Information
-   } 
+   }
 
-   cout << endl << "Reading input file...." << endl; 
+   cout << endl << "Reading input file...." << endl;
 
    ifstream iStream(fname);
    if (!iStream) {
@@ -113,58 +113,58 @@ int main(int argc, char **argv) {
    }
    xmippCTVectors ts(0, true);
    iStream >> ts;
-   
+
    FILE  *fout;
    fout = fopen(selname.c_str(), "w");
    if( fout == NULL ) {
     cerr << argv[0] << ": can't open file " << selname << endl;
-    exit(EXIT_FAILURE);   
+    exit(EXIT_FAILURE);
    }
 
    if (nomask && (planes*rows*cols != ts.theItems[0].size())) {
       cerr << argv[0] << ": Images size doesn't coincide with data file " << endl;
-      exit(EXIT_FAILURE);        
+      exit(EXIT_FAILURE);
    }
 
    cout << "generating volumes......" << endl;
-   
-   for (int i = 0; i < ts.size(); i++) {      
+
+   for (int i = 0; i < ts.size(); i++) {
       VolumeXmipp image;
-      if (nomask) 
-      	  image().resize(planes, rows, cols);   // creates image              
+      if (nomask)
+      	  image().resize(planes, rows, cols);   // creates image
       else {
-      	 image().resize(mask());         // creates image      
+      	 image().resize(mask());         // creates image
       }
-      image().set_Xmipp_origin();       // sets origin at the center of the image.        
+      image().set_Xmipp_origin();       // sets origin at the center of the image.
       int counter = 0;
       double minVal = MAXFLOAT;
      for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
       for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-        for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {        
+        for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {
 	// Checks if voxel is different from zero (it's inside the binary mask)
-	   if (nomask || mask(z,y,x) != 0) {    
-	        image(z,y,x) = (double) ts.theItems[i][counter];         
+	   if (nomask || mask(z,y,x) != 0) {
+	        image(z,y,x) = (double) ts.theItems[i][counter];
 		if (ts.theItems[i][counter] < minVal)
 		   minVal = ts.theItems[i][counter];
 		counter++;
 	   }
-      } // for x      
+      } // for x
       if (!nomask) {
       for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
         for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-          for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {        
+          for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++) {
 	     // Checks if pixel is zero (it's outside the binary mask)
-	     if (nomask || mask(z,y,x) == 0) 
-	        image(z, y,x) = (double) minVal;         
-          } // for x      
+	     if (nomask || mask(z,y,x) == 0)
+	        image(z, y,x) = (double) minVal;
+          } // for x
       } // if nomask.
 
-      tmpN = (string) imgName + ItoA(i) + (string) "." + (string) ext; 
+      tmpN = (string) imgName + ItoA(i) + (string) "." + (string) ext;
       image.write(tmpN);
-      fprintf(fout, "%s 1 \n", tmpN.c_str());      
+      fprintf(fout, "%s 1 \n", tmpN.c_str());
    }
    fclose(fout);      // close output file
    exit(0);
-} 
+}
 
 

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
@@ -31,18 +31,16 @@
 #ifndef XMIPP_VECTOR_OPS_H
 #define XMIPP_VECTOR_OPS_H
 
+#include <cmath>
+#include <stdexcept>
+#include <vector>
+#include <functional>
+#include <algorithm>
+#include <sstream>
 
-#include <math.h>                // for fabs()
-#include <stdexcept>             // runtime_error
-#include <vector>                // vector
-#include <functional>            // for plus<T>, minus<T>
-#include <algorithm>             // for transform()
-#include <sstream>               // for ostrstream
-#include "xmippUniform.hh"       // for Uniform (Random)
+#include "uniform.h"
 
 using namespace std;
-
-//-----------------------------------------------------------------------------
 
 /**@name Vector Operations*/
 //@{
@@ -50,7 +48,7 @@ using namespace std;
 /**
  *    Adds a scalar "a" to a vector "v"
  *    returns a vector	
- *    example: r = v+a 
+ *    example: r = v+a
  */
 template<class T> vector<T> operator+(const vector<T>& v, const T& a)
 {
@@ -60,9 +58,9 @@ template<class T> vector<T> operator+(const vector<T>& v, const T& a)
 }
 
 /**
- *    Adds a vector "v" to a scalar "a" 
+ *    Adds a vector "v" to a scalar "a"
  *    returns a vector	
- *    example: r = a+v 
+ *    example: r = a+v
  */
 template<class T> vector<T> operator+(const T& a, const vector<T>& v)
 {
@@ -74,7 +72,7 @@ template<class T> vector<T> operator+(const T& a, const vector<T>& v)
 /**
  *    Substract a scalar "a" to a vector "v"
  *    returns a vector	
- *    example: r = v-a 
+ *    example: r = v-a
  */
 template<class T> vector<T> operator-(const vector<T>& v, const T& a)
 {
@@ -84,9 +82,9 @@ template<class T> vector<T> operator-(const vector<T>& v, const T& a)
 }
 
 /**
- *    Substract a vector "v" to a scalar "a" 
+ *    Substract a vector "v" to a scalar "a"
  *    returns a vector	
- *    example: r = a-v 
+ *    example: r = a-v
  */
 template<class T> vector<T> operator-(const T& a, const vector<T>& v)
 {
@@ -96,9 +94,9 @@ template<class T> vector<T> operator-(const T& a, const vector<T>& v)
 }
 
 /**
- *    Multiply a vector "v" by a scalar "a" 
+ *    Multiply a vector "v" by a scalar "a"
  *    returns a vector	
- *    example: r = v*a 
+ *    example: r = v*a
  */
 template<class T> vector<T> operator*(const vector<T>& v, T a)
 {
@@ -108,9 +106,9 @@ template<class T> vector<T> operator*(const vector<T>& v, T a)
 }
 
 /**
- *    Multiply a scalar "a" by a vector "v" 
+ *    Multiply a scalar "a" by a vector "v"
  *    returns a vector	
- *    example: r = a*v 
+ *    example: r = a*v
  */
 template<class T> vector<T> operator*( T a, const vector<T>& v)
 {
@@ -121,9 +119,9 @@ template<class T> vector<T> operator*( T a, const vector<T>& v)
 
 
 /**
- *    Divides a vector "v" by a scalar "a" 
+ *    Divides a vector "v" by a scalar "a"
  *    returns a vector	
- *    example: r = v/a 
+ *    example: r = v/a
  */
 template<class T> vector<T> operator/(const vector<T>& v, T a)
 {
@@ -133,7 +131,7 @@ template<class T> vector<T> operator/(const vector<T>& v, T a)
 }
 
 /**
- *    Divides a scalar "a" by a vector "v" 
+ *    Divides a scalar "a" by a vector "v"
  *    returns a vector	
  *    example: r = a/v
  */
@@ -145,9 +143,9 @@ template<class T> vector<T> operator/( T a, const vector<T>& v)
 }
 
 /**
- *    *= operator 
+ *    *= operator
  *    returns a vector	
- *    example: v = v*r 
+ *    example: v = v*r
  */
 template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2)
 {
@@ -156,9 +154,9 @@ template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2)
 }
 
 /**
- *    /= operator 
+ *    /= operator
  *    returns a vector	
- *    example: v = v/r 
+ *    example: v = v/r
  */
 template<class T> vector<T>& operator/=(vector<T>& v1, const vector<T>& v2)
 {
@@ -200,7 +198,7 @@ vector<T>& operator += (vector<T>& _v1, const vector<T>& _v2)
   if (_v1.size()!=_v2.size())
     throw runtime_error("different size vectors in +=");
 
-  transform( _v1.begin(), _v1.end(), _v2.begin(), _v1.begin(), 
+  transform( _v1.begin(), _v1.end(), _v2.begin(), _v1.begin(),
 	     plus<T>() );
 
   return _v1;
@@ -230,7 +228,7 @@ vector<T>& operator -= (vector<T>& _v1, const vector<T>& _v2 )
  * @param _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
-template <class T> 
+template <class T>
 vector<T> operator + ( const vector<T>& _v1, const vector<T>& _v2)
 {
   if (_v1.size()!=_v2.size())
@@ -327,7 +325,7 @@ ostream& operator << ( ostream& _os, const vector<T>& _v )
   typename vector<T>::const_iterator i;
   for (i=_v.begin(); i!=_v.end(); i++) _os << *i << " ";
   //CO: copy( _v.begin(), _v.end(), ostream_iterator<T>( _os, " "));
-  _os<< ">";  
+  _os<< ">";
   return _os;
 };
 
@@ -337,26 +335,26 @@ ostream& operator << ( ostream& _os, const vector<T>& _v )
  * @param _v   The container to be read
  * @exception  runtime_error  If there are problems reading the vector
  */
-template <class T> 
+template <class T>
 istream& operator >> ( istream& _is, vector<T>& _v )
 {
   _v.clear();
 
   char c;
   _is >> c;
-  
+
   if (_is && c!='<')
     _is.setstate(ios::failbit);
 
   bool finish = false;
-  
+
   while (_is && !finish)
   {
     _is >> c;
-    
+
     if (!_is)
       return _is;
-    
+
     if (c=='>')
       finish=true;
     else
@@ -374,7 +372,7 @@ istream& operator >> ( istream& _is, vector<T>& _v )
 
   if (!_is)
     throw runtime_error("Error reading the vector");
-  
+
   return _is;
 };
 //@}

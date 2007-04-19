@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* SYMMETRIES                                                                */
@@ -51,12 +51,11 @@
 // matrix euality accuracy
 #define SYM_ACCURACY 1e-6
 
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippArgs.hh>
-#include <Reconstruction/grids.hh>
-//#include <Reconstruction/Programs/Prog_art_crystal.hh>
+#include <data/matrix2d.h>
+#include <data/funcs.h>
+#include <data/volume.h>
+#include <data/args.h>
+#include <reconstruction/grids.h>
 
 /**@name Symmetry lists
     The symmetry lists are, simply, lists of 2D matrices. It's the way of
@@ -87,10 +86,10 @@
     in terms of two matrices L and R, so that any Euler matrix must be
     transformed by L*Euler*R resulting into a new perspective of the volume
     which is equivalent to the original one.
-    
+
     The typical use of the symmetry lists is to read the symmetry file, and
     do nothing else but reading matrices from it.
-    
+
     The symmetry file format is
     \begin{verbatim}
     #This is a comment
@@ -122,13 +121,13 @@ public:
 
    // Number of Axis, mirrors, ...
    int              __sym_elements;
-   
+
 public:
    /** Create an empty list.
        The 2D matrices are 0x0.
        \\ Ex: SymList SL; */
    SymList() {__sym_elements=true_symNo=space_group=0;}
-   
+
    /** Create Symmetry List from a Symmetry file.
        All the subgroup elements are computed automatically.
        \\ Ex: SymList SL("sym.txt"); */
@@ -191,7 +190,7 @@ public:
        but the subgroup is not updated, you must do it manually using
        \Ref{compute_subgroup}. What is more, the subgroup after the insertion
        is corrupted.
-       
+
        The chain length is the number of single matrices multiplication of
        which the inserted one is compound.*/
    void add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
@@ -203,7 +202,7 @@ public:
        matrices are multiplied until no more different matrices are produced.
        The accuracy is used in order to compare when two matrix elements are
        the same.
-       
+
        So far, all the shifts associated to generated matrices are set to 0*/
    void compute_subgroup(double accuracy=SYM_ACCURACY);
 
@@ -223,26 +222,26 @@ public:
        notice that it should be always less or equal to the total number
        of matrices in the subgroup. */
    int TrueSymsNo() const {return true_symNo;}
-   
-   /** Guess Crystallographic space group.  
+
+   /** Guess Crystallographic space group.
        Return the  \URL[space group]{
        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
-       far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75), 
+       far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75),
        P4212 (90) and P6 (168).
-       
+
        Mag_a and Mag_b are the crystal vector magnitude. */
-       
-   int  crystallographic_space_group (double mag_a, 
+
+   int  crystallographic_space_group (double mag_a,
                                            double mag_b,
 					   double ang_a2b_deg) const;
 
-}; 
+};
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also
    inizializates the shift vector. The crystal vectors and the basis must be
    the same  except for a constant!!
    A note: Please realize that we are not repeating code here.
-   The class SymList deals with symmetries when expressed in 
+   The class SymList deals with symmetries when expressed in
    Cartesian space, that is the basis is orthonormal. Here
    we describe symmetries in the crystallographic way
    that is, the basis and the crystal vectors are the same.
@@ -251,19 +250,19 @@ public:
  */
 
 
-    void symmetrize_crystal_vectors(matrix1D<double> &aint, 
+    void symmetrize_crystal_vectors(matrix1D<double> &aint,
 			          matrix1D<double> &bint,
 				  matrix1D<double> &shift,
 				  int space_group,
 				  int sym_no,
 				  const matrix1D<double> &eprm_aint,
-				  const matrix1D<double> &eprm_bint);   
+				  const matrix1D<double> &eprm_bint);
 
 /** Symmetrizes a crystal volume.
  */
 
     void symmetrize_crystal_volume(GridVolume &vol,
-                              const matrix1D<double> &eprm_aint, 
+                              const matrix1D<double> &eprm_aint,
 			      const matrix1D<double> &eprm_bint,
 			      int eprm_space_group,const matrix2D<int> &mask,
 			      int grid_type );
@@ -271,35 +270,35 @@ public:
 /** Symmetrizes a simple grid with P2_122  symmetry
 */
      void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint, 
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type);
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
      void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint, 
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
      void symmetry_P4(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint, 
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type);
 /** Symmetrizes a simple grid with P4212 symmetry
 */
-     void symmetry_P42_12(Volume &vol, const SimpleGrid &grid, 
-                                const matrix1D<double> &eprm_aint, 
+     void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type);
 /** Symmetrizes a simple grid with P6 symmetry
 */
      void symmetry_P6(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint, 
+                                const matrix1D<double> &eprm_aint,
 			        const matrix1D<double> &eprm_bint,
 				const matrix2D<int> &mask, int volume_no,
 				int grid_type);

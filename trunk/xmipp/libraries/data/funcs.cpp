@@ -6,24 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../xmippFuncs.hh"
-#include "../xmippArgs.hh"
+#include "funcs.h"
+#include "args.h"
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -67,7 +68,7 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
    y -= muY;
    double xp= cos(ang)*x+sin(ang)*y;
    double yp=-sin(ang)*x+cos(ang)*y;
-   
+
    // Now evaluate
    return 1/sqrt(2*PI*sigmaX*sigmaY)*exp(-0.5*((xp/sigmaX)*(xp/sigmaX)+
       (yp/sigmaY)*(yp/sigmaY)));
@@ -112,18 +113,18 @@ void  init_random_generator(int seed) {
 
 void  randomize_random_generator(){static  unsigned int seed;
                                    int rand_return;
-                                   
+
                                    srand(seed);
                                    rand_return=rand();
 
-                                   time_t t; 
-                                   time(&t); 
+                                   time_t t;
+                                   time(&t);
                                    rand_return=abs(rand_return);
                                    idum=( -(int)(t%10000)
                                           -(int)(rand_return%10000));
                                    ran1(&idum);
                                    seed=(unsigned int)rand_return;}
-                                 
+
 float rnd_unif()                  {return ran1(&idum);}
 float rnd_unif(float a, float b)  {if (a==b) return a;
                                    else return a+(b-a)*ran1(&idum);}
@@ -228,7 +229,7 @@ void _Xmipp_error (const int nerr, const string &what) {
       msg=what;
    }
 
-   // Show message 
+   // Show message
    ostream& operator << (ostream& o, Xmipp_error &XE) {
       o << XE.__errno << ":" << XE.msg << endl;
    return o;
@@ -270,7 +271,7 @@ void create_empty_file(const FileName &fn, size_t size,
    size_t block_size) {
    unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
       block_size);
-   if (buffer==NULL) 
+   if (buffer==NULL)
       REPORT_ERROR(1,"create_empty_file: No memory left");
    FILE * fd = fopen(fn.c_str(), "w");
    if (fd==NULL)
@@ -566,14 +567,14 @@ void progress_bar(long rlen) {
           h2 = (float)m2/60.0;
           hour=1;
 	  min = 0;
-         } else hour=0;	 
-      } else min = 0; 	  
-      
+         } else hour=0;	
+      } else min = 0; 	
+
       if (hour)
          fprintf(stderr,"\r%3.2f/%3.2f %s ", h1, h2, "hours");
       else if (min)
          fprintf(stderr,"\r%3.2f/%3.2f %s ", m1, m2, "min");
-      else 	 
+      else 	
          fprintf(stderr,"\r%4u/%4u %4s ", (int)t1, (int)t2, "sec.");
 
       i=(int) (60*(1-(float)(totlen-rlen)/totlen));

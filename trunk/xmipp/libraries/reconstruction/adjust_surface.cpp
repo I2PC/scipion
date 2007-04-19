@@ -6,27 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_adjust_surface.hh"
-#include "../Prog_surface.hh"
-#include <XmippInterface/xmippINRIA.hh>
-#include <XmippData/xmippArgs.hh>
+#include "adjust_surface.h"
+#include "surface.h"
+
+#include <interface/inria.h>
+#include <data/args.h>
 
 /* Read from command line ================================================== */
 void Prog_Adjust_Surface_Parameters::read(int argc, char **argv) {
@@ -98,7 +99,7 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv) {
 /* Usage =================================================================== */
 void Prog_Adjust_Surface_Parameters::usage() const {
    cout << "\nUsage:\n";
-   cout << "adjust_surface\n" 
+   cout << "adjust_surface\n"
         << "   -i <Input surface>             : Xmipp image\n"
         << "  [-o <Output surface>]           : Output scaled surface\n"
         << "   -vol <volume to fit>           : volume to be fitted\n"
@@ -180,7 +181,7 @@ void create_surface_mask(const Image *surf, const Volume *V, Volume *Vsurf,
       default:
          REPORT_ERROR(1,"create_surface_mask: Unknown direction");
    }
-   
+
    // Invert mask
    FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*Vsurf))
       VOLVOXEL(*Vsurf,k,i,j)=1-VOLVOXEL(*Vsurf,k,i,j);
@@ -268,7 +269,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
    STARTINGZ((*Vsurf)())=0;
    STARTINGY((*Vsurf)())=STARTINGY(VOL);
    STARTINGX((*Vsurf)())=STARTINGX(VOL);
-   
+
    for (int k=ktop; k<=kbottom; k++)
        for (int i=STARTINGY(VOL); i<=FINISHINGY(VOL); i++)
            for (int j=STARTINGX(VOL); j<=FINISHINGX(VOL); j++)
@@ -329,7 +330,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
 /* Correlation surface - Gradient method =================================== */
 //#define DEBUG
 double correlate_surface_and_volume_gradients(const Image *surf,
-   const Volume *V, Volume *Vsurf, 
+   const Volume *V, Volume *Vsurf,
    const Vectorial_matrix3D &V_grad, Vectorial_matrix3D & Vsurf_grad,
    int ktop, int kbottom, int direction, int tell) {
    double retval=0;
@@ -447,7 +448,7 @@ double eval_surface(double *p) {
 }
 #undef prmsij
 #undef    sij
-#undef ZDIM  
+#undef ZDIM
 
 /* Main routine ============================================================ */
 #define prmsij prm.surface(i,j)

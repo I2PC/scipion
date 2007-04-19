@@ -8,21 +8,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 /* ------------------------------------------------------------------------- */
 /* CTFVIEWER                                                                  */
@@ -31,14 +31,14 @@
 #ifndef CTFVIEWER_H
 #define CTFVIEWER_H
 
-
 /* ************************************************************************* */
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
 
-#include <XmippGraphics/showPlotter.hh>
-#include <XmippGraphics/show2D.hh>
-#include <Reconstruction/CTF.hh>
+#include <graphics/show_plotter.h>
+#include <graphics/show_2d.h>
+#include <reconstruction/ctf.h>
+
 #include <qcombobox.h>
 #include <qlabel.h>
 #include <qlineedit.h>
@@ -63,7 +63,7 @@ class CTFViewer: public QMainWindow {
       // Constructor for CTFViewer. The fn_ctf filename may be empty
       CTFViewer(QWidget *parent, const char *name,
          const FileName &fn_ctfparam="");
-      
+
    // Internal data
    public:
       //Variable to handle the plotter
@@ -81,7 +81,7 @@ class CTFViewer: public QMainWindow {
 
       // First settings setted when loaded the File,
       // used when button reset is pressed
-      PlotSettings firstSettings;      
+      PlotSettings firstSettings;
 
       // Radio Buttons of show options
       QRadioButton *ShowCTF;
@@ -99,18 +99,18 @@ class CTFViewer: public QMainWindow {
       QLineEdit *lineEditMinX;
       QLineEdit *lineEditMinY;
 
-      // LineEdits for main CTF values 
+      // LineEdits for main CTF values
       QLineEdit *lineEditDfU;
       QLineEdit *lineEditDfV;
       QLineEdit *lineEditAzi;
 
       // Combo and lineEdit to change CTF values
       QComboBox *SelecVar;
-      QLineEdit *lineEditVar;      
+      QLineEdit *lineEditVar;
 
       // Different buttons
       QPushButton *PBreset;
-      QPushButton *quitButton;  
+      QPushButton *quitButton;
       QPushButton *photoButton;
 
       //Spinbox to select section angle
@@ -145,7 +145,7 @@ class CTFViewer: public QMainWindow {
    // Slots
    private slots:
       // Slots to change Plotsettings, connected to the plotter via plotter
-      // pointer    
+      // pointer
       void setPlotSettings();
       // Slot to open a file
       void openFile();

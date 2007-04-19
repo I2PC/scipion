@@ -1,8 +1,9 @@
 bin_PROGRAMS = mpi_run
 mpi_run_SOURCES = main.cpp
 mpi_run_LDADD = \
-	$(top_srcdir)/libraries/reconstructionMPI/libXmippReconsMPI.la \
+	$(top_srcdir)/libraries/reconstruction_mpi/libXmippReconsMPI.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
+	$(top_srcdir)/external/bilib/libBilib.la \
 	@MPILIBS@
 
 CC=@MPICXX@

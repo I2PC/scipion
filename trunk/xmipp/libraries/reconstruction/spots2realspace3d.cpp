@@ -17,11 +17,13 @@
  *****************************************************************************/
 
 #include <strstream>
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippInterface/xmippAPH.hh>
-#include "../Prog_Spots2RealSpace3D.hh"
-#include "../Prog_art_crystal.hh"
+
+#include <data/args.h>
+#include <data/geometry.h>
+#include <interface/aph.h>
+
+#include "spots2realspace3d.h"
+#include "art_crystal.h"
 
 #define twoPI 2*M_PI
 
@@ -44,14 +46,14 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
       try {*is >> XX(NoCells) >> YY(NoCells) >> ZZ(NoCells);}
       catch (...) {REPORT_ERROR(3007,
               "Spot2RealSpace3D_Parameters::read: Cannot read Output cells no");}
-	      
+	
       Phase_Shift.resize(3);
       aux_str=get_param(fh_param,"Phase Shift",0,"0.0 0.0 0.0");
       delete is; is = new istrstream(aux_str.c_str());
       try {*is >> XX(Phase_Shift) >> YY(Phase_Shift) >> ZZ(Phase_Shift);}
       catch (...) {REPORT_ERROR(3007,
               "Spot2RealSpace3D_Parameters::read: Cannot read Phase Shift");}
-	      
+	
       KeepContrast=AtoI(get_param(fh_param,"Keep Contrast",0,"1"));
       Celldim.resize(3);
       aux_str=get_param(fh_param,"Cell Size");
@@ -92,7 +94,7 @@ void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1) {
    double argx,argy,argz;
    double cosarg,sinarg;
    int dir=1;//if dir = -1 forward FT, if dir=1 backward FT
-   
+
    s_iz=V1.startingZ();
    s_iy=V1.startingY();
    s_ix=V1.startingX();
@@ -133,16 +135,16 @@ void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1) {
                               sinarg = sin(kz * argz
 			                  +ky * argy
 					  +kx * argx);
-              VOL_ELEM(V1,iz,iy,ix) += real(VOL_ELEM(FT,kz,ky,kx)) * cosarg + 
+              VOL_ELEM(V1,iz,iy,ix) += real(VOL_ELEM(FT,kz,ky,kx)) * cosarg +
 		   /* if dir use "-"*/ imag(VOL_ELEM(FT,kz,ky,kx)) * sinarg;
-//img part                  I[iz][iy][ix] += (x1[kx][ky][kx] * sinarg + 
+//img part                  I[iz][iy][ix] += (x1[kx][ky][kx] * sinarg +
 //		                        y1[kz][ky][kx] * cosarg);
                          }}}//kx,ky,kz
           }//ix
        }//iy
    }//iz
    progress_bar(-s_iz+e_iz+1);
-#ifdef NEVEEVER   
+#ifdef NEVEEVER
    /* Copy the data back */
    double 3m;
    3m=z_dim*y_dim*x_dim;
@@ -157,17 +159,17 @@ void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1) {
          y1[iz][iy][ix] = y2[iz][iy][ix];
       }
    }
-#endif   
+#endif
 
 }
-//void Spot2RealSpace3D_Parameters::produce_SideInfo() {   
+//void Spot2RealSpace3D_Parameters::produce_SideInfo() {
 //    FOR_ALL_ELEMENTS_IN_MATRIX3D(aph_file.spots_abs) {//l,k,h
 //       if(aph_file.spots_abs(k,i,j)!=0.)
 //         cout << j <<" " << i << " " << k << " " <<aph_file.spots_abs(k,i,j) << endl;
 //    }
 //}
 /* Main routine for transforming ------------------------------------------- */
-void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm, 
+void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
                              VolumeXmipp &V1) {
    prm.aph_file.read_from_prepmklcf(prm.fnaph_in);
    cout << prm;
@@ -175,7 +177,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
    double phase_shift=(prm.KeepContrast)? 0:180;
    FOR_ALL_ELEMENTS_IN_MATRIX3D(prm.aph_file.spots_arg) {
        VOL_ELEM(prm.aph_file.spots_arg,k,i,j)  =  (double) /*DEG2RAD */
-           (VOL_ELEM(prm.aph_file.spots_arg,k,i,j) + phase_shift + 
+           (VOL_ELEM(prm.aph_file.spots_arg,k,i,j) + phase_shift +
            k*ZZ(prm.Phase_Shift) +
            i*YY(prm.Phase_Shift) +
            j*XX(prm.Phase_Shift));
@@ -192,7 +194,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
    int lsize=MAX(ABS(lmin),ABS(lmax));
    int ksize=MAX(ABS(kmin),ABS(kmax));
    int hsize=MAX(ABS(hmin),ABS(hmax));
-   
+
    matrix3D< complex<double> > FT;
    FT.init_zeros(2*lsize+1,2*ksize+1,2*hsize+1);
    STARTINGZ(FT)= -lsize;
@@ -205,21 +207,21 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
          cout << "Detected P1 symmetry"<<endl;
 	 symmetrize_P1(FT,prm);
 	 break;
-      case(90)://P4212   
+      case(90)://P4212
          cout << "Detected P4212 symmetry"<<endl;
 	 symmetrize_P4212(FT,prm);
-	 break;    
+	 break;
       default:
          cerr << "\nHORROR: Symmetry not implemented!!!" << endl;
-	 exit(false); 
+	 exit(false);
          break;
-	   
+	
       }//switch end
 
 
 
    // Create volumen
-   if (XX(prm.Celldim)==-1 || 
+   if (XX(prm.Celldim)==-1 ||
        YY(prm.Celldim)==-1 ||
        ZZ(prm.Celldim)==-1
        ){
@@ -231,13 +233,13 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 		 YY(prm.Celldim),
 		 XX(prm.Celldim));
    V1().set_Xmipp_origin();
-   
-       
+
+
    IDFT_3D(FT,V1());
 //   V1.write(prm.fn_out);
 //   V1() *= prm.Scale_Factor;
-//ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION    
-   
+//ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION
+
    // Any repetition?
    int s_k=STARTINGZ (V1()); int e_k=FINISHINGZ(V1());
    int s_i=STARTINGY (V1()); int e_i=FINISHINGY(V1());
@@ -248,7 +250,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
    int s_K=STARTINGZ (V1()); int e_K=FINISHINGZ(V1());
    int s_I=STARTINGY (V1()); int e_I=FINISHINGY(V1());
    int s_J=STARTINGX (V1()); int e_J=FINISHINGX(V1());
-   
+
 
  for (int K=s_K, k=s_k; K<=e_K; K++,k++){if(k>e_k) k=s_k;
    for (int I=s_I, i=s_i; I<=e_I; I++,i++){if(i>e_i) i=s_i;
@@ -259,11 +261,11 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
       }//k
    // Save Image
    V1.write(prm.fn_out);
-   
+
 }
 
 void symmetrize_P1(matrix3D< complex<double> > &FT,
-                  Spot2RealSpace3D_Parameters &prm) 
+                  Spot2RealSpace3D_Parameters &prm)
 {
    FOR_ALL_ELEMENTS_IN_MATRIX3D(prm.aph_file.spots_abs) {
 	  VOL_ELEM(FT, k,i,j) = polar(VOL_ELEM(prm.aph_file.spots_abs,k,i,j),
@@ -283,9 +285,9 @@ void symmetrize_P4212(matrix3D< complex<double> > &FT,
    int korder  = STARTINGY (FT);
    int lorder  = STARTINGZ (FT);
     for(int l=lorder; l<= -lorder; l++) {
-     for(int k=korder; k<= -korder; k++) { 
+     for(int k=korder; k<= -korder; k++) {
       for(int h=horder; h<= -horder; h++) { asymmh = h;asymmk = k;asymml = l;
-        /* Computing the reflection equivalent in the asymmetric unit. */         
+        /* Computing the reflection equivalent in the asymmetric unit. */
         AsymmUnitP4212(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
 //cout << "\n (" << l <<"," << k << "," << h <<")->";  	
 //cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
@@ -298,7 +300,7 @@ void symmetrize_P4212(matrix3D< complex<double> > &FT,
         phase = fmod(phase, 360.0);
         if(phase > 180.0)  phase -= 360.0;
         if(phase < -180.0) phase += 360.0;
-        /* Imposing phase from the symmetry. */    
+        /* Imposing phase from the symmetry. */
         // This line is for imposing the symmetry. I am going to keep it
 	// commented since the simmetry should has been imposed before.
         // if(impose && spec) refptr->ap.phs = iptest;
@@ -313,18 +315,18 @@ void symmetrize_P4212(matrix3D< complex<double> > &FT,
 /*----------------------------------------------------------------------------*/
 /*
     Brings the input reflection  H K L into the asymmetric unit according to
-    the symmetry P4212. The routine returns the new values of the indexes 
+    the symmetry P4212. The routine returns the new values of the indexes
     H' K' L' within the asymmetric unit, as well as a flag indicating whether
     the reflection is special. And, in such a case, returns its phase value
     (0 or 90 degrees) corresponding to its character real or imaginary.
-    
+
     The asymmetric unit in P4212 involves H,K,Z >=0 and H <= K. When H < 0,
-    or H==0 and K < 0, or H==K==0 and Z < 0 the Conjugate Symmetry Property 
-    of the DFT is applied in order to bring the reflection into the H,K >= 0 
+    or H==0 and K < 0, or H==K==0 and Z < 0 the Conjugate Symmetry Property
+    of the DFT is applied in order to bring the reflection into the H,K >= 0
     and make easier the subsequent processes.
-    
+
                                                                               */
-void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2, 
+void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
                int *spec, int *iptest)
 
 {
@@ -342,25 +344,25 @@ int pass, index;
 *ip1 = 1; *ip2 = 0;
 
 /* The asymmetric unit in P4212 involves H,K,Z >=0 and H <= K.
-   In the cases in which H<0 or (H=0 & K<0) or (H=K=0 & Z<0) the program 
+   In the cases in which H<0 or (H=0 & K<0) or (H=K=0 & Z<0) the program
    generates the corresponding reflection by applying the Conjugate Symmetry.
    This is got by multiplying by matrix[0]. */
 if(*ih < 0               ||              /* H < 0 */
    *ih == 0 && *ik < 0   ||              /* H == 0 && K < 0 */
    *ih == 0 && *ik == 0 && *il < 0)      /* H == 0 && K == 0 && Z < 0 */
        MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
-                                                                              
+
 /* Bringing the current reflection into the asymmetric unit. */
 for(pass=0; pass<2;){
     index = 0;
     if(*ik >= 0) index ++;
     if(*il >= 0) index += 2;
     if(*ih < abs(*ik)) index += 4;
-    
+
     /* <index> classifies the reflection by its indices.
        <gomatrix> indicates which matrix will bring the reflection into the
        unique asymmetric unit for a given index.
-       
+
                    index      K>=0      Z>=0    |K|>=|H|
                    -----------------------------------
                      0         NO        NO        NO
@@ -371,27 +373,27 @@ for(pass=0; pass<2;){
                      5         YES       NO        YES
                      6         NO        YES       YES
                      7         YES       YES       YES
-                     
-       P622 in the highest symmetry and its asymmetric unit is only. index = 7. 
-       
+
+       P622 in the highest symmetry and its asymmetric unit is only. index = 7.
+
                                                                               */
-    
+
     if(index < 7) {
         MatrixMult(matrix[gomatrix[index]], ih, ik, il, ip1, ip2);
 
         if(gomatrix[index] < 3) continue;
         }
-        
+
     if(*ih == 0 && *ik < 0)
         MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
-            
+
     pass++;
     }
 
-/* After reflections have been placed into the asymmetric unit they are 
-   examined to see if they are special reflections, ones whose phase must 
+/* After reflections have been placed into the asymmetric unit they are
+   examined to see if they are special reflections, ones whose phase must
    be either real (0 or PI) or imaginary (PI/2 or 3*PI/2). */
-CheckSpec(*ih, *ik, *il, spec, iptest);   
+CheckSpec(*ih, *ik, *il, spec, iptest);
 
 }
 /*----------------------------------------------------------------------------*/
@@ -400,23 +402,23 @@ void CheckSpec(int ih, int ik, int il, int *spec, int *iptest)
 /*
    Checks if the current reflection (H K L) is a special reflection, i.e.,
    whose phase must be either real (0 or PI) or imaginary (PI/2 or 3*PI/2).
-   
+
    It returns spec=1 if the reflection is special. Otherwise, 0.
    It returns in iptest 0 if real and 90 is imaginary.
-   
+
    Conditions checked are:
-   
+
       - H=0 special
       - K=0 special
       - Z=0 special
       - H=K special
       - If for H=0 or K=0 K+H is odd, it indicates an imaginary value for the
         reflection.
-      
+
       Except the last condition, all other special reflections are real.
-      
+
       Summary of special reflections.
-      
+
                  Real               Imaginary
                 ------             -----------
                 (2n,0,L)            (2n+1,0,L)
@@ -434,7 +436,7 @@ void CheckSpec(int ih, int ik, int il, int *spec, int *iptest)
 /* Checking the conditions. */
 if(ih == 0 || ik == 0){
     int i2, i = ih + ik;
-    
+
     i2 = 2 * (i / 2);
     if(i > i2) *iptest = 90;                   /* Imaginary. Otherwise, Real. */
     (*spec)++;
@@ -442,26 +444,26 @@ if(ih == 0 || ik == 0){
     }
 if(il == 0 || ih == ik) (*spec)++;                                   /* Real. */
 
-return;    
-} 
+return;
+}
 /*----------------------------------------------------------------------------*/
 void MatrixMult(int A[], int *ih, int *ik, int *il, int *ip1, int *ip2)
 
 /*
-    Does matrix multiplication to bring reflections into the asymmetric unit. 
+    Does matrix multiplication to bring reflections into the asymmetric unit.
 
         (H' K' Z' AMP' PHS') = (H K Z AMP PHS) <A>
-        
+
     where <A> has form:
-    
+
            A[0]  A[2]   0     0    A[5]
            A[1]  A[3]   0     0    A[6]
             0     0    A[4]   0     0
             0     0     0     1     0
             0     0     0     0    A[7]
-            
+
      for all cases.
-     
+
                                                                               */
 {
 int ih1;

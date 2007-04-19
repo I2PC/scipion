@@ -23,11 +23,12 @@
 
 using namespace std;
 
-#include <Classification/xmippBaseAlgo.hh>
-#include <Classification/xmippCDataTypes.hh>
-#include <Classification/xmippCTVectors.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
+#include "base_algorithm.h"
+#include "data_types.h"
+#include "training_vector.h"
+
+#include <data/funcs.h>
+#include <data/matrix2d.h>
 
 /**@name PCA classes*/
 //@{
@@ -136,7 +137,7 @@ public:
 	    Given a vector of the same size as the PCA vectors this function
 	    returns the projection of size D onto the first D eigenvectors.
 	    D is set via the set_Dimension function
-	    
+	
 	    An exception is thrown if the input vectors are not of the same size
 	    as the PCA ones.*/
         void Project(xmippVector &input, xmippVector &output);
@@ -153,7 +154,7 @@ public:
 
 private:
 
-  	xmippBaseListener* listener;   // Listener class   
+  	xmippBaseListener* listener;   // Listener class
 
 
 };
@@ -164,7 +165,7 @@ class PCA_set {
 public:
    /** Set of PCA analysis. */
    vector<xmippPC *> PCA;
-   
+
 public:
    /** Destructor */
    ~PCA_set();
@@ -181,7 +182,7 @@ public:
 
    /** Show all PCA */
    friend ostream& operator << (ostream &out, const PCA_set &PS);
-   
+
    /** Read a set of PCA just as shown */
    friend istream& operator >> (istream &in, PCA_set &PS);
 };
@@ -190,7 +191,7 @@ public:
     Running PCA is an algorithm that estimates iteratively the
     principal components of a dataset that is provided to the algorithm
     as vectors are available.
-    
+
     See J. Weng, Y. Zhang, W.S. Hwang. Candid covariance-free incremental
     principal component analysis. IEEE Trans. On Pattern Analysis and
     Machine Intelligence, 25(8): 1034-1040 (2003).
@@ -205,10 +206,10 @@ public:
 
    /// Current estimate of the population mean
    matrix1D<double> current_sample_mean;
-   
+
    /// Current number of samples seen
    long n;
-   
+
    /** Current estimate of the eigenvectors.
        Each column is an eigenvector. */
    matrix2D<double> eigenvectors;
@@ -223,7 +224,7 @@ public:
 
    /** Project a sample vector on the PCA space. */
    void project(const matrix1D<double> &input, matrix1D<double> &output) const;
-   
+
    /// Get a certain eigenvector.
    void get_eigenvector(int j, matrix1D<double> &result) const {
       eigenvectors.getCol(j,result);
@@ -238,7 +239,7 @@ public:
 public:
    // Sum of all samples so far
    matrix1D<double> sum_all_samples;
-   
+
    // Sum of all projections so far
    matrix1D<double> sum_proj;
 

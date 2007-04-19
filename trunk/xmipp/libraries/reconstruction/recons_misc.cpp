@@ -6,28 +6,29 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../recons_misc.hh"
-#include "../Prog_symmetrize.hh"
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippWavelets.hh>
+#include "recons_misc.h"
+#include "symmetrize.h"
+
+#include <data/histogram.h>
+#include <data/mask.h>
+#include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
 void build_recons_info(SelFile &selfile, SelFile &selctf,
@@ -35,7 +36,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
    Recons_info * &IMG_Inf, bool do_not_use_symproj) {
    matrix2D<double>  L(4,4), R(4,4);    // A matrix from the list
    FileName          fn_proj;
-   FileName          fn_ctf1; 
+   FileName          fn_ctf1;
    Projection        read_proj;
    bool              is_there_ctf=false;
    bool              is_ctf_unique=false;
@@ -45,9 +46,9 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
    int numIMG;
    if (!do_not_use_symproj) numIMG=trueIMG*(SL.SymsNo() + 1);
    else numIMG=trueIMG;
-   
-   // The next two ifs check whether there is a CTF file, and 
-   // whether it is unique 
+
+   // The next two ifs check whether there is a CTF file, and
+   // whether it is unique
    if (fn_ctf!="") {
       is_there_ctf=true;
       is_ctf_unique=true;
@@ -56,7 +57,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
          int truectf=selctf.ImgNo();
          selctf.go_first_ACTIVE();
          int numctf=truectf*(SL.SymsNo() + 1);
-         if (numctf!=numIMG) 
+         if (numctf!=numIMG)
 		REPORT_ERROR(9696,"Number of CTF and image files differ");
       }
    }
@@ -70,7 +71,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
    init_progress_bar(trueIMG);
    while (!selfile.eof()) {
      fn_proj=selfile.NextImg();
-     if (is_there_ctf && !is_ctf_unique) fn_ctf1=selctf.NextImg(); 
+     if (is_there_ctf && !is_ctf_unique) fn_ctf1=selctf.NextImg();
      if (fn_proj!="") {
         read_proj.read(fn_proj);
 
@@ -137,11 +138,11 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
    VolumeXmipp vol_voxels;
 
    // Convert from basis to voxels
-   prm->basis.changeToVoxels(*ptr_vol_out, &(vol_voxels()), 
+   prm->basis.changeToVoxels(*ptr_vol_out, &(vol_voxels()),
       Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
    (*ptr_vol_out).init_zeros();
    N++;
-   
+
    // Make the DWT
    matrix3D<double> DWTV;
    #ifdef MODE7
@@ -161,7 +162,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
       vol_voxels.write("PPPVariability.vol");
       char c; cout << "Press any key\n"; cin >> c;
    #endif
-   
+
    // Select the LLL block and keep it
    int x1, x2, y1, y2, z1, z2;
    SelectDWTBlock(keep_from_iteration, DWTV, "000", x1, x2, y1, y2, z1, z2);
@@ -203,7 +204,7 @@ void VariabilityClass::finishAnalysis() {
       #define NFEATURES 15
    #endif
    FOR_ALL_ELEMENTS_IN_MATRIX3D(SignificantT2()) {
-      // Save the data for this voxel 
+      // Save the data for this voxel
       ofstream fh_dat;
       fh_dat.open("PPP.dat");
       if (!fh_dat)
@@ -253,12 +254,12 @@ void VariabilityClass::finishAnalysis() {
 	 #endif
 	 v_aux=v_aux*v_aux;
 	 // COSS: Doesn't work: v_aux=v_aux.sort();
-	 
+	
 	 fh_dat << v_aux.transpose() << endl;
 	 v.push_back(v_aux);
       }
       fh_dat.close();
-      
+
       // Classify
       system("xmipp_fcmeans -din PPP.dat -cout PPP -c 2 -saveclusters > /dev/null");
 
@@ -285,7 +286,7 @@ void VariabilityClass::finishAnalysis() {
 	 cov/=N; \
 	 aux.from_vector(avg); \
 	 cov-=aux*aux.transpose();
-      
+
       ifstream fh_0;
       matrix1D<double> avg0(NFEATURES);
       matrix1D<int>    idx0(nmax);
@@ -301,7 +302,7 @@ void VariabilityClass::finishAnalysis() {
 	    }
 	 }
       #endif
-      
+
       ifstream fh_1;
       matrix1D<double> avg1(NFEATURES);
       matrix1D<int>    idx1(nmax);
@@ -370,7 +371,7 @@ void VariabilityClass::finishAnalysis() {
    SignificantMinRatio.write(prm->fn_root+"_minratio.vol");
    SignificantMaxRatio.write(prm->fn_root+"_maxratio.vol");
    system("rm PPP.dat PPP.cod PPP.vs PPP.err PPP.his PPP.inf PPP.0 PPP.1");
-   
+
    for (int n=0; n<nmax; n++)
        for (int np=n+1; np<nmax; np++)
           coocurrence(np,n)=coocurrence(n,np);
@@ -397,7 +398,7 @@ POCSClass::POCSClass(Basic_ART_Parameters *_prm,
    Zoutput_volume_size=_Zoutput_volume_size;
    Youtput_volume_size=_Youtput_volume_size;
    Xoutput_volume_size=_Xoutput_volume_size;
-   apply_POCS=(prm->surface_mask!=NULL || 
+   apply_POCS=(prm->surface_mask!=NULL ||
        prm->positivity || (prm->force_sym!=0 && !prm->is_crystal) ||
        prm->known_volume!=-1);
 }
@@ -546,7 +547,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images) {
    		   POCS_freq++;
    		   POCS_state=POCS_use;
    		   #ifdef DEBUG_POCS
-   		      cerr << "1: Changing to " << POCS_freq << endl; 
+   		      cerr << "1: Changing to " << POCS_freq << endl;
    		   #endif
    		}
    		break;

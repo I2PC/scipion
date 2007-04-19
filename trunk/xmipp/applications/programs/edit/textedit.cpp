@@ -8,7 +8,8 @@
 **
 *****************************************************************************/
 
-#include "textedit.hh"
+#include "textedit.h"
+
 #include <iostream>
 
 #include <qtextedit.h>
@@ -46,7 +47,7 @@ TextEdit::TextEdit( QWidget *parent, const char *name )
     connect( tabWidget, SIGNAL( currentChanged( QWidget * ) ),
 	     this, SLOT( editorChanged( QWidget * ) ) );
     setCentralWidget( tabWidget );
-    
+
     remove=false;
 }
 
@@ -125,7 +126,7 @@ void TextEdit::load( const QString &f )
     tabWidget->showPage( edit );
     edit->viewport()->setFocus();
     filenames.replace( edit, f );
-    
+
     files_open.push_back(f);
 }
 

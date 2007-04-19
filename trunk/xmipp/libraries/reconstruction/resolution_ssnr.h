@@ -6,29 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _PROG_SSNR
    #define _PROG_SSNR
 
 #include <iostream>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippSelFiles.hh>
+
+#include <data/volume.h>
+#include <data/selfile.h>
 
 /**@name Spectral Signal to Noise Ratio */
 //@{
@@ -37,13 +38,13 @@ class Prog_SSNR_prm {
 public:
    /// Signal reconstructed volume or a selfile with its projections
    FileName fn_S;
-   
+
    /// Noise reconstructed volume or a selfile with its projections
    FileName fn_N;
-   
+
    /// Selfile with all the experimental images
    FileName fn_Ssel;
-   
+
    /// Selfile with all the noise images
    FileName fn_Nsel;
 
@@ -51,7 +52,7 @@ public:
    FileName fn_VSSNR;
 
    /// Ringwidth
-   double ring_width;   
+   double ring_width;
 
    /// Sampling rate
    double Tm;
@@ -66,29 +67,29 @@ public:
 
    /** Generate VSSNR.*/
    bool generate_VSSNR;
-   
+
    /** Generate radial average.*/
    bool radial_avg;
-   
+
    /** Min_power: Threshold for not dividing */
    double min_power;
 public:
    /* Side info -------------------------------------------------------- */
    // Signal volume
    VolumeXmipp S;
-   
+
    // Noise volume
    VolumeXmipp N;
-   
+
    // Selfile with all experimental images
    SelFile SF_S;
-   
+
    // Selfile with all noisy images
    SelFile SF_N;
 
    // Selfile with all the images projected from the signal volume
    SelFile SF_Sth;
-   
+
    // Selfile with all the images projected from the noise volume
    SelFile SF_Nth;
 
@@ -98,13 +99,13 @@ public:
 public:
    /// Read parameters from command line
    void read(int argc, char **argv);
-   
+
    /// Show parameters
    friend ostream & operator << (ostream &out, const Prog_SSNR_prm &prm);
-   
+
    /// Usage
    void usage() const;
-   
+
    /// Produce side Info
    void produce_side_info();
 

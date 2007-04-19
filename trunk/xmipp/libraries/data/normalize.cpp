@@ -6,27 +6,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_normalize.hh"
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMicrograph.hh>
-#include <XmippData/xmippMasks.hh>
+#include "normalize.h"
+#include "args.h"
+#include "micrograph.h"
+#include "mask.h"
 
 /* Read -------------------------------------------------------------------- */
 void Normalize_parameters::read(int argc, char **argv) {
@@ -57,7 +57,7 @@ void Normalize_parameters::read(int argc, char **argv) {
    apply_geo=false;
    // Get background mask
    if (!normalizing_vol) {
-      if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
+      if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 ||
           normalizing_method==MICHAEL || normalizing_method==NEAR_OLDXMIPP ||
 	  normalizing_method==RAMP) {
 	enable_mask=check_param(argc,argv,"-mask");
@@ -71,7 +71,7 @@ void Normalize_parameters::read(int argc, char **argv) {
 	    REPORT_ERROR(1,"Normalize: Not enough parameters after -background");
 	  aux=argv[i+1];
 	  r=AtoI(argv[i+2]);
-	  
+	
 	  if (aux=="frame")       background_mode=FRAME;
 	  else if (aux=="circle") background_mode=CIRCLE;
 	  else
@@ -95,7 +95,7 @@ void Normalize_parameters::read(int argc, char **argv) {
       }
    }
 }
-   
+
 /* Produce side information ------------------------------------------------ */
 void Normalize_parameters::produce_side_info() {
    int Zdim, Ydim, Xdim;
@@ -138,22 +138,22 @@ void Normalize_parameters::show() {
 	 case RANDOM:        cout << "Random a=[" << a0 << "," << aF << "], "
 	                          << "b=[" << b0 << "," << bF << "]\n"; break;
       }
-      if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 || 
+      if (normalizing_method==NEWXMIPP || normalizing_method==NEWXMIPP2 ||
           normalizing_method==NEAR_OLDXMIPP || normalizing_method==MICHAEL ||
 	  normalizing_method==RAMP) {
          cout << "Background mode: ";
          switch (background_mode) {
             case NONE :  cout << "None\n"; break;
-            case FRAME:  cout << "Frame, width=" << r << endl; 
-                         cout << "Apply transformation to mask: " << apply_geo << endl; 
+            case FRAME:  cout << "Frame, width=" << r << endl;
+                         cout << "Apply transformation to mask: " << apply_geo << endl;
                          break;
-            case CIRCLE: cout << "Circle, radius=" << r << endl; 
-                         cout << "Apply transformation to mask: " << apply_geo << endl; 
+            case CIRCLE: cout << "Circle, radius=" << r << endl;
+                         cout << "Apply transformation to mask: " << apply_geo << endl;
                          break;
          }
       }
-      if (remove_black_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_black_dust)<<endl;  
-      if (remove_white_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_white_dust)<<endl;   
+      if (remove_black_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_black_dust)<<endl;
+      if (remove_white_dust) cout << "Remove black dust particles, using threshold "<<FtoA(thresh_white_dust)<<endl;
    }
 
    if (normalizing_method==NEWXMIPP && enable_mask) mask_prm.show();
@@ -201,7 +201,7 @@ void Normalize_parameters::apply(Image *img) {
      double avg, stddev, min, max, zz;
      (*img)().compute_stats(avg, stddev, min, max);
 
-     if ((min-avg)/stddev<thresh_black_dust && remove_black_dust) { 
+     if ((min-avg)/stddev<thresh_black_dust && remove_black_dust) {
        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D((*img)()) {
 	 zz=(dMij((*img)(),i,j)-avg)/stddev;
 	 if (zz < thresh_black_dust) dMij((*img)(),i,j)=avg;

@@ -7,41 +7,41 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_assign_CTF.hh"
+#include "ctf_estimate_from_micrograph.h"
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippMicrograph.hh>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippHeader.hh>
+#include <data/args.h>
+#include <data/micrograph.h>
+#include <data/selfile.h>
+#include <data/header.h>
 
 /* Read parameters ========================================================= */
 void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files) {
    // Read parameters for adjust CTF from input file
    adjust_CTF_prm.read(fn_prm);
-   
+
    // Read specific parameters for this program from input file
    FILE *fh_param;
    if ((fh_param = fopen(fn_prm.c_str(), "r")) == NULL)
       REPORT_ERROR(1,(string)"assign_CTF: There is a problem "
-            "opening the file "+fn_prm); 
-                                      
+            "opening the file "+fn_prm);
+
    reversed          =check_param(fh_param,"reverse endian");
    N_horizontal      =AtoI(get_param(fh_param,"N_horizontal",0));
    N_vertical        =AtoI(get_param(fh_param,"N_vertical",0,"-1"));
@@ -104,7 +104,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
    }
    if (PSD_mode==Periodogram) fh_param << "Periodogram=yes\n";
    if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
-  
+
    fh_param << endl;
    fh_param.close();
 
@@ -118,7 +118,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
    int small_Ydim=2*YSIZE(piece)/Nside_piece;
    int small_Xdim=2*XSIZE(piece)/Nside_piece;
    matrix2D<double> small_piece(small_Ydim,small_Xdim);
-   
+
    int Xstep=(XSIZE(piece)-small_Xdim)/(Nside_piece-1);
    int Ystep=(YSIZE(piece)-small_Ydim)/(Nside_piece-1);
    psd.init_zeros(small_piece);
@@ -127,14 +127,14 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
          // Take the corresponding small piece from the piece
          int i0=ii*Xstep;
          int j0=jj*Ystep;
-         
+
          int i,j,ib,jb;
          for (i=0,ib=i0; i<small_Ydim; i++, ib++)
             for (j=0, jb=j0; j<small_Xdim; j++, jb++)
                DIRECT_MAT_ELEM(small_piece,i,j)=
                   DIRECT_MAT_ELEM(piece,ib,jb);
 
-         // Compute the PSD of the small piece   
+         // Compute the PSD of the small piece
          matrix2D<double> small_psd;
          small_psd.init_zeros(small_piece);
          if (PSD_mode==ARMA) {
@@ -151,7 +151,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
             small_psd*=small_psd;
             small_psd*=small_Ydim*small_Xdim;
          }
-         
+
          // Add to the average
          psd+=small_psd;
       }
@@ -205,16 +205,16 @@ void Prog_assign_CTF_prm::process() {
 
       // Count the number of lines in the Position file
       string line;
-      PosFile.clear();       
+      PosFile.clear();
       PosFile.seekg(0, ios::beg);
       while (getline(PosFile,line)) if (line[0]!='#') div_Number++;
 
       // check that the number of entries in the pos file is the right one
       if (SF.LineNo()!=div_Number) {
          cerr << "Prog_assign_CTF_prm: number of entries in "
-              << "pos file: "<< picked_fn.c_str() 
+              << "pos file: "<< picked_fn.c_str()
               << "(" << div_Number << ") "
-              << " and sel file " 
+              << " and sel file "
               << SF.name() << "(" << SF.LineNo() << ") "
               << "is different.\n"
               << "I cannot go any further sorry\n";
@@ -235,7 +235,7 @@ void Prog_assign_CTF_prm::process() {
     }
 
    // Process each piece ---------------------------------------------------
-   PosFile.clear();       
+   PosFile.clear();
    PosFile.seekg(0, ios::beg); // Start of file
    SF.go_beginning();
    ImageXmipp psd_avg;
@@ -254,7 +254,7 @@ void Prog_assign_CTF_prm::process() {
          // Read position of the particle
          string line;
          getline(PosFile,line);
-         while (line[0]=='#') getline(PosFile,line);       
+         while (line[0]=='#') getline(PosFile,line);
          float fi, fj; sscanf(line.c_str(),"%f %f",&fj,&fi);
          i = (int) fi;
          j = (int) fj;
@@ -279,13 +279,13 @@ void Prog_assign_CTF_prm::process() {
             j=((N-1)%div_NumberX)*Xstep;
          }
       }
-      
+
       // test if the full piece is inside the micrograph
       if (!selfile_mode) {
          if (i+N_vertical>Ydim)   i=Ydim-N_vertical;
          if (j+N_horizontal>Xdim) j=Xdim-N_horizontal;
       }
-      
+
       // Extract micrograph piece ..........................................
       matrix2D<double> piece(N_vertical,N_horizontal);
       if (!selfile_mode) {
@@ -334,14 +334,14 @@ void Prog_assign_CTF_prm::process() {
          if (compute_at_particle) {
             piece_fn_root = SF.get_current_file();
             piece_fn_root = piece_fn_root.get_baseName();
-            SF.next();                       
+            SF.next();
          } else
             piece_fn_root=PSDfn_root+ItoA(N,5);
 
          psd.write(piece_fn_root+".psd");
 
       	 if (!dont_adjust_CTF) {
-            // Estimate the CTF parameters of this piece 
+            // Estimate the CTF parameters of this piece
             adjust_CTF_prm.fn_ctf=piece_fn_root+".psd";
             if (!dont_adjust_CTF) {
                double fitting_error=ROUT_Adjust_CTF(adjust_CTF_prm,false);
@@ -382,7 +382,7 @@ void Prog_assign_CTF_prm::process() {
             REPORT_ERROR(1,(string)"Prog_assign_CTF_prm::process: Could not open "+
                picked_fn+" for reading");
       }
-      while (!SF.eof()) {  
+      while (!SF.eof()) {
          if (!selfile_mode) {
             string line;
             getline(PosFile,line);

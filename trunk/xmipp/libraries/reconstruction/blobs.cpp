@@ -6,30 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 
-#include "../blobs.hh"
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippGeometry.hh>
+#include "blobs.h"
+
+#include <data/funcs.h>
+#include <data/geometry.h>
 
 /* Value of a blob --------------------------------------------------------- */
 double kaiser_value(double r, double a, double alpha, int m) {
@@ -126,14 +127,14 @@ double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
 // Compute the limits of the blob in the grid coordinate system
    grid.universe2grid(vector_R3(-blob.radius,-blob.radius,-blob.radius),corner1);
    grid.universe2grid(vector_R3( blob.radius, blob.radius, blob.radius),corner2);
-   if (D!=NULL) 
+   if (D!=NULL)
       box_enclosing(corner1,corner2,*D,corner1,corner2);
 
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the blob, which we know they are 0.
-   for (i= (int)corner1.X(); i<=(int)corner2.X(); i++) 
-      for (j= (int)corner1.Y(); j<=(int)corner2.Y(); j++) 
+   for (i= (int)corner1.X(); i<=(int)corner2.X(); i++)
+      for (j= (int)corner1.Y(); j<=(int)corner2.Y(); j++)
          for (k= (int)corner1.Z(); k<=(int)corner2.Z(); k++) {
             VECTOR_R3(gr,i,j,k);
             grid.grid2universe(gr,ur);
@@ -309,14 +310,14 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
 }
 
 /* Footprint of a blob ----------------------------------------------------- */
-void footprint_blob( 
+void footprint_blob(
    ImageOver &blobprint,         // blob foot_print table
    const struct blobtype &blob,  // blob description
-   int   istep,            // number of foot-print samples per one sample 
+   int   istep,            // number of foot-print samples per one sample
                            // on projection plane in u,v directions
    int   normalise)        // set to 1 if you want normalise. Usually
                            // you may omit it and no normalisation is performed
-{  
+{
 // Resize output image and redefine the origin of it
    int footmax=CEIL(blob.radius);
    blobprint.init(-footmax, footmax, istep, -footmax, footmax, istep);
@@ -447,7 +448,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
 
 	    // These two corners are also real valued
             process=true;
-//ROB	    
+//ROB	
 //This is OK if blob.radius is in Cartesian space as I think is the case
             V3_PLUS_CT(corner1,real_position,-blob.radius);
             V3_PLUS_CT(corner2,real_position, blob.radius);
@@ -462,7 +463,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
             if (YY(corner1)>=yF) process=false;
             if (ZZ(corner1)>=zF) process=false;
             if (XX(corner2)<=x0) process=false;
-            if (YY(corner2)<=y0) process=false; 
+            if (YY(corner2)<=y0) process=false;
             if (ZZ(corner2)<=z0) process=false;
             #ifdef DEBUG
                if (!process && condition) cout << "   It is outside output volume\n";
@@ -496,11 +497,11 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
       	          }
                #endif
 
-               if (!FORW) 
+               if (!FORW)
 	          switch (eq_mode) {
 		     case VARTK:     vol_correction=0; break;
 		     case VMAXARTK:  vol_correction=-1e38; break;
-		  } 
+		  }
 
 	       // Effectively convert
                long N_eq;
@@ -548,7 +549,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
                         	 cout.flush();
 			      }
                            #endif
-                           if (vol_corr!=NULL) 
+                           if (vol_corr!=NULL)
                               VOL_ELEM(*vol_corr,iz,iy,ix) +=
                                  VEC_ELEM(blob_table,id)*VEC_ELEM(blob_table,id);
                         } else {
@@ -562,7 +563,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
 			         if (contrib>vol_correction)
 				    vol_correction=contrib;
 				 break;
-			         
+			
 			   }
                            #ifdef DEBUG_MORE
 			      if (condition) {
@@ -656,7 +657,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
          #endif
       }
    #endif
-   
+
    type_cast(Gcorner1,corner1);
 
    #ifdef DEBUG
@@ -668,7 +669,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 #undef DEBUG
 
 /* Blobs -> Voxels for a Grid ---------------------------------------------- */
-//#define DEBUG      
+//#define DEBUG
 void blobs2voxels(const GridVolume &vol_blobs,
    const struct blobtype &blob, matrix3D<double> *vol_voxels,
    const matrix2D<double> *D, int Zdim, int Ydim, int Xdim) {
@@ -697,7 +698,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
          save.write((string)"PPPvoxels"+ItoA(i));
       #endif
    }
-   
+
    // Now normalise the resulting volume ..................................
    double inorm=1.0/sum_blob_Grid(blob,vol_blobs.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
@@ -732,7 +733,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
    matrix1D<int> corner1, size;
    voxel_volume_shape(vol_blobs,blob,NULL,corner1,size);
    double g_2=vol_blobs.grid(0).relative_size/2;
-   XX(corner1)=(int)(FLOOR(XX(corner1))/g_2); XX(size)=(int)(CEIL(XX(size))/g_2); 
+   XX(corner1)=(int)(FLOOR(XX(corner1))/g_2); XX(size)=(int)(CEIL(XX(size))/g_2);
    YY(corner1)=(int)(FLOOR(YY(corner1))/g_2); YY(size)=(int)(CEIL(YY(size))/g_2);
    ZZ(corner1)=(int)(FLOOR(ZZ(corner1))/g_2); ZZ(size)=(int)(CEIL(ZZ(size))/g_2);
    (*vol_coefs).init_zeros(ZZ(size),YY(size),XX(size));
@@ -761,9 +762,9 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
 	       #ifdef DEBUG
 	       cout << "Blob value at (" << j << "," << i << ","
 		    << k << ") (" << XX(univ_position)
-		    << "," << YY(univ_position) << "," 
+		    << "," << YY(univ_position) << ","
 		    << ZZ(univ_position) << ") ("
-		    << XX(coef_position) << "," << YY(coef_position) << "," 
+		    << XX(coef_position) << "," << YY(coef_position) << ","
 		    << ZZ(coef_position) <<") --> "
 		    << vol_blobs(n)((int)k,(int)i,(int)j) << endl;
 	       #endif
@@ -820,7 +821,7 @@ void ART_voxels2blobs_single_step(
    double norm=sum_blob_Grid(blob,vol_in.grid(),D); // Aqui tambien hay que multiplicar ****!!!!
    FOR_ALL_ELEMENTS_IN_MATRIX3D(*theo_vol)
       VOL_ELEM(*theo_vol,k,i,j) /= norm;
-   
+
    #ifdef DEBUG
       VolumeXmipp save, save2;
       save()=*theo_vol; save.write("PPPtheovol.vol");
@@ -877,7 +878,7 @@ void ART_voxels2blobs_single_step(
    #endif
 
    mean_error /= MAX(N,1); // At worst, divided by 1
-   
+
    // Backprojection of correction volume ..................................
    for (int i=0; i<vol_in.VolumesNo(); i++) {
       blobs2voxels_SimpleGrid((*vol_out)(i)(),(*vol_out).grid(i),blob,
@@ -910,15 +911,15 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
    Grid grid_blobs;
    if (R==-1) {
       matrix1D<double> corner1(3), corner2(3);
-      XX(corner1)=STARTINGX(*vol_voxels); 
-      YY(corner1)=STARTINGY(*vol_voxels); 
-      ZZ(corner1)=STARTINGZ(*vol_voxels); 
-      XX(corner2)=FINISHINGX(*vol_voxels); 
-      YY(corner2)=FINISHINGY(*vol_voxels); 
+      XX(corner1)=STARTINGX(*vol_voxels);
+      YY(corner1)=STARTINGY(*vol_voxels);
+      ZZ(corner1)=STARTINGZ(*vol_voxels);
+      XX(corner2)=FINISHINGX(*vol_voxels);
+      YY(corner2)=FINISHINGY(*vol_voxels);
       ZZ(corner2)=FINISHINGZ(*vol_voxels);
 
       switch (grid_type) {
-	 case (CC): 
+	 case (CC):
             grid_blobs=Create_CC_grid(grid_relative_size,corner1,corner2);
             break;
 	 case (FCC):
@@ -930,7 +931,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
       }
    } else {
       switch (grid_type) {
-	 case (CC): 
+	 case (CC):
             grid_blobs=Create_CC_grid(grid_relative_size,R);
             break;
 	 case (FCC):
@@ -946,7 +947,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
    // Convert ..............................................................
    cout << "Converting voxel volume to blobs\n";
    ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda,
-      &(theo_vol()), vol_voxels, 
+      &(theo_vol()), vol_voxels,
       &(corr_vol()), vol_mask, mean_error_1, max_error, VARTK);
    if (tell&&SHOW_CONVERSION)
       cout << "   Finished iteration: " << it++
@@ -962,11 +963,11 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
       cout << "Press any key\n";
       char c; cin >> c;
    #endif
-   
+
    double change;
    bool end_condition;
    do {
-      ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda, 
+      ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda,
          &(theo_vol()), vol_voxels,
          &(corr_vol()), vol_mask, mean_error, max_error, VARTK);
       #ifdef DEBUG

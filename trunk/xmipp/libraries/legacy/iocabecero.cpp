@@ -7,27 +7,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
   /* **********************************************************************
 
-        This file contains some routines for reading and writing 
+        This file contains some routines for reading and writing
         geometric information in the image's header, using the
         struct "GEO_INFO" defined in "spider.h" as:
 
@@ -43,13 +43,14 @@
 
    ************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
+#include <cmath>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include "spider.h"
 #include "groe.h"
-#include <math.h>
-
 
 /***************************************************************
   This routine read or write the struct "infogeo" using a
@@ -63,9 +64,9 @@ void rdwr_geo(double matriz[3][3],float *angle,GEO_INFO *infogeo,int rdwr)
  switch(rdwr)
   {
     case WRITING :
-      for (i = 0; i < 3; i++)  
+      for (i = 0; i < 3; i++)
        {
-          infogeo->fGeo_matrix[i][0] = matriz[i][0]; 
+          infogeo->fGeo_matrix[i][0] = matriz[i][0];
           infogeo->fGeo_matrix[i][1] = matriz[i][1];
           infogeo->fGeo_matrix[i][2] = matriz[i][2];
        }

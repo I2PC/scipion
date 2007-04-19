@@ -6,24 +6,24 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_euler.hh"
+#include "euler.h"
 
 //#define VERBOSE
 
@@ -37,7 +37,7 @@ void ROUT_EULER(const double rot,
 		const double d10,
 		const double d11)
 {
-int i; 
+int i;
 matrix1D<double> w(3);
 matrix1D<double> new_w(3);
 matrix1D<double> D_1byw(3);
@@ -60,7 +60,7 @@ Euler_direction( rot, tilt, psi, w);
 //  cout << "If everything is OK this should be the original
 //  angles" << endl;
 //  cout << "rot= "  << newrot
-//       << "tilt= " << newtilt 
+//       << "tilt= " << newtilt
 //       << "psi= "  << newpsi << endl;
 
 //fw(0)=(float)w(0);
@@ -71,10 +71,10 @@ Euler_direction( rot, tilt, psi, w);
 //  cout << "Projection direction calculated in float\n" << fw;
 
 //Euler_direction2angles (fw, fnewrot, fnewtilt, fnewpsi);
-//  cout << "If everything is OK this should be the original 
+//  cout << "If everything is OK this should be the original
 //  angles calculated in float" << endl;
 //  cout << "rot= "  << fnewrot
-//       << "tilt= " << fnewtilt 
+//       << "tilt= " << fnewtilt
 //       << "psi= "  << fnewpsi << endl;
 
 
@@ -89,19 +89,19 @@ new_w = D_1byw/module;
 
 Euler_direction2angles (new_w, newrot, newtilt, newpsi);
 if(newtilt==0.) newrot=rot;
-  cout << endl 
-     << "Old_rot  = " << rot  << " New_rot  = " << newrot  
+  cout << endl
+     << "Old_rot  = " << rot  << " New_rot  = " << newrot
                                                << endl
-     << "Old_tilt = " << tilt << " New_tilt = " << newtilt 
+     << "Old_tilt = " << tilt << " New_tilt = " << newtilt
                                                << endl
-     << "Old_psi  = " << psi  << " New_psi  = " << newpsi  
+     << "Old_psi  = " << psi  << " New_psi  = " << newpsi
                                                << endl;
 
   Euler_direction( newrot, newtilt, newpsi, w);
   cout << "Projectionn direction made with new angles\n" << w;
   Euler_angles2matrix(rot, tilt, psi, D);
   cout << "Euler Matrix with old angles\n" << D;
-try{ 
+try{
   cout << "Inverse Euler Matrix with old angles\n" << D.inv();
   } catch(Xmipp_error &XE){
     cout << XE;
@@ -110,7 +110,7 @@ try{
 
   Euler_angles2matrix(newrot, newtilt, newpsi, D);
   cout << "Euler Matrix with new angles\n" << D;
-try{ 
+try{
   cout << "Inverse Euler Matrix with new angles\n" << D.inv();
   } catch(Xmipp_error &XE){
     cout << XE;

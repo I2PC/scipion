@@ -6,31 +6,33 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ART_CRYSTAL_HH
 #  define _PROG_ART_CRYSTAL_HH
 
-#include <XmippData/xmippMatrices1D.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippImages.hh>
-#include "Prog_art.hh"
-#include <Reconstruction/symmetries.hh>
+#include <data/matrix1d.h>
+#include <data/matrix2d.h>
+#include <data/matrix3d.h>
+#include <data/image.h>
+
+#include "reconstruct_art.h"
+#include "symmetries.h"
+
 /**@name ART+crystal */
 //@{
 /** ART+crystal parameters.
@@ -117,16 +119,16 @@ public:
 /** Compute integer lattice vectors and passing matrix.
     Given two real lattice vectors, this function returns the corresponding
     integer vectors and the matrix V which passes from a to aint. All
-    vectors are supposed to be 2x1, so V is 2x2. Before computing 
+    vectors are supposed to be 2x1, so V is 2x2. Before computing
     \begin{verbatim}
        aint = Vinv*a; a=V*aint;
        bint = Vinv*b; b=V*bint;
     \end{verbatim} */
 void compute_integer_lattice(const matrix1D<double> &a,
-                             const matrix1D<double> &b, 
+                             const matrix1D<double> &b,
 			     double a_mag, double b_mag,
 			     double ang_a2b_deg,
-			     matrix1D<double> &aint, 
+			     matrix1D<double> &aint,
 			     matrix1D<double> &bint,
                              matrix2D<double> &V,
 			     int space_group);
@@ -140,12 +142,12 @@ void compute_integer_lattice(const matrix1D<double> &a,
     are output by the routine. The mean error is also an output.
     numIMG is a normalizing factor to be used in SIRT, if you are
     running pure ART then this factor should be 1.
-    
+
     The symmetry matrix from which the view is derived must be given in
     sym_no. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
    Basic_ART_Parameters &prm, Crystal_ART_Parameters &eprm,
-   Projection &theo_proj, Projection &read_proj, 
+   Projection &theo_proj, Projection &read_proj,
    int sym_no,
    Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
    double &mean_error, int numIMG, double lambda, int act_proj,
@@ -159,7 +161,7 @@ void finish_ART_iterations(const Basic_ART_Parameters &prm,
 /** Expand basis values to fill space.
     Copy basis values as a crystal in order to fill the whole space determined
     by the output volume. */
-void expand_to_fill_space(const Basic_ART_Parameters &prm, 
+void expand_to_fill_space(const Basic_ART_Parameters &prm,
    const Crystal_ART_Parameters &eprm, GridVolume &vol);
 
 /** Force the {\it trial} volume to be symmetric. */

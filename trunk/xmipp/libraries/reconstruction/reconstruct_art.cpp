@@ -6,27 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_art.hh"
-#include "../Prog_FourierFilter.hh"
-#include <XmippData/xmippWavelets.hh>
-#include <XmippData/Programs/Prog_denoising.hh>
+#include "reconstruct_art.h"
+#include "fourier_filter.h"
+
+#include <data/wavelet.h>
+#include <data/denoise.h>
 
 /* ------------------------------------------------------------------------- */
 /* Plain ART Parameters                                                      */
@@ -48,7 +49,7 @@ void process_correction(Projection &corr_proj) {
    // Mask correction
    int Rmin=CEIL(MIN(XSIZE(corr_proj()),YSIZE(corr_proj()))/2);
    int R2=Rmin*Rmin;
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj()) 
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj())
       if (i*i+j*j>R2) corr_proj(i,j)=0;
 
    // Denoise the corrections
@@ -76,7 +77,7 @@ void process_correction(Projection &corr_proj) {
 /* ------------------------------------------------------------------------- */
 /* Update residual vector for WLS                                            */
 /* ------------------------------------------------------------------------- */
-void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis, 
+void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 			    double &kappa, double &pow_residual_vol, double &pow_residual_imgs) {
   GridVolume       residual_vol;
   Projection       read_proj,dummy_proj,new_proj;
@@ -136,7 +137,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 
   // Now that we have the residual volume: project in all directions
   pow_residual_imgs=0.;
-  new_proj().resize(read_proj()); 
+  new_proj().resize(read_proj());
   mask.resize(read_proj());
   BinaryCircularMask(mask,YSIZE(read_proj())/2,INNER_MASK);
 
@@ -231,7 +232,7 @@ void ART_single_step(
       ctf.ctf.read(fn_ctf);
       ctf.ctf.Tm/=BLOB_SUBSAMPLING;
       ctf.ctf.Produce_Side_Info();
-      
+
       // Create new footprints
       footprint=new ImageOver;
       footprint2=new ImageOver;
@@ -305,13 +306,13 @@ void ART_single_step(
    }
 
    // Now compute differences .................................................
-   double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1 
+   double applied_lambda=lambda/numIMG; // In ART mode, numIMG=1
 
    mean_error=0;
    diff_proj().resize(read_proj());
-   
+
    // Weighted least-squares ART for Maximum-Likelihood refinement
-   if (prm.WLS) { 
+   if (prm.WLS) {
      weight=read_proj.weight()/prm.sum_weight;
      sqrtweight=sqrt(weight);
 
@@ -319,10 +320,10 @@ void ART_single_step(
        // Compute difference image and error
        IMGPIXEL(diff_proj,i,j)=IMGPIXEL(read_proj,i,j)-IMGPIXEL(theo_proj,i,j);
        mean_error += IMGPIXEL(diff_proj,i,j) * IMGPIXEL(diff_proj,i,j);
-       
+
        // Subtract the residual image (stored in alig_proj!)
        IMGPIXEL(diff_proj,i,j)=sqrtweight*IMGPIXEL(diff_proj,i,j)-IMGPIXEL(alig_proj,i,j);
-       
+
        // Calculate the correction and the updated residual images
        IMGPIXEL(corr_proj,i,j)=
          applied_lambda*IMGPIXEL(diff_proj,i,j)/(weight*IMGPIXEL(corr_proj,i,j) + 1.);
@@ -347,7 +348,7 @@ void ART_single_step(
      }
      mean_error /= XSIZE(diff_proj())*YSIZE(diff_proj());
    }
-   
+
    // Denoising of the correction image
    if (prm.denoise) process_correction(corr_proj);
 
@@ -356,7 +357,7 @@ void ART_single_step(
       corr_proj,YSIZE(read_proj()),XSIZE(read_proj()),
       read_proj.rot(),read_proj.tilt(),read_proj.psi(),BACKWARD,prm.eq_mode,
       prm.GVNeq,NULL,prm.ray_length);
-   
+
    // Remove footprints if necessary
    if (remove_footprints) {
       delete footprint;

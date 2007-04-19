@@ -6,36 +6,38 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
   /* **********************************************************************
 
-        This file contains all the routines to call the corresponding 
+        This file contains all the routines to call the corresponding
         fft routines, depending on the dimensions of the data (power of 2
         or not).
 
    ************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+
 #include "fftn.h"
 #include "groe.h"
+
 /*
 # define fftn	fftnf
 */
@@ -105,7 +107,7 @@ if (no_correct (row, &power) || no_correct (col, &power))
         fft_free();
         free(datamon);
      }
-        
+
      else
      {
       /* -------------now do the inverse----------------- */
@@ -143,7 +145,7 @@ if (no_correct (row, &power) || no_correct (col, &power))
           if (n<col2)
           x[m][n]=Real_El(m,n);
           else
-          x[m][n]=Real_El(m,n)/(row*col); 
+          x[m][n]=Real_El(m,n)/(row*col);
         }
 
    fft_free ();
@@ -156,7 +158,7 @@ else
 {
   ret=fft_pow2 (x, row, col, kind);
   return (ret);
-}  
+}
 }
 
 /************************************************************************
@@ -174,7 +176,7 @@ int dims[3];
 
 /******************* Check image dimensions *********************************/
 
-if (no_correct (sli, &poweri) || 
+if (no_correct (sli, &poweri) ||
     no_correct (row, &powerj) || no_correct (col, &powerk))
 {
 
@@ -184,7 +186,7 @@ if (no_correct (sli, &poweri) ||
      fprintf(stderr, "\nCan't allocate memory\n");
      return (ERROR);
    }
-   
+
    dims[0]=sli;
    dims[1]=row;
    dims[2]=col;
@@ -215,7 +217,7 @@ if (no_correct (sli, &poweri) ||
      fft_free();
      free(datamon);
      return (OK);
-   } 
+   }
    else
    {
      for (l=0; l<sli; l++)
@@ -273,5 +275,5 @@ else
      ret=vfft_pow2 (vol, sli, row, col, kind);
      return(ret);
 }
-} 
+}
 /* ---------------------- end-of-file (c source) ---------------------- */

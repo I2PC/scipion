@@ -7,30 +7,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
- 
-#include "../ImUmbend.hh"
+
+#include "im_unbend.h"
+
 #include <sys/types.h>
 #include <sys/times.h>
 
 //////////////////////////// AUXILIAR FUNCTIONS
 
-// Comparison function for qsort of Lat. Pts 
+// Comparison function for qsort of Lat. Pts
 // in increasing x values.
 // Needed for Computation of DELAUNAY Triang.
 /*int XYZCompare(const void *v1,const void *v2)
@@ -40,7 +41,7 @@
       p2 = (XYZ *) v2;
 
       return (p1->x - p2->x);
-        
+
 }*/
 
 int LatPtCompare(const void *v1,const void *v2)
@@ -73,8 +74,8 @@ void ImUmbend::PeaksCorresp( )
    LatPoint valCoord;
     //Threshold over CCvalue
    double Th=cc_peak_factor* ExpLat.cc_max;
-   
-   
+
+
    for (int kk = 0; kk < ExpLat.MRC_Xcoord.size(); kk++)
    {
    	
@@ -94,21 +95,21 @@ void ImUmbend::PeaksCorresp( )
  //  #define DEBUG
    #ifdef DEBUG
    for (int kk = 0; kk < INCR_coord.size(); kk++)
-	 cout <<  INCR_coord[kk].x << " " << INCR_coord[kk].y << " " 
-	     <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << endl;   
+	 cout <<  INCR_coord[kk].x << " " << INCR_coord[kk].y << " "
+	     <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << endl;
 
    #endif
    #undef DEBUG
 }
 
 
- 
+
 
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////// IMAGE UNBENDING
 // OBS: Interpolation based on Delanauy is not efficient by the point on triangle search (FindNearest)
-// We implement instead interpolation of shifts to the whole regular grid (using Delanauy) and then linear 
+// We implement instead interpolation of shifts to the whole regular grid (using Delanauy) and then linear
 // intrepolation to the whole image.
 
 void ImUmbend::UnBending( )
@@ -136,12 +137,12 @@ void ImUmbend::UnBending( )
 	O[1]=inIm().ColNo()*0.5;
 	O[2]=inIm().RowNo()*0.5;
 	outIm().resize(inIm());
-        
+
         //Lattice Triangulation (MRC coordinates)
 	LatTriang(LatTri);
 	
         #undef DEBUG
-        
+
 	
 	// Extend Shifts to Regular Grid (MRC Coordinates)
 	// (Remove it when you find an efficient triangle search)
@@ -158,18 +159,18 @@ void ImUmbend::UnBending( )
      cout <<  MatIncrX.RowNo() << " " << MatIncrX.ColNo() << endl;
      #endif
      #undef DEBUG
-     
+
 	Scattered2Regular(MatIncrX,MatIncrY,LatTri);
 	
 
 	
-	  
+	
     //Interpolate Values for Transformation inIm(i+shift_Y,j+shift_X)
     FOR_ALL_ELEMENTS_IN_MATRIX2D(outIm()) {
-       
-    //Interpolate Experimental Shifts 
-     
-     
+
+    //Interpolate Experimental Shifts
+
+
     // Change coordinates from xmipp to MRC (Only for interpolations based on Delanauy triangulation of MRC mesh)
      //TargetPt.x=j+O[1];
      //TargetPt.y=i+O[2];
@@ -177,13 +178,13 @@ void ImUmbend::UnBending( )
      TargetPt.y=i;
      TargetPt.Incrx=0;
      TargetPt.Incry=0;
-    
+
     	
 	
     ShiftsInterpReg(MatIncrX,MatIncrY,TargetPt);
     // Not efficient
     // ShiftsInterp(TargetPt,LatTri);
-    
+
     #ifdef TIMES
     times(&after);
     cout << "Total Shift time "<< after.tms_utime-before.tms_utime << endl;
@@ -219,16 +220,16 @@ void ImUmbend::UnBending( )
 		outIm(i,j)=0;
 	}
    }
-    
+
    /* save image  */
    try {
-     outIm.write(outImfile);   
+     outIm.write(outImfile);
    } catch (Xmipp_error XE)
    {
    cerr << XE;
    exit(1);
-   }    
-  
+   }
+
 }
 
 /////////////////////////////////////////////////////
@@ -242,39 +243,39 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
    float Tx,Ty,Ti,Tj,TiM,TjM;
    float A,A1,A2,A3,A4;
    float ACoeff[4];
-   
-  
-   
+
+
+
    //Indexes of nearest point in grid
-   det=ExpLat.a(0)*ExpLat.b(1)-ExpLat.a(1)*ExpLat.b(0);   
+   det=ExpLat.a(0)*ExpLat.b(1)-ExpLat.a(1)*ExpLat.b(0);
    Tx=TargetPt.x;
    Ty=TargetPt.y;
    j= (int) ((ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det); //Coordenada x
    i= (int) ((-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det); //Coordenada y
-   
+
    //Nearest neighbors
    Tj=j*ExpLat.a(0)+i*ExpLat.b(0);
    Ti=j*ExpLat.a(1)+i*ExpLat.b(1);
    TjM=(j+1)*ExpLat.a(0)+(i+1)*ExpLat.b(0);
    TiM=(j+1)*ExpLat.a(1)+(i+1)*ExpLat.b(1);
-    
+
    //Area computation (CHOSE INTERPOLATION method here)
-   
+
    Interp2D(Tx,Ty,Ti,Tj,TiM,TjM,ACoeff);
    A1=ACoeff[0];
    A2=ACoeff[1];
    A3=ACoeff[2];
    A4=ACoeff[3];
    A=A1+A2+A3+A4;
-   
+
    //Shift Interpolation	
    if( (!MatIncrX.outside(i,j)) && (!MatIncrX.outside(i+1,j+1)))
-   {   
+   {
      TargetPt.Incrx=A1*MatIncrX(i,j)+A2*MatIncrX(i,j+1)+A3*MatIncrX(i+1,j)+A4*MatIncrX(i+1,j+1);
      TargetPt.Incrx=TargetPt.Incrx/A;
      TargetPt.Incry=A1*MatIncrY(i,j)+A2*MatIncrY(i,j+1)+A3*MatIncrY(i+1,j)+A4*MatIncrY(i+1,j+1);
      TargetPt.Incry=TargetPt.Incry/A;
-     
+
       #undef DEBUG
    //  #define DEBUG
      #ifdef DEBUG
@@ -282,7 +283,7 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
       cout << TargetPt.Incrx << " " << TargetPt.Incry << "  " << MatIncrX(i,j) << " " << MatIncrY(i,j) << endl;
      #endif
      #undef DEBUG
-    }   
+    }
     else if( (MatIncrX.outside(i+1,j)) &&
              (MatIncrX.outside(i,j+1)) &&
              (MatIncrX.outside(i+1,j+1))
@@ -311,7 +312,7 @@ void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX,matrix2D <double> & 
          TargetPt.Incry=A1*MatIncrY(i,j)+A3*MatIncrY(i+1,j);
          TargetPt.Incry=TargetPt.Incry/A;
          }
-   
+
 }
 //2D Interpolation on Square acoording to InterpModel
 void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM, float * ACoeff)
@@ -320,29 +321,29 @@ void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM,
   double Na,Nb;
   int indR;
   int Bdim=300;
-  
+
  Na=sqrt(ExpLat.a(0)*ExpLat.a(0)+ExpLat.a(1)*ExpLat.a(1));
  Nb=sqrt(ExpLat.b(0)*ExpLat.b(0)+ExpLat.b(1)*ExpLat.b(1));
- 
+
  h=0.01;
  if(strcmp(InterpModel.c_str(),"Bessel")==0){
-      
+
       x0=SIG*(Tx-TjM)/Na;
       y0=SIG*(Ty-TiM)/Nb;
       R0=sqrt(x0*x0+y0*y0);
       indR=ROUND(R0/h);
       if(indR<Bdim)
         ACoeff[3]=B[indR];
-      else 
+      else
         ACoeff[3]=0;
-      
+
       x0=SIG*(Tx-Tj)/Na;
       y0=SIG*(Ty-TiM)/Nb;
       R0=sqrt(x0*x0+y0*y0);
       indR=ROUND(R0/h);
       if(indR<Bdim)
         ACoeff[2]=B[indR];
-      else 
+      else
         ACoeff[2]=0;
 	
       x0=SIG*(Tx-TjM)/Na;
@@ -351,16 +352,16 @@ void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM,
       indR=ROUND(R0/h);
       if(indR<Bdim)
         ACoeff[1]=B[indR];
-      else 
+      else
         ACoeff[1]=0;
-      
+
       x0=SIG*(Tx-Tj)/Na;
       y0=SIG*(Ty-Ti)/Nb;
       R0=sqrt(x0*x0+y0*y0);
       indR=ROUND(R0/h);
       if(indR<Bdim)
         ACoeff[0]=B[indR];
-      else 
+      else
         ACoeff[0]=0;
       }
  else{
@@ -368,9 +369,9 @@ void ImUmbend::Interp2D(float Tx,float Ty,float Ti,float Tj,float TiM,float TjM,
        ACoeff[1]=fabs(Ty-TiM)*fabs(Tx-Tj);
        ACoeff[2]=fabs(Ty-Ti)*fabs(Tx-TjM);
        ACoeff[3]=fabs(Ty-Ti)*fabs(Tx-Tj);
-      }      
+      }
 }
-   
+
 
 ///////////////////////////////////////////////////////////////////////////
 //Linear Interpolation from scattered data set to regular grid
@@ -381,7 +382,7 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
   int N=INCR_coord.size();
   //Interpolation Parameters
   LatPoint TargetPt;
-  
+
   //Interpolation to the whole grid	
   for(k=0;k<N;k++){
     if(INCR_coord[k].Interp){
@@ -393,21 +394,21 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
     INCR_coord[k]=TargetPt;
     }
    }
-   
+
    //Matrix Form
    int i,j;
    double Tx,Ty,det;
    for(k=0;k<N;k++){
-   
-   det=ExpLat.a(0)*ExpLat.b(1)-ExpLat.a(1)*ExpLat.b(0);   
+
+   det=ExpLat.a(0)*ExpLat.b(1)-ExpLat.a(1)*ExpLat.b(0);
    Tx=INCR_coord[k].x;
    Ty=INCR_coord[k].y;
    //index coordinates in lattice
    j=  ROUND(( ExpLat.b(1)* Tx-ExpLat.b(0)*Ty)/det); //Coordenada x
    i=  ROUND((-ExpLat.a(1)* Tx+ExpLat.a(0)*Ty)/det); //Coordenada y
-   
-     
-     
+
+
+
    MatIncrX(i,j)=INCR_coord[k].Incrx;
    MatIncrY(i,j)=INCR_coord[k].Incry;
     #undef DEBUG
@@ -416,10 +417,10 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
      cout <<  i << " " << j << " " << INCR_coord[k].x <<" "<< INCR_coord[k].y << "  " << MatIncrX(i,j) << " " << MatIncrY(i,j) << endl;
      #endif
      #undef DEBUG
-   
-    
+
+
    }
-   
+
 }
 
 
@@ -428,14 +429,14 @@ void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX,matrix2D <double> 
 void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 {
 	//Interpolation Parameters
-        int Tind, Ptind;  
+        int Tind, Ptind;
 	int n;
         float w[3],del;
 	float x[3],y[3],Incrx[3],Incry[3];
 	float xi,yi;
-	  
-	       
-	           
+	
+	
+	
         //#undef TIMES
         //#define TIMES
         #ifdef TIMES
@@ -443,7 +444,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 	times(&before);
 	#endif
 	
-	        
+	
                 //find nearest Triangle
 		Tind=FindNearestTri(TargetPt, LatTri);
 		#ifdef TIMES
@@ -470,9 +471,9 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 		 Incrx[2]=INCR_coord[LatTri[Tind].p3].Incrx;
 		 Incry[2]=INCR_coord[LatTri[Tind].p3].Incry;
 	
-	         
+	
 		//Linear Interpolation (from MatLab griddata)
-		//Barycentric Coord. 
+		//Barycentric Coord.
 		//IMPORTANT: Need that (x[k],y[k]) define a triangle (del!=0)
 	       del=(x[1]-x[0])*(y[2]-y[0])-(x[2]-x[0])*(y[1]-y[0]);
 	        w[2]=((x[0]-xi)*(y[1]-yi)-(x[1]-xi)*(y[0]-yi))/del;
@@ -488,7 +489,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 		}
 		else
 		{
-		 //Use nearest neighbour interpolation 
+		 //Use nearest neighbour interpolation
 		 Ptind=FindNearestPt(TargetPt);
 		 TargetPt.Incrx=INCR_coord[Ptind].Incrx;
 		 TargetPt.Incry=INCR_coord[Ptind].Incry;
@@ -512,11 +513,11 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
    v = (ITRIANGLE *) malloc(3*N*sizeof(ITRIANGLE));
    pLat=(LatPoint *)malloc(N*sizeof(LatPoint));
 
-  
+
 
    //Sort vertixes in x increasing order
    for(i=0;i<N;i++){
-   
+
 	   pLat[i]=INCR_coord[i];
    }
    qsort(pLat,N,sizeof(LatPoint),LatPtCompare);
@@ -525,7 +526,7 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
    {
 	   INCR_coord[i]=pLat[i];
    }
-  
+
 
    //Set Lat. Pts Coord.
    for(i=0;i<N;i++)
@@ -534,10 +535,10 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
 	p[i].y=INCR_coord[i].y;
 	p[i].z=0;
    }
-  
-   ///// Triangulation routine in DelTriang.hh
+
+   ///// Triangulation routine in DelTriang.h
    Triangulate(N,p,v,&ntri);
-  
+
 
    //Copy Triangulation to vector format
    for(i=0;i<ntri;i++)
@@ -549,11 +550,11 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
        cout <<  i << " " << v[i].p1 << " " << v[i].p2 << " " << v[i].p3 << endl;
        #endif
        #undef DEBUG
-   
+
    }
-   
+
    		
-       
+
    //free memory
    free(pLat);
    free(v);
@@ -570,7 +571,7 @@ int ImUmbend::FindNearestTri(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 	XYZ Pi,P1,P2,P3;
 	float x1,x2,x3,y1,y2,y3;
 	int N=LatTri.size();
-    
+
      //Target point position
        Pi.x=TargetPt.x;
        Pi.y=TargetPt.y;
@@ -579,7 +580,7 @@ int ImUmbend::FindNearestTri(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 	//Nearest Triangle Computation
 	for(k=0;k<N;k++)
 	{
-        
+
     	//Triangle Vertex position
 	  Vind=LatTri[k].p1;
           P1.x=INCR_coord[Vind].x;
@@ -593,10 +594,10 @@ int ImUmbend::FindNearestTri(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 
         //Inside Condition
 	x1 = P1.x-Pi.x; y1 = P1.y-Pi.y;
-        x2 = P2.x-Pi.x; y2 = P2.y-Pi.y; 
-        x3 = P3.x-Pi.x; y3 = P3.y-Pi.y; 
+        x2 = P2.x-Pi.x; y2 = P2.y-Pi.y;
+        x3 = P3.x-Pi.x; y3 = P3.y-Pi.y;
         t =  (x1*y2 > x2*y1) + (x2*y3 > x3*y2) + (x3*y1 > x1*y3);
-       
+
        // printf("Inside Condition of Triangle %d is %d:\n",k,t);
 
         if((t==3) || (t==0)) return k;
@@ -612,9 +613,9 @@ int ImUmbend::FindNearestPt(LatPoint &TargetPt)
     int k,indMin;
     int N=INCR_coord.size();
     float Dist,MinDist;
-    
+
     MinDist=-1;
-    
+
      //Nearest Pt is the one achieving minimum distance
     for(k=0;k<N;k++)
     {
@@ -627,8 +628,8 @@ int ImUmbend::FindNearestPt(LatPoint &TargetPt)
 	  }
 
     }
-   
-    
+
+
     return indMin;
-    
+
 }

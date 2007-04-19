@@ -22,8 +22,9 @@
 #include <qwidget.h>
 #include <qimage.h>
 #include <qpainter.h>
-#include <XmippData/xmippSelFiles.hh>
-#include <XmippData/xmippImages.hh>
+
+#include <data/selfile.h>
+#include <data/image.h>
 
 ///  Ways the training set can be used
 typedef enum {CIRCLE, ELLIPSE,  RECTANGLE, SQUARE, RING, ELLIPRING,
@@ -40,24 +41,24 @@ class maskFigure: public QPainter
 public:
      /** maskFigure default constructor
      */
-     
+
      /** maskFigure constructor
      *   @param _cx: X-coordinate
      *   @param _cy: Y-coordinate
      */
-     maskFigure(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): 
+     maskFigure(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height):
      		QPainter(_paintDevice), pixmap(_pixmap) {
 	width = _width; height = _height;	
-	rcx = width/2;	ocx = rcx; 
+	rcx = width/2;	ocx = rcx;
 	rcy = height/2;	ocy = rcy;
      }
 
      maskFigure(int _cx = 5, int _cy = 5): rcx(_cx), rcy(_cy) {};
-     
+
      /** maskFigure destructor
      */
      ~maskFigure() {};
-     
+
      /** Gets a constant reference to the X-coordinate of the figure's center
      */
      const int& cx() const {return rcx;};
@@ -81,7 +82,7 @@ public:
      /** Decreases the area in the case of the ring
      */
      virtual bool decreaseArea() {return true;}
-     
+
      /** Moves the figure
      *   @param _cx: new X-coordinate
      *   @param _cy: new Y-coordinate
@@ -126,14 +127,14 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-	rcx = (int) ((float) (rcx*_width)/ (float)width); 
-	rcy = (int) ((float) (rcy*_width)/ (float)width); 
+	rcx = (int) ((float) (rcx*_width)/ (float)width);
+	rcy = (int) ((float) (rcy*_width)/ (float)width);
 	ocx = rcx; ocy = rcy;	
      };
 
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
      virtual void paint(){
     	QBrush brush( NoBrush );  // void brush
@@ -184,9 +185,9 @@ public:
      	ryradius = height/4;
 	if (rxradius < 1) rxradius = 20;
 	if (ryradius < 1) ryradius = 20;
-	oxradius = rxradius;        
-	oyradius = ryradius;        
-     }; 
+	oxradius = rxradius;
+	oyradius = ryradius;
+     };
 
 
      /** maskEllipse constructor
@@ -196,11 +197,11 @@ public:
      *   @param _yradius: radius of the ellipse
      */
      maskEllipse(int _cx = 0, int _cy = 0, int _xradius = 1, int _yradius = 1): maskFigure(_cx, _cy), rxradius(_xradius), ryradius(_yradius) {};
-     
+
      /** maskCircle destructor
      */
      ~maskEllipse() {};
-     
+
      /** Gets a constant reference to the x radius of the ellipse
      */
      const int& xradius() const {return rxradius;};
@@ -227,8 +228,8 @@ public:
             ((rcy - ryradius) > 0) &&
 	    ((rcx + rxradius) < width) &&
 	    ((rcy + ryradius) < height)) {
-	    	oxradius = rxradius;        
-	    	oyradius = ryradius;        
+	    	oxradius = rxradius;
+	    	oyradius = ryradius;
         	ocx = rcx; ocy = rcy;
         	rcx = _cx; rcy = _cy;
 		paint();
@@ -240,55 +241,55 @@ public:
      */
      virtual bool moveLeft() {
        if ((rcx - rxradius) > 0) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rcx--;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
 
      /** Moves the figure up one pixel
      */
      virtual bool moveUp() {
        if ((rcy - ryradius) > 0) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rcy--;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
-     
+
      /** Moves the figure to the right one pixel
      */
      virtual bool moveRight() {
        if ((rcx + rxradius) < width) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rcx++;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
      /** Moves the figure down one pixel
      */
      virtual bool moveDown() {
        if ((rcy + ryradius) < height) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rcy++;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
 
 
@@ -296,8 +297,8 @@ public:
      */
      virtual bool decreaseWidth() {
         if (rxradius > 1) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rxradius--;
 	    paint();
@@ -309,8 +310,8 @@ public:
      */
      virtual bool decreaseHeight() {
         if (ryradius > 1) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             ryradius--;
 	    paint();
@@ -322,8 +323,8 @@ public:
      */
      virtual bool increaseWidth() {
         if (((rcx + rxradius) < width) && ((rcy + ryradius) < height) && ((rcx - rxradius) > 0) && ((rcy - ryradius) > 0)) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rxradius++;
 	    paint();
@@ -335,8 +336,8 @@ public:
      */
      virtual bool increaseHeight() {
         if (((rcx + rxradius) < width) && ((rcy + ryradius) < height) && ((rcx - rxradius) > 0) && ((rcy - ryradius) > 0)) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             ryradius++;
 	    paint();
@@ -350,22 +351,22 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-        maskFigure::resize(_width, _height);        
-	rxradius = (int) ((float) (rxradius*_width)/ (float)width); 
-	ryradius = (int) ((float) (ryradius*_width)/ (float)width); 
-	oxradius = rxradius;        
-	oyradius = ryradius;        
+        maskFigure::resize(_width, _height);
+	rxradius = (int) ((float) (rxradius*_width)/ (float)width);
+	ryradius = (int) ((float) (ryradius*_width)/ (float)width);
+	oxradius = rxradius;
+	oyradius = ryradius;
         height = _height; width = _width;
 	paint();
      };
 
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
-     virtual void paint() { 
+     virtual void paint() {
        maskFigure::paint();
-       QPoint point(ocx-oxradius, ocy-oyradius); 
+       QPoint point(ocx-oxradius, ocy-oyradius);
        QRect rect(ocx-oxradius, ocy-oyradius, oxradius*2, oyradius*2);
        drawPixmap(point, (*pixmap), rect);
        drawEllipse(rcx-rxradius, rcy-ryradius, rxradius*2, ryradius*2);
@@ -381,7 +382,7 @@ public:
         float Y = (float) (_cy - rcy)/ (float)ryradius;
         if ((X*X + Y*Y) < 1)
            return true;
-	else 
+	else
 	   return false;
      };
 
@@ -417,7 +418,7 @@ public:
      *   @param _cx: X-coordinate
      *   @param _cy: Y-coordinate
      */
-     maskCircle(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipse(_paintDevice, _pixmap, _width, _height) {}; 
+     maskCircle(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipse(_paintDevice, _pixmap, _width, _height) {};
 
 
      /** maskCircle constructor
@@ -426,11 +427,11 @@ public:
      *   @param _radius: radius of the circle
      */
      maskCircle(int _cx = 0, int _cy = 0, int _radius = 1): maskEllipse(_cx, _cy, _radius, _radius) {};
-     
+
      /** maskCircle destructor
      */
      ~maskCircle() {};
-     
+
      /** Gets a constant reference to the radius of the circle
      */
      const int& radius() const {return rxradius;};
@@ -438,37 +439,37 @@ public:
      /** Sets the radius of the circle
      */
      void setRadius(int _radius) {
-	oxradius = rxradius;        
-	oyradius = ryradius;        
+	oxradius = rxradius;
+	oyradius = ryradius;
      	rxradius = _radius; ryradius = _radius;
      };
 
      /** Decreases the width one pixel
      */
      virtual bool decreaseWidth() {
-       maskEllipse::decreaseWidth(); 
-       return maskEllipse::decreaseHeight(); 
+       maskEllipse::decreaseWidth();
+       return maskEllipse::decreaseHeight();
      };
 
      /** Decreases the height one pixel
      */
      virtual bool decreaseHeight() {
-       maskEllipse::decreaseWidth(); 
-       return maskEllipse::decreaseHeight(); 
+       maskEllipse::decreaseWidth();
+       return maskEllipse::decreaseHeight();
      };
 
      /** Increases the width one pixel
      */
      virtual bool increaseWidth() {
-       maskEllipse::increaseWidth(); 
-       return maskEllipse::increaseHeight(); 
+       maskEllipse::increaseWidth();
+       return maskEllipse::increaseHeight();
      };
 
      /** Increases the height one pixel
      */
      virtual bool increaseHeight() {
-       maskEllipse::increaseWidth(); 
-       return maskEllipse::increaseHeight(); 
+       maskEllipse::increaseWidth();
+       return maskEllipse::increaseHeight();
      };
 
 };
@@ -493,9 +494,9 @@ public:
      	rrheight = height/4;
 	if (rrwidth < 1) rrwidth = 20;
 	if (rrheight < 1) rrheight = 20;
-	orwidth = rrwidth;        
-	orheight = rrheight;        
-     }; 
+	orwidth = rrwidth;
+	orheight = rrheight;
+     };
 
 
      /** maskRectangle constructor
@@ -505,11 +506,11 @@ public:
      *   @param _rheight: height of the rectangle
      */
      maskRectangle(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskFigure(_cx, _cy), rrwidth(_rwidth), rrheight(_rheight) {};
-     
+
      /** maskRectangle destructor
      */
      ~maskRectangle() {};
-     
+
      /** Gets a constant reference to the width of the rectangle
      */
      const int& rwidth() const {return rrwidth;};
@@ -535,8 +536,8 @@ public:
             ((rcy - rrheight) > 0) &&
 	    ((rcx + rrwidth) < width) &&
 	    ((rcy + rrheight) < height)) {
-	    	orwidth = rrwidth;        
-	    	orheight = rrheight;        
+	    	orwidth = rrwidth;
+	    	orheight = rrheight;
         	ocx = rcx; ocy = rcy;
         	rcx = _cx; rcy = _cy;
 		paint();
@@ -548,63 +549,63 @@ public:
      */
      virtual bool moveLeft() {
        if ((rcx - rrwidth) > 0) {
-	    orwidth = rrwidth;        
-	    orheight = rrheight;        
+	    orwidth = rrwidth;
+	    orheight = rrheight;
             ocx = rcx; ocy = rcy;
             rcx--;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
 
      /** Moves the figure up one pixel
      */
      virtual bool moveUp() {
        if ((rcy - rrheight) > 0) {
-	    orwidth = rrwidth;        
-	    orheight = rrheight;        
+	    orwidth = rrwidth;
+	    orheight = rrheight;
             ocx = rcx; ocy = rcy;
             rcy--;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
-     
+
      /** Moves the figure to the right one pixel
      */
      virtual bool moveRight() {
        if ((rcx + rrwidth) < width) {
-	    orwidth = rrwidth;        
-	    orheight = rrheight;        
+	    orwidth = rrwidth;
+	    orheight = rrheight;
             ocx = rcx; ocy = rcy;
             rcx++;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
      /** Moves the figure down one pixel
      */
      virtual bool moveDown() {
        if ((rcy + rrheight) < height) {
-	    orwidth = rrwidth;        
-	    orheight = rrheight;        
+	    orwidth = rrwidth;
+	    orheight = rrheight;
             ocx = rcx; ocy = rcy;
             rcy++;
 	    paint();
 	    return true;
 	} else return false;
-     };     
+     };
 
 
      /** Decreases the width one pixel
      */
      virtual bool decreaseWidth() {
         if (rrwidth > 1) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
           rrwidth--;
 	  paint();
@@ -616,8 +617,8 @@ public:
      */
      virtual bool decreaseHeight() {
         if (rrheight > 1) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
           rrheight--;
 	  paint();
@@ -629,8 +630,8 @@ public:
      */
      virtual bool increaseWidth() {
         if (((rcx + rrwidth) < width) && ((rcy + rrheight) < height) && ((rcx - rrwidth) > 0) && ((rcy - rrheight) > 0)) {
-	   orwidth = rrwidth;        
-	   orheight = rrheight;        
+	   orwidth = rrwidth;
+	   orheight = rrheight;
            ocx = rcx; ocy = rcy;
            rrwidth++;
 	   paint();
@@ -642,8 +643,8 @@ public:
      */
      virtual bool increaseHeight() {
         if (((rcx + rrwidth) < width) && ((rcy + rrheight) < height) && ((rcx - rrwidth) > 0) && ((rcy - rrheight) > 0)) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
           rrheight++;
 	  paint();
@@ -657,22 +658,22 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-        maskFigure::resize(_width, _height);        
-	rrwidth = (int) ((float) (rrwidth*_width)/ (float)width); 
-	rrheight = (int) ((float) (rrheight*_width)/ (float)width); 
-	orwidth = rrwidth;        
-	orheight = rrheight;        
+        maskFigure::resize(_width, _height);
+	rrwidth = (int) ((float) (rrwidth*_width)/ (float)width);
+	rrheight = (int) ((float) (rrheight*_width)/ (float)width);
+	orwidth = rrwidth;
+	orheight = rrheight;
         height = _height; width = _width;
 	paint();
      };
 
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
-     virtual void paint() { 
+     virtual void paint() {
        maskFigure::paint();
-       QPoint point(ocx-orwidth, ocy-orheight); 
+       QPoint point(ocx-orwidth, ocy-orheight);
        QRect rect(ocx-orwidth, ocy-orheight, orwidth*2, orheight*2);
        drawPixmap(point, (*pixmap), rect);
        drawRect(rcx-rrwidth, rcy-rrheight, rrwidth*2, rrheight*2);
@@ -686,7 +687,7 @@ public:
      virtual bool isIn(int _cx, int _cy) {
         if (  (_cx > (rcx-rrwidth)) && (_cy > (rcy-rrheight)) && (_cx < (rcx+rrwidth)) && (_cy < (rcy+rrheight)))	
            return true;
-	else 
+	else
 	   return false;
      };
 
@@ -719,7 +720,7 @@ public:
      *   @param _cx: X-coordinate
      *   @param _cy: Y-coordinate
      */
-     maskSquare(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectangle(_paintDevice, _pixmap, _width, _height) {}; 
+     maskSquare(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectangle(_paintDevice, _pixmap, _width, _height) {};
 
 
      /** maskSquare constructor
@@ -728,11 +729,11 @@ public:
      *   @param _width: width of the sqaure
      */
      maskSquare(int _cx = 0, int _cy = 0, int _width = 1): maskRectangle(_cx, _cy, _width, _width) {};
-     
+
      /** maskSquare destructor
      */
      ~maskSquare() {};
-     
+
      /** Gets a constant reference to the width of the square
      */
      const int& swidth() const {return rrwidth;};
@@ -744,29 +745,29 @@ public:
      /** Decreases the width one pixel
      */
      virtual bool decreaseWidth() {
-       maskRectangle::decreaseWidth(); 
-       return maskRectangle::decreaseHeight(); 
+       maskRectangle::decreaseWidth();
+       return maskRectangle::decreaseHeight();
      };
 
      /** Decreases the height one pixel
      */
      virtual bool decreaseHeight() {
-       maskRectangle::decreaseWidth(); 
-       return maskRectangle::decreaseHeight(); 
+       maskRectangle::decreaseWidth();
+       return maskRectangle::decreaseHeight();
      };
 
      /** Increases the width one pixel
      */
      virtual bool increaseWidth() {
-       maskRectangle::increaseWidth(); 
-       return maskRectangle::increaseHeight(); 
+       maskRectangle::increaseWidth();
+       return maskRectangle::increaseHeight();
      };
 
      /** Increases the height one pixel
      */
      virtual bool increaseHeight() {
-       maskRectangle::increaseWidth(); 
-       return maskRectangle::increaseHeight(); 
+       maskRectangle::increaseWidth();
+       return maskRectangle::increaseHeight();
      };
 
 };
@@ -787,9 +788,9 @@ public:
      *   @param _cy: Y-coordinate
      */
      maskEllipRing(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipse(_paintDevice, _pixmap, _width, _height) {
-        innerXradius = rxradius - 10; 
-        innerYradius = rxradius - 10; 
-     }; 
+        innerXradius = rxradius - 10;
+        innerYradius = rxradius - 10;
+     };
 
 
      /** maskEllipse constructor
@@ -799,14 +800,14 @@ public:
      *   @param _yradius: radius of the ellipse
      */
      maskEllipRing(int _cx = 0, int _cy = 0, int _xradius = 1, int _yradius = 1): maskEllipse(_cx, _cy, _xradius, _yradius) {
-        innerXradius = rxradius - 10; 
-        innerYradius = rxradius - 10; 
+        innerXradius = rxradius - 10;
+        innerYradius = rxradius - 10;
      };
-     
+
      /** maskEllipRing destructor
      */
      ~maskEllipRing() {};
-     
+
      /** Gets a constant reference to the inner radius of the ellipse
      */
      const int& innerXRadius() const {return innerXradius;};
@@ -828,8 +829,8 @@ public:
      */
      virtual bool decreaseArea() {
         if ( (rxradius > innerXradius) && (ryradius > innerYradius) ) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rxradius--;
             ryradius--;
@@ -843,8 +844,8 @@ public:
      */
      virtual bool increaseArea() {
         if (((rcx + rxradius) < width) && ((rcy + ryradius) < height) && ((rcx - rxradius) > 0) && ((rcy - ryradius) > 0)) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
             rxradius++;
             ryradius++;
@@ -858,8 +859,8 @@ public:
      */
      virtual bool decreaseWidth() {
         if (innerXradius > 1) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
 	    innerXradius--;
             rxradius--;
@@ -872,8 +873,8 @@ public:
      */
      virtual bool decreaseHeight() {
         if (innerYradius > 1) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
 	    innerYradius--;
             ryradius--;
@@ -886,8 +887,8 @@ public:
      */
      virtual bool increaseWidth() {
         if (((rcx + rxradius) < width) && ((rcy + ryradius) < height) && ((rcx - rxradius) > 0) && ((rcy - ryradius) > 0)) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
 	    innerXradius++;
             rxradius++;
@@ -900,8 +901,8 @@ public:
      */
      virtual bool increaseHeight() {
         if (((rcx + rxradius) < width) && ((rcy + ryradius) < height) && ((rcx - rxradius) > 0) && ((rcy - ryradius) > 0)) {
-	    oxradius = rxradius;        
-	    oyradius = ryradius;        
+	    oxradius = rxradius;
+	    oyradius = ryradius;
             ocx = rcx; ocy = rcy;
 	    innerYradius++;
             ryradius++;
@@ -916,24 +917,24 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-        maskFigure::resize(_width, _height);        
-	rxradius = (int) ((float) (rxradius*_width)/ (float)width); 
-	ryradius = (int) ((float) (ryradius*_width)/ (float)width); 
-	innerXradius = (int) ((float) (innerXradius*_width)/ (float)width); 
-	innerYradius = (int) ((float) (innerYradius*_width)/ (float)width); 
-	oxradius = rxradius;        
-	oyradius = ryradius;        
+        maskFigure::resize(_width, _height);
+	rxradius = (int) ((float) (rxradius*_width)/ (float)width);
+	ryradius = (int) ((float) (ryradius*_width)/ (float)width);
+	innerXradius = (int) ((float) (innerXradius*_width)/ (float)width);
+	innerYradius = (int) ((float) (innerYradius*_width)/ (float)width);
+	oxradius = rxradius;
+	oyradius = ryradius;
         height = _height; width = _width;
 	paint();
      };
 
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
-     virtual void paint() { 
+     virtual void paint() {
        maskFigure::paint();
-       QPoint point(ocx-oxradius, ocy-oyradius); 
+       QPoint point(ocx-oxradius, ocy-oyradius);
        QRect rect(ocx-oxradius, ocy-oyradius, oxradius*2, oyradius*2);
        drawPixmap(point, (*pixmap), rect);
        drawEllipse(rcx-rxradius, rcy-ryradius, rxradius*2, ryradius*2);
@@ -960,14 +961,14 @@ public:
      virtual void print(float scalex, float scaley) {
         maskEllipse::print(scalex,scaley);
 	cout << "(innerXradius,innerYradius): (" << innerXradius/scalex << ", "
-	                                         << innerYradius/scaley << ")" 
+	                                         << innerYradius/scaley << ")"
 						 << endl;
      }
 
      	
 protected:
-     int innerXradius; 	      // inner X radius   
-     int innerYradius; 	      // inner Y radius   
+     int innerXradius; 	      // inner X radius
+     int innerYradius; 	      // inner Y radius
 };
 
 
@@ -985,7 +986,7 @@ public:
      *   @param _cx: X-coordinate
      *   @param _cy: Y-coordinate
      */
-     maskCircleRing(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipRing(_paintDevice, _pixmap, _width, _height) {}; 
+     maskCircleRing(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipRing(_paintDevice, _pixmap, _width, _height) {};
 
 
      /** maskCircleRing constructor
@@ -994,11 +995,11 @@ public:
      *   @param _radius: outer radius of the circle
      */
      maskCircleRing(int _cx = 0, int _cy = 0, int _radius = 1): maskEllipRing(_cx, _cy, _radius, _radius) {};
-     
+
      /** maskCircleRing destructor
      */
      ~maskCircleRing() {};
-     
+
      /** Gets a constant reference to the inner radius of the circle
      */
      const int& innerRadius() const {return innerXradius;};
@@ -1007,29 +1008,29 @@ public:
      /** Decreases the width one pixel
      */
      virtual bool decreaseWidth() {
-       maskEllipRing::decreaseWidth(); 
-       return maskEllipRing::decreaseHeight(); 
+       maskEllipRing::decreaseWidth();
+       return maskEllipRing::decreaseHeight();
      };
 
      /** Decreases the height one pixel
      */
      virtual bool decreaseHeight() {
-       maskEllipRing::decreaseWidth(); 
-       return maskEllipRing::decreaseHeight(); 
+       maskEllipRing::decreaseWidth();
+       return maskEllipRing::decreaseHeight();
      };
 
      /** Increases the width one pixel
      */
      virtual bool increaseWidth() {
-       maskEllipRing::increaseWidth(); 
-       return maskEllipRing::increaseHeight(); 
+       maskEllipRing::increaseWidth();
+       return maskEllipRing::increaseHeight();
      };
 
      /** Increases the height one pixel
      */
      virtual bool increaseHeight() {
-       maskEllipRing::increaseWidth(); 
-       return maskEllipRing::increaseHeight(); 
+       maskEllipRing::increaseWidth();
+       return maskEllipRing::increaseHeight();
      };
 };
 
@@ -1053,7 +1054,7 @@ public:
      maskRectFrame(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectangle(_paintDevice, _pixmap, _width, _height) {
         innerwidth = rrwidth - 10;
         innerheight = rrheight - 10;
-     }; 
+     };
 
 
      /** maskRectangle constructor
@@ -1066,18 +1067,18 @@ public:
         innerwidth = rrwidth - 10;
         innerheight = rrheight - 10;
      };
-     
+
      /** maskRectangle destructor
      */
      ~maskRectFrame() {};
-     
+
 
      /** Decreases the area of the frame
      */
      virtual bool decreaseArea() {
         if ( (rrwidth > innerwidth) && (rrheight > innerheight) ) {
-	     orwidth = rrwidth;        
-	     orheight = rrheight;        
+	     orwidth = rrwidth;
+	     orheight = rrheight;
              ocx = rcx; ocy = rcy;
              rrwidth--;
              rrheight--;
@@ -1091,8 +1092,8 @@ public:
      */
      virtual bool increaseArea() {
         if (((rcx + rrwidth) < width) && ((rcy + rrheight) < height) && ((rcx - rrwidth) > 0) && ((rcy - rrheight) > 0)) {
-	     orwidth = rrwidth;        
-	     orheight = rrheight;        
+	     orwidth = rrwidth;
+	     orheight = rrheight;
              ocx = rcx; ocy = rcy;
              rrwidth++;
              rrheight++;
@@ -1106,8 +1107,8 @@ public:
      */
      virtual bool decreaseWidth() {
         if (innerwidth > 1) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
 	  innerwidth--;
           rrwidth--;
@@ -1120,8 +1121,8 @@ public:
      */
      virtual bool decreaseHeight() {
         if (innerheight > 1) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
 	  innerheight--;
           rrheight--;
@@ -1134,8 +1135,8 @@ public:
      */
      virtual bool increaseWidth() {
         if (((rcx + rrwidth) < width) && ((rcy + rrheight) < height) && ((rcx - rrwidth) > 0) && ((rcy - rrheight) > 0)) {
-	   orwidth = rrwidth;        
-	   orheight = rrheight;        
+	   orwidth = rrwidth;
+	   orheight = rrheight;
            ocx = rcx; ocy = rcy;
            rrwidth++;
 	   innerwidth++;
@@ -1148,8 +1149,8 @@ public:
      */
      virtual bool increaseHeight() {
         if (((rcx + rrwidth) < width) && ((rcy + rrheight) < height) && ((rcx - rrwidth) > 0) && ((rcy - rrheight) > 0)) {
-	  orwidth = rrwidth;        
-	  orheight = rrheight;        
+	  orwidth = rrwidth;
+	  orheight = rrheight;
           ocx = rcx; ocy = rcy;
           rrheight++;
 	  innerheight++;
@@ -1164,24 +1165,24 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-        maskFigure::resize(_width, _height);        
-	rrwidth = (int) ((float) (rrwidth*_width)/ (float)width); 
-	rrheight = (int) ((float) (rrheight*_width)/ (float)width); 
-	innerwidth = (int) ((float) (innerwidth*_width)/ (float)width); 
-	innerheight = (int) ((float) (innerheight*_width)/ (float)width); 
-	orwidth = rrwidth;        
-	orheight = rrheight;        
+        maskFigure::resize(_width, _height);
+	rrwidth = (int) ((float) (rrwidth*_width)/ (float)width);
+	rrheight = (int) ((float) (rrheight*_width)/ (float)width);
+	innerwidth = (int) ((float) (innerwidth*_width)/ (float)width);
+	innerheight = (int) ((float) (innerheight*_width)/ (float)width);
+	orwidth = rrwidth;
+	orheight = rrheight;
         height = _height; width = _width;
 	paint();
      };
 
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
-     virtual void paint() { 
+     virtual void paint() {
        maskFigure::paint();
-       QPoint point(ocx-orwidth, ocy-orheight); 
+       QPoint point(ocx-orwidth, ocy-orheight);
        QRect rect(ocx-orwidth, ocy-orheight, orwidth*2, orheight*2);
        drawPixmap(point, (*pixmap), rect);
        drawRect(rcx-rrwidth, rcy-rrheight, rrwidth*2, rrheight*2);
@@ -1205,7 +1206,7 @@ public:
         maskRectangle::print(scalex,scaley);
 	cout << "(half_innerwidth,"
 	         "half_innerheight): (" << innerwidth/scalex << ", "
-	                                << innerheight/scaley << ")" 
+	                                << innerheight/scaley << ")"
 					<< endl;
      }
 
@@ -1232,7 +1233,7 @@ public:
      *   @param _cy: Y-coordinate
      */
      maskSquFrame(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectFrame(_paintDevice, _pixmap, _width, _height) {
-     }; 
+     };
 
 
      /** maskSquFrame constructor
@@ -1243,37 +1244,37 @@ public:
      */
      maskSquFrame(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskRectFrame(_cx, _cy, _rwidth, _rheight){
      };
-     
+
      /** maskSquFrame destructor
      */
      ~maskSquFrame() {};
-     
+
      /** Decreases the width one pixel
      */
      virtual bool decreaseWidth() {
-       maskRectFrame::decreaseWidth(); 
-       return maskRectFrame::decreaseHeight(); 
+       maskRectFrame::decreaseWidth();
+       return maskRectFrame::decreaseHeight();
      };
 
      /** Decreases the height one pixel
      */
      virtual bool decreaseHeight() {
-       maskRectFrame::decreaseWidth(); 
-       return maskRectFrame::decreaseHeight(); 
+       maskRectFrame::decreaseWidth();
+       return maskRectFrame::decreaseHeight();
      };
 
      /** Increases the width one pixel
      */
      virtual bool increaseWidth() {
-       maskRectFrame::increaseWidth(); 
-       return maskRectFrame::increaseHeight(); 
+       maskRectFrame::increaseWidth();
+       return maskRectFrame::increaseHeight();
      };
 
      /** Increases the height one pixel
      */
      virtual bool increaseHeight() {
-       maskRectFrame::increaseWidth(); 
-       return maskRectFrame::increaseHeight(); 
+       maskRectFrame::increaseWidth();
+       return maskRectFrame::increaseHeight();
      };
 
 };
@@ -1294,7 +1295,7 @@ public:
      */
      maskPolygon(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskFigure(_paintDevice, _pixmap, _width, _height) {
         close_polygon=false;
-     }; 
+     };
 
      /** Moves the figure
      *   @param _cx: new X-coordinate
@@ -1319,7 +1320,7 @@ public:
           paint();
           return true;
        } else return false;
-     };     
+     };
 
      /** Moves the figure up one pixel
      */
@@ -1335,7 +1336,7 @@ public:
           paint();
           return true;
        } else return false;
-     };     
+     };
 
      /** Moves the figure to the right one pixel
      */
@@ -1351,7 +1352,7 @@ public:
           paint();
           return true;
        } else return false;
-     };     
+     };
 
      /** Moves the figure down one pixel
      */
@@ -1367,7 +1368,7 @@ public:
           paint();
           return true;
        } else return false;
-     };     
+     };
 
      /** Decreases the width one pixel
      */
@@ -1458,7 +1459,7 @@ public:
      *   @param _height: new height
      */
      virtual void resize(int _width, int _height) {
-        maskFigure::resize(_width, _height);        
+        maskFigure::resize(_width, _height);
         double factor=(double)_width/(double)width;
         for (int i=0; i<list_of_points.size(); i++)
            list_of_points[i]*factor;
@@ -1469,7 +1470,7 @@ public:
      };
 
      /** Paints the figure (virtual method)
-     *   
+     *
      */
      virtual void paint() {
        if (list_of_points.size()==0) return;
@@ -1580,9 +1581,9 @@ private:
     int		clickx, clicky;
     static 	maskImg* other;
     Image       mask;
-    maskType    typeOfMask;    
+    maskType    typeOfMask;
     int         cx, cy, w, h, KEYevent;
-    maskFigure* theMaskFigure;    
+    maskFigure* theMaskFigure;
 private slots:
     void	newWindow();
     void	openFile();

@@ -7,32 +7,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _PROG_ANGULAR_PREDICT_CONTINOUOS
    #define _PROG_ANGULAR_PREDICT_CONTINUOUS
 
-#include <XmippData/xmippProgs.hh>
-#include <XmippData/xmippMatrices3D.hh>
-#include <XmippData/xmippMatrices2D.hh>
-#include <XmippData/xmippMatrices1D.hh>
-#include <XmippData/xmippMasks.hh>
-#include <XmippData/xmippDocFiles.hh>
+#include <data/progs.h>
+#include <data/matrix3d.h>
+#include <data/matrix2d.h>
+#include <data/matrix1d.h>
+#include <data/mask.h>
+#include <data/docfile.h>
 
 /**@name Angular Predict Continuous */
 //@{
@@ -137,7 +137,7 @@ public:
     allocated by the caller. */
 struct cstregistrationStruct {
    /* Real part of the DFT of the volume.
-       The size must be given in the fields: 
+       The size must be given in the fields:
        nx_ReDftVolume, ny_ReDftVolume and nz_ReDftVolume.of this structure.
    */
    double   *ReDftVolume;
@@ -149,7 +149,7 @@ struct cstregistrationStruct {
    long    nz_ReDftVolume;
 
    /* Imaginary part of the DFT of the volume.
-       The size must be given in the fields: 
+       The size must be given in the fields:
        nx_ImDftVolume, ny_ImDftVolume and nz_ImDftVolume.of this structure.
    */
    double   *ImDftVolume;
@@ -161,7 +161,7 @@ struct cstregistrationStruct {
    long    nz_ImDftVolume;
 
    /* Real part of the DFT of the image.
-       The size must be given in the fields: 
+       The size must be given in the fields:
        nx_ReDftImage and ny_ReDftImage of this structure.
    */
    double   *ReDftImage;
@@ -171,7 +171,7 @@ struct cstregistrationStruct {
    long    ny_ReDftImage;
 
    /* Imaginary part of the DFT of the image.
-       The size must be given in the fields: 
+       The size must be given in the fields:
        nx_ReDftImage and ny_ImDftImage.of this structure.
    */
    double   *ImDftImage;
@@ -194,7 +194,7 @@ struct cstregistrationStruct {
    double   *VoxelSize;
    // Length of the VoxelSize vector
    long    nx_VoxelSize;
-   
+
    /* Vector with the pixel size in physical units (A/pix) in each direction.
        Its length is given by nx_PixelSize. Normally it is 2 */
    double   *PixelSize;
@@ -207,7 +207,7 @@ struct cstregistrationStruct {
    double   *Parameters;
    // Length of the initial pose parameters vector
    long    nx_Parameters;
-   
+
    /* Final pose parameters.
        This is a matrix whose columns are the different pose parameters
        after each iteration of the optimization. Column 0 is the pose at time 0,
@@ -225,20 +225,20 @@ struct cstregistrationStruct {
    double   *Cost;
    // Size of the vector Cost
    long    nx_Cost;
-   
+
    /* Vector with the time consumed at each iteration.
        Its size is nx_TimePerIter */
    double   *TimePerIter;
    // Size of TimePerIter
    long    nx_TimePerIter;
-   
+
    /* Number of iterations performed. */
    long    *NumberIterPerformed;
    /* Number of successful iterations */
    long    *NumberSuccPerformed;
    /* Number of failed iterations. */
    long    *NumberFailPerformed;
-   
+
    /* Vector with the number of the failed iterations.
        Its size should be the maximum number of iterations. Normally
        all values are 0s except at those iterations where it failed.
@@ -246,19 +246,19 @@ struct cstregistrationStruct {
    double   *Failures;
    // Size of the Failures vector
    long    nx_Failures;
-   
+
    /* Interpolated section of the Fourier volume.
        It is a two slice volume. The first slice is the real part and
        the second slice the imaginary part. No */
    double   *dftProj;
-   
+
    // X dimension of the interpolated section
    long    nx_dftProj;
    // Y dimension of the interpolated section
    long    ny_dftProj;
    // Z dimension of the interpolated section (should be 2)
    long    nz_dftProj;
-   
+
    /* Scaling factor for changing the parameter lambda in the LM optimizer.
        If a success/failure occurs, lambda is changed by this factor. */
    double  ScaleLambda;
@@ -276,11 +276,11 @@ struct cstregistrationStruct {
        with the initial pose parameters. */
    long    MakeDesiredProj;
    /* Tolerance in the angle to accept a certain solution.
-       If the angular parameters change less than this value, 
+       If the angular parameters change less than this value,
        the optimizer will stop. */
    double  ToleranceAngle;
    /* Tolerance in the shift to accept a certain solution.
-       If the shift parameters change less than this value, 
+       If the shift parameters change less than this value,
        the optimizer will stop. */
    double  ToleranceShift;
 };

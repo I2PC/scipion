@@ -6,34 +6,34 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /* ------------------------------------------------------------------------- */
 /* VECTORS                                                                   */
 /* ------------------------------------------------------------------------- */
-#include "../xmippMatrices1D.hh"
+#include "matrix1d.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
 #define maT matrix1D<T>
 #define ma  matrix1D
-#include "MultidimBasic.inc"
+#include "multidim_basic.inc"
 #undef ma
 #undef maT
 // Special case for complex numbers
@@ -41,7 +41,7 @@ template <>
 ostream& operator << (ostream& out, const matrix1D< complex<double> >& v) {
    if (MULTIDIM_SIZE(v)==0) out << "NULL vector\n";
    else {
-      FOR_ALL_ELEMENTS_IN_MATRIX1D(v) {      
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(v) {
          if (v.row) out << VEC_ELEM(v,i) << ' ';
          else       out << VEC_ELEM(v,i) << '\n';
       }
@@ -116,13 +116,13 @@ void Powell_optimizer(matrix1D<double> &p, int i0, int n,
    for (int i=1,ptr=1; i<=n; i++)
        for (int j=1; j<=n; j++,ptr++)
            xi[ptr]=(i==j)?steps(i-1):0;
-   
+
    // Optimize
    xi-=n; // This is because NR works with matrices
             // starting at [1,1]
    powell(auxpptr,xi,n,ftol,iter,fret,f, show);
    xi+=n;
-   
+
    // Exit
    free_Tvector(xi,1,n*n);
 }

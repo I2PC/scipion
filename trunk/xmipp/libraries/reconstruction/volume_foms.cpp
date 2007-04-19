@@ -6,26 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../volume_FOMs.hh"
-#include "../phantom.hh"
-#include <XmippData/xmippHistograms.hh>
-#include <XmippData/xmippDocFiles.hh>
+
+#include "volume_foms.h"
+#include "phantom.h"
+
+#include <data/histogram.h>
+#include <data/docfile.h>
 
 // Some nice definitions ...................................................
 #define L    VOLMATRIX(*vol_label)
@@ -51,10 +53,10 @@ typedef struct coord {
 /* ------------------------------------------------------------------------- */
 /* Compute Number of voxels in each feature                                  */
 /* ------------------------------------------------------------------------- */
-void compute_voxels_in_feat(Volume *vol_label, 
+void compute_voxels_in_feat(Volume *vol_label,
    matrix1D<double> &feat_voxels) {
    int sel_feat;
-   
+
    // Choose dimensions for output vector
    int label_no=(int)(*vol_label)().compute_max();
    feat_voxels.resize(label_no+1); // 0, 1, ..., FeatNo()
@@ -115,7 +117,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
          out.width(3);  out << " (" << j << ",";
          out.width(3);  out << i << ",";
          out.width(3);  out << k << ")";
-                        out << " (" << r.transpose() << ")" << endl; 
+                        out << " (" << r.transpose() << ")" << endl;
       }
    }
 }
@@ -135,7 +137,7 @@ void compute_sc_FOMs(
    int    no_samples  =0;
    double Mp=-1e30, mp=1e30;
    double Mr=-1e30, mr=1e30;
-   
+
    FOR_ALL_ELEMENTS_IN_MATRIX3D(L) {
       if (!mi) continue; // If it is not in the mask continue
       int f=(int)li;
@@ -162,7 +164,7 @@ void compute_sc_FOMs(
    double covariance     = (no_samples>0)?
       (phantom_recons_sum-phantom_avg*recons_sum-recons_avg*phantom_sum+
          phantom_avg*recons_avg*no_samples)/no_samples:0;
-   
+
    if (no_samples>0) {
       scL2_FOM    = (double)(1-1.0/no_samples*L2_error);
       scL1_FOM    = (double)(1-0.5/no_samples*L1_error);
@@ -173,9 +175,9 @@ void compute_sc_FOMs(
          sccorr_FOM  = covariance/(phantom_stddev*recons_stddev);
       else sccorr_FOM=-1;
    } else {
-      scL2_FOM = scL1_FOM = scmu_FOM = scdev_FOM = scrange_FOM = 
+      scL2_FOM = scL1_FOM = scmu_FOM = scdev_FOM = scrange_FOM =
          sccorr_FOM = -1.0;
-   }      
+   }
 
    // Compute mutual information FOM
    histogram1D hist_phantom, hist_recons;
@@ -215,7 +217,7 @@ void compute_sc_FOMs(
    } else scinf_FOM=-1;
 
    // Show process
-   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.hh
+   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.h
       cout << "   Selected feature: ";
       switch (sel_feat) {
          case -1: cout << "whole volume\n"; break;
@@ -261,7 +263,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
                               // and the reconstruction, between
    double phantom_confidence_i, recons_confidence_i;
    double phantom_confidence_o, recons_confidence_o;
-   
+
    // Histogram detection error variables .................................
    histogram1D Hpf, Hpb;    // Phantom fore and background histograms
    histogram1D Hrf, Hrb;    // Reconstruction for and background histograms
@@ -273,7 +275,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
       Hrf.init(min,max,100);
       Hrb.init(min,max,100);
    double phantom_dt_err, recons_dt_err;
-   
+
    // Vertical resolution variables ........................................
    int compute_vrFOM=phantom_descr(sel_feat)->Type=="dcy";
    double mp1=0, mp2=0, mp3=0, vp1=0, vp2=0, vp3=0;
@@ -294,7 +296,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
          cout << "z3=" << z3 << endl;
       #endif
    }
-   
+
    // Other variables ......................................................
    matrix1D<double> r(3), corner1(3), corner2(3), aux1(3), aux2(3);
    Feature *Back       = phantom_descr(sel_feat)->background(back_mode,back_param);
@@ -327,7 +329,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
          #ifdef DEBUG
             cout << "   It's totally inside the foreground\n";
          #endif
-   
+
       // Check if inside background
       if (Back->voxel_inside(r)==8) {
          // Is it purely in background?
@@ -364,7 +366,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             Hrf.insert_value(r_r);
          }
       }
-      
+
       // Check if for vrFOM
       if (compute_vrFOM && ABS(ZZ(r)-z2)<XMIPP_EQUAL_ACCURACY &&
           totally_inside_foreground) {
@@ -416,7 +418,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
          hsbr_FOM=zro-zpo;
       }
    } else hsbr_FOM=-1;
-   
+
    // Compute detectability error ..........................................
    phantom_dt_err=detectability_error(Hpb,Hpf);
    recons_dt_err =detectability_error(Hrb,Hrf);
@@ -452,9 +454,9 @@ void compute_hs_FOMs(Volume *vol_phantom,
       cout << "   Watch out, there is no voxel for vertical resolution FOM\n";
       hsvr_FOM=-1;
    }
-   
+
    // Show results .........................................................
-   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.hh
+   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.h
       cout << "Foreground " << phantom_descr(sel_feat);
       cout << "Background " << Back;
       cout << "Inner  foreground " << Inner_fore;
@@ -501,8 +503,8 @@ void compute_hs_FOMs(Volume *vol_phantom,
       printf("         recons  dt error: %10.8f\n",recons_dt_err);
       printf("\n");
    }
-   
-   if (tell&0x8) { // This is the flag SAVE_HISTOGRAMS of Prog_evaluate.hh
+
+   if (tell&0x8) { // This is the flag SAVE_HISTOGRAMS of Prog_evaluate.h
       DocFile DF;
       matrix1D<double> aux(6);
       DF.reserve(XSIZE(Hpf)+2);
@@ -556,7 +558,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
       rot_recons=R;
       rot_mask=M;
    }
-   
+
    // Initialise output image and Radon Transform ..........................
    (*img_histog)().resize(rot_recons.SliNo(),no_steps);
    (*img_histog)().startingY()=rot_recons.startingZ();
@@ -571,12 +573,12 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
    // Run over the volume ..................................................
    FOR_ALL_ELEMENTS_IN_MATRIX3D(rot_phantom) {
       if (!mi) continue; // If it is not in the mask continue
-   
+
       // Radon Transforms
       VEC_ELEM(RT_phantom,k) += VOL_ELEM(rot_phantom,k,i,j);
       VEC_ELEM(RT_recons ,k) += VOL_ELEM(rot_recons, k,i,j);
       VEC_ELEM(RTno,k)++;
-      
+
       // Histogram Image
       int hh; hist_recons.val2index(VOL_ELEM(rot_recons,k,i,j),hh);
       if (hh!=-1) IMGPIXEL(*img_histog,k,hh)++;
@@ -589,16 +591,16 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
          // Finish computing the Radon Transform
          RT_phantom(i) /= RTno(i);
          RT_recons(i)  /= RTno(i);
-         
+
          // Sum for the drrt_FOM
          sum += ABS(RT_phantom(i)-RT_recons(i));
          N++;
       }
    if (N==0) drrt_FOM=-1;
    else      drrt_FOM=1-0.5*sum/N;
-   
+
    // Show results .........................................................
-   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.hh
+   if (tell&0x4) { // This is the flag SHOW_PROCESS of Prog_evaluate.h
       DocFile DF;
       matrix1D<double> aux(4);
       DF.reserve(XSIZE(RT_recons)+2);
@@ -627,7 +629,7 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
    struct coord    auxcoord;
    vector<coord>   border;
    matrix1D<double> r(3), v_dist(3);
-      
+
    // Search for all voxels in the border ..................................
    FOR_ALL_ELEMENTS_IN_MATRIX3D(L) {
       if (li==0) continue;
@@ -663,10 +665,10 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
       }
    }
    int bmax=border.size();
-   
+
    // Compute distance map .................................................
    (*vol_distance)().init_zeros(L);
-   
+
    init_progress_bar(ZSIZE(L));
    for (int k=STARTINGZ(L); k<=FINISHINGZ(L); k++) {
       progress_bar(k-STARTINGZ(L));
@@ -783,10 +785,10 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    spider_batch.close();
    char *spider_prog=getenv("SPIDER");
    if (spider_prog==NULL)
-       REPORT_ERROR(1,"Compute resol:: The environment variable SPIDER is not set"); 
+       REPORT_ERROR(1,"Compute resol:: The environment variable SPIDER is not set");
    system(((string)spider_prog+" "+ext+" b01").c_str());
    vol_phantom.rename(original_phantom_name);
-   
+
    // Process output file
    DocFile DF;
    try {
@@ -800,7 +802,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
       i++;
    }
    i--;
-   
+
    // Compute exact resolution
    if (found) {
       double x0=DF(i-1,0), y0=DF(i-1,2)-DF(i-1,3);
@@ -813,7 +815,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    } else resolution=-1;
 
    // Show results .........................................................
-   if (tell&0x4) // This is the flag SHOW_PROCESS of Prog_evaluate.hh
+   if (tell&0x4) // This is the flag SHOW_PROCESS of Prog_evaluate.h
       system(((string)"cat resolution."+ext).c_str());
 
 //   system(((string)"rm resolution."+ext).c_str());
@@ -832,7 +834,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 
    // Run bresolve of bsoft to compute resolution
    system("bresolve -s 1 -m superfeo.spi superfeo2.spi > superfeo3");
-   
+
    // Process output file
    ifstream fh_resol;
    fh_resol.open("superfeo3");
@@ -881,7 +883,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
    string command=(string)"bresolve -s "+FtoA(sampling_rate)+
       " -v4 -m superfeo.spi superfeo2.spi > superfeo3";
    system(command.c_str());
-   
+
    // Process output file
    ifstream fh_resol;
    fh_resol.open("superfeo3");
@@ -890,7 +892,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
          "compute_FSC: Cannot open results file from Bresolve");
    try {
       string line;
-      
+
       // Find the line that says radius
       bool radius_found=false;
       do {
@@ -899,7 +901,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
                "compute_FSC: unexpected end of file from Bresolve");
          if (line.find("Radius")==0) radius_found=true;
       } while (!radius_found);
-      
+
       // Copy until the line that says Fourier
       bool fourier_found=false;
       vector<double> auxfreq, auxFSC;
@@ -909,7 +911,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
             REPORT_ERROR(1,
                "compute_FSC: unexpected end of file from Bresolve");
          if (line.find("Fourier")==0) {fourier_found=true; continue;}
-         
+
          // It is a valid line
          tokenize(line,tokens);
          double f  =AtoF(tokens[1]);
@@ -918,7 +920,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
          auxFSC. push_back(fsc);
          if (resolution==-1 && fsc<0.5) resolution=f;
       } while (!fourier_found);
-      
+
       // Now copy
       frequency.resize(auxfreq.size());
       FSC.resize(auxfreq.size());
@@ -931,10 +933,10 @@ double compute_FSC(VolumeXmipp &vol_phantom,
            << "compute_resolution: Error reading resolution, ignoring it\n";
    }
    fh_resol.close();
-   
+
    // Fix a bug of Bresolve
    if (FSC(0)>1) FSC(0)=1;
-   
+
    // Remove intermidiate files
    system("rm superfeo.spi superfeo2.spi superfeo3");
    return resolution;
@@ -961,7 +963,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
    string command=(string)"xmipp_resolution -sam "+FtoA(sampling_rate)+
       " -ref superfeo.vol -i superfeo2.vol";
    system(command.c_str());
-   
+
    // Process output file
    ifstream fh_resol;
    fh_resol.open("superfeo2.vol.frc");
@@ -972,7 +974,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
       string line;
       // Skip first line
       getline(fh_resol,line);
-      
+
       // Read the rest
       vector<double> auxfreq, auxFSC;
       vector<string> tokens;
@@ -984,7 +986,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
          auxFSC. push_back(fsc);
          if (resolution==-1 && fsc<0.5) resolution=f;
       }
-      
+
       // Now copy
       frequency.resize(auxfreq.size());
       FSC.resize(auxfreq.size());
@@ -997,7 +999,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
            << "compute_resolution: Error reading resolution, ignoring it\n";
    }
    fh_resol.close();
-   
+
    // Remove intermidiate files
    system("rm superfeo.vol superfeo2.vol superfeo2.vol.frc superfeo2.vol.dpr");
    return resolution;

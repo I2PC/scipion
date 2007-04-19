@@ -6,29 +6,30 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROJECTION_HH
 #  define _PROJECTION_HH
 
-#include <XmippData/xmippImages.hh>
-#include <XmippData/xmippProjection.hh>
-#include "grids.hh"
-#include "basis.hh"
+#include <data/image.h>
+#include <data/projection.h>
+
+#include "grids.h"
+#include "basis.h"
 
 template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
@@ -60,14 +61,14 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles). The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
     The projection itself, from now on, will keep the Euler angles.
-    
+
     FORWARD process:
        Each volume of the grid is projected on to the projection plane.
        The output is the projection itself and a normalising image, the
        normalising image is the projection of the same grid supposing
        that all basis are of value 1. This normalising image is used by
        the ART process
-    
+
     BACKWARD process:
        During the backward process the normalising projection contains
        the correction image to apply to the volume (in the ART sense).
@@ -76,7 +77,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
        all.
 
     As for the mode, valid modes are ARTK, CAVK, COUNT_EQ, CAVARTK.
-    
+
     M is the matrix corresponding to the projection process.
     */
 template <class T>
@@ -87,7 +88,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
    double ray_length=-1);
 
 /** From voxel volumes.
-    
+
     The voxel volume is projected onto a projection plane defined by
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
@@ -109,7 +110,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 	
 
 void singleWBP(matrix3D<double> &V, Projection &P);
- 
+
 /** Count equations in volume.
    For Component AVeraing (CAV), the number of equations in which
    each basis is involved is needed. */
@@ -125,7 +126,7 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
     volume f, the undeformed one. You must supply the deformed lattice
     vectors, and the matrix to pass from the deformed to the undeformed
     vectors (D and Dinv). a=D*ai;
-    
+
     Valid eq_modes are ARTK, CAVARTK and CAV.
 */
 void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
@@ -171,7 +172,7 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
    Notation simplification:
    Case: VOLVOXEL(V,k,i,j) ----> V(k,i,j):   + 38% (Inacceptable)
    Case: DIRECT_IMGPIXEL   ----> IMGPIXEL:   +  5% (Acceptable)
-   
+
    Algorithmic changes:
    Case: project each basis position ---->   +325% (Inacceptable)
          get rid of all beginZ, beginY, prjX, ... and project each
@@ -192,7 +193,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
    const VolumeT<int> *VNeq, matrix2D<double> *M,
    double ray_length) {
-   matrix1D<double> zero(3);                // Origin (0,0,0) 
+   matrix1D<double> zero(3);                // Origin (0,0,0)
    static matrix1D<double> prjPix(3);       // Position of the pixel within the
                                             // projection
    static matrix1D<double> prjX(3);         // Coordinate: Projection of the
@@ -223,7 +224,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                             // and (-umax,+umax) in the X axis
                                             // This footprint size is the
                                             // R2 vector (umax,vmax).
-                                       
+
    int XX_corner2, XX_corner1;              // Coord: Corners of the
    int YY_corner2, YY_corner1;              // footprint when it is projected
                                             // onto the projection plane
@@ -257,7 +258,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
    VECTOR_R3(actprj,1,0,0); grid.Gdir_project_to_plane(actprj,proj.euler,prjX);
    VECTOR_R3(actprj,0,1,0); grid.Gdir_project_to_plane(actprj,proj.euler,prjY);
    VECTOR_R3(actprj,0,0,1); grid.Gdir_project_to_plane(actprj,proj.euler,prjZ);
-   
+
    // This time the origin of the grid is in the universal coord system
    Uproject_to_plane(grid.origin, proj.euler, prjOrigin);
 
@@ -360,7 +361,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                ray_length_interesting=
                   ABS(point_plane_distance_3D(univ_position, zero,
                       proj.direction))<=ray_length;
-            
+
       	    if (grid.is_interesting(univ_position) &&
                 ray_length_interesting) {
                // Be careful that you cannot skip any basis, although its
@@ -646,7 +647,7 @@ void project_Volume(
       norm_proj().copy_shape(proj());
       norm_proj().init_zeros();
    }
-   
+
    #ifdef DEBUG_LITTLE
       if (FORW) {
 	 cout << "Number of volumes: " << vol.VolumesNo() << endl
@@ -654,7 +655,7 @@ void project_Volume(
          for (int i=0; i<vol.VolumesNo(); i++)
 	     cout << "Volume " << i << endl << vol.grid(i) << endl;
       }
-      
+
    #endif
 
    // Project each subvolume
@@ -672,11 +673,11 @@ void project_Volume(
 }
 #undef DEBUG_LITTLE
 #undef DEBUG
-#undef x0   
-#undef xF   
-#undef y0   
-#undef yF   
-#undef xDim 
-#undef yDim 
+#undef x0
+#undef xF
+#undef y0
+#undef yF
+#undef xDim
+#undef yDim
 
 #endif

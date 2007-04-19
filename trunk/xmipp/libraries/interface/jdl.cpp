@@ -8,25 +8,27 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                      <                               
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *                                      <
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../xmippJDL.hh"
-#include <XmippData/xmippSelFiles.hh>
+#include "jdl.h"
+
+#include <data/selfile.h>
+
 #include <fstream>
 #include <stdlib.h>
 
@@ -116,7 +118,7 @@ void JDLFile::write() {
    for (int i=0; i<imax; i++)
       fh_sh << "tar zrf " << fn_data_in << ".tgz " << input_wildfiles[i] << endl;
    fh_sh << endl;
-   
+
    // Publish the data
    fh_sh << "# Publish the data\n";
    if (publisher_data_in!="") {
@@ -174,7 +176,7 @@ void JDLFile::write() {
 	 << "      break\n"
          << "   else\n"
 	 << "      se=\"\" \n"
-	 << "   fi\n"  
+	 << "   fi\n"
 	 << "   fi\n"
          << "   let i=$i+2\n"
          << "done\n"
@@ -190,7 +192,7 @@ void JDLFile::write() {
    }
    fh_sh.close();
    system(((string)"chmod u+x "+job_root+"_local_in.sh").c_str());
-   
+
    // Write the remote script ..............................................
    fh_sh.open((job_root+"remote.sh").c_str());
    if (!fh_sh)
@@ -210,14 +212,14 @@ void JDLFile::write() {
    for (int i=0; i<imax; i++)
       fh_sh << "chmod 700 " << running_programs[i] << "\n";
    fh_sh << endl;
-   
+
    // Write user commands
    fh_sh << "# User commands\n";
    imax=job_sh.size();
    for (int i=0; i<imax; i++)
       fh_sh << job_sh[i] << endl;
    fh_sh << endl;
-   
+
    // Pack the output
    fh_sh << "# Prepare an output directory\n";
    fh_sh << "mkdir " << fn_tmpdir << endl << endl;
@@ -255,7 +257,7 @@ void JDLFile::write() {
    fh_sh << "gzip " << fn_data_out << ".tar\n";
    fh_sh << endl;
    fh_sh << endl;
-   
+
    // Publish the data
    fh_sh << "# Publish the data\n"
        ;
@@ -278,14 +280,14 @@ void JDLFile::write() {
             << "      break\n"
             << "   else\n"
             << "      se=\"\" \n"
-            << "   fi\n"   
+            << "   fi\n"
             << "   let i=$i+1\n"
             << "done\n"
  	;
    }
    fh_sh.close();
    system(((string)"chmod u+x "+job_root+"remote.sh").c_str());
-   
+
    // Write JDL file .......................................................
    ofstream fh_jdl;
    fh_jdl.open((job_root+".jdl").c_str());
@@ -332,7 +334,7 @@ void JDLFile::write() {
       fh_sh << "tar -zxf $CURRENT_DIR/" << fn_data_out << ".tgz\n";
       fh_sh << "cd $CURRENT_DIR\n";
    } else {
-      fh_sh << "if ( !(-e " << local_output_dir << ") ) then\n" 
+      fh_sh << "if ( !(-e " << local_output_dir << ") ) then\n"
             << "   mkdir " << local_output_dir << "\n"
 	    << "endif\n";
       fh_sh << "cd " << local_output_dir << endl;

@@ -6,28 +6,28 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippArgs.hh>
-#include <XmippData/xmippVolumes.hh>
-#include <XmippData/xmippFilters.hh>
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippMasks.hh>
+#include <data/args.h>
+#include <data/volume.h>
+#include <data/filters.h>
+#include <data/geometry.h>
+#include <data/mask.h>
 
 void Usage(const Mask_Params &m);
 
@@ -42,15 +42,15 @@ int main (int argc, char **argv) {
    bool     apply;
    Mask_Params mask(INT_MASK);
    bool     mask_enabled, mean_in_mask;
-   
+
    #define COVARIANCE       1
    #define LEAST_SQUARES    2
    int alignment_method;
-   
+
    #define MINIMUM          1
    #define MAXIMUM          2
    int optimize_criterion;
-   
+
    // Get parameters =======================================================
    try {
       fn1=get_param(argc,argv,"-i1");
@@ -64,12 +64,12 @@ int main (int argc, char **argv) {
       get_3_double_params(argc,argv,"-z",z0,zF,step_z,0,0,1);
       get_3_double_params(argc,argv,"-y",y0,yF,step_y,0,0,1);
       get_3_double_params(argc,argv,"-x",x0,xF,step_x,0,0,1);
-      
+
       mask_enabled=check_param(argc,argv,"-mask");
       mean_in_mask=check_param(argc,argv,"-mean_in_mask");
       if (mask_enabled)
          mask.read(argc,argv);
-      
+
       if (step_rot  ==0) step_rot  =1;
       if (step_tilt ==0) step_tilt =1;
       if (step_psi  ==0) step_psi  =1;
@@ -80,14 +80,14 @@ int main (int argc, char **argv) {
       if (step_x    ==0) step_x    =1;
       tell=check_param(argc,argv,"-show_fit");
       apply=check_param(argc,argv,"-apply");
-      
+
       if (check_param(argc,argv,"-covariance"))
          {alignment_method=COVARIANCE; optimize_criterion=MAXIMUM;}
       else if (check_param(argc,argv,"-least_squares"))
          {alignment_method=LEAST_SQUARES; optimize_criterion=MINIMUM;}
       else {alignment_method=COVARIANCE; optimize_criterion=MAXIMUM;}
    } catch (Xmipp_error XE) {cout << XE; Usage(mask); exit(1);}
-   
+
    // Main program =========================================================
    //#define DEBUG
    try {
@@ -104,7 +104,7 @@ int main (int argc, char **argv) {
       double best_sc, best_grey, best_fit, fit;
       matrix1D<double> best_r(3);
       bool first=true;
-      
+
       // Generate mask
       const matrix3D<int> *mask_ptr;
       if (mask_enabled) {
@@ -127,7 +127,7 @@ int main (int argc, char **argv) {
          init_progress_bar(times);
       } else
          cout << "#Scale Z Y X rot tilt psi grey_factor fitness\n";
-      
+
       // Iterate
       int itime=0;
       int step_time=CEIL((double)times/60.0);

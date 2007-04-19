@@ -7,30 +7,32 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include <string.h>
-#include "QtFileMenu.hh"
-#include "QtWidgetMicrograph.hh"
-#include "QtMainWidgetMark.hh"
-#include "XmippData/xmippMicrograph.hh"
-#include "XmippData/xmippFuncs.hh"
+#include <cstring>
+
+#include "file_menu.h"
+#include "widget_micrograph.h"
+#include "main_widget_mark.h"
+
+#include <data/micrograph.h>
+#include <data/funcs.h>
+
 #include <qfiledialog.h>
 #include <qgrid.h>
 #include <qlabel.h>
@@ -53,21 +55,21 @@ QtFileMenu::QtFileMenu( QtWidgetMicrograph* _parent) :
 void QtFileMenu::slotLoadCoords() {
    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
    if ( m == NULL ) return;
-   
+
    try {
       QFileDialog coordFileDialog( this, 0, TRUE );
       coordFileDialog.setCaption( "Coordinates filename" );
       coordFileDialog.setFilter( "*.pos" );
       if ( coordFileDialog.exec() ) {
          // Get the family name from the filename
-         FileName fn;         
+         FileName fn;
          fn = (char*)coordFileDialog.selectedFile().ascii();
          fn = fn.without_extension();
          fn = fn.remove_extension("raw");
          const char *familyName = fn.get_extension().c_str();
          emit signalAddFamily( familyName );
 
-         int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();         
+         int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
          m->read_coordinates( activeFamily,
                               (char*)coordFileDialog.selectedFile().ascii() );
          ((QtWidgetMicrograph*)parentWidget())->repaint();
@@ -94,8 +96,8 @@ void QtFileMenu::slotSaveCoords() {
     }
 
    int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
-   m->write_coordinates( activeFamily,  m->micrograph_name() + "." + 
-   					m->get_label(activeFamily) + 
+   m->write_coordinates( activeFamily,  m->micrograph_name() + "." +
+   					m->get_label(activeFamily) +
    					".pos" );
    __coordinates_are_saved=TRUE;
 }
@@ -104,7 +106,7 @@ void QtFileMenu::slotSaveCoords() {
 void QtFileMenu::slotGenerateImages() {
    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
    if ( m == NULL ) return;
-/*   
+/*
    switch(QMessageBox::information( this, "Mark",
                                    "Generate active family images\n"
                                    "Are you sure?",
@@ -142,14 +144,14 @@ void QtFileMenu::slotGenerateImages() {
       computeInverse.setChecked(FALSE);
       QPushButton okButton( "Ok", &qgrid );
       QPushButton cancelButton( "Cancel", &qgrid );
-  
+
       connect( &okButton, SIGNAL(clicked(void)),
                &setPropertiesDialog, SLOT(accept(void)) );
       connect( &cancelButton, SIGNAL(clicked(void)),
                &setPropertiesDialog, SLOT(reject(void)) );
 
       if ( setPropertiesDialog.exec() ) {
-         m->set_window_size( windowSizeXLineEdit.text().toInt(), 
+         m->set_window_size( windowSizeXLineEdit.text().toInt(),
                              windowSizeYLineEdit.text().toInt() );
          m->set_transmitance_flag(computeTransmitance.isChecked());
          m->set_inverse_flag(computeInverse.isChecked());
@@ -162,10 +164,10 @@ void QtFileMenu::slotGenerateImages() {
 	    if (MAIN_WIDGET->there_is_tilted()) {
 	       if (((QtWidgetMicrograph *) (MAIN_WIDGET->tilted_widget()))==
 	           (QtWidgetMicrograph *) parentWidget()) {
-	           psi   = MAIN_WIDGET->alpha_t(); 
+	           psi   = MAIN_WIDGET->alpha_t();
                    gamma = MAIN_WIDGET->gamma_t();
 		   this_is_tilted=true;
-	       }	   
+	       }	
 	       else {
 	            gamma=0;
                     alpha=MAIN_WIDGET->alpha_u();
@@ -210,7 +212,7 @@ void QtFileMenu::slotQuit() {
       M->compute_alphas();
       slotSaveAngles();
    }
-   
+
    if (!__coordinates_are_saved) {
       switch(QMessageBox::information( this, "Mark",
                                       "The document contains unsaved work\n"

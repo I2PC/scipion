@@ -7,25 +7,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <XmippData/xmippGeometry.hh>
-#include <XmippData/xmippArgs.hh>
+#include <data/geometry.h>
+#include <data/args.h>
+
 void Usage();
 
 int main(int argc, char **argv) {
@@ -59,21 +60,21 @@ int main(int argc, char **argv) {
      double x,y;
 /* compute projection crystal vectors in projection coordinate system
    Solve system of equations:
-   
+
     (a*)^t  a = 1, (a*)^t  b = 0
     (b*)^t  a = 0, (b*)^t  b = 1
-    
+
     ( (a*)^t ) ( a b ) = I
     ( (b*)^t )
-    
+
     Renaming
-    
+
     V^t v = I
-    
+
     Taking transpose
-    
+
     v^t V = I
-    
+
     Thus, V=(v^t)^(-1)
 
     NOTE 1: asume column vectors
@@ -117,7 +118,7 @@ int main(int argc, char **argv) {
          cout << "tilt: " << tilt <<endl;
          cout << "psi: " << psi <<endl;
          cout << "gamma: " << rot <<endl;
-         
+
          }
 */
 	 SHOW("ap*=",Vp,0);
@@ -179,7 +180,7 @@ void Usage() {
          $YB   {label="Y component of vector B"; type=float;}
          $CRYSTAL_SIZE {
             help="Size in pixels of the crystal image";
-            label="Crystal size"; 
+            label="Crystal size";
             type=natural;
             by default=1024;
          }

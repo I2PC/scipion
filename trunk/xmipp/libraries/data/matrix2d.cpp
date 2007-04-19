@@ -6,34 +6,34 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /* ------------------------------------------------------------------------- */
 /* MATRICES                                                                  */
 /* ------------------------------------------------------------------------- */
-#include "../xmippMatrices2D.hh"
+#include "matrix2d.h"
 
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
 #define maT matrix2D<T>
 #define ma  matrix2D
-#include "MultidimBasic.inc"
+#include "multidim_basic.inc"
 #undef ma
 #undef maT
 
@@ -58,7 +58,7 @@ double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
       REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
    if (d.isRow())
       REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
-   
+
    matrix2D<double> Ct(XSIZE(C),YSIZE(C)); // Ct=C^t
    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
       DIRECT_MAT_ELEM(Ct,i,j)=DIRECT_MAT_ELEM(C,j,i);
@@ -173,7 +173,7 @@ bool matrix2D< complex<double> >::IsLowerTriangular() const
 matrix2D<double> rot2D_matrix(double ang) {
    matrix2D<double> result(3,3);
    double cosine, sine;
-   
+
    ang=DEG2RAD(ang);
    cosine=cos(ang);
    sine=sin(ang);
@@ -181,15 +181,15 @@ matrix2D<double> rot2D_matrix(double ang) {
    DIRECT_MAT_ELEM(result,0,0)=cosine;
    DIRECT_MAT_ELEM(result,0,1)=-sine;
    DIRECT_MAT_ELEM(result,0,2)=0;
- 
+
    DIRECT_MAT_ELEM(result,1,0)=sine;
    DIRECT_MAT_ELEM(result,1,1)=cosine;
    DIRECT_MAT_ELEM(result,1,2)=0;
- 
+
    DIRECT_MAT_ELEM(result,2,0)=0;
    DIRECT_MAT_ELEM(result,2,1)=0;
    DIRECT_MAT_ELEM(result,2,2)=1;
-   
+
    return result;
 }
 
@@ -204,18 +204,18 @@ matrix2D<double> translation2D_matrix(matrix1D<double> v) {
    DIRECT_MAT_ELEM(result,0,2)=XX(v);
    DIRECT_MAT_ELEM(result,1,2)=YY(v);
 
-   return result;   
+   return result;
 }
 
 /* Rotation 3D around the system axes -------------------------------------- */
 matrix2D<double> rot3D_matrix(double ang, char axis) {
    matrix2D<double> result(4,4);
    double cosine, sine;
-   
+
    ang=DEG2RAD(ang);
    cosine=cos(ang);
    sine=sin(ang);
-   
+
    result.init_zeros();
    DIRECT_MAT_ELEM(result,3,3)=1;
    switch (axis) {
@@ -253,7 +253,7 @@ matrix2D<double> align_with_Z(const matrix1D<double> &axis) {
 
    if (axis.get_dim()!=3)
       REPORT_ERROR(1002,"align_with_Z: Axis is not in R3");
-      
+
    // Copy axis and compute length of the projection on YZ plane
    Axis=axis.normalize();
    double proj_mod=sqrt(YY(Axis)*YY(Axis)+ZZ(Axis)*ZZ(Axis));
@@ -299,7 +299,7 @@ matrix2D<double> translation3D_matrix(const matrix1D<double> &v) {
    DIRECT_MAT_ELEM(result,1,3)=YY(v);
    DIRECT_MAT_ELEM(result,2,3)=ZZ(v);
 
-   return result;   
+   return result;
 }
 
 /* Scale 3D ---------------------------------------------------------------- */
@@ -314,7 +314,7 @@ matrix2D<double> scale3D_matrix(const matrix1D<double> &sc) {
    DIRECT_MAT_ELEM(result,1,1)=YY(sc);
    DIRECT_MAT_ELEM(result,2,2)=ZZ(sc);
 
-   return result;   
+   return result;
 }
 
 /* Quadratic form ---------------------------------------------------------- */
@@ -331,7 +331,7 @@ void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
       for (int j=0; j<XSIZE(x); j++)
             DIRECT_VEC_ELEM(grad,i) += DIRECT_MAT_ELEM(H,i,j)*
                DIRECT_VEC_ELEM(x,j);
-   
+
    // Now, compute c^t*x+1/2*x^t*H*x
    // Add c to the gradient
    double quad=0;
@@ -365,10 +365,10 @@ void quadprog_obj32(int nparam,int j,double* x,double* fj,void* cd)
    XSIZE(X)=1;
    YSIZE(X)=nparam;
    MULTIDIM_ARRAY(X)=x;
-   
+
    matrix2D<double> result;
    result= 0.5*X.transpose()*in->C*X + in->D.transpose()*X;
-   
+
    *fj=result(0,0);
    MULTIDIM_ARRAY(X)=NULL;
    XSIZE(X)=YSIZE(X)=0;
@@ -383,7 +383,7 @@ void quadprog_cntr32(int nparam,int j,double* x,double* gj,void* cd)
    for (int k=0; k<nparam; k++)
       *gj+=in->A(j-1,k)*x[k];
     *gj-=in->B(j-1,0);
-    
+
    return;
 }
 
@@ -399,7 +399,7 @@ void quadprog_grob32(int nparam,int j,double* x,double* gradfj, void (*mydummy)(
    matrix2D<double> gradient;
    gradient=in->C*X+in->D;
    for (int k=0; k<nparam; k++)
-      gradfj[k]=gradient(k,0);   
+      gradfj[k]=gradient(k,0);
 
    MULTIDIM_ARRAY(X)=NULL;
    XSIZE(X)=YSIZE(X)=0;
@@ -411,17 +411,17 @@ void quadprog_grcn32(int nparam, int j, double *x, double *gradgj,void (*mydummy
 {
    CDAB* in = (CDAB *)cd;
    for (int k=0; k<nparam; k++)
-      gradgj[k]=in->A(j-1,k);   
+      gradgj[k]=in->A(j-1,k);
    return;
-}   
+}
 
-/************************************************************************** 
+/**************************************************************************
 
-   Solves Quadratic programming subproblem. 
+   Solves Quadratic programming subproblem.
 
-  min 0.5*x'Cx + d'x   subject to:  A*x <= b 
+  min 0.5*x'Cx + d'x   subject to:  A*x <= b
    x                                Aeq*x=beq
-      	             	      	    bl<=x<=bu  
+      	             	      	    bl<=x<=bu
 
 **************************************************************************/
 void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
@@ -435,21 +435,21 @@ void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
    prm.A.init_zeros(YSIZE(A)+YSIZE(Aeq),XSIZE(A));
    prm.B.init_zeros(YSIZE(prm.A),1);
 
-   
+
    // Copy Inequalities
    for (int i=0; i<YSIZE(A); i++) {
       for (int j=0; j<XSIZE(A); j++)
          prm.A(i,j)=A(i,j);
       prm.B(i,0)=b(i);
    }
-   
+
    // Copy Equalities
    for (int i=0; i<YSIZE(Aeq); i++) {
       for (int j=0; j<XSIZE(Aeq); j++)
          prm.A(i+YSIZE(A),j)=Aeq(i,j);
       prm.B(i+YSIZE(A),0)=beq(i);
    }
-   
+
    double bigbnd=1e30;
    // Bounds
    if (XSIZE(bl)==0) {
@@ -458,10 +458,10 @@ void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
    if (XSIZE(bu)==0) {
       bu.resize(XSIZE(C)); bu.init_constant( bigbnd);
    }
-   
+
    // Define intermediate variables
    int    mode=100;    // CFSQP mode
-   int    iprint=0;    // Debugging 
+   int    iprint=0;    // Debugging
    int    miter=1000;  // Maximum number of iterations
    double eps=1e-4;   // Epsilon
    double epsneq=1e-4; // Epsilon for equalities
@@ -496,33 +496,33 @@ void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
       if (inform==3) printf("\n MAXIMUM NUMBER OF ITERATIONS REACHED.\n");
       if (inform>3) printf("\ninform=%d\n",inform);
    #endif
-   
+
 }
 
 
-/************************************************************************** 
+/**************************************************************************
 
-   Solves the least square problem 
+   Solves the least square problem
 
-  min 0.5*(Norm(C*x-d))   subject to:  A*x <= b 
-   x                                Aeq*x=beq  
-      	             	      	    bl<=x<=bu 
+  min 0.5*(Norm(C*x-d))   subject to:  A*x <= b
+   x                                Aeq*x=beq
+      	             	      	    bl<=x<=bu
 **************************************************************************/
 void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
    const matrix2D<double> &A,   const matrix1D<double> &b,
    const matrix2D<double> &Aeq, const matrix1D<double> &beq,
          matrix1D<double> &bl,        matrix1D<double> &bu,
          matrix1D<double> &x) {
-   
+
    // Convert d to matrix2D for multiplication
    matrix2D<double> P;
    P.from_vector(d);
    P=-2*P.transpose()*C;
    P=P.transpose();
-   
+
    //Convert back to vector for passing it to quadprog
-   matrix1D<double> newd; 
+   matrix1D<double> newd;
    P.to_vector(newd);
-      
+
    quadprog(C.transpose()*C,newd,A,b,Aeq,beq,bl,bu,x);
 }

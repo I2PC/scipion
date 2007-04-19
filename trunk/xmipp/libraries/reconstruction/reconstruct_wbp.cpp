@@ -22,15 +22,16 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include "../Prog_WBP.hh"
+
+#include "reconstruct_wbp.h"
 
 // Read arguments ==========================================================
 void Prog_WBP_prm::read(int argc, char **argv)  {
 
   fn_sel=get_param(argc,argv,"-i");
   apply_shifts=!check_param(argc,argv,"-dont_apply_shifts");
-  fn_out =  get_param(argc,argv,"-o","wbp.vol"); 
-  fn_sym =  get_param(argc,argv,"-sym",""); 
+  fn_out =  get_param(argc,argv,"-o","wbp.vol");
+  fn_sym =  get_param(argc,argv,"-sym","");
   threshold=AtoF(get_param(argc,argv,"-threshold","0.005"));
   diameter=2*AtoI(get_param(argc,argv,"-radius","0"));
   sampling=AtoF(get_param(argc,argv,"-filsam","5"));
@@ -95,7 +96,7 @@ void Prog_WBP_prm::produce_Side_info() {
   SF.ImgSize(dim,dim);
   if (fn_sym!="") SL.read_sym_file(fn_sym);
   if (diameter==0) diameter=dim;
-  
+
   // Fill arrays of transformation matrices
   if (do_all_matrices) get_all_matrices(SF);
   else get_sampled_matrices(SF);
@@ -103,7 +104,7 @@ void Prog_WBP_prm::produce_Side_info() {
 }
 
 void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
-  
+
   DocFile           DFlib,DFcp;
   headerXmipp       head;
   matrix2D<double>  A(3,3);
@@ -124,7 +125,7 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
     head.read(SF.NextImg());
     rot=head.Phi();
     tilt=head.Theta();
-    if (do_weights) 
+    if (do_weights)
       count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)]+=head.Weight();
     else count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)]+=1.;
   }
@@ -145,7 +146,7 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF) {
       mat_g[no_mats].count=count_imgs[i];
       totimgs+=mat_g[no_mats].count;
       no_mats++;
-      // Expand symmetric directions 
+      // Expand symmetric directions
       for (int j=0; j<SL.SymsNo(); j++) {
 	SL.get_matrices(j,L,R);
 	L.resize(3,3); R.resize(3,3);
@@ -214,7 +215,7 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF) {
 }
 
 // Simple backprojection of a single image
-void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol, 
+void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
 					 int diameter) {
   int i, j, k, l, m;
   matrix2D<double> A(3,3);
@@ -270,7 +271,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
   FourierImageXmipp IMG;
   matrix2D<double>  A(3,3);
   float             factor, argum, weight, x, y;
-  
+
   factor=(float)diameter;
 
   // Tabulated sinc
@@ -282,11 +283,11 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
   CenterFFT(IMG(),true);
 
   // loop over all transformation matrices
-  for (int k=0; k<no_mats; k++) 
+  for (int k=0; k<no_mats; k++)
   {
       mat_f[k].zero=A(0,0)*mat_g[k].zero+
 	            A(1,0)*mat_g[k].one+
-	            A(2,0)*mat_g[k].two; 
+	            A(2,0)*mat_g[k].two;
       mat_f[k].one=A(0,1)*mat_g[k].zero+
 	           A(1,1)*mat_g[k].one+
 	           A(2,1)*mat_g[k].two;
@@ -294,7 +295,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)  {
 
 
   FOR_ALL_ELEMENTS_IN_MATRIX2D(IMG()) {
-    y=(float)i; 
+    y=(float)i;
     x=(float)j;
     weight = 0.;
     for (int k=0; k<no_mats; k++) {
@@ -344,7 +345,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
   while (!SF.eof()) {
     proj.read(SF.NextImg(),apply_shifts);
     proj().set_Xmipp_origin();
-    if (do_weights)  proj()*=proj.weight(); 
+    if (do_weights)  proj()*=proj.weight();
     rot=proj.rot();
     tilt=proj.tilt();
     psi=proj.psi();

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 /* ------------------------------------------------------------------------- */
@@ -29,7 +29,7 @@
 #ifndef _XMIPP_VECTORIAL_HH
 #   define _XMIPP_VECTORIAL_HH
 
-#include "xmippVolumes.hh"
+#include "volume.h"
 
 /**@name Xmipp Vectorial */
 //@{
@@ -52,7 +52,7 @@
     or access to the vector at a given position (logical positions as in
     matrix3D), the X component at that position or the X component at a given
     multidimensional array position.
-    
+
     You can perform arithmetic operations on these vectors, and other
     common operations such as resize, print_shape, ...*/
 class Vectorial_matrix3D {
@@ -81,7 +81,7 @@ public:
 
    /// Init zeros
    void init_zeros() {__X.init_zeros(); __Y.init_zeros(); __Z.init_zeros();}
-   
+
    /// Set Xmipp origin
    void set_Xmipp_origin()
       {__X.set_Xmipp_origin(); __Y.set_Xmipp_origin(); __Z.set_Xmipp_origin();}
@@ -265,7 +265,7 @@ public:
       func((arg1).__Y, (arg2), (result).__Y, op); \
       func((arg1).__Z, (arg2), (result).__Z, op);
    /// v3=v1+k
-   maT operator  + (double op1) const 
+   maT operator  + (double op1) const
       {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'+'); return temp;}
    /// v3=v1-k
    maT operator  - (double op1) const

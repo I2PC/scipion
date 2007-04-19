@@ -21,11 +21,12 @@
 
 using namespace std;
 
-#include <Classification/xmippBaseAlgo.hh>
-#include <Classification/xmippCDataTypes.hh>
-#include <Classification/xmippCTVectors.hh>
-#include <XmippData/xmippFuncs.hh>
-#include <XmippData/xmippMatrices2D.hh>
+#include "base_algorithm.h"
+#include "data_types.h"
+#include "training_vector.h"
+
+#include <data/funcs.h>
+#include <data/matrix2d.h>
 
 /**@name RM classes*/
 //@{
@@ -61,10 +62,10 @@ public:
         /** Project onto RM space.
 	    Given a vector of the same size as the Random matrix this function
 	    returns the projection of size k onto the first k random vectors.
-	    
+	
 	    An exception is thrown if the input vectors are not of the same size
 	    as the RM ones.*/
-	    
+	
         void Project(xmippCTVectors &input, xmippCTVectors &output, int _k);
 
 	/** Defines Listener class
@@ -75,8 +76,8 @@ public:
 private:
  	string matdist; // Matrix distribution (sparse or gaussian)
 	matrix2D<double> RM;
-  	xmippBaseListener* listener;   // Listener class   
-        
+  	xmippBaseListener* listener;   // Listener class
+
 
 };
 

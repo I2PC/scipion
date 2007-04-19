@@ -7,59 +7,60 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* Includes ---------------------------------------------------------------- */
-#include "QtImageMicrograph.hh"
-#include "QtColorLabel.hh"
-#include "QtDialogProperties.hh"
-#include "QtWidgetMicrograph.hh"
-#include <XmippData/xmippMicrograph.hh>
+#include "image_micrograph.h"
+#include "color_label.h"
+#include "dialog_properties.h"
+#include "widget_micrograph.h"
+
+#include <data/micrograph.h>
+#include <xvsmooth.h>
+
 #include <qpainter.h>
-#include "../DownSample/xvsmooth.h"
 
 /* Constructor ------------------------------------------------------------- */
-QtImageMicrograph::QtImageMicrograph( QWidget *_parent, 
-                                      const char *_name, 
-                                      WFlags _f) : 
-   QtImage( _parent, _name, _f ) { 
-   __x          = 0; 
+QtImageMicrograph::QtImageMicrograph( QWidget *_parent,
+                                      const char *_name,
+                                      WFlags _f) :
+   QtImage( _parent, _name, _f ) {
+   __x          = 0;
    __y          = 0;
    __pressed    = false;
    __movingMark = -1;
    __tilted     = false;
    __ellipse_radius = 5;
-   
+
    emit signalSetWidthHeight( image()->width(), image()->height() );
 }
 
 /* Set the micrograph ------------------------------------------------------ */
 void QtImageMicrograph::setMicrograph( Micrograph *_m ) {
    QtImage::setMicrograph( _m );
-   
-   emit signalSetWidthHeight( image()->width(), image()->height() );   
+
+   emit signalSetWidthHeight( image()->width(), image()->height() );
 }
 
 /* Load Image -------------------------------------------------------------- */
 void QtImageMicrograph::loadImage() {
    int mMaxX, mMaxY, mX, mY;
    double emX, emY;
-   
+
    if ( getMicrograph() != NULL ) getMicrograph()->size( mMaxX, mMaxY );
    else return;
 
@@ -67,7 +68,7 @@ void QtImageMicrograph::loadImage() {
    int mY0, mX0, mYF, mXF;
    imageToMicrograph( 0, 0, mX0, mY0 );
    imageToMicrograph( image()->width(), image()->height(), mXF, mYF );
-   
+
    if (mXF-mX0<=image()->width() && mYF-mY0<=image()->height() &&
        getMicrograph()->depth()==8) {
       // Use XV for showing the image
@@ -117,7 +118,7 @@ void QtImageMicrograph::loadImage() {
 void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius) {
    int mX, mY;
    micrographToImage( _x, _y, mX, mY );
-   if ( (mX > 0 && mX < image()->width()) && 
+   if ( (mX > 0 && mX < image()->width()) &&
         (mY > 0 && mY < image()->height()) ) {
       QPen pen( __col.col(_color), 2 );
       __paint->setPen( pen );
@@ -136,8 +137,8 @@ void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellip
 void QtImageMicrograph::loadSymbols() {
    if ( getMicrograph() == NULL ) return;
    for( int i = 0; i < getMicrograph()->ParticleNo(); i++ ) {
-      if ( !getMicrograph()->coord(i).valid ) continue;      
-      drawEllipse(getMicrograph()->coord(i).X, 
+      if ( !getMicrograph()->coord(i).valid ) continue;
+      drawEllipse(getMicrograph()->coord(i).X,
          getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label,
 	 __ellipse_radius);
    }
@@ -153,11 +154,11 @@ void QtImageMicrograph::slotChangeFamilyOther( int _coord, int _f ) {
 
 void QtImageMicrograph::resizeEvent( QResizeEvent *e ) {
    QtImage::resizeEvent( e );
-   
+
    if ( getMicrograph() == NULL ) return;
-      
+
    emit signalSetWidthHeight( image()->width(), image()->height() );
-   emit signalRepaint();   
+   emit signalRepaint();
 }
 
 void QtImageMicrograph::mousePressEvent( QMouseEvent *e ) {
@@ -175,22 +176,22 @@ void QtImageMicrograph::mouseReleaseEvent( QMouseEvent *e ) {
       emit signalRecalculateTiltMatrix();
       return;
    } else if ( __movingMark != -1 ) return;
-   
+
    // If picking a new one
    int mX, mY;
    imageToMicrograph( e->pos().x(), e->pos().y(), mX, mY );
-   
+
    if ( e->button() == RightButton ) changeProperties( mX, mY );
    else if ( __pressed == true ) {
       if ( isTilted() ) {
          cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
 	 getMicrograph()->move_last_coord_to(mX,mY);
 	 __pressed = false;
-         emit signalRepaint();   
+         emit signalRepaint();
          emit signalRecalculateTiltMatrix();
       } else {
 	 cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
-	 getMicrograph()->add_coord( mX, mY, __activeFamily );    
+	 getMicrograph()->add_coord( mX, mY, __activeFamily );
 	 __pressed = false;
 	 emit signalAddCoordOther( mX, mY, __activeFamily );
       }
@@ -199,22 +200,22 @@ void QtImageMicrograph::mouseReleaseEvent( QMouseEvent *e ) {
 
 void QtImageMicrograph::mouseMoveEvent( QMouseEvent *e ) {
    if ( getMicrograph() == NULL || __movingMark == -1 || !__pressed ) return;
-   
+
    int mX, mY;
    imageToMicrograph( e->pos().x(), e->pos().y(), mX, mY );
    getMicrograph()->coord(__movingMark).X = mX;
    getMicrograph()->coord(__movingMark).Y = mY;
-   
-   emit signalRepaint();   
+
+   emit signalRepaint();
 }
 
 void QtImageMicrograph::changeProperties( int mX, int mY ) {
    int coord = getMicrograph()->search_coord_near( mX, mY, 10 );
    if ( coord == -1 ) return;
-   
+
    QtDialogProperties dialogProperties( getMicrograph(), getWidgetMicrograph(),
       coord, this, 0, TRUE );
-   
+
    connect( &dialogProperties, SIGNAL(signalDeleteMarkOther(int)),
             this, SLOT(slotDeleteMarkOther(int)) );
    connect( &dialogProperties, SIGNAL(signalChangeFamilyOther(int,int)),
@@ -226,7 +227,7 @@ void QtImageMicrograph::changeProperties( int mX, int mY ) {
 void QtImageMicrograph::slotZoomIn() {
    if ( __zoom == 0.1 ) return;
    __zoom -= 0.1;
-   
+
    __x = __y = 0;
    emit signalSetCoords( 0, 0 );
    emit signalRepaint();
@@ -234,7 +235,7 @@ void QtImageMicrograph::slotZoomIn() {
 
 void QtImageMicrograph::slotZoomOut() {
    __zoom += 0.1;
-   
+
    __x = __y = 0;
    emit signalSetCoords( 0, 0 );
    emit signalRepaint();

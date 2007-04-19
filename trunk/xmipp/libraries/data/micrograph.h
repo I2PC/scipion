@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 #ifndef _XMIPPMICROGRAPH_H
@@ -30,9 +30,11 @@
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
 #include <vector>
-#include "xmippFuncs.hh"
-#include "xmippImages.hh"
-#include "xmippMatrices2D.hh"
+
+#include "funcs.h"
+#include "image.h"
+#include "matrix2d.h"
+
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
 /* ************************************************************************* */
@@ -59,7 +61,7 @@ struct Particle_coords {
 
 /** Micrography class.
     This class manages a large micrograph on disk. The image is not loaded
-    into memory, that should avoid memory problems 
+    into memory, that should avoid memory problems
 */
 class Micrograph {
 protected:
@@ -111,7 +113,7 @@ public:
    /** Close micrograpgh.
        After working with the file, you must close it. */
    void close_micrograph();
-   
+
    /** Compute scaling for 8 bits */
    void compute_8_bit_scaling();
 
@@ -143,33 +145,33 @@ public:
        images. */
    void set_window_size(int _X_window_size, int _Y_window_size)
       {X_window_size=_X_window_size; Y_window_size=_Y_window_size;}
-      
+
    /** Set Transmitance flag.
        When cutting images, 1/log10 is computed over the pixel values
        if this transmitance_flag=true. This function sets it
-       Note: if pixel_value=0, no log is computed */   
-       
+       Note: if pixel_value=0, no log is computed */
+
    void set_transmitance_flag (bool flag_value){compute_transmitance =
                                                             flag_value;}
-      
+
    /** Get Transmitance flag.
        When cutting images, 1/log10 is computed over the pixel values
        if transmitance_flag=true. This function reads it
-       Note: if pixel_value=0, no log is computed */   
-       
+       Note: if pixel_value=0, no log is computed */
+
    bool read_transmitance_flag (void){return compute_transmitance;}
 
    /** Set Log flag.
        When cutting images, the contrast is inverted if inverse flag
-       is true.  */   
-       
+       is true.  */
+
    void set_inverse_flag (bool flag_value){compute_inverse =
                                                             flag_value;}
-      
+
    /** Get Log flag.
        When cutting images, the contrast is inverted
-       if inverse flag=true.  This function reads it*/   
-       
+       if inverse flag=true.  This function reads it*/
+
    bool read_inverse_flag (void){return compute_inverse;}
 
    /** Scissor.
@@ -177,18 +179,18 @@ public:
        coordinate list. If the index is beyond the number of particles
        \Ref{ParticleNo}, or the window size is not set (\Ref{set_window_size})
        an exception is thrown.
-       
+
        Make sure that index n represents a valid particle before cutting it
-       
+
        The scale affects the particle position, such that the position cut
        is pos*scale, but not the window size.
-       
+
        If only check is true then the particle is not scissored, but
        the routine only checks if it can be done.
-       
+
        Dmax and Dmin are used to invert the image and or compute the
        trnasmitance
-       
+
        Returns 0 if an error ocurred and 1 if everything is all right*/
    int scissor(const Particle_coords &P, Image &result,
       double Dmin, double Dmax,
@@ -267,9 +269,9 @@ public:
         }
        }
 	Dmin=(double)_min;Dmax=(double)_Max;
-      } 
+      }
       else if (__depth==16) {
-         if(__is_signed){ 
+         if(__is_signed){
 	    int _Max=m16[0];
 	    int _min=_Max;
 	    long tmp=0;
@@ -279,8 +281,8 @@ public:
         	   else if(m16[tmp]<_min) _min=m16[tmp];
                }
           Dmin=(double)_min;Dmax=(double)_Max;
-	  }   
-         else{ 
+	  }
+         else{
 	    unsigned int _Max=um16[0];
 	    unsigned int _min=_Max;
 	    long tmp=0;
@@ -290,7 +292,7 @@ public:
         	   else if(um16[tmp]<_min) _min=um16[tmp];
                }
           Dmin=(double)_min;Dmax=(double)_Max;
-	  }   
+	  }
       }
       else if (__depth==32) {
 	    float _Max=m32[0];
@@ -347,7 +349,7 @@ public:
    /** Add coordinate.
        It returns the index of the particle added within the coordinate list. */
    int add_coord(int x, int y, int label);
-   
+
    /** Move last coordinate to this position. */
    void move_last_coord_to(int x, int y);
 
@@ -402,16 +404,16 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
    be called with all images in the corresponding SelFile. In the
    following documentation m(x) is the mean of x, v(x) is the variance,
    bg(x) is its background.
-   
+
    The original image is X and is supposed to be related to each single
    projection by I=a*(X+n)+b where a and b are different for every projection.
-   
+
    Noise is assumed to follow a gaussian distribution N(0,sqrt(v(n)))
-   
+
    In general the background mask is used only to compute statistics, while
    the mask is the one which is really applied to the image. Supply NULL if
    you don't want any mask to be applied
-   
+
    When b is used
    it is measured as the mean in the background, while a*sqrt(v(n)) is the
    standard deviation in the same area.

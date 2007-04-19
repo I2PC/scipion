@@ -6,30 +6,31 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "../Prog_CorrectPhase.hh"
-#include <XmippData/xmippArgs.hh>
+#include "ctf_correct_phase.h"
+
+#include <data/args.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhase_Params::read(int argc, char **argv) {
    fn_ctf=get_param(argc,argv,"-ctf");
-   
+
    epsilon=AtoF(get_param(argc,argv,"-small","0"));
    string aux; aux=get_param(argc,argv,"-method","");
    if      (aux=="remove")           method=CORRECT_SETTING_SMALL_TO_ZERO;
@@ -88,7 +89,7 @@ void CorrectPhase_Params::correct(matrix2D< complex<double> > &v) {
 
    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) {
      complex<double> m=ctf.mask2D(i,j);
-     if (m.imag()!=0) 
+     if (m.imag()!=0)
 	REPORT_ERROR(1,"CorrectPhase::correct: CTF is not real\n");
      #ifdef DEBUG
 	cout << "CTF at (" << j << "," << i << ")="

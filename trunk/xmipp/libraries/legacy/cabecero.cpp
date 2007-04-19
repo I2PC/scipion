@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
@@ -32,13 +32,15 @@
 
    ************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include "spider.h"
 #include "groe.h"
-#include <math.h>
-#include <stdlib.h>
 
 CABECERO cabecero;
 
@@ -80,7 +82,7 @@ struct stat info;
 }
 
 /***************************************************************
- This function open the file "fname" and check if it is a BYTE 
+ This function open the file "fname" and check if it is a BYTE
  file, that is, the file "fname" must be "filxcol" bytes long.
  It returns '1' if success, '0' if failure, and '-1' if there's
  a file open error .
@@ -99,7 +101,7 @@ struct stat info;
       fclose(fp);
       tam= fil*col*sizeof(char);
       if(tam==info.st_size)   return 1;
-      else return 0; 
+      else return 0;
     }
 
   fclose(fp);
@@ -108,7 +110,7 @@ struct stat info;
 
 
 /***************************************************************
- This routine read/write the geometric information from/to the 
+ This routine read/write the geometric information from/to the
  header.
  ***************************************************************/
 void header_geo(double matriz[3][3],float *angle,int rdwr)
@@ -118,9 +120,9 @@ void header_geo(double matriz[3][3],float *angle,int rdwr)
  switch(rdwr)
   {
     case WRITING :
-      for (i = 0; i < 3; i++)  
+      for (i = 0; i < 3; i++)
        {
-          cabecero.fGeo_matrix[i][0] = matriz[i][0]; 
+          cabecero.fGeo_matrix[i][0] = matriz[i][0];
           cabecero.fGeo_matrix[i][1] = matriz[i][1];
           cabecero.fGeo_matrix[i][2] = matriz[i][2];
        }
@@ -142,7 +144,7 @@ void header_geo(double matriz[3][3],float *angle,int rdwr)
 
 /***************************************************************
  This function check if there's geometric information in the
- matrix ( non zero values ); returns '1' if this information 
+ matrix ( non zero values ); returns '1' if this information
  exists and '0' in other case.
  ***************************************************************/
 int IsInfogeo(double matriz[3][3])
@@ -158,7 +160,7 @@ int IsInfogeo(double matriz[3][3])
 
 
 /***************************************************************
-  This simple routine initializes the header 'cabecero' with 
+  This simple routine initializes the header 'cabecero' with
   zeros.
  ***************************************************************/
 void ceroCabecero(void)
@@ -179,7 +181,7 @@ void ceroCabecero(void)
 void identMatrix( double matrix[3][3])
 {
  int i;
-  
+
  for (i=0; i < 9; i++)
   {
     if (i%3 == i/3)
@@ -191,7 +193,7 @@ void identMatrix( double matrix[3][3])
 
 /***************************************************************
  This kind routine sets the geometric information in the header
- to default values,that is, sets the angle=0 and the matrix with 
+ to default values,that is, sets the angle=0 and the matrix with
  geometric information equal to the the Identity.
  ***************************************************************/
 void defaultHeader(void)
@@ -202,7 +204,7 @@ void defaultHeader(void)
 
  identMatrix(matriz_geo);
  header_geo(matriz_geo,&angulo,WRITING);
-   
+
 }
 
 /***************************************************************
@@ -248,7 +250,7 @@ void normalize_io( float **image,int rdwr,char *name )
 
 /***************************************************************
  This is the routine that does the work of normalize the image.
- The image is in a "iNrow*iNsam" matrix of floats called 
+ The image is in a "iNrow*iNsam" matrix of floats called
  "fimagen".
  ***************************************************************/
 void normImg(float **fImagen,int iNrow,int iNsam,float *ppmax,float *ppmin)
@@ -271,7 +273,7 @@ void normImg(float **fImagen,int iNrow,int iNsam,float *ppmax,float *ppmin)
           suma2 += aux*aux;
        }
 
-  numpuntos= (double) iNrow * (double) iNsam; 
+  numpuntos= (double) iNrow * (double) iNsam;
 /****
   fmedia =  (suma1/(double)iNrow)/(double)iNsam ;
   fsigma =  sqrt ( ((suma2/(double)iNrow)/(double)iNsam)-(fmedia*fmedia));
@@ -300,7 +302,7 @@ void normImg(float **fImagen,int iNrow,int iNsam,float *ppmax,float *ppmin)
 
 /***************************************************************
  This function open the file "fname" and check if it is a
- SPIDER volume. It returns '1' and the voume dimensions if 
+ SPIDER volume. It returns '1' and the voume dimensions if
  success, '0' if failure, and '-1' if there's  a file open error .
  ***************************************************************/
 int SPIDvolum(char *fname,int *slice,int *row,int *col)
@@ -427,9 +429,9 @@ void normVol(float ***volu,int capas,int fil,int col,
    double theroot;
 
    int i,j,k;
-   
+
    for (i=0; i < capas; i++)
-     for (j=0; j <fil ; j++) 
+     for (j=0; j <fil ; j++)
        for (k=0; k <col; k++)
        {
           aux = volu[i][j][k];
@@ -444,15 +446,15 @@ void normVol(float ***volu,int capas,int fil,int col,
    fsigma =  sqrt ( fabs(theroot) );
 
     /***** Setting average=0 and sigma=1 *****/
-  
+
    for (i=0; i < capas; i++)
      for (j=0; j <fil ; j++)
        for (k=0; k <col; k++)
        {
-         volu[i][j][k]= (float)( ( volu[i][j][k] - fmedia) / fsigma ); 
+         volu[i][j][k]= (float)( ( volu[i][j][k] - fmedia) / fsigma );
          if( volu[i][j][k] > themax ) themax = volu[i][j][k];
          if( volu[i][j][k] < themin ) themin = volu[i][j][k];
-      
+
        }
   *fvmax=themax;
   *fvmin=themin;
