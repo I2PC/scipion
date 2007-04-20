@@ -4,64 +4,65 @@ lib_LTLIBRARIES = \
 	libXmippReconsINRIA.la
 
 libXmippRecons_la_SOURCES = \
-	grids.cpp \
-	blobs.cpp \
-	splines.cpp \
-	symmetries.cpp \
-	phantom.cpp \
-	projection.cpp \
-	volume_foms.cpp \
-	volume_labelling.cpp \
-	radon.cpp \
-	directions.cpp \
-	basis.cpp \
-	project.cpp \
-	foms_evaluate.cpp \
-	evaluate_fscs.cpp \
-	recons_misc.cpp \
-	project_crystal.cpp \
-	surface.cpp \
-	euler.cpp \
-	draw_surface.cpp \
-	symmetrize.cpp \
-	angular_distance.cpp \
-	align2d.cpp \
-	angular_neighbourhood.cpp \
-	align_tilt_pairs.cpp \
-	ctf.cpp \
-	refinement.cpp \
-	fourier_filter.cpp \
-	ctf_correct_idr.cpp \
-	ctf_correct_phase.cpp \
-	spar.cpp \
-	art_crystal.cpp\
-	sparma.cpp \
-	phantom_create_random.cpp \
-	phantom_simulate_microscope.cpp \
 	adjust_ctf.cpp \
 	adjust_volume_grey_levels.cpp \
-	ctf_estimate_from_micrograph.cpp \
-	reconstruct_art.cpp \
-	basic_art.cpp \
-	resolution_ssnr.cpp \
-	angular_discrete_assign.cpp \
-	angular_continuous_assign.cpp \
+	align2d.cpp \
+	align_tilt_pairs.cpp \
 	angular_assign_for_tomogram.cpp \
+	angular_continuous_assign.cpp \
+	angular_discrete_assign.cpp \
+	angular_distance.cpp \
+	angular_neighbourhood.cpp \
+	angular_projection_matching.cpp \
+	art_crystal.cpp\
+	basic_art.cpp \
+	basis.cpp \
+	blobs.cpp \
+	break_symmetry.cpp \
+	convert_pdb2vol.cpp \
+	crystal_create_surface.cpp \
+	ctf_correct_idr.cpp \
+	ctf_correct_phase.cpp \
+	ctf.cpp \
+	ctf_estimate_from_micrograph.cpp \
+	directions.cpp \
+	draw_surface.cpp \
+	euler.cpp \
+	evaluate_fscs.cpp \
+	foms_evaluate.cpp \
+	fourier_filter.cpp \
+	grids.cpp \
 	ml_align2d.cpp \
 	ml_refine3d.cpp \
-	break_symmetry.cpp \
-	reconstruct_wbp.cpp \
-	angular_projection_matching.cpp \
+	phantom.cpp \
+	phantom_create_random.cpp \
+	phantom_simulate_microscope.cpp \
+        precompute_sampling.cpp \
+	project.cpp \
+	project_crystal.cpp \
+	projection.cpp \
 	psd_enhance.cpp \
-	convert_pdb2vol.cpp \
-	crystal_create_surface.cpp
+	radon.cpp \
+	recons_misc.cpp \
+	reconstruct_art.cpp \
+	reconstruct_wbp.cpp \
+	refinement.cpp \
+	resolution_ssnr.cpp \
+        sampling.cpp \
+	spar.cpp \
+	sparma.cpp \
+	splines.cpp \
+	surface.cpp \
+	symmetries.cpp \
+	volume_foms.cpp \
+	volume_labelling.cpp
 
 libXmippRecons_Interface_la_SOURCES = \
 	crystal_aph2img.cpp \
-	recons_spider.cpp \
 	crystal_unbend.cpp\
 	im_unbend.cpp \
-	phantom_test_reconstruction.cpp
+	phantom_test_reconstruction.cpp \
+	recons_spider.cpp
 
 libXmippReconsINRIA_la_SOURCES = \
 	adjust_surface.cpp
@@ -110,6 +111,7 @@ EXTRA_DIST = \
 	phantom.h \
 	phantom_simulate_microscope.h \
 	phantom_test_reconstruction.h \
+        precompute_sampling.h \
 	project_crystal.h \
 	project.h \
 	projection.h \
@@ -122,6 +124,7 @@ EXTRA_DIST = \
 	reconstruct_wbp.h \
 	refinement.h \
 	resolution_ssnr.h \
+        sampling.h \
 	spar.h \
 	sparma.h \
 	splines.h \
