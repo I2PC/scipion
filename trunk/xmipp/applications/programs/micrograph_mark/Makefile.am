@@ -100,7 +100,7 @@ widget_psd_moc.cpp : widget_psd.h
 	@QT_MOC@ widget_psd.h -o widget_psd_moc.cpp
 
 EXTRA_DIST = \
-	autoMenu.h \
+	auto_menu.h \
 	filter.h \
 	image_micrograph.h \
 	color_label.h \
