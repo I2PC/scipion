@@ -248,6 +248,7 @@ AC_OUTPUT( \
 	applications/programs/phantom_simulate_microscope/Makefile \
 	applications/programs/phantom_test_reconstruction/Makefile \
 	applications/programs/phantom_transform/Makefile \
+	applications/programs/precompute_sampling/Makefile \
 	applications/programs/project/Makefile \
 	applications/programs/psd_enhance/Makefile \
 	applications/programs/range_adjust/Makefile \
