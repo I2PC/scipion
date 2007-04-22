@@ -255,35 +255,65 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
        cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << endl;
        }
    #endif
-   #undef DEBUG2
-   matrix1D<double> aux(3);
+   #undef DEBUG3
+   matrix1D<double> aux(3), aux1(3);
+   ZZ(aux)=0.;
    double rot, tilt,psi;
     for(    int i = 0; 
             i < sampling_points_vector.size(); 
             i++)
          {
-         Euler_direction2angles(sampling_points_vector[j], rot, tilt,psi);
-         XX(aux)=rot;YY(aux)=tilt;ZZ(aux)=psi;
-         sampling_points_angles.push_back(aux);  
+         XX(aux)=atan2(YY(sampling_points_vector[i]),
+                       XX(sampling_points_vector[i]));
+         YY(aux)=asin(ZZ(sampling_points_vector[i]));              
+         sampling_points_angles.push_back(aux*180./PI);  
          }
-    for(    int i = 0;  i < sampling_points_angles.size();  i++)
-         {
-          for(    int j = i+1; j < sampling_points_angles.size();  j++)
-            {
-            XX(aux)=rot;YY(aux)=tilt;ZZ(aux)=psi;
-            sampling_points_angles.push_back(aux);  
-            }
-         }
+
+  //sort points
+  int k;
+  int bound = sampling_points_angles.size()-1;
+  int t;
+  int last_swap;
+  matrix1D<double> aux_angle(3);
+  matrix1D<double> aux_vector(3);
+
+  while (bound) {
+    last_swap = 0;
+    for ( k=0; k<bound; k++ ){
+       aux = sampling_points_angles[k]; /* aux is a maximum of A[0]..A[k] */
+       aux1 = sampling_points_vector[k]; /* aux is a maximum of A[0]..A[k] */
+       if ( sort_func(aux, sampling_points_angles[k+1])) {
+         sampling_points_angles[k] = sampling_points_angles[k+1];
+         sampling_points_angles[k] = sampling_points_angles[k+1];
+         sampling_points_angles[k+1] = aux; /*swap*/
+         sampling_points_vector[k] = sampling_points_vector[k+1];
+         sampling_points_vector[k] = sampling_points_vector[k+1];
+         sampling_points_vector[k+1] = aux1; /*swap*/
+         last_swap = k; /* mark the last swap position */
+       }//if
+    }//for
+    bound=last_swap; /*elements after bound already sorted */       
+  }//while       
+   //#define DEBUG3
+   #ifdef  DEBUG3
+    for(    int i = 0; 
+            i < sampling_points_angles.size(); 
+            i++)
+       {     
+       cout  <<  sampling_points_angles[i].transpose()  << " 1 1 " << endl;
+       }
+   #endif
+   #undef DEBUG3
+
  }  
  
  // return 1 if a should go first 0 is equal -1 if before
-int XmippSampling::sort_func(matrix1D<double> &a, matrix1D<double> &b)
+int XmippSampling::sort_func(matrix1D<double> &t, matrix1D<double> &a)
  {
- if (YY(a) < YY(b)) return 1;
- else if (YY(a) > YY(b)) return -1;
- if (XX(a) < XX(b)) return 1;
- else if (YY(a) > YY(b)) return -1;
- return 0;
+ if (YY(t) - 0.000001> YY(a)) { return 1;}
+ else if (YY(t) + 0.000001 < YY(a)) { return 0;};
+ if (XX(t)  > XX(a)) { return 1;}
+ else  { return 0;};
  }
     
 void XmippSampling::fill_edge(matrix1D<double> starting_point,
@@ -404,13 +434,19 @@ void XmippSampling::remove_redundant_points(SymList & SL)
        no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
   }      
 #endif
-
+  //#define TEST
+  #ifdef TEST
+  matrix1D<double>  two(3)=vector_R3(0.,0.,1.).normalize();
+  matrix1D<double>  five(3)=vector_R3(1.,0.,1.618033989).normalize();
+  matrix1D<double>  three(3)=vector_R3(0.,0.53934467,1.4120227).normalize();
+  #endif
   no_redundant_sampling_points_vector.clear();     
   int j_end=0;
   int i_end=sampling_points_vector.size();
+  double my_dot_product;
   for (int i=0; i< i_end; i++)
-    {
-    for (int j=0; j<j_end; j++) 
+    {cerr << ".";
+    for (int j=0; j<no_redundant_sampling_points_vector.size(); j++) 
        {
        Euler_direction2angles(no_redundant_sampling_points_vector[j], rot, tilt,psi);  
        for (int isym=0; isym<=SL.SymsNo(); isym++) 
@@ -428,12 +464,15 @@ void XmippSampling::remove_redundant_points(SymList & SL)
                row =   no_redundant_sampling_points_vector[j];   
 //          if (ZZ(row)<0) continue;
 //          cerr << i << " " << j << " " << isym << " " << 
-//               ABS(acos(dot_product(row,sampling_points_vector[i]))) 
+//               dot_product(row,sampling_points_vector[i]) << " " <<
+//               acos(dot_product(row,sampling_points_vector[i]))
 //               << " " << sampling_rate_rad
+//               << " " << row.module()
 //               << endl;
-          if(acos(dot_product(row,sampling_points_vector[i]
-                                 ) 
-                  ) < (sampling_rate_rad))
+           my_dot_product= dot_product(row,sampling_points_vector[i]);
+           if (my_dot_product >=1.) my_dot_product=0.999999;
+           
+           if(acos(my_dot_product) < (sampling_rate_rad*.75))
               {
               match=true;
               break;
