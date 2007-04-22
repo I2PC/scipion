@@ -71,12 +71,14 @@ void Prog_Sampling_Parameters::show() {
 
 /* Run --------------------------------------------------------------------- */
 void Prog_Sampling_Parameters::run() {
-   sampling=5;
+   sampling=4;
    symmetry_file="ico.sym";
    mysampling.SetSampling(sampling);
    mysampling.Compute_sampling_points(false);
+   cerr << " read_sym_file " << endl;
    SL.read_sym_file(symmetry_file);
    //fill vector with symmetry axis
+   cerr << " remove_redundant_points " << endl;
    mysampling.remove_redundant_points(SL);
    #define DEBUG6
    #ifdef DEBUG6
