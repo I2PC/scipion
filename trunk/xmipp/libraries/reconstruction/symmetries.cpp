@@ -50,8 +50,8 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    // count number of axis and mirror planes. It will help to identify
    // the crystallographic symmetry
 
-   int no_axis, no_mirror_planes;
-   no_axis= no_mirror_planes= 0;
+   int no_axis, no_mirror_planes,no_inversion_points;
+   no_axis= no_mirror_planes= no_inversion_points = 0;
 
    while (fgets (line, 79, fpoii) != NULL) {
       if (line[0]==';' || line[0]=='#' || line[0]=='\0') continue;
@@ -66,6 +66,8 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 	 true_symNo += (fold-1); no_axis++;
       } else if (strcmp(auxstr,"mirror_plane")==0) {true_symNo++;
                                                     no_mirror_planes++;}
+      else if (strcmp(auxstr,"inversion" )==0) {true_symNo+=1;
+                                                no_inversion_points=1;}
       else if (strcmp(auxstr,"P4212" )==0) true_symNo+=7;
       else if (strcmp(auxstr,"P2_122")==0) true_symNo+=3;
       else if (strcmp(auxstr,"P22_12")==0) true_symNo+=3;
@@ -100,8 +102,16 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
             set_matrices(i++,L,R.transpose());
          }
          __sym_elements++;
-      // Mirror plane ------------------------------------------------------
-      } else if (strcmp(auxstr,"mirror_plane")==0) {
+      // inversion ------------------------------------------------------
+      } else if (strcmp(auxstr,"inversion")==0) {
+         L.init_identity();
+         R.init_identity();
+         R(0,0)=-1.;  R(1,1)=-1.; R(2,2)=-1.;
+	 set_shift(i,shift);
+         set_matrices(i++,L,R);
+         __sym_elements++;
+      // P4212 -------------------------------------------------------------
+      }else if (strcmp(auxstr,"mirror_plane")==0) {
          auxstr=next_token(); axis.X()=AtoF(auxstr);
          auxstr=next_token(); axis.Y()=AtoF(auxstr);
          auxstr=next_token(); axis.Z()=AtoF(auxstr);
@@ -175,17 +185,17 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
    if (accuracy>0) compute_subgroup(accuracy);
 
    //possible crystallographic symmetry
-   if(no_axis==0 && no_mirror_planes== 0 &&
+   if(no_axis==0 && no_mirror_planes== 0 && no_inversion_points ==0 &&
       true_symNo==7 && space_group==sym_P42_12)
          space_group=sym_P42_12;
-   else if(no_axis==0 && no_mirror_planes== 0 &&
+   else if(no_axis==0 && no_mirror_planes== 0 && no_inversion_points ==0 &&
       true_symNo==3 && space_group==sym_P2_122)
          space_group=sym_P2_122;
-   else if(no_axis==0 && no_mirror_planes== 0 &&
+   else if(no_axis==0 && no_mirror_planes== 0 && no_inversion_points ==0 &&
       true_symNo==3 && space_group==sym_P22_12)
          space_group=sym_P22_12;
    // P4 and P6	
-   else if (no_axis==1 && no_mirror_planes== 0 &&
+   else if (no_axis==1 && no_mirror_planes== 0 && no_inversion_points ==0 &&
             fabs(R(2,2)-1.) < XMIPP_EQUAL_ACCURACY &&
 	    fabs(R(0,0) - R(1,1)) < XMIPP_EQUAL_ACCURACY &&
 	    fabs(R(0,1) + R(1,0)) < XMIPP_EQUAL_ACCURACY )
@@ -202,7 +212,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
 		 break;
 	       }//switch end
 	    }//end else if (no_axis==1 && no_mirror_planes== 0
-   else if (no_axis==0 && no_mirror_planes== 0)
+   else if (no_axis==0 && no_inversion_points ==0 && no_mirror_planes== 0 )
          space_group=sym_P1;
    else
          space_group=sym_undefined;	
