@@ -476,7 +476,7 @@ void Euler_direction2angles(matrix1D<double> &v0,
 
    if( fabs((cb))>0.999847695)/*one degree */
    {
-   cout<< "\nWARNING: Routine Euler_direction2angles is not reliable\n"
+   cerr<< "\nWARNING: Routine Euler_direction2angles is not reliable\n"
           "for small tilt angles. Up to 0.001 deg it should be OK\n"
           "for most applications but you never know";
    }
