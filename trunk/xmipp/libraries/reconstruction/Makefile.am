@@ -54,6 +54,7 @@ libXmippRecons_la_SOURCES = \
 	splines.cpp \
 	surface.cpp \
 	symmetries.cpp \
+	symmetrize.cpp \
 	volume_foms.cpp \
 	volume_labelling.cpp
 
