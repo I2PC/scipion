@@ -75,6 +75,9 @@ public:
     /** vector with sampling points described by vectors, only store
         the non redundant part */  
     vector <matrix1D<double> > no_redundant_sampling_points_vector;
+    /** vector with sampling points described by vectors, only store
+        the non redundant part */  
+    vector <matrix1D<double> > no_redundant_sampling_points_vector_angles;
 
     /** Default constructor. sampling in degrees*/
     XmippSampling();
