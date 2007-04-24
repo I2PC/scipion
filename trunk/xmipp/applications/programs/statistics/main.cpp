@@ -277,7 +277,8 @@ int main(int argc, char **argv) {
 /* Usage ------------------------------------------------------------------- */
 void Usage() {
     cerr << "Purpose:\n";
-    cerr << "    Displays statistics of images or volumes (possibly restricted to the area within a mask)\n";
+    cerr << "    Displays statistics of images or volumes \n"
+         << "      (possibly restricted to the area within a mask)\n";
     cerr << "Usage: statistics " << endl
 	 << "    -i               : Selfile with images/volumes \n"
          << "                        or individual image or volume \n"
