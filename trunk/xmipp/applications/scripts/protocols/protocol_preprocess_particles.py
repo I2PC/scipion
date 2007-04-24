@@ -212,7 +212,7 @@ class preprocess_particles_class:
             
     def process_all_micrographs(self):
         import os
-        import SelFiles
+        import selfile
         print '*********************************************************************'
         print '*  Pre-processing micrographs in '+str(self.MicrographSelfile)
 
@@ -224,7 +224,7 @@ class preprocess_particles_class:
         self.allselfile = []
         self.allctflibfile = []
 
-        mysel=SelFiles.selfile()
+        mysel=selfile.selfile()
         mysel.read(self.MicrographSelfile)
         for name,state in mysel.sellines:
             self.shortname,self.downname=os.path.split(name)

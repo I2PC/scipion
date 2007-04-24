@@ -152,7 +152,7 @@ class kerdensom_class:
     def make_local_copy_of_images(self):
 
         import os,glob
-        import SelFiles
+        import selfile
 
         # Make a directory for the local copies of all relevant images
         if not os.path.exists('local_images'):
@@ -175,7 +175,7 @@ class kerdensom_class:
             message='Making a local copy of the images in '+str(self.classselfile)
             print '* ',message
             self.log.info(message)
-            mysel=SelFiles.selfile()
+            mysel=selfile.selfile()
             mysel.read(self.classselfile)
             newsel=mysel.copy_sel('local_images')
             self.classselfile=os.path.basename(self.classselfile)

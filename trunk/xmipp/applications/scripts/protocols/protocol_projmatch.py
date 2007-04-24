@@ -488,7 +488,7 @@ def execute_projection_matching(_mylog,
                                 _ReferenceVolume):
                                            
    _mylog.debug("execute_projection_matching")
-   import os,SelFiles
+   import os,selfile
    ReferenceVolume=_ProjectDir+'/'+_ReferenceFileName
    Reference_Vol=_ReferenceVolume
 
@@ -526,9 +526,9 @@ def execute_projection_matching(_mylog,
                        RunInBackground)
    
    if _DisplayProjectionMatching==True:
-      classes_sel_file=SelFiles.selfile()
+      classes_sel_file=selfile.selfile()
       classes_sel_file.read(_Proj_Maching_Output_Root_Name+'_classes.sel')
-      library_sel_file=SelFiles.selfile()
+      library_sel_file=selfile.selfile()
       library_sel_file.read(_Proj_Maching_Output_Root_Name+'_lib.sel')
       newsel=library_sel_file.intercalate_union(classes_sel_file)
       compare_sel_file=_Proj_Maching_Output_Root_Name+'_compare.sel'
@@ -567,11 +567,11 @@ def execute_align2d(_mylog,
         fh = open(tmp_file_name,'w')
       
    _mylog.debug("execute_align2d")
-   import os,SelFiles, glob,shutil
+   import os,selfile, glob,shutil
    class_sel_pattern = _Proj_Maching_Output_Root_Name+'_class[0-9]*.sel'
    _mylog.debug("class_sel_pattern: " + class_sel_pattern)
-   aux_sel_file=SelFiles.selfile()
-   align2d_sel=SelFiles.selfile()
+   aux_sel_file=selfile.selfile()
+   align2d_sel=selfile.selfile()
    #create compare sel and put to -1
    for class_selfile in glob.glob(class_sel_pattern):
       reference=class_selfile.replace('.sel','.xmp')

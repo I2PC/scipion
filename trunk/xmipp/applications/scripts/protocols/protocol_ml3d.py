@@ -301,10 +301,10 @@ class ML3D_class:
     # Splits selfile and performs a single cycle of ML3D-classification for each subset
     def generate_seeds(self):
         import os
-        import SelFiles
+        import selfile
         print '*********************************************************************'
         print '*  Generating seeds:' 
-        newsel=SelFiles.selfile()
+        newsel=selfile.selfile()
 
         # Split selfiles
 #        command='xmipp_selfile_split -o seeds_split'+ \

@@ -161,7 +161,7 @@ class RCT_class:
     # And make the corresponding tilted selfile
     def prepare_classes(self):
         import os,sys,glob,shutil
-        import SelFiles
+        import selfile
         self.untiltclasslist={}
 
         print '*********************************************************************'
@@ -199,7 +199,7 @@ class RCT_class:
                 message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
                 print '* ',message
                 self.log.info(message)
-                mysel=SelFiles.selfile()
+                mysel=selfile.selfile()
                 mysel.read(local_unt_selfile)
                 newsel=mysel.copy_sel('local_untilted_images')
                 newsel.write(local_unt_selfile)
@@ -210,10 +210,10 @@ class RCT_class:
     # This routine makes the corresponding selfile of the subset with tilted images
     # using the subset selfile of untilted images, and the original UntiltedSelFile & TiltedSelFile
     def make_tilted_selfile(self,name_unt_sel):
-        import SelFiles
-        unt=SelFiles.selfile()
-        pat1=SelFiles.selfile()
-        pat2=SelFiles.selfile()
+        import selfile
+        unt=selfile.selfile()
+        pat1=selfile.selfile()
+        pat2=selfile.selfile()
         pat1.read(self.UntiltedSelFile)
         pat2.read(self.TiltedSelFile)
         unt.read(name_unt_sel)
@@ -224,7 +224,7 @@ class RCT_class:
         
     def set_headers_untilted(self):
         import os
-        import SelFiles
+        import selfile
 
         print '*********************************************************************'
         print '*  Re-aligning untilted images of each class to set image headers'

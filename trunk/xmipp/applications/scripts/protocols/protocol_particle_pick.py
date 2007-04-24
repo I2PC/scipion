@@ -68,7 +68,7 @@ class particle_pick_class:
 	def process_all_micrographs(self):
             import os
             import glob
-            import SelFiles
+            import selfile
             print '*********************************************************************'
             print '*  Perform manual particle picking for micrographs in: '+str(self.MicrographSelfile)
             print '*'
@@ -78,7 +78,7 @@ class particle_pick_class:
             print '*'
 
             if not self.IsPairList:
-                self.mysel=SelFiles.selfile()
+                self.mysel=selfile.selfile()
                 self.mysel.read(self.MicrographSelfile)
                 self.prepare_have_picked()
                 

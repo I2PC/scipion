@@ -55,14 +55,14 @@ class visualize_ML2D_class:
 
     def show_matrixview_all_iter(self):
         import os,glob
-        import SelFiles
+        import selfile
         
         selfiles=glob.glob('*_it?????.sel')
         if len(selfiles)==0:
             print "No selfiles yet. Visualize after job completion..."
         else:
-            newsel=SelFiles.selfile()
-            tmpsel=SelFiles.selfile()
+            newsel=selfile.selfile()
+            tmpsel=selfile.selfile()
             for selfile in selfiles:
                 tmpsel.read(selfile)
                 newsel.append(tmpsel.sellines)

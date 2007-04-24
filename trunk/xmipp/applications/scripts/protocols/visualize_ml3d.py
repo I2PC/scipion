@@ -210,9 +210,9 @@ class visualize_ML3D_class:
         print 'The output of moving particles remains to be added to this script...'
 
     def join_selfiles(self,selfile1,selfile2,newselfile):
-        import SelFiles
-        sel1=SelFiles.selfile()
-        sel2=SelFiles.selfile()
+        import selfile
+        sel1=selfile.selfile()
+        sel2=selfile.selfile()
         sel1.read(selfile1)
         sel2.read(selfile2)
         newsel=sel1.intercalate_union(sel2)

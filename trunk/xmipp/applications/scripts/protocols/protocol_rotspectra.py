@@ -216,10 +216,10 @@ class rotational_spectra_class:
    #execute_align2d
    #------------------------------------------------------------------------
    def execute_align2d(self):
-      import os,SelFiles
+      import os,selfile
       print '*********************************************************************'
       print '* Copying images to working directory ...'
-      mysel=SelFiles.selfile()
+      mysel=selfile.selfile()
       mysel.read(self._SelFileName)
       newsel=mysel.copy_sel('.')
       newsel.write(os.path.basename(self._SelFileName))
@@ -305,11 +305,11 @@ class rotational_spectra_class:
    #true_if_file_is_NOT_in_native_endian
    #------------------------------------------------------------------------
    def true_if_file_is_NOT_in_native_endian(self):
-      import SelFiles,spider_header,os
+      import selfile,spider_header,os
       print '*********************************************************************'
       print '*  check if images are in native endian (spectra preprocesing)'
-      mysel=SelFiles.selfile()
-      #mysel=SelFiles.selfile()
+      mysel=selfile.selfile()
+      #mysel=selfile.selfile()
       mysel.read(os.path.basename(self._SelFileName))
       filename,state=mysel.find_first_active_image()
       myheader=spider_header.spiderheader(filename)
