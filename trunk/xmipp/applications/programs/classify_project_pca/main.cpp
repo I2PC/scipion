@@ -55,12 +55,12 @@ bool           recon;           // Reconstruct original data using k components?
 /* Parameters ============================================================== */
    try {
 
-       fn_in = get_param(argc, argv, "-din");
+       fn_in = get_param(argc, argv, "-i");
        fn_ein = get_param(argc, argv, "-ein");
        fn_evin = get_param(argc, argv, "-evin");
 
-       if (check_param(argc, argv, "-cout"))
-          fn_out = get_param(argc, argv, "-cout");
+       if (check_param(argc, argv, "-o"))
+          fn_out = get_param(argc, argv, "-o");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
@@ -305,10 +305,10 @@ void Usage (char **argv) {
      "\n"
      "\nParameter Values: (note space before value)"
      "\n"
-     "\n    -din    file_in           Input data file (plain data)"
+     "\n    -i      file_in           Input data file (plain data)"
+     "\n    -o      file_out          Base name for output data files"
      "\n    -ein    file_in           Eigen vectors file"
      "\n    -evin   file_in           Eigen values file"
-     "\n    -cout   file_out          Base name for output data files"
      "\n    -k      k                 Number of components"
      "\n    -p      p                 Percent of the explained variance"
      "\n    -recon  true/false        If true, reconstruct original data"
