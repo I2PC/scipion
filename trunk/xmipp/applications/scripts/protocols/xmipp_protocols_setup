@@ -1,0 +1,6 @@
+#!/bin/csh
+if (!(-e protocol_setup.py)) then
+cp ~/scripts/protocol_setup.py ./. 
+python ~/scripts/protocol_gui.py protocol_setup.py &
+endif
+
