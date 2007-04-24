@@ -25,7 +25,7 @@ SetupPreProcessMicrographs=False
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False
-# {setup-2d} ML2D classification
+# {setup-2d} ml2d classification
 SetupML2D=False
 # {setup-2d} kerdenSOM classification 
 SetupKerdensom=False
@@ -33,7 +33,7 @@ SetupKerdensom=False
 SetupRotSpectra=False
 # {setup-3d} Random Conical Tilt
 SetupRCT=False
-# {setup-3d} ML3D classification
+# {setup-3d} ml3d classification
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
@@ -50,13 +50,13 @@ LogDir="Logs"
 PreProcessDir="Preprocessing"
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Directory name for ML2D classification:
+# {expert} Directory name for ml2d classification:
 ML2DDir="ML2D"
 # {expert} Directory name for rotational spectra classification:
 RotSpectraDir="Rotspectra"
 # {expert} Directory name for Random Conical Tilt reconstruction:
 RCTDir="RCT"
-# {expert} Directory name for ML3D classification:
+# {expert} Directory name for ml3d classification:
 ML3DDir="ML3D"
 # {expert} Directory name for projection matching refinement:
 ProjMatchDir="ProjMatching"
@@ -138,7 +138,7 @@ class setup_protocols_class:
                                                 ['protocol_preprocess_particles.py']]
             self.library['SetupML2D']=[self.SetupML2D,
                                          self.ML2DDir,
-                                         ['protocol_ML2D.py','visualize_ML2D.py']]
+                                         ['protocol_ml2d.py','visualize_ml2d.py']]
             self.library['SetupKerdensom']=[self.SetupKerdensom,
                                               self.ML2DDir,
                                               ['protocol_kerdensom.py','visualize_kerdensom.py']]
@@ -150,7 +150,7 @@ class setup_protocols_class:
                                         ['protocol_rct.py','visualize_rct.py']]
             self.library['SetupML3D']=[self.SetupML3D,
                                         self.ML3DDir,
-                                        ['protocol_ML3D.py','visualize_ML3D.py']]
+                                        ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         self.ProjMatchDir,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
