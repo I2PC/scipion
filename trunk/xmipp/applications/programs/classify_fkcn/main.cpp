@@ -56,15 +56,15 @@ bool 	       saveClusters = false;    // Save clusters in separate files
 /* Parameters ============================================================== */
    try {
 
-       if (check_param(argc, argv, "-din"))
-         fn_in = get_param(argc, argv, "-din");
+       if (check_param(argc, argv, "-i"))
+         fn_in = get_param(argc, argv, "-i");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
        }
 
-       if (check_param(argc, argv, "-cout"))
-          fn_out = get_param(argc, argv, "-cout");
+       if (check_param(argc, argv, "-o"))
+          fn_out = get_param(argc, argv, "-o");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
@@ -318,8 +318,8 @@ void Usage (char **argv) {
      "\n"
      "\nParameter Values: (note space before value)"
      "\n"
-     "\n    -din  file_in        Input data file"
-     "\n    -cout file_out       Base name for output data files "
+     "\n    -i    file_in        Input data file"
+     "\n    -o    file_out       Base name for output data files "
      "\n    -cvin   file_in      Cluster centers input file"
      "\n    -saveclusters    	 Save clusters in separate files (Default = No)"
      "\n    -c    Clusters 	 Number of clusters"
