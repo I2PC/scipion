@@ -3,10 +3,10 @@
 # basic setup, import all environment and custom tools
 import os
 env = Environment(ENV = os.environ, tools = ['default', 'disttar'], toolpath =
-    ['scons/ToolsFromWiki'])
+                  ['scons/ToolsFromWiki'])
 
 # avoid cruft in top dir
-base_dir = 'Build'
+base_dir = 'build'
 if not os.path.exists(base_dir):
     Execute(Mkdir(base_dir))
 base_dir +=  '/'
@@ -32,6 +32,7 @@ opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
 
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
 opts.Add(BoolOption('quiet', 'Hide command line?', 'yes'))
+
 opts.Add(BoolOption('tiff', 'Build the Tiff programs?', 'yes'))
 opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
 opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
@@ -43,7 +44,7 @@ opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
-opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
+opts.Add('prefix', 'Base installation directory', Dir('.').abspath + '/' + 'installation')
 opts.Update(env)
 
 # generate help for options
@@ -162,8 +163,7 @@ if env.GetOption('clean'):
     if 'distclean' in COMMAND_LINE_TARGETS:
         print '* Deleting configuration ...'
         Execute(Delete(base_dir))
-        Execute(Delete('./bin'))
-        Execute(Delete('./lib'))
+        Execute(Delete(env['prefix']))
 else:
     print '* Configuring  ...'
     config_dir = base_dir + 'config.tests'
@@ -197,7 +197,7 @@ else:
         confQT = Configure(envQT, {}, config_dir, config_log)
 
         if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h', 'c++',
-        'QApplication qapp(0,0);', 0):
+                                         'QApplication qapp(0,0);', 0):
             print '* Did not find QT. Disabling ...'
             env['gui'] = 0
 
@@ -214,7 +214,7 @@ else:
         env.Append(LIBPATH = env['TIFF_LIBDIR'], CPPPATH = env['TIFF_INCLUDE'])
 
         if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
-            'TIFFGetVersion();', 0):
+                                       'TIFFGetVersion();', 0):
             print '* Did not find TIFF library. Disabling ...'
             env['tiff'] = 0
 
@@ -225,7 +225,7 @@ else:
     # MPI
     if int(env['mpi']):
         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
-        env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
+                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
             print '* Did not find MPI library. Disabling ...'
             env['mpi'] = 0
 
