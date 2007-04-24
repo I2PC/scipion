@@ -68,10 +68,10 @@ bool 	       tStudent = false;        // tStudent Kernel
 
    try {
 
-       fn_in = get_param(argc, argv, "-din");
+       fn_in = get_param(argc, argv, "-i");
 
-       if (check_param(argc, argv, "-cout"))
-          fn_out = get_param(argc, argv, "-cout");
+       if (check_param(argc, argv, "-o"))
+          fn_out = get_param(argc, argv, "-o");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
@@ -455,8 +455,8 @@ void Usage (char **argv) {
      "\nUsage: %s [Purpose and Parameters]"
      "\nPurpose: Kernel Density Estimator Self-Organizing Map"
      "\nParameter Values: (note space before value)"
-     "\n    -din    file_in           Input data file (plain data)"
-     "\n    -cout   file_out          Base name for output data files"
+     "\n    -i      file_in           Input data file (plain data)"
+     "\n    -o      file_out          Base name for output data files"
      "\n    -cvin   file_in           Codevectors input file"
      "\n    -saveclusters    	      save clusters in separate files (Default = No)"
      "\n    -xdim   H-dimension	      Horizontal size of the map"
