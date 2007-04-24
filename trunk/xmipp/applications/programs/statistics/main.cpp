@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
       cout << '>' << endl;
    }
 
+   SF.go_beginning();
    while (!SF.eof()) {
      FileName file_name = SF.NextImg();
 
@@ -276,7 +277,7 @@ int main(int argc, char **argv) {
 /* Usage ------------------------------------------------------------------- */
 void Usage() {
     cerr << "Purpose:\n";
-    cerr << "    Displays statistics of images or volumes \n";
+    cerr << "    Displays statistics of images or volumes (possibly restricted to the area within a mask)\n";
     cerr << "Usage: statistics " << endl
 	 << "    -i               : Selfile with images/volumes \n"
          << "                        or individual image or volume \n"
