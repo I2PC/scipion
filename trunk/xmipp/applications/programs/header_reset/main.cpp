@@ -11,7 +11,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FO A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -42,10 +42,7 @@ int main (int argc,char *argv[]) {
        while (!SF.eof()) 
        {
 	   img.read(SF.NextImg());
-	   img.set_eulerAngles(0.,0.,0.);
-	   img.set_originOffsets(0.,0.);
-	   img.weight()=0.;
-	   img.flip()=0.;
+	   img.clear_header();
 	   img.write(img.name());
        }
        cerr <<" done!"<<endl;
