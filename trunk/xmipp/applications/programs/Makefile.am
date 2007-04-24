@@ -71,6 +71,7 @@ SUBDIRS = \
 	ctf_correct_idr \
 	convert_img2data \
 	header_print \
+	statistics \
 	classify_kcmeans \
 	classify_kerdensom \
 	crystal_lattice_vectors \
