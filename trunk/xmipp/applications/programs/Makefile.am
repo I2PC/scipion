@@ -64,7 +64,9 @@ SUBDIRS = \
 	mirror \
 	fourier_filter \
 	classify_fsom \
-	headerinfo \
+	header_reset \
+	header_assign \
+	header_extract \
 	histogram \
 	ctf_correct_idr \
 	convert_img2data \
