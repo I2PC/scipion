@@ -47,7 +47,7 @@ int main (int argc,char *argv[]) {
        }
        cerr <<" done!"<<endl;
    }
-   } catch (Xmipp_error XE) {cout << XE; Usage();}
+   catch (Xmipp_error XE) {cout << XE; Usage();}
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -59,3 +59,4 @@ void Usage() {
     printf("        -i  <selfile>      : selfile with input images \n");
     exit(1);
 }
+
