@@ -43,7 +43,7 @@ SetupHighRes3D=False
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home/scheres/Xmipp/Applications/Batches/Protocols_lib"
+ProjectDir="/home/roberto2/trunk/xmipp/applications/scripts/protocols"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 # {expert} Directory name for preprocessing:
@@ -243,6 +243,7 @@ class setup_protocols_class:
                 fh=open(dst,'w')
                 fh.writelines(text)
                 fh.close()
+                os.chmod(dst,0755)
 
             # Only auto-launch the first script
             script=scripts[0]
