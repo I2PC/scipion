@@ -50,10 +50,10 @@ unsigned       verb = 0;	// Verbosity level
 /* Parameters ============================================================== */
    try {
 
-       fn_in = get_param(argc, argv, "-din");
+       fn_in = get_param(argc, argv, "-i");
 
-       if (check_param(argc, argv, "-cout"))
-          fn_out = get_param(argc, argv, "-cout");
+       if (check_param(argc, argv, "-o"))
+          fn_out = get_param(argc, argv, "-o");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
@@ -173,8 +173,8 @@ void Usage (char **argv) {
      "\n"
      "\nParameter Values: (note space before value)"
      "\n"
-     "\n    -din    file_in           Input data file (plain data)"
-     "\n    -cout   file_out          Base name for output data files:"
+     "\n    -i      file_in           Input data file (plain data)"
+     "\n    -o      file_out          Base name for output data files:"
      "\n    -verb   level	      Show progress bar: "
      "\n    			      0: Do not show the progress bar"
      "\n    			      1: Show the progress bar (default)"
