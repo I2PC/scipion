@@ -61,15 +61,15 @@ bool           norm = 1;	// Normalize?
 /* Parameters ============================================================== */
    try {
 
-       if (check_param(argc, argv, "-din"))
-         fn_in = get_param(argc, argv, "-din");
+       if (check_param(argc, argv, "-i"))
+         fn_in = get_param(argc, argv, "-i");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
        }
 
-       if (check_param(argc, argv, "-cout"))
-          fn_out = get_param(argc, argv, "-cout");
+       if (check_param(argc, argv, "-o"))
+          fn_out = get_param(argc, argv, "-o");
        else {
          Usage(argv);
 	 exit(EXIT_FAILURE);
@@ -196,8 +196,8 @@ void Usage (char **argv) {
      "\n"
      "\nParameter Values: (note space before value)"
      "\n"
-     "\n    -din  file_in        input data file"
-     "\n    -cout file_out       output data file (mapped data)"
+     "\n    -i    file_in        input data file"
+     "\n    -o    file_out       output data file (mapped data)"
      "\n    -dim  dimension      dimension of the output space (default = 2)"
      "\n    -iter iterations  	 number of iterations (default = 100000)"
      "\n    -norm   	 	 Normalize training data (default: No)"
