@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/create_surface.h>
+#include <reconstruction/crystal_create_surface.h>
 #include <data/error.h>
 
 #include <iostream>
