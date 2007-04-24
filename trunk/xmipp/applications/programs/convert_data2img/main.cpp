@@ -53,15 +53,13 @@ int main(int argc, char **argv) {
 
   try {
 
-    fname = get_param(argc, argv, "-iname");
-
+    fname = get_param(argc, argv, "-i");
     basename = fname.get_baseName();
     selname = basename + (string) ".sel";
-
-    selname = get_param(argc, argv, "-sel", selname.c_str());
+    selname = get_param(argc, argv, "-o", selname.c_str());
     imgName = get_param(argc, argv, "-imgName", basename.c_str());
     ext = get_param(argc, argv, "-ext", "spi");
-    bmname = get_param(argc, argv, "-mname", "mask.spi");
+    bmname = get_param(argc, argv, "-mask", "mask.spi");
     if (check_param(argc, argv, "-nomask")) {
       nomask = true;
       rows = AtoI(get_param(argc, argv, "-rows"));
@@ -73,11 +71,11 @@ int main(int argc, char **argv) {
   catch (Xmipp_error) {
     cout << "data2img: Convert a data set into a set of images" << endl;
     cout << "Usage:" << endl;
-    cout << "-iname         : Input file name" << endl;
-    cout << "[-sel]         : Output sel file name (default: iname.sel)" << endl;
+    cout << "-i             : Input file name (iname)" << endl;
+    cout << "[-o]           : Output sel file name (default: iname.sel)" << endl;
     cout << "[-imgName]     : first letters of the images' names (default: iname)" << endl;
     cout << "[-ext]         : Extension of the output images (default: spi)" << endl;
-    cout << "[-mname]       : Input Mask file name (default: mask.spi)" << endl;
+    cout << "[-mask]        : Input Mask file name (default: mask.spi)" << endl;
 //    cout << "[-noBB]        : Images will be inside the Mask's bounding box (default: yes)" << endl;
     cout << "[-nomask]      : set if the mask is not going to be used" << endl;
     cout << "[-rows]        : Number of rows if the mask is not going to be used" << endl;
@@ -86,9 +84,9 @@ int main(int argc, char **argv) {
    }
 
   cout << "Given parameters are: " << endl;
-  cout << "sel = " << selname << endl;
+  cout << "output = " << selname << endl;
   if (!nomask)
-     cout << "mname = " << bmname << endl;
+     cout << "mask = " << bmname << endl;
   else {
       cout << "No mask is going to be used" << endl;
       cout << "Number of rows of the generated images: " << rows << endl;
@@ -96,7 +94,7 @@ int main(int argc, char **argv) {
   }
 //  if (!noBB)
 //     cout << "Generated images will be inside the mask's bounding box" << endl;
-  cout << "iname = " << fname << endl;
+  cout << "input = " << fname << endl;
   cout << "imgName = " << imgName << endl;
 
   // Read spider mask
