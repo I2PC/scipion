@@ -217,8 +217,10 @@ AC_OUTPUT( \
 	applications/programs/fourier_filter/Makefile \
 	applications/programs/fourier_transform/Makefile \
 	applications/programs/header_apply/Makefile \
-	applications/programs/headerinfo/Makefile \
+	applications/programs/header_assign/Makefile \
+	applications/programs/header_extract/Makefile \
 	applications/programs/header_print/Makefile \
+	applications/programs/header_reset/Makefile \
 	applications/programs/histogram/Makefile \
 	applications/programs/make_spectra/Makefile \
 	applications/programs/mask/Makefile \
