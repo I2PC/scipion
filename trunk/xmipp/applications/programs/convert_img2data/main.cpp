@@ -47,9 +47,9 @@ int main(int argc, char **argv) {
 
   // Read arguments
   try {
-    selname = get_param(argc, argv, "-sel");
-    fname = get_param(argc, argv, "-fname", "out.dat");
-    bmname = get_param(argc, argv, "-mname", "mask.spi");
+    selname = get_param(argc, argv, "-i");
+    bmname = get_param(argc, argv, "-mask", "mask.spi");
+    fname = get_param(argc, argv, "-o", "out.dat");
     if (check_param(argc, argv, "-nomask"))
      nomask = true;
     if (check_param(argc, argv, "-verb"))
@@ -60,11 +60,11 @@ int main(int argc, char **argv) {
   catch (Xmipp_error) {
     cout << "img2data: Convert a set of images into a set of data vectors" << endl;
     cout << "Usage:" << endl;
-    cout << "-sel                 : Sel file name" << endl;
-    cout << "-mname               : Input Mask file name (default: mask.spi)" << endl;
+    cout << "-i                   : Input selfile name" << endl;
+    cout << "-mask                : Input Mask file name (default: mask.spi)" << endl;
+    cout << "[-o]                 : Output file name (default: out.dat)" << endl;
     cout << "[-nomask]            : set if the mask is not going to be used" << endl;
     cout << "[-radial_avg]        : set if only the radial avg should be output" << endl;
-    cout << "[-fname]             : Output file name (default: out.dat)" << endl;
     cout << "[-verb]              : Verbosity (default: false)" << endl;
     cout << "[-dont_apply_geo]    : Do not apply transformation stored in the header of 2D-images"<< endl;
     exit(1);
