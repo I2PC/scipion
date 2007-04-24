@@ -15,19 +15,19 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Selfile with all micrographs to pick particles from (in current dir):
-MicrographSelfile="all_micrographs.sel"
-# Is this a list of untilted-tilted pairs?
+MicrographSelfile="pairs.sel"
+# Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
     untilted_pair2.raw tilted_pair2.raw 1
     etc...
     Where 1 in the third column means active pair, and -1 means inactive pair
 """
-IsPairList=False
+IsPairList=True
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
-ProjectDir="/home/scheres/work/protocols"
+ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
@@ -103,12 +103,13 @@ class particle_pick_class:
                     
                 for line in self.pairlines:
                     words=line.split()
-                    untilted=os.path.basename(words[0])
+                    untilted=words[0]
                     tilted=words[1]
                     state=words[2]
                     if (state.find('-1') == -1):
                         self.update_have_picked()
                         if not (self.have_already_picked(untilted)):
+                            print 'untilted= ',untilted,tilted
                             self.perform_picking_pair(untilted,tilted)
 
         def prepare_have_picked(self):
@@ -124,7 +125,7 @@ class particle_pick_class:
                         micrograph,state=line[:-1].split(" ")
                         downname=os.path.basename(micrograph)
                         downname=downname.replace('.raw','')
-                        self.append_line_have_picked(self,downname,state)
+                        self.append_line_have_picked(downname,state)
                 else:
                     for line in self.pairlines:
                         words=line.split()
@@ -132,7 +133,7 @@ class particle_pick_class:
                         untilted=untilted.replace('.raw','')
                         tilted=words[1]
                         state=words[2]
-                        self.append_line_have_picked(self,untilted,state)
+                        self.append_line_have_picked(untilted,state)
    
                 self.havepickedlines.append('# {end-of-header} \n')
                 fh.writelines(self.havepickedlines)
