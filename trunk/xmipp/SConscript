@@ -606,7 +606,15 @@ AddProgram('classify_fsom', 'applications/programs/classify_fsom', '*.cpp', [],
     ['libraries', '#'], ['libraries/classification', 'libraries/data',
     'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
 
-AddProgram('headerinfo', 'applications/programs/headerinfo', '*.cpp', [],
+AddProgram('header_assign', 'applications/programs/header_assign', '*.cpp', [],
+    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
+    'Bilib'])
+
+AddProgram('header_extract', 'applications/programs/header_extract', '*.cpp', [],
+    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
+    'Bilib'])
+
+AddProgram('header_reset', 'applications/programs/header_reset', '*.cpp', [],
     ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
     'Bilib'])
 
@@ -624,6 +632,10 @@ AddProgram('convert_img2data', 'applications/programs/convert_img2data',
     ['XmippData', 'Bilib'])
 
 AddProgram('header_print', 'applications/programs/header_print', '*.cpp', [],
+    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
+    'Bilib'])
+
+AddProgram('statistics', 'applications/programs/statistics', '*.cpp', [],
     ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
     'Bilib'])
 
