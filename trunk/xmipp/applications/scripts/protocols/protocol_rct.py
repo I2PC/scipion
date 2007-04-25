@@ -248,10 +248,10 @@ class RCT_class:
             unt_selfile=self.untiltclasslist[ref][0]
             til_selfile=self.untiltclasslist[ref][2]
             docfile=til_selfile.replace('.sel','.doc')
-            command='xmipp_align_tilt_pairs -u '+unt_selfile+\
-                     ' -t '+til_selfile+\
-                     ' -doc '+docfile+\
-                     ' -max_shift '+str(self.CenterMaxShift)
+            command = 'xmipp_align_tilt_pairs -u ' + unt_selfile + \
+                      ' -t '+til_selfile + \
+                      ' -doc '+docfile + \
+                      ' -max_shift ' + str(self.CenterMaxShift)
             if not self.DoCenterTilted:
                 command+=' -skip_centering'
             if not self.DoUseCosineStretching:
@@ -266,8 +266,8 @@ class RCT_class:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','')
             outname='art_'+outname
-            command='xmipp_reconstruct_art -i ' + til_selfile + \
-                     ' -o ' + outname + \
+            command='xmipp_reconstruct_art -i ' + str(til_selfile) + \
+                     ' -o ' + str(outname) + \
                      ' -l ' + str(self.ArtLambda)
             if not self.ArtAdditionalParams=="":
                 command+=' '+str(self.ArtAdditionalParams)
@@ -282,8 +282,8 @@ class RCT_class:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','.vol')
             outname='wbp_'+outname
-            command='xmipp_reconstruct_wbp -i ' + til_selfile + \ 
-                    ' -o ' + outname + \
+            command='xmipp_reconstruct_wbp -i ' + til_selfile + \
+                     ' -o ' + outname + \
                      ' -threshold ' + str(self.WbpThreshold)
             if not self.WbpAdditionalParams=="":
                 command+=' '+str(self.WbpAdditionalParams)

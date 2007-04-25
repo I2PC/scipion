@@ -129,13 +129,13 @@ class setup_protocols_class:
             self.library={}
             self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
                                                 self.PreProcessDir,
-                                                ['protocol_preprocess_micrographs.py']]
+                                                ['protocol_preprocess_micrographs.py','visualize_preprocess_micrographs.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
                                                 self.PreProcessDir,
                                                 ['protocol_particle_pick.py']]
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
                                                 self.PreProcessDir,
-                                                ['protocol_preprocess_particles.py']]
+                                                ['protocol_preprocess_particles.py','visualize_preprocess_particles.py']]
             self.library['SetupML2D']=[self.SetupML2D,
                                          self.ML2DDir,
                                          ['protocol_ml2d.py','visualize_ml2d.py']]

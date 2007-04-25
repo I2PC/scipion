@@ -14,8 +14,6 @@
 # Working subdirectory:
 WorkingDir="SOM_ML2ref_ref1"
 # Delete working subdirectory if it already exists?
-""" The directory will not be deleted when only visualizing! 
-"""
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
@@ -65,8 +63,6 @@ SomSteps=1
 """ For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraParams=""
-# Visualize the SOM after job completion?
-DoVisualizeSOM=True
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -97,8 +93,7 @@ class kerdensom_class:
                  _SomReg0,
                  _SomReg1,
                  _SomSteps,
-                 _KerdensomExtraParams,
-                 _DoVisualizeSOM ):
+                 _KerdensomExtraParams):
 
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -119,7 +114,6 @@ class kerdensom_class:
         self.SomReg1=_SomReg1
         self.SomSteps=_SomSteps
         self.KerdensomExtraParams=_KerdensomExtraParams
-        self.DoVisualizeSOM=_DoVisualizeSOM
         
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -128,21 +122,21 @@ class kerdensom_class:
                                      self.WorkingDir)
                 
         # Delete working directory if it exists, make a new one, and go there
-        if (_DoDeleteWorkingDir and (_DoSOM or _DoXmask) ): 
+        if (_DoDeleteWorkingDir): 
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
         os.chdir(self.WorkingDir)
 
-        # Check whether ML2D working subdirectory
+        # Check whether ML2D subdirectory exists
         if not os.path.exists(self.ML2DWorkingDir):
             message=" Error: ML2D directory "+self.ML2DWorkingDir+" does not exists!"
             print '* '+message
             self.log.error(message)
             sys.exit()
             
-        # Execute MLalign2D in the working directory
+        # Execute kerdensom protocol in the working directory
         self.execute_whole_protocol()
 
         # Return to parent dir
@@ -228,17 +222,17 @@ class kerdensom_class:
 
     def execute_img2data(self,selfile,maskname,outname):
         import os
-        command='xmipp_convert_img2data -sel '+ str(selfile) + \
-                 ' -mname '+ str(maskname) + \
-                 ' -fname '+ str(outname) + ' \n'
+        command='xmipp_convert_img2data -i '+ str(selfile) + \
+                 ' -mask '+ str(maskname) + \
+                 ' -o ' + str(outname) + ' \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
 
     def execute_data2img(self,iname,maskname):
         import os
-        command='xmipp_convert_data2img -iname '+ str(iname) + \
-                 ' -mname '+ str(maskname) + ' \n'
+        command='xmipp_convert_data2img -i '+ str(iname) + \
+                 ' -mask '+ str(maskname) + ' \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
@@ -262,8 +256,8 @@ class kerdensom_class:
         
         print '*********************************************************************'
         print '*  Executing kerdenSOM program :' 
-        command= 'xmipp_classify_kerdensom'+ ' -din ' + str(datafile) + \
-                 ' -cout ' + str(somname)  + \
+        command= 'xmipp_classify_kerdensom'+ ' -i ' + str(datafile) + \
+                 ' -o '    + str(somname)  + \
                  ' -xdim ' + str(self.SomXdim) + \
                  ' -ydim ' + str(self.SomYdim) + \
                  ' -reg0 ' + str(self.SomReg0) + \
@@ -273,15 +267,6 @@ class kerdensom_class:
         print '* ',command
         self.log.info(command)
         os.system(command)
-
-                                               
-    def visualize_SOM(self,somname):
-         import os
-
-         command='xmipp_show -som ' + str(somname)
-         print '* ',command
-         self.log.info(command)
-         os.system(command)
 
     def execute_whole_protocol(self):
         
@@ -298,8 +283,6 @@ class kerdensom_class:
             self.execute_img2data(self.classselfile,self.MaskFileName,'data.dat')
             self.execute_kerdensom('data.dat',self.SomName)
             self.execute_data2img(str(self.SomName)+'.cod',self.MaskFileName)
-            if (self.DoVisualizeSOM):
-                self.visualize_SOM(self.SomName)
 
     def close(self):
         message='Done!'
@@ -328,8 +311,7 @@ if __name__ == '__main__':
                               SomReg0,
                               SomReg1,
                               SomSteps,
-                              KerdensomExtraParams,
-                              DoVisualizeSOM)
+                              KerdensomExtraParams)
     # close 
     kerdensom.close()
 

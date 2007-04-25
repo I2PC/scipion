@@ -82,10 +82,9 @@ class visualize_ML3D_class:
                  VisualizeMatrixLastIter
                  ):
 	     
-        import os,sys,shutil
+        import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
         import visualization
 
 

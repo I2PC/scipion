@@ -79,8 +79,6 @@ SphericalAberration=2.26
 Sampling=2.8
 # Amplitude Contrast (typically negative!)
 AmplitudeContrast=-0.1
-# Visualize CTF-estimation?
-DoVisualizeCTF=True
 # {expert} Lowest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
     This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
@@ -105,8 +103,11 @@ DoPhaseFlipping=True
 #------------------------------------------------------------------------------------------------
 # Perform particle sorting to identify junk particles?
 DoSorting=True
-# Visualize sorted particles?
-DoVisualizeSorting=True
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_preprocess_particles.py"
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -140,11 +141,9 @@ class preprocess_particles_class:
                  AmplitudeContrast,
                  LowResolCutoff,
                  HighResolCutoff,
-                 DoVisualizeCTF,
                  OutCTFSelFile,
                  DoPhaseFlipping,
                  DoSorting,
-                 DoVisualizeSorting,
                  ):
 	     
         import os,sys
@@ -173,11 +172,9 @@ class preprocess_particles_class:
         self.AmplitudeContrast=AmplitudeContrast
         self.LowResolCutoff=LowResolCutoff
         self.HighResolCutoff=HighResolCutoff
-        self.DoVisualizeCTF=DoVisualizeCTF
         self.OutCTFSelFile=OutCTFSelFile
         self.DoPhaseFlipping=DoPhaseFlipping
         self.DoSorting=DoSorting
-        self.DoVisualizeSorting=DoVisualizeSorting
         # Parameters set from outside
         self.Down=protocol_preprocess_micrographs.Down
         self.log=log.init_log_system(self.ProjectDir,
@@ -243,9 +240,6 @@ class preprocess_particles_class:
 
                     if (self.DoPhaseFlipping):
                         self.perform_phaseflip()
-
-        if (self.DoVisualizeCTF):
-            self.visualize_ctfs()
 
         if (self.DoSorting):
             self.perform_sort_junk()
@@ -601,15 +595,6 @@ class preprocess_particles_class:
         self.log.info(command)
         os.system(command)
         
-    def visualize_ctfs(self):
-        import os
-        print '*********************************************************************'
-        print '*  Visualizing all CTFs: '
-        command='xmipp_show -ctfsel all_ctfs.sel &'
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
-
     def perform_sort_junk(self):
         import os
         print '*********************************************************************'
@@ -618,12 +603,6 @@ class preprocess_particles_class:
         print '* ',command
         self.log.info(command)
         os.system(command)
-        if (self.DoVisualizeSorting):
-    	    command='xmipp_show -sel sort_junk.sel & '
-    	    print '* ',command
-    	    self.log.info(command)
-    	    os.system(command)
-
 
     def close(self):
         message=" Done pre-processing all"
@@ -659,11 +638,9 @@ if __name__ == '__main__':
                                                         AmplitudeContrast,
                                                         LowResolCutoff,
                                                         HighResolCutoff,
-                                                        DoVisualizeCTF,
                                                         OutCTFSelFile,
                                                         DoPhaseFlipping,
-                                                        DoSorting,
-                                                        DoVisualizeSorting)
+                                                        DoSorting)
 
 	# close 
 	preprocess_particles.close()

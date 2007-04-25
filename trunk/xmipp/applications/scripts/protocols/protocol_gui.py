@@ -249,9 +249,9 @@ class automated_gui_class:
         self.morehelp=StringVar()
 
         # Script title
-        headertext="GUI for Xmipp "
-        programname=os.path.basename(sys.argv[1])
-        headertext+=programname.replace('.py','')+'\n'
+        programname=(os.path.basename(sys.argv[1])).replace('.py','')
+        self.master.title(programname)
+        headertext='GUI for Xmipp '+programname+'\n'
         headertext+="Executed in directory: "+str(os.getcwd())
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
@@ -297,6 +297,7 @@ class automated_gui_class:
         self.morehelp=StringVar()
       
         # Script title
+        self.master.title('Xmipp protocols')
         headertext="Which Xmipp protocol do you want to run?"
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)

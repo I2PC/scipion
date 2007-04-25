@@ -42,8 +42,11 @@ Down=3
 #------------------------------------------------------------------------------------------------
 # Perform power spectral density estimation?
 DoEstimatePSD=True
-# Visualize estimated power spectral densities?
-DoVisualizePSD=True
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_preprocess_micrographs.py"
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -62,8 +65,7 @@ class preprocess_A_class:
 		     DoTif2Raw,
 		     DoDownSample,
 		     Down,
-		     DoEstimatePSD,
-		     DoVisualizePSD):
+		     DoEstimatePSD):
 	     
 		import os,sys
                 scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -78,7 +80,6 @@ class preprocess_A_class:
 		self.DoDownSample=DoDownSample
 		self.Down=Down
 		self.DoEstimatePSD=DoEstimatePSD
-		self.DoVisualizePSD=DoVisualizePSD
 		self.log=log.init_log_system(self.ProjectDir,
                                              self.LogDir,
                                              sys.argv[0],
@@ -133,18 +134,6 @@ class preprocess_A_class:
                 FILE = open("all_psds.sel","w")
 		FILE.writelines(self.psdselfile)
 		FILE.close()
-
-	def visualize_psds(self):
-		import os
-		print '*********************************************************************'
-		print '*  Visualizing all PSDs: '
-		command='xmipp_show -psdsel all_psds.sel'
-		print '* ',command
-                print '* You may select bad micrographs and save them as discarded.'
-                print '* Make sure to use save this file again as "all_psds.sel'
-                print '* This way, the discarded micrographs will no longer be processed!'
-		self.log.info(command)
-		os.system(command )
     
         def append_micrograph_selfile(self):
             name=self.shortname+'/'+self.downname+'.raw'
@@ -152,31 +141,6 @@ class preprocess_A_class:
             FILE = open(self.MicrographSelfile,'w')
             FILE.writelines(self.micselfile)
             FILE.close()
-
-        def update_micrograph_selfile(self):
-            fh=open(self.MicrographSelfile,'r')
-            miclines=fh.readlines()
-            fh.close()
-            fh=open('all_psds.sel','r')
-            psdlines=fh.readlines()
-            fh.close()
-            if (len(miclines)!=len(psdlines)):
-                message='Error: all_psds.sel and '+str(self.MicrographSelfile)+' are of unequal length'
-                self.log.error(message)
-                print '* ',message
-                sys.exit()
-            else:
-                newlines=[]
-                for i in range(len(miclines)):
-                    args1=miclines[i].split(' ')
-                    args2=psdlines[i].split(' ')
-                    newlines.append(args1[0]+' '+args2[1])
-                fh=open(self.MicrographSelfile,'w')
-                fh.writelines(newlines)
-                fh.close()
-                message='Updated '+str(self.MicrographSelfile)
-                print '* ',message
-                self.log.info(message)
 
 	def process_all_micrographs(self):
 		import os
@@ -212,10 +176,6 @@ class preprocess_A_class:
 
                         self.append_micrograph_selfile()
 
-		if (self.DoVisualizePSD):
-		    self.visualize_psds()
-                    self.update_micrograph_selfile()
-
 	def close(self):
                 message=" Done pre-processing all"
 		print '* ',message
@@ -235,8 +195,7 @@ if __name__ == '__main__':
 				       DoTif2Raw,
 				       DoDownSample,
 				       Down,
-				       DoEstimatePSD,
-				       DoVisualizePSD)
+				       DoEstimatePSD)
 
 	# close 
 	preprocessA.close()

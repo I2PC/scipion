@@ -15,7 +15,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Selfile with all micrographs to pick particles from (in current dir):
-MicrographSelfile="pairs.sel"
+MicrographSelfile="all_micrographs.sel"
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -23,7 +23,7 @@ MicrographSelfile="pairs.sel"
     etc...
     Where 1 in the third column means active pair, and -1 means inactive pair
 """
-IsPairList=True
+IsPairList=False
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
@@ -121,8 +121,7 @@ class particle_pick_class:
                 self.havepickedlines.append('#!/usr/bin/env python \n')
                 self.havepickedlines.append('# {section} Select Yes when you have finished a micrograph, and Save \n')
                 if not self.IsPairList:
-                    for line in self.mysel.sellines:
-                        micrograph,state=line[:-1].split(" ")
+                    for micrograph,state in self.mysel.sellines:
                         downname=os.path.basename(micrograph)
                         downname=downname.replace('.raw','')
                         self.append_line_have_picked(downname,state)
