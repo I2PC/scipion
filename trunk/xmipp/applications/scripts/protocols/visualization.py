@@ -104,3 +104,40 @@ class gnuplot:
                                         titley1+"' with lines")   
        self.send(" replot '" + DataFile + "'using "+str(X_col)+":"+str(Y2_col)+" title '"+\
                                         titley2+"' with lines")   
+
+    def plot_xy1y2_several_angular_doc_files(self, docfilename,
+                                Title="",
+                                X_Label="x",
+                                Y_Label="y",
+                                X_col=1,
+                                Y_col=2):
+       import glob
+       file_patern=docfilename+'[0-9]*.doc'
+       self.send(" set title '"+Title+"'")   
+       self.send(" set xlabel '"+X_Label+"'")   
+       self.send(" set ylabel '"+Y_Label+"'") 
+       self.send(" set polar") 
+       self.send(" set angles degrees") 
+       #self.send(" set rrange[0:90]") 
+       #self.send(" set trange[0:360]") 
+       self.send(" set xrange[-95:95]") 
+       self.send(" set yrange[-95:95]") 
+       
+       self.send(' set datafile commentschars "#;"') 
+       self.send(" set grid polar 15") 
+       self.send(" set xtics 10") 
+       for _docfilename in glob.glob(file_patern):
+          point_size = _docfilename.strip(docfilename)
+          point_size = point_size.strip(".doc")
+          self.send(" plot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
+                                         "' with points pt 6 ps "+ str(int(point_size)+1) ) 
+          print " plot '" + _docfilename+     "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
+                                         "' with points pt 6 ps "+ str(int(point_size)+1)
+          break                                 
+       for _docfilename in glob.glob(file_patern):
+          point_size = _docfilename.strip(docfilename)
+          point_size = point_size.strip(".doc")
+          self.send(" replot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
+                                         "' with points pt 6 ps "+ str(int(point_size)+1) )   
+          print " replot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
+                                         "' with points pt 6 ps "+ str(int(point_size)+1) 
