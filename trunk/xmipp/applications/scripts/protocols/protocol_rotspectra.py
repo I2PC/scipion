@@ -105,6 +105,11 @@ SomSteps=5
 """ For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 KerdensomExtraCommand=""
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_rotspectra.py"
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end-of-header} do not change anything bellow this line unless you know what you are doing
@@ -139,7 +144,7 @@ class rotational_spectra_class:
                 ):
 
        import os,sys
-       scriptdir=os.path.expanduser('~')+'/trunk/Xmipp/Applications/Batches/Protocols_lib/'
+       scriptdir=os.path.expanduser('~')+'/scripts/'
        sys.path.append(scriptdir) # add default search path
        import log
 
@@ -245,13 +250,13 @@ class rotational_spectra_class:
       self.mylog.info(command)
       os.system(command)
       if self._DisplayResults==True:
-         command='xmipp_show -sel '+ os.path.basename(self._SelFileName)+' &'
+         command='xmipp_show -sel '+ os.path.basename(self._SelFileName)
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
          os.system(command)
       if self._DisplayResults==True:
-         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp &'
+         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -360,7 +365,7 @@ class rotational_spectra_class:
           print '* Display spectra'
           selFileName=os.path.basename(self._SelFileName)
           command='xmipp_show'+ \
-                  ' -spect ' + str(self._SpectraName)+' &'
+                  ' -spect ' + str(self._SpectraName)
           print '* ',command
           self.mylog.info(command)
           program = os.system(command)     
@@ -406,7 +411,7 @@ class rotational_spectra_class:
       if self._DisplayResults==True:
          command='xmipp_show -spectsom ' + \
                   str(self._SomName) + \
-                  ' -din ' + str(self._SpectraName) + ' &'
+                  ' -din ' + str(self._SpectraName)
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
