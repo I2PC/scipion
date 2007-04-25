@@ -66,7 +66,9 @@ class gnuplot:
     def plot_xy_file(self,DataFile,
                           Title="",
                           X_Label="x",
-                          Y_Label="y"):
+                          Y_Label="y",
+                          X_col=1,
+                          Y_col=2):
        """ plots a file using gnuplot
            data file may have comments (line starting with #)
        """
@@ -77,19 +79,19 @@ class gnuplot:
        self.send(" set title '"+Title+"'")   
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'")   
-       self.send(" plot '" + DataFile + "' with lines")   
+       self.send(" plot '" + DataFile + "' using "+str(X_col)+":"+str(Y_col)+" with lines")   
 
     def plot_xy1y2_file(self,DataFile,
                              Title="",
                              titley1="",
                              titley2="",
                              X_Label="x",
-                             Y_Label="y"):
+                             Y_Label="y",
+                             X_col=1,
+                             Y1_col=2,
+                             Y2_col=3):
        """ plots a file using gnuplot
-           file is format is
-           x1 y11 y12
-           x2 y21 y22
-           ...
+           data file may have comments (line starting with #)
        """
        print DataFile
        print Title
@@ -98,7 +100,7 @@ class gnuplot:
        self.send(" set title '"+Title+"'")   
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'")   
-       self.send(" plot '" + DataFile + "'using 1:2 title '"+\
+       self.send(" plot '" + DataFile + "'using "+str(X_col)+":"+str(Y1_col)+" title '"+\
                                         titley1+"' with lines")   
-       self.send(" replot '" + DataFile + "'using 1:3 title '"+\
+       self.send(" replot '" + DataFile + "'using "+str(X_col)+":"+str(Y2_col)+" title '"+\
                                         titley2+"' with lines")   
