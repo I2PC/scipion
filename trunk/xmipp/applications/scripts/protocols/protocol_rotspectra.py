@@ -34,6 +34,8 @@ WorkDirectory='test1'
 DoDeleteWorkingDir=True
 # Display all intermediate results?
 """ Images will be displayed after alignment, average, makespectra and kendersom...
+    The display is NOT make in the background. If you want to 
+    send to a queue this job set this flag to NULL 
 """
 DisplayResults=True
 # {expert} Root directory name for this project:
@@ -169,10 +171,12 @@ class rotational_spectra_class:
                                       _LogDir,
                                       sys.argv[0],
                                       _WorkDirectory)
-
        if (_DoDeleteWorkingDir): 
           self.delete_working_directory()
        self.create_working_directory()
+       
+       #made backup of this script
+       log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
 
        #change to working dir
        os.chdir(self._WorkDirectory)
