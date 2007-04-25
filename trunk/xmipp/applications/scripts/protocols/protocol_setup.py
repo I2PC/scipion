@@ -4,7 +4,7 @@
 #  - Preprocessing of micrographs
 #  - Manual particle picking
 #  - Preprocessing of extracted particles
-#  - 2D image alignment and classification (by ml2d & kerdenSOM)
+#  - 2D image alignment and classification (by ML2D & kerdenSOM)
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
 #  - 3D refinement by standard projection matching
@@ -25,7 +25,7 @@ SetupPreProcessMicrographs=False
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False
-# {setup-2d} ml2d classification
+# {setup-2d} ML2D classification
 SetupML2D=False
 # {setup-2d} kerdenSOM classification 
 SetupKerdensom=False
@@ -33,7 +33,7 @@ SetupKerdensom=False
 SetupRotSpectra=False
 # {setup-3d} Random Conical Tilt
 SetupRCT=False
-# {setup-3d} ml3d classification
+# {setup-3d} ML3D classification
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
@@ -50,13 +50,13 @@ LogDir="Logs"
 PreProcessDir="Preprocessing"
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Directory name for ml2d classification:
+# {expert} Directory name for ML2D classification:
 ML2DDir="ML2D"
 # {expert} Directory name for rotational spectra classification:
 RotSpectraDir="Rotspectra"
 # {expert} Directory name for Random Conical Tilt reconstruction:
 RCTDir="RCT"
-# {expert} Directory name for ml3d classification:
+# {expert} Directory name for ML3D classification:
 ML3DDir="ML3D"
 # {expert} Directory name for projection matching refinement:
 ProjMatchDir="ProjMatching"

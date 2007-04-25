@@ -1,6 +1,9 @@
 #!/bin/csh
+echo " *** Launching GUI for Xmipp protocols_setup ***" 
+echo " "
+echo " Always execute this command in your ProjectDir! "
 if (!(-e protocol_setup.py)) then
-cp ~/scripts/protocol_setup.py ./. 
-python ~/scripts/protocol_gui.py protocol_setup.py &
+  cp ~/scripts/protocol_setup.py ./. 
 endif
+python ~/scripts/protocol_gui.py protocol_setup.py &
 
