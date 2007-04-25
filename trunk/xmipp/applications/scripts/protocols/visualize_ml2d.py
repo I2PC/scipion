@@ -12,12 +12,14 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Visualize last iterations class averages and output logfile to screen?
-DoShowLastIter=True
 # Visualize the class averages of all iterations in matrix-view?
-DoMatrixAllIter=True
-# Output statistics of all iterations to screen?
-DoShowStatsAllIter=True
+DoMatrixAllIter=False
+# Visualize class averages of the last iterations separately?
+DoShowLastIter=False
+# Plot model (and mirror) fractions of the last iertation?
+DoShowFractions=False
+# Plot convergence statistics for all iterations?
+DoShowStatsAllIter=False
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -29,8 +31,9 @@ class visualize_ML2D_class:
 
     #init variables
     def __init__(self,
-                 DoShowLastIter,
                  DoMatrixAllIter,
+                 DoShowLastIter,
+                 DoShowFractions,
                  DoShowStatsAllIter):
 	     
         import os,sys,shutil
@@ -43,12 +46,14 @@ class visualize_ML2D_class:
         self.WorkingDir=protocol_ml2d.WorkingDir
 
         os.chdir(self.WorkingDir)
-        if (DoShowLastIter):
-            self.show_last_iter()
         if (DoMatrixAllIter):
             self.show_matrixview_all_iter()
+        if (DoShowLastIter):
+            self.show_last_iter()
+        if (DoShowFractions):
+            self.show_model_fractions()
         if (DoShowStatsAllIter):
-            self.show_statistics_all_iter()
+            self.show_LL_PmaxsumP_all_iter()
 
         # Return to parent dir
         os.chdir(os.pardir)
@@ -76,20 +81,86 @@ class visualize_ML2D_class:
             print '* ',command
             os.system(command)
 
-    def show_statistics_all_iter(self):
+    def show_LL_PmaxsumP_all_iter(self):
         import os,glob
+        import visualization
+        import docfiles
+        logfiles=glob.glob('*_it?????.log')
+        if len(logfiles)==0:
+            print "No logfiles yet. Visualize after job completion..."
+        else: 
+            newlines1=[]
+            newlines2=[]
+            newlines3=[]
+            newlines1.append('# iter | log-likelihood \n')
+            newlines2.append('# iter | Pmax/sumP \n')
+            newlines3.append('# iter | signal change \n')
+            conv=0.05
+            for logfile in logfiles:
+                doc=docfiles.docfile(logfile)
+                eps=doc.maximum_of_column(4)
+                fh=open(logfile,'r')
+                line1=fh.readline()
+                line2=fh.readline()
+                line3=fh.readline()
+                fh.close()
+                words1=line1.split()
+                words2=line2.split()
+                words3=line2.split()
+                # find convergence threshold
+                for i in range(len(words3)):
+                    if (words2[i]=='-eps'):
+                        conv=float(words3[i+1])/1000.
+                # get iteration
+                iter=int(words2[6])-1
+                # get data
+                newlines1.append(str(iter)+' '+words1[7]+'\n')
+                newlines2.append(str(iter)+' '+words1[9]+'\n')
+                newlines3.append(str(iter)+' '+str(eps)+'\n')
+            fh=open('alliter_LL.dat','w')
+            fh.writelines(newlines1)
+            fh.close();
+            fh=open('alliter_Pmax.dat','w')
+            fh.writelines(newlines2)
+            fh.close();
+            fh=open('alliter_signalchange.dat','w')
+            fh.writelines(newlines3)
+            fh.close();
+            plot1=visualization.gnuplot()
+            plot1.plot_xy_file('alliter_LL.dat',
+                              'Log-likelihood target function (should increase)',
+                              'iterations',
+                              'LL')
+            plot2=visualization.gnuplot()
+            plot2.plot_xy_file('alliter_Pmax.dat',
+                              'The width of the probability distributions (often goes to one i.e. delta-functions)',
+                              'iterations',
+                              'Pmax/sumP')
+            plot3=visualization.gnuplot()
+            plot3.plot_xy_file('alliter_signalchange.dat',
+                              'The maximum signal change over all references (green line is convergence)',
+                              'iterations',
+                              'signal change')
+            plot3.send('set yrange [0:1]')
+            plot3.send("plot 'alliter_signalchange.dat' with lines")
+            plot3.send('replot '+str(conv))
+                             
+    def show_model_fractions(self):
+        import os,glob
+        import visualization
+        import docfiles
         logfiles=glob.glob('*_it?????.log')
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else:
-            for logfile in logfiles:
-                fh=open(logfile,'r')
-                line1=fh.readline()
-                line2=fh.readline()
-                fh.close()
-                words1=line1.split()
-                words2=line2.split()
-                print logfile,words1[6],words1[7],words1[8],words1[9],words2[1],words2[2],words2[3],words2[4]
+            plot1=visualization.gnuplot()
+            plot1.plot_xy1y2_file(logfiles[-1],
+                                  'Model and mirror fractions in the last iteration',
+                                  'model fraction',
+                                  'mirror fraction',
+                                  'reference number',
+                                  'fractions',
+                                  1,3,4)
 
     def show_last_iter(self):
         # Visualize class averages:
@@ -108,7 +179,7 @@ class visualize_ML2D_class:
                 print line[:-1]
             
             # Display last selfile
-            lastselfile=lastlogfile.replace('.sel','.log')
+            lastselfile=lastlogfile.replace('.log','.sel')
             command='xmipp_show -sel '+str(lastselfile)+ ' & '
             print '* ',command
             os.system(command)
@@ -124,8 +195,9 @@ class visualize_ML2D_class:
 if __name__ == '__main__':
 
     # create ML2D_class object
-    visualize_ML2D=visualize_ML2D_class(DoShowLastIter,
-                                        DoMatrixAllIter,
+    visualize_ML2D=visualize_ML2D_class(DoMatrixAllIter,
+                                        DoShowLastIter,
+                                        DoShowFractions,
                                         DoShowStatsAllIter)
     # close 
     visualize_ML2D.close()
