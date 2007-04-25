@@ -27,8 +27,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPIMAGES_H
-#define XMIPPIMAGES_H
+#ifndef IMAGE_H
+#define IMAGE_H
 
 #include "funcs.h"
 #include "matrix2d.h"
@@ -52,8 +52,10 @@
 // This forward declarations are needed for defining operators functions that
 // use other clases type
 
-template<typename T> class ImageImagicT;
-template<typename T> class ImageXmippT;
+template<typename T>
+class ImageImagicT;
+template<typename T>
+class ImageXmippT;
 
 // String that identifies a selline as an Imagic image
 static const char* IMAGIC_TAG = "imagic:";
@@ -118,7 +120,7 @@ public:
     {
         img.resize(Ydim, Xdim);
         fn_img = "";
-    };
+    }
 
     /** Constructor using filename
      * @ingroup ImageConstructors
@@ -133,7 +135,7 @@ public:
     ImageT(FileName _name)
     {
         fn_img = _name;
-    };
+    }
 
     /** Copy constructor
      * @ingroup ImageConstructors
@@ -146,7 +148,7 @@ public:
     {
         img = I.img;
         fn_img = I.fn_img;
-    };
+    }
 
     /// @defgroup ImageOperations Some operations
     /// @ingroup Images
@@ -397,7 +399,7 @@ public:
      */
     bool read(const FileName& name, float fIform, int Ydim, int Xdim,
               bool reversed=false, Image_Type image_type=IBYTE,
-	      int header_size=0)
+              int header_size=0)
     {
         FILE* fh;
         clear();
@@ -408,7 +410,7 @@ public:
 
         bool ret;
         if ((ret = ImageT<  T>::read(fh, fIform, Ydim, Xdim, reversed,
-             image_type)))
+                                     image_type)))
             fn_img=name;
 
         fclose(fh);
@@ -426,26 +428,26 @@ public:
         img.resize(Ydim, Xdim);
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-            switch (image_type)
-            {
-            case IBYTE:
-                unsigned char u;
-                FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = u;
-                break;
+        switch (image_type)
+        {
+        case IBYTE:
+            unsigned char u;
+            FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+            MULTIDIM_ELEM(img, i) = u;
+            break;
 
-            case I16:
-                unsigned short us;
-                FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = us;
-                break;
+        case I16:
+            unsigned short us;
+            FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+            MULTIDIM_ELEM(img, i) = us;
+            break;
 
-            case IFLOAT:
-                float f;
-                FREAD(&f, sizeof(float), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = f;
-                break;
-            }
+        case IFLOAT:
+            float f;
+            FREAD(&f, sizeof(float), 1, fh, reversed);
+            MULTIDIM_ELEM(img, i) = f;
+            break;
+        }
         return (true);
     }
 
@@ -505,7 +507,7 @@ public:
         if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
         {
             REPORT_ERROR(1503, "Image::write: File " + fn_img +
-                " cannot be saved");
+                         " cannot be saved");
         }
 
         ImageT< T >::write(fp, reversed, image_type);
@@ -537,26 +539,26 @@ public:
         }
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-            switch (image_type)
-            {
-            case IBYTE:
-                unsigned char u;
-                u = (unsigned char) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
-                FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
-                break;
+        switch (image_type)
+        {
+        case IBYTE:
+            unsigned char u;
+            u = (unsigned char) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
+            FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
+            break;
 
-            case I16:
-                unsigned short us;
-                us = (unsigned short) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
-                FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
-                break;
+        case I16:
+            unsigned short us;
+            us = (unsigned short) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
+            FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
+            break;
 
-            case IFLOAT:
-                float f;
-                f = (float) MULTIDIM_ELEM(img, i);
-                FWRITE(&f, sizeof(float), 1, fh, reversed);
-                break;
-            }
+        case IFLOAT:
+            float f;
+            f = (float) MULTIDIM_ELEM(img, i);
+            FWRITE(&f, sizeof(float), 1, fh, reversed);
+            break;
+        }
     }
 };
 
@@ -564,7 +566,7 @@ public:
 // Inlined to avoid multiple definitions
 template<>
 inline bool ImageT< complex< double> >::read(FILE*& fh, float fIform,
-    int Ydim, int Xdim, bool reversed, Image_Type image_type)
+        int Ydim, int Xdim, bool reversed, Image_Type image_type)
 {
     img.resize(Ydim, Xdim);
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
@@ -587,7 +589,7 @@ inline bool ImageT< complex< double> >::read(FILE*& fh, float fIform,
 // Specialized function to write images with complex numbers in them
 template<>
 inline void ImageT< complex< double> >::write(FILE*& fh, bool reversed,
-    Image_Type image_type)
+        Image_Type image_type)
 {
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
     {
@@ -704,8 +706,8 @@ public:
             header.headerType() = headerXmipp::IMG_XMIPP;
 
         // Sets header Slices
-        header.Slices() = 1;                 	
-    };
+        header.Slices() = 1;
+    }
 
     /** Constructor with size
      *
@@ -729,7 +731,7 @@ public:
         header.set_header(); // Initialize header
         header.set_time(); // Set time and date
         header.set_date();
-    };
+    }
 
     /** Constructor with filename, read from disk
      *
@@ -915,7 +917,7 @@ public:
         ImageXmippT< T >::rename(name);
         if ((fp = fopen(ImageT< T >::fn_img.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501, (string) "ImageXmipp::read: File " +
-            ImageT<T>::fn_img + " not found");
+                         ImageT<T>::fn_img + " not found");
 
         // Read header
         if (!header.read(fp, skip_type_check, reversed))
@@ -924,7 +926,7 @@ public:
 
         // Read whole image and close file
         if ((ret = ImageT< T >::read(fp, header.fIform(), header.iYdim(),
-             header.iXdim(), header.reversed(), IFLOAT)))
+                                     header.iXdim(), header.reversed(), IFLOAT)))
         {
             if (apply_geo || only_apply_shifts)
             {
@@ -933,11 +935,11 @@ public:
                 // values to first element in the matrix
                 matrix2D< double > A =
                     ImageXmippT< T >::get_transformation_matrix(
-                    only_apply_shifts);
+                        only_apply_shifts);
 
                 if (!A.IsIdent())
                     ImageT< T >::img.self_apply_geom_Bspline(A, 3, IS_INV,
-                                                             WRAP);
+                            WRAP);
             }
 
             // scale if necessary
@@ -948,7 +950,7 @@ public:
                                      header.Xdim() * header.Scale());
 
                 ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
-                                                            header.iXdim());
+                        header.iXdim());
             }
 
             header.set_header(); // Set header in a Xmipp consistent state
@@ -1113,7 +1115,7 @@ public:
                 // This indeed seems to be an OldXmipp style header with
                 // non-zero offsets
                 cerr << "WARNING%% Copying shifts from old to new headers: "
-                    << (*this).name() << endl;
+                << (*this).name() << endl;
 
                 header.fXoff() = -(float) mat(2, 0);
                 header.fYoff() = -(float) mat(2, 1);
@@ -1235,14 +1237,14 @@ public:
         return header.Weight();
     }
 
-     /** Set flip
-      *
-      * @code
-      * IX.flip() = 1; // flip image
-      *
-      * IX.flip() = 0; // do NOT flip image
-      * @endcode
-      */
+    /** Set flip
+     *
+     * @code
+     * IX.flip() = 1; // flip image
+     *
+     * IX.flip() = 0; // do NOT flip image
+     * @endcode
+     */
     float& flip()
     {
         return header.Flip();
@@ -1747,12 +1749,12 @@ public:
         return header.Theta2();
     }
 
-     /** Set Psi
-      *
-      * @code
-      * IX.Psi() = 350;
-      * @endcode
-      */
+    /** Set Psi
+     *
+     * @code
+     * IX.Psi() = 350;
+     * @endcode
+     */
     float& Psi()
     {
         return header.Psi();
@@ -2035,12 +2037,12 @@ class ImageOver: public Image
 {
 public:
     int uistep, vistep; // number of samples per
-                        // one sample on normal image (50)
-                        // in u,v directions
+    // one sample on normal image (50)
+    // in u,v directions
 
     int overumax, overvmax; // table borders in normal units (-2,2)
     int overumin, overvmin; // table borders in normal units (-2,2)
-                            // They should be an integer number
+    // They should be an integer number
 
 public:
     /** Prepare the Oversampled Image for work
@@ -2110,7 +2112,7 @@ public:
      * OVER2IMG(IO, y, x, iy, ix);
      * @endcode
      */
-    #define OVER2IMG(IO, v, u, iv, iu) \
+#define OVER2IMG(IO, v, u, iv, iu) \
        iu = (int) ROUND((((u)-(IO).overumin) * (IO).uistep)); \
        iv = (int) ROUND((((v)-(IO).overvmin) * (IO).vistep));
 
@@ -2147,21 +2149,21 @@ public:
      * IMG2OVER(IO, iy, ix, y, x);
      * @endcode
      */
-    #define IMG2OVER(IO, iv, iu, v, u) \
+#define IMG2OVER(IO, iv, iu, v, u) \
        u = (double) (IO).overumin + (iu) / (double) ((IO).uistep); \
        v = (double) (IO).overvmin + (iv) / (double) ((IO).vistep);
 
-     /** Constant pixel access with fractional indexes
-      *
-      * This function returns you a constant pixel access referred with a
-      * fractional index. If you want to access to the pixels in the classic
-      * Image fashion then you should use the macro IMGPIXEL. An exception is
-      * thrown if you try to access an image outside the image.
-      *
-      * @code
-      * cout << IO(1.34,-0.56) << endl;
-      * @endcode
-      */
+    /** Constant pixel access with fractional indexes
+     *
+     * This function returns you a constant pixel access referred with a
+     * fractional index. If you want to access to the pixels in the classic
+     * Image fashion then you should use the macro IMGPIXEL. An exception is
+     * thrown if you try to access an image outside the image.
+     *
+     * @code
+     * cout << IO(1.34,-0.56) << endl;
+     * @endcode
+     */
     double operator()(double v, double u) const
     {
         if (v<overvmin || v>overvmax)
@@ -2203,7 +2205,7 @@ public:
      * OVERPIXEL(IO, 1.34, -0.56) = 1;
      * @endcode
      */
-    #define OVERPIXEL(IO, y, x) IMGPIXEL((IO), \
+#define OVERPIXEL(IO, y, x) IMGPIXEL((IO), \
        (int) ROUND(((u) * (IO).uistep)), \
        (int) ROUND(((v) * (IO).vistep)))
 
@@ -2353,19 +2355,19 @@ static const char IMAGIC_TAG_SEP = ':';
 /* Constants for the offset into the Imagic header file
  */
 static const unsigned IMAGIC_IFOL_OFFSET=4, IMAGIC_IXLP_OFFSET=48,
-    IMAGIC_IYLP_OFFSET=52, IMAGIC_TYPE_OFFSET=56, IMAGIC_WORD_LEN=4,
-    IMAGIC_RECORD_LEN=1024;
+        IMAGIC_IYLP_OFFSET=52, IMAGIC_TYPE_OFFSET=56, IMAGIC_WORD_LEN=4,
+                           IMAGIC_RECORD_LEN=1024;
 
 /* Constants defining the Imagic header and some of its fields
  */
 static const unsigned int IMAGIC_HEADER_BLOCK_SIZE = 256;
 static const unsigned int IMAGIC_IDX_IMN = 0, IMAGIC_IDX_IFOL = 1,
-    IMAGIC_IDX_NHFR = 3, IMAGIC_IDX_NDATE = 5, IMAGIC_IDX_NMONTH = 4,
-    // These seem reversed in the spec
-    IMAGIC_IDX_NYEAR = 6, IMAGIC_IDX_NHOUR = 7, IMAGIC_IDX_NMINUT = 8,
-    IMAGIC_IDX_NSEC = 9, IMAGIC_IDX_NPIX2 = 10, IMAGIC_IDX_NPIXEL = 11,
-    IMAGIC_IDX_IXLP1 = 12, IMAGIC_IDX_IYLP1 = 13, IMAGIC_IDX_TYPE = 14,
-    IMAGIC_IDX_NAME = 29, IMAGIC_IDX_NAMELEN = 80, IMAGIC_IDX_ARCHTYPE = 68;
+        IMAGIC_IDX_NHFR = 3, IMAGIC_IDX_NDATE = 5, IMAGIC_IDX_NMONTH = 4,
+                                                // These seem reversed in the spec
+                                                IMAGIC_IDX_NYEAR = 6, IMAGIC_IDX_NHOUR = 7, IMAGIC_IDX_NMINUT = 8,
+                                                                   IMAGIC_IDX_NSEC = 9, IMAGIC_IDX_NPIX2 = 10, IMAGIC_IDX_NPIXEL = 11,
+                                                                                                           IMAGIC_IDX_IXLP1 = 12, IMAGIC_IDX_IYLP1 = 13, IMAGIC_IDX_TYPE = 14,
+                                                                                                                              IMAGIC_IDX_NAME = 29, IMAGIC_IDX_NAMELEN = 80, IMAGIC_IDX_ARCHTYPE = 68;
 
 /** Types of Imagic files
  *
@@ -2507,12 +2509,12 @@ public:
         FileName img_fname = getImgFname();
         if (img_fname == "")
             REPORT_ERROR(1501, "ImageImagic::read: File " + name +
-                          " doesn't seem fit Imagic format");
+                         " doesn't seem fit Imagic format");
 
         FILE* img_fh;
         if ((img_fh = fopen(img_fname.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501, "ImageImagic::read: IMAGIC file " + img_fname +
-                          " not found");
+                         " not found");
 
         const int imgnum = getImgNum();
         const size_t img_offset = img_info.xsize * img_info.ysize;
@@ -2560,7 +2562,7 @@ public:
             }
         default:
             REPORT_ERROR(1501,
-                "ImageImagicType not supported for this imgtype!");
+                         "ImageImagicType not supported for this imgtype!");
             break;
         }
         fclose(img_fh);
@@ -2629,11 +2631,11 @@ public:
                 if (imgnumpos > IMAGIC_TAG_LEN)
                 {
                     hedfname = ImageT< T >::fn_img.substr(IMAGIC_TAG_LEN,
-                        imgnumpos-IMAGIC_TAG_LEN);
+                                                          imgnumpos-IMAGIC_TAG_LEN);
                     imgfname = hedfname.substitute_extension(IMAGIC_HEADER_EXT,
                                IMAGIC_IMAGE_EXT);
                     imgnum = atoi(
-                        (ImageT< T >::fn_img.substr(imgnumpos + 1)).c_str());
+                                 (ImageT< T >::fn_img.substr(imgnumpos + 1)).c_str());
                 }
             }
             name_parsed = true;
@@ -2660,6 +2662,7 @@ inline string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
     char aux[15];
     ostrstream ss(aux,sizeof(aux));
 #else
+
     ostringstream ss;
 #endif
 
@@ -2718,7 +2721,7 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             header_block[IMAGIC_IDX_NMINUT] = nowtm->tm_min;
             header_block[IMAGIC_IDX_NSEC] = nowtm->tm_sec;
             header_block[IMAGIC_IDX_NPIX2] = XSIZE((*image)()) *
-                YSIZE((*image)());
+                                             YSIZE((*image)());
             header_block[IMAGIC_IDX_NPIXEL] = header_block[IMAGIC_IDX_NPIX2];
             header_block[IMAGIC_IDX_IXLP1] = XSIZE((*image)());
             header_block[IMAGIC_IDX_IYLP1] = YSIZE((*image)());
@@ -2745,13 +2748,16 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
 
             memcpy(&header_block[IMAGIC_IDX_TYPE], formatstr.c_str(), 4);
             strncpy((char*) &header_block[IMAGIC_IDX_NAME],
-                     image->name().c_str(), IMAGIC_IDX_NAMELEN);
+                    image->name().c_str(), IMAGIC_IDX_NAMELEN);
 
 #if defined(_LINUX)
+
             static const unsigned int ARCH_VAL = 33686018;
 #elif defined(_SUN)
+
             static const unsigned int ARCH_VAL = 67372036;
 #else
+
             static const unsigned int ARCH_VAL = 33686018;
 #endif
 

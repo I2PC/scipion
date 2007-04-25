@@ -24,8 +24,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPHISTOGRAMS_H
-#define XMIPPHISTOGRAMS_H
+#ifndef HISTOGRAM_H
+#define HISTOGRAM_H
 
 #include "matrix1d.h"
 #include "matrix2d.h"

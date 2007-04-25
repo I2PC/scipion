@@ -6,43 +6,43 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPERROR_H
-#define XMIPPERROR_H
+#ifndef ERROR_H
+#define ERROR_H
 
 #include <string>
 #include <iostream>
 
 /** @defgroup ErrorHandling Error handling
- * 
+ *
  * The error handling is performed in two different ways depending on the
  * configuration selected for Xmipp in the file xmippConfiguration: a simple
  * error management and a second method based on C++ exceptions.
- * 
+ *
  * The first method aborts the program with an error code (different for each
  * error) while the second throws an exception which might be caught by an
  * external routine or program.
- * 
+ *
  * The prototype definitions in both cases are the same as they are based on
  * some macros which change with the configuration. Here goes a programming
  * example considering both implementations.
- * 
+ *
  * @code
  * // Class definition
  * class ReconstructingVolume :
@@ -51,7 +51,7 @@
  * void write(const FileName& fn) const;
  * ...
  * };
- * 
+ *
  * // Class implementation
  * void ReconstructingVolume::write(const FileName& fn) const
  * {
@@ -60,7 +60,7 @@
  *     REPORT_ERROR(6001, "Volume too small to be stored");
  * ...
  * }
- * 
+ *
  * // Use of this class in an external program
  * using std::cout;
  * using std::endl;
@@ -82,7 +82,7 @@
  * #endif
  *  ...
  * @endcode
- * 
+ *
  * You see that the routine implementation is the same in both cases but the
  * external program varies from one to the other as in the exception case we can
  * catch the exception and go on processing, while in the exit mode, the program
@@ -93,9 +93,9 @@
 
 /** Show message and exit
  * @ingroup ErrorHandling
- * 
+ *
  * This macro shows the given message and exits with the error code.
- * 
+ *
  * @code
  * if (...)
  *     EXIT_ERROR(1, "Error 1");
@@ -110,10 +110,10 @@ void _Xmipp_error(const int nerr, const std::string& what);
 
 /** Exception class
  * @ingroup ErrorHandling
- * 
+ *
  * This is the class type for the errors thrown by the routines when the
  * exception handling mode is active (see Xmipp Configuration for details about
- * enabling the exception handling). 
+ * enabling the exception handling).
  */
 
 class Xmipp_error

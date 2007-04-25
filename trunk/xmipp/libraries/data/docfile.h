@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPDOCFILES_HH
-#define XMIPPDOCFILES_HH
+#ifndef DOCFILE_H
+#define DOCFILE_H
 
 #include <vector>
 #include <string>
@@ -81,7 +81,8 @@ public:
      * The document line is created with no type (neither comment or data). You
      * must use the function set_type to assign a type
      */
-    DocLine() : line_type(NOT_ASSIGNED) {}
+    DocLine() : line_type(NOT_ASSIGNED)
+    {}
 
     /** Copy constructor.
      * @ingroup DocLineConstructors

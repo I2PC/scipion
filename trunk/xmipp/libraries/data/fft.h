@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPFFT_H
-#define XMIPPFFT_H
+#ifndef FFT_H
+#define FFT_H
 
 #include <complex>
 
@@ -112,7 +112,7 @@ void digfreq2FFT_idx(T& v, const matrix1D< double >& freq, matrix1D< int >& idx)
     v.get_size(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        DIGFREQ2FFT_IDX(VEC_ELEM(freq, i), size[i], VEC_ELEM(idx, i));
+    DIGFREQ2FFT_IDX(VEC_ELEM(freq, i), size[i], VEC_ELEM(idx, i));
 }
 
 /** Digital to Continuous frequency
@@ -414,7 +414,7 @@ void CenterFFT(matrix3D< T >& v, bool forward)
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix1D< complex< double > >& v,
-	      double xshift);
+              double xshift);
 
 /** FFT shift 2D
  * @ingroup FourierOperations
@@ -423,7 +423,7 @@ void ShiftFFT(matrix1D< complex< double > >& v,
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix2D< complex< double > >& v,
-	      double xshift, double yshift);
+              double xshift, double yshift);
 
 /** FFT shift 3D
  * @ingroup FourierOperations
@@ -432,7 +432,7 @@ void ShiftFFT(matrix2D< complex< double > >& v,
  * by phase shifts in Fourier space
  */
 void ShiftFFT(matrix3D< complex< double > >& v,
-	      double xshift, double yshift, double zshift);
+              double xshift, double yshift, double zshift);
 
 /** Place the origin of the 1D FFT at the center of the vector and back
  * @ingroup FourierOperations
@@ -506,7 +506,7 @@ void auto_correlation_matrix(matrix2D< T > const & Img, matrix2D< double >& R)
 
     // Multiply FFT1 * FFT1'
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= conj(FFT1(i, j));
+    FFT1(i, j) *= conj(FFT1(i, j));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
@@ -534,7 +534,7 @@ void correlation_matrix(matrix2D< T > const & m1, matrix2D< T > const & m2,
 
     // Multiply FFT1 * FFT2'
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= conj(FFT2(i, j));
+    FFT1(i, j) *= conj(FFT2(i, j));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
@@ -715,14 +715,14 @@ void differential_phase_residual(matrix2D< T > const & m1,
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
         dMij(aux, i, j) *= realWRAP(RAD2DEG(
-            (atan2(dMij(FT1, i, j).imag(), dMij(FT1, i, j).real())) -
-            (atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real()))),
-            -180, 180);
+                                        (atan2(dMij(FT1, i, j).imag(), dMij(FT1, i, j).real())) -
+                                        (atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real()))),
+                                    -180, 180);
 
         dMij(aux, i, j) *= realWRAP(RAD2DEG(
-            (atan2(dMij(FT1, i, j).imag(), dMij(FT1, i, j).real())) -
-            (atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real()))),
-            -180, 180);
+                                        (atan2(dMij(FT1, i, j).imag(), dMij(FT1, i, j).real())) -
+                                        (atan2(dMij(FT2, i, j).imag(), dMij(FT2, i, j).real()))),
+                                    -180, 180);
     }
 
     tmp2.init_zeros();
@@ -781,13 +781,13 @@ void differential_phase_residual(matrix3D< T > const & m1,
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
     {
         dVkij(aux, k, i, j) *= realWRAP(RAD2DEG(
-            (atan2(dVkij(FT1, k, i, j).imag(), dVkij(FT1, k, i, j).real())) -
-            (atan2(dVkij(FT2, k, i, j).imag(), dVkij(FT2, k, i, j).real()))),
-            -180, 180);
+                                            (atan2(dVkij(FT1, k, i, j).imag(), dVkij(FT1, k, i, j).real())) -
+                                            (atan2(dVkij(FT2, k, i, j).imag(), dVkij(FT2, k, i, j).real()))),
+                                        -180, 180);
         dVkij(aux, k, i, j) *= realWRAP(RAD2DEG(
-            (atan2(dVkij(FT1, k, i, j).imag(), dVkij(FT1, k, i, j).real())) -
-            (atan2(dVkij(FT2, k, i, j).imag(), dVkij(FT2, k, i,j ).real()))),
-            -180, 180);
+                                            (atan2(dVkij(FT1, k, i, j).imag(), dVkij(FT1, k, i, j).real())) -
+                                            (atan2(dVkij(FT2, k, i, j).imag(), dVkij(FT2, k, i,j ).real()))),
+                                        -180, 180);
     }
 
     tmp2.init_zeros();

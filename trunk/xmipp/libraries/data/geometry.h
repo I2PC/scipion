@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPGEOMETRY_H
-#define XMIPPGEOMETRY_H
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
 
 #include "matrix3d.h"
 

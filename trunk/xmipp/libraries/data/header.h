@@ -58,8 +58,8 @@
  *
  */
 
-#ifndef XMIPPHEADER_H
-#define XMIPPHEADER_H
+#ifndef HEADER_H
+#define HEADER_H
 
 #include <iostream>
 #include <cstdio>

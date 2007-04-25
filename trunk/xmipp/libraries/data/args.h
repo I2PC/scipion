@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPARGS_HH
-#define XMIPPARGS_HH
+#ifndef ARGS_H
+#define ARGS_H
 
 #include <cstdio>
 #include <vector>

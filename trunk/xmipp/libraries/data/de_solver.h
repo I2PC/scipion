@@ -9,10 +9,12 @@
 // Last Modified: 6/8/98
 // Revision: 1.0
 
-#if !defined(_DESOLVER_H)
-#define _DESOLVER_H
+#ifndef DESOLVER_H
+#define DESOLVER_H
 
 #include "matrix1d.h"
+
+// TODO Document everything
 
 #define stBest1Exp			0
 #define stRand1Exp			1
@@ -32,72 +34,95 @@ typedef void (DESolver::*StrategyFunction)(int);
 class DESolver
 {
 public:
-	DESolver(int dim,int popSize,double _pGrad=0.0);
-	~DESolver(void);
-	
-	// Setup() must be called before solve to set min, max, strategy etc.
-	void Setup(double min[],double max[],int deStrategy,
-							double diffScale,double crossoverProb);
+    DESolver(int dim, int popSize, double _pGrad=0.0);
+    ~DESolver(void);
 
-	// Solve() returns true if EnergyFunction() returns true.
-	// Otherwise it runs maxGenerations generations and returns false.
-	virtual bool Solve(int maxGenerations);
+    // Setup() must be called before solve to set min, max, strategy etc.
+    void Setup(double min[],double max[],int deStrategy,
+               double diffScale, double crossoverProb);
 
-	// EnergyFunction must be overridden for problem to solve
-	// testSolution[] is nDim array for a candidate solution
-	// setting bAtSolution = true indicates solution is found
-	// and Solve() immediately returns true.
-	virtual double EnergyFunction(double testSolution[],bool &bAtSolution) = 0;
-	
-	int Dimension(void) { return(nDim); }
-	int Population(void) { return(nPop); }
+    // Solve() returns true if EnergyFunction() returns true.
+    // Otherwise it runs maxGenerations generations and returns false.
+    virtual bool Solve(int maxGenerations);
 
-	// Call these functions after Solve() to get results.
-	double Energy(void) { return(bestEnergy); }
-	double *Solution(void) { return(bestSolution); }
+    // EnergyFunction must be overridden for problem to solve
+    // testSolution[] is nDim array for a candidate solution
+    // setting bAtSolution = true indicates solution is found
+    // and Solve() immediately returns true.
+    virtual double EnergyFunction(double testSolution[], bool&  bAtSolution) = 0;
 
-	int Generations(void) { return(generations); }
+    int Dimension(void)
+    {
+        return(nDim);
+    }
 
-         // Enable gradient
-         void enable_grad(double _pGrad) {pGrad=_pGrad;}
+    int Population(void)
+    {
+        return(nPop);
+    }
+
+    // Call these functions after Solve() to get results.
+    double Energy(void)
+    {
+        return(bestEnergy);
+    }
+
+    double* Solution(void)
+    {
+        return(bestSolution);
+    }
+
+    int Generations(void)
+    {
+        return(generations);
+    }
+
+    // Enable gradient
+    void enable_grad(double _pGrad)
+    {
+        pGrad=_pGrad;
+    }
+
 protected:
-	void SelectSamples(int candidate,int *r1,int *r2=0,int *r3=0,
-												int *r4=0,int *r5=0);
-	double RandomUniform(double min,double max);
+    void SelectSamples(int candidate, int* r1, int* r2=0, int* r3=0,
+                       int* r4=0, int* r5=0);
 
-	int nDim;
-	int nPop;
-	int generations;
-        double pGrad;
+    double RandomUniform(double min, double max);
 
-	int strategy;
-	StrategyFunction calcTrialSolution;
-	double scale;
-	double probability;
+    int nDim;
+    int nPop;
+    int generations;
+    double pGrad;
 
-	double trialEnergy;
-	double bestEnergy;
+    int strategy;
+    StrategyFunction calcTrialSolution;
+    double scale;
+    double probability;
 
-	double *trialSolution;
-	double *bestSolution;
-	double *popEnergy;
-	double *population;
-        matrix1D<double> trialGrad;
-        matrix1D<double> stepsGrad;
+    double trialEnergy;
+    double bestEnergy;
+
+    double* trialSolution;
+    double* bestSolution;
+    double* popEnergy;
+    double* population;
+    matrix1D< double > trialGrad;
+    matrix1D< double > stepsGrad;
 
 private:
-	void Best1Exp(int candidate);
-	void Rand1Exp(int candidate);
-	void RandToBest1Exp(int candidate);
-	void Best2Exp(int candidate);
-	void Rand2Exp(int candidate);
-	void Best1Bin(int candidate);
-	void Rand1Bin(int candidate);
-	void RandToBest1Bin(int candidate);
-	void Best2Bin(int candidate);
-	void Rand2Bin(int candidate);
+    void Best1Exp(int candidate);
+    void Rand1Exp(int candidate);
+    void RandToBest1Exp(int candidate);
+    void Best2Exp(int candidate);
+    void Rand2Exp(int candidate);
+    void Best1Bin(int candidate);
+    void Rand1Bin(int candidate);
+    void RandToBest1Bin(int candidate);
+    void Best2Bin(int candidate);
+    void Rand2Bin(int candidate);
 
 };
-double EnergyFunctionGrad(double *);
 
-#endif // _DESOLVER_H
+double EnergyFunctionGrad(double*);
+
+#endif

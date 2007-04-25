@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPFILTERS_H
-#define XMIPPFILTERS_H
+#ifndef FILTERS_H
+#define ILTERS_H
 
 #define LOG2 0.693147181
 

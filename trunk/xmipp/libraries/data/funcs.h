@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPFUNCS_H
-#define XMIPPFUNCS_H
+#ifndef FUNCS_H
+#define FUNCS_H
 
 // TODO remove this, never open namespaces in header files
 using namespace std;
@@ -1379,7 +1379,7 @@ public:
     }
 
 private:
-    /** Vrify float
+    /** Verify float
      * @ingroup Marsaglia
      *
      * Be aware that Marsaglia reads blindly the data, therefore if the type
