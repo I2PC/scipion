@@ -213,7 +213,7 @@ class kerdensom_class:
         import os
         import glob
 
-        command='xmipp_headerinfo -assign -i '+self.docfilename+' -mirror \n'
+        command='xmipp_header_assign -i '+self.docfilename+' -mirror \n'
         print '* ',command
         self.log.info(command)
         os.system(command)

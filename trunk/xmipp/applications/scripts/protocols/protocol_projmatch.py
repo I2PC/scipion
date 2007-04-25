@@ -287,7 +287,7 @@ class projection_matching_class:
        
        #save initial header
        docfile_with_original_angles='docfile_with_original_angles.doc'
-       command='xmipp_headerinfo -extract -i '
+       command='xmipp_header_extract -i '
        command=command+self._SelFileName + \
                       ' -o ' + docfile_with_original_angles 
        self._mylog.debug("save original header in file: " + 
@@ -308,7 +308,7 @@ class projection_matching_class:
        
        #save initial header
        docfile_with_original_angles='docfile_with_original_angles.doc'
-       command='xmipp_headerinfo -extract -i '
+       command='xmipp_header_extract -i '
        command=command+self._SelFileName + \
                       ' -o ' + docfile_with_original_angles 
        self._mylog.debug("save original header in file: " + 
@@ -390,7 +390,7 @@ class projection_matching_class:
        #change to working dir
        os.chdir(self._WorkDirectory)
        if _DoRestoreOriginalHeader:
-          command='xmipp_headerinfo -assign -i '
+          command='xmipp_header_assign -i '
           command=command+docfile_with_original_angles
           self._mylog.debug("restore original header in file: " + 
                                    docfile_with_original_angles ) 
@@ -642,8 +642,8 @@ def execute_align2d(_mylog,
    #we may read using headerinfo.
    _in_filename   =  _Proj_Maching_Output_Root_Name + '_classes.sel'
    _out_filename  =  _Proj_Maching_Output_Root_Name + '_classes.doc'
-   command='xmipp_headerinfo -extract -i ' + _in_filename +\
-                                    ' -o ' + _out_filename
+   command='xmipp_header_extract -i ' + _in_filename +\
+                               ' -o ' + _out_filename
    _mylog.info(command)
    os.system(command)
 
@@ -655,7 +655,7 @@ def execute_align2d(_mylog,
    
    _input.close()
    _output.close()
-   command='xmipp_headerinfo -assign -i ' + _out_filename+'.o'
+   command='xmipp_header_assign -i ' + _out_filename+'.o'
    _mylog.info(command)
    os.system(command)
    
@@ -693,8 +693,8 @@ def execute_reconstruction(_mylog,
    print '*********************************************************************'
    print '* Reconstruct volume'
    if _ReconstructionMethod=='wbp':
-      program = 'xmipp_wbp'
-      mpi_program = 'xmipp_mpi_wbp'
+      program = 'xmipp_reconstruct_wbp'
+      mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + reconstruction_sel + \
                   ' -o '    + Outputvolume + \
                   ' -weight -use_each_image ' + \
@@ -702,10 +702,10 @@ def execute_reconstruction(_mylog,
                   _ReconstructionExtraCommand
               
    elif _ReconstructionMethod=='art':
-      program = 'xmipp_art'
+      program = 'xmipp_reconstruct_art'
       mpi_program = 'NULL'
       _DoParallel=False
-      mpi_program = 'xmipp_mpi_wbp'
+      mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters=' -i '    + InPutVolume + \
                  ' -o '    + Outputvolume 
    else:

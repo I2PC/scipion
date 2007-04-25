@@ -182,7 +182,7 @@ class particle_pick_class:
             import os
             directory,micrograph=os.path.split(name)
             os.chdir(directory)
-            command='xmipp_mark -i '+micrograph
+            command='xmipp_micrograph_mark -i '+micrograph
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -194,7 +194,7 @@ class particle_pick_class:
             directory,uname=os.path.split(untilted)
             tname='../'+tilted
             os.chdir(directory)
-            command='xmipp_mark -i '+uname+' -tilted '+tname
+            command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname
             print '* ',command
             self.log.info(command)
             os.system(command)

@@ -244,10 +244,8 @@ class ML3D_class:
         params+=' -dont_modify_header -output_classes -output_refs'
                 
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_projection_matching",
-                                       "xmipp_mpi_projection_matching",
-#                                       "xmipp_angular_projection_matching",
-#                                       "xmipp_mpi_angular_projection_matching",
+                                       "xmipp_angular_projection_matching",
+                                       "xmipp_mpi_angular_projection_matching",
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
@@ -265,10 +263,8 @@ class ML3D_class:
             params+= ' -sym '+str(self.SymmetryFile)
            
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_wbp",
-                                       "xmipp_mpi_wbp",
-#                                       "xmipp_reconstruct_wbp",
-#                                       "xmipp_mpi_reconstruct_wbp",
+                                       "xmipp_reconstruct_wbp",
+                                       "xmipp_mpi_reconstruct_wbp",
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
@@ -289,7 +285,7 @@ class ML3D_class:
             reference=corrvol
         else:
             reference=self.InitialReference
-        command='xmipp_fourierfilter -o filtered_reference.vol' + \
+        command='xmipp_fourier_filter -o filtered_reference.vol' + \
                  ' -i ' + reference  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
@@ -307,8 +303,7 @@ class ML3D_class:
         newsel=selfile.selfile()
 
         # Split selfiles
-#        command='xmipp_selfile_split -o seeds_split'+ \
-        command='xmipp_split_selfile -o seeds_split'+ \
+        command='xmipp_selfile_split -o seeds_split'+ \
                  ' -i ' + str(self.InSelFile) + \
                  ' -n ' + str(self.NumberOfReferences) +' \n'
         print '* ',command
@@ -378,10 +373,8 @@ class ML3D_class:
         params+=' '+extraparam
 
         launch_parallel_job.launch_job(self.DoParallel,
-#                                       "xmipp_ml_refine3d",
-#                                       "xmipp_mpi_ml_refine3d",
-                                       "xmipp_MLrefine3D",
-                                       "xmipp_mpi_MLrefine3D",
+                                       "xmipp_ml_refine3d",
+                                       "xmipp_mpi_ml_refine3d",
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,

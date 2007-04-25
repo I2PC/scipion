@@ -392,8 +392,8 @@ class rotational_spectra_class:
       selFileName=os.path.basename(self._SelFileName)
       print '*********************************************************************'
       print '* Computing kerdensom ...'
-      command='xmipp_classify_kerdensom'+ ' -verb 1 -din '  + str(self._SpectraName) + \
-              ' -cout ' + str(self._SomName)  + \
+      command='xmipp_classify_kerdensom'+ ' -verb 1 -i '  + str(self._SpectraName) + \
+              ' -o '    + str(self._SomName)  + \
               ' -xdim ' + str(self._SomXdim) + \
               ' -ydim ' + str(self._SomYdim) + \
               ' -reg0 ' + str(self._SomReg0) + \

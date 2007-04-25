@@ -335,8 +335,7 @@ class preprocess_particles_class:
         self.check_file_exists(posname2)
         self.check_file_exists(angname)
 
-#        command='xmipp_micrograph_scissor -i ' + iname + ' -root ' + rootname + \
-        command='xmipp_scissor -i ' + iname + ' -root ' + rootname + \
+        command='xmipp_micrograph_scissor -i ' + iname + ' -root ' + rootname + \
                  ' -tilted ' + iname2 + ' -root_tilted ' + rootname2 + \
                  ' -Xdim ' + str(self.Size) + \
                  '|grep "corresponding image is set to blank"> ' + logname            
@@ -441,8 +440,7 @@ class preprocess_particles_class:
         if not os.path.exists(imgsubdir):
             os.makedirs(imgsubdir)
 
-#        command='xmipp_micrograph_scissor -i ' + iname + ' -pos ' + posname + \
-        command='xmipp_scissor -i ' + iname + ' -pos ' + posname + \
+        command='xmipp_micrograph_scissor -i ' + iname + ' -pos ' + posname + \
                  ' -root ' + rootname + ' -Xdim ' + str(size) + \
                  '|grep "corresponding image is set to blank"> ' + logname
         print '* ',command
@@ -544,8 +542,7 @@ class preprocess_particles_class:
         fh=open(pname,"w")
         fh.writelines(paramlist)
         fh.close()
-#        command='xmipp_ctf_estimate_from_micrograph -i '+pname
-        command='xmipp_assign_CTF -i '+pname
+        command='xmipp_ctf_estimate_from_micrograph -i '+pname
         print '* ',command
         self.log.info(command)
         os.system(command )
@@ -593,8 +590,7 @@ class preprocess_particles_class:
         # Perform phase flipping operation
         print '*********************************************************************'
         print '*  Flipping phases for images in: '+selname
-#        command='xmipp_ctf_correct_phase -i '+selname+' -ctf '+ctfparam
-        command='xmipp_correctphase -i '+selname+' -ctf '+ctfparam
+        command='xmipp_ctf_correct_phase -i '+selname+' -ctf '+ctfparam
         print '* ',command
         self.log.info(command)
         os.system(command)
@@ -618,8 +614,7 @@ class preprocess_particles_class:
         import os
         print '*********************************************************************'
         print '*  Sorting images to identify junk particles in: '+self.OutSelFile
-#        command='xmipp_sort_by_statistics -i '+self.ProjectDir+'/'+self.OutSelFile
-        command='xmipp_sort_junk -i '+self.ProjectDir+'/'+self.OutSelFile
+        command='xmipp_sort_by_statistics -i '+self.ProjectDir+'/'+self.OutSelFile
         print '* ',command
         self.log.info(command)
         os.system(command)
