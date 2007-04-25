@@ -157,6 +157,7 @@ AC_OUTPUT( \
 	applications/scripts/mpi_mlf_align2d/Makefile \
 	applications/scripts/mlf_refine3d/Makefile \
 	applications/scripts/mpi_mlf_refine3d/Makefile \
+	applications/scripts/protocols/Makefile \
 	applications/programs/Makefile \
 	applications/programs/add_noise/Makefile \
 	applications/programs/adjust_volume_grey_levels/Makefile \

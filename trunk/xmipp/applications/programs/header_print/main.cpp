@@ -55,6 +55,7 @@ int main(int argc, char **argv) {
    try {
 
   // Process each file -----------------------------------------------------
+   SF.go_beginning();
    while (!SF.eof()) {
      FileName file_name = SF.NextImg();
 

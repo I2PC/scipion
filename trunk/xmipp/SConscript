@@ -874,6 +874,7 @@ AddBatch('mlf_align2d', 'applications/scripts/mlf_align2d')
 AddBatch('mlf_refine3d', 'applications/scripts/mlf_refine3d')
 AddBatch('mpi_mlf_align2d', 'applications/scripts/mpi_mlf_align2d')
 AddBatch('mpi_mlf_refine3d', 'applications/scripts/mpi_mlf_refine3d')
+AddBatch('protocols', 'applications/scripts/protocols')
 
 # FIXME Protocols?
 
