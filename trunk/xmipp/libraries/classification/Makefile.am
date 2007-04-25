@@ -49,7 +49,3 @@ EXTRA_DIST = \
 	umatrix.h \
 	uniform.h \
 	vector_ops.h
-
-docs:
-	@echo "Creating documentation in Classification ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

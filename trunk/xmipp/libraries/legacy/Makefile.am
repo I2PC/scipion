@@ -22,5 +22,3 @@ EXTRA_DIST = \
 	groe.h \
 	sacaf.h \
 	spider.h
-
-docs:

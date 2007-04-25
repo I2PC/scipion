@@ -88,7 +88,3 @@ EXTRA_DIST = \
 	volume.h \
 	volume_segment.h \
 	wavelet.h
-
-docs:
-	@echo "Creating documentation in XmippData ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

@@ -24,8 +24,8 @@
  ***************************************************************************/
 #include "args.h"
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 #include <errno.h>
 
 #define GCC_VERSION (__GNUC__ * 10000 \

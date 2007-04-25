@@ -78,7 +78,3 @@ EXTRA_DIST = \
 ## images/filesave.png \
 ## images/zoomin.png
 ## images/zoomout.png
-
-docs:
-	@echo "Creating documentation in XmippInterface ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

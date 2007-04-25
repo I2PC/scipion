@@ -11,7 +11,3 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $
 INCLUDES = -I$(top_srcdir)/libraries
 
 EXTRA_DIST = mpi_run.h
-
-docs:
-	@echo "Creating documentation in Reconstruction ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

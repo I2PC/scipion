@@ -15,6 +15,3 @@ SUBDIRS = \
 	interface \
 	legacy \
 	$(OPTIONAL_LIBS)
-
-docs:
-	for dir in $(SUBDIRS); do cd $$dir; $(MAKE) docs; cd ..; done

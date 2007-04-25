@@ -39,7 +39,3 @@ EXTRA_DIST = \
 INCLUDES = \
 	-I$(top_srcdir)/libraries \
 	-I$(top_srcdir)/external
-
-docs:
-	@echo "Creating documentation in XmippInterface ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

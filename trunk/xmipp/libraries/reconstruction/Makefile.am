@@ -135,7 +135,3 @@ EXTRA_DIST = \
 	symmetrize.h \
 	volume_foms.h \
 	volume_labelling.h
-
-docs:
-	@echo "Creating documentation in Reconstruction ..."
-	@doc++ -f -B @XMIPPDIR@/Extra_Docs/banner.html -d Docs documentation

@@ -29,8 +29,8 @@
 //-----------------------------------------------------------------------------
 
 
-#ifndef XMIPPBASEALGO_H
-#define XMIPPBASEALGO_H
+#ifndef BASEALGORITHM_H
+#define BASEALGORITHM_H
 
 #include <iostream>
 
@@ -88,7 +88,7 @@ class xmippBaseAlgo
   /**
    * Method to test the algorithm.
    * Note that this method is pure virtual, so it must be defined in every xmipp descendant class.
-   * @param _ds Data structure to train. Const because it´s not affected by test
+   * @param _ds Data structure to train. Const because its not affected by test
    * @param _examples  A training set with the training examples.
    * @return The test error, that is, error obtained for the test file. Might be
    * MSE error, or success in classification error, or whatever; just be consistent
