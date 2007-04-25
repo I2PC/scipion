@@ -14,9 +14,9 @@
 #------------------------------------------------------------------------------------------------
 # Visualize the class averages of all iterations in matrix-view?
 DoMatrixAllIter=False
-# Visualize class averages of the last iterations separately?
+# Separately visualize class averages of the last iteration?
 DoShowLastIter=False
-# Plot model (and mirror) fractions of the last iertation?
+# Plot model (and mirror) fractions of the last iteration?
 DoShowFractions=False
 # Plot convergence statistics for all iterations?
 DoShowStatsAllIter=False
