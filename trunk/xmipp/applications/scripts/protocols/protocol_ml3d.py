@@ -12,9 +12,9 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Selfile with the input images (relative path from ProjectDir):
-InSelFile="200.sel"
+InSelFile="all_images.sel"
 # Initial single reference map (relative path from ProjectDir):
-InitialReference="RCT/test1/wbp_ML3ref_ref00001_tilted.vol.sc32"
+InitialReference="my_ref.vol"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
@@ -57,7 +57,7 @@ PixelSize=5.6
 # Generate unbiased seeds from a single initial reference map?
 DoGenerateSeeds=True
 # Number of seeds to be generated (and later on used in ml3d-classification):
-NumberOfReferences=2
+NumberOfReferences=3
 # Alternatively, provide selfile with user-defined seeds (relative path from ProjectDir):
 """ Automated (unbiased!) seed generation is highly recommended...
     But you may use this option to provide the seeds from a previous run
@@ -73,16 +73,16 @@ DoML3DClassification=True
 """ Fine samplings take huge amounts of CPU and memory.
     Therefore, in general, dont use samplings finer than 10 degrees.
 """
-AngularSampling=30
+AngularSampling=10
 # Number of ml3d iterations to perform:
-NumberOfIterations=1
+NumberOfIterations=25
 # Symmetry description file (relative path from ProjectDir):
 """ See WIKI link for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
 SymmetryFile="6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
-ExtraParamsMLrefine3D="-l 0.3 -k 0.5 -n 2"
+ExtraParamsMLrefine3D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
