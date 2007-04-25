@@ -37,7 +37,7 @@ DoDeleteWorkingDir=True
     The display is NOT make in the background. If you want to 
     send to a queue this job set this flag to NULL 
 """
-DisplayResults=True
+DisplayResults=False
 # {expert} Root directory name for this project:
 ProjectDir="/home/roberto2/Test/Para_Roberto/"
 # {expert} Directory name for logfiles:
