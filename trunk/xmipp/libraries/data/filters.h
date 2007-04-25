@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #ifndef FILTERS_H
-#define ILTERS_H
+#define FILTERS_H
 
 #define LOG2 0.693147181
 
