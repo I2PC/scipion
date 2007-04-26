@@ -70,12 +70,7 @@ class gnuplot:
                           X_col=1,
                           Y_col=2):
        """ plots a file using gnuplot
-           data file may have comments (line starting with #)
        """
-       print DataFile
-       print Title
-       print X_Label
-       print Y_Label
        self.send(" set title '"+Title+"'")   
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'")   
@@ -91,12 +86,7 @@ class gnuplot:
                              Y1_col=2,
                              Y2_col=3):
        """ plots a file using gnuplot
-           data file may have comments (line starting with #)
        """
-       print DataFile
-       print Title
-       print X_Label
-       print Y_Label
        self.send(" set title '"+Title+"'")   
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'")   
@@ -109,8 +99,8 @@ class gnuplot:
                                 Title="",
                                 X_Label="x",
                                 Y_Label="y",
-                                X_col=1,
-                                Y_col=2):
+                                X_col=3,
+                                Y_col=4):
        import glob
        file_patern=docfilename+'[0-9]*.doc'
        self.send(" set title '"+Title+"'")   
@@ -118,26 +108,26 @@ class gnuplot:
        self.send(" set ylabel '"+Y_Label+"'") 
        self.send(" set polar") 
        self.send(" set angles degrees") 
-       #self.send(" set rrange[0:90]") 
-       #self.send(" set trange[0:360]") 
        self.send(" set xrange[-95:95]") 
        self.send(" set yrange[-95:95]") 
-       
-       self.send(' set datafile commentschars "#;"') 
-       self.send(" set grid polar 15") 
+
+# The following line is not functional in gnuplot 3.7 (jumilla)
+# pre-treat docfiles to remove comment lines!
+#       self.send(' set datafile commentschars "#;"') 
+       self.send(" set grid polar 30") 
        self.send(" set xtics 10") 
+       i = 0
        for _docfilename in glob.glob(file_patern):
-          point_size = _docfilename.strip(docfilename)
-          point_size = point_size.strip(".doc")
-          self.send(" plot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
-                                         "' with points pt 6 ps "+ str(int(point_size)+1) ) 
-          print " plot '" + _docfilename+     "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
-                                         "' with points pt 6 ps "+ str(int(point_size)+1)
-          break                                 
-       for _docfilename in glob.glob(file_patern):
-          point_size = _docfilename.strip(docfilename)
-          point_size = point_size.strip(".doc")
-          self.send(" replot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
-                                         "' with points pt 6 ps "+ str(int(point_size)+1) )   
-          print " replot '" + _docfilename+ "' using "+str(X_col)+":"+str(Y2_col)+" title '"+\
-                                         "' with points pt 6 ps "+ str(int(point_size)+1) 
+           point_size = _docfilename.replace(docfilename,'')
+           point_size = point_size.replace('.doc','')
+           point_size=(float(point_size)+2)/2
+           if (i==0):
+               plot='plot'
+           else:
+               plot='replot'
+           i=i+1
+           plotcommand=plot+" '" + _docfilename+ "' using "+str(X_col)+":"+str(Y_col)+ \
+                     " title '' with points pt 7 ps "+ str(point_size)
+           self.send(plotcommand)
+#           print plotcommand
+

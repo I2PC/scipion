@@ -109,7 +109,7 @@ class visualize_ML2D_class:
                 words3=line2.split()
                 # find convergence threshold
                 for i in range(len(words3)):
-                    if (words2[i]=='-eps'):
+                    if (words3[i]=='-eps'):
                         conv=float(words3[i+1])/1000.
                 # get iteration
                 iter=int(words2[6])-1

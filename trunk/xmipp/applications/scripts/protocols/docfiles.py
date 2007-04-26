@@ -78,23 +78,23 @@ class docfile:
        fh.writelines(newline)
        fh.close()
        
-   def write_several(self, docfilename,bin,col,min,max):
+   def write_several(self,docfilename,bin,col,min,max):
    
        for h in range(0,bin):
             
            fh = open(docfilename+str(h)+'.doc', 'w')
            newline=self.firstline
-           size = len(self.lineLst[0])
+           size = len(self.lineLst[0])-1
            _bin=(max-min)/bin
            i=0
            for ii in range(len(self.lineLst)):
               if float(self.lineLst[ii][col]) < min+h*_bin or\
                  float(self.lineLst[ii][col]) > min+(h+1)*_bin:
                      continue
-              newline = newline + ' ; ' + self.lineLst[ii][size-1] + '\n'
-              newline = newline + ' ' + str(i) + ' ' + str(size) 
-              i=1+1
-              for j in range(0,size-2):
+              i=i+1
+              newline = newline + ' ; ' + self.lineLst[ii][size] + '\n'
+              newline = newline + ' ' + str(i) + ' ' + str(size-2) 
+              for j in range(2,size):
                   newline=newline + ' ' +self.lineLst[ii][j]
               newline=newline + '\n'
            fh.writelines(newline)

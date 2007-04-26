@@ -14,46 +14,49 @@
 #------------------------------------------------------------------------------------------------
 # Visualize volumes in slices along Z?
 VisualizeVolZ=False
-# Visualize volumes in slices along X?
+# {expert} Visualize volumes in slices along X?
 VisualizeVolX=False
-# Visualize volumes in slices along Y?
+# {expert} Visualize volumes in slices along Y?
 VisualizeVolY=False
 # Visualize volumes in UCSF Chimera?
 """ For this to work, you need to have chimera installed!
 """
-VisualizeVolChimera=True
+VisualizeVolChimera=False
 # {expert} Width of Matrix-views (even value!):
 MatrixWidth=10
 #------------------------------------------------------------------------------------------------
 # {section} Visualization of seeds preparation steps
 #------------------------------------------------------------------------------------------------
 # Visualize the library projections and the averages of the grey-scale correction?
-DoVisualizeMatrixCorrectReference=True
+DoVisualizeMatrixCorrectReference=False
 # Visualize the grey-scale corrected reference volume?
-DoVisualizeCorrectReference=True
+DoVisualizeCorrectReference=False
 # Visualize the low-pass filtered reference volume?
-DoVisualizeFilteredReference=True
+DoVisualizeFilteredReference=False
 # Visualize the library projections and the averages of the seed generation runs?
-DoVisualizeMatrixSeeds=True
-# Visualize the generated seeds?
-DoVisualizeGeneratedSeeds=True
+DoVisualizeMatrixSeeds=False
+# Visualize the generated seed volumes?
+DoVisualizeGeneratedSeeds=False
 #------------------------------------------------------------------------------------------------
-# {section} Visualization of ML3D iterations
+# {section} Per-iteration ML3D Visualization
 #------------------------------------------------------------------------------------------------
 # Which iterations to visualize? (Separate numbers by comma's)
 SelectIterations="2"
 # Visualize the reference volumes for the given iterations?
-VisualizeML3DReferences=True
+VisualizeML3DReferences=False
 # Visualize weighted 2D-averages?
-VisualizeML3DAvgs=True
-# Output to screen the number of particles that change optimal orientation/class?
-""" As described in Scheres et al. (2007) Nature Methods, 4, 27-29 
+VisualizeML3DAvgs=False
+# Visualize the angular distribution?
+VisualizeAngDistribution=False
+#------------------------------------------------------------------------------------------------
+# {section} Overall ML3D visualization
+#------------------------------------------------------------------------------------------------
+# Plot overall convergence statistics?
+""" As also described in Scheres et al. (2007) Nature Methods, 4, 27-29 
 """
-DoShowMovingParticles=True
-# Output overall statistics of all iterations to screen?
-DoShowStatsAllIter=True
+DoShowStatsAllIter=False
 # Visualize matrixview of library projections and weighted averages of the last iteration?
-VisualizeMatrixLastIter=True
+VisualizeMatrixLastIter=False
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -77,7 +80,7 @@ class visualize_ML3D_class:
                  SelectIterations,
                  VisualizeML3DReferences,
                  VisualizeML3DAvgs,
-                 DoShowMovingParticles,
+                 VisualizeAngDistribution,
                  DoShowStatsAllIter,
                  VisualizeMatrixLastIter
                  ):
@@ -96,23 +99,21 @@ class visualize_ML3D_class:
 
         self.VisualizeML3DReferences=VisualizeML3DReferences
         self.VisualizeML3DAvgs=VisualizeML3DAvgs
+        self.VisualizeAngDistribution=VisualizeAngDistribution
         self.SelectIterations=SelectIterations
         self.VisualizeMatrixLastIter=VisualizeMatrixLastIter;
-        self.DoShowMovingParticles=DoShowMovingParticles
         self.DoShowStatsAllIter=DoShowStatsAllIter
         self.ShowVolumes=[]
         self.ShowSelfiles=[]
 
-        os.chdir(protocol_ML3D.WorkingDir)
+        os.chdir(protocol_ml3d.WorkingDir)
 
         self.visualize_preparation()
 
         self.visualize_seed_generation()
 
-        self.visualize_ML3D_iterations()
+        self.visualize_ML3D()
         
-        self.visualize_ML3D_overall()
-
         # Do the actual visualization of volumes and selfiles
         visualization.visualize_volumes(self.ShowVolumes,VisualizeVolZ,VisualizeVolX,VisualizeVolY,VisualizeVolChimera)
         visualization.visualize_images(self.ShowSelfiles,True,MatrixWidth)
@@ -133,8 +134,10 @@ class visualize_ML3D_class:
             self.ShowVolumes.append('filtered_reference.vol')
 
     def visualize_seed_generation(self):
-        for i in range(protocol_ML3D.NumberOfReferences):
-            dirname='GenerateSeed_'+str(i+1)+'/'
+        import glob
+        seeddirs=glob.glob('GenerateSeed_*/')
+        for i in range(len(seeddirs)):
+            dirname=seeddirs[i]
             outname='seeds_split_'+str(i+1)
             if (self.DoVisualizeGeneratedSeeds):
                 seedname=dirname+outname+'_it00001.vol'
@@ -147,31 +150,30 @@ class visualize_ML3D_class:
                 self.ShowSelfiles.append(matrixname)
 
 
-    def visualize_ML3D_iterations(self):
+    def visualize_ML3D(self):
         import os,glob
         iters=self.SelectIterations.split(',')
         for iter in iters:
+            selfiles=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.sel')
             if (self.VisualizeML3DAvgs):
-                selfiles=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.sel')
                 for selfile in selfiles:
                     self.ShowSelfiles.append(selfile)
+
+            if (self.VisualizeAngDistribution):
+                for i in range(len(selfiles)): 
+                    self.show_ang_distribution(selfiles[i],iter,i+1)
 
             if (self.VisualizeML3DReferences):
                 volumes=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.vol')
                 for volume in volumes:
                     self.ShowVolumes.append(volume)
 
-    def visualize_ML3D_overall(self):
-
-        if (self.DoShowMovingParticles):
-            self.show_moving_particles()
-        
-        if (self.DoShowStatsAllIter):
-            self.show_statistics_alliter()
-
         if (self.VisualizeMatrixLastIter):
             self.visualize_matrix_last_iter()
-        
+
+        if (self.DoShowStatsAllIter):
+            self.show_convergence_stats()
+
     def visualize_matrix_last_iter(self):
         import os,glob
         selfiles=glob.glob('RunML3D/ml3d_it?????.sel')
@@ -184,29 +186,111 @@ class visualize_ML3D_class:
         self.join_selfiles(selfile1,selfile2,'matrixview_ML3D_lastiter.sel')
         self.ShowSelfiles.append('matrixview_ML3D_lastiter.sel')
             
+    def show_ang_distribution(self,selfile,iter,ref):
+        import os
+        import docfiles
+        import visualization
 
-    def show_statistics_alliter(self):
+        docname='ang_distribution_ref'+str(ref).zfill(5)
+        command='xmipp_header_extract -i '+selfile+' -o '+docname+'.doc'
+        print '* ',command
+        os.system(command)
+        doc=docfiles.docfile(docname+'.doc')
+        newname=docname+'_bin_'
+        doc.check_angle_range()
+        doc.write_several(newname,
+                          10,
+                          7,
+                          doc.minimum_of_column(7),
+                          doc.maximum_of_column(7)
+                          )
+        plot=visualization.gnuplot()
+        title='Angular distribution for reference '+str(ref)+' in iteration '+str(iter)
+        plot.plot_xy1y2_several_angular_doc_files(newname,
+                                                  title,
+                                                  'degrees',
+                                                  'degrees')
+
+    def show_convergence_stats(self):
         import os,glob
+        import visualization
         logfiles=glob.glob('RunML3D/ml3d_it?????.log')
         if len(logfiles)==0:
-            print "No logfiles yet. Visualize only after job completion..."
-        else:
-            for logfile in logfiles:
-                fh=open(logfile,'r')
+            print "No logfiles yet. Visualize after job completion..."
+        else: 
+            newlines1=[]
+            newlines2=[]
+            newlines3=[]
+            newlines1.append('# iter | log-likelihood \n')
+            newlines2.append('# iter | Pmax/sumP \n')
+            newlines3.append('# iter | moving particles \n')
+            for i in range(len(logfiles)):
+                fh=open(logfiles[i],'r')
                 line1=fh.readline()
                 line2=fh.readline()
                 fh.close()
                 words1=line1.split()
                 words2=line2.split()
-                print logfile,words1[6],words1[7],words1[8],words1[9],\
-                      words2[1],words2[2],words2[3],words2[4]
+                # get iteration
+                iter=int(words2[6])-1
+                # get data
+                newlines1.append(str(iter)+' '+words1[7]+'\n')
+                newlines2.append(str(iter)+' '+words1[9]+'\n')
+                # moving particles
+                if (iter > 1):
+                    docfile1=logfiles[i].replace('log','doc')
+                    docfile0=logfiles[i-1].replace('log','doc')
+                    mov=self.moving_particles(docfile0,docfile1)
+                    newlines3.append(str(iter)+' '+str(mov)+'\n')
+            fh=open('alliter_LL.dat','w')
+            fh.writelines(newlines1)
+            fh.close();
+            fh=open('alliter_Pmax.dat','w')
+            fh.writelines(newlines2)
+            fh.close();
+            fh=open('alliter_moving_particles.dat','w')
+            fh.writelines(newlines3)
+            fh.close();
+            plot1=visualization.gnuplot()
+            plot1.plot_xy_file('alliter_LL.dat',
+                              'Log-likelihood target function (to be maximized)',
+                              'iterations',
+                              'LL')
+            plot2=visualization.gnuplot()
+            plot2.plot_xy_file('alliter_Pmax.dat',
+                              'The width of the probability distributions (ideally goes to one i.e. delta-functions)',
+                              'iterations',
+                              'Pmax/sumP')
+            plot3=visualization.gnuplot()
+            plot3.plot_xy_file('alliter_moving_particles.dat',
+                              'The number of particles that change their optimal orientation/class (ideally goes to zero)',
+                              'iterations',
+                              '#')
+                             
+    def moving_particles(self,docfile0,docfile1):
+        import os, sys
+        fh=open(docfile0,'r')
+        lines0=fh.readlines()
+        fh.close()
+        fh=open(docfile1,'r')
+        lines1=fh.readlines()
+        fh.close()
 
-    def show_moving_particles(self):
-        import os,glob
-        docfiles=glob.glob('RunML3D/ml3d_it?????.doc')
-        if os.path.exists('moving_particles.dat'):
-            os.remove('moving_particles.dat')
-        print 'The output of moving particles remains to be added to this script...'
+        if not (len(lines0) == len(lines1)):
+            message='Error: docfiles '+docfile0+' and '+docfile1+' are of unequal lenght'
+            print '* ',message
+            sys.exit()
+
+        count=0
+        for i in range(len(lines0)):
+            if (lines0[i].find(';')<0):
+                words0=lines0[i].split()
+                words1=lines1[i].split()
+                for entry in [2, 3, 4, 5, 6, 7, 8]:
+                    if not (words0[entry]==words1[entry]):
+                        count = count + 1
+                        break
+        return count
 
     def join_selfiles(self,selfile1,selfile2,newselfile):
         import selfile
@@ -216,27 +300,6 @@ class visualize_ML3D_class:
         sel2.read(selfile2)
         newsel=sel1.intercalate_union(sel2)
         newsel.write(newselfile)
-
-    def show_last_iter(self):
-        # Visualize class averages:
-        import os,glob
-        selfiles=glob.glob('*_it?????.sel')
-        if len(selfiles)==0:
-            print "No selfiles yet. Visualize after job completion..."
-        else:
-            lastselfile=selfiles[-1]
-            command='xmipp_show -sel '+str(lastselfile)+ ' & '
-            print '* ',command
-            os.system(command)
-
-            # print logfile to screen:
-            logfiles=glob.glob('*_it?????.log')
-            lastlogfile=logfiles[-1]
-            fh=open(lastlogfile,'r')
-            loglines=fh.readlines()
-            print "Logfile "+str(lastlogfile)+": "
-            for line in loglines:
-                print line[:-1]
 
     def close(self):
         message='Done!'
@@ -260,7 +323,7 @@ if __name__ == '__main__':
                                         SelectIterations,
                                         VisualizeML3DReferences,
                                         VisualizeML3DAvgs,
-                                        DoShowMovingParticles,
+                                        VisualizeAngDistribution,
                                         DoShowStatsAllIter,
                                         VisualizeMatrixLastIter
                                         )
