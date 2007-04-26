@@ -13,7 +13,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Visualize volumes in slices along Z?
-VisualizeVolZ=False
+VisualizeVolZ=True
 # {expert} Visualize volumes in slices along X?
 VisualizeVolX=False
 # {expert} Visualize volumes in slices along Y?
@@ -46,8 +46,10 @@ SelectIterations="2"
 VisualizeML3DReferences=False
 # Visualize weighted 2D-averages?
 VisualizeML3DAvgs=False
-# Visualize the angular distribution?
+# Plot the angular distribution of the reference(s)?
 VisualizeAngDistribution=False
+# Plot data distribution over the distinct references?
+VisualizeClassDistribution=False
 #------------------------------------------------------------------------------------------------
 # {section} Overall ML3D visualization
 #------------------------------------------------------------------------------------------------
@@ -81,6 +83,7 @@ class visualize_ML3D_class:
                  VisualizeML3DReferences,
                  VisualizeML3DAvgs,
                  VisualizeAngDistribution,
+                 VisualizeClassDistribution,
                  DoShowStatsAllIter,
                  VisualizeMatrixLastIter
                  ):
@@ -100,6 +103,7 @@ class visualize_ML3D_class:
         self.VisualizeML3DReferences=VisualizeML3DReferences
         self.VisualizeML3DAvgs=VisualizeML3DAvgs
         self.VisualizeAngDistribution=VisualizeAngDistribution
+        self.VisualizeClassDistribution=VisualizeClassDistribution
         self.SelectIterations=SelectIterations
         self.VisualizeMatrixLastIter=VisualizeMatrixLastIter;
         self.DoShowStatsAllIter=DoShowStatsAllIter
@@ -122,12 +126,17 @@ class visualize_ML3D_class:
         os.chdir(os.pardir)
 
     def visualize_preparation(self):
+        import os
         if (self.DoVisualizeMatrixCorrectReference):
             dirname='CorrectGreyscale/'
             selfile1=dirname+'corrected_reference_lib.sel'
             selfile2=dirname+'corrected_reference_classes.sel'
-            self.join_selfiles(selfile1,selfile2,'matrixview_greyscale_correction.sel')
-            self.ShowSelfiles.append('matrixview_greyscale_correction.sel')
+            if not os.path.exists(dirname):
+                message='Warning: directory '+dirname+' does not exist, skipping...'
+                print '* ',message
+            else:
+                self.join_selfiles(selfile1,selfile2,'matrixview_greyscale_correction.sel')
+                self.ShowSelfiles.append('matrixview_greyscale_correction.sel')
         if (self.DoVisualizeCorrectReference):
             self.ShowVolumes.append('corrected_reference.vol')
         if (self.DoVisualizeFilteredReference):
@@ -159,9 +168,15 @@ class visualize_ML3D_class:
                 for selfile in selfiles:
                     self.ShowSelfiles.append(selfile)
 
-            if (self.VisualizeAngDistribution):
-                for i in range(len(selfiles)): 
-                    self.show_ang_distribution(selfiles[i],iter,i+1)
+            if (self.VisualizeAngDistribution or self.VisualizeClassDistribution):
+                self.prepare_distribution_docfiles(selfiles)
+                
+                if (self.VisualizeAngDistribution):
+                    for i in range(len(selfiles)): 
+                        self.show_ang_distribution(selfiles[i],iter,i+1)
+
+                if (self.VisualizeClassDistribution):
+                    self.show_class_distribution(selfiles,iter)
 
             if (self.VisualizeML3DReferences):
                 volumes=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.vol')
@@ -186,15 +201,41 @@ class visualize_ML3D_class:
         self.join_selfiles(selfile1,selfile2,'matrixview_ML3D_lastiter.sel')
         self.ShowSelfiles.append('matrixview_ML3D_lastiter.sel')
             
+    def prepare_distribution_docfiles(self,selfiles):
+        import os
+        for i in range(len(selfiles)):
+            docname='ang_distribution_ref'+str(i+1).zfill(5)+'.doc'
+            command='xmipp_header_extract -i '+selfiles[i]+' -o '+docname
+            print '* ',command
+            os.system(command)
+ 
+    def show_class_distribution(self,selfiles,iter):
+        import os
+        import docfiles
+        import visualization
+
+        newlines=[]
+        newlines.append('reference | sum weights (# images) \n')
+        for i in range(len(selfiles)):
+            docname='ang_distribution_ref'+str(i+1).zfill(5)+'.doc'
+            doc=docfiles.docfile(docname)
+            newlines.append(str(i+1)+' '+str(doc.sum_of_column(7))+'\n')
+
+        fh=open('class_distribution.dat','w')
+        fh.writelines(newlines)
+        fh.close()
+        plot=visualization.gnuplot()
+        plot.plot_xy_file('class_distribution.dat',
+                           'Number of images contributing to each class for iteration '+str(iter),
+                           'class number',
+                           'sumweight')
+
     def show_ang_distribution(self,selfile,iter,ref):
         import os
         import docfiles
         import visualization
 
         docname='ang_distribution_ref'+str(ref).zfill(5)
-        command='xmipp_header_extract -i '+selfile+' -o '+docname+'.doc'
-        print '* ',command
-        os.system(command)
         doc=docfiles.docfile(docname+'.doc')
         newname=docname+'_bin_'
         doc.check_angle_range()
@@ -324,6 +365,7 @@ if __name__ == '__main__':
                                         VisualizeML3DReferences,
                                         VisualizeML3DAvgs,
                                         VisualizeAngDistribution,
+                                        VisualizeClassDistribution,
                                         DoShowStatsAllIter,
                                         VisualizeMatrixLastIter
                                         )

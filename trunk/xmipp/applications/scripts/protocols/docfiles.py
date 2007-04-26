@@ -54,6 +54,13 @@ class docfile:
               maximum = tmp
        return maximum
        
+   def sum_of_column(self,column):
+       import string
+       sum=0.
+       for i in range(len(self.lineLst)):
+           sum = sum + float(self.lineLst[i][column]) 
+       return sum
+       
    def compare_7(self,a, b):
         return cmp(float(a[7]), float(b[7]))
         

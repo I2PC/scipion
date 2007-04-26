@@ -367,7 +367,7 @@ class ML3D_class:
                 ' -o '    + str(outname) + \
                 ' -vol '  + str(volname) + \
                 ' -iter ' + str(iter) + \
-                ' -sam '  + str(sampling)
+                ' -ang '  + str(sampling)
         if not symfile=="":
             params+= ' -sym '+str(symfile)
         params+=' '+extraparam
