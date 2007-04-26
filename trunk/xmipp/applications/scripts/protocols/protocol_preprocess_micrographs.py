@@ -17,14 +17,14 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# All filenames.tif on which to perform preprocessing
-AllMicrographs="./*.tif"
-# Output selfile with preprocessed micrographs
-MicrographSelfile="all_micrographs.sel"
+# Directory name from where to process all *.tif files
+Directory_Micrographs='/home/scheres/work/protocols/ML2D'
+# Name for output selection file with all preprocessed micrographs
+MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir='/home/scheres/work/protocols'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Tiff2Raw
 #------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ DoTif2Raw=True
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-Down=3
+Down=2
 #------------------------------------------------------------------------------------------------
 # {section} Power Spectral Density estimation
 #------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ DoEstimatePSD=True
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_preprocess_micrographs.py"
+AnalysisScript='visualize_s.py'
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class preprocess_A_class:
 
 	#init variables
 	def __init__(self,
-                     AllMicrographs,
+                     Directory_Micrographs,
                      MicrographSelfile,
                      ProjectDir,
                      LogDir,
@@ -72,7 +72,7 @@ class preprocess_A_class:
                 sys.path.append(scriptdir) # add default search path
                 import log
 
-                self.AllMicrographs=AllMicrographs
+                self.Directory_Micrographs=Directory_Micrographs
                 self.MicrographSelfile=MicrographSelfile
                 self.ProjectDir=ProjectDir
                 self.LogDir=LogDir
@@ -147,13 +147,13 @@ class preprocess_A_class:
 		import glob
 		print '*********************************************************************'
 		print '*  Processing the following micrographs: '
-		for self.filename in glob.glob(self.AllMicrographs):
+		for self.filename in glob.glob(self.Directory_Micrographs+'/*.tif'):
 			(self.filepath, self.name) = os.path.split(self.filename)
 			print '*  '+self.name
 
 		self.psdselfile = []
                 self.micselfile = []
-		for self.filename in glob.glob(self.AllMicrographs):
+		for self.filename in glob.glob(self.Directory_Micrographs+'/*.tif'):
 			(self.filepath, self.name) = os.path.split(self.filename)
 
 			self.shortname=self.name.replace ( '.tif', '' )
@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
    	# create preprocess_A_class object
 
-	preprocessA=preprocess_A_class(AllMicrographs,
+	preprocessA=preprocess_A_class(Directory_Micrographs,
                                        MicrographSelfile,
                                        ProjectDir,
                                        LogDir,

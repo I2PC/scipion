@@ -71,14 +71,14 @@ class automated_gui_class:
     def SetupGuiParameters(self):
         if (self.is_setupgui):
             self.guiwidth=650
-            self.guiheight=350
+            self.guiheight=400
             self.columnspantextlabel=2
             self.columntextentry=2
             self.column_pre=0
             self.column_2d=1
             self.column_3d=2
         else:
-            self.guiwidth=600
+            self.guiwidth=700
             self.guiheight=650
             self.columnspantextlabel=3
             self.columntextentry=3
@@ -112,7 +112,13 @@ class automated_gui_class:
                 self.script_header_lines[i][0]!=" " and
                 self.script_header_lines[i][0]!="\t"):
                 args=self.script_header_lines[i].split("=")
-                lineb=str(args[0])+'='+str(self.variables[args[0]][2].get())+"\n"
+                # Add "" for strings
+                if (self.variables[args[0]][1]=="String" or
+                    self.variables[args[0]][1]=="File" or
+                    self.variables[args[0]][1]=="Directory"):
+                    lineb=str(args[0])+'=\''+str(self.variables[args[0]][2].get())+"\'\n"
+                else:
+                    lineb=str(args[0])+'='+str(self.variables[args[0]][2].get())+"\n"
             else:
                 lineb=self.script_header_lines[i]
             linesb.append(lineb)
@@ -121,9 +127,9 @@ class automated_gui_class:
         fh.writelines(self.script_body_lines)
         fh.close() 
         os.chmod(self.scriptname,0755)
+
     def ScriptParseComments(self,i):
         import string
-
         morehelp=[]
         found_comment=False
         j=i
@@ -156,6 +162,12 @@ class automated_gui_class:
         morehelp=morehelp.replace('\"\"\"','')
         return comment,isexpert,morehelp
         
+    def Is_a_number(self,string):
+        try:
+            test=float(string)
+        except ValueError:
+            return False
+        return True
 
     def ScriptParseVariables(self):
         self.variables={}
@@ -182,15 +194,39 @@ class automated_gui_class:
                   and self.script_header_lines[i][0]!="\t"
                   and self.script_header_lines[i][0]!=" "):
                 args=self.script_header_lines[i].split("=")
+                value=args[1][:-1]
+                value=value.strip('\'')
+                value=value.strip('\"')
                 if (args[0]=="AnalysisScript"):
                     self.have_analyse_results=True;
-                self.variables[args[0]]=[args[1][:-1],]
                 self.vfields.append(args[0])
                 if ("True" in args[1]) or ("False" in args[1]):
+                    # boolean
+                    self.variables[args[0]]=[value,]
                     self.variables[args[0]].append("Boolean")
                     newvar=BooleanVar()                    
                     self.variables[args[0]].append(newvar)
+                elif (args[0][0:5]=='File_'):
+                    # filename
+                    self.variables[args[0]]=[value,]
+                    self.variables[args[0]].append("File")
+                    newvar=StringVar()                    
+                    self.variables[args[0]].append(newvar)
+                elif (args[0][0:10]=='Directory_'):
+                    # directory
+                    self.variables[args[0]]=[value,]
+                    self.variables[args[0]].append("Directory")
+                    newvar=StringVar()                    
+                    self.variables[args[0]].append(newvar)
+                elif (self.Is_a_number(value)):
+                    # number
+                    self.variables[args[0]]=[value,]
+                    self.variables[args[0]].append("Number")
+                    newvar=StringVar()                    
+                    self.variables[args[0]].append(newvar)
                 else:
+                    # string
+                    self.variables[args[0]]=[value,]
                     self.variables[args[0]].append("String")
                     newvar=StringVar()
                     self.variables[args[0]].append(newvar)
@@ -199,10 +235,12 @@ class automated_gui_class:
                 self.variables[args[0]].append(comment)
                 self.variables[args[0]].append(isexpert)
                 self.variables[args[0]].append(morehelp)
+                row=0
+                self.variables[args[0]].append(row)
 
         if self.is_setupgui:
             # Set PWD as default for ProjectDir
-            self.variables['ProjectDir'][0]='\"'+str(os.getcwd())+'\"'
+            self.variables['ProjectDir'][0]=str(os.getcwd())
 
     def GuiFill(self):
                        
@@ -247,6 +285,7 @@ class automated_gui_class:
 
         import os,sys
         self.morehelp=StringVar()
+        self.whichfile=StringVar()
 
         # Script title
         programname=(os.path.basename(sys.argv[1])).replace('.py','')
@@ -270,7 +309,20 @@ class automated_gui_class:
         for var in self.vfields:
             if (self.variables[var][1]=="Section"):
                 self.GuiAddSection(self.variables[var][0])
-            elif (self.variables[var][1]=="String"):
+            elif (self.variables[var][1]=="File" or
+                  self.variables[var][1]=="Directory"):                 
+                if (self.variables[var][1]=="File"):
+                    is_a_file=True
+                else:
+                    is_a_file=False
+                self.GuiAddBrowseEntry(var,
+                                       self.variables[var][3],
+                                       self.variables[var][0],
+                                       self.variables[var][4],
+                                       self.variables[var][5],
+                                       is_a_file)
+            elif (self.variables[var][1]=="String" or
+                  self.variables[var][1]=="Number"):
                 self.GuiAddTextEntry(self.variables[var][3],
                                      self.variables[var][0],
                                      self.variables[var][2],
@@ -372,7 +424,7 @@ class automated_gui_class:
                                 value=value,  indicatoron=0, command=self.GuiLanchSetup)
         self.bGet.grid(row=row,column=column)
 
-    def GuiPositionLabel(self,label,default,variable,expert,morehelp):
+    def GuiPositionLabel(self,label,default,variable,expert,morehelp,has_browse=False):
         row=(self.frame.grid_size()[1]+1)
         if (expert=="expert"):
             self.l=Label(self.frame, text=label, bg="yellow")
@@ -382,8 +434,12 @@ class automated_gui_class:
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
         self.r=Radiobutton(self.frame,text="What's this?",variable=self.morehelp,
                            value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
+        if (has_browse):
+            column=self.columntextentry+3
+        else:
+            column=self.columntextentry+2
         if (morehelp!=""):
-            self.r.grid(row=row, column=self.columntextentry+2, sticky=W)
+            self.r.grid(row=row, column=column, sticky=W)
             
         return row,self.l,self.r
 
@@ -416,28 +472,27 @@ class automated_gui_class:
             if (morehelp!=""):
                 self.widgetexpertlist.append(self.r)
 
-    def GuiBrowseWindow(self):
-        import tkFileDialog
-        fileformats = [('All Files ','*.*')]
-        self.FILENAME = tkFileDialog.askopenfilename(title='Choose File',
-                                                     filetypes=fileformats)
-        # This somehow doesn't work yet...
-        self.e.delete(0, END) 
-        self.e.insert(0,self.FILENAME)
-
-    def GuiAddFileNameEntry(self,label,default,variable,expert):
-        row,self.l=self.GuiPositionLabel(label,default,variable,expert)
+    def GuiAddBrowseEntry(self,variable,label,default,expert,morehelp,is_file):
+        row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp,True)
+        self.variables[variable][6]=row
         self.e = Entry(self.frame, text=label, textvariable=variable)
         self.e.delete(0, END) 
         self.e.insert(0,default)
-        self.e.grid(row=row, column=3)
-        self.FILENAME=StringVar()
-        self.b = Button(self.frame, text="Browse", command=self.GuiBrowseWindow)
-        self.b.grid(row=row, column=4)
+        self.e.grid(row=row, column=self.columntextentry,columnspan=2,sticky=W+E)
+        if (is_file):
+            self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
+                                 value=variable, command=self.GuiBrowseFile)
+        else:
+            self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
+                                 value=variable, command=self.GuiBrowseDirectory)
+        self.b.grid(row=row, column=self.columntextentry+2)
+
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.e)
             self.widgetexpertlist.append(self.b)
+            if (morehelp!=""):
+                self.widgetexpertlist.append(self.r)
 
     def GuiAddRestProtocolButtons(self):
         self.Addseparator(self.buttonrow)
@@ -501,6 +556,32 @@ class automated_gui_class:
             self.GuiAddRestSetupButtons()
         else:
             self.GuiAddRestProtocolButtons()
+
+    def GuiBrowseFile(self):
+        import tkFileDialog
+        import os
+        fileformats = [('All Files ','*.*')]
+        fname = tkFileDialog.askopenfilename(title='Choose File',
+                                             filetypes=fileformats)
+        fname='..'.os.path.relpathto(fname)
+        self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+        self.e.delete(0, END) 
+        self.e.insert(0,fname)
+        self.e.grid(row=self.variables[self.whichfile.get()][6],
+                    column=self.columntextentry,
+                    columnspan=2,sticky=W+E)
+
+    def GuiBrowseDirectory(self):
+        import tkFileDialog
+        import os
+        fileformats = [('All Files ','*.*')]
+        fname = tkFileDialog.askdirectory()       
+        self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+        self.e.delete(0, END) 
+        self.e.insert(0,fname)
+        self.e.grid(row=self.variables[self.whichfile.get()][6],
+                    column=self.columntextentry,
+                    columnspan=2,sticky=W+E)
 
     def AnalyseResults(self):
         self.GuiSave()
