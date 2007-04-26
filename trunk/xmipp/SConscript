@@ -43,7 +43,7 @@ def AddBatch(name, basedir, extension = ''):
     env.Alias(fullname, install)
     env.Default(alias)
 
-# FIXME default parameters' order
+# FIXME default parameters' order, to save writing []
 def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
     ''' add a new program to the build list '''
@@ -53,17 +53,16 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
 
-    # FIXME Shouldn't env[] variables be honored?
-    includes += env['CPPPATH']
-    libpath += env['LIBPATH']
-    libs += env['LIBS']
-    cxxflags += env['CXXFLAGS']
-    linkflags += env['LINKFLAGS']
-
     # action
-    program = env.Program(os.path.join(basedir, fullname), sources,
-        CPPPATH = includes, LIBPATH = libpath, LIBS = libs, CXXFLAGS = cxxflags,
-        LINKFLAGS = linkflags)
+    program = env.Program(
+        os.path.join(basedir, fullname),
+        sources,
+        CPPPATH = includes + [env['CPPPATH']],
+        LIBPATH = libpath + [env['LIBPATH']],
+        LIBS = libs + [env['LIBS']],
+        CXXFLAGS = cxxflags + [env['CXXFLAGS']],
+        LINKFLAGS = linkflags + [env['LINKFLAGS']]
+        )
 
     # alias
     alias = env.Alias(fullname, program)
@@ -80,18 +79,18 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
 
-    # FIXME Shouldn't env[] variables be honored?
-    includes += env['CPPPATH']
-    libpath += env['LIBPATH']
-    libs += env['LIBS']
-    cxxflags += env['CXXFLAGS']
-    linkflags += env['LINKFLAGS']
-
     # action
-    program = env.Program(os.path.join(basedir, fullname), sources,
-        CC = env['MPI_CC'], CXX = env['MPI_CXX'], CPPPATH = includes +
-        [env['MPI_INCLUDE']], LIBPATH = libpath + [env['MPI_LIBDIR']], LIBS =
-        libs + [env['MPI_LIB']], CXXFLAGS = cxxflags, LINKFLAGS = linkflags)
+    program = env.Program(
+        os.path.join(basedir, fullname),
+        sources,
+        CC = env['MPI_CC'],
+        CXX = env['MPI_CXX'],
+        CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+        LIBPATH = libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
+        LIBS = libs + [env['LIBS']] + [env['MPI_LIB']],
+        CXXFLAGS = cxxflags + [env['CXXFLAGS']],
+        LINKFLAGS = linkflags + [env['LINKFLAGS']]
+        )
 
     # alias
     alias = env.Alias(fullname, program)
@@ -99,7 +98,7 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     env.Alias(fullname, install)
     env.Default(alias)
 
-# COSS wanted an explicit list...
+# For Roberto's new lib
 def AddMPILibrary(name, basedir, sources, includes):
 
     # setup
@@ -108,9 +107,6 @@ def AddMPILibrary(name, basedir, sources, includes):
     for x in sources:
         sources[sources.index(x)] = basedir + x
 
-    # FIXME Shouldn't env[] variables be honored?
-    includes += env['CPPPATH']
-
     # separate local and global includes
     for x in includes:
         if x[0] != '#':
@@ -119,15 +115,25 @@ def AddMPILibrary(name, basedir, sources, includes):
     # action
     # FIXME Exclusive may not be what users want
     if int(env['static']):
-        library = env.StaticLibrary(basedir + name, sources, CPPPATH=includes +
-        [env['MPI_INCLUDE']],
-        CC = env['MPI_CC'], CXX = env['MPI_CXX'], LIBPATH = [env['MPI_LIBDIR']],
-        LIBS = [env['MPI_LIB']])
+        library = env.StaticLibrary(
+            basedir + name,
+            sources,
+            CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC = env['MPI_CC'],
+            CXX = env['MPI_CXX'],
+            LIBPATH = [env['MPI_LIBDIR']],
+            LIBS = [env['MPI_LIB']]
+            )
     else:
-        library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes +
-        [env['MPI_INCLUDE']],
-        CC = env['MPI_CC'], CXX = env['MPI_CXX'], LIBPATH = [env['MPI_LIBDIR']],
-        LIBS = [env['MPI_LIB']])
+        library = env.SharedLibrary(
+            basedir + name,
+            sources,
+            CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC = env['MPI_CC'],
+            CXX = env['MPI_CXX'],
+            LIBPATH = [env['MPI_LIBDIR']],
+            LIBS = [env['MPI_LIB']]
+            )
 
     # alias
     alias = env.Alias(name, library)
@@ -135,6 +141,7 @@ def AddMPILibrary(name, basedir, sources, includes):
     env.Alias(name, install)
     env.Default(alias)
 
+# COSS wanted an explicit list...
 def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
 
     # setup
@@ -143,9 +150,6 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     for x in sources:
         sources[sources.index(x)] = basedir + x
 
-    # FIXME Shouldn't env[] variables be honored?
-    includes += env['CPPPATH']
-
     # separate local and global includes
     for x in includes:
         if x[0] != '#':
@@ -154,11 +158,21 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     # action
     # FIXME Exclusive may not be what users want
     if int(env['static']):
-        library = env.StaticLibrary(basedir + name, sources, CPPPATH=includes,
-                                    LIBPATH=libpath, LIBS=libs)
+        library = env.StaticLibrary(
+            basedir + name,
+            sources,
+            CPPPATH = includes + [env['CPPPATH']],
+            LIBPATH = libpath,
+            LIBS = libs
+            )
     else:
-        library = env.SharedLibrary(basedir + name, sources, CPPPATH=includes,
-                                    LIBPATH=libpath, LIBS=libs)
+        library = env.SharedLibrary(
+            basedir + name,
+            sources,
+            CPPPATH = includes + [env['CPPPATH']],
+            LIBPATH = libpath,
+            LIBS = libs
+            )
 
     # alias
     alias = env.Alias(name, library)
@@ -419,19 +433,19 @@ AddLibrary('INRIA', 'external/inria', INRIASources, [])
 
 # FindSCenter
 AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
-    ['#libraries'], ['#libraries/data', '#libraries/legacy', '#external/bilib'],
+    ['libraries'], ['libraries/data', 'libraries/legacy', 'external/bilib'],
     ['XmippData', 'OldXmipp', 'Bilib'], [], [])
 
 # Src (apps)
 
 AddProgram('add_noise', 'applications/programs/add_noise', '*.cpp', [],
-    ['#libraries', '#'], ['#libraries/data', '#external/bilib'], ['XmippData',
+    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
     'Bilib'])
 
 AddProgram('adjust_volume_grey_levels',
     'applications/programs/adjust_volume_grey_levels', '*.cpp', [],
-    ['#libraries', '#'], ['#libraries/reconstruction', '#libraries/data',
-    '#external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
+    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
 
 AddProgram('align2d', 'applications/programs/align2d', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
@@ -717,7 +731,8 @@ AddProgram('project', 'applications/programs/project', '*.cpp', [],
     'XmippData', 'Bilib'])
 
 AddProgram('angular_neighbourhood',
-    'applications/programs/angular_neighbourhood', '*.cpp', [], ['libraries', '#'],
+    'applications/programs/angular_neighbourhood', '*.cpp', [],
+    ['libraries', '#'],
     ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
     ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
 
@@ -1048,23 +1063,21 @@ if int(env['gui']):
         fullname = env['prepend'] + name
         binprefix =  os.path.join(env['prefix'], 'bin')
 
-        # FIXME Shouldn't env[] variables be honored?
-        includes += env['CPPPATH']
-        libpath += env['LIBPATH']
-        libs += env['LIBS']
-        cxxflags += env['CXXFLAGS']
-        linkflags += env['LINKFLAGS']
-
         extra = []
         for i in mocs:
             extra.append(envQT.Moc(basedir + i))
 
         sources = Glob(basedir, sources_pattern, skip_list)
 
-        program = envQT.Program(basedir + env['prepend'] + name, sources +
-            extra, CPPPATH = envQT['CPPPATH'] + includes, LIBPATH =
-            envQT['LIBPATH'] + libpath, LIBS = envQT['LIBS'] + libs, CXXFLAGS =
-            cxxflags, LINKFLAGS = linkflags)
+        program = envQT.Program(
+            basedir + env['prepend'] + name,
+            sources + extra,
+            CPPPATH = envQT['CPPPATH'] + includes + [env['CPPPATH']],
+            LIBPATH = envQT['LIBPATH'] + libpath + [env['LIBPATH']],
+            LIBS = envQT['LIBS'] + libs + [env['LIBS']],
+            CXXFLAGS = cxxflags + [env['CXXFLAGS']],
+            LINKFLAGS = linkflags + [env['LINKFLAGS']]
+            )
 
         # alias
         alias = env.Alias(fullname, program)
@@ -1084,11 +1097,17 @@ if int(env['gui']):
         graphics_objects.append(i)
 
     if int(env['static']):
-        graphics = envQT.StaticLibrary(graphics_basedir + graphics_name,
-            graphics_objects, CPPPATH = graphics_cpppath)
+        graphics = envQT.StaticLibrary(
+            graphics_basedir + graphics_name,
+            graphics_objects,
+            CPPPATH = graphics_cpppath
+            )
     else:
-        graphics = envQT.SharedLibrary(graphics_basedir + graphics_name,
-             graphics_objects , CPPPATH = graphics_cpppath)
+        graphics = envQT.SharedLibrary(
+            graphics_basedir + graphics_name,
+            graphics_objects,
+            CPPPATH = graphics_cpppath
+            )
 
     graphics_alias = env.Alias(graphics_name, graphics)
     graphics_install = env.Install(os.path.join(env['prefix'], 'lib'),
@@ -1124,9 +1143,13 @@ if int(env['gui']):
     mark_libs = envQT['LIBS'] + ['XmippInterface', 'XmippGraphics',
         'XmippRecons', 'XmippClassif', 'XmippData', 'Bilib']
 
-    mark_prog = envQT.Program(mark_basedir + env['prepend'] + 'micrograph_mark',
-        mark_objects + mark_mocs + obj_DownSample, CPPPATH = mark_cpppath,
-        LIBPATH = mark_libpath, LIBS = mark_libs)
+    mark_prog = envQT.Program(
+        mark_basedir + env['prepend'] + 'micrograph_mark',
+        mark_objects + mark_mocs + obj_DownSample,
+        CPPPATH = mark_cpppath,
+        LIBPATH = mark_libpath,
+        LIBS = mark_libs
+        )
 
     mark_alias = env.Alias(env['prepend'] + 'micrograph_mark', mark_prog)
     mark_install = env.Install(os.path.join(env['prefix'],

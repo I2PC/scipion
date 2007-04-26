@@ -19,6 +19,11 @@ opts = Options(None, ARGUMENTS)
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
+
+# FIXME With ARGUMENTS these should be read...
+#opts.Add('CCFLAGS', 'The C compiler flags', None)
+opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
+
 opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
 opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
@@ -44,8 +49,12 @@ opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
-opts.Add('prefix', 'Base installation directory', Dir('.').abspath + '/' + 'installation')
+opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 opts.Update(env)
+
+# FIXME Hack for several flags in command-line
+env['CCFLAGS'] = Split(env['CCFLAGS'])
+env['CXXFLAGS'] = Split(env['CXXFLAGS'])
 
 # generate help for options
 Help(opts.GenerateHelpText(env, sort=cmp))
@@ -64,6 +73,9 @@ else:
     # "safe" optimization
     #env.Append(CXXFLAGS = ['-O2', '-fomit-frame-pointer'])
     env.Append(CXXFLAGS = ['-O2'])
+
+# dbg
+print env['CXXFLAGS']
 
 # strip?
 if int(env['strip']):
