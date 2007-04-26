@@ -36,7 +36,15 @@ class selfile:
        for name,state in self.sellines: 
            if state=='1': i = i + 1
        return i
-       
+   
+   # counts number of entries in selfile
+   def lenght_even_no_actives(self):
+       i=0
+       state=-1
+       for name,state in self.sellines: 
+           if state=='1' or state=='-1': i = i + 1
+       return i
+      
    # Insert an image "name" with state "state" in the selfile
    def insert(self,name,state):
        self.sellines.append([name,state])
