@@ -401,7 +401,8 @@ class automated_gui_class:
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.r1)
             self.widgetexpertlist.append(self.r2)
-            self.widgetexpertlist.append(self.r)
+            if (morehelp!=""):
+                self.widgetexpertlist.append(self.r)
 
     def GuiAddTextEntry(self,label,default,variable,expert,morehelp):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
@@ -412,7 +413,8 @@ class automated_gui_class:
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
             self.widgetexpertlist.append(self.e)
-            self.widgetexpertlist.append(self.r)
+            if (morehelp!=""):
+                self.widgetexpertlist.append(self.r)
 
     def GuiBrowseWindow(self):
         import tkFileDialog
@@ -493,7 +495,8 @@ class automated_gui_class:
         else:
             self.expert_mode=True
             for w in self.widgetexpertlist:
-                w.grid()  
+                w.grid()
+                
         if (self.is_setupgui):
             self.GuiAddRestSetupButtons()
         else:
@@ -526,7 +529,6 @@ class automated_gui_class:
     def GuiShowMoreHelp(self):
         import tkMessageBox
         message=str(self.morehelp.get())
-        print message
         tkMessageBox.showinfo('More Help',message)
 
 # A scrollbar that hides itself if it's not needed.
