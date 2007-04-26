@@ -74,9 +74,6 @@ else:
     #env.Append(CXXFLAGS = ['-O2', '-fomit-frame-pointer'])
     env.Append(CXXFLAGS = ['-O2'])
 
-# dbg
-print env['CXXFLAGS']
-
 # strip?
 if int(env['strip']):
     env.Append(LINKFLAGS = ['-s'])
