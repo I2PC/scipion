@@ -16,7 +16,7 @@ def visualize_volumes(Names,ShowSliceZ,ShowSliceX,ShowSliceY,ShowChimera):
                     xmipp_command+=name+'y '
                 if (ShowChimera):
                     chimera_command+='spider:'+name+' '
-
+        
         if (ShowSliceZ or ShowSliceX or ShowSliceY): 
             xmipp_command+=' &'
             print '* ',xmipp_command
