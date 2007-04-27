@@ -299,7 +299,6 @@ void statistics_adjust(double avgF, double stddevF)
 
 /**@name Arithmethic operations */
 //@{
-#define mi MULTIDIM_ELEM(*this,i)
 /* Array "by" array ----------------------------------------------------- */
 /**@name Array "by" array operations
    These are operations that are performed between 2 arrays of the
