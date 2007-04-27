@@ -36,6 +36,9 @@ Obligatory:
       (by default not shown in the GUI, unless you press the -show expert options-
       button, at the left side of the variable entry field. Then, they will be
       shown in yellow.
+    * A {file} or {dir} label on the comment line (#) marks the option as a
+      Filename or Directory, and will add a corresponding Browse-button to the GUI
+      Note that this button return absolute paths
 
 Optional:
 
@@ -139,6 +142,7 @@ class automated_gui_class:
             if (self.script_header_lines[j][0]=='#'):
                 found_comment=True
                 comment=self.script_header_lines[j][1:]
+                # Check setup or expert options
                 if "{expert}" in comment:
                     isexpert="expert"
                     comment=comment.replace ('{expert}', '' )
@@ -153,6 +157,16 @@ class automated_gui_class:
                     comment=comment.replace ('{setup-3d}', '' )
                 else:
                     isexpert="normal"
+                # Check browse options
+                if "{file}" in comment:
+                    browse="file"
+                    comment=comment.replace ('{file}', '' )
+                elif "{dir}" in comment:
+                    browse="dir"
+                    comment=comment.replace ('{dir}', '' )
+                else:
+                    browse="none"
+        # Checkout more help
         if (i-j>1):
             while (j<i-1):
                 j=j+1
@@ -160,7 +174,7 @@ class automated_gui_class:
 
         morehelp=string.join(morehelp,'')
         morehelp=morehelp.replace('\"\"\"','')
-        return comment,isexpert,morehelp
+        return comment,isexpert,morehelp,browse
         
     def Is_a_number(self,string):
         try:
@@ -206,18 +220,6 @@ class automated_gui_class:
                     self.variables[args[0]].append("Boolean")
                     newvar=BooleanVar()                    
                     self.variables[args[0]].append(newvar)
-                elif (args[0][0:5]=='File_'):
-                    # filename
-                    self.variables[args[0]]=[value,]
-                    self.variables[args[0]].append("File")
-                    newvar=StringVar()                    
-                    self.variables[args[0]].append(newvar)
-                elif (args[0][0:10]=='Directory_'):
-                    # directory
-                    self.variables[args[0]]=[value,]
-                    self.variables[args[0]].append("Directory")
-                    newvar=StringVar()                    
-                    self.variables[args[0]].append(newvar)
                 elif (self.Is_a_number(value)):
                     # number
                     self.variables[args[0]]=[value,]
@@ -231,7 +233,11 @@ class automated_gui_class:
                     newvar=StringVar()
                     self.variables[args[0]].append(newvar)
             
-                comment,isexpert,morehelp=self.ScriptParseComments(i)
+                comment,isexpert,morehelp,browse=self.ScriptParseComments(i)
+                if (browse=="file"):
+                    self.variables[args[0]][1]="File"
+                elif (browse=="dir"):
+                    self.variables[args[0]][1]="Directory"
                 self.variables[args[0]].append(comment)
                 self.variables[args[0]].append(isexpert)
                 self.variables[args[0]].append(morehelp)
@@ -557,31 +563,49 @@ class automated_gui_class:
         else:
             self.GuiAddRestProtocolButtons()
 
+    def relpath(self,target, base=os.curdir):
+        import os
+        if not os.path.exists(target):
+            raise OSError, 'Target does not exist: '+target
+        if not os.path.isdir(base):
+            raise OSError, 'Base is not a directory or does not exist: '+base
+        base_list = (os.path.abspath(base)).split(os.sep)
+        target_list = (os.path.abspath(target)).split(os.sep)
+        for i in range(min(len(base_list), len(target_list))):
+            if base_list[i] <> target_list[i]: break
+        else:
+            i+=1
+        rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:]
+        return os.path.join(*rel_list)
+
     def GuiBrowseFile(self):
         import tkFileDialog
         import os
         fileformats = [('All Files ','*.*')]
         fname = tkFileDialog.askopenfilename(title='Choose File',
                                              filetypes=fileformats)
-        fname='..'.os.path.relpathto(fname)
-        self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
-        self.e.delete(0, END) 
-        self.e.insert(0,fname)
-        self.e.grid(row=self.variables[self.whichfile.get()][6],
-                    column=self.columntextentry,
-                    columnspan=2,sticky=W+E)
+        if (len(fname)>0):
+#            fname=self.relpath(fname,os.curdir)
+            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+            self.e.delete(0, END) 
+            self.e.insert(0,fname)
+            self.e.grid(row=self.variables[self.whichfile.get()][6],
+                        column=self.columntextentry,
+                        columnspan=2,sticky=W+E)
 
     def GuiBrowseDirectory(self):
         import tkFileDialog
         import os
         fileformats = [('All Files ','*.*')]
         fname = tkFileDialog.askdirectory()       
-        self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
-        self.e.delete(0, END) 
-        self.e.insert(0,fname)
-        self.e.grid(row=self.variables[self.whichfile.get()][6],
-                    column=self.columntextentry,
-                    columnspan=2,sticky=W+E)
+        if (len(fname)>0):
+#            fname=self.relpath(fname,os.curdir)
+            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+            self.e.delete(0, END) 
+            self.e.insert(0,fname)
+            self.e.grid(row=self.variables[self.whichfile.get()][6],
+                        column=self.columntextentry,
+                        columnspan=2,sticky=W+E)
 
     def AnalyseResults(self):
         self.GuiSave()

@@ -13,14 +13,12 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Selfile with the input images (relative path from ProjectDir):
-InSelFile="all_images.sel"
+# {file} Selfile with the input images:
+InSelFile="/home/scheres/work/protocols/G40P/all_images.sel"
 # Working subdirectory:
 WorkingDir="ML3ref"
 # Delete working subdirectory if it already exists?
-""" The directory will not be deleted when only visualizing! 
-"""
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -52,7 +50,7 @@ ExtraParamsMLalign2D=""
 DoParallel=False
 # Number of processors to use:
 MyNumberOfCPUs=10
-# A list of all available CPUs (the MPI-machinefile):
+# {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, this file may be required. If not, just leave this entry blank.
     If your job submission system uses an environment variable, just type it here with the leading $
 """
@@ -92,7 +90,7 @@ class ML2D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.InSelFile=self.ProjectDir+'/'+str(InSelFile)
+        self.InSelFile=InSelFile
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast

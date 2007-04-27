@@ -17,12 +17,14 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Directory name from where to process all *.tif files
-Directory_Micrographs='/home/scheres/work/protocols/ML2D'
+# {dir} Directory name from where to process all *.tif files
+DirMicrographs='/home/scheres/work/protocols/G40P/micrographs'
+# Which files in this directory to process
+ExtMicrographs='*.tif'
 # Name for output selection file with all preprocessed micrographs
 MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
-ProjectDir='/home/scheres/work/protocols'
+ProjectDir='/home/scheres/work/protocols/G40P'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -56,147 +58,149 @@ AnalysisScript='visualize_s.py'
 #
 class preprocess_A_class:
 
-	#init variables
-	def __init__(self,
-                     Directory_Micrographs,
-                     MicrographSelfile,
-                     ProjectDir,
-                     LogDir,
-		     DoTif2Raw,
-		     DoDownSample,
-		     Down,
-		     DoEstimatePSD):
-	     
-		import os,sys
-                scriptdir=os.path.expanduser('~')+'/scripts/'
-                sys.path.append(scriptdir) # add default search path
-                import log
 
-                self.Directory_Micrographs=Directory_Micrographs
-                self.MicrographSelfile=MicrographSelfile
-                self.ProjectDir=ProjectDir
-                self.LogDir=LogDir
-		self.DoTif2Raw=DoTif2Raw
-		self.DoDownSample=DoDownSample
-		self.Down=Down
-		self.DoEstimatePSD=DoEstimatePSD
-		self.log=log.init_log_system(self.ProjectDir,
-                                             self.LogDir,
-                                             sys.argv[0],
-                                             '.')
+    def __init__(self,
+                 DirMicrographs,
+                 ExtMicrographs,
+                 MicrographSelfile,
+                 ProjectDir,
+                 LogDir,
+                 DoTif2Raw,
+                 DoDownSample,
+                 Down,
+                 DoEstimatePSD):
+        
+        import os,sys
+        scriptdir=os.path.expanduser('~')+'/scripts/'
+        sys.path.append(scriptdir) # add default search path
+        import log
+
+        self.DirMicrographs=DirMicrographs
+        self.ExtMicrographs=ExtMicrographs
+        self.MicrographSelfile=MicrographSelfile
+        self.ProjectDir=ProjectDir
+        self.LogDir=LogDir
+        self.DoTif2Raw=DoTif2Raw
+        self.DoDownSample=DoDownSample
+        self.Down=Down
+        self.DoEstimatePSD=DoEstimatePSD
+        self.log=log.init_log_system(self.ProjectDir,
+                                     self.LogDir,
+                                     sys.argv[0],
+                                     '.')
                 
-		# Execute program
-		self.process_all_micrographs()
-
-	def perform_tif2raw(self):
-		import os
-		oname=self.shortname+'/'+self.shortname+'.raw'
-		print '*********************************************************************'
-		print '*  Generating RAW for micrograph: '+self.name
-		command='xmipp_convert_tiff2raw '+self.filename+' '+oname
-		print '* ',command
-		self.log.info(command)
-		os.system(command)
+        # Execute program
+        self.process_all_micrographs()
+        
+    def perform_tif2raw(self):
+        import os
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        print '*********************************************************************'
+        print '*  Generating RAW for micrograph: '+self.name
+        command='xmipp_convert_tiff2raw '+self.filename+' '+oname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
     
-	def perform_downsample(self):
-		import os
-		iname=self.shortname+'/'+self.shortname+'.raw'
-		oname=self.shortname+'/'+self.downname+'.raw'
-		print '*********************************************************************'
-		print '*  Downsampling micrograph: '+iname
-		command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
-		print '* ',command
-		self.log.info(command)
-		os.system(command )
+    def perform_downsample(self):
+        import os
+        iname=self.shortname+'/'+self.shortname+'.raw'
+        oname=self.shortname+'/'+self.downname+'.raw'
+        print '*********************************************************************'
+        print '*  Downsampling micrograph: '+iname
+        command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
 
-	def perform_psdestimate(self):
-		import os
-		iname=self.shortname+'/'+self.downname+'.raw'
-		pname=self.shortname+'/'+self.shortname+'_psd.param'
-		print '*********************************************************************'
-		print '*  Estimate PSD for micrograph: '+iname
-		paramlist = []
-		paramlist.append('image= '+iname+'\n')
-		paramlist.append('micrograph_averaging= yes \n')
-		paramlist.append('N_horizontal= 512 \n')
-		paramlist.append('periodogram= yes \n')
-		paramlist.append('dont_adjust_CTF= yes \n')
-		
-		FILE = open(pname,"w")
-		FILE.writelines(paramlist)
-		FILE.close()
-		command='xmipp_ctf_estimate_from_micrograph -i '+pname
-		print '* ',command
-		self.log.info(command)
-		os.system(command )
-		oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-		self.psdselfile.append(oname+' 1 \n')
-                FILE = open("all_psds.sel","w")
-		FILE.writelines(self.psdselfile)
-		FILE.close()
+    def perform_psdestimate(self):
+        import os
+        iname=self.shortname+'/'+self.downname+'.raw'
+        pname=self.shortname+'/'+self.shortname+'_psd.param'
+        print '*********************************************************************'
+        print '*  Estimate PSD for micrograph: '+iname
+        paramlist = []
+        paramlist.append('image= '+iname+'\n')
+        paramlist.append('micrograph_averaging= yes \n')
+        paramlist.append('N_horizontal= 512 \n')
+        paramlist.append('periodogram= yes \n')
+        paramlist.append('dont_adjust_CTF= yes \n')
+    	
+        FILE = open(pname,"w")
+        FILE.writelines(paramlist)
+        FILE.close()
+        command='xmipp_ctf_estimate_from_micrograph -i '+pname
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+        oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        self.psdselfile.append(oname+' 1 \n')
+        FILE = open("all_psds.sel","w")
+        FILE.writelines(self.psdselfile)
+        FILE.close()
     
-        def append_micrograph_selfile(self):
-            name=self.shortname+'/'+self.downname+'.raw'
-            self.micselfile.append(name+' 1 \n')
-            FILE = open(self.MicrographSelfile,'w')
-            FILE.writelines(self.micselfile)
-            FILE.close()
+    def append_micrograph_selfile(self):
+        name=self.shortname+'/'+self.downname+'.raw'
+        self.micselfile.append(name+' 1 \n')
+        FILE = open(self.MicrographSelfile,'w')
+        FILE.writelines(self.micselfile)
+        FILE.close()
 
-	def process_all_micrographs(self):
-		import os
-		import glob
-		print '*********************************************************************'
-		print '*  Processing the following micrographs: '
-		for self.filename in glob.glob(self.Directory_Micrographs+'/*.tif'):
-			(self.filepath, self.name) = os.path.split(self.filename)
-			print '*  '+self.name
+    def process_all_micrographs(self):
+        import os
+        import glob
+        print '*********************************************************************'
+        print '*  Processing the following micrographs: '
+        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
+            (self.filepath, self.name) = os.path.split(self.filename)
+            print '*  '+self.name
 
-		self.psdselfile = []
-                self.micselfile = []
-		for self.filename in glob.glob(self.Directory_Micrographs+'/*.tif'):
-			(self.filepath, self.name) = os.path.split(self.filename)
+        self.psdselfile = []
+        self.micselfile = []
+        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
+            (self.filepath, self.name) = os.path.split(self.filename)
+            self.shortname=self.name.replace ( '.tif', '' )
+            self.downname='down'+str(self.Down)+'_'+self.shortname
 
-			self.shortname=self.name.replace ( '.tif', '' )
-			self.downname='down'+str(self.Down)+'_'+self.shortname
+            if not os.path.exists(self.shortname):
+                os.makedirs(self.shortname)
 
-                        if not os.path.exists(self.shortname):
-                            os.makedirs(self.shortname)
+            if (self.DoTif2Raw):
+                self.perform_tif2raw()
 
-			if (self.DoTif2Raw):
-                            self.perform_tif2raw()
+            if (self.DoDownSample):
+                self.perform_downsample()
 
-			if (self.DoDownSample):
-                            self.perform_downsample()
+            if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
+                self.downname=self.shortname
 
-                        if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
-                            self.downname=self.shortname
+            if (self.DoEstimatePSD):
+                self.perform_psdestimate()
 
-			if (self.DoEstimatePSD):
-                            self.perform_psdestimate()
+                self.append_micrograph_selfile()
 
-                        self.append_micrograph_selfile()
-
-	def close(self):
-                message=" Done pre-processing all"
-		print '* ',message
-		print '*********************************************************************'
-                self.log.info(message)
+    def close(self):
+        message=" Done pre-processing all"
+        print '* ',message
+        print '*********************************************************************'
+        self.log.info(message)
 #		
 # Main
 #     
 if __name__ == '__main__':
 
-   	# create preprocess_A_class object
+    # create preprocess_A_class object
+    
+    preprocessA=preprocess_A_class(DirMicrographs,
+                                   ExtMicrographs,
+                                   MicrographSelfile,
+                                   ProjectDir,
+                                   LogDir,
+                                   DoTif2Raw,
+                                   DoDownSample,
+                                   Down,
+                                   DoEstimatePSD)
 
-	preprocessA=preprocess_A_class(Directory_Micrographs,
-                                       MicrographSelfile,
-                                       ProjectDir,
-                                       LogDir,
-				       DoTif2Raw,
-				       DoDownSample,
-				       Down,
-				       DoEstimatePSD)
-
-	# close 
-	preprocessA.close()
+    # close 
+    preprocessA.close()
 

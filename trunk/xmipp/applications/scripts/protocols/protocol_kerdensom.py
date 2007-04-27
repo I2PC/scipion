@@ -14,7 +14,7 @@
 # Working subdirectory:
 WorkingDir="SOM_ML2ref_ref1"
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
@@ -24,8 +24,8 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
-# Subdirectory where you have previously ran ML2D classification:
-ML2DWorkingDir="ML2ref"
+# {dir} Directory where you have previously ran ML2D classification:
+ML2DWorkingDir="/home/scheres/work/protocols/G40P/ML2ref"
 # The number of the class to use:
 ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
@@ -33,7 +33,10 @@ ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
 # Design your mask graphically? (Save as name below!)
 DoXmask=True
-# Name of the mask (inside the working subdirectory):
+# {file} Name of the mask:
+""" The browse window yields an absolute path to the file.
+    Just give a name (e.g. mask.msk) if you design your own mask, and use the mask_design program to save it in the working directory
+"""
 MaskFileName="mask.msk"
 #------------------------------------------------------------------------------------------------
 # {section} classify_kerdensom parameters
@@ -102,7 +105,7 @@ class kerdensom_class:
 
         self.WorkingDir=_WorkingDir
         self.ProjectDir=_ProjectDir
-        self.ML2DWorkingDir='../'+_ML2DWorkingDir
+        self.ML2DWorkingDir=_ML2DWorkingDir
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
         self.MaskFileName=_MaskFileName

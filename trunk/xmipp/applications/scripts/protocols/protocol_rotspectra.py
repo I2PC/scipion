@@ -24,14 +24,12 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# Selfile with the input images (relative path from ProjectDir):
-""" The name of this file will be used as a seed for all new files
-"""
-SelFileName='100.sel'
+# {file} Selfile with the input images:
+SelFileName='/home/scheres/work/protocols/G40P/100.sel'
 # Working subdirectory: 
 WorkDirectory='test1'
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # Display all intermediate results?
 """ Images will be displayed after alignment, average, makespectra and kendersom...
     The display is NOT make in the background. If you want to 
@@ -151,7 +149,7 @@ class rotational_spectra_class:
        import log
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
+       self._SelFileName=_SelFileName
        self._DisplayResults=_DisplayResults
        self._InnerRadius=_InnerRadius
        self._OuterRadius=_OuterRadius

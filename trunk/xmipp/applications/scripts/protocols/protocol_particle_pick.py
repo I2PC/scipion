@@ -14,8 +14,8 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Selfile with all micrographs to pick particles from (in current dir):
-MicrographSelfile="all_micrographs.sel"
+# {file} Selfile with all micrographs to pick particles from:
+MicrographSelfile="/home/scheres/work/protocols/G40P/Preprocessing/all_micrographs.sel"
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -70,7 +70,7 @@ class particle_pick_class:
             import glob
             import selfile
             print '*********************************************************************'
-            print '*  Perform manual particle picking for micrographs in: '+str(self.MicrographSelfile)
+            print '*  Perform manual particle picking for micrographs in: '+basename(self.MicrographSelfile)
             print '*'
             print '* DONT FORGET TO SAVE YOUR COORDINATES REGULALRLY, AND ALWAYS BEFORE CLOSING!'
             if (self.IsPairList):

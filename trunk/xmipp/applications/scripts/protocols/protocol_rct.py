@@ -10,16 +10,16 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Selfile with all untilted images: (in ProjectDir)
-UntiltedSelFile="untSelect.sel"
-# Selfile with all tilted images: (in ProjectDir)
-TiltedSelFile="tilSelect.sel"
+# {file} Selfile with all untilted images:
+UntiltedSelFile="/home/scheres/work/protocols/G40P/untSelect.sel"
+# {file} Selfile with all tilted images:
+TiltedSelFile="/home/scheres/work/protocols/G40P/tilSelect.sel"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
+ProjectDir="/home/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored in $ProjectDir/$LogDir
 """
@@ -27,8 +27,8 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} Previous ML2D classification (WITHOUT INCLUDING MIRRORS!)
 #------------------------------------------------------------------------------------------------
-# Directory of previous ML2D-classification on the untilted images (from ProjectDir)
-PreviousDirML2D="ML2D/ML3ref"
+# {dir} Directory of previous ML2D-classification on the untilted images
+PreviousDirML2D="/home/scheres/work/protocols/G40P/ML2D/ML3ref"
 # {expert} Rootname for ML2D run (only provide if different from its working directory)
 PreviousML2DRoot=""
 # Which of these classes do you want to reconstruct? (Separate numbers by comma's)
@@ -112,9 +112,9 @@ class RCT_class:
         
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.UntiltedSelFile=self.ProjectDir+'/'+UntiltedSelFile
-        self.TiltedSelFile=self.ProjectDir+'/'+TiltedSelFile
-        self.PreviousDirML2D=self.ProjectDir+'/'+PreviousDirML2D
+        self.UntiltedSelFile=UntiltedSelFile
+        self.TiltedSelFile=TiltedSelFile
+        self.PreviousDirML2D=PreviousDirML2D
         self.PreviousML2DRoot=PreviousML2DRoot
         self.SelectClasses=SelectClasses
         self.DoCenterTilted=DoCenterTilted

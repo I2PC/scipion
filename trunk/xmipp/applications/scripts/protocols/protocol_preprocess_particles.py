@@ -20,8 +20,8 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Selfile with micrographs on which to perform processing
-MicrographSelfile='all_micrographs.sel'
+# {file} Selfile with micrographs on which to perform processing
+MicrographSelfile='/home/scheres/work/protocols/G40P/Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -33,7 +33,7 @@ MicrographSelfile='all_micrographs.sel'
 """
 IsPairList=False
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ PosFile="raw.Common.pos"
 Size=64
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Selfile with all particles (is placed in ProjectDir)
+# {expert} Name foir selfile with all particles (is placed in ProjectDir)
 """ For tilted pairs, extension .sel is replaced by _untilted.sel and _tilted.sel
 """
 OutSelFile="all_images.sel"
@@ -211,7 +211,7 @@ class preprocess_particles_class:
         import os
         import selfile
         print '*********************************************************************'
-        print '*  Pre-processing micrographs in '+str(self.MicrographSelfile)
+        print '*  Pre-processing micrographs in '+basename(self.MicrographSelfile)
 
         dirname=self.ProjectDir+'/'+self.ImagesDir
         if not os.path.exists(dirname):
@@ -247,7 +247,7 @@ class preprocess_particles_class:
     def process_all_pairs(self):
         import os
         print '*********************************************************************'
-        print '*  Pre-processing all micrograph pairs in '+str(self.MicrographSelfile)
+        print '*  Pre-processing all micrograph pairs in '+basename(self.MicrographSelfile)
 
         dirname=self.ProjectDir+'/'+self.ImagesDir
         if not os.path.exists(dirname):

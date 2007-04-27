@@ -11,14 +11,14 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Selfile with the input images (relative path from ProjectDir):
-InSelFile="all_images.sel"
-# Initial single reference map (relative path from ProjectDir):
-InitialReference="my_ref.vol"
+# {file} Selfile with the input images:
+InSelFile="/home2/bioinfo/scheres/work/protocols/G40P/all_images.sel"
+# {file} Initial single reference map:
+InitialReference="/home2/bioinfo/scheres/work/protocols/G40P/my_ref.vol"
 # Working subdirectory:
 WorkingDir="test1"
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
@@ -58,7 +58,7 @@ PixelSize=5.6
 DoGenerateSeeds=True
 # Number of seeds to be generated (and later on used in ml3d-classification):
 NumberOfReferences=3
-# Alternatively, provide selfile with user-defined seeds (relative path from ProjectDir):
+# {expert} {file} Alternatively, provide selfile with user-defined seeds:
 """ Automated (unbiased!) seed generation is highly recommended...
     But you may use this option to provide the seeds from a previous run
     The seeds should already be on the correct absolute greyscale!
@@ -76,11 +76,11 @@ DoML3DClassification=True
 AngularSampling=10
 # Number of ml3d iterations to perform:
 NumberOfIterations=25
-# Symmetry description file (relative path from ProjectDir):
+# {file} Symmetry description file (relative path from ProjectDir):
 """ See WIKI link for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile="6fold.sym"
+SymmetryFile="/home2/bioinfo/scheres/work/protocols/G40P/6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
 ExtraParamsMLrefine3D=""
 #------------------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ ExtraParamsMLrefine3D=""
 DoParallel=True
 # Number of processors to use:
 MyNumberOfCPUs=5
-# A list of all available CPUs (the MPI-machinefile):
+# {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
@@ -138,19 +138,13 @@ class ML3D_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self.InSelFile=ProjectDir+'/'+InSelFile
+        self.InSelFile=InSelFile
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
         self.DoGenerateSeeds=DoGenerateSeeds
-        if (InitialReference==""):
-            self.InitialReference=""
-        else:
-            self.InitialReference=ProjectDir+'/'+InitialReference
-        if (SeedsSelfile==""):
-            self.SeedsSelfile=""
-        else:
-            self.SeedsSelfile=ProjectDir+'/'+SeedsSelfile
+        self.InitialReference=InitialReference
+        self.SeedsSelfile=SeedsSelfile
         self.AngularSampling=AngularSampling
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize
