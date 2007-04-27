@@ -18,7 +18,7 @@
 # {file} Selfile with the input images:
 """ Absolute paths are required in the selection file
 """
-SelFileName='/home/roberto/bla/bla//all.sel'
+SelFileName='/ABS/PATH/TO/all_images.sel'
 
 # Working subdirectory: 
 WorkDirectory='Test'
@@ -273,6 +273,9 @@ class projection_matching_class:
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
        create_working_directory(self._mylog,self._WorkDirectory)
+       # Backup script
+       log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
+    
        #change to working dir
        os.chdir(self._WorkDirectory)
        

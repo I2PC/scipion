@@ -11,13 +11,13 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working subdirectory:
+# Working subdirectory (to be created in current dir):
 WorkingDir="SOM_ML2ref_ref1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
-# {expert} Root directory name for this project:
+# {expert} Root directory name for this project (abs. path):
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
-# {expert} Directory name for logfiles:
+# {expert} Directory name for logfiles (relative path from ProjectDir):
 """ All logfiles will be stored in $ProjectDir/$LogDir
 """
 LogDir="Logs"
@@ -124,12 +124,16 @@ class kerdensom_class:
                                      sys.argv[0],
                                      self.WorkingDir)
                 
-        # Delete working directory if it exists, make a new one, and go there
+        # Delete working directory if it exists, make a new one
         if (_DoDeleteWorkingDir): 
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
         os.chdir(self.WorkingDir)
 
         # Check whether ML2D subdirectory exists

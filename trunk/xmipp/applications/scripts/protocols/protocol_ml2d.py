@@ -105,13 +105,17 @@ class ML2D_class:
                                      sys.argv[0],
                                      self.WorkingDir)
                 
-        # Delete working directory if it exists, make a new one, and go there
+        # Delete working directory if it exists, make a new one
         if (DoDeleteWorkingDir and DoML2D): 
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
+    
         # Execute MLalign2D in the working directory
         os.chdir(self.WorkingDir)
         if (DoML2D):

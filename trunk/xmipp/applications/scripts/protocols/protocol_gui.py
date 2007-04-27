@@ -63,9 +63,10 @@ class automated_gui_class:
         self.master=Tk()
         self.expert_mode=False
         self.is_setupgui=False
+        self.is_markgui=False
         self.have_publication=False
-        self.publications=[]
-        
+
+    def MakeGui(self):
         self.ScriptRead()
         self.ScriptParseVariables()
         self.SetupGuiParameters()
@@ -186,6 +187,7 @@ class automated_gui_class:
     def ScriptParseVariables(self):
         self.variables={}
         self.vfields=[]
+        self.publications=[]
         self.have_analyse_results=False
 
         for i in range(len(self.script_header_lines)):
@@ -250,24 +252,9 @@ class automated_gui_class:
 
     def GuiFill(self):
                        
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(self.master)
-        vscrollbar.grid(row=0, column=1, sticky=N+S)
-        hscrollbar = AutoScrollbar(self.master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E+W)
-        canvas = Canvas(self.master,
-                        width=self.guiwidth,
-                        height=self.guiheight,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-        vscrollbar.config(command=canvas.yview)
-        hscrollbar.config(command=canvas.xview)
-        self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
-        self.frame = Frame(canvas)
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=1)
+        import gui_lib
+        # Create the Canvas with Scrollbars
+        self.canvas,self.frame=gui_lib.PrepareCanvas(self.master,self.guiwidth,self.guiheight)
 
         # Fill the entire GUI
         if (self.is_setupgui):
@@ -276,15 +263,14 @@ class automated_gui_class:
             self.FillProtocolGui()
         
         # Launch the window
-        canvas.create_window(0, 0, anchor=NW, window=self.frame)
-        self.frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
+        gui_lib.LaunchCanvas(self.canvas,self.frame)
 
         # Remove expert options in normal mode
         if (self.expert_mode==False):
             for w in self.widgetexpertlist:
                 w.grid_remove()  
 
+        # Enter main loop
         self.master.mainloop()
 
     def FillProtocolGui(self):
@@ -324,6 +310,7 @@ class automated_gui_class:
                 self.GuiAddBrowseEntry(var,
                                        self.variables[var][3],
                                        self.variables[var][0],
+                                       self.variables[var][2],
                                        self.variables[var][4],
                                        self.variables[var][5],
                                        is_a_file)
@@ -478,19 +465,19 @@ class automated_gui_class:
             if (morehelp!=""):
                 self.widgetexpertlist.append(self.r)
 
-    def GuiAddBrowseEntry(self,variable,label,default,expert,morehelp,is_file):
+    def GuiAddBrowseEntry(self,varname,label,default,variable,expert,morehelp,is_file):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp,True)
-        self.variables[variable][6]=row
+        self.variables[varname][6]=row
         self.e = Entry(self.frame, text=label, textvariable=variable)
         self.e.delete(0, END) 
         self.e.insert(0,default)
         self.e.grid(row=row, column=self.columntextentry,columnspan=2,sticky=W+E)
         if (is_file):
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
-                                 value=variable, command=self.GuiBrowseFile)
+                                 value=varname, command=self.GuiBrowseFile)
         else:
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
-                                 value=variable, command=self.GuiBrowseDirectory)
+                                 value=varname, command=self.GuiBrowseDirectory)
         self.b.grid(row=row, column=self.columntextentry+2)
 
         if (expert=="expert"):
@@ -502,22 +489,23 @@ class automated_gui_class:
 
     def GuiAddRestProtocolButtons(self):
         self.Addseparator(self.buttonrow)
+        self.button = Button(self.frame, text="Close", command=self.GuiClose)
+        self.button.grid(row=self.buttonrow+3,column=0, sticky=W)
+
         if (self.expert_mode==True):
             text2=" Hide expert options "
         else:
             text2="Show expert options"
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow+3,column=0)
-        self.button = Button(self.frame, text="QUIT", command=self.master.quit)
-        self.button.grid(row=self.buttonrow+3,column=1)
+        self.bGet.grid(row=self.buttonrow+3,column=2, sticky=E)
 
+        self.bGet = Button(self.frame, text="Load", command=self.GuiLoad)
+        self.bGet.grid(row=self.buttonrow+3,column=3)
+        self.bGet = Button(self.frame, text="Execute", command=self.GuiSaveExecute)
+        self.bGet.grid(row=self.buttonrow+3,column=4)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
-            self.bGet.grid(row=self.buttonrow+3,column=2)
-        self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
-        self.bGet.grid(row=self.buttonrow+3,column=3)
-        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
-        self.bGet.grid(row=self.buttonrow+3,column=4)
+            self.bGet.grid(row=self.buttonrow+3,column=5)
 
         # Job submission command option
         self.jobsubmission=StringVar()
@@ -533,14 +521,14 @@ class automated_gui_class:
         self.e.grid(row=self.buttonrow+4, column=self.columntextentry,columnspan=2,sticky=W+E)
 
     def GuiAddRestSetupButtons(self):
+        self.button = Button(self.frame, text="Close", command=self.master.quit)
+        self.button.grid(row=self.buttonrow,column=0, sticky=W)
         if (self.expert_mode==True):
             text2=" Hide expert options "
         else:
             text2="Show expert options"
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow,column=0)
-        self.button = Button(self.frame, text="QUIT", command=self.master.quit)
-        self.button.grid(row=self.buttonrow,column=2)
+        self.bGet.grid(row=self.buttonrow,column=1)
         if (self.have_publication):
             headertext="Read more about Xmipp protocols in:"
             for pub in self.publications:
@@ -592,11 +580,11 @@ class automated_gui_class:
             self.e.grid(row=self.variables[self.whichfile.get()][6],
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
+            print "var=",self.whichfile.get(),self.variables[self.whichfile.get()][2].get()
 
     def GuiBrowseDirectory(self):
         import tkFileDialog
         import os
-        fileformats = [('All Files ','*.*')]
         fname = tkFileDialog.askdirectory()       
         if (len(fname)>0):
 #            fname=self.relpath(fname,os.curdir)
@@ -615,15 +603,35 @@ class automated_gui_class:
         print command
         os.system(command)
          
+    def GuiClose(self):
+        self.GuiSave()
+        print "* Closing..."
+        self.master.destroy()
+        
+    def GuiSave(self):
+        print "* Saving..."
+        self.ScriptWrite()
+
     def GuiSaveExecute(self):
         self.GuiSave()
         command=self.jobsubmission.get()+" python "+self.scriptname+' &'
         print "* Executing job with: "+command
         os.system(command)
                 
-    def GuiSave(self):
-        print "* Saving..."
-        self.ScriptWrite()
+    def GuiLoad(self):
+        import tkFileDialog
+        import os,shutil
+        fname = tkFileDialog.askdirectory()       
+        if (len(fname)>0):
+            print "* Loading protocol from "+os.path.basename(fname)+" ..."
+            fname=fname+'/'+self.scriptname+'_backup'
+            shutil.copy(fname,self.scriptname)
+            self.master.destroy()
+            self.master=Tk()
+            self.ScriptRead()
+            self.ScriptParseVariables()
+            self.SetupGuiParameters()
+            self.GuiFill()
 
     def GuiLanchSetup(self):
         self.GuiSave()
@@ -651,3 +659,4 @@ if __name__ == '__main__':
     import sys
     args=sys.argv[1]
     automated_gui=automated_gui_class(args)
+    automated_gui.MakeGui()
