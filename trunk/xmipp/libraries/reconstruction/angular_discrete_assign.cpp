@@ -66,7 +66,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) {
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
    search5D=check_param(argc,argv,"-5D");
-   if (((string)argv[0]).find("mpirun")!=-1) produce_side_info();
+   if (((string)argv[0]).find("mpirun")==-1) produce_side_info();
 }
 
 // Show ====================================================================
