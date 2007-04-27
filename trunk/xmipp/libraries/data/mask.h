@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPMASKS_H
-#define XMIPPMASKS_H
+#ifndef MASK_H
+#define MASK_H
 
 #include "matrix2d.h"
 #include "matrix3d.h"

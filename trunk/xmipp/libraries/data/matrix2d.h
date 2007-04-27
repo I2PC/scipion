@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPMATRICES2D_H
-#define XMIPPMATRICES2D_H
+#ifndef MATRIX2D_H
+#define MATRIX2D_H
 
 #include <cstdlib>
 #include <cmath>

@@ -23,9 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-
-#ifndef _PROG_MAKE_SPECTRA
-   #define _PROG_MAKE_SPECTRA
+#ifndef MAKESPECTRA_H
+#define MAKESPECTRA_H
 
 #include "rotational_spectrum.h"
 #include "progs.h"
@@ -33,47 +32,66 @@
 
 #include <vector>
 
-/**@name Make spectra */
-//@{
-class Prog_make_spectra_prm: public Prog_parameters {
+/// @defgroup MakeSpectra Make spectra.
+
+/** Make spectra parameters.
+ * @ingroup MakeSpectra
+ */
+class Prog_make_spectra_prm: public Prog_parameters
+{
 public:
-   /// Output filename
-   FileName fn_out;
+    /** Output filename.
+     */
+    FileName fn_out;
 
-   /// Rotational spectrum
-   Rotational_Spectrum rot_spt;
+    /** Rotational spectrum.
+     */
+    Rotational_Spectrum rot_spt;
+
 public:
-   // Set of harmonics
-   vector< matrix1D<double> > Harmonics;
-   // Set of images
-   vector<FileName> Img_name;
-public:
-   /// Empty constructor
-   Prog_make_spectra_prm();
+    /** Set of harmonics.
+     */
+    std::vector< matrix1D< double > > Harmonics;
 
-   /// Read parameters from command line
-   void read(int argc, char **argv);
+    /** Set of images.
+     */
+    std::vector< FileName > Img_name;
 
-   /** Produce side info. */
-   void produce_side_info();
+    /** Empty constructor.
+     */
+    Prog_make_spectra_prm();
 
-   /// Show parameters. This function calls show_specific
-   void show();
+    /** Read parameters from command line.
+     */
+    void read(int argc, char** argv);
 
-   /// Show specific
-   void show_specific();
+    /** Produce side info.
+     */
+    void produce_side_info();
 
-   /// Usage. This function calls usage_specific
-   void usage();
+    /** Show parameters. This function calls show_specific.
+     */
+    void show();
 
-   /// Show specific parameters
-   void usage_specific();
+    /** Show specific.
+     */
+    void show_specific();
 
-   /// Process image
-   void process_img(ImageXmipp &img);
+    /** Usage. This function calls usage_specific.
+     */
+    void usage();
 
-   /// Finish processing
-   void finish_processing();
+    /** Show specific parameters.
+     */
+    void usage_specific();
+
+    /** Process image.
+     */
+    void process_img(ImageXmipp& img);
+
+    /** Finish processing.
+     */
+    void finish_processing();
 };
-//@}
+
 #endif

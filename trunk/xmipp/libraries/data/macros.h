@@ -6,25 +6,25 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.uam.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#ifndef XMIPPMACROS_H
-#define XMIPPMACROS_H
+#ifndef MACROS_H
+#define MACROS_H
 
 #ifndef _CYGWIN
    #ifdef __APPLE__
@@ -55,7 +55,7 @@
 
 /** Equal accuracy
  * @ingroup MacrosConstants
- * 
+ *
  * In a comparison if two values are closer than this epsilon they are said to
  * be the same. Actually set to 1e-6
  */
@@ -66,9 +66,9 @@
 
 /** Absolute value
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of number (int, short, float, etc)
- * 
+ *
  * @code
  * x = ABS(x);
  * @endcode
@@ -79,9 +79,9 @@
 
 /** Sign of
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of number (int, short, float, etc). It returns +1 or -1
- * 
+ *
  * @code
  * if (SGN(x) == -1)
  *     cout << "x is negative" << endl;
@@ -93,10 +93,10 @@
 
 /** Sign of, considering 0 as 0
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of number (int, short, float, etc). It returns +1 if the
  * number is positive, -1 if the number is negative, and 0 if the number is 0.
- * 
+ *
  * @code
  * if (SGN0(x) == -1)
  *     cout << "x is negative" << endl;
@@ -108,9 +108,9 @@
 
 /** Minimum
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of numbers (int, short, float, etc).
- * 
+ *
  * @code
  * min_val = MIN(x, y);
  * @endcode
@@ -121,9 +121,9 @@
 
 /** Maximum
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of numbers (int, short, float, etc).
- * 
+ *
  * @code
  * max_val = MAX(x, y);
  * @endcode
@@ -134,13 +134,13 @@
 
 /** Round to next integer
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
- * 
+ *
  * @code
  * a = ROUND(-0.8); // a = -1
- * a = ROUND(-0.2); // a = 0 
+ * a = ROUND(-0.2); // a = 0
  * a = ROUND(0.2); // a = 0
  * a = ROUND(0.8); // a = 1
  * @endcode
@@ -151,10 +151,10 @@
 
 /** Round to next larger integer
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
- * 
+ *
  * @code
  * a = CEIL(-0.8); // a = 0
  * a = CEIL(-0.2); // a = 0
@@ -166,10 +166,10 @@
 
 /** Round to next smaller integer
  * @ingroup MacrosNumerical
- * 
+ *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
- * 
+ *
  * @code
  * a = FLOOR(-0.8); // a = -1
  * a = FLOOR(-0.2); // a = -1
@@ -182,18 +182,18 @@
 
 /** Return the fractional part of a value
  * @ingroup MacrosNumerical
- * 
+ *
  * The fractional part of 3.7 is 0.7 and of -3.7 is -0.7.
  */
 #define FRACTION(x) ((x) - (int)(x))
 
 /** Clip in a saturation fashion
  * @ingroup MacrosNumerical
- * 
+ *
  * CLIP is a macro which acts like a saturation curve, a value x is "clipped" to
  * a range defined by x0 and xF, for example the output values for the following
  * x and CLIP(x,-2,2) would be
- * 
+ *
  * @code
  * x = ... -8 -7 -6 -5 -4 -3 -2 -1 0 1 2 3 4 5 6 7 8 ...
  * output = ... -2 -2 -2 -2 -2 -2 -2 -1 0 1 2 2 2 2 2 2 2 ...
@@ -203,10 +203,10 @@
 
 /** Wrapping for integers
  * @ingroup MacrosNumerical
- * 
+ *
  * intWRAP performs a wrapping in the integer set, when the cycle is finsihed it
  * begins again. For example, for intWRAP(x,-2,2) would be
- * 
+ *
  * @code
  * x = ... -8 -7 -6 -5 -4 -3 -2 -1  0  1  2  3  4  5  6  7  8 ...
  * output = ...  2 -2 -1  0  1  2 -2 -1  0  1  2 -2 -1  0  1  2 -2 ...
@@ -219,11 +219,11 @@
 
 /** Wrapping for real numbers
  * @ingroup MacrosNumerical
- * 
+ *
  * realWRAP is used to keep a floating number between a range with a wrapping
  * fashion. For instance, it is used in trigonometry to say that an angle of
  * 5*PI is the same as PI, ie, to keep an angle in the range 0...2*PI
- * 
+ *
  * @code
  * Corrected_angle = realWRAP(angle, 0, 2*PI);
  * @endcode
@@ -234,7 +234,7 @@
 
 /** Degrees to radians
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * angle_in_radians = DEG2RAD(ang_in_degrees);
  * @endcode
@@ -243,7 +243,7 @@
 
 /** Radians to degrees
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * angle_in_degrees = RAD2DEG(ang_in_radians);
  * @endcode
@@ -252,7 +252,7 @@
 
 /** Cosine in degrees
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * if (COSD(90) == 0)
  *     cout << "This is in degrees!\n";
@@ -262,7 +262,7 @@
 
 /** ArcCosine in degrees
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * if (ACOSD(0.5) == 60)
  *     cout << "This is in degrees!\n";
@@ -272,7 +272,7 @@
 
 /** Sine in degrees
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * if (SIND(90) == 1)
  *     cout << "This is in degrees!\n";
@@ -282,7 +282,7 @@
 
 /** ArcSine in degrees
  * @ingroup MacrosNumerical
- * 
+ *
  * @code
  * if (ASIND(0.5) == 30.)
  *     cout << "This is in degrees!\n";
@@ -292,7 +292,7 @@
 
 /** SINC function
  * @ingroup MacrosNumerical
- * 
+ *
  * The sinc function is defined as sin(PI*x)/(PI*x).
  */
 #define SINC(x) (((x) < 0.0001 && (x) > -0.0001) ? 1 : sin(PI * (x)) \
@@ -300,10 +300,10 @@
 
 /** Returns next positive power of 2
  * @ingroup MacrosNumerical
- * 
+ *
  * It is supposed that the given number is positive although it's not needed to
  * be an integer
- * 
+ *
  * @code
  * next_power = NEXT_POWER_OF_2(1000); // next_power = 1024
  * @endcode
@@ -312,7 +312,7 @@
 
 /** Linear interpolation
  * @ingroup MacrosNumerical
- * 
+ *
  * From low (when a=0) to high (when a=1). The following value is returned
  * (equal to (a*h)+((1-a)*l)
  */
@@ -320,7 +320,7 @@
 
 /** XOR
  * @ingroup MacrosNumerical
- * 
+ *
  * Logical Xor
  */
 #define XOR(a, b) (((a) && !(b)) || (!(a) && (b)))
@@ -330,9 +330,9 @@
 
 /** Speed up temporary variables
  * @ingroup MacrosMisc
- * 
+ *
  * The following variables are provided:
- * 
+ *
  * @code
  * float spduptmp0, spduptmp1, spduptmp2;
  * int ispduptmp0, ispduptmp1, ispduptmp2, ispduptmp3, ispduptmp4, ispduptmp5;
@@ -347,7 +347,7 @@
 
 /** Swap two values
  * @igroup MacrosMisc
- * 
+ *
  * It uses a temporal variable which must be of the same type as the two
  * parameters
  */
@@ -358,7 +358,7 @@
 
 /** Starting point for Xmipp volume/image
  * @ingroup MacrosMisc
- * 
+ *
  * Given a size (in some direction), this function returns the first index for
  * a volume/image/array with this size. The formula is -(int) ((float) (size)
  * / 2.0)
@@ -367,9 +367,9 @@
 
 /** Starting point for Xmipp volume/image
  * @ingroup MacrosMisc
- * 
+ *
  * Given a size (in some direction), this function returns the first index for a
- * volume/image/array with this size. The formula is FIRST_XMIPP_INDEX(size) + 
+ * volume/image/array with this size. The formula is FIRST_XMIPP_INDEX(size) +
  * (size) - 1
  */
 #define LAST_XMIPP_INDEX(size) FIRST_XMIPP_INDEX(size) + (size) - 1
