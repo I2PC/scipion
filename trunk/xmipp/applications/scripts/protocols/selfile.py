@@ -10,7 +10,8 @@ class selfile:
 
    # Reads selfile from disc
    def read(self,selfilename):
-       fh=open(selfilename,'r')
+       self.selfilename=selfilename
+       fh=open(self.selfilename,'r')
        lines=fh.readlines()
        self.sellines=[]
        for line in lines:
