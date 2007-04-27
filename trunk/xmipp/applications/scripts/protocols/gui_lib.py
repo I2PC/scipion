@@ -27,7 +27,7 @@ def LaunchCanvas(canvas,frame):
     frame.update_idletasks()
     canvas.config(scrollregion=canvas.bbox("all"))
 
-def AddSeparator(self,frame,row,columnspan):
+def AddSeparator(frame,row,columnspan):
     l1=Label(frame,text="")
     l1.grid(row=row)
     l2=Frame(frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
