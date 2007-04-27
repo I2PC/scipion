@@ -672,44 +672,45 @@ void Prog_align2d_prm::align2d() {
   if (oext!="") fn_out=fn_out.insert_before_extension("_"+oext);
   SFo.write(fn_out);
 
-  cerr << "Calculating average, correlations and writing out results ..."<<endl;
 
   // Calculate average and stddev image and write out
-  ImageXmipp med,sig;
-  double min,max;
-  SFo.get_statistics(med,sig,min,max,true);
-  fn_img=fn_sel.without_extension()+".xmp";
-  if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
-  fn_img=fn_img.insert_before_extension(".med");
-  med.weight()=SFo.LineNo();
-  med.write(fn_img);
-  fn_img=fn_sel.without_extension()+".xmp";
-  if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
-  fn_img=fn_img.insert_before_extension(".sig");
-  sig.write(fn_img);
+  if(SFo.ImgNo(SelLine::ACTIVE)){
+      cerr << "Calculating average, correlations and writing out results ..."<<endl;
+      ImageXmipp med,sig;
+      double min,max;
+      SFo.get_statistics(med,sig,min,max,true);
+      fn_img=fn_sel.without_extension()+".xmp";
+      if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
+      fn_img=fn_img.insert_before_extension(".med");
+      med.weight()=SFo.ImgNo(SelLine::ACTIVE);
+      med.write(fn_img);
+      fn_img=fn_sel.without_extension()+".xmp";
+      if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
+      fn_img=fn_img.insert_before_extension(".sig");
+      sig.write(fn_img);
 
-  // Calculate correlation wrt average image for document file
-  med().set_Xmipp_origin();
-  calc_correlation(med(),Ri,Ro);
-
-  // Write out docfile
-  if (fn_doc!="") {
-    DocFile           DFo;
-    DFo.reserve(n_images);
-    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Corr (6)");
-    matrix1D<double>  dataline(6);
-    for (int imgno=0; imgno < n_images; imgno++) {
-      dataline(0)=images[imgno].Phi();
-      dataline(1)=images[imgno].Theta();
-      dataline(2)=images[imgno].Psi();
-      dataline(3)=images[imgno].Xoff();
-      dataline(4)=images[imgno].Yoff();
-      dataline(5)=corr[imgno];
-      DFo.append_comment(images[imgno].name());
-      DFo.append_data_line(dataline);
-    }
-    DFo.write(fn_doc);
-  }
+      // Calculate correlation wrt average image for document file
+      med().set_Xmipp_origin();
+      calc_correlation(med(),Ri,Ro);
+      // Write out docfile
+      if (fn_doc!="") {
+        DocFile           DFo;
+        DFo.reserve(n_images);
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Corr (6)");
+        matrix1D<double>  dataline(6);
+        for (int imgno=0; imgno < n_images; imgno++) {
+          dataline(0)=images[imgno].Phi();
+          dataline(1)=images[imgno].Theta();
+          dataline(2)=images[imgno].Psi();
+          dataline(3)=images[imgno].Xoff();
+          dataline(4)=images[imgno].Yoff();
+          dataline(5)=corr[imgno];
+          DFo.append_comment(images[imgno].name());
+          DFo.append_data_line(dataline);
+        }
+        DFo.write(fn_doc);
+      }
+   }
 
   images.clear();
   corr.clear();
