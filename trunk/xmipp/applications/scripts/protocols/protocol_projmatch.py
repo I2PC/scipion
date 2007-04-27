@@ -15,28 +15,21 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# Root directory name for this project:
-""" All Paths should be relative to this directory
+# {file} Selfile with the input images:
+""" Absolute paths are required in the selection file
 """
-ProjectDir="/home/roberto2/Test/PARA_Roberto"
+SelFileName='/home/roberto/bla/bla//all.sel'
 
-# Selfile with the input images:
-""" Absolute paths are required in self file but the self file localtion 
-    is relative  to ProjectDir
-"""
-SelFileName='../all.sel'
-
-# Working directory: 
-""" Relateive path to ProjectDir
-"""
+# Working subdirectory: 
 WorkDirectory='Test'
 
 # Delete working directory?
 DoDeleteWorkingDir=True
 
-# {expert} Directory name for logfiles:
-""" Relative path to ProjectDir
-"""
+# {expert} Root directory name for this project:
+ProjectDir="/home/roberto2/Test/PARA_Roberto"
+
+# {expert} Directory name for logfiles (from project dir):
 LogDir="Logs"
 
 #------------------------------------------------------------------------------------------------
@@ -46,9 +39,9 @@ LogDir="Logs"
 DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=2
-# A list of all available CPUs (the MPI-machinefile):
+# {file} A list of all available CPUs (the MPI-machinefile):
 """ List with all working nodes (computer names) that are going
-    to be used for computation. ABSOLUTE PATH
+    to be used for computation.
 """
 MachineFile="/home/roberto2/bin/machines.dat"
 
@@ -61,10 +54,8 @@ MachineFile="/home/roberto2/bin/machines.dat"
 """
 DoMask=True
 
-# Reference file name (3D map)
-""" Relative path to ProjectDir
-"""
-ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
+# {file} Reference file name (3D map)
+ReferenceFileName="/home/roberto/bla/bla/init_reference/LTA_rot_0.1_norm.vol"
 
 #show masked volume
 """ Masked volume will be shown. Do not set ths option to true for
@@ -72,8 +63,8 @@ ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
 """
 DisplayMask=True
 
-#binary mask-file used to mask reference volume
-MaskFileName='circular_mask.msk'
+# {file} binary mask-file used to mask reference volume
+MaskFileName='/home/roberto/bla/bla/circular_mask.msk'
 
 
 #-----------------------------------------------------------------------------
@@ -103,11 +94,11 @@ Tilt0=40
 #Higher-value for restricted tilt angle search
 TiltF=140
 
-#Limit angular search to asymmetric part of the Ewald sphere.
+# {file} Limit angular search to asymmetric part of the Ewald sphere.
 """ This option does not work in combination with a limited search 
     of the rot or tilt angle.
 """
-Symfile="../P6.sym"
+Symfile="/home/roberto2/bla/P6.sym"
 
 #extra options for Projection_Maching
 """ IF you want to use your only references use the -ref option here,
@@ -225,7 +216,7 @@ class projection_matching_class:
        import log,logging
        
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       self._SelFileName=os.path.abspath(str(_SelFileName))
+       self._SelFileName=_SelFileName
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
        self._ReferenceFileName=_ReferenceFileName
        self._MaskFileName=_MaskFileName
@@ -434,15 +425,15 @@ def execute_mask(_mylog,
                  _ReferenceVolume):
    import os
    _mylog.debug("execute_mask")
-   MaskVolume =_ProjectDir+'/'+_MaskFileName
+   MaskVolume =_MaskFileName
    MaskedVolume=_ReferenceVolume
    if _iteration_number==1:
-      InPutVolume=_ProjectDir+'/'+_ReferenceFileName
+      InPutVolume=_ReferenceFileName
    else:
       InPutVolume='../Iter_'+str(_iteration_number-1)+target
          
        
-   InPutVolume=_ProjectDir+'/'+_ReferenceFileName
+   InPutVolume=_ReferenceFileName
    print '*********************************************************************'
    print '* Mask the reference volume'
    command='xmipp_mask'+ \
@@ -489,7 +480,7 @@ def execute_projection_matching(_mylog,
                                            
    _mylog.debug("execute_projection_matching")
    import os,selfile
-   ReferenceVolume=_ProjectDir+'/'+_ReferenceFileName
+   ReferenceVolume=_ReferenceFileName
    Reference_Vol=_ReferenceVolume
 
    print '*********************************************************************'

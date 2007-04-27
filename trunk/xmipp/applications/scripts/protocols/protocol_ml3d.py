@@ -21,9 +21,7 @@ WorkingDir="test1"
 DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
-# {expert} Directory name for logfiles:
-""" All logfiles will be stored in $ProjectDir/$LogDir
-"""
+# {expert} Directory name for logfiles (from project dir):
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} Correct absolute grey scale of initial reference
