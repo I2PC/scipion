@@ -308,7 +308,7 @@
  * next_power = NEXT_POWER_OF_2(1000); // next_power = 1024
  * @endcode
  */
-#define NEXT_POWER_OF_2(x) pow(2, ceil(log((double) x) / log(2.0)) )
+#define NEXT_POWER_OF_2(x) pow(2, ceil(log((double) x) / log(2.0)-XMIPP_EQUAL_ACCURACY) )
 
 /** Linear interpolation
  * @ingroup MacrosNumerical
