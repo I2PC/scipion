@@ -69,7 +69,7 @@ class visualize_rotspectra_class:
 
     def visualize_AlignedImages(self,_SelFileName):
          import os
-         command='xmipp_show -sel '+ os.path.basename(_SelFileName)
+         command='xmipp_show -sel '+ os.path.basename(_SelFileName) + '&'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -79,7 +79,7 @@ class visualize_rotspectra_class:
     def visualize_Average(self,_SelFileName):
          import os
          selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
-         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp'
+         command='xmipp_show -img '+ selfile_without_ext + '.med.xmp' + '&'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -89,7 +89,7 @@ class visualize_rotspectra_class:
          import os
          selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
          command='xmipp_show'+ \
-                  ' -spect ' + str(_SpectraName)
+                  ' -spect ' + str(_SpectraName) + '&'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
@@ -100,7 +100,7 @@ class visualize_rotspectra_class:
          selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
          command='xmipp_show -spectsom ' + \
                   str(_SomName) + \
-                  ' -din ' + str(_SpectraName)
+                  ' -din ' + str(_SpectraName) + '&'
          print '*********************************************************************'
          print '* ',command
          self.mylog.info(command)
