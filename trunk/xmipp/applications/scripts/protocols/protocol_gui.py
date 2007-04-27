@@ -334,7 +334,7 @@ class automated_gui_class:
                 sys.exit()
 
         # Add bottom row buttons
-        self.buttonrow=(self.frame.grid_size()[1]+1)
+        self.buttonrow=(self.frame.grid_size()[1])
         self.GuiAddRestProtocolButtons()
 
     def FillSetupGui(self):
@@ -349,7 +349,7 @@ class automated_gui_class:
         self.Addseparator(2)
 
         # Add labels for different protocol categories
-        row=(self.frame.grid_size()[1]+1)
+        row=(self.frame.grid_size()[1])
         self.row_pre=row
         self.row_2d=row
         self.row_3d=row
@@ -380,11 +380,11 @@ class automated_gui_class:
                 sys.exit()
 
         # Add bottom row buttons
-        self.buttonrow=(self.frame.grid_size()[1]+1)
+        self.buttonrow=(self.frame.grid_size()[1])
         self.GuiAddRestSetupButtons()
 
     def GuiAddSection(self,label):
-        row=(self.frame.grid_size()[1]+1)
+        row=(self.frame.grid_size()[1])
         line="-----------------------------------------------------------"
         self.l1=Label(self.frame, text=label, fg="medium blue")
         self.l2=Label(self.frame, text=line, fg="medium blue")
@@ -418,7 +418,7 @@ class automated_gui_class:
         self.bGet.grid(row=row,column=column)
 
     def GuiPositionLabel(self,label,default,variable,expert,morehelp,has_browse=False):
-        row=(self.frame.grid_size()[1]+1)
+        row=(self.frame.grid_size()[1])
         if (expert=="expert"):
             self.l=Label(self.frame, text=label, bg="yellow")
         else: 
@@ -502,7 +502,7 @@ class automated_gui_class:
         self.bGet = Button(self.frame, text="Load", command=self.GuiLoad)
         self.bGet.grid(row=self.buttonrow+3,column=3)
         self.bGet = Button(self.frame, text="Execute", command=self.GuiSaveExecute)
-        self.bGet.grid(row=self.buttonrow+3,column=4)
+        self.bGet.grid(row=self.buttonrow+3,column=1)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
             self.bGet.grid(row=self.buttonrow+3,column=5)

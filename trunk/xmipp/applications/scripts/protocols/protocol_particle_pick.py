@@ -15,7 +15,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile="/home/scheres/work/protocols/G40P/Preprocessing/all_micrographs.sel"
+MicrographSelfile="/home2/bioinfo/scheres/work/protocols/Preprocessing/all_micrographs.sel"
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -24,6 +24,10 @@ MicrographSelfile="/home/scheres/work/protocols/G40P/Preprocessing/all_micrograp
     Where 1 in the third column means active pair, and -1 means inactive pair
 """
 IsPairList=False
+# Name of the position files (or family name)
+""" This is specified inside the micrograph_mark program (raw.Common.pos by default)
+"""
+PosName="raw.Common.pos"
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
@@ -36,71 +40,102 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+from Tkinter import *
+# Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
 
-	#init variables
-	def __init__(self,
-                     MicrographSelfile,
-                     IsPairList,
-                     DoUseGui,
-                     ProjectDir,
-                     LogDir):
-	     
-		import os,sys
-                scriptdir=os.path.expanduser('~')+'/scripts/'
-                sys.path.append(scriptdir) # add default search path
-                self.SYSTEMSCRIPTDIR=scriptdir
-                import log
+    def __init__(self,
+                 MicrographSelfile,
+                 IsPairList,
+                 PosName,
+                 DoUseGui,
+                 ProjectDir,
+                 LogDir):
 
-                self.MicrographSelfile=MicrographSelfile
-                self.IsPairList=IsPairList
-                self.ProjectDir=ProjectDir
-                self.LogDir=LogDir
-                self.DoUseGui=DoUseGui
-                self.log=log.init_log_system(self.ProjectDir,
-                                             self.LogDir,
-                                             sys.argv[0],
-                                             '.')
-                
-		# Execute program
-		self.process_all_micrographs()
+        import os,sys
+        scriptdir=os.path.expanduser('~')+'/scripts/'
+        sys.path.append(scriptdir) # add default search path
+        self.SYSTEMSCRIPTDIR=scriptdir
+        import log
 
-	def process_all_micrographs(self):
-            import os
-            import glob
-            import selfile
-            print '*********************************************************************'
-            print '*  Perform manual particle picking for micrographs in: '+basename(self.MicrographSelfile)
-            print '*'
-            print '* DONT FORGET TO SAVE YOUR COORDINATES REGULALRLY, AND ALWAYS BEFORE CLOSING!'
-            if (self.IsPairList):
-                print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
-            print '*'
+        self.MicrographSelfile=MicrographSelfile
+        self.IsPairList=IsPairList
+        self.PosName=PosName
+        self.ProjectDir=ProjectDir
+        self.LogDir=LogDir
+        self.DoUseGui=DoUseGui
 
-            if not self.IsPairList:
-                self.mysel=selfile.selfile()
-                self.mysel.read(self.MicrographSelfile)
-                self.prepare_have_picked()
-                
-                for micrograph,state in self.mysel.sellines:
-                    if (state.find('-1') == -1):
-                        self.update_have_picked()
-                        if not (self.have_already_picked(micrograph)):
-                            self.perform_picking(micrograph)
+        self.log=log.init_log_system(self.ProjectDir,
+                                     self.LogDir,
+                                     sys.argv[0],
+                                     '.')
 
-            else:
-                fh=open(self.MicrographSelfile,'r')
-                self.pairlines=fh.readlines()
-                fh.close()
-                words=self.pairlines[0].split()
-                if (len(words)<3):
-                    message='Error: Selfile is not a pairlist file!'
-                    print '*',message
-                    self.log.error(message)
-                    sys.exit()
-                else:
-                    self.prepare_have_picked()
-                    
+        # Execute protocol:
+        self.print_warning()
+        self.sellines=self.ReadSelfile()
+        if (DoUseGui):
+            self.MakeGui()
+        else:
+            self.process_all_without_gui()
+            
+
+    def MakeGui(self):
+        import gui_lib
+        
+        self.master=Tk()
+        self.total_count=0
+        self.guiwidth=600
+        self.guiheight=500
+
+        # Create the Canvas with Scrollbars
+        self.canvas,self.frame=gui_lib.PrepareCanvas(self.master,self.guiwidth,self.guiheight)
+
+        # Fill the GUI
+        self.FillMarkGui()
+
+        # Launch the window
+        gui_lib.LaunchCanvas(self.canvas,self.frame)
+
+        # Enter main loop
+        self.master.mainloop()
+
+    def ReadSelfile(self):
+        import os
+        newlines=[]
+        if not os.path.exists(self.MicrographSelfile):
+            message='Error: '+self.MicrographSelfile+' does not exist'
+            print '*',message
+            self.log.error(message)
+            sys.exit()
+        fh=open(self.MicrographSelfile,'r')
+        lines=fh.readlines()
+        fh.close()
+        words=lines[0].split()
+        if ((not self.IsPairList) and (not len(words)==2)):
+            message='Error: '+self.MicrographSelfile+' is not a valid selection file'
+            print '*',message
+            self.log.error(message)
+            sys.exit()
+        if ((self.IsPairList) and (not len(words)==3)):
+            message='Error: '+self.MicrographSelfile+' is not a valid pairlist file'
+            print '*',message
+            self.log.error(message)
+            sys.exit()
+        for line in lines:
+            words=line.split()
+            newlines.append(words)
+        return newlines
+ 
+    def process_all_without_gui(self):
+        if not self.IsPairList:
+            for micrograph,state in self.sellines:
+                if (state.find('-1') == -1):
+                    self.perform_picking(micrograph)
+        else:
+            for untilted,tilted,state in sellines:
+                if (state.find('-1') == -1):
+                    self.perform_picking_pair(untilted,tilted)
+
                 for line in self.pairlines:
                     words=line.split()
                     untilted=words[0]
@@ -109,101 +144,139 @@ class particle_pick_class:
                     if (state.find('-1') == -1):
                         self.update_have_picked()
                         if not (self.have_already_picked(untilted)):
-                            print 'untilted= ',untilted,tilted
                             self.perform_picking_pair(untilted,tilted)
 
-        def prepare_have_picked(self):
-            import os
-            if not os.path.exists('have_picked.py'):
+    def FillMarkGui(self):
+        import os
+        import gui_lib
 
-                fh=open('have_picked.py','w')
-                self.havepickedlines=[]
-                self.havepickedlines.append('#!/usr/bin/env python \n')
-                self.havepickedlines.append('# {section} Select Yes when you have finished a micrograph, and Save \n')
-                if not self.IsPairList:
-                    for micrograph,state in self.mysel.sellines:
-                        downname=os.path.basename(micrograph)
-                        downname=downname.replace('.raw','')
-                        self.append_line_have_picked(downname,state)
-                else:
-                    for line in self.pairlines:
-                        words=line.split()
-                        untilted=os.path.basename(words[0])
-                        untilted=untilted.replace('.raw','')
-                        tilted=words[1]
-                        state=words[2]
-                        self.append_line_have_picked(untilted,state)
-   
-                self.havepickedlines.append('# {end-of-header} \n')
-                fh.writelines(self.havepickedlines)
-                fh.close()
+        self.whichmark=StringVar()
+        self.row={}
 
-            if (self.DoUseGui):
-                print '* Select with which micrographs you have finished and save'
-                command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py have_picked.py &'
-                os.system(command)
-            else:
-                print '* Edit manually the have_picked.py file to tell the program '
-                print '* with which micrographs you have finished '
-            
-        def append_line_have_picked(self,name,state):
-            if (state.find('-1') == -1):
-                if (self.IsPairList):
-                    self.havepickedlines.append('# Finished picking pair with '+name+'?\n')
-                else:
-                    self.havepickedlines.append('# Finished picking micrograph '+name+'?\n')
-                self.havepickedlines.append('Done_'+name+'=False\n')
-
-        def update_have_picked(self):
-            self.havepickedlines=[]
-            fh=open('have_picked.py','r')
-            self.havepickedlines=fh.readlines()
-            fh.close()
-
-        def have_already_picked(self,name):
-            import os,sys
-            downname=os.path.basename(name)
-            downname=downname.replace('.raw','')
-            pattern='Done_'+downname
-            for line in self.havepickedlines:
-                if (line.find(pattern) > -1):
-                    args=line.split('=')
-                    if (args[1].find('True') > -1):
-                        return True
-                    else:
-                        return False
-            message='Error: pattern '+pattern+'not found in have_picked.py'
-            self.log.error(message)
-            print '* ',message
-            sys.exit()
+        # Script title
+        self.master.title("GUI for particle picking")
+        headertext='GUI for Xmipp particle picking\n'
+        headertext+="Executed in directory: "+str(os.getcwd())
+        self.l1=Label(self.frame, text=headertext, fg="medium blue")
+        self.l1.grid(row=0, column=0,columnspan=3,sticky=EW)
  
-        def perform_picking(self,name):
-            import os
-            directory,micrograph=os.path.split(name)
-            os.chdir(directory)
-            command='xmipp_micrograph_mark -i '+micrograph
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
-            os.chdir(os.pardir)
+        total=0
+        if not self.IsPairList:
+            for micrograph,state in self.sellines:
+                if (state.find('-1') == -1):
+                    c=self.CountPicked(micrograph)
+                    total+=c
+                    row=self.GuiAddSingleEntry(micrograph,c)
+                    self.row[micrograph]=row
+        else:
+            for micrograph,tilted,state in sellines:
+                if (state.find('-1') == -1):
+                    self.GuiAddPairEntry(micrograph)
+ 
+        row=(self.frame.grid_size()[1]+1)
+        gui_lib.AddSeparator(self.frame,row,6)
+        self.buttonrow=(self.frame.grid_size()[1]+1)
+        b = Button(self.frame, text="Close", command=self.GuiClose)
+        b.grid(row=self.buttonrow,column=0,sticky=W)
+        b = Button(self.frame, text="Update Total Count:", command=self.GuiUpdateCount)
+        b.grid(row=self.buttonrow,column=1)
+        label=str(total).zfill(5)
+        l = Label(self.frame, text=label)
+        l.grid(row=self.buttonrow,column=2)
+    
+    def GuiAddSingleEntry(self,micrograph,count):
+        import os
+        row=(self.frame.grid_size()[1])
+        label='Micrograph '+os.path.basename(micrograph)
+        l=Label(self.frame, text=label)
+        l.grid(row=row, column=0, sticky=E)
+        label=str(count).zfill(5)
+        l=Label(self.frame, text=label)
+        l.grid(row=row, column=2)
+        r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
+                           value=micrograph,indicatoron=0, command=self.LaunchSingleMark)
+        r.grid(row=row, column=1,sticky=N)
+        return row
+
+    def CountPicked(self,micrograph):
+        import os
+        posfile=str(micrograph).replace('.raw','')+'.'+str(self.PosName)
+        if os.path.exists(posfile):
+            fh=open(posfile,'r')
+            lines=fh.readlines()
+            fh.close()
+            picked=len(lines)-1
+            if picked>0:
+                return picked
+        return 0
+    
+    def CountAll(self):
+        total=0
+        for mic,row in self.row.items():
+            c=self.CountPicked(mic)
+            total=total+c
+            label=str(c).zfill(5)
+            l=Label(self.frame, text=label)
+            l.grid(row=row, column=2)
+        return total
+        
+    def LaunchSingleMark(self):
+        import os
+        print "* Marking... "
+        self.perform_picking(self.whichmark.get())
+        self.GuiUpdateCount()
+
+    def GuiUpdateCount(self):
+        print "* Updating count..."
+        total=self.CountAll()
+        label=str(total).zfill(5)
+        l=Label(self.frame, text=label)
+        l.grid(row=self.buttonrow, column=2)
+
+    def GuiClose(self):
+        import sys
+        print "* Closing..."
+        self.master.destroy()
+        sys.exit(0)
+        
+
+    def print_warning(self):
+        import os
+        print '*********************************************************************'
+        print '*  Perform manual particle picking for micrographs in: '+os.path.basename(self.MicrographSelfile)
+        print '*'
+        print '* DONT FORGET TO SAVE YOUR COORDINATES REGULARLY, AND ALWAYS BEFORE CLOSING!'
+        if (self.IsPairList):
+            print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
+        print '*'
 
 
-        def perform_picking_pair(self,untilted,tilted):
-            import os
-            directory,uname=os.path.split(untilted)
-            tname='../'+tilted
-            os.chdir(directory)
-            command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
-            os.chdir(os.pardir)
+    def perform_picking(self,name):
+        import os
+        directory,micrograph=os.path.split(name)
+        os.chdir(directory)
+        command='xmipp_micrograph_mark -i '+micrograph
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+        os.chdir(os.pardir)
 
-	def close(self):
-                message=" You have done picking all particles! :-)"
-		print '* ',message
-		print '*********************************************************************'
-                self.log.info(message)
+    def perform_picking_pair(self,untilted,tilted):
+        import os
+        directory,uname=os.path.split(untilted)
+        tname='../'+tilted
+        os.chdir(directory)
+        command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+        os.chdir(os.pardir)
+
+    def close(self):
+        message=" Exiting ... "
+        print '* ',message
+        print '*********************************************************************'
+        self.log.info(message)
 #		
 # Main
 #     
@@ -213,6 +286,7 @@ if __name__ == '__main__':
 
 	particle_pick=particle_pick_class(MicrographSelfile,
                                           IsPairList,
+                                          PosName,
                                           DoUseGui,
                                           ProjectDir,
                                           LogDir)
@@ -220,3 +294,12 @@ if __name__ == '__main__':
 	# close 
 	particle_pick.close()
 
+if __name__ == '__main__':
+
+    import sys
+    pick=particle_pick_class(MicrographSelfile,
+                             IsPairList,
+                             PosName,
+                             DoUseGui,
+                             ProjectDir,
+                             LogDir)
