@@ -67,12 +67,15 @@ void solve(const mT& A, const vT& b, vT& result);
 template<typename T>
 void solve(const mT& A, const mT& b, mT& result);
 
-/** Use this solve_by_svd function to solve linear systems by singular value
- * decomposition. This is indicated for ill-conditioned systems and
- * hard-to-solve problems (But it's slower)
+/** Solve linear systems by singular value decomposition.
+ *
+ * This is indicated for ill-conditioned systems and hard-to-solve problems
+ * (But it's slower)
  */
 template<typename T>
-void solve_by_svd(const mT& A, const vT& b, matrix1D< double >& result,
+void solve_by_svd(const mT& A,
+                  const vT& b,
+                  matrix1D< double >& result,
                   double tolerance);
 
 // TODO Document
@@ -85,23 +88,36 @@ void lubksb(const mT& LU, matrix1D< int >& indx, vT& b);
 
 // TODO Document
 template<typename T>
-void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
-            matrix1D< double >& w, matrix2D< double >& v);
+void svdcmp(const matrix2D< T >& a,
+            matrix2D< double >& u,
+            matrix1D< double >& w,
+            matrix2D< double >& v);
 
 // TODO Document
-void svbksb(matrix2D< double >& u, matrix1D< double >& w,
-            matrix2D< double >& v, matrix1D< double >& b,
+void svbksb(matrix2D< double >& u,
+            matrix1D< double >& w,
+            matrix2D< double >& v,
+            matrix1D< double >& b,
             matrix1D< double >& x);
 
 // TODO Document
 template<typename T>
-void apply_geom(mT& m2, matrix2D< double > A, const mT& m1, bool inv,
-                bool wrap, T outside=(T) 0);
+void apply_geom(mT& m2,
+                matrix2D< double > A,
+                const mT& m1,
+                bool inv,
+                bool wrap,
+                T outside=(T) 0);
 
 // TODO Document
 template<typename T>
-void apply_geom_Bspline(mT& m2, matrix2D< double > A, const mT& m1,
-                        int Splinedegree, bool inv, bool wrap, T outside=(T) 0);
+void apply_geom_Bspline(mT& m2,
+                        matrix2D< double > A,
+                        const mT& m1,
+                        int Splinedegree,
+                        bool inv,
+                        bool wrap,
+                        T outside=(T) 0);
 
 // TODO Document
 matrix2D< double > rot2D_matrix(double ang);
@@ -301,7 +317,7 @@ int best_prec(float F, int _width);
  * val = DIRECT_MAT_ELEM(m, 0, 0);
  * @endcode
  */
-#define DIRECT_MAT_ELEM(mat, i, j) (mat).__m[(i) * XSIZE(mat) + (j)]
+#define DIRECT_MAT_ELEM(mat, i, j) (mat).data[(i) * XSIZE(mat) + (j)]
 
 /** Short alias for the previous function
  * @ingroup MatricesMemory
@@ -527,7 +543,7 @@ public:
     {
         core_init();
         init_shape();
-        __spcdim = 2;
+        dimension = 2;
     }
 
     /** Dimension constructor
@@ -546,18 +562,18 @@ public:
     {
         core_init();
         init_shape();
-        __m = new T[Ydim * Xdim];
+        data = new T[Ydim * Xdim];
 
-        if (__m == NULL)
+        if (data == NULL)
             REPORT_ERROR(1001, "Resize: no memory left");
 
         xdim = Xdim;
         ydim = Ydim;
-        __dim = xdim * ydim;
-        __spcdim = 2;
+        size = xdim * ydim;
+        dimension = 2;
 
-        for (long int i=0; i<__dim; i++)
-            __m[i] = 0;
+        for (long int i=0; i<size; i++)
+            data[i] = 0;
     }
 
     /** Copy constructor
@@ -858,7 +874,7 @@ public:
         MULTIDIM_ARRAY(*this) = new_m;
         XSIZE(*this) = Xdim;
         YSIZE(*this) = Ydim;
-        __dim = Ydim * Xdim;
+        size = Ydim * Xdim;
     }
 
     /** Produce an array suitable for working with Numerical Recipes
@@ -888,7 +904,7 @@ public:
      */
     T* adapt_for_numerical_recipes2() const
     {
-        return __m - 1 - XSIZE(*this);
+        return data - 1 - XSIZE(*this);
     }
 
     /** Load from numerical recipes result.
@@ -1260,7 +1276,7 @@ public:
             for (int l=l1; l<=l2; l++)
             {
                 double xminusl = x - (double) l;
-                double Coeff = (double) __m[row_m + l];
+                double Coeff = (double) data[row_m + l];
                 switch (SplineDegree)
                 {
                 case 2:

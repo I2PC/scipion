@@ -221,11 +221,11 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
 
 /** For all direct elements in the array.
  * @ingroup VolumeSizeShape
- * 
- * This macro is used to generate loops for the volume in an easy way. It 
+ *
+ * This macro is used to generate loops for the volume in an easy way. It
  * defines internal indexes 'k','i' and 'j' which ranges the volume using its
  * physical definition.
- * 
+ *
  * @code
  * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
  * {
@@ -267,7 +267,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * val = DIRECT_VOL_ELEM(V, 0, 0, 0);
  * @endcode
  */
-#define DIRECT_VOL_ELEM(V, k, i, j) (V).__m[(k) * XYSIZE(V) + (i) * XSIZE(V) \
+#define DIRECT_VOL_ELEM(V, k, i, j) (V).data[(k) * XYSIZE(V) + (i) * XSIZE(V) \
     + (j)]
 
 /** A short alias for the previous function.
@@ -336,7 +336,7 @@ public:
     {
         core_init();
         init_shape();
-        __spcdim = 3;
+        dimension = 3;
     }
 
     /** Dimension constructor.
@@ -359,7 +359,7 @@ public:
         core_init();
         init_shape();
         resize(Zdim, Ydim, Xdim);
-        __spcdim = 3;
+        dimension = 3;
     }
 
     /** Copy constructor
@@ -536,7 +536,7 @@ public:
         ZSIZE(*this) = Zdim;
         XYSIZE(*this) = YXdim;
 
-        __dim = Zdim * YXdim;
+        size = Zdim * YXdim;
     }
 
     /** Produce an array suitable for working with Numerical Recipes.
@@ -992,7 +992,7 @@ public:
                         for (int l=l1; l<=l2; l++)
                         {
                             double xminusl = x - (double) l;
-                            double Coeff = (double) __m[row_m + l];
+                            double Coeff = (double) data[row_m + l];
                             switch (SplineDegree)
                             {
                             case 2:

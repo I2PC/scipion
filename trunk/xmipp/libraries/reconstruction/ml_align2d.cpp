@@ -1386,12 +1386,12 @@ void Prog_MLalign2D_prm::Fourier_translate2D(const matrix2D<complex<double> > &F
     dotp=2*PI*(xx*xxshift+yyshift*yy);
     a=cos(dotp);
     b=sin(dotp);
-    c=(Fimg).__m[ii].real();
-    d=(Fimg).__m[ii].imag();
+    c=(Fimg).data[ii].real();
+    d=(Fimg).data[ii].imag();
     ac=a*c;
     bd=b*d;
     ab_cd=(a+b)*(c+d);
-    (Fimg_shift).__m[ii]=complex<double>(ac-bd,ab_cd-ac-bd);
+    (Fimg_shift).data[ii]=complex<double>(ac-bd,ab_cd-ac-bd);
   }
 
 }
@@ -1657,9 +1657,9 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
   decctf.resize(dim,dim);
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(sigma2) {
     ii=dMij(Mresol,i,j);
-    dMij(sigma2,i,j)=Vsig[focus].__m[ii];
-    dMij(ctf,i,j)=Vctf[focus].__m[ii];
-    dMij(decctf,i,j)=Vdec[focus].__m[ii];
+    dMij(sigma2,i,j)=Vsig[focus].data[ii];
+    dMij(ctf,i,j)=Vctf[focus].data[ii];
+    dMij(decctf,i,j)=Vdec[focus].data[ii];
   }
   if (!apply_ctf) ctf.init_constant(1.);
 
@@ -1683,11 +1683,11 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
 	  diff=0.;
 	  for (int ipoint=0; ipoint<nr_pointer_sigctf; ipoint++) {
 	    ii=pointer_sigctf[ipoint];
-	    tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).real() -
-	      ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).real();
-	    tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).imag() -
-	      ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).imag();
-	    tmpr=(tmpr*tmpr+tmpi*tmpi)/(anneal*2.*(sigma2).__m[ii]);
+	    tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
+	      ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).real();
+	    tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
+	      ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).imag();
+	    tmpr=(tmpr*tmpr+tmpi*tmpi)/(anneal*2.*(sigma2).data[ii]);
 	    diff+=tmpr;
 	  }
 	
@@ -1764,11 +1764,11 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
 		  diff=0.;
 		  for (int ipoint=0; ipoint<nr_pointer_sigctf; ipoint++) {
 		    ii=pointer_sigctf[ipoint];
-		    tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).real() -
-		      ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).real();
-		    tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).imag() -
-		      ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).imag();
-		    tmpr=(tmpr*tmpr+tmpi*tmpi)/(anneal*2*(sigma2).__m[ii]);
+		    tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
+		      ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).real();
+		    tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
+		      ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).imag();
+		    tmpr=(tmpr*tmpr+tmpi*tmpi)/(anneal*2*(sigma2).data[ii]);
 		    diff+=tmpr;
 		  }
 		  aux=diff-mindiff2;
@@ -1849,15 +1849,15 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
 	      // Estimation of new references (use only significant pixels!)
 	      for (int ipoint=0; ipoint<nr_pointer_ctf; ipoint++) {
 		ii=pointer_ctf[ipoint];
-		Fwsum_imgs[refno][ipsi].__m[ii]+=
-		  (weight*(decctf).__m[ii])*(Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii];
-		Fwsum_ctfimgs[refno][ipsi].__m[ii]+=
-		  weight*(Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii];
-		tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).real() -
-		  ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).real();
-		tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).__m[ii]).imag() -
-		  ctf.__m[ii]*(double)((Fref[refno][ipsi]).__m[ii]).imag();
-		Mwsum_sigma2.__m[ii]+=weight*(tmpr*tmpr+tmpi*tmpi);
+		Fwsum_imgs[refno][ipsi].data[ii]+=
+		  (weight*(decctf).data[ii])*(Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii];
+		Fwsum_ctfimgs[refno][ipsi].data[ii]+=
+		  weight*(Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii];
+		tmpr= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
+		  ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).real();
+		tmpi= (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
+		  ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).imag();
+		Mwsum_sigma2.data[ii]+=weight*(tmpr*tmpr+tmpi*tmpi);
 		// 10jan07:
 		wdiff2+=weight*(tmpr*tmpr+tmpi*tmpi);
 	      }
@@ -1904,7 +1904,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
   double rr=0.;
   for (int ipoint=0; ipoint<nr_pointer_ctf; ipoint++) {
     ii=pointer_ctf[ipoint];
-    rr+=log(2*PI*sqrt(sigma2.__m[ii]));
+    rr+=log(2*PI*sqrt(sigma2.data[ii]));
   }
   LL+= log(sum_refw) - mindiff2 - rr;
   */
@@ -1961,7 +1961,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 	  Maux=Mref[refno][ipsi];
 	  diff=A2_plus_Xi2;
 	  for (int ii=0; ii<dim2; ii++) {
-	    diff-=(Maux).__m[ii]*(Mtrans).__m[ii];
+	    diff-=(Maux).data[ii]*(Mtrans).data[ii];
 	  }
 	  dVkij(Mweight,zero_trans,refno,irot)=diff;
 	  if (diff<mindiff2) mindiff2=diff;
@@ -2033,7 +2033,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 		Mtrans=Mimg_trans[point_trans][iflip%nr_nomirror_flips];
 		diff=A2_plus_Xi2;
 		for (int ii=0; ii<dim2; ii++) {
-		  diff-=(Maux).__m[ii]*(Mtrans).__m[ii];
+		  diff-=(Maux).data[ii]*(Mtrans).data[ii];
 		}
 		aux=(diff-mindiff2)/(anneal*sigma_noise2);
 		// next line because of numerical precision of exp-function

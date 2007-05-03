@@ -177,12 +177,12 @@ void ShiftFFT(matrix1D< complex< double > >& v,
 	dotp=-2*PI*((double)(j)*xxshift);
 	a=cos(dotp);
 	b=sin(dotp);
-	c=(v).__m[j].real();
-	d=(v).__m[j].imag();
+	c=(v).data[j].real();
+	d=(v).data[j].imag();
 	ac=a*c;
 	bd=b*d;
 	ab_cd=(a+b)*(c+d); // (ab_cd-ac-bd = ad+bc : but needs 4 multiplications)
-	(v).__m[j]=complex<double>(ac-bd,ab_cd-ac-bd);
+	(v).data[j]=complex<double>(ac-bd,ab_cd-ac-bd);
     }
 }
 
@@ -199,12 +199,12 @@ void ShiftFFT(matrix2D< complex< double > >& v,
 	    dotp=-2*PI*((double)(j)*xxshift+(double)(i)*yyshift);
 	    a=cos(dotp);
 	    b=sin(dotp);
-	    c=(v).__m[(i)*XSIZE(v)+(j)].real();
-	    d=(v).__m[(i)*XSIZE(v)+(j)].imag();
+	    c=(v).data[(i)*XSIZE(v)+(j)].real();
+	    d=(v).data[(i)*XSIZE(v)+(j)].imag();
 	    ac=a*c;
 	    bd=b*d;
 	    ab_cd=(a+b)*(c+d);
-	    (v).__m[(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
+	    (v).data[(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
 	}
     }
 }
@@ -225,12 +225,12 @@ void ShiftFFT(matrix3D< complex< double > >& v,
 		dotp=-2*PI*((double)(j)*xxshift+(double)(i)*yyshift+(double)(k)*zzshift);
 		a=cos(dotp);
 		b=sin(dotp);
-		c=(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].real();
-		d=(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].imag();
+		c=(v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].real();
+		d=(v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].imag();
 		ac=a*c;
 		bd=b*d;
 		ab_cd=(a+b)*(c+d);
-		(v).__m[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
+		(v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)]=complex<double>(ac-bd,ab_cd-ac-bd);
 	    }
 	}
     }

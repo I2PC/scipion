@@ -16,14 +16,14 @@
  * @ingroup MultidimMacros
  */
 #ifndef MULTIDIM_SIZE
-#define MULTIDIM_SIZE(v) ((v).__dim)
+#define MULTIDIM_SIZE(v) ((v).size)
 #endif
 
 /** Dimension of the space in which it is defined (1D, 2D or 3D).
  * @ingroup MultidimMacros
  */
 #ifndef SPACE_DIM
-#define SPACE_DIM(v) ((v).__spcdim)
+#define SPACE_DIM(v) ((v).dimension)
 #endif
 
 /** For all elements in the array.
@@ -40,7 +40,7 @@
  */
 #ifndef FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY
 #define FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) \
-    for (int i=0; i<(v).__dim; i++)
+    for (int i=0; i<(v).size; i++)
 #endif
 
 /** For all elements in the array (pointer version).
@@ -58,7 +58,7 @@
  */
 #ifndef FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr
 #define FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY_ptr(v) \
-    for (int i=0, ptr=__m; i<(v).__dim; i++, ptr++)
+    for (int i=0, ptr=data; i<(v).size; i++, ptr++)
 #endif
 
 /** Vector element: Physical access.
@@ -73,7 +73,7 @@
  * @endcode
  */
 #ifndef MULTIDIM_ELEM
-#define MULTIDIM_ELEM(v, i) ((v).__m[(i)])
+#define MULTIDIM_ELEM(v, i) ((v).data[(i)])
 #endif
 
 /** Array access.
@@ -86,7 +86,7 @@
  * @endcode
  */
 #ifndef MULTIDIM_ARRAY
-#define MULTIDIM_ARRAY(v) ((v).__m)
+#define MULTIDIM_ARRAY(v) ((v).data)
 #endif
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
@@ -100,7 +100,7 @@
 template<typename T, typename T1>
 void type_cast(const maT& v1, maT1& v2)
 {
-    if (MULTIDIM_SIZE(v1) == 0)
+    if (v1.size == 0)
     {
         v2.clear();
         return;
@@ -108,6 +108,6 @@ void type_cast(const maT& v1, maT1& v2)
 
     v2.resize(v1);
 
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v2)
-        MULTIDIM_ELEM(v2, i) = (T1) MULTIDIM_ELEM(v1, i);
+    for (int i=0; i<v2.size; i++)
+        v2.data[i] = static_cast< T1 >(v1.data[i]);
 }

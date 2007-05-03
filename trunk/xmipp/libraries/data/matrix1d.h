@@ -33,7 +33,7 @@
 #include "funcs.h"
 
 // TODO Remove this ASAP
-#define maT matrix1D< T>
+#define maT matrix1D< T >
 #define maT1 matrix1D< T1 >
 #define maTC matrix1D< complex < double > >
 
@@ -474,7 +474,7 @@ public:
     {
         core_init();
         init_shape(column);
-        __spcdim = 1;
+        dimension = 1;
     }
 
     /** Dimension constructor
@@ -498,13 +498,13 @@ public:
     {
         core_init();
         init_shape(column);
-        __m = new T[dim];
-        if (__m == NULL)
+        data = new T[dim];
+        if (data == NULL)
             REPORT_ERROR(1001, "Resize: no memory left");
-        __dim = XSIZE(*this) = dim;
-        __spcdim = 1;
-        for (long int i=0; i<__dim; i++)
-            __m[i] = 0;
+        size = XSIZE(*this) = dim;
+        dimension = 1;
+        for (long int i=0; i<size; i++)
+            data[i] = 0;
     }
 
     /** Copy constructor
@@ -691,7 +691,7 @@ public:
         // assign *this vector to the newly created
         MULTIDIM_ARRAY(*this) = new_m;
         XSIZE(*this) = Xdim;
-        __dim = Xdim;
+        size = Xdim;
     }
 
     /** Produce a vector suitable for working with Numerical Recipes
@@ -705,7 +705,7 @@ public:
      */
     T* adapt_for_numerical_recipes() const
     {
-        return __m - 1;
+        return data - 1;
     }
 
     /** Kill an array produced for Numerical Recipes.
