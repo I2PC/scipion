@@ -27,11 +27,18 @@ def visualize_volumes(Names,ShowSliceZ,ShowSliceX,ShowSliceY,ShowChimera):
             print '* ',chimera_command
             os.system(chimera_command)
 
-def visualize_images(Names,Areselfile=False,SelFileWidth="",SelFileHeight=""):
+def visualize_images(Names,
+                     Areselfile=False,
+                     SelFileWidth="",
+                     SelFileHeight="",
+                     ShowAll=False):
     import os
     if (len(Names)>0):
         if (Areselfile):
-            command='xmipp_show '
+            if(ShowAll):
+               command='xmipp_show -showall '
+            else:
+               command='xmipp_show '
             if not (SelFileWidth==""):
                 command+=' -w '+str(SelFileWidth)
             if not (SelFileHeight==""):
