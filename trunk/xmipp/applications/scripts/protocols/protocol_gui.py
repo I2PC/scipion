@@ -55,10 +55,12 @@ Optional:
 class automated_gui_class:
 
     def __init__(self,
-                 scriptname):
+                 scriptname,
+                 is_analysis):
 
         self.SYSTEMSCRIPTDIR=os.path.expanduser('~')+'/scripts/'
 
+        self.is_analysis=is_analysis
         self.scriptname=scriptname
         self.master=Tk()
         self.expert_mode=False
@@ -465,7 +467,7 @@ class automated_gui_class:
         else:
             column=self.columntextentry+2
         if (morehelp!=""):
-            self.r.grid(row=row, column=column, sticky=W)
+            self.r.grid(row=row, column=column, sticky=EW)
             
         return row,self.l,self.r
 
@@ -511,7 +513,7 @@ class automated_gui_class:
         else:
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
                                  value=varname, command=self.GuiBrowseDirectory)
-        self.b.grid(row=row, column=self.columntextentry+2,sticky=W)
+        self.b.grid(row=row, column=self.columntextentry+2,sticky=EW)
 
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
@@ -621,7 +623,7 @@ class automated_gui_class:
         self.GuiSave()
         print "* Analyzing..."
         command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
-                 self.variables["AnalysisScript"][0]+' &'
+                 self.variables["AnalysisScript"][0]+' -analysis &'
         print command
         os.system(command)
          
@@ -637,10 +639,13 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         command="python "+self.scriptname+' &'
-        answer=tkMessageBox._show("Execute protocol",
-                                  "Use a job queueing system?",
-                                  tkMessageBox.QUESTION, 
-                                  tkMessageBox.YESNOCANCEL)
+        if (self.is_analysis):
+            answer="no"
+        else:
+            answer=tkMessageBox._show("Execute protocol",
+                                      "Use a job queueing system?",
+                                      tkMessageBox.QUESTION, 
+                                      tkMessageBox.YESNOCANCEL)
         if (answer=="yes"):
             self.master.update()
             d = MyQueueLaunch(self.master,command)
@@ -714,5 +719,9 @@ if __name__ == '__main__':
 
     import sys
     args=sys.argv[1]
-    automated_gui=automated_gui_class(args)
+    if len(sys.argv) == 3:
+        is_analysis=sys.argv[2]
+    else:
+        is_analysis=0
+    automated_gui=automated_gui_class(args,is_analysis)
     automated_gui.MakeGui()
