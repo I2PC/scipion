@@ -265,10 +265,11 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
          {
          XX(aux)=atan2(YY(sampling_points_vector[i]),
                        XX(sampling_points_vector[i]));
-         YY(aux)=asin(ZZ(sampling_points_vector[i]));              
+         YY(aux)=acos(ZZ(sampling_points_vector[i])); 
+         if (YY(aux)<0.) YY(aux) += PI;            
          sampling_points_angles.push_back(aux*180./PI);  
          }
-
+#ifdef NEVERDEFINED
   //sort points
   int k;
   int bound = sampling_points_angles.size()-1;
@@ -294,6 +295,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
     }//for
     bound=last_swap; /*elements after bound already sorted */       
   }//while       
+#endif
    //#define DEBUG3
    #ifdef  DEBUG3
     for(    int i = 0; 
@@ -369,7 +371,8 @@ void XmippSampling::fill_distance(matrix1D<double> starting_point,
       }
  }
 
-void XmippSampling::remove_redundant_points(SymList & SL)
+void XmippSampling::remove_redundant_points(string symmetry,
+                                            int sym_order )
 {
   matrix2D<double>  L(4,4), R(4,4);
   matrix2D<double>  aux(3,3);
@@ -383,6 +386,263 @@ void XmippSampling::remove_redundant_points(SymList & SL)
  
   //int j_end=0;
   matrix1D<double>  row(3);
+
+
+  no_redundant_sampling_points_vector.clear();     
+  no_redundant_sampling_points_angles.clear();     
+  double my_dot_product;
+  if (symmetry.compare("cn")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= (-180./sym_order) &&
+               XX(sampling_points_angles[i])<=  (180./sym_order) )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("ci")==0 ||
+           symmetry.compare("cs")==0 )
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (YY(sampling_points_angles[i])<=90)
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("cnv")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>=    0./sym_order &&
+               XX(sampling_points_angles[i])<=  180./sym_order )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("cnh")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= -180./sym_order &&
+               XX(sampling_points_angles[i])<=  180./sym_order &&
+               YY(sampling_points_angles[i])<=    90.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("sn")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= -180./(2*sym_order) &&
+               XX(sampling_points_angles[i])<=  180./(2*sym_order) &&
+               YY(sampling_points_angles[i])<=    90.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("dn")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= -180./(sym_order) &&
+               XX(sampling_points_angles[i])<=  180./(sym_order) &&
+               YY(sampling_points_angles[i])<=    90.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("dnv")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>=    0. &&
+               XX(sampling_points_angles[i])<=  180./(sym_order) &&
+               YY(sampling_points_angles[i])<=    90.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("dnh")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= 0. &&
+               XX(sampling_points_angles[i])<=  180./(sym_order) &&
+               YY(sampling_points_angles[i])<=   90.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("t")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= -180./(3) &&
+               XX(sampling_points_angles[i])<=  180./(3) &&
+               YY(sampling_points_angles[i])>=    0.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("td")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= 0. &&
+               XX(sampling_points_angles[i])<=  180./(3) &&
+               YY(sampling_points_angles[i])>=    0.
+               )
+              {
+              no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+              no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+              }
+        }// for i  
+     }
+  else if (symmetry.compare("th")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+        int flag = false;
+           if (XX(sampling_points_angles[i])>= 0. &&
+               XX(sampling_points_angles[i])<=  180./(2) 
+               )
+             {
+              if(XX(sampling_points_angles[i])>= 0 && 
+                 XX(sampling_points_angles[i])<= 45 &&
+                 YY(sampling_points_angles[i])<= XX(sampling_points_angles[i]) 
+                 )  
+                 flag=true;
+              else if(XX(sampling_points_angles[i])> 45 && 
+                 XX(sampling_points_angles[i])<= 90 &&
+                 YY(sampling_points_angles[i])<= 90.-XX(sampling_points_angles[i]) 
+                 )  
+                 flag=true;
+               
+             if (flag)
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+             }
+        }// for i  
+     }
+  else if (symmetry.compare("o")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+        int flag = false;
+           if (XX(sampling_points_angles[i])>= 0. &&
+               XX(sampling_points_angles[i])<=  180./(2) &&
+               YY(sampling_points_angles[i])>=45
+               )
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+        }// for i  
+     }
+  else if (symmetry.compare("oh")==0)
+     {
+        /** coordinates of the icosahedron P5 axis
+            +-31.7174745559,90 
+            coordinates of the icosahedron P3 axis
+            0,69.094843368*/
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+        int flag = false;
+           if (XX(sampling_points_angles[i])>= 90./2. &&
+               XX(sampling_points_angles[i])<=  180./(2.) &&
+               YY(sampling_points_angles[i])>=45
+               )
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+         }// for i  
+     }
+  else if (symmetry.compare("i")==0)
+     {
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])>= -31.7174745559 &&
+               XX(sampling_points_angles[i])<=  0 &&
+               YY(sampling_points_angles[i])<=90 &&
+               YY(sampling_points_angles[i])>= (69.094843368 - 
+                                                XX(sampling_points_angles[i])*
+                                                (90.-69.094843368)/31.7174745559
+                                               )
+               )
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+            else if (   XX(sampling_points_angles[i]) <= 31.7174745559 &&
+                        XX(sampling_points_angles[i]) >   0 &&
+                        YY(sampling_points_angles[i]) <= 90 &&
+                        YY(sampling_points_angles[i]) >= (69.094843368 -RAD2DEG(sampling_rate_rad) + 
+                                                          XX(sampling_points_angles[i])*
+                                                          (90.-69.094843368)/31.7174745559
+                                                         )
+               )
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+         }// for i  
+    }
+  else if (symmetry.compare("ih")==0)
+      for (int i=0; i< sampling_points_angles.size(); i++)
+        {
+           if (XX(sampling_points_angles[i])<= 31.7174745559 &&
+               XX(sampling_points_angles[i])>=  0 &&
+               YY(sampling_points_angles[i])<=90 &&
+               YY(sampling_points_angles[i])>= (69.094843368 + 
+                                              XX(sampling_points_angles[i])*
+                                              (90.-69.094843368)/31.7174745559
+                                              )
+               )
+                {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+         }// for i  
+  else  
+     {
+     cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+     exit(0);
+     }
+
+
+#ifdef NEVERDEFINED  
+
+
 /*  
   for (int j=1; j<SL.v_rotation_axis.size(); j++)
     Euler_direction2angles(SL.v_rotation_axis[j], rot, tilt,psi);  
@@ -530,6 +790,7 @@ void XmippSampling::remove_redundant_points(SymList & SL)
        j_end++;
        } 
    }
+#endif
 #endif
 
 }     
