@@ -31,13 +31,13 @@ ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
 # {section} Mask parameters
 #------------------------------------------------------------------------------------------------
-# Design your mask graphically? (Save as name below!)
+# Design your mask graphically?
 DoXmask=True
-# {file} Name of the mask:
-""" The browse window yields an absolute path to the file.
-    Just give a name (e.g. mask.msk) if you design your own mask, and use the mask_design program to save it in the working directory
+""" This will launch a graphical program to design your own mask.
+    Be careful NOT to submit your job via a queueing system!
 """
-MaskFileName="mask.msk"
+# {file} OR provide an already existing mask:
+MaskFileName=""
 #------------------------------------------------------------------------------------------------
 # {section} classify_kerdensom parameters
 #------------------------------------------------------------------------------------------------
@@ -222,24 +222,34 @@ class kerdensom_class:
     def execute_xmask(self,selfile):
         import os
 
-        command='xmipp_mask_design -sel '+str(selfile) + ' \n'
+        self.MaskFileName='mask_design.msk'
+        command='xmipp_mask_design -sel '+str(selfile) + ' -save_as mask_design.msk \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
 
     def execute_img2data(self,selfile,maskname,outname):
         import os
-        command='xmipp_convert_img2data -i '+ str(selfile) + \
-                 ' -mask '+ str(maskname) + \
-                 ' -o ' + str(outname) + ' \n'
+        if (maskname==''):
+            command='xmipp_convert_img2data -i '+ str(selfile) + \
+                     ' -nomask '+ \
+                     ' -o ' + str(outname) + ' \n'
+        else:
+            command='xmipp_convert_img2data -i '+ str(selfile) + \
+                     ' -mask '+ str(maskname) + \
+                     ' -o ' + str(outname) + ' \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
 
     def execute_data2img(self,iname,maskname):
         import os
-        command='xmipp_convert_data2img -i '+ str(iname) + \
-                 ' -mask '+ str(maskname) + ' \n'
+        if (maskname==''):
+            command='xmipp_convert_data2img -i '+ str(iname) + \
+                     ' -nomask \n'
+        else:
+            command='xmipp_convert_data2img -i '+ str(iname) + \
+                     ' -mask '+ str(maskname) + ' \n'
         print '* ',command
         self.log.info(command)
         os.system(command)
