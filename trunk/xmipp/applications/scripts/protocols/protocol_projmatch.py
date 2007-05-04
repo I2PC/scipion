@@ -393,8 +393,6 @@ class projection_matching_class:
                                    ' -o ' + self._align2d_doc
        self._mylog.info(command)
        os.system(command)
-
-       exit(1)                
         
        if (_DoReconstruction):
           execute_reconstruction(self._mylog, 
@@ -405,7 +403,7 @@ class projection_matching_class:
                                  self._MyNumberOfCPUs,
                                  self._MyMachineFile,
                                  self._ReconstructionMethod,
-                                 self._multi_align2d_sel,
+                                 self._align2d_sel,
                                  self._Symfile)
        else:
           self._mylog.info("Skipped Reconstruction") 
@@ -717,7 +715,6 @@ def execute_reconstruction(_mylog,
                            _MyNumberOfCPUs,
                            _MyMachineFile,
                            _ReconstructionMethod,
-                           _multi_align2d_sel,
                            _align2d_sel,
                            _Symfile):
    import os,shutil
@@ -752,8 +749,6 @@ def execute_reconstruction(_mylog,
       print "Reconstruction method unknown. Quiting"
       exit(1)
     
-   print '*********************************************************************'
-   print '* ',command
    import launch_parallel_job
    RunInBackground=False
    launch_parallel_job.launch_job(
