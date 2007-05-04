@@ -23,69 +23,89 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* ------------------------------------------------------------------------- */
-/* MULTIDIM BASIC                                                            */
-/* ------------------------------------------------------------------------- */
+/** Core array by scalar specialization.
+ */
+template<>
+void core_array_by_scalar< complex< double > >(const maTC& op1,
+                                               const complex< double >& op2,
+                                               maTC& result,
+                                               char operation)
+{
+    for (int i=0; i<result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1.data[i] + op2;
+            break;
+        case '-':
+            result.data[i] = op1.data[i] - op2;
+            break;
+        case '*':
+            result.data[i] = op1.data[i] * op2;
+            break;
+        case '/':
+            result.data[i] = op1.data[i] / op2;
+            break;
+        case '^':
+            result.data[i] = pow(op1.data[i], op2);
+            break;
+        }
+}
 
-/* Core array by scalar ---------------------------------------------------- */
-template <>
-void core_array_by_scalar< complex<double> >(const maTC &op1,
-   const complex<double> &op2, maTC &result, char operation) {
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
-         switch (operation) {
-            case '+':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) + op2; break;
-            case '-':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) - op2; break;
-            case '*':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) * op2; break;
-            case '/':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) / op2; break;
-            case '^':
-               MULTIDIM_ELEM(result,i)=
-                  pow(MULTIDIM_ELEM(op1,i),op2); break;
-         }
-   }
+/** Scalar by array specialization.
+ */
+template<>
+void core_scalar_by_array< complex< double > >(const complex< double >& op1,
+                                               const maTC& op2,
+                                               maTC& result,
+                                               char operation)
+{
+    for (int i=0; i<result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1 + op2.data[i];
+            break;
+        case '-':
+            result.data[i] = op1 - op2.data[i];
+            break;
+        case '*':
+            result.data[i] = op1 * op2.data[i];
+            break;
+        case '/':
+            result.data[i] = op1 / op2.data[i];
+            break;
+        case '^':
+            result.data[i] = pow(op1, op2.data[i]);
+            break;
+        }
+}
 
-/* Scalar by array --------------------------------------------------------- */
+/** Array by array specialization.
+ */
 template <>
-void core_scalar_by_array< complex<double> >(const complex<double> &op1,
-   const maTC &op2, maTC &result, char operation) {
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
-         switch (operation) {
-            case '+':
-               MULTIDIM_ELEM(result,i)=op1 + MULTIDIM_ELEM(op2,i); break;
-            case '-':
-               MULTIDIM_ELEM(result,i)=op1 - MULTIDIM_ELEM(op2,i); break;
-            case '*':
-               MULTIDIM_ELEM(result,i)=op1 * MULTIDIM_ELEM(op2,i); break;
-            case '/':
-               MULTIDIM_ELEM(result,i)=op1 / MULTIDIM_ELEM(op2,i); break;
-            case '^':
-               MULTIDIM_ELEM(result,i)=pow(op1,MULTIDIM_ELEM(op2,i)); break;
-         }
-   }
-
-/* Array by array ---------------------------------------------------------- */
-template <>
-void core_array_by_array< complex<double> >(const maTC &op1, const maTC &op2,
-   maTC &result, char operation) {
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(result)
-         switch (operation) {
-            case '+':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) +
-                                       MULTIDIM_ELEM(op2,i); break;
-            case '-':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) -
-                                       MULTIDIM_ELEM(op2,i); break;
-            case '*':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) *
-                                       MULTIDIM_ELEM(op2,i); break;
-            case '/':
-               MULTIDIM_ELEM(result,i)=MULTIDIM_ELEM(op1,i) /
-                                       MULTIDIM_ELEM(op2,i); break;
-            case '^':
-               MULTIDIM_ELEM(result,i)=pow(MULTIDIM_ELEM(op1,i),
-                                       MULTIDIM_ELEM(op2,i)); break;
-         }
-   }
+void core_array_by_array< complex< double > >(const maTC& op1,
+                                              const maTC& op2,
+                                              maTC& result,
+                                              char operation)
+{
+    for (int i=0; i<result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1.data[i] + op2.data[i];
+            break;
+        case '-':
+            result.data[i] = op1.data[i] - op2.data[i];
+            break;
+        case '*':
+            result.data[i] = op1.data[i] * op2.data[i];
+            break;
+        case '/':
+            result.data[i] = op1.data[i] / op2.data[i];
+            break;
+        case '^':
+            result.data[i] = pow(op1.data[i], op2.data[i]);
+            break;
+        }
+}

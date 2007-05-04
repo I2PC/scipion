@@ -23,17 +23,20 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-// This file contains several definitions for statistics and arithmetic
-// operations. To use it you have to redirect the internal type maT
-// (multidimensional array<T>) to the type you need. For example, for
-// a vector library would be
-//
-//#define maT vector<T>
-//
-// These definitions are outside because in this way we can reuse the
-// module for other libraries (matrices1D, matrices2D, ...). This way
-// a further advantage is that all functions are named the same in
-// all libraries
+/* FIXME Correct this
+ * 
+ * This file contains several definitions for statistics and arithmetic
+ * operations. To use it you have to redirect the internal type maT
+ * (multidimensional array<T>) to the type you need. For example, for
+ * a vector library would be
+ * 
+ * #define maT vector<T>
+ * 
+ * These definitions are outside because in this way we can reuse the
+ * module for other libraries (matrices1D, matrices2D, ...). This way
+ * a further advantage is that all functions are named the same in
+ * all libraries
+ */
 
 
 public:
