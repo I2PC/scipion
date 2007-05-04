@@ -97,6 +97,7 @@ ostream& operator << (ostream& o, const headerXmipp &I) {
    o << "Time         : " << I.get_time() << endl;
    o << "Title        : " << I.get_title() << endl;
    o << "Header size  : " << I.get_header_size() << endl;
+   o << "Weight  : " << I.Weight() << endl;
    return o;
 }
 
