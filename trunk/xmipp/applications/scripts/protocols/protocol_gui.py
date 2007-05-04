@@ -51,6 +51,15 @@ Optional:
       variables by a blue line + the corresponding title in the GUI 
 
 """
+# A scrollbar that hides itself if it's not needed.
+class AutoScrollbar(Scrollbar):
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.tk.call("grid", "remove", self)
+        else:
+            self.grid()
+        Scrollbar.set(self, lo, hi)
+
 # Create a GUI automatically from a script
 class automated_gui_class:
 
@@ -268,6 +277,12 @@ class automated_gui_class:
         frame.columnconfigure(0, weight=1)
         return canvas,frame
 
+    def LaunchCanvas(self,master,canvas,frame):
+        # Launch the window
+        canvas.create_window(0, 0, anchor=NW, window=frame)
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+        
     def GuiResize(self,master,frame):
         height=frame.winfo_reqheight()+25
         width=frame.winfo_reqwidth()+25
@@ -277,12 +292,6 @@ class automated_gui_class:
             width=800
         master.geometry("%dx%d%+d%+d" % (width,height,0,0))
 
-    def LaunchCanvas(self,master,canvas,frame):
-        # Launch the window
-        canvas.create_window(0, 0, anchor=NW, window=frame)
-        frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
-        
     def GuiFill(self):
                        
         # Create the Canvas with Scrollbars
@@ -541,10 +550,10 @@ class automated_gui_class:
         self.master.bind('<Control_L><l>', self.GuiLoad)
         self.bGet = Button(self.frame, text="Save", command=self.GuiSave,underline=0)
         self.bGet.grid(row=self.buttonrow+3,column=3)
-        self.master.bind('<Control_L><s>', self.Save)
+        self.master.bind('<Control_L><s>', self.GuiSave)
         self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
         self.bGet.grid(row=self.buttonrow+3,column=4)
-        self.master.bind('<Control_L><e>', self.SaveExecute)
+        self.master.bind('<Control_L><e>', self.GuiSaveExecute)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
@@ -713,17 +722,6 @@ class MyQueueLaunch:
     def cancel(self):
         self.top.destroy()
       
-
-# A scrollbar that hides itself if it's not needed.
-class AutoScrollbar(Scrollbar):
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.tk.call("grid", "remove", self)
-        else:
-            self.grid()
-        Scrollbar.set(self, lo, hi)
-
-
 if __name__ == '__main__':
 
     import sys

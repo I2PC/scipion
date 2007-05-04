@@ -15,7 +15,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile='/home2/bioinfo/scheres/work/protocols/Preprocessing/all_micrographs.sel'
+MicrographSelfile='/home/scheres/work/protocols/all.sel'
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -23,7 +23,7 @@ MicrographSelfile='/home2/bioinfo/scheres/work/protocols/Preprocessing/all_micro
     etc...
     Where 1 in the third column means active pair, and -1 means inactive pair
 """
-IsPairList=False
+IsPairList=True
 # Name of the position files (or family name)
 """ This is specified inside the micrograph_mark program (raw.Common.pos by default)
 """
@@ -31,7 +31,7 @@ PosName='raw.Common.pos'
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
-ProjectDir='/home2/bioinfo/scheres/work/protocols'
+ProjectDir='/home/scheres/work/protocols'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -41,6 +41,15 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 #
 from Tkinter import *
+# A scrollbar that hides itself if it's not needed.
+class AutoScrollbar(Scrollbar):
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.tk.call("grid", "remove", self)
+        else:
+            self.grid()
+        Scrollbar.set(self, lo, hi)
+
 # Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
 
@@ -99,23 +108,21 @@ class particle_pick_class:
                             self.perform_picking_pair(untilted,tilted)
 
     def MakeGui(self):
-        import protocol_gui
-        import sys
-   
-        gui=protocol_gui.automated_gui_class(sys.argv[1])
-
         self.master=Tk()
         self.total_count=0
+        self.whichmark=StringVar()
+        self.whichtilted={}
+        self.row={}
 
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=gui.PrepareCanvas(self.master)
+        self.canvas,self.frame=self.PrepareCanvas(self.master)
 
         # Fill the GUI
         self.FillMarkGui()
 
         # Launch the window
-        gui.LaunchCanvas(self.canvas,self.frame)
-        gui.GuiResize(self.master,self.frame)
+        self.LaunchCanvas(self.master,self.canvas,self.frame)
+        self.GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
@@ -147,19 +154,49 @@ class particle_pick_class:
             newlines.append(words)
         return newlines
  
-    def FillMarkGui(self,gui):
-        import os
-        import protocol_gui
+    def PrepareCanvas(self,master):
 
-        self.whichmark=StringVar()
-        self.whichtilted={}
-        self.row={}
+        # Stuff to make the scrollbars work
+        vscrollbar = AutoScrollbar(master)
+        vscrollbar.grid(row=0, column=1, sticky=N+S)
+        hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky=E+W)
+        canvas = Canvas(master,
+                        yscrollcommand=vscrollbar.set,
+                        xscrollcommand=hscrollbar.set)
+        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+        vscrollbar.config(command=canvas.yview)
+        hscrollbar.config(command=canvas.xview)
+        master.grid_rowconfigure(0, weight=1)
+        master.grid_columnconfigure(0, weight=1)
+        frame = Frame(canvas)
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
+        return canvas,frame
+
+    def LaunchCanvas(self,master,canvas,frame):
+        # Launch the window
+        canvas.create_window(0, 0, anchor=NW, window=frame)
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+        
+    def GuiResize(self,master,frame):
+        height=frame.winfo_reqheight()+25
+        width=frame.winfo_reqwidth()+25
+        if (height>600):
+            height=600
+        if (width>800):
+            width=800
+        master.geometry("%dx%d%+d%+d" % (width,height,0,0))
+
+    def FillMarkGui(self):
+        import os
 
         # Script title
-        gui.master.title("GUI for particle picking")
+        self.master.title("GUI for particle picking")
         headertext='GUI for Xmipp particle picking\n'
         headertext+="Executed in directory: "+str(os.getcwd())
-        l1=Label(gui.frame, text=headertext, fg="medium blue")
+        l1=Label(self.frame, text=headertext, fg="medium blue")
         l1.grid(row=0, column=0,columnspan=3,sticky=EW)
  
         total=0
@@ -168,54 +205,58 @@ class particle_pick_class:
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph)
                     total+=c
-                    row=self.GuiAddSingleEntry(micrograph,c)
+                    row=self.GuiAddSingleMarkEntry(micrograph,c)
                     self.row[micrograph]=row
         else:
-            for micrograph,tilted,state in sellines:
+            for micrograph,tilted,state in self.sellines:
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph)
                     total+=c
-                    row=self.GuiAddPairEntry(micrograph,c)
+                    row=self.GuiAddPairMarkEntry(micrograph,c)
                     self.row[micrograph]=row
                     self.whichtilted[micrograph]=tilted
 
-        row=(gui.frame.grid_size()[1]+1)
-        gui_lib.AddSeparator(gui.frame,row,6)
-        self.buttonrow=(gui.frame.grid_size()[1]+1)
-        b = Button(gui.frame, text="Close", command=self.GuiClose,underline=0)
+        row=(self.frame.grid_size()[1]+1)
+        Label(self.frame,text="").grid(row=row)
+        l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
+        l2.grid(row=row+1, column=0,columnspan=6,sticky=EW)
+        Label(self.frame,text="").grid(row=row+2)
+        self.buttonrow=(self.frame.grid_size()[1]+1)
+        b = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         b.grid(row=self.buttonrow,column=0,sticky=W)
-        self.master.bind('<Control_L><c>', self.GuiClose
-        b = Button(gui.frame, text="Update Total Count:", command=self.GuiUpdateCount)
+        self.master.bind('<Control_L><c>', self.GuiClose)
+        b = Button(self.frame, text="Update Total Count:", command=self.GuiUpdateCount)
         b.grid(row=self.buttonrow,column=1)
         label=str(total).zfill(5)
-        l = Label(gui.frame, text=label)
+        l = Label(self.frame, text=label)
         l.grid(row=self.buttonrow,column=2)
     
     def GuiAddSingleMarkEntry(self,micrograph,count):
         import os
         row=self.frame.grid_size()[1]
-        label='Micrograph '+os.path.basename(micrograph)
+        label=os.path.basename(micrograph)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=0, sticky=E)
         label=str(count).zfill(5)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=2)
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
-                           value=micrograph,indicatoron=0, command=self.LaunchSingleMark)
+                           value=micrograph,indicatoron=0,command=self.LaunchSingleMark)
         r.grid(row=row, column=1,sticky=N)
         return row
 
     def GuiAddPairMarkEntry(self,micrograph,count):
         import os
         row=self.frame.grid_size()[1]
-        label='Micrograph '+os.path.basename(micrograph)
+        label=os.path.basename(micrograph)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=0, sticky=E)
         label=str(count).zfill(5)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=2)
+        print "mic=",micrograph
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
-                           value=micrograph,indicatoron=0, command=self.LaunchPairMark)
+                           value=micrograph, indicatoron=0, command=self.LaunchPairMark)
         r.grid(row=row, column=1,sticky=N)
         return row
 
@@ -250,6 +291,9 @@ class particle_pick_class:
     def LaunchPairMark(self):
         import os
         print "* Marking... "
+        untilted=self.whichmark.get()
+        print "untilted=",untilted
+        print "tilted=",self.whichtilted[untilted]
         self.perform_picking_pair(self.whichmark.get(),self.whichtilted[self.whichmark.get()])
         self.GuiUpdateCount()
 
