@@ -183,6 +183,7 @@ ReferenceVolume='reference_volume.vol'
 Proj_Maching_Output_Root_Name="proj_match"
 multi_align2d_sel="multi_align2d.sel"
 align2d_sel="align2d.sel"
+align2d_doc="align2d.doc"
 docfile_with_original_angles='docfile_with_original_angles.doc'
 
 class projection_matching_class:
@@ -224,6 +225,7 @@ class projection_matching_class:
                 _Proj_Maching_Output_Root_Name,
                 _multi_align2d_sel,
                 _align2d_sel,
+                _align2d_doc,
                 _ResetImageHeader
                 ):
        import os,sys
@@ -271,6 +273,7 @@ class projection_matching_class:
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
        self._multi_align2d_sel=_multi_align2d_sel
        self._align2d_sel=_align2d_sel
+       self._align2d_doc=_align2d_doc
        #name of the masked volume
        tmp_OutPutVol=os.path.basename(self._ReferenceFileName)
        ReferenceFileName_without_ext=\
@@ -386,6 +389,11 @@ class projection_matching_class:
                       + self._align2d_sel
        self._mylog.info(command)
        os.system(command)
+       command='xmipp_header_extract -i ' + self._align2d_sel +\
+                                   ' -o ' + self._align2d_doc
+       self._mylog.info(command)
+       os.system(command)
+
        exit(1)                
         
        if (_DoReconstruction):
@@ -814,5 +822,6 @@ if __name__ == '__main__':
                 Proj_Maching_Output_Root_Name,
                 multi_align2d_sel,
                 align2d_sel,
+                align2d_doc,
                 ResetImageHeader
                 )
