@@ -77,7 +77,7 @@ public:
     vector <matrix1D<double> > no_redundant_sampling_points_vector;
     /** vector with sampling points described by vectors, only store
         the non redundant part */  
-    vector <matrix1D<double> > no_redundant_sampling_points_vector_angles;
+    vector <matrix1D<double> > no_redundant_sampling_points_angles;
 
     /** Default constructor. sampling in degrees*/
     XmippSampling();
@@ -102,9 +102,10 @@ public:
    /** set sampling rate */
    void SetSampling(double sampling);
    
-   /* eliminate rdundant points */
+   /* eliminate redundant points, 
+      symmetry group, symmetry order */
    
-   void remove_redundant_points(SymList & SL);
+   void remove_redundant_points(string symmetry, int sym_order);
 
    /// Usage
    //void Usage();
