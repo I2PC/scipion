@@ -47,8 +47,6 @@ public:
    /** A sampling point is neighbor if closer than this value in degrees */
    double neighborhood;
 
-   /** symmetry file */
-   FileName symmetry_file;
 
    /** root for output files */
    string sampling_file_root;
@@ -63,8 +61,6 @@ public:
    /** For infinite groups symmetry order*/
    int sym_order;
 
-   /** symmetry information **/
-   SymList  SL;
    /** fil vector with symmetry axis */
    // vector <matrix1D<double> > symmetry_vectors;
 public:
@@ -90,9 +86,6 @@ public:
    /** get all directions related by symmetry to (1,0,0)  */
    void get_sym_vectors(vector< matrix1D<double > > &sym_points);
 
-   /** create symmetry file from introduced symmetry
-       see  SymList class */
-   void create_sym_file();
 };
 //@}
 #endif
