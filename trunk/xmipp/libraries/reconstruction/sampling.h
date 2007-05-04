@@ -82,6 +82,12 @@ public:
     /** Default constructor. sampling in degrees*/
     XmippSampling();
    
+   /** symmetry file */
+   FileName symmetry_file;
+
+   /** symmetry information **/
+   SymList  SL;
+
     /** Compuute edge sampling points 
         if you are looking only for directtions set only_half_sphere = true
     */
@@ -113,6 +119,9 @@ public:
    /* sorting criteria for euler angles */
    int sort_func(matrix1D<double> & a,matrix1D<double> & b);
 
+   /** create symmetry file from introduced symmetry
+       see  SymList class */
+   void create_sym_file(string symmetry,int sym_order);
 };
 //@}
 #endif

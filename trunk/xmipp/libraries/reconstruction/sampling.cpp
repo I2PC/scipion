@@ -392,7 +392,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
   no_redundant_sampling_points_angles.clear();     
   double my_dot_product;
   if (symmetry.compare("cn")==0)
-     {
+     {//OK
       for (int i=0; i< sampling_points_angles.size(); i++)
         {
            if (XX(sampling_points_angles[i])>= (-180./sym_order) &&
@@ -405,7 +405,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
      }
   else if (symmetry.compare("ci")==0 ||
            symmetry.compare("cs")==0 )
-     {
+     {//OK
       for (int i=0; i< sampling_points_angles.size(); i++)
         {
            if (YY(sampling_points_angles[i])<=90)
@@ -416,7 +416,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
         }// for i  
      }
   else if (symmetry.compare("cnv")==0)
-     {
+     {//OK
       for (int i=0; i< sampling_points_angles.size(); i++)
         {
            if (XX(sampling_points_angles[i])>=    0./sym_order &&
@@ -428,7 +428,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
         }// for i  
      }
   else if (symmetry.compare("cnh")==0)
-     {
+     {//OK
       for (int i=0; i< sampling_points_angles.size(); i++)
         {
            if (XX(sampling_points_angles[i])>= -180./sym_order &&
@@ -588,7 +588,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
          }// for i  
      }
   else if (symmetry.compare("i")==0)
-     {
+     {//?
       for (int i=0; i< sampling_points_angles.size(); i++)
         {
            if (XX(sampling_points_angles[i])>= -31.7174745559 &&
@@ -794,3 +794,125 @@ void XmippSampling::remove_redundant_points(string symmetry,
 #endif
 
 }     
+/* Create symmetry file----------------------------------------------------- */
+void XmippSampling::create_sym_file(string symmetry, int sym_order) {
+   symmetry_file=symmetry+".sys";
+   ofstream SymFile;
+   SymFile.open(symmetry_file.c_str(), ios::out);
+       if (symmetry.compare("cn")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          }
+       else if (symmetry.compare("ci")==0)
+          {
+          SymFile << "invertion ";
+          }
+       else if (symmetry.compare("cs")==0)
+          {
+          SymFile << "mirror_plane 0 0 1";
+          }
+       else if (symmetry.compare("cnv")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "mirror_plane 1 0 0";
+          }
+       else if (symmetry.compare("cnh")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "mirror_plane 0 0 1";
+          }
+       else if (symmetry.compare("sn")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "invertion ";
+          }
+       else if (symmetry.compare("dn")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 1 0 0";
+          }
+       else if (symmetry.compare("dnv")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 1 0 0";
+          SymFile << endl;
+          SymFile << "mirror_plane 1 0 0";
+          }
+       else if (symmetry.compare("dnh")==0)
+          {
+          SymFile << "rot_axis " << sym_order << " 0 0 1";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 1 0 0";
+          SymFile << endl;
+          SymFile << "mirror_plane 0 0 1";
+          }
+       else if (symmetry.compare("t")==0)
+          {
+          SymFile << "rot_axis " << "3" << "  .57735026918962576451  .57735026918962576451 .57735026918962576451";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 0 0 1";
+          }
+       else if (symmetry.compare("td")==0)
+          {
+          SymFile << "rot_axis " << "3" << "  .57735026918962576451  .57735026918962576451 .57735026918962576451";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 0 0 1";
+          SymFile << endl;
+          SymFile << "mirror_plane 0 1 1";
+          }
+       else if (symmetry.compare("th")==0)
+          {
+          SymFile << "rot_axis " << "3" << "  .57735026918962576451  .57735026918962576451 .57735026918962576451";
+          SymFile << endl;
+          SymFile << "rot_axis " << "2" << " 0 0 1";
+          SymFile << endl;
+          SymFile << "inversion";
+          }
+       else if (symmetry.compare("o")==0)
+          {
+          SymFile << "rot_axis " << "3" << "  .57735026918962576451  .57735026918962576451 .57735026918962576451";
+          SymFile << endl;
+          SymFile << "rot_axis " << "4" << " 0 0 1";
+          SymFile << endl;
+          SymFile << "inversion";
+          }
+       else if (symmetry.compare("oh")==0)
+          {
+          SymFile << "rot_axis " << "3" << "  .57735026918962576451  .57735026918962576451 .57735026918962576451";
+          SymFile << endl;
+          SymFile << "rot_axis " << "4" << " 0 0 1";
+          SymFile << endl;
+          SymFile << "mirror_plane 0 1 1";
+          }
+       else if (symmetry.compare("i")==0)
+          {
+          SymFile << "rot_axis 2  0             0          1";
+          SymFile << endl;
+          SymFile << "rot_axis 5 -1.618033989  -1           0";
+          SymFile << endl;
+          SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
+          }
+       else if (symmetry.compare("ih")==0)
+          {
+          SymFile << "rot_axis 2  0             0          1";
+          SymFile << endl;
+          SymFile << "rot_axis 5 -1.618033989  -1           0";
+          SymFile << endl;
+          SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
+          SymFile << endl;
+          SymFile << "mirror_plane 1 0 0";
+          }
+       else  
+          {
+          cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+          exit(0);
+          }
+       SymFile.close();
+       SL.read_sym_file(symmetry_file);
+
+}
