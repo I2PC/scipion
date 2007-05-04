@@ -83,6 +83,7 @@ class visualize_projmatch_class:
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
         self._multi_align2d_sel=protocol_projmatch.multi_align2d_sel
         self._align2d_sel=protocol_projmatch.align2d_sel
+        self._align2d_doc=protocol_projmatch.align2d_doc
         self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch.SelFileName)
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
         self._Proj_Maching_Output_Root_Name=protocol_projmatch.Proj_Maching_Output_Root_Name
@@ -112,11 +113,14 @@ class visualize_projmatch_class:
            self._ShowPlots.append(os.getcwd()+'/'+\
                                   self._Iteration_Working_Directory+'/'+\
                                   self._Proj_Maching_Output_Root_Name+\
-                                  ".doc")
+                                  '_classes.doc')
            title='Angular distribution after "projection matching" for iteration '+\
                     str(self._iteration_number)
            show_ang_distribution(self._ShowPlots,self._iteration_number,title)
-           
+           self._mylog.debug( self._ShowPlots[0] + " " +\
+                              str(self._iteration_number) + " " +\
+                              title )
+
         if (_DisplayProjectionMatching):
            self.ShowSelfiles=[] 
            self.ShowSelfiles.append(os.getcwd()+'/'+\
@@ -136,10 +140,13 @@ class visualize_projmatch_class:
            self._ShowPlots=[]
            self._ShowPlots.append(os.getcwd()+'/'+\
                                   self._Iteration_Working_Directory+'/'+\
-                                  self._align2d_sel)
-           title='Angular distribution after "alig2d" for iteration '+\
+                                  self._align2d_doc)
+           title='Angular distribution after "align2d" for iteration '+\
                     str(self._iteration_number)
            show_ang_distribution(self._ShowPlots,self._iteration_number,title)
+           self._mylog.debug( self._ShowPlots[0] + " " +\
+                              str(self._iteration_number) + " " +\
+                              title )
 
         #if (_DisplayReconstruction):
         #    self.visualize_Reconstruction(self._SomName,self._SpectraName)
@@ -159,17 +166,26 @@ def show_ang_distribution(_ShowPlots,_iteration_number,title):
         for plots in _ShowPlots: 
             doc=docfiles.docfile(plots)
             doc.check_angle_range()
+            mini=doc.minimum_of_column(7)
+            maxi=doc.maximum_of_column(7)
+            if mini==0:
+               mini=1
+            if maxi<mini:
+               maxi=mini   
             doc.write_several(plots,
                               10,
                               7,
-                              doc.minimum_of_column(7),
-                              doc.maximum_of_column(7)
+                              mini,
+                              maxi,
                               )
             plot=visualization.gnuplot()
+            title =title+' min= '+str(mini)+', max= '+str(maxi) 
             plot.plot_xy1y2_several_angular_doc_files(plots,
                                                       title,
                                                       'degrees',
-                                                      'degrees')
+                                                      'degrees',
+                                                      3,
+                                                      4)
 
 
 #		
