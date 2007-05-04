@@ -29,6 +29,8 @@
 #include <reconstruction/symmetries.h>
 #include <data/args.h>
 #include <fstream>
+#include <iostream>
+#include <string>
 
 /**@name PDB Phantom program */
 //@{
@@ -39,16 +41,32 @@ public:
    /** sampling object */    
    XmippSampling mysampling;
 
-   /** Sampling rate */
+   /** Sampling rate. Distance between sampling points in degrees*/
    double sampling;
+
+   /** A sampling point is neighbor if closer than this value in degrees */
+   double neighborhood;
 
    /** symmetry file */
    FileName symmetry_file;
 
+   /** root for output files */
+   string sampling_file_root;
+
+   /** Symmetry. One of the 17 possible symmetries in 
+      single particle electron microscopy.
+      See details at url
+      Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
+      dn, dnv, dnh, t, td, th, o, oh, i, ih */
+   string symmetry;
+
+   /** For infinite groups symmetry order*/
+   int sym_order;
+
    /** symmetry information **/
    SymList  SL;
    /** fil vector with symmetry axis */
-    vector <matrix1D<double> > symmetry_vectors;
+   // vector <matrix1D<double> > symmetry_vectors;
 public:
    /** Empty constructor */
    Prog_Sampling_Parameters();
@@ -68,9 +86,13 @@ public:
    
    /** Run. */
    void run();
+
    /** get all directions related by symmetry to (1,0,0)  */
    void get_sym_vectors(vector< matrix1D<double > > &sym_points);
 
+   /** create symmetry file from introduced symmetry
+       see  SymList class */
+   void create_sym_file();
 };
 //@}
 #endif
