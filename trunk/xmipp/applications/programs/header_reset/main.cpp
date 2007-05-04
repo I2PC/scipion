@@ -33,12 +33,24 @@ void Usage();
 int main (int argc,char *argv[]) {
    SelFile         SF;
    ImageXmipp      img;
+   FileName        fn_input;
 
    try 
    {
-       SF.read(get_param(argc,argv,"-i"));
-       SF.go_beginning();
+       fn_input=get_param(argc,argv,"-i");
+       if (Is_ImageXmipp(fn_input))
+       {
+	   SF.insert(fn_input,SelLine::ACTIVE);
+       }
+       else
+	   SF.read(fn_input);
+   }
+   catch (Xmipp_error XE) {cout << XE; Usage();}
+
+   try 
+   {
        cerr <<" Resetting all angles, origin offsets, weights and mirror flags to zero ... "<<endl;
+       SF.go_beginning();
        while (!SF.eof()) 
        {
 	   img.read(SF.NextImg());
@@ -56,7 +68,7 @@ void Usage() {
     printf(" Reset the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");
     printf("   header_reset \n");
-    printf("        -i  <selfile>      : selfile with input images \n");
+    printf("    -i               : Selfile with images or individual image\n");
     exit(1);
 }
 
