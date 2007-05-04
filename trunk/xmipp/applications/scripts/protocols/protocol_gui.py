@@ -640,14 +640,12 @@ class automated_gui_class:
 
     def AnalyseResults(self,event=""):
         self.GuiSave()
-        print "* Analyzing..."
         command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
                  self.variables["AnalysisScript"][0]+' -analysis &'
         print command
         os.system(command)
          
     def GuiClose(self,event=""):
-        print "* Closing..."
         self.master.destroy()
         
     def GuiSave(self):
@@ -713,12 +711,11 @@ class MyQueueLaunch:
     def __init__(self, parent,command):
         self.command=command
         top = self.top = Toplevel(parent)
-        Label(top, text="Job submission command \n (e.g. \"bsub -q 1week\")").grid(row=0,column=0,columnspan=2)
+        Label(top, text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
         self.e = Entry(top)
         self.e.grid(row=1,column=0,columnspan=2)
         Button(top, text="Submit", command=self.ok).grid(row=2,column=0)
         Button(top, text="Cancel", command=self.cancel).grid(row=2,column=1)
-        
 
     def ok(self):
         import os

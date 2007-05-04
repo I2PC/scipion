@@ -211,7 +211,7 @@ class preprocess_particles_class:
         import os
         import selfile
         print '*********************************************************************'
-        print '*  Pre-processing micrographs in '+basename(self.MicrographSelfile)
+        print '*  Pre-processing micrographs in '+os.path.basename(self.MicrographSelfile)
 
         dirname=self.ProjectDir+'/'+self.ImagesDir
         if not os.path.exists(dirname):
@@ -247,7 +247,7 @@ class preprocess_particles_class:
     def process_all_pairs(self):
         import os
         print '*********************************************************************'
-        print '*  Pre-processing all micrograph pairs in '+basename(self.MicrographSelfile)
+        print '*  Pre-processing all micrograph pairs in '+os.path.basename(self.MicrographSelfile)
 
         dirname=self.ProjectDir+'/'+self.ImagesDir
         if not os.path.exists(dirname):

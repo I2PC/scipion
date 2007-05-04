@@ -22,14 +22,13 @@ MicrographSelfile='/home/scheres/work/protocols/all.sel'
     untilted_pair2.raw tilted_pair2.raw 1
     etc...
     Where 1 in the third column means active pair, and -1 means inactive pair
+    Use relative paths from the Preprocessing directory!
 """
 IsPairList=True
 # Name of the position files (or family name)
 """ This is specified inside the micrograph_mark program (raw.Common.pos by default)
 """
 PosName='raw.Common.pos'
-# Use GUI to display list of finished micrographs?
-DoUseGui=True
 # {expert} Root directory name for this project:
 ProjectDir='/home/scheres/work/protocols'
 # {expert} Directory name for logfiles:
@@ -41,15 +40,6 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 #
 from Tkinter import *
-# A scrollbar that hides itself if it's not needed.
-class AutoScrollbar(Scrollbar):
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.tk.call("grid", "remove", self)
-        else:
-            self.grid()
-        Scrollbar.set(self, lo, hi)
-
 # Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
 
@@ -57,7 +47,6 @@ class particle_pick_class:
                  MicrographSelfile,
                  IsPairList,
                  PosName,
-                 DoUseGui,
                  ProjectDir,
                  LogDir):
 
@@ -72,8 +61,6 @@ class particle_pick_class:
         self.PosName=PosName
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
-        self.DoUseGui=DoUseGui
-
         self.log=log.init_log_system(self.ProjectDir,
                                      self.LogDir,
                                      sys.argv[0],
@@ -82,32 +69,11 @@ class particle_pick_class:
         # Execute protocol:
         self.print_warning()
         self.sellines=self.ReadSelfile()
-        if (DoUseGui):
-            self.MakeGui()
-        else:
-            self.process_all_without_gui()
-            
-    def process_all_without_gui(self):
-        if not self.IsPairList:
-            for micrograph,state in self.sellines:
-                if (state.find('-1') == -1):
-                    self.perform_picking(micrograph)
-        else:
-            for untilted,tilted,state in sellines:
-                if (state.find('-1') == -1):
-                    self.perform_picking_pair(untilted,tilted)
-
-                for line in self.pairlines:
-                    words=line.split()
-                    untilted=words[0]
-                    tilted=words[1]
-                    state=words[2]
-                    if (state.find('-1') == -1):
-                        self.update_have_picked()
-                        if not (self.have_already_picked(untilted)):
-                            self.perform_picking_pair(untilted,tilted)
+        self.MakeGui()
 
     def MakeGui(self):
+        import protocol_gui
+
         self.master=Tk()
         self.total_count=0
         self.whichmark=StringVar()
@@ -115,14 +81,14 @@ class particle_pick_class:
         self.row={}
 
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=self.PrepareCanvas(self.master)
+        self.canvas,self.frame=protocol_gui.PrepareCanvas(self.master)
 
         # Fill the GUI
         self.FillMarkGui()
 
         # Launch the window
-        self.LaunchCanvas(self.master,self.canvas,self.frame)
-        self.GuiResize(self.master,self.frame)
+        protocol_gui.LaunchCanvas(self.master,self.canvas,self.frame)
+        protocol_gui.GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
@@ -154,41 +120,6 @@ class particle_pick_class:
             newlines.append(words)
         return newlines
  
-    def PrepareCanvas(self,master):
-
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(master)
-        vscrollbar.grid(row=0, column=1, sticky=N+S)
-        hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E+W)
-        canvas = Canvas(master,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-        vscrollbar.config(command=canvas.yview)
-        hscrollbar.config(command=canvas.xview)
-        master.grid_rowconfigure(0, weight=1)
-        master.grid_columnconfigure(0, weight=1)
-        frame = Frame(canvas)
-        frame.rowconfigure(0, weight=1)
-        frame.columnconfigure(0, weight=1)
-        return canvas,frame
-
-    def LaunchCanvas(self,master,canvas,frame):
-        # Launch the window
-        canvas.create_window(0, 0, anchor=NW, window=frame)
-        frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
-        
-    def GuiResize(self,master,frame):
-        height=frame.winfo_reqheight()+25
-        width=frame.winfo_reqwidth()+25
-        if (height>600):
-            height=600
-        if (width>800):
-            width=800
-        master.geometry("%dx%d%+d%+d" % (width,height,0,0))
-
     def FillMarkGui(self):
         import os
 
@@ -254,7 +185,6 @@ class particle_pick_class:
         label=str(count).zfill(5)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=2)
-        print "mic=",micrograph
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
                            value=micrograph, indicatoron=0, command=self.LaunchPairMark)
         r.grid(row=row, column=1,sticky=N)
@@ -292,8 +222,6 @@ class particle_pick_class:
         import os
         print "* Marking... "
         untilted=self.whichmark.get()
-        print "untilted=",untilted
-        print "tilted=",self.whichtilted[untilted]
         self.perform_picking_pair(self.whichmark.get(),self.whichtilted[self.whichmark.get()])
         self.GuiUpdateCount()
 
@@ -306,7 +234,6 @@ class particle_pick_class:
 
     def GuiClose(self):
         import sys
-        print "* Closing..."
         self.master.quit()
         self.master.destroy()
         sys.exit(0)
@@ -334,13 +261,14 @@ class particle_pick_class:
     def perform_picking_pair(self,untilted,tilted):
         import os
         directory,uname=os.path.split(untilted)
-        tname='../'+tilted
         os.chdir(directory)
+        tname='../'+tilted
         command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname
         print '* ',command
         self.log.info(command)
         os.system(command)
         os.chdir(os.pardir)
+
 
     def close(self):
         message=" Exiting ... "
@@ -357,19 +285,8 @@ if __name__ == '__main__':
 	particle_pick=particle_pick_class(MicrographSelfile,
                                           IsPairList,
                                           PosName,
-                                          DoUseGui,
                                           ProjectDir,
                                           LogDir)
 
 	# close 
 	particle_pick.close()
-
-if __name__ == '__main__':
-
-    import sys
-    pick=particle_pick_class(MicrographSelfile,
-                             IsPairList,
-                             PosName,
-                             DoUseGui,
-                             ProjectDir,
-                             LogDir)
