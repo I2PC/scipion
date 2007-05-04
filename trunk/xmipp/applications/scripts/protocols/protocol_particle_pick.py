@@ -182,8 +182,9 @@ class particle_pick_class:
         row=(gui.frame.grid_size()[1]+1)
         gui_lib.AddSeparator(gui.frame,row,6)
         self.buttonrow=(gui.frame.grid_size()[1]+1)
-        b = Button(gui.frame, text="Close", command=self.GuiClose)
+        b = Button(gui.frame, text="Close", command=self.GuiClose,underline=0)
         b.grid(row=self.buttonrow,column=0,sticky=W)
+        self.master.bind('<Control_L><c>', self.GuiClose
         b = Button(gui.frame, text="Update Total Count:", command=self.GuiUpdateCount)
         b.grid(row=self.buttonrow,column=1)
         label=str(total).zfill(5)

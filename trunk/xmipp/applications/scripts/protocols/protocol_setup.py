@@ -43,25 +43,25 @@ SetupHighRes3D=False
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Root directory name for this project:
-ProjectDir="/home/roberto2/trunk/xmipp/applications/scripts/protocols"
+ProjectDir='/home/scheres/Xmipp/applications/scripts/protocols'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 # {expert} Directory name for preprocessing:
-PreProcessDir="Preprocessing"
+PreProcessDir='Preprocessing'
 # {expert} Directory name for particle images:
-ImagesDir="Images"
+ImagesDir='Images'
 # {expert} Directory name for ML2D classification:
-ML2DDir="ML2D"
+ML2DDir='ML2D'
 # {expert} Directory name for rotational spectra classification:
-RotSpectraDir="Rotspectra"
+RotSpectraDir='Rotspectra'
 # {expert} Directory name for Random Conical Tilt reconstruction:
-RCTDir="RCT"
+RCTDir='RCT'
 # {expert} Directory name for ML3D classification:
-ML3DDir="ML3D"
+ML3DDir='ML3D'
 # {expert} Directory name for projection matching refinement:
-ProjMatchDir="ProjMatching"
+ProjMatchDir='ProjMatching'
 # {expert} Directory name for HighRes3D:
-HighRes3DDir="HighRes3D"
+HighRes3DDir='HighRes3D'
 #
 #
 #------------------------------------------------------------------------------------------------
