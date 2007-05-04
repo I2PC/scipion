@@ -15,7 +15,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile="/home2/bioinfo/scheres/work/protocols/Preprocessing/all_micrographs.sel"
+MicrographSelfile='/home2/bioinfo/scheres/work/protocols/Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -27,13 +27,13 @@ IsPairList=False
 # Name of the position files (or family name)
 """ This is specified inside the micrograph_mark program (raw.Common.pos by default)
 """
-PosName="raw.Common.pos"
+PosName='raw.Common.pos'
 # Use GUI to display list of finished micrographs?
 DoUseGui=True
 # {expert} Root directory name for this project:
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir='/home2/bioinfo/scheres/work/protocols'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -78,23 +78,44 @@ class particle_pick_class:
         else:
             self.process_all_without_gui()
             
+    def process_all_without_gui(self):
+        if not self.IsPairList:
+            for micrograph,state in self.sellines:
+                if (state.find('-1') == -1):
+                    self.perform_picking(micrograph)
+        else:
+            for untilted,tilted,state in sellines:
+                if (state.find('-1') == -1):
+                    self.perform_picking_pair(untilted,tilted)
+
+                for line in self.pairlines:
+                    words=line.split()
+                    untilted=words[0]
+                    tilted=words[1]
+                    state=words[2]
+                    if (state.find('-1') == -1):
+                        self.update_have_picked()
+                        if not (self.have_already_picked(untilted)):
+                            self.perform_picking_pair(untilted,tilted)
 
     def MakeGui(self):
-        import gui_lib
-        
+        import protocol_gui
+        import sys
+   
+        gui=protocol_gui.automated_gui_class(sys.argv[1])
+
         self.master=Tk()
         self.total_count=0
-        self.guiwidth=600
-        self.guiheight=500
 
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=gui_lib.PrepareCanvas(self.master,self.guiwidth,self.guiheight)
+        self.canvas,self.frame=gui.PrepareCanvas(self.master)
 
         # Fill the GUI
         self.FillMarkGui()
 
         # Launch the window
-        gui_lib.LaunchCanvas(self.canvas,self.frame)
+        gui.LaunchCanvas(self.canvas,self.frame)
+        gui.GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
@@ -126,39 +147,20 @@ class particle_pick_class:
             newlines.append(words)
         return newlines
  
-    def process_all_without_gui(self):
-        if not self.IsPairList:
-            for micrograph,state in self.sellines:
-                if (state.find('-1') == -1):
-                    self.perform_picking(micrograph)
-        else:
-            for untilted,tilted,state in sellines:
-                if (state.find('-1') == -1):
-                    self.perform_picking_pair(untilted,tilted)
-
-                for line in self.pairlines:
-                    words=line.split()
-                    untilted=words[0]
-                    tilted=words[1]
-                    state=words[2]
-                    if (state.find('-1') == -1):
-                        self.update_have_picked()
-                        if not (self.have_already_picked(untilted)):
-                            self.perform_picking_pair(untilted,tilted)
-
-    def FillMarkGui(self):
+    def FillMarkGui(self,gui):
         import os
-        import gui_lib
+        import protocol_gui
 
         self.whichmark=StringVar()
+        self.whichtilted={}
         self.row={}
 
         # Script title
-        self.master.title("GUI for particle picking")
+        gui.master.title("GUI for particle picking")
         headertext='GUI for Xmipp particle picking\n'
         headertext+="Executed in directory: "+str(os.getcwd())
-        self.l1=Label(self.frame, text=headertext, fg="medium blue")
-        self.l1.grid(row=0, column=0,columnspan=3,sticky=EW)
+        l1=Label(gui.frame, text=headertext, fg="medium blue")
+        l1.grid(row=0, column=0,columnspan=3,sticky=EW)
  
         total=0
         if not self.IsPairList:
@@ -171,22 +173,26 @@ class particle_pick_class:
         else:
             for micrograph,tilted,state in sellines:
                 if (state.find('-1') == -1):
-                    self.GuiAddPairEntry(micrograph)
- 
-        row=(self.frame.grid_size()[1]+1)
-        gui_lib.AddSeparator(self.frame,row,6)
-        self.buttonrow=(self.frame.grid_size()[1]+1)
-        b = Button(self.frame, text="Close", command=self.GuiClose)
+                    c=self.CountPicked(micrograph)
+                    total+=c
+                    row=self.GuiAddPairEntry(micrograph,c)
+                    self.row[micrograph]=row
+                    self.whichtilted[micrograph]=tilted
+
+        row=(gui.frame.grid_size()[1]+1)
+        gui_lib.AddSeparator(gui.frame,row,6)
+        self.buttonrow=(gui.frame.grid_size()[1]+1)
+        b = Button(gui.frame, text="Close", command=self.GuiClose)
         b.grid(row=self.buttonrow,column=0,sticky=W)
-        b = Button(self.frame, text="Update Total Count:", command=self.GuiUpdateCount)
+        b = Button(gui.frame, text="Update Total Count:", command=self.GuiUpdateCount)
         b.grid(row=self.buttonrow,column=1)
         label=str(total).zfill(5)
-        l = Label(self.frame, text=label)
+        l = Label(gui.frame, text=label)
         l.grid(row=self.buttonrow,column=2)
     
-    def GuiAddSingleEntry(self,micrograph,count):
+    def GuiAddSingleMarkEntry(self,micrograph,count):
         import os
-        row=(self.frame.grid_size()[1])
+        row=self.frame.grid_size()[1]
         label='Micrograph '+os.path.basename(micrograph)
         l=Label(self.frame, text=label)
         l.grid(row=row, column=0, sticky=E)
@@ -195,6 +201,20 @@ class particle_pick_class:
         l.grid(row=row, column=2)
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
                            value=micrograph,indicatoron=0, command=self.LaunchSingleMark)
+        r.grid(row=row, column=1,sticky=N)
+        return row
+
+    def GuiAddPairMarkEntry(self,micrograph,count):
+        import os
+        row=self.frame.grid_size()[1]
+        label='Micrograph '+os.path.basename(micrograph)
+        l=Label(self.frame, text=label)
+        l.grid(row=row, column=0, sticky=E)
+        label=str(count).zfill(5)
+        l=Label(self.frame, text=label)
+        l.grid(row=row, column=2)
+        r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
+                           value=micrograph,indicatoron=0, command=self.LaunchPairMark)
         r.grid(row=row, column=1,sticky=N)
         return row
 
@@ -226,6 +246,12 @@ class particle_pick_class:
         self.perform_picking(self.whichmark.get())
         self.GuiUpdateCount()
 
+    def LaunchPairMark(self):
+        import os
+        print "* Marking... "
+        self.perform_picking_pair(self.whichmark.get(),self.whichtilted[self.whichmark.get()])
+        self.GuiUpdateCount()
+
     def GuiUpdateCount(self):
         print "* Updating count..."
         total=self.CountAll()
@@ -236,10 +262,10 @@ class particle_pick_class:
     def GuiClose(self):
         import sys
         print "* Closing..."
+        self.master.quit()
         self.master.destroy()
         sys.exit(0)
         
-
     def print_warning(self):
         import os
         print '*********************************************************************'
@@ -249,7 +275,6 @@ class particle_pick_class:
         if (self.IsPairList):
             print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
         print '*'
-
 
     def perform_picking(self,name):
         import os

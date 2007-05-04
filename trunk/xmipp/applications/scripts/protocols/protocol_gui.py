@@ -74,16 +74,12 @@ class automated_gui_class:
         
     def SetupGuiParameters(self):
         if (self.is_setupgui):
-            self.guiwidth=650
-            self.guiheight=400
             self.columnspantextlabel=2
             self.columntextentry=2
             self.column_pre=0
             self.column_2d=1
             self.column_3d=2
         else:
-            self.guiwidth=700
-            self.guiheight=650
             self.columnspantextlabel=3
             self.columntextentry=3
 
@@ -250,11 +246,45 @@ class automated_gui_class:
             # Set PWD as default for ProjectDir
             self.variables['ProjectDir'][0]=str(os.getcwd())
 
+    def PrepareCanvas(self,master):
+
+        # Stuff to make the scrollbars work
+        vscrollbar = AutoScrollbar(master)
+        vscrollbar.grid(row=0, column=1, sticky=N+S)
+        hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
+        hscrollbar.grid(row=1, column=0, sticky=E+W)
+        canvas = Canvas(master,
+                        yscrollcommand=vscrollbar.set,
+                        xscrollcommand=hscrollbar.set)
+        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+        vscrollbar.config(command=canvas.yview)
+        hscrollbar.config(command=canvas.xview)
+        master.grid_rowconfigure(0, weight=1)
+        master.grid_columnconfigure(0, weight=1)
+        frame = Frame(canvas)
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
+        return canvas,frame
+
+    def GuiResize(self,master,frame):
+        height=frame.winfo_reqheight()+25
+        width=frame.winfo_reqwidth()+25
+        if (height>600):
+            height=600
+        if (width>800):
+            width=800
+        master.geometry("%dx%d%+d%+d" % (width,height,0,0))
+
+    def LaunchCanvas(self,master,canvas,frame):
+        # Launch the window
+        canvas.create_window(0, 0, anchor=NW, window=frame)
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+        
     def GuiFill(self):
                        
-        import gui_lib
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=gui_lib.PrepareCanvas(self.master,self.guiwidth,self.guiheight)
+        self.canvas,self.frame=self.PrepareCanvas(self.master)
 
         # Fill the entire GUI
         if (self.is_setupgui):
@@ -263,12 +293,15 @@ class automated_gui_class:
             self.FillProtocolGui()
         
         # Launch the window
-        gui_lib.LaunchCanvas(self.canvas,self.frame)
+        self.LaunchCanvas(self.master,self.canvas,self.frame)
 
         # Remove expert options in normal mode
         if (self.expert_mode==False):
             for w in self.widgetexpertlist:
                 w.grid_remove()  
+
+        # Resize window
+        self.GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
@@ -285,16 +318,16 @@ class automated_gui_class:
         headertext='GUI for Xmipp '+programname+'\n'
         headertext+="Executed in directory: "+str(os.getcwd())
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
-        self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
+        self.l1.grid(row=0, column=0,columnspan=6,sticky=EW)
         if (self.have_publication):
             headertext="If you publish results obtained with this protocol, please cite:"
             for pub in self.publications:
                 headertext+='\n'+pub.replace('\n','')
             self.l2=Label(self.frame, text=headertext, fg="dark green")
             self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
-            self.Addseparator(2)
+            self.AddSeparator(2)
         else:
-            self.Addseparator(1)
+            self.AddSeparator(1)
 
         # Add all the variables in the script header
         self.widgetexpertlist=[]
@@ -346,7 +379,7 @@ class automated_gui_class:
         headertext="Which Xmipp protocol do you want to run?"
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
-        self.Addseparator(2)
+        self.AddSeparator(2)
 
         # Add labels for different protocol categories
         row=(self.frame.grid_size()[1])
@@ -391,7 +424,7 @@ class automated_gui_class:
         self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
 
-    def Addseparator(self,row):
+    def AddSeparator(self,row):
         self.l1=Label(self.frame,text="")
         self.l1.grid(row=row)
         self.l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
@@ -478,7 +511,7 @@ class automated_gui_class:
         else:
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
                                  value=varname, command=self.GuiBrowseDirectory)
-        self.b.grid(row=row, column=self.columntextentry+2)
+        self.b.grid(row=row, column=self.columntextentry+2,sticky=W)
 
         if (expert=="expert"):
             self.widgetexpertlist.append(self.l)
@@ -488,7 +521,7 @@ class automated_gui_class:
                 self.widgetexpertlist.append(self.r)
 
     def GuiAddRestProtocolButtons(self):
-        self.Addseparator(self.buttonrow)
+        self.AddSeparator(self.buttonrow)
         self.button = Button(self.frame, text="Close", command=self.GuiClose)
         self.button.grid(row=self.buttonrow+3,column=0, sticky=W)
 
@@ -497,28 +530,17 @@ class automated_gui_class:
         else:
             text2="Show expert options"
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow+3,column=2, sticky=E)
+        self.bGet.grid(row=self.buttonrow+3,column=1)
 
         self.bGet = Button(self.frame, text="Load", command=self.GuiLoad)
+        self.bGet.grid(row=self.buttonrow+3,column=2)
+        self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
         self.bGet.grid(row=self.buttonrow+3,column=3)
-        self.bGet = Button(self.frame, text="Execute", command=self.GuiSaveExecute)
-        self.bGet.grid(row=self.buttonrow+3,column=1)
+        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
+        self.bGet.grid(row=self.buttonrow+3,column=4)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
             self.bGet.grid(row=self.buttonrow+3,column=5)
-
-        # Job submission command option
-        self.jobsubmission=StringVar()
-        morehelp="The job submission command for your queueing system. (e.g. bsub -q 1week)\n"
-        morehelp+="Leave empty to submit directly."
-        self.l=Label(self.frame, text="Job submission command")
-        self.l.configure(wraplength=350)
-        self.l.grid(row=self.buttonrow+4, column=0,columnspan=self.columnspantextlabel, sticky=E)
-        self.r=Radiobutton(self.frame,text="What's this?",variable=self.morehelp,
-                           value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
-        self.r.grid(row=self.buttonrow+4, column=self.columntextentry+2, sticky=W)
-        self.e = Entry(self.frame, text="", textvariable=self.jobsubmission)
-        self.e.grid(row=self.buttonrow+4, column=self.columntextentry,columnspan=2,sticky=W+E)
 
     def GuiAddRestSetupButtons(self):
         self.button = Button(self.frame, text="Close", command=self.master.quit)
@@ -545,7 +567,7 @@ class automated_gui_class:
             self.expert_mode=True
             for w in self.widgetexpertlist:
                 w.grid()
-                
+
         if (self.is_setupgui):
             self.GuiAddRestSetupButtons()
         else:
@@ -604,7 +626,6 @@ class automated_gui_class:
         os.system(command)
          
     def GuiClose(self):
-        self.GuiSave()
         print "* Closing..."
         self.master.destroy()
         
@@ -613,10 +634,22 @@ class automated_gui_class:
         self.ScriptWrite()
 
     def GuiSaveExecute(self):
+        import tkMessageBox
         self.GuiSave()
-        command=self.jobsubmission.get()+" python "+self.scriptname+' &'
-        print "* Executing job with: "+command
-        os.system(command)
+        command="python "+self.scriptname+' &'
+        answer=tkMessageBox._show("Execute protocol",
+                                  "Use a job queueing system?",
+                                  tkMessageBox.QUESTION, 
+                                  tkMessageBox.YESNOCANCEL)
+        if (answer=="yes"):
+            self.master.update()
+            d = MyQueueLaunch(self.master,command)
+            self.master.wait_window(d.top)
+        elif (answer=="no"):
+            import popen2
+            command="python "+self.scriptname+' &'
+            print "* Executing job with: "+command
+            os.system(command)
                 
     def GuiLoad(self):
         import tkFileDialog
@@ -643,6 +676,29 @@ class automated_gui_class:
         import tkMessageBox
         message=str(self.morehelp.get())
         tkMessageBox.showinfo('More Help',message)
+
+# A dialog window to ask for the queueing command
+class MyQueueLaunch:
+    def __init__(self, parent,command):
+        self.command=command
+        top = self.top = Toplevel(parent)
+        Label(top, text="Job submission command \n (e.g. \"bsub -q 1week\")").grid(row=0,column=0,columnspan=2)
+        self.e = Entry(top)
+        self.e.grid(row=1,column=0,columnspan=2)
+        Button(top, text="Submit", command=self.ok).grid(row=2,column=0)
+        Button(top, text="Cancel", command=self.cancel).grid(row=2,column=1)
+        
+
+    def ok(self):
+        import os
+        command=self.e.get()+" "+self.command
+        print "* Executing job with: "+command
+        os.system(command)
+        self.top.destroy()
+
+    def cancel(self):
+        self.top.destroy()
+      
 
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
