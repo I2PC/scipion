@@ -18,9 +18,11 @@
 # {file} Selfile with the input images:
 """ Absolute paths are required in the selection file
 """
-SelFileName='/ABS/PATH/TO/all_images.sel'
+SelFileName='/home/roberto2/Test/PARA_Roberto/100.sel'
 
-# Working subdirectory: 
+# Working directory: 
+""" Relative path to ProjectDir
+"""
 WorkDirectory='Test'
 
 # Delete working directory?
@@ -36,7 +38,7 @@ LogDir="Logs"
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=True
+DoParallel=False
 # Number of processors to use:
 NumberOfCPUs=2
 # {file} A list of all available CPUs (the MPI-machinefile):
@@ -55,16 +57,16 @@ MachineFile="/home/roberto2/bin/machines.dat"
 DoMask=True
 
 # {file} Reference file name (3D map)
-ReferenceFileName="/home/roberto/bla/bla/init_reference/LTA_rot_0.1_norm.vol"
+ReferenceFileName="/home/roberto2/Test/PARA_Roberto/init_reference/LTA_rot_0.1_norm.vol"
 
 #show masked volume
 """ Masked volume will be shown. Do not set ths option to true for
     non iterative processing (jobs sent to queues)
 """
-DisplayMask=True
+DisplayMask=False
 
 # {file} binary mask-file used to mask reference volume
-MaskFileName='/home/roberto/bla/bla/circular_mask.msk'
+MaskFileName='/home/roberto2/Test/PARA_Roberto/circular_mask.msk'
 
 
 #-----------------------------------------------------------------------------
@@ -77,10 +79,10 @@ DoProjectionMatching=True
 """ Show average of projections. Do not set ths option to true for
     non iterative processing (jobs sent to queues)
 """
-DisplayProjectionMatching=True
+DisplayProjectionMatching=False
 
 #Angular sampling rate (in degrees)
-AngSamplingRateDeg=20
+AngSamplingRateDeg=8
 
 #Maximum change in origin offset (+/- pixels)
 MaxChangeOffset=10
@@ -98,10 +100,10 @@ TiltF=140
 """ This option does not work in combination with a limited search 
     of the rot or tilt angle.
 """
-Symfile="/home/roberto2/bla/P6.sym"
+Symfile="/home/roberto2/Test/PARA_Roberto/P6.sym"
 
 #extra options for Projection_Maching
-""" IF you want to use your only references use the -ref option here,
+""" If you want to use your only references use the -ref option here,
     references name should be proj_match_lib00001.proj
 """
 ProjMatchingExtra=""
@@ -116,7 +118,7 @@ DoAlign2D=True
 """ Show aligned classes. Do not set ths option to true for
     non iterative processing (jobs sent to queues)
 """
-DisplayAlign2D=True
+DisplayAlign2D=False
 
 # Inner radius for rotational correlation:
 """ These values are in pixels from the image center
@@ -124,8 +126,8 @@ DisplayAlign2D=True
 InnerRadius=0
 # Outer radius for rotational correlation
 OuterRadius=18
-# Number of align2d iterations to perform:
-Align2DIterNr=4
+# Number of align2d iterations (use at least 3):
+Align2DIterNr=2
 # {expert} Additional align2d parameters
 """ For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 
@@ -144,7 +146,7 @@ Align2DExtraCommand="-max_shift 4"# -max_rot 10"
 DoReconstruction=True
 
 #display reconstructed volume
-DisplayReconstruction=True
+DisplayReconstruction=False
 
 # {expert} Additional reconstruction parameters
 """ examples go here
@@ -160,8 +162,10 @@ ReconstructionMethod="wbp"
 #-----------------------------------------------------------------------------
 # {section} Cleaning temporal files and Reseting origial data
 #-----------------------------------------------------------------------------
-# Restore original Header?
-DoRestoreOriginalHeader=False
+
+# Reset image header
+"""Set shifts and angles stored in the image headers to zero """
+ResetImageHeader=True
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -173,6 +177,12 @@ AnalysisScript="visualize_projmatch.py"
 #-----------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
+#Do not change these variables
+ReferenceVolume='reference_volume.vol'
+Proj_Maching_Output_Root_Name="proj_match"
+multi_align2d_sel="multi_align2d.sel"
+docfile_with_original_angles='docfile_with_original_angles.doc'
+
 class projection_matching_class:
 
    #init variables
@@ -207,15 +217,20 @@ class projection_matching_class:
                 _DoParallel,
                 _MyNumberOfCPUs,
                 _MyMachineFile,
-                _DoRestoreOriginalHeader,
-                _Symfile
+                _Symfile,
+                _ReferenceVolume,
+                _Proj_Maching_Output_Root_Name,
+                _multi_align2d_sel,
+                _ResetImageHeader
                 ):
        import os,sys
-       scriptdir=os.path.expanduser('~')+'/trunk/Xmipp/Applications/Batches/Protocols_lib'
+       scriptdir=os.path.expanduser('~')+'/scripts/'
        sys.path.append(scriptdir) # add default search path
        import log,logging
        
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
+       #self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
+       #self._SelFileName=os.path.abspath(str(_SelFileName))
        self._SelFileName=_SelFileName
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
        self._ReferenceFileName=_ReferenceFileName
@@ -243,16 +258,15 @@ class projection_matching_class:
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
        self._MyMachineFile=_MyMachineFile
-       self._DoRestoreOriginalHeader=_DoRestoreOriginalHeader
        self._Symfile=os.path.abspath(str(_Symfile))
        self._iteration_number=1
        self._ReconstructionExtraCommand=_ReconstructionExtraCommand
        self._ReconstructionMethod=_ReconstructionMethod
 
        
-       self._ReferenceVolume='reference_volume.vol'
-       self._Proj_Maching_Output_Root_Name="proj_match"
-       self._multi_align2d_sel="multi_align2d.sel"
+       self._ReferenceVolume=_ReferenceVolume
+       self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
+       self._multi_align2d_sel=_multi_align2d_sel
        #name of the masked volume
        tmp_OutPutVol=os.path.basename(self._ReferenceFileName)
        ReferenceFileName_without_ext=\
@@ -260,9 +274,9 @@ class projection_matching_class:
        
        
        self._mylog=log.init_log_system(_ProjectDir,
-                                      _LogDir,
-                                      sys.argv[0],
-                                      _WorkDirectory)
+                                       _LogDir,
+                                       sys.argv[0],
+                                       _WorkDirectory)
                                       
        #uncomment next line to get Degub level logging
        self._mylog.setLevel(logging.DEBUG)
@@ -273,21 +287,19 @@ class projection_matching_class:
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
        create_working_directory(self._mylog,self._WorkDirectory)
-       # Backup script
+       #made backup of this script
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
-    
        #change to working dir
        os.chdir(self._WorkDirectory)
        
-       #save initial header
-       docfile_with_original_angles='docfile_with_original_angles.doc'
-       command='xmipp_header_extract -i '
-       command=command+self._SelFileName + \
-                      ' -o ' + docfile_with_original_angles 
-       self._mylog.debug("save original header in file: " + 
-                                docfile_with_original_angles ) 
-       self._mylog.info(command)
-       os.system(command)
+       #copy files to local directory
+       copy_images_to_local_disk(self._mylog,
+                                 self._SelFileName,
+                                 self._WorkDirectory)
+       self._SelFileName=self._WorkDirectory+'/'+\
+                         str(os.path.basename(self._SelFileName))
+       if (_ResetImageHeader):
+           reset_image_header(self._mylog,self._SelFileName)
 
        ##
        ##LOOP
@@ -348,7 +360,7 @@ class projection_matching_class:
                                       )
        else:
           self._mylog.info("Skipped ProjectionMatching") 
-                       
+       exit(1)                
        if (_DoAlign2D):
           execute_align2d(self._mylog,
                           self._InnerRadius,
@@ -380,16 +392,6 @@ class projection_matching_class:
           self._mylog.info("Skipped Reconstruction") 
 
 
-       #restore initial header
-       #change to working dir
-       os.chdir(self._WorkDirectory)
-       if _DoRestoreOriginalHeader:
-          command='xmipp_header_assign -i '
-          command=command+docfile_with_original_angles
-          self._mylog.debug("restore original header in file: " + 
-                                   docfile_with_original_angles ) 
-          self._mylog.info(command)
-          os.system(command)
 
 #------------------------------------------------------------------------
 #delete_working directory
@@ -417,6 +419,31 @@ def create_working_directory(_mylog,_WorkDirectory):
        os.makedirs(_WorkDirectory)
 
 #------------------------------------------------------------------------
+#           reset_image_header(self._SelFileName)
+#------------------------------------------------------------------------
+def reset_image_header(_mylog,_SelFileName):
+    import os
+    print '**************************************************************'
+    print '* Reset headers of files in selfile ' + _SelFileName 
+    command = "xmipp_header_reset -i " + _SelFileName
+    print '* ',command
+    _mylog.info(command)
+    os.system(command)
+
+#------------------------------------------------------------------------
+#           copy files to local dir
+#------------------------------------------------------------------------
+def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory):
+      import os,selfile
+      print '*********************************************************************'
+      print '* Copying images to working directory ...'
+      mysel=selfile.selfile()
+      mysel.read(_SelFileName)
+      newsel=mysel.copy_sel(_WorkDirectory)
+      newsel.write(os.path.basename(_SelFileName))
+      _mylog.info("copy files to local directory")
+
+#------------------------------------------------------------------------
 #execute_mask
 #------------------------------------------------------------------------
 def execute_mask(_mylog,
@@ -441,14 +468,14 @@ def execute_mask(_mylog,
    print '* Mask the reference volume'
    command='xmipp_mask'+ \
            ' -i '    + InPutVolume + \
-           ' -o '    + MaskedVolume + \
+           ' -o '    + _ReferenceVolume + \
            ' -mask ' + MaskVolume 
 
    print '* ',command
    _mylog.info(command)
    os.system(command)
    if _DisplayMask==True:
-      command='xmipp_show -vol '+ _Masked_Vol +' -w 10 &'
+      command='xmipp_show -vol '+ MaskedVolume +' -w 10'
       print '*********************************************************************'
       print '* ',command
       _mylog.info(command)
@@ -494,12 +521,12 @@ def execute_projection_matching(_mylog,
               ' -sam '         + _AngSamplingRateDeg  + \
               ' -max_shift '   + _MaxChangeOffset
   
-  if _DoRetricSearchbyTiltAngle:
+   if _DoRetricSearchbyTiltAngle:
      parameters=  parameters                           + \
               ' -tilt0 '       + str(_Tilt0)        + \
               ' -tiltF '       + str(_TiltF)
   
-  parameters=  parameters                           + \
+   parameters=  parameters                           + \
               ' -Ri '          + str(_Ri)           + \
               ' -Ro '          + str(_Ro)           + \
               ' -output_refs -output_classes ' + \
@@ -612,7 +639,7 @@ def execute_align2d(_mylog,
    if _DoParallel:
        fh.close();
        parameters="-i " +  tmp_file_name
-       _mylog.info("xmipp_mpi_run " + command)
+       _mylog.info("xmipp_mpi_run " + parameters)
        import launch_parallel_job
        RunInBackground=False
        launch_parallel_job.launch_parallel_job(
@@ -623,10 +650,24 @@ def execute_align2d(_mylog,
                            _MyMachineFile,
                            RunInBackground)
        os.remove(tmp_file_name)
+       
+   #if a sel file is empty copy reference class
+   for class_selfile in glob.glob(class_sel_pattern):
+      aux_sel_file.read(class_selfile)
+      message= aux_sel_file.selfilename,\
+             "length ", aux_sel_file.length(), \
+             "length_t ", aux_sel_file.lenght_even_no_actives()
+      _mylog.debug(message)
+             
+      if (aux_sel_file.length()<1 and \
+          aux_sel_file.lenght_even_no_actives()>0):  
+          class_file_name = class_selfile.replace('.sel','.xmp') 
+          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
+          shutil.copy(class_file_name,aligned_file_name)
+          _mylog.info("cp "+class_file_name+" "+aligned_file_name) 
 
    if _DisplayAlign2D==True:
       command='xmipp_show -showall -sel '+ _multi_align2d_sel +' -w 9'
-
       print '*********************************************************************'
       print '* ',command
       _mylog.info(command) 
@@ -772,6 +813,9 @@ if __name__ == '__main__':
                 DoParallel,
                 NumberOfCPUs,
                 MachineFile,
-                DoRestoreOriginalHeader,
-                Symfile
+                Symfile,
+                ReferenceVolume,
+                Proj_Maching_Output_Root_Name,
+                multi_align2d_sel,
+                ResetImageHeader
                 )
