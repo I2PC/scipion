@@ -150,7 +150,7 @@ def show_ang_distribution(_ShowPlots,_iteration_number):
                               doc.maximum_of_column(7)
                               )
             plot=visualization.gnuplot()
-            title='Angular distribution for projection matching for iteration '+\
+            title='Angular distribution after "projection matching" for iteration '+\
                     str(_iteration_number)
             plot.plot_xy1y2_several_angular_doc_files(plots,
                                                       title,
