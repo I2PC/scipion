@@ -48,7 +48,7 @@ DoEstimatePSD=True
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript='visualize_s.py'
+AnalysisScript='visualize_preprocess_micrographs.py'
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
