@@ -27,15 +27,13 @@ VisualizeVolY=False
 """ For this to work, you need to have chimera installed!
 """
 VisualizeVolChimera=True
-# {expert} Width of Matrix-views (multiple of three value!):
-MatrixWidth=10
+# {expert} Width of Matrix-views (multiple of 3!):
+MatrixWidth=9
 #------------------------------------------------------------------------------------------------
 # {section}Reference volume 
 #------------------------------------------------------------------------------------------------
 #show reference volume 
 DisplayReference=False
-# Plot the angular distribution of the reference(s)?
-VisualizeAngDistribution=False
 #Show projection maching library and alignes classes
 DisplayProjectionMatching=False
 #display angular distribution
@@ -64,13 +62,13 @@ class visualize_projmatch_class:
                 _DisplayProjectionMatching,
                 _DisplayReconstruction,
                 _MatrixWidth,
-                _VisualizeAngDistribution
+                _DisplayAngularDistribution
                 ):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
+        import log,logging
         import visualization
 
         # import corresponding protocol
@@ -85,13 +83,14 @@ class visualize_projmatch_class:
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
         self._Proj_Maching_Output_Root_Name=protocol_projmatch.Proj_Maching_Output_Root_Name
         self._Proj_Maching_Output_Root_Name + '.doc'
-        self.mylog=log.init_log_system(self._ProjectDir,
+        self._mylog=log.init_log_system(self._ProjectDir,
                                        self._LogDir,
                                        sys.argv[0],
                                        self._WorkDirectory)
+        self._mylog.setLevel(logging.DEBUG)
         self._iteration_number=_DisplayIterNo
         self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
-                                   str(self._iteration_number)
+                                      str(self._iteration_number)
         #os.chdir(Iteration_Working_Directory)
 
         if (_DisplayReference):
@@ -104,8 +103,8 @@ class visualize_projmatch_class:
                                                 _VisualizeVolX,
                                                 _VisualizeVolY,
                                                 _VisualizeVolChimera)
-        if (_VisualizeAngDistribution):
-           self._ShowPlots=[] 
+        if (_DisplayAngularDistribution):
+           self._ShowPlots=[]
            self._ShowPlots.append(os.getcwd()+'/'+\
                                   self._Iteration_Working_Directory+'/'+\
                                   self._Proj_Maching_Output_Root_Name+\
@@ -113,17 +112,29 @@ class visualize_projmatch_class:
            show_ang_distribution(self._ShowPlots,self._iteration_number)
            
         if (_DisplayProjectionMatching):
-            self.ShowSelfiles=[] 
-            self.ShowSelfiles.append(self._Iteration_Working_Directory+'/'+\
-                                     self._multi_align2d_sel)
-            visualization.visualize_images(self.ShowSelfiles,
-                             True,
-                             self._MatrixWidth)
+           self.ShowSelfiles=[] 
+           self.ShowSelfiles.append(os.getcwd()+'/'+\
+                                    self._Iteration_Working_Directory+'/'+\
+                                    self._multi_align2d_sel)
+           currdir=os.getcwd()
+           for selfiles in self.ShowSelfiles:
+              os.chdir(self._Iteration_Working_Directory)
+              visualization.visualize_images(self.ShowSelfiles,
+                                             True,
+                                             self._MatrixWidth,
+                                             self._MatrixWidth,
+                                             True)
+           os.chdir(currdir)
         #if (_DisplayReconstruction):
         #    self.visualize_Reconstruction(self._SomName,self._SpectraName)
             
         # Return to parent dir
         # os.chdir(os.pardir)
+
+    def close(self):
+        message='Done!'
+        print '*',message
+        print '*********************************************************************'
 
 def show_ang_distribution(_ShowPlots,_iteration_number):
         import os
@@ -146,10 +157,6 @@ def show_ang_distribution(_ShowPlots,_iteration_number):
                                                       'degrees',
                                                       'degrees')
 
-def close():
-        message='Done!'
-        print '*',message
-        print '*********************************************************************'
 
 #		
 # Main
@@ -166,7 +173,7 @@ if __name__ == '__main__':
                                                   DisplayProjectionMatching,
                                                   DisplayReconstruction,
                                                   MatrixWidth,
-                                                  VisualizeAngDistribution)
+                                                  DisplayAngularDistribution)
     # close 
     visualize_projmatch.close()
 
