@@ -658,7 +658,14 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         command="python "+self.scriptname+' &'
-        if (self.is_analysis or event.keysym=='r'):
+
+        # For CTRL-R direct execution (hidden option)
+        if not (event==""):
+            key=event.keysym
+        else:
+            key="xx"
+
+        if (self.is_analysis or key=="r"):
             answer="no"
         else:
             answer=tkMessageBox._show("Execute protocol",
