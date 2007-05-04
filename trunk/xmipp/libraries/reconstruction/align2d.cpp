@@ -674,11 +674,21 @@ void Prog_align2d_prm::align2d() {
 
 
   // Calculate average and stddev image and write out
-  if(SFo.ImgNo(SelLine::ACTIVE)){
+//  if(SFo.ImgNo(SelLine::ACTIVE)){
       cerr << "Calculating average, correlations and writing out results ..."<<endl;
       ImageXmipp med,sig;
       double min,max;
-      SFo.get_statistics(med,sig,min,max,true);
+      if(SFo.ImgNo(SelLine::ACTIVE))
+         {
+         SFo.get_statistics(med,sig,min,max,true);
+         }
+      else
+         {
+         med().resize(Iref().RowNo(),Iref().ColNo());
+         med().init_zeros();   
+         sig().resize(Iref().RowNo(),Iref().ColNo());   
+         sig().init_zeros();   
+         }
       fn_img=fn_sel.without_extension()+".xmp";
       if (oext!="") fn_img=fn_img.insert_before_extension("_"+oext);
       fn_img=fn_img.insert_before_extension(".med");
@@ -709,7 +719,7 @@ void Prog_align2d_prm::align2d() {
           DFo.append_data_line(dataline);
         }
         DFo.write(fn_doc);
-      }
+//      }
    }
 
   images.clear();
