@@ -554,7 +554,7 @@ class automated_gui_class:
         self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
         self.bGet.grid(row=self.buttonrow+3,column=4)
         self.master.bind('<Control_L><e>', self.GuiSaveExecute)
-        self.master.bind('<Control_L><d>', self.GuiSaveExecute)
+        self.master.bind('<Control_L><r>', self.GuiSaveExecute)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
@@ -659,7 +659,7 @@ class automated_gui_class:
         self.GuiSave()
         command="python "+self.scriptname+' &'
         print "keysym=",event.keysym
-        if (self.is_analysis or event.keysym=='d'):
+        if (self.is_analysis or event.keysym=='r'):
             answer="no"
         else:
             answer=tkMessageBox._show("Execute protocol",
