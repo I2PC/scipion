@@ -277,6 +277,14 @@ class automated_gui_class:
             width=800
         master.geometry("%dx%d%+d%+d" % (width,height,0,0))
 
+    def GuiSetKeyBindings(self):
+        self.master.bind('<Control_L><c>', self.GuiClose)
+        self.master.bind('<Control_L><e>', self.GuiSaveExecute)
+        self.master.bind('<Control_L><s>', self.GuiSave)
+        self.master.bind('<Control_L><a>', self.AnalyseResults)
+        self.master.bind('<Control_L><l>', self.GuiLoad)
+        self.master.bind('<Control_L><o>', self.GuiTockleExpertMode)
+
     def LaunchCanvas(self,master,canvas,frame):
         # Launch the window
         canvas.create_window(0, 0, anchor=NW, window=frame)
@@ -371,6 +379,7 @@ class automated_gui_class:
         # Add bottom row buttons
         self.buttonrow=(self.frame.grid_size()[1])
         self.GuiAddRestProtocolButtons()
+        self.GuiSetKeyBindings()
 
     def FillSetupGui(self):
         self.which_setup=StringVar()
@@ -524,35 +533,35 @@ class automated_gui_class:
 
     def GuiAddRestProtocolButtons(self):
         self.AddSeparator(self.buttonrow)
-        self.button = Button(self.frame, text="Close", command=self.GuiClose)
+        self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         self.button.grid(row=self.buttonrow+3,column=0, sticky=W)
 
         if (self.expert_mode==True):
-            text2=" Hide expert options "
+            text2="Hide Expert Options"
         else:
-            text2="Show expert options"
-        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow+3,column=1)
+            text2="Show Expert Options"
+        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,underline=12)
+        self.bGet.grid(row=self.buttonrow+3,column=1,sticky=EW)
 
-        self.bGet = Button(self.frame, text="Load", command=self.GuiLoad)
+        self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,underline=0)
         self.bGet.grid(row=self.buttonrow+3,column=2)
-        self.bGet = Button(self.frame, text="Save", command=self.GuiSave)
+        self.bGet = Button(self.frame, text="Save", command=self.GuiSave,underline=0)
         self.bGet.grid(row=self.buttonrow+3,column=3)
-        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute)
+        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
         self.bGet.grid(row=self.buttonrow+3,column=4)
         if (self.have_analyse_results):
-            self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults)
+            self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
 
     def GuiAddRestSetupButtons(self):
         self.button = Button(self.frame, text="Close", command=self.master.quit)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         if (self.expert_mode==True):
-            text2=" Hide expert options "
+            text2="Hide Expert Options"
         else:
-            text2="Show expert options"
-        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode)
-        self.bGet.grid(row=self.buttonrow,column=1)
+            text2="Show Expert Options"
+        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,underline=12)
+        self.bGet.grid(row=self.buttonrow,column=1,sticky=EW)
         if (self.have_publication):
             headertext="Read more about Xmipp protocols in:"
             for pub in self.publications:
@@ -560,7 +569,7 @@ class automated_gui_class:
             self.l2=Label(self.frame, text=headertext, fg="dark green")
             self.l2.grid(row=self.buttonrow+1, column=0,columnspan=5,sticky=EW)
 
-    def GuiTockleExpertMode(self):
+    def GuiTockleExpertMode(self,event=""):
         if (self.expert_mode==True):
             for w in self.widgetexpertlist:
                 w.grid_remove()
@@ -619,7 +628,7 @@ class automated_gui_class:
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
 
-    def AnalyseResults(self):
+    def AnalyseResults(self,event=""):
         self.GuiSave()
         print "* Analyzing..."
         command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
@@ -627,7 +636,7 @@ class automated_gui_class:
         print command
         os.system(command)
          
-    def GuiClose(self):
+    def GuiClose(self,event=""):
         print "* Closing..."
         self.master.destroy()
         
@@ -635,7 +644,7 @@ class automated_gui_class:
         print "* Saving..."
         self.ScriptWrite()
 
-    def GuiSaveExecute(self):
+    def GuiSaveExecute(self,event=""):
         import tkMessageBox
         self.GuiSave()
         command="python "+self.scriptname+' &'
@@ -656,7 +665,7 @@ class automated_gui_class:
             print "* Executing job with: "+command
             os.system(command)
                 
-    def GuiLoad(self):
+    def GuiLoad(self,event=""):
         import tkFileDialog
         import os,shutil
         fname = tkFileDialog.askdirectory()       
