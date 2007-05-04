@@ -27,13 +27,15 @@ VisualizeVolY=False
 """ For this to work, you need to have chimera installed!
 """
 VisualizeVolChimera=True
-# {expert} Width of Matrix-views (even value!):
+# {expert} Width of Matrix-views (multiple of three value!):
 MatrixWidth=10
 #------------------------------------------------------------------------------------------------
 # {section}Reference volume 
 #------------------------------------------------------------------------------------------------
-#show masked volume
-DisplayMask=False
+#show reference volume 
+DisplayReference=False
+# Plot the angular distribution of the reference(s)?
+VisualizeAngDistribution=False
 #Show projection maching library and alignes classes
 DisplayProjectionMatching=False
 #display angular distribution
@@ -58,10 +60,11 @@ class visualize_projmatch_class:
                 _VisualizeVolY,
                 _VisualizeVolChimera,
                 _DisplayIterNo,
-                _DisplayMask,
+                _DisplayReference,
                 _DisplayProjectionMatching,
                 _DisplayReconstruction,
-                _MatrixWidth
+                _MatrixWidth,
+                _VisualizeAngDistribution
                 ):
 	     
         import os,sys,shutil
@@ -80,25 +83,39 @@ class visualize_projmatch_class:
         self._multi_align2d_sel=protocol_projmatch.multi_align2d_sel
         self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch.SelFileName)
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
+        self._Proj_Maching_Output_Root_Name=protocol_projmatch.Proj_Maching_Output_Root_Name
+        self._Proj_Maching_Output_Root_Name + '.doc'
         self.mylog=log.init_log_system(self._ProjectDir,
                                        self._LogDir,
                                        sys.argv[0],
                                        self._WorkDirectory)
         self._iteration_number=_DisplayIterNo
-        Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
+        self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
                                    str(self._iteration_number)
-        self.ShowVolumes=[] 
-        self.ShowVolumes.append(self._ReferenceVolume)
-        os.chdir(Iteration_Working_Directory)
-        if (_DisplayMask):
+        #os.chdir(Iteration_Working_Directory)
+
+        if (_DisplayReference):
+           self.ShowVolumes=[] 
+           self.ShowVolumes.append(os.getcwd()+'/'+\
+                                   self._Iteration_Working_Directory+'/'+\
+                                   self._ReferenceVolume)
            visualization.visualize_volumes(self.ShowVolumes,
                                                 _VisualizeVolZ,
                                                 _VisualizeVolX,
                                                 _VisualizeVolY,
                                                 _VisualizeVolChimera)
-        self.ShowSelfiles=[] 
-        self.ShowSelfiles.append(self._multi_align2d_sel)
+        if (_VisualizeAngDistribution):
+           self._ShowPlots=[] 
+           self._ShowPlots.append(os.getcwd()+'/'+\
+                                  self._Iteration_Working_Directory+'/'+\
+                                  self._Proj_Maching_Output_Root_Name+\
+                                  ".doc")
+           show_ang_distribution(self._ShowPlots,self._iteration_number)
+           
         if (_DisplayProjectionMatching):
+            self.ShowSelfiles=[] 
+            self.ShowSelfiles.append(self._Iteration_Working_Directory+'/'+\
+                                     self._multi_align2d_sel)
             visualization.visualize_images(self.ShowSelfiles,
                              True,
                              self._MatrixWidth)
@@ -106,10 +123,30 @@ class visualize_projmatch_class:
         #    self.visualize_Reconstruction(self._SomName,self._SpectraName)
             
         # Return to parent dir
-        os.chdir(os.pardir)
+        # os.chdir(os.pardir)
 
+def show_ang_distribution(_ShowPlots,_iteration_number):
+        import os
+        import docfiles
+        import visualization
+        for plots in _ShowPlots: 
+            doc=docfiles.docfile(plots)
+            doc.check_angle_range()
+            doc.write_several(plots,
+                              10,
+                              7,
+                              doc.minimum_of_column(7),
+                              doc.maximum_of_column(7)
+                              )
+            plot=visualization.gnuplot()
+            title='Angular distribution for projection matching for iteration '+\
+                    str(_iteration_number)
+            plot.plot_xy1y2_several_angular_doc_files(plots,
+                                                      title,
+                                                      'degrees',
+                                                      'degrees')
 
-    def close(self):
+def close():
         message='Done!'
         print '*',message
         print '*********************************************************************'
@@ -125,10 +162,11 @@ if __name__ == '__main__':
                                                   VisualizeVolY,
                                                   VisualizeVolChimera,
                                                   DisplayIterNo,
-                                                  DisplayMask,
+                                                  DisplayReference,
                                                   DisplayProjectionMatching,
                                                   DisplayReconstruction,
-                                                  MatrixWidth)
+                                                  MatrixWidth,
+                                                  VisualizeAngDistribution)
     # close 
     visualize_projmatch.close()
 
