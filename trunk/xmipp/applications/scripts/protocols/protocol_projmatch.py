@@ -161,7 +161,7 @@ ReconstructionMethod="wbp"
 
 
 #-----------------------------------------------------------------------------
-# {section} Cleaning temporal files and Reseting origial data
+# {section} Cleaning temporal files and Reseting original data
 #-----------------------------------------------------------------------------
 
 # Reset image header
@@ -182,6 +182,7 @@ AnalysisScript="visualize_projmatch.py"
 ReferenceVolume='reference_volume.vol'
 Proj_Maching_Output_Root_Name="proj_match"
 multi_align2d_sel="multi_align2d.sel"
+align2d_sel="align2d.sel"
 docfile_with_original_angles='docfile_with_original_angles.doc'
 
 class projection_matching_class:
@@ -222,6 +223,7 @@ class projection_matching_class:
                 _ReferenceVolume,
                 _Proj_Maching_Output_Root_Name,
                 _multi_align2d_sel,
+                _align2d_sel,
                 _ResetImageHeader
                 ):
        import os,sys
@@ -268,6 +270,7 @@ class projection_matching_class:
        self._ReferenceVolume=_ReferenceVolume
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
        self._multi_align2d_sel=_multi_align2d_sel
+       self._align2d_sel=_align2d_sel
        #name of the masked volume
        tmp_OutPutVol=os.path.basename(self._ReferenceFileName)
        ReferenceFileName_without_ext=\
@@ -373,13 +376,20 @@ class projection_matching_class:
                           self._MyNumberOfCPUs,
                           self._MyMachineFile,
                           self._DisplayAlign2D,
-                          self._multi_align2d_sel)
+                          self._multi_align2d_sel
+                          )
        else:
           self._mylog.info("Skipped Align2D") 
+       command='cat ' + self._multi_align2d_sel \
+                      + ' | grep  \.med\.xmp  ' \
+                      + ' | grep -v \ -1 >' \
+                      + self._align2d_sel
+       self._mylog.info(command)
+       os.system(command)
        exit(1)                
         
        if (_DoReconstruction):
-          execute_reconstruction(self._mylog,
+          execute_reconstruction(self._mylog, 
                                  self._ReconstructionExtraCommand,
                                  self._iteration_number,
                                  self._DisplayReconstruction,
@@ -594,7 +604,7 @@ def execute_align2d(_mylog,
    _mylog.debug("class_sel_pattern: " + class_sel_pattern)
    aux_sel_file=selfile.selfile()
    align2d_sel=selfile.selfile()
-   #create compare sel and put to -1
+   #create compare sel 
    for class_selfile in glob.glob(class_sel_pattern):
       reference=class_selfile.replace('.sel','.xmp')
       aux_sel_file.read(class_selfile)
@@ -605,20 +615,11 @@ def execute_align2d(_mylog,
       align2d_sel.insert(lib_file_name,str(1))
       align2d_sel.insert(class_file_name,str(-1))
       aligned_file_name = class_selfile.replace('.sel','.med.xmp')
-      if (aux_sel_file.length()<2):
-         if (aux_sel_file.length()<1):
-           align2d_sel.insert(aligned_file_name,str(-1))
-         else:
-           align2d_sel.insert(aligned_file_name,str(1))
-         command="cp " + class_file_name + " " + aligned_file_name +"\n"
-         if _DoParallel:
-            _mylog.debug(command)
-            fh.writelines(command)
-         else:  
-            shutil.copy(class_file_name,aligned_file_name)
-            _mylog.info(command)
+      align2d_sel.insert(aligned_file_name,str(1))
+      if (aux_sel_file.length()<1):
+         command="xmipp_operate -i " + \
+                  class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
       else:
-         align2d_sel.insert(aligned_file_name,str(1))
          print '*********************************************************************'
          print '* Aligning translationally each class'
          command='xmipp_align2d'+ \
@@ -628,13 +629,13 @@ def execute_align2d(_mylog,
                  ' -iter ' + str(_Align2DIterNr) +\
                  ' -ref ' + reference +\
                  ' '  + _Align2DExtraCommand
-         print '* ',command
-         if _DoParallel:
-            fh.writelines(command+"\n")
-            _mylog.debug(command)
-         else:  
-            os.system(command)
-            _mylog.info(command)
+      print '* ',command
+      if _DoParallel:
+         fh.writelines(command+"\n")
+         _mylog.debug(command)
+      else:  
+         os.system(command)
+         _mylog.info(command)
             
    align2d_sel.write(_multi_align2d_sel);
    if _DoParallel:
@@ -652,20 +653,20 @@ def execute_align2d(_mylog,
                            RunInBackground)
        os.remove(tmp_file_name)
        
-   #if a sel file is empty copy reference class
-   for class_selfile in glob.glob(class_sel_pattern):
-      aux_sel_file.read(class_selfile)
-      message= aux_sel_file.selfilename,\
-             "length ", aux_sel_file.length(), \
-             "length_t ", aux_sel_file.lenght_even_no_actives()
-      _mylog.debug(message)
-             
-      if (aux_sel_file.length()<1 and \
-          aux_sel_file.lenght_even_no_actives()>0):  
-          class_file_name = class_selfile.replace('.sel','.xmp') 
-          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
-          shutil.copy(class_file_name,aligned_file_name)
-          _mylog.info("cp "+class_file_name+" "+aligned_file_name) 
+#   #if a sel file is empty copy reference class
+#   for class_selfile in glob.glob(class_sel_pattern):
+#      aux_sel_file.read(class_selfile)
+#      message= aux_sel_file.selfilename,\
+#             "length ", aux_sel_file.length(), \
+#             "length_t ", aux_sel_file.lenght_even_no_actives()
+#      _mylog.debug(message)
+#             
+#      if (aux_sel_file.length()<1 and \
+#          aux_sel_file.lenght_even_no_actives()>0):  
+#          class_file_name = class_selfile.replace('.sel','.xmp') 
+#          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
+#          shutil.copy(class_file_name,aligned_file_name)
+#          _mylog.info("cp "+class_file_name+" "+aligned_file_name) 
 
    if _DisplayAlign2D==True:
       command='xmipp_show -showall -sel '+ _multi_align2d_sel +' -w 9'
@@ -709,6 +710,7 @@ def execute_reconstruction(_mylog,
                            _MyMachineFile,
                            _ReconstructionMethod,
                            _multi_align2d_sel,
+                           _align2d_sel,
                            _Symfile):
    import os,shutil
    _mylog.debug("execute_reconstruction")
@@ -716,14 +718,7 @@ def execute_reconstruction(_mylog,
 
    #the user should be able to delete images
    #this is dirty but what else can I do
-   reconstruction_sel='reconstruction.sel';
-
-
-   command='cat ' + _multi_align2d_sel + ' | grep  \.med\.xmp  ' +\
-                                         ' | grep -v \ -1 >'+ \
-                                          reconstruction_sel
-   _mylog.info(command)
-   os.system(command)
+   reconstruction_sel=_align2d_sel;
 
    Outputvolume  ="reconstruction_iter_"+str(_iteration_number)+".vol"
    print '*********************************************************************'
@@ -818,5 +813,6 @@ if __name__ == '__main__':
                 ReferenceVolume,
                 Proj_Maching_Output_Root_Name,
                 multi_align2d_sel,
+                align2d_sel,
                 ResetImageHeader
                 )
