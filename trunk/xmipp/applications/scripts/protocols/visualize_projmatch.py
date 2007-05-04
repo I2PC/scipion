@@ -34,10 +34,12 @@ MatrixWidth=9
 #------------------------------------------------------------------------------------------------
 #show reference volume 
 DisplayReference=False
-#Show projection maching library and alignes classes
+#Show projection maching library and aligned classes
 DisplayProjectionMatching=False
-#display angular distribution
+#display angular distribution after projection matching
 DisplayAngularDistribution=False
+#display angular distribution after  align2d
+DisplayAngularDistributionAlign2d=False
 #display reconstructed volume
 DisplayReconstruction=False
 
@@ -62,7 +64,8 @@ class visualize_projmatch_class:
                 _DisplayProjectionMatching,
                 _DisplayReconstruction,
                 _MatrixWidth,
-                _DisplayAngularDistribution
+                _DisplayAngularDistribution,
+                _DisplayAngularDistributionAlign2d
                 ):
 	     
         import os,sys,shutil
@@ -79,6 +82,7 @@ class visualize_projmatch_class:
         self._ProjectDir=protocol_projmatch.ProjectDir
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
         self._multi_align2d_sel=protocol_projmatch.multi_align2d_sel
+        self._align2d_sel=protocol_projmatch.align2d_sel
         self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch.SelFileName)
         self._ReferenceVolume=protocol_projmatch.ReferenceVolume
         self._Proj_Maching_Output_Root_Name=protocol_projmatch.Proj_Maching_Output_Root_Name
@@ -109,7 +113,9 @@ class visualize_projmatch_class:
                                   self._Iteration_Working_Directory+'/'+\
                                   self._Proj_Maching_Output_Root_Name+\
                                   ".doc")
-           show_ang_distribution(self._ShowPlots,self._iteration_number)
+           title='Angular distribution after "projection matching" for iteration '+\
+                    str(self._iteration_number)
+           show_ang_distribution(self._ShowPlots,self._iteration_number,title)
            
         if (_DisplayProjectionMatching):
            self.ShowSelfiles=[] 
@@ -125,6 +131,16 @@ class visualize_projmatch_class:
                                              self._MatrixWidth,
                                              True)
            os.chdir(currdir)
+
+        if (_DisplayAngularDistributionAlign2d):
+           self._ShowPlots=[]
+           self._ShowPlots.append(os.getcwd()+'/'+\
+                                  self._Iteration_Working_Directory+'/'+\
+                                  self._align2d_sel)
+           title='Angular distribution after "alig2d" for iteration '+\
+                    str(self._iteration_number)
+           show_ang_distribution(self._ShowPlots,self._iteration_number,title)
+
         #if (_DisplayReconstruction):
         #    self.visualize_Reconstruction(self._SomName,self._SpectraName)
             
@@ -136,7 +152,7 @@ class visualize_projmatch_class:
         print '*',message
         print '*********************************************************************'
 
-def show_ang_distribution(_ShowPlots,_iteration_number):
+def show_ang_distribution(_ShowPlots,_iteration_number,title):
         import os
         import docfiles
         import visualization
@@ -150,8 +166,6 @@ def show_ang_distribution(_ShowPlots,_iteration_number):
                               doc.maximum_of_column(7)
                               )
             plot=visualization.gnuplot()
-            title='Angular distribution after "projection matching" for iteration '+\
-                    str(_iteration_number)
             plot.plot_xy1y2_several_angular_doc_files(plots,
                                                       title,
                                                       'degrees',
@@ -173,7 +187,8 @@ if __name__ == '__main__':
                                                   DisplayProjectionMatching,
                                                   DisplayReconstruction,
                                                   MatrixWidth,
-                                                  DisplayAngularDistribution)
+                                                  DisplayAngularDistribution,
+                                                  DisplayAngularDistributionAlign2d)
     # close 
     visualize_projmatch.close()
 
