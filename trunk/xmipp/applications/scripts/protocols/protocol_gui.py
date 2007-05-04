@@ -658,7 +658,6 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         command="python "+self.scriptname+' &'
-        print "keysym=",event.keysym
         if (self.is_analysis or event.keysym=='r'):
             answer="no"
         else:
