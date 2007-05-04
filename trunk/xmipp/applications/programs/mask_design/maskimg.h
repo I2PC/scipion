@@ -1541,6 +1541,7 @@ public:
 
     /** Apply transformations that are stored in the headers of the images? */
     bool        apply_geo;
+    string      saveasname;
     bool	loadImage( const char *fileName);
     Image	xmippImage;				// Xmipp Image
 
@@ -1587,6 +1588,7 @@ private:
 private slots:
     void	newWindow();
     void	openFile();
+    void	Close();
     void	saveImage(int);
     void	giveHelp();
     void	doOption(int);

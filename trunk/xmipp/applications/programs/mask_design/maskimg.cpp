@@ -82,7 +82,7 @@ void maskImg::Init()
     help->insertItem( "Help!", this, SLOT(giveHelp()));
 
     menubar->insertSeparator();
-    menubar->insertItem( "Quit", this,  SLOT(close()));
+    menubar->insertItem( "Quit", this,  SLOT(Close()));
 
     connect( options, SIGNAL(activated(int)), this, SLOT(doOption(int)) );
 
@@ -344,13 +344,41 @@ void maskImg::updateStatus()
 /****************************************************/
 
 /*
+  This function exits.
+*/
+void maskImg::Close( )
+{
+
+    if (saveasname!="") 
+    {
+	saveImage(0);
+    }
+    close();
+
+}
+
+
+
+/****************************************************/
+
+/*
   This function saves the image.
 */
 void maskImg::saveImage( int item )
 {
     //const char* fmt = saveimage->text(item);
 //    QString savefilename = QFileDialog::getSaveFileName(0, 0, 0, filename);
-    QString savefilename = QFileDialog::getSaveFileName(QString::null, "*.msk", this);
+    QString savefilename;
+
+    if (saveasname=="") 
+    {
+	savefilename = QFileDialog::getSaveFileName(QString::null, "*.msk", this);
+    }
+    else
+    {
+	const char* c_string = saveasname.c_str();
+	savefilename = QString(c_string );
+    }
 
     if ( !savefilename.isEmpty() ) {
 	QFileInfo fi(savefilename);

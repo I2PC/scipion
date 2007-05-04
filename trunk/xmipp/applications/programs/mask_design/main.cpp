@@ -46,7 +46,7 @@ int main( int argc, char **argv )
     qInitImageIO();
 #endif
 
-  string selname = "", imgname = "";
+  string selname = "", imgname = "", saveasname = "";
   bool sdflag = false;
   bool apply_geo;
 
@@ -55,6 +55,7 @@ int main( int argc, char **argv )
     	selname = get_param(argc, argv, "-sel");
     else
     	imgname = get_param(argc, argv, "-img");
+    saveasname=get_param(argc, argv, "-save_as");
     if (check_param(argc, argv, "-sd"))
      sdflag = true;
     apply_geo=!check_param(argc, argv, "-dont_apply_geo");
@@ -65,6 +66,7 @@ int main( int argc, char **argv )
     cout << "-img              : Image to visualize" << endl;
     cout << "-sel              : Use Sel file average or SD Image" << endl;
     cout << "[-sd]             : Uses SD image instead of Average image (default: false)" << endl;
+    cout << "[-save_as <name>] : Always save mask with this name" << endl;
     cout << "[-dont_apply_geo] : Do not apply transformation stored in the header" << endl;
 
     exit(1);
@@ -73,6 +75,7 @@ int main( int argc, char **argv )
    if (imgname != "")  {
 	    maskImg *w = new maskImg(0, imgname.c_str(), QWidget::WDestructiveClose);
 	    w->apply_geo=apply_geo;
+	    w->saveasname=saveasname;
 	    w->loadImage( imgname.c_str());
 	    w->show();
    } else {
@@ -87,6 +90,7 @@ int main( int argc, char **argv )
 	else
 	   w = new maskImg(NULL, &ave, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
 	w->apply_geo=apply_geo;
+	w->saveasname=saveasname;
 	w->show();
    }
    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
