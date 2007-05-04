@@ -137,7 +137,8 @@ Align2DIterNr=2
 
   consider filtering the images with \"-filter 10 -sampling 2\"
 """
-Align2DExtraCommand="-max_shift 4"# -max_rot 10"
+Align2DExtraCommand="-max_shift 4"
+# -max_rot 10
 
 #-----------------------------------------------------------------------------
 # {section} Reconstruction
@@ -360,7 +361,6 @@ class projection_matching_class:
                                       )
        else:
           self._mylog.info("Skipped ProjectionMatching") 
-       exit(1)                
        if (_DoAlign2D):
           execute_align2d(self._mylog,
                           self._InnerRadius,
@@ -376,6 +376,7 @@ class projection_matching_class:
                           self._multi_align2d_sel)
        else:
           self._mylog.info("Skipped Align2D") 
+       exit(1)                
         
        if (_DoReconstruction):
           execute_reconstruction(self._mylog,
