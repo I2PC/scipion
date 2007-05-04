@@ -57,7 +57,6 @@ EXTRA_DIST = \
 	header.h \
 	histogram.h \
 	image.h \
-	imagic.h \
 	integration.h \
 	macros.h \
 	make_spectra.h \
