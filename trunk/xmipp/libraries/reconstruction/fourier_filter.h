@@ -140,7 +140,7 @@ public:
    This function cannot be used to generate CTF masks.*/
    template <class T>
    void generate_mask(T &v) {
-      int dim=SPACE_DIM(v);
+      int dim=v.dimension;
       // Resize Xmipp real mask
       bool copy_from_Xmipp_real_mask=true;
       Mask_Params real_mask;
@@ -242,7 +242,7 @@ public:
    template <class T>
    void generate_CTF_mask(T &v) {
       STARTINGX(mask2D)=STARTINGY(mask2D)=0;
-      int dim=SPACE_DIM(v);
+      int dim=v.dimension;
       if (dim!=2)
          REPORT_ERROR(1,
             "generate_CTF_mask is intended only for images");

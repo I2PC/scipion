@@ -39,6 +39,7 @@
 
 // FIXME This is a BAD practice..
 #include "multidim_friends.inc"
+
 string FtoA(float F, int _width, int _prec);
 
 /// @defgroup Vectors Xmipp Vectors
@@ -85,7 +86,7 @@ string FtoA(float F, int _width, int _prec);
  * int fin = FINISHINGX(v);
  * @endcode
  */
-#define FINISHINGX(v) ((v).xinit+(v).xdim-1)
+#define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
 
 /** Access to X dimension (size)
  * @ingroup VectorsSizeShape
@@ -1739,9 +1740,9 @@ void vT::patch(const vT& patch_array, char operation)
 
 // TODO Document
 template<typename T>
-ostream& operator<<(ostream& out, const vT& v)
+std::ostream& operator<<(std::ostream& out, const vT& v)
 {
-    if (MULTIDIM_SIZE(v) == 0)
+    if (v.size == 0)
         out << "NULL vector\n";
     else
     {
