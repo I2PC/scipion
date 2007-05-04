@@ -69,8 +69,6 @@ EXTRA_DIST = \
 	micrograph_downsample.h \
 	micrograph.h \
 	morphology.h \
-	multidim_basic2.h \
-	multidim_basic3.h \
 	multidim_basic.h \
 	multidim_common.h \
 	multidim_friends_implementation.h \
