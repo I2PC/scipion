@@ -60,6 +60,41 @@ class AutoScrollbar(Scrollbar):
             self.grid()
         Scrollbar.set(self, lo, hi)
 
+def PrepareCanvas(master):
+
+    # Stuff to make the scrollbars work
+    vscrollbar = AutoScrollbar(master)
+    vscrollbar.grid(row=0, column=1, sticky=N+S)
+    hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
+    hscrollbar.grid(row=1, column=0, sticky=E+W)
+    canvas = Canvas(master,
+                    yscrollcommand=vscrollbar.set,
+                    xscrollcommand=hscrollbar.set)
+    canvas.grid(row=0, column=0, sticky=N+S+E+W)
+    vscrollbar.config(command=canvas.yview)
+    hscrollbar.config(command=canvas.xview)
+    master.grid_rowconfigure(0, weight=1)
+    master.grid_columnconfigure(0, weight=1)
+    frame = Frame(canvas)
+    frame.rowconfigure(0, weight=1)
+    frame.columnconfigure(0, weight=1)
+    return canvas,frame
+
+def LaunchCanvas(master,canvas,frame):
+    # Launch the window
+    canvas.create_window(0, 0, anchor=NW, window=frame)
+    frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+    
+def GuiResize(master,frame):
+    height=frame.winfo_reqheight()+25
+    width=frame.winfo_reqwidth()+25
+    if (height>600):
+        height=600
+    if (width>800):
+        width=800
+    master.geometry("%dx%d%+d%+d" % (width,height,0,0))
+
 # Create a GUI automatically from a script
 class automated_gui_class:
 
@@ -257,45 +292,10 @@ class automated_gui_class:
             # Set PWD as default for ProjectDir
             self.variables['ProjectDir'][0]=str(os.getcwd())
 
-    def PrepareCanvas(self,master):
-
-        # Stuff to make the scrollbars work
-        vscrollbar = AutoScrollbar(master)
-        vscrollbar.grid(row=0, column=1, sticky=N+S)
-        hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
-        hscrollbar.grid(row=1, column=0, sticky=E+W)
-        canvas = Canvas(master,
-                        yscrollcommand=vscrollbar.set,
-                        xscrollcommand=hscrollbar.set)
-        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-        vscrollbar.config(command=canvas.yview)
-        hscrollbar.config(command=canvas.xview)
-        master.grid_rowconfigure(0, weight=1)
-        master.grid_columnconfigure(0, weight=1)
-        frame = Frame(canvas)
-        frame.rowconfigure(0, weight=1)
-        frame.columnconfigure(0, weight=1)
-        return canvas,frame
-
-    def LaunchCanvas(self,master,canvas,frame):
-        # Launch the window
-        canvas.create_window(0, 0, anchor=NW, window=frame)
-        frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
-        
-    def GuiResize(self,master,frame):
-        height=frame.winfo_reqheight()+25
-        width=frame.winfo_reqwidth()+25
-        if (height>600):
-            height=600
-        if (width>800):
-            width=800
-        master.geometry("%dx%d%+d%+d" % (width,height,0,0))
-
     def GuiFill(self):
                        
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=self.PrepareCanvas(self.master)
+        self.canvas,self.frame=PrepareCanvas(self.master)
 
         # Fill the entire GUI
         if (self.is_setupgui):
@@ -304,7 +304,7 @@ class automated_gui_class:
             self.FillProtocolGui()
         
         # Launch the window
-        self.LaunchCanvas(self.master,self.canvas,self.frame)
+        LaunchCanvas(self.master,self.canvas,self.frame)
 
         # Remove expert options in normal mode
         if (self.expert_mode==False):
@@ -312,7 +312,7 @@ class automated_gui_class:
                 w.grid_remove()  
 
         # Resize window
-        self.GuiResize(self.master,self.frame)
+        GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
@@ -554,6 +554,7 @@ class automated_gui_class:
         self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
         self.bGet.grid(row=self.buttonrow+3,column=4)
         self.master.bind('<Control_L><e>', self.GuiSaveExecute)
+        self.master.bind('<Control_L><d>', self.GuiSaveExecute)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
@@ -657,7 +658,8 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         command="python "+self.scriptname+' &'
-        if (self.is_analysis):
+        print "keysym=",event.keysym
+        if (self.is_analysis or event.keysym=='d'):
             answer="no"
         else:
             answer=tkMessageBox._show("Execute protocol",
