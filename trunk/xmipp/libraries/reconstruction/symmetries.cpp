@@ -104,7 +104,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy) {
          __sym_elements++;
       // inversion ------------------------------------------------------
       } else if (strcmp(auxstr,"inversion")==0) {
-         L.init_identity();
+         L.init_identity();L(2,2)=-1;
          R.init_identity();
          R(0,0)=-1.;  R(1,1)=-1.; R(2,2)=-1.;
 	 set_shift(i,shift);
