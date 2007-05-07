@@ -214,16 +214,16 @@ class particle_pick_class:
         
     def LaunchSingleMark(self):
         import os
+        self.GuiUpdateCount()
         print "* Marking... "
         self.perform_picking(self.whichmark.get())
-        self.GuiUpdateCount()
 
     def LaunchPairMark(self):
         import os
+        self.GuiUpdateCount()
         print "* Marking... "
         untilted=self.whichmark.get()
         self.perform_picking_pair(self.whichmark.get(),self.whichtilted[self.whichmark.get()])
-        self.GuiUpdateCount()
 
     def GuiUpdateCount(self):
         print "* Updating count..."
@@ -252,7 +252,7 @@ class particle_pick_class:
         import os
         directory,micrograph=os.path.split(name)
         os.chdir(directory)
-        command='xmipp_micrograph_mark -i '+micrograph
+        command='xmipp_micrograph_mark -i '+micrograph+' &'
         print '* ',command
         self.log.info(command)
         os.system(command)
@@ -263,7 +263,7 @@ class particle_pick_class:
         directory,uname=os.path.split(untilted)
         os.chdir(directory)
         tname='../'+tilted
-        command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname
+        command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname+' &'
         print '* ',command
         self.log.info(command)
         os.system(command)
