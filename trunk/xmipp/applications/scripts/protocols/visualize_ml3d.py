@@ -65,8 +65,6 @@ VisualizeMatrixLastIter=False
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
-import protocol_ml3d
-#
 class visualize_ML3D_class:
 
     #init variables
@@ -85,7 +83,8 @@ class visualize_ML3D_class:
                  VisualizeAngDistribution,
                  VisualizeClassDistribution,
                  DoShowStatsAllIter,
-                 VisualizeMatrixLastIter
+                 VisualizeMatrixLastIter,
+                 WorkingDir
                  ):
 	     
         import os,sys
@@ -109,8 +108,9 @@ class visualize_ML3D_class:
         self.DoShowStatsAllIter=DoShowStatsAllIter
         self.ShowVolumes=[]
         self.ShowSelfiles=[]
+        self.WorkingDir=WorkingDir
 
-        os.chdir(protocol_ml3d.WorkingDir)
+        os.chdir(self.WorkingDir)
 
         self.visualize_preparation()
 

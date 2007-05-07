@@ -27,20 +27,22 @@ class visualize_kerdensom_class:
     #init variables
     def __init__(self,
                  DoShowSOM,
-                 DoShowInfFile):
+                 DoShowInfFile,
+                 WorkingDir):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import log
 
-        # import corresponding protocol
-        import protocol_kerdensom
-
-        self.WorkingDir=protocol_kerdensom.WorkingDir
-        self.SomName=protocol_kerdensom.SomName
-
+        self.WorkingDir=WorkingDir
         os.chdir(self.WorkingDir)
+
+        # import corresponding protocol
+        sys.path.append(self.WorkingDir)
+        import protocol_kerdensom_backup
+        self.SomName=protocol_kerdensom_backup.SomName
+
         if (DoShowSOM):
             self.visualize_SOM()
         if (DoShowInfFile):
@@ -72,9 +74,13 @@ class visualize_kerdensom_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create kerdensom_class object
     visualize_kerdensom=visualize_kerdensom_class(DoShowSOM,
-                                                  DoShowInfFile)
+                                                  DoShowInfFile,
+                                                  WorkingDir)
     # close 
     visualize_kerdensom.close()
 

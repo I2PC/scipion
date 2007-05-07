@@ -34,18 +34,21 @@ class visualize_ML2D_class:
                  DoMatrixAllIter,
                  DoShowLastIter,
                  DoShowFractions,
-                 DoShowStatsAllIter):
+                 DoShowStatsAllIter,
+                 WorkingDir):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import log
 
-        # import corresponding protocol
-        import protocol_ml2d
-        self.WorkingDir=protocol_ml2d.WorkingDir
-
+        
+        self.WorkingDir=WorkingDir
         os.chdir(self.WorkingDir)
+        # Example how to import corresponding protocol
+        #sys.path.append(self.WorkingDir)
+        #import protocol_ml2d_backup
+
         if (DoMatrixAllIter):
             self.show_matrixview_all_iter()
         if (DoShowLastIter):
@@ -194,11 +197,15 @@ class visualize_ML2D_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create ML2D_class object
     visualize_ML2D=visualize_ML2D_class(DoMatrixAllIter,
                                         DoShowLastIter,
                                         DoShowFractions,
-                                        DoShowStatsAllIter)
+                                        DoShowStatsAllIter,
+                                        WorkingDir)
     # close 
     visualize_ML2D.close()
 

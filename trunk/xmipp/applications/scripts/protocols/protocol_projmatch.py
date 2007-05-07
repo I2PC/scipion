@@ -16,9 +16,9 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-""" Absolute paths are required in the selection file
+""" Relative path to ProjectDir
 """
-SelFileName='/home/roberto2/Test/PARA_Roberto/100.sel'
+SelFileName='all_images.sel'
 
 # Working directory: 
 """ Relative path to ProjectDir
@@ -29,6 +29,8 @@ WorkDirectory='Test'
 DoDeleteWorkingDir=True
 
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home/roberto2/Test/PARA_Roberto"
 
 # {expert} Directory name for logfiles (from project dir):
@@ -57,7 +59,9 @@ MachineFile="/home/roberto2/bin/machines.dat"
 DoMask=True
 
 # {file} Reference file name (3D map)
-ReferenceFileName="/home/roberto2/Test/PARA_Roberto/init_reference/LTA_rot_0.1_norm.vol"
+""" Relative path to ProjectDir
+"""
+ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
 
 #show masked volume
 """ Masked volume will be shown. Do not set ths option to true for
@@ -66,7 +70,9 @@ ReferenceFileName="/home/roberto2/Test/PARA_Roberto/init_reference/LTA_rot_0.1_n
 DisplayMask=False
 
 # {file} binary mask-file used to mask reference volume
-MaskFileName='/home/roberto2/Test/PARA_Roberto/circular_mask.msk'
+""" Relative path to ProjectDir
+"""
+MaskFileName='circular_mask.msk'
 
 
 #-----------------------------------------------------------------------------
@@ -100,7 +106,7 @@ TiltF=140
 """ This option does not work in combination with a limited search 
     of the rot or tilt angle.
 """
-Symfile="/home/roberto2/Test/PARA_Roberto/P6.sym"
+Symfile="P6.sym"
 
 #extra options for Projection_Maching
 """ If you want to use your only references use the -ref option here,
@@ -236,10 +242,10 @@ class projection_matching_class:
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
        #self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
        #self._SelFileName=os.path.abspath(str(_SelFileName))
-       self._SelFileName=_SelFileName
+       self._SelFileName=os.path.abspath(_SelFileName)
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
-       self._ReferenceFileName=_ReferenceFileName
-       self._MaskFileName=_MaskFileName
+       self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
+       self._MaskFileName=os.path.abspath(_MaskFileName)
        self._DoMask=_DoMask
        self._DoProjectionMatching=_DoProjectionMatching
        self._DisplayProjectionMatching=_DisplayProjectionMatching
@@ -262,14 +268,14 @@ class projection_matching_class:
        self._DoReconstruction=_DoReconstruction
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
-       self._MyMachineFile=_MyMachineFile
+       self._MyMachineFile=os.path.abspath(_MyMachineFile)
        self._Symfile=os.path.abspath(str(_Symfile))
        self._iteration_number=1
        self._ReconstructionExtraCommand=_ReconstructionExtraCommand
        self._ReconstructionMethod=_ReconstructionMethod
 
        
-       self._ReferenceVolume=_ReferenceVolume
+       self._ReferenceVolume=os.path.abspath(_ReferenceVolume)
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
        self._multi_align2d_sel=_multi_align2d_sel
        self._align2d_sel=_align2d_sel

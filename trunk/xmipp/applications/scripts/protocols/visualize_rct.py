@@ -45,7 +45,6 @@ VisualizeWbpVols=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
-import protocol_rct
 #
 class visualize_RCT_class:
 
@@ -61,15 +60,17 @@ class visualize_RCT_class:
                  VisualizeUntiltedImages,
                  VisualizeTiltedImages,
                  VisualizeArtVols,
-                 VisualizeWbpVols):
+                 VisualizeWbpVols,
+                 WorkingDir):
 	     
         import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import visualization
      
-        print '*  cd '+str(protocol_rct.WorkingDir)
-        os.chdir(protocol_rct.WorkingDir)
+        self.WorkingDir=WorkingDir
+        os.chdir(self.WorkingDir)
+        
         ShowVolumes=[]
         ShowSelfiles=[]
         ShowImages=[]
@@ -104,7 +105,6 @@ class visualize_RCT_class:
         visualization.visualize_images(ShowImages)
  
         # Return to parent dir
-        print '*  cd ..'
         os.chdir(os.pardir)
 
     def getname(self,pattern):
@@ -127,6 +127,9 @@ class visualize_RCT_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     visualize_RCT=visualize_RCT_class(SelectClasses,
                                       VisualizeVolZ,
                                       VisualizeVolX,
@@ -137,5 +140,6 @@ if __name__ == '__main__':
                                       VisualizeUntiltedImages,
                                       VisualizeTiltedImages,
                                       VisualizeArtVols,
-                                      VisualizeWbpVols)
+                                      VisualizeWbpVols,
+                                      WorkingDir)
     visualize_RCT.close()

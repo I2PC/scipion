@@ -44,25 +44,8 @@ SetupHighRes3D=False
 #------------------------------------------------------------------------
 # Root directory name for this project:
 ProjectDir='/home/scheres/Xmipp/applications/scripts/protocols'
-# {expert} Directory name for logfiles:
+# Directory name for logfiles:
 LogDir='Logs'
-# {expert} Directory name for preprocessing:
-PreProcessDir='Preprocessing'
-# {expert} Directory name for particle images:
-ImagesDir='Images'
-# {expert} Directory name for ML2D classification:
-ML2DDir='ML2D'
-# {expert} Directory name for rotational spectra classification:
-RotSpectraDir='Rotspectra'
-# {expert} Directory name for Random Conical Tilt reconstruction:
-RCTDir='RCT'
-# {expert} Directory name for ML3D classification:
-ML3DDir='ML3D'
-# {expert} Directory name for projection matching refinement:
-ProjMatchDir='ProjMatching'
-# {expert} Directory name for HighRes3D:
-HighRes3DDir='HighRes3D'
-#
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -85,14 +68,6 @@ class setup_protocols_class:
                      SetupHighRes3D,
                      ProjectDir,
                      LogDir,
-                     ImagesDir,
-                     PreProcessDir,
-                     ML2DDir,
-                     RotSpectraDir,
-                     RCTDir,
-                     ML3DDir,
-                     ProjMatchDir,
-                     HighRes3DDir,
                      AutoLaunch):
 
             import os,sys
@@ -110,15 +85,6 @@ class setup_protocols_class:
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
-            self.ImagesDir=ImagesDir
-            self.PreProcessDir=PreProcessDir
-            self.ML2DDir=ML2DDir
-            self.RotSpectraDir=RotSpectraDir
-            self.RCTDir=RCTDir
-            self.ML3DDir=ML3DDir
-            self.ProjMatchDir=ProjMatchDir
-            self.HighRes3DDir=HighRes3DDir
-
             self.AutoLaunch=AutoLaunch
 
             scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -128,47 +94,29 @@ class setup_protocols_class:
             # Which scripts and which directories to use
             self.library={}
             self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
-                                                self.PreProcessDir,
                                                 ['protocol_preprocess_micrographs.py','visualize_preprocess_micrographs.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
-                                                self.PreProcessDir,
                                                 ['protocol_particle_pick.py']]
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
-                                                self.PreProcessDir,
                                                 ['protocol_preprocess_particles.py','visualize_preprocess_particles.py']]
             self.library['SetupML2D']=[self.SetupML2D,
-                                         self.ML2DDir,
                                          ['protocol_ml2d.py','visualize_ml2d.py']]
             self.library['SetupKerdensom']=[self.SetupKerdensom,
-                                              self.ML2DDir,
                                               ['protocol_kerdensom.py','visualize_kerdensom.py']]
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
-                                               self.RotSpectraDir,
                                                ['protocol_rotspectra.py','visualize_rotspectra.py']]
             self.library['SetupRCT']=[self.SetupRCT,
-                                        self.RCTDir,
                                         ['protocol_rct.py','visualize_rct.py']]
             self.library['SetupML3D']=[self.SetupML3D,
-                                        self.ML3DDir,
                                         ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
-                                        self.ProjMatchDir,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
             self.library['SetupHighRes3D']=[self.SetupHighRes3D,
-                                        self.HighRes3DDir,
                                         ['protocol_highres3D.py','visualize_highres3D.py']]
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
-                              "LogDir":self.LogDir,
-                              "PreProcessDir":self.PreProcessDir,
-                              "ImagesDir":self.ImagesDir,
-                              "ML2DDir":self.ML2DDir,
-                              "RotSpectraDir":self.RotSpectraDir,
-                              "RCTDir":self.RCTDir,
-                              "ML3DDir":self.ML3DDir,
-                              "ProjMatchDir":self.ProjMatchDir,
-                              "HighRes3DDir":self.HighRes3DDir,
+                              "LogDir":self.LogDir
                               }
             
 
@@ -177,15 +125,13 @@ class setup_protocols_class:
                 # A. Setup from GUI (Autolaunch)
                 # This will copy the (modified) protocol script to the corresponding directory
                 # and will automatically launch the GUI for this protocol
-                self.setup_protocol(self.library[self.AutoLaunch][1],
-                                    self.library[self.AutoLaunch][2])
+                self.setup_protocol(self.library[self.AutoLaunch][1])
             else:
                 # B. Setup from this script:
                 # This will only copy the (modified) protocol script to the corresponding directory
                 for var in self.library:
                     if (self.library[var][0]):
-                        self.setup_protocol(self.library[var][1],
-                                            self.library[var][2])
+                        self.setup_protocol(self.library[var][1])
 
         def modify_script_header(self,src):
 
@@ -224,17 +170,15 @@ class setup_protocols_class:
                 header_lines=newheader_lines
             return header_lines+body_lines
 
-        def setup_protocol(self,directory,scripts):
+        def setup_protocol(self,scripts):
             import os
             import shutil
 
             os.chdir(self.ProjectDir)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
                 
             for script in scripts:
                 src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
-                dst=str(directory)+"/"+str(script)
+                dst=str(script)
                 if os.path.exists(dst):
                     src=dst
                     print "* File "+dst+" already existed (now updated)"
@@ -248,10 +192,8 @@ class setup_protocols_class:
             # Only auto-launch the first script
             script=scripts[0]
             if (self.AutoLaunch!=""):
-                os.chdir(directory)
                 command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+str(script)+' &'
                 os.system(command)
-                os.chdir(self.ProjectDir)
 
 
 #
@@ -277,13 +219,5 @@ if __name__ == '__main__':
                                 SetupHighRes3D,
                                 ProjectDir,
                                 LogDir,
-                                ImagesDir,
-                                PreProcessDir,
-                                ML2DDir,
-                                RotSpectraDir,
-                                RCTDir,
-                                ML3DDir,
-                                ProjMatchDir,
-                                HighRes3DDir,
                                 AutoLaunch)
 

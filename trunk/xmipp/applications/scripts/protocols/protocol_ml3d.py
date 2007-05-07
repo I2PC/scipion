@@ -12,14 +12,16 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with the input images:
-InSelFile="/home2/bioinfo/scheres/work/protocols/G40P/all_images.sel"
+InSelFile="all_images.sel"
 # {file} Initial single reference map:
-InitialReference="/home2/bioinfo/scheres/work/protocols/G40P/my_ref.vol"
+InitialReference="my_ref.vol"
 # Working subdirectory:
-WorkingDir="test1"
+WorkingDir="ML3D/test1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles (from project dir):
 LogDir="Logs"
@@ -56,7 +58,7 @@ PixelSize=5.6
 DoGenerateSeeds=True
 # Number of seeds to be generated (and later on used in ml3d-classification):
 NumberOfReferences=3
-# {expert} {file} Alternatively, provide selfile with user-defined seeds:
+# {expert} {file} Alternatively, provide a selfile with user-defined seeds:
 """ Automated (unbiased!) seed generation is highly recommended...
     But you may use this option to provide the seeds from a previous run
     The seeds should already be on the correct absolute greyscale!
@@ -136,13 +138,13 @@ class ML3D_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self.InSelFile=InSelFile
+        self.InSelFile=os.path.abspath(InSelFile)
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
         self.DoGenerateSeeds=DoGenerateSeeds
-        self.InitialReference=InitialReference
-        self.SeedsSelfile=SeedsSelfile
+        self.InitialReference=os.path.abspath(InitialReference)
+        self.SeedsSelfile=os.path.abspath(SeedsSelfile)
         self.AngularSampling=AngularSampling
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize

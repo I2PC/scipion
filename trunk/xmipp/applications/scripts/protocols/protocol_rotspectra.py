@@ -25,9 +25,9 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='/home/scheres/work/protocols/G40P/100.sel'
+SelFileName='all_images.sel'
 # Working subdirectory: 
-WorkDirectory='test1'
+WorkDirectory='RotSpectra/test1'
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
 # Display all intermediate results?
@@ -37,6 +37,8 @@ DoDeleteWorkingDir=False
 """
 DisplayResults=False
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home/roberto2/Test/Para_Roberto/"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
@@ -149,7 +151,7 @@ class rotational_spectra_class:
        import log
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       self._SelFileName=_SelFileName
+       self._SelFileName=os.path.abspath(_SelFileName)
        self._DisplayResults=_DisplayResults
        self._InnerRadius=_InnerRadius
        self._OuterRadius=_OuterRadius

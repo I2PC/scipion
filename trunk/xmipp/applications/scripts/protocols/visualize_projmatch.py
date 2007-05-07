@@ -65,7 +65,8 @@ class visualize_projmatch_class:
                 _DisplayReconstruction,
                 _MatrixWidth,
                 _DisplayAngularDistribution,
-                _DisplayAngularDistributionAlign2d
+                _DisplayAngularDistributionAlign2d,
+                _WorkingDir,
                 ):
 	     
         import os,sys,shutil
@@ -75,18 +76,21 @@ class visualize_projmatch_class:
         import visualization
 
         # import corresponding protocol
-        import protocol_projmatch
+        os.chdir(_WorkingDir)
+        import protocol_projmatch_backup
+        os.chdir(os.pardir)
+
         self._MatrixWidth=_MatrixWidth
-        self._WorkDirectory=protocol_projmatch.WorkDirectory
-        self._LogDir=protocol_projmatch.LogDir
-        self._ProjectDir=protocol_projmatch.ProjectDir
-        self._ReferenceVolume=protocol_projmatch.ReferenceVolume
-        self._multi_align2d_sel=protocol_projmatch.multi_align2d_sel
-        self._align2d_sel=protocol_projmatch.align2d_sel
-        self._align2d_doc=protocol_projmatch.align2d_doc
-        self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch.SelFileName)
-        self._ReferenceVolume=protocol_projmatch.ReferenceVolume
-        self._Proj_Maching_Output_Root_Name=protocol_projmatch.Proj_Maching_Output_Root_Name
+        self._WorkDirectory=protocol_projmatch_backup.WorkDirectory
+        self._LogDir=protocol_projmatch_backup.LogDir
+        self._ProjectDir=protocol_projmatch_backup.ProjectDir
+        self._ReferenceVolume=protocol_projmatch_backup.ReferenceVolume
+        self._multi_align2d_sel=protocol_projmatch_backup.multi_align2d_sel
+        self._align2d_sel=protocol_projmatch_backup.align2d_sel
+        self._align2d_doc=protocol_projmatch_backup.align2d_doc
+        self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch_backup.SelFileName)
+        self._ReferenceVolume=protocol_projmatch_backup.ReferenceVolume
+        self._Proj_Maching_Output_Root_Name=protocol_projmatch_backup.Proj_Maching_Output_Root_Name
         self._Proj_Maching_Output_Root_Name + '.doc'
         self._mylog=log.init_log_system(self._ProjectDir,
                                        self._LogDir,
@@ -193,6 +197,9 @@ def show_ang_distribution(_ShowPlots,_iteration_number,title):
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create projmatch_class object
     visualize_projmatch=visualize_projmatch_class(VisualizeVolZ,
                                                   VisualizeVolX,
@@ -204,7 +211,8 @@ if __name__ == '__main__':
                                                   DisplayReconstruction,
                                                   MatrixWidth,
                                                   DisplayAngularDistribution,
-                                                  DisplayAngularDistributionAlign2d)
+                                                  DisplayAngularDistributionAlign2d,
+                                                  WorkingDir)
     # close 
     visualize_projmatch.close()
 

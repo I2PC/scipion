@@ -15,7 +15,7 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
     LogName += scriptname.replace('.py','')
     if not (WorkDirectory=="." or WorkDirectory=='.'):
         LogName += '_'
-        LogName += WorkDirectory
+        LogName += os.path.basename(WorkDirectory)
     LogName += '.log'
 
     mylog = logging.getLogger(scriptname)
@@ -42,9 +42,9 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
 def make_backup_of_script_file(script_file_name,
                                absolute_path_to_working_dir):
     import shutil,os
-    #strip_file_name
-    protocol_name=str(os.path.basename(script_file_name))                        
+
+    protocol_name=str(os.path.basename(script_file_name)).replace('.py','')
     in_file_name=script_file_name
     out_file_name=absolute_path_to_working_dir +\
-                   '/' + protocol_name + "_backup"
+                   '/' + protocol_name + "_backup.py"
     shutil.copy(in_file_name,out_file_name)

@@ -11,14 +11,16 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with all untilted images:
-UntiltedSelFile="/home/scheres/work/protocols/G40P/untSelect.sel"
+UntiltedSelFile="all_images_untilted.sel"
 # {file} Selfile with all tilted images:
-TiltedSelFile="/home/scheres/work/protocols/G40P/tilSelect.sel"
+TiltedSelFile="all_images_tilted.sel"
 # Working subdirectory:
-WorkingDir="test1"
+WorkingDir="RCT/test1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored in $ProjectDir/$LogDir
@@ -28,8 +30,11 @@ LogDir="Logs"
 # {section} Previous ML2D classification (WITHOUT INCLUDING MIRRORS!)
 #------------------------------------------------------------------------------------------------
 # {dir} Directory of previous ML2D-classification on the untilted images
-PreviousDirML2D="/home/scheres/work/protocols/G40P/ML2D/ML3ref"
-# {expert} Rootname for ML2D run (only provide if different from its working directory)
+PreviousDirML2D="ML2D/ML3ref"
+# {expert} Rootname for ML2D run
+""" Only provide something if the ml2d output rootname was different from the default.
+    This will never be the case when using the standardized protocols 
+"""
 PreviousML2DRoot=""
 # Which of these classes do you want to reconstruct? (Separate numbers by comma's)
 SelectClasses="1,2"
@@ -112,9 +117,9 @@ class RCT_class:
         
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.UntiltedSelFile=UntiltedSelFile
-        self.TiltedSelFile=TiltedSelFile
-        self.PreviousDirML2D=PreviousDirML2D
+        self.UntiltedSelFile=os.path.abspath(UntiltedSelFile)
+        self.TiltedSelFile=os.path.abspath(TiltedSelFile)
+        self.PreviousDirML2D=os.path.abspath(PreviousDirML2D)
         self.PreviousML2DRoot=PreviousML2DRoot
         self.SelectClasses=SelectClasses
         self.DoCenterTilted=DoCenterTilted
@@ -137,6 +142,10 @@ class RCT_class:
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
         os.chdir(self.WorkingDir)
 
         self.prepare_classes()
@@ -167,9 +176,8 @@ class RCT_class:
         print '*********************************************************************'
 
         # Set self.PreviousML2DRoot to the ML2D Working dir if empty
-        if self.PreviousML2DRoot=="":
-            head,tail=os.path.split(os.path.normpath(self.PreviousDirML2D))
-            self.PreviousML2DRoot=tail
+        if self.PreviousML2DRoot=='':
+            self.PreviousML2DRoot='ml2d'
         ml2d_abs_rootname=self.PreviousDirML2D+'/'+self.PreviousML2DRoot
         
         # Check whether the ML2D run has written docfiles already

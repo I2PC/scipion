@@ -100,11 +100,15 @@ class automated_gui_class:
 
     def __init__(self,
                  scriptname,
-                 is_analysis):
+                 analyse_directory):
 
         self.SYSTEMSCRIPTDIR=os.path.expanduser('~')+'/scripts/'
 
-        self.is_analysis=is_analysis
+        self.analyse_directory=analyse_directory
+        if analyse_directory=='':
+            self.is_analysis=False
+        else:
+            self.is_analysis=True
         self.scriptname=scriptname
         self.master=Tk()
         self.expert_mode=False
@@ -387,9 +391,18 @@ class automated_gui_class:
       
         # Script title
         self.master.title('Xmipp protocols')
+
+        # Reference
+        #headertext="Read more about Xmipp protocols in:\n"
+        #headertext+="The Xmipp team (2007) Nature Protocols xx, xx-xx\n"
+        #self.l2=Label(self.frame, text=headertext, fg="dark green")
+        #self.l2.grid(row=0, column=0,columnspan=5,sticky=EW)
+
+        # Message which protocol
+        row=(self.frame.grid_size()[1])
         headertext="Which Xmipp protocol do you want to run?"
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
-        self.l1.grid(row=0, column=0,columnspan=5,sticky=EW)
+        self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
         self.AddSeparator(2)
 
         # Add labels for different protocol categories
@@ -545,9 +558,10 @@ class automated_gui_class:
         self.bGet.grid(row=self.buttonrow+3,column=1,sticky=EW)
         self.master.bind('<Control_L><o>', self.GuiTockleExpertMode)
 
-        self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,underline=0)
-        self.bGet.grid(row=self.buttonrow+3,column=2)
-        self.master.bind('<Control_L><l>', self.GuiLoad)
+        if not self.is_analysis:
+            self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,underline=0)
+            self.bGet.grid(row=self.buttonrow+3,column=2)
+            self.master.bind('<Control_L><l>', self.GuiLoad)
         self.bGet = Button(self.frame, text="Save", command=self.GuiSave,underline=0)
         self.bGet.grid(row=self.buttonrow+3,column=3)
         self.master.bind('<Control_L><s>', self.GuiSave)
@@ -564,20 +578,6 @@ class automated_gui_class:
         self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         self.master.bind('<Control_L><c>', self.GuiClose)
-        if (self.expert_mode==True):
-            text2="Hide Expert Options"
-        else:
-            text2="Show Expert Options"
-        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,underline=12)
-        self.bGet.grid(row=self.buttonrow,column=1,sticky=EW)
-        self.master.bind('<Control_L><o>', self.GuiTockleExpertMode)
-
-        if (self.have_publication):
-            headertext="Read more about Xmipp protocols in:"
-            for pub in self.publications:
-                headertext+='\n'+pub.replace('\n','')
-            self.l2=Label(self.frame, text=headertext, fg="dark green")
-            self.l2.grid(row=self.buttonrow+1, column=0,columnspan=5,sticky=EW)
 
     def GuiTockleExpertMode(self,event=""):
         if (self.expert_mode==True):
@@ -616,21 +616,20 @@ class automated_gui_class:
         fname = tkFileDialog.askopenfilename(title='Choose File',
                                              filetypes=fileformats)
         if (len(fname)>0):
-#            fname=self.relpath(fname,os.curdir)
+            fname=self.relpath(fname,os.curdir)
             self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
             self.e.delete(0, END) 
             self.e.insert(0,fname)
             self.e.grid(row=self.variables[self.whichfile.get()][6],
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
-            print "var=",self.whichfile.get(),self.variables[self.whichfile.get()][2].get()
 
     def GuiBrowseDirectory(self):
         import tkFileDialog
         import os
         fname = tkFileDialog.askdirectory()       
         if (len(fname)>0):
-#            fname=self.relpath(fname,os.curdir)
+            fname=self.relpath(fname,os.curdir)
             self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
             self.e.delete(0, END) 
             self.e.insert(0,fname)
@@ -639,11 +638,15 @@ class automated_gui_class:
                         columnspan=2,sticky=W+E)
 
     def AnalyseResults(self,event=""):
-        self.GuiSave()
-        command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
-                 self.variables["AnalysisScript"][0]+' -analysis &'
-        print command
-        os.system(command)
+        import os
+        import tkFileDialog
+        fname = tkFileDialog.askdirectory()       
+        if (len(fname)>0):
+            print "* Analysing results in directory "+os.path.basename(fname)+" ..."
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+                     self.variables["AnalysisScript"][0]+' '+fname+' &'
+            print '*',command
+            os.system(command)
          
     def GuiClose(self,event=""):
         self.master.destroy()
@@ -676,8 +679,11 @@ class automated_gui_class:
             self.master.wait_window(d.top)
         elif (answer=="no"):
             import popen2
-            command="python "+self.scriptname+' &'
-            print "* Executing job with: "+command
+            if (self.is_analysis):
+                command="python "+self.scriptname+' '+self.analyse_directory+' &'
+            else:
+                command="python "+self.scriptname+' &'
+                print "* Executing job with: "+command
             os.system(command)
                 
     def GuiLoad(self,event=""):
@@ -686,7 +692,7 @@ class automated_gui_class:
         fname = tkFileDialog.askdirectory()       
         if (len(fname)>0):
             print "* Loading protocol from "+os.path.basename(fname)+" ..."
-            fname=fname+'/'+self.scriptname+'_backup'
+            fname=fname+'/'+self.scriptname.replace('.py','')+'_backup.py'
             shutil.copy(fname,self.scriptname)
             self.master.destroy()
             self.master=Tk()
@@ -697,7 +703,6 @@ class automated_gui_class:
 
     def GuiLanchSetup(self):
         self.GuiSave()
-        print "* Launching protocol ..."
         command='python '+str(self.scriptname)+' '+str(self.which_setup.get())+' &'
         os.system(command)
        
@@ -732,8 +737,8 @@ if __name__ == '__main__':
     import sys
     args=sys.argv[1]
     if len(sys.argv) == 3:
-        is_analysis=sys.argv[2]
+        analyse_directory=sys.argv[2]
     else:
-        is_analysis=0
-    automated_gui=automated_gui_class(args,is_analysis)
+        analyse_directory=''
+    automated_gui=automated_gui_class(args,analyse_directory)
     automated_gui.MakeGui()

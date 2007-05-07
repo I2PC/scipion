@@ -17,13 +17,22 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
+# Working subdirectory:
+WorkingDir="Preprocessing"
+# Delete working subdirectory if it already exists?
+DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all *.tif files
-DirMicrographs='/home/scheres/work/protocols/G40P/micrographs'
+DirMicrographs='Micrographs'
 # Which files in this directory to process
+""" This is typically *.tif
+    But any wildcard is possible, e.g. *3[1,2].tif
+"""
 ExtMicrographs='*.tif'
 # Name for output selection file with all preprocessed micrographs
 MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir='/home/scheres/work/protocols/G40P'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -60,6 +69,8 @@ class preprocess_A_class:
 
 
     def __init__(self,
+                 WorkingDir,
+                 DoDeleteWorkingDir,
                  DirMicrographs,
                  ExtMicrographs,
                  MicrographSelfile,
@@ -75,6 +86,7 @@ class preprocess_A_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
+        self.WorkingDir=WorkingDir
         self.DirMicrographs=DirMicrographs
         self.ExtMicrographs=ExtMicrographs
         self.MicrographSelfile=MicrographSelfile
@@ -84,13 +96,31 @@ class preprocess_A_class:
         self.DoDownSample=DoDownSample
         self.Down=Down
         self.DoEstimatePSD=DoEstimatePSD
+
+        # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
-                                     self.LogDir,
+                                     LogDir,
                                      sys.argv[0],
-                                     '.')
+                                     self.WorkingDir)
                 
-        # Execute program
+        # Delete working directory if it exists, make a new one
+        if (DoDeleteWorkingDir): 
+            if os.path.exists(self.WorkingDir):
+                shutil.rmtree(self.WorkingDir)
+        if not os.path.exists(self.WorkingDir):
+            os.makedirs(self.WorkingDir)
+
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
+    
+        # Execute protocol in the working directory
+        os.chdir(self.WorkingDir)
         self.process_all_micrographs()
+
+        # Return to parent dir
+        os.chdir(os.pardir)
+
         
     def perform_tif2raw(self):
         import os
@@ -134,14 +164,14 @@ class preprocess_A_class:
         self.log.info(command)
         os.system(command )
         oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-        self.psdselfile.append(oname+' 1 \n')
+        self.psdselfile.append(oname+' 1\n')
         FILE = open("all_psds.sel","w")
         FILE.writelines(self.psdselfile)
         FILE.close()
     
     def append_micrograph_selfile(self):
         name=self.shortname+'/'+self.downname+'.raw'
-        self.micselfile.append(name+' 1 \n')
+        self.micselfile.append(name+' 1\n')
         FILE = open(self.MicrographSelfile,'w')
         FILE.writelines(self.micselfile)
         FILE.close()
@@ -191,7 +221,9 @@ if __name__ == '__main__':
 
     # create preprocess_A_class object
     
-    preprocessA=preprocess_A_class(DirMicrographs,
+    preprocessA=preprocess_A_class(WorkingDir,
+                                   DoDeleteWorkingDir,
+                                   DirMicrographs,
                                    ExtMicrographs,
                                    MicrographSelfile,
                                    ProjectDir,

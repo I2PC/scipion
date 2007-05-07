@@ -33,25 +33,37 @@ class visualize_particles_class:
     def __init__(self,
                  DoShowCTFs,
                  DoShowParticles,
-                 DoShowSortedParticles):
+                 DoShowSortedParticles,
+                 WorkingDir):
 	     
         import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir)
         import visualization
-        import protocol_preprocess_particles
+
+
+        self.WorkingDir=WorkingDir
+        os.chdir(self.WorkingDir)
+
+        # import corresponding protocol
+        sys.path.append(self.WorkingDir)
+        import protocol_preprocess_particles_backup
 
         ShowSelfiles=[]
         if (DoShowCTFs):
             self.visualize_ctfs()
         if (DoShowParticles):
-            selfile=protocol_preprocess_particles.ProjectDir+ '/' + \
-                     protocol_preprocess_particles.OutSelFile
+            selfile=protocol_preprocess_particles_backup.ProjectDir+ '/' + \
+                     protocol_preprocess_particles_backup.OutSelFile
             ShowSelfiles.append(selfile)
         if (DoShowSortedParticles):
             ShowSelfiles.append('sort_junk.sel')
 
         visualization.visualize_images(ShowSelfiles,True)
+
+        # Return to parent dir
+        os.chdir(os.pardir)
+        
             
     def visualize_ctfs(self):
         import os
@@ -78,9 +90,13 @@ class visualize_particles_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create preprocess_particles_class object
     visualize=visualize_particles_class(DoShowCTFs,
                                         DoShowParticles,
-                                        DoShowSortedParticles)
+                                        DoShowSortedParticles,
+                                        WorkingDir)
     visualize.close()
 

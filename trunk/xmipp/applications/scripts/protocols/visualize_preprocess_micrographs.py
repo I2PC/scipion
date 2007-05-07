@@ -26,19 +26,27 @@ class visualize_micrographs_class:
 
     #init variables
     def __init__(self,
-                 DoShowPSDs):
+                 DoShowPSDs,
+                 WorkingDir):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
 
+        self.WorkingDir=WorkingDir
+        os.chdir(self.WorkingDir)
+
         # import corresponding protocol
-        import protocol_preprocess_micrographs
-        self.MicrographSelfile=protocol_preprocess_micrographs.MicrographSelfile
+        sys.path.append(self.WorkingDir)
+        import protocol_preprocess_micrographs_backup
+        self.MicrographSelfile=protocol_preprocess_micrographs_backup.MicrographSelfile
 
         if (DoShowPSDs):
             self.visualize_psds()
             self.update_micrograph_selfile()
+
+        # Return to parent dir
+        os.chdir(os.pardir)
             
     def visualize_psds(self):
         import os
@@ -85,7 +93,11 @@ class visualize_micrographs_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create preprocess_micrographs_class object
-    visualize=visualize_micrographs_class(DoShowPSDs)
+    visualize=visualize_micrographs_class(DoShowPSDs,
+                                          WorkingDir)
     visualize.close()
 

@@ -14,12 +14,14 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with the input images:
-InSelFile="/home/scheres/work/protocols/G40P/all_images.sel"
+InSelFile="all_images.sel"
 # Working subdirectory:
-WorkingDir="ML3ref"
+WorkingDir="ML2D/ML3ref"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored in $ProjectDir/$LogDir
@@ -90,15 +92,15 @@ class ML2D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.InSelFile=InSelFile
+        self.InSelFile=os.path.abspath(InSelFile)
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
         self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
-        self.MyMachineFile=MyMachineFile
-
+        self.MyMachineFile=os.path.abspath(MyMachineFile)
+        
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
                                      LogDir,
@@ -116,7 +118,7 @@ class ML2D_class:
         log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
     
-        # Execute MLalign2D in the working directory
+        # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
         if (DoML2D):
             self.execute_MLalign2D()
@@ -131,7 +133,6 @@ class ML2D_class:
         print '*********************************************************************'
         print '*  Executing ml_align2d program :' 
         params= ' -i '    + str(self.InSelFile) + \
-                ' -o '    + str(self.WorkingDir) + \
                 ' -nref ' + str(self.NumberOfReferences)
         if (self.DoFast):
             params+= ' -fast '

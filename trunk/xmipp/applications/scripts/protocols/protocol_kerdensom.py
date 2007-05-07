@@ -11,11 +11,13 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Working subdirectory (to be created in current dir):
-WorkingDir="SOM_ML2ref_ref1"
+# Working subdirectory:
+WorkingDir="SOM/ML2ref_ref1"
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
-# {expert} Root directory name for this project (abs. path):
+# {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles (relative path from ProjectDir):
 """ All logfiles will be stored in $ProjectDir/$LogDir
@@ -25,7 +27,7 @@ LogDir="Logs"
 # {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
 # {dir} Directory where you have previously ran ML2D classification:
-ML2DWorkingDir="/home/scheres/work/protocols/G40P/ML2ref"
+ML2DWorkingDir="ML2D/ML2ref"
 # The number of the class to use:
 ML2DReferenceNr=1
 #------------------------------------------------------------------------------------------------
@@ -105,7 +107,7 @@ class kerdensom_class:
 
         self.WorkingDir=_WorkingDir
         self.ProjectDir=_ProjectDir
-        self.ML2DWorkingDir=_ML2DWorkingDir
+        self.ML2DWorkingDir=os.path.abspath(_ML2DWorkingDir)
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
         self.MaskFileName=_MaskFileName
@@ -152,7 +154,7 @@ class kerdensom_class:
 
     def make_local_copy_of_images(self):
 
-        import os,glob
+        import sys,os,glob
         import selfile
 
         # Make a directory for the local copies of all relevant images

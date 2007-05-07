@@ -14,8 +14,12 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
+# {dir} Working subdirectory:
+""" Use the same directory where you executed protocol_preprocess_micrographs.py
+"""
+WorkingDir="Preprocessing"
 # {file} Selfile with all micrographs to pick particles from:
-MicrographSelfile='/home/scheres/work/protocols/all.sel'
+MicrographSelfile='Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -24,12 +28,14 @@ MicrographSelfile='/home/scheres/work/protocols/all.sel'
     Where 1 in the third column means active pair, and -1 means inactive pair
     Use relative paths from the Preprocessing directory!
 """
-IsPairList=True
+IsPairList=False
 # Name of the position files (or family name)
-""" This is specified inside the micrograph_mark program (raw.Common.pos by default)
+""" This is specified inside the micrograph_mark program (Common by default)
 """
-PosName='raw.Common.pos'
+PosName='Common'
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir='/home/scheres/work/protocols'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -44,6 +50,7 @@ from Tkinter import *
 class particle_pick_class:
 
     def __init__(self,
+                 WorkingDir,
                  MicrographSelfile,
                  IsPairList,
                  PosName,
@@ -56,20 +63,37 @@ class particle_pick_class:
         self.SYSTEMSCRIPTDIR=scriptdir
         import log
 
-        self.MicrographSelfile=MicrographSelfile
+        self.WorkingDir=WorkingDir
+        self.MicrographSelfile=os.path.abspath(MicrographSelfile)
         self.IsPairList=IsPairList
         self.PosName=PosName
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
-        self.log=log.init_log_system(self.ProjectDir,
-                                     self.LogDir,
-                                     sys.argv[0],
-                                     '.')
 
-        # Execute protocol:
+        # Setup logging
+        self.log=log.init_log_system(self.ProjectDir,
+                                     LogDir,
+                                     sys.argv[0],
+                                     self.WorkingDir)
+                
+        # Make working directory if it does not exist yet
+        if not os.path.exists(self.WorkingDir):
+            os.makedirs(self.WorkingDir)
+
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
+    
+        # Execute protocol in the working directory
+        os.chdir(self.WorkingDir)
+        
+        # Execute protocol in the working directory
         self.print_warning()
         self.sellines=self.ReadSelfile()
         self.MakeGui()
+
+        # Return to parent dir
+        os.chdir(os.pardir)
 
     def MakeGui(self):
         import protocol_gui
@@ -179,7 +203,7 @@ class particle_pick_class:
     def GuiAddPairMarkEntry(self,micrograph,count):
         import os
         row=self.frame.grid_size()[1]
-        label=os.path.basename(micrograph)
+        label=os.path.basename(micrograph)+' : '+os.path.basename(self.whichtilted[micrograph])
         l=Label(self.frame, text=label)
         l.grid(row=row, column=0, sticky=E)
         label=str(count).zfill(5)
@@ -192,7 +216,7 @@ class particle_pick_class:
 
     def CountPicked(self,micrograph):
         import os
-        posfile=str(micrograph).replace('.raw','')+'.'+str(self.PosName)
+        posfile=str(micrograph)+'.'+str(self.PosName)+'.pos'
         if os.path.exists(posfile):
             fh=open(posfile,'r')
             lines=fh.readlines()
@@ -282,7 +306,8 @@ if __name__ == '__main__':
 
    	# create preprocess_A_class object
 
-	particle_pick=particle_pick_class(MicrographSelfile,
+	particle_pick=particle_pick_class(WorkingDir,
+                                          MicrographSelfile,
                                           IsPairList,
                                           PosName,
                                           ProjectDir,

@@ -20,8 +20,12 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
+# {dir} Working subdirectory:
+""" Use the same directory where you executed protocol_preprocess_micrographs.py
+"""
+WorkingDir="Preprocessing"
 # {file} Selfile with micrographs on which to perform processing
-MicrographSelfile='/home/scheres/work/protocols/G40P/Preprocessing/all_micrographs.sel'
+MicrographSelfile='Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -33,6 +37,8 @@ MicrographSelfile='/home/scheres/work/protocols/G40P/Preprocessing/all_micrograp
 """
 IsPairList=False
 # {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
@@ -41,15 +47,18 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # Extract particles from micrographs?
 DoExtract=True
-## These file are supposed to be in the corresponding subdirectories
-# Extension for the picked coordinates file
-PosFile="raw.Common.pos"
+# Family name for the picked coordinates file
+""" By default this is Common, and the posfiles are called <mic>.raw.Common.pos
+    These files are supposed to be in the micrograph-related subdirectories
+"""
+PosFile="Common"
 # Dimension of the particles to extract (in pix.)
 Size=64
 # {expert} Directory name for particle images:
 ImagesDir="Images"
-# {expert} Name foir selfile with all particles (is placed in ProjectDir)
-""" For tilted pairs, extension .sel is replaced by _untilted.sel and _tilted.sel
+# {expert} Name for selfile with all particles
+""" This file is placed in the ProjectDir
+    For tilted pairs, extension .sel is replaced by _untilted.sel and _tilted.sel
 """
 OutSelFile="all_images.sel"
 #------------------------------------------------------------------------------------------------
@@ -120,6 +129,7 @@ class preprocess_particles_class:
 
     #init variables
     def __init__(self,
+                 WorkingDir,
                  MicrographSelfile,
                  IsPairList,
                  ProjectDir,
@@ -151,7 +161,8 @@ class preprocess_particles_class:
         sys.path.append(scriptdir) # add default search path
         import log,protocol_preprocess_micrographs
         
-        self.MicrographSelfile=MicrographSelfile
+        self.WorkingDir=WorkingDir
+        self.MicrographSelfile=os.path.abspath(MicrographSelfile)
         self.IsPairList=IsPairList
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
@@ -175,12 +186,26 @@ class preprocess_particles_class:
         self.OutCTFSelFile=OutCTFSelFile
         self.DoPhaseFlipping=DoPhaseFlipping
         self.DoSorting=DoSorting
+
+        # Setup logging
+        self.log=log.init_log_system(self.ProjectDir,
+                                     LogDir,
+                                     sys.argv[0],
+                                     self.WorkingDir)
+                
+        # Make working directory if it does not exist yet
+        if not os.path.exists(self.WorkingDir):
+            os.makedirs(self.WorkingDir)
+
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+                                       os.path.abspath(self.WorkingDir))
+    
+        # Execute protocol in the working directory
+        os.chdir(self.WorkingDir)
+        
         # Parameters set from outside
         self.Down=protocol_preprocess_micrographs.Down
-        self.log=log.init_log_system(self.ProjectDir,
-                                     self.LogDir,
-                                     sys.argv[0],
-                                     '.')
         
         # Check pairlist file
         if (not self.IsPairList):
@@ -198,14 +223,16 @@ class preprocess_particles_class:
                 message='Warning: images will not be sorted for tilted pairs!'
                 print '*',message
                 self.log.error(message)
-            if (not self.PosFile=="raw.Common.pos"):
-                message='Error: for tilted pairs The coordinate file extension has to be raw.Common.pos!'
+            if (not self.PosFile=="Common"):
+                message='Error: for tilted pairs The coordinate family name has to be Common!'
                 print '*',message
                 self.log.error(message)
                 sys.exit()
 
             self.process_all_pairs()
 
+        # Return to parent dir
+        os.chdir(os.pardir)
             
     def process_all_micrographs(self):
         import os
@@ -293,7 +320,7 @@ class preprocess_particles_class:
 
     def check_have_marked(self):
         import os
-        posname=self.shortname+'/'+self.downname+'.'+self.PosFile 
+        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
         if os.path.exists(posname):
             return True
         else:
@@ -313,8 +340,8 @@ class preprocess_particles_class:
         selname2=self.downname2+'.raw.sel' 
         selnameb=self.shortname+'/'+self.downname+'.raw.sel' 
         selnameb2=self.shortname2+'/'+self.downname2+'.raw.sel' 
-        posname=self.shortname+'/'+self.downname+'.'+self.PosFile
-        posname2=self.shortname2+'/'+self.downname2+'.'+self.PosFile
+        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
+        posname2=self.shortname2+'/'+self.downname2+'.raw.'+self.PosFile+'.pos'
         angname=self.shortname+'/'+self.downname+'.ang'
         logname=self.shortname+'/scissor.log'
 
@@ -419,7 +446,7 @@ class preprocess_particles_class:
         iname=self.shortname+'/'+self.downname+'.raw' 
         selname=self.downname+'.raw.sel' 
         selnameb=self.shortname+'/'+self.downname+'.raw.sel' 
-        posname=self.shortname+'/'+self.downname+'.'+self.PosFile 
+        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         rootname=imgsubdir+'/'+self.shortname+'_'
         logname=self.shortname+'/scissor.log'
@@ -509,7 +536,7 @@ class preprocess_particles_class:
         import os
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_input.param'
-        posname=self.shortname+'/'+self.downname+'.'+self.PosFile 
+        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
         selname=self.shortname+'/'+self.downname+'.raw.sel' 
         ctfname=self.downname+'.raw.ctf.sel' 
         ctfname2=self.shortname+'/'+self.downname+'.raw.ctf.sel' 
@@ -617,7 +644,8 @@ if __name__ == '__main__':
 
    	# create preprocess_particles_class object
 
-	preprocess_particles=preprocess_particles_class(MicrographSelfile,
+	preprocess_particles=preprocess_particles_class(WorkingDir,
+                                                        MicrographSelfile,
                                                         IsPairList,
                                                         ProjectDir,
                                                         LogDir,
