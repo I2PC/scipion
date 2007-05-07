@@ -39,7 +39,7 @@ class selfile:
        return i
    
    # counts number of entries in selfile
-   def lenght_even_no_actives(self):
+   def length_even_no_actives(self):
        i=0
        state=-1
        for name,state in self.sellines: 

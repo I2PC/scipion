@@ -664,11 +664,11 @@ def execute_align2d(_mylog,
 #      aux_sel_file.read(class_selfile)
 #      message= aux_sel_file.selfilename,\
 #             "length ", aux_sel_file.length(), \
-#             "length_t ", aux_sel_file.lenght_even_no_actives()
+#             "length_t ", aux_sel_file.length_even_no_actives()
 #      _mylog.debug(message)
 #             
 #      if (aux_sel_file.length()<1 and \
-#          aux_sel_file.lenght_even_no_actives()>0):  
+#          aux_sel_file.length_even_no_actives()>0):  
 #          class_file_name = class_selfile.replace('.sel','.xmp') 
 #          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
 #          shutil.copy(class_file_name,aligned_file_name)
