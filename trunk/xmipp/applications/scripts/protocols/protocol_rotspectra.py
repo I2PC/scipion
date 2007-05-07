@@ -82,7 +82,7 @@ SpectraName="spectra.sim"
 #-----------------------------------------------------------------------------
 # {section} classify_kerdensom 
 #-----------------------------------------------------------------------------
-# Perform kerdensom calculation?
+# Perform self-organizing map calculation?
 DoKerdensom=True
 # Name of Output SOM:
 """ Existing files with this name will be deleted!

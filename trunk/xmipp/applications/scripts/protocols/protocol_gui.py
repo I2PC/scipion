@@ -642,7 +642,6 @@ class automated_gui_class:
         import tkFileDialog
         fname = tkFileDialog.askdirectory()       
         if (len(fname)>0):
-            print "* Analysing results in directory "+os.path.basename(fname)+" ..."
             command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
                      self.variables["AnalysisScript"][0]+' '+fname+' &'
             print '*',command

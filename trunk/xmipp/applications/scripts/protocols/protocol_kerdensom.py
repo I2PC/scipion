@@ -20,7 +20,7 @@ DoDeleteWorkingDir=False
 """
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles (relative path from ProjectDir):
-""" All logfiles will be stored in $ProjectDir/$LogDir
+""" All logfiles will be stored here
 """
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
@@ -61,9 +61,9 @@ SomYdim=5
 """
 SomReg0=1000
 # Final regularization factor:
-SomReg1=1000
+SomReg1=200
 # Number of steps to lower the regularization factor:
-SomSteps=1
+SomSteps=5
 # {expert} Additional classify_kerdensom parameters:
 """ For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """

@@ -24,7 +24,7 @@ DoDeleteWorkingDir=False
 """
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
-""" All logfiles will be stored in $ProjectDir/$LogDir
+""" All logfiles will be stored here
 """
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------

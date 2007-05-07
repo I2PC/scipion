@@ -42,7 +42,7 @@ SetupHighRes3D=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
-# Root directory name for this project:
+# Absolute path to the root directory name for this project):
 ProjectDir='/home/scheres/Xmipp/applications/scripts/protocols'
 # Directory name for logfiles:
 LogDir='Logs'
