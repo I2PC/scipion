@@ -80,12 +80,58 @@ void Prog_Sampling_Parameters::run() {
    mysampling.Compute_sampling_points(false);
    mysampling.create_sym_file(symmetry,sym_order);
    mysampling.remove_redundant_points(symmetry,sym_order);
-   #define DEBUG6
+   mysampling.create_asym_unit_file(sampling_file_root);
+   #define DEBUG6 
    #ifdef DEBUG6
        for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++){  
-           cout << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.1 2 " << endl;
+           cout << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.1 2.2222 " << endl;
            //cout << mysampling.no_redundant_sampling_points_angles[i].transpose() << " 1.21 1 " << endl;
            }
+   #endif
+   #undef DEBUG6
+   #define DEBUG6
+   #ifdef DEBUG6
+   {   /* for sphere coverage only R is important.
+          for psi L and R are important
+        */  
+       double rot,  tilt,  psi;
+       double rotp, tiltp, psip; 
+       matrix1D<double>  row(3);
+       matrix2D<double>  L(4,4), R(4,4);
+       //cerr << "mysampling.SL.SymsNo():" << mysampling.SL.SymsNo() << endl;
+       for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++)
+          {
+         if(i==100)
+            {
+            rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
+            tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
+            psi=ZZ(mysampling.no_redundant_sampling_points_angles[i]);
+            cerr << 1 << " " << 3 << " " <<rot << " " << tilt << " " << psi << endl;
+            //cerr << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1 1" << endl;
+            }
+          for (int isym=0; isym<mysampling.SL.SymsNo(); isym++) 
+             {
+               //cerr << L << R << endl;
+               mysampling.SL.get_matrices(isym,L,R);
+               R.resize(3,3); // as only the relative orientation 
+               row = R * mysampling.no_redundant_sampling_points_vector[i];
+               cout << row.transpose() << " 1 " << isym +2 << endl;
+               if(i==100)
+                 {
+                  //cerr << row.transpose() << " 1 " << isym +2 << endl;
+                  L.resize(3,3); // Erase last row and column
+                  //cerr << L << R << endl;
+                  Euler_apply_transf(L,R,rot,tilt,psi,rotp,tiltp,psip);
+                  Euler_direction(rotp, tiltp, psip,row);
+                  cerr << isym +2 << " " << 3 << " " << rotp << " " << tiltp << " " << psip << endl;
+                  }
+               }
+          }
+    }     
+   #endif
+   #undef DEBUG6
+   //#define DEBUG6
+   #ifdef DEBUG6
        for (int i = 0; 
             i < mysampling.sampling_points_vector.size(); 
             i++)
