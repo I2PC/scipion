@@ -55,7 +55,7 @@ int main( int argc, char **argv )
     	selname = get_param(argc, argv, "-sel");
     else
     	imgname = get_param(argc, argv, "-img");
-    saveasname=get_param(argc, argv, "-save_as");
+    saveasname=get_param(argc, argv, "-save_as","");
     if (check_param(argc, argv, "-sd"))
      sdflag = true;
     apply_geo=!check_param(argc, argv, "-dont_apply_geo");
