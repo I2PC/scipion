@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors:    Slavica Jonic            slavica.jonic@a3.epfl.ch (2004)
+ * Authors:    Slavica Jonic                slavica.jonic@a3.epfl.ch (2004)
+ *             Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * Biomedical Imaging Group, EPFL.
  *
@@ -328,24 +329,28 @@ double CSTSplineAssignment(
 
    // Call Slavica's routine ...............................................
    Status=cstregistration(&Data);
-   if (Status==ERROR)
-      REPORT_ERROR(1,"CSTSplineAssignment: There was a problem while assigning");
 
    // Retrieve results .....................................................
    // Skip last iterations if they are failures
-   long last_iteration_performed=*(Data.NumberIterPerformed)+1;
-   while (Failures(last_iteration_performed-1)>0.0)
-      last_iteration_performed--;
+   double retval;
+   if (Status!=ERROR) {
+      long last_iteration_performed=*(Data.NumberIterPerformed)+1;
+      while (Failures(last_iteration_performed-1)>0.0)
+	 last_iteration_performed--;
 
-   // Get the pose parameters
-   pose_parameters(0)=RAD2DEG(output_pose(0,last_iteration_performed-1));
-   pose_parameters(1)=RAD2DEG(output_pose(1,last_iteration_performed-1));
-   pose_parameters(2)=RAD2DEG(output_pose(2,last_iteration_performed-1));
-   pose_parameters(3)=output_pose(3,last_iteration_performed-1);
-   pose_parameters(4)=output_pose(4,last_iteration_performed-1);
+      // Get the pose parameters
+      pose_parameters(0)=RAD2DEG(output_pose(0,last_iteration_performed-1));
+      pose_parameters(1)=RAD2DEG(output_pose(1,last_iteration_performed-1));
+      pose_parameters(2)=RAD2DEG(output_pose(2,last_iteration_performed-1));
+      pose_parameters(3)=output_pose(3,last_iteration_performed-1);
+      pose_parameters(4)=output_pose(4,last_iteration_performed-1);
 
-   // Get the cost
-   double retval=Cost(last_iteration_performed-1);
+      // Get the cost
+      retval=Cost(last_iteration_performed-1);
+   } else {
+      retval=-1;
+      cout << "There is a problem with one image, angles not assigned\n";
+   }
 
    // Return
    return retval;
