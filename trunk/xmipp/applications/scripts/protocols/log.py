@@ -1,13 +1,30 @@
-def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
-    import os, sys
-    import logging
-    import socket
+import os, sys
+import socket
+class XmippLog:
+    def __init__(self,logName):
+        self.fh_log=open(logName,'a')
     
+    def debug(self,message):
+        self.info("DEBUG: "+message)
+
+    def info(self,message):
+        import time
+        self.fh_log.write(message+" "+\
+           time.asctime(time.localtime(time.time()))+"\n")
+        self.fh_log.flush()
+
+    def __del__(self):
+        self.fh_log.close()
+
+# --------------------------------------------------------------------------
+# Init log system
+# --------------------------------------------------------------------------
+def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
     """ Set up logging information
     more info at:
     http://webmaster.iu.edu/tool_guide_info/python/lib/module-logging.html
     """
-            
+
     LogName = projectdir + '/' + logdir + '/'
     if not os.path.exists(LogName):
         os.makedirs(LogName)
@@ -18,12 +35,17 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
         LogName += os.path.basename(WorkDirectory)
     LogName += '.log'
 
-    mylog = logging.getLogger(scriptname)
-    hdlr = logging.FileHandler(LogName)
-    formatter = logging.Formatter('%(levelname)s (%(lineno)d) %(message)s (%(asctime)s)')
-    hdlr.setFormatter(formatter)
-    mylog.addHandler(hdlr) 
-    mylog.setLevel(logging.INFO)
+    try:
+       import logging
+       mylog = logging.getLogger(scriptname)
+       hdlr = logging.FileHandler(LogName)
+       formatter = logging.Formatter('%(levelname)s (%(lineno)d) %(message)s (%(asctime)s)')
+       hdlr.setFormatter(formatter)
+       mylog.addHandler(hdlr) 
+       mylog.setLevel(logging.INFO)
+    except ImportError:
+       mylog = XmippLog(LogName)
+       
 
     # append a line with user, machine and date
     myusername = str(os.environ.get('USERNAME'))
@@ -36,7 +58,7 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
     event += myhost + ':' 
     event += mypwd 
     mylog.info(event)
-    
+
     return mylog
             
 def make_backup_of_script_file(script_file_name,
