@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
    double          rot0,  rotF,  step_rot;
    double          tilt0, tiltF, step_tilt;
    int             rot_sym;
+   bool            centerVolume;
 
    VolumeXmipp     volume;
 
@@ -46,6 +47,7 @@ int main(int argc, char **argv) {
    try {
      fn_input=get_param(argc,argv,"-i");
      rot_sym=AtoI(get_param(argc,argv,"-rot_sym","0"));
+     centerVolume=check_param(argc,argv,"-center_volume");
      int i;
      if ((i=position_param(argc,argv,"-rot"))!=-1) {
 	if (i+3>=argc)
@@ -88,6 +90,7 @@ int main(int argc, char **argv) {
 
       // Move origin to that center of mass
       volume().self_translate(-center_of_mass,DONT_WRAP);
+      if (centerVolume) volume.write();
 
       // Look for the rotational symmetry axis
       if (rot_sym>1) {
@@ -149,6 +152,7 @@ void Usage() {
 
     cerr << "Usage: findcenter3D [options]" << endl
          << "    -i <volume>                         : volume to process\n"
+	 << "   [-center_volume]                     : save the centered volume\n"
 	 << "   [-rot_sym <n=0>]                     : order of the rotational axis\n"
 	 << "   [-rot  <rot0=0>  <rotF=355> <step=5>]: limits for rotational axis\n"
 	 << "   [-tilt <tilt0=0> <tiltF=90> <step=5>]: limits for rotational axis\n"
