@@ -27,6 +27,7 @@
 #ifndef _SAMPLING1_HH
 #define _SAMPLING1_HH
 #include <vector>
+#include <data/docfile.h>
 #include <data/macros.h>
 #include <data/matrix1d.h>
 #include <reconstruction/symmetries.h>
@@ -87,7 +88,7 @@ public:
 
    /** symmetry information **/
    SymList  SL;
-
+  
     /** Compuute edge sampling points 
         if you are looking only for directtions set only_half_sphere = true
     */
@@ -122,6 +123,10 @@ public:
    /** create symmetry file from introduced symmetry
        see  SymList class */
    void create_sym_file(string symmetry,int sym_order);
+
+   /** save assymetric unit sampling in a doc file */
+   void create_asym_unit_file(FileName docfilename);
+
 };
 //@}
 #endif
