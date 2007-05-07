@@ -12,10 +12,6 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Visualize the estimated CTF models for all micrographs?
-""" You may re-estimate CTFs by selecting a micrograph, and selecting re-estimate CTF from the right-mouse button menu 
-"""
-DoShowCTFs=True
 # Visualize the individual particles, sorted by micrograph?
 DoShowParticles=True
 # Visualize the individual particles, sorted by statistics?
@@ -36,7 +32,6 @@ class visualize_particles_class:
 
     #init variables
     def __init__(self,
-                 DoShowCTFs,
                  DoShowParticles,
                  DoShowSortedParticles,
                  DoShowZscore,
@@ -55,8 +50,6 @@ class visualize_particles_class:
         import protocol_preprocess_particles_backup
 
         ShowSelfiles=[]
-        if (DoShowCTFs):
-            self.visualize_ctfs()
         if (DoShowParticles):
             selfile=protocol_preprocess_particles_backup.ProjectDir+ '/' + \
                      protocol_preprocess_particles_backup.OutSelFile
@@ -71,21 +64,6 @@ class visualize_particles_class:
         # Return to parent dir
         os.chdir(os.pardir)
         
-            
-    def visualize_ctfs(self):
-        import os
-        print '*********************************************************************'
-        print '*  Visualizing all CTFs: '
-        command='xmipp_show -ctfsel all_ctfs.sel &'
-        print '* ',command
-        print '* '
-        print '* You may re-estimate CTFs by selecting the corresponding micrograph (double-clicking) '
-        print '* and then selecting re-estimate CTF from the right-mouse button menu '
-        print '* Adjust the red circle to coincide with the first zero in the PSD '
-        print '* After re-esimtation re-run the script (skipping CTF-estimation, '
-        print '* but performing extraction, normalization, phase flipping etc.) '
-        print '* '
-        os.system(command)
 
     def show_z_score(self):
         import os,sys
@@ -128,8 +106,7 @@ if __name__ == '__main__':
     WorkingDir=sys.argv[1]
 
     # create preprocess_particles_class object
-    visualize=visualize_particles_class(DoShowCTFs,
-                                        DoShowParticles,
+    visualize=visualize_particles_class(DoShowParticles,
                                         DoShowSortedParticles,
                                         DoShowZscore,
                                         WorkingDir)

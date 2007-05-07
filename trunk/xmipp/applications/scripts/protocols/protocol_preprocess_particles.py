@@ -2,7 +2,6 @@
 #------------------------------------------------------------------------------------------------
 #
 # General script for Xmipp-based pre-processing of single-particles: 
-#  - CTF estimation
 #  - extraction of particles
 #  - phase flipping
 #  - normalization
@@ -76,33 +75,6 @@ DoRemoveBlackDust=False
 # Perform white dust particles removal?
 DoRemoveWhiteDust=False
 #------------------------------------------------------------------------------------------------
-# {section} Contrast Transfer Function estimation
-#------------------------------------------------------------------------------------------------
-# Perform CTF estimation?
-DoEstimateCTF=False
-# Microscope voltage (in kV)
-Voltage=200
-# Spherical aberration
-SphericalAberration=2.26
-# Pixel size in the particles (in Angstrom/pixel)
-Sampling=2.8
-# Amplitude Contrast (typically negative!)
-AmplitudeContrast=-0.1
-# {expert} Lowest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
-    The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
-"""
-LowResolCutoff=0.05
-# {expert} Highest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
-    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
-"""
-HighResolCutoff=0.35
-# {expert} Selfile with CTFs for all particles (is placed in ProjectDir)
-OutCTFSelFile="all_images_ctf.sel"
-#------------------------------------------------------------------------------------------------
 # {section} Phase correction
 #------------------------------------------------------------------------------------------------
 # Perform CTF-phase flipping?
@@ -144,14 +116,6 @@ class preprocess_particles_class:
                  DoUseRamp,
                  DoRemoveBlackDust,
                  DoRemoveWhiteDust,
-                 DoEstimateCTF,
-                 Voltage,
-                 SphericalAberration,
-                 Sampling,
-                 AmplitudeContrast,
-                 LowResolCutoff,
-                 HighResolCutoff,
-                 OutCTFSelFile,
                  DoPhaseFlipping,
                  DoSorting,
                  ):
@@ -176,14 +140,6 @@ class preprocess_particles_class:
         self.DoUseRamp=DoUseRamp
         self.DoRemoveBlackDust=DoRemoveBlackDust
         self.DoRemoveWhiteDust=DoRemoveWhiteDust
-        self.DoEstimateCTF=DoEstimateCTF
-        self.Voltage=Voltage
-        self.SphericalAberration=SphericalAberration
-        self.Sampling=Sampling
-        self.AmplitudeContrast=AmplitudeContrast
-        self.LowResolCutoff=LowResolCutoff
-        self.HighResolCutoff=HighResolCutoff
-        self.OutCTFSelFile=OutCTFSelFile
         self.DoPhaseFlipping=DoPhaseFlipping
         self.DoSorting=DoSorting
 
@@ -211,10 +167,6 @@ class preprocess_particles_class:
         if (not self.IsPairList):
             self.process_all_micrographs()
         else:
-            if (self.DoEstimateCTF):
-                message='Warning: CTFs will not be estimated for tilted pairs!'
-                print '*',message
-                self.log.error(message)
             if (self.DoPhaseFlipping):
                 message='Warning: CTF phases will not be flipped for tilted pairs!'
                 print '*',message
@@ -262,9 +214,6 @@ class preprocess_particles_class:
                     if (self.DoNormalize):
                         self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
                               
-                    if (self.DoEstimateCTF):
-                        self.perform_ctfestimate()
-
                     if (self.DoPhaseFlipping):
                         self.perform_phaseflip()
 
@@ -532,66 +481,6 @@ class preprocess_particles_class:
         os.system(command)
 
 
-    def perform_ctfestimate(self):
-        import os
-        iname=self.shortname+'/'+self.downname+'.raw'
-        pname=self.shortname+'/'+self.shortname+'_input.param'
-        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
-        selname=self.shortname+'/'+self.downname+'.raw.sel' 
-        ctfname=self.downname+'.raw.ctf.sel' 
-        ctfname2=self.shortname+'/'+self.downname+'.raw.ctf.sel' 
-        print '*********************************************************************'
-        print '*  Estimate CTF for micrograph: '+iname
-
-        # prepare parameter file
-        paramlist = []
-        paramlist.append('image= '+iname+'\n')
-        paramlist.append('micrograph_averaging= yes \n')
-        paramlist.append('voltage= '+str(self.Voltage)+'\n')
-        paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
-        paramlist.append('sampling_rate= '+str(self.Sampling)+'\n')
-        paramlist.append('particle_horizontal= 128 \n')
-        paramlist.append('Q0= '+str(self.AmplitudeContrast)+'\n')
-        paramlist.append('N_horizontal= 512 \n')
-        paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
-        paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
-        paramlist.append('selfile= '+selname+'\n')
-        paramlist.append('picked='+posname+'\n')
-        paramlist.append('periodogram= yes \n')
-
-        # Perform CTF estimation
-        fh=open(pname,"w")
-        fh.writelines(paramlist)
-        fh.close()
-        command='xmipp_ctf_estimate_from_micrograph -i '+pname
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
-
-        # Add entry to the ctfselfile (for visualization of all CTFs)
-        currdir=os.getcwd()
-        oname=currdir+'/'+self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel'
-        self.ctfselfile.append(oname+' 1 \n')
-
-        # Move ctf.sel file into subdirectory
-        if os.path.exists(ctfname):
-            os.rename(ctfname,ctfname2)
-
-        # Fill selfile with all CTFs
-        fh=open(ctfname2,'r')
-        text = fh.readlines()
-        fh.close()
-        outctfselname=self.ProjectDir+'/'+OutCTFSelFile
-        fh=open(outctfselname,'a')
-        fh.writelines(text)
-        fh.close()
-
-        # Update all_ctfs.sel
-        fh=open('all_ctfs.sel','w')
-        fh.writelines(self.ctfselfile)
-        fh.close()
-
-
     def perform_phaseflip(self):
         import os
         import spider_header
@@ -659,14 +548,6 @@ if __name__ == '__main__':
                                                         DoUseRamp,
                                                         DoRemoveBlackDust,
                                                         DoRemoveWhiteDust,
-                                                        DoEstimateCTF,
-                                                        Voltage,
-                                                        SphericalAberration,
-                                                        Sampling,
-                                                        AmplitudeContrast,
-                                                        LowResolCutoff,
-                                                        HighResolCutoff,
-                                                        OutCTFSelFile,
                                                         DoPhaseFlipping,
                                                         DoSorting)
 

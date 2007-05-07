@@ -23,6 +23,8 @@
 SetupPreProcessMicrographs=False
 # {setup-pre} Manual particle selection
 SetupParticlePick=False
+# {setup-pre} CTF estimation
+SetupCtfEstimation=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False
 # {setup-2d} ML2D classification
@@ -57,6 +59,7 @@ class setup_protocols_class:
        #init variables
         def __init__(self,
                      SetupPreProcessMicrographs,
+                     SetupCtfEstimation,
                      SetupParticlePick,
                      SetupPreProcessParticles,
                      SetupML2D,
@@ -73,6 +76,7 @@ class setup_protocols_class:
             import os,sys
 
             self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
+            self.SetupCtfEstimation=SetupCtfEstimation
             self.SetupParticlePick=SetupParticlePick
             self.SetupPreProcessParticles=SetupPreProcessParticles
             self.SetupML2D=SetupML2D
@@ -95,6 +99,8 @@ class setup_protocols_class:
             self.library={}
             self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
                                                 ['protocol_preprocess_micrographs.py','visualize_preprocess_micrographs.py']]
+            self.library['SetupCtfEstimation']=[self.SetupCtfEstimation,
+                                                ['protocol_ctf_estimation.py','visualize_ctf_estimation.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
                                                 ['protocol_particle_pick.py']]
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
@@ -208,6 +214,7 @@ if __name__ == '__main__':
         AutoLaunch=sys.argv[1]
 
     setup=setup_protocols_class(SetupPreProcessMicrographs,
+                                SetupCtfEstimation,
                                 SetupParticlePick,
                                 SetupPreProcessParticles,
                                 SetupML2D,
