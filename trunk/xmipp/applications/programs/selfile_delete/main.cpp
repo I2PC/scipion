@@ -73,7 +73,7 @@ try {
       SelLine line= SF.current();
       if (line.Is_data()) { 		//The SelLine is not a comment
        FileName in_name = line.get_text();
-       comStr = "rm " + org_path + in_name;       	
+       comStr = "rm -f " + org_path + in_name;       	
 
        if (!system(comStr.c_str()))
 	   cout << " file " << org_path << in_name << " removed " << endl;
@@ -83,7 +83,7 @@ try {
 
    	
    // now remove sel file
-   comStr = "rm " + sel_file;			
+   comStr = "rm -f " + sel_file;			
    system(comStr.c_str());
 
 } catch (Xmipp_error XE) {cout << XE;}
@@ -108,17 +108,3 @@ void Usage (char **argv) {
      "\n"
      ,argv[0]);
 }
-
-/* ------------------------------------------------------------------------- */
-/* Menu                                                                      */
-/* ------------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM RmSel {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/RmSel/Help/rmsel.html";
-      help="Remove all files appearing in a selection file";
-      OPEN MENU menu_selfile;
-      COMMAND LINES {
-        + usual: xmipp_rmsel $SELFILE_IN
-      }
-   }
-*/
