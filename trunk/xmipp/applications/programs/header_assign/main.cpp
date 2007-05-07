@@ -43,6 +43,7 @@ int main (int argc,char *argv[]) {
    int             key_img;
    string          root,ext;
    bool            verb,do_weights=false,do_mirrors=false, round_shifts=false;
+   bool            force=false;
    float           weight,mirror;
    FileName        fn_img,fn_out,fn_tst;
    SelFile         SF;
@@ -60,6 +61,7 @@ int main (int argc,char *argv[]) {
      DF.read(get_param(argc,argv,"-i"));
      fn_out=get_param(argc,argv,"-o","");
      verb=check_param(argc,argv,"-verb");
+     force=check_param(argc,argv,"-force");
 
      // Columns numbers
      if ((i=position_param(argc,argv,"-columns"))!=-1) 
@@ -105,7 +107,7 @@ int main (int argc,char *argv[]) {
        // Assigning angles and shifts from document file
        DF.go_beginning();
        if (DF.get_current_line().Is_comment()) fn_tst=(DF.get_current_line()).get_text();
-       if (strstr(fn_tst.c_str(),"Headerinfo")==NULL) 
+       if (strstr(fn_tst.c_str(),"Headerinfo")==NULL || force) 
        {
 	   
 	   // Non-NewXmipp type document file
@@ -229,6 +231,8 @@ void Usage() {
     printf("       [-o <selfile>]      : selfile containing the images to be assessed\n");
     printf("                             (only necessary for non-NewXmipp docfiles) \n");
     printf("       [-verb]             : output assigned information to screen \n");
+    printf("       [-force]            : perform the assignment even if the selfile does not\n"
+           "                             correspond to the docfile\n");
     printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> \n"
            "                           : where the 5 integers are the column numbers for the \n"
            "                           : respective angles and offsets in the docfile\n"
