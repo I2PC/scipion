@@ -1,10 +1,10 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.uam.es)
- *              Carlos �scar S�nchez Sorzano (coss.eps@ceu.es)
+ *              Carlos Oscar Sanchez Sorzano (coss.eps@ceu.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- * Lab. de Bioingenier�a, Univ. San Pablo CEU
+ * Lab. de Bioingenieria, Univ. San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,18 +50,18 @@ int main (int argc, char **argv) {
 
    try {
       // Rank 0 creates projections
-      char fn_random[10];
+      int fn_random;
       if (rank==0) {
          prm.produce_side_info(0);
-         strcpy(fn_random,prm.fn_random.c_str());
+	 fn_random=AtoI(prm.fn_random);
       }
-      MPI_Bcast(fn_random, strlen(fn_random)+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&fn_random, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
       // Now all the ranks except 0 produce their own info
       if (rank!=0) {
-         prm.fn_ref=(string)"ref"+fn_random+".sel";
-	 prm.fn_ang=(string)"reference"+fn_random+"__movements.txt";
-         prm.produce_side_info(0);
+         prm.fn_ref=(string)"ref"+ItoA(fn_random,4)+".sel";
+	 prm.fn_ang=(string)"reference"+ItoA(fn_random,4)+"__movements.txt";
+         prm.produce_side_info(rank);
       }
 
       // Divide the selfile in chunks
@@ -77,6 +77,8 @@ int main (int argc, char **argv) {
       double v[7];
       if (rank==0) {	
 	 int toGo=imgNbr;
+	 cerr << "Assigning angles ...\n";
+	 init_progress_bar(imgNbr);
 	 MPI_Status status;
 	 while( toGo > 0) {
 	    MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
@@ -88,13 +90,14 @@ int main (int argc, char **argv) {
 	    prm.predicted_shiftX[i]=v[4];
 	    prm.predicted_shiftY[i]=v[5];
 	    prm.predicted_corr[i]=v[6];
-	    toGo--;	
+	    toGo--;
+	    if (toGo % (imgNbr/60)==0) {progress_bar(imgNbr-toGo); cerr.flush();}
 	 }
+	 progress_bar(imgNbr);
       } else {
          SelFile SF_in(prm.fn_in);
 	 SF_in.go_beginning();
 	 SF_in.jump(myFirst);
-	 init_progress_bar(myLast-myFirst+1);
 	 for (int i=myFirst; i<=myLast; i++) {
 	    // Read image and estimate angular parameters
             ImageXmipp I;
@@ -103,7 +106,7 @@ int main (int argc, char **argv) {
 	    double shiftX, shiftY, psi, rot, tilt;
 	    prm.predict_angles(I,shiftX, shiftY, rot, tilt, psi);
 	    double corr=prm.predicted_corr[i-myFirst];
-	
+	    
 	    // Rewrite the image header if necessary
 	    if (!prm.dont_modify_header) {
 	       I.read(I.name());
@@ -121,10 +124,8 @@ int main (int argc, char **argv) {
 	    v[5]=shiftY;
 	    v[6]=corr;
 	    MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-	    progress_bar(i-myFirst+1);
 	 }
       }
-      progress_bar(myLast-myFirst+1);
 
       MPI_Finalize();	
       if (rank==0) prm.finish_processing();
