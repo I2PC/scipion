@@ -19,9 +19,12 @@ DoShowCTFs=True
 # Visualize the individual particles, sorted by micrograph?
 DoShowParticles=True
 # Visualize the individual particles, sorted by statistics?
-""" Most common particles will be displayed at the top, and outliers will be displayed at the bottom of the selection file"""
+""" Most common particles will be displayed at the top, and outliers will be displayed at the bottom of the selection file
+"""
 DoShowSortedParticles=True
 # Visualize the Z-score used for particles sorting?
+""" Particles will be sorted from low Z-scores (common particles) to high Z-scores (strange particles)
+"""
 DoShowZscore=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
