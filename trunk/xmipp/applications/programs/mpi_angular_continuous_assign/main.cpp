@@ -1,9 +1,9 @@
 /***************************************************************************
  *
- * Authors:     Carlos �scar S�nchez Sorzano (coss.eps@ceu.es)
+ * Authors:     Carlos Oscar Sanchez Sorzano (coss.eps@ceu.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- * Lab. de Bioingenier�a, Univ. San Pablo CEU
+ * Lab. de Bioingenieria, Univ. San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ int main (int argc, char **argv) {
       int myFirst=(rank-1)*Nchunk;
       int myLast=rank*Nchunk-1;
       if (rank==NProcessors-1) myLast=imgNbr-1;
-
+      
       // Make the alignment, rank=0 receives all the assignments
       // The rest of the ranks compute the angular parameters for their
       // assigned images
@@ -65,6 +65,8 @@ int main (int argc, char **argv) {
       if (rank==0) {	
 	 int toGo=imgNbr;
 	 MPI_Status status;
+	 cerr << "Assigning angles ...\n";
+	 init_progress_bar(imgNbr);
 	 while( toGo > 0) {
 	    MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
 	       MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -75,22 +77,28 @@ int main (int argc, char **argv) {
 	    prm.predicted_shiftX[i]=v[4];
 	    prm.predicted_shiftY[i]=v[5];
 	    prm.predicted_cost[i]=v[6];
-	    toGo--;	
+	    toGo--;
+	    if (toGo % (imgNbr/60)==0) {progress_bar(imgNbr-toGo); cerr.flush();}
 	 }
+	 progress_bar(imgNbr);
       } else {
          SelFile SF_in(prm.fn_in);
 	 SF_in.go_beginning();
 	 SF_in.jump(myFirst);
-	 init_progress_bar(myLast-myFirst+1);
 	 for (int i=myFirst; i<=myLast; i++) {
 	    // Read image and estimate angular parameters
             ImageXmipp I;
 	    I.read(SF_in.NextImg(),false,false,false);
 	    I().set_Xmipp_origin();
 	    double shiftX, shiftY, psi, rot, tilt;
+	    rot    = prm.DF_initial(i+1,0);
+	    tilt   = prm.DF_initial(i+1,1);
+	    psi    = prm.DF_initial(i+1,2);
+	    shiftX = prm.DF_initial(i+1,3);
+	    shiftY = prm.DF_initial(i+1,4);
 	    prm.predict_angles(I, shiftX, shiftY, rot, tilt, psi);
 	    double cost=prm.predicted_cost[i-myFirst];
-	
+	    
 	    // Rewrite the image header if necessary
 	    if (!prm.dont_modify_header) {
 	       I.read(I.name());
@@ -108,10 +116,8 @@ int main (int argc, char **argv) {
 	    v[5]=shiftY;
 	    v[6]=cost;
 	    MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-	    progress_bar(i-myFirst+1);
 	 }
       }
-      progress_bar(myLast-myFirst+1);
 
       MPI_Finalize();	
       if (rank==0) prm.finish_processing();
