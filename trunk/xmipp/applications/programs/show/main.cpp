@@ -49,7 +49,7 @@ void Usage();
 
 int main( int argc, char **argv ) {
     int numCols, numRows, mode, ifirst;
-    FileName fn_dat, fn_assign;
+    FileName fn_dat, fn_assign, fn_assignsel;
     bool poll, apply_geo=true, common_normalization=false;
 
     try {
@@ -58,6 +58,7 @@ int main( int argc, char **argv ) {
        else if (check_param(argc,argv,"-ctfsel"))  {
           mode=MODE_CTFSEL; ifirst=position_param(argc,argv,"-ctfsel");
           fn_assign=get_param(argc,argv,"-assign","");
+	  fn_assignsel=get_param(argc,argv,"-assignsel","");
        }
        else if (check_param(argc,argv,"-sel"))     {mode=MODE_SEL; ifirst=position_param(argc,argv,"-sel");}
        else if (check_param(argc,argv,"-vol"))     {mode=MODE_VOL; ifirst=position_param(argc,argv,"-vol");}
@@ -206,6 +207,7 @@ int main( int argc, char **argv ) {
           showsel->showonlyactive = false;
 	  showsel->initWithFile(numRows, numCols, argv[i], ShowSel::CTF_mode);
           showsel->setAssignCTFfile(fn_assign);
+          showsel->setAssignCTFselfile(fn_assignsel);
 	  showsel->show();
           shown++;
        } else if (mode==MODE_VOL) {
@@ -250,6 +252,7 @@ void Usage() {
          << "    -psdsel <selfiles> |  : Input PSD Selfiles (in image format)\n"
          << "    -ctfsel <selfiles> |  : Input CTF Selfiles (in image format)\n"
          << "      [-assign <filename>]: Input Assign CTF Parameters file\n"
+         << "      [-assignsel <filename>]: Selfile of Input Assign CTF Parameters files\n"
          << "    -vol <XmippVolumes>   : Add x or y to the filename\n"
 	 << "                            to see slices in that direction\n"
          << "    -spect <datafile>     : Spectra .dat file\n"
