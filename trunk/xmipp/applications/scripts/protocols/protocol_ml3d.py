@@ -82,6 +82,9 @@ NumberOfIterations=25
 """
 SymmetryFile="/home2/bioinfo/scheres/work/protocols/G40P/6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
+""" For a complete description see the manual pages:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLrefine3D
+"""
 ExtraParamsMLrefine3D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
