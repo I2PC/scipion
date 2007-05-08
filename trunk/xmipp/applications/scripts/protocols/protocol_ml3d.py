@@ -89,7 +89,7 @@ ExtraParamsMLrefine3D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel? (see Expert options)
+# Use multiple processors in parallel?
 DoParallel=True
 # Number of processors to use:
 MyNumberOfCPUs=5

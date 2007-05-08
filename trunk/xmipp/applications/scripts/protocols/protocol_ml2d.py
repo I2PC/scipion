@@ -51,7 +51,7 @@ ExtraParamsMLalign2D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel? (see Expert options)
+# Use multiple processors in parallel?
 DoParallel=False
 # Number of processors to use:
 MyNumberOfCPUs=10
