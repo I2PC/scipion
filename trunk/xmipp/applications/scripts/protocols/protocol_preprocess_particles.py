@@ -35,6 +35,10 @@ MicrographSelfile='Preprocessing/all_micrographs.sel'
     Also note that the extension of the coordinates files has to be raw.Common.pos!
 """
 IsPairList=False
+# {expert} Name for the output selfile:
+""" This name should have extension .sel
+"""
+OutSelFile='all_images.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
@@ -54,12 +58,9 @@ PosFile="Common"
 # Dimension of the particles to extract (in pix.)
 Size=64
 # {expert} Directory name for particle images:
-ImagesDir="Images"
-# {expert} Name for selfile with all particles
-""" This file is placed in the ProjectDir
-    For tilted pairs, extension .sel is replaced by _untilted.sel and _tilted.sel
+""" This directory will be placed in the project directory
 """
-OutSelFile="all_images.sel"
+ImagesDir="Images"
 #------------------------------------------------------------------------------------------------
 # {section} Normalization
 #------------------------------------------------------------------------------------------------
@@ -69,10 +70,16 @@ DoNormalize=True
 # Radius for background circle definition (in pix.)
 BackGroundRadius=30
 # Perform ramping background correction?
+""" Correct for inclined background densities by fitting a least-squares plane through the background pixels
+"""
 DoUseRamp=True
 # Perform black dust particles removal?
+""" Sets pixels with unusually low values (i.e. stddev<-3.5) to zero
+"""
 DoRemoveBlackDust=False
 # Perform white dust particles removal?
+""" Sets pixels with unusually high values (i.e. stddev>3.5) to zero
+"""
 DoRemoveWhiteDust=False
 #------------------------------------------------------------------------------------------------
 # {section} Phase correction
@@ -110,7 +117,6 @@ class preprocess_particles_class:
                  PosFile,
                  Size,
                  ImagesDir,
-                 OutSelFile,
                  DoNormalize,
                  BackGroundRadius,
                  DoUseRamp,
@@ -134,7 +140,6 @@ class preprocess_particles_class:
         self.PosFile=PosFile
         self.Size=Size
         self.ImagesDir=ImagesDir
-        self.OutSelFile=OutSelFile
         self.DoNormalize=DoNormalize
         self.BackGroundRadius=BackGroundRadius
         self.DoUseRamp=DoUseRamp
@@ -142,6 +147,7 @@ class preprocess_particles_class:
         self.DoRemoveWhiteDust=DoRemoveWhiteDust
         self.DoPhaseFlipping=DoPhaseFlipping
         self.DoSorting=DoSorting
+        self.OutSelFile=OutSelFile
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -196,9 +202,8 @@ class preprocess_particles_class:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        self.ctfselfile = []
         self.allselfile = []
-        self.allctflibfile = []
+        self.allctfselfile = []
 
         mysel=selfile.selfile()
         mysel.read(self.MicrographSelfile)
@@ -458,6 +463,18 @@ class preprocess_particles_class:
         fh=open(outselfname, 'w')
         fh.writelines(self.allselfile)
         fh.close()
+
+        # Update all_images_ctf.sel
+        for i in range(len(newsel)):
+            self.allctfselfile.append(os.getcwd() + '/' + \
+                                       self.shortname + '/' + \
+                                       self.downname + \
+                                       '_Periodogramavg.ctfmodel_halfplane 1\n')
+        ctfselname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_ctf.sel')
+        fh=open(ctfselname,'w')
+        fh.writelines(self.allctfselfile)
+        fh.close()
+
         # Output to screen
         message='Removed '+str(count)+' particles from selfile because they were too near to the border'
         print '* ',message
@@ -542,7 +559,6 @@ if __name__ == '__main__':
                                                         PosFile,
                                                         Size,
                                                         ImagesDir,
-                                                        OutSelFile,
                                                         DoNormalize,
                                                         BackGroundRadius,
                                                         DoUseRamp,

@@ -18,7 +18,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
-WorkingDir="Preprocessing"
+WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all *.tif files
@@ -28,12 +28,12 @@ DirMicrographs='Micrographs'
     But any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
-# Name for output selection file with all preprocessed micrographs
+# {expert} Name for the output micrograph selfile:
 MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/scheres/work/protocols/G40P'
+ProjectDir='/home2/bioinfo/scheres/work/protocols'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -47,12 +47,72 @@ DoTif2Raw=True
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-Down=2
+Down=4
 #------------------------------------------------------------------------------------------------
-# {section} Power Spectral Density estimation
+# {section} CTF estimation
 #------------------------------------------------------------------------------------------------
-# Perform power spectral density estimation?
-DoEstimatePSD=True
+# Perform CTF estimation?
+DoCtfEstimate=True
+# Microscope voltage (in kV)
+Voltage=200
+# Spherical aberration
+SphericalAberration=2.26
+# Magnification rate
+Magnification=50000
+# Scanned pixel size (in um)
+ScannedPixelSize=7
+# Amplitude Contrast
+AmplitudeContrast=0.1
+# {expert} Only perform power spectral density estimation?
+""" Skip the CTF estimation part, and only estimate the PSD
+"""
+OnlyEstimatePSD=False
+# {expert} Lowest resolution for CTF estimation
+""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
+    This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
+    The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
+"""
+LowResolCutoff=0.05
+# {expert} Highest resolution for CTF estimation
+""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
+    This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
+    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
+"""
+HighResolCutoff=0.35
+#------------------------------------------------------------------------------------------------
+# {section} CTFFIND
+#------------------------------------------------------------------------------------------------
+# Use N. Grigorieffs CTFFIND instead of Xmipp?
+""" Some people prefer the faster CTFFIND program.
+    Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
+"""
+DoCtffind=False
+# {file} Location of the CTFFIND executable
+CtffindExec='/home/cnbb13/indivi/bin/ctffind3b.exe'
+# {expert} Window size
+WinSize=128
+# {expert} Minimum resolution (in Ang.)
+MinRes=200.0
+""" Lowest resolution to include in CTF estimation
+"""
+# {expert} Maximum resolution factor
+""" The highest resolution used in the CTF estimation will be:
+    <this factor> x 10000 x Down x ScannedPixelSize / Magnification
+    recommended value: 3
+"""
+MaxResFactor=3
+# {expert} Minimum defocus to search (in Ang.)
+""" Minimum defocus value (in Angstrom) to include in defocus search
+"""
+MinFocus=5000
+# {expert} Maximum defocus to search (in Ang.)
+""" Maximum defocus value (in Angstrom) to include in defocus search
+"""
+MaxFocus=100000
+# {expert} Defocus step (in Ang.)
+""" Step size for defocus search (in Angstrom)
+"""
+StepFocus=500
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -79,23 +139,56 @@ class preprocess_A_class:
                  DoTif2Raw,
                  DoDownSample,
                  Down,
-                 DoEstimatePSD):
+                 DoCtfEstimate,
+                 Voltage,
+                 SphericalAberration,
+                 Magnification,
+                 ScannedPixelSize,
+                 AmplitudeContrast,
+                 OnlyEstimatePSD,
+                 LowResolCutoff,
+                 HighResolCutoff,
+                 DoCtffind,
+                 CtffindExec,
+                 WinSize,
+                 MinRes,
+                 MaxResFactor,
+                 MinFocus,
+                 MaxFocus,
+                 StepFocus
+                 ):
         
         import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
-        sys.path.append(scriptdir) # add default search path
+        sys.path.append(scriptdir)
         import log
 
-        self.WorkingDir=WorkingDir
-        self.DirMicrographs=DirMicrographs
+        self.WorkingDir=os.path.abspath(WorkingDir)
+        self.DirMicrographs=os.path.abspath(DirMicrographs)
         self.ExtMicrographs=ExtMicrographs
-        self.MicrographSelfile=MicrographSelfile
-        self.ProjectDir=ProjectDir
+        self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
         self.DoTif2Raw=DoTif2Raw
         self.DoDownSample=DoDownSample
         self.Down=Down
-        self.DoEstimatePSD=DoEstimatePSD
+        self.DoCtfEstimate=DoCtfEstimate
+        self.Voltage=Voltage
+        self.SphericalAberration=SphericalAberration
+        self.Magnification=Magnification
+        self.ScannedPixelSize=ScannedPixelSize
+        self.AmplitudeContrast=AmplitudeContrast
+        self.OnlyEstimatePSD=OnlyEstimatePSD
+        self.LowResolCutoff=LowResolCutoff
+        self.HighResolCutoff=HighResolCutoff
+        self.DoCtffind=DoCtffind
+        self.CtffindExec=os.path.abspath(CtffindExec)
+        self.WinSize=WinSize
+        self.MinRes=MinRes
+        self.MaxResFactor=MaxResFactor
+        self.MinFocus=MinFocus
+        self.MaxFocus=MaxFocus
+        self.StepFocus=StepFocus
+        self.MicrographSelfile=MicrographSelfile
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -122,6 +215,46 @@ class preprocess_A_class:
         os.chdir(os.pardir)
 
         
+    def process_all_micrographs(self):
+        import os
+        import glob
+        print '*********************************************************************'
+        print '*  Processing the following micrographs: '
+        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
+            (self.filepath, self.name) = os.path.split(self.filename)
+            print '*  '+self.name
+
+        self.psdselfile = []
+        self.ctfselfile = []
+        self.micselfile = []
+        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
+            (self.filepath, self.name) = os.path.split(self.filename)
+            self.shortname=self.name.replace ( '.tif', '' )
+            self.downname='down'+str(self.Down)+'_'+self.shortname
+
+            if not os.path.exists(self.shortname):
+                os.makedirs(self.shortname)
+
+            if (self.DoTif2Raw):
+                self.perform_tif2raw()
+
+            if (self.DoDownSample):
+                self.perform_downsample()
+
+            if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
+                self.downname=self.shortname
+                
+            if (self.DoCtfEstimate):
+                if not (self.DoCtffind):
+                    if (self.OnlyEstimatePSD):
+                        self.perform_only_psdestimate()
+                    else:
+                        self.perform_ctfestimate_xmipp()
+                else:
+                    self.perform_ctfestimate_ctffind()
+
+            self.append_micrograph_selfile()
+
     def perform_tif2raw(self):
         import os
         oname=self.shortname+'/'+self.shortname+'.raw'
@@ -143,7 +276,7 @@ class preprocess_A_class:
         self.log.info(command)
         os.system(command )
 
-    def perform_psdestimate(self):
+    def perform_only_psdestimate(self):
         import os
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_psd.param'
@@ -156,58 +289,183 @@ class preprocess_A_class:
         paramlist.append('periodogram= yes \n')
         paramlist.append('dont_adjust_CTF= yes \n')
     	
-        FILE = open(pname,"w")
-        FILE.writelines(paramlist)
-        FILE.close()
+        fh = open(pname,"w")
+        fh.writelines(paramlist)
+        fh.close()
         command='xmipp_ctf_estimate_from_micrograph -i '+pname
         print '* ',command
         self.log.info(command)
         os.system(command )
         oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
         self.psdselfile.append(oname+' 1\n')
-        FILE = open("all_psds.sel","w")
-        FILE.writelines(self.psdselfile)
-        FILE.close()
+        fh = open("all_psds.sel","w")
+        fh.writelines(self.psdselfile)
+        fh.close()
     
+    def perform_ctfestimate_xmipp(self):
+        import os
+        iname=self.shortname+'/'+self.downname+'.raw'
+        pname=self.shortname+'/'+self.shortname+'_input.param'
+        print '*********************************************************************'
+        print '*  Estimate CTF for micrograph: '+iname
+
+        # prepare parameter file
+        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        paramlist = []
+        paramlist.append('image= '+iname+'\n')
+        paramlist.append('micrograph_averaging= yes \n')
+        paramlist.append('voltage= '+str(self.Voltage)+'\n')
+        paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
+        paramlist.append('sampling_rate= '+str(AngPix)+'\n')
+        paramlist.append('particle_horizontal= 128 \n')
+        paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
+        paramlist.append('N_horizontal= 512 \n')
+        paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
+        paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
+        paramlist.append('periodogram= yes \n')
+
+        # Perform CTF estimation
+        fh=open(pname,"w")
+        fh.writelines(paramlist)
+        fh.close()
+        command='xmipp_ctf_estimate_from_micrograph -i '+pname
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+
+        # Add entry to the ctfselfile (for visualization of all CTFs)
+        oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
+        self.ctfselfile.append(oname+' 1\n')
+        fh=open('all_ctfs.sel','w')
+        fh.writelines(self.ctfselfile)
+        fh.close()
+
+        #Also add enrty to psdselfile
+        oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        self.psdselfile.append(oname+' 1\n')
+        fh = open("all_psds.sel","w")
+        fh.writelines(self.psdselfile)
+        fh.close()
+
+
+    def perform_ctfestimate_ctffind(self):
+        import os
+
+        # Prepare stuff
+        DStep = self.ScannedPixelSize * self.Down
+        MaxRes = (self.MaxResFactor * 10000. * DStep) / self.Magnification
+        self.convert_raw_to_mrc()
+
+        # Execute CTFFIND
+        command=  self.CtffindExec+'  << eof > '+self.shortname+'/ctffind_'+self.downname+'.log\n'
+        command+= self.shortname+'/tmp.mrc\n'
+        command+= self.shortname+'/spectrum.mrc\n'
+        command+= str(self.SphericalAberration) + ',' + \
+                  str(self.Voltage) + ',' + \
+                  str(self.AmplitudeContrast) + ',' + \
+                  str(self.Magnification) + ',' + \
+                  str(DStep) + '\n'
+        command+= str(self.WinSize) + ',' + \
+                  str(self.MinRes) + ',' + \
+                  str(MaxRes) + ',' + \
+                  str(self.MinFocus) + ',' + \
+                  str(self.MaxFocus) + ',' + \
+                  str(self.StepFocus) + '\n'
+        command+= 'eof\n'
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+
+        # Convert output to Xmipp ctfparam files
+        self.convert_ctffind_output_to_xmipp_style()        
+
+        # Remove temporary files
+        os.remove(self.shortname+'/tmp.mrc')
+        os.remove(self.shortname+'/tmp.spi')
+        os.remove(self.shortname+'/spectrum.mrc')
+
+    def convert_raw_to_mrc(self):
+        import os
+        command='xmipp_convert_raw22spi ' + \
+                 ' -i '+ self.shortname+'/'+self.downname+'.raw ' + \
+                 ' -o '+ self.shortname+'/tmp.spi ' + \
+                 ' -is_micrograph -f'
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+        command='xmipp_convert_spi22ccp4 ' + \
+                 ' -i '+ self.shortname+'/tmp.spi ' + \
+                 ' -o '+ self.shortname+'/tmp.mrc '
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+
+    def convert_ctffind_output_to_xmipp_style(self):
+        import os;
+        logfile=self.shortname+'/ctffind_'+self.downname+'.log'
+        fh=open(logfile,'r')
+        lines=fh.readlines()
+        fh.close()
+        newlines=[]
+        DF1=0.
+        DF2=0.
+        Angle=0.
+        for i in range(len(lines)):
+            if not (lines[i].find('Final Values')==-1):
+                words=lines[i].split()
+                DF1=words[0]
+                DF2=words[1]
+                Angle=words[2]
+            if (lines[i].find('CS[mm], HT[kV], AmpCnst, XMAG, DStep[um]')>-1):
+                newlines.append(str(DF1)+' '+str(DF2)+' '+str(Angle)+' '+lines[i+1])
+
+        # Write CTFFIND .ctf file
+        ctffile=self.shortname+'/ctffind_'+self.downname+'.ctf'
+        fh=open(ctffile,'w')
+        fh.writelines(newlines)
+        fh.close()
+
+        # Convert MRC ctf model to Xmipp image
+        ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
+        command='xmipp_convert_spi22ccp4 ' + \
+                 ' -i ' + self.shortname + '/spectrum.mrc ' + \
+                 ' -o '+ ctfname
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+
+        # Add entry to the ctfselfile (for visualization of all CTFs)
+        self.ctfselfile.append(ctfname+' 1 \n')
+        fh=open('all_ctfs.sel','w')
+        fh.writelines(self.ctfselfile)
+        fh.close()
+  
+        # Generate Xmipp .ctfparam file:
+        paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
+        if os.path.exists(paramname):
+            os.remove(paramname)
+        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        paramlist = []
+        paramlist.append('defocusU= -'+str(DF1)+'\n')
+        paramlist.append('defocusV= -'+str(DF2)+'\n')
+        paramlist.append('azimuthal_angle= '+str(Angle)+'\n')
+        paramlist.append('sampling_rate= '+str(AngPix)+'\n')
+        paramlist.append('voltage= '+str(self.Voltage)+'\n')
+        paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
+        paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
+        paramlist.append('K= 1.\n')
+        fh=open(paramname,"w")
+        fh.writelines(paramlist)
+        fh.close()
+
+
     def append_micrograph_selfile(self):
         name=self.shortname+'/'+self.downname+'.raw'
         self.micselfile.append(name+' 1\n')
-        FILE = open(self.MicrographSelfile,'w')
-        FILE.writelines(self.micselfile)
-        FILE.close()
+        fh = open(self.MicrographSelfile,'w')
+        fh.writelines(self.micselfile)
+        fh.close()
 
-    def process_all_micrographs(self):
-        import os
-        import glob
-        print '*********************************************************************'
-        print '*  Processing the following micrographs: '
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            print '*  '+self.name
-
-        self.psdselfile = []
-        self.micselfile = []
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            self.shortname=self.name.replace ( '.tif', '' )
-            self.downname='down'+str(self.Down)+'_'+self.shortname
-
-            if not os.path.exists(self.shortname):
-                os.makedirs(self.shortname)
-
-            if (self.DoTif2Raw):
-                self.perform_tif2raw()
-
-            if (self.DoDownSample):
-                self.perform_downsample()
-
-            if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
-                self.downname=self.shortname
-
-            if (self.DoEstimatePSD):
-                self.perform_psdestimate()
-
-                self.append_micrograph_selfile()
 
     def close(self):
         message=" Done pre-processing all"
@@ -231,7 +489,23 @@ if __name__ == '__main__':
                                    DoTif2Raw,
                                    DoDownSample,
                                    Down,
-                                   DoEstimatePSD)
+                                   DoCtfEstimate,
+                                   Voltage,
+                                   SphericalAberration,
+                                   Magnification,
+                                   ScannedPixelSize,
+                                   AmplitudeContrast,
+                                   OnlyEstimatePSD,
+                                   LowResolCutoff,
+                                   HighResolCutoff,
+                                   DoCtffind,
+                                   CtffindExec,
+                                   WinSize,
+                                   MinRes,
+                                   MaxResFactor,
+                                   MinFocus,
+                                   MaxFocus,
+                                   StepFocus)
 
     # close 
     preprocessA.close()

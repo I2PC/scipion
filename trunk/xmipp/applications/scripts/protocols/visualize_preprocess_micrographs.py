@@ -12,10 +12,10 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-# Visualize the power spectral densities of all micrographs?
-""" You may select bad micrographs by double clicking and save them as discarded in the same selfile
-"""
-DoShowPSDs=True
+# Visualize the estimated CTFs of all micrographs?
+DoShowCTFs=True
+# {expert} Visualize the PSDs of all micrographs?
+DoShowPSDs=False
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -26,6 +26,7 @@ class visualize_micrographs_class:
 
     #init variables
     def __init__(self,
+                 DoShowCTFs,
                  DoShowPSDs,
                  WorkingDir):
 	     
@@ -35,7 +36,6 @@ class visualize_micrographs_class:
 
         self.WorkingDir=WorkingDir
         os.chdir(self.WorkingDir)
-
         # import corresponding protocol
         sys.path.append(self.WorkingDir)
         import protocol_preprocess_micrographs_backup
@@ -43,8 +43,12 @@ class visualize_micrographs_class:
 
         if (DoShowPSDs):
             self.visualize_psds()
-            self.update_micrograph_selfile()
+            self.update_micrograph_selfile('all_psds.sel')
 
+        if (DoShowCTFs):
+            self.visualize_ctfs()
+            self.update_micrograph_selfile('all_ctfs.sel')
+        
         # Return to parent dir
         os.chdir(os.pardir)
             
@@ -60,7 +64,19 @@ class visualize_micrographs_class:
         print '* This way, the discarded micrographs will no longer be processed!'
         os.system(command )
 
-    def update_micrograph_selfile(self):
+    def visualize_ctfs(self):
+        import os
+        print '*********************************************************************'
+        print '*  Visualizing all CTFs: '
+        command='xmipp_show -sel all_ctfs.sel'
+        print '* ',command
+        print '* '
+        print '* You may select bad micrographs and save them as discarded.'
+        print '* Make sure to use save this file again as "all_ctfs.sel'
+        print '* This way, the discarded micrographs will no longer be processed!'
+        os.system(command )
+
+    def update_micrograph_selfile(self,ctfselfile):
         import sys
         import selfile
         
@@ -68,10 +84,10 @@ class visualize_micrographs_class:
         sel2=selfile.selfile()
         sel3=selfile.selfile()
         sel1.read(self.MicrographSelfile)
-        sel2.read('all_psds.sel')
+        sel2.read(ctfselfile)
         
         if not (sel1.length_even_no_actives() == sel2.length_even_no_actives()):
-            message='Error: all_psds.sel and '+str(self.MicrographSelfile)+' are of unequal length'
+            message='Error: '+ctfselfile+' and '+str(self.MicrographSelfile)+' are of unequal length'
             print '* ',message
             sys.exit()
         else:
@@ -97,7 +113,8 @@ if __name__ == '__main__':
     WorkingDir=sys.argv[1]
 
     # create preprocess_micrographs_class object
-    visualize=visualize_micrographs_class(DoShowPSDs,
+    visualize=visualize_micrographs_class(DoShowCTFs,
+                                          DoShowPSDs,
                                           WorkingDir)
     visualize.close()
 
