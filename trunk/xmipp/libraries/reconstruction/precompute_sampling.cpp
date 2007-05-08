@@ -77,11 +77,13 @@ void Prog_Sampling_Parameters::show() {
 void Prog_Sampling_Parameters::run() {
    show();
    mysampling.SetSampling(sampling);
+   mysampling.SetNeighborhoodRadius(neighborhood);
    mysampling.Compute_sampling_points(false);
    mysampling.create_sym_file(symmetry,sym_order);
    mysampling.remove_redundant_points(symmetry,sym_order);
    mysampling.create_asym_unit_file(sampling_file_root);
-   #define DEBUG6 
+   mysampling.compute_neighbors();
+   //#define DEBUG6 
    #ifdef DEBUG6
        for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++){  
            cout << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.1 2.2222 " << endl;
@@ -89,7 +91,7 @@ void Prog_Sampling_Parameters::run() {
            }
    #endif
    #undef DEBUG6
-   #define DEBUG6
+   //#define DEBUG6
    #ifdef DEBUG6
    {   /* for sphere coverage only R is important.
           for psi L and R are important
@@ -101,7 +103,7 @@ void Prog_Sampling_Parameters::run() {
        //cerr << "mysampling.SL.SymsNo():" << mysampling.SL.SymsNo() << endl;
        for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++)
           {
-         if(i==100)
+         if(i==50)
             {
             rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
             tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
@@ -116,7 +118,7 @@ void Prog_Sampling_Parameters::run() {
                R.resize(3,3); // as only the relative orientation 
                row = R * mysampling.no_redundant_sampling_points_vector[i];
                cout << row.transpose() << " 1 " << isym +2 << endl;
-               if(i==100)
+               if(i==50)
                  {
                   //cerr << row.transpose() << " 1 " << isym +2 << endl;
                   L.resize(3,3); // Erase last row and column
@@ -136,6 +138,18 @@ void Prog_Sampling_Parameters::run() {
             i < mysampling.sampling_points_vector.size(); 
             i++)
           cout  <<  mysampling.sampling_points_vector[i].transpose()  << " 1 1 " << endl;
+   #endif
+   #undef DEBUG6
+   //#define DEBUG6
+   #ifdef DEBUG6
+       for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size();i++)
+          {
+          cout  << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.2 3 " << endl;
+          for (int j = 0; j < mysampling.my_neighbors[i].size();j++)
+           cout  <<
+            mysampling.no_redundant_sampling_points_vector[mysampling.my_neighbors[i][j]].transpose() 
+            << " 1.1 2 " << endl;
+          }  
    #endif
    #undef DEBUG6
 }
