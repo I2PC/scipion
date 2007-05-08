@@ -51,10 +51,29 @@ LowResolCutoff=0.05
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
 """
 HighResolCutoff=0.35
-# {expert} Selfile with CTFs for all particles (is placed in ProjectDir)
-OutCTFSelFile="all_images_ctf.sel"
-# {expert} Use N. Grigorieffs CTFFIND instead of Xmipp?
-UseCtffind=False
+#------------------------------------------------------------------------------------------------
+# {section} CTFFIND
+#------------------------------------------------------------------------------------------------
+# Use N. Grigorieffs CTFFIND instead of Xmipp to estimate CTF?
+DoCtffind=False
+# Location where CTFFIND is installed
+CtffindExec='/home/cnbb13/indivi/bin/ctffind3b.exe'
+# {expert} Window size
+WinSize=128
+# {expert} Minimum resolution (in Ang.)
+MinRes=200.0
+# {expert} Maximum resolution factor
+""" The maximum resolution used in the CTF estimation will be:
+    this factor x 1000 x Down x ScannedPixelSize / Magnification
+    recommended value: 3
+"""
+MaxResFactor=3
+# {expert} Minimum defocus to search
+MinFocus=5000
+# {expert} Maximum defocus to search
+MaxFocus=100000
+# {expert} Defocus step
+StepFocus=500
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -76,7 +95,6 @@ class preprocess_particles_class:
                  MicrographSelfile,
                  ProjectDir,
                  LogDir,
-                 UseCtffind,
                  Voltage,
                  SphericalAberration,
                  Magnification,
@@ -84,7 +102,14 @@ class preprocess_particles_class:
                  AmplitudeContrast,
                  LowResolCutoff,
                  HighResolCutoff,
-                 OutCTFSelFile,
+                 DoCtffind,
+                 CtffindExec,,
+                 WinSize,
+                 MinRes,
+                 MaxResFactor,
+                 MinFocus,
+                 MaxFocus,
+                 StepFocus
                  ):
 	     
         import os,sys
@@ -96,15 +121,23 @@ class preprocess_particles_class:
         self.MicrographSelfile=os.path.abspath(MicrographSelfile)
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
-        self.UseCtffind=UseCtffind
         self.Voltage=Voltage
         self.SphericalAberration=SphericalAberration
         self.Magnification=Magnification
         self.ScannedPixelSize=ScannedPixelSize
         self.AmplitudeContrast=AmplitudeContrast
+        self.DoCtffind=DoCtffind
         self.LowResolCutoff=LowResolCutoff
         self.HighResolCutoff=HighResolCutoff
-        self.OutCTFSelFile=OutCTFSelFile
+        self.DoCtffind=DoCtffind
+        self.CtffindExec=CtffindExec
+        self.WinSize=WinSize
+        self.MinRes=MinRes
+        self.MaxResFactor=MaxResFactor
+        self.MinFocus=MinFocus
+        self.MaxFocus=MaxFocus
+        self.StepFocus=StepFocus
+        
         # Parameters set from outside
         self.Down=protocol_preprocess_micrographs.Down
 
@@ -161,7 +194,6 @@ class preprocess_particles_class:
         import os
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_input.param'
-#        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
         selname=self.shortname+'/'+self.downname+'.raw.sel' 
         ctfname=self.downname+'.raw.ctf.sel' 
         ctfname2=self.shortname+'/'+self.downname+'.raw.ctf.sel' 
@@ -184,7 +216,6 @@ class preprocess_particles_class:
         paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
         paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
         paramlist.append('selfile= '+selname+'\n')
-#        paramlist.append('picked='+posname+'\n')
         paramlist.append('periodogram= yes \n')
 
         # Perform CTF estimation
