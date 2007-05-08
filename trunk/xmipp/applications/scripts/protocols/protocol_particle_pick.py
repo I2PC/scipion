@@ -167,9 +167,9 @@ class particle_pick_class:
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph)
                     total+=c
+                    self.whichtilted[micrograph]=tilted
                     row=self.GuiAddPairMarkEntry(micrograph,c)
                     self.row[micrograph]=row
-                    self.whichtilted[micrograph]=tilted
 
         row=(self.frame.grid_size()[1]+1)
         Label(self.frame,text="").grid(row=row)
@@ -275,7 +275,8 @@ class particle_pick_class:
     def perform_picking(self,name):
         import os
         directory,micrograph=os.path.split(name)
-        os.chdir(directory)
+        if (len(directory)>0):
+            os.chdir(directory)
         command='xmipp_micrograph_mark -i '+micrograph+' &'
         print '* ',command
         self.log.info(command)
@@ -285,7 +286,8 @@ class particle_pick_class:
     def perform_picking_pair(self,untilted,tilted):
         import os
         directory,uname=os.path.split(untilted)
-        os.chdir(directory)
+        if (len(directory)>0):
+            os.chdir(directory)
         tname='../'+tilted
         command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname+' &'
         print '* ',command

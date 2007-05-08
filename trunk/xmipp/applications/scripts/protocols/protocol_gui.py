@@ -707,18 +707,17 @@ class automated_gui_class:
        
     def GuiShowMoreHelp(self):
         d = MyShowMoreHelp(self.master,str(self.morehelp.get()))
-#        self.master.wait_window(d.top)
 
 # A dialog window to ask for the queueing command
 class MyQueueLaunch:
     def __init__(self, parent,command):
         self.command=command
-        top = self.top = Toplevel(parent)
-        Label(top, text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
-        self.e = Entry(top)
+        self.top = Toplevel(parent)
+        Label(self.top, text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
+        self.e = Entry(self.top)
         self.e.grid(row=1,column=0,columnspan=2)
-        Button(top, text="Submit", command=self.ok).grid(row=2,column=0)
-        Button(top, text="Cancel", command=self.cancel).grid(row=2,column=1)
+        Button(self.top, text="Submit", command=self.ok).grid(row=2,column=0)
+        Button(self.top, text="Cancel", command=self.cancel).grid(row=2,column=1)
 
     def ok(self):
         import os
