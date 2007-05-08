@@ -35,15 +35,18 @@ DoML2D=False
 # Number of references (or classes) to be used:
 NumberOfReferences=3
 # Also include mirror transformation in the alignment?
-"""  Including the mirror transformation is useful if your particles have a handedness
-     and may fall either face-up or face-down on the grid
+"""  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid
 """
 DoMirror=False
 # Use the fast version of this algorithm?
-""" See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244
+""" See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244:
+    http://dx.doi.org/10.1093/bioinformatics/bti1140
 """
 DoFast=True
 # {expert} Additional xmipp_ml_align2d parameters:
+""" For a complete description see the ml_align2d manual page at:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
+"""
 ExtraParamsMLalign2D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
