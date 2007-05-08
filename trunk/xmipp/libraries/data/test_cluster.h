@@ -23,69 +23,81 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-
-#ifndef _PROG_TEST_CLUSTER
-   #define _PROG_TEST_CLUSTER
+#ifndef TESTCLUSTER_H
+#define TESTCLUSTER_H
 
 #include "funcs.h"
 #include "mask.h"
 #include "selfile.h"
 #include "matrix2d.h"
 
-/**@name Test cluster */
-//@{
-/** Test cluster parameters */
-class Test_cluster_parameters {
+/// @defgroup TestCluster Test cluster.
+
+/** Test cluster parameters.
+ * @ingroup TestCluster
+ */
+class Test_cluster_parameters
+{
 public:
-   typedef enum {EUCLIDEAN,
-         CORRELATION,
-	 MAHALANOBIS} Distance_type;
+    typedef enum
+    {
+        EUCLIDEAN,
+        CORRELATION,
+        MAHALANOBIS
+    } Distance_type;
 
-   /// Selfile with the cluster images
-   FileName fn_selfile;
+    /// Selfile with the cluster images.
+    FileName fn_selfile;
 
-   /// Filename of the output histogram
-   FileName fn_out;
+    /// Filename of the output histogram.
+    FileName fn_out;
 
-   /// Mask to apply, maybe none
-   Mask_Params mask;
+    /// Mask to apply, maybe none.
+    Mask_Params mask;
 
-   /** Distance.
-       Valid distances are EUCLIDEAN, CORRELATION, MAHALANOBIS. */
-   Distance_type distance;
+    /** Distance.
+     *
+     * Valid distances are EUCLIDEAN, CORRELATION, MAHALANOBIS.
+     */
+    Distance_type distance;
 
-public:
-   // Selfile with all the cluster
-   SelFile SF_in;
+    /// Selfile with all the cluster.
+    SelFile SF_in;
 
-   // Covariance matrix
-   matrix2D<double> covariance;
+    /// Covariance matrix.
+    matrix2D< double > covariance;
 
-   // Mean vector
-   matrix1D<double> mean;
+    /// Mean vector.
+    matrix1D< double > mean;
 
-public:
-   /// Empty constructor
-   Test_cluster_parameters();
+    /// Empty constructor.
+    Test_cluster_parameters();
 
-   /// Read parameters from command line
-   void read(int argc, char **argv);
+    /// Read parameters from command line.
+    void read(int argc, char** argv);
 
-   /** Produce side info.
-       The mask is created.*/
-   void produce_side_info();
+    /** Produce side info.
+     *
+     * The mask is created.
+     */
+    void produce_side_info();
 
-   /// Show parameters. This function calls show_specific
-   void show();
+    /** Show parameters.
+     *
+     * This function calls show_specific.
+     */
+    void show();
 
-   /// Usage. This function calls usage_specific
-   void usage();
+    /** Usage.
+     * This function calls usage_specific.
+     */
+    void usage();
 
-   /// Build covariance matrix
-   void build_covariance_matrix();
+    /// Build covariance matrix.
+    void build_covariance_matrix();
 
-   /// Effectively do the work
-   void test_cluster();
+    /// Effectively do the work.
+    void test_cluster();
 };
-//@}
+
 #endif

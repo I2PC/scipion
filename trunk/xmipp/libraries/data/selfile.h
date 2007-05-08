@@ -22,8 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef XMIPPSELFILES_H
-#define XMIPPSELFILES_H
+#ifndef SELFILE_H
+#define SELFILE_H
 
 #include <string>
 #include <vector>
@@ -34,7 +34,7 @@
 // Forward declaration
 class SelFile;
 
-/// @defgroup SelFiles Selection files
+/// @defgroup SelFiles Selection files.
 
 /** Line of a selection file.
  * @ingroup SelFiles
@@ -73,7 +73,7 @@ private:
     friend class SelFile;
 
 public:
-    /// @defgroup SelFilesConstructors Constructors
+    /// @defgroup SelFilesConstructors Constructors.
     /// @ingroup SelFiles
 
     /** Empty Constructor.
@@ -105,27 +105,42 @@ public:
     /** Get text of this line.
      * @ingroup SelFilesStructure
      */
-    std::string get_text() { return text; }
+    std::string get_text()
+    {
+        return text;
+    }
 
     /** Get label of this line.
      * @ingroup SelFilesStructure
      */
-    short get_label() { return label; }
+    short get_label()
+    {
+        return label;
+    }
 
     /** Get number of this line.
      * @ingroup SelFilesStructure
      */
-    int get_number() { return number; }
+    int get_number()
+    {
+        return number;
+    }
 
     /** True if current line is a comment.
      * @ingroup SelFilesStructure
      */
-    int Is_comment() { return line_type == COMMENT; }
+    int Is_comment()
+    {
+        return line_type == COMMENT;
+    }
 
     /** True if current line is data.
      * @ingroup SelFilesStructure
      */
-    int Is_data() { return line_type == DATALINE; }
+    int Is_data()
+    {
+        return line_type == DATALINE;
+    }
 
     /** Set type.
      * @ingroup SelFilesStructure
@@ -134,14 +149,20 @@ public:
      * text is not touched. The valid types are DATALINE, COMMENT, NOT_ASSIGNED,
      * and NOT_CONSIDERED.
      */
-    void set_type(Line_Type type) { line_type = type; }
+    void set_type(Line_Type type)
+    {
+        line_type = type;
+    }
 
     /** Set number of this line.
      * @ingroup SelFilesStructure
      */
-    void set_number(int n) { number = n; }
+    void set_number(int n)
+    {
+        number = n;
+    }
 
-    /// @defgroup SelFilesOperations Useful operations
+    /// @defgroup SelFilesOperations Useful operations.
     /// @ingroup SelFiles
 
     /** Lesser than.
@@ -162,9 +183,9 @@ public:
      * @ingroup SelFilesOperations
      */
     friend std::vector< SelLine >::iterator find(std::vector< SelLine >& text,
-        string& img_name);
+                                                 std::string& img_name);
 
-    /// @defgroup SelFilesIO I/O
+    /// @defgroup SelFilesIO I/O.
     /// @ingroup SelFiles
 
     /** Show a SelLine.
@@ -226,7 +247,10 @@ public:
      * SelFile sel("g1t.sel");
      * @endcode
      */
-    SelFile(FileName name) { read(name); }
+    SelFile(FileName name)
+    {
+        read(name);
+    }
 
     /** Copy constructor.
      * @ingroup SelFilesConstructors
@@ -243,8 +267,11 @@ public:
      * It doesn't matter if entries are comments or data. The current line is
      * set to the beginning of the SelFile
      */
-    void reserve(int n) { text_line.reserve(n); current_line =
-        text_line.begin(); }
+    void reserve(int n)
+    {
+        text_line.reserve(n);
+        current_line = text_line.begin();
+    }
 
     /** Empties the object.
      * @ingroup SelFilesConstructors
@@ -284,7 +311,7 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& o, const SelFile& sel);
 
-    /// @defgroup SelFilesDisk Managing files in disk
+    /// @defgroup SelFilesDisk Managing files in disk.
     /// @ingroup SelFiles
 
     /** Read a file from disk.
@@ -314,7 +341,10 @@ public:
      * sel.append("g2t.sel");
      * @endcode
      */
-    void append(const FileName& name) { read(name, 0); }
+    void append(const FileName& name)
+    {
+        read(name, 0);
+    }
 
     /** Merge a file from disk with an already read one.
      * @ingroup SelFilesDisk
@@ -379,7 +409,7 @@ public:
      */
     void write(const FileName& sel_name="");
 
-    /// @defgroup SelFilesPointer  Moving the current line "pointer"
+    /// @defgroup SelFilesPointer  Moving the current line "pointer".
     /// @ingroup SelFiles
 
     /** Go to the beginning of the file.
@@ -392,7 +422,10 @@ public:
      * sel.go_beginning();
      * @endcode
      */
-    void go_beginning() { current_line = text_line.begin(); }
+    void go_beginning()
+    {
+        current_line = text_line.begin();
+    }
 
     /** Go to the first ACTIVE image.
      * @ingroup SelFilesPointer
@@ -442,7 +475,10 @@ public:
      * }
      * @endcode
      */
-    void next() { current_line++; }
+    void next()
+    {
+        current_line++;
+    }
 
     /** Jump over a number of lines with a given label.
      * @ingroup SelFilesPointer
@@ -470,265 +506,438 @@ public:
      */
     bool jump_lines(int count);
 
+    /** Move "pointer" to a certain image filename.
+     *
+     * This function searches for an image name within the file, and locate
+     * the current line "pointer" pointing to that line. If the image name is
+     * not present (it is not the same "not present" and "discarded") in the
+     * selection file, then the pointer is moved to the end of the selection
+     * file. You can check this situation using eof(). It doesn't matter if the
+     * current line "pointer" before the function call is after the line where
+     * the image name is, this function makes a search all over the file,
+     * regardless the previous situation of the current line "pointer".
+     *
+     * @code
+     * sel.search("g1ta0001");
+     * @endcode
+     */
+    void search(std::string img_name)
+    {
+        current_line = find(img_name);
+    }
+
+    /** True if current line "pointer" is at the end of file.
+     *
+     * @code
+     * if (sel.eof())
+     *     std::cout << "The selection file is over\n";
+     * @endcode
+     */
+    int eof()
+    {
+        return current_line == text_line.end();
+    }
+
+    /// @defgroup SelFilesInfo Getting information.
+    /// @ingroup SelFiles
+
+    /** Returns the name of the file.
+     * @ingroup SelFilesInfo
+     */
+    FileName name() const
+    {
+        return fn_sel;
+    }
+
+    /** True if current line is a data line and it is active.
+     * @ingroup SelFilesInfo
+     */
+    int Is_ACTIVE() const
+    {
+        return current_line->Is_data() &&
+               current_line->get_label() == SelLine::ACTIVE;
+    }
+
+    /** True if current line is a data line and it is active.
+     * @ingroup SelFilesInfo
+     */
+    int Is_DISCARDED() const
+    {
+        return current_line->Is_data() &&
+               current_line->get_label() == SelLine::DISCARDED;
+    }
+
+    /** True if current line is a comment.
+     * @ingroup SelFilesInfo
+     */
+    int Is_COMMENT() const
+    {
+        return current_line->Is_comment();
+    }
+
+    /** Returns current line as a Sel Line.
+     * @ingroup SelFilesInfo
+     */
+    const SelLine& current()
+    {
+        return *current_line;
+    }
+
+    /** Another function to get a SelLine.
+     * @ingroup SelFilesInfo
+     */
+    void get_current(SelLine& _SL)
+    {
+        _SL = current();
+    }
+
+    /** True if the image name is inside the selection file.
+     * @ingroup SelFilesInfo
+     *
+     * The current line "pointer" is not modified. If an image is discarded in
+     * the selection file, this function still will say that it exists,
+     * although it is discarded.
+     *
+     * @code
+     * if (sel.exists("g1ta0001"))
+     *     std::cout << "g1ta0001 exists in the selection file\n";
+     * @endcode
+     */
+    int exists(std::string img_name)
+    {
+        return find(img_name) != text_line.end();
+    }
+
+    /** Number of images inside a selection file with a certain label.
+     * @ingroup SelFilesInfo
+     *
+     * This function returns the number of images inside the selection file
+     * with a given label. By default this label is ACTIVE.
+     *
+     * @code
+     * std::cout << "There are " << sel.ImgNo() << " active images\n";
+     * std::cout << "There are " << sel.ImgNo(SelLine::ACTIVE)
+     *     << " active images\n";
+     * std::cout << "There are " << sel.ImgNo(SelLine::DISCARDED)
+     *     << " discarded images\n";
+     * @endcode
+     */
+    int ImgNo(SelLine::Label label=SelLine::ACTIVE) const;
+
+    /** Returns the number of lines within a file.
+     * @ingroup SelFilesInfo
+     *
+     * This function gives the total number of lines (including comments)
+     * within a file.
+     *
+     * @code
+     * std::cout << "There are " << sel.LineNo() << " lines in this file\n";
+     * @endcode
+     */
+    int LineNo();
+
+    /** Returns the size of the images inside.
+     * @ingroup SelFilesInfo
+     *
+     * The filenames within a selection file are supposed to be for SPIDER
+     * images, this function opens one of the images (an active one) and
+     * returns the size of that image, supposed to be the same for the rest of
+     * the images in the selection file.
+     *
+     * An exception is thrown if the first valid image in the selfile, doesn't
+     * exist in the disk or it is not a XMIPP image.
+     *
+     * @code
+     * sel.ImgSize(y, x);
+     * @endcode
+     */
+    void ImgSize(int& Ydim, int& Xdim);
+
+    /** Returns the extension of the files inside.
+     * @ingroup SelFilesInfo
+     *
+     * This function returns the extension of the first active file.
+     */
+    FileName FileExtension();
+
+    /** Returns the maximum length of an active filename inside the selfile.
+     * @ingroup SelFilesInfo
+     *
+     * The current pointer is not moved.
+     */
+    int MaxFileNameLength();
+
+    /** Get the filename of the current line.
+     * @ingroup SelFilesInfo
+     *
+     * If the current line "pointer" is at the end of the file or is pointing
+     * to a comment then an empty string is returned.
+     *
+     * @code
+     * fn = sel.get_current_file();
+     * @endcode
+     */
+    std::string get_current_file();
+
+    /** Get current line.
+     * @ingroup SelFilesInfo
+     */
+    SelLine get_current_line()
+    {
+        return *current_line;
+    }
+
+    /** Get the filename at the ACTIVE line number i.
+     * @ingroup SelFilesInfo
+     *
+     * The first file is number 0. If i is greater than the total number
+     * of ACTIVE files, then "" is returned.
+     *
+     * @code
+     * fn = sel.get_file_number(i);
+     * @endcode
+     */
+    std::string get_file_number(int i);
+
+    /** Gets statistics of the active images in the selfile.
+     * @ingroup SelFilesInfo
+     *
+     *  It returns the average image, the minimum and maximum.
+     *
+     *  @code
+     *  sel.get_statistics(aveImg, min, max);
+     *  @endcode
+     */
+    void get_statistics(Image& _ave,
+                        Image& _sd,
+                        double& _min,
+                        double& _max,
+                        bool apply_geo=false);
+
+    /// @defgroup SelFilesModify Modifying the selection file.
+    /// @ingroup SelFiles
+
+    /** Removes an image from the selection file.
+     * @ingroup SelFilesModify
+     *
+     * This function searches for an image in the selection file, if it is
+     * found then the corresponding line is deleted. If the image is actually
+     * being pointed by the current line, then the current line is now the
+     * following line.
+     *
+     * @code
+     * sel.remove("g1ta0001");
+     * @endcode
+     */
+    void remove(std::string img_name);
+
+    /** Removes actual line.
+     * @ingroup SelFilesModify
+     *
+     * This function removes the current line, either it is a comment or an
+     * image. The current line "pointer" is moved to the following line in the
+     * file.
+     *
+     * @code
+     * sel.remove_current();
+     * @endcode
+     */
+    void remove_current();
+
+    /** Set label of an image.
+     * @ingroup SelFilesModify
+     *
+     * This function searches for an image inside the selection file and sets
+     * its label to the given label. If the image is not found in the file,
+     * then it is added at the end with the given label. The current line
+     * pointer is not modified.
+     *
+     * @code
+     * sel.set("g1ta0001", SelLine::ACTIVE);
+     * @endcode
+     */
+    void set(std::string img_name, SelLine::Label label);
+
+    /** Set the label of the current file.
+     * @ingroup SelFilesModify
+     *
+     * The same as the previous function but the label is set to the file
+     * currently pointed.
+     */
+    void set_current(SelLine::Label label);
+
+    /** Change current filename.
+     * @ingroup SelFilesModify
+     *
+     * This function changes the current filename to a new one if it is not a
+     * comment. If it is a comment line, nothing is done.
+     */
+    void set_current_filename(const FileName& fn_new);
+
+    /** Insert image before current line.
+     * @ingroup SelFilesModify
+     *
+     * There is no checking for the previous existence of the img. The current
+     * line is still pointing to the same line as it was before entering the
+     * function.
+     *
+     * @code
+     * sel.insert("g1ta0000");
+     * sel.insert("g1ta0000", SelLine::DISCARDED);
+     * @endcode
+     */
+    void insert(std::string img_name, SelLine::Label label=SelLine::ACTIVE);
+
+    /** Insert line before current line.
+     * @ingroup SelFilesModify
+     *
+     * It is checked that the line is either a comment or data line, in this
+     * case that the label is right, too. The current line is still pointing
+     * to the same line as it was before entering the function.
+     *
+     * @code
+     * sel.insert("g1ta0000", SelLine::ACTIVE);
+     * @endcode
+     */
+    void insert(const SelLine& _selline);
+
+    /** Insert a comment before the current line.
+     * @ingroup SelFilesModify
+     *
+     * Comments must not start with any special character since a "#" is
+     * automatically added at the beginning of the line. The current line is
+     * still pointing to the same line as it was before entering the function.
+     *
+     * @code
+     * sel.insert_comment("This is a comment");
+     * @endcode
+     */
+    void insert_comment(std::string comment);
+
+    /** Deletes all DISCARDED images from the selection file.
+     * @ingroup SelFilesModify
+     *
+     * The current line "pointer" is moved to the beginning of the file.
+     *
+     * @code
+     * sel.clean();
+     * @endcode
+     */
+    void clean();
+
+    /** Deletes all comments from the selection file.
+     * @ingroup SelFilesModify
+     *
+     * The current line "pointer" is moved to the beginning of the file.
+     *
+     * @code
+     * sel.clean_comments();
+     * @endcode
+     */
+    void clean_comments();
+
+    /// @defgroup SelFilesHelpful Helpful procedures.
+    /// @ingroup SelFiles
 
 
-   /** Move "pointer" to a certain image filename.
-       This function searches for an image name within the file, and
-       locate the current line "pointer" pointing to that line. If
-       the image name is not present (it is not the same "not present" and
-       "discarded") in
-       the selection file, then the pointer is moved to the end
-       of the selection file. You can check this situation using eof().
-       It doesn't matter if the current line "pointer" before the function
-       call is after the line where the image name is, this function
-       makes a search all over the file, regardless the previous
-       situation of the current line "pointer".
-       \\Ex: SF.search("g1ta0001");
-       @see exists, get_current_file*/
-   void search(string img_name) {current_line=find(img_name);}
+    /** Sort images in ascending order.
+     * @ingroup SelFilesHelpful
+     *
+     * All images are sorted in ascending order either they are active or
+     * discarded. All comments are gathered at the end of the resulting
+     * selection file. The current line of the resulting selection file is
+     * placed at the beginning of the file.
+     *
+     * @code
+     * sel2 = sel1.sort_by_filenames();
+     * @endcode
+     */
+    SelFile sort_by_filenames();
 
-   /** True if current line "pointer" is at the end of file.
-       \\ Ex: if (SF.eof()) cout << "The selection file is over\n"; */
-   int eof() {return current_line==text_line.end();}
-   //@}
+    /** Alter order in sel file.
+     * @ingroup SelFilesHelpful
+     *
+     * A new selection file with all the images of the actual object (either
+     * they are active or discarded) is created, but this time all images are
+     * in a random order. The comments of the original selection file are lost
+     * in the new copy. The current line of the resulting selection file is
+     * placed at the beginning of the file.
+     *
+     * @code
+     * sel2 = sel1.randomize();
+     * @endcode
+     */
+    SelFile randomize();
 
-   // Getting information ..................................................
-   /**@name Getting information*/
-   //@{
-   /** Returns the name of the file */
-   FileName name() const {return fn_sel;}
+    /** Discard randomly N images.
+     * @ingroup SelFilesHelpful
+     *
+     * A set of N images are discarded from the actual selection file. If N is
+     * equal or greater than the actual number of images within the file, all
+     * images are discarded. Comments are kept at their original positions. The
+     * current line of the resulting selection file is placed at the beginning
+     * of the file.
+     *
+     * @code
+     * sel2 = sel1.random_discard(3);
+     * @endcode
+     */
+    SelFile random_discard(int N);
 
-   /** True if current line is a data line and it is active */
-   int Is_ACTIVE() const
-       {return current_line->Is_data() &&
-               current_line->get_label()==SelLine::ACTIVE;}
+    /** Compare two selection files.
+     * @ingroup SelFilesHelpful
+     *
+     * The result is another selection file. At the beginning of it there is
+     * information about the number of active and discarded images on both
+     * input selection files, about the number of matching files (a file is
+     * said to match if it is active in both selection files), the number of
+     * active files which are only in the first selection file, and the number
+     * of active files which are only in the second. Then goes the list of
+     * matching files, the list of files only in SF1 and the list of files
+     * only in SF2. There are comments enough to know where things start and
+     * finish, and what the numbers are at the beginning. If a file is active
+     * in a file and discarded in the other, then it is said to match and it is
+     * kept as active, a preceeding comment warns of this situation.
+     *
+     * @code
+     * sel3 = compare(sel1, sel2);
+     * @endcode
+     */
+    friend SelFile compare(SelFile& SF1, SelFile& SF2);
 
-   /** True if current line is a data line and it is active */
-   int Is_DISCARDED() const
-       {return current_line->Is_data() &&
-               current_line->get_label()==SelLine::DISCARDED;}
-
-   /** True if current line is a comment */
-   int Is_COMMENT() const
-       {return current_line->Is_comment();}
-
-   /** Returns current line as a Sel Line. */
-   const SelLine & current() {return *current_line;}
-
-   /** Another function to get a Sel Line. */
-   void get_current(SelLine & _SL) {_SL=current();}
-
-   /** True if the image name is inside the selection file.
-       The current line "pointer" is not modified. If an image is
-       discarded in the selection file, this function still will say
-       that it exists, although it is discarded.
-       \\Ex: if (SF.exists("g1ta0001")) cout << "g1ta0001 exists in the
-             selection file\n"; */
-   int exists(string img_name)
-       {return find(img_name)!=text_line.end();}
-
-   /** Number of images inside a selection file with a certain label.
-       This function returns the number of images inside the
-       selection file with a given label. By default this label
-       is ACTIVE.
-       \\Ex: cout << "There are " << SF.ImgNo() << " active images\n";
-       \\Ex: cout << "There are " << SF.ImgNo(SelLine::ACTIVE) << " active images\n";
-       \\Ex: cout << "There are " << SF.ImgNo(SelLine::DISCARDED) << " discarded images\n";*/
-   int ImgNo(SelLine::Label label=SelLine::ACTIVE) const;
-
-   /** Returns the number of lines within a file.
-       This function gives the total number of lines (including comments)
-       within a file.
-       \\ Ex: cout << "There are " << SF.LineNo() << " lines in this file\n"; */
-   int LineNo();
-
-   /** Returns the size of the images inside.
-       The filenames within a selection file are supposed to be for
-       SPIDER images, this function opens one of the images (an active one)
-       and returns the size of that image, supposed to be the same for
-       the rest of the images in the selection file.
-
-       An exception is thrown if the first valid image in the sel file,
-       doesn't exist in the disk or it is not a XMIPP image.
-       \\ Ex: SF.ImgSize(Ydim,Xdim); */
-   void ImgSize(int &Ydim, int &Xdim);
-
-   /** Returns the extension of the files inside.
-       This function returns the extension of the first active file.*/
-   FileName FileExtension();
-
-   /** Returns the maximum length of an active filename inside the selfile.
-       The current pointer is not moved. */
-   int MaxFileNameLength();
-
-   /** Get the filename of the current line.
-       If the current line "pointer" is at the end of the file or
-       is pointing to a comment then "" is returned.
-       \\Ex: fn=SF.get_current_file(); */
-   string get_current_file();
-
-   // Get current line
-   SelLine get_current_line() {return *current_line;}
-
-   /** Get the filename at the ACTIVE line number i.
-       The first file is number 0. If i is greater than the total number
-       of ACTIVE files, then "" is returned.
-       \\Ex: fn=SF.get_file_number(i); */
-   string get_file_number(int i);
-
-   /** Gets statistics of the active images in the sel file
-       it returns the average image, the minimum and maximum.
-       \\Ex: SF.get_statistics(aveImg, min, max); */
-   void get_statistics(Image& _ave, Image& _sd,
-      double& _min, double& _max, bool apply_geo=false);
-
-   //@}
-
-   // Modifying lines ......................................................
-   /**@name Modifying the selection file*/
-   //@{
-   /** Removes an image from the selection file.
-       This function searches for an image in the selection file, if it
-       is found then the corresponding line is deleted. If the image
-       is actually being pointed by the current line, then the current
-       line is now the following line.
-       \\ Ex: SF.remove("g1ta0001"); */
-   void remove(string img_name);
-
-   /** Removes actual line.
-       This function removes the current line, either it is a comment or
-       an image. The current line "pointer" is moved to the following
-       line in the file.
-       \\ Ex: SF.remove_current(); */
-   void remove_current();
-
-   /** Set label of an image.
-       This function searches for an image inside the selection file and
-       sets its label to the given label. If the image is not found in
-       the file, then it is added at the end with the given label.
-       The current line pointer is not modified.
-       \\ Ex: SF.set("g1ta0001",SelLine::ACTIVE); */
-   void set(string img_name, SelLine::Label label);
-
-   /** Set the label of the current file.
-       The same as the previous function but the label is set to
-       the file currently pointed. */
-   void set_current(SelLine::Label label);
-
-   /** Change current filename.
-       This function changes the current filename to a new one if it
-       is not a comment. If it is a comment line, nothing is done. */
-   void set_current_filename(const FileName &fn_new);
-
-   /** Insert image before current line.
-       There is no checking for the previous existence of the img.
-       The current line is still pointing to the same line as it was
-       before entering the function.
-       \\ Ex: SF.insert("g1ta0000");
-       \\ Ex: SF.insert("g1ta0000",SelLine::DISCARDED); */
-   void insert(string img_name, SelLine::Label label=SelLine::ACTIVE);
-
-   /** Insert line before current line.
-       It is checked that the line is either a comment or data line,
-       in this case that the label is right, too.
-       The current line is still pointing to the same line as it was
-       before entering the function.
-       \\ Ex: SF.insert("g1ta0000",SelLine::ACTIVE); */
-   void insert(const SelLine &_selline);
-
-   /** Insert a comment before the current line.
-       Comments must not start with any special character since a "#" is
-       automatically added at the beginning of the line.
-       The current line is still pointing to the same line as it was
-       before entering the function.
-       \\ Ex: SF.insert_comment("This is a comment"); */
-   void insert_comment(string comment);
-
-   /** Deletes all DISCARDED images from the selection file.
-       The current line "pointer" is moved to the beginning of the file.
-       \\Ex: SF.clean(); */
-   void clean();
-
-   /** Deletes all comments from the selection file.
-       The current line "pointer" is moved to the beginning of the file.
-       \\Ex: SF.clean_comments(); */
-   void clean_comments();
-   //@}
-
-   // Helpful procedures ...................................................
-   /**@name Helpful procedures*/
-   //@{
-   /** Sort images in ascending order.
-       All images are sorted in ascending order either they are active or
-       discarded. All comments are gathered at the end of the resulting
-       selection file. The current line of the resulting selection file
-       is placed at the beginning of the file.
-       \\ Ex: SF2=SF1.sort_by_filenames(); */
-   SelFile sort_by_filenames();
-
-   /** Alter order in sel file.
-       A new selection file with all the images of the actual object
-       (either they are active or discarded) is created, but this
-       time all images are in a random order. The comments of the
-       original selection file are lost in the new copy.
-       The current line of the resulting selection file
-       is placed at the beginning of the file.
-       \\ SF2=SF1.randomize(); */
-   SelFile randomize();
-
-   /** Discard randomly N images.
-       A set of N images are discarded from the actual selection file.
-       If N is equal or greater than the actual number of images
-       within the file, all images are discarded. Comments are kept
-       at their original positions.
-       The current line of the resulting selection file
-       is placed at the beginning of the file.
-       \\ Ex: SF2=SF1.random_discard(3); */
-   SelFile random_discard(int N);
-
-   /** Compare two selection files.
-       The result is another selection file. At the beginning of it there
-       is information about the number of active and discarded images on
-       both input selection files, about the number of matching files
-       (a file is said to match if it is active in both selection files),
-       the number of active files which are only in the first selection
-       file, and the number of active files which are only in the second.
-       Then goes the list of matching files, the list of files only
-       in SF1 and the list of files only in SF2. There are comments enough
-       to know where things start and finish, and what the numbers are at
-       the beginning. If a file is active in a file and discarded in the
-       other, then it is said to match and it is kept as active, a
-       preceeding comment warns of this situation.
-       \\ Ex: SF3=compare(SF1,SF2);*/
-   friend SelFile compare(SelFile &SF1, SelFile &SF2);
-
-   /** Apply a function to all images with a certain label.
-       The function must take an input image name and an output image
-       name. Then transform the input image into the output one according
-       to its functionality, and finally save the result as an Xmipp image.
-       The output names are formed by adding an extension to the input ones,
-       this extension can be empty and then the input and output images
-       are the same. By default, the function is only applied to ACTIVE images
-       and the output image is the same as the input one.
-       \\Ex: \begin{verbatim}
-             void function1(FileName _fn_in, FileName _fn_out) {
-                ImageXmipp A(_fn_in);
-                A()=A().reverseY();
-                A.save(_fn_out);
-             }
-
-             ...
-             SF.for_all(&function1);               --> Same I/O image, apply
-                                                   --> only to ACTIVE images
-             SF.for_all(&function1,"out");         --> Add ".out"
-             SF.for_all(&function1,"",SelLine::DISCARDED);
-                                                   --> Same I/O, apply only to
-                                                   --> DISCARDED images
-            \end{verbatim}*/
-       void for_all(void (*f)(FileName, FileName), string _ext="",
-          SelLine::Label _label=SelLine::ACTIVE);
-   //@}
+    /** Apply a function to all images with a certain label.
+     * @ingroup SelFilesHelpful
+     *
+     * The function must take an input image name and an output image name.
+     * Then transform the input image into the output one according to its
+     * functionality, and finally save the result as an Xmipp image. The output
+     * names are formed by adding an extension to the input ones, this
+     * extension can be empty and then the input and output images are the
+     * same. By default, the function is only applied to ACTIVE images
+     * and the output image is the same as the input one.
+     *
+     * @code
+     * void function1(FileName in, FileName out)
+     * {
+     *     ImageXmipp A(in);
+     *     A() = A().reverseY();
+     *     A.save(out);
+     * }
+     *
+     * ...
+     *
+     * sel.for_all(&function1); // Same I/O image, apply
+     *                          // only to ACTIVE images
+     *
+     * sel.for_all(&function1, "out"); // Add ".out"
+     *
+     * sel.for_all(&function1, "", SelLine::DISCARDED);
+     * // Same I/O, apply only to DISCARDED images
+     * @endcode
+     */
+    void for_all(void (*f)(FileName, FileName),
+                 std::string _ext="",
+                 SelLine::Label _label=SelLine::ACTIVE);
 };
 
-//@}
 #endif

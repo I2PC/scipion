@@ -22,78 +22,113 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef _PROG_NORMALIZE_HH
-#  define _PROG_NORMALIZE_HH
+
+#ifndef NORMALIZE_H
+#define NORMALIZE_H
 
 #include "matrix2d.h"
 #include "progs.h"
 #include "mask.h"
 
-/**@name Normalize program */
-//@{
-/* Normalize parameters ---------------------------------------------------- */
-/// Recons_test Parameters
-class Normalize_parameters: public Prog_parameters {
+/// @defgroup Normalize Normalize program.
+
+/** Normalize parameters.
+ * @ingroup Normalize
+ */
+class Normalize_parameters: public Prog_parameters
+{
 public:
-   #define NONE          0
-   #define OLDXMIPP      1
-   #define NEAR_OLDXMIPP 2
-   #define NEWXMIPP      3
-   #define MICHAEL       4
-   #define NEWXMIPP2     5
-   #define RANDOM        6
-   #define RAMP          7
-   /** Normalizing method. Valid methods are OLDXMIPP, NEAR_OLDXMIPP
-       NEWXMIPP, NEWXMIPP2, MICHAEL, NONE, RANDOM */
-   int                   normalizing_method;
 
-   /** Nomalization of volumes. */
-   bool                  normalizing_vol;
+// FIXME Make this an enum or similar
+#define NONE 0
+#define OLDXMIPP 1
+#define NEAR_OLDXMIPP 2
+#define NEWXMIPP 3
+#define MICHAEL 4
+#define NEWXMIPP2 5
+#define RANDOM 6
+#define RAMP 7
 
-   #define NONE          0
-   #define FRAME         1
-   #define CIRCLE        2
-   /** Background mode. Valid modes are NONE, FRAME, CIRCLE*/
-   int                   background_mode;
-   /** Frame width or circle radius */
-   int                   r;
-   /** Upper limit of a in y=ax+b */
-   double                aF;
-   /** Lower limit of a in y=ax+b */
-   double                a0;
-   /** Upper limit of b in y=ax+b */
-   double                bF;
-   /** Lower limit of b in y=ax+b */
-   double                b0;
-   /** Flags for remving balck/white spots due to dust */
-   bool                  remove_black_dust, remove_white_dust;
-   /** Threshold for removing black/white (dust) spots */
-   double                thresh_black_dust,thresh_white_dust;
+    /** Normalizing method.
+     * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
+     * NONE, RANDOM.
+     */
+    int method;
 
-public:
-   matrix2D<int>         bg_mask;
-   bool                  apply_geo;
-   bool                  enable_mask;
-   Mask_Params           mask_prm;
+    /** Nomalization of volumes.
+     */
+    bool volume;
 
-public:
-   /** Read parameters from command line */
-   void read(int argc, char **argv);
+// TODO Same thing, an enum
+#define NONE 0
+#define FRAME 1
+#define CIRCLE 2
 
-   /** Produce side information */
-   void produce_side_info();
+    /** Background mode.
+     * Valid modes are NONE, FRAME, CIRCLE.
+     */
+    int background_mode;
 
-   /** Show parameters */
-   void show();
+    /** Frame width or circle radius.
+     */
+    int r;
 
-   /** Usage */
-   void usage();
+    /** Upper limit of a in y=ax+b.
+     */
+    double aF;
 
-   /** Apply inverse geometric transformation as stored in image header to the mask */
-   void apply_geo_mask(ImageXmipp &img);
+    /** Lower limit of a in y=ax+b.
+     */
+    double a0;
 
-   /** Apply to an image. The input image is modified */
-   void apply(Image *img);
+    /** Upper limit of b in y=ax+b.
+     */
+    double bF;
+
+    /** Lower limit of b in y=ax+b.
+     */
+    double b0;
+
+    /** Flags for remving balck/white spots due to dust.
+     */
+    bool remove_black_dust;
+    bool remove_white_dust;
+
+    /** Threshold for removing black/white (dust) spots.
+     */
+    double thresh_black_dust;
+    double thresh_white_dust;
+
+    matrix2D< int  > bg_mask;
+    bool apply_geo;
+    bool enable_mask;
+    Mask_Params mask_prm;
+
+    /** Read parameters from command line.
+     */
+    void read(int argc, char** argv);
+
+    /** Produce side information.
+     */
+    void produce_side_info();
+
+    /** Show parameters.
+     */
+    void show();
+
+    /** Usage.
+     */
+    void usage();
+
+    /** Apply inverse geometric transformation.
+     * As stored in image header to the mask.
+     */
+    void apply_geo_mask(ImageXmipp& img);
+
+    /** Apply to an image.
+     * The input image is modified.
+     */
+    void apply(Image* img);
 };
-//@}
+
 #endif

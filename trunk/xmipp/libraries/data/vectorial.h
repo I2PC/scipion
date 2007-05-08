@@ -23,280 +23,635 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* ------------------------------------------------------------------------- */
-/* Xmipp Vectorial                                                           */
-/* ------------------------------------------------------------------------- */
-#ifndef _XMIPP_VECTORIAL_HH
-#   define _XMIPP_VECTORIAL_HH
+#ifndef VECTORIAL_H
+#define VECTORIAL_H
 
 #include "volume.h"
 
-/**@name Xmipp Vectorial */
-//@{
-/**@name Speed up functions */
+/// @defgroup Vectorial Vectorial.
+
+/** @defgroup VectorialSpeedUp Speed up functions.
+ * @ingroup Vectorial
+ */
+
 /** For all elements in a volume fashion.
-    An (k,i,j) position is available inside the loop */
+ * @ingroup VectorialSpeedUp
+ *
+ * An (k,i,j) position is available inside the loop.
+ */
 #define FOR_ALL_ELEMENTS_IN_VECTORIAL_MATRIX3D(v) \
    FOR_ALL_ELEMENTS_IN_MATRIX3D((v).__X)
 
 /** For all elements in a multidim array fashion.
-    A single index (i) is available. */
+ * @ingroup VectorialSpeedUp
+ *
+ * A single index (i) is available.
+ */
 #define FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(v) \
    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((v).__X)
 
 /** Vectorial volume.
-    A vectorial volume is a "normal" matrix3D whose elements are vectors
-    instead of single elements are doubles, floats, ... You can access
-    independently to any of the three components as a whole volume, ie,
-    a volume with all the X components, another with all Y components, ...
-    or access to the vector at a given position (logical positions as in
-    matrix3D), the X component at that position or the X component at a given
-    multidimensional array position.
+ * @ingroup Vectorial
+ *
+ * A vectorial volume is a "normal" matrix3D whose elements are vectors
+ * instead of single elements are doubles, floats, ... You can access
+ * independently to any of the three components as a whole volume, ie, a
+ * volume with all the X components, another with all Y components, ... or
+ * access to the vector at a given position (logical positions as in ),
+ * the X component at that position or the X component at a given
+ * multidimensional array position.
+ *
+ * You can perform arithmetic operations on these vectors, and other common
+ * operations such as resize, print_shape, ...
+ */
+class Vectorial_matrix3D
+{
+    // The 3 components
+    matrix3D< double > __X;
+    matrix3D< double > __Y;
+    matrix3D< double > __Z;
 
-    You can perform arithmetic operations on these vectors, and other
-    common operations such as resize, print_shape, ...*/
-class Vectorial_matrix3D {
-   // The 3 components
-   matrix3D<double> __X;
-   matrix3D<double> __Y;
-   matrix3D<double> __Z;
 public:
-   /**@name Shape*/
-   //@{
-   /// Resize
-   void resize(int Zdim, int Ydim, int Xdim)
-      {__X.resize(Zdim,Ydim,Xdim);
-       __Y.resize(Zdim,Ydim,Xdim);
-       __Z.resize(Zdim,Ydim,Xdim);}
+    /// @defgroup VectorialShape Shape.
+    /// @ingroup Vectorial
 
-   /// Resize with pattern
-   void resize(const matrix3D<double> &V)
-      {__X.resize(V); __Y.resize(V); __Z.resize(V);}
+    /** Resize.
+     * @ingroup VectorialShape
+     */
+    void resize(int Zdim, int Ydim, int Xdim)
+    {
+        __X.resize(Zdim, Ydim, Xdim);
+        __Y.resize(Zdim, Ydim, Xdim);
+        __Z.resize(Zdim, Ydim, Xdim);
+    }
 
-   /// Clear
-   void clear() {__X.clear(); __Y.clear(); __Z.clear();}
+    /** Resize with pattern.
+     * @ingroup VectorialShape
+     */
+    void resize(const matrix3D< double >& V)
+    {
+        __X.resize(V);
+        __Y.resize(V);
+        __Z.resize(V);
+    }
 
-   /// Print shape
-   void print_shape() const {__X.print_shape();}
+    /** Clear.
+     * @ingroup VectorialShape
+     */
+    void clear()
+    {
+        __X.clear();
+        __Y.clear();
+        __Z.clear();
+    }
 
-   /// Init zeros
-   void init_zeros() {__X.init_zeros(); __Y.init_zeros(); __Z.init_zeros();}
+    /** Print shape.
+     * @ingroup VectorialShape
+     */
+    void print_shape() const
+    {
+        __X.print_shape();
+    }
 
-   /// Set Xmipp origin
-   void set_Xmipp_origin()
-      {__X.set_Xmipp_origin(); __Y.set_Xmipp_origin(); __Z.set_Xmipp_origin();}
-   //@}
+    /** Init zeros.
+     * @ingroup VectorialShape
+     */
+    void init_zeros()
+    {
+        __X.init_zeros();
+        __Y.init_zeros();
+        __Z.init_zeros();
+    }
 
-   /**@name Component access */
-   //@{
-   /** Vector at a position.
-       The returned vector is a column 3x1 vector. The integer position
-       are logical indexes inside the matrix3D */
-   matrix1D<double> vector_at(int k, int i, int j) const
-      {matrix1D<double> result(3);
-       XX(result)=__X(k,i,j); YY(result)=__Y(k,i,j); ZZ(result)=__Z(k,i,j);
-       return result;}
+    /** Set Xmipp origin.
+     * @ingroup VectorialShape
+     */
+    void set_Xmipp_origin()
+    {
+        __X.set_Xmipp_origin();
+        __Y.set_Xmipp_origin();
+        __Z.set_Xmipp_origin();
+    }
 
-   /** Vector at a position, result as argument. */
-   void vector_at(int k, int i, int j, matrix1D<double> &result) const
-      {result.resize(3);
-       XX(result)=__X(k,i,j); YY(result)=__Y(k,i,j); ZZ(result)=__Z(k,i,j);}
+    /// @defgroup VectorialAccess Component access.
+    /// @ingroup Vectorial
 
-   /** Constant access to X component.
-       X components are a matrix3D */
-   const matrix3D<double> & X() const {return __X;}
+    /** Vector at a position.
+     * @ingroup VectorialAccess
+     *
+     * The returned vector is a column 3x1 vector. The integer position are
+     * logical indexes inside the matrix3D.
+     */
+    matrix1D< double > vector_at(int k, int i, int j) const
+    {
+        matrix1D< double > result(3);
+        XX(result) = __X(k, i, j);
+        YY(result) = __Y(k, i, j);
+        ZZ(result) = __Z(k, i, j);
+        return result;
+    }
 
-   /// Access to X components
-   matrix3D<double> & X()             {return __X;}
+    /** Vector at a position, result as argument.
+     * @ingroup VectorialAccess
+     */
+    void vector_at(int k, int i, int j, matrix1D< double >& result) const
+    {
+        result.resize(3);
+        XX(result) = __X(k, i, j);
+        YY(result) = __Y(k, i, j);
+        ZZ(result) = __Z(k, i, j);
+    }
 
-   /** Get the X components.*/
-   void get_X(matrix3D<double> &_XXX) {_XXX=__X;}
+    /** Constant access to X component.
+     * @ingroup VectorialAccess
+     *
+     * X components are a matrix3D.
+     */
+    const matrix3D< double >& X() const
+    {
+        return __X;
+    }
 
-   /** Set the X components.*/
-   void set_X(const matrix3D<double> &_XXX) {__X=_XXX;}
+    /** Access to X components.
+     * @ingroup VectorialAccess
+     */
+    matrix3D< double >& X()
+    {
+        return __X;
+    }
 
-   /// Constant access to Y component.
-   const matrix3D<double> & Y() const {return __Y;}
+    /** Get the X components.
+     * @ingroup VectorialAccess
+     */
+    void get_X(matrix3D< double >& _XXX)
+    {
+        _XXX = __X;
+    }
 
-   /// Access to Y components
-   matrix3D<double> & Y()             {return __Y;}
+    /** Set the X components.
+     * @ingroup VectorialAccess
+     */
+    void set_X(const matrix3D< double >& _XXX)
+    {
+        __X = _XXX;
+    }
 
-   /** Get the Y components.*/
-   void get_Y(matrix3D<double> &_Y) {_Y=__Y;}
+    /** Constant access to Y component.
+     * @ingroup VectorialAccess
+     */
+    const matrix3D< double >& Y() const
+    {
+        return __Y;
+    }
 
-   /** Set the Y components.*/
-   void set_Y(const matrix3D<double> &_Y) {__Y=_Y;}
+    /** Access to Y components.
+     * @ingroup VectorialAccess
+     */
+    matrix3D< double >& Y()
+    {
+        return __Y;
+    }
 
-   /// Constant access to Z component.
-   const matrix3D<double> & Z() const {return __Z;}
+    /** Get the Y components.
+     * @ingroup VectorialAccess
+     */
+    void get_Y(matrix3D< double >& _Y)
+    {
+        _Y = __Y;
+    }
 
-   /// Access to Z components
-   matrix3D<double> & Z()             {return __Z;}
+    /** Set the Y components.
+     * @ingroup VectorialAccess
+     */
+    void set_Y(const matrix3D< double >& _Y)
+    {
+        __Y = _Y;
+    }
 
-   /** Get the Z components.*/
-   void get_Z(matrix3D<double> &_Z) {_Z=__Z;}
+    /** Constant access to Z component.
+     * @ingroup VectorialAccess
+     */
+    const matrix3D< double >& Z() const
+    {
+        return __Z;
+    }
 
-   /** Set the Z components.*/
-   void set_Z(const matrix3D<double> &_Z) {__Z=_Z;}
+    /** Access to Z components.
+     * @ingroup VectorialAccess
+     */
+    matrix3D< double >& Z()
+    {
+        return __Z;
+    }
 
-   /// Constant access to a particular X component
-   double X(int k, int i, int j) const {return VOL_ELEM(__X,k,i,j);}
+    /** Get the Z components.
+     * @ingroup VectorialAccess
+     */
+    void get_Z(matrix3D< double >& _Z)
+    {
+        _Z = __Z;
+    }
 
-   /// Access to a particular X component
-   double & X(int k, int i, int j) {return VOL_ELEM(__X,k,i,j);}
+    /** Set the Z components.
+     * @ingroup VectorialAccess
+     */
+    void set_Z(const matrix3D< double >& _Z)
+    {
+        __Z = _Z;
+    }
 
-   /** Get the X component at (k,i,j).*/
-   double get_X_component(int k, int i, int j) {return X(k,i,j);}
+    /** Constant access to a particular X component.
+     * @ingroup VectorialAccess
+     */
+    double X(int k, int i, int j) const
+    {
+        return VOL_ELEM(__X, k, i, j);
+    }
 
-   /** Set the X component at (k,i,j).*/
-   double set_X_component(int k, int i, int j, double val) {X(k,i,j)=val;}
+    /** Access to a particular X component.
+     * @ingroup VectorialAccess
+     */
+    double& X(int k, int i, int j)
+    {
+        return VOL_ELEM(__X, k, i, j);
+    }
 
-   /// Constant access to a particular Y component
-   double Y(int k, int i, int j) const {return VOL_ELEM(__Y,k,i,j);}
+    /** Get the X component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double get_X_component(int k, int i, int j)
+    {
+        return X(k, i, j);
+    }
 
-   /// Access to a particular Y component
-   double & Y(int k, int i, int j) {return VOL_ELEM(__Y,k,i,j);}
+    /** Set the X component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double set_X_component(int k, int i, int j, double val)
+    {
+        X(k, i, j) = val;
+    }
 
-   /** Get the Y component at (k,i,j).*/
-   double get_Y_component(int k, int i, int j) {return Y(k,i,j);}
+    /** Constant access to a particular Y component.
+     * @ingroup VectorialAccess
+     */
+    double Y(int k, int i, int j) const
+    {
+        return VOL_ELEM(__Y, k, i, j);
+    }
 
-   /** Set the Y component at (k,i,j).*/
-   double set_Y_component(int k, int i, int j, double val) {Y(k,i,j)=val;}
+    /** Access to a particular Y component.
+     * @ingroup VectorialAccess
+     */
+    double& Y(int k, int i, int j)
+    {
+        return VOL_ELEM(__Y, k, i, j);
+    }
 
-   /// Constant access to a particular Z component
-   double Z(int k, int i, int j) const {return VOL_ELEM(__Z,k,i,j);}
+    /** Get the Y component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double get_Y_component(int k, int i, int j)
+    {
+        return Y(k, i, j);
+    }
 
-   /// Access to a particular Z component
-   double & Z(int k, int i, int j) {return VOL_ELEM(__Z,k,i,j);}
+    /** Set the Y component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double set_Y_component(int k, int i, int j, double val)
+    {
+        Y(k, i, j) = val;
+    }
 
-   /** Get the Z component at (k,i,j).*/
-   double get_Z_component(int k, int i, int j) {return Z(k,i,j);}
+    /** Constant access to a particular Z component.
+     * @ingroup VectorialAccess
+     */
+    double Z(int k, int i, int j) const
+    {
+        return VOL_ELEM(__Z, k, i, j);
+    }
 
-   /** Set the Z component at (k,i,j).*/
-   double set_Z_component(int k, int i, int j, double val) {Z(k,i,j)=val;}
+    /** Access to a particular Z component.
+     * @ingroup VectorialAccess
+     */
+    double& Z(int k, int i, int j)
+    {
+        return VOL_ELEM(__Z, k, i, j);
+    }
 
-   /// Constant access to a particular X component as a multidim array
-   double X(int i) const {return MULTIDIM_ELEM(__X,i);}
-   /// Access to a particular X component as a multidim array
-   double & X(int i) {return MULTIDIM_ELEM(__X,i);}
+    /** Get the Z component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double get_Z_component(int k, int i, int j)
+    {
+        return Z(k, i, j);
+    }
 
-   /// Constant access to a particular Y component as a multidim array
-   double Y(int i) const {return MULTIDIM_ELEM(__Y,i);}
-   /// Access to a particular Y component as a multidim array
-   double & Y(int i) {return MULTIDIM_ELEM(__Y,i);}
+    /** Set the Z component at (k,i,j).
+     * @ingroup VectorialAccess
+     */
+    double set_Z_component(int k, int i, int j, double val)
+    {
+        Z(k, i, j) = val;
+    }
 
-   /// Constant access to a particular Z component as a multidim array
-   double Z(int i) const {return MULTIDIM_ELEM(__Z,i);}
-   /// Access to a particular Z component as a multidim array
-   double & Z(int i) {return MULTIDIM_ELEM(__Z,i);}
-   //@}
+    /** Constant access to a particular X component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double X(int i) const
+    {
+        return MULTIDIM_ELEM(__X, i);
+    }
 
-   /**@name Utilities */
-   //@{
-   /** Substitute each vector by its unit vector */
-   void normalize_all_vectors() {
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this) {
-         double mod=sqrt(X(i)*X(i)+Y(i)*Y(i)+Z(i)*Z(i));
-         X(i) /= mod; Y(i) /= mod; Z(i) /=mod;
-      }
-   }
+    /** Access to a particular X component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double& X(int i)
+    {
+        return MULTIDIM_ELEM(__X, i);
+    }
 
-   /** Module of all vectors.
-       A volume with all vector modules at each position is returned. */
-   void module(matrix3D<double> &result) const {
-      result.resize(__X);
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
-         MULTIDIM_ELEM(result,i)=sqrt(X(i)*X(i)+Y(i)*Y(i)+Z(i)*Z(i));
-   }
+    /** Constant access to a particular Y component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double Y(int i) const
+    {
+        return MULTIDIM_ELEM(__Y, i);
+    }
 
-   /** Write.
-       Given a FileName, this function saves 3 volumes named "_X", "_Y" and
-       "_Z". */
-   void write(const FileName &fn) const {
-      VolumeXmipp V;
-      V=__X; V.write(fn.insert_before_extension("_X"));
-      V=__Y; V.write(fn.insert_before_extension("_Y"));
-      V=__Z; V.write(fn.insert_before_extension("_Z"));
-   }
-   //@}
+    /** Access to a particular Y component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double& Y(int i)
+    {
+        return MULTIDIM_ELEM(__Y, i);
+    }
 
-   /**@name Arithmetic operations */
-   //@{
-   #define maT Vectorial_matrix3D
-   #define OPERATION(func,arg1,arg2,result,op) \
-      func((arg1).__X, (arg2).__X, (result).__X, op); \
-      func((arg1).__Y, (arg2).__Y, (result).__Y, op); \
-      func((arg1).__Z, (arg2).__Z, (result).__Z, op);
-   /// v3=v1+v2
-   maT operator  + (const maT &op1) const
-      {maT temp; OPERATION(array_by_array,*this, op1, temp, '+'); return temp;}
-   /// v3=v1-v2.
-   maT operator  - (const maT &op1) const
-      {maT temp; OPERATION(array_by_array,*this, op1, temp, '-'); return temp;}
-   /// v3=v1*v2.
-   maT operator  * (const maT &op1) const
-      {maT temp; OPERATION(array_by_array,*this, op1, temp, '*'); return temp;}
-   /// v3=v1/v2.
-   maT operator  / (const maT &op1) const
-      {maT temp; OPERATION(array_by_array,*this, op1, temp, '/'); return temp;}
-   /// v3=v1^v2.
-   maT operator  ^ (const maT &op1) const
-      {maT temp; OPERATION(array_by_array,*this, op1, temp, '^'); return temp;}
+    /** Constant access to a particular Z component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double Z(int i) const
+    {
+        return MULTIDIM_ELEM(__Z, i);
+    }
 
-   /// v3+=v2
-   void operator  += (const maT &op1)
-      {OPERATION(array_by_array, *this, op1, *this, '+');}
-   /// v3-=v2.
-   void operator  -= (const maT &op1)
-      {OPERATION(array_by_array, *this, op1, *this, '-');}
-   /// v3*=v2.
-   void operator  *= (const maT &op1)
-      {OPERATION(array_by_array, *this, op1, *this, '*');}
-   /// v3/=v2.
-   void operator  /= (const maT &op1)
-      {OPERATION(array_by_array, *this, op1, *this, '/');}
-   /// v3^=v2.
-   void operator  ^= (const maT &op1)
-      {OPERATION(array_by_array, *this, op1, *this, '^');}
+    /** Access to a particular Z component as a multidim array.
+     * @ingroup VectorialAccess
+     */
+    double& Z(int i)
+    {
+        return MULTIDIM_ELEM(__Z, i);
+    }
 
-   #undef OPERATION
-   #define OPERATION(func,arg1,arg2,result,op) \
-      func((arg1).__X, (arg2), (result).__X, op); \
-      func((arg1).__Y, (arg2), (result).__Y, op); \
-      func((arg1).__Z, (arg2), (result).__Z, op);
-   /// v3=v1+k
-   maT operator  + (double op1) const
-      {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'+'); return temp;}
-   /// v3=v1-k
-   maT operator  - (double op1) const
-      {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'-'); return temp;}
-   /// v3=v1*k
-   maT operator  * (double op1) const
-      {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'*'); return temp;}
-   /// v3=v1/k
-   maT operator  / (double op1) const
-      {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'/'); return temp;}
-   /// v3=v1^k
-   maT operator  ^ (double op1) const
-      {maT temp; OPERATION(array_by_scalar,*this,op1,temp,'^'); return temp;}
+    /// @defgroup VectorialUtilitites Utilities.
+    /// @ingroup Vectorial
 
-   /// v3+=k
-   void operator  += (const double &op1)
-      {OPERATION(array_by_scalar,*this,op1,*this,'+');}
-   /// v3-=k
-   void operator  -= (const double &op1)
-      {OPERATION(array_by_scalar,*this,op1,*this,'-');}
-   /// v3*=k
-   void operator  *= (const double &op1)
-      {OPERATION(array_by_scalar,*this,op1,*this,'*');}
-   /// v3/=k
-   void operator  /= (const double &op1)
-      {OPERATION(array_by_scalar,*this,op1,*this,'/');}
-   /// v3^=k
-   void operator  ^= (const double &op1)
-      {OPERATION(array_by_scalar,*this,op1,*this,'^');}
-   #undef maT
-   //@}
+    /** Substitute each vector by its unit vector.
+     * @ingroup VectorialUtilitites
+     */
+    void normalize_all_vectors()
+    {
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
+        {
+            double mod = sqrt(X(i) * X(i) + Y(i) * Y(i) + Z(i) * Z(i));
+            X(i) /= mod;
+            Y(i) /= mod;
+            Z(i) /= mod;
+        }
+    }
+
+    /** Module of all vectors.
+     * @ingroup VectorialUtilitites
+     *
+     * A volume with all vector modules at each position is returned.
+     */
+    void module(matrix3D< double >& result) const
+    {
+        result.resize(__X);
+
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
+            MULTIDIM_ELEM(result, i) = sqrt(X(i) * X(i) + Y(i) * Y(i) +
+                Z(i) * Z(i));
+    }
+
+    /** Write.
+     * @ingroup VectorialUtilitites
+     *
+     * Given a FileName, this function saves 3 volumes named "_X", "_Y" and
+     * "_Z".
+     */
+    void write(const FileName& fn) const
+    {
+        VolumeXmipp V;
+
+        V = __X;
+        V.write(fn.insert_before_extension("_X"));
+        V = __Y;
+        V.write(fn.insert_before_extension("_Y"));
+        V = __Z;
+        V.write(fn.insert_before_extension("_Z"));
+    }
+
+    /// @defgroup VectorialArithmetic Arithmetic operations
+    /// @ingroup Vectorial
+
+#define maT Vectorial_matrix3D
+
+#define OPERATION(func, arg1, arg2, result, op) \
+    func((arg1).__X, (arg2).__X, (result).__X, op); \
+    func((arg1).__Y, (arg2).__Y, (result).__Y, op); \
+    func((arg1).__Z, (arg2).__Z, (result).__Z, op);
+
+    /** v3=v1+v2.
+     * @ingroup VectorialArithmetic
+     */
+    maT operator+(const maT& op1) const
+    {
+        maT temp;
+        OPERATION(array_by_array, *this, op1, temp, '+');
+        return temp;
+    }
+
+    /** v3=v1-v2.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator-(const maT& op1) const
+    {
+        maT temp;
+        OPERATION(array_by_array, *this, op1, temp, '-');
+        return temp;
+    }
+
+    /** v3=v1*v2.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator*(const maT& op1) const
+    {
+        maT temp;
+        OPERATION(array_by_array, *this, op1, temp, '*');
+        return temp;
+    }
+
+    /** v3=v1/v2.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator/(const maT& op1) const
+    {
+        maT temp;
+        OPERATION(array_by_array, *this, op1, temp, '/');
+        return temp;
+    }
+
+    /** v3=v1^v2.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator^(const maT& op1) const
+    {
+        maT temp;
+        OPERATION(array_by_array, *this, op1, temp, '^');
+        return temp;
+    }
+
+    /** v3+=v2.
+     * @ingroup VectorialAritmetic
+     */
+    void operator+=(const maT& op1)
+    {
+        OPERATION(array_by_array, *this, op1, *this, '+');
+    }
+
+    /** v3-=v2.
+     * @ingroup VectorialAritmetic
+     */
+    void operator-=(const maT& op1)
+    {
+        OPERATION(array_by_array, *this, op1, *this, '-');
+    }
+
+    /** v3*=v2.
+     * @ingroup VectorialAritmetic
+     */
+    void operator*=(const maT& op1)
+    {
+        OPERATION(array_by_array, *this, op1, *this, '*');
+    }
+
+    /** v3/=v2.
+     * @ingroup VectorialAritmetic
+     */
+    void operator/= (const maT& op1)
+    {
+        OPERATION(array_by_array, *this, op1, *this, '/');
+    }
+
+    /** v3^=v2.
+     * @ingroup VectorialAritmetic
+     */
+    void operator^=(const maT& op1)
+    {
+        OPERATION(array_by_array, *this, op1, *this, '^');
+    }
+
+#undef OPERATION
+#define OPERATION(func, arg1, arg2, result, op) \
+    func((arg1).__X, (arg2), (result).__X, op); \
+    func((arg1).__Y, (arg2), (result).__Y, op); \
+    func((arg1).__Z, (arg2), (result).__Z, op);
+
+    /** v3=v1+k.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator+(double op1) const
+    {
+        maT temp;
+        OPERATION(array_by_scalar, *this, op1, temp, '+');
+        return temp;
+    }
+
+    /** v3=v1-k.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator-(double op1) const
+    {
+        maT temp;
+        OPERATION(array_by_scalar, *this, op1, temp, '-');
+        return temp;
+    }
+
+    /** v3=v1*k.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator*(double op1) const
+    {
+        maT temp;
+        OPERATION(array_by_scalar, *this, op1, temp, '*');
+        return temp;
+    }
+
+    /** v3=v1/k.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator/(double op1) const
+    {
+        maT temp;
+        OPERATION(array_by_scalar, *this, op1, temp, '/');
+        return temp;
+    }
+
+    /** v3=v1^k.
+     * @ingroup VectorialAritmetic
+     */
+    maT operator^(double op1) const
+    {
+        maT temp;
+        OPERATION(array_by_scalar, *this, op1, temp, '^');
+        return temp;
+    }
+
+    /** v3+=k.
+     * @ingroup VectorialAritmetic
+     */
+    void operator+=(const double& op1)
+    {
+        OPERATION(array_by_scalar, *this, op1, *this, '+');
+    }
+
+    /** v3-=k.
+     * @ingroup VectorialAritmetic
+     */
+    void operator-=(const double& op1)
+    {
+        OPERATION(array_by_scalar, *this, op1, *this, '-');
+    }
+
+    /** v3*=k.
+     * @ingroup VectorialAritmetic
+     */
+    void operator*=(const double& op1)
+    {
+        OPERATION(array_by_scalar, *this, op1, *this, '*');
+    }
+
+    /** v3/=k.
+     * @ingroup VectorialAritmetic
+     */
+    void operator/=(const double& op1)
+    {
+        OPERATION(array_by_scalar, *this, op1, *this, '/');
+    }
+
+    /** v3^=k.
+     * @ingroup VectorialAritmetic
+     */
+    void operator^=(const double& op1)
+    {
+        OPERATION(array_by_scalar, *this, op1, *this, '^');
+    }
+
+#undef maT
+
 };
-//@}
+
+
 #endif

@@ -22,74 +22,88 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef _XMIPP_PROJECTION_HH
-#  define _XMIPP_PROJECTION_HH
+
+#ifndef PROJECTION_H
+#define PROJECTION_H
 
 #include "image.h"
 
-/*---------------------------------------------------------------------------*/
-/* PROJECTION                                                                */
-/*---------------------------------------------------------------------------*/
-/**@name Projections */
-//@{
-// Projection class ========================================================
+/// @defgroup Projections Projections.
+
 /** Projection class.
-    A projection is an ImageXmipp plus some information (about the direction
-    of prejection) which makes it suitable for 3D reconstruction.
-    A projection is supposed to have the point (0,0) at the center of the
-    image and not in the corners as usual matrices have.
-
-    The normal use of a projection is
-    \begin{verbatim}
-    Projection P;                // Create variable
-    P.reset(65,65);              // Init with zeros and set right origin
-    P.set_angles(30,45,-50);     // Set Euler angles
-    \end{verbatim}
-
-    From now on, the projection can be treated as any other Image, even
-    you can write it on disk as it inherits from ImageXmipp.
-*/
-class Projection: public ImageXmipp {
+ * @ingroup Projections
+ *
+ * A projection is an ImageXmipp plus some information (about the direction
+ * of prejection) which makes it suitable for 3D reconstruction. A projection
+ * is supposed to have the point (0,0) at the center of the image and not in
+ * the corners as usual matrices have.
+ *
+ * The normal use of a projection is:
+ *
+ * @code
+ * Projection P; // Create variable
+ * P.reset(65, 65); // Init with zeros and set right origin
+ * P.set_angles(30, 45, -50); // Set Euler angles
+ * @endcode
+ *
+ * From now on, the projection can be treated as any other Image. You can even
+ * write it on disk as it inherits from ImageXmipp.
+ */
+class Projection: public ImageXmipp
+{
 public:
-   /** This is a vector perpendicular to the projection plane. It is
-       calculated as a function of rot and tilt. */
-   matrix1D<double>      direction;
+    /** Vector perpendicular to the projection plane.
+     * It is calculated as a function of rot and tilt.
+     */
+    matrix1D< double > direction;
 
-   /** This matrix is used to pass from the Universal coordinate system
-       to the projection coordinate system.
-       \\Rp = euler * Ru */
-   matrix2D<double>      euler;
+    /** Matrix used to pass from the Universal coordinate system to the
+     * projection coordinate system.
+     *
+     * @code
+     * Rp = euler * Ru
+     * @endcode
+     */
+    matrix2D< double > euler;
 
-   /** Just the opposite.
-       Ru = eulert * Rp. */
-   matrix2D<double>      eulert;
+    /** Just the opposite.
+     *
+     * @code
+     * Ru = eulert * Rp.
+     * @endcode
+     */
+    matrix2D< double > eulert;
 
-public:
-   /** Init_zeros and move origin to center.
-       This function initialises the projection plane with 0's, and
-       then moves the logical origin of the image to the physical
-       center of the image (using the Xmipp conception of image
-       center). */
-   void reset(int Ydim, int Xdim);
+    /** Init_zeros and move origin to center.
+     *
+     * This function initialises the projection plane with 0's, and then moves
+     * the logical origin of the image to the physical center of the image
+     * (using the Xmipp conception of image center).
+     */
+    void reset(int Ydim, int Xdim);
 
-   /** Set Euler angles for this projection.
-       The Euler angles are stored in the Xmipp header, then the
-       pass matrices (Universe <---> Projection coordinate system)
-       are computed, and the vector perpendicular to this projection
-       plane is also calculated */
-   void set_angles(double _rot, double _tilt, double _psi);
+    /** Set Euler angles for this projection.
+     *
+     * The Euler angles are stored in the Xmipp header, then the pass matrices
+     * (Universe <---> Projection coordinate system) are computed, and the
+     * vector perpendicular to this projection plane is also calculated.
+     */
+    void set_angles(double _rot, double _tilt, double _psi);
 
-   /** Read a Projection from file.
-       When a projection is read, the Euler matrices and perpendicular
-       direction is computed and stored in the Projection structure. */
-   void read(const FileName &fn, const bool &apply_shifts=false);
+    /** Read a Projection from file.
+     *
+     * When a projection is read, the Euler matrices and perpendicular
+     * direction is computed and stored in the Projection structure.
+     */
+    void read(const FileName& fn, const bool& apply_shifts=false);
 
-   /** Assignment. */
-   Projection & operator = (const Projection &P);
+    /** Assignment.
+     */
+    Projection& operator=(const Projection& P);
 
-   /** Another function for assigment.*/
-   void assign (const Projection &P);
+    /** Another function for assigment.
+     */
+    void assign(const Projection& P);
 };
 
-//@}
 #endif

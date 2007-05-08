@@ -571,7 +571,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
    if (prm.enable_normalization) {
       Normalize_parameters norm_prm;
       norm_prm.fn_in=SF.name();
-      norm_prm.normalizing_method=prm.normalizing_method;
+      norm_prm.method=prm.normalizing_method;
       norm_prm.background_mode=CIRCLE;
       norm_prm.r=prm.bg_radius;
       norm_prm.produce_side_info();

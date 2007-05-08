@@ -67,7 +67,7 @@ string FtoA(float F, int _width, int _prec);
  * starting point. Be aware that this is a macro which simplifies to a boolean.
  */
 #define SAME_SHAPE1D(v1, v2) \
-    (XSIZE(v1) == XSIZE(v2) && \
+    ((v1).xdim == (v2).xdim && \
      STARTINGX(v1) == STARTINGX(v2))
 
 /** Returns the first valid logical index
@@ -178,7 +178,7 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<XSIZE(v); i++)
+    for (int i=0; i<v.xdim; i++)
 
 /// @defgroup VectorsMemory Memory access
 /// @ingroup VectorsSpeedUp
@@ -502,7 +502,7 @@ public:
         data = new T[dim];
         if (data == NULL)
             REPORT_ERROR(1001, "Resize: no memory left");
-        size = XSIZE(*this) = dim;
+        size = xdim = dim;
         dimension = 1;
         for (long int i=0; i<size; i++)
             data[i] = 0;
@@ -644,8 +644,8 @@ public:
     template<typename T1>
     void copy_shape(const maT1& v)
     {
-        if (XSIZE(*this) != XSIZE(v))
-            resize(XSIZE(v));
+        if (xdim != v.xdim)
+            resize(v.xdim);
 
         STARTINGX(*this) = STARTINGX(v);
         row = v.row;
@@ -665,7 +665,7 @@ public:
      */
     void resize(int Xdim)
     {
-        if (Xdim == XSIZE(*this))
+        if (Xdim == xdim)
             return;
 
         if (Xdim <= 0)
@@ -681,8 +681,8 @@ public:
 
         // Copy needed elements, fill with 0 if necessary
         for (int i=0; i<Xdim; i++)
-            if (i < XSIZE(*this))
-                new_m[i] = DIRECT_VEC_ELEM(*this, i);
+            if (i < xdim)
+                new_m[i] = data[i];
             else
                 new_m[i] = 0;
 
@@ -691,7 +691,7 @@ public:
 
         // assign *this vector to the newly created
         MULTIDIM_ARRAY(*this) = new_m;
-        XSIZE(*this) = Xdim;
+        xdim = Xdim;
         size = Xdim;
     }
 
@@ -768,7 +768,7 @@ public:
      */
     void move_origin_to(int i)
     {
-        STARTINGX(*this) = i + FIRST_XMIPP_INDEX(XSIZE(*this));
+        STARTINGX(*this) = i + FIRST_XMIPP_INDEX(xdim);
     }
 
     /** Sets the origin
@@ -1149,12 +1149,12 @@ public:
      */
     void self_reverse()
     {
-        int imax = (int)(XSIZE(*this) - 1) / 2;
+        int imax = (int)(xdim - 1) / 2;
         for (int i=0; i<=imax; i++)
         {
             T aux;
             SWAP(MULTIDIM_ELEM(*this, i), MULTIDIM_ELEM(*this,
-                XSIZE(*this) -1 - i), aux);
+                xdim -1 - i), aux);
         }
     }
 
@@ -1228,7 +1228,7 @@ public:
         vT temp;
         matrix1D< double > aux;
 
-        if (XSIZE(*this) == 0)
+        if (xdim == 0)
             return temp;
 
         // Initialise data
@@ -1259,10 +1259,10 @@ public:
         matrix1D< int >   indx;
         matrix1D< double > temp;
 
-        if (XSIZE(*this) == 0)
+        if (xdim == 0)
             return indx;
 
-        if (XSIZE(*this) == 1)
+        if (xdim == 1)
         {
             indx.resize(1);
             indx(0) = 1;
@@ -1318,7 +1318,7 @@ public:
      */
     void max_index(int& imax) const
     {
-        if (XSIZE(*this) == 0)
+        if (xdim == 0)
         {
             imax = -1;
             return;
@@ -1343,7 +1343,7 @@ public:
      */
     void min_index(int& imin) const
     {
-        if (XSIZE(*this) == 0)
+        if (xdim == 0)
         {
             imin = -1;
             return;
@@ -1452,8 +1452,8 @@ T dot_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
 
     T accumulate = 0;
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v1)
-        accumulate += MULTIDIM_ELEM(v1, i) * MULTIDIM_ELEM(v2, i);
+    for (int i=0; i<v1.size; i++)
+        accumulate += v1.data[i] * v2.data[i];
 
     return accumulate;
 }
@@ -1475,7 +1475,7 @@ T dot_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
 template<typename T>
 matrix1D< T > vector_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
 {
-    if (XSIZE(v1) != 3 || XSIZE(v2) != 3)
+    if (v1.xdim != 3 || v2.xdim != 3)
         REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
 
     if (v1.isRow() != v2.isRow())
@@ -1574,7 +1574,7 @@ template<typename T>
 void sort_two_vectors(vT& v1, vT& v2)
 {
     T temp;
-    if (XSIZE(v1) != XSIZE(v2) || STARTINGX(v1) != STARTINGX(v2))
+    if (v1.xdim != v2.xdim || STARTINGX(v1) != STARTINGX(v2))
         REPORT_ERROR(1007,
             "sort_two_vectors: vectors are not of the same shape");
 
@@ -1619,8 +1619,8 @@ void Powell_optimizer(matrix1D< double >& p, int i0, int n,
 template<typename T>
 void vT::print_shape(ostream& out) const
 {
-    out << "Size: " << XSIZE(*this)
-    << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    out << "Size: " << xdim
+   << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
 // TODO Document
@@ -1636,7 +1636,7 @@ void vT::get_size(int* size) const
 template<typename T>
 bool vT::outside(const matrix1D< double >& v) const
 {
-    if (XSIZE(v)<1)
+    if (v.xdim < 1)
         REPORT_ERROR(1, "Outside: index vector has got not enough components");
 
     return (XX(v) < STARTINGX(*this) || XX(v) > FINISHINGX(*this));
@@ -1653,7 +1653,7 @@ bool vT::outside(int i) const
 template<typename T>
 bool vT::intersects(const vT& m) const
 {
-    return intersects(STARTINGX(m), XSIZE(m) - 1);
+    return intersects(STARTINGX(m), m.xdim - 1);
 }
 
 // TODO Document
@@ -1661,7 +1661,7 @@ template<typename T>
 bool vT::intersects(const matrix1D< double >& corner1,
                     const matrix1D< double >& corner2) const
 {
-    if (XSIZE(corner1) != 1 || XSIZE(corner2) != 1)
+    if (corner1.xdim != 1 || corner2.xdim != 1)
         REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
 
     return intersects(XX(corner1), XX(corner2) - XX(corner1));
@@ -1684,7 +1684,7 @@ bool vT::intersects(double x0, double xdim) const
 template<typename T>
 bool vT::isCorner(const matrix1D< double >& v)
 {
-    if (XSIZE(v) < 1)
+    if (v.xdim < 1)
         REPORT_ERROR(1,
             "isCorner: index vector has got not enough components");
 
@@ -1695,7 +1695,7 @@ bool vT::isCorner(const matrix1D< double >& v)
 template<typename T>
 bool vT::isBorder(const matrix1D< int >& v)
 {
-    if (XSIZE(v) < 1)
+    if (v.xdim < 1)
         REPORT_ERROR(1, "isBorder: index vector has got not enough components");
 
     return isBorder(XX(v));

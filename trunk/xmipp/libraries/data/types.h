@@ -22,8 +22,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef XMIPPTYPES_H
-#define XMIPPTYPES_H
+
+#ifndef TYPES_H
+#define TYPES_H
 
 #include "args.h"
 #include "docfile.h"
