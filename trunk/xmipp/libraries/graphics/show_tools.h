@@ -185,16 +185,14 @@ signals:
 //@{
 /** Xmipp -> QImage.*/
 void xmipp2Qt(Image& _ximage, QImage &_qimage,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0,
-   bool treat_separately_left_right=false);
+   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
 
 /** Qimage -> Xmipp.*/
 void Qt2xmipp(QImage &_qimage, Image &_ximage);
 
 /** Xmipp -> PixMap */
 void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0,
-   bool treat_separately_left_right=false);
+   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
 
 /** Xmipp image -> Xmipp PSD.
     The log10 is taken, outliers rejected and the image is reorganized. */

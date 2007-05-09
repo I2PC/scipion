@@ -515,7 +515,7 @@ bool ImageViewer::showImage()
 
 /*****************************************/
 
-bool ImageViewer::xmipp2Qt(Image& _image, bool treat_differently_left_right )
+bool ImageViewer::xmipp2Qt(Image& _image)
 {
     bool ok = FALSE;
 		
@@ -523,10 +523,9 @@ bool ImageViewer::xmipp2Qt(Image& _image, bool treat_differently_left_right )
       xmippImage = _image;
       // Take the one in showTools
       if (minGray==0 && maxGray==0)
-	 ::xmipp2Qt(_image,image,0,255,0,0,treat_differently_left_right);
+	 ::xmipp2Qt(_image,image,0,255,0,0);
       else
-	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray,
-            treat_differently_left_right);
+	 ::xmipp2Qt(_image,image,0,255,minGray,maxGray);
       xmippFlag = 0;	 	// Sets flag = Xmipp image.
       ok = TRUE;
     } catch (Xmipp_error) {
@@ -589,7 +588,6 @@ bool ImageViewer::loadImage( const char *fileName,
     bool imagic=((string)(filename)).find("imagic:")==0;
     bool ok = FALSE;
     static bool message_shown=false;
-    bool treat_separately_left_right=false;
     if ( filename ) {
 	
 	// try to read image from standard format.	
@@ -616,10 +614,7 @@ bool ImageViewer::loadImage( const char *fileName,
                   options->setItemEnabled(enhancePSD,true);
                } else if (load_mode==ImageViewer::CTF_mode) {
                   // It is ARMA and CTF together
-                  xmipp2CTF(p(),p());
-                  treat_separately_left_right=true;
                   options->setItemEnabled(editctfmodel,true);
-                  options->setItemEnabled(enhancePSD,true);
                   if (fn_assign!="")
                      options->setItemEnabled(recomputectfmodel,true);
                }
@@ -636,7 +631,7 @@ bool ImageViewer::loadImage( const char *fileName,
 	    tmpImage().set_Xmipp_origin();
 	    minGray=_minGray;
 	    maxGray=_maxGray;
-	    ok = xmipp2Qt(tmpImage,treat_separately_left_right);
+	    ok = xmipp2Qt(tmpImage);
 	  } catch (Xmipp_error) {
 	    ok = FALSE;
 	    if (!message_shown) {
@@ -668,7 +663,6 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
    load_mode=_load_mode;
    bool ok = FALSE;
    static bool message_shown=false;
-   bool treat_separately_left_right=false;
    if ( XSIZE(_matrix)==0 ) return false;
 
    Image tmpImage;
@@ -680,16 +674,14 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
    } else if (load_mode==ImageViewer::CTF_mode) {
       // It is ARMA and CTF together
       xmipp2CTF(_matrix,_matrix);
-      treat_separately_left_right=true;
       options->setItemEnabled(editctfmodel,true);
-      options->setItemEnabled(enhancePSD,true);
    }
    tmpImage()=_matrix;
 
    tmpImage().set_Xmipp_origin();
    minGray=_minGray;
    maxGray=_maxGray;
-   ok = xmipp2Qt(tmpImage,treat_separately_left_right);
+   ok = xmipp2Qt(tmpImage);
 
    if (ok) ok = showImage();
    return ok;
@@ -1107,23 +1099,25 @@ void ImageViewer::runEnhancePSD(vector<float> enhance_prms) {
    prm.mask_w2=enhance_prms[4];
 
    ImageXmipp I, Iaux; I.read(filename);
+   int Xdim=XSIZE(I());
+   int Ydim=YSIZE(I());
    if (load_mode==ImageViewer::CTF_mode) {
       Iaux()=I();
-      // Copy the right part from the left part
-      for (int i=0; i<YSIZE(I()); i++)
-         for (int j=0; j<XSIZE(I())/2; j++)
+      // Remove the part of the model
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+         if ((i<Ydim/2 && j<Xdim/2) || (i>=Ydim/2 && j>=Xdim/2))
             I(i,j)=I(i,XSIZE(I())-1-j);
    }
    prm.apply(I());
    if (load_mode==ImageViewer::CTF_mode) {
       CenterFFT(I(),true);
-      // Copy the right part from the original image
-      for (int i=0; i<YSIZE(I()); i++)
-         for (int j=0; j<XSIZE(I())/2; j++)
+      // Copy the part of the model
+      FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+         if ((i<Ydim/2 && j<Xdim/2) || (i>=Ydim/2 && j>=Xdim/2))
             I(i,j)=ABS(Iaux(i,j));
       CenterFFT(I(),false);
    }
    I().set_Xmipp_origin();
-   xmipp2Qt(I,load_mode==ImageViewer::CTF_mode);
+   xmipp2Qt(I);
    showImage();
 }

@@ -263,7 +263,7 @@ void Qt2xmipp( QImage &_qimage, Image &_ximage ) {
 
 /* Xmipp -> QImage --------------------------------------------------------- */
 void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
-   int _max_scale, double _m, double _M, bool treat_separately_left_right) {
+   int _max_scale, double _m, double _M) {
    // Creates a Qt Image to hold Xmipp Image
    _qimage.create(_ximage().ColNo(), _ximage().RowNo(), 8, 256);
 
@@ -277,76 +277,27 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
    const matrix2D<double> &xmatrix=_ximage();
    int xdim=XSIZE(xmatrix);
    int ydim=YSIZE(xmatrix);
-   if (!treat_separately_left_right) {
-      double min_val, max_val;
-      if (_m==0 && _M==0) xmatrix.compute_double_minmax(min_val,max_val);
-      else {min_val=_m; max_val=_M;}
-      double a;
-      if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
-         a=1.0;
-      else
-         a=(_max_scale-_min_scale)/(max_val-min_val);
+   double min_val, max_val;
+   if (_m==0 && _M==0) xmatrix.compute_double_minmax(min_val,max_val);
+   else {min_val=_m; max_val=_M;}
+   double a;
+   if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
+      a=1.0;
+   else
+      a=(_max_scale-_min_scale)/(max_val-min_val);
 
-      // Reads pixels.
-      for (int y = 0; y < ydim; y++)
-        for (int x = 0; x < xdim; x++)
-          _qimage.setPixel(x,y,((uint) CLIP((a*(
-             DIRECT_MAT_ELEM(xmatrix,y,x)-min_val)+_min_scale),0,255)));
-   } else {
-      int xdim2=xdim/2;
-      // Left part .........................................................
-      double min_val, max_val;
-      min_val=max_val=DIRECT_MAT_ELEM(xmatrix,0,0);
-      for (int i=0; i<ydim; i++)
-         for (int j=0; j<xdim2; j++) {
-            if (DIRECT_MAT_ELEM(xmatrix,i,j)<min_val)
-               min_val=DIRECT_MAT_ELEM(xmatrix,i,j);
-            if (DIRECT_MAT_ELEM(xmatrix,i,j)>max_val)
-               max_val=DIRECT_MAT_ELEM(xmatrix,i,j);
-         }
-
-      double a;
-      if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
-         a=1.0;
-      else
-         a=(_max_scale-_min_scale)/(max_val-min_val);
-
-      // Reads pixels.
-      for (int y = 0; y < ydim; y++)
-        for (int x = 0; x < xdim2; x++)
-          _qimage.setPixel(x,y,((uint) CLIP((a*(
-             DIRECT_MAT_ELEM(xmatrix,y,x)-min_val)+_min_scale),0,255)));
-
-      // Right part ........................................................
-      min_val=max_val=DIRECT_MAT_ELEM(xmatrix,ydim-1,xdim-1);
-      for (int i=0; i<ydim; i++)
-         for (int j=xdim2; j<xdim; j++) {
-            if (DIRECT_MAT_ELEM(xmatrix,i,j)<min_val)
-               min_val=DIRECT_MAT_ELEM(xmatrix,i,j);
-            if (DIRECT_MAT_ELEM(xmatrix,i,j)>max_val)
-               max_val=DIRECT_MAT_ELEM(xmatrix,i,j);
-         }
-
-      if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
-         a=1.0;
-      else
-         a=(_max_scale-_min_scale)/(max_val-min_val);
-
-      // Reads pixels.
-      for (int y = 0; y < ydim; y++)
-        for (int x = xdim2; x < xdim; x++)
-          _qimage.setPixel(x,y,((uint) CLIP((a*(
-             DIRECT_MAT_ELEM(xmatrix,y,x)-min_val)+_min_scale),0,255)));
-   }
+   // Reads pixels.
+   for (int y = 0; y < ydim; y++)
+     for (int x = 0; x < xdim; x++)
+       _qimage.setPixel(x,y,((uint) CLIP((a*(
+          DIRECT_MAT_ELEM(xmatrix,y,x)-min_val)+_min_scale),0,255)));
 }
 
 /* Xmipp -> Pixmap --------------------------------------------------------- */
 void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
-   int _minScale, int _maxScale, double _m, double _M,
-      bool treat_separately_left_right) {
+   int _minScale, int _maxScale, double _m, double _M) {
    QImage tmpImage;
-   xmipp2Qt(xmippImage,tmpImage,_minScale,_maxScale,_m,_M,
-      treat_separately_left_right);
+   xmipp2Qt(xmippImage,tmpImage,_minScale,_maxScale,_m,_M);
    pixmap->convertFromImage(tmpImage, 0);
 }
 
@@ -369,32 +320,38 @@ void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output) {
    output=input;
    CenterFFT(output,true);
 
-   // Prepare left part (ARMA model)
-   double min_val=output(0,0);
+   // Prepare PSD part
+   double min_val=output(0,XSIZE(output)-1);
    double max_val=min_val;
    bool first=true;
-   for (int i=0; i<YSIZE(output); i++)
-      for (int j=0; j<XSIZE(output)/2; j++) {
+   int Xdim=XSIZE(output);
+   int Ydim=YSIZE(output);
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(output) {
+      if ((i<Ydim/2 && j>=Xdim/2) || (i>=Ydim/2 && j<Xdim/2) ) {
          if (output(i,j)>XMIPP_EQUAL_ACCURACY &&
              (output(i,j)<min_val || first)) min_val=output(i,j);
-         if (output(i,j)>XMIPP_EQUAL_ACCURACY &&
+         if (output(i,j)>XMIPP_EQUAL_ACCURACY && 
              (output(i,j)>max_val || first)) {
              max_val=output(i,j); first=false;
          }
       }
-   matrix2D<double> left(YSIZE(output),XSIZE(output)/2);
+   }
+   matrix2D<double> left(YSIZE(output),XSIZE(output));
    min_val=10*log10(min_val);
-   for (int i=0; i<YSIZE(output); i++)
-      for (int j=0; j<XSIZE(output)/2; j++)
+   FOR_ALL_ELEMENTS_IN_MATRIX2D(output) {
+      if ((i<Ydim/2 && j>=Xdim/2) || (i>=Ydim/2 && j<Xdim/2) ) {
          if (output(i,j)>XMIPP_EQUAL_ACCURACY)
               left(i,j)=10*log10(output(i,j));
          else left(i,j)=min_val;
+      }
+   }
    reject_outliers(left);
 
    // Join both parts
    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
-      if (j<XSIZE(output)/2) output(i,j)=left(i,j);
-      else                   output(i,j)=ABS(output(i,j));
+      if ((i<Ydim/2 && j>=Xdim/2) || (i>=Ydim/2 && j<Xdim/2) )
+           output(i,j)=left(i,j);
+      else output(i,j)=ABS(output(i,j));
 }
 
 /* Pixmap from MIME source ------------------------------------------------- */

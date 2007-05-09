@@ -160,7 +160,7 @@ protected:
     int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
     int         recomputectfmodel, enhancePSD;
     void	Init();
-    bool 	xmipp2Qt(Image& _image, bool treat_differently_left_right=false);
+    bool 	xmipp2Qt(Image& _image);
     bool 	Qt2xmipp(QImage &_image);
     bool 	showImage();
     void 	generateFFTImage(matrix2D<double> &out);
