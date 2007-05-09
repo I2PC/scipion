@@ -178,7 +178,10 @@ void Cone::assign (const Cone &F) {*this=F;}
 /* Rotation                                                                  */
 /* ------------------------------------------------------------------------- */
 void Feature::rotate_center(const matrix2D<double> &E) {
-   Center=E*Center;
+   matrix2D<double> inverse_angles_matrix;
+   inverse_angles_matrix=E.inv();
+   Center=inverse_angles_matrix*Center;
+   //Center=E*Center;
 }
 
 void Feature::rotate(const matrix2D<double> &E) {
