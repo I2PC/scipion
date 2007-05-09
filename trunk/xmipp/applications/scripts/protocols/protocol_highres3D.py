@@ -28,7 +28,7 @@ WorkDirectory='Experiment1'
 DoDeleteWorkingDir=False
 
 # {expert} Root directory name for this project:
-projectDirectory="/usr/scratch/cperez/CTD_LTA"
+ProjectDir="/usr/scratch/cperez/CTD_LTA"
 
 # {expert} Directory name for logfiles:
 LogDir="Logs"
@@ -216,7 +216,7 @@ class HighRes3DClass:
 		_ReferenceFileName,
 		_WorkDirectory,
 		_DoDeleteWorkingDir,
-		_projectDirectory,
+		_ProjectDir,
 		_LogDir,
 		
 		_ParticleRadius,
@@ -249,11 +249,11 @@ class HighRes3DClass:
 		_Verbose
                 ):
        self.scriptFile=os.path.abspath(sys.argv[0])
-       self.selFileName=os.path.abspath(_projectDirectory+"/"+_SelFileName)
-       self.referenceFileName=os.path.abspath(_projectDirectory+"/"+_ReferenceFileName)
+       self.selFileName=os.path.abspath(_ProjectDir+"/"+_SelFileName)
+       self.referenceFileName=os.path.abspath(_ProjectDir+"/"+_ReferenceFileName)
        self.workDirectory=os.getcwd()+'/'+_WorkDirectory
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
-       self.projectDirectory=_projectDirectory
+       self.ProjectDir=_ProjectDir
        self.logDir=_LogDir
 		
        self.particleRadius=_ParticleRadius
@@ -261,7 +261,7 @@ class HighRes3DClass:
        if _SymmetryFile=="":
           self.symmetryFile=self.workDirectory+"/Src/symmetry.sym"
        else:
-          self.symmetryFile=self.projectDirectory+"/"+_SymmetryFile
+          self.symmetryFile=self.ProjectDir+"/"+_SymmetryFile
        self.samplingRate=_SamplingRate
 
        self.pyramidLevels="0 "+_PyramidLevels
@@ -279,7 +279,7 @@ class HighRes3DClass:
 		
        self.doReferenceMask="0 "+_DoReferenceMask
        if not _InitialReferenceMask=="":
-          self.initialReferenceMask=os.path.abspath(_projectDirectory+"/"+_InitialReferenceMask)
+          self.initialReferenceMask=os.path.abspath(_ProjectDir+"/"+_InitialReferenceMask)
        else:
           self.initialReferenceMask=""
        self.filterReference="0 "+_FilterReference
@@ -292,7 +292,7 @@ class HighRes3DClass:
        self.verbose=_Verbose
 
        if self.verbose:
-	  self.mylog=log.init_log_system(_projectDirectory,
+	  self.mylog=log.init_log_system(_ProjectDir,
                                 	 _LogDir,
                                 	 sys.argv[0],
                                 	 _WorkDirectory)
@@ -514,7 +514,7 @@ class HighRes3DClass:
           self.createDirectory(self.workDirectory+"/ScaledImgs")
 
           # Copy the images as they are and change name
-      	  self.changeDirectory(self.projectDirectory)
+      	  self.changeDirectory(self.ProjectDir)
       	  self.execute("xmipp_adapt_for_spider rename -i "+self.selFileName+ \
                        " -oroot "+self.workDirectory+"/ScaledImgs/img"+\
 	               " -o "+self.workDirectory+"/imgs.sel")
@@ -664,7 +664,7 @@ class HighRes3DClass:
    # Get image size
    #------------------------------------------------------------------------
    def getImageSize(self):
-      SFaux=self.SF.add_1directory_begin(self.projectDirectory)
+      SFaux=self.SF.add_1directory_begin(self.ProjectDir)
       self.xDim,self.yDim=SFaux.imgSize()
       self.workXDim=pow(2.0,math.ceil(math.log10(self.xDim)/math.log10(2.0)));
       self.workingSamplingRate=self.samplingRate*self.xDim/self.workXDim
@@ -918,7 +918,7 @@ if __name__ == '__main__':
 		ReferenceFileName,
 		WorkDirectory,
 		DoDeleteWorkingDir,
-		projectDirectory,
+		ProjectDir,
 		LogDir,
 		
 		ParticleRadius,

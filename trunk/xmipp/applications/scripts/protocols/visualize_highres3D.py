@@ -60,7 +60,7 @@ class VisualizeHighres3DClass:
 		protocol_highres3D.ReferenceFileName,
 		protocol_highres3D.WorkDirectory,
 		protocol_highres3D.DoDeleteWorkingDir,
-		protocol_highres3D.projectDirectory,
+		protocol_highres3D.ProjectDir,
 		protocol_highres3D.LogDir,
 		
 		protocol_highres3D.ParticleRadius,
