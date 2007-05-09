@@ -107,10 +107,10 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal,double scale) {
             break;
          case 6:
             // shift file
+            // DF_shift_bool is true when there is a shift file
             fn_shift=first_word(line);
             if (strcmp(fn_shift.c_str(),"NULL"))
-	        DF_shift_bool=true;
-	    	
+			DF_shift_bool=true;
             lineNo++;
             break;
       } /* switch end */
@@ -264,22 +264,29 @@ void project_crystal(Phantom &phantom, Projection &P,
    matrix2D<double> exp_shifts_matrix_X;
    matrix2D<double> exp_shifts_matrix_Y;
    matrix2D<double> exp_shifts_matrix_Z;
+   matrix2D<double> exp_normal_shifts_matrix_X;
+   matrix2D<double> exp_normal_shifts_matrix_Y;
+   matrix2D<double> exp_normal_shifts_matrix_Z;
 
    fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
       prm_crystal, cell_shiftX, cell_shiftY, cell_shiftZ, cell_inside,
       exp_shifts_matrix_X, exp_shifts_matrix_Y,exp_shifts_matrix_Z);
-
-   // Fill a table with all exp shifts
+     
+   // Fill a table with all exp shifts 
    init_shift_matrix(prm_crystal,cell_inside, exp_shifts_matrix_X,
                                               exp_shifts_matrix_Y,
-					      exp_shifts_matrix_Z,
-					      phantom.phantom_scale
-					      );
-   // Prepare matrices to go from uncompressed space to deformed projection
+					      					  exp_shifts_matrix_Z,											  
+					      					  exp_normal_shifts_matrix_X,
+					      					  exp_normal_shifts_matrix_Y,
+					      					  exp_normal_shifts_matrix_Z,						  
+					      					  phantom.phantom_scale);
+									
+  // Prepare matrices to go from uncompressed space to deformed projection
    matrix2D<double> AE=A*P.euler;   // From uncompressed to deformed
    matrix2D<double> AEinv=AE.inv(); // From deformed to uncompressed
    // add the shifts to the already compute values
    matrix1D<double> temp_vect(3);
+
    FOR_ALL_ELEMENTS_IN_MATRIX2D(exp_shifts_matrix_X) {
          //these experimental shift are in phantom
 	 //coordinates, not into the projection
@@ -296,7 +303,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 	   		           exp_shifts_matrix_Z(i,j));
 	#endif
 	#undef DEBUG5
-				
+	
 	 // Add experimental shifts
 	 //so far temp_vect(i,j) = exp_shifts_matrix_Z(i,j);
 	 cell_shiftX(i,j) += XX(temp_vect);
@@ -367,17 +374,48 @@ void project_crystal(Phantom &phantom, Projection &P,
          // Any phantom in the projection line will give the same shift
          // in the projection we are interested in the phantom whose center
          // is in the XYplane
+
+
+        // the phantom is mapped into a surface of different shapes (parabole,cosine, etc)
+		matrix1D<double> normal_vector(3);
+		double alpha, beta, gamma;
+		double rota, tilta, psia;
+		matrix2D<double> angles_matrix,inverse_angles_matrix;
+		matrix2D<double> def_cyl_angles_matrix;
+		matrix2D<double> cyl_angles_matrix;
+		 
+	// the phantom is rotated only when there exists a shifts file	 
+ 	if (prm_crystal.DF_shift_bool)
+ 		{
+		// for each (h,k) calculate the normal vector and its corresponding rotation matrix
+		normal_vector(0)=exp_normal_shifts_matrix_X(i,j);
+		normal_vector(1)=exp_normal_shifts_matrix_Y(i,j);
+		normal_vector(2)=exp_normal_shifts_matrix_Z(i,j);
+		
+		Euler_direction2angles (normal_vector, alpha, beta, gamma);
+		gamma=-alpha;
+		Euler_angles2matrix (alpha, beta, gamma, angles_matrix);
+		inverse_angles_matrix=angles_matrix.inv();
+
+			for (int ii=0; ii<aux.VF.size(); ii++)
+   			{
+			 aux.VF[ii]->rotate(angles_matrix);	
+	  		}	
+    	}
+		  		 
          cell_shift=cell_shift-ZZ(cell_shift)/ZZ(P.direction)*P.direction;
          #ifdef DEBUG
             cout << "cell_shift after moving to ground "
                  << cell_shift.transpose() << endl;
          #endif
+		 
          aux.shift(XX(cell_shift),YY(cell_shift),ZZ(cell_shift));
 
-         // Project this phantom
+     	// Project this phantom
          aux.project_to(P, AE,prm_crystal.disappearing_th);
-	 // Multiply by factor
-	 P()=P()*density_factor;
+	 	// Multiply by factor
+	 
+	 	P()=P()*density_factor;
          #ifdef DEBUG_MORE
             cout << "After Projecting ...\n" << aux << endl;
             P.write("inter");
@@ -385,6 +423,7 @@ void project_crystal(Phantom &phantom, Projection &P,
             char c; cin >> c;
          #endif
       }
+
 }
 #undef DEBUG
 #undef DEBUG_MORE
@@ -635,11 +674,14 @@ void fill_cell_positions(Projection &P,
 /* Fill aux matrix with experimental shifs to add to unit cell
    projection********************************************************/
 
-   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
+   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal, 
                           matrix2D<int>    &cell_inside,
 			  matrix2D<double> &exp_shifts_matrix_X,
 			  matrix2D<double> &exp_shifts_matrix_Y,
  			  matrix2D<double> &exp_shifts_matrix_Z,
+			  matrix2D<double> &exp_normal_shifts_matrix_X,
+			  matrix2D<double> &exp_normal_shifts_matrix_Y,
+			  matrix2D<double> &exp_normal_shifts_matrix_Z,			 		  
 			  double phantom_scale)
   {
    DocFile        aux_DF_shift;//crystal_param is cont
@@ -650,6 +692,13 @@ void fill_cell_positions(Projection &P,
    exp_shifts_matrix_Y.init_zeros();
    exp_shifts_matrix_Z.resize(cell_inside);
    exp_shifts_matrix_Z.init_zeros();
+
+   exp_normal_shifts_matrix_X.resize(cell_inside);  
+   exp_normal_shifts_matrix_X.init_zeros(); 
+   exp_normal_shifts_matrix_Y.resize(cell_inside);  
+   exp_normal_shifts_matrix_Y.init_zeros(); 
+   exp_normal_shifts_matrix_Z.resize(cell_inside);  
+   exp_normal_shifts_matrix_Z.init_zeros();
 
    //#define DEBUG2
    #ifdef DEBUG2
@@ -674,6 +723,13 @@ void fill_cell_positions(Projection &P,
                             =aux_DF_shift(5);
          exp_shifts_matrix_Z(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
                             =aux_DF_shift(6)*phantom_scale;
+							
+		 exp_normal_shifts_matrix_X(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(7);
+         exp_normal_shifts_matrix_Y(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(8);
+         exp_normal_shifts_matrix_Z(ROUND(aux_DF_shift(1)),ROUND(aux_DF_shift(0)))
+                            =aux_DF_shift(9);							
       }		
       aux_DF_shift.next_data_line();
    }
