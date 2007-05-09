@@ -220,9 +220,9 @@ cont=0;
 		result.coy_real=vec.Y();
 		result.coz_real=cteA*cos(cteB*result.cox_real);
 		// normal coordinates		
- 		normal_vec.X() =-cteA*cteB*sin(cteB*result.cox_real) ;	
+ 		normal_vec.X() =+cteA*cteB*sin(cteB*result.cox_real) ;	
  		normal_vec.Y() =0 ;	
- 		normal_vec.Z() =-1 ;	
+ 		normal_vec.Z() =+1 ;	
  		normal_vec=normal_vec.normalize();
 		result.Nx=normal_vec.X();
 		result.Ny=normal_vec.Y();
@@ -237,9 +237,9 @@ cont=0;
 		result.coy_real=normalized_vec.Y()*inte_high;
 		result.coz_real=parabole.Aperture*(result.cox_real*result.cox_real + result.coy_real*result.coy_real);
 		// normal coordinates		
- 		normal_vec.X() =2.*parabole.Aperture*result.cox_real ;	
- 		normal_vec.Y() =2.*parabole.Aperture*result.coy_real ;	
- 		normal_vec.Z() =-1 ;	
+ 		normal_vec.X() =-2.*parabole.Aperture*result.cox_real ;	
+ 		normal_vec.Y() =-2.*parabole.Aperture*result.coy_real ;	
+ 		normal_vec.Z() =+1 ;	
  		normal_vec=normal_vec.normalize();
 		result.Nx=normal_vec.X();
 		result.Ny=normal_vec.Y();
@@ -268,8 +268,8 @@ for (int h=hmin; h<=hmax; h++) {
 	 data_line(1)=k; // k
 	 data_line(2)=result.cox_ideal; // x
 	 data_line(3)=result.coy_ideal; // y
-	 data_line(4)=result.cox_real + rnd_gaus(0,x_des); // Delta_x
-	 data_line(5)=result.coy_real + rnd_gaus(0,y_des); // Delta_y
+	 data_line(4)=result.cox_real - result.cox_ideal  + rnd_gaus(0,x_des); // Delta_x
+	 data_line(5)=result.coy_real - result.coy_ideal  + rnd_gaus(0,y_des); // Delta_y
 	 data_line(6)=result.coz_real + rnd_gaus(0,z_des); // Delta_z
 	 data_line(7)=result.Nx+ rnd_gaus(0,x_nor_des); // N_x
 	 data_line(8)=result.Ny+ rnd_gaus(0,y_nor_des); // N_y
