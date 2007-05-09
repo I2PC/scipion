@@ -161,6 +161,9 @@ void fill_cell_positions(Projection &P,
 			  matrix2D<double> &exp_shifts_matrix_X,
 			  matrix2D<double> &exp_shifts_matrix_Y,
 			  matrix2D<double> &exp_shifts_matrix_Z,
+			  matrix2D<double> &exp_normal_shifts_matrix_X,
+			  matrix2D<double> &exp_normal_shifts_matrix_Y,
+			  matrix2D<double> &exp_normal_shifts_matrix_Z,
 			  double param_file_scale);
 
 //@}
