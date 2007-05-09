@@ -75,7 +75,7 @@ void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 }
 
 /* Compute edge sampling points using Baumgardner  1995 */
-
+//ADD MIN AND MAX TILT
 void XmippSampling::Compute_sampling_points(bool only_half_sphere)
  {
     /** vector to decimate the triangles */  
@@ -300,7 +300,9 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
        }//if
     }//for
     bound=last_swap; /*elements after bound already sorted */       
-  }//while       
+  }//while  
+  
+       
 #endif
    //#define DEBUG3
    #ifdef  DEBUG3

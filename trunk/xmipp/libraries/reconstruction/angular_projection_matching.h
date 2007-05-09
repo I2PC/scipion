@@ -35,8 +35,8 @@
 #include "projection.h"
 #include "directions.h"
 #include "symmetries.h"
+#include "sampling.h"
 
-#define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
 /**@name projection_matching */
@@ -46,7 +46,7 @@ class Prog_projection_matching_prm {
 public:
 
   /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_vol,fn_root,fn_sym,fn_ref,fn_ang;
+  FileName fn_vol,fn_root;
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
@@ -54,8 +54,6 @@ public:
   vector<matrix2D<double> >::iterator idirno;
   /** Vectors for standard deviation and mean of reference library projections */
   double * ref_stddev, * ref_mean;
-  /** Vector with reference library angles */
-  double * ref_rot, * ref_tilt;
   /** Number of projection directions */
   int nr_dir;
   /** Number of steps to sample in-plane rotation in 90 degrees */
@@ -66,6 +64,15 @@ public:
       1: gives progress bar (=default)
       0: gives no output to screen at all */
   int verb;
+   /** Symmetry. One of the 17 possible symmetries in 
+      single particle electron microscopy.
+      See details at url
+      Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
+      dn, dnv, dnh, t, td, th, o, oh, i, ih */
+  string symmetry;
+
+  /** For infinite groups symmetry order*/
+  int sym_order;
   /** Flag whether to store optimal transformations in the image headers */
   bool modify_header;
   /** Flag whether to output reference projections, selfile and docfile */
@@ -90,6 +97,9 @@ public:
     /** Vector with all running class averages */
     vector<ImageXmipp> class_avgs;
     vector<SelFile> class_selfiles;
+
+   /** sampling object */    
+   XmippSampling mysampling;
 
 public:
   /// Read arguments from command line

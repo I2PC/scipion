@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres           scheres@cnb.uam.es (2004)
+ *             Roberto Marabini
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
@@ -30,7 +31,7 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
 
   // Read command line
   if (check_param(argc,argv,"-show_all_options")) { usage(); extended_usage();}
-  fn_vol=get_param(argc,argv,"-vol","");
+  fn_vol=get_param(argc,argv,"-vol");
   SF.read(get_param(argc,argv,"-i"));
   SF.ImgSize(dim,dim);
   fn_root=get_param(argc,argv,"-o","out");
@@ -38,23 +39,16 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   max_shift=AtoF(get_param(argc,argv,"-max_shift","5"));
 
   // Additional commands
-  ang_search=AtoF(get_param(argc,argv,"-ang_search","-1"));
+  ang_search=AtoF(get_param(argc,argv,"-ang_search","360."));
   Ri=AtoF(get_param(argc,argv,"-Ri","-1"));
   Ro=AtoF(get_param(argc,argv,"-Ro","-1"));
-  fn_sym=get_param(argc,argv,"-sym","");
-  fn_ang=get_param(argc,argv,"-ang","");
+  symmetry=get_param(argc,argv,"-symmetry","cn");
+  sym_order=AtoI(get_param(argc,argv,"-sym_order","1"));
   output_refs=check_param(argc,argv,"-output_refs");
   modify_header=!check_param(argc,argv,"-dont_modify_header");
-  fn_ref=get_param(argc,argv,"-ref","");
   output_classes=check_param(argc,argv,"-output_classes");
   tilt_range0=AtoF(get_param(argc,argv,"-tilt0","0."));
   tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","180."));
-
-  // Checks
-  if (fn_ref=="" && fn_vol=="")
-    REPORT_ERROR(1," Provide either -vol or -ref!");
-  if (fn_ang!="" && ang_search>0)
-    REPORT_ERROR(1," option -ang and -ang_search are incompatible!");
 
   // Hidden stuff
   verb=AtoI(get_param(argc,argv,"-verb","1"));
@@ -74,20 +68,14 @@ void Prog_projection_matching_prm::show() {
     if (Ro>0)
     cerr << "  Outer radius rot-search : "<<Ro<<endl;
     cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
+    cerr    << "symmetry group:     " << symmetry << endl;
+    cerr    << "symmetry order:     " << sym_order << endl;
     if (ang_search>0) {
       cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<endl;
     }
     if (tilt_range0>0. || tilt_rangeF<180.)
     {
 	cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
-    }
-    if (fn_sym!="")
-    {
-	cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<endl;
-    }
-    if (fn_ang!="")
-    {
-	cerr << "  -> Document file with angles for projection library: "<<fn_ang<<endl;
     }
     if (!modify_header)
     {
@@ -125,11 +113,12 @@ void Prog_projection_matching_prm::extended_usage() {
        << " [ -tiltF <float=180.> ]       : Higher-value for restricted tilt angle search \n"
        << " [ -Ri <float=0> ]             : Inner radius to limit rotational search \n"
        << " [ -Ro <float=dim/2> ]         : Outer radius to limit rotational search \n"
-       << " [ -sym <symfile> ]            : Limit angular search to asymmetric part \n"
+       << " [ -symmetry <cn> ]            :  One of the 17 possible symmetries in\n" 
+       << "                                  single particle electronmicroscopy\n"
+       << "                                  i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, dnh, t, td, th, o, oh, i, ih\n"
+       << " [ -sym_order <1> ]            : For infinite groups symmetry order\n"
        << " [ -output_refs ]              : Output reference projections, sel and docfile \n"
        << " [ -output_classes ]           : Output averages and selfiles for all projection directions\n"
-       << " [ -ref <selfile>  ]           : Selfile with reference projections (instead of volume)\n"
-       << " [ -ang <docfile> ]            : Angles for projection library (instead of  \n"
        << " [ -dont_modify_header ]       : Do not store alignment parameters in the image headers \n";
   exit(1);
 }
@@ -140,7 +129,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     VolumeXmipp      vol;
     ImageXmipp       img,empty;
     Projection       proj;
-    DocFile          DF,DFi,DF2;
+    DocFile          DF;
     SelFile          SFr,emptySF;
     SymList          SL;
     FileName         fn_tmp, fn_refs;
@@ -166,196 +155,66 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	empty().set_Xmipp_origin();
 	empty.clear_header();
     }
-    // Read symmetry file into memory
-    if (fn_sym!="")
-    {
-	SL.read_sym_file(fn_sym);
-    }
 
-    if (fn_ref!="")
-    // Read projections from selfile
-    {
-	SFr.read(fn_ref);
-	nl=SFr.ImgNo();
-	ref_img.clear();
-	ref_rot=(double*)malloc(nl*sizeof(double));
-	ref_tilt=(double*)malloc(nl*sizeof(double));
-	ref_mean=(double*)malloc(nl*sizeof(double));
-	ref_stddev=(double*)malloc(nl*sizeof(double));
-	SFr.go_beginning();
-	nr_dir=0;
-	while (!SFr.eof())
-	{
-	    proj.read(SFr.NextImg());
-	    proj().set_Xmipp_origin();
-	    ref_rot[nr_dir]=proj.rot();
-	    ref_tilt[nr_dir]=proj.tilt();
-	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
-	    proj()-=mean_ref;
-	    apply_binary_mask(rotmask,proj(),proj(),0.);
-	    ref_img.push_back(proj());
-	    ref_stddev[nr_dir]=stddev_ref;
-	    ref_mean[nr_dir]=mean_ref;
-	    nr_dir++;
-	    if (output_classes)
-	    {
-		empty.rot()=proj.rot();
-		empty.tilt()=proj.tilt();
-		class_avgs.push_back(empty);
-		class_selfiles.push_back(emptySF);
-	    }
-	}
-    }
-    else
+    // Set up angular sampling	
+    mysampling.SetSampling(sampling); // STILL ADD OPTION TO USE A SELFILE
+    mysampling.SetNeighborhoodRadius(ang_search);
+    mysampling.Compute_sampling_points(false); // STILL ADD MIN&MAX TILT!
+    mysampling.create_sym_file(symmetry,sym_order);
+    mysampling.remove_redundant_points(symmetry,sym_order);
+    mysampling.compute_neighbors();
+
     // Generate reference projections from sampling
+    vol.read(fn_vol);
+    vol().set_Xmipp_origin();
+    nl=mysampling.no_redundant_sampling_points_vector.size();
+    ref_img.clear();
+    ref_mean=(double*)malloc(nl*sizeof(double));
+    ref_stddev=(double*)malloc(nl*sizeof(double));
+    SFr.reserve(nl);
+    SFr.go_beginning();
+
+    if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
+    if (verb>0) init_progress_bar(nl);
+
+    fn_refs=fn_root+"_lib";
+    for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++)
     {
+	double rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
+	double tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
 
-	if (ang_search>=0)
-	{
-	    // ignore -sym or -ref option and use -sam to generate all projections on the Ewald sphere
-	    // then select only those that are within the search_ranges of all experimental projections
-	    // THIS CODE IS AT LEAST SLOPPY...
-
-	    // 1. Create even distribution over the entire Ewald sphere
-	    if (verb>0) cerr << "--> Making even distribution on entire Ewald sphere "<<endl;
-	    make_even_distribution(DF,sampling,SL,true);
-	    if (tilt_range0>0. || tilt_rangeF<180.)
-		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
-	    // 2. Get all angles from all experimental images
-	    double act_rot_range, ref_rot,ref_tilt,img_rot,img_tilt;
-	    int nn,c;
-	    SF.go_beginning();
-	    DFi.clear();
-	    DF2.clear();
-	    while (!SF.eof())
-	    {
-		proj.read(SF.NextImg());
-		dataline(0)=proj.rot();
-		dataline(1)=proj.tilt();
-		dataline(2)=proj.psi();
-		DFi.append_data_line(dataline);
-	    }
-	    // 3. Check which angles of DF to use
-	    if (verb>0) cerr << "--> Selecting relevant library projection directions ..."<<endl;
-	    if (verb>0)
-	    {
-		nn=DF.dataLineNo();
-		init_progress_bar(nn);
-		c=MAX(1,nn/60);
-	    }
-	    DF.go_first_data_line();
-	    int ii=0;
-	    while (!DF.eof())
-	    {
-		ref_rot=DF(0);
-		ref_tilt=DF(1);
-		// act_rot_range is tilt-angle dependent!
-		if (ref_tilt>0 && ref_tilt<180)
-		    act_rot_range=ang_search/sin(DEG2RAD(ref_tilt));
-		else
-		    act_rot_range=361.;
-		bool search=false;
-		DFi.go_first_data_line();
-		while (!DFi.eof())
-		{
-		    img_rot=DFi(0);
-		    img_tilt=DFi(1);
-		    if ( ABS(realWRAP(img_rot-ref_rot,-180.,180.)) <= act_rot_range &&
-			 ABS(realWRAP(img_tilt-ref_tilt,-180.,180.)) <= ang_search )
-		    {
-			search=true;
-			break;
-		    }
-		    DFi.next_data_line();
-		}
-		if (search)
-		{
-		    dataline(0)=ref_rot;
-		    dataline(1)=ref_tilt;
-		    dataline(2)=0.;
-		    DF2.append_data_line(dataline);
-		}
-		ii++;
-		if (verb>0) if (ii%c==0) progress_bar(ii);
-		DF.next_data_line();
-	    }
-	    if (verb>0) progress_bar(nn);
-	    DF=DF2;
-	    DF2.clear();
-	}
-	else if (fn_ang!="")
-	// Generate reference projections from docfile
-	{
-	    DF.read(fn_ang);
-	}
-	else
-	// Generate reference projections from even distribution
-	{
-	    // Create evenly-distributed reference projection angles
-	    if (verb>0) cerr << "--> Making even angular distribution ..."<<endl;
-	    make_even_distribution(DF,sampling,SL,true);
-	    if (tilt_range0>0. || tilt_rangeF<180.)
-		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
-	}
-
-	// At this point we have a docfile with all projection directions
-	// Now create reference projection images
-	vol.read(fn_vol);
-	vol().set_Xmipp_origin();
-	nl=DF.dataLineNo();
-	ref_img.clear();
-	ref_rot=(double*)malloc(nl*sizeof(double));
-	ref_tilt=(double*)malloc(nl*sizeof(double));
-	ref_mean=(double*)malloc(nl*sizeof(double));
-	ref_stddev=(double*)malloc(nl*sizeof(double));
-	SFr.reserve(nl);
-	SFr.go_beginning();
-	DF.go_beginning();
-
-	if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
-	if (verb>0) init_progress_bar(nl);
-
-	fn_refs=fn_root+"_lib";
-	DF.adjust_to_data_line();
-	nr_dir=0;
-	while (!DF.eof())
-	{
-	    ref_rot[nr_dir]=DF(0);
-	    ref_tilt[nr_dir]=DF(1);
-	    project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
-	    if (output_refs)
-	    {
-		fn_tmp.compose(fn_refs,nr_dir+1,"proj");
-		proj.write(fn_tmp);
-		SFr.insert(fn_tmp);
-	    }
-	    if (output_classes)
-	    {
-		empty.rot()=DF(0);
-		empty.tilt()=DF(1);
-		class_avgs.push_back(empty);
-		class_selfiles.push_back(emptySF);
-	    }
-	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
-	    proj()-=mean_ref;
-	    ref_img.push_back(proj());
-	    ref_stddev[nr_dir]=stddev_ref;
-	    ref_mean[nr_dir]=mean_ref;
-	    DF.next_data_line();
-	    nr_dir++;
-	    if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
-	}
+	project_Volume(vol(),proj,dim,dim,rot,tilt,psi);
 	if (output_refs)
 	{
-	    fn_tmp=fn_refs+".doc";
-	    DF.write(fn_tmp);
-	    fn_tmp=fn_refs+".sel";
-	    SFr.write(fn_tmp);
+	    fn_tmp.compose(fn_refs,i+1,"proj");
+	    proj.write(fn_tmp);
+	    SFr.insert(fn_tmp);
+	    DF.insert_data_line(mysampling.no_redundant_sampling_points_angles[i]);
 	}
-	if (verb>0) progress_bar(nl);
-	if (verb>0) cerr << " ================================================================="<<endl;
-
+	if (output_classes)
+	{
+	    empty.rot()=rot;
+	    empty.tilt()=tilt;
+	    class_avgs.push_back(empty);
+	    class_selfiles.push_back(emptySF);
+	}
+	compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
+	proj()-=mean_ref;
+	ref_img.push_back(proj());
+	ref_stddev[i]=stddev_ref;
+	ref_mean[i]=mean_ref;
+	if (verb>0 && (i%MAX(1,nl/60)==0)) progress_bar(i);
     }
+    if (output_refs)
+    {
+	fn_tmp=fn_refs+".doc";
+	DF.write(fn_tmp);
+	fn_tmp=fn_refs+".sel";
+	SFr.write(fn_tmp);
+    }
+    if (verb>0) progress_bar(nl);
+    if (verb>0) cerr << " ================================================================="<<endl;
+
 
 
 }
@@ -370,11 +229,9 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
   // Rotational search ====================================================
   matrix2D<double> Mimg,Mref,Maux,Mcorr;
-  double act_rot_range,psi,thisCC,oldCC,aveCC=0.,varCC=0.;
+  double psi,psi_min,psi_max,psi_ref,thisCC,oldCC,aveCC=0.,varCC=0.;
   double stddev_img,mean_img,dummy,xmax,ymax;
-  int c=0,ioptpsi=0,ioptflip=0;
-  bool search;
-  vector<matrix2D<double> >::iterator ipp;
+  int dirno,c=0,ioptpsi=0,ioptflip=0;
 
   maxCC=-99.e99;
   Mimg.resize(dim,dim);
@@ -390,41 +247,40 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   Maux-=mean_img;
   apply_binary_mask(rotmask,Maux,Maux,0.);
 
+  // INSERT THE FOLLOWING FUNCTION:
+  //int my_i=mysampling.get_my_nearest_sampling_point(img_rot,img_tilt,img_psi)
+  int my_i=0;
+
   // Calculate correlation coefficients for all angles
-  FOR_ALL_ROTATIONS() {
-    psi=(double)(ipsi*360./nr_psi);
+  psi_min=img_psi-MIN(180.,ang_search);
+  psi_max=img_psi+MIN(180.,ang_search);
+  for (psi=psi_min; psi<psi_max; psi+=sampling)
+  {
     Mimg=Maux.rotate(psi,DONT_WRAP);
-    ipp=ref_img.begin();
-    FOR_ALL_DIRECTIONS() {
-      search=true;
-      // For some strange reason I need to access the vector via its pointer
-      // otherwise it goes 50x slower on jumilla (Alpha-Unix)
-      Mref=*(ipp);
-      if (ang_search >0) {
-	// act_rot_range is tilt-angle dependent!
-	if (ref_tilt[dirno]>0 && ref_tilt[dirno]<180) act_rot_range=ang_search/sin(DEG2RAD(ref_tilt[dirno]));
-	else act_rot_range=361.;
-	if ( ABS(realWRAP(img_rot-ref_rot[dirno],-180.,180.)) > act_rot_range ||
-	     ABS(realWRAP(img_tilt-ref_tilt[dirno],-180.,180.)) > ang_search ) search=false;
+    for (int j = 0; j < mysampling.my_neighbors[my_i].size();j++)
+    {
+      dirno=mysampling.my_neighbors[my_i][j];
+      Mref=ref_img[dirno];
+      psi_ref=mysampling.my_neighbors_psi[my_i][j];
+      if (psi_ref!=0.) 
+      { 
+          // or -psi_ref, or psi_ref + pi divido por e
+          Mimg=Mimg.rotate(psi_ref,DONT_WRAP);
       }
-      if (search) {
-	thisCC=0.;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
-	  thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
-	}
-	thisCC/=ref_stddev[dirno]*stddev_img*nr_pixels_rotmask;
-	c++;
-        oldCC=aveCC;
-        aveCC+=(thisCC-oldCC)/(c+1);
-        if (c>1) varCC=(1.-1./(double)c)*varCC+(c+1.)*(oldCC-aveCC)*(oldCC-aveCC);
-	//cout << "rot= "<<ref_rot[dirno]<<" tilt= "<<ref_tilt[dirno]<<" psi= "<<psi<<" CC= "<<thisCC<<" maxCC= "<<maxCC<<" "<<dirno<<" "<<opt_dirno<<endl;
-	if (thisCC>maxCC) {
-	  maxCC=thisCC;
-	  opt_psi=psi;
-	  opt_dirno=dirno;
-	}
+      thisCC=0.;
+      FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
+	thisCC+=dMij(Mref,i,j)*dMij(Mimg,i,j);
       }
-      ipp++;
+      thisCC/=ref_stddev[dirno]*stddev_img*nr_pixels_rotmask;
+      c++;
+      oldCC=aveCC;
+      aveCC+=(thisCC-oldCC)/(c+1);
+      if (c>1) varCC=(1.-1./(double)c)*varCC+(c+1.)*(oldCC-aveCC)*(oldCC-aveCC);
+      if (thisCC>maxCC) {
+	maxCC=thisCC;
+	opt_psi=psi;
+	opt_dirno=dirno;
+      }
     }
   }
 
@@ -462,7 +318,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   FileName fn_img;
   matrix1D<double> dataline(8);
   matrix2D<double> A(3,3);
-  double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
+  double opt_rot,opt_tilt,opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
   int c,nn,imgno,opt_dirno;
 
   if (verb>0) cerr << "--> Projection matching ... "<<endl;
@@ -487,10 +343,12 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
     opt_xoff+=img.Xoff();
     opt_yoff+=img.Yoff();
+    opt_rot=XX(mysampling.no_redundant_sampling_points_angles[opt_dirno]);
+    opt_tilt=YY(mysampling.no_redundant_sampling_points_angles[opt_dirno]);
 
     sumCC+=maxCC;
-    dataline(0)=ref_rot[opt_dirno];      // rot
-    dataline(1)=ref_tilt[opt_dirno];     // tilt
+    dataline(0)=opt_rot;                 // rot
+    dataline(1)=opt_tilt;                // tilt
     dataline(2)=opt_psi;                 // psi
     dataline(3)=opt_xoff;                // Xoff
     dataline(4)=opt_yoff;                // Yoff
@@ -506,7 +364,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     {
 	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
-	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
+	img.set_eulerAngles(opt_rot,opt_tilt,opt_psi);
 	img.set_originOffsets(opt_xoff,opt_yoff);
 	img.write(fn_img);
     }
@@ -514,7 +372,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
     {
 	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
-	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
+	img.set_eulerAngles(opt_rot,opt_tilt,opt_psi);
 	img.set_originOffsets(opt_xoff,opt_yoff);
 	img().self_apply_geom_Bspline(img.get_transformation_matrix(),3,IS_INV,WRAP);
 	class_avgs[opt_dirno]()+=img();
@@ -532,8 +390,6 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
   // free memory
   free(ref_mean);
-  free(ref_rot);
-  free(ref_tilt);
   ref_img.clear();
 }
 void Prog_projection_matching_prm::write_classes()
@@ -545,13 +401,14 @@ void Prog_projection_matching_prm::write_classes()
     fn_base=fn_root+"_class";
     SF.clear();
     SF2.clear();
-    FOR_ALL_DIRECTIONS() {
-	fn_img.compose(fn_base,dirno+1,"xmp");
+    for (int i=0; i<mysampling.no_redundant_sampling_points_vector.size(); i++)
+    {
+	fn_img.compose(fn_base,i+1,"xmp");
 	SF.insert(fn_img);
-	fn_sel.compose(fn_base,dirno+1,"sel");
-	class_avgs[dirno]()/=class_avgs[dirno].weight();
-	class_avgs[dirno].write(fn_img);
-	class_selfiles[dirno].write(fn_sel);
+	fn_sel.compose(fn_base,i+1,"sel");
+	class_avgs[i]()/=class_avgs[i].weight();
+	class_avgs[i].write(fn_img);
+	class_selfiles[i].write(fn_sel);
     }
     fn_base+="es.sel";
     SF.write(fn_base);
