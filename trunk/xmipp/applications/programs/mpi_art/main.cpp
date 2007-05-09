@@ -514,7 +514,6 @@ int main (int argc, char *argv[]) {
 	/*************************** FINISHING AND STORING VALUES ***************************/
 		
 	if( rank > 0 ){
-		art_prm.fh_hist->close();			
 	        MPI_Finalize();	  // Must exist for each proccess on MPI evironment
         	return 0;
 	}
@@ -533,8 +532,8 @@ int main (int argc, char *argv[]) {
 	if (art_prm.tell&TELL_SAVE_BASIS)
 	    vol_basis.write(art_prm.fn_root+".basis");
 
-	art_prm.fh_hist->close();			
    	uswtime( &recons_t );
+        art_prm.fh_hist->close();
 	cout << "\n\n------ FINAL STATISTICS ------" << endl;
 	cout << "\nTOTAL EXECUTION TIME: " << recons_t.wall - total_t << endl;
 	cout << "Communications time: " << comms_t << " secs." << endl;
@@ -545,9 +544,3 @@ int main (int argc, char *argv[]) {
         MPI_Finalize();	
         return 0 ;
 }
-
-
-
-
-
-
