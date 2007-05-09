@@ -86,7 +86,6 @@ void Projection_Parameters::read(FileName fn_proj_param) {
       REPORT_ERROR(3005,
          (string)"Prog_Project_Parameters::read: There is a problem "
          "opening the file "+fn_proj_param);
-
    while (fgets (line, 200,fh_param ) != NULL) {
       if (line[0]==0)    continue;
       if (line[0]=='#')  continue;
@@ -258,7 +257,6 @@ void Projection_Parameters::read(FileName fn_proj_param) {
    if (lineNo!=12)
       REPORT_ERROR(3007,(string)"Prog_Project_Parameters::read: I "
          "couldn't read all parameters from file " + fn_proj_param);
-
    fclose(fh_param);
 }
 
@@ -603,16 +601,17 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
     PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
     Projection &proj, SelFile &SF) {
+	
 
    int NumProjs=0;
    SF.clear();
    cerr << "Projecting ...\n";
    if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
    SF.reserve(side.DF.dataLineNo());
-
    DocFile DF_movements;
    DF_movements.append_comment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
    matrix1D<double> movements(8);
+
    while (!side.DF.eof()) {
       double rot, tilt, psi;         // Actual projecting angles
       FileName fn_proj;              // Projection name
@@ -626,7 +625,6 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
       movements(0) = rot  = side.DF(0);
       movements(1) = tilt = side.DF(1);
       movements(2) = psi  = side.DF(2);
-
       // Choose Center displacement ........................................
       double shiftX=rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
       double shiftY=rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
@@ -643,13 +641,16 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
          aux=side.phantom_descr;
          aux.shift(shiftX,shiftY,0);
          if (prm_crystal.crystal_Xdim==0)
+		 {	
             // Project a single mathematical volume
             aux.project_to(proj,
                prm.proj_Ydim, prm.proj_Xdim,
                rot, tilt, psi);
+			   }
          else
-            // Project mathematical volume as a crystal
+		 {	// Project mathematical volume as a crystal
             project_crystal(aux,proj,prm,side,prm_crystal,rot,tilt,psi);
+			}
       }
 
       // Add noise in angles and voxels ....................................
@@ -684,12 +685,12 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
    PROJECT_Side_Info side;
    proj_prm.from_prog_params(prm);
    side.produce_Side_Info(proj_prm,prm);
-
    Crystal_Projection_Parameters crystal_proj_prm;
 
    if (prm.fn_crystal!="") {
        crystal_proj_prm.read(prm.fn_crystal,
                             (side.phantom_descr).phantom_scale);
+
        // if not null read doc file with unitcell shift
        // format h, k, shift_X shift_Y shift_Z
        if (crystal_proj_prm.DF_shift_bool==true)
@@ -703,15 +704,25 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
 	      (crystal_proj_prm.DF_shift).set(2, my_aux);
 	      my_aux=(crystal_proj_prm.DF_shift)(3) *  my_scale;
 	      (crystal_proj_prm.DF_shift).set(3, my_aux);
+		  
 	      my_aux=(crystal_proj_prm.DF_shift)(4) *  my_scale;
 	      (crystal_proj_prm.DF_shift).set(4, my_aux);
 	      my_aux=(crystal_proj_prm.DF_shift)(5) *  my_scale;
 	      (crystal_proj_prm.DF_shift).set(5, my_aux);
 	      my_aux=(crystal_proj_prm.DF_shift)(6) *  my_scale;
 	      (crystal_proj_prm.DF_shift).set(6, my_aux);
-	      (crystal_proj_prm.DF_shift).next_data_line();
+
+	      my_aux=(crystal_proj_prm.DF_shift)(7) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(7, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(8) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(8, my_aux);
+	      my_aux=(crystal_proj_prm.DF_shift)(9) *  my_scale;
+	      (crystal_proj_prm.DF_shift).set(9, my_aux);
+		  
+		  (crystal_proj_prm.DF_shift).next_data_line();	  
 	   }
        }
+
    //#define DEBUG1
    #ifdef DEBUG1
        if (crystal_proj_prm.DF_shift_bool==true)
@@ -721,10 +732,9 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF) {
 
    int ProjNo=0;
    if (!prm.only_create_angles) {
-      // Really project
+      // Really project	  
       ProjNo=PROJECT_Effectively_project(proj_prm, side, crystal_proj_prm,
          proj, SF);
-
       // Save SelFile
       if (prm.fn_sel_file!="") SF.write(prm.fn_sel_file);
    } else {
