@@ -67,6 +67,16 @@ public:
     /** number of samples */
     int number_of_samples;
 
+    /** neighborhood  in radians */
+    double neighborhood_radius_rad;
+    
+    /** cosine of neighborhood  s */
+    double cos_neighborhood_radius;
+    
+    /** vector with neighbors */
+    vector<vector<int> >  my_neighbors;
+    /** vector with neighbors psi*/
+    vector<vector<double> > my_neighbors_psi;
 
     /** vector with sampling points described by vectors */  
     vector <matrix1D<double> > sampling_points_vector;
@@ -109,7 +119,10 @@ public:
    /** set sampling rate */
    void SetSampling(double sampling);
    
-   /* eliminate redundant points, 
+    /** set neighborhood distance */
+   void SetNeighborhoodRadius(double neighborhood);
+   
+  /* eliminate redundant points, 
       symmetry group, symmetry order */
    
    void remove_redundant_points(string symmetry, int sym_order);
@@ -127,6 +140,12 @@ public:
    /** save assymetric unit sampling in a doc file */
    void create_asym_unit_file(FileName docfilename);
 
+   /** for each point i in the assymetric sampling unit cell
+   compute the neighbors inside the assymetric unit cell,
+   save not only the neighbors but the angle psi
+   */
+   
+   void compute_neighbors(void);
 };
 //@}
 #endif

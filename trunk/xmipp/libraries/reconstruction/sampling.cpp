@@ -68,6 +68,12 @@ void XmippSampling::SetSampling(double sampling)
    number_of_samples = ROUND(cte_w/sampling_rate_rad);
 }
 
+void XmippSampling::SetNeighborhoodRadius(double neighborhood)
+{
+   neighborhood_radius_rad = DEG2RAD(neighborhood);
+   cos_neighborhood_radius = cos(neighborhood_radius_rad);
+}
+
 /* Compute edge sampling points using Baumgardner  1995 */
 
 void XmippSampling::Compute_sampling_points(bool only_half_sphere)
@@ -677,160 +683,6 @@ void XmippSampling::remove_redundant_points(string symmetry,
      exit(0);
      }
 
-
-#ifdef NEVERDEFINED  
-
-
-/*  
-  for (int j=1; j<SL.v_rotation_axis.size(); j++)
-    Euler_direction2angles(SL.v_rotation_axis[j], rot, tilt,psi);  
-    for (int isym=0; isym<=SL.SymsNo(); isym++) 
-      {
-      if(isym!=SL.SymsNo())
-           {
-           SL.get_matrices(isym,L,R);
-           L.resize(3,3); // Erase last row and column
-           R.resize(3,3); // as only the relative orientation
-           Euler_apply_transf(L,R,rot,tilt,psi,rotp,tiltp,psip);
-           Euler_direction(rotp, tiltp, psip,row);
-           aux1=ABS(dot_product(row1,SL.v_rotation_axis[0]));
-           //row = R * no_redundant_sampling_points_vector[j];
-           }
-      }
-   }  
-*/
-//  cout << SL.v_rotation_axis[0];
-//  cout << SL.v_ang_incr[0];
-#ifdef NEVERDEFINED  
-  int j_end=SL.v_rotation_axis.size();
-  int i_end=sampling_points_vector.size();
-  for (int i=0; i< i_end; i++)
-  { 
-    valid =true;
-    for (int j=0; j<j_end; j++)
-        {
-         Euler_direction2angles(SL.v_rotation_axis[j], rot, tilt,psi);  
-         Euler_angles2matrix(rot, tilt,psi,aux);
-         aux.getRow(0,row1);
-         row1=row1.transpose();
-         Euler_angles2matrix(rot, tilt,psi+SL.v_ang_incr[j],aux);
-         aux.getRow(0,row2);
-         row2=row2.transpose();
-         row1=vector_product(row1,sampling_points_vector[i]);
-         row2=vector_product(row2,sampling_points_vector[i]);
-         
-         aux1=dot_product(row1,SL.v_rotation_axis[j]);
-         aux2=dot_product(row2,SL.v_rotation_axis[j]);
-         //cerr << i << " " << j << " " << aux1 << " " << aux2 <<endl;
-         
-         if( (aux1<0 && aux2>0) || (aux1==0 && aux2==0))
-            continue;
-         else
-           valid =false;   
-         }
-    if(valid)     
-       no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
-  }      
-#endif
-  //#define TEST
-  #ifdef TEST
-  matrix1D<double>  two(3)=vector_R3(0.,0.,1.).normalize();
-  matrix1D<double>  five(3)=vector_R3(1.,0.,1.618033989).normalize();
-  matrix1D<double>  three(3)=vector_R3(0.,0.53934467,1.4120227).normalize();
-  #endif
-  no_redundant_sampling_points_vector.clear();     
-  int j_end=0;
-  int i_end=sampling_points_vector.size();
-  double my_dot_product;
-  for (int i=0; i< i_end; i++)
-    {cerr << ".";
-    for (int j=0; j<no_redundant_sampling_points_vector.size(); j++) 
-       {
-       Euler_direction2angles(no_redundant_sampling_points_vector[j], rot, tilt,psi);  
-       for (int isym=0; isym<=SL.SymsNo(); isym++) 
-          {
-          if(isym!=SL.SymsNo())
-               {
-               SL.get_matrices(isym,L,R);
-               L.resize(3,3); // Erase last row and column
-               R.resize(3,3); // as only the relative orientation
-               Euler_apply_transf(L,R,rot,tilt,psi,rotp,tiltp,psip);
-               Euler_direction(rotp, tiltp, psip,row);
-               //row = R * no_redundant_sampling_points_vector[j];
-               }
-          else
-               row =   no_redundant_sampling_points_vector[j];   
-//          if (ZZ(row)<0) continue;
-//          cerr << i << " " << j << " " << isym << " " << 
-//               dot_product(row,sampling_points_vector[i]) << " " <<
-//               acos(dot_product(row,sampling_points_vector[i]))
-//               << " " << sampling_rate_rad
-//               << " " << row.module()
-//               << endl;
-           my_dot_product= dot_product(row,sampling_points_vector[i]);
-           if (my_dot_product >=1.) my_dot_product=0.999999;
-           
-           if(acos(my_dot_product) < (sampling_rate_rad*.75))
-              {
-              match=true;
-              break;
-              }//if
-           }//for isym   
-      if(match) break;
-       }//for j
-    if (!match)
-       {
-       no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
-       //cout << "non_redu " << no_redundant_sampling_points_vector.size()<< endl;;
-       j_end++;
-       }
-       match=false;
-    }// for i  
-#ifdef NEVERDEFINED  
-  for (int i=0; i< i_end; i++)
-    {
-    for (int j=0; j<j_end; j++) 
-       {
-       cerr << "j="     << j     << " " << endl;
-       cerr << "j_end=" << j_end << " " << endl;
-       Euler_direction2angles(no_redundant_sampling_points_vector[j], rot, tilt,psi);  
-       for (int isym=0; isym<SL.SymsNo(); isym++) 
-          {
-          SL.get_matrices(isym,L,R);
-
-          L.resize(3,3); // Erase last row and column
-          R.resize(3,3); // as only the relative orientation
-          Euler_apply_transf(L,R,rot,tilt,psi,rotp,tiltp,psip);
-          Euler_direction(rotp, tiltp, psip,row);
-          cerr << isym << " " ;
-          cerr << 
-                  row.transpose() << "   " << 
-                  sampling_points_vector[i].transpose() <<
-                  " " << ABS(acos(dot_product(row,sampling_points_vector[i]) ) )<<
-                  " " << sampling_rate_rad*0.7 << "\n";
-          cerr.flush();       
-
-          if(ABS(acos(dot_product(row,sampling_points_vector[i]) ) ) < 
-                 (sampling_rate_rad*0.7))
-                 {
-                 match=true;
-                 break;
-                 }
-
-          }
-       if(match) break;
-       }    
-    if (!match)
-       {
-       no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
-       cout << sampling_points_vector[i].transpose() << " 1 1 " << endl;
-       match=false;
-       j_end++;
-       } 
-   }
-#endif
-#endif
-
 }     
 /* Create symmetry file----------------------------------------------------- */
 void XmippSampling::create_sym_file(string symmetry, int sym_order) {
@@ -966,4 +818,73 @@ void XmippSampling::create_asym_unit_file(FileName docfilename) {
    DFvectors.write(tmp_filename);
    tmp_filename=docfilename+"_angles.doc";
    DFangles.write(tmp_filename);
+}
+
+void XmippSampling::compute_neighbors(void) {
+ double rot,  tilt,  psi;
+ double rotp, tiltp, psip; 
+ double my_dot_product;
+ matrix1D<double>  row(3);
+ matrix2D<double>  L(4,4), R(4,4);
+ vector<int>  aux_neighbors;
+ vector<double> aux_neighbors_psi;
+ for (int i=0; i<no_redundant_sampling_points_vector.size(); i++)
+  { 
+  aux_neighbors_psi.clear();
+  aux_neighbors.clear();
+    //#define DEBUGH
+    //#define DEBUGHH
+    for (int j=0; j<no_redundant_sampling_points_vector.size(); j++)
+    {
+    #ifdef DEBUGH
+    cerr << "i,j " << i << " " << j << endl;
+    #endif
+    if(i==j) continue;
+    //check identity
+    my_dot_product = dot_product(no_redundant_sampling_points_vector[i],
+                                 no_redundant_sampling_points_vector[j]);
+                    
+    if (my_dot_product > cos_neighborhood_radius)
+        {
+        aux_neighbors.push_back(j);
+        aux_neighbors_psi.push_back(0.0);
+        }
+    else                
+        {
+        for (int isym=0; isym<SL.SymsNo(); isym++) 
+           {
+    #ifdef DEBUGH
+    cerr << "            isym " << isym<< endl;
+    #endif
+             SL.get_matrices(isym,L,R);
+             R.resize(3,3); 
+             row =  no_redundant_sampling_points_vector[j].transpose()* R;
+             my_dot_product = dot_product (no_redundant_sampling_points_vector[i],
+                                           row);
+
+    #ifdef DEBUGHH
+    cerr << "            row out " << row<< endl;
+    #endif
+            if (my_dot_product > cos_neighborhood_radius)
+                {
+                aux_neighbors.push_back(j);
+                rot=XX(no_redundant_sampling_points_angles[j]);
+                tilt=YY(no_redundant_sampling_points_angles[j]);
+                psi=ZZ(no_redundant_sampling_points_angles[j]);
+                L.resize(3,3); // Erase last row and column
+                Euler_apply_transf(L,R,rot,tilt,psi,rotp,tiltp,psip);
+                aux_neighbors_psi.push_back(psip);
+    #ifdef DEBUGHH
+                  Euler_direction(rotp, tiltp, psip,row);
+    cerr << "row in " << row << endl;
+    #endif
+                break;
+                }
+             }//for (int isym=0
+         }   
+    }//for (int j=0;
+    my_neighbors.push_back(aux_neighbors);
+    my_neighbors_psi.push_back(aux_neighbors_psi);
+   }//for i 
+    #undef DEBUGH
 }
