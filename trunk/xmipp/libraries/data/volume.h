@@ -564,18 +564,18 @@ inline void VolumeT< complex< double > >::read(FILE* fh,
     }
 }
 
-
-template <>
-inline void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
-        Volume_Type volume_type)
+template<>
+inline void VolumeT< complex< double > >::write(FILE *fh,
+                                                bool reversed,
+                                                Volume_Type volume_type)
 {
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+    for (int i=0; i<img.size; i++)
     {
-        float a,b;
-        a=(float) (MULTIDIM_ELEM(img,i)).real();
-        b=(float) (MULTIDIM_ELEM(img,i)).imag();
-        FWRITE (&a, sizeof(float), 1, fh, reversed);
-        FWRITE (&b, sizeof(float), 1, fh, reversed);
+        float a, b;
+        a = static_cast< float >((MULTIDIM_ELEM(img, i)).real());
+        b = static_cast< float >((MULTIDIM_ELEM(img,i)).imag());
+        FWRITE(&a, sizeof(float), 1, fh, reversed);
+        FWRITE(&b, sizeof(float), 1, fh, reversed);
     }
 }
 
@@ -587,242 +587,316 @@ inline void VolumeT<complex<double> >::write(FILE *fh, bool reversed,
  */
 void write_as_CCP4(VolumeT< double>* V, const FileName& fn, double Ts=1);
 
-/**@name Speed up macros*/
-//@{
+/** @defgroup VolumesSpeedUp Speed up macros
+ * @ingroup Volumes
+ */
+
 /** 3D Matrix access.
-    This macro does the same as the normal 3D matrix access but
-    in a faster way as no function call is generated.
-    \\ Ex: VOLMATRIX(V).resize(128,128,128);
-    \\ Ex: VOLMATRIX(V2)=VOLMATRIX(V1)+VOLMATRIX(V2); */
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro does the same as the normal 3D matrix access but in a faster way
+ * as no function call is generated.
+ *
+ * @code
+ * VOLMATRIX(V).resize(128, 128, 128);
+ *
+ * VOLMATRIX(V2) = VOLMATRIX(V1) + VOLMATRIX(V2);
+ * @endcode
+ */
 #define VOLMATRIX(V) ((V).img)
 
 /** Array access.
-    This macro allows you to access to the tridimensional array behind
-    the image (float ***). */
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro allows you to access to the tridimensional array behind the image
+ * (float***).
+ */
 #define VOLARRAY(V) (VOL_ARRAY(V).img)
 
 /** Voxel access.
-    This macro does the same as the normal voxel access (remember,
-    logical access) but in a faster way as no function call is
-    generated.
-    \\Ex: cout << "Grey level of voxel (2,-3,-3) of the Volume = "
-               << VOLVOXEL(V,2,-3,-3) << endl;
-    \\Ex: VOLVOXEL(I,2,-3,-3)=VOLVOXEL(I,2,-3,-2); */
-#define VOLVOXEL(V,k,i,j) VOL_ELEM(((V).img),(k),(i),(j))
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro does the same as the normal voxel access (remember, logical
+ * access) but in a faster way as no function call is generated.
+ *
+ * @code
+ * std::cout << "Grey level of voxel (2,-3,-3) of the Volume = " <<
+ *     VOLVOXEL(V, 2, -3, -3) << std::endl;
+ *
+ * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
+ * @endcode
+ */
+#define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).img), (k), (i), (j))
 
 /** Physical voxel access.
-    The physical voxel access gives you access to a voxel by
-    its physical position and not by its logical one. This access
-    shouldn't be used as a custom, use instead the logical access,
-    but there might be cases in which this access might be interesting.
-    Physical positions start at index 0 in C.
-    \\Ex: cout << "This is the first voxel stored in the Volume " <<
-          DIRECT_VOLVOXEL(V,0,0,0) << endl;
-    @see DIRECT_VOL_ELEM */
-#define DIRECT_VOLVOXEL(V,k,i,j) DIRECT_VOL_ELEM(((V).img),(k),(i),(j))
-//@}
+ * @ingroup VolumesSpeedUp
+ *
+ * The physical voxel access gives you access to a voxel by its physical
+ * position and not by its logical one. This access shouldn't be used as a
+ * custom, use instead the logical access, but there might be cases in which
+ * this access might be interesting. Physical positions start at index 0 in C.
+ *
+ * @code
+ * std::cout << "This is the first voxel stored in the Volume " <<
+ *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
+ * @endcode
+ */
+#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_VOL_ELEM(((V).img), (k), (i), (j))
 
-/* ************************************************************************* */
-/* XMIPP VOLUMES                                                                    */
-/* ************************************************************************* */
 /** Xmipp 3D Volumes.
-    The Xmipp volume is a normal volume (inherited from volume class) plus a
-    Spider header. This is the appropiate class to work with volumes in
-    memory which we want to save later.
-    The data in the header is not directly accesible from
-    the programmer and must be set through object functions, in this way
-    the coherence in the header is assured. See File Formats for
-    more information about the Spider format.
-
-    In principle, the volume starts at voxel (0,0) but this can be modified
-    for any other logical access. See class \Ref{Volume} for more information.
-
-    The Euler angles are useless in a Xmipp volume, and although the
-    Spider header has got space for them they are not used and cannot be
-    accessed.
-    @see Volume
-*/
-
-template <class T>
-class VolumeXmippT: public VolumeT<T>
+ *
+ * The Xmipp volume is a normal volume (inherited from volume class) plus a
+ * Spider header. This is the appropiate class to work with volumes in memory
+ * which we want to save later. The data in the header is not directly
+ * accesible from the programmer and must be set through object functions,
+ * in this way the coherence in the header is assured. See File Formats for
+ * more information about the Spider format.
+ *
+ * In principle, the volume starts at voxel (0,0) but this can be modified
+ * for any other logical access. See class Volume for more information.
+ *
+ * The Euler angles are useless in a Xmipp volume, and although the Spider
+ * header has got space for them they are not used and cannot be accessed.
+ *
+ */
+template<typename T>
+class VolumeXmippT: public VolumeT< T >
 {
 protected:
-    headerXmipp header;				       // Declares a header
+    headerXmipp header;
 
 public:
-    // Constructors .........................................................
-    /**@name Constructors*/
-    //@{
+
     /** Empty constructor.
-        Creates an empty (0x0x0) image with no information in the header.
-        \\ Ex: VolumeXmipp VX;*/
-    VolumeXmippT():VolumeT<T>()
+     * @ingroup VolumesConstructors
+     *
+     * Creates an empty (0x0x0) image with no information in the header.
+     *
+     * @code
+     * VolumeXmipp vol;
+     * @endcode
+     */
+    VolumeXmippT():VolumeT< T >()
     {
-        if(typeid(T) == typeid(double) )
+        if(typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
-        // Sets header of type Image_XMipp
-        else if(typeid(T) == typeid(int) )
+        else if(typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        // Sets header of type Image_XMipp
-        else if(typeid(T) == typeid(complex<double>) )
+        else if(typeid(T) == typeid(complex< double >) )
             header.headerType() = headerXmipp::VOL_FOURIER;
-        // Sets header of type Image_XMipp (complex)
         else
         {
-            cout << "\nError: VolumeXmipp should be,complex<double>, double or integer\n";
+            std::cout << "\nError: VolumeXmipp should be" <<
+                " complex< double >, double or integer\n";
             exit(0);
         }
     }
 
     /** Constructor with size.
-        Creates a 0.0 filled volume of size Zdim x Ydim x Xdim.
-        \\ Ex: VolumeXmipp<double> VX(64,64,64); */
-    VolumeXmippT (int Zdim, int Ydim, int Xdim):VolumeT<T>(Zdim, Ydim, Xdim)
+     * @ingroup VolumesConstructors
+     *
+     * Creates a 0.0 filled volume of size Zdim x Ydim x Xdim.
+     *
+     * @code
+     * VolumeXmipp< double > vol(64, 64, 64);
+     * @endcode
+     */
+    VolumeXmippT(int Zdim, int Ydim, int Xdim) : VolumeT< T >(Zdim, Ydim, Xdim)
     {
-        if(  typeid(T) == typeid(double) )
+        if(typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
-        // Sets header of type Image_XMipp
-        else if (typeid(T) == typeid(int) )
+        else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        // Sets header of type Image int
-        else if (typeid(T) == typeid(complex<double>) )
+        else if (typeid(T) == typeid(complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
-        // Sets header of type Image_XMipp (complex)
         else
         {
-            cout << "\nError: VolumeXmipp should be double or integer\n";
+            std::cout << "\nError: VolumeXmipp should be double or integer\n";
             exit(0);
         }
 
-        header.set_dimension(Ydim, Xdim);                 // Sets header dimensions
-        header.Slices() = Zdim;                 	       // Sets header Slices
-        header.set_header(); 			       // Initialize header
-        header.set_time();				       // Set time and date
+        header.set_dimension(Ydim, Xdim);
+        header.Slices() = Zdim;
+        header.set_header();
+        header.set_time();
         header.set_date();
-    };
+    }
 
     /** Constructor with filename, read from disk.
-        The filename given must exist, then the file is loaded in the
-        VolumeXmipp class structure. You have loaded the volume at the
-        declaration time.
-        \\ Ex: VolumeXmipp<double> VX("art0001.vol"); */
-    VolumeXmippT(FileName _name):VolumeT<T>(_name)
+     * @ingroup VolumesConstructors
+     *
+     * The filename given must exist, then the file is loaded in the VolumeXmipp
+     * class structure. You have loaded the volume at the declaration time.
+     *
+     * @code
+     * VolumeXmipp< double > vol("art0001.vol");
+     * @endcode
+     */
+    VolumeXmippT(FileName name) : VolumeT< T >(name)
     {
-        if(  typeid(T) == typeid(double) )
+        if(typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
-        // Sets header of type Image_XMipp
-        else if (typeid(T) == typeid(int) )
+        else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        // Sets header of type Image int
-        else if (typeid(T) == typeid(complex<double>) )
+        else if (typeid(T) == typeid(complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
-        // Sets header of type Image_XMipp (complex)
         else
         {
-            cout << "\nError: VolumeXmipp should be double or integer\n";
+            std::cout << "\nError: VolumeXmipp should be double or integer\n";
             exit(0);
         }
-        read(_name);  			  	       // Read image from file
+
+        read(name);
     }
 
     /** Copy constructor.
-        \\ Ex: VolumeXmipp<double> VX2(VX1); */
-    VolumeXmippT (const VolumeXmippT &I): VolumeT<T>(I)
+     * @ingroup VolumesConstructors
+     *
+     * @code
+     * VolumeXmipp< double > vol2(vol1);
+     * @endcode
+     */
+    VolumeXmippT(const VolumeXmippT& I): VolumeT< T >(I)
     {
         header = I.header;
     }
 
     /** Empty image.
-        All information is cleared.
-        \\Ex: VX.clear();*/
+     * @ingroup VolumesConstructors
+     *
+     * All information is cleared.
+     *
+     * @code
+     * vol.clear();
+     * @endcode
+     */
     void clear()
     {
         clear_header();
-        VolumeT<T>::clear();
+        VolumeT< T >::clear();
     }
-    //@}
 
-    // Overload some operators ..............................................
-    /**@name Some operators*/
-    //@{
     /** Show the header information of a Xmipp volume.
-        \\ Ex: cout << VX; */
-    friend ostream& operator << (ostream& out, const VolumeXmippT<T> &V)
+     * @ingroup VolumesOperations
+     *
+     * @code
+     * std::cout << vol;
+     * @endcode
+     */
+    friend std::ostream& operator<<(std::ostream& out,
+                                    const VolumeXmippT< T >& v)
     {
-        out << (VolumeT<T> &) V << V.header;
+        // FIXME Previous: old-style cast to reference
+        out << static_cast< VolumeT< T > >(v) << v.header;
         return out;
     }
 
     /** Assignment from another Xmipp volume.
-        \\ Ex: VolumeXmipp VX1, VX2; VX2=VX1; */
-    VolumeXmippT & operator= (const VolumeXmippT<T> &op1)
+     * @ingroup VolumesOperations
+     *
+     * @code
+     * VolumeXmipp vol1, vol2;
+     * vol2 = vol1;
+     * @endcode
+     */
+    VolumeXmippT& operator=(const VolumeXmippT< T >& op1)
     {
-        if (&op1!=this)
+        if (&op1 != this)
         {
-            this->VolumeT<T>::operator = (op1);
+            this->VolumeT< T >::operator=(op1);
             header = op1.header;
         }
+
         return *this;
     }
 
     /** Assignment from a generic image.
-        \\Ex: Volume<double> V; VolumeXmipp<double> VX; VX=V;*/
-    VolumeXmippT & operator= (const VolumeT<T> &op1)
+     * @ingroup VolumesOperations
+     *
+     * @code
+     * Volume< double > v;
+     * VolumeXmipp< double > vol;
+     * vol = v;
+     * @endcode
+     */
+    VolumeXmippT& operator=(const VolumeT< T >& op1)
     {
-        if (this!=&op1)
+        if (this != &op1)
         {
-            this->VolumeT<T>::operator = (op1);
+            this->VolumeT< T >::operator=(op1);
             clear_header();
             adjust_header();
         }
+
         return *this;
     }
 
     /** Assignment from a 3D matrix.
-        \\Ex: matrix3D<float> m; VolumeXmipp VX; VX=m; */
-    template <class Type>
-    VolumeXmippT& operator=(const matrix3D<Type> &op1)
+     * @ingroup VolumesOperations
+     *
+     * @code
+     * matrix3D< float > m;
+     * VolumeXmipp vol;
+     * vol = m;
+     * @endcode
+     */
+    template<typename T2>
+    VolumeXmippT& operator=(const matrix3D< T2>& op1)
     {
-        this->VolumeT<T>::operator = (op1);
+        this->VolumeT< T >::operator=(op1);
         clear_header();
         adjust_header();
+
         return *this;
     }
 
-    /** Assignment from any kind of volume.*/
-    //Ex:Volume<double> VO; VolumeXmipp VX; VX.assign_from(&VO);
-    template <class Type>
-    void assign_from(VolumeT<Type> *v)
+    /** Assignment from any kind of volume.
+     * @ingroup VolumesOperations
+     *
+     * @code
+     * Volume< double > vol;
+     * VolumeXmipp v;
+     * v.assign_from(&vol);
+     * @endcode
+     */
+    template<typename T2>
+    void assign_from(VolumeT< T2 >* v)
     {
-        *this=*v;
+        *this = *v;
     }
-    //@}
 
-    // Input/Output .........................................................
-    /**@name Input/Output*/
-    //@{
     /** Read Xmipp volume from disk.
-        If the volume doesn't exist at the given path then an exception is
-        thrown.
-        The type check is a test performed on input image to check
-        if it comes from a big or little endian machine. It is done
-        over the \Ref{xmippHeader} field fIform. Sometimes, this value
-        is corrupted although the whole image is still valid. You can
-        skip this check and provide the reversed status via force_reversed.
-        \\ Ex: VX.read("art0001.vol");*/
-    void read(const FileName &name, bool skip_type_check=false,
+     * @ingroup VolumesIO
+     *
+     * If the volume doesn't exist at the given path then an exception is
+     * thrown.
+     *
+     * The type check is a test performed on input image to check if it comes
+     * from a big or little endian machine. It is done over the header field
+     * fIform. Sometimes, this value is corrupted although the whole image is
+     * still valid. You can skip this check and provide the reversed status via
+     * force_reversed.
+     *
+     * @code
+     * vol.read("art0001.vol");
+     * @endcode
+     */
+    void read(const FileName& name,
+              bool skip_type_check=false,
               bool force_reversed=false)
     {
-        FILE *fp;
+        FILE* fp;
 
         rename(name);
-        if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "rb")) == NULL)
-            REPORT_ERROR(1501,(string)"VolumeXmipp::read: File "+VolumeT<T>::fn_img+" not found");
+        if ((fp = fopen(VolumeT< T >::fn_img.c_str(), "rb")) == NULL)
+            REPORT_ERROR(1501,
+                static_cast< std::string >("VolumeXmipp::read: File " +
+                VolumeT< T >::fn_img + " not found"));
 
         // Read header
         if (!header.read(fp, skip_type_check, force_reversed))
-            REPORT_ERROR(1502,"VolumeXmipp::read: File " + VolumeT<T>::fn_img +
-                         " is not a valid Xmipp file");
+            REPORT_ERROR(1502, "VolumeXmipp::read: File " +
+                VolumeT< T >::fn_img + " is not a valid Xmipp file");
 
         // Read whole image and close file
         VolumeT<T>::read(fp, header.iSlices(), header.iYdim(), header.iXdim(),
@@ -833,103 +907,120 @@ public:
     }
 
     /** Write Xmipp volume to disk.
-        If there is any problem in the writing, an exception is thrown.
-        You can give a name to the written volume different from the one used
-        when it was read. From this point the filename of the volume has
-        changed. This is somehow like the "Save as ..." and "Save".
-        \\ Ex: VX.write() ---> Save
-        \\ Ex: VX.write("art0002.vol") ---> Save as
-        If force_reversed is TRUE then image is saved in reversed mode,
-        if not it is saved in the same mode as it was loaded.*/
-    void write(const FileName &name = "", bool force_reversed=false)
+     * @ingroup VolumesIO
+     *
+     * If there is any problem in the writing, an exception is thrown. You can
+     * give a name to the written volume different from the one used when it
+     * was read. From this point the filename of the volume has changed. This
+     * is somehow like the "Save as ..." and "Save".
+     *
+     * @code
+     * vol.write(); // Save
+     * vol.write("art0002.vol"); // Save as
+     * @endcode
+     *
+     * If force_reversed is TRUE then image is saved in reversed mode, if not
+     * it is saved in the same mode as it was loaded.
+     */
+    void write(const FileName& name = "", bool force_reversed=false)
     {
-        FILE *fp;
+        FILE* fp;
         if (name != "")
             rename(name);
-        if ((fp = fopen(VolumeT<T>::fn_img.c_str(), "wb")) == NULL)
-            REPORT_ERROR(1503,(string)"VolumeXmipp::write: File "+VolumeT<T>::fn_img +
-                         " cannot be written");
+
+        if ((fp = fopen(VolumeT< T >::fn_img.c_str(), "wb")) == NULL)
+            REPORT_ERROR(1503,
+                static_cast< std::string >("VolumeXmipp::write: File " +
+                VolumeT< T >::fn_img + " cannot be written"));
+
         adjust_header();
         header.write(fp, force_reversed);
-        VolumeT<T>::write(fp, header.reversed(), VFLOAT);
+        VolumeT< T >::write(fp, header.reversed(), VFLOAT);
         fclose(fp);
     }
-    //@}
 
-    // Header operations interface ..........................................
-    // These are the only access to the header allowed
-    /**@name Header access*/
-    //@{
+    /// @defgroup VolumesHeader Header access
+    /// @ingroup Volumes
+
     /** Adjust header.
-        Force header to have the dimensions of the image, time, date updated */
+     * @ingroup VolumesHeader
+     *
+     * Force header to have the dimensions of the image, time, date updated.
+     */
     void adjust_header()
     {
-        if(typeid(T) == typeid(double) )
+        if(typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
-        // Sets header of type Image_XMipp
-        else if (typeid(T) == typeid(int) )
+        else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        // Sets header of type Image int
-        else if (typeid(T) == typeid(complex<double>) )
+        else if (typeid(T) == typeid(complex< double >) )
             header.headerType() = headerXmipp::VOL_FOURIER;
 
-        header.set_dimension(YSIZE(VolumeT<T>::img), XSIZE(VolumeT<T>::img)); // Sets header dimensions
-        header.Slices() = ZSIZE(VolumeT<T>::img);     // Sets header Slices
-        header.set_time();			    // Set time and date
+        header.set_dimension(YSIZE(VolumeT< T >::img), XSIZE(VolumeT<T>::img));
+        header.Slices() = ZSIZE(VolumeT< T >::img);
+        header.set_time();
         header.set_date();
-        header.set_title(VolumeT<T>::fn_img);         // Set title
-        header.set_header(); 			    // Initialize header
+        header.set_title(VolumeT< T >::fn_img);
+        header.set_header();
     }
 
-    /** Resets header. */
+    /** Resets header.
+     * @ingroup VolumesHeader
+     */
     void clear_header()
     {
         header.clear();
     }
 
     /** Change Filename.
-        \\Ex: IX.rename("newName.spd"); */
+     * @ingroup VolumesHeader
+     *
+     * @code
+     * vol.rename("newName.spd");
+     * @endcode
+     */
     void rename(FileName newName)
     {
-        VolumeT<T>::rename(newName);
+        VolumeT< T >::rename(newName);
         header.set_title(newName);
     }
 
     /** Reversed status.
-        This is used for the little/big endian process. */
+     * @ingroup VolumesHeader
+     *
+     * This is used for the little/big endian process.
+     */
     bool reversed() const
     {
         return header.reversed();
     }
-    //@}
 };
 
+// TODO Document
+typedef VolumeT< double > Volume;
+typedef VolumeXmippT< double > VolumeXmipp;
+typedef VolumeT< complex< double > > FourierVolume;
+typedef VolumeXmippT< complex< double > > FourierVolumeXmipp;
 
-/* ************************************************************************* */
-/* TYPE DEFINITIONS                                                          */
-/* ************************************************************************* */
-typedef VolumeT<double> Volume;
-typedef VolumeXmippT<double> VolumeXmipp;
-typedef VolumeT<complex<double> > FourierVolume;
-typedef VolumeXmippT<complex<double> > FourierVolumeXmipp;
-
-
-/**@name Related functions */
-//@{
-/** True if the given volume is an Xmipp volume. See \Ref{volumeXmipp::read}
-    for an explanation of skip_type_check and force_reversed.*/
-int Is_VolumeXmipp(const FileName &fn, bool skip_type_check=false,
+/** True if the given volume is an Xmipp volume.
+ * @ingroup VolumesRelated
+ */
+int Is_VolumeXmipp(const FileName& fn,
+                   bool skip_type_check=false,
                    bool force_reversed=false);
 
-/** True if the given volume is a Fourier Xmipp volume. See \Ref{volumeXmipp::read}
-    for an explanation of skip_type_check and force_reversed.*/
-int Is_FourierVolumeXmipp(const FileName &fn, bool skip_type_check=false,
+/** True if the given volume is a Fourier Xmipp volume.
+ * @ingroup VolumesRelated
+ */
+int Is_FourierVolumeXmipp(const FileName& fn,
+                          bool skip_type_check=false,
                           bool force_reversed=false);
 
 /** Get size of a volume.
-    It returns -1 if the file is not an Xmipp volume.*/
-void GetXmippVolumeSize(const FileName &fn, int &Zdim, int &Ydim, int &Xdim);
-//@}
+ * @ingroup VolumesRelated
+ *
+ * Returns -1 if the file is not an Xmipp volume.
+ */
+void GetXmippVolumeSize(const FileName& fn, int &Zdim, int &Ydim, int &Xdim);
 
-//@}
 #endif
