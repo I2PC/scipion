@@ -151,8 +151,7 @@ void ShowSel::compute_global_normalization_params() {
    bool first=true;
    for (int i=0; i<listSize; i++) {
       ImageXmipp I(imgnames[i]);
-      if      (load_mode==PSD_mode) xmipp2PSD(I(),I());
-      else if (load_mode==CTF_mode) xmipp2CTF(I(),I());
+      if (load_mode==PSD_mode) xmipp2PSD(I(),I());
       double min_val, max_val;
       I().compute_double_minmax(min_val,max_val);
       if (first || min_val<minPixel) minPixel=min_val;
@@ -284,7 +283,6 @@ const char * ShowSel::cellLabel(int i) const {
 
 /* Produce pixmap ---------------------------------------------------------- */
 void ShowSel::producePixmapAt(int i) {
-    bool treat_separately_left_right=false;
     ImageXmipp I;
     // Read image
     if (imgnames[i].find("imagic:")!=-1) {
@@ -294,11 +292,7 @@ void ShowSel::producePixmapAt(int i) {
     } else if (Is_ImageXmipp(imgnames[i])) {
        // Plain Xmipp images
        I.read(imgnames[i],FALSE,FALSE,apply_geo,FALSE);
-       if      (load_mode==PSD_mode) xmipp2PSD(I(),I());
-       else if (load_mode==CTF_mode) {
-          treat_separately_left_right=true;
-          xmipp2CTF(I(),I());
-       }
+       if (load_mode==PSD_mode) xmipp2PSD(I(),I());
     } else if (Is_FourierImageXmipp(imgnames[i])) {
        // FFT Xmipp images: plot log10(1+|I|^2)
        FourierImageXmipp If;
@@ -322,7 +316,7 @@ void ShowSel::producePixmapAt(int i) {
 
     // Convert Xmipp image to Pixmap
     content[i]=new QPixmap;
-    xmipp2Pixmap(I,content[i],minGray,maxGray,0,0,treat_separately_left_right);
+    xmipp2Pixmap(I,content[i],minGray,maxGray,0,0);
 }
 
 /* Resize event ------------------------------------------------------------ */
@@ -578,36 +572,61 @@ void ShowSel::showThisImage() {
 
 // Edit CTF model ----------------------------------------------------------
 void ShowSel::editCTFmodel() {
-   if (fn_assign=="") {
+   if (fn_assign=="" && fn_assign_sel=="") {
       QMessageBox::about( this, "Error!", "No Assign CTF file provided\n");
       return;
    }
-   // Read the Assign CTF parameters
-   Prog_assign_CTF_prm assign_ctf_prm;
-   assign_ctf_prm.read(fn_assign);
 
-   // Check if the CTF is computed at each particle
-   FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
    FileName fn_param;
+   if (fn_assign!="") { // Single micrograph with or without pieces
+      // Read the Assign CTF parameters
+      Prog_assign_CTF_prm assign_ctf_prm;
+      assign_ctf_prm.read(fn_assign);
 
-   // Get the piece name
-   if (assign_ctf_prm.compute_at_particle) {
-      int i=indexOf(currentRow(),currentColumn());
-      fn_param=imgnames[i].without_extension()+".ctfparam";
-   } else if (assign_ctf_prm.micrograph_averaging) {
-      // If it is the average of the micrograph
-      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-           fn_param=fn_root+"_ARMAavg.ctfparam";
-      else fn_param=fn_root+"_Periodogramavg.ctfparam";
-   } else {
-      // If the micrograph was divided into pieces
-      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-           fn_param=fn_root+"_ARMA";
-      else fn_param=fn_root+"_Periodogram";
-      // Get the piece to edit
-      int i=indexOf(currentRow(),currentColumn())+1;
-      fn_param+=ItoA(i,5);
-      fn_param+=".ctfparam";
+      // Check if the CTF is computed at each particle
+      FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
+
+      // Get the piece name
+      if (assign_ctf_prm.compute_at_particle) {
+	 int i=indexOf(currentRow(),currentColumn());
+	 fn_param=imgnames[i].without_extension()+".ctfparam";
+      } else if (assign_ctf_prm.micrograph_averaging) {
+	 // If it is the average of the micrograph
+	 if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+              fn_param=fn_root+"_ARMAavg.ctfparam";
+	 else fn_param=fn_root+"_Periodogramavg.ctfparam";
+      } else {
+	 // If the micrograph was divided into pieces
+	 if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+              fn_param=fn_root+"_ARMA";
+	 else fn_param=fn_root+"_Periodogram";
+	 // Get the piece to edit
+	 int i=indexOf(currentRow(),currentColumn())+1;
+	 fn_param+=ItoA(i,5);
+	 fn_param+=".ctfparam";
+      }
+   } else { // Multiple micrographs all with micrograph_averaging
+      // Get the assign filename
+      SelFile SF_assign;
+      SF_assign.read(fn_assign_sel);
+      SF_assign.jump(indexOf(currentRow(),currentColumn()));
+      FileName fn_assign=SF_assign.get_current_file();
+
+      // Read the corresponding assignment parameter file
+      Prog_assign_CTF_prm assign_ctf_prm;
+      assign_ctf_prm.read(fn_assign);
+      FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
+
+      // Get the piece name
+      if (assign_ctf_prm.micrograph_averaging) {
+	 // If it is the average of the micrograph
+	 if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
+              fn_param=fn_root+"_ARMAavg.ctfparam";
+	 else fn_param=fn_root+"_Periodogramavg.ctfparam";
+      } else {
+         REPORT_ERROR(1,"ShowSel::editCTFmodel: This function is intended"
+	    " only for micrograph averages");
+      }
    }
 
    // Edit the CTF
@@ -692,4 +711,9 @@ void ShowSel::updateStatus(int i) {
 // Set Assign CTF file -----------------------------------------------------
 void ShowSel::setAssignCTFfile(const FileName &_fn_assign) {
    fn_assign=_fn_assign;
+}
+
+// Set Assign CTF selfile --------------------------------------------------
+void ShowSel::setAssignCTFselfile(const FileName &_fn_assign_sel) {
+   fn_assign_sel=_fn_assign_sel;
 }

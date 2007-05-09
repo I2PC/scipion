@@ -75,8 +75,12 @@ protected:
         mi_showLabel,       mi_hideLabel,
         mi_selAsLabels,     mi_imgAsLabels;
 
-    // Assign CTF file
+    // Assign CTF file: This is used for a single micrograph with pieces
     FileName fn_assign;
+
+    // Assign CTF sel file: This is usef for a bunch of micrographs with
+    // a single CTF each one
+    FileName fn_assign_sel;
 
     // Reimplementation of the insert_in queue to account for
     // the deletion of unused cells
@@ -176,6 +180,9 @@ public:
 
     /** For CTF mode, set assign CTF file. */
     void setAssignCTFfile(const FileName &_fn_assign);
+
+    /** For CTF mode, set assign CTF file. */
+    void setAssignCTFselfile(const FileName &_fn_assign_sel);
 };
 //@}
 #endif
