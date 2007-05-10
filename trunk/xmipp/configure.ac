@@ -35,6 +35,16 @@ fi
 XMIPPDIR=`pwd`
 AC_SUBST(XMIPPDIR)
 
+# Fast mathematics
+
+if test $GCC = yes ; then
+	CFLAGS=$CFLAGS" -O3 -fomit-frame-pointer -ffast-math -finline-functions -funroll-loops"
+	CXXFLAGS=$CXXFLAGS" -O3 -fomit-frame-pointer -ffast-math -finline-functions -funroll-loops"
+else
+	CFLAGS=$CFLAGS" -O"
+	CXXFLAGS=$CXXFLAGS" -O"
+fi
+
 # If --enable-debug , -g compiler flag
 # will be enabled.
 
@@ -135,6 +145,7 @@ AC_CHECK_LIB(pthread, main)
 AC_OUTPUT( \
     external/Makefile \
 	external/bilib/Makefile \
+	external/cuba/Makefile \
 	external/inria/Makefile \
 	libraries/Makefile \
 	libraries/data/Makefile \

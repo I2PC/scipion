@@ -180,3 +180,49 @@ double *my_vector(int nl,int nh)
 }
 
 
+// Multidimensional integration --------------------------------------------
+matrix1D<double>  cuhreX0;
+matrix1D<double>  cuhreXX;
+matrix1D<double>  cuhreRange;
+integrand_t       cuhreIntegrand=NULL;
+
+void scaledIntegrand(const int *ndim, const double xx[],
+   const int *ncomp, double ff[]) {
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(cuhreXX)
+     cuhreXX(i)=cuhreX0(i)+cuhreRange(i)*xx[i];
+   (*cuhreIntegrand)(ndim,MULTIDIM_ARRAY(cuhreXX),ncomp,ff);
+}
+
+double multidimensionalIntegral(const matrix1D<double> &x0,
+   const matrix1D<double> &xF, integrand_t integrand) {
+   // Set some global variables
+   cuhreX0=x0;
+   cuhreRange=xF-x0;
+   cuhreXX.init_zeros(x0);
+   cuhreIntegrand=integrand;
+
+   // Set Cuhre specific variables
+   const double EPSREL  = 1e-3;
+   const double EPSABS  = 1e-12;
+   const int    VERBOSE = 0;
+   const int    MINEVAL = 0;
+   const int    MAXEVAL = 50000;
+   const int    NCOMP   = 1;
+   const int    KEY     = 0;
+   double integral[NCOMP], error[NCOMP], prob[NCOMP];
+   int NDIM=XSIZE(x0);
+   
+   // Compute integral
+   int nregions, neval, fail;
+   Cuhre(NDIM, NCOMP, scaledIntegrand,
+      EPSREL, EPSABS, VERBOSE, MINEVAL, MAXEVAL,
+      KEY,
+      &nregions, &neval, &fail, integral, error, prob);
+
+   // Take into account that Cuhre routine computes the integral
+   // between 0 and 1. Thus, the result must be multiplied by the Jacobian
+   // of a scaling
+   double jacobian=1;
+   FOR_ALL_ELEMENTS_IN_MATRIX1D(x0) jacobian*=(xF(i)-x0(i));
+   return integral[0]*jacobian;
+}

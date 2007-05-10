@@ -33,12 +33,16 @@ using namespace std;
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <external/cuba/cuba.h>
+#include <data/matrix1d.h>
 
 /** @defgroup NumericalIntegration Numerical integration.
  *
  * This code performs numeric integrations as described in the Numerical Recipes
  * Book, in particular it implements the "trapezoidal" (Trapeze) and the Romberg
  * integration. Both are designed for smoothly variant functions.
+   
+   This module can also perform multidimensional integration.
  */
 
 /** A double-returning function.
@@ -230,6 +234,46 @@ public:
      */
     double midpnt(int n);
 };
+
+/** Multidimensional integration
+    @ingroup Numerical_interation
+    Compute the double, triple, ... integral of a function. For instance
+    
+    @code
+    integral_x0^xF  integral_y0^yF f(x,y) dx dy
+    @endcode
+    
+    Our computation is based on the CUBA library (http://www.feynarts.de/cuba/).
+    
+    Example of use.
+  
+  1) Define the function to integrate:
+@code
+void integrand(const int *ndim, const double xx[],
+               const int *ncomp, double ff[]) {
+   #define f ff[0]
+   #define x xx[0]
+   #define y xx[1]
+   f=x+y;
+}
+@endcode
+
+    ndim is the number of dimensions of the integral. It is equal
+    to the number of variables of f. ncomp is the number of components
+    of f. The CUBA library is
+    prepared for functions returning more than 1 value, but our
+    function is not.
+
+ 2) In the main code
+ 
+@code
+#include <data/integration.hh>
+cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
+            &integrand) << endl;
+@endcode
+ */
+double multidimensionalIntegral(const matrix1D<double> &x0,
+   const matrix1D<double> &xF, integrand_t integrand);
 
 // TODO Document
 void polint(double xa[], double ya[], int n, double x, double& y, double& dy);
