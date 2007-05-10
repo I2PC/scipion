@@ -2,7 +2,8 @@ bin_PROGRAMS = rotate
 rotate_SOURCES = main.cpp
 rotate_LDADD = \
 	$(top_srcdir)/libraries/data/libXmippData.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 rotate_LDFLAGS = @EXEC_TYPE@
 

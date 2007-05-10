@@ -7,7 +7,8 @@ ctf_view_LDADD = \
 	$(top_srcdir)/libraries/graphics/libXmippGraphics.la \
 	$(top_srcdir)/libraries/classification/libXmippClassif.la \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 ctf_view_LDFLAGS = @QT_LIBS@
 INCLUDES = -I$(top_srcdir)/libraries @QT_CXXFLAGS@

@@ -4,7 +4,8 @@ nodist_edit_SOURCES = textedit_moc.cpp
 
 edit_LDADD = \
 	$(top_srcdir)/libraries/data/libXmippData.la  \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 edit_LDFLAGS = @QT_LIBS@
 

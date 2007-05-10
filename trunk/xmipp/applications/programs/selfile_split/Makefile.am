@@ -2,7 +2,8 @@ bin_PROGRAMS = selfile_split
 selfile_split_SOURCES = main.cpp
 selfile_split_LDADD = \
 	$(top_srcdir)/libraries/data/libXmippData.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 selfile_split_LDFLAGS = @EXEC_TYPE@
 INCLUDES = -I$(top_srcdir)/libraries

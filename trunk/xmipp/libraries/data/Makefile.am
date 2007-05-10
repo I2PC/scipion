@@ -41,7 +41,7 @@ INCLUDES = \
 	-I$(top_srcdir)/external/bilib/types \
 	-I$(top_srcdir)/external/bilib
 
-LDADD = $(top_srcdir)/external/bilib/libBilib.la
+LDADD = $(top_srcdir)/external/bilib/libBilib.la $(top_srcdir)/external/cuba/libCuba.la
 
 EXTRA_DIST = \
 	args.h \

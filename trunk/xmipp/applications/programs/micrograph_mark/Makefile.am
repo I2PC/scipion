@@ -42,7 +42,8 @@ micrograph_mark_LDADD = \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/classification/libXmippClassif.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 micrograph_mark_LDFLAGS = @QT_LIBS@
 

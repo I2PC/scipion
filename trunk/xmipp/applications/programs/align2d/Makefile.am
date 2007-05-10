@@ -3,7 +3,8 @@ align2d_SOURCES = main.cpp
 align2d_LDADD = \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 align2d_LDFLAGS = @EXEC_TYPE@
 

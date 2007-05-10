@@ -3,7 +3,8 @@ reconstruct_art_SOURCES = main.cpp
 reconstruct_art_LDADD = \
 	$(top_srcdir)/libraries/reconstruction/libXmippRecons.la \
 	$(top_srcdir)/libraries/data/libXmippData.la \
-	$(top_srcdir)/external/bilib/libBilib.la
+	$(top_srcdir)/external/bilib/libBilib.la \
+        $(top_srcdir)/external/cuba/libCuba.la
 
 reconstruct_art_LDFLAGS = @EXEC_TYPE@
 
