@@ -1038,10 +1038,6 @@ if int(env['mpi']):
         [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
         ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
-    AddMPIProgram('mpi_mlf_tomo', 'applications/programs/mpi_mlf_tomo', '*.cpp',
-        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
-        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
-
     AddMPIProgram('mpi_angular_projection_matching',
         'applications/programs/mpi_angular_projection_matching', '*.cpp', [],
         ['libraries', '#', 'external'],
