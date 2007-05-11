@@ -200,15 +200,15 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed) {
     if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
       REPORT_ERROR(1503,"EM::read_header_from_file: File " + fn_in + " cannot be read");
 
-   FREAD(&(my_em_header.machine), 1, 1, fp, FALSE);
-   FREAD(&(my_em_header.general_use), 1, 1, fp, FALSE);
-   FREAD(&(my_em_header.not_used), 1, 1, fp, FALSE);
-   FREAD(&(my_em_header.mode), 1, 1, fp, FALSE);
+   FREAD(&(my_em_header.machine), 1, 1, fp, false);
+   FREAD(&(my_em_header.general_use), 1, 1, fp, false);
+   FREAD(&(my_em_header.not_used), 1, 1, fp, false);
+   FREAD(&(my_em_header.mode), 1, 1, fp, false);
 
-   if (my_em_header.machine != 6 && IsLittleEndian() && reversed==FALSE)
-     reversed=TRUE;
-   else if (my_em_header.machine == 6 && IsBigEndian() && reversed==FALSE)
-     reversed=TRUE;
+   if (my_em_header.machine != 6 && IsLittleEndian() && reversed==false)
+     reversed=true;
+   else if (my_em_header.machine == 6 && IsBigEndian() && reversed==false)
+     reversed=true;
 
    FREAD(&(my_em_header.nx), 4, 1, fp, reversed);
    FREAD(&(my_em_header.ny), 4, 1, fp, reversed);

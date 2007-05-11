@@ -29,8 +29,6 @@
 #include <data/geometry.h>
 #include <data/volume.h>
 
-#include <bilib/configs.h>
-
 #include <sys/stat.h>
 
 /**@name EM Files */

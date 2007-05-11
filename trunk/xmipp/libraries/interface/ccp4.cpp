@@ -465,12 +465,12 @@ void CCP4::clear(){
    // Get  size
    if ((my_mrc_header.machst)[0] == ((0x1 << 4) + 0x1) &&
         IsLittleEndian() &&
-        reversed==FALSE)
-       reversed=TRUE;
+        reversed==false)
+       reversed=true;
     else if ((my_mrc_header.machst)[0] == ((0x4 << 4) + 0x4) &&
         IsBigEndian() &&
-        reversed==FALSE)
-       reversed=TRUE;
+        reversed==false)
+       reversed=true;
    fseek(fp,0x00,SEEK_SET);
    FREAD(&(my_mrc_header.nx), sizeof(int), 1, fp, reversed);
    FREAD(&(my_mrc_header.ny), sizeof(int), 1, fp, reversed);

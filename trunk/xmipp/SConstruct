@@ -32,6 +32,7 @@ opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
 opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
+opts.Add(BoolOption('fast', 'Fast?', 'no'))
 # TODO  No real Doxygen support yet
 # opts.Add(BoolOption('docs', 'Create Doxygen documentation?', 'no'))
 opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
@@ -201,7 +202,6 @@ elif (ARGUMENTS['mode']=='compile'):
             env['strip'] = 0
     else:
 	# "safe" optimization
-	#env.Append(CXXFLAGS = ['-O2', '-fomit-frame-pointer'])
 	env.Append(CXXFLAGS = ['-O2'])
 
     # strip?
@@ -215,6 +215,10 @@ elif (ARGUMENTS['mode']=='compile'):
 	env.Append(CXXFLAGS = ['-w'])
 	# TODO suppress linker warnings too, what's the flag?
 	# env.Append(LINKFLAGS = ['-Wl,'])
+
+    # fast?
+    if int(env['fast']):
+	env.Append(CXXFLAGS = ['-O3','-fomit-frame-pointer','-ffast-math','-finline-functions','-funroll-loops'])
 
     # static?
     env['STATIC_FLAG'] = '-static'

@@ -37,8 +37,6 @@
 #include <data/image.h>
 #include <data/volume.h>
 
-#include <bilib/configs.h>
-
 #include <sys/stat.h>
 
 /**@name cp4 Files */
