@@ -32,7 +32,7 @@ opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
 opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
-# TODO No real Doxygen support yet
+# TODO  No real Doxygen support yet
 # opts.Add(BoolOption('docs', 'Create Doxygen documentation?', 'no'))
 opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
 
