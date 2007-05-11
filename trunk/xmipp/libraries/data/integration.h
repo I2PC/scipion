@@ -34,7 +34,7 @@ using namespace std;
 #include <cstdio>
 #include <iostream>
 #include <external/cuba/cuba.h>
-#include <data/matrix1d.h>
+#include "matrix1d.h"
 
 /** @defgroup NumericalIntegration Numerical integration.
  *
