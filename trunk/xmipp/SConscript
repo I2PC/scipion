@@ -163,8 +163,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
             sources,
             CPPPATH = includes + [env['CPPPATH']],
             LIBPATH = libpath,
-            LIBS = libs
-            )
+            LIBS = libs            )
     else:
         library = env.SharedLibrary(
             basedir + name,
@@ -181,6 +180,15 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 # --- Libraries
+
+# Cuba
+CubaSources = [
+    'src/vegas/Vegas.c',
+    'src/suave/Suave.c',
+    'src/divonne/Divonne.c',
+    'src/cuhre/Cuhre.c']
+
+AddLibrary('Cuba', 'external/cuba', CubaSources, ['.', 'src/common'])
 
 # Bilib
 BilibSources = [
@@ -434,144 +442,144 @@ AddLibrary('INRIA', 'external/inria', INRIASources, [])
 
 # FindSCenter
 AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
-    ['libraries'], ['libraries/data', 'libraries/legacy', 'external/bilib'],
-    ['XmippData', 'OldXmipp', 'Bilib'], [], [])
+    ['libraries'], ['libraries/data', 'libraries/legacy', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'OldXmipp', 'Bilib', 'Cuba'], [], [])
 
 # Src (apps)
 
 AddProgram('add_noise', 'applications/programs/add_noise', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('adjust_volume_grey_levels',
     'applications/programs/adjust_volume_grey_levels', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
-    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('align2d', 'applications/programs/align2d', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
-    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('align_volumes', 'applications/programs/align_volumes', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('angular_distribution_show',
     'applications/programs/angular_distribution_show', '*.cpp', [],
     ['libraries', '#'], ['libraries/interface', 'libraries/data',
-    'external/bilib'], ['XmippInterface', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_distance', 'applications/programs/angular_distance', '*.cpp',
     [], ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
-    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_discrete_assign',
     'applications/programs/angular_discrete_assign', '*.cpp', [], ['libraries',
     '#'], ['libraries/reconstruction', 'libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippClassif',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_continuous_assign',
     'applications/programs/angular_continuous_assign', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippClassif',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_assign_for_tomogram',
     'applications/programs/angular_assign_for_tomogram', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippClassif',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('header_apply', 'applications/programs/header_apply', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('docfile_append', 'applications/programs/docfile_append', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('reconstruct_art', 'applications/programs/reconstruct_art', '*.cpp',
     [], ['libraries', '#', '#external'], ['libraries/reconstruction', 'libraries/data',
-    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('ctf_estimate_from_micrograph',
     'applications/programs/ctf_estimate_from_micrograph', '*.cpp', [],
     ['libraries', '#'],
-    ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('classify_batch_som', 'applications/programs/classify_batch_som',
     '*.cpp', [], ['libraries', '#'], ['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('break_symmetry', 'applications/programs/break_symmetry', '*.cpp',
     [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data',
-    'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('align_tilt_pairs', 'applications/programs/align_tilt_pairs',
     '*.cpp', [], ['libraries', '#'], ['libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_compare', 'applications/programs/selfile_compare', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('ctf_correct_phase', 'applications/programs/ctf_correct_phase',
     '*.cpp', [], ['libraries', '#'], ['libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('correlation', 'applications/programs/correlation', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
-    'libraries/interface', 'external/bilib'], ['XmippRecons', 'XmippData',
-    'XmippInterface', 'Bilib'])
+    'libraries/interface', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData',
+    'XmippInterface', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_copy', 'applications/programs/selfile_copy', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('phantom_create', 'applications/programs/phantom_create', '*.cpp',
     [], ['libraries', '#', 'external'], ['libraries/data', 'libraries/reconstruction',
-    'external/bilib'], ['XmippData', 'XmippRecons', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippData', 'XmippRecons', 'Bilib', 'Cuba'])
 
 AddProgram('crystal_create_surface',
     'applications/programs/crystal_create_surface', '*.cpp', [], ['libraries',
-    '#'], ['libraries/data', 'libraries/reconstruction', 'external/bilib'],
-    ['XmippData', 'XmippRecons', 'Bilib'])
+    '#'], ['libraries/data', 'libraries/reconstruction', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'XmippRecons', 'Bilib', 'Cuba'])
 
 AddProgram('ctf_profile', 'applications/programs/ctf_profile', '*.cpp', [],
     ['libraries', '#', 'external'], ['libraries/data', 'libraries/reconstruction',
-    'external/bilib'], ['XmippData', 'XmippRecons', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippData', 'XmippRecons', 'Bilib', 'Cuba'])
 
 AddProgram('convert_data2img', 'applications/programs/convert_data2img',
     '*.cpp', [], ['libraries', '#'], ['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_data2vol', 'applications/programs/convert_data2vol',
     '*.cpp', [], ['libraries', '#'], ['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('crystal_shear', 'applications/programs/crystal_shear', '*.cpp', [],
     ['libraries', '#'], ['libraries/reconstruction', 'libraries/data',
-    'libraries/interface', 'external/bilib'], ['XmippRecons', 'XmippData',
-    'XmippInterface', 'Bilib'])
+    'libraries/interface', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData',
+    'XmippInterface', 'Bilib', 'Cuba'])
 
 AddProgram('denoise', 'applications/programs/denoise', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('micrograph_denoise', 'applications/programs/micrograph_denoise',
-    '*.cpp', [], ['libraries', '#', 'external'], ['libraries/data', 'external/bilib'],
-    ['XmippData', 'Bilib'])
+    '*.cpp', [], ['libraries', '#', 'external'], ['libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('docfile_histogram', 'applications/programs/docfile_histogram',
-    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib'],
-    ['XmippData', 'Bilib'])
+    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('micrograph_downsample', 'applications/programs/micrograph_downsample',
-    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib'],
-    ['XmippData', 'Bilib'])
+    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'Bilib', 'Cuba'])
 
 # FIXME This hack is required for program Mark
 if int(env['gui']):
@@ -583,304 +591,304 @@ if int(env['gui']):
 
 AddProgram('crystal_euler2mrc', 'applications/programs/crystal_euler2mrc',
     '*.cpp', [], ['libraries', '#'], ['libraries/reconstruction',
-    'libraries/data', 'libraries/interface', 'external/bilib'], ['XmippRecons',
-    'XmippRecons_Interface', 'XmippData', 'XmippInterface', 'Bilib'])
+    'libraries/data', 'libraries/interface', 'external/bilib', 'external/cuba'], ['XmippRecons',
+    'XmippRecons_Interface', 'XmippData', 'XmippInterface', 'Bilib', 'Cuba'])
 
 AddProgram('psd_enhance', 'applications/programs/psd_enhance', '*.cpp', [],
     ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippInterface', 'XmippRecons',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippRecons',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('foms_evaluate', 'applications/programs/foms_evaluate', '*.cpp',
     ['adjust.cc'], ['libraries', '#', 'external'], ['libraries/interface',
-    'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('classify_fcmeans', 'applications/programs/classify_fcmeans',
     '*.cpp', [], ['libraries', '#'],['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('find_center3d', 'applications/programs/find_center3d', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('classify_fkcn', 'applications/programs/classify_fkcn', '*.cpp', [],
     ['libraries', '#'], ['libraries/classification', 'libraries/data',
-    'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('mirror', 'applications/programs/mirror', '*.cpp', [], ['libraries',
-    '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('fourier_filter', 'applications/programs/fourier_filter', '*.cpp',
     [], ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippInterface', 'XmippRecons',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippRecons',
+    'XmippData', 'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('classify_fsom', 'applications/programs/classify_fsom', '*.cpp', [],
     ['libraries', '#'], ['libraries/classification', 'libraries/data',
-    'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('header_assign', 'applications/programs/header_assign', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('header_extract', 'applications/programs/header_extract', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('header_reset', 'applications/programs/header_reset', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('histogram', 'applications/programs/histogram', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('ctf_correct_idr', 'applications/programs/ctf_correct_idr', '*.cpp',
     [], ['libraries', '#', 'external'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippInterface', 'XmippRecons',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippRecons',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_img2data', 'applications/programs/convert_img2data',
-    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib'],
-    ['XmippData', 'Bilib'])
+    '*.cpp', [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('header_print', 'applications/programs/header_print', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('statistics', 'applications/programs/statistics', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('classify_kcmeans', 'applications/programs/classify_kcmeans',
     '*.cpp', [], ['libraries', '#'], ['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData',
-    'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData',
+    'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('classify_kerdensom', 'applications/programs/classify_kerdensom',
     '*.cpp', [], ['libraries', '#'], ['libraries/classification',
-    'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData',
-    'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('crystal_lattice_vectors',
     'applications/programs/crystal_lattice_vectors', '*.cpp', [], ['libraries',
-    '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('make_spectra', 'applications/programs/make_spectra', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('mask', 'applications/programs/mask', '*.cpp', [], ['libraries',
-    '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('try_symmetry', 'applications/programs/try_symmetry', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
 AddProgram('phantom_simulate_microscope',
     'applications/programs/phantom_simulate_microscope',
     '*.cpp', [], ['libraries', '#'], ['libraries/interface',
-    'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('ml_align2d', 'applications/programs/ml_align2d', '*.cpp', [],
-    ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('ml_align2d_combine', 'applications/programs/ml_align2d_combine',
     '*.cpp',
-    [], ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('ml_refine3d', 'applications/programs/ml_refine3d', '*.cpp',
-    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('mlf_tomo', 'applications/programs/mlf_tomo', '*.cpp',
-    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('morphology', 'applications/programs/morphology', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_move', 'applications/programs/selfile_move', '*.cpp', [],
     ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('normalize', 'applications/programs/normalize', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('operate', 'applications/programs/operate', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('classify_pca', 'applications/programs/classify_pca', '*.cpp', [],
     ['libraries', '#'],
-    ['libraries/classification', 'libraries/data', 'external/bilib'],
-    ['XmippClassif', 'XmippData', 'Bilib'])
+    ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_pdb2vol', 'applications/programs/convert_pdb2vol', '*.cpp', [],
-    ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('phantom_transform', 'applications/programs/phantom_transform', '*.cpp',
-    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('project', 'applications/programs/project', '*.cpp', [],
     ['libraries', '#', 'external'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippInterface', 'XmippRecons',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippRecons',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_neighbourhood',
     'applications/programs/angular_neighbourhood', '*.cpp', [],
     ['libraries', '#'],
-    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('angular_projection_matching',
     'applications/programs/angular_projection_matching',
     '*.cpp', [], ['libraries', '#', 'external'], ['libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('classify_project_pca', 'applications/programs/classify_project_pca',
     '*.cpp', [], ['libraries', '#'],
-    ['libraries/classification', 'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippData', 'Bilib'])
+    ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('scale_pyramid', 'applications/programs/scale_pyramid', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('phantom_create_random', 'applications/programs/phantom_create_random',
     '*.cpp', [], ['libraries', '#', 'external'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('range_adjust', 'applications/programs/range_adjust', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_raw22spi', 'applications/programs/convert_raw22spi', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('phantom_test_reconstruction', 'applications/programs/phantom_test_reconstruction',
     '*.cpp', [], ['libraries', '#', 'external'], ['libraries/interface', 'libraries/reconstruction',
-    'libraries/data', 'external/bilib'], ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons',
-    'XmippData', 'Bilib'])
+    'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('reverse_endian', 'applications/programs/reverse_endian', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('resolution_fsc', 'applications/programs/resolution_fsc', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_delete', 'applications/programs/selfile_delete', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('rotate', 'applications/programs/rotate', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('classify_sammon_projection', 'applications/programs/classify_sammon_projection', '*.cpp', [],
-    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib'], ['XmippClassif',
-    'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('scale', 'applications/programs/scale', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('micrograph_scissor', 'applications/programs/micrograph_scissor', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('volume_segment', 'applications/programs/volume_segment', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_select', 'applications/programs/selfile_select', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_statistics', 'applications/programs/selfile_statistics', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('separate_objects', 'applications/programs/separate_objects', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('shift', 'applications/programs/shift', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('crystal_skew', 'applications/programs/crystal_skew', '*.cpp', [], ['libraries', '#'],
-    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('classify_som', 'applications/programs/classify_som', '*.cpp', [],
-    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib'], ['XmippClassif',
-    'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('sort_by_statistics', 'applications/programs/sort_by_statistics', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('selfile_split', 'applications/programs/selfile_split', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_spi22em', 'applications/programs/convert_spi22em', '*.cpp', [], ['libraries', '#', 'external'],
-    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_spi22ccp4', 'applications/programs/convert_spi22ccp4', '*.cpp', [], ['libraries', '#', 'external'],
-    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 # FIXME -Wno-deprecated
 AddProgram('crystal_aph2img', 'applications/programs/crystal_aph2img', '*.cpp',
-    [], ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('resolution_ssnr', 'applications/programs/resolution_ssnr', '*.cpp', [], ['libraries', '#'],
-    ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('average', 'applications/programs/average', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('symmetrize', 'applications/programs/symmetrize', '*.cpp', [], ['libraries', '#'],
-    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('threshold', 'applications/programs/threshold', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_data2pdb', 'applications/programs/convert_data2pdb', '*.cpp', [],
-    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib'], ['XmippClassif',
-    'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_data2descr', 'applications/programs/convert_data2descr', '*.cpp', [],
-    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib'], ['XmippClassif',
-    'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/classification', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif',
+    'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('crystal_unbend', 'applications/programs/crystal_unbend', '*.cpp',
-    [], ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons_Interface', 'XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('fourier_transform', 'applications/programs/fourier_transform', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_vol2data', 'applications/programs/convert_vol2data', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_vol2pseudo', 'applications/programs/convert_vol2pseudo', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('convert_voxels22blobs', 'applications/programs/convert_voxels22blobs', '*.cpp', [],
-    ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries', '#'], ['libraries/interface', 'libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippInterface', 'XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('reconstruct_wbp', 'applications/programs/reconstruct_wbp', '*.cpp', [],
-    ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-    ['XmippRecons', 'XmippData', 'Bilib'])
+    ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+    ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('window', 'applications/programs/window', '*.cpp', [], ['libraries', '#'],
-    ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 AddProgram('micrograph_window', 'applications/programs/micrograph_window', '*.cpp',
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData', 'Bilib', 'Cuba'])
 
 # --- Scripts
 
@@ -1006,44 +1014,44 @@ if int(env['mpi']):
 
     AddMPIProgram('mpi_art', 'applications/programs/mpi_art', '*.cpp', [],
         ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data',
-        'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_angular_discrete_assign', 'applications/programs/mpi_angular_discrete_assign',
         '*.cpp', [], ['libraries', '#'],
-        ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_angular_continuous_assign', 'applications/programs/mpi_angular_continuous_assign',
         '*.cpp', [], ['libraries', '#'],
-        ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_reconstruct_wbp', 'applications/programs/mpi_reconstruct_wbp', '*.cpp', [], ['libraries', '#', 'external'],
-        ['libraries/reconstruction', 'libraries/data', 'external/bilib'], ['XmippRecons', 'XmippData', 'Bilib'])
+        ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'], ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_ml_align2d', 'applications/programs/mpi_ml_align2d', '*.cpp', [],
-        ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        ['libraries', '#'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_ml_refine3d', 'applications/programs/mpi_ml_refine3d', '*.cpp',
-        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_mlf_tomo', 'applications/programs/mpi_mlf_tomo', '*.cpp',
-        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_angular_projection_matching',
         'applications/programs/mpi_angular_projection_matching', '*.cpp', [],
         ['libraries', '#', 'external'],
-        ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
-        ['XmippRecons', 'XmippData', 'Bilib'])
+        ['libraries/reconstruction', 'libraries/data', 'external/bilib', 'external/cuba'],
+        ['XmippRecons', 'XmippData', 'Bilib', 'Cuba'])
 
     AddMPIProgram('mpi_run', 'applications/programs/mpi_run', '*.cpp', [],
         ['libraries', '#'],
-        ['libraries/data', 'libraries/reconstruction_mpi', 'external/bilib'],
-        ['XmippData', 'XmippReconsMPI', 'Bilib'])
+        ['libraries/data', 'libraries/reconstruction_mpi', 'external/bilib', 'external/cuba'],
+        ['XmippData', 'XmippReconsMPI', 'Bilib', 'Cuba'])
 
 # TIFF
 # Tiff2Raw
@@ -1125,13 +1133,13 @@ if int(env['gui']):
     env.Default(graphics_alias)
 
     AddQtProgram('edit', 'applications/programs/edit', '*.cpp', [],
-    [], ['libraries', '#'], ['libraries/data', 'external/bilib'], ['XmippData',
-    'Bilib'])
+    [], ['libraries', '#'], ['libraries/data', 'external/bilib', 'external/cuba'], ['XmippData',
+    'Bilib', 'Cuba'])
 
     AddQtProgram('ctf_view', 'applications/programs/ctf_view', '*.cpp',
     [], [], ['libraries', '#'], ['libraries/data', 'libraries/graphics',
-    'libraries/classification', 'libraries/reconstruction', 'external/bilib'],
-    ['XmippData', 'XmippGraphics', 'XmippClassif', 'XmippRecons', 'Bilib'])
+    'libraries/classification', 'libraries/reconstruction', 'external/bilib', 'external/cuba'],
+    ['XmippData', 'XmippGraphics', 'XmippClassif', 'XmippRecons', 'Bilib', 'Cuba'])
 
     # FIXME obj_DownSample is required. cannot use AddQtProgram
     mark_basedir = AddLastSlash('applications/programs/micrograph_mark')
@@ -1147,10 +1155,10 @@ if int(env['gui']):
         '#applications/programs/micrograph_downsample']
     mark_libpath = envQT['LIBPATH'] + ['libraries/interface', 'libraries/graphics'
         , 'libraries/reconstruction', 'libraries/classification', 'libraries/data',
-        'external/bilib']
+        'external/bilib', 'external/cuba']
 
     mark_libs = envQT['LIBS'] + ['XmippInterface', 'XmippGraphics',
-        'XmippRecons', 'XmippClassif', 'XmippData', 'Bilib']
+        'XmippRecons', 'XmippClassif', 'XmippData', 'Bilib', 'Cuba']
 
     mark_prog = envQT.Program(
         mark_basedir + env['prepend'] + 'micrograph_mark',
@@ -1169,10 +1177,10 @@ if int(env['gui']):
     AddQtProgram('show', 'applications/programs/show', '*.cpp', [], [],
         ['libraries', '#'],
         ['libraries/classification', 'libraries/graphics', 'libraries/reconstruction',
-        'libraries/data', 'external/bilib'], ['XmippClassif', 'XmippGraphics', 'XmippRecons',
-        'XmippData', 'Bilib'])
+        'libraries/data', 'external/bilib', 'external/cuba'], ['XmippClassif', 'XmippGraphics', 'XmippRecons',
+        'XmippData', 'Bilib', 'Cuba'])
 
     AddQtProgram('mask_design', 'applications/programs/mask_design', '*.cpp',
         [], [], ['libraries', '#'], ['libraries/data', 'libraries/classification',
-        'external/bilib'], ['XmippData', 'XmippClassif', 'Bilib'])
+        'external/bilib', 'external/cuba'], ['XmippData', 'XmippClassif', 'Bilib', 'Cuba'])
 
