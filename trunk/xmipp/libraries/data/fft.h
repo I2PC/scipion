@@ -155,7 +155,21 @@ void Whole2Half(const matrix2D< complex < double > >& in,
 void Half2Whole(const matrix2D< complex < double > >& in,
                 matrix2D< complex< double > >& out, int oriydim);
 
-/** @defgroup FourierTransforms Fouerier Transforms
+/** Conversion from complex -> real,imag 3D
+ * @ingroup FourierFormat
+ */
+void Complex2RealImag(const matrix3D< complex < double > >& in,
+		      matrix3D< double > & real,
+		      matrix3D< double > & imag);
+
+/** Conversion from real,imag -> complex 3D
+ * @ingroup FourierFormat
+ */
+void RealImag2Complex(const matrix3D< double > & real,
+		      const matrix3D< double > & imag,
+		      matrix3D< complex < double > >& out);
+
+/** @defgroup FourierTransforms Fourier Transforms
  * @ingroup Fourier
  */
 

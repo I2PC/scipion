@@ -65,6 +65,29 @@ void Half2Whole(const matrix2D<complex<double> > &in, matrix2D<complex<double> >
   }
 }
 
+
+/** Convert complex -> real,imag Fourier transforms 3D. -- */
+void Complex2RealImag(const matrix3D< complex < double > >& in,
+		      matrix3D< double > & real,
+		      matrix3D< double > & imag){
+
+    real.resize(in);
+    imag.resize(in);
+    Complex2RealImag(MULTIDIM_ARRAY(in),MULTIDIM_ARRAY(real),
+      MULTIDIM_ARRAY(imag),XSIZE(in)*YSIZE(in)*ZSIZE(in));
+
+}
+
+/** Convert real,imag -> complex Fourier transforms 3D. -- */
+void RealImag2Complex(const matrix3D< double > & real,
+		      const matrix3D< double > & imag,
+		      matrix3D< complex < double > >& out){
+    out.resize(real);
+    RealImag2Complex(MULTIDIM_ARRAY(real),MULTIDIM_ARRAY(imag),
+		     MULTIDIM_ARRAY(out),XSIZE(real)*YSIZE(real)*ZSIZE(real));
+
+}
+
 /** Direct Fourier Transform 1D ------------------------------------------- */
 void FourierTransform(const matrix1D<double> &in,
    matrix1D< complex<double> > &out) {
