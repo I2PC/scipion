@@ -298,6 +298,7 @@ ReconsSources = [
     'grids.cpp',
     'ml_align2d.cpp',
     'ml_refine3d.cpp',
+    'mlf_tomo.cpp',
     'phantom.cpp',
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
@@ -699,6 +700,10 @@ AddProgram('ml_refine3d', 'applications/programs/ml_refine3d', '*.cpp',
     [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
     ['XmippRecons', 'XmippData', 'Bilib'])
 
+AddProgram('mlf_tomo', 'applications/programs/mlf_tomo', '*.cpp',
+    [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
+    ['XmippRecons', 'XmippData', 'Bilib'])
+
 AddProgram('morphology', 'applications/programs/morphology', '*.cpp', [], ['libraries', '#'],
     ['libraries/data', 'external/bilib'], ['XmippData', 'Bilib'])
 
@@ -1022,6 +1027,10 @@ if int(env['mpi']):
         ['XmippRecons', 'XmippData', 'Bilib'])
 
     AddMPIProgram('mpi_ml_refine3d', 'applications/programs/mpi_ml_refine3d', '*.cpp',
+        [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
+        ['XmippRecons', 'XmippData', 'Bilib'])
+
+    AddMPIProgram('mpi_mlf_tomo', 'applications/programs/mpi_mlf_tomo', '*.cpp',
         [], ['libraries', '#', 'external'], ['libraries/reconstruction', 'libraries/data', 'external/bilib'],
         ['XmippRecons', 'XmippData', 'Bilib'])
 
