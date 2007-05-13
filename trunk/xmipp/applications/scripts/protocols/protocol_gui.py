@@ -762,8 +762,8 @@ class MyShowMoreHelp:
         else:
             import tkMessageBox
             message='Please define your favourite browser using the environment variable $XMIPP_BROWSER\n'
-            message+='e.g. for csh: setenv XMIPP_BROWSER netscape'
-            message+='e.g. for bash: set XMIPP_BROWSER=netscape'
+            message+='e.g. for csh: setenv XMIPP_BROWSER netscape '
+            message+='e.g. for bash: export XMIPP_BROWSER=netscape'
             tkMessageBox.showinfo('Define a browser',message)
 
 class HyperlinkManager:
