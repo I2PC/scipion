@@ -29,7 +29,6 @@ libXmippData_la_SOURCES = \
 	range_adjust.cpp \
 	rotational_spectrum.cpp \
 	selfile.cpp \
-	test_cluster.cpp \
 	tomogram.cpp \
 	volume.cpp \
 	volume_segment.cpp \
