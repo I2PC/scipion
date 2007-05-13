@@ -25,7 +25,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='all_images.sel'
+SelFileName='100.sel'
 # Working subdirectory: 
 WorkDirectory='RotSpectra/test1'
 # Delete working subdirectory if it already exists?
@@ -39,16 +39,23 @@ DisplayResults=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home/roberto2/Test/Para_Roberto/"
+ProjectDir='/home/roberto2/Test/Para_Roberto'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 #-----------------------------------------------------------------------------
-# {section} Align2d
+# {section} Data Alignment: align2d
 #-----------------------------------------------------------------------------
 # Perform 2D pre-alignment?
 DoAlign2D=True
-# Inner radius for rotational correlation (also used to make spectra):
+# Use Selfile average as reference image
+""" Is this option is set to False then the reference will be computed as a  
+    piramidal combination of subset of images. Details are available at 
+    http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
+"""
+DoAverageAsReference=True
+# Inner radius for rotational correlation:
 """ These values are in pixels from the image center
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 """
 InnerRadius=3
 # Outer radius for rotational correlation (also used to make spectra):
@@ -56,38 +63,46 @@ OuterRadius=12
 # Number of align2d iterations to perform:
 Align2DIterNr=4
 # {expert} Additional align2d parameters
-""" For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
+""" For a complete description, 
+    see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 
   Examples:
-  Align2DExtraCommand=\"-trans_only  -filter 10 -sampling 2 -max_shift 2 -max_rot 3\"
-  Align2DExtraCommand=\"-max_shift 2 -max_rot 3\"
+  Align2DExtraCommand="-trans_only  -filter 10 -sampling 2 -max_shift 2 -max_rot 3"
+  Align2DExtraCommand="-max_shift 2 -max_rot 3"
 
-  consider filtering the images with \"-filter 10 -sampling 2\"
+  consider filtering the images with "-filter 10 -sampling 2"
 """
-Align2DExtraCommand=""
+Align2DExtraCommand=''
 #-----------------------------------------------------------------------------
-# {section} Find_center
+# {section} Minimize first rotational harmonic: Find_center
 #-----------------------------------------------------------------------------
 # Perform search for symmetry center?
 DoFindCenter=True
 #-----------------------------------------------------------------------------
-# {section} Make_spectra
+# {section} Compute roational harmonics Make_spectra
 #-----------------------------------------------------------------------------
 # Perform Rotational Spectra calculation?
 DoMakeSpectra=True
+# Inner radius for rotational harmonics calculation:
+""" These values are in pixels from the image center
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Makespectra
+"""
+SpectraInnerRadius=7
+# Outer radius for rotational harmonics calculation:
+SpectraOuterRadius=10
 # Name of the output file:
 """ Existing files with this name will be deleted!
 """
-SpectraName="spectra.sim"
+SpectraName='spectra.sim'
 #-----------------------------------------------------------------------------
-# {section} classify_kerdensom 
+# {section} Classification: classify_kerdensom 
 #-----------------------------------------------------------------------------
 # Perform self-organizing map calculation?
 DoKerdensom=True
 # Name of Output SOM:
 """ Existing files with this name will be deleted!
 """
-SomName="som"
+SomName='som'
 # X-dimension of the self-organizing map:
 SomXdim=7
 # Y-dimension of the self-organizing map:
@@ -97,6 +112,7 @@ SomYdim=7
     to a final lower one, in a user-defined number of steps.
     If the output map is too smooth, lower the regularization factors
     If the output map is not organized, higher the regularization factors
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
 SomReg0=1000
 # Final regularization factor:
@@ -104,14 +120,15 @@ SomReg1=200
 # Number of steps to lower the regularization factor:
 SomSteps=5
 # {expert} Additional kerdenSOM parameters:
-""" For a complete description see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
+""" For a complete description 
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
-KerdensomExtraCommand=""
+KerdensomExtraCommand=''
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_rotspectra.py"
+AnalysisScript='visualize_rotspectra.py'
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 # {end-of-header} do not change anything bellow this line unless you know what you are doing
@@ -128,8 +145,11 @@ class rotational_spectra_class:
                 _ProjectDir,
                 _LogDir,
                 _DoAlign2D,
+                _DoAverageAsReference,
                 _InnerRadius,
                 _OuterRadius,
+                _SpectraInnerRadius,
+                _SpectraOuterRadius,
                 _Align2DIterNr,
                 _Align2DExtraCommand,
                 _DoFindCenter,
@@ -151,10 +171,13 @@ class rotational_spectra_class:
        import log
 
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       self._SelFileName=os.path.abspath(_SelFileName)
+       self._SelFileName=_SelFileName
+       #os.path.abspath(_SelFileName)
        self._DisplayResults=_DisplayResults
        self._InnerRadius=_InnerRadius
        self._OuterRadius=_OuterRadius
+       self._SpectraInnerRadius=_SpectraInnerRadius
+       self._SpectraOuterRadius=_SpectraOuterRadius
        self._Align2DIterNr=_Align2DIterNr
        self._Align2DExtraCommand=_Align2DExtraCommand
        self._Reverseendian=1
@@ -166,7 +189,8 @@ class rotational_spectra_class:
        self._SomReg1=_SomReg1
        self._SomSteps=_SomSteps              
        self._KerdensomExtraCommand=_KerdensomExtraCommand
-
+       self._ProjectDir=_ProjectDir
+       self._DoAverageAsReference=_DoAverageAsReference
        self.mylog=log.init_log_system(_ProjectDir,
                                       _LogDir,
                                       sys.argv[0],
@@ -178,9 +202,11 @@ class rotational_spectra_class:
        #made backup of this script
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
 
+
+       if (_DoAlign2D):
+          self.copy_images_to_working_dir()
        #change to working dir
        os.chdir(self._WorkDirectory)
-
        if (_DoAlign2D):
           self.execute_align2d()
 
@@ -222,23 +248,29 @@ class rotational_spectra_class:
           os.makedirs(self._WorkDirectory)
         
    #------------------------------------------------------------------------
-   #execute_align2d
+   #copy_images_to_working_dir
    #------------------------------------------------------------------------
-   def execute_align2d(self):
+   def copy_images_to_working_dir(self):
       import os,selfile
       print '*********************************************************************'
       print '* Copying images to working directory ...'
       mysel=selfile.selfile()
-      mysel.read(self._SelFileName)
-      newsel=mysel.copy_sel('.')
-      newsel.write(os.path.basename(self._SelFileName))
+      mysel.read(self._ProjectDir+'/'+self._SelFileName)
+      newsel=mysel.copy_sel(self._WorkDirectory)
+      newsel.write(self._WorkDirectory+'/'+self._SelFileName)
 
-      print '*********************************************************************'
-      print '* Computing initial reference using average'
-      command = 'xmipp_average -i ' + os.path.basename(self._SelFileName)
-      print '* ',command
-      os.system(command)
-      self.mylog.info(command)
+   #------------------------------------------------------------------------
+   #execute_align2d
+   #------------------------------------------------------------------------
+   def execute_align2d(self):
+      import os,selfile
+      if self._DoAverageAsReference:
+         print '*********************************************************************'
+         print '* Computing initial reference using average'
+         command = 'xmipp_average -i ' + os.path.basename(self._SelFileName)
+         print '* ',command
+         os.system(command)
+         self.mylog.info(command)
       
       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
       print '*********************************************************************'
@@ -247,9 +279,10 @@ class rotational_spectra_class:
               ' -i '  + os.path.basename(self._SelFileName) + \
               ' -Ri ' + str(self._InnerRadius) + \
               ' -Ro ' + str(self._OuterRadius) +\
-              ' -iter ' + str(self._Align2DIterNr) +\
-              ' -ref ' + selfile_without_ext + '.med.xmp' +\
-              ' '  + self._Align2DExtraCommand
+              ' -iter ' + str(self._Align2DIterNr)
+      if self._DoAverageAsReference:
+              command = command + ' -ref ' + selfile_without_ext + '.med.xmp'
+      command = command +' '  + self._Align2DExtraCommand
       print '* ',command
       self.mylog.info(command)
       os.system(command)
@@ -284,8 +317,8 @@ class rotational_spectra_class:
               ' -img ' + filename + \
               ' -x0 '  + str((ncolumns-1)/2) + \
               ' -y0 '  + str((nrows   -1)/2) + \
-              ' -r1 '  + str(self._InnerRadius) +   ' -r2 '   + str(self._OuterRadius) +\
-              ' -low ' + str(self._OuterRadius+2) + ' -high ' + str(self._OuterRadius+5)
+              ' -r1 '  + str(self._SpectraInnerRadius) +   ' -r2 '   + str(self._SpectraOuterRadius) +\
+              ' -low ' + str(self._SpectraOuterRadius+2) + ' -high ' + str(self._SpectraOuterRadius+5)
               
       print '* ',command
       self.mylog.info(command)
@@ -359,7 +392,7 @@ class rotational_spectra_class:
               ' -o ' + str(self._SpectraName) + \
               ' -x0 '  + str(self.xOffset) + \
               ' -y0 '  + str(self.yOffset) + \
-              ' -r1 '  + str(self._InnerRadius) +   ' -r2 '   + str(self._OuterRadius) 
+              ' -r1 '  + str(self._SpectraInnerRadius) +   ' -r2 '   + str(self._SpectraOuterRadius) 
               
       print '* ',command
       self.mylog.info(command)
@@ -449,8 +482,11 @@ if __name__ == '__main__':
                                       ProjectDir,
                                       LogDir,
                                       DoAlign2D,
+                                      DoAverageAsReference,
                                       InnerRadius,
                                       OuterRadius,
+                                      SpectraInnerRadius,
+                                      SpectraOuterRadius,
                                       Align2DIterNr,
                                       Align2DExtraCommand,
                                       DoFindCenter,
