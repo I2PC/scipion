@@ -18,12 +18,12 @@
 # {file} Selfile with the input images:
 """ Relative path to ProjectDir
 """
-SelFileName='all_images.sel'
+SelFileName='100.sel'
 
 # Working directory: 
 """ Relative path to ProjectDir
 """
-WorkDirectory='Test'
+WorkDirectory='ProjMatch/Test'
 
 # Delete working directory?
 DoDeleteWorkingDir=True
