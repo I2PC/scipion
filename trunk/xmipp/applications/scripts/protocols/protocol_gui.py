@@ -257,8 +257,6 @@ class automated_gui_class:
                   and self.script_header_lines[i][0]!=" "):
                 args=self.script_header_lines[i].split("=")
                 value=args[1][:-1]
-                value=value.strip('\'')
-                value=value.strip('\"')
                 if (args[0]=="AnalysisScript"):
                     self.have_analyse_results=True;
                 self.vfields.append(args[0])
@@ -276,6 +274,8 @@ class automated_gui_class:
                     self.variables[args[0]].append(newvar)
                 else:
                     # string
+                    value=value.strip('\'')
+                    value=value.strip('\"')
                     self.variables[args[0]]=[value,]
                     self.variables[args[0]].append("String")
                     newvar=StringVar()
