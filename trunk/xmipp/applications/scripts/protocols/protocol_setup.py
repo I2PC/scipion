@@ -38,7 +38,7 @@ SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
 # {setup-3d} High Resolution reconstruction
-SetupHighRes3D=False
+SetupHighRes3d=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupHighRes3D,
+                     SetupHighRes3d,
                      ProjectDir,
                      LogDir,
                      AutoLaunch):
@@ -81,7 +81,7 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupHighRes3D=SetupHighRes3D
+            self.SetupHighRes3d=SetupHighRes3d
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -111,8 +111,8 @@ class setup_protocols_class:
                                         ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
-            self.library['SetupHighRes3D']=[self.SetupHighRes3D,
-                                        ['protocol_highres3D.py','visualize_highres3D.py']]
+            self.library['SetupHighRes3d']=[self.SetupHighRes3d,
+                                        ['protocol_highres3d.py','visualize_highres3d.py']]
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupHighRes3D,
+                                SetupHighRes3d,
                                 ProjectDir,
                                 LogDir,
                                 AutoLaunch)
