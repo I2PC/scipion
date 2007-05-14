@@ -548,7 +548,7 @@ class automated_gui_class:
         self.AddSeparator(self.buttonrow)
         self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         self.button.grid(row=self.buttonrow+3,column=0, sticky=W)
-        self.master.bind('<Control_L><c>', self.GuiClose)
+        self.master.bind('<Alt_L><c>', self.GuiClose)
 
         if (self.expert_mode==True):
             text2="Hide Expert Options"
@@ -556,28 +556,28 @@ class automated_gui_class:
             text2="Show Expert Options"
         self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,underline=12)
         self.bGet.grid(row=self.buttonrow+3,column=1,sticky=EW)
-        self.master.bind('<Control_L><o>', self.GuiTockleExpertMode)
+        self.master.bind('<Alt_L><o>', self.GuiTockleExpertMode)
 
         if not self.is_analysis:
             self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=2)
-            self.master.bind('<Control_L><l>', self.GuiLoad)
+            self.master.bind('<Alt_L><l>', self.GuiLoad)
         self.bGet = Button(self.frame, text="Save", command=self.GuiSave,underline=0)
         self.bGet.grid(row=self.buttonrow+3,column=3)
-        self.master.bind('<Control_L><s>', self.GuiSave)
+        self.master.bind('<Alt_L><s>', self.GuiSave)
         self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
         self.bGet.grid(row=self.buttonrow+3,column=4)
-        self.master.bind('<Control_L><e>', self.GuiSaveExecute)
-        self.master.bind('<Control_L><r>', self.GuiSaveExecute)
+        self.master.bind('<Alt_L><e>', self.GuiSaveExecute)
+        self.master.bind('<Alt_L><r>', self.GuiSaveExecute)
         if (self.have_analyse_results):
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
-            self.master.bind('<Control_L><a>', self.AnalyseResults)
+            self.master.bind('<Alt_L><a>', self.AnalyseResults)
 
     def GuiAddRestSetupButtons(self):
         self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
-        self.master.bind('<Control_L><c>', self.GuiClose)
+        self.master.bind('<Alt_L><c>', self.GuiClose)
 
     def GuiTockleExpertMode(self,event=""):
         if (self.expert_mode==True):
@@ -659,7 +659,7 @@ class automated_gui_class:
         self.GuiSave()
         command="python "+self.scriptname+' &'
 
-        # For CTRL-R direct execution (hidden option)
+        # For ALT-R direct execution (hidden option)
         if not (event==""):
             key=event.keysym
         else:
@@ -762,8 +762,8 @@ class MyShowMoreHelp:
         else:
             import tkMessageBox
             message='Please define your favourite browser using the environment variable $XMIPP_BROWSER\n'
-            message+='e.g. for csh: setenv XMIPP_BROWSER netscape '
-            message+='e.g. for bash: export XMIPP_BROWSER=netscape'
+            message+='e.g. for csh: setenv XMIPP_BROWSER netscape\n'
+            message+='e.g. for bash: export XMIPP_BROWSER=netscape\n'
             tkMessageBox.showinfo('Define a browser',message)
 
 class HyperlinkManager:
