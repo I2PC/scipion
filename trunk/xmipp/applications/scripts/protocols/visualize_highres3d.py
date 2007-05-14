@@ -3,8 +3,7 @@
 # Protocol for visualization of the results of protocol_highres.py
 #
 # Example use:
-# python visualize_highres3D.py
-# python protocol_gui.py visualize_highres3D.py
+# ./visualize_highres3d.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, April 2007
 #
@@ -12,15 +11,15 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations="l15-19"
+Iterations='1-last'
 # Show reconstructed volume
-DoShowVolume=1
+DoShowVolume=True
 # Show model
-DoShowModel=1
+DoShowModel=True
 # Show angle convergence
-DoShowAngleConvergence=1
-# Show vector differences
-DoShowVectorDifferences=1
+DoShowAngleConvergence=True
+# Show vector difference
+DoShowVectorDifferences=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -31,9 +30,9 @@ import shutil
 import string
 import sys
 
-scriptdir=os.path.expanduser('~')+'/trunk/Xmipp/Applications/Batches/Protocols_lib'
+scriptdir=os.path.expanduser('~')+'/scripts'
 sys.path.append(scriptdir) # add default search path
-import protocol_highres3D
+import protocol_highres3d
 
 #===========================================================================
 # Beginning of the protocol
@@ -55,41 +54,40 @@ class VisualizeHighres3DClass:
        self.doShowVectorDifferences=_DoShowVectorDifferences
 
        # Produce side info
-       self.myHighRes3D=protocol_highres3D.HighRes3DClass(
-      	        protocol_highres3D.SelFileName,
-		protocol_highres3D.ReferenceFileName,
-		protocol_highres3D.WorkDirectory,
-		protocol_highres3D.DoDeleteWorkingDir,
-		protocol_highres3D.ProjectDir,
-		protocol_highres3D.LogDir,
+       self.myHighRes3D=protocol_highres3d.HighRes3DClass(
+      	        protocol_highres3d.SelFileName,
+		protocol_highres3d.ReferenceFileName,
+		protocol_highres3d.WorkDirectory,
+		protocol_highres3d.DoDeleteWorkingDir,
+		protocol_highres3d.ProjectDir,
+		protocol_highres3d.LogDir,
 		
-		protocol_highres3D.ParticleRadius,
-		protocol_highres3D.ParticleMass,
-		protocol_highres3D.SymmetryFile,
-		protocol_highres3D.SamplingRate,
+		protocol_highres3d.ParticleRadius,
+		protocol_highres3d.ParticleMass,
+		protocol_highres3d.SymmetryFile,
+		protocol_highres3d.SamplingRate,
 		
-		protocol_highres3D.PyramidLevels,
-		protocol_highres3D.AngularSteps,
-		protocol_highres3D.UseART,
-		protocol_highres3D.SerialART,
-		protocol_highres3D.ARTLambda,
-		protocol_highres3D.DiscreteAssignment,
-		protocol_highres3D.ContinuousAssignment,
-		protocol_highres3D.GaussianLowPass,
-		protocol_highres3D.ComputeResolution,
-		protocol_highres3D.ResumeIteration,
+		protocol_highres3d.PyramidLevels,
+		protocol_highres3d.AngularSteps,
+		protocol_highres3d.UseART,
+		protocol_highres3d.SerialART,
+		protocol_highres3d.ARTLambda,
+		protocol_highres3d.DiscreteAssignment,
+		protocol_highres3d.ContinuousAssignment,
+		protocol_highres3d.ComputeResolution,
+		protocol_highres3d.ResumeIteration,
 		
-		protocol_highres3D.CTFDat,
-		protocol_highres3D.AmplitudeCorrection,
+		protocol_highres3d.CTFDat,
+		protocol_highres3d.AmplitudeCorrection,
 		
-		protocol_highres3D.DoReferenceMask,
-		protocol_highres3D.InitialReferenceMask,
-		protocol_highres3D.FilterReference,
-		protocol_highres3D.SegmentUsingMass,
+		protocol_highres3d.DoReferenceMask,
+		protocol_highres3d.InitialReferenceMask,
+		protocol_highres3d.FilterReference,
+		protocol_highres3d.SegmentUsingMass,
 
-		protocol_highres3D.DoParallel,
-		protocol_highres3D.MyNumberOfCPUs,
-		protocol_highres3D.MyMachineFile,
+		protocol_highres3d.DoParallel,
+		protocol_highres3d.MyNumberOfCPUs,
+		protocol_highres3d.MyMachineFile,
 		
 		False
               )
@@ -113,16 +111,28 @@ class VisualizeHighres3DClass:
          listaIntervalo=string.split(lista[i],'-')
 	 if len(listaIntervalo)==1:
 	    if listaIntervalo[0]=="last":
-	       lastIter=-1
-	       for iteration in range(99):
-	          if os.path.exists("Iteration"+itoa(iteration,2)):
-		     lastIter=iteration
+	       lastIter=self.lastIteration()
 	       if lastIter>=0: self.iterationList+=[lastIter]
 	    else:
 	       self.iterationList+=[int(listaIntervalo[0])]
 	 else:
+	    if listaIntervalo[1]=="last":
+	       lastIter=self.lastIteration()
+	       if lastIter>=0: self.iterationList+=[lastIter]
+	       else: lastIter=listaIntervalo[0]
+	       listaIntervalo[1]=lastIter
 	    self.iterationList+=range(int(listaIntervalo[0]),
 	                              int(listaIntervalo[1]))
+
+   #------------------------------------------------------------------------
+   # Last iteration
+   #------------------------------------------------------------------------
+   def lastIteration(self):
+      lastIter=-1
+      for iteration in range(99):
+	 if os.path.exists(self.myHighRes3D.getModelFilename(iteration)):
+	    lastIter=iteration
+      return lastIter
 
    #------------------------------------------------------------------------
    # Run
@@ -148,9 +158,10 @@ class VisualizeHighres3DClass:
        if not len(self.iterationList)==0:
           command="xmipp_show -vol "
 	  for i in range(len(self.iterationList)):
-	      command+=self.myHighRes3D.getReconstructionRootname(
-	         self.iterationList[i])+".vol "
+	      command+=self.myHighRes3D.getModelFilename(
+	         self.iterationList[i])+" "
 	  command+="&"
+	  print command
 	  self.execute(command)
 	     
    #------------------------------------------------------------------------
