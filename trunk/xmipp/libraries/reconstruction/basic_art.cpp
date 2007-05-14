@@ -507,7 +507,24 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
 /* Get True Image number and projection size ------------------------------- */
    if (level>=BASIC) {
-      selfile.read(fn_sel);
+      //take into account weights here
+      if (WLS)
+      {
+         SelFile SF_aux;
+         headerXmipp       head;
+         SF_aux.read(fn_sel);
+         SF_aux.go_beginning();
+         while (!SF_aux.eof()) {
+              head.read(SF_aux.get_current_file());
+              if(head.Weight()!=0)
+                 {
+                 selfile.insert(SF_aux.current());
+                 }
+              SF_aux.NextImg();   
+         }     
+      }
+      else
+         selfile.read(fn_sel);
       trueIMG = selfile.ImgNo();
       if (trueIMG==0) REPORT_ERROR(3008,"Produce_Basic_ART_Side_Info: No images !!");
       selfile.ImgSize(projYdim,projXdim);
