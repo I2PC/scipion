@@ -92,7 +92,27 @@ void Prog_WBP_prm::usage() {
 void Prog_WBP_prm::produce_Side_info() {
 
   // Read-in stuff
-  SF.read(fn_sel);
+
+  //remove images with weight=0
+  headerXmipp      head;
+  //remove images with weight=0
+  if (do_weights)
+  {
+     SelFile SF_aux;
+     SF_aux.read(fn_sel);
+     SF_aux.go_beginning();
+     while (!SF_aux.eof()) {
+          head.read(SF_aux.get_current_file());
+          if(head.Weight()!=0)
+             {
+             SF.insert(SF_aux.current());
+             }
+          SF_aux.NextImg();   
+     }     
+  }
+  else
+    SF.read(fn_sel);
+      
   SF.ImgSize(dim,dim);
   if (fn_sym!="") SL.read_sym_file(fn_sym);
   if (diameter==0) diameter=dim;
