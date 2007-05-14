@@ -2,23 +2,29 @@
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for High Resolution 3D reconstruction
 #
-#  - delete and create workdirectory
-#  - alignment (MLalign2D)
+# {please cite} C.O.S. Sorzano et al. Journal of Structural Biology 146(3): 381-392 (2004)
+# {please cite} C.O.S. Sorzano et al. Ultramicroscopy 101(2-4): 129-138 (2004)
+# {please cite} C.O.S. Sorzano et al. Journal of Structural Biology 148: 194-204 (2004)
+# {please cite} S. Jonic et al. Ultramicroscopy,  103:  303-317 (2005)
+# {please cite} S. Scheres et al. (2005) J.Mol.Biol 348, 139-149 
+# {please cite} S. Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244
 #
 # Example use:
-# ./xmipp_protocol_highres3D.py
+# ./protocol_highres3D.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, April 2007
-#
-# required files: log.py
 #
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# Selfile with the input images:
-SelFileName='all_except_failures.sel'
+# {directory} Root directory name for this project:
+ProjectDir="/media/usb_linux/Experiments/CTD_LTA"
 
-# Reference file name (3D map)
+# {file} Selfile with the input images:
+#SelFileName='all_except_failures.sel'
+SelFileName='first100.sel'
+
+# {file} Reference file name (3D map)
 ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
 
 # Working directory: 
@@ -27,11 +33,13 @@ WorkDirectory='Experiment1'
 # Delete working directory if it already exists?
 DoDeleteWorkingDir=False
 
-# {expert} Root directory name for this project:
-ProjectDir="/usr/scratch/cperez/CTD_LTA"
-
-# {expert} Directory name for logfiles:
+# {expert} {directory} Directory name for logfiles:
 LogDir="Logs"
+
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript="visualize_highres3d.py"
 
 #-----------------------------------------------------------------------------
 # {section} Particle description
@@ -45,8 +53,9 @@ ParticleRadius=18
 """
 ParticleMass=800000
 
-# Symmetry file
-""" Use the syntax from xmipp_symmetry
+# {file} Symmetry file
+""" Use the syntax from xmipp_symmetrize:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetrize
 """
 SymmetryFile="symmetryC6.txt"
 
@@ -66,6 +75,9 @@ SamplingRate=5.6
     10 iterations at value scale=2, 15 at scale=1, 10 at scale=0).
     
     Downsampled images should not be smaller than 64x64 pixels.
+    
+    Scaling is done via spline pyramids, please visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
 PyramidLevels="35x1 15x0"
 
@@ -73,11 +85,19 @@ PyramidLevels="35x1 15x0"
 """ Angular steps for each of the iterations. This parameter is used to build
     the discrete angular assignment library in the wavelet assignment. The
     smaller the angular step, the most accurate (but slow) it is. The
-    syntax for this vector is the same as for the PyramidLevels
+    syntax for this vector is the same as for the PyramidLevels.
+    
+    The discrete angular assignment is done with xmipp_angular_predict:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps="40x5 10x2"
+AngularSteps="40x8 10x2"
 
 # {expert} Use ART for reconstruction instead of WBP
+""" For more information about art, visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
+
+    For more information about wbp, visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp"""
 UseART="0"
 
 # {expert} Serial ART
@@ -92,6 +112,9 @@ SerialART="1"
     too high relaxation factors result in too noisy reconstructions. As a
     a general rule, the noiser the projections, the smaller the relaxation
     factor.
+    
+    For more information about art, visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
 """
 ARTLambda="20x0.001 10x0.001 15x0.0005"
 
@@ -100,6 +123,9 @@ ARTLambda="20x0.001 10x0.001 15x0.0005"
     or not. Sometimes, it is desirable to do only continuous assignments
     in the last iterations. Set this variable to 0
     if no discrete assignment should be done, or to 1 if it should be done
+
+    The discrete angular assignment is done with xmipp_angular_predict:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
 DiscreteAssignment="1"
 
@@ -108,8 +134,11 @@ DiscreteAssignment="1"
     or not. It is not advisable to use continuous assignment if the
     reference volume is still too blurred. Set this variable to 0
     if no continuous assignment should be done, or to 1 if it should be done
+
+    The discrete angular assignment is done with xmipp_angular_predict:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment="7x0 1"
+ContinuousAssignment="3x0 1"
 
 # {expert} Compute resolution
 """ Resolution is something slow to compute, do not abuse of it.
@@ -121,7 +150,7 @@ ComputeResolution=""
 """ Provide the first iteration number for which a valid volume is not computed.
     If no iterations have been performed, set to 1.
 """
-ResumeIteration=1
+ResumeIteration=6
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -150,13 +179,16 @@ AmplitudeCorrection="0"
 """
 DoReferenceMask="1"
 
-# Initial Reference Mask Volume
+# {file} Initial Reference Mask Volume
 InitialReferenceMask="init_reference/initialMask.vol"
 
 # {expert} Reference Lowpass filter
 """ This vector specifies the frequency at which each reference volume
     will be filtered. The maximum frequency is 0.5, and 0.25 for all
     iterations is a reasonable value.
+
+    For more information about Fourier filtering, please visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
 """
 FilterReference="0.25"
 
@@ -165,6 +197,9 @@ FilterReference="0.25"
     to segment the reference for the next iteration. It is not
     adivsable to segment using the mass while the volume is still too
     blurred.
+    
+    Segmentation is done with xmipp_segment:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Segment
 """
 SegmentUsingMass="0"
 
@@ -172,21 +207,15 @@ SegmentUsingMass="0"
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel? (see Expert options)
-DoParallel=True
+DoParallel=False
 
 # Number of processors to use:
 MyNumberOfCPUs=8
 
-# {expert} A list of all available CPUs (the MPI-machinefile):
+# {expert} {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
 """
 MyMachineFile=""
-
-#------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
-""" This variable serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript="visualize_highres3D.py"
 
 #-----------------------------------------------------------------------------
 # {end-of-header} do not change anything bellow this line unless you know what you are doing
@@ -204,7 +233,7 @@ import sys
 scriptdir=os.path.expanduser('~')+'/scripts'
 sys.path.append(scriptdir) # add default search path
 import log
-import SelFiles
+import selfile
 import launch_parallel_job
 
 class HighRes3DClass:
@@ -248,20 +277,20 @@ class HighRes3DClass:
 		
 		_Verbose
                 ):
+       self.projectDir=_ProjectDir
        self.scriptFile=os.path.abspath(sys.argv[0])
-       self.selFileName=os.path.abspath(_ProjectDir+"/"+_SelFileName)
-       self.referenceFileName=os.path.abspath(_ProjectDir+"/"+_ReferenceFileName)
-       self.workDirectory=os.getcwd()+'/'+_WorkDirectory
+       self.selFileName=os.path.abspath(self.projectDir+"/"+_SelFileName)
+       self.referenceFileName=os.path.abspath(self.projectDir+"/"+_ReferenceFileName)
+       self.workDirectory=os.path.abspath(self.projectDir+"/"+_WorkDirectory)
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
-       self.ProjectDir=_ProjectDir
-       self.logDir=_LogDir
+       self.logDir=os.path.abspath(self.projectDir+"/"+_LogDir)
 		
        self.particleRadius=_ParticleRadius
        self.particleMass=_ParticleMass
        if _SymmetryFile=="":
           self.symmetryFile=self.workDirectory+"/Src/symmetry.sym"
        else:
-          self.symmetryFile=self.ProjectDir+"/"+_SymmetryFile
+          self.symmetryFile=os.path.abspath(self.projectDir+"/"+_SymmetryFile)
        self.samplingRate=_SamplingRate
 
        self.pyramidLevels="0 "+_PyramidLevels
@@ -274,12 +303,12 @@ class HighRes3DClass:
        self.computeResolution="0 "+_ComputeResolution
        self.resumeIteration=_ResumeIteration
 
-       self.CTFDat=_CTFDat
+       self.CTFDat=os.path.abspath(self.projectDir+_CTFDat)
        self.amplitudeCorrection="0 "+_AmplitudeCorrection
 		
        self.doReferenceMask="0 "+_DoReferenceMask
        if not _InitialReferenceMask=="":
-          self.initialReferenceMask=os.path.abspath(_ProjectDir+"/"+_InitialReferenceMask)
+          self.initialReferenceMask=os.path.abspath(self.projectDir+"/"+_InitialReferenceMask)
        else:
           self.initialReferenceMask=""
        self.filterReference="0 "+_FilterReference
@@ -299,7 +328,7 @@ class HighRes3DClass:
 	  self.logLevel='info'
        
        # Produce side info
-       self.SF=SelFiles.selfile()
+       self.SF=selfile.selfile()
        self.SF.read(self.selFileName)
                                       
    #------------------------------------------------------------------------
@@ -325,12 +354,12 @@ class HighRes3DClass:
 	 self.copyFile(self.getModelFilename(_iteration-1),
 	               self.getModelFFilename(_iteration))
 	 if previousPyramidLevel<currentPyramidLevel:
-            self.execute("xmipp_pyramid -i "+\
+            self.execute("xmipp_scale_pyramid -i "+\
 	                 self.getModelFFilename(_iteration)+\
 	        	 " -reduce -levels "+\
 			 str(currentPyramidLevel-previousPyramidLevel))
          else:
-            self.execute("xmipp_pyramid -i "+\
+            self.execute("xmipp_scale_pyramid -i "+\
 	                 self.getModelFFilename(_iteration)+\
 	        	 " -expand -levels "+\
 			 str(previousPyramidLevel-currentPyramidLevel))
@@ -353,7 +382,7 @@ class HighRes3DClass:
 	 if not self.initialReferenceMask=="":
 	    if not os.path.exists(self.getMaskFilename(_iteration)):
 	       if not currentPyramidLevel==0:
-                  self.execute("xmipp_pyramid -i ../Src/referenceScaledMask.vol -o "+\
+                  self.execute("xmipp_scale_pyramid -i ../Src/referenceScaledMask.vol -o "+\
 	                       self.getMaskFilename(_iteration)+\
 	        	       " -reduce -levels "+\
 			       str(currentPyramidLevel))
@@ -375,7 +404,7 @@ class HighRes3DClass:
        self.log("# Angular assignment --------------------------------------------------")
        
        # Take the last assignment to the image headers
-       self.execute("xmipp_headerinfo -assign -i "+\
+       self.execute("xmipp_header_assign -i "+\
                     self.getAlignmentFFilename(_iteration)+\
 		    " -o preproc_assign.sel -force")
        
@@ -388,8 +417,8 @@ class HighRes3DClass:
 		 "-psi_step "+self.getAngularSteps(_iteration)+" "+\
                  "-sym "+self.symmetryFile
 	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_angular_predict",
-        			       "xmipp_mpi_angular_predict",
+        			       "xmipp_angular_discrete_assign",
+        			       "xmipp_mpi_angular_discrete_assign",
         			       params,
         			       self.mylog,
         			       self.myNumberOfCPUs,
@@ -408,8 +437,8 @@ class HighRes3DClass:
 		 "-ang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
 		 "-oang "+self.getContinuousAnglesFilename(_iteration)
 	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_angular_predict_continuous",
-        			       "xmipp_mpi_angular_predict_continuous",
+        			       "xmipp_angular_continuous_assign",
+        			       "xmipp_mpi_angular_continuous_assign",
         			       params,
         			       self.mylog,
         			       self.myNumberOfCPUs,
@@ -432,14 +461,6 @@ class HighRes3DClass:
 		    ">> angle_convergence.txt")
 
    #------------------------------------------------------------------------
-   # Backup protocol
-   #------------------------------------------------------------------------
-   def backupProtocol(self):
-       self.log("# Creating backup")
-       self.copyFile(self.scriptFile,self.workDirectory+"/Src/"+\
-          removeDirectories(sys.argv[0]))
-
-   #------------------------------------------------------------------------
    # Change directory
    #------------------------------------------------------------------------
    def changeDirectory(self,_directory):
@@ -457,6 +478,29 @@ class HighRes3DClass:
        self.execute("cp "+_source+" "+_target)
        if not os.path.exists(_target):
 	  raise RuntimeError,"There is an error copying "+_target
+
+   #------------------------------------------------------------------------
+   # Copy selfile
+   #------------------------------------------------------------------------
+   def copySelFile(self,_sourceSelFile,_targetDirectory,_targetSelFile="",
+       _baseDirectory="",_pathToSelFile=""):
+       self.log("# Copying "+_sourceSelFile+" into "+_targetDirectory);
+       SFin=selfile.selfile()
+       SFin.read(_sourceSelFile)
+       if not _pathToSelFile=="":
+          SFin=SFin.add_1directory_begin(_pathToSelFile)
+       SFout=SFin.copy_sel(_targetDirectory)
+       if not _baseDirectory=="":
+          SFout=SFout.replace_string(_baseDirectory+"/","")
+       if not os.path.exists(_targetDirectory):
+	  raise RuntimeError,"There is an error copying "+_sourceSelFile
+       if _targetSelFile=="":
+          _targetSelFile=_targetDirectory+".sel"
+       self.log("# Creating "+_targetSelFile)
+       SFout.write(_targetSelFile)
+       if not os.path.exists(_targetSelFile):
+	  raise RuntimeError,"There is an error creating "+_targetSelFile
+       self.execute("chmod -R u+w "+_targetDirectory)
 
    #------------------------------------------------------------------------
    # Create directory
@@ -514,10 +558,9 @@ class HighRes3DClass:
           self.createDirectory(self.workDirectory+"/ScaledImgs")
 
           # Copy the images as they are and change name
-      	  self.changeDirectory(self.ProjectDir)
-      	  self.execute("xmipp_adapt_for_spider rename -i "+self.selFileName+ \
-                       " -oroot "+self.workDirectory+"/ScaledImgs/img"+\
-	               " -o "+self.workDirectory+"/imgs.sel")
+      	  self.changeDirectory(self.projectDir)
+	  self.copySelFile(self.selFileName,self.workDirectory+"/ScaledImgs",
+	                   self.workDirectory+"/imgs.sel", self.workDirectory)
 
           # Rescale the images
 	  self.changeDirectory(self.workDirectory)
@@ -547,17 +590,16 @@ class HighRes3DClass:
           
           # Generate plain set of images
           self.deleteDirectory("preproc")
-          self.createDirectory("preproc")
-          self.execute("xmipp_adapt_for_spider rename -i ../imgs.sel -oroot preproc/preproc -o preproc.sel")
-	  self.execute("chmod -R u+w preproc*")
+	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
+	                   self.workDirectory+"/Results","..")
 
           # Correct for the amplitude
           if self.getAmplitudeCorrection(_iteration)=="1" \
 	     and self.getPyramidLevel(_iteration)=="0":
-	     self.execute("xmipp_headerinfo -assign -i "+\
+	     self.execute("xmipp_header_assign -i "+\
 	                  self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
 		          " -force")
-	     self.execute("xmipp_idr_art -exp preproc.sel -vol "+\
+	     self.execute("xmipp_ctf_correct_idr -exp preproc.sel -vol "+\
 	                  self.getModelFilename(_iteration)+" -ctf "+\
 		          self.CTFDat+\
 		          " -oroot preproc/preproc -adjust_gray_levels")
@@ -565,20 +607,19 @@ class HighRes3DClass:
 
           # Generate images for assignment
 	  factor=pow(2,-int(self.getPyramidLevel(_iteration)))
-          self.execute("xmipp_adapt_for_spider rename -i preproc.sel -oroot preproc/preproc_assign -o preproc_assign.sel")
-	  self.execute("chmod -R u+w preproc*")
+          self.copySelFile("preproc.sel","preproc_assign")
           if not self.getPyramidLevel(_iteration)=="0":
-	     self.execute("xmipp_pyramid -i preproc_assign.sel -reduce -levels "+\
+	     self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
 	                  str(self.getPyramidLevel(_iteration)))
           self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
 	               str(math.ceil(self.particleWorkingRadius*1.1*factor)))
 
           # Remove useless images
-          self.execute("xmipp_rmsel preproc.sel")
+          self.execute("xmipp_selfile_delete preproc.sel")
+	  self.execute("rmdir preproc")
 
           # Generate images for reconstruction
-          self.execute("xmipp_adapt_for_spider rename -i preproc_assign.sel -oroot preproc/preproc_recons -o preproc_recons.sel")
-	  self.execute("chmod -R u+w preproc*")
+	  self.copySelFile("preproc_assign.sel","preproc_recons")
           self.execute("xmipp_mask -i preproc_recons.sel -mask raised_cosine "+\
 	               str(-(math.ceil(self.particleWorkingRadius*factor)))+" "+\
 		       str(-(math.ceil(self.particleWorkingRadius*1.1*factor))))
@@ -593,7 +634,7 @@ class HighRes3DClass:
 		  
       # Filter
       if not self.getFilterReference(_iteration)=="0":
-         self.execute("xmipp_fourierfilter -i "+\
+         self.execute("xmipp_fourier_filter -i "+\
 	              self.getModelFilename(_iteration)+" "+\
 		      "-low_pass "+self.getFilterReference(_iteration)+" "+\
 			 "-fourier_mask raised_cosine 0.05")
@@ -603,7 +644,7 @@ class HighRes3DClass:
 
       # Segment
       if self.getSegmentUsingMass(_iteration)=="1":
-         self.execute("xmipp_segment -i "+self.getModelFilename(_iteration)+" "+\
+         self.execute("xmipp_volume_segment -i "+self.getModelFilename(_iteration)+" "+\
 	              "-dalton_mass "+str(self.particleMass)+" "+\
 		      "-sampling_rate "+
 		      str(self.workingSamplingRate*pow(2,int(self.getPyramidLevel(_iteration))))+" "+\
@@ -613,7 +654,7 @@ class HighRes3DClass:
          self.deleteFile("temp_mask.vol")
 
       # Move the center of mass to 0
-      self.execute("xmipp_findcenter3D -i "+self.getModelFilename(_iteration)+" "+\
+      self.execute("xmipp_find_center3d -i "+self.getModelFilename(_iteration)+" "+\
                    "-center_volume")
 
    #------------------------------------------------------------------------
@@ -664,7 +705,7 @@ class HighRes3DClass:
    # Get image size
    #------------------------------------------------------------------------
    def getImageSize(self):
-      SFaux=self.SF.add_1directory_begin(self.ProjectDir)
+      SFaux=self.SF.add_1directory_begin(self.projectDir)
       self.xDim,self.yDim=SFaux.imgSize()
       self.workXDim=pow(2.0,math.ceil(math.log10(self.xDim)/math.log10(2.0)));
       self.workingSamplingRate=self.samplingRate*self.xDim/self.workXDim
@@ -690,7 +731,9 @@ class HighRes3DClass:
              self.touchFile(self.symmetryFile)
 
        # Backup the protocol
-       self.backupProtocol()
+       print self.workDirectory
+       log.make_backup_of_script_file(self.projectDir+"/"+sys.argv[0],
+                                      os.path.abspath(self.workDirectory))
 
    #------------------------------------------------------------------------
    # Link file
@@ -732,15 +775,14 @@ class HighRes3DClass:
        self.log("Prealigning","info",True);
        if not os.path.exists(self.workDirectory+"/Src/prealignment.txt"):
           self.changeDirectory(self.workDirectory+"/Results")
-	  self.createDirectory("preproc")
-	  self.execute("xmipp_adapt_for_spider rename -i ../imgs.sel "+
-                       "-oroot preproc/preproc -o preproc.sel");
-	  self.execute("xmipp_fourierfilter -i preproc.sel "+
+	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
+	     self.workDirectory+"/Results","..");
+	  self.execute("xmipp_fourier_filter -i preproc.sel "+
                        "-low_pass 0.25 -fourier_mask raised_cosine 0.02");
 	  params="-i preproc.sel -nref 1 -output_docfile -fast"
 	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_MLalign2D",
-        			       "xmipp_mpi_MLalign2D",
+        			       "xmipp_ml_align2d",
+        			       "xmipp_mpi_ml_align2d",
         			       params,
         			       self.mylog,
         			       self.myNumberOfCPUs,
@@ -777,7 +819,7 @@ class HighRes3DClass:
        self.log("# 3D reconstruction ---------------------------------------------------")
        
        # Take the last assignment to the image headers
-       self.execute("xmipp_headerinfo -assign -i "+\
+       self.execute("xmipp_header_assign -i "+\
                     self.getAlignmentFilename(_iteration)+\
 		    " -o preproc_recons.sel -force")
        
@@ -792,7 +834,7 @@ class HighRes3DClass:
 	  if self.getSerialART(_iteration)=="1":
 	     doParallel=False
 	  launch_parallel_job.launch_job(doParallel,
-        			       "xmipp_art",
+        			       "xmipp_reconstruct_art",
         			       "xmipp_mpi_art",
         			       params,
         			       self.mylog,
@@ -806,8 +848,8 @@ class HighRes3DClass:
 		 "-sym "+self.symmetryFile+" "+\
 		 "-use_each_image"
 	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_wbp",
-        			       "xmipp_mpi_wbp",
+        			       "xmipp_reconstruct_wbp",
+        			       "xmipp_mpi_reconstruct_wbp",
         			       params,
         			       self.mylog,
         			       self.myNumberOfCPUs,
