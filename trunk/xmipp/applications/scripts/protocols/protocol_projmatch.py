@@ -26,7 +26,7 @@ SelFileName='100.sel'
 WorkDirectory='ProjMatch/Test'
 
 # Delete working directory?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
@@ -40,7 +40,7 @@ LogDir="Logs"
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=False
+DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=2
 # {file} A list of all available CPUs (the MPI-machinefile):
@@ -56,7 +56,7 @@ MachineFile="/home/roberto2/bin/machines.dat"
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
 """
-DoMask=True
+DoMask=False
 
 # {file} Reference file name (3D map)
 """ Relative path to ProjectDir
@@ -76,10 +76,10 @@ MaskFileName='circular_mask.msk'
 
 
 #-----------------------------------------------------------------------------
-# {section} Projection Matching
+# {section} Projection Matching angular_projection_matching)
 #-----------------------------------------------------------------------------
 # Projection Matching
-DoProjectionMatching=True
+DoProjectionMatching=False
 
 #Show projection maching library and classes
 """ Show average of projections. Do not set ths option to true for
@@ -115,10 +115,10 @@ Symfile="P6.sym"
 ProjMatchingExtra=""
 
 #-----------------------------------------------------------------------------
-# {section} Align2d
+# {section} Alineamiento (align2d)
 #-----------------------------------------------------------------------------
 # Perform 2D alignment?
-DoAlign2D=True
+DoAlign2D=False
 
 #Display align2d results
 """ Show aligned classes. Do not set ths option to true for
@@ -147,7 +147,7 @@ Align2DExtraCommand="-max_shift 4"
 # -max_rot 10
 
 #-----------------------------------------------------------------------------
-# {section} Reconstruction
+# {section} Reconstruction (reconstruction_art/wbp)
 #-----------------------------------------------------------------------------
 # Perform 3D Reconstruction
 DoReconstruction=True
@@ -165,6 +165,16 @@ ReconstructionExtraCommand=""#"-max_shift 2 -max_rot 10"
 """
 ReconstructionMethod="wbp"
 
+#-----------------------------------------------------------------------------
+# {section} Compute Resolution (resolution_fsc)
+#-----------------------------------------------------------------------------
+# Perform 3D Reconstruction
+DoComputeResolution=True
+
+# {expert} Additional reconstruction parameters
+""" sampling rate so x axis is in Armstrong^-1
+"""
+ResolSam="1"
 
 #-----------------------------------------------------------------------------
 # {section} Cleaning temporal files and Reseting original data
@@ -219,6 +229,8 @@ class projection_matching_class:
                 _DoReconstruction,
                 _ReconstructionMethod,
                 _ReconstructionExtraCommand,
+                _DoComputeResolution,
+                _ResolSam,
                 _SelFileName,
                 _WorkDirectory,
                 _ProjectDir,
@@ -267,6 +279,8 @@ class projection_matching_class:
        self._Align2DExtraCommand=_Align2DExtraCommand
        self._DisplayReconstruction=_DisplayReconstruction
        self._DoReconstruction=_DoReconstruction
+       self._DoComputeResolution=_DoComputeResolution
+       self._ResolSam=_ResolSam
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
        self._MyMachineFile=os.path.abspath(_MyMachineFile)
@@ -402,6 +416,7 @@ class projection_matching_class:
        os.system(command)
         
        if (_DoReconstruction):
+          print self._ReconstructionMetho+"\n"
           execute_reconstruction(self._mylog, 
                                  self._ReconstructionExtraCommand,
                                  self._iteration_number,
@@ -412,6 +427,19 @@ class projection_matching_class:
                                  self._ReconstructionMethod,
                                  self._align2d_sel,
                                  self._Symfile)
+       else:
+          self._mylog.info("Skipped Reconstruction") 
+       if (_DoComputeResolution):
+          execute_resolution(self._mylog, 
+                             self._ReconstructionExtraCommand,
+                             self._ReconstructionMethod,
+                             self._iteration_number,
+                             self._DisplayReconstruction,
+                             self._ResolSam,
+                             self._align2d_sel,
+                             self._DoParallel,
+                             self._MyNumberOfCPUs,
+                             self._MyMachineFile)
        else:
           self._mylog.info("Skipped Reconstruction") 
 
@@ -735,7 +763,7 @@ def execute_reconstruction(_mylog,
 
    Outputvolume  ="reconstruction_iter_"+str(_iteration_number)+".vol"
    print '*********************************************************************'
-   print '* Reconstruct volume'
+   print '* Reconstruct volume using ', _ReconstructionMethod
    if _ReconstructionMethod=='wbp':
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
@@ -779,7 +807,79 @@ def execute_reconstruction(_mylog,
       _mylog.info(command)
       os.system(command)
 
+#------------------------------------------------------------------------
+#           execute_resolution(self._SelFileName)
+#------------------------------------------------------------------------
+def  execute_resolution(_mylog,
+                        _ReconstructionExtraCommand,
+                        _ReconstructionMethod,
+                        _iteration_number,
+                        _DisplayReconstruction,
+                        _ResolSam,
+                        _align2d_sel,
+                        _DoParallel,
+                        _MyNumberOfCPUs,
+                        _MyMachineFile):
+    import os
+    # Split selfiles
+    #the user should be able to delete images
+    #this is dirty but what else can I do
+    reconstruction_sel=_align2d_sel;
+    split_sel_root_name="split_sel"
+    command='xmipp_selfile_split -o '+ split_sel_root_name+ \
+             ' -i ' + reconstruction_sel + \
+             ' -n 2'
+    print '* ',command
+    _mylog.info(command)
+    os.system(command)
 
+    Outputvolumes=[]
+    Outputvolumes.append(split_sel_root_name+'_1_'+str(_iteration_number)+".vol")
+    Outputvolumes.append(split_sel_root_name+'_2_'+str(_iteration_number)+".vol")
+    for Outputvolume in Outputvolumes:
+       print '*********************************************************************'
+       print '* Reconstruct volume'
+       if _ReconstructionMethod=='wbp':
+          program = 'xmipp_reconstruct_wbp'
+          mpi_program = 'xmipp_mpi_reconstruct_wbp'
+          parameters= ' -i '    + reconstruction_sel + \
+                      ' -o '    + Outputvolume + \
+                      ' -weight -use_each_image ' + \
+                      ' -sym ' + _Symfile + ' ' + \
+                      _ReconstructionExtraCommand
+
+       elif _ReconstructionMethod=='art':
+          program = 'xmipp_reconstruct_art'
+          mpi_program = 'NULL'
+          _DoParallel=False
+          mpi_program = 'xmipp_mpi_reconstruct_wbp'
+          parameters=' -i '    + InPutVolume + \
+                     ' -o '    + Outputvolume 
+       else:
+          _mylog.error("Reconstruction method unknown. Quiting")
+          print "Reconstruction method unknown. Quiting"
+          exit(1)
+
+       import launch_parallel_job
+       RunInBackground=False
+       launch_parallel_job.launch_job(
+                           _DoParallel,
+                           program,
+                           mpi_program,
+                           parameters,
+                           _mylog,
+                           _MyNumberOfCPUs,
+                           _MyMachineFile,
+                           RunInBackground)
+
+
+
+    #print '**************************************************************'
+    #print '* Compute resolutione ' + _SelFileName 
+    #command = "xmipp_resolution_fsc -ref " + _SelFileName
+    #print '* ',command
+    #_mylog.info(command)
+    #os.system(command)
 
 #
 # main
@@ -811,6 +911,8 @@ if __name__ == '__main__':
                 Align2DExtraCommand,
                 DisplayReconstruction,
                 DoReconstruction,
+                DoComputeResolution,
+                ResolSam,
                 ReconstructionMethod,
                 ReconstructionExtraCommand,
                 SelFileName,
