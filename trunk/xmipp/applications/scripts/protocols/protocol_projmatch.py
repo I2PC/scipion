@@ -242,7 +242,8 @@ class projection_matching_class:
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
        #self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
        #self._SelFileName=os.path.abspath(str(_SelFileName))
-       self._SelFileName=os.path.abspath(_SelFileName)
+       #self._SelFileName=os.path.abspath(_SelFileName)
+       self._SelFileName=_SelFileName
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
        self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
        self._MaskFileName=os.path.abspath(_MaskFileName)
@@ -302,13 +303,13 @@ class projection_matching_class:
        create_working_directory(self._mylog,self._WorkDirectory)
        #made backup of this script
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
-       #change to working dir
-       os.chdir(self._WorkDirectory)
        
        #copy files to local directory
        copy_images_to_local_disk(self._mylog,
                                  self._SelFileName,
                                  self._WorkDirectory)
+       #change to working dir
+       os.chdir(self._WorkDirectory)
        self._SelFileName=self._WorkDirectory+'/'+\
                          str(os.path.basename(self._SelFileName))
        if (_ResetImageHeader):
@@ -442,6 +443,20 @@ def create_working_directory(_mylog,_WorkDirectory):
        os.makedirs(_WorkDirectory)
 
 #------------------------------------------------------------------------
+#           copy files to local dir
+#------------------------------------------------------------------------
+def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory):
+      import os,selfile
+      print '*********************************************************************'
+      print '* Copying images to working directory ...'
+      mysel=selfile.selfile()
+      mysel.read(_SelFileName)
+      newsel=mysel.copy_sel(_WorkDirectory)
+      print _WorkDirectory+'/'+_SelFileName
+      newsel.write(_WorkDirectory+'/'+_SelFileName)
+      _mylog.info("copy files to local directory")
+
+#------------------------------------------------------------------------
 #           reset_image_header(self._SelFileName)
 #------------------------------------------------------------------------
 def reset_image_header(_mylog,_SelFileName):
@@ -452,19 +467,6 @@ def reset_image_header(_mylog,_SelFileName):
     print '* ',command
     _mylog.info(command)
     os.system(command)
-
-#------------------------------------------------------------------------
-#           copy files to local dir
-#------------------------------------------------------------------------
-def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory):
-      import os,selfile
-      print '*********************************************************************'
-      print '* Copying images to working directory ...'
-      mysel=selfile.selfile()
-      mysel.read(_SelFileName)
-      newsel=mysel.copy_sel(_WorkDirectory)
-      newsel.write(os.path.basename(_SelFileName))
-      _mylog.info("copy files to local directory")
 
 #------------------------------------------------------------------------
 #execute_mask
