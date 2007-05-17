@@ -41,24 +41,24 @@ DoVisualizeGeneratedSeeds=False
 # {section} Per-iteration ML3D Visualization
 #------------------------------------------------------------------------------------------------
 # Which iterations to visualize? (Separate numbers by comma's)
-SelectIterations="2"
+SelectIterations="1,2"
 # Visualize the reference volumes for the given iterations?
-VisualizeML3DReferences=False
+VisualizeML3DReferences=True
 # Visualize weighted 2D-averages?
-VisualizeML3DAvgs=False
+VisualizeML3DAvgs=True
 # Plot the angular distribution of the reference(s)?
-VisualizeAngDistribution=False
+VisualizeAngDistribution=True
 # Plot data distribution over the distinct references?
-VisualizeClassDistribution=False
+VisualizeClassDistribution=True
 #------------------------------------------------------------------------------------------------
 # {section} Overall ML3D visualization
 #------------------------------------------------------------------------------------------------
 # Plot overall convergence statistics?
 """ As also described in Scheres et al. (2007) Nature Methods, 4, 27-29 
 """
-DoShowStatsAllIter=False
+DoShowStatsAllIter=True
 # Visualize matrixview of library projections and weighted averages of the last iteration?
-VisualizeMatrixLastIter=False
+VisualizeMatrixLastIter=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
