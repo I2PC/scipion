@@ -23,7 +23,7 @@ DoDeleteWorkingDir=False
 """ Absolute path to the root directory for this project
 """
 ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
-# {expert} Directory name for logfiles (from project dir):
+# {expert} Directory name for logfiles:
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} Correct absolute grey scale of initial reference
@@ -76,7 +76,7 @@ DoML3DClassification=True
 AngularSampling=10
 # Number of ml3d iterations to perform:
 NumberOfIterations=25
-# {file} Symmetry description file (relative path from ProjectDir):
+# {file} Symmetry description file:
 """ See WIKI link for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
@@ -158,7 +158,7 @@ class ML3D_class:
         self.WbpThreshold=WbpThreshold
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
-        self.MyMachineFile=MyMachineFile
+        self.MyMachineFile=os.path.abspath(MyMachineFile)
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
