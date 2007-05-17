@@ -70,6 +70,15 @@ class gnuplot:
     def send(self, cmd):
         self.session.write(cmd+'\n')
         self.session.flush() 
+
+    def prepare_empty_plot(self,
+                           Title="",
+                           X_Label="x",
+                           Y_Label="y"):
+       self.send(" set title '"+Title+"'")   
+       self.send(" set xlabel '"+X_Label+"'")   
+       self.send(" set ylabel '"+Y_Label+"'")   
+
     def plot_xy_file(self,DataFile,
                           Title="",
                           X_Label="x",
@@ -78,9 +87,7 @@ class gnuplot:
                           Y_col=2):
        """ plots a file using gnuplot
        """
-       self.send(" set title '"+Title+"'")   
-       self.send(" set xlabel '"+X_Label+"'")   
-       self.send(" set ylabel '"+Y_Label+"'")   
+       self.prepare_empty_plot(Title,X_Label,Y_Label)
        self.send(" plot '" + DataFile + "' using "+str(X_col)+":"+str(Y_col)+" with lines")   
 
     def plot_xy1y2_file(self,DataFile,
@@ -94,9 +101,7 @@ class gnuplot:
                              Y2_col=3):
        """ plots a file using gnuplot
        """
-       self.send(" set title '"+Title+"'")   
-       self.send(" set xlabel '"+X_Label+"'")   
-       self.send(" set ylabel '"+Y_Label+"'")   
+       self.prepare_empty_plot(Title,X_Label,Y_Label)
        self.send(" plot '" + DataFile + "'using "+str(X_col)+":"+str(Y1_col)+" title '"+\
                                         titley1+"' with lines")   
        self.send(" replot '" + DataFile + "'using "+str(X_col)+":"+str(Y2_col)+" title '"+\

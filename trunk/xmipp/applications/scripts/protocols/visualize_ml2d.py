@@ -13,13 +13,13 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Visualize the class averages of all iterations in matrix-view?
-DoMatrixAllIter=False
+DoMatrixAllIter=True
 # Separately visualize class averages of the last iteration?
-DoShowLastIter=False
+DoShowLastIter=True
 # Plot model (and mirror) fractions of the last iteration?
-DoShowFractions=False
+DoShowFractions=True
 # Plot convergence statistics for all iterations?
-DoShowStatsAllIter=False
+DoShowStatsAllIter=True
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -156,14 +156,23 @@ class visualize_ML2D_class:
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else:
+            # Get number of classes:
+            fh=open(logfiles[-1],'r')
+            lines=fh.readlines()
+            fh.close()
+            nr_class=0.5
+            for line in lines:
+                if (line.find(';')<0):
+                    nr_class+=1.
+
             plot1=visualization.gnuplot()
-            plot1.plot_xy1y2_file(logfiles[-1],
-                                  'Model and mirror fractions in the last iteration',
-                                  'model fraction',
-                                  'mirror fraction',
-                                  'reference number',
-                                  'fractions',
-                                  1,3,4)
+            plot1.prepare_empty_plot('Model and mirror fractions in the last iteration',
+                                     'reference number',
+                                     'fractions')
+            plot1.send(" set yrange [0:1]")
+            plot1.send(" set xrange [0.5:"+str(nr_class)+"]")
+            plot1.send(" plot '" + logfiles[-1] + "' using 1:3 title 'model fraction' with boxes")
+            plot1.send(" replot '" + logfiles[-1] + "' using 1:4 title 'mirror fraction' with boxes")
 
     def show_last_iter(self):
         # Visualize class averages:

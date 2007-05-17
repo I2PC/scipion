@@ -224,11 +224,14 @@ class visualize_ML3D_class:
         fh=open('class_distribution.dat','w')
         fh.writelines(newlines)
         fh.close()
+        nr_class=len(newlines)
+        nr_class-=0.5
         plot=visualization.gnuplot()
-        plot.plot_xy_file('class_distribution.dat',
-                           'Number of images contributing to each class for iteration '+str(iter),
-                           'class number',
-                           'sumweight')
+        plot.prepare_empty_plot('Number of images contributing to each class for iteration '+str(iter),
+                                'class number',
+                                'sumweight')
+        plot.send(" set xrange [0.5:"+str(nr_class)+"]")
+        plot.send(" plot 'class_distribution.dat' using 1:2 with boxes")
 
     def show_ang_distribution(self,selfile,iter,ref):
         import os
@@ -352,6 +355,9 @@ class visualize_ML3D_class:
 #     
 if __name__ == '__main__':
 
+    import sys
+    WorkingDir=sys.argv[1]
+
     # create ML3D_class object
     visualize_ML3D=visualize_ML3D_class(VisualizeVolZ,
                                         VisualizeVolX,
@@ -367,7 +373,8 @@ if __name__ == '__main__':
                                         VisualizeAngDistribution,
                                         VisualizeClassDistribution,
                                         DoShowStatsAllIter,
-                                        VisualizeMatrixLastIter
+                                        VisualizeMatrixLastIter,
+                                        WorkingDir
                                         )
     # close 
     visualize_ML3D.close()
