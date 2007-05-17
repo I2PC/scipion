@@ -152,7 +152,7 @@ class ML3D_class:
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize
         self.NumberOfIterations=NumberOfIterations
-        self.SymmetryFile=SymmetryFile
+        self.SymmetryFile=os.path.abspath(SymmetryFile)
         self.ExtraParamsMLrefine3D=ExtraParamsMLrefine3D
         self.ProjMatchSampling=ProjMatchSampling
         self.WbpThreshold=WbpThreshold
