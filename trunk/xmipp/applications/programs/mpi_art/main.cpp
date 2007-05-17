@@ -6,27 +6,26 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ * the Free Software Foundation; either version 2 of the License, or   
+ * (at your option) any later version.                                 
+ *                                                                     
+ * This program is distributed in the hope that it will be useful,     
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of      
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
+ * GNU General Public License for more details.                        
+ *                                                                     
+ * You should have received a copy of the GNU General Public License   
+ * along with this program; if not, write to the Free Software         
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
+ * 02111-1307  USA                                                     
+ *                                                                     
+ *  All comments concerning this program package may be sent to the    
+ *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
 
-#include <reconstruction/reconstruct_art.h>
-#include <reconstruction/art_crystal.h>
-
+#include <Reconstruction/Programs/Prog_art.hh>
+#include <Reconstruction/Programs/Prog_art_crystal.hh>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -45,13 +44,13 @@ typedef struct {
 
 // Gets User and System times for use with MPI
 void uswtime(USWtime_t *tm)
-{
-	struct rusage buffer;
+{ 
+	struct rusage buffer; 
 
 	tm->wall = MPI_Wtime();
 	getrusage(RUSAGE_SELF, &buffer);
-	tm->user = (double) buffer.ru_utime.tv_sec + 1.0e-6 * buffer.ru_utime.tv_usec;
-	tm->sys  = (double) buffer.ru_stime.tv_sec + 1.0e-6 * buffer.ru_stime.tv_usec;
+	tm->user = (double) buffer.ru_utime.tv_sec + 1.0e-6 * buffer.ru_utime.tv_usec; 
+	tm->sys  = (double) buffer.ru_stime.tv_sec + 1.0e-6 * buffer.ru_stime.tv_usec;  
 }
 
 /* ------------------------------------------------------------------------- */
@@ -66,7 +65,7 @@ int main (int argc, char *argv[]) {
    GridVolume             vol_basis;
    int                    crystal_mode;
    MPI_Status		  status;            	// Stores MPI directives status
-   int 			  num_img_tot;		// The total amount of images
+   int 			  num_img_tot;		// The total amount of images 
    int			  num_img_node;		// Stores the total amount of images each node deals with
    int 			  remaining;         	// Number of projections still to compute
    int 			  Npart;             	// Number of projection to process
@@ -83,7 +82,7 @@ int main (int argc, char *argv[]) {
    matrix1D<int> Ordered_aux;
 	
    int 			  rank, size;	     	// MPI number of proccess and number of proccesses
-
+   
 	
 	// Init Parallel interface		
   	MPI_Init(&argc, &argv);
@@ -145,32 +144,39 @@ int main (int argc, char *argv[]) {
 
 	// How many images processes each node. It is done in such a way that every node receives the
 	// same amount of them
-	
+
 	num_img_tot = art_prm.numIMG;
 
 	Npart = (int) ((float)num_img_tot / (float)size);
+
+	num_img_node = Npart;
+
 	remaining = num_img_tot % size;
 
-	// each process will only see the images it is iterested in.
-	if( !remaining || rank < remaining)
-        	myFirst = rank * Npart;
-	else                  // for rank >= remaining > 0
-        	myFirst = rank * Npart - (rank - remaining) - 1;
+	// each process will only see the images it is iterested in.            
+	if( rank < remaining )
+	{
+		num_img_node++;
+		myFirst = rank * Npart + rank; 
+	}
+	else
+	{
+		myFirst = Npart * rank + remaining;
+	}
 
-     	myLast = myFirst + Npart - 1;
-
-	num_img_node = myLast-myFirst;
+     	myLast = myFirst + num_img_node - 1;
 
 	art_prm.ordered_list.startingX() = -myFirst;
 
 	art_prm.no_it = 1;
 
 	GridVolume   vol_basis_aux = vol_basis;
+
 	GridVolume   vol_aux2 = vol_basis;
    	
 	// Print some data
 	if( rank == 0 ){
-		if      ( art_prm.parallel_mode == Basic_ART_Parameters::pSART ){
+		if      ( art_prm.parallel_mode == Basic_ART_Parameters::pSART ){ 
 	             if (art_prm.block_size < size ) art_prm.block_size = size; // Each processor will have at least one projection
 		     if (art_prm.block_size > num_img_tot ) art_prm.block_size = num_img_tot; // block_size is as much equal to num_img_tot
 		     cout << "pSART " << "TB = " << art_prm.block_size << endl;
@@ -179,7 +185,7 @@ int main (int argc, char *argv[]) {
 		     cout << "pCAV" << endl;
 		else if ( art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV ){
 		     if (art_prm.block_size < size ) art_prm.block_size = size; // Each processor will have at least one projection
-		     if (art_prm.block_size > num_img_tot ) art_prm.block_size = num_img_tot; // block_size is as much equal to num_img_tot
+		     if (art_prm.block_size > num_img_tot ) art_prm.block_size = num_img_tot; // block_size is as much equal to num_img_tot 
 		     cout << "pBiCAV " << "TB = " << art_prm.block_size << endl;
 	        }
 		else if ( art_prm.parallel_mode == Basic_ART_Parameters::pSIRT )
@@ -194,7 +200,7 @@ int main (int argc, char *argv[]) {
 		cout << "Projections: " << num_img_tot << endl;
 		cout << "________________________________________________________________________________\n\n" << endl;
 	}
-	
+
 	art_prm.block_size /= size; // Now this variable stores how many projs. from each block belong to each node.
 	
 	/*************************** CAV weights precalculation *************************/
@@ -219,7 +225,7 @@ int main (int argc, char *argv[]) {
 			(*(art_prm.GVNeq))(n)() = GVNeq_aux(n)();	
 		}
 		if( rank==0 ) cout <<"Elapsed time for pCAV weights computation: "<< MPI_Wtime()-cav_t<<endl;
-	}
+	} 
 	
 	/*************************** PARALLEL ART ALGORITHM ***************************/
 	
@@ -240,7 +246,7 @@ int main (int argc, char *argv[]) {
 			int numsteps = Npart / art_prm.block_size;
 			
 			// could be necessary another step for remaining projections
-			if (( Npart % art_prm.block_size ) != 0)
+			if (( Npart % art_prm.block_size ) != 0) 
 				numsteps++;
 				
 			int processed = 0;
@@ -291,7 +297,7 @@ int main (int argc, char *argv[]) {
 
 			int processed = 0;
 						
-			if(( num_img_node % art_prm.block_size) != 0)
+			if(( num_img_node % art_prm.block_size) != 0) 
 				numsteps++;
 	
 			art_prm.numIMG = art_prm.block_size;
@@ -365,7 +371,7 @@ int main (int argc, char *argv[]) {
 						}
 						else
 						{
-							// This case should not happen as this element
+							// This case should not happen as this element 
 							// is not affected by actual projections
 	
 							cerr << "Error with weights, contact developers!" << endl;
@@ -374,10 +380,10 @@ int main (int argc, char *argv[]) {
 					}
 					else
 					{
-					  	MULTIDIM_ELEM( vol_basis(j)(),i) =
-					  		MULTIDIM_ELEM( vol_aux2(j)(),i) +
-							MULTIDIM_ELEM( vol_basis_aux(j)(),i) /
-							MULTIDIM_ELEM( GVNeq_aux(j)(),i);
+					  	MULTIDIM_ELEM( vol_basis(j)(),i) = 
+					  		MULTIDIM_ELEM( vol_aux2(j)(),i) + 
+							MULTIDIM_ELEM( vol_basis_aux(j)(),i) /  
+							MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
 					}
 				}	
 			}
@@ -417,7 +423,7 @@ int main (int argc, char *argv[]) {
 						}
 						else
 						{
-							// This case should not happen as this element
+							// This case should not happen as this element 
 							// is not affected by actual projections
 	
 							cerr << "Error with weights, contact developers!" << endl;
@@ -426,14 +432,14 @@ int main (int argc, char *argv[]) {
 					}
 					else
 					{
-				          MULTIDIM_ELEM( vol_basis(j)(),i) =
-					  	MULTIDIM_ELEM( vol_aux2(j)(),i) +
-						MULTIDIM_ELEM( vol_basis_aux(j)(),i) /
-						MULTIDIM_ELEM( GVNeq_aux(j)(),i);
+				          MULTIDIM_ELEM( vol_basis(j)(),i) = 
+					  	MULTIDIM_ELEM( vol_aux2(j)(),i) + 
+						MULTIDIM_ELEM( vol_basis_aux(j)(),i) /  
+						MULTIDIM_ELEM( GVNeq_aux(j)(),i); 
 					}
 			}	
 		}
-		else{   // SIRT AND AVSP
+		else{   // SIRT AND ASS
 		
 			art_prm.numIMG = num_img_node;
 			
@@ -447,7 +453,7 @@ int main (int argc, char *argv[]) {
 			}
 			
 			Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
-		
+
 			// All processors send their result and get the other's so all of them
 			// have the same volume for the next step.
 			for ( int j = 0 ; j < vol_basis.VolumesNo() ; j++)
@@ -461,8 +467,9 @@ int main (int argc, char *argv[]) {
 				
 				MPI_Barrier( MPI_COMM_WORLD );
 				aux_comm_t = MPI_Wtime();
-				MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
+				MPI_Allreduce( MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE( vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+	
 				aux_t = MPI_Wtime() - aux_comm_t;
 				comms_t += aux_t;
 				comms_t_it += aux_t;
@@ -489,22 +496,13 @@ int main (int argc, char *argv[]) {
 		// Only the proccess with rank=0 (Master) will output the results
 		if ( rank == 0 ){
 			cout << "\nIteration " << i << endl;
-			cout << "Time: " << MPI_Wtime() - it_t << " secs." << endl;
+			cout << "Time: " << MPI_Wtime() - it_t << " secs." << endl; 
 			cout << "Comms. time: " << comms_t_it << " secs." << endl;
 			if(  art_prm.parallel_mode==Basic_ART_Parameters::pBiCAV  )
 				cout << "BiCAV weighting time: " << cavk_it_t << endl;
 		
-			if( i < num_iter-1 ){
-				int Xoutput_volume_size=(art_prm.Xoutput_volume_size==0) ?
-				    art_prm.projXdim:art_prm.Xoutput_volume_size;
-				int Youtput_volume_size=(art_prm.Youtput_volume_size==0) ?
-				    art_prm.projYdim:art_prm.Youtput_volume_size;
- 				int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
-				    art_prm.projXdim:art_prm.Zoutput_volume_size;
-		 		blobs2voxels(vol_basis, art_prm.basis.blob, &(vol_voxels()), art_prm.D,
-        			Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-        			vol_voxels.write(art_prm.fn_root+"it"+ItoA(i+1)+".vol");
-			
+			if( i < num_iter-1 )
+			{
 			        if ((art_prm.tell&TELL_SAVE_BASIS) && (i < num_iter-1 ))
  					vol_basis.write(art_prm.fn_root+"it"+ItoA(i+1)+".basis");
 			}
@@ -514,33 +512,31 @@ int main (int argc, char *argv[]) {
 	/*************************** FINISHING AND STORING VALUES ***************************/
 		
 	if( rank > 0 ){
+		art_prm.fh_hist->close();			
 	        MPI_Finalize();	  // Must exist for each proccess on MPI evironment
         	return 0;
 	}
-		
- 	int Xoutput_volume_size=(art_prm.Xoutput_volume_size==0) ?
-	  art_prm.projXdim:art_prm.Xoutput_volume_size;
-	int Youtput_volume_size=(art_prm.Youtput_volume_size==0) ?
-	  art_prm.projYdim:art_prm.Youtput_volume_size;
- 	int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
-	  art_prm.projXdim:art_prm.Zoutput_volume_size;
-			 		
-	blobs2voxels(vol_basis, art_prm.basis.blob, &(vol_voxels()), art_prm.D,Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
- 		
-	vol_voxels.write(art_prm.fn_root+".vol");
-		
-	if (art_prm.tell&TELL_SAVE_BASIS)
-	    vol_basis.write(art_prm.fn_root+".basis");
 
-   	uswtime( &recons_t );
-        art_prm.fh_hist->close();
+	vol_basis.write(art_prm.fn_root+".vol");
+		
+	if (art_prm.tell&TELL_SAVE_BASIS) 
+
+	art_prm.fh_hist->close();			
+   	
+	uswtime( &recons_t );
 	cout << "\n\n------ FINAL STATISTICS ------" << endl;
 	cout << "\nTOTAL EXECUTION TIME: " << recons_t.wall - total_t << endl;
 	cout << "Communications time: " << comms_t << " secs." << endl;
 	cout << "CPU time: " << recons_t.user + recons_t.sys<< " secs." << endl;
-	cout << "USER: " << recons_t.user << " SYSTEM: " << recons_t.sys << "\n\n" << endl;
+	cout << "USER: " << recons_t.user << " SYSTEM: " << recons_t.sys << "\n\n" << endl;  
 	if(  art_prm.parallel_mode==Basic_ART_Parameters::pBiCAV )
 		cout << "total pBiCAV Weighting time: "<< cavk_total_t << endl;								
         MPI_Finalize();	
         return 0 ;
 }
+
+
+
+
+
+
