@@ -55,18 +55,18 @@ double& DocLine::operator[](int i)
 {
     if (i+1 > data.size())
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
-        ItoA(i) + " of a document line");
+                     ItoA(i) + " of a document line");
 
-   return data[i];
+    return data[i];
 }
 
 double DocLine::operator[](int i) const
 {
     if (i+1 > data.size())
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
-        ItoA(i) + " of a document line");
+                     ItoA(i) + " of a document line");
 
-   return data[i];
+    return data[i];
 }
 
 void DocLine::set(int i, double val)
@@ -111,28 +111,28 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
     char aux[30];
     switch (line.line_type)
     {
-        case (DocLine::DATALINE):
-            // Print a data line
-            sprintf(aux, "%5d ", line.key);
+    case (DocLine::DATALINE):
+                    // Print a data line
+                    sprintf(aux, "%5d ", line.key);
+        o << aux;
+        sprintf(aux, "%-2d", line.data.size());
+        o << aux;
+
+        int imax;
+        imax = line.data.size();
+        for (int i=0; i<imax; i++)
+        {
+            sprintf(aux, " % 10.5f", line.data[i]);
             o << aux;
-            sprintf(aux, "%-2d", line.data.size());
-            o << aux;
+        }
 
-            int imax;
-            imax = line.data.size();
-            for (int i=0; i<imax; i++)
-            {
-                sprintf(aux, " % 10.5f", line.data[i]);
-                o << aux;
-            }
+        o << endl;
+        break;
 
-            o << endl;
-            break;
-
-        case (DocLine::COMMENT):
-            // Print a comment
-            o << line.text << std::endl;
-            break;
+    case (DocLine::COMMENT):
+                    // Print a comment
+                    o << line.text << std::endl;
+        break;
     }
 
     return o;
@@ -170,14 +170,14 @@ void DocLine::read(std::istream& in)
 
         key = AtoI(next_token(line, i), 1602,"Error reading key");
         param_no = AtoI(next_token(line, i), 1602,
-            "Error reading number parameters");
+                        "Error reading number parameters");
         std::string auxline = line;
 
         try
         {
             // Try unfixed mode first
             read_float_list(line, i, param_no, data, 1602,
-                "Error reading doc file line");
+                            "Error reading doc file line");
         }
         catch(Xmipp_error e)
         {
@@ -227,7 +227,7 @@ DocFile& DocFile::operator=(const DocFile& doc)
 void DocFile::assign(const DocFile& doc)
 {
     // Call the previous one, as in this->operator=(doc)
-   *this = doc;
+    *this = doc;
 }
 
 DocFile& DocFile::operator=(const matrix2D< double >& A)
@@ -302,7 +302,7 @@ void DocFile::debug()
     while (current != last)
     {
         if ((*current).line_type == DocLine::DATALINE ||
-            (*current).line_type == DocLine::COMMENT)
+                (*current).line_type == DocLine::COMMENT)
             std::cout << *current;
         else
         {
@@ -390,33 +390,34 @@ void DocFile::read(FileName name, int overriding)
     in.peek();
     while (!in.eof())
     {
-        #ifndef _NO_EXCEPTION
+#ifndef _NO_EXCEPTION
         try
         {
-        #endif
+#endif
             temp.read(in);
-        #ifndef _NO_EXCEPTION
+#ifndef _NO_EXCEPTION
+
         }
         catch (Xmipp_error e)
         {
             std::cout << "Doc File: Line " << line_no <<
-                " is skipped due to an error\n";
+            " is skipped due to an error\n";
         }
-        #endif
+#endif
 
         switch (temp.line_type)
         {
-            case (DocLine::NOT_ASSIGNED):
-                break; // Line with an error
+        case (DocLine::NOT_ASSIGNED):
+                        break; // Line with an error
 
-            case (DocLine::DATALINE):
-                no_lines++;
-                m.push_back(temp);
-                break;
+        case (DocLine::DATALINE):
+                        no_lines++;
+            m.push_back(temp);
+            break;
 
-            case (DocLine::COMMENT):
-                m.push_back(temp);
-                break;
+        case (DocLine::COMMENT):
+                        m.push_back(temp);
+            break;
         }
 
         line_no++;
@@ -449,7 +450,7 @@ void DocFile::write(FileName name)
     out.open(fn_doc.c_str(), std::ios::out);
     if (!out)
         REPORT_ERROR(1603, "DocFile::write: File " + fn_doc +
-        " cannot be written");
+                     " cannot be written");
 
     // Read each line and keep it in the list of the SelFile object
     while (current != last)
@@ -481,7 +482,7 @@ int DocFile::search_comment(std::string comment)
         if ((*current_line).Is_comment())
         {
             if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
-                == 0)
+                    == 0)
             {
                 adjust_to_data_line();
                 return 1;
@@ -501,7 +502,7 @@ void DocFile::get_selfile(SelFile& sel)
     if ((*current_line).Is_comment())
         if (strstr(((*current_line).get_text()).c_str(), "Headerinfo") == NULL)
             REPORT_ERROR(1605,
-            "DocFile::get_selfile: Docfile is of non-NewXmipp type!");
+                         "DocFile::get_selfile: Docfile is of non-NewXmipp type!");
 
     sel.clear();
     next();
@@ -527,7 +528,7 @@ void DocFile::locate(int k)
     while (current_line != last)
     {
         if ((*current_line).line_type == DocLine::DATALINE &&
-            (*current_line).key >= k)
+                (*current_line).key >= k)
             return;
 
         current_line++;
@@ -569,226 +570,226 @@ double DocFile::operator()(int k, int i)
 
     if (aux == m.end())
         REPORT_ERROR(1604, "DocFile::operator(): The given key (" + ItoA(k)
-        + ") is not in the file");
+                     + ") is not in the file");
 
-   return (*aux)[i];
+    return (*aux)[i];
 }
 
 void DocFile::get_angles(int k, double& rot, double& tilt, double& psi,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                         const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     std::vector< DocLine >::iterator it = find(k);
 
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::get_angles(): The given key (" + ItoA(k)
-        + ") is not in the file");
+                     + ") is not in the file");
 
     switch (ang1[0])
     {
-        case 'r':
-            rot = (*it)[0];
-            break;
+    case 'r':
+        rot = (*it)[0];
+        break;
 
-        case 't':
-            tilt = (*it)[0];
-            break;
+    case 't':
+        tilt = (*it)[0];
+        break;
 
-        case 'p':
-            psi = (*it)[0];
-            break;
+    case 'p':
+        psi = (*it)[0];
+        break;
     }
 
     switch (ang2[0])
     {
-        case 'r':
-            rot = (*it)[1];
-            break;
+    case 'r':
+        rot = (*it)[1];
+        break;
 
-        case 't':
-            tilt = (*it)[1];
-            break;
+    case 't':
+        tilt = (*it)[1];
+        break;
 
-        case 'p':
-            psi = (*it)[1];
-            break;
+    case 'p':
+        psi = (*it)[1];
+        break;
     }
 
     switch (ang3[0])
     {
-        case 'r':
-            rot = (*it)[2];
-            break;
+    case 'r':
+        rot = (*it)[2];
+        break;
 
-        case 't':
-            tilt = (*it)[2];
-            break;
+    case 't':
+        tilt = (*it)[2];
+        break;
 
-        case 'p':
-            psi = (*it)[2];
-            break;
+    case 'p':
+        psi = (*it)[2];
+        break;
     }
 }
 
 void DocFile::get_angles1(int k, double& rot, double& tilt, double& psi,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                          const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     std::vector< DocLine >::iterator it = find(k);
 
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::get_angles1(): The given key (" +
-        ItoA(k) + ") is not in the file");
+                     ItoA(k) + ") is not in the file");
 
     switch (ang1[0])
     {
-        case 'r':
-            rot = (*it)[3];
-            break;
+    case 'r':
+        rot = (*it)[3];
+        break;
 
-        case 't':
-            tilt = (*it)[3];
-            break;
+    case 't':
+        tilt = (*it)[3];
+        break;
 
-        case 'p':
-            psi = (*it)[3];
-            break;
+    case 'p':
+        psi = (*it)[3];
+        break;
     }
 
     switch (ang2[0])
     {
-        case 'r':
-            rot = (*it)[4];
-            break;
+    case 'r':
+        rot = (*it)[4];
+        break;
 
-        case 't':
-            tilt = (*it)[4];
-            break;
+    case 't':
+        tilt = (*it)[4];
+        break;
 
-        case 'p':
-            psi = (*it)[4];
-            break;
+    case 'p':
+        psi = (*it)[4];
+        break;
     }
 
     switch (ang3[0])
     {
-        case 'r':
-            rot = (*it)[5];
-            break;
+    case 'r':
+        rot = (*it)[5];
+        break;
 
-        case 't':
-            tilt = (*it)[5];
-            break;
+    case 't':
+        tilt = (*it)[5];
+        break;
 
-        case 'p':
-            psi = (*it)[5];
-            break;
+    case 'p':
+        psi = (*it)[5];
+        break;
     }
 }
 
 void DocFile::get_angles2(int k, double& rot, double& tilt, double &psi,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                          const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::get_angles2(): The given key (" + ItoA(k)
-        + ") is not in the file");
+                     + ") is not in the file");
 
     switch (ang1[0])
     {
-        case 'r':
-            rot = (*it)[6];
-            break;
+    case 'r':
+        rot = (*it)[6];
+        break;
 
-        case 't':
-            tilt = (*it)[6];
-            break;
+    case 't':
+        tilt = (*it)[6];
+        break;
 
-        case 'p':
-            psi = (*it)[6];
-            break;
+    case 'p':
+        psi = (*it)[6];
+        break;
     }
 
     switch (ang2[0])
     {
-        case 'r':
-            rot = (*it)[7];
-            break;
+    case 'r':
+        rot = (*it)[7];
+        break;
 
-        case 't':
-            tilt = (*it)[7];
-            break;
+    case 't':
+        tilt = (*it)[7];
+        break;
 
-        case 'p':
-            psi = (*it)[7];
-            break;
+    case 'p':
+        psi = (*it)[7];
+        break;
     }
 
     switch (ang3[0])
     {
-        case 'r':
-            rot = (*it)[8];
-            break;
+    case 'r':
+        rot = (*it)[8];
+        break;
 
-        case 't':
-            tilt = (*it)[8];
-            break;
+    case 't':
+        tilt = (*it)[8];
+        break;
 
-        case 'p':
-            psi = (*it)[8];
-            break;
+    case 'p':
+        psi = (*it)[8];
+        break;
     }
 }
 
 void DocFile::set_angles(int k, double rot, double tilt, double psi,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                         const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::set_angles(): The given key (" +
-        ItoA(k) + ") is not in the file");
+                     ItoA(k) + ") is not in the file");
 
     switch (ang1[0])
     {
-        case 'r':
-            (*it)[0] = rot;
-            break;
+    case 'r':
+        (*it)[0] = rot;
+        break;
 
-        case 't':
-            (*it)[0] = tilt;
-            break;
+    case 't':
+        (*it)[0] = tilt;
+        break;
 
-        case 'p':
-            (*it)[0] = psi;
-            break;
+    case 'p':
+        (*it)[0] = psi;
+        break;
     }
 
     switch (ang2[0])
     {
-        case 'r':
-            (*it)[1] = rot;
-            break;
+    case 'r':
+        (*it)[1] = rot;
+        break;
 
-        case 't':
-            (*it)[1] = tilt;
-            break;
+    case 't':
+        (*it)[1] = tilt;
+        break;
 
-        case 'p':
-            (*it)[1] = psi;
-            break;
+    case 'p':
+        (*it)[1] = psi;
+        break;
     }
 
     switch (ang3[0])
     {
-        case 'r':
-            (*it)[2] = rot;
-            break;
+    case 'r':
+        (*it)[2] = rot;
+        break;
 
-        case 't':
-            (*it)[2] = tilt;
-            break;
+    case 't':
+        (*it)[2] = tilt;
+        break;
 
-        case 'p':
-            (*it)[2] = psi;
-            break;
+    case 'p':
+        (*it)[2] = psi;
+        break;
     }
 }
 
@@ -812,7 +813,7 @@ void DocFile::set(int k, int i, double val)
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::set(): The given key (" + ItoA(k)
-        + ") is not in the file");
+                     + ") is not in the file");
 
     it->set(i, val);
 }
@@ -960,7 +961,7 @@ void DocFile::append_comment(const std::string& comment)
 }
 
 int DocFile::append_angles(double rot, double tilt, double psi,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                           const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     matrix1D< double > aux(3);
 
@@ -989,8 +990,8 @@ int DocFile::append_angles(double rot, double tilt, double psi,
 }
 
 int DocFile::append_angles(double rot, double tilt, double psi,
-    double rot1, double tilt1, double psi1,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                           double rot1, double tilt1, double psi1,
+                           const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     matrix1D< double > aux(6);
 
@@ -1040,9 +1041,9 @@ int DocFile::append_angles(double rot, double tilt, double psi,
 }
 
 int DocFile::append_angles(double rot, double tilt, double psi,
-    double rot1, double tilt1, double psi1,
-    double rot2, double tilt2, double psi2,
-    const std::string& ang1, const std::string& ang2, const std::string& ang3)
+                           double rot1, double tilt1, double psi1,
+                           double rot2, double tilt2, double psi2,
+                           const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
     matrix1D< double > aux(9);
 
@@ -1227,7 +1228,7 @@ matrix1D< double > DocFile::row(int k)
     for (int i=0; i<result.xdim; i++)
         VEC_ELEM(result, i) = it->data[i];
 
-   return result;
+    return result;
 }
 
 void DocFile::setCol(int c, matrix1D< double >& v)
@@ -1246,7 +1247,7 @@ void DocFile::setCol(int c, matrix1D< double >& v)
 }
 
 void DocFile::for_all_lines(void (*f) (const matrix1D< double >&,
-    matrix1D< double >&), int key0, int keyF)
+                                       matrix1D< double >&), int key0, int keyF)
 {
     int current_key;
 
@@ -1308,9 +1309,9 @@ void DocFile::for_column(double (*f)(double), int c, int key0, int keyF)
                 for (int i=0; i<current_line->data.size(); i++)
                     current_line->data[i] = f(current_line->data[i]);
             else if (c < current_line->data.size() &&
-                (key0 == -1 || current_line->key >= key0) &&
-                (keyF == -1 || current_line->key <= keyF))
-                    current_line->data[c] = f(current_line->data[c]);
+                     (key0 == -1 || current_line->key >= key0) &&
+                     (keyF == -1 || current_line->key <= keyF))
+                current_line->data[c] = f(current_line->data[c]);
 
         current_line++;
     }
@@ -1319,7 +1320,7 @@ void DocFile::for_column(double (*f)(double), int c, int key0, int keyF)
 }
 
 int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
-    std::string ang3, DocFile& doc)
+                             std::string ang3, DocFile& doc)
 {
     DocFile aux(name);
     DocLine line1, line2;
@@ -1330,7 +1331,7 @@ int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
 
     // Macro to assign the angle from line1 in the correct place of line2
     // The angle order in line2 is (rot, tilt, psi)
-    #define assign_in_correct_place_of_line2(angle_descr,angle_index) \
+#define assign_in_correct_place_of_line2(angle_descr,angle_index) \
         switch (angle_descr[0]) \
         { \
             case ('r'): line2.set(0, line1[angle_index]); break; \
@@ -1353,8 +1354,8 @@ int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
 
             doc.append_line(line2);
 
-         }
-         else if (line1.Is_comment())
+        }
+        else if (line1.Is_comment())
             // Insert the comment
             doc.append_line(line1);
 
@@ -1366,7 +1367,7 @@ int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
 }
 
 void select_images(DocFile& doc, SelFile& sel, int col, bool en_limit0,
-    double limit0, bool en_limitF, double limitF)
+                   double limit0, bool en_limitF, double limitF)
 {
     sel.go_beginning();
     doc.go_first_data_line();

@@ -27,41 +27,46 @@
 #include "args.h"
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::read(int argc, char **argv) {
-   min_val=AtoF(get_param(argc,argv,"-min"));
-   max_val=AtoF(get_param(argc,argv,"-max"));
-   sigma=AtoF(get_param(argc,argv,"-noise","0"));
-   randomize_random_generator();
+void Prog_Range_adjust_Parameters::read(int argc, char **argv)
+{
+    min_val=AtoF(get_param(argc,argv,"-min"));
+    max_val=AtoF(get_param(argc,argv,"-max"));
+    sigma=AtoF(get_param(argc,argv,"-noise","0"));
+    randomize_random_generator();
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::usage() {
-   cerr << "   -min <min_val>       : Output minimum value\n"
-        << "   -max <max_val>       : Output maximum value\n"
-        << "  [-noise <sigma %>]    : Variation of the minimum value\n"
-   ;
+void Prog_Range_adjust_Parameters::usage()
+{
+    cerr << "   -min <min_val>       : Output minimum value\n"
+    << "   -max <max_val>       : Output maximum value\n"
+    << "  [-noise <sigma %>]    : Variation of the minimum value\n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::show() {
-   cout << "Min:   " << min_val << endl
-        << "Max:   " << max_val << endl
-        << "Noise: " << sigma   << endl;
+void Prog_Range_adjust_Parameters::show()
+{
+    cout << "Min:   " << min_val << endl
+    << "Max:   " << max_val << endl
+    << "Noise: " << sigma   << endl;
 }
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::apply(matrix2D<double> &I) {
-   double amin=rnd_gaus(0,sigma);
-   double amax=rnd_gaus(0,sigma);
-   double minval=min_val+amin;
-   double maxval=max_val+amax;
-   I.range_adjust(minval,maxval);
+void Prog_Range_adjust_Parameters::apply(matrix2D<double> &I)
+{
+    double amin=rnd_gaus(0,sigma);
+    double amax=rnd_gaus(0,sigma);
+    double minval=min_val+amin;
+    double maxval=max_val+amax;
+    I.range_adjust(minval,maxval);
 }
 
-void Prog_Range_adjust_Parameters::apply(matrix3D<double> &V) {
-   double amin=rnd_gaus(0,sigma);
-   double amax=rnd_gaus(0,sigma);
-   double minval=min_val+amin;
-   double maxval=max_val+amax;
-   V.range_adjust(minval,maxval);
+void Prog_Range_adjust_Parameters::apply(matrix3D<double> &V)
+{
+    double amin=rnd_gaus(0,sigma);
+    double amax=rnd_gaus(0,sigma);
+    double minval=min_val+amin;
+    double maxval=max_val+amax;
+    V.range_adjust(minval,maxval);
 }

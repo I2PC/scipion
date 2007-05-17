@@ -65,57 +65,70 @@ double AtoD(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-float AtoF(const char *str, int _errno, string errmsg, int exit)
+float AtoF(const char* str, int _errno, std::string errmsg, int exit)
 {
     float retval;
-    int   ok;
-    if (str==NULL)
+    int ok;
+    
+    if (str == NULL)
         if (exit)
-            EXIT_ERROR(_errno,errmsg);
+            EXIT_ERROR(_errno, errmsg);
         else
-            REPORT_ERROR(_errno,errmsg);
-    ok=sscanf(str,"%f",&retval);
+            REPORT_ERROR(_errno, errmsg);
+            
+    ok = sscanf(str, "%f", &retval);
+    
     if (ok)
         return retval;
+    
     if (exit)
         EXIT_ERROR(_errno,errmsg);
     else
         REPORT_ERROR(_errno,errmsg);
+    
     return 0;
 }
 
-int AtoI(const char *str, int _errno, string errmsg, int exit)
+int AtoI(const char* str, int _errno, std::string errmsg, int exit)
 {
     int retval;
-    int   ok;
-    if (str==NULL)
+    int ok;
+    
+    if (str == NULL)
         if (exit)
-            EXIT_ERROR(_errno,errmsg);
+            EXIT_ERROR(_errno, errmsg);
         else
-            REPORT_ERROR(_errno,errmsg);
-    ok=sscanf(str,"%d",&retval);
+            REPORT_ERROR(_errno, errmsg);
+            
+    ok = sscanf(str, "%d", &retval);
+    
     if (ok)
         return retval;
+    
     if (exit)
-        EXIT_ERROR(_errno,errmsg);
+        EXIT_ERROR(_errno, errmsg);
     else
-        REPORT_ERROR(_errno,errmsg);
+        REPORT_ERROR(_errno, errmsg);
+    
     return 0;
 }
 
-// Char --> Long long Integer ==============================================
-long long AtoLL(const char *str, int _errno, string errmsg, int exit)
+long long AtoLL(const char* str, int _errno, std::string errmsg, int exit)
 {
     long long int retval;
-    int   ok;
-    if (str==NULL)
+    int ok;
+    
+    if (str == NULL)
         if (exit)
-            EXIT_ERROR(_errno,errmsg);
+            EXIT_ERROR(_errno, errmsg);
         else
-            REPORT_ERROR(_errno,errmsg);
-    ok=sscanf(str,"%lld",&retval);
+            REPORT_ERROR(_errno, errmsg);
+            
+    ok = sscanf(str, "%lld", &retval); 
+    
     if (ok)
         return retval;
+    
     if (exit)
         EXIT_ERROR(_errno,errmsg);
     else
@@ -123,110 +136,114 @@ long long AtoLL(const char *str, int _errno, string errmsg, int exit)
     return 0;
 }
 
-// Best precission =========================================================
 int best_prec(float F, int _width)
 {
     // If it is 0
-    if (F==0)
+    if (F == 0)
         return 1;
 
     // Otherwise
-    int exp=FLOOR(log10(ABS(F)));
+    int exp = FLOOR(log10(ABS(F)));
     int advised_prec;
-    if (exp>=0)
-        if (exp>_width-3)
-            advised_prec=-1;
+    
+    if (exp >= 0)
+        if (exp > _width-3)
+            advised_prec = -1;
         else
-            advised_prec=_width-2;
+            advised_prec = _width-2;
     else
     {
-        advised_prec=_width+(exp-1)-3;
-        if (advised_prec<=0)
-            advised_prec=-1;
+        advised_prec = _width + (exp-1) - 3;
+        if (advised_prec <= 0)
+            advised_prec = -1;
     }
 
-    if (advised_prec<0)
-        advised_prec=-1; // Choose exponential format
+    if (advised_prec < 0)
+        advised_prec = -1; // Choose exponential format
+    
     return advised_prec;
 }
 
-// Float --> String ========================================================
-string FtoA(float F, int _width, int _prec)
+std::string FtoA(float F, int _width, int _prec)
 {
 #if GCC_VERSION < 30300
     char aux[15];
-    ostrstream outs(aux,sizeof(aux));
+    std::ostrstream outs(aux, sizeof(aux));
 #else
-
-    ostringstream outs;
+    std::ostringstream outs;
 #endif
 
     outs.fill(' ');
-    if (_width!=0)
+
+    if (_width != 0)
         outs.width(_width);
-    if (_prec==0)
-        _prec=best_prec(F,_width);
-    if (_prec==-1 && _width>7)
+        
+    if (_prec == 0)
+        _prec = best_prec(F, _width);
+        
+    if (_prec == -1 && _width > 7)
     {
-        outs.precision(_width-7);
-        outs.setf(ios::scientific);
+        outs.precision(_width - 7);
+        outs.setf(std::ios::scientific);
     }
     else
         outs.precision(_prec);
+        
 #if GCC_VERSION < 30301
-
     outs << F << ends;
 #else
-
     outs << F;
 #endif
-   #if GCC_VERSION < 30300
 
-    return (string)aux;
+#if GCC_VERSION < 30300
+    return std::string(aux);
 #else
-
-    string retval=outs.str();
-    int i=retval.find('\0');
-    if (i!=-1)
-        retval=retval.substr(0,i);
+    std::string retval = outs.str();
+    int i = retval.find('\0');
+    
+    if (i != -1)
+        retval = retval.substr(0, i);
+    
     return retval;
 #endif
 }
 
 // Integer --> String ======================================================
-string ItoA(int I, int _width, char fill_with)
+std::string ItoA(int I, int _width, char fill_with)
 {
     char aux[15];
 
     // Check width
-    int width=_width;
-    int Iaux=ABS(I);
-    if (SGN(I)<0)
+    int width = _width;
+    int Iaux = ABS(I);
+    
+    if (SGN(I) < 0)
         width--;
-    if (width==0)
+    
+    if (width == 0)
         do
         {
-            Iaux/=10;
+            Iaux /= 10;
             width++;
         }
-        while (Iaux!=0);
+        while (Iaux != 0);
 
     // Fill the number with the fill character
     for (int i=0; i<width; i++)
-        aux[i]=fill_with;
+        aux[i] = fill_with;
 
     // Start filling the array
-    aux[width--]='\0';
-    Iaux=ABS(I);
+    aux[width--] = '\0';
+    Iaux = ABS(I);
     do
     {
-        int digit=Iaux%10;
-        Iaux/=10;
-        aux[width--]='0'+digit;
+        int digit = Iaux % 10;
+        Iaux /= 10;
+        aux[width--] = '0' + digit;
     }
-    while (Iaux!=0);
+    while (Iaux != 0);
 
-    if (SGN(I)<0)
+    if (SGN(I) < 0)
         return (string)"-"+aux;
     else
         return (string)aux;

@@ -73,7 +73,7 @@ void Normalize_parameters::read(int argc, char** argv)
     if (!volume)
     {
         if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
-            method == NEAR_OLDXMIPP || method == RAMP)
+                method == NEAR_OLDXMIPP || method == RAMP)
         {
             enable_mask = check_param(argc, argv, "-mask");
             if (enable_mask)
@@ -87,7 +87,7 @@ void Normalize_parameters::read(int argc, char** argv)
                 int i = position_param(argc, argv, "-background");
                 if (i + 2 >= argc)
                     REPORT_ERROR(1,
-                    "Normalize: Not enough parameters after -background");
+                                 "Normalize: Not enough parameters after -background");
 
                 aux = argv[i + 1];
                 r  =AtoI(argv[i + 2]);
@@ -113,7 +113,7 @@ void Normalize_parameters::read(int argc, char** argv)
             int i = position_param(argc, argv, "-prm");
             if (i+4 >= argc)
                 REPORT_ERROR(1,
-                "Normalize_parameters::read: Not enough parameters after -prm");
+                             "Normalize_parameters::read: Not enough parameters after -prm");
 
             a0 = AtoF(argv[i + 1]);
             aF = AtoF(argv[i + 2]);
@@ -141,7 +141,7 @@ void Normalize_parameters::produce_side_info()
             {
             case FRAME:
                 BinaryFrameMask(bg_mask, Xdim - 2 * r, Ydim - 2 * r,
-                OUTSIDE_MASK);
+                                OUTSIDE_MASK);
                 break;
             case CIRCLE:
                 BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
@@ -193,7 +193,7 @@ void Normalize_parameters::show()
         }
 
         if (method == NEWXMIPP || method == NEWXMIPP2 ||
-            method == NEAR_OLDXMIPP || method == MICHAEL || method == RAMP)
+                method == NEAR_OLDXMIPP || method == MICHAEL || method == RAMP)
         {
             std::cout << "Background mode: ";
             switch (background_mode)
@@ -261,7 +261,7 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.self_apply_geom_Bspline(img.get_transformation_matrix(), 3, IS_NOT_INV,
-        DONT_WRAP, outside);
+                                DONT_WRAP, outside);
     type_cast(tmp, bg_mask);
 }
 
@@ -319,7 +319,7 @@ void Normalize_parameters::apply(Image* img)
         b = rnd_unif(b0, bF);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D((*img)())
-            (*img)(i, j) = a * (*img)(i, j) + b;
+        (*img)(i, j) = a * (*img)(i, j) + b;
 
         break;
     }
