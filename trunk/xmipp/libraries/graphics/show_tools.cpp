@@ -281,7 +281,9 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
    if (_m==0 && _M==0) xmatrix.compute_double_minmax(min_val,max_val);
    else {min_val=_m; max_val=_M;}
    double a;
-   if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY)
+   if(_max_scale-_min_scale<XMIPP_EQUAL_ACCURACY ||
+// Sjors 17may07: prevent division by zero for constant images
+       max_val-min_val<XMIPP_EQUAL_ACCURACY)
       a=1.0;
    else
       a=(_max_scale-_min_scale)/(max_val-min_val);
