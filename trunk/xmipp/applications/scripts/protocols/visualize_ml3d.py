@@ -286,7 +286,7 @@ class visualize_ML3D_class:
                     docfile0=logfiles[i-1].replace('log','doc')
                     mov=self.moving_particles(docfile0,docfile1)
                     newlines3.append(str(iter)+' '+str(mov)+'\n')
-            fh=open('alliter_LL.dat','w')
+            fh=open('alliter_dLL.dat','w')
             fh.writelines(newlines1)
             fh.close();
             fh=open('alliter_Pmax.dat','w')
@@ -296,10 +296,11 @@ class visualize_ML3D_class:
             fh.writelines(newlines3)
             fh.close();
             plot1=visualization.gnuplot()
-            plot1.plot_xy_file('alliter_LL.dat',
-                              'Log-likelihood target function (to be maximized)',
+            plot1.plot_xy_file('alliter_dLL.dat',
+                              'Log-likelihood gain (should be positive, converges to zero)',
                               'iterations',
-                              'LL')
+                              'dLL')
+            plot1.send('replot 0')
             plot2=visualization.gnuplot()
             plot2.plot_xy_file('alliter_Pmax.dat',
                               'The width of the probability distributions (ideally goes to one i.e. delta-functions)',
