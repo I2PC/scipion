@@ -172,6 +172,7 @@ class visualize_ML2D_class:
                                      'fractions')
             plot1.send(" set yrange [0:1]")
             plot1.send(" set xrange [0.5:"+str(nr_class)+"]")
+            plot1.send(" set xtics 1")
             plot1.send(" plot '" + logfiles[-1] + "' using 1:3 title 'model fraction' with boxes")
             plot1.send(" replot '" + logfiles[-1] + "' using 1:4 title 'mirror fraction' with boxes")
 

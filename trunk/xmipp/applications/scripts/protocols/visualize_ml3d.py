@@ -231,6 +231,7 @@ class visualize_ML3D_class:
                                 'class number',
                                 'sumweight')
         plot.send(" set xrange [0.5:"+str(nr_class)+"]")
+        plot.send(" set xtics 1")
         plot.send(" plot 'class_distribution.dat' using 1:2 with boxes")
 
     def show_ang_distribution(self,selfile,iter,ref):
