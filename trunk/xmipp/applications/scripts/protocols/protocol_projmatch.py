@@ -16,38 +16,24 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-""" Relative path to ProjectDir
-"""
 SelFileName='100.sel'
 
-# Working directory: 
-""" Relative path to ProjectDir
-"""
+# {file} Initial 3D reference map:
+ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+
+# Working subdirectory: 
 WorkDirectory='ProjMatch/Test'
 
-# Delete working directory?
+# Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home/roberto2/Test/PARA_Roberto"
+ProjectDir='/home/roberto2/Test/PARA_Roberto'
 
-# {expert} Directory name for logfiles (from project dir):
-LogDir="Logs"
-
-#------------------------------------------------------------------------------------------------
-# {section} Parallelization issues
-#------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
-DoParallel=True
-# Number of processors to use:
-NumberOfCPUs=2
-# {file} A list of all available CPUs (the MPI-machinefile):
-""" List with all working nodes (computer names) that are going
-    to be used for computation.
-"""
-MachineFile="/home/roberto2/bin/machines.dat"
+# {expert} Directory name for logfiles:
+LogDir='Logs'
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -58,71 +44,68 @@ MachineFile="/home/roberto2/bin/machines.dat"
 """
 DoMask=False
 
-# {file} Reference file name (3D map)
-""" Relative path to ProjectDir
-"""
-ReferenceFileName="init_reference/LTA_rot_0.1_norm.vol"
-
-#show masked volume
-""" Masked volume will be shown. Do not set ths option to true for
-    non iterative processing (jobs sent to queues)
+# Show masked volume
+""" Masked volume will be shown. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
 DisplayMask=False
 
-# {file} binary mask-file used to mask reference volume
-""" Relative path to ProjectDir
-"""
-MaskFileName='circular_mask.msk'
-
+# {file} Binary mask-file used to mask the reference volume
+MaskFileName=''
 
 #-----------------------------------------------------------------------------
-# {section} Projection Matching angular_projection_matching)
+# {section} Projection Matching
 #-----------------------------------------------------------------------------
 # Projection Matching
 DoProjectionMatching=False
 
-#Show projection maching library and classes
-""" Show average of projections. Do not set ths option to true for
-    non iterative processing (jobs sent to queues)
+# Show projection maching library and classes
+""" Show average of projections. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
 DisplayProjectionMatching=False
 
-#Angular sampling rate (in degrees)
+# Angular sampling rate (in degrees)
 AngSamplingRateDeg=8
 
-#Maximum change in origin offset (+/- pixels)
+# Maximum change in origin offset (+/- pixels)
 MaxChangeOffset=10
 
-#restrict search by tilt angle
-DoRetricSearchbyTiltAngle=True
+# Restrict search by tilt angle
+DoRetricSearchbyTiltAngle=False
 
-#Lower-value for restricted tilt angle search
+# Lower-value for restricted tilt angle search
 Tilt0=40
 
-#Higher-value for restricted tilt angle search
+# Higher-value for restricted tilt angle search
 TiltF=140
 
-# {file} Limit angular search to asymmetric part of the Ewald sphere.
+# {file} Symmetry description file:
 """ This option does not work in combination with a limited search 
     of the rot or tilt angle.
-"""
-Symfile="P6.sym"
 
-#extra options for Projection_Maching
-""" If you want to use your only references use the -ref option here,
+    See WIKI link for a description of the symmetry file format
+    dont give anything, if no symmetry is present
+"""
+Symfile=''
+
+# Extra options for Projection_Matching
+""" If you want to use your own references use the -ref option here,
     references name should be proj_match_lib00001.proj
 """
-ProjMatchingExtra=""
+ProjMatchingExtra=''
 
 #-----------------------------------------------------------------------------
-# {section} Alineamiento (align2d)
+# {section} 2D alignment
 #-----------------------------------------------------------------------------
 # Perform 2D alignment?
+""" After performing a 3D projection matching iteration, each of the
+    subsets of images assigned to one of the library projections is
+    re-aligned using a 2D-alignment protocol.
+    This may serve to remove model bias.
+"""
 DoAlign2D=False
 
-#Display align2d results
-""" Show aligned classes. Do not set ths option to true for
-    non iterative processing (jobs sent to queues)
+# Display 2D alignment results
+""" Show aligned classes. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
 DisplayAlign2D=False
 
@@ -130,10 +113,13 @@ DisplayAlign2D=False
 """ These values are in pixels from the image center
 """
 InnerRadius=0
+
 # Outer radius for rotational correlation
 OuterRadius=18
+
 # Number of align2d iterations (use at least 3):
 Align2DIterNr=2
+
 # {expert} Additional align2d parameters
 """ For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 
@@ -143,46 +129,61 @@ Align2DIterNr=2
 
   consider filtering the images with \"-filter 10 -sampling 2\"
 """
-Align2DExtraCommand="-max_shift 4"
-# -max_rot 10
+Align2DExtraCommand='-max_shift 4'
 
 #-----------------------------------------------------------------------------
-# {section} Reconstruction (reconstruction_art/wbp)
+# {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
 # Perform 3D Reconstruction
 DoReconstruction=True
 
-#display reconstructed volume
+# Display reconstructed volume
 DisplayReconstruction=False
 
 # {expert} Additional reconstruction parameters
 """ examples go here
 """
-ReconstructionExtraCommand=""#"-max_shift 2 -max_rot 10"
+ReconstructionExtraCommand=''#'-max_shift 2 -max_rot 10'
 
-#reconstructiom method
-""" wbp or art
+# Reconstruction method
+""" Choose between wbp or art
 """
-ReconstructionMethod="wbp"
+ReconstructionMethod='wbp'
 
 #-----------------------------------------------------------------------------
-# {section} Compute Resolution (resolution_fsc)
+# {section} Resolution calculation
 #-----------------------------------------------------------------------------
-# Perform 3D Reconstruction
+# Perform resolution calculation
 DoComputeResolution=True
 
-# {expert} Additional reconstruction parameters
-""" sampling rate so x axis is in Armstrong^-1
+# {expert} Pixel size (in Ang.)
+""" This will yield resolution plots where the X-axis units are 1/Armstrong instead of digital frequencies.
 """
-ResolSam="1"
+ResolSam=1
 
 #-----------------------------------------------------------------------------
 # {section} Cleaning temporal files and Reseting original data
 #-----------------------------------------------------------------------------
-
+## ROBERTO: PLEASE EXPLAIN MORE CLEARLY WHAT YOU MEAN HERE!
 # Reset image header
-"""Set shifts and angles stored in the image headers to zero """
+""" Set shifts and angles stored in the image headers to zero
+"""
 ResetImageHeader=True
+
+#------------------------------------------------------------------------------------------------
+# {section} Parallelization issues
+#------------------------------------------------------------------------------------------------
+# Use multiple processors in parallel?
+DoParallel=True
+
+# Number of processors to use:
+NumberOfCPUs=2
+
+# {file} A list of all available CPUs (the MPI-machinefile):
+""" Depending on your system, your standard script to launch MPI-jobs may require this
+    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
+"""
+MachineFile="/home/roberto2/bin/machines.dat"
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results

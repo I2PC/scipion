@@ -13,7 +13,7 @@
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with the input images:
 InSelFile="all_images.sel"
-# {file} Initial single reference map:
+# {file} Initial 3D reference map:
 InitialReference="my_ref.vol"
 # Working subdirectory:
 WorkingDir="ML3D/test1"
@@ -95,6 +95,7 @@ DoParallel=True
 MyNumberOfCPUs=5
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
+    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
 #------------------------------------------------------------------------------------------------

@@ -17,29 +17,26 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# {dir} Root directory name for this project:
-ProjectDir='/media/usb_linux/Experiments/CTD_LTA'
 
 # {file} Selfile with the input images:
-#SelFileName='all_except_failures.sel'
 SelFileName='first100.sel'
 
-# {file} Reference file name (3D map)
+# {file} Initial 3D reference map:
 ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
-# Working directory: 
+# Working subdirectory: 
 WorkDirectory='Experiment1'
 
 # Delete working directory if it already exists?
 DoDeleteWorkingDir=False
 
+# {expert} Root directory name for this project:
+""" Absolute path to the root directory for this project
+"""
+ProjectDir='/media/usb_linux/Experiments/CTD_LTA'
+
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
-
-# {expert} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_highres3d.py'
 
 #-----------------------------------------------------------------------------
 # {section} Particle description
@@ -141,7 +138,7 @@ DiscreteAssignment='1'
 ContinuousAssignment='3x0 1'
 
 # {expert} Compute resolution
-""" Resolution is something slow to compute, do not abuse of it.
+""" Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
 ComputeResolution=''
@@ -206,17 +203,23 @@ SegmentUsingMass='0'
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel? (see Expert options)
+# Use multiple processors in parallel?
 DoParallel=False
 
 # Number of processors to use:
 MyNumberOfCPUs=8
 
-# {expert} {file} A list of all available CPUs (the MPI-machinefile):
+# {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
+    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
 MyMachineFile=''
 
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript='visualize_highres3d.py'
 #-----------------------------------------------------------------------------
 # {end-of-header} do not change anything bellow this line unless you know what you are doing
 #-----------------------------------------------------------------------------
