@@ -12,6 +12,7 @@ def getComponentFromVector(_vector,_iteration):
 # getListFromVector
 #---------------------------------------------------------------------------
 def getListFromVector(_vector):
+   import string
    intervalos=string.split(_vector)
    if len(intervalos)==0:
       raise RuntimeError,"Empty vector"
