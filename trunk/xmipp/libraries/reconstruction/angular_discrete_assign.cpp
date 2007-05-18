@@ -1037,8 +1037,7 @@ void Prog_angular_predict_prm::produceSummary() {
    // Construct summary
    DocFile DFsummary;
    SelFile SFsummary;
-   SelFile SFref;
-   SelFile SFavg;
+   SelFile SFcomparison;
    DFsummary.reserve(L+1);
    DFsummary.append_comment("Rot Tilt Psi X Y Weight");
    matrix1D<double> v(6);
@@ -1049,8 +1048,8 @@ void Prog_angular_predict_prm::produceSummary() {
       ImageXmipp I;
       I.read(library_name[l]); I.write(fn_refl);
       assignedAvg[l].write(fn_avgl);
-      SFref.insert(fn_refl.remove_directories());
-      SFavg.insert(fn_avgl.remove_directories());
+      SFcomparison.insert(fn_refl.remove_directories());
+      SFcomparison.insert(fn_avgl.remove_directories());
       
       // Write corresponding line in the docfile
       v(0)=rot[l];
@@ -1073,6 +1072,5 @@ void Prog_angular_predict_prm::produceSummary() {
    }
    DFsummary.write(summaryRootname+"_summary.doc");
    SFsummary.write(summaryRootname+"_summary.sel");
-   SFref.write(summaryRootname+"_ref.sel");
-   SFavg.write(summaryRootname+"_avg.sel");
+   SFcomparison.write(summaryRootname+"_comparison.sel");
 }
