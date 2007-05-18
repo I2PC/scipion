@@ -119,6 +119,7 @@ class gnuplot:
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'") 
        self.send(" set polar") 
+       self.send(" set size square")
        self.send(" set angles degrees") 
        self.send(" set xrange[-95:95]") 
        self.send(" set yrange[-95:95]") 
