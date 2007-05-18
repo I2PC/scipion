@@ -51,10 +51,10 @@ int main(int argc, char **argv) {
     if (rank==0) prm.show();
     else  { prm.verb=0; prm.output_refs=false; }
 
+    prm.produce_Side_info();
     // Select only relevant part of selfile for this rank
     prm.SF.mpi_select_part(rank,size,num_img_tot);
 
-    prm.produce_Side_info();
 
   } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
 
@@ -97,7 +97,6 @@ int main(int argc, char **argv) {
      // All nodes write out temporary DFo
     fn_img.compose(prm.fn_root,rank,"tmpdoc");
     DFo.write(fn_img);
-
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Master writes out final docfile
