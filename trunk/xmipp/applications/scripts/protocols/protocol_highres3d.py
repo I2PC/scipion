@@ -315,6 +315,7 @@ class HighRes3DClass:
           self.initialReferenceMask=os.path.abspath(self.projectDir+"/"+_InitialReferenceMask)
        else:
           self.initialReferenceMask=""
+	  self.doReferenceMask="0"
        self.filterReference="0 "+_FilterReference
        self.segmentUsingMass="0 "+_SegmentUsingMass
 
@@ -640,9 +641,6 @@ class HighRes3DClass:
                     self.getModelFilename(_iteration))
 		  
       # Filter
-      self.execute("xmipp_fourier_filter -i "+\
-	           self.getModelFilename(_iteration)+" "+\
-		   "-high_pass 0.02 -fourier_mask raised_cosine 0.02")
       if not self.getFilterReference(_iteration)=="0":
          self.execute("xmipp_fourier_filter -i "+\
 	              self.getModelFilename(_iteration)+" "+\
@@ -666,6 +664,11 @@ class HighRes3DClass:
       # Move the center of mass to 0
       self.execute("xmipp_find_center3d -i "+self.getModelFilename(_iteration)+" "+\
                    "-center_volume")
+
+      # Remove very low frequencies
+      self.execute("xmipp_fourier_filter -i "+\
+	           self.getModelFilename(_iteration)+" "+\
+		   "-high_pass 0.02 -fourier_mask raised_cosine 0.02")
 
    #------------------------------------------------------------------------
    # Get
@@ -793,7 +796,7 @@ class HighRes3DClass:
 	     self.workDirectory+"/Results","..");
 	  self.execute("xmipp_fourier_filter -i preproc.sel "+
                        "-low_pass 0.25 -fourier_mask raised_cosine 0.02");
-	  params="-i preproc.sel -nref 1 -output_docfile -fast -iter 4"
+	  params="-i preproc.sel -nref 1 -output_docfile -fast"
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_ml_align2d",
         			       "xmipp_mpi_ml_align2d",
