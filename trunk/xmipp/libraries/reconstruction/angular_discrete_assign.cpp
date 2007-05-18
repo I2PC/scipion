@@ -66,6 +66,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv) {
    if (check_param(argc,argv,"-show_psi_shift")) tell|=TELL_PSI_SHIFT;
    if (check_param(argc,argv,"-show_options")) tell|=TELL_OPTIONS;
    search5D=check_param(argc,argv,"-5D");
+   summaryRootname=get_param(argc,argv,"-summary","");
    if (((string)argv[0]).find("mpirun")==-1) produce_side_info();
 }
 
@@ -88,6 +89,7 @@ void Prog_angular_predict_prm::show() {
         << "Show level: " << tell << endl
 	<< "Modify header:  " << !dont_modify_header << endl
 	<< "5D search: " << search5D << endl
+	<< "Summary: " << summaryRootname << endl
    ;
 }
 
@@ -137,6 +139,7 @@ void Prog_angular_predict_prm::more_usage() {
 	<< "  [-dont_modify_header]     : Don't save the parameters in the\n"
         << "                              image header\n"
 	<< "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
+	<< "  [-summary <rootname>]     : Summary rootname\n"
    ;
 }
 
@@ -226,6 +229,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank) {
    predicted_shiftX.resize(number_of_images);
    predicted_shiftY.resize(number_of_images);
    predicted_corr.resize(number_of_images);
+   predicted_reference.resize(number_of_images);
 
    // Build mask for subbands
    int Ydim, Xdim;
@@ -954,13 +958,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
    }
 
    // Save results
-                     image_name[current_img]       = I.name();
-   assigned_rot    = predicted_rot[current_img]    = best_rot;
-   assigned_tilt   = predicted_tilt[current_img]   = best_tilt;
-   assigned_psi    = predicted_psi[current_img]    = best_psi;
-   assigned_shiftX = predicted_shiftX[current_img] = best_shiftX;
-   assigned_shiftY = predicted_shiftY[current_img] = best_shiftY;
-                     predicted_corr[current_img]   = best_score;
+                     image_name[current_img]          = I.name();
+   assigned_rot    = predicted_rot[current_img]       = best_rot;
+   assigned_tilt   = predicted_tilt[current_img]      = best_tilt;
+   assigned_psi    = predicted_psi[current_img]       = best_psi;
+   assigned_shiftX = predicted_shiftX[current_img]    = best_shiftX;
+   assigned_shiftY = predicted_shiftY[current_img]    = best_shiftY;
+                     predicted_corr[current_img]      = best_score;
+		     predicted_reference[current_img] = vref_idx[ibest];
    current_img++;
    return best_rate;
 }
@@ -986,8 +991,88 @@ void Prog_angular_predict_prm::finish_processing() {
    }
    DF.write(fn_out_ang);
 
+   if (summaryRootname!="") produceSummary();
+
    if (volume_mode) {
       system(((string)"xmipp_rmsel "+fn_ref+" > /dev/null").c_str());
       system(((string)"rm -f "+fn_ang).c_str());
    }
+}
+
+// Produce summary ---------------------------------------------------------
+void Prog_angular_predict_prm::produceSummary() {
+   int L=library_name.size();
+   int N=predicted_rot.size();
+   int Xdim, Ydim;
+   SelFile SFin; SFin.read(fn_in);
+   SFin.ImgSize(Ydim, Xdim);
+   SFin.go_first_ACTIVE();
+   
+   // Initialize variables for storing the reference weights
+   // and the assigned averages
+   vector< vector<FileName> > referenceWeight;
+   vector< ImageXmipp >  assignedAvg;
+   referenceWeight.reserve(L);
+   assignedAvg.reserve(L);
+   ImageXmipp blankImage(Ydim,Xdim);
+   vector<FileName> blankList;
+   for (int l=0; l<L; l++) {
+      referenceWeight.push_back(blankList);
+      assignedAvg.push_back(blankImage);
+   }
+
+   // Count the images assigned to each reference
+   // And compute average
+   for (int n=0; n<N; n++) {
+      ImageXmipp I;
+      I.read(SFin.NextImg(),true);
+      referenceWeight[predicted_reference[n]].push_back(I.name());
+      I().self_rotate(I.psi());
+      assignedAvg[predicted_reference[n]]()+=I();
+   }
+   for (int l=0; l<L; l++)
+      if (referenceWeight[l].size()!=0)
+         assignedAvg[l]()/=referenceWeight[l].size();
+
+   // Construct summary
+   DocFile DFsummary;
+   SelFile SFsummary;
+   SelFile SFref;
+   SelFile SFavg;
+   DFsummary.reserve(L+1);
+   DFsummary.append_comment("Rot Tilt Psi X Y Weight");
+   matrix1D<double> v(6);
+   for (int l=0; l<L; l++) {
+      // Write the reference and assigned reference
+      FileName fn_refl=summaryRootname+"_ref"+ItoA(l,5)+".xmp";
+      FileName fn_avgl=summaryRootname+"_avg"+ItoA(l,5)+".xmp";
+      ImageXmipp I;
+      I.read(library_name[l]); I.write(fn_refl);
+      assignedAvg[l].write(fn_avgl);
+      SFref.insert(fn_refl.remove_directories());
+      SFavg.insert(fn_avgl.remove_directories());
+      
+      // Write corresponding line in the docfile
+      v(0)=rot[l];
+      v(1)=tilt[l];
+      v(2)=0;
+      v(3)=0;
+      v(4)=0;
+      v(5)=referenceWeight[l].size();
+      DFsummary.append_comment(fn_refl);
+      DFsummary.append_data_line(v);
+      
+      // Write the assigned images in a selfile
+      SFsummary.insert_comment((string)"Images assigned to "+fn_refl);
+      SFsummary.insert_comment((string)"rot="+FtoA(rot[l])+" tilt="+FtoA(tilt[l]));
+      if (referenceWeight[l].size()!=0) {
+         for (int i=0; i<referenceWeight[l].size(); i++)
+	    SFsummary.insert(referenceWeight[l][i]);
+	 SFsummary.insert_comment("");
+      }
+   }
+   DFsummary.write(summaryRootname+"_summary.doc");
+   SFsummary.write(summaryRootname+"_summary.sel");
+   SFref.write(summaryRootname+"_ref.sel");
+   SFavg.write(summaryRootname+"_avg.sel");
 }

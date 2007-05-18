@@ -95,6 +95,8 @@ public:
    bool extended_usage;
    /** 5D search, instead of 3D+2D */
    bool search5D;
+   /** Rootname for summary */
+   FileName summaryRootname;
 public:
    // A reference volume has been provided
    bool volume_mode;
@@ -115,9 +117,9 @@ public:
    // Power of the library images at different
    // subbands
    matrix2D<double> library_power;
-   // Vector with the rotational angles to learn
+   // Vector with the rotational angles of the library
    vector<double> rot;
-   // Vector with the tilting angles to learn
+   // Vector with the tilting angles of the library
    vector<double> tilt;
    // Index of the current processed image
    int current_img;
@@ -135,6 +137,8 @@ public:
    vector<double> predicted_shiftY;
    // Vector of predicted corr
    vector<double> predicted_corr;
+   // Vector of corresponding reference index
+   vector<int>    predicted_reference;
    // Parameters for computing distances
    Prog_angular_distance_prm distance_prm;
 public:
@@ -229,6 +233,9 @@ public:
    /** Finish processing.
        Close all output files. */
    void finish_processing();
+
+   /** Produce summary */
+   void produceSummary();
 };
 //@}
 #endif
