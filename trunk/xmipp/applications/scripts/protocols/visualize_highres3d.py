@@ -6,20 +6,23 @@
 # ./visualize_highres3d.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, April 2007
+# QUEDA POR HACER: Mostrar la distribucion angular del summary
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations='1-last'
+Iterations='14-15'
 # Show reconstructed volume
-DoShowVolume=True
+DoShowVolume=False
 # Show model
-DoShowModel=True
+DoShowModel=False
 # Show angle convergence
-DoShowAngleConvergence=True
+DoShowAngleConvergence=False
 # Show vector difference
-DoShowVectorDifferences=True
+DoShowVectorDifferences=False
+# Show angular distribution
+DoShowAngularDistribution=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -46,12 +49,14 @@ class VisualizeHighres3DClass:
        _DoShowVolume,
        _DoShowModel,
        _DoShowAngleConvergence,
-       _DoShowVectorDifferences):
+       _DoShowVectorDifferences,
+       _DoShowAngularDistribution):
        self.iterations=_Iterations
        self.doShowVolume=_DoShowVolume
        self.doShowModel=_DoShowModel
        self.doShowAngleConvergence=_DoShowAngleConvergence
        self.doShowVectorDifferences=_DoShowVectorDifferences
+       self.doShowAngularDistribution=_DoShowAngularDistribution
 
        # Produce side info
        self.myHighRes3D=protocol_highres3d.HighRes3DClass(
@@ -59,6 +64,7 @@ class VisualizeHighres3DClass:
 		protocol_highres3d.ReferenceFileName,
 		protocol_highres3d.WorkDirectory,
 		protocol_highres3d.DoDeleteWorkingDir,
+		protocol_highres3d.NumberofIterations,
 		protocol_highres3d.ProjectDir,
 		protocol_highres3d.LogDir,
 		
@@ -142,6 +148,7 @@ class VisualizeHighres3DClass:
        if self.doShowModel:  self.showModels()
        if self.doShowAngleConvergence: self.showAngleConvergence()
        if self.doShowVectorDifferences: self.showVectorDifferences()
+       if self.doShowAngularDistribution: self.showAngularDistribution()
 
    #------------------------------------------------------------------------
    # Show Angle Convergence
@@ -150,6 +157,21 @@ class VisualizeHighres3DClass:
        command="echo plot \\\"angle_convergence.txt\\\" u 1:2 w l"
        command+=" \; pause 300 | gnuplot &"
        self.execute(command)
+	     
+   #------------------------------------------------------------------------
+   # Show Angular Distribution
+   #------------------------------------------------------------------------
+   def showAngularDistribution(self):
+       if not len(self.iterationList)==0:
+ 	  import visualize_projmatch
+	  for i in range(len(self.iterationList)):
+              ShowPlots=[]
+	      ShowPlots.append(self.myHighRes3D.getDiscreteAnglesSummaryDir(
+ 	         self.iterationList[i])+"/summary_summary.doc")
+	      title='Angular distribution for iteration '+\
+        	     str(self.iterationList[i])
+      	      visualize_projmatch.show_ang_distribution(
+	         ShowPlots,self.iterationList[i],title)
 	     
    #------------------------------------------------------------------------
    # Show Models
@@ -207,6 +229,7 @@ if __name__ == '__main__':
        DoShowVolume,
        DoShowModel,
        DoShowAngleConvergence,
-       DoShowVectorDifferences)
+       DoShowVectorDifferences,
+       DoShowAngularDistribution)
     visualizeHighres3D.run()
 
