@@ -2,15 +2,11 @@
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for High Resolution 3D reconstruction
 #
-# {please cite} C.O.S. Sorzano et al. Journal of Structural Biology 146(3): 381-392 (2004)
-# {please cite} C.O.S. Sorzano et al. Ultramicroscopy 101(2-4): 129-138 (2004)
 # {please cite} C.O.S. Sorzano et al. Journal of Structural Biology 148: 194-204 (2004)
 # {please cite} S. Jonic et al. Ultramicroscopy,  103:  303-317 (2005)
-# {please cite} S. Scheres et al. (2005) J.Mol.Biol 348, 139-149 
-# {please cite} S. Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244
 #
 # Example use:
-# ./protocol_highres3D.py
+# ./protocol_highres3d.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, April 2007
 #
@@ -29,6 +25,17 @@ WorkDirectory='Experiment1'
 
 # Delete working directory if it already exists?
 DoDeleteWorkingDir=False
+
+# COSS: PLEASE PROVIDE THIS FUNCTIONALITY IN YOUR SCRIPT!! (SEE ROBERTOS PROJMATCH)
+# Number of iterations to perform
+NumberofIterations=4
+
+# Resume at iteration
+""" This option may be used to finish a previously performed run.
+    Set to 1 to start a new run 
+    Note: Do NOT delete working directory if this option is not set to 1
+"""
+ResumeIteration=1
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
@@ -142,12 +149,6 @@ ContinuousAssignment='3x0 1'
     The resolution is always computed in the last iteration
 """
 ComputeResolution=''
-
-# {expert} Resume at iteration
-""" Provide the first iteration number for which a valid volume is not computed.
-    If no iterations have been performed, set to 1.
-"""
-ResumeIteration=1
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
