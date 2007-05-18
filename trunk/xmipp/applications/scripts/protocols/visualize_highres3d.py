@@ -12,7 +12,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations='14-15'
+Iterations='1-2'
 # Show reconstructed volume
 DoShowVolume=False
 # Show model
@@ -21,8 +21,8 @@ DoShowModel=False
 DoShowAngleConvergence=False
 # Show vector difference
 DoShowVectorDifferences=False
-# Show angular distribution
-DoShowAngularDistribution=True
+# Show discrete angular assignment summary
+DoShowDiscreteSummary=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -50,13 +50,13 @@ class VisualizeHighres3DClass:
        _DoShowModel,
        _DoShowAngleConvergence,
        _DoShowVectorDifferences,
-       _DoShowAngularDistribution):
+       _DoShowDiscreteSummary):
        self.iterations=_Iterations
        self.doShowVolume=_DoShowVolume
        self.doShowModel=_DoShowModel
        self.doShowAngleConvergence=_DoShowAngleConvergence
        self.doShowVectorDifferences=_DoShowVectorDifferences
-       self.doShowAngularDistribution=_DoShowAngularDistribution
+       self.doShowDiscreteSummary=DoShowDiscreteSummary
 
        # Produce side info
        self.myHighRes3D=protocol_highres3d.HighRes3DClass(
@@ -104,6 +104,7 @@ class VisualizeHighres3DClass:
    # Execute command
    #------------------------------------------------------------------------
    def execute(self,_command):
+      print _command
       os.system(_command)
 
    #------------------------------------------------------------------------
@@ -128,7 +129,7 @@ class VisualizeHighres3DClass:
 	       else: lastIter=listaIntervalo[0]
 	       listaIntervalo[1]=lastIter
 	    self.iterationList+=range(int(listaIntervalo[0]),
-	                              int(listaIntervalo[1]))
+	                              int(listaIntervalo[1])+1)
 
    #------------------------------------------------------------------------
    # Last iteration
@@ -148,7 +149,7 @@ class VisualizeHighres3DClass:
        if self.doShowModel:  self.showModels()
        if self.doShowAngleConvergence: self.showAngleConvergence()
        if self.doShowVectorDifferences: self.showVectorDifferences()
-       if self.doShowAngularDistribution: self.showAngularDistribution()
+       if self.doShowDiscreteSummary: self.showDiscreteSummary()
 
    #------------------------------------------------------------------------
    # Show Angle Convergence
@@ -159,9 +160,9 @@ class VisualizeHighres3DClass:
        self.execute(command)
 	     
    #------------------------------------------------------------------------
-   # Show Angular Distribution
+   # Show Angular Assignment Discrete Summary
    #------------------------------------------------------------------------
-   def showAngularDistribution(self):
+   def showDiscreteSummary(self):
        if not len(self.iterationList)==0:
  	  import visualize_projmatch
 	  for i in range(len(self.iterationList)):
@@ -172,6 +173,14 @@ class VisualizeHighres3DClass:
         	     str(self.iterationList[i])
       	      visualize_projmatch.show_ang_distribution(
 	         ShowPlots,self.iterationList[i],title)
+	      print "Calling",i
+
+	  for i in range(len(self.iterationList)):
+              command="( cd "+self.myHighRes3D.workDirectory+"/Results/"+\
+	         self.myHighRes3D.getDiscreteAnglesSummaryDir(
+	            self.iterationList[i])+\
+		    " ; xmipp_show -sel summary_comparison.sel ) &"
+ 	      self.execute(command)
 	     
    #------------------------------------------------------------------------
    # Show Models
@@ -183,7 +192,6 @@ class VisualizeHighres3DClass:
 	      command+=self.myHighRes3D.getModelFilename(
 	         self.iterationList[i])+" "
 	  command+="&"
-	  print command
 	  self.execute(command)
 	     
    #------------------------------------------------------------------------
@@ -199,7 +207,6 @@ class VisualizeHighres3DClass:
 	      if not i==len(self.iterationList)-1:
 	         command+=", "
           command+=" \; pause 300 | gnuplot &"
-	  print command
 	  self.execute(command)
 
    #------------------------------------------------------------------------
@@ -230,6 +237,6 @@ if __name__ == '__main__':
        DoShowModel,
        DoShowAngleConvergence,
        DoShowVectorDifferences,
-       DoShowAngularDistribution)
+       DoShowDiscreteSummary)
     visualizeHighres3D.run()
 
