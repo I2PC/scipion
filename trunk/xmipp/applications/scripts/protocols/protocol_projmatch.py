@@ -14,7 +14,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='100.sel'
+SelFileName='all.sel'
 
 # {file} Initial 3D reference map:
 ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
@@ -23,7 +23,7 @@ ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 WorkDirectory='ProjMatch/Test'
 
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 
 # Number of iterations to perform
 NumberofIterations=4
@@ -50,7 +50,7 @@ LogDir='Logs'
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
 """
-DoMask=False
+DoMask=True
 
 # Show masked volume
 """ Masked volume will be shown. Do not set ths option to true for non iterative processing (jobs sent to queues)
@@ -58,7 +58,7 @@ DoMask=False
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName=''
+MaskFileName='circular_mask.msk'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -82,7 +82,7 @@ DisplayProjectionMatching=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg="30 20 2x4"
+AngSamplingRateDeg="10 10 2x5"
 
 # {expert} Angular Search 
 """Maximum change in rot & tilt  (+/- degrees)
@@ -111,7 +111,7 @@ MaxChangeInAngles="2x360 10 5"
 MaxChangeOffset="2x1000 2x10"
 
 # Restrict tilt angle search?
-DoRetricSearchbyTiltAngle=False
+DoRetricSearchbyTiltAngle=True
 
 # Lower-value for restricted tilt angle search
 Tilt0=40
@@ -356,7 +356,7 @@ class projection_matching_class:
        scriptdir=os.path.expanduser('~')+'/scripts/'
        sys.path.append(scriptdir) # add default search path
        import log,logging
-       
+       import shutil
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
        #self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
        #self._SelFileName=os.path.abspath(str(_SelFileName))
@@ -418,11 +418,12 @@ class projection_matching_class:
                                        _WorkDirectory)
                                       
        #uncomment next line to get Degub level logging
-       self._mylog.setLevel(logging.DEBUG)
-       self._mylog.debug("Debug level logging enabled")
+       #self._mylog.setLevel(logging.DEBUG)
+       #self._mylog.debug("Debug level logging enabled")
                                       
-       _ContinueAtIteration-=1;
-       if _ContinueAtIteration!=0 and DoDeleteWorkingDir==True:
+       #_ContinueAtIteration-=1;
+       _NumberofIterations +=1;
+       if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
           print "You can not delete the working directory"
           print " and star at iteration", _ContinueAtIteration
           exit(1)
@@ -435,7 +436,7 @@ class projection_matching_class:
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
        
        #copy files to local directory
-       if _ContinueAtIteration==0:
+       if _ContinueAtIteration==1:
           copy_images_to_local_disk(self._mylog,
                                     self._SelFileName,
                                     self._WorkDirectory)
@@ -452,14 +453,16 @@ class projection_matching_class:
        #output of reconstruction cicle
        #first value given by user
        self._ReconstructedandfilteredVolume=[]
+       self._ReconstructedandfilteredVolume.append("dummy")
        self._ReconstructedandfilteredVolume.append(self._user_suplied_ReferenceVolume)
-       for _iteration_number in range(0, _NumberofIterations):
+       for _iteration_number in range(1, _NumberofIterations):
            self._ReconstructedandfilteredVolume.append("../"+'Iter_'+\
                                       str(_iteration_number)+'/'+
-                                      "reconstruction_iter.vol")
+                                      "reconstruction.vol")
        #reconstructed and filtered volume of n-1 after masking
        self._ReferenceVolume=[]
-       for _iteration_number in range(0, _NumberofIterations):
+       self._ReferenceVolume.append("dummy")
+       for _iteration_number in range(1, _NumberofIterations):
            self._ReferenceVolume.append("../"+'Iter_'+\
                                       str(_iteration_number)+'/'+
                                       ReferenceVolume)
@@ -468,7 +471,7 @@ class projection_matching_class:
           print "*", debug_string
           self._mylog.info(debug_string)
           self._ResetImageHeader=arg.getComponentFromVector(_ResetImageHeader,\
-                                                        _iteration_number)
+                                                        _iteration_number-1)
           if (int(self._ResetImageHeader)):
               reset_image_header(self._mylog,self._SelFileName)
        
@@ -488,34 +491,30 @@ class projection_matching_class:
                                    docfile_with_original_angles ) 
           self._mylog.info(command)
           os.system(command)
-          if (_DoMask):
-             execute_mask(self._mylog,
-                          self._ProjectDir,
-                          self._ReconstructedandfilteredVolume[_iteration_number],#in
-                          self._MaskFileName,
-                          self._DisplayMask,
-                          _iteration_number,
-                          self._ReferenceVolume[_iteration_number])#out
-          else:
-             self._mylog.info("Skipped Mask") 
-          #think about how to restric angular search
-          #after first iteration  
+          execute_mask(_DoMask,
+                       self._mylog,
+                       self._ProjectDir,
+                       self._ReconstructedandfilteredVolume[_iteration_number],#in
+                       self._MaskFileName,
+                       self._DisplayMask,
+                       _iteration_number,
+                       self._ReferenceVolume[_iteration_number])#out
 
           #parameters for projection matching
           self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
-                                                        _iteration_number)
+                                                        _iteration_number-1)
           self._MaxChangeOffset=arg.getComponentFromVector(_MaxChangeOffset,\
-                                                        _iteration_number)
+                                                        _iteration_number-1)
           self._MaxChangeInAngles=arg.getComponentFromVector(_MaxChangeInAngles,\
-                                                        _iteration_number)
+                                                        _iteration_number-1)
           if (_DoProjectionMatching):
              #parameters for projection matching
              self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
-                                                           _iteration_number)
+                                                           _iteration_number-1)
              self._MaxChangeOffset=arg.getComponentFromVector(_MaxChangeOffset,\
-                                                           _iteration_number)
+                                                           _iteration_number-1)
              self._MaxChangeInAngles=arg.getComponentFromVector(_MaxChangeInAngles,\
-                                                           _iteration_number)
+                                                           _iteration_number-1)
              execute_projection_matching(self._mylog,
                                          self._ProjectDir,
                                          self._ReferenceVolume[_iteration_number],
@@ -570,7 +569,7 @@ class projection_matching_class:
           os.system(command)
 
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
-                                                        _iteration_number)
+                                                        _iteration_number-1)
           if (_DoReconstruction):
              execute_reconstruction(self._mylog, 
                                     self._ARTReconstructionExtraCommand,
@@ -606,17 +605,14 @@ class projection_matching_class:
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
                                                ConstantToAddToFiltration,\
-                                                        _iteration_number)
-          if (_DoComputeResolution):
-             filter_at_given_resolution(self._mylog, 
-                                        _iteration_number,
-                                        self._SetResolutiontoZero,
-                                        self._ConstantToAddToFiltration,
-                                        filter_frequence
-                                       )
-          else:
-             self._mylog.info("Skipped filter reconstruction") 
-             
+                                                        _iteration_number-1)
+          filter_at_given_resolution(_DoComputeResolution,
+                                     self._mylog, 
+                                     _iteration_number,
+                                     self._SetResolutiontoZero,
+                                     self._ConstantToAddToFiltration,
+                                     filter_frequence
+                                    )
 
 
 
@@ -673,35 +669,46 @@ def reset_image_header(_mylog,_SelFileName):
 #------------------------------------------------------------------------
 #execute_mask
 #------------------------------------------------------------------------
-def execute_mask(_mylog,
+def execute_mask(_DoMask,
+                 _mylog,
                  _ProjectDir,
                  _ReferenceFileName,
                  _MaskFileName,
                  _DisplayMask,
                  _iteration_number,
                  _ReferenceVolume):
-   import os
+   import os,shutil
    _mylog.debug("execute_mask")
-   MaskVolume =_MaskFileName
-   MaskedVolume=_ReferenceVolume
-   InPutVolume=str(_ReferenceFileName)
-   InPutVolume=_ReferenceFileName
-   print '*********************************************************************'
-   print '* Mask the reference volume'
-   command='xmipp_mask'+ \
-           ' -i '    + InPutVolume + \
-           ' -o '    + _ReferenceVolume + \
-           ' -mask ' + MaskVolume 
 
-   print '* ',command
-   _mylog.info(command)
-   os.system(command)
-   if _DisplayMask==True:
-      command='xmipp_show -vol '+ MaskedVolume +' -w 10'
-      print '*********************************************************************'
-      print '* ',command
-      _mylog.info(command)
-      os.system(command)
+   InPutVolume=_ReferenceFileName
+   if (_DoMask):
+       MaskVolume =_MaskFileName
+       MaskedVolume=_ReferenceVolume
+       print '*********************************************************************'
+       print '* Mask the reference volume'
+       command='xmipp_mask'+ \
+               ' -i '    + InPutVolume + \
+               ' -o '    + _ReferenceVolume + \
+               ' -mask ' + MaskVolume 
+
+       print '* ',command
+       _mylog.info(command)
+       os.system(command)
+       if _DisplayMask==True:
+          command='xmipp_show -vol '+ MaskedVolume +' -w 10 &'
+          print '*********************************************************************'
+          print '* ',command
+          _mylog.info(command)
+          os.system(command)
+          
+   else:
+       shutil.copy(InPutVolume,_ReferenceVolume)
+       _mylog.info("Skipped Mask")
+       _mylog.info("cp" + InPutVolume +\
+                   " "  + _ReferenceVolume )
+       print '*********************************************************************'
+       print '* Skipped Mask'
+
 #------------------------------------------------------------------------
 #execute_projection_matching
 #------------------------------------------------------------------------
@@ -932,10 +939,10 @@ def execute_reconstruction(_mylog,
    #this is dirty but what else can I do
    reconstruction_sel=_align2d_sel;
 
-   Outputvolume  ="reconstruction_iter.vol"
    print '*********************************************************************'
    print '* Reconstruct volume using '
    if _ReconstructionMethod=='wbp':
+      Outputvolume  ="reconstruction.vol"
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + reconstruction_sel + \
@@ -945,12 +952,13 @@ def execute_reconstruction(_mylog,
                   _WBPReconstructionExtraCommand
               
    elif _ReconstructionMethod=='art':
+      Outputvolume  ="reconstruction"
       program = 'xmipp_reconstruct_art'
       mpi_program = 'NULL'
       _DoParallel=False
       parameters=' -i '    + reconstruction_sel + \
                  ' -o '    + Outputvolume + ' ' + \
-                 ' -WSL -sym ' + _Symfile + ' ' + \
+                 ' -WLS -sym ' + _Symfile + ' ' + \
                   _ARTReconstructionExtraCommand
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1036,7 +1044,7 @@ def  execute_resolution(_mylog,
           _DoParallel=False
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] +\
-                 ' -WSL -sym ' + _Symfile + ' ' + \
+                 ' -WLS -sym ' + _Symfile + ' ' + \
                   _ARTReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1103,7 +1111,8 @@ def  execute_resolution(_mylog,
 #------------------------------------------------------------------------
 #           filter_at_given_resolution
 #------------------------------------------------------------------------
-def filter_at_given_resolution(_mylog, 
+def filter_at_given_resolution(_DoComputeResolution,
+                               _mylog, 
                                _iteration_number,
                                _SetResolutiontoZero,
                                _ConstantToAddToFiltration,
@@ -1111,14 +1120,14 @@ def filter_at_given_resolution(_mylog,
                                ):
 
     import os,shutil
-    Inputvolume   ="reconstruction_iter.vol"
+    Inputvolume   ="reconstruction.vol"
     Outputvolume  ="filtered_reconstruction.vol"
     filter_in_pixels_at = float(_filter_frequence) +\
                           float(_ConstantToAddToFiltration)
                           
     print '**************************************************************'
     print '* Filter reconstruction ' 
-    if (_ConstantToAddToFiltration<0.5):
+    if (_ConstantToAddToFiltration<0.5 or (not _DoComputeResolution)):
         shutil.copy(Inputvolume,Outputvolume) 
         command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
     else:   
