@@ -54,8 +54,9 @@ ParticleRadius=40
 ParticleMass=800000
 
 # {file} Symmetry file
-""" Use the syntax from xmipp_symmetrize:
-    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetrize
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry file format
+    dont give anything, if no symmetry is present
 """
 SymmetryFile=''
 
