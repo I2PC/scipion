@@ -77,9 +77,11 @@ AngularSampling=10
 # Number of ml3d iterations to perform:
 NumberOfIterations=25
 # {file} Symmetry description file:
-""" See WIKI link for a description of the symmetry file format
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
+
 SymmetryFile="/home2/bioinfo/scheres/work/protocols/G40P/6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
 """ For a complete description see the manual pages:
