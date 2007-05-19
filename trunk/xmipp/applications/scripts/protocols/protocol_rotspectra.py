@@ -98,6 +98,8 @@ SpectraName='spectra.sim'
 # {section} Classification: classify_kerdensom 
 #-----------------------------------------------------------------------------
 # Perform self-organizing map calculation?
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
+"""
 DoKerdensom=True
 # Name of Output SOM:
 """ Existing files with this name will be deleted!
