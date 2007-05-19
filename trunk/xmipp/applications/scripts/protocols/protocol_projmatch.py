@@ -49,6 +49,7 @@ LogDir='Logs'
 # Mask Reference volume
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
 DoMask=True
 
@@ -64,6 +65,9 @@ MaskFileName='circular_mask.msk'
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
 # Projection Matching
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
+"""
 DoProjectionMatching=True
 
 # Show projection maching library and classes
@@ -123,13 +127,15 @@ TiltF=140
 """ This option does not work in combination with a limited search 
     of the rot or tilt angle.
 
-    See WIKI link for a description of the symmetry file format
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-Symfile=''
+Symfile='c6.sym'
 
 # {expert} Additional options for Projection_Matching
-""" See WIKI link
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
 """
 ProjMatchingExtra=''
 
@@ -141,6 +147,7 @@ ProjMatchingExtra=''
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.
     This may serve to remove model bias.
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
 """
 DoAlign2D=True
 
@@ -172,6 +179,7 @@ Align2DIterNr=4
   Align2DExtraCommand=\"-max_shift 2 -max_rot 3\"
 
   consider filtering the images with \"-filter 10 -sampling 2\"
+  See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
 """
 Align2DExtraCommand="-max_shift 4"
 
@@ -179,6 +187,11 @@ Align2DExtraCommand="-max_shift 4"
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
 # Perform 3D Reconstruction
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
+        for details
+"""
 DoReconstruction=True
 
 # Display reconstructed volume?
@@ -198,12 +211,15 @@ DisplayReconstruction=False
 ReconstructionMethod="3xwbp art"
 
 # {expert} Additional reconstruction parameters for ART
-""" WIKI link
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
+        for details
 """
 ARTReconstructionExtraCommand=" "
 
 # {expert} Additional reconstruction parameters for WBP
-""" WIKI link
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
+        for details
 """
 WBPReconstructionExtraCommand=" "
 
@@ -211,6 +227,8 @@ WBPReconstructionExtraCommand=" "
 # {section} Compute Resolution
 #-----------------------------------------------------------------------------
 # Compute resolution?
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution fo details
+"""
 DoComputeResolution=True
 
 # Pixel size (in Ang.)
@@ -947,9 +965,10 @@ def execute_reconstruction(_mylog,
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + reconstruction_sel + \
                   ' -o '    + Outputvolume + \
-                  ' -weight -use_each_image ' + \
-                  ' -sym ' + _Symfile + ' ' + \
-                  _WBPReconstructionExtraCommand
+                  ' -weight -use_each_image '
+      if len(_Symfile)>1:
+         parameters = parameters + ' -sym ' + _Symfile + ' '
+      parameters = parameters + _WBPReconstructionExtraCommand
               
    elif _ReconstructionMethod=='art':
       Outputvolume  ="reconstruction"
@@ -958,8 +977,10 @@ def execute_reconstruction(_mylog,
       _DoParallel=False
       parameters=' -i '    + reconstruction_sel + \
                  ' -o '    + Outputvolume + ' ' + \
-                 ' -WLS -sym ' + _Symfile + ' ' + \
-                  _ARTReconstructionExtraCommand
+                 ' -WLS '
+      if len(_Symfile)>1:
+         parameters = parameters + ' -sym ' + _Symfile + ' '
+      parameters = parameters + _ARTReconstructionExtraCommand
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
       print "Reconstruction method unknown. Quiting"
@@ -1033,9 +1054,10 @@ def  execute_resolution(_mylog,
           mpi_program = 'xmipp_mpi_reconstruct_wbp'
           parameters= ' -i '    + Selfiles[i] + \
                       ' -o '    + Outputvolumes[i] +".vol"\
-                      ' -weight -use_each_image ' + \
-                      ' -sym ' + _Symfile + ' ' + \
-                      _WBPReconstructionExtraCommand
+                  ' -weight -use_each_image '
+          if len(_Symfile)>1:
+             parameters = parameters + ' -sym ' + _Symfile + ' '
+          parameters = parameters + _WBPReconstructionExtraCommand
 
        elif _ReconstructionMethod=='art':
           RunInBackground=False
@@ -1044,8 +1066,10 @@ def  execute_resolution(_mylog,
           _DoParallel=False
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] +\
-                 ' -WLS -sym ' + _Symfile + ' ' + \
-                  _ARTReconstructionExtraCommand
+                     ' -WLS '
+          if len(_Symfile)>1:
+             parameters = parameters + ' -sym ' + _Symfile + ' '
+          parameters = parameters + _ARTReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
