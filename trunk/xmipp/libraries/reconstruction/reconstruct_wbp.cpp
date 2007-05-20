@@ -92,7 +92,6 @@ void Prog_WBP_prm::usage() {
 void Prog_WBP_prm::produce_Side_info() {
 
   // Read-in stuff
-
   //remove images with weight=0
   headerXmipp      head;
   //remove images with weight=0
@@ -109,7 +108,7 @@ void Prog_WBP_prm::produce_Side_info() {
              }
           SF_aux.NextImg();   
      }
-     if(SF_aux.ImgNo()==0)
+     if(SF.ImgNo()==0)
        {
        cerr << "there is no input file with weight!=0" << endl;
        exit(1);
