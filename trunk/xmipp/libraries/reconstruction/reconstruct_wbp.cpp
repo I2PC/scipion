@@ -108,7 +108,12 @@ void Prog_WBP_prm::produce_Side_info() {
              SF.insert(SF_aux.current());
              }
           SF_aux.NextImg();   
-     }     
+     }
+     if(SF_aux.ImgNo()==0)
+       {
+       cerr << "there is no input file with weight!=0" << endl;
+       exit(1);
+       }
   }
   else
     SF.read(fn_sel);
