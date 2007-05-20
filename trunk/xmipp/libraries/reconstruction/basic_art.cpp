@@ -522,7 +522,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                  }
               SF_aux.NextImg();   
          }     
-         if(SF_aux.ImgNo()==0)
+         if(selfile.ImgNo()==0)
          {
            cerr << "there is no input file with weight!=0" << endl;
            exit(1);
