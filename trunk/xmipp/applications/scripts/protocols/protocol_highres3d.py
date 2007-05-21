@@ -39,16 +39,16 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/media/usb_linux/Experiments/CTD_LTA'
+ProjectDir='/media/usb_linux/Experiments/TestSencillo'
 
 # {expert} {dir} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 
 #-----------------------------------------------------------------------------
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=40
+ParticleRadius=30
 
 # Particle mass (Daltons)
 ParticleMass=800000
@@ -80,7 +80,7 @@ SamplingRate=1
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='20x2 15x1 15x0'
+PyramidLevels='35x1 15x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -91,7 +91,7 @@ PyramidLevels='20x2 15x1 15x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='40x8 10x2'
+AngularSteps='10x8 20x5 20x2'
 
 # {expert} Use ART for reconstruction instead of WBP
 """ Vector specifying if ART should be used instead of WBP at each iteration
@@ -667,9 +667,9 @@ class HighRes3DClass:
                    "-center_volume")
 
       # Remove very low frequencies
-      self.execute("xmipp_fourier_filter -i "+\
-	           self.getModelFilename(_iteration)+" "+\
-		   "-high_pass 0.02 -fourier_mask raised_cosine 0.02")
+#     self.execute("xmipp_fourier_filter -i "+\
+#	           self.getModelFilename(_iteration)+" "+\
+#		   "-high_pass 0.03 -fourier_mask raised_cosine 0.02")
 
    #------------------------------------------------------------------------
    # Get
