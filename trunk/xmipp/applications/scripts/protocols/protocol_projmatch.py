@@ -14,7 +14,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='all.sel'
+SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
 ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
