@@ -235,6 +235,7 @@ public:
     double midpnt(int n);
 };
 
+#ifdef __GNUC__
 /** Multidimensional integration
     @ingroup Numerical_interation
     Compute the double, triple, ... integral of a function. For instance
@@ -274,6 +275,7 @@ cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
  */
 double multidimensionalIntegral(const matrix1D<double> &x0,
    const matrix1D<double> &xF, integrand_t integrand);
+#endif
 
 // TODO Document
 void polint(double xa[], double ya[], int n, double x, double& y, double& dy);

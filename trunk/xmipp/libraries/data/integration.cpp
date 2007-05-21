@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Javier Rodr�guez Falces (jrodriguez@cnb.uam.es)
+ * Authors:     Javier Rodriguez Falces (jrodriguez@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -223,6 +223,7 @@ void scaledIntegrand(const int *ndim, const double xx[],
     (*cuhreIntegrand)(ndim,MULTIDIM_ARRAY(cuhreXX),ncomp,ff);
 }
 
+#ifdef __GNUC__
 double multidimensionalIntegral(const matrix1D<double> &x0,
                                 const matrix1D<double> &xF, integrand_t integrand)
 {
@@ -257,3 +258,4 @@ double multidimensionalIntegral(const matrix1D<double> &x0,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(x0) jacobian*=(xF(i)-x0(i));
     return integral[0]*jacobian;
 }
+#endif

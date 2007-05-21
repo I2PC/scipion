@@ -275,9 +275,14 @@ INRIASources = [
     'inria/recbuffer.cc',
     'inria/recline.cc']
 
-AddLibrary('XmippExternal', 'external',
-   INRIASources+BilibSources+CubaSources,
-   ['bilib', 'bilib/headers', 'bilib/types', 'cuba/src/common'])
+if env['CC']=='gcc':
+   AddLibrary('XmippExternal', 'external',
+      INRIASources+BilibSources+CubaSources,
+      ['bilib', 'bilib/headers', 'bilib/types', 'cuba/src/common'])
+else:
+   AddLibrary('XmippExternal', 'external',
+      INRIASources+BilibSources,
+      ['bilib', 'bilib/headers', 'bilib/types'])
 
 # XmippData
 DataSources = [
