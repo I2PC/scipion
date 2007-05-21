@@ -23,7 +23,7 @@ ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 WorkDirectory='ProjMatch/Test'
 
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 
 # Number of iterations to perform
 NumberofIterations=4
@@ -33,20 +33,20 @@ NumberofIterations=4
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ContinueAtIteration=1
+ContinueAtIteration=2
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/roberto2/Test/PARA_Roberto'
+ProjectDir="/home/roberto2/trunk/xmipp/applications/scripts/protocols"
 
 # {expert} Directory name for logfiles:
-LogDir='Logs'
+LogDir="Logs"
 
 #-----------------------------------------------------------------------------
 # {section} Mask
 #-----------------------------------------------------------------------------
-# Mask Reference volume
+# Mask reference volume?
 """ Masking the reference volume will increase the signal to noise ratio.
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
@@ -64,7 +64,7 @@ MaskFileName='circular_mask.msk'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
-# Projection Matching
+# Perform projection Matching?
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
 """
@@ -86,7 +86,7 @@ DisplayProjectionMatching=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg="10 10 2x5"
+AngSamplingRateDeg='10 10 2x5'
 
 # {expert} Angular Search 
 """Maximum change in rot & tilt  (+/- degrees)
@@ -99,7 +99,7 @@ AngSamplingRateDeg="10 10 2x5"
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles="2x360 10 5"
+MaxChangeInAngles='2x360 10 5'
 
 # {expert} Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
@@ -112,7 +112,7 @@ MaxChangeInAngles="2x360 10 5"
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset="2x1000 2x10"
+MaxChangeOffset='2x1000 2x10'
 
 # Restrict tilt angle search?
 DoRetricSearchbyTiltAngle=True
@@ -123,11 +123,8 @@ Tilt0=40
 # Higher-value for restricted tilt angle search
 TiltF=140
 
-# {file} Symmetry description file:
-""" This option does not work in combination with a limited search 
-    of the rot or tilt angle.
-
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+# {file} If you want to appply symmetry supply the symmetry description file:
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
@@ -181,12 +178,12 @@ Align2DIterNr=4
   consider filtering the images with \"-filter 10 -sampling 2\"
   See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
 """
-Align2DExtraCommand="-max_shift 4"
+Align2DExtraCommand='-max_shift 4'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
-# Perform 3D Reconstruction
+# Perform 3D Reconstruction?
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
@@ -208,20 +205,20 @@ DisplayReconstruction=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod="3xwbp art"
+ReconstructionMethod='3xwbp art'
 
 # {expert} Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
-ARTReconstructionExtraCommand=" "
+ARTReconstructionExtraCommand=' '
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         for details
 """
-WBPReconstructionExtraCommand=" "
+WBPReconstructionExtraCommand=' '
 
 #-----------------------------------------------------------------------------
 # {section} Compute Resolution
@@ -265,13 +262,13 @@ SetResolutiontoZero=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration="2x.15 2x.1"
+ConstantToAddToFiltration='2x.15 2x.1'
 
 #-----------------------------------------------------------------------------
 # {section} Cleaning temporal files and Reseting original data
 #-----------------------------------------------------------------------------
 
-# Reset image header
+# Reset image header?
 """Set shifts and angles stored in the image headers to zero 
    in each iteration. You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1 0 0 0" 
@@ -284,7 +281,7 @@ ConstantToAddToFiltration="2x.15 2x.1"
     Note: Do not set this option to 1  if you want to limit the
           search in projection matching
 """
-ResetImageHeader="1 3x0"
+ResetImageHeader='1 3x0'
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -299,13 +296,13 @@ NumberOfCPUs=2
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile="/home/roberto2/bin/machines.dat"
+MachineFile='/home/roberto2/bin/machines.dat'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_projmatch.py"
+AnalysisScript='visualize_projmatch.py'
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
