@@ -12,13 +12,17 @@
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
-#show results for iteration
-DisplayIterNo=1
+#show results for iterations
+""" You may specify more than one iteration here 
+    This can be done by a sequence of numbers (for instance, "2 8" 
+    specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
+"""
+DisplayIterationsNo="1 3"
 #------------------------------------------------------------------------------------------------
 # {section} Volume visualization
 #------------------------------------------------------------------------------------------------
 # Visualize volumes in slices along Z?
-VisualizeVolZ=False
+VisualizeVolZ=True
 # Visualize volumes in slices along X?
 VisualizeVolX=False
 # Visualize volumes in slices along Y?
@@ -27,22 +31,23 @@ VisualizeVolY=False
 """ For this to work, you need to have chimera installed!
 """
 VisualizeVolChimera=True
-# {expert} Width of Matrix-views (multiple of 3!):
+# {expert} Width of xmipp_show (multiple of 3!):
 MatrixWidth=9
 #------------------------------------------------------------------------------------------------
 # {section}Reference volume 
 #------------------------------------------------------------------------------------------------
 #show reference volume 
 DisplayReference=False
-#Show projection maching library and aligned classes
-DisplayProjectionMatching=False
 #display angular distribution after projection matching
 DisplayAngularDistribution=False
-#display angular distribution after  align2d
+#Show projection maching library and aligned classes
+DisplayProjectionMatching=False
+#display angular distribution after align2d
 DisplayAngularDistributionAlign2d=False
 #display reconstructed volume
 DisplayReconstruction=False
-
+#display resolution plots
+DisplayResolutionPlots=True
 
 
 #------------------------------------------------------------------------------------------------
@@ -59,10 +64,11 @@ class visualize_projmatch_class:
                 _VisualizeVolX,
                 _VisualizeVolY,
                 _VisualizeVolChimera,
-                _DisplayIterNo,
+                _DisplayIterationsNo,
                 _DisplayReference,
                 _DisplayProjectionMatching,
                 _DisplayReconstruction,
+                _DisplayResolutionPlots,
                 _MatrixWidth,
                 _DisplayAngularDistribution,
                 _DisplayAngularDistributionAlign2d,
@@ -72,19 +78,18 @@ class visualize_projmatch_class:
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log,logging
+        import log,logging,arg
         import visualization
 
         # import corresponding protocol
-        os.chdir(_WorkingDir)
+        sys.path.append(_WorkingDir)
         import protocol_projmatch_backup
-        os.chdir(os.pardir)
+        #os.chdir(os.pardir)
 
         self._MatrixWidth=_MatrixWidth
         self._WorkDirectory=protocol_projmatch_backup.WorkDirectory
         self._LogDir=protocol_projmatch_backup.LogDir
         self._ProjectDir=protocol_projmatch_backup.ProjectDir
-        self._ReferenceVolume=protocol_projmatch_backup.ReferenceVolume
         self._multi_align2d_sel=protocol_projmatch_backup.multi_align2d_sel
         self._align2d_sel=protocol_projmatch_backup.align2d_sel
         self._align2d_doc=protocol_projmatch_backup.align2d_doc
@@ -97,66 +102,94 @@ class visualize_projmatch_class:
                                        sys.argv[0],
                                        self._WorkDirectory)
         self._mylog.setLevel(logging.DEBUG)
-        self._iteration_number=_DisplayIterNo
-        self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
-                                      str(self._iteration_number)
-        #os.chdir(Iteration_Working_Directory)
+        self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
+        
+        for self._iteration_number in _DisplayIterationsNo:
+           if self._iteration_number==' ':
+              continue
+           self._Iteration_Working_Directory=_WorkingDir+'/Iter_'+\
+                                         str(self._iteration_number)+'/'
 
-        if (_DisplayReference):
-           self.ShowVolumes=[] 
-           self.ShowVolumes.append(os.getcwd()+'/'+\
-                                   self._Iteration_Working_Directory+'/'+\
-                                   self._ReferenceVolume)
-           visualization.visualize_volumes(self.ShowVolumes,
-                                                _VisualizeVolZ,
-                                                _VisualizeVolX,
-                                                _VisualizeVolY,
-                                                _VisualizeVolChimera)
-        if (_DisplayAngularDistribution):
-           self._ShowPlots=[]
-           self._ShowPlots.append(os.getcwd()+'/'+\
-                                  self._Iteration_Working_Directory+'/'+\
-                                  self._Proj_Maching_Output_Root_Name+\
-                                  '_classes.doc')
-           title='Angular distribution after "projection matching" for iteration '+\
-                    str(self._iteration_number)
-           show_ang_distribution(self._ShowPlots,self._iteration_number,title)
-           self._mylog.debug( self._ShowPlots[0] + " " +\
-                              str(self._iteration_number) + " " +\
-                              title )
+           self._mylog.debug ("cd " + self._Iteration_Working_Directory)
+           os.chdir(self._Iteration_Working_Directory)
+       
+           # how many iterations should a process
 
-        if (_DisplayProjectionMatching):
-           self.ShowSelfiles=[] 
-           self.ShowSelfiles.append(os.getcwd()+'/'+\
-                                    self._Iteration_Working_Directory+'/'+\
-                                    self._multi_align2d_sel)
-           currdir=os.getcwd()
-           for selfiles in self.ShowSelfiles:
-              os.chdir(self._Iteration_Working_Directory)
-              visualization.visualize_images(self.ShowSelfiles,
-                                             True,
-                                             self._MatrixWidth,
-                                             self._MatrixWidth,
-                                             True)
-           os.chdir(currdir)
 
-        if (_DisplayAngularDistributionAlign2d):
-           self._ShowPlots=[]
-           self._ShowPlots.append(os.getcwd()+'/'+\
-                                  self._Iteration_Working_Directory+'/'+\
-                                  self._align2d_doc)
-           title='Angular distribution after "align2d" for iteration '+\
-                    str(self._iteration_number)
-           show_ang_distribution(self._ShowPlots,self._iteration_number,title)
-           self._mylog.debug( self._ShowPlots[0] + " " +\
-                              str(self._iteration_number) + " " +\
-                              title )
+           if (_DisplayReference):
+              self.ShowVolumes=[] 
+              self.ShowVolumes.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/'+self._ReferenceVolume)
+              visualization.visualize_volumes(self.ShowVolumes,
+                                                   _VisualizeVolZ,
+                                                   _VisualizeVolX,
+                                                   _VisualizeVolY,
+                                                   _VisualizeVolChimera)
+           if (_DisplayAngularDistribution):
+              self._ShowPlots=[]
+              self._ShowPlots.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/'+\
+                                     self._Proj_Maching_Output_Root_Name+\
+                                     '_classes.doc')
+              title='Angular distribution after "projection matching" for iteration '+\
+                       str(self._iteration_number)
+              show_ang_distribution(self._ShowPlots,self._iteration_number,title)
+              self._mylog.debug( self._ShowPlots[0] + " " +\
+                                 str(self._iteration_number) + " " +\
+                                 title )
 
-        #if (_DisplayReconstruction):
-        #    self.visualize_Reconstruction(self._SomName,self._SpectraName)
-            
-        # Return to parent dir
-        # os.chdir(os.pardir)
+           if (_DisplayProjectionMatching):
+              self.ShowSelfiles=[] 
+              self.ShowSelfiles.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/'+\
+                                       self._multi_align2d_sel)
+              for selfiles in self.ShowSelfiles:
+                 visualization.visualize_images(self.ShowSelfiles,
+                                                True,
+                                                self._MatrixWidth,
+                                                self._MatrixWidth,
+                                                True)
+
+           if (_DisplayAngularDistributionAlign2d):
+              self._ShowPlots=[]
+              self._ShowPlots.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/'+\
+                                     self._align2d_doc)
+              title='Angular distribution after "align2d" for iteration '+\
+                       str(self._iteration_number)
+              show_ang_distribution(self._ShowPlots,self._iteration_number,title)
+              self._mylog.debug( self._ShowPlots[0] + " " +\
+                                 str(self._iteration_number) + " " +\
+                                 title )
+
+           if (_DisplayReconstruction):
+              self.ShowVolumes=[] 
+              self.ShowVolumes.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/reconstruction.vol')
+              self._mylog.debug (self.ShowVolumes[0])
+              visualization.visualize_volumes(self.ShowVolumes,
+                                                   _VisualizeVolZ,
+                                                   _VisualizeVolX,
+                                                   _VisualizeVolY,
+                                                   _VisualizeVolChimera)
+
+           if (_DisplayResolutionPlots):
+              plot=visualization.gnuplot()
+              plot_name='..'+'/Iter_'+\
+                         str(self._iteration_number)+\
+                         '/'+'split_sel_2.vol.frc'
+              plot.plot_xy_file(plot_name,
+                          Title="Resolution",
+                          X_Label="Armstrong^-1",
+                          Y_Label="y",
+                          X_col=1,
+                          Y_col=2)
+
 
     def close(self):
         message='Done!'
@@ -205,10 +238,11 @@ if __name__ == '__main__':
                                                   VisualizeVolX,
                                                   VisualizeVolY,
                                                   VisualizeVolChimera,
-                                                  DisplayIterNo,
+                                                  DisplayIterationsNo,
                                                   DisplayReference,
                                                   DisplayProjectionMatching,
                                                   DisplayReconstruction,
+                                                  DisplayResolutionPlots,
                                                   MatrixWidth,
                                                   DisplayAngularDistribution,
                                                   DisplayAngularDistributionAlign2d,
