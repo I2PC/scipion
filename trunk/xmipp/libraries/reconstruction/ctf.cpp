@@ -263,7 +263,8 @@ void XmippCTF::Produce_Side_Info() {
 }
 
 /* Zero -------------------------------------------------------------------- */
-void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) {
+//#define DEBUG
+void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) const {
    double wmax=1/(2*Tm);
    double wstep=wmax/300;
    int sign_changes=0;
@@ -282,10 +283,19 @@ void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) {
       VECTOR_R2(freq,-1,-1);
    } else {
       // Compute more accurate zero
+      #ifdef DEBUG
+         cout << n << " zero: w=" << w << " (" << wmax << ") freq="
+              << (u*w).transpose()
+              << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
+      #endif
       w+=ctf*wstep/(last_ctf-ctf);
       V2_BY_CT(freq,u,w);
+      #ifdef DEBUG
+         cout << " final w= " << w << " final freq=" << freq.transpose() << endl;
+      #endif
    }
 }
+#undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
 void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const {

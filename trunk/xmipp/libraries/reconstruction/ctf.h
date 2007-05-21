@@ -424,7 +424,7 @@ public:
 
    /** Returns the continuous frequency of the zero number n in the direction u.
        u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found */
-   void zero(int n, const matrix1D<double> &u, matrix1D<double> &freq);
+   void zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) const;
 
    /// Apply CTF to an image
    void Apply_CTF(matrix2D < complex<double> > &FFTI) const;
