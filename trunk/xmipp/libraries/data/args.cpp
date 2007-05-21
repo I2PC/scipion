@@ -39,29 +39,29 @@
    #include <strstream>
 #endif
 
-// not a very safe implemenation but standard c function
-// do not retrieve more than 6 significative digits
+/* NOTE: not a very safe implemenation but standard c functions do not retrieve
+ * more than 6 significative digits */
 double AtoD(const char* str, int _errno, std::string errmsg, int exit)
 {
     double retval;
     int ok;
-    
+
     if (str == NULL)
         if (exit)
             EXIT_ERROR(_errno, errmsg);
         else
             REPORT_ERROR(_errno, errmsg);
-            
+
     ok = sscanf(str, "%lf", &retval);
-    
+
     if (ok)
         return retval;
-    
+
     if (exit)
         EXIT_ERROR(_errno, errmsg);
     else
         REPORT_ERROR(_errno, errmsg);
-    
+
     return 0;
 }
 
@@ -69,23 +69,23 @@ float AtoF(const char* str, int _errno, std::string errmsg, int exit)
 {
     float retval;
     int ok;
-    
+
     if (str == NULL)
         if (exit)
             EXIT_ERROR(_errno, errmsg);
         else
             REPORT_ERROR(_errno, errmsg);
-            
+
     ok = sscanf(str, "%f", &retval);
-    
+
     if (ok)
         return retval;
-    
+
     if (exit)
         EXIT_ERROR(_errno,errmsg);
     else
         REPORT_ERROR(_errno,errmsg);
-    
+
     return 0;
 }
 
@@ -93,23 +93,23 @@ int AtoI(const char* str, int _errno, std::string errmsg, int exit)
 {
     int retval;
     int ok;
-    
+
     if (str == NULL)
         if (exit)
             EXIT_ERROR(_errno, errmsg);
         else
             REPORT_ERROR(_errno, errmsg);
-            
+
     ok = sscanf(str, "%d", &retval);
-    
+
     if (ok)
         return retval;
-    
+
     if (exit)
         EXIT_ERROR(_errno, errmsg);
     else
         REPORT_ERROR(_errno, errmsg);
-    
+
     return 0;
 }
 
@@ -117,18 +117,18 @@ long long AtoLL(const char* str, int _errno, std::string errmsg, int exit)
 {
     long long int retval;
     int ok;
-    
+
     if (str == NULL)
         if (exit)
             EXIT_ERROR(_errno, errmsg);
         else
             REPORT_ERROR(_errno, errmsg);
-            
-    ok = sscanf(str, "%lld", &retval); 
-    
+
+    ok = sscanf(str, "%lld", &retval);
+
     if (ok)
         return retval;
-    
+
     if (exit)
         EXIT_ERROR(_errno,errmsg);
     else
@@ -145,7 +145,7 @@ int best_prec(float F, int _width)
     // Otherwise
     int exp = FLOOR(log10(ABS(F)));
     int advised_prec;
-    
+
     if (exp >= 0)
         if (exp > _width-3)
             advised_prec = -1;
@@ -160,7 +160,7 @@ int best_prec(float F, int _width)
 
     if (advised_prec < 0)
         advised_prec = -1; // Choose exponential format
-    
+
     return advised_prec;
 }
 
@@ -177,10 +177,10 @@ std::string FtoA(float F, int _width, int _prec)
 
     if (_width != 0)
         outs.width(_width);
-        
+
     if (_prec == 0)
         _prec = best_prec(F, _width);
-        
+
     if (_prec == -1 && _width > 7)
     {
         outs.precision(_width - 7);
@@ -188,7 +188,7 @@ std::string FtoA(float F, int _width, int _prec)
     }
     else
         outs.precision(_prec);
-        
+
 #if GCC_VERSION < 30301
     outs << F << ends;
 #else
@@ -200,15 +200,14 @@ std::string FtoA(float F, int _width, int _prec)
 #else
     std::string retval = outs.str();
     int i = retval.find('\0');
-    
+
     if (i != -1)
         retval = retval.substr(0, i);
-    
+
     return retval;
 #endif
 }
 
-// Integer --> String ======================================================
 std::string ItoA(int I, int _width, char fill_with)
 {
     char aux[15];
@@ -216,10 +215,10 @@ std::string ItoA(int I, int _width, char fill_with)
     // Check width
     int width = _width;
     int Iaux = ABS(I);
-    
+
     if (SGN(I) < 0)
         width--;
-    
+
     if (width == 0)
         do
         {
@@ -229,7 +228,7 @@ std::string ItoA(int I, int _width, char fill_with)
         while (Iaux != 0);
 
     // Fill the number with the fill character
-    for (int i=0; i<width; i++)
+    for (int i=0; i < width; i++)
         aux[i] = fill_with;
 
     // Start filling the array
@@ -244,76 +243,87 @@ std::string ItoA(int I, int _width, char fill_with)
     while (Iaux != 0);
 
     if (SGN(I) < 0)
-        return (string)"-"+aux;
+        return static_cast< std::string >("-")  + aux;
     else
-        return (string)aux;
+        return static_cast< std::string >(aux);
 }
 
-// Character --> Integer ===================================================
-int CtoI(const char *str, int _errno, string errmsg, int exit)
+int CtoI(const char* str, int _errno, std::string errmsg, int exit)
 {
-    char  readval;
-    int   ok;
-    if (str==NULL)
+    char readval;
+    int ok;
+
+    if (str == NULL)
         if (exit)
-            EXIT_ERROR(_errno,errmsg);
+            EXIT_ERROR(_errno, errmsg);
         else
-            REPORT_ERROR(_errno,errmsg);
-    ok=sscanf(str,"%c",&readval);
+            REPORT_ERROR(_errno, errmsg);
+
+    ok = sscanf(str, "%c", &readval);
+
     if (ok)
-        return readval-48;
+        return readval - 48;
+
     if (exit)
-        EXIT_ERROR(_errno,errmsg);
+        EXIT_ERROR(_errno, errmsg);
     else
-        REPORT_ERROR(_errno,errmsg);
+        REPORT_ERROR(_errno, errmsg);
+
     return 0;
 }
 
-// String --> String with length ===========================================
-string AtoA(const string &str, int _width)
+string AtoA(const std::string& str, int _width)
 {
-    if (_width==0)
+    if (_width == 0)
         return str;
-    if (_width<str.length())
-        return str.substr(0,_width);
-    string aux=str;
-    return aux.append(_width-str.length(),' ');
+
+    if (_width < str.length())
+        return str.substr(0, _width);
+
+    std::string aux = str;
+    return aux.append(_width - str.length(), ' ');
 }
 
-// Check angle description =================================================
-void check_angle_descr(const string &str)
+void check_angle_descr(const std::string& str)
 {
-    if (str=="rot")
+    if (str == "rot")
         return;
-    if (str=="tilt")
+
+    if (str == "tilt")
         return;
-    if (str=="psi")
+
+    if (str == "psi")
         return;
-    REPORT_ERROR(1,(string)"check_angle_descr: Not recognized angle type: "+str);
+
+    REPORT_ERROR(1,
+        static_cast< std::string >(
+        "check_angle_descr: Not recognized angle type: " + str));
 }
 
-// Remove spaces ===========================================================
-string remove_spaces(const string &_str)
+std::string remove_spaces(const std::string& _str)
 {
-    string retval;
-    int first=_str.find_first_not_of("\n \t");
-    int last=_str.find_last_not_of("\n \t");
-    bool after_blank=false;
-    int imax=_str.length();
+    std::string retval;
+    int first = _str.find_first_not_of("\n \t");
+    int last = _str.find_last_not_of("\n \t");
+    bool after_blank = false;
+    int imax = _str.length();
+
     for (int i=first; i<=last; i++)
     {
-        if (_str[i]==' ' || _str[i]=='\n' || _str[i]=='\t')
+        if (_str[i] == ' ' || _str[i] == '\n' || _str[i] == '\t')
         {
             if (!after_blank)
                 retval += _str[i];
-            after_blank=true;
+
+            after_blank = true;
         }
         else
         {
             retval += _str[i];
-            after_blank=false;
+            after_blank = false;
         }
     }
+
     return retval;
 }
 
@@ -334,37 +344,39 @@ void remove_quotes(char **_str)
 }
 
 // Split a string ==========================================================
-int splitString(const string& input, const string& delimiter,
-                vector<string>& results, bool includeEmpties)
+int splitString(const std::string& input,
+                const std::string& delimiter,
+                std::vector< std::string >& results,
+                bool includeEmpties)
 {
     results.clear();
     int iPos = 0;
     int newPos = -1;
-    int sizeS2 = (int)delimiter.size();
-    int isize = (int)input.size();
+    int sizeS2 = static_cast< int >(delimiter.size());
+    int isize = static_cast< int >(input.size());
 
-    if (isize==0 || sizeS2==0)
+    if (isize == 0 || sizeS2 == 0)
         return 0;
 
-    vector<int> positions;
-    newPos = input.find (delimiter, 0);
+    std::vector< int > positions;
+    newPos = input.find(delimiter, 0);
 
-    if (newPos<0)
+    if (newPos < 0)
         return 0;
 
     int numFound = 0;
-    while (newPos>=iPos)
+    while (newPos >= iPos)
     {
         numFound++;
         positions.push_back(newPos);
         iPos = newPos;
-        newPos = input.find (delimiter, iPos+sizeS2);
+        newPos = input.find(delimiter, iPos + sizeS2);
     }
 
-    if (numFound==0)
+    if (numFound == 0)
         return 0;
 
-    for (int i=0; i<=(int)positions.size(); ++i)
+    for (int i=0; i <= static_cast< int >(positions.size()); i++)
     {
         string s("");
         if (i==0)

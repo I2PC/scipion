@@ -35,7 +35,7 @@
 // TODO Remove this ASAP
 #define maT matrix1D< T >
 #define maT1 matrix1D< T1 >
-#define maTC matrix1D< complex < double > >
+#define maTC matrix1D< std::complex < double > >
 
 // FIXME This is a BAD practice..
 #include "multidim_friends.inc"
@@ -68,7 +68,7 @@ string FtoA(float F, int _width, int _prec);
  */
 #define SAME_SHAPE1D(v1, v2) \
     ((v1).xdim == (v2).xdim && \
-     STARTINGX(v1) == STARTINGX(v2))
+     (v1).xinit == (v2).xinit)
 
 /** Returns the first valid logical index
  * @ingroup VectorsSizeShape
@@ -116,7 +116,7 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+    for (int i=(v).xinit; i<=FINISHINGX(v); i++)
 
 /** For all elements in the array between corners
  * @ingroup VectorsSizeShape
