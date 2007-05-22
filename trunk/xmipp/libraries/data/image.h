@@ -923,7 +923,7 @@ public:
         if (!header.read(fp, skip_type_check, reversed))
             REPORT_ERROR(1502, "ImageXmipp::read: File " + ImageT< T >::fn_img +
                          " is not a valid Xmipp file");
-
+      
         // Read whole image and close file
         if ((ret = ImageT< T >::read(fp, header.fIform(), header.iYdim(),
                                      header.iXdim(), header.reversed(), IFLOAT)))
@@ -941,20 +941,22 @@ public:
                     ImageT< T >::img.self_apply_geom_Bspline(A, 3, IS_INV,
                             WRAP);
             }
-
+//scale value in header is not reliable, do not use it
+#undef NEVERDEFINED
+#ifdef NEVERDEFINED
             // scale if necessary
             // TODO check this with Carlos
-            if ((header.Scale() != 0.) && (header.Scale() != 1.))
-            {
-                header.set_dimension(header.Ydim() * header.Scale(),
-                                     header.Xdim() * header.Scale());
+             if ((header.Scale() != 0.) && (header.Scale() != 1.))
+             {
+                 header.set_dimension(header.Ydim() * header.Scale(),
+                                      header.Xdim() * header.Scale());
 
-                ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
-                        header.iXdim());
-            }
+                 ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
+                         header.iXdim());
+             }
 
             header.set_header(); // Set header in a Xmipp consistent state
-
+#endif
         }
 
         fclose(fp);
