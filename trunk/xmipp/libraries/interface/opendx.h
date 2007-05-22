@@ -41,21 +41,22 @@
       \URL[distance.net]{../Extra_Docs/distances.net}. (To measuure distances select: Options->viewcontrol and then mode->pick, click in teh image select picks->pick_2 and pick again in the image.)
     */
 
-class openDX {
-  private:
+class openDX
+{
+private:
     ofstream fh_out;
     int number_of_elements;
-  public:
+public:
     /**Open file and write header. Default filename is myopenDX.dx"
       */
-   void openDXFile(FileName openDXfilename="myopenDX.dx" );
+    void openDXFile(FileName openDXfilename = "myopenDX.dx");
 
-   /** Add one grid point place it at XYZ
-     */
-   void Add_Item(const matrix1D<double> XYZ=vector_R3(0.,0.,0.));
-   /** write a footer and Close file, also write the total number of elements
-       */
-   ~openDX();
-   };
+    /** Add one grid point place it at XYZ
+      */
+    void Add_Item(const matrix1D<double> XYZ = vector_R3(0., 0., 0.));
+    /** write a footer and Close file, also write the total number of elements
+        */
+    ~openDX();
+};
 //@}
 #endif

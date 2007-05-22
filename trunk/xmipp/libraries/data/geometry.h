@@ -1,27 +1,27 @@
 /***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- ***************************************************************************/
+*
+* Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+*
+* Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+* 02111-1307  USA
+*
+*  All comments concerning this program package may be sent to the
+*  e-mail address 'xmipp@cnb.uam.es'
+***************************************************************************/
 
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
@@ -66,7 +66,8 @@
  * The result and point vectors can be the same one.
  */
 void Uproject_to_plane(const matrix1D< double >& point,
-                       const matrix1D< double >& direction, double distance,
+                       const matrix1D< double >& direction,
+                       double distance,
                        matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler angles)
@@ -101,8 +102,11 @@ void Uproject_to_plane(const matrix1D< double >& point,
  *
  * The result and point vectors can be the same one.
  */
-void Uproject_to_plane(const matrix1D< double >& r, double rot, double tilt,
-                       double psi, matrix1D<double> &result);
+void Uproject_to_plane(const matrix1D< double >& r,
+                       double rot,
+                       double tilt,
+                       double psi,
+                       matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler matrix)
  * @ingroup GeometricalOperations
@@ -173,7 +177,7 @@ inline double point_plane_distance_3D(const matrix1D< double >& p,
 {
     static matrix1D< double > p_a(3);
 
-    V3_MINUS_V3(p_a, p,a);
+    V3_MINUS_V3(p_a, p, a);
     return (dot_product(p_a, v) / v.module());
 }
 
@@ -271,13 +275,13 @@ public:
         int m1 = CLIP(CEIL(y_arg - SplineDegree_1), m0, mF);
         int m2 = CLIP(m1 + SplineDegree, m0, mF);
         double columns = 0.0;
-        for (int m=m1; m<=m2; m++)
+        for (int m = m1; m <= m2; m++)
         {
             double rows = 0.0;
-            for (int l=l1; l<=l2; l++)
+            for (int l = l1; l <= l2; l++)
             {
-                double xminusl = x_arg-(double)l;
-                double Coeff = c_ml(m,l);
+                double xminusl = x_arg - (double)l;
+                double Coeff = c_ml(m, l);
                 switch (SplineDegree)
                 {
                 case 2:
@@ -307,7 +311,7 @@ public:
                 }
             }
 
-            double yminusm = y_arg-(double)m;
+            double yminusm = y_arg - (double)m;
             switch (SplineDegree)
             {
             case 2:
@@ -359,8 +363,15 @@ public:
  * @endcode
  */
 void Bspline_model_fitting(const vector< fit_point >& IN_points,
-                           int SplineDegree, int l0, int lF, int m0, int mF,
-                           double h_x, double h_y, double x0, double y0,
+                           int SplineDegree,
+                           int l0,
+                           int lF,
+                           int m0,
+                           int mF,
+                           double h_x,
+                           double h_y,
+                           double x0,
+                           double y0,
                            Bspline_model& result);
 
 /** Rectangle which encloses a deformed rectangle
@@ -395,8 +406,10 @@ void rectangle_enclosing(const matrix1D< double >& v0,
  *
  * The v0 and vF vectors can be reused as outputs.
  */
-void box_enclosing(const matrix1D< double >& v0, const matrix1D< double >& vF,
-                   const matrix2D< double >& V, matrix1D< double >& corner1,
+void box_enclosing(const matrix1D< double >& v0,
+                   const matrix1D< double >& vF,
+                   const matrix2D< double >& V,
+                   matrix1D< double >& corner1,
                    matrix1D< double >& corner2);
 
 /** Point inside polygon
@@ -406,7 +419,7 @@ void box_enclosing(const matrix1D< double >& v0, const matrix1D< double >& vF,
  * ust be the same), determine whether another point is inside the polygon or
  * not.
  */
-bool point_inside_polygon(const vector< matrix1D< double > >& polygon,
+bool point_inside_polygon(const vector< matrix1D< double > > & polygon,
                           const matrix1D< double >& point);
 
 /** Line Plane Intersection
@@ -472,7 +485,7 @@ int line_plane_intersection(const matrix1D< double > normal_plane,
                             const matrix1D< double > vector_line,
                             matrix1D< double >& intersection_point,
                             const matrix1D< double > point_line,
-                            double point_plane_at_x_y_zero=0.);
+                            double point_plane_at_x_y_zero = 0.);
 
 /// @defgroup EulerOperations Euler operations
 /// @ingroup Geometry
@@ -522,8 +535,7 @@ int line_plane_intersection(const matrix1D< double > normal_plane,
  * As an implementation note you might like to know that this function calls
  * always to matrix2D::resize
  */
-void Euler_angles2matrix(double a, double b, double g,
-                         matrix2D< double >& A);
+void Euler_angles2matrix(double a, double b, double g, matrix2D< double >& A);
 
 /** Angles after compresion
  * @ingroup EulerOperations
@@ -534,9 +546,13 @@ void Euler_angles2matrix(double a, double b, double g,
  * vector w_prime in g. Given the w Euler angles this routine provide the
  * w_prime angles
  */
-void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
-                                   double& new_rot, double& new_tilt,
-                                   double& new_psi, matrix2D< double >& D);
+void Euler_Angles_after_compresion(const double rot,
+                                   double tilt,
+                                   double psi,
+                                   double& new_rot,
+                                   double& new_tilt,
+                                   double& new_psi,
+                                   matrix2D< double >& D);
 
 /** Euler direction
  * @ingroup EulerOperations
@@ -544,7 +560,9 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
  * This function returns  a vector parallel to the  projection direction.
  * Resizes v if needed
  */
-void Euler_direction(double alpha, double beta, double gamma,
+void Euler_direction(double alpha,
+                     double beta,
+                     double gamma,
                      matrix1D< double >& v);
 
 /** Euler direction2angles
@@ -554,7 +572,9 @@ void Euler_direction(double alpha, double beta, double gamma,
  * the vector v. The 3rd Euler angle is set always to 0
  */
 void Euler_direction2angles(matrix1D< double >& v,
-                            double& alpha, double& beta, double& gamma);
+                            double& alpha,
+                            double& beta,
+                            double& gamma);
 
 /** "Euler" matrix --> angles
  * @ingroup EulerOperations
@@ -571,7 +591,9 @@ void Euler_direction2angles(matrix1D< double >& v,
  * Euler_matrix2angles(Euler, alpha, beta, gamma);
  * @endcode
  */
-void Euler_matrix2angles(matrix2D< double >& A, double& alpha, double& beta,
+void Euler_matrix2angles(matrix2D< double >& A,
+                         double& alpha,
+                         double& beta,
                          double& gamma);
 
 /** Up-Down projection equivalence
@@ -596,8 +618,12 @@ void Euler_matrix2angles(matrix2D< double >& A, double& alpha, double& beta,
  * Euler_up_down(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_up_down(double rot, double tilt, double psi,
-                   double& newrot, double& newtilt, double& newpsi);
+void Euler_up_down(double rot,
+                   double tilt,
+                   double psi,
+                   double& newrot,
+                   double& newtilt,
+                   double& newpsi);
 
 /** The same view but differently expressed
  * @ingroup EulerOperations
@@ -616,8 +642,12 @@ void Euler_up_down(double rot, double tilt, double psi,
  * Euler_another_set(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_another_set(double rot, double tilt, double psi,
-                       double& newrot, double& newtilt, double& newpsi);
+void Euler_another_set(double rot,
+                       double tilt,
+                       double psi,
+                       double& newrot,
+                       double& newtilt,
+                       double& newpsi);
 
 /** Mirror over Y axis
  * @ingroup EulerOperations
@@ -646,8 +676,12 @@ void Euler_another_set(double rot, double tilt, double psi,
  * Euler_mirrorY(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorY(double rot, double tilt, double psi,
-                   double& newrot, double& newtilt, double& newpsi);
+void Euler_mirrorY(double rot,
+                   double tilt,
+                   double psi,
+                   double& newrot,
+                   double& newtilt,
+                   double& newpsi);
 
 /** Mirror over X axis
  * @ingroup EulerOperations
@@ -676,8 +710,12 @@ void Euler_mirrorY(double rot, double tilt, double psi,
  * Euler_mirrorX(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorX(double rot, double tilt, double psi,
-                   double& newrot, double& newtilt, double& newpsi);
+void Euler_mirrorX(double rot,
+                   double tilt,
+                   double psi,
+                   double& newrot,
+                   double& newtilt,
+                   double& newpsi);
 
 /** Mirror over X and Y axes
  * @ingroup EulerOperations
@@ -707,8 +745,12 @@ void Euler_mirrorX(double rot, double tilt, double psi,
  * Euler_mirrorX(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorXY(double rot, double tilt, double psi,
-                    double& newrot, double& newtilt, double& newpsi);
+void Euler_mirrorXY(double rot,
+                    double tilt,
+                    double psi,
+                    double& newrot,
+                    double& newtilt,
+                    double& newpsi);
 
 /** Apply a geometrical transformation
  * @ingroup EulerOperations
@@ -740,8 +782,12 @@ void Euler_mirrorXY(double rot, double tilt, double psi,
  */
 void Euler_apply_transf(const matrix2D< double >& L,
                         const matrix2D< double >& R,
-                        double rot, double tilt, double psi,
-                        double& newrot, double& newtilt, double& newpsi);
+                        double rot,
+                        double tilt,
+                        double psi,
+                        double& newrot,
+                        double& newtilt,
+                        double& newpsi);
 
 /** 3D Rotation matrix after 3 Euler angles
  * @ingroup EulerOperations
@@ -762,7 +808,9 @@ matrix2D< double > Euler_rot3D_matrix(double rot, double tilt, double psi);
  * The following prototype of the function is faster.
  */
 matrix3D< double > Euler_rotate(const matrix3D< double >& V,
-                                double rot, double tilt, double psi);
+                                double rot,
+                                double tilt,
+                                double psi);
 
 /** Rotate a volume after 3 Euler angles
  * @ingroup EulerOperations
@@ -770,7 +818,9 @@ matrix3D< double > Euler_rotate(const matrix3D< double >& V,
  * Input and output volumes cannot be the same one.
  */
 void Euler_rotate(const matrix3D< double >& V,
-                  double rot, double tilt, double psi,
+                  double rot,
+                  double tilt,
+                  double psi,
                   matrix3D< double >& result);
 
 /// @defgroup Intersections Intersections

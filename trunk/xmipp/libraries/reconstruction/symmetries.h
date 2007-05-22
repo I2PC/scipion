@@ -76,7 +76,7 @@
     within this first numIMG images of the image we want to symmetrize The
     first image in the list is the number 0 */
 #define SYMINDEX(SL, sym_no, i, numIMG) \
-   numIMG+SL.__L.ydim/4*i+sym_no
+    numIMG+SL.__L.ydim/4*i+sym_no
 
 /** Symmetry List class.
     Internally the symmetry list class is implemented as a single 2D matrix,
@@ -103,137 +103,149 @@
     mirror_plane    0 0 1
     \end{verbatim}
 */
-class SymList {
+class SymList
+{
 private:
-   // Crystallographic space group. This is only a guess based on angles.
-   // No check on vectors magnitude is made
-   int		space_group;
+    // Crystallographic space group. This is only a guess based on angles.
+    // No check on vectors magnitude is made
+    int  space_group;
 public:
-   // L and R matrices
-   matrix2D<double> __L, __R;
-   matrix2D<double> __shift;  // It is used for crystallographic symmetries
-   matrix1D<int>    __chain_length;
+    // L and R matrices
+    matrix2D<double> __L, __R;
+    matrix2D<double> __shift;  // It is used for crystallographic symmetries
+    matrix1D<int>    __chain_length;
 
-   // As the symmetry elements form a subgroup, this is the number of
-   // true symmetry elements belonging to the list, the rest of
-   // the list are simply the elements to fill the subgroup
-   int true_symNo;
+    // As the symmetry elements form a subgroup, this is the number of
+    // true symmetry elements belonging to the list, the rest of
+    // the list are simply the elements to fill the subgroup
+    int true_symNo;
 
-   // Number of Axis, mirrors, ...
-   int              __sym_elements;
+    // Number of Axis, mirrors, ...
+    int              __sym_elements;
 
 public:
-   /** Create an empty list.
-       The 2D matrices are 0x0.
-       \\ Ex: SymList SL; */
-   SymList() {__sym_elements=true_symNo=space_group=0;}
+    /** Create an empty list.
+        The 2D matrices are 0x0.
+        \\ Ex: SymList SL; */
+    SymList()
+    {
+        __sym_elements = true_symNo = space_group = 0;
+    }
 
-   /** Create Symmetry List from a Symmetry file.
-       All the subgroup elements are computed automatically.
-       \\ Ex: SymList SL("sym.txt"); */
-   SymList(FileName fn_sym, double accuracy=SYM_ACCURACY)
-       {read_sym_file(fn_sym,accuracy);}
+    /** Create Symmetry List from a Symmetry file.
+        All the subgroup elements are computed automatically.
+        \\ Ex: SymList SL("sym.txt"); */
+    SymList(FileName fn_sym, double accuracy = SYM_ACCURACY)
+    {
+        read_sym_file(fn_sym, accuracy);
+    }
 
-   /** Get matrices from the symmetry list.
-       The number of matrices inside the list is given by \Ref{SymsNo}.
-       This function return the 4x4 transformation matrices associated to
-       the one in the list which occupies the position 'i'. The matrix
-       numbering within the list starts at 0. The output transformation
-       matrices is given as a pointer to gain speed.
-       \\ Ex:
-       \begin{verbatim}
-          for (i=0; i<SL.SymsNo; i++) {
-              SL.get_matrices(i,L,R);
-              ...
-          }
-       \end{verbatim} */
-   void get_matrices(int i, matrix2D<double> &L, matrix2D<double> &R) const;
+    /** Get matrices from the symmetry list.
+        The number of matrices inside the list is given by \Ref{SymsNo}.
+        This function return the 4x4 transformation matrices associated to
+        the one in the list which occupies the position 'i'. The matrix
+        numbering within the list starts at 0. The output transformation
+        matrices is given as a pointer to gain speed.
+        \\ Ex:
+        \begin{verbatim}
+           for (i=0; i<SL.SymsNo; i++) {
+               SL.get_matrices(i,L,R);
+               ...
+           }
+        \end{verbatim} */
+    void get_matrices(int i, matrix2D<double> &L, matrix2D<double> &R) const;
 
-   /** Set a couple of matrices in the symmetry list.
-       The number of matrices inside the list is given by \Ref{SymsNo}.
-       This function sets the 4x4 transformation matrices associated to
-       the one in the list which occupies the position 'i'. The matrix
-       numbering within the list starts at 0.
-       \\ Ex:
-       \begin{verbatim}
-          for (i=0; i<SL.SymsNo; i++) {
-              SL.set_matrix(i,L,R);
-              ...
-          }
-       \end{verbatim} */
-   void set_matrices(int i, const matrix2D<double> &L,
-      const matrix2D<double> &R);
+    /** Set a couple of matrices in the symmetry list.
+        The number of matrices inside the list is given by \Ref{SymsNo}.
+        This function sets the 4x4 transformation matrices associated to
+        the one in the list which occupies the position 'i'. The matrix
+        numbering within the list starts at 0.
+        \\ Ex:
+        \begin{verbatim}
+           for (i=0; i<SL.SymsNo; i++) {
+               SL.set_matrix(i,L,R);
+               ...
+           }
+        \end{verbatim} */
+    void set_matrices(int i, const matrix2D<double> &L,
+                      const matrix2D<double> &R);
 
-   /** Get shift.
-       Returns the shift associated to a certain symmetry. */
-   void get_shift(int i, matrix1D<double> &shift) const;
+    /** Get shift.
+        Returns the shift associated to a certain symmetry. */
+    void get_shift(int i, matrix1D<double> &shift) const;
 
-   /** Set shift.
-       Set the shift associated to a certain symmetry. */
-   void set_shift(int i, const matrix1D<double> &shift);
+    /** Set shift.
+        Set the shift associated to a certain symmetry. */
+    void set_shift(int i, const matrix1D<double> &shift);
 
-   /** Add shift.
-       Add a shift vector to the shift matrix. An exception is thrown if
-       the input vector is not a 3x1 vector.*/
-   void add_shift(const matrix1D<double> &shift);
+    /** Add shift.
+        Add a shift vector to the shift matrix. An exception is thrown if
+        the input vector is not a 3x1 vector.*/
+    void add_shift(const matrix1D<double> &shift);
 
-   /** Read a symmetry file into a symmetry list.
-       The former symmetry list is overwritten with the new one. All the
-       subgroup members are added to the list. If the accuracy is negative
-       then the subgroup is not generated.
-       \\ Ex: SL.read_sym_file("sym.txt");*/
-   void read_sym_file(FileName fn_sym, double accuracy=SYM_ACCURACY);
+    /** Read a symmetry file into a symmetry list.
+        The former symmetry list is overwritten with the new one. All the
+        subgroup members are added to the list. If the accuracy is negative
+        then the subgroup is not generated.
+        \\ Ex: SL.read_sym_file("sym.txt");*/
+    void read_sym_file(FileName fn_sym, double accuracy = SYM_ACCURACY);
 
-   /** Add symmetry matrices to the symmetry list.
-       The given matrix must specify a point of view equivalent to the
-       actual point of view. The matrices are added to the subgroup generator
-       but the subgroup is not updated, you must do it manually using
-       \Ref{compute_subgroup}. What is more, the subgroup after the insertion
-       is corrupted.
+    /** Add symmetry matrices to the symmetry list.
+        The given matrix must specify a point of view equivalent to the
+        actual point of view. The matrices are added to the subgroup generator
+        but the subgroup is not updated, you must do it manually using
+        \Ref{compute_subgroup}. What is more, the subgroup after the insertion
+        is corrupted.
 
-       The chain length is the number of single matrices multiplication of
-       which the inserted one is compound.*/
-   void add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
-       int chain_length);
+        The chain length is the number of single matrices multiplication of
+        which the inserted one is compound.*/
+    void add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
+                      int chain_length);
 
-   /** Compute subgroup for this structure.
-       After adding or setting a matrix, the subgroup information
-       is lost, you must recalculate it using this function. The different
-       matrices are multiplied until no more different matrices are produced.
-       The accuracy is used in order to compare when two matrix elements are
-       the same.
+    /** Compute subgroup for this structure.
+        After adding or setting a matrix, the subgroup information
+        is lost, you must recalculate it using this function. The different
+        matrices are multiplied until no more different matrices are produced.
+        The accuracy is used in order to compare when two matrix elements are
+        the same.
 
-       So far, all the shifts associated to generated matrices are set to 0*/
-   void compute_subgroup(double accuracy=SYM_ACCURACY);
+        So far, all the shifts associated to generated matrices are set to 0*/
+    void compute_subgroup(double accuracy = SYM_ACCURACY);
 
-   /** Number of symmetry matrices inside the structure.
-       This is the number of all the matrices inside the subgroup.
-       \\ Ex:
-       \begin{verbatim}
-          for (i=0; i<SL.SymsNo; i++) {
-              SL.get_matrix(i,A);
-              ...
-          }
-       \end{verbatim} */
-   int SymsNo() const {return __L.ydim/4;}
+    /** Number of symmetry matrices inside the structure.
+        This is the number of all the matrices inside the subgroup.
+        \\ Ex:
+        \begin{verbatim}
+           for (i=0; i<SL.SymsNo; i++) {
+               SL.get_matrix(i,A);
+               ...
+           }
+        \end{verbatim} */
+    int SymsNo() const
+    {
+        return __L.ydim / 4;
+    }
 
-   /** Number of symmetry matrices which generated the structure.
-       This is the number of the matrices which generated the structure,
-       notice that it should be always less or equal to the total number
-       of matrices in the subgroup. */
-   int TrueSymsNo() const {return true_symNo;}
+    /** Number of symmetry matrices which generated the structure.
+        This is the number of the matrices which generated the structure,
+        notice that it should be always less or equal to the total number
+        of matrices in the subgroup. */
+    int TrueSymsNo() const
+    {
+        return true_symNo;
+    }
 
-   /** Guess Crystallographic space group.
-       Return the  \URL[space group]{
-       http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
-       far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75),
-       P4212 (90) and P6 (168).
+    /** Guess Crystallographic space group.
+        Return the  \URL[space group]{
+        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
+        far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75),
+        P4212 (90) and P6 (168).
 
-       Mag_a and Mag_b are the crystal vector magnitude. */
+        Mag_a and Mag_b are the crystal vector magnitude. */
 
-   int  crystallographic_space_group (double mag_a,
-                                           double mag_b,
-					   double ang_a2b_deg) const;
+    int  crystallographic_space_group(double mag_a,
+                                      double mag_b,
+                                      double ang_a2b_deg) const;
 
 };
 
@@ -250,58 +262,58 @@ public:
  */
 
 
-    void symmetrize_crystal_vectors(matrix1D<double> &aint,
-			          matrix1D<double> &bint,
-				  matrix1D<double> &shift,
-				  int space_group,
-				  int sym_no,
-				  const matrix1D<double> &eprm_aint,
-				  const matrix1D<double> &eprm_bint);
+void symmetrize_crystal_vectors(matrix1D<double> &aint,
+                                matrix1D<double> &bint,
+                                matrix1D<double> &shift,
+                                int space_group,
+                                int sym_no,
+                                const matrix1D<double> &eprm_aint,
+                                const matrix1D<double> &eprm_bint);
 
 /** Symmetrizes a crystal volume.
  */
 
-    void symmetrize_crystal_volume(GridVolume &vol,
-                              const matrix1D<double> &eprm_aint,
-			      const matrix1D<double> &eprm_bint,
-			      int eprm_space_group,const matrix2D<int> &mask,
-			      int grid_type );
+void symmetrize_crystal_volume(GridVolume &vol,
+                               const matrix1D<double> &eprm_aint,
+                               const matrix1D<double> &eprm_bint,
+                               int eprm_space_group, const matrix2D<int> &mask,
+                               int grid_type);
 
 /** Symmetrizes a simple grid with P2_122  symmetry
 */
-     void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint,
-			        const matrix1D<double> &eprm_bint,
-				const matrix2D<int> &mask, int volume_no,
-				int grid_type);
+void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
+                     const matrix1D<double> &eprm_aint,
+                     const matrix1D<double> &eprm_bint,
+                     const matrix2D<int> &mask, int volume_no,
+                     int grid_type);
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
-     void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint,
-			        const matrix1D<double> &eprm_bint,
-				const matrix2D<int> &mask, int volume_no,
-				int grid_type);
+void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+                     const matrix1D<double> &eprm_aint,
+                     const matrix1D<double> &eprm_bint,
+                     const matrix2D<int> &mask, int volume_no,
+                     int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
-     void symmetry_P4(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint,
-			        const matrix1D<double> &eprm_bint,
-				const matrix2D<int> &mask, int volume_no,
-				int grid_type);
+void symmetry_P4(Volume &vol, const SimpleGrid &grid,
+                 const matrix1D<double> &eprm_aint,
+                 const matrix1D<double> &eprm_bint,
+                 const matrix2D<int> &mask, int volume_no,
+                 int grid_type);
 /** Symmetrizes a simple grid with P4212 symmetry
 */
-     void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint,
-			        const matrix1D<double> &eprm_bint,
-				const matrix2D<int> &mask, int volume_no,
-				int grid_type);
+void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+                     const matrix1D<double> &eprm_aint,
+                     const matrix1D<double> &eprm_bint,
+                     const matrix2D<int> &mask, int volume_no,
+                     int grid_type);
 /** Symmetrizes a simple grid with P6 symmetry
 */
-     void symmetry_P6(Volume &vol, const SimpleGrid &grid,
-                                const matrix1D<double> &eprm_aint,
-			        const matrix1D<double> &eprm_bint,
-				const matrix2D<int> &mask, int volume_no,
-				int grid_type);
+void symmetry_P6(Volume &vol, const SimpleGrid &grid,
+                 const matrix1D<double> &eprm_aint,
+                 const matrix1D<double> &eprm_bint,
+                 const matrix2D<int> &mask, int volume_no,
+                 int grid_type);
 
 //@}
 

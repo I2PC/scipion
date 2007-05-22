@@ -46,99 +46,103 @@ using namespace std;
  */
 class xmippCTVectors : public xmippCTSet<xmippVector, xmippLabel>
 {
- public:
+public:
 
-      typedef struct stats {
-			      xmippFeature mean;
-			      xmippFeature sd;
-			   } statsStruct;
-
-
-  /**
-   * Default constructor
-   @param _vecSize Vector dimension; required to dim the feature and types vector
-   @para _calib calibration which should be true if the data set has labels
-  */
-  xmippCTVectors(unsigned _vecSize = 0, bool _calib = true)
-    : xmippCTSet<xmippVector, xmippLabel>(_calib ),  /*varStats(_vecSize),*/
-      normalized (false) {};
-
-  /**
-   * Constructs a training set given a stream
-   * @param _is  The input stream
-   * @exception  runtime_error  If there are problems with the stream
-   */
-  xmippCTVectors(istream & _is);
-
-	
-  /**
-   * Copy Constructor. Useful when returning a xmippCTVectors Class.
-   * @param op1 xmippCTVectors
-   */
-    xmippCTVectors (const xmippCTVectors &op1);
-
-  /**
-   * Virtual destructor
-   */
-  virtual ~xmippCTVectors() {};
+    typedef struct stats
+    {
+        xmippFeature mean;
+        xmippFeature sd;
+    }
+    statsStruct;
 
 
-  /**
-   * Returns the amount of features (cases)
-   */
-  unsigned featureSize() const;
+    /**
+     * Default constructor
+     @param _vecSize Vector dimension; required to dim the feature and types vector
+     @para _calib calibration which should be true if the data set has labels
+    */
+    xmippCTVectors(unsigned _vecSize = 0, bool _calib = true)
+            : xmippCTSet<xmippVector, xmippLabel>(_calib),  /*varStats(_vecSize),*/
+            normalized(false)
+    {};
 
-  /**
-   * Returns the dimension of the vectors (number of features)
-   */
-  unsigned dimension() const;
-
-  /**
-   * Clears the training set
-   */
-  void clear ();
-
-  /**
-   * Standard output for a training set
-   * @param _os The output stream
-   */
-  virtual void printSelf(ostream& _os) const;
-
-  /**
-   * Standard input for a training set
-   * @param _is The input stream
-   * @exception  runtime_error  If there are problems with the stream
-   */
-  virtual void readSelf (istream& _is);
+    /**
+     * Constructs a training set given a stream
+     * @param _is  The input stream
+     * @exception  runtime_error  If there are problems with the stream
+     */
+    xmippCTVectors(istream & _is);
 
 
-  /**
-   * Saves the class into a stream.
-   * this method can be used to save the status of the class.
-   * @param _os The output stream
-   */
-  virtual void saveObject(ostream& _os) const;
+    /**
+     * Copy Constructor. Useful when returning a xmippCTVectors Class.
+     * @param op1 xmippCTVectors
+     */
+    xmippCTVectors(const xmippCTVectors &op1);
+
+    /**
+     * Virtual destructor
+     */
+    virtual ~xmippCTVectors()
+    {};
 
 
-  /**
-   * Loads the class from a stream.
-   * this method can be used to load the status of the class.
-   * @param _is The output stream
-   */
-  virtual void loadObject(istream& _is);
+    /**
+     * Returns the amount of features (cases)
+     */
+    unsigned featureSize() const;
+
+    /**
+     * Returns the dimension of the vectors (number of features)
+     */
+    unsigned dimension() const;
+
+    /**
+     * Clears the training set
+     */
+    void clear();
+
+    /**
+     * Standard output for a training set
+     * @param _os The output stream
+     */
+    virtual void printSelf(ostream& _os) const;
+
+    /**
+     * Standard input for a training set
+     * @param _is The input stream
+     * @exception  runtime_error  If there are problems with the stream
+     */
+    virtual void readSelf(istream& _is);
 
 
-  /**
-   * Deletes a variable (feature) from Training set
-   * @param _var variable index
-   */
-  void deleteVariable(int _var);
+    /**
+     * Saves the class into a stream.
+     * this method can be used to save the status of the class.
+     * @param _os The output stream
+     */
+    virtual void saveObject(ostream& _os) const;
 
-  /**
-   * Operator "="
-   * @param op1 xmippCTVectors
-   */
-  xmippCTVectors& operator= (const xmippCTVectors &op1);
+
+    /**
+     * Loads the class from a stream.
+     * this method can be used to load the status of the class.
+     * @param _is The output stream
+     */
+    virtual void loadObject(istream& _is);
+
+
+    /**
+     * Deletes a variable (feature) from Training set
+     * @param _var variable index
+     */
+    void deleteVariable(int _var);
+
+    /**
+     * Operator "="
+     * @param op1 xmippCTVectors
+     */
+    xmippCTVectors& operator= (const xmippCTVectors &op1);
 
 
     /** Copy the structure from another TS but leave it empty.
@@ -159,7 +163,7 @@ class xmippCTVectors : public xmippCTSet<xmippVector, xmippLabel>
     * @param _idx   row to be deleted
     */
     bool deleteRow(unsigned int _idx);
-	
+
 
     /**
     * Normalize a feature in the training set
@@ -169,19 +173,19 @@ class xmippCTVectors : public xmippCTSet<xmippVector, xmippLabel>
 
 
     /**
-    *	Normalize all features in the training set
+    * Normalize all features in the training set
     */
     void normalize();
 
     /**
-    *	UnNormalize all features in the training set
+    * UnNormalize all features in the training set
     */
-     virtual void unNormalize();
+    virtual void unNormalize();
 
     /**
-    *	returns normalized variable in the original scale
+    * returns normalized variable in the original scale
     */
-     virtual double getUnormalizedVar(unsigned _item, unsigned _var) const;
+    virtual double getUnormalizedVar(unsigned _item, unsigned _var) const;
 
     /**
     * Returns TRUE if recordset is normalized.
@@ -191,24 +195,27 @@ class xmippCTVectors : public xmippCTSet<xmippVector, xmippLabel>
     /**
     * Returns a const reference to the normalization vector
     */
-    virtual const vector<statsStruct>& getNormalizationInfo() const {return varStats;};
+    virtual const vector<statsStruct>& getNormalizationInfo() const
+    {
+        return varStats;
+    };
 
-   /**
-    * Calcualtes the average and SD of a feature in the training set
-    * @param _i  The index to the feature
+    /**
+     * Calcualtes the average and SD of a feature in the training set
+     * @param _i  The index to the feature
+     */
+    void getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd);
+
+    /**
+    * Returns a vector containing the average (item 0) and SD (item 1)
     */
-   void getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd);
 
-   /**
-   *	Returns a vector containing the average (item 0) and SD (item 1)
-   */
-
-   xmippCTVectors getStatVector();
+    xmippCTVectors getStatVector();
 
 
 protected:
     vector <statsStruct>  varStats;
-    bool		  normalized;
+    bool    normalized;
 
 };
 //@}

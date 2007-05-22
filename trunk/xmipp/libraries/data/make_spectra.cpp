@@ -29,16 +29,16 @@
 // Empty constructor -------------------------------------------------------
 Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters()
 {
-    each_image_produces_an_output=false;
-    rot_spt.x0=rot_spt.y0=-1;
+    each_image_produces_an_output = false;
+    rot_spt.x0 = rot_spt.y0 = -1;
 }
 
 // Read from command line --------------------------------------------------
 void Prog_make_spectra_prm::read(int argc, char **argv)
 {
-    Prog_parameters::read(argc,argv);
-    fn_out=get_param(argc,argv,"-o");
-    rot_spt.read(argc,argv);
+    Prog_parameters::read(argc, argv);
+    fn_out = get_param(argc, argv, "-o");
+    rot_spt.read(argc, argv);
     produce_side_info();
 }
 
@@ -76,8 +76,8 @@ void Prog_make_spectra_prm::usage_specific()
 // Process an image --------------------------------------------------------
 void Prog_make_spectra_prm::process_img(ImageXmipp &img)
 {
-    rot_spt.compute_rotational_spectrum(img(),rot_spt.rl, rot_spt.rh,
-                                        rot_spt.dr, rot_spt.rh-rot_spt.rl);
+    rot_spt.compute_rotational_spectrum(img(), rot_spt.rl, rot_spt.rh,
+                                        rot_spt.dr, rot_spt.rh - rot_spt.rl);
     Harmonics.push_back(rot_spt.rot_spectrum);
     Img_name.push_back(img.name());
 }
@@ -89,17 +89,17 @@ void Prog_make_spectra_prm::finish_processing()
     fh_out.open(fn_out.c_str());
 
     if (!fh_out)
-        REPORT_ERROR(1,(string)"Prog_make_spectra_prm::finish_processing: "
-                     "Cannot open"+fn_out+" for output");
-    if (Harmonics.size()!=0)
+        REPORT_ERROR(1, (string)"Prog_make_spectra_prm::finish_processing: "
+                     "Cannot open" + fn_out + " for output");
+    if (Harmonics.size() != 0)
     {
         fh_out << XSIZE(Harmonics[0]) << " " << Harmonics.size() << endl;
-        int imax=Harmonics.size();
-        for (int i=0; i<imax; i++)
+        int imax = Harmonics.size();
+        for (int i = 0; i < imax; i++)
         {
-            double norm=Harmonics[i].sum()/100.0;
-            for (int j=0; j<XSIZE(Harmonics[i]); j++)
-                fh_out << FtoA(Harmonics[i](j)/norm,6,4) << " ";
+            double norm = Harmonics[i].sum() / 100.0;
+            for (int j = 0; j < XSIZE(Harmonics[i]); j++)
+                fh_out << FtoA(Harmonics[i](j) / norm, 6, 4) << " ";
             fh_out << Img_name[i] << endl;
         }
     }

@@ -39,81 +39,82 @@
     Here only those specific parameters for crystals are found, the rest of
     parameters common with normal ART should be looked up in
     \Ref{Prog_Art_Parameters} */
-class Crystal_ART_Parameters {
+class Crystal_ART_Parameters
+{
 public:
-   /* User parameters ...................................................... */
-   /**@name User parameters */
-   //@{
-   /// First lattice vector module (user supplies it in arbitrary units
-   /// but it is divided by sampling as soon as it is initialized)
-   double a_mag;
-   /// Second lattice vector module (user supplies it in arbitrary units
-   /// but it is divided by sampling as soon as it is initialized)
-   double b_mag;
-   /// angle from a to b (degrees)
-   double ang_a2b_deg;
-   /// angle from x axis to a (degrees)
-   double ang_x2a_deg;
-   /// First lattice vector  (voxel units)
-   matrix1D<double> avox;
-   /// Second lattice vector (voxel units)
-   matrix1D<double> bvox;
-   /// Fill space, repeat unit cell all over the space
-   bool fill_space;
-   //@}
+    /* User parameters ...................................................... */
+    /**@name User parameters */
+    //@{
+    /// First lattice vector module (user supplies it in arbitrary units
+    /// but it is divided by sampling as soon as it is initialized)
+    double a_mag;
+    /// Second lattice vector module (user supplies it in arbitrary units
+    /// but it is divided by sampling as soon as it is initialized)
+    double b_mag;
+    /// angle from a to b (degrees)
+    double ang_a2b_deg;
+    /// angle from x axis to a (degrees)
+    double ang_x2a_deg;
+    /// First lattice vector  (voxel units)
+    matrix1D<double> avox;
+    /// Second lattice vector (voxel units)
+    matrix1D<double> bvox;
+    /// Fill space, repeat unit cell all over the space
+    bool fill_space;
+    //@}
 
-   /* Side information ..................................................... */
-   /**@name Side information */
-   //@{
-   /**@name Crystal lattice related */
-   //@{
-   /// First lattice vector (BCC units)
-   matrix1D<double> a;
-   /// Second lattice vector (BCC units)
-   matrix1D<double> b;
-   /// First lattice vector approximated to integer numbers (BCC units)
-   matrix1D<double> aint;
-   /// Second lattice vector approximated to integer numbers (BCC units)
-   matrix1D<double> bint;
-   /// ai=aint/2 as double numbers
-   matrix1D<double> ai;
-   /// bi=aint/2 as double numbers
-   matrix1D<double> bi;
-   /// space_group
-   int space_group;
-   //@}
-   /** Unit cell mask.
-       This mask is defined in the BCC space
-       and it represent a parallelogram defined by points (-a-b)/2, (-a+b)/2,
-       (a-b)/2, (a+b)/2. The reconstruction will be only performed for
-       the basis inside this mask. Be careful that this is a 2D mask for a 3D
-       reconstruction. */
-   matrix2D<int> unit_cell_mask;
-   //@}
+    /* Side information ..................................................... */
+    /**@name Side information */
+    //@{
+    /**@name Crystal lattice related */
+    //@{
+    /// First lattice vector (BCC units)
+    matrix1D<double> a;
+    /// Second lattice vector (BCC units)
+    matrix1D<double> b;
+    /// First lattice vector approximated to integer numbers (BCC units)
+    matrix1D<double> aint;
+    /// Second lattice vector approximated to integer numbers (BCC units)
+    matrix1D<double> bint;
+    /// ai=aint/2 as double numbers
+    matrix1D<double> ai;
+    /// bi=aint/2 as double numbers
+    matrix1D<double> bi;
+    /// space_group
+    int space_group;
+    //@}
+    /** Unit cell mask.
+        This mask is defined in the BCC space
+        and it represent a parallelogram defined by points (-a-b)/2, (-a+b)/2,
+        (a-b)/2, (a+b)/2. The reconstruction will be only performed for
+        the basis inside this mask. Be careful that this is a 2D mask for a 3D
+        reconstruction. */
+    matrix2D<int> unit_cell_mask;
+    //@}
 public:
-   /// cout << crystal_prm;
-   friend ostream & operator << (ostream &o,
-      const Crystal_ART_Parameters &eprm);
+    /// cout << crystal_prm;
+    friend ostream & operator << (ostream &o,
+                                  const Crystal_ART_Parameters &eprm);
 
-   /** Read special parameters from a command line.
-       This function reads the parameters from a command line
-       defined by argc and argv. An exception might be thrown by any
-       of the internal conversions, this would mean that there is
-       an error in the command line and you might show a usage message. */
-   void read(int argc, char **argv, Basic_ART_Parameters &prm);
+    /** Read special parameters from a command line.
+        This function reads the parameters from a command line
+        defined by argc and argv. An exception might be thrown by any
+        of the internal conversions, this would mean that there is
+        an error in the command line and you might show a usage message. */
+    void read(int argc, char **argv, Basic_ART_Parameters &prm);
 
-   /** Usage message.
-       This function shows the way of introducing these parameters. */
-   void usage_more();
+    /** Usage message.
+        This function shows the way of introducing these parameters. */
+    void usage_more();
 
-   /** Produce Initial and Side information for ART+crystal.
-       This function computes from the ART+crystal parameters things like
-       the integer<-->float lattice vector matrices, the unit cell mask.
-       The reconstructed volume size can be modified such that the unit cell
-       mask fits.
-   */
-   void produce_Side_Info(Basic_ART_Parameters &prm,
-      GridVolume &vol_basis0);
+    /** Produce Initial and Side information for ART+crystal.
+        This function computes from the ART+crystal parameters things like
+        the integer<-->float lattice vector matrices, the unit cell mask.
+        The reconstructed volume size can be modified such that the unit cell
+        mask fits.
+    */
+    void produce_Side_Info(Basic_ART_Parameters &prm,
+                           GridVolume &vol_basis0);
 };
 
 /** Compute integer lattice vectors and passing matrix.
@@ -126,12 +127,12 @@ public:
     \end{verbatim} */
 void compute_integer_lattice(const matrix1D<double> &a,
                              const matrix1D<double> &b,
-			     double a_mag, double b_mag,
-			     double ang_a2b_deg,
-			     matrix1D<double> &aint,
-			     matrix1D<double> &bint,
+                             double a_mag, double b_mag,
+                             double ang_a2b_deg,
+                             matrix1D<double> &aint,
+                             matrix1D<double> &bint,
                              matrix2D<double> &V,
-			     int space_group);
+                             int space_group);
 
 /** Run a single step of ART.
     An ART iteration is compound of as many steps as projections,
@@ -146,28 +147,28 @@ void compute_integer_lattice(const matrix1D<double> &a,
     The symmetry matrix from which the view is derived must be given in
     sym_no. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-   Basic_ART_Parameters &prm, Crystal_ART_Parameters &eprm,
-   Projection &theo_proj, Projection &read_proj,
-   int sym_no,
-   Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
-   double &mean_error, int numIMG, double lambda, int act_proj,
-   const FileName &fn_ctf);
+                     Basic_ART_Parameters &prm, Crystal_ART_Parameters &eprm,
+                     Projection &theo_proj, Projection &read_proj,
+                     int sym_no,
+                     Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
+                     double &mean_error, int numIMG, double lambda, int act_proj,
+                     const FileName &fn_ctf);
 
 /* Finish ART iterations.
    Expand output volume to fill space if necessary. */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Crystal_ART_Parameters &eprm, GridVolume &vol_basis);
+                           const Crystal_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Expand basis values to fill space.
     Copy basis values as a crystal in order to fill the whole space determined
     by the output volume. */
 void expand_to_fill_space(const Basic_ART_Parameters &prm,
-   const Crystal_ART_Parameters &eprm, GridVolume &vol);
+                          const Crystal_ART_Parameters &eprm, GridVolume &vol);
 
 /** Force the {\it trial} volume to be symmetric. */
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Crystal_ART_Parameters &eprm,
-		    int grid_type);
+                    int grid_type);
 
 //@}
 

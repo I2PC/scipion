@@ -27,50 +27,58 @@
 #include <data/args.h>
 #include <reconstruction/ctf_correct_phase.h>
 
-class Prog_CorrectPhase_Params: public Prog_parameters {
+class Prog_CorrectPhase_Params: public Prog_parameters
+{
 public:
-   CorrectPhase_Params cpprm;
+    CorrectPhase_Params cpprm;
 public:
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      cpprm.read(argc,argv);
-      cpprm.produce_side_info();
-      allow_time_bar=false;
-   }
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        cpprm.read(argc, argv);
+        cpprm.produce_side_info();
+        allow_time_bar = false;
+    }
 
-   void show() {
-      Prog_parameters::show();
-      cpprm.show();
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        cpprm.show();
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cpprm.usage();
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cpprm.usage();
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Prog_CorrectPhase_Params *eprm=(Prog_CorrectPhase_Params *) prm;
-   matrix2D< complex<double> > fft;
-   FileName       fn_ctf;
-   if (eprm->cpprm.multiple_CTFs) {
-      fn_ctf=eprm->cpprm.SF_CTF.NextImg();
-      eprm->cpprm.ctf.ctf.read(fn_ctf);
-      eprm->cpprm.ctf.ctf.Produce_Side_Info();
-      cerr << "Correcting " << img.name() << " with " << fn_ctf << endl;
-   }
-   FourierTransform(img(),fft);
-   eprm->cpprm.correct(fft);
-   InverseFourierTransform(fft,img());
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Prog_CorrectPhase_Params *eprm = (Prog_CorrectPhase_Params *) prm;
+    matrix2D< complex<double> > fft;
+    FileName       fn_ctf;
+    if (eprm->cpprm.multiple_CTFs)
+    {
+        fn_ctf = eprm->cpprm.SF_CTF.NextImg();
+        eprm->cpprm.ctf.ctf.read(fn_ctf);
+        eprm->cpprm.ctf.ctf.Produce_Side_Info();
+        cerr << "Correcting " << img.name() << " with " << fn_ctf << endl;
+    }
+    FourierTransform(img(), fft);
+    eprm->cpprm.correct(fft);
+    InverseFourierTransform(fft, img());
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cerr << "This process is not intended for volumes\n";
-   return false;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    cerr << "This process is not intended for volumes\n";
+    return false;
 }
 
-int main (int argc, char **argv) {
-   Prog_CorrectPhase_Params prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Prog_CorrectPhase_Params prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

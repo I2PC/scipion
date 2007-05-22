@@ -31,73 +31,74 @@
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */
-class Prog_PDBPhantom_Parameters {
+class Prog_PDBPhantom_Parameters
+{
 public:
-   /** Sampling rate */
-   double Ts;
+    /** Sampling rate */
+    double Ts;
 
-   /** PDB file */
-   FileName fn_pdb;
+    /** PDB file */
+    FileName fn_pdb;
 
-   /** Output fileroot */
-   FileName fn_out;
+    /** Output fileroot */
+    FileName fn_out;
 
-   /** Blob */
-   struct blobtype blob;
+    /** Blob */
+    struct blobtype blob;
 
-   /** Final size in pixels */
-   int output_dim;
+    /** Final size in pixels */
+    int output_dim;
 public:
-   /** Empty constructor */
-   Prog_PDBPhantom_Parameters();
+    /** Empty constructor */
+    Prog_PDBPhantom_Parameters();
 
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** Show parameters. */
-   void show();
+    /** Show parameters. */
+    void show();
 
-   /** Run. */
-   void run();
+    /** Run. */
+    void run();
 public:
-   /* Sampling rate used for highly sampled volumes */
-   double highTs;
+    /* Sampling rate used for highly sampled volumes */
+    double highTs;
 
-   /* periodic_table(i,0)=radius
-      periodic_table(i,1)=atomic weight */
-   matrix2D<double> periodic_table;
+    /* periodic_table(i,0)=radius
+       periodic_table(i,1)=atomic weight */
+    matrix2D<double> periodic_table;
 
-   // Protein geometry
-   matrix1D<double> center_of_mass, limit;
+    // Protein geometry
+    matrix1D<double> center_of_mass, limit;
 
-   /* Volume at a high sampling rate */
-   VolumeXmipp Vhigh;
+    /* Volume at a high sampling rate */
+    VolumeXmipp Vhigh;
 
-   /* Volume at a low sampling rate */
-   VolumeXmipp Vlow;
+    /* Volume at a low sampling rate */
+    VolumeXmipp Vlow;
 
-   /* Blob properties at the high sampling rate */
-   void blob_properties() const;
+    /* Blob properties at the high sampling rate */
+    void blob_properties() const;
 
-   /* Atom weight and radius */
-   void atom_description(const string &_element, double &weight, double &radius)
-      const;
+    /* Atom weight and radius */
+    void atom_description(const string &_element, double &weight, double &radius)
+    const;
 
-   /* Protein geometry */
-   void compute_protein_geometry();
+    /* Protein geometry */
+    void compute_protein_geometry();
 
-   /* Create protein at a high sampling rate */
-   void create_protein_at_high_sampling_rate();
+    /* Create protein at a high sampling rate */
+    void create_protein_at_high_sampling_rate();
 
-   /* Create protein at a low sampling rate */
-   void create_protein_at_low_sampling_rate();
+    /* Create protein at a low sampling rate */
+    void create_protein_at_low_sampling_rate();
 };
 //@}
 #endif

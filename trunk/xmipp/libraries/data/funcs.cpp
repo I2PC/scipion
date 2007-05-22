@@ -42,23 +42,23 @@ int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
                         float prec)
 {
     // Degenerate case?
-    if (ABS(a)<prec)
-        if (ABS(b)<prec)
+    if (ABS(a) < prec)
+        if (ABS(b) < prec)
             return -1;
         else
         {
-            x1=-c/b;
+            x1 = -c / b;
             return 1;
         }
 
     // Normal case
-    float d=b*b-4*a*c;
-    if   (d<0)
+    float d = b * b - 4 * a * c;
+    if (d < 0)
         return 0;
     else
     {
-        x1=(-b+sqrt(d))/(2*a);
-        x2=(-b-sqrt(d))/(2*a);
+        x1 = (-b + sqrt(d)) / (2 * a);
+        x2 = (-b - sqrt(d)) / (2 * a);
         return 2;
     }
 }
@@ -67,7 +67,7 @@ int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
 double gaussian1D(double x, double sigma, double mu)
 {
     x -= mu;
-    return 1/sqrt(2*PI*sigma*sigma)*exp(-0.5*((x/sigma)*(x/sigma)));
+    return 1 / sqrt(2*PI*sigma*sigma)*exp(-0.5*((x / sigma)*(x / sigma)));
 }
 
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
@@ -76,45 +76,45 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
     // Express x,y in the gaussian internal coordinates
     x -= muX;
     y -= muY;
-    double xp= cos(ang)*x+sin(ang)*y;
-    double yp=-sin(ang)*x+cos(ang)*y;
+    double xp = cos(ang) * x + sin(ang) * y;
+    double yp = -sin(ang) * x + cos(ang) * y;
 
     // Now evaluate
-    return 1/sqrt(2*PI*sigmaX*sigmaY)*exp(-0.5*((xp/sigmaX)*(xp/sigmaX)+
-                                          (yp/sigmaY)*(yp/sigmaY)));
+    return 1 / sqrt(2*PI*sigmaX*sigmaY)*exp(-0.5*((xp / sigmaX)*(xp / sigmaX) +
+                                            (yp / sigmaY)*(yp / sigmaY)));
 }
 
 /* Integrate --------------------------------------------------------------- */
-double integrateNewtonCotes(double (*f)(double),
+double integrateNewtonCotes(double(*f)(double),
                             double a, double b, int N)
 {
-    if (N<2 || N>9)
-        REPORT_ERROR(1,"integrateNewtonCotes: N must be greater than 1");
-    double h=(b-a)/(N-1);
+    if (N < 2 || N > 9)
+        REPORT_ERROR(1, "integrateNewtonCotes: N must be greater than 1");
+    double h = (b - a) / (N - 1);
     matrix1D<double> fx(N);
-    for (int i=0; i<N; i++)
-        fx(i)=(*f)(a+i*h);
+    for (int i = 0; i < N; i++)
+        fx(i) = (*f)(a + i * h);
     switch (N)
     {
     case 2:
-        return h/2*(fx(0)+fx(1));
+        return h / 2*(fx(0) + fx(1));
     case 3:
-        return h/3*(fx(0)+4*fx(1)+fx(2));
+        return h / 3*(fx(0) + 4*fx(1) + fx(2));
     case 4:
-        return h*3.0/8.0*((fx(0)+fx(3))+3*(fx(1)+fx(2)));
+        return h*3.0 / 8.0*((fx(0) + fx(3)) + 3*(fx(1) + fx(2)));
     case 5:
-        return h*2.0/45.0*(7*(fx(0)+fx(4))+32*(fx(1)+fx(3))+12*fx(2));
+        return h*2.0 / 45.0*(7*(fx(0) + fx(4)) + 32*(fx(1) + fx(3)) + 12*fx(2));
     case 6:
-        return h*5.0/288.0*(19*(fx(0)+fx(5))+75*(fx(1)+fx(4))+50*(fx(2)+fx(3)));
+        return h*5.0 / 288.0*(19*(fx(0) + fx(5)) + 75*(fx(1) + fx(4)) + 50*(fx(2) + fx(3)));
     case 7:
-        return h/140.0*(41*(fx(0)+fx(6))+216*(fx(1)+fx(5))+27*(fx(2)+fx(4))+
-                        272*fx(3));
+        return h / 140.0*(41*(fx(0) + fx(6)) + 216*(fx(1) + fx(5)) + 27*(fx(2) + fx(4)) +
+                          272*fx(3));
     case 8:
-        return h*7.0/17280.0*(751*(fx(0)+fx(7))+3577*(fx(1)+fx(6))+1323*(fx(2)+fx(5))+
-                              2989*(fx(3)+fx(4)));
+        return h*7.0 / 17280.0*(751*(fx(0) + fx(7)) + 3577*(fx(1) + fx(6)) + 1323*(fx(2) + fx(5)) +
+                                2989*(fx(3) + fx(4)));
     case 9:
-        return 4.0/14175.0*h*(989*(fx(0)+fx(8))+5888*(fx(1)+fx(7))+
-                              -928*(fx(2)+fx(6))+10496*(fx(3)+fx(5))-4540*fx(4));
+        return 4.0 / 14175.0*h*(989*(fx(0) + fx(8)) + 5888*(fx(1) + fx(7)) +
+                                -928*(fx(2) + fx(6)) + 10496*(fx(3) + fx(5)) - 4540*fx(4));
     }
 }
 
@@ -133,10 +133,10 @@ int idum;
 // Uniform distribution ....................................................
 void  init_random_generator(int seed)
 {
-    idum=-1;
+    idum = -1;
     ran1(&idum);
-    if (seed!=-1)
-        for (int i=0; i<seed; i++)
+    if (seed != -1)
+        for (int i = 0; i < seed; i++)
             ran1(&idum);
 }
 
@@ -146,15 +146,15 @@ void  randomize_random_generator()
     int rand_return;
 
     srand(seed);
-    rand_return=rand();
+    rand_return = rand();
 
     time_t t;
     time(&t);
-    rand_return=abs(rand_return);
-    idum=( -(int)(t%10000)
-           -(int)(rand_return%10000));
+    rand_return = abs(rand_return);
+    idum = (-(int)(t % 10000)
+            - (int)(rand_return % 10000));
     ran1(&idum);
-    seed=(unsigned int)rand_return;
+    seed = (unsigned int)rand_return;
 }
 
 float rnd_unif()
@@ -163,10 +163,10 @@ float rnd_unif()
 }
 float rnd_unif(float a, float b)
 {
-    if (a==b)
+    if (a == b)
         return a;
     else
-        return a+(b-a)*ran1(&idum);
+        return a + (b - a)*ran1(&idum);
 }
 
 // Gaussian distribution ...................................................
@@ -176,132 +176,132 @@ float rnd_gaus()
 }
 float rnd_gaus(float a, float b)
 {
-    if (b==0)
+    if (b == 0)
         return a;
     else
-        return b*gasdev(&idum)+a;
+        return b*gasdev(&idum) + a;
 }
 float gaus_within_x0(float x0, float mean, float stddev)
 {
-    float z0=(x0-mean)/stddev;
-    return erf(ABS(z0)/sqrt(2.0));
+    float z0 = (x0 - mean) / stddev;
+    return erf(ABS(z0) / sqrt(2.0));
 }
 
 float gaus_outside_x0(float x0, float mean, float stddev)
 {
-    float z0=(x0-mean)/stddev;
-    return erfc(ABS(z0)/sqrt(2.0));
+    float z0 = (x0 - mean) / stddev;
+    return erfc(ABS(z0) / sqrt(2.0));
 }
 
 float gaus_up_to_x0(float x0, float mean, float stddev)
 {
-    if      (x0 >mean)
-        return 1.0-gaus_outside_x0(x0,mean,stddev)/2;
-    else if (x0==mean)
+    if (x0 > mean)
+        return 1.0 -gaus_outside_x0(x0, mean, stddev) / 2;
+    else if (x0 == mean)
         return 0.5;
     else
-        return gaus_outside_x0(x0,mean,stddev)/2;
+        return gaus_outside_x0(x0, mean, stddev) / 2;
 }
 
 float gaus_from_x0(float x0, float mean, float stddev)
 {
-    if      (x0 >mean)
-        return gaus_outside_x0(x0,mean,stddev)/2;
-    else if (x0==mean)
+    if (x0 > mean)
+        return gaus_outside_x0(x0, mean, stddev) / 2;
+    else if (x0 == mean)
         return 0.5;
     else
-        return 1.0-gaus_outside_x0(x0,mean,stddev)/2;
+        return 1.0 -gaus_outside_x0(x0, mean, stddev) / 2;
 }
 
 float gaus_outside_probb(float p, float mean, float stddev)
 {
     // Make a Bolzano search for the right value
     float p1, p2, pm, x1, x2, xm;
-    x1=mean;
-    x2=mean+5*stddev;
+    x1 = mean;
+    x2 = mean + 5 * stddev;
     do
     {
-        xm=(x1+x2)/2;
-        p1=gaus_outside_x0(x1,mean,stddev);
-        p2=gaus_outside_x0(x2,mean,stddev);
-        pm=gaus_outside_x0(xm,mean,stddev);
-        if (pm>p)
-            x1=xm;
+        xm = (x1 + x2) / 2;
+        p1 = gaus_outside_x0(x1, mean, stddev);
+        p2 = gaus_outside_x0(x2, mean, stddev);
+        pm = gaus_outside_x0(xm, mean, stddev);
+        if (pm > p)
+            x1 = xm;
         else
-            x2=xm;
+            x2 = xm;
     }
-    while (ABS(pm-p)/p>0.005);
+    while (ABS(pm - p) / p > 0.005);
     return xm;
 }
 
 // See Numerical Recipes, Chap. 6.3
 float student_within_t0(float t0, float degrees_of_freedom)
 {
-    return 1-betai(degrees_of_freedom/2,0.5,
-                   degrees_of_freedom/(degrees_of_freedom+t0*t0));
+    return 1 -betai(degrees_of_freedom / 2, 0.5,
+                    degrees_of_freedom / (degrees_of_freedom + t0*t0));
 }
 
 float student_outside_t0(float t0, float degrees_of_freedom)
 {
-    return 1-student_within_t0(t0,degrees_of_freedom);
+    return 1 -student_within_t0(t0, degrees_of_freedom);
 }
 
 float student_up_to_t0(float t0, float degrees_of_freedom)
 {
-    if   (t0 >=0)
-        return 1.0-student_outside_t0(t0,degrees_of_freedom)/2;
+    if (t0 >= 0)
+        return 1.0 -student_outside_t0(t0, degrees_of_freedom) / 2;
     else
-        return student_outside_t0(t0,degrees_of_freedom)/2;
+        return student_outside_t0(t0, degrees_of_freedom) / 2;
 }
 
 float student_from_t0(float t0, float degrees_of_freedom)
 {
-    return 1-student_up_to_t0(t0,degrees_of_freedom);
+    return 1 -student_up_to_t0(t0, degrees_of_freedom);
 }
 
 float student_outside_probb(float p, float degrees_of_freedom)
 {
     // Make a Bolzano search for the right value
     float p1, p2, pm, t1, t2, tm;
-    t1=0;
-    t2=100;
+    t1 = 0;
+    t2 = 100;
     do
     {
-        tm=(t1+t2)/2;
-        p1=student_outside_t0(t1,degrees_of_freedom);
-        p2=student_outside_t0(t2,degrees_of_freedom);
-        pm=student_outside_t0(tm,degrees_of_freedom);
-        if (pm>p)
-            t1=tm;
+        tm = (t1 + t2) / 2;
+        p1 = student_outside_t0(t1, degrees_of_freedom);
+        p2 = student_outside_t0(t2, degrees_of_freedom);
+        pm = student_outside_t0(tm, degrees_of_freedom);
+        if (pm > p)
+            t1 = tm;
         else
-            t2=tm;
+            t2 = tm;
     }
-    while (ABS(pm-p)/p>0.005);
+    while (ABS(pm - p) / p > 0.005);
     return tm;
 }
 
 float chi2_up_to_t0(float t0, float degrees_of_freedom)
 {
-    return gammp(degrees_of_freedom/2,t0/2);
+    return gammp(degrees_of_freedom / 2, t0 / 2);
 }
 
 float chi2_from_t0(float t0, float degrees_of_freedom)
 {
-    return 1-chi2_up_to_t0(t0,degrees_of_freedom);
+    return 1 -chi2_up_to_t0(t0, degrees_of_freedom);
 }
 
 // Log uniform distribution ................................................
 float rnd_log(float a, float b)
 {
-    if (a==b)
+    if (a == b)
         return a;
     else
-        return exp(rnd_unif(log(a),log(b)));
+        return exp(rnd_unif(log(a), log(b)));
 }
 
 
 /* Exception handling ------------------------------------------------------ */
-void _Xmipp_error (const int nerr, const string &what)
+void _Xmipp_error(const int nerr, const string &what)
 {
     cout << nerr << ": " << what << endl;
     exit(nerr);
@@ -310,8 +310,8 @@ void _Xmipp_error (const int nerr, const string &what)
 // Object Constructor
 Xmipp_error::Xmipp_error(const int nerr, const string &what)
 {
-    __errno=nerr;
-    msg=what;
+    __errno = nerr;
+    msg = what;
 }
 
 // Show message
@@ -324,12 +324,12 @@ ostream& operator << (ostream& o, Xmipp_error &XE)
 
 
 /* Handling with filenames ------------------------------------------------- */
-int exists (const FileName &fn)
+int exists(const FileName &fn)
 {
     FILE *aux;
-    if ((aux = fopen (fn.c_str(), "r")) == NULL)
+    if ((aux = fopen(fn.c_str(), "r")) == NULL)
         return 0;
-    fclose (aux);
+    fclose(aux);
     return 1;
 }
 
@@ -342,18 +342,18 @@ void wait_until_stable_size(const FileName &fn,
     struct stat info1, info2;
     if (stat(fn.c_str(), &info1))
         REPORT_ERROR(1,
-                     (string)"wait_until_stable_size: Cannot get size of file "+fn);
-    off_t size1=info1.st_size;
+                     (string)"wait_until_stable_size: Cannot get size of file " + fn);
+    off_t size1 = info1.st_size;
     do
     {
         usleep(time_step);
         if (stat(fn.c_str(), &info2))
             REPORT_ERROR(1,
-                         (string)"wait_until_stable_size: Cannot get size of file "+fn);
-        off_t size2=info2.st_size;
-        if (size1==size2)
+                         (string)"wait_until_stable_size: Cannot get size of file " + fn);
+        off_t size2 = info2.st_size;
+        if (size1 == size2)
             break;
-        size1=size2;
+        size1 = size2;
     }
     while (true);
     return;
@@ -365,71 +365,71 @@ void create_empty_file(const FileName &fn, size_t size,
 {
     unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
                              block_size);
-    if (buffer==NULL)
-        REPORT_ERROR(1,"create_empty_file: No memory left");
+    if (buffer == NULL)
+        REPORT_ERROR(1, "create_empty_file: No memory left");
     FILE * fd = fopen(fn.c_str(), "w");
-    if (fd==NULL)
-        REPORT_ERROR(1,(string)"create_empty_file: Cannot open file" + fn);
-    for (size_t i=0; i< size/block_size; i++)
-        fwrite( buffer, sizeof(unsigned char), block_size, fd);
-    fwrite(buffer, sizeof(unsigned char), size%block_size, fd);
+    if (fd == NULL)
+        REPORT_ERROR(1, (string)"create_empty_file: Cannot open file" + fn);
+    for (size_t i = 0; i < size / block_size; i++)
+        fwrite(buffer, sizeof(unsigned char), block_size, fd);
+    fwrite(buffer, sizeof(unsigned char), size % block_size, fd);
     fclose(fd);
 }
 
 /* Get the Xmipp Base directory -------------------------------------------- */
 FileName xmippBaseDir()
 {
-    string path=getenv("PATH");
+    string path = getenv("PATH");
     vector<string> directories;
-    int number_directories=splitString(path, ":", directories);
-    if (number_directories==0)
-        REPORT_ERROR(1,"xmippBaseDir::Cannot find Xmipp Base directory");
-    bool found=false;
+    int number_directories = splitString(path, ":", directories);
+    if (number_directories == 0)
+        REPORT_ERROR(1, "xmippBaseDir::Cannot find Xmipp Base directory");
+    bool found = false;
     int i;
-    for (i=0; i<number_directories; i++)
+    for (i = 0; i < number_directories; i++)
     {
-        FileName fn=directories[i]+"/xmipp_art";
+        FileName fn = directories[i] + "/xmipp_art";
         FILE *aux;
-        if ((aux = fopen (fn.c_str(), "r")) != NULL)
+        if ((aux = fopen(fn.c_str(), "r")) != NULL)
         {
-            fclose (aux);
-            found=true;
+            fclose(aux);
+            found = true;
             break;
         }
     }
     if (found)
-        return directories[i].substr(0,directories[i].length()-4);
+        return directories[i].substr(0, directories[i].length() - 4);
     else
-        REPORT_ERROR(1,"xmippBaseDir::Cannot find Xmipp Base directory");
+        REPORT_ERROR(1, "xmippBaseDir::Cannot find Xmipp Base directory");
 }
 
 // Constructor with root, number and extension .............................
 void FileName::compose(const string &str, int no, const string &ext)
 {
-    *this=(FileName) str;
-    if (no!=-1)
+    *this = (FileName) str;
+    if (no != -1)
     {
         char aux_str[5];
-        sprintf(aux_str,"%05d",no);
+        sprintf(aux_str, "%05d", no);
         *this += aux_str;
     }
 
-    if (ext!="")
-        *this += "."+ext;
+    if (ext != "")
+        *this += "." + ext;
 }
 
 // Get the root name of a filename .........................................
 FileName FileName::get_root() const
 {
-    int skip_directories=find_last_of("/")+1;
-    int point=find_first_of(".",skip_directories);
-    if (point==-1)
-        point=length();
-    int root_end=find_last_not_of("0123456789",point-1);
-    if (root_end+1 != point)
-        if (point-root_end>5)
-            root_end=point-5-1;
-    return (FileName) substr(0,root_end+1);
+    int skip_directories = find_last_of("/") + 1;
+    int point = find_first_of(".", skip_directories);
+    if (point == -1)
+        point = length();
+    int root_end = find_last_not_of("0123456789", point - 1);
+    if (root_end + 1 != point)
+        if (point - root_end > 5)
+            root_end = point - 5 - 1;
+    return (FileName) substr(0, root_end + 1);
 }
 
 // Get the base name of a filename .........................................
@@ -438,15 +438,15 @@ string FileName::get_baseName() const
     string basename = "";
     string myname = *this;
     int myindex = 0;
-    for (int p = myname.size()-1; p >=0; p--)
+    for (int p = myname.size() - 1; p >= 0; p--)
     {
         if (myname[p] == '/')
         {
-            myindex = p+1;
+            myindex = p + 1;
             break;
         }
     }
-    for (int p = myindex; p <myname.size(); p++)
+    for (int p = myindex; p < myname.size(); p++)
     {
         if (myname[p] != '.')
             basename += myname[p];
@@ -459,16 +459,16 @@ string FileName::get_baseName() const
 // Get number from file ....................................................
 int FileName::get_number() const
 {
-    int skip_directories=find_last_of("/")+1;
-    int point=find_first_of(".",skip_directories);
-    if (point==-1)
-        point=length();
-    int root_end=find_last_not_of("0123456789",point-1);
-    if (root_end+1 != point)
+    int skip_directories = find_last_of("/") + 1;
+    int point = find_first_of(".", skip_directories);
+    if (point == -1)
+        point = length();
+    int root_end = find_last_not_of("0123456789", point - 1);
+    if (root_end + 1 != point)
     {
-        if (point-root_end>5)
-            root_end=point-5-1;
-        string aux=substr(root_end+1,point-root_end+1);
+        if (point - root_end > 5)
+            root_end = point - 5 - 1;
+        string aux = substr(root_end + 1, point - root_end + 1);
         return atoi(aux.c_str());
     }
     else
@@ -478,40 +478,40 @@ int FileName::get_number() const
 // Get the extension of a filename .........................................
 string FileName::get_extension() const
 {
-    int skip_directories=find_last_of("/")+1;
-    int first_point=find_first_of(".",skip_directories);
-    if (first_point==-1)
+    int skip_directories = find_last_of("/") + 1;
+    int first_point = find_first_of(".", skip_directories);
+    if (first_point == -1)
         return "";
     else
-        return substr(first_point+1);
+        return substr(first_point + 1);
 }
 
 // Init random .............................................................
 void FileName::init_random(int length)
 {
     randomize_random_generator();
-    *this="";
-    for (int i=0; i<length; i++)
-        *this+='a'+FLOOR(rnd_unif(0,26));
+    *this = "";
+    for (int i = 0; i < length; i++)
+        *this += 'a' + FLOOR(rnd_unif(0, 26));
 }
 
 // Add at beginning ........................................................
 FileName FileName::add_prefix(const string &prefix) const
 {
-    FileName retval=*this;
-    int skip_directories=find_last_of("/")+1;
-    return retval.insert(skip_directories,prefix);
+    FileName retval = *this;
+    int skip_directories = find_last_of("/") + 1;
+    return retval.insert(skip_directories, prefix);
 }
 
 // Add at the end ..........................................................
 FileName FileName::add_extension(const string &ext) const
 {
-    if (ext=="")
+    if (ext == "")
         return *this;
     else
     {
-        FileName retval=*this;
-        retval=retval.append((string)"."+ext);
+        FileName retval = *this;
+        retval = retval.append((string)"." + ext);
         return retval;
     }
 }
@@ -519,8 +519,8 @@ FileName FileName::add_extension(const string &ext) const
 // Remove last extension ...................................................
 FileName FileName::without_extension() const
 {
-    FileName retval=*this;
-    return retval.substr(0,rfind("."));
+    FileName retval = *this;
+    return retval.substr(0, rfind("."));
 }
 
 // Remove root .............................................................
@@ -532,110 +532,110 @@ FileName FileName::without_root() const
 // Insert before extension .................................................
 FileName FileName::insert_before_extension(const string &str) const
 {
-    int point=-1;
-    bool done=false;
+    int point = -1;
+    bool done = false;
     do
     {
-        point=find(".",point+1);
-        if (point==-1)
+        point = find(".", point + 1);
+        if (point == -1)
         {
-            point=length();
-            done=true;
+            point = length();
+            done = true;
         }
-        else if (point==length()-1)
-            done=true;
-        else if ((*this)[point+1]=='.' || (*this)[point+1]=='/')
-            done=false;
+        else if (point == length() - 1)
+            done = true;
+        else if ((*this)[point+1] == '.' || (*this)[point+1] == '/')
+            done = false;
         else
-            done=true;
+            done = true;
     }
     while (!done);
-    FileName retval=*this;
-    return retval.insert(point,str);
+    FileName retval = *this;
+    return retval.insert(point, str);
 }
 
 // Remove an extension wherever it is ......................................
 FileName FileName::remove_extension(const string &ext) const
 {
-    int first=find((string)"."+ext);
-    if (first==-1)
+    int first = find((string)"." + ext);
+    if (first == -1)
         return *this;
     else
     {
-        FileName retval=*this;
-        return retval.erase(first,1+ext.length());
+        FileName retval = *this;
+        return retval.erase(first, 1 + ext.length());
     }
 }
 
 // Remove all extensions....................................................
 FileName FileName::remove_all_extensions() const
 {
-    int first=rfind("/");
-    first=find(".",first+1);
-    if (first==-1)
+    int first = rfind("/");
+    first = find(".", first + 1);
+    if (first == -1)
         return *this;
     else
-        return substr(0,first);
+        return substr(0, first);
 }
 
 // Substitute one extension by other .......................................
 FileName FileName::substitute_extension(const string &ext1,
                                         const string &ext2) const
 {
-    int first=find((string)"."+ext1);
-    if (first==-1)
+    int first = find((string)"." + ext1);
+    if (first == -1)
         return *this;
     else
     {
-        FileName retval=*this;
-        return retval.replace(first,1+ext1.length(),(string)"."+ext2);
+        FileName retval = *this;
+        return retval.replace(first, 1 + ext1.length(), (string)"." + ext2);
     }
 }
 
 // Remove a substring ......................................................
 FileName FileName::without(const string &str) const
 {
-    if (str.length()==0)
+    if (str.length() == 0)
         return *this;
-    int pos=find(str);
-    if (pos==-1)
+    int pos = find(str);
+    if (pos == -1)
         return *this;
     else
     {
-        FileName retval=*this;
-        return retval.erase(pos,str.length());
+        FileName retval = *this;
+        return retval.erase(pos, str.length());
     }
 }
 
 // Remove until prefix .....................................................
 FileName FileName::remove_until_prefix(const string &str) const
 {
-    if (str.length()==0)
+    if (str.length() == 0)
         return *this;
-    int pos=find(str);
-    if (pos==-1)
+    int pos = find(str);
+    if (pos == -1)
         return *this;
     else
     {
-        FileName retval=*this;
-        return retval.erase(0,pos+str.length());
+        FileName retval = *this;
+        return retval.erase(0, pos + str.length());
     }
 }
 
 // Remove directories ......................................................
 FileName FileName::remove_directories(int keep) const
 {
-    int last_slash=rfind("/");
-    int tokeep=keep;
-    while (tokeep>0)
+    int last_slash = rfind("/");
+    int tokeep = keep;
+    while (tokeep > 0)
     {
-        last_slash=rfind("/",last_slash-1);
+        last_slash = rfind("/", last_slash - 1);
         tokeep--;
     }
-    if (last_slash==-1)
+    if (last_slash == -1)
         return *this;
     else
-        return substr(last_slash+1,length()-last_slash);
+        return substr(last_slash + 1, length() - last_slash);
 }
 
 /* Time managing ----------------------------------------------------------- */
@@ -676,8 +676,8 @@ void acum_time(TimeStamp *orig, TimeStamp *dest)
 {
     TimeStamp now;
     times(&now);
-    (*dest).tms_utime += (*dest).tms_utime + (now.tms_utime-(*orig).tms_utime);
-    (*dest).tms_stime += (*dest).tms_stime + (now.tms_utime-(*orig).tms_utime);
+    (*dest).tms_utime += (*dest).tms_utime + (now.tms_utime - (*orig).tms_utime);
+    (*dest).tms_stime += (*dest).tms_stime + (now.tms_utime - (*orig).tms_utime);
 }
 
 // Show elapsed time since last annotation .................................
@@ -685,12 +685,12 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
 {
     TimeStamp now;
     times(&now);
-    float userTime=now.tms_utime - time.tms_utime;
-    float sysTime=now.tms_stime - time.tms_stime;
+    float userTime = now.tms_utime - time.tms_utime;
+    float sysTime = now.tms_stime - time.tms_stime;
     if (_IN_SECS)
     {
         userTime /= XmippTICKS;
-        sysTime /=XmippTICKS;
+        sysTime /= XmippTICKS;
     }
     cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
     << ")\n";
@@ -701,14 +701,14 @@ float elapsed_time(TimeStamp &time, bool _IN_SECS)
 {
     TimeStamp now;
     times(&now);
-    float userTime=now.tms_utime - time.tms_utime;
-    float sysTime=now.tms_stime - time.tms_stime;
+    float userTime = now.tms_utime - time.tms_utime;
+    float sysTime = now.tms_stime - time.tms_stime;
     if (_IN_SECS)
     {
         userTime /= XmippTICKS;
-        sysTime /=XmippTICKS;
+        sysTime /= XmippTICKS;
     }
-    return userTime+sysTime;
+    return userTime + sysTime;
 }
 
 // Compute the predicted time left .........................................
@@ -716,9 +716,9 @@ float time_to_go(TimeStamp &time, float fraction_done)
 {
     TimeStamp now;
     times(&now);
-    float totalTime=(now.tms_utime - time.tms_utime +
-                     now.tms_stime - time.tms_stime)/XmippTICKS;
-    return totalTime*(1-fraction_done)/fraction_done;
+    float totalTime = (now.tms_utime - time.tms_utime +
+                       now.tms_stime - time.tms_stime) / XmippTICKS;
+    return totalTime*(1 - fraction_done) / fraction_done;
 }
 
 // Show a message with the time it is produced .............................
@@ -727,12 +727,12 @@ void TimeMessage(string message)
     struct tm *T;
     time_t     seconds;
 
-    if( time(&seconds) <0)
-        seconds=0;
-    T=localtime(&seconds);
+    if (time(&seconds) < 0)
+        seconds = 0;
+    T = localtime(&seconds);
 
-    printf("%2d:%2d:%2d (day=%2d) =>%s ",T->tm_hour,
-           T->tm_min,T->tm_sec,T->tm_mday,message.c_str());
+    printf("%2d:%2d:%2d (day=%2d) =>%s ", T->tm_hour,
+           T->tm_min, T->tm_sec, T->tm_mday, message.c_str());
 }
 
 // Show a bar with the progress in time ....................................
@@ -748,61 +748,61 @@ void progress_bar(long rlen)
     int min, i, hour;
     float h1, h2, m1, m2;
 
-    if (rlen==0)
+    if (rlen == 0)
         return;
-    currt=time(NULL);
+    currt = time(NULL);
 
-    if (rlen<0)
+    if (rlen < 0)
     {
-        totlen=-rlen;
-        prevt=startt=currt;
-        fprintf(stderr,"0000/???? sec. ");
-        for (i=0; i<10; i++)
-            fprintf(stderr,"------");
+        totlen = -rlen;
+        prevt = startt = currt;
+        fprintf(stderr, "0000/???? sec. ");
+        for (i = 0; i < 10; i++)
+            fprintf(stderr, "------");
         fflush(stderr);
     }
-    else if (totlen>0)
+    else if (totlen > 0)
     {
-        t1=currt-startt;                   // Elapsed time
-        t2=(long) (t1*(float)totlen/rlen); // Total time
+        t1 = currt - startt;               // Elapsed time
+        t2 = (long)(t1 * (float)totlen / rlen); // Total time
 
         hour = 0;
         min = 0;
-        if (t2>60)
+        if (t2 > 60)
         {
-            m1 = (float)t1/60.0;
-            m2 = (float)t2/60.0;
-            min=1;
-            if (m2>60)
+            m1 = (float)t1 / 60.0;
+            m2 = (float)t2 / 60.0;
+            min = 1;
+            if (m2 > 60)
             {
-                h1 = (float)m1/60.0;
-                h2 = (float)m2/60.0;
-                hour=1;
+                h1 = (float)m1 / 60.0;
+                h2 = (float)m2 / 60.0;
+                hour = 1;
                 min = 0;
             }
             else
-                hour=0;
+                hour = 0;
         }
         else
             min = 0;
 
         if (hour)
-            fprintf(stderr,"\r%3.2f/%3.2f %s ", h1, h2, "hours");
+            fprintf(stderr, "\r%3.2f/%3.2f %s ", h1, h2, "hours");
         else if (min)
-            fprintf(stderr,"\r%3.2f/%3.2f %s ", m1, m2, "min");
+            fprintf(stderr, "\r%3.2f/%3.2f %s ", m1, m2, "min");
         else
-            fprintf(stderr,"\r%4u/%4u %4s ", (int)t1, (int)t2, "sec.");
+            fprintf(stderr, "\r%4u/%4u %4s ", (int)t1, (int)t2, "sec.");
 
-        i=(int) (60*(1-(float)(totlen-rlen)/totlen));
+        i = (int)(60 * (1 - (float)(totlen - rlen) / totlen));
         while (i--)
-            fprintf(stderr,".");
-        if (rlen==totlen)
+            fprintf(stderr, ".");
+        if (rlen == totlen)
         {
-            fprintf(stderr,"\n");
-            totlen=0;
+            fprintf(stderr, "\n");
+            totlen = 0;
         }
         fflush(stderr);
-        prevt=currt;
+        prevt = currt;
     }
 }
 
@@ -829,7 +829,7 @@ void xmippTextualListener::OnProgress(unsigned long _it)
 // Shows a message indicating the operation in progress.
 void xmippTextualListener::OnReportOperation(const string& _rsOp)
 {
-    fprintf(stderr, _rsOp.c_str());//	cout << _rsOp;
+    fprintf(stderr, _rsOp.c_str());// cout << _rsOp;
 }
 
 
@@ -841,19 +841,19 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse)
 {
     size_t retval;
     if (!reverse)
-        retval=fread(dest,size,nitems,fp);
+        retval = fread(dest, size, nitems, fp);
     else
     {
-        char *ptr=(char *)dest;
-        bool end=false;
-        retval=0;
-        for (int n=0; n<nitems; n++)
+        char *ptr = (char *)dest;
+        bool end = false;
+        retval = 0;
+        for (int n = 0; n < nitems; n++)
         {
-            for (int i=size-1; i>=0; i--)
+            for (int i = size - 1; i >= 0; i--)
             {
-                if (fread(ptr+i,1,1,fp)!=1)
+                if (fread(ptr + i, 1, 1, fp) != 1)
                 {
-                    end=true;
+                    end = true;
                     break;
                 }
             }
@@ -861,7 +861,7 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse)
                 break;
             else
                 retval++;
-            ptr +=size;
+            ptr += size;
         }
     }
     return retval;
@@ -873,19 +873,19 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 {
     size_t retval;
     if (!reverse)
-        retval=fwrite(src,size,nitems,fp);
+        retval = fwrite(src, size, nitems, fp);
     else
     {
-        char *ptr=(char *)src;
-        bool end=false;
-        retval=0;
-        for (int n=0; n<nitems; n++)
+        char *ptr = (char *)src;
+        bool end = false;
+        retval = 0;
+        for (int n = 0; n < nitems; n++)
         {
-            for (int i=size-1; i>=0; i--)
+            for (int i = size - 1; i >= 0; i--)
             {
-                if (fwrite(ptr+i,1,1,fp)!=1)
+                if (fwrite(ptr + i, 1, 1, fp) != 1)
                 {
-                    end=true;
+                    end = true;
                     break;
                 }
             }
@@ -893,7 +893,7 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
                 break;
             else
                 retval++;
-            ptr +=size;
+            ptr += size;
         }
     }
     return retval;
@@ -908,8 +908,8 @@ size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 void ByteSwap(unsigned char * b, int n)
 {
     register int i = 0;
-    register int j = n-1;
-    while (i<j)
+    register int j = n - 1;
+    while (i < j)
     {
         std::swap(b[i], b[j]);
         i++, j--;
@@ -918,18 +918,18 @@ void ByteSwap(unsigned char * b, int n)
 
 /** Returns 1 if machine is little endian else 0*/
 
-int IsLittleEndian (void)
+int IsLittleEndian(void)
 {
     static const unsigned long ul = 0x00000001;
 
-    return ((int) (*((unsigned char *) &ul)));
+    return ((int)(*((unsigned char *) &ul)));
 }
 
 /** Returns 1 if machine is big endian else 0*/
 
-int IsBigEndian (void)
+int IsBigEndian(void)
 {
     static const unsigned long ul = 0x01000000;
 
-    return ((int) (*((unsigned char *) &ul)));
+    return ((int)(*((unsigned char *) &ul)));
 }

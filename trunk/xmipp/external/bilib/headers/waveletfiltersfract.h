@@ -6,7 +6,7 @@ Author       : Olivier Saudan
 
 Organization : EPFL, Biomedical Imaging Group
 
-Date         : June 1999                 
+Date         : June 1999
 
 ---------------------------------------------------------------------------- */
 extern int WaveletFiltersGetSize_Fract(double Alpha, long *nh, long *ng);

@@ -107,7 +107,7 @@ void apply_geom(mT& m2,
                 const mT& m1,
                 bool inv,
                 bool wrap,
-                T outside=(T) 0);
+                T outside = (T) 0);
 
 // TODO Document
 template<typename T>
@@ -117,7 +117,7 @@ void apply_geom_Bspline(mT& m2,
                         int Splinedegree,
                         bool inv,
                         bool wrap,
-                        T outside=(T) 0);
+                        T outside = (T) 0);
 
 // TODO Document
 matrix2D< double > rot2D_matrix(double ang);
@@ -210,7 +210,7 @@ int best_prec(float F, int _width);
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
     for (int i=STARTINGY(m); i<=FINISHINGY(m); i++) \
-       for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
+        for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
 
 /** For all elements in the array between corners
  * @ingroup MatricesSizeShape
@@ -237,7 +237,7 @@ int best_prec(float F, int _width);
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) \
     for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-       for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
 
 /** For all elements in common
@@ -267,7 +267,7 @@ int best_prec(float F, int _width);
     ispduptmp4 = MAX(STARTINGX(m1), STARTINGX(m2)); \
     ispduptmp5 = MIN(FINISHINGX(m1), FINISHINGX(m2)); \
     for (int i=ispduptmp2; i<=ispduptmp3; i++) \
-       for (int j=ispduptmp4; j<=ispduptmp5; j++)
+        for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 
 /** For all elements in the array, accessed physically
@@ -286,7 +286,7 @@ int best_prec(float F, int _width);
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m) \
     for (int i=0; i<YSIZE(m); i++) \
-       for (int j=0; j<XSIZE(m); j++)
+        for (int j=0; j<XSIZE(m); j++)
 
 /// @defgroup MatricesMemory Memory access
 /// @ingroup MatricesSpeedUp
@@ -299,8 +299,8 @@ int best_prec(float F, int _width);
  * val = MAT_ELEM(m, -2, 1);
  * @endcode
  */
- #define MAT_ELEM(mat, i, j) \
-   DIRECT_MAT_ELEM(mat, (i) - STARTINGY(mat), (j) - STARTINGX(mat))
+#define MAT_ELEM(mat, i, j) \
+    DIRECT_MAT_ELEM(mat, (i) - STARTINGY(mat), (j) - STARTINGX(mat))
 
 
 /** Matrix element: Physical access
@@ -369,13 +369,13 @@ int best_prec(float F, int _width);
  * @endcode
  */
 #define M3x3_BY_V3x1(a, M, b) { \
-    spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b) + dMij(M, 0, 2) \
-        * ZZ(b); \
-    spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b) + dMij(M, 1, 2) \
-        * ZZ(b); \
-    spduptmp2 = dMij(M, 2, 0) * XX(b) + dMij(M, 2, 1) * YY(b) + dMij(M, 2, 2) \
-        * ZZ(b); \
-    XX(a) = spduptmp0; YY(a) = spduptmp1; ZZ(a) = spduptmp2; }
+        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b) + dMij(M, 0, 2) \
+                    * ZZ(b); \
+        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b) + dMij(M, 1, 2) \
+                    * ZZ(b); \
+        spduptmp2 = dMij(M, 2, 0) * XX(b) + dMij(M, 2, 1) * YY(b) + dMij(M, 2, 2) \
+                    * ZZ(b); \
+        XX(a) = spduptmp0; YY(a) = spduptmp1; ZZ(a) = spduptmp2; }
 
 
 /** Matrix (3x3) by Matrix (3x3) (A=B*C)
@@ -386,33 +386,33 @@ int best_prec(float F, int _width);
  * results (that is, M3x3_BY_M3x3(A, A, B);, is allowed).
  */
 #define M3x3_BY_M3x3(A, B, C) { \
-    spduptmp0 = dMij(B, 0, 0) * dMij(C, 0, 0) + dMij(B, 0, 1) * dMij(C, 1, 0) \
-    	+ dMij(B, 0, 2) * dMij(C, 2, 0); \
-    spduptmp1 = dMij(B, 0, 0) * dMij(C, 0, 1) + dMij(B, 0, 1) * dMij(C, 1, 1) \
-    	+ dMij(B, 0, 2) * dMij(C, 2, 1); \
-    spduptmp2 = dMij(B, 0, 0) * dMij(C, 0, 2) + dMij(B, 0, 1) * dMij(C, 1, 2) \
-    	+ dMij(B, 0, 2) * dMij(C, 2, 2); \
-    spduptmp3 = dMij(B, 1, 0) * dMij(C, 0, 0) + dMij(B, 1, 1) * dMij(C, 1, 0) \
-    	 + dMij(B, 1, 2) * dMij(C, 2, 0); \
-    spduptmp4 = dMij(B, 1, 0) * dMij(C, 0, 1) + dMij(B, 1, 1) * dMij(C, 1, 1) \
-    	+ dMij(B, 1, 2) * dMij(C, 2, 1); \
-    spduptmp5 = dMij(B, 1, 0) * dMij(C, 0, 2) + dMij(B, 1, 1) * dMij(C, 1, 2) \
-    	+ dMij(B, 1, 2) * dMij(C, 2, 2); \
-    spduptmp6 = dMij(B, 2, 0) * dMij(C, 0, 0) + dMij(B, 2, 1) * dMij(C, 1, 0) \
-    	+ dMij(B, 2, 2) * dMij(C, 2, 0); \
-    spduptmp7 = dMij(B, 2, 0) * dMij(C, 0, 1) + dMij(B, 2, 1) * dMij(C, 1, 1) \
-    	+ dMij(B, 2, 2) * dMij(C, 2, 1); \
-    spduptmp8 = dMij(B, 2, 0) * dMij(C, 0, 2) + dMij(B, 2, 1) * dMij(C, 1, 2) \
-    	+ dMij(B, 2, 2) * dMij(C, 2, 2); \
-    dMij(A, 0, 0) = spduptmp0; \
-    dMij(A, 0, 1) = spduptmp1; \
-    dMij(A, 0, 2) = spduptmp2; \
-    dMij(A, 1, 0) = spduptmp3; \
-    dMij(A, 1, 1) = spduptmp4; \
-    dMij(A, 1, 2) = spduptmp5; \
-    dMij(A, 2, 0) = spduptmp6; \
-    dMij(A, 2, 1) = spduptmp7; \
-    dMij(A, 2, 2) = spduptmp8; }
+        spduptmp0 = dMij(B, 0, 0) * dMij(C, 0, 0) + dMij(B, 0, 1) * dMij(C, 1, 0) \
+                    + dMij(B, 0, 2) * dMij(C, 2, 0); \
+        spduptmp1 = dMij(B, 0, 0) * dMij(C, 0, 1) + dMij(B, 0, 1) * dMij(C, 1, 1) \
+                    + dMij(B, 0, 2) * dMij(C, 2, 1); \
+        spduptmp2 = dMij(B, 0, 0) * dMij(C, 0, 2) + dMij(B, 0, 1) * dMij(C, 1, 2) \
+                    + dMij(B, 0, 2) * dMij(C, 2, 2); \
+        spduptmp3 = dMij(B, 1, 0) * dMij(C, 0, 0) + dMij(B, 1, 1) * dMij(C, 1, 0) \
+                    + dMij(B, 1, 2) * dMij(C, 2, 0); \
+        spduptmp4 = dMij(B, 1, 0) * dMij(C, 0, 1) + dMij(B, 1, 1) * dMij(C, 1, 1) \
+                    + dMij(B, 1, 2) * dMij(C, 2, 1); \
+        spduptmp5 = dMij(B, 1, 0) * dMij(C, 0, 2) + dMij(B, 1, 1) * dMij(C, 1, 2) \
+                    + dMij(B, 1, 2) * dMij(C, 2, 2); \
+        spduptmp6 = dMij(B, 2, 0) * dMij(C, 0, 0) + dMij(B, 2, 1) * dMij(C, 1, 0) \
+                    + dMij(B, 2, 2) * dMij(C, 2, 0); \
+        spduptmp7 = dMij(B, 2, 0) * dMij(C, 0, 1) + dMij(B, 2, 1) * dMij(C, 1, 1) \
+                    + dMij(B, 2, 2) * dMij(C, 2, 1); \
+        spduptmp8 = dMij(B, 2, 0) * dMij(C, 0, 2) + dMij(B, 2, 1) * dMij(C, 1, 2) \
+                    + dMij(B, 2, 2) * dMij(C, 2, 2); \
+        dMij(A, 0, 0) = spduptmp0; \
+        dMij(A, 0, 1) = spduptmp1; \
+        dMij(A, 0, 2) = spduptmp2; \
+        dMij(A, 1, 0) = spduptmp3; \
+        dMij(A, 1, 1) = spduptmp4; \
+        dMij(A, 1, 2) = spduptmp5; \
+        dMij(A, 2, 0) = spduptmp6; \
+        dMij(A, 2, 1) = spduptmp7; \
+        dMij(A, 2, 2) = spduptmp8; }
 
 
 /** Matrix (2x2) by vector (2x1) (a=M*b)
@@ -440,10 +440,10 @@ int best_prec(float F, int _width);
  * @endcode
  */
 #define M2x2_BY_V2x1(a, M, b) { \
-    spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b); \
-    spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b); \
-    XX(a) = spduptmp0; \
-    YY(a) = spduptmp1; }
+        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b); \
+        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b); \
+        XX(a) = spduptmp0; \
+        YY(a) = spduptmp1; }
 
 
 /** Matrix (2x2) by constant (M2=M1*k)
@@ -454,10 +454,10 @@ int best_prec(float F, int _width);
  * allowed).
  */
 #define M2x2_BY_CT(M2, M1, k) { \
-    dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-    dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-    dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-    dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; }
+        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
+        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
+        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
+        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; }
 
 
 /** Matrix (3x3) by constant (M2=M1*k)
@@ -467,15 +467,15 @@ int best_prec(float F, int _width);
  * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
  */
 #define M3x3_BY_CT(M2, M1, k) { \
-    dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-    dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-    dMij(M2, 0, 2) = dMij(M1, 0, 2) * k; \
-    dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-    dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; \
-    dMij(M2, 1, 2) = dMij(M1, 1, 2) * k; \
-    dMij(M2, 2, 0) = dMij(M1, 2, 0) * k; \
-    dMij(M2, 2, 1) = dMij(M1, 2, 1) * k; \
-    dMij(M2, 2, 2) = dMij(M1, 2, 2) * k; }
+        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
+        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
+        dMij(M2, 0, 2) = dMij(M1, 0, 2) * k; \
+        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
+        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; \
+        dMij(M2, 1, 2) = dMij(M1, 1, 2) * k; \
+        dMij(M2, 2, 0) = dMij(M1, 2, 0) * k; \
+        dMij(M2, 2, 1) = dMij(M1, 2, 1) * k; \
+        dMij(M2, 2, 2) = dMij(M1, 2, 2) * k; }
 
 
 /** Inverse of a matrix (2x2)
@@ -485,13 +485,13 @@ int best_prec(float F, int _width);
  * already resized.
  */
 #define M2x2_INV(Ainv, A) { \
-   spduptmp0 = 1.0 / (dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) \
-   * dMij(A, 1, 0)); \
-   dMij(Ainv, 0, 0) = dMij(A, 1, 1); \
-   dMij(Ainv, 0, 1) = -dMij(A, 0, 1); \
-   dMij(Ainv, 1, 0) = -dMij(A, 1, 0); \
-   dMij(Ainv, 1, 1) =  dMij(A, 0, 0); \
-   M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
+        spduptmp0 = 1.0 / (dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) \
+                           * dMij(A, 1, 0)); \
+        dMij(Ainv, 0, 0) = dMij(A, 1, 1); \
+        dMij(Ainv, 0, 1) = -dMij(A, 0, 1); \
+        dMij(Ainv, 1, 0) = -dMij(A, 1, 0); \
+        dMij(Ainv, 1, 1) =  dMij(A, 0, 0); \
+        M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
 //@}
 
 // FIXME No comments..
@@ -572,7 +572,7 @@ public:
         size = xdim * ydim;
         dimension = 2;
 
-        for (long int i=0; i<size; i++)
+        for (long int i = 0; i < size; i++)
             data[i] = 0;
     }
 
@@ -644,7 +644,7 @@ public:
      */
     void init_identity(int Ydim, int Xdim)
     {
-        if (Xdim==0 || Ydim==0)
+        if (Xdim == 0 || Ydim == 0)
         {
             clear();
             return;
@@ -653,7 +653,7 @@ public:
         resize(Ydim, Xdim);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
+        DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
     }
 
     /** Zero initialisation with a new dimension
@@ -696,7 +696,7 @@ public:
         {
             resize(1, XSIZE(op1));
 
-            for (int j=0; j<XSIZE(op1); j++)
+            for (int j = 0; j < XSIZE(op1); j++)
                 DIRECT_MAT_ELEM(*this, 0, j) = DIRECT_VEC_ELEM(op1, j);
 
             STARTINGX(*this) = STARTINGX(op1);
@@ -706,7 +706,7 @@ public:
         {
             resize(XSIZE(op1), 1);
 
-            for (int i=0; i<XSIZE(op1); i++)
+            for (int i = 0; i < XSIZE(op1); i++)
                 DIRECT_MAT_ELEM(*this, i, 0) = DIRECT_VEC_ELEM(op1, i);
 
             STARTINGX(*this) = 0;
@@ -738,7 +738,7 @@ public:
         // If matrix is not a vector, produce an error
         if (XSIZE(*this) != 1 && (YSIZE(*this) != 1))
             REPORT_ERROR(1102,
-                "To_vector: Matrix cannot be converted to vector");
+                         "To_vector: Matrix cannot be converted to vector");
 
         // Look at shape and copy values
         if (YSIZE(*this) == 1)
@@ -746,7 +746,7 @@ public:
             // Row vector
             op1.resize(XSIZE(*this));
 
-            for (int j=0; j<XSIZE(*this); j++)
+            for (int j = 0; j < XSIZE(*this); j++)
                 DIRECT_VEC_ELEM(op1, j) = DIRECT_MAT_ELEM(*this, 0, j);
 
             op1.setRow();
@@ -757,7 +757,7 @@ public:
             // Column vector
             op1.resize(YSIZE(*this));
 
-            for (int i=0; i<YSIZE(*this); i++)
+            for (int i = 0; i < YSIZE(*this); i++)
                 DIRECT_VEC_ELEM(op1, i) = DIRECT_MAT_ELEM(*this, i, 0);
 
             op1.setCol();
@@ -852,8 +852,8 @@ public:
             REPORT_ERROR(1001, "Resize: no memory left");
 
         // Copy needed elements, fill with 0 if necessary
-        for (int i=0; i<Ydim; i++)
-            for (int j=0; j<Xdim; j++)
+        for (int i = 0; i < Ydim; i++)
+            for (int j = 0; j < Xdim; j++)
             {
                 T val;
 
@@ -890,7 +890,7 @@ public:
         ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
-            m[i+1][j+1] = DIRECT_MAT_ELEM(*this, i, j);
+        m[i+1][j+1] = DIRECT_MAT_ELEM(*this, i, j);
 
         return m;
     }
@@ -914,9 +914,9 @@ public:
     {
         resize(Ydim, Xdim);
 
-        for (int i=1; i<=Ydim; i++)
-            for (int j=1; j<=Xdim; j++)
-                (*this)(i-1, j-1) = m[i][j];
+        for (int i = 1; i <= Ydim; i++)
+            for (int j = 1; j <= Xdim; j++)
+                (*this)(i - 1, j - 1) = m[i][j];
     }
 
     /** Kill an array produced for numerical recipes
@@ -934,7 +934,8 @@ public:
      *
      * Nothing needs to be done in fact.
      */
-    void kill_adaptation_for_numerical_recipes2(T** m) const {}
+    void kill_adaptation_for_numerical_recipes2(T** m) const
+        {}
 
     /** Intersects
      * @ingroup MatricesSize
@@ -1158,7 +1159,7 @@ public:
             REPORT_ERROR(1103, "Matrix subscript (i) out of range");
 
         if (j < xinit || j >= xinit + xdim)
-            REPORT_ERROR(1103,"Matrix subscript (j) out of range");
+            REPORT_ERROR(1103, "Matrix subscript (j) out of range");
 
         return MAT_ELEM(*this, i, j);
     }
@@ -1217,7 +1218,7 @@ public:
      *
      * Bilinear interpolation. (x,y) are in logical coordinates.
      */
-    T interpolated_elem(double x, double y, T outside_value=(T) 0) const
+    T interpolated_elem(double x, double y, T outside_value = (T) 0) const
     {
         int x0 = FLOOR(x);
         double fx = x - x0;
@@ -1253,7 +1254,7 @@ public:
      * 0.5,3);
      * @endcode
      */
-    T interpolated_elem_as_Bspline(double x, double y, int SplineDegree=3) const
+    T interpolated_elem_as_Bspline(double x, double y, int SplineDegree = 3) const
     {
         int SplineDegree_1 = SplineDegree - 1;
 
@@ -1263,17 +1264,17 @@ public:
 
         int lmax = XSIZE(*this);
         int mmax = YSIZE(*this);
-        int l1 = CLIP(CEIL(x - SplineDegree_1), 0, lmax-1);
-        int l2 = CLIP(l1 + SplineDegree, 0, lmax-1);
-        int m1 = CLIP(CEIL(y - SplineDegree_1), 0, mmax-1);
-        int m2 = CLIP(m1 + SplineDegree, 0, mmax-1);
+        int l1 = CLIP(CEIL(x - SplineDegree_1), 0, lmax - 1);
+        int l2 = CLIP(l1 + SplineDegree, 0, lmax - 1);
+        int m1 = CLIP(CEIL(y - SplineDegree_1), 0, mmax - 1);
+        int m2 = CLIP(m1 + SplineDegree, 0, mmax - 1);
 
         double columns = 0.0;
-        for (int m=m1; m<=m2; m++)
+        for (int m = m1; m <= m2; m++)
         {
             int row_m = XSIZE(*this) * m;
             double rows = 0.0;
-            for (int l=l1; l<=l2; l++)
+            for (int l = l1; l <= l2; l++)
             {
                 double xminusl = x - (double) l;
                 double Coeff = (double) data[row_m + l];
@@ -1363,11 +1364,11 @@ public:
                  matrix1D< double >& profile) const
     {
         profile.init_zeros(N);
-        double tx_step = (double) (xF - x0) / (N-1);
-        double ty_step = (double) (yF - y0) / (N-1);
+        double tx_step = (double)(xF - x0) / (N - 1);
+        double ty_step = (double)(yF - y0) / (N - 1);
         double tx = x0, ty = y0;
 
-        for (int i=0; i<N; i++)
+        for (int i = 0; i < N; i++)
         {
             profile(i) = interpolated_elem(tx, ty);
             tx += tx_step;
@@ -1426,12 +1427,12 @@ public:
 
         if (i < STARTINGY(*this) || i > FINISHINGY(*this))
             REPORT_ERROR(1103,
-                "getRow: Matrix subscript (i) greater than matrix dimension");
+                         "getRow: Matrix subscript (i) greater than matrix dimension");
 
         v.resize(XSIZE(*this));
         STARTINGX(v) = STARTINGX(*this);
 
-        for (int j=STARTINGX(*this); j<=FINISHINGX(*this); j++)
+        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
             VEC_ELEM(v, j) = MAT_ELEM(*this, i, j);
 
         v.setRow();
@@ -1469,12 +1470,12 @@ public:
 
         if (j < STARTINGX(*this) || j > FINISHINGX(*this))
             REPORT_ERROR(1103,
-                "getCol: Matrix subscript (j) greater than matrix dimension");
+                         "getCol: Matrix subscript (j) greater than matrix dimension");
 
         v.resize(YSIZE(*this));
-        STARTINGX(v)  =STARTINGY(*this);
+        STARTINGX(v)  = STARTINGY(*this);
 
-        for (int i=STARTINGY(*this); i<=FINISHINGY(*this); i++)
+        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
             VEC_ELEM(v, i) = MAT_ELEM(*this, i, j);
 
         v.setCol();
@@ -1511,13 +1512,13 @@ public:
 
         if (v.get_dim() != xdim)
             REPORT_ERROR(1102,
-                "setRow: Vector dimension different from matrix one");
+                         "setRow: Vector dimension different from matrix one");
 
         if (!v.isRow())
             REPORT_ERROR(1107, "setRow: Not a row vector in assignment");
 
         i = i - STARTINGY(*this);
-        for (int j=0; j<XSIZE(*this); j++)
+        for (int j = 0; j < XSIZE(*this); j++)
             DIRECT_MAT_ELEM(*this, i, j) = DIRECT_VEC_ELEM(v, j);
     }
 
@@ -1536,18 +1537,18 @@ public:
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
             REPORT_ERROR(1, "setCol: Target matrix is empty");
 
-        if (j < xinit || j >= xinit+xdim)
+        if (j < xinit || j >= xinit + xdim)
             REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
 
         if (v.get_dim() != ydim)
             REPORT_ERROR(1102,
-                "setCol: Vector dimension different from matrix one");
+                         "setCol: Vector dimension different from matrix one");
 
         if (!v.isCol())
             REPORT_ERROR(1107, "setCol: Not a column vector in assignment");
 
         j = j - STARTINGX(*this);
-        for (int i=0; i<YSIZE(*this); i++)
+        for (int i = 0; i < YSIZE(*this); i++)
             DIRECT_MAT_ELEM(*this, i, j) = DIRECT_VEC_ELEM(v, i);
     }
 
@@ -1603,7 +1604,7 @@ public:
         mT result(XSIZE(*this), YSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(result)
-            DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(*this, j, i);
+        DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(*this, j, i);
 
         STARTINGX(result) = STARTINGX(*this);
         STARTINGY(result) = STARTINGY(*this);
@@ -1640,10 +1641,10 @@ public:
     void self_reverseX()
     {
         T aux;
-        int jmax = (int) (XSIZE(*this) - 1) / 2;
+        int jmax = (int)(XSIZE(*this) - 1) / 2;
 
-        for (int i=0; i<YSIZE(*this); i++)
-            for (int j=0; j<=jmax; j++)
+        for (int i = 0; i < YSIZE(*this); i++)
+            for (int j = 0; j <= jmax; j++)
             {
                 SWAP(DIRECT_MAT_ELEM(*this, i, j),
                      DIRECT_MAT_ELEM(*this, i, XSIZE(*this) - 1 - j), aux);
@@ -1679,10 +1680,10 @@ public:
     void self_reverseY()
     {
         T aux;
-        int imax = (int) (YSIZE(*this) - 1) / 2;
+        int imax = (int)(YSIZE(*this) - 1) / 2;
 
-        for (int i=0; i<=imax; i++)
-            for (int j=0; j<xdim; j++)
+        for (int i = 0; i <= imax; i++)
+            for (int j = 0; j < xdim; j++)
             {
                 SWAP(DIRECT_MAT_ELEM(*this, i, j),
                      DIRECT_MAT_ELEM(*this, YSIZE(*this) - 1 - i, j), aux);
@@ -1707,10 +1708,10 @@ public:
         if (xdim != ydim)
             REPORT_ERROR(1109, "determinant: Matrix is not squared");
 
-        for (int i=0; i<YSIZE(*this); i++)
+        for (int i = 0; i < YSIZE(*this); i++)
         {
             bool all_zeros = true;
-            for (int j=0; j<XSIZE(*this); j++)
+            for (int j = 0; j < XSIZE(*this); j++)
                 if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
                 {
                     all_zeros = false;
@@ -1728,8 +1729,8 @@ public:
         ludcmp(*this, LU, indx, d);
 
         // Calculate determinant
-        for (int i=0; i<XSIZE(*this); i++)
-            d *= (T) LU(i ,i);
+        for (int i = 0; i < XSIZE(*this); i++)
+            d *= (T) LU(i , i);
 
         return d;
     }
@@ -1760,7 +1761,7 @@ public:
 
         // Compute W^-1
         bool invertible = false;
-        for (int i=0; i<XSIZE(w); i++)
+        for (int i = 0; i < XSIZE(w); i++)
         {
             if (ABS(DIRECT_VEC_ELEM(w, i)) > tol)
             {
@@ -1776,14 +1777,14 @@ public:
 
         // Compute V*W^-1
         FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
-            DIRECT_MAT_ELEM(v, i, j) *= DIRECT_VEC_ELEM(w, j);
+        DIRECT_MAT_ELEM(v, i, j) *= DIRECT_VEC_ELEM(w, j);
 
         // Compute Inverse
-        for (int i=0; i<XSIZE(*this); i++)
-            for (int j=0; j<YSIZE(*this); j++)
-                for (int k=0; k<XSIZE(*this); k++)
+        for (int i = 0; i < XSIZE(*this); i++)
+            for (int j = 0; j < YSIZE(*this); j++)
+                for (int k = 0; k < XSIZE(*this); k++)
                     DIRECT_MAT_ELEM(result, i, j) += (T)
-                        (DIRECT_MAT_ELEM(v, i, k) * DIRECT_MAT_ELEM(u, j, k));
+                                                     (DIRECT_MAT_ELEM(v, i, k) * DIRECT_MAT_ELEM(u, j, k));
     }
 
     /** Inverse of a matrix
@@ -1837,18 +1838,18 @@ public:
      * m1.window(-1, -1, 1, 2);
      * @endcode
      */
-    void window(int y0, int x0, int yF, int xF, T init_value=0)
+    void window(int y0, int x0, int yF, int xF, T init_value = 0)
     {
         mT result(yF - y0 + 1, xF - x0 + 1);
         STARTINGY(result) = y0;
         STARTINGX(result) = x0;
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-            if (j >= STARTINGX(*this) && j<=FINISHINGX(*this) &&
-                i >= STARTINGY(*this) && i<=FINISHINGY(*this))
-                MAT_ELEM(result, i, j) = MAT_ELEM(*this, i, j);
-            else
-                MAT_ELEM(result, i, j) = init_value;
+        if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
+            i >= STARTINGY(*this) && i <= FINISHINGY(*this))
+            MAT_ELEM(result, i, j) = MAT_ELEM(*this, i, j);
+        else
+            MAT_ELEM(result, i, j) = init_value;
 
         *this = result;
     }
@@ -1933,7 +1934,7 @@ public:
      * Same as the previous one, but the result is kept in this object
      */
     void self_apply_geom(matrix2D< double > A, bool inv, bool wrap,
-                         T outside=(T) 0)
+                         T outside = (T) 0)
     {
         mT aux;
         apply_geom(aux, A, *this, inv, wrap, outside);
@@ -1945,7 +1946,7 @@ public:
      *@ingroup MatricesGeometrical
      */
     void self_apply_geom_Bspline(matrix2D< double > A, int SplineDegree,
-                                 bool inv, bool wrap, T outside=(T) 0)
+                                 bool inv, bool wrap, T outside = (T) 0)
     {
         mT aux;
         apply_geom_Bspline(aux, A, *this, SplineDegree, inv, wrap, outside);
@@ -1967,7 +1968,7 @@ public:
      * m1.rotate(60, m2);
      * @endcode
      */
-    void rotate(double ang, mT& result, bool wrap=DONT_WRAP) const
+    void rotate(double ang, mT& result, bool wrap = DONT_WRAP) const
     {
         matrix2D< double > temp = rot2D_matrix(ang);
         apply_geom(result, temp, *this, IS_NOT_INV, wrap);
@@ -1978,7 +1979,7 @@ public:
      *
      * Same as the previous one.
      */
-    mT rotate(double ang, bool wrap=DONT_WRAP) const
+    mT rotate(double ang, bool wrap = DONT_WRAP) const
     {
         mT aux;
         rotate(ang, aux, wrap);
@@ -1991,7 +1992,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_rotate(double ang, bool wrap=DONT_WRAP)
+    void self_rotate(double ang, bool wrap = DONT_WRAP)
     {
         mT aux;
         rotate(ang, aux, wrap);
@@ -2009,7 +2010,7 @@ public:
      * @endcode
      */
     void rotate_Bspline(int Splinedegree,
-                        double ang, mT& result, bool wrap=DONT_WRAP) const
+                        double ang, mT& result, bool wrap = DONT_WRAP) const
     {
         matrix2D< double > temp = rot2D_matrix(ang);
         apply_geom_Bspline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
@@ -2020,7 +2021,7 @@ public:
      *
      * Same as the previous one.
      */
-    mT rotate_Bspline(int Splinedegree, double ang, bool wrap=DONT_WRAP) const
+    mT rotate_Bspline(int Splinedegree, double ang, bool wrap = DONT_WRAP) const
     {
         mT aux;
         rotate_Bspline(Splinedegree, ang, aux, wrap);
@@ -2033,7 +2034,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_rotate_Bspline(int Splinedegree, double ang, bool wrap=DONT_WRAP)
+    void self_rotate_Bspline(int Splinedegree, double ang, bool wrap = DONT_WRAP)
     {
         mT aux;
         rotate_Bspline(Splinedegree, ang, aux, wrap);
@@ -2053,7 +2054,7 @@ public:
      * @endcode
      */
     void translate(const matrix1D< double >& v, mT& result,
-                   bool wrap=WRAP) const
+                   bool wrap = WRAP) const
     {
         matrix2D< double > temp = translation2D_matrix(v);
         apply_geom(result, temp, *this, IS_NOT_INV, wrap);
@@ -2064,7 +2065,7 @@ public:
      *
      * Same as the previous one.
      */
-    mT translate(const matrix1D< double >& v, bool wrap=WRAP) const
+    mT translate(const matrix1D< double >& v, bool wrap = WRAP) const
     {
         mT aux;
         translate(v, aux, wrap);
@@ -2077,7 +2078,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_translate(const matrix1D< double >& v, bool wrap=WRAP)
+    void self_translate(const matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
         translate(v, aux, wrap);
@@ -2098,7 +2099,7 @@ public:
      */
     void translate_Bspline(int Splinedegree,
                            const matrix1D< double >& v, mT& result,
-                           bool wrap=WRAP) const
+                           bool wrap = WRAP) const
     {
         matrix2D< double > temp = translation2D_matrix(v);
         apply_geom_Bspline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
@@ -2110,7 +2111,7 @@ public:
      * Same as the previous one.
      */
     mT translate_Bspline(int Splinedegree,
-                         const matrix1D< double >& v, bool wrap=WRAP) const
+                         const matrix1D< double >& v, bool wrap = WRAP) const
     {
         mT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -2124,7 +2125,7 @@ public:
      * Same as the previous one, but the result is kept in this object
      */
     void self_translate_Bspline(int Splinedegree,
-                                const matrix1D< double >& v, bool wrap=WRAP)
+                                const matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -2138,7 +2139,7 @@ public:
      * If the input has very high values, it is better to rescale it to be
      * between 0 and 1.
      */
-    void self_translate_center_of_mass_to_center(bool wrap=WRAP)
+    void self_translate_center_of_mass_to_center(bool wrap = WRAP)
     {
         set_Xmipp_origin();
         matrix1D< double > center;
@@ -2154,7 +2155,7 @@ public:
      * between 0 and 1.
      */
     void self_translate_center_of_mass_to_center_Bspline(
-        int Splinedegree, bool wrap=WRAP)
+        int Splinedegree, bool wrap = WRAP)
     {
         set_Xmipp_origin();
         matrix1D< double > center;
@@ -2176,14 +2177,14 @@ public:
      */
     void scale_to_size(int Ydim, int Xdim, mT& result) const
     {
-        matrix2D< double > temp(3,3);
+        matrix2D< double > temp(3, 3);
         result.resize(Ydim, Xdim);
         temp.init_identity();
 
         DIRECT_MAT_ELEM(temp, 0, 0) = (double) Xdim / (double) XSIZE(*this);
         DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
 
-        apply_geom(result, temp, *this, IS_NOT_INV,WRAP);
+        apply_geom(result, temp, *this, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size
@@ -2269,15 +2270,15 @@ public:
      * given size. The last columns and rows are removed if the size of the
      * original image is not an exact multiple of the given superpixel size
      */
-    void superpixel_reduce(mT& result, int size=2) const
+    void superpixel_reduce(mT& result, int size = 2) const
     {
         result.init_zeros(YSIZE(*this) / size, XSIZE(*this) / size);
         int size2 = size * size;
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
         {
-            for (int ii=0; ii<size; ii++)
-                for (int jj=0; jj<size; jj++)
+            for (int ii = 0; ii < size; ii++)
+                for (int jj = 0; jj < size; jj++)
                     DIRECT_MAT_ELEM(result, i, j) +=
                         DIRECT_MAT_ELEM(*this, size * i + ii, size * j + jj);
 
@@ -2291,14 +2292,14 @@ public:
      * This function copies each pixel to a new image as many times as the size
      * of the superpixel.
      */
-    void superpixel_expand(mT& result, int size=2) const
+    void superpixel_expand(mT& result, int size = 2) const
     {
         result.init_zeros(YSIZE(*this) * size, XSIZE(*this) * size);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
         {
-            for (int ii=0; ii<size; ii++)
-                for (int jj=0; jj<size; jj++)
+            for (int ii = 0; ii < size; ii++)
+                for (int jj = 0; jj < size; jj++)
                     DIRECT_MAT_ELEM(result, size * i + ii, size * j + jj) =
                         DIRECT_MAT_ELEM(*this, i, j);
         }
@@ -2307,12 +2308,12 @@ public:
     /** Reduce the image by 2 using a BSpline pyramid
      * @ingroup MatricesGeometrical
      */
-    void pyramid_reduce(matrix2D< double >& result, int levels=1) const
+    void pyramid_reduce(matrix2D< double >& result, int levels = 1) const
     {
         matrix2D< double > aux, aux2;
         produce_spline_coeffs(aux, 3);
 
-        for (int i=0; i<levels; i++)
+        for (int i = 0; i < levels; i++)
         {
             aux.reduce_Bspline(aux2, 3);
             aux = aux2;
@@ -2324,13 +2325,13 @@ public:
     /** Expand the image by 2 using a BSpline pyramid
      * @ingroup MatricesGeometrical
      */
-    void pyramid_expand(matrix2D< double >& result, int levels=1) const
+    void pyramid_expand(matrix2D< double >& result, int levels = 1) const
     {
         matrix2D< double > aux, aux2;
         produce_spline_coeffs(aux, 3);
         cout << levels << endl;
 
-        for (int i=0; i<levels; i++)
+        for (int i = 0; i < levels; i++)
         {
             aux.expand_Bspline(aux2, 3);
             aux = aux2;
@@ -2352,7 +2353,7 @@ public:
      * interpolated_elem_as_Bspline.
      */
     void produce_spline_coeffs(matrix2D< double >& coeffs,
-                               int SplineDegree=3) const
+                               int SplineDegree = 3) const
     {
         coeffs.init_zeros(YSIZE(*this), XSIZE(*this));
 
@@ -2373,20 +2374,20 @@ public:
 
     /** Produce image from B-spline coefficients. */
     void produce_image_from_spline_coeffs(
-        matrix2D<double> &img, int SplineDegree=3) const
+        matrix2D<double> &img, int SplineDegree = 3) const
     {
-        img.init_zeros(YSIZE(*this),XSIZE(*this));
-        STARTINGX(img)=STARTINGX(*this);
-        STARTINGY(img)=STARTINGY(*this);
+        img.init_zeros(YSIZE(*this), XSIZE(*this));
+        STARTINGX(img) = STARTINGX(*this);
+        STARTINGY(img) = STARTINGY(*this);
         int Status;
         matrix2D<double> aux;
-        type_cast(*this,aux);
-        ChangeBasisVolume(MULTIDIM_ARRAY(aux),MULTIDIM_ARRAY(img),
+        type_cast(*this, aux);
+        ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
                           XSIZE(*this), YSIZE(*this), 1,
                           BasicSpline, CardinalSpline, SplineDegree,
                           MirrorOnBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1,"matrix2D::produce_spline_img: Error");
+            REPORT_ERROR(1, "matrix2D::produce_spline_img: Error");
     }
 
 #undef DBL_EPSILON
@@ -2397,7 +2398,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * expanded set of B-spline coefficients using the two-scale relationship.
      */
-    void expand_Bspline(matrix2D< double >& expanded, int SplineDegree=3) const
+    void expand_Bspline(matrix2D< double >& expanded, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2424,7 +2425,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * reduced set of B-spline coefficients using the two-scale relationship.
      */
-    void reduce_Bspline(matrix2D< double >& reduced, int SplineDegree=3) const
+    void reduce_Bspline(matrix2D< double >& reduced, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2445,7 +2446,7 @@ public:
         else if (YSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux) - 1, XSIZE(aux));
         else if (XSIZE(aux) % 2 != 0)
-            aux.resize(YSIZE(aux), XSIZE(aux)-1);
+            aux.resize(YSIZE(aux), XSIZE(aux) - 1);
 
         reduced.resize(YSIZE(aux) / 2, XSIZE(aux) / 2);
 
@@ -2471,7 +2472,7 @@ public:
      * v1 = m.for_all_rows(&vector_sum);
      * @endcode
      */
-    vT for_all_rows (T (*f) (vT&)) const
+    vT for_all_rows(T(*f)(vT&)) const
     {
         vT temp;
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -2481,11 +2482,11 @@ public:
         STARTINGX(temp) = STARTINGY(*this);
         temp.setCol();
 
-        for (int i=STARTINGY(*this); i<=FINISHINGY(*this); i++)
+        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
         {
             vT aux;
             getRow(i, aux);
-            VEC_ELEM(temp, i) = (*f) (aux);
+            VEC_ELEM(temp, i) = (*f)(aux);
         }
 
         return temp;
@@ -2506,7 +2507,7 @@ public:
      * v1 = m.for_all_cols(&vector_sum);
      * @endcode
      */
-    vT for_all_cols (T (*f) (vT&)) const
+    vT for_all_cols(T(*f)(vT&)) const
     {
         vT temp;
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -2516,11 +2517,11 @@ public:
         STARTINGX(temp) = STARTINGX(*this);
         temp.setRow();
 
-        for (int j=STARTINGX(*this); j<=FINISHINGX(*this); j++)
+        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
         {
             vT aux;
             getCol(j, aux);
-            VEC_ELEM(temp, j) = (*f) (aux);
+            VEC_ELEM(temp, j) = (*f)(aux);
         }
 
         return temp;
@@ -2542,7 +2543,7 @@ public:
      * m2 = m.for_all_rows(&vector_norm);
      * @endcode
      */
-    mT for_all_rows (vT (*f) (vT&)) const
+    mT for_all_rows(vT(*f)(vT&)) const
     {
         mT aux(*this);
         aux.for_all_rows(f);
@@ -2553,16 +2554,16 @@ public:
     /** Apply a vectorial function to all rows, keep in this object.
      * @ingroup MatricesIterators
      */
-    void for_all_rows (vT (*f) (vT&))
+    void for_all_rows(vT(*f)(vT&))
     {
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
             return;
 
-        for (int i=STARTINGY(*this); i<=FINISHINGY(*this); i++)
+        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
         {
             vT aux;
             getRow(i, aux);
-            setRow(i, (*f) (aux));
+            setRow(i, (*f)(aux));
         }
     }
 
@@ -2582,7 +2583,7 @@ public:
      * m2 = m.for_all_cols(&vector_norm);
      * @endcode
      */
-    mT for_all_cols (vT (*f) (vT&)) const
+    mT for_all_cols(vT(*f)(vT&)) const
     {
         mT aux(*this);
         aux.for_all_cols(f);
@@ -2593,16 +2594,16 @@ public:
     /** Apply a vectorial function to all rows, keep in this object
      * @ingroup MatricesIterators
      */
-    void for_all_cols (vT (*f) (vT&))
+    void for_all_cols(vT(*f)(vT&))
     {
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
             return;
 
-        for (int j=STARTINGX(*this); j<=FINISHINGX(*this); j++)
+        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
         {
             vT aux;
             getCol(j, aux);
-            setCol(j, (*f) (aux));
+            setCol(j, (*f)(aux));
         }
     }
 
@@ -2657,10 +2658,10 @@ public:
 
         result.init_zeros(YSIZE(*this));
 
-        for (int i=0; i<YSIZE(*this); i++)
-            for (int j=0; j<XSIZE(op1); j++)
-                DIRECT_VEC_ELEM(result, i) += DIRECT_MAT_ELEM(*this, i, j)*
-                                             DIRECT_VEC_ELEM(op1,j);
+        for (int i = 0; i < YSIZE(*this); i++)
+            for (int j = 0; j < XSIZE(op1); j++)
+                DIRECT_VEC_ELEM(result, i) += DIRECT_MAT_ELEM(*this, i, j) *
+                                              DIRECT_VEC_ELEM(op1, j);
 
         result.setCol();
         STARTINGX(result) = STARTINGY(*this);
@@ -2724,9 +2725,9 @@ public:
             return false;
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            if (i != j && ABS(DIRECT_MAT_ELEM(*this, i, j)) >
-                XMIPP_EQUAL_ACCURACY)
-                return false;
+        if (i != j && ABS(DIRECT_MAT_ELEM(*this, i, j)) >
+            XMIPP_EQUAL_ACCURACY)
+            return false;
 
         return true;
     }
@@ -2742,7 +2743,7 @@ public:
         if (!IsDiagonal())
             return false;
 
-        for (int i=1; i<YSIZE(*this); i++)
+        for (int i = 1; i < YSIZE(*this); i++)
             if (ABS(DIRECT_MAT_ELEM(*this, i, i) - DIRECT_MAT_ELEM(*this, 0, 0))
                 > XMIPP_EQUAL_ACCURACY)
                 return false;
@@ -2763,10 +2764,10 @@ public:
         if (XSIZE(*this) != YSIZE(*this))
             return false;
 
-        for (int i=0; i<YSIZE(*this); i++)
-            for (int j=i+1; j<XSIZE(*this); j++)
+        for (int i = 0; i < YSIZE(*this); i++)
+            for (int j = i + 1; j < XSIZE(*this); j++)
                 if (ABS(DIRECT_MAT_ELEM(*this, i, j) -
-                    DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
+                        DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
                     return false;
 
         return true;
@@ -2785,10 +2786,10 @@ public:
         if (XSIZE(*this) != YSIZE(*this))
             return false;
 
-        for (int i=0; i<YSIZE(*this); i++)
-            for (int j=i+1; j<XSIZE(*this); j++)
+        for (int i = 0; i < YSIZE(*this); i++)
+            for (int j = i + 1; j < XSIZE(*this); j++)
                 if (ABS(DIRECT_MAT_ELEM(*this, i, j) +
-                    DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
+                        DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
                     return false;
 
         return true;
@@ -2804,11 +2805,11 @@ public:
      */
     bool IsUpperTriangular() const
     {
-        if (XSIZE(*this)!=YSIZE(*this))
+        if (XSIZE(*this) != YSIZE(*this))
             return false;
-        for (int i=1; i<YSIZE(*this); i++)
-            for (int j=0; j<i-1; j++)
-                if (ABS(DIRECT_MAT_ELEM(*this,i,j))>XMIPP_EQUAL_ACCURACY)
+        for (int i = 1; i < YSIZE(*this); i++)
+            for (int j = 0; j < i - 1; j++)
+                if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
                     return false;
         return true;
     }
@@ -2826,8 +2827,8 @@ public:
         if (XSIZE(*this) != YSIZE(*this))
             return false;
 
-        for (int i=1; i<YSIZE(*this); i++)
-            for (int j=i+1; j<XSIZE(*this); j++)
+        for (int i = 1; i < YSIZE(*this); i++)
+            for (int j = i + 1; j < XSIZE(*this); j++)
                 if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
                     return false;
 
@@ -2880,12 +2881,12 @@ public:
         T max = MAT_ELEM(*this, imax, jmax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            if (MAT_ELEM(*this, i, j) > max)
-            {
-                max = MAT_ELEM(*this, i, j);
-                imax = i;
-                jmax = j;
-            }
+        if (MAT_ELEM(*this, i, j) > max)
+        {
+            max = MAT_ELEM(*this, i, j);
+            imax = i;
+            jmax = j;
+        }
     }
 
     /** Minimum element
@@ -2906,12 +2907,12 @@ public:
         T min = MAT_ELEM(*this, imin, jmin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            if (MAT_ELEM(*this, i, j)>min)
-            {
-                min = MAT_ELEM(*this, i, j);
-                imin = i;
-                jmin = j;
-            }
+        if (MAT_ELEM(*this, i, j) > min)
+        {
+            min = MAT_ELEM(*this, i, j);
+            imin = i;
+            jmin = j;
+        }
     }
 };
 
@@ -2924,15 +2925,15 @@ complex< double > matrix2D< complex< double > >::interpolated_elem(
     double x, double y, complex< double > outside_value) const;
 
 template<>
-void core_array_by_scalar< complex< double > >(const maTC& op1,
+void core_array_by_scalar< complex< double > > (const maTC& op1,
         const complex< double >& op2, maTC& result, char operation);
 
 template<>
-void core_scalar_by_array< complex< double > >(const complex< double >& op1,
+void core_scalar_by_array< complex< double > > (const complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 template<>
-void core_array_by_array< complex< double > >(const maTC& op1, const maTC& op2,
+void core_array_by_array< complex< double > > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 template<>
@@ -3119,7 +3120,7 @@ void radial_average(const matrix2D< T >& m,
                     const matrix1D< int >& center_of_rot,
                     matrix1D< T >& radial_mean,
                     matrix1D< int >& radial_count,
-                    const bool& rounding=false)
+                    const bool& rounding = false)
 {
     matrix1D< double > idx(2);
 
@@ -3129,19 +3130,19 @@ void radial_average(const matrix2D< T >& m,
     double y = STARTINGY(m) - YY(center_of_rot);
     double x = STARTINGX(m) - XX(center_of_rot);
 
-    distances(0) = (int) floor(sqrt(x*x + y*y));
+    distances(0) = (int) floor(sqrt(x * x + y * y));
     x = FINISHINGX(m) - XX(center_of_rot);
     y = STARTINGY(m) - YY(center_of_rot);
 
-    distances(1) = (int) floor(sqrt(x*x + y*y));
+    distances(1) = (int) floor(sqrt(x * x + y * y));
     x = STARTINGX(m) - XX(center_of_rot);
     y = FINISHINGY(m) - YY(center_of_rot);
 
-    distances(2) = (int) floor(sqrt(x*x + y*y));
+    distances(2) = (int) floor(sqrt(x * x + y * y));
     x = FINISHINGX(m) - XX(center_of_rot);
     y = FINISHINGY(m) - YY(center_of_rot);
 
-    distances(3) = (int) floor(sqrt(x*x + y*y));
+    distances(3) = (int) floor(sqrt(x * x + y * y));
     int dim = (int) CEIL(distances.compute_max()) + 1;
 
     if (rounding)
@@ -3301,8 +3302,8 @@ bool mT::intersects(const matrix1D< double >& corner1,
     if (XSIZE(corner1) != 2 || XSIZE(corner2) != 2)
         REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
 
-    return intersects(XX(corner1),YY(corner1),
-                      XX(corner2)-XX(corner1),YY(corner2)-YY(corner1));
+    return intersects(XX(corner1), YY(corner1),
+                      XX(corner2) - XX(corner1), YY(corner2) - YY(corner1));
 }
 
 // TODO Document
@@ -3364,28 +3365,28 @@ void mT::patch(const mT& patch_array, char operation)
     SPEED_UP_temps;
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(patch_array, *this)
-        switch (operation)
-        {
-        case '=':
-            MAT_ELEM(*this, i, j) = MAT_ELEM(patch_array, i, j);
-            break;
+    switch (operation)
+    {
+    case '=':
+        MAT_ELEM(*this, i, j) = MAT_ELEM(patch_array, i, j);
+        break;
 
-        case '+':
-            MAT_ELEM(*this, i, j) += MAT_ELEM(patch_array, i, j);
-            break;
+    case '+':
+        MAT_ELEM(*this, i, j) += MAT_ELEM(patch_array, i, j);
+        break;
 
-        case '-':
-            MAT_ELEM(*this, i, j) -= MAT_ELEM(patch_array, i, j);
-            break;
+    case '-':
+        MAT_ELEM(*this, i, j) -= MAT_ELEM(patch_array, i, j);
+        break;
 
-        case '*':
-            MAT_ELEM(*this, i, j) *= MAT_ELEM(patch_array, i, j);
-            break;
+    case '*':
+        MAT_ELEM(*this, i, j) *= MAT_ELEM(patch_array, i, j);
+        break;
 
-        case '/':
-            MAT_ELEM(*this, i, j) /= MAT_ELEM(patch_array, i, j);
-            break;
-        }
+    case '/':
+        MAT_ELEM(*this, i, j) /= MAT_ELEM(patch_array, i, j);
+        break;
+    }
 }
 
 // TODO Document
@@ -3397,7 +3398,7 @@ void mT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
     min_val = max_val = (*this)(corner1);
 
     matrix1D< double > r(3);
-    double N=0, sum=0, sum2=0;
+    double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
     {
@@ -3474,13 +3475,13 @@ ostream& operator<<(ostream& ostrm, const mT& v)
         double max_val = ABS(MULTIDIM_ELEM(v, 0));
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-            max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
+        max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
 
         int prec = best_prec(max_val, 10);
 
-        for (int i=STARTINGY(v); i<=FINISHINGY(v); i++)
+        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
         {
-            for (int j=STARTINGX(v); j<=FINISHINGX(v); j++)
+            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
                 ostrm << FtoA((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
             }
@@ -3544,8 +3545,8 @@ void solve_by_svd(const matrix2D< T >& A, const matrix1D< T >& b,
     // If a value is lower than tolerance, the it's zeroed, as this increases
     // the precision of the routine.
     FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
-        if(w(i) < tolerance)
-            w(i) = 0;
+    if (w(i) < tolerance)
+        w(i) = 0;
 
     // Set size of matrices
     result.resize(b.get_dim());
@@ -3553,7 +3554,7 @@ void solve_by_svd(const matrix2D< T >& A, const matrix1D< T >& b,
     // Xmipp interface that calls to svdksb of numerical recipes
     matrix1D< double > bd;
     type_cast(b, bd);
-    svbksb(u, w, v, bd,result);
+    svbksb(u, w, v, bd, result);
 }
 
 // TODO Document
@@ -3583,7 +3584,7 @@ void ludcmp(const mT& A, mT& LU, matrix1D< int >& indx, T& d)
     LU = A;
     indx.resize(XSIZE(A));
     ludcmp(LU.adapt_for_numerical_recipes2(), XSIZE(A),
-            indx.adapt_for_numerical_recipes(), &d);
+           indx.adapt_for_numerical_recipes(), &d);
 }
 
 // TODO Document
@@ -3598,7 +3599,7 @@ void lubksb(const mT& LU, matrix1D< int >& indx, vT& b)
 // TODO Document
 #define VIA_BILIB
 template<typename T>
-void svdcmp(const matrix2D< T >& a,matrix2D< double >& u,
+void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
             matrix1D< double >& w, matrix2D< double >& v)
 {
     // svdcmp only works with double
@@ -3619,10 +3620,10 @@ void svdcmp(const matrix2D< T >& a,matrix2D< double >& u,
 #ifdef VIA_BILIB
     int status;
     SingularValueDecomposition(MULTIDIM_ARRAY(u),
-                                u.RowNo(), u.ColNo(),
-                                MULTIDIM_ARRAY(w),
-                                MULTIDIM_ARRAY(v),
-                                5000, &status);
+                               u.RowNo(), u.ColNo(),
+                               MULTIDIM_ARRAY(w),
+                               MULTIDIM_ARRAY(v),
+                               5000, &status);
 #endif
 }
 
@@ -3675,10 +3676,10 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
     }
 
     // Find center and limits of image
-    cen_y  = (int) (YSIZE(M2) / 2);
-    cen_x  = (int) (XSIZE(M2) / 2);
-    cen_yp = (int) (YSIZE(M1) / 2);
-    cen_xp = (int) (XSIZE(M1) / 2);
+    cen_y  = (int)(YSIZE(M2) / 2);
+    cen_x  = (int)(XSIZE(M2) / 2);
+    cen_yp = (int)(YSIZE(M1) / 2);
+    cen_xp = (int)(XSIZE(M1) / 2);
     minxp  = -cen_xp;
     minyp  = -cen_yp;
     maxxp  = XSIZE(M1) - cen_xp - 1;
@@ -3700,7 +3701,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
 #endif
     //#undef DEBUG_APPLYGEO
 
-    for (int i=0; i<YSIZE(M2); i++)
+    for (int i = 0; i < YSIZE(M2); i++)
     {
         // Calculate position of the beginning of the row in the output image
         x = -cen_x;
@@ -3717,7 +3718,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
         xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
         yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
 
-        for (int j=0; j<XSIZE(M2); j++)
+        for (int j = 0; j < XSIZE(M2); j++)
         {
             bool interp;
             T tmp;
@@ -3735,7 +3736,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
             {
                 if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                     xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                    xp = realWRAP(xp, minxp-0.5, maxxp + 0.5);
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
                 if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
                     yp > maxyp + XMIPP_EQUAL_ACCURACY)
@@ -3794,17 +3795,17 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
                 // if wx == 0 means that the rightest point is useless for this
                 // interpolation, and even it might not be defined if m1=xdim-1
                 // The same can be said for wy.
-                tmp  = (T) ((1-wy) * (1-wx) * dMij(M1, n1, m1));
+                tmp  = (T)((1 - wy) * (1 - wx) * dMij(M1, n1, m1));
 
                 if (wx != 0 && m2 < M1.xdim)
-                    tmp += (T) ((1-wy) * wx * dMij(M1, n1, m2));
+                    tmp += (T)((1 - wy) * wx * dMij(M1, n1, m2));
 
                 if (wy != 0 && n2 < M1.ydim)
                 {
-                    tmp += (T) (wy * (1-wx) * dMij(M1, n2, m1));
+                    tmp += (T)(wy * (1 - wx) * dMij(M1, n2, m1));
 
                     if (wx != 0 && m2 < M1.xdim)
-                        tmp += (T) (wy * wx * dMij(M1, n2, m2));
+                        tmp += (T)(wy * wx * dMij(M1, n2, m2));
                 }
 
                 dMij(M2, i, j) = tmp;
@@ -3828,7 +3829,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
 // TODO Document
 //#define DEBUG
 template<typename T>
-void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
+void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
                         int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, m2, n2;
@@ -3863,14 +3864,14 @@ void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
     // Initialise output matrix with value=outside
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M2)
     {
-        DIRECT_MAT_ELEM(M2, i, j)=outside;
+        DIRECT_MAT_ELEM(M2, i, j) = outside;
     }
 
     // Find center and limits of image
-    cen_y  = (int) (YSIZE(M2) / 2);
-    cen_x  = (int) (XSIZE(M2) / 2);
-    cen_yp = (int) (YSIZE(M1) / 2);
-    cen_xp = (int) (XSIZE(M1) / 2);
+    cen_y  = (int)(YSIZE(M2) / 2);
+    cen_x  = (int)(XSIZE(M2) / 2);
+    cen_yp = (int)(YSIZE(M1) / 2);
+    cen_xp = (int)(XSIZE(M1) / 2);
     minxp  = -cen_xp;
     minyp  = -cen_yp;
     maxxp  = XSIZE(M1) - cen_xp - 1;
@@ -3886,7 +3887,7 @@ void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
     // in the output image we calculate which are the corresponding ones in
     // the original image, make an interpolation with them and put this value
     // at the output pixel
-    for (int i=0; i<YSIZE(M2); i++)
+    for (int i = 0; i < YSIZE(M2); i++)
     {
         // Calculate position of the beginning of the row in the output image
         x = -cen_x;
@@ -3899,7 +3900,7 @@ void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
         xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
         yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
 
-        for (int j=0; j<XSIZE(M2); j++)
+        for (int j = 0; j < XSIZE(M2); j++)
         {
             bool interp;
             T tmp;
@@ -3945,7 +3946,7 @@ void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
             if (interp)
             {
                 dMij(M2, i, j) = (T) Bcoeffs.interpolated_elem_as_Bspline(
-                                   xp, yp, Splinedegree);
+                                     xp, yp, Splinedegree);
 
 #ifdef DEBUG_APPLYGEO
                 cout << "   val= " << tmp << endl;
@@ -3966,7 +3967,7 @@ void apply_geom_Bspline(mT& M2,matrix2D< double > A, const mT& M1,
 template<>
 inline void matrix2D< complex< double > >::scale_to_size_Bspline(
     int Splinedegree, int Ydim, int Xdim,
-    matrix2D< complex< double > >& result) const
+    matrix2D< complex< double > > & result) const
 {
     matrix2D< double > re, im, scre, scim;
 
@@ -4018,11 +4019,11 @@ void mul_matrix(const mT& op1, const mT& op2, mT& result)
         REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
 
     result.init_zeros(YSIZE(op1), XSIZE(op2));
-    for (int i=0; i<YSIZE(op1); i++)
-        for (int j=0; j<XSIZE(op2); j++)
-            for (int k=0; k<XSIZE(op1); k++)
+    for (int i = 0; i < YSIZE(op1); i++)
+        for (int j = 0; j < XSIZE(op2); j++)
+            for (int k = 0; k < XSIZE(op1); k++)
                 DIRECT_MAT_ELEM(result, i, j) += DIRECT_MAT_ELEM(op1, i, k) *
-                    DIRECT_MAT_ELEM(op2, k, j);
+                                                 DIRECT_MAT_ELEM(op2, k, j);
 
     STARTINGY(result) = STARTINGY(op1);
     STARTINGX(result) = STARTINGX(op1);
@@ -4041,10 +4042,10 @@ vT vT::operator*(const mT& M)
         REPORT_ERROR(1102, "Vector is not a row");
 
     result.init_zeros(XSIZE(M));
-    for (int j=0; j<XSIZE(M); j++)
-        for (int i=0; i<YSIZE(M); i++)
+    for (int j = 0; j < XSIZE(M); j++)
+        for (int i = 0; i < YSIZE(M); i++)
             DIRECT_VEC_ELEM(result, j) += DIRECT_VEC_ELEM(*this, i) *
-                DIRECT_MAT_ELEM(M,i,j);
+                                          DIRECT_MAT_ELEM(M, i, j);
 
     result.setRow();
     STARTINGX(result) = STARTINGX(M);

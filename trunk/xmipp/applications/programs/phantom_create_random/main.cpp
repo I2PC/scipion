@@ -26,19 +26,34 @@
 
 #include <reconstruction/phantom_create_random.h>
 
-int main (int argc,char **argv ) {
+int main(int argc, char **argv)
+{
 // Parameters
-   Prog_Random_Phantom_Parameters prog_prm;
-   Phantom                        Realization;
+    Prog_Random_Phantom_Parameters prog_prm;
+    Phantom                        Realization;
 
 // Read parameters from command line
-   try {prog_prm.read(argc,argv);}
-   catch (Xmipp_error XE) {cout << XE; prog_prm.usage(); exit(1);}
+    try
+    {
+        prog_prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prog_prm.usage();
+        exit(1);
+    }
 
 // Generate Realization and write to disk
-   try{ROUT_random_phantom(prog_prm, Realization);}
-   catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+    try
+    {
+        ROUT_random_phantom(prog_prm, Realization);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 }
 /* Menus ------------------------------------------------------------------- */
 /*Colimate:
@@ -47,27 +62,27 @@ int main (int argc,char **argv ) {
       help="Produce a realizaion of a random phantom family";
       OPEN MENU menu_random_phantom;
       COMMAND LINES {
-	+ single: random_phantom -i $PHANTOM_FAMILY -o $PHANTOM
+ + single: random_phantom -i $PHANTOM_FAMILY -o $PHANTOM
                   [-min_volume $MINVOLUME] [-discrete]
       }
       PARAMETER DEFINITIONS {
         $PHANTOM_FAMILY {
-	   label="Phantom Family Description";
-	   help="Input: This file has got a complex structure, better see
+    label="Phantom Family Description";
+    help="Input: This file has got a complex structure, better see
                  the Web help";
-	   type=file existing;
-	}
+    type=file existing;
+ }
         $PHANTOM {
-	   label="Phantom realisation";
-	   help="Output";
-	   type=file;
-	}
+    label="Phantom realisation";
+    help="Output";
+    type=file;
+ }
         $MINVOLUME {
-	   label="Minimum volume";
+    label="Minimum volume";
            help="All features have got at least this volume";
-	   type=float;
+    type=float;
            by default=0;
-	}
+ }
         OPT(-discrete) {
            label="Discrete values";
            help="Density values are forced to be integer";

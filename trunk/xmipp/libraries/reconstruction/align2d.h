@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ALIGN2D
-   #define _PROG_ALIGN2D
+#define _PROG_ALIGN2D
 
 #include <data/fft.h>
 #include <data/args.h>
@@ -37,95 +37,96 @@
 /**@name Align2D */
 //@{
 /** Align2D parameters. */
-class Prog_align2d_prm {
+class Prog_align2d_prm
+{
 public:
-  /** Filename selection file containing the images */
-  FileName fn_sel;
-  /** Filename reference image */
-  FileName fn_ref;
-  /** Filename output reference image */
-  FileName fn_ave;
-  /**  Filename output document file */
-  FileName fn_doc;
-  /**  Filename output extension */
-  FileName oext;
+    /** Filename selection file containing the images */
+    FileName fn_sel;
+    /** Filename reference image */
+    FileName fn_ref;
+    /** Filename output reference image */
+    FileName fn_ave;
+    /**  Filename output document file */
+    FileName fn_doc;
+    /**  Filename output extension */
+    FileName oext;
 
-  /** Integer inner radius for rotational alignment */
-  int Ri;
-  /** Integer outer radius for rotational alignment */
-  int Ro;
-  /** Integer number of iterations to perform */
-  int Niter;
-  /** Integer number of images to be aligned */
-  int n_images;
+    /** Integer inner radius for rotational alignment */
+    int Ri;
+    /** Integer outer radius for rotational alignment */
+    int Ro;
+    /** Integer number of iterations to perform */
+    int Niter;
+    /** Integer number of images to be aligned */
+    int n_images;
 
-  /** Float maximum allowed shift (discard images that shift more in last iteration)*/
-  float max_shift;
-  /** Float maximum allowed rotational change (discard images that rotate more in last iteration)*/
-  float max_rot;
-  /** Float resolution limit for low-pass filter [Angstrom]*/
-  float resol;
-  /** Float sampling rate (i.e. pixel size) [Angstrom] */
-  float sam;
+    /** Float maximum allowed shift (discard images that shift more in last iteration)*/
+    float max_shift;
+    /** Float maximum allowed rotational change (discard images that rotate more in last iteration)*/
+    float max_rot;
+    /** Float resolution limit for low-pass filter [Angstrom]*/
+    float resol;
+    /** Float sampling rate (i.e. pixel size) [Angstrom] */
+    float sam;
 
-  /** Boolean to apply low-pass filter to images */
-  bool do_filter;
-  /** Boolean to perform rotational alignment */
-  bool do_rot;
-  /** Boolean to perform translational alignment */
-  bool do_trans;
+    /** Boolean to apply low-pass filter to images */
+    bool do_filter;
+    /** Boolean to perform rotational alignment */
+    bool do_rot;
+    /** Boolean to perform translational alignment */
+    bool do_trans;
 
-  /** Boolean to perform complete-search (psi and translations) alignment */
-  bool do_complete;
-  /** Float psi-interval in complete search */
-  float psi_interval;
-
-public:
-  // SelFile images
-  SelFile SF;
-  // Stack of input images
-  vector<ImageXmipp>  images;
-  // Stack of optimal correlations for all images
-  vector<double>  corr;
-  // Boolean for successful alignment of image
-  vector<bool>  success;
-  // Image holding current reference
-  ImageXmipp Iref;
+    /** Boolean to perform complete-search (psi and translations) alignment */
+    bool do_complete;
+    /** Float psi-interval in complete search */
+    float psi_interval;
 
 public:
-  /// Read argument from command line
-  void read(int argc, char **argv);
+    // SelFile images
+    SelFile SF;
+    // Stack of input images
+    vector<ImageXmipp>  images;
+    // Stack of optimal correlations for all images
+    vector<double>  corr;
+    // Boolean for successful alignment of image
+    vector<bool>  success;
+    // Image holding current reference
+    ImageXmipp Iref;
 
-  /// Show
-  void show();
+public:
+    /// Read argument from command line
+    void read(int argc, char **argv);
 
-  /// Usage
-  void usage();
+    /// Show
+    void show();
 
-  /// Rotational alignment of an image
-  bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
-		 const float &max_rot, const float &Rin, const float &Rout, const double &outside=0.);
+    /// Usage
+    void usage();
 
-   /// Translational alignment of an image
-  bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside=0.);
+    /// Rotational alignment of an image
+    bool align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
+                   const float &max_rot, const float &Rin, const float &Rout, const double &outside = 0.);
 
-  /// Alignment by complete search of rotations and translations
-  bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref,
-                       const float &max_shift, const float &max_rot, const float &psi_interval,
-		       const float &Rin, const float &Rout, const double &outside=0.);
+    /// Translational alignment of an image
+    bool align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift, const double &outside = 0.);
 
-  /// Piramidal combination of images to construct a reference
-  void do_pspc();
+    /// Alignment by complete search of rotations and translations
+    bool align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref,
+                               const float &max_shift, const float &max_rot, const float &psi_interval,
+                               const float &Rin, const float &Rout, const double &outside = 0.);
 
-  /// Alignment of all images by iterative refinement
-  void refinement();
+    /// Piramidal combination of images to construct a reference
+    void do_pspc();
 
-  /// Calculate optimal correlation for in document file
-  void calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout);
+    /// Alignment of all images by iterative refinement
+    void refinement();
 
-  /// Main routine
-  void align2d();
+    /// Calculate optimal correlation for in document file
+    void calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout);
 
-};				
+    /// Main routine
+    void align2d();
+
+};
 //@}
 #endif

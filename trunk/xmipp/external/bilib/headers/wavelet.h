@@ -27,45 +27,45 @@
 /** Wavelet transform job parameters.*/
 struct TWaveletStruct
 {
-        /** Pointer to input data */
-	double   *Input;
-	/** X size of the input data */
-	long    NxInput;
-	/** Y size of the input data */
-	long    NyInput;
-	/** Z size of the input data */
-	long    NzInput;
-        /** Pointer to output data */
-	double   *Output;
-	/** X size of the input data */
-	long    NxOutput;
-	/** Y size of the input data */
-	long    NyOutput;
-	/** Z size of the input data */
-	long    NzOutput;
-	/** Valid operations: "Analysis" (DWT) or "Synthesis" (IDWT) */
-	char    *Operation;
-	/** Valid filters:
-	    "B-Spline", "Cardinal Spline", "Dual Spline",
-	    "Orthogonal Spline", "Orthonormal Spline", and
-	    "Fractional Orthonormal Spline" */
-	char    *Filter;
-	/** Valid boundaries: "Mirror"  or "Periodic" */
-	char    *BoundaryConditions;
-        /** For spline wavelets: "0", "1", "3", "5". */
-	char    *Order;
-        /** For fractional spline wavelets. */
-	double  Alpha;
+    /** Pointer to input data */
+    double   *Input;
+    /** X size of the input data */
+    long    NxInput;
+    /** Y size of the input data */
+    long    NyInput;
+    /** Z size of the input data */
+    long    NzInput;
+    /** Pointer to output data */
+    double   *Output;
+    /** X size of the input data */
+    long    NxOutput;
+    /** Y size of the input data */
+    long    NyOutput;
+    /** Z size of the input data */
+    long    NzOutput;
+    /** Valid operations: "Analysis" (DWT) or "Synthesis" (IDWT) */
+    char    *Operation;
+    /** Valid filters:
+        "B-Spline", "Cardinal Spline", "Dual Spline",
+        "Orthogonal Spline", "Orthonormal Spline", and
+        "Fractional Orthonormal Spline" */
+    char    *Filter;
+    /** Valid boundaries: "Mirror"  or "Periodic" */
+    char    *BoundaryConditions;
+    /** For spline wavelets: "0", "1", "3", "5". */
+    char    *Order;
+    /** For fractional spline wavelets. */
+    double  Alpha;
 };
 
 /* ------------------------------------------------------------------------- */
 /* Functions                                                                 */
 /* ------------------------------------------------------------------------- */
-extern int WaveletCheck( struct TWaveletStruct *Data);
-extern int WaveletSize( struct TWaveletStruct *Data);
+extern int WaveletCheck(struct TWaveletStruct *Data);
+extern int WaveletSize(struct TWaveletStruct *Data);
 /** Do the wavelet tranformation job.
     It can be either forward (DWT="Analysis") or backwards
     (IDWT="Synthesis") */
-extern int Wavelet( struct TWaveletStruct *Data);
+extern int Wavelet(struct TWaveletStruct *Data);
 
 

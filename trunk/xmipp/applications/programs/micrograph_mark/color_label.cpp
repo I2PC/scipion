@@ -30,30 +30,33 @@
 
 
 /* Constructor ------------------------------------------------------------- */
-QtColorLabel::QtColorLabel() {
-   __col = new QColor[__numColors];
-   __col[0]  = Qt::red;
-   __col[1]  = Qt::green;
-   __col[2]  = Qt::blue;
-   __col[3]  = Qt::black;
-   __col[4]  = Qt::cyan;
-   __col[5]  = Qt::magenta;
-   __col[6]  = Qt::yellow;
-   __col[7]  = Qt::darkRed;
-   __col[8]  = Qt::darkGreen;
-   __col[9]  = Qt::darkBlue;
-   __col[10] = Qt::darkCyan;
-   __col[11] = Qt::darkMagenta;
-   __col[12] = Qt::darkYellow;
-   __col[13] = Qt::darkGray;
-   __col[14] = Qt::lightGray;
+QtColorLabel::QtColorLabel()
+{
+    __col = new QColor[__numColors];
+    __col[0]  = Qt::red;
+    __col[1]  = Qt::green;
+    __col[2]  = Qt::blue;
+    __col[3]  = Qt::black;
+    __col[4]  = Qt::cyan;
+    __col[5]  = Qt::magenta;
+    __col[6]  = Qt::yellow;
+    __col[7]  = Qt::darkRed;
+    __col[8]  = Qt::darkGreen;
+    __col[9]  = Qt::darkBlue;
+    __col[10] = Qt::darkCyan;
+    __col[11] = Qt::darkMagenta;
+    __col[12] = Qt::darkYellow;
+    __col[13] = Qt::darkGray;
+    __col[14] = Qt::lightGray;
 }
 
-QtColorLabel::~QtColorLabel() {
-   delete __col;
+QtColorLabel::~QtColorLabel()
+{
+    delete __col;
 }
 
 /* Get the color for the i family ------------------------------------------ */
-QColor QtColorLabel::col( int i ) {
-   return( __col[ i % __numColors ] );
+QColor QtColorLabel::col(int i)
+{
+    return(__col[ i % __numColors ]);
 }

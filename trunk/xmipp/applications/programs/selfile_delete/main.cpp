@@ -29,82 +29,105 @@
 
 /* Prototypes -============================================================= */
 
-void Usage (char **argv);
+void Usage(char **argv);
 
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-/* Input Parameters ======================================================== */
-FileName       sel_file;   // selection file
+    /* Input Parameters ======================================================== */
+    FileName       sel_file;   // selection file
 
-/* Parameters ============================================================== */
-   try {
-       if (argc != 2) {Usage(argv); exit(0);} else {
-       		sel_file = argv[1];
-       }
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(argv);}
-
-try {
-
-/* Perform copy or move =================================================== */
-
-  // Finds last slash
-  string org_path;
-  int break_point = -1;
-  for(int i = sel_file.size()- 1; i >= 0; i--) {
-    if (sel_file[i] == '/') {
-    	break_point = i;
-	break;
+    /* Parameters ============================================================== */
+    try
+    {
+        if (argc != 2)
+        {
+            Usage(argv);
+            exit(0);
+        }
+        else
+        {
+            sel_file = argv[1];
+        }
     }
-  }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage(argv);
+    }
 
-  // Copy only the path  	
-  if (break_point >=0) {
-    org_path.resize(break_point+1);
-    for(int j = 0; j <= break_point; j++)
-      org_path[j] = sel_file[j];
-  }
+    try
+    {
 
-   SelFile SF(sel_file);
-   string comStr;
-   while (!SF.eof()) {
-      // Get file
-      SelLine line= SF.current();
-      if (line.Is_data()) { 		//The SelLine is not a comment
-       FileName in_name = line.get_text();
-       comStr = "rm -f " + org_path + in_name;       	
+        /* Perform copy or move =================================================== */
 
-       if (!system(comStr.c_str()))
-	   cout << " file " << org_path << in_name << " removed " << endl;
-      }
-      SF.next();
-   }  // while
+        // Finds last slash
+        string org_path;
+        int break_point = -1;
+        for (int i = sel_file.size() - 1; i >= 0; i--)
+        {
+            if (sel_file[i] == '/')
+            {
+                break_point = i;
+                break;
+            }
+        }
 
-   	
-   // now remove sel file
-   comStr = "rm -f " + sel_file;			
-   system(comStr.c_str());
+        // Copy only the path
+        if (break_point >= 0)
+        {
+            org_path.resize(break_point + 1);
+            for (int j = 0; j <= break_point; j++)
+                org_path[j] = sel_file[j];
+        }
 
-} catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+        SelFile SF(sel_file);
+        string comStr;
+        while (!SF.eof())
+        {
+            // Get file
+            SelLine line = SF.current();
+            if (line.Is_data())
+            {   //The SelLine is not a comment
+                FileName in_name = line.get_text();
+                comStr = "rm -f " + org_path + in_name;
+
+                if (!system(comStr.c_str()))
+                    cout << " file " << org_path << in_name << " removed " << endl;
+            }
+            SF.next();
+        }  // while
+
+
+        // now remove sel file
+        comStr = "rm -f " + sel_file;
+        system(comStr.c_str());
+
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 } //main
 
 /* ------------------------------------------------------------------------- */
 /* Help Message for this Program                                             */
 /* ------------------------------------------------------------------------- */
-void Usage (char **argv) {
-  printf (
-     "Usage: %s [Purpose and Parameters]"
-     "\nPurpose: Remove the images in a sel file (and the sel file) "
-     "\nParameter Values: (note space before value)"
-     "\nI/O parameters"
-     "\n    input_file    input sel file"
-     "\n  "
-     "\nExample: "
-     "\n    rmsel c3u.sel "
-     "\n    (will remove all images in c3u.sel file ) "
+void Usage(char **argv)
+{
+    printf(
+        "Usage: %s [Purpose and Parameters]"
+        "\nPurpose: Remove the images in a sel file (and the sel file) "
+        "\nParameter Values: (note space before value)"
+        "\nI/O parameters"
+        "\n    input_file    input sel file"
+        "\n  "
+        "\nExample: "
+        "\n    rmsel c3u.sel "
+        "\n    (will remove all images in c3u.sel file ) "
 
-     "\n"
-     ,argv[0]);
+        "\n"
+        , argv[0]);
 }

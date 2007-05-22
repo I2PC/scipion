@@ -51,7 +51,8 @@
     This is a general class that is inherited by real show classes
     like ShowSel or ShowVol.
 */
-class ShowTable : public QTable {
+class ShowTable : public QTable
+{
     Q_OBJECT
 
 protected:
@@ -113,14 +114,17 @@ public:
 
     /** Modify representation if the file changes.
         Call this function before initWithFile of the inherited class.*/
-    void setPoll() {check_file_change=true;}
+    void setPoll()
+    {
+        check_file_change = true;
+    }
 
     /** Only way to initialize the show... widgets */
     virtual void initWithFile(int _numRows, int _numCols,
-       const FileName &_fn, double _minGray=0, double _maxGray=0)=0;
+                              const FileName &_fn, double _minGray = 0, double _maxGray = 0) = 0;
     /** Open new file.
         Use this function to change the file being represented.*/
-    virtual void openNewFile(const FileName &_fn)=0;
+    virtual void openNewFile(const FileName &_fn) = 0;
 private:
     /* Change mark of cell */
     void changeMark(int row, int col);
@@ -149,7 +153,7 @@ protected:
     /* Initialize shape and properties of the table */
     virtual void initTable();
     /* Form the right click menu bar */
-    virtual void initRightclickMenubar()=0;
+    virtual void initRightclickMenubar() = 0;
 
     /* Insert help and Quit in the right click menu bar*/
     void insertGeneralItemsInRightclickMenubar();
@@ -160,44 +164,57 @@ protected:
 
     /* Send update to a cell */
     void updateCellIdx(int i)
-      {int row, col; IndextoPos(i,row,col); updateCell(row,col);}
+    {
+        int row, col;
+        IndextoPos(i, row, col);
+        updateCell(row, col);
+    }
     /* Index of cell */
-    int indexOf( int row, int col ) const
-      {return (row * numCols()) + col;}
+    int indexOf(int row, int col) const
+    {
+        return (row * numCols()) + col;
+    }
     /* Position of cell */
-    void IndextoPos( int _index, int& _row, int& _col ) const
-      {_col = _index%NumCols; _row = _index/NumCols;}
+    void IndextoPos(int _index, int& _row, int& _col) const
+    {
+        _col = _index % NumCols;
+        _row = _index / NumCols;
+    }
     /* Label of cell */
-    virtual const char* cellLabel( int i ) const
-                {return NULL;}
+    virtual const char* cellLabel(int i) const
+    {
+        return NULL;
+    }
 
     /* How to repaint the cell.
        This is the main function. It calls producePixmapAt(i) if the
        corresponding pixmap pointer is NULL. */
-    virtual void paintCell(QPainter *p, int row, int col,const QRect & cr,
-       bool selected, const QColorGroup & cg);
+    virtual void paintCell(QPainter *p, int row, int col, const QRect & cr,
+                           bool selected, const QColorGroup & cg);
     /* Draw Red/White frame and label in the Cell.
        The position of the label can be 0=Bottom-right corner or
        1=Top-right corner */
     virtual void drawFrameAndLabel(QPainter *p, int row, int col, int i,
-       int label_pos=0);
+                                   int label_pos = 0);
     /* This is the function that all inherited classes should implement */
-    virtual void producePixmapAt(int i)=0;
+    virtual void producePixmapAt(int i) = 0;
     /* Scale to currScale and produce the output minGray and maxGray
        for an ImageXmipp. This function is used by producePixmapAt.*/
     virtual void scale_and_normalize(matrix2D<double> &I, bool normalize,
-       int &minGray, int &maxGray);
+                                     int &minGray, int &maxGray);
     /* How to check if the pixmap is old or not */
-    virtual void insert_content_in_queue(int i) {};
+    virtual void insert_content_in_queue(int i)
+    {};
 
     /* Reopen this file */
-    virtual void reOpenFile() {};
+    virtual void reOpenFile()
+    {};
 
     /* Show the average and SD of a Selfile */
-    void showStats(SelFile &SF, bool apply_geo=FALSE);
+    void showStats(SelFile &SF, bool apply_geo = FALSE);
 
     /* Make a temp file */
-    string makeTempFile (int &fd);
+    string makeTempFile(int &fd);
 private slots:
     /* Open window with help about keys */
     void giveHelp();
@@ -209,16 +226,18 @@ protected slots:
     /* Change scale */
     virtual void changeScale(double newScale);
     /* Process keys */
-    virtual void keyPressEvent( QKeyEvent* );
+    virtual void keyPressEvent(QKeyEvent*);
     /* Process double clicks */
     virtual void contentsMouseDoubleClickEvent(int row, int col, int button,
-         const QPoint & mousePos);
+            const QPoint & mousePos);
     /* Process single clicks */
-    virtual void contentsMousePressEvent( int row, int col, int button,
-         const QPoint & mousePos);
+    virtual void contentsMousePressEvent(int row, int col, int button,
+                                         const QPoint & mousePos);
     /* Process mouse move events */
-    virtual void contentsMouseMoveEvent ( QMouseEvent* e )
-       {QTable::contentsMouseMoveEvent(e);};
+    virtual void contentsMouseMoveEvent(QMouseEvent* e)
+    {
+        QTable::contentsMouseMoveEvent(e);
+    };
     /* Check the change of file */
     virtual void check_file();
     /*Change background color */

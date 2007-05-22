@@ -1,7 +1,7 @@
 /*
-	stddecl.h
-		Type declarations common to all Cuba routines
-		last modified 2 Mar 06 th
+ stddecl.h
+  Type declarations common to all Cuba routines
+  last modified 2 Mar 06 th
 */
 
 
@@ -64,9 +64,9 @@
 #endif
 
 #define MemAlloc(p, n) if( Malloc(p, n) == NULL ) { \
-  fprintf(stderr, "Out of memory in " __FILE__ " line %d.\n", __LINE__); \
-  exit(1); \
-}
+        fprintf(stderr, "Out of memory in " __FILE__ " line %d.\n", __LINE__); \
+        exit(1); \
+    }
 
 #define Alloc(p, n) MemAlloc(p, (n)*sizeof(*p))
 
@@ -104,12 +104,12 @@ typedef const number cnumber;
 #define REAL "%g"
 #define REALF "%f"
 typedef /*long*/ double real;
-	/* Switching to long double is not as trivial as it
-	   might seem here.  sqrt, erf, exp, pow need to be
-	   replaced by their long double versions (sqrtl, ...),
-	   printf formats need to be updated similarly, and
-	   ferrying long doubles to Mathematica is of course
-	   quite another matter, too. */
+/* Switching to long double is not as trivial as it
+   might seem here.  sqrt, erf, exp, pow need to be
+   replaced by their long double versions (sqrtl, ...),
+   printf formats need to be updated similarly, and
+   ferrying long doubles to Mathematica is of course
+   quite another matter, too. */
 
 typedef const real creal;
 
@@ -123,23 +123,23 @@ typedef const real creal;
 
 static inline real Sq(creal x)
 {
-  return x*x;
+    return x*x;
 }
 
 static inline real Min(creal a, creal b)
 {
-  return (a < b) ? a : b;
+    return (a < b) ? a : b;
 }
 
 static inline real Max(creal a, creal b)
 {
-  return (a > b) ? a : b;
+    return (a > b) ? a : b;
 }
 
 static inline real Weight(creal sum, creal sqsum, cnumber n)
 {
-  creal w = sqrt(sqsum*n);
-  return (n - 1)/Max((w + sum)*(w - sum), NOTZERO);
+    creal w = sqrt(sqsum * n);
+    return (n - 1) / Max((w + sum)*(w - sum), NOTZERO);
 }
 
 

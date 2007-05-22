@@ -32,16 +32,20 @@
 
 #include <sys/types.h>
 
-typedef struct {
-char szFileName[16];    /* File name */
-int  iXposition    ;
-int  iYposition    ;
-} SACAFSTRUC;
-typedef struct {
-int width;    /* File name */
-int height ;
-int depth;
-} TAMANO;
+typedef struct
+{
+    char szFileName[16];    /* File name */
+    int  iXposition    ;
+    int  iYposition    ;
+}
+SACAFSTRUC;
+typedef struct
+{
+    int width;    /* File name */
+    int height ;
+    int depth;
+}
+TAMANO;
 
 #define BORDER_WIDTH 4
 #define BITMAP_PAD 8

@@ -30,34 +30,35 @@ class Micrograph;
 class QtWidgetMicrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtDialogProperties : public QDialog {
-   Q_OBJECT
+class QtDialogProperties : public QDialog
+{
+    Q_OBJECT
 
 private:
-   Micrograph         *__m;
-   QtWidgetMicrograph *__wm;
-   int                 __coord;
-   bool                __moving;
-   QListBox           *__familyList;
-   QPushButton        *__moveButton;
-   QPushButton        *__deleteButton;
-   QVBox              *__vBoxLayout;
+    Micrograph         *__m;
+    QtWidgetMicrograph *__wm;
+    int                 __coord;
+    bool                __moving;
+    QListBox           *__familyList;
+    QPushButton        *__moveButton;
+    QPushButton        *__deleteButton;
+    QVBox              *__vBoxLayout;
 
 public:
-   // Constructor
-   QtDialogProperties( Micrograph *_m, QtWidgetMicrograph *_wm,
-                       int _coord, QWidget *_parent=0,
-                       const char *_name=0, bool _modal=FALSE, WFlags _f=0 );
-   ~QtDialogProperties();
+    // Constructor
+    QtDialogProperties(Micrograph *_m, QtWidgetMicrograph *_wm,
+                       int _coord, QWidget *_parent = 0,
+                       const char *_name = 0, bool _modal = FALSE, WFlags _f = 0);
+    ~QtDialogProperties();
 
 public slots:
-   void slotChangeFamily( int _f );
-   void slotDeleteMark();
-   void slotMoveMark();
+    void slotChangeFamily(int _f);
+    void slotDeleteMark();
+    void slotMoveMark();
 
 signals:
-   void signalDeleteMarkOther( int _coord );
-   void signalChangeFamilyOther( int _coord, int _f );
+    void signalDeleteMarkOther(int _coord);
+    void signalChangeFamilyOther(int _coord, int _f);
 };
 
 #endif

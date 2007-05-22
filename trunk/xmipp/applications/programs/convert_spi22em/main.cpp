@@ -30,45 +30,61 @@
 #include <data/volume.h>
 #include <interface/em.h>
 
-void Usage ();
+void Usage();
 
-int main (int argc, char *argv[]) {
-FileName       fn_in;    // input file
-FileName       fn_out;   // output file
-bool           reverse_endian;
-EM             emdata;
+int main(int argc, char *argv[])
+{
+    FileName       fn_in;    // input file
+    FileName       fn_out;   // output file
+    bool           reverse_endian;
+    EM             emdata;
 
-/* Parameters ============================================================== */
-   try {
-       fn_in  = get_param(argc, argv, "-i");
-       fn_out = get_param(argc, argv, "-o");
-       reverse_endian=check_param(argc,argv,"-reverse_endian");
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage();exit(1);}
-   VolumeXmipp  V;
+    /* Parameters ============================================================== */
+    try
+    {
+        fn_in  = get_param(argc, argv, "-i");
+        fn_out = get_param(argc, argv, "-o");
+        reverse_endian = check_param(argc, argv, "-reverse_endian");
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
+    VolumeXmipp  V;
 
-   try {
-     if (Is_VolumeXmipp(fn_in)) { //is this a spider volume
-       V.read(fn_in);
-       emdata.write(fn_out,V,reverse_endian);
-     } else {
-       emdata.read(fn_in,V,reverse_endian);
-       V.write(fn_out);
-     }
-   } catch (Xmipp_error XE) {cout << XE;}
+    try
+    {
+        if (Is_VolumeXmipp(fn_in))
+        { //is this a spider volume
+            V.read(fn_in);
+            emdata.write(fn_out, V, reverse_endian);
+        }
+        else
+        {
+            emdata.read(fn_in, V, reverse_endian);
+            V.write(fn_out);
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 
-   exit(0);
+    exit(0);
 } //main
 
 /* ------------------------------------------------------------------------- */
 /* Help Message for this Program                                             */
 /* ------------------------------------------------------------------------- */
-void Usage () {
-  printf (
-     "Usage: spi22em [Purpose and Parameters]"
-     "\nPurpose: Convert between EM-data (TOM-toolbox) and Spider/Xmipp volumes"
-     "\n    -i    file_in        input EM/Xmipp file (2D or 3D)"
-     "\n    -o    file_out       output Xmipp/EM file"
-     "\n    [-reverse_endian]    by default, output has the same endiannes as input"
-     "\n                         use this option to change endianness\n");
+void Usage()
+{
+    printf(
+        "Usage: spi22em [Purpose and Parameters]"
+        "\nPurpose: Convert between EM-data (TOM-toolbox) and Spider/Xmipp volumes"
+        "\n    -i    file_in        input EM/Xmipp file (2D or 3D)"
+        "\n    -o    file_out       output Xmipp/EM file"
+        "\n    [-reverse_endian]    by default, output has the same endiannes as input"
+        "\n                         use this option to change endianness\n");
 }

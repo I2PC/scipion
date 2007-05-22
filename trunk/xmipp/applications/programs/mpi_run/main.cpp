@@ -27,25 +27,38 @@
 
 #include <mpi.h>
 
-int main (int argc, char *argv[]) {
-   if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
-      fprintf(stderr, "MPI initialization error\n");
-      exit(EXIT_FAILURE);
-  }
+int main(int argc, char *argv[])
+{
+    if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
+    {
+        fprintf(stderr, "MPI initialization error\n");
+        exit(EXIT_FAILURE);
+    }
 
-  Prog_MPI_Run_Parameters prm(argc,argv);
-    try {
-    prm.read(argc,argv);
-   }
+    Prog_MPI_Run_Parameters prm(argc, argv);
+    try
+    {
+        prm.read(argc, argv);
+    }
 
-   catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(1);}
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(1);
+    }
 
-   try {
-    if (prm.rank==0) prm.show();
-      prm.run();
-   }
-   catch (Xmipp_error XE) {cout << XE; exit(1);}
-   exit(0);
+    try
+    {
+        if (prm.rank == 0) prm.show();
+        prm.run();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        exit(1);
+    }
+    exit(0);
 }
 
 

@@ -26,31 +26,32 @@
 class QtWidgetMicrograph;
 
 /* File menu for Mark ------------------------------------------------------ */
-class QtAutoMenu : public QtPopupMenuMark {
-   // For accepting signals and slots
-   Q_OBJECT
+class QtAutoMenu : public QtPopupMenuMark
+{
+    // For accepting signals and slots
+    Q_OBJECT
 public:
-   // Constructor
-   QtAutoMenu( QtWidgetMicrograph* _parent );
+    // Constructor
+    QtAutoMenu(QtWidgetMicrograph* _parent);
 
 
 public slots:
-   // Configuration
-   void slotConfig();
+    // Configuration
+    void slotConfig();
 
-   // Load models of particles
-   void slotLoadModels();
+    // Load models of particles
+    void slotLoadModels();
 
-   // Learn particles
-   void slotLearnParticles();
+    // Learn particles
+    void slotLearnParticles();
 
-   // Automatically select particles
-   void slotAutoSelectParticles();
+    // Automatically select particles
+    void slotAutoSelectParticles();
 
-   // Save models of particles
-   void slotSaveModels();
+    // Save models of particles
+    void slotSaveModels();
 signals:
-   void signalAddFamily( const char * );
+    void signalAddFamily(const char *);
 };
 
 #endif

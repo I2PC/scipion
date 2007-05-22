@@ -87,7 +87,7 @@ public:
      * An exception is thrown if the file is not valid.
      */
     void open_tomogram(const FileName& fn_tomogram,
-                       bool reversed=false);
+                       bool reversed = false);
 
     /** Close tomogram.
      *
@@ -99,7 +99,7 @@ public:
      */
     string tomogram_name()
     {
-        return( fn_tomogram );
+        return(fn_tomogram);
     }
 
     /** Access to array of 8 bits.
@@ -162,8 +162,8 @@ public:
                 unsigned short int ret = um16[z * XYdim + y * Xdim + x];
                 if (__reversed)
                 {
-                    unsigned char* ptr= reinterpret_cast< unsigned char* >(&ret),
-                        temp;
+                    unsigned char* ptr = reinterpret_cast< unsigned char* >(&ret),
+                                         temp;
                     SWAP(*ptr, *(ptr + 1), temp);
                 }
 
@@ -176,7 +176,7 @@ public:
             if (__reversed)
             {
                 unsigned char* ptr = reinterpret_cast< unsigned char* >(&ret),
-                    temp;
+                                     temp;
                 SWAP(*ptr, *(ptr + 3), temp);
                 SWAP(*(ptr + 1), *(ptr + 2), temp);
             }
@@ -191,7 +191,7 @@ public:
      */
     void set_val(int x, int y, int z, double new_val)
     {
-        if (y<0 || y >= Ydim || x < 0 || x >= Xdim || z < 0 || z >= Zdim)
+        if (y < 0 || y >= Ydim || x < 0 || x >= Xdim || z < 0 || z >= Zdim)
             REPORT_ERROR(1, "tomogram::set_val: index out of range");
 
         if (__depth == 8)
@@ -199,7 +199,7 @@ public:
                 static_cast< unsigned char >(new_val);
         else if (__depth == 16 && __is_signed)
             m16[z * XYdim + y * Xdim + x] = static_cast< short int >(new_val);
-        else if (__depth ==16 && !__is_signed)
+        else if (__depth == 16 && !__is_signed)
             um16[z * XYdim + y * Xdim + x] =
                 static_cast< unsigned short int >(new_val);
         else if (__depth == 32)

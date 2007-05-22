@@ -33,17 +33,29 @@ using namespace std;
 /* ------------------------------------------------------------------------- */
 /* Program                                                                   */
 /* ------------------------------------------------------------------------- */
-int main (int argc, char *argv[]) {
-   Prog_PDBPhantom_Parameters prm;
-   try {
-      prm.read(argc,argv);
-   }
-   catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(1);}
+int main(int argc, char *argv[])
+{
+    Prog_PDBPhantom_Parameters prm;
+    try
+    {
+        prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(1);
+    }
 
-   try {
-      prm.show();
-      prm.run();
-   }
-   catch (Xmipp_error XE) {cout << XE; exit(1);}
-   exit(0);
+    try
+    {
+        prm.show();
+        prm.run();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        exit(1);
+    }
+    exit(0);
 }

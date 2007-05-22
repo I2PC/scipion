@@ -32,21 +32,22 @@
 /*@name Show SOM images. */
 //@{
 /** Class to show SOM images. */
-class ShowSOM: public ShowSel {
-   Q_OBJECT;
+class ShowSOM: public ShowSel
+{
+    Q_OBJECT;
 public:
-  // Apply geometric transformation when showing average & stddev of original images
-  // and to compute the error image
+    // Apply geometric transformation when showing average & stddev of original images
+    // and to compute the error image
     bool        apply_geo;
 protected:
-   // Array of selfiles, a selfile for each codevector
-   SelFile *SFcv;
-   // Histogram of images assigned
-   string  *hisAssigned;
-   // Errors within group
-   string  *cv_errors;
-   // Info file
-   QString infStr;
+    // Array of selfiles, a selfile for each codevector
+    SelFile *SFcv;
+    // Histogram of images assigned
+    string  *hisAssigned;
+    // Errors within group
+    string  *cv_errors;
+    // Info file
+    QString infStr;
 
     /* Initialization.
        Sets SFcv = NULL; and then calls to ShowSel::init() */
@@ -55,7 +56,7 @@ protected:
     virtual void clear();
     /* Read SOM files and Sel file. */
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0);
+                          double _minGray = 0, double _maxGray = 0);
     /* Read only SOM files. */
     virtual void readSOMFiles(const FileName &_fn_root);
 
@@ -69,8 +70,8 @@ protected:
     virtual const char* cellLabel(int i) const;
     /* Some menu items for the options */
     int mi_hisAsLabels, mi_errAsLabels;
-       #define Histogram_LABEL 2
-       #define Err_LABEL       3
+#define Histogram_LABEL 2
+#define Err_LABEL       3
     /* Change the labels */
     virtual void changeLabel(int _clicked_mi);
 
@@ -97,10 +98,10 @@ protected slots:
     /* Show algorithm information */
     virtual void showAlgoInfo();
 public:
-   /** Init with SOM files.
-       The given parameter is the rootname and the following files are needed:
-   */
-   void initWithFile(const FileName &_fn_root);
+    /** Init with SOM files.
+        The given parameter is the rootname and the following files are needed:
+    */
+    void initWithFile(const FileName &_fn_root);
 };
 //@}
 

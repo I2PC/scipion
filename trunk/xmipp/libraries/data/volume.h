@@ -40,11 +40,11 @@
 
 typedef enum
 {
-    VBYTE=1,
-    VFLOAT=2,
-    VINT=3,
-    VUCHAR=4,
-    V16=5
+    VBYTE = 1,
+    VFLOAT = 2,
+    VINT = 3,
+    VUCHAR = 4,
+    V16 = 5
 } Volume_Type;
 
 /** Basic volume class.
@@ -353,9 +353,9 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const VolumeT< T >& V)
     {
         out << "Volume Name   : " << V.fn_img << std::endl
-            << "dimensions   : " << V.img.SliNo() << " x "
-            << V.img.RowNo() << " x " << V.img.ColNo()
-            << "  (slices x rows x columns)" << std::endl;
+        << "dimensions   : " << V.img.SliNo() << " x "
+        << V.img.RowNo() << " x " << V.img.ColNo()
+        << "  (slices x rows x columns)" << std::endl;
 
         return out;
     }
@@ -393,9 +393,9 @@ public:
               int Zdim,
               int Ydim,
               int Xdim,
-              bool reversed=false,
-              Volume_Type volume_type=VBYTE,
-              int header_size=0)
+              bool reversed = false,
+              Volume_Type volume_type = VBYTE,
+              int header_size = 0)
     {
         FILE* fh;
         clear();
@@ -422,9 +422,9 @@ public:
               bool reversed,
               Volume_Type volume_type)
     {
-        img.resize(Zdim, Ydim,Xdim);
+        img.resize(Zdim, Ydim, Xdim);
 
-        for (int i=0; i<img.size; i++)
+        for (int i = 0; i < img.size; i++)
             switch (volume_type)
             {
             case VBYTE:
@@ -448,7 +448,7 @@ public:
                 FREAD(&f, sizeof(float), 1, fh, reversed);
                 MULTIDIM_ELEM(img, i) = static_cast< T >(f);
                 break;
-        }
+            }
     }
 
     /** Write Volume to disk.
@@ -465,8 +465,8 @@ public:
      * @endcode
      */
     void write(FileName name = "",
-               bool reversed=false,
-               Volume_Type volume_type=VBYTE)
+               bool reversed = false,
+               Volume_Type volume_type = VBYTE)
     {
         FILE* fp;
         if (name != "")
@@ -474,7 +474,7 @@ public:
 
         if ((fp = fopen(fn_img.c_str(), "wb")) == NULL)
             REPORT_ERROR(1503, "Volume::write: File " + fn_img +
-                " cannot be saved");
+                         " cannot be saved");
 
         write(fp, reversed, volume_type);
         fclose(fp);
@@ -506,19 +506,19 @@ public:
             b = min_val;
         }
 
-        for (int i=0; i<img.size; i++)
+        for (int i = 0; i < img.size; i++)
             switch (volume_type)
             {
             case VBYTE:
                 unsigned char u;
                 u = static_cast< unsigned char >(ROUND(a *
-                    (MULTIDIM_ELEM(img, i) - b)));
+                                                       (MULTIDIM_ELEM(img, i) - b)));
                 FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
                 break;
             case V16:
                 unsigned short us;
                 us = static_cast< unsigned short >(ROUND(a *
-                    (MULTIDIM_ELEM(img, i) - b)));
+                                                   (MULTIDIM_ELEM(img, i) - b)));
                 FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
                 break;
             case VFLOAT:
@@ -539,15 +539,15 @@ public:
 // Specialization for complex numbers
 template<>
 inline void VolumeT< complex< double > >::read(FILE* fh,
-                                               int Zdim,
-                                               int Ydim,
-                                               int Xdim,
-                                               bool reversed,
-                                               Volume_Type volume_type)
+        int Zdim,
+        int Ydim,
+        int Xdim,
+        bool reversed,
+        Volume_Type volume_type)
 {
     img.resize(Zdim, Ydim, Xdim);
 
-    for (int i=0; i<img.size; i++)
+    for (int i = 0; i < img.size; i++)
     {
         float a, b;
 
@@ -566,14 +566,14 @@ inline void VolumeT< complex< double > >::read(FILE* fh,
 
 template<>
 inline void VolumeT< complex< double > >::write(FILE *fh,
-                                                bool reversed,
-                                                Volume_Type volume_type)
+        bool reversed,
+        Volume_Type volume_type)
 {
-    for (int i=0; i<img.size; i++)
+    for (int i = 0; i < img.size; i++)
     {
         float a, b;
         a = static_cast< float >((MULTIDIM_ELEM(img, i)).real());
-        b = static_cast< float >((MULTIDIM_ELEM(img,i)).imag());
+        b = static_cast< float >((MULTIDIM_ELEM(img, i)).imag());
         FWRITE(&a, sizeof(float), 1, fh, reversed);
         FWRITE(&b, sizeof(float), 1, fh, reversed);
     }
@@ -585,7 +585,7 @@ inline void VolumeT< complex< double > >::write(FILE *fh,
  * See CCP4 format at http://www.ccp4.ac.uk/dist/html/maplib.html. Ts is the
  * sampling rate in angstroms per pixel
  */
-void write_as_CCP4(VolumeT< double>* V, const FileName& fn, double Ts=1);
+void write_as_CCP4(VolumeT< double>* V, const FileName& fn, double Ts = 1);
 
 /** @defgroup VolumesSpeedUp Speed up macros
  * @ingroup Volumes
@@ -676,18 +676,18 @@ public:
      * VolumeXmipp vol;
      * @endcode
      */
-    VolumeXmippT():VolumeT< T >()
+    VolumeXmippT(): VolumeT< T >()
     {
-        if(typeid(T) == typeid(double))
+        if (typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
-        else if(typeid(T) == typeid(int))
+        else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if(typeid(T) == typeid(complex< double >) )
+        else if (typeid(T) == typeid(complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
         else
         {
             std::cout << "\nError: VolumeXmipp should be" <<
-                " complex< double >, double or integer\n";
+            " complex< double >, double or integer\n";
             exit(0);
         }
     }
@@ -703,7 +703,7 @@ public:
      */
     VolumeXmippT(int Zdim, int Ydim, int Xdim) : VolumeT< T >(Zdim, Ydim, Xdim)
     {
-        if(typeid(T) == typeid(double))
+        if (typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
@@ -734,7 +734,7 @@ public:
      */
     VolumeXmippT(FileName name) : VolumeT< T >(name)
     {
-        if(typeid(T) == typeid(double))
+        if (typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
@@ -882,21 +882,21 @@ public:
      * @endcode
      */
     void read(const FileName& name,
-              bool skip_type_check=false,
-              bool force_reversed=false)
+              bool skip_type_check = false,
+              bool force_reversed = false)
     {
         FILE* fp;
 
         rename(name);
         if ((fp = fopen(VolumeT< T >::fn_img.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501,
-                static_cast< std::string >("VolumeXmipp::read: File " +
-                VolumeT< T >::fn_img + " not found"));
+                         static_cast< std::string >("VolumeXmipp::read: File " +
+                                                    VolumeT< T >::fn_img + " not found"));
 
         // Read header
         if (!header.read(fp, skip_type_check, force_reversed))
             REPORT_ERROR(1502, "VolumeXmipp::read: File " +
-                VolumeT< T >::fn_img + " is not a valid Xmipp file");
+                         VolumeT< T >::fn_img + " is not a valid Xmipp file");
 
         // Read whole image and close file
         VolumeT<T>::read(fp, header.iSlices(), header.iYdim(), header.iXdim(),
@@ -922,7 +922,7 @@ public:
      * If force_reversed is TRUE then image is saved in reversed mode, if not
      * it is saved in the same mode as it was loaded.
      */
-    void write(const FileName& name = "", bool force_reversed=false)
+    void write(const FileName& name = "", bool force_reversed = false)
     {
         FILE* fp;
         if (name != "")
@@ -930,8 +930,8 @@ public:
 
         if ((fp = fopen(VolumeT< T >::fn_img.c_str(), "wb")) == NULL)
             REPORT_ERROR(1503,
-                static_cast< std::string >("VolumeXmipp::write: File " +
-                VolumeT< T >::fn_img + " cannot be written"));
+                         static_cast< std::string >("VolumeXmipp::write: File " +
+                                                    VolumeT< T >::fn_img + " cannot be written"));
 
         adjust_header();
         header.write(fp, force_reversed);
@@ -949,11 +949,11 @@ public:
      */
     void adjust_header()
     {
-        if(typeid(T) == typeid(double))
+        if (typeid(T) == typeid(double))
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if (typeid(T) == typeid(complex< double >) )
+        else if (typeid(T) == typeid(complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
 
         header.set_dimension(YSIZE(VolumeT< T >::img), XSIZE(VolumeT<T>::img));
@@ -1006,15 +1006,15 @@ typedef VolumeXmippT< complex< double > > FourierVolumeXmipp;
  * @ingroup VolumesRelated
  */
 int Is_VolumeXmipp(const FileName& fn,
-                   bool skip_type_check=false,
-                   bool force_reversed=false);
+                   bool skip_type_check = false,
+                   bool force_reversed = false);
 
 /** True if the given volume is a Fourier Xmipp volume.
  * @ingroup VolumesRelated
  */
 int Is_FourierVolumeXmipp(const FileName& fn,
-                          bool skip_type_check=false,
-                          bool force_reversed=false);
+                          bool skip_type_check = false,
+                          bool force_reversed = false);
 
 /** Get size of a volume.
  * @ingroup VolumesRelated

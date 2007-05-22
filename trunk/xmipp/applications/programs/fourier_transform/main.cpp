@@ -27,83 +27,107 @@
 #include <data/args.h>
 #include <data/fft.h>
 
-class FFT_parameters: public Prog_parameters {
+class FFT_parameters: public Prog_parameters
+{
 public:
-   #define COMPLETE_FFT    0
-   #define ONLY_AMPLITUDES 1
-   #define ONLY_PHASE      2
-   int FFT_mode;
-   bool apply_log;
-   bool squared;
-   bool do_not_center;
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      if      (check_param(argc,argv,"-phase"))      FFT_mode=ONLY_PHASE;
-      else if (check_param(argc,argv,"-amplitudes")) FFT_mode=ONLY_AMPLITUDES;
-      else                                           FFT_mode=COMPLETE_FFT;
-      apply_log=check_param(argc,argv,"-log10");
-      squared=check_param(argc,argv,"-squared");
-      do_not_center=check_param(argc,argv,"-do_not_center");
-   }
+#define COMPLETE_FFT    0
+#define ONLY_AMPLITUDES 1
+#define ONLY_PHASE      2
+    int FFT_mode;
+    bool apply_log;
+    bool squared;
+    bool do_not_center;
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        if (check_param(argc, argv, "-phase"))      FFT_mode = ONLY_PHASE;
+        else if (check_param(argc, argv, "-amplitudes")) FFT_mode = ONLY_AMPLITUDES;
+        else                                           FFT_mode = COMPLETE_FFT;
+        apply_log = check_param(argc, argv, "-log10");
+        squared = check_param(argc, argv, "-squared");
+        do_not_center = check_param(argc, argv, "-do_not_center");
+    }
 
-   void show() {
-      Prog_parameters::show();
-      switch (FFT_mode) {
-         case COMPLETE_FFT:    cout << "Computing the whole FFT\n"; break;
-         case ONLY_AMPLITUDES: cout << "Computing Amplitude FFT\n"; break;
-         case ONLY_PHASE:      cout << "Computing Phase FFT\n"; break;
-      }
-      if (apply_log) cout << "Computing Log of result\n";
-      if (squared)   cout << "Squaring amplitudes\n";
-      if (do_not_center) cout << "Not centering result\n";
-      else               cout << "Centering result\n";
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        switch (FFT_mode)
+        {
+        case COMPLETE_FFT:
+            cout << "Computing the whole FFT\n";
+            break;
+        case ONLY_AMPLITUDES:
+            cout << "Computing Amplitude FFT\n";
+            break;
+        case ONLY_PHASE:
+            cout << "Computing Phase FFT\n";
+            break;
+        }
+        if (apply_log) cout << "Computing Log of result\n";
+        if (squared)   cout << "Squaring amplitudes\n";
+        if (do_not_center) cout << "Not centering result\n";
+        else               cout << "Centering result\n";
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cerr << "  [-phase]                  : By default, the whole FFT\n"
-           << "  [-amplitudes]             : is returned\n"
-           << "  [-log10]                  : Return logarithm of result\n"
-	   << "  [-squared]                : Return the square of the result\n"
-           << "  [-do_not_center]          : By default, the result is centered\n";
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  [-phase]                  : By default, the whole FFT\n"
+        << "  [-amplitudes]             : is returned\n"
+        << "  [-log10]                  : Return logarithm of result\n"
+        << "  [-squared]                : Return the square of the result\n"
+        << "  [-do_not_center]          : By default, the result is centered\n";
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   FFT_parameters *eprm=(FFT_parameters *) prm;
-   matrix2D< complex<double> > fftI;
-   FourierTransform(img(), fftI);
-   switch (eprm->FFT_mode) {
-      case ONLY_PHASE:      FFT_phase(fftI,img()); break;
-      case ONLY_AMPLITUDES: FFT_magnitude(fftI,img()); break;
-   }
-   if (eprm->squared) img() *= img();
-   if (eprm->apply_log)
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
-         MULTIDIM_ELEM(img(),i)=log10(1+MULTIDIM_ELEM(img(),i));
-   if (!eprm->do_not_center) CenterFFT(img(),true);
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    FFT_parameters *eprm = (FFT_parameters *) prm;
+    matrix2D< complex<double> > fftI;
+    FourierTransform(img(), fftI);
+    switch (eprm->FFT_mode)
+    {
+    case ONLY_PHASE:
+        FFT_phase(fftI, img());
+        break;
+    case ONLY_AMPLITUDES:
+        FFT_magnitude(fftI, img());
+        break;
+    }
+    if (eprm->squared) img() *= img();
+    if (eprm->apply_log)
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
+        MULTIDIM_ELEM(img(), i) = log10(1 + MULTIDIM_ELEM(img(), i));
+    if (!eprm->do_not_center) CenterFFT(img(), true);
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   FFT_parameters *eprm=(FFT_parameters *) prm;
-   matrix3D< complex<double> > fftV;
-   FourierTransform(vol(), fftV);
-   switch (eprm->FFT_mode) {
-      case ONLY_PHASE:      FFT_phase(fftV,vol()); break;
-      case ONLY_AMPLITUDES: FFT_magnitude(fftV,vol()); break;
-   }
-   if (eprm->squared) vol() *= vol();
-   if (eprm->apply_log)
-      FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
-         MULTIDIM_ELEM(vol(),i)=log10(1+MULTIDIM_ELEM(vol(),i));
-   if (!eprm->do_not_center) CenterFFT(vol(),true);
-   return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    FFT_parameters *eprm = (FFT_parameters *) prm;
+    matrix3D< complex<double> > fftV;
+    FourierTransform(vol(), fftV);
+    switch (eprm->FFT_mode)
+    {
+    case ONLY_PHASE:
+        FFT_phase(fftV, vol());
+        break;
+    case ONLY_AMPLITUDES:
+        FFT_magnitude(fftV, vol());
+        break;
+    }
+    if (eprm->squared) vol() *= vol();
+    if (eprm->apply_log)
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
+        MULTIDIM_ELEM(vol(), i) = log10(1 + MULTIDIM_ELEM(vol(), i));
+    if (!eprm->do_not_center) CenterFFT(vol(), true);
+    return true;
 }
 
-int main (int argc, char **argv) {
-   FFT_parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    FFT_parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
 /* Menus =================================================================== */
@@ -113,23 +137,23 @@ int main (int argc, char **argv) {
       help="Visualize the Fourier Transform of volumes and images";
       OPEN MENU menu_visualize_FFT;
       COMMAND LINES {
-	+ usual: xmipp_visualize_FFT
+ + usual: xmipp_visualize_FFT
                #include "prog_line.mnu"
-	         $AMPL_PHASE
-		 [-log10] [-squared] [-do_not_center]
+          $AMPL_PHASE
+   [-log10] [-squared] [-do_not_center]
       }
       PARAMETER DEFINITIONS {
          #include "prog_vars.mnu"
          $AMPL_PHASE {
-	    label="Visualize";
-	    type=exclusion {
-	       "Amplitude" {-amplitudes}
-	       "Phase"     {-phase}
-	    };
-	 }
-	 OPT(-log10)   {label="Log10";}
-	 OPT(-squared) {label="Squared";}
-	 OPT(-do_not_center) {label="Do not center";}
+     label="Visualize";
+     type=exclusion {
+        "Amplitude" {-amplitudes}
+        "Phase"     {-phase}
+     };
+  }
+  OPT(-log10)   {label="Log10";}
+  OPT(-squared) {label="Squared";}
+  OPT(-do_not_center) {label="Do not center";}
       }
    }
 

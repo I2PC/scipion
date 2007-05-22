@@ -27,7 +27,7 @@
 /*****************************************************************************/
 
 #ifndef _RECONS_SPIDER_HH
-   #define _RECONS_SPIDER_HH
+#define _RECONS_SPIDER_HH
 
 #include <data/selfile.h>
 #include <data/funcs.h>
@@ -60,7 +60,7 @@
     The actual process status is written to cerr.
 */
 void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
-   const FileName &fn_root, const FileName &fn_ext,
-   const FileName &fn_recons_root, const FileName &fn_batch);
+                 const FileName &fn_root, const FileName &fn_ext,
+                 const FileName &fn_recons_root, const FileName &fn_batch);
 //@}
 #endif

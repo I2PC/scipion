@@ -41,7 +41,7 @@ using namespace std;
  * This code performs numeric integrations as described in the Numerical Recipes
  * Book, in particular it implements the "trapezoidal" (Trapeze) and the Romberg
  * integration. Both are designed for smoothly variant functions.
-   
+
    This module can also perform multidimensional integration.
  */
 
@@ -54,7 +54,8 @@ class doubleFunction
 {
 public:
     virtual double operator()()=0; // pure virtual function
-    virtual ~doubleFunction() {} // virtual destructor
+    virtual ~doubleFunction()
+    {} // virtual destructor
 };
 
 /** Fast integration routine.
@@ -114,7 +115,7 @@ public:
      * @param max_iter Maximum number of iterations
      */
     double operator()(double min, double max,
-                      double precision=1.0e-7, int max_iter=20)
+                      double precision = 1.0e-7, int max_iter = 20)
     {
         a = min;
         b = max;
@@ -132,8 +133,8 @@ public:
      * @param precision Maximum error allowed
      * @param max_iter Maximum number of iterations
      */
-    Trapeze(doubleFunction& f,double& Var, double min, double max,
-            double precision=1.0e-7, int max_iter=20) : func(f), x(Var)
+    Trapeze(doubleFunction& f, double& Var, double min, double max,
+            double precision = 1.0e-7, int max_iter = 20) : func(f), x(Var)
     {
         a = min;
         b = max;
@@ -205,7 +206,7 @@ public:
      * @param precision Maximum error allowed
      * @param max_iter Maximum number of iterations
      */
-    double operator()(double min, double max, double precision=1.0e-7)
+    double operator()(double min, double max, double precision = 1.0e-7)
     {
         a = min;
         b = max;
@@ -223,7 +224,7 @@ public:
      * @param max_iter Maximum number of iterations
      */
     Romberg(doubleFunction& f, double& Var, double min, double max,
-            double precision=1.0e-7) : func(f), x(Var)
+            double precision = 1.0e-7) : func(f), x(Var)
     {
         a = min;
         b = max;
@@ -239,15 +240,15 @@ public:
 /** Multidimensional integration
     @ingroup Numerical_interation
     Compute the double, triple, ... integral of a function. For instance
-    
+
     @code
     integral_x0^xF  integral_y0^yF f(x,y) dx dy
     @endcode
-    
+
     Our computation is based on the CUBA library (http://www.feynarts.de/cuba/).
-    
+
     Example of use.
-  
+
   1) Define the function to integrate:
 @code
 void integrand(const int *ndim, const double xx[],
@@ -266,7 +267,7 @@ void integrand(const int *ndim, const double xx[],
     function is not.
 
  2) In the main code
- 
+
 @code
 #include <data/integration.hh>
 cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
@@ -274,7 +275,7 @@ cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
 @endcode
  */
 double multidimensionalIntegral(const matrix1D<double> &x0,
-   const matrix1D<double> &xF, integrand_t integrand);
+                                const matrix1D<double> &xF, integrand_t integrand);
 #endif
 
 // TODO Document

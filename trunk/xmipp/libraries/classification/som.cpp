@@ -30,268 +30,297 @@
 
 #include "som.h"
 
- /**
-  * Construct a SOM from the code vectors in a stream
-  * @param _is  The stream
-  */
-  xmippSOM::xmippSOM(istream& _is): xmippBaseAlgo<xmippMap>()
-  {
+/**
+ * Construct a SOM from the code vectors in a stream
+ * @param _is  The stream
+ */
+xmippSOM::xmippSOM(istream& _is): xmippBaseAlgo<xmippMap>()
+{
     readSelf(_is);
-  };
+};
 
 
-  /**
-   * Sets the alpha function
-   * @param _alpha  alpha(t)
-   */
-  void xmippSOM::alpha(Descent _alpha) { somAlpha = _alpha; };
+/**
+ * Sets the alpha function
+ * @param _alpha  alpha(t)
+ */
+void xmippSOM::alpha(Descent _alpha)
+{
+    somAlpha = _alpha;
+};
 
-  /**
-   * Sets the radius function
-   * @param _radius  radius(t)
-   */
-  void xmippSOM::radius(Descent _radius) { somRadius = _radius; };
+/**
+ * Sets the radius function
+ * @param _radius  radius(t)
+ */
+void xmippSOM::radius(Descent _radius)
+{
+    somRadius = _radius;
+};
 
-  /**
-   * Sets the number of training steps
-   * @param _nSteps  Number of training steps
-   */
-  void xmippSOM::nSteps(const unsigned long& _nSteps) { somNSteps = _nSteps; };
+/**
+ * Sets the number of training steps
+ * @param _nSteps  Number of training steps
+ */
+void xmippSOM::nSteps(const unsigned long& _nSteps)
+{
+    somNSteps = _nSteps;
+};
 
 
-  /**
-   * Trains the SOM
-   * @param _som  The som to train
-   * @param _ts   The training set
-   */
-  void xmippSOM::train (xmippMap& _som, xmippCTVectors& _ts) const
-  {
-    unsigned long t=0;
+/**
+ * Trains the SOM
+ * @param _som  The som to train
+ * @param _ts   The training set
+ */
+void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
+{
+    unsigned long t = 0;
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-  	listener->OnReportOperation((string) "Training Kohonen SOM....\n");
+        listener->OnReportOperation((string) "Training Kohonen SOM....\n");
     if (verbosity == 1 || verbosity == 3)
-      listener->OnInitOperation(somNSteps);
+        listener->OnInitOperation(somNSteps);
 
 
     while (t < somNSteps)
     {
-      for (vector<SomIn>::iterator i = _ts.theItems.begin();
-           t<somNSteps && i<_ts.theItems.end() ; i++, t++)
-      {
-        // get the best matching.
-        SomIn& theBest = _som.test(*i);	
-	if (somNeigh == BUBBLE) { // Bubble	
-           // update the neighborhood around the best one
-             vector<unsigned> neig=_som.neighborhood(_som.codVecPos(theBest),
-						ceil(somRadius(t, somNSteps)));
-             for (vector<unsigned>::iterator it = neig.begin();it<neig.end();it++)
-	     {
-               SomIn& v = _som.theItems[*it];
-	       for (unsigned j = 0; j < v.size(); j++)
-               	  v[j] += ((*i)[j] - v[j]) * somAlpha(t, somNSteps);	
-	     }	
-	} else { // Gaussian
-           // update all neighborhood convoluted by a gaussian
-	   double radius = somRadius(t, somNSteps);	
-	   double alpha = somAlpha(t, somNSteps);
-      	   for (unsigned it=0 ; it<_som.size(); it++)
-      	   {
-	       double dist = _som.neighDist(_som.codVecPos(theBest), _som.indexToPos(it)); 		
-               double alp = alpha*(double) exp((double) (-dist * dist / (2.0 * radius * radius)));	
-               SomIn& v = _som.theItems[it];
-	       for (unsigned j = 0; j < v.size(); j++)
-               	  v[j] += ((*i)[j] - v[j]) * alp;	
-      	   }	
-	} // else
+        for (vector<SomIn>::iterator i = _ts.theItems.begin();
+             t < somNSteps && i < _ts.theItems.end() ; i++, t++)
+        {
+            // get the best matching.
+            SomIn& theBest = _som.test(*i);
+            if (somNeigh == BUBBLE)
+            { // Bubble
+                // update the neighborhood around the best one
+                vector<unsigned> neig = _som.neighborhood(_som.codVecPos(theBest),
+                                        ceil(somRadius(t, somNSteps)));
+                for (vector<unsigned>::iterator it = neig.begin();it < neig.end();it++)
+                {
+                    SomIn& v = _som.theItems[*it];
+                    for (unsigned j = 0; j < v.size(); j++)
+                        v[j] += ((*i)[j] - v[j]) * somAlpha(t, somNSteps);
+                }
+            }
+            else
+            { // Gaussian
+                // update all neighborhood convoluted by a gaussian
+                double radius = somRadius(t, somNSteps);
+                double alpha = somAlpha(t, somNSteps);
+                for (unsigned it = 0 ; it < _som.size(); it++)
+                {
+                    double dist = _som.neighDist(_som.codVecPos(theBest), _som.indexToPos(it));
+                    double alp = alpha * (double) exp((double)(-dist * dist / (2.0 * radius * radius)));
+                    SomIn& v = _som.theItems[it];
+                    for (unsigned j = 0; j < v.size(); j++)
+                        v[j] += ((*i)[j] - v[j]) * alp;
+                }
+            } // else
 
-      } // for examples
+        } // for examples
 
-      	if (verbosity == 1 || verbosity == 3)
-      		listener->OnProgress(t);
-      	if (verbosity >= 2) {
-	   char s[100];
-	   sprintf(s, "Iteration %d of %d.\n", t, somNSteps);
-  	   listener->OnReportOperation((string) s);
-      	}	
+        if (verbosity == 1 || verbosity == 3)
+            listener->OnProgress(t);
+        if (verbosity >= 2)
+        {
+            char s[100];
+            sprintf(s, "Iteration %d of %d.\n", t, somNSteps);
+            listener->OnReportOperation((string) s);
+        }
     } // while t < somSteps
 
 
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
 
-  };
+};
 
 
-  /**
-   * Tests the SOM
-   * @param _som        The som to test
-   * @param _examples   The training set of examples
-   */
-  double xmippSOM::test (const xmippMap& _som, const TS& _examples) const
-  {
+/**
+ * Tests the SOM
+ * @param _som        The som to test
+ * @param _examples   The training set of examples
+ */
+double xmippSOM::test(const xmippMap& _som, const TS& _examples) const
+{
 
-	// Defines verbosity level
-        int verbosity = listener->getVerbosity();
-        if (verbosity) {
-  	  listener->OnReportOperation((string) "Estimating quantization error....\n");
-          listener->OnInitOperation(_examples.size());
-	}
-
-
-  	/* Scan all data entries */
-  	double qerror = 0.0;
-        for (int i = 0; i < _examples.size(); i++) {
-           SomIn& theBest = _som.test(_examples.theItems[i]); // get the best
-   	   qerror += (double) eDist(theBest, _examples.theItems[i]);
-	   if (verbosity) {
-	        int tmp = (int)((_examples.size()*5)/100);
-		if ((tmp == 0) && (i != 0)) tmp = i; else tmp = 1;
-	   	if ((i % tmp) == 0)
-	   		listener->OnProgress(i);
-	   }
-	}
-	if (verbosity)listener->OnProgress(_examples.size());	
-	return (qerror/(double) _examples.size());
-	
-  };
-
-   /**
-   * Clears the Algorithm
-   */
-
-   void xmippSOM::clear ()
-   {
-      somNeigh = GAUSSIAN; 	
-      somNSteps = 0;
-      listener = NULL; // it can not be deleted here
-   };
-
-  /**
-  * Standard output for a SOM algorithm
-  * @param _os The output stream
-  */
-  void xmippSOM::printSelf(ostream& _os) const
-  {
-      _os << (int) somNeigh << endl;
-      _os << somNSteps << endl;
-      somAlpha.printSelf(_os);
-      somRadius.printSelf(_os);
-  };
-
-  /**
-  * Standard input for a som algorithm
-  * @param _is The input stream
-  */
-  void xmippSOM::readSelf (istream& _is)
-  {
-	  clear();
-	  try
-	  {
-		if (_is)
-			_is >> (int&) somNeigh;
-		if(_is)
-			_is >> somNSteps;
-		somAlpha.readSelf(_is);
-		somRadius.readSelf(_is);
-
-	  }
-      catch (exception& e)
-	  {
-		  ostrstream msg;
-		  msg << e.what() << endl << "Error reading the SOM algorithm";
-		  throw runtime_error(msg.str());
-	  }
-	
-  };
+    // Defines verbosity level
+    int verbosity = listener->getVerbosity();
+    if (verbosity)
+    {
+        listener->OnReportOperation((string) "Estimating quantization error....\n");
+        listener->OnInitOperation(_examples.size());
+    }
 
 
-  /**
-   * Saves the xmippSOM class into a stream.
-   * this method can be used to save the status of the class.
-   * @param _os The output stream
-   */
-  void xmippSOM::saveObject(ostream& _os) const { printSelf(_os);}
+    /* Scan all data entries */
+    double qerror = 0.0;
+    for (int i = 0; i < _examples.size(); i++)
+    {
+        SomIn& theBest = _som.test(_examples.theItems[i]); // get the best
+        qerror += (double) eDist(theBest, _examples.theItems[i]);
+        if (verbosity)
+        {
+            int tmp = (int)((_examples.size() * 5) / 100);
+            if ((tmp == 0) && (i != 0)) tmp = i;
+            else tmp = 1;
+            if ((i % tmp) == 0)
+                listener->OnProgress(i);
+        }
+    }
+    if (verbosity)listener->OnProgress(_examples.size());
+    return (qerror / (double) _examples.size());
+
+};
+
+/**
+* Clears the Algorithm
+*/
+
+void xmippSOM::clear()
+{
+    somNeigh = GAUSSIAN;
+    somNSteps = 0;
+    listener = NULL; // it can not be deleted here
+};
+
+/**
+* Standard output for a SOM algorithm
+* @param _os The output stream
+*/
+void xmippSOM::printSelf(ostream& _os) const
+{
+    _os << (int) somNeigh << endl;
+    _os << somNSteps << endl;
+    somAlpha.printSelf(_os);
+    somRadius.printSelf(_os);
+};
+
+/**
+* Standard input for a som algorithm
+* @param _is The input stream
+*/
+void xmippSOM::readSelf(istream& _is)
+{
+    clear();
+    try
+    {
+        if (_is)
+            _is >> (int&) somNeigh;
+        if (_is)
+            _is >> somNSteps;
+        somAlpha.readSelf(_is);
+        somRadius.readSelf(_is);
+
+    }
+    catch (exception& e)
+    {
+        ostrstream msg;
+        msg << e.what() << endl << "Error reading the SOM algorithm";
+        throw runtime_error(msg.str());
+    }
+
+};
 
 
-  /**
-   * Loads the xmippSOM class from a stream.
-   * this method can be used to load the status of the class.
-   * @param _is The output stream
-   */
-  void xmippSOM::loadObject(istream& _is) { readSelf(_is); }
+/**
+ * Saves the xmippSOM class into a stream.
+ * this method can be used to save the status of the class.
+ * @param _os The output stream
+ */
+void xmippSOM::saveObject(ostream& _os) const
+{
+    printSelf(_os);
+}
+
+
+/**
+ * Loads the xmippSOM class from a stream.
+ * this method can be used to load the status of the class.
+ * @param _is The output stream
+ */
+void xmippSOM::loadObject(istream& _is)
+{
+    readSelf(_is);
+}
 
 
 
 
-  //---------------------------------------------------------------------------
-  // Class Descent
-  //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Class Descent
+//---------------------------------------------------------------------------
 
 
-  /**
-   * Returns the function value associated a step if the transition from
-   * the initial value to the final value es made in _nSteps steps
-   * @param _step    The actual step
-   * @param _nsteps  The number of steps to reach the final val from the
-   *		     initial one
-   */
-  double Descent::operator() (const unsigned _step, const unsigned _nSteps) const
-  {
-    if (_nSteps==0 || initial==final || _step >= _nSteps)
-      return final;
+/**
+ * Returns the function value associated a step if the transition from
+ * the initial value to the final value es made in _nSteps steps
+ * @param _step    The actual step
+ * @param _nsteps  The number of steps to reach the final val from the
+ *       initial one
+ */
+double Descent::operator()(const unsigned _step, const unsigned _nSteps) const
+{
+    if (_nSteps == 0 || initial == final || _step >= _nSteps)
+        return final;
     else
-      return final + ((initial-final) *
-		      ((double)(_nSteps - _step) / (double)_nSteps));
-  };
+        return final + ((initial - final) *
+                        ((double)(_nSteps - _step) / (double)_nSteps));
+};
 
 
-  /**
-  * Standard output for a Descent class
-  * @param _os The output stream
-  */
-  void Descent::printSelf(ostream& _os) const
-  {
-      _os << initial << endl;
-      _os << final << endl;
-  };
+/**
+* Standard output for a Descent class
+* @param _os The output stream
+*/
+void Descent::printSelf(ostream& _os) const
+{
+    _os << initial << endl;
+    _os << final << endl;
+};
 
-  /**
-  * Standard input for a Descent class
-  * @param _is The input stream
-  */
-  void Descent::readSelf (istream& _is)
-  {
-	  try
-	  {
-		if (_is)
-			_is >> initial;
-		if(_is)
-			_is >> final;
-	  }
-      catch (exception& e)
-	  {
-		  ostrstream msg;
-		  msg << e.what() << endl << "Error reading Descent class";
-		  throw runtime_error(msg.str());
-	  }
-	
-  };
+/**
+* Standard input for a Descent class
+* @param _is The input stream
+*/
+void Descent::readSelf(istream& _is)
+{
+    try
+    {
+        if (_is)
+            _is >> initial;
+        if (_is)
+            _is >> final;
+    }
+    catch (exception& e)
+    {
+        ostrstream msg;
+        msg << e.what() << endl << "Error reading Descent class";
+        throw runtime_error(msg.str());
+    }
 
-
-  /**
-   * Saves the Descent class into a stream.
-   * this method can be used to save the status of the class.
-   * @param _os The output stream
-   */
-  void Descent::saveObject(ostream& _os) const { printSelf(_os);}
+};
 
 
-  /**
-   * Loads the Descent class from a stream.
-   * this method can be used to load the status of the class.
-   * @param _is The output stream
-   */
-  void Descent::loadObject(istream& _is) { readSelf(_is); }
+/**
+ * Saves the Descent class into a stream.
+ * this method can be used to save the status of the class.
+ * @param _os The output stream
+ */
+void Descent::saveObject(ostream& _os) const
+{
+    printSelf(_os);
+}
+
+
+/**
+ * Loads the Descent class from a stream.
+ * this method can be used to load the status of the class.
+ * @param _is The output stream
+ */
+void Descent::loadObject(istream& _is)
+{
+    readSelf(_is);
+}
 

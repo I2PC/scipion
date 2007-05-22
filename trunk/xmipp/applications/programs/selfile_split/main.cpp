@@ -28,74 +28,88 @@
 
 void Usage();
 
-int main( int argc, char **argv ) {
-  FileName fn_in,fn_out,fn_root;
-  SelFile  SFin,SFout,SFtmp,SFtmp2;
-  SelLine  line;
-  bool     dont_randomize;
-  int N;
+int main(int argc, char **argv)
+{
+    FileName fn_in, fn_out, fn_root;
+    SelFile  SFin, SFout, SFtmp, SFtmp2;
+    SelLine  line;
+    bool     dont_randomize;
+    int N;
 
-  try {
-    fn_in=get_param(argc,argv,"-i");
-    N=AtoI(get_param(argc,argv,"-n","2"));
-    fn_root=get_param(argc,argv,"-o","");
-    dont_randomize=check_param(argc,argv,"-dont_randomize");
-    if (fn_root=="") fn_root=fn_in.without_extension();
-    SFin.read(fn_in);
-  }  catch (Xmipp_error) {Usage(); exit(1);}
-
-  try {
-    if (!dont_randomize) SFtmp=SFin.randomize();
-    else                 SFtmp=SFin;
-    int Num_images=(int)SFtmp.ImgNo();
-    int Num_groups=N;
-    if(Num_groups>Num_images) Num_groups=Num_images;
-
-    int Nsub_=(int)Num_images/N;
-    int Nres_=Num_images%N;
-
-    int arr_groups[Num_groups];
-
-    int i,j;
-
-    for(i=0;i<(Num_groups-Nres_);i++)
+    try
     {
-    	arr_groups[i]=Nsub_;
+        fn_in = get_param(argc, argv, "-i");
+        N = AtoI(get_param(argc, argv, "-n", "2"));
+        fn_root = get_param(argc, argv, "-o", "");
+        dont_randomize = check_param(argc, argv, "-dont_randomize");
+        if (fn_root == "") fn_root = fn_in.without_extension();
+        SFin.read(fn_in);
+    }
+    catch (Xmipp_error)
+    {
+        Usage();
+        exit(1);
     }
 
-    for(j=i;j<Num_groups;j++)
+    try
     {
-        arr_groups[j]=Nsub_+1;	
-    }
+        if (!dont_randomize) SFtmp = SFin.randomize();
+        else                 SFtmp = SFin;
+        int Num_images = (int)SFtmp.ImgNo();
+        int Num_groups = N;
+        if (Num_groups > Num_images) Num_groups = Num_images;
 
-    SFtmp.go_beginning();
-    for(i=0;i<Num_groups;i++)
+        int Nsub_ = (int)Num_images / N;
+        int Nres_ = Num_images % N;
+
+        int arr_groups[Num_groups];
+
+        int i, j;
+
+        for (i = 0;i < (Num_groups - Nres_);i++)
+        {
+            arr_groups[i] = Nsub_;
+        }
+
+        for (j = i;j < Num_groups;j++)
+        {
+            arr_groups[j] = Nsub_ + 1;
+        }
+
+        SFtmp.go_beginning();
+        for (i = 0;i < Num_groups;i++)
+        {
+            SFout.clear();
+            SFout.reserve(arr_groups[i]);
+            for (j = 0;j < arr_groups[i];j++)
+            {
+                SFout.insert(SFtmp.current());
+                SFtmp.NextImg();
+            }
+            SFtmp2 = SFout.sort_by_filenames();
+            SFout = SFtmp2;
+            string num = "_" + ItoA(i + 1);
+            fn_out = fn_root + num;
+            fn_out += ".sel";
+            SFout.write(fn_out);
+        }
+
+    }
+    catch (Xmipp_error)
     {
-      SFout.clear();
-      SFout.reserve(arr_groups[i]);
-      for(j=0;j<arr_groups[i];j++)
-      {
-      	SFout.insert(SFtmp.current());
-	SFtmp.NextImg();
-      }
-      SFtmp2=SFout.sort_by_filenames();
-      SFout=SFtmp2;
-      string num="_"+ItoA(i+1);
-      fn_out=fn_root+num;
-      fn_out+=".sel";
-      SFout.write(fn_out);
+        cerr << "ERROR, exiting..." << endl;
+        exit(1);
     }
-
-  } catch (Xmipp_error) {cerr <<"ERROR, exiting..."<<endl; exit(1);}
 
 }
 
-void Usage() {
+void Usage()
+{
     cout << "Usage: split_selfile [options]\n"
-         << "    -i <selfile>            : Input selfile\n"
-         << "  [ -n <int=2> ]            : Number of output selfiles\n"
-         << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
-         << "                              output will be: rootname_<n>.sel\n"
-         << "  [ -dont_randomize ]       : Do not generate random groups\n"
+    << "    -i <selfile>            : Input selfile\n"
+    << "  [ -n <int=2> ]            : Number of output selfiles\n"
+    << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
+    << "                              output will be: rootname_<n>.sel\n"
+    << "  [ -dont_randomize ]       : Do not generate random groups\n"
     ;
 }

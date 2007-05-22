@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #ifndef _BLOBS_HH
-   #define _BLOBS_HH
+#define _BLOBS_HH
 
 #include "grids.h"
 
@@ -64,29 +64,30 @@
       #include <XmippData/xmippArgs.hh>
 
       int main(int argc, char **argv) {
-	  struct blobtype blob;                  // Definition of the blob
-	  blob.radius = 2;                       // Blob radius in voxels
-	  blob.order  = 2;                       // Order of the Bessel function
-	  blob.alpha  = AtoF(argv[1]);           // Smoothness parameter
+   struct blobtype blob;                  // Definition of the blob
+   blob.radius = 2;                       // Blob radius in voxels
+   blob.order  = 2;                       // Order of the Bessel function
+   blob.alpha  = AtoF(argv[1]);           // Smoothness parameter
 
 
-	  double M=blob_Fourier_val (0, blob);
-	  for (double w=0; w<=2; w += 0.05)
-	     cout << w << " " <<  blob_Fourier_val (w, blob)/M << endl;
+   double M=blob_Fourier_val (0, blob);
+   for (double w=0; w<=2; w += 0.05)
+      cout << w << " " <<  blob_Fourier_val (w, blob)/M << endl;
 
-	  return 0;
+   return 0;
       }
     \end{verbatim}
 */
-struct blobtype {
-   /// Spatial radius in \Ref{Universal System} units
-   double radius;
+struct blobtype
+{
+    /// Spatial radius in \Ref{Universal System} units
+    double radius;
 
-   /// Derivation order and Bessel function order
-   int   order;
+    /// Derivation order and Bessel function order
+    int   order;
 
-   /// Smoothness parameter
-   double alpha;
+    /// Smoothness parameter
+    double alpha;
 };
 
 // Blob value --------------------------------------------------------------
@@ -136,13 +137,13 @@ double kaiser_proj(double r, double a, double alpha, int m);
 
     The Fourier Transform can be computed only for blobs with m=2. */
 #define blob_Fourier_val(w, blob) \
-   kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
+    kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
 double kaiser_Fourier_value(double w, double a, double alpha, int m);
 /** Formula for a volume integral of a blob (n is the blob dimension)
     */
 #define blob_mass(blob) \
     basvolume(blob.radius, blob.alpha, blob.order,3)
-double  basvolume (double a, double alpha, int m, int n);
+double  basvolume(double a, double alpha, int m, int n);
 
 /** Limit (z->0) of (1/z)^n I_n(z) (needed by basvolume)*/
 double in_zeroarg(int n);
@@ -154,8 +155,8 @@ double inph_zeroarg(int n);
 double i_nph(int n, double x);
 
 /** Bessel function I_n (x),  n = 0, 1, 2, ...
-	Use ONLY for small values of n	*/
-double	i_n(int n, double x);
+ Use ONLY for small values of n */
+double i_n(int n, double x);
 
 /** Blob pole.
     This is the normalized frequency at which the blob goes to 0. */
@@ -198,8 +199,8 @@ double optimal_FCC_grid_relative_size(struct blobtype b);
 
     If there is no blob meeting the specification then alpha=a=-1.*/
 blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
-   double a_0, double a_F, double inc_a, double w, double *target_att,
-   int target_length=1);
+                   double a_0, double a_F, double inc_a, double w, double *target_att,
+                   int target_length = 1);
 
 /** Footprint of a blob.
     In the actual implementation of the 3D reconstruction one of the most
@@ -229,7 +230,7 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     samples each pixel. The real size of the footprint is (5·50)x(5·50).
 */
 void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
-   int istep=50, int normalise=0);
+                    int istep = 50, int normalise = 0);
 
 /** Sum of a single blob over a grid.
     As a normalisation factor, the sum of the blob values over a given grid
@@ -257,7 +258,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
    D*(i,j,k)'.
 */
 double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
-   const matrix2D<double> *D=NULL);
+                     const matrix2D<double> *D = NULL);
 
 
 /** Voxel shape for a blob volume.
@@ -265,8 +266,8 @@ double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
     size for the minimum voxel volume which holds it. See \Ref{blobs2voxels}
     for an explanation of the limit and V parameters.*/
 void voxel_volume_shape(const GridVolume &vol_blobs,
-    const struct blobtype &blob, const matrix2D<double> *D,
-    matrix1D<int> &corner1, matrix1D<int> &size);
+                        const struct blobtype &blob, const matrix2D<double> *D,
+                        matrix1D<int> &corner1, matrix1D<int> &size);
 
 /** Blobs ---> Voxels.
     The voxel size is defined between two coordinates (Gcorner1 and Gcorner2)
@@ -301,14 +302,14 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
    D*(i,j,k)'.
 */
 void blobs2voxels(const GridVolume &vol_blobs,
-   const struct blobtype &blob, matrix3D<double> *vol_voxels,
-   const matrix2D<double> *D=NULL, int Zdim=0, int Ydim=0, int Xdim=0);
+                  const struct blobtype &blob, matrix3D<double> *vol_voxels,
+                  const matrix2D<double> *D = NULL, int Zdim = 0, int Ydim = 0, int Xdim = 0);
 
 /** Blob coefficients as a voxel volume.
     This function returns a volume with the blob coefficients in their right position
     in space. The voxel size is g/2 */
 void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype &blob,
-   matrix3D<double> *vol_coefs);
+                              matrix3D<double> *vol_coefs);
 
 #define SHOW_CONVERSION 1
 /** Voxels ---> Blobs.
@@ -329,11 +330,11 @@ void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype
 
     Valid grid types are defined in \Ref{Some useful grids}*/
 void voxels2blobs(const matrix3D<double> *vol_voxels,
-   const struct blobtype &blob, GridVolume &vol_blobs,
-   int grid_type, double grid_relative_size,
-   double lambda, const matrix3D<double> *vol_mask=NULL,
-   const matrix2D<double> *D=NULL,
-   double final_error_change=0.01, int tell=0, double R=-1);
+                  const struct blobtype &blob, GridVolume &vol_blobs,
+                  int grid_type, double grid_relative_size,
+                  double lambda, const matrix3D<double> *vol_mask = NULL,
+                  const matrix2D<double> *D = NULL,
+                  double final_error_change = 0.01, int tell = 0, double R = -1);
 
 #define VARTK 1
 #define VMAXARTK 2
@@ -361,10 +362,10 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
      \\VARTK:     ART by blocks for volumes.
      \\VMAXARTK:  update with the maximum update.*/
 void ART_voxels2blobs_single_step(
-   GridVolume &vol_in, GridVolume *vol_out, const struct blobtype &blob,
-   const matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
-   const matrix3D<double> *read_vol, matrix3D<double> *corr_vol,
-   const matrix3D<double> *mask_vol,
-   double &mean_error, double &max_error, int eq_mode=VARTK);
+    GridVolume &vol_in, GridVolume *vol_out, const struct blobtype &blob,
+    const matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
+    const matrix3D<double> *read_vol, matrix3D<double> *corr_vol,
+    const matrix3D<double> *mask_vol,
+    double &mean_error, double &max_error, int eq_mode = VARTK);
 //@}
 #endif

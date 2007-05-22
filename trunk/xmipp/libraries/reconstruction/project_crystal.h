@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECT_CRYSTAL_HH
-   #define _PROG_PROJECT_CRYSTAL_HH
+#define _PROG_PROJECT_CRYSTAL_HH
 
 class Projection_Parameters;
 class PROJECT_Side_Info;
@@ -52,54 +52,55 @@ class Crystal_Projection_Parameters;
      |
      -----------> a
 */
-class Crystal_Projection_Parameters {
+class Crystal_Projection_Parameters
+{
 public:
-   /// Crystal X dimension
-   int crystal_Xdim;
-   /// Crystal Y dimension
-   int crystal_Ydim;
-   /// Orthogonalize projections
-   bool orthogonal;
-   /// Crystal vector a
-   matrix1D<double> a;
-   /// Crustal vector b
-   matrix1D<double> b;
-   /// Bias to apply to the magnitude shift
-   double    Nshift_avg;
-   /// Standard deviation of the magnitude shift
-   double    Nshift_dev;
-   /// Disappearing threshold
-   double    disappearing_th;
-   /// file with shifts
-   FileName fn_shift;
-   /// Document File for shifts. Order: H K x_SHIFT y_SHIFT z_SHIFT
-   DocFile        DF_shift;
-   /// is doc file with shifts available
-   bool        DF_shift_bool;
+    /// Crystal X dimension
+    int crystal_Xdim;
+    /// Crystal Y dimension
+    int crystal_Ydim;
+    /// Orthogonalize projections
+    bool orthogonal;
+    /// Crystal vector a
+    matrix1D<double> a;
+    /// Crustal vector b
+    matrix1D<double> b;
+    /// Bias to apply to the magnitude shift
+    double    Nshift_avg;
+    /// Standard deviation of the magnitude shift
+    double    Nshift_dev;
+    /// Disappearing threshold
+    double    disappearing_th;
+    /// file with shifts
+    FileName fn_shift;
+    /// Document File for shifts. Order: H K x_SHIFT y_SHIFT z_SHIFT
+    DocFile        DF_shift;
+    /// is doc file with shifts available
+    bool        DF_shift_bool;
 
 public:
-   /** Empty constructor*/
-   Crystal_Projection_Parameters();
+    /** Empty constructor*/
+    Crystal_Projection_Parameters();
 
-   /** Read projection parameters from a file.
-       An exception is thrown if the file is not found or any of the
-       parameters is not found in the right place.*/
-   void read(FileName fn_crystal, double scale=1.0);
+    /** Read projection parameters from a file.
+        An exception is thrown if the file is not found or any of the
+        parameters is not found in the right place.*/
+    void read(FileName fn_crystal, double scale = 1.0);
 
-   /** Write projection parameters to a file.
-       The projection parameters are written into a file wth the same
-       structure as always. If the file cannot be openned for output
-       an exception is thrown. */
-   void write(FileName fn_crystal);
+    /** Write projection parameters to a file.
+        The projection parameters are written into a file wth the same
+        structure as always. If the file cannot be openned for output
+        an exception is thrown. */
+    void write(FileName fn_crystal);
 };
 
 /* Project as crystal ------------------------------------------------------ */
 /** Project a Mathematical volume as a crystal.
 */
 void project_crystal(Phantom &phantom, Projection &P,
-    const Projection_Parameters &prm,
-    PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
-    float rot, float tilt, float psi);
+                     const Projection_Parameters &prm,
+                     PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
+                     float rot, float tilt, float psi);
 
 /** Find crystal limits.
     This function returns imin and imax such that imin*v and imax*v are
@@ -112,10 +113,10 @@ void project_crystal(Phantom &phantom, Projection &P,
     vectors, unit cell and projection size such that the unit cell intersects
     the projection. */
 void find_crystal_limits(
-   const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
-   const matrix1D<double> &corner1, const matrix1D<double> &corner2,
-   const matrix1D<double> &a, const matrix1D<double> &b,
-   int &iamin, int &iamax, int &ibmin, int &ibmax);
+    const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
+    const matrix1D<double> &corner1, const matrix1D<double> &corner2,
+    const matrix1D<double> &a, const matrix1D<double> &b,
+    int &iamin, int &iamax, int &ibmin, int &ibmax);
 
 /** Move following a spiral.
     Starting in a given position this function visits a matrix using
@@ -142,29 +143,29 @@ void move_following_spiral(matrix1D<double> &r, const matrix2D<int> &visited);
     unit cell corners in the deformed space. Output shifts are in the
     deformed space. */
 void fill_cell_positions(Projection &P,
-   matrix1D<double> &aproj,   matrix1D<double> &bproj,
-   matrix1D<double> &aprojd,  matrix1D<double> &bprojd,
-   matrix1D<double> &corner1, matrix1D<double> &corner2,
-   const Crystal_Projection_Parameters &prm_crystal,
-   matrix2D<double> &cell_shiftX, matrix2D<double> &cell_shiftY,
-   matrix2D<double> &cell_shiftZ,
-   matrix2D<int> &cell_inside,   matrix2D<double> &exp_shifts_matrix_X,
-   matrix2D<double> &exp_shifts_matrix_Y,
-   matrix2D<double> &exp_shifts_matrix_Z);
+                         matrix1D<double> &aproj,   matrix1D<double> &bproj,
+                         matrix1D<double> &aprojd,  matrix1D<double> &bprojd,
+                         matrix1D<double> &corner1, matrix1D<double> &corner2,
+                         const Crystal_Projection_Parameters &prm_crystal,
+                         matrix2D<double> &cell_shiftX, matrix2D<double> &cell_shiftY,
+                         matrix2D<double> &cell_shiftZ,
+                         matrix2D<int> &cell_inside,   matrix2D<double> &exp_shifts_matrix_X,
+                         matrix2D<double> &exp_shifts_matrix_Y,
+                         matrix2D<double> &exp_shifts_matrix_Z);
 /** Fill auxiliary matrix with experimental shifts.
     the values 3D shifts stored in the doc file DF_shift are
     transfer to two 2D matrices
 
 */
-   void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
-                          matrix2D<int>    &cell_inside,
-			  matrix2D<double> &exp_shifts_matrix_X,
-			  matrix2D<double> &exp_shifts_matrix_Y,
-			  matrix2D<double> &exp_shifts_matrix_Z,
-			  matrix2D<double> &exp_normal_shifts_matrix_X,
-			  matrix2D<double> &exp_normal_shifts_matrix_Y,
-			  matrix2D<double> &exp_normal_shifts_matrix_Z,
-			  double param_file_scale);
+void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
+                       matrix2D<int>    &cell_inside,
+                       matrix2D<double> &exp_shifts_matrix_X,
+                       matrix2D<double> &exp_shifts_matrix_Y,
+                       matrix2D<double> &exp_shifts_matrix_Z,
+                       matrix2D<double> &exp_normal_shifts_matrix_X,
+                       matrix2D<double> &exp_normal_shifts_matrix_Y,
+                       matrix2D<double> &exp_normal_shifts_matrix_Z,
+                       double param_file_scale);
 
 //@}
 #endif

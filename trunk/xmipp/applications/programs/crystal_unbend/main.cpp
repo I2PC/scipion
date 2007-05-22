@@ -29,40 +29,52 @@
 
 void Usage(char *argv[]);
 
-int main (int argc, char **argv) {
-	
-   ImUmbend prm;
+int main(int argc, char **argv)
+{
+
+    ImUmbend prm;
 
 
-   // Get command line parameters ------------------------------------------
-   try {
-      prm.inImfile  = get_param(argc, argv, "-i");
-      prm.outImfile = get_param(argc, argv, "-o");
-      prm.FN_Correlation = get_param(argc,argv,"-cor");
-      prm.cc_peak_factor =  AtoF(get_param(argc,argv,"-cc_peak_factor","0.0"));
-      prm.InterpModel = get_param(argc, argv, "-interp_model","Linear");
+    // Get command line parameters ------------------------------------------
+    try
+    {
+        prm.inImfile  = get_param(argc, argv, "-i");
+        prm.outImfile = get_param(argc, argv, "-o");
+        prm.FN_Correlation = get_param(argc, argv, "-cor");
+        prm.cc_peak_factor =  AtoF(get_param(argc, argv, "-cc_peak_factor", "0.0"));
+        prm.InterpModel = get_param(argc, argv, "-interp_model", "Linear");
 
-  } catch (Xmipp_error XE) {Usage(argv);}
+    }
+    catch (Xmipp_error XE)
+    {
+        Usage(argv);
+    }
 
-   // Main program ---------------------------------------------------------
-   try {
-      ROUT_Umbend(prm);
-   } catch (Xmipp_error XE) {cout<<XE;}
-   exit(0);
+    // Main program ---------------------------------------------------------
+    try
+    {
+        ROUT_Umbend(prm);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 }
 
-void Usage (char *argv[]) {
+void Usage(char *argv[])
+{
     cout << "Purpose:\n"
-         << "    Computes 2D crystal distorsion AND unbends the crystal\n"
-         << "    The input is a cor (MRC) file\n"
-         << "Usage:" << argv[0] <<" -i InImage -o OutImage -cor filename"
-	 << " -cc_peak_factor cc_peak_factor -interp_model InterpModel" << endl << endl
-         << "\t-i               :  Input Image" << endl
-         << "\t-o               :  Output image" << endl
-         << "\t-cor             : Correlation file" << endl
-         << "\t-cc_peak_factor  : crosscorrelation thershold (0-1)" << endl
-	 << "\t-interp_model    : interpolation scheme (Linear or Bessel) "
-	 << "used for computation of crystal distorsion" << endl
+    << "    Computes 2D crystal distorsion AND unbends the crystal\n"
+    << "    The input is a cor (MRC) file\n"
+    << "Usage:" << argv[0] << " -i InImage -o OutImage -cor filename"
+    << " -cc_peak_factor cc_peak_factor -interp_model InterpModel" << endl << endl
+    << "\t-i               :  Input Image" << endl
+    << "\t-o               :  Output image" << endl
+    << "\t-cor             : Correlation file" << endl
+    << "\t-cc_peak_factor  : crosscorrelation thershold (0-1)" << endl
+    << "\t-interp_model    : interpolation scheme (Linear or Bessel) "
+    << "used for computation of crystal distorsion" << endl
     ;
     exit(1);
 

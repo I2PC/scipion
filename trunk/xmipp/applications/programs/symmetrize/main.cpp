@@ -25,18 +25,30 @@
 
 #include <reconstruction/symmetrize.h>
 
-int main (int argc, char *argv[]) {
-   Symmetrize_Parameters prm;
+int main(int argc, char *argv[])
+{
+    Symmetrize_Parameters prm;
 
-   try {
-      prm.read(argc, argv);
-   }
-   catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(1);}
+    try
+    {
+        prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(1);
+    }
 
-   try {
-      ROUT_symmetrize(prm);
-   } catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+    try
+    {
+        ROUT_symmetrize(prm);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -46,23 +58,23 @@ int main (int argc, char *argv[]) {
       help="Symmetrize a volume using a symmetry description file";
       OPEN MENU menu_symmetrize;
       COMMAND LINES {
-	+ usual: symmetrize -i $INPUT_VOL [-o $OUTPUT_VOL] -sym $SYMFILE
+ + usual: symmetrize -i $INPUT_VOL [-o $OUTPUT_VOL] -sym $SYMFILE
       }
       PARAMETER DEFINITIONS {
         $INPUT_VOL {
-	   label="Input volume";
+    label="Input volume";
            help="Xmipp volume, if an output is not given this is
                  the output, too";
-	   type=file existing;
-	}
+    type=file existing;
+ }
         $OUTPUT_VOL {
-	   label="Output volume";
-	   help="Xmipp format";
-	   type=file;
-	}
+    label="Output volume";
+    help="Xmipp format";
+    type=file;
+ }
         $SYMFILE {
            label="Symmetry volume";
-	   help="This file has got a complex structure, better see
+    help="This file has got a complex structure, better see
                  the Web help";
            type=file existing;
         }

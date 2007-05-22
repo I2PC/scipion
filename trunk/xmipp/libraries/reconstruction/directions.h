@@ -30,22 +30,22 @@
 
 /// Check whether projection directions are unique
 bool directions_are_unique(double rot,  double tilt,
-			   double rot2, double tilt2,
-			   double rot_limit, double tilt_limit,
-			   SymList &SL, bool include_mirrors);
+                           double rot2, double tilt2,
+                           double rot_limit, double tilt_limit,
+                           SymList &SL, bool include_mirrors);
 
 /// Calculate angular distance between two directions
 double distance_directions(double rot1, double tilt1,
-			   double rot2, double tilt2,
-			   bool include_mirrors);
+                           double rot2, double tilt2,
+                           bool include_mirrors);
 
 /// Make even distribution, taking symmetry into account
 void make_even_distribution(DocFile &DF, double sampling,
-			    SymList &SL, bool include_mirror);
+                            SymList &SL, bool include_mirror);
 
 /// Select a user-provided tilt range
 void limit_tilt_range(DocFile &DF, double tilt_range0, double tilt_rangeF);
 
 // Determine which of the entries in DFlib is closest to [rot1,tilt1]
 int find_nearest_direction(double rot1, double tilt1,
-			   DocFile &DFlib, int col_rot, int col_tilt, SymList &SL);
+                           DocFile &DFlib, int col_rot, int col_tilt, SymList &SL);

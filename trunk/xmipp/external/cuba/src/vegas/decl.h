@@ -1,8 +1,8 @@
 /*
-	decl.h
-		Type declarations
-		this file is part of Vegas
-		last modified 2 Feb 05 th
+ decl.h
+  Type declarations
+  this file is part of Vegas
+  last modified 2 Feb 05 th
 */
 
 
@@ -21,14 +21,16 @@ typedef const bin_t cbin_t;
 
 typedef real Grid[NBINS];
 
-typedef struct {
-  real sum, sqsum;
-  real weightsum, avgsum;
-  real chisum, chisqsum, guess;
-  real avg, err, chisq;
-} Cumulants;
+typedef struct
+{
+    real sum, sqsum;
+    real weightsum, avgsum;
+    real chisum, chisqsum, guess;
+    real avg, err, chisq;
+}
+Cumulants;
 
 typedef const Cumulants cCumulants;
 
-typedef void (*Integrand)(ccount *, creal *, ccount *, real *);
+typedef void(*Integrand)(ccount *, creal *, ccount *, real *);
 

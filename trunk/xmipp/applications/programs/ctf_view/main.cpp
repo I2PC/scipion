@@ -31,24 +31,31 @@
 
 #include "module.h"
 
-int main(int argc, char *argv[]) {
-   FileName fn_ctf;
-   try {
-      fn_ctf=get_param(argc,argv,"-i","");
-   } catch (Xmipp_error XE) {
-      cerr << XE;
-      cerr << "Usage: CTFViewer\n"
-           << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
-      exit(1);
-   }
-   try {
-      QApplication app(argc,argv);
-      CTFViewer * Viewer = new CTFViewer(0,0,fn_ctf);
-      app.setMainWidget(Viewer);
-      return app.exec();
-   } catch (Xmipp_error XE) {
-      cerr << XE;
-      exit(1);
-   }
-   return 0;
+int main(int argc, char *argv[])
+{
+    FileName fn_ctf;
+    try
+    {
+        fn_ctf = get_param(argc, argv, "-i", "");
+    }
+    catch (Xmipp_error XE)
+    {
+        cerr << XE;
+        cerr << "Usage: CTFViewer\n"
+        << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
+        exit(1);
+    }
+    try
+    {
+        QApplication app(argc, argv);
+        CTFViewer * Viewer = new CTFViewer(0, 0, fn_ctf);
+        app.setMainWidget(Viewer);
+        return app.exec();
+    }
+    catch (Xmipp_error XE)
+    {
+        cerr << XE;
+        exit(1);
+    }
+    return 0;
 }

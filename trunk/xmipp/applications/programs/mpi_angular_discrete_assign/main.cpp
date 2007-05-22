@@ -29,108 +29,128 @@
 
 #include <mpi.h>
 
-int main (int argc, char **argv) {
-   // Initialize MPI
-   int rank, NProcessors;
-   MPI_Init(&argc, &argv);
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
+int main(int argc, char **argv)
+{
+    // Initialize MPI
+    int rank, NProcessors;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
 
-   Prog_angular_predict_prm prm;
-   try {
-      // Read input parameters
-      prm.read(argc,argv);
-   } catch (Xmipp_error XE) {
-      if (rank==0) {
-	 cout << XE;
-	 prm.usage();
-      }
-      exit(1);
-   }
+    Prog_angular_predict_prm prm;
+    try
+    {
+        // Read input parameters
+        prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        if (rank == 0)
+        {
+            cout << XE;
+            prm.usage();
+        }
+        exit(1);
+    }
 
-   try {
-      // Rank 0 creates projections
-      int fn_random;
-      if (rank==0) {
-         prm.produce_side_info(0);
-	 fn_random=AtoI(prm.fn_random);
-      }
-      MPI_Bcast(&fn_random, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    try
+    {
+        // Rank 0 creates projections
+        int fn_random;
+        if (rank == 0)
+        {
+            prm.produce_side_info(0);
+            fn_random = AtoI(prm.fn_random);
+        }
+        MPI_Bcast(&fn_random, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-      // Now all the ranks except 0 produce their own info
-      if (rank!=0) {
-         prm.fn_ref=(string)"ref"+ItoA(fn_random,4)+".sel";
-	 prm.fn_ang=(string)"reference"+ItoA(fn_random,4)+"__movements.txt";
-         prm.produce_side_info(rank);
-      }
+        // Now all the ranks except 0 produce their own info
+        if (rank != 0)
+        {
+            prm.fn_ref = (string)"ref" + ItoA(fn_random, 4) + ".sel";
+            prm.fn_ang = (string)"reference" + ItoA(fn_random, 4) + "__movements.txt";
+            prm.produce_side_info(rank);
+        }
 
-      // Divide the selfile in chunks
-      int imgNbr = prm.get_images_to_process();
-      int Nchunk = (int) ((float)imgNbr/(float)(NProcessors-1));
-      int myFirst=(rank-1)*Nchunk;
-      int myLast=rank*Nchunk-1;
-      if (rank==NProcessors-1) myLast=imgNbr-1;
+        // Divide the selfile in chunks
+        int imgNbr = prm.get_images_to_process();
+        int Nchunk = (int)((float)imgNbr / (float)(NProcessors - 1));
+        int myFirst = (rank - 1) * Nchunk;
+        int myLast = rank * Nchunk - 1;
+        if (rank == NProcessors - 1) myLast = imgNbr - 1;
 
-      // Make the alignment, rank=0 receives all the assignments
-      // The rest of the ranks compute the angular parameters for their
-      // assigned images
-      double v[7];
-      if (rank==0) {	
-	 int toGo=imgNbr;
-	 cerr << "Assigning angles ...\n";
-	 init_progress_bar(imgNbr);
-	 MPI_Status status;
-	 while( toGo > 0) {
-	    MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
-	       MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	    int i=(int)v[0];
-	    prm.predicted_rot[i]=v[1];
-	    prm.predicted_tilt[i]=v[2];
-	    prm.predicted_psi[i]=v[3];
-	    prm.predicted_shiftX[i]=v[4];
-	    prm.predicted_shiftY[i]=v[5];
-	    prm.predicted_corr[i]=v[6];
-	    toGo--;
-	    if (toGo % (imgNbr/60)==0) {progress_bar(imgNbr-toGo); cerr.flush();}
-	 }
-	 progress_bar(imgNbr);
-      } else {
-         SelFile SF_in(prm.fn_in);
-	 SF_in.go_beginning();
-	 SF_in.jump(myFirst);
-	 for (int i=myFirst; i<=myLast; i++) {
-	    // Read image and estimate angular parameters
-            ImageXmipp I;
-	    I.read(SF_in.NextImg(),false,false,false);
-	    I().set_Xmipp_origin();
-	    double shiftX, shiftY, psi, rot, tilt;
-	    prm.predict_angles(I,shiftX, shiftY, rot, tilt, psi);
-	    double corr=prm.predicted_corr[i-myFirst];
-	    
-	    // Rewrite the image header if necessary
-	    if (!prm.dont_modify_header) {
-	       I.read(I.name());
-	       I.set_eulerAngles(rot,tilt,psi);
-	       I.set_originOffsets(shiftX,shiftY);
-	       I.write();
-	    }
+        // Make the alignment, rank=0 receives all the assignments
+        // The rest of the ranks compute the angular parameters for their
+        // assigned images
+        double v[7];
+        if (rank == 0)
+        {
+            int toGo = imgNbr;
+            cerr << "Assigning angles ...\n";
+            init_progress_bar(imgNbr);
+            MPI_Status status;
+            while (toGo > 0)
+            {
+                MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
+                         MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                int i = (int)v[0];
+                prm.predicted_rot[i] = v[1];
+                prm.predicted_tilt[i] = v[2];
+                prm.predicted_psi[i] = v[3];
+                prm.predicted_shiftX[i] = v[4];
+                prm.predicted_shiftY[i] = v[5];
+                prm.predicted_corr[i] = v[6];
+                toGo--;
+                if (toGo % (imgNbr / 60) == 0)
+                {
+                    progress_bar(imgNbr - toGo);
+                    cerr.flush();
+                }
+            }
+            progress_bar(imgNbr);
+        }
+        else
+        {
+            SelFile SF_in(prm.fn_in);
+            SF_in.go_beginning();
+            SF_in.jump(myFirst);
+            for (int i = myFirst; i <= myLast; i++)
+            {
+                // Read image and estimate angular parameters
+                ImageXmipp I;
+                I.read(SF_in.NextImg(), false, false, false);
+                I().set_Xmipp_origin();
+                double shiftX, shiftY, psi, rot, tilt;
+                prm.predict_angles(I, shiftX, shiftY, rot, tilt, psi);
+                double corr = prm.predicted_corr[i-myFirst];
 
-      	    // Send the alignment parameters to the master
-	    v[0]=i;
-	    v[1]=rot;
-	    v[2]=tilt;
-	    v[3]=psi;
-	    v[4]=shiftX;
-	    v[5]=shiftY;
-	    v[6]=corr;
-	    MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-	 }
-      }
+                // Rewrite the image header if necessary
+                if (!prm.dont_modify_header)
+                {
+                    I.read(I.name());
+                    I.set_eulerAngles(rot, tilt, psi);
+                    I.set_originOffsets(shiftX, shiftY);
+                    I.write();
+                }
 
-      MPI_Finalize();	
-      if (rank==0) prm.finish_processing();
-      return 0 ;
-   } catch (Xmipp_error XE) {
-      cout << XE << endl;
-   }
+                // Send the alignment parameters to the master
+                v[0] = i;
+                v[1] = rot;
+                v[2] = tilt;
+                v[3] = psi;
+                v[4] = shiftX;
+                v[5] = shiftY;
+                v[6] = corr;
+                MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            }
+        }
+
+        MPI_Finalize();
+        if (rank == 0) prm.finish_processing();
+        return 0 ;
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE << endl;
+    }
 }

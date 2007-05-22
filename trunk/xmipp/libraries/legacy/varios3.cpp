@@ -51,9 +51,9 @@
 #include <sys/stat.h>
 
 #ifndef __APPLE__
-   #include <malloc.h>
+#include <malloc.h>
 #else
-   #include <cstdlib>
+#include <cstdlib>
 #endif
 
 #include <cstdio>
@@ -76,9 +76,10 @@
  the rutine "image_io" in file "varios.c".
  ***************************************************************/
 
-int capa_io (char **image,int row,int col,int handle,int rdwr,int format)
+int capa_io(char **image, int row, int col, int handle, int rdwr, int format)
 
-{   int i, j, k;                    /* Counters                             */
+{
+    int i, j, k;                    /* Counters                             */
     int size;                       /* Size of element to read/write        */
     int n_block;                    /* No. of rows that can fit in a block  */
     int n_rest;                     /* No. of rows in the last short block  */
@@ -90,109 +91,117 @@ int capa_io (char **image,int row,int col,int handle,int rdwr,int format)
     char *aux_ptr;                  /* Auxiliary pointer                    */
 
 
-/********************* Check that the user is honest ************************/
+    /********************* Check that the user is honest ************************/
 
-if (row <= 0 || col <= 0)
-    return ERROR;   /* Allowed range: 1..? */
+    if (row <= 0 || col <= 0)
+        return ERROR;   /* Allowed range: 1..? */
 
-/***************** Assign value to the size flag ***************************/
+    /***************** Assign value to the size flag ***************************/
 
-switch (format) {
+    switch (format)
+    {
     case NATURAL:
-        size = sizeof (BYTE);
+        size = sizeof(BYTE);
         break;
     case INTFMT:
-        size = sizeof (UWORD);
+        size = sizeof(UWORD);
         break;
     case LONGFMT:
-        size = sizeof (ULONG);
+        size = sizeof(ULONG);
         break;
     case FLOATFMT:
-        size = sizeof (float);
+        size = sizeof(float);
         break;
     case FOURIER:
-        size = sizeof (float);
+        size = sizeof(float);
         col += 2;               /* Column index ranges from (0..N/2) * 2   */
         break;
     default:
         return ERROR;            /* Unrecognized format                    */
-}
+    }
 
-size *= col;                     /* No. of bytes to read in each row       */
+    size *= col;                     /* No. of bytes to read in each row       */
 
-/*************** Allocate temp. buffer & adjust reading parameters *********/
+    /*************** Allocate temp. buffer & adjust reading parameters *********/
 
-n_block = 32000/size;  /* no. of rows that fit in 32 K (roughly 32000)     */
-if (n_block == 0)
-    return ERROR;    /* The user's pulling the routine's leg, too much     */
-io_size = n_block * size;                    /* This is the block i/o size */
+    n_block = 32000 / size;  /* no. of rows that fit in 32 K (roughly 32000)     */
+    if (n_block == 0)
+        return ERROR;    /* The user's pulling the routine's leg, too much     */
+    io_size = n_block * size;                    /* This is the block i/o size */
 
-while ((temp_buffer = (char *) malloc (io_size)) == NULL)
-{   io_size -=size;              /* Not enough memory, reduce requeriments */
-    if (io_size <= 0)
-        return ERROR;                         /* No memory at all, goodbye */
-}
+    while ((temp_buffer = (char *) malloc(io_size)) == NULL)
+    {
+        io_size -= size;              /* Not enough memory, reduce requeriments */
+        if (io_size <= 0)
+            return ERROR;                         /* No memory at all, goodbye */
+    }
 
-n_block = io_size / size;                   /* No. of rows per block       */
-tot_size = (long) size * (long) row;        /* Total no. of bytes to read  */
-no_blocks = tot_size / io_size;             /* no. of 32K blocks to read   */
-rest = tot_size % io_size;                  /* no. of bytes that are left  */
-n_rest = rest / size;                       /* no. of rows that are left   */
+    n_block = io_size / size;                   /* No. of rows per block       */
+    tot_size = (long) size * (long) row;        /* Total no. of bytes to read  */
+    no_blocks = tot_size / io_size;             /* no. of 32K blocks to read   */
+    rest = tot_size % io_size;                  /* no. of bytes that are left  */
+    n_rest = rest / size;                       /* no. of rows that are left   */
 
-/********************** Read/write file/memory *****************************/
+    /********************** Read/write file/memory *****************************/
 
-i = 0;
-for (j = 0; j < no_blocks; j++)          /* Read all the blocks of 32000  */
-{
-    aux_ptr = temp_buffer;               /* Reset aux. pointer            */
-    if (rdwr == WRITING)                 /* Copy rows to temp. buffer     */
-        for (k = 0; k < n_block; k++, i++, aux_ptr += size)
-            memcpy (aux_ptr, image [i], size);
+    i = 0;
+    for (j = 0; j < no_blocks; j++)          /* Read all the blocks of 32000  */
+    {
+        aux_ptr = temp_buffer;               /* Reset aux. pointer            */
+        if (rdwr == WRITING)                 /* Copy rows to temp. buffer     */
+            for (k = 0; k < n_block; k++, i++, aux_ptr += size)
+                memcpy(aux_ptr, image [i], size);
 
-   switch (rdwr) {
-       case READING:
-          if (read(handle, temp_buffer, io_size) != io_size)
-          {   free (temp_buffer);
-              return ERROR;                    /* EOF prematurelly reached      */
-          }
-           break;
-       case WRITING:
-          if (write(handle, temp_buffer, io_size) != io_size)
-          {   free (temp_buffer);
-              return ERROR;                    /* EOF prematurelly reached      */
-          }
-           break;
-   }
-    if (rdwr == READING)                 /* Copy temp. buffer to rows     */
-        for (k = 0; k < n_block; k++, i++, aux_ptr += size)
-            memcpy (image [i], aux_ptr, size);
-}
-aux_ptr = temp_buffer;                   /* Reset aux. pointer            */
-if (rdwr == WRITING)
-    for (k = 0; k < n_rest; k++, i++, aux_ptr += size)
-        memcpy (aux_ptr, image[i], size);/* Copy rows to aux. memory      */
-   switch (rdwr) {
-       case READING:
-            if (read(handle, temp_buffer, rest) != rest)
-            {   free (temp_buffer);
-                return ERROR;                        /* EOF prematurelly reached      */
+        switch (rdwr)
+        {
+        case READING:
+            if (read(handle, temp_buffer, io_size) != io_size)
+            {
+                free(temp_buffer);
+                return ERROR;                    /* EOF prematurelly reached      */
             }
-           break;
-       case WRITING:
-            if (write(handle, temp_buffer, rest) != rest)
-            {   free (temp_buffer);
-                return ERROR;                        /* EOF prematurelly reached      */
+            break;
+        case WRITING:
+            if (write(handle, temp_buffer, io_size) != io_size)
+            {
+                free(temp_buffer);
+                return ERROR;                    /* EOF prematurelly reached      */
             }
-           break;
-   }
-if (rdwr == READING)                     /* Copy temp. buffer to rows     */
-    for (k = 0; k < n_rest; k++, i++, aux_ptr += size)
-        memcpy (image [i], aux_ptr, size);
+            break;
+        }
+        if (rdwr == READING)                 /* Copy temp. buffer to rows     */
+            for (k = 0; k < n_block; k++, i++, aux_ptr += size)
+                memcpy(image [i], aux_ptr, size);
+    }
+    aux_ptr = temp_buffer;                   /* Reset aux. pointer            */
+    if (rdwr == WRITING)
+        for (k = 0; k < n_rest; k++, i++, aux_ptr += size)
+            memcpy(aux_ptr, image[i], size);/* Copy rows to aux. memory      */
+    switch (rdwr)
+    {
+    case READING:
+        if (read(handle, temp_buffer, rest) != rest)
+        {
+            free(temp_buffer);
+            return ERROR;                        /* EOF prematurelly reached      */
+        }
+        break;
+    case WRITING:
+        if (write(handle, temp_buffer, rest) != rest)
+        {
+            free(temp_buffer);
+            return ERROR;                        /* EOF prematurelly reached      */
+        }
+        break;
+    }
+    if (rdwr == READING)                     /* Copy temp. buffer to rows     */
+        for (k = 0; k < n_rest; k++, i++, aux_ptr += size)
+            memcpy(image [i], aux_ptr, size);
 
-/************* Close file, free temp. buffer & return OK ******************/
+    /************* Close file, free temp. buffer & return OK ******************/
 
-free (temp_buffer);
-return OK;
+    free(temp_buffer);
+    return OK;
 }
 
 
@@ -201,20 +210,21 @@ return OK;
  "imalloc" (in file "varios.c") which allocs memory for an image,
  and in this case, allocs memory for each slice of the volume.
  ***************************************************************/
-void ***trialloc (int capas,int row,int col,int format)
+void ***trialloc(int capas, int row, int col, int format)
 
-{   int i;                    /* Counters                             */
+{
+    int i;                    /* Counters                             */
     void ***temp;
 
-if (format == FOURIER)         /**** 2 slices more ****/
-    capas += 2;
+    if (format == FOURIER)         /**** 2 slices more ****/
+        capas += 2;
 
-temp = (void ***) malloc (capas* sizeof(void **));
-for (i = 0; i < capas; i++)
-     if ((temp[i] = imalloc (row, col, format)) == NULL)
-         return NULL;
+    temp = (void ***) malloc(capas * sizeof(void **));
+    for (i = 0; i < capas; i++)
+        if ((temp[i] = imalloc(row, col, format)) == NULL)
+            return NULL;
 
-return temp;
+    return temp;
 
 }
 
@@ -222,17 +232,18 @@ return temp;
  This function frees the memory allocated by "trialloc"
  (see the previous function)
  ***************************************************************/
-void trifree (void ***volumen,int capas,int row,int col,int format)
+void trifree(void ***volumen, int capas, int row, int col, int format)
 
-{   int i;                    /* Counters                             */
+{
+    int i;                    /* Counters                             */
 
-if (format == FOURIER)         /**** 2 slices more ****/
-    capas += 2;
+    if (format == FOURIER)         /**** 2 slices more ****/
+        capas += 2;
 
-for (i= 0; i < capas; i++)
-    imfree ((char **)volumen[i], row, col, format);
+    for (i = 0; i < capas; i++)
+        imfree((char **)volumen[i], row, col, format);
 
-free(volumen);
+    free(volumen);
 
 }
 
@@ -253,147 +264,156 @@ free(volumen);
  standard desviation = 1.
  ***************************************************************/
 
-int volume_io (char ***volumen, int capas, int fil, int col, char *name,
-     int rdwr, int format,int norma)
+int volume_io(char ***volumen, int capas, int fil, int col, char *name,
+              int rdwr, int format, int norma)
 
 {
-     int handle, oflag, pmode, i;
-     int  headrec;    /* more spider header fun               */
-     int NORMwr=0;                   /* Flags for normalized volume          */
-     int NORMrd=0;                   /* (one for writing , one for reading)  */
+    int handle, oflag, pmode, i;
+    int  headrec;    /* more spider header fun               */
+    int NORMwr = 0;                   /* Flags for normalized volume          */
+    int NORMrd = 0;                   /* (one for writing , one for reading)  */
 
 
-if (capas <= 0 || fil <= 0 || col <= 0)
-    return ERROR;   /* Allowed range: 1..? */
+    if (capas <= 0 || fil <= 0 || col <= 0)
+        return ERROR;   /* Allowed range: 1..? */
 
-if (format == FOURIER)         /**** 2 slices more ****/
-    capas += 2;
+    if (format == FOURIER)         /**** 2 slices more ****/
+        capas += 2;
 
-/****************** Assign appropriate values to I/O parameters *************/
+    /****************** Assign appropriate values to I/O parameters *************/
 
-switch (rdwr) {
+    switch (rdwr)
+    {
     case READING:
         oflag = O_RDONLY ;                  /* read                         */
         break;
     case WRITING:
         oflag = O_WRONLY | O_TRUNC | O_CREAT;             /* write          */
         pmode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-                                                   /* Read-write permission */
+        /* Read-write permission */
         break;
     default:
         return ERROR;                       /* Operation not allowed        */
-}
-
-if( (format == FLOATFMT) && (norma==TRUE) ){
-      if(rdwr==READING) NORMrd=1;
-      else NORMwr=1;
- }
-
-
-/*********************** Open file, checking errors ***************************/
-
-if ((handle = open (name, oflag, pmode)) == -1)
-    return ERROR;                                     /* File not found error */
-
-		/********       THE HEADER      *************/
-
-if ((format == FLOATFMT) || (format == FOURIER) )
-  {
-        i= sizeof(CABECERO);
-        cabecero.fNlabel = (float)((int)(256/col+1));
-        cabecero.fLabrec=(float) ceil((float)256/col);
-
-	if(rdwr == WRITING)
-         {
-                cabecero.fNslice = (float) capas;
-                cabecero.fNsam = (float) col;
-                cabecero.fNrow = (float) fil;
-                headrec = (int) 1024 / ((int)cabecero.fNsam * 4);
-                if (format == FOURIER)
-                  cabecero.fIform = (-3);
-                else
-                  cabecero.fIform = 3;
-                if(  (1024%(int)cabecero.fNsam !=0))
-                  {
-                  cabecero.fNrec= cabecero.fNrow+1;
-                  headrec = headrec + 1;
-                  }
-                else
-                  cabecero.fNrec=cabecero.fNrow;
-
-                cabecero.fLabbyt = (float) headrec * cabecero.fNsam * 4 ;
-                cabecero.fLenbyt = (float) cabecero.fNsam * 4;
-                i=(int)cabecero.fNsam*(int)cabecero.fLabrec*4;
-                Tiempo(); /*calculate time & date and store them in the header*/         }
-
-        if( NORMwr ) norm_of_volume((float ***)volumen,rdwr,name);
-
-         switch (rdwr) {
-             case READING:
-                 if (read(handle, (char*)&cabecero,i) != i)
-                  {   close (handle);           /* Perform I/O                 */
-                      return ERROR;             /* EOF prematurelly reached    */
-	          }
-                 break;
-             case WRITING:
-                 if (write(handle, (char*)&cabecero,i) != i)
-                  {   close (handle);           /* Perform I/O                 */
-                      return ERROR;             /* EOF prematurelly reached    */
-	          }
-                  break;
-         }
-
-       if(rdwr == READING)
-         {
-           lseek(handle,col*(int)cabecero.fLabrec*4,SEEK_SET);
-         }
-/****************************************************************************/
-/*         cambiar numero de planos de negativo a positivo                  */
-/***************************************************************************/
-       cabecero.fNslice = fabs(cabecero.fNslice);
-  }
-	
-
-for (i=0; i < capas; i++)
-    if (capa_io (volumen[i], fil, col,handle,rdwr, format) == ERROR)
-    {   close (handle);
-        return ERROR;
     }
 
-if( NORMrd ) norm_of_volume((float ***)volumen,rdwr,name);
+    if ((format == FLOATFMT) && (norma == TRUE))
+    {
+        if (rdwr == READING) NORMrd = 1;
+        else NORMwr = 1;
+    }
 
-close (handle);
-return OK;
+
+    /*********************** Open file, checking errors ***************************/
+
+    if ((handle = open(name, oflag, pmode)) == -1)
+        return ERROR;                                     /* File not found error */
+
+    /********       THE HEADER      *************/
+
+    if ((format == FLOATFMT) || (format == FOURIER))
+    {
+        i = sizeof(CABECERO);
+        cabecero.fNlabel = (float)((int)(256 / col + 1));
+        cabecero.fLabrec = (float) ceil((float)256 / col);
+
+        if (rdwr == WRITING)
+        {
+            cabecero.fNslice = (float) capas;
+            cabecero.fNsam = (float) col;
+            cabecero.fNrow = (float) fil;
+            headrec = (int) 1024 / ((int)cabecero.fNsam * 4);
+            if (format == FOURIER)
+                cabecero.fIform = (-3);
+            else
+                cabecero.fIform = 3;
+            if ((1024 % (int)cabecero.fNsam != 0))
+            {
+                cabecero.fNrec = cabecero.fNrow + 1;
+                headrec = headrec + 1;
+            }
+            else
+                cabecero.fNrec = cabecero.fNrow;
+
+            cabecero.fLabbyt = (float) headrec * cabecero.fNsam * 4 ;
+            cabecero.fLenbyt = (float) cabecero.fNsam * 4;
+            i = (int)cabecero.fNsam * (int)cabecero.fLabrec * 4;
+            Tiempo(); /*calculate time & date and store them in the header*/
+        }
+
+        if (NORMwr) norm_of_volume((float ***)volumen, rdwr, name);
+
+        switch (rdwr)
+        {
+        case READING:
+            if (read(handle, (char*)&cabecero, i) != i)
+            {
+                close(handle);           /* Perform I/O                 */
+                return ERROR;             /* EOF prematurelly reached    */
+            }
+            break;
+        case WRITING:
+            if (write(handle, (char*)&cabecero, i) != i)
+            {
+                close(handle);           /* Perform I/O                 */
+                return ERROR;             /* EOF prematurelly reached    */
+            }
+            break;
+        }
+
+        if (rdwr == READING)
+        {
+            lseek(handle, col*(int)cabecero.fLabrec*4, SEEK_SET);
+        }
+        /****************************************************************************/
+        /*         cambiar numero de planos de negativo a positivo                  */
+        /***************************************************************************/
+        cabecero.fNslice = fabs(cabecero.fNslice);
+    }
+
+
+    for (i = 0; i < capas; i++)
+        if (capa_io(volumen[i], fil, col, handle, rdwr, format) == ERROR)
+        {
+            close(handle);
+            return ERROR;
+        }
+
+    if (NORMrd) norm_of_volume((float ***)volumen, rdwr, name);
+
+    close(handle);
+    return OK;
 }
 
 /*************************************************************************/
 /* This routine converts a float volume to a char volume.                */
 /*************************************************************************/
 
-void vox_4_a_1 (float ***volumen, BYTE ***volbyte, int dim)
+void vox_4_a_1(float ***volumen, BYTE ***volbyte, int dim)
 
-{   int i, j, k;
+{
+    int i, j, k;
     float maxi = -1e38, mini = 1e38, aux;
 
-for (i=0; i < dim; i++)
-    for (j=0; j < dim; j++)
-        for (k=0; k < dim; k++)
-        {   aux = volumen[i][j][k];
-            if (aux < mini)
-                mini = aux;
-            if (aux > maxi)
-                maxi = aux;
-        }
+    for (i = 0; i < dim; i++)
+        for (j = 0; j < dim; j++)
+            for (k = 0; k < dim; k++)
+            {
+                aux = volumen[i][j][k];
+                if (aux < mini)
+                    mini = aux;
+                if (aux > maxi)
+                    maxi = aux;
+            }
 
-if (maxi == mini)
-    aux = 0;
-else
-    aux = 255./(maxi-mini);
+    if (maxi == mini)
+        aux = 0;
+    else
+        aux = 255. / (maxi - mini);
 
-for (i=0; i < dim; i++)
-    for (j=0; j < dim; j++)
-        for (k=0; k < dim; k++)
-            volbyte[i][j][k] = (unsigned char)((volumen[i][j][k]-mini)*aux+0.5);
+    for (i = 0; i < dim; i++)
+        for (j = 0; j < dim; j++)
+            for (k = 0; k < dim; k++)
+                volbyte[i][j][k] = (unsigned char)((volumen[i][j][k] - mini) * aux + 0.5);
 
 }
 
@@ -401,13 +421,14 @@ for (i=0; i < dim; i++)
 /* This routine converts a char volume to a float volume.                */
 /*************************************************************************/
 
-void vox_1_a_4 (float ***volumen, BYTE ***volbyte, int dim)
+void vox_1_a_4(float ***volumen, BYTE ***volbyte, int dim)
 
-{   int i, j, k;
+{
+    int i, j, k;
 
-for (i=0; i < dim; i++)
-    for (j=0; j < dim; j++)
-        for (k=0; k < dim; k++)
-            volumen[i][j][k] = volbyte[i][j][k];
+    for (i = 0; i < dim; i++)
+        for (j = 0; j < dim; j++)
+            for (k = 0; k < dim; k++)
+                volumen[i][j][k] = volbyte[i][j][k];
 }
 

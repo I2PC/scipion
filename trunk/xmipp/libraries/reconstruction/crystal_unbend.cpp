@@ -33,19 +33,20 @@
 #include "crystal_unbend.h"
 
 /* Main routine for transforming ------------------------------------------- */
-void ROUT_Umbend(ImUmbend &ImUm) {
-	
+void ROUT_Umbend(ImUmbend &ImUm)
+{
 
-        cout<<"Reading"<<endl;
-	//Read .cor file
-	ImUm.ReadMRCCord();
-	//(ImUm.myUmbendfile).read(ImUm.FN_Correlation);
-    	cout<<"PeaksCorrespondance"<<endl;
-	//Uniform sistematic sampling
-        ImUm.PeaksCorresp();
- 	cout<<"Crystal UnBending"<<endl;
-	//Displacement Interpolation
-        ImUm.UnBending();
+
+    cout << "Reading" << endl;
+    //Read .cor file
+    ImUm.ReadMRCCord();
+    //(ImUm.myUmbendfile).read(ImUm.FN_Correlation);
+    cout << "PeaksCorrespondance" << endl;
+    //Uniform sistematic sampling
+    ImUm.PeaksCorresp();
+    cout << "Crystal UnBending" << endl;
+    //Displacement Interpolation
+    ImUm.UnBending();
 }
 
 

@@ -25,26 +25,26 @@
  ***************************************************************************/
 
 
-  /* **********************************************************************
+/* **********************************************************************
 
-        This file contains the routine to calculate the fast Fourier
-        transform magnitude of an image. The image is in a "rows x cols"
-	matrix of floats, and it will be overwritten by the result of:
+      This file contains the routine to calculate the fast Fourier
+      transform magnitude of an image. The image is in a "rows x cols"
+matrix of floats, and it will be overwritten by the result of:
 
-        final_pixel = log( || F.F.T.( ini_pixel ) || +1 )
+      final_pixel = log( || F.F.T.( ini_pixel ) || +1 )
 
-        Where :
-                final_pixel    : It's the final pixel value.
+      Where :
+              final_pixel    : It's the final pixel value.
 
-                ini_pixel      : It's the initial pixel value.
+              ini_pixel      : It's the initial pixel value.
 
-                log            : It's the natural logarithm.
+              log            : It's the natural logarithm.
 
-                F.F.T          : It's the fast Fourier transform .
+              F.F.T          : It's the fast Fourier transform .
 
-                || F.F.T.() || : The fast Fourier transform magnitude.
+              || F.F.T.() || : The fast Fourier transform magnitude.
 
-   ************************************************************************/
+ ************************************************************************/
 
 
 
@@ -61,61 +61,61 @@
 
 /**************************************************************************/
 
-int fast_fourier_trans_img(float **imgModulo,int rows,int cols)
+int fast_fourier_trans_img(float **imgModulo, int rows, int cols)
 {
-int i,j, cols2;
-float **fImg;
-float par=-(1.);
+    int i, j, cols2;
+    float **fImg;
+    float par = -(1.);
 
- if ( (fImg=(float **)imalloc(rows,cols,FOURIER)) ==NULL)
-  {
-     fprintf(stderr,"\nCan't allocate memory \n");
-     return(0);
-  }
+    if ((fImg = (float **)imalloc(rows, cols, FOURIER)) == NULL)
+    {
+        fprintf(stderr, "\nCan't allocate memory \n");
+        return(0);
+    }
 
- for( i=0; i <rows; i++)
-  {                          /* multiplico por 1 y -1 alternativamente */
-    for( j=0; j<cols ; j++)
-     {
+    for (i = 0; i < rows; i++)
+    {                          /* multiplico por 1 y -1 alternativamente */
+        for (j = 0; j < cols ; j++)
+        {
+            par *= -1.0;
+            fImg[i][j] = par * imgModulo[i][j];
+        }
         par *= -1.0;
-        fImg[i][j] = par * imgModulo[i][j];
-     }
-    par *= -1.0;
-  }
+    }
 
-                 /*  calculo de los valores de la transfomada de fourier  */
+    /*  calculo de los valores de la transfomada de fourier  */
 
- if ( image_fft(fImg,rows,cols,DIRECT) == ERROR)
-  {
-     fprintf(stderr,"\n FFT coefficients error");
-     return(0);
-  }
-            /* Calculo del modulo y la fase de  la transformada    */
+    if (image_fft(fImg, rows, cols, DIRECT) == ERROR)
+    {
+        fprintf(stderr, "\n FFT coefficients error");
+        return(0);
+    }
+    /* Calculo del modulo y la fase de  la transformada    */
 
- cols2=(int) (cols/2);
+    cols2 = (int)(cols / 2);
 
- for (i=0; i<rows ; i++)
-    for (j=0; j<cols;  j++)
-      {
-        if (j<=cols2 )
-            imgModulo[i][j] = fmodulo( Re(i,j),Im(i,j));
-        else  if (i==0)
-            imgModulo[0][j] = fmodulo(Re(0,cols-j),Im(0,cols-j));
-        else
-            imgModulo[i][j] = fmodulo(Re(rows-i,cols-j),Im(rows-i,cols-j));
-      }
+    for (i = 0; i < rows ; i++)
+        for (j = 0; j < cols;  j++)
+        {
+            if (j <= cols2)
+                imgModulo[i][j] = fmodulo(Re(i, j), Im(i, j));
+            else  if (i == 0)
+                imgModulo[0][j] = fmodulo(Re(0, cols - j), Im(0, cols - j));
+            else
+                imgModulo[i][j] = fmodulo(Re(rows - i, cols - j), Im(rows - i, cols - j));
+        }
 
- return(1);
+    return(1);
 }
 
 /****************************************************************************/
 
-float fmodulo(float x,float y)
+float fmodulo(float x, float y)
 {
-  double res;
+    double res;
 
-  res = log ( (double)(1.0 + sqrt(x*x+y*y) ));
-  return( (float) res);
+    res = log((double)(1.0 + sqrt(x * x + y * y)));
+    return((float) res);
 
 }  /* end of fmodulo   */
 

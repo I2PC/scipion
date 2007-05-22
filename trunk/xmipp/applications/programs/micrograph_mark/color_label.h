@@ -22,23 +22,24 @@
 
 /* Includes ---------------------------------------------------------------- */
 
-/* Forward declarations ---------------------------------------------------- */ 
+/* Forward declarations ---------------------------------------------------- */
 class QColor;
 
 /* Set of colors for the labels -------------------------------------------- */
-class QtColorLabel {
-   
+class QtColorLabel
+{
+
 private:
-   static const int  __numColors = 15;         
-   QColor           *__col;
-   
+    static const int  __numColors = 15;
+    QColor           *__col;
+
 public:
-   // Constructor
-   QtColorLabel();
-   ~QtColorLabel();
-      
-   // Get the color for the i family
-   QColor col( int i );
+    // Constructor
+    QtColorLabel();
+    ~QtColorLabel();
+
+    // Get the color for the i family
+    QColor col(int i);
 };
 
 #endif

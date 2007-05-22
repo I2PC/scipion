@@ -31,19 +31,19 @@
 // Read arguments ==========================================================
 void Prog_segment_prm::read(int argc, char **argv)
 {
-    fn_vol=get_param(argc,argv,"-i");
-    voxel_mass=AtoF(get_param(argc,argv,"-voxel_mass","-1"));
-    dalton_mass=AtoF(get_param(argc,argv,"-dalton_mass","-1"));
-    aa_mass=AtoF(get_param(argc,argv,"-aa_mass","-1"));
-    sampling_rate=AtoF(get_param(argc,argv,"-sampling_rate","-1"));
-    fn_mask=get_param(argc,argv,"-o","");
-    en_threshold=check_param(argc,argv,"-threshold");
+    fn_vol = get_param(argc, argv, "-i");
+    voxel_mass = AtoF(get_param(argc, argv, "-voxel_mass", "-1"));
+    dalton_mass = AtoF(get_param(argc, argv, "-dalton_mass", "-1"));
+    aa_mass = AtoF(get_param(argc, argv, "-aa_mass", "-1"));
+    sampling_rate = AtoF(get_param(argc, argv, "-sampling_rate", "-1"));
+    fn_mask = get_param(argc, argv, "-o", "");
+    en_threshold = check_param(argc, argv, "-threshold");
     if (en_threshold)
-        threshold=AtoF(get_param(argc,argv,"-threshold"));
+        threshold = AtoF(get_param(argc, argv, "-threshold"));
 
     //Sjors
-    wang_radius=AtoI(get_param(argc,argv,"-wang","3."));
-    do_prob=check_param(argc,argv,"-prob");
+    wang_radius = AtoI(get_param(argc, argv, "-wang", "3."));
+    do_prob = check_param(argc, argv, "-prob");
 
 }
 
@@ -82,15 +82,15 @@ void Prog_segment_prm::usage() const
 void Prog_segment_prm::produce_side_info()
 {
     V.read(fn_vol);
-    double sampling_rate3=sampling_rate*sampling_rate*sampling_rate;
-    if (voxel_mass==-1 && !en_threshold)
+    double sampling_rate3 = sampling_rate * sampling_rate * sampling_rate;
+    if (voxel_mass == -1 && !en_threshold)
     {
-        if ((dalton_mass==-1 && aa_mass==-1) || sampling_rate==-1)
-            REPORT_ERROR(1,"Prog_segment_prm: No way to compute voxel mass");
-        if (dalton_mass!=-1)
-            voxel_mass=dalton_mass*1.207/sampling_rate3;
+        if ((dalton_mass == -1 && aa_mass == -1) || sampling_rate == -1)
+            REPORT_ERROR(1, "Prog_segment_prm: No way to compute voxel mass");
+        if (dalton_mass != -1)
+            voxel_mass = dalton_mass * 1.207 / sampling_rate3;
         else
-            voxel_mass=aa_mass*110*1.207/sampling_rate3;
+            voxel_mass = aa_mass * 110 * 1.207 / sampling_rate3;
     }
     cout << endl << "Derived voxel_mass=" << voxel_mass << endl;
 }
@@ -105,17 +105,17 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     Volume aux;
 
     // Binarize input volume
-    (*V_out)()=(*V_in)();
-    (*V_out)().threshold("below",threshold,threshold);
+    (*V_out)() = (*V_in)();
+    (*V_out)().threshold("below", threshold, threshold);
     (*V_out)().binarize(threshold);
 
 #ifdef DEBUG
 
     cout << threshold << endl;
     VolumeXmipp save;
-    save()=(*V_in)();
+    save() = (*V_in)();
     save.write("PPP0.vol");
-    save()=(*V_out)();
+    save() = (*V_out)();
     save.write("PPP1.vol");
 #endif
 
@@ -123,21 +123,21 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     {
         // Apply morphological opening to input volume
         aux().resize((*V_out)());
-        opening3D((*V_out)(), aux(),18,0,1);
-        closing3D(aux(), (*V_out)(),18,0,1);
+        opening3D((*V_out)(), aux(), 18, 0, 1);
+        closing3D(aux(), (*V_out)(), 18, 0, 1);
 #ifdef DEBUG
 
-        save()=(*V_out)();
+        save() = (*V_out)();
         save.write("PPP2.vol");
 #endif
 
     }
 
     // Count the number of different objects
-    int no_comp=label_volume((*V_out)(),aux());
-    matrix1D<double> count(no_comp+1);
+    int no_comp = label_volume((*V_out)(), aux());
+    matrix1D<double> count(no_comp + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(aux())
-    count((int)aux(k,i,j))++;
+    count((int)aux(k, i, j))++;
 
 #ifdef DEBUG
 
@@ -148,13 +148,13 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 #endif
 
     // Pick the maximum
-    count(0)=0; // We don't want to pick the background
+    count(0) = 0; // We don't want to pick the background
     int imax;
     count.max_index(imax);
 
     // Select the mask with only that piece
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_out)())
-    (*V_out)(k,i,j)=aux(k,i,j)==imax;
+    (*V_out)(k, i, j) = aux(k, i, j) == imax;
 
     return count(imax);
 }
@@ -162,33 +162,33 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
 {
 
-    int r2,radius2=radius*radius;
-    double sumw,weight;
+    int r2, radius2 = radius * radius;
+    double sumw, weight;
 
     (*V_out)().resize((*V_in)());
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
     {
-        sumw=0.;
-        VOL_ELEM((*V_out)(),k,i,j)=0.;
-        for (int kp=k-radius; kp<k+radius; kp++)
+        sumw = 0.;
+        VOL_ELEM((*V_out)(), k, i, j) = 0.;
+        for (int kp = k - radius; kp < k + radius; kp++)
         {
-            if (kp>STARTINGZ((*V_in)()) && kp<FINISHINGZ((*V_in)()))
+            if (kp > STARTINGZ((*V_in)()) && kp < FINISHINGZ((*V_in)()))
             {
-                for (int ip=i-radius; ip<i+radius; ip++)
+                for (int ip = i - radius; ip < i + radius; ip++)
                 {
-                    if (ip>STARTINGY((*V_in)()) && ip<FINISHINGY((*V_in)()))
+                    if (ip > STARTINGY((*V_in)()) && ip < FINISHINGY((*V_in)()))
                     {
-                        for (int jp=j-radius; jp<j+radius; jp++)
+                        for (int jp = j - radius; jp < j + radius; jp++)
                         {
-                            if (jp>STARTINGX((*V_in)()) && jp<FINISHINGX((*V_in)()))
+                            if (jp > STARTINGX((*V_in)()) && jp < FINISHINGX((*V_in)()))
                             {
-                                r2=(kp-k)*(kp-k)+(ip-i)*(ip-i)+(jp-j)*(jp-j);
-                                if ((r2<radius2) && (VOL_ELEM((*V_in)(),kp,ip,jp)>0.))
+                                r2 = (kp - k) * (kp - k) + (ip - i) * (ip - i) + (jp - j) * (jp - j);
+                                if ((r2 < radius2) && (VOL_ELEM((*V_in)(), kp, ip, jp) > 0.))
                                 {
-                                    weight=1.-sqrt((double)(r2/radius2));
-                                    VOL_ELEM((*V_out)(),k,i,j)+=weight*MAX(0.,VOL_ELEM((*V_in)(),kp,ip,jp));
-                                    sumw+=weight;
+                                    weight = 1. - sqrt((double)(r2 / radius2));
+                                    VOL_ELEM((*V_out)(), k, i, j) += weight * MAX(0., VOL_ELEM((*V_in)(), kp, ip, jp));
+                                    sumw += weight;
                                 }
                             }
                         }
@@ -196,10 +196,10 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
                 }
             }
         }
-        if (sumw>0.)
-            VOL_ELEM((*V_out)(),k,i,j)/=sumw;
+        if (sumw > 0.)
+            VOL_ELEM((*V_out)(), k, i, j) /= sumw;
         else
-            VOL_ELEM((*V_out)(),k,i,j)=0.;
+            VOL_ELEM((*V_out)(), k, i, j) = 0.;
     }
 
 }
@@ -210,53 +210,53 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
 
     // Calculate mean and sigma for protein and solvent regions
     // according to the traditional segmentation
-    double Np,sump,sum2p,Ns,sums,sum2s;
-    double avgp,sigp,avgs,sigs,aux,solv_frac,prot_frac;
-    double p_prot,p_solv;
+    double Np, sump, sum2p, Ns, sums, sum2s;
+    double avgp, sigp, avgs, sigs, aux, solv_frac, prot_frac;
+    double p_prot, p_solv;
 
     (*V_in)().set_Xmipp_origin();
     (*V_out)().set_Xmipp_origin();
 
-    Np=sump=sum2p=Ns=sums=sum2s=0.;
+    Np = sump = sum2p = Ns = sums = sum2s = 0.;
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
     {
-        aux=VOL_ELEM((*V_in)(),k,i,j);
-        if (VOL_ELEM((*V_out)(),k,i,j)<0.5)
+        aux = VOL_ELEM((*V_in)(), k, i, j);
+        if (VOL_ELEM((*V_out)(), k, i, j) < 0.5)
         {
-            sums+=aux;
-            sum2s+=aux*aux;
-            Ns+=1.;
+            sums += aux;
+            sum2s += aux * aux;
+            Ns += 1.;
         }
         else
         {
-            sump+=aux;
-            sum2p+=aux*aux;
-            Np+=1.;
+            sump += aux;
+            sum2p += aux * aux;
+            Np += 1.;
         }
     }
-    if (Np>0. && Ns>0.)
+    if (Np > 0. && Ns > 0.)
     {
-        avgs=sums/Ns;
-        sigs=sum2s/Ns-avgs*avgs;
-        avgp=sump/Np;
-        sigp=sum2p/Np-avgp*avgp;
-        prot_frac=Np/(Np+Ns);
-        solv_frac=1.-prot_frac;
+        avgs = sums / Ns;
+        sigs = sum2s / Ns - avgs * avgs;
+        avgp = sump / Np;
+        sigp = sum2p / Np - avgp * avgp;
+        prot_frac = Np / (Np + Ns);
+        solv_frac = 1. - prot_frac;
     }
     else
     {
-        REPORT_ERROR(1,"Prog_segment_prm: empty solvent or protein region");
+        REPORT_ERROR(1, "Prog_segment_prm: empty solvent or protein region");
     }
 
     // Terwilliger-like calculation of P(x|solv) & P(x|prot)
     // Bayes: P(prot|x)= P(x|prot)/{P(x|prot)+P(x|solv)}
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
     {
-        aux=VOL_ELEM((*V_in)(),k,i,j)-avgs;
-        p_solv=solv_frac*exp(-aux*aux/(2*sigs));
-        aux=VOL_ELEM((*V_in)(),k,i,j)-avgp;
-        p_prot=prot_frac*exp(-aux*aux/(2*sigp));
-        VOL_ELEM((*V_out)(),k,i,j)=p_prot/(p_prot+p_solv);
+        aux = VOL_ELEM((*V_in)(), k, i, j) - avgs;
+        p_solv = solv_frac * exp(-aux * aux / (2 * sigs));
+        aux = VOL_ELEM((*V_in)(), k, i, j) - avgp;
+        p_prot = prot_frac * exp(-aux * aux / (2 * sigp));
+        VOL_ELEM((*V_out)(), k, i, j) = p_prot / (p_prot + p_solv);
     }
 
 }
@@ -265,39 +265,39 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
 void Prog_segment_prm::segment(VolumeXmipp &mask)
 {
     double th_min, th_max, val_min, val_max;
-    V().compute_double_minmax(val_min,val_max);
-    th_min=val_min;
-    th_max=val_max;
-    double mass_min=MULTIDIM_SIZE(V());
-    double mass_max=1;
+    V().compute_double_minmax(val_min, val_max);
+    th_min = val_min;
+    th_max = val_max;
+    double mass_min = MULTIDIM_SIZE(V());
+    double mass_max = 1;
 
-    bool ok=false;
+    bool ok = false;
     if (!en_threshold)
     {
         // Perform a bracketing search until the mass is
         // within a 0.1% of the desired mass
         do
         {
-            double th_med=(th_min+th_max)*0.5;
-            double mass_med=segment_threshold(&V,&mask,th_med,do_prob);
+            double th_med = (th_min + th_max) * 0.5;
+            double mass_med = segment_threshold(&V, &mask, th_med, do_prob);
             cout << "Threshold= " << th_med
             << " mass of the main piece= " << mass_med << endl;
-            if (ABS(mass_med-voxel_mass)/voxel_mass<0.001)
+            if (ABS(mass_med - voxel_mass) / voxel_mass < 0.001)
             {
-                ok=true;
+                ok = true;
                 break;
             }
-            if ((th_max-th_min)/(val_max-val_min)<0.0001)
+            if ((th_max - th_min) / (val_max - val_min) < 0.0001)
                 break;
-            if (mass_med<voxel_mass)
+            if (mass_med < voxel_mass)
             {
-                th_max=th_med;
-                mass_max=mass_med;
+                th_max = th_med;
+                mass_max = mass_med;
             }
             else
             {
-                th_min=th_med;
-                mass_min=mass_med;
+                th_min = th_med;
+                mass_min = mass_med;
             }
         }
         while (true);
@@ -305,27 +305,27 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
     else
     {
         // Perform a single thresholding
-        double mass_med=segment_threshold(&V,&mask,threshold,do_prob);
+        double mass_med = segment_threshold(&V, &mask, threshold, do_prob);
         cout << "Threshold= " << threshold
         << " mass of the main piece= " << mass_med << endl;
-        ok=true;
+        ok = true;
     }
 
     if (do_prob)
     {
         // Wang-Leslie like modification of the input volume
-        if (wang_radius>=3)
+        if (wang_radius >= 3)
         {
             VolumeXmipp Vwang;
-            wang_smoothing(&V,&Vwang,wang_radius);
-            V=Vwang;
+            wang_smoothing(&V, &Vwang, wang_radius);
+            V = Vwang;
         }
         // Terwilliger-like calculation of P(solv|x) through P(x|solv) & P(x|prot)
-        probabilistic_solvent(&V,&mask);
+        probabilistic_solvent(&V, &mask);
     }
 
     // Save mask if necessary
-    if (fn_mask!="" && (ok || do_prob) )
+    if (fn_mask != "" && (ok || do_prob))
         mask.write(fn_mask);
     if (!ok && !do_prob)
         cout << "Segment: Cannot find an appropriate threshold\n";

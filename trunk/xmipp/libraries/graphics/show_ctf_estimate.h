@@ -38,47 +38,48 @@
     This class shows a psd and allows to select some parameters for
     adjusting the CTF.
 */
-class AssignCTFViewer: public ImageViewer {
+class AssignCTFViewer: public ImageViewer
+{
     Q_OBJECT
 public:
-   /// Constructor with a PSD image
-   AssignCTFViewer(const FileName &_fn_psd, Prog_assign_CTF_prm &_assign_ctf_prm);
+    /// Constructor with a PSD image
+    AssignCTFViewer(const FileName &_fn_psd, Prog_assign_CTF_prm &_assign_ctf_prm);
 
-   /// Draw first zero
-   void drawFirstZero(vector<float> &prm);
+    /// Draw first zero
+    void drawFirstZero(vector<float> &prm);
 
-   /// Update mask
-   void updateMask(vector<float> &prm);
+    /// Update mask
+    void updateMask(vector<float> &prm);
 public:
-   // Assign CTF parameters
-   Prog_assign_CTF_prm assign_ctf_prm;
+    // Assign CTF parameters
+    Prog_assign_CTF_prm assign_ctf_prm;
 
-   // PSD filename
-   FileName fn_psd;
+    // PSD filename
+    FileName fn_psd;
 
-   // Scroll parameters
-   ScrollParam *select_prm;
+    // Scroll parameters
+    ScrollParam *select_prm;
 
-   // Current vector of parameters
-   // 0: Min freq
-   // 1: Max freq
-   // 2: Defocus U
-   // 3: Defocus V
-   // 4: Angle
-   vector<float> current_prm;
+    // Current vector of parameters
+    // 0: Min freq
+    // 1: Max freq
+    // 2: Defocus U
+    // 3: Defocus V
+    // 4: Angle
+    vector<float> current_prm;
 
-   // Backup of the original image
-   matrix2D<double> xmippImage_backup;
+    // Backup of the original image
+    matrix2D<double> xmippImage_backup;
 public slots:
-   // Set a new set of parameters
-   void set_prm(vector<float> new_prm);
-   // cancel
-   void cancel();
-   // proceed
-   void okToProceed();
+    // Set a new set of parameters
+    void set_prm(vector<float> new_prm);
+    // cancel
+    void cancel();
+    // proceed
+    void okToProceed();
 protected slots:
-   // For repainting
-   virtual void paintEvent( QPaintEvent * );
+    // For repainting
+    virtual void paintEvent(QPaintEvent *);
 };
 //@}
 

@@ -38,32 +38,33 @@
 //@{
 /** Class to show spectra.
 */
-class ShowSpectra: public ShowSel {
-   Q_OBJECT;
+class ShowSpectra: public ShowSel
+{
+    Q_OBJECT;
 protected:
-   // Vectors to represent
-   xmippCTVectors *V;
+    // Vectors to represent
+    xmippCTVectors *V;
 
-   // Axes offset within cell frame
-   int offX, offY;
-   // Spacing between X ticks
-   int spacing;
-   // Offset for ticks
-   int x_tick_off;
+    // Axes offset within cell frame
+    int offX, offY;
+    // Spacing between X ticks
+    int spacing;
+    // Offset for ticks
+    int x_tick_off;
 
-   // Background Color
-   QColor backColor;
-   // Curve Color
-   QColor curveColor;
-   // Axis color
-   QColor axisColor;
-   // Font for axes
-   QFont axisFont;
+    // Background Color
+    QColor backColor;
+    // Curve Color
+    QColor curveColor;
+    // Axis color
+    QColor axisColor;
+    // Font for axes
+    QFont axisFont;
 
-   // Some menu items to enable/disable them
-   int mi_showgrid,    mi_hidegrid,
-       mi_showXlegend, mi_hideXlegend,
-       mi_showYlegend, mi_hideYlegend;
+    // Some menu items to enable/disable them
+    int mi_showgrid,    mi_hidegrid,
+    mi_showXlegend, mi_hideXlegend,
+    mi_showYlegend, mi_hideYlegend;
 
     /* Initialization.
        Sets V = NULL; and then calls to ShowSel::init() */
@@ -74,18 +75,19 @@ protected:
     virtual void initRightclickMenubar();
     /* How to repaint the cell.
        This is the main function. */
-    virtual void paintCell(QPainter *p, int row, int col,const QRect & cr,
-       bool selected, const QColorGroup & cg);
+    virtual void paintCell(QPainter *p, int row, int col, const QRect & cr,
+                           bool selected, const QColorGroup & cg);
     /* Produce Pixmap for cell i */
-    virtual void producePixmapAt(int i) {}
+    virtual void producePixmapAt(int i)
+    {}
     /* Open a new file. Old parameters must be discarded */
-            void openNewFile (const FileName &);
+    void openNewFile(const FileName &);
     /* Read a Dat File.
        First some initialization is done and then it call readDatFile*/
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0);
-   // Really read a Dat file
-   virtual void readDatFile(const FileName &_fn_root);
+                          double _minGray = 0, double _maxGray = 0);
+    // Really read a Dat file
+    virtual void readDatFile(const FileName &_fn_root);
     /* Init from vectors.
        Initialize many variables from the information contained in the
        vectors.*/
@@ -125,35 +127,36 @@ protected slots:
 public:
     /** Initialize with a set of vectors.
         The same as with initWithFile but without reading any file.
-	The memory pointed by _V should not be destroyed after calling
-	this function since it will be the vectors seen by this class,
-	i.e., no copy will be performed.*/
+    The memory pointed by _V should not be destroyed after calling
+    this function since it will be the vectors seen by this class,
+    i.e., no copy will be performed.*/
     virtual void initWithVectors(int _numRows, int _numCols,
-       xmippCTVectors *_V, const char *_title);
+                                 xmippCTVectors *_V, const char *_title);
 };
 
 /** Class to filter spectra.
 */
-class SpectraFilter : public QWidget {
-   Q_OBJECT
+class SpectraFilter : public QWidget
+{
+    Q_OBJECT
 public:
-   /** Constructor */
-   SpectraFilter(int min, int max, const vector<float> &_x,
-      ShowSpectra *show_spectra,
-      QWidget *parent=0, const char *name=0, int wflags=0);
-   /** Destructor */
-   ~SpectraFilter();
+    /** Constructor */
+    SpectraFilter(int min, int max, const vector<float> &_x,
+                  ShowSpectra *show_spectra,
+                  QWidget *parent = 0, const char *name = 0, int wflags = 0);
+    /** Destructor */
+    ~SpectraFilter();
 private:
-   ShowSpectra *__show_spectra;
-   int         __N;    // Number of sliders
-   float      *__current_values;
-   QScrollBar **__scroll_min;
-   QScrollBar **__scroll_max;
-   QLabel     **__label_min;
-   QLabel     **__label_max;
+    ShowSpectra *__show_spectra;
+    int         __N;    // Number of sliders
+    float      *__current_values;
+    QScrollBar **__scroll_min;
+    QScrollBar **__scroll_max;
+    QLabel     **__label_min;
+    QLabel     **__label_max;
 private slots:
-   void but_ok_clicked();
-   void scrollValueChanged(int);
+    void but_ok_clicked();
+    void scrollValueChanged(int);
 };
 
 //@}

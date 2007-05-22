@@ -26,70 +26,91 @@
 #include <data/progs.h>
 #include <data/args.h>
 
-class Pyramid_parameters: public Prog_parameters {
+class Pyramid_parameters: public Prog_parameters
+{
 public:
-   enum Toperation {Expand, Reduce, None};
-   Toperation operation;
-   int levels;
+    enum Toperation {Expand, Reduce, None};
+    Toperation operation;
+    int levels;
 
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      levels=AtoI(get_param(argc,argv,"-levels","1"));
-      if      (check_param(argc,argv,"-expand")) operation=Expand;
-      else if (check_param(argc,argv,"-reduce")) operation=Reduce;
-      else                                       operation=None;
-   }
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        levels = AtoI(get_param(argc, argv, "-levels", "1"));
+        if (check_param(argc, argv, "-expand")) operation = Expand;
+        else if (check_param(argc, argv, "-reduce")) operation = Reduce;
+        else                                       operation = None;
+    }
 
-   void show() {
-      Prog_parameters::show();
-      cout << "Operation: ";
-      switch (operation) {
-         case Expand: cout << "Expand\n"; break;
-         case Reduce: cout << "Reduce\n"; break;
-         case None  : cout << "None  \n"; break;
-      }
-      cout << "Levels: " << levels << endl;
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        cout << "Operation: ";
+        switch (operation)
+        {
+        case Expand:
+            cout << "Expand\n";
+            break;
+        case Reduce:
+            cout << "Reduce\n";
+            break;
+        case None  :
+            cout << "None  \n";
+            break;
+        }
+        cout << "Levels: " << levels << endl;
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cerr << "  -expand | -reduce         : Expand or reduce the image\n";
-      cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  -expand | -reduce         : Expand or reduce the image\n";
+        cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
-   float Xoff, Yoff; img.get_originOffsets(Xoff,Yoff);
-   matrix2D<double> result;
-   float scale_factor=(float) (pow(2.0,eprm->levels));
-   switch (eprm->operation) {
-      case Pyramid_parameters::Expand:
-         img().pyramid_expand(result,eprm->levels);
-         img.set_originOffsets(Xoff*scale_factor,Yoff*scale_factor);
-         break;
-      case Pyramid_parameters::Reduce:
-         img().pyramid_reduce(result,eprm->levels);
-         img.set_originOffsets(Xoff/scale_factor,Yoff/scale_factor);
-         break;
-   }
-   img()=result;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
+    float Xoff, Yoff;
+    img.get_originOffsets(Xoff, Yoff);
+    matrix2D<double> result;
+    float scale_factor = (float)(pow(2.0, eprm->levels));
+    switch (eprm->operation)
+    {
+    case Pyramid_parameters::Expand:
+        img().pyramid_expand(result, eprm->levels);
+        img.set_originOffsets(Xoff*scale_factor, Yoff*scale_factor);
+        break;
+    case Pyramid_parameters::Reduce:
+        img().pyramid_reduce(result, eprm->levels);
+        img.set_originOffsets(Xoff / scale_factor, Yoff / scale_factor);
+        break;
+    }
+    img() = result;
 
-   return true;
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   Pyramid_parameters *eprm=(Pyramid_parameters *) prm;
-   matrix3D<double> result;
-   switch (eprm->operation) {
-      case Pyramid_parameters::Expand: vol().pyramid_expand(result,eprm->levels); break;
-      case Pyramid_parameters::Reduce: vol().pyramid_reduce(result,eprm->levels); break;
-   }
-   vol()=result;
-   return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
+    matrix3D<double> result;
+    switch (eprm->operation)
+    {
+    case Pyramid_parameters::Expand:
+        vol().pyramid_expand(result, eprm->levels);
+        break;
+    case Pyramid_parameters::Reduce:
+        vol().pyramid_reduce(result, eprm->levels);
+        break;
+    }
+    vol() = result;
+    return true;
 }
 
-int main (int argc, char **argv) {
-   Pyramid_parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Pyramid_parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

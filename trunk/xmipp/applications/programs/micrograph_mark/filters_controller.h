@@ -32,36 +32,38 @@ class QDialog;
 class QListBox;
 
 /* Filters generic class --------------------------------------------------- */
-class QtFiltersController : public QWidget {
-   Q_OBJECT
+class QtFiltersController : public QWidget
+{
+    Q_OBJECT
 
 private:
-   vector<QtFilter*>  __filterList;
-   QDialog           *__addFilterDialog;
-   QListBox          *__listFilters;
-   const Micrograph  *__M;
+    vector<QtFilter*>  __filterList;
+    QDialog           *__addFilterDialog;
+    QListBox          *__listFilters;
+    const Micrograph  *__M;
 
-   enum filters {
-      invertContrastFilter,
-      enhanceContrastFilter,
-      substractBackgroundFilter,
-      removeOutlierFilter,
-      lowpassFilter,
-      highpassFilter
-   };
+    enum filters
+    {
+        invertContrastFilter,
+        enhanceContrastFilter,
+        substractBackgroundFilter,
+        removeOutlierFilter,
+        lowpassFilter,
+        highpassFilter
+    };
 
 public:
-   // Constructor
-   QtFiltersController( QWidget * _parent, const Micrograph *_M );
-   ~QtFiltersController();
+    // Constructor
+    QtFiltersController(QWidget * _parent, const Micrograph *_M);
+    ~QtFiltersController();
 
-   // Apply the filters list
-   void applyFilters( QImage *_img );
+    // Apply the filters list
+    void applyFilters(QImage *_img);
 
 public slots:
-   void slotAddFilter();
-   void slotAddFilter( int _f );
-   void slotCleanFilters();
+    void slotAddFilter();
+    void slotAddFilter(int _f);
+    void slotCleanFilters();
 };
 
 #endif

@@ -31,46 +31,47 @@
 //@{
 /* Enhance PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */
-class Prog_Enhance_PSD_Parameters: public Prog_parameters {
+class Prog_Enhance_PSD_Parameters: public Prog_parameters
+{
 public:
-   /// Center PSD before working
-   bool center;
+    /// Center PSD before working
+    bool center;
 
-   /// Take log10 before working
-   bool take_log;
+    /// Take log10 before working
+    bool take_log;
 
-   /// Bandpass filter low frequency (in Fourier space, max 0.5)
-   double filter_w1;
+    /// Bandpass filter low frequency (in Fourier space, max 0.5)
+    double filter_w1;
 
-   /// Bandpass filter high frequency (in Fourier space, max 0.5)
-   double filter_w2;
+    /// Bandpass filter high frequency (in Fourier space, max 0.5)
+    double filter_w2;
 
-   /// Decay width (raised cosine)
-   double decay_width;
+    /// Decay width (raised cosine)
+    double decay_width;
 
-   /// Lower frequency for the mask (in Fourier space, max 0.5)
-   double mask_w1;
+    /// Lower frequency for the mask (in Fourier space, max 0.5)
+    double mask_w1;
 
-   /// Higher frequency for the mask (in Fourier space, max 0.5)
-   double mask_w2;
+    /// Higher frequency for the mask (in Fourier space, max 0.5)
+    double mask_w2;
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** Show parameters. */
-   void show();
+    /** Show parameters. */
+    void show();
 
-   /** Apply to a single PSD.
-       The steps are basically: outlier removal, band pass filtration, masking
-       and normalization. */
-   void apply(matrix2D<double> &PSD);
+    /** Apply to a single PSD.
+        The steps are basically: outlier removal, band pass filtration, masking
+        and normalization. */
+    void apply(matrix2D<double> &PSD);
 };
 //@}
 #endif

@@ -43,53 +43,54 @@
 /**@name Break_Sym */
 //@{
 /** Break_Sym parameters. */
-class Prog_Break_Sym_prm {
+class Prog_Break_Sym_prm
+{
 
 public:
-  // Various filenames
-  FileName fn_sel, fn_vol, fn_sym, fn_root, fn_mask, fn_iter;
-  // Selfile with experimental images or reference volumes
-  SelFile SF,SFvol;
-  // Symmetry list
-  SymList SL;
-  // Verbosity flag
-  int verb;
-  // dimension
-  int dim;
-  // Number of volumes to process
-  int Nvols;
-  // Iteration numbering
-  int Niter, istart;
-  // Convergence check
-  double eps;
-  // Radius for masking of volume
-  double mask_radius;
-  // File handler for the history file
-  ofstream fh_hist;
-  // Reference volumes
-  vector<matrix3D<double> > vols;
-  // Mask
-  VolumeXmipp mask;
+    // Various filenames
+    FileName fn_sel, fn_vol, fn_sym, fn_root, fn_mask, fn_iter;
+    // Selfile with experimental images or reference volumes
+    SelFile SF, SFvol;
+    // Symmetry list
+    SymList SL;
+    // Verbosity flag
+    int verb;
+    // dimension
+    int dim;
+    // Number of volumes to process
+    int Nvols;
+    // Iteration numbering
+    int Niter, istart;
+    // Convergence check
+    double eps;
+    // Radius for masking of volume
+    double mask_radius;
+    // File handler for the history file
+    ofstream fh_hist;
+    // Reference volumes
+    vector<matrix3D<double> > vols;
+    // Mask
+    VolumeXmipp mask;
 
 public:
 
-  /// Read additional arguments for 3D-process from command line
-  void read(int argc, char **argv);
+    /// Read additional arguments for 3D-process from command line
+    void read(int argc, char **argv);
 
-  /// Usage
-  void usage();
+    /// Usage
+    void usage();
 
-  /// Show
-  void show();
+    /// Show
+    void show();
 
-  /// Project the reference volume in evenly sampled directions
-  void process_one_image(ImageXmipp &img, int &opt_vol, int &opt_sym, double &maxcorr);
+    /// Project the reference volume in evenly sampled directions
+    void process_one_image(ImageXmipp &img, int &opt_vol, int &opt_sym, double &maxcorr);
 
-  /// Process various images
-  void process_selfile(SelFile &SF, vector<SelFile> &SFout, double &avecorr);
+    /// Process various images
+    void process_selfile(SelFile &SF, vector<SelFile> &SFout, double &avecorr);
 
-  /// reconstruction by (weighted ART) or WBP
-  void reconstruction(int argc, char **argv, SelFile &SF, int iter, int volno);
+    /// reconstruction by (weighted ART) or WBP
+    void reconstruction(int argc, char **argv, SelFile &SF, int iter, int volno);
 
 };
 //@}

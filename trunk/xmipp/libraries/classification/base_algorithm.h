@@ -52,85 +52,96 @@
 template<class DSClass>
 class xmippBaseAlgo
 {
- public:
+public:
 
-  typedef DSClass DS;
-  typedef typename DS::TS TS;
+    typedef DSClass DS;
+    typedef typename DS::TS TS;
 
-  /**
-   * Constructor.
-   * @param _ID an ID string unique for each algorithm class
-   */
-  xmippBaseAlgo( const string& _ID = ""): ID( _ID ) {};
+    /**
+     * Constructor.
+     * @param _ID an ID string unique for each algorithm class
+     */
+    xmippBaseAlgo(const string& _ID = ""): ID(_ID)
+    {};
 
-  /**
-   * Destructor.
-   * The default destructor
-   */
-  virtual ~xmippBaseAlgo() {};
+    /**
+     * Destructor.
+     * The default destructor
+     */
+    virtual ~xmippBaseAlgo()
+    {};
 
-  /**
-   * Method to train the algorithm.
-   * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
-   * @param _ds Data structure to train
-   * @param _examples  A training set with the training examples.
-   */
-  virtual void train(DS& _ds, const TS& _examples) const {};
+    /**
+     * Method to train the algorithm.
+     * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
+     * @param _ds Data structure to train
+     * @param _examples  A training set with the training examples.
+     */
+    virtual void train(DS& _ds, const TS& _examples) const
+        {};
 
-  /**
-   * Method to train the algorithm.
-   * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
-   * @param _ds Data structure to train
-   * @param _examples  A training set with the training examples.
-   */
-  virtual void train(DS& _ds, TS& _examples) const {};
+    /**
+     * Method to train the algorithm.
+     * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
+     * @param _ds Data structure to train
+     * @param _examples  A training set with the training examples.
+     */
+    virtual void train(DS& _ds, TS& _examples) const
+        {};
 
-  /**
-   * Method to test the algorithm.
-   * Note that this method is pure virtual, so it must be defined in every xmipp descendant class.
-   * @param _ds Data structure to train. Const because its not affected by test
-   * @param _examples  A training set with the training examples.
-   * @return The test error, that is, error obtained for the test file. Might be
-   * MSE error, or success in classification error, or whatever; just be consistent
-   * for each algorithm
-   */
-  virtual double test(const DS& _ds, const TS& _examples) const = 0;
+    /**
+     * Method to test the algorithm.
+     * Note that this method is pure virtual, so it must be defined in every xmipp descendant class.
+     * @param _ds Data structure to train. Const because its not affected by test
+     * @param _examples  A training set with the training examples.
+     * @return The test error, that is, error obtained for the test file. Might be
+     * MSE error, or success in classification error, or whatever; just be consistent
+     * for each algorithm
+     */
+    virtual double test(const DS& _ds, const TS& _examples) const = 0;
 
-  /** Print itself on standard output
-   */
-  virtual void printSelf( ostream& _os ) const {
-    _os << "xmippBaseAlgo" << endl;	// to identify it as an algorith
-    _os << ID << endl;
-  };
+    /** Print itself on standard output
+     */
+    virtual void printSelf(ostream& _os) const
+    {
+        _os << "xmippBaseAlgo" << endl; // to identify it as an algorith
+        _os << ID << endl;
+    };
 
-  /** Set ID (returns a const reference to the ID)
-  */
-  virtual const string& setID() const {
-      return ID;
-  };
+    /** Set ID (returns a const reference to the ID)
+    */
+    virtual const string& setID() const
+    {
+        return ID;
+    };
 
-  /** Set ID (returns a non-const reference to the ID)
-  */
-  virtual string& setID() {
-      return ID;
-  };
+    /** Set ID (returns a non-const reference to the ID)
+    */
+    virtual string& setID()
+    {
+        return ID;
+    };
 
 
-  /** Defines Listener class
-  */
-  void setListener(xmippBaseListener* _listener) { listener = _listener; };
+    /** Defines Listener class
+    */
+    void setListener(xmippBaseListener* _listener)
+    {
+        listener = _listener;
+    };
 
- protected:
-  string ID;// algorithm ID, an unique name to recognize the algorithm
-  xmippBaseListener* listener;   // Listener class
+protected:
+    string ID;// algorithm ID, an unique name to recognize the algorithm
+    xmippBaseListener* listener;   // Listener class
 
 };
 
 
 //-----------------------------------------------------------------------------
 template<class DS>
-ostream& operator << (ostream& _os, const xmippBaseAlgo<DS>& _algo ) {
-	_algo.printSelf( _os );
+ostream& operator << (ostream& _os, const xmippBaseAlgo<DS>& _algo)
+{
+    _algo.printSelf(_os);
     return _os;
 };
 

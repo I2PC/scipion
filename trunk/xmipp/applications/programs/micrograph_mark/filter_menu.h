@@ -26,27 +26,28 @@
 class QtWidgetMicrograph;
 
 /* Filter menu for Mark ---------------------------------------------------- */
-class QtFilterMenu : public QtPopupMenuMark {
-   // For accepting signals and slots
-   Q_OBJECT
+class QtFilterMenu : public QtPopupMenuMark
+{
+    // For accepting signals and slots
+    Q_OBJECT
 
 public:
-   // Constructor
-   QtFilterMenu( QtWidgetMicrograph* _parent );
+    // Constructor
+    QtFilterMenu(QtWidgetMicrograph* _parent);
 
 
 public slots:
-   // Add filter
-   void slotAdjustContrast();
-   void slotCrop();
-   void slotAddFilter();
-   void slotCleanFilters();
+    // Add filter
+    void slotAdjustContrast();
+    void slotCrop();
+    void slotAddFilter();
+    void slotCleanFilters();
 
 signals:
-   void signalAdjustContrast();
-   void signalCrop();
-   void signalAddFilter();
-   void signalCleanFilters();
+    void signalAdjustContrast();
+    void signalCrop();
+    void signalAddFilter();
+    void signalCleanFilters();
 };
 
 #endif

@@ -5,9 +5,9 @@
 #define RowVector(a,b)  (&a[b*nDim])
 #define CopyVector(a,b) memcpy((a),(b),nDim*sizeof(double))
 
-DESolver *global_ptr_desolver=NULL;
+DESolver *global_ptr_desolver = NULL;
 
-DESolver::DESolver(int dim,int popSize, double _pGrad) :
+DESolver::DESolver(int dim, int popSize, double _pGrad) :
         nDim(dim), nPop(popSize), pGrad(_pGrad),
         generations(0), strategy(stRand1Exp),
         scale(0.7), probability(0.5), bestEnergy(0.0),
@@ -19,8 +19,8 @@ DESolver::DESolver(int dim,int popSize, double _pGrad) :
     trialGrad.resize(nDim);
     stepsGrad.resize(nDim);
     stepsGrad.init_constant(1);
-    popEnergy	  = new double[nPop];
-    population	  = new double[nPop * nDim];
+    popEnergy   = new double[nPop];
+    population   = new double[nPop * nDim];
 
     return;
 }
@@ -40,26 +40,26 @@ DESolver::~DESolver(void)
     return;
 }
 
-void DESolver::Setup(double *min,double *max,
-                     int deStrategy,double diffScale,double crossoverProb)
+void DESolver::Setup(double *min, double *max,
+                     int deStrategy, double diffScale, double crossoverProb)
 {
     int i;
 
-    strategy	= deStrategy;
-    scale		= diffScale;
+    strategy = deStrategy;
+    scale  = diffScale;
     probability     = crossoverProb;
     bestEnergy      = 1.0E20;
 
-    for (i=0; i < nPop; i++)
+    for (i = 0; i < nPop; i++)
     {
-        for (int j=0; j < nDim; j++)
-            Element(population,i,j) = RandomUniform(min[j],max[j]);
+        for (int j = 0; j < nDim; j++)
+            Element(population, i, j) = RandomUniform(min[j], max[j]);
 
         popEnergy[i] = 1.0E20;
     }
 
-    for (i=0; i < nDim; i++)
-        bestSolution[i] = (min[i]+max[i])/2.0;
+    for (i = 0; i < nDim; i++)
+        bestSolution[i] = (min[i] + max[i]) / 2.0;
 
     switch (strategy)
     {
@@ -109,40 +109,40 @@ void DESolver::Setup(double *min,double *max,
 
 bool DESolver::Solve(int maxGenerations)
 {
-    bool bAtSolution=false;
+    bool bAtSolution = false;
     int generation;
 
-    for (generation=0;(generation < maxGenerations) && !bAtSolution;generation++)
-        for (int candidate=0; candidate < nPop; candidate++)
+    for (generation = 0;(generation < maxGenerations) && !bAtSolution;generation++)
+        for (int candidate = 0; candidate < nPop; candidate++)
         {
             (this->*calcTrialSolution)(candidate);
-            trialEnergy = EnergyFunction(trialSolution,bAtSolution);
+            trialEnergy = EnergyFunction(trialSolution, bAtSolution);
 
             if (trialEnergy < popEnergy[candidate])
             {
                 // Follow gradient?
-                if (RandomUniform(0,1)<pGrad)
+                if (RandomUniform(0, 1) < pGrad)
                 {
                     int iter;
-                    global_ptr_desolver=this;
+                    global_ptr_desolver = this;
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(trialGrad)
-                    trialGrad(i)=trialSolution[i];
+                    trialGrad(i) = trialSolution[i];
                     Powell_optimizer(
                         trialGrad, 0, XSIZE(trialGrad),
                         EnergyFunctionGrad,
-                        0.01,trialEnergy,
-                        iter,stepsGrad);
+                        0.01, trialEnergy,
+                        iter, stepsGrad);
                 }
 
                 // New low for this candidate
                 popEnergy[candidate] = trialEnergy;
-                CopyVector(RowVector(population,candidate),trialSolution);
+                CopyVector(RowVector(population, candidate), trialSolution);
 
                 // Check if all-time low
                 if (trialEnergy < bestEnergy)
                 {
                     bestEnergy = trialEnergy;
-                    CopyVector(bestSolution,trialSolution);
+                    CopyVector(bestSolution, trialSolution);
                 }
             }
         }
@@ -156,15 +156,15 @@ void DESolver::Best1Exp(int candidate)
     int r1, r2;
     int n;
 
-    SelectSamples(candidate,&r1,&r2);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; (RandomUniform(0.0,1.0) < probability) && (i < nDim); i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; (RandomUniform(0.0, 1.0) < probability) && (i < nDim); i++)
     {
         trialSolution[n] = bestSolution[n]
-                           + scale * (Element(population,r1,n)
-                                      - Element(population,r2,n));
+                           + scale * (Element(population, r1, n)
+                                      - Element(population, r2, n));
         n = (n + 1) % nDim;
     }
 
@@ -176,15 +176,15 @@ void DESolver::Rand1Exp(int candidate)
     int r1, r2, r3;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; (RandomUniform(0.0,1.0) < probability) && (i < nDim); i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; (RandomUniform(0.0, 1.0) < probability) && (i < nDim); i++)
     {
-        trialSolution[n] = Element(population,r1,n)
-                           + scale * (Element(population,r2,n)
-                                      - Element(population,r3,n));
+        trialSolution[n] = Element(population, r1, n)
+                           + scale * (Element(population, r2, n)
+                                      - Element(population, r3, n));
         n = (n + 1) % nDim;
     }
 
@@ -196,15 +196,15 @@ void DESolver::RandToBest1Exp(int candidate)
     int r1, r2;
     int n;
 
-    SelectSamples(candidate,&r1,&r2);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; (RandomUniform(0.0,1.0) < probability) && (i < nDim); i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; (RandomUniform(0.0, 1.0) < probability) && (i < nDim); i++)
     {
         trialSolution[n] += scale * (bestSolution[n] - trialSolution[n])
-                            + scale * (Element(population,r1,n)
-                                       - Element(population,r2,n));
+                            + scale * (Element(population, r1, n)
+                                       - Element(population, r2, n));
         n = (n + 1) % nDim;
     }
 
@@ -216,17 +216,17 @@ void DESolver::Best2Exp(int candidate)
     int r1, r2, r3, r4;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3,&r4);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3, &r4);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; (RandomUniform(0.0,1.0) < probability) && (i < nDim); i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; (RandomUniform(0.0, 1.0) < probability) && (i < nDim); i++)
     {
         trialSolution[n] = bestSolution[n] +
-                           scale * (Element(population,r1,n)
-                                    + Element(population,r2,n)
-                                    - Element(population,r3,n)
-                                    - Element(population,r4,n));
+                           scale * (Element(population, r1, n)
+                                    + Element(population, r2, n)
+                                    - Element(population, r3, n)
+                                    - Element(population, r4, n));
         n = (n + 1) % nDim;
     }
 
@@ -238,17 +238,17 @@ void DESolver::Rand2Exp(int candidate)
     int r1, r2, r3, r4, r5;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3,&r4,&r5);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3, &r4, &r5);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; (RandomUniform(0.0,1.0) < probability) && (i < nDim); i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; (RandomUniform(0.0, 1.0) < probability) && (i < nDim); i++)
     {
-        trialSolution[n] = Element(population,r1,n)
-                           + scale * (Element(population,r2,n)
-                                      + Element(population,r3,n)
-                                      - Element(population,r4,n)
-                                      - Element(population,r5,n));
+        trialSolution[n] = Element(population, r1, n)
+                           + scale * (Element(population, r2, n)
+                                      + Element(population, r3, n)
+                                      - Element(population, r4, n)
+                                      - Element(population, r5, n));
         n = (n + 1) % nDim;
     }
 
@@ -260,16 +260,16 @@ void DESolver::Best1Bin(int candidate)
     int r1, r2;
     int n;
 
-    SelectSamples(candidate,&r1,&r2);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; i < nDim; i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; i < nDim; i++)
     {
-        if ((RandomUniform(0.0,1.0) < probability) || (i == (nDim - 1)))
+        if ((RandomUniform(0.0, 1.0) < probability) || (i == (nDim - 1)))
             trialSolution[n] = bestSolution[n]
-                               + scale * (Element(population,r1,n)
-                                          - Element(population,r2,n));
+                               + scale * (Element(population, r1, n)
+                                          - Element(population, r2, n));
         n = (n + 1) % nDim;
     }
 
@@ -281,16 +281,16 @@ void DESolver::Rand1Bin(int candidate)
     int r1, r2, r3;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; i < nDim; i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; i < nDim; i++)
     {
-        if ((RandomUniform(0.0,1.0) < probability) || (i  == (nDim - 1)))
-            trialSolution[n] = Element(population,r1,n)
-                               + scale * (Element(population,r2,n)
-                                          - Element(population,r3,n));
+        if ((RandomUniform(0.0, 1.0) < probability) || (i  == (nDim - 1)))
+            trialSolution[n] = Element(population, r1, n)
+                               + scale * (Element(population, r2, n)
+                                          - Element(population, r3, n));
         n = (n + 1) % nDim;
     }
 
@@ -302,16 +302,16 @@ void DESolver::RandToBest1Bin(int candidate)
     int r1, r2;
     int n;
 
-    SelectSamples(candidate,&r1,&r2);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; i < nDim; i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; i < nDim; i++)
     {
-        if ((RandomUniform(0.0,1.0) < probability) || (i  == (nDim - 1)))
+        if ((RandomUniform(0.0, 1.0) < probability) || (i  == (nDim - 1)))
             trialSolution[n] += scale * (bestSolution[n] - trialSolution[n])
-                                + scale * (Element(population,r1,n)
-                                           - Element(population,r2,n));
+                                + scale * (Element(population, r1, n)
+                                           - Element(population, r2, n));
         n = (n + 1) % nDim;
     }
 
@@ -323,18 +323,18 @@ void DESolver::Best2Bin(int candidate)
     int r1, r2, r3, r4;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3,&r4);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3, &r4);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; i < nDim; i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; i < nDim; i++)
     {
-        if ((RandomUniform(0.0,1.0) < probability) || (i  == (nDim - 1)))
+        if ((RandomUniform(0.0, 1.0) < probability) || (i  == (nDim - 1)))
             trialSolution[n] = bestSolution[n]
-                               + scale * (Element(population,r1,n)
-                                          + Element(population,r2,n)
-                                          - Element(population,r3,n)
-                                          - Element(population,r4,n));
+                               + scale * (Element(population, r1, n)
+                                          + Element(population, r2, n)
+                                          - Element(population, r3, n)
+                                          - Element(population, r4, n));
         n = (n + 1) % nDim;
     }
 
@@ -346,32 +346,32 @@ void DESolver::Rand2Bin(int candidate)
     int r1, r2, r3, r4, r5;
     int n;
 
-    SelectSamples(candidate,&r1,&r2,&r3,&r4,&r5);
-    n = (int)RandomUniform(0.0,(double)nDim);
+    SelectSamples(candidate, &r1, &r2, &r3, &r4, &r5);
+    n = (int)RandomUniform(0.0, (double)nDim);
 
-    CopyVector(trialSolution,RowVector(population,candidate));
-    for (int i=0; i < nDim; i++)
+    CopyVector(trialSolution, RowVector(population, candidate));
+    for (int i = 0; i < nDim; i++)
     {
-        if ((RandomUniform(0.0,1.0) < probability) || (i  == (nDim - 1)))
-            trialSolution[n] = Element(population,r1,n)
-                               + scale * (Element(population,r2,n)
-                                          + Element(population,r3,n)
-                                          - Element(population,r4,n)
-                                          - Element(population,r5,n));
+        if ((RandomUniform(0.0, 1.0) < probability) || (i  == (nDim - 1)))
+            trialSolution[n] = Element(population, r1, n)
+                               + scale * (Element(population, r2, n)
+                                          + Element(population, r3, n)
+                                          - Element(population, r4, n)
+                                          - Element(population, r5, n));
         n = (n + 1) % nDim;
     }
 
     return;
 }
 
-void DESolver::SelectSamples(int candidate,int *r1,int *r2,
-                             int *r3,int *r4,int *r5)
+void DESolver::SelectSamples(int candidate, int *r1, int *r2,
+                             int *r3, int *r4, int *r5)
 {
     if (r1)
     {
         do
         {
-            *r1 = (int)RandomUniform(0.0,(double)nPop);
+            *r1 = (int)RandomUniform(0.0, (double)nPop);
         }
         while (*r1 == candidate);
     }
@@ -380,7 +380,7 @@ void DESolver::SelectSamples(int candidate,int *r1,int *r2,
     {
         do
         {
-            *r2 = (int)RandomUniform(0.0,(double)nPop);
+            *r2 = (int)RandomUniform(0.0, (double)nPop);
         }
         while ((*r2 == candidate) || (*r2 == *r1));
     }
@@ -389,7 +389,7 @@ void DESolver::SelectSamples(int candidate,int *r1,int *r2,
     {
         do
         {
-            *r3 = (int)RandomUniform(0.0,(double)nPop);
+            *r3 = (int)RandomUniform(0.0, (double)nPop);
         }
         while ((*r3 == candidate) || (*r3 == *r2) || (*r3 == *r1));
     }
@@ -398,7 +398,7 @@ void DESolver::SelectSamples(int candidate,int *r1,int *r2,
     {
         do
         {
-            *r4 = (int)RandomUniform(0.0,(double)nPop);
+            *r4 = (int)RandomUniform(0.0, (double)nPop);
         }
         while ((*r4 == candidate) || (*r4 == *r3) || (*r4 == *r2) || (*r4 == *r1));
     }
@@ -407,10 +407,10 @@ void DESolver::SelectSamples(int candidate,int *r1,int *r2,
     {
         do
         {
-            *r5 = (int)RandomUniform(0.0,(double)nPop);
+            *r5 = (int)RandomUniform(0.0, (double)nPop);
         }
         while ((*r5 == candidate) || (*r5 == *r4) || (*r5 == *r3)
-                || (*r5 == *r2) || (*r5 == *r1));
+               || (*r5 == *r2) || (*r5 == *r1));
     }
 
     return;
@@ -433,13 +433,13 @@ void DESolver::SelectSamples(int candidate,int *r1,int *r2,
 #define EPS 1.2e-7
 #define RNMX (1.0-EPS)
 
-double DESolver::RandomUniform(double minValue,double maxValue)
+double DESolver::RandomUniform(double minValue, double maxValue)
 {
     long j;
     long k;
     static long idum;
-    static long idum2=123456789;
-    static long iy=0;
+    static long idum2 = 123456789;
+    static long iy = 0;
     static long iv[NTAB];
     double result;
 
@@ -455,10 +455,10 @@ double DESolver::RandomUniform(double minValue,double maxValue)
 
         idum2 = idum;
 
-        for (j=NTAB+7; j>=0; j--)
+        for (j = NTAB + 7; j >= 0; j--)
         {
             k = idum / IQ1;
-            idum = IA1 * (idum - k*IQ1) - k*IR1;
+            idum = IA1 * (idum - k * IQ1) - k * IR1;
             if (idum < 0)
                 idum += IM1;
             if (j < NTAB)
@@ -469,13 +469,13 @@ double DESolver::RandomUniform(double minValue,double maxValue)
     }
 
     k = idum / IQ1;
-    idum = IA1 * (idum - k*IQ1) - k*IR1;
+    idum = IA1 * (idum - k * IQ1) - k * IR1;
 
     if (idum < 0)
         idum += IM1;
 
     k = idum2 / IQ2;
-    idum2 = IA2 * (idum2 - k*IQ2) - k*IR2;
+    idum2 = IA2 * (idum2 - k * IQ2) - k * IR2;
 
     if (idum2 < 0)
         idum2 += IM2;
@@ -499,7 +499,7 @@ double DESolver::RandomUniform(double minValue,double maxValue)
 // Energy function for the gradient -----------------------------------------
 double EnergyFunctionGrad(double *trialSolution)
 {
-    bool bAtSolution=false;
-    return global_ptr_desolver->EnergyFunction(trialSolution+1, bAtSolution);
+    bool bAtSolution = false;
+    return global_ptr_desolver->EnergyFunction(trialSolution + 1, bAtSolution);
     // +1 because of the shift of numerical recipes
 }

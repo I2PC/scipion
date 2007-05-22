@@ -21,11 +21,11 @@ typedef struct
 }
 XYZ;
 
-int Triangulate(int, XYZ*, ITRIANGLE*, int* );
+int Triangulate(int, XYZ*, ITRIANGLE*, int*);
 
-int CircumCircle(double ,double ,
-                 double ,double ,double ,double ,double ,double ,
-                 double *,double *,double *);
+int CircumCircle(double , double ,
+                 double , double , double , double , double , double ,
+                 double *, double *, double *);
 
 // Returns index of triangle in vector LatTri
 //int FindNearest(XYZ &, std::vector <XYZ> &,std::vector <ITRIANGLE> & );

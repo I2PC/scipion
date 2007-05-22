@@ -39,18 +39,18 @@
  */
 xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
 {
-  if (_v1.size()!=_v2.size())
-    throw runtime_error("vector of different size in eDist");
+    if (_v1.size() != _v2.size())
+        throw runtime_error("vector of different size in eDist");
 
-  double dist = 0;
-  xmippVector::const_iterator i, j;
-  for ( i=_v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++ )
-  {
-    double tmp = (double)(*i) - (double)(*j);
-    dist += tmp * tmp;
-  }
+    double dist = 0;
+    xmippVector::const_iterator i, j;
+    for (i = _v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++)
+    {
+        double tmp = (double)(*i) - (double)(*j);
+        dist += tmp * tmp;
+    }
 
-  return (xmippFeature) sqrt(dist);
+    return (xmippFeature) sqrt(dist);
 };
 
 //-----------------------------------------------------------------------------
@@ -63,15 +63,15 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
  */
 xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2)
 {
-  if (_v1.size()!=_v2.size())
-    throw runtime_error("vector of different size in mDist");
+    if (_v1.size() != _v2.size())
+        throw runtime_error("vector of different size in mDist");
 
-  double dist = 0;
-  xmippVector::const_iterator i, j;
-  for ( i=_v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++ )
-    dist += fabs(((double)(*i) - (double)(*j)));
+    double dist = 0;
+    xmippVector::const_iterator i, j;
+    for (i = _v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++)
+        dist += fabs(((double)(*i) - (double)(*j)));
 
-  return (xmippFeature) dist;
+    return (xmippFeature) dist;
 };
 
 //-----------------------------------------------------------------------------
@@ -80,10 +80,10 @@ xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2)
 
 xmippFeature xmippNorm::operator()(const xmippVector& v)
 {
-  double sum = 0.0;
-  for (xmippVector::const_iterator i = v.begin(); i != v.end(); i++)
-    sum += (double)(*i) * (double)(*i);
-  return (xmippFeature) sqrt(sum);
+    double sum = 0.0;
+    for (xmippVector::const_iterator i = v.begin(); i != v.end(); i++)
+        sum += (double)(*i) * (double)(*i);
+    return (xmippFeature) sqrt(sum);
 }
 
 //-----------------------------------------------------------------------------

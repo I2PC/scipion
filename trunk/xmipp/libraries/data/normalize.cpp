@@ -73,7 +73,7 @@ void Normalize_parameters::read(int argc, char** argv)
     if (!volume)
     {
         if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
-                method == NEAR_OLDXMIPP || method == RAMP)
+            method == NEAR_OLDXMIPP || method == RAMP)
         {
             enable_mask = check_param(argc, argv, "-mask");
             if (enable_mask)
@@ -90,7 +90,7 @@ void Normalize_parameters::read(int argc, char** argv)
                                  "Normalize: Not enough parameters after -background");
 
                 aux = argv[i + 1];
-                r  =AtoI(argv[i + 2]);
+                r  = AtoI(argv[i + 2]);
 
                 if (aux == "frame")
                     background_mode = FRAME;
@@ -111,7 +111,7 @@ void Normalize_parameters::read(int argc, char** argv)
         if (method == RANDOM)
         {
             int i = position_param(argc, argv, "-prm");
-            if (i+4 >= argc)
+            if (i + 4 >= argc)
                 REPORT_ERROR(1,
                              "Normalize_parameters::read: Not enough parameters after -prm");
 
@@ -193,7 +193,7 @@ void Normalize_parameters::show()
         }
 
         if (method == NEWXMIPP || method == NEWXMIPP2 ||
-                method == NEAR_OLDXMIPP || method == MICHAEL || method == RAMP)
+            method == NEAR_OLDXMIPP || method == MICHAEL || method == RAMP)
         {
             std::cout << "Background mode: ";
             switch (background_mode)
@@ -255,7 +255,7 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 {
     matrix2D< double > tmp;
     tmp.resize(bg_mask);
-    type_cast(bg_mask,tmp);
+    type_cast(bg_mask, tmp);
 
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
 

@@ -31,50 +31,60 @@
 
 void Usage(char *argv[]);
 
-int main (int argc, char **argv) {
-FileName       fn_in;     // input file
-FileName       fn_out;    // output file
-double d00, d01, d10, d11;
+int main(int argc, char **argv)
+{
+    FileName       fn_in;     // input file
+    FileName       fn_out;    // output file
+    double d00, d01, d10, d11;
 
-VolumeXmipp    V_in, V_out;
-matrix2D<double> D(4,4);
+    VolumeXmipp    V_in, V_out;
+    matrix2D<double> D(4, 4);
 
-   D.init_zeros();
-   D(0,0) = D(1,1) = D(2,2) = D(3,3) = 1.0f;
+    D.init_zeros();
+    D(0, 0) = D(1, 1) = D(2, 2) = D(3, 3) = 1.0f;
 
-   // Get command line parameters ------------------------------------------
-   try {
-      D(0,0) = AtoF(get_param(argc, argv, "-d00","1.0"));
-      D(0,1) = AtoF(get_param(argc, argv, "-d01","0.0"));
-      D(1,0) = AtoF(get_param(argc, argv, "-d10","0.0"));
-      D(1,1) = AtoF(get_param(argc, argv, "-d11","1.0"));
-     fn_in  = get_param(argc, argv, "-i");		
-     fn_out = get_param(argc, argv, "-o");		
-   } catch (Xmipp_error XE) {Usage(argv);}
+    // Get command line parameters ------------------------------------------
+    try
+    {
+        D(0, 0) = AtoF(get_param(argc, argv, "-d00", "1.0"));
+        D(0, 1) = AtoF(get_param(argc, argv, "-d01", "0.0"));
+        D(1, 0) = AtoF(get_param(argc, argv, "-d10", "0.0"));
+        D(1, 1) = AtoF(get_param(argc, argv, "-d11", "1.0"));
+        fn_in  = get_param(argc, argv, "-i");
+        fn_out = get_param(argc, argv, "-o");
+    }
+    catch (Xmipp_error XE)
+    {
+        Usage(argv);
+    }
 
-   cout << "Matrix D: \n" << D;
-   // Main program ---------------------------------------------------------
+    cout << "Matrix D: \n" << D;
+    // Main program ---------------------------------------------------------
 
 
- if (!Is_VolumeXmipp(fn_in))
-    {cout << "File: " <<  fn_in<<" is not an Spider volume, bye."
-          << endl; exit(1);}
-  V_in.read(fn_in);
+    if (!Is_VolumeXmipp(fn_in))
+    {
+        cout << "File: " <<  fn_in << " is not an Spider volume, bye."
+        << endl;
+        exit(1);
+    }
+    V_in.read(fn_in);
 
-  apply_geom(V_out.img, D, V_in.img, IS_INV,DONT_WRAP);
-  V_out.write(fn_out);
-  exit(0);
+    apply_geom(V_out.img, D, V_in.img, IS_INV, DONT_WRAP);
+    V_out.write(fn_out);
+    exit(0);
 }
 
-void Usage (char *argv[]) {
+void Usage(char *argv[])
+{
     cout << "Purpose:\n";
     cout << "    Applies a lineal transformation defined by a 2x2 matrix";
     cout << " to all the planes perpendicular to Z that form a volume\n\n";
     cout << "Usage:" << argv[0] ;
     cout << argv[0] << " -i input file -o outout_file"
-         << " -d00 d00 -d01 d01 -d10 d10 -d11 d11\n"
-         << "where d00, d01, d10 and d11"
-         << "are the element of the 2x2 matrix "<< endl << endl;
+    << " -d00 d00 -d01 d01 -d10 d10 -d11 d11\n"
+    << "where d00, d01, d10 and d11"
+    << "are the element of the 2x2 matrix " << endl << endl;
     exit(1);
 
 }

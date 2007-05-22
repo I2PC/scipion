@@ -40,17 +40,18 @@
     This class contains extra information for: Plain ART.
     In this case nothing. Notice that mainly this classes are created to
     support other versions of ART (crystals, ...) */
-class Plain_ART_Parameters {
+class Plain_ART_Parameters
+{
     /* User parameters ..................................................... */
     /* Side information .................................................... */
 public:
     /// cout << eprm;
     friend ostream & operator << (ostream &o,
-       const Plain_ART_Parameters &eprm);
+                                  const Plain_ART_Parameters &eprm);
 
     /// Produce Plain side information from the Extra parameters
     void produce_Side_Info(const Basic_ART_Parameters &prm,
-       GridVolume &vol_basis0);
+                           GridVolume &vol_basis0);
 };
 
 /** Run a single step of ART.
@@ -67,27 +68,27 @@ public:
     sym_no. In fact, it is not used in this version of ART, but it is
     needed for the crystal counterpart. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-   Basic_ART_Parameters &prm, Plain_ART_Parameters &eprm,
-   Projection &theo_proj, Projection &read_proj,
-   int sym_no,
-   Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
-   double &mean_error, int numIMG, double lamdba, int act_proj,
-   const FileName &fn_ctf);
+                     Basic_ART_Parameters &prm, Plain_ART_Parameters &eprm,
+                     Projection &theo_proj, Projection &read_proj,
+                     int sym_no,
+                     Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
+                     double &mean_error, int numIMG, double lamdba, int act_proj,
+                     const FileName &fn_ctf);
 
 /** Update residual vector for WLS ART */
 void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
-			    double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
+                            double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /** Finish iterations.
     For WLS: delete residual images
     Else: do nothing. */
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
-   const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
+                           const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Force the {\it trial} volume to be symmetric. So far only implemented
     for crystals.*/
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Plain_ART_Parameters &eprm,
-		    int grid_type);
+                    int grid_type);
 //@}
 #endif

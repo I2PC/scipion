@@ -25,17 +25,32 @@
 
 #include <reconstruction/foms_evaluate.h>
 
-int main (int argc, char *argv[]) {
-   Prog_Evaluate_Parameters prog_prm;
-   EVALUATE_results         results;
+int main(int argc, char *argv[])
+{
+    Prog_Evaluate_Parameters prog_prm;
+    EVALUATE_results         results;
 
 // Read parameters from command line
-   try {prog_prm.read(argc,argv);}
-   catch (Xmipp_error XE) {cout << XE; prog_prm.usage(); exit(1);}
+    try
+    {
+        prog_prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prog_prm.usage();
+        exit(1);
+    }
 
 // Evaluate
-   try {ROUT_Evaluate(prog_prm, results);}
-   catch (Xmipp_error XE) {cout << XE;}
+    try
+    {
+        ROUT_Evaluate(prog_prm, results);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -45,7 +60,7 @@ int main (int argc, char *argv[]) {
       help="Evaluate FOMs using a phantom and a reconstruction";
       OPEN MENU menu_evaluate;
       COMMAND LINES {
-	+ single: evaluate -p $PHANTOM -r $RECONS [-mass $MASS] [-R $R]
+ + single: evaluate -p $PHANTOM -r $RECONS [-mass $MASS] [-R $R]
                   [-dir $ROT $TILT $AXIS] [-back_radius $r]
                   [-back_factor $FACTOR] [-save_maps]
                   [-show_values] [-show_process] [-save_histograms]
@@ -58,26 +73,26 @@ int main (int argc, char *argv[]) {
       }
       PARAMETER DEFINITIONS {
         $PHANTOM {
-	   label="Phantom Description File";
-	   help="This file has got a complex structure, better see
+    label="Phantom Description File";
+    help="This file has got a complex structure, better see
                  the Web help";
-	   type=file existing;
-	}
+    type=file existing;
+ }
         $RECONS {
-	   label="Reconstructed file";
-	   help="Xmipp format";
-	   type=file existing;
-	}
+    label="Reconstructed file";
+    help="Xmipp format";
+    type=file existing;
+ }
         $MASS {
            label="Percentage of mass out slice histograms";
-	   type=float;
+    type=float;
            by default="99";
-	}
+ }
         $R {
-	   label="Global Radius Mask";
-	   help="The volume is only evaluated in this sphere";
-	   type=FLOAT;
-	}
+    label="Global Radius Mask";
+    help="The volume is only evaluated in this sphere";
+    type=FLOAT;
+ }
         OPT(-dir) {
            label="Directional FOMs";
            help="For the Radon Transform";
@@ -94,16 +109,16 @@ int main (int argc, char *argv[]) {
                by default=2;
            }
         $r {
-	   label="Surrounding ackground radius";
+    label="Surrounding ackground radius";
            help="For all histogram measures";
-	   type=FLOAT;
-	}
+    type=FLOAT;
+ }
         $FACTOR {
-	   label="Background enlarging factor";
-	   type=FLOAT;
+    label="Background enlarging factor";
+    type=FLOAT;
            help="For all histogram measures";
            by default=1.25;
-	}
+ }
         OPT(-save_maps) {
            label="Save Intermidiate maps";
            help="Squared errors, distances, ...";

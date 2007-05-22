@@ -1,27 +1,27 @@
 /***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- ***************************************************************************/
+*
+* Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+*
+* Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+* 02111-1307  USA
+*
+*  All comments concerning this program package may be sent to the
+*  e-mail address 'xmipp@cnb.uam.es'
+***************************************************************************/
 
 #ifndef ARGS_H
 #define ARGS_H
@@ -134,9 +134,9 @@ int best_prec(float F, int _width);
  * @endcode
  */
 double AtoD(const char* str,
-            int _errno=2101,
-            std::string errmsg="Error in AtoD",
-            int exit=0);
+            int _errno = 2101,
+            std::string errmsg = "Error in AtoD",
+            int exit = 0);
 
 /** String (char*) to float conversion.
  * @ingroup TypeConversions
@@ -146,9 +146,9 @@ double AtoD(const char* str,
  * @endcode
  */
 float AtoF(const char* str,
-           int _errno=2101,
-           std::string errmsg="Error in AtoF",
-           int exit=0);
+           int _errno = 2101,
+           std::string errmsg = "Error in AtoF",
+           int exit = 0);
 
 /** String (STL) to float conversion.
  * @ingroup TypeConversions
@@ -158,9 +158,9 @@ float AtoF(const char* str,
  * @endcode
  */
 inline float AtoF(const std::string str,
-                  int _errno=2101,
-                  std::string errmsg="Error in AtoF",
-                  int exit=0)
+                  int _errno = 2101,
+                  std::string errmsg = "Error in AtoF",
+                  int exit = 0)
 {
     return AtoF(str.c_str(), _errno, errmsg, exit);
 }
@@ -173,9 +173,9 @@ inline float AtoF(const std::string str,
  * @endcode
  */
 int AtoI(const char* str,
-         int _errno=2102,
-         std::string errmsg="Error in AtoI",
-         int exit=0);
+         int _errno = 2102,
+         std::string errmsg = "Error in AtoI",
+         int exit = 0);
 
 /** String (STL) to integer conversion.
  * @ingroup TypeConversions
@@ -185,9 +185,9 @@ int AtoI(const char* str,
  * @endcode
  */
 inline int AtoI(const std::string str,
-                int _errno=2102,
-                std::string errmsg="Error in AtoI",
-                int exit=0)
+                int _errno = 2102,
+                std::string errmsg = "Error in AtoI",
+                int exit = 0)
 {
     return AtoI(str.c_str(), _errno, errmsg, exit);
 }
@@ -201,9 +201,9 @@ inline int AtoI(const std::string str,
  * @endcode
  */
 long long AtoLL(const char* str,
-                int _errno=2102,
-                std::string errmsg="Error in AtoL",
-                int exit=0);
+                int _errno = 2102,
+                std::string errmsg = "Error in AtoL",
+                int exit = 0);
 
 /** Float to string conversion.
  * @ingroup TypeConversions
@@ -217,7 +217,7 @@ long long AtoLL(const char* str,
  * REPORT_ERROR(1602, "Value not recognised " + FtoA(val));
  * @endcode
  */
-std::string FtoA(float F, int _width=8, int _prec=0);
+std::string FtoA(float F, int _width = 8, int _prec = 0);
 
 /** Integer to string conversion.
  * @ingroup TypeConversions
@@ -230,7 +230,7 @@ std::string FtoA(float F, int _width=8, int _prec=0);
  * REPORT_ERROR(1602, "Error reading key " + ItoA(key));
  * @endcode
  */
-std::string ItoA(int I, int _width=0, char fill_with='0');
+std::string ItoA(int I, int _width = 0, char fill_with = '0');
 
 /** Character to integer conversion.
  * @ingroup TypeConversions
@@ -245,9 +245,9 @@ std::string ItoA(int I, int _width=0, char fill_with='0');
  * @endcode
  */
 int CtoI(const char* str,
-         int _errno=2103,
-         std::string errmsg="Error in CtoI",
-         int exit=0);
+         int _errno = 2103,
+         std::string errmsg = "Error in CtoI",
+         int exit = 0);
 
 /** String to string with given length conversion.
  * @ingroup TypeConversions
@@ -257,7 +257,7 @@ int CtoI(const char* str,
  * truncated and if it is greater the string is right padded with spaces. If
  * width==0 then the same string is returned.
  */
-std::string AtoA(const std::string& str, int _width=0);
+std::string AtoA(const std::string& str, int _width = 0);
 
 /** Check angle.
  * @ingroup TypeConversions
@@ -335,8 +335,8 @@ void remove_quotes(char** _str);
  */
 int splitString(const std::string& input,
                 const std::string& delimiter,
-                std::vector< std::string >& results, 
-                bool includeEmpties=false);
+                std::vector< std::string >& results,
+                bool includeEmpties = false);
 
 /** Returns first token (char*).
  * @ingroup Tokenization
@@ -363,7 +363,7 @@ inline char* first_token(const char* str)
  */
 inline char* first_token(const std::string& str)
 {
-	// FIXME C-style cast
+    // FIXME C-style cast
     return strtok((char*) str.c_str(), " \n");
 }
 
@@ -387,7 +387,7 @@ inline char* first_token(const std::string& str)
  */
 inline char* next_token()
 {
-	// FIXME C-style cast
+    // FIXME C-style cast
     return strtok((char*) NULL, " \n");
 }
 
@@ -408,10 +408,10 @@ std::string next_token(const std::string& str, int& i);
  * word is substituted by a NULL character (as it uses the function first_token.
  * Further word readings should use the function read_next_word
  */
-char* first_word(char* str, 
-                 int _errno=2106,
-                 std::string errmsg="first word: String not found",
-                 int exit=0);
+char* first_word(char* str,
+                 int _errno = 2106,
+                 std::string errmsg = "first word: String not found",
+                 int exit = 0);
 
 /** Get non empty string (STL).
  * @ingroup Tokenization
@@ -419,11 +419,11 @@ char* first_word(char* str,
  * Same as the previous function but for STL strings
  */
 inline char* first_word(std::string& str,
-                        int _errno=2106,
-                        std::string errmsg="first word: String not found",
-                        int exit=0)
+                        int _errno = 2106,
+                        std::string errmsg = "first word: String not found",
+                        int exit = 0)
 {
-	// FIXME C-style cast
+    // FIXME C-style cast
     return first_word((char*) str.c_str(), _errno, errmsg, exit);
 }
 
@@ -433,11 +433,11 @@ inline char* first_word(std::string& str,
  * This is the same as the next_token, but an exception is thrown or an exit
  * error produced if the word is empty
  */
-inline char* next_word(int _errno=2106,
-                       std::string errmsg="next word: String not found",
-                       int exit=0)
+inline char* next_word(int _errno = 2106,
+                       std::string errmsg = "next word: String not found",
+                       int exit = 0)
 {
-	// FIXME C-style cast
+    // FIXME C-style cast
     return first_word((char*) NULL, _errno, errmsg, exit);
 }
 
@@ -445,7 +445,7 @@ inline char* next_word(int _errno=2106,
 /// @ingroup Tokenization
 void tokenize(const std::string& str,
               std::vector< std::string >& tokens,
-              const std::string& delimiters=" \t");
+              const std::string& delimiters = " \t");
 
 /** @defgroup ReadLists Read lists.
  * @ingroup Arguments
@@ -478,18 +478,18 @@ void tokenize(const std::string& str,
 /** List to STL vector.
  * @ingroup ReadLists
  */
-template<typename T>
+template <typename T>
 void read_float_list(const char* str,
-					 int N, std::vector< T >& v,
-					 int _errno=2105,
-                     std::string errmsg="Error reading list",
-                     int exit=0)
+                     int N, std::vector< T >& v,
+                     int _errno = 2105,
+                     std::string errmsg = "Error reading list",
+                     int exit = 0)
 {
-    T  valueF;
+    T valueF;
     char* token;
 
     token = first_token(str);
-    for (int i=0; i<N; i++)
+    for (int i = 0; i < N; i++)
     {
         if (token == NULL)
         {
@@ -510,7 +510,7 @@ void read_float_list(const char* str,
 
         v.push_back(valueF);
 
-        if (i != N-1)
+        if (i != N - 1)
             token = next_token();
     }
 }
@@ -518,20 +518,20 @@ void read_float_list(const char* str,
 /** List to STL vector.
  * @ingroup ReadLists
  */
-template<typename T>
+template <typename T>
 void read_float_list(const std::string& str,
                      int& i,
                      int N,
                      std::vector< T >& v,
-                     int _errno=2105,
-                     std::string errmsg="Error reading list",
-                     int exit=0)
+                     int _errno = 2105,
+                     std::string errmsg = "Error reading list",
+                     int exit = 0)
 {
-    T  valueF;
+    T valueF;
     std::string token;
 
     token = next_token(str, i);
-    for (int j=0; j<N; j++)
+    for (int j = 0; j < N; j++)
     {
         if (token == "")
         {
@@ -552,7 +552,7 @@ void read_float_list(const std::string& str,
 
         v.push_back(valueF);
 
-        if (j != N-1)
+        if (j != N - 1)
             token = next_token(str, i);
     }
 }
@@ -560,19 +560,19 @@ void read_float_list(const std::string& str,
 /** List to matrix1D.
  * @ingroup ReadLists
  */
-template<typename T>
+template <typename T>
 void read_float_list(const char* str,
                      int N,
                      matrix1D< T >& v,
-                     int _errno=2105,
-                     string errmsg="Error reading floating list",
-                     int exit=0)
+                     int _errno = 2105,
+                     string errmsg = "Error reading floating list",
+                     int exit = 0)
 {
-    T  valueF;
+    T valueF;
     char* token;
 
     token = first_token(str);
-    for (int i=0; i<N; i++)
+    for (int i = 0; i < N; i++)
     {
         if (token == NULL)
         {
@@ -584,7 +584,7 @@ void read_float_list(const char* str,
 
         try
         {
-            valueF= (T) AtoF(token);
+            valueF = (T) AtoF(token);
         }
         catch (Xmipp_error)
         {
@@ -592,7 +592,7 @@ void read_float_list(const char* str,
         }
 
         DIRECT_VEC_ELEM(v, i) = valueF;
-        if (i != N-1)
+        if (i != N - 1)
             token = next_token();
     }
 }
@@ -634,9 +634,9 @@ void read_float_list(const char* str,
 char* get_param(int argc,
                 char** argv,
                 const char* param,
-                const char* option=NULL,
-                int _errno=-1,
-                std::string errmsg="",
+                const char* option = NULL,
+                int _errno = -1,
+                std::string errmsg = "",
                 int exit = 0);
 
 /** Get two float parameters after a flag from the command line.
@@ -649,13 +649,13 @@ char* get_param(int argc,
  */
 bool get_2_double_params(int argc,
                          char** argv,
-                         const char* param, 
+                         const char* param,
                          double& v1,
                          double& v2,
-                         double v1_def, 
+                         double v1_def,
                          double v2_def,
-                         int _errno=2104,
-                         std::string errmsg="",
+                         int _errno = 2104,
+                         std::string errmsg = "",
                          int exit = 0);
 
 /** Get 3 float parameters after a flag from the command line.
@@ -675,9 +675,9 @@ bool get_3_double_params(int argc,
                          double v1_def,
                          double v2_def,
                          double v3_def,
-                         int _errno=2104,
-                         std::string errmsg="",
-                         int exit=0);
+                         int _errno = 2104,
+                         std::string errmsg = "",
+                         int exit = 0);
 
 /** Get boolean parameters from the command line.
  * @ingroup CommandLineFunctions
@@ -753,10 +753,10 @@ int component_no(const std::string& str);
 matrix1D< double > get_vector_param(int argc,
                                     char** argv,
                                     const char* param,
-                                    int dim=2,
-                                    int _errno=-1,
-                                    std::string errmsg="",
-                                    int exit=0);
+                                    int dim = 2,
+                                    int _errno = -1,
+                                    std::string errmsg = "",
+                                    int exit = 0);
 
 /** Get specific command line.
  * @ingroup CommandLineFunctions
@@ -875,11 +875,11 @@ bool generate_command_line(FILE* fh,
  */
 std::string get_param(FILE* fh,
                       const char* param,
-                      int skip=0,
-                      const char* option=NULL,
-                      int _errno=-1,
-                      std::string errmsg="",
-                      int exit=0);
+                      int skip = 0,
+                      const char* option = NULL,
+                      int _errno = -1,
+                      std::string errmsg = "",
+                      int exit = 0);
 
 /** Check if a parameter is present in a file.
  * @ingroup CommandLineFunctions
@@ -897,10 +897,10 @@ bool check_param(FILE* fh, const char* param);
  * The same as before but reading is done from a file
  */
 matrix1D< double > get_vector_param(FILE* fh,
-                                    const char* param, 
-                                    int dim=2,
-                                    int _errno=-1,
-                                    std::string errmsg="",
-                                    int exit=0);
+                                    const char* param,
+                                    int dim = 2,
+                                    int _errno = -1,
+                                    std::string errmsg = "",
+                                    int exit = 0);
 
 #endif

@@ -33,54 +33,55 @@
 //@{
 /* Microscope Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Microscope_Parameters: public Prog_parameters {
+class Prog_Microscope_Parameters: public Prog_parameters
+{
 public:
-   /// Filename with the CTF
-   FileName fn_ctf;
-   /// Total noise power
-   double   sigma;
-   /// Low pass frequency before CTF
-   double   low_pass_before_CTF;
-   /// Filename with the root squared spectrum for noise after CTF
-   bool     after_ctf_noise;
-   /// Defocus change (%)
-   double   defocus_change;
+    /// Filename with the CTF
+    FileName fn_ctf;
+    /// Total noise power
+    double   sigma;
+    /// Low pass frequency before CTF
+    double   low_pass_before_CTF;
+    /// Filename with the root squared spectrum for noise after CTF
+    bool     after_ctf_noise;
+    /// Defocus change (%)
+    double   defocus_change;
 public:
-   /// CTF
-   FourierMask ctf;
-   /// Low pass filter, if it is 0 no lowpass filter is applied
-   FourierMask lowpass;
-   /// After CTF noise root squared spectrum
-   FourierMask after_ctf;
-   /// Noise power before CTF
-   double   sigma_before_CTF;
-   /// Noise power after CTF
-   double   sigma_after_CTF;
-   /// Input image Xdim
-   int Xdim;
-   /// Input image Ydim
-   int Ydim;
+    /// CTF
+    FourierMask ctf;
+    /// Low pass filter, if it is 0 no lowpass filter is applied
+    FourierMask lowpass;
+    /// After CTF noise root squared spectrum
+    FourierMask after_ctf;
+    /// Noise power before CTF
+    double   sigma_before_CTF;
+    /// Noise power after CTF
+    double   sigma_after_CTF;
+    /// Input image Xdim
+    int Xdim;
+    /// Input image Ydim
+    int Ydim;
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** Show parameters. */
-   void show();
+    /** Show parameters. */
+    void show();
 
-   /** Produce side information. */
-   void produce_side_info();
+    /** Produce side information. */
+    void produce_side_info();
 
-   /** Apply to a single image. The image is modified.
-       If the CTF is randomly selected then a new CTF is generated
-       for each image */
-   void apply(matrix2D<double> &I);
+    /** Apply to a single image. The image is modified.
+        If the CTF is randomly selected then a new CTF is generated
+        for each image */
+    void apply(matrix2D<double> &I);
 };
 //@}
 #endif

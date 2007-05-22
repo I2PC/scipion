@@ -1,27 +1,27 @@
 /***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- ***************************************************************************/
+*
+* Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+*
+* Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+* 02111-1307  USA
+*
+*  All comments concerning this program package may be sent to the
+*  e-mail address 'xmipp@cnb.uam.es'
+***************************************************************************/
 
 #ifndef FUNCS_H
 #define FUNCS_H
@@ -97,16 +97,16 @@ public:
     /** Value access. Tabulated sine in radians */
     float operator()(float val) const
     {
-        return tabulatedsinc[ABS((int) (val / sampl))];
+        return tabulatedsinc[ABS((int)(val / sampl))];
     }
 
     /** Actually fill the table */
     void filltable()
     {
-        no_elem = (int) (xmax / sampl);
+        no_elem = (int)(xmax / sampl);
         tabulatedsinc = (float*) malloc(no_elem * sizeof(float));
         tabulatedsinc[0] = 1;
-        for (int i=1; i<no_elem; i++)
+        for (int i = 1; i < no_elem; i++)
         {
             float xx = (float) i * sampl * PI;
             tabulatedsinc[i] = sin(xx) / xx;
@@ -124,8 +124,12 @@ public:
  * to be 0 if its absolute magnitude is smaller than precision. This is used to
  * avoid dividing by 0
  */
-int solve_2nd_degree_eq(float a, float b, float c, float& x1, float& x2,
-                        float prec=XMIPP_EQUAL_ACCURACY);
+int solve_2nd_degree_eq(float a,
+                        float b,
+                        float c,
+                        float& x1,
+                        float& x2,
+                        float prec = XMIPP_EQUAL_ACCURACY);
 
 /** 1D gaussian value
  * @ingroup NumericalFunctions
@@ -133,7 +137,7 @@ int solve_2nd_degree_eq(float a, float b, float c, float& x1, float& x2,
  * This function returns the value of a univariate gaussian function at the
  * point x.
  */
-double gaussian1D(double x, double sigma, double mu=0);
+double gaussian1D(double x, double sigma, double mu = 0);
 
 /** 2D gaussian value
  * @ingroup NumericalFunctions
@@ -143,15 +147,20 @@ double gaussian1D(double x, double sigma, double mu=0);
  * (counter-clockwise) radians (the angle is positive when measured from the
  * universal X to the gaussian X). X and Y are supposed to be independent.
  */
-double gaussian2D(double x, double y, double sigmaX, double sigmaY,
-                  double ang, double muX=0, double muY=0);
+double gaussian2D(double x,
+                  double y,
+                  double sigmaX,
+                  double sigmaY,
+                  double ang,
+                  double muX = 0,
+                  double muY = 0);
 
 /** Integrate a function using Newton-Cotes formula
  * @ingroup NumericalFunctions
  *
  * Estimate the integral of a function between a and b using N points.
  */
-double integrateNewtonCotes(double (*f) (double), double a, double b, int N);
+double integrateNewtonCotes(double(*f)(double), double a, double b, int N);
 
 
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
@@ -167,13 +176,13 @@ void print(ostream& o, const bool b);
  *
  * So far not instatiate for float/double number
  */
-template<typename T>
-void printb(ostream& o,T value)
+template <typename T>
+void printb(ostream& o, T value)
 {
     char buf[CHAR_BIT * sizeof(T) + 1];
     size_t i;
 
-    for (i=0; i<CHAR_BIT * sizeof(T); ++i)
+    for (i = 0; i < CHAR_BIT * sizeof(T); ++i)
     {
         buf[i] = '0' + (value & 1);
         value >>= 1;
@@ -191,18 +200,20 @@ void printb(ostream& o,T value)
  *
  * The output array(s) must be already resized.
  */
-template<typename T>
-void RealImag2Complex(const T* _real, const T* _imag,
-                      complex< double >* _complex, int length)
+template <typename T>
+void RealImag2Complex(const T* _real,
+                      const T* _imag,
+                      complex< double >* _complex,
+                      int length)
 {
     T* aux_real = (T*) _real;
     T* aux_imag = (T*) _imag;
     double* aux_complex = (double*) _complex;
 
-    for (int i=0; i<length; i++)
+    for (int i = 0; i < length; i++)
     {
-        *aux_complex++ = (double) (*aux_real++);
-        *aux_complex++ = (double) (*aux_imag++);
+        *aux_complex++ = (double)(*aux_real++);
+        *aux_complex++ = (double)(*aux_imag++);
     }
 }
 
@@ -211,18 +222,20 @@ void RealImag2Complex(const T* _real, const T* _imag,
  *
  * The output array(s) must be already resized.
  */
-template<typename T>
-void AmplPhase2Complex(const T* _ampl, const T* _phase,
-                       complex< double >* _complex, int length)
+template <typename T>
+void AmplPhase2Complex(const T* _ampl,
+                       const T* _phase,
+                       complex< double >* _complex,
+                       int length)
 {
     T* aux_ampl = (T*) _ampl;
     T* aux_phase = (T*) _phase;
     double* aux_complex = (double*) _complex;
 
-    for (int i=0; i<length; i++)
+    for (int i = 0; i < length; i++)
     {
-        double ampl = (double) (*aux_ampl++);
-        double phase = (double) (*aux_phase++);
+        double ampl = (double)(*aux_ampl++);
+        double phase = (double)(*aux_phase++);
         *aux_complex++ = ampl * cos(phase);
         *aux_complex++ = ampl * sin(phase);
     }
@@ -233,18 +246,20 @@ void AmplPhase2Complex(const T* _ampl, const T* _phase,
  *
  * The output array(s) must be already resized.
  */
-template<typename T>
+template <typename T>
 void Complex2RealImag(const complex< double >* _complex,
-                      T* _real, T* _imag, int length)
+                      T* _real,
+                      T* _imag,
+                      int length)
 {
     T* aux_real = (T*) _real;
     T* aux_imag = (T*) _imag;
     double* aux_complex = (double*) _complex;
 
-    for (int i=0; i<length; i++)
+    for (int i = 0; i < length; i++)
     {
-        *aux_real++ = (T) (*aux_complex++);
-        *aux_imag++ = (T) (*aux_complex++);
+        *aux_real++ = (T)(*aux_complex++);
+        *aux_imag++ = (T)(*aux_complex++);
     }
 }
 
@@ -253,19 +268,21 @@ void Complex2RealImag(const complex< double >* _complex,
  *
  * The output array(s) must be already resized.
  */
-template<typename T>
+template <typename T>
 void Complex2AmplPhase(const complex< double >* _complex,
-                       T* _ampl, T* _phase, int length)
+                       T* _ampl,
+                       T* _phase,
+                       int length)
 {
     T* aux_ampl = (T*) _ampl;
     T* aux_phase = (T*) _phase;
     double* aux_complex = (double*) _complex;
 
-    for (int i=0; i<length; i++)
+    for (int i = 0; i < length; i++)
     {
         double re = *aux_complex++;
         double im = *aux_complex++;
-        *aux_ampl++ = sqrt(re*re + im*im);
+        *aux_ampl++ = sqrt(re * re + im * im);
         *aux_phase++ = atan2(im, re);
     }
 }
@@ -303,7 +320,7 @@ void Complex2AmplPhase(const complex< double >* _complex,
  * init_rnd_unif(17891)
  * @endcode
  */
-void init_random_generator(int seed=-1);
+void init_random_generator(int seed = -1);
 
 /** Reset uniform random generator according to the clock
  * @ingroup RandomFunctions
@@ -364,7 +381,7 @@ float rnd_gaus(float a, float b);
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
-float gaus_within_x0(float x0, float mean=0, float stddev=1);
+float gaus_within_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area outisde -x0 to x0
  * @ingroup RandomFunctions
@@ -372,7 +389,7 @@ float gaus_within_x0(float x0, float mean=0, float stddev=1);
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
-float gaus_outside_x0(float x0, float mean=0, float stddev=1);
+float gaus_outside_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area from -inf to x0
  * @ingroup RandomFunctions
@@ -380,7 +397,7 @@ float gaus_outside_x0(float x0, float mean=0, float stddev=1);
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
-float gaus_up_to_x0(float x0, float mean=0, float stddev=1);
+float gaus_up_to_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area from x0 to inf
  * @ingroup RandomFunctions
@@ -388,7 +405,7 @@ float gaus_up_to_x0(float x0, float mean=0, float stddev=1);
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
-float gaus_from_x0(float x0, float mean=0, float stddev=1);
+float gaus_from_x0(float x0, float mean = 0, float stddev = 1);
 
 /** t0 for a given two-sided probability
  * @ingroup RandomFunctions
@@ -514,7 +531,8 @@ public:
      * FileName fn_blobs;
      * @endcode
      */
-    FileName(): string("") {}
+    FileName(): string("")
+    {}
 
     /** Constructor from string
      * @ingroup FilenameConstructors
@@ -528,19 +546,22 @@ public:
      * FileName fn_blobs((string) "art00001" + ".blobs");
      * @endcode
      */
-    FileName(const string& str): string(str) {}
+    FileName(const string& str): string(str)
+    {}
 
     /** Constructor from char*
      * @ingroup FilenameConstructors
      */
-    FileName(const char* str) : string(str) {}
+    FileName(const char* str) : string(str)
+    {}
 
     /** Copy constructor
      * @ingroup FilenameConstructors
      */
-    FileName(const FileName& fn) : string(fn) {}
+    FileName(const FileName& fn) : string(fn)
+    {}
 
-// FIXME What is this?
+    // FIXME What is this?
 #ifdef NEVER_DEFINED
     /** Constructor from root, number and extension
      * @ingroup FilenameConstructors
@@ -553,7 +574,7 @@ public:
      * FileName fn_proj("g1ta",1); // fn_proj = "g1ta00001"
      * @endcode
      */
-    FileName(const char* str, int no=-1, const string& ext="")
+    FileName(const char* str, int no = -1, const string& ext = "")
     {
         compose(str, no, ext);
     }
@@ -568,7 +589,8 @@ public:
      * FileName fn_proj("g1ta00001", "xmp"); // fn_proj = "g1ta00001.xmp"
      * @endcode
      */
-    FileName(const char* str, const string& ext): string(str + ext) {}
+    FileName(const char* str, const string& ext): string(str + ext)
+    {}
 
     /// @defgroup FilenameComposing Composing/Decomposing the filename
     /// @ingroup Filenames
@@ -761,7 +783,7 @@ public:
      *
      * Or if keep>0, then keep the lowest keep directories
      */
-    FileName remove_directories(int keep=0) const;
+    FileName remove_directories(int keep = 0) const;
 };
 
 /** True if the file exists in the current directory
@@ -783,7 +805,7 @@ int exists(const FileName& fn);
  * An exception is throw if the file exists but its size cannot be stated.
  */
 void wait_until_stable_size(const FileName& fn,
-                            unsigned long time_step=250000);
+                            unsigned long time_step = 250000);
 
 /** Write a zero filled file with the desired size.
  * @ingroup Filenames
@@ -791,8 +813,9 @@ void wait_until_stable_size(const FileName& fn,
  * The file is written by blocks to speed up, you can modify the block size.
  * An exception is thrown if any error happens
  */
-void create_empty_file(const FileName& fn, size_t size,
-                       size_t block_size=102400);
+void create_empty_file(const FileName& fn,
+                       size_t size,
+                       size_t block_size = 102400);
 
 /** Returns the base directory of the Xmipp installation
  * @ingroup Filenames
@@ -939,7 +962,7 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
  * float elapsed = elapsed_time(t0, FALSE);
  * @endcode
  */
-float elapsed_time(TimeStamp& time, bool _IN_SECS=true);
+float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Show on screen the elapsed time since a given annotation
  * @ingroup TimeManaging
@@ -958,7 +981,7 @@ float elapsed_time(TimeStamp& time, bool _IN_SECS=true);
  * Usually the time is shown in seconds, but you might specify to show it in
  * clock ticks setting the variable _IN_SECS to FALSE.
  */
-void print_elapsed_time(TimeStamp& time, bool _IN_SECS=true);
+void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Returns the estimated time left to finish
  * @ingroup TimeManagement
@@ -1016,7 +1039,8 @@ class xmippBaseListener
 {
 public :
     /** Default constructor */
-    xmippBaseListener(): verbosity(0), cancel(false) {}
+    xmippBaseListener(): verbosity(0), cancel(false)
+    {}
 
     /** Initialize progress bar.
      *
@@ -1054,14 +1078,14 @@ public :
     virtual const unsigned& getVerbosity() const
     {
         return verbosity;
-    };
+    }
 
     /** This method will set the verbosity level to be used
      */
     virtual unsigned& setVerbosity()
     {
         return verbosity;
-    };
+    }
 
     /** This method returns true if a cancel command was set
      *
@@ -1072,14 +1096,14 @@ public :
     virtual const bool& OnUserCancel() const
     {
         return cancel;
-    };
+    }
 
     /** This method is used to send a cancel command
      */
     virtual bool& setCancel()
     {
         return cancel;
-    };
+    }
 
 private:
     unsigned verbosity;
@@ -1158,7 +1182,7 @@ void TimeMessage(string message);
  * @endcode
  */
 size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
-             bool reverse=false);
+             bool reverse = false);
 
 /** Write to file
  * @ingroup LittleBigEndian
@@ -1166,8 +1190,11 @@ size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
  */
-size_t FWRITE(const void* src, size_t size, size_t nitems, FILE*& fp,
-              bool reverse=false);
+size_t FWRITE(const void* src,
+              size_t size,
+              size_t nitems,
+              FILE*& fp,
+              bool reverse = false);
 
 /** Conversion little-big endian
  * @ingroup LittleBigEndian
@@ -1214,7 +1241,7 @@ int IsLittleEndian(void);
  *
  * When the random numbers are floats, by default they are in the interval [0,1]
  */
-template<typename T>
+template <typename T>
 class Marsaglia
 {
 private:
@@ -1242,7 +1269,8 @@ public:
     }
 
     // TODO Document
-    Marsaglia() {}
+    Marsaglia()
+    {}
 
     /** You may use init for reading another set of random numbers
      * @ingroup Marsaglia
@@ -1259,17 +1287,17 @@ public:
         in.seekg(0, ios::end); // End of file
         std::streampos sp = in.tellg(); // Size of file
         if (sp < Number_of_Numbers * Type_size)
-            REPORT_ERROR(1,(string) "Marsaglia::Init: File " + fn_in +
-                "is too small");
+            REPORT_ERROR(1, (string) "Marsaglia::Init: File " + fn_in +
+                         "is too small");
         else
         {
             // get a random number to set the file pointer at a random position
             randomize_random_generator();
 
-            random_vector =  new char[(Number_of_Numbers * Type_size)];
+            random_vector = new char[(Number_of_Numbers * Type_size)];
             T_random_vector = (T*) random_vector;
-            in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float) (sp -
-                (std::streamoff) (Number_of_Numbers * Type_size)))), ios::beg);
+            in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
+                                            (std::streamoff)(Number_of_Numbers * Type_size)))), ios::beg);
             in.read(random_vector, (Number_of_Numbers * Type_size));
 
             in.close();
@@ -1288,8 +1316,8 @@ public:
     {
         if (pointer_in_memory >= Number_of_Numbers)
             pointer_in_memory = (int) FLOOR(rnd_unif(0.f, (float)
-                (Number_of_Numbers - 1)));
-        return(T_random_vector[pointer_in_memory++]);
+                                            (Number_of_Numbers - 1)));
+        return (T_random_vector[pointer_in_memory++]);
     }
 
     /** Calculate random vector log (use only with flloats)
@@ -1299,10 +1327,10 @@ public:
     {
         if (typeid(float) != typeid(T) && typeid(double) != typeid(T))
             REPORT_ERROR(1,
-                "Marsaglia: I do not know how to calculate integer logs");
+                         "Marsaglia: I do not know how to calculate integer logs");
 
-        for(int hh=0; hh<Number_of_Numbers; hh++)
-            if(T_random_vector[hh] == 0.)
+        for (int hh = 0; hh < Number_of_Numbers; hh++)
+            if (T_random_vector[hh] == 0.)
                 T_random_vector[hh] = -1e+20f;
             else
                 T_random_vector[hh] = log(T_random_vector[hh]);
@@ -1313,7 +1341,7 @@ public:
      */
     void mul(T mul_cte)
     {
-        for (int hh=0; hh<Number_of_Numbers; hh++)
+        for (int hh = 0; hh < Number_of_Numbers; hh++)
             T_random_vector[hh] *= mul_cte;
     }
 
@@ -1322,7 +1350,7 @@ public:
      */
     void operator&= (T mod_cte)
     {
-        for (int hh=0; hh<Number_of_Numbers; hh++)
+        for (int hh = 0; hh < Number_of_Numbers; hh++)
             T_random_vector[hh] &= mod_cte;
     }
 
@@ -1331,7 +1359,7 @@ public:
      */
     void add(T add_cte)
     {
-        for (int hh=0; hh<Number_of_Numbers; hh++)
+        for (int hh = 0; hh < Number_of_Numbers; hh++)
             T_random_vector[hh] += add_cte;
     }
 
@@ -1354,19 +1382,19 @@ public:
         m_max;
 
         // get a random number to set the file pointer at a random position
-        in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float) (sp -
-            (std::streamoff)(Number_of_Numbers*Type_size)) ) ),ios::beg);
-        for (int ii=0; ii<Number_of_Numbers;)
+        in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
+                                        (std::streamoff)(Number_of_Numbers*Type_size)))), ios::beg);
+        for (int ii = 0; ii < Number_of_Numbers;)
         {
-            aux_number  = T_random_vector[ii];
+            aux_number = T_random_vector[ii];
             aux_number &= mask;
             if (aux_number > m_max ||
-                    (T_random_vector[ii] <= 0) && (aux_number==0))
+                (T_random_vector[ii] <= 0) && (aux_number == 0))
             {
                 if (in.eof())
-                    in.seekg((std::streampos) FLOOR( rnd_unif(0.f, (float)
-                        (sp - (std::streamoff)(Number_of_Numbers*Type_size)))),
-                            ios::beg);
+                    in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)
+                                                    (sp - (std::streamoff)(Number_of_Numbers*Type_size)))),
+                             ios::beg);
                 in.read((char*) &(T_random_vector[ii]), Type_size);
             }
             else
@@ -1395,12 +1423,12 @@ private:
         long long MaxInteger;
         if (sizeof(float) != sizeof(int))
             REPORT_ERROR(1,
-                "Marsaglia: I do not know how to make the float correction");
+                         "Marsaglia: I do not know how to make the float correction");
         MaxInteger = (long long) pow(2.0, sizeof(unsigned int) * 8.0);
         int_random_vector = (unsigned int*) random_vector;
-        for (int hh=0; hh<Number_of_Numbers; hh++)
-            T_random_vector[hh]= (T) ((double) int_random_vector[hh] /
-                (double) MaxInteger);
+        for (int hh = 0; hh < Number_of_Numbers; hh++)
+            T_random_vector[hh] = (T)((double) int_random_vector[hh] /
+                                      (double) MaxInteger);
     }
 };
 

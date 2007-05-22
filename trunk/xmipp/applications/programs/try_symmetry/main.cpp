@@ -26,43 +26,50 @@
 #include <data/progs.h>
 #include <data/args.h>
 
-class Markhan_parameters: public Prog_parameters {
+class Markhan_parameters: public Prog_parameters
+{
 public:
-   int symmetry;
+    int symmetry;
 
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      symmetry=AtoI(get_param(argc,argv,"-symorder"));
-   }
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        symmetry = AtoI(get_param(argc, argv, "-symorder"));
+    }
 
-   void show() {
-      Prog_parameters::show();
-      cout << "Symmetry order = " << symmetry << endl;
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        cout << "Symmetry order = " << symmetry << endl;
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cerr << "  [-symorder <n>]           : Symmetry order\n";
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  [-symorder <n>]           : Symmetry order\n";
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Markhan_parameters *eprm=(Markhan_parameters *) prm;
-   matrix2D<double> aux=img();
-   for (int i=1; i<eprm->symmetry; i++)
-      aux+=img().rotate_Bspline(3,360.0/eprm->symmetry*i);
-   aux/=eprm->symmetry;
-   img()=aux;
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Markhan_parameters *eprm = (Markhan_parameters *) prm;
+    matrix2D<double> aux = img();
+    for (int i = 1; i < eprm->symmetry; i++)
+        aux += img().rotate_Bspline(3, 360.0 / eprm->symmetry * i);
+    aux /= eprm->symmetry;
+    img() = aux;
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   REPORT_ERROR(1,"xmipp_markhan: This program is not intended for volumes. "
-                   "Please use xmipp_symmetrize.");
-   return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    REPORT_ERROR(1, "xmipp_markhan: This program is not intended for volumes. "
+                 "Please use xmipp_symmetrize.");
+    return true;
 }
 
-int main (int argc, char **argv) {
-   Markhan_parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Markhan_parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

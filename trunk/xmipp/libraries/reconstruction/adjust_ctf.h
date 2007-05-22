@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #ifndef _ADJUST_CTF_HH
-   #define _ADJUST_CTF_HH
+#define _ADJUST_CTF_HH
 
 #include "fourier_filter.h"
 
@@ -35,74 +35,74 @@
 class Adjust_CTF_Parameters
 {
 public:
-   /// CTF filename
-   FileName             fn_ctf;
-   /// Model to which the current one must be similar
-   FileName             fn_similar_model;
-   /// CTF amplitude to model
-   ImageXmipp           ctftomodel;
-   /// CTF amplitude to model
-   ImageXmipp           enhanced_ctftomodel;
-   /// CTF amplitude to model
-   ImageXmipp           enhanced_ctftomodel_fullsize;
-   /// CTF model
-   XmippCTF             initial_ctfmodel;
-   /// Show convergence values
-   bool                 show_optimization;
-   /// Allow astigmatic noise
-   bool                 astigmatic_noise;
-   /// X dimension of particle projections (-1=the same as the psd)
-   int			ctfmodelSize;
+    /// CTF filename
+    FileName             fn_ctf;
+    /// Model to which the current one must be similar
+    FileName             fn_similar_model;
+    /// CTF amplitude to model
+    ImageXmipp           ctftomodel;
+    /// CTF amplitude to model
+    ImageXmipp           enhanced_ctftomodel;
+    /// CTF amplitude to model
+    ImageXmipp           enhanced_ctftomodel_fullsize;
+    /// CTF model
+    XmippCTF             initial_ctfmodel;
+    /// Show convergence values
+    bool                 show_optimization;
+    /// Allow astigmatic noise
+    bool                 astigmatic_noise;
+    /// X dimension of particle projections (-1=the same as the psd)
+    int   ctfmodelSize;
 
-   /// Minimum frequency to adjust
-   double               min_freq;
-   /// Maximum frequency to adjust
-   double               max_freq;
-   /// Sampling rate
-   double               Tm;
-   /// Defocus range
-   double               defocus_range;
+    /// Minimum frequency to adjust
+    double               min_freq;
+    /// Maximum frequency to adjust
+    double               max_freq;
+    /// Sampling rate
+    double               Tm;
+    /// Defocus range
+    double               defocus_range;
 
-   /// Initial Chromatic aberration
-   double               initial_Ca;
+    /// Initial Chromatic aberration
+    double               initial_Ca;
 
-   /// Enhancement filter low freq
-   double               f1;
-   /// Enhancement filter high freq
-   double               f2;
-   /// Weight of the enhanced image
-   double               enhanced_weight;
+    /// Enhancement filter low freq
+    double               f1;
+    /// Enhancement filter high freq
+    double               f2;
+    /// Weight of the enhanced image
+    double               enhanced_weight;
 
-   /// Set of parameters for the complete adjustment of the CTF
-   matrix1D<double>     adjust;
+    /// Set of parameters for the complete adjustment of the CTF
+    matrix1D<double>     adjust;
 public:
-   /// Read parameters from file
-   void read(const FileName &fn_param);
+    /// Read parameters from file
+    void read(const FileName &fn_param);
 
-   /// Write to a file
-   void write(const FileName &fn, bool rewrite=true);
+    /// Write to a file
+    void write(const FileName &fn, bool rewrite = true);
 
-   /// Show parameters
-   void show();
+    /// Show parameters
+    void show();
 
-   /// Usage
-   void Usage();
+    /// Usage
+    void Usage();
 
-   /// Produce side information
-   void produce_side_info();
+    /// Produce side information
+    void produce_side_info();
 
-   /** Generate half-plane model at a given size.
-       It is assumed that ROUT_Adjust_CTF has been already run */
-   void generate_model_halfplane(int Ydim, int Xdim, matrix2D<double> &model);
+    /** Generate half-plane model at a given size.
+        It is assumed that ROUT_Adjust_CTF has been already run */
+    void generate_model_halfplane(int Ydim, int Xdim, matrix2D<double> &model);
 
-   /** Generate quadrant model at a given size.
-       It is assumed that ROUT_Adjust_CTF has been already run */
-   void generate_model_quadrant(int Ydim, int Xdim, matrix2D<double> &model);
+    /** Generate quadrant model at a given size.
+        It is assumed that ROUT_Adjust_CTF has been already run */
+    void generate_model_quadrant(int Ydim, int Xdim, matrix2D<double> &model);
 };
 
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone=true);
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone = true);
 //@}
 #endif

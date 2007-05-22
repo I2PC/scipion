@@ -31,62 +31,74 @@
 void Usage();
 
 /* MAIN -------------------------------------------------------------------- */
-int main (int argc,char *argv[]) {
-   bool            round_shifts=false;
-   float           xx,yy;
-   FileName        fn_img,fn_out;
-   SelFile         SF;
-   DocFile         DF;
-   ImageXmipp      img;
-   headerXmipp     head;
+int main(int argc, char *argv[])
+{
+    bool            round_shifts = false;
+    float           xx, yy;
+    FileName        fn_img, fn_out;
+    SelFile         SF;
+    DocFile         DF;
+    ImageXmipp      img;
+    headerXmipp     head;
 
 // Check command line options ===========================================
-   try 
-   {
+    try
+    {
 
-       SF.read(get_param(argc,argv,"-i"));
-       fn_out=get_param(argc,argv,"-o");
-       round_shifts=check_param(argc,argv,"-round_shifts");
+        SF.read(get_param(argc, argv, "-i"));
+        fn_out = get_param(argc, argv, "-o");
+        round_shifts = check_param(argc, argv, "-round_shifts");
 
-   } catch (Xmipp_error XE) {cout << XE; Usage();}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+    }
 
 // Extracting information  ==================================================
-   try 
-   {
+    try
+    {
 
-       DF.reserve(SF.ImgNo());
-       matrix1D<double> docline;
-       DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Mirror (7)");
+        DF.reserve(SF.ImgNo());
+        matrix1D<double> docline;
+        DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Mirror (7)");
 
-       docline.init_zeros(7);
-       SF.go_beginning();
-       while (!SF.eof()) {
-	   fn_img=SF.NextImg();
-	   head.read(fn_img);
-	   head.get_originOffsets(xx,yy);
-	   if (round_shifts) 
-	   {
-	       xx=(float)ROUND(xx);
-	       yy=(float)ROUND(yy);
-	   }
-	   docline(0)=head.Phi();
-	   docline(1)=head.Theta();
-	   docline(2)=head.Psi();
-	   docline(3)=xx;
-	   docline(4)=yy;
-	   docline(5)=head.Weight();
-	   docline(6)=head.Flip();
-	   DF.append_comment(fn_img);
-	   DF.append_data_line(docline);
-       }
-       DF.write(fn_out);
-       cerr<<" done!"<<endl;
-   } catch (Xmipp_error XE) {cout << XE;}
+        docline.init_zeros(7);
+        SF.go_beginning();
+        while (!SF.eof())
+        {
+            fn_img = SF.NextImg();
+            head.read(fn_img);
+            head.get_originOffsets(xx, yy);
+            if (round_shifts)
+            {
+                xx = (float)ROUND(xx);
+                yy = (float)ROUND(yy);
+            }
+            docline(0) = head.Phi();
+            docline(1) = head.Theta();
+            docline(2) = head.Psi();
+            docline(3) = xx;
+            docline(4) = yy;
+            docline(5) = head.Weight();
+            docline(6) = head.Flip();
+            DF.append_comment(fn_img);
+            DF.append_data_line(docline);
+        }
+        DF.write(fn_out);
+        cerr << " done!" << endl;
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
+void Usage()
+{
     printf("Purpose:\n");
     printf(" Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");

@@ -36,59 +36,64 @@
 #include <qhbox.h>
 
 /* Constructor ------------------------------------------------------------- */
-QtDialogProperties::QtDialogProperties( Micrograph *_m,
-                                        QtWidgetMicrograph *_wm,
-                                        int _coord,
-                                    QWidget *_parent,
-                                        const char *_name,
-                                        bool _modal,
-                                        WFlags _f ) :
-   QDialog( _parent, _name, _modal, _f ) {
+QtDialogProperties::QtDialogProperties(Micrograph *_m,
+                                       QtWidgetMicrograph *_wm,
+                                       int _coord,
+                                       QWidget *_parent,
+                                       const char *_name,
+                                       bool _modal,
+                                       WFlags _f) :
+        QDialog(_parent, _name, _modal, _f)
+{
 
-   setCaption( "Change properties" );
-   __m            = _m;
-   __wm           = _wm;
-   __coord        = _coord;
-   __moving       = false;
-   __vBoxLayout   = new QVBox( this );
-   __vBoxLayout->setMinimumSize( 300, 300 );
-   __moveButton   = new QPushButton( "Move", __vBoxLayout );
-   __deleteButton = new QPushButton( "Delete", __vBoxLayout );
-   __familyList   = new QListBox( __vBoxLayout );
+    setCaption("Change properties");
+    __m            = _m;
+    __wm           = _wm;
+    __coord        = _coord;
+    __moving       = false;
+    __vBoxLayout   = new QVBox(this);
+    __vBoxLayout->setMinimumSize(300, 300);
+    __moveButton   = new QPushButton("Move", __vBoxLayout);
+    __deleteButton = new QPushButton("Delete", __vBoxLayout);
+    __familyList   = new QListBox(__vBoxLayout);
 
-   for( int i = 0; i < __m->LabelNo(); i++ )
-      __familyList->insertItem( __m->get_label(i).c_str() );
-   __familyList->setSelected( __m->coord(__coord).label, TRUE );
+    for (int i = 0; i < __m->LabelNo(); i++)
+        __familyList->insertItem(__m->get_label(i).c_str());
+    __familyList->setSelected(__m->coord(__coord).label, TRUE);
 
-   connect( __familyList, SIGNAL(highlighted(int)),
-            this, SLOT(slotChangeFamily(int)) );
-   connect( __deleteButton, SIGNAL(clicked(void)),
-            this, SLOT(slotDeleteMark(void)) );
-   connect( __moveButton, SIGNAL(clicked(void)),
-            this, SLOT(slotMoveMark(void)) );
+    connect(__familyList, SIGNAL(highlighted(int)),
+            this, SLOT(slotChangeFamily(int)));
+    connect(__deleteButton, SIGNAL(clicked(void)),
+            this, SLOT(slotDeleteMark(void)));
+    connect(__moveButton, SIGNAL(clicked(void)),
+            this, SLOT(slotMoveMark(void)));
 }
 
-QtDialogProperties::~QtDialogProperties() {
-   delete __familyList;
-   delete __deleteButton;
-   delete __moveButton;
-   delete __vBoxLayout;
+QtDialogProperties::~QtDialogProperties()
+{
+    delete __familyList;
+    delete __deleteButton;
+    delete __moveButton;
+    delete __vBoxLayout;
 }
 
-void QtDialogProperties::slotChangeFamily( int _f ) {
-   __m->coord(__coord).label = _f;
-   emit signalChangeFamilyOther( __coord, _f );
-   accept();
+void QtDialogProperties::slotChangeFamily(int _f)
+{
+    __m->coord(__coord).label = _f;
+    emit signalChangeFamilyOther(__coord, _f);
+    accept();
 }
 
-void QtDialogProperties::slotDeleteMark() {
-   __m->coord(__coord).valid = false;
-   __wm->delete_particle(__coord);
-   emit signalDeleteMarkOther( __coord );
-   accept();
+void QtDialogProperties::slotDeleteMark()
+{
+    __m->coord(__coord).valid = false;
+    __wm->delete_particle(__coord);
+    emit signalDeleteMarkOther(__coord);
+    accept();
 }
 
-void QtDialogProperties::slotMoveMark() {
-   ((QtImageMicrograph*)parentWidget())->movingMark( __coord );
-   accept();
+void QtDialogProperties::slotMoveMark()
+{
+    ((QtImageMicrograph*)parentWidget())->movingMark(__coord);
+    accept();
 }

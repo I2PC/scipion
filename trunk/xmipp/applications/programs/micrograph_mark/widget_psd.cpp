@@ -30,74 +30,86 @@
 
 // Set the assign CTF file -------------------------------------------------
 void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
-   const FileName &_fn_assign_CTF) {
+                                      const FileName &_fn_assign_CTF)
+{
 
-   // Read the input assign CTF file
-   fn_assign_CTF=_fn_assign_CTF;
-   assign_ctf_prm.read(fn_assign_CTF);
-   FileName fn_root=assign_ctf_prm.image_fn.remove_all_extensions();
+    // Read the input assign CTF file
+    fn_assign_CTF = _fn_assign_CTF;
+    assign_ctf_prm.read(fn_assign_CTF);
+    FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
 
-   // Check if the CTF is computed at each particle
-   if (assign_ctf_prm.compute_at_particle) {
-      cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
-              "for individual particles. See file " << fn_assign_CTF << endl;
-      return;
-   }
+    // Check if the CTF is computed at each particle
+    if (assign_ctf_prm.compute_at_particle)
+    {
+        cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
+        "for individual particles. See file " << fn_assign_CTF << endl;
+        return;
+    }
 
-   // Generate a random selfile
-   FileName fn_random; fn_random.init_random(15);
-   fn_random=(string)"PPP"+fn_random+".sel";
-   files_to_remove.push_back(fn_random);
+    // Generate a random selfile
+    FileName fn_random;
+    fn_random.init_random(15);
+    fn_random = (string)"PPP" + fn_random + ".sel";
+    files_to_remove.push_back(fn_random);
 
-   // To shape the selfile
-   int div_NumberX, div_NumberY;
+    // To shape the selfile
+    int div_NumberX, div_NumberY;
 
-   // Check if it is a micrograph average
-   if (assign_ctf_prm.micrograph_averaging) {
-      FileName fn_avg;
-      if (!ctf_mode) {
-         if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-              fn_avg=fn_root+"_ARMAavg.psd";
-         else fn_avg=fn_root+"_Periodogramavg.psd";
-      } else {
-         if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-              fn_avg=fn_root+"_ARMAavg.ctfmodel";
-         else fn_avg=fn_root+"_Periodogramavg.ctfmodel";
-      }
-      system(((string)"xmipp_do_selfile "+fn_avg+" > "+fn_random).c_str());
-      div_NumberX=div_NumberY=1;
-   } else {
-      // The CTF must have been computed by pieces
-      FileName PSDfn_root;
-      if (assign_ctf_prm.PSD_mode==Prog_assign_CTF_prm::ARMA)
-           PSDfn_root=fn_root+"_ARMA";
-      else PSDfn_root=fn_root+"_Periodogram";
-      string command;
-      if (!ctf_mode)
-         command=(string)"xmipp_do_selfile \""+PSDfn_root+"?????.psd\" > "+fn_random;
-      else
-         command=(string)"xmipp_do_selfile \""+PSDfn_root+"?????.ctfmodel\" > "+fn_random;
-      system(command.c_str());
+    // Check if it is a micrograph average
+    if (assign_ctf_prm.micrograph_averaging)
+    {
+        FileName fn_avg;
+        if (!ctf_mode)
+        {
+            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+                fn_avg = fn_root + "_ARMAavg.psd";
+            else fn_avg = fn_root + "_Periodogramavg.psd";
+        }
+        else
+        {
+            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+                fn_avg = fn_root + "_ARMAavg.ctfmodel";
+            else fn_avg = fn_root + "_Periodogramavg.ctfmodel";
+        }
+        system(((string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
+        div_NumberX = div_NumberY = 1;
+    }
+    else
+    {
+        // The CTF must have been computed by pieces
+        FileName PSDfn_root;
+        if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+            PSDfn_root = fn_root + "_ARMA";
+        else PSDfn_root = fn_root + "_Periodogram";
+        string command;
+        if (!ctf_mode)
+            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;
+        else
+            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel\" > " + fn_random;
+        system(command.c_str());
 
-      int Ydim, Xdim; m.size(Xdim, Ydim);
-      div_NumberX=CEIL((double)Xdim/assign_ctf_prm.N_horizontal);
-      div_NumberY=CEIL((double)Ydim/assign_ctf_prm.N_vertical  );
-   }
+        int Ydim, Xdim;
+        m.size(Xdim, Ydim);
+        div_NumberX = CEIL((double)Xdim / assign_ctf_prm.N_horizontal);
+        div_NumberY = CEIL((double)Ydim / assign_ctf_prm.N_vertical);
+    }
 
-   // Show the selfile
-   ShowSel *showsel = new ShowSel;
-   showsel->apply_geo=false;
-   showsel->showonlyactive = false;
-   if (!ctf_mode)
-      showsel->initWithFile(div_NumberY, div_NumberX, fn_random.c_str(), ShowSel::PSD_mode);
-   else {
-      showsel->initWithFile(div_NumberY, div_NumberX, fn_random.c_str(), ShowSel::CTF_mode);
-      showsel->setAssignCTFfile(fn_assign_CTF);
-   }
-   showsel->show();
+    // Show the selfile
+    ShowSel *showsel = new ShowSel;
+    showsel->apply_geo = false;
+    showsel->showonlyactive = false;
+    if (!ctf_mode)
+        showsel->initWithFile(div_NumberY, div_NumberX, fn_random.c_str(), ShowSel::PSD_mode);
+    else
+    {
+        showsel->initWithFile(div_NumberY, div_NumberX, fn_random.c_str(), ShowSel::CTF_mode);
+        showsel->setAssignCTFfile(fn_assign_CTF);
+    }
+    showsel->show();
 }
 
-QtWidgetPSD::~QtWidgetPSD() {
-   for (int i=0; i<files_to_remove.size(); i++)
-      system(((string)"rm "+files_to_remove[i]).c_str());
+QtWidgetPSD::~QtWidgetPSD()
+{
+    for (int i = 0; i < files_to_remove.size(); i++)
+        system(((string)"rm " + files_to_remove[i]).c_str());
 }

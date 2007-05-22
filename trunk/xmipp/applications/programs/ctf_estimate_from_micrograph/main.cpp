@@ -30,51 +30,60 @@
 
    NAME:        Usage function
 
-   DESCRIPTION:	Show program usage
-				
+   DESCRIPTION: Show program usage
+
    INPUT:
-				
+
    OUTPUT:      Values are shown in standar output
 
-****************************************************************************/			
+****************************************************************************/
 void Usage()
 {
-   cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
-		<< "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
-   ;
+    cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
+    << "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
+    ;
 }
 
 /****************************************************************************
 
    NAME:        main
 
-   DESCRIPTION:	This program calculates and assings a CTF for every particle
-   				picked in a micrograph
-			
+   DESCRIPTION: This program calculates and assings a CTF for every particle
+       picked in a micrograph
+
    INPUT:
-   				
+
    OUTPUT:
 
-****************************************************************************/			
-int main (int argc,char *argv[])
+****************************************************************************/
+int main(int argc, char *argv[])
 {
-   Prog_assign_CTF_prm     prm;
+    Prog_assign_CTF_prm     prm;
 
-/*****************************************************************************
-		 Check the command line and get the parameters
-/*****************************************************************************/
-   try
-   {
-      // Read the file with all the program parameters
-      prm.read(get_param(argc,argv,"-i"));
-   }
-   catch (Xmipp_error &XE) {cout << XE; Usage(); exit(1);}
+    /*****************************************************************************
+       Check the command line and get the parameters
+    /*****************************************************************************/
+    try
+    {
+        // Read the file with all the program parameters
+        prm.read(get_param(argc, argv, "-i"));
+    }
+    catch (Xmipp_error &XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
 
-   try
-   {
-      prm.process();
-   }
-   catch (Xmipp_error &XE) {cout << XE; exit(1);}
+    try
+    {
+        prm.process();
+    }
+    catch (Xmipp_error &XE)
+    {
+        cout << XE;
+        exit(1);
+    }
 }
 
 /* Menus ------------------------------------------------------------------- */

@@ -26,70 +26,85 @@
 #include <data/progs.h>
 #include <data/args.h>
 
-class Add_noise_parameters: public Prog_parameters {
+class Add_noise_parameters: public Prog_parameters
+{
 public:
-   double noise_min, noise_max;
-   double noise_avg, noise_stddev;
-   bool   gaussian,  uniform;
+    double noise_min, noise_max;
+    double noise_avg, noise_stddev;
+    bool   gaussian,  uniform;
 
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      gaussian=uniform=false;
-      if (check_param(argc,argv,"-gaussian")) {
-         gaussian=true;
-         int i=position_param(argc,argv,"-gaussian");
-         if (i+1>=argc) REPORT_ERROR(1,"Not enough parameters after -gaussian");
-         noise_stddev=AtoF(argv[i+1]);
-         if (i+2<argc) {noise_avg=AtoF(argv[i+2]);} else noise_avg=0;
-      } else if (check_param(argc,argv,"-uniform")) {
-         uniform=true;
-         int i=position_param(argc,argv,"-uniform");
-         if (i+2>=argc) REPORT_ERROR(1,"Not enough parameters after -uniform");
-         noise_min=AtoF(argv[i+1]);
-         noise_max=AtoF(argv[i+2]);
-      } else
-         REPORT_ERROR(1,"Unknown noise type");
-   }
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        gaussian = uniform = false;
+        if (check_param(argc, argv, "-gaussian"))
+        {
+            gaussian = true;
+            int i = position_param(argc, argv, "-gaussian");
+            if (i + 1 >= argc) REPORT_ERROR(1, "Not enough parameters after -gaussian");
+            noise_stddev = AtoF(argv[i+1]);
+            if (i + 2 < argc)
+            {
+                noise_avg = AtoF(argv[i+2]);
+            }
+            else noise_avg = 0;
+        }
+        else if (check_param(argc, argv, "-uniform"))
+        {
+            uniform = true;
+            int i = position_param(argc, argv, "-uniform");
+            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -uniform");
+            noise_min = AtoF(argv[i+1]);
+            noise_max = AtoF(argv[i+2]);
+        }
+        else
+            REPORT_ERROR(1, "Unknown noise type");
+    }
 
-   void show() {
-      Prog_parameters::show();
-      if (gaussian)
-         cout << "Noise avg=" << noise_avg << endl
-              << "Noise stddev=" << noise_stddev << endl;
-      else if (uniform)
-         cout << "Noise min=" << noise_min << endl
-              << "Noise max=" << noise_max << endl;
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        if (gaussian)
+            cout << "Noise avg=" << noise_avg << endl
+            << "Noise stddev=" << noise_stddev << endl;
+        else if (uniform)
+            cout << "Noise min=" << noise_min << endl
+            << "Noise max=" << noise_max << endl;
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cerr << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
-           << "  [-uniform  <min> <max>]   : Uniform noise parameters\n";
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
+        << "  [-uniform  <min> <max>]   : Uniform noise parameters\n";
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-  Add_noise_parameters *eprm=(Add_noise_parameters *) prm;
-  if (eprm->gaussian)
-     img().add_noise(eprm->noise_avg, eprm->noise_stddev,"gaussian");
-  else if (eprm->uniform)
-     img().add_noise(eprm->noise_min, eprm->noise_max,"uniform");
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
+    if (eprm->gaussian)
+        img().add_noise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+    else if (eprm->uniform)
+        img().add_noise(eprm->noise_min, eprm->noise_max, "uniform");
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-  Add_noise_parameters *eprm=(Add_noise_parameters *) prm;
-  if (eprm->gaussian)
-     vol().add_noise(eprm->noise_avg, eprm->noise_stddev,"gaussian");
-  else if (eprm->uniform)
-     vol().add_noise(eprm->noise_min, eprm->noise_max,"uniform");
-   return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
+    if (eprm->gaussian)
+        vol().add_noise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+    else if (eprm->uniform)
+        vol().add_noise(eprm->noise_min, eprm->noise_max, "uniform");
+    return true;
 }
 
-int main (int argc, char **argv) {
-   Add_noise_parameters prm;
-   randomize_random_generator();
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Add_noise_parameters prm;
+    randomize_random_generator();
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -99,7 +114,7 @@ int main (int argc, char **argv) {
       help="Add noise to volumes and images";
       OPEN MENU menu_add_noise;
       COMMAND LINES {
-	+ usual: xmipp_add_noise
+ + usual: xmipp_add_noise
                #include "prog_line.mnu"
                [-gaussian $STDDEV [$AVG]]
                [-uniform  $MIN $MAX]

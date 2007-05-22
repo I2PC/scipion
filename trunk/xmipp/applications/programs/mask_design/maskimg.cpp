@@ -54,52 +54,52 @@ void maskImg::Init()
     menubar = new QPopupMenu();
 
     file = new QPopupMenu();
-    menubar->insertItem( "&File", file );
-    file->insertItem( "New window", this,  SLOT(newWindow()));
-    file->insertItem( "Open...", this,  SLOT(openFile()));
-    file->insertItem( "Save mask...", this,  SLOT(saveImage(int)));
+    menubar->insertItem("&File", file);
+    file->insertItem("New window", this,  SLOT(newWindow()));
+    file->insertItem("Open...", this,  SLOT(openFile()));
+    file->insertItem("Save mask...", this,  SLOT(saveImage(int)));
 
     options =  new QPopupMenu();
-    menubar->insertItem( "&Mask types", options );
-    circle = options->insertItem( "Circle" );
-    ellip = options->insertItem( "Ellipse" );
-    rect = options->insertItem( "Rectangle" );
-    squ = options->insertItem( "Square" );
-    ring = options->insertItem( "Circular Crown" );
-    ellipring = options->insertItem( "Elliptical Crown" );
-    rectframe = options->insertItem( "Rectangular Frame" );
-    squframe = options->insertItem( "Square Frame" );
-    polygon = options->insertItem( "Polygon" );
-    options->setCheckable( TRUE );
+    menubar->insertItem("&Mask types", options);
+    circle = options->insertItem("Circle");
+    ellip = options->insertItem("Ellipse");
+    rect = options->insertItem("Rectangle");
+    squ = options->insertItem("Square");
+    ring = options->insertItem("Circular Crown");
+    ellipring = options->insertItem("Elliptical Crown");
+    rectframe = options->insertItem("Rectangular Frame");
+    squframe = options->insertItem("Square Frame");
+    polygon = options->insertItem("Polygon");
+    options->setCheckable(TRUE);
 
     menubar->insertSeparator();
 
     QPopupMenu* help = new QPopupMenu();
-    menubar->insertItem( "&Help", help );
-    help->insertItem( "&About", this, SLOT(about()));
-    help->insertItem( "About &Xmipp", this, SLOT(aboutXmipp()));
+    menubar->insertItem("&Help", help);
+    help->insertItem("&About", this, SLOT(about()));
+    help->insertItem("About &Xmipp", this, SLOT(aboutXmipp()));
     help->insertSeparator();
-    help->insertItem( "Help!", this, SLOT(giveHelp()));
+    help->insertItem("Help!", this, SLOT(giveHelp()));
 
     menubar->insertSeparator();
-    menubar->insertItem( "Quit", this,  SLOT(Close()));
+    menubar->insertItem("Quit", this,  SLOT(Close()));
 
-    connect( options, SIGNAL(activated(int)), this, SLOT(doOption(int)) );
+    connect(options, SIGNAL(activated(int)), this, SLOT(doOption(int)));
 
     status = new QLabel(this);
-    status->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
-    status->setFixedHeight( fontMetrics().height() + 4 );
+    status->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
+    status->setFixedHeight(fontMetrics().height() + 4);
 
-    setMouseTracking( TRUE );
+    setMouseTracking(TRUE);
     options->setItemChecked(circle, true);
 }
 
 
 /****************************************************/
-maskImg::maskImg( QWidget *parent, const char *name, int wFlags )
-    : QWidget( parent, name, wFlags ),
-      filename( 0 ),
-      helpmsg( 0 )
+maskImg::maskImg(QWidget *parent, const char *name, int wFlags)
+        : QWidget(parent, name, wFlags),
+        filename(0),
+        helpmsg(0)
 {
     Init();
     typeOfMask = CIRCLE;
@@ -107,66 +107,66 @@ maskImg::maskImg( QWidget *parent, const char *name, int wFlags )
 
 /****************************************************/
 
-maskImg::maskImg( QWidget *parent, QImage *_image, maskType _typeOfMask, const char *name, int wFlags )
-    : QWidget( parent, name, wFlags ),
-      filename( 0 ),
-      helpmsg( 0 )
+maskImg::maskImg(QWidget *parent, QImage *_image, maskType _typeOfMask, const char *name, int wFlags)
+        : QWidget(parent, name, wFlags),
+        filename(0),
+        helpmsg(0)
 {
     Init();
     filename = name;
     if (Qt2xmipp((QImage) *_image)) showImage();
     typeOfMask = _typeOfMask;
-    if (typeOfMask == CIRCLE )
-    	theMaskFigure = new maskCircle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPSE )
-    	theMaskFigure = new maskEllipse(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTANGLE )
-    	theMaskFigure = new maskRectangle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUARE )
-    	theMaskFigure = new maskSquare(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RING )
-    	theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPRING )
-    	theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTFRAME )
-    	theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUFRAME )
-    	theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height()- status->height());             	
-    else if (typeOfMask == POLYGON )
-    	theMaskFigure = new maskPolygon(this, &pmScaled, width(), height()- status->height());
+    if (typeOfMask == CIRCLE)
+        theMaskFigure = new maskCircle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPSE)
+        theMaskFigure = new maskEllipse(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTANGLE)
+        theMaskFigure = new maskRectangle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUARE)
+        theMaskFigure = new maskSquare(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RING)
+        theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPRING)
+        theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTFRAME)
+        theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUFRAME)
+        theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == POLYGON)
+        theMaskFigure = new maskPolygon(this, &pmScaled, width(), height() - status->height());
     theMaskFigure->paint();
 }
 
 /****************************************************/
 
-maskImg::maskImg( QWidget *parent, Image *_image, maskType _typeOfMask, const char *name, int wFlags )
-    : QWidget( parent, name, wFlags ),
-      filename( 0 ),
-      helpmsg( 0 )
+maskImg::maskImg(QWidget *parent, Image *_image, maskType _typeOfMask, const char *name, int wFlags)
+        : QWidget(parent, name, wFlags),
+        filename(0),
+        helpmsg(0)
 {
     Init();
     filename = name;
     if (xmipp2Qt(*_image))
-      showImage();
+        showImage();
     typeOfMask = _typeOfMask;
-    if (typeOfMask == CIRCLE )
-    	theMaskFigure = new maskCircle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPSE )
-    	theMaskFigure = new maskEllipse(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTANGLE )
-    	theMaskFigure = new maskRectangle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUARE )
-    	theMaskFigure = new maskSquare(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RING )
-    	theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPRING )
-    	theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTFRAME )
-    	theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUFRAME )
-    	theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height()- status->height());             	
-    else if (typeOfMask == POLYGON )
-    	theMaskFigure = new maskPolygon(this, &pmScaled, width(), height()- status->height());             	
+    if (typeOfMask == CIRCLE)
+        theMaskFigure = new maskCircle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPSE)
+        theMaskFigure = new maskEllipse(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTANGLE)
+        theMaskFigure = new maskRectangle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUARE)
+        theMaskFigure = new maskSquare(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RING)
+        theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPRING)
+        theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTFRAME)
+        theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUFRAME)
+        theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == POLYGON)
+        theMaskFigure = new maskPolygon(this, &pmScaled, width(), height() - status->height());
     theMaskFigure->paint();
 }
 
@@ -174,10 +174,10 @@ maskImg::maskImg( QWidget *parent, Image *_image, maskType _typeOfMask, const ch
 
 maskImg::~maskImg()
 {
-    if ( alloc_context )
-	QColor::destroyAllocContext( alloc_context );
-    if ( other == this )
-	other = 0;
+    if (alloc_context)
+        QColor::destroyAllocContext(alloc_context);
+    if (other == this)
+        other = 0;
     delete theMaskFigure;
 }
 
@@ -191,153 +191,175 @@ maskImg::~maskImg()
 void maskImg::doOption(int item)
 {
 
-    if ( options->isItemChecked( item ) ) return; // They are all radio buttons
+    if (options->isItemChecked(item)) return;     // They are all radio buttons
 
-     if (theMaskFigure != NULL)
-	   delete theMaskFigure;
-    if ( item == circle ) {
-	options->setItemChecked(circle, true);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = CIRCLE;
-    	theMaskFigure = new maskCircle(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == rect ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, true);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = RECTANGLE;
-    	theMaskFigure = new maskRectangle(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == ellip ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, true);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = ELLIPSE;
-    	theMaskFigure = new maskEllipse(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == squ ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, true);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = SQUARE;
-    	theMaskFigure = new maskSquare(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == ring ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, true);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = RING;
-    	theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == ellipring ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, true);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = ELLIPRING;
-    	theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == rectframe ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, true);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, false);
-	typeOfMask = RECTFRAME;
-    	theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == squframe ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, true);
-	options->setItemChecked(polygon, false);
-	typeOfMask = SQUFRAME;
-    	theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height()- status->height());
-    } else if ( item == polygon ) {
-	options->setItemChecked(circle, false);
-	options->setItemChecked(rect, false);
-	options->setItemChecked(ellip, false);
-	options->setItemChecked(squ, false);
-	options->setItemChecked(ring, false);
-	options->setItemChecked(ellipring, false);
-	options->setItemChecked(rectframe, false);
-	options->setItemChecked(squframe, false);
-	options->setItemChecked(polygon, true);
-	typeOfMask = POLYGON;
-    	theMaskFigure = new maskPolygon(this, &pmScaled, width(), height()- status->height());
+    if (theMaskFigure != NULL)
+        delete theMaskFigure;
+    if (item == circle)
+    {
+        options->setItemChecked(circle, true);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = CIRCLE;
+        theMaskFigure = new maskCircle(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == rect)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, true);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = RECTANGLE;
+        theMaskFigure = new maskRectangle(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == ellip)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, true);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = ELLIPSE;
+        theMaskFigure = new maskEllipse(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == squ)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, true);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = SQUARE;
+        theMaskFigure = new maskSquare(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == ring)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, true);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = RING;
+        theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == ellipring)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, true);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = ELLIPRING;
+        theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == rectframe)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, true);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, false);
+        typeOfMask = RECTFRAME;
+        theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == squframe)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, true);
+        options->setItemChecked(polygon, false);
+        typeOfMask = SQUFRAME;
+        theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height() - status->height());
+    }
+    else if (item == polygon)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(rect, false);
+        options->setItemChecked(ellip, false);
+        options->setItemChecked(squ, false);
+        options->setItemChecked(ring, false);
+        options->setItemChecked(ellipring, false);
+        options->setItemChecked(rectframe, false);
+        options->setItemChecked(squframe, false);
+        options->setItemChecked(polygon, true);
+        typeOfMask = POLYGON;
+        theMaskFigure = new maskPolygon(this, &pmScaled, width(), height() - status->height());
     }
     theMaskFigure->paint();
 
     // And reconvert...
-    repaint(image.hasAlphaBuffer());	// show image in widget
+    repaint(image.hasAlphaBuffer()); // show image in widget
 }
 
 /****************************************************/
 
 void maskImg::updateStatus()
 {
-    if ( pm.size() == QSize( 0, 0 ) ) {
-	if ( filename )
-	    status->setText("Could not load image");
-	else
-	    status->setText("No image - select Open from File menu.");
-    } else {
-	QString message, moremsg;
-	
-	if (image.valid(pickx,picky)) {
-	    int y_log, x_log;
-	    xmippImage().physical2logical(picky, pickx, y_log, x_log);
-	    moremsg.sprintf("(%d,%d)= %.3f ",
-			  x_log, y_log,
-			  xmippImage(y_log,x_log));
-	    message += moremsg;
-	}
-	moremsg.sprintf("%dx%d", image.width(), image.height());
-	message += moremsg;
-	if ( pm.size() != pmScaled.size() ) {
-	    moremsg.sprintf(" [%dx%d]", pmScaled.width(),
-		pmScaled.height());
-	    message += moremsg;
-	}
-	status->setText(message);
+    if (pm.size() == QSize(0, 0))
+    {
+        if (filename)
+            status->setText("Could not load image");
+        else
+            status->setText("No image - select Open from File menu.");
+    }
+    else
+    {
+        QString message, moremsg;
+
+        if (image.valid(pickx, picky))
+        {
+            int y_log, x_log;
+            xmippImage().physical2logical(picky, pickx, y_log, x_log);
+            moremsg.sprintf("(%d,%d)= %.3f ",
+                            x_log, y_log,
+                            xmippImage(y_log, x_log));
+            message += moremsg;
+        }
+        moremsg.sprintf("%dx%d", image.width(), image.height());
+        message += moremsg;
+        if (pm.size() != pmScaled.size())
+        {
+            moremsg.sprintf(" [%dx%d]", pmScaled.width(),
+                            pmScaled.height());
+            message += moremsg;
+        }
+        status->setText(message);
     }
 }
 
@@ -346,12 +368,12 @@ void maskImg::updateStatus()
 /*
   This function exits.
 */
-void maskImg::Close( )
+void maskImg::Close()
 {
 
-    if (saveasname!="") 
+    if (saveasname != "")
     {
-	saveImage(0);
+        saveImage(0);
     }
     close();
 
@@ -364,67 +386,74 @@ void maskImg::Close( )
 /*
   This function saves the image.
 */
-void maskImg::saveImage( int item )
+void maskImg::saveImage(int item)
 {
     //const char* fmt = saveimage->text(item);
 //    QString savefilename = QFileDialog::getSaveFileName(0, 0, 0, filename);
     QString savefilename;
 
-    if (saveasname=="") 
+    if (saveasname == "")
     {
-	savefilename = QFileDialog::getSaveFileName(QString::null, "*.msk", this);
+        savefilename = QFileDialog::getSaveFileName(QString::null, "*.msk", this);
     }
     else
     {
-	const char* c_string = saveasname.c_str();
-	savefilename = QString(c_string );
+        const char* c_string = saveasname.c_str();
+        savefilename = QString(c_string);
     }
 
-    if ( !savefilename.isEmpty() ) {
-	QFileInfo fi(savefilename);
-	if (fi.exists()) {
- 		if ( QMessageBox::information( this, "ImageViewer application",
-				      "The file already exist. Overwrite?",
-				      "Yes",
-				      "No") != 0) {
-					  QMessageBox::about( this, "Warning!", "Saving aborted\n");
-					  return;
-					}
-	}
-/*        if (strcmp(fmt, "Spider") != 0) {
- 	  if ( !image.save( savefilename, fmt ) )
-	    QMessageBox::warning( this, "Save failed", "Error saving file" );
-	} else {*/
-	  try {
-	    // Creates a Xmipp temporal Image
+    if (!savefilename.isEmpty())
+    {
+        QFileInfo fi(savefilename);
+        if (fi.exists())
+        {
+            if (QMessageBox::information(this, "ImageViewer application",
+                                         "The file already exist. Overwrite?",
+                                         "Yes",
+                                         "No") != 0)
+            {
+                QMessageBox::about(this, "Warning!", "Saving aborted\n");
+                return;
+            }
+        }
+        /*        if (strcmp(fmt, "Spider") != 0) {
+            if ( !image.save( savefilename, fmt ) )
+             QMessageBox::warning( this, "Save failed", "Error saving file" );
+         } else {*/
+        try
+        {
+            // Creates a Xmipp temporal Image
 
-	    ImageXmipp tmpImage(xmippImage().RowNo(), xmippImage().ColNo());
-			
-	    // Writes pixels.
-	    for (int y = 0; y < tmpImage().RowNo(); y++)
-	      for (int x = 0; x < tmpImage().ColNo(); x++) {
-		   int phy_x, phy_y;
-		   phy_x = (int) ((float) (x*pmScaled.width())/ (float)xmippImage().ColNo());
-		   phy_y = (int) ((float) (y*pmScaled.height())/ (float)xmippImage().RowNo()); 	
-		   if (theMaskFigure->isIn(phy_x, phy_y))
-	              tmpImage(y,x) = (float) 1.0;
-		   else
-	              tmpImage(y,x) = (float) 0.0;
-	      }		
+            ImageXmipp tmpImage(xmippImage().RowNo(), xmippImage().ColNo());
 
- 	    // Saves Xmipp Image
-	    tmpImage.rename((string) ((const  char *)savefilename));
+            // Writes pixels.
+            for (int y = 0; y < tmpImage().RowNo(); y++)
+                for (int x = 0; x < tmpImage().ColNo(); x++)
+                {
+                    int phy_x, phy_y;
+                    phy_x = (int)((float)(x * pmScaled.width()) / (float)xmippImage().ColNo());
+                    phy_y = (int)((float)(y * pmScaled.height()) / (float)xmippImage().RowNo());
+                    if (theMaskFigure->isIn(phy_x, phy_y))
+                        tmpImage(y, x) = (float) 1.0;
+                    else
+                        tmpImage(y, x) = (float) 0.0;
+                }
+
+            // Saves Xmipp Image
+            tmpImage.rename((string)((const  char *)savefilename));
             tmpImage.write();
             // print parameters
-            theMaskFigure->print(pmScaled.width()/ (float)xmippImage().ColNo(),
-	                         pmScaled.height()/ (float)xmippImage().RowNo());
-	  } catch (Xmipp_error) {
-	      char *helptext = "Invalid image type";
-	      helpmsg = new QMessageBox( "Error", helptext,
-	      	QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE );
-    	      helpmsg->show();
-    	      helpmsg->raise();
-	  }
+            theMaskFigure->print(pmScaled.width() / (float)xmippImage().ColNo(),
+                                 pmScaled.height() / (float)xmippImage().RowNo());
+        }
+        catch (Xmipp_error)
+        {
+            char *helptext = "Invalid image type";
+            helpmsg = new QMessageBox("Error", helptext,
+                                      QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
+            helpmsg->show();
+            helpmsg->raise();
+        }
     }
 }
 
@@ -442,9 +471,10 @@ void maskImg::newWindow()
 void maskImg::openFile()
 {
     QString newfilename = QFileDialog::getOpenFileName();
-    if ( !newfilename.isEmpty() ) {
-	loadImage( newfilename ) ;
-	repaint();			// show image in widget
+    if (!newfilename.isEmpty())
+    {
+        loadImage(newfilename) ;
+        repaint();   // show image in widget
     }
 }
 
@@ -453,26 +483,30 @@ void maskImg::openFile()
 bool maskImg::showImage()
 {
     bool ok = FALSE;
-    QApplication::setOverrideCursor( waitCursor ); // this might take time
+    QApplication::setOverrideCursor(waitCursor);   // this might take time
     pickx = -1;
     clickx = -1;
     ok = reconvertImage();
-    if ( ok ) {
-	setCaption( filename );			// set window caption
+    if (ok)
+    {
+        setCaption(filename);     // set window caption
         int w = pm.width();
-    	int h = pm.height();
-    	const int reasonable_width = 128;
-    	if ( w < reasonable_width ) {
-    	    // Integer scale up to something reasonable
-    	    int multiply = ( reasonable_width + w - 1 ) / w;
-    	    w *= multiply;
-    	    h *= multiply;
-    	}
-    	h += status->height();
-    	resize( w, h ); 			    // we resize to fit image
-    } else {
-    	pm.resize(0,0); 			    // couldn't load image
-    	update();
+        int h = pm.height();
+        const int reasonable_width = 128;
+        if (w < reasonable_width)
+        {
+            // Integer scale up to something reasonable
+            int multiply = (reasonable_width + w - 1) / w;
+            w *= multiply;
+            h *= multiply;
+        }
+        h += status->height();
+        resize(w, h);          // we resize to fit image
+    }
+    else
+    {
+        pm.resize(0, 0);       // couldn't load image
+        update();
     }
     QApplication::restoreOverrideCursor();  // restore original cursor
     updateStatus();
@@ -481,38 +515,42 @@ bool maskImg::showImage()
 
 /*****************************************/
 
-bool maskImg::xmipp2Qt(Image &_image )
+bool maskImg::xmipp2Qt(Image &_image)
 {
     bool ok = FALSE;
-		
-    try {
-      xmippImage = _image;
-      // Creates a Qt Image to hold Xmipp Image
-      QImage tmpImage(_image().ColNo(), _image().RowNo(), 8, 256);
-      _image().range_adjust(0, 255);
 
-      // Sets Graylevel Palette.
-      for (int i = 0; i < 256; i++) {
-    	QColor c;
-    	c.setRgb(i,i,i);
-    	tmpImage.setColor(i, c.rgb());
-      }
-      // Reads pixels.
-      for (int y = 0; y < _image().RowNo(); y++)
-    	for (int x = 0; x < _image().ColNo(); x++)
-    	  tmpImage.setPixel(x,y, ((uint) _image(y,x)) );  	
+    try
+    {
+        xmippImage = _image;
+        // Creates a Qt Image to hold Xmipp Image
+        QImage tmpImage(_image().ColNo(), _image().RowNo(), 8, 256);
+        _image().range_adjust(0, 255);
 
-      image = tmpImage;
-      xmippFlag = 0;	 	// Sets flag = Xmipp image.
-      ok = TRUE;
+        // Sets Graylevel Palette.
+        for (int i = 0; i < 256; i++)
+        {
+            QColor c;
+            c.setRgb(i, i, i);
+            tmpImage.setColor(i, c.rgb());
+        }
+        // Reads pixels.
+        for (int y = 0; y < _image().RowNo(); y++)
+            for (int x = 0; x < _image().ColNo(); x++)
+                tmpImage.setPixel(x, y, ((uint) _image(y, x)));
 
-    } catch (Xmipp_error) {
-      ok = FALSE;
-      char *helptext = "Error converting xmipp to Qt";
-      helpmsg = new QMessageBox( "Error", helptext,
-    	QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE );
-      helpmsg->show();
-      helpmsg->raise();
+        image = tmpImage;
+        xmippFlag = 0;   // Sets flag = Xmipp image.
+        ok = TRUE;
+
+    }
+    catch (Xmipp_error)
+    {
+        ok = FALSE;
+        char *helptext = "Error converting xmipp to Qt";
+        helpmsg = new QMessageBox("Error", helptext,
+                                  QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
+        helpmsg->show();
+        helpmsg->raise();
     }
 
     return ok;
@@ -520,36 +558,39 @@ bool maskImg::xmipp2Qt(Image &_image )
 
 /*****************************************/
 
-bool maskImg::Qt2xmipp( QImage _image )
+bool maskImg::Qt2xmipp(QImage _image)
 {
     bool ok = FALSE;
     // try to read image from standard format.
-		
-    try {
-      image = _image;
-      image.setNumColors(256);
 
-      // Creates a Xmipp Image to hold Qt Image
-      Image tmpImage(image.height(), image.width());
+    try
+    {
+        image = _image;
+        image.setNumColors(256);
 
-      // Reads pixels.
-      for (int y = 0; y < image.width(); y++)
-    	for (int x = 0; x < image.height(); x++)
-    	  tmpImage(x,y) = (double) image.pixelIndex(y, x);
-	
+        // Creates a Xmipp Image to hold Qt Image
+        Image tmpImage(image.height(), image.width());
 
-      xmippImage = tmpImage;
-      xmippFlag = 0;	 	// Sets flag = Xmipp image.
+        // Reads pixels.
+        for (int y = 0; y < image.width(); y++)
+            for (int x = 0; x < image.height(); x++)
+                tmpImage(x, y) = (double) image.pixelIndex(y, x);
 
-      ok = TRUE;
 
-    } catch (Xmipp_error) {
-      ok = FALSE;
-      char *helptext = "Error converting Qt image to Xmipp image";
-      helpmsg = new QMessageBox( "Error", helptext,
-    	QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE );
-      helpmsg->show();
-      helpmsg->raise();
+        xmippImage = tmpImage;
+        xmippFlag = 0;   // Sets flag = Xmipp image.
+
+        ok = TRUE;
+
+    }
+    catch (Xmipp_error)
+    {
+        ok = FALSE;
+        char *helptext = "Error converting Qt image to Xmipp image";
+        helpmsg = new QMessageBox("Error", helptext,
+                                  QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
+        helpmsg->show();
+        helpmsg->raise();
     }
 
     return ok;
@@ -567,57 +608,62 @@ bool maskImg::Qt2xmipp( QImage _image )
   Returns TRUE if the image was successfully loaded.
 */
 
-bool maskImg::loadImage( const char *fileName)
+bool maskImg::loadImage(const char *fileName)
 {
     filename = fileName;
     bool ok = FALSE;
-    if ( filename ) {
-	
-	// try to read image from standard format.	
-	
-	if (image.load(filename, 0)) ok = Qt2xmipp(image);	
-	
-	if (!ok) {
-          try {
- 	    // reads Xmipp Image
-            Image *tmpImage = Image::LoadImage (fileName,apply_geo);
-	    if (!tmpImage)
-	      REPORT_ERROR (1501, (string)"Error opening file " + fileName);
-	    ok = TRUE;
-	    ok = xmipp2Qt(*tmpImage);
-	    delete tmpImage;
-	  } catch (Xmipp_error) {
-	    ok = FALSE;
-	    char *helptext = "Invalid image type";
-	    helpmsg = new QMessageBox( "Error", helptext,
-	      QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE );
-    	    helpmsg->show();
-    	    helpmsg->raise();
-	  }
-	}
+    if (filename)
+    {
+
+        // try to read image from standard format.
+
+        if (image.load(filename, 0)) ok = Qt2xmipp(image);
+
+        if (!ok)
+        {
+            try
+            {
+                // reads Xmipp Image
+                Image *tmpImage = Image::LoadImage(fileName, apply_geo);
+                if (!tmpImage)
+                    REPORT_ERROR(1501, (string)"Error opening file " + fileName);
+                ok = TRUE;
+                ok = xmipp2Qt(*tmpImage);
+                delete tmpImage;
+            }
+            catch (Xmipp_error)
+            {
+                ok = FALSE;
+                char *helptext = "Invalid image type";
+                helpmsg = new QMessageBox("Error", helptext,
+                                          QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
+                helpmsg->show();
+                helpmsg->raise();
+            }
+        }
     }
 
     if (ok) ok = showImage();
     if (theMaskFigure != NULL)
-    	delete theMaskFigure;
-    if (typeOfMask == CIRCLE )
-    	theMaskFigure = new maskCircle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPSE )
-    	theMaskFigure = new maskEllipse(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTANGLE )
-    	theMaskFigure = new maskRectangle(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUARE )
-    	theMaskFigure = new maskSquare(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RING )
-    	theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == ELLIPRING )
-    	theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == RECTFRAME )
-    	theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height()- status->height());
-    else if (typeOfMask == SQUFRAME )
-    	theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height()- status->height());             	
-    else if (typeOfMask == POLYGON )
-    	theMaskFigure = new maskPolygon(this, &pmScaled, width(), height()- status->height());             	
+        delete theMaskFigure;
+    if (typeOfMask == CIRCLE)
+        theMaskFigure = new maskCircle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPSE)
+        theMaskFigure = new maskEllipse(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTANGLE)
+        theMaskFigure = new maskRectangle(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUARE)
+        theMaskFigure = new maskSquare(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RING)
+        theMaskFigure = new maskCircleRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == ELLIPRING)
+        theMaskFigure = new maskEllipRing(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == RECTFRAME)
+        theMaskFigure = new maskRectFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == SQUFRAME)
+        theMaskFigure = new maskSquFrame(this, &pmScaled, width(), height() - status->height());
+    else if (typeOfMask == POLYGON)
+        theMaskFigure = new maskPolygon(this, &pmScaled, width(), height() - status->height());
     theMaskFigure->paint();
     return ok;
 }
@@ -628,24 +674,27 @@ bool maskImg::reconvertImage()
 {
     bool success = FALSE;
 
-    if ( image.isNull() ) return FALSE;
-    if ( alloc_context ) {
-	QColor::destroyAllocContext( alloc_context );
-	alloc_context = 0;
-    }
-    QApplication::setOverrideCursor( waitCursor ); // this might take time
-    if ( pm.convertFromImage(image) )
+    if (image.isNull()) return FALSE;
+    if (alloc_context)
     {
-	pmScaled = QPixmap();
-	scale();
-	resize( width(), height() );
-	success = TRUE;				// load successful
-    } else {
-	pm.resize(0,0);				// couldn't load image
+        QColor::destroyAllocContext(alloc_context);
+        alloc_context = 0;
+    }
+    QApplication::setOverrideCursor(waitCursor);   // this might take time
+    if (pm.convertFromImage(image))
+    {
+        pmScaled = QPixmap();
+        scale();
+        resize(width(), height());
+        success = TRUE;    // load successful
+    }
+    else
+    {
+        pm.resize(0, 0);   // couldn't load image
     }
     updateStatus();
-    QApplication::restoreOverrideCursor();	// restore original cursor
-    return success;				// TRUE if loaded OK
+    QApplication::restoreOverrideCursor(); // restore original cursor
+    return success;    // TRUE if loaded OK
 }
 
 
@@ -660,21 +709,23 @@ void maskImg::scale()
 {
     int h = height() - status->height();
 
-    if ( image.isNull() ) return;
+    if (image.isNull()) return;
 
-    QApplication::setOverrideCursor( waitCursor ); // this might take time
-    if ( width() == pm.width() && h == pm.height() )
-    {						// no need to scale if widget
-	pmScaled = pm;				// size equals pixmap size
-    } else {
-	    QWMatrix m;				// transformation matrix
-	    m.scale(((double)width())/pm.width(),// define scale factors
-		    ((double)h)/pm.height());
-	    pmScaled = pm.xForm( m );		// create scaled pixmap
+    QApplication::setOverrideCursor(waitCursor);   // this might take time
+    if (width() == pm.width() && h == pm.height())
+    {      // no need to scale if widget
+        pmScaled = pm;    // size equals pixmap size
+    }
+    else
+    {
+        QWMatrix m;    // transformation matrix
+        m.scale(((double)width()) / pm.width(),// define scale factors
+                ((double)h) / pm.height());
+        pmScaled = pm.xForm(m);    // create scaled pixmap
     }
     if (theMaskFigure != NULL)
-       theMaskFigure->resize(width(), height()- status->height());
-    QApplication::restoreOverrideCursor();	// restore original cursor
+        theMaskFigure->resize(width(), height() - status->height());
+    QApplication::restoreOverrideCursor(); // restore original cursor
 }
 
 
@@ -685,19 +736,19 @@ void maskImg::scale()
   scale() to fit the pixmap to the new widget size.
 */
 
-void maskImg::resizeEvent( QResizeEvent * )
+void maskImg::resizeEvent(QResizeEvent *)
 {
     status->setGeometry(0, height() - status->height(),
-		        width(), status->height());
+                        width(), status->height());
 
-    if ( pm.size() == QSize( 0, 0 ) )		// we couldn't load the image
-	return;
+    if (pm.size() == QSize(0, 0))      // we couldn't load the image
+        return;
 
     int h = height() - status->height();
-    if ( width() != pmScaled.width() || h != pmScaled.height())
-    {						// if new size,
-	scale();				// scale pmScaled to window
-	updateStatus();
+    if (width() != pmScaled.width() || h != pmScaled.height())
+    {      // if new size,
+        scale();    // scale pmScaled to window
+        updateStatus();
     }
 }
 
@@ -708,17 +759,19 @@ void maskImg::resizeEvent( QResizeEvent * )
   Handles a change in the mouse
 */
 
-bool maskImg::convertEvent( QMouseEvent* e, int& x, int& y)
+bool maskImg::convertEvent(QMouseEvent* e, int& x, int& y)
 {
-    if ( pm.size() != QSize( 0, 0 ) ) {
-	int h = height() - status->height();
-	int nx = e->x() * image.width() / width();
-	int ny = (e->y()) * image.height() / h;
-	if (nx != x || ny != y ) {
-	    x = nx;
-	    y = ny;
-	    return true;
-	}
+    if (pm.size() != QSize(0, 0))
+    {
+        int h = height() - status->height();
+        int nx = e->x() * image.width() / width();
+        int ny = (e->y()) * image.height() / h;
+        if (nx != x || ny != y)
+        {
+            x = nx;
+            y = ny;
+            return true;
+        }
     }
     return false;
 }
@@ -729,25 +782,27 @@ bool maskImg::convertEvent( QMouseEvent* e, int& x, int& y)
   Mouse press events.
 */
 
-void maskImg::mousePressEvent( QMouseEvent *e )
+void maskImg::mousePressEvent(QMouseEvent *e)
 {
-    QPoint clickedPos = e->pos();		// extract pointer position
-    if  (e->button() == RightButton)
-      menubar->exec(clickedPos);
-    else if (e->button() == LeftButton && typeOfMask == POLYGON) {
-       maskPolygon *polygon=dynamic_cast<maskPolygon *>(theMaskFigure);
-       polygon->add_point(clickedPos.x(),clickedPos.y());
+    QPoint clickedPos = e->pos();  // extract pointer position
+    if (e->button() == RightButton)
+        menubar->exec(clickedPos);
+    else if (e->button() == LeftButton && typeOfMask == POLYGON)
+    {
+        maskPolygon *polygon = dynamic_cast<maskPolygon *>(theMaskFigure);
+        polygon->add_point(clickedPos.x(), clickedPos.y());
     }
 }
 
 
 /****************************************************/
-void maskImg::mouseDoubleClickEvent( QMouseEvent *e )
+void maskImg::mouseDoubleClickEvent(QMouseEvent *e)
 {
-    QPoint clickedPos = e->pos();		// extract pointer position
-    if (typeOfMask == POLYGON) {
-        maskPolygon *polygon=dynamic_cast<maskPolygon *>(theMaskFigure);
-        polygon->add_point(clickedPos.x(),clickedPos.y());
+    QPoint clickedPos = e->pos();  // extract pointer position
+    if (typeOfMask == POLYGON)
+    {
+        maskPolygon *polygon = dynamic_cast<maskPolygon *>(theMaskFigure);
+        polygon->add_point(clickedPos.x(), clickedPos.y());
         polygon->closePolygon();
     }
 }
@@ -757,14 +812,15 @@ void maskImg::mouseDoubleClickEvent( QMouseEvent *e )
 /*
   Record the pixel position of interest.
 */
-void maskImg::mouseMoveEvent( QMouseEvent *e )
+void maskImg::mouseMoveEvent(QMouseEvent *e)
 {
-  if (convertEvent(e,pickx,picky))
-     updateStatus();
-  if (typeOfMask == POLYGON) {
-      maskPolygon *polygon=dynamic_cast<maskPolygon *>(theMaskFigure);
-      polygon->move_point(pickx,picky);
-  }
+    if (convertEvent(e, pickx, picky))
+        updateStatus();
+    if (typeOfMask == POLYGON)
+    {
+        maskPolygon *polygon = dynamic_cast<maskPolygon *>(theMaskFigure);
+        polygon->move_point(pickx, picky);
+    }
 }
 
 
@@ -775,85 +831,98 @@ void maskImg::mouseMoveEvent( QMouseEvent *e )
   Handles key press events.
 */
 
-void maskImg::keyPressEvent( QKeyEvent* e )
+void maskImg::keyPressEvent(QKeyEvent* e)
 {
-    switch( e->key() ) {			// Look at the key code
-	case Key_Escape:
-             if (typeOfMask == POLYGON) {
-                 maskPolygon *polygon=dynamic_cast<maskPolygon *>(theMaskFigure);
-                 polygon->clear_all_points();
-             }
-	     break;	
-	case Key_R:
-             if (e->state() == ControlButton) {	// If 'Ctrol R' key,
-  		  xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
-	     }
-	     break;	
-	case Key_O:				// Xmipp origin
-             if (e->state() == ControlButton) {	// If 'Ctrol N' key,
-  		  xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.
-	     }
-	     break;
-	case Key_Q:				// Quit program
-             if (e->state() == ControlButton) {	// If 'Ctrol Q' key,
-  		  close();                      // Exit
-	     }
-	     break;
-	case Key_N:				// Natural size (original size)
-             if (e->state() == ControlButton) {	// If 'Ctrol N' key,
-    		  resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());	
-	     }
-	     break;
-	case Key_M:
-	case Key_Minus:				// Half size
-             if (e->state() == ControlButton) {	// If 'Ctrol-' key
-	          if (width() > pm.width()/3)
-    		  	resize(width()/2, height()/2 + status->height()/2 + 1);	
-	     } else if (e->state() == AltButton) {	// If 'CtrolShift+' key,
-		   theMaskFigure->decreaseArea();
-	     }
-	     break;
-	case Key_P:
-	case Key_Plus:			        // Double size
-             if (e->state() == ControlButton) {	// If 'Ctrol+' key,
-    		  resize(width()*2, height()*2 - status->height());
-	     } else if (e->state() == AltButton) {	// If 'CtrolShift+' key,
-		   theMaskFigure->increaseArea();
-	     }
-	     break;
-	case Key_A:    				// Aspect ratio
-             if (e->state() == ControlButton) {	// If 'Ctrol+' key,
-	          double ratio = (double) xmippImage().ColNo()/ (double) xmippImage().RowNo();		
-    		  resize((int)width(), (int) (width()/ratio + status->height()));	
-	     }
-	     break;
-	case Key_Left:				// If 'left arrow'-key,
-            if (e->state() == ControlButton) 	// If 'Ctrol+' key,
-	    	theMaskFigure->decreaseWidth();
-	    else
-	    	theMaskFigure->moveLeft();
-	    break;
-	case Key_Right:				// Correspondingly...
-            if (e->state() == ControlButton)	// If 'Ctrol+' key,
-	    	theMaskFigure->increaseWidth();
-	    else
-	    	theMaskFigure->moveRight();
-	    break;
-	case Key_Up:
-            if (e->state() == ControlButton)	// If 'Ctrol' key,
-	       theMaskFigure->increaseHeight();
-	    else
-	    	theMaskFigure->moveUp();
-	    break;
-	case Key_Down:
-            if (e->state() == ControlButton)	// If 'Ctrol' key,
-	       theMaskFigure->decreaseHeight();
-	    else
-	    	theMaskFigure->moveDown();
-	    break;
-	default:				// If not an interesting key,
-	    e->ignore();			// we don't accept the event
-	    return;	
+    switch (e->key())
+    {   // Look at the key code
+    case Key_Escape:
+        if (typeOfMask == POLYGON)
+        {
+            maskPolygon *polygon = dynamic_cast<maskPolygon *>(theMaskFigure);
+            polygon->clear_all_points();
+        }
+        break;
+    case Key_R:
+        if (e->state() == ControlButton)
+        { // If 'Ctrol R' key,
+            xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
+        }
+        break;
+    case Key_O:    // Xmipp origin
+        if (e->state() == ControlButton)
+        { // If 'Ctrol N' key,
+            xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.
+        }
+        break;
+    case Key_Q:    // Quit program
+        if (e->state() == ControlButton)
+        { // If 'Ctrol Q' key,
+            close();                      // Exit
+        }
+        break;
+    case Key_N:    // Natural size (original size)
+        if (e->state() == ControlButton)
+        { // If 'Ctrol N' key,
+            resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());
+        }
+        break;
+    case Key_M:
+    case Key_Minus:    // Half size
+        if (e->state() == ControlButton)
+        { // If 'Ctrol-' key
+            if (width() > pm.width() / 3)
+                resize(width() / 2, height() / 2 + status->height() / 2 + 1);
+        }
+        else if (e->state() == AltButton)
+        { // If 'CtrolShift+' key,
+            theMaskFigure->decreaseArea();
+        }
+        break;
+    case Key_P:
+    case Key_Plus:           // Double size
+        if (e->state() == ControlButton)
+        { // If 'Ctrol+' key,
+            resize(width()*2, height()*2 - status->height());
+        }
+        else if (e->state() == AltButton)
+        { // If 'CtrolShift+' key,
+            theMaskFigure->increaseArea();
+        }
+        break;
+    case Key_A:        // Aspect ratio
+        if (e->state() == ControlButton)
+        { // If 'Ctrol+' key,
+            double ratio = (double) xmippImage().ColNo() / (double) xmippImage().RowNo();
+            resize((int)width(), (int)(width() / ratio + status->height()));
+        }
+        break;
+    case Key_Left:    // If 'left arrow'-key,
+        if (e->state() == ControlButton)  // If 'Ctrol+' key,
+            theMaskFigure->decreaseWidth();
+        else
+            theMaskFigure->moveLeft();
+        break;
+    case Key_Right:    // Correspondingly...
+        if (e->state() == ControlButton) // If 'Ctrol+' key,
+            theMaskFigure->increaseWidth();
+        else
+            theMaskFigure->moveRight();
+        break;
+    case Key_Up:
+        if (e->state() == ControlButton) // If 'Ctrol' key,
+            theMaskFigure->increaseHeight();
+        else
+            theMaskFigure->moveUp();
+        break;
+    case Key_Down:
+        if (e->state() == ControlButton) // If 'Ctrol' key,
+            theMaskFigure->decreaseHeight();
+        else
+            theMaskFigure->moveDown();
+        break;
+    default:    // If not an interesting key,
+        e->ignore();   // we don't accept the event
+        return;
     }
 }
 
@@ -865,15 +934,16 @@ void maskImg::keyPressEvent( QKeyEvent* e )
   an error message if no legal pixmap has been loaded.
 */
 
-void maskImg::paintEvent( QPaintEvent *e )
+void maskImg::paintEvent(QPaintEvent *e)
 {
-    if ( pm.size() != QSize( 0, 0 ) ) {		// is an image loaded?
-	QPainter painter(this);
-	painter.setClipRect(e->rect());
- 	painter.drawPixmap(0, 0, pmScaled);
+    if (pm.size() != QSize(0, 0))
+    {  // is an image loaded?
+        QPainter painter(this);
+        painter.setClipRect(e->rect());
+        painter.drawPixmap(0, 0, pmScaled);
         if (theMaskFigure != NULL)
-   	 theMaskFigure->paint();        		
-   }
+            theMaskFigure->paint();
+    }
 }
 
 
@@ -884,44 +954,49 @@ void maskImg::paintEvent( QPaintEvent *e )
 */
 void maskImg::giveHelp()
 {
-    if (!helpmsg) {
-	QString helptext = "Usage: xmipp_xmask <-img> <-sel> [-sd]\n\n ";
-    	QStrList support = QImage::outputFormats();
-	helptext += "\n\nSupported input formats:\n";
-	int lastnl = helptext.length();
+    if (!helpmsg)
+    {
+        QString helptext = "Usage: xmipp_xmask <-img> <-sel> [-sd]\n\n ";
+        QStrList support = QImage::outputFormats();
+        helptext += "\n\nSupported input formats:\n";
+        int lastnl = helptext.length();
 
-    	support.clear();
-    	support.insert(0, "Spider");
-    	support.insert(1, "bmp");
-	
-	const char* f = support.first();
-	helptext += f;
-	f = support.next();
-	for (; f; f = support.next()) {
-	    helptext += ',';
-	    if ( helptext.length() - lastnl > 40 ) {
-		helptext += "\n  ";
-		lastnl = helptext.length() - 2;
-	    } else {
-		helptext += ' ';
-	    }
-	    helptext += f;
-	}
-	helptext += "\n\nCommands:\n";
-	helptext += " Right-click  : Popup menu\n";
-	helptext += " Ctrl Q: Quit program\n";
-	helptext += " Ctrl N: Natural size of the image\n";
-	helptext += " Ctrl O: Set origin to the center of the image\n";
-	helptext += " Ctrl R: Restore origin to the upper left corner of the image\n";
-	helptext += " Ctrl - or Ctrl M: Half the size of the image\n";
-	helptext += " Ctrl + or Ctrl P: Double the size of the image\n";
-	helptext += " Ctrl A: Aspect ratio\n";
-	helptext += " Arrows: Moves the mask around the image\n";
-	helptext += " Ctrl+Arrows: Resizes the mask\n";
-	helptext += " Alt + or Ctrl P: Increases the width of the crown or frame\n";
-	helptext += " Alt - or Ctrl M: Decreases the width of the crown or frame\n";
-	helpmsg = new QMessageBox( "Help", helptext,
-	    QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE );
+        support.clear();
+        support.insert(0, "Spider");
+        support.insert(1, "bmp");
+
+        const char* f = support.first();
+        helptext += f;
+        f = support.next();
+        for (; f; f = support.next())
+        {
+            helptext += ',';
+            if (helptext.length() - lastnl > 40)
+            {
+                helptext += "\n  ";
+                lastnl = helptext.length() - 2;
+            }
+            else
+            {
+                helptext += ' ';
+            }
+            helptext += f;
+        }
+        helptext += "\n\nCommands:\n";
+        helptext += " Right-click  : Popup menu\n";
+        helptext += " Ctrl Q: Quit program\n";
+        helptext += " Ctrl N: Natural size of the image\n";
+        helptext += " Ctrl O: Set origin to the center of the image\n";
+        helptext += " Ctrl R: Restore origin to the upper left corner of the image\n";
+        helptext += " Ctrl - or Ctrl M: Half the size of the image\n";
+        helptext += " Ctrl + or Ctrl P: Double the size of the image\n";
+        helptext += " Ctrl A: Aspect ratio\n";
+        helptext += " Arrows: Moves the mask around the image\n";
+        helptext += " Ctrl+Arrows: Resizes the mask\n";
+        helptext += " Alt + or Ctrl P: Increases the width of the crown or frame\n";
+        helptext += " Alt - or Ctrl M: Decreases the width of the crown or frame\n";
+        helpmsg = new QMessageBox("Help", helptext,
+                                  QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
     }
     helpmsg->show();
     helpmsg->raise();
@@ -929,19 +1004,19 @@ void maskImg::giveHelp()
 
 void maskImg::about()
 {
-    QMessageBox::about( this, "XMask",
-			"Creates a binary mask out of a set of \n"
-			"Electron Microscopy Single Particle Images.\n");
+    QMessageBox::about(this, "XMask",
+                       "Creates a binary mask out of a set of \n"
+                       "Electron Microscopy Single Particle Images.\n");
 }
 
 
 void maskImg::aboutXmipp()
 {
-    QMessageBox::about( this, "Xmipp: Xmipp Image Processing Package",
-    				"Biocomputing Unit.\n"
-				"National Center of Biotechnology-CSIC\n"
-				"Madrid, Spain\n"
-				"http://www.biocomp.cnb.uam.es\n");
+    QMessageBox::about(this, "Xmipp: Xmipp Image Processing Package",
+                       "Biocomputing Unit.\n"
+                       "National Center of Biotechnology-CSIC\n"
+                       "Madrid, Spain\n"
+                       "http://www.biocomp.cnb.uam.es\n");
 }
 
 

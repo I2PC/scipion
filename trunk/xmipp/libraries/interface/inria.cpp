@@ -35,56 +35,58 @@
 
 /* Derivative -------------------------------------------------------------- */
 void compute_derivative(const matrix3D<double> &in_vol,
-   matrix3D<double> &out_vol, char *type,
-   double sigma) {
-   // Prepare some variables
-   int borderLengths[3]={1,1,1};
-   recursiveFilterType filterType=ALPHA_DERICHE;
-   float filterCoefs[3];
-   filterCoefs[0] = filterCoefs[1] = filterCoefs[2] = sigma;
-   int Dims[3];
-   Dims[2]= ZSIZE(in_vol);
-   Dims[1]= YSIZE(in_vol);
-   Dims[0]= XSIZE(in_vol);
-   out_vol.resize(in_vol);
+                        matrix3D<double> &out_vol, char *type,
+                        double sigma)
+{
+    // Prepare some variables
+    int borderLengths[3] = {1, 1, 1};
+    recursiveFilterType filterType = ALPHA_DERICHE;
+    float filterCoefs[3];
+    filterCoefs[0] = filterCoefs[1] = filterCoefs[2] = sigma;
+    int Dims[3];
+    Dims[2] = ZSIZE(in_vol);
+    Dims[1] = YSIZE(in_vol);
+    Dims[0] = XSIZE(in_vol);
+    out_vol.resize(in_vol);
 
-   // Translate derivative type
-   derivativeOrder derivative_type[3];
-   #define COUNT(c,N) \
-      N=0; \
-      if (type[0]==c) {N++;} \
-      if (type[0]!='\0') {if (type[1]==c) N++;} \
-      if (type[0]!='\0') {if (type[1]!='\0') {if (type[2]==c) N++;}}
-   #define SET_DERIVATIVE_TYPE_FOR(c,idx) {\
-      int N; COUNT(c, N); \
-      switch (N) { \
-         case 0: derivative_type[idx]=SMOOTHING; break; \
-         case 1: derivative_type[idx]=DERIVATIVE_1; break; \
-         case 2: derivative_type[idx]=DERIVATIVE_2; break; \
-         case 3: derivative_type[idx]=DERIVATIVE_3; break; \
-      } \
-   }
-   SET_DERIVATIVE_TYPE_FOR('X',0);
-   SET_DERIVATIVE_TYPE_FOR('Y',1);
-   SET_DERIVATIVE_TYPE_FOR('Z',2);
+    // Translate derivative type
+    derivativeOrder derivative_type[3];
+#define COUNT(c,N) \
+    N=0; \
+    if (type[0]==c) {N++;} \
+    if (type[0]!='\0') {if (type[1]==c) N++;} \
+    if (type[0]!='\0') {if (type[1]!='\0') {if (type[2]==c) N++;}}
+#define SET_DERIVATIVE_TYPE_FOR(c,idx) {\
+        int N; COUNT(c, N); \
+        switch (N) { \
+        case 0: derivative_type[idx]=SMOOTHING; break; \
+        case 1: derivative_type[idx]=DERIVATIVE_1; break; \
+        case 2: derivative_type[idx]=DERIVATIVE_2; break; \
+        case 3: derivative_type[idx]=DERIVATIVE_3; break; \
+        } \
+    }
+    SET_DERIVATIVE_TYPE_FOR('X', 0);
+    SET_DERIVATIVE_TYPE_FOR('Y', 1);
+    SET_DERIVATIVE_TYPE_FOR('Z', 2);
 
-   // Compute derivative
-   matrix3D<float> aux;
-   type_cast(in_vol,aux);
-   // This auxiliar volume is used due to the fact that INRIA library
-   // seems to have a problem with input double volumes
-   if (partial_derivative_3D(VOL_ARRAY(aux), FLOAT,
-       VOL_ARRAY(out_vol), DOUBLE,
-       Dims, borderLengths, filterCoefs, filterType, derivative_type) == 0)
-       REPORT_ERROR(1,"Processing of derivative failed.");
+    // Compute derivative
+    matrix3D<float> aux;
+    type_cast(in_vol, aux);
+    // This auxiliar volume is used due to the fact that INRIA library
+    // seems to have a problem with input double volumes
+    if (partial_derivative_3D(VOL_ARRAY(aux), FLOAT,
+                              VOL_ARRAY(out_vol), DOUBLE,
+                              Dims, borderLengths, filterCoefs, filterType, derivative_type) == 0)
+        REPORT_ERROR(1, "Processing of derivative failed.");
 }
 
 /* Gradient ---------------------------------------------------------------- */
 void compute_gradient(const matrix3D<double> &in_vol,
-   Vectorial_matrix3D &out_vol, double sigma) {
-   out_vol.resize(in_vol);
-   compute_derivative(in_vol,out_vol.X(),"X",sigma);
-   compute_derivative(in_vol,out_vol.Y(),"Y",sigma);
-   compute_derivative(in_vol,out_vol.Z(),"Z",sigma);
+                      Vectorial_matrix3D &out_vol, double sigma)
+{
+    out_vol.resize(in_vol);
+    compute_derivative(in_vol, out_vol.X(), "X", sigma);
+    compute_derivative(in_vol, out_vol.Y(), "Y", sigma);
+    compute_derivative(in_vol, out_vol.Z(), "Z", sigma);
 }
 #endif

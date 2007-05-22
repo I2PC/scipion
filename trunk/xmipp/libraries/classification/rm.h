@@ -31,52 +31,62 @@ using namespace std;
 /**@name RM classes*/
 //@{
 /** Basic RM class */
-class xmippRM {
+class xmippRM
+{
 public:
 
-	/**
-	* Make an empty xmippRP
-	*/
-	xmippRM(void){matdist = "gaussian";}
+    /**
+    * Make an empty xmippRP
+    */
+    xmippRM(void)
+    {
+        matdist = "gaussian";
+    }
 
-	/**
-	* Sets the matrix distribution:
-	* "gaussian" or "sparse"
-	* @param _type The type of the matrix distribution
-	*/
-	void setRMDistribution(string _type){matdist = _type;}
+    /**
+    * Sets the matrix distribution:
+    * "gaussian" or "sparse"
+    * @param _type The type of the matrix distribution
+    */
+    void setRMDistribution(string _type)
+    {
+        matdist = _type;
+    }
 
 
-	/**
-	* Calculate the Random matrix
-	* @param ts The vectors.
-	* @param k Number of components
-	*/
-	void calculateRM(xmippCTVectors const &ts, int _k);
+    /**
+    * Calculate the Random matrix
+    * @param ts The vectors.
+    * @param k Number of components
+    */
+    void calculateRM(xmippCTVectors const &ts, int _k);
 
-        /** Clear.
-	    Clean the Random Matrix*/
-        void clear();
-	
+    /** Clear.
+    Clean the Random Matrix*/
+    void clear();
 
-        /** Project onto RM space.
-	    Given a vector of the same size as the Random matrix this function
-	    returns the projection of size k onto the first k random vectors.
-	
-	    An exception is thrown if the input vectors are not of the same size
-	    as the RM ones.*/
-	
-        void Project(xmippCTVectors &input, xmippCTVectors &output, int _k);
 
-	/** Defines Listener class
-  	*/
-  	void setListener(xmippBaseListener* _listener) { listener = _listener; };
+    /** Project onto RM space.
+    Given a vector of the same size as the Random matrix this function
+    returns the projection of size k onto the first k random vectors.
+
+    An exception is thrown if the input vectors are not of the same size
+    as the RM ones.*/
+
+    void Project(xmippCTVectors &input, xmippCTVectors &output, int _k);
+
+    /** Defines Listener class
+      */
+    void setListener(xmippBaseListener* _listener)
+    {
+        listener = _listener;
+    };
 
 
 private:
- 	string matdist; // Matrix distribution (sparse or gaussian)
-	matrix2D<double> RM;
-  	xmippBaseListener* listener;   // Listener class
+    string matdist; // Matrix distribution (sparse or gaussian)
+    matrix2D<double> RM;
+    xmippBaseListener* listener;   // Listener class
 
 
 };

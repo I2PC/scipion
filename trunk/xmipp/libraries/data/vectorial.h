@@ -40,7 +40,7 @@
  * An (k,i,j) position is available inside the loop.
  */
 #define FOR_ALL_ELEMENTS_IN_VECTORIAL_MATRIX3D(v) \
-   FOR_ALL_ELEMENTS_IN_MATRIX3D((v).__X)
+    FOR_ALL_ELEMENTS_IN_MATRIX3D((v).__X)
 
 /** For all elements in a multidim array fashion.
  * @ingroup VectorialSpeedUp
@@ -48,7 +48,7 @@
  * A single index (i) is available.
  */
 #define FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(v) \
-   FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((v).__X)
+    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((v).__X)
 
 /** Vectorial volume.
  * @ingroup Vectorial
@@ -431,8 +431,8 @@ public:
         result.resize(__X);
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
-            MULTIDIM_ELEM(result, i) = sqrt(X(i) * X(i) + Y(i) * Y(i) +
-                Z(i) * Z(i));
+        MULTIDIM_ELEM(result, i) = sqrt(X(i) * X(i) + Y(i) * Y(i) +
+                                        Z(i) * Z(i));
     }
 
     /** Write.

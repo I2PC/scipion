@@ -27,7 +27,7 @@
 /*****************************************************************************/
 
 #ifndef _XMIPP_SPIDER_HH
-   #define _XMIPP_SPIDER_HH
+#define _XMIPP_SPIDER_HH
 
 #include <data/funcs.h>
 #include <data/selfile.h>
@@ -53,8 +53,8 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style);
     (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void extract_angles(SelFile &SF_in, DocFile &DF_out,
-   const string &ang1="rot", const string &ang2="tilt",
-   const string &ang3="psi");
+                    const string &ang1 = "rot", const string &ang2 = "tilt",
+                    const string &ang3 = "psi");
 
 #ifdef NEVERDEFINED
 /** Extract angles from a Docfile and store them in a SelFile.
@@ -62,8 +62,8 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
     (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void write_angles(SelFile &SF_out, DocFile &DF_in,
-   const string &ang1="rot", const string &ang2="tilt",
-   const string &ang3="psi");
+                  const string &ang1 = "rot", const string &ang2 = "tilt",
+                  const string &ang3 = "psi");
 #endif
 
 /** Rename ACTIVE images in a selfile.
@@ -74,12 +74,12 @@ void write_angles(SelFile &SF_out, DocFile &DF_in,
     The renaming is done by calls to cp in the Operating System, so there
     is no restriction on th einput names. */
 void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
-   const FileName &out_ext);
+                       const FileName &out_ext);
 
 /** Create empty Spider file.
     Creates a zero filled spider file with the desired dimension. */
 void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
-   int Xdim, bool reversed=false, size_t block_size=102400);
+                              int Xdim, bool reversed = false, size_t block_size = 102400);
 
 /** 3D Radon transform.
     Creates the 3D radon transform of a volume via Spider.
@@ -95,7 +95,7 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
     The outputis written to file although it is a VolumeXmipp.
 **/
 void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
-   double Delta_rot=2, double Delta_tilt=2, int output_size=-1);
+                     double Delta_rot = 2, double Delta_tilt = 2, int output_size = -1);
 
 /** 2D Radon transform.
     Creates the 2D radon transform of an image via Spider.
@@ -112,7 +112,7 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     any of the Xmipp classes.
 **/
 void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
-   double Delta_ang=2, int output_size=-1);
+                     double Delta_ang = 2, int output_size = -1);
 
 /** Fourier Radon transform.
     Makes the Fourier-Radon transform of the volume or image supplied as fn_in.
@@ -122,8 +122,8 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
     An exception is thrown if b01.fft, superfeo.fft or superfeo2.fft cannot be created.
 */
 void Fourier_transform_of_Radon_transform(const FileName &fn_in,
-   const FileName &fn_out, double cutoff_freq,
-   double Fermi_temperature=0.2);
+        const FileName &fn_out, double cutoff_freq,
+        double Fermi_temperature = 0.2);
 
 /** Angular_refinement via Radon.
     The angular refinement process via the Radon transform is performed.
@@ -137,11 +137,11 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
     An exception is thrown if the file b01."ext" cannot be created.
 */
 void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
-    const FileName &fn_report,
-    double rot0=0, double rotF=360, double rot_step=2,
-    double tilt0=0, double tiltF=90, double tilt_step=2,
-    double psi0=0, double psiF=360, double psi_step=2,
-    double max_shift=2);
+                              const FileName &fn_report,
+                              double rot0 = 0, double rotF = 360, double rot_step = 2,
+                              double tilt0 = 0, double tiltF = 90, double tilt_step = 2,
+                              double psi0 = 0, double psiF = 360, double psi_step = 2,
+                              double max_shift = 2);
 
 /** Angular refinement via Projection Matching. fn_ext is computed as the
     extension of the volume. The files refangles.<fn_ext> and projlist.<fn_ext> are
@@ -152,10 +152,10 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     shift_step*/
 
 void Angular_refinement_Matching(const FileName &fn_vol, const FileName &fn_sel,
-    const FileName &fn_report,
-    double tilt_step=2,
-    double max_shift=2, double shift_step=1,
-    double first_ring=0, double last_ring=-1);
+                                 const FileName &fn_report,
+                                 double tilt_step = 2,
+                                 double max_shift = 2, double shift_step = 1,
+                                 double first_ring = 0, double last_ring = -1);
 
 //@}
 

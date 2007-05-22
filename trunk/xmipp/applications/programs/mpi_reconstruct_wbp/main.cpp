@@ -27,52 +27,68 @@
 
 #include <mpi.h>
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-  // For parallelization
-  int           rank, size,num_img_tot;
-  // For program
-  VolumeXmipp   vol,aux;
-  Prog_WBP_prm  prm;
-  int           iaux;
+    // For parallelization
+    int           rank, size, num_img_tot;
+    // For program
+    VolumeXmipp   vol, aux;
+    Prog_WBP_prm  prm;
+    int           iaux;
 
-  // Init Parallel interface		
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+    // Init Parallel interface
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  try {
+    try
+    {
 
-    // Read command line & produce side info
-    prm.read(argc,argv);
-    if (rank==0) prm.show();
-    else  { prm.verb=0; }
+        // Read command line & produce side info
+        prm.read(argc, argv);
+        if (rank == 0) prm.show();
+        else
+        {
+            prm.verb = 0;
+        }
 
-    // First produce the filter and then cut selfile in smaller parts
-    prm.produce_Side_info();
+        // First produce the filter and then cut selfile in smaller parts
+        prm.produce_Side_info();
 
-    // Select only relevant part of selfile for this rank
-    prm.SF.mpi_select_part(rank,size,num_img_tot);
+        // Select only relevant part of selfile for this rank
+        prm.SF.mpi_select_part(rank, size, num_img_tot);
 
-    // Actual backprojection
-    prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
+        // Actual backprojection
+        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
 
-    aux().resize(vol());
-    MPI_Allreduce(MULTIDIM_ARRAY(vol()),MULTIDIM_ARRAY(aux()),
-		  MULTIDIM_SIZE(vol()),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    vol=aux;
-    MPI_Allreduce(&prm.count_thr,&iaux,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+        aux().resize(vol());
+        MPI_Allreduce(MULTIDIM_ARRAY(vol()), MULTIDIM_ARRAY(aux()),
+                      MULTIDIM_SIZE(vol()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        vol = aux;
+        MPI_Allreduce(&prm.count_thr, &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-    if (rank==0) {
-	cerr << "Fourier pixels for which the threshold was not reached: "
-	     <<(float)(iaux*100.)/(num_img_tot*prm.dim*prm.dim)<<" %"<<endl;
-	vol.write(prm.fn_out);
+        if (rank == 0)
+        {
+            cerr << "Fourier pixels for which the threshold was not reached: "
+            << (float)(iaux*100.) / (num_img_tot*prm.dim*prm.dim) << " %" << endl;
+            vol.write(prm.fn_out);
+        }
+
+    }
+    catch (Xmipp_error XE)
+    {
+        if (rank == 0)
+        {
+            cout << XE;
+            prm.usage();
+        }
+        MPI_Finalize();
+        exit(1);
     }
 
-  } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
-
-  MPI_Finalize();	
-  return 0;
+    MPI_Finalize();
+    return 0;
 
 }
 

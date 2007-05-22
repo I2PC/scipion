@@ -116,5 +116,5 @@ void SF_main(int argc,
              Prog_parameters* prm,
              void* process_img,
              void* process_vol,
-             int operation_mode=IMAGE2IMAGE);
+             int operation_mode = IMAGE2IMAGE);
 #endif

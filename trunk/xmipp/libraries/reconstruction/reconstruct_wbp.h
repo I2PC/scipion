@@ -36,72 +36,80 @@
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 
-typedef struct Column {double zero; double one; double two; double count;} column;
+typedef struct Column
+{
+    double zero;
+    double one;
+    double two;
+    double count;
+}
+column;
 
 /**@name WBP */
 //@{
 /** WBP parameters. */
-class Prog_WBP_prm {
+class Prog_WBP_prm
+{
 public:
-  /** Filenames */
-  FileName fn_out, fn_sym, fn_sel;
-  /** SelFile containing all projections */
-  SelFile SF;
-  /** If true: apply shifts upon reading the images (default) */
-  bool apply_shifts;
-  /** Lower threshold for the filter */
-  double threshold;
-  /** Counter for how many times the threshold was not reached */
-  int count_thr;
-  /** Diameter for reconstruction */
-  int diameter;
-  /** verbosity flag */
-  int verb;
-  /** dimensions of the images */
-  int dim;
-  /** Number of elements in matrix array */
-  int no_mats;
-  /** columns of matrices*/
-  column * mat_g, * mat_f;
-  /** Angular sampling for projection directions of arbitrary geometry filter */
-  double sampling;
-  /** Flag whether to use all experimental projection directions instead of
-      sampled projection directions for arbitrary geometry filter */
-  bool do_all_matrices;
-  /** Flag whether to use the weights in the image headers */
-  bool do_weights;
-  /** Symmetry list for symmetric volumes */
-  SymList SL;
+    /** Filenames */
+    FileName fn_out, fn_sym, fn_sel;
+    /** SelFile containing all projections */
+    SelFile SF;
+    /** If true: apply shifts upon reading the images (default) */
+    bool apply_shifts;
+    /** Lower threshold for the filter */
+    double threshold;
+    /** Counter for how many times the threshold was not reached */
+    int count_thr;
+    /** Diameter for reconstruction */
+    int diameter;
+    /** verbosity flag */
+    int verb;
+    /** dimensions of the images */
+    int dim;
+    /** Number of elements in matrix array */
+    int no_mats;
+    /** columns of matrices*/
+    column * mat_g, * mat_f;
+    /** Angular sampling for projection directions of arbitrary geometry filter */
+    double sampling;
+    /** Flag whether to use all experimental projection directions instead of
+        sampled projection directions for arbitrary geometry filter */
+    bool do_all_matrices;
+    /** Flag whether to use the weights in the image headers */
+    bool do_weights;
+    /** Symmetry list for symmetric volumes */
+    SymList SL;
 
 public:
-  /// Read arguments from command line
-  void read(int argc, char **argv);
+    /// Read arguments from command line
+    void read(int argc, char **argv);
 
-  /// Show
-  void show();
+    /// Show
+    void show();
 
-  /// Usage
-  void usage();
+    /// Usage
+    void usage();
 
-  /// Produce side info: fill arrays with relevant transformation matrices
-  void produce_Side_info() ;
+    /// Produce side info: fill arrays with relevant transformation matrices
+    void produce_Side_info() ;
 
-  /// Fill array with transformation matrices needed for arbitrary geometry filter
-  void get_all_matrices(SelFile &SF) ;
+    /// Fill array with transformation matrices needed for arbitrary geometry filter
+    void get_all_matrices(SelFile &SF) ;
 
-  /// Fill array with transformation matrices for representative
-  /// evenly sampled projection directions
-  void get_sampled_matrices(SelFile &SF) ;
+    /// Fill array with transformation matrices for representative
+    /// evenly sampled projection directions
+    void get_sampled_matrices(SelFile &SF) ;
 
-  // Simple (i.e. unfiltered) backprojection of a single image
-  void simple_backprojection(Projection &img, VolumeXmipp &vol,
-			     int diameter) ;
+    // Simple (i.e. unfiltered) backprojection of a single image
+    void simple_backprojection(Projection &img, VolumeXmipp &vol,
+                               int diameter) ;
 
-  // Calculate the filter and apply it to a projection
-  void filter_one_image(Projection &proj);
+    // Calculate the filter and apply it to a projection
+    void filter_one_image(Projection &proj);
 
-  // Calculate the filter for arbitrary tilt geometry in 2D and apply
-  void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
+    // Calculate the filter for arbitrary tilt geometry in 2D and apply
+    void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
 
 };
 //@}

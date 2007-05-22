@@ -42,7 +42,8 @@
        showvol->show();
     \end{verbatim}
 */
-class ShowVol: public ShowTable {
+class ShowVol: public ShowTable
+{
     Q_OBJECT;
 protected:
     // Volume to be represented
@@ -58,10 +59,10 @@ protected:
 
     /* Read a volume file */
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0);
+                          double _minGray = 0, double _maxGray = 0);
     /* Open a new file.
        The old window and volume parameters must be discarded */
-    virtual void openNewFile (const FileName &);
+    virtual void openNewFile(const FileName &);
     /* Reopen the file because its time has changed */
     virtual void reOpenFile();
 
@@ -74,11 +75,11 @@ private slots:
 public:
     /** Read volume for the first time.
         If you need to update the volume representation, use setPoll()
-	and change the saved volume or use openNewFile().
-	The gray limits are used for common normalization. Set them to 0
-	if you don't want to use this option. */
+    and change the saved volume or use openNewFile().
+    The gray limits are used for common normalization. Set them to 0
+    if you don't want to use this option. */
     void initWithFile(int _numRows, int _numCols, const FileName &_fn,
-       double _minGray=0, double _maxGray=0);
+                      double _minGray = 0, double _maxGray = 0);
 };
 //@}
 #endif

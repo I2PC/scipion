@@ -32,71 +32,71 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
 {
     if (!do_not_read_files)
     {
-        fn_micrograph  = get_param(argc,argv,"-i");
-        fn_downsampled = get_param(argc,argv,"-o");
+        fn_micrograph  = get_param(argc, argv, "-i");
+        fn_downsampled = get_param(argc, argv, "-o");
     }
-    bitsMp         = AtoI(get_param(argc,argv,"-output_bits","32"));
-    if (bitsMp!=8 && bitsMp!=16 && bitsMp!=32)
-        REPORT_ERROR(1,"Downsample: you must specify 8, 16 or 32 bits only");
-    Xstep          = AtoI(get_param(argc,argv,"-Xstep"));
-    if (check_param(argc,argv,"-Ystep"))
-        Ystep     = AtoI(get_param(argc,argv,"-Ystep"));
+    bitsMp         = AtoI(get_param(argc, argv, "-output_bits", "32"));
+    if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
+        REPORT_ERROR(1, "Downsample: you must specify 8, 16 or 32 bits only");
+    Xstep          = AtoI(get_param(argc, argv, "-Xstep"));
+    if (check_param(argc, argv, "-Ystep"))
+        Ystep     = AtoI(get_param(argc, argv, "-Ystep"));
     else
         Ystep     = Xstep;
 
-    if (check_param(argc,argv,"-kernel"))
+    if (check_param(argc, argv, "-kernel"))
     {
-        string aux=get_param(argc,argv,"-kernel");
-        int i=position_param(argc,argv,"-kernel");
-        if (aux=="rectangle")
+        string aux = get_param(argc, argv, "-kernel");
+        int i = position_param(argc, argv, "-kernel");
+        if (aux == "rectangle")
         {
-            kernel_mode=KER_RECTANGLE;
-            if (i+2>=argc)
-                REPORT_ERROR(1,"Downsample: Not enough parameters after rectangle");
-            Yrect=AtoI(argv[i+2]);
-            Xrect=AtoI(argv[i+3]);
+            kernel_mode = KER_RECTANGLE;
+            if (i + 2 >= argc)
+                REPORT_ERROR(1, "Downsample: Not enough parameters after rectangle");
+            Yrect = AtoI(argv[i+2]);
+            Xrect = AtoI(argv[i+3]);
         }
-        else if (aux=="circle")
+        else if (aux == "circle")
         {
-            kernel_mode=KER_CIRCLE;
-            if (i+2>=argc)
-                REPORT_ERROR(1,"Downsample: Not enough parameters after circle");
-            r=AtoF(argv[i+2]);
+            kernel_mode = KER_CIRCLE;
+            if (i + 2 >= argc)
+                REPORT_ERROR(1, "Downsample: Not enough parameters after circle");
+            r = AtoF(argv[i+2]);
         }
-        else if (aux=="gaussian")
+        else if (aux == "gaussian")
         {
-            kernel_mode=KER_GAUSSIAN;
-            if (i+3>=argc)
-                REPORT_ERROR(1,"Downsample: Not enough parameters after gaussian");
-            if (Xstep!=Ystep)
-                REPORT_ERROR(1,"Downsample: You cannot apply different steps in this mode");
-            r=AtoF(argv[i+2]);
-            sigma=AtoF(argv[i+3]);
+            kernel_mode = KER_GAUSSIAN;
+            if (i + 3 >= argc)
+                REPORT_ERROR(1, "Downsample: Not enough parameters after gaussian");
+            if (Xstep != Ystep)
+                REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
+            r = AtoF(argv[i+2]);
+            sigma = AtoF(argv[i+3]);
         }
-        else if (aux=="pick")
+        else if (aux == "pick")
         {
-            kernel_mode=KER_PICK;
+            kernel_mode = KER_PICK;
         }
-        else if (aux=="sinc")
+        else if (aux == "sinc")
         {
-            kernel_mode=KER_SINC;
-            if (i+3>=argc)
-                REPORT_ERROR(1,"Downsample: Not enough parameters after sinc");
-            if (Xstep!=Ystep)
-                REPORT_ERROR(1,"Downsample: You cannot apply different steps in this mode");
-            delta=AtoF(argv[i+2]);
-            Deltaw=AtoF(argv[i+3]);
+            kernel_mode = KER_SINC;
+            if (i + 3 >= argc)
+                REPORT_ERROR(1, "Downsample: Not enough parameters after sinc");
+            if (Xstep != Ystep)
+                REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
+            delta = AtoF(argv[i+2]);
+            Deltaw = AtoF(argv[i+3]);
         }
         else
-            REPORT_ERROR(1,"Downsample: Unknown kernel mode");
+            REPORT_ERROR(1, "Downsample: Unknown kernel mode");
     }
     else
     {
-        kernel_mode=KER_SINC;
-        delta=0.02;
-        Deltaw=1.0/10.0;
+        kernel_mode = KER_SINC;
+        delta = 0.02;
+        Deltaw = 1.0 / 10.0;
     }
-    reversed=check_param(argc,argv,"-reverse_endian");
+    reversed = check_param(argc, argv, "-reverse_endian");
 }
 
 // Usage -------------------------------------------------------------------
@@ -118,28 +118,28 @@ void Prog_downsample_prm::usage() const
 string Prog_downsample_prm::command_line() const
 {
     string retval;
-    retval+=(string)"-i "+fn_micrograph+" ";
-    retval+=(string)"-o "+fn_downsampled+" ";
-    retval+=(string)"-output_bits "+ItoA(bitsMp)+" ";
-    retval+=(string)"-Xstep "+ItoA(Xstep)+" ";
-    retval+=(string)"-Ystep "+ItoA(Ystep)+" ";
-    retval+=(string)"-kernel ";
+    retval += (string)"-i " + fn_micrograph + " ";
+    retval += (string)"-o " + fn_downsampled + " ";
+    retval += (string)"-output_bits " + ItoA(bitsMp) + " ";
+    retval += (string)"-Xstep " + ItoA(Xstep) + " ";
+    retval += (string)"-Ystep " + ItoA(Ystep) + " ";
+    retval += (string)"-kernel ";
     switch (kernel_mode)
     {
     case KER_RECTANGLE:
-        retval+=(string)"rectangle"+ItoA(Yrect)+" "+ItoA(Xrect)+" ";
+        retval += (string)"rectangle" + ItoA(Yrect) + " " + ItoA(Xrect) + " ";
         break;
     case KER_CIRCLE:
-        retval+=(string)"circle"+FtoA(r)+" ";
+        retval += (string)"circle" + FtoA(r) + " ";
         break;
     case KER_GAUSSIAN:
-        retval+=(string)"gaussian"+FtoA(r)+" "+FtoA(sigma)+" ";
+        retval += (string)"gaussian" + FtoA(r) + " " + FtoA(sigma) + " ";
         break;
     case KER_PICK:
-        retval+=(string)"pick";
+        retval += (string)"pick";
         break;
     case KER_SINC:
-        retval+=(string)"sinc"+FtoA(delta)+" "+FtoA(Deltaw)+" ";
+        retval += (string)"sinc" + FtoA(delta) + " " + FtoA(Deltaw) + " ";
         break;
     }
     return retval;
@@ -154,36 +154,36 @@ void Prog_downsample_prm::generate_kernel()
     switch (kernel_mode)
     {
     case KER_RECTANGLE:
-        kernel.resize(Yrect,Xrect);
+        kernel.resize(Yrect, Xrect);
         kernel.init_constant(1);
         break;
     case KER_CIRCLE:
-        ikernel.resize(CEIL(2*r)+1, CEIL(2*r)+1);
+        ikernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
         ikernel.set_Xmipp_origin();
         BinaryCircularMask(ikernel, r);
-        type_cast(ikernel,kernel);
+        type_cast(ikernel, kernel);
         break;
     case KER_GAUSSIAN:
-        kernel.resize(CEIL(2*r)+1, CEIL(2*r)+1);
+        kernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
         kernel.set_Xmipp_origin();
         GaussianMask(kernel, sigma);
         break;
     case KER_PICK:
-        kernel.resize(1,1);
+        kernel.resize(1, 1);
         kernel.init_constant(1);
         break;
     case KER_SINC:
-        SeparableSincKaiserMask(kernel,(1.0/Xstep),
-                                delta,Deltaw);
+        SeparableSincKaiserMask(kernel, (1.0 / Xstep),
+                                delta, Deltaw);
         break;
     }
     kernel.set_Xmipp_origin();
     // Keep energy constant
     // kernel /=sqrt(kernel.sum2());
     // Keep average value constant
-    kernel/=kernel.sum();
+    kernel /= kernel.sum();
     ImageXmipp save;
-    save()=kernel;
+    save() = kernel;
     save.write("PPPkernel.xmp");
 }
 
@@ -191,14 +191,14 @@ void Prog_downsample_prm::generate_kernel()
 void Prog_downsample_prm::create_empty_output_file()
 {
     cerr << "Creating empty downsampled file ...\n";
-    Ypdim=FLOOR(Ydim/Ystep);
-    Xpdim=FLOOR(Xdim/Xstep);
-    create_empty_file(fn_downsampled,Ypdim*Xpdim*bitsMp/8);
+    Ypdim = FLOOR(Ydim / Ystep);
+    Xpdim = FLOOR(Xdim / Xstep);
+    create_empty_file(fn_downsampled, Ypdim*Xpdim*bitsMp / 8);
 
     ofstream fh_downsample_inf;
-    fh_downsample_inf.open((fn_downsampled+".inf").c_str());
+    fh_downsample_inf.open((fn_downsampled + ".inf").c_str());
     if (!fh_downsample_inf)
-        REPORT_ERROR(1,(string)"Downsample: Cannot open "+fn_downsampled+
+        REPORT_ERROR(1, (string)"Downsample: Cannot open " + fn_downsampled +
                      ".inf");
     fh_downsample_inf << "# Generated by Downsample\n";
     fh_downsample_inf << "# Original file: " << fn_micrograph << endl;
@@ -216,9 +216,9 @@ void Prog_downsample_prm::create_empty_output_file()
 // Open input micrograph ---------------------------------------------------
 void Prog_downsample_prm::open_input_micrograph()
 {
-    M.open_micrograph(fn_micrograph,reversed);
-    bitsM=M.depth();
-    M.size(Xdim,Ydim);
+    M.open_micrograph(fn_micrograph, reversed);
+    bitsM = M.depth();
+    M.size(Xdim, Ydim);
 }
 
 // Close input micrograph --------------------------------------------------
@@ -231,7 +231,7 @@ void Prog_downsample_prm::close_input_micrograph()
 void Prog_downsample_prm::Downsample() const
 {
     Micrograph Mp;
-    Mp.open_micrograph(fn_downsampled,reversed);
-    downsample(M,Xstep,Ystep,kernel,Mp);
+    Mp.open_micrograph(fn_downsampled, reversed);
+    downsample(M, Xstep, Ystep, kernel, Mp);
     Mp.close_micrograph();
 }

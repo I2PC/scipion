@@ -35,37 +35,38 @@
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Symmetrize Parameters
-class Symmetrize_Parameters {
+class Symmetrize_Parameters
+{
 public:
-   /// input file
-   FileName        fn_in;
-   /// output file
-   FileName        fn_out;
-   /// symmetry file
-   FileName        fn_sym;
-   /// Do not generate subgroup
-   bool            do_not_generate_subgroup;
-   /// wrap or don't wrap input file during symmetrisation
-   bool            wrap;
+    /// input file
+    FileName        fn_in;
+    /// output file
+    FileName        fn_out;
+    /// symmetry file
+    FileName        fn_sym;
+    /// Do not generate subgroup
+    bool            do_not_generate_subgroup;
+    /// wrap or don't wrap input file during symmetrisation
+    bool            wrap;
 public:
-   /** Read parameters from command line. */
-   void read(int argc, char **argv);
+    /** Read parameters from command line. */
+    void read(int argc, char **argv);
 
-   /** Usage */
-   void usage();
+    /** Usage */
+    void usage();
 
-   /** Show parameters */
-   friend ostream & operator << (ostream &out, const Symmetrize_Parameters
-      &prm);
+    /** Show parameters */
+    friend ostream & operator << (ostream &out, const Symmetrize_Parameters
+                                  &prm);
 };
 
 /** Really symmetrize.*/
 void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
-   bool wrap=true, bool show_progress=false);
+                bool wrap = true, bool show_progress = false);
 
 /** Really symmetrize using Bsplines */
 void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
-			int Splinedegree, bool wrap, bool do_outside_avg);
+                        int Splinedegree, bool wrap, bool do_outside_avg);
 
 /** Main program */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm);

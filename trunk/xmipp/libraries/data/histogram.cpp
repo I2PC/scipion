@@ -36,17 +36,17 @@
 /* Clear ------------------------------------------------------------------- */
 void histogram1D::clear()
 {
-    hmin=0;
-    hmax=0;
-    step_size=0;
-    no_samples=0;
+    hmin = 0;
+    hmax = 0;
+    step_size = 0;
+    no_samples = 0;
     matrix1D<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
 histogram1D & histogram1D::operator =(const histogram1D &H)
 {
-    if (this!=&H)
+    if (this != &H)
     {
         this->matrix1D<double>::operator = (H);
         hmin       = H.hmin;
@@ -58,18 +58,18 @@ histogram1D & histogram1D::operator =(const histogram1D &H)
 }
 
 /* Another function for assignament ---------------------------------------- */
-void histogram1D::assign (const histogram1D &H)
+void histogram1D::assign(const histogram1D &H)
 {
-    *this=H;
+    *this = H;
 }
 /* Initialize -------------------------------------------------------------- */
 void histogram1D::init(double min_val, double max_val, int n_steps)
 {
-    hmin=min_val;
-    hmax=max_val;
-    step_size = (double) (max_val-min_val) / (double) n_steps; // CO: n_steps-1->n_steps
+    hmin = min_val;
+    hmax = max_val;
+    step_size = (double)(max_val - min_val) / (double) n_steps; // CO: n_steps-1->n_steps
     init_zeros(n_steps);
-    no_samples=0;
+    no_samples = 0;
 }
 
 /* Insert value ------------------------------------------------------------ */
@@ -77,10 +77,10 @@ void histogram1D::init(double min_val, double max_val, int n_steps)
 void histogram1D::insert_value(double val)
 {
     int i;
-    val2index(val,i);
-    if (i==-1)
+    val2index(val, i);
+    if (i == -1)
         return; // the value is outside our scope
-    VEC_ELEM(*this,i)++;
+    VEC_ELEM(*this, i)++;
     no_samples++;
 #ifdef DEBUG
 
@@ -93,11 +93,11 @@ void histogram1D::insert_value(double val)
 /* cout << hist ------------------------------------------------------------ */
 ostream& operator << (ostream &o, const histogram1D &hist)
 {
-    matrix2D<double> aux(hist.stepNo(),2);
+    matrix2D<double> aux(hist.stepNo(), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
     {
-        hist.index2val(i,MAT_ELEM(aux,i,0));
-        MAT_ELEM(aux,i,1)=VEC_ELEM(hist,i);
+        hist.index2val(i, MAT_ELEM(aux, i, 0));
+        MAT_ELEM(aux, i, 1) = VEC_ELEM(hist, i);
     }
     o << aux;
     return o;
@@ -109,7 +109,7 @@ void histogram1D::write(const FileName &fn)
     ofstream  fh;
     fh.open(fn.c_str(), ios::out);
     if (!fh)
-        REPORT_ERROR(1,(string)"Histogram1D::write: File "+fn+
+        REPORT_ERROR(1, (string)"Histogram1D::write: File " + fn +
                      " cannot be openned for output");
     fh << *this;
     fh.close();
@@ -120,41 +120,41 @@ void histogram1D::write(const FileName &fn)
    the histogram is comprised */
 double histogram1D::percentil(double percent_mass)
 {
-    int i=0;
-    double acc=0;
+    int i = 0;
+    double acc = 0;
     double required_mass;
     double percentil_i;
     double ret_val;
 
     // Check it is a correct mass
-    if (percent_mass>100)
-        REPORT_ERROR(2001,"Asked for a percentil greater than 100");
+    if (percent_mass > 100)
+        REPORT_ERROR(2001, "Asked for a percentil greater than 100");
 
     // Trivial cases
-    if (percent_mass==0)
+    if (percent_mass == 0)
         return(hmin);
-    if (percent_mass==100)
+    if (percent_mass == 100)
         return(hmax);
 
     // Any other case, find index of corresponding piece
-    required_mass=(double)no_samples*percent_mass/100.0;
-    int N_diff_from_0=0;
-    while (acc<required_mass)
+    required_mass = (double)no_samples * percent_mass / 100.0;
+    int N_diff_from_0 = 0;
+    while (acc < required_mass)
     {
-        acc += VEC_ELEM(*this,i);
-        if (VEC_ELEM(*this,i)>0)
+        acc += VEC_ELEM(*this, i);
+        if (VEC_ELEM(*this, i) > 0)
             N_diff_from_0++;
         i++;
     }
 
     // If the sum is just the one we want OK
-    if   (acc==required_mass)
-        percentil_i=i;
+    if (acc == required_mass)
+        percentil_i = i;
     // If there is only one sample different from 0
     // then there is no way of setting the threshold in the middle
     // Let's put it at the beginning of the bin
-    else if (N_diff_from_0==1)
-        percentil_i=i-1;
+    else if (N_diff_from_0 == 1)
+        percentil_i = i - 1;
     // If not, then go back a step and compute which fraction of the
     // bar is needed to finish the required mass
     else
@@ -164,11 +164,11 @@ double histogram1D::percentil(double percent_mass)
         i--;
         acc -= VEC_ELEM(*this,i);
         percentil_i=i+(required_mass-acc)/(double) VEC_ELEM(*this,i); */
-        percentil_i=i-1;
+        percentil_i = i - 1;
     }
 
     // Now translate from index to range
-    index2val(percentil_i,ret_val);
+    index2val(percentil_i, ret_val);
     return ret_val;
 }
 
@@ -176,21 +176,21 @@ double histogram1D::percentil(double percent_mass)
 double histogram1D::mass_below(double value)
 {
     // Trivial cases
-    if (value<=hmin)
+    if (value <= hmin)
         return 0;
-    if (value>=hmax)
+    if (value >= hmax)
         return no_samples;
 
     // Any other case, find index of corresponding piece
-    int i=0;
-    double acc=0;
+    int i = 0;
+    double acc = 0;
     double current_value;
-    index2val(i,current_value);
-    while (current_value<=value)
+    index2val(i, current_value);
+    while (current_value <= value)
     {
-        acc += VEC_ELEM(*this,i);
+        acc += VEC_ELEM(*this, i);
         i++;
-        index2val(i,current_value);
+        index2val(i, current_value);
     }
     return acc;
 }
@@ -205,24 +205,24 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     double hmin, hmax;
     double step;
     double v;
-    double error=0;
+    double error = 0;
     int   ih1, ih2;               // Indexes within the histograms
     double p1, p2;                 // Probability associated
 
     // Find global range
-    hmin=MAX(h1.hmin,h2.hmin);
-    hmax=MIN(h1.hmax,h2.hmax);
-    step=MIN(h1.step_size,h2.step_size)/2;
+    hmin = MAX(h1.hmin, h2.hmin);
+    hmax = MIN(h1.hmax, h2.hmax);
+    step = MIN(h1.step_size, h2.step_size) / 2;
 
     // Go over the range computing the errors
-    v=hmin;
-    int N=0;
-    while (v<=hmax)
+    v = hmin;
+    int N = 0;
+    while (v <= hmax)
     {
-        h1.val2index(v,ih1);
-        p1=VEC_ELEM(h1,ih1)/h1.no_samples;
-        h2.val2index(v,ih2);
-        p2=VEC_ELEM(h2,ih2)/h2.no_samples;
+        h1.val2index(v, ih1);
+        p1 = VEC_ELEM(h1, ih1) / h1.no_samples;
+        h2.val2index(v, ih2);
+        p2 = VEC_ELEM(h2, ih2) / h2.no_samples;
         //#define DEBUG
 #ifdef DEBUG
 
@@ -230,8 +230,8 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
         cout << "   hmin " << hmin << " hmax " << hmax << " stepsize " << h1.step_size << endl;
 #endif//;
 
-        if (p1!=0 && p2!=0)
-            if (p1>p2)
+        if (p1 != 0 && p2 != 0)
+            if (p1 > p2)
                 error += p2;
             else
                 error += p1;
@@ -240,7 +240,7 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     }
 
     // Normalise such that the result is the area of a probability function
-    error *= step/(hmax-hmin);
+    error *= step / (hmax - hmin);
     error /= N;
 #ifdef DEBUG
 
@@ -256,20 +256,20 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
 /* Clear ------------------------------------------------------------------- */
 void histogram2D::clear()
 {
-    imin=0;
-    imax=0;
-    istep_size=0;
-    jmin=0;
-    jmax=0;
-    jstep_size=0;
-    no_samples=0;
+    imin = 0;
+    imax = 0;
+    istep_size = 0;
+    jmin = 0;
+    jmax = 0;
+    jstep_size = 0;
+    no_samples = 0;
     matrix2D<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
 histogram2D & histogram2D::operator = (const histogram2D &H)
 {
-    if (this!=&H)
+    if (this != &H)
     {
         this->matrix2D<double>::operator =(H);
         imin        = H.imin;
@@ -284,9 +284,9 @@ histogram2D & histogram2D::operator = (const histogram2D &H)
 }
 
 /* Another function for assignment -------------------------------------------------------------- */
-void histogram2D::assign (const histogram2D &H)
+void histogram2D::assign(const histogram2D &H)
 {
-    *this=H;
+    *this = H;
 }
 
 /* Initialize -------------------------------------------------------------- */
@@ -294,17 +294,17 @@ void histogram2D::init(double imin_val, double imax_val, int in_steps,
                        double jmin_val, double jmax_val, int jn_steps)
 {
     // V axis
-    imin=imin_val;
-    imax=imax_val;
-    istep_size = (double) (imax_val-imin_val) / (double) in_steps;
+    imin = imin_val;
+    imax = imax_val;
+    istep_size = (double)(imax_val - imin_val) / (double) in_steps;
 
     // U axis
-    jmin=jmin_val;
-    jmax=jmax_val;
-    jstep_size = (double) (jmax_val-jmin_val) / (double) jn_steps;
+    jmin = jmin_val;
+    jmax = jmax_val;
+    jstep_size = (double)(jmax_val - jmin_val) / (double) jn_steps;
 
-    init_zeros(in_steps,jn_steps);
-    no_samples=0;
+    init_zeros(in_steps, jn_steps);
+    no_samples = 0;
 }
 
 /* Insert value ------------------------------------------------------------ */
@@ -312,23 +312,23 @@ void histogram2D::insert_value(double v, double u)
 {
     int i, j;
     val2index(v, u, i, j);
-    if (i==-1 || j==-1)
+    if (i == -1 || j == -1)
         return; // it is outside our scope
-    i=CLIP(i,0,YSIZE(*this));
-    j=CLIP(j,0,XSIZE(*this));
-    MAT_ELEM(*this,i,j)++;
+    i = CLIP(i, 0, YSIZE(*this));
+    j = CLIP(j, 0, XSIZE(*this));
+    MAT_ELEM(*this, i, j)++;
     no_samples++;
 }
 
 /* cout << hist ------------------------------------------------------------ */
 ostream& operator << (ostream &o, const histogram2D &hist)
 {
-    matrix2D<double> aux(hist.IstepNo()*hist.JstepNo(),3);
-    int n=0;
+    matrix2D<double> aux(hist.IstepNo()*hist.JstepNo(), 3);
+    int n = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(hist)
     {
-        hist.index2val(i,j,MAT_ELEM(aux,n,0),MAT_ELEM(aux,n,1));
-        MAT_ELEM(aux,n,2)=MAT_ELEM(hist,i,j);
+        hist.index2val(i, j, MAT_ELEM(aux, n, 0), MAT_ELEM(aux, n, 1));
+        MAT_ELEM(aux, n, 2) = MAT_ELEM(hist, i, j);
         n++;
     }
     o << aux;
@@ -341,7 +341,7 @@ void histogram2D::write(const FileName &fn)
     ofstream  fh;
     fh.open(fn.c_str(), ios::out);
     if (!fh)
-        REPORT_ERROR(1,"MultidimArray::write: File "+fn+" cannot be openned for output");
+        REPORT_ERROR(1, "MultidimArray::write: File " + fn + " cannot be openned for output");
     fh << *this;
     fh.close();
 }

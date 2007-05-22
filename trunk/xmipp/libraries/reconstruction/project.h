@@ -38,35 +38,36 @@
 //@{
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Project_Parameters {
+class Prog_Project_Parameters
+{
 public:
-   /// Filename with the \Ref{Projection_Parameters}.
-   FileName fn_proj_param;
-   /// Selection file with all projections
-   FileName fn_sel_file;
-   /** Filename with the special crystal parameters
-      (\Ref{Crystal_Projection_Parameters}) */
-   FileName fn_crystal;
-   /// Symmetry file
-   FileName fn_sym;
-   /// Only create angles, do not project
-   bool only_create_angles;
+    /// Filename with the \Ref{Projection_Parameters}.
+    FileName fn_proj_param;
+    /// Selection file with all projections
+    FileName fn_sel_file;
+    /** Filename with the special crystal parameters
+       (\Ref{Crystal_Projection_Parameters}) */
+    FileName fn_crystal;
+    /// Symmetry file
+    FileName fn_sym;
+    /// Only create angles, do not project
+    bool only_create_angles;
 
-   #define TELL_SHOW_ANGLES 0x1
-   /** Debugging variable.
-       This is a bitwise flag with the following valid labels:
-       \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
-   int tell;
+#define TELL_SHOW_ANGLES 0x1
+    /** Debugging variable.
+        This is a bitwise flag with the following valid labels:
+        \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
+    int tell;
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 };
 
 /* Angular range ----------------------------------------------------------- */
@@ -93,27 +94,28 @@ public:
           0      270      132.87
     \end{verbatim}
 */
-struct Angle_range {
-   /// initial angular value
-   double    ang0;
-   /// final angular value
-   double    angF;
-   /// No. of samples
-   int      samples;
+struct Angle_range
+{
+    /// initial angular value
+    double    ang0;
+    /// final angular value
+    double    angF;
+    /// No. of samples
+    int      samples;
 
-   #define ANGLE_RANGE_DETERMINISTIC 0
-   #define ANGLE_RANGE_RANDOM_GROUPS 1
-   #define ANGLE_RANGE_RANDOM        2
-   #define ANGLE_EVENLY              3
-   /** Kind of range.
-       The kind of range can be any of these three:
-       ANGLE_RANGE_DETERMINISTIC, ANGLE_RANGE_RANDOM_GROUPS,
-       ANGLE_RANGE_RANDOM, ANGLE_EVENLY */
-   int      randomness;
-   /// Mean of the noise that must be added to the definition of the angle
-   double    Navg;
-   /// Stddev of the noise that must be added to the definition of the angle
-   double    Ndev;
+#define ANGLE_RANGE_DETERMINISTIC 0
+#define ANGLE_RANGE_RANDOM_GROUPS 1
+#define ANGLE_RANGE_RANDOM        2
+#define ANGLE_EVENLY              3
+    /** Kind of range.
+        The kind of range can be any of these three:
+        ANGLE_RANGE_DETERMINISTIC, ANGLE_RANGE_RANDOM_GROUPS,
+        ANGLE_RANGE_RANDOM, ANGLE_EVENLY */
+    int      randomness;
+    /// Mean of the noise that must be added to the definition of the angle
+    double    Navg;
+    /// Stddev of the noise that must be added to the definition of the angle
+    double    Ndev;
 };
 
 /* Projection parameters --------------------------------------------------- */
@@ -125,84 +127,85 @@ struct Angle_range {
     the same file format, for doing so you must first introduce the
     right values in the class fields, and the call to the procedure
     write */
-class Projection_Parameters {
+class Projection_Parameters
+{
 public:
-   /**@name Filenames and size */
-   //@{
-   /** Phantom filename.
-       It can be a Xmipp volume or a mathematically defined phantom. */
-   FileName fn_phantom;
-   /// Starting name for all projections
-   string   fn_projection_seed;
-   /// First projection number. By default, 1.
-   int      starting;
-   /// Extension for projection filenames. This is optional
-   string   fn_projection_extension;
+    /**@name Filenames and size */
+    //@{
+    /** Phantom filename.
+        It can be a Xmipp volume or a mathematically defined phantom. */
+    FileName fn_phantom;
+    /// Starting name for all projections
+    string   fn_projection_seed;
+    /// First projection number. By default, 1.
+    int      starting;
+    /// Extension for projection filenames. This is optional
+    string   fn_projection_extension;
 
-   /// Projection Xdim
-   int      proj_Xdim;
-   /// Projection Ydim
-   int      proj_Ydim;
+    /// Projection Xdim
+    int      proj_Xdim;
+    /// Projection Ydim
+    int      proj_Ydim;
 
-   /// Debugging level. See \Ref{Prog_Project_Parameters::tell}
-   int tell;
-   //@}
+    /// Debugging level. See \Ref{Prog_Project_Parameters::tell}
+    int tell;
+    //@}
 
-   /**@name Angle Mode: Giving ranges */
-   //@{
-   /// Enable angle range mode (0 or 1)
-   int enable_angle_range;
-   /// Rotational angle range
-   Angle_range rot_range;
-   /// Tilting angle range
-   Angle_range tilt_range;
-   /// Psi angle range
-   Angle_range psi_range;
-   //@}
+    /**@name Angle Mode: Giving ranges */
+    //@{
+    /// Enable angle range mode (0 or 1)
+    int enable_angle_range;
+    /// Rotational angle range
+    Angle_range rot_range;
+    /// Tilting angle range
+    Angle_range tilt_range;
+    /// Psi angle range
+    Angle_range psi_range;
+    //@}
 
-   /**@name Angle mode: Using a Document File */
-   //@{
-   /// Document filename
-   FileName fn_angle;
-   /// First number in the document file is "rot","tilt" or "psi"
-   string   ang1;
-   /// Second number in the document file is "rot","tilt" or "psi"
-   string   ang2;
-   /// Third number in the document file is "rot","tilt" or "psi"
-   string   ang3;
-   //@}
+    /**@name Angle mode: Using a Document File */
+    //@{
+    /// Document filename
+    FileName fn_angle;
+    /// First number in the document file is "rot","tilt" or "psi"
+    string   ang1;
+    /// Second number in the document file is "rot","tilt" or "psi"
+    string   ang2;
+    /// Third number in the document file is "rot","tilt" or "psi"
+    string   ang3;
+    //@}
 
-   /**@name Noise.
-      Noise to the pixels is introduced by adding Gaussian noise, while
-      to the center is done by translating the image by a random
-      quantity */
-   //@{
-   /// Bias to be applied to each pixel grey value */
-   double    Npixel_avg;
-   /// Standard deviation of the noise to be added to each pixel grey value
-   double    Npixel_dev;
+    /**@name Noise.
+       Noise to the pixels is introduced by adding Gaussian noise, while
+       to the center is done by translating the image by a random
+       quantity */
+    //@{
+    /// Bias to be applied to each pixel grey value */
+    double    Npixel_avg;
+    /// Standard deviation of the noise to be added to each pixel grey value
+    double    Npixel_dev;
 
-   /// Bias to apply to the image center
-   double    Ncenter_avg;
-   /// Standard deviation of the image center
-   double    Ncenter_dev;
-   //@}
+    /// Bias to apply to the image center
+    double    Ncenter_avg;
+    /// Standard deviation of the image center
+    double    Ncenter_dev;
+    //@}
 public:
-   /** From Program Parameters.
-       This function loads the Projection Parameters from the parameters
-       given to the program (PROJECT). */
-   void from_prog_params(const Prog_Project_Parameters &prog_prm);
+    /** From Program Parameters.
+        This function loads the Projection Parameters from the parameters
+        given to the program (PROJECT). */
+    void from_prog_params(const Prog_Project_Parameters &prog_prm);
 
-   /** Read projection parameters from a file.
-       An exception is thrown if the file is not found or any of the
-       parameters is not found in the right place.*/
-   void read(FileName fn_proj_param);
+    /** Read projection parameters from a file.
+        An exception is thrown if the file is not found or any of the
+        parameters is not found in the right place.*/
+    void read(FileName fn_proj_param);
 
-   /** Write projection parameters to a file.
-       The projection parameters are written into a file wth the same
-       structure as always. If the file cannot be openned for output
-       an exception is thrown. */
-   void write(FileName fn_proj_param);
+    /** Write projection parameters to a file.
+        The projection parameters are written into a file wth the same
+        structure as always. If the file cannot be openned for output
+        an exception is thrown. */
+    void write(FileName fn_proj_param);
 };
 
 /** Project program Side information.
@@ -210,27 +213,28 @@ public:
     This information can be obtained from the parameters and is basically
     the Xmipp volume or phantom description plus a flag saying which
     of the two is valid. */
-class PROJECT_Side_Info {
+class PROJECT_Side_Info
+{
 public:
-   /// Document File for the projecting angles. Order: rot, tilt, psi
-   DocFile        DF;
-   /// Projecting from a voxel volume?
-   int            voxel_mode;
-   /// Phantom Xmipp volume
-   VolumeXmipp    phantom_vol;
-   /// Phantom mathematical description
-   Phantom        phantom_descr;
+    /// Document File for the projecting angles. Order: rot, tilt, psi
+    DocFile        DF;
+    /// Projecting from a voxel volume?
+    int            voxel_mode;
+    /// Phantom Xmipp volume
+    VolumeXmipp    phantom_vol;
+    /// Phantom mathematical description
+    Phantom        phantom_descr;
 public:
-   /** Produce Project Side information.
-       This function produce the side information from the project
-       program parameters. Basically it loads the phantom, sets
-       the phantom mode to voxel or mathemattical description and
-       generates or read the projection angles.
+    /** Produce Project Side information.
+        This function produce the side information from the project
+        program parameters. Basically it loads the phantom, sets
+        the phantom mode to voxel or mathemattical description and
+        generates or read the projection angles.
 
-       Projection from voxel volumes is not implemented yet and
-       an exception is thrown. */
-   void produce_Side_Info(const Projection_Parameters &prm,
-      const Prog_Project_Parameters &prog_prm);
+        Projection from voxel volumes is not implemented yet and
+        an exception is thrown. */
+    void produce_Side_Info(const Projection_Parameters &prm,
+                           const Prog_Project_Parameters &prog_prm);
 };
 
 /* Assigning angles -------------------------------------------------------- */
@@ -261,8 +265,8 @@ int PROJECT_Assign_angles(DocFile &DF, const Projection_Parameters &prm);
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
-    PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
-    Projection &proj, SelFile &SF);
+                                PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
+                                Projection &proj, SelFile &SF);
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.

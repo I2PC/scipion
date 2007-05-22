@@ -27,26 +27,40 @@
 
 void Usage(const Prog_segment_prm &prm);
 
-int main(int argc, char **argv) {
-   Prog_segment_prm prm;
+int main(int argc, char **argv)
+{
+    Prog_segment_prm prm;
 
-   // Read arguments
-   try {
-      prm.read(argc,argv);
-      cout << prm;
-   } catch (Xmipp_error Xe) {cout << Xe; Usage(prm); exit(1);}
+    // Read arguments
+    try
+    {
+        prm.read(argc, argv);
+        cout << prm;
+    }
+    catch (Xmipp_error Xe)
+    {
+        cout << Xe;
+        Usage(prm);
+        exit(1);
+    }
 
-   // Really segment
-   try {
-      VolumeXmipp mask;
-      prm.produce_side_info();
-      prm.segment(mask);
-   } catch (Xmipp_error Xe) {cout << Xe;}
+    // Really segment
+    try
+    {
+        VolumeXmipp mask;
+        prm.produce_side_info();
+        prm.segment(mask);
+    }
+    catch (Xmipp_error Xe)
+    {
+        cout << Xe;
+    }
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage(const Prog_segment_prm &prm) {
-   cerr << "Usage: segment [Parameters]\n";
-   prm.usage();
+void Usage(const Prog_segment_prm &prm)
+{
+    cerr << "Usage: segment [Parameters]\n";
+    prm.usage();
 }
 

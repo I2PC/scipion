@@ -27,7 +27,7 @@
 /*****************************************************************************/
 
 #ifndef _XMIPP_CRISP_HH
-   #define _XMIPP_CRISP_HH
+#define _XMIPP_CRISP_HH
 
 #include <data/funcs.h>
 #include <data/volume.h>
@@ -35,49 +35,50 @@
 /**@name Crisp */
 //@{
 /** Crisp volumes */
-class CrispVolume {
+class CrispVolume
+{
 public:
-   /// Flags
-   short  flags;
-   /// real dimension of density map along A axis in steps
-   short  Adata;
-   /// real dimension of density map along B axis in steps
-   short  Bdata;
-   /// real dimension of density map along C axis in steps
-   short  Cdata;
-   /// number of steps along A axis in file
-   short  Afile;
-   /// number of steps along B axis in file
-   short  Bfile;
-   /// number of steps along C axis in file
-   short  Cfile;
-   /// cell size along A axis in angstroms
-   short  Asize;
-   /// cell size along B axis in angstroms
-   short  Bsize;
-   /// cell size along C axis in angstroms
-   short  Csize;
-   /// angle between A and B axes
-   short  Gamma;
-   /// reserved
-   short  dummy0[21];
-   /// name of density map (for reference)
-   char Name[32];
-   /// reserved
-   short  dummy1[208];
+    /// Flags
+    short  flags;
+    /// real dimension of density map along A axis in steps
+    short  Adata;
+    /// real dimension of density map along B axis in steps
+    short  Bdata;
+    /// real dimension of density map along C axis in steps
+    short  Cdata;
+    /// number of steps along A axis in file
+    short  Afile;
+    /// number of steps along B axis in file
+    short  Bfile;
+    /// number of steps along C axis in file
+    short  Cfile;
+    /// cell size along A axis in angstroms
+    short  Asize;
+    /// cell size along B axis in angstroms
+    short  Bsize;
+    /// cell size along C axis in angstroms
+    short  Csize;
+    /// angle between A and B axes
+    short  Gamma;
+    /// reserved
+    short  dummy0[21];
+    /// name of density map (for reference)
+    char Name[32];
+    /// reserved
+    short  dummy1[208];
 
-   /// Filename
-   FileName name;
-   /// Volume
-   Volume V;
+    /// Filename
+    FileName name;
+    /// Volume
+    Volume V;
 
 public:
-   /// Read from file
-   void read(const FileName &fn);
-   /// Show header
-   friend ostream & operator << (ostream &out, const CrispVolume &cv);
-   /// Write as spider
-   void write_as_spider(const FileName &fn);
+    /// Read from file
+    void read(const FileName &fn);
+    /// Show header
+    friend ostream & operator << (ostream &out, const CrispVolume &cv);
+    /// Write as spider
+    void write_as_spider(const FileName &fn);
 };
 
 //@}

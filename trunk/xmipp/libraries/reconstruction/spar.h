@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #ifndef _PROG_SPAR_HH
-   #define _PROG_SPAR_HH
+#define _PROG_SPAR_HH
 
 #include <data/matrix2d.h>
 
@@ -34,11 +34,11 @@
 /** CausalAR.
 
    This function determines the coeficients of an 2D - AR model
-   		    pf  qf
+         pf  qf
    Img(y,x)=(-1.0)*sum(sum( AR(p,q)*Img(y-p,x-q)) + sigma^2 * h(y,x)
-   		   p=0 q=q0
-   (except for the case where p=0 and q=0)				
-   			
+        p=0 q=q0
+   (except for the case where p=0 and q=0)
+
    that adjust to the matrix provided as argument. To do
    that work, it solves the Yule-Walker equations for espectral
    estimation, involving the calculus of autocorrelation factors.
@@ -56,64 +56,64 @@
    Prentice Hall, signal proc. series, pp. 325
 
     PARAMETERS:   Img - The matrix - Here it's supposed that it comes from
-    		        an image
-		  ordeR, orderC - The order in Rows and Columns directions of the AR
-		                  model.
-		  ARParameters - The matrix to store the resulting parameteres
-		  		for the AR model.
-				
-   OUTPUT: 	The function stores the AR parameters into ARParameters
-   		value for (0,0) is sigma form the model.
-		Sigma is also returned by the function.
+              an image
+    ordeR, orderC - The order in Rows and Columns directions of the AR
+                    model.
+    ARParameters - The matrix to store the resulting parameteres
+      for the AR model.
+
+   OUTPUT:  The function stores the AR parameters into ARParameters
+     value for (0,0) is sigma form the model.
+  Sigma is also returned by the function.
 
    DATE:        19-1-2001
 */
 double CausalAR(matrix2D<double> &Img,
-   int orderR,int orderC, matrix2D<double> &ARParameters);
+                int orderR, int orderC, matrix2D<double> &ARParameters);
 
 /** NonCausalAR.
 
    Does the same work of CausalAR but in this function the
    region of support considered is all the pixels that surround
-	 	   the actual one considered.
+      the actual one considered.
 
-   	   For more details:
-   	   Huang, T.  "Advances in computer vision and image processing",
-   	   Vol.2 (1986), pp. 328 (Noncausal prediction)
+       For more details:
+       Huang, T.  "Advances in computer vision and image processing",
+       Vol.2 (1986), pp. 328 (Noncausal prediction)
 
     PARAMETERS:   Img - The matrix: Here it's supposed that it comes from
-    		            an image
-		
-		          ordeR, orderC - The order in Rows and Columns directions of the AR
-		                          model.
-		          ARParameters - The matrix to store the resulting parameteres
-		  		                 for the AR model.
-				
-   OUTPUT: 	      The function stores the AR parameters into ARParameters
-   		          value for (0,0) is sigma form the model.
-		          Sigma is also returned by the function.
+                  an image
+
+            ordeR, orderC - The order in Rows and Columns directions of the AR
+                            model.
+            ARParameters - The matrix to store the resulting parameteres
+                       for the AR model.
+
+   OUTPUT:        The function stores the AR parameters into ARParameters
+               value for (0,0) is sigma form the model.
+            Sigma is also returned by the function.
 
    DATE:          21-2-2001
 */
 double NonCausalAR(matrix2D<double> &Img,
-   int orderR,int orderC, matrix2D<double> &ARParameters);
+                   int orderR, int orderC, matrix2D<double> &ARParameters);
 
 /** ARFilter.
    This function returns the AR Filter associated to an AR model.
 
     PARAMETERS:   Img - The matrix - Here it's supposed that it comes from
-    		        an input image
-		  Filter - The matrix if Fourier space
-		           that will contain the filter. It has double
-		           size in columns to store complex numbers. 		
-		  ARParameters - The matrix with the AR model coeficients.
-				
-   OUTPUT: 	The function stores the output in Filter.
+              an input image
+    Filter - The matrix if Fourier space
+             that will contain the filter. It has double
+             size in columns to store complex numbers.
+    ARParameters - The matrix with the AR model coeficients.
+
+   OUTPUT:  The function stores the output in Filter.
 
    DATE:        6-1-2001
 */
 void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
-   matrix2D<double> &ARParameters);
+              matrix2D<double> &ARParameters);
 
 /** Combine AR Filters.
 
@@ -122,22 +122,22 @@ void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
    doing the armonic mean of their magnitudes.
 
     PARAMETERS:
-		  Filter1 - The matrix with coeficients of the 1st filter,
-		            in Fourier space
-		  Filter2 - The matrix with coeficients of the 2nd filter,
-		            in Fourier space
-		  Filter  - The matrix with coeficients of the resulting filter,
-		            in Fourier space	
- 	          method _ The method employed to combine the filters
-		
-   OUTPUT: 	The function stores the output in Filter.
+    Filter1 - The matrix with coeficients of the 1st filter,
+              in Fourier space
+    Filter2 - The matrix with coeficients of the 2nd filter,
+              in Fourier space
+    Filter  - The matrix with coeficients of the resulting filter,
+              in Fourier space
+            method _ The method employed to combine the filters
+
+   OUTPUT:  The function stores the output in Filter.
 
    DATE:        6-1-2001
 */
-void combineARFilters( const matrix2D< complex<double> > &Filter1,
-		       const matrix2D< complex<double> > &Filter2,
-		       matrix2D< complex<double> > &Filter,
-	               const string &method);
+void combineARFilters(const matrix2D< complex<double> > &Filter1,
+                      const matrix2D< complex<double> > &Filter2,
+                      matrix2D< complex<double> > &Filter,
+                      const string &method);
 
 //@}
 #endif

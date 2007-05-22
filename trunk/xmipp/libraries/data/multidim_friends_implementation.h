@@ -6,7 +6,7 @@ void core_array_by_scalar(const maT& op1,
                           maT& result,
                           char operation)
 {
-    for (int i=0; i<result.size; i++)
+    for (int i = 0; i < result.size; i++)
         switch (operation)
         {
         case '+':
@@ -23,7 +23,7 @@ void core_array_by_scalar(const maT& op1,
             break;
         case '^':
             result.data[i] = static_cast< T >(pow(
-            static_cast< double >(op1.data[i]), static_cast< double >(op2)));
+                                                  static_cast< double >(op1.data[i]), static_cast< double >(op2)));
             break;
         }
 }
@@ -36,7 +36,7 @@ void core_scalar_by_array(const T& op1,
                           maT& result,
                           char operation)
 {
-    for (int i=0; i<result.size; i++)
+    for (int i = 0; i < result.size; i++)
         switch (operation)
         {
         case '+':
@@ -53,7 +53,7 @@ void core_scalar_by_array(const T& op1,
             break;
         case '^':
             result.data[i] = static_cast< T >(pow(
-            static_cast< double >(op1), static_cast< double >(op2.data[i])));
+                                                  static_cast< double >(op1), static_cast< double >(op2.data[i])));
             break;
         }
 }
@@ -66,7 +66,7 @@ void core_array_by_array(const maT& op1,
                          maT& result,
                          char operation)
 {
-    for (int i=0; i<result.size; i++)
+    for (int i = 0; i < result.size; i++)
         switch (operation)
         {
         case '+':
@@ -83,8 +83,8 @@ void core_array_by_array(const maT& op1,
             break;
         case '^':
             result.data[i] = static_cast< T >(pow(
-            static_cast< double >(op1.data[i]),
-            static_cast< double >(op2.data[i])));
+                                                  static_cast< double >(op1.data[i]),
+                                                  static_cast< double >(op2.data[i])));
             break;
         }
 }

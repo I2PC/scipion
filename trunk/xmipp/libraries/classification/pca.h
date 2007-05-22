@@ -33,158 +33,183 @@ using namespace std;
 /**@name PCA classes*/
 //@{
 /** Basic PCA class */
-class xmippPC {
+class xmippPC
+{
 public:
 
-	/**
-	* Make an empty xmippPC
-	*/
-	xmippPC(void){}
+    /**
+    * Make an empty xmippPC
+    */
+    xmippPC(void)
+    {}
 
-	/**
-	* Construct a xmippPC object with eigenvectors & eigenvalues
-	* from ts.
-	* @param ts The vectors.
-	*/
-	xmippPC(xmippCTVectors const &ts) {reset(ts);}
+    /**
+    * Construct a xmippPC object with eigenvectors & eigenvalues
+    * from ts.
+    * @param ts The vectors.
+    */
+    xmippPC(xmippCTVectors const &ts)
+    {
+        reset(ts);
+    }
 
-	/**
-	* Construct a xmippPC object with eigenvectors & eigenvalues
-	* from ts, using only the items given in idx.
-	* @param ts The vectors.
-	* @param idx The indexes of the vectors to use
-	*/
-	xmippPC(xmippCTVectors const &ts, vector<unsigned> const & idx) {reset(ts,idx);}
+    /**
+    * Construct a xmippPC object with eigenvectors & eigenvalues
+    * from ts, using only the items given in idx.
+    * @param ts The vectors.
+    * @param idx The indexes of the vectors to use
+    */
+    xmippPC(xmippCTVectors const &ts, vector<unsigned> const & idx)
+    {
+        reset(ts, idx);
+    }
 
-	/**
-	* Calculate the eigenval/vecs
-	* @param ts The vectors.
-	*/
-	void reset(xmippCTVectors const &ts);
+    /**
+    * Calculate the eigenval/vecs
+    * @param ts The vectors.
+    */
+    void reset(xmippCTVectors const &ts);
 
-	/**
-	* Calculate the eigenval/vecs
-	* @param ts The vectors.
-	* @param idx The indexes of the vectors to use
-	*/
-	void reset(xmippCTVectors const &ts, vector<unsigned> const & idx);
+    /**
+    * Calculate the eigenval/vecs
+    * @param ts The vectors.
+    * @param idx The indexes of the vectors to use
+    */
+    void reset(xmippCTVectors const &ts, vector<unsigned> const & idx);
 
-	/**
-	* The eigenvectors
-	*/
-	vector<xmippVector> eigenvec;
+    /**
+    * The eigenvectors
+    */
+    vector<xmippVector> eigenvec;
 
-	/**
-	* The eigenvalues
-	*/
-	xmippVector eigenval;
+    /**
+    * The eigenvalues
+    */
+    xmippVector eigenval;
 
-	/**
-	* Mean of the input training set
-	*/
-        xmippVector mean;
+    /**
+    * Mean of the input training set
+    */
+    xmippVector mean;
 
-        /** Number of relevant eigenvectors */
-	int D;
+    /** Number of relevant eigenvectors */
+    int D;
 
-        /** Product <mean,mean> */
-	double prod_mean_mean;
-	
-	/** Products <ei,mean> */
-	vector<double> prod_ei_mean;
-	
-	/** Products <ei,ei> */
-	vector<double> prod_ei_ei;
+    /** Product <mean,mean> */
+    double prod_mean_mean;
 
-      	/** Average of the mean vector */
-	double avg_mean;
-	
-	/** Average of the ei vectors */
-	vector<double> avg_ei;
+    /** Products <ei,mean> */
+    vector<double> prod_ei_mean;
 
-	/**Set identity matrix as eigenvector matrix
-		@param n The number of eigenvectors*/
-	void setIdentity(int n);
-  	
-        /** Clear.
-	    Clean the eigenvector, eigenvalues and D */
-        void clear();
-	
-      	/** Prepare for correlation.
-	    This function computes the inner products emong the ei,
-	    and the mean vector, among the ei, and the average of all
-	    vectors*/
-        void prepare_for_correlation();
+    /** Products <ei,ei> */
+    vector<double> prod_ei_ei;
 
-        /** Set the number of relevant eigenvalues. */
-	void set_Dimension(int _D) {D=_D;}
+    /** Average of the mean vector */
+    double avg_mean;
 
-        /** Get the number of relevant eigenvalues. */
-	int get_Dimension() const {return D;}
+    /** Average of the ei vectors */
+    vector<double> avg_ei;
 
-      	/** Get the dimension of the eigenvectors. */
-	int get_eigenDimension() const {
-	   if (eigenvec.size()>1) return eigenvec[0].size();
-	   else return 0;
-	}
+    /**Set identity matrix as eigenvector matrix
+     @param n The number of eigenvectors*/
+    void setIdentity(int n);
 
-      	/** Number of components for a given accuracy explanation.
-	    This function returns the number of components to be taken
-	    if th_var% of the variance should be explained */
-	int Dimension_for_variance(double th_var);
+    /** Clear.
+    Clean the eigenvector, eigenvalues and D */
+    void clear();
 
-        /** Project onto PCA space.
-	    Given a vector of the same size as the PCA vectors this function
-	    returns the projection of size D onto the first D eigenvectors.
-	    D is set via the set_Dimension function
-	
-	    An exception is thrown if the input vectors are not of the same size
-	    as the PCA ones.*/
-        void Project(xmippVector &input, xmippVector &output);
+    /** Prepare for correlation.
+    This function computes the inner products emong the ei,
+    and the mean vector, among the ei, and the average of all
+    vectors*/
+    void prepare_for_correlation();
 
-	/** Defines Listener class
-  	*/
-  	void setListener(xmippBaseListener* _listener) { listener = _listener; };
+    /** Set the number of relevant eigenvalues. */
+    void set_Dimension(int _D)
+    {
+        D = _D;
+    }
 
-	/** Show relevant eigenvectors and eigenvalues */
-	friend ostream& operator << (ostream &out, const xmippPC &PC);
+    /** Get the number of relevant eigenvalues. */
+    int get_Dimension() const
+    {
+        return D;
+    }
 
-	/** Read a set of PCA just as shown */
-	friend istream& operator >> (istream &in, xmippPC &PC);
+    /** Get the dimension of the eigenvectors. */
+    int get_eigenDimension() const
+    {
+        if (eigenvec.size() > 1) return eigenvec[0].size();
+        else return 0;
+    }
+
+    /** Number of components for a given accuracy explanation.
+    This function returns the number of components to be taken
+    if th_var% of the variance should be explained */
+    int Dimension_for_variance(double th_var);
+
+    /** Project onto PCA space.
+    Given a vector of the same size as the PCA vectors this function
+    returns the projection of size D onto the first D eigenvectors.
+    D is set via the set_Dimension function
+
+    An exception is thrown if the input vectors are not of the same size
+    as the PCA ones.*/
+    void Project(xmippVector &input, xmippVector &output);
+
+    /** Defines Listener class
+      */
+    void setListener(xmippBaseListener* _listener)
+    {
+        listener = _listener;
+    };
+
+    /** Show relevant eigenvectors and eigenvalues */
+    friend ostream& operator << (ostream &out, const xmippPC &PC);
+
+    /** Read a set of PCA just as shown */
+    friend istream& operator >> (istream &in, xmippPC &PC);
 
 private:
 
-  	xmippBaseListener* listener;   // Listener class
+    xmippBaseListener* listener;   // Listener class
 
 
 };
 
 
 /** Set of PCA classes */
-class PCA_set {
+class PCA_set
+{
 public:
-   /** Set of PCA analysis. */
-   vector<xmippPC *> PCA;
+    /** Set of PCA analysis. */
+    vector<xmippPC *> PCA;
 
 public:
-   /** Destructor */
-   ~PCA_set();
+    /** Destructor */
+    ~PCA_set();
 
-   /** Create empty PCA.
-       Creates space for n new PCA and returns the index of the first one */
-   int create_empty_PCA(int n=1);
+    /** Create empty PCA.
+        Creates space for n new PCA and returns the index of the first one */
+    int create_empty_PCA(int n = 1);
 
-   /** Returns the number of PCA analysis.*/
-   int PCANo() const {return PCA.size();}
+    /** Returns the number of PCA analysis.*/
+    int PCANo() const
+    {
+        return PCA.size();
+    }
 
-   /** Returns a pointer to PCA number i*/
-   xmippPC * operator ()(int i) const {return PCA[i];}
+    /** Returns a pointer to PCA number i*/
+    xmippPC * operator()(int i) const
+    {
+        return PCA[i];
+    }
 
-   /** Show all PCA */
-   friend ostream& operator << (ostream &out, const PCA_set &PS);
+    /** Show all PCA */
+    friend ostream& operator << (ostream &out, const PCA_set &PS);
 
-   /** Read a set of PCA just as shown */
-   friend istream& operator >> (istream &in, PCA_set &PS);
+    /** Read a set of PCA just as shown */
+    friend istream& operator >> (istream &in, PCA_set &PS);
 };
 
 /** Running PCA.
@@ -196,55 +221,58 @@ public:
     principal component analysis. IEEE Trans. On Pattern Analysis and
     Machine Intelligence, 25(8): 1034-1040 (2003).
 */
-class Running_PCA {
+class Running_PCA
+{
 public:
-   /// Total number of eigenvectors to be computed.
-   int J;
+    /// Total number of eigenvectors to be computed.
+    int J;
 
-   /// Dimension of the sample vectors
-   int d;
+    /// Dimension of the sample vectors
+    int d;
 
-   /// Current estimate of the population mean
-   matrix1D<double> current_sample_mean;
+    /// Current estimate of the population mean
+    matrix1D<double> current_sample_mean;
 
-   /// Current number of samples seen
-   long n;
+    /// Current number of samples seen
+    long n;
 
-   /** Current estimate of the eigenvectors.
-       Each column is an eigenvector. */
-   matrix2D<double> eigenvectors;
+    /** Current estimate of the eigenvectors.
+        Each column is an eigenvector. */
+    matrix2D<double> eigenvectors;
 
-   /** Constructor.
-       J is the number of eigenvectors to compute. d is the
-       dimension of the sample vectors. */
-   Running_PCA(int _J, int _d);
+    /** Constructor.
+        J is the number of eigenvectors to compute. d is the
+        dimension of the sample vectors. */
+    Running_PCA(int _J, int _d);
 
-   /** Update estimates with a new sample. */
-   void new_sample(const matrix1D<double> &sample);
+    /** Update estimates with a new sample. */
+    void new_sample(const matrix1D<double> &sample);
 
-   /** Project a sample vector on the PCA space. */
-   void project(const matrix1D<double> &input, matrix1D<double> &output) const;
+    /** Project a sample vector on the PCA space. */
+    void project(const matrix1D<double> &input, matrix1D<double> &output) const;
 
-   /// Get a certain eigenvector.
-   void get_eigenvector(int j, matrix1D<double> &result) const {
-      eigenvectors.getCol(j,result);
-   }
+    /// Get a certain eigenvector.
+    void get_eigenvector(int j, matrix1D<double> &result) const
+    {
+        eigenvectors.getCol(j, result);
+    }
 
-   /// Get the variance associated to a certain eigenvector.
-   double get_eigenvector_variance(int j) const {
-      if (n<=j) return 0.0;
-      double mean_proj=sum_proj(j)/n;
-      return sum_proj2(j)/n-mean_proj*mean_proj;
-   }
+    /// Get the variance associated to a certain eigenvector.
+    double get_eigenvector_variance(int j) const
+    {
+        if (n <= j) return 0.0;
+        double mean_proj = sum_proj(j) / n;
+        return sum_proj2(j) / n - mean_proj*mean_proj;
+    }
 public:
-   // Sum of all samples so far
-   matrix1D<double> sum_all_samples;
+    // Sum of all samples so far
+    matrix1D<double> sum_all_samples;
 
-   // Sum of all projections so far
-   matrix1D<double> sum_proj;
+    // Sum of all projections so far
+    matrix1D<double> sum_proj;
 
-   // Sum of all projections squared so far
-   matrix1D<double> sum_proj2;
+    // Sum of all projections squared so far
+    matrix1D<double> sum_proj2;
 };
 //@}
 #endif

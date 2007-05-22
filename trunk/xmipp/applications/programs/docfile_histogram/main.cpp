@@ -28,106 +28,130 @@
 
 void Usage();
 
-int main (int argc,char *argv[]) {
-   DocFile          DF;
-   FileName         fn_out;
-   FileName         fn_img;
-   int              generate_img;
-   int              col, col2;         // Columns for histogram
-   double           m, M, m2, M2;      // range for histogram
-   int              automatic_range, automatic_range2;
-   int              StepsNo, StepsNo2;
-   histogram1D      hist;
-   histogram2D      hist2;
-   matrix1D<double> C,C2;
-   double           percentil;
+int main(int argc, char *argv[])
+{
+    DocFile          DF;
+    FileName         fn_out;
+    FileName         fn_img;
+    int              generate_img;
+    int              col, col2;         // Columns for histogram
+    double           m, M, m2, M2;      // range for histogram
+    int              automatic_range, automatic_range2;
+    int              StepsNo, StepsNo2;
+    histogram1D      hist;
+    histogram2D      hist2;
+    matrix1D<double> C, C2;
+    double           percentil;
 
 // Check the command line ==================================================
-   try {
-      int i;
-      DF.read(get_param(argc,argv,"-i"));
-      fn_out=get_param(argc,argv,"-o","");
-      percentil=AtoF(get_param(argc,argv,"-percentil","50"));
-      col=AtoI(get_param(argc,argv,"-col","0"));
-      col2=AtoI(get_param(argc,argv,"-col2","-1"));
+    try
+    {
+        int i;
+        DF.read(get_param(argc, argv, "-i"));
+        fn_out = get_param(argc, argv, "-o", "");
+        percentil = AtoF(get_param(argc, argv, "-percentil", "50"));
+        col = AtoI(get_param(argc, argv, "-col", "0"));
+        col2 = AtoI(get_param(argc, argv, "-col2", "-1"));
 
-      StepsNo=AtoI(get_param(argc,argv,"-steps","100"));
-      if ((i=position_param(argc,argv,"-range"))!=-1) {
-         if (i+2>=argc)
-            EXIT_ERROR(1,"DocFile Histogram: Not enough parameters behind -range\n");
-         m=AtoF(argv[i+1]);
-         M=AtoF(argv[i+2]);
-         automatic_range=false;
-      } else automatic_range=true;
+        StepsNo = AtoI(get_param(argc, argv, "-steps", "100"));
+        if ((i = position_param(argc, argv, "-range")) != -1)
+        {
+            if (i + 2 >= argc)
+                EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range\n");
+            m = AtoF(argv[i+1]);
+            M = AtoF(argv[i+2]);
+            automatic_range = false;
+        }
+        else automatic_range = true;
 
-      StepsNo2=AtoI(get_param(argc,argv,"-steps2","100"));
-      if ((i=position_param(argc,argv,"-range2"))!=-1) {
-         if (i+2>=argc)
-            EXIT_ERROR(1,"DocFile Histogram: Not enough parameters behind -range2\n");
-         m2=AtoF(argv[i+1]);
-         M2=AtoF(argv[i+2]);
-         automatic_range2=false;
-      } else automatic_range2=true;
+        StepsNo2 = AtoI(get_param(argc, argv, "-steps2", "100"));
+        if ((i = position_param(argc, argv, "-range2")) != -1)
+        {
+            if (i + 2 >= argc)
+                EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range2\n");
+            m2 = AtoF(argv[i+1]);
+            M2 = AtoF(argv[i+2]);
+            automatic_range2 = false;
+        }
+        else automatic_range2 = true;
 
-      // Check columns are possible
-      if (col<0 || col>=DF.FirstLine_ColNo())
-         EXIT_ERROR(1,"DocFile Histogram: Column for histogram not valid");
-      if ((col2<0 || col2>=DF.FirstLine_ColNo()) && col2!=-1)
-         EXIT_ERROR(1,"DocFile Histogram: Column 2 for histogram not valid");
+        // Check columns are possible
+        if (col < 0 || col >= DF.FirstLine_ColNo())
+            EXIT_ERROR(1, "DocFile Histogram: Column for histogram not valid");
+        if ((col2 < 0 || col2 >= DF.FirstLine_ColNo()) && col2 != -1)
+            EXIT_ERROR(1, "DocFile Histogram: Column 2 for histogram not valid");
 
-      // Check if the 2D histogram must be an image
-      if (col2!=-1) {
-         fn_img=get_param(argc,argv,"-img","");
-         generate_img=(fn_img!="");
-      }
-   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
+        // Check if the 2D histogram must be an image
+        if (col2 != -1)
+        {
+            fn_img = get_param(argc, argv, "-img", "");
+            generate_img = (fn_img != "");
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
 
 // Compute Histogram =======================================================
-   try {
-      double avg, stddev, dummy;
-      // 1D histograms -----------------------------------------------------
-      if (col2==-1) {
-         C=DF.col(col);
-         if (automatic_range) C.compute_double_minmax(m,M);
-         compute_hist(C,hist,m,M,StepsNo);
-         cerr << "Min: " << m << " max: " << M
-              << " Steps: " << StepsNo << endl;
-	 C.compute_stats(avg,stddev,dummy,dummy);
-	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
-         cerr << "Percentil (" << percentil << "): "
-	      << hist.percentil(percentil) << endl;
-         if (fn_out!="") hist.write(fn_out);
-         else            cout << hist;
+    try
+    {
+        double avg, stddev, dummy;
+        // 1D histograms -----------------------------------------------------
+        if (col2 == -1)
+        {
+            C = DF.col(col);
+            if (automatic_range) C.compute_double_minmax(m, M);
+            compute_hist(C, hist, m, M, StepsNo);
+            cerr << "Min: " << m << " max: " << M
+            << " Steps: " << StepsNo << endl;
+            C.compute_stats(avg, stddev, dummy, dummy);
+            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
+            cerr << "Percentil (" << percentil << "): "
+            << hist.percentil(percentil) << endl;
+            if (fn_out != "") hist.write(fn_out);
+            else            cout << hist;
 
-      // 2D histograms -----------------------------------------------------
-      } else {
-         C=DF.col(col);
-         C2=DF.col(col2);
-         if (automatic_range) {
-            C.compute_double_minmax(m,M);
-            C2.compute_double_minmax(m2,M2);
-         }
-         compute_hist(C,C2,hist2,m,M,m2,M2,StepsNo,StepsNo2);
-         cerr << "Min1: "   << m        << " max1: " << M
-              << " Steps1: " << StepsNo  << endl;
-	 C.compute_stats(avg,stddev,dummy,dummy);
-	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
-         cerr << "Min2: "   << m2       << " max2: " << M2
-              << " Steps2: " << StepsNo2 << endl;
-	 C2.compute_stats(avg,stddev,dummy,dummy);
-	 cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
-         if (fn_out!="") hist2.write(fn_out);
-         else            cout << hist2;
-         if (generate_img) {
-            ImageXmipp I;
-            I()=hist2;
-            I.write(fn_img);
-         }
-      }
-   } catch (Xmipp_error XE) {cout << XE;}
+            // 2D histograms -----------------------------------------------------
+        }
+        else
+        {
+            C = DF.col(col);
+            C2 = DF.col(col2);
+            if (automatic_range)
+            {
+                C.compute_double_minmax(m, M);
+                C2.compute_double_minmax(m2, M2);
+            }
+            compute_hist(C, C2, hist2, m, M, m2, M2, StepsNo, StepsNo2);
+            cerr << "Min1: "   << m        << " max1: " << M
+            << " Steps1: " << StepsNo  << endl;
+            C.compute_stats(avg, stddev, dummy, dummy);
+            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
+            cerr << "Min2: "   << m2       << " max2: " << M2
+            << " Steps2: " << StepsNo2 << endl;
+            C2.compute_stats(avg, stddev, dummy, dummy);
+            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
+            if (fn_out != "") hist2.write(fn_out);
+            else            cout << hist2;
+            if (generate_img)
+            {
+                ImageXmipp I;
+                I() = hist2;
+                I.write(fn_img);
+            }
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 }
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
+void Usage()
+{
     printf("Purpose:\n");
     printf("   This program performs the histogram of a column or a \n"
            "   couple of columns in a document file\n");
@@ -142,13 +166,13 @@ void Usage() {
            "      [-range <m> <M>]             : range for the first column\n"
            "                                     by default, it is automatic\n"
            "      [-steps <N=100>]             : number of subdivisions for column 1\n"
-	   "      [-percentil <p=50>]          : Only for 1D histograms\n"
+           "      [-percentil <p=50>]          : Only for 1D histograms\n"
            "      [-col2 <n>]                  : if specified, then a 2D histogram\n"
            "                                     is calculated\n"
            "      [-range2 <m> <M>]            : range for the second column\n"
            "                                     by default, it is automatic\n"
            "      [-steps2 <N=100>]            : number of subdivisions for column 2\n"
-    );
+          );
 }
 
 /* Menus ------------------------------------------------------------------- */

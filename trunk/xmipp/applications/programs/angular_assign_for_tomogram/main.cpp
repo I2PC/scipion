@@ -25,24 +25,27 @@
 
 #include <reconstruction/angular_assign_for_tomogram.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Prog_angular_predict_tomography_prm *eprm=(Prog_angular_predict_tomography_prm *) prm;
-   double shiftX, shiftY, psi, rot, tilt;
-   double corr=eprm->predict_angles(img,shiftX, shiftY, rot, tilt, psi);
-   img.read(img.name());
-   img.set_eulerAngles(rot,tilt,psi);
-   img.set_originOffsets(shiftX,shiftY);
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Prog_angular_predict_tomography_prm *eprm = (Prog_angular_predict_tomography_prm *) prm;
+    double shiftX, shiftY, psi, rot, tilt;
+    double corr = eprm->predict_angles(img, shiftX, shiftY, rot, tilt, psi);
+    img.read(img.name());
+    img.set_eulerAngles(rot, tilt, psi);
+    img.set_originOffsets(shiftX, shiftY);
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cout << "This program is not intended for volumes\n";
-   return false;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    cout << "This program is not intended for volumes\n";
+    return false;
 }
 
-int main (int argc, char **argv) {
-   Prog_angular_predict_tomography_prm prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-   prm.finish_processing();
-   return 0;
+int main(int argc, char **argv)
+{
+    Prog_angular_predict_tomography_prm prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    prm.finish_processing();
+    return 0;
 }

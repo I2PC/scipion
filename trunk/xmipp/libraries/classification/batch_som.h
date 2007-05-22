@@ -42,41 +42,43 @@
  */
 class xmippBatchSOM : public xmippSOM
 {
- public:
+public:
 
 
-  /**
-   * Constructs the algorithm
-   * @param _radius     How is gonna decrease the radius of neighborhood
-   * @param _nSteps     Number of training steps
-   */
-  xmippBatchSOM(Descent& _radius,  unsigned long _nSteps)
-  : xmippSOM(_radius, _radius, BUBBLE, _nSteps) {};
+    /**
+     * Constructs the algorithm
+     * @param _radius     How is gonna decrease the radius of neighborhood
+     * @param _nSteps     Number of training steps
+     */
+    xmippBatchSOM(Descent& _radius,  unsigned long _nSteps)
+            : xmippSOM(_radius, _radius, BUBBLE, _nSteps)
+    {};
 
-  /**
-   * Construct a BatchSOM from the code vectors in a stream
-   * @param _is  The stream
-   */
-  xmippBatchSOM(istream& _is);
+    /**
+     * Construct a BatchSOM from the code vectors in a stream
+     * @param _is  The stream
+     */
+    xmippBatchSOM(istream& _is);
 
 
-  /**
-   * Virtual destructor
-   */
-  virtual ~xmippBatchSOM() {};
+    /**
+     * Virtual destructor
+     */
+    virtual ~xmippBatchSOM()
+    {};
 
-  /**
-   * Trains the SOM
-   * @param _som  The som to train
-   * @param _ts   The training set
-   */
-  virtual void train (xmippMap& _som, const xmippCTVectors& _ts) const;
+    /**
+     * Trains the SOM
+     * @param _som  The som to train
+     * @param _ts   The training set
+     */
+    virtual void train(xmippMap& _som, const xmippCTVectors& _ts) const;
 
-  /**
-   * Trains the SOM
-   * @param _som  The som to train
-   * @param _ts   The training set
-   */
+    /**
+     * Trains the SOM
+     * @param _som  The som to train
+     * @param _ts   The training set
+     */
 //  virtual void train (xmippMap& _som, const TS& _ts) const {};
 
 

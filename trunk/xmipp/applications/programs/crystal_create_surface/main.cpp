@@ -33,19 +33,31 @@ using namespace std;
 /* ------------------------------------------------------------------------- */
 /* Program                                                                   */
 /* ------------------------------------------------------------------------- */
-int main (int argc, char *argv[]) {
-   Prog_create_surface prm;
-  // FileName filein;
-   try {
-      prm.read(argc,argv);
-      prm.read_input_file();
-   }
-   catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(1);}
+int main(int argc, char *argv[])
+{
+    Prog_create_surface prm;
+    // FileName filein;
+    try
+    {
+        prm.read(argc, argv);
+        prm.read_input_file();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(1);
+    }
 
-   try {
-      prm.run();
-   }
-   catch (Xmipp_error XE) {cout << XE; exit(1);}
+    try
+    {
+        prm.run();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        exit(1);
+    }
 
-   exit(0);
+    exit(0);
 }

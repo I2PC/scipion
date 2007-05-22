@@ -76,7 +76,7 @@
 class headerXmipp
 {
 public:
-    //	Types of initialization of the Header
+    // Types of initialization of the Header
     typedef enum { IMG_BYTE = 0, IMG_XMIPP  = 1,
                    IMG_INT  = 9, /*IMG_SHORT  = , IMG_UCHAR = ,*/
                    VOL_BYTE = 2,  VOL_XMIPP  = 3,
@@ -87,7 +87,7 @@ public:
     headerXmipp(initMode _im = IMG_BYTE)
     {
         clear();
-        im =_im;
+        im = _im;
     }
 
     // Some operators streams
@@ -95,12 +95,19 @@ public:
     void print_hard(ostream& o) const;
 
     // reversed is only used in case that the type_check is skipped
-    int read(FILE* fp, bool skip_type_check=false, bool reversed=false,
-             bool skip_extra_checkings=false);
-    int read(const FileName& fn, bool skip_type_check=false,
-             bool reversed=false, bool skip_extra_checkings=false);
-    void write(FILE* fp, bool force_reversed=false);
-    void write(const FileName &fn, bool force_reversed=false);
+    int read(FILE* fp,
+             bool skip_type_check = false,
+             bool reversed = false,
+             bool skip_extra_checkings = false);
+             
+    int read(const FileName& fn, 
+             bool skip_type_check = false,
+             bool reversed = false,
+             bool skip_extra_checkings = false);
+             
+    void write(FILE* fp, bool force_reversed = false);
+    
+    void write(const FileName &fn, bool force_reversed = false);
 
     // Set type of header
     initMode& headerType()
@@ -115,10 +122,11 @@ public:
     }
 
     void clear();
+    
     void set_header(); // Sets a consistent header
 
     // Interaction with data
-    bool  reversed() const
+    bool reversed() const
     {
         return __reversed;
     }
@@ -134,7 +142,7 @@ public:
 
     int get_header_size() const
     {
-        return (int) header.fNcol * (int) header.fLabrec * sizeof(float);
+        return (int) header.fNcol *(int) header.fLabrec * sizeof(float);
     }
 
     float& Ydim()
@@ -154,7 +162,7 @@ public:
     }
 
     // Get Xdim
-    int  iXdim() const
+    int iXdim() const
     {
         return (int) header.fNcol;
     }
@@ -412,7 +420,7 @@ public:
      */
     void clear_fFlag_flag()
     {
-        header.fFlag=0.f;
+        header.fFlag = 0.f;
     }
 
     template<typename T>
@@ -649,7 +657,7 @@ private:
 
         /* 30*/
         float fFlag; // THAT ANGLES ARE SET. 1 = ONE ADDITIONAL
-        //	ROTATION IS PRESENT, 2 = ADDITIONAL ROTATION
+        // ROTATION IS PRESENT, 2 = ADDITIONAL ROTATION
         // THAT PRECEEDS THE ROTATION THAT WAS STORED IN
         // 15 FOR DETAILS SEE MANUAL CHAPTER VOCEUL.MAN
 

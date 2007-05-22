@@ -28,31 +28,43 @@
 
 void Usage(char *argv[]);
 
-int main (int argc, char **argv) {
-   FileName          	       fn_prm;
-   Spot2RealSpace2D_Parameters prm;
-   Projection                  prj;
+int main(int argc, char **argv)
+{
+    FileName                  fn_prm;
+    Spot2RealSpace2D_Parameters prm;
+    Projection                  prj;
 
-   // Get command line parameters ------------------------------------------
-   try {
-      fn_prm = get_param(argc,argv,"-i");
-      prm.read_from_file(fn_prm);
-   } catch (Xmipp_error XE) {Usage(argv);}
+    // Get command line parameters ------------------------------------------
+    try
+    {
+        fn_prm = get_param(argc, argv, "-i");
+        prm.read_from_file(fn_prm);
+    }
+    catch (Xmipp_error XE)
+    {
+        Usage(argv);
+    }
 
-   // Main program ---------------------------------------------------------
-   try {
-      ROUT_Spots2RealSpace(prm,prj);
-   } catch (Xmipp_error XE) {cout<<XE;}
-   exit(0);
+    // Main program ---------------------------------------------------------
+    try
+    {
+        ROUT_Spots2RealSpace(prm, prj);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 }
 
-void Usage (char *argv[]) {
+void Usage(char *argv[])
+{
     cout << "Purpose:\n"
-         << "    Perform a DISCRETE but not FAST Fourier Transform\n"
-         << "    The input is an aph (MRC) file\n"
+    << "    Perform a DISCRETE but not FAST Fourier Transform\n"
+    << "    The input is an aph (MRC) file\n"
 
-         << "Usage:" << argv[0] <<" -i filename" << endl << endl
-         << "\t-i           : Parameters file" << endl
+    << "Usage:" << argv[0] << " -i filename" << endl << endl
+    << "\t-i           : Parameters file" << endl
     ;
     exit(1);
 

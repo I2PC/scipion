@@ -53,53 +53,59 @@
  */
 class xmippSammon
 {
- public:
-  /// An xmipp training vector is taken as input
-  typedef xmippCTVectors In;
-  /// An xmipp training vector is given as output
-  typedef xmippCTVectors Out;
+public:
+    /// An xmipp training vector is taken as input
+    typedef xmippCTVectors In;
+    /// An xmipp training vector is given as output
+    typedef xmippCTVectors Out;
 
 
-  /**
-   * Constructs the algorithm
-   * @param _mapped     the dimension of the output space
-   * @param _num_iterations Number of iterations to be used
-   * @param _learning_rate "Magic number"
-   */
-  xmippSammon(const unsigned _mapped = 2,
-	    const unsigned _num_iterations = 100, 	
-	    const double _learning_rate = 0.2);
+    /**
+     * Constructs the algorithm
+     * @param _mapped     the dimension of the output space
+     * @param _num_iterations Number of iterations to be used
+     * @param _learning_rate "Magic number"
+     */
+    xmippSammon(const unsigned _mapped = 2,
+                const unsigned _num_iterations = 100,
+                const double _learning_rate = 0.2);
 
 
-  /**
-   * () operator that trains the algorithm.
-   * @param in Input features vector (in N-dimmensional space)
-   * @param out Output  vector (in _mapped-dimmensional space)
-   */
-  void operator()(const In& in, Out& out);
+    /**
+     * () operator that trains the algorithm.
+     * @param in Input features vector (in N-dimmensional space)
+     * @param out Output  vector (in _mapped-dimmensional space)
+     */
+    void operator()(const In& in, Out& out);
 
 
-  /**
-   * Gets the sammon stress (mapping error)
-   */
-  double getStress() const { return stress; };
+    /**
+     * Gets the sammon stress (mapping error)
+     */
+    double getStress() const
+    {
+        return stress;
+    };
 
-  /**
-   * Sets the listener class
-   */
-  void setListener(xmippBaseListener* _listener) { listener = _listener; };
+    /**
+     * Sets the listener class
+     */
+    void setListener(xmippBaseListener* _listener)
+    {
+        listener = _listener;
+    };
 
- private:
-  unsigned mapped;          	// mapped space dimension
-  unsigned num_iterations;  	// number of iterations
-  double learning_rate;     	// learning rate
-  double stress;		// Sammon stress (error in distances)
-  xmippBaseListener* listener;  // Listener class
-  unsigned verbosity;	    	// defines verbosity level
-  				// 0: No verbosity
-				// 1: Only shows progress bar
-				// 2: Only shows stress
-				// 3: Shows progress and stress
+private:
+    unsigned mapped;           // mapped space dimension
+    unsigned num_iterations;   // number of iterations
+    double learning_rate;      // learning rate
+    double stress;  // Sammon stress (error in distances)
+    xmippBaseListener* listener;  // Listener class
+    unsigned verbosity;      // defines verbosity level
+    // 0: No verbosity
+    // 1: Only shows progress bar
+    // 2: Only shows stress
+    // 3: Shows progress and stress
 };
 
 //@}

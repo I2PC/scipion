@@ -26,26 +26,35 @@
 #include <data/selfile.h>
 #include <data/args.h>
 
-int main(int argc, char **argv) {
-   FileName fn1, fn2, fn_out;
-   try {
-      fn1   =get_param(argc,argv,"-i1");
-      fn2   =get_param(argc,argv,"-i2");
-      fn_out=get_param(argc,argv,"-o");
-   } catch (Xmipp_error XE) {
-      cout << XE;
-      cout << "Usage: compare_selfiles\n"
-           << "   -i1 <selfile1>      : First  selfile to compare\n"
-           << "   -i2 <selfile2>      : Second selfile to compare\n"
-           << "   -o  <selfile_out>   : Output selfile to compare\n"
-      ;
-   }
+int main(int argc, char **argv)
+{
+    FileName fn1, fn2, fn_out;
+    try
+    {
+        fn1   = get_param(argc, argv, "-i1");
+        fn2   = get_param(argc, argv, "-i2");
+        fn_out = get_param(argc, argv, "-o");
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        cout << "Usage: compare_selfiles\n"
+        << "   -i1 <selfile1>      : First  selfile to compare\n"
+        << "   -i2 <selfile2>      : Second selfile to compare\n"
+        << "   -o  <selfile_out>   : Output selfile to compare\n"
+        ;
+    }
 
-   try {
-      SelFile SF1(fn1), SF2(fn2);
-      SelFile SFout=compare(SF1,SF2);
-      SFout.write(fn_out);
-   } catch (Xmipp_error XE) {cout << XE;}
+    try
+    {
+        SelFile SF1(fn1), SF2(fn2);
+        SelFile SFout = compare(SF1, SF2);
+        SFout.write(fn_out);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 
-   return 0;
+    return 0;
 }

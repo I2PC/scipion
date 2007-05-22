@@ -28,24 +28,34 @@
 /* ------------------------------------------------------------------------- */
 /* Main                                                                      */
 /* ------------------------------------------------------------------------- */
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 // Variables
-   Prog_IDR_ART_Parameters   idr_art_prm;
-   VolumeXmipp               vol_recons;
+    Prog_IDR_ART_Parameters   idr_art_prm;
+    VolumeXmipp               vol_recons;
 
 // Read Art Parameters
-   try {
-      idr_art_prm.read(argc,argv);
-   } catch (Xmipp_error &XE) {
-      idr_art_prm.Usage();
-      exit(1);
-   }
+    try
+    {
+        idr_art_prm.read(argc, argv);
+    }
+    catch (Xmipp_error &XE)
+    {
+        idr_art_prm.Usage();
+        exit(1);
+    }
 
 // Call main ART routine
-   try {
-      idr_art_prm.produce_side_info();
-      idr_art_prm.IDR_correction();
-   } catch (Xmipp_error XE) {cout << XE; exit(1);}
-   return 0;
+    try
+    {
+        idr_art_prm.produce_side_info();
+        idr_art_prm.IDR_correction();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        exit(1);
+    }
+    return 0;
 }
 

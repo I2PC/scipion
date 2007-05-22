@@ -275,7 +275,7 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define VECTOR_R2(v, x, y) { \
-    XX(v) = x; YY(v) = y; }
+        XX(v) = x; YY(v) = y; }
 
 /** Creates vector in R3
  * @ingroup VectorsGeometry
@@ -289,7 +289,7 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define VECTOR_R3(v, x, y, z) { \
-   XX(v) = x; YY(v) = y; ZZ(v) = z;}
+        XX(v) = x; YY(v) = y; ZZ(v) = z;}
 
 /** @defgroup VectorsArithmetic Arithmethic operations
  * @ingroup VectorsSpeedUp
@@ -312,8 +312,8 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V2_PLUS_V2(a, b, c) { \
-   XX(a) = XX(b) + XX(c); \
-   YY(a) = YY(b) + YY(c); }
+        XX(a) = XX(b) + XX(c); \
+        YY(a) = YY(b) + YY(c); }
 
 /** Substracting two R2 vectors (a=b-c)
  * @ingroup VectorsOperations2D
@@ -324,8 +324,8 @@ string FtoA(float F, int _width, int _prec);
  * V2_MINUS_V2(a, b, c);
  */
 #define V2_MINUS_V2(a, b, c) { \
-   XX(a) = XX(b) - XX(c); \
-   YY(a) = YY(b) - YY(c); }
+        XX(a) = XX(b) - XX(c); \
+        YY(a) = YY(b) - YY(c); }
 
 /** Adding/substracting a constant to a R2 vector (a=b-k).
  * @ingroup VectorsOperations2D
@@ -343,8 +343,8 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V2_PLUS_CT(a, b, k) { \
-   XX(a) = XX(b) + (k); \
-   YY(a) = YY(b) + (k); }
+        XX(a) = XX(b) + (k); \
+        YY(a) = YY(b) + (k); }
 
 /** Multiplying/dividing by a constant a R2 vector (a=b*k)
  * @ingroup VectorsOperations2D
@@ -362,8 +362,8 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V2_BY_CT(a, b, k) { \
-   XX(a) = XX(b) * (k); \
-   YY(a) = YY(b) * (k); }
+        XX(a) = XX(b) * (k); \
+        YY(a) = YY(b) * (k); }
 
 /// @defgroup VectorsOperations3D R3 operations
 /// @ingroup VectorsArithmetic
@@ -378,9 +378,9 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V3_PLUS_V3(a, b, c) { \
-   XX(a) = XX(b) + XX(c); \
-   YY(a) = YY(b) + YY(c); \
-   ZZ(a) = ZZ(b) + ZZ(c); }
+        XX(a) = XX(b) + XX(c); \
+        YY(a) = YY(b) + YY(c); \
+        ZZ(a) = ZZ(b) + ZZ(c); }
 
 /** Substracting two R3 vectors (a=b-c)
  * @ingroup VectorsOperations3D
@@ -392,9 +392,9 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V3_MINUS_V3(a, b, c) { \
-   XX(a) = XX(b) - XX(c); \
-   YY(a) = YY(b) - YY(c); \
-   ZZ(a) = ZZ(b) - ZZ(c); }
+        XX(a) = XX(b) - XX(c); \
+        YY(a) = YY(b) - YY(c); \
+        ZZ(a) = ZZ(b) - ZZ(c); }
 
 /** Adding/substracting a constant to a R3 vector (a=b-k)
  * @ingroup VectorsOperations3D
@@ -412,9 +412,9 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V3_PLUS_CT(a, b, c) { \
-   XX(a) = XX(b) + (c); \
-   YY(a) = YY(b) + (c); \
-   ZZ(a) = ZZ(b) + (c); }
+        XX(a) = XX(b) + (c); \
+        YY(a) = YY(b) + (c); \
+        ZZ(a) = ZZ(b) + (c); }
 
 /** Multiplying/dividing by a constant a R3 vector (a=b*k)
  * @ingroup VectorsOperations3D
@@ -432,9 +432,9 @@ string FtoA(float F, int _width, int _prec);
  * @endcode
  */
 #define V3_BY_CT(a, b, c) { \
-   XX(a) = XX(b) * (c); \
-   YY(a) = YY(b) * (c); \
-   ZZ(a) = ZZ(b) * (c); }
+        XX(a) = XX(b) * (c); \
+        YY(a) = YY(b) * (c); \
+        ZZ(a) = ZZ(b) * (c); }
 
 // FIXME No comments...
 #include "multidim_common.h"
@@ -471,7 +471,7 @@ public:
      * // empty row vector
      * @endcode
      */
-    matrix1D(bool column=true)
+    matrix1D(bool column = true)
     {
         core_init();
         init_shape(column);
@@ -495,7 +495,7 @@ public:
      * // empty row vector
      * @endcode
      */
-    matrix1D(int dim, bool column=true)
+    matrix1D(int dim, bool column = true)
     {
         core_init();
         init_shape(column);
@@ -504,7 +504,7 @@ public:
             REPORT_ERROR(1001, "Resize: no memory left");
         size = xdim = dim;
         dimension = 1;
-        for (long int i=0; i<size; i++)
+        for (long int i = 0; i < size; i++)
             data[i] = 0;
     }
 
@@ -560,7 +560,7 @@ public:
      * v1.init_linear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
-    void init_linear(T minF, T maxF, int n=1, const string& mode="incr")
+    void init_linear(T minF, T maxF, int n = 1, const string& mode = "incr")
     {
         double slope;
         int steps;
@@ -573,19 +573,19 @@ public:
         else if (mode == "steps")
         {
             steps = n;
-            slope = (maxF - minF) / (steps-1);
+            slope = (maxF - minF) / (steps - 1);
         }
         else
             REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
-                ")");
+                         ")");
 
         if (steps == 0)
             clear();
         else
         {
             resize(steps);
-            for (int i=0; i<steps; i++)
-                VEC_ELEM(*this, i) = (T) ((double) minF + slope * i);
+            for (int i = 0; i < steps; i++)
+                VEC_ELEM(*this, i) = (T)((double) minF + slope * i);
         }
     }
 
@@ -602,26 +602,26 @@ public:
         init_constant((T) 0);
     }
 
-     /** @defgroup VectorsSize Size and shape
-      * @ingroup Vectors
-      *
-      * The shape of a vector is defined by its origin, its size and if it is a
-      * column or a row vector. The size is clear, and the origin is the logical
-      * position of the first real position of the array. For instance, if we
-      * have a vector of dimension 5 and origin -2, this means that the array is
-      * representing the logical positions [-2 -1 0 1 2], we could access to any
-      * of these positions (Ex: v(-2) = 3;) and actually any try to access to a
-      * position related to 5 (Ex: v(4) = 3;), although it physically exists, is
-      * not logically correct and hence it will throw an exception. The starting
-      * and finishing positions for this sample vector are -2 and 2
-      * respectively, and the "for" iterations through the vector should include
-      * these 2 values if you want to cover the whole vector
-      *
-      * @code
-      * for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
-      *     VEC_ELEM(v, i) += 1;
-      * @endcode
-      */
+    /** @defgroup VectorsSize Size and shape
+     * @ingroup Vectors
+     *
+     * The shape of a vector is defined by its origin, its size and if it is a
+     * column or a row vector. The size is clear, and the origin is the logical
+     * position of the first real position of the array. For instance, if we
+     * have a vector of dimension 5 and origin -2, this means that the array is
+     * representing the logical positions [-2 -1 0 1 2], we could access to any
+     * of these positions (Ex: v(-2) = 3;) and actually any try to access to a
+     * position related to 5 (Ex: v(4) = 3;), although it physically exists, is
+     * not logically correct and hence it will throw an exception. The starting
+     * and finishing positions for this sample vector are -2 and 2
+     * respectively, and the "for" iterations through the vector should include
+     * these 2 values if you want to cover the whole vector
+     *
+     * @code
+     * for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+     *     VEC_ELEM(v, i) += 1;
+     * @endcode
+     */
 
     /** Init shape
      * @ingroup VectorsSize
@@ -629,11 +629,11 @@ public:
      * xdim=0, startingx=0. The column or row mode is set according to input
      * argument
      */
-    void init_shape(bool column=true)
+    void init_shape(bool column = true)
     {
         xinit = 0;
         xdim = 0;
-        row =! column;
+        row = ! column;
     }
 
     /** Copy shape
@@ -680,7 +680,7 @@ public:
             REPORT_ERROR(1001, "Resize: no memory left");
 
         // Copy needed elements, fill with 0 if necessary
-        for (int i=0; i<Xdim; i++)
+        for (int i = 0; i < Xdim; i++)
             if (i < xdim)
                 new_m[i] = data[i];
             else
@@ -714,7 +714,8 @@ public:
      *
      * Nothing needs to be done in fact.
      */
-    void kill_adaptation_for_numerical_recipes(T* m) const {}
+    void kill_adaptation_for_numerical_recipes(T* m) const
+        {}
 
     /** Intersects
      * @ingroup VectorsSize
@@ -921,7 +922,7 @@ public:
      * val = v(-2);
      * @endcode
      */
-    T& operator() (int i) const
+    T& operator()(int i) const
     {
         if (i >= xinit + xdim || i < xinit)
             REPORT_ERROR(1003, "Vector subscript not defined for this vector");
@@ -1081,7 +1082,7 @@ public:
     {
         if (!op1.same_shape(op2))
             REPORT_ERROR(1007, (string) "Array_by_array: different shapes (" +
-                operation + ")");
+                         operation + ")");
 
         if (operation == 'x')
             operation = '*';
@@ -1150,11 +1151,11 @@ public:
     void self_reverse()
     {
         int imax = (int)(xdim - 1) / 2;
-        for (int i=0; i<=imax; i++)
+        for (int i = 0; i <= imax; i++)
         {
             T aux;
             SWAP(MULTIDIM_ELEM(*this, i), MULTIDIM_ELEM(*this,
-                xdim -1 - i), aux);
+                    xdim - 1 - i), aux);
         }
     }
 
@@ -1296,12 +1297,12 @@ public:
      * v1.window(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
      * @endcode
      */
-    void window(int x0, int xF, T init_value=0)
+    void window(int x0, int xF, T init_value = 0)
     {
         vT result(xF - x0 + 1);
         STARTINGX(result) = x0;
 
-        for (int j=x0; j<=xF; j++)
+        for (int j = x0; j <= xF; j++)
             if (j >= STARTINGX(*this) && j <= FINISHINGX(*this))
                 VEC_ELEM(result, j) = VEC_ELEM(*this, j);
             else
@@ -1328,11 +1329,11 @@ public:
         T max = VEC_ELEM(*this, imax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-            if (VEC_ELEM(*this, i) > max)
-            {
-                max = VEC_ELEM(*this, i);
-                imax = i;
-            }
+        if (VEC_ELEM(*this, i) > max)
+        {
+            max = VEC_ELEM(*this, i);
+            imax = i;
+        }
     }
 
     /** Minimum element
@@ -1353,11 +1354,11 @@ public:
         T min = VEC_ELEM(*this, imin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-            if (VEC_ELEM(*this, i) < min)
-            {
-                min = VEC_ELEM(*this, i);
-                imin = i;
-            }
+        if (VEC_ELEM(*this, i) < min)
+        {
+            min = VEC_ELEM(*this, i);
+            imin = i;
+        }
     }
 
     /** Show using gnuplot
@@ -1376,15 +1377,15 @@ public:
         fh_gplot.open(((string) "PPP" + fn_tmp + ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-            (string) "vector::show_with_gnuplot: Cannot open PPP" + fn_tmp +
-            ".gpl for output");
+                         (string) "vector::show_with_gnuplot: Cannot open PPP" + fn_tmp +
+                         ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
-            "\" w l\n";
+        "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
         system(((string) "(gnuplot PPP" + fn_tmp + ".gpl; rm PPP" + fn_tmp +
-            ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+                ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 };
 
@@ -1452,7 +1453,7 @@ T dot_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
 
     T accumulate = 0;
-    for (int i=0; i<v1.size; i++)
+    for (int i = 0; i < v1.size; i++)
         accumulate += v1.data[i] * v2.data[i];
 
     return accumulate;
@@ -1576,7 +1577,7 @@ void sort_two_vectors(vT& v1, vT& v2)
     T temp;
     if (v1.xdim != v2.xdim || STARTINGX(v1) != STARTINGX(v2))
         REPORT_ERROR(1007,
-            "sort_two_vectors: vectors are not of the same shape");
+                     "sort_two_vectors: vectors are not of the same shape");
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v1)
     {
@@ -1611,16 +1612,16 @@ void sort_two_vectors(vT& v1, vT& v2)
   * The option show forces the routine to show the convergence path
   */
 void Powell_optimizer(matrix1D< double >& p, int i0, int n,
-                      double (*f) (double* x), double ftol, double& fret,
+                      double(*f)(double* x), double ftol, double& fret,
                       int& iter, const matrix1D< double >& steps,
-                      bool show=false);
+                      bool show = false);
 
 // TODO Document
 template<typename T>
 void vT::print_shape(ostream& out) const
 {
     out << "Size: " << xdim
-   << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
 // TODO Document
@@ -1646,7 +1647,7 @@ bool vT::outside(const matrix1D< double >& v) const
 template<typename T>
 bool vT::outside(int i) const
 {
-    return (i<STARTINGX(*this) || i>FINISHINGX(*this));
+    return (i < STARTINGX(*this) || i > FINISHINGX(*this));
 }
 
 // TODO Document
@@ -1686,7 +1687,7 @@ bool vT::isCorner(const matrix1D< double >& v)
 {
     if (v.xdim < 1)
         REPORT_ERROR(1,
-            "isCorner: index vector has got not enough components");
+                     "isCorner: index vector has got not enough components");
 
     return (XX(v) == STARTINGX(*this) || XX(v) == FINISHINGX(*this));
 }
@@ -1714,28 +1715,28 @@ void vT::patch(const vT& patch_array, char operation)
 {
     SPEED_UP_temps;
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(patch_array, *this)
-        switch (operation)
-        {
-        case '=':
-            VEC_ELEM(*this, i) = VEC_ELEM(patch_array, i);
-            break;
+    switch (operation)
+    {
+    case '=':
+        VEC_ELEM(*this, i) = VEC_ELEM(patch_array, i);
+        break;
 
-        case '+':
-            VEC_ELEM(*this, i) += VEC_ELEM(patch_array, i);
-            break;
+    case '+':
+        VEC_ELEM(*this, i) += VEC_ELEM(patch_array, i);
+        break;
 
-        case '-':
-            VEC_ELEM(*this, i) -= VEC_ELEM(patch_array, i);
-            break;
+    case '-':
+        VEC_ELEM(*this, i) -= VEC_ELEM(patch_array, i);
+        break;
 
-        case '*':
-            VEC_ELEM(*this, i) *= VEC_ELEM(patch_array, i);
-            break;
+    case '*':
+        VEC_ELEM(*this, i) *= VEC_ELEM(patch_array, i);
+        break;
 
-        case '/':
-            VEC_ELEM(*this, i) /= VEC_ELEM(patch_array, i);
-            break;
-        }
+    case '/':
+        VEC_ELEM(*this, i) /= VEC_ELEM(patch_array, i);
+        break;
+    }
 }
 
 // TODO Document
@@ -1769,9 +1770,9 @@ void vT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
                        const matrix1D< double >& corner1,
                        const matrix1D< double >& corner2) const
 {
-    min_val = max_val = (*this) (corner1);
+    min_val = max_val = (*this)(corner1);
     matrix1D< double > r(3);
-    double N=0, sum=0, sum2=0;
+    double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
     {
@@ -1802,7 +1803,7 @@ void vT::compute_double_minmax(double& min_val, double& max_val,
                                const matrix1D< double >& corner1,
                                const matrix1D< double >& corner2) const
 {
-    min_val = max_val = (*this) (corner1);
+    min_val = max_val = (*this)(corner1);
     matrix1D< double > r(1);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
@@ -1824,7 +1825,7 @@ void vT::center_of_mass(matrix1D< double >& center, void* mask)
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
     {
-        if (imask==NULL || VEC_ELEM(*imask, i))
+        if (imask == NULL || VEC_ELEM(*imask, i))
         {
             XX(center) += i * VEC_ELEM(*this, i);
             mass += VEC_ELEM(*this, i);

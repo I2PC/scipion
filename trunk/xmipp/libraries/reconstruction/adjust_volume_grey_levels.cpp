@@ -29,184 +29,202 @@
 #include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::read(int argc, char **argv) {
-   fn_vol=get_param(argc,argv,"-i");
-   fn_sel=get_param(argc,argv,"-sel");
-   fn_out=get_param(argc,argv,"-o","");
-   optimize=check_param(argc,argv,"-optimize");
-   probb_eval=AtoF(get_param(argc,argv,"-probb_eval","0.2"));
-   produce_side_info();
+void Prog_Adjust_Volume_Parameters::read(int argc, char **argv)
+{
+    fn_vol = get_param(argc, argv, "-i");
+    fn_sel = get_param(argc, argv, "-sel");
+    fn_out = get_param(argc, argv, "-o", "");
+    optimize = check_param(argc, argv, "-optimize");
+    probb_eval = AtoF(get_param(argc, argv, "-probb_eval", "0.2"));
+    produce_side_info();
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::usage() {
-   cerr << "Usage: adjust_volume\n";
-   cerr << "   -i <Volume>         : Input volume\n"
-        << "   -sel <SelFile>      : Set of projections\n"
-	<< "  [-o <Output Volume>] : By default, the input one\n"
-	<< "  [-optimize]          : Optimize\n"
-	<< "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
-   ;
+void Prog_Adjust_Volume_Parameters::usage()
+{
+    cerr << "Usage: adjust_volume\n";
+    cerr << "   -i <Volume>         : Input volume\n"
+    << "   -sel <SelFile>      : Set of projections\n"
+    << "  [-o <Output Volume>] : By default, the input one\n"
+    << "  [-optimize]          : Optimize\n"
+    << "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::show() {
-   cout << "Input Volume:  " << fn_vol   << endl
-        << "Input Selfile: " << fn_sel   << endl
-        << "Output Volume: " << fn_out   << endl
-	<< "Optimize:      " << optimize << endl
-   ;
+void Prog_Adjust_Volume_Parameters::show()
+{
+    cout << "Input Volume:  " << fn_vol   << endl
+    << "Input Selfile: " << fn_sel   << endl
+    << "Output Volume: " << fn_out   << endl
+    << "Optimize:      " << optimize << endl
+    ;
 }
 
 
 /* Produce side information ------------------------------------------------ */
-void Prog_Adjust_Volume_Parameters::produce_side_info() {
-   // Read input volume
-   VolumeXmipp IV; IV.read(fn_vol);
-   V=IV();
-   V.set_Xmipp_origin();
+void Prog_Adjust_Volume_Parameters::produce_side_info()
+{
+    // Read input volume
+    VolumeXmipp IV;
+    IV.read(fn_vol);
+    V = IV();
+    V.set_Xmipp_origin();
 
-   // Read input selfile
-   SF.read(fn_sel);
+    // Read input selfile
+    SF.read(fn_sel);
 }
 
 /* Goal function -----------------------------------------------------------  */
 Prog_Adjust_Volume_Parameters *global_adjust_volume_prm;
 
-double projection_mismatching(double *p) {
-   return global_adjust_volume_prm->mismatching(p[1],p[2]);
+double projection_mismatching(double *p)
+{
+    return global_adjust_volume_prm->mismatching(p[1], p[2]);
 }
 
 //#define DEBUG
-double Prog_Adjust_Volume_Parameters::mismatching(double a, double b) {
-   if (a<=0) return 1e38;
+double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
+{
+    if (a <= 0) return 1e38;
 
-   // Transform the volume
-   matrix3D<double> aux=V;
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) aux(k,i,j)=a*aux(k,i,j)+b;
+    // Transform the volume
+    matrix3D<double> aux = V;
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) aux(k, i, j) = a * aux(k, i, j) + b;
 
-   // Compute the mismatching
-   double retval=0;
-   SF.go_first_ACTIVE();
-   int N=0;
-   while (!SF.eof()) {
-      // Read next image
-      FileName fn=SF.NextImg();
+    // Compute the mismatching
+    double retval = 0;
+    SF.go_first_ACTIVE();
+    int N = 0;
+    while (!SF.eof())
+    {
+        // Read next image
+        FileName fn = SF.NextImg();
 
-      // Skip randomly some images
-      double x=rnd_unif(0,1);
-      if (x>probb_eval) continue;
-      N++;
+        // Skip randomly some images
+        double x = rnd_unif(0, 1);
+        if (x > probb_eval) continue;
+        N++;
 
-      ImageXmipp I; I.read(fn);
-      I().set_Xmipp_origin();
+        ImageXmipp I;
+        I.read(fn);
+        I().set_Xmipp_origin();
 
-      // Project the auxiliary volume in the same direction
-      Projection P;
-      project_Volume(aux,P,YSIZE(I()),XSIZE(I()),
-         I.rot(),I.tilt(),I.psi());
+        // Project the auxiliary volume in the same direction
+        Projection P;
+        project_Volume(aux, P, YSIZE(I()), XSIZE(I()),
+                       I.rot(), I.tilt(), I.psi());
 
-      // Compute the difference
-      matrix2D<double> diff;
-      diff=I()-P();
-      retval+=diff.sum2();
+        // Compute the difference
+        matrix2D<double> diff;
+        diff = I() - P();
+        retval += diff.sum2();
 
-      #ifdef DEBUG
-         I.write("PPPexp.xmp");
-	 I()=P(); I.write("PPPtheo.xmp");
-	 cout << "Difference=" << diff.sum2() << endl;
-	 cout << "Press any key\n";
-	 char c; cin >> c;
-      #endif
-   }
-   return retval/N;
+#ifdef DEBUG
+        I.write("PPPexp.xmp");
+        I() = P();
+        I.write("PPPtheo.xmp");
+        cout << "Difference=" << diff.sum2() << endl;
+        cout << "Press any key\n";
+        char c;
+        cin >> c;
+#endif
+    }
+    return retval / N;
 }
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out) {
-   // Compute the average power and average value of all the projections
-   double sum=0, sum2=0, N=0;
-   cerr << "Computing first estimate of the linear transformation ...\n";
-   int imgno=SF.ImgNo();
-   init_progress_bar(imgno);
-   int i=0;
+void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
+{
+    // Compute the average power and average value of all the projections
+    double sum = 0, sum2 = 0, N = 0;
+    cerr << "Computing first estimate of the linear transformation ...\n";
+    int imgno = SF.ImgNo();
+    init_progress_bar(imgno);
+    int i = 0;
 
-   int projXdim, projYdim;
-   while (!SF.eof()) {
-      // Read image
-      FileName fn=SF.NextImg();
-      ImageXmipp I; I.read(fn);
-      projXdim=XSIZE(I());
-      projYdim=YSIZE(I());
+    int projXdim, projYdim;
+    while (!SF.eof())
+    {
+        // Read image
+        FileName fn = SF.NextImg();
+        ImageXmipp I;
+        I.read(fn);
+        projXdim = XSIZE(I());
+        projYdim = YSIZE(I());
 
-      // Compute the image statistics
-      double avg, stddev, min, max;
-      I().compute_stats(avg, stddev, min, max);
-      double Ni=projXdim*projYdim;
-      sum+=avg;
-      sum2+=stddev*stddev;
-      N+=Ni;
+        // Compute the image statistics
+        double avg, stddev, min, max;
+        I().compute_stats(avg, stddev, min, max);
+        double Ni = projXdim * projYdim;
+        sum += avg;
+        sum2 += stddev * stddev;
+        N += Ni;
 
-      // End of loop
-      i++;
-      if (i%10==0) progress_bar(i);
-   }
-   progress_bar(imgno);
-   cout << endl;
+        // End of loop
+        i++;
+        if (i % 10 == 0) progress_bar(i);
+    }
+    progress_bar(imgno);
+    cout << endl;
 
-   // Statistics of the volume
-   double avg0, stddev0, min0, max0;
-   V.compute_stats(avg0, stddev0, min0, max0);
+    // Statistics of the volume
+    double avg0, stddev0, min0, max0;
+    V.compute_stats(avg0, stddev0, min0, max0);
 
-   // First guess of the transformation parameters a*(x-vm)+b
-   // r is the average length of a ray
-   // The equations to solve are
-   // v_i follows currently N(avg0,stddev0)
-   // we want it to follow N(avgF,stddevF)
-   // such that sum_{i=1}^r{v_i} follows N(avg_pict,stddev_pict)
-   // On the other hand we know that
-   //     sum_{i=1}^r{v_i} follows N(r avgF, sqrt(r)*stddevF)
-   // Thus,
-   //     avgF=avg_pict/r
-   //     stddevF=stddev_pict/sqrt(r)
-   // the equations of the transformation are
-   //    y=ax+b
-   //    avg_y     =a*avg_x+b=avgF
-   //    stddev_y  =a*stddev_y=stddevF
-   // Therefore
-   //    a=stddevF/stddev0
-   //    b=avgF-a*avg0
-   double r=pow(MULTIDIM_SIZE(V),1.0/3.0);
-   double avg_pict=sum/imgno;
-   double stddev_pict=sqrt(sum2/imgno);
-   double avgF=avg_pict/r;
-   double stddevF=stddev_pict/sqrt(r);
-   double a=stddevF/stddev0;
-   double b=avgF-a*avg0;
-   cout << "First Linear transformation: y=" << a << "*x+"  << b << endl;
+    // First guess of the transformation parameters a*(x-vm)+b
+    // r is the average length of a ray
+    // The equations to solve are
+    // v_i follows currently N(avg0,stddev0)
+    // we want it to follow N(avgF,stddevF)
+    // such that sum_{i=1}^r{v_i} follows N(avg_pict,stddev_pict)
+    // On the other hand we know that
+    //     sum_{i=1}^r{v_i} follows N(r avgF, sqrt(r)*stddevF)
+    // Thus,
+    //     avgF=avg_pict/r
+    //     stddevF=stddev_pict/sqrt(r)
+    // the equations of the transformation are
+    //    y=ax+b
+    //    avg_y     =a*avg_x+b=avgF
+    //    stddev_y  =a*stddev_y=stddevF
+    // Therefore
+    //    a=stddevF/stddev0
+    //    b=avgF-a*avg0
+    double r = pow(MULTIDIM_SIZE(V), 1.0 / 3.0);
+    double avg_pict = sum / imgno;
+    double stddev_pict = sqrt(sum2 / imgno);
+    double avgF = avg_pict / r;
+    double stddevF = stddev_pict / sqrt(r);
+    double a = stddevF / stddev0;
+    double b = avgF - a * avg0;
+    cout << "First Linear transformation: y=" << a << "*x+"  << b << endl;
 
-   // Optimize
-   if (optimize) {
-      matrix1D<double> p(2), steps(2);
-      p(0)=a; p(1)=b;
-      steps.init_constant(1);
-      double ftol=0.01, fret;
-      int iter;
-      global_adjust_volume_prm=this;
-      Powell_optimizer(p,1,2,&projection_mismatching,ftol,fret,iter,steps,true);
-      a=p(0); b=p(1);
-   }
+    // Optimize
+    if (optimize)
+    {
+        matrix1D<double> p(2), steps(2);
+        p(0) = a;
+        p(1) = b;
+        steps.init_constant(1);
+        double ftol = 0.01, fret;
+        int iter;
+        global_adjust_volume_prm = this;
+        Powell_optimizer(p, 1, 2, &projection_mismatching, ftol, fret, iter, steps, true);
+        a = p(0);
+        b = p(1);
+    }
 
-   // Apply the transformation
-   out=V;
-   FOR_ALL_ELEMENTS_IN_MATRIX3D(V) out(k,i,j)=a*V(k,i,j)+b;
+    // Apply the transformation
+    out = V;
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(V) out(k, i, j) = a * V(k, i, j) + b;
 }
 
 /* Run --------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::run() {
-   VolumeXmipp out;
-   apply(out());
-   if (fn_out=="") out.write(fn_vol);
-   else            out.write(fn_out);
+void Prog_Adjust_Volume_Parameters::run()
+{
+    VolumeXmipp out;
+    apply(out());
+    if (fn_out == "") out.write(fn_vol);
+    else            out.write(fn_out);
 }

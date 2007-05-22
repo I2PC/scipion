@@ -1,8 +1,8 @@
 /*
-	decl.h
-		Type declarations
-		this file is part of Suave
-		last modified 19 Jan 05 th
+ decl.h
+  Type declarations
+  this file is part of Suave
+  last modified 19 Jan 05 th
 */
 
 
@@ -21,32 +21,36 @@ typedef real Grid[NBINS];
 
 typedef const Grid cGrid;
 
-typedef struct {
-  real avg, err, sigsq, chisq;
-} Result;
+typedef struct
+{
+    real avg, err, sigsq, chisq;
+}
+Result;
 
 typedef const Result cResult;
 
 
-typedef struct {
-  real lower, upper, mid;
-  Grid grid;
-} Bounds;
+typedef struct
+{
+    real lower, upper, mid;
+    Grid grid;
+}
+Bounds;
 
 typedef const Bounds cBounds;
 
 
 #define TYPEDEFREGION \
-  typedef struct region { \
-    struct region *next; \
-    count div, df; \
-    number n; \
-    Result result[NCOMP]; \
-    Bounds bounds[NDIM]; \
-    real fluct[NCOMP][NDIM][2]; \
-    real w[]; \
-  } Region
+    typedef struct region { \
+        struct region *next; \
+        count div, df; \
+        number n; \
+        Result result[NCOMP]; \
+        Bounds bounds[NDIM]; \
+        real fluct[NCOMP][NDIM][2]; \
+        real w[]; \
+    } Region
 
 
-typedef void (*Integrand)(ccount *, creal *, ccount *, real *);
+typedef void(*Integrand)(ccount *, creal *, ccount *, real *);
 

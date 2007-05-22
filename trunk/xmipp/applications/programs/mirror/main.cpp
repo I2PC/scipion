@@ -27,52 +27,59 @@
 #include <data/args.h>
 #include <data/geometry.h>
 
-class Flip_parameters: public Prog_parameters {
+class Flip_parameters: public Prog_parameters
+{
 public:
-   bool flipX;
-   bool flipY;
-   bool flipZ;
+    bool flipX;
+    bool flipY;
+    bool flipZ;
 
-   void read(int argc, char **argv) {
-      Prog_parameters::read(argc,argv);
-      flipX=check_param(argc,argv,"-flipX");
-      flipY=check_param(argc,argv,"-flipY");
-      flipZ=check_param(argc,argv,"-flipZ");
-   }
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        flipX = check_param(argc, argv, "-flipX");
+        flipY = check_param(argc, argv, "-flipY");
+        flipZ = check_param(argc, argv, "-flipZ");
+    }
 
-   void show() {
-      Prog_parameters::show();
-      cout << "FlipX = " << flipX << endl
-           << "FlipY = " << flipY << endl
-           << "FlipZ = " << flipZ << endl;
-   }
+    void show()
+    {
+        Prog_parameters::show();
+        cout << "FlipX = " << flipX << endl
+        << "FlipY = " << flipY << endl
+        << "FlipZ = " << flipZ << endl;
+    }
 
-   void usage() {
-      Prog_parameters::usage();
-      cerr << "  [-flipX]                  : Flip along X\n"
-           << "  [-flipY]                  : Flip along Y\n"
-           << "  [-flipZ]                  : Flip along Z\n";
-   }
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  [-flipX]                  : Flip along X\n"
+        << "  [-flipY]                  : Flip along Y\n"
+        << "  [-flipZ]                  : Flip along Z\n";
+    }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Flip_parameters *eprm=(Flip_parameters *) prm;
-   if (eprm->flipX) img().self_reverseX();
-   if (eprm->flipY) img().self_reverseY();
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Flip_parameters *eprm = (Flip_parameters *) prm;
+    if (eprm->flipX) img().self_reverseX();
+    if (eprm->flipY) img().self_reverseY();
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   Flip_parameters *eprm=(Flip_parameters *) prm;
-   if (eprm->flipX) vol().self_reverseX();
-   if (eprm->flipY) vol().self_reverseY();
-   if (eprm->flipZ) vol().self_reverseZ();
-   return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    Flip_parameters *eprm = (Flip_parameters *) prm;
+    if (eprm->flipX) vol().self_reverseX();
+    if (eprm->flipY) vol().self_reverseY();
+    if (eprm->flipZ) vol().self_reverseZ();
+    return true;
 }
 
-int main (int argc, char **argv) {
-   Flip_parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Flip_parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -82,7 +89,7 @@ int main (int argc, char **argv) {
       help="Flip (mirror) volumes and images";
       OPEN MENU menu_flip;
       COMMAND LINES {
-	+ usual: xmipp_flip
+ + usual: xmipp_flip
                #include "prog_line.mnu"
                [-flipX]
                [-flipY]

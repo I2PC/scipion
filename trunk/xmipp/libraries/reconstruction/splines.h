@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #ifndef _SPLINES_HH
-   #define _SPLINES_HH
+#define _SPLINES_HH
 
 #include "grids.h"
 
@@ -39,27 +39,29 @@
 /** Spline value.
     This function returns the value of a Bspline of order 3 at a given
     point */
-inline double spatial_Bspline03(const matrix1D<double> &r) {
-   if (-2<=XX(r) && XX(r)<2 &&
-       -2<=YY(r) && YY(r)<2 &&
-       -2<=ZZ(r) && ZZ(r)<2)
-       return Bspline03(XX(r))*Bspline03(YY(r))*Bspline03(ZZ(r));
-   else return 0.0;
+inline double spatial_Bspline03(const matrix1D<double> &r)
+{
+    if (-2 <= XX(r) && XX(r) < 2 &&
+        -2 <= YY(r) && YY(r) < 2 &&
+        -2 <= ZZ(r) && ZZ(r) < 2)
+        return Bspline03(XX(r))*Bspline03(YY(r))*Bspline03(ZZ(r));
+    else return 0.0;
 }
 
-const int BSPLINE03_SUBSAMPLING=2000;
+const int BSPLINE03_SUBSAMPLING = 2000;
 /** Value of a Bspline of order 3 in a Look-Up Table. */
 double Bspline03LUT(double x);
 
 /** Spline value with Look-Up Table.
     This function returns the value of a Bspline of order 3 at a given
     point */
-inline double spatial_Bspline03LUT(const matrix1D<double> &r) {
-   if (-2<=XX(r) && XX(r)<2 &&
-       -2<=YY(r) && YY(r)<2 &&
-       -2<=ZZ(r) && ZZ(r)<2)
-       return Bspline03LUT(XX(r))*Bspline03LUT(YY(r))*Bspline03LUT(ZZ(r));
-   else return 0.0;
+inline double spatial_Bspline03LUT(const matrix1D<double> &r)
+{
+    if (-2 <= XX(r) && XX(r) < 2 &&
+        -2 <= YY(r) && YY(r) < 2 &&
+        -2 <= ZZ(r) && ZZ(r) < 2)
+        return Bspline03LUT(XX(r))*Bspline03LUT(YY(r))*Bspline03LUT(ZZ(r));
+    else return 0.0;
 }
 
 /** Sum of a single spline over a grid.
@@ -84,7 +86,7 @@ double spatial_Bspline03_proj(const matrix1D<double> &r, const matrix1D<double> 
    fit into the output volume.
 */
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
-   matrix3D<double> *vol_voxels,
-   int Zdim=0, int Ydim=0, int Xdim=0);
+                              matrix3D<double> *vol_voxels,
+                              int Zdim = 0, int Ydim = 0, int Xdim = 0);
 //@}
 #endif

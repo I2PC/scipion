@@ -26,51 +26,53 @@
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtImageOverviewMicrograph : public QtImage {
-   Q_OBJECT
+class QtImageOverviewMicrograph : public QtImage
+{
+    Q_OBJECT
 
 private:
-   double  __w, __h;
-   int     __x0_crop, __y0_crop, __xF_crop, __yF_crop;
+    double  __w, __h;
+    int     __x0_crop, __y0_crop, __xF_crop, __yF_crop;
 
 public:
-   // Constructor
-   QtImageOverviewMicrograph( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );
+    // Constructor
+    QtImageOverviewMicrograph(QWidget *_parent = 0, const char *_name = 0, WFlags _f = 0);
 
-   // Set the micrograph
-   void setMicrograph( Micrograph *_m );
-   void drawEllipse(int _x, int _y, int _color);
-   void draw_axis(double _ang);
+    // Set the micrograph
+    void setMicrograph(Micrograph *_m);
+    void drawEllipse(int _x, int _y, int _color);
+    void draw_axis(double _ang);
 
-   // Crop area
-   void init_crop_area();
-   void finish_crop_area();
+    // Crop area
+    void init_crop_area();
+    void finish_crop_area();
 
 protected:
-   // Coordinate transformations
-   void micrographToOverview( const int _x, const int _y,
-                              int &_rx, int &_ry );
-   void overviewToMicrograph( const int _x, const int _y,
-                              int &_rx, int &_ry );
-   void exact_micrographToOverview( const int _x, const int _y,
-                              double &_rx, double &_ry );
-   void exact_overviewToMicrograph( const int _x, const int _y,
-                              double &_rx, double &_ry );
-   void loadImage();
-   void loadSymbols();
-   void applyFilters(QtFiltersController *_f, QImage *_img) {}
+    // Coordinate transformations
+    void micrographToOverview(const int _x, const int _y,
+                              int &_rx, int &_ry);
+    void overviewToMicrograph(const int _x, const int _y,
+                              int &_rx, int &_ry);
+    void exact_micrographToOverview(const int _x, const int _y,
+                                    double &_rx, double &_ry);
+    void exact_overviewToMicrograph(const int _x, const int _y,
+                                    double &_rx, double &_ry);
+    void loadImage();
+    void loadSymbols();
+    void applyFilters(QtFiltersController *_f, QImage *_img)
+    {}
 
 public slots:
-   void slotSetWidthHeight( int _w, int _h );
-   void slotActualizeOtherOverview( int _x, int _y );
-   void slotDrawCropArea(vector<int> value);
+    void slotSetWidthHeight(int _w, int _h);
+    void slotActualizeOtherOverview(int _x, int _y);
+    void slotDrawCropArea(vector<int> value);
 
 signals:
-   void signalActualizeOtherOverview( int _x, int _y );
+    void signalActualizeOtherOverview(int _x, int _y);
 
 protected:
-   void mouseMoveEvent( QMouseEvent *e );
-   void mouseReleaseEvent( QMouseEvent *e );
+    void mouseMoveEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
 };
 
 #endif

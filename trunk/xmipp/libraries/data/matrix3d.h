@@ -58,7 +58,7 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
 // TODO Document
 template<class T>
 void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
-                        int Splinedegree, bool inv, bool wrap, T outside=0);
+                        int Splinedegree, bool inv, bool wrap, T outside = 0);
 
 /// @defgroup Volumes Volumes.
 
@@ -152,8 +152,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX3D(V) \
     for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-       for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-          for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in the array between corners.
  * @ingroup VolumesSizeShape
@@ -181,8 +181,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) \
     for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
-       for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-          for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
+            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
 /** For all elements in common.
  * @ingroup VolumesSizeShape
@@ -216,8 +216,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
     ispduptmp4 = MAX(STARTINGX(V1), STARTINGX(V2)); \
     ispduptmp5 = MIN(FINISHINGX(V1),FINISHINGX(V2)); \
     for (int k=ispduptmp0; k<=ispduptmp1; k++) \
-       for (int i=ispduptmp2; i<=ispduptmp3; i++) \
-          for (int j=ispduptmp4; j<=ispduptmp5; j++)
+        for (int i=ispduptmp2; i<=ispduptmp3; i++) \
+            for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 /** For all direct elements in the array.
  * @ingroup VolumeSizeShape
@@ -235,8 +235,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V) \
     for (int k=0; k<ZSIZE(V); k++) \
-       for (int i=0; i<YSIZE(V); i++) \
-          for (int j=0; j<XSIZE(V); j++)
+        for (int i=0; i<YSIZE(V); i++) \
+            for (int j=0; j<XSIZE(V); j++)
 
 /** @defgroup VolumesMemory Memory access.
  * @ingroup VolumesSpeedUp
@@ -251,7 +251,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * @endcode
  */
 #define VOL_ELEM(V, k, i, j) \
-   DIRECT_VOL_ELEM(V,(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
+    DIRECT_VOL_ELEM(V,(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
 
 /** Volume element: Physical access.
  * @ingroup VolumesMemory
@@ -268,7 +268,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * @endcode
  */
 #define DIRECT_VOL_ELEM(V, k, i, j) (V).data[(k) * XYSIZE(V) + (i) * XSIZE(V) \
-    + (j)]
+        + (j)]
 
 /** A short alias for the previous function.
  * @ingroup VolumesMemory
@@ -467,7 +467,7 @@ public:
     void copy_shape(const maT1& v)
     {
         if (XSIZE(*this) != XSIZE(v) || YSIZE(*this) != YSIZE(v) ||
-                ZSIZE(*this) != ZSIZE(v) )
+            ZSIZE(*this) != ZSIZE(v))
             resize(ZSIZE(v), YSIZE(v), XSIZE(v));
 
         STARTINGX(*this) = STARTINGX(v);
@@ -490,28 +490,28 @@ public:
     void resize(int Zdim, int Ydim, int Xdim)
     {
         if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-                Zdim == ZSIZE(*this))
+            Zdim == ZSIZE(*this))
             return;
 
-        if (Xdim<=0 || Ydim<=0 || Zdim<=0)
+        if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0)
         {
             clear();
             return;
         }
 
         // Ask for memory
-        T* new_m=new T [((long int)(Zdim)) * ((long int) (Ydim)) *
-            ((long int)(Xdim))];
+        T* new_m = new T [((long int)(Zdim)) *((long int)(Ydim)) *
+                          ((long int)(Xdim))];
 
         if (new_m == NULL)
             REPORT_ERROR(1001, "Resize: no memory left");
 
         // Copy needed elements, fill with 0 if necessary
-        long int YXdim = ((long int) (Ydim)) * ((long int) (Xdim));
+        long int YXdim = ((long int)(Ydim)) * ((long int)(Xdim));
 
-        for (int k=0; k<Zdim; k++)
-            for (int i=0; i<Ydim; i++)
-                for (int j=0; j<Xdim; j++)
+        for (int k = 0; k < Zdim; k++)
+            for (int i = 0; i < Ydim; i++)
+                for (int j = 0; j < Xdim; j++)
                 {
                     T val;
                     if (k >= ZSIZE(*this))
@@ -552,7 +552,7 @@ public:
         ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(*this)
-            m[k+1][i+1][j+1] = DIRECT_VOL_ELEM(*this, k, i, j);
+        m[k+1][i+1][j+1] = DIRECT_VOL_ELEM(*this, k, i, j);
 
         return m;
     }
@@ -851,16 +851,16 @@ public:
      */
     T& operator()(int k, int i, int j) const
     {
-        if (k<zinit || k>=zinit + zdim)
+        if (k < zinit || k >= zinit + zdim)
             REPORT_ERROR(1203,
-                "Matrix3D::operator (): Matrix3D subscript (k) out of range");
+                         "Matrix3D::operator (): Matrix3D subscript (k) out of range");
 
-        if (i<yinit || i>=yinit + ydim)
+        if (i < yinit || i >= yinit + ydim)
             REPORT_ERROR(1203,
-                "Matrix3D::operator (): Matrix3D subscript (i) out of range");
-        if (j<xinit || j>=xinit + xdim)
+                         "Matrix3D::operator (): Matrix3D subscript (i) out of range");
+        if (j < xinit || j >= xinit + xdim)
             REPORT_ERROR(1203,
-                "Matrix3D::operator (): Matrix3D subscript (j) out of range");
+                         "Matrix3D::operator (): Matrix3D subscript (j) out of range");
 
         return VOL_ELEM(*this, k, i, j);
     }
@@ -868,7 +868,7 @@ public:
     /** Get the voxel at (k,i,j) (logical access).
      * @ingroup VolumesMemory
      */
-    T get_voxel(int k, int i ,int j) const
+    T get_voxel(int k, int i , int j) const
     {
         return (*this)(k, i, j);
     }
@@ -916,7 +916,7 @@ public:
      *
      * (x,y,z) are in logical coordinates.
      */
-    T interpolated_elem(double x, double y, double z, T outside_value=(T) 0)
+    T interpolated_elem(double x, double y, double z, T outside_value = (T) 0)
     {
         int x0 = FLOOR(x);
         double fx = x - x0;
@@ -930,14 +930,14 @@ public:
         double fz = z - z0;
         int z1 = z0 + 1;
 
-        T d000 = (outside(z0,y0,x0)) ? outside_value : VOL_ELEM(*this,z0,y0,x0);
-        T d001 = (outside(z0,y0,x1)) ? outside_value : VOL_ELEM(*this,z0,y0,x1);
-        T d010 = (outside(z0,y1,x0)) ? outside_value : VOL_ELEM(*this,z0,y1,x0);
-        T d011 = (outside(z0,y1,x1)) ? outside_value : VOL_ELEM(*this,z0,y1,x1);
-        T d100 = (outside(z1,y0,x0)) ? outside_value : VOL_ELEM(*this,z1,y0,x0);
-        T d101 = (outside(z1,y0,x1)) ? outside_value : VOL_ELEM(*this,z1,y0,x1);
-        T d110 = (outside(z1,y1,x0)) ? outside_value : VOL_ELEM(*this,z1,y1,x0);
-        T d111 = (outside(z1,y1,x1)) ? outside_value : VOL_ELEM(*this,z1,y1,x1);
+        T d000 = (outside(z0, y0, x0)) ? outside_value : VOL_ELEM(*this, z0, y0, x0);
+        T d001 = (outside(z0, y0, x1)) ? outside_value : VOL_ELEM(*this, z0, y0, x1);
+        T d010 = (outside(z0, y1, x0)) ? outside_value : VOL_ELEM(*this, z0, y1, x0);
+        T d011 = (outside(z0, y1, x1)) ? outside_value : VOL_ELEM(*this, z0, y1, x1);
+        T d100 = (outside(z1, y0, x0)) ? outside_value : VOL_ELEM(*this, z1, y0, x0);
+        T d101 = (outside(z1, y0, x1)) ? outside_value : VOL_ELEM(*this, z1, y0, x1);
+        T d110 = (outside(z1, y1, x0)) ? outside_value : VOL_ELEM(*this, z1, y1, x0);
+        T d111 = (outside(z1, y1, x1)) ? outside_value : VOL_ELEM(*this, z1, y1, x1);
 
         double dx00 = LIN_INTERP(fx, (double) d000, (double) d001);
         double dx01 = LIN_INTERP(fx, (double) d100, (double) d101);
@@ -956,7 +956,7 @@ public:
      * (x,y,z) are in logical coordinates.
      */
     T interpolated_elem_as_Bspline(double x, double y, double z,
-                                     int SplineDegree=3)
+                                   int SplineDegree = 3)
     {
         int SplineDegree_1 = SplineDegree - 1;
 
@@ -979,17 +979,17 @@ public:
         int n2 = CLIP(n1 + SplineDegree, 0, ZSIZE(*this) - 1);
 
         double zyxsum = 0.0;
-        for (int n=n1; n<=n2; n++)
-            if (n<nmax && n>=-1L)
+        for (int n = n1; n <= n2; n++)
+            if (n < nmax && n >= -1L)
             {
                 int plane_n = YSIZE(*this) * XSIZE(*this) * n;
                 double yxsum = 0.0;
-                for (int m=m1; m<=m2; m++)
-                    if (m<mmax && m>-1L)
+                for (int m = m1; m <= m2; m++)
+                    if (m < mmax && m > -1L)
                     {
                         int row_m = plane_n + XSIZE(*this) * m;
                         double xsum = 0.0;
-                        for (int l=l1; l<=l2; l++)
+                        for (int l = l1; l <= l2; l++)
                         {
                             double xminusl = x - (double) l;
                             double Coeff = (double) data[row_m + l];
@@ -1138,7 +1138,7 @@ public:
      * matrix2D< doubl e> m = V.slice(0);
      * @endcode
      */
-    mT getSlice(int i, char axis='Z') const
+    mT getSlice(int i, char axis = 'Z') const
     {
         mT tmp;
         getSlice(i, tmp, axis);
@@ -1158,7 +1158,7 @@ public:
      * V.slice(0, m);
      * @endcode
      */
-    void getSlice(int k, mT& M, char axis='Z') const
+    void getSlice(int k, mT& M, char axis = 'Z') const
     {
         if (xdim == 0)
         {
@@ -1169,44 +1169,44 @@ public:
         switch (axis)
         {
         case 'Z':
-            if (k<zinit || k>=zinit+zdim)
+            if (k < zinit || k >= zinit + zdim)
                 REPORT_ERROR(1203,
-                    "Slice: matrix3D subscript (k) out of range");
+                             "Slice: matrix3D subscript (k) out of range");
 
             k = k - zinit;
             M.resize(ydim, xdim);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, k, i, j);
+            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
         case 'Y':
-            if (k<yinit || k>=yinit+ydim)
+            if (k < yinit || k >= yinit + ydim)
                 REPORT_ERROR(1203,
-                    "Slice: matrix3D subscript (i) out of range");
+                             "Slice: matrix3D subscript (i) out of range");
 
             k = k - yinit;
             M.resize(zdim, xdim);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, k, j);
+            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
         case 'X':
-            if (k<xinit || k>=xinit+xdim)
+            if (k < xinit || k >= xinit + xdim)
                 REPORT_ERROR(1203,
-                    "Slice: matrix3D subscript (j) out of range");
+                             "Slice: matrix3D subscript (j) out of range");
 
             k = k - xinit;
             M.resize(zdim, ydim);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, j, k);
+            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
         default:
             REPORT_ERROR(1205,
-                (std::string) "Slice: not supported axis " + axis);
+                         (std::string) "Slice: not supported axis " + axis);
         }
     }
 
@@ -1226,18 +1226,18 @@ public:
         if (xdim == 0)
             return;
 
-        if (k<zinit || k>=zinit+zdim)
+        if (k < zinit || k >= zinit + zdim)
             REPORT_ERROR(1203,
-                "setSlice: matrix3D subscript (k) out of range");
+                         "setSlice: matrix3D subscript (k) out of range");
 
         if (v.RowNo() != ydim || v.ColNo() != xdim)
             REPORT_ERROR(1202,
-                "setSlice: matrix3D dimensions different from the matrix ones");
+                         "setSlice: matrix3D dimensions different from the matrix ones");
 
         k = k - zinit;
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
-            DIRECT_VOL_ELEM(*this, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
+        DIRECT_VOL_ELEM(*this, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
     }
 
     /** @defgroup VolumesUtilites Utilities
@@ -1307,12 +1307,12 @@ public:
      */
     void self_reverseX()
     {
-        for (int k=0; k<zdim; k++)
-            for (int i=0; i<ydim; i++)
-                for (int j=0; j<=(int) (xdim-1)/2; j++)
+        for (int k = 0; k < zdim; k++)
+            for (int i = 0; i < ydim; i++)
+                for (int j = 0; j <= (int)(xdim - 1) / 2; j++)
                 {
                     T aux;
-                    if (k==0 && i==0)
+                    if (k == 0 && i == 0)
                         std::cout << "Changing " << j << " " << XSIZE(*this) - 1 - j
                         << std::endl;
 
@@ -1359,9 +1359,9 @@ public:
      */
     void self_reverseY()
     {
-        for (int k=0; k<zdim; k++)
-            for (int i=0; i<=(int) (ydim-1)/2; i++)
-                for (int j=0; j<xdim; j++)
+        for (int k = 0; k < zdim; k++)
+            for (int i = 0; i <= (int)(ydim - 1) / 2; i++)
+                for (int j = 0; j < xdim; j++)
                 {
                     T aux;
                     SWAP(DIRECT_VOL_ELEM(*this, k, i, j),
@@ -1407,17 +1407,17 @@ public:
      */
     void self_reverseZ()
     {
-        for (int k=0; k<=(int)(zdim-1)/2; k++)
-            for (int i=0; i<ydim; i++)
-                for (int j=0; j<xdim; j++)
+        for (int k = 0; k <= (int)(zdim - 1) / 2; k++)
+            for (int i = 0; i < ydim; i++)
+                for (int j = 0; j < xdim; j++)
                 {
                     T aux;
-                    SWAP(DIRECT_VOL_ELEM(*this ,k, i, j),
+                    SWAP(DIRECT_VOL_ELEM(*this , k, i, j),
                          DIRECT_VOL_ELEM(*this, ZSIZE(*this) - 1 - k, i, j),
                          aux);
                 }
 
-        STARTINGZ(*this )= -FINISHINGZ(*this);
+        STARTINGZ(*this) = -FINISHINGZ(*this);
     }
 
     /** Put a window to volume.
@@ -1447,19 +1447,19 @@ public:
      * V1.window(0, 0, -1, 1, 1, 2);
      * @endcode
      */
-    void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value=0)
+    void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value = 0)
     {
         VT result(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
         result.zinit = z0;
         result.yinit = y0;
         result.xinit = x0;
 
-        for (int k=z0; k<=zF; k++)
-            for (int i=y0; i<=yF; i++)
-                for (int j=x0; j<=xF; j++)
-                    if ((k >= zinit && k <= zinit+zdim-1) &&
-                            (i >= yinit && i <= yinit + ydim - 1) &&
-                            (j >= xinit && j <= xinit + xdim - 1))
+        for (int k = z0; k <= zF; k++)
+            for (int i = y0; i <= yF; i++)
+                for (int j = x0; j <= xF; j++)
+                    if ((k >= zinit && k <= zinit + zdim - 1) &&
+                        (i >= yinit && i <= yinit + ydim - 1) &&
+                        (j >= xinit && j <= xinit + xdim - 1))
                         VOL_ELEM(result, k, i, j) = VOL_ELEM(*this, k, i, j);
                     else
                         VOL_ELEM(result, k, i, j) = init_value;
@@ -1573,10 +1573,10 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_apply_geom_Bspline(matrix2D< double > A, int SplineDegree,
-                                 bool inv, bool wrap, T outside=0)
+                                 bool inv, bool wrap, T outside = 0)
     {
         VT aux;
-        apply_geom_Bspline(aux, A,*this, SplineDegree, inv,wrap, outside);
+        apply_geom_Bspline(aux, A, *this, SplineDegree, inv, wrap, outside);
         *this = aux;
     }
 
@@ -1591,7 +1591,7 @@ public:
      * V2 = V1.rotate(60);
      * @endcode
      */
-    void rotate(double ang, char axis, VT& result, bool wrap=DONT_WRAP) const
+    void rotate(double ang, char axis, VT& result, bool wrap = DONT_WRAP) const
     {
         matrix2D< double > tmp = rot3D_matrix(ang, axis);
         apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1601,7 +1601,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void rotate_Bspline(int Splinedegree, double ang, char axis, VT& result,
-                        bool wrap=DONT_WRAP, T outside=0) const
+                        bool wrap = DONT_WRAP, T outside = 0) const
     {
         matrix2D< double > temp = rot3D_matrix(ang, axis);
         apply_geom_Bspline(result, temp, *this, IS_NOT_INV, wrap, outside);
@@ -1610,7 +1610,7 @@ public:
     /** Rotate a volume around system axis, return result.
      * @ingroup VolumesGeometrical
      */
-    VT rotate(double ang, char axis, bool wrap=DONT_WRAP) const
+    VT rotate(double ang, char axis, bool wrap = DONT_WRAP) const
     {
         VT aux;
         rotate(ang, axis, aux, wrap);
@@ -1621,7 +1621,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     VT rotate_Bspline(int Splinedegree, double ang, char axis,
-                      bool wrap=DONT_WRAP) const
+                      bool wrap = DONT_WRAP) const
     {
         VT aux;
         rotate_Bspline(Splinedegree, ang, axis, aux, wrap);
@@ -1631,7 +1631,7 @@ public:
     /** Rotate a volume around system axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_rotate(double ang, char axis, bool wrap=DONT_WRAP)
+    void self_rotate(double ang, char axis, bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate(ang, axis, aux, wrap);
@@ -1642,7 +1642,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_rotate_Bspline(int Splinedegree, double ang, char axis,
-                             bool wrap=DONT_WRAP)
+                             bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate_Bspline(Splinedegree, ang, axis, aux, wrap);
@@ -1661,7 +1661,7 @@ public:
      * @endcode
      */
     void rotate(double ang, const matrix1D< double >& axis, VT& result,
-                bool wrap=DONT_WRAP) const
+                bool wrap = DONT_WRAP) const
     {
         matrix2D< double > tmp = rot3D_matrix(ang, axis);
         apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1672,17 +1672,17 @@ public:
      */
     void rotate_Bspline(int Splinedegree, double ang,
                         const matrix1D< double >& axis, VT& result,
-                        bool wrap=DONT_WRAP, T outside=0) const
+                        bool wrap = DONT_WRAP, T outside = 0) const
     {
-        matrix2D< double > tmp = rot3D_matrix(ang,axis);
+        matrix2D< double > tmp = rot3D_matrix(ang, axis);
         apply_geom_Bspline(result, tmp, *this, Splinedegree, IS_NOT_INV,
-            wrap, outside);
+                           wrap, outside);
     }
 
     /** Rotate a volume around any axis, return result.
      * @ingroup VolumesGeometrical
      */
-    VT rotate(double ang, const matrix1D< double > v, bool wrap=DONT_WRAP) const
+    VT rotate(double ang, const matrix1D< double > v, bool wrap = DONT_WRAP) const
     {
         VT aux;
         rotate(ang, v, aux, wrap);
@@ -1693,7 +1693,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     VT rotate_Bspline(int Splinedegree, double ang, const matrix1D< double > v,
-                      bool wrap=DONT_WRAP) const
+                      bool wrap = DONT_WRAP) const
     {
         VT aux;
         rotate_Bspline(Splinedegree, ang, v, aux, wrap);
@@ -1704,7 +1704,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_rotate(double ang, const matrix1D< double >& v,
-        bool wrap=DONT_WRAP)
+                     bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate(ang, v, aux, wrap);
@@ -1715,7 +1715,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_rotate_Bspline(int Splinedegree, double ang,
-                             const matrix1D< double >& v, bool wrap=DONT_WRAP)
+                             const matrix1D< double >& v, bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate_Bspline(Splinedegree, ang, v, aux, wrap);
@@ -1733,8 +1733,8 @@ public:
      * V2 = V1.translate(vector_R3(0, 0, 2));
      * @endcode
      */
-    void translate(const matrix1D< double >& v, VT& result, bool wrap=WRAP)
-        const
+    void translate(const matrix1D< double >& v, VT& result, bool wrap = WRAP)
+    const
     {
         matrix2D< double > tmp = translation3D_matrix(v);
         apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1744,7 +1744,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void translate_Bspline(int Splinedegree, const matrix1D< double >& v,
-                           VT& result, bool wrap=WRAP) const
+                           VT& result, bool wrap = WRAP) const
     {
         matrix2D< double > tmp = translation3D_matrix(v);
         apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1753,7 +1753,7 @@ public:
     /** Translate a volume, return result.
      * @ingroup VolumesGeometrical
      */
-    VT translate(const matrix1D< double >& v, bool wrap=WRAP) const
+    VT translate(const matrix1D< double >& v, bool wrap = WRAP) const
     {
         VT aux;
         translate(v, aux, wrap);
@@ -1764,7 +1764,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     VT translate_Bspline(int Splinedegree, const matrix1D< double >& v,
-                         bool wrap=WRAP) const
+                         bool wrap = WRAP) const
     {
         VT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -1774,7 +1774,7 @@ public:
     /** Translate a volume, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_translate(const matrix1D< double >& v, bool wrap=WRAP)
+    void self_translate(const matrix1D< double >& v, bool wrap = WRAP)
     {
         VT aux;
         translate(v, aux, wrap);
@@ -1785,7 +1785,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_translate_Bspline(int Splinedegree, const matrix1D< double >& v,
-                                bool wrap=WRAP)
+                                bool wrap = WRAP)
     {
         VT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -1798,7 +1798,7 @@ public:
      * If the input has very high values, sometimes it is better to rescale it
      * to be between 0 and 1.
      */
-    void self_translate_center_of_mass_to_center(bool wrap=WRAP)
+    void self_translate_center_of_mass_to_center(bool wrap = WRAP)
     {
         set_Xmipp_origin();
         matrix1D< double > center;
@@ -1811,7 +1811,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_translate_center_of_mass_to_center_Bspline(
-        int Splinedegree, bool wrap=WRAP)
+        int Splinedegree, bool wrap = WRAP)
     {
         set_Xmipp_origin();
         matrix1D< double > center;
@@ -1851,7 +1851,7 @@ public:
     void scale_to_size_Bspline(int Splinedegree, int Zdim, int Ydim, int Xdim,
                                VT& result) const
     {
-        matrix2D< double > tmp(4,4);
+        matrix2D< double > tmp(4, 4);
         tmp.init_identity();
 
         DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) xdim;
@@ -1860,7 +1860,7 @@ public:
 
         result.resize(Zdim, Ydim, Xdim);
 
-        apply_geom_Bspline(result, tmp, *this, Splinedegree, IS_NOT_INV,WRAP);
+        apply_geom_Bspline(result, tmp, *this, Splinedegree, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size, return result
@@ -1908,12 +1908,12 @@ public:
     /** Reduce the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramid_reduce(matrix3D< double >& result, int levels=1) const
+    void pyramid_reduce(matrix3D< double >& result, int levels = 1) const
     {
         matrix3D< double > aux, aux2;
         produce_spline_coeffs(aux, 3);
 
-        for (int i=0; i<levels; i++)
+        for (int i = 0; i < levels; i++)
         {
             aux.reduce_Bspline(aux2, 3);
             aux = aux2;
@@ -1925,12 +1925,12 @@ public:
     /** Expand the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramid_expand(matrix3D< double >& result, int levels=1) const
+    void pyramid_expand(matrix3D< double >& result, int levels = 1) const
     {
         matrix3D< double > aux, aux2;
         produce_spline_coeffs(aux, 3);
 
-        for (int i=0; i<levels; i++)
+        for (int i = 0; i < levels; i++)
         {
             aux.expand_Bspline(aux2, 3);
             aux = aux2;
@@ -1943,10 +1943,10 @@ public:
      * @ingroup VolumesGeometrical
      */
 #ifndef DBL_EPSILON
-    #define DBL_EPSILON 1e-50
+#define DBL_EPSILON 1e-50
 #endif
-    void produce_spline_coeffs(matrix3D< double >& coeffs, int SplineDegree=3)
-        const
+    void produce_spline_coeffs(matrix3D< double >& coeffs, int SplineDegree = 3)
+    const
     {
         coeffs.init_zeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(coeffs) = STARTINGX(*this);
@@ -1968,7 +1968,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void produce_image_from_spline_coeffs(
-        matrix3D< double >& img, int SplineDegree=3) const
+        matrix3D< double >& img, int SplineDegree = 3) const
     {
         img.init_zeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
@@ -1993,7 +1993,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * expanded set of B-spline coefficients using the two-scale relationship.
      */
-    void expand_Bspline(matrix3D< double >& expanded, int SplineDegree=3) const
+    void expand_Bspline(matrix3D< double >& expanded, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2019,7 +2019,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * reduced set of B-spline coefficients using the two-scale relationship.
      */
-    void reduce_Bspline(matrix3D< double >& reduced, int SplineDegree=3) const
+    void reduce_Bspline(matrix3D< double >& reduced, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2038,23 +2038,23 @@ public:
         if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2 != 0)
             aux.resize(ZSIZE(aux - 1), YSIZE(aux) - 1, XSIZE(aux) - 1);
         else if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2
-            == 0)
-            aux.resize(ZSIZE(aux), YSIZE(aux)-1, XSIZE(aux)-1);
+                 == 0)
+            aux.resize(ZSIZE(aux), YSIZE(aux) - 1, XSIZE(aux) - 1);
         else if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 == 0 && ZSIZE(aux) % 2
-            != 0)
+                 != 0)
             aux.resize(ZSIZE(aux) - 1, YSIZE(aux), XSIZE(aux) - 1);
         else if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 == 0 && ZSIZE(aux) % 2
-            == 0)
+                 == 0)
             aux.resize(ZSIZE(aux), YSIZE(aux), XSIZE(aux) - 1);
         else if (XSIZE(aux) % 2 == 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2
-            != 0)
+                 != 0)
             aux.resize(ZSIZE(aux) - 1, YSIZE(aux) - 1, XSIZE(aux));
         else if (XSIZE(aux) % 2 == 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2
-            == 0)
+                 == 0)
             aux.resize(ZSIZE(aux), YSIZE(aux) - 1, XSIZE(aux));
         else if (XSIZE(aux) % 2 == 0 && YSIZE(aux) % 2 == 0 && ZSIZE(aux) % 2
-            != 0)
-            aux.resize(ZSIZE(aux)-1, YSIZE(aux), XSIZE(aux));
+                 != 0)
+            aux.resize(ZSIZE(aux) - 1, YSIZE(aux), XSIZE(aux));
 
         reduced.resize(ZSIZE(aux) / 2, YSIZE(aux) / 2, XSIZE(aux) / 2);
 
@@ -2080,13 +2080,13 @@ public:
         T max = VOL_ELEM(*this, kmax, imax, jmax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
-            if (VOL_ELEM(*this, k, i, j) > max)
-            {
-                max = VOL_ELEM(*this, k, i, j);
-                kmax = k;
-                imax = i;
-                jmax = j;
-            }
+        if (VOL_ELEM(*this, k, i, j) > max)
+        {
+            max = VOL_ELEM(*this, k, i, j);
+            kmax = k;
+            imax = i;
+            jmax = j;
+        }
     }
 
     /** Minimum element.
@@ -2107,13 +2107,13 @@ public:
         T min = VOL_ELEM(*this, kmin, imin, jmin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
-            if (VOL_ELEM(*this, k, i, j) > min)
-            {
-                min = VOL_ELEM(*this, k, i, j);
-                kmin = k;
-                imin = i;
-                jmin = j;
-            }
+        if (VOL_ELEM(*this, k, i, j) > min)
+        {
+            min = VOL_ELEM(*this, k, i, j);
+            kmin = k;
+            imin = i;
+            jmin = j;
+        }
     }
 
     /** @defgroup VolumesIterators Iterators
@@ -2131,7 +2131,7 @@ public:
      * v1 = V.for_all_slices(&matrix_sum);
      * @endcode
      */
-    vT for_all_slices (T (*f) (mT&)) const
+    vT for_all_slices(T(*f)(mT&)) const
     {
         vT tmp;
 
@@ -2144,11 +2144,11 @@ public:
         tmp.resize(ZSIZE(*this));
         STARTINGX(tmp) = STARTINGZ(*this);
 
-        for (int k=STARTINGZ(*this); k<=FINISHINGZ(*this); k++)
+        for (int k = STARTINGZ(*this); k <= FINISHINGZ(*this); k++)
         {
             mT aux;
             getSlice(k, aux);
-            VEC_ELEM(tmp,k) = (*f)(aux);
+            VEC_ELEM(tmp, k) = (*f)(aux);
         }
 
         return tmp;
@@ -2166,21 +2166,21 @@ public:
      * V2 = V.for_all_slices(&matrix_norm);
      * @endcode
      */
-    VT for_all_slices (mT (*f) (mT&)) const
+    VT for_all_slices(mT(*f)(mT&)) const
     {
         VT tmp;
 
-        if (xdim==0)
+        if (xdim == 0)
         {
             tmp.clear();
             return tmp;
         }
         tmp.copy_shape(*this);
 
-        for (int k=STARTINGZ(*this); k<=FINISHINGZ(*this); k++)
+        for (int k = STARTINGZ(*this); k <= FINISHINGZ(*this); k++)
         {
             mT aux;
-            getSlice(k,aux);
+            getSlice(k, aux);
             aux = (*f)(aux);
             tmp.setSlice(k, aux);
         }
@@ -2193,17 +2193,17 @@ public:
 
 // TODO Document
 template<>
-void core_array_by_scalar< complex< double > >(const maTC& op1,
+void core_array_by_scalar< complex< double > > (const maTC& op1,
         const complex< double >& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void core_scalar_by_array< complex< double > >(const complex< double >& op1,
+void core_scalar_by_array< complex< double > > (const complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void core_array_by_array< complex< double> >(const maTC& op1, const maTC& op2,
+void core_array_by_array< complex< double> > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 /** @defgroup VolumesRelated Related functions
@@ -2278,7 +2278,7 @@ void radial_average(const matrix3D< T >& m,
                     const matrix1D< int >& center_of_rot,
                     matrix1D< T >& radial_mean,
                     matrix1D< int >& radial_count,
-                    const bool& rounding=false)
+                    const bool& rounding = false)
 {
     matrix1D< double > idx(3);
 
@@ -2290,28 +2290,28 @@ void radial_average(const matrix3D< T >& m,
     double y = STARTINGY(m) - YY(center_of_rot);
     double x = STARTINGX(m) - XX(center_of_rot);
 
-    distances(0) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(0) = (int) floor(sqrt(x * x + y * y + z * z));
     x = FINISHINGX(m) - XX(center_of_rot);
 
-    distances(1) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(1) = (int) floor(sqrt(x * x + y * y + z * z));
     y = FINISHINGY(m) - YY(center_of_rot);
 
-    distances(2) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(2) = (int) floor(sqrt(x * x + y * y + z * z));
     x = STARTINGX(m) - XX(center_of_rot);
 
-    distances(3) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(3) = (int) floor(sqrt(x * x + y * y + z * z));
     z = FINISHINGZ(m) - ZZ(center_of_rot);
 
-    distances(4) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(4) = (int) floor(sqrt(x * x + y * y + z * z));
     x = FINISHINGX(m) - XX(center_of_rot);
 
-    distances(5) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(5) = (int) floor(sqrt(x * x + y * y + z * z));
     y = STARTINGY(m) - YY(center_of_rot);
 
-    distances(6) = (int) floor(sqrt(x*x + y*y + z*z));
-    x=STARTINGX(m) - XX(center_of_rot);
+    distances(6) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = STARTINGX(m) - XX(center_of_rot);
 
-    distances(7) = (int) floor(sqrt(x*x + y*y + z*z));
+    distances(7) = (int) floor(sqrt(x * x + y * y + z * z));
 
     int dim = (int) CEIL(distances.compute_max()) + 1;
     if (rounding)
@@ -2347,7 +2347,7 @@ void radial_average(const matrix3D< T >& m,
 
     // Perform the mean
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
-        radial_mean(i) /= (T) radial_count(i);
+    radial_mean(i) /= (T) radial_count(i);
 }
 
 #undef maT
@@ -2358,10 +2358,10 @@ template<typename T>
 void VT::print_shape(std::ostream& out) const
 {
     out << "Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x"
-        << XSIZE(*this)
-        << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-        << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+    << XSIZE(*this)
+    << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
+    << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+    << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
 // TODO Document
@@ -2377,7 +2377,7 @@ void VT::get_size(int* size) const
 template<typename T>
 bool VT::outside(const matrix1D< double >& v) const
 {
-    if (XSIZE(v)<3)
+    if (XSIZE(v) < 3)
         REPORT_ERROR(1, "Outside: index vector has got not enough components");
 
     return (XX(v) < STARTINGX(*this) || XX(v) > FINISHINGX(*this) ||
@@ -2444,32 +2444,32 @@ bool VT::intersects(double x0, double y0, double z0, double xdim, double ydim,
 template<typename T>
 bool VT::isCorner(const matrix1D< double >& v)
 {
-    if (XSIZE(v)<3)
+    if (XSIZE(v) < 3)
         REPORT_ERROR(1, "isCorner: index vector has got not enough components");
 
     return ((ZZ(v) == STARTINGZ(*this) && XX(v) == STARTINGX(*this) &&
-                YY(v) == STARTINGY(*this))  ||
+             YY(v) == STARTINGY(*this))  ||
             (ZZ(v) == STARTINGZ(*this) && XX(v) == STARTINGX(*this) &&
-                YY(v) == FINISHINGY(*this)) ||
+             YY(v) == FINISHINGY(*this)) ||
             (ZZ(v) == STARTINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-                YY(v) == STARTINGY(*this))  ||
+             YY(v) == STARTINGY(*this))  ||
             (ZZ(v) == STARTINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-                YY(v) == FINISHINGY(*this)) ||
+             YY(v) == FINISHINGY(*this)) ||
             (ZZ(v) == FINISHINGZ(*this) && XX(v) == STARTINGX(*this) &&
-                YY(v) == STARTINGY(*this))  ||
+             YY(v) == STARTINGY(*this))  ||
             (ZZ(v) == FINISHINGZ(*this) && XX(v) == STARTINGX(*this) &&
-                YY(v) == FINISHINGY(*this)) ||
+             YY(v) == FINISHINGY(*this)) ||
             (ZZ(v) == FINISHINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-                YY(v) == STARTINGY(*this))  ||
+             YY(v) == STARTINGY(*this))  ||
             (ZZ(v) == FINISHINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-                YY(v) == FINISHINGY(*this)));
+             YY(v) == FINISHINGY(*this)));
 }
 
 // TODO Comment
 template<typename T>
 bool VT::isBorder(const matrix1D< int >& v)
 {
-    if (XSIZE(v)<3)
+    if (XSIZE(v) < 3)
         REPORT_ERROR(1, "isBorder: index vector has got not enough components");
 
     return  isBorder(ZZ(v), YY(v), XX(v));
@@ -2491,24 +2491,24 @@ void VT::patch(const VT& patch_array, char operation)
     SPEED_UP_temps;
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(patch_array, *this)
-        switch (operation)
-        {
-        case '=':
-            VOL_ELEM(*this, k, i, j) = VOL_ELEM(patch_array, k, i, j);
-            break;
-        case '+':
-            VOL_ELEM(*this, k, i, j) += VOL_ELEM(patch_array, k, i, j);
-            break;
-        case '-':
-            VOL_ELEM(*this, k, i, j) -= VOL_ELEM(patch_array, k, i, j);
-            break;
-        case '*':
-            VOL_ELEM(*this,k,i,j) *= VOL_ELEM(patch_array, k, i, j);
-            break;
-        case '/':
-            VOL_ELEM(*this, k, i, j) /= VOL_ELEM(patch_array, k, i, j);
-            break;
-        }
+    switch (operation)
+    {
+    case '=':
+        VOL_ELEM(*this, k, i, j) = VOL_ELEM(patch_array, k, i, j);
+        break;
+    case '+':
+        VOL_ELEM(*this, k, i, j) += VOL_ELEM(patch_array, k, i, j);
+        break;
+    case '-':
+        VOL_ELEM(*this, k, i, j) -= VOL_ELEM(patch_array, k, i, j);
+        break;
+    case '*':
+        VOL_ELEM(*this, k, i, j) *= VOL_ELEM(patch_array, k, i, j);
+        break;
+    case '/':
+        VOL_ELEM(*this, k, i, j) /= VOL_ELEM(patch_array, k, i, j);
+        break;
+    }
 }
 
 // TODO Document
@@ -2520,19 +2520,19 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
     else
         ostrm << std::endl;
 
-    double max_val = ABS(MULTIDIM_ELEM(v ,0));
+    double max_val = ABS(MULTIDIM_ELEM(v , 0));
 
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-        max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
+    max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
 
     int prec = best_prec(max_val, 10);
 
-    for (int k=STARTINGZ(v); k<=FINISHINGZ(v); k++)
+    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
     {
         ostrm << "Slice No. " << k << endl;
-        for (int i=STARTINGY(v); i<=FINISHINGY(v); i++)
+        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
         {
-            for (int j=STARTINGX(v); j<=FINISHINGX(v); j++)
+            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
                 ostrm << FtoA((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
             }
@@ -2559,7 +2559,7 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
 
     if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
         REPORT_ERROR(1102,
-            "Apply_geom3D: geometrical transformation is not 4x4");
+                     "Apply_geom3D: geometrical transformation is not 4x4");
 
     if (A.IsIdent())
     {
@@ -2586,12 +2586,12 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
         V2.resize(V1);
 
     // Find center of matrix3D
-    cen_z = (int) (V2.zdim / 2);
-    cen_y = (int) (V2.ydim / 2);
-    cen_x = (int) (V2.xdim / 2);
-    cen_zp = (int) (V1.zdim / 2);
-    cen_yp = (int) (V1.ydim / 2);
-    cen_xp = (int) (V1.xdim / 2);
+    cen_z = (int)(V2.zdim / 2);
+    cen_y = (int)(V2.ydim / 2);
+    cen_x = (int)(V2.xdim / 2);
+    cen_zp = (int)(V1.zdim / 2);
+    cen_yp = (int)(V1.ydim / 2);
+    cen_xp = (int)(V1.xdim / 2);
     minxp = -cen_xp;
     minyp = -cen_yp;
     minzp = -cen_zp;
@@ -2618,8 +2618,8 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
     // this value at the output voxel
 
     // V2 is not initialised to 0 because all its pixels are rewritten
-    for (int k=0; k<V2.zdim; k++)
-        for (int i=0; i<V2.ydim; i++)
+    for (int k = 0; k < V2.zdim; k++)
+        for (int i = 0; i < V2.ydim; i++)
         {
             // Calculate position of the beginning of the row in the output
             // matrix3D
@@ -2631,21 +2631,21 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
             // geometrical transformation they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
             xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
-                + dMij(A, 0, 3);
+                 + dMij(A, 0, 3);
             yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
-                + dMij(A, 1, 3);
+                 + dMij(A, 1, 3);
             zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
-                + dMij(A, 2, 3);
+                 + dMij(A, 2, 3);
 
-            for (int j=0; j<V2.xdim; j++)
+            for (int j = 0; j < V2.xdim; j++)
             {
                 bool interp;
                 T tmp;
 
 #ifdef DEBUG
                 bool show_debug = false;
-                if ((i==0 && j==0 && k==0) ||
-                        (i==V2.ydim - 1 && j==V2.xdim - 1 && k==V2.zdim - 1))
+                if ((i == 0 && j == 0 && k == 0) ||
+                    (i == V2.ydim - 1 && j == V2.xdim - 1 && k == V2.zdim - 1))
                     show_debug = true;
 
                 if (show_debug)
@@ -2657,33 +2657,33 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
                 // If the point is outside the volume, apply a periodic
                 // extension of the volume, what exits by one side enters by
                 // the other
-                interp  =true;
+                interp  = true;
                 if (wrap)
                 {
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
                     if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
                         zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
                 }
                 else
                 {
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
 
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
 
                     if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
                 }
 
@@ -2694,7 +2694,7 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
                     // top left corner of the interpolation square. Ie,
                     // (0.7,0.7) would give (0,0)
                     // Calculate also weights for point m1+1,n1+1
-                    wx = xp+ cen_xp;
+                    wx = xp + cen_xp;
                     m1 = (int) wx;
                     wx = wx - m1;
                     m2 = m1 + 1;
@@ -2711,12 +2711,12 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
                     if (show_debug)
                     {
                         std::cout << "After wrapping(xp,yp,zp)= "
-                            << "(" << xp << "," << yp << "," << zp << ")\n";
+                        << "(" << xp << "," << yp << "," << zp << ")\n";
                         std::cout << "(m1,n1,o1)-->(m2,n2,o2)="
-                            << "(" << m1 << "," << n1 << "," << o1 << ") "
-                            << "(" << m2 << "," << n2 << "," << o2 << ")\n";
+                        << "(" << m1 << "," << n1 << "," << o1 << ") "
+                        << "(" << m2 << "," << n2 << "," << o2 << ")\n";
                         std::cout << "(wx,wy,wz)="
-                            << "(" << wx << "," << wy << "," << wz << ")\n";
+                        << "(" << wx << "," << wy << "," << wz << ")\n";
                     }
 #endif
 
@@ -2725,67 +2725,67 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
                     // this interpolation, and even it might not be defined if
                     // m1=xdim-1
                     // The same can be said for wy.
-                    tmp  = (T) ((1-wz) * (1-wy) * (1-wx) * dVkij(V1, o1, n1,
-                        m1));
+                    tmp  = (T)((1 - wz) * (1 - wy) * (1 - wx) * dVkij(V1, o1, n1,
+                               m1));
 
                     if (wx != 0 && m2 < V1.xdim)
-                        tmp += (T) ((1-wz) * (1-wy) * wx * dVkij(V1, o1, n1,
-                        m2));
+                        tmp += (T)((1 - wz) * (1 - wy) * wx * dVkij(V1, o1, n1,
+                                   m2));
 
                     if (wy != 0 && n2 < V1.ydim)
                     {
-                        tmp += (T) ((1-wz) * wy * (1-wx) * dVkij(V1, o1, n2,
-                            m1));
+                        tmp += (T)((1 - wz) * wy * (1 - wx) * dVkij(V1, o1, n2,
+                                   m1));
                         if (wx != 0 && m2 < V1.xdim)
-                            tmp += (T) ((1-wz) * wy * wx * dVkij(V1, o1, n2,
-                                m2));
+                            tmp += (T)((1 - wz) * wy * wx * dVkij(V1, o1, n2,
+                                                                  m2));
                     }
 
                     if (wz != 0 && o2 < V1.zdim)
                     {
-                        tmp += (T) (wz * (1-wy) * (1-wx) * dVkij(V1, o2, n1,
-                            m1));
+                        tmp += (T)(wz * (1 - wy) * (1 - wx) * dVkij(V1, o2, n1,
+                                   m1));
                         if (wx != 0 && m2 < V1.xdim)
-                            tmp += (T) (wz * (1-wy) * wx * dVkij(V1, o2, n1,
-                                m2));
+                            tmp += (T)(wz * (1 - wy) * wx * dVkij(V1, o2, n1,
+                                                                  m2));
                         if (wy != 0 && n2 < V1.ydim)
                         {
-                            tmp += (T) (wz * wy * (1-wx) * dVkij(V1, o2, n2,
-                                m1));
+                            tmp += (T)(wz * wy * (1 - wx) * dVkij(V1, o2, n2,
+                                                                  m1));
                             if (wx != 0 && m2 < V1.xdim)
-                                tmp += (T) (wz * wy * wx * dVkij(V1, o2, n2,
-                                m2));
+                                tmp += (T)(wz * wy * wx * dVkij(V1, o2, n2,
+                                                                m2));
                         }
                     }
 
-                    dVkij(V2 ,k, i, j) = tmp;
+                    dVkij(V2 , k, i, j) = tmp;
 #ifdef DEBUG
                     if (show_debug)
                         std::cout <<
-                        "tmp1=" << dVkij(V1, o1, n1, m1) << " " << (T) ((1-wz)
-                            * (1-wy) * (1-wx) * dVkij(V1, o1, n1, m1)) <<
-                            std::endl <<
-                        "tmp2=" << dVkij(V1, o1, n1, m2) << " " << (T) ((1-wz)
-                            * (1-wy) * wx * dVkij(V1, o1, n1, m2)) <<
-                            std::endl <<
-                        "tmp3=" << dVkij(V1, o1, n2, m1) << " " << (T) ((1-wz)
-                            * wy * (1-wx) * dVkij(V1, o1, n2, m1)) <<
-                            std::endl<<
-                        "tmp4=" << dVkij(V1, o1, n2, m2) << " " << (T) ((1-wz)
-                            * wy * wx * dVkij(V1, o1, n2, m2)) <<
-                            std::endl <<
-                        "tmp5=" << dVkij(V1, o2, n1, m1) << " " << (T) (wz *
-                            (1-wy) * (1-wx) * dVkij(V1, o2, n1, m1))
-                            << std::endl <<
-                        "tmp6=" << dVkij(V1, o2, n1, m2) << " " << (T) (wz *
-                            (1-wy) * wx * dVkij(V1, o2, n1, m2)) <<
-                            std::endl <<
-                        "tmp7=" << dVkij(V1, o2, n2, m1) << " " << (T) (wz *
-                            wy * (1-wx) * dVkij(V1, o2, n2, m1)) <<
-                            std::endl <<
-                        "tmp8=" << dVkij(V1, o2, n2, m2) << " " << (T) (wz *
-                            wy * wx * dVkij(V1, o2, n2, m2)) <<
-                            std::endl <<
+                        "tmp1=" << dVkij(V1, o1, n1, m1) << " " << (T)((1 - wz)
+                                *(1 - wy) *(1 - wx) * dVkij(V1, o1, n1, m1)) <<
+                        std::endl <<
+                        "tmp2=" << dVkij(V1, o1, n1, m2) << " " << (T)((1 - wz)
+                                *(1 - wy) * wx * dVkij(V1, o1, n1, m2)) <<
+                        std::endl <<
+                        "tmp3=" << dVkij(V1, o1, n2, m1) << " " << (T)((1 - wz)
+                                * wy *(1 - wx) * dVkij(V1, o1, n2, m1)) <<
+                        std::endl <<
+                        "tmp4=" << dVkij(V1, o1, n2, m2) << " " << (T)((1 - wz)
+                                * wy * wx * dVkij(V1, o1, n2, m2)) <<
+                        std::endl <<
+                        "tmp5=" << dVkij(V1, o2, n1, m1) << " " << (T)(wz *
+                                (1 - wy) *(1 - wx) * dVkij(V1, o2, n1, m1))
+                        << std::endl <<
+                        "tmp6=" << dVkij(V1, o2, n1, m2) << " " << (T)(wz *
+                                (1 - wy) * wx * dVkij(V1, o2, n1, m2)) <<
+                        std::endl <<
+                        "tmp7=" << dVkij(V1, o2, n2, m1) << " " << (T)(wz *
+                                wy *(1 - wx) * dVkij(V1, o2, n2, m1)) <<
+                        std::endl <<
+                        "tmp8=" << dVkij(V1, o2, n2, m2) << " " << (T)(wz *
+                                wy * wx * dVkij(V1, o2, n2, m2)) <<
+                        std::endl <<
                         "tmp= " << tmp << std::endl;
 #endif
                 }
@@ -2838,12 +2838,12 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
         V2.resize(V1);
 
     // Find center of matrix3D
-    cen_z = (int) (V2.zdim / 2);
-    cen_y = (int) (V2.ydim / 2);
-    cen_x = (int) (V2.xdim / 2);
-    cen_zp = (int) (V1.zdim / 2);
-    cen_yp = (int) (V1.ydim / 2);
-    cen_xp = (int) (V1.xdim / 2);
+    cen_z = (int)(V2.zdim / 2);
+    cen_y = (int)(V2.ydim / 2);
+    cen_x = (int)(V2.xdim / 2);
+    cen_zp = (int)(V1.zdim / 2);
+    cen_yp = (int)(V1.ydim / 2);
+    cen_xp = (int)(V1.xdim / 2);
     minxp = -cen_xp;
     minyp = -cen_yp;
     minzp = -cen_zp;
@@ -2875,8 +2875,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
     // this value at the output voxel
 
     // V2 is not initialised to 0 because all its pixels are rewritten
-    for (int k=0; k<V2.zdim; k++)
-        for (int i=0; i<V2.ydim; i++)
+    for (int k = 0; k < V2.zdim; k++)
+        for (int i = 0; i < V2.ydim; i++)
         {
             // Calculate position of the beginning of the row in the output
             // matrix3D
@@ -2888,21 +2888,21 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
             // geometrical transformation they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
             xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
-                + dMij(A, 0, 3);
+                 + dMij(A, 0, 3);
             yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
-                + dMij(A, 1, 3);
+                 + dMij(A, 1, 3);
             zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
-                + dMij(A, 2, 3);
+                 + dMij(A, 2, 3);
 
-            for (int j=0; j<V2.xdim; j++)
+            for (int j = 0; j < V2.xdim; j++)
             {
                 bool interp;
                 T tmp;
 
 #ifdef DEBUG
                 bool show_debug = false;
-                if ((i==0 && j==0 && k==0) ||
-                        (i==V2.ydim - 1 && j==V2.xdim - 1 && k==V2.zdim - 1))
+                if ((i == 0 && j == 0 && k == 0) ||
+                    (i == V2.ydim - 1 && j == V2.xdim - 1 && k == V2.zdim - 1))
                     show_debug = true;
 
                 if (show_debug)
@@ -2918,29 +2918,29 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
                 if (wrap)
                 {
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
                     if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
                         zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
                 }
                 else
                 {
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                            xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
 
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                            yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
 
                     if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                            zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
                 }
 
@@ -2948,7 +2948,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
                 {
                     dVkij(V2, k, i, j) =
                         (T) Bcoeffs.interpolated_elem_as_Bspline(xp, yp, zp,
-                                                                 Splinedegree);
+                                Splinedegree);
                 }
                 else
                     dVkij(V2, k, i, j) = outside;
@@ -2969,7 +2969,7 @@ void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 {
     min_val = max_val = (*this)(corner1);
     matrix1D< double > r(3);
-    double N=0, sum=0, sum2=0;
+    double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
     {
@@ -2985,7 +2985,7 @@ void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 
     if (N != 0)
     {
-        avg = sum/N;
+        avg = sum / N;
         stddev = sqrt(sum2 / N - avg * avg);
     }
     else
@@ -3022,7 +3022,7 @@ void VT::center_of_mass(matrix1D< double >& center, void* mask)
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
     {
-        if (imask==NULL || VOL_ELEM(*imask, k, i, j))
+        if (imask == NULL || VOL_ELEM(*imask, k, i, j))
         {
             XX(center) += j * VOL_ELEM(*this, k, i, j);
             YY(center) += i * VOL_ELEM(*this, k, i, j);
@@ -3039,6 +3039,6 @@ void VT::center_of_mass(matrix1D< double >& center, void* mask)
 // TODO Document
 template<>
 complex<double> matrix3D< complex< double> >::interpolated_elem(double x,
-    double y, double z, complex< double > outside_value);
+        double y, double z, complex< double > outside_value);
 
 #endif

@@ -35,208 +35,209 @@
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Recons_test Parameters
-class Recons_test_Parameters {
+class Recons_test_Parameters
+{
 public:
-   /// Random phantom description filename
-   FileName fn_random_phantom;
+    /// Random phantom description filename
+    FileName fn_random_phantom;
 
-   /// Phantom volume in voxels
-   FileName fn_voxel_phantom;
+    /// Phantom volume in voxels
+    FileName fn_voxel_phantom;
 
-   /// Projection parameters filename
-   FileName fn_proj_params;
+    /// Projection parameters filename
+    FileName fn_proj_params;
 
-   /// Crystal parameters
-   FileName fn_crystal;
+    /// Crystal parameters
+    FileName fn_crystal;
 
-   /// Symemtry file. Included while ART process
-   FileName fn_sym;
+    /// Symemtry file. Included while ART process
+    FileName fn_sym;
 
-   /// Do not use symproj
-   bool     do_not_use_symproj;
+    /// Do not use symproj
+    bool     do_not_use_symproj;
 
-   /// Force symmetry
-   int      force_sym;
+    /// Force symmetry
+    int      force_sym;
 
-   /// Final symmetry file. At the end of the reconstruction process
-   FileName fn_final_sym;
+    /// Final symmetry file. At the end of the reconstruction process
+    FileName fn_final_sym;
 
-   /// CTF to apply
-   FileName fn_CTF;
+    /// CTF to apply
+    FileName fn_CTF;
 
-   /// Defocus change
-   double   defocus_change;
+    /// Defocus change
+    double   defocus_change;
 
-   /// noise power before CTF
-   double sigma;
+    /// noise power before CTF
+    double sigma;
 
-   /// Lowpass filter noise before CTF
-   double low_pass_before_CTF;
+    /// Lowpass filter noise before CTF
+    double low_pass_before_CTF;
 
-   /// High pass filter cutoff
-   double w_hp;
+    /// High pass filter cutoff
+    double w_hp;
 
-   #define use_ART   	   1
-   #define use_SIRT        2
-   #define use_WBP         3
-   #define use_SIRT_Spider 4
-   /// Reconstruction mode: use_ART, use_SIRT, use_WBP or use_SIRT_Spider
-   int recons_method;
+#define use_ART       1
+#define use_SIRT        2
+#define use_WBP         3
+#define use_SIRT_Spider 4
+    /// Reconstruction mode: use_ART, use_SIRT, use_WBP or use_SIRT_Spider
+    int recons_method;
 
-   /// Random sort of projections (TRUE or FALSE)?
-   bool random_sort;
+    /// Random sort of projections (TRUE or FALSE)?
+    bool random_sort;
 
-   /// Sort with last N. If -1, with all previous
-   int sort_last_N;
+    /// Sort with last N. If -1, with all previous
+    int sort_last_N;
 
-   /// Initial Relaxation parameter (valid for ART and SIRT)
-   vector<double> lambda0;
+    /// Initial Relaxation parameter (valid for ART and SIRT)
+    vector<double> lambda0;
 
-   /// Final Relaxation parameter (valid for ART and SIRT)
-   vector<double> lambdaF;
+    /// Final Relaxation parameter (valid for ART and SIRT)
+    vector<double> lambdaF;
 
-   /// Initial Number of iterations (valid for ART and SIRT)
-   vector<int> no_it0;
+    /// Initial Number of iterations (valid for ART and SIRT)
+    vector<int> no_it0;
 
-   /// Final Number of iterations (valid for ART and SIRT)
-   vector<int> no_itF;
+    /// Final Number of iterations (valid for ART and SIRT)
+    vector<int> no_itF;
 
-   /// Use succesive relaxation parameters
-   bool succesive_params;
+    /// Use succesive relaxation parameters
+    bool succesive_params;
 
-   /// Threshold for WBP
-   vector<double> WBP_threshold;
+    /// Threshold for WBP
+    vector<double> WBP_threshold;
 
-   /// Maximum expected resolution (<1/2), used to filter reconstruction
-   double max_resolution;
+    /// Maximum expected resolution (<1/2), used to filter reconstruction
+    double max_resolution;
 
-   /** Number of tests to be considered a measure.
-       If it is -1 then it is not used and the accuracy goals are
-       used instead, but this goal is only valid for training */
-   int MeasNo;
+    /** Number of tests to be considered a measure.
+        If it is -1 then it is not used and the accuracy goals are
+        used instead, but this goal is only valid for training */
+    int MeasNo;
 
-   /** Accuracy for the measures (%).
-       We want the true value of the FOM to be within a (%) of the
-       measured value. Typical value 2. We can have an unlucky
-       random selection with
-       a probability determined by the next variable. If it is -1
-       then the measure number is used instead of this criterion.
-       This option is only valid for training */
-   float accuracy;
+    /** Accuracy for the measures (%).
+        We want the true value of the FOM to be within a (%) of the
+        measured value. Typical value 2. We can have an unlucky
+        random selection with
+        a probability determined by the next variable. If it is -1
+        then the measure number is used instead of this criterion.
+        This option is only valid for training */
+    float accuracy;
 
-   /** Admitted unluckiness.
-       Probability with which we admit an unlucky selection of samples.
-       Typical value 0.01, that means that 1 of every 100 trials we
-       will have a measure which is not within a 2% of the true value. */
-   float unluckiness;
+    /** Admitted unluckiness.
+        Probability with which we admit an unlucky selection of samples.
+        Typical value 0.01, that means that 1 of every 100 trials we
+        will have a measure which is not within a 2% of the true value. */
+    float unluckiness;
 
-   // True if only structural consistency should be evaluated.
-   // This value is set by the single measure functions. Programmer
-   // should not care about it
-   int only_structural;
+    // True if only structural consistency should be evaluated.
+    // This value is set by the single measure functions. Programmer
+    // should not care about it
+    int only_structural;
 
-   /// Global radius for evaluation
-   double global_radius;
+    /// Global radius for evaluation
+    double global_radius;
 
-   /// Probe radius for surface generation
-   double probe_radius;
-   /// Enable top surface
-   bool enable_top_surface;
-   /// Surface top range
-   double top0;
-   /// Surface top range
-   double topF;
+    /// Probe radius for surface generation
+    double probe_radius;
+    /// Enable top surface
+    bool enable_top_surface;
+    /// Surface top range
+    double top0;
+    /// Surface top range
+    double topF;
 
-   /// Enable bottom surface
-   bool enable_bottom_surface;
-   /// Surface bottom range
-   double bottom0;
-   /// Surface bottom range
-   double bottomF;
+    /// Enable bottom surface
+    bool enable_bottom_surface;
+    /// Surface bottom range
+    double bottom0;
+    /// Surface bottom range
+    double bottomF;
 
-   /// Surface generation by thresholding
-   bool enable_segmented_surface;
-   /// Threshold for surface generation
-   double threshold_surface_segment;
-   /// Dilation amount for surface and starting volume generation
-   int    segmented_dilation;
+    /// Surface generation by thresholding
+    bool enable_segmented_surface;
+    /// Threshold for surface generation
+    double threshold_surface_segment;
+    /// Dilation amount for surface and starting volume generation
+    int    segmented_dilation;
 
-   /// Start from phantom
-   bool start_from_phantom;
+    /// Start from phantom
+    bool start_from_phantom;
 
-   /// Starting filter (in digital freq.)
-   double starting_low_pass;
+    /// Starting filter (in digital freq.)
+    double starting_low_pass;
 
-   /// Starting noise
-   double starting_noise;
+    /// Starting noise
+    double starting_noise;
 
-   /// Mass constraint
-   double mass;
+    /// Mass constraint
+    double mass;
 
-   /// Reconstruct also without any constraint
-   bool run_also_without_constraints;
+    /// Reconstruct also without any constraint
+    bool run_also_without_constraints;
 
-   #define BIG_BLOB 1
-   #define SMALL_BLOB 2
-   #define VISUAL_BLOB 3
-   /// Blob type = BIG_BLOB, SMALL_BLOB or VISUAL BLOB
-   int blob_type;
-   /// True if voxel basis
-   bool voxel_basis;
-   /// Stop at = Number of images after which the algorithm must stop
-   int stop_at;
-   /// Apply positivity
-   bool POCS_positivity;
-   /// Reconstruction radius
-   double reconstruction_radius;
+#define BIG_BLOB 1
+#define SMALL_BLOB 2
+#define VISUAL_BLOB 3
+    /// Blob type = BIG_BLOB, SMALL_BLOB or VISUAL BLOB
+    int blob_type;
+    /// True if voxel basis
+    bool voxel_basis;
+    /// Stop at = Number of images after which the algorithm must stop
+    int stop_at;
+    /// Apply positivity
+    bool POCS_positivity;
+    /// Reconstruction radius
+    double reconstruction_radius;
 
-   /** Enable normalization. The following parameters are useless if this
-       flag is off */
-   bool enable_normalization;
+    /** Enable normalization. The following parameters are useless if this
+        flag is off */
+    bool enable_normalization;
 
-   /// Average of a in y=ax+b
-   double a_avg;
-   /// Stddev of a in y=ax+b
-   double a_stddev;
-   /// Average of b in y=ax+b
-   double b_avg;
-   /// Stddev of b in y=ax+b
-   double b_stddev;
-   /// Normalizing method. See \Ref{Normalize_parameters}
-   int normalizing_method;
-   /// Background radius
-   int bg_radius;
+    /// Average of a in y=ax+b
+    double a_avg;
+    /// Stddev of a in y=ax+b
+    double a_stddev;
+    /// Average of b in y=ax+b
+    double b_avg;
+    /// Stddev of b in y=ax+b
+    double b_stddev;
+    /// Normalizing method. See \Ref{Normalize_parameters}
+    int normalizing_method;
+    /// Background radius
+    int bg_radius;
 
-   /// Correct CTF phase
-   bool correct_phase;
-   /// Phase correction method
-   int phase_correction_method;
-   /// Phase correction param
-   double phase_correction_param;
-   /// Correct amplitude via IDR
-   bool correct_amplitude;
-   /// IDR relaxation factor
-   double mu;
-   /// Unmatched CTF correction
-   bool unmatched;
+    /// Correct CTF phase
+    bool correct_phase;
+    /// Phase correction method
+    int phase_correction_method;
+    /// Phase correction param
+    double phase_correction_param;
+    /// Correct amplitude via IDR
+    bool correct_amplitude;
+    /// IDR relaxation factor
+    double mu;
+    /// Unmatched CTF correction
+    bool unmatched;
 
-   /// Tomography
-   bool tomography;
+    /// Tomography
+    bool tomography;
 
-   /// Evaluate
-   bool evaluate;
-   /** Phantom for evaluation.
-       Should be empty if it is the same as the projected phantom. */
-   FileName fn_alternative_evaluation_phantom;
-   /// Smooth mask before evaluation
-   FileName fn_smooth_evaluation_mask;
+    /// Evaluate
+    bool evaluate;
+    /** Phantom for evaluation.
+        Should be empty if it is the same as the projected phantom. */
+    FileName fn_alternative_evaluation_phantom;
+    /// Smooth mask before evaluation
+    FileName fn_smooth_evaluation_mask;
 public:
-   /** Read parameters from file. */
-   void read(const FileName &fn_test_params);
+    /** Read parameters from file. */
+    void read(const FileName &fn_test_params);
 
-   /** Show parameters */
-   friend ostream & operator << (ostream &out, const Recons_test_Parameters
-      &prm);
+    /** Show parameters */
+    friend ostream & operator << (ostream &out, const Recons_test_Parameters
+                                  &prm);
 };
 
 /** Single measure on a FOM.
@@ -258,9 +259,9 @@ public:
 
     Valid FOMs: scL1, scL11, scL10, scL2, scL21, scL20, scL1w, scL2w*/
 void single_measure_on_FOM(Recons_test_Parameters &prm,
-   int i, int &nvol,
-   double &training_mean, double &training_stddev, double &training_N,
-   EVALUATE_results &results, const string &training_FOM);
+                           int i, int &nvol,
+                           double &training_mean, double &training_stddev, double &training_N,
+                           EVALUATE_results &results, const string &training_FOM);
 
 /** Single measure on all FOMs.
     A measure is compound of \Ref{Recons_test_Parameters::MeasNo} tests.
@@ -277,7 +278,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
 
     See \Ref{FOM_ARGS} */
 void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
-    int &nvol, FOMs &foms_mean, FOMs &foms_stddev, EVALUATE_results &results);
+                                int &nvol, FOMs &foms_mean, FOMs &foms_stddev, EVALUATE_results &results);
 
 /** Single reconstruction test.
     This function performs a whole reconstruction process, starting from
@@ -307,7 +308,7 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     and the convention of names are
     */
 void single_recons_test(const Recons_test_Parameters &prm,
-   int i, int nvol, EVALUATE_results &results);
+                        int i, int nvol, EVALUATE_results &results);
 
 //@}
 #endif

@@ -54,7 +54,7 @@
 void Bilib_DWT(const matrix1D< double >& input,
                matrix1D< double >& result,
                int iterations,
-               int isign=1);
+               int isign = 1);
 
 /** B-spline Wavelet transform of a matrix.
  * @ingroup WaveletsBilib
@@ -62,7 +62,7 @@ void Bilib_DWT(const matrix1D< double >& input,
 void Bilib_DWT(const matrix2D< double >& input,
                matrix2D< double >& result,
                int iterations,
-               int isign=1);
+               int isign = 1);
 
 /** B-spline Wavelet transform of a matrix.
  * @ingroup WaveletsBilib
@@ -70,7 +70,7 @@ void Bilib_DWT(const matrix2D< double >& input,
 void Bilib_DWT(const matrix3D< double >& input,
                matrix3D< double >& result,
                int iterations,
-               int isign=1);
+               int isign = 1);
 
 /// @defgroup WaveletsRecipes Numerical recipes wavelets.
 /// @ingroup Wavelets
@@ -91,7 +91,7 @@ void set_DWT_type(int DWT_type);
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const matrix1D< T >& v, matrix1D< double >& result, int isign=1)
+void DWT(const matrix1D< T >& v, matrix1D< double >& result, int isign = 1)
 {
     unsigned long int nn[1];
     unsigned long int* ptr_nn = nn - 1;
@@ -110,7 +110,7 @@ void DWT(const matrix1D< T >& v, matrix1D< double >& result, int isign=1)
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const matrix2D< T >& v, matrix2D< double >& result, int isign=1)
+void DWT(const matrix2D< T >& v, matrix2D< double >& result, int isign = 1)
 {
     unsigned long int nn[2];
     unsigned long int* ptr_nn = nn - 1;
@@ -130,10 +130,10 @@ void DWT(const matrix2D< T >& v, matrix2D< double >& result, int isign=1)
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const matrix3D< T >& v, matrix3D< double >& result, int isign=1)
+void DWT(const matrix3D< T >& v, matrix3D< double >& result, int isign = 1)
 {
     unsigned long int nn[2];
-    unsigned long int *ptr_nn = nn-1;
+    unsigned long int *ptr_nn = nn - 1;
 
     type_cast(v, result);
     nn[2] = ZSIZE(result);
@@ -177,9 +177,9 @@ void IDWT(const matrix3D< double >& v, matrix3D< double >& result);
 void DWT_lowpass(const matrix2D< double >& v, matrix2D< double >& result);
 
 #define DWT_Imin(s, smax, l) static_cast< int >(((l == '0') ? 0 : \
-    pow(2.0, smax - s - 1)))
+        pow(2.0, smax - s - 1)))
 #define DWT_Imax(s, smax, l) static_cast< int>(((l == '0') ? \
-    pow(2.0, smax - s - 1) - 1 : pow(2.0, smax - s) - 1))
+        pow(2.0, smax - s - 1) - 1 : pow(2.0, smax - s) - 1))
 
 /** Select Block 1D.
  * @ingroup Wavelets
@@ -383,12 +383,12 @@ void DWT_keep_central_part(matrix2D< double >& I, double R);
  * are not applied to the image.
  */
 matrix1D< double > bayesian_wiener_filtering(matrix2D< double >& WI,
-                                             int allowed_scale,
-                                             double SNR0=0.1,
-                                             double SNRF=0.2,
-                                             bool white_noise=false,
-                                             int tell=0,
-                                             bool denoise=true);
+        int allowed_scale,
+        double SNR0 = 0.1,
+        double SNRF = 0.2,
+        bool white_noise = false,
+        int tell = 0,
+        bool denoise = true);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising
@@ -411,12 +411,12 @@ void bayesian_wiener_filtering(matrix2D< double >& WI,
  * are not applied to the image.
  */
 matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
-                                             int allowed_scale,
-                                             double SNR0=0.1,
-                                             double SNRF=0.2,
-                                             bool white_noise=false,
-                                             int tell=0,
-                                             bool denoise=true);
+        int allowed_scale,
+        double SNR0 = 0.1,
+        double SNRF = 0.2,
+        bool white_noise = false,
+        int tell = 0,
+        bool denoise = true);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising

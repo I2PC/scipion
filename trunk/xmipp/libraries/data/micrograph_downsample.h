@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #ifndef _DOWNSAMPLE
-   #define _DOWNSAMPLE
+#define _DOWNSAMPLE
 
 #include "funcs.h"
 #include "micrograph.h"
@@ -32,88 +32,89 @@
 /**@name Downsample */
 //@{
 /** Downsample parameters. */
-class Prog_downsample_prm {
+class Prog_downsample_prm
+{
 public:
-   /// Input micrograph
-   FileName fn_micrograph;
+    /// Input micrograph
+    FileName fn_micrograph;
 
-   /// Output micrograph
-   FileName fn_downsampled;
+    /// Output micrograph
+    FileName fn_downsampled;
 
-   /// Xstep
-   int      Xstep;
-   /// Ystep
-   int      Ystep;
+    /// Xstep
+    int      Xstep;
+    /// Ystep
+    int      Ystep;
 
-   #define KER_RECTANGLE  0
-   #define KER_CIRCLE     1
-   #define KER_GAUSSIAN   2
-   #define KER_PICK       3
-   #define KER_SINC       4
+#define KER_RECTANGLE  0
+#define KER_CIRCLE     1
+#define KER_GAUSSIAN   2
+#define KER_PICK       3
+#define KER_SINC       4
 
-   /** Kernel mode.
-       Valid modes are KER_RECTANGLE, KER_CIRCLE, KER_GAUSSIAN
-       KER_PICK and KER_SINC */
-   int      kernel_mode;
+    /** Kernel mode.
+        Valid modes are KER_RECTANGLE, KER_CIRCLE, KER_GAUSSIAN
+        KER_PICK and KER_SINC */
+    int      kernel_mode;
 
-   /// Circle radius
-   double   r;
+    /// Circle radius
+    double   r;
 
-   /// Gaussian sigma
-   double   sigma;
+    /// Gaussian sigma
+    double   sigma;
 
-   /// delta
-   double   delta;
+    /// delta
+    double   delta;
 
-   /// Deltaw
-   double   Deltaw;
+    /// Deltaw
+    double   Deltaw;
 
-   /// Rectangular X size
-   int      Xrect;
-   /// Rectangular Y size
-   int      Yrect;
-   /// Output bits
-   int      bitsMp;
-   /// Reverse endian
-   bool     reversed;
+    /// Rectangular X size
+    int      Xrect;
+    /// Rectangular Y size
+    int      Yrect;
+    /// Output bits
+    int      bitsMp;
+    /// Reverse endian
+    bool     reversed;
 public:
-   // Side information
-   // Kernel
-   matrix2D<double> kernel;
-   // Input micrograph
-   Micrograph M;
-   // Input micrograph depth
-   int bitsM;
-   // Input dimensions
-   int Xdim, Ydim;
-   // Output dimensions
-   int Xpdim, Ypdim;
+    // Side information
+    // Kernel
+    matrix2D<double> kernel;
+    // Input micrograph
+    Micrograph M;
+    // Input micrograph depth
+    int bitsM;
+    // Input dimensions
+    int Xdim, Ydim;
+    // Output dimensions
+    int Xpdim, Ypdim;
 public:
-   /** Read input parameters.
-       If do_not_read_files=TRUE then fn_micrograph and
-       fn_downsampled are not read. */
-   void read(int argc, char **argv, bool do_not_read_files=false);
+    /** Read input parameters.
+        If do_not_read_files=TRUE then fn_micrograph and
+        fn_downsampled are not read. */
+    void read(int argc, char **argv, bool do_not_read_files = false);
 
-   /// Usage
-   void usage() const;
+    /// Usage
+    void usage() const;
 
-   /// Produce command line parameters
-   string command_line() const;
+    /// Produce command line parameters
+    string command_line() const;
 
-   /// Generate kernel
-   void generate_kernel();
+    /// Generate kernel
+    void generate_kernel();
 
-   /// Open input micrograph
-   void open_input_micrograph();
+    /// Open input micrograph
+    void open_input_micrograph();
 
-   /// Close input micrograph
-   void close_input_micrograph();
+    /// Close input micrograph
+    void close_input_micrograph();
 
-   /** Create output information file */
-   void create_empty_output_file();
+    /** Create output information file */
+    void create_empty_output_file();
 
-   /** Really downsample.*/
-   void Downsample() const;
+    /** Really downsample.*/
+    void Downsample() const;
 };
 //@}
 #endif

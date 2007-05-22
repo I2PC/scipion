@@ -25,18 +25,33 @@
 
 #include <reconstruction/align2d.h>
 
-int main(int argc, char **argv) {
-  Prog_align2d_prm prm;
+int main(int argc, char **argv)
+{
+    Prog_align2d_prm prm;
 
-  // Get input parameters
-  try {
-    prm.read(argc,argv);
-    prm.show();
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    // Get input parameters
+    try
+    {
+        prm.read(argc, argv);
+        prm.show();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
-  try {
-    prm.align2d();
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    try
+    {
+        prm.align2d();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
 }
 

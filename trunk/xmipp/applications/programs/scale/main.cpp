@@ -30,88 +30,112 @@
 
 void Usage();
 
-int main(int argc, char **argv) {
-   FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
-   SelFile         SF;
-   ImageXmipp      image;
-   VolumeXmipp     volume;
-   int             zdim, ydim, xdim;
+int main(int argc, char **argv)
+{
+    FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
+    SelFile         SF;
+    ImageXmipp      image;
+    VolumeXmipp     volume;
+    int             zdim, ydim, xdim;
 
-   // Read arguments --------------------------------------------------------
-   try {
-     fn_input = get_param(argc,argv,"-i",NULL,1,"Scale: Input file not found");
-     fn_out   = get_param(argc,argv,"-o","");
-     fn_oext  = get_param(argc,argv,"-oext","");
-     if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
-       SF.read(fn_input);
-     zdim=AtoI(get_param(argc,argv,"-zdim","0"));
-     ydim=AtoI(get_param(argc,argv,"-ydim","0"));
-     xdim=AtoI(get_param(argc,argv,"-xdim"));
+    // Read arguments --------------------------------------------------------
+    try
+    {
+        fn_input = get_param(argc, argv, "-i", NULL, 1, "Scale: Input file not found");
+        fn_out   = get_param(argc, argv, "-o", "");
+        fn_oext  = get_param(argc, argv, "-oext", "");
+        if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
+            SF.read(fn_input);
+        zdim = AtoI(get_param(argc, argv, "-zdim", "0"));
+        ydim = AtoI(get_param(argc, argv, "-ydim", "0"));
+        xdim = AtoI(get_param(argc, argv, "-xdim"));
 
-     if (ydim==0) ydim=xdim;
-     if (zdim==0) zdim=xdim;
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
+        if (ydim == 0) ydim = xdim;
+        if (zdim == 0) zdim = xdim;
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
 
-   try {
-   // Scale a single image -------------------------------------------------
-   if (Is_ImageXmipp(fn_input)) {
-      image.read(fn_input);
-      image().self_scale_to_size_Bspline(3,ydim, xdim);
-      if (fn_out=="") image.write(fn_input);
-      else            image.write(fn_out);
+    try
+    {
+        // Scale a single image -------------------------------------------------
+        if (Is_ImageXmipp(fn_input))
+        {
+            image.read(fn_input);
+            image().self_scale_to_size_Bspline(3, ydim, xdim);
+            if (fn_out == "") image.write(fn_input);
+            else            image.write(fn_out);
 
-   // Scale a single volume ------------------------------------------------
-   } else if (Is_VolumeXmipp(fn_input)) {
-      volume.read(fn_input);
-      volume().self_scale_to_size_Bspline(3,zdim, ydim, xdim);
-      if (fn_out=="") volume.write(fn_input);
-      else            volume.write(fn_out);
+            // Scale a single volume ------------------------------------------------
+        }
+        else if (Is_VolumeXmipp(fn_input))
+        {
+            volume.read(fn_input);
+            volume().self_scale_to_size_Bspline(3, zdim, ydim, xdim);
+            if (fn_out == "") volume.write(fn_input);
+            else            volume.write(fn_out);
 
-   // Mask a selection file ------------------------------------------------
-   } else {
-      SF.read(fn_input);
+            // Mask a selection file ------------------------------------------------
+        }
+        else
+        {
+            SF.read(fn_input);
 
-      // Initialise progress bar
-      time_config();
-      int i=0; init_progress_bar(SF.ImgNo());
-      while (!SF.eof()) {
-         fn_in=SF.NextImg();
-         if (fn_oext=="") fn_out=fn_in;
-         else             fn_out=fn_in.without_extension()+"."+fn_oext;
-         // Process an image ...............................................
-         if (Is_ImageXmipp(fn_in)) {
-            image.read(fn_in);
-            image().self_scale_to_size_Bspline(3,ydim, xdim);
-            image.write(fn_out);
-         // Process a volume ...............................................
-         } else if (Is_VolumeXmipp(fn_in)) {
-            volume.read(fn_in);
-            volume().self_scale_to_size_Bspline(3,zdim, ydim, xdim);
-            volume.write(fn_out);
-         // Not a Spider file ..............................................
-         } else
-            cout << fn_in << " is not a SPIDER file\n";
+            // Initialise progress bar
+            time_config();
+            int i = 0;
+            init_progress_bar(SF.ImgNo());
+            while (!SF.eof())
+            {
+                fn_in = SF.NextImg();
+                if (fn_oext == "") fn_out = fn_in;
+                else             fn_out = fn_in.without_extension() + "." + fn_oext;
+                // Process an image ...............................................
+                if (Is_ImageXmipp(fn_in))
+                {
+                    image.read(fn_in);
+                    image().self_scale_to_size_Bspline(3, ydim, xdim);
+                    image.write(fn_out);
+                    // Process a volume ...............................................
+                }
+                else if (Is_VolumeXmipp(fn_in))
+                {
+                    volume.read(fn_in);
+                    volume().self_scale_to_size_Bspline(3, zdim, ydim, xdim);
+                    volume.write(fn_out);
+                    // Not a Spider file ..............................................
+                }
+                else
+                    cout << fn_in << " is not a SPIDER file\n";
 
-         if (i++%25==0) progress_bar(i);
-      }
-      progress_bar(SF.ImgNo());
-   }
-   } catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+                if (i++ % 25 == 0) progress_bar(i);
+            }
+            progress_bar(SF.ImgNo());
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 } //main
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
+void Usage()
+{
     cerr << "Purpose:\n";
     cerr << "    Scale images/volumes to a given size\n";
 
     cerr << "Usage: scale <parameters>\n"
-         << "   -i <image or volume> [-o <image_out or volume_out]\n"
-         << "   -i <selfile> [-oext <output extension>]\n"
-         << "   -xdim <new x dimension>\n"
-         << "  [-ydim <new y dimension=new x dimension>\n"
-         << "  [-zdim <new z dimension=new x dimension>\n";
+    << "   -i <image or volume> [-o <image_out or volume_out]\n"
+    << "   -i <selfile> [-oext <output extension>]\n"
+    << "   -xdim <new x dimension>\n"
+    << "  [-ydim <new y dimension=new x dimension>\n"
+    << "  [-zdim <new z dimension=new x dimension>\n";
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -121,7 +145,7 @@ void Usage() {
       help="Scale volumes and images to a new size";
       OPEN MENU menu_scale;
       COMMAND LINES {
-	+ usual: xmipp_scale
+ + usual: xmipp_scale
                #include "prog_line.mnu"
                -xdim $XDIM [-ydim $YDIM] [-zdim $ZDIM]
       }

@@ -28,54 +28,60 @@
 #include <data/args.h>
 
 /* Read from command line -------------------------------------------------- */
-void Prog_Draw_Surface_Parameters::read(int argc, char **argv) {
-   fn_in   = get_param(argc,argv,"-i");
-   fn_surf = get_param(argc,argv,"-s");
-   fn_out  = get_param(argc,argv,"-o","");
-   enable_adjust=check_param(argc,argv,"-ztop");
-   if (enable_adjust) {
-      ztop=AtoI(get_param(argc,argv,"-ztop"));
-      zbottom=AtoI(get_param(argc,argv,"-zbottom"));
-   }
-   color=AtoF(get_param(argc,argv,"-color","2"));
+void Prog_Draw_Surface_Parameters::read(int argc, char **argv)
+{
+    fn_in   = get_param(argc, argv, "-i");
+    fn_surf = get_param(argc, argv, "-s");
+    fn_out  = get_param(argc, argv, "-o", "");
+    enable_adjust = check_param(argc, argv, "-ztop");
+    if (enable_adjust)
+    {
+        ztop = AtoI(get_param(argc, argv, "-ztop"));
+        zbottom = AtoI(get_param(argc, argv, "-zbottom"));
+    }
+    color = AtoF(get_param(argc, argv, "-color", "2"));
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Draw_Surface_Parameters::usage() const {
-   cerr << "Usage: draw_surface [parameters]\n"
-        << "   -i <volume>                   : volume where drawing surface\n"
-        << "   -s <surface>                  : image with a surface coded\n"
-        << "  [-o <output volume>]           : if not given the same as input\n"
-        << "  [-ztop <zmin> -zbottom <zmax>] : force surface to be in this range\n"
-        << "  [-color <density=2>]           : density value for surface\n";
+void Prog_Draw_Surface_Parameters::usage() const
+{
+    cerr << "Usage: draw_surface [parameters]\n"
+    << "   -i <volume>                   : volume where drawing surface\n"
+    << "   -s <surface>                  : image with a surface coded\n"
+    << "  [-o <output volume>]           : if not given the same as input\n"
+    << "  [-ztop <zmin> -zbottom <zmax>] : force surface to be in this range\n"
+    << "  [-color <density=2>]           : density value for surface\n";
 }
 
 /* Produce side information ------------------------------------------------ */
-void Prog_Draw_Surface_Parameters::produce_Side_Info() {
-   vol.read(fn_in);
-   surface.read(fn_surf);
-   if (enable_adjust)
-      surface().range_adjust(ztop,zbottom);
-   vol().set_Xmipp_origin();
-   surface().set_Xmipp_origin();
+void Prog_Draw_Surface_Parameters::produce_Side_Info()
+{
+    vol.read(fn_in);
+    surface.read(fn_surf);
+    if (enable_adjust)
+        surface().range_adjust(ztop, zbottom);
+    vol().set_Xmipp_origin();
+    surface().set_Xmipp_origin();
 }
 
 /* Draw surface in volume -------------------------------------------------- */
 #define V VOLMATRIX(*vol)
 #define S IMGMATRIX(*surf)
-void draw_surface(Volume *vol, const Image *surf, float color) {
-   if (XSIZE(V)!=XSIZE(S)         || YSIZE(V)!=YSIZE(S) ||
-       STARTINGX(V)!=STARTINGX(S) || STARTINGY(V)!=STARTINGY(S))
-       REPORT_ERROR(1,"draw_surface: Volume and surface are of different size");
-   FOR_ALL_ELEMENTS_IN_MATRIX2D(S)
-      if (MAT_ELEM(S,i,j)>=STARTINGZ(V) && MAT_ELEM(S,i,j)<=FINISHINGZ(V))
-         VOL_ELEM(V,ROUND(MAT_ELEM(S,i,j)),i,j)=color;
+void draw_surface(Volume *vol, const Image *surf, float color)
+{
+    if (XSIZE(V) != XSIZE(S)         || YSIZE(V) != YSIZE(S) ||
+        STARTINGX(V) != STARTINGX(S) || STARTINGY(V) != STARTINGY(S))
+        REPORT_ERROR(1, "draw_surface: Volume and surface are of different size");
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(S)
+    if (MAT_ELEM(S, i, j) >= STARTINGZ(V) && MAT_ELEM(S, i, j) <= FINISHINGZ(V))
+        VOL_ELEM(V, ROUND(MAT_ELEM(S, i, j)), i, j) = color;
 }
 
 /* Routine Draw surface ---------------------------------------------------- */
-void ROUT_draw_surface(Prog_Draw_Surface_Parameters &prm) {
-   prm.produce_Side_Info();
-   draw_surface(&(prm.vol), &(prm.surface), prm.color);
-   if (prm.fn_out!="") prm.vol.write(prm.fn_out);
-   else                prm.vol.write(prm.fn_in);
+void ROUT_draw_surface(Prog_Draw_Surface_Parameters &prm)
+{
+    prm.produce_Side_Info();
+    draw_surface(&(prm.vol), &(prm.surface), prm.color);
+    if (prm.fn_out != "") prm.vol.write(prm.fn_out);
+    else                prm.vol.write(prm.fn_in);
 }

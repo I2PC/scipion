@@ -108,6 +108,6 @@ void type_cast(const maT& v1, maT1& v2)
 
     v2.resize(v1);
 
-    for (int i=0; i<v2.size; i++)
+    for (int i = 0; i < v2.size; i++)
         v2.data[i] = static_cast< T1 >(v1.data[i]);
 }

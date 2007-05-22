@@ -25,19 +25,28 @@
 
 #include <reconstruction/resolution_ssnr.h>
 
-int main (int argc, char **argv) {
-   Prog_SSNR_prm prm;
-   try {
-      prm.read(argc,argv);
-   } catch (Xmipp_error XE) {
-      cout << XE;
-      prm.usage();
-      return 1;
-   }
+int main(int argc, char **argv)
+{
+    Prog_SSNR_prm prm;
+    try
+    {
+        prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        return 1;
+    }
 
-   try {
-      matrix2D<double> output;
-      ROUT_SSNR(prm, output);
-   } catch (Xmipp_error XE) {cout << XE;}
-   return 0;
+    try
+    {
+        matrix2D<double> output;
+        ROUT_SSNR(prm, output);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    return 0;
 }

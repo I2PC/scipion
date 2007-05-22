@@ -38,42 +38,43 @@ using namespace std;
 //@{
 /* MPI Run Program Parameters ------------------------------------------ */
 /** Parameter class for the MPI run program */
-class Prog_MPI_Run_Parameters {
+class Prog_MPI_Run_Parameters
+{
 public:
-   /** PDB file */
-   FileName fn_commands;
+    /** PDB file */
+    FileName fn_commands;
 
-   /** Number of Procesors **/
-   int nprocs;
+    /** Number of Procesors **/
+    int nprocs;
 
-   /** computing node number. Master=0 */
-   int rank;
+    /** computing node number. Master=0 */
+    int rank;
 
-   /** status after am MPI call */
-   MPI_Status status;
+    /** status after am MPI call */
+    MPI_Status status;
 
 public:
-   /** Empty constructor */
-   Prog_MPI_Run_Parameters(int argc, char **argv);
+    /** Empty constructor */
+    Prog_MPI_Run_Parameters(int argc, char **argv);
 
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** Show parameters. */
-   void show();
+    /** Show parameters. */
+    void show();
 
-   /** Run. */
-   void run();
+    /** Run. */
+    void run();
 
-   /** a short function to print a message and exit */
-   void error_exit(char * msg);
+    /** a short function to print a message and exit */
+    void error_exit(char * msg);
 };
 //@}
 #endif

@@ -27,48 +27,52 @@
 
 #include <data/args.h>
 
-void VirusEulerMatrices::read(const FileName &fn) {
-   ifstream  fh_Euler;
-   int       line_no=0;
-   string    line;
-   int       i;
+void VirusEulerMatrices::read(const FileName &fn)
+{
+    ifstream  fh_Euler;
+    int       line_no = 0;
+    string    line;
+    int       i;
 
-   //alloc Memory
-   for(i=0;i<Vir_Eq_Views;i++)
-       E_Matrices[i].resize(3,3);
+    //alloc Memory
+    for (i = 0;i < Vir_Eq_Views;i++)
+        E_Matrices[i].resize(3, 3);
 
-   // Open file
-   fh_Euler.open(fn.c_str(), ios::in);
-   if (!fh_Euler)
-      REPORT_ERROR(1601,"VirusEulerMatrices::read: File "+fn+" not found");
+    // Open file
+    fh_Euler.open(fn.c_str(), ios::in);
+    if (!fh_Euler)
+        REPORT_ERROR(1601, "VirusEulerMatrices::read: File " + fn + " not found");
 
-   fh_Euler.peek();
-   while (!fh_Euler.eof()) {
-      try {
-         getline(fh_Euler,line);
-         if (line[0]==0)    continue;
-         if (line[0]=='#')  continue;
-         if (line[0]=='\n') continue;
-	
-	 E_Matrices[(int)(line_no/3)](line_no%3,0) = AtoF(first_token(line));
-	 E_Matrices[(int)(line_no/3)](line_no%3,1) = AtoF(next_token());
-	 E_Matrices[(int)(line_no/3)](line_no%3,2) = AtoF(next_token());
+    fh_Euler.peek();
+    while (!fh_Euler.eof())
+    {
+        try
+        {
+            getline(fh_Euler, line);
+            if (line[0] == 0)    continue;
+            if (line[0] == '#')  continue;
+            if (line[0] == '\n') continue;
+
+            E_Matrices[(int)(line_no/3)](line_no % 3, 0) = AtoF(first_token(line));
+            E_Matrices[(int)(line_no/3)](line_no % 3, 1) = AtoF(next_token());
+            E_Matrices[(int)(line_no/3)](line_no % 3, 2) = AtoF(next_token());
 //cout<<line<<endl;
-      }
-      catch (Xmipp_error) {
-         cout << "Euler File: Line " << line_no << " is skipped due to an error\n";
-      }
-      line_no++;
-      fh_Euler.peek();
+        }
+        catch (Xmipp_error)
+        {
+            cout << "Euler File: Line " << line_no << " is skipped due to an error\n";
+        }
+        line_no++;
+        fh_Euler.peek();
 //if(line_no%3==0)
 //{
 //cout<<E_Matrices[(int)((line_no-1)/3)];
 //exit(1);
 //}
-   }/* while */
+    }/* while */
 
-   // Close file
-   fh_Euler.close();
+    // Close file
+    fh_Euler.close();
 //   fh_Euler=fn;
 
 }/*  VirusEulerMatrices::read */

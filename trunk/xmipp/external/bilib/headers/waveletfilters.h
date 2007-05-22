@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
  Function:  WaveletFilters.h
- 
- Purpose:	Header file for WaveletFilter.c
+
+ Purpose: Header file for WaveletFilter.c
 ---------------------------------------------------------------------------- */
 
 extern int WaveletFiltersGetSize(short Filter, short Order, long *nh, long *ng);

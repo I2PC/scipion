@@ -26,52 +26,64 @@
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtImageMicrograph : public QtImage {
-   Q_OBJECT
+class QtImageMicrograph : public QtImage
+{
+    Q_OBJECT
 public:
-   float   __ellipse_radius;
+    float   __ellipse_radius;
 private:
-   bool    __pressed;
-   int     __movingMark;
-   bool    __tilted;
+    bool    __pressed;
+    int     __movingMark;
+    bool    __tilted;
 
 public:
-   // Constructor
-   QtImageMicrograph( QWidget *_parent=0, const char *_name=0, WFlags _f=0 );
+    // Constructor
+    QtImageMicrograph(QWidget *_parent = 0, const char *_name = 0, WFlags _f = 0);
 
-   // Set the micrograph
-   void setMicrograph( Micrograph *_m );
-   void setTilted() {__tilted=TRUE;}
-   bool isTilted() {return __tilted;}
-   void movingMark( int _coord ) { __movingMark = _coord; }
-   void drawEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
-   void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius=5.0);
+    // Set the micrograph
+    void setMicrograph(Micrograph *_m);
+    void setTilted()
+    {
+        __tilted = TRUE;
+    }
+    bool isTilted()
+    {
+        return __tilted;
+    }
+    void movingMark(int _coord)
+    {
+        __movingMark = _coord;
+    }
+    void drawEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0);
+    void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0);
 
 protected:
-   void loadImage();
-   void loadSymbols();
-   void applyFilters(QtFiltersController *_f, QImage *_img)
-      {_f->applyFilters(_img);}
+    void loadImage();
+    void loadSymbols();
+    void applyFilters(QtFiltersController *_f, QImage *_img)
+    {
+        _f->applyFilters(_img);
+    }
 
 public slots:
-   void slotDeleteMarkOther( int _coord );
-   void slotChangeFamilyOther( int _coord, int _f );
-   void slotZoomIn();
-   void slotZoomOut();
+    void slotDeleteMarkOther(int _coord);
+    void slotChangeFamilyOther(int _coord, int _f);
+    void slotZoomIn();
+    void slotZoomOut();
 
 signals:
-   void signalSetWidthHeight( int _w, int _h );
-   void signalAddCoordOther( int _mX, int _mY, int _f );
-   void signalDeleteMarkOther( int _coord );
-   void signalChangeFamilyOther( int _coord, int _f );
-   void signalRecalculateTiltMatrix();
+    void signalSetWidthHeight(int _w, int _h);
+    void signalAddCoordOther(int _mX, int _mY, int _f);
+    void signalDeleteMarkOther(int _coord);
+    void signalChangeFamilyOther(int _coord, int _f);
+    void signalRecalculateTiltMatrix();
 
 protected:
-   void resizeEvent( QResizeEvent *e );
-   void mousePressEvent( QMouseEvent *e );
-   void mouseReleaseEvent( QMouseEvent *e );
-   void mouseMoveEvent( QMouseEvent *e );
-   void changeProperties( int mX, int mY );
+    void resizeEvent(QResizeEvent *e);
+    void mousePressEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
+    void changeProperties(int mX, int mY);
 };
 
 #endif

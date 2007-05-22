@@ -30,36 +30,37 @@ class QVBox;
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
-class QtDialogFamilies : public QDialog {
-   Q_OBJECT
+class QtDialogFamilies : public QDialog
+{
+    Q_OBJECT
 
 private:
-   Micrograph  *__m;
-   Micrograph  *__mTilted;
-   QListBox    *__familyList;
-   QPushButton *__addFamilyButton;
-   QVBox       *__vBoxLayout;
+    Micrograph  *__m;
+    Micrograph  *__mTilted;
+    QListBox    *__familyList;
+    QPushButton *__addFamilyButton;
+    QVBox       *__vBoxLayout;
 
 public:
-   // Constructor
-   QtDialogFamilies( QWidget *_parent=0, const char *_name=0,
-                     bool _modal=FALSE, WFlags _f=0 );
-   ~QtDialogFamilies();
+    // Constructor
+    QtDialogFamilies(QWidget *_parent = 0, const char *_name = 0,
+                     bool _modal = FALSE, WFlags _f = 0);
+    ~QtDialogFamilies();
 
-   // Set the micrograph
-   void setMicrograph( Micrograph *_m );
-   void setTiltedMicrograph( Micrograph *_mTilted );
+    // Set the micrograph
+    void setMicrograph(Micrograph *_m);
+    void setTiltedMicrograph(Micrograph *_mTilted);
 
-   int findFamily( const char *_familyName );
+    int findFamily(const char *_familyName);
 
 public slots:
-   void slotAddFamily();
-   void slotAddFamily( const char *_familyName );
-   void slotEditFamily( int _f );
-   void slotActiveFamily( int _f );
+    void slotAddFamily();
+    void slotAddFamily(const char *_familyName);
+    void slotEditFamily(int _f);
+    void slotActiveFamily(int _f);
 
 signals:
-   void signalActiveFamily( int _f );
+    void signalActiveFamily(int _f);
 };
 
 #endif

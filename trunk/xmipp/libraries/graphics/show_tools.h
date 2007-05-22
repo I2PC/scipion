@@ -51,7 +51,7 @@
     An example of use of this class with a single parameter is
     \begin{verbatim}
       // Create window
-      ScrollParam* param_window;	
+      ScrollParam* param_window;
       param_window = new ScrollParam(min, max, spacing, "Set spacing", "Spacing",
          0, "new window", WDestructiveClose);
 
@@ -77,7 +77,7 @@
          prm_name.push_back("Spacing");
          prm_name.push_back("Tick offset");
       param_window = new ScrollParam(min,max,initial_value,prm_name,
-	 "Set spacing", 0, "new window", WDestructiveClose,0);
+  "Set spacing", 0, "new window", WDestructiveClose,0);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(vector<float>)),
@@ -90,49 +90,49 @@
 */
 class ScrollParam : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
     /** Constructor for a single scroll.
         Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam( float min, float max, float initial_value, char *prm_name,
-       char *caption, QWidget *parent = 0,
-       const char *name = 0, int wFlags=0, int precision=2  );
+    ScrollParam(float min, float max, float initial_value, char *prm_name,
+                char *caption, QWidget *parent = 0,
+                const char *name = 0, int wFlags = 0, int precision = 2);
 
     /** Constructor for several scrolls.
         Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam( vector<float> &min, vector<float> &max,
-       vector<float> &initial_value, vector<char *> &prm_name,
-       char *caption, QWidget *parent = 0,
-       const char *name = 0, int wFlags=0, int precision=2  );
+    ScrollParam(vector<float> &min, vector<float> &max,
+                vector<float> &initial_value, vector<char *> &prm_name,
+                char *caption, QWidget *parent = 0,
+                const char *name = 0, int wFlags = 0, int precision = 2);
 
     /** Destructor. */
     ~ScrollParam();
 
     /** Init. */
     void init(vector<float> &min, vector<float> &max,
-       vector<float> &initial_value, vector<char *> &prm_name,
-       char *caption, int precision=2);
+              vector<float> &initial_value, vector<char *> &prm_name,
+              char *caption, int precision = 2);
 
-   /** Get current values. */
-   vector<float> getCurrentValues();
+    /** Get current values. */
+    vector<float> getCurrentValues();
 private:
-   vector<float>     value;
-   vector<QLabel *>  value_lab;   // label for the current value of the slider
-   vector<QScrollBar *> scroll;   // sliders
-   int       my_precision;
+    vector<float>     value;
+    vector<QLabel *>  value_lab;   // label for the current value of the slider
+    vector<QScrollBar *> scroll;   // sliders
+    int       my_precision;
 private slots:
-   void scrollValueChanged(int);
-   void slot_close_clicked();
-   void slot_ok_clicked();
+    void scrollValueChanged(int);
+    void slot_close_clicked();
+    void slot_ok_clicked();
 signals:
-   /** Signal emitted when the value is changed*/
-   void new_value(float);
-   /** Signal emitted when the value is changed*/
-   void new_value(vector<float>);
-   /** Signal emitted when the close button is clicked */
-   void signal_close_clicked();
-   /** Signal emitted when the ok button is clicked */
-   void signal_ok_clicked();
+    /** Signal emitted when the value is changed*/
+    void new_value(float);
+    /** Signal emitted when the value is changed*/
+    void new_value(vector<float>);
+    /** Signal emitted when the close button is clicked */
+    void signal_close_clicked();
+    /** Signal emitted when the ok button is clicked */
+    void signal_ok_clicked();
 };
 
 /**Exclusive param class.
@@ -160,39 +160,39 @@ signals:
 */
 class ExclusiveParam : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
     /** Constructor.
         Provide the min_value, max_value, caption and initial_value.*/
-    ExclusiveParam( vector<string> &list_values, int initial_value,
-       char *caption, QWidget *parent = 0,
-       const char *name = 0, int wFlags=0 );
+    ExclusiveParam(vector<string> &list_values, int initial_value,
+                   char *caption, QWidget *parent = 0,
+                   const char *name = 0, int wFlags = 0);
     ~ExclusiveParam();
 
 private:
-   int       value;
-   vector< QRadioButton *> button;
+    int       value;
+    vector< QRadioButton *> button;
 private slots:
-   void but_close_clicked();
-   void but_ok_clicked();
-   void exclusiveValueChanged();
+    void but_close_clicked();
+    void but_ok_clicked();
+    void exclusiveValueChanged();
 signals:
-   /** Signal emitted when the value is changed*/
-   void new_value(int);
+    /** Signal emitted when the value is changed*/
+    void new_value(int);
 };
 
 /**@name Image conversions */
 //@{
 /** Xmipp -> QImage.*/
 void xmipp2Qt(Image& _ximage, QImage &_qimage,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
+              int _minScale = 0, int _maxScale = 255, double _m = 0, double _M = 0);
 
 /** Qimage -> Xmipp.*/
 void Qt2xmipp(QImage &_qimage, Image &_ximage);
 
 /** Xmipp -> PixMap */
 void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
-   int _minScale = 0, int _maxScale = 255, double _m=0, double _M=0);
+                  int _minScale = 0, int _maxScale = 255, double _m = 0, double _M = 0);
 
 /** Xmipp image -> Xmipp PSD.
     The log10 is taken, outliers rejected and the image is reorganized. */

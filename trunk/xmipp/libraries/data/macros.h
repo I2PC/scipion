@@ -27,18 +27,18 @@
 #define MACROS_H
 
 #ifndef _CYGWIN
-   #ifdef __APPLE__
-      #include <limits.h>
-   #else
-      #include <values.h>
-   #endif
+#ifdef __APPLE__
+#include <limits.h>
+#else
+#include <values.h>
+#endif
 #endif
 
 #ifndef MINFLOAT
-   #define MINFLOAT -1e30
+#define MINFLOAT -1e30
 #endif
 #ifndef MAXFLOAT
-   #define MAXFLOAT  1e30
+#define MAXFLOAT  1e30
 #endif
 
 /// @defgroup Macros
@@ -162,7 +162,7 @@
  * a = CEIL(0.8); // a = 1
  */
 #define CEIL(x) (((x) == (int)(x)) ? (int)(x):(((x) > 0) ? (int)((x) + 1) : \
-    (int)(x)))
+                 (int)(x)))
 
 /** Round to next smaller integer
  * @ingroup MacrosNumerical
@@ -178,7 +178,7 @@
  * @endcode
  */
 #define FLOOR(x) (((x) == (int)(x)) ? (int)(x):(((x) > 0) ? (int)(x) : \
-    (int)((x) - 1)))
+                  (int)((x) - 1)))
 
 /** Return the fractional part of a value
  * @ingroup MacrosNumerical
@@ -213,9 +213,9 @@
  * @endcode
  */
 #define intWRAP(x, x0, xF) (((x) >= (x0) && (x) <= (xF)) ? (x) : ((x) < (x0)) \
-    ? ((x) - (int)(((x) - (x0) + 1) / ((xF) - (x0) + 1) - 1) * \
-    ((xF) - (x0) + 1)) : ((x) - (int)(((x) - (xF) - 1) / ((xF) - (x0) + 1) \
-    + 1) * ((xF) - (x0) + 1)))
+                            ? ((x) - (int)(((x) - (x0) + 1) / ((xF) - (x0) + 1) - 1) * \
+                               ((xF) - (x0) + 1)) : ((x) - (int)(((x) - (xF) - 1) / ((xF) - (x0) + 1) \
+                                                                 + 1) * ((xF) - (x0) + 1)))
 
 /** Wrapping for real numbers
  * @ingroup MacrosNumerical
@@ -229,8 +229,8 @@
  * @endcode
  */
 #define realWRAP(x, x0, xF) (((x) >= (x0) && (x) <= (xF)) ? (x) : ((x) < (x0)) \
-    ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
-    ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
+                             ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
+                             ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
 
 /** Degrees to radians
  * @ingroup MacrosNumerical
@@ -296,7 +296,7 @@
  * The sinc function is defined as sin(PI*x)/(PI*x).
  */
 #define SINC(x) (((x) < 0.0001 && (x) > -0.0001) ? 1 : sin(PI * (x)) \
-    / (PI * (x)))
+                 / (PI * (x)))
 
 /** Returns next positive power of 2
  * @ingroup MacrosNumerical
@@ -340,10 +340,10 @@
  */
 #define SPEED_UP_temps \
     double spduptmp0, spduptmp1, spduptmp2, \
-           spduptmp3, spduptmp4, spduptmp5, \
-           spduptmp6, spduptmp7, spduptmp8; \
+    spduptmp3, spduptmp4, spduptmp5, \
+    spduptmp6, spduptmp7, spduptmp8; \
     int   ispduptmp0, ispduptmp1, ispduptmp2, \
-          ispduptmp3, ispduptmp4, ispduptmp5;
+    ispduptmp3, ispduptmp4, ispduptmp5;
 
 /** Swap two values
  * @igroup MacrosMisc
@@ -352,9 +352,9 @@
  * parameters
  */
 #define SWAP(a, b, tmp) {\
-    tmp = a; \
-    a = b; \
-    b = tmp; }
+        tmp = a; \
+        a = b; \
+        b = tmp; }
 
 /** Starting point for Xmipp volume/image
  * @ingroup MacrosMisc

@@ -33,54 +33,55 @@
 //@{
 /* Surface Program Parameters ---------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Draw_Surface_Parameters {
+class Prog_Draw_Surface_Parameters
+{
 public:
-   /// Filename with the input volume.
-   FileName fn_in;
-   /** Filename with the output volume. Maybe empty and then the input one
-       is used */
-   FileName fn_out;
-   /** Surface to draw */
-   FileName fn_surf;
-   /** Force surface size */
-   bool     enable_adjust;
-   /** New forced surface size */
-   int      ztop, zbottom;
-   /** Colouring density */
-   float    color;
+    /// Filename with the input volume.
+    FileName fn_in;
+    /** Filename with the output volume. Maybe empty and then the input one
+        is used */
+    FileName fn_out;
+    /** Surface to draw */
+    FileName fn_surf;
+    /** Force surface size */
+    bool     enable_adjust;
+    /** New forced surface size */
+    int      ztop, zbottom;
+    /** Colouring density */
+    float    color;
 
-   /**@name Side parameters */
-   //@{
-   /// Volume where to draw
-   VolumeXmipp vol;
-   /// Surface
-   ImageXmipp surface;
-   //@}
+    /**@name Side parameters */
+    //@{
+    /// Volume where to draw
+    VolumeXmipp vol;
+    /// Surface
+    ImageXmipp surface;
+    //@}
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage() const;
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage() const;
 
-   /** Produce Side Information.
-       Read phantom file and assign ztop and zbottom if they
-       are not assigned by user, ie, set it to zdim. */
-   void produce_Side_Info();
+    /** Produce Side Information.
+        Read phantom file and assign ztop and zbottom if they
+        are not assigned by user, ie, set it to zdim. */
+    void produce_Side_Info();
 };
 
 /** Draw surface on volume.
     The given color is assigned to the volumem voxel specified by the
     surface (V(S(i,j),i,j)=color). An exception is thrown if the
     surface is not exactly of the same shape as the volume XY plane. */
-   void draw_surface(Volume *vol, const Image *surf, float color);
+void draw_surface(Volume *vol, const Image *surf, float color);
 
 /** Run draw_surface.
     Produces side information, draw the surface and save output volume*/
-   void ROUT_draw_surface(Prog_Draw_Surface_Parameters &prm);
+void ROUT_draw_surface(Prog_Draw_Surface_Parameters &prm);
 //@}
 #endif

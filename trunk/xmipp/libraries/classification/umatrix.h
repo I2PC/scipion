@@ -53,50 +53,51 @@ typedef xmippMap umatType;
  */
 class xmippUmatrix
 {
- public:
-  typedef xmippMap In;
-  typedef xmippMap Out;
-  typedef enum { NONE = 0, MEDIAN = 1, AVERAGE = 2 } smoothMode;
+public:
+    typedef xmippMap In;
+    typedef xmippMap Out;
+    typedef enum { NONE = 0, MEDIAN = 1, AVERAGE = 2 } smoothMode;
 
-  /** Umatrix constructor
-  *   @param _sm: Defines the smoothing mode: NONE, MEDIAN or AVERAGE
-  *
-  */
-  xmippUmatrix(smoothMode _sm = NONE):smooth(_sm){};
+    /** Umatrix constructor
+    *   @param _sm: Defines the smoothing mode: NONE, MEDIAN or AVERAGE
+    *
+    */
+    xmippUmatrix(smoothMode _sm = NONE): smooth(_sm)
+    {};
 
-  /**
-  *   () operator.
-  *    It takes a SOM as input and returns the calculated Umatrix
-  */
-  void operator()(const In& in, Out& out) const;
+    /**
+    *   () operator.
+    *    It takes a SOM as input and returns the calculated Umatrix
+    */
+    void operator()(const In& in, Out& out) const;
 
-  /**
-  *   Same as () operator.
-  *   It takes a SOM as input and returns the calculated Umatrix
-  */
-  void getUmatrix (const In& in, Out& out) const;
+    /**
+    *   Same as () operator.
+    *   It takes a SOM as input and returns the calculated Umatrix
+    */
+    void getUmatrix(const In& in, Out& out) const;
 
-  /**
-  *   Gets the Umatrix but removing a variable from the analysis.
-  *   It takes a SOM as input and returns the calculated Umatrix
-  */
-  void getUmatrix (const In& in, Out& out, const unsigned& _varOut) const;
+    /**
+    *   Gets the Umatrix but removing a variable from the analysis.
+    *   It takes a SOM as input and returns the calculated Umatrix
+    */
+    void getUmatrix(const In& in, Out& out, const unsigned& _varOut) const;
 
-  /**
-  *   Gets the Umatrix but removing a list of variables from the analysis.
-  *   It takes a SOM as input and returns the calculated Umatrix
-  */
+    /**
+    *   Gets the Umatrix but removing a list of variables from the analysis.
+    *   It takes a SOM as input and returns the calculated Umatrix
+    */
 
-  void getUmatrix (const In& in, Out& out, const vector<unsigned>& _varsOut) const;
+    void getUmatrix(const In& in, Out& out, const vector<unsigned>& _varsOut) const;
 
 
- private:
+private:
 
-  smoothMode smooth;          // Type of smoothing filter
+    smoothMode smooth;          // Type of smoothing filter
 
-  // Smoothing functions
-  void medianSmoothing (Out& out) const;
-  void averageSmoothing (Out& out) const;
+    // Smoothing functions
+    void medianSmoothing(Out& out) const;
+    void averageSmoothing(Out& out) const;
 
 };
 

@@ -25,12 +25,12 @@
  ***************************************************************************/
 
 
-  /* **********************************************************************
+/* **********************************************************************
 
-	This file contains all the routines to read, write and modify
-	the image or volume header called 'cabecero'.
+This file contains all the routines to read, write and modify
+the image or volume header called 'cabecero'.
 
-   ************************************************************************/
+ ************************************************************************/
 
 #include <cstdio>
 #include <cmath>
@@ -49,36 +49,36 @@ CABECERO cabecero;
  SPIDER file. It returns '1' and the image dimensions if success,
  '0' if failure, and '-1' if there's  a file open error .
  ***************************************************************/
-int SPIDheader(char *fname,int *row, int *col)
+int SPIDheader(char *fname, int *row, int *col)
 {
-unsigned long tam;
-FILE *fp;
-struct stat info;
+    unsigned long tam;
+    FILE *fp;
+    struct stat info;
 
-  fp=fopen(fname,"rb");
-  if (!fp) return(-1);   /*unable to open file*/
+    fp = fopen(fname, "rb");
+    if (!fp) return(-1);   /*unable to open file*/
 
-  if ( fread(&cabecero, SPID_HDR_SIZE ,1,fp) !=1 )
-   {
-      fclose(fp);
-      return( 0) ;       /*not a SPIDER file*/
-   }
+    if (fread(&cabecero, SPID_HDR_SIZE , 1, fp) != 1)
+    {
+        fclose(fp);
+        return(0) ;       /*not a SPIDER file*/
+    }
 
-  if( !fstat(fileno(fp),&info) )
-   {
-      fclose(fp);
-      tam= (unsigned long)(cabecero.fNsam * cabecero.fLabrec *4) +
-           (unsigned long)(cabecero.fNsam * cabecero.fNrow *4);
-      if(tam==info.st_size)
-       {
-         *row=(int)cabecero.fNrow;
-         *col=(int)cabecero.fNsam;
-         return 1;
-       }
-   }
-  else
-    fclose(fp);
-  return 0;
+    if (!fstat(fileno(fp), &info))
+    {
+        fclose(fp);
+        tam = (unsigned long)(cabecero.fNsam * cabecero.fLabrec * 4) +
+              (unsigned long)(cabecero.fNsam * cabecero.fNrow * 4);
+        if (tam == info.st_size)
+        {
+            *row = (int)cabecero.fNrow;
+            *col = (int)cabecero.fNsam;
+            return 1;
+        }
+    }
+    else
+        fclose(fp);
+    return 0;
 }
 
 /***************************************************************
@@ -87,25 +87,25 @@ struct stat info;
  It returns '1' if success, '0' if failure, and '-1' if there's
  a file open error .
  ***************************************************************/
-int BYTEheader(char *fname,int fil,int col)
+int BYTEheader(char *fname, int fil, int col)
 {
-unsigned long tam;
-FILE *fp;
-struct stat info;
+    unsigned long tam;
+    FILE *fp;
+    struct stat info;
 
-  fp=fopen(fname,"rb");
-  if (!fp) return( -1 );
+    fp = fopen(fname, "rb");
+    if (!fp) return(-1);
 
-  if( !fstat(fileno(fp),&info) )
+    if (!fstat(fileno(fp), &info))
     {
-      fclose(fp);
-      tam= fil*col*sizeof(char);
-      if(tam==info.st_size)   return 1;
-      else return 0;
+        fclose(fp);
+        tam = fil * col * sizeof(char);
+        if (tam == info.st_size)   return 1;
+        else return 0;
     }
 
-  fclose(fp);
-  return 0;
+    fclose(fp);
+    return 0;
 }
 
 
@@ -113,32 +113,32 @@ struct stat info;
  This routine read/write the geometric information from/to the
  header.
  ***************************************************************/
-void header_geo(double matriz[3][3],float *angle,int rdwr)
+void header_geo(double matriz[3][3], float *angle, int rdwr)
 {
- int i;
+    int i;
 
- switch(rdwr)
-  {
+    switch (rdwr)
+    {
     case WRITING :
-      for (i = 0; i < 3; i++)
-       {
-          cabecero.fGeo_matrix[i][0] = matriz[i][0];
-          cabecero.fGeo_matrix[i][1] = matriz[i][1];
-          cabecero.fGeo_matrix[i][2] = matriz[i][2];
-       }
-      cabecero.fAngle1=*angle;
-      break;
+        for (i = 0; i < 3; i++)
+        {
+            cabecero.fGeo_matrix[i][0] = matriz[i][0];
+            cabecero.fGeo_matrix[i][1] = matriz[i][1];
+            cabecero.fGeo_matrix[i][2] = matriz[i][2];
+        }
+        cabecero.fAngle1 = *angle;
+        break;
 
     case READING :
-      for (i = 0; i < 3; i++)
-       {
-          matriz[i][0] = cabecero.fGeo_matrix[i][0];
-          matriz[i][1] = cabecero.fGeo_matrix[i][1];
-          matriz[i][2] = cabecero.fGeo_matrix[i][2];
-       }
-      *angle=cabecero.fAngle1;
-      break;
-  }
+        for (i = 0; i < 3; i++)
+        {
+            matriz[i][0] = cabecero.fGeo_matrix[i][0];
+            matriz[i][1] = cabecero.fGeo_matrix[i][1];
+            matriz[i][2] = cabecero.fGeo_matrix[i][2];
+        }
+        *angle = cabecero.fAngle1;
+        break;
+    }
 
 }
 
@@ -149,13 +149,13 @@ void header_geo(double matriz[3][3],float *angle,int rdwr)
  ***************************************************************/
 int IsInfogeo(double matriz[3][3])
 {
- int i,j;
+    int i, j;
 
-   for(i=0;i<3;i++)
-     for(j=0;j<3;j++)
-        if( matriz[i][j] != 0.)  return 1;
+    for (i = 0;i < 3;i++)
+        for (j = 0;j < 3;j++)
+            if (matriz[i][j] != 0.)  return 1;
 
- return 0;
+    return 0;
 }
 
 
@@ -165,12 +165,12 @@ int IsInfogeo(double matriz[3][3])
  ***************************************************************/
 void ceroCabecero(void)
 {
- int i;
- BYTE *punt;
+    int i;
+    BYTE *punt;
 
- punt= (BYTE *)&cabecero;
- for (i=0; i<1024;i++) *punt++ = 0;
-   /** *(punt+i)='\0'; Esto es mas lento **/
+    punt = (BYTE *) & cabecero;
+    for (i = 0; i < 1024;i++) *punt++ = 0;
+    /** *(punt+i)='\0'; Esto es mas lento **/
 }
 
 
@@ -178,17 +178,17 @@ void ceroCabecero(void)
   And this one sets a 3x3 matrix to the Identity.
  ***************************************************************/
 
-void identMatrix( double matrix[3][3])
+void identMatrix(double matrix[3][3])
 {
- int i;
+    int i;
 
- for (i=0; i < 9; i++)
-  {
-    if (i%3 == i/3)
-      matrix[i/3][i%3] = 1;
-    else
-      matrix[i/3][i%3] = 0;
-  }
+    for (i = 0; i < 9; i++)
+    {
+        if (i % 3 == i / 3)
+            matrix[i/3][i%3] = 1;
+        else
+            matrix[i/3][i%3] = 0;
+    }
 }
 
 /***************************************************************
@@ -199,11 +199,11 @@ void identMatrix( double matrix[3][3])
 void defaultHeader(void)
 {
 
- double matriz_geo[3][3];
- float angulo=0.;
+    double matriz_geo[3][3];
+    float angulo = 0.;
 
- identMatrix(matriz_geo);
- header_geo(matriz_geo,&angulo,WRITING);
+    identMatrix(matriz_geo);
+    header_geo(matriz_geo, &angulo, WRITING);
 
 }
 
@@ -213,38 +213,40 @@ void defaultHeader(void)
  If the I/O operation is 'read' check if the image has alredy
  been normalized , and in that case exits.
  ***************************************************************/
-void normalize_io( float **image,int rdwr,char *name )
+void normalize_io(float **image, int rdwr, char *name)
 {
- float fmax,fmin;
+    float fmax, fmin;
 
-  switch(rdwr)
-   {
-    case WRITING : normImg(image,(int)cabecero.fNrow,(int)cabecero.fNsam,
-                           &fmax,&fmin);
-                   cabecero.fAv=0.;
-                   cabecero.fSig=1.;
-                   cabecero.fImami=1.;
-                   cabecero.fFmax=fmax;
-                   cabecero.fFmin=fmin;
-                   break;
-
-    case READING : if( cabecero.fAv!=0. || cabecero.fSig!=1.)
-                    {
-                      normImg(image,(int)cabecero.fNrow,(int)cabecero.fNsam,
-                          &fmax,&fmin);
-                      cabecero.fAv=0.;
-                      cabecero.fSig=1.;
-                      cabecero.fImami=1.;
-                      cabecero.fFmax=fmax;
-                      cabecero.fFmin=fmin;
-                    }
-                   break;
-   }
-
-   if( cabecero.fFmax==cabecero.fFmin)
+    switch (rdwr)
     {
-      fprintf(stdout,"\n WARNING:  file %s : MAX and MIN values are identical\n",name);
-      fflush(stdout);
+    case WRITING :
+        normImg(image, (int)cabecero.fNrow, (int)cabecero.fNsam,
+                &fmax, &fmin);
+        cabecero.fAv = 0.;
+        cabecero.fSig = 1.;
+        cabecero.fImami = 1.;
+        cabecero.fFmax = fmax;
+        cabecero.fFmin = fmin;
+        break;
+
+    case READING :
+        if (cabecero.fAv != 0. || cabecero.fSig != 1.)
+        {
+            normImg(image, (int)cabecero.fNrow, (int)cabecero.fNsam,
+                    &fmax, &fmin);
+            cabecero.fAv = 0.;
+            cabecero.fSig = 1.;
+            cabecero.fImami = 1.;
+            cabecero.fFmax = fmax;
+            cabecero.fFmin = fmin;
+        }
+        break;
+    }
+
+    if (cabecero.fFmax == cabecero.fFmin)
+    {
+        fprintf(stdout, "\n WARNING:  file %s : MAX and MIN values are identical\n", name);
+        fflush(stdout);
     }
 }
 
@@ -253,48 +255,48 @@ void normalize_io( float **image,int rdwr,char *name )
  The image is in a "iNrow*iNsam" matrix of floats called
  "fimagen".
  ***************************************************************/
-void normImg(float **fImagen,int iNrow,int iNsam,float *ppmax,float *ppmin)
+void normImg(float **fImagen, int iNrow, int iNsam, float *ppmax, float *ppmin)
 {
 
- int i,j;
- float fmax=-1e36 ,fmin=1e36;
- double aux;
- double fmedia,fsigma;
- double suma1=0;
- double suma2=0;
- double numpuntos;
- double theroot;
+    int i, j;
+    float fmax = -1e36 , fmin = 1e36;
+    double aux;
+    double fmedia, fsigma;
+    double suma1 = 0;
+    double suma2 = 0;
+    double numpuntos;
+    double theroot;
 
-  for (i=0; i <iNrow ; i++)
-     for (j=0; j < iNsam ; j++)
-       {
-          aux = fImagen[i][j];
-          suma1 += aux;
-          suma2 += aux*aux;
-       }
+    for (i = 0; i < iNrow ; i++)
+        for (j = 0; j < iNsam ; j++)
+        {
+            aux = fImagen[i][j];
+            suma1 += aux;
+            suma2 += aux * aux;
+        }
 
-  numpuntos= (double) iNrow * (double) iNsam;
-/****
-  fmedia =  (suma1/(double)iNrow)/(double)iNsam ;
-  fsigma =  sqrt ( ((suma2/(double)iNrow)/(double)iNsam)-(fmedia*fmedia));
-****/
+    numpuntos = (double) iNrow * (double) iNsam;
+    /****
+      fmedia =  (suma1/(double)iNrow)/(double)iNsam ;
+      fsigma =  sqrt ( ((suma2/(double)iNrow)/(double)iNsam)-(fmedia*fmedia));
+    ****/
 
-  fmedia =  (double) ( suma1/ numpuntos);
-  theroot= (double)(suma2/numpuntos) -(fmedia*fmedia) ;
-  fsigma =  sqrt ( fabs(theroot) );
+    fmedia = (double)(suma1 / numpuntos);
+    theroot = (double)(suma2 / numpuntos) - (fmedia * fmedia) ;
+    fsigma =  sqrt(fabs(theroot));
 
 
     /***** setting average=0 and sigma=1 *****/
 
-  for (i=0; i <iNrow ; i++)
-    for (j=0; j < iNsam ; j++)
-     {
-        fImagen[i][j] = (fImagen[i][j]-fmedia)/fsigma;
-        if(fImagen[i][j] <fmin ) fmin=fImagen[i][j];
-        if(fImagen[i][j] >fmax ) fmax=fImagen[i][j];
-     }
-  *ppmin=fmin;
-  *ppmax=fmax;
+    for (i = 0; i < iNrow ; i++)
+        for (j = 0; j < iNsam ; j++)
+        {
+            fImagen[i][j] = (fImagen[i][j] - fmedia) / fsigma;
+            if (fImagen[i][j] < fmin) fmin = fImagen[i][j];
+            if (fImagen[i][j] > fmax) fmax = fImagen[i][j];
+        }
+    *ppmin = fmin;
+    *ppmax = fmax;
 }
 
 /**************************************************************************/
@@ -305,40 +307,40 @@ void normImg(float **fImagen,int iNrow,int iNsam,float *ppmax,float *ppmin)
  SPIDER volume. It returns '1' and the voume dimensions if
  success, '0' if failure, and '-1' if there's  a file open error .
  ***************************************************************/
-int SPIDvolum(char *fname,int *slice,int *row,int *col)
+int SPIDvolum(char *fname, int *slice, int *row, int *col)
 {
-unsigned long tam;
-FILE *fp;
-struct stat info;
+    unsigned long tam;
+    FILE *fp;
+    struct stat info;
 
-  fp=fopen(fname,"rb");
-  if (!fp) return(-1);   /*unable to open file*/
+    fp = fopen(fname, "rb");
+    if (!fp) return(-1);   /*unable to open file*/
 
-  if ( fread(&cabecero, SPID_HDR_SIZE ,1,fp) !=1 )
-   {
-      fclose(fp);
-      return( 0) ;       /*not a SPIDER file*/
-   }
+    if (fread(&cabecero, SPID_HDR_SIZE , 1, fp) != 1)
+    {
+        fclose(fp);
+        return(0) ;       /*not a SPIDER file*/
+    }
 
-  if( (fabs(cabecero.fIform ) )!= 3. )
-      return (0);
+    if ((fabs(cabecero.fIform)) != 3.)
+        return (0);
 
-  if( !fstat(fileno(fp),&info) )
-   {
-      fclose(fp);
-      tam= (unsigned long)(cabecero.fNsam * cabecero.fLabrec *4) +
-           (unsigned long)(abs((int)cabecero.fNslice) * cabecero.fNsam * cabecero.fNrow *4);
-      if(tam==info.st_size)
-       {
-         *slice= (int)abs((int)cabecero.fNslice) ;
-         *row=(int)cabecero.fNrow;
-         *col=(int)cabecero.fNsam;
-         return 1;
-       }
-   }
-  else
-    fclose(fp);
-  return 0;
+    if (!fstat(fileno(fp), &info))
+    {
+        fclose(fp);
+        tam = (unsigned long)(cabecero.fNsam * cabecero.fLabrec * 4) +
+              (unsigned long)(abs((int)cabecero.fNslice) * cabecero.fNsam * cabecero.fNrow * 4);
+        if (tam == info.st_size)
+        {
+            *slice = (int)abs((int)cabecero.fNslice) ;
+            *row = (int)cabecero.fNrow;
+            *col = (int)cabecero.fNsam;
+            return 1;
+        }
+    }
+    else
+        fclose(fp);
+    return 0;
 }
 
 /***************************************************************
@@ -347,25 +349,25 @@ struct stat info;
  bytes long. It returns '1' if success, '0' if failure, and '-1'
  if there's a file open error .
  ***************************************************************/
-int BYTEvolum(char *fname,int slice,int row,int col)
+int BYTEvolum(char *fname, int slice, int row, int col)
 {
-unsigned long tam;
-FILE *fp;
-struct stat info;
+    unsigned long tam;
+    FILE *fp;
+    struct stat info;
 
-  fp=fopen(fname,"rb");
-  if (!fp) return( -1 );
+    fp = fopen(fname, "rb");
+    if (!fp) return(-1);
 
-  if( !fstat(fileno(fp),&info) )
+    if (!fstat(fileno(fp), &info))
     {
-      fclose(fp);
-      tam= slice * row * col * sizeof(char);
-      if(tam==info.st_size)   return 1;
-      else return 0;
+        fclose(fp);
+        tam = slice * row * col * sizeof(char);
+        if (tam == info.st_size)   return 1;
+        else return 0;
     }
 
-  fclose(fp);
-  return 0;
+    fclose(fp);
+    return 0;
 }
 
 /***************************************************************
@@ -374,41 +376,43 @@ struct stat info;
  If the I/O operation is 'read' check if the volume has alredy
  been normalized , and in that case exits.
  ***************************************************************/
-void norm_of_volume(float ***volumen,int rdwr,char *name )
+void norm_of_volume(float ***volumen, int rdwr, char *name)
 {
 
- float fmax=-1e36, fmin=1e36;
+    float fmax = -1e36, fmin = 1e36;
 
-  switch(rdwr)
-   {
-    case WRITING : normVol( volumen, (int)cabecero.fNslice,
-                            (int)cabecero.fNrow , (int)cabecero.fNsam,
-                            &fmax , &fmin);
-                   cabecero.fAv=0.;
-                   cabecero.fSig=1.;
-                   cabecero.fImami=1.;
-                   cabecero.fFmax=fmax;
-                   cabecero.fFmin=fmin;
-                   break;
-
-    case READING : if( cabecero.fAv!=0. || cabecero.fSig!=1.)
-                    {
-                      normVol( volumen, (int)cabecero.fNslice,
-                               (int)cabecero.fNrow , (int)cabecero.fNsam,
-                               &fmax , &fmin);
-                      cabecero.fAv=0.;
-                      cabecero.fSig=1.;
-                      cabecero.fImami=1.;
-                      cabecero.fFmax=fmax;
-                      cabecero.fFmin=fmin;
-                    }
-                   break;
-   }
-
-   if( cabecero.fFmax==cabecero.fFmin)
+    switch (rdwr)
     {
-      fprintf(stdout,"\n WARNING:  file %s : MAX and MIN values are identical\n"                      ,name);
-      fflush(stdout);
+    case WRITING :
+        normVol(volumen, (int)cabecero.fNslice,
+                (int)cabecero.fNrow , (int)cabecero.fNsam,
+                &fmax , &fmin);
+        cabecero.fAv = 0.;
+        cabecero.fSig = 1.;
+        cabecero.fImami = 1.;
+        cabecero.fFmax = fmax;
+        cabecero.fFmin = fmin;
+        break;
+
+    case READING :
+        if (cabecero.fAv != 0. || cabecero.fSig != 1.)
+        {
+            normVol(volumen, (int)cabecero.fNslice,
+                    (int)cabecero.fNrow , (int)cabecero.fNsam,
+                    &fmax , &fmin);
+            cabecero.fAv = 0.;
+            cabecero.fSig = 1.;
+            cabecero.fImami = 1.;
+            cabecero.fFmax = fmax;
+            cabecero.fFmin = fmin;
+        }
+        break;
+    }
+
+    if (cabecero.fFmax == cabecero.fFmin)
+    {
+        fprintf(stdout, "\n WARNING:  file %s : MAX and MIN values are identical\n"                      , name);
+        fflush(stdout);
     }
 }
 
@@ -417,47 +421,47 @@ void norm_of_volume(float ***volumen,int rdwr,char *name )
  The volume is in a "capas x fil x col " array of floats called
  "volu".
  ***************************************************************/
-void normVol(float ***volu,int capas,int fil,int col,
+void normVol(float ***volu, int capas, int fil, int col,
              float *fvmax, float *fvmin)
 {
-   float themax=-1e36,themin=1e36;
-   double aux;
-   double fmedia,fsigma;
-   double suma1=0;
-   double suma2=0;
-   double numpuntos;
-   double theroot;
+    float themax = -1e36, themin = 1e36;
+    double aux;
+    double fmedia, fsigma;
+    double suma1 = 0;
+    double suma2 = 0;
+    double numpuntos;
+    double theroot;
 
-   int i,j,k;
+    int i, j, k;
 
-   for (i=0; i < capas; i++)
-     for (j=0; j <fil ; j++)
-       for (k=0; k <col; k++)
-       {
-          aux = volu[i][j][k];
-          suma1 += aux;
-          suma2 += aux*aux;
-       }
+    for (i = 0; i < capas; i++)
+        for (j = 0; j < fil ; j++)
+            for (k = 0; k < col; k++)
+            {
+                aux = volu[i][j][k];
+                suma1 += aux;
+                suma2 += aux * aux;
+            }
 
-   numpuntos= (double)capas * (double) fil * (double) col;
+    numpuntos = (double)capas * (double) fil * (double) col;
 
-   fmedia =  (double) ( suma1/ numpuntos);
-   theroot= (double)(suma2/numpuntos) -(fmedia*fmedia);
-   fsigma =  sqrt ( fabs(theroot) );
+    fmedia = (double)(suma1 / numpuntos);
+    theroot = (double)(suma2 / numpuntos) - (fmedia * fmedia);
+    fsigma =  sqrt(fabs(theroot));
 
     /***** Setting average=0 and sigma=1 *****/
 
-   for (i=0; i < capas; i++)
-     for (j=0; j <fil ; j++)
-       for (k=0; k <col; k++)
-       {
-         volu[i][j][k]= (float)( ( volu[i][j][k] - fmedia) / fsigma );
-         if( volu[i][j][k] > themax ) themax = volu[i][j][k];
-         if( volu[i][j][k] < themin ) themin = volu[i][j][k];
+    for (i = 0; i < capas; i++)
+        for (j = 0; j < fil ; j++)
+            for (k = 0; k < col; k++)
+            {
+                volu[i][j][k] = (float)((volu[i][j][k] - fmedia) / fsigma);
+                if (volu[i][j][k] > themax) themax = volu[i][j][k];
+                if (volu[i][j][k] < themin) themin = volu[i][j][k];
 
-       }
-  *fvmax=themax;
-  *fvmin=themin;
+            }
+    *fvmax = themax;
+    *fvmin = themin;
 
 }
 /**********************************************************/

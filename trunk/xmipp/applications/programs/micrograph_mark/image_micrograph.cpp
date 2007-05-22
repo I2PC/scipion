@@ -35,208 +35,238 @@
 #include <qpainter.h>
 
 /* Constructor ------------------------------------------------------------- */
-QtImageMicrograph::QtImageMicrograph( QWidget *_parent,
-                                      const char *_name,
-                                      WFlags _f) :
-   QtImage( _parent, _name, _f ) {
-   __x          = 0;
-   __y          = 0;
-   __pressed    = false;
-   __movingMark = -1;
-   __tilted     = false;
-   __ellipse_radius = 5;
+QtImageMicrograph::QtImageMicrograph(QWidget *_parent,
+                                     const char *_name,
+                                     WFlags _f) :
+        QtImage(_parent, _name, _f)
+{
+    __x          = 0;
+    __y          = 0;
+    __pressed    = false;
+    __movingMark = -1;
+    __tilted     = false;
+    __ellipse_radius = 5;
 
-   emit signalSetWidthHeight( image()->width(), image()->height() );
+    emit signalSetWidthHeight(image()->width(), image()->height());
 }
 
 /* Set the micrograph ------------------------------------------------------ */
-void QtImageMicrograph::setMicrograph( Micrograph *_m ) {
-   QtImage::setMicrograph( _m );
+void QtImageMicrograph::setMicrograph(Micrograph *_m)
+{
+    QtImage::setMicrograph(_m);
 
-   emit signalSetWidthHeight( image()->width(), image()->height() );
+    emit signalSetWidthHeight(image()->width(), image()->height());
 }
 
 /* Load Image -------------------------------------------------------------- */
-void QtImageMicrograph::loadImage() {
-   int mMaxX, mMaxY, mX, mY;
-   double emX, emY;
+void QtImageMicrograph::loadImage()
+{
+    int mMaxX, mMaxY, mX, mY;
+    double emX, emY;
 
-   if ( getMicrograph() != NULL ) getMicrograph()->size( mMaxX, mMaxY );
-   else return;
+    if (getMicrograph() != NULL) getMicrograph()->size(mMaxX, mMaxY);
+    else return;
 
-   // Get the starting and finishing point in the original micrograph
-   int mY0, mX0, mYF, mXF;
-   imageToMicrograph( 0, 0, mX0, mY0 );
-   imageToMicrograph( image()->width(), image()->height(), mXF, mYF );
+    // Get the starting and finishing point in the original micrograph
+    int mY0, mX0, mYF, mXF;
+    imageToMicrograph(0, 0, mX0, mY0);
+    imageToMicrograph(image()->width(), image()->height(), mXF, mYF);
 
-   if (mXF-mX0<=image()->width() && mYF-mY0<=image()->height() &&
-       getMicrograph()->depth()==8) {
-      // Use XV for showing the image
-      // Copy that piece of the micrograph in an intermidiate piece of memory
-      byte *ptr,*piece=new byte[image()->width() * image()->height()];
-      if (piece==NULL)
-          REPORT_ERROR(1,"QtImageMicrograph::loadImage: Cannot allocate memory");
-      ptr=piece;
-      for (mY=mY0; mY<mYF; mY++)
-         for (mX=mX0; mX<mXF; mX++)
-            *ptr++=getMicrograph()->val8(mX, mY);
+    if (mXF - mX0 <= image()->width() && mYF - mY0 <= image()->height() &&
+        getMicrograph()->depth() == 8)
+    {
+        // Use XV for showing the image
+        // Copy that piece of the micrograph in an intermidiate piece of memory
+        byte *ptr, *piece = new byte[image()->width() * image()->height()];
+        if (piece == NULL)
+            REPORT_ERROR(1, "QtImageMicrograph::loadImage: Cannot allocate memory");
+        ptr = piece;
+        for (mY = mY0; mY < mYF; mY++)
+            for (mX = mX0; mX < mXF; mX++)
+                *ptr++ = getMicrograph()->val8(mX, mY);
 
-      // Apply xvsmooth and copy to the canvas
-      byte rgb[256]; for (int i=0; i<256; i++) rgb[i]=i;
-      byte *result = SmoothResize(piece,
-         mXF-mX0, mYF-mY0, image()->width(), image()->height(),
-         rgb, rgb, rgb, rgb, rgb, rgb, 256);
-      ptr=result;
-      for( int y = 0; y < image()->height(); y++ )
-         for( int x = 0; x < image()->width(); x++ )
-            setPixel( x, y, *ptr++);
-      free(result);
-      delete piece;
-   } else {
-      // Apply bilinear interpolation
-      for( int y = 0; y < image()->height(); y++ )
-         for( int x = 0; x < image()->width(); x++ )
-            if ( getMicrograph() != NULL ) {
-               exact_imageToMicrograph( x, y, emX, emY );
-               double val=0;
-               if (emX>=0 && emX<mMaxX-1 && emY>=0 && emY<mMaxY-1) {
-                  double wx=emX-(int)emX;
-                  double wy=emY-(int)emY;
-                  int    mX1=(int)emX, mX2=mX1+1;
-                  int    mY1=(int)emY, mY2=mY1+1;
-                  val+=(1-wy)*(1-wx)*getMicrograph()->val8(mX1,mY1)+
-                       (1-wy)*   wx *getMicrograph()->val8(mX2,mY1)+
-                          wy *(1-wx)*getMicrograph()->val8(mX1,mY2)+
-                          wy *   wx *getMicrograph()->val8(mX2,mY2);
-               }
-               setPixel( x, y, (unsigned int)val );
-            } else setPixel( x, y, 0 );
-   }
+        // Apply xvsmooth and copy to the canvas
+        byte rgb[256];
+        for (int i = 0; i < 256; i++) rgb[i] = i;
+        byte *result = SmoothResize(piece,
+                                    mXF - mX0, mYF - mY0, image()->width(), image()->height(),
+                                    rgb, rgb, rgb, rgb, rgb, rgb, 256);
+        ptr = result;
+        for (int y = 0; y < image()->height(); y++)
+            for (int x = 0; x < image()->width(); x++)
+                setPixel(x, y, *ptr++);
+        free(result);
+        delete piece;
+    }
+    else
+    {
+        // Apply bilinear interpolation
+        for (int y = 0; y < image()->height(); y++)
+            for (int x = 0; x < image()->width(); x++)
+                if (getMicrograph() != NULL)
+                {
+                    exact_imageToMicrograph(x, y, emX, emY);
+                    double val = 0;
+                    if (emX >= 0 && emX < mMaxX - 1 && emY >= 0 && emY < mMaxY - 1)
+                    {
+                        double wx = emX - (int)emX;
+                        double wy = emY - (int)emY;
+                        int    mX1 = (int)emX, mX2 = mX1 + 1;
+                        int    mY1 = (int)emY, mY2 = mY1 + 1;
+                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mX1, mY1) +
+                               (1 - wy) *   wx * getMicrograph()->val8(mX2, mY1) +
+                               wy * (1 - wx) * getMicrograph()->val8(mX1, mY2) +
+                               wy *   wx * getMicrograph()->val8(mX2, mY2);
+                    }
+                    setPixel(x, y, (unsigned int)val);
+                }
+                else setPixel(x, y, 0);
+    }
 }
 
 /* Draw ellipse ------------------------------------------------------------ */
-void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius) {
-   int mX, mY;
-   micrographToImage( _x, _y, mX, mY );
-   if ( (mX > 0 && mX < image()->width()) &&
-        (mY > 0 && mY < image()->height()) ) {
-      QPen pen( __col.col(_color), 2 );
-      __paint->setPen( pen );
-      __paint->drawEllipse(ROUND(mX-_ellipse_radius/__zoom),
-         ROUND(mY-_ellipse_radius/__zoom),
-      	 ROUND(2*_ellipse_radius/__zoom), ROUND(2*_ellipse_radius/__zoom) );
-      __paint->flush();
-   }
+void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius)
+{
+    int mX, mY;
+    micrographToImage(_x, _y, mX, mY);
+    if ((mX > 0 && mX < image()->width()) &&
+        (mY > 0 && mY < image()->height()))
+    {
+        QPen pen(__col.col(_color), 2);
+        __paint->setPen(pen);
+        __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
+                             ROUND(mY - _ellipse_radius / __zoom),
+                             ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+        __paint->flush();
+    }
 }
 
-void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius) {
-   drawEllipse(_x,_y,_color,5.+_ellipse_radius);
+void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius)
+{
+    drawEllipse(_x, _y, _color, 5. + _ellipse_radius);
 }
 
 /* Load Symbols ------------------------------------------------------------ */
-void QtImageMicrograph::loadSymbols() {
-   if ( getMicrograph() == NULL ) return;
-   for( int i = 0; i < getMicrograph()->ParticleNo(); i++ ) {
-      if ( !getMicrograph()->coord(i).valid ) continue;
-      drawEllipse(getMicrograph()->coord(i).X,
-         getMicrograph()->coord(i).Y,getMicrograph()->coord(i).label,
-	 __ellipse_radius);
-   }
+void QtImageMicrograph::loadSymbols()
+{
+    if (getMicrograph() == NULL) return;
+    for (int i = 0; i < getMicrograph()->ParticleNo(); i++)
+    {
+        if (!getMicrograph()->coord(i).valid) continue;
+        drawEllipse(getMicrograph()->coord(i).X,
+                    getMicrograph()->coord(i).Y, getMicrograph()->coord(i).label,
+                    __ellipse_radius);
+    }
 }
 
-void QtImageMicrograph::slotDeleteMarkOther( int _coord ) {
-   emit signalDeleteMarkOther( _coord );
+void QtImageMicrograph::slotDeleteMarkOther(int _coord)
+{
+    emit signalDeleteMarkOther(_coord);
 }
 
-void QtImageMicrograph::slotChangeFamilyOther( int _coord, int _f ) {
-   emit signalChangeFamilyOther( _coord, _f );
+void QtImageMicrograph::slotChangeFamilyOther(int _coord, int _f)
+{
+    emit signalChangeFamilyOther(_coord, _f);
 }
 
-void QtImageMicrograph::resizeEvent( QResizeEvent *e ) {
-   QtImage::resizeEvent( e );
+void QtImageMicrograph::resizeEvent(QResizeEvent *e)
+{
+    QtImage::resizeEvent(e);
 
-   if ( getMicrograph() == NULL ) return;
+    if (getMicrograph() == NULL) return;
 
-   emit signalSetWidthHeight( image()->width(), image()->height() );
-   emit signalRepaint();
+    emit signalSetWidthHeight(image()->width(), image()->height());
+    emit signalRepaint();
 }
 
-void QtImageMicrograph::mousePressEvent( QMouseEvent *e ) {
-   if ( e->button() == LeftButton ) __pressed = true;
+void QtImageMicrograph::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == LeftButton) __pressed = true;
 }
 
-void QtImageMicrograph::mouseReleaseEvent( QMouseEvent *e ) {
-   if ( getMicrograph() == NULL ) return;
+void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
+{
+    if (getMicrograph() == NULL) return;
 
-   // If moving a particle
-   if ( __movingMark != -1 && __pressed ) {
-      getWidgetMicrograph()->move_particle(__movingMark);
-      __movingMark = -1;
-      __pressed    = false;
-      emit signalRecalculateTiltMatrix();
-      return;
-   } else if ( __movingMark != -1 ) return;
+    // If moving a particle
+    if (__movingMark != -1 && __pressed)
+    {
+        getWidgetMicrograph()->move_particle(__movingMark);
+        __movingMark = -1;
+        __pressed    = false;
+        emit signalRecalculateTiltMatrix();
+        return;
+    }
+    else if (__movingMark != -1) return;
 
-   // If picking a new one
-   int mX, mY;
-   imageToMicrograph( e->pos().x(), e->pos().y(), mX, mY );
+    // If picking a new one
+    int mX, mY;
+    imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
 
-   if ( e->button() == RightButton ) changeProperties( mX, mY );
-   else if ( __pressed == true ) {
-      if ( isTilted() ) {
-         cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
-	 getMicrograph()->move_last_coord_to(mX,mY);
-	 __pressed = false;
-         emit signalRepaint();
-         emit signalRecalculateTiltMatrix();
-      } else {
-	 cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
-	 getMicrograph()->add_coord( mX, mY, __activeFamily );
-	 __pressed = false;
-	 emit signalAddCoordOther( mX, mY, __activeFamily );
-      }
-   }
+    if (e->button() == RightButton) changeProperties(mX, mY);
+    else if (__pressed == true)
+    {
+        if (isTilted())
+        {
+            cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
+            getMicrograph()->move_last_coord_to(mX, mY);
+            __pressed = false;
+            emit signalRepaint();
+            emit signalRecalculateTiltMatrix();
+        }
+        else
+        {
+            cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
+            getMicrograph()->add_coord(mX, mY, __activeFamily);
+            __pressed = false;
+            emit signalAddCoordOther(mX, mY, __activeFamily);
+        }
+    }
 }
 
-void QtImageMicrograph::mouseMoveEvent( QMouseEvent *e ) {
-   if ( getMicrograph() == NULL || __movingMark == -1 || !__pressed ) return;
+void QtImageMicrograph::mouseMoveEvent(QMouseEvent *e)
+{
+    if (getMicrograph() == NULL || __movingMark == -1 || !__pressed) return;
 
-   int mX, mY;
-   imageToMicrograph( e->pos().x(), e->pos().y(), mX, mY );
-   getMicrograph()->coord(__movingMark).X = mX;
-   getMicrograph()->coord(__movingMark).Y = mY;
+    int mX, mY;
+    imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
+    getMicrograph()->coord(__movingMark).X = mX;
+    getMicrograph()->coord(__movingMark).Y = mY;
 
-   emit signalRepaint();
+    emit signalRepaint();
 }
 
-void QtImageMicrograph::changeProperties( int mX, int mY ) {
-   int coord = getMicrograph()->search_coord_near( mX, mY, 10 );
-   if ( coord == -1 ) return;
+void QtImageMicrograph::changeProperties(int mX, int mY)
+{
+    int coord = getMicrograph()->search_coord_near(mX, mY, 10);
+    if (coord == -1) return;
 
-   QtDialogProperties dialogProperties( getMicrograph(), getWidgetMicrograph(),
-      coord, this, 0, TRUE );
+    QtDialogProperties dialogProperties(getMicrograph(), getWidgetMicrograph(),
+                                        coord, this, 0, TRUE);
 
-   connect( &dialogProperties, SIGNAL(signalDeleteMarkOther(int)),
-            this, SLOT(slotDeleteMarkOther(int)) );
-   connect( &dialogProperties, SIGNAL(signalChangeFamilyOther(int,int)),
-            this, SLOT(slotChangeFamilyOther(int,int)) );
+    connect(&dialogProperties, SIGNAL(signalDeleteMarkOther(int)),
+            this, SLOT(slotDeleteMarkOther(int)));
+    connect(&dialogProperties, SIGNAL(signalChangeFamilyOther(int, int)),
+            this, SLOT(slotChangeFamilyOther(int, int)));
 
-   dialogProperties.exec();
+    dialogProperties.exec();
 }
 
-void QtImageMicrograph::slotZoomIn() {
-   if ( __zoom == 0.1 ) return;
-   __zoom -= 0.1;
+void QtImageMicrograph::slotZoomIn()
+{
+    if (__zoom == 0.1) return;
+    __zoom -= 0.1;
 
-   __x = __y = 0;
-   emit signalSetCoords( 0, 0 );
-   emit signalRepaint();
+    __x = __y = 0;
+    emit signalSetCoords(0, 0);
+    emit signalRepaint();
 }
 
-void QtImageMicrograph::slotZoomOut() {
-   __zoom += 0.1;
+void QtImageMicrograph::slotZoomOut()
+{
+    __zoom += 0.1;
 
-   __x = __y = 0;
-   emit signalSetCoords( 0, 0 );
-   emit signalRepaint();
+    __x = __y = 0;
+    emit signalSetCoords(0, 0);
+    emit signalRepaint();
 }

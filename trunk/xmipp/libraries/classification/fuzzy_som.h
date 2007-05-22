@@ -41,116 +41,119 @@
  */
 class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
 {
- public:
+public:
 
-  /**
-   * Constructs the algorithm
-   * @param _m0         Initial Fuzzy Membership constant
-   * @param _m1         Final Fuzzy Membership constant
-   * @param _annSteps   Number of steps in deterministic annealing
-   * @param _reg        Regularization constant
-   * @param _epsilon    Stopping criterion
-   * @param _nSteps     Number of training steps
-   */
-  xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
-  		double _reg, double _epsilon, unsigned long _nSteps)
-  : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
-    reg(_reg), epsilon(_epsilon), somNSteps(_nSteps) {};
+    /**
+     * Constructs the algorithm
+     * @param _m0         Initial Fuzzy Membership constant
+     * @param _m1         Final Fuzzy Membership constant
+     * @param _annSteps   Number of steps in deterministic annealing
+     * @param _reg        Regularization constant
+     * @param _epsilon    Stopping criterion
+     * @param _nSteps     Number of training steps
+     */
+    xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
+                  double _reg, double _epsilon, unsigned long _nSteps)
+            : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
+            reg(_reg), epsilon(_epsilon), somNSteps(_nSteps)
+    {};
 
-  /**
-   * Virtual destructor
-   */
-  virtual ~xmippFuzzySOM() {};
+    /**
+     * Virtual destructor
+     */
+    virtual ~xmippFuzzySOM()
+    {};
 
-  /**
-   * Sets the number of training steps
-   * @param _nSteps  Number of training steps
-   */
-  void nSteps(const unsigned long& _nSteps);
+    /**
+     * Sets the number of training steps
+     * @param _nSteps  Number of training steps
+     */
+    void nSteps(const unsigned long& _nSteps);
 
-  /**
-   * Sets the Initial Fuzzy membership
-   * @param _m0
-   */
-  void initialFuzzzyMembership(const double& _m0);
-
-
-  /**
-   * Sets the Final Fuzzy membership
-   * @param _m1
-   */
-  void finalFuzzzyMembership(const double& _m1);
+    /**
+     * Sets the Initial Fuzzy membership
+     * @param _m0
+     */
+    void initialFuzzzyMembership(const double& _m0);
 
 
-  /**
-   * Sets the number of deterministic annealing training steps
-   * @param _annSteps  Number of steps
-   */
-  void setAnnSteps(const unsigned long& _annSteps);
+    /**
+     * Sets the Final Fuzzy membership
+     * @param _m1
+     */
+    void finalFuzzzyMembership(const double& _m1);
 
 
-
-  /**
-   * Sets the Regularization Constant
-   * @param _reg
-   */
-  void regularization(const double& _reg);
-
-
-  /**
-   * Trains the Fuzzy SOM
-   * @param _som  The som to train
-   * @param _examples   The training set
-   */
-  virtual void train (xmippFuzzyMap& _som, const TS& _examples);
-
-  /**
-   * Tests the Fuzzy SOM
-   * @param _som        The fuzzy som to test
-   * @param _examples   The training set of examples
-   */
-  virtual double test (const xmippFuzzyMap& _som, const TS& _examples) const;
-
-  /**
-   * Determines the functional value
-   * Returns the fidelity to the data and penalty parts of the functional
-   */
-  virtual double functional(const TS& _examples, const xmippFuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty);
+    /**
+     * Sets the number of deterministic annealing training steps
+     * @param _annSteps  Number of steps
+     */
+    void setAnnSteps(const unsigned long& _annSteps);
 
 
 
- private:
-   double m0;          	      // Initial Fuzzy Membership
-   double m1;          	      // Final Fuzzy Membership
-   unsigned long annSteps;    	      // number of deterministic annealing steps
-   double reg;          	      // Regularization constant
-   double epsilon;	      // Stopping criterion Error < epsilon
-   unsigned long somNSteps;           // number of steps
+    /**
+     * Sets the Regularization Constant
+     * @param _reg
+     */
+    void regularization(const double& _reg);
 
-  /** Declaration of virtual method */
-   virtual void train (xmippFuzzyMap& _som, const TS& _examples) const {};
 
-   double updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m);   	
+    /**
+     * Trains the Fuzzy SOM
+     * @param _som  The som to train
+     * @param _examples   The training set
+     */
+    virtual void train(xmippFuzzyMap& _som, const TS& _examples);
 
-   // Update Fuzzy Code vectors
-   void updateV(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
+    /**
+     * Tests the Fuzzy SOM
+     * @param _som        The fuzzy som to test
+     * @param _examples   The training set of examples
+     */
+    virtual double test(const xmippFuzzyMap& _som, const TS& _examples) const;
 
-   // Local Average of the code vectors
-   void LocalAve(xmippFuzzyMap& _som, xmippVector& tmpV, int tmpi, int tmpj);
+    /**
+     * Determines the functional value
+     * Returns the fidelity to the data and penalty parts of the functional
+     */
+    virtual double functional(const TS& _examples, const xmippFuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty);
 
-   // Internal Scratch
 
-   unsigned numNeurons;
-   unsigned numVectors;
-   unsigned dim;
-   vector<double> tmpV, tmpD, tmpDens;
-   vector < vector<double> > tmpMap;
 
-void showX(const TS& _ts);
+private:
+    double m0;                 // Initial Fuzzy Membership
+    double m1;                 // Final Fuzzy Membership
+    unsigned long annSteps;           // number of deterministic annealing steps
+    double reg;                 // Regularization constant
+    double epsilon;       // Stopping criterion Error < epsilon
+    unsigned long somNSteps;           // number of steps
 
-void showV(xmippFuzzyMap& _som);
+    /** Declaration of virtual method */
+    virtual void train(xmippFuzzyMap& _som, const TS& _examples) const
+        {};
 
-void showU(xmippFuzzyMap& _som, const TS& _ts);
+    double updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
+
+    // Update Fuzzy Code vectors
+    void updateV(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
+
+    // Local Average of the code vectors
+    void LocalAve(xmippFuzzyMap& _som, xmippVector& tmpV, int tmpi, int tmpj);
+
+    // Internal Scratch
+
+    unsigned numNeurons;
+    unsigned numVectors;
+    unsigned dim;
+    vector<double> tmpV, tmpD, tmpDens;
+    vector < vector<double> > tmpMap;
+
+    void showX(const TS& _ts);
+
+    void showV(xmippFuzzyMap& _som);
+
+    void showU(xmippFuzzyMap& _som, const TS& _ts);
 
 
 };

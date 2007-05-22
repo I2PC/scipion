@@ -25,10 +25,10 @@
  ***************************************************************************/
 
 #ifndef _PROG_SPARMA_HH
-   #define _PROG_SPARMA_HH
-   #define AR          0   // To distinguish between an AR parameter or a MA
-   #define MA	       1   // parameter, or sigma in the output ARMAParameters matrix
-   #define SIGMA       2   // returned by functions.
+#define _PROG_SPARMA_HH
+#define AR          0   // To distinguish between an AR parameter or a MA
+#define MA        1   // parameter, or sigma in the output ARMAParameters matrix
+#define SIGMA       2   // returned by functions.
 
 #include <data/matrix2d.h>
 
@@ -37,29 +37,29 @@
 /** CausalARMA.
 
    This function determines the coeficients of an 2D - ARMA model
-   		
+
    Img(y,x)=sum( AR(p,q)*Img(y+p,x+q)) + sqrt(sigma) * e(y,x)
 
 
    Where:
         (p,q) is a vector belonging to a support region N1
-		AR(p,q) is the matrix with the AR part coeficients of the model
-		sigma is the variance of the random correlated input e(x,y)
-		e(x,y) is random correlated input with zero mean and cross-spectral
-		density:
-		
-		E[e(x,y)*Img(x+a,y+b)]=
-		                           sqrt(sigma)            if (p,q)=(0,0)
-								   sqrt(sigma)*MA(p,q)    if (p,q) belongs to N2
-								   0                      otherwise
-		
-		
-		
-		N1 - The support region for the AR part is the first quadrant region
-		     defined by N_AR and M_AR
-		N2 - The support region the the MA part  is the second quadrant region
-		     defined by N_MA and M_MA
-			
+  AR(p,q) is the matrix with the AR part coeficients of the model
+  sigma is the variance of the random correlated input e(x,y)
+  e(x,y) is random correlated input with zero mean and cross-spectral
+  density:
+
+  E[e(x,y)*Img(x+a,y+b)]=
+                             sqrt(sigma)            if (p,q)=(0,0)
+           sqrt(sigma)*MA(p,q)    if (p,q) belongs to N2
+           0                      otherwise
+
+
+
+  N1 - The support region for the AR part is the first quadrant region
+       defined by N_AR and M_AR
+  N2 - The support region the the MA part  is the second quadrant region
+       defined by N_MA and M_MA
+
    This model is determined following the method depicted in:
 
    R. L. Kashyap, "Characterization and Estimation of Two-Dimensional
@@ -67,30 +67,30 @@
    5, pp. 736-745, September 1984.
 
 
-   				
+
 
     PARAMETERS:
-	      Img - The matrix - Here it's supposed that it comes from an image
-		  N_AR, M_AR - The order in Rows and Columns directions of the AR part
-		               of the model.
-		  N_AR, M_AR - The order in Rows and Columns directions of the MA part
-		               of the model.
-		  ARParameters - The matrix to return the resulting parameteres
-		  		           for the AR part of the model.
-		  MAParameters - The matrix to return the resulting parameteres
-		  		           for the MA part of the model.
-				
-   OUTPUT: 	The function stores the ARMA parameters into ARParameters and
+       Img - The matrix - Here it's supposed that it comes from an image
+    N_AR, M_AR - The order in Rows and Columns directions of the AR part
+                 of the model.
+    N_AR, M_AR - The order in Rows and Columns directions of the MA part
+                 of the model.
+    ARParameters - The matrix to return the resulting parameteres
+                 for the AR part of the model.
+    MAParameters - The matrix to return the resulting parameteres
+                 for the MA part of the model.
+
+   OUTPUT:  The function stores the ARMA parameters into ARParameters and
             MAParameters
             Every row of this output matrices has 3 values:
-			1nd and 2nd- indicate the support point (p,q) for the coeficient
-			3th column - indicates the value of the coeficient
+   1nd and 2nd- indicate the support point (p,q) for the coeficient
+   3th column - indicates the value of the coeficient
 
    DATE:        26-3-2001
 */
 double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
                   int N_MA, int M_MA, matrix2D<double> &ARParameters,
-				  matrix2D<double> &MAParameters);
+                  matrix2D<double> &MAParameters);
 
 
 /** ARMAFilter.
@@ -101,38 +101,38 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
     PARAMETERS:   Img - The matrix - Here it's supposed that it comes from
                         an input image
                   Filter - The matrix that will contain the filter.
-		  ARParameters - The matrix with the AR model coeficients, as
-			   is returned by CausalARMA or NonCausalARMA
-		  MAParameters - The matrix with the MA model coeficients, as
+    ARParameters - The matrix with the AR model coeficients, as
+      is returned by CausalARMA or NonCausalARMA
+    MAParameters - The matrix with the MA model coeficients, as
                            is returned by CausalARMA or NonCausalARMA
-		  dSigma        - The Sigma Coeficient for the ARMA model
-				
-   OUTPUT: 	The function stores the output in Filter.
+    dSigma        - The Sigma Coeficient for the ARMA model
+
+   OUTPUT:  The function stores the output in Filter.
 
    DATE:        26-3-2001
 */
 void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
                 matrix2D<double> &ARParameters, matrix2D<double> &MAParameters,
-				double dSigma);
+                double dSigma);
 //@}
 
 class ARMA_parameters
 {
 public:
-   FileName 	fn_in;		    // Name of input image
-   FileName     fn_filter;          // Name of filter image
-   int      	N_AR;               // order in the Rows direction of the AR part of the model
-   int      	M_AR;               // order in the Cols direction of the AR part of the model
-   int      	N_MA;               // order in the Rows direction of the MA part of the model
-   int      	M_MA;               // order in the Cols direction of the MA part of the model
+    FileName  fn_in;      // Name of input image
+    FileName     fn_filter;          // Name of filter image
+    int       N_AR;               // order in the Rows direction of the AR part of the model
+    int       M_AR;               // order in the Cols direction of the AR part of the model
+    int       N_MA;               // order in the Rows direction of the MA part of the model
+    int       M_MA;               // order in the Cols direction of the MA part of the model
 
 public:
-   /// Read parameters from command line
-   void read(int argc, char **argv);
-   /// Read parameters from command line
-   void read(const FileName &file);
-   /// Write to a file
-   void write(const FileName &fn, bool rewrite=true);
+    /// Read parameters from command line
+    void read(int argc, char **argv);
+    /// Read parameters from command line
+    void read(const FileName &file);
+    /// Write to a file
+    void write(const FileName &fn, bool rewrite = true);
 };
 
 #endif

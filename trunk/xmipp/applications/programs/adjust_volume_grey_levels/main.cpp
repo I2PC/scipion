@@ -25,14 +25,27 @@
 
 #include <reconstruction/adjust_volume_grey_levels.h>
 
-int main (int argc, char **argv) {
-   Prog_Adjust_Volume_Parameters prm;
-   try {
-      prm.read(argc,argv);
-   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(1);}
-   try {
-      prm.run();
-   } catch (Xmipp_error XE) {cout << XE;}
-   return 0;
+int main(int argc, char **argv)
+{
+    Prog_Adjust_Volume_Parameters prm;
+    try
+    {
+        prm.read(argc, argv);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(1);
+    }
+    try
+    {
+        prm.run();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    return 0;
 }
 

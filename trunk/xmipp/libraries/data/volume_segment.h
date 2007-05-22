@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_SEGMENT
-   #define _PROG_SEGMENT
+#define _PROG_SEGMENT
 
 #include "funcs.h"
 #include "volume.h"
@@ -31,54 +31,55 @@
 /**@name Segment */
 //@{
 /** Segment parameters. */
-class Prog_segment_prm {
+class Prog_segment_prm
+{
 public:
-   /// Input volume
-   FileName fn_vol;
-   /** Desired mass (in voxels), if not given computed from
-       the mass and the sampling rate by produce_info. */
-   double   voxel_mass;
-   /// Desired mass (in Daltons). Not necessary if voxel_mass is provided
-   double   dalton_mass;
-   /// Desired mass (in aminoacids). Not necessary if voxel_mass is provided
-   double   aa_mass;
-   /// Sampling rate (in A/pixel). Not necessary if voxel_mass is provided
-   double   sampling_rate;
-   /// Output mask. If not given it is not written
-   FileName fn_mask;
-   /// Enable a single threshold measure
-   bool     en_threshold;
-   /// Threshold
-   double   threshold;
+    /// Input volume
+    FileName fn_vol;
+    /** Desired mass (in voxels), if not given computed from
+        the mass and the sampling rate by produce_info. */
+    double   voxel_mass;
+    /// Desired mass (in Daltons). Not necessary if voxel_mass is provided
+    double   dalton_mass;
+    /// Desired mass (in aminoacids). Not necessary if voxel_mass is provided
+    double   aa_mass;
+    /// Sampling rate (in A/pixel). Not necessary if voxel_mass is provided
+    double   sampling_rate;
+    /// Output mask. If not given it is not written
+    FileName fn_mask;
+    /// Enable a single threshold measure
+    bool     en_threshold;
+    /// Threshold
+    double   threshold;
 
-  /// From here on by Sjors
-  // Create probabilistic solvent mask
-  bool do_prob;
-  /// radius for B.C. Wang-like smoothing procedure
-  int wang_radius;
+    /// From here on by Sjors
+    // Create probabilistic solvent mask
+    bool do_prob;
+    /// radius for B.C. Wang-like smoothing procedure
+    int wang_radius;
 
 public:
-   // Input volume
-   VolumeXmipp V;
+    // Input volume
+    VolumeXmipp V;
 public:
-   /// Read argument from command line
-   void read(int argc, char **argv);
+    /// Read argument from command line
+    void read(int argc, char **argv);
 
-   /// Show
-   friend ostream & operator << (ostream &out, const Prog_segment_prm &prm);
+    /// Show
+    friend ostream & operator << (ostream &out, const Prog_segment_prm &prm);
 
-   /// Usage
-   void usage() const;
+    /// Usage
+    void usage() const;
 
-   /** Produce side info.
-       Read the input volume, and compute the number of voxels
-       if not given. An exception is thrown if no way is given to compute
-       the voxel mass*/
-   void produce_side_info();
+    /** Produce side info.
+        Read the input volume, and compute the number of voxels
+        if not given. An exception is thrown if no way is given to compute
+        the voxel mass*/
+    void produce_side_info();
 
-   /** Really compute the mask. If a mask name is given then it is
-       written to disk.*/
-   void segment(VolumeXmipp &mask);
+    /** Really compute the mask. If a mask name is given then it is
+        written to disk.*/
+    void segment(VolumeXmipp &mask);
 
 };
 //@}

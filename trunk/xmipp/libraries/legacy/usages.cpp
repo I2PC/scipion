@@ -28,42 +28,42 @@
  ****************************************************************************/
 
 
-  /* **********************************************************************
+/* **********************************************************************
 
-        This file contains kind routines for the usage checking, and
-        for file names handling.
+      This file contains kind routines for the usage checking, and
+      for file names handling.
 
-   ************************************************************************/
+ ************************************************************************/
 
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <cctype>
 
-int check_comm( char **arv)
+int check_comm(char **arv)
 {
 
-  if (strlen (arv[1]) != 2)
-  {
-    printf ("Error in the arguments ( %s )",arv[0]);
-    puts ("series-name must have two characters");
-    return 0;
-  }
+    if (strlen(arv[1]) != 2)
+    {
+        printf("Error in the arguments ( %s )", arv[0]);
+        puts("series-name must have two characters");
+        return 0;
+    }
 
-  if (strlen (arv[2]) != 1)
-  {
-    printf ("Error in the arguments ( %s )",arv[0]);
-    puts ("t|u must have only one character");
-    return 0;
-  }
+    if (strlen(arv[2]) != 1)
+    {
+        printf("Error in the arguments ( %s )", arv[0]);
+        puts("t|u must have only one character");
+        return 0;
+    }
 
-  if (tolower(*arv[2]) != 't' && tolower(*arv[2]) != 'u')
-  {
-    printf ("Error in the arguments ( %s )",arv[0]);
-    puts (" t|u must be 't' or 'u'");
-    return 0;
-  }
- return 1;
+    if (tolower(*arv[2]) != 't' && tolower(*arv[2]) != 'u')
+    {
+        printf("Error in the arguments ( %s )", arv[0]);
+        puts(" t|u must be 't' or 'u'");
+        return 0;
+    }
+    return 1;
 
 }
 
@@ -71,27 +71,27 @@ int check_comm( char **arv)
 
 void getTempoName(char *filNomb)
 {
- time_t ltime;
+    time_t ltime;
 
-   time(&ltime);
+    time(&ltime);
 
-   sprintf(filNomb,"T%d",ltime);
-   filNomb[8]='.';
-   filNomb[12]='\0';
+    sprintf(filNomb, "T%d", ltime);
+    filNomb[8] = '.';
+    filNomb[12] = '\0';
 }
 /* ********************************************************************* */
 void getDate(char *day, char *hour)
 {
- time_t lTiempo;
- struct tm *tmTiempoGreng;
+    time_t lTiempo;
+    struct tm *tmTiempoGreng;
 
-   time(&lTiempo);
-   tmTiempoGreng=localtime(&lTiempo);
-   tmTiempoGreng->tm_mon++;
+    time(&lTiempo);
+    tmTiempoGreng = localtime(&lTiempo);
+    tmTiempoGreng->tm_mon++;
 
-   sprintf(hour,"%d%s%d",tmTiempoGreng->tm_hour,":",tmTiempoGreng->tm_min);
-   sprintf( day,"%d%s%d%s%d",tmTiempoGreng->tm_mday,"-",
-            tmTiempoGreng->tm_mon,"-",tmTiempoGreng->tm_year);
+    sprintf(hour, "%d%s%d", tmTiempoGreng->tm_hour, ":", tmTiempoGreng->tm_min);
+    sprintf(day, "%d%s%d%s%d", tmTiempoGreng->tm_mday, "-",
+            tmTiempoGreng->tm_mon, "-", tmTiempoGreng->tm_year);
 }
 /* ********************************************************************* */
 
@@ -100,14 +100,14 @@ void getDate(char *day, char *hour)
 
 void getNameAbs(char *nameD, char *nameProg)
 {
-   char *puntero;
-   int c= '/';
+    char *puntero;
+    int c = '/';
 
-   puntero = strrchr( nameProg,c ) ;
+    puntero = strrchr(nameProg, c) ;
 
-   if( puntero ==NULL)
-     strcpy ( nameD,nameProg);
-   else
-     strcpy ( nameD,puntero+1);
+    if (puntero == NULL)
+        strcpy(nameD, nameProg);
+    else
+        strcpy(nameD, puntero + 1);
 }
 /* ********************************************************************* */

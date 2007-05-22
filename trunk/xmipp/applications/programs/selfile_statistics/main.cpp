@@ -29,68 +29,87 @@
 
 /* Prototypes -============================================================= */
 
-void Usage (char **argv);
+void Usage(char **argv);
 
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-/* Input Parameters ======================================================== */
-FileName       sel_file;   // selection file
-
-
-/* Parameters ============================================================== */
-   try {
-       if (argc != 2) {Usage(argv); exit(0);} else {
-       		sel_file = argv[1];
-       }
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(argv);}
-
-try {
-
-   SelFile SF(sel_file);
-   int total = 0;
-   int active = 0;
-   int discarded = 0;
-   int commented = 0;
-   while (!SF.eof()) {
-      // Get file
-         if (SF.Is_ACTIVE())
-	    active++;
-	 else if (SF.Is_DISCARDED())
-	    discarded++;
-	 else if (SF.Is_COMMENT())
-	    commented++;
-      SF.next();
-      total++;
-   }  // while
-
-   cout << "RESULTS: " << endl;
-   cout << "total number of images : " << total << " (100%)" << endl;
-   cout << "active images : " << active << " (" << (float) active*100.0/(float) total << "%)" << endl;
-   cout << "discarded images : " << discarded << " (" << (float) discarded*100.0/(float) total << "%)" << endl;
-   cout << "commented images : " << commented << " (" << (float) commented*100.0/(float) total << "%)" << endl;
+    /* Input Parameters ======================================================== */
+    FileName       sel_file;   // selection file
 
 
-} catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+    /* Parameters ============================================================== */
+    try
+    {
+        if (argc != 2)
+        {
+            Usage(argv);
+            exit(0);
+        }
+        else
+        {
+            sel_file = argv[1];
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage(argv);
+    }
+
+    try
+    {
+
+        SelFile SF(sel_file);
+        int total = 0;
+        int active = 0;
+        int discarded = 0;
+        int commented = 0;
+        while (!SF.eof())
+        {
+            // Get file
+            if (SF.Is_ACTIVE())
+                active++;
+            else if (SF.Is_DISCARDED())
+                discarded++;
+            else if (SF.Is_COMMENT())
+                commented++;
+            SF.next();
+            total++;
+        }  // while
+
+        cout << "RESULTS: " << endl;
+        cout << "total number of images : " << total << " (100%)" << endl;
+        cout << "active images : " << active << " (" << (float) active*100.0 / (float) total << "%)" << endl;
+        cout << "discarded images : " << discarded << " (" << (float) discarded*100.0 / (float) total << "%)" << endl;
+        cout << "commented images : " << commented << " (" << (float) commented*100.0 / (float) total << "%)" << endl;
+
+
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 } //main
 
 /* ------------------------------------------------------------------------- */
 /* Help Message for this Program                                             */
 /* ------------------------------------------------------------------------- */
-void Usage (char **argv) {
-  printf (
-     "Usage: %s [Purpose and Parameters]"
-     "\nPurpose: Sel file statistics"
-     "\nParameter Values: (note space before value)"
-     "\nI/O parameters"
-     "\n    input_file    input sel file"
-     "\n  "
-     "\nExample: "
-     "\n    selstats c3u.sel "
+void Usage(char **argv)
+{
+    printf(
+        "Usage: %s [Purpose and Parameters]"
+        "\nPurpose: Sel file statistics"
+        "\nParameter Values: (note space before value)"
+        "\nI/O parameters"
+        "\n    input_file    input sel file"
+        "\n  "
+        "\nExample: "
+        "\n    selstats c3u.sel "
 
-     "\n"
-     ,argv[0]);
+        "\n"
+        , argv[0]);
 }
 

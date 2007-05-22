@@ -37,25 +37,26 @@
 /*@name Show Spectra SOM. */
 //@{
 /** Class to show Spectra SOM. */
-class ShowSpectraSOM: public ShowSpectra {
-   Q_OBJECT;
+class ShowSpectraSOM: public ShowSpectra
+{
+    Q_OBJECT;
 public:
-   // Apply geometric transformation when showing average & stddev of original
-   // images and to compute the error image
-   bool        apply_geo;
+    // Apply geometric transformation when showing average & stddev of original
+    // images and to compute the error image
+    bool        apply_geo;
 protected:
-   // Original data
-   xmippCTVectors *Vdat;
-   // Array of list of images, a list for each codevector
-   vector<string> *SFcv;
-   // Array of list of spectra, a list for each codevector
-   vector<int>    *SFcvs;
-   // Histogram of images assigned
-   string  *hisAssigned;
-   // Errors within group
-   string  *cv_errors;
-   // Info file
-   QString infStr;
+    // Original data
+    xmippCTVectors *Vdat;
+    // Array of list of images, a list for each codevector
+    vector<string> *SFcv;
+    // Array of list of spectra, a list for each codevector
+    vector<int>    *SFcvs;
+    // Histogram of images assigned
+    string  *hisAssigned;
+    // Errors within group
+    string  *cv_errors;
+    // Info file
+    QString infStr;
 
     /* Initialization.
        Sets SFcv = NULL; and then calls to ShowSel::init() */
@@ -64,7 +65,7 @@ protected:
     virtual void clear();
     /* Read SOM files and Dat file. */
     virtual void readFile(const FileName &_fn,
-       double _minGray=0, double _maxGray=0);
+                          double _minGray = 0, double _maxGray = 0);
     /* Read only SOM files. */
     virtual void readSOMFiles(const FileName &_fn_root);
 
@@ -82,8 +83,8 @@ protected:
     virtual const char* cellLabel(int i) const;
     /* Some menu items for the options */
     int mi_hisAsLabels, mi_errAsLabels;
-       #define Histogram_LABEL 2
-       #define Err_LABEL       3
+#define Histogram_LABEL 2
+#define Err_LABEL       3
     /* Change the labels */
     virtual void changeLabel(int _clicked_mi);
 
@@ -110,10 +111,10 @@ protected slots:
     /* Show algorithm information */
     virtual void showAlgoInfo();
 public:
-   /** Init with SOM files.
-       The given parameter is the rootname and the following files are needed:
-   */
-   void initWithFile(const FileName &_fn_root, const FileName &_fn_dat);
+    /** Init with SOM files.
+        The given parameter is the rootname and the following files are needed:
+    */
+    void initWithFile(const FileName &_fn_root, const FileName &_fn_dat);
 
 };
 //@}

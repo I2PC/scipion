@@ -60,7 +60,7 @@
 #define Z_AXIS 3
 
 /*
- *	This is the official size of the EM header.
+ * This is the official size of the EM header.
  */
 #define SIZEOF_EM_HEADER 512
 /*******************************************************************************
@@ -70,46 +70,48 @@
  */
 typedef struct EMheader
 {
-  unsigned char   machine;                  /* Machine coding  */
-  unsigned char   general_use;              /* General purpose */
-  unsigned char   not_used;                 /* Not used */
-  unsigned char   mode;                     /* See modes above. */
+    unsigned char   machine;                  /* Machine coding  */
+    unsigned char   general_use;              /* General purpose */
+    unsigned char   not_used;                 /* Not used */
+    unsigned char   mode;                     /* See modes above. */
 
-  unsigned long   nx;                       /* Number of columns X (fastest) */
-  unsigned long   ny;                       /* Number of columns Y  */
-  unsigned long   nz;                       /* Number of columns Z (slowest) */
+    unsigned long   nx;                       /* Number of columns X (fastest) */
+    unsigned long   ny;                       /* Number of columns Y  */
+    unsigned long   nz;                       /* Number of columns Z (slowest) */
 
-  unsigned char   comment[EM_COMMENT_SIZE]; /* User comment */
-  unsigned long   user[EM_USER_INTS];       /* For user - all set to zero by default. */
-  unsigned char   user_data[EM_USER_DATA];  /* User data  */
+    unsigned char   comment[EM_COMMENT_SIZE]; /* User comment */
+    unsigned long   user[EM_USER_INTS];       /* For user - all set to zero by default. */
+    unsigned char   user_data[EM_USER_DATA];  /* User data  */
 
 
-} EM_HEADER;
+}
+EM_HEADER;
 
-class EM {
+class EM
+{
 public:
-   /** Estructure with EM EM_header */
-   EM_HEADER my_em_header;
+    /** Estructure with EM EM_header */
+    EM_HEADER my_em_header;
 
 public:
 
-/** write a EM 3D file*/
-   void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed=false);
+    /** write a EM 3D file*/
+    void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed = false);
 
-/** read a EM 3D file*/
-   void read (const FileName &fn_out,  VolumeXmipp &V, bool reversed=false);
+    /** read a EM 3D file*/
+    void read(const FileName &fn_out,  VolumeXmipp &V, bool reversed = false);
 
-/** Empties actual my_em_header structure. */
-   void clear();
+    /** Empties actual my_em_header structure. */
+    void clear();
 
-/** Fill EM header from 3D xmipp image. */
-   void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed=false);
+    /** Fill EM header from 3D xmipp image. */
+    void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed = false);
 
-/** Fill EM header from EM file.
-    Returns true if either reversed is true or the native endianess is
-    different from the one used to store the data.
-    */
-   bool read_header_from_file(const FileName &fn_in, bool reversed=false);
+    /** Fill EM header from EM file.
+        Returns true if either reversed is true or the native endianess is
+        different from the one used to store the data.
+        */
+    bool read_header_from_file(const FileName &fn_in, bool reversed = false);
 };
 
 //@}

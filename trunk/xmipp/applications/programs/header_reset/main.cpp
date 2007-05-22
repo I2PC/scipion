@@ -30,40 +30,50 @@
 void Usage();
 
 /* MAIN -------------------------------------------------------------------- */
-int main (int argc,char *argv[]) {
-   SelFile         SF;
-   ImageXmipp      img;
-   FileName        fn_input;
+int main(int argc, char *argv[])
+{
+    SelFile         SF;
+    ImageXmipp      img;
+    FileName        fn_input;
 
-   try 
-   {
-       fn_input=get_param(argc,argv,"-i");
-       if (Is_ImageXmipp(fn_input))
-       {
-	   SF.insert(fn_input,SelLine::ACTIVE);
-       }
-       else
-	   SF.read(fn_input);
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage();}
+    try
+    {
+        fn_input = get_param(argc, argv, "-i");
+        if (Is_ImageXmipp(fn_input))
+        {
+            SF.insert(fn_input, SelLine::ACTIVE);
+        }
+        else
+            SF.read(fn_input);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+    }
 
-   try 
-   {
-       cerr <<" Resetting all angles, origin offsets, weights and mirror flags to zero ... "<<endl;
-       SF.go_beginning();
-       while (!SF.eof()) 
-       {
-	   img.read(SF.NextImg());
-	   img.clear_header();
-	   img.write(img.name());
-       }
-       cerr <<" done!"<<endl;
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage();}
+    try
+    {
+        cerr << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << endl;
+        SF.go_beginning();
+        while (!SF.eof())
+        {
+            img.read(SF.NextImg());
+            img.clear_header();
+            img.write(img.name());
+        }
+        cerr << " done!" << endl;
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+    }
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
+void Usage()
+{
     printf("Purpose:\n");
     printf(" Reset the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");

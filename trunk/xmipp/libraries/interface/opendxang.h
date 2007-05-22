@@ -42,25 +42,26 @@
       \URL[distance.net]{../Extra_Docs/distances.net}. (To measuure distances select: Options->viewcontrol and then mode->pick, click in teh image select picks->pick_2 and pick again in the image.)
     */
 
-class openDXang {
-  private:
+class openDXang
+{
+private:
     ofstream fh_out_header;
     ofstream fh_out_data;
     FileName openDXangname;
     int number_of_elements;
 
-  public:
+public:
     /**Open file and write header. Default filenames are myopenDXang.general and
     myopentest.data"
       */
-   void openDXangFile(FileName openDXangfilename="myopenDXang.dx" );
+    void openDXangFile(FileName openDXangfilename = "myopenDXang.dx");
 
-   /** Add one grid point
-     */
-   void Add_Item(const matrix1D<double> RotTiltPsi=vector_R3(0.,0.,0.));
-   /** write a footer and Close file, also write the total number of elements
-       */
-   ~openDXang();
-   };
+    /** Add one grid point
+      */
+    void Add_Item(const matrix1D<double> RotTiltPsi = vector_R3(0., 0., 0.));
+    /** write a footer and Close file, also write the total number of elements
+        */
+    ~openDXang();
+};
 //@}
 #endif

@@ -39,11 +39,11 @@ compresion */
 
 void ROUT_EULER(const double rot,
                 const double tilt,
-		const double psi,
-		const double d00,
-		const double d01,
-		const double d10,
-		const double d11);
+                const double psi,
+                const double d00,
+                const double d01,
+                const double d10,
+                const double d11);
 
 //@}
 /**@name EULER-->Calculate de new tilt after volume
@@ -51,12 +51,12 @@ compresion in Fourier space*/
 //@{
 
 void ROUT_EULER1(const double rot,
-                const double tilt,
-		const double psi,
-		const double d00,
-		const double d01,
-		const double d10,
-		const double d11);
+                 const double tilt,
+                 const double psi,
+                 const double d00,
+                 const double d01,
+                 const double d10,
+                 const double d11);
 
 //@}
 #endif

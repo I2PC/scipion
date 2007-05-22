@@ -36,23 +36,24 @@
 //-------------------------------------------------------------------------
 /* Correlate two projections and find the maximun of the correlation matrix -- */
 /* If the maximun if moved further away than max_step returns 0 */
-void calculate_and_find_correlation_max_proj( Projection const &proj1,
-                                	      Projection const &proj2,
-                                	     Projection &proj_temp,
-                                	     double &shift_X, double &shift_Y,
-                   	        	     double const max_step,
-					     int ref_trans_after,int imagen_no){
+void calculate_and_find_correlation_max_proj(Projection const &proj1,
+        Projection const &proj2,
+        Projection &proj_temp,
+        double &shift_X, double &shift_Y,
+        double const max_step,
+        int ref_trans_after, int imagen_no)
+{
 //       #define DEBUG_calculate_and_find_correlation_max_proj
-       #ifdef DEBUG_calculate_and_find_correlation_max_proj
-       cout << "\n  (cal_find_corr_proj) imagen_no:  "   << imagen_no  <<endl;
-       #endif
+#ifdef DEBUG_calculate_and_find_correlation_max_proj
+    cout << "\n  (cal_find_corr_proj) imagen_no:  "   << imagen_no  << endl;
+#endif
 
 
-       proj_temp().resize(proj1());
-       calculate_and_find_correlation_max_mat(IMGMATRIX(proj1),
-                                              IMGMATRIX(proj2),
-	  			              IMGMATRIX(proj_temp),
-				              shift_X,shift_Y, max_step);
-  				
+    proj_temp().resize(proj1());
+    calculate_and_find_correlation_max_mat(IMGMATRIX(proj1),
+                                           IMGMATRIX(proj2),
+                                           IMGMATRIX(proj_temp),
+                                           shift_X, shift_Y, max_step);
+
 }//calculate_and_find_correlation_max end
 #undef DEBUG_calculate_and_find_correlation_max_proj

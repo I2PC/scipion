@@ -28,7 +28,7 @@
 /*****************************************************************************/
 
 #ifndef _XVMRC_H
-   #define _XVMRC_H
+#define _XVMRC_H
 
 #include <data/funcs.h>
 #include <data/matrix2d.h>
@@ -66,9 +66,9 @@
 #define Z_AXIS 3
 
 /*
- *	This is the official size of the mrc header.
- *	C requires the '\0' terminator for strings which would
- *	offset the size by MRC_NUM_LABELS bytes.
+ * This is the official size of the mrc header.
+ * C requires the '\0' terminator for strings which would
+ * offset the size by MRC_NUM_LABELS bytes.
  */
 #define SIZEOF_MRC_HEADER 1024
 /*******************************************************************************
@@ -80,11 +80,11 @@
 typedef struct MRCheader
 {
     int         nx;                 /* Number of columns -      */
-                                    /* Fastest changing in map. */
+    /* Fastest changing in map. */
     int         ny;
 
     int         nz;                 /* Number of sections -     */
-                                    /* slowest changing in map. */
+    /* slowest changing in map. */
 
     int         mode;               /* See modes above. */
 
@@ -105,11 +105,11 @@ typedef struct MRCheader
     float       gamma;              /* Cell angles (Degrees). */
 
     int         mapc;               /* Which axis corresponds to Columns.  */
-                                    /* (1,2,3 for X,Y,Z.                   */
+    /* (1,2,3 for X,Y,Z.                   */
     int         mapr;               /* Which axis corresponds to Rows.     */
-                                    /* (1,2,3 for X,Y,Z.                   */
+    /* (1,2,3 for X,Y,Z.                   */
     int         maps;               /* Which axis corresponds to Sections. */
-                                    /* (1,2,3 for X,Y,Z.                   */
+    /* (1,2,3 for X,Y,Z.                   */
 
     float       amin;               /* Minimum density value. */
     float       amax;               /* Maximum density value. */
@@ -118,29 +118,29 @@ typedef struct MRCheader
     int         ispg;               /* Space group number (0 for images). */
 
     int         nsymbt;             /* Number of bytes used for storing   */
-                                    /* symmetry operators. */
+    /* symmetry operators. */
     unsigned long  user[MRC_USER];  /* For user - all set to zero by default. */
     char        map[4];              /* Char string 'MAP ' to identify file type */
     char        machst[4];           /* Machine stamp indicating the machine type
-			               which wrote file
-                                       The machine stamp is a 32-bit
-                                       quantity containing a set of four
-                                       `nibbles' (half-bytes)---only half
-                                       the space is used. Each nibble is
-                                       a number specifying the representation
-                                       of (in C terms) double (d) , float (f),
-                                       int (i) and unsigned char (c) types.
-                                        Thus each stamp is of the form
-                                        0xdfic0000. The values for the
-                                        floating point nibbles may be taken
-                                        from the list (following HDF):
-                                       1 	Big-endian ieee
-                                       2 	VAX
-                                       3 	Cray
-                                       4 	Little-endian ieee
-                                       5 	Convex native
-                                       6 	Fijitsu VP
-                                       */
+                      which wrote file
+                                           The machine stamp is a 32-bit
+                                           quantity containing a set of four
+                                           `nibbles' (half-bytes)---only half
+                                           the space is used. Each nibble is
+                                           a number specifying the representation
+                                           of (in C terms) double (d) , float (f),
+                                           int (i) and unsigned char (c) types.
+                                            Thus each stamp is of the form
+                                            0xdfic0000. The values for the
+                                            floating point nibbles may be taken
+                                            from the list (following HDF):
+                                           1  Big-endian ieee
+                                           2  VAX
+                                           3  Cray
+                                           4  Little-endian ieee
+                                           5  Convex native
+                                           6  Fijitsu VP
+                                           */
 
 
     float       xorigin;            /* X origin. */
@@ -148,50 +148,52 @@ typedef struct MRCheader
 
     int         nlabl;              /* Number of labels being used. */
 
-                                    /* 10 text labels of 80 characters each. */
+    /* 10 text labels of 80 characters each. */
     char        labels[MRC_NUM_LABELS][MRC_LABEL_SIZE+1];
 
-} MRC_HEADER;
+}
+MRC_HEADER;
 
-class CCP4 {
+class CCP4
+{
 public:
-   /** Estructure with ccp4 header
-        copied from ccp4 code */
-   MRC_HEADER my_mrc_header;
+    /** Estructure with ccp4 header
+         copied from ccp4 code */
+    MRC_HEADER my_mrc_header;
 
 
 public:
-/** write a ccp4 2D file*/
-   void write(const FileName &fn_out, const ImageXmipp &I, bool reversed=false,
-                                 double x_length=0., double y_length=0., double z_length=0.);
+    /** write a ccp4 2D file*/
+    void write(const FileName &fn_out, const ImageXmipp &I, bool reversed = false,
+               double x_length = 0., double y_length = 0., double z_length = 0.);
 
-/** write a ccp4 3D file*/
-   void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed=false,
-                                 double x_length=0., double y_length=0., double z_length=0.);
+    /** write a ccp4 3D file*/
+    void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed = false,
+               double x_length = 0., double y_length = 0., double z_length = 0.);
 
-/** read  a ccp4 2D file*/
-   void read (const FileName &fn_out,  ImageXmipp &I, bool reversed=false);
+    /** read  a ccp4 2D file*/
+    void read(const FileName &fn_out,  ImageXmipp &I, bool reversed = false);
 
-/** read  a ccp4 3D file*/
-   void read (const FileName &fn_out,  VolumeXmipp &V, bool reversed=false);
+    /** read  a ccp4 3D file*/
+    void read(const FileName &fn_out,  VolumeXmipp &V, bool reversed = false);
 
-/** Empties actual my_mrc_header structure. */
-   void clear();
+    /** Empties actual my_mrc_header structure. */
+    void clear();
 
-/** Fill mrc header from 2D xmipp image. */
-   void fill_header_from_xmippimage(ImageXmipp I, bool reversed=false,
-                                 double x_length=0., double y_length=0., double z_length=0.);
+    /** Fill mrc header from 2D xmipp image. */
+    void fill_header_from_xmippimage(ImageXmipp I, bool reversed = false,
+                                     double x_length = 0., double y_length = 0., double z_length = 0.);
 
-/** Fill mrc header from 3D xmipp image. */
-   void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed=false,
-                                 double x_length=0., double y_length=0., double z_length=0.);
+    /** Fill mrc header from 3D xmipp image. */
+    void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed = false,
+                                      double x_length = 0., double y_length = 0., double z_length = 0.);
 
-/** Fill mrc header from mrc file.
-    Returns tre is either reversed is true or the native endianess is
-    different from the one used to store the data.
+    /** Fill mrc header from mrc file.
+        Returns tre is either reversed is true or the native endianess is
+        different from the one used to store the data.
 
-    */
-   bool read_header_from_file(const FileName &fn_in, bool reversed=false);
+        */
+    bool read_header_from_file(const FileName &fn_in, bool reversed = false);
 };
 
 

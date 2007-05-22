@@ -45,21 +45,22 @@ typedef xmippMap planeType;
  */
 class xmippPlanes
 {
- public:
-  typedef xmippMap In;
-  typedef planeType Out;
+public:
+    typedef xmippMap In;
+    typedef planeType Out;
 
-  /** Planes default constructor
-  */
-  xmippPlanes(){};
+    /** Planes default constructor
+    */
+    xmippPlanes()
+    {};
 
-  /** getPlane: gets the "plane" (a map representing the effect of the
-  *   given variable.
-  *   @param _in: input SOM
-  *   @param _out: output plane
-  *   @param _plane: variable
-  */
-  void getPlane(const In& _in, Out& _out, const unsigned _plane) const;
+    /** getPlane: gets the "plane" (a map representing the effect of the
+    *   given variable.
+    *   @param _in: input SOM
+    *   @param _out: output plane
+    *   @param _plane: variable
+    */
+    void getPlane(const In& _in, Out& _out, const unsigned _plane) const;
 
 
 };

@@ -25,17 +25,20 @@
 
 #include <data/range_adjust.h>
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Prog_Range_adjust_Parameters *eprm=(Prog_Range_adjust_Parameters *) prm;
-   eprm->apply(img());
+void process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Prog_Range_adjust_Parameters *eprm = (Prog_Range_adjust_Parameters *) prm;
+    eprm->apply(img());
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   Prog_Range_adjust_Parameters *eprm=(Prog_Range_adjust_Parameters *) prm;
-   eprm->apply(vol());
+void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    Prog_Range_adjust_Parameters *eprm = (Prog_Range_adjust_Parameters *) prm;
+    eprm->apply(vol());
 }
 
-int main (int argc, char **argv) {
-   Prog_Range_adjust_Parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Prog_Range_adjust_Parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

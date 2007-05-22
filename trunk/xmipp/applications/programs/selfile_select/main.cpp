@@ -28,72 +28,88 @@
 
 void Usage();
 
-int main (int argc, char *argv[]) {
-   FileName fn_DF, fn_SF, fn_SF_out, fn_tst;
-   int      col;
-   double   limit0, limitF;
-   bool     en_limit0, en_limitF, do_clean;
+int main(int argc, char *argv[])
+{
+    FileName fn_DF, fn_SF, fn_SF_out, fn_tst;
+    int      col;
+    double   limit0, limitF;
+    bool     en_limit0, en_limitF, do_clean;
 
-   // Get input parameters .................................................
-   try {
-      fn_DF     = get_param(argc, argv, "-doc");
-      fn_SF     = get_param(argc, argv, "-sel","");
-      fn_SF_out = get_param(argc, argv, "-o","");
-      col       = AtoI(get_param(argc, argv, "-col","1"));
-      col--;
-      en_limit0 = check_param(argc,argv,"-limit0");
-      if (en_limit0)
-         limit0 = AtoF(get_param(argc,argv,"-limit0"));
-      en_limitF = check_param(argc,argv,"-limitF");
-      if (en_limitF)
-         limitF = AtoF(get_param(argc,argv,"-limitF"));
-      do_clean=check_param(argc,argv,"-clean");
+    // Get input parameters .................................................
+    try
+    {
+        fn_DF     = get_param(argc, argv, "-doc");
+        fn_SF     = get_param(argc, argv, "-sel", "");
+        fn_SF_out = get_param(argc, argv, "-o", "");
+        col       = AtoI(get_param(argc, argv, "-col", "1"));
+        col--;
+        en_limit0 = check_param(argc, argv, "-limit0");
+        if (en_limit0)
+            limit0 = AtoF(get_param(argc, argv, "-limit0"));
+        en_limitF = check_param(argc, argv, "-limitF");
+        if (en_limitF)
+            limitF = AtoF(get_param(argc, argv, "-limitF"));
+        do_clean = check_param(argc, argv, "-clean");
 
-   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(0);}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(0);
+    }
 
-   // Process ..............................................................
-   try {
-      DocFile DF;
-      DF.read(fn_DF);
-      DF.go_beginning();
-      SelFile SF;
-      if (DF.get_current_line().Is_comment()) fn_tst=(DF.get_current_line()).get_text();
-      if (strstr(fn_tst.c_str(),"Headerinfo")==NULL) {
-	// Non-NewXmipp type document file
-	cerr << "Docfile is of non-NewXmipp type. "<<endl;
-	if (fn_SF=="")
-	  REPORT_ERROR(1,"Select images: Please provide the corresponding selfile as well.");
-	SF.read(fn_SF);
-      } else DF.get_selfile(SF);
+    // Process ..............................................................
+    try
+    {
+        DocFile DF;
+        DF.read(fn_DF);
+        DF.go_beginning();
+        SelFile SF;
+        if (DF.get_current_line().Is_comment()) fn_tst = (DF.get_current_line()).get_text();
+        if (strstr(fn_tst.c_str(), "Headerinfo") == NULL)
+        {
+            // Non-NewXmipp type document file
+            cerr << "Docfile is of non-NewXmipp type. " << endl;
+            if (fn_SF == "")
+                REPORT_ERROR(1, "Select images: Please provide the corresponding selfile as well.");
+            SF.read(fn_SF);
+        }
+        else DF.get_selfile(SF);
 
-      // Actually select images
-      if (SF.ImgNo(SelLine::ACTIVE)+SF.ImgNo(SelLine::DISCARDED)!=
-	  DF.dataLineNo())
-	REPORT_ERROR(1,"Select images: SelFile and DocFile do not have the "
-		     "same number of lines");
-      if (col>=DF.FirstLine_ColNo())
-	REPORT_ERROR(1,"Select images: Column not valid for this DocFile");
-      select_images(DF, SF, col, en_limit0, limit0, en_limitF, limitF);
+        // Actually select images
+        if (SF.ImgNo(SelLine::ACTIVE) + SF.ImgNo(SelLine::DISCARDED) !=
+            DF.dataLineNo())
+            REPORT_ERROR(1, "Select images: SelFile and DocFile do not have the "
+                         "same number of lines");
+        if (col >= DF.FirstLine_ColNo())
+            REPORT_ERROR(1, "Select images: Column not valid for this DocFile");
+        select_images(DF, SF, col, en_limit0, limit0, en_limitF, limitF);
 
-      // Cleaning
-      if (do_clean) SF.clean();
+        // Cleaning
+        if (do_clean) SF.clean();
 
-      // Write output
-      if (fn_SF_out=="") fn_SF_out=fn_DF.without_extension().add_extension("sel");
-      SF.write(fn_SF_out);
+        // Write output
+        if (fn_SF_out == "") fn_SF_out = fn_DF.without_extension().add_extension("sel");
+        SF.write(fn_SF_out);
 
-   } catch (Xmipp_error XE) {cout << XE;}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
-   cerr << "Usage: select_images\n"
-        << "   -doc <docfile>        : Input document file\n"
-        << "  [-sel <selfile>]       : Corresponding selfile (only for non-NewXmipp docfiles)\n"
-        << "  [-o  <docroot.sel>]    : Output selfile. By default, the docfile root + .sel\n"
-        << "  [-col <col=1>]         : Column of the docfile (first column is 1) \n"
-        << "  [-limit0 <limit0>]     : Values below this are discarded\n"
-        << "  [-limitF <limitF>]     : Values above this are discarded\n"
-        << "  [-clean]               : Remove discarded images from the selfile \n"
-   ;
+void Usage()
+{
+    cerr << "Usage: select_images\n"
+    << "   -doc <docfile>        : Input document file\n"
+    << "  [-sel <selfile>]       : Corresponding selfile (only for non-NewXmipp docfiles)\n"
+    << "  [-o  <docroot.sel>]    : Output selfile. By default, the docfile root + .sel\n"
+    << "  [-col <col=1>]         : Column of the docfile (first column is 1) \n"
+    << "  [-limit0 <limit0>]     : Values below this are discarded\n"
+    << "  [-limitF <limitF>]     : Values above this are discarded\n"
+    << "  [-clean]               : Remove discarded images from the selfile \n"
+    ;
 }

@@ -27,47 +27,59 @@
 
 void Usage(char *argv[]);
 
-int main (int argc, char *argv[]) {
-   string            fn_phantom;
-   string            fn_vol;
-   Phantom           phantom;
-   VolumeXmipp       vol;
+int main(int argc, char *argv[])
+{
+    string            fn_phantom;
+    string            fn_vol;
+    Phantom           phantom;
+    VolumeXmipp       vol;
 
-   // Read Parameters ......................................................
-   try {
-      fn_phantom = get_param(argc, argv, "-i");
-      fn_vol     = get_param(argc, argv, "-o");
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(argv);}
+    // Read Parameters ......................................................
+    try
+    {
+        fn_phantom = get_param(argc, argv, "-i");
+        fn_vol     = get_param(argc, argv, "-o");
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage(argv);
+    }
 
 
-   try {
-      // Read description file .............................................
-      phantom.read(fn_phantom);
+    try
+    {
+        // Read description file .............................................
+        phantom.read(fn_phantom);
 
-      // Generate volume and write .........................................
-      phantom.draw_in(&vol);
-      vol.write(fn_vol);
-   }
-   catch (Xmipp_error XE) {cout << XE; exit(1);}
-   exit(0);
+        // Generate volume and write .........................................
+        phantom.draw_in(&vol);
+        vol.write(fn_vol);
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        exit(1);
+    }
+    exit(0);
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage (char *argv[]) {
-   printf(
-      "\n\nPurpose: This program allows you to create phantom XMIPP volumes\n"
-      "     from a phantom feature description file.\n"
-      );
-   printf(
-      "\n\nUsage: %s [Parameters]"
-      "\nOptions:"
-      "\nParameter Values: (note space before value)"
-      "\n    -i <description file>"
-      "\n    -o <output file>"
-      "\n"
-      ,argv[0]);
-   exit(1);
+void Usage(char *argv[])
+{
+    printf(
+        "\n\nPurpose: This program allows you to create phantom XMIPP volumes\n"
+        "     from a phantom feature description file.\n"
+    );
+    printf(
+        "\n\nUsage: %s [Parameters]"
+        "\nOptions:"
+        "\nParameter Values: (note space before value)"
+        "\n    -i <description file>"
+        "\n    -o <output file>"
+        "\n"
+        , argv[0]);
+    exit(1);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -77,20 +89,20 @@ void Usage (char *argv[]) {
       help="Produces a 3D volume from a phantom mathematical description";
       OPEN MENU menu_create_phantom;
       COMMAND LINES {
-	+ usual: create_phantom -i $FILE_IN -o $FILE_OUT
+ + usual: create_phantom -i $FILE_IN -o $FILE_OUT
       }
       PARAMETER DEFINITIONS {
         $FILE_IN {
-	   label="Phantom Description file";
-	   help="This file has got a complex structure, better see
+    label="Phantom Description file";
+    help="This file has got a complex structure, better see
                  the Web help";
-	   type=file existing;
-	}
+    type=file existing;
+ }
         $FILE_OUT {
-	   label="Output Volume file";
-	   help="Xmipp format";
-	   type=file;
-	}
+    label="Output Volume file";
+    help="Xmipp format";
+    type=file;
+ }
       }
    }
 

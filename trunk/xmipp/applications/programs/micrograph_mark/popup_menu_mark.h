@@ -26,13 +26,15 @@
 class QtWidgetMicrograph;
 
 /* Virtual class for Mark menus -------------------------------------------- */
-class QtPopupMenuMark : public QPopupMenu {
-   Q_OBJECT
+class QtPopupMenuMark : public QPopupMenu
+{
+    Q_OBJECT
 
 public:
-   // Constructor. Set reference to main_widget
-   QtPopupMenuMark( QtWidgetMicrograph *_parent ) :
-      QPopupMenu( (QWidget*)_parent ) {}
+    // Constructor. Set reference to main_widget
+    QtPopupMenuMark(QtWidgetMicrograph *_parent) :
+            QPopupMenu((QWidget*)_parent)
+    {}
 
 public slots:
 };

@@ -8,29 +8,29 @@
     Kernel is the grey-scale structural element by which VolumeSource
     is processed. (Kx, Ky, Kz) is the size (bounding box) of the
     structural element. (Ox, Oy, Oz) is the origin of the structural element.
-    
+
     Convention is the boundary convention applied to VolumeSource before
     processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		BrightTopHatFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  BrightTopHatFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale bright top hat filter using a cuboid
@@ -43,19 +43,19 @@ extern int		BrightTopHatFloat
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing.
     success: return(!ERROR); failure: return(ERROR) */
-extern int		BrightTopHatFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  BrightTopHatFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as bright top hat.
@@ -68,24 +68,24 @@ extern int		BrightTopHatFloatCuboid
     Convention is the boundary convention applied to VolumeSource before
     processing.
     success: return(!ERROR); failure: return(ERROR) */
-extern int		BrightTopHatShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  BrightTopHatShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale bright top hat filter using a cuboid
@@ -96,21 +96,21 @@ extern int		BrightTopHatShort
     the value 1.0F. The origin of the structural element is ((Kx - 1L) / 2L,
     (Ky - 1L) / 2L, (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		BrightTopHatShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  BrightTopHatShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as closing.
@@ -122,26 +122,26 @@ extern int		BrightTopHatShortCuboid
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     closing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ClosingFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  ClosingFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale closing filter using a cuboid as
@@ -153,21 +153,21 @@ extern int		ClosingFloat
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before closing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ClosingFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  ClosingFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as closing.
@@ -179,26 +179,26 @@ extern int		ClosingFloatCuboid
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     closing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ClosingShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  ClosingShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale closing filter using a cuboid as
@@ -210,21 +210,21 @@ extern int		ClosingShort
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before closing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ClosingShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  ClosingShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as dark top hat.
@@ -236,26 +236,26 @@ extern int		ClosingShortCuboid
     element. (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DarkTopHatFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  DarkTopHatFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale dark top hat filter using a cuboid
@@ -267,19 +267,19 @@ extern int		DarkTopHatFloat
     (Ky - 1L) / 2L, (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DarkTopHatFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  DarkTopHatFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as dark top hat.
@@ -291,26 +291,26 @@ extern int		DarkTopHatFloatCuboid
     element. (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DarkTopHatShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  DarkTopHatShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale dark top hat filter using a cuboid
@@ -322,21 +322,21 @@ extern int		DarkTopHatShort
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DarkTopHatShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  DarkTopHatShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as dilatation.
@@ -348,25 +348,25 @@ extern int		DarkTopHatShortCuboid
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     dilatation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DilateFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention			/* boundary convention */
-				);
+extern int  DilateFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention   /* boundary convention */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as dilatation.
@@ -378,25 +378,25 @@ extern int		DilateFloat
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     dilatation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		DilateShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention			/* boundary convention */
-				);
+extern int  DilateShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention   /* boundary convention */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as erosion.
@@ -407,25 +407,25 @@ extern int		DilateShort
     eroded. (Kx, Ky, Kz) is the size (bounding box) of the structural element.
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
-    erosion. 
+    erosion.
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ErodeFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention			/* boundary convention */
-				);
+extern int  ErodeFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention   /* boundary convention */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as erosion.
@@ -436,25 +436,25 @@ extern int		ErodeFloat
     (Kx, Ky, Kz) is the size (bounding box) of the structural element.
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before erosion.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		ErodeShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention			/* boundary convention */
-				);
+extern int  ErodeShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention   /* boundary convention */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale max filter using a cuboid as
@@ -465,21 +465,21 @@ extern int		ErodeShort
     the value 1.0F. The origin of the structural element is ((Kx - 1L) / 2L,
     (Ky - 1L) / 2L, (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before dilatation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MaxFilterFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MaxFilterFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale max filter using a cuboid as
@@ -491,21 +491,21 @@ extern int		MaxFilterFloatCuboid
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before dilatation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MaxFilterShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MaxFilterShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale min filter using a cuboid as
@@ -517,21 +517,21 @@ extern int		MaxFilterShortCuboid
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before erosion.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MinFilterFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MinFilterFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale min filter using a cuboid as
@@ -543,21 +543,21 @@ extern int		MinFilterFloatCuboid
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before erosion.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MinFilterShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MinFilterShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as morphological
@@ -571,26 +571,26 @@ extern int		MinFilterShortCuboid
     element. (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     the gradient operation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MorphologicalGradientFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MorphologicalGradientFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale gradient filter using a cuboid as
@@ -602,21 +602,21 @@ extern int		MorphologicalGradientFloat
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MorphologicalGradientFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MorphologicalGradientFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as morphological
@@ -630,26 +630,26 @@ extern int		MorphologicalGradientFloatCuboid
     element. (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     the gradient operation.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MorphologicalGradientShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MorphologicalGradientShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale gradient filter using a cuboid as
@@ -661,21 +661,21 @@ extern int		MorphologicalGradientShort
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before processing.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		MorphologicalGradientShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  MorphologicalGradientShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as opening.
@@ -686,26 +686,26 @@ extern int		MorphologicalGradientShortCuboid
     opened. (Kx, Ky, Kz) is the size (bounding box) of the structural element.
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before opening.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		OpeningFloat
-				(
-					float	*VolumeSource,		/* data to process */
-					float	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					float	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  OpeningFloat
+    (
+        float *VolumeSource,  /* data to process */
+        float *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        float *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale opening filter using a cuboid as
@@ -717,21 +717,21 @@ extern int		OpeningFloat
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L).
     Convention is the boundary convention applied to Volume before opening.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		OpeningFloatCuboid
-				(
-					float	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  OpeningFloatCuboid
+    (
+        float *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as opening.
@@ -743,26 +743,26 @@ extern int		OpeningFloatCuboid
     (Ox, Oy, Oz) is the origin of the structural element.
     Convention is the boundary convention applied to VolumeSource before
     opening.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		OpeningShort
-				(
-					short	*VolumeSource,		/* data to process */
-					short	*VolumeDestination,	/* result */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					short	*Kernel,			/* structural element */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					long	Ox,					/* kernel X origin */
-					long	Oy,					/* kernel Y origin */
-					long	Oz,					/* kernel Z origin */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  OpeningShort
+    (
+        short *VolumeSource,  /* data to process */
+        short *VolumeDestination, /* result */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        short *Kernel,   /* structural element */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        long Ox,     /* kernel X origin */
+        long Oy,     /* kernel Y origin */
+        long Oz,     /* kernel Z origin */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform a morphological grey-scale opening filter using a cuboid as
@@ -774,19 +774,19 @@ extern int		OpeningShort
     The origin of the structural element is ((Kx - 1L) / 2L, (Ky - 1L) / 2L,
     (Kz - 1L) / 2L)
     Convention is the boundary convention applied to Volume before opening.
-    
+
     success: return(!ERROR); failure: return(ERROR) */
-extern int		OpeningShortCuboid
-				(
-					short	*Volume,			/* data to process in-place */
-					long	Nx,					/* width of the volume */
-					long	Ny,					/* height of the volume */
-					long	Nz,					/* depth of the volume */
-					long	Kx,					/* width of the kernel */
-					long	Ky,					/* height of the kernel */
-					long	Kz,					/* depth of the kernel */
-					enum TBoundaryConvention
-							Convention,			/* boundary convention */
-					int		*Status				/* error management */
-				);
+extern int  OpeningShortCuboid
+    (
+        short *Volume,   /* data to process in-place */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Kx,     /* width of the kernel */
+        long Ky,     /* height of the kernel */
+        long Kz,     /* depth of the kernel */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        int  *Status    /* error management */
+    );
 //@}

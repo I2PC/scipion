@@ -29,103 +29,129 @@
 #include <cstdlib>
 
 
-void Usage (char **argv);
+void Usage(char **argv);
 
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-FileName       sel_file;   // selection file
-string 	       dest_path;  // extension for output files in selection file.	
+    FileName       sel_file;   // selection file
+    string         dest_path;  // extension for output files in selection file.
 
 
-/* Parameters ============================================================== */
-   try {
-       if (argc != 3) {Usage(argv); exit(0);} else {
-       		sel_file = argv[1];
-       		dest_path = argv[2];
-       }
-   }
-   catch (Xmipp_error XE) {cout << XE; Usage(argv);}
-
-try {
-
-/* Perform copy or move =================================================== */
-
-  // Finds last slash in path (to avoid moving files to another file)
-
-  int break_point = -1;
-  for(int i = dest_path.size()- 1; i >= 0; i--) {
-    if (dest_path[i] == '/') {
-    	break_point = i;
-	break;
+    /* Parameters ============================================================== */
+    try
+    {
+        if (argc != 3)
+        {
+            Usage(argv);
+            exit(0);
+        }
+        else
+        {
+            sel_file = argv[1];
+            dest_path = argv[2];
+        }
     }
-  }
-
-  if (break_point < 0) {
-  	cout << endl << "Error, destination path is not a valid directory name " << endl;
-	Usage(argv);	
-	exit(0);
-  }
-
-
-  // Finds last slash in sel name
-  string org_path;
-  break_point = -1;
-  for(int i = sel_file.size()- 1; i >= 0; i--) {
-    if (sel_file[i] == '/') {
-    	break_point = i;
-	break;
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage(argv);
     }
-  }
 
-  // Copy only the path  	
-  if (break_point >=0) {
-    org_path.resize(break_point+1);
-    for(int j = 0; j <= break_point; j++)
-      org_path[j] = sel_file[j];
-  }
+    try
+    {
 
-   SelFile SF(sel_file);
-   string comStr;
-   while (!SF.eof()) {
-      // Get file
-      SelLine line= SF.current();
-      if (line.Is_data()) { 		//The SelLine is not a comment
-       FileName in_name = line.get_text();
-       comStr = "mv " + org_path + in_name + " " + dest_path;
+        /* Perform copy or move =================================================== */
 
-       if (!system(comStr.c_str()))
-	   cout << " file " << org_path << in_name << " moved to " << dest_path << endl;
-      }
-      SF.next();
-   }  // while
-		
-   // now move sel file
-   comStr = "mv " + sel_file + " " + dest_path;       	
-   system(comStr.c_str());
+        // Finds last slash in path (to avoid moving files to another file)
 
-} catch (Xmipp_error XE) {cout << XE;}
-   exit(0);
+        int break_point = -1;
+        for (int i = dest_path.size() - 1; i >= 0; i--)
+        {
+            if (dest_path[i] == '/')
+            {
+                break_point = i;
+                break;
+            }
+        }
+
+        if (break_point < 0)
+        {
+            cout << endl << "Error, destination path is not a valid directory name " << endl;
+            Usage(argv);
+            exit(0);
+        }
+
+
+        // Finds last slash in sel name
+        string org_path;
+        break_point = -1;
+        for (int i = sel_file.size() - 1; i >= 0; i--)
+        {
+            if (sel_file[i] == '/')
+            {
+                break_point = i;
+                break;
+            }
+        }
+
+        // Copy only the path
+        if (break_point >= 0)
+        {
+            org_path.resize(break_point + 1);
+            for (int j = 0; j <= break_point; j++)
+                org_path[j] = sel_file[j];
+        }
+
+        SelFile SF(sel_file);
+        string comStr;
+        while (!SF.eof())
+        {
+            // Get file
+            SelLine line = SF.current();
+            if (line.Is_data())
+            {   //The SelLine is not a comment
+                FileName in_name = line.get_text();
+                comStr = "mv " + org_path + in_name + " " + dest_path;
+
+                if (!system(comStr.c_str()))
+                    cout << " file " << org_path << in_name << " moved to " << dest_path << endl;
+            }
+            SF.next();
+        }  // while
+
+        // now move sel file
+        comStr = "mv " + sel_file + " " + dest_path;
+        system(comStr.c_str());
+
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    exit(0);
 } //main
 
 /* ------------------------------------------------------------------------- */
 /* Help Message for this Program                                             */
 /* ------------------------------------------------------------------------- */
-void Usage (char **argv) {
-  printf (
-     "Usage: %s [Purpose and Parameters]"
-     "\nPurpose: Moves the images in a sel file (and the sel file) to a destination directory"
-     "\nParameter Values: (note space before value)"
-     "\nI/O parameters"
-     "\n    input_file    input sel file"
-     "\n    path path     path of destination"
-     "\n  "
-     "\nExample: "
-     "\n    mvsel c3u.sel New_Images/ "
-     "\n    (will move all images in c3u.sel file to New_Images directory) "
+void Usage(char **argv)
+{
+    printf(
+        "Usage: %s [Purpose and Parameters]"
+        "\nPurpose: Moves the images in a sel file (and the sel file) to a destination directory"
+        "\nParameter Values: (note space before value)"
+        "\nI/O parameters"
+        "\n    input_file    input sel file"
+        "\n    path path     path of destination"
+        "\n  "
+        "\nExample: "
+        "\n    mvsel c3u.sel New_Images/ "
+        "\n    (will move all images in c3u.sel file to New_Images directory) "
 
-     "\n"
-     ,argv[0]);
+        "\n"
+        , argv[0]);
 }
 
 /* ------------------------------------------------------------------------- */

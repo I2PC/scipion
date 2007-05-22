@@ -33,76 +33,93 @@
 
 void Usage();
 
-int main( int argc, char **argv ) {
-   FileName fnRaw;
-   FileName fnRawTilted;
-   bool     reversed;
-   FileName fn_assign_CTF;
-   bool     ctf_mode=false;
+int main(int argc, char **argv)
+{
+    FileName fnRaw;
+    FileName fnRawTilted;
+    bool     reversed;
+    FileName fn_assign_CTF;
+    bool     ctf_mode = false;
 
-   // Get input parameters .................................................
-   try {
-       fnRaw         = get_param( argc, argv, "-i" );
-       fnRawTilted   = get_param( argc, argv, "-tilted", "" );
-       reversed      = check_param( argc, argv, "-reverse_endian");
-       fn_assign_CTF = get_param( argc, argv, "-psd", "");
-       if (check_param(argc, argv, "-ctf")) {
-          ctf_mode=true;
-          fn_assign_CTF = get_param( argc, argv, "-ctf");
-       }
-   } catch ( Xmipp_error XE ) { cout << XE; Usage(); exit( 1 ); }
+    // Get input parameters .................................................
+    try
+    {
+        fnRaw         = get_param(argc, argv, "-i");
+        fnRawTilted   = get_param(argc, argv, "-tilted", "");
+        reversed      = check_param(argc, argv, "-reverse_endian");
+        fn_assign_CTF = get_param(argc, argv, "-psd", "");
+        if (check_param(argc, argv, "-ctf"))
+        {
+            ctf_mode = true;
+            fn_assign_CTF = get_param(argc, argv, "-ctf");
+        }
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
 
-   try {
-      Micrograph m, mTilted;
+    try
+    {
+        Micrograph m, mTilted;
 
-      m.open_micrograph( fnRaw, reversed );
-      m.compute_8_bit_scaling();
-      if ( fnRawTilted != "" ) {
-         mTilted.open_micrograph( fnRawTilted, reversed );
-	 mTilted.compute_8_bit_scaling();
-      }
+        m.open_micrograph(fnRaw, reversed);
+        m.compute_8_bit_scaling();
+        if (fnRawTilted != "")
+        {
+            mTilted.open_micrograph(fnRawTilted, reversed);
+            mTilted.compute_8_bit_scaling();
+        }
 
-      // Configure application .............................................
-      QApplication app( argc, argv );
-      QtMainWidgetMark *mainWidget;
+        // Configure application .............................................
+        QApplication app(argc, argv);
+        QtMainWidgetMark *mainWidget;
 
-      if ( fnRawTilted == "" ) mainWidget = new QtMainWidgetMark( &m );
-      else mainWidget = new QtMainWidgetMark( &m, &mTilted );
+        if (fnRawTilted == "") mainWidget = new QtMainWidgetMark(&m);
+        else mainWidget = new QtMainWidgetMark(&m, &mTilted);
 
-      // Check if the PSDs must be shown ...................................
-      if (fn_assign_CTF!="") {
-         QtWidgetPSD PSDshow;
-         if (ctf_mode) PSDshow.set_CTF_mode();
-         PSDshow.set_assign_CTF_file(m,fn_assign_CTF);
-         PSDshow.show();
-      }
+        // Check if the PSDs must be shown ...................................
+        if (fn_assign_CTF != "")
+        {
+            QtWidgetPSD PSDshow;
+            if (ctf_mode) PSDshow.set_CTF_mode();
+            PSDshow.set_assign_CTF_file(m, fn_assign_CTF);
+            PSDshow.show();
+        }
 
-      // Run application ...................................................
-      app.setMainWidget( mainWidget );
-      mainWidget->show();
+        // Run application ...................................................
+        app.setMainWidget(mainWidget);
+        mainWidget->show();
 
-      app.exec();
+        app.exec();
 
-      // Finish ............................................................
-      m.close_micrograph();
-      if ( fnRawTilted != "" ) mTilted.close_micrograph();
-      delete mainWidget;
-   } catch ( Xmipp_error XE ) { cout << XE; }
-   return 0;
+        // Finish ............................................................
+        m.close_micrograph();
+        if (fnRawTilted != "") mTilted.close_micrograph();
+        delete mainWidget;
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
+    return 0;
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
-   cerr << "Purpose: Mark particles in a Raw image\n"
-        << "         There must exist the image and the corresponding .inf file\n"
-        << "\n"
-        << "Usage: mark [options]\n"
-        << "   -i <input raw file>                : File with the image\n"
-        << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
-	<< "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
-        << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
-        << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
-   ;
+void Usage()
+{
+    cerr << "Purpose: Mark particles in a Raw image\n"
+    << "         There must exist the image and the corresponding .inf file\n"
+    << "\n"
+    << "Usage: mark [options]\n"
+    << "   -i <input raw file>                : File with the image\n"
+    << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
+    << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
+    << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
+    << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
+    ;
 }
 
 /* Colimate menu =========================================================== */

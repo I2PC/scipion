@@ -29,15 +29,15 @@
 /* Common functions -------------------------------------------------------- */
 void Prog_parameters::read(int argc, char **argv)
 {
-    fn_in  = get_param(argc,argv,"-i");
-    fn_out = get_param(argc,argv,"-o","");
-    oext   = get_param(argc,argv,"-oext","");
-    oroot  = get_param(argc,argv,"-oroot","");
+    fn_in  = get_param(argc, argv, "-i");
+    fn_out = get_param(argc, argv, "-o", "");
+    oext   = get_param(argc, argv, "-oext", "");
+    oroot  = get_param(argc, argv, "-oroot", "");
     // For each_image_produces_an_output there exists no possibility to apply_geo
     // This because it would require a back-transformation, which deteriorates the images
     if (!each_image_produces_an_output)
     {
-        apply_geo=!check_param(argc,argv,"-dont_apply_geo");
+        apply_geo = !check_param(argc, argv, "-dont_apply_geo");
     }
 }
 
@@ -45,14 +45,14 @@ void Prog_parameters::show()
 {
     cout << "Input File: " << fn_in << endl;
     if (apply_geo && !Is_VolumeXmipp(fn_in))
-        cout << "Applying transformation stored in header of 2D-image"<< endl;
+        cout << "Applying transformation stored in header of 2D-image" << endl;
     if (each_image_produces_an_output)
     {
-        if (fn_out!="")
+        if (fn_out != "")
             cout << "Output File: " << fn_out << endl;
-        if (oext!="")
+        if (oext != "")
             cout << "Output Extension: " << oext << endl;
-        if (oroot!="")
+        if (oroot != "")
             cout << "Output Root: " << oroot << endl;
     }
 }
@@ -77,23 +77,23 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     if (Is_ImageXmipp(fn_in))
     {
         ImageXmipp I(fn_in);
-        Zdim=1;
-        Ydim=YSIZE(I());
-        Xdim=XSIZE(I());
+        Zdim = 1;
+        Ydim = YSIZE(I());
+        Xdim = XSIZE(I());
     }
     else if (Is_VolumeXmipp(fn_in))
     {
         VolumeXmipp V(fn_in);
-        Zdim=ZSIZE(V());
-        Ydim=YSIZE(V());
-        Xdim=XSIZE(V());
+        Zdim = ZSIZE(V());
+        Ydim = YSIZE(V());
+        Xdim = XSIZE(V());
     }
     else
     {
         SelFile SF;
         SF.read(fn_in);
-        Zdim=1;
-        SF.ImgSize(Ydim,Xdim);
+        Zdim = 1;
+        SF.ImgSize(Ydim, Xdim);
     }
 }
 
@@ -118,23 +118,23 @@ void SF_main(int argc, char **argv,
              void *process_vol, int operation_mode)
 {
     // Some variables .......................................................
-    ImageXmipp img,orig_img;
+    ImageXmipp img, orig_img;
     VolumeXmipp vol;
     FourierImageXmipp IMG;
     FourierVolumeXmipp VOL;
     SelFile SF_in, SF_out;
 
-    bool (*fi2i) (ImageXmipp &, const Prog_parameters *)=NULL;
-    bool (*fi2I) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)=NULL;
-    bool (*fI2i) (FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)=NULL;
-    bool (*fI2I) (FourierImageXmipp &, const Prog_parameters *)=NULL;
-    bool (*fi2F) (ImageXmipp &, const FileName &, const Prog_parameters *)=NULL;
-    bool (*fv2v) (VolumeXmipp &, const Prog_parameters *)=NULL;
-    bool (*fv2V) (VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *)=NULL;
-    bool (*fV2v) (FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *)=NULL;
-    bool (*fV2V) (FourierVolumeXmipp &, const Prog_parameters *)=NULL;
-    bool (*fv2F) (VolumeXmipp &, const FileName &, const Prog_parameters *)=NULL;
-    bool (*fF2F) (const FileName &, const FileName &, const Prog_parameters *)=NULL;
+    bool(*fi2i)(ImageXmipp &, const Prog_parameters *) = NULL;
+    bool(*fi2I)(ImageXmipp &, FourierImageXmipp &, const Prog_parameters *) = NULL;
+    bool(*fI2i)(FourierImageXmipp &, ImageXmipp &, const Prog_parameters *) = NULL;
+    bool(*fI2I)(FourierImageXmipp &, const Prog_parameters *) = NULL;
+    bool(*fi2F)(ImageXmipp &, const FileName &, const Prog_parameters *) = NULL;
+    bool(*fv2v)(VolumeXmipp &, const Prog_parameters *) = NULL;
+    bool(*fv2V)(VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *) = NULL;
+    bool(*fV2v)(FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *) = NULL;
+    bool(*fV2V)(FourierVolumeXmipp &, const Prog_parameters *) = NULL;
+    bool(*fv2F)(VolumeXmipp &, const FileName &, const Prog_parameters *) = NULL;
+    bool(*fF2F)(const FileName &, const FileName &, const Prog_parameters *) = NULL;
 
     // Read command line ....................................................
     try
@@ -154,42 +154,42 @@ void SF_main(int argc, char **argv,
     try
     {
         if (!exists(prm->fn_in))
-            EXIT_ERROR(1,(string)argv[0]+": "+prm->fn_in+" doesn't exist");
+            EXIT_ERROR(1, (string)argv[0] + ": " + prm->fn_in + " doesn't exist");
         bool success;
 
         // For single image .....................................................
         FileName fn_out;
-        if (prm->fn_out=="")
-            fn_out=prm->fn_in;
+        if (prm->fn_out == "")
+            fn_out = prm->fn_in;
         else
-            fn_out=prm->fn_out;
+            fn_out = prm->fn_out;
         if (Is_ImageXmipp(prm->fn_in))
         {
-            img.read(prm->fn_in,false,false,prm->apply_geo);
+            img.read(prm->fn_in, false, false, prm->apply_geo);
             img().set_Xmipp_origin();
             switch (operation_mode)
             {
             case IMAGE2IMAGE:
-                fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
-                success=fi2i(img, prm);
+                fi2i = (bool(*)(ImageXmipp &, const Prog_parameters *)) process_img;
+                success = fi2i(img, prm);
                 if (prm->each_image_produces_an_output)
                 {
-                    /*	      if (prm->apply_geo) {
-                    		      cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
-                    		           << " the only exception is the apply_geo program";
-                    	      }
-                    */	    img.write(fn_out);
+                    /*       if (prm->apply_geo) {
+                            cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+                                 << " the only exception is the apply_geo program";
+                           }
+                    */     img.write(fn_out);
                 }
                 break;
             case IMAGE2FOURIER:
-                fi2I=(bool (*) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;
-                success=fi2I(img, IMG, prm);
+                fi2I = (bool(*)(ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;
+                success = fi2I(img, IMG, prm);
                 if (prm->each_image_produces_an_output)
                     IMG.write(fn_out);
                 break;
             case IMAGE2FILE:
-                fi2F=(bool (*) (ImageXmipp &, const FileName &, const Prog_parameters *)) process_img;
-                success=fi2F(img, fn_out, prm);
+                fi2F = (bool(*)(ImageXmipp &, const FileName &, const Prog_parameters *)) process_img;
+                success = fi2F(img, fn_out, prm);
                 break;
             }
             // For single volume ....................................................
@@ -201,20 +201,20 @@ void SF_main(int argc, char **argv,
             switch (operation_mode)
             {
             case IMAGE2IMAGE:
-                fv2v=(bool (*) (VolumeXmipp &, const Prog_parameters *)) process_vol;
-                success=fv2v(vol, prm);
+                fv2v = (bool(*)(VolumeXmipp &, const Prog_parameters *)) process_vol;
+                success = fv2v(vol, prm);
                 if (prm->each_image_produces_an_output)
                     vol.write(fn_out);
                 break;
             case IMAGE2FOURIER:
-                fv2V=(bool (*) (VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *)) process_vol;
-                success=fv2V(vol, VOL, prm);
+                fv2V = (bool(*)(VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *)) process_vol;
+                success = fv2V(vol, VOL, prm);
                 if (prm->each_image_produces_an_output)
                     VOL.write(fn_out);
                 break;
             case IMAGE2FILE:
-                fv2F=(bool (*) (VolumeXmipp &, const FileName &, const Prog_parameters *)) process_vol;
-                success=fv2F(vol, fn_out, prm);
+                fv2F = (bool(*)(VolumeXmipp &, const FileName &, const Prog_parameters *)) process_vol;
+                success = fv2F(vol, fn_out, prm);
                 break;
             }
             // For single Fourier image .............................................
@@ -226,14 +226,14 @@ void SF_main(int argc, char **argv,
             switch (operation_mode)
             {
             case FOURIER2FOURIER:
-                fI2I=(bool (*) (FourierImageXmipp &, const Prog_parameters *)) process_img;
-                success=fI2I(IMG, prm);
+                fI2I = (bool(*)(FourierImageXmipp &, const Prog_parameters *)) process_img;
+                success = fI2I(IMG, prm);
                 if (prm->each_image_produces_an_output)
                     IMG.write(fn_out);
                 break;
             case FOURIER2IMAGE:
-                fI2i=(bool (*) (FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)) process_img;
-                success=fI2i(IMG, img, prm);
+                fI2i = (bool(*)(FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)) process_img;
+                success = fI2i(IMG, img, prm);
                 if (prm->each_image_produces_an_output)
                     img.write(fn_out);
                 break;
@@ -247,14 +247,14 @@ void SF_main(int argc, char **argv,
             switch (operation_mode)
             {
             case FOURIER2FOURIER:
-                fV2V=(bool (*) (FourierVolumeXmipp &, const Prog_parameters *)) process_img;
-                success=fV2V(VOL, prm);
+                fV2V = (bool(*)(FourierVolumeXmipp &, const Prog_parameters *)) process_img;
+                success = fV2V(VOL, prm);
                 if (prm->each_image_produces_an_output)
                     VOL.write(fn_out);
                 break;
             case FOURIER2IMAGE:
-                fV2v=(bool (*) (FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *)) process_img;
-                success=fV2v(VOL, vol, prm);
+                fV2v = (bool(*)(FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *)) process_img;
+                success = fV2v(VOL, vol, prm);
                 if (prm->each_image_produces_an_output)
                     vol.write(fn_out);
                 break;
@@ -268,67 +268,67 @@ void SF_main(int argc, char **argv,
 
             // Initialise progress bar
             time_config();
-            int i=0;
+            int i = 0;
             if (prm->allow_time_bar)
                 init_progress_bar(SF_in.ImgNo());
-            int istep=CEIL((double)SF_in.ImgNo()/60.0);
+            int istep = CEIL((double)SF_in.ImgNo() / 60.0);
 
             // Process all selfile
             while (!SF_in.eof())
             {
                 FileName fn_read;
-                fn_read=SF_in.NextImg();
+                fn_read = SF_in.NextImg();
                 if (prm->each_image_produces_an_output)
-                    if (prm->oext=="" && prm->oroot=="")
-                        prm->fn_out=fn_read;
-                    else if (prm->oroot!="")
+                    if (prm->oext == "" && prm->oroot == "")
+                        prm->fn_out = fn_read;
+                    else if (prm->oroot != "")
                     {
-                        prm->fn_out=prm->oroot+fn_read.without_root();
-                        if (operation_mode==IMAGE2FOURIER)
-                            if (fn_read.get_extension()=="xmp")
-                                prm->fn_out=prm->fn_out.without_extension()+".fft";
+                        prm->fn_out = prm->oroot + fn_read.without_root();
+                        if (operation_mode == IMAGE2FOURIER)
+                            if (fn_read.get_extension() == "xmp")
+                                prm->fn_out = prm->fn_out.without_extension() + ".fft";
                             else
-                                prm->fn_out=prm->fn_out.without_extension()+".fft3";
-                        if (operation_mode==FOURIER2IMAGE)
-                            if (fn_read.get_extension()=="fft")
-                                prm->fn_out=prm->fn_out.without_extension()+".xmp";
+                                prm->fn_out = prm->fn_out.without_extension() + ".fft3";
+                        if (operation_mode == FOURIER2IMAGE)
+                            if (fn_read.get_extension() == "fft")
+                                prm->fn_out = prm->fn_out.without_extension() + ".xmp";
                             else
-                                prm->fn_out=prm->fn_out.without_extension()+".vol";
+                                prm->fn_out = prm->fn_out.without_extension() + ".vol";
                     }
                     else
                     {
-                        prm->fn_out=fn_read.without_extension()+"."+prm->oext;
+                        prm->fn_out = fn_read.without_extension() + "." + prm->oext;
                     }
 
                 if (Is_ImageXmipp(fn_read))
                 {
-                    img.read(fn_read,false,false,prm->apply_geo);
+                    img.read(fn_read, false, false, prm->apply_geo);
                     img().set_Xmipp_origin();
                     switch (operation_mode)
                     {
                     case IMAGE2IMAGE:
-                        fi2i=(bool (*) (ImageXmipp &, const Prog_parameters *)) process_img;
-                        success=fi2i(img, prm);
+                        fi2i = (bool(*)(ImageXmipp &, const Prog_parameters *)) process_img;
+                        success = fi2i(img, prm);
                         if (prm->each_image_produces_an_output)
                         {
                             /*
                             if (prm->apply_geo) {
                               cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
                                    << " the only exception is the apply_geo program";
-                        }
+                            }
                             */
                             img.write(prm->fn_out);
                         }
                         break;
                     case IMAGE2FOURIER:
-                        fi2I=(bool (*) (ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;
-                        success=fi2I(img, IMG, prm);
+                        fi2I = (bool(*)(ImageXmipp &, FourierImageXmipp &, const Prog_parameters *)) process_img;
+                        success = fi2I(img, IMG, prm);
                         if (prm->each_image_produces_an_output)
                             IMG.write(prm->fn_out);
                         break;
                     case IMAGE2FILE:
-                        fi2F=(bool (*) (ImageXmipp &, const FileName &, const Prog_parameters *)) process_img;
-                        success=fi2F(img, prm->fn_out, prm);
+                        fi2F = (bool(*)(ImageXmipp &, const FileName &, const Prog_parameters *)) process_img;
+                        success = fi2F(img, prm->fn_out, prm);
                         break;
                     }
                 }
@@ -339,20 +339,20 @@ void SF_main(int argc, char **argv,
                     switch (operation_mode)
                     {
                     case IMAGE2IMAGE:
-                        fv2v=(bool (*) (VolumeXmipp &, const Prog_parameters *)) process_vol;
+                        fv2v = (bool(*)(VolumeXmipp &, const Prog_parameters *)) process_vol;
                         fv2v(vol, prm);
                         if (prm->each_image_produces_an_output)
                             vol.write(prm->fn_out);
                         break;
                     case IMAGE2FOURIER:
-                        fv2V=(bool (*) (VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *)) process_vol;
-                        success=fv2V(vol, VOL, prm);
+                        fv2V = (bool(*)(VolumeXmipp &, FourierVolumeXmipp &, const Prog_parameters *)) process_vol;
+                        success = fv2V(vol, VOL, prm);
                         if (prm->each_image_produces_an_output)
                             VOL.write(prm->fn_out);
                         break;
                     case IMAGE2FILE:
-                        fv2F=(bool (*) (VolumeXmipp &, const FileName &, const Prog_parameters *)) process_vol;
-                        success=fv2F(vol, prm->fn_out, prm);
+                        fv2F = (bool(*)(VolumeXmipp &, const FileName &, const Prog_parameters *)) process_vol;
+                        success = fv2F(vol, prm->fn_out, prm);
                         break;
                     }
                 }
@@ -363,14 +363,14 @@ void SF_main(int argc, char **argv,
                     switch (operation_mode)
                     {
                     case FOURIER2FOURIER:
-                        fI2I=(bool (*) (FourierImageXmipp &, const Prog_parameters *)) process_img;
-                        success=fI2I(IMG, prm);
+                        fI2I = (bool(*)(FourierImageXmipp &, const Prog_parameters *)) process_img;
+                        success = fI2I(IMG, prm);
                         if (prm->each_image_produces_an_output)
                             IMG.write(prm->fn_out);
                         break;
                     case FOURIER2IMAGE:
-                        fI2i=(bool (*) (FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)) process_img;
-                        success=fI2i(IMG, img, prm);
+                        fI2i = (bool(*)(FourierImageXmipp &, ImageXmipp &, const Prog_parameters *)) process_img;
+                        success = fI2i(IMG, img, prm);
                         if (prm->each_image_produces_an_output)
                             img.write(prm->fn_out);
                         break;
@@ -383,23 +383,23 @@ void SF_main(int argc, char **argv,
                     switch (operation_mode)
                     {
                     case FOURIER2FOURIER:
-                        fV2V=(bool (*) (FourierVolumeXmipp &, const Prog_parameters *)) process_img;
-                        success=fV2V(VOL, prm);
+                        fV2V = (bool(*)(FourierVolumeXmipp &, const Prog_parameters *)) process_img;
+                        success = fV2V(VOL, prm);
                         if (prm->each_image_produces_an_output)
                             VOL.write(prm->fn_out);
                         break;
                     case FOURIER2IMAGE:
-                        fV2v=(bool (*) (FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *)) process_img;
-                        success=fV2v(VOL, vol, prm);
+                        fV2v = (bool(*)(FourierVolumeXmipp &, VolumeXmipp &, const Prog_parameters *)) process_img;
+                        success = fV2v(VOL, vol, prm);
                         if (prm->each_image_produces_an_output)
                             vol.write(prm->fn_out);
                         break;
                     }
                 }
-                else if (operation_mode==FILE2FILE)
+                else if (operation_mode == FILE2FILE)
                 {
-                    fF2F=(bool (*) (const FileName &, const FileName &, const Prog_parameters *)) process_img;
-                    success=fF2F(fn_read, prm->fn_out, prm);
+                    fF2F = (bool(*)(const FileName &, const FileName &, const Prog_parameters *)) process_img;
+                    success = fF2F(fn_read, prm->fn_out, prm);
                 }
 
                 if (prm->each_image_produces_an_output)
@@ -408,15 +408,15 @@ void SF_main(int argc, char **argv,
                     else
                         SF_out.insert(prm->fn_out, SelLine::DISCARDED);
 
-                if (i++%istep==0 && prm->allow_time_bar)
+                if (i++ % istep == 0 && prm->allow_time_bar)
                     progress_bar(i);
             }
             if (prm->allow_time_bar)
                 progress_bar(SF_in.ImgNo());
             if (prm->each_image_produces_an_output)
-                if (prm->oext!="")
+                if (prm->oext != "")
                 {
-                    prm->fn_out=prm->fn_in.insert_before_extension(prm->oext);
+                    prm->fn_out = prm->fn_in.insert_before_extension(prm->oext);
                     SF_out.write(prm->fn_out);
                 }
         }

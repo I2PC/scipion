@@ -42,11 +42,11 @@
     Values in the output volume are the corresponding derivatives at
     each volume position*/
 void compute_derivative(const matrix3D<double> &in_vol,
-   matrix3D<double> &out_vol, char *type, double sigma=1);
+                        matrix3D<double> &out_vol, char *type, double sigma = 1);
 
 /** Gradient of a volume */
 void compute_gradient(const matrix3D<double> &in_vol,
-   Vectorial_matrix3D &out_vol, double sigma=1);
+                      Vectorial_matrix3D &out_vol, double sigma = 1);
 //@}
 
 //@}

@@ -56,7 +56,7 @@ void apply_geo_cont_2D_mask(matrix2D< double >& mask,
  * mask is created.
  */
 void RaisedCosineMask(matrix1D< double >& mask,
-                      double r1, double r2, int mode=INNER_MASK, double x0=0);
+                      double r1, double r2, int mode = INNER_MASK, double x0 = 0);
 
 /** Creates a 1D RaisedCrown mask for already sized masks
  * @ingroup Masks1D
@@ -70,8 +70,8 @@ void RaisedCosineMask(matrix1D< double >& mask,
  */
 void RaisedCrownMask(matrix1D< double >& mask,
                      double r1, double r2, double pix_width,
-                     int mode=INNER_MASK,
-                     double x0=0);
+                     int mode = INNER_MASK,
+                     double x0 = 0);
 
 /// @defgroup Masks2D 2D masks
 /// @ingroup Masks
@@ -86,7 +86,7 @@ void RaisedCrownMask(matrix1D< double >& mask,
  * is created.
  */
 void BinaryCircularMask(matrix2D< int >& mask,
-                        double radius, int mode=INNER_MASK, double x0=0, double y0=0);
+                        double radius, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D DWT circular for already sized masks
  * @ingroup Masks2D
@@ -114,8 +114,8 @@ void BinaryDWTCircularMask(matrix2D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryCrownMask(matrix2D< int >& mask,
-                     double R1, double R2, int mode=INNER_MASK, double x0=0,
-                     double y0=0);
+                     double R1, double R2, int mode = INNER_MASK, double x0 = 0,
+                     double y0 = 0);
 
 /** Creates a 2D frame mask for already sized masks
  * @ingroup Masks2D
@@ -129,8 +129,8 @@ void BinaryCrownMask(matrix2D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryFrameMask(matrix2D< int >& mask,
-                     int Xrect, int Yrect, int mode=INNER_MASK, double x0=0,
-                     double y0=0);
+                     int Xrect, int Yrect, int mode = INNER_MASK, double x0 = 0,
+                     double y0 = 0);
 
 /** Creates a 2D gaussian mask for already sized masks
  * @ingroup Masks2D
@@ -144,7 +144,7 @@ void BinaryFrameMask(matrix2D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void GaussianMask(matrix2D< double >& mask,
-                  double sigma, int mode=INNER_MASK, double x0=0, double y0=0);
+                  double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D RaisedCosine mask for already sized masks
  * @ingroup Masks2D
@@ -158,8 +158,8 @@ void GaussianMask(matrix2D< double >& mask,
  * When entering, the mask is initialiazed to 0 and then the mask is created.
  */
 void RaisedCosineMask(matrix2D< double >& mask,
-                      double r1, double r2, int mode=INNER_MASK, double x0=0,
-                      double y0=0);
+                      double r1, double r2, int mode = INNER_MASK, double x0 = 0,
+                      double y0 = 0);
 
 /** Creates a 2D RaisedCrown mask for already sized masks
  * @ingroup Masks2D
@@ -174,15 +174,15 @@ void RaisedCosineMask(matrix2D< double >& mask,
  */
 void RaisedCrownMask(matrix2D< double >& mask,
                      double r1, double r2, double pix_width,
-                     int mode=INNER_MASK, double x0=0, double y0=0);
+                     int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** 2D blackman window
  * @ingroup Masks2D
  *
  * It receives no parameter.
  */
-void BlackmanMask(matrix2D< double >& mask, int mode=INNER_MASK,
-                  double x0=0, double y0=0);
+void BlackmanMask(matrix2D< double >& mask, int mode = INNER_MASK,
+                  double x0 = 0, double y0 = 0);
 
 /** 2D Kaiser window
  * @ingroup Masks2D
@@ -190,8 +190,8 @@ void BlackmanMask(matrix2D< double >& mask, int mode=INNER_MASK,
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
  */
-void KaiserMask(matrix2D<double> &mask, double delta=0.01,
-                double Deltaw=1.0/12.0);
+void KaiserMask(matrix2D<double> &mask, double delta = 0.01,
+                double Deltaw = 1.0 / 12.0);
 
 /** Creates a 2D sinc mask for already sized masks
  * @ingroup Masks2D
@@ -206,7 +206,7 @@ void KaiserMask(matrix2D<double> &mask, double delta=0.01,
  * Remind that sinc(w*n) is zero at n=1/w;
  */
 void SincMask(matrix2D< double >& mask,
-              double omega, int mode=INNER_MASK, double x0=0, double y0=0);
+              double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D sinc-blackman mask, the mask is resized
  * @ingroup Masks2D
@@ -216,7 +216,7 @@ void SincMask(matrix2D< double >& mask,
  */
 void SincBlackmanMask(matrix2D< double >& mask,
                       double omega, double power_percentage,
-                      int mode=INNER_MASK, double x0=0, double y0=0);
+                      int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D radial-sinc-kaiser mask, the mask is resized.
  * @ingroup Masks2D
@@ -225,7 +225,7 @@ void SincBlackmanMask(matrix2D< double >& mask,
  *  Deltaw=transition bandwidth (normalized to 1).
  */
 void SincKaiserMask(matrix2D<double> &mask,
-                    double omega, double delta=0.01, double Deltaw=1.0/12.0);
+                    double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
  * @ingroup Masks2D
@@ -234,8 +234,8 @@ void SincKaiserMask(matrix2D<double> &mask,
  *  Deltaw=transition bandwidth (normalized to 1).
  */
 void SeparableSincKaiserMask(matrix2D<double> &mask,
-                             double omega, double delta=0.01,
-			     double Deltaw=1.0/12.0);
+                             double omega, double delta = 0.01,
+                             double Deltaw = 1.0 / 12.0);
 
 /** Creates a 3x3 mask with value (1 by default) for those 4-neighbours of the
  * central point (0 otherwise).
@@ -243,7 +243,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_4neig(matrix2D< int >& mask, int value=1, int center=NO_ACTIVATE);
+void mask2D_4neig(matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE);
 
 /** Creates a 3x3 mask with value1 for those 4-neighbors of the central point
  * and value2 for the 8 neighbours.
@@ -251,8 +251,8 @@ void mask2D_4neig(matrix2D< int >& mask, int value=1, int center=NO_ACTIVATE);
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_8neig(matrix2D< int >& mask, int value1=1, int value2=1,
-                  int center=NO_ACTIVATE);
+void mask2D_8neig(matrix2D< int >& mask, int value1 = 1, int value2 = 1,
+                  int center = NO_ACTIVATE);
 
 /// @defgroup Masks3D 3D masks
 /// @ingroup Masks
@@ -268,8 +268,8 @@ void mask2D_8neig(matrix2D< int >& mask, int value1=1, int value2=1,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinarySphericalMask(matrix3D< int >& mask,
-                         double radius, int mode=INNER_MASK, double x0=0,
-                         double y0=0, double z0=0);
+                         double radius, int mode = INNER_MASK, double x0 = 0,
+                         double y0 = 0, double z0 = 0);
 
 /** Creates a 3D DWT spherical for already sized masks
  * @ingroup Masks3D
@@ -295,8 +295,8 @@ void BinaryDWTCircularMask(matrix3D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryCrownMask(matrix3D< int >& mask,
-                     double R1, double R2, int mode=INNER_MASK, double x0=0,
-                     double y0=0, int z0=0);
+                     double R1, double R2, int mode = INNER_MASK, double x0 = 0,
+                     double y0 = 0, int z0 = 0);
 
 /** Creates a 3D Cylinder mask for already sized masks
  * @ingroup Masks3D
@@ -308,8 +308,8 @@ void BinaryCrownMask(matrix3D< int >& mask,
  * initialiazed to 0 and then the mask is created.
  */
 void BinaryCylinderMask(matrix3D< int >& mask,
-                        double R, double H, int mode=INNER_MASK, double x0=0,
-                        double y0=0, int z0=0);
+                        double R, double H, int mode = INNER_MASK, double x0 = 0,
+                        double y0 = 0, int z0 = 0);
 
 /** Creates a 3D frame mask for already sized masks
  * @ingroup Masks3D
@@ -323,8 +323,8 @@ void BinaryCylinderMask(matrix3D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryFrameMask(matrix3D< int >& mask,
-                     int Xrect, int Yrect, int Zrect, int mode=INNER_MASK,
-                     double x0=0, double y0=0, double z0=0);
+                     int Xrect, int Yrect, int Zrect, int mode = INNER_MASK,
+                     double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a 3D cone mask for already sized masks
  * @ingroup Masks3D
@@ -337,7 +337,7 @@ void BinaryFrameMask(matrix3D< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryConeMask(matrix3D< int >& mask,
-                    double theta, int mode=INNER_MASK);
+                    double theta, int mode = INNER_MASK);
 
 /** Creates a 3D missing wedge mask
  * @ingroup Masks3D
@@ -362,8 +362,8 @@ void BinaryWedgeMask(matrix3D< double >& mask, double theta0, double thetaF,
  * is created.
  */
 void GaussianMask(matrix3D< double >& mask,
-                  double sigma, int mode=INNER_MASK, double x0=0, double y0=0,
-                  double z0=0);
+                  double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0,
+                  double z0 = 0);
 
 /** Creates a 3D RaisedCosine mask for already sized masks
  * @ingroup Masks3D
@@ -377,8 +377,8 @@ void GaussianMask(matrix3D< double >& mask,
  * When entering, the mask is initialiazed to 0 and then the mask is created.
  */
 void RaisedCosineMask(matrix3D< double >& mask,
-                      double r1, double r2, int mode=INNER_MASK, double x0=0,
-                      double y0=0, double z0=0);
+                      double r1, double r2, int mode = INNER_MASK, double x0 = 0,
+                      double y0 = 0, double z0 = 0);
 
 /** Creates a 3D RaisedCrown mask for already sized masks
  * @ingroup Masks3D
@@ -393,16 +393,16 @@ void RaisedCosineMask(matrix3D< double >& mask,
  */
 void RaisedCrownMask(matrix3D< double >& mask,
                      double r1, double r2, double pix_width,
-                     int mode=INNER_MASK, double x0=0, double y0=0,
-                     double z0=0);
+                     int mode = INNER_MASK, double x0 = 0, double y0 = 0,
+                     double z0 = 0);
 
 /** 3D blackman window
  * @ingroup Masks3D
  *
  * It receives no parameter.
  */
-void BlackmanMask(matrix3D< double >& mask, int mode=INNER_MASK,
-                  double x0=0, double y0=0, double z0=0);
+void BlackmanMask(matrix3D< double >& mask, int mode = INNER_MASK,
+                  double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a 3D sinc mask for already sized masks
  * @ingroup Masks3D
@@ -418,8 +418,8 @@ void BlackmanMask(matrix3D< double >& mask, int mode=INNER_MASK,
  * Remind that sinc(w*t) is zero at t=1/w;
  */
 void SincMask(matrix3D< double >& mask,
-              double omega, int mode=INNER_MASK, double x0=0, double y0=0,
-              double z0=0);
+              double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0,
+              double z0 = 0);
 
 /** Creates a 3D sinc-blackman mask, the mask is resized
  * @ingroup Masks3D
@@ -429,8 +429,8 @@ void SincMask(matrix3D< double >& mask,
  */
 void SincBlackmanMask(matrix3D< double >& mask,
                       double omega, double power_percentage,
-                      int mode=INNER_MASK, double x0=0, double y0=0,
-                      double z0=0);
+                      int mode = INNER_MASK, double x0 = 0, double y0 = 0,
+                      double z0 = 0);
 
 /** Creates a 3x3x3 mask with value (1 by default) for those 6-neighbors of the
  * central point (0 otherwise).
@@ -438,7 +438,7 @@ void SincBlackmanMask(matrix3D< double >& mask,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_6neig(matrix3D< int >& mask, int value=1, int center=NO_ACTIVATE);
+void mask3D_6neig(matrix3D< int >& mask, int value = 1, int center = NO_ACTIVATE);
 
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors and
  * value2 for the 18 neighbors of the central point (0 otherwise).
@@ -446,8 +446,8 @@ void mask3D_6neig(matrix3D< int >& mask, int value=1, int center=NO_ACTIVATE);
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_18neig(matrix3D< int >& mask, int value1=1, int value2=1,
-                   int center=NO_ACTIVATE);
+void mask3D_18neig(matrix3D< int >& mask, int value1 = 1, int value2 = 1,
+                   int center = NO_ACTIVATE);
 
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors,
  * value2 for the 18 neighbors and value3 for the 26 neighbors of the central
@@ -456,8 +456,8 @@ void mask3D_18neig(matrix3D< int >& mask, int value1=1, int value2=1,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_26neig(matrix3D< int >& mask, int value1=1, int value2=1,
-                   int value3=1, int center=NO_ACTIVATE);
+void mask3D_26neig(matrix3D< int >& mask, int value1 = 1, int value2 = 1,
+                   int value3 = 1, int center = NO_ACTIVATE);
 
 /** Parameters for a general Mask.
  * @ingroup Masks
@@ -511,21 +511,21 @@ class Mask_Params
 {
 public:
 
-#define NO_MASK               	  0
-#define BINARY_CIRCULAR_MASK  	  1
-#define BINARY_CROWN_MASK     	  2
-#define BINARY_CYLINDER_MASK  	  3
-#define BINARY_FRAME_MASK     	  4
-#define GAUSSIAN_MASK         	  5
-#define RAISED_COSINE_MASK    	  6
-#define BLACKMAN_MASK         	  7
-#define SINC_MASK             	  8
-#define SINC_BLACKMAN_MASK    	  9
-#define READ_MASK             	 10
+#define NO_MASK                  0
+#define BINARY_CIRCULAR_MASK     1
+#define BINARY_CROWN_MASK        2
+#define BINARY_CYLINDER_MASK     3
+#define BINARY_FRAME_MASK        4
+#define GAUSSIAN_MASK            5
+#define RAISED_COSINE_MASK       6
+#define BLACKMAN_MASK            7
+#define SINC_MASK                8
+#define SINC_BLACKMAN_MASK       9
+#define READ_MASK               10
 #define RAISED_CROWN_MASK        11
 #define BINARY_DWT_CIRCULAR_MASK 12
-#define BINARY_CONE_MASK     	 13
-#define BINARY_WEDGE_MASK     	 14
+#define BINARY_CONE_MASK       13
+#define BINARY_WEDGE_MASK       14
 
     /** Mask Type
      *
@@ -653,7 +653,7 @@ public:
     /** Constructors
      * Allowed data types are ALL_KINDS, INT_MASK and DOUBLE_MASK used with | .
      */
-    Mask_Params(int _allowed_data_type=ALL_KINDS);
+    Mask_Params(int _allowed_data_type = ALL_KINDS);
 
     /** Clear
      */
@@ -688,16 +688,16 @@ public:
      */
     int datatype()
     {
-        if (type==BINARY_CIRCULAR_MASK || type==BINARY_CROWN_MASK ||
-                type==BINARY_CYLINDER_MASK || type==BINARY_FRAME_MASK ||
-                type==NO_MASK || type==READ_MASK ||
-                type==BINARY_DWT_CIRCULAR_MASK || type==BINARY_CONE_MASK)
+        if (type == BINARY_CIRCULAR_MASK || type == BINARY_CROWN_MASK ||
+            type == BINARY_CYLINDER_MASK || type == BINARY_FRAME_MASK ||
+            type == NO_MASK || type == READ_MASK ||
+            type == BINARY_DWT_CIRCULAR_MASK || type == BINARY_CONE_MASK)
             return INT_MASK;
 
-        else if (type==GAUSSIAN_MASK || type==RAISED_COSINE_MASK ||
-                 type==SINC_MASK || type==SINC_BLACKMAN_MASK ||
-                 type==BLACKMAN_MASK || type==RAISED_CROWN_MASK ||
-                 type==BINARY_WEDGE_MASK)
+        else if (type == GAUSSIAN_MASK || type == RAISED_COSINE_MASK ||
+                 type == SINC_MASK || type == SINC_BLACKMAN_MASK ||
+                 type == BLACKMAN_MASK || type == RAISED_CROWN_MASK ||
+                 type == BINARY_WEDGE_MASK)
             return DOUBLE_MASK;
 
         return 0;
@@ -840,7 +840,7 @@ public:
      */
     template<typename T>
     void apply_mask(const matrix1D< T >& I, matrix1D< T >& result,
-                    T subs_val=0)
+                    T subs_val = 0)
     {
         switch (datatype())
         {
@@ -859,7 +859,7 @@ public:
      */
     template<typename T>
     void apply_mask(const matrix2D< T >& I, matrix2D< T >& result,
-                    T subs_val=0, const bool& apply_geo=false)
+                    T subs_val = 0, const bool& apply_geo = false)
     {
         switch (datatype())
         {
@@ -883,7 +883,7 @@ public:
      * subs_val is the substitute value in case of binary masks
      */
     template<typename T>
-    void apply_mask(const matrix3D< T >& I, matrix3D< T >& result, T subs_val=0)
+    void apply_mask(const matrix3D< T >& I, matrix3D< T >& result, T subs_val = 0)
     {
         switch (datatype())
         {
@@ -909,39 +909,39 @@ public:
     void produce_vector(const matrix1D< T >& I, matrix1D< T >& result)
     {
         // Resize the output vector
-        if (XSIZE(result)==0)
+        if (XSIZE(result) == 0)
         {
-            int size=0;
+            int size = 0;
             switch (datatype())
             {
             case INT_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
-                    if (DIRECT_VEC_ELEM(imask1D, i)>0)
-                        size++;
+                if (DIRECT_VEC_ELEM(imask1D, i) > 0)
+                    size++;
                 break;
 
             case DOUBLE_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
-                    if (DIRECT_VEC_ELEM(dmask1D, i)>0)
-                        size++;
+                if (DIRECT_VEC_ELEM(dmask1D, i) > 0)
+                    size++;
                 break;
             }
             result.init_zeros(size);
         }
 
-        int p=0;
+        int p = 0;
         switch (datatype())
         {
         case INT_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
-                if (DIRECT_VEC_ELEM(imask1D, i)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
-                break;
+            if (DIRECT_VEC_ELEM(imask1D, i) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
+            break;
 
         case DOUBLE_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
-                if (DIRECT_VEC_ELEM(dmask1D, i)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
+            if (DIRECT_VEC_ELEM(dmask1D, i) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
             break;
         }
     }
@@ -958,39 +958,39 @@ public:
     void produce_vector(const matrix2D< T >& I, matrix1D< T >& result)
     {
         // Resize the output vector
-        if (XSIZE(result)==0)
+        if (XSIZE(result) == 0)
         {
-            int size=0;
+            int size = 0;
             switch (datatype())
             {
             case INT_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
-                    if (DIRECT_MAT_ELEM(imask2D, i, j)>0)
-                        size++;
+                if (DIRECT_MAT_ELEM(imask2D, i, j) > 0)
+                    size++;
                 break;
 
             case DOUBLE_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
-                    if (DIRECT_MAT_ELEM(dmask2D, i, j)>0)
-                        size++;
+                if (DIRECT_MAT_ELEM(dmask2D, i, j) > 0)
+                    size++;
                 break;
             }
             result.init_zeros(size);
         }
 
-        int p=0;
+        int p = 0;
         switch (datatype())
         {
         case INT_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
-                if (DIRECT_MAT_ELEM(imask2D, i, j)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            if (DIRECT_MAT_ELEM(imask2D, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
             break;
 
         case DOUBLE_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
-                if (DIRECT_MAT_ELEM(dmask2D, i, j)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            if (DIRECT_MAT_ELEM(dmask2D, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
             break;
         }
     }
@@ -1007,39 +1007,39 @@ public:
     void produce_vector(const matrix3D< T >& I, matrix1D< T >& result)
     {
         // Resize the output vector
-        if (XSIZE(result)==0)
+        if (XSIZE(result) == 0)
         {
-            int size=0;
+            int size = 0;
             switch (datatype())
             {
             case INT_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
-                    if (DIRECT_MAT_ELEM(imask3D, i, j)>0)
-                        size++;
+                if (DIRECT_MAT_ELEM(imask3D, i, j) > 0)
+                    size++;
                 break;
 
             case DOUBLE_MASK:
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
-                    if (DIRECT_MAT_ELEM(dmask3D, i, j)>0)
-                        size++;
+                if (DIRECT_MAT_ELEM(dmask3D, i, j) > 0)
+                    size++;
                 break;
             }
             result.init_zeros(size);
         }
 
-        int p=0;
+        int p = 0;
         switch (datatype())
         {
         case INT_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
-                if (DIRECT_MAT_ELEM(imask3D, i, j)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            if (DIRECT_MAT_ELEM(imask3D, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
             break;
         case DOUBLE_MASK:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
-                if (DIRECT_MAT_ELEM(dmask3D, i, j)>0)
-                    DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
-                break;
+            if (DIRECT_MAT_ELEM(dmask3D, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            break;
         }
     }
 
@@ -1133,7 +1133,7 @@ public:
      */
     void force_to_be_continuous()
     {
-        if (datatype()==INT_MASK)
+        if (datatype() == INT_MASK)
         {
             type_cast(imask1D, dmask1D);
             type_cast(imask2D, dmask2D);
@@ -1147,7 +1147,7 @@ public:
      */
     void force_to_be_binary()
     {
-        if (datatype()==DOUBLE_MASK)
+        if (datatype() == DOUBLE_MASK)
         {
             type_cast(dmask1D, imask1D);
             type_cast(dmask2D, imask2D);
@@ -1179,9 +1179,9 @@ void compute_stats_within_binary_mask(const matrix2D< int >& mask,
                                       T& max_val, double& avg, double& stddev)
 {
     SPEED_UP_temps;
-    double sum1=0;
-    double sum2=0;
-    int N=0;
+    double sum1 = 0;
+    double sum2 = 0;
+    int N = 0;
 
     max_val = min_val = DIRECT_MAT_ELEM(m, 0, 0);
 
@@ -1206,8 +1206,8 @@ void compute_stats_within_binary_mask(const matrix2D< int >& mask,
 
     // average and standard deviation
     avg = sum1 / (double) N;
-    if (N>1)
-        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N-1));
+    if (N > 1)
+        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N - 1));
     else
         stddev = 0;
 }
@@ -1234,20 +1234,20 @@ void apply_geo_cont_2D_mask(matrix2D< double >& mask,
  */
 template<typename T>
 void apply_binary_mask(const matrix1D< int >& mask, const matrix1D< T >& m_in,
-                       matrix1D< T >& m_out, T subs_val=(T) 0)
+                       matrix1D< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
-        // If in common with the mask
-        if (i >= STARTINGX(mask) && i <= FINISHINGX(mask))
-            if (VEC_ELEM(mask, i) == 0)
-                VEC_ELEM(m_out, i) = subs_val;
-            else
-                VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
-        // It is not in common, leave the original one
+    // If in common with the mask
+    if (i >= STARTINGX(mask) && i <= FINISHINGX(mask))
+        if (VEC_ELEM(mask, i) == 0)
+            VEC_ELEM(m_out, i) = subs_val;
         else
             VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
+    // It is not in common, leave the original one
+    else
+        VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
 }
 
 /** Apply continuous mask to an image (1D)
@@ -1263,12 +1263,12 @@ void apply_cont_mask(const matrix1D< double >& mask, const matrix1D< T >& m_in,
     m_out.resize(m_in);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
-        // If in common with the mask
-        if (i>=STARTINGX(mask) && i<=FINISHINGX(mask))
-            VEC_ELEM(m_out, i) = (T) (VEC_ELEM(m_in, i) * VEC_ELEM(mask, i));
-        // It is not in common, leave the original one
-        else
-            VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
+    // If in common with the mask
+    if (i >= STARTINGX(mask) && i <= FINISHINGX(mask))
+        VEC_ELEM(m_out, i) = (T)(VEC_ELEM(m_in, i) * VEC_ELEM(mask, i));
+    // It is not in common, leave the original one
+    else
+        VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
 }
 
 /** Apply binary mask to an image (2D)
@@ -1280,21 +1280,21 @@ void apply_cont_mask(const matrix1D< double >& mask, const matrix1D< T >& m_in,
  */
 template<typename T>
 void apply_binary_mask(const matrix2D< int >& mask, const matrix2D< T >& m_in,
-                       matrix2D< T >& m_out, T subs_val=(T) 0)
+                       matrix2D< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
-        // If in common with the mask
-        if (i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
-                j>=STARTINGX(mask) && j<=FINISHINGX(mask))
-            if (MAT_ELEM(mask, i, j) == 0)
-                MAT_ELEM(m_out, i, j) = subs_val;
-            else
-                MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
-        // It is not in common, leave the original one
+    // If in common with the mask
+    if (i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
+        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
+        if (MAT_ELEM(mask, i, j) == 0)
+            MAT_ELEM(m_out, i, j) = subs_val;
         else
             MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
+    // It is not in common, leave the original one
+    else
+        MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
 }
 
 /** Apply continuous mask to an image (2D)
@@ -1309,14 +1309,14 @@ void apply_cont_mask(const matrix2D< double >& mask, const matrix2D< T >& m_in,
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
-        // If in common with the mask
-        if (i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
-                j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-            MAT_ELEM(m_out, i, j) = (T) (MAT_ELEM(m_in, i, j) *
-                MAT_ELEM(mask, i, j));
-        // It is not in common, leave the original one
-        else
-            MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
+    // If in common with the mask
+    if (i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
+        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
+        MAT_ELEM(m_out, i, j) = (T)(MAT_ELEM(m_in, i, j) *
+                                    MAT_ELEM(mask, i, j));
+    // It is not in common, leave the original one
+    else
+        MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
 }
 
 /** Compute statistics in the active area (3D)
@@ -1332,9 +1332,9 @@ void compute_stats_within_binary_mask(const matrix3D< int >& mask,
                                       double& avg, double& stddev)
 {
     SPEED_UP_temps;
-    double sum1=0;
-    double sum2=0;
-    int N=0;
+    double sum1 = 0;
+    double sum2 = 0;
+    int N = 0;
 
     max_val = min_val = DIRECT_VOL_ELEM(m, 0, 0, 0);
 
@@ -1352,16 +1352,16 @@ void compute_stats_within_binary_mask(const matrix3D< int >& mask,
                 max_val = VOL_ELEM(m, k, i, j);
 
             // cumulative sums for average and standard deviation
-            sum1 +=  (double) VOL_ELEM(m, k, i, j);
+            sum1 += (double) VOL_ELEM(m, k, i, j);
             sum2 += ((double) VOL_ELEM(m, k, i, j)) *
-                ((double) VOL_ELEM(m, k, i, j));
+                    ((double) VOL_ELEM(m, k, i, j));
         }
     }
 
     // average and standard deviation
     avg  = sum1 / (double) N;
-    if (N>1)
-        stddev = sqrt(ABS(sum2 / N - avg * avg) * N/ (N-1));
+    if (N > 1)
+        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N - 1));
     else
         stddev = 0;
 }
@@ -1374,22 +1374,22 @@ void compute_stats_within_binary_mask(const matrix3D< int >& mask,
  */
 template<typename T>
 void apply_binary_mask(const matrix3D< int >& mask, const matrix3D< T >& m_in,
-                       matrix3D< T >& m_out, T subs_val=(T) 0)
+                       matrix3D< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
-        // If in common with the mask
-        if (k>=STARTINGZ(mask) && k<=FINISHINGZ(mask) &&
-                i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
-                j>=STARTINGX(mask) && j<=FINISHINGX(mask))
-            if (VOL_ELEM(mask, k, i, j)==0)
-                VOL_ELEM(m_out, k, i, j) = subs_val;
-            else
-                VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
-        // It is not in common, leave the original one
+    // If in common with the mask
+    if (k >= STARTINGZ(mask) && k <= FINISHINGZ(mask) &&
+        i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
+        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
+        if (VOL_ELEM(mask, k, i, j) == 0)
+            VOL_ELEM(m_out, k, i, j) = subs_val;
         else
             VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
-    }
+    // It is not in common, leave the original one
+    else
+        VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
+}
 
 /** Apply continuous mask to an image (3D)
  * @ingroup MasksTools
@@ -1403,15 +1403,15 @@ void apply_cont_mask(const matrix3D< double >& mask, const matrix3D< T >& m_in,
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
-        // If in common with the mask
-        if (k>=STARTINGZ(mask) && k<=FINISHINGZ(mask) &&
-                i>=STARTINGY(mask) && i<=FINISHINGY(mask) &&
-                j>=STARTINGX(mask) && j<=FINISHINGX(mask))
-            VOL_ELEM(m_out, k, i, j) = (T) (VOL_ELEM(m_in, k, i, j)
-                * VOL_ELEM(mask, k, i, j));
-        // It is not in common, leave the original one
-        else
-            VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
+    // If in common with the mask
+    if (k >= STARTINGZ(mask) && k <= FINISHINGZ(mask) &&
+        i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
+        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
+        VOL_ELEM(m_out, k, i, j) = (T)(VOL_ELEM(m_in, k, i, j)
+                                       * VOL_ELEM(mask, k, i, j));
+    // It is not in common, leave the original one
+    else
+        VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
 }
 
 /** Compute histogram inside mask within its minimum and maximum value (2D)
@@ -1451,9 +1451,9 @@ void compute_hist_within_binary_mask(const matrix2D< int >& mask,
     SPEED_UP_temps;
     hist.init(min, max, no_steps);
 
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,v)
-        if (MAT_ELEM(mask, i, j) != 0)
-            hist.insert_value(MAT_ELEM(v, i, j));
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask, v)
+    if (MAT_ELEM(mask, i, j) != 0)
+        hist.insert_value(MAT_ELEM(v, i, j));
 }
 
 /** Compute histogram inside mask within its minimum and maximum value (3D)
@@ -1493,8 +1493,8 @@ void compute_hist_within_binary_mask(const matrix3D< int >& mask,
     SPEED_UP_temps;
     hist.init(min, max, no_steps);
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, v)
-        if (VOL_ELEM(mask, k, i, j) != 0)
-            hist.insert_value(VOL_ELEM(v, k, i, j));
+    if (VOL_ELEM(mask, k, i, j) != 0)
+        hist.insert_value(VOL_ELEM(v, k, i, j));
 }
 
 #define COUNT_ABOVE 1
@@ -1546,31 +1546,31 @@ int count_with_mask(const matrix2D< int >& mask,
                     const matrix2D< T >& m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
-    int N=0;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask,m)
+    int N = 0;
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask, m)
     if (MAT_ELEM(mask, i, j))
         switch (mode)
         {
         case (COUNT_ABOVE):
-            if (MAT_ELEM(m, i, j) >= th1)
-                N++;
+                        if (MAT_ELEM(m, i, j) >= th1)
+                            N++;
             break;
 
         case (COUNT_BELOW):
-            if (MAT_ELEM(m, i, j) <= th1)
-                N++;
+                        if (MAT_ELEM(m, i, j) <= th1)
+                            N++;
             break;
 
         case (COUNT_BETWEEN):
-            if (MAT_ELEM(m, i, j) >= th1 && MAT_ELEM(m, i, j)<=th2)
-                N++;
+                        if (MAT_ELEM(m, i, j) >= th1 && MAT_ELEM(m, i, j) <= th2)
+                            N++;
             break;
         }
     return N;
 }
 
 int count_with_mask(const matrix2D< int >& mask,
-                    const matrix2D< complex< double > >& m, int mode,
+                    const matrix2D< complex< double > > & m, int mode,
                     double th1, double th2);
 
 /** Count voxels with mask and threshold
@@ -1590,31 +1590,31 @@ int count_with_mask(const matrix3D< int >& mask,
                     const matrix3D< T >& m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
-    int N=0;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask,m)
-        if (VOL_ELEM(mask, k, i, j))
-            switch (mode)
-            {
-            case (COUNT_ABOVE):
-                if (VOL_ELEM(m, k, i, j) >= th1)
-                    N++;
-                break;
+    int N = 0;
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, m)
+    if (VOL_ELEM(mask, k, i, j))
+        switch (mode)
+        {
+        case (COUNT_ABOVE):
+                        if (VOL_ELEM(m, k, i, j) >= th1)
+                            N++;
+            break;
 
-            case (COUNT_BELOW):
-                if (VOL_ELEM(m, k, i, j) <= th1)
-                    N++;
-                break;
+        case (COUNT_BELOW):
+                        if (VOL_ELEM(m, k, i, j) <= th1)
+                            N++;
+            break;
 
-            case (COUNT_BETWEEN):
-                if (VOL_ELEM(m, k, i, j) >= th1 && VOL_ELEM(m, k, i, j) <= th2)
-                    N++;
-                break;
-            }
+        case (COUNT_BETWEEN):
+                        if (VOL_ELEM(m, k, i, j) >= th1 && VOL_ELEM(m, k, i, j) <= th2)
+                            N++;
+            break;
+        }
     return N;
 }
 
 int count_with_mask(const matrix3D< int >& mask,
-                    const matrix3D< complex< double > >& m, int mode,
+                    const matrix3D< complex< double > > & m, int mode,
                     double th1, double th2);
 
 /** Invert binary mask (2D)
@@ -1626,7 +1626,7 @@ template<typename T>
 void invert_binary_mask(matrix2D< T >& mask)
 {
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
-        MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
+    MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
 }
 
 /** Invert binary mask (3D)
@@ -1638,7 +1638,7 @@ template<typename T>
 void invert_binary_mask(matrix3D< T >& mask)
 {
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
-        MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
+    MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
 }
 
 /** Range adjust within binary mask

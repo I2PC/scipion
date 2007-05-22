@@ -25,16 +25,17 @@
 #include <qimage.h>
 
 /*  --------------------------------------------------- */
-class QtImageConverter {
+class QtImageConverter
+{
 public:
-   // Constructor
-   QtImageConverter();
+    // Constructor
+    QtImageConverter();
 
-   // qt to xmipp converter
-   Image *qt2xmipp( QImage *qtImg );
+    // qt to xmipp converter
+    Image *qt2xmipp(QImage *qtImg);
 
-   // xmipp to qt converter
-   QImage *xmipp2qt( Image *xmippImg );
+    // xmipp to qt converter
+    QImage *xmipp2qt(Image *xmippImg);
 };
 
 #endif

@@ -32,33 +32,40 @@
 #include <data/micrograph.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
-class QtWidgetPSD : public QWidget {
-   Q_OBJECT
+class QtWidgetPSD : public QWidget
+{
+    Q_OBJECT
 public:
-   /// Show the CTF instead the PSD
-   bool ctf_mode;
+    /// Show the CTF instead the PSD
+    bool ctf_mode;
 
-   /// Filename of the assign CTF parameters file
-   FileName fn_assign_CTF;
+    /// Filename of the assign CTF parameters file
+    FileName fn_assign_CTF;
 
-   /// Empty constructor
-   QtWidgetPSD() {ctf_mode=false;}
+    /// Empty constructor
+    QtWidgetPSD()
+    {
+        ctf_mode = false;
+    }
 
-   /// Destructor
-   ~QtWidgetPSD();
+    /// Destructor
+    ~QtWidgetPSD();
 
-   /// Set CTF mode
-   void set_CTF_mode() {ctf_mode=true;}
+    /// Set CTF mode
+    void set_CTF_mode()
+    {
+        ctf_mode = true;
+    }
 
-   /// Set the assign CTF parameters file
-   void set_assign_CTF_file(Micrograph &m,
-      const FileName &_fn_assign_CTF);
+    /// Set the assign CTF parameters file
+    void set_assign_CTF_file(Micrograph &m,
+                             const FileName &_fn_assign_CTF);
 public:
-   // Assign CTF parameters
-   Prog_assign_CTF_prm assign_ctf_prm;
+    // Assign CTF parameters
+    Prog_assign_CTF_prm assign_ctf_prm;
 
-   // Filenames to remove when this object is destroyed
-   vector<FileName> files_to_remove;
+    // Filenames to remove when this object is destroyed
+    vector<FileName> files_to_remove;
 };
 
 #endif

@@ -1,27 +1,27 @@
 /***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- ***************************************************************************/
+*
+* Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+*
+* Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+* 02111-1307  USA
+*
+*  All comments concerning this program package may be sent to the
+*  e-mail address 'xmipp@cnb.uam.es'
+***************************************************************************/
 
 #ifndef DOCFILE_H
 #define DOCFILE_H
@@ -65,9 +65,9 @@ public:
 
 private:
     Line_Type line_type;
-    string text; ///< if a comment, the whole line
+    std::string text; ///< if a comment, the whole line
     int key; //< key of this line
-    vector< double > data; ///< data of that line
+    std::vector< double > data; ///< data of that line
 
     friend class DocFile; ///< Document file can access anything in this class
 
@@ -235,13 +235,13 @@ public:
 class DocFile
 {
     FileName fn_doc; ///< Filename
-    vector< DocLine > m; ///< All data
+    std::vector< DocLine > m; ///< All data
     int no_lines; ///< Number of not commented lines
     int first_key; ///< Number of the first file key
-    vector< DocLine >::iterator current_line; ///< "pointer" to current line
+    std::vector< DocLine >::iterator current_line; ///< "pointer" to current line
 
     // TODO document
-    vector< DocLine >::iterator find(int _key);
+    std::vector< DocLine >::iterator find(int _key);
 
 public:
     /// @defgroup DocFileConstructor DocFile constructors.
@@ -318,7 +318,7 @@ public:
     /** Another function for assigment.
      * @ingroup DocFileOperator
      */
-    void assign (const DocFile &DF);
+    void assign(const DocFile &DF);
 
     /** Assignment from matrix.
      * @ingroup DocFileOperator
@@ -361,7 +361,7 @@ public:
      * DF.show_line(3);  // Show line with key=3
      * @endcode
      */
-    void show_line(ostream& o, int key=-1);
+    void show_line(ostream& o, int key = -1);
 
     /** Show everything in a document file.
      * @ingroup DocFileOperator
@@ -386,7 +386,7 @@ public:
      * DF.read("angles.doc");
      * @endcode
      */
-    void read(FileName _name, int overrinding=1);
+    void read(FileName _name, int overrinding = 1);
 
     /** Append a file from disk to an already read one.
      * @ingroup DocFileDisk
@@ -401,7 +401,7 @@ public:
      */
     void append(FileName _name)
     {
-        read(_name,0);
+        read(_name, 0);
     }
 
     /** Write a document file to disk.
@@ -416,7 +416,7 @@ public:
      * DF.write("angles3.doc"); // Save as ...
      * @endcode
      */
-    void write(FileName _name="");
+    void write(FileName _name = "");
 
     /// @defgroup DocFilePointer Moving the current line pointer.
     /// @ingroup DocFiles
@@ -771,8 +771,13 @@ public:
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-    void get_angles(int _key, double& rot, double& tilt, double& psi,
-                    const string& ang1, const string& ang2, const string& ang3);
+    void get_angles(int _key,
+                    double& rot,
+                    double& tilt,
+                    double& psi,
+                    const std::string& ang1,
+                    const std::string& ang2,
+                    const std::string& ang3);
 
     /** Get angles on key i (second triad of Euler angles).
      * @ingroup DocFileInfo
@@ -780,9 +785,13 @@ public:
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-    void get_angles1(int _key, double& rot, double& tilt, double& psi,
-                     const string& ang1, const string& ang2,
-                     const string& ang3);
+    void get_angles1(int _key,
+                     double& rot,
+                     double& tilt,
+                     double& psi,
+                     const std::string& ang1,
+                     const std::string& ang2,
+                     const std::string& ang3);
 
     /** Get angles on key i (third triad of Euler angles)
      * @ingroup DocFileInfo
@@ -790,9 +799,13 @@ public:
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-    void get_angles2(int _key, double& rot, double& tilt, double& psi,
-                     const string& ang1, const string& ang2,
-                     const string& ang3);
+    void get_angles2(int _key,
+                     double& rot,
+                     double& tilt,
+                     double& psi,
+                     const std::string& ang1,
+                     const std::string& ang2,
+                     const std::string& ang3);
 
     /** Set angles on key i.
      * @ingroup DocFileInfo
@@ -800,8 +813,13 @@ public:
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
      */
-    void set_angles(int _key, double rot, double tilt, double psi, const string&
-                    ang1, const string& ang2, const string& ang3);
+    void set_angles(int _key,
+                    double rot,
+                    double tilt,
+                    double psi,
+                    const std::string& ang1,
+                    const std::string& ang2,
+                    const std::string& ang3);
 
     /** Set a value in the current line.
      * @ingroup DocFileInfo
@@ -877,7 +895,7 @@ public:
      * DF.remove(700,705); // both limits are removed too
      * @endcode
      */
-    void remove(int _key0, int _keyF=-1);
+    void remove(int _key0, int _keyF = -1);
 
     /** Removes actual line.
      * @ingroup DocFileModify
@@ -905,7 +923,7 @@ public:
      * new_key = DF.insert_data_line();
      * @endcode
      */
-    int insert_data_line(int no_lines_to_insert=1);
+    int insert_data_line(int no_lines_to_insert = 1);
 
     /** Insert a data line before current line.
      * @ingroup DocFileModify
@@ -946,7 +964,7 @@ public:
      * DF.insert_comment("This is a comment");
      * @endcode
      */
-    void insert_comment(string comment);
+    void insert_comment(std::string comment);
 
     /** Insert a document line before the current line.
      * @ingroup DocFileModify
@@ -978,7 +996,7 @@ public:
      * new_key = DF.append_data_line();
      * @endcode
      */
-    int append_data_line(int no_lines_to_append=1);
+    int append_data_line(int no_lines_to_append = 1);
 
     /** Append a data line at the end of the file.
      * @ingroup DocFileModify
@@ -1001,27 +1019,45 @@ public:
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
-    int append_angles(double rot, double tilt, double psi, const string& ang1,
-                      const string& ang2, const string& ang3);
+    int append_angles(double rot,
+                      double tilt,
+                      double psi,
+                      const std::string& ang1,
+                      const std::string& ang2,
+                      const std::string& ang3);
 
     /** Append angles, using 2 triads of Euler angles.
      * @ingroup DocFileModify
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
-    int append_angles(double rot,  double tilt,  double psi, double rot1, double
-                      tilt1, double psi1, const string& ang1, const string&
-                      ang2, const string& ang3);
+    int append_angles(double rot,
+                      double tilt,
+                      double psi,
+                      double rot1,
+                      double tilt1,
+                      double psi1,
+                      const std::string& ang1,
+                      const std::string& ang2,
+                      const std::string& ang3);
 
     /** Append angles, using three triads of Euler angles.
      * @ingroup DocFileModify
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
-    int append_angles(double rot, double tilt, double psi, double rot1,
-                      double tilt1, double psi1, double rot2, double tilt2,
-                      double psi2, const string& ang1, const string& ang2,
-                      const string& ang3);
+    int append_angles(double rot,
+                      double tilt,
+                      double psi,
+                      double rot1,
+                      double tilt1,
+                      double psi1,
+                      double rot2,
+                      double tilt2,
+                      double psi2,
+                      const std::string& ang1,
+                      const std::string& ang2,
+                      const std::string& ang3);
 
     /** Append a comment at the end of the file.
      * @ingroup DocFileModify
@@ -1034,7 +1070,7 @@ public:
      * DF.append_comment("This is a comment");
      * @endcode
      */
-    void append_comment(const string& comment);
+    void append_comment(const std::string& comment);
 
     /** Append a document line at the end of the file.
      * @ingroup DocFileModify
@@ -1171,8 +1207,10 @@ public:
      *
      * @endcode
      */
-    void for_all_lines(void (*f) (const matrix1D< double >&, matrix1D< double >&
-                                 ), int key0=-1, int keyF=-1);
+    void for_all_lines(void(*f)(const matrix1D< double >&,
+                                matrix1D< double >&),
+                       int key0 = -1,
+                       int keyF = -1);
 
     /** Apply a function to a data line with a given key.
      * @ingroup DocFileHelpful
@@ -1187,8 +1225,9 @@ public:
      * // Apply to line with key=30
      * @endcode
      */
-    void for_one_line(void (*f) (const matrix1D< double >&, matrix1D< double >&)
-                      , int key0)
+    void for_one_line(void(*f)(const matrix1D< double >&,
+                               matrix1D< double >&),
+                      int key0)
     {
         for_all_lines(f, key0, key0);
     }
@@ -1219,8 +1258,10 @@ public:
      * DF.for_column(&adjust_angle, 1, 30, 40);
      * @endcode
      */
-    void for_column(double (*f) (double), int _col=-1, int _key0=-1, int
-                    _keyF=-1);
+    void for_column(double(*f)(double),
+                    int _col = -1,
+                    int _key0 = -1,
+                    int _keyF = -1);
 };
 
 /** Read Document File with Euler angles.
@@ -1242,7 +1283,10 @@ public:
  * std::cout << " sets of angles" << std::endl
  * @endcode
  */
-int read_Euler_document_file(FileName fn, string ang1, string ang2, string ang3,
+int read_Euler_document_file(FileName fn,
+                             std::string ang1,
+                             std::string ang2,
+                             std::string ang3,
                              DocFile& DF);
 
 /** Select images from a selfile meeting some condition.
@@ -1257,7 +1301,12 @@ int read_Euler_document_file(FileName fn, string ang1, string ang2, string ang3,
  * It is not checked that the number of images (active and discarded) and the
  * number of data linea in the DocFile match.
  */
-void select_images(DocFile& DF, SelFile& SF, int col, bool en_limit0, double
-                   limit0, bool en_limitF, double limitF);
+void select_images(DocFile& DF,
+                   SelFile& SF,
+                   int col,
+                   bool en_limit0,
+                   double limit0,
+                   bool en_limitF,
+                   double limitF);
 
 #endif

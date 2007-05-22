@@ -30,48 +30,65 @@
 
 void Usage(const Prog_downsample_prm &prm);
 
-int main(int argc, char **argv) {
-   Prog_downsample_prm prm;
-   bool                smooth;
-   bool                reversed;
+int main(int argc, char **argv)
+{
+    Prog_downsample_prm prm;
+    bool                smooth;
+    bool                reversed;
 
-   // Get input parameters -------------------------------------------------
-   try {
-      prm.read(argc,argv);
-      smooth         = check_param(argc,argv,"-smooth");
-      reversed       = check_param(argc,argv,"-reverse_endian");
-   } catch (Xmipp_error XE) {cout << XE; Usage(prm); exit(1);}
+    // Get input parameters -------------------------------------------------
+    try
+    {
+        prm.read(argc, argv);
+        smooth         = check_param(argc, argv, "-smooth");
+        reversed       = check_param(argc, argv, "-reverse_endian");
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage(prm);
+        exit(1);
+    }
 
-   try {
-      prm.generate_kernel();
-      prm.open_input_micrograph();
-      prm.create_empty_output_file();
-      if (smooth) {
-         Micrograph Mp;
-         Mp.open_micrograph(prm.fn_downsampled, reversed);
-         byte rgb[256]; for (int i=0; i<256; i++) rgb[i]=i;
-         byte *result = SmoothResize((byte *) (prm.M.array8()),
-            prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
-            rgb, rgb, rgb, rgb, rgb, rgb, 256);
-         for (int i=0; i<prm.Ypdim; i++)
-             for (int j=0; j<prm.Xpdim; j++)
-                 Mp.set_val(j,i,result[i*prm.Xpdim+j]);
-         Mp.close_micrograph();
-      } else prm.Downsample();
-      prm.close_input_micrograph();
-   } catch (Xmipp_error XE) {cout << XE;}
+    try
+    {
+        prm.generate_kernel();
+        prm.open_input_micrograph();
+        prm.create_empty_output_file();
+        if (smooth)
+        {
+            Micrograph Mp;
+            Mp.open_micrograph(prm.fn_downsampled, reversed);
+            byte rgb[256];
+            for (int i = 0; i < 256; i++) rgb[i] = i;
+            byte *result = SmoothResize((byte *)(prm.M.array8()),
+                                        prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
+                                        rgb, rgb, rgb, rgb, rgb, rgb, 256);
+            for (int i = 0; i < prm.Ypdim; i++)
+                for (int j = 0; j < prm.Xpdim; j++)
+                    Mp.set_val(j, i, result[i*prm.Xpdim+j]);
+            Mp.close_micrograph();
+        }
+        else prm.Downsample();
+        prm.close_input_micrograph();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 }
 
 /* Usage =================================================================== */
-void Usage(const Prog_downsample_prm &prm) {
-   cerr << "Purpose: This file allows you to downsample raw images\n"
-        << "Usage: downsample [parameters]\n"
-        << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
-        << "                            must exist\n"
-        << "   -o <output_file>       : Must be different from input one\n"
-        << "  [-smooth]               : Use Smoothing for downsampling\n"
-   ;
-   prm.usage();
+void Usage(const Prog_downsample_prm &prm)
+{
+    cerr << "Purpose: This file allows you to downsample raw images\n"
+    << "Usage: downsample [parameters]\n"
+    << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
+    << "                            must exist\n"
+    << "   -o <output_file>       : Must be different from input one\n"
+    << "  [-smooth]               : Use Smoothing for downsampling\n"
+    ;
+    prm.usage();
 }
 
 /* Colimate menu =========================================================== */

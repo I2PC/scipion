@@ -35,38 +35,39 @@
 /**@name Centilt */
 //@{
 /** Centilt parameters. */
-class Prog_centilt_prm {
+class Prog_centilt_prm
+{
 public:
-  /** SelFiles for untilted and tilted images */
-  SelFile SFu, SFt;
-  /**  Filename output document file */
-  FileName fn_doc;
-  /**  Filename output extension */
-  FileName oext;
-  /** Discard images that shift more than max_shift*/
-  double max_shift;
-  /** Force x-shift to be zero */
-  bool force_x_zero;
-  /** Perform cosine stretching */
-  bool do_stretch;
-  /** Perform centering */
-  bool do_center;
+    /** SelFiles for untilted and tilted images */
+    SelFile SFu, SFt;
+    /**  Filename output document file */
+    FileName fn_doc;
+    /**  Filename output extension */
+    FileName oext;
+    /** Discard images that shift more than max_shift*/
+    double max_shift;
+    /** Force x-shift to be zero */
+    bool force_x_zero;
+    /** Perform cosine stretching */
+    bool do_stretch;
+    /** Perform centering */
+    bool do_center;
 
 public:
-  /// Read arguments from command line
-  void read(int argc, char **argv);
+    /// Read arguments from command line
+    void read(int argc, char **argv);
 
-  /// Show
-  void show();
+    /// Show
+    void show();
 
-  /// Usage
-  void usage();
+    /// Usage
+    void usage();
 
-  /// Center one tilted image
-  bool center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf);
+    /// Center one tilted image
+    bool center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf);
 
-  /// Main routine
-  void centilt();
+    /// Main routine
+    void centilt();
 
-};				
+};
 //@}

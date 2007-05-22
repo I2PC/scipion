@@ -1,27 +1,27 @@
 /***************************************************************************
- *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
- ***************************************************************************/
+*
+* Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+*
+* Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+* 02111-1307  USA
+*
+*  All comments concerning this program package may be sent to the
+*  e-mail address 'xmipp@cnb.uam.es'
+***************************************************************************/
 
 #ifndef FILTERS_H
 #define FILTERS_H
@@ -62,9 +62,14 @@ void contrast_enhancement(Image* I);
  *
  * Valid neighbourhoods are 4 or 8.
  */
-void region_growing(const matrix2D< double >& I_in, matrix2D< double >& I_out,
-                    int i, int j, float stop_colour=1, float filling_colour=1,
-                    bool less=true, int neighbourhood=8);
+void region_growing(const matrix2D< double >& I_in,
+                    matrix2D< double >& I_out,
+                    int i,
+                    int j,
+                    float stop_colour = 1,
+                    float filling_colour = 1,
+                    bool less = true,
+                    int neighbourhood = 8);
 
 /** Region growing for volumes
  * @ingroup Filter
@@ -77,9 +82,14 @@ void region_growing(const matrix2D< double >& I_in, matrix2D< double >& I_out,
  * border are greater than the region voxels. If less is false the region is
  * grown so that all voxels on its border are smaller than the region voxels.
  */
-void region_growing(const matrix3D< double >& V_in, matrix3D< double >& V_out,
-                    int k, int i, int j, float stop_colour=1,
-                    float filling_colour=1, bool less=true);
+void region_growing(const matrix3D< double >& V_in,
+                    matrix3D< double >& V_out,
+                    int k,
+                    int i,
+                    int j,
+                    float stop_colour = 1,
+                    float filling_colour = 1,
+                    bool less = true);
 
 /** Label a binary image
  * @ingroup Filters
@@ -88,8 +98,9 @@ void region_growing(const matrix3D< double >& V_in, matrix3D< double >& V_out,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image(const matrix2D< double >& I, matrix2D< double >& label,
-                int neighbourhood=8);
+int label_image(const matrix2D< double >& I,
+                matrix2D< double >& label,
+                int neighbourhood = 8);
 
 /** Label a binary volume
  * @ingroup Filters
@@ -105,8 +116,9 @@ int label_volume(const matrix3D< double >& V, matrix3D< double >& label);
  *
  * Remove connected components smaller than a given size. They are set to 0.
  */
-void remove_small_components(matrix2D< double >& I, int size, int
-                             neighbourhood=8);
+void remove_small_components(matrix2D< double >& I,
+                             int size,
+                             int neighbourhood = 8);
 
 /** Keep the biggest connected component
  * @ingroup Filters
@@ -114,15 +126,16 @@ void remove_small_components(matrix2D< double >& I, int size, int
  * If the biggest component does not cover the percentage required (by default,
  * 0), more big components are taken until this is accomplished.
  */
-void keep_biggest_component(matrix2D< double >& I, double percentage=0, int
-                            neighbourhood=8);
+void keep_biggest_component(matrix2D< double >& I,
+                            double percentage = 0,
+                            int neighbourhood = 8);
 
 /** Fill object
  * @ingroup Filters
  *
  * Everything that is not background is assumed to be object.
  */
-void fill_binary_object(matrix2D< double >&I, int neighbourhood=8);
+void fill_binary_object(matrix2D< double >&I, int neighbourhood = 8);
 
 /** Correlation 1D
  * @ingroup Filters
@@ -133,23 +146,25 @@ void fill_binary_object(matrix2D< double >&I, int neighbourhood=8);
  *
  * This function returns the number of objects (different from background)
  */
-template<typename T>
-double correlation(const matrix1D< T >& x, const matrix1D< T >& y,
-                   const matrix1D< int >* mask=NULL, int l=0)
+template <typename T>
+double correlation(const matrix1D< T >& x,
+                   const matrix1D< T >& y,
+                   const matrix1D< int >* mask = NULL,
+                   int l = 0)
 {
     SPEED_UP_temps;
 
-    double retval=0; // returned value
+    double retval = 0; // returned value
     int i, ip; // indexes
     int Rows; // of the matrices
 
     Rows = x.get_dim();
-    for(i=0; i<Rows; i++)
+    for (i = 0; i < Rows; i++)
     {
         ip = i - l;
-        if (ip>=0 && ip<Rows)
+        if (ip >= 0 && ip < Rows)
         {
-            if (mask!=NULL)
+            if (mask != NULL)
                 if (!DIRECT_VEC_ELEM((*mask), i))
                     continue;
 
@@ -163,9 +178,11 @@ double correlation(const matrix1D< T >& x, const matrix1D< T >& y,
 /** Correlation 2D
  * @ingroup Filters
  */
-template<typename T>
-double correlation(const matrix2D< T >& x, const matrix2D< T >& y,
-                   const matrix2D< int >* mask=NULL, int l=0, int m=0)
+template <typename T>
+double correlation(const matrix2D< T >& x,
+                   const matrix2D< T >& y,
+                   const matrix2D< int >* mask = NULL,
+                   int l = 0, int m = 0)
 {
     /* Note: l index is for rows and m index for columns */
 
@@ -179,13 +196,13 @@ double correlation(const matrix2D< T >& x, const matrix2D< T >& y,
     Cols = x.ColNo();
     Rows = x.RowNo();
 
-    for(i=0; i<Rows; i++)
-        for(j=0; j<Cols; j++)
+    for (i = 0; i < Rows; i++)
+        for (j = 0; j < Cols; j++)
         {
             ip = i - l;
             jp = j - m;
 
-            if (ip>=0 && ip<Rows && jp>=0 && jp<Cols)
+            if (ip >= 0 && ip < Rows && jp >= 0 && jp < Cols)
                 if (mask != NULL)
                     if (!DIRECT_MAT_ELEM((*mask), i, j))
                         continue;
@@ -199,9 +216,13 @@ double correlation(const matrix2D< T >& x, const matrix2D< T >& y,
 /** Correlation 3D
  * @ingroup Filters
  */
-template<typename T>
-double correlation(const matrix3D< T >& x, const matrix3D< T >& y,
-                   const matrix3D< int >* mask=NULL, int l=0, int m=0, int q=0)
+template <typename T>
+double correlation(const matrix3D< T >& x,
+                   const matrix3D< T >& y,
+                   const matrix3D< int >* mask = NULL,
+                   int l = 0,
+                   int m = 0,
+                   int q = 0)
 {
     SPEED_UP_temps;
 
@@ -215,15 +236,16 @@ double correlation(const matrix3D< T >& x, const matrix3D< T >& y,
     Slices = x.SliNo();
 
     long N = 0;
-    for(k=0; k<Slices; k++)
-        for(i=0; i<Rows; i++)
-            for(j=0; j<Cols; j++)
+    for (k = 0; k < Slices; k++)
+        for (i = 0; i < Rows; i++)
+            for (j = 0; j < Cols; j++)
             {
                 ip = i - l;
                 jp = j - m;
                 kp = k - q;
 
-                if (ip>=0 && ip<Rows && jp>=0 && jp<Cols && kp>=0 && kp<Slices)
+                if (ip >= 0 && ip < Rows && jp >= 0 && jp < Cols && kp >= 0 &&
+                    kp < Slices)
                 {
                     if (mask != NULL)
                         if (!DIRECT_VOL_ELEM((*mask), k, i, j))
@@ -243,7 +265,7 @@ double correlation(const matrix3D< T >& x, const matrix3D< T >& y,
  * Return the sum{(x-mean_x)*(y-mean_y)}/(stddev_x*stddev_y*n) in the common
  * positions.
  */
-template<typename T>
+template <typename T>
 double correlation_index(const matrix1D< T >& x, const matrix1D< T >& y)
 {
     SPEED_UP_temps;
@@ -273,10 +295,11 @@ double correlation_index(const matrix1D< T >& x, const matrix1D< T >& y)
 /** correlation_index 2D
  * @ingroup Filters
  */
-template<typename T>
-double correlation_index(const matrix2D< T >& x, const matrix2D< T >&y,
-                         const matrix2D< int >* mask=NULL,
-                         matrix2D< double >* Contributions=NULL)
+template <typename T>
+double correlation_index(const matrix2D< T >& x,
+                         const matrix2D< T >&y,
+                         const matrix2D< int >* mask = NULL,
+                         matrix2D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -343,9 +366,10 @@ double correlation_index(const matrix2D< T >& x, const matrix2D< T >&y,
 /** correlation_index 3D
  * @ingroup Filters
  */
-template<typename T>
-double correlation_index(const matrix3D< T >& x, const matrix3D< T >& y,
-                         const matrix3D< int >* mask=NULL,
+template <typename T>
+double correlation_index(const matrix3D< T >& x,
+                         const matrix3D< T >& y,
+                         const matrix3D< int >* mask = NULL,
                          matrix3D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
@@ -392,7 +416,7 @@ double correlation_index(const matrix3D< T >& x, const matrix3D< T >& y,
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x,y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(k, i, j))
@@ -417,16 +441,18 @@ double correlation_index(const matrix3D< T >& x, const matrix3D< T >& y,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  */
-void best_shift(const matrix2D< double >& I1, const matrix2D< double >& I2,
-                double& shiftX, double& shiftY,
-                const matrix2D< int >* mask=NULL);
+void best_shift(const matrix2D< double >& I1,
+                const matrix2D< double >& I2,
+                double& shiftX,
+                double& shiftY,
+                const matrix2D< int >* mask = NULL);
 
 /** euclidian_distance 1D
  * @ingroup Filters
  *
  * Return the SQRT[sum{(x-y)*(x-y)}] in the common positions.
  */
-template<typename T>
+template <typename T>
 double euclidian_distance(const matrix1D< T >& x, const matrix1D< T >& y)
 {
     SPEED_UP_temps;
@@ -451,9 +477,10 @@ double euclidian_distance(const matrix1D< T >& x, const matrix1D< T >& y)
  * @ingroup Filters
  *
  */
-template<typename T>
-double euclidian_distance(const matrix2D< T >& x, const matrix2D< T >& y,
-                          const matrix2D< int >* mask=NULL)
+template <typename T>
+double euclidian_distance(const matrix2D< T >& x,
+                          const matrix2D< T >& y,
+                          const matrix2D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -480,9 +507,10 @@ double euclidian_distance(const matrix2D< T >& x, const matrix2D< T >& y,
 /** euclidian distance 3D
  * @ingroup Filters
  */
-template<typename T>
-double euclidian_distance(const matrix3D< T >& x, const matrix3D< T >& y,
-                          const matrix3D< int >* mask=NULL)
+template <typename T>
+double euclidian_distance(const matrix3D< T >& x,
+                          const matrix3D< T >& y,
+                          const matrix3D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -522,9 +550,11 @@ double euclidian_distance(const matrix3D< T >& x, const matrix3D< T >& y,
  * matrices is assumed, and the number of bins is calculated as: log2(n)+1.
  * (according to: Tourassi et al. (2001) Med. Phys. 28 pp. 2394-2402.)
  */
-template<typename T>
-double mutual_information(const matrix1D< T >& x, const matrix1D< T >& y,
-                          int nx=0, int ny=0)
+template <typename T>
+double mutual_information(const matrix1D< T >& x,
+                          const matrix1D< T >& y,
+                          int nx = 0,
+                          int ny = 0)
 {
     SPEED_UP_temps;
 
@@ -545,7 +575,7 @@ double mutual_information(const matrix1D< T >& x, const matrix1D< T >& y,
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
     {
         aux_x(n) = VEC_ELEM(x, i);
-        aux_y(n)= VEC_ELEM(y, i);
+        aux_y(n) = VEC_ELEM(y, i);
         n++;
     }
 
@@ -556,11 +586,11 @@ double mutual_information(const matrix1D< T >& x, const matrix1D< T >& y,
     {
         if (nx == 0)
             //Assume Gaussian distribution
-            nx = (int) ((log((double) n) / LOG2) + 1);
+            nx = (int)((log((double) n) / LOG2) + 1);
 
         if (ny == 0)
             //Assume Gaussian distribution
-            ny = (int) ((log((double) n) / LOG2) + 1);
+            ny = (int)((log((double) n) / LOG2) + 1);
 
         compute_hist(aux_x, histx, nx);
         compute_hist(aux_y, histy, ny);
@@ -570,15 +600,15 @@ double mutual_information(const matrix1D< T >& x, const matrix1D< T >& y,
         my = histy;
         mxy = histxy;
 
-        for (int i=0; i<nx; i++)
+        for (int i = 0; i < nx; i++)
         {
             double histxi = (histx(i)) / n;
-            for (int j=0; j<ny; j++)
+            for (int j = 0; j < ny; j++)
             {
                 double histyj = (histy(j)) / n;
                 double histxyij = (histxy(i, j)) / n;
 
-                if (histxyij>0)
+                if (histxyij > 0)
                     retval += histxyij * log(histxyij / (histxi * histyj)) /
                               LOG2;
             }
@@ -593,9 +623,12 @@ double mutual_information(const matrix1D< T >& x, const matrix1D< T >& y,
 /** mutual information 2D
  * @ingroup Filters
  */
-template<typename T>
-double mutual_information(const matrix2D< T >& x, const matrix2D< T >& y,
-                          int nx=0, int ny=0, const matrix2D< int >* mask=NULL)
+template <typename T>
+double mutual_information(const matrix2D< T >& x,
+                          const matrix2D< T >& y,
+                          int nx = 0,
+                          int ny = 0,
+                          const matrix2D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -631,11 +664,11 @@ double mutual_information(const matrix2D< T >& x, const matrix2D< T >& y,
     {
         if (nx == 0)
             //Assume Gaussian distribution
-            nx = (int) ((log((double) n) / LOG2) + 1);
+            nx = (int)((log((double) n) / LOG2) + 1);
 
         if (ny == 0)
             //Assume Gaussian distribution
-            ny = (int) ((log((double) n) / LOG2) + 1);
+            ny = (int)((log((double) n) / LOG2) + 1);
 
         compute_hist(aux_x, histx, nx);
         compute_hist(aux_y, histy, ny);
@@ -645,14 +678,14 @@ double mutual_information(const matrix2D< T >& x, const matrix2D< T >& y,
         my = histy;
         mxy = histxy;
 
-        for (int i=0; i<nx; i++)
+        for (int i = 0; i < nx; i++)
         {
             double histxi = (histx(i)) / n;
-            for (int j=0; j<ny; j++)
+            for (int j = 0; j < ny; j++)
             {
                 double histyj = (histy(j)) / n;
                 double histxyij = (histxy(i, j)) / n;
-                if (histxyij>0)
+                if (histxyij > 0)
                     retval += histxyij * log(histxyij / (histxi * histyj)) /
                               LOG2;
             }
@@ -667,9 +700,12 @@ double mutual_information(const matrix2D< T >& x, const matrix2D< T >& y,
 /** mutual information 3D
  * @ingroup Filters
  */
-template<typename T>
-double mutual_information(const matrix3D< T >& x, const matrix3D< T >& y,
-                          int nx=0, int ny=0, const matrix3D< int >* mask=NULL)
+template <typename T>
+double mutual_information(const matrix3D< T >& x,
+                          const matrix3D< T >& y,
+                          int nx = 0,
+                          int ny = 0,
+                          const matrix3D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -705,11 +741,11 @@ double mutual_information(const matrix3D< T >& x, const matrix3D< T >& y,
     {
         if (nx == 0)
             //Assume Gaussian distribution
-            nx = (int) ((log((double) n) / LOG2) + 1);
+            nx = (int)((log((double) n) / LOG2) + 1);
 
         if (ny == 0)
             //Assume Gaussian distribution
-            ny = (int) ((log((double) n) / LOG2) + 1);
+            ny = (int)((log((double) n) / LOG2) + 1);
 
         compute_hist(aux_x, histx, nx);
         compute_hist(aux_y, histy, ny);
@@ -718,14 +754,14 @@ double mutual_information(const matrix3D< T >& x, const matrix3D< T >& y,
         mx = histx;
         my = histy;
         mxy = histxy;
-        for (int i=0; i<nx; i++)
+        for (int i = 0; i < nx; i++)
         {
             double histxi = (histx(i)) / n;
-            for (int j=0; j<ny; j++)
+            for (int j = 0; j < ny; j++)
             {
                 double histyj = (histy(j)) / n;
                 double histxyij = (histxy(i, j)) / n;
-                if (histxyij>0)
+                if (histxyij > 0)
                     retval += histxyij * log(histxyij / (histxi * histyj)) /
                               LOG2;
             }
@@ -742,10 +778,11 @@ double mutual_information(const matrix3D< T >& x, const matrix3D< T >& y,
  *
  * Return the sqrt(sum{(x-y)*(x-y)}/n) in the common positions.
  */
-template<typename T>
-double rms(const matrix1D< T >& x, const matrix1D< T >& y,
-           const matrix1D< int >* mask=NULL,
-           matrix1D< double >* Contributions=NULL)
+template <typename T>
+double rms(const matrix1D< T >& x,
+           const matrix1D< T >& y,
+           const matrix1D< int >* mask = NULL,
+           matrix1D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -762,7 +799,7 @@ double rms(const matrix1D< T >& x, const matrix1D< T >& y,
                     continue;
 
             aux = (VEC_ELEM(x, i) - VEC_ELEM(y, i)) * (VEC_ELEM(x, i) -
-                    VEC_ELEM(y,	i));
+                    VEC_ELEM(y, i));
             VEC_ELEM(*Contributions, i) = aux;
             retval += aux;
             n++;
@@ -795,10 +832,11 @@ double rms(const matrix1D< T >& x, const matrix1D< T >& y,
 /** RMS 2D
  * @ingroup Filters
  */
-template<typename T>
-double rms(const matrix2D< T >& x, const matrix2D< T >& y,
+template <typename T>
+double rms(const matrix2D< T >& x,
+           const matrix2D< T >& y,
            const matrix2D< int >* mask = NULL,
-           matrix2D< double >* Contributions=NULL)
+           matrix2D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -808,7 +846,7 @@ double rms(const matrix2D< T >& x, const matrix2D< T >& y,
     // If contributions are desired
     if (Contributions != NULL)
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x,y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(i, j))
@@ -849,10 +887,11 @@ double rms(const matrix2D< T >& x, const matrix2D< T >& y,
 /** RMS 3D
  * @ingroup Filters
  */
-template<typename T>
-double rms(const matrix3D< T >& x, const matrix3D< T >& y,
-           const matrix3D< int >* mask=NULL,
-           matrix3D< double >* Contributions=NULL)
+template <typename T>
+double rms(const matrix3D< T >& x,
+           const matrix3D< T >& y,
+           const matrix3D< int >* mask = NULL,
+           matrix3D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -909,8 +948,11 @@ double rms(const matrix3D< T >& x, const matrix3D< T >& y,
  * k1 and k2 determines the harmonic coefficients to be computed.
  */
 void Fourier_Bessel_decomposition(const matrix2D< double >& img_in,
-                                  matrix2D< double >& m_out, double r1,
-                                  double r2, int k1, int k2);
+                                  matrix2D< double >& m_out,
+                                  double r1,
+                                  double r2,
+                                  int k1,
+                                  int k2);
 
 /** Harmonic decomposition
  * @ingroup Filters
@@ -919,7 +961,7 @@ void harmonic_decomposition(const matrix2D< double >& img_in,
                             matrix1D< double >& v_out);
 
 // TODO Document, check indentation
-template<typename T>
+template <typename T>
 void sort(T a, T b, T c, matrix1D< T >& v)
 {
     if (a < b)
@@ -961,7 +1003,7 @@ void sort(T a, T b, T c, matrix1D< T >& v)
     }
 }
 
-template<typename T>
+template <typename T>
 void merge_sort(matrix1D< T >& v1, matrix1D< T >& v2, matrix1D< T >& v)
 {
     int i1 = 0, i2 = 0, i = 0;
@@ -984,7 +1026,7 @@ void merge_sort(matrix1D< T >& v1, matrix1D< T >& v2, matrix1D< T >& v)
 // This UGLY function performs a fast merge sort for the case of vectors of 3
 // elements. This way is guaranteed a minimum number of comparisons (maximum
 // number of comparisons to perform the sort, 5)
-template<typename T>
+template <typename T>
 void fast_merge_sort(matrix1D< T >& x, matrix1D< T >& y, matrix1D< T >& v)
 {
     if (x(0) < y(0))
@@ -1172,7 +1214,7 @@ void fast_merge_sort(matrix1D< T >& x, matrix1D< T >& y, matrix1D< T >& v)
 }
 
 // TODO Document
-template<typename T>
+template <typename T>
 void median(matrix1D< T >& x, matrix1D< T >& y, T& m)
 {
     if (x(0) < y(1))
@@ -1205,7 +1247,7 @@ void median(matrix1D< T >& x, matrix1D< T >& y, T& m)
 /** Median_filter with a 3x3 window
  * @ingroup Filters
  */
-template<typename T>
+template <typename T>
 void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
 {
     int backup_startingx = STARTINGX(m);
@@ -1220,24 +1262,24 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
 
     // Set the initial and final matrix indices to explore
     int initialY = 1, initialX = 1;
-    int finalY = m.RowNo()-2;
-    int finalX = m.ColNo()-2;
+    int finalY = m.RowNo() - 2;
+    int finalX = m.ColNo() - 2;
 
     // For every row
-    for (int i=initialY; i<=finalY; i++)
+    for (int i = initialY; i <= finalY; i++)
     {
         // For every pair of pixels (mean is computed obtaining
         // two means at the same time using an efficient method)
-        for (int j=initialX; j<=finalX; j+=2)
+        for (int j = initialX; j <= finalX; j += 2)
         {
             // If we are in the border case
-            if (j==1)
+            if (j == 1)
             {
                 // Order the first and second vectors of 3 elements
-                sort(DIRECT_MAT_ELEM(m, i-1, j-1), DIRECT_MAT_ELEM(m, i, j-1),
-                     DIRECT_MAT_ELEM(m, i+1, j-1), v1);
-                sort(DIRECT_MAT_ELEM(m, i-1, j), DIRECT_MAT_ELEM(m, i, j),
-                     DIRECT_MAT_ELEM(m, i+1, j), v2);
+                sort(DIRECT_MAT_ELEM(m, i - 1, j - 1), DIRECT_MAT_ELEM(m, i, j - 1),
+                     DIRECT_MAT_ELEM(m, i + 1, j - 1), v1);
+                sort(DIRECT_MAT_ELEM(m, i - 1, j), DIRECT_MAT_ELEM(m, i, j),
+                     DIRECT_MAT_ELEM(m, i + 1, j), v2);
             }
             else
             {
@@ -1253,18 +1295,18 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
             {
                 v1 = v3;
                 v2 = v4;
-                sort(DIRECT_MAT_ELEM(m, i-1, j+1), DIRECT_MAT_ELEM(m, i, j+1),
-                     DIRECT_MAT_ELEM(m, i+1, j+1), v3);
-                fast_merge_sort(v2,v3,v);
+                sort(DIRECT_MAT_ELEM(m, i - 1, j + 1), DIRECT_MAT_ELEM(m, i, j + 1),
+                     DIRECT_MAT_ELEM(m, i + 1, j + 1), v3);
+                fast_merge_sort(v2, v3, v);
                 median(v1, v, out(i, j));
             }
             else
             {
                 // Order the third and fourth vectors of 3 elements
-                sort(DIRECT_MAT_ELEM(m, i-1, j+1), DIRECT_MAT_ELEM(m, i, j+1),
-                     DIRECT_MAT_ELEM(m, i+1, j+1), v3);
-                sort(DIRECT_MAT_ELEM(m, i-1, j+2), DIRECT_MAT_ELEM(m, i, j+2),
-                     DIRECT_MAT_ELEM(m, i+1, j+2), v4);
+                sort(DIRECT_MAT_ELEM(m, i - 1, j + 1), DIRECT_MAT_ELEM(m, i, j + 1),
+                     DIRECT_MAT_ELEM(m, i + 1, j + 1), v3);
+                sort(DIRECT_MAT_ELEM(m, i - 1, j + 2), DIRECT_MAT_ELEM(m, i, j + 2),
+                     DIRECT_MAT_ELEM(m, i + 1, j + 2), v4);
 
                 // Merge sort the second and third vectors
                 fast_merge_sort(v2, v3, v);
@@ -1273,7 +1315,7 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
                 median(v1, v, out(i, j));
 
                 // Find the second median and assign it to the output
-                median(v4, v, out(i, j+1));
+                median(v4, v, out(i, j + 1));
             }
         }
     }
@@ -1290,10 +1332,10 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
  * detect region boundaries and relax image smoothness constraints near these
  * discontinuities. The functional minimized is:
  *
- *   E = W0*(f-d)*(f-d)	              (data matching)
+ *   E = W0*(f-d)*(f-d)               (data matching)
  * + W1*(fx*fx + fy*fy)*(1-s)*(1-s)      (1st deriv smooth)
- * + W2*(s*s) 			      (edge strengths)
- * + W3*(sx*sx + sy*sy)		      (edge smoothness)
+ * + W2*(s*s)          (edge strengths)
+ * + W3*(sx*sx + sy*sy)        (edge smoothness)
  *
  * The program diffusion from KUIM (developed by J. Gaush, U. Kansas) was used
  * as the "seed".
@@ -1307,7 +1349,7 @@ void Smoothing_Shah(matrix2D< double >& img,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,
-                    bool adjust_range=true);
+                    bool adjust_range = true);
 
 /** Rotational invariant moments
  * @ingroup Filters
@@ -1358,7 +1400,10 @@ void fill_triangle(matrix2D< double >&img, int* tx, int* ty, double color);
  * - Thresholding the difference image with C.
  * - Inverting the thresholded image.
  */
-void local_thresholding(matrix2D< double >& img, double C, double dimLocal,
-                        matrix2D< int >& result, matrix2D< int >* mask=NULL);
+void local_thresholding(matrix2D< double >& img,
+                        double C,
+                        double dimLocal,
+                        matrix2D< int >& result,
+                        matrix2D< int >* mask = NULL);
 
 #endif

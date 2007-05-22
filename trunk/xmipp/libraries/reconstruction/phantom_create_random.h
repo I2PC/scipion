@@ -42,44 +42,45 @@
     genration  process.
     See \URL[Random_phantom]{../../../Applications/Src/Random_phantom/Help/random_phantom.html}
     for more information. */
-class Prog_Random_Phantom_Parameters {
+class Prog_Random_Phantom_Parameters
+{
 public:
-   /// Input Phantom description file
-   FileName fn_random;
-   /// Output Phantom description file
-   FileName fn_output;
-   /// Minimum volume for the randomly generated features
-   double    min_vol;
-   /// Use only discrete (integer) values for the features's density
-   int  discrete;
-   /// center of the features should be at a distance greater than distance
-   double RPP_distance;
-   /// center of the features should be inside an sphere of radius radius
-   double RPP_radius;
-   /// Compute volume statistics, and only this
-   int N_stats;
-   /// Filename with the CTF
-   FileName fn_CTF;
-   /// Xdim of projections
-   int Xdim;
-   /// Ydim of projections
-   int Ydim;
-   /// Target SNR
-   double target_SNR;
+    /// Input Phantom description file
+    FileName fn_random;
+    /// Output Phantom description file
+    FileName fn_output;
+    /// Minimum volume for the randomly generated features
+    double    min_vol;
+    /// Use only discrete (integer) values for the features's density
+    int  discrete;
+    /// center of the features should be at a distance greater than distance
+    double RPP_distance;
+    /// center of the features should be inside an sphere of radius radius
+    double RPP_radius;
+    /// Compute volume statistics, and only this
+    int N_stats;
+    /// Filename with the CTF
+    FileName fn_CTF;
+    /// Xdim of projections
+    int Xdim;
+    /// Ydim of projections
+    int Ydim;
+    /// Target SNR
+    double target_SNR;
 public:
-   /// Empty constructor
-   Prog_Random_Phantom_Parameters();
+    /// Empty constructor
+    Prog_Random_Phantom_Parameters();
 
-   /** Read parameters from a command line.
-       This function reads the parameters from a command line
-       defined by argc and argv. An exception might be thrown by any
-       of the internal conversions, this would mean that there is
-       an error in the command line and you might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read parameters from a command line.
+        This function reads the parameters from a command line
+        defined by argc and argv. An exception might be thrown by any
+        of the internal conversions, this would mean that there is
+        an error in the command line and you might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 };
 
 /* Random Phantom Side information ----------------------------------------- */
@@ -87,23 +88,24 @@ public:
     The Side information is useful information that needn't be computed
     more than once at the beginning from the Random Phantom parameters and
     that is used all over the program. */
-class Random_Phantom_Side_Info {
+class Random_Phantom_Side_Info
+{
 public:
-   /// True if in voxel mode
-   bool voxel_mode;
-   /// Random specification phantom
-   Phantom         Random;
-   /// Voxel phantom
-   VolumeXmipp     VoxelPhantom;
+    /// True if in voxel mode
+    bool voxel_mode;
+    /// Random specification phantom
+    Phantom         Random;
+    /// Voxel phantom
+    VolumeXmipp     VoxelPhantom;
 public:
-   /** Produce Initial and Side information for Random Phantom.
-       This function loads the phantom specification defined in the
-       Random Phantom parameters. It also check that the phantom file meets
-       the conditions to be a Random Phantom specification (see
-       \URL[Random_phantom]
-       {../../../Applications/Src/Random_phantom/Help/random_phantom.html}
-       for more information. */
-   void produce_Side_Info(const Prog_Random_Phantom_Parameters &prm);
+    /** Produce Initial and Side information for Random Phantom.
+        This function loads the phantom specification defined in the
+        Random Phantom parameters. It also check that the phantom file meets
+        the conditions to be a Random Phantom specification (see
+        \URL[Random_phantom]
+        {../../../Applications/Src/Random_phantom/Help/random_phantom.html}
+        for more information. */
+    void produce_Side_Info(const Prog_Random_Phantom_Parameters &prm);
 };
 
 /* Generate a realization of the random phantom  --------------------------- */
@@ -112,8 +114,8 @@ public:
     Side Information. It takes care that created features are at least
     of a volume superior to the minimum volume of the parameters. */
 void generate_realization_of_random_phantom(
-   const Prog_Random_Phantom_Parameters &prm,
-   Random_Phantom_Side_Info &side, Phantom &Realization);
+    const Prog_Random_Phantom_Parameters &prm,
+    Random_Phantom_Side_Info &side, Phantom &Realization);
 
 /* Main Random Phantom Routine --------------------------------------------- */
 /** Main Random Phantom Routine.
@@ -122,6 +124,6 @@ void generate_realization_of_random_phantom(
     been given). The realization is also
     returned in the Phantom variable. */
 void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
-   Phantom &Realization);
+                         Phantom &Realization);
 //@}
 #endif

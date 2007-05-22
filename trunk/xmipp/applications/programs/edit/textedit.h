@@ -27,11 +27,11 @@ class TextEdit : public QMainWindow
     Q_OBJECT
 
 public:
-    TextEdit( QWidget *parent = 0, const char *name = 0 );
+    TextEdit(QWidget *parent = 0, const char *name = 0);
 
 public slots:
     QTextEdit *currentEditor() const;
-    void load( const QString &f );
+    void load(const QString &f);
 
     void fileNew();
     void fileOpen();
@@ -47,17 +47,20 @@ public slots:
     void editCopy();
     void editPaste();
 
-    void addAccel( int accel, const QString &function );
+    void addAccel(int accel, const QString &function);
 
-    void setRemoveFlag() {remove=true;}
+    void setRemoveFlag()
+    {
+        remove = true;
+    }
 private:
     void setupFileActions();
     void setupEditActions();
     void setupTextActions();
-    void doConnections( QTextEdit *e );
+    void doConnections(QTextEdit *e);
 
 private slots:
-    void editorChanged( QWidget * );
+    void editorChanged(QWidget *);
     void execAccel();
 
 private:

@@ -27,77 +27,93 @@
 #include <reconstruction/mlf_tomo.h>
 
 /* MAIN -------------------------------------------------------------------- */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-  int c,nn,imgno,opt_refno;
-  double LL,sumw_allrefs,sumcorr;
-  double aux,wsum_sigma_offset,wsum_sigma_noise2;
-  vector<matrix3D<double > > wsum_Mref,Mref;
-  vector<matrix3D<double > > wsum_Mwedge;
-  vector<double> sumw,wsum_sigma2,sum_nonzero_pixels;
-  matrix3D<double> Maux;
-  vector<int> count_defocus;
-  FileName fn_img,fn_tmp;
-  matrix1D<double> oneline(0);
-  DocFile DFo,DFf;
-  SelFile SFa;
+    int c, nn, imgno, opt_refno;
+    double LL, sumw_allrefs, sumcorr;
+    double aux, wsum_sigma_offset, wsum_sigma_noise2;
+    vector<matrix3D<double > > wsum_Mref, Mref;
+    vector<matrix3D<double > > wsum_Mwedge;
+    vector<double> sumw, wsum_sigma2, sum_nonzero_pixels;
+    matrix3D<double> Maux;
+    vector<int> count_defocus;
+    FileName fn_img, fn_tmp;
+    matrix1D<double> oneline(0);
+    DocFile DFo, DFf;
+    SelFile SFa;
 
-  Prog_mlf_tomo_prm prm;
+    Prog_mlf_tomo_prm prm;
 
-  // Get input parameters
-  try {
-    prm.read(argc,argv);
-    prm.produce_Side_info();
-    prm.show();
-    if (prm.fn_sig=="") prm.estimate_initial_sigma2();
-    prm.produce_Side_info2();
+    // Get input parameters
+    try
+    {
+        prm.read(argc, argv);
+        prm.produce_Side_info();
+        prm.show();
+        if (prm.fn_sig == "") prm.estimate_initial_sigma2();
+        prm.produce_Side_info2();
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
-  try {
-    Maux.resize(prm.dim,prm.dim,prm.dim);
-    Maux.set_Xmipp_origin();
-    DFo.reserve(2*prm.SF.ImgNo()+1);
-    DFf.reserve(2*prm.SFr.ImgNo()+4);
-    SFa.reserve(prm.Niter*prm.nr_ref);
-    SFa.clear();
-    
-    // Loop over all iterations
-    for (int iter=prm.istart; iter<=prm.Niter; iter++) {
+    try
+    {
+        Maux.resize(prm.dim, prm.dim, prm.dim);
+        Maux.set_Xmipp_origin();
+        DFo.reserve(2*prm.SF.ImgNo() + 1);
+        DFf.reserve(2*prm.SFr.ImgNo() + 4);
+        SFa.reserve(prm.Niter*prm.nr_ref);
+        SFa.clear();
 
-      if (prm.verb>0) cerr << "  Sub-tomogram refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
+        // Loop over all iterations
+        for (int iter = prm.istart; iter <= prm.Niter; iter++)
+        {
 
-      DFo.clear();
-      DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
+            if (prm.verb > 0) cerr << "  Sub-tomogram refinement:  iteration " << iter << " of " << prm.Niter << endl;
 
-      // Integrate over all images
-      prm.sum_over_all_images(prm.SF,wsum_Mref,wsum_Mwedge,sum_nonzero_pixels,wsum_sigma2,
-                                 wsum_sigma_offset,sumw,LL,sumcorr,DFo);
+            DFo.clear();
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
 
-      // Update model parameters
-      prm.update_parameters(wsum_Mref,wsum_Mwedge,sum_nonzero_pixels,wsum_sigma2,
-                            wsum_sigma_offset,sumw,sumcorr,sumw_allrefs,iter);
+            // Integrate over all images
+            prm.sum_over_all_images(prm.SF, wsum_Mref, wsum_Mwedge, sum_nonzero_pixels, wsum_sigma2,
+                                    wsum_sigma_offset, sumw, LL, sumcorr, DFo);
 
-      // Do some post-processing and calculate real-space references
-      prm.post_process_references(Mref);
+            // Update model parameters
+            prm.update_parameters(wsum_Mref, wsum_Mwedge, sum_nonzero_pixels, wsum_sigma2,
+                                  wsum_sigma_offset, sumw, sumcorr, sumw_allrefs, iter);
 
-      prm.write_output_files(iter,SFa,DFf,Mref,sumw_allrefs,sumw,LL,sumcorr);
+            // Do some post-processing and calculate real-space references
+            prm.post_process_references(Mref);
 
-      // Write out docfile with optimal transformation & references
-      fn_tmp=prm.fn_root+"_it";
-      fn_tmp.compose(fn_tmp,iter,"doc");
-      DFo.write(fn_tmp);
+            prm.write_output_files(iter, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
 
-    } // end loop iterations
+            // Write out docfile with optimal transformation & references
+            fn_tmp = prm.fn_root + "_it";
+            fn_tmp.compose(fn_tmp, iter, "doc");
+            DFo.write(fn_tmp);
 
-    // Write out converged structures
-    prm.write_output_files(-1,SFa,DFf,Mref,sumw_allrefs,sumw,LL,sumcorr);
+        } // end loop iterations
 
-    // Write out docfile with optimal transformation & references
-    fn_img=prm.fn_root+".doc";
-    DFo.write(fn_img);
+        // Write out converged structures
+        prm.write_output_files(-1, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+        // Write out docfile with optimal transformation & references
+        fn_img = prm.fn_root + ".doc";
+        DFo.write(fn_img);
+
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 }
 
 

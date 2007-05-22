@@ -30,63 +30,69 @@
 void openDXang::openDXangFile(FileName openDXangname_aux)
 {
 
-  FileName data_name;
-  openDXangname=openDXangname_aux;
-  data_name=openDXangname.add_extension("data");
+    FileName data_name;
+    openDXangname = openDXangname_aux;
+    data_name = openDXangname.add_extension("data");
 
-  openDXang::number_of_elements=0;
-   		
+    openDXang::number_of_elements = 0;
+
 //data
-   openDXang::fh_out_data.open(data_name.c_str(), ios::out); //trunc file
-   if ( fh_out_data.fail() ) {cerr << "Cant open file: "
-                              << data_name.c_str()<<endl;
-                         exit( 0 );
-                        }
+    openDXang::fh_out_data.open(data_name.c_str(), ios::out); //trunc file
+    if (fh_out_data.fail())
+    {
+        cerr << "Cant open file: "
+        << data_name.c_str() << endl;
+        exit(0);
+    }
 
-		
+
 }/* openDXang */
 
 
 void openDXang::Add_Item(const matrix1D<double> RotTiltPsi)
 {
-double Xp,Yp,Zp;
-double X,Y,Z;
+    double Xp, Yp, Zp;
+    double X, Y, Z;
 
-X=Xp = XX(RotTiltPsi);Y=Yp = YY(RotTiltPsi);Z=Zp = ZZ(RotTiltPsi);
-if(Y<-90. || Y>=90)
- Euler_up_down(Xp,Yp,Zp,X,Y,Z);
+    X = Xp = XX(RotTiltPsi);
+    Y = Yp = YY(RotTiltPsi);
+    Z = Zp = ZZ(RotTiltPsi);
+    if (Y < -90. || Y >= 90)
+        Euler_up_down(Xp, Yp, Zp, X, Y, Z);
 
 
-openDXang::number_of_elements++;
-openDXang::fh_out_data << " "<< X << " " << Y << " " << Z << endl;
+    openDXang::number_of_elements++;
+    openDXang::fh_out_data << " " << X << " " << Y << " " << Z << endl;
 
 
 }
 
 openDXang::~openDXang()
-   {
+{
 
-  FileName header_name;
-  header_name=openDXangname.add_extension("general");
+    FileName header_name;
+    header_name = openDXangname.add_extension("general");
 
- //header
-   openDXang::fh_out_header.open(header_name.c_str(), ios::out); //trunc file
-   if ( fh_out_header.fail() ) {cerr << "Cant open file: "
-                              << header_name.c_str()<<endl;
-                         exit( 0 );
-                        }
+//header
+    openDXang::fh_out_header.open(header_name.c_str(), ios::out); //trunc file
+    if (fh_out_header.fail())
+    {
+        cerr << "Cant open file: "
+        << header_name.c_str() << endl;
+        exit(0);
+    }
 
 //write right number of point
-   openDXang::fh_out_header << "file = " <<openDXang::openDXangname.c_str() << ".data"
-   			     << "\n"
-   			     << "points = "<< openDXang::number_of_elements
-			     << "\n"
-			     << "format = ascii\n"
-			     << "interleaving = field\n"
-			     << "field = locations\n"
-			     << "structure = 3-vector\n"
-			     << "type = float\n\n"
-                      	     << "end" << endl;
+    openDXang::fh_out_header << "file = " << openDXang::openDXangname.c_str() << ".data"
+    << "\n"
+    << "points = " << openDXang::number_of_elements
+    << "\n"
+    << "format = ascii\n"
+    << "interleaving = field\n"
+    << "field = locations\n"
+    << "structure = 3-vector\n"
+    << "type = float\n\n"
+    << "end" << endl;
 
 
 

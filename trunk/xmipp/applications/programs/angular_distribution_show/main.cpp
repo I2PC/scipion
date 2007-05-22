@@ -34,273 +34,316 @@
 
 void Usage();
 
-int main (int argc,char *argv[]) {
-   string          ang1="rot",ang2="tilt",ang3="psi";
-   DocFile         angles;
-   FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX;
-   int             steps;
-   int             tell;
-   float           R, r, rmax, wmax=-99.e99;
-   float           rot_view;
-   float           tilt_view;
-   int             up_down_correction, colw;
-   bool            solid_sphere;
+int main(int argc, char *argv[])
+{
+    string          ang1 = "rot", ang2 = "tilt", ang3 = "psi";
+    DocFile         angles;
+    FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX;
+    int             steps;
+    int             tell;
+    float           R, r, rmax, wmax = -99.e99;
+    float           rot_view;
+    float           tilt_view;
+    int             up_down_correction, colw;
+    bool            solid_sphere;
 
 
 // Check the command line ==================================================
-   try {
-      fn_sel=get_param(argc,argv,"-sel","");
-      fn_ang=get_param(argc,argv,"-ang","");
-      fn_hist=get_param(argc,argv,"-hist","");
-      fn_ps=get_param(argc,argv,"-ps","");
-      fn_DX=get_param(argc,argv,"-DX","");
-      steps=AtoI(get_param(argc,argv,"-steps","100"));
-      tell=check_param(argc,argv,"-show_process");
-      R=AtoF(get_param(argc,argv,"-R","60"));
-      rmax=AtoF(get_param(argc,argv,"-r","1.5"));
-      rot_view =AtoF(get_param(argc,argv,"-rot_view",  "0"));
-      tilt_view=AtoF(get_param(argc,argv,"-tilt_view","30"));
-      up_down_correction=check_param(argc,argv,"-up_down_correction");
-      solid_sphere=check_param(argc,argv,"-solid_sphere");
-      colw=AtoI(get_param(argc,argv,"-wcol","-1"));
+    try
+    {
+        fn_sel = get_param(argc, argv, "-sel", "");
+        fn_ang = get_param(argc, argv, "-ang", "");
+        fn_hist = get_param(argc, argv, "-hist", "");
+        fn_ps = get_param(argc, argv, "-ps", "");
+        fn_DX = get_param(argc, argv, "-DX", "");
+        steps = AtoI(get_param(argc, argv, "-steps", "100"));
+        tell = check_param(argc, argv, "-show_process");
+        R = AtoF(get_param(argc, argv, "-R", "60"));
+        rmax = AtoF(get_param(argc, argv, "-r", "1.5"));
+        rot_view = AtoF(get_param(argc, argv, "-rot_view",  "0"));
+        tilt_view = AtoF(get_param(argc, argv, "-tilt_view", "30"));
+        up_down_correction = check_param(argc, argv, "-up_down_correction");
+        solid_sphere = check_param(argc, argv, "-solid_sphere");
+        colw = AtoI(get_param(argc, argv, "-wcol", "-1"));
 
-      // Angle order
-      int i;
-      if ((i=position_param(argc,argv,"-order"))!=-1) {
-         if (i+3>=argc) {
-            cout << "Angular distribution: Not enough parameters behind -ang\n";
-            Usage();
-            exit(1);
-         }
-         ang1=argv[i+1];
-         ang2=argv[i+2];
-         ang3=argv[i+3];
-      }
+        // Angle order
+        int i;
+        if ((i = position_param(argc, argv, "-order")) != -1)
+        {
+            if (i + 3 >= argc)
+            {
+                cout << "Angular distribution: Not enough parameters behind -ang\n";
+                Usage();
+                exit(1);
+            }
+            ang1 = argv[i+1];
+            ang2 = argv[i+2];
+            ang3 = argv[i+3];
+        }
 
-   // Check they are "rot", "tilt", and "psi"
-   check_angle_descr(ang1);
-   check_angle_descr(ang2);
-   check_angle_descr(ang3);
-   if (ang1[1]==ang2[1] || ang1[1]==ang3[1] || ang2[1]==ang3[1])
-      REPORT_ERROR(1,"Angular distribution: There is an angle twice in the angle order");
+        // Check they are "rot", "tilt", and "psi"
+        check_angle_descr(ang1);
+        check_angle_descr(ang2);
+        check_angle_descr(ang3);
+        if (ang1[1] == ang2[1] || ang1[1] == ang3[1] || ang2[1] == ang3[1])
+            REPORT_ERROR(1, "Angular distribution: There is an angle twice in the angle order");
 
-   // Check there is some input
-   if (fn_ang=="" && fn_sel=="")
-      REPORT_ERROR(1,"Angular distribution: There is no input information");
-   } catch (Xmipp_error XE) {cout << XE; Usage(); exit(1);}
+        // Check there is some input
+        if (fn_ang == "" && fn_sel == "")
+            REPORT_ERROR(1, "Angular distribution: There is no input information");
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        Usage();
+        exit(1);
+    }
 
-   try {
+    try
+    {
 // Get angles ==============================================================
-   if (fn_ang!="")
-      angles.read(fn_ang);
-   else {
-      SelFile selfile(fn_sel);
-      extract_angles(selfile, angles, ang1, ang2, ang3);
-   }
-   int AngleNo=angles.dataLineNo();
-   if (AngleNo==0)
-      EXIT_ERROR(1,"Angular distribution: Input files doesn't contain angular information");
+        if (fn_ang != "")
+            angles.read(fn_ang);
+        else
+        {
+            SelFile selfile(fn_sel);
+            extract_angles(selfile, angles, ang1, ang2, ang3);
+        }
+        int AngleNo = angles.dataLineNo();
+        if (AngleNo == 0)
+            EXIT_ERROR(1, "Angular distribution: Input files doesn't contain angular information");
 
-   if (colw>=0) {
-     // Find maximum weight
-     for (int i=0; i<AngleNo; i++) if (angles(i+1,colw)>wmax) wmax=angles(i+1,colw);
-   }
+        if (colw >= 0)
+        {
+            // Find maximum weight
+            for (int i = 0; i < AngleNo; i++) if (angles(i + 1, colw) > wmax) wmax = angles(i + 1, colw);
+        }
 
 // Build vector tables ======================================================
-   #define GET_ANGLES(i) \
-       angles.get_angles(i,rot,tilt,psi,ang1,ang2,ang3); \
-       if (up_down_correction && ABS(tilt)>90) \
-          Euler_up_down(rot,tilt,psi,rot,tilt,psi);
+#define GET_ANGLES(i) \
+    angles.get_angles(i,rot,tilt,psi,ang1,ang2,ang3); \
+    if (up_down_correction && ABS(tilt)>90) \
+        Euler_up_down(rot,tilt,psi,rot,tilt,psi);
 
-   double rot, tilt, psi;
-   vector< matrix1D<double> > v,v_ang;
-   v.reserve(AngleNo);
-   v_ang.reserve(AngleNo);
-   for (int i=0; i<AngleNo; i++) {
-       matrix1D<double> aux(3);
-       matrix1D<double> aux_ang(6);
-
-
-       GET_ANGLES(i+1);
-       Euler_direction(rot, tilt, psi, aux);
-       v.push_back(aux);
+        double rot, tilt, psi;
+        vector< matrix1D<double> > v, v_ang;
+        v.reserve(AngleNo);
+        v_ang.reserve(AngleNo);
+        for (int i = 0; i < AngleNo; i++)
+        {
+            matrix1D<double> aux(3);
+            matrix1D<double> aux_ang(6);
 
 
-       aux_ang=vector_R3(rot,tilt,psi);
-       v_ang.push_back(aux_ang);
+            GET_ANGLES(i + 1);
+            Euler_direction(rot, tilt, psi, aux);
+            v.push_back(aux);
 
-   }
 
- //Show distribution with OpenDx ==============================================
- openDXang DX;
- DX.openDXangFile(fn_DX);
+            aux_ang = vector_R3(rot, tilt, psi);
+            v_ang.push_back(aux_ang);
 
- for (int i=0; i<AngleNo; i++) {
+        }
 
-	
-       DX.Add_Item(v_ang[i]);
-   }
+//Show distribution with OpenDx ==============================================
+        openDXang DX;
+        DX.openDXangFile(fn_DX);
+
+        for (int i = 0; i < AngleNo; i++)
+        {
+
+
+            DX.Add_Item(v_ang[i]);
+        }
 
 
 // Compute histogram of distances =============================================
-   if (fn_hist!="") {
-      matrix1D<double> dist;
+        if (fn_hist != "")
+        {
+            matrix1D<double> dist;
 
-      #define di VEC_ELEM(dist,i)
-      #define dj VEC_ELEM(dist,j)
+#define di VEC_ELEM(dist,i)
+#define dj VEC_ELEM(dist,j)
 
-      #define SHOW {\
-         GET_ANGLES(i+1); \
-         cout << i << " " << rot << " " << tilt << " v[i]=" \
-             << v[i].transpose() << endl; \
-         GET_ANGLES(j+1); \
-         cout << j << " " << rot << " " << tilt << " v[j]=" \
-             << v[j].transpose() << endl; \
-         cout << " d= " << d << endl << endl; \
-      }
+#define SHOW {\
+        GET_ANGLES(i+1); \
+        cout << i << " " << rot << " " << tilt << " v[i]=" \
+        << v[i].transpose() << endl; \
+        GET_ANGLES(j+1); \
+        cout << j << " " << rot << " " << tilt << " v[j]=" \
+        << v[j].transpose() << endl; \
+        cout << " d= " << d << endl << endl; \
+    }
 
-      // Compute minimum distance table
-      dist.init_zeros(AngleNo);
-      for (int i=0; i<AngleNo; i++)
-          for (int j=i+1; j<AngleNo; j++) {
-              double d=spherical_distance(v[i],v[j]);
-              if (di==0 || d<di) {di=d; if (tell) SHOW;}
-              if (dj==0 || d<dj) {dj=d; if (tell) SHOW;}
-          }
+            // Compute minimum distance table
+            dist.init_zeros(AngleNo);
+            for (int i = 0; i < AngleNo; i++)
+                for (int j = i + 1; j < AngleNo; j++)
+                {
+                    double d = spherical_distance(v[i], v[j]);
+                    if (di == 0 || d < di)
+                    {
+                        di = d;
+                        if (tell) SHOW;
+                    }
+                    if (dj == 0 || d < dj)
+                    {
+                        dj = d;
+                        if (tell) SHOW;
+                    }
+                }
 
-      histogram1D dist_hist;
-      double min, max; dist.compute_double_minmax(min,max);
-      dist_hist.init(min,max,steps);
-      for (int i=0; i<AngleNo; i++) dist_hist.insert_value(di);
-      dist_hist.write(fn_hist);
-   }
+            histogram1D dist_hist;
+            double min, max;
+            dist.compute_double_minmax(min, max);
+            dist_hist.init(min, max, steps);
+            for (int i = 0; i < AngleNo; i++) dist_hist.insert_value(di);
+            dist_hist.write(fn_hist);
+        }
 
 
 
 // Show distribution as triangles ==========================================
-   if (fn_ps!="") {
-      ofstream fh_ps;
-      fh_ps.open(fn_ps.c_str(),ios::out);
-      if (!fh_ps)
-         EXIT_ERROR(1,(string)"Ang_distribution: Cannot open "+fn_ps+" for output");
+        if (fn_ps != "")
+        {
+            ofstream fh_ps;
+            fh_ps.open(fn_ps.c_str(), ios::out);
+            if (!fh_ps)
+                EXIT_ERROR(1, (string)"Ang_distribution: Cannot open " + fn_ps + " for output");
 
-      fh_ps << "%%!PS-Adobe-2.0\n";
-      fh_ps << "%% Creator: Angular Distribution\n";
-      fh_ps << "%% Title: Angular distribution of " << fn_sel << "\n";
-      fh_ps << "%% Pages: 1\n";
+            fh_ps << "%%!PS-Adobe-2.0\n";
+            fh_ps << "%% Creator: Angular Distribution\n";
+            fh_ps << "%% Title: Angular distribution of " << fn_sel << "\n";
+            fh_ps << "%% Pages: 1\n";
 
-      #define TO_PS(x,y) \
-         tmp=y; \
-         y=400.0f-x*250.0f/60; \
-         x=300.0f+tmp*250.0f/60;
+#define TO_PS(x,y) \
+    tmp=y; \
+    y=400.0f-x*250.0f/60; \
+    x=300.0f+tmp*250.0f/60;
 
-      matrix1D<double> p0(4),p1(4),p2(4),p3(4),origin(3);
-      matrix2D<double> A,euler_view;
-      Euler_angles2matrix(rot_view,tilt_view,0.0f,euler_view);
-      origin.init_zeros();
-      double tmp;
-      for (int i=0; i<AngleNo; i++) {
-
-
-	 // Triangle size depedent on w
-	 if (colw>=0) {
-	   r=angles(i+1,colw);
-	   r*=rmax/wmax;
-	 } else r=rmax;
+            matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
+            matrix2D<double> A, euler_view;
+            Euler_angles2matrix(rot_view, tilt_view, 0.0f, euler_view);
+            origin.init_zeros();
+            double tmp;
+            for (int i = 0; i < AngleNo; i++)
+            {
 
 
-          // Initially the triangle is on the floor of the projection plane
-          VECTOR_R3(p0,    0   ,      0        ,0);
-          VECTOR_R3(p1,    0   , r*2/3*SIND(60),0);
-          VECTOR_R3(p2, r/2*0.6,-r*1/3*SIND(60),0);
-          VECTOR_R3(p3,-r/2*0.6,-r*1/3*SIND(60),0);
+                // Triangle size depedent on w
+                if (colw >= 0)
+                {
+                    r = angles(i + 1, colw);
+                    r *= rmax / wmax;
+                }
+                else r = rmax;
 
-          // Convert to homogeneous coordinates
-          p0(3)=1; p1(3)=1; p2(3)=1; p3(3)=1;
 
-          // Compute Transformation matrix
-          GET_ANGLES(i+1);
-          Euler_angles2matrix(rot,tilt,psi,A);
+                // Initially the triangle is on the floor of the projection plane
+                VECTOR_R3(p0,    0   ,      0        , 0);
+                VECTOR_R3(p1,    0   , r*2 / 3*SIND(60), 0);
+                VECTOR_R3(p2, r / 2*0.6, -r*1 / 3*SIND(60), 0);
+                VECTOR_R3(p3, -r / 2*0.6, -r*1 / 3*SIND(60), 0);
 
-          // We go from the projeciton plane to the universal coordinates
-          A=A.transpose();
+                // Convert to homogeneous coordinates
+                p0(3) = 1;
+                p1(3) = 1;
+                p2(3) = 1;
+                p3(3) = 1;
 
-          // Convert to homogeneous coordinates and apply a translation
-          // to the sphere of radius R
-          A.resize(4,4);
-          A(0,3)=R*XX(v[i]); A(1,3)=R*YY(v[i]); A(2,3)=R*ZZ(v[i]); A(3,3)=1;
+                // Compute Transformation matrix
+                GET_ANGLES(i + 1);
+                Euler_angles2matrix(rot, tilt, psi, A);
 
-          // Convert triangle coordinates to universal ones
-          p0=A*p0;
-          p1=A*p1;
-          p2=A*p2;
-          p3=A*p3;
+                // We go from the projeciton plane to the universal coordinates
+                A = A.transpose();
 
-          // Check if this triangle must be drawn
-          if (solid_sphere) {
-             matrix1D<double> view_direction, p0p;
-             euler_view.getRow(2,view_direction);
-             p0p=p0; p0p.resize(3);
-             if (point_plane_distance_3D(p0,origin,view_direction)<0)
-                continue;
-          }
+                // Convert to homogeneous coordinates and apply a translation
+                // to the sphere of radius R
+                A.resize(4, 4);
+                A(0, 3) = R * XX(v[i]);
+                A(1, 3) = R * YY(v[i]);
+                A(2, 3) = R * ZZ(v[i]);
+                A(3, 3) = 1;
 
-          // Project this triangle onto the view plane and write in PS
-          matrix1D<double> pp(3);
-          Uproject_to_plane(p1,euler_view,pp);
-          TO_PS(XX(pp),YY(pp));
-          fh_ps << "newpath\n";
-          fh_ps << XX(pp) << " " << YY(pp) << " moveto\n";
+                // Convert triangle coordinates to universal ones
+                p0 = A * p0;
+                p1 = A * p1;
+                p2 = A * p2;
+                p3 = A * p3;
 
-          Uproject_to_plane(p2,euler_view,pp);
-          TO_PS(XX(pp),YY(pp));
-          fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
+                // Check if this triangle must be drawn
+                if (solid_sphere)
+                {
+                    matrix1D<double> view_direction, p0p;
+                    euler_view.getRow(2, view_direction);
+                    p0p = p0;
+                    p0p.resize(3);
+                    if (point_plane_distance_3D(p0, origin, view_direction) < 0)
+                        continue;
+                }
 
-          Uproject_to_plane(p3,euler_view,pp);
-          TO_PS(XX(pp),YY(pp));
-          fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
+                // Project this triangle onto the view plane and write in PS
+                matrix1D<double> pp(3);
+                Uproject_to_plane(p1, euler_view, pp);
+                TO_PS(XX(pp), YY(pp));
+                fh_ps << "newpath\n";
+                fh_ps << XX(pp) << " " << YY(pp) << " moveto\n";
 
-          Uproject_to_plane(p1,euler_view,pp);
-          TO_PS(XX(pp),YY(pp));
-          fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
+                Uproject_to_plane(p2, euler_view, pp);
+                TO_PS(XX(pp), YY(pp));
+                fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
 
-          fh_ps << "closepath\nstroke\n";
-      }
-      fh_ps << "showpage\n";
-      fh_ps.close();
-   }
+                Uproject_to_plane(p3, euler_view, pp);
+                TO_PS(XX(pp), YY(pp));
+                fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
 
-   } catch (Xmipp_error XE) {cout << XE;}
+                Uproject_to_plane(p1, euler_view, pp);
+                TO_PS(XX(pp), YY(pp));
+                fh_ps << XX(pp) << " " << YY(pp) << " lineto\n";
+
+                fh_ps << "closepath\nstroke\n";
+            }
+            fh_ps << "showpage\n";
+            fh_ps.close();
+        }
+
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage() {
+void Usage()
+{
     cout << "Usage:\n";
     cout << "   ang_distribution <options>\n";
     cout << "   Where <options> are:\n";
     cout << "      (-sel <sel_file> |            : selection file with the set of images\n"
-         << "       -ang <ang_file>              : Spider document file with the angles\n"
-         << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
-         << "                                      either psi, psi, tilt, tilt,\n"
-         << "                                      rot or rot. The default\n"
-         << "                                      order is rot, tilt and psi.\n"
-	 << "      [-DX <-DX file out>           : DX file\n"
-         << "      [-hist <doc_file>]            : histogram of distances\n"
-         << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
-         << "      [-show_process]               : show distances.\n"
-         << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
-         << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS file\n"
-         << "      [-r <triangle side=1.5>]      : triangle size for the PS file\n"
-         << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
-         << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
-         << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
-         << "                                      number in corresponding column of the docfile\n"
-         << "      [-up_down_correction]         : correct angles so that a semisphere\n"
-         << "                                      is shown\n"
-         << "      [-solid_sphere]               : projections in the back plane are\n"
-         << "                                      not shown\n"
-   ;
+    << "       -ang <ang_file>              : Spider document file with the angles\n"
+    << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
+    << "                                      either psi, psi, tilt, tilt,\n"
+    << "                                      rot or rot. The default\n"
+    << "                                      order is rot, tilt and psi.\n"
+    << "      [-DX <-DX file out>           : DX file\n"
+    << "      [-hist <doc_file>]            : histogram of distances\n"
+    << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
+    << "      [-show_process]               : show distances.\n"
+    << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
+    << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS file\n"
+    << "      [-r <triangle side=1.5>]      : triangle size for the PS file\n"
+    << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
+    << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
+    << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
+    << "                                      number in corresponding column of the docfile\n"
+    << "      [-up_down_correction]         : correct angles so that a semisphere\n"
+    << "                                      is shown\n"
+    << "      [-solid_sphere]               : projections in the back plane are\n"
+    << "                                      not shown\n"
+    ;
 }
 
 /* ------------------------------------------------------------------------- */

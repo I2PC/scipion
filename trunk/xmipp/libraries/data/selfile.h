@@ -82,7 +82,8 @@ public:
      * The selection line is created with no type (neither comment or data).
      * You must use the function @p set_type to assign a type.
      */
-    SelLine() : line_type(NOT_ASSIGNED) {}
+    SelLine() : line_type(NOT_ASSIGNED)
+    {}
 
     /** Copy constructor.
      * @ingroup SelFilesConstructors
@@ -183,7 +184,7 @@ public:
      * @ingroup SelFilesOperations
      */
     friend std::vector< SelLine >::iterator find(std::vector< SelLine >& text,
-                                                 std::string& img_name);
+            std::string& img_name);
 
     /// @defgroup SelFilesIO I/O.
     /// @ingroup SelFiles
@@ -327,7 +328,7 @@ public:
      * sel.read("g2t.sel");
      * @endcode
      */
-    void read(const FileName& name, int overrinding=1);
+    void read(const FileName& name, int overrinding = 1);
 
     /** Append a file from disk to an already read one.
      * @ingroup SelFilesDisk
@@ -407,7 +408,7 @@ public:
      * sel.write("g3t.sel"); // Save as ...
      * @endcode
      */
-    void write(const FileName& sel_name="");
+    void write(const FileName& sel_name = "");
 
     /// @defgroup SelFilesPointer  Moving the current line "pointer".
     /// @ingroup SelFiles
@@ -458,7 +459,7 @@ public:
      * name = sel.NextImg(SelLine::DISCARDED); // Next discarded image
      * @endcode
      */
-    std::string NextImg(SelLine::Label label=SelLine::ACTIVE);
+    std::string NextImg(SelLine::Label label = SelLine::ACTIVE);
 
     /** Move the current pointer to the next image, disregarding its label.
      * @ingroup SelFilesPointer
@@ -496,7 +497,7 @@ public:
      * sel.jump(2, SelLine::DISCARDED) // Jump over 2 discarded images
      * @endcode
      */
-    void jump(int count, SelLine::Label label=SelLine::ACTIVE);
+    void jump(int count, SelLine::Label label = SelLine::ACTIVE);
 
     /** Jump over a number of lines disregarding the label.
      * @ingroup SelFilesPointer
@@ -622,7 +623,7 @@ public:
      *     << " discarded images\n";
      * @endcode
      */
-    int ImgNo(SelLine::Label label=SelLine::ACTIVE) const;
+    int ImgNo(SelLine::Label label = SelLine::ACTIVE) const;
 
     /** Returns the number of lines within a file.
      * @ingroup SelFilesInfo
@@ -712,7 +713,7 @@ public:
                         Image& _sd,
                         double& _min,
                         double& _max,
-                        bool apply_geo=false);
+                        bool apply_geo = false);
 
     /// @defgroup SelFilesModify Modifying the selection file.
     /// @ingroup SelFiles
@@ -786,7 +787,7 @@ public:
      * sel.insert("g1ta0000", SelLine::DISCARDED);
      * @endcode
      */
-    void insert(std::string img_name, SelLine::Label label=SelLine::ACTIVE);
+    void insert(std::string img_name, SelLine::Label label = SelLine::ACTIVE);
 
     /** Insert line before current line.
      * @ingroup SelFilesModify
@@ -935,9 +936,9 @@ public:
      * // Same I/O, apply only to DISCARDED images
      * @endcode
      */
-    void for_all(void (*f)(FileName, FileName),
-                 std::string _ext="",
-                 SelLine::Label _label=SelLine::ACTIVE);
+    void for_all(void(*f)(FileName, FileName),
+                 std::string _ext = "",
+                 SelLine::Label _label = SelLine::ACTIVE);
 };
 
 #endif

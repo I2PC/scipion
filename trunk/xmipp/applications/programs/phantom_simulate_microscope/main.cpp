@@ -26,20 +26,23 @@
 #include <data/progs.h>
 #include <reconstruction/phantom_simulate_microscope.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Prog_Microscope_Parameters *eprm=(Prog_Microscope_Parameters *) prm;
-   eprm->apply(img());
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Prog_Microscope_Parameters *eprm = (Prog_Microscope_Parameters *) prm;
+    eprm->apply(img());
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cerr << "This process is not valid for volumes\n";
-   return false;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    cerr << "This process is not valid for volumes\n";
+    return false;
 }
 
-int main (int argc, char **argv) {
-   Prog_Microscope_Parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Prog_Microscope_Parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
 /* Menus =================================================================== */
@@ -49,17 +52,17 @@ int main (int argc, char **argv) {
       help="Apply CTF and after CTF noise to artificial projections";
       OPEN MENU menu_Microscope;
       COMMAND LINES {
-	+ usual: xmipp_microscope
+ + usual: xmipp_microscope
                #include "prog_line.mnu"
-	         -ctf $CTF
-		[-noise $NOISE] [-low_pass $W]
+          -ctf $CTF
+  [-noise $NOISE] [-low_pass $W]
       }
       PARAMETER DEFINITIONS {
          #include "prog_vars.mnu"
-	 $CTF {type=file existing; label="CTF file";
-	       help="Xmipp Fourier Image";}
-	 $NOISE {type=float; label="After CTF noise stddev"; by default=1;}
-	 $W {type=float; label="Low pass filter for noise"; by default=0;}
+  $CTF {type=file existing; label="CTF file";
+        help="Xmipp Fourier Image";}
+  $NOISE {type=float; label="After CTF noise stddev"; by default=1;}
+  $W {type=float; label="Low pass filter for noise"; by default=0;}
       }
    }
 

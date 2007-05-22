@@ -248,7 +248,7 @@ public:
         else
             i = (int) FLOOR((v - hmin) / step_size);
 
-        if (i<0 || i>=stepNo())
+        if (i < 0 || i >= stepNo())
             i = -1;
     }
 
@@ -263,7 +263,7 @@ public:
      * hist.index2val(0, beginning_of_interval_0);
      * @endcode
      */
-    void index2val(double i,double& v) const
+    void index2val(double i, double& v) const
     {
         v = hmin + i * step_size;
     }
@@ -372,7 +372,7 @@ void compute_hist(const T& v, histogram1D& hist,
 {
     hist.init(min, max, no_steps);
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-        hist.insert_value(MULTIDIM_ELEM(v, i));
+    hist.insert_value(MULTIDIM_ELEM(v, i));
 }
 
 /** Compute histogram within a region
@@ -384,15 +384,15 @@ template<typename T>
 void compute_hist(const matrix2D< T >& v, histogram1D& hist,
                   const matrix1D< int >& corner1,
                   const matrix1D< int >& corner2,
-                  int no_steps=100)
+                  int no_steps = 100)
 {
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
-    hist.init(min,max,no_steps);
+    hist.init(min, max, no_steps);
 
     matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
+    hist.insert_value(v(r));
 }
 
 /** Compute histogram within a region 3D
@@ -404,7 +404,7 @@ template<typename T>
 void compute_hist(const matrix3D< T >& v, histogram1D& hist,
                   const matrix1D< int >& corner1,
                   const matrix1D< int >& corner2,
-                  int no_steps=100)
+                  int no_steps = 100)
 {
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
@@ -412,7 +412,7 @@ void compute_hist(const matrix3D< T >& v, histogram1D& hist,
 
     matrix1D< int >r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
+    hist.insert_value(v(r));
 }
 
 /** Compute the detectability error between two pdf's
@@ -457,12 +457,12 @@ double detectability_error(const histogram1D& h1, const histogram1D& h2);
  * @endcode
  */
 template<typename T>
-double effective_range(const T& v, double percentil_out=0.25)
+double effective_range(const T& v, double percentil_out = 0.25)
 {
     histogram1D hist;
     compute_hist(v, hist, 200);
     double min_val = hist.percentil(percentil_out / 2);
-    double max_val = hist.percentil(100-percentil_out / 2);
+    double max_val = hist.percentil(100 - percentil_out / 2);
     return max_val - min_val;
 }
 
@@ -472,22 +472,22 @@ double effective_range(const T& v, double percentil_out=0.25)
  * Look at the documentation of effective_rage
  */
 template<typename T>
-void reject_outliers(T& v, double percentil_out=0.25)
+void reject_outliers(T& v, double percentil_out = 0.25)
 {
     histogram1D hist;
     compute_hist(v, hist, 200);
     double eff0 = hist.percentil(percentil_out / 2);
-    double effF = hist.percentil(100-percentil_out / 2);
+    double effF = hist.percentil(100 - percentil_out / 2);
 
     // FIXME No words for this...
-    #define vi MULTIDIM_ELEM(v, i)
+#define vi MULTIDIM_ELEM(v, i)
 
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-        if (vi<eff0)
-            vi = eff0;
-        else if (vi>effF)
-            vi=effF;
-    #undef vi
+    if (vi < eff0)
+        vi = eff0;
+    else if (vi > effF)
+        vi = effF;
+#undef vi
 }
 
 /** Histogram equalization and re-quantization
@@ -498,7 +498,7 @@ void reject_outliers(T& v, double percentil_out=0.25)
  * array is defined between 0 and bins-1.
  */
 template<typename T>
-void histogram_equalization(T& v, int bins=8)
+void histogram_equalization(T& v, int bins = 8)
 {
     const int hist_steps = 200;
     histogram1D hist;
@@ -508,44 +508,44 @@ void histogram_equalization(T& v, int bins=8)
     matrix1D< double > norm_sum(hist_steps);
     norm_sum(0) = hist(0);
 
-    for(int i=1; i<hist_steps; i++)
-        norm_sum(i) = norm_sum(i-1) + hist(i);
+    for (int i = 1; i < hist_steps; i++)
+        norm_sum(i) = norm_sum(i - 1) + hist(i);
 
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
-    matrix1D< double > div(bins-1);
+    matrix1D< double > div(bins - 1);
     int index = 0;
 
-    for(int current_bin=1; current_bin<bins; current_bin++)
+    for (int current_bin = 1; current_bin < bins; current_bin++)
     {
         double current_value = (double) current_bin / bins;
 
-        while (norm_sum(index)<current_value)
+        while (norm_sum(index) < current_value)
             index++;
 
-        hist.index2val((double) index, div(current_bin-1));
+        hist.index2val((double) index, div(current_bin - 1));
     }
 
     // requantize and equalize histogram
     // FIXME Oh, my, again...
-    #define vi MULTIDIM_ELEM(v, i)
+#define vi MULTIDIM_ELEM(v, i)
 
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-        if (vi<div(0))
-            vi = 0;
-        else if (vi>div(bins-2))
-            vi = bins-1;
-        else
-        {
-            index = 0;
+    if (vi < div(0))
+        vi = 0;
+    else if (vi > div(bins - 2))
+        vi = bins - 1;
+    else
+    {
+        index = 0;
 
-            while(vi>div(index))
-                index++;
+        while (vi > div(index))
+            index++;
 
-            vi=index;
-        }
-    #undef vi
+        vi = index;
+    }
+#undef vi
 }
 
 /** Histograms with 2 parameters
@@ -692,20 +692,20 @@ public:
      */
     void val2index(double v, double u, int& i, int& j) const
     {
-        if (v==imax)
+        if (v == imax)
             i = IstepNo() - 1;
         else
-            i = (int) FLOOR((v-imin) / istep_size);
+            i = (int) FLOOR((v - imin) / istep_size);
 
-        if (u==jmax)
+        if (u == jmax)
             j = JstepNo() - 1;
 
-        j = (int) FLOOR((u-jmin) / jstep_size);
+        j = (int) FLOOR((u - jmin) / jstep_size);
 
-        if (i<0 || i>=IstepNo())
+        if (i < 0 || i >= IstepNo())
             i = -1;
 
-        if (j<0 || j>=JstepNo())
+        if (j < 0 || j >= JstepNo())
             j = -1;
     }
 
@@ -884,7 +884,7 @@ void compute_hist(const T& v1, const T& v2, histogram2D& hist,
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
 
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v1)
-        hist.insert_value(MULTIDIM_ELEM(v1, i), MULTIDIM_ELEM(v2, i));
+    hist.insert_value(MULTIDIM_ELEM(v1, i), MULTIDIM_ELEM(v2, i));
 }
 
 #endif

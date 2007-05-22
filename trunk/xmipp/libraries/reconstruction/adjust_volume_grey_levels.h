@@ -33,54 +33,55 @@
 //@{
 /* Adjust volume Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Adjust_Volume_Parameters {
+class Prog_Adjust_Volume_Parameters
+{
 public:
-   /// Filename with the input volume
-   FileName fn_vol;
-   /// Filename with the input projections
-   FileName fn_sel;
-   /** Filename of the output volume.
-       If empty the input one is used. */
-   FileName fn_out;
-   /// Optimize
-   bool optimize;
-   /// Probability of being evaluated
-   double probb_eval;
+    /// Filename with the input volume
+    FileName fn_vol;
+    /// Filename with the input projections
+    FileName fn_sel;
+    /** Filename of the output volume.
+        If empty the input one is used. */
+    FileName fn_out;
+    /// Optimize
+    bool optimize;
+    /// Probability of being evaluated
+    double probb_eval;
 public:
-   // Input volume
-   matrix3D<double> V;
-   // SelFile
-   SelFile SF;
+    // Input volume
+    matrix3D<double> V;
+    // SelFile
+    SelFile SF;
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** Show parameters. */
-   void show();
+    /** Show parameters. */
+    void show();
 
-   /** Produce side information. */
-   void produce_side_info();
+    /** Produce side information. */
+    void produce_side_info();
 
-   /** Mismatching.
-       This function returns the overall mismatiching between the
-       experimental projections and the theoretical projections of the current
-       volume. */
-   double mismatching(double a, double b);
+    /** Mismatching.
+        This function returns the overall mismatiching between the
+        experimental projections and the theoretical projections of the current
+        volume. */
+    double mismatching(double a, double b);
 
-   /** Apply.
-       This is the function that really does the job */
-   void apply(matrix3D<double> &output_volume);
+    /** Apply.
+        This is the function that really does the job */
+    void apply(matrix3D<double> &output_volume);
 
-   /** Run.
-       Calls apply and save the result. */
-   void run();
+    /** Run.
+        Calls apply and save the result. */
+    void run();
 };
 //@}
 #endif

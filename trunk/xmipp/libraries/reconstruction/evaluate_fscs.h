@@ -35,83 +35,84 @@
 //@{
 /* Evaluation FSCs Program Parameters --------------------------------------- */
 /** Parameter class for the evaluate FSCs program */
-class Prog_Evaluate_FSCs_Parameters {
+class Prog_Evaluate_FSCs_Parameters
+{
 public:
-   /// Phantom filename: either Xmipp volume
-   FileName fn_phantom;
+    /// Phantom filename: either Xmipp volume
+    FileName fn_phantom;
 
-   /// Reconstruction filename: Xmipp volume or Selfile
-   FileName fn_recons;
+    /// Reconstruction filename: Xmipp volume or Selfile
+    FileName fn_recons;
 
-   /// Reconstruction filename 2: Selfile
-   FileName fn_recons2;
+    /// Reconstruction filename 2: Selfile
+    FileName fn_recons2;
 
-   #define ESTIMATE_SINGLE_FSC         0
-   #define ESTIMATE_AVERAGE_RESOLUTION 1
-   #define ESTIMATE_AVERAGE_FSC        2
-   #define COMPARE_TWO_SETS            3
-   /** Action to perform.
-       Valid actions: ESTIMATE_SINGLE_FSC, ESTIMATE_AVERAGE_RESOLUTION,
-       ESTIMATE_AVERAGE_FSC, COMPARE_TWO_SETS. */
-   int action;
+#define ESTIMATE_SINGLE_FSC         0
+#define ESTIMATE_AVERAGE_RESOLUTION 1
+#define ESTIMATE_AVERAGE_FSC        2
+#define COMPARE_TWO_SETS            3
+    /** Action to perform.
+        Valid actions: ESTIMATE_SINGLE_FSC, ESTIMATE_AVERAGE_RESOLUTION,
+        ESTIMATE_AVERAGE_FSC, COMPARE_TWO_SETS. */
+    int action;
 
-   /// Sampling rate
-   double sampling_rate;
+    /// Sampling rate
+    double sampling_rate;
 
 // Side information .........................................................
 public:
-   // Phantom volume
-   VolumeXmipp phantom;
+    // Phantom volume
+    VolumeXmipp phantom;
 
-   // Reconstructed volume
-   VolumeXmipp reconstruction;
+    // Reconstructed volume
+    VolumeXmipp reconstruction;
 
-   // Selfile with all reconstructions
-   SelFile SF_recons;
+    // Selfile with all reconstructions
+    SelFile SF_recons;
 
-   // Selfile with the second set of reconstructions
-   SelFile SF_recons2;
+    // Selfile with the second set of reconstructions
+    SelFile SF_recons2;
 
-   // Output file (not always necessary)
-   FileName fn_out;
+    // Output file (not always necessary)
+    FileName fn_out;
 
 public:
-   /** Read from a command line.
-       An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.
+        An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-   /** cout << prm; */
-   friend ostream & operator << (ostream &out,
-      const Prog_Evaluate_FSCs_Parameters &prm);
+    /** cout << prm; */
+    friend ostream & operator << (ostream &out,
+                                  const Prog_Evaluate_FSCs_Parameters &prm);
 
-   /** Produce side information.
-       An exception might be thrown if some data cannot be accessed.*/
-   void produce_side_info();
+    /** Produce side information.
+        An exception might be thrown if some data cannot be accessed.*/
+    void produce_side_info();
 
-   /** Compute average and stddev of the resolution of a selfile.
-       Given a selfile, what is the average resolution (FSC<0.5) in (1/A).
-       The vector of all resolutions is provided to check if there is
-       any outlier. */
-   void compute_average_resolution(double &avg_resol, double &stddev_resol,
-      matrix1D<double> &resol);
+    /** Compute average and stddev of the resolution of a selfile.
+        Given a selfile, what is the average resolution (FSC<0.5) in (1/A).
+        The vector of all resolutions is provided to check if there is
+        any outlier. */
+    void compute_average_resolution(double &avg_resol, double &stddev_resol,
+                                    matrix1D<double> &resol);
 
-   /** Compute the average, min and max FSC of a selfile.*/
-   void compute_average_FSC(matrix1D<double> &frequency,
-      matrix1D<double> &avg_FSC, matrix1D<double> &min_FSC,
-      matrix1D<double> &max_FSC);
+    /** Compute the average, min and max FSC of a selfile.*/
+    void compute_average_FSC(matrix1D<double> &frequency,
+                             matrix1D<double> &avg_FSC, matrix1D<double> &min_FSC,
+                             matrix1D<double> &max_FSC);
 
-   /** Compare the FSCs of two selfiles.
-       The average of the difference (F2-F1) is returned as well as
-       its stddev at each frequency.
-   */
-   void compare_two_sets(matrix1D<double> &frequency,
-      matrix1D<double> &avg_diff_FSC, matrix1D<double> &stddev_diff_FSC);
+    /** Compare the FSCs of two selfiles.
+        The average of the difference (F2-F1) is returned as well as
+        its stddev at each frequency.
+    */
+    void compare_two_sets(matrix1D<double> &frequency,
+                          matrix1D<double> &avg_diff_FSC, matrix1D<double> &stddev_diff_FSC);
 };
 
 /** Main Evaluation FSCs routine.

@@ -40,36 +40,42 @@
 #include <qlineedit.h>
 
 /* Constructor ------------------------------------------------------------- */
-QtAutoMenu::QtAutoMenu( QtWidgetMicrograph* _parent) :
-   QtPopupMenuMark( _parent ) {
-   insertItem( "Configure", this, SLOT(slotConfig()) );
-   insertItem( "Load models", this, SLOT(slotLoadModels()) );
-   insertItem( "Learn particles", this, SLOT(slotLearnParticles()) );
-   insertItem( "AutoSelect", this, SLOT(slotAutoSelectParticles()) );
-   insertItem( "Save models", this, SLOT(slotSaveModels()) );
+QtAutoMenu::QtAutoMenu(QtWidgetMicrograph* _parent) :
+        QtPopupMenuMark(_parent)
+{
+    insertItem("Configure", this, SLOT(slotConfig()));
+    insertItem("Load models", this, SLOT(slotLoadModels()));
+    insertItem("Learn particles", this, SLOT(slotLearnParticles()));
+    insertItem("AutoSelect", this, SLOT(slotAutoSelectParticles()));
+    insertItem("Save models", this, SLOT(slotSaveModels()));
 }
 
 /* Configure --------------------------------------------------------------- */
-void QtAutoMenu::slotConfig() {
-   ((QtWidgetMicrograph *)parentWidget())->configure_auto();
+void QtAutoMenu::slotConfig()
+{
+    ((QtWidgetMicrograph *)parentWidget())->configure_auto();
 }
 
 /* Load models of Particles ------------------------------------------------ */
-void QtAutoMenu::slotLoadModels() {
-   ((QtWidgetMicrograph *)parentWidget())->loadModels();
+void QtAutoMenu::slotLoadModels()
+{
+    ((QtWidgetMicrograph *)parentWidget())->loadModels();
 }
 
 /* Learn Particles --------------------------------------------------------- */
-void QtAutoMenu::slotLearnParticles() {
-   ((QtWidgetMicrograph *)parentWidget())->learnParticles();
+void QtAutoMenu::slotLearnParticles()
+{
+    ((QtWidgetMicrograph *)parentWidget())->learnParticles();
 }
 
 /* AutoSelect Particles ---------------------------------------------------- */
-void QtAutoMenu::slotAutoSelectParticles() {
-   ((QtWidgetMicrograph *)parentWidget())->automaticallySelectParticles();
+void QtAutoMenu::slotAutoSelectParticles()
+{
+    ((QtWidgetMicrograph *)parentWidget())->automaticallySelectParticles();
 }
 
 /* Save models of Particles ------------------------------------------------ */
-void QtAutoMenu::slotSaveModels() {
-   ((QtWidgetMicrograph *)parentWidget())->saveModels();
+void QtAutoMenu::slotSaveModels()
+{
+    ((QtWidgetMicrograph *)parentWidget())->saveModels();
 }

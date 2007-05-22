@@ -25,18 +25,31 @@
 
 #include <reconstruction/angular_neighbourhood.h>
 
-int main (int argc, char **argv) {
-   Prog_projection_neighbourhood_prm prm;
+int main(int argc, char **argv)
+{
+    Prog_projection_neighbourhood_prm prm;
 
-   // Get input parameters
-   try {
-      prm.read(argc,argv);
-      prm.show();
-   } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    // Get input parameters
+    try
+    {
+        prm.read(argc, argv);
+        prm.show();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
-   // Really process
-   try {
-      prm.compute_neighbourhood();
-   } catch (Xmipp_error XE) {cout << XE;}
+    // Really process
+    try
+    {
+        prm.compute_neighbourhood();
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+    }
 }
 

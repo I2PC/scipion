@@ -34,9 +34,9 @@ using namespace std;
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
 void nrerror(char error_text[])
 {
-    fprintf(stderr,"Numerical Recipes run-time error...\n");
-    fprintf(stderr,"%s\n",error_text);
-    fprintf(stderr,"...now exiting to system...\n");
+    fprintf(stderr, "Numerical Recipes run-time error...\n");
+    fprintf(stderr, "%s\n", error_text);
+    fprintf(stderr, "...now exiting to system...\n");
     exit(1);
 }
 #define NRSIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
@@ -57,36 +57,36 @@ void nrerror(char error_text[])
 /* Chapter 7 Section 1: UNIFORM RANDOM NUMBERS */
 double ran1(int *idum)
 {
-    static long ix1,ix2,ix3;
+    static long ix1, ix2, ix3;
     static double r[98];
     double temp;
-    static int iff=0;
+    static int iff = 0;
     int j;
 
     if (*idum < 0 || iff == 0)
     {
-        iff=1;
-        ix1=(IC1-(*idum)) % M1;
-        ix1=(IA1*ix1+IC1) % M1;
-        ix2=ix1 % M2;
-        ix1=(IA1*ix1+IC1) % M1;
-        ix3=ix1 % M3;
-        for (j=1;j<=97;j++)
+        iff = 1;
+        ix1 = (IC1 - (*idum)) % M1;
+        ix1 = (IA1 * ix1 + IC1) % M1;
+        ix2 = ix1 % M2;
+        ix1 = (IA1 * ix1 + IC1) % M1;
+        ix3 = ix1 % M3;
+        for (j = 1;j <= 97;j++)
         {
-            ix1=(IA1*ix1+IC1) % M1;
-            ix2=(IA2*ix2+IC2) % M2;
-            r[j]=(ix1+ix2*RM2)*RM1;
+            ix1 = (IA1 * ix1 + IC1) % M1;
+            ix2 = (IA2 * ix2 + IC2) % M2;
+            r[j] = (ix1 + ix2 * RM2) * RM1;
         }
-        *idum=1;
+        *idum = 1;
     }
-    ix1=(IA1*ix1+IC1) % M1;
-    ix2=(IA2*ix2+IC2) % M2;
-    ix3=(IA3*ix3+IC3) % M3;
-    j=1 + ((97*ix3)/M3);
+    ix1 = (IA1 * ix1 + IC1) % M1;
+    ix2 = (IA2 * ix2 + IC2) % M2;
+    ix3 = (IA3 * ix3 + IC3) % M3;
+    j = 1 + ((97 * ix3) / M3);
     if (j > 97 || j < 1)
         nrerror("RAN1: This cannot happen.");
-    temp=r[j];
-    r[j]=(ix1+ix2*RM2)*RM1;
+    temp = r[j];
+    r[j] = (ix1 + ix2 * RM2) * RM1;
     return temp;
 }
 
@@ -105,27 +105,27 @@ double ran1(int *idum)
 /* Chapter 7 Section 3: GAUSSIAN RANDOM NUMBERS */
 double gasdev(int *idum)
 {
-    static int iset=0;
+    static int iset = 0;
     static double gset;
-    double fac,r,v1,v2;
+    double fac, r, v1, v2;
 
-    if  (iset == 0)
+    if (iset == 0)
     {
         do
         {
-            v1=2.0*ran1(idum)-1.0;
-            v2=2.0*ran1(idum)-1.0;
-            r=v1*v1+v2*v2;
+            v1 = 2.0 * ran1(idum) - 1.0;
+            v2 = 2.0 * ran1(idum) - 1.0;
+            r = v1 * v1 + v2 * v2;
         }
         while (r >= 1.0);
-        fac=sqrt(-2.0*log(r)/r);
-        gset=v1*fac;
-        iset=1;
+        fac = sqrt(-2.0 * log(r) / r);
+        gset = v1 * fac;
+        iset = 1;
         return v2*fac;
     }
     else
     {
-        iset=0;
+        iset = 0;
         return gset;
     }
 }
@@ -134,42 +134,42 @@ double gasdev(int *idum)
 /* Chapter 8, Section 3: Indexing */
 void indexx(int n, double arrin[], int indx[])
 {
-    int l,j,ir,indxt,i;
+    int l, j, ir, indxt, i;
     double q;
 
-    for (j=1;j<=n;j++)
-        indx[j]=j;
-    l=(n >> 1) + 1;
-    ir=n;
+    for (j = 1;j <= n;j++)
+        indx[j] = j;
+    l = (n >> 1) + 1;
+    ir = n;
     for (;;)
     {
         if (l > 1)
-            q=arrin[(indxt=indx[--l])];
+            q = arrin[(indxt=indx[--l])];
         else
         {
-            q=arrin[(indxt=indx[ir])];
-            indx[ir]=indx[1];
+            q = arrin[(indxt=indx[ir])];
+            indx[ir] = indx[1];
             if (--ir == 1)
             {
-                indx[1]=indxt;
+                indx[1] = indxt;
                 return;
             }
         }
-        i=l;
-        j=l << 1;
+        i = l;
+        j = l << 1;
         while (j <= ir)
         {
             if (j < ir && arrin[indx[j]] < arrin[indx[j+1]])
                 j++;
             if (q < arrin[indx[j]])
             {
-                indx[i]=indx[j];
-                j += (i=j);
+                indx[i] = indx[j];
+                j += (i = j);
             }
             else
-                j=ir+1;
+                j = ir + 1;
         }
-        indx[i]=indxt;
+        indx[i] = indxt;
     }
 }
 
@@ -182,66 +182,66 @@ void indexx(int n, double arrin[], int indx[])
 
 void qcksrt(int n, double arr[])
 {
-    int l=1,jstack=0,j,ir,iq,i;
+    int l = 1, jstack = 0, j, ir, iq, i;
     int istack[NSTACK+1];
-    long int fx=0L;
+    long int fx = 0L;
     double a;
 
-    ir=n;
+    ir = n;
     for (;;)
     {
-        if (ir-l < M)
+        if (ir - l < M)
         {
-            for (j=l+1;j<=ir;j++)
+            for (j = l + 1;j <= ir;j++)
             {
-                a=arr[j];
-                for (i=j-1;arr[i]>a && i>0;i--)
-                    arr[i+1]=arr[i];
-                arr[i+1]=a;
+                a = arr[j];
+                for (i = j - 1;arr[i] > a && i > 0;i--)
+                    arr[i+1] = arr[i];
+                arr[i+1] = a;
             }
             if (jstack == 0)
                 return;
-            ir=istack[jstack--];
-            l=istack[jstack--];
+            ir = istack[jstack--];
+            l = istack[jstack--];
         }
         else
         {
-            i=l;
-            j=ir;
-            fx=(fx*FA+FC) % FM;
-            iq=l+((ir-l+1)*fx)/FM;
-            a=arr[iq];
-            arr[iq]=arr[l];
+            i = l;
+            j = ir;
+            fx = (fx * FA + FC) % FM;
+            iq = l + ((ir - l + 1) * fx) / FM;
+            a = arr[iq];
+            arr[iq] = arr[l];
             for (;;)
             {
                 while (j > 0 && a < arr[j])
                     j--;
                 if (j <= i)
                 {
-                    arr[i]=a;
+                    arr[i] = a;
                     break;
                 }
-                arr[i++]=arr[j];
+                arr[i++] = arr[j];
                 while (a > arr[i] && i <= n)
                     i++;
                 if (j <= i)
                 {
-                    arr[(i=j)]=a;
+                    arr[(i=j)] = a;
                     break;
                 }
-                arr[j--]=arr[i];
+                arr[j--] = arr[i];
             }
-            if (ir-i >= i-l)
+            if (ir - i >= i - l)
             {
-                istack[++jstack]=i+1;
-                istack[++jstack]=ir;
-                ir=i-1;
+                istack[++jstack] = i + 1;
+                istack[++jstack] = ir;
+                ir = i - 1;
             }
             else
             {
-                istack[++jstack]=l;
-                istack[++jstack]=i-1;
-                l=i+1;
+                istack[++jstack] = l;
+                istack[++jstack] = i - 1;
+                l = i + 1;
             }
             if (jstack > NSTACK)
                 nrerror("NSTACK too small in QCKSRT");
@@ -260,35 +260,35 @@ void qcksrt(int n, double arr[])
    idea to put them here, in fact they come from Gabor's group in Feb'84     */
 double bessj0(double x)
 {
-    double ax,z;
-    double xx,y,ans,ans1,ans2;
+    double ax, z;
+    double xx, y, ans, ans1, ans2;
 
-    if ((ax=fabs(x)) < 8.0)
+    if ((ax = fabs(x)) < 8.0)
     {
-        y=x*x;
-        ans1=57568490574.0+y*(-13362590354.0+
-                              y*(651619640.7
-                                 +y*(-11214424.18+
-                                     y*(77392.33017+
-                                        y*(-184.9052456)))));
-        ans2=57568490411.0+y*(1029532985.0+
-                              y*(9494680.718
-                                 +y*(59272.64853+
-                                     y*(267.8532712+
-                                        y*1.0))));
-        ans=ans1/ans2;
+        y = x * x;
+        ans1 = 57568490574.0 + y * (-13362590354.0 +
+                                    y * (651619640.7
+                                         + y * (-11214424.18 +
+                                                y * (77392.33017 +
+                                                     y * (-184.9052456)))));
+        ans2 = 57568490411.0 + y * (1029532985.0 +
+                                    y * (9494680.718
+                                         + y * (59272.64853 +
+                                                y * (267.8532712 +
+                                                     y * 1.0))));
+        ans = ans1 / ans2;
     }
     else
     {
-        z=8.0/ax;
-        y=z*z;
-        xx=ax-0.785398164;
-        ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-                                        +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-        ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-                                   +y*(-0.6911147651e-5+y*(0.7621095161e-6
-                                                           -y*0.934935152e-7)));
-        ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
+        z = 8.0 / ax;
+        y = z * z;
+        xx = ax - 0.785398164;
+        ans1 = 1.0 + y * (-0.1098628627e-2 + y * (0.2734510407e-4
+                          + y * (-0.2073370639e-5 + y * 0.2093887211e-6)));
+        ans2 = -0.1562499995e-1 + y * (0.1430488765e-3
+                                       + y * (-0.6911147651e-5 + y * (0.7621095161e-6
+                                                                      - y * 0.934935152e-7)));
+        ans = sqrt(0.636619772 / ax) * (cos(xx) * ans1 - z * sin(xx) * ans2);
     }
     return ans;
 }
@@ -297,20 +297,20 @@ double bessj0(double x)
 double bessi0(double x)
 {
     double y, ax, ans;
-    if ((ax=fabs(x)) < 3.75)
+    if ((ax = fabs(x)) < 3.75)
     {
-        y=x/3.75;
-        y*=y;
-        ans=1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492
-                                             +y*(0.2659732+y*(0.360768e-1+y*0.45813e-2)))));
+        y = x / 3.75;
+        y *= y;
+        ans = 1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492
+                                          + y * (0.2659732 + y * (0.360768e-1 + y * 0.45813e-2)))));
     }
     else
     {
-        y=3.75/ax;
-        ans=(exp(ax)/sqrt(ax))*(0.39894228+y*(0.1328592e-1
-                                              +y*(0.225319e-2+y*(-0.157565e-2+y*(0.916281e-2
-                                                                                 +y*(-0.2057706e-1+y*(0.2635537e-1+y*(-0.1647633e-1
-                                                                                                                      +y*0.392377e-2))))))));
+        y = 3.75 / ax;
+        ans = (exp(ax) / sqrt(ax)) * (0.39894228 + y * (0.1328592e-1
+                                      + y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2
+                                                                + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1
+                                                                                            + y * 0.392377e-2))))))));
     }
     return ans;
 }
@@ -320,21 +320,21 @@ double bessi1(double x)
 {
     double ax, ans;
     double y;
-    if ((ax=fabs(x)) < 3.75)
+    if ((ax = fabs(x)) < 3.75)
     {
-        y=x/3.75;
-        y*=y;
-        ans=ax*(0.5+y*(0.87890594+y*(0.51498869+y*(0.15084934
-                                     +y*(0.2658733e-1+y*(0.301532e-2+y*0.32411e-3))))));
+        y = x / 3.75;
+        y *= y;
+        ans = ax * (0.5 + y * (0.87890594 + y * (0.51498869 + y * (0.15084934
+                               + y * (0.2658733e-1 + y * (0.301532e-2 + y * 0.32411e-3))))));
     }
     else
     {
-        y=3.75/ax;
-        ans=0.2282967e-1+y*(-0.2895312e-1+y*(0.1787654e-1
-                                             -y*0.420059e-2));
-        ans=0.39894228+y*(-0.3988024e-1+y*(-0.362018e-2
-                                           +y*(0.163801e-2+y*(-0.1031555e-1+y*ans))));
-        ans *= (exp(ax)/sqrt(ax));
+        y = 3.75 / ax;
+        ans = 0.2282967e-1 + y * (-0.2895312e-1 + y * (0.1787654e-1
+                                  - y * 0.420059e-2));
+        ans = 0.39894228 + y * (-0.3988024e-1 + y * (-0.362018e-2
+                                + y * (0.163801e-2 + y * (-0.1031555e-1 + y * ans))));
+        ans *= (exp(ax) / sqrt(ax));
     }
     return x < 0.0 ? -ans : ans;
 }
@@ -342,19 +342,19 @@ double bessi1(double x)
 /* General Bessel functions ------------------------------------------------ */
 double chebev(double a, double b, double c[], int m, double x)
 {
-    double d=0.0,dd=0.0,sv,y,y2;
+    double d = 0.0, dd = 0.0, sv, y, y2;
     int j;
 
-    if ((x-a)*(x-b) > 0.0)
+    if ((x - a)*(x - b) > 0.0)
         nrerror("x not in range in routine chebev");
-    y2=2.0*(y=(2.0*x-a-b)/(b-a));
-    for (j=m-1;j>=1;j--)
+    y2 = 2.0 * (y = (2.0 * x - a - b) / (b - a));
+    for (j = m - 1;j >= 1;j--)
     {
-        sv=d;
-        d=y2*d-dd+c[j];
-        dd=sv;
+        sv = d;
+        d = y2 * d - dd + c[j];
+        dd = sv;
     }
-    return y*d-dd+0.5*c[0];
+    return y*d - dd + 0.5*c[0];
 }
 #define NUSE1 5
 #define NUSE2 5
@@ -362,20 +362,24 @@ double chebev(double a, double b, double c[], int m, double x)
 void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
 {
     double xx;
-    static double c1[] = {
-                             -1.142022680371172e0,6.516511267076e-3,
-                             3.08709017308e-4,-3.470626964e-6,6.943764e-9,
-                             3.6780e-11,-1.36e-13};
-    static double c2[] = {
-                             1.843740587300906e0,-0.076852840844786e0,
-                             1.271927136655e-3,-4.971736704e-6,-3.3126120e-8,
-                             2.42310e-10,-1.70e-13,-1.0e-15};
+    static double c1[] =
+        {
+            -1.142022680371172e0, 6.516511267076e-3,
+            3.08709017308e-4, -3.470626964e-6, 6.943764e-9,
+            3.6780e-11, -1.36e-13
+        };
+    static double c2[] =
+        {
+            1.843740587300906e0, -0.076852840844786e0,
+            1.271927136655e-3, -4.971736704e-6, -3.3126120e-8,
+            2.42310e-10, -1.70e-13, -1.0e-15
+        };
 
-    xx=8.0*x*x-1.0;
-    *gam1=chebev(-1.0,1.0,c1,NUSE1,xx);
-    *gam2=chebev(-1.0,1.0,c2,NUSE2,xx);
-    *gampl= *gam2-x*(*gam1);
-    *gammi= *gam2+x*(*gam1);
+    xx = 8.0 * x * x - 1.0;
+    *gam1 = chebev(-1.0, 1.0, c1, NUSE1, xx);
+    *gam2 = chebev(-1.0, 1.0, c2, NUSE2, xx);
+    *gampl = *gam2 - x * (*gam1);
+    *gammi = *gam2 + x * (*gam1);
 }
 
 #undef NUSE1
@@ -387,163 +391,163 @@ void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
 #define XMIN 2.0
 void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *ryp)
 {
-    int i,isign,l,nl;
-    double a,b,br,bi,c,cr,ci,d,del,del1,den,di,dlr,dli,dr,e,f,fact,fact2,
-    fact3,ff,gam,gam1,gam2,gammi,gampl,h,p,pimu,pimu2,q,r,rjl,
-    rjl1,rjmu,rjp1,rjpl,rjtemp,ry1,rymu,rymup,rytemp,sum,sum1,
-    temp,w,x2,xi,xi2,xmu,xmu2;
+    int i, isign, l, nl;
+    double a, b, br, bi, c, cr, ci, d, del, del1, den, di, dlr, dli, dr, e, f, fact, fact2,
+    fact3, ff, gam, gam1, gam2, gammi, gampl, h, p, pimu, pimu2, q, r, rjl,
+    rjl1, rjmu, rjp1, rjpl, rjtemp, ry1, rymu, rymup, rytemp, sum, sum1,
+    temp, w, x2, xi, xi2, xmu, xmu2;
 
     if (x <= 0.0 || xnu < 0.0)
         nrerror("bad arguments in bessjy");
-    nl=(x < XMIN ? (int)(xnu+0.5) : MAX(0,(int)(xnu-x+1.5)));
-    xmu=xnu-nl;
-    xmu2=xmu*xmu;
-    xi=1.0/x;
-    xi2=2.0*xi;
-    w=xi2/PI;
-    isign=1;
-    h=xnu*xi;
+    nl = (x < XMIN ? (int)(xnu + 0.5) : MAX(0, (int)(xnu - x + 1.5)));
+    xmu = xnu - nl;
+    xmu2 = xmu * xmu;
+    xi = 1.0 / x;
+    xi2 = 2.0 * xi;
+    w = xi2 / PI;
+    isign = 1;
+    h = xnu * xi;
     if (h < FPMIN)
-        h=FPMIN;
-    b=xi2*xnu;
-    d=0.0;
-    c=h;
-    for (i=1;i<=MAXIT;i++)
+        h = FPMIN;
+    b = xi2 * xnu;
+    d = 0.0;
+    c = h;
+    for (i = 1;i <= MAXIT;i++)
     {
         b += xi2;
-        d=b-d;
+        d = b - d;
         if (fabs(d) < FPMIN)
-            d=FPMIN;
-        c=b-1.0/c;
+            d = FPMIN;
+        c = b - 1.0 / c;
         if (fabs(c) < FPMIN)
-            c=FPMIN;
-        d=1.0/d;
-        del=c*d;
-        h=del*h;
+            c = FPMIN;
+        d = 1.0 / d;
+        del = c * d;
+        h = del * h;
         if (d < 0.0)
             isign = -isign;
-        if (fabs(del-1.0) < EPS)
+        if (fabs(del - 1.0) < EPS)
             break;
     }
     if (i > MAXIT)
         nrerror("x too large in bessjy; try asymptotic expansion");
-    rjl=isign*FPMIN;
-    rjpl=h*rjl;
-    rjl1=rjl;
-    rjp1=rjpl;
-    fact=xnu*xi;
-    for (l=nl;l>=1;l--)
+    rjl = isign * FPMIN;
+    rjpl = h * rjl;
+    rjl1 = rjl;
+    rjp1 = rjpl;
+    fact = xnu * xi;
+    for (l = nl;l >= 1;l--)
     {
-        rjtemp=fact*rjl+rjpl;
+        rjtemp = fact * rjl + rjpl;
         fact -= xi;
-        rjpl=fact*rjtemp-rjl;
-        rjl=rjtemp;
+        rjpl = fact * rjtemp - rjl;
+        rjl = rjtemp;
     }
     if (rjl == 0.0)
-        rjl=EPS;
-    f=rjpl/rjl;
+        rjl = EPS;
+    f = rjpl / rjl;
     if (x < XMIN)
     {
-        x2=0.5*x;
-        pimu=PI*xmu;
-        fact = (fabs(pimu) < EPS ? 1.0 : pimu/sin(pimu));
+        x2 = 0.5 * x;
+        pimu = PI * xmu;
+        fact = (fabs(pimu) < EPS ? 1.0 : pimu / sin(pimu));
         d = -log(x2);
-        e=xmu*d;
-        fact2 = (fabs(e) < EPS ? 1.0 : sinh(e)/e);
-        beschb(xmu,&gam1,&gam2,&gampl,&gammi);
-        ff=2.0/PI*fact*(gam1*cosh(e)+gam2*fact2*d);
-        e=exp(e);
-        p=e/(gampl*PI);
-        q=1.0/(e*PI*gammi);
-        pimu2=0.5*pimu;
-        fact3 = (fabs(pimu2) < EPS ? 1.0 : sin(pimu2)/pimu2);
-        r=PI*pimu2*fact3*fact3;
-        c=1.0;
-        d = -x2*x2;
-        sum=ff+r*q;
-        sum1=p;
-        for (i=1;i<=MAXIT;i++)
+        e = xmu * d;
+        fact2 = (fabs(e) < EPS ? 1.0 : sinh(e) / e);
+        beschb(xmu, &gam1, &gam2, &gampl, &gammi);
+        ff = 2.0 / PI * fact * (gam1 * cosh(e) + gam2 * fact2 * d);
+        e = exp(e);
+        p = e / (gampl * PI);
+        q = 1.0 / (e * PI * gammi);
+        pimu2 = 0.5 * pimu;
+        fact3 = (fabs(pimu2) < EPS ? 1.0 : sin(pimu2) / pimu2);
+        r = PI * pimu2 * fact3 * fact3;
+        c = 1.0;
+        d = -x2 * x2;
+        sum = ff + r * q;
+        sum1 = p;
+        for (i = 1;i <= MAXIT;i++)
         {
-            ff=(i*ff+p+q)/(i*i-xmu2);
-            c *= (d/i);
-            p /= (i-xmu);
-            q /= (i+xmu);
-            del=c*(ff+r*q);
+            ff = (i * ff + p + q) / (i * i - xmu2);
+            c *= (d / i);
+            p /= (i - xmu);
+            q /= (i + xmu);
+            del = c * (ff + r * q);
             sum += del;
-            del1=c*p-i*del;
+            del1 = c * p - i * del;
             sum1 += del1;
-            if (fabs(del) < (1.0+fabs(sum))*EPS)
+            if (fabs(del) < (1.0 + fabs(sum))*EPS)
                 break;
         }
         if (i > MAXIT)
             nrerror("bessy series failed to converge");
         rymu = -sum;
-        ry1 = -sum1*xi2;
-        rymup=xmu*xi*rymu-ry1;
-        rjmu=w/(rymup-f*rymu);
+        ry1 = -sum1 * xi2;
+        rymup = xmu * xi * rymu - ry1;
+        rjmu = w / (rymup - f * rymu);
     }
     else
     {
-        a=0.25-xmu2;
-        p = -0.5*xi;
-        q=1.0;
-        br=2.0*x;
-        bi=2.0;
-        fact=a*xi/(p*p+q*q);
-        cr=br+q*fact;
-        ci=bi+p*fact;
-        den=br*br+bi*bi;
-        dr=br/den;
-        di = -bi/den;
-        dlr=cr*dr-ci*di;
-        dli=cr*di+ci*dr;
-        temp=p*dlr-q*dli;
-        q=p*dli+q*dlr;
-        p=temp;
-        for (i=2;i<=MAXIT;i++)
+        a = 0.25 - xmu2;
+        p = -0.5 * xi;
+        q = 1.0;
+        br = 2.0 * x;
+        bi = 2.0;
+        fact = a * xi / (p * p + q * q);
+        cr = br + q * fact;
+        ci = bi + p * fact;
+        den = br * br + bi * bi;
+        dr = br / den;
+        di = -bi / den;
+        dlr = cr * dr - ci * di;
+        dli = cr * di + ci * dr;
+        temp = p * dlr - q * dli;
+        q = p * dli + q * dlr;
+        p = temp;
+        for (i = 2;i <= MAXIT;i++)
         {
-            a += 2*(i-1);
+            a += 2 * (i - 1);
             bi += 2.0;
-            dr=a*dr+br;
-            di=a*di+bi;
-            if (fabs(dr)+fabs(di) < FPMIN)
-                dr=FPMIN;
-            fact=a/(cr*cr+ci*ci);
-            cr=br+cr*fact;
-            ci=bi-ci*fact;
-            if (fabs(cr)+fabs(ci) < FPMIN)
-                cr=FPMIN;
-            den=dr*dr+di*di;
+            dr = a * dr + br;
+            di = a * di + bi;
+            if (fabs(dr) + fabs(di) < FPMIN)
+                dr = FPMIN;
+            fact = a / (cr * cr + ci * ci);
+            cr = br + cr * fact;
+            ci = bi - ci * fact;
+            if (fabs(cr) + fabs(ci) < FPMIN)
+                cr = FPMIN;
+            den = dr * dr + di * di;
             dr /= den;
             di /= -den;
-            dlr=cr*dr-ci*di;
-            dli=cr*di+ci*dr;
-            temp=p*dlr-q*dli;
-            q=p*dli+q*dlr;
-            p=temp;
-            if (fabs(dlr-1.0)+fabs(dli) < EPS)
+            dlr = cr * dr - ci * di;
+            dli = cr * di + ci * dr;
+            temp = p * dlr - q * dli;
+            q = p * dli + q * dlr;
+            p = temp;
+            if (fabs(dlr - 1.0) + fabs(dli) < EPS)
                 break;
         }
         if (i > MAXIT)
             nrerror("cf2 failed in bessjy");
-        gam=(p-f)/q;
-        rjmu=sqrt(w/((p-f)*gam+q));
-        rjmu=NRSIGN(rjmu,rjl);
-        rymu=rjmu*gam;
-        rymup=rymu*(p+q/gam);
-        ry1=xmu*xi*rymu-rymup;
+        gam = (p - f) / q;
+        rjmu = sqrt(w / ((p - f) * gam + q));
+        rjmu = NRSIGN(rjmu, rjl);
+        rymu = rjmu * gam;
+        rymup = rymu * (p + q / gam);
+        ry1 = xmu * xi * rymu - rymup;
     }
-    fact=rjmu/rjl;
-    *rj=rjl1*fact;
-    *rjp=rjp1*fact;
-    for (i=1;i<=nl;i++)
+    fact = rjmu / rjl;
+    *rj = rjl1 * fact;
+    *rjp = rjp1 * fact;
+    for (i = 1;i <= nl;i++)
     {
-        rytemp=(xmu+i)*xi2*ry1-rymu;
-        rymu=ry1;
-        ry1=rytemp;
+        rytemp = (xmu + i) * xi2 * ry1 - rymu;
+        rymu = ry1;
+        ry1 = rytemp;
     }
-    *ry=rymu;
-    *ryp=xnu*xi*rymu-ry1;
+    *ry = rymu;
+    *ryp = xnu * xi * rymu - ry1;
 }
 #undef EPS
 #undef FPMIN
@@ -553,49 +557,52 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
 /*............................................................................*/
 double bessi0_5(double x)
 {
-    return (x==0)? 0:sqrt(2/(PI*x))*sinh(x);
+    return (x == 0) ? 0 : sqrt(2 / (PI*x))*sinh(x);
 }
 double bessi1_5(double x)
 {
-    return (x==0)? 0:sqrt(2/(PI*x))*(cosh(x)-sinh(x)/x);
+    return (x == 0) ? 0 : sqrt(2 / (PI*x))*(cosh(x) - sinh(x) / x);
 }
-double bessi2  (double x)
+double bessi2(double x)
 {
-    return (x==0)? 0:bessi0  (x)-(2*1  )/x*bessi1  (x);
+    return (x == 0) ? 0 : bessi0(x) - (2*1) / x*bessi1(x);
 }
 double bessi2_5(double x)
 {
-    return (x==0)? 0:bessi0_5(x)-(2*1.5)/x*bessi1_5(x);
+    return (x == 0) ? 0 : bessi0_5(x) - (2*1.5) / x*bessi1_5(x);
 }
 double bessi3_5(double x)
 {
-    return (x==0)? 0:bessi1_5(x)-(2*2.5)/x*bessi2_5(x);
+    return (x == 0) ? 0 : bessi1_5(x) - (2*2.5) / x*bessi2_5(x);
 }
 double bessj3_5(double x)
 {
     double rj, ry, rjp, ryp;
-    bessjy(x,3.5, &rj, &ry, &rjp, &ryp);
+    bessjy(x, 3.5, &rj, &ry, &rjp, &ryp);
     return rj;
 }
 
 /* Special functions ------------------------------------------------------- */
 double gammln(double xx)
 {
-    double x,tmp,ser;
-    static double cof[6]={76.18009173,-86.50532033,24.01409822,
-                          -1.231739516,0.120858003e-2,-0.536382e-5};
+    double x, tmp, ser;
+    static double cof[6] =
+        {
+            76.18009173, -86.50532033, 24.01409822,
+            -1.231739516, 0.120858003e-2, -0.536382e-5
+        };
     int j;
 
-    x=xx-1.0;
-    tmp=x+5.5;
-    tmp -= (x+0.5)*log(tmp);
-    ser=1.0;
-    for (j=0;j<=5;j++)
+    x = xx - 1.0;
+    tmp = x + 5.5;
+    tmp -= (x + 0.5) * log(tmp);
+    ser = 1.0;
+    for (j = 0;j <= 5;j++)
     {
         x += 1.0;
-        ser += cof[j]/x;
+        ser += cof[j] / x;
     }
-    return -tmp+log(2.50662827465*ser);
+    return -tmp + log(2.50662827465*ser);
 }
 
 
@@ -605,13 +612,13 @@ double betai(double a, double b, double x)
     if (x < 0.0 || x > 1.0)
         nrerror("Bad x in routine BETAI");
     if (x == 0.0 || x == 1.0)
-        bt=0.0;
+        bt = 0.0;
     else
-        bt=exp(gammln(a+b)-gammln(a)-gammln(b)+a*log(x)+b*log(1.0-x));
-    if (x < (a+1.0)/(a+b+2.0))
-        return bt*betacf(a,b,x)/a;
+        bt = exp(gammln(a + b) - gammln(a) - gammln(b) + a * log(x) + b * log(1.0 - x));
+    if (x < (a + 1.0) / (a + b + 2.0))
+        return bt*betacf(a, b, x) / a;
     else
-        return 1.0-bt*betacf(b,a,1.0-x)/b;
+        return 1.0 -bt*betacf(b, a, 1.0 - x) / b;
 
 }
 
@@ -619,31 +626,31 @@ double betai(double a, double b, double x)
 #define EPS 3.0e-7
 double betacf(double a, double b, double x)
 {
-    double qap,qam,qab,em,tem,d;
-    double bz,bm=1.0,bp,bpp;
-    double az=1.0,am=1.0,ap,app,aold;
+    double qap, qam, qab, em, tem, d;
+    double bz, bm = 1.0, bp, bpp;
+    double az = 1.0, am = 1.0, ap, app, aold;
     int m;
 
-    qab=a+b;
-    qap=a+1.0;
-    qam=a-1.0;
-    bz=1.0-qab*x/qap;
-    for (m=1;m<=ITMAX;m++)
+    qab = a + b;
+    qap = a + 1.0;
+    qam = a - 1.0;
+    bz = 1.0 - qab * x / qap;
+    for (m = 1;m <= ITMAX;m++)
     {
-        em=(double) m;
-        tem=em+em;
-        d=em*(b-em)*x/((qam+tem)*(a+tem));
-        ap=az+d*am;
-        bp=bz+d*bm;
-        d = -(a+em)*(qab+em)*x/((qap+tem)*(a+tem));
-        app=ap+d*az;
-        bpp=bp+d*bz;
-        aold=az;
-        am=ap/bpp;
-        bm=bp/bpp;
-        az=app/bpp;
-        bz=1.0;
-        if (fabs(az-aold) < (EPS*fabs(az)))
+        em = (double) m;
+        tem = em + em;
+        d = em * (b - em) * x / ((qam + tem) * (a + tem));
+        ap = az + d * am;
+        bp = bz + d * bm;
+        d = -(a + em) * (qab + em) * x / ((qap + tem) * (a + tem));
+        app = ap + d * az;
+        bpp = bp + d * bz;
+        aold = az;
+        am = ap / bpp;
+        bm = bp / bpp;
+        az = app / bpp;
+        bz = 1.0;
+        if (fabs(az - aold) < (EPS*fabs(az)))
             return az;
     }
     nrerror("a or b too big, or ITMAX too small in BETACF");
@@ -662,44 +669,44 @@ void instantiate_recipes()
 
     int **II1;
     int *I1;
-    int i1=0;
+    int i1 = 0;
 
     char *C1;
 
-    ask_Tvector(D1,i1,i1);
-    free_Tvector(D1,i1,i1);
-    ask_Tvector(F1,i1,i1);
-    free_Tvector(F1,i1,i1);
-    ask_Tvector(I1,i1,i1);
-    free_Tvector(I1,i1,i1);
-    ask_Tvector(C1,i1,i1);
-    free_Tvector(C1,i1,i1);
+    ask_Tvector(D1, i1, i1);
+    free_Tvector(D1, i1, i1);
+    ask_Tvector(F1, i1, i1);
+    free_Tvector(F1, i1, i1);
+    ask_Tvector(I1, i1, i1);
+    free_Tvector(I1, i1, i1);
+    ask_Tvector(C1, i1, i1);
+    free_Tvector(C1, i1, i1);
 
-    ask_Tmatrix(DD1,i1,i1,i1,i1);
-    free_Tmatrix(DD1,i1,i1,i1,i1);
-    ask_Tmatrix(FF1,i1,i1,i1,i1);
-    free_Tmatrix(FF1,i1,i1,i1,i1);
-    ask_Tmatrix(II1,i1,i1,i1,i1);
-    free_Tmatrix(II1,i1,i1,i1,i1);
+    ask_Tmatrix(DD1, i1, i1, i1, i1);
+    free_Tmatrix(DD1, i1, i1, i1, i1);
+    ask_Tmatrix(FF1, i1, i1, i1, i1);
+    free_Tmatrix(FF1, i1, i1, i1, i1);
+    ask_Tmatrix(II1, i1, i1, i1, i1);
+    free_Tmatrix(II1, i1, i1, i1, i1);
 }
 
 /* Optimization ------------------------------------------------------------ */
 #define TOL 2.0e-4
 
-int ncom=0;	/* defining declarations */
-double *pcom=NULL, *xicom=NULL;
-double (*nrfunc)(double *)=NULL;
+int ncom = 0; /* defining declarations */
+double *pcom = NULL, *xicom = NULL;
+double(*nrfunc)(double *) = NULL;
 
 double f1dim(double x)
 {
     int j;
-    double f,*xt;
+    double f, *xt;
 
-    ask_Tvector(xt,1,ncom);
-    for (j=1;j<=ncom;j++)
-        xt[j]=pcom[j]+x*xicom[j];
-    f=(*nrfunc)(xt);
-    free_Tvector(xt,1,ncom);
+    ask_Tvector(xt, 1, ncom);
+    for (j = 1;j <= ncom;j++)
+        xt[j] = pcom[j] + x * xicom[j];
+    f = (*nrfunc)(xt);
+    free_Tvector(xt, 1, ncom);
     return f;
 }
 
@@ -714,67 +721,67 @@ double f1dim(double x)
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
 
 void mnbrak(double *ax, double *bx, double *cx,
-            double *fa, double *fb, double *fc, double (*func)(double))
+            double *fa, double *fb, double *fc, double(*func)(double))
 {
-    double ulim,u,r,q,fu,dum;
+    double ulim, u, r, q, fu, dum;
 
-    *fa=(*func)(*ax);
-    *fb=(*func)(*bx);
+    *fa = (*func)(*ax);
+    *fb = (*func)(*bx);
     if (*fb > *fa)
     {
-        SHFT(dum,*ax,*bx,dum)
-        SHFT(dum,*fb,*fa,dum)
+        SHFT(dum, *ax, *bx, dum)
+        SHFT(dum, *fb, *fa, dum)
     }
-    *cx=(*bx)+GOLD*(*bx-*ax);
-    *fc=(*func)(*cx);
+    *cx = (*bx) + GOLD * (*bx - *ax);
+    *fc = (*func)(*cx);
     while (*fb > *fc)
     {
-        r=(*bx-*ax)*(*fb-*fc);
-        q=(*bx-*cx)*(*fb-*fa);
-        u=(*bx)-((*bx-*cx)*q-(*bx-*ax)*r)/
-          (2.0*SIGN(MAX(fabs(q-r),TINY),q-r));
-        ulim=(*bx)+GLIMIT*(*cx-*bx);
-        if ((*bx-u)*(u-*cx) > 0.0)
+        r = (*bx - *ax) * (*fb - *fc);
+        q = (*bx - *cx) * (*fb - *fa);
+        u = (*bx) - ((*bx - *cx) * q - (*bx - *ax) * r) /
+            (2.0 * SIGN(MAX(fabs(q - r), TINY), q - r));
+        ulim = (*bx) + GLIMIT * (*cx - *bx);
+        if ((*bx - u)*(u - *cx) > 0.0)
         {
-            fu=(*func)(u);
+            fu = (*func)(u);
             if (fu < *fc)
             {
-                *ax=(*bx);
-                *bx=u;
-                *fa=(*fb);
-                *fb=fu;
+                *ax = (*bx);
+                *bx = u;
+                *fa = (*fb);
+                *fb = fu;
                 return;
             }
             else if (fu > *fb)
             {
-                *cx=u;
-                *fc=fu;
+                *cx = u;
+                *fc = fu;
                 return;
             }
-            u=(*cx)+GOLD*(*cx-*bx);
-            fu=(*func)(u);
+            u = (*cx) + GOLD * (*cx - *bx);
+            fu = (*func)(u);
         }
-        else if ((*cx-u)*(u-ulim) > 0.0)
+        else if ((*cx - u)*(u - ulim) > 0.0)
         {
-            fu=(*func)(u);
+            fu = (*func)(u);
             if (fu < *fc)
             {
-                SHFT(*bx,*cx,u,*cx+GOLD*(*cx-*bx))
-                SHFT(*fb,*fc,fu,(*func)(u))
+                SHFT(*bx, *cx, u, *cx + GOLD*(*cx - *bx))
+                SHFT(*fb, *fc, fu, (*func)(u))
             }
         }
-        else if ((u-ulim)*(ulim-*cx) >= 0.0)
+        else if ((u - ulim)*(ulim - *cx) >= 0.0)
         {
-            u=ulim;
-            fu=(*func)(u);
+            u = ulim;
+            fu = (*func)(u);
         }
         else
         {
-            u=(*cx)+GOLD*(*cx-*bx);
-            fu=(*func)(u);
+            u = (*cx) + GOLD * (*cx - *bx);
+            fu = (*func)(u);
         }
-        SHFT(*ax,*bx,*cx,u)
-        SHFT(*fa,*fb,*fc,fu)
+        SHFT(*ax, *bx, *cx, u)
+        SHFT(*fa, *fb, *fc, fu)
     }
 }
 
@@ -789,84 +796,84 @@ void mnbrak(double *ax, double *bx, double *cx,
 #define ZEPS 1.0e-10
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
 
-double brent(double ax, double bx, double cx, double (*f)(double), double tol,
+double brent(double ax, double bx, double cx, double(*f)(double), double tol,
              double *xmin)
 {
     int iter;
-    double a,b,d,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
-    double e=0.0;
+    double a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm;
+    double e = 0.0;
 
-    a=(ax < cx ? ax : cx);
-    b=(ax > cx ? ax : cx);
-    x=w=v=bx;
-    fw=fv=fx=(*f)(x);
-    for (iter=1;iter<=ITMAX;iter++)
+    a = (ax < cx ? ax : cx);
+    b = (ax > cx ? ax : cx);
+    x = w = v = bx;
+    fw = fv = fx = (*f)(x);
+    for (iter = 1;iter <= ITMAX;iter++)
     {
-        xm=0.5*(a+b);
-        tol2=2.0*(tol1=tol*fabs(x)+ZEPS);
-        if (fabs(x-xm) <= (tol2-0.5*(b-a)))
+        xm = 0.5 * (a + b);
+        tol2 = 2.0 * (tol1 = tol * fabs(x) + ZEPS);
+        if (fabs(x - xm) <= (tol2 - 0.5*(b - a)))
         {
-            *xmin=x;
+            *xmin = x;
             return fx;
         }
         if (fabs(e) > tol1)
         {
-            r=(x-w)*(fx-fv);
-            q=(x-v)*(fx-fw);
-            p=(x-v)*q-(x-w)*r;
-            q=2.0*(q-r);
+            r = (x - w) * (fx - fv);
+            q = (x - v) * (fx - fw);
+            p = (x - v) * q - (x - w) * r;
+            q = 2.0 * (q - r);
             if (q > 0.0)
                 p = -p;
-            q=fabs(q);
-            etemp=e;
-            e=d;
-            if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
-                d=CGOLD*(e=(x >= xm ? a-x : b-x));
+            q = fabs(q);
+            etemp = e;
+            e = d;
+            if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a - x) || p >= q*(b - x))
+                d = CGOLD * (e = (x >= xm ? a - x : b - x));
             else
             {
-                d=p/q;
-                u=x+d;
-                if (u-a < tol2 || b-u < tol2)
-                    d=SIGN(tol1,xm-x);
+                d = p / q;
+                u = x + d;
+                if (u - a < tol2 || b - u < tol2)
+                    d = SIGN(tol1, xm - x);
             }
         }
         else
         {
-            d=CGOLD*(e=(x >= xm ? a-x : b-x));
+            d = CGOLD * (e = (x >= xm ? a - x : b - x));
         }
-        u=(fabs(d) >= tol1 ? x+d : x+SIGN(tol1,d));
-        fu=(*f)(u);
+        u = (fabs(d) >= tol1 ? x + d : x + SIGN(tol1, d));
+        fu = (*f)(u);
         if (fu <= fx)
         {
             if (u >= x)
-                a=x;
+                a = x;
             else
-                b=x;
-            SHFT(v,w,x,u)
-            SHFT(fv,fw,fx,fu)
+                b = x;
+            SHFT(v, w, x, u)
+            SHFT(fv, fw, fx, fu)
         }
         else
         {
             if (u < x)
-                a=u;
+                a = u;
             else
-                b=u;
+                b = u;
             if (fu <= fw || w == x)
             {
-                v=w;
-                w=u;
-                fv=fw;
-                fw=fu;
+                v = w;
+                w = u;
+                fv = fw;
+                fw = fu;
             }
             else if (fu <= fv || v == x || v == w)
             {
-                v=u;
-                fv=fu;
+                v = u;
+                fv = fu;
             }
         }
     }
     nrerror("Too many iterations in brent");
-    *xmin=x;
+    *xmin = x;
     return fx;
 }
 #undef ITMAX
@@ -875,32 +882,32 @@ double brent(double ax, double bx, double cx, double (*f)(double), double tol,
 #undef SHFT
 
 void linmin(double *p, double *xi, int n, double &fret,
-            double (*func)(double *))
+            double(*func)(double *))
 {
     int j;
-    double xx,xmin,fx,fb,fa,bx,ax;
+    double xx, xmin, fx, fb, fa, bx, ax;
 
-    ncom=n;
-    nrfunc=func;
-    ask_Tvector(pcom,1,n);
-    ask_Tvector(xicom,1,n);
-    for (j=1;j<=n;j++)
+    ncom = n;
+    nrfunc = func;
+    ask_Tvector(pcom, 1, n);
+    ask_Tvector(xicom, 1, n);
+    for (j = 1;j <= n;j++)
     {
-        pcom[j]=p[j];
-        xicom[j]=xi[j];
+        pcom[j] = p[j];
+        xicom[j] = xi[j];
     }
-    ax=0.0;
-    xx=1.0;
-    bx=2.0;
-    mnbrak(&ax,&xx,&bx,&fa,&fx,&fb,f1dim);
-    fret=brent(ax,xx,bx,f1dim,TOL,&xmin);
-    for (j=1;j<=n;j++)
+    ax = 0.0;
+    xx = 1.0;
+    bx = 2.0;
+    mnbrak(&ax, &xx, &bx, &fa, &fx, &fb, f1dim);
+    fret = brent(ax, xx, bx, f1dim, TOL, &xmin);
+    for (j = 1;j <= n;j++)
     {
         xi[j] *= xmin;
         p[j] += xi[j];
     }
-    free_Tvector(xicom,1,n);
-    free_Tvector(pcom,1,n);
+    free_Tvector(xicom, 1, n);
+    free_Tvector(pcom, 1, n);
 }
 
 #undef TOL
@@ -910,64 +917,64 @@ static double sqrarg;
 #define SQR(a) (sqrarg=(a),sqrarg*sqrarg)
 
 void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double (*func)(double *), bool show)
+            double &fret, double(*func)(double *), bool show)
 {
-    int i,ibig,j;
-    double t,fptt,fp,del;
-    double *pt,*ptt,*xit;
+    int i, ibig, j;
+    double t, fptt, fp, del;
+    double *pt, *ptt, *xit;
     bool   different_from_0;
 
-    ask_Tvector(pt,1,n);
-    ask_Tvector(ptt,1,n);
-    ask_Tvector(xit,1,n);
-    fret=(*func)(p);
-    for (j=1;j<=n;j++)
-        pt[j]=p[j];
+    ask_Tvector(pt, 1, n);
+    ask_Tvector(ptt, 1, n);
+    ask_Tvector(xit, 1, n);
+    fret = (*func)(p);
+    for (j = 1;j <= n;j++)
+        pt[j] = p[j];
 
-    for (iter=1;;(iter)++)
+    for (iter = 1;;(iter)++)
     {
         /* By coss ----- */
         if (show)
         {
             cout << iter << " (" << p[1];
-            for (int co=2; co<=n; co++)
+            for (int co = 2; co <= n; co++)
                 cout << "," << p[co];
             cout << ")--->" << fret << endl;
         }
         /* ------------- */
 
-        fp=fret;
-        ibig=0;
-        del=0.0;
-        for (i=1;i<=n;i++)
+        fp = fret;
+        ibig = 0;
+        del = 0.0;
+        for (i = 1;i <= n;i++)
         {
-            different_from_0=false; // CO
-            for (j=1;j<=n;j++)
+            different_from_0 = false; // CO
+            for (j = 1;j <= n;j++)
             {
-                xit[j]=xi[j*n+i];
-                if (xit[j]!=0)
-                    different_from_0=true;
+                xit[j] = xi[j*n+i];
+                if (xit[j] != 0)
+                    different_from_0 = true;
             }
             if (different_from_0)
             {
-                fptt=fret;
-                linmin(p,xit,n,fret,func);
-                if (fabs(fptt-fret) > del)
+                fptt = fret;
+                linmin(p, xit, n, fret, func);
+                if (fabs(fptt - fret) > del)
                 {
-                    del=fabs(fptt-fret);
-                    ibig=i;
+                    del = fabs(fptt - fret);
+                    ibig = i;
                 }
                 /* By coss ----- */
                 if (show)
                 {
-                    cout << "	  (";
-                    if (i==1)
+                    cout << "   (";
+                    if (i == 1)
                         cout << "***";
                     cout << p[1];
-                    for (int co=2; co<=n; co++)
+                    for (int co = 2; co <= n; co++)
                     {
                         cout << ",";
-                        if (co==i)
+                        if (co == i)
                             cout << "***";
                         cout << p[co];
                     }
@@ -976,30 +983,30 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
                 /* ------------- */
             }
         }
-        if (2.0*fabs(fp-fret) <= ftol*(fabs(fp)+fabs(fret)))
+        if (2.0*fabs(fp - fret) <= ftol*(fabs(fp) + fabs(fret)))
         {
-            free_Tvector(xit,1,n);
-            free_Tvector(ptt,1,n);
-            free_Tvector(pt,1,n);
+            free_Tvector(xit, 1, n);
+            free_Tvector(ptt, 1, n);
+            free_Tvector(pt, 1, n);
             return;
         }
         if (iter == ITMAX)
             nrerror("Too many iterations in routine POWELL");
-        for (j=1;j<=n;j++)
+        for (j = 1;j <= n;j++)
         {
-            ptt[j]=2.0*p[j]-pt[j];
-            xit[j]=p[j]-pt[j];
-            pt[j]=p[j];
+            ptt[j] = 2.0 * p[j] - pt[j];
+            xit[j] = p[j] - pt[j];
+            pt[j] = p[j];
         }
-        fptt=(*func)(ptt);
+        fptt = (*func)(ptt);
         if (fptt < fp)
         {
-            t=2.0*(fp-2.0*fret+fptt)*SQR(fp-fret-del)-del*SQR(fp-fptt);
+            t = 2.0 * (fp - 2.0 * fret + fptt) * SQR(fp - fret - del) - del * SQR(fp - fptt);
             if (t < 0.0)
             {
-                linmin(p,xit,n,fret,func);
-                for (j=1;j<=n;j++)
-                    xi[j*n+ibig]=xit[j];
+                linmin(p, xit, n, fret, func);
+                for (j = 1;j <= n;j++)
+                    xi[j*n+ibig] = xit[j];
             }
         }
     }
@@ -1024,15 +1031,15 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
    double x[5];
    double rnorm;
    int i;
- 
+
    int success=nnls(a,3,5,b,x,&rnorm,NULL,NULL,NULL);
    printf("success=%d\n",success);
    printf("rnorm=%d\n",rnorm);
    for (i=0; i<5; i++)
       printf("%f\n",x[i]);
- 
+
    In this case: x=0 2.666 0 0 0.111
- 
+
    This program resolves A^t*x=b subject to x>=0.
    In terms of basis vectors, the rows of A are the basis axes, b is
    the vector we want to represent in the subspace spanned by the rows of A
@@ -1052,31 +1059,31 @@ void _nnls_g1(double a, double b, double *cterm, double *sterm, double *sig)
 {
     double d1, xr, yr;
 
-    if(fabs(a)>fabs(b))
+    if (fabs(a) > fabs(b))
     {
-        xr=b/a;
-        d1=xr;
-        yr=sqrt(d1*d1 + 1.);
-        d1=1./yr;
-        *cterm=(a>=0.0 ? fabs(d1) : -fabs(d1));
-        *sterm=(*cterm)*xr;
-        *sig=fabs(a)*yr;
+        xr = b / a;
+        d1 = xr;
+        yr = sqrt(d1 * d1 + 1.);
+        d1 = 1. / yr;
+        *cterm = (a >= 0.0 ? fabs(d1) : -fabs(d1));
+        *sterm = (*cterm) * xr;
+        *sig = fabs(a) * yr;
     }
-    else if(b!=0.)
+    else if (b != 0.)
     {
-        xr=a/b;
-        d1=xr;
-        yr=sqrt(d1*d1 + 1.);
-        d1=1./yr;
-        *sterm=(b>=0.0 ? fabs(d1) : -fabs(d1));
-        *cterm=(*sterm)*xr;
-        *sig=fabs(b)*yr;
+        xr = a / b;
+        d1 = xr;
+        yr = sqrt(d1 * d1 + 1.);
+        d1 = 1. / yr;
+        *sterm = (b >= 0.0 ? fabs(d1) : -fabs(d1));
+        *cterm = (*sterm) * xr;
+        *sig = fabs(b) * yr;
     }
     else
     {
-        *sig=0.;
-        *cterm=0.;
-        *sterm=1.;
+        *sig = 0.;
+        *cterm = 0.;
+        *sterm = 1.;
     }
 } /* _nnls_g1 */
 /****************************************************************************/
@@ -1110,79 +1117,79 @@ int _nnls_h12(
     int ice,        /* Storage increment between elements of vectors in cm[] */
     int icv,        /* Storage increment between vectors in cm[] */
     int ncv         /* Nr of vectors in cm[] to be transformed;
-                         if ncv<=0, then no operations will be done on cm[] */
+                             if ncv<=0, then no operations will be done on cm[] */
 )
 {
     double d1, d2, b, clinv, cl, sm;
     int incr, k, j, i2, i3, i4;
 
     /* Check parameters */
-    if(mode!=1 && mode!=2)
+    if (mode != 1 && mode != 2)
         return(1);
-    if(m<1 || u==NULL || u_dim1<1 || cm==NULL)
+    if (m < 1 || u == NULL || u_dim1 < 1 || cm == NULL)
         return(2);
-    if(lpivot<0 || lpivot>=l1 || l1>=m)
+    if (lpivot < 0 || lpivot >= l1 || l1 >= m)
         return(0);
     /* Function Body */
-    cl= (d1 = u[lpivot*u_dim1], fabs(d1));
-    if(mode==2)
+    cl = (d1 = u[lpivot*u_dim1], fabs(d1));
+    if (mode == 2)
     { /* Apply transformation I+U*(U**T)/B to cm[] */
-        if(cl<=0.)
+        if (cl <= 0.)
             return(0);
     }
     else
     { /* Construct the transformation */
-        for(j=l1; j<m; j++)
+        for (j = l1; j < m; j++)
         { /* Computing MAX */
-            d2=(d1=u[j*u_dim1], fabs(d1));
-            if(d2>cl)
-                cl=d2;
+            d2 = (d1 = u[j*u_dim1], fabs(d1));
+            if (d2 > cl)
+                cl = d2;
         }
-        if(cl<=0.)
+        if (cl <= 0.)
             return(0);
-        clinv=1.0/cl;
+        clinv = 1.0 / cl;
         /* Computing 2nd power */
-        d1=u[lpivot*u_dim1]*clinv;
-        sm=d1*d1;
-        for(j=l1; j<m; j++)
+        d1 = u[lpivot*u_dim1] * clinv;
+        sm = d1 * d1;
+        for (j = l1; j < m; j++)
         {
-            d1=u[j*u_dim1]*clinv;
-            sm+=d1*d1;
+            d1 = u[j*u_dim1] * clinv;
+            sm += d1 * d1;
         }
-        cl*=sqrt(sm);
-        if(u[lpivot*u_dim1]>0.)
-            cl=-cl;
-        *up=u[lpivot*u_dim1]-cl;
-        u[lpivot*u_dim1]=cl;
+        cl *= sqrt(sm);
+        if (u[lpivot*u_dim1] > 0.)
+            cl = -cl;
+        *up = u[lpivot*u_dim1] - cl;
+        u[lpivot*u_dim1] = cl;
     }
-    if(ncv<=0)
+    if (ncv <= 0)
         return(0);
-    b=(*up)*u[lpivot*u_dim1];
+    b = (*up) * u[lpivot*u_dim1];
     /* b must be nonpositive here; if b>=0., then return */
-    if(b>=0.)
+    if (b >= 0.)
         return(0);
-    b=1.0/b;
-    i2=1-icv+ice*lpivot;
-    incr=ice*(l1-lpivot);
-    for(j=0; j<ncv; j++)
+    b = 1.0 / b;
+    i2 = 1 - icv + ice * lpivot;
+    incr = ice * (l1 - lpivot);
+    for (j = 0; j < ncv; j++)
     {
-        i2+=icv;
-        i3=i2+incr;
-        i4=i3;
-        sm=cm[i2-1]*(*up);
-        for(k=l1; k<m; k++)
+        i2 += icv;
+        i3 = i2 + incr;
+        i4 = i3;
+        sm = cm[i2-1] * (*up);
+        for (k = l1; k < m; k++)
         {
-            sm+=cm[i3-1]*u[k*u_dim1];
-            i3+=ice;
+            sm += cm[i3-1] * u[k*u_dim1];
+            i3 += ice;
         }
-        if(sm!=0.0)
+        if (sm != 0.0)
         {
-            sm*=b;
-            cm[i2-1]+=sm*(*up);
-            for(k=l1; k<m; k++)
+            sm *= b;
+            cm[i2-1] += sm * (*up);
+            for (k = l1; k < m; k++)
             {
-                cm[i4-1]+=sm*u[k*u_dim1];
-                i4+=ice;
+                cm[i4-1] += sm * u[k*u_dim1];
+                i4 += ice;
             }
         }
     }
@@ -1221,263 +1228,263 @@ int nnls(
     int *indexp  /* An n-array of working space, index[]. */
 )
 {
-    int pfeas, ret=0, iz, jz, iz1, iz2, npp1, *index;
+    int pfeas, ret = 0, iz, jz, iz1, iz2, npp1, *index;
     double d1, d2, sm, up, ss, *w, *zz;
-    int iter, k, j=0, l, itmax, izmax=0, nsetp, ii, jj=0, ip;
+    int iter, k, j = 0, l, itmax, izmax = 0, nsetp, ii, jj = 0, ip;
     double temp, wmax, t, alpha, asave, dummy, unorm, ztest, cc;
 
 
     /* Check the parameters and data */
-    if(m<=0 || n<=0 || a==NULL || b==NULL || x==NULL)
+    if (m <= 0 || n <= 0 || a == NULL || b == NULL || x == NULL)
         return(2);
     /* Allocate memory for working space, if required */
-    if(wp!=NULL)
-        w=wp;
+    if (wp != NULL)
+        w = wp;
     else
-        w=(double*)calloc(n, sizeof(double));
-    if(zzp!=NULL)
-        zz=zzp;
+        w = (double*)calloc(n, sizeof(double));
+    if (zzp != NULL)
+        zz = zzp;
     else
-        zz=(double*)calloc(m, sizeof(double));
-    if(indexp!=NULL)
-        index=indexp;
+        zz = (double*)calloc(m, sizeof(double));
+    if (indexp != NULL)
+        index = indexp;
     else
-        index=(int*)calloc(n, sizeof(int));
-    if(w==NULL || zz==NULL || index==NULL)
+        index = (int*)calloc(n, sizeof(int));
+    if (w == NULL || zz == NULL || index == NULL)
         return(2);
 
     /* Initialize the arrays INDEX[] and X[] */
-    for(k=0; k<n; k++)
+    for (k = 0; k < n; k++)
     {
-        x[k]=0.;
-        index[k]=k;
+        x[k] = 0.;
+        index[k] = k;
     }
-    iz2=n-1;
-    iz1=0;
-    nsetp=0;
-    npp1=0;
+    iz2 = n - 1;
+    iz1 = 0;
+    nsetp = 0;
+    npp1 = 0;
 
     /* Main loop; quit if all coeffs are already in the solution or */
     /* if M cols of A have been triangularized */
-    iter=0;
-    itmax=n*3;
-    while(iz1<=iz2 && nsetp<m)
+    iter = 0;
+    itmax = n * 3;
+    while (iz1 <= iz2 && nsetp < m)
     {
         /* Compute components of the dual (negative gradient) vector W[] */
-        for(iz=iz1; iz<=iz2; iz++)
+        for (iz = iz1; iz <= iz2; iz++)
         {
-            j=index[iz];
-            sm=0.;
-            for(l=npp1; l<m; l++)
-                sm+=a[j*m+l]*b[l];
-            w[j]=sm;
+            j = index[iz];
+            sm = 0.;
+            for (l = npp1; l < m; l++)
+                sm += a[j*m+l] * b[l];
+            w[j] = sm;
         }
 
-        while(1)
+        while (1)
         {
             /* Find largest positive W[j] */
-            for(wmax=0., iz=iz1; iz<=iz2; iz++)
+            for (wmax = 0., iz = iz1; iz <= iz2; iz++)
             {
-                j=index[iz];
-                if(w[j]>wmax)
+                j = index[iz];
+                if (w[j] > wmax)
                 {
-                    wmax=w[j];
-                    izmax=iz;
+                    wmax = w[j];
+                    izmax = iz;
                 }
             }
 
             /* Terminate if wmax<=0.; */
             /* it indicates satisfaction of the Kuhn-Tucker conditions */
-            if(wmax<=0.0)
+            if (wmax <= 0.0)
                 break;
-            iz=izmax;
-            j=index[iz];
+            iz = izmax;
+            j = index[iz];
 
             /* The sign of W[j] is ok for j to be moved to set P. */
             /* Begin the transformation and check new diagonal element to avoid */
             /* near linear dependence. */
-            asave=a[j*m+npp1];
-            _nnls_h12(1, npp1, npp1+1, m, &a[j*m+0], 1, &up, &dummy, 1, 1, 0);
-            unorm=0.;
-            if(nsetp!=0)
-                for(l=0; l<nsetp; l++)
+            asave = a[j*m+npp1];
+            _nnls_h12(1, npp1, npp1 + 1, m, &a[j*m+0], 1, &up, &dummy, 1, 1, 0);
+            unorm = 0.;
+            if (nsetp != 0)
+                for (l = 0; l < nsetp; l++)
                 {
-                    d1=a[j*m+l];
-                    unorm+=d1*d1;
+                    d1 = a[j*m+l];
+                    unorm += d1 * d1;
                 }
-            unorm=sqrt(unorm);
-            d2=unorm+(d1=a[j*m+npp1], fabs(d1)) * 0.01;
-            if((d2-unorm)>0.)
+            unorm = sqrt(unorm);
+            d2 = unorm + (d1 = a[j*m+npp1], fabs(d1)) * 0.01;
+            if ((d2 - unorm) > 0.)
             {
                 /* Col j is sufficiently independent. Copy B into ZZ, update ZZ */
                 /* and solve for ztest ( = proposed new value for X[j] ) */
-                for(l=0; l<m; l++)
-                    zz[l]=b[l];
-                _nnls_h12(2, npp1, npp1+1, m, &a[j*m+0], 1, &up, zz, 1, 1, 1);
-                ztest=zz[npp1]/a[j*m+npp1];
+                for (l = 0; l < m; l++)
+                    zz[l] = b[l];
+                _nnls_h12(2, npp1, npp1 + 1, m, &a[j*m+0], 1, &up, zz, 1, 1, 1);
+                ztest = zz[npp1] / a[j*m+npp1];
                 /* See if ztest is positive */
-                if(ztest>0.)
+                if (ztest > 0.)
                     break;
             }
 
             /* Reject j as a candidate to be moved from set Z to set P. Restore */
             /* A[npp1,j], set W[j]=0., and loop back to test dual coeffs again */
-            a[j*m+npp1]=asave;
-            w[j]=0.;
+            a[j*m+npp1] = asave;
+            w[j] = 0.;
         } /* while(1) */
-        if(wmax<=0.0)
+        if (wmax <= 0.0)
             break;
 
         /* Index j=INDEX[iz] has been selected to be moved from set Z to set P. */
         /* Update B and indices, apply householder transformations to cols in */
         /* new set Z, zero subdiagonal elts in col j, set W[j]=0. */
-        for(l=0; l<m; ++l)
-            b[l]=zz[l];
-        index[iz]=index[iz1];
-        index[iz1]=j;
+        for (l = 0; l < m; ++l)
+            b[l] = zz[l];
+        index[iz] = index[iz1];
+        index[iz1] = j;
         iz1++;
-        nsetp=npp1+1;
+        nsetp = npp1 + 1;
         npp1++;
-        if(iz1<=iz2)
-            for(jz=iz1; jz<=iz2; jz++)
+        if (iz1 <= iz2)
+            for (jz = iz1; jz <= iz2; jz++)
             {
-                jj=index[jz];
-                _nnls_h12(2, nsetp-1, npp1, m, &a[j*m+0], 1, &up,
+                jj = index[jz];
+                _nnls_h12(2, nsetp - 1, npp1, m, &a[j*m+0], 1, &up,
                           &a[jj*m+0], 1, m, 1);
             }
-        if(nsetp!=m)
-            for(l=npp1; l<m; l++)
-                a[j*m+l]=0.;
-        w[j]=0.;
+        if (nsetp != m)
+            for (l = npp1; l < m; l++)
+                a[j*m+l] = 0.;
+        w[j] = 0.;
         /* Solve the triangular system; store the solution temporarily in Z[] */
-        for(l=0; l<nsetp; l++)
+        for (l = 0; l < nsetp; l++)
         {
-            ip=nsetp-(l+1);
-            if(l!=0)
-                for(ii=0; ii<=ip; ii++)
-                    zz[ii]-=a[jj*m+ii]*zz[ip+1];
-            jj=index[ip];
-            zz[ip]/=a[jj*m+ip];
+            ip = nsetp - (l + 1);
+            if (l != 0)
+                for (ii = 0; ii <= ip; ii++)
+                    zz[ii] -= a[jj*m+ii] * zz[ip+1];
+            jj = index[ip];
+            zz[ip] /= a[jj*m+ip];
         }
 
         /* Secondary loop begins here */
-        while(++iter<itmax)
+        while (++iter < itmax)
         {
             /* See if all new constrained coeffs are feasible; if not, compute alpha */
-            for(alpha=2.0, ip=0; ip<nsetp; ip++)
+            for (alpha = 2.0, ip = 0; ip < nsetp; ip++)
             {
-                l=index[ip];
-                if(zz[ip]<=0.)
+                l = index[ip];
+                if (zz[ip] <= 0.)
                 {
-                    t=-x[l]/(zz[ip]-x[l]);
-                    if(alpha>t)
+                    t = -x[l] / (zz[ip] - x[l]);
+                    if (alpha > t)
                     {
-                        alpha=t;
-                        jj=ip-1;
+                        alpha = t;
+                        jj = ip - 1;
                     }
                 }
             }
 
             /* If all new constrained coeffs are feasible then still alpha==2. */
             /* If so, then exit from the secondary loop to main loop */
-            if(alpha==2.0)
+            if (alpha == 2.0)
                 break;
             /* Use alpha (0.<alpha<1.) to interpolate between old X and new ZZ */
-            for(ip=0; ip<nsetp; ip++)
+            for (ip = 0; ip < nsetp; ip++)
             {
-                l=index[ip];
-                x[l]+=alpha*(zz[ip]-x[l]);
+                l = index[ip];
+                x[l] += alpha * (zz[ip] - x[l]);
             }
 
             /* Modify A and B and the INDEX arrays to move coefficient i */
             /* from set P to set Z. */
-            k=index[jj+1];
-            pfeas=1;
+            k = index[jj+1];
+            pfeas = 1;
             do
             {
-                x[k]=0.;
-                if(jj!=(nsetp-1))
+                x[k] = 0.;
+                if (jj != (nsetp - 1))
                 {
                     jj++;
-                    for(j=jj+1; j<nsetp; j++)
+                    for (j = jj + 1; j < nsetp; j++)
                     {
-                        ii=index[j];
-                        index[j-1]=ii;
+                        ii = index[j];
+                        index[j-1] = ii;
                         _nnls_g1(a[ii*m+j-1], a[ii*m+j], &cc, &ss, &a[ii*m+j-1]);
-                        for(a[ii*m+j]=0., l=0; l<n; l++)
-                            if(l!=ii)
+                        for (a[ii*m+j] = 0., l = 0; l < n; l++)
+                            if (l != ii)
                             {
                                 /* Apply procedure G2 (CC,SS,A(J-1,L),A(J,L)) */
-                                temp=a[l*m+j-1];
-                                a[l*m+j-1]=cc*temp+ss*a[l*m+j];
-                                a[l*m+j]=-ss*temp+cc*a[l*m+j];
+                                temp = a[l*m+j-1];
+                                a[l*m+j-1] = cc * temp + ss * a[l*m+j];
+                                a[l*m+j] = -ss * temp + cc * a[l*m+j];
                             }
                         /* Apply procedure G2 (CC,SS,B(J-1),B(J)) */
-                        temp=b[j-1];
-                        b[j-1]=cc*temp+ss*b[j];
-                        b[j]=-ss*temp+cc*b[j];
+                        temp = b[j-1];
+                        b[j-1] = cc * temp + ss * b[j];
+                        b[j] = -ss * temp + cc * b[j];
                     }
                 }
-                npp1=nsetp-1;
+                npp1 = nsetp - 1;
                 nsetp--;
                 iz1--;
-                index[iz1]=k;
+                index[iz1] = k;
 
                 /* See if the remaining coeffs in set P are feasible; they should */
                 /* be because of the way alpha was determined. If any are */
                 /* infeasible it is due to round-off error. Any that are */
                 /* nonpositive will be set to zero and moved from set P to set Z */
-                for(jj=0; jj<nsetp; jj++)
+                for (jj = 0; jj < nsetp; jj++)
                 {
-                    k=index[jj];
-                    if(x[k]<=0.)
+                    k = index[jj];
+                    if (x[k] <= 0.)
                     {
-                        pfeas=0;
+                        pfeas = 0;
                         break;
                     }
                 }
             }
-            while(pfeas==0);
+            while (pfeas == 0);
 
             /* Copy B[] into zz[], then solve again and loop back */
-            for(k=0; k<m; k++)
-                zz[k]=b[k];
-            for(l=0; l<nsetp; l++)
+            for (k = 0; k < m; k++)
+                zz[k] = b[k];
+            for (l = 0; l < nsetp; l++)
             {
-                ip=nsetp-(l+1);
-                if(l!=0)
-                    for(ii=0; ii<=ip; ii++)
-                        zz[ii]-=a[jj*m+ii]*zz[ip+1];
-                jj=index[ip];
-                zz[ip]/=a[jj*m+ip];
+                ip = nsetp - (l + 1);
+                if (l != 0)
+                    for (ii = 0; ii <= ip; ii++)
+                        zz[ii] -= a[jj*m+ii] * zz[ip+1];
+                jj = index[ip];
+                zz[ip] /= a[jj*m+ip];
             }
         } /* end of secondary loop */
-        if(iter>itmax)
+        if (iter > itmax)
         {
-            ret=1;
+            ret = 1;
             break;
         }
-        for(ip=0; ip<nsetp; ip++)
+        for (ip = 0; ip < nsetp; ip++)
         {
-            k=index[ip];
-            x[k]=zz[ip];
+            k = index[ip];
+            x[k] = zz[ip];
         }
     } /* end of main loop */
     /* Compute the norm of the final residual vector */
-    sm=0.;
-    if(npp1<m)
-        for(k=npp1; k<m; k++)
-            sm+=(b[k]*b[k]);
+    sm = 0.;
+    if (npp1 < m)
+        for (k = npp1; k < m; k++)
+            sm += (b[k] * b[k]);
     else
-        for(j=0; j<n; j++)
-            w[j]=0.;
-    *rnorm=sqrt(sm);
+        for (j = 0; j < n; j++)
+            w[j] = 0.;
+    *rnorm = sqrt(sm);
     /* Free working space, if it was allocated here */
-    if(wp==NULL)
+    if (wp == NULL)
         free(w);
-    if(zzp==NULL)
+    if (zzp == NULL)
         free(zz);
-    if(indexp==NULL)
+    if (indexp == NULL)
         free(index);
     return(ret);
 } /* nnls_ */
@@ -1485,12 +1492,12 @@ int nnls(
 /****************************************************************************/
 /*
   nnlsWght()
- 
+
   Algorithm for weighting the problem that is given to nnls-algorithm.
   Square roots of weights are used because in nnls the difference
   w*A-w*b is squared.
   Algorithm returns zero if successful, 1 if arguments are inappropriate.
- 
+
 */
 int nnlsWght(int N, int M, double *A, double *b, double *weight)
 {
@@ -1498,31 +1505,31 @@ int nnlsWght(int N, int M, double *A, double *b, double *weight)
     double *w;
 
     /* Check the arguments */
-    if(N<1 || M<1 || A==NULL || b==NULL || weight==NULL)
+    if (N < 1 || M < 1 || A == NULL || b == NULL || weight == NULL)
         return(1);
 
     /* Allocate memory */
-    w=(double*)malloc(M*sizeof(double));
-    if(w==NULL)
+    w = (double*)malloc(M * sizeof(double));
+    if (w == NULL)
         return(2);
 
     /* Check that weights are not zero and get the square roots of them to w[] */
-    for(m=0; m<M; m++)
+    for (m = 0; m < M; m++)
     {
-        if(weight[m]<=1.0e-20)
-            w[m]=0.0;
+        if (weight[m] <= 1.0e-20)
+            w[m] = 0.0;
         else
-            w[m]=sqrt(weight[m]);
+            w[m] = sqrt(weight[m]);
     }
 
     /* Multiply rows of matrix A and elements of vector b with weights*/
-    for(m=0; m<M; m++)
+    for (m = 0; m < M; m++)
     {
-        for(n=0; n<N; n++)
+        for (n = 0; n < N; n++)
         {
-            A[n*M+m]*=w[m];
+            A[n*M+m] *= w[m];
         }
-        b[m]*=w[m];
+        b[m] *= w[m];
     }
 
     free(w);
@@ -1544,17 +1551,17 @@ double Pythag(double a, double b)
 }
 
 #define SVDMAXITER 1000
-void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
+void svdcmp(double *U, int Lines, int Columns, double *W, double *V)
 {
-    double	*rv1 = (double *)NULL;
-    double	Norm, Scale;
-    double	c, f, g, h, s;
-    double	x, y, z;
-    long	i, its, j, jj, k, l = 0L, nm = 0L;
+    double *rv1 = (double *)NULL;
+    double Norm, Scale;
+    double c, f, g, h, s;
+    double x, y, z;
+    long i, its, j, jj, k, l = 0L, nm = 0L;
     bool    Flag;
-    int     MaxIterations=SVDMAXITER;
+    int     MaxIterations = SVDMAXITER;
 
-    ask_Tvector(rv1,0,Columns*Columns-1);
+    ask_Tvector(rv1, 0, Columns*Columns - 1);
     g = Scale = Norm = 0.0;
     for (i = 0L; (i < Columns); i++)
     {
@@ -1772,7 +1779,7 @@ void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
             }
             if (its == MaxIterations)
             {
-                free_Tvector(rv1,0,Columns*Columns-1);
+                free_Tvector(rv1, 0, Columns*Columns - 1);
                 return;
             }
             x = W[l];
@@ -1830,34 +1837,34 @@ void svdcmp(double *U,int Lines,int Columns,double *W, double *V)
             W[k] = x;
         }
     }
-    free_Tvector(rv1,0,Columns*Columns-1);
+    free_Tvector(rv1, 0, Columns*Columns - 1);
 }
 
-void svbksb(double *u,double *w,double *v, int m,int n,double *b,double *x)
+void svbksb(double *u, double *w, double *v, int m, int n, double *b, double *x)
 {
-    int jj,j,i;
-    double s,*tmp;
+    int jj, j, i;
+    double s, *tmp;
 
-    ask_Tvector(tmp,1,n);
-    for (j=1;j<=n;j++)
+    ask_Tvector(tmp, 1, n);
+    for (j = 1;j <= n;j++)
     {
-        s=0.0;
+        s = 0.0;
         if (w[j])
         {
-            for (i=1;i<=m;i++)
-                s += u[i*n+j]*b[i];
+            for (i = 1;i <= m;i++)
+                s += u[i*n+j] * b[i];
             s /= w[j];
         }
-        tmp[j]=s;
+        tmp[j] = s;
     }
-    for (j=1;j<=n;j++)
+    for (j = 1;j <= n;j++)
     {
-        s=0.0;
-        for (jj=1;jj<=n;jj++)
-            s += v[j*n+jj]*tmp[jj];
-        x[j]=s;
+        s = 0.0;
+        for (jj = 1;jj <= n;jj++)
+            s += v[j*n+jj] * tmp[jj];
+        x[j] = s;
     }
-    free_Tvector(tmp,1,n);
+    free_Tvector(tmp, 1, n);
 }
 
 /* Savitzky-Golay filter coefficients. ------------------------------------- */
@@ -1872,49 +1879,49 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
  m is the order of the smoothing polynomial, also equal to the highest conserved
  moment; usual values are m = 2or m = 4. */
 {
-    int imj,ipj,j,k,kk,mm,*indx;
-    double d,fac,sum,*a,*b;
+    int imj, ipj, j, k, kk, mm, *indx;
+    double d, fac, sum, *a, *b;
 
-    if (np < nl+nr+1 || nl < 0 || nr < 0 || ld > m||nl+nr < m)
+    if (np < nl + nr + 1 || nl < 0 || nr < 0 || ld > m || nl + nr < m)
         nrerror("SAVGOL: bad arguments");
-    ask_Tvector(indx,1,m+1);
-    ask_Tvector(a,1,(m+1)*(m+1));
-    ask_Tvector(b,1,m+1);
+    ask_Tvector(indx, 1, m + 1);
+    ask_Tvector(a, 1, (m + 1)*(m + 1));
+    ask_Tvector(b, 1, m + 1);
     // Set up the normal equations of the desired least-squares fit.
-    for (ipj=0;ipj<=(m << 1);ipj++)
+    for (ipj = 0;ipj <= (m << 1);ipj++)
     {
-        sum=(ipj ? 0.0 : 1.0);
-        for (k=1;k<=nr;k++)
-            sum += pow((double)k,(double)ipj);
-        for (k=1;k<=nl;k++)
-            sum += pow((double)-k,(double)ipj);
-        mm=MIN(ipj,2*m-ipj);
-        for (imj = -mm;imj<=mm;imj+=2)
-            a[(1+(ipj+imj)/2)*(m+1)+1+(ipj-imj)/2]=sum;
+        sum = (ipj ? 0.0 : 1.0);
+        for (k = 1;k <= nr;k++)
+            sum += pow((double)k, (double)ipj);
+        for (k = 1;k <= nl;k++)
+            sum += pow((double) - k, (double)ipj);
+        mm = MIN(ipj, 2 * m - ipj);
+        for (imj = -mm;imj <= mm;imj += 2)
+            a[(1+(ipj+imj)/2)*(m+1)+1+(ipj-imj)/2] = sum;
     }
     // Solve them: LU decomposition.
-    ludcmp(a,m+1,indx,&d);
+    ludcmp(a, m + 1, indx, &d);
 
-    for (j=1;j<=m+1;j++)
-        b[j]=0.0;
-    b[ld+1]=1.0;
+    for (j = 1;j <= m + 1;j++)
+        b[j] = 0.0;
+    b[ld+1] = 1.0;
     // Right-hand side vector is unit vector, depending on which derivative we want.
-    lubksb(a,m+1,indx,b); // Get one row of the inverse matrix.
-    for (kk=1;kk<=np;kk++)
-        c[kk]=0.0; // Zero the output array (it may be bigger than number of coeficients).
-    for (k = -nl;k<=nr;k++)
+    lubksb(a, m + 1, indx, b); // Get one row of the inverse matrix.
+    for (kk = 1;kk <= np;kk++)
+        c[kk] = 0.0; // Zero the output array (it may be bigger than number of coeficients).
+    for (k = -nl;k <= nr;k++)
     {
-        sum=b[1]; // Each Savitzky-Golay coeficient is the dot product of powers of an integer with the inverse matrix row.
-        fac=1.0;
-        for (mm=1;mm<=m;mm++)
-            sum += b[mm+1]*(fac *= k);
-        kk=((np-k) % np)+1; // Store in wrap-around order.
-        c[kk]=sum;
+        sum = b[1]; // Each Savitzky-Golay coeficient is the dot product of powers of an integer with the inverse matrix row.
+        fac = 1.0;
+        for (mm = 1;mm <= m;mm++)
+            sum += b[mm+1] * (fac *= k);
+        kk = ((np - k) % np) + 1; // Store in wrap-around order.
+        c[kk] = sum;
     }
 
-    free_Tvector(b,1,m+1);
-    free_Tvector(a,1,(m+1)*(m+1));
-    free_Tvector(indx,1,m+1);
+    free_Tvector(b, 1, m + 1);
+    free_Tvector(a, 1, (m + 1)*(m + 1));
+    free_Tvector(indx, 1, m + 1);
 }
 
 // CFSQP -------------------------------------------------------------------
@@ -1925,62 +1932,62 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
 #ifndef FALSE
 #define FALSE 0
 #endif
-int x_is_new=TRUE;
+int x_is_new = TRUE;
 
 /* Declare and initialize user-accessible stopping criterion */
-double objeps=-1.e0;
-double objrep=-1.e0;
-double gLgeps=-1.e0;
+double objeps = -1.e0;
+double objrep = -1.e0;
+double gLgeps = -1.e0;
 extern int nstop;
 
 /* CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
                      !!!! NOTICE !!!!
- 
+
 1. The routines contained in this file are due to Prof. K.Schittkowski
     of the University of Bayreuth, Germany (modification of routines
     due to Prof. MJD Powell at the University of Cambridge).  They can
     be freely distributed.
- 
+
 2. A few minor modifications were performed at the University of
     Maryland. They are marked in the code by "umd".
- 
+
                                       A.L. Tits, J.L. Zhou, and
-				      Craig Lawrence
+          Craig Lawrence
                                       University of Maryland
- 
+
  ***********************************************************************
- 
- 
- 
+
+
+
              SOLUTION OF QUADRATIC PROGRAMMING PROBLEMS
- 
- 
- 
+
+
+
    QL0001 SOLVES THE QUADRATIC PROGRAMMING PROBLEM
- 
+
    MINIMIZE        .5*X'*C*X + D'*X
    SUBJECT TO      A(J)*X  +  B(J)   =  0  ,  J=1,...,ME
                    A(J)*X  +  B(J)  >=  0  ,  J=ME+1,...,M
                    XL  <=  X  <=  XU
- 
+
 HERE C MUST BE AN N BY N SYMMETRIC AND POSITIVE MATRIX, D AN N-DIMENSIONAL
 VECTOR, A AN M BY N MATRIX AND B AN M-DIMENSIONAL VECTOR. THE ABOVE
 SITUATION IS INDICATED BY IWAR(1)=1. ALTERNATIVELY, I.E. IF IWAR(1)=0,
 THE OBJECTIVE FUNCTION MATRIX CAN ALSO BE PROVIDED IN FACTORIZED FORM.
 IN THIS CASE, C IS AN UPPER TRIANGULAR MATRIX.
- 
+
 THE SUBROUTINE REORGANIZES SOME DATA SO THAT THE PROBLEM CAN BE SOLVED
 BY A MODIFICATION OF AN ALGORITHM PROPOSED BY POWELL (1983).
- 
- 
+
+
 USAGE:
- 
+
       QL0001(M,ME,MMAX,N,NMAX,MNN,C,D,A,B,XL,XU,X,U,IOUT,IFAIL,IPRINT,
              WAR,LWAR,IWAR,LIWAR)
- 
- 
+
+
    DEFINITION OF THE PARAMETERS:
- 
+
    M :        TOTAL NUMBER OF CONSTRAINTS.
    ME :       NUMBER OF EQUALITY CONSTRAINTS.
    MMAX :     ROW DIMENSION OF A. MMAX MUST BE AT LEAST ONE AND GREATER
@@ -2026,25 +2033,25 @@ USAGE:
               IT IS ASSUMED THAT THE USER PROVIDES THE INITIAL FAC-
               TORIZATION BY HIMSELF AND STORES IT IN THE UPPER TRIAN-
               GULAR PART OF THE ARRAY C.
- 
+
    A NAMED COMMON-BLOCK  /CMACHE/EPS   MUST BE PROVIDED BY THE USER,
    WHERE EPS DEFINES A GUESS FOR THE UNDERLYING MACHINE PRECISION.
- 
- 
+
+
    AUTHOR:    K. SCHITTKOWSKI,
               MATHEMATISCHES INSTITUT,
               UNIVERSITAET BAYREUTH,
               8580 BAYREUTH,
               GERMANY, F.R.
- 
- 
+
+
    VERSION:   1.4  (MARCH, 1987)
 */
 /* f2c.h  --  Standard Fortran to C header file */
 
 /**  barf  [ba:rf]  2.  "He suggested using FORTRAN, and everybody barfed."
- 
-	- From The Shogakukan DICTIONARY OF NEW ENGLISH (Second edition) */
+
+ - From The Shogakukan DICTIONARY OF NEW ENGLISH (Second edition) */
 
 #ifndef F2C_INCLUDE
 #define F2C_INCLUDE
@@ -2150,34 +2157,34 @@ typedef struct
     ftnint inunit;
     char *infile;
     ftnlen infilen;
-    ftnint	*inex;	/*parameters in standard's order*/
-    ftnint	*inopen;
-    ftnint	*innum;
-    ftnint	*innamed;
-    char	*inname;
-    ftnlen	innamlen;
-    char	*inacc;
-    ftnlen	inacclen;
-    char	*inseq;
-    ftnlen	inseqlen;
-    char 	*indir;
-    ftnlen	indirlen;
-    char	*infmt;
-    ftnlen	infmtlen;
-    char	*inform;
-    ftnint	informlen;
-    char	*inunf;
-    ftnlen	inunflen;
-    ftnint	*inrecl;
-    ftnint	*innrec;
-    char	*inblank;
-    ftnlen	inblanklen;
+    ftnint *inex; /*parameters in standard's order*/
+    ftnint *inopen;
+    ftnint *innum;
+    ftnint *innamed;
+    char *inname;
+    ftnlen innamlen;
+    char *inacc;
+    ftnlen inacclen;
+    char *inseq;
+    ftnlen inseqlen;
+    char  *indir;
+    ftnlen indirlen;
+    char *infmt;
+    ftnlen infmtlen;
+    char *inform;
+    ftnint informlen;
+    char *inunf;
+    ftnlen inunflen;
+    ftnint *inrecl;
+    ftnint *innrec;
+    char *inblank;
+    ftnlen inblanklen;
 }
 inlist;
 
 #define VOID void
 
-union Multitype {	/* for multiple entry points */
+union Multitype { /* for multiple entry points */
     shortint h;
     integer i;
     cfsqpreal r;
@@ -2191,7 +2198,7 @@ typedef union Multitype Multitype;
 typedef long Long;
 
 struct Vardesc
-{	/* for Namelist */
+{ /* for Namelist */
     char *name;
     char *addr;
     Long *dims;
@@ -2219,34 +2226,34 @@ typedef struct Namelist Namelist;
 #define F2C_proc_par_types 1
 #ifdef __cplusplus
 typedef int /* Unknown procedure type */ (*U_fp)(...);
-typedef shortint (*J_fp)(...);
-typedef integer (*I_fp)(...);
-typedef cfsqpreal (*R_fp)(...);
-typedef doublereal (*D_fp)(...), (*E_fp)(...);
-typedef /* Complex */ VOID (*C_fp)(...);
-typedef /* Double Complex */ VOID (*Z_fp)(...);
-typedef logical (*L_fp)(...);
-typedef shortlogical (*K_fp)(...);
-typedef /* Character */ VOID (*H_fp)(...);
-typedef /* Subroutine */ int (*S_fp)(...);
+typedef shortint(*J_fp)(...);
+typedef integer(*I_fp)(...);
+typedef cfsqpreal(*R_fp)(...);
+typedef doublereal(*D_fp)(...), (*E_fp)(...);
+typedef /* Complex */ VOID(*C_fp)(...);
+typedef /* Double Complex */ VOID(*Z_fp)(...);
+typedef logical(*L_fp)(...);
+typedef shortlogical(*K_fp)(...);
+typedef /* Character */ VOID(*H_fp)(...);
+typedef /* Subroutine */ int(*S_fp)(...);
 #else
 typedef int /* Unknown procedure type */ (*U_fp)();
-typedef shortint (*J_fp)();
-typedef integer (*I_fp)();
-typedef cfsqpreal (*R_fp)();
-typedef doublereal (*D_fp)(), (*E_fp)();
-typedef /* Complex */ VOID (*C_fp)();
-typedef /* Double Complex */ VOID (*Z_fp)();
-typedef logical (*L_fp)();
-typedef shortlogical (*K_fp)();
-typedef /* Character */ VOID (*H_fp)();
-typedef /* Subroutine */ int (*S_fp)();
+typedef shortint(*J_fp)();
+typedef integer(*I_fp)();
+typedef cfsqpreal(*R_fp)();
+typedef doublereal(*D_fp)(), (*E_fp)();
+typedef /* Complex */ VOID(*C_fp)();
+typedef /* Double Complex */ VOID(*Z_fp)();
+typedef logical(*L_fp)();
+typedef shortlogical(*K_fp)();
+typedef /* Character */ VOID(*H_fp)();
+typedef /* Subroutine */ int(*S_fp)();
 #endif
 /* E_fp is for real functions when -R is not specified */
-typedef VOID C_f;	/* complex function */
-typedef VOID H_f;	/* character function */
-typedef VOID Z_f;	/* double complex function */
-typedef doublereal E_f;	/* real function with -R not specified */
+typedef VOID C_f; /* complex function */
+typedef VOID H_f; /* character function */
+typedef VOID Z_f; /* double complex function */
+typedef doublereal E_f; /* real function with -R not specified */
 
 /* undef any lower-case symbols that your C compiler predefines, e.g.: */
 
@@ -2298,12 +2305,12 @@ ql0002_ is declared here to provide ANSI C compliance.
 */
 #ifdef __STDC__
 
-int ql0002_(integer *n,integer *m,integer *meq,integer *mmax,
-            integer *mn,integer *mnn,integer *nmax,
+int ql0002_(integer *n, integer *m, integer *meq, integer *mmax,
+            integer *mn, integer *mnn, integer *nmax,
             logical *lql,
-            doublereal *a,doublereal *b,doublereal *grad,
-            doublereal *g,doublereal *xl,doublereal *xu,doublereal *x,
-            integer *nact,integer *iact,integer *maxit,
+            doublereal *a, doublereal *b, doublereal *grad,
+            doublereal *g, doublereal *xl, doublereal *xu, doublereal *x,
+            integer *nact, integer *iact, integer *maxit,
             doublereal *vsmall,
             integer *info,
             doublereal *diag, doublereal *w,
@@ -2323,10 +2330,10 @@ Two alternative definitions are provided in order to give ANSI
 compliance.
 */
 #ifdef __STDC__
-int ql0001_(int *m,int *me,int *mmax,int *n,int *nmax,int *mnn,
-            double *c,double *d,double *a,double *b,double *xl,
-            double *xu,double *x,double *u,int *iout,int *ifail,
-            int *iprint,double *war,int *lwar,int *iwar,int *liwar,
+int ql0001_(int *m, int *me, int *mmax, int *n, int *nmax, int *mnn,
+            double *c, double *d, double *a, double *b, double *xl,
+            double *xu, double *x, double *u, int *iout, int *ifail,
+            int *iprint, double *war, int *lwar, int *iwar, int *liwar,
             double *eps1)
 #else
 /* Subroutine */
@@ -2372,13 +2379,34 @@ doublereal *eps1;
     static integer inw1, inw2;
 
     /* Fortran I/O blocks */
-    static cilist io___16 = { 0, 0, 0, fmt_1000, 0 };
-    static cilist io___18 = { 0, 0, 0, fmt_1100, 0 };
-    static cilist io___19 = { 0, 0, 0, fmt_1200, 0 };
-    static cilist io___20 = { 0, 0, 0, fmt_1210, 0 };
-    static cilist io___21 = { 0, 0, 0, fmt_1220, 0 };
-    static cilist io___22 = { 0, 0, 0, fmt_1300, 0 };
-    static cilist io___23 = { 0, 0, 0, fmt_1400, 0 };
+    static cilist io___16 =
+        {
+            0, 0, 0, fmt_1000, 0
+        };
+    static cilist io___18 =
+        {
+            0, 0, 0, fmt_1100, 0
+        };
+    static cilist io___19 =
+        {
+            0, 0, 0, fmt_1200, 0
+        };
+    static cilist io___20 =
+        {
+            0, 0, 0, fmt_1210, 0
+        };
+    static cilist io___21 =
+        {
+            0, 0, 0, fmt_1220, 0
+        };
+    static cilist io___22 =
+        {
+            0, 0, 0, fmt_1300, 0
+        };
+    static cilist io___23 =
+        {
+            0, 0, 0, fmt_1400, 0
+        };
 
 
 
@@ -2487,10 +2515,10 @@ L20:
     }
     /*
         if (*iprint > 0 && idiag > 0) {
-    	io___16.ciunit = *iout;
-    	s_wsfe(&io___16);
-    	do_fio(&c__1, (char *)&idiag, (ftnlen)sizeof(integer));
-    	e_wsfe();
+     io___16.ciunit = *iout;
+     s_wsfe(&io___16);
+     do_fio(&c__1, (char *)&idiag, (ftnlen)sizeof(integer));
+     e_wsfe();
         }
     */
     if (info < 0)
@@ -2527,15 +2555,15 @@ L70:
     *ifail = -info + 10;
     /*
         if (*iprint > 0 && nact > 0) {
-    	io___18.ciunit = *iout;
-    	s_wsfe(&io___18);
-    	i__1 = -info;
-    	do_fio(&c__1, (char *)&i__1, (ftnlen)sizeof(integer));
-    	i__2 = nact;
-    	for (i = 1; i <= i__2; ++i) {
-    	    do_fio(&c__1, (char *)&iwar[i], (ftnlen)sizeof(integer));
-    	}
-    	e_wsfe();
+     io___18.ciunit = *iout;
+     s_wsfe(&io___18);
+     i__1 = -info;
+     do_fio(&c__1, (char *)&i__1, (ftnlen)sizeof(integer));
+     i__2 = nact;
+     for (i = 1; i <= i__2; ++i) {
+         do_fio(&c__1, (char *)&iwar[i], (ftnlen)sizeof(integer));
+     }
+     e_wsfe();
         }
     */
     return 0;
@@ -2543,9 +2571,9 @@ L80:
     *ifail = 5;
     /*
         if (*iprint > 0) {
-    	io___19.ciunit = *iout;
-    	s_wsfe(&io___19);
-    	e_wsfe();
+     io___19.ciunit = *iout;
+     s_wsfe(&io___19);
+     e_wsfe();
         }
     */
     return 0;
@@ -2553,9 +2581,9 @@ L81:
     *ifail = 5;
     /*
         if (*iprint > 0) {
-    	io___20.ciunit = *iout;
-    	s_wsfe(&io___20);
-    	e_wsfe();
+     io___20.ciunit = *iout;
+     s_wsfe(&io___20);
+     e_wsfe();
         }
     */
     return 0;
@@ -2563,9 +2591,9 @@ L82:
     *ifail = 5;
     /*
         if (*iprint > 0) {
-    	io___21.ciunit = *iout;
-    	s_wsfe(&io___21);
-    	e_wsfe();
+     io___21.ciunit = *iout;
+     s_wsfe(&io___21);
+     e_wsfe();
         }
     */
     return 0;
@@ -2573,10 +2601,10 @@ L40:
     *ifail = 1;
     /*
         if (*iprint > 0) {
-    	io___22.ciunit = *iout;
-    	s_wsfe(&io___22);
-    	do_fio(&c__1, (char *)&maxit, (ftnlen)sizeof(integer));
-    	e_wsfe();
+     io___22.ciunit = *iout;
+     s_wsfe(&io___22);
+     do_fio(&c__1, (char *)&maxit, (ftnlen)sizeof(integer));
+     e_wsfe();
         }
     */
     return 0;
@@ -2584,9 +2612,9 @@ L90:
     *ifail = 2;
     /*
         if (*iprint > 0) {
-    	io___23.ciunit = *iout;
-    	s_wsfe(&io___23);
-    	e_wsfe();
+     io___23.ciunit = *iout;
+     s_wsfe(&io___23);
+     e_wsfe();
         }
     */
     return 0;
@@ -2602,12 +2630,12 @@ compliance.
 (Thanks got to Martin Wauchope for providing this correction)
 */
 #ifdef __STDC__
-int ql0002_(integer *n,integer *m,integer *meq,integer *mmax,
-            integer *mn,integer *mnn,integer *nmax,
+int ql0002_(integer *n, integer *m, integer *meq, integer *mmax,
+            integer *mn, integer *mnn, integer *nmax,
             logical *lql,
-            doublereal *a,doublereal *b,doublereal *grad,
-            doublereal *g,doublereal *xl,doublereal *xu,doublereal *x,
-            integer *nact,integer *iact,integer *maxit,
+            doublereal *a, doublereal *b, doublereal *grad,
+            doublereal *g, doublereal *xl, doublereal *xu, doublereal *x,
+            integer *nact, integer *iact, integer *maxit,
             doublereal *vsmall,
             integer *info,
             doublereal *diag, doublereal *w,
@@ -2741,7 +2769,7 @@ integer *lw;
     diagr = two;
     xmagr = .01;
     ifinc = 3;
-    kfinc = max(10,*n);
+    kfinc = max(10, *n);
 
     /*     FIND THE RECIPROCALS OF THE LENGTHS OF THE CONSTRAINT NORMALS. */
     /*     RETURN IF A CONSTRAINT IS INFEASIBLE DUE TO A ZERO NORMAL. */
@@ -2802,7 +2830,7 @@ L45:
 
     /*     IF NECESSARY INCREASE THE DIAGONAL ELEMENTS OF G. */
 
-    if (! (*lql))
+    if (!(*lql))
     {
         goto L165;
     }
@@ -2814,7 +2842,7 @@ L45:
         w[id] = g[i + i * g_dim1];
         /* Computing MAX */
         d__1 = *diag, d__2 = *vsmall - w[id];
-        *diag = max(d__1,d__2);
+        *diag = max(d__1, d__2);
         if (i == *n)
         {
             goto L60;
@@ -2825,7 +2853,7 @@ L45:
         {
             /* Computing MIN */
             d__1 = w[id], d__2 = g[j + j * g_dim1];
-            ga = -min(d__1,d__2);
+            ga = -min(d__1, d__2);
             gb = (d__1 = w[id] - g[j + j * g_dim1], abs(d__1)) + (d__2 = g[i
                     + j * g_dim1], abs(d__2));
             if (gb > zero)
@@ -2835,7 +2863,7 @@ L45:
                 ga += d__1 * d__1 / gb;
             }
             /* L55: */
-            *diag = max(*diag,ga);
+            *diag = max(*diag, ga);
         }
 L60:
         ;
@@ -3802,7 +3830,7 @@ L590:
         {
             /* Computing MAX */
             d__1 = zero, d__2 = w[k];
-            w[k] = max(d__1,d__2);
+            w[k] = max(d__1, d__2);
         }
         /* L600: */
     }
@@ -3821,7 +3849,7 @@ L601:
     goto L800;
 L610:
     iws = iws - *nact - 1;
-    nu = min(*n,nu);
+    nu = min(*n, nu);
     i__2 = nu;
     for (i = 1; i <= i__2; ++i)
     {
@@ -3934,7 +3962,7 @@ L700:
         goto L250;
     }
 L710:
-    if (! (*lql))
+    if (!(*lql))
     {
         return 0;
     }
@@ -4074,7 +4102,7 @@ L810:
     ir = ir + kdrop + 1;
     /* Computing MAX */
     d__3 = (d__1 = w[ir - 1], abs(d__1)), d__4 = (d__2 = w[ir], abs(d__2));
-    temp = max(d__3,d__4);
+    temp = max(d__3, d__4);
     /* Computing 2nd power */
     d__1 = w[ir - 1] / temp;
     /* Computing 2nd power */
@@ -4167,7 +4195,7 @@ L880:
     }
     /* Computing MAX */
     d__3 = (d__1 = w[is - 1], abs(d__1)), d__4 = (d__2 = w[is], abs(d__2));
-    temp = max(d__3,d__4);
+    temp = max(d__3, d__4);
     /* Computing 2nd power */
     d__1 = w[is - 1] / temp;
     /* Computing 2nd power */
@@ -4225,7 +4253,7 @@ L920:
         ;
     }
     /* L925: */
-    xmag = max(xmag,sum);
+    xmag = max(xmag, sum);
     switch ((int)jflag)
     {
     case 1:
@@ -4289,7 +4317,7 @@ ql0002:
 #define CONSTR 2
 
 /***************************************************************/
-/*     Global Variables and Data Structures 	               */
+/*     Global Variables and Data Structures                 */
 /***************************************************************/
 
 struct _objective
@@ -4325,32 +4353,32 @@ struct _violation
     int index;
 };
 
-double 	bgbnd,tolfea;
-int  nstop,maxit;
+double  bgbnd, tolfea;
+int  nstop, maxit;
 
 struct Tglob_info
 {
     int nnineq, M, ncallg, ncallf, mode, modec;
-    int tot_actf_sip,tot_actg_sip,nfsip,ncsipl,ncsipn; /* SIP */
+    int tot_actf_sip, tot_actg_sip, nfsip, ncsipl, ncsipn; /* SIP */
 }
 glob_info;
 
 struct Tglob_prnt
 {
-    int iprint,info,ipd,iter,initvl,iter_mod;
+    int iprint, info, ipd, iter, initvl, iter_mod;
     FILE *io;
 }
 glob_prnt;
 
 struct Tglob_grd
 {
-    double epsmac,rteps,udelta,valnom;
+    double epsmac, rteps, udelta, valnom;
 }
 glob_grd;
 
 struct Tglob_log
 {
-    int dlfeas,local,update,first,rhol_is1,d0_is0,get_ne_mult;
+    int dlfeas, local, update, first, rhol_is1, d0_is0, get_ne_mult;
 }
 glob_log;
 
@@ -4360,31 +4388,31 @@ extern double objrep;
 extern double gLgeps;
 extern int x_is_new;
 
-/* Workspace							 */
+/* Workspace        */
 int     *iw;
-double	*w;
-int 	lenw, leniw;
+double *w;
+int  lenw, leniw;
 
 /***************************************************************/
 /*     Memory Utilities                                        */
 /***************************************************************/
 
 #ifdef __STDC__
-static int 	*make_iv(int);
-static double 	*make_dv(int);
-static double 	**make_dm(int, int);
-static void 	free_iv(int *);
-static void 	free_dv(double *);
-static void 	free_dm(double **, int);
-static double 	*convert(double **, int, int);
+static int  *make_iv(int);
+static double  *make_dv(int);
+static double  **make_dm(int, int);
+static void  free_iv(int *);
+static void  free_dv(double *);
+static void  free_dm(double **, int);
+static double  *convert(double **, int, int);
 #else
-static int 	*make_iv();
-static double 	*make_dv();
-static double 	**make_dm();
-static void 	free_iv();
-static void 	free_dv();
-static void 	free_dm();
-static double 	*convert();
+static int  *make_iv();
+static double  *make_dv();
+static double  **make_dm();
+static void  free_iv();
+static void  free_dv();
+static void  free_dm();
+static double  *convert();
 #endif
 
 /***************************************************************/
@@ -4393,51 +4421,51 @@ static double 	*convert();
 
 #ifdef __STDC__
 int
-ql0001_(int *,int *,int *,int *,int *,int *,double *,double *,
-        double *,double *,double *,double *,double *,double *,
-        int *,int *,int *,double *,int *,int *,int *,double *);
-static void 	diagnl(int, double, double **);
-static void 	error(char string[],int *);
+ql0001_(int *, int *, int *, int *, int *, int *, double *, double *,
+        double *, double *, double *, double *, double *, double *,
+        int *, int *, int *, double *, int *, int *, int *, double *);
+static void  diagnl(int, double, double **);
+static void  error(char string[], int *);
 static void
-estlam(int,int,int *,double,double **,double *,double *,double *,
-       struct _constraint *,double *,double *,double *,double *);
-static double 	*colvec(double **,int,int);
-static double 	scaprd(int,double *,double *);
-static double 	small(void);
-static int 	fuscmp(double,double);
-static int 	indexs(int,int);
-static void 	matrcp(int,double **,int,double **);
-static void 	matrvc(int,int,double **,double *,double *);
-static void 	nullvc(int,double *);
+estlam(int, int, int *, double, double **, double *, double *, double *,
+       struct _constraint *, double *, double *, double *, double *);
+static double  *colvec(double **, int, int);
+static double  scaprd(int, double *, double *);
+static double  small(void);
+static int  fuscmp(double, double);
+static int  indexs(int, int);
+static void  matrcp(int, double **, int, double **);
+static void  matrvc(int, int, double **, double *, double *);
+static void  nullvc(int, double *);
 static void
-resign(int,int,double *,double *,double *,struct _constraint *,
-       double *,int,int);
-static void 	sbout1(FILE *,int,char *,double,double *,int,int);
-static void 	sbout2(FILE *,int,int,char *,char *,double *);
-static void 	shift(int,int,int *);
+resign(int, int, double *, double *, double *, struct _constraint *,
+       double *, int, int);
+static void  sbout1(FILE *, int, char *, double, double *, int, int);
+static void  sbout2(FILE *, int, int, char *, char *, double *);
+static void  shift(int, int, int *);
 static double
-slope(int,int,int,int,int,struct _objective *,double *,double *,
-      double *,double,double,int,double *,int);
-static int	element(int *,int,int);
+slope(int, int, int, int, int, struct _objective *, double *, double *,
+      double *, double, double, int, double *, int);
+static int element(int *, int, int);
 #else
-int  	ql0001_();      /* QLD Subroutine */
-static void 	diagnl();
-static void 	error();
-static void 	estlam();
-static double 	*colvec();
-static double 	scaprd();
-static double 	small();
-static int 	fuscmp();
-static int 	indexs();
-static void 	matrcp();
-static void 	matrvc();
-static void 	nullvc();
-static void 	resign();
-static void 	sbout1();
-static void 	sbout2();
-static void 	shift();
-static double 	slope();
-static int	element();
+int   ql0001_();      /* QLD Subroutine */
+static void  diagnl();
+static void  error();
+static void  estlam();
+static double  *colvec();
+static double  scaprd();
+static double  small();
+static int  fuscmp();
+static int  indexs();
+static void  matrcp();
+static void  matrvc();
+static void  nullvc();
+static void  resign();
+static void  sbout1();
+static void  sbout2();
+static void  shift();
+static double  slope();
+static int element();
 #endif
 
 /**************************************************************/
@@ -4445,13 +4473,13 @@ static int	element();
 /**************************************************************/
 
 #ifdef __STDC__
-void 	grobfd(int,int,double *,double *,void (*)(int,int,
-             double *,double *,void *),void *);
-void 	grcnfd(int,int,double *,double *,void (*)(int,int,
-             double *,double *,void *),void *);
+void  grobfd(int, int, double *, double *, void(*)(int, int,
+             double *, double *, void *), void *);
+void  grcnfd(int, int, double *, double *, void(*)(int, int,
+             double *, double *, void *), void *);
 #else
-void 	grobfd();
-void 	grcnfd();
+void  grobfd();
+void  grcnfd();
 #endif
 
 /**************************************************************/
@@ -4460,81 +4488,81 @@ void 	grcnfd();
 
 #ifdef __STDC__
 static void
-cfsqp1(int,int,int,int,int,int,int,int,int,int,int *,int,
-       int,int,int,double,double,int *,int *,struct _parameter *,
-       struct _constraint *,struct _objective *,double *,
-       void (*)(int,int,double *,double *,void *),
-       void (*)(int,int,double *,double *,void *),
-       void (*)(int,int,double *,double *,
-                void (*)(int,int,double *,double *,void *),void *),
-       void (*)(int,int,double *,double *,
-                void (*)(int,int,double *,double *,void *),void *));
+cfsqp1(int, int, int, int, int, int, int, int, int, int, int *, int,
+       int, int, int, double, double, int *, int *, struct _parameter *,
+       struct _constraint *, struct _objective *, double *,
+       void(*)(int, int, double *, double *, void *),
+       void(*)(int, int, double *, double *, void *),
+       void(*)(int, int, double *, double *,
+               void(*)(int, int, double *, double *, void *), void *),
+       void(*)(int, int, double *, double *,
+               void(*)(int, int, double *, double *, void *), void *));
 static void
-check(int,int,int,int *,int,int,int,int,int,int,int,int *,double,
-      double,struct _parameter *);
+check(int, int, int, int *, int, int, int, int, int, int, int, int *, double,
+      double, struct _parameter *);
 static void
-initpt(int,int,int,int,int,int,int,struct _parameter *,
-       struct _constraint *,void (*)(int,int,double *,double *,void *),
-       void (*)(int,int,double *,double *,
-                void (*)(int,int,double *,double *,void *),void *));
+initpt(int, int, int, int, int, int, int, struct _parameter *,
+       struct _constraint *, void(*)(int, int, double *, double *, void *),
+       void(*)(int, int, double *, double *,
+               void(*)(int, int, double *, double *, void *), void *));
 static void
-dir(int,int,int,int,int,int,int,int,int,int,int,int,double *,
-    double,double,double *,double *,double,double *,double *,int *,
-    int *,int *,int *,int *,int *,struct _parameter *,double *,
-    double *,struct _constraint *,struct _objective *,double *,
-    double *,double *,double *,double *,double *,double **,double *,
-    double *,double *,double *,double **,double **,double *,
-    double *,struct _violation *,void (*)(int,int,double *,double *,
-                                          void *),void (*)(int,int,double *,double *,void *));
+dir(int, int, int, int, int, int, int, int, int, int, int, int, double *,
+    double, double, double *, double *, double, double *, double *, int *,
+    int *, int *, int *, int *, int *, struct _parameter *, double *,
+    double *, struct _constraint *, struct _objective *, double *,
+    double *, double *, double *, double *, double *, double **, double *,
+    double *, double *, double *, double **, double **, double *,
+    double *, struct _violation *, void(*)(int, int, double *, double *,
+                                           void *), void(*)(int, int, double *, double *, void *));
 static void
-step1(int,int,int,int,int,int,int,int,int,int,int,int *,int *,int *,
-      int *,int *,int *,int *,int *,int,double,struct _objective *,
-      double *,double *,double *,double *,double *,double *,double *,
-      double *,double *,double *,double *,struct _constraint *,
-      double *,double *,struct _violation *viol,
-      void (*)(int,int,double *,double *,void *),
-      void (*)(int,int,double *,double *,void *),void *);
+step1(int, int, int, int, int, int, int, int, int, int, int, int *, int *, int *,
+      int *, int *, int *, int *, int *, int, double, struct _objective *,
+      double *, double *, double *, double *, double *, double *, double *,
+      double *, double *, double *, double *, struct _constraint *,
+      double *, double *, struct _violation *viol,
+      void(*)(int, int, double *, double *, void *),
+      void(*)(int, int, double *, double *, void *), void *);
 static void
-hessian(int,int,int,int,int,int,int,int,int,int,int,int *,int,
-        double *,struct _parameter *,struct _objective *,
-        double,double *,double *,double *,double *,double *,
-        struct _constraint *,double *,int *,int *,double *,
-        double *,double *,double **,double *,double,int *,
-        double *,double *,void (*)(int,int,double *,double *,void *),
-        void (*)(int,int,double *,double *,void *),
-        void (*)(int,int,double *,double *,
-                 void (*)(int,int,double *,double *,void *),void *),
-        void (*)(int,int,double *,double *,
-                 void (*)(int,int,double *,double *,void *),void *),
-        double **,double *,double *,struct _violation *);
+hessian(int, int, int, int, int, int, int, int, int, int, int, int *, int,
+        double *, struct _parameter *, struct _objective *,
+        double, double *, double *, double *, double *, double *,
+        struct _constraint *, double *, int *, int *, double *,
+        double *, double *, double **, double *, double, int *,
+        double *, double *, void(*)(int, int, double *, double *, void *),
+        void(*)(int, int, double *, double *, void *),
+        void(*)(int, int, double *, double *,
+                void(*)(int, int, double *, double *, void *), void *),
+        void(*)(int, int, double *, double *,
+                void(*)(int, int, double *, double *, void *), void *),
+        double **, double *, double *, struct _violation *);
 static void
-out(int,int,int,int,int,int,int,int,int,int,int,int *,double *,
-    struct _constraint *,struct _objective *,double,
-    double,double,double,double,int);
+out(int, int, int, int, int, int, int, int, int, int, int, int *, double *,
+    struct _constraint *, struct _objective *, double,
+    double, double, double, double, int);
 static void
-update_omega(int,int,int,int *,int,int,int,int,double,double,
-             struct _constraint *,struct _objective *,double *,
-             struct _violation *,void (*)(int,int,double *,double *,
-                                          void *),void (*)(int,int,double *,double *,void *),
-             void (*)(int,int,double *,double *,
-                      void (*)(int,int,double *,double *,void *),void *),
-             void (*)(int,int,double *,double *,
-                      void (*)(int,int,double *,double *,void *),void *),
-             void *,int);
+update_omega(int, int, int, int *, int, int, int, int, double, double,
+             struct _constraint *, struct _objective *, double *,
+             struct _violation *, void(*)(int, int, double *, double *,
+                                          void *), void(*)(int, int, double *, double *, void *),
+             void(*)(int, int, double *, double *,
+                     void(*)(int, int, double *, double *, void *), void *),
+             void(*)(int, int, double *, double *,
+                     void(*)(int, int, double *, double *, void *), void *),
+             void *, int);
 #else
-static void 	cfsqp1();
-static void 	check();
-static void	initpt();
-static void 	dir();
-static void 	step1();
-static void 	hessian();
-static void 	out();
-static void	update_omega();
+static void  cfsqp1();
+static void  check();
+static void initpt();
+static void  dir();
+static void  step1();
+static void  hessian();
+static void  out();
+static void update_omega();
 #endif
 
 #ifdef __STDC__
 static void
-dealloc(int,int,double *,int *,int *,struct _constraint *cs,
+dealloc(int, int, double *, int *, int *, struct _constraint *cs,
         struct _parameter *);
 #else
 static void dealloc();
@@ -4542,28 +4570,28 @@ static void dealloc();
 
 #ifdef __STDC__
 void
-cfsqp(int nparam,int nf,int nfsr,int nineqn,int nineq,int neqn,
-      int neq,int ncsrl,int ncsrn,int *mesh_pts,
-      int mode,int iprint,int miter,int *inform,double bigbnd,
-      double eps,double epseqn,double udelta,double *bl,double *bu,
-      double *x,double *f,double *g,double *lambda,
-      void (*obj)(int, int, double *, double *,void *),
-      void (*constr)(int,int,double *,double *,void *),
-      void (*gradob)(int,int,double *,double *,
-                     void (*)(int,int,double *,double *,void *),void *),
-      void (*gradcn)(int,int,double *,double *,
-                     void (*)(int,int,double *,double *,void *),void *),
+cfsqp(int nparam, int nf, int nfsr, int nineqn, int nineq, int neqn,
+      int neq, int ncsrl, int ncsrn, int *mesh_pts,
+      int mode, int iprint, int miter, int *inform, double bigbnd,
+      double eps, double epseqn, double udelta, double *bl, double *bu,
+      double *x, double *f, double *g, double *lambda,
+      void(*obj)(int, int, double *, double *, void *),
+      void(*constr)(int, int, double *, double *, void *),
+      void(*gradob)(int, int, double *, double *,
+                    void(*)(int, int, double *, double *, void *), void *),
+      void(*gradcn)(int, int, double *, double *,
+                    void(*)(int, int, double *, double *, void *), void *),
       void *cd)
 #else
 void
-cfsqp(nparam,nf,nfsr,nineqn,nineq,neqn,neq,ncsrl,ncsrn,mesh_pts,
-      mode,iprint,miter,inform,bigbnd,eps,epseqn,udelta,bl,bu,x,
-      f,g,lambda,obj,constr,gradob,gradcn,cd)
-int 	nparam,nf,nfsr,neqn,nineqn,nineq,neq,ncsrl,ncsrn,mode,
-iprint,miter,*mesh_pts,*inform;
-double	bigbnd,eps,epseqn,udelta;
-double	*bl,*bu,*x,*f,*g,*lambda;
-void    (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
+cfsqp(nparam, nf, nfsr, nineqn, nineq, neqn, neq, ncsrl, ncsrn, mesh_pts,
+      mode, iprint, miter, inform, bigbnd, eps, epseqn, udelta, bl, bu, x,
+      f, g, lambda, obj, constr, gradob, gradcn, cd)
+int  nparam, nf, nfsr, neqn, nineqn, nineq, neq, ncsrl, ncsrn, mode,
+iprint, miter, *mesh_pts, *inform;
+double bigbnd, eps, epseqn, udelta;
+double *bl, *bu, *x, *f, *g, *lambda;
+void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
 void    *cd;
 #endif
 
@@ -4573,25 +4601,25 @@ void    *cd;
 *
 * nparam : number of variables
 * nf     : number of objective functions (count each set of sequentially
-*          related objective functions once)			
+*          related objective functions once)
 * nfsr   : number of sets of sequentially related objectives (possibly
-*          zero)						
+*          zero)
 * nineqn : number of nonlinear inequality constraints
 * nineq  : total number of inequality constraints
 * neqn   : number of nonlinear equality constraints
 * neq    : total number of equality constraints
 * ncsrl  : number of sets of linear sequentially related inequality
-*          constraints                 				
+*          constraints
 * ncsrn  : number of sets of nonlinear sequentially related inequality
-*          constraints              				
+*          constraints
 * mesh_pts : array of integers giving the number of actual objectives/
 *            constraints in each sequentially related objective or
-*	     constraint set. The order is as follows:		
-*	     (i) objective sets, (ii) nonlinear constraint sets,
+*      constraint set. The order is as follows:
+*      (i) objective sets, (ii) nonlinear constraint sets,
 *            (iii) linear constraint sets. If one or no sequentially
 *            related constraint or objectives sets are present, the
 *            user may simply pass the address of an integer variable
-*            containing the appropriate number (possibly zero).	
+*            containing the appropriate number (possibly zero).
 * mode   : mode=CBA specifies job options as described below:
 *          A = 0 : ordinary minimax problems
 *            = 1 : ordinary minimax problems with each individual
@@ -4601,7 +4629,7 @@ void    *cd;
 *                  after each iteration
 *            = 1 : monotone decrease of objective function after
 *                  at most four iterations
-*          C = 1 : default operation.				
+*          C = 1 : default operation.
 *            = 2 : requires that constraints always be evaluated
 *                  before objectives during the line search.
 * iprint : print level indicator with the following options-
@@ -4629,8 +4657,8 @@ void    *cd;
 *          inform= 5:failure in attempting to construct d0
 *          inform= 6:failure in attempting to construct d1
 *          inform= 7:inconsistent input data
-*	   inform= 8:new iterate essentially identical to previous
-*		     iterate, though stopping criterion not satisfied.
+*    inform= 8:new iterate essentially identical to previous
+*       iterate, though stopping criterion not satisfied.
 *          inform= 9:penalty parameter too large, unable to satisfy
 *                    nonlinear equality constraint
 * bigbnd : plus infinity
@@ -4642,7 +4670,7 @@ void    *cd;
 *          difference. The actual perturbation is determined by
 *          sign(x_i) X max{udelta, rteps X max{1, |x_i|}} for each
 *          component of x, where rteps is the square root of machine
-*          precision. 						
+*          precision.
 * bl     : array of dimension nparam,containing lower bound of x
 * bu     : array of dimension nparam,containing upper bound of x
 * x      : array of dimension nparam,containing initial guess in input
@@ -4650,11 +4678,11 @@ void    *cd;
 * f      : array of dimension sufficient enough to hold the value of
 *          all regular objective functions and the value of all
 *          members of the sequentially related objective sets.
-*          (dimension must be at least 1)			
+*          (dimension must be at least 1)
 * g      : array of dimension sufficient enough to hold the value of
 *          all regular constraint functions and the value of all
 *          members of the sequentially related constraint sets.
-*          (dimension must be at least 1)			
+*          (dimension must be at least 1)
 * lambda : array of dimension nparam+dim(f)+dim(g), containing
 *          Lagrange multiplier values at x in output. (A concerns the
 *          mode, see above). The first nparam positions contain the
@@ -4663,7 +4691,7 @@ void    *cd;
 *          the constraints. The final dim(f) positions contain the
 *          multipliers associated with the objective functions. The
 *          multipliers are in the order they were specified in the
-*          user-defined objective and constraint functions.	
+*          user-defined objective and constraint functions.
 * obj    : Pointer to function that returns the value of objective
 *          functions, one upon each call
 * constr : Pointer to function that returns the value of constraints
@@ -4681,7 +4709,7 @@ void    *cd;
 *
 *
 *                       CFSQP  Version 2.5b
-*								
+*
 *                  Craig Lawrence, Jian L. Zhou
 *                         and Andre Tits
 *                  Institute for Systems Research
@@ -4708,7 +4736,7 @@ void    *cd;
 *
 * CFSQP is also able to efficiently handle problems with large sets of
 * sequentially related objectives or constraints, see the manual for
-* details.							
+* details.
 *
 *
 *                  Conditions for External Use
@@ -4722,10 +4750,10 @@ void    *cd;
 *   3. Due acknowledgment  must be  made of the  use of the CFSQP
 *      routines in research  reports  or  publications.  Whenever
 *      such reports are released for public access, a copy should
-*      be forwarded to the authors.				
+*      be forwarded to the authors.
 *   4. The CFSQP  routines  may  only  be  used  for research and
 *      development, unless it has been agreed  otherwise with the
-*      authors in writing.					
+*      authors in writing.
 *
 * Copyright (c) 1993-1997 by Craig T. Lawrence, Jian L. Zhou, and
 *                         Andre L. Tits
@@ -4778,12 +4806,12 @@ void    *cd;
 ***********************************************************************
 */
 {
-    int	i,ipp,j,ncnstr,nclin,nctotl,nob,nobL,modem,nn,
-    nppram,nrowa,ncsipl1,ncsipn1,nfsip1;
-    int  feasbl,feasb,prnt,Linfty;
-    int	*indxob,*indxcn,*mesh_pts1;
+    int i, ipp, j, ncnstr, nclin, nctotl, nob, nobL, modem, nn,
+    nppram, nrowa, ncsipl1, ncsipn1, nfsip1;
+    int  feasbl, feasb, prnt, Linfty;
+    int *indxob, *indxcn, *mesh_pts1;
     double *signeq;
-    double xi,gi,gmax,dummy,epskt;
+    double xi, gi, gmax, dummy, epskt;
     struct _constraint *cs;      /* pointer to array of constraints */
     struct _objective  *ob;      /* pointer to array of objectives  */
     struct _parameter  *param;   /* pointer to parameter structure  */
@@ -4791,83 +4819,83 @@ void    *cd;
 
     /*     Make adjustments to parameters for SIP constraints       */
     glob_info.tot_actf_sip = glob_info.tot_actg_sip = 0;
-    mesh_pts=mesh_pts-1;
-    glob_info.nfsip=nfsr;
-    glob_info.ncsipl=ncsrl;
-    glob_info.ncsipn=ncsrn;
-    nf=nf-nfsr;
-    nfsip1=nfsr;
-    nfsr=0;
-    for (i=1; i<=nfsip1; i++)
-        nfsr=nfsr+mesh_pts[i];
-    nf=nf+nfsr;
-    nineqn=nineqn-ncsrn;
-    nineq=nineq-ncsrl-ncsrn;
-    ncsipl1=ncsrl;
-    ncsipn1=ncsrn;
-    ncsrl=0;
-    ncsrn=0;
+    mesh_pts = mesh_pts - 1;
+    glob_info.nfsip = nfsr;
+    glob_info.ncsipl = ncsrl;
+    glob_info.ncsipn = ncsrn;
+    nf = nf - nfsr;
+    nfsip1 = nfsr;
+    nfsr = 0;
+    for (i = 1; i <= nfsip1; i++)
+        nfsr = nfsr + mesh_pts[i];
+    nf = nf + nfsr;
+    nineqn = nineqn - ncsrn;
+    nineq = nineq - ncsrl - ncsrn;
+    ncsipl1 = ncsrl;
+    ncsipn1 = ncsrn;
+    ncsrl = 0;
+    ncsrn = 0;
     if (ncsipn1)
-        for (i=1; i<=ncsipn1; i++)
-            ncsrn=ncsrn+mesh_pts[nfsip1+i];
+        for (i = 1; i <= ncsipn1; i++)
+            ncsrn = ncsrn + mesh_pts[nfsip1+i];
     if (ncsipl1)
-        for (i=1; i<=ncsipl1; i++)
-            ncsrl=ncsrl+mesh_pts[nfsip1+ncsipn1+i];
-    nineqn=nineqn+ncsrn;
-    nineq=nineq+ncsrn+ncsrl;
-    /* Create array of constraint structures		  */
-    cs=(struct _constraint *)calloc(nineq+neq+1,
-                                    sizeof(struct _constraint));
-    for (i=1; i<=nineq+neq; i++)
+        for (i = 1; i <= ncsipl1; i++)
+            ncsrl = ncsrl + mesh_pts[nfsip1+ncsipn1+i];
+    nineqn = nineqn + ncsrn;
+    nineq = nineq + ncsrn + ncsrl;
+    /* Create array of constraint structures    */
+    cs = (struct _constraint *)calloc(nineq + neq + 1,
+                                      sizeof(struct _constraint));
+    for (i = 1; i <= nineq + neq; i++)
     {
-        cs[i].grad=make_dv(nparam);
-        cs[i].act_sip=FALSE;
-        cs[i].d1bind=FALSE;
+        cs[i].grad = make_dv(nparam);
+        cs[i].act_sip = FALSE;
+        cs[i].d1bind = FALSE;
     }
-    /* Create parameter structure			  */
-    _param.x=make_dv(nparam+1);
-    _param.bl=make_dv(nparam);
-    _param.bu=make_dv(nparam);
-    _param.mult=make_dv(nparam+1);
-    param=&_param;
+    /* Create parameter structure     */
+    _param.x = make_dv(nparam + 1);
+    _param.bl = make_dv(nparam);
+    _param.bu = make_dv(nparam);
+    _param.mult = make_dv(nparam + 1);
+    param = &_param;
 
-    /*   Initialize, compute the machine precision, etc.	  */
-    bl=bl-1;
-    bu=bu-1;
-    x=x-1;
-    for (i=1; i<=nparam; i++)
+    /*   Initialize, compute the machine precision, etc.   */
+    bl = bl - 1;
+    bu = bu - 1;
+    x = x - 1;
+    for (i = 1; i <= nparam; i++)
     {
-        param->x[i]=x[i];
-        param->bl[i]=bl[i];
-        param->bu[i]=bu[i];
+        param->x[i] = x[i];
+        param->bl[i] = bl[i];
+        param->bu[i] = bu[i];
     }
-    param->cd=cd;    /* Initialize client data */
-    dummy=0.e0;
-    f=f-1;
-    g=g-1;
-    lambda=lambda-1;
-    glob_prnt.iter=0;
-    nstop=1;
-    nn=nineqn+neqn;
-    glob_grd.epsmac=small();
-    tolfea=glob_grd.epsmac*1.e2;
-    bgbnd=bigbnd;
-    glob_grd.rteps=sqrt(glob_grd.epsmac);
-    glob_grd.udelta=udelta;
-    glob_log.rhol_is1=FALSE;
-    glob_log.get_ne_mult=FALSE;
-    signeq=make_dv(neqn);
+    param->cd = cd;    /* Initialize client data */
+    dummy = 0.e0;
+    f = f - 1;
+    g = g - 1;
+    lambda = lambda - 1;
+    glob_prnt.iter = 0;
+    nstop = 1;
+    nn = nineqn + neqn;
+    glob_grd.epsmac = small();
+    tolfea = glob_grd.epsmac * 1.e2;
+    bgbnd = bigbnd;
+    glob_grd.rteps = sqrt(glob_grd.epsmac);
+    glob_grd.udelta = udelta;
+    glob_log.rhol_is1 = FALSE;
+    glob_log.get_ne_mult = FALSE;
+    signeq = make_dv(neqn);
 
-    nob=0;
-    gmax=-bgbnd;
-    glob_prnt.info=0;
-    glob_prnt.iprint=iprint%10;
-    ipp=iprint;
-    glob_prnt.iter_mod=DMAX1(iprint-iprint%10,1);
-    glob_prnt.io=stdout;
-    ncnstr=nineq+neq;
-    glob_info.nnineq=nineq;
-    if (glob_prnt.iprint>0)
+    nob = 0;
+    gmax = -bgbnd;
+    glob_prnt.info = 0;
+    glob_prnt.iprint = iprint % 10;
+    ipp = iprint;
+    glob_prnt.iter_mod = DMAX1(iprint - iprint % 10, 1);
+    glob_prnt.io = stdout;
+    ncnstr = nineq + neq;
+    glob_info.nnineq = nineq;
+    if (glob_prnt.iprint > 0)
     {
         fprintf(glob_prnt.io,
                 "\n\n    CFSQP Version 2.5b (Released June 1997) \n");
@@ -4881,184 +4909,184 @@ void    *cd;
                 "             All Rights Reserved            \n\n");
     }
     /*-----------------------------------------------------*/
-    /*   Check the input data				  */
+    /*   Check the input data      */
     /*-----------------------------------------------------*/
-    check(nparam,nf,nfsr,&Linfty,nineq,nineqn,neq,neqn,
-          ncsrl,ncsrn,mode,&modem,eps,bgbnd,param);
-    if (glob_prnt.info==7)
+    check(nparam, nf, nfsr, &Linfty, nineq, nineqn, neq, neqn,
+          ncsrl, ncsrn, mode, &modem, eps, bgbnd, param);
+    if (glob_prnt.info == 7)
     {
-        *inform=glob_prnt.info;
+        *inform = glob_prnt.info;
         return;
     }
 
-    maxit=DMAX1(DMAX1(miter,10*DMAX1(nparam,ncnstr)),1000);
-    feasb=TRUE;
-    feasbl=TRUE;
-    prnt=FALSE;
-    nppram=nparam+1;
+    maxit = DMAX1(DMAX1(miter, 10 * DMAX1(nparam, ncnstr)), 1000);
+    feasb = TRUE;
+    feasbl = TRUE;
+    prnt = FALSE;
+    nppram = nparam + 1;
 
     /*-----------------------------------------------------*/
-    /*   Check whether x is within bounds		  */
+    /*   Check whether x is within bounds    */
     /*-----------------------------------------------------*/
-    for (i=1; i<=nparam; i++)
+    for (i = 1; i <= nparam; i++)
     {
-        xi=param->x[i];
-        if (param->bl[i]<=xi && param->bu[i]>=xi)
+        xi = param->x[i];
+        if (param->bl[i] <= xi && param->bu[i] >= xi)
             continue;
-        feasbl=FALSE;
+        feasbl = FALSE;
         break;
     }
-    nclin=ncnstr-nn;
+    nclin = ncnstr - nn;
     /*-----------------------------------------------------*/
     /*   Check whether linear constraints are feasbile     */
     /*-----------------------------------------------------*/
-    if (nclin!=0)
+    if (nclin != 0)
     {
-        for (i=1; i<=nclin; i++)
+        for (i = 1; i <= nclin; i++)
         {
-            j=i+nineqn;
-            if (j<=nineq)
+            j = i + nineqn;
+            if (j <= nineq)
             {
-                constr(nparam,j,(param->x)+1,&gi,param->cd);
-                if (gi>glob_grd.epsmac)
-                    feasbl=FALSE;
+                constr(nparam, j, (param->x) + 1, &gi, param->cd);
+                if (gi > glob_grd.epsmac)
+                    feasbl = FALSE;
             }
             else
             {
-                constr(nparam,j+neqn,(param->x)+1,&gi,param->cd);
-                if (fabs(gi)>glob_grd.epsmac)
-                    feasbl=FALSE;
+                constr(nparam, j + neqn, (param->x) + 1, &gi, param->cd);
+                if (fabs(gi) > glob_grd.epsmac)
+                    feasbl = FALSE;
             }
-            cs[j].val=gi;
+            cs[j].val = gi;
         }
     }
     /*-------------------------------------------------------*/
-    /*   Generate a new point if infeasible		    */
+    /*   Generate a new point if infeasible      */
     /*-------------------------------------------------------*/
     if (!feasbl)
     {
-        if (glob_prnt.iprint>0)
+        if (glob_prnt.iprint > 0)
         {
             fprintf(glob_prnt.io,
                     " The given initial point is infeasible for inequality\n");
             fprintf(glob_prnt.io,
                     " constraints and linear equality constraints:\n");
-            sbout1(glob_prnt.io,nparam,"                    ",dummy,
-                   param->x,2,1);
-            prnt=TRUE;
+            sbout1(glob_prnt.io, nparam, "                    ", dummy,
+                   param->x, 2, 1);
+            prnt = TRUE;
         }
-        nctotl=nparam+nclin;
-        lenw=2*nparam*nparam+10*nparam+2*nctotl+1;
-        leniw=DMAX1(2*nparam+2*nctotl+3,2*nclin+2*nparam+6);
+        nctotl = nparam + nclin;
+        lenw = 2 * nparam * nparam + 10 * nparam + 2 * nctotl + 1;
+        leniw = DMAX1(2 * nparam + 2 * nctotl + 3, 2 * nclin + 2 * nparam + 6);
         /*-----------------------------------------------------*/
         /*   Attempt to generate a point satisfying all linear */
-        /*   constraints.					     */
+        /*   constraints.          */
         /*-----------------------------------------------------*/
-        nrowa=DMAX1(nclin,1);
-        iw=make_iv(leniw);
-        w=make_dv(lenw);
-        initpt(nparam,nineqn,neq,neqn,nclin,nctotl,nrowa,param,
-               &cs[nineqn],constr,gradcn);
+        nrowa = DMAX1(nclin, 1);
+        iw = make_iv(leniw);
+        w = make_dv(lenw);
+        initpt(nparam, nineqn, neq, neqn, nclin, nctotl, nrowa, param,
+               &cs[nineqn], constr, gradcn);
         free_iv(iw);
         free_dv(w);
-        if (glob_prnt.info!=0)
+        if (glob_prnt.info != 0)
         {
-            *inform=glob_prnt.info;
+            *inform = glob_prnt.info;
             return;
         }
     }
-    indxob=make_iv(DMAX1(nineq+neq,nf));
-    indxcn=make_iv(nineq+neq);
+    indxob = make_iv(DMAX1(nineq + neq, nf));
+    indxcn = make_iv(nineq + neq);
 L510:
-    if (glob_prnt.info!=-1)
+    if (glob_prnt.info != -1)
     {
-        for (i=1; i<=nineqn; i++)
+        for (i = 1; i <= nineqn; i++)
         {
-            constr(nparam,i,(param->x)+1,&(cs[i].val),param->cd);
-            if (cs[i].val>0.e0)
-                feasb=FALSE;
+            constr(nparam, i, (param->x) + 1, &(cs[i].val), param->cd);
+            if (cs[i].val > 0.e0)
+                feasb = FALSE;
         }
-        glob_info.ncallg=nineqn;
+        glob_info.ncallg = nineqn;
         if (!feasb)
         {
             /* Create array of objective structures for Phase 1  */
-            ob=(struct _objective *)calloc(nineqn+1,
-                                           sizeof(struct _objective));
-            for (i=1; i<=nineqn; i++)
+            ob = (struct _objective *)calloc(nineqn + 1,
+                                             sizeof(struct _objective));
+            for (i = 1; i <= nineqn; i++)
             {
-                ob[i].grad=make_dv(nparam);
-                ob[i].act_sip=FALSE;
+                ob[i].grad = make_dv(nparam);
+                ob[i].act_sip = FALSE;
             }
-            for (i=1; i<=nineqn; i++)
+            for (i = 1; i <= nineqn; i++)
             {
                 nob++;
-                indxob[nob]=i;
-                ob[nob].val=cs[i].val;
-                gmax=DMAX1(gmax,ob[nob].val);
+                indxob[nob] = i;
+                ob[nob].val = cs[i].val;
+                gmax = DMAX1(gmax, ob[nob].val);
             }
-            for (i=1; i<=nineq-nineqn; i++)
-                indxcn[i]=nineqn+i;
-            for (i=1; i<=neq-neqn; i++)
-                indxcn[i+nineq-nineqn]=nineq+neqn+i;
+            for (i = 1; i <= nineq - nineqn; i++)
+                indxcn[i] = nineqn + i;
+            for (i = 1; i <= neq - neqn; i++)
+                indxcn[i+nineq-nineqn] = nineq + neqn + i;
             goto L605;
         }
     }
 
     /* Create array of objective structures for Phase 2 and      */
-    /* initialize.						*/
-    ob=(struct _objective *)calloc(nf+1,sizeof(struct _objective));
-    for (i=1; i<=nf; i++)
+    /* initialize.      */
+    ob = (struct _objective *)calloc(nf + 1, sizeof(struct _objective));
+    for (i = 1; i <= nf; i++)
     {
-        ob[i].grad=make_dv(nparam);
-        ob[i].act_sip=FALSE;
+        ob[i].grad = make_dv(nparam);
+        ob[i].act_sip = FALSE;
     }
-    for (i=1; i<=nineqn; i++)
+    for (i = 1; i <= nineqn; i++)
     {
-        indxcn[i]=i;
+        indxcn[i] = i;
     }
-    for (i=1; i<=neq-neqn; i++)
-        cs[i+nineq+neqn].val=cs[i+nineq].val;
-    for (i=1; i<=neqn; i++)
+    for (i = 1; i <= neq - neqn; i++)
+        cs[i+nineq+neqn].val = cs[i+nineq].val;
+    for (i = 1; i <= neqn; i++)
     {
-        j=i+nineq;
-        constr(nparam,j,(param->x)+1,&(cs[j].val),param->cd);
-        indxcn[nineqn+i]=j;
+        j = i + nineq;
+        constr(nparam, j, (param->x) + 1, &(cs[j].val), param->cd);
+        indxcn[nineqn+i] = j;
     }
-    for (i=1; i<=nineq-nineqn; i++)
-        indxcn[i+nn]=nineqn+i;
-    for (i=1; i<=neq-neqn; i++)
-        indxcn[i+nineq+neqn]=nineq+neqn+i;
-    glob_info.ncallg+=neqn;
+    for (i = 1; i <= nineq - nineqn; i++)
+        indxcn[i+nn] = nineqn + i;
+    for (i = 1; i <= neq - neqn; i++)
+        indxcn[i+nineq+neqn] = nineq + neqn + i;
+    glob_info.ncallg += neqn;
 
-    L605:
-    if (glob_prnt.iprint>0 && feasb && !prnt)
+L605:
+    if (glob_prnt.iprint > 0 && feasb && !prnt)
     {
         fprintf(glob_prnt.io,
                 "The given initial point is feasible for inequality\n");
         fprintf(glob_prnt.io,
                 "         constraints and linear equality constraints:\n");
-        sbout1(glob_prnt.io,nparam,"                    ",dummy,
-               param->x,2,1);
-        prnt=TRUE;
+        sbout1(glob_prnt.io, nparam, "                    ", dummy,
+               param->x, 2, 1);
+        prnt = TRUE;
     }
-    if (nob==0)
+    if (nob == 0)
     {
-        if (glob_prnt.iprint>0)
+        if (glob_prnt.iprint > 0)
         {
-            if (glob_prnt.info!=0)
+            if (glob_prnt.info != 0)
             {
                 fprintf(glob_prnt.io,
                         "To generate a feasible point for nonlinear inequality\n");
                 fprintf(glob_prnt.io,
                         "constraints and linear equality constraints, ");
-                fprintf(glob_prnt.io,"ncallg = %10d\n",glob_info.ncallg);
-                if (ipp==0)
-                    fprintf(glob_prnt.io," iteration           %26d\n",
+                fprintf(glob_prnt.io, "ncallg = %10d\n", glob_info.ncallg);
+                if (ipp == 0)
+                    fprintf(glob_prnt.io, " iteration           %26d\n",
                             glob_prnt.iter);
-                if (ipp>0)
-                    fprintf(glob_prnt.io," iteration           %26d\n",
-                            glob_prnt.iter-1);
-                if (ipp==0)
+                if (ipp > 0)
+                    fprintf(glob_prnt.io, " iteration           %26d\n",
+                            glob_prnt.iter - 1);
+                if (ipp == 0)
                     glob_prnt.iter++;
             }
             if (feasb && !feasbl)
@@ -5067,191 +5095,191 @@ L510:
                         "Starting from the generated point feasible for\n");
                 fprintf(glob_prnt.io,
                         "inequality constraints and linear equality constraints:\n");
-                sbout1(glob_prnt.io,nparam,"                    ",
-                       dummy,param->x,2,1);
+                sbout1(glob_prnt.io, nparam, "                    ",
+                       dummy, param->x, 2, 1);
 
             }
-            if (glob_prnt.info!=0 || !prnt || !feasb)
+            if (glob_prnt.info != 0 || !prnt || !feasb)
             {
                 fprintf(glob_prnt.io,
                         "Starting from the generated point feasible for\n");
                 fprintf(glob_prnt.io,
                         "inequality constraints and linear equality constraints:\n");
-                sbout1(glob_prnt.io,nparam,"                    ",
-                       dummy,param->x,2,1);
+                sbout1(glob_prnt.io, nparam, "                    ",
+                       dummy, param->x, 2, 1);
             }
         }
-        feasb=TRUE;
-        feasbl=TRUE;
+        feasb = TRUE;
+        feasbl = TRUE;
     }
-    if (ipp>0 && !feasb && !prnt)
+    if (ipp > 0 && !feasb && !prnt)
     {
         fprintf(glob_prnt.io,
                 " The given initial point is infeasible for inequality\n");
         fprintf(glob_prnt.io,
                 " constraints and linear equality constraints:\n");
-        sbout1(glob_prnt.io,nparam,"                    ",dummy,
-               param->x,2,1);
-        prnt=TRUE;
+        sbout1(glob_prnt.io, nparam, "                    ", dummy,
+               param->x, 2, 1);
+        prnt = TRUE;
     }
-    if (nob==0)
-        nob=1;
+    if (nob == 0)
+        nob = 1;
     if (feasb)
     {
-        nob=nf;
-        glob_prnt.info=0;
-        glob_prnt.iprint=iprint%10;
-        ipp=iprint;
-        glob_prnt.iter_mod=DMAX1(iprint-iprint%10,1);
-        glob_info.mode=modem;
-        epskt=eps;
+        nob = nf;
+        glob_prnt.info = 0;
+        glob_prnt.iprint = iprint % 10;
+        ipp = iprint;
+        glob_prnt.iter_mod = DMAX1(iprint - iprint % 10, 1);
+        glob_info.mode = modem;
+        epskt = eps;
         if (Linfty)
-            nobL=2*nob;
+            nobL = 2 * nob;
         else
-            nobL=nob;
-        if (nob!=0 || neqn!=0)
+            nobL = nob;
+        if (nob != 0 || neqn != 0)
             goto L910;
         fprintf(glob_prnt.io,
                 "current feasible iterate with no objective specified\n");
-        *inform=glob_prnt.info;
-        for (i=1; i<=nineq+neq; i++)
-            g[i]=cs[i].val;
-        dealloc(nineq,neq,signeq,indxcn,indxob,cs,param);
+        *inform = glob_prnt.info;
+        for (i = 1; i <= nineq + neq; i++)
+            g[i] = cs[i].val;
+        dealloc(nineq, neq, signeq, indxcn, indxob, cs, param);
         free((char *) ob);
         return;
     }
-    ipp=0;
-    glob_info.mode=0;
-    nobL=nob;
-    glob_prnt.info=-1;
-    epskt=1.e-10;
-    L910:
-    nctotl=nppram+ncnstr+DMAX1(nobL,1);
-    leniw=2*(ncnstr+DMAX1(nobL,1))+2*nppram+6;
-    lenw=2*nppram*nppram+10*nppram+6*(ncnstr+DMAX1(nobL,1)+1);
-    glob_info.M=4;
-    if (modem==1 && nn==0)
-        glob_info.M=3;
+    ipp = 0;
+    glob_info.mode = 0;
+    nobL = nob;
+    glob_prnt.info = -1;
+    epskt = 1.e-10;
+L910:
+    nctotl = nppram + ncnstr + DMAX1(nobL, 1);
+    leniw = 2 * (ncnstr + DMAX1(nobL, 1)) + 2 * nppram + 6;
+    lenw = 2 * nppram * nppram + 10 * nppram + 6 * (ncnstr + DMAX1(nobL, 1) + 1);
+    glob_info.M = 4;
+    if (modem == 1 && nn == 0)
+        glob_info.M = 3;
 
-    param->x[nparam+1]=gmax;
+    param->x[nparam+1] = gmax;
     if (feasb)
     {
-        for (i=1; i<=neqn; i++)
+        for (i = 1; i <= neqn; i++)
         {
-            if (cs[i+nineq].val>0.e0)
-                signeq[i]=-1.e0;
+            if (cs[i+nineq].val > 0.e0)
+                signeq[i] = -1.e0;
             else
-                signeq[i]=1.e0;
+                signeq[i] = 1.e0;
         }
     }
     if (!feasb)
     {
-        ncsipl1=ncsrl;
-        ncsipn1=0;
-        nfsip1=ncsrn;
-        mesh_pts1=&mesh_pts[nfsr];
+        ncsipl1 = ncsrl;
+        ncsipn1 = 0;
+        nfsip1 = ncsrn;
+        mesh_pts1 = &mesh_pts[nfsr];
     }
     else
     {
-        ncsipl1=ncsrl;
-        ncsipn1=ncsrn;
-        nfsip1=nfsr;
-        mesh_pts1=mesh_pts;
+        ncsipl1 = ncsrl;
+        ncsipn1 = ncsrn;
+        nfsip1 = nfsr;
+        mesh_pts1 = mesh_pts;
     }
     /*---------------------------------------------------------------*/
-    /*    either attempt to generate a point satisfying all 	    */
+    /*    either attempt to generate a point satisfying all      */
     /*    constraints or try to solve the original problem           */
     /*---------------------------------------------------------------*/
-    nrowa=DMAX1(ncnstr+DMAX1(nobL,1),1);
-    w=make_dv(lenw);
-    iw=make_iv(leniw);
+    nrowa = DMAX1(ncnstr + DMAX1(nobL, 1), 1);
+    w = make_dv(lenw);
+    iw = make_iv(leniw);
 
-    cfsqp1(miter,nparam,nob,nobL,nfsip1,nineqn,neq,neqn,ncsipl1,ncsipn1,
-           mesh_pts1,ncnstr,nctotl,nrowa,feasb,epskt,epseqn,indxob,
-           indxcn,param,cs,ob,signeq,obj,constr,gradob,gradcn);
+    cfsqp1(miter, nparam, nob, nobL, nfsip1, nineqn, neq, neqn, ncsipl1, ncsipn1,
+           mesh_pts1, ncnstr, nctotl, nrowa, feasb, epskt, epseqn, indxob,
+           indxcn, param, cs, ob, signeq, obj, constr, gradob, gradcn);
 
     free_iv(iw);
     free_dv(w);
-    if (glob_prnt.info==-1)
+    if (glob_prnt.info == -1)
     { /* Successful phase 1 termination  */
-        for (i=1; i<=nob; i++)
-            cs[i].val=ob[i].val;
-        nob=0;
-        for (i=1; i<=nineqn; i++)
+        for (i = 1; i <= nob; i++)
+            cs[i].val = ob[i].val;
+        nob = 0;
+        for (i = 1; i <= nineqn; i++)
             free_dv(ob[i].grad);
         free((char *) ob);
         goto L510;
     }
-    if (glob_prnt.info!=0)
+    if (glob_prnt.info != 0)
     {
         if (feasb)
         {
-            for (i=1; i<=nparam; i++)
-                x[i]=param->x[i];
-            for (i=1; i<=nineq+neq; i++)
-                g[i]=cs[i].val;
-            *inform=glob_prnt.info;
-            dealloc(nineq,neq,signeq,indxcn,indxob,cs,param);
-            for (i=1; i<=nf; i++)
+            for (i = 1; i <= nparam; i++)
+                x[i] = param->x[i];
+            for (i = 1; i <= nineq + neq; i++)
+                g[i] = cs[i].val;
+            *inform = glob_prnt.info;
+            dealloc(nineq, neq, signeq, indxcn, indxob, cs, param);
+            for (i = 1; i <= nf; i++)
             {
-                f[i]=ob[i].val;
+                f[i] = ob[i].val;
                 free_dv(ob[i].grad);
             }
             free((char *) ob);
             return;
         }
-        glob_prnt.info=2;
+        glob_prnt.info = 2;
         fprintf(glob_prnt.io,
                 "Error: No feasible point is found for nonlinear inequality\n");
         fprintf(glob_prnt.io,
                 "constraints and linear equality constraints\n");
-        *inform=glob_prnt.info;
-        dealloc(nineq,neq,signeq,indxcn,indxob,cs,param);
-        for (i=1; i<=nineqn; i++)
+        *inform = glob_prnt.info;
+        dealloc(nineq, neq, signeq, indxcn, indxob, cs, param);
+        for (i = 1; i <= nineqn; i++)
             free_dv(ob[i].grad);
         free((char *) ob);
         return;
     }
-    /* Successful phase 2 termination				*/
-    *inform=glob_prnt.info;
-    for (i=1; i<=nparam; i++)
+    /* Successful phase 2 termination    */
+    *inform = glob_prnt.info;
+    for (i = 1; i <= nparam; i++)
     {
-        x[i]=param->x[i];
-        lambda[i]=param->mult[i];
+        x[i] = param->x[i];
+        lambda[i] = param->mult[i];
     }
-    for (i=1; i<=nineq+neq; i++)
+    for (i = 1; i <= nineq + neq; i++)
     {
-        g[i]=cs[i].val;
-        lambda[i+nparam]=cs[i].mult;
+        g[i] = cs[i].val;
+        lambda[i+nparam] = cs[i].mult;
     }
-    for (i=1; i<=nf; i++)
+    for (i = 1; i <= nf; i++)
     {
-        f[i]=ob[i].val;
-        lambda[i+nparam+nineq+neq]=ob[i].mult;
+        f[i] = ob[i].val;
+        lambda[i+nparam+nineq+neq] = ob[i].mult;
         free_dv(ob[i].grad);
     }
     /* If just one objective, set multiplier=1 */
-    if (nf==1)
-        lambda[1+nparam+nineq+neq]=1.e0;
+    if (nf == 1)
+        lambda[1+nparam+nineq+neq] = 1.e0;
     free((char *) ob);
-    dealloc(nineq,neq,signeq,indxcn,indxob,cs,param);
+    dealloc(nineq, neq, signeq, indxcn, indxob, cs, param);
     return;
 }
 
 /***************************************************************/
-/*     Free allocated memory				       */
+/*     Free allocated memory           */
 /***************************************************************/
 
 #ifdef __STDC__
 static void
-dealloc(int nineq,int neq,double *signeq,int *indxob,
-        int *indxcn,struct _constraint *cs,struct _parameter *param)
+dealloc(int nineq, int neq, double *signeq, int *indxob,
+        int *indxcn, struct _constraint *cs, struct _parameter *param)
 #else
 static void
-dealloc(nineq,neq,signeq,indxob,indxcn,cs,param)
-int nineq,neq;
+dealloc(nineq, neq, signeq, indxob, indxcn, cs, param)
+int nineq, neq;
 double *signeq;
-int    *indxob,*indxcn;
+int    *indxob, *indxcn;
 struct _constraint *cs;
 struct _parameter  *param;
 #endif
@@ -5265,7 +5293,7 @@ struct _parameter  *param;
     free_dv(signeq);
     free_iv(indxob);
     free_iv(indxcn);
-    for (i=1; i<=nineq+neq; i++)
+    for (i = 1; i <= nineq + neq; i++)
         free_dv(cs[i].grad);
     free((char *) cs);
 }
@@ -5276,210 +5304,210 @@ struct _parameter  *param;
 
 #ifdef __STDC__
 static void
-dealloc1(int,int,double **,double **,double **,double *,double *,
-         double *,double *,double *,double *,double *,double *,
-         double *,double *,double *,double *,int *,int *,int *);
+dealloc1(int, int, double **, double **, double **, double *, double *,
+         double *, double *, double *, double *, double *, double *,
+         double *, double *, double *, double *, int *, int *, int *);
 #else
 static void dealloc1();
 #endif
 
 #ifdef __STDC__
 static void
-cfsqp1(int miter,int nparam,int nob,int nobL,int nfsip,int nineqn,
-       int neq,int neqn,int ncsipl,int ncsipn,int *mesh_pts,int ncnstr,
-       int nctotl,int nrowa,int feasb,double epskt,double epseqn,
-       int *indxob,int *indxcn,struct _parameter *param,
+cfsqp1(int miter, int nparam, int nob, int nobL, int nfsip, int nineqn,
+       int neq, int neqn, int ncsipl, int ncsipn, int *mesh_pts, int ncnstr,
+       int nctotl, int nrowa, int feasb, double epskt, double epseqn,
+       int *indxob, int *indxcn, struct _parameter *param,
        struct _constraint *cs, struct _objective *ob,
-       double *signeq,void (*obj)(int,int,double *,double *,void *),
-       void (*constr)(int,int,double *,double *,void *),
-       void (*gradob)(int,int,double *,double *,
-                      void (*)(int,int,double *,double *,void *),void *),
-       void (*gradcn)(int,int,double *,double *,
-                      void (*)(int,int,double *,double *,void *),void *))
+       double *signeq, void(*obj)(int, int, double *, double *, void *),
+       void(*constr)(int, int, double *, double *, void *),
+       void(*gradob)(int, int, double *, double *,
+                     void(*)(int, int, double *, double *, void *), void *),
+       void(*gradcn)(int, int, double *, double *,
+                     void(*)(int, int, double *, double *, void *), void *))
 #else
 static void
-cfsqp1(miter,nparam,nob,nobL,nfsip,nineqn,neq,neqn,ncsipl,ncsipn,
-       mesh_pts,ncnstr,nctotl,nrowa,feasb,epskt,epseqn,indxob,
-       indxcn,param,cs,ob,signeq,obj,constr,gradob,gradcn)
-int	miter,nparam,nob,nobL,nfsip,nineqn,neq,neqn,ncnstr,
-nctotl,nrowa,feasb,ncsipl,ncsipn,*mesh_pts;
-int	*indxob,*indxcn;
-double  epskt,epseqn;
+cfsqp1(miter, nparam, nob, nobL, nfsip, nineqn, neq, neqn, ncsipl, ncsipn,
+       mesh_pts, ncnstr, nctotl, nrowa, feasb, epskt, epseqn, indxob,
+       indxcn, param, cs, ob, signeq, obj, constr, gradob, gradcn)
+int miter, nparam, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr,
+nctotl, nrowa, feasb, ncsipl, ncsipn, *mesh_pts;
+int *indxob, *indxcn;
+double  epskt, epseqn;
 double  *signeq;
 struct _constraint *cs;
 struct _objective  *ob;
 struct _parameter  *param;
-void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
+void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
 #endif
 {
-    int   i,iskp,nfs,ncf,ncg,nn,nstart,nrst,ncnst1;
-    int   *iact,*iskip,*istore;
-    double Cbar,Ck,dbar,fmax,fM,fMp,steps,d0nm,dummy,
-    sktnom,scvneq,grdftd,psf;
-    double *di,*d,*gm,*grdpsf,*penp,*bl,*bu,*clamda,
-    *cvec,*psmu,*span,*backup;
-    double **hess,**hess1,**a;
+    int   i, iskp, nfs, ncf, ncg, nn, nstart, nrst, ncnst1;
+    int   *iact, *iskip, *istore;
+    double Cbar, Ck, dbar, fmax, fM, fMp, steps, d0nm, dummy,
+    sktnom, scvneq, grdftd, psf;
+    double *di, *d, *gm, *grdpsf, *penp, *bl, *bu, *clamda,
+    *cvec, *psmu, *span, *backup;
+    double **hess, **hess1, **a;
     double *tempv;
     struct _violation *viol;
     struct _violation _viol;
 
     /*   Allocate memory                              */
 
-    hess=make_dm(nparam,nparam);
-    hess1=make_dm(nparam+1,nparam+1);
-    a=make_dm(nrowa,nparam+2);
-    di=make_dv(nparam+1);
-    d=make_dv(nparam+1);
-    gm=make_dv(4*neqn);
-    grdpsf=make_dv(nparam);
-    penp=make_dv(neqn);
-    bl=make_dv(nctotl);
-    bu=make_dv(nctotl);
-    clamda=make_dv(nctotl+nparam+1);
-    cvec=make_dv(nparam+1);
-    psmu=make_dv(neqn);
-    span=make_dv(4);
-    backup=make_dv(nob+ncnstr);
-    iact=make_iv(nob+nineqn+neqn);
-    iskip=make_iv(glob_info.nnineq+1);
-    istore=make_iv(nineqn+nob+neqn);
+    hess = make_dm(nparam, nparam);
+    hess1 = make_dm(nparam + 1, nparam + 1);
+    a = make_dm(nrowa, nparam + 2);
+    di = make_dv(nparam + 1);
+    d = make_dv(nparam + 1);
+    gm = make_dv(4 * neqn);
+    grdpsf = make_dv(nparam);
+    penp = make_dv(neqn);
+    bl = make_dv(nctotl);
+    bu = make_dv(nctotl);
+    clamda = make_dv(nctotl + nparam + 1);
+    cvec = make_dv(nparam + 1);
+    psmu = make_dv(neqn);
+    span = make_dv(4);
+    backup = make_dv(nob + ncnstr);
+    iact = make_iv(nob + nineqn + neqn);
+    iskip = make_iv(glob_info.nnineq + 1);
+    istore = make_iv(nineqn + nob + neqn);
 
-    viol=&_viol;
-    viol->index=0;
-    viol->type=NONE;
+    viol = &_viol;
+    viol->index = 0;
+    viol->type = NONE;
 
-    glob_prnt.initvl=1;
-    glob_log.first=TRUE;
-    nrst=glob_prnt.ipd=0;
-    dummy=0.e0;
-    scvneq=0.e0;
-    steps=0.e0;
-    sktnom=0.e0;
-    d0nm=0.e0;
-    if (glob_prnt.iter==0)
-        diagnl(nparam,1.e0,hess);
+    glob_prnt.initvl = 1;
+    glob_log.first = TRUE;
+    nrst = glob_prnt.ipd = 0;
+    dummy = 0.e0;
+    scvneq = 0.e0;
+    steps = 0.e0;
+    sktnom = 0.e0;
+    d0nm = 0.e0;
+    if (glob_prnt.iter == 0)
+        diagnl(nparam, 1.e0, hess);
     if (feasb)
     {
-        glob_log.first=TRUE;
-        if (glob_prnt.iter>0)
+        glob_log.first = TRUE;
+        if (glob_prnt.iter > 0)
             glob_prnt.iter--;
-        if (glob_prnt.iter!=0)
-            diagnl(nparam,1.e0,hess);
+        if (glob_prnt.iter != 0)
+            diagnl(nparam, 1.e0, hess);
     }
-    Ck=Cbar=1.e-2;
-    dbar=5.e0;
-    nstart=1;
-    glob_info.ncallf=0;
-    nstop=1;
-    nfs=0;
-    if (glob_info.mode!=0)
-        nfs=glob_info.M;
+    Ck = Cbar = 1.e-2;
+    dbar = 5.e0;
+    nstart = 1;
+    glob_info.ncallf = 0;
+    nstop = 1;
+    nfs = 0;
+    if (glob_info.mode != 0)
+        nfs = glob_info.M;
     if (feasb)
     {
-        nn=nineqn+neqn;
-        ncnst1=ncnstr;
+        nn = nineqn + neqn;
+        ncnst1 = ncnstr;
     }
     else
     {
-        nn=0;
-        ncnst1=ncnstr-nineqn-neqn;
+        nn = 0;
+        ncnst1 = ncnstr - nineqn - neqn;
     }
-    scvneq=0.e0;
-    for (i=1; i<=ncnst1; i++)
+    scvneq = 0.e0;
+    for (i = 1; i <= ncnst1; i++)
     {
-        glob_grd.valnom=cs[indxcn[i]].val;
-        backup[i]=glob_grd.valnom;
-        if (feasb && i>nineqn && i<=nn)
+        glob_grd.valnom = cs[indxcn[i]].val;
+        backup[i] = glob_grd.valnom;
+        if (feasb && i > nineqn && i <= nn)
         {
-            gm[i-nineqn]=glob_grd.valnom*signeq[i-nineqn];
-            scvneq=scvneq+fabs(glob_grd.valnom);
+            gm[i-nineqn] = glob_grd.valnom * signeq[i-nineqn];
+            scvneq = scvneq + fabs(glob_grd.valnom);
         }
-        if (feasb && i<=nn)
+        if (feasb && i <= nn)
         {
-            iact[i]=indxcn[i];
-            istore[i]=0;
-            if (i>nineqn)
-                penp[i-nineqn]=2.e0;
+            iact[i] = indxcn[i];
+            istore[i] = 0;
+            if (i > nineqn)
+                penp[i-nineqn] = 2.e0;
         }
-        gradcn(nparam,indxcn[i],(param->x)+1,(cs[indxcn[i]].grad)+1,
-               constr,param->cd);
+        gradcn(nparam, indxcn[i], (param->x) + 1, (cs[indxcn[i]].grad) + 1,
+               constr, param->cd);
     }
-    nullvc(nparam,grdpsf);
-    psf=0.e0;
-    if (feasb && neqn!=0)
-        resign(nparam,neqn,&psf,grdpsf,penp,cs,signeq,12,12);
-    fmax=-bgbnd;
-    for (i=1; i<=nob; i++)
+    nullvc(nparam, grdpsf);
+    psf = 0.e0;
+    if (feasb && neqn != 0)
+        resign(nparam, neqn, &psf, grdpsf, penp, cs, signeq, 12, 12);
+    fmax = -bgbnd;
+    for (i = 1; i <= nob; i++)
     {
         if (!feasb)
         {
-            glob_grd.valnom=ob[i].val;
-            iact[i]=i;
-            istore[i]=0;
-            gradcn(nparam,indxob[i],(param->x)+1,(ob[i].grad)+1,constr,
+            glob_grd.valnom = ob[i].val;
+            iact[i] = i;
+            istore[i] = 0;
+            gradcn(nparam, indxob[i], (param->x) + 1, (ob[i].grad) + 1, constr,
                    param->cd);
         }
         else
         {
-            iact[nn+i]=i;
-            istore[nn+i]=0;
-            obj(nparam,i,(param->x)+1,&(ob[i].val),param->cd);
-            glob_grd.valnom=ob[i].val;
-            backup[i+ncnst1]=glob_grd.valnom;
-            gradob(nparam,i,(param->x)+1,(ob[i].grad)+1,obj,param->cd);
+            iact[nn+i] = i;
+            istore[nn+i] = 0;
+            obj(nparam, i, (param->x) + 1, &(ob[i].val), param->cd);
+            glob_grd.valnom = ob[i].val;
+            backup[i+ncnst1] = glob_grd.valnom;
+            gradob(nparam, i, (param->x) + 1, (ob[i].grad) + 1, obj, param->cd);
             glob_info.ncallf++;
-            if (nobL!=nob)
-                fmax=DMAX1(fmax,-ob[i].val);
+            if (nobL != nob)
+                fmax = DMAX1(fmax, -ob[i].val);
         }
-        fmax=DMAX1(fmax,ob[i].val);
+        fmax = DMAX1(fmax, ob[i].val);
     }
-    if (feasb && nob==0)
-        fmax=0.e0;
-    fM=fmax;
-    fMp=fmax-psf;
-    span[1]=fM;
+    if (feasb && nob == 0)
+        fmax = 0.e0;
+    fM = fmax;
+    fMp = fmax - psf;
+    span[1] = fM;
 
-    if (glob_prnt.iprint>=3 && glob_log.first)
+    if (glob_prnt.iprint >= 3 && glob_log.first)
     {
-        for (i=1; i<=nob; i++)
+        for (i = 1; i <= nob; i++)
         {
             if (feasb)
             {
-                if (nob>1)
+                if (nob > 1)
                 {
-                    tempv=ob[i].grad;
-                    sbout2(glob_prnt.io,nparam,i,"gradf(j,",")",tempv);
+                    tempv = ob[i].grad;
+                    sbout2(glob_prnt.io, nparam, i, "gradf(j,", ")", tempv);
                 }
-                if (nob==1)
+                if (nob == 1)
                 {
-                    tempv=ob[1].grad;
-                    sbout1(glob_prnt.io,nparam,"gradf(j)            ",
-                           dummy,tempv,2,2);
+                    tempv = ob[1].grad;
+                    sbout1(glob_prnt.io, nparam, "gradf(j)            ",
+                           dummy, tempv, 2, 2);
                 }
                 continue;
             }
-            tempv=ob[i].grad;
-            sbout2(glob_prnt.io,nparam,indxob[i],"gradg(j,",")",tempv);
+            tempv = ob[i].grad;
+            sbout2(glob_prnt.io, nparam, indxob[i], "gradg(j,", ")", tempv);
         }
-        if (ncnstr!=0)
+        if (ncnstr != 0)
         {
-            for (i=1; i<=ncnst1; i++)
+            for (i = 1; i <= ncnst1; i++)
             {
-                tempv=cs[indxcn[i]].grad;
-                sbout2(glob_prnt.io,nparam,indxcn[i],"gradg(j,",")",tempv);
+                tempv = cs[indxcn[i]].grad;
+                sbout2(glob_prnt.io, nparam, indxcn[i], "gradg(j,", ")", tempv);
             }
-            if (neqn!=0)
+            if (neqn != 0)
             {
-                sbout1(glob_prnt.io,nparam,"grdpsf(j)           ",dummy,
-                       grdpsf,2,2);
-                sbout1(glob_prnt.io,neqn,"P                   ",dummy,
-                       penp,2,2);
+                sbout1(glob_prnt.io, nparam, "grdpsf(j)           ", dummy,
+                       grdpsf, 2, 2);
+                sbout1(glob_prnt.io, neqn, "P                   ", dummy,
+                       penp, 2, 2);
             }
         }
-        for (i=1; i<=nparam; i++)
+        for (i = 1; i <= nparam; i++)
         {
-            tempv=colvec(hess,i,nparam);
-            sbout2(glob_prnt.io,nparam,i,"hess (j,",")",tempv);
+            tempv = colvec(hess, i, nparam);
+            sbout2(glob_prnt.io, nparam, i, "hess (j,", ")", tempv);
             free_dv(tempv);
         }
     }
@@ -5488,100 +5516,100 @@ void   (* obj)(),(* constr)(),(* gradob)(),(* gradcn)();
      *              Main loop of the algorithm                  *
      *----------------------------------------------------------*/
 
-    nstop=1;
+    nstop = 1;
     for (;;)
     {
-        out(miter,nparam,nob,nobL,nfsip,nineqn,nn,nineqn,ncnst1,
-            ncsipl,ncsipn,mesh_pts,param->x,cs,ob,fM,fmax,steps,
-            sktnom,d0nm,feasb);
-        if (nstop==0)
+        out(miter, nparam, nob, nobL, nfsip, nineqn, nn, nineqn, ncnst1,
+            ncsipl, ncsipn, mesh_pts, param->x, cs, ob, fM, fmax, steps,
+            sktnom, d0nm, feasb);
+        if (nstop == 0)
         {
             if (!feasb)
             {
-                dealloc1(nparam,nrowa,a,hess,hess1,di,d,gm,
-                         grdpsf,penp,bl,bu,clamda,cvec,psmu,span,backup,
-                         iact,iskip,istore);
+                dealloc1(nparam, nrowa, a, hess, hess1, di, d, gm,
+                         grdpsf, penp, bl, bu, clamda, cvec, psmu, span, backup,
+                         iact, iskip, istore);
                 return;
             }
-            for (i=1; i<=ncnst1; i++)
-                cs[i].val=backup[i];
-            for (i=1; i<=nob; i++)
-                ob[i].val=backup[i+ncnst1];
-            for (i=1; i<=neqn; i++)
-                cs[glob_info.nnineq+i].mult = signeq[i]*psmu[i];
-            dealloc1(nparam,nrowa,a,hess,hess1,di,d,gm,
-                     grdpsf,penp,bl,bu,clamda,cvec,psmu,span,backup,
-                     iact,iskip,istore);
+            for (i = 1; i <= ncnst1; i++)
+                cs[i].val = backup[i];
+            for (i = 1; i <= nob; i++)
+                ob[i].val = backup[i+ncnst1];
+            for (i = 1; i <= neqn; i++)
+                cs[glob_info.nnineq+i].mult = signeq[i] * psmu[i];
+            dealloc1(nparam, nrowa, a, hess, hess1, di, d, gm,
+                     grdpsf, penp, bl, bu, clamda, cvec, psmu, span, backup,
+                     iact, iskip, istore);
             return;
         }
-        if (!feasb && glob_prnt.iprint==0)
+        if (!feasb && glob_prnt.iprint == 0)
             glob_prnt.iter++;
         /*   Update the SIP constraint set Omega_k  */
-        if ((ncsipl+ncsipn)!=0 || nfsip)
-            update_omega(nparam,ncsipl,ncsipn,mesh_pts,nineqn,nob,nobL,
-                         nfsip,steps,fmax,cs,ob,param->x,viol,
-                         constr,obj,gradob,gradcn,param->cd,feasb);
+        if ((ncsipl + ncsipn) != 0 || nfsip)
+            update_omega(nparam, ncsipl, ncsipn, mesh_pts, nineqn, nob, nobL,
+                         nfsip, steps, fmax, cs, ob, param->x, viol,
+                         constr, obj, gradob, gradcn, param->cd, feasb);
         /*   Compute search direction               */
-        dir(nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-            ncnst1,feasb,&steps,epskt,epseqn,&sktnom,&scvneq,Ck,&d0nm,
-            &grdftd,indxob,indxcn,iact,&iskp,iskip,istore,param,di,d,
-            cs,ob,&fM,&fMp,&fmax,&psf,grdpsf,penp,a,bl,bu,clamda,cvec,
-            hess,hess1,backup,signeq,viol,obj,constr);
-        if (nstop==0 && !glob_log.get_ne_mult)
+        dir(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+            ncnst1, feasb, &steps, epskt, epseqn, &sktnom, &scvneq, Ck, &d0nm,
+            &grdftd, indxob, indxcn, iact, &iskp, iskip, istore, param, di, d,
+            cs, ob, &fM, &fMp, &fmax, &psf, grdpsf, penp, a, bl, bu, clamda, cvec,
+            hess, hess1, backup, signeq, viol, obj, constr);
+        if (nstop == 0 && !glob_log.get_ne_mult)
             continue;
-        glob_log.first=FALSE;
+        glob_log.first = FALSE;
         if (!glob_log.update && !glob_log.d0_is0)
         {
             /*   Determine step length                                */
-            step1(nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-                  ncnst1,&ncg,&ncf,indxob,indxcn,iact,&iskp,iskip,istore,
-                  feasb,grdftd,ob,&fM,&fMp,&fmax,&psf,penp,&steps,&scvneq,
-                  bu,param->x,di,d,cs,backup,signeq,viol,obj,constr,
+            step1(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+                  ncnst1, &ncg, &ncf, indxob, indxcn, iact, &iskp, iskip, istore,
+                  feasb, grdftd, ob, &fM, &fMp, &fmax, &psf, penp, &steps, &scvneq,
+                  bu, param->x, di, d, cs, backup, signeq, viol, obj, constr,
                   param->cd);
-            if (nstop==0)
+            if (nstop == 0)
                 continue;
         }
         /*   Update the Hessian                                      */
-        hessian(nparam,nob,nfsip,nobL,nineqn,neq,neqn,nn,ncsipn,ncnst1,
-                nfs,&nstart,feasb,bu,param,ob,fmax,&fM,&fMp,&psf,grdpsf,
-                penp,cs,gm,indxob,indxcn,bl,clamda,di,hess,d,steps,&nrst,
-                signeq,span,obj,constr,gradob,gradcn,hess1,cvec,psmu,viol);
-        if (nstop==0 || glob_info.mode==0)
+        hessian(nparam, nob, nfsip, nobL, nineqn, neq, neqn, nn, ncsipn, ncnst1,
+                nfs, &nstart, feasb, bu, param, ob, fmax, &fM, &fMp, &psf, grdpsf,
+                penp, cs, gm, indxob, indxcn, bl, clamda, di, hess, d, steps, &nrst,
+                signeq, span, obj, constr, gradob, gradcn, hess1, cvec, psmu, viol);
+        if (nstop == 0 || glob_info.mode == 0)
             continue;
-        if (d0nm>dbar)
-            Ck=DMAX1(0.5e0*Ck,Cbar);
-        if (d0nm<=dbar && glob_log.dlfeas)
-            Ck=Ck;
-        if (d0nm<=dbar && !glob_log.dlfeas &&
-                !glob_log.rhol_is1)
-            Ck=10.e0*Ck;
+        if (d0nm > dbar)
+            Ck = DMAX1(0.5e0 * Ck, Cbar);
+        if (d0nm <= dbar && glob_log.dlfeas)
+            Ck = Ck;
+        if (d0nm <= dbar && !glob_log.dlfeas &&
+            !glob_log.rhol_is1)
+            Ck = 10.e0 * Ck;
     }
 }
 
 /*******************************************************************/
-/*    Free up memory used by CFSQP1				   */
+/*    Free up memory used by CFSQP1       */
 /*******************************************************************/
 
 #ifdef __STDC__
 static void
-dealloc1(int nparam,int nrowa,double **a,double **hess,double **hess1,
-         double *di,double *d,double *gm,double *grdpsf,double *penp,
-         double *bl,double *bu,double *clamda,double *cvec,double *psmu,
-         double *span,double *backup,int *iact,int *iskip,int *istore)
+dealloc1(int nparam, int nrowa, double **a, double **hess, double **hess1,
+         double *di, double *d, double *gm, double *grdpsf, double *penp,
+         double *bl, double *bu, double *clamda, double *cvec, double *psmu,
+         double *span, double *backup, int *iact, int *iskip, int *istore)
 #else
 static void
-dealloc1(nparam,nrowa,a,hess,hess1,di,d,gm,grdpsf,penp,bl,bu,clamda,
-         cvec,psmu,span,backup,iact,iskip,istore)
-int	nparam,nrowa;
-double	**a,**hess,**hess1;
-double  *di,*d,*gm,*grdpsf,*penp,*bl,*bu,*clamda,*cvec,*psmu,*span,
+dealloc1(nparam, nrowa, a, hess, hess1, di, d, gm, grdpsf, penp, bl, bu, clamda,
+         cvec, psmu, span, backup, iact, iskip, istore)
+int nparam, nrowa;
+double **a, **hess, **hess1;
+double  *di, *d, *gm, *grdpsf, *penp, *bl, *bu, *clamda, *cvec, *psmu, *span,
 *backup;
-int	*iact,*iskip,*istore;
+int *iact, *iskip, *istore;
 #endif
 {
-    free_dm(a,nrowa);
-    free_dm(hess,nparam);
-    free_dm(hess1,nparam+1);
+    free_dm(a, nrowa);
+    free_dm(hess, nparam);
+    free_dm(hess1, nparam + 1);
     free_dv(di);
     free_dv(d);
     free_dv(gm);
@@ -5605,53 +5633,53 @@ int	*iact,*iskip,*istore;
 
 #ifdef __STDC__
 static void
-check(int nparam,int nf,int nfsip,int *Linfty,int nineq,
-      int nnl,int neq,int neqn,int ncsipl,int ncsipn,int mode,
-      int *modem,double eps,double bigbnd,struct _parameter *param)
+check(int nparam, int nf, int nfsip, int *Linfty, int nineq,
+      int nnl, int neq, int neqn, int ncsipl, int ncsipn, int mode,
+      int *modem, double eps, double bigbnd, struct _parameter *param)
 #else
 static void
-check(nparam,nf,nfsip,Linfty,nineq,nnl,neq,neqn,ncsipl,ncsipn,
-      mode,modem,eps,bigbnd,param)
-int	nparam,nf,nfsip,nineq,nnl,neq,neqn,ncsipl,ncsipn,mode,*modem,
+check(nparam, nf, nfsip, Linfty, nineq, nnl, neq, neqn, ncsipl, ncsipn,
+      mode, modem, eps, bigbnd, param)
+int nparam, nf, nfsip, nineq, nnl, neq, neqn, ncsipl, ncsipn, mode, *modem,
 *Linfty;
-double  bigbnd,eps;
+double  bigbnd, eps;
 struct  _parameter *param;
 #endif
 {
     int i;
-    double bli,bui;
+    double bli, bui;
 
-    if (nparam<=0)
+    if (nparam <= 0)
         error("nparam should be positive!                ",
               &glob_prnt.info);
-    if (nf<0)
+    if (nf < 0)
         error("nf should not be negative!                ",
               &glob_prnt.info);
-    if (nineq<0)
+    if (nineq < 0)
         error("nineq should not be negative!             ",
               &glob_prnt.info);
-    if (nineq>=0 && nnl>=0 && nineq<nnl)
+    if (nineq >= 0 && nnl >= 0 && nineq < nnl)
         error("nineq should be no smaller then nnl!     ",
               &glob_prnt.info);
-    if (neqn<0)
+    if (neqn < 0)
         error("neqn should not be negative!              ",
               &glob_prnt.info);
-    if (neq<neqn)
+    if (neq < neqn)
         error("neq should not be smaller then neqn      ",
               &glob_prnt.info);
-    if (nf<nfsip)
+    if (nf < nfsip)
         error("nf should not be smaller then nfsip      ",
               &glob_prnt.info);
-    if (nineq<ncsipn+ncsipl)
+    if (nineq < ncsipn + ncsipl)
         error("ncsrl+ncsrn should not be larger then nineq",
               &glob_prnt.info);
-    if (nparam<=neq-neqn)
+    if (nparam <= neq - neqn)
         error("Must have nparam > number of linear equalities",
               &glob_prnt.info);
-    if (glob_prnt.iprint<0 || glob_prnt.iprint>3)
+    if (glob_prnt.iprint < 0 || glob_prnt.iprint > 3)
         error("iprint mod 10 should be 0,1,2 or 3!       ",
               &glob_prnt.info);
-    if (eps<=glob_grd.epsmac)
+    if (eps <= glob_grd.epsmac)
     {
         error("eps should be bigger than epsmac!         ",
               &glob_prnt.info);
@@ -5659,54 +5687,54 @@ struct  _parameter *param;
                 "epsmac = %22.14e which is machine dependent.\n",
                 glob_grd.epsmac);
     }
-    if (!(mode==100 || mode==101 || mode==110 || mode==111
-            || mode==200 || mode==201 || mode==210 || mode==211))
+    if (!(mode == 100 || mode == 101 || mode == 110 || mode == 111
+          || mode == 200 || mode == 201 || mode == 210 || mode == 211))
         error("mode is not properly specified!           ",
               &glob_prnt.info);
-    if (glob_prnt.info!=0)
+    if (glob_prnt.info != 0)
     {
         fprintf(glob_prnt.io,
                 "Error: Input parameters are not consistent.\n");
         return;
     }
-    for (i=1; i<=nparam; i++)
+    for (i = 1; i <= nparam; i++)
     {
-        bli=param->bl[i];
-        bui=param->bu[i];
-        if (bli>bui)
+        bli = param->bl[i];
+        bui = param->bu[i];
+        if (bli > bui)
         {
             fprintf(glob_prnt.io,
                     "lower bounds should be smaller than upper bounds\n");
-            glob_prnt.info=7;
+            glob_prnt.info = 7;
         }
-        if (glob_prnt.info!=0)
+        if (glob_prnt.info != 0)
             return;
-        if (bli<(-bigbnd))
-            param->bl[i]=-bigbnd;
-        if (bui>bigbnd)
-            param->bu[i]=bigbnd;
+        if (bli < (-bigbnd))
+            param->bl[i] = -bigbnd;
+        if (bui > bigbnd)
+            param->bu[i] = bigbnd;
     }
     if (mode >= 200)
     {
-        i=mode-200;
-        glob_info.modec=2;
+        i = mode - 200;
+        glob_info.modec = 2;
     }
     else
     {
-        i=mode-100;
-        glob_info.modec=1;
+        i = mode - 100;
+        glob_info.modec = 1;
     }
-    if (i<10)
-        *modem=0;
+    if (i < 10)
+        *modem = 0;
     else
     {
-        *modem=1;
-        i-=10;
+        *modem = 1;
+        i -= 10;
     }
     if (!i)
-        *Linfty=FALSE;
+        *Linfty = FALSE;
     else
-        *Linfty=TRUE;
+        *Linfty = TRUE;
 }
 /****************************************************************/
 /*    CFSQP : Generate a feasible point satisfying simple       */
@@ -5716,100 +5744,100 @@ struct  _parameter *param;
 
 #ifdef __STDC__
 static void
-initpt(int nparam,int nnl,int neq,int neqn,int nclin,int nctotl,
-       int nrowa,struct _parameter *param,struct _constraint *cs,
-       void (*constr)(int,int,double *,double *,void *),
-       void (*gradcn)(int,int,double *,double *,
-                      void (*)(int,int,double *,double *,void *),void *))
+initpt(int nparam, int nnl, int neq, int neqn, int nclin, int nctotl,
+       int nrowa, struct _parameter *param, struct _constraint *cs,
+       void(*constr)(int, int, double *, double *, void *),
+       void(*gradcn)(int, int, double *, double *,
+                     void(*)(int, int, double *, double *, void *), void *))
 #else
 static void
-initpt(nparam,nnl,neq,neqn,nclin,nctotl,nrowa,param,cs,
-       constr,gradcn)
-int	nparam,nnl,neq,neqn,nclin,nctotl,nrowa;
+initpt(nparam, nnl, neq, neqn, nclin, nctotl, nrowa, param, cs,
+       constr, gradcn)
+int nparam, nnl, neq, neqn, nclin, nctotl, nrowa;
 struct _constraint *cs;
 struct _parameter  *param;
-void    (* constr)(),(* gradcn)();
+void(* constr)(), (* gradcn)();
 #endif
 {
-    int i,j,infoql,mnn,temp1,iout,zero;
-    double x0i,*atemp,*htemp;
-    double *x,*bl,*bu,*cvec,*clamda,*bj;
-    double **a,**hess;
+    int i, j, infoql, mnn, temp1, iout, zero;
+    double x0i, *atemp, *htemp;
+    double *x, *bl, *bu, *cvec, *clamda, *bj;
+    double **a, **hess;
 
-    hess=make_dm(nparam,nparam);
-    a=make_dm(nrowa,nparam);
-    x=make_dv(nparam);
-    bl=make_dv(nctotl);
-    bu=make_dv(nctotl);
-    cvec=make_dv(nparam);
-    clamda=make_dv(nctotl+nparam+1);
-    bj=make_dv(nclin);
+    hess = make_dm(nparam, nparam);
+    a = make_dm(nrowa, nparam);
+    x = make_dv(nparam);
+    bl = make_dv(nctotl);
+    bu = make_dv(nctotl);
+    cvec = make_dv(nparam);
+    clamda = make_dv(nctotl + nparam + 1);
+    bj = make_dv(nclin);
 
-    glob_prnt.info=1;
-    for (i=1; i<=nclin; i++)
+    glob_prnt.info = 1;
+    for (i = 1; i <= nclin; i++)
     {
-        glob_grd.valnom=cs[i].val;
-        j=i+nnl;
-        if (j<=glob_info.nnineq)
-            gradcn(nparam,j,(param->x)+1,cs[i].grad+1,constr,param->cd);
+        glob_grd.valnom = cs[i].val;
+        j = i + nnl;
+        if (j <= glob_info.nnineq)
+            gradcn(nparam, j, (param->x) + 1, cs[i].grad + 1, constr, param->cd);
         else
-            gradcn(nparam,j+neqn,(param->x)+1,cs[i].grad+1,constr,
+            gradcn(nparam, j + neqn, (param->x) + 1, cs[i].grad + 1, constr,
                    param->cd);
     }
-    for (i=1; i<=nparam; i++)
+    for (i = 1; i <= nparam; i++)
     {
-        x0i=param->x[i];
-        bl[i]=param->bl[i]-x0i;
-        bu[i]=param->bu[i]-x0i;
-        cvec[i]=0.e0;
+        x0i = param->x[i];
+        bl[i] = param->bl[i] - x0i;
+        bu[i] = param->bu[i] - x0i;
+        cvec[i] = 0.e0;
     }
-    for (i=nclin; i>=1; i--)
-        bj[nclin-i+1]=-cs[i].val;
-    for (i=nclin; i>=1; i--)
-        for (j=1; j<=nparam; j++)
-            a[nclin-i+1][j]=-cs[i].grad[j];
-    diagnl(nparam,1.e0,hess);
-    nullvc(nparam,x);
+    for (i = nclin; i >= 1; i--)
+        bj[nclin-i+1] = -cs[i].val;
+    for (i = nclin; i >= 1; i--)
+        for (j = 1; j <= nparam; j++)
+            a[nclin-i+1][j] = -cs[i].grad[j];
+    diagnl(nparam, 1.e0, hess);
+    nullvc(nparam, x);
 
-    iout=6;
-    zero=0;
-    mnn=nrowa+2*nparam;
-    iw[1]=1;
-    temp1=neq-neqn;
-    htemp=convert(hess,nparam,nparam);
-    atemp=convert(a,nrowa,nparam);
+    iout = 6;
+    zero = 0;
+    mnn = nrowa + 2 * nparam;
+    iw[1] = 1;
+    temp1 = neq - neqn;
+    htemp = convert(hess, nparam, nparam);
+    atemp = convert(a, nrowa, nparam);
 
-    ql0001_(&nclin,&temp1,&nrowa,&nparam,&nparam,&mnn,(htemp+1),
-            (cvec+1),(atemp+1),(bj+1),(bl+1),(bu+1),(x+1),(clamda+1),
-            &iout,&infoql,&zero,(w+1),&lenw,(iw+1),&leniw,
+    ql0001_(&nclin, &temp1, &nrowa, &nparam, &nparam, &mnn, (htemp + 1),
+            (cvec + 1), (atemp + 1), (bj + 1), (bl + 1), (bu + 1), (x + 1), (clamda + 1),
+            &iout, &infoql, &zero, (w + 1), &lenw, (iw + 1), &leniw,
             &glob_grd.epsmac);
 
     free_dv(htemp);
     free_dv(atemp);
-    if (infoql==0)
+    if (infoql == 0)
     {
-        for (i=1; i<=nparam; i++)
-            param->x[i]=param->x[i]+x[i];
-        x_is_new=TRUE;
-        for (i=1; i<=nclin; i++)
+        for (i = 1; i <= nparam; i++)
+            param->x[i] = param->x[i] + x[i];
+        x_is_new = TRUE;
+        for (i = 1; i <= nclin; i++)
         {
-            j=i+nnl;
-            if (j<=glob_info.nnineq)
-                constr(nparam,j,(param->x)+1,
-                       &(cs[i].val),param->cd);
+            j = i + nnl;
+            if (j <= glob_info.nnineq)
+                constr(nparam, j, (param->x) + 1,
+                       &(cs[i].val), param->cd);
             else
-                constr(nparam,j+neqn,(param->x)+1,&(cs[i].val),param->cd);
+                constr(nparam, j + neqn, (param->x) + 1, &(cs[i].val), param->cd);
         }
-        glob_prnt.info=0;
+        glob_prnt.info = 0;
     }
-    if (glob_prnt.info==1 && glob_prnt.iprint!=0)
+    if (glob_prnt.info == 1 && glob_prnt.iprint != 0)
     {
         fprintf(glob_prnt.io,
                 "\n Error: No feasible point is found for the");
-        fprintf(glob_prnt.io," linear constraints.\n");
+        fprintf(glob_prnt.io, " linear constraints.\n");
     }
-    free_dm(a,nrowa);
-    free_dm(hess,nparam);
+    free_dm(a, nrowa);
+    free_dm(hess, nparam);
     free_dv(x);
     free_dv(bl);
     free_dv(bu);
@@ -5820,97 +5848,97 @@ void    (* constr)(),(* gradcn)();
 }
 /****************************************************************/
 /*   CFSQP : Update the SIP "active" objective and constraint   */
-/*           sets Omega_k and Xi_k.	                        */
+/*           sets Omega_k and Xi_k.                         */
 /****************************************************************/
 
 
 #ifdef __STDC__
 static void
-update_omega(int nparam,int ncsipl,int ncsipn,int *mesh_pts,
-             int nineqn,int nob,int nobL,int nfsip,double steps,
-             double fmax,struct _constraint *cs,struct _objective *ob,
-             double *x,struct _violation *viol,
-             void (*constr)(int,int,double *,double *,void *),
-             void (*obj)(int,int,double *,double *,void *),
-             void (*gradob)(int,int,double *,double *,
-                            void (*)(int,int,double *,double *,void *),void *),
-             void (*gradcn)(int,int,double *,double *,
-                            void (*)(int,int,double *,double *,void *),void *),
-             void *cd,int feasb)
+update_omega(int nparam, int ncsipl, int ncsipn, int *mesh_pts,
+             int nineqn, int nob, int nobL, int nfsip, double steps,
+             double fmax, struct _constraint *cs, struct _objective *ob,
+             double *x, struct _violation *viol,
+             void(*constr)(int, int, double *, double *, void *),
+             void(*obj)(int, int, double *, double *, void *),
+             void(*gradob)(int, int, double *, double *,
+                           void(*)(int, int, double *, double *, void *), void *),
+             void(*gradcn)(int, int, double *, double *,
+                           void(*)(int, int, double *, double *, void *), void *),
+             void *cd, int feasb)
 #else
 static void
-update_omega(nparam,ncsipl,ncsipn,mesh_pts,nineqn,nob,nobL,nfsip,
-             steps,fmax,cs,ob,x,viol,constr,obj,gradob,gradcn,cd,feasb)
-int	nparam,ncsipl,ncsipn,*mesh_pts,nineqn,nobL,nob,nfsip,feasb;
-double	*x,steps,fmax;
+update_omega(nparam, ncsipl, ncsipn, mesh_pts, nineqn, nob, nobL, nfsip,
+             steps, fmax, cs, ob, x, viol, constr, obj, gradob, gradcn, cd, feasb)
+int nparam, ncsipl, ncsipn, *mesh_pts, nineqn, nobL, nob, nfsip, feasb;
+double *x, steps, fmax;
 struct _constraint *cs;
 struct _objective *ob;
 struct _violation *viol;
-void	(* constr)();
-void	(* obj)();
-void    (* gradob)();
-void	(* gradcn)();
+void(* constr)();
+void(* obj)();
+void(* gradob)();
+void(* gradcn)();
 void    *cd;
 #endif
 {
-    int i,j,i_max,index,offset,nineq,display;
-    double epsilon,g_max,fprev,fnow,fnext,fmult;
+    int i, j, i_max, index, offset, nineq, display;
+    double epsilon, g_max, fprev, fnow, fnext, fmult;
 
-    epsilon=1.e0;
-    glob_info.tot_actf_sip=glob_info.tot_actg_sip=0;
-    nineq=glob_info.nnineq;
-    if (glob_prnt.iter%glob_prnt.iter_mod)
-        display=FALSE;
+    epsilon = 1.e0;
+    glob_info.tot_actf_sip = glob_info.tot_actg_sip = 0;
+    nineq = glob_info.nnineq;
+    if (glob_prnt.iter % glob_prnt.iter_mod)
+        display = FALSE;
     else
-        display=TRUE;
+        display = TRUE;
     /* Clear previous constraint sets                   */
-    for (i=1; i<=ncsipl; i++)
-        cs[nineq-ncsipl+i].act_sip=FALSE;
-    for (i=1; i<=ncsipn; i++)
-        cs[nineqn-ncsipn+i].act_sip=FALSE;
+    for (i = 1; i <= ncsipl; i++)
+        cs[nineq-ncsipl+i].act_sip = FALSE;
+    for (i = 1; i <= ncsipn; i++)
+        cs[nineqn-ncsipn+i].act_sip = FALSE;
     /* Clear previous objective sets                    */
-    for (i=nob-nfsip+1; i<=nob; i++)
-        ob[i].act_sip=FALSE;
+    for (i = nob - nfsip + 1; i <= nob; i++)
+        ob[i].act_sip = FALSE;
 
     /*--------------------------------------------------*/
-    /* Update Constraint Sets Omega_k	       	       */
+    /* Update Constraint Sets Omega_k                */
     /*--------------------------------------------------*/
 
     if (ncsipn != 0)
     {
-        offset=nineqn-ncsipn;
-        for (i=1; i<=glob_info.ncsipn; i++)
+        offset = nineqn - ncsipn;
+        for (i = 1; i <= glob_info.ncsipn; i++)
         {
-            for (j=1; j<=mesh_pts[glob_info.nfsip+i]; j++)
+            for (j = 1; j <= mesh_pts[glob_info.nfsip+i]; j++)
             {
                 offset++;
-                if (j==1)
+                if (j == 1)
                 {
                     if (cs[offset].val >= -epsilon &&
-                            cs[offset].val>=cs[offset+1].val)
+                        cs[offset].val >= cs[offset+1].val)
                     {
-                        cs[offset].act_sip=TRUE;
+                        cs[offset].act_sip = TRUE;
                         glob_info.tot_actg_sip++;
-                        if (cs[offset].mult==0.e0 && !glob_log.first)
+                        if (cs[offset].mult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=cs[offset].val;
-                            gradcn(nparam,offset,x+1,cs[offset].grad+1,constr,
+                            glob_grd.valnom = cs[offset].val;
+                            gradcn(nparam, offset, x + 1, cs[offset].grad + 1, constr,
                                    cd);
                         }
                         continue;
                     }
                 }
-                else if (j==mesh_pts[glob_info.nfsip+i])
+                else if (j == mesh_pts[glob_info.nfsip+i])
                 {
                     if (cs[offset].val >= -epsilon &&
-                            cs[offset].val>cs[offset-1].val)
+                        cs[offset].val > cs[offset-1].val)
                     {
-                        cs[offset].act_sip=TRUE;
+                        cs[offset].act_sip = TRUE;
                         glob_info.tot_actg_sip++;
-                        if (cs[offset].mult==0.e0 && !glob_log.first)
+                        if (cs[offset].mult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=cs[offset].val;
-                            gradcn(nparam,offset,x+1,cs[offset].grad+1,constr,
+                            glob_grd.valnom = cs[offset].val;
+                            gradcn(nparam, offset, x + 1, cs[offset].grad + 1, constr,
                                    cd);
                         }
                         continue;
@@ -5919,15 +5947,15 @@ void    *cd;
                 else
                 {
                     if (cs[offset].val >= -epsilon && cs[offset].val >
-                            cs[offset-1].val && cs[offset].val >=
-                            cs[offset+1].val)
+                        cs[offset-1].val && cs[offset].val >=
+                        cs[offset+1].val)
                     {
-                        cs[offset].act_sip=TRUE;
+                        cs[offset].act_sip = TRUE;
                         glob_info.tot_actg_sip++;
-                        if (cs[offset].mult==0.e0 && !glob_log.first)
+                        if (cs[offset].mult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=cs[offset].val;
-                            gradcn(nparam,offset,x+1,cs[offset].grad+1,constr,
+                            glob_grd.valnom = cs[offset].val;
+                            gradcn(nparam, offset, x + 1, cs[offset].grad + 1, constr,
                                    cd);
                         }
                         continue;
@@ -5935,29 +5963,29 @@ void    *cd;
                 }
                 if (cs[offset].val >= -glob_grd.epsmac)
                 {
-                    cs[offset].act_sip=TRUE;
+                    cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
-                    if (cs[offset].mult==0.e0 && !glob_log.first)
+                    if (cs[offset].mult == 0.e0 && !glob_log.first)
                     {
-                        glob_grd.valnom=cs[offset].val;
-                        gradcn(nparam,offset,x+1,cs[offset].grad+1,constr,cd);
+                        glob_grd.valnom = cs[offset].val;
+                        gradcn(nparam, offset, x + 1, cs[offset].grad + 1, constr, cd);
                     }
                     continue;
                 }
-                if (cs[offset].mult>0.e0)
+                if (cs[offset].mult > 0.e0)
                 {
-                    cs[offset].act_sip=TRUE;
+                    cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
                 /* Add if binding for d1  */
                 if (cs[offset].d1bind)
                 {
-                    cs[offset].act_sip=TRUE;
+                    cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
-                    if (cs[offset].mult==0.e0 && !glob_log.first)
+                    if (cs[offset].mult == 0.e0 && !glob_log.first)
                     {
-                        glob_grd.valnom=cs[offset].val;
-                        gradcn(nparam,offset,x+1,cs[offset].grad+1,constr,cd);
+                        glob_grd.valnom = cs[offset].val;
+                        gradcn(nparam, offset, x + 1, cs[offset].grad + 1, constr, cd);
                     }
                 }
 
@@ -5967,33 +5995,33 @@ void    *cd;
     if (ncsipl != 0)
     {
         /* Don't need to get gradients */
-        offset=nineq-ncsipl;
-        for (i=1; i<=glob_info.ncsipl; i++)
+        offset = nineq - ncsipl;
+        for (i = 1; i <= glob_info.ncsipl; i++)
         {
             if (feasb)
-                index=glob_info.nfsip+glob_info.ncsipn+i;
+                index = glob_info.nfsip + glob_info.ncsipn + i;
             else
-                index=glob_info.ncsipn+i;
-            for (j=1; j<=mesh_pts[index]; j++)
+                index = glob_info.ncsipn + i;
+            for (j = 1; j <= mesh_pts[index]; j++)
             {
                 offset++;
-                if (j==1)
+                if (j == 1)
                 {
                     if (cs[offset].val >= -epsilon &&
-                            cs[offset].val>=cs[offset+1].val)
+                        cs[offset].val >= cs[offset+1].val)
                     {
-                        cs[offset].act_sip=TRUE;
+                        cs[offset].act_sip = TRUE;
                         glob_info.tot_actg_sip++;
                         continue;
                     }
                 }
                 else
-                    if (j==mesh_pts[index])
+                    if (j == mesh_pts[index])
                     {
                         if (cs[offset].val >= -epsilon &&
-                                cs[offset].val>cs[offset-1].val)
+                            cs[offset].val > cs[offset-1].val)
                         {
-                            cs[offset].act_sip=TRUE;
+                            cs[offset].act_sip = TRUE;
                             glob_info.tot_actg_sip++;
                             continue;
                         }
@@ -6001,18 +6029,18 @@ void    *cd;
                     else
                     {
                         if (cs[offset].val >= -epsilon && cs[offset].val >
-                                cs[offset-1].val && cs[offset].val >=
-                                cs[offset+1].val)
+                            cs[offset-1].val && cs[offset].val >=
+                            cs[offset+1].val)
                         {
-                            cs[offset].act_sip=TRUE;
+                            cs[offset].act_sip = TRUE;
                             glob_info.tot_actg_sip++;
                             continue;
                         }
                     }
                 if (cs[offset].val >= -glob_grd.epsmac ||
-                        cs[offset].mult>0.e0 || cs[offset].d1bind)
+                    cs[offset].mult > 0.e0 || cs[offset].d1bind)
                 {
-                    cs[offset].act_sip=TRUE;
+                    cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
             }
@@ -6025,214 +6053,214 @@ void    *cd;
     {
         if (feasb)
         {
-            offset=nineqn-ncsipn;
-            for (i=1; i<=glob_info.ncsipn; i++)
+            offset = nineqn - ncsipn;
+            for (i = 1; i <= glob_info.ncsipn; i++)
             {
-                i_max= ++offset;
-                g_max=cs[i_max].val;
+                i_max = ++offset;
+                g_max = cs[i_max].val;
                 if (!cs[i_max].act_sip)
                 { /* add first point       */
-                    cs[i_max].act_sip=TRUE;
+                    cs[i_max].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
-                for (j=2;j<=mesh_pts[glob_info.nfsip+i];j++)
+                for (j = 2;j <= mesh_pts[glob_info.nfsip+i];j++)
                 {
                     offset++;
-                    if (cs[offset].val>g_max)
+                    if (cs[offset].val > g_max)
                     {
-                        i_max=offset;
-                        g_max=cs[i_max].val;
+                        i_max = offset;
+                        g_max = cs[i_max].val;
                     }
                 }
                 if (!cs[i_max].act_sip)
                 {
-                    cs[i_max].act_sip=TRUE;
+                    cs[i_max].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
                 if (!cs[offset].act_sip)
                 { /* add last point          */
-                    cs[offset].act_sip=TRUE;
+                    cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
             }
         }
-        offset=nineq-ncsipl;
-        for (i=1; i<=glob_info.ncsipl; i++)
+        offset = nineq - ncsipl;
+        for (i = 1; i <= glob_info.ncsipl; i++)
         {
-            i_max= ++offset;
-            g_max=cs[i_max].val;
+            i_max = ++offset;
+            g_max = cs[i_max].val;
             if (!cs[i_max].act_sip)
             { /* add first point       */
-                cs[i_max].act_sip=TRUE;
+                cs[i_max].act_sip = TRUE;
                 glob_info.tot_actg_sip++;
             }
             if (feasb)
-                index=glob_info.nfsip+glob_info.ncsipn+i;
+                index = glob_info.nfsip + glob_info.ncsipn + i;
             else
-                index=glob_info.ncsipn+i;
-            for (j=2;j<=mesh_pts[index]; j++)
+                index = glob_info.ncsipn + i;
+            for (j = 2;j <= mesh_pts[index]; j++)
             {
                 offset++;
-                if (cs[offset].val>g_max)
+                if (cs[offset].val > g_max)
                 {
-                    i_max=offset;
-                    g_max=cs[i_max].val;
+                    i_max = offset;
+                    g_max = cs[i_max].val;
                 }
             }
             if (!cs[i_max].act_sip)
             {
-                cs[i_max].act_sip=TRUE;
+                cs[i_max].act_sip = TRUE;
                 glob_info.tot_actg_sip++;
             }
             if (!cs[offset].act_sip)
             { /* add last point          */
-                cs[offset].act_sip=TRUE;
+                cs[offset].act_sip = TRUE;
                 glob_info.tot_actg_sip++;
             }
         }
     }
 
-    /* If necessary, append xi_bar		               */
-    if (steps<1.e0 && viol->type==CONSTR)
+    /* If necessary, append xi_bar                 */
+    if (steps < 1.e0 && viol->type == CONSTR)
     {
-        i=viol->index;
+        i = viol->index;
         if (!cs[i].act_sip)
         {
-            cs[i].act_sip=TRUE;
+            cs[i].act_sip = TRUE;
             glob_info.tot_actg_sip++;
         }
     }
-    if (glob_prnt.iprint>=2 && display)
-        fprintf(glob_prnt.io," |Xi_k| for g %26d\n",
+    if (glob_prnt.iprint >= 2 && display)
+        fprintf(glob_prnt.io, " |Xi_k| for g %26d\n",
                 glob_info.tot_actg_sip);
 
-    for (i=1; i<=ncsipl; i++)
-        cs[nineq-ncsipl+i].d1bind=FALSE;
-    for (i=1; i<=ncsipn; i++)
-        cs[nineqn-ncsipn+i].d1bind=FALSE;
+    for (i = 1; i <= ncsipl; i++)
+        cs[nineq-ncsipl+i].d1bind = FALSE;
+    for (i = 1; i <= ncsipn; i++)
+        cs[nineqn-ncsipn+i].d1bind = FALSE;
 
     /*---------------------------------------------------------*/
-    /* Update Objective Set Omega_k				      */
+    /* Update Objective Set Omega_k          */
     /*---------------------------------------------------------*/
 
     if (nfsip)
     {
-        offset=nob-nfsip;
+        offset = nob - nfsip;
         if (feasb)
-            index=glob_info.nfsip;
+            index = glob_info.nfsip;
         else
-            index=glob_info.ncsipn;
-        for (i=1; i<=index; i++)
+            index = glob_info.ncsipn;
+        for (i = 1; i <= index; i++)
         {
-            for (j=1; j<=mesh_pts[i]; j++)
+            for (j = 1; j <= mesh_pts[i]; j++)
             {
                 offset++;
-                if (nobL>nob)
+                if (nobL > nob)
                 {
-                    fnow=fabs(ob[offset].val);
-                    fmult=DMAX1(fabs(ob[offset].mult),
-                                fabs(ob[offset].mult_L));
+                    fnow = fabs(ob[offset].val);
+                    fmult = DMAX1(fabs(ob[offset].mult),
+                                  fabs(ob[offset].mult_L));
                 }
                 else
                 {
-                    fnow=ob[offset].val;
-                    fmult=ob[offset].mult;
+                    fnow = ob[offset].val;
+                    fmult = ob[offset].mult;
                 }
-                if (j==1)
+                if (j == 1)
                 {
-                    if (nobL>nob)
-                        fnext=fabs(ob[offset+1].val);
+                    if (nobL > nob)
+                        fnext = fabs(ob[offset+1].val);
                     else
-                        fnext=ob[offset+1].val;
-                    if ((fnow>=fmax-epsilon)&& fnow>=fnext)
+                        fnext = ob[offset+1].val;
+                    if ((fnow >= fmax - epsilon) && fnow >= fnext)
                     {
-                        ob[offset].act_sip=TRUE;
+                        ob[offset].act_sip = TRUE;
                         glob_info.tot_actf_sip++;
-                        if (fmult==0.e0 && !glob_log.first)
+                        if (fmult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=ob[offset].val;
+                            glob_grd.valnom = ob[offset].val;
                             if (feasb)
-                                gradob(nparam,offset,x+1,
-                                       ob[offset].grad+1,obj,cd);
+                                gradob(nparam, offset, x + 1,
+                                       ob[offset].grad + 1, obj, cd);
                             else
-                                gradcn(nparam,offset,x+1,ob[offset].grad+1,
-                                       constr,cd);
+                                gradcn(nparam, offset, x + 1, ob[offset].grad + 1,
+                                       constr, cd);
                         }
                         continue;
                     }
                 }
-                else if (j==mesh_pts[i])
+                else if (j == mesh_pts[i])
                 {
-                    if (nobL>nob)
-                        fprev=fabs(ob[offset-1].val);
+                    if (nobL > nob)
+                        fprev = fabs(ob[offset-1].val);
                     else
-                        fprev=ob[offset-1].val;
-                    if ((fnow>=fmax-epsilon)&& fnow>fprev)
+                        fprev = ob[offset-1].val;
+                    if ((fnow >= fmax - epsilon) && fnow > fprev)
                     {
-                        ob[offset].act_sip=TRUE;
+                        ob[offset].act_sip = TRUE;
                         glob_info.tot_actf_sip++;
-                        if (fmult==0.e0 && !glob_log.first)
+                        if (fmult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=ob[offset].val;
+                            glob_grd.valnom = ob[offset].val;
                             if (feasb)
-                                gradob(nparam,offset,x+1,
-                                       ob[offset].grad+1,obj,cd);
+                                gradob(nparam, offset, x + 1,
+                                       ob[offset].grad + 1, obj, cd);
                             else
-                                gradcn(nparam,offset,x+1,ob[offset].grad+1,
-                                       constr,cd);
+                                gradcn(nparam, offset, x + 1, ob[offset].grad + 1,
+                                       constr, cd);
                         }
                         continue;
                     }
                 }
                 else
                 {
-                    if (nobL>nob)
+                    if (nobL > nob)
                     {
-                        fprev=fabs(ob[offset-1].val);
-                        fnext=fabs(ob[offset+1].val);
+                        fprev = fabs(ob[offset-1].val);
+                        fnext = fabs(ob[offset+1].val);
                     }
                     else
                     {
-                        fprev=ob[offset-1].val;
-                        fnext=ob[offset+1].val;
+                        fprev = ob[offset-1].val;
+                        fnext = ob[offset+1].val;
                     }
-                    if ((fnow>=fmax-epsilon)&& fnow>fprev &&
-                            fnow>=fnext)
+                    if ((fnow >= fmax - epsilon) && fnow > fprev &&
+                        fnow >= fnext)
                     {
-                        ob[offset].act_sip=TRUE;
+                        ob[offset].act_sip = TRUE;
                         glob_info.tot_actf_sip++;
-                        if (fmult==0.e0 && !glob_log.first)
+                        if (fmult == 0.e0 && !glob_log.first)
                         {
-                            glob_grd.valnom=ob[offset].val;
+                            glob_grd.valnom = ob[offset].val;
                             if (feasb)
-                                gradob(nparam,offset,x+1,
-                                       ob[offset].grad+1,obj,cd);
+                                gradob(nparam, offset, x + 1,
+                                       ob[offset].grad + 1, obj, cd);
                             else
-                                gradcn(nparam,offset,x+1,ob[offset].grad+1,
-                                       constr,cd);
+                                gradcn(nparam, offset, x + 1, ob[offset].grad + 1,
+                                       constr, cd);
                         }
                         continue;
                     }
                 }
-                if (fnow>= fmax-glob_grd.epsmac && !ob[offset].act_sip)
+                if (fnow >= fmax - glob_grd.epsmac && !ob[offset].act_sip)
                 {
-                    ob[offset].act_sip=TRUE;
+                    ob[offset].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
-                    if (fmult==0.e0 && !glob_log.first)
+                    if (fmult == 0.e0 && !glob_log.first)
                     {
-                        glob_grd.valnom=ob[offset].val;
+                        glob_grd.valnom = ob[offset].val;
                         if (feasb)
-                            gradob(nparam,offset,x+1,
-                                   ob[offset].grad+1,obj,cd);
+                            gradob(nparam, offset, x + 1,
+                                   ob[offset].grad + 1, obj, cd);
                         else
-                            gradcn(nparam,offset,x+1,ob[offset].grad+1,
-                                   constr,cd);
+                            gradcn(nparam, offset, x + 1, ob[offset].grad + 1,
+                                   constr, cd);
                     }
                     continue;
                 }
-                if (fmult!=0.e0 && !ob[offset].act_sip)
+                if (fmult != 0.e0 && !ob[offset].act_sip)
                 {
-                    ob[offset].act_sip=TRUE;
+                    ob[offset].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                     continue;
                 }
@@ -6242,65 +6270,65 @@ void    *cd;
         /* Current heuristics: maximizers and end-points        */
         if (glob_log.first)
         {
-            offset=nob-nfsip;
+            offset = nob - nfsip;
             if (feasb)
-                index=glob_info.nfsip;
+                index = glob_info.nfsip;
             else
-                index=glob_info.ncsipn;
-            for (i=1; i<=index; i++)
+                index = glob_info.ncsipn;
+            for (i = 1; i <= index; i++)
             {
-                i_max= ++offset;
-                if (nobL==nob)
-                    g_max=ob[i_max].val;
+                i_max = ++offset;
+                if (nobL == nob)
+                    g_max = ob[i_max].val;
                 else
-                    g_max=fabs(ob[i_max].val);
+                    g_max = fabs(ob[i_max].val);
                 if (!ob[i_max].act_sip)
                 { /* add first point       */
-                    ob[i_max].act_sip=TRUE;
+                    ob[i_max].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                 }
-                for (j=2;j<=mesh_pts[i];j++)
+                for (j = 2;j <= mesh_pts[i];j++)
                 {
                     offset++;
-                    if (nobL==nob)
-                        fnow=ob[offset].val;
+                    if (nobL == nob)
+                        fnow = ob[offset].val;
                     else
-                        fnow=fabs(ob[offset].val);
-                    if (fnow>g_max)
+                        fnow = fabs(ob[offset].val);
+                    if (fnow > g_max)
                     {
-                        i_max=offset;
-                        g_max=fnow;
+                        i_max = offset;
+                        g_max = fnow;
                     }
                 }
                 if (!ob[i_max].act_sip)
                 {
-                    ob[i_max].act_sip=TRUE;
+                    ob[i_max].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                 }
                 if (!ob[offset].act_sip)
                 { /* add last point          */
-                    ob[offset].act_sip=TRUE;
+                    ob[offset].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                 }
             }
         }
 
-        /* If necessary, append omega_bar			         */
-        if (steps<1.e0 && viol->type==OBJECT)
+        /* If necessary, append omega_bar            */
+        if (steps < 1.e0 && viol->type == OBJECT)
         {
-            i=viol->index;
+            i = viol->index;
             if (!ob[i].act_sip)
             {
-                ob[i].act_sip=TRUE;
+                ob[i].act_sip = TRUE;
                 glob_info.tot_actf_sip++;
             }
         }
-        if (glob_prnt.iprint>=2 && display)
-            fprintf(glob_prnt.io," |Omega_k| for f %26d\n",
+        if (glob_prnt.iprint >= 2 && display)
+            fprintf(glob_prnt.io, " |Omega_k| for f %26d\n",
                     glob_info.tot_actf_sip);
     }
-    viol->type=NONE;
-    viol->index=0;
+    viol->type = NONE;
+    viol->index = 0;
     return;
 }
 /*******************************************************************/
@@ -6310,16 +6338,16 @@ void    *cd;
 
 #ifdef __STDC__
 static void
-dqp(int,int,int,int,int,int,int,int,int,int,int,int,int,
-    int,int,int *,struct _parameter *,double *,int,
-    struct _objective *,double,double *,struct _constraint *,
-    double **,double *,double *,double *,double *,
-    double **,double **,double *,double,int);
+dqp(int, int, int, int, int, int, int, int, int, int, int, int, int,
+    int, int, int *, struct _parameter *, double *, int,
+    struct _objective *, double, double *, struct _constraint *,
+    double **, double *, double *, double *, double *,
+    double **, double **, double *, double, int);
 static void
-di1(int,int,int,int,int,int,int,int,int,int,int,int,int *,
-    int,struct _parameter *,double *,struct _objective *,
-    double,double *,struct _constraint *,double *,
-    double *,double *,double *,double **,double *,double);
+di1(int, int, int, int, int, int, int, int, int, int, int, int, int *,
+    int, struct _parameter *, double *, struct _objective *,
+    double, double *, struct _constraint *, double *,
+    double *, double *, double *, double **, double *, double);
 #else
 static void dqp();
 static void di1();
@@ -6327,175 +6355,175 @@ static void di1();
 
 #ifdef __STDC__
 static void
-dir(int nparam,int nob,int nobL,int nfsip,int nineqn,int neq,int neqn,
-    int nn,int ncsipl,int ncsipn,int ncnstr,
-    int feasb,double *steps,double epskt,double epseqn,
-    double *sktnom,double *scvneq,double Ck,double *d0nm,
-    double *grdftd,int *indxob,int *indxcn,int *iact,int *iskp,
-    int *iskip,int *istore,struct _parameter *param,double *di,
-    double *d,struct _constraint *cs,struct _objective *ob,
-    double *fM,double *fMp,double *fmax,double *psf,double *grdpsf,
-    double *penp,double **a,double *bl,double *bu,double *clamda,
-    double *cvec,double **hess,double **hess1,
-    double *backup,double *signeq,struct _violation *viol,
-    void (*obj)(int,int,double *,double *,void *),
-    void (*constr)(int,int,double *,double *,void *))
+dir(int nparam, int nob, int nobL, int nfsip, int nineqn, int neq, int neqn,
+    int nn, int ncsipl, int ncsipn, int ncnstr,
+    int feasb, double *steps, double epskt, double epseqn,
+    double *sktnom, double *scvneq, double Ck, double *d0nm,
+    double *grdftd, int *indxob, int *indxcn, int *iact, int *iskp,
+    int *iskip, int *istore, struct _parameter *param, double *di,
+    double *d, struct _constraint *cs, struct _objective *ob,
+    double *fM, double *fMp, double *fmax, double *psf, double *grdpsf,
+    double *penp, double **a, double *bl, double *bu, double *clamda,
+    double *cvec, double **hess, double **hess1,
+    double *backup, double *signeq, struct _violation *viol,
+    void(*obj)(int, int, double *, double *, void *),
+    void(*constr)(int, int, double *, double *, void *))
 #else
 static void
-dir(nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,ncnstr,
-    feasb,steps,epskt,epseqn,sktnom,scvneq,Ck,d0nm,
-    grdftd,indxob,indxcn,iact,iskp,iskip,istore,param,di,d,cs,ob,
-    fM,fMp,fmax,psf,grdpsf,penp,a,bl,bu,clamda,cvec,hess,hess1,
-    backup,signeq,viol,obj,constr)
-int	nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,ncnstr,
-*iskp,feasb;
-int	*indxob,*indxcn,*iact,*iskip,*istore;
-double	*steps,epskt,epseqn,*sktnom,Ck,*d0nm,*grdftd,*fM,*fMp,
-*fmax,*psf,*scvneq;
-double  *di,*d,*grdpsf,*penp,**a,*bl,*bu,*clamda,*cvec,**hess,
-**hess1,*backup,*signeq;
+dir(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
+    feasb, steps, epskt, epseqn, sktnom, scvneq, Ck, d0nm,
+    grdftd, indxob, indxcn, iact, iskp, iskip, istore, param, di, d, cs, ob,
+    fM, fMp, fmax, psf, grdpsf, penp, a, bl, bu, clamda, cvec, hess, hess1,
+    backup, signeq, viol, obj, constr)
+int nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
+*iskp, feasb;
+int *indxob, *indxcn, *iact, *iskip, *istore;
+double *steps, epskt, epseqn, *sktnom, Ck, *d0nm, *grdftd, *fM, *fMp,
+*fmax, *psf, *scvneq;
+double  *di, *d, *grdpsf, *penp, **a, *bl, *bu, *clamda, *cvec, **hess,
+**hess1, *backup, *signeq;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _parameter  *param;
 struct  _violation  *viol;
-void    (* obj)(),(* constr)();
+void(* obj)(), (* constr)();
 #endif
 {
-    int  i,j,k,kk,ncg,ncf,nqprm0,nclin0,nctot0,infoqp,nqprm1,ncl,
-    nclin1,ncc,nff,nrowa0,nrowa1,ninq,nobb,nobbL,
-    nncn,ltem1,ltem2,display,need_d1;
-    double fmxl,vv,dx,dmx,dnm1,dnm,v0,v1,vk,temp1,temp2,theta,
-    rhol,rhog,rho,grdfd0,grdfd1,dummy,grdgd0,grdgd1,thrshd,
-    sign,*adummy,dnmtil,*tempv;
+    int  i, j, k, kk, ncg, ncf, nqprm0, nclin0, nctot0, infoqp, nqprm1, ncl,
+    nclin1, ncc, nff, nrowa0, nrowa1, ninq, nobb, nobbL,
+    nncn, ltem1, ltem2, display, need_d1;
+    double fmxl, vv, dx, dmx, dnm1, dnm, v0, v1, vk, temp1, temp2, theta,
+    rhol, rhog, rho, grdfd0, grdfd1, dummy, grdgd0, grdgd1, thrshd,
+    sign, *adummy, dnmtil, *tempv;
 
-    ncg=ncf=*iskp=0;
-    ncl=glob_info.nnineq-nineqn;
-    glob_log.local=glob_log.update=FALSE;
-    glob_log.rhol_is1=FALSE;
-    thrshd=tolfea;
-    adummy=make_dv(1);
-    adummy[1]=0.e0;
-    dummy=0.e0;
-    temp1=temp2=0.e0;
-    if (glob_prnt.iter%glob_prnt.iter_mod)
-        display=FALSE;
+    ncg = ncf = *iskp = 0;
+    ncl = glob_info.nnineq - nineqn;
+    glob_log.local = glob_log.update = FALSE;
+    glob_log.rhol_is1 = FALSE;
+    thrshd = tolfea;
+    adummy = make_dv(1);
+    adummy[1] = 0.e0;
+    dummy = 0.e0;
+    temp1 = temp2 = 0.e0;
+    if (glob_prnt.iter % glob_prnt.iter_mod)
+        display = FALSE;
     else
-        display=TRUE;
-    need_d1=TRUE;
+        display = TRUE;
+    need_d1 = TRUE;
 
-    if (nobL<=1)
+    if (nobL <= 1)
     {
-        nqprm0=nparam;
-        nclin0=ncnstr;
+        nqprm0 = nparam;
+        nclin0 = ncnstr;
     }
     else
     {
-        nqprm0=nparam+1;
-        nclin0=ncnstr+nobL;
+        nqprm0 = nparam + 1;
+        nclin0 = ncnstr + nobL;
     }
-    nctot0=nqprm0+nclin0;
-    vv=0.e0;
-    nrowa0=DMAX1(nclin0,1);
-    for (i=1; i<=ncnstr; i++)
+    nctot0 = nqprm0 + nclin0;
+    vv = 0.e0;
+    nrowa0 = DMAX1(nclin0, 1);
+    for (i = 1; i <= ncnstr; i++)
     {
         if (feasb)
         {
-            if (i>nineqn && i<=glob_info.nnineq)
-                iskip[glob_info.nnineq+2-i]=i;
-            iw[i]=i;
+            if (i > nineqn && i <= glob_info.nnineq)
+                iskip[glob_info.nnineq+2-i] = i;
+            iw[i] = i;
         }
         else
         {
-            if (i<=ncl)
-                iskip[ncl+2-i]=nineqn+i;
-            if (i<=ncl)
-                iw[i]=nineqn+i;
-            if (i>ncl)
-                iw[i]=nineqn+neqn+i;
+            if (i <= ncl)
+                iskip[ncl+2-i] = nineqn + i;
+            if (i <= ncl)
+                iw[i] = nineqn + i;
+            if (i > ncl)
+                iw[i] = nineqn + neqn + i;
         }
     }
-    for (i=1; i<=nob; i++)
-        iw[ncnstr+i]=i;
+    for (i = 1; i <= nob; i++)
+        iw[ncnstr+i] = i;
     nullvc(nparam, cvec);
-    glob_log.d0_is0=FALSE;
-    dqp(nparam,nqprm0,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-        ncnstr,nctot0,nrowa0,nineqn,&infoqp,param,di,feasb,ob,
-        *fmax,grdpsf,cs,a,cvec,bl,bu,clamda,hess,hess1,di,vv,0);
-    if (infoqp!=0)
+    glob_log.d0_is0 = FALSE;
+    dqp(nparam, nqprm0, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+        ncnstr, nctot0, nrowa0, nineqn, &infoqp, param, di, feasb, ob,
+        *fmax, grdpsf, cs, a, cvec, bl, bu, clamda, hess, hess1, di, vv, 0);
+    if (infoqp != 0)
     {
-        glob_prnt.info=5;
+        glob_prnt.info = 5;
         if (!feasb)
-            glob_prnt.info=2;
-        nstop=0;
+            glob_prnt.info = 2;
+        nstop = 0;
         free_dv(adummy);
         return;
     }
     /*-------------------------------------------------------------*/
     /*    Reorder indexes of constraints & objectives              */
     /*-------------------------------------------------------------*/
-    if (nn>1)
+    if (nn > 1)
     {
-        j=1;
-        k=nn;
-        for (i=nn; i>=1; i--)
+        j = 1;
+        k = nn;
+        for (i = nn; i >= 1; i--)
         {
-            if (fuscmp(cs[indxcn[i]].mult,thrshd))
+            if (fuscmp(cs[indxcn[i]].mult, thrshd))
             {
-                iact[j]=indxcn[i];
+                iact[j] = indxcn[i];
                 j++;
             }
             else
             {
-                iact[k]=indxcn[i];
+                iact[k] = indxcn[i];
                 k--;
             }
         }
     }
-    if (nobL>1)
+    if (nobL > 1)
     {
-        j=nn+1;
-        k=nn+nob;
-        for (i=nob; i>=1; i--)
+        j = nn + 1;
+        k = nn + nob;
+        for (i = nob; i >= 1; i--)
         {
-            kk=nqprm0+ncnstr;
-            ltem1=fuscmp(ob[i].mult,thrshd);
-            ltem2=(nobL!=nob) && (fuscmp(ob[i].mult_L,thrshd));
+            kk = nqprm0 + ncnstr;
+            ltem1 = fuscmp(ob[i].mult, thrshd);
+            ltem2 = (nobL != nob) && (fuscmp(ob[i].mult_L, thrshd));
             if (ltem1 || ltem2)
             {
-                iact[j]=i;
+                iact[j] = i;
                 j++;
             }
             else
             {
-                iact[k]=i;
+                iact[k] = i;
                 k--;
             }
         }
     }
-    if (nob>0)
-        vv=ob[iact[nn+1]].val;
-    *d0nm=sqrt(scaprd(nparam,di,di));
-    if (glob_log.first && nclin0==0)
+    if (nob > 0)
+        vv = ob[iact[nn+1]].val;
+    *d0nm = sqrt(scaprd(nparam, di, di));
+    if (glob_log.first && nclin0 == 0)
     {
-        dx=sqrt(scaprd(nparam,param->x,param->x));
-        dmx=DMAX1(dx,1.e0);
-        if (*d0nm>dmx)
+        dx = sqrt(scaprd(nparam, param->x, param->x));
+        dmx = DMAX1(dx, 1.e0);
+        if (*d0nm > dmx)
         {
-            for (i=1; i<=nparam; i++)
-                di[i]=di[i]*dmx/(*d0nm);
-            *d0nm=dmx;
+            for (i = 1; i <= nparam; i++)
+                di[i] = di[i] * dmx / (*d0nm);
+            *d0nm = dmx;
         }
     }
-    matrvc(nparam,nparam,hess,di,w);
-    if (nn==0)
-        *grdftd = -scaprd(nparam,w,di);
-    *sktnom=sqrt(scaprd(nparam,w,w));
-    if (((*d0nm<=epskt)||((gLgeps>0.e0)&&(*sktnom<=gLgeps)))&&
-            (neqn==0 || *scvneq<=epseqn))
+    matrvc(nparam, nparam, hess, di, w);
+    if (nn == 0)
+        *grdftd = -scaprd(nparam, w, di);
+    *sktnom = sqrt(scaprd(nparam, w, w));
+    if (((*d0nm <= epskt) || ((gLgeps > 0.e0) && (*sktnom <= gLgeps))) &&
+        (neqn == 0 || *scvneq <= epseqn))
     {
         /* We are finished! */
-        nstop=0;
-        if (feasb && glob_log.first && neqn!=0)
+        nstop = 0;
+        if (feasb && glob_log.first && neqn != 0)
         {
             /*  Finished, but still need to estimate nonlinear equality
                 constraint multipliers   */
@@ -6503,40 +6531,40 @@ void    (* obj)(),(* constr)();
             glob_log.d0_is0 = TRUE;
         }
         if (!feasb)
-            glob_prnt.info=2;
+            glob_prnt.info = 2;
         free_dv(adummy);
-        if (glob_prnt.iprint<3 || !display)
+        if (glob_prnt.iprint < 3 || !display)
             return;
-        if (nobL<=1)
-            nff=1;
-        if (nobL>1)
-            nff=2;
-        sbout1(glob_prnt.io,nparam,"multipliers for x   ",dummy,
-               param->mult,2,2);
-        if (ncnstr!=0)
+        if (nobL <= 1)
+            nff = 1;
+        if (nobL > 1)
+            nff = 2;
+        sbout1(glob_prnt.io, nparam, "multipliers for x   ", dummy,
+               param->mult, 2, 2);
+        if (ncnstr != 0)
         {
-            fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
-                    "           for g    ",cs[1].mult);
-            for (j=2; j<=ncnstr; j++)
-                fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",cs[j].mult);
+            fprintf(glob_prnt.io, "\t\t\t %s\t %22.14e\n",
+                    "           for g    ", cs[1].mult);
+            for (j = 2; j <= ncnstr; j++)
+                fprintf(glob_prnt.io, " \t\t\t\t\t\t %22.14e\n", cs[j].mult);
         }
-        if (nobL>1)
+        if (nobL > 1)
         {
-            fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
-                    "           for f    ",ob[1].mult);
-            for (j=2; j<=nob; j++)
-                fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",ob[j].mult);
+            fprintf(glob_prnt.io, "\t\t\t %s\t %22.14e\n",
+                    "           for f    ", ob[1].mult);
+            for (j = 2; j <= nob; j++)
+                fprintf(glob_prnt.io, " \t\t\t\t\t\t %22.14e\n", ob[j].mult);
         }
         return;
     }
-    if (glob_prnt.iprint>=3 && display)
+    if (glob_prnt.iprint >= 3 && display)
     {
-        sbout1(glob_prnt.io,nparam,"d0                  ",dummy,di,2,2);
-        sbout1(glob_prnt.io,0,"d0norm              ",*d0nm,adummy,1,2);
-        sbout1(glob_prnt.io,0,"ktnorm              ",*sktnom,adummy,1,2);
+        sbout1(glob_prnt.io, nparam, "d0                  ", dummy, di, 2, 2);
+        sbout1(glob_prnt.io, 0, "d0norm              ", *d0nm, adummy, 1, 2);
+        sbout1(glob_prnt.io, 0, "ktnorm              ", *sktnom, adummy, 1, 2);
     }
-    if (neqn!=0 && *d0nm<=DMIN1(0.5e0*epskt,(0.1e-1)*glob_grd.rteps)
-            && *scvneq>epseqn)
+    if (neqn != 0 && *d0nm <= DMIN1(0.5e0*epskt, (0.1e-1)*glob_grd.rteps)
+        && *scvneq > epseqn)
     {
         /* d0 is "zero", but equality constraints not satisfied  */
         glob_log.d0_is0 = TRUE;
@@ -6545,568 +6573,568 @@ void    (* obj)(),(* constr)();
     /*--------------------------------------------------------------*/
     /*     Single objective without nonlinear constraints requires  */
     /*     no d1 and dtilde; multi-objectives without nonlinear     */
-    /*     constraints requires no d1.				   */
+    /*     constraints requires no d1.       */
     /*--------------------------------------------------------------*/
-    if (nn!=0)
-        *grdftd=slope(nob,nobL,neqn,nparam,feasb,ob,grdpsf,
-                      di,d,*fmax,dummy,0,adummy,0);
+    if (nn != 0)
+        *grdftd = slope(nob, nobL, neqn, nparam, feasb, ob, grdpsf,
+                        di, d, *fmax, dummy, 0, adummy, 0);
 
-    if (nn==0 && nobL<=1)
+    if (nn == 0 && nobL <= 1)
     {
-        for (i=1; i<=nparam; i++)
-            d[i]=0.e0;
-        dnmtil=0.e0;
+        for (i = 1; i <= nparam; i++)
+            d[i] = 0.e0;
+        dnmtil = 0.e0;
         free_dv(adummy);
         return;
     }
-    if (nn==0)
+    if (nn == 0)
     {
-        dnm=*d0nm;
-        rho=0.e0;
-        rhog=0.e0;
+        dnm = *d0nm;
+        rho = 0.e0;
+        rhog = 0.e0;
         goto L310;
     }
     /*-------------------------------------------------------------*/
-    /*     compute modified first order direction d1		  */
+    /*     compute modified first order direction d1    */
     /*-------------------------------------------------------------*/
 
     /* First check that it is necessary */
-    if (glob_info.mode==1)
+    if (glob_info.mode == 1)
     {
-        vk=DMIN1(Ck*(*d0nm)*(*d0nm),*d0nm);
-        need_d1=FALSE;
-        for (i=1; i<=nn; i++)
+        vk = DMIN1(Ck * (*d0nm) * (*d0nm), *d0nm);
+        need_d1 = FALSE;
+        for (i = 1; i <= nn; i++)
         {
-            tempv=cs[indxcn[i]].grad;
-            grdgd0=scaprd(nparam,tempv,di);
-            temp1=vk+cs[indxcn[i]].val+grdgd0;
-            if (temp1>0.e0)
+            tempv = cs[indxcn[i]].grad;
+            grdgd0 = scaprd(nparam, tempv, di);
+            temp1 = vk + cs[indxcn[i]].val + grdgd0;
+            if (temp1 > 0.e0)
             {
-                need_d1=TRUE;
+                need_d1 = TRUE;
                 break;
             }
         }
     }
     if (need_d1)
     {
-        nqprm1=nparam+1;
-        if (glob_info.mode==0)
-            nclin1=ncnstr+DMAX1(nobL,1);
-        if (glob_info.mode==1)
-            nclin1=ncnstr;
-        nrowa1=DMAX1(nclin1,1);
-        ninq=glob_info.nnineq;
-        di1(nparam,nqprm1,nob,nobL,nfsip,nineqn,neq,neqn,ncnstr,
-            ncsipl,ncsipn,nrowa1,&infoqp,glob_info.mode,
-            param,di,ob,*fmax,grdpsf,cs,cvec,bl,bu,clamda,
-            hess1,d,*steps);
-        if (infoqp!=0)
+        nqprm1 = nparam + 1;
+        if (glob_info.mode == 0)
+            nclin1 = ncnstr + DMAX1(nobL, 1);
+        if (glob_info.mode == 1)
+            nclin1 = ncnstr;
+        nrowa1 = DMAX1(nclin1, 1);
+        ninq = glob_info.nnineq;
+        di1(nparam, nqprm1, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr,
+            ncsipl, ncsipn, nrowa1, &infoqp, glob_info.mode,
+            param, di, ob, *fmax, grdpsf, cs, cvec, bl, bu, clamda,
+            hess1, d, *steps);
+        if (infoqp != 0)
         {
-            glob_prnt.info=6;
+            glob_prnt.info = 6;
             if (!feasb)
-                glob_prnt.info=2;
-            nstop=0;
+                glob_prnt.info = 2;
+            nstop = 0;
             free_dv(adummy);
             return;
         }
-        dnm1=sqrt(scaprd(nparam,d,d));
-        if (glob_prnt.iprint>=3 && display)
+        dnm1 = sqrt(scaprd(nparam, d, d));
+        if (glob_prnt.iprint >= 3 && display)
         {
-            sbout1(glob_prnt.io,nparam,"d1                  ",dummy,d,2,2);
-            sbout1(glob_prnt.io,0,"d1norm              ",dnm1,adummy,1,2);
+            sbout1(glob_prnt.io, nparam, "d1                  ", dummy, d, 2, 2);
+            sbout1(glob_prnt.io, 0, "d1norm              ", dnm1, adummy, 1, 2);
         }
     }
     else
     {
-        dnm1=0.e0;
-        for (i=1; i<=nparam; i++)
-            d[i]=0.e0;
+        dnm1 = 0.e0;
+        for (i = 1; i <= nparam; i++)
+            d[i] = 0.e0;
     }
-    if (glob_info.mode!=1)
+    if (glob_info.mode != 1)
     {
-        v0=pow(*d0nm,2.1);
-        v1=DMAX1(0.5e0,pow(dnm1,2.5));
-        rho=v0/(v0+v1);
-        rhog=rho;
+        v0 = pow(*d0nm, 2.1);
+        v1 = DMAX1(0.5e0, pow(dnm1, 2.5));
+        rho = v0 / (v0 + v1);
+        rhog = rho;
     }
     else
     {
-        rhol=0.e0;
+        rhol = 0.e0;
         if (need_d1)
         {
-            for (i=1; i<=nn; i++)
+            for (i = 1; i <= nn; i++)
             {
-                tempv=cs[indxcn[i]].grad;
-                grdgd0=scaprd(nparam,tempv,di);
-                grdgd1=scaprd(nparam,tempv,d);
-                temp1=vk+cs[indxcn[i]].val+grdgd0;
-                temp2=grdgd1-grdgd0;
-                if (temp1<=0.e0)
+                tempv = cs[indxcn[i]].grad;
+                grdgd0 = scaprd(nparam, tempv, di);
+                grdgd1 = scaprd(nparam, tempv, d);
+                temp1 = vk + cs[indxcn[i]].val + grdgd0;
+                temp2 = grdgd1 - grdgd0;
+                if (temp1 <= 0.e0)
                     continue;
-                if (fabs(temp2)<glob_grd.epsmac)
+                if (fabs(temp2) < glob_grd.epsmac)
                 {
-                    rhol=1.e0;
-                    glob_log.rhol_is1=TRUE;
+                    rhol = 1.e0;
+                    glob_log.rhol_is1 = TRUE;
                     break;
                 }
-                rhol=DMAX1(rhol,-temp1/temp2);
-                if (temp2<0.e0 && rhol<1.e0)
+                rhol = DMAX1(rhol, -temp1 / temp2);
+                if (temp2 < 0.e0 && rhol < 1.e0)
                     continue;
-                rhol=1.e0;
-                glob_log.rhol_is1=TRUE;
+                rhol = 1.e0;
+                glob_log.rhol_is1 = TRUE;
                 break;
             }
         }
-        theta=0.2e0;
-        if (rhol==0.e0)
+        theta = 0.2e0;
+        if (rhol == 0.e0)
         {
-            rhog=rho=0.e0;
-            dnm=*d0nm;
+            rhog = rho = 0.e0;
+            dnm = *d0nm;
             goto L310;
         }
-        if (nobL>1)
+        if (nobL > 1)
         {
-            rhog=slope(nob,nobL,neqn,nparam,feasb,ob,grdpsf,
-                       di,d,*fmax,theta,glob_info.mode,adummy,0);
-            rhog=DMIN1(rhol,rhog);
+            rhog = slope(nob, nobL, neqn, nparam, feasb, ob, grdpsf,
+                         di, d, *fmax, theta, glob_info.mode, adummy, 0);
+            rhog = DMIN1(rhol, rhog);
         }
         else
         {
-            grdfd0= *grdftd;
-            if (nob==1)
-                grdfd1=scaprd(nparam,ob[1].grad,d);
+            grdfd0 = *grdftd;
+            if (nob == 1)
+                grdfd1 = scaprd(nparam, ob[1].grad, d);
             else
-                grdfd1=0.e0;
-            grdfd1=grdfd1-scaprd(nparam,grdpsf,d);
-            temp1=grdfd1-grdfd0;
-            temp2=(theta-1.e0)*grdfd0/temp1;
-            if(temp1<=0.e0)
-                rhog=rhol;
+                grdfd1 = 0.e0;
+            grdfd1 = grdfd1 - scaprd(nparam, grdpsf, d);
+            temp1 = grdfd1 - grdfd0;
+            temp2 = (theta - 1.e0) * grdfd0 / temp1;
+            if (temp1 <= 0.e0)
+                rhog = rhol;
             else
-                rhog=DMIN1(rhol,temp2);
+                rhog = DMIN1(rhol, temp2);
         }
-        rho=rhog;
-        if (*steps==1.e0 && rhol<0.5e0)
-            rho=rhol;
+        rho = rhog;
+        if (*steps == 1.e0 && rhol < 0.5e0)
+            rho = rhol;
     }
-    for (i=1; i<=nparam; i++)
+    for (i = 1; i <= nparam; i++)
     {
-        if (rho!=rhog)
-            cvec[i]=di[i];
-        di[i]=(1.e0-rho)*di[i]+rho*d[i];
+        if (rho != rhog)
+            cvec[i] = di[i];
+        di[i] = (1.e0 - rho) * di[i] + rho * d[i];
     }
-    dnm=sqrt(scaprd(nparam,di,di));
-    if (!(glob_prnt.iprint<3 || glob_info.mode==1 || nn==0)&&display)
+    dnm = sqrt(scaprd(nparam, di, di));
+    if (!(glob_prnt.iprint < 3 || glob_info.mode == 1 || nn == 0) && display)
     {
-        sbout1(glob_prnt.io,0,"rho                 ",rho,adummy,1,2);
-        sbout1(glob_prnt.io,nparam,"d                   ",dummy,di,2,2);
-        sbout1(glob_prnt.io,0,"dnorm               ",dnm,adummy,1,2);
+        sbout1(glob_prnt.io, 0, "rho                 ", rho, adummy, 1, 2);
+        sbout1(glob_prnt.io, nparam, "d                   ", dummy, di, 2, 2);
+        sbout1(glob_prnt.io, 0, "dnorm               ", dnm, adummy, 1, 2);
     }
 L310:
-    for (i=1; i<=nob; i++)
-        bl[i]=ob[i].val;
-    if (rho!=1.e0)
+    for (i = 1; i <= nob; i++)
+        bl[i] = ob[i].val;
+    if (rho != 1.e0)
     {
-        if (!(glob_prnt.iprint!=3 || glob_info.mode==0 || nn==0)
-                && display)
+        if (!(glob_prnt.iprint != 3 || glob_info.mode == 0 || nn == 0)
+            && display)
         {
-            sbout1(glob_prnt.io,0,"Ck                  ",Ck,adummy,1,2);
-            sbout1(glob_prnt.io,0,"rhol                ",rho,adummy,1,2);
-            sbout1(glob_prnt.io,nparam,"dl                  ",dummy,di,2,2);
-            sbout1(glob_prnt.io,0,"dlnorm              ",dnm,adummy,1,2);
+            sbout1(glob_prnt.io, 0, "Ck                  ", Ck, adummy, 1, 2);
+            sbout1(glob_prnt.io, 0, "rhol                ", rho, adummy, 1, 2);
+            sbout1(glob_prnt.io, nparam, "dl                  ", dummy, di, 2, 2);
+            sbout1(glob_prnt.io, 0, "dlnorm              ", dnm, adummy, 1, 2);
         }
-        if (glob_info.mode!=0)
+        if (glob_info.mode != 0)
         {
-            glob_log.local=TRUE;
-            step1(nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-                  ncnstr,&ncg,&ncf,indxob,indxcn,iact,iskp,iskip,istore,
-                  feasb,*grdftd,ob,fM,fMp,fmax,psf,penp,steps,scvneq,bu,
-                  param->x,di,d,cs,backup,signeq,viol,obj,constr,param->cd);
+            glob_log.local = TRUE;
+            step1(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+                  ncnstr, &ncg, &ncf, indxob, indxcn, iact, iskp, iskip, istore,
+                  feasb, *grdftd, ob, fM, fMp, fmax, psf, penp, steps, scvneq, bu,
+                  param->x, di, d, cs, backup, signeq, viol, obj, constr, param->cd);
             if (!glob_log.update)
-                nstop=1;
+                nstop = 1;
             else
             {
                 free_dv(adummy);
                 return;
             }
-            glob_log.local=FALSE;
-            if (rho!=rhog && nn!=0)
-                for (i=1; i<=nparam; i++)
-                    di[i]=(1-rhog)*cvec[i]+rhog*d[i];
-            dnm=sqrt(scaprd(nparam,di,di));
+            glob_log.local = FALSE;
+            if (rho != rhog && nn != 0)
+                for (i = 1; i <= nparam; i++)
+                    di[i] = (1 - rhog) * cvec[i] + rhog * d[i];
+            dnm = sqrt(scaprd(nparam, di, di));
         }
     }
-    if (!(glob_prnt.iprint<3 || glob_info.mode==0 || nn==0) &&
-            display)
+    if (!(glob_prnt.iprint < 3 || glob_info.mode == 0 || nn == 0) &&
+        display)
     {
-        sbout1(glob_prnt.io,0,"rhog                ",rhog,adummy,1,2);
-        sbout1(glob_prnt.io,nparam,"dg                  ",dummy,di,2,2);
-        sbout1(glob_prnt.io,0,"dgnorm              ",dnm,adummy,1,2);
+        sbout1(glob_prnt.io, 0, "rhog                ", rhog, adummy, 1, 2);
+        sbout1(glob_prnt.io, nparam, "dg                  ", dummy, di, 2, 2);
+        sbout1(glob_prnt.io, 0, "dgnorm              ", dnm, adummy, 1, 2);
     }
-    if (rho !=0.e0)
-        *grdftd=slope(nob,nobL,neqn,nparam,feasb,ob,
-                      grdpsf,di,d,*fmax,theta,0,bl,1);
-    if (glob_info.mode!=1 || rho!=rhog)
-        for (i=1; i<=nparam; i++)
-            bu[i]=param->x[i]+di[i];
-    x_is_new=TRUE;
-    if (rho!=rhog)
-        ncg=0;
-    ncc=ncg+1;
-    fmxl=-bgbnd;
-    ninq=nncn=ncg;
-    j=0;
+    if (rho != 0.e0)
+        *grdftd = slope(nob, nobL, neqn, nparam, feasb, ob,
+                        grdpsf, di, d, *fmax, theta, 0, bl, 1);
+    if (glob_info.mode != 1 || rho != rhog)
+        for (i = 1; i <= nparam; i++)
+            bu[i] = param->x[i] + di[i];
+    x_is_new = TRUE;
+    if (rho != rhog)
+        ncg = 0;
+    ncc = ncg + 1;
+    fmxl = -bgbnd;
+    ninq = nncn = ncg;
+    j = 0;
     /*--------------------------------------------------------------*/
     /*   iskip[1]-iskip[iskp] store the indexes of linear inequality*/
     /*   constraints that are not to be used to compute d~          */
     /*   iskip[nnineq-nineqn+1]-iskip[nnineq-ncn+1-iskp] store      */
     /*   those that are to be used to compute d~                    */
     /*--------------------------------------------------------------*/
-    for (i=ncc; i<=ncnstr; i++)
+    for (i = ncc; i <= ncnstr; i++)
     {
-        if (i<=nn)
-            kk=iact[i];
+        if (i <= nn)
+            kk = iact[i];
         else
-            kk=indxcn[i];
-        if (kk>nineqn && kk<=glob_info.nnineq)
+            kk = indxcn[i];
+        if (kk > nineqn && kk <= glob_info.nnineq)
         {
-            iskip[ncl+1-j]=kk;
+            iskip[ncl+1-j] = kk;
             j++;
         }
-        if (kk<=glob_info.nnineq)
+        if (kk <= glob_info.nnineq)
         {
-            tempv=cs[kk].grad;
-            temp1=dnm*sqrt(scaprd(nparam,tempv,tempv));
-            temp2=cs[kk].mult;
+            tempv = cs[kk].grad;
+            temp1 = dnm * sqrt(scaprd(nparam, tempv, tempv));
+            temp2 = cs[kk].mult;
         }
-        if (temp2!=0.e0 || cs[kk].val >= (-0.2e0*temp1) ||
-                kk>glob_info.nnineq)
+        if (temp2 != 0.e0 || cs[kk].val >= (-0.2e0*temp1) ||
+            kk > glob_info.nnineq)
         {
             ninq++;
-            iw[ninq]=kk;
-            if (feasb && kk<=nineqn)
-                istore[kk]=1;
-            constr(nparam,kk,bu+1,&(cs[kk].val),param->cd);
-            if (!feasb || (feasb && (kk>glob_info.nnineq+neqn)))
+            iw[ninq] = kk;
+            if (feasb && kk <= nineqn)
+                istore[kk] = 1;
+            constr(nparam, kk, bu + 1, &(cs[kk].val), param->cd);
+            if (!feasb || (feasb && (kk > glob_info.nnineq + neqn)))
                 continue;
-            if (kk<=nineqn)
-                nncn=ninq;
-            fmxl=DMAX1(fmxl,cs[kk].val);
-            if (feasb &&(kk<=nineqn || (kk>glob_info.nnineq
-                                        && kk<=(glob_info.nnineq+neqn))))
+            if (kk <= nineqn)
+                nncn = ninq;
+            fmxl = DMAX1(fmxl, cs[kk].val);
+            if (feasb && (kk <= nineqn || (kk > glob_info.nnineq
+                                           && kk <= (glob_info.nnineq + neqn))))
                 glob_info.ncallg++;
-            if (fabs(fmxl)>bgbnd)
+            if (fabs(fmxl) > bgbnd)
             {
-                for (i=1; i<=nparam; i++)
-                    d[i]=0.e0;
-                dnmtil=0.e0;
-                nstop=1;
+                for (i = 1; i <= nparam; i++)
+                    d[i] = 0.e0;
+                dnmtil = 0.e0;
+                nstop = 1;
                 free_dv(adummy);
                 return;
             }
             continue;
         }
-        if (kk<=nineqn)
+        if (kk <= nineqn)
             continue;
         (*iskp)++;
-        iskip[*iskp]=kk;
+        iskip[*iskp] = kk;
         j--;
     }
-    if ((neqn!=0)&&(feasb))
-        resign(nparam,neqn,psf,grdpsf,penp,cs,signeq,10,20);
-    ninq-=neq;
+    if ((neqn != 0) && (feasb))
+        resign(nparam, neqn, psf, grdpsf, penp, cs, signeq, 10, 20);
+    ninq -= neq;
     /*  if (!feasb) ninq+=neqn;   BUG???   */
-    if (ncg!=0)
-        for (i=1; i<=ncg; i++)
+    if (ncg != 0)
+        for (i = 1; i <= ncg; i++)
         {
-            iw[i]=iact[i];
-            istore[iact[i]]=1;
-            fmxl=DMAX1(fmxl,cs[iact[i]].val);
-            if (fabs(fmxl)>bgbnd)
+            iw[i] = iact[i];
+            istore[iact[i]] = 1;
+            fmxl = DMAX1(fmxl, cs[iact[i]].val);
+            if (fabs(fmxl) > bgbnd)
             {
-                for (i=1; i<=nparam; i++)
-                    d[i]=0.e0;
-                dnmtil=0.e0;
-                nstop=1;
+                for (i = 1; i <= nparam; i++)
+                    d[i] = 0.e0;
+                dnmtil = 0.e0;
+                nstop = 1;
                 free_dv(adummy);
                 return;
             }
         }
-    if (nobL<=1)
+    if (nobL <= 1)
     {
-        iw[1+ninq+neq]=1;
-        nobb=nob;
+        iw[1+ninq+neq] = 1;
+        nobb = nob;
         goto L1110;
     }
-    if (rho!=rhog)
-        ncf=0;
-    nff=ncf+1;
-    nobb=ncf;
-    sign=1.e0;
-    fmxl=-bgbnd;
-    if (ob[iact[nn+1]].mult<0.e0)
-        sign=-1.e0;
-    for (i=nff; i<=nob; i++)
+    if (rho != rhog)
+        ncf = 0;
+    nff = ncf + 1;
+    nobb = ncf;
+    sign = 1.e0;
+    fmxl = -bgbnd;
+    if (ob[iact[nn+1]].mult < 0.e0)
+        sign = -1.e0;
+    for (i = nff; i <= nob; i++)
     {
-        kk=iact[nn+i];
+        kk = iact[nn+i];
         if (!feasb)
-            kk=iact[i];
+            kk = iact[i];
         if (feasb)
-            k=nn+1;
+            k = nn + 1;
         if (!feasb)
-            k=1;
-        for (j=1; j<=nparam; j++)
-            w[nparam+j]=sign*ob[iact[k]].grad[j]-ob[kk].grad[j];
-        temp1=fabs(ob[kk].val-sign*vv);
-        temp2=dnm*sqrt(scaprd(nparam,&w[nparam],&w[nparam]));
-        if (temp1!=0.e0 && temp2!=0.e0)
+            k = 1;
+        for (j = 1; j <= nparam; j++)
+            w[nparam+j] = sign * ob[iact[k]].grad[j] - ob[kk].grad[j];
+        temp1 = fabs(ob[kk].val - sign * vv);
+        temp2 = dnm * sqrt(scaprd(nparam, &w[nparam], &w[nparam]));
+        if (temp1 != 0.e0 && temp2 != 0.e0)
         {
-            temp1=temp1/temp2;
-            temp2=ob[kk].mult;
-            if (temp2==0.e0 && temp1>0.2e0)
+            temp1 = temp1 / temp2;
+            temp2 = ob[kk].mult;
+            if (temp2 == 0.e0 && temp1 > 0.2e0)
                 continue;
         }
         nobb++;
-        iw[nobb+ninq+neq]=kk;
+        iw[nobb+ninq+neq] = kk;
         if (feasb)
-            istore[nineqn+kk]=1;
+            istore[nineqn+kk] = 1;
         else
-            istore[kk]=1;
+            istore[kk] = 1;
         if (!feasb)
         {
-            constr(nparam,indxob[kk],bu+1,&(ob[kk].val),param->cd);
+            constr(nparam, indxob[kk], bu + 1, &(ob[kk].val), param->cd);
             glob_info.ncallg++;
         }
         else
         {
-            obj(nparam,kk,bu+1,&(ob[kk].val),param->cd);
+            obj(nparam, kk, bu + 1, &(ob[kk].val), param->cd);
             glob_info.ncallf++;
-            if (nobL!=nob)
-                fmxl=DMAX1(fmxl, -ob[kk].val);
+            if (nobL != nob)
+                fmxl = DMAX1(fmxl, -ob[kk].val);
         }
-        fmxl=DMAX1(fmxl,ob[kk].val);
-        if (fabs(fmxl)>bgbnd)
+        fmxl = DMAX1(fmxl, ob[kk].val);
+        if (fabs(fmxl) > bgbnd)
         {
-            for (i=1; i<=nparam; i++)
-                d[i]=0.e0;
-            dnmtil=0.e0;
-            nstop=1;
+            for (i = 1; i <= nparam; i++)
+                d[i] = 0.e0;
+            dnmtil = 0.e0;
+            nstop = 1;
             free_dv(adummy);
             return;
         }
     }
     if (ncf != 0)
     {
-        for (i=1; i<=ncf; i++)
+        for (i = 1; i <= ncf; i++)
         {
-            iw[ninq+neq+i]=iact[i+nn];
-            istore[nineqn+iact[i+nn]]=1;
-            fmxl=DMAX1(fmxl,ob[iact[i+nn]].val);
+            iw[ninq+neq+i] = iact[i+nn];
+            istore[nineqn+iact[i+nn]] = 1;
+            fmxl = DMAX1(fmxl, ob[iact[i+nn]].val);
             if (nobL != nob)
-                fmxl=DMAX1(fmxl,-ob[iact[i+nn]].val);
-            if (fabs(fmxl)>bgbnd)
+                fmxl = DMAX1(fmxl, -ob[iact[i+nn]].val);
+            if (fabs(fmxl) > bgbnd)
             {
-                for (i=1; i<=nparam; i++)
-                    d[i]=0.e0;
-                dnmtil=0.e0;
-                nstop=1;
+                for (i = 1; i <= nparam; i++)
+                    d[i] = 0.e0;
+                dnmtil = 0.e0;
+                nstop = 1;
                 free_dv(adummy);
                 return;
             }
         }
     }
-    L1110:
-    matrvc(nparam,nparam,hess,di,cvec);
-    vv=-DMIN1(0.01e0*dnm,pow(dnm,2.5));
+L1110:
+    matrvc(nparam, nparam, hess, di, cvec);
+    vv = -DMIN1(0.01e0 * dnm, pow(dnm, 2.5));
     /*--------------------------------------------------------------*/
     /*    compute a correction dtilde to d=(1-rho)d0+rho*d1         */
     /*--------------------------------------------------------------*/
-    if (nobL!=nob)
-        nobbL=2*nobb;
-    if (nobL==nob)
-        nobbL=nobb;
-    if (nobbL<=1)
+    if (nobL != nob)
+        nobbL = 2 * nobb;
+    if (nobL == nob)
+        nobbL = nobb;
+    if (nobbL <= 1)
     {
-        nqprm0=nparam;
-        nclin0=ninq+neq;
+        nqprm0 = nparam;
+        nclin0 = ninq + neq;
     }
     else
     {
-        nqprm0=nparam+1;
-        nclin0=ninq+neq+nobbL;
+        nqprm0 = nparam + 1;
+        nclin0 = ninq + neq + nobbL;
     }
-    nctot0=nqprm0+nclin0;
-    nrowa0=DMAX1(nclin0,1);
-    i=ninq+neq;
-    nstop=1;
-    dqp(nparam,nqprm0,nobb,nobbL,nfsip,nncn,neq,neqn,nn,ncsipl,ncsipn,i,
-        nctot0,nrowa0,nineqn,&infoqp,param,di,feasb,ob,fmxl,
-        grdpsf,cs,a,cvec,bl,bu,clamda,hess,hess1,d,vv,1);
-    dnmtil=sqrt(scaprd(nparam,d,d));
-    if (infoqp!=0 || dnmtil>dnm)
+    nctot0 = nqprm0 + nclin0;
+    nrowa0 = DMAX1(nclin0, 1);
+    i = ninq + neq;
+    nstop = 1;
+    dqp(nparam, nqprm0, nobb, nobbL, nfsip, nncn, neq, neqn, nn, ncsipl, ncsipn, i,
+        nctot0, nrowa0, nineqn, &infoqp, param, di, feasb, ob, fmxl,
+        grdpsf, cs, a, cvec, bl, bu, clamda, hess, hess1, d, vv, 1);
+    dnmtil = sqrt(scaprd(nparam, d, d));
+    if (infoqp != 0 || dnmtil > dnm)
     {
-        for (i=1; i<=nparam; i++)
-            d[i]=0.e0;
-        dnmtil=0.e0;
-        nstop=1;
+        for (i = 1; i <= nparam; i++)
+            d[i] = 0.e0;
+        dnmtil = 0.e0;
+        nstop = 1;
         free_dv(adummy);
         return;
     }
-    if (dnmtil!=0.e0)
-        for (i=1; i<=nineqn+nob; i++)
-            istore[i]=0;
-    if (glob_prnt.iprint<3 || !display)
+    if (dnmtil != 0.e0)
+        for (i = 1; i <= nineqn + nob; i++)
+            istore[i] = 0;
+    if (glob_prnt.iprint < 3 || !display)
     {
         free_dv(adummy);
         return;
     }
-    sbout1(glob_prnt.io,nparam,"dtilde              ",dummy,d,2,2);
-    sbout1(glob_prnt.io,0,"dtnorm              ",dnmtil,adummy,1,2);
+    sbout1(glob_prnt.io, nparam, "dtilde              ", dummy, d, 2, 2);
+    sbout1(glob_prnt.io, 0, "dtnorm              ", dnmtil, adummy, 1, 2);
     free_dv(adummy);
     return;
 }
 
 /*******************************************************************/
-/*     job=0:     compute d0					   */
-/*     job=1:     compute d~					   */
+/*     job=0:     compute d0        */
+/*     job=1:     compute d~        */
 /*******************************************************************/
 #ifdef __STDC__
 static void
-dqp(int nparam,int nqpram,int nob,int nobL,int nfsip,int nineqn,
-    int neq,int neqn,int nn,int ncsipl,int ncsipn,int ncnstr,
-    int nctotl,int nrowa,int nineqn_tot,int *infoqp,
-    struct _parameter *param,double *di,int feasb,struct _objective *ob,
-    double fmax,double *grdpsf,struct _constraint *cs,
-    double **a,double *cvec,double *bl,double *bu,double *clamda,
-    double **hess,double **hess1,double *x,
-    double vv,int job)
+dqp(int nparam, int nqpram, int nob, int nobL, int nfsip, int nineqn,
+    int neq, int neqn, int nn, int ncsipl, int ncsipn, int ncnstr,
+    int nctotl, int nrowa, int nineqn_tot, int *infoqp,
+    struct _parameter *param, double *di, int feasb, struct _objective *ob,
+    double fmax, double *grdpsf, struct _constraint *cs,
+    double **a, double *cvec, double *bl, double *bu, double *clamda,
+    double **hess, double **hess1, double *x,
+    double vv, int job)
 #else
 static void
-dqp(nparam,nqpram,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-    ncnstr,nctotl,nrowa,nineqn_tot,infoqp,param,di,feasb,ob,
-    fmax,grdpsf,cs,a,cvec,bl,bu,clamda,hess,hess1,x,vv,job)
-int	nparam,nqpram,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,
-ncnstr,nctotl,nrowa,nineqn_tot,*infoqp,job,feasb;
-double	fmax,vv;
-double	*di,*grdpsf,**a,*cvec,*bl,*bu,*clamda,**hess,**hess1,*x;
+dqp(nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+    ncnstr, nctotl, nrowa, nineqn_tot, infoqp, param, di, feasb, ob,
+    fmax, grdpsf, cs, a, cvec, bl, bu, clamda, hess, hess1, x, vv, job)
+int nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
+ncnstr, nctotl, nrowa, nineqn_tot, *infoqp, job, feasb;
+double fmax, vv;
+double *di, *grdpsf, **a, *cvec, *bl, *bu, *clamda, **hess, **hess1, *x;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _parameter  *param;
 #endif
 {
-    int i,ii,j,jj,ij,k,iout,mnn,nqnp,zero,temp1,temp2,ncnstr_used,
+    int i, ii, j, jj, ij, k, iout, mnn, nqnp, zero, temp1, temp2, ncnstr_used,
     numf_used;
     int *iw_hold;
-    double x0i,xdi,*bj,*htemp,*atemp;
+    double x0i, xdi, *bj, *htemp, *atemp;
 
-    iout=6;
-    bj=make_dv(nrowa);
-    iw_hold=make_iv(nrowa);
-    for (i=1; i<=nparam; i++)
+    iout = 6;
+    bj = make_dv(nrowa);
+    iw_hold = make_iv(nrowa);
+    for (i = 1; i <= nparam; i++)
     {
-        x0i=param->x[i];
-        if (job==1)
-            xdi=di[i];
-        if (job==0)
-            xdi=0.e0;
-        bl[i]=param->bl[i]-x0i-xdi;
-        bu[i]=param->bu[i]-x0i-xdi;
-        cvec[i]=cvec[i]-grdpsf[i];
+        x0i = param->x[i];
+        if (job == 1)
+            xdi = di[i];
+        if (job == 0)
+            xdi = 0.e0;
+        bl[i] = param->bl[i] - x0i - xdi;
+        bu[i] = param->bu[i] - x0i - xdi;
+        cvec[i] = cvec[i] - grdpsf[i];
     }
-    if (nobL>1)
+    if (nobL > 1)
     {
-        bl[nqpram]=-bgbnd;
-        bu[nqpram]=bgbnd;
+        bl[nqpram] = -bgbnd;
+        bu[nqpram] = bgbnd;
     }
-    ii=ncnstr-nn;
+    ii = ncnstr - nn;
     /*---------------------------------------------------------------*/
     /*     constraints are assigned to a in reverse order            */
     /*---------------------------------------------------------------*/
-    k=0;
-    for (i=1; i<=ncnstr; i++)
+    k = 0;
+    for (i = 1; i <= ncnstr; i++)
     {
-        jj=iw[ncnstr+1-i];
-        if ((jj>glob_info.nnineq)||(jj<=nineqn_tot-ncsipn)||
-                ((jj>nineqn_tot)&&(jj<=glob_info.nnineq-ncsipl))||
-                cs[jj].act_sip)
+        jj = iw[ncnstr+1-i];
+        if ((jj > glob_info.nnineq) || (jj <= nineqn_tot - ncsipn) ||
+            ((jj > nineqn_tot) && (jj <= glob_info.nnineq - ncsipl)) ||
+            cs[jj].act_sip)
         {
             k++;
-            x0i=vv;
-            if (i<=(neq-neqn) || (i>neq && i<=(ncnstr-nineqn)))
-                x0i=0.e0;
+            x0i = vv;
+            if (i <= (neq - neqn) || (i > neq && i <= (ncnstr - nineqn)))
+                x0i = 0.e0;
             if (!feasb)
-                x0i=0.e0;
-            bj[k]=x0i-cs[jj].val;
-            for (j=1; j<=nparam; j++)
-                a[k][j]=-cs[jj].grad[j];
-            if (nobL>1)
-                a[k][nqpram]=0.e0;
-            iw_hold[k]=jj;
+                x0i = 0.e0;
+            bj[k] = x0i - cs[jj].val;
+            for (j = 1; j <= nparam; j++)
+                a[k][j] = -cs[jj].grad[j];
+            if (nobL > 1)
+                a[k][nqpram] = 0.e0;
+            iw_hold[k] = jj;
         }
     }
-    ncnstr_used=k;
+    ncnstr_used = k;
     /*---------------------------------------------------------------*/
-    /* Assign objectives for QP					    */
+    /* Assign objectives for QP         */
     /*---------------------------------------------------------------*/
-    if (nobL==1)
+    if (nobL == 1)
     {
-        for (i=1; i<=nparam; i++)
-            cvec[i]=cvec[i]+ob[1].grad[i];
+        for (i = 1; i <= nparam; i++)
+            cvec[i] = cvec[i] + ob[1].grad[i];
     }
-    else if (nobL>1)
+    else if (nobL > 1)
     {
-        numf_used=nob-nfsip+glob_info.tot_actf_sip;
-        if (job&&nfsip)
+        numf_used = nob - nfsip + glob_info.tot_actf_sip;
+        if (job && nfsip)
         {     /* compute # objectives used for dtilde */
-            numf_used=0;
-            for (i=1; i<=nob; i++)
+            numf_used = 0;
+            for (i = 1; i <= nob; i++)
                 if (ob[iw[ncnstr+i]].act_sip)
                     numf_used++;
         }
-        for (i=1; i<=nob; i++)
+        for (i = 1; i <= nob; i++)
         {
-            ij=ncnstr+i;
-            if ((i<=nob-nfsip) || ob[iw[ij]].act_sip)
+            ij = ncnstr + i;
+            if ((i <= nob - nfsip) || ob[iw[ij]].act_sip)
             {
                 k++;
-                iw_hold[k]=iw[ij];  /* record which are used */
-                bj[k]=fmax-ob[iw[ij]].val;
-                if (nobL>nob)
-                    bj[k+numf_used]=fmax+ob[iw[ij]].val;
-                for (j=1; j<=nparam; j++)
+                iw_hold[k] = iw[ij];  /* record which are used */
+                bj[k] = fmax - ob[iw[ij]].val;
+                if (nobL > nob)
+                    bj[k+numf_used] = fmax + ob[iw[ij]].val;
+                for (j = 1; j <= nparam; j++)
                 {
-                    a[k][j]=-ob[iw[ij]].grad[j];
-                    if (nobL>nob)
-                        a[k+numf_used][j]=ob[iw[ij]].grad[j];
+                    a[k][j] = -ob[iw[ij]].grad[j];
+                    if (nobL > nob)
+                        a[k+numf_used][j] = ob[iw[ij]].grad[j];
                 }
-                a[k][nqpram]=1.e0;
-                if (nobL>nob)
-                    a[k+numf_used][nqpram]=1.e0;
+                a[k][nqpram] = 1.e0;
+                if (nobL > nob)
+                    a[k+numf_used][nqpram] = 1.e0;
             }
         }
-        cvec[nqpram]=1.e0;
-        if (nobL>nob)
-            k=k+numf_used;  /* k=# rows for a         */
-    }				    /*  =# constraints for QP */
-    matrcp(nparam,hess,nparam+1,hess1);
-    nullvc(nqpram,x);
+        cvec[nqpram] = 1.e0;
+        if (nobL > nob)
+            k = k + numf_used;  /* k=# rows for a         */
+    }        /*  =# constraints for QP */
+    matrcp(nparam, hess, nparam + 1, hess1);
+    nullvc(nqpram, x);
 
-    iw[1]=1;
-    zero=0;
-    temp1=neq-neqn;
-    temp2=nparam+1;
-    mnn=k+2*nqpram;
-    htemp=convert(hess1,nparam+1,nparam+1);
-    atemp=convert(a,nrowa,nqpram);
+    iw[1] = 1;
+    zero = 0;
+    temp1 = neq - neqn;
+    temp2 = nparam + 1;
+    mnn = k + 2 * nqpram;
+    htemp = convert(hess1, nparam + 1, nparam + 1);
+    atemp = convert(a, nrowa, nqpram);
 
-    ql0001_(&k,&temp1,&nrowa,&nqpram,&temp2,&mnn,(htemp+1),
-            (cvec+1),(atemp+1),(bj+1),(bl+1),(bu+1),(x+1),
-            (clamda+1),&iout,infoqp,&zero,(w+1),&lenw,(iw+1),&leniw,
+    ql0001_(&k, &temp1, &nrowa, &nqpram, &temp2, &mnn, (htemp + 1),
+            (cvec + 1), (atemp + 1), (bj + 1), (bl + 1), (bu + 1), (x + 1),
+            (clamda + 1), &iout, infoqp, &zero, (w + 1), &lenw, (iw + 1), &leniw,
             &glob_grd.epsmac);
 
     free_dv(htemp);
     free_dv(atemp);
-    if (*infoqp!=0 || job==1)
+    if (*infoqp != 0 || job == 1)
     {
         free_iv(iw_hold);
         free_dv(bj);
@@ -7116,194 +7144,194 @@ struct  _parameter  *param;
     /*---------------------------------------------------------------*/
     /*  Save multipliers from the computation of d0                  */
     /*---------------------------------------------------------------*/
-    nullvc(nqpram,param->mult);
-    if (ncsipl+ncsipn)
-        for (i=1; i<=ncnstr; i++)
-            cs[i].mult=0.e0;
+    nullvc(nqpram, param->mult);
+    if (ncsipl + ncsipn)
+        for (i = 1; i <= ncnstr; i++)
+            cs[i].mult = 0.e0;
     if (nfsip)
-        for (i=1; i<=nob; i++)
+        for (i = 1; i <= nob; i++)
         {
-            ob[i].mult=0.e0;
-            ob[i].mult_L=0.e0;
+            ob[i].mult = 0.e0;
+            ob[i].mult_L = 0.e0;
         }
-    for (i=1; i<=nqpram; i++)
+    for (i = 1; i <= nqpram; i++)
     {
-        ii=k+i;
-        if (clamda[ii]==0.e0 && clamda[ii+nqpram]==0.e0)
+        ii = k + i;
+        if (clamda[ii] == 0.e0 && clamda[ii+nqpram] == 0.e0)
             continue;
-        else if (clamda[ii]!=0.e0)
-            clamda[ii]=-clamda[ii];
+        else if (clamda[ii] != 0.e0)
+            clamda[ii] = -clamda[ii];
         else
-            clamda[ii]=clamda[ii+nqpram];
+            clamda[ii] = clamda[ii+nqpram];
     }
-    nqnp=nqpram+ncnstr;
-    for (i=1; i<=nqpram; i++) 	              /* Simple bounds */
-        param->mult[i]=clamda[k+i];
-    if (nctotl>nqnp)
+    nqnp = nqpram + ncnstr;
+    for (i = 1; i <= nqpram; i++)                /* Simple bounds */
+        param->mult[i] = clamda[k+i];
+    if (nctotl > nqnp)
     {                         /* Objectives    */
-        for (i=1; i<=numf_used; i++)
+        for (i = 1; i <= numf_used; i++)
         {
-            ij=ncnstr_used+i;
-            if (nobL!=nob)
+            ij = ncnstr_used + i;
+            if (nobL != nob)
             {
-                ii=k-2*numf_used+i;
-                ob[iw_hold[ij]].mult=clamda[ii]-clamda[ii+numf_used];
-                ob[iw_hold[ij]].mult_L=clamda[ii+numf_used];
+                ii = k - 2 * numf_used + i;
+                ob[iw_hold[ij]].mult = clamda[ii] - clamda[ii+numf_used];
+                ob[iw_hold[ij]].mult_L = clamda[ii+numf_used];
             }
             else
             {
-                ii=k-numf_used+i;
-                ob[iw_hold[ij]].mult=clamda[ii];
+                ii = k - numf_used + i;
+                ob[iw_hold[ij]].mult = clamda[ii];
             }
         }
     }
-    for (i=1; i<=ncnstr_used; i++)             /* Constraints   */
-        cs[iw_hold[i]].mult=clamda[i];
+    for (i = 1; i <= ncnstr_used; i++)             /* Constraints   */
+        cs[iw_hold[i]].mult = clamda[i];
     free_iv(iw_hold);
     free_dv(bj);
     return;
 }
 
 /****************************************************************/
-/*    Computation of first order direction d1			*/
+/*    Computation of first order direction d1   */
 /****************************************************************/
 #ifdef __STDC__
 static void
-di1(int nparam,int nqpram,int nob,int nobL,int nfsip,int nineqn,
-    int neq,int neqn,int ncnstr,int ncsipl,int ncsipn,
-    int nrowa,int *infoqp,int mode,struct _parameter *param,
-    double *d0,struct _objective *ob,double fmax,double
-    *grdpsf,struct _constraint *cs,double *cvec,double *bl,double *bu,
-    double *clamda,double **hess1,double *x,double steps)
+di1(int nparam, int nqpram, int nob, int nobL, int nfsip, int nineqn,
+    int neq, int neqn, int ncnstr, int ncsipl, int ncsipn,
+    int nrowa, int *infoqp, int mode, struct _parameter *param,
+    double *d0, struct _objective *ob, double fmax, double
+    *grdpsf, struct _constraint *cs, double *cvec, double *bl, double *bu,
+    double *clamda, double **hess1, double *x, double steps)
 #else
 static void
-di1(nparam,nqpram,nob,nobL,nfsip,nineqn,neq,neqn,ncnstr,ncsipl,
-    ncsipn,nrowa,infoqp,mode,param,d0,ob,fmax,grdpsf,cs,
-    cvec,bl,bu,clamda,hess1,x,steps)
-int	nparam,nqpram,nob,nobL,nfsip,nineqn,neq,neqn,ncnstr,
-nrowa,*infoqp,mode,ncsipl,ncsipn;
-double	fmax,steps;
-double	*d0,*grdpsf,*cvec,*bl,*bu,*clamda,**hess1,*x;
+di1(nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr, ncsipl,
+    ncsipn, nrowa, infoqp, mode, param, d0, ob, fmax, grdpsf, cs,
+    cvec, bl, bu, clamda, hess1, x, steps)
+int nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr,
+nrowa, *infoqp, mode, ncsipl, ncsipn;
+double fmax, steps;
+double *d0, *grdpsf, *cvec, *bl, *bu, *clamda, **hess1, *x;
 struct _constraint *cs;
 struct _objective  *ob;
 struct _parameter  *param;
 #endif
 {
-    int i,k,ii,jj,iout,j,mnn,zero,temp1,temp3,ncnstr_used,numf_used;
+    int i, k, ii, jj, iout, j, mnn, zero, temp1, temp3, ncnstr_used, numf_used;
     int *iw_hold;
-    double x0i,eta,*atemp,*htemp,**a,*bj;
+    double x0i, eta, *atemp, *htemp, **a, *bj;
 
-    if ((ncsipl+ncsipn)!=0)
-        nrowa=nrowa-(ncsipl+ncsipn)+glob_info.tot_actg_sip;
+    if ((ncsipl + ncsipn) != 0)
+        nrowa = nrowa - (ncsipl + ncsipn) + glob_info.tot_actg_sip;
     if (nfsip)
     {
-        if (nobL>nob)
-            nrowa=nrowa-2*nfsip+2*glob_info.tot_actf_sip;
+        if (nobL > nob)
+            nrowa = nrowa - 2 * nfsip + 2 * glob_info.tot_actf_sip;
         else
-            nrowa=nrowa-nfsip+glob_info.tot_actf_sip;
+            nrowa = nrowa - nfsip + glob_info.tot_actf_sip;
     }
-    nrowa=DMAX1(nrowa,1);
-    a=make_dm(nrowa,nqpram);
-    bj=make_dv(nrowa);
-    iw_hold=make_iv(nrowa);
-    iout=6;
-    if (mode==0)
-        eta=0.1e0;
-    if (mode==1)
-        eta=3.e0;
-    for (i=1; i<=nparam; i++)
+    nrowa = DMAX1(nrowa, 1);
+    a = make_dm(nrowa, nqpram);
+    bj = make_dv(nrowa);
+    iw_hold = make_iv(nrowa);
+    iout = 6;
+    if (mode == 0)
+        eta = 0.1e0;
+    if (mode == 1)
+        eta = 3.e0;
+    for (i = 1; i <= nparam; i++)
     {
-        x0i=param->x[i];
-        bl[i]=param->bl[i]-x0i;
-        bu[i]=param->bu[i]-x0i;
-        if (mode==0)
-            cvec[i]=-eta*d0[i];
-        if (mode==1)
-            cvec[i]=0.e0;
+        x0i = param->x[i];
+        bl[i] = param->bl[i] - x0i;
+        bu[i] = param->bu[i] - x0i;
+        if (mode == 0)
+            cvec[i] = -eta * d0[i];
+        if (mode == 1)
+            cvec[i] = 0.e0;
     }
-    bl[nqpram]=-bgbnd;
-    bu[nqpram]=bgbnd;
-    cvec[nqpram]=1.e0;
-    ii=ncnstr-nineqn;
-    k=0;
-    for (i=1; i<=ncnstr; i++)
+    bl[nqpram] = -bgbnd;
+    bu[nqpram] = bgbnd;
+    cvec[nqpram] = 1.e0;
+    ii = ncnstr - nineqn;
+    k = 0;
+    for (i = 1; i <= ncnstr; i++)
     {
-        jj=ncnstr+1-i;
-        if ((jj>glob_info.nnineq)||(jj<=nineqn-ncsipn)||
-                ((jj>nineqn)&&(jj<=glob_info.nnineq-ncsipl))||
-                cs[jj].act_sip)
+        jj = ncnstr + 1 - i;
+        if ((jj > glob_info.nnineq) || (jj <= nineqn - ncsipn) ||
+            ((jj > nineqn) && (jj <= glob_info.nnineq - ncsipl)) ||
+            cs[jj].act_sip)
         {
             k++;
-            bj[k]=-cs[jj].val;
-            for (j=1; j<=nparam; j++)
-                a[k][j]=-cs[jj].grad[j];
-            a[k][nqpram]=0.e0;
-            if ((i>(neq-neqn) && i<=neq) || i>ii)
-                a[k][nqpram]=1.e0;
-            iw_hold[k]=jj;
+            bj[k] = -cs[jj].val;
+            for (j = 1; j <= nparam; j++)
+                a[k][j] = -cs[jj].grad[j];
+            a[k][nqpram] = 0.e0;
+            if ((i > (neq - neqn) && i <= neq) || i > ii)
+                a[k][nqpram] = 1.e0;
+            iw_hold[k] = jj;
         }
     }
-    ncnstr_used=k;
+    ncnstr_used = k;
 
-    if (mode!=1)
+    if (mode != 1)
     {
-        numf_used=nob-nfsip+glob_info.tot_actf_sip;
-        for (i=1; i<=nob; i++)
+        numf_used = nob - nfsip + glob_info.tot_actf_sip;
+        for (i = 1; i <= nob; i++)
         {
-            if ((i<=nob-nfsip) || ob[i].act_sip)
+            if ((i <= nob - nfsip) || ob[i].act_sip)
             {
                 k++;
-                bj[k]=fmax-ob[i].val;
-                for (j=1; j<=nparam; j++)
+                bj[k] = fmax - ob[i].val;
+                for (j = 1; j <= nparam; j++)
                 {
-                    a[k][j]=-ob[i].grad[j]+grdpsf[j];
-                    if (nobL>nob)
-                        a[k+numf_used][j]=ob[i].grad[j]+grdpsf[j];
+                    a[k][j] = -ob[i].grad[j] + grdpsf[j];
+                    if (nobL > nob)
+                        a[k+numf_used][j] = ob[i].grad[j] + grdpsf[j];
                 }
-                a[k][nqpram]=1.e0;
-                if (nobL>nob)
-                    a[k+numf_used][nqpram]=1.e0;
+                a[k][nqpram] = 1.e0;
+                if (nobL > nob)
+                    a[k+numf_used][nqpram] = 1.e0;
             }
         }
-        if (nob==0)
+        if (nob == 0)
         {
             k++;
-            bj[k]=fmax;
-            for (j=1; j<=nparam; j++)
-                a[k][j]=grdpsf[j];
-            a[k][nqpram]=1.e0;
+            bj[k] = fmax;
+            for (j = 1; j <= nparam; j++)
+                a[k][j] = grdpsf[j];
+            a[k][nqpram] = 1.e0;
         }
     }
-    diagnl(nqpram,eta,hess1);
-    nullvc(nqpram,x);
-    hess1[nqpram][nqpram]=0.e0;
+    diagnl(nqpram, eta, hess1);
+    nullvc(nqpram, x);
+    hess1[nqpram][nqpram] = 0.e0;
 
-    iw[1]=1;
-    zero=0;
-    temp1=neq-neqn;
-    if (nobL>nob)
-        temp3=k+numf_used;
+    iw[1] = 1;
+    zero = 0;
+    temp1 = neq - neqn;
+    if (nobL > nob)
+        temp3 = k + numf_used;
     else
-        temp3=k;
-    mnn=temp3+2*nqpram;
-    htemp=convert(hess1,nparam+1,nparam+1);
-    atemp=convert(a,nrowa,nqpram);
+        temp3 = k;
+    mnn = temp3 + 2 * nqpram;
+    htemp = convert(hess1, nparam + 1, nparam + 1);
+    atemp = convert(a, nrowa, nqpram);
 
-    ql0001_(&temp3,&temp1,&nrowa,&nqpram,&nqpram,&mnn,(htemp+1),
-            (cvec+1),(atemp+1),(bj+1),(bl+1),(bu+1),(x+1),
-            (clamda+1),&iout,infoqp,&zero,(w+1),&lenw,(iw+1),&leniw,
+    ql0001_(&temp3, &temp1, &nrowa, &nqpram, &nqpram, &mnn, (htemp + 1),
+            (cvec + 1), (atemp + 1), (bj + 1), (bl + 1), (bu + 1), (x + 1),
+            (clamda + 1), &iout, infoqp, &zero, (w + 1), &lenw, (iw + 1), &leniw,
             &glob_grd.epsmac);
 
     free_dv(htemp);
     free_dv(atemp);
-    free_dm(a,nrowa);
+    free_dm(a, nrowa);
     free_dv(bj);
     /* Determine binding constraints */
-    if (ncsipl+ncsipn)
+    if (ncsipl + ncsipn)
     {
-        for (i=1; i<=ncnstr_used; i++)
-            if (clamda[i]>0.e0)
-                cs[iw_hold[i]].d1bind=TRUE;
+        for (i = 1; i <= ncnstr_used; i++)
+            if (clamda[i] > 0.e0)
+                cs[iw_hold[i]].d1bind = TRUE;
     }
     free_iv(iw_hold);
     return;
@@ -7317,107 +7345,107 @@ struct _parameter  *param;
 
 #ifdef __STDC__
 static void
-step1(int nparam,int nob,int nobL,int nfsip,int nineqn,int neq,int neqn,
-      int nn,int ncsipl,int ncsipn,int ncnstr,int *ncg,int *ncf,
-      int *indxob,int *indxcn,int *iact,int *iskp,int *iskip,
-      int *istore,int feasb,double grdftd,struct _objective *ob,
-      double *fM,double *fMp,double *fmax,double *psf,double *penp,
-      double *steps,double *scvneq,double *xnew,double *x,double *di,
-      double *d,struct _constraint *cs,double *backup,double *signeq,
+step1(int nparam, int nob, int nobL, int nfsip, int nineqn, int neq, int neqn,
+      int nn, int ncsipl, int ncsipn, int ncnstr, int *ncg, int *ncf,
+      int *indxob, int *indxcn, int *iact, int *iskp, int *iskip,
+      int *istore, int feasb, double grdftd, struct _objective *ob,
+      double *fM, double *fMp, double *fmax, double *psf, double *penp,
+      double *steps, double *scvneq, double *xnew, double *x, double *di,
+      double *d, struct _constraint *cs, double *backup, double *signeq,
       struct _violation *sip_viol,
-      void (*obj)(int,int,double *,double *,void *),
-      void (*constr)(int,int,double *,double *,void *),void *cd)
+      void(*obj)(int, int, double *, double *, void *),
+      void(*constr)(int, int, double *, double *, void *), void *cd)
 #else
 static void
-step1(nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,ncnstr,
-      ncg,ncf,indxob,indxcn,iact,iskp,iskip,istore,feasb,grdftd,ob,
-      fM,fMp,fmax,psf,penp,steps,scvneq,xnew,x,di,d,cs,backup,
-      signeq,sip_viol,obj,constr,cd)
-int 	nparam,nob,nobL,nfsip,nineqn,neq,neqn,nn,ncsipl,ncsipn,ncnstr,
-*ncg,*ncf,feasb,*iskp;
-int	*indxob,*indxcn,*iact,*iskip,*istore;
-double  grdftd,*fM,*fMp,*fmax,*steps,*scvneq,*psf;
-double  *xnew,*x,*di,*d,*penp,*backup,*signeq;
+step1(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
+      ncg, ncf, indxob, indxcn, iact, iskp, iskip, istore, feasb, grdftd, ob,
+      fM, fMp, fmax, psf, penp, steps, scvneq, xnew, x, di, d, cs, backup,
+      signeq, sip_viol, obj, constr, cd)
+int  nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
+*ncg, *ncf, feasb, *iskp;
+int *indxob, *indxcn, *iact, *iskip, *istore;
+double  grdftd, *fM, *fMp, *fmax, *steps, *scvneq, *psf;
+double  *xnew, *x, *di, *d, *penp, *backup, *signeq;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _violation  *sip_viol;
-void    (* obj)(),(* constr)();
+void(* obj)(), (* constr)();
 void    *cd;
 #endif
 {
-    int	i,ii,ij,jj,itry,ikeep,j,job,nlin,mnm,ltem1,ltem2,reform,
-    fbind,cdone,fdone,eqdone,display,sipldone;
-    double prod1,prod,dummy,fmax1,tolfe,ostep,temp,**adummy,fii;
+    int i, ii, ij, jj, itry, ikeep, j, job, nlin, mnm, ltem1, ltem2, reform,
+    fbind, cdone, fdone, eqdone, display, sipldone;
+    double prod1, prod, dummy, fmax1, tolfe, ostep, temp, **adummy, fii;
 
-    nlin=glob_info.nnineq-nineqn;
-    itry=ii=jj=1;
-    ostep=*steps=1.e0;
-    fbind=cdone=fdone=eqdone=FALSE;
-    dummy=0.e0;
-    sipldone=(ncsipl==0);
+    nlin = glob_info.nnineq - nineqn;
+    itry = ii = jj = 1;
+    ostep = *steps = 1.e0;
+    fbind = cdone = fdone = eqdone = FALSE;
+    dummy = 0.e0;
+    sipldone = (ncsipl == 0);
     if (glob_log.local)
-        glob_log.dlfeas=FALSE;
-    ikeep=nlin-*iskp;
-    prod1=(0.1e0)*grdftd;        /* alpha = 0.1e0  */
-    tolfe=0.e0;                  /* feasibility tolerance */
-    adummy=make_dm(1,1);
-    adummy[1][1]=0.e0;
-    if (glob_prnt.iter%glob_prnt.iter_mod)
-        display=FALSE;
+        glob_log.dlfeas = FALSE;
+    ikeep = nlin - *iskp;
+    prod1 = (0.1e0) * grdftd;        /* alpha = 0.1e0  */
+    tolfe = 0.e0;                  /* feasibility tolerance */
+    adummy = make_dm(1, 1);
+    adummy[1][1] = 0.e0;
+    if (glob_prnt.iter % glob_prnt.iter_mod)
+        display = FALSE;
     else
-        display=TRUE;
+        display = TRUE;
     if (glob_prnt.iprint >= 3 && display)
-        sbout1(glob_prnt.io,0,"directional deriv   ",grdftd,*(adummy+1),
-               1,2);
-    w[1]=*fM;
+        sbout1(glob_prnt.io, 0, "directional deriv   ", grdftd, *(adummy + 1),
+               1, 2);
+    w[1] = *fM;
     for (;;)
     {
-        reform=TRUE;
+        reform = TRUE;
         if (glob_prnt.iprint >= 3 && display)
-            fprintf(glob_prnt.io,"\t\t\t trial number            %22d\n",
+            fprintf(glob_prnt.io, "\t\t\t trial number            %22d\n",
                     itry);
-        prod=prod1*(*steps);
+        prod = prod1 * (*steps);
         if (!feasb || (nobL > 1))
-            prod=prod+tolfe;
-        for (i=1; i<=nparam; i++)
+            prod = prod + tolfe;
+        for (i = 1; i <= nparam; i++)
         {
             if (glob_log.local)
-                xnew[i]=x[i]+(*steps)*di[i];
+                xnew[i] = x[i] + (*steps) * di[i];
             else
-                xnew[i]=x[i]+(*steps)*di[i]+d[i]*(*steps)*(*steps);
+                xnew[i] = x[i] + (*steps) * di[i] + d[i] * (*steps) * (*steps);
         }
-        x_is_new=TRUE;
+        x_is_new = TRUE;
         if (glob_prnt.iprint >= 3 && display)
         {
-            sbout1(glob_prnt.io,0,"trial step          ",*steps,
-                   *(adummy+1),1,2);
-            sbout1(glob_prnt.io,nparam,"trial point         ",
-                   dummy,xnew,2,2);
+            sbout1(glob_prnt.io, 0, "trial step          ", *steps,
+                   *(adummy + 1), 1, 2);
+            sbout1(glob_prnt.io, nparam, "trial point         ",
+                   dummy, xnew, 2, 2);
         }
 
         /* Generate an upper bound step size using the linear constraints
            not used in the computation of dtilde */
         if (*iskp != 0)
         {
-            ostep=*steps;
-            for (i=ii; i<=*iskp; i++)
+            ostep = *steps;
+            for (i = ii; i <= *iskp; i++)
             {
-                ij=iskip[i];
-                constr(nparam,ij,xnew+1,&(cs[ij].val),cd);
+                ij = iskip[i];
+                constr(nparam, ij, xnew + 1, &(cs[ij].val), cd);
                 if (glob_prnt.iprint >= 3 && display)
                 {
-                    if (i==1)
+                    if (i == 1)
                         fprintf(glob_prnt.io,
-                                "\t\t\t trial constraints  %d \t %22.14e\n",ij,
+                                "\t\t\t trial constraints  %d \t %22.14e\n", ij,
                                 cs[ij].val);
-                    if (i!=1)
+                    if (i != 1)
                         fprintf(glob_prnt.io,
-                                "\t\t\t\t\t %d \t %22.14e\n",ij,cs[ij].val);
+                                "\t\t\t\t\t %d \t %22.14e\n", ij, cs[ij].val);
                 }
-                if (cs[ij].val<=tolfe)
+                if (cs[ij].val <= tolfe)
                     continue;
-                ii=i;
-                if (ncsipl && ii>glob_info.nnineq-ncsipl)
+                ii = i;
+                if (ncsipl && ii > glob_info.nnineq - ncsipl)
                 {
                     sip_viol->type = CONSTR;
                     sip_viol->index = ij;
@@ -7429,39 +7457,39 @@ void    *cd;
                 }
                 goto L1120;
             }
-            *iskp=0;
+            *iskp = 0;
         }
 
         /* Refine the upper bound using the linear SI constraints not
            in Omega_k */
         if (!sipldone)
         {
-            for (i=jj; i<=ncsipl; i++)
+            for (i = jj; i <= ncsipl; i++)
             {
-                ij=glob_info.nnineq-ncsipl+i;
-                if (cs[ij].act_sip||element(iskip,nlin-ikeep,ij))
+                ij = glob_info.nnineq - ncsipl + i;
+                if (cs[ij].act_sip || element(iskip, nlin - ikeep, ij))
                     continue;
-                constr(nparam,ij,xnew+1,&(cs[ij].val),cd);
+                constr(nparam, ij, xnew + 1, &(cs[ij].val), cd);
                 if (glob_prnt.iprint >= 3 && display)
                 {
-                    if (i==1)
+                    if (i == 1)
                         fprintf(glob_prnt.io,
-                                "\t\t\t trial constraints  %d \t %22.14e\n",ij,
+                                "\t\t\t trial constraints  %d \t %22.14e\n", ij,
                                 cs[ij].val);
-                    if (i!=1)
+                    if (i != 1)
                         fprintf(glob_prnt.io,
-                                "\t\t\t\t\t %d \t %22.14e\n",ij,cs[ij].val);
+                                "\t\t\t\t\t %d \t %22.14e\n", ij, cs[ij].val);
                 }
-                if (cs[ij].val<=tolfe)
+                if (cs[ij].val <= tolfe)
                     continue;
-                jj=i;
-                sip_viol->type=CONSTR;
-                sip_viol->index=ij;
+                jj = i;
+                sip_viol->type = CONSTR;
+                sip_viol->index = ij;
                 goto L1120;
             }
-            sipldone=TRUE;
+            sipldone = TRUE;
         }
-        if (nn==0)
+        if (nn == 0)
             goto L310;
 
         /* Check nonlinear constraints                            */
@@ -7469,248 +7497,248 @@ void    *cd;
             goto L315;
         do
         {
-            for (i=1; i<=nn; i++)
+            for (i = 1; i <= nn; i++)
             {
-                *ncg=i;
-                ii=iact[i];
-                ij=glob_info.nnineq+neqn;
-                if (!((ii<=glob_info.nnineq && istore[ii]==1)||
-                        (ii>glob_info.nnineq && ii<=ij && eqdone)))
+                *ncg = i;
+                ii = iact[i];
+                ij = glob_info.nnineq + neqn;
+                if (!((ii <= glob_info.nnineq && istore[ii] == 1) ||
+                      (ii > glob_info.nnineq && ii <= ij && eqdone)))
                 {
-                    temp=1.e0;
-                    if(ii>glob_info.nnineq && ii<=ij)
-                        temp=signeq[ii-glob_info.nnineq];
-                    constr(nparam,ii,xnew+1,&(cs[ii].val),cd);
+                    temp = 1.e0;
+                    if (ii > glob_info.nnineq && ii <= ij)
+                        temp = signeq[ii-glob_info.nnineq];
+                    constr(nparam, ii, xnew + 1, &(cs[ii].val), cd);
                     cs[ii].val *= temp;
                     glob_info.ncallg++;
                 }
-                if (glob_prnt.iprint>=3 && display)
+                if (glob_prnt.iprint >= 3 && display)
                 {
-                    if (i==1 && ikeep==nlin)
+                    if (i == 1 && ikeep == nlin)
                         fprintf(glob_prnt.io,
-                                "\t\t\t trial constraints  %d \t %22.14e\n",ii,
+                                "\t\t\t trial constraints  %d \t %22.14e\n", ii,
                                 cs[ii].val);
-                    if (i!=1 || ikeep!=nlin)
+                    if (i != 1 || ikeep != nlin)
                         fprintf(glob_prnt.io,
-                                "\t\t\t\t\t %d \t %22.14e\n",ii,cs[ii].val);
+                                "\t\t\t\t\t %d \t %22.14e\n", ii, cs[ii].val);
                 }
-                if (!(glob_log.local || cs[ii].val<=tolfe))
+                if (!(glob_log.local || cs[ii].val <= tolfe))
                 {
-                    shift(nn,ii,iact);
-                    if (ncsipn && ii>nineqn-ncsipn)
+                    shift(nn, ii, iact);
+                    if (ncsipn && ii > nineqn - ncsipn)
                     {
-                        sip_viol->type=CONSTR;
-                        sip_viol->index=ii;
+                        sip_viol->type = CONSTR;
+                        sip_viol->index = ii;
                     }
                     else
                     {
-                        sip_viol->type=NONE; /* non-SIP constraint violated */
-                        sip_viol->index=0;
+                        sip_viol->type = NONE; /* non-SIP constraint violated */
+                        sip_viol->index = 0;
                     }
                     goto L1110;
                 }
-                if (glob_log.local && cs[ii].val>tolfe)
+                if (glob_log.local && cs[ii].val > tolfe)
                 {
-                    if (ncsipn && ii>nineqn-ncsipn)
+                    if (ncsipn && ii > nineqn - ncsipn)
                     {
-                        sip_viol->type=CONSTR;
-                        sip_viol->index=ii;
+                        sip_viol->type = CONSTR;
+                        sip_viol->index = ii;
                     }
                     else
                     {
-                        sip_viol->type=NONE; /* non-SIP constraint violated */
-                        sip_viol->index=0;
+                        sip_viol->type = NONE; /* non-SIP constraint violated */
+                        sip_viol->index = 0;
                     }
                     goto L1500;
                 }
             }
 L310:
-            cdone=eqdone=TRUE;
+            cdone = eqdone = TRUE;
             if (glob_log.local)
-                glob_log.dlfeas=TRUE; /* dl is feasible */
+                glob_log.dlfeas = TRUE; /* dl is feasible */
 L315:
             if (fdone)
                 break;
-            if (nob>0)
-                fmax1=-bgbnd;
+            if (nob > 0)
+                fmax1 = -bgbnd;
             else
-                fmax1=0.e0;
-            for (i=0; i<=nob; i++)
+                fmax1 = 0.e0;
+            for (i = 0; i <= nob; i++)
             {
-                if (nob!=0 && i==0)
+                if (nob != 0 && i == 0)
                     continue;
-                *ncf=i;
-                ii=iact[nn+i];
+                *ncf = i;
+                ii = iact[nn+i];
                 if (feasb)
                 {
-                    if (!(eqdone || neqn==0))
+                    if (!(eqdone || neqn == 0))
                     {
-                        for (j=1; j<=neqn; j++)
-                            constr(nparam,glob_info.nnineq+j,xnew+1,
-                                   &(cs[glob_info.nnineq+j].val),cd);
-                        glob_info.ncallg+=neqn;
+                        for (j = 1; j <= neqn; j++)
+                            constr(nparam, glob_info.nnineq + j, xnew + 1,
+                                   &(cs[glob_info.nnineq+j].val), cd);
+                        glob_info.ncallg += neqn;
                     }
                     if (neqn != 0)
                     {
                         if (eqdone)
-                            job=20;
+                            job = 20;
                         if (!eqdone)
-                            job=10;
-                        resign(nparam,neqn,psf,*(adummy+1),penp,cs,signeq,
-                               job,10);
+                            job = 10;
+                        resign(nparam, neqn, psf, *(adummy + 1), penp, cs, signeq,
+                               job, 10);
                     }
-                    if (istore[nineqn+ii]!=1 && i!=0)
+                    if (istore[nineqn+ii] != 1 && i != 0)
                     {
-                        obj(nparam,ii,xnew+1,&(ob[ii].val),cd);
+                        obj(nparam, ii, xnew + 1, &(ob[ii].val), cd);
                         glob_info.ncallf++;
                     }
-                    if (i==0)
-                        fii=0.e0;
+                    if (i == 0)
+                        fii = 0.e0;
                     else
-                        fii=ob[ii].val;
-                    if (i==0 && glob_prnt.iprint>=3 && display)
+                        fii = ob[ii].val;
+                    if (i == 0 && glob_prnt.iprint >= 3 && display)
                         fprintf(glob_prnt.io,
-                                "\t\t\t trial penalty term \t %22.14e\n",-*psf);
-                    if (i==1 && glob_prnt.iprint>=3 && display)
+                                "\t\t\t trial penalty term \t %22.14e\n", -*psf);
+                    if (i == 1 && glob_prnt.iprint >= 3 && display)
                         fprintf(glob_prnt.io,
                                 "\t\t\t trial objectives   %d \t %22.14e\n",
-                                ii,fii-*psf);
-                    if (i>1 && glob_prnt.iprint>=3 && display)
+                                ii, fii - *psf);
+                    if (i > 1 && glob_prnt.iprint >= 3 && display)
                         fprintf(glob_prnt.io,
-                                "\t\t\t\t\t %d \t %22.14e\n",ii,fii-*psf);
+                                "\t\t\t\t\t %d \t %22.14e\n", ii, fii - *psf);
                 }
                 else
                 {
-                    if (istore[ii]!=1)
+                    if (istore[ii] != 1)
                     {
-                        constr(nparam,indxob[ii],xnew+1,&(ob[ii].val),cd);
+                        constr(nparam, indxob[ii], xnew + 1, &(ob[ii].val), cd);
                         glob_info.ncallg++;
                     }
-                    if (ob[ii].val>tolfe)
-                        reform=FALSE;
-                    if (i==1 && glob_prnt.iprint>2 && display)
+                    if (ob[ii].val > tolfe)
+                        reform = FALSE;
+                    if (i == 1 && glob_prnt.iprint > 2 && display)
                         fprintf(glob_prnt.io,
                                 "\t\t\t trial objectives   %d \t %22.14e\n",
-                                indxob[ii],ob[ii].val);
-                    if (i!=1 && glob_prnt.iprint>2 && display)
+                                indxob[ii], ob[ii].val);
+                    if (i != 1 && glob_prnt.iprint > 2 && display)
                         fprintf(glob_prnt.io,
-                                "\t\t\t\t\t %d \t %22.14e\n",indxob[ii],
+                                "\t\t\t\t\t %d \t %22.14e\n", indxob[ii],
                                 ob[ii].val);
-                    fii=ob[ii].val;
+                    fii = ob[ii].val;
                 }
-                fmax1=DMAX1(fmax1,fii);
-                if (nobL!=nob)
-                    fmax1=DMAX1(fmax1,-fii);
+                fmax1 = DMAX1(fmax1, fii);
+                if (nobL != nob)
+                    fmax1 = DMAX1(fmax1, -fii);
                 if (!feasb && reform)
                     continue;
                 if (!glob_log.local)
                 {
-                    if ((fii-*psf)>(*fMp+prod))
+                    if ((fii - *psf) > (*fMp + prod))
                     {
-                        fbind=TRUE;
-                        shift(nob,ii,&iact[nn]);
-                        if (nfsip && ii>nob-nfsip)
+                        fbind = TRUE;
+                        shift(nob, ii, &iact[nn]);
+                        if (nfsip && ii > nob - nfsip)
                         {
-                            sip_viol->type=OBJECT;
-                            sip_viol->index=ii;
+                            sip_viol->type = OBJECT;
+                            sip_viol->index = ii;
                         }
                         else
                         {
-                            sip_viol->type=NONE;
-                            sip_viol->index=0;
+                            sip_viol->type = NONE;
+                            sip_viol->index = 0;
                         }
                         goto L1110;
                     }
-                    if (nobL==nob || (-fii-*psf)<=(*fMp+prod))
+                    if (nobL == nob || (-fii - *psf) <= (*fMp + prod))
                         continue;
-                    fbind=TRUE;
-                    shift(nob,ii,&iact[nn]);
-                    if (nfsip && ii>nob-nfsip)
+                    fbind = TRUE;
+                    shift(nob, ii, &iact[nn]);
+                    if (nfsip && ii > nob - nfsip)
                     {
-                        sip_viol->type=OBJECT;
-                        sip_viol->index=ii;
+                        sip_viol->type = OBJECT;
+                        sip_viol->index = ii;
                     }
                     else
                     {
-                        sip_viol->type=NONE;
-                        sip_viol->index=0;
+                        sip_viol->type = NONE;
+                        sip_viol->index = 0;
                     }
                     goto L1110;
                 }
-                ltem1=(fii-*psf)>(*fMp+prod);
-                ltem2=(nobL!=nob)&&((-fii-*psf)>(*fMp+prod));
+                ltem1 = (fii - *psf) > (*fMp + prod);
+                ltem2 = (nobL != nob) && ((-fii - *psf) > (*fMp + prod));
                 if (ltem1 || ltem2)
                     goto L1500;
             }
-            fbind=FALSE;
-            fdone=eqdone=TRUE;
+            fbind = FALSE;
+            fdone = eqdone = TRUE;
         }
         while (!cdone);
-        if (ostep==*steps)
-            mnm=ikeep+neq-neqn;
-        if (ostep!=*steps)
-            mnm=ncnstr-nn;
-        for (i=1; i<=mnm; i++)
+        if (ostep == *steps)
+            mnm = ikeep + neq - neqn;
+        if (ostep != *steps)
+            mnm = ncnstr - nn;
+        for (i = 1; i <= mnm; i++)
         {
-            ii=indxcn[i+nn];
-            if (ikeep!=nlin && ostep==*steps)
+            ii = indxcn[i+nn];
+            if (ikeep != nlin && ostep == *steps)
             {
-                if (i<= ikeep)
-                    ii=iskip[nlin+2-i];
+                if (i <= ikeep)
+                    ii = iskip[nlin+2-i];
                 else
-                    ii=indxcn[nn+i-ikeep+nlin];
+                    ii = indxcn[nn+i-ikeep+nlin];
             }
-            constr(nparam,ii,xnew+1,&(cs[ii].val),cd);
+            constr(nparam, ii, xnew + 1, &(cs[ii].val), cd);
         }
-        *scvneq=0.e0;
-        for (i=1; i<=ncnstr; i++)
+        *scvneq = 0.e0;
+        for (i = 1; i <= ncnstr; i++)
         {
-            if (i>glob_info.nnineq && i<=(glob_info.nnineq+neqn))
-                *scvneq=*scvneq-cs[i].val;
-            backup[i]=cs[i].val;
+            if (i > glob_info.nnineq && i <= (glob_info.nnineq + neqn))
+                *scvneq = *scvneq - cs[i].val;
+            backup[i] = cs[i].val;
         }
-        for (i=1; i<=nob; i++)
-            backup[i+ncnstr]=ob[i].val;
+        for (i = 1; i <= nob; i++)
+            backup[i+ncnstr] = ob[i].val;
         if (!feasb && reform)
         {
-            for (i=1; i<=nparam; i++)
-                x[i]=xnew[i];
-            nstop=0;
+            for (i = 1; i <= nparam; i++)
+                x[i] = xnew[i];
+            nstop = 0;
             goto L1500;
         }
         if (glob_log.local)
-            *ncg=ncnstr;
+            *ncg = ncnstr;
         if (glob_log.local)
-            glob_log.update=TRUE;
-        *fM=fmax1;
-        *fMp=fmax1-*psf;
-        *fmax=fmax1;
-        for (i=1; i<=nn; i++)
-            iact[i]=indxcn[i];
-        for (i=1; i<=nob; i++)
-            iact[nn+i]=i;
+            glob_log.update = TRUE;
+        *fM = fmax1;
+        *fMp = fmax1 - *psf;
+        *fmax = fmax1;
+        for (i = 1; i <= nn; i++)
+            iact[i] = indxcn[i];
+        for (i = 1; i <= nob; i++)
+            iact[nn+i] = i;
         goto L1500;
-        L1110:
-        cdone=fdone=eqdone=reform=FALSE;
-        L1120:
+L1110:
+        cdone = fdone = eqdone = reform = FALSE;
+L1120:
         itry++;
-        if (glob_info.modec==2)
-            fbind=FALSE;
+        if (glob_info.modec == 2)
+            fbind = FALSE;
         if (*steps >= 1.e0)
-            for (i=1; i<=nob+nineqn; i++)
-                istore[i]=0;
-        *steps=*steps*0.5e0;
-        if (*steps<glob_grd.epsmac)
+            for (i = 1; i <= nob + nineqn; i++)
+                istore[i] = 0;
+        *steps = *steps * 0.5e0;
+        if (*steps < glob_grd.epsmac)
             break;
     }
-    glob_prnt.info=4;
-    nstop=0;
-    L1500:
-    free_dm(adummy,1);
-    if (*steps<1.e0)
+    glob_prnt.info = 4;
+    nstop = 0;
+L1500:
+    free_dm(adummy, 1);
+    if (*steps < 1.e0)
         return;
-    for (i=1; i<=nob+nineqn; i++)
-        istore[i]=0;
+    for (i = 1; i <= nob + nineqn; i++)
+        istore[i] = 0;
     return;
 }
 /******************************************************************/
@@ -7721,43 +7749,43 @@ L315:
 
 #ifdef __STDC__
 static void
-hessian(int nparam,int nob,int nfsip,int nobL,int nineqn,int neq,
-        int neqn,int nn,int ncsipn,int ncnstr,int nfs,int *nstart,
-        int feasb,double *xnew,struct _parameter *param,
-        struct _objective *ob,double fmax,double *fM,double *fMp,
-        double *psf,double *grdpsf,double *penp,struct _constraint *cs,
-        double *gm,int *indxob,int *indxcn,double *delta,double *eta,
-        double *gamma,double **hess,double *hd,double steps,int *nrst,
-        double *signeq,double *span,
-        void (*obj)(int,int,double *,double *,void *),
-        void (*constr)(int,int,double *,double *,void *),
-        void (*gradob)(int,int,double *,double *,
-                       void (*)(int,int,double *,double *,void *),void *),
-        void (*gradcn)(int,int,double *,double *,
-                       void (*)(int,int,double *,double *,void *),void *),
-        double **phess,double *psb,double *psmu,
+hessian(int nparam, int nob, int nfsip, int nobL, int nineqn, int neq,
+        int neqn, int nn, int ncsipn, int ncnstr, int nfs, int *nstart,
+        int feasb, double *xnew, struct _parameter *param,
+        struct _objective *ob, double fmax, double *fM, double *fMp,
+        double *psf, double *grdpsf, double *penp, struct _constraint *cs,
+        double *gm, int *indxob, int *indxcn, double *delta, double *eta,
+        double *gamma, double **hess, double *hd, double steps, int *nrst,
+        double *signeq, double *span,
+        void(*obj)(int, int, double *, double *, void *),
+        void(*constr)(int, int, double *, double *, void *),
+        void(*gradob)(int, int, double *, double *,
+                      void(*)(int, int, double *, double *, void *), void *),
+        void(*gradcn)(int, int, double *, double *,
+                      void(*)(int, int, double *, double *, void *), void *),
+        double **phess, double *psb, double *psmu,
         struct _violation *sip_viol)
 #else
 static void
-hessian(nparam,nob,nfsip,nobL,nineqn,neq,neqn,nn,ncsipn,ncnstr,
-        nfs,nstart,feasb,xnew,param,ob,fmax,fM,fMp,psf,grdpsf,penp,
-        cs,gm,indxob,indxcn,delta,eta,gamma,hess,hd,steps,nrst,signeq,
-        span,obj,constr,gradob,gradcn,phess,psb,psmu,sip_viol)
-int	nparam,nob,nobL,nineqn,neq,neqn,nn,nfsip,ncsipn,ncnstr,
-nfs,*nstart,feasb,*nrst;
-int     *indxob,*indxcn;
-double	steps,*psf,fmax,*fM,*fMp;
-double  *xnew,*grdpsf,*penp,*gm,*delta,*eta,*gamma,
-**hess,*hd,*signeq,*span,**phess,*psb,*psmu;
+hessian(nparam, nob, nfsip, nobL, nineqn, neq, neqn, nn, ncsipn, ncnstr,
+        nfs, nstart, feasb, xnew, param, ob, fmax, fM, fMp, psf, grdpsf, penp,
+        cs, gm, indxob, indxcn, delta, eta, gamma, hess, hd, steps, nrst, signeq,
+        span, obj, constr, gradob, gradcn, phess, psb, psmu, sip_viol)
+int nparam, nob, nobL, nineqn, neq, neqn, nn, nfsip, ncsipn, ncnstr,
+nfs, *nstart, feasb, *nrst;
+int     *indxob, *indxcn;
+double steps, *psf, fmax, *fM, *fMp;
+double  *xnew, *grdpsf, *penp, *gm, *delta, *eta, *gamma,
+**hess, *hd, *signeq, *span, **phess, *psb, *psmu;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _parameter  *param;
 struct  _violation  *sip_viol;
-void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
+void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
 #endif
 {
-    int    i,j,k,ifail,np,mnm,done,display;
-    double dhd,gammd,etad,dummy,theta,signgj,psfnew,delta_s;
+    int    i, j, k, ifail, np, mnm, done, display;
+    double dhd, gammd, etad, dummy, theta, signgj, psfnew, delta_s;
     double *tempv;
 
     /* Check to see whether user-accessible stopping criterion
@@ -7767,309 +7795,309 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
     if (!glob_log.get_ne_mult)
     {
         if (feasb && nstop && !neqn)
-            if ((fabs(w[1]-fmax) <= objeps) ||
-                    (fabs(w[1]-fmax) <= objrep*fabs(w[1])))
-                nstop=0;
+            if ((fabs(w[1] - fmax) <= objeps) ||
+                (fabs(w[1] - fmax) <= objrep*fabs(w[1])))
+                nstop = 0;
         if (!nstop)
         {
-            for (i=1; i<= nparam; i++)
-                param->x[i]=xnew[i];
-            x_is_new=TRUE;
+            for (i = 1; i <= nparam; i++)
+                param->x[i] = xnew[i];
+            x_is_new = TRUE;
             return;
         }
     }
 
-    delta_s=glob_grd.rteps;  /* SIP */
-    if (glob_prnt.iter%glob_prnt.iter_mod)
-        display=FALSE;
+    delta_s = glob_grd.rteps;  /* SIP */
+    if (glob_prnt.iter % glob_prnt.iter_mod)
+        display = FALSE;
     else
-        display=TRUE;
-    psfnew=0.e0;
-    glob_prnt.ipd=0;
-    done=FALSE;
-    dummy=0.e0;
-    nullvc(nparam,delta);
-    nullvc(nparam,eta);
-    for (j=1; j<=2; j++)
+        display = TRUE;
+    psfnew = 0.e0;
+    glob_prnt.ipd = 0;
+    done = FALSE;
+    dummy = 0.e0;
+    nullvc(nparam, delta);
+    nullvc(nparam, eta);
+    for (j = 1; j <= 2; j++)
     {
         nullvc(nparam, gamma);
-        if (nobL>1)
+        if (nobL > 1)
         {
-            for (i=1; i<=nparam; i++)
+            for (i = 1; i <= nparam; i++)
             {
-                hd[i]=0.e0;
-                for (k=1; k<=nob; k++)
-                    hd[i]=hd[i]+ob[k].grad[i]*ob[k].mult;
+                hd[i] = 0.e0;
+                for (k = 1; k <= nob; k++)
+                    hd[i] = hd[i] + ob[k].grad[i] * ob[k].mult;
             }
         }
         if (feasb)
         {
             if (nineqn != 0)
             {
-                for (i=1; i<=nparam; i++)
+                for (i = 1; i <= nparam; i++)
                 {
-                    gamma[i]=0.e0;
-                    for (k=1; k<=nineqn; k++)
-                        gamma[i]=gamma[i]+cs[k].grad[i]*cs[k].mult;
+                    gamma[i] = 0.e0;
+                    for (k = 1; k <= nineqn; k++)
+                        gamma[i] = gamma[i] + cs[k].grad[i] * cs[k].mult;
                 }
             }
             if (neqn != 0)
             {
-                for (i=1; i<=nparam; i++)
+                for (i = 1; i <= nparam; i++)
                 {
-                    eta[i]=0.e0;
-                    for (k=1; k<=neqn; k++)
-                        eta[i]=eta[i]+cs[glob_info.nnineq+k].grad[i]*
-                               cs[glob_info.nnineq+k].mult;
+                    eta[i] = 0.e0;
+                    for (k = 1; k <= neqn; k++)
+                        eta[i] = eta[i] + cs[glob_info.nnineq+k].grad[i] *
+                                 cs[glob_info.nnineq+k].mult;
                 }
             }
         }
-        for (i=1; i<=nparam; i++)
+        for (i = 1; i <= nparam; i++)
         {
-            if (nobL>1)
+            if (nobL > 1)
             {
                 if (done)
-                    psb[i]=hd[i]+param->mult[i]+gamma[i];
-                gamma[i]=gamma[i]+hd[i]-grdpsf[i]+eta[i];
+                    psb[i] = hd[i] + param->mult[i] + gamma[i];
+                gamma[i] = gamma[i] + hd[i] - grdpsf[i] + eta[i];
             }
-            else if (nobL==1)
+            else if (nobL == 1)
             {
                 if (done)
-                    psb[i]=ob[1].grad[i]+param->mult[i]+gamma[i];
-                gamma[i]=gamma[i]+ob[1].grad[i]-grdpsf[i]+eta[i];
+                    psb[i] = ob[1].grad[i] + param->mult[i] + gamma[i];
+                gamma[i] = gamma[i] + ob[1].grad[i] - grdpsf[i] + eta[i];
             }
-            else if (nobL==0)
+            else if (nobL == 0)
             {
                 if (done)
-                    psb[i]=param->mult[i]+gamma[i];
-                gamma[i]=gamma[i]-grdpsf[i]+eta[i];
+                    psb[i] = param->mult[i] + gamma[i];
+                gamma[i] = gamma[i] - grdpsf[i] + eta[i];
             }
             if (!done)
-                delta[i]=gamma[i];
+                delta[i] = gamma[i];
         }
         if (!done && !glob_log.d0_is0)
         {
             if (nn != 0)
             {
-                for (i=1; i<=nn; i++)
+                for (i = 1; i <= nn; i++)
                 {
-                    if ((feasb) && (i>nineqn))
-                        signgj=signeq[i-nineqn];
-                    if ((!feasb) || (i<=nineqn))
-                        signgj=1.e0;
-                    if ((feasb) && (ncsipn) && (i>nineqn-ncsipn) &&
-                            (cs[indxcn[i]].mult==0.e0))
+                    if ((feasb) && (i > nineqn))
+                        signgj = signeq[i-nineqn];
+                    if ((!feasb) || (i <= nineqn))
+                        signgj = 1.e0;
+                    if ((feasb) && (ncsipn) && (i > nineqn - ncsipn) &&
+                        (cs[indxcn[i]].mult == 0.e0))
                         continue;
-                    glob_grd.valnom=cs[indxcn[i]].val*signgj;
-                    gradcn(nparam,indxcn[i],xnew+1,cs[indxcn[i]].grad+1,
-                           constr,param->cd);
+                    glob_grd.valnom = cs[indxcn[i]].val * signgj;
+                    gradcn(nparam, indxcn[i], xnew + 1, cs[indxcn[i]].grad + 1,
+                           constr, param->cd);
                 }
-                resign(nparam,neqn,psf,grdpsf,penp,cs,signeq,11,11);
+                resign(nparam, neqn, psf, grdpsf, penp, cs, signeq, 11, 11);
             }
-            for (i=1; i<=nob; i++)
+            for (i = 1; i <= nob; i++)
             {
-                glob_grd.valnom=ob[i].val;
-                if ((i<=nob-nfsip)||(i>nob-nfsip &&
-                                     ((ob[i].mult !=0.e0)||(ob[i].mult_L !=0.e0))))
+                glob_grd.valnom = ob[i].val;
+                if ((i <= nob - nfsip) || (i > nob - nfsip &&
+                                           ((ob[i].mult != 0.e0) || (ob[i].mult_L != 0.e0))))
                 {
                     if (feasb)
-                        gradob(nparam,i,xnew+1,ob[i].grad+1,obj,param->cd);
+                        gradob(nparam, i, xnew + 1, ob[i].grad + 1, obj, param->cd);
                     else
-                        gradcn(nparam,indxob[i],xnew+1,ob[i].grad+1,
-                               constr,param->cd);
+                        gradcn(nparam, indxob[i], xnew + 1, ob[i].grad + 1,
+                               constr, param->cd);
                 }
             }
-            done=TRUE;
+            done = TRUE;
         }
         if (glob_log.d0_is0)
-            done=TRUE;
+            done = TRUE;
     }
     if (!glob_log.d0_is0)
     {
-        if (!(feasb && steps<delta_s && ((sip_viol->type==OBJECT &&
-                                          !ob[sip_viol->index].act_sip)||(sip_viol->type==CONSTR &&
-                                                                          !cs[sip_viol->index].act_sip))))
+        if (!(feasb && steps < delta_s && ((sip_viol->type == OBJECT &&
+                                            !ob[sip_viol->index].act_sip) || (sip_viol->type == CONSTR &&
+                                                                              !cs[sip_viol->index].act_sip))))
         {
-            if (*nrst<(5*nparam) || steps>0.1e0)
+            if (*nrst < (5*nparam) || steps > 0.1e0)
             {
                 (*nrst)++;
-                for (i=1; i<=nparam; i++)
+                for (i = 1; i <= nparam; i++)
                 {
-                    gamma[i]=gamma[i]-delta[i];
-                    delta[i]=xnew[i]-param->x[i];
+                    gamma[i] = gamma[i] - delta[i];
+                    delta[i] = xnew[i] - param->x[i];
                 }
-                matrvc(nparam,nparam,hess,delta,hd);
-                dhd=scaprd(nparam,delta,hd);
-                if (sqrt(scaprd(nparam,delta,delta)) <= glob_grd.epsmac)
+                matrvc(nparam, nparam, hess, delta, hd);
+                dhd = scaprd(nparam, delta, hd);
+                if (sqrt(scaprd(nparam, delta, delta)) <= glob_grd.epsmac)
                 {
                     /* xnew too close to x!! */
-                    nstop=0;
-                    glob_prnt.info=8;
+                    nstop = 0;
+                    glob_prnt.info = 8;
                     return;
                 }
-                gammd=scaprd(nparam,delta,gamma);
+                gammd = scaprd(nparam, delta, gamma);
                 if (gammd >= (0.2e0*dhd))
-                    theta=1.e0;
+                    theta = 1.e0;
                 else
-                    theta=0.8e0*dhd/(dhd-gammd);
-                for (i=1; i<=nparam; i++)
-                    eta[i]=hd[i]*(1.e0-theta)+theta*gamma[i];
-                etad=theta*gammd+(1.e0-theta)*dhd;
-                for (i=1; i<=nparam; i++)
+                    theta = 0.8e0 * dhd / (dhd - gammd);
+                for (i = 1; i <= nparam; i++)
+                    eta[i] = hd[i] * (1.e0 - theta) + theta * gamma[i];
+                etad = theta * gammd + (1.e0 - theta) * dhd;
+                for (i = 1; i <= nparam; i++)
                 {
-                    for (j=i; j<=nparam; j++)
+                    for (j = i; j <= nparam; j++)
                     {
-                        hess[i][j]=hess[i][j] - hd[i]*hd[j]/dhd +
-                                   eta[i]*eta[j]/etad;
-                        hess[j][i]=hess[i][j];
+                        hess[i][j] = hess[i][j] - hd[i] * hd[j] / dhd +
+                                     eta[i] * eta[j] / etad;
+                        hess[j][i] = hess[i][j];
                     }
                 }
             }
             else
             {
-                *nrst=0;
-                diagnl(nparam,1.e0,hess);
+                *nrst = 0;
+                diagnl(nparam, 1.e0, hess);
             }
         }
-        for (i=1; i<=nparam; i++)
-            param->x[i]=xnew[i];
-        x_is_new=TRUE;
+        for (i = 1; i <= nparam; i++)
+            param->x[i] = xnew[i];
+        x_is_new = TRUE;
     }
-    if (neqn!=0 && (feasb))
+    if (neqn != 0 && (feasb))
     {
-        i=glob_info.nnineq-nineqn;
-        if (i!=0)
+        i = glob_info.nnineq - nineqn;
+        if (i != 0)
         {
-            for (j=1; j<=nparam; j++)
+            for (j = 1; j <= nparam; j++)
             {
-                gamma[j]=0.e0;
-                for (k=1; k<=i; k++)
-                    gamma[j]=gamma[j]+cs[k+nineqn].grad[j]*
-                             cs[nineqn+k].mult;
+                gamma[j] = 0.e0;
+                for (k = 1; k <= i; k++)
+                    gamma[j] = gamma[j] + cs[k+nineqn].grad[j] *
+                               cs[nineqn+k].mult;
             }
-            for (i=1; i<=nparam; i++)
-                psb[i]=psb[i]+gamma[i];
+            for (i = 1; i <= nparam; i++)
+                psb[i] = psb[i] + gamma[i];
         }
-        i=neq-neqn;
-        if (i!=0)
+        i = neq - neqn;
+        if (i != 0)
         {
-            for (j=1; j<=nparam; j++)
+            for (j = 1; j <= nparam; j++)
             {
-                gamma[j]=0.e0;
-                for (k=1; k<=i; k++)
-                    gamma[j]=gamma[j]+cs[k+neqn+glob_info.nnineq].grad[j]*
-                             cs[glob_info.nnineq+neqn+k].mult;
+                gamma[j] = 0.e0;
+                for (k = 1; k <= i; k++)
+                    gamma[j] = gamma[j] + cs[k+neqn+glob_info.nnineq].grad[j] *
+                               cs[glob_info.nnineq+neqn+k].mult;
             }
-            for (i=1; i<=nparam; i++)
-                psb[i]=psb[i]+gamma[i];
+            for (i = 1; i <= nparam; i++)
+                psb[i] = psb[i] + gamma[i];
         }
         /* Update penalty parameters for nonlinear equality constraints */
-        estlam(nparam,neqn,&ifail,bgbnd,phess,delta,eta,
-               gamma,cs,psb,hd,xnew,psmu);
+        estlam(nparam, neqn, &ifail, bgbnd, phess, delta, eta,
+               gamma, cs, psb, hd, xnew, psmu);
         if (glob_log.get_ne_mult)
             return;
-        for (i=1; i<=neqn; i++)
+        for (i = 1; i <= neqn; i++)
         {
             if (ifail != 0 || glob_log.d0_is0)
-                penp[i]=2.e0*penp[i];
+                penp[i] = 2.e0 * penp[i];
             else
             {
-                etad=psmu[i]+penp[i];
+                etad = psmu[i] + penp[i];
                 if (etad < 1.e0)
-                    penp[i]=DMAX1((1.e0-psmu[i]),(2.e0*penp[i]));
+                    penp[i] = DMAX1((1.e0 - psmu[i]), (2.e0 * penp[i]));
             }
             if (penp[i] > bgbnd)
             {
-                nstop=0;
-                glob_prnt.info=9;
+                nstop = 0;
+                glob_prnt.info = 9;
                 return;
             }
         }
-        resign(nparam,neqn,psf,grdpsf,penp,cs,signeq,20,12);
-        *fMp=*fM-*psf;
+        resign(nparam, neqn, psf, grdpsf, penp, cs, signeq, 20, 12);
+        *fMp = *fM - *psf;
     }
     if (nfs != 0)
     {
         (*nstart)++;
-        np=indexs(*nstart,nfs);
-        span[np]=fmax;
-        for (i=1; i<=neqn; i++)
-            gm[(np-1)*neqn+i]=cs[glob_info.nnineq+i].val;
+        np = indexs(*nstart, nfs);
+        span[np] = fmax;
+        for (i = 1; i <= neqn; i++)
+            gm[(np-1)*neqn+i] = cs[glob_info.nnineq+i].val;
         if (neqn != 0)
         {
-            psfnew=0.e0;
-            for (i=1; i<=neqn; i++)
-                psfnew=psfnew+gm[i]*penp[i];
+            psfnew = 0.e0;
+            for (i = 1; i <= neqn; i++)
+                psfnew = psfnew + gm[i]*penp[i];
         }
-        *fM=span[1];
-        *fMp=span[1]-psfnew;
-        mnm=DMIN1(*nstart,nfs);
-        for (i=2; i<=mnm; i++)
+        *fM = span[1];
+        *fMp = span[1] - psfnew;
+        mnm = DMIN1(*nstart, nfs);
+        for (i = 2; i <= mnm; i++)
         {
             if (neqn != 0)
             {
-                psfnew=0.e0;
-                for (j=1; j<=neqn; j++)
-                    psfnew=psfnew+gm[(i-1)*neqn +j]*penp[j];
+                psfnew = 0.e0;
+                for (j = 1; j <= neqn; j++)
+                    psfnew = psfnew + gm[(i-1)*neqn +j]*penp[j];
             }
-            *fM=DMAX1(*fM, span[i]);
-            *fMp=DMAX1(*fMp,span[i]-psfnew);
+            *fM = DMAX1(*fM, span[i]);
+            *fMp = DMAX1(*fMp, span[i] - psfnew);
         }
     }
     if (glob_prnt.iprint < 3 || !display)
         return;
-    for (i=1; i<=nob; i++)
+    for (i = 1; i <= nob; i++)
     {
         if (!feasb)
         {
-            sbout2(glob_prnt.io,nparam,indxob[i],"gradg(j,",
-                   ")",ob[i].grad);
+            sbout2(glob_prnt.io, nparam, indxob[i], "gradg(j,",
+                   ")", ob[i].grad);
             continue;
         }
-        if (nob>1)
-            sbout2(glob_prnt.io,nparam,i,"gradf(j,",")",
+        if (nob > 1)
+            sbout2(glob_prnt.io, nparam, i, "gradf(j,", ")",
                    ob[i].grad);
-        if (nob==1)
-            sbout1(glob_prnt.io,nparam,"gradf(j)            ",
-                   dummy,ob[1].grad,2,2);
+        if (nob == 1)
+            sbout1(glob_prnt.io, nparam, "gradf(j)            ",
+                   dummy, ob[1].grad, 2, 2);
     }
     if (ncnstr != 0)
     {
-        for (i=1; i<=ncnstr; i++)
+        for (i = 1; i <= ncnstr; i++)
         {
-            tempv=cs[indxcn[i]].grad;
-            sbout2(glob_prnt.io,nparam,indxcn[i],"gradg(j,",")",tempv);
+            tempv = cs[indxcn[i]].grad;
+            sbout2(glob_prnt.io, nparam, indxcn[i], "gradg(j,", ")", tempv);
         }
         if (neqn != 0)
         {
-            sbout1(glob_prnt.io,nparam,"grdpsf(j)           ",
-                   dummy,grdpsf,2,2);
-            sbout1(glob_prnt.io,neqn,"P                   ",dummy,
-                   penp,2,2);
-            sbout1(glob_prnt.io,neqn,"psmu                ",dummy,
-                   psmu,2,2);
+            sbout1(glob_prnt.io, nparam, "grdpsf(j)           ",
+                   dummy, grdpsf, 2, 2);
+            sbout1(glob_prnt.io, neqn, "P                   ", dummy,
+                   penp, 2, 2);
+            sbout1(glob_prnt.io, neqn, "psmu                ", dummy,
+                   psmu, 2, 2);
         }
     }
-    sbout1(glob_prnt.io,nparam,"multipliers for x   ",dummy,
-           param->mult,2,2);
+    sbout1(glob_prnt.io, nparam, "multipliers for x   ", dummy,
+           param->mult, 2, 2);
     if (ncnstr != 0)
     {
-        fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
-                "            for g   ",cs[1].mult);
-        for (j=2; j<=ncnstr; j++)
-            fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",cs[j].mult);
+        fprintf(glob_prnt.io, "\t\t\t %s\t %22.14e\n",
+                "            for g   ", cs[1].mult);
+        for (j = 2; j <= ncnstr; j++)
+            fprintf(glob_prnt.io, " \t\t\t\t\t\t %22.14e\n", cs[j].mult);
     }
     if (nobL > 1)
     {
-        fprintf(glob_prnt.io,"\t\t\t %s\t %22.14e\n",
-                "            for f   ",ob[1].mult);
-        for (j=2; j<=nob; j++)
-            fprintf(glob_prnt.io," \t\t\t\t\t\t %22.14e\n",ob[j].mult);
+        fprintf(glob_prnt.io, "\t\t\t %s\t %22.14e\n",
+                "            for f   ", ob[1].mult);
+        for (j = 2; j <= nob; j++)
+            fprintf(glob_prnt.io, " \t\t\t\t\t\t %22.14e\n", ob[j].mult);
     }
-    for (i=1; i<=nparam; i++)
+    for (i = 1; i <= nparam; i++)
     {
-        tempv=colvec(hess,i,nparam);
-        sbout2(glob_prnt.io,nparam,i,"hess (j,",")",tempv);
+        tempv = colvec(hess, i, nparam);
+        sbout2(glob_prnt.io, nparam, i, "hess (j,", ")", tempv);
         free_dv(tempv);
     }
     return;
@@ -8081,330 +8109,330 @@ void    (* obj)(), (* constr)(),(* gradob)(), (* gradcn)();
 
 #ifdef __STDC__
 static void
-out(int miter,int nparam,int nob,int nobL,int nfsip,int ncn,
-    int nn,int nineqn,int ncnstr,int ncsipl,int ncsipn,
-    int *mesh_pts,double *x,struct _constraint *cs,
-    struct _objective *ob,double fM,double fmax,
-    double steps,double sktnom,double d0norm,int feasb)
+out(int miter, int nparam, int nob, int nobL, int nfsip, int ncn,
+    int nn, int nineqn, int ncnstr, int ncsipl, int ncsipn,
+    int *mesh_pts, double *x, struct _constraint *cs,
+    struct _objective *ob, double fM, double fmax,
+    double steps, double sktnom, double d0norm, int feasb)
 #else
 static void
-out(miter,nparam,nob,nobL,nfsip,ncn,nn,nineqn,ncnstr,ncsipl,ncsipn,
-    mesh_pts,x,cs,ob,fM,fmax,steps,sktnom,d0norm,feasb)
-int	miter,nparam,nob,nobL,nfsip,ncn,nn,ncnstr,feasb,
-ncsipl,ncsipn,nineqn,*mesh_pts;
-double  fM,fmax,steps,sktnom,d0norm;
+out(miter, nparam, nob, nobL, nfsip, ncn, nn, nineqn, ncnstr, ncsipl, ncsipn,
+    mesh_pts, x, cs, ob, fM, fmax, steps, sktnom, d0norm, feasb)
+int miter, nparam, nob, nobL, nfsip, ncn, nn, ncnstr, feasb,
+ncsipl, ncsipn, nineqn, *mesh_pts;
+double  fM, fmax, steps, sktnom, d0norm;
 double  *x;
 struct  _constraint *cs;
 struct  _objective  *ob;
 #endif
 {
-    int i,j,index,display,offset;
-    double SNECV,dummy,*adummy,gmax;
+    int i, j, index, display, offset;
+    double SNECV, dummy, *adummy, gmax;
 
-    adummy=make_dv(1);
-    adummy[1]=0.e0;
-    dummy=0.e0;
-    if (glob_prnt.iter>=miter && nstop != 0)
+    adummy = make_dv(1);
+    adummy[1] = 0.e0;
+    dummy = 0.e0;
+    if (glob_prnt.iter >= miter && nstop != 0)
     {
-        glob_prnt.info=3;
-        nstop=0;
-        if (glob_prnt.iprint==0)
+        glob_prnt.info = 3;
+        nstop = 0;
+        if (glob_prnt.iprint == 0)
             goto L9000;
     }
-    if (glob_prnt.iprint==0 && glob_prnt.iter<miter)
+    if (glob_prnt.iprint == 0 && glob_prnt.iter < miter)
     {
         glob_prnt.iter++;
         goto L9000;
     }
-    if ((glob_prnt.info>0 && glob_prnt.info<3) || glob_prnt.info==7)
+    if ((glob_prnt.info > 0 && glob_prnt.info < 3) || glob_prnt.info == 7)
         goto L120;
-    if (glob_prnt.iprint==1 && nstop!=0)
+    if (glob_prnt.iprint == 1 && nstop != 0)
     {
         glob_prnt.iter++;
-        if (glob_prnt.initvl==0)
+        if (glob_prnt.initvl == 0)
             goto L9000;
-        if (feasb && nob>0)
+        if (feasb && nob > 0)
         {
-            fprintf(glob_prnt.io," objectives\n");
-            for (i=1; i<=nob-nfsip; i++)
+            fprintf(glob_prnt.io, " objectives\n");
+            for (i = 1; i <= nob - nfsip; i++)
             {
-                if (nob==nobL)
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",ob[i].val);
+                if (nob == nobL)
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", ob[i].val);
                 else
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",fabs(ob[i].val));
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", fabs(ob[i].val));
             }
             if (nfsip)
             {
-                offset=nob-nfsip;
-                for (i=1; i<=glob_info.nfsip; i++)
+                offset = nob - nfsip;
+                for (i = 1; i <= glob_info.nfsip; i++)
                 {
-                    if (nob==nobL)
-                        gmax=ob[++offset].val;
+                    if (nob == nobL)
+                        gmax = ob[++offset].val;
                     else
-                        gmax=fabs(ob[++offset].val);
-                    for (j=2; j<=mesh_pts[i]; j++)
+                        gmax = fabs(ob[++offset].val);
+                    for (j = 2; j <= mesh_pts[i]; j++)
                     {
                         offset++;
-                        if (nob==nobL && ob[offset].val>gmax)
-                            gmax=ob[offset].val;
-                        else if (nob!=nobL && fabs(ob[offset].val)>gmax)
-                            gmax=fabs(ob[offset].val);
+                        if (nob == nobL && ob[offset].val > gmax)
+                            gmax = ob[offset].val;
+                        else if (nob != nobL && fabs(ob[offset].val) > gmax)
+                            gmax = fabs(ob[offset].val);
                     }
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
                 }
             }
         }
-        if (glob_info.mode==1 && glob_prnt.iter>1 && feasb)
-            sbout1(glob_prnt.io,0,"objective max4      ",fM,adummy,1,1);
-        if (nob>1)
-            sbout1(glob_prnt.io,0,"objmax              ",fmax,adummy,1,1);
-        if (ncnstr==0)
-            fprintf(glob_prnt.io,"\n");
+        if (glob_info.mode == 1 && glob_prnt.iter > 1 && feasb)
+            sbout1(glob_prnt.io, 0, "objective max4      ", fM, adummy, 1, 1);
+        if (nob > 1)
+            sbout1(glob_prnt.io, 0, "objmax              ", fmax, adummy, 1, 1);
+        if (ncnstr == 0)
+            fprintf(glob_prnt.io, "\n");
         else
         {
-            fprintf(glob_prnt.io," constraints\n");
-            for (i=1; i<=nineqn-ncsipn; i++)
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+            fprintf(glob_prnt.io, " constraints\n");
+            for (i = 1; i <= nineqn - ncsipn; i++)
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
             if (ncsipn)
             {
-                offset=nineqn-ncsipn;
-                for (i=1; i<=glob_info.ncsipn; i++)
+                offset = nineqn - ncsipn;
+                for (i = 1; i <= glob_info.ncsipn; i++)
                 {
-                    gmax=cs[++offset].val;
-                    for (j=2; j<=mesh_pts[glob_info.nfsip+i]; j++)
+                    gmax = cs[++offset].val;
+                    for (j = 2; j <= mesh_pts[glob_info.nfsip+i]; j++)
                     {
                         offset++;
-                        if (cs[offset].val>gmax)
-                            gmax=cs[offset].val;
+                        if (cs[offset].val > gmax)
+                            gmax = cs[offset].val;
                     }
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
                 }
             }
-            for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++)
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+            for (i = nineqn + 1; i <= glob_info.nnineq - ncsipl; i++)
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
             if (ncsipl)
             {
-                offset=glob_info.nnineq-ncsipl;
-                for (i=1; i<=glob_info.ncsipl; i++)
+                offset = glob_info.nnineq - ncsipl;
+                for (i = 1; i <= glob_info.ncsipl; i++)
                 {
-                    gmax=cs[++offset].val;
+                    gmax = cs[++offset].val;
                     if (feasb)
-                        index=glob_info.nfsip+glob_info.ncsipn+i;
+                        index = glob_info.nfsip + glob_info.ncsipn + i;
                     else
-                        index=glob_info.ncsipn+i;
-                    for (j=2; j<=mesh_pts[index]; j++)
+                        index = glob_info.ncsipn + i;
+                    for (j = 2; j <= mesh_pts[index]; j++)
                     {
                         offset++;
-                        if (cs[offset].val>gmax)
-                            gmax=cs[offset].val;
+                        if (cs[offset].val > gmax)
+                            gmax = cs[offset].val;
                     }
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
                 }
             }
-            for (i=glob_info.nnineq+1; i<=ncnstr; i++)
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+            for (i = glob_info.nnineq + 1; i <= ncnstr; i++)
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
         }
-        if (ncnstr!=0)
-            fprintf(glob_prnt.io,"\n");
+        if (ncnstr != 0)
+            fprintf(glob_prnt.io, "\n");
         goto L9000;
     }
-    if (glob_prnt.iprint==1 && nstop==0)
-        fprintf(glob_prnt.io," iteration           %26d\n",
+    if (glob_prnt.iprint == 1 && nstop == 0)
+        fprintf(glob_prnt.io, " iteration           %26d\n",
                 glob_prnt.iter);
-    if (glob_prnt.iprint<=2 && nstop==0)
-        fprintf(glob_prnt.io," inform              %26d\n",
+    if (glob_prnt.iprint <= 2 && nstop == 0)
+        fprintf(glob_prnt.io, " inform              %26d\n",
                 glob_prnt.info);
-    if (glob_prnt.iprint==1 && nstop==0 && (ncsipl+ncsipn)!=0)
-        fprintf(glob_prnt.io," |Xi_k|              %26d\n",
+    if (glob_prnt.iprint == 1 && nstop == 0 && (ncsipl + ncsipn) != 0)
+        fprintf(glob_prnt.io, " |Xi_k|              %26d\n",
                 glob_info.tot_actg_sip);
-    if (glob_prnt.iprint==1 && nstop==0 && nfsip!=0)
-        fprintf(glob_prnt.io," |Omega_k|           %26d\n",
+    if (glob_prnt.iprint == 1 && nstop == 0 && nfsip != 0)
+        fprintf(glob_prnt.io, " |Omega_k|           %26d\n",
                 glob_info.tot_actf_sip);
     glob_prnt.iter++;
-    if (!((glob_prnt.iter)%glob_prnt.iter_mod))
-        display=TRUE;
+    if (!((glob_prnt.iter) % glob_prnt.iter_mod))
+        display = TRUE;
     else
-        display=(nstop==0);
-    if (glob_prnt.iter_mod!=1 && display)
-        fprintf(glob_prnt.io,"\n iteration           %26d\n",
-                glob_prnt.iter-1);
-    if (glob_prnt.initvl==0 && display)
-        sbout1(glob_prnt.io,nparam,"x                   ",dummy,x,2,1);
+        display = (nstop == 0);
+    if (glob_prnt.iter_mod != 1 && display)
+        fprintf(glob_prnt.io, "\n iteration           %26d\n",
+                glob_prnt.iter - 1);
+    if (glob_prnt.initvl == 0 && display)
+        sbout1(glob_prnt.io, nparam, "x                   ", dummy, x, 2, 1);
     if (display)
     {
-        if (nob>0)
+        if (nob > 0)
         {
-            fprintf(glob_prnt.io," objectives\n");
-            for (i=1; i<=nob-nfsip; i++)
+            fprintf(glob_prnt.io, " objectives\n");
+            for (i = 1; i <= nob - nfsip; i++)
             {
-                if (nob==nobL)
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",ob[i].val);
+                if (nob == nobL)
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n", ob[i].val);
                 else
-                    fprintf(glob_prnt.io," \t\t\t %22.14e\n",
+                    fprintf(glob_prnt.io, " \t\t\t %22.14e\n",
                             fabs(ob[i].val));
             }
         }
         if (nfsip)
         {
-            offset=nob-nfsip;
+            offset = nob - nfsip;
             if (feasb)
-                index=glob_info.nfsip;
+                index = glob_info.nfsip;
             else
-                index=glob_info.ncsipn;
-            for (i=1; i<=index; i++)
+                index = glob_info.ncsipn;
+            for (i = 1; i <= index; i++)
             {
-                if (nob==nobL)
-                    gmax=ob[++offset].val;
+                if (nob == nobL)
+                    gmax = ob[++offset].val;
                 else
-                    gmax=fabs(ob[++offset].val);
-                for (j=2; j<=mesh_pts[i]; j++)
+                    gmax = fabs(ob[++offset].val);
+                for (j = 2; j <= mesh_pts[i]; j++)
                 {
                     offset++;
-                    if (nob==nobL && ob[offset].val>gmax)
-                        gmax=ob[offset].val;
-                    else if (nob!=nobL && fabs(ob[offset].val)>gmax)
-                        gmax=fabs(ob[offset].val);
+                    if (nob == nobL && ob[offset].val > gmax)
+                        gmax = ob[offset].val;
+                    else if (nob != nobL && fabs(ob[offset].val) > gmax)
+                        gmax = fabs(ob[offset].val);
                 }
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
             }
         }
     }
-    if (glob_info.mode==1 && glob_prnt.iter>1 && display)
-        sbout1(glob_prnt.io,0,"objective max4      ",fM,adummy,1,1);
-    if (nob>1 && display)
-        sbout1(glob_prnt.io,0,"objmax              ",fmax,adummy,1,1);
-    if (ncnstr != 0 && display )
+    if (glob_info.mode == 1 && glob_prnt.iter > 1 && display)
+        sbout1(glob_prnt.io, 0, "objective max4      ", fM, adummy, 1, 1);
+    if (nob > 1 && display)
+        sbout1(glob_prnt.io, 0, "objmax              ", fmax, adummy, 1, 1);
+    if (ncnstr != 0 && display)
     {
-        fprintf(glob_prnt.io," constraints\n");
-        for (i=1; i<=nineqn-ncsipn; i++)
-            fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+        fprintf(glob_prnt.io, " constraints\n");
+        for (i = 1; i <= nineqn - ncsipn; i++)
+            fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
         if (ncsipn)
         {
-            offset=nineqn-ncsipn;
-            for (i=1; i<=glob_info.ncsipn; i++)
+            offset = nineqn - ncsipn;
+            for (i = 1; i <= glob_info.ncsipn; i++)
             {
-                gmax=cs[++offset].val;
-                for (j=2; j<=mesh_pts[glob_info.nfsip+i]; j++)
+                gmax = cs[++offset].val;
+                for (j = 2; j <= mesh_pts[glob_info.nfsip+i]; j++)
                 {
                     offset++;
-                    if (cs[offset].val>gmax)
-                        gmax=cs[offset].val;
+                    if (cs[offset].val > gmax)
+                        gmax = cs[offset].val;
                 }
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
             }
         }
-        for (i=nineqn+1; i<=glob_info.nnineq-ncsipl; i++)
-            fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+        for (i = nineqn + 1; i <= glob_info.nnineq - ncsipl; i++)
+            fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
         if (ncsipl)
         {
-            offset=glob_info.nnineq-ncsipl;
-            for (i=1; i<=glob_info.ncsipl; i++)
+            offset = glob_info.nnineq - ncsipl;
+            for (i = 1; i <= glob_info.ncsipl; i++)
             {
-                gmax=cs[++offset].val;
+                gmax = cs[++offset].val;
                 if (feasb)
-                    index=glob_info.nfsip+glob_info.ncsipn+i;
+                    index = glob_info.nfsip + glob_info.ncsipn + i;
                 else
-                    index=glob_info.ncsipn+i;
-                for (j=2; j<=mesh_pts[index];
-                        j++)
+                    index = glob_info.ncsipn + i;
+                for (j = 2; j <= mesh_pts[index];
+                     j++)
                 {
                     offset++;
-                    if (cs[offset].val>gmax)
-                        gmax=cs[offset].val;
+                    if (cs[offset].val > gmax)
+                        gmax = cs[offset].val;
                 }
-                fprintf(glob_prnt.io," \t\t\t %22.14e\n",gmax);
+                fprintf(glob_prnt.io, " \t\t\t %22.14e\n", gmax);
             }
         }
-        for (i=glob_info.nnineq+1; i<=ncnstr; i++)
-            fprintf(glob_prnt.io," \t\t\t %22.14e\n",cs[i].val);
+        for (i = glob_info.nnineq + 1; i <= ncnstr; i++)
+            fprintf(glob_prnt.io, " \t\t\t %22.14e\n", cs[i].val);
         if (feasb)
         {
-            SNECV=0.e0;
-            for (i=glob_info.nnineq+1; i<=glob_info.nnineq+nn-nineqn; i++)
-                SNECV=SNECV+fabs(cs[i].val);
-            if (glob_prnt.initvl==0 && (nn-nineqn)!=0)
-                sbout1(glob_prnt.io,0,"SNECV               ",
-                       SNECV,adummy,1,1);
+            SNECV = 0.e0;
+            for (i = glob_info.nnineq + 1; i <= glob_info.nnineq + nn - nineqn; i++)
+                SNECV = SNECV + fabs(cs[i].val);
+            if (glob_prnt.initvl == 0 && (nn - nineqn) != 0)
+                sbout1(glob_prnt.io, 0, "SNECV               ",
+                       SNECV, adummy, 1, 1);
         }
     }
-    if (glob_prnt.iter<=1 && display)
+    if (glob_prnt.iter <= 1 && display)
     {
-        fprintf(glob_prnt.io," \n");
-        fprintf(glob_prnt.io," iteration           %26d\n",
+        fprintf(glob_prnt.io, " \n");
+        fprintf(glob_prnt.io, " iteration           %26d\n",
                 glob_prnt.iter);
         goto L9000;
     }
-    if (glob_prnt.iprint>=2 && glob_prnt.initvl==0 && display)
-        sbout1(glob_prnt.io,0,"step                ",steps,adummy,1,1);
-    if (glob_prnt.initvl==0 && display &&
-            (nstop==0 || glob_prnt.info!=0 || glob_prnt.iprint==2))
+    if (glob_prnt.iprint >= 2 && glob_prnt.initvl == 0 && display)
+        sbout1(glob_prnt.io, 0, "step                ", steps, adummy, 1, 1);
+    if (glob_prnt.initvl == 0 && display &&
+        (nstop == 0 || glob_prnt.info != 0 || glob_prnt.iprint == 2))
     {
-        sbout1(glob_prnt.io,0,"d0norm              ",d0norm,adummy,1,1);
-        sbout1(glob_prnt.io,0,"ktnorm              ",sktnom,adummy,1,1);
+        sbout1(glob_prnt.io, 0, "d0norm              ", d0norm, adummy, 1, 1);
+        sbout1(glob_prnt.io, 0, "ktnorm              ", sktnom, adummy, 1, 1);
     }
-    if (glob_prnt.initvl==0 && feasb && display)
-        fprintf(glob_prnt.io," ncallf              %26d\n",
+    if (glob_prnt.initvl == 0 && feasb && display)
+        fprintf(glob_prnt.io, " ncallf              %26d\n",
                 glob_info.ncallf);
-    if (glob_prnt.initvl==0 && (nn!=0 || !feasb) && display)
-        fprintf(glob_prnt.io," ncallg              %26d\n",
+    if (glob_prnt.initvl == 0 && (nn != 0 || !feasb) && display)
+        fprintf(glob_prnt.io, " ncallg              %26d\n",
                 glob_info.ncallg);
-    if (glob_prnt.iprint>=3 && glob_prnt.iter_mod!=1 && nstop!=0
-            && !(glob_prnt.iter%glob_prnt.iter_mod))
+    if (glob_prnt.iprint >= 3 && glob_prnt.iter_mod != 1 && nstop != 0
+        && !(glob_prnt.iter % glob_prnt.iter_mod))
         fprintf(glob_prnt.io,
                 "\n The following was calculated during iteration %5d:\n",
                 glob_prnt.iter);
-    if (nstop != 0 && (glob_prnt.iter_mod==1))
-        fprintf(glob_prnt.io,"\n iteration           %26d\n",
+    if (nstop != 0 && (glob_prnt.iter_mod == 1))
+        fprintf(glob_prnt.io, "\n iteration           %26d\n",
                 glob_prnt.iter);
 L120:
-    if (nstop!=0 || glob_prnt.iprint==0)
+    if (nstop != 0 || glob_prnt.iprint == 0)
         goto L9000;
-    fprintf(glob_prnt.io,"\n");
-    if (glob_prnt.iprint>=3)
-        fprintf(glob_prnt.io," inform              %26d\n",
+    fprintf(glob_prnt.io, "\n");
+    if (glob_prnt.iprint >= 3)
+        fprintf(glob_prnt.io, " inform              %26d\n",
                 glob_prnt.info);
-    if (glob_prnt.info==0)
+    if (glob_prnt.info == 0)
         fprintf(glob_prnt.io,
                 "\nNormal termination: You have obtained a solution !!\n");
-    if (glob_prnt.info==0 && sktnom>0.1e0)
+    if (glob_prnt.info == 0 && sktnom > 0.1e0)
         fprintf(glob_prnt.io,
                 "Warning: Norm of Kuhn-Tucker vector is large !!\n");
-    if (glob_prnt.info==3)
+    if (glob_prnt.info == 3)
     {
         fprintf(glob_prnt.io,
                 "\nWarning: Maximum iterations have been reached before\n");
-        fprintf(glob_prnt.io,"obtaining a solution !!\n\n");
+        fprintf(glob_prnt.io, "obtaining a solution !!\n\n");
     }
-    if (glob_prnt.info==4)
+    if (glob_prnt.info == 4)
     {
         fprintf(glob_prnt.io,
                 "\nError : Step size has been smaller than the computed\n");
-        fprintf(glob_prnt.io,"machine precision !!\n\n");
+        fprintf(glob_prnt.io, "machine precision !!\n\n");
     }
-    if (glob_prnt.info==5)
+    if (glob_prnt.info == 5)
         fprintf(glob_prnt.io,
                 "\nError: Failure in constructing d0 !!\n\n");
-    if (glob_prnt.info==6)
+    if (glob_prnt.info == 6)
         fprintf(glob_prnt.io,
                 "\nError: Failure in constructing d1 !!\n\n");
-    if (glob_prnt.info==8)
+    if (glob_prnt.info == 8)
     {
         fprintf(glob_prnt.io,
                 "\nError: The new iterate is numerically equivalent to the\n");
         fprintf(glob_prnt.io,
                 "previous iterate, though the stopping criterion is not \n");
-        fprintf(glob_prnt.io,"satisfied\n");
+        fprintf(glob_prnt.io, "satisfied\n");
     }
-    if (glob_prnt.info==9)
+    if (glob_prnt.info == 9)
     {
         fprintf(glob_prnt.io,
                 "\nError: Could not satisfy nonlinear equality constraints -\n");
-        fprintf(glob_prnt.io,"       Penalty parameter too large\n");
+        fprintf(glob_prnt.io, "       Penalty parameter too large\n");
     }
-    fprintf(glob_prnt.io,"\n");
+    fprintf(glob_prnt.io, "\n");
 L9000:
     free_dv(adummy);
-    glob_prnt.initvl=0;
+    glob_prnt.initvl = 0;
     return;
 }
 /*************************************************************/
@@ -8414,40 +8442,40 @@ L9000:
 
 
 #ifdef __STDC__
-void grobfd(int nparam,int j,double *x,double *gradf,
-            void (*obj)(int,int,double *,double *,void *),void *cd)
+void grobfd(int nparam, int j, double *x, double *gradf,
+            void(*obj)(int, int, double *, double *, void *), void *cd)
 #else
-void grobfd(nparam,j,x,gradf,obj,cd)
-int nparam,j;
-double *x,*gradf;
-void   (*obj)();
+void grobfd(nparam, j, x, gradf, obj, cd)
+int nparam, j;
+double *x, *gradf;
+void(*obj)();
 void   *cd;
 #endif
 {
     int i;
-    double xi,delta;
+    double xi, delta;
 
-    for (i=0; i<=nparam-1; i++)
+    for (i = 0; i <= nparam - 1; i++)
     {
-        xi=x[i];
-        delta=DMAX1(glob_grd.udelta,
-                    glob_grd.rteps*DMAX1(1.e0,fabs(xi)));
-        if (xi<0.e0)
-            delta=-delta;
-        if (!(glob_prnt.ipd==1 || j != 1 || glob_prnt.iprint<3))
+        xi = x[i];
+        delta = DMAX1(glob_grd.udelta,
+                      glob_grd.rteps * DMAX1(1.e0, fabs(xi)));
+        if (xi < 0.e0)
+            delta = -delta;
+        if (!(glob_prnt.ipd == 1 || j != 1 || glob_prnt.iprint < 3))
         {
             /*  formats are not set yet...  */
-            if (i==0)
-                fprintf(glob_prnt.io,"\tdelta(i)\t %22.14f\n",delta);
-            if (i!=0)
-                fprintf(glob_prnt.io,"\t\t\t %22.14f\n",delta);
+            if (i == 0)
+                fprintf(glob_prnt.io, "\tdelta(i)\t %22.14f\n", delta);
+            if (i != 0)
+                fprintf(glob_prnt.io, "\t\t\t %22.14f\n", delta);
         }
-        x[i]=xi+delta;
-        x_is_new=TRUE;
-        (*obj)(nparam,j,x,&gradf[i],cd);
-        gradf[i]=(gradf[i]-glob_grd.valnom)/delta;
-        x[i]=xi;
-        x_is_new=TRUE;
+        x[i] = xi + delta;
+        x_is_new = TRUE;
+        (*obj)(nparam, j, x, &gradf[i], cd);
+        gradf[i] = (gradf[i] - glob_grd.valnom) / delta;
+        x[i] = xi;
+        x_is_new = TRUE;
     }
     return;
 }
@@ -8458,41 +8486,41 @@ void   *cd;
 /***********************************************************/
 
 #ifdef __STDC__
-void grcnfd(int nparam,int j,double *x,double *gradg,
-            void (*constr)(int,int,double *,double *,void *),void *cd)
+void grcnfd(int nparam, int j, double *x, double *gradg,
+            void(*constr)(int, int, double *, double *, void *), void *cd)
 #else
-void grcnfd(nparam,j,x,gradg,constr,cd)
-int nparam,j;
-double *x,*gradg;
-void   (*constr)();
+void grcnfd(nparam, j, x, gradg, constr, cd)
+int nparam, j;
+double *x, *gradg;
+void(*constr)();
 void   *cd;
 #endif
 {
     int i;
-    double xi,delta;
+    double xi, delta;
 
-    for (i=0; i<=nparam-1; i++)
+    for (i = 0; i <= nparam - 1; i++)
     {
-        xi=x[i];
-        delta=DMAX1(glob_grd.udelta,
-                    glob_grd.rteps*DMAX1(1.e0,fabs(xi)));
-        if (xi<0.e0)
-            delta=-delta;
-        if (!(j != 1 || glob_prnt.iprint<3))
+        xi = x[i];
+        delta = DMAX1(glob_grd.udelta,
+                      glob_grd.rteps * DMAX1(1.e0, fabs(xi)));
+        if (xi < 0.e0)
+            delta = -delta;
+        if (!(j != 1 || glob_prnt.iprint < 3))
         {
             /*  formats are not set yet...  */
-            if (i==0)
-                fprintf(glob_prnt.io,"\tdelta(i)\t %22.14f\n",delta);
-            if (i!=0)
-                fprintf(glob_prnt.io,"\t\t\t %22.14f\n",delta);
-            glob_prnt.ipd=1;
+            if (i == 0)
+                fprintf(glob_prnt.io, "\tdelta(i)\t %22.14f\n", delta);
+            if (i != 0)
+                fprintf(glob_prnt.io, "\t\t\t %22.14f\n", delta);
+            glob_prnt.ipd = 1;
         }
-        x[i]=xi+delta;
-        x_is_new=TRUE;
-        (*constr)(nparam,j,x,&gradg[i],cd);
-        gradg[i]=(gradg[i]-glob_grd.valnom)/delta;
-        x[i]=xi;
-        x_is_new=TRUE;
+        x[i] = xi + delta;
+        x_is_new = TRUE;
+        (*constr)(nparam, j, x, &gradg[i], cd);
+        gradg[i] = (gradg[i] - glob_grd.valnom) / delta;
+        x[i] = xi;
+        x_is_new = TRUE;
     }
     return;
 }
@@ -8519,23 +8547,23 @@ static void fool();
 /************************************************************/
 
 #ifdef __STDC__
-static void diagnl(int nrowa,double diag,double **a)
+static void diagnl(int nrowa, double diag, double **a)
 #else
-static void diagnl(nrowa,diag,a)
+static void diagnl(nrowa, diag, a)
 int nrowa;
-double **a,diag;
+double **a, diag;
 #endif
 {
-    int i,j;
+    int i, j;
 
-    for (i=1; i<=nrowa; i++)
+    for (i = 1; i <= nrowa; i++)
     {
-        for (j=i; j<=nrowa; j++)
+        for (j = i; j <= nrowa; j++)
         {
-            a[i][j]=0.e0;
-            a[j][i]=0.e0;
+            a[i][j] = 0.e0;
+            a[j][i] = 0.e0;
         }
-        a[i][i]=diag;
+        a[i][i] = diag;
     }
     return;
 }
@@ -8545,16 +8573,16 @@ double **a,diag;
 /***********************************************************/
 
 #ifdef __STDC__
-static void error(char string[],int *inform)
+static void error(char string[], int *inform)
 #else
-static void error(string,inform)
+static void error(string, inform)
 char string[];
 int *inform;
 #endif
 {
-    if (glob_prnt.iprint>0)
-        fprintf(stderr,"%s\n",string);
-    *inform=7;
+    if (glob_prnt.iprint > 0)
+        fprintf(stderr, "%s\n", string);
+    *inform = 7;
     return;
 }
 
@@ -8565,44 +8593,44 @@ int *inform;
 
 #ifdef __STDC__
 static void
-estlam(int nparam,int neqn,int *ifail,double bigbnd,double **hess,
-       double *cvec,double *a,double *b,struct _constraint *cs,
-       double *psb,double *bl,double *bu,double *x)
+estlam(int nparam, int neqn, int *ifail, double bigbnd, double **hess,
+       double *cvec, double *a, double *b, struct _constraint *cs,
+       double *psb, double *bl, double *bu, double *x)
 #else
 static void
-estlam(nparam,neqn,ifail,bigbnd,hess,cvec,a,b,cs,psb,bl,bu,x)
-int nparam,neqn,*ifail;
-double bigbnd,**hess,*cvec,*a,*b,*psb,*bl,*bu,*x;
+estlam(nparam, neqn, ifail, bigbnd, hess, cvec, a, b, cs, psb, bl, bu, x)
+int nparam, neqn, *ifail;
+double bigbnd, **hess, *cvec, *a, *b, *psb, *bl, *bu, *x;
 struct _constraint *cs;
 #endif
 {
-    int i,j,zero,one,lwar2,mnn,iout;
+    int i, j, zero, one, lwar2, mnn, iout;
     double *ctemp;
 
-    for (i=1; i<=neqn; i++)
+    for (i = 1; i <= neqn; i++)
     {
-        bl[i]= (-bigbnd);
-        bu[i]= bigbnd;
-        cvec[i]=scaprd(nparam,cs[i+glob_info.nnineq].grad,psb);
-        x[i]= 0.e0;
-        for (j=i; j<=neqn; j++)
+        bl[i] = (-bigbnd);
+        bu[i] = bigbnd;
+        cvec[i] = scaprd(nparam, cs[i+glob_info.nnineq].grad, psb);
+        x[i] = 0.e0;
+        for (j = i; j <= neqn; j++)
         {
-            hess[i][j]=scaprd(nparam,cs[i+glob_info.nnineq].grad,
-                              cs[j+glob_info.nnineq].grad);
-            hess[j][i]=hess[i][j];
+            hess[i][j] = scaprd(nparam, cs[i+glob_info.nnineq].grad,
+                                cs[j+glob_info.nnineq].grad);
+            hess[j][i] = hess[i][j];
         }
     }
-    zero=0;
-    one=1;
-    iw[1]=1;
-    mnn=2*neqn;
-    ctemp=convert(hess,neqn,neqn);
-    lwar2=lenw-1;
-    iout=6;
+    zero = 0;
+    one = 1;
+    iw[1] = 1;
+    mnn = 2 * neqn;
+    ctemp = convert(hess, neqn, neqn);
+    lwar2 = lenw - 1;
+    iout = 6;
 
-    ql0001_(&zero,&zero,&one,&neqn,&neqn,&mnn,(ctemp+1),(cvec+1),
-            (a+1),(b+1),(bl+1),(bu+1),(x+1),(w+1),&iout,ifail,
-            &zero,(w+3),&lwar2,(iw+1),&leniw,&glob_grd.epsmac);
+    ql0001_(&zero, &zero, &one, &neqn, &neqn, &mnn, (ctemp + 1), (cvec + 1),
+            (a + 1), (b + 1), (bl + 1), (bu + 1), (x + 1), (w + 1), &iout, ifail,
+            &zero, (w + 3), &lwar2, (iw + 1), &leniw, &glob_grd.epsmac);
 
     free_dv(ctemp);
     return;
@@ -8613,19 +8641,19 @@ struct _constraint *cs;
 /**************************************************************/
 
 #ifdef __STDC__
-static double *colvec(double **a,int col,int nrows)
+static double *colvec(double **a, int col, int nrows)
 #else
-static double *colvec(a,col,nrows)
+static double *colvec(a, col, nrows)
 double **a;
-int col,nrows;
+int col, nrows;
 #endif
 {
     double *temp;
     int i;
 
-    temp=make_dv(nrows);
-    for (i=1;i<=nrows;i++)
-        temp[i]=a[i][col];
+    temp = make_dv(nrows);
+    for (i = 1;i <= nrows;i++)
+        temp[i] = a[i][col];
     return temp;
 }
 
@@ -8634,9 +8662,9 @@ int col,nrows;
 /************************************************************/
 
 #ifdef __STDC__
-static double scaprd(int n,double *x,double *y)
+static double scaprd(int n, double *x, double *y)
 #else
-static double scaprd(n,x,y)
+static double scaprd(n, x, y)
 double *x, *y;
 int n;
 #endif
@@ -8644,9 +8672,9 @@ int n;
     int i;
     double z;
 
-    z=0.e0;
-    for (i=1;i<=n;i++)
-        z=z+x[i]*y[i];
+    z = 0.e0;
+    for (i = 1;i <= n;i++)
+        z = z + x[i] * y[i];
     return z;
 }
 
@@ -8655,13 +8683,13 @@ int n;
 /***********************************************************/
 
 #ifdef __STDC__
-static void fool(double x,double y,double *z)
+static void fool(double x, double y, double *z)
 #else
-static void fool(x,y,z)
-double x,y,*z;
+static void fool(x, y, z)
+double x, y, *z;
 #endif
 {
-    *z=x*y+y;
+    *z = x * y + y;
     return;
 }
 
@@ -8671,17 +8699,17 @@ double x,y,*z;
 
 static double small()
 {
-    double one,two,z,tsmall;
+    double one, two, z, tsmall;
 
-    one=1.e0;
-    two=2.e0;
-    tsmall=one;
+    one = 1.e0;
+    two = 2.e0;
+    tsmall = one;
     do
     {
-        tsmall=tsmall/two;
-        fool(tsmall,one,&z);
+        tsmall = tsmall / two;
+        fool(tsmall, one, &z);
     }
-    while (z>1.e0);
+    while (z > 1.e0);
     return tsmall*two*two;
 }
 
@@ -8690,18 +8718,18 @@ static double small()
 /**********************************************************/
 
 #ifdef __STDC__
-static int fuscmp(double val,double thrshd)
+static int fuscmp(double val, double thrshd)
 #else
-static int fuscmp(val,thrshd)
-double val,thrshd;
+static int fuscmp(val, thrshd)
+double val, thrshd;
 #endif
 {
     int temp;
 
-    if (fabs(val)<=thrshd)
-        temp=FALSE;
+    if (fabs(val) <= thrshd)
+        temp = FALSE;
     else
-        temp=TRUE;
+        temp = TRUE;
     return temp;
 }
 
@@ -8710,15 +8738,15 @@ double val,thrshd;
 /**********************************************************/
 
 #ifdef __STDC__
-static int indexs(int i,int nfs)
+static int indexs(int i, int nfs)
 #else
-static int indexs(i,nfs)
-int i,nfs;
+static int indexs(i, nfs)
+int i, nfs;
 #endif
 {
-    int mm=i;
+    int mm = i;
 
-    while (mm>nfs)
+    while (mm > nfs)
         mm -= nfs;
     return mm;
 }
@@ -8728,24 +8756,24 @@ int i,nfs;
 /*********************************************************/
 
 #ifdef __STDC__
-static void matrcp(int ndima,double **a,int ndimb,double **b)
+static void matrcp(int ndima, double **a, int ndimb, double **b)
 #else
-static void matrcp(ndima,a,ndimb,b)
-double **a,**b;
-int ndima,ndimb;
+static void matrcp(ndima, a, ndimb, b)
+double **a, **b;
+int ndima, ndimb;
 #endif
 {
-    int i,j;
+    int i, j;
 
-    for (i=1; i<=ndima; i++)
-        for (j=1; j<=ndima; j++)
-            b[i][j]=a[i][j];
-    if (ndimb<=ndima)
+    for (i = 1; i <= ndima; i++)
+        for (j = 1; j <= ndima; j++)
+            b[i][j] = a[i][j];
+    if (ndimb <= ndima)
         return;
-    for (i=1; i<=ndimb; i++)
+    for (i = 1; i <= ndimb; i++)
     {
-        b[ndimb][i]=0.e0;
-        b[i][ndimb]=0.e0;
+        b[ndimb][i] = 0.e0;
+        b[i][ndimb] = 0.e0;
     }
     return;
 }
@@ -8755,22 +8783,22 @@ int ndima,ndimb;
 /*******************************************************/
 
 #ifdef __STDC__
-static void matrvc(int la,int na,double **a,double *x,double *y)
+static void matrvc(int la, int na, double **a, double *x, double *y)
 #else
-static void matrvc(la,na,a,x,y)
-double **a,*x,*y;
-int la,na;
+static void matrvc(la, na, a, x, y)
+double **a, *x, *y;
+int la, na;
 #endif
 {
-    int i,j;
+    int i, j;
     double yi;
 
-    for (i=1; i<=la; i++)
+    for (i = 1; i <= la; i++)
     {
-        yi=0.e0;
-        for (j=1; j<=na; j++)
-            yi=yi + a[i][j]*x[j];
-        y[i]=yi;
+        yi = 0.e0;
+        for (j = 1; j <= na; j++)
+            yi = yi + a[i][j] * x[j];
+        y[i] = yi;
     }
     return;
 }
@@ -8780,17 +8808,17 @@ int la,na;
 /******************************************************/
 
 #ifdef __STDC__
-static void nullvc(int nparam,double *x)
+static void nullvc(int nparam, double *x)
 #else
-static void nullvc(nparam,x)
+static void nullvc(nparam, x)
 int nparam;
 double *x;
 #endif
 {
     int i;
 
-    for (i=1; i<=nparam; i++)
-        x[i]=0.e0;
+    for (i = 1; i <= nparam; i++)
+        x[i] = 0.e0;
     return;
 }
 
@@ -8799,45 +8827,45 @@ double *x;
 /*                        job1=12: job1=10&11            */
 /*   job1=20: do not change sign                         */
 /*   job2=10: psf,        job2=11: grdpsf,               */
-/*			  job2=12: job2=10&11            */
+/*     job2=12: job2=10&11            */
 /*   job2=20: do not change sign                         */
 /*********************************************************/
 
 #ifdef __STDC__
 static void
-resign(int n,int neqn,double *psf,double *grdpsf,double *penp,
-       struct _constraint *cs,double *signeq,int job1,int job2)
+resign(int n, int neqn, double *psf, double *grdpsf, double *penp,
+       struct _constraint *cs, double *signeq, int job1, int job2)
 #else
 static void
-resign(n,neqn,psf,grdpsf,penp,cs,signeq,job1,job2)
-int job1,job2,n,neqn;
-double *psf,*grdpsf,*penp,*signeq;
+resign(n, neqn, psf, grdpsf, penp, cs, signeq, job1, job2)
+int job1, job2, n, neqn;
+double *psf, *grdpsf, *penp, *signeq;
 struct _constraint *cs;
 #endif
 {
-    int i,j,nineq;
+    int i, j, nineq;
 
-    nineq=glob_info.nnineq;
-    if (job2==10 || job2==12)
-        *psf=0.e0;
-    for (i=1; i<=neqn; i++)
+    nineq = glob_info.nnineq;
+    if (job2 == 10 || job2 == 12)
+        *psf = 0.e0;
+    for (i = 1; i <= neqn; i++)
     {
-        if (job1==10 || job1==12)
-            cs[i+nineq].val=
-                signeq[i]*cs[i+nineq].val;
-        if (job2==10 || job2==12)
-            *psf=*psf+cs[i+nineq].val*penp[i];
-        if (job1==10 || job1==20)
+        if (job1 == 10 || job1 == 12)
+            cs[i+nineq].val =
+                signeq[i] * cs[i+nineq].val;
+        if (job2 == 10 || job2 == 12)
+            *psf = *psf + cs[i+nineq].val * penp[i];
+        if (job1 == 10 || job1 == 20)
             continue;
-        for (j=1; j<=n; j++)
-            cs[i+nineq].grad[j]=cs[i+nineq].grad[j]*signeq[i];
+        for (j = 1; j <= n; j++)
+            cs[i+nineq].grad[j] = cs[i+nineq].grad[j] * signeq[i];
     }
-    if (job2==10 || job2==20)
+    if (job2 == 10 || job2 == 20)
         return;
-    nullvc(n,grdpsf);
-    for (i=1; i<=n; i++)
-        for (j=1; j<=neqn; j++)
-            grdpsf[i]=grdpsf[i]+cs[j+nineq].grad[i]*penp[j];
+    nullvc(n, grdpsf);
+    for (i = 1; i <= n; i++)
+        for (j = 1; j <= neqn; j++)
+            grdpsf[i] = grdpsf[i] + cs[j+nineq].grad[i] * penp[j];
     return;
 }
 
@@ -8847,12 +8875,12 @@ struct _constraint *cs;
 
 #ifdef __STDC__
 static void
-sbout1(FILE *io,int n,char *s1,double z,double *z1,int job,int level)
+sbout1(FILE *io, int n, char *s1, double z, double *z1, int job, int level)
 #else
-static void sbout1(io,n,s1,z,z1,job,level)
+static void sbout1(io, n, s1, z, z1, job, level)
 FILE *io;
-int n,job,level;
-double z,*z1;
+int n, job, level;
+double z, *z1;
 char *s1;
 #endif
 {
@@ -8861,23 +8889,23 @@ char *s1;
     if (job != 2)
     {
         if (level == 1)
-            fprintf(io," %s\t %22.14e\n",s1,z);
+            fprintf(io, " %s\t %22.14e\n", s1, z);
         if (level == 2)
-            fprintf(io,"\t\t\t %s\t %22.14e\n",s1,z);
+            fprintf(io, "\t\t\t %s\t %22.14e\n", s1, z);
         return;
     }
-    if (n==0)
+    if (n == 0)
         return;
     if (level == 1)
-        fprintf(io," %s\t %22.14e\n",s1,z1[1]);
+        fprintf(io, " %s\t %22.14e\n", s1, z1[1]);
     if (level == 2)
-        fprintf(io,"\t\t\t %s\t %22.14e\n",s1,z1[1]);
-    for (j=2; j<=n; j++)
+        fprintf(io, "\t\t\t %s\t %22.14e\n", s1, z1[1]);
+    for (j = 2; j <= n; j++)
     {
         if (level == 1)
-            fprintf(io," \t\t\t %22.14e\n",z1[j]);
+            fprintf(io, " \t\t\t %22.14e\n", z1[j]);
         if (level == 2)
-            fprintf(io," \t\t\t\t\t\t %22.14e\n",z1[j]);
+            fprintf(io, " \t\t\t\t\t\t %22.14e\n", z1[j]);
     }
     return;
 }
@@ -8888,20 +8916,20 @@ char *s1;
 
 #ifdef __STDC__
 static void
-sbout2(FILE *io,int n,int i,char *s1,char *s2,double *z)
+sbout2(FILE *io, int n, int i, char *s1, char *s2, double *z)
 #else
-static void sbout2(io,n,i,s1,s2,z)
+static void sbout2(io, n, i, s1, s2, z)
 FILE *io;
-int n,i;
+int n, i;
 double *z;
-char *s1,*s2;
+char *s1, *s2;
 #endif
 {
     int j;
 
-    fprintf(io,"\t\t\t %8s %5d %1s\t %22.14e\n",s1,i,s2,z[1]);
-    for (j=2; j<=n; j++)
-        fprintf(io,"\t\t\t\t\t\t %22.14e\n",z[j]);
+    fprintf(io, "\t\t\t %8s %5d %1s\t %22.14e\n", s1, i, s2, z[1]);
+    for (j = 2; j <= n; j++)
+        fprintf(io, "\t\t\t\t\t\t %22.14e\n", z[j]);
     return;
 }
 
@@ -8910,26 +8938,26 @@ char *s1,*s2;
 /*********************************************************/
 
 #ifdef __STDC__
-static void shift(int n,int ii,int *iact)
+static void shift(int n, int ii, int *iact)
 #else
-static void shift(n,ii,iact)
-int n,ii,*iact;
+static void shift(n, ii, iact)
+int n, ii, *iact;
 #endif
 {
-    int j,k;
+    int j, k;
 
     if (ii == iact[1])
         return;
-    for (j=1; j<=n; j++)
+    for (j = 1; j <= n; j++)
     {
         if (ii != iact[j])
             continue;
-        for (k=j; k>=2; k--)
-            iact[k]=iact[k-1];
+        for (k = j; k >= 2; k--)
+            iact[k] = iact[k-1];
         break;
     }
-    if (n!=0)
-        iact[1]=ii;
+    if (n != 0)
+        iact[1] = ii;
     return;
 }
 
@@ -8940,63 +8968,63 @@ int n,ii,*iact;
 
 #ifdef __STDC__
 static double
-slope(int nob,int nobL,int neqn,int nparam,int feasb,
-      struct _objective *ob,double *grdpsf,double *x,double *y,
-      double fmax,double theta,int job,double *prev,int old)
+slope(int nob, int nobL, int neqn, int nparam, int feasb,
+      struct _objective *ob, double *grdpsf, double *x, double *y,
+      double fmax, double theta, int job, double *prev, int old)
 #else
 static double
-slope(nob,nobL,neqn,nparam,feasb,ob,grdpsf,x,y,fmax,theta,job,
-      prev,old)
-int nob,nobL,neqn,nparam,job,feasb,old;
+slope(nob, nobL, neqn, nparam, feasb, ob, grdpsf, x, y, fmax, theta, job,
+      prev, old)
+int nob, nobL, neqn, nparam, job, feasb, old;
 double fmax, theta;
-double *grdpsf,*x,*y,* prev;
+double *grdpsf, *x, *y, * prev;
 struct _objective *ob;
 #endif
 {
     int i;
-    double slope1,rhs,rhog,grdftx,grdfty,diff,grpstx,grpsty;
+    double slope1, rhs, rhog, grdftx, grdfty, diff, grpstx, grpsty;
     double tslope;
 
-    tslope=-bgbnd;
-    if (feasb && nob==0)
-        tslope=0.e0;
-    if (neqn==0 || !feasb)
+    tslope = -bgbnd;
+    if (feasb && nob == 0)
+        tslope = 0.e0;
+    if (neqn == 0 || !feasb)
     {
-        grpstx=0.e0;
-        grpsty=0.e0;
+        grpstx = 0.e0;
+        grpsty = 0.e0;
     }
     else
     {
-        grpstx=scaprd(nparam,grdpsf,x);
-        grpsty=scaprd(nparam,grdpsf,y);
+        grpstx = scaprd(nparam, grdpsf, x);
+        grpsty = scaprd(nparam, grdpsf, y);
     }
-    for (i=1; i<=nob; i++)
+    for (i = 1; i <= nob; i++)
     {
         if (old)
-            slope1=prev[i]+scaprd(nparam,ob[i].grad,x);
+            slope1 = prev[i] + scaprd(nparam, ob[i].grad, x);
         else
-            slope1=ob[i].val+scaprd(nparam,ob[i].grad,x);
-        tslope=DMAX1(tslope,slope1);
+            slope1 = ob[i].val + scaprd(nparam, ob[i].grad, x);
+        tslope = DMAX1(tslope, slope1);
         if (nobL != nob)
-            tslope=DMAX1(tslope,-slope1);
+            tslope = DMAX1(tslope, -slope1);
     }
-    tslope=tslope-fmax-grpstx;
+    tslope = tslope - fmax - grpstx;
     if (job == 0)
         return tslope;
-    rhs=theta*tslope+fmax;
-    rhog=1.e0;
-    for (i=1; i<=nob; i++)
+    rhs = theta * tslope + fmax;
+    rhog = 1.e0;
+    for (i = 1; i <= nob; i++)
     {
-        grdftx=scaprd(nparam,ob[i].grad,x)-grpstx;
-        grdfty=scaprd(nparam,ob[i].grad,y)-grpsty;
-        diff=grdfty-grdftx;
+        grdftx = scaprd(nparam, ob[i].grad, x) - grpstx;
+        grdfty = scaprd(nparam, ob[i].grad, y) - grpsty;
+        diff = grdfty - grdftx;
         if (diff <= 0.e0)
             continue;
-        rhog=DMIN1(rhog,(rhs-ob[i].val-grdftx)/diff);
+        rhog = DMIN1(rhog, (rhs - ob[i].val - grdftx) / diff);
         if (nobL != nob)
-            rhog=DMIN1(rhog,-(rhs+ob[i].val+grdftx)/diff);
+            rhog = DMIN1(rhog, -(rhs + ob[i].val + grdftx) / diff);
     }
-    tslope=rhog;
+    tslope = rhog;
     return tslope;
 }
 
@@ -9005,23 +9033,23 @@ struct _objective *ob;
 /************************************************************/
 
 #ifdef __STDC__
-static int element(int *set,int length,int index)
+static int element(int *set, int length, int index)
 #else
 static int element(set, length, index)
 int *set;
-int length,index;
+int length, index;
 #endif
 {
-    int i,temp;
+    int i, temp;
 
-    temp=0;
-    for (i=1; i<=length; i++)
+    temp = 0;
+    for (i = 1; i <= length; i++)
     {
-        if (set[i]==0)
+        if (set[i] == 0)
             break;
-        if (set[i]==index)
+        if (set[i] == index)
         {
-            temp=1;
+            temp = 1;
             return temp;
         }
     }
@@ -9029,7 +9057,7 @@ int length,index;
 }
 /*************************************************************/
 /*     Memory allocation utilities for CFSQP                 */
-/*						             */
+/*                   */
 /*     All vectors and matrices are intended to              */
 /*     be subscripted from 1 to n, NOT 0 to n-1.             */
 /*     The addreses returned assume this convention.         */
@@ -9052,11 +9080,11 @@ int len;
     double *v;
 
     if (!len)
-        len=1;
-    v=(double *)calloc(len,sizeof(double));
+        len = 1;
+    v = (double *)calloc(len, sizeof(double));
     if (!v)
     {
-        fprintf(stderr,"Run-time error in make_dv");
+        fprintf(stderr, "Run-time error in make_dv");
         exit(1);
     }
     return --v;
@@ -9078,11 +9106,11 @@ int len;
     int *v;
 
     if (!len)
-        len=1;
-    v=(int *)calloc(len,sizeof(int));
+        len = 1;
+    v = (int *)calloc(len, sizeof(int));
     if (!v)
     {
-        fprintf(stderr,"Run-time error in make_iv");
+        fprintf(stderr, "Run-time error in make_iv");
         exit(1);
     }
     return --v;
@@ -9105,22 +9133,22 @@ int rows, cols;
     int i;
 
     if (rows == 0)
-        rows=1;
+        rows = 1;
     if (cols == 0)
-        cols=1;
-    temp=(double **)calloc(rows,sizeof(double *));
+        cols = 1;
+    temp = (double **)calloc(rows, sizeof(double *));
     if (!temp)
     {
-        fprintf(stderr,"Run-time error in make_dm");
+        fprintf(stderr, "Run-time error in make_dm");
         exit(1);
     }
     temp--;
-    for (i=1; i<=rows; i++)
+    for (i = 1; i <= rows; i++)
     {
-        temp[i]=(double *)calloc(cols,sizeof(double));
+        temp[i] = (double *)calloc(cols, sizeof(double));
         if (!temp[i])
         {
-            fprintf(stderr,"Run-time error in make_dm");
+            fprintf(stderr, "Run-time error in make_dm");
             exit(1);
         }
         temp[i]--;
@@ -9141,7 +9169,7 @@ free_dv(v)
 double *v;
 #endif
 {
-    free((char *) (v+1));
+    free((char *)(v + 1));
 }
 
 /*************************************************************/
@@ -9157,7 +9185,7 @@ free_iv(v)
 int *v;
 #endif
 {
-    free((char *) (v+1));
+    free((char *)(v + 1));
 }
 
 /*************************************************************/
@@ -9166,10 +9194,10 @@ int *v;
 
 #ifdef __STDC__
 static void
-free_dm(double **m,int rows)
+free_dm(double **m, int rows)
 #else
 static void
-free_dm(m,rows)
+free_dm(m, rows)
 double **m;
 int rows;
 #endif
@@ -9177,10 +9205,10 @@ int rows;
     int i;
 
     if (!rows)
-        rows=1;
-    for (i=1; i<=rows; i++)
-        free((char *) (m[i]+1));
-    free ((char *) (m+1));
+        rows = 1;
+    for (i = 1; i <= rows; i++)
+        free((char *)(m[i] + 1));
+    free((char *)(m + 1));
 }
 
 /*************************************************************/
@@ -9190,21 +9218,21 @@ int rows;
 
 #ifdef __STDC__
 static double *
-convert(double **a,int m,int n)
+convert(double **a, int m, int n)
 #else
 static double *
-convert(a,m,n)
+convert(a, m, n)
 double **a;
-int m,n;
+int m, n;
 #endif
 {
     double *temp;
-    int i,j;
+    int i, j;
 
-    temp = make_dv(m*n);
+    temp = make_dv(m * n);
 
-    for (i=1; i<=n; i++)     /* loop thru columns */
-        for (j=1; j<=m; j++)  /* loop thru row     */
+    for (i = 1; i <= n; i++)     /* loop thru columns */
+        for (j = 1; j <= m; j++)  /* loop thru row     */
             temp[(m*(i-1)+j)] = a[j][i];
 
     return temp;
@@ -9213,7 +9241,7 @@ int m,n;
 
 // Wavelets ----------------------------------------------------------------
 void wt1(double a[], unsigned long n, int isign,
-         void (*wtstep)(double [], unsigned long, int))
+         void(*wtstep)(double [], unsigned long, int))
 {
     unsigned long nn;
 
@@ -9221,63 +9249,63 @@ void wt1(double a[], unsigned long n, int isign,
         return;
     if (isign >= 0)
     {
-        for (nn=n;nn>=4;nn>>=1)
-            (*wtstep)(a,nn,isign);
+        for (nn = n;nn >= 4;nn >>= 1)
+            (*wtstep)(a, nn, isign);
     }
     else
     {
-        for (nn=4;nn<=n;nn<<=1)
-            (*wtstep)(a,nn,isign);
+        for (nn = 4;nn <= n;nn <<= 1)
+            (*wtstep)(a, nn, isign);
     }
 }
 
 void wtn(double a[], unsigned long nn[], int ndim, int isign,
-         void (*wtstep)(double [], unsigned long, int))
+         void(*wtstep)(double [], unsigned long, int))
 {
-    unsigned long i1,i2,i3,k,n,nnew,nprev=1,nt,ntot=1;
+    unsigned long i1, i2, i3, k, n, nnew, nprev = 1, nt, ntot = 1;
     int idim;
     double *wksp;
 
-    for (idim=1;idim<=ndim;idim++)
+    for (idim = 1;idim <= ndim;idim++)
         ntot *= nn[idim];
-    ask_Tvector(wksp,1,ntot);
-    for (idim=1;idim<=ndim;idim++)
+    ask_Tvector(wksp, 1, ntot);
+    for (idim = 1;idim <= ndim;idim++)
     {
-        n=nn[idim];
-        nnew=n*nprev;
+        n = nn[idim];
+        nnew = n * nprev;
         if (n > 4)
         {
-            for (i2=0;i2<ntot;i2+=nnew)
+            for (i2 = 0;i2 < ntot;i2 += nnew)
             {
-                for (i1=1;i1<=nprev;i1++)
+                for (i1 = 1;i1 <= nprev;i1++)
                 {
-                    for (i3=i1+i2,k=1;k<=n;k++,i3+=nprev)
-                        wksp[k]=a[i3];
+                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
+                        wksp[k] = a[i3];
                     if (isign >= 0)
                     {
-                        for(nt=n;nt>=4;nt >>= 1)
-                            (*wtstep)(wksp,nt,isign);
+                        for (nt = n;nt >= 4;nt >>= 1)
+                            (*wtstep)(wksp, nt, isign);
                     }
                     else
                     {
-                        for(nt=4;nt<=n;nt <<= 1)
-                            (*wtstep)(wksp,nt,isign);
+                        for (nt = 4;nt <= n;nt <<= 1)
+                            (*wtstep)(wksp, nt, isign);
                     }
 
-                    for (i3=i1+i2,k=1;k<=n;k++,i3+=nprev)
-                        a[i3]=wksp[k];
+                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
+                        a[i3] = wksp[k];
                 }
             }
         }
-        nprev=nnew;
+        nprev = nnew;
     }
-    free_Tvector(wksp,1,ntot);
+    free_Tvector(wksp, 1, ntot);
 }
 
 typedef struct
 {
-    int ncof,ioff,joff;
-    double *cc,*cr;
+    int ncof, ioff, joff;
+    double *cc, *cr;
 }
 wavefilt;
 
@@ -9288,42 +9316,51 @@ void pwtset(int n)
     void nrerror(char error_text[]);
     int k;
     float sig = -1.0;
-    static double c4[5]={0.0,0.4829629131445341,0.8365163037378079,
-                         0.2241438680420134,-0.1294095225512604};
-    static double c12[13]={0.0,0.111540743350, 0.494623890398, 0.751133908021,
-                           0.315250351709,-0.226264693965,-0.129766867567,
-                           0.097501605587, 0.027522865530,-0.031582039318,
-                           0.000553842201, 0.004777257511,-0.001077301085};
-    static double c20[21]={0.0,0.026670057901, 0.188176800078, 0.527201188932,
-                           0.688459039454, 0.281172343661,-0.249846424327,
-                           -0.195946274377, 0.127369340336, 0.093057364604,
-                           -0.071394147166,-0.029457536822, 0.033212674059,
-                           0.003606553567,-0.010733175483, 0.001395351747,
-                           0.001992405295,-0.000685856695,-0.000116466855,
-                           0.000093588670,-0.000013264203};
-    static double c4r[5],c12r[13],c20r[21];
+    static double c4[5] =
+        {
+            0.0, 0.4829629131445341, 0.8365163037378079,
+            0.2241438680420134, -0.1294095225512604
+        };
+    static double c12[13] =
+        {
+            0.0, 0.111540743350, 0.494623890398, 0.751133908021,
+            0.315250351709, -0.226264693965, -0.129766867567,
+            0.097501605587, 0.027522865530, -0.031582039318,
+            0.000553842201, 0.004777257511, -0.001077301085
+        };
+    static double c20[21] =
+        {
+            0.0, 0.026670057901, 0.188176800078, 0.527201188932,
+            0.688459039454, 0.281172343661, -0.249846424327,
+            -0.195946274377, 0.127369340336, 0.093057364604,
+            -0.071394147166, -0.029457536822, 0.033212674059,
+            0.003606553567, -0.010733175483, 0.001395351747,
+            0.001992405295, -0.000685856695, -0.000116466855,
+            0.000093588670, -0.000013264203
+        };
+    static double c4r[5], c12r[13], c20r[21];
 
-    wfilt.ncof=n;
+    wfilt.ncof = n;
     if (n == 4)
     {
-        wfilt.cc=c4;
-        wfilt.cr=c4r;
+        wfilt.cc = c4;
+        wfilt.cr = c4r;
     }
     else if (n == 12)
     {
-        wfilt.cc=c12;
-        wfilt.cr=c12r;
+        wfilt.cc = c12;
+        wfilt.cr = c12r;
     }
     else if (n == 20)
     {
-        wfilt.cc=c20;
-        wfilt.cr=c20r;
+        wfilt.cc = c20;
+        wfilt.cr = c20r;
     }
     else
         nrerror("unimplemented value n in pwtset");
-    for (k=1;k<=n;k++)
+    for (k = 1;k <= n;k++)
     {
-        wfilt.cr[wfilt.ncof+1-k]=sig*wfilt.cc[k];
+        wfilt.cr[wfilt.ncof+1-k] = sig * wfilt.cc[k];
         sig = -sig;
     }
     wfilt.ioff = wfilt.joff = -(n >> 1);
@@ -9331,52 +9368,52 @@ void pwtset(int n)
 
 void pwt(double a[], unsigned long n, int isign)
 {
-    double ai,ai1,*wksp;
-    unsigned long i,ii,j,jf,jr,k,n1,ni,nj,nh,nmod;
+    double ai, ai1, *wksp;
+    unsigned long i, ii, j, jf, jr, k, n1, ni, nj, nh, nmod;
 
     if (n < 4)
         return;
-    ask_Tvector(wksp,1,n);
-    nmod=wfilt.ncof*n;
-    n1=n-1;
-    nh=n >> 1;
-    for (j=1;j<=n;j++)
-        wksp[j]=0.0;
+    ask_Tvector(wksp, 1, n);
+    nmod = wfilt.ncof * n;
+    n1 = n - 1;
+    nh = n >> 1;
+    for (j = 1;j <= n;j++)
+        wksp[j] = 0.0;
     if (isign >= 0)
     {
-        for (ii=1,i=1;i<=n;i+=2,ii++)
+        for (ii = 1, i = 1;i <= n;i += 2, ii++)
         {
-            ni=i+nmod+wfilt.ioff;
-            nj=i+nmod+wfilt.joff;
-            for (k=1;k<=wfilt.ncof;k++)
+            ni = i + nmod + wfilt.ioff;
+            nj = i + nmod + wfilt.joff;
+            for (k = 1;k <= wfilt.ncof;k++)
             {
-                jf=n1 & (ni+k);
-                jr=n1 & (nj+k);
-                wksp[ii] += wfilt.cc[k]*a[jf+1];
-                wksp[ii+nh] += wfilt.cr[k]*a[jr+1];
+                jf = n1 & (ni + k);
+                jr = n1 & (nj + k);
+                wksp[ii] += wfilt.cc[k] * a[jf+1];
+                wksp[ii+nh] += wfilt.cr[k] * a[jr+1];
             }
         }
     }
     else
     {
-        for (ii=1,i=1;i<=n;i+=2,ii++)
+        for (ii = 1, i = 1;i <= n;i += 2, ii++)
         {
-            ai=a[ii];
-            ai1=a[ii+nh];
-            ni=i+nmod+wfilt.ioff;
-            nj=i+nmod+wfilt.joff;
-            for (k=1;k<=wfilt.ncof;k++)
+            ai = a[ii];
+            ai1 = a[ii+nh];
+            ni = i + nmod + wfilt.ioff;
+            nj = i + nmod + wfilt.joff;
+            for (k = 1;k <= wfilt.ncof;k++)
             {
-                jf=(n1 & (ni+k))+1;
-                jr=(n1 & (nj+k))+1;
-                wksp[jf] += wfilt.cc[k]*ai;
-                wksp[jr] += wfilt.cr[k]*ai1;
+                jf = (n1 & (ni + k)) + 1;
+                jr = (n1 & (nj + k)) + 1;
+                wksp[jf] += wfilt.cc[k] * ai;
+                wksp[jr] += wfilt.cr[k] * ai1;
             }
         }
     }
-    for (j=1;j<=n;j++)
-        a[j]=wksp[j];
-    free_Tvector(wksp,1,n);
+    for (j = 1;j <= n;j++)
+        a[j] = wksp[j];
+    free_Tvector(wksp, 1, n);
 }
 
 /* Gamma function ---------------------------------------------------------- */
@@ -9386,28 +9423,28 @@ void pwt(double a[], unsigned long n, int isign)
 void gser(double *gamser, double a, double x, double *gln)
 {
     int n;
-    double sum,del,ap;
+    double sum, del, ap;
 
-    *gln=gammln(a);
+    *gln = gammln(a);
     if (x <= 0.0)
     {
         if (x < 0.0)
             nrerror("x less than 0 in routine gser");
-        *gamser=0.0;
+        *gamser = 0.0;
         return;
     }
     else
     {
-        ap=a;
-        del=sum=1.0/a;
-        for (n=1;n<=ITMAX;n++)
+        ap = a;
+        del = sum = 1.0 / a;
+        for (n = 1;n <= ITMAX;n++)
         {
             ++ap;
-            del *= x/ap;
+            del *= x / ap;
             sum += del;
             if (fabs(del) < fabs(sum)*EPS)
             {
-                *gamser=sum*exp(-x+a*log(x)-(*gln));
+                *gamser = sum * exp(-x + a * log(x) - (*gln));
                 return;
             }
         }
@@ -9425,32 +9462,32 @@ void gser(double *gamser, double a, double x, double *gln)
 void gcf(double *gammcf, double a, double x, double *gln)
 {
     int i;
-    double an,b,c,d,del,h;
+    double an, b, c, d, del, h;
 
-    *gln=gammln(a);
-    b=x+1.0-a;
-    c=1.0/FPMIN;
-    d=1.0/b;
-    h=d;
-    for (i=1;i<=ITMAX;i++)
+    *gln = gammln(a);
+    b = x + 1.0 - a;
+    c = 1.0 / FPMIN;
+    d = 1.0 / b;
+    h = d;
+    for (i = 1;i <= ITMAX;i++)
     {
-        an = -i*(i-a);
+        an = -i * (i - a);
         b += 2.0;
-        d=an*d+b;
+        d = an * d + b;
         if (fabs(d) < FPMIN)
-            d=FPMIN;
-        c=b+an/c;
+            d = FPMIN;
+        c = b + an / c;
         if (fabs(c) < FPMIN)
-            c=FPMIN;
-        d=1.0/d;
-        del=d*c;
+            c = FPMIN;
+        d = 1.0 / d;
+        del = d * c;
         h *= del;
-        if (fabs(del-1.0) < EPS)
+        if (fabs(del - 1.0) < EPS)
             break;
     }
     if (i > ITMAX)
         nrerror("a too large, ITMAX too small in gcf");
-    *gammcf=exp(-x+a*log(x)-(*gln))*h;
+    *gammcf = exp(-x + a * log(x) - (*gln)) * h;
 }
 #undef ITMAX
 #undef EPS
@@ -9458,61 +9495,61 @@ void gcf(double *gammcf, double a, double x, double *gln)
 
 double gammp(double a, double x)
 {
-    double gamser,gammcf,gln;
+    double gamser, gammcf, gln;
 
     if (x < 0.0 || a <= 0.0)
         nrerror("Invalid arguments in routine gammp");
-    if (x < (a+1.0))
+    if (x < (a + 1.0))
     {
-        gser(&gamser,a,x,&gln);
+        gser(&gamser, a, x, &gln);
         return gamser;
     }
     else
     {
-        gcf(&gammcf,a,x,&gln);
-        return 1.0-gammcf;
+        gcf(&gammcf, a, x, &gln);
+        return 1.0 -gammcf;
     }
 }
 
 /* Solving linear equation systems via Cholesky ---------------------------- */
 void choldc(double *a, int n, double *p)
 {
-    int i,j,k;
+    int i, j, k;
     float sum;
 
-    for (i=1;i<=n;i++)
+    for (i = 1;i <= n;i++)
     {
-        for (j=i;j<=n;j++)
+        for (j = i;j <= n;j++)
         {
-            for (sum=a[i*n+j],k=i-1;k>=1;k--)
-                sum -= a[i*n+k]*a[j*n+k];
+            for (sum = a[i*n+j], k = i - 1;k >= 1;k--)
+                sum -= a[i*n+k] * a[j*n+k];
             if (i == j)
             {
                 if (sum <= 0.0)
                     nrerror("choldc failed");
-                p[i]=sqrt(sum);
+                p[i] = sqrt(sum);
             }
             else
-                a[j*n+i]=sum/p[i];
+                a[j*n+i] = sum / p[i];
         }
     }
 }
 
 void cholsl(double *a, int n, double *p, double *b, double *x)
 {
-    int i,k;
+    int i, k;
     float sum;
 
-    for (i=1;i<=n;i++)
+    for (i = 1;i <= n;i++)
     {
-        for (sum=b[i],k=i-1;k>=1;k--)
-            sum -= a[i*n+k]*x[k];
-        x[i]=sum/p[i];
+        for (sum = b[i], k = i - 1;k >= 1;k--)
+            sum -= a[i*n+k] * x[k];
+        x[i] = sum / p[i];
     }
-    for (i=n;i>=1;i--)
+    for (i = n;i >= 1;i--)
     {
-        for (sum=x[i],k=i+1;k<=n;k++)
-            sum -= a[k*n+i]*x[k];
-        x[i]=sum/p[i];
+        for (sum = x[i], k = i + 1;k <= n;k++)
+            sum -= a[k*n+i] * x[k];
+        x[i] = sum / p[i];
     }
 }

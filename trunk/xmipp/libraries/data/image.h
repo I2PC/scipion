@@ -40,13 +40,13 @@
 #include <vector>
 
 #define GCC_VERSION (__GNUC__ * 10000 \
-    + __GNUC_MINOR__ * 100 \
-    + __GNUC_PATCHLEVEL__)
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
 /* Test for GCC > 3.3.0 */
 #if GCC_VERSION >= 30300
-    #include <sstream>
+#include <sstream>
 #else
-    #include <strstream.h>
+#include <strstream.h>
 #endif
 
 // This forward declarations are needed for defining operators functions that
@@ -62,7 +62,11 @@ static const char* IMAGIC_TAG = "imagic:";
 
 /// @defgroup Images Images
 
-typedef enum {IBYTE=1, IFLOAT=2, I16=3} Image_Type;
+typedef enum
+{
+    IBYTE = 1, IFLOAT = 2, I16 = 3
+}
+Image_Type;
 
 /** Basic image class
  * @ingroup Images
@@ -318,7 +322,7 @@ public:
      * I(-3, -3) = I(-3, -2);
      * @endcode
      */
-    T& operator () (int i, int j) const
+    T& operator()(int i, int j) const
     {
         return img(i, j);
     }
@@ -398,20 +402,20 @@ public:
      * @endcode
      */
     bool read(const FileName& name, float fIform, int Ydim, int Xdim,
-              bool reversed=false, Image_Type image_type=IBYTE,
-              int header_size=0)
+              bool reversed = false, Image_Type image_type = IBYTE,
+              int header_size = 0)
     {
         FILE* fh;
         clear();
 
         if ((fh = fopen(name.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501, "Image::read: File " + name + " not found");
-        fseek(fh,header_size,SEEK_SET);
+        fseek(fh, header_size, SEEK_SET);
 
         bool ret;
         if ((ret = ImageT<  T>::read(fh, fIform, Ydim, Xdim, reversed,
                                      image_type)))
-            fn_img=name;
+            fn_img = name;
 
         fclose(fh);
         return (ret);
@@ -459,13 +463,13 @@ public:
      * the base Image class.  Caller is responsible for deleting the memory for
      * the object.  Returns NULL on error.
      */
-    static ImageT< T >* LoadImage (const FileName& name, bool apply_geo=false)
+    static ImageT< T >* LoadImage(const FileName& name, bool apply_geo = false)
     {
         ImageT< T >* ret = NULL;
-        if (name.find (IMAGIC_TAG) != string::npos)
+        if (name.find(IMAGIC_TAG) != string::npos)
         {
             ImageImagicT< T >* i = new ImageImagicT< T >();
-            if (i->read (name))
+            if (i->read(name))
                 ret = i;
             else
                 delete i;
@@ -497,8 +501,8 @@ public:
      * I.write("g0ta0001.raw") // Save as
      * @endcode
      */
-    void write(FileName name = "", bool reversed=false,
-               Image_Type image_type=IBYTE)
+    void write(FileName name = "", bool reversed = false,
+               Image_Type image_type = IBYTE)
     {
         FILE* fp;
         if (name != "")
@@ -521,7 +525,7 @@ public:
      */
     void write(FILE*& fh, bool reversed, Image_Type image_type)
     {
-        if (XSIZE(img)==0 || YSIZE(img)==0)
+        if (XSIZE(img) == 0 || YSIZE(img) == 0)
             return;
 
         double a, b;
@@ -594,8 +598,8 @@ inline void ImageT< complex< double> >::write(FILE*& fh, bool reversed,
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
     {
         float a, b;
-        a = (float) (MULTIDIM_ELEM(img, i)).real();
-        b = (float) (MULTIDIM_ELEM(img, i)).imag();
+        a = (float)(MULTIDIM_ELEM(img, i)).real();
+        b = (float)(MULTIDIM_ELEM(img, i)).imag();
 
         FWRITE(&a, sizeof(float), 1, fh, reversed);
         FWRITE(&b, sizeof(float), 1, fh, reversed);
@@ -696,7 +700,7 @@ public:
      * ImageXmipp IX;
      * @endcode
      */
-    ImageXmippT():ImageT< T >()
+    ImageXmippT(): ImageT< T >()
     {
         if (typeid(T) == typeid(complex< double >))
             // Sets header of type Image_Fourier(Complex)
@@ -742,7 +746,7 @@ public:
      * ImageXmipp IX("g1ta0001.spd");
      * @endcode
      */
-    ImageXmippT(FileName _name, bool apply_geo=false) : ImageT< T >(_name)
+    ImageXmippT(FileName _name, bool apply_geo = false) : ImageT< T >(_name)
     {
         if (typeid(T) == typeid(complex< double >))
             // Sets header of type Image_Fourier (Complex)
@@ -801,7 +805,7 @@ public:
      */
     ImageXmippT<T>& operator= (const ImageXmippT<T> &op1)
     {
-        if (&op1!=this)
+        if (&op1 != this)
         {
             this->ImageT<T>::operator = (op1);
             header = op1.header;
@@ -907,9 +911,9 @@ public:
      * IX.read("g1ta0002.spd");
      * @endcode
      */
-    virtual bool read(const FileName& name, bool skip_type_check=false,
-                      bool reversed=false, bool apply_geo=false,
-                      bool only_apply_shifts=false)
+    virtual bool read(const FileName& name, bool skip_type_check = false,
+                      bool reversed = false, bool apply_geo = false,
+                      bool only_apply_shifts = false)
     {
         FILE* fp;
         bool ret;
@@ -923,7 +927,7 @@ public:
         if (!header.read(fp, skip_type_check, reversed))
             REPORT_ERROR(1502, "ImageXmipp::read: File " + ImageT< T >::fn_img +
                          " is not a valid Xmipp file");
-      
+
         // Read whole image and close file
         if ((ret = ImageT< T >::read(fp, header.fIform(), header.iYdim(),
                                      header.iXdim(), header.reversed(), IFLOAT)))
@@ -946,14 +950,14 @@ public:
 #ifdef NEVERDEFINED
             // scale if necessary
             // TODO check this with Carlos
-             if ((header.Scale() != 0.) && (header.Scale() != 1.))
-             {
-                 header.set_dimension(header.Ydim() * header.Scale(),
-                                      header.Xdim() * header.Scale());
+            if ((header.Scale() != 0.) && (header.Scale() != 1.))
+            {
+                header.set_dimension(header.Ydim() * header.Scale(),
+                                     header.Xdim() * header.Scale());
 
-                 ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
-                         header.iXdim());
-             }
+                ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
+                        header.iXdim());
+            }
 
             header.set_header(); // Set header in a Xmipp consistent state
 #endif
@@ -976,7 +980,7 @@ public:
      * IX.write("g1ta0002.spd"); // Save as
      * @endcode
      */
-    virtual void write(const FileName& name = "", bool force_reversed=false)
+    virtual void write(const FileName& name = "", bool force_reversed = false)
     {
         FILE* fp;
         if (name != "")
@@ -987,7 +991,7 @@ public:
                          " cannot be written");
 
         adjust_header();
-        bool reversed=(force_reversed) ? !header.reversed() : header.reversed();
+        bool reversed = (force_reversed) ? !header.reversed() : header.reversed();
         header.write(fp, force_reversed);
         ImageT< T >::write(fp, reversed, IFLOAT);
         fclose(fp);
@@ -1009,7 +1013,7 @@ public:
         if (typeid(T) == typeid(complex< double >))
             // Sets header of type Image_Fourier (Complex)
             header.headerType() = headerXmipp::IMG_FOURIER;
-        else if (typeid(T)==typeid(double))
+        else if (typeid(T) == typeid(double))
             // Sets header of type Image_XMipp
             header.headerType() = headerXmipp::IMG_XMIPP;
 
@@ -1046,7 +1050,7 @@ public:
 
     /** Get geometric transformation matrix from 2D-image header
      */
-    matrix2D< double > get_transformation_matrix(bool only_apply_shifts=false)
+    matrix2D< double > get_transformation_matrix(bool only_apply_shifts = false)
     {
         matrix2D< double > A(3, 3);
         double psi = realWRAP(header.Psi(), -180, 180);
@@ -1066,7 +1070,7 @@ public:
         }
         else
         {
-            if (theta==0.)
+            if (theta == 0.)
             {
                 // For untilted images: apply Euler matrix
                 Euler_angles2matrix(header.Phi(), 0., header.Psi(), A);
@@ -1075,12 +1079,12 @@ public:
             {
                 // For tilted images: only apply Psi
                 // Take another_set into account
-                if (theta<0.)
+                if (theta < 0.)
                 {
                     theta = -theta;
-                    psi = realWRAP(psi-180., -180, 180);
+                    psi = realWRAP(psi - 180., -180, 180);
                 }
-                Euler_angles2matrix(0., 0., psi,A);
+                Euler_angles2matrix(0., 0., psi, A);
             }
             A(0, 2) = -header.fXoff();
             A(1, 2) = -header.fYoff();
@@ -1103,16 +1107,16 @@ public:
      */
     void check_oldxmipp_header()
     {
-        if (header.fXoff()==0. && header.fYoff()==0. && header.fZoff()==0.)
+        if (header.fXoff() == 0. && header.fYoff() == 0. && header.fZoff() == 0.)
         {
             // Might be oldXmipp image header
             float ang = header.old_rot();
             matrix2D< double > mat = header.fGeo_matrix();
             if (ABS(mat(0, 0) - COSD(ang)) < XMIPP_EQUAL_ACCURACY &&
-                    ABS(mat(1, 1) - COSD(ang)) < XMIPP_EQUAL_ACCURACY &&
-                    ABS(mat(0, 1) - SIND(ang)) < XMIPP_EQUAL_ACCURACY &&
-                    ABS(mat(1, 0) + SIND(ang)) < XMIPP_EQUAL_ACCURACY &&
-                    mat(2, 0) != 0. && mat(2, 1) != 0. )
+                ABS(mat(1, 1) - COSD(ang)) < XMIPP_EQUAL_ACCURACY &&
+                ABS(mat(0, 1) - SIND(ang)) < XMIPP_EQUAL_ACCURACY &&
+                ABS(mat(1, 0) + SIND(ang)) < XMIPP_EQUAL_ACCURACY &&
+                mat(2, 0) != 0. && mat(2, 1) != 0.)
             {
                 // This indeed seems to be an OldXmipp style header with
                 // non-zero offsets
@@ -1138,7 +1142,7 @@ public:
      */
     void set_originOffsets(float _Xoff, float _Yoff)
     {
-        header.set_originOffsets( _Xoff, _Yoff);
+        header.set_originOffsets(_Xoff, _Yoff);
     }
 
     /** Get origin offsets
@@ -1167,7 +1171,7 @@ public:
      */
     void set_Xoff(float& _Xoff)
     {
-        header.fXoff()=_Xoff;
+        header.fXoff() = _Xoff;
     }
 
     /** Get Xoff
@@ -1449,7 +1453,7 @@ public:
      */
     void set_rot(float& _rot)
     {
-        header.Phi()=_rot;
+        header.Phi() = _rot;
     }
 
     /** Get rot
@@ -1651,7 +1655,7 @@ public:
     /** Another function for set Theta1.*/
     void set_Theta1(float& _Theta1)
     {
-        header.Theta1()=_Theta1;
+        header.Theta1() = _Theta1;
     }
 
     /** Get Theta1
@@ -1824,7 +1828,7 @@ public:
      */
     void set_Psi1(float & _Psi1)
     {
-        header.Psi1()=_Psi1;
+        header.Psi1() = _Psi1;
     }
 
     /** Get Psi1
@@ -1911,7 +1915,7 @@ public:
      */
     void set_psi2(float& _psi2)
     {
-        header.Psi2()=_psi2;
+        header.Psi2() = _psi2;
     }
 
     /** Get psi2
@@ -1928,13 +1932,13 @@ public:
 
 /** True if the given volume is an Xmipp image
  */
-int Is_ImageXmipp(const FileName &fn, bool skip_type_check=false,
-                  bool reversed=false);
+int Is_ImageXmipp(const FileName &fn, bool skip_type_check = false,
+                  bool reversed = false);
 
 /** True if the given volume is a Fourier Xmipp image.
  */
-int Is_FourierImageXmipp(const FileName& fn, bool skip_type_check=false,
-                         bool reversed=false);
+int Is_FourierImageXmipp(const FileName& fn, bool skip_type_check = false,
+                         bool reversed = false);
 
 /** Get size of an image
  *
@@ -2095,14 +2099,14 @@ public:
      */
     void over2img(double v, double u, int& iv, int& iu) const
     {
-        if (v<overvmin || v>overvmax)
+        if (v < overvmin || v > overvmax)
             REPORT_ERROR(1505, "ImgeOver::over2img: v out of range");
 
-        if (u<overumin || u>overumax)
+        if (u < overumin || u > overumax)
             REPORT_ERROR(1505, "ImgeOver::over2img: u out of range");
 
-        iu = (int) ROUND((((u)-overumin) * uistep));
-        iv = (int) ROUND((((v)-overvmin) * vistep));
+        iu = (int) ROUND((((u) - overumin) * uistep));
+        iv = (int) ROUND((((v) - overvmin) * vistep));
     }
 
     /** Speed up pixel index macro
@@ -2115,8 +2119,8 @@ public:
      * @endcode
      */
 #define OVER2IMG(IO, v, u, iv, iu) \
-       iu = (int) ROUND((((u)-(IO).overumin) * (IO).uistep)); \
-       iv = (int) ROUND((((v)-(IO).overvmin) * (IO).vistep));
+    iu = (int) ROUND((((u)-(IO).overumin) * (IO).uistep)); \
+    iv = (int) ROUND((((v)-(IO).overvmin) * (IO).vistep));
 
     /** Returns the logical position of a "physical" location
      *
@@ -2132,10 +2136,10 @@ public:
      */
     void img2over(int iv, int iu, double &v, double &u) const
     {
-        if (iu<0 || iu>XSIZE(img))
+        if (iu < 0 || iu > XSIZE(img))
             REPORT_ERROR(1505, "ImageOver::img2over: iu out of range");
 
-        if (iv<0 || iv>YSIZE(img))
+        if (iv < 0 || iv > YSIZE(img))
             REPORT_ERROR(1505, "ImageOver::img2over: iv out of range");
 
         u = (double) overumin + iu / (double) uistep;
@@ -2152,8 +2156,8 @@ public:
      * @endcode
      */
 #define IMG2OVER(IO, iv, iu, v, u) \
-       u = (double) (IO).overumin + (iu) / (double) ((IO).uistep); \
-       v = (double) (IO).overvmin + (iv) / (double) ((IO).vistep);
+    u = (double) (IO).overumin + (iu) / (double) ((IO).uistep); \
+    v = (double) (IO).overvmin + (iv) / (double) ((IO).vistep);
 
     /** Constant pixel access with fractional indexes
      *
@@ -2168,10 +2172,10 @@ public:
      */
     double operator()(double v, double u) const
     {
-        if (v<overvmin || v>overvmax)
+        if (v < overvmin || v > overvmax)
             REPORT_ERROR(1505, "ImgeOver::over2img: v out of range");
 
-        if (u<overumin || u>overumax)
+        if (u < overumin || u > overumax)
             REPORT_ERROR(1505, "ImgeOver::over2img: u out of range");
 
         int iu, iv;
@@ -2208,8 +2212,8 @@ public:
      * @endcode
      */
 #define OVERPIXEL(IO, y, x) IMGPIXEL((IO), \
-       (int) ROUND(((u) * (IO).uistep)), \
-       (int) ROUND(((v) * (IO).vistep)))
+                                     (int) ROUND(((u) * (IO).uistep)), \
+                                     (int) ROUND(((v) * (IO).vistep)))
 
     // The following two functions have been redefined (they should be
     // inherited from Image) because the compiler doesn't admit this
@@ -2356,9 +2360,9 @@ static const char IMAGIC_TAG_SEP = ':';
 
 /* Constants for the offset into the Imagic header file
  */
-static const unsigned IMAGIC_IFOL_OFFSET=4, IMAGIC_IXLP_OFFSET=48,
-        IMAGIC_IYLP_OFFSET=52, IMAGIC_TYPE_OFFSET=56, IMAGIC_WORD_LEN=4,
-                           IMAGIC_RECORD_LEN=1024;
+static const unsigned IMAGIC_IFOL_OFFSET = 4, IMAGIC_IXLP_OFFSET = 48,
+        IMAGIC_IYLP_OFFSET = 52, IMAGIC_TYPE_OFFSET = 56, IMAGIC_WORD_LEN = 4,
+                             IMAGIC_RECORD_LEN = 1024;
 
 /* Constants defining the Imagic header and some of its fields
  */
@@ -2375,7 +2379,10 @@ static const unsigned int IMAGIC_IDX_IMN = 0, IMAGIC_IDX_IFOL = 1,
  *
  * Valid types are IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP.
  */
-enum ImageImagicType { IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP };
+enum ImageImagicType
+{
+    IMAGIC_REAL, IMAGIC_INTG, IMAGIC_PACK, IMAGIC_COMP
+};
 
 /* structure that holds Imagic image information */
 struct ImageImagicInfo
@@ -2427,7 +2434,7 @@ public:
 
     /** Rename
      */
-    virtual void rename (FileName newName)
+    virtual void rename(FileName newName)
     {
         if (newName != ImageT< T >::fn_img)
         {
@@ -2527,41 +2534,41 @@ public:
         switch (img_info.img_types[imgnum])
         {
         case IMAGIC_REAL:
+        {
+            float data;
+            const unsigned size = 4;
+            fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
+            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
             {
-                float data;
-                const unsigned size = 4;
-                fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
-                FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
-                {
-                    FREAD(&data, size, 1, img_fh, reversed);
-                    MULTIDIM_ELEM(ImageT< T >::img, i) = data;
-                }
-                break;
+                FREAD(&data, size, 1, img_fh, reversed);
+                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
             }
+            break;
+        }
         case IMAGIC_INTG:
+        {
+            short int data;
+            const unsigned size = 2;
+            fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
+            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
             {
-                short int data;
-                const unsigned size = 2;
-                fseek (img_fh, imgnum * size * img_offset, SEEK_SET);
-                FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
-                {
-                    FREAD(&data, size, 1, img_fh, reversed);
-                    MULTIDIM_ELEM(ImageT< T >::img, i) = data;
-                }
-                break;
+                FREAD(&data, size, 1, img_fh, reversed);
+                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
             }
+            break;
+        }
         case IMAGIC_PACK:
+        {
+            unsigned char data;
+            const unsigned size = 1;
+            fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
+            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
             {
-                unsigned char data;
-                const unsigned size = 1;
-                fseek (img_fh, imgnum * size * img_offset, SEEK_SET);
-                FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
-                {
-                    FREAD (&data, size, 1, img_fh, reversed);
-                    MULTIDIM_ELEM(ImageT< T >::img, i) = data;
-                }
-                break;
+                FREAD(&data, size, 1, img_fh, reversed);
+                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
             }
+            break;
+        }
         default:
             REPORT_ERROR(1501,
                          "ImageImagicType not supported for this imgtype!");
@@ -2575,8 +2582,8 @@ public:
      *
      * FIXME Not implemented
      */
-    void write (const FileName& name="", bool reversed=false,
-                Image_Type image_type=IBYTE)
+    void write(const FileName& name = "", bool reversed = false,
+               Image_Type image_type = IBYTE)
     {
         REPORT_ERROR(1503, "ImageImagic::write: can't directly save");
     }
@@ -2633,7 +2640,7 @@ public:
                 if (imgnumpos > IMAGIC_TAG_LEN)
                 {
                     hedfname = ImageT< T >::fn_img.substr(IMAGIC_TAG_LEN,
-                                                          imgnumpos-IMAGIC_TAG_LEN);
+                                                          imgnumpos - IMAGIC_TAG_LEN);
                     imgfname = hedfname.substitute_extension(IMAGIC_HEADER_EXT,
                                IMAGIC_IMAGE_EXT);
                     imgnum = atoi(
@@ -2662,7 +2669,7 @@ inline string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
 {
 #if GCC_VERSION < 30300
     char aux[15];
-    ostrstream ss(aux,sizeof(aux));
+    ostrstream ss(aux, sizeof(aux));
 #else
 
     ostringstream ss;
@@ -2681,7 +2688,7 @@ const ImageImagicInfo ImagicGetImgInfo(const FileName& hed_fname);
  */
 template<typename T>
 bool ImagicWriteImagicFile(const FileName& hed_fname,
-                           const vector< ImageT< T >* >& imgs,
+                           const vector< ImageT< T >* > & imgs,
                            ImageImagicType img_type = IMAGIC_REAL)
 {
     const FileName img_fname = hed_fname.substitute_extension(IMAGIC_HEADER_EXT,
@@ -2700,25 +2707,25 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             if (!image)
             {
                 if (imagic_hed)
-                    fclose (imagic_hed);
+                    fclose(imagic_hed);
 
                 if (imagic_img)
-                    fclose (imagic_img);
+                    fclose(imagic_img);
 
                 return (false);
             }
 
             memset(header_block, 0, sizeof(header_block));
-            header_block[IMAGIC_IDX_IMN] = imgcount+1;
-            header_block[IMAGIC_IDX_IFOL] = imgs.size() - (imgcount+1);
+            header_block[IMAGIC_IDX_IMN] = imgcount + 1;
+            header_block[IMAGIC_IDX_IFOL] = imgs.size() - (imgcount + 1);
             header_block[IMAGIC_IDX_NHFR] = 1;
 
             const time_t nowt = time(NULL);
             const struct tm* nowtm = localtime(&nowt);
 
-            header_block[IMAGIC_IDX_NMONTH] = nowtm->tm_mon+1;
+            header_block[IMAGIC_IDX_NMONTH] = nowtm->tm_mon + 1;
             header_block[IMAGIC_IDX_NDATE] = nowtm->tm_mday;
-            header_block[IMAGIC_IDX_NYEAR] = nowtm->tm_year+1900;
+            header_block[IMAGIC_IDX_NYEAR] = nowtm->tm_year + 1900;
             header_block[IMAGIC_IDX_NHOUR] = nowtm->tm_hour;
             header_block[IMAGIC_IDX_NMINUT] = nowtm->tm_min;
             header_block[IMAGIC_IDX_NSEC] = nowtm->tm_sec;
@@ -2766,7 +2773,7 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             // This next line will generate an error if not using linux or sun!
             header_block[IMAGIC_IDX_ARCHTYPE] = ARCH_VAL;
 
-            fwrite(header_block, sizeof (header_block), 1, imagic_hed);
+            fwrite(header_block, sizeof(header_block), 1, imagic_hed);
 
             // Write the image data to the .img file
             FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((*image)())
@@ -2774,19 +2781,19 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
                 switch (img_type)
                 {
                 case IMAGIC_REAL:
-                    {
-                        const float p = (float) MULTIDIM_ELEM((*image)(), i);
-                        FWRITE(&p, sizeof (p), 1, imagic_img, false);
-                        break;
-                    }
+                {
+                    const float p = (float) MULTIDIM_ELEM((*image)(), i);
+                    FWRITE(&p, sizeof(p), 1, imagic_img, false);
+                    break;
+                }
 
                 case IMAGIC_INTG:
-                    {
-                        const unsigned short p =
-                            (unsigned short) MULTIDIM_ELEM((*image)(), i);
-                        FWRITE(&p, sizeof (p), 1, imagic_img, false);
-                        break;
-                    }
+                {
+                    const unsigned short p =
+                        (unsigned short) MULTIDIM_ELEM((*image)(), i);
+                    FWRITE(&p, sizeof(p), 1, imagic_img, false);
+                    break;
+                }
 
                 case IMAGIC_PACK:
                 case IMAGIC_COMP:
@@ -2802,10 +2809,10 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
     }
 
     if (imagic_hed)
-        fclose (imagic_hed);
+        fclose(imagic_hed);
 
     if (imagic_img)
-        fclose (imagic_img);
+        fclose(imagic_img);
 
     return true;
 }

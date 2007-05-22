@@ -23,15 +23,15 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _VOLUME_LABELLING_HH
-   #define _VOLUME_LABELLING_HH
+#define _VOLUME_LABELLING_HH
 
 /**@name Volume labelling */
 //@{
-   /** Labels from mathematical description.
-       Label a volume from a mathematical description. */
-   int Labels_from_description(Phantom &phantom, Volume *vol_label);
+/** Labels from mathematical description.
+    Label a volume from a mathematical description. */
+int Labels_from_description(Phantom &phantom, Volume *vol_label);
 
-   /** Labels from volume by region growing. */
-   int Labels_from_growing(Volume *phantom, Volume *vol_label);
+/** Labels from volume by region growing. */
+int Labels_from_growing(Volume *phantom, Volume *vol_label);
 //@}
 #endif

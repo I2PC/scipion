@@ -28,37 +28,41 @@
 class QtWidgetMicrograph;
 
 /* File menu for Mark ------------------------------------------------------ */
-class QtFileMenu : public QtPopupMenuMark {
-   // For accepting signals and slots
-   Q_OBJECT
+class QtFileMenu : public QtPopupMenuMark
+{
+    // For accepting signals and slots
+    Q_OBJECT
 
-   // Coordinates have been saved
-   bool __coordinates_are_saved;
+    // Coordinates have been saved
+    bool __coordinates_are_saved;
 public:
-   // Constructor
-   QtFileMenu( QtWidgetMicrograph* _parent );
+    // Constructor
+    QtFileMenu(QtWidgetMicrograph* _parent);
 
 
 public slots:
-   // Load coords
-   void slotLoadCoords();
+    // Load coords
+    void slotLoadCoords();
 
-   // Save coords
-   void slotSaveCoords();
+    // Save coords
+    void slotSaveCoords();
 
-   // Generate images
-   void slotGenerateImages();
+    // Generate images
+    void slotGenerateImages();
 
-   // Save angles
-   void slotSaveAngles();
+    // Save angles
+    void slotSaveAngles();
 
-   // Quit
-   void slotQuit();
+    // Quit
+    void slotQuit();
 
-   // Coordinates changed
-   void slotCoordChange() {__coordinates_are_saved=FALSE;}
+    // Coordinates changed
+    void slotCoordChange()
+    {
+        __coordinates_are_saved = FALSE;
+    }
 signals:
-   void signalAddFamily( const char * );
+    void signalAddFamily(const char *);
 };
 
 #endif

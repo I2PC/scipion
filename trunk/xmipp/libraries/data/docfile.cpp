@@ -72,12 +72,12 @@ double DocLine::operator[](int i) const
 void DocLine::set(int i, double val)
 {
     // Make sure there is enough memory
-    if (i+1 > data.size())
-        data.reserve(i+1);
+    if (i + 1 > data.size())
+        data.reserve(i + 1);
 
     // Pad with zeros for the non-existing indexes in between
-    int space_needed = i+1 - data.size();
-    for (int k=0; k<space_needed; k++)
+    int space_needed = i + 1 - data.size();
+    for (int k = 0; k < space_needed; k++)
         data.push_back(0);
 
     // Set required data
@@ -94,7 +94,7 @@ void DocLine::set(const matrix1D< double >& v)
     }
 
     data.reserve(XSIZE(v));
-    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+    for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
         data.push_back(VEC_ELEM(v, i));
 }
 
@@ -120,8 +120,8 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
 
         int imax;
         imax = line.data.size();
-        for (int i=0; i<imax; i++)
-        {
+        for (int i = 0; i < imax; i++)
+{
             sprintf(aux, " % 10.5f", line.data[i]);
             o << aux;
         }
@@ -168,7 +168,7 @@ void DocLine::read(std::istream& in)
         text = "";
         int i = 0;
 
-        key = AtoI(next_token(line, i), 1602,"Error reading key");
+        key = AtoI(next_token(line, i), 1602, "Error reading key");
         param_no = AtoI(next_token(line, i), 1602,
                         "Error reading number parameters");
         std::string auxline = line;
@@ -179,12 +179,12 @@ void DocLine::read(std::istream& in)
             read_float_list(line, i, param_no, data, 1602,
                             "Error reading doc file line");
         }
-        catch(Xmipp_error e)
+        catch (Xmipp_error e)
         {
             // Try fixed mode then
             data.clear();
             data.reserve(param_no);
-            for (int i=0; i<param_no; i++)
+            for (int i = 0; i < param_no; i++)
             {
                 data.push_back(AtoF(line.substr(8 + i*12, 12)));
             }
@@ -235,13 +235,13 @@ DocFile& DocFile::operator=(const matrix2D< double >& A)
     clear();
     DocLine temp;
 
-    for (int i=STARTINGY(A); i<=FINISHINGY(A); i++)
+    for (int i = STARTINGY(A); i <= FINISHINGY(A); i++)
     {
         temp.clear();
         temp.line_type = DocLine::DATALINE;
         temp.data.resize(XSIZE(A));
 
-        for (int j=STARTINGX(A); j<=FINISHINGX(A); j++)
+        for (int j = STARTINGX(A); j <= FINISHINGX(A); j++)
             temp.data[j-STARTINGX(A)] = MAT_ELEM(A, i, j);
 
         m.push_back(temp);
@@ -302,19 +302,19 @@ void DocFile::debug()
     while (current != last)
     {
         if ((*current).line_type == DocLine::DATALINE ||
-                (*current).line_type == DocLine::COMMENT)
+            (*current).line_type == DocLine::COMMENT)
             std::cout << *current;
         else
         {
             char aux[30];
-            std::string str="";
+            std::string str = "";
 
             std::cout << "Special line\n";
             std::cout << "  Type: " << (*current).line_type << std::endl;
             std::cout << "  Key:  " << (*current).key << std::endl;
             std::cout << "  Text: " << (*current).text << std::endl;
             std::cout << "  Data: ";
-            for (int i=0; i<(*current).data.size(); i++)
+            for (int i = 0; i < (*current).data.size(); i++)
             {
                 sprintf(aux, " % 11.5f", (*current).data[i]);
                 str += aux;
@@ -375,7 +375,7 @@ void DocFile::read(FileName name, int overriding)
 {
     DocLine temp;
     std::ifstream in;
-    int line_no=1;
+    int line_no = 1;
 
     // Empties current DocFile
     if (overriding)
@@ -464,7 +464,7 @@ void DocFile::jump(int count)
 {
     adjust_to_data_line();
 
-    for (int i=0; i<count; i++)
+    for (int i = 0; i < count; i++)
         if (current_line != m.end())
         {
             current_line++;
@@ -482,7 +482,7 @@ int DocFile::search_comment(std::string comment)
         if ((*current_line).Is_comment())
         {
             if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
-                    == 0)
+                == 0)
             {
                 adjust_to_data_line();
                 return 1;
@@ -528,7 +528,7 @@ void DocFile::locate(int k)
     while (current_line != last)
     {
         if ((*current_line).line_type == DocLine::DATALINE &&
-                (*current_line).key >= k)
+            (*current_line).key >= k)
             return;
 
         current_line++;
@@ -863,7 +863,7 @@ int DocFile::insert_data_line(int count)
     tmp.line_type = DocLine::DATALINE;
 
     std::vector< DocLine >::iterator it;
-    for (int i=0; i<count; i++)
+    for (int i = 0; i < count; i++)
     {
         current_line = m.insert(current_line, tmp);
 
@@ -924,12 +924,12 @@ int DocFile::insert_line(const DocLine& line)
 int DocFile::append_data_line(int count)
 {
     DocLine tmp;
-    tmp.line_type=DocLine::DATALINE;
+    tmp.line_type = DocLine::DATALINE;
 
     int ret = get_last_key() + 1;
     int act_key = ret;
 
-    for (int i=0; i<count; i++, act_key++)
+    for (int i = 0; i < count; i++, act_key++)
     {
         tmp.key = act_key;
         m.push_back(tmp);
@@ -1101,7 +1101,7 @@ int DocFile::append_angles(double rot, double tilt, double psi,
     else if (ang2[0] == 't')
         VEC_ELEM(aux, 7) = tilt2;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux,7) = psi2;
+        VEC_ELEM(aux, 7) = psi2;
 
     if (ang3[0] == 'r')
         VEC_ELEM(aux, 8) = rot2;
@@ -1155,7 +1155,7 @@ DocFile DocFile::randomize()
 
     aux = *this;
 
-    for (i=no_lines; i>0; i--)
+    for (i = no_lines; i > 0; i--)
     {
         // Jump a random number from the beginning
         rnd_indx = (int) rnd_unif(0, i);
@@ -1183,7 +1183,7 @@ DocFile DocFile::random_discard(int n)
     randomize_random_generator();
     n = min(n, no_lines);
 
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         // Jump a random number from the beginning
         rnd_indx = (int) rnd_unif(0, result.no_lines);
@@ -1202,7 +1202,7 @@ matrix1D< double > DocFile::col(int c)
 
     std::vector< DocLine >::iterator current = m.begin();
     std::vector< DocLine >::iterator last = m.end();
-    int i=0;
+    int i = 0;
 
     while (current != last)
     {
@@ -1225,7 +1225,7 @@ matrix1D< double > DocFile::row(int k)
     result.resize(it->data.size());
     result.setRow();
 
-    for (int i=0; i<result.xdim; i++)
+    for (int i = 0; i < result.xdim; i++)
         VEC_ELEM(result, i) = it->data[i];
 
     return result;
@@ -1235,7 +1235,7 @@ void DocFile::setCol(int c, matrix1D< double >& v)
 {
     go_first_data_line();
 
-    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+    for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
     {
         set(c, VEC_ELEM(v, i));
         next_data_line();
@@ -1246,8 +1246,8 @@ void DocFile::setCol(int c, matrix1D< double >& v)
         REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 
-void DocFile::for_all_lines(void (*f) (const matrix1D< double >&,
-                                       matrix1D< double >&), int key0, int keyF)
+void DocFile::for_all_lines(void(*f)(const matrix1D< double >&,
+                                     matrix1D< double >&), int key0, int keyF)
 {
     int current_key;
 
@@ -1297,7 +1297,7 @@ void DocFile::for_all_lines(void (*f) (const matrix1D< double >&,
     go_beginning();
 }
 
-void DocFile::for_column(double (*f)(double), int c, int key0, int keyF)
+void DocFile::for_column(double(*f)(double), int c, int key0, int keyF)
 {
     current_line = m.begin();
     std::vector< DocLine >::iterator last = m.end();
@@ -1306,7 +1306,7 @@ void DocFile::for_column(double (*f)(double), int c, int key0, int keyF)
     {
         if (current_line->line_type == DocLine::DATALINE)
             if (c == -1)
-                for (int i=0; i<current_line->data.size(); i++)
+                for (int i = 0; i < current_line->data.size(); i++)
                     current_line->data[i] = f(current_line->data[i]);
             else if (c < current_line->data.size() &&
                      (key0 == -1 || current_line->key >= key0) &&
@@ -1332,12 +1332,12 @@ int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
     // Macro to assign the angle from line1 in the correct place of line2
     // The angle order in line2 is (rot, tilt, psi)
 #define assign_in_correct_place_of_line2(angle_descr,angle_index) \
-        switch (angle_descr[0]) \
-        { \
-            case ('r'): line2.set(0, line1[angle_index]); break; \
-            case ('t'): line2.set(1, line1[angle_index]); break; \
-            case ('p'): line2.set(2, line1[angle_index]); break; \
-        }
+    switch (angle_descr[0]) \
+    { \
+    case ('r'): line2.set(0, line1[angle_index]); break; \
+    case ('t'): line2.set(1, line1[angle_index]); break; \
+    case ('p'): line2.set(2, line1[angle_index]); break; \
+    }
 
     // Read the whole file
     while (!aux.eof())

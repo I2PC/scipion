@@ -25,19 +25,22 @@
 
 #include <data/normalize.h>
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Normalize_parameters * eprm=(Normalize_parameters *) prm;
-   if (eprm->apply_geo) eprm->apply_geo_mask(img);
-   eprm->apply(&img);
+void process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Normalize_parameters * eprm = (Normalize_parameters *) prm;
+    if (eprm->apply_geo) eprm->apply_geo_mask(img);
+    eprm->apply(&img);
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   vol().statistics_adjust(0,1);
+void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    vol().statistics_adjust(0, 1);
 }
 
-int main (int argc, char **argv) {
-   Normalize_parameters prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Normalize_parameters prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
 /* Colimate menu =========================================================== */

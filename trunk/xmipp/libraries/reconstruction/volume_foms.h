@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _volume_FOMs_HH
-   #define _volume_FOMs_HH
+#define _volume_FOMs_HH
 
 #include <data/volume.h>
 #include <data/image.h>
@@ -50,7 +50,7 @@
     feat_voxels contains the result with indexes 0 ... FeatNo().
     See also \Ref{Phantom::label}. */
 void compute_voxels_in_feat(Volume *vol_label,
-   matrix1D<double> &feat_voxels);
+                            matrix1D<double> &feat_voxels);
 
 /** Show voxel values in feat.
     This function shows in two columns the values of the voxels corresponding
@@ -58,8 +58,8 @@ void compute_voxels_in_feat(Volume *vol_label,
     feature is negative then the voxels for that feature is presented, and
     if it is 0 then the background voxels are shown */
 void show_voxels_in_feat(const Volume *vol_phantom,
-   const Volume *vol_recons, const Volume *vol_label,
-   int selected_feat, ostream &out);
+                         const Volume *vol_recons, const Volume *vol_label,
+                         int selected_feat, ostream &out);
 
 /** Show voxel values in feat using a phantom.
     This function shows in two columns the values of the voxels corresponding
@@ -67,8 +67,8 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     with respect to the previous function is that now the relative coordinate
     of the point with respecto to the center of the feature is shown */
 void show_voxels_in_feat(const Volume *vol_phantom,
-   const Volume *vol_recons, const Volume *volume_label, const Phantom &P,
-   int selected_feat, ostream &out);
+                         const Volume *vol_recons, const Volume *volume_label, const Phantom &P,
+                         int selected_feat, ostream &out);
 
 /** Compute structural consistency for a single feature.
     Under this function several measures are performed over the volume.
@@ -109,9 +109,9 @@ void show_voxels_in_feat(const Volume *vol_phantom,
 
     The sccorr_FOM is the correlation between the phantom and the reconstruction.
     \begin{verbatim}
-                      1   1   	             	      	          1         1
+                      1   1                                   1         1
     sccorr_FOM(f) = ---- sum (p(i)-p(f).avg())(r(i)-r(f).avg())/(sum (p(i)-p(f).avg())²*sum (r(i)-r(f).avg())²)
-    \end{verbatim}  N(f) N(f)					 N(f)	   N(f)
+    \end{verbatim}  N(f) N(f)      N(f)    N(f)
 
     The mutual information is defined as
     \begin{verbatim}
@@ -130,7 +130,7 @@ void compute_sc_FOMs(
     const Volume *vol_phantom, const Volume *vol_recons,
     const Volume *vol_label, const Volume *vol_mask, int sel_feat,
     double &scL2_FOM, double &scL1_FOM, double &scmu_FOM, double &scdev_FOM,
-    double &scrange_FOM, double &sccorr_FOM, double &scinf_FOM, bool tell=false);
+    double &scrange_FOM, double &sccorr_FOM, double &scinf_FOM, bool tell = false);
 
 /** Compute histogram based FOMs.
     These FOMs try to measure the separability between the histograms
@@ -244,11 +244,11 @@ void compute_sc_FOMs(
     show them in the standard output.
 */
 void compute_hs_FOMs(Volume *vol_phantom,
-   Volume *vol_recons, const Volume *vol_label, const Volume *vol_mask,
-   int sel_feat, const Phantom &P,
-   int background_mode, double back_param,
-   double &hsmu_FOM, double &hsbr_FOM, double &hsdt_FOM, double &hsvr_FOM,
-   int tell, const FileName &fn_histog="stdout");
+                     Volume *vol_recons, const Volume *vol_label, const Volume *vol_mask,
+                     int sel_feat, const Phantom &P,
+                     int background_mode, double back_param,
+                     double &hsmu_FOM, double &hsbr_FOM, double &hsdt_FOM, double &hsvr_FOM,
+                     int tell, const FileName &fn_histog = "stdout");
 
 /** Compute directional FOMs.
     The directional FOMs are defined along the line specified by rot and
@@ -301,10 +301,10 @@ void compute_hs_FOMs(Volume *vol_phantom,
     show them in the standard output.
 */
 void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
-   const Volume *vol_mask,
-   double rot, double tilt,
-   Image *img_histog, int no_steps, double max_background,
-   double &drrt_FOM, int tell, const FileName &fn_radon="stdout");
+                     const Volume *vol_mask,
+                     double rot, double tilt,
+                     Image *img_histog, int no_steps, double max_background,
+                     double &drrt_FOM, int tell, const FileName &fn_radon = "stdout");
 
 /** Distance map for a volume.
     The distance map is another volume which expresses the distance of
@@ -319,7 +319,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     Its distance is -1.
 */
 void compute_distance_map(const Volume *vol_label, const Phantom &label,
-   const Volume *vol_mask, Volume *vol_distance);
+                          const Volume *vol_mask, Volume *vol_distance);
 
 /** Compute distance based FOMs.
     Based on the distance map you can do the following measures:
@@ -357,8 +357,8 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     \end{verbatim}
 */
 void compute_ds_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
-   const Volume *vol_label,
-   const Volume *vol_distance, double &dsbl_FOM, double &dsad_FOM);
+                     const Volume *vol_label,
+                     const Volume *vol_distance, double &dsbl_FOM, double &dsad_FOM);
 
 /** Show shape.
     The shape is defined as the density as a function of the minimum
@@ -371,8 +371,8 @@ void compute_ds_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     These voxels are labelled with a distance -1.
 */
 void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
-   const Volume *vol_label,
-   const Volume *vol_distance, const FileName &fn_shape);
+                const Volume *vol_label,
+                const Volume *vol_distance, const FileName &fn_shape);
 
 
 /* Compute resolution.
@@ -387,7 +387,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
    the program or reading the output file then -1 is returned.
 */
 void compute_resolution(VolumeXmipp &vol_phantom,
-   VolumeXmipp &vol_recons, double &resolution);
+                        VolumeXmipp &vol_recons, double &resolution);
 
 /* Compute Fourier Shell Correlation.
    This function is performed via Bsoft. If there is any problem calling
@@ -396,7 +396,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
    frequency at which the FSC falls below 0.5.
 */
 double compute_FSC(VolumeXmipp &vol_phantom,
-  VolumeXmipp &vol_recons, double sampling_rate,
-  matrix1D<double> &frequency, matrix1D<double> &FSC);
+                   VolumeXmipp &vol_recons, double sampling_rate,
+                   matrix1D<double> &frequency, matrix1D<double> &FSC);
 //@}
 #endif

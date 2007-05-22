@@ -28,27 +28,32 @@
 #include "widget_micrograph.h"
 
 /* Constructor ------------------------------------------------------------- */
-QtFilterMenu::QtFilterMenu( QtWidgetMicrograph* _parent) :
-   QtPopupMenuMark( _parent ) {
-   insertItem( "Adjust contrast", this, SLOT(slotAdjustContrast()) );
-   insertItem( "Crop micrograph", this, SLOT(slotCrop()) );
-   insertItem( "Add filter", this, SLOT(slotAddFilter()) );
-   insertItem( "Clean filters", this, SLOT(slotCleanFilters()) );
+QtFilterMenu::QtFilterMenu(QtWidgetMicrograph* _parent) :
+        QtPopupMenuMark(_parent)
+{
+    insertItem("Adjust contrast", this, SLOT(slotAdjustContrast()));
+    insertItem("Crop micrograph", this, SLOT(slotCrop()));
+    insertItem("Add filter", this, SLOT(slotAddFilter()));
+    insertItem("Clean filters", this, SLOT(slotCleanFilters()));
 }
 
 /* Add Filter -------------------------------------------------------------- */
-void QtFilterMenu::slotAdjustContrast() {
-   emit signalAdjustContrast();
+void QtFilterMenu::slotAdjustContrast()
+{
+    emit signalAdjustContrast();
 }
 
-void QtFilterMenu::slotCrop() {
-   emit signalCrop();
+void QtFilterMenu::slotCrop()
+{
+    emit signalCrop();
 }
 
-void QtFilterMenu::slotAddFilter() {
-   emit signalAddFilter();
+void QtFilterMenu::slotAddFilter()
+{
+    emit signalAddFilter();
 }
 
-void QtFilterMenu::slotCleanFilters() {
-   emit signalCleanFilters();
+void QtFilterMenu::slotCleanFilters()
+{
+    emit signalCleanFilters();
 }

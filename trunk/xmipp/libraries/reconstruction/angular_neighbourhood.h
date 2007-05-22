@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECTION_NEIGHBOURHOOD
-   #define _PROG_PROJECTION_NEIGHBOURHOOD
+#define _PROG_PROJECTION_NEIGHBOURHOOD
 
 #include <data/funcs.h>
 #include <data/docfile.h>
@@ -34,53 +34,54 @@
 /**@name Projection Neighbourhood */
 //@{
 /** Projection Neighbourhood parameters. */
-class Prog_projection_neighbourhood_prm {
+class Prog_projection_neighbourhood_prm
+{
 public:
-   /** Filename reference projection directions document file */
-   FileName fn_ref;
-   /** Filename selection file containing the images */
-   FileName fn_sel;
-   /** Double maximum neighbour distance */
-   double maxdist;
-   /** Filename symmetry file */
-   FileName fn_sym;
-   /** Filename of output file with merging */
-   char* fn_root_out;
+    /** Filename reference projection directions document file */
+    FileName fn_ref;
+    /** Filename selection file containing the images */
+    FileName fn_sel;
+    /** Double maximum neighbour distance */
+    double maxdist;
+    /** Filename symmetry file */
+    FileName fn_sym;
+    /** Filename of output file with merging */
+    char* fn_root_out;
 
 public:
-   // DocFile images
-   DocFile DF1;
-   // DocFile nbhoods
-   DocFile DF2;
-   // SelFile images
-   SelFile SF1;
-   // Symmetry List
-   SymList SL;
+    // DocFile images
+    DocFile DF1;
+    // DocFile nbhoods
+    DocFile DF2;
+    // SelFile images
+    SelFile SF1;
+    // Symmetry List
+    SymList SL;
 public:
-   /// Read argument from command line
-   /// Also read document & selection files and symmetry list if any.
-   void read(int argc, char **argv);
+    /// Read argument from command line
+    /// Also read document & selection files and symmetry list if any.
+    void read(int argc, char **argv);
 
-   /// Show
-   void show();
+    /// Show
+    void show();
 
-   /// Usage
-   void usage();
+    /// Usage
+    void usage();
 
-   /// Extract angles
-   void get_angles(SelFile &SF_in, DocFile &DF_out);
+    /// Extract angles
+    void get_angles(SelFile &SF_in, DocFile &DF_out);
 
-   /** Check symmetries.
-       Given two sets of angles, this function modifies set 2 so that
-       the difference with set 1 are minimized searching in the symmetry
-       list and the second set. Return the angle distance.*/
-   double check_symmetries(
-      double rot1, double tilt1,double &rot2, double &tilt2);
+    /** Check symmetries.
+        Given two sets of angles, this function modifies set 2 so that
+        the difference with set 1 are minimized searching in the symmetry
+        list and the second set. Return the angle distance.*/
+    double check_symmetries(
+        double rot1, double tilt1, double &rot2, double &tilt2);
 
-   /** Compute distance.
-       Compute the distance between the two document files loaded. The
-       average distance is returned.*/
-   void compute_neighbourhood();
+    /** Compute distance.
+        Compute the distance between the two document files loaded. The
+        average distance is returned.*/
+    void compute_neighbourhood();
 };
 //@}
 #endif

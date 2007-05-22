@@ -40,68 +40,70 @@
 for further details
 */
 
-class Prog_create_surface{
+class Prog_create_surface
+{
 
 public:
 
-   /** Struct to keep the data of the plane lattice and the
-   mapped lattice */
-struct surface_coordinates{
-		double cox_ideal;	
-		double coy_ideal;
-		double coz_ideal;
-	
-		double cox_real;
-		double coy_real;
-		double coz_real;
+    /** Struct to keep the data of the plane lattice and the
+    mapped lattice */
+    struct surface_coordinates
+    {
+        double cox_ideal;
+        double coy_ideal;
+        double coz_ideal;
 
-		double Nx;
-		double Ny;
-		double Nz;
-		};
+        double cox_real;
+        double coy_real;
+        double coz_real;
 
-   /** Input file */
-   FileName fn_in;
+        double Nx;
+        double Ny;
+        double Nz;
+    };
 
-   /** Output file */
-   FileName fn_out;
+    /** Input file */
+    FileName fn_in;
 
-   /** Paramter that determines the shape of the surface to
-   be mapped */
-   string option;
+    /** Output file */
+    FileName fn_out;
 
-   /** parameters included in the input file */
-   int hmax,hmin,kmin,kmax;
-   matrix1D<double > a, b;
-   double x_des,y_des,z_des,x_nor_des,y_nor_des,z_nor_des;
+    /** Paramter that determines the shape of the surface to
+    be mapped */
+    string option;
+
+    /** parameters included in the input file */
+    int hmax, hmin, kmin, kmax;
+    matrix1D<double > a, b;
+    double x_des, y_des, z_des, x_nor_des, y_nor_des, z_nor_des;
 
 
 
 public:
-   /** Constructor */
-   Prog_create_surface();
+    /** Constructor */
+    Prog_create_surface();
 
-   /** Read from a command line.  The program is expecting an
-   input file (fn_in), an output file (fn_out) and the type of
-   surface to map (option).  An exception might be thrown by any of the internal conversions,
-       this would mean that there is an error in the command line and you
-       might show a usage message. */
-   void read(int argc, char **argv);
+    /** Read from a command line.  The program is expecting an
+    input file (fn_in), an output file (fn_out) and the type of
+    surface to map (option).  An exception might be thrown by any of the internal conversions,
+        this would mean that there is an error in the command line and you
+        might show a usage message. */
+    void read(int argc, char **argv);
 
-   /** Read lattice parameters from an input file (fn_in) */
-   void read_input_file();
+    /** Read lattice parameters from an input file (fn_in) */
+    void read_input_file();
 
-   /** Usage message.
-       This function shows the way of introducing this parameters. */
-   void usage();
+    /** Usage message.
+        This function shows the way of introducing this parameters. */
+    void usage();
 
-     /** The maping function maps each (h,k) point into a parabole or cosine surface */
-   void maping_function(matrix1D<double > a, matrix1D<double > b, int h, int k,  surface_coordinates &result);
+    /** The maping function maps each (h,k) point into a parabole or cosine surface */
+    void maping_function(matrix1D<double > a, matrix1D<double > b, int h, int k,  surface_coordinates &result);
 
-     /** Run function. This function carries out the maping
-	 of the points of the plane lattice into other shape
-	 lattice   */
-   void run();
+    /** Run function. This function carries out the maping
+    of the points of the plane lattice into other shape
+    lattice   */
+    void run();
 };
 
 

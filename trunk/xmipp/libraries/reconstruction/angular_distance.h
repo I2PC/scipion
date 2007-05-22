@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ANGULAR_DISTANCE
-   #define _PROG_ANGULAR_DISTANCE
+#define _PROG_ANGULAR_DISTANCE
 
 #include <data/funcs.h>
 #include <data/docfile.h>
@@ -33,69 +33,70 @@
 /**@name Angular Distance */
 //@{
 /** Angular Distance parameters. */
-class Prog_angular_distance_prm {
+class Prog_angular_distance_prm
+{
 public:
-   /** Filename angle doc 1 */
-   FileName fn_ang1;
-   /** Filename angle doc 2 */
-   FileName fn_ang2;
-   /** Filename symmetry file */
-   FileName fn_sym;
-   /** Filename of output file with merging */
-   FileName fn_ang_out;
-   /** Check mirrors for Spider APMQ */
-   bool check_mirrors;
+    /** Filename angle doc 1 */
+    FileName fn_ang1;
+    /** Filename angle doc 2 */
+    FileName fn_ang2;
+    /** Filename symmetry file */
+    FileName fn_sym;
+    /** Filename of output file with merging */
+    FileName fn_ang_out;
+    /** Check mirrors for Spider APMQ */
+    bool check_mirrors;
 public:
-   // DocFile 1
-   DocFile DF1;
-   // DocFile 2
-   DocFile DF2;
-   // Symmetry List
-   SymList SL;
+    // DocFile 1
+    DocFile DF1;
+    // DocFile 2
+    DocFile DF2;
+    // Symmetry List
+    SymList SL;
 public:
-   /// Read argument from command line
-   void read(int argc, char **argv);
+    /// Read argument from command line
+    void read(int argc, char **argv);
 
-   /// Show
-   void show();
+    /// Show
+    void show();
 
-   /// Usage
-   void usage();
+    /// Usage
+    void usage();
 
-   /** Produce side info.
-       Read all document files and symmetry list if any.
+    /** Produce side info.
+        Read all document files and symmetry list if any.
 
-       An exception is thrown if both files are not of the same length*/
-   void produce_side_info();
+        An exception is thrown if both files are not of the same length*/
+    void produce_side_info();
 
-   /** Second angle set.
-       Given two sets of angles, this function modifies set 2 so that
-       the difference with set 1 are minimized searching in the second
-       way of expressing the angles.
+    /** Second angle set.
+        Given two sets of angles, this function modifies set 2 so that
+        the difference with set 1 are minimized searching in the second
+        way of expressing the angles.
 
-       The sum of the absolute values of the differences among angles.
-       If the projdir_mode is false then the angular distance is measured
-       among all axes. If it is true, then it is only measured in the
-       projection direction.*/
-   double second_angle_set(
-      double rot1, double tilt1, double psi1,
-      double &rot2, double &tilt2, double &psi2, bool projdir_mode=false);
+        The sum of the absolute values of the differences among angles.
+        If the projdir_mode is false then the angular distance is measured
+        among all axes. If it is true, then it is only measured in the
+        projection direction.*/
+    double second_angle_set(
+        double rot1, double tilt1, double psi1,
+        double &rot2, double &tilt2, double &psi2, bool projdir_mode = false);
 
-   /** Check symmetries.
-       Given two sets of angles, this function modifies set 2 so that
-       the difference with set 1 are minimized searching in the symmetry
-       list and the second set. Return the angle distance.
+    /** Check symmetries.
+        Given two sets of angles, this function modifies set 2 so that
+        the difference with set 1 are minimized searching in the symmetry
+        list and the second set. Return the angle distance.
 
-       See the method second_angle_set of this class to understand
-       projdir_mode*/
-   double check_symmetries(
-      double rot1, double tilt1, double psi1,
-      double &rot2, double &tilt2, double &psi2, bool projdir_mode=false);
+        See the method second_angle_set of this class to understand
+        projdir_mode*/
+    double check_symmetries(
+        double rot1, double tilt1, double psi1,
+        double &rot2, double &tilt2, double &psi2, bool projdir_mode = false);
 
-   /** Compute distance.
-       Compute the distance between the two document files loaded. The
-       average distance is returned.*/
-   double compute_distance();
+    /** Compute distance.
+        Compute the distance between the two document files loaded. The
+        average distance is returned.*/
+    double compute_distance();
 };
 //@}
 #endif

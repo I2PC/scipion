@@ -35,70 +35,71 @@
 //@{
 
 /** Assign CTF parameters. */
-class Prog_assign_CTF_prm {
+class Prog_assign_CTF_prm
+{
 public:
-   typedef enum {ARMA, Periodogram} TPSD_mode;
-
-public:
-   /// Parameters for adjust_CTF program
-   Adjust_CTF_Parameters   adjust_CTF_prm;
-   /// Parameters for ARMA
-   ARMA_parameters         ARMA_prm;
-   /// Reversed endian
-   bool              	   reversed;
-   /// X dimension of micrograph pieces
-   int                     N_horizontal;
-   /// Y dimension of micrograph pieces
-   int                     N_vertical;
-   /// Selfile with all projections
-   FileName                selfile_fn;
-   /// Position file
-   FileName                picked_fn;
-   /// PSD files root
-   FileName                PSDfn_root;
-   /// Micrograph filename
-   FileName                image_fn;
-   /** the center of the windows in which the CTF is computed
-       are the particles (stored at the .pos file) instead of
-       a regular grid. By default this is false.
-   */
-   bool                    compute_at_particle;
-   /** Perform averaging. */
-   bool                    micrograph_averaging;
-   /** Perform averaging. */
-   bool                    piece_averaging;
-   /** Number of pieces (Nside_piece x Nside_piece) for the piece averaging */
-   int                     Nside_piece;
-   /** PSD_mode */
-   TPSD_mode               PSD_mode;
-   /** Don't adjust CTF.
-       That is, only compute the PSD */
-   bool                    dont_adjust_CTF;
-public:
-   /** Selfile mode.
-       If image_fn finishes in .sel, then the selfile_mode is on,
-       otherwise is off */
-   bool                    selfile_mode;
+    typedef enum {ARMA, Periodogram} TPSD_mode;
 
 public:
-   /** Read parameters from file.
-       If do_not_read_files is TRUE then all FileNames parameters
-       are not read */
-   void read(const FileName &fn_prm, bool do_not_read_files=false);
+    /// Parameters for adjust_CTF program
+    Adjust_CTF_Parameters   adjust_CTF_prm;
+    /// Parameters for ARMA
+    ARMA_parameters         ARMA_prm;
+    /// Reversed endian
+    bool                  reversed;
+    /// X dimension of micrograph pieces
+    int                     N_horizontal;
+    /// Y dimension of micrograph pieces
+    int                     N_vertical;
+    /// Selfile with all projections
+    FileName                selfile_fn;
+    /// Position file
+    FileName                picked_fn;
+    /// PSD files root
+    FileName                PSDfn_root;
+    /// Micrograph filename
+    FileName                image_fn;
+    /** the center of the windows in which the CTF is computed
+        are the particles (stored at the .pos file) instead of
+        a regular grid. By default this is false.
+    */
+    bool                    compute_at_particle;
+    /** Perform averaging. */
+    bool                    micrograph_averaging;
+    /** Perform averaging. */
+    bool                    piece_averaging;
+    /** Number of pieces (Nside_piece x Nside_piece) for the piece averaging */
+    int                     Nside_piece;
+    /** PSD_mode */
+    TPSD_mode               PSD_mode;
+    /** Don't adjust CTF.
+        That is, only compute the PSD */
+    bool                    dont_adjust_CTF;
+public:
+    /** Selfile mode.
+        If image_fn finishes in .sel, then the selfile_mode is on,
+        otherwise is off */
+    bool                    selfile_mode;
 
-   /** Write parameters to file.
-       The directory is an option used in the grid. */
-   void write(const FileName &fn_prm, string directory="");
+public:
+    /** Read parameters from file.
+        If do_not_read_files is TRUE then all FileNames parameters
+        are not read */
+    void read(const FileName &fn_prm, bool do_not_read_files = false);
 
-   /** PSD averaging within a piece.
-       Compute the PSD of a piece by subdividing it in smaller pieces and
-       averaging their PSDs. The piece will be cut into 3x3 overlapping
-       pieces of size N/2 x N/2.*/
-   void PSD_piece_by_averaging(matrix2D<double> &piece,
-      matrix2D<double> &psd);
+    /** Write parameters to file.
+        The directory is an option used in the grid. */
+    void write(const FileName &fn_prm, string directory = "");
 
-   /// Process the whole thing
-   void process();
+    /** PSD averaging within a piece.
+        Compute the PSD of a piece by subdividing it in smaller pieces and
+        averaging their PSDs. The piece will be cut into 3x3 overlapping
+        pieces of size N/2 x N/2.*/
+    void PSD_piece_by_averaging(matrix2D<double> &piece,
+                                matrix2D<double> &psd);
+
+    /// Process the whole thing
+    void process();
 };
 //@}
 #endif

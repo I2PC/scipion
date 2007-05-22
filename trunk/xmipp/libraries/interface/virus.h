@@ -27,7 +27,7 @@
 /*****************************************************************************/
 
 #ifndef _XMIPP_VIRUS_HH
-   #define _XMIPP_VIRUS_HH
+#define _XMIPP_VIRUS_HH
 
 #include <data/funcs.h>
 #include <data/matrix2d.h>
@@ -41,14 +41,15 @@
     This is a class to read the Euler matrices used by the icosahedral virus recon programs.
   The input is a stack of 60 3x3 matrices<double> matrices
 */
-class VirusEulerMatrices {
+class VirusEulerMatrices
+{
 public:
-   /** Virus Euler Filename */
-   FileName fh_Euler;
-   /** 60 Matrices with the Euler rotations */
-   matrix2D<double> E_Matrices[Vir_Eq_Views];
-   /** Read an Euler matrix file with the symmetry relationships in a virus */
-   void read(const FileName &fn);
+    /** Virus Euler Filename */
+    FileName fh_Euler;
+    /** 60 Matrices with the Euler rotations */
+    matrix2D<double> E_Matrices[Vir_Eq_Views];
+    /** Read an Euler matrix file with the symmetry relationships in a virus */
+    void read(const FileName &fn);
 };
 //@}
 #endif

@@ -42,47 +42,49 @@
 template<class InClass, class OutClass>
 class xmippCDSet
 {
- public:
-  /// Class of input vectors. Usually a xmippVector (vector of xmippFeature)
-  typedef InClass In;
+public:
+    /// Class of input vectors. Usually a xmippVector (vector of xmippFeature)
+    typedef InClass In;
 
-  /// Class of the target. Can be a double, string, unsigned, even a vector ...
-  typedef OutClass Out;
+    /// Class of the target. Can be a double, string, unsigned, even a vector ...
+    typedef OutClass Out;
 
-  /// Training set. Set of vectors (training vectors), probably classified.
-  typedef xmippCTSet<In, Out> TS;
+    /// Training set. Set of vectors (training vectors), probably classified.
+    typedef xmippCTSet<In, Out> TS;
 
-  /**
-   * Constructor.
-   * This constructor is empty.
-   */
-  xmippCDSet() {};
+    /**
+     * Constructor.
+     * This constructor is empty.
+     */
+    xmippCDSet()
+    {};
 
-  /**
-   * Destructor.
-   * The default destructor
-   */
-  virtual ~xmippCDSet() {};
+    /**
+     * Destructor.
+     * The default destructor
+     */
+    virtual ~xmippCDSet()
+    {};
 
-  /**
-   * Method to classify a feature vector
-   * It returns the 'class' to which the vector belongs
-   * @param _in  vcetor to test.
-   * @return     The result of classification.
-   */
-   virtual Out apply(const In& _in) const = 0;
+    /**
+     * Method to classify a feature vector
+     * It returns the 'class' to which the vector belongs
+     * @param _in  vcetor to test.
+     * @return     The result of classification.
+     */
+    virtual Out apply(const In& _in) const = 0;
 
-   /**
-    * Method to classify an input vector.
-    * This method returns an unsigned integer that would correspond to
-    * the output neuron, the output codevector, or anything similar.
-    * If it makes no sense, it should be declared as private. Although
-    * it means many different things, it´s included here to have an uniform
-    * representation
-    * @param _in  input vector to test.
-    * @return     The result of classification.
-    */
-   virtual unsigned output(const In& _in) const = 0;
+    /**
+     * Method to classify an input vector.
+     * This method returns an unsigned integer that would correspond to
+     * the output neuron, the output codevector, or anything similar.
+     * If it makes no sense, it should be declared as private. Although
+     * it means many different things, it´s included here to have an uniform
+     * representation
+     * @param _in  input vector to test.
+     * @return     The result of classification.
+     */
+    virtual unsigned output(const In& _in) const = 0;
 };
 
 //@}

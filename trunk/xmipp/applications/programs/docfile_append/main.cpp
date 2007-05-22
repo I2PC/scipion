@@ -26,28 +26,35 @@
 #include <data/args.h>
 #include <data/docfile.h>
 
-int main (int argc, char **argv) {
-   FileName fn1, fn2, fn_out;
-   try {
-      fn1    = get_param(argc,argv,"-i1");
-      fn2    = get_param(argc,argv,"-i2");
-      fn_out = get_param(argc,argv,"-o");
-   } catch (Xmipp_error XE) {
-      cerr << XE << endl;
-      cerr << "Usage: appenddocfile\n"
-           << "   -i1 <docfile1>    : Input file 1\n"
-           << "   -i2 <docfile2>    : Input file 2\n"
-           << "   -o  <docfile1>    : Concatenated file: 1+2\n";
-      return 1;
-   }
+int main(int argc, char **argv)
+{
+    FileName fn1, fn2, fn_out;
+    try
+    {
+        fn1    = get_param(argc, argv, "-i1");
+        fn2    = get_param(argc, argv, "-i2");
+        fn_out = get_param(argc, argv, "-o");
+    }
+    catch (Xmipp_error XE)
+    {
+        cerr << XE << endl;
+        cerr << "Usage: appenddocfile\n"
+        << "   -i1 <docfile1>    : Input file 1\n"
+        << "   -i2 <docfile2>    : Input file 2\n"
+        << "   -o  <docfile1>    : Concatenated file: 1+2\n";
+        return 1;
+    }
 
-   try {
-      DocFile DF(fn1);
-      DF.append(fn2);
-      DF.write(fn_out);
-   } catch (Xmipp_error XE) {
-      cerr << XE << endl;
-      return 2;
-   }
-   return 0;
+    try
+    {
+        DocFile DF(fn1);
+        DF.append(fn2);
+        DF.write(fn_out);
+    }
+    catch (Xmipp_error XE)
+    {
+        cerr << XE << endl;
+        return 2;
+    }
+    return 0;
 }

@@ -115,110 +115,110 @@ typedef float          ** float_image;
 extern CABECERO cabecero;
 
 /**
-	Funtions in cabecero.c :
+ Funtions in cabecero.c :
 **/
 
-  int SPIDheader(char *,int *, int *);
-  int BYTEheader(char *,int ,int);
-  int SPIDvolum(char *,int *,int *,int *);
-  int BYTEvolum(char *,int,int ,int);
+int SPIDheader(char *, int *, int *);
+int BYTEheader(char *, int , int);
+int SPIDvolum(char *, int *, int *, int *);
+int BYTEvolum(char *, int, int , int);
 
-  void header_geo(double matriz[3][3],float *,int);
-  int IsInfogeo(double matriz[3][3]);
-  void ceroCabecero(void);
-  void identMatrix( double matrix[3][3]);
-  void defaultHeader(void);
+void header_geo(double matriz[3][3], float *, int);
+int IsInfogeo(double matriz[3][3]);
+void ceroCabecero(void);
+void identMatrix(double matrix[3][3]);
+void defaultHeader(void);
 
-  void normalize_io( float **,int ,char *);
-  void norm_of_volume(float ***,int ,char *);
-  void normImg(float **,int,int,float *,float *);
-  void normVol(float ***,int,int,int,float *, float *);
+void normalize_io(float **, int , char *);
+void norm_of_volume(float ***, int , char *);
+void normImg(float **, int, int, float *, float *);
+void normVol(float ***, int, int, int, float *, float *);
 /**
-	Funtions in varios.c :
+ Funtions in varios.c :
 **/
-  int image_io (char **,char **,int,int,char *,int,int,int);
-  void **imalloc (int, int, int);
-  void imfree (char **, int,int, int);
-  int exists (char *);
-  void asigna_extension (char *, int);
-  void busca_maximos (float **,int,int,float *,int *,int *,int);
-  void Tiempo(void);
-  void Cabecera(void);
-  float ScanfMejorFloat (void);
+int image_io(char **, char **, int, int, char *, int, int, int);
+void **imalloc(int, int, int);
+void imfree(char **, int, int, int);
+int exists(char *);
+void asigna_extension(char *, int);
+void busca_maximos(float **, int, int, float *, int *, int *, int);
+void Tiempo(void);
+void Cabecera(void);
+float ScanfMejorFloat(void);
 /**
-	Funtions en varios2.c :
+ Funtions en varios2.c :
 **/
-  void cornor(float **, int, int, float **, int, int, double);
-  void transforma (float **,float **,int,int,double matriz[3][3]);
-  void compon (double m1[3][3], double m2[3][3], double m3[3][3]);
+void cornor(float **, int, int, float **, int, int, double);
+void transforma(float **, float **, int, int, double matriz[3][3]);
+void compon(double m1[3][3], double m2[3][3], double m3[3][3]);
 /**
-	Funtions en varios3.c :
+ Funtions en varios3.c :
 **/
-  int capa_io (char **,int,int,int,int,int);
-  void ***trialloc (int ,int ,int ,int );
-  void trifree (void ***,int,int,int,int);
-  /*int volume_io (void ***,int,int,int,char *,int,int,int);*/
-  int volume_io (char ***,int,int,int,char *,int,int,int);
-  void vox_4_a_1 (float ***, BYTE ***, int);
-  void vox_1_a_4 (float ***, BYTE ***, int);
+int capa_io(char **, int, int, int, int, int);
+void ***trialloc(int , int , int , int);
+void trifree(void ***, int, int, int, int);
+/*int volume_io (void ***,int,int,int,char *,int,int,int);*/
+int volume_io(char ***, int, int, int, char *, int, int, int);
+void vox_4_a_1(float ***, BYTE ***, int);
+void vox_1_a_4(float ***, BYTE ***, int);
 /**
-	Funtions in dimension.c :
+ Funtions in dimension.c :
 **/
-  int Count_element( FILE *,char *,int,int);
-  int  First_name( FILE *,char *,int,int);
-  int Get_dimension( char *, int *, int *);
-  int Get_Vol_dimension(char *, int *, int *, int *);
+int Count_element(FILE *, char *, int, int);
+int  First_name(FILE *, char *, int, int);
+int Get_dimension(char *, int *, int *);
+int Get_Vol_dimension(char *, int *, int *, int *);
 /**
-	Funtions in floatnat.c :
+ Funtions in floatnat.c :
 **/
-  void oraCharoraFloat(BYTE **,float **,int,int,int);
-  void volCharvolFloat(BYTE ***,float ***,int,int,int,int);
-  void InterpBilinear(BYTE **, BYTE **,int,int,int,int);
-  void matriz_tira(unsigned char **,unsigned char *,int,int,
-                   unsigned long *,unsigned long *,int, int);
-  void mFloat_tira( float **,unsigned char *,int,int,int,
-                   unsigned long *,unsigned long *);
-  void tira_matriz(unsigned char *,unsigned char **,int,int);
+void oraCharoraFloat(BYTE **, float **, int, int, int);
+void volCharvolFloat(BYTE ***, float ***, int, int, int, int);
+void InterpBilinear(BYTE **, BYTE **, int, int, int, int);
+void matriz_tira(unsigned char **, unsigned char *, int, int,
+                 unsigned long *, unsigned long *, int, int);
+void mFloat_tira(float **, unsigned char *, int, int, int,
+                 unsigned long *, unsigned long *);
+void tira_matriz(unsigned char *, unsigned char **, int, int);
 /**
-	Funtions in iocabecero.c :
+ Funtions in iocabecero.c :
 **/
-  void rdwr_geo(double matriz[3][3],float *,GEO_INFO *,int);
-  void infog_cabecero(GEO_INFO *,int);
+void rdwr_geo(double matriz[3][3], float *, GEO_INFO *, int);
+void infog_cabecero(GEO_INFO *, int);
 /**
-	Funtions in usages.c
+ Funtions in usages.c
 **/
-  int check_comm( char **);
-  void getTempoName(char *);
-  void getDate(char *, char *);
-  void getNameAbs(char *, char *);
+int check_comm(char **);
+void getTempoName(char *);
+void getDate(char *, char *);
+void getNameAbs(char *, char *);
 /**
-	Funtion in fft.c
+ Funtion in fft.c
 **/
-  void fftcol (float **,int,float **,int,int,int,int );
-  int image_fft (float **, int , int , int);
-  int no_correct (int , int *);
-  void rfft ( float *,int,int,int);
-  void cfft (float *, float *, int,int,int );
-  int volume_fft (float ***, int , int, int , int);
-  int fft_pow2 (float **x, int row, int col, int kind);
-  int vfft_pow2 (float ***vol, int sli, int row, int col, int kind);
+void fftcol(float **, int, float **, int, int, int, int);
+int image_fft(float **, int , int , int);
+int no_correct(int , int *);
+void rfft(float *, int, int, int);
+void cfft(float *, float *, int, int, int);
+int volume_fft(float ***, int , int, int , int);
+int fft_pow2(float **x, int row, int col, int kind);
+int vfft_pow2(float ***vol, int sli, int row, int col, int kind);
 /**
-	Funtions in fftmod.c
+ Funtions in fftmod.c
 **/
-  float  fmodulo(float,float);
-  int fast_fourier_trans_img(float **,int,int);
+float  fmodulo(float, float);
+int fast_fourier_trans_img(float **, int, int);
 /**
-	Funtions in filtros.c
+ Funtions in filtros.c
 **/
-  void filtra_pb (float **, float **, int, int);
-  void cos_alz (float **, int, int, int, int, int);
+void filtra_pb(float **, float **, int, int);
+void cos_alz(float **, int, int, int, int, int);
 
 /**
-	Funtions in specmod.c
+ Funtions in specmod.c
 **/
-void spectro_m (char *nom, float xr1, float xr2, float xdr, float xr,
-                float *result);
-void leespe (FILE *in,short *ir,short *numin,short *numax,
-         float *x0,float *y0,float *rl,float *rh,float *dr,float *ac,float *as);
+void spectro_m(char *nom, float xr1, float xr2, float xdr, float xr,
+               float *result);
+void leespe(FILE *in, short *ir, short *numin, short *numax,
+            float *x0, float *y0, float *rl, float *rh, float *dr, float *ac, float *as);
 /** End file **/
 #endif

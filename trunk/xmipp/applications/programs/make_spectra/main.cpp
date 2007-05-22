@@ -25,20 +25,23 @@
 
 #include <data/make_spectra.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-   Prog_make_spectra_prm *eprm=
-      (Prog_make_spectra_prm *) prm;
-   eprm->process_img(img);
-   return true;
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    Prog_make_spectra_prm *eprm =
+        (Prog_make_spectra_prm *) prm;
+    eprm->process_img(img);
+    return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-   cout << "This program is not intended for volumes\n";
-   return false;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    cout << "This program is not intended for volumes\n";
+    return false;
 }
 
-int main (int argc, char **argv) {
-   Prog_make_spectra_prm prm;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-   prm.finish_processing();
+int main(int argc, char **argv)
+{
+    Prog_make_spectra_prm prm;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    prm.finish_processing();
 }

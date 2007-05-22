@@ -61,41 +61,44 @@ class ImageViewer : public QWidget
     Q_OBJECT
 public:
     typedef enum {
-       Normal_mode,
-       PSD_mode,
-       CTF_mode
+        Normal_mode,
+        PSD_mode,
+        CTF_mode
     } TLoadMode;
 
     /** Empty constructor. */
-    ImageViewer( const char *name=0, bool _check_file_change=false);
+    ImageViewer(const char *name = 0, bool _check_file_change = false);
 
     /** Constructor with a pointer to an Image */
-    ImageViewer( Image *_image=0, const char *name=0);
+    ImageViewer(Image *_image = 0, const char *name = 0);
 
     /** Constructor with a pointer to a Fourier Xmipp Image */
-    ImageViewer( FourierImageXmipp *_FFTimage=0, const char *name=0);
+    ImageViewer(FourierImageXmipp *_FFTimage = 0, const char *name = 0);
 
     /** Constructor with a pointer to QImage */
-    ImageViewer( QImage *_image=0, const char *name=0);
+    ImageViewer(QImage *_image = 0, const char *name = 0);
 
     ~ImageViewer();
 
     /** Load image from file.
         The image may be in any standard format or Xmipp format.
-	The gray limits are used for common normalization. Set them to 0
-	if you don't want to use this option.*/
-    bool loadImage( const char *fileName,
-       double _minGray=0, double _maxGray=0,
-       TLoadMode load_mode=ImageViewer::Normal_mode );
+    The gray limits are used for common normalization. Set them to 0
+    if you don't want to use this option.*/
+    bool loadImage(const char *fileName,
+                   double _minGray = 0, double _maxGray = 0,
+                   TLoadMode load_mode = ImageViewer::Normal_mode);
 
     /** Load matrix.
         Load the image from a matrix provided */
     bool loadMatrix(matrix2D<double> &_matrix,
-       double _minGray=0, double _maxGray=0,
-       TLoadMode load_mode=ImageViewer::Normal_mode );
+                    double _minGray = 0, double _maxGray = 0,
+                    TLoadMode load_mode = ImageViewer::Normal_mode);
 
     /** Set this image as a Fourier image */
-    void set_Fourier_flag() {isFourierImage=true;}
+    void set_Fourier_flag()
+    {
+        isFourierImage = true;
+    }
 
     /** For CTF mode, set assign CTF file. */
     void setAssignCTFfile(const FileName &_fn_assign);
@@ -112,40 +115,41 @@ public:
     /** Get Pixmap size.
         This is the size of the window being currently represented,
         taking into account the zoom factor. */
-    void getPixmapSize(int &width, int &height) {
-       width=pmScaled.size().width();
-       height=pmScaled.size().height();
+    void getPixmapSize(int &width, int &height)
+    {
+        width = pmScaled.size().width();
+        height = pmScaled.size().height();
     }
 
 protected:
-    virtual void paintEvent( QPaintEvent * );
-    void	resizeEvent( QResizeEvent * );
-    void	mousePressEvent( QMouseEvent * );
-    void	mouseReleaseEvent( QMouseEvent * );
-    void	mouseMoveEvent( QMouseEvent * );
-    void 	keyPressEvent( QKeyEvent* );
+    virtual void paintEvent(QPaintEvent *);
+    void resizeEvent(QResizeEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void  keyPressEvent(QKeyEvent*);
 protected:
-    void	scale();
-    int		alloc_context;
-    bool	convertEvent( QMouseEvent* e, int& x, int& y );
+    void scale();
+    int  alloc_context;
+    bool convertEvent(QMouseEvent* e, int& x, int& y);
     const char* filename;
-    Image	xmippImage;		// Xmipp Image
+    Image xmippImage;  // Xmipp Image
     matrix2D< complex<double> > xmippImageFourier; // Fourier image
     double      minGray;                // Minimum value of the image
     double      maxGray;                // Maximum value of the image
-    QImage	image;			// the loaded image
-    QPixmap	pm;			// the converted pixmap
-    QPixmap	pmScaled;		// the scaled pixmap
-    int 	xmippFlag;		// stands for:
-    					// -1: No Xmipp image
-					//  0: Xmipp image
+    QImage image;   // the loaded image
+    QPixmap pm;   // the converted pixmap
+    QPixmap pmScaled;  // the scaled pixmap
+    int  xmippFlag;  // stands for:
+    // -1: No Xmipp image
+    //  0: Xmipp image
     bool        check_file_change;
     int         fft_show_mode;          // 0 10*log10(abs(z)^2)
-                                        // 1 real(z)
-					// 2 imag(z)
-					// 3 abs(z)
-					// 4 abs(z)^2
-					// 5 phase(z)
+    // 1 real(z)
+    // 2 imag(z)
+    // 3 abs(z)
+    // 4 abs(z)^2
+    // 5 phase(z)
     bool        isFourierImage;         // True if the image is in Fourier
     TLoadMode   load_mode;
     time_t      modification_time;      // of the file
@@ -157,22 +161,22 @@ protected:
     QPrinter   *printer;
     QLabel     *status;
     QTimer     *timer;
-    int 	ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
+    int  ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
     int         recomputectfmodel, enhancePSD;
-    void	Init();
-    bool 	xmipp2Qt(Image& _image);
-    bool 	Qt2xmipp(QImage &_image);
-    bool 	showImage();
-    void 	generateFFTImage(matrix2D<double> &out);
-    void	updateStatus();
-    bool 	reconvertImage();
+    void Init();
+    bool  xmipp2Qt(Image& _image);
+    bool  Qt2xmipp(QImage &_image);
+    bool  showImage();
+    void  generateFFTImage(matrix2D<double> &out);
+    void updateStatus();
+    bool  reconvertImage();
     void        refineProfileLine();
-    int		pickx, picky;
-    bool	may_be_other;
-    static 	ImageViewer* other;
-    bool 	down;
-    int 	xi, yi, xf, yf;
-    int 	xir, yir, xfr, yfr, old_xfr, old_yfr;
+    int  pickx, picky;
+    bool may_be_other;
+    static  ImageViewer* other;
+    bool  down;
+    int  xi, yi, xf, yf;
+    int  xir, yir, xfr, yfr, old_xfr, old_yfr;
     float       spacing;
     QMultiLineEdit *ed1;
 
@@ -184,15 +188,15 @@ public slots:
     void runEnhancePSD(vector<float> enhance_prms);
 
 protected slots:
-    void	newWindow();
-    void	openFile();
-    void	saveImage(int);
-    void	giveHelp();
-    void	doOption(int);
-    void 	printIt();
-    void 	set_spacing(float _spacing);
-    void 	set_profile_line(vector<float> prm);
-    void 	set_fft_show_mode(int _fft_show_mode);
+    void newWindow();
+    void openFile();
+    void saveImage(int);
+    void giveHelp();
+    void doOption(int);
+    void  printIt();
+    void  set_spacing(float _spacing);
+    void  set_profile_line(vector<float> prm);
+    void  set_fft_show_mode(int _fft_show_mode);
     void        about();
     void        aboutXmipp();
     void        check_file();

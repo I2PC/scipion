@@ -43,33 +43,36 @@
  *  an unsupervised clustering algorithm that is a combination of Fuzzy c-means
  *  and Kohonen SOM.
 */
-class xmippFKCN:  public xmippFCMeans {
+class xmippFKCN:  public xmippFCMeans
+{
 
 public:
 
 
-  /**  Big mega ctor. Creates a Fuzzy codebook, and initializes it
-   * @param _m   Fuzzy constant
-   * @param _epsilon  Stopping criterion
-   * @param _epochs Number of epochs or iterations
-  */
-  xmippFKCN( double _m, double _epsilon, unsigned _epochs)
-    :xmippFCMeans(_m, _epsilon, _epochs) {
-       setID() = "Fuzzy Kohonen Clustering Network";
+    /**  Big mega ctor. Creates a Fuzzy codebook, and initializes it
+     * @param _m   Fuzzy constant
+     * @param _epsilon  Stopping criterion
+     * @param _epochs Number of epochs or iterations
+    */
+    xmippFKCN(double _m, double _epsilon, unsigned _epochs)
+            : xmippFCMeans(_m, _epsilon, _epochs)
+    {
+        setID() = "Fuzzy Kohonen Clustering Network";
     };
 
 
-  /// Virtual destructor
-  virtual ~xmippFKCN() {};
+    /// Virtual destructor
+    virtual ~xmippFKCN()
+    {};
 
 
-  /**
-   * Trains the Algorithm
-   * @param _xmippDS Data structure to train, a codeBook in this case
-   * @param _examples  A training set with the training examples
-   */
-  virtual void train(xmippFCB& _xmippDS,
-		     const TS& _examples) const;
+    /**
+     * Trains the Algorithm
+     * @param _xmippDS Data structure to train, a codeBook in this case
+     * @param _examples  A training set with the training examples
+     */
+    virtual void train(xmippFCB& _xmippDS,
+                       const TS& _examples) const;
 
 };
 

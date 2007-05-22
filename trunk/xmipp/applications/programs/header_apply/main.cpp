@@ -27,22 +27,27 @@
 #include <data/args.h>
 #include <data/geometry.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm) {
-     //set shifts to zero
-     img.Xoff()=0.; img.Yoff()=0.;
-     img.psi()=0.; if(img.tilt()==0) img.rot()=0;
-     //set angles to zero
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+{
+    //set shifts to zero
+    img.Xoff() = 0.;
+    img.Yoff() = 0.;
+    img.psi() = 0.;
+    if (img.tilt() == 0) img.rot() = 0;
+    //set angles to zero
 
-     return true;
+    return true;
 }//images end
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm) {
-     cerr << "Applygeo does not work with volumes\n";
-     return true;
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+{
+    cerr << "Applygeo does not work with volumes\n";
+    return true;
 }//volume end
 
-int main (int argc, char **argv) {
-   Prog_parameters prm;
-   prm.apply_geo=true;
-   SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+int main(int argc, char **argv)
+{
+    Prog_parameters prm;
+    prm.apply_geo = true;
+    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }

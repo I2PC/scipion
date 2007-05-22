@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #ifndef _XMIPP_RBF
-   #define _XMIPP_RBF
+#define _XMIPP_RBF
 
 #include "training_vector.h"
 #include <data/matrix2d.h>
@@ -79,9 +79,9 @@ Example:
     Exceptions are thrown if any of the input dimensions do not
     meet what expected.*/
 void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
-   vector<double> &y, double minscale,
-   double maxscale, double scalestep, xmippRBF &RBF,
-   double &error, vector<double> &y_predicted);
+                          vector<double> &y, double minscale,
+                          double maxscale, double scalestep, xmippRBF &RBF,
+                          double &error, vector<double> &y_predicted);
 
 /** Predict the values at given points.
     Given the centers, weight and radii this function returns the predicted
@@ -96,54 +96,67 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted)
 
     Look the Mark Orr's function rbf_dm */
 void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
-   xmippCTVectors &X, matrix2D<double> &H);
+                       xmippCTVectors &X, matrix2D<double> &H);
 
 /** Compute model given a certain scale.
     The selected centers are chosen via the index_out variable.
     */
 void RBF_train(xmippCTVectors &C,  xmippCTVectors &X,
-   vector<double> &y, matrix1D<double> &r, double scale,
-   vector<int> &idx_out, matrix1D<double> &r_out,
-   matrix1D<double> &w_out, double &error);
+               vector<double> &y, matrix1D<double> &r, double scale,
+               vector<int> &idx_out, matrix1D<double> &r_out,
+               matrix1D<double> &w_out, double &error);
 
 /** RBF class.
     This class holds a RBF. */
-class xmippRBF {
+class xmippRBF
+{
 public:
-   /// Radii
-   matrix1D<double> r;
-   /// Vector of weights
-   matrix1D<double> w;
-   /// Vector of Centers
-   xmippCTVectors C;
+    /// Radii
+    matrix1D<double> r;
+    /// Vector of weights
+    matrix1D<double> w;
+    /// Vector of Centers
+    xmippCTVectors C;
 public:
-   /** Clear model. */
-   void clear() {r.clear(); w.clear(); C.clear();}
+    /** Clear model. */
+    void clear()
+    {
+        r.clear();
+        w.clear();
+        C.clear();
+    }
 
-   /** Model size. Number of centers*/
-   int model_size() {return XSIZE(w);}
+    /** Model size. Number of centers*/
+    int model_size()
+    {
+        return XSIZE(w);
+    }
 
-   /** Train model.
-       Given the candidate centers, the set of pairs (X,y) this function
-       returns the error of prediction (defined as the standard deviation
-       of the predicted value with respect to y) and vector of predicted
-       values for the training set. */
-   void train(xmippCTVectors &candidate_C, xmippCTVectors &X, vector<double> &y,
-      double &error, vector<double> &y_predicted, double minscale=0.1,
-      double maxscale=1.0, double scalestep=0.15) {
-      RBF_train_best_scale(candidate_C, X, y, minscale, maxscale, scalestep,
-         *this, error, y_predicted);}
+    /** Train model.
+        Given the candidate centers, the set of pairs (X,y) this function
+        returns the error of prediction (defined as the standard deviation
+        of the predicted value with respect to y) and vector of predicted
+        values for the training set. */
+    void train(xmippCTVectors &candidate_C, xmippCTVectors &X, vector<double> &y,
+               double &error, vector<double> &y_predicted, double minscale = 0.1,
+               double maxscale = 1.0, double scalestep = 0.15)
+    {
+        RBF_train_best_scale(candidate_C, X, y, minscale, maxscale, scalestep,
+                             *this, error, y_predicted);
+    }
 
-   /** Predict the values at given points.
-       Given the points X this function returns the predicted points.*/
-   void predict(xmippCTVectors &X, vector<double> &y_predicted)
-      {RBF_predict(*this,X,y_predicted);}
+    /** Predict the values at given points.
+        Given the points X this function returns the predicted points.*/
+    void predict(xmippCTVectors &X, vector<double> &y_predicted)
+    {
+        RBF_predict(*this, X, y_predicted);
+    }
 
-   /** Show an RBF. */
-   friend ostream & operator << (ostream &out, xmippRBF &rbf);
+    /** Show an RBF. */
+    friend ostream & operator << (ostream &out, xmippRBF &rbf);
 
-   /** Read an RBF. */
-   friend istream & operator >> (istream &in, xmippRBF &rbf);
+    /** Read an RBF. */
+    friend istream & operator >> (istream &in, xmippRBF &rbf);
 };
 
 //@}

@@ -29,27 +29,27 @@
 /* Reset =================================================================== */
 void Projection::reset(int Ydim, int Xdim)
 {
-    img.init_zeros(Ydim,Xdim);
+    img.init_zeros(Ydim, Xdim);
     move_origin_to_center();
 }
 
 /* Set angles ============================================================== */
 void Projection::set_angles(double _rot, double _tilt, double _psi)
 {
-    set_eulerAngles(_rot,_tilt,_psi);
-    Euler_angles2matrix(_rot,_tilt,_psi,euler);
-    eulert=euler.transpose();
-    euler.getRow(2,direction);
+    set_eulerAngles(_rot, _tilt, _psi);
+    Euler_angles2matrix(_rot, _tilt, _psi, euler);
+    eulert = euler.transpose();
+    euler.getRow(2, direction);
     direction.self_transpose();
 }
 
 /* Read ==================================================================== */
 void Projection::read(const FileName &fn, const bool &apply_shifts)
 {
-    ImageXmipp::read(fn,false,false,false,apply_shifts);
-    Euler_angles2matrix(rot(),tilt(),psi(),euler);
-    eulert=euler.transpose();
-    euler.getRow(2,direction);
+    ImageXmipp::read(fn, false, false, false, apply_shifts);
+    Euler_angles2matrix(rot(), tilt(), psi(), euler);
+    eulert = euler.transpose();
+    euler.getRow(2, direction);
     direction.self_transpose();
 }
 
@@ -57,7 +57,7 @@ void Projection::read(const FileName &fn, const bool &apply_shifts)
 Projection & Projection::operator = (const Projection &P)
 {
     // Esto hay que ponerlo m�s elegantemente accediendo al = del padre
-    *(ImageXmipp *)this = * ((ImageXmipp *) &P);
+    *(ImageXmipp *)this = * ((ImageXmipp *) & P);
     direction = P.direction;
     euler     = P.euler;
     eulert    = P.eulert;
@@ -65,8 +65,8 @@ Projection & Projection::operator = (const Projection &P)
 }
 
 /* Another function for assignment ========================================= */
-void Projection::assign (const Projection &P)
+void Projection::assign(const Projection &P)
 {
-    *this=P;
+    *this = P;
 }
 

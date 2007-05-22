@@ -73,7 +73,7 @@ public:
                                     const Cylindrical_Wave_Decomposition& _cwd);
 
     /// Interpolate image value (bilinear)
-    double interpolate(matrix2D< double >& img, double y,double x);
+    double interpolate(matrix2D< double >& img, double y, double x);
 
     /// Compute the Cylindrical Wave decomposition of an image
     void compute_cwd(matrix2D< double >& img);

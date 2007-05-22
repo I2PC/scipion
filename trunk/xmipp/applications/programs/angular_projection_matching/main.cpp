@@ -25,40 +25,55 @@
 
 #include <reconstruction/angular_projection_matching.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-  double                        sumCC;
-  DocFile                       DFlib,DFo;
-  SymList                       SL;
-  Prog_projection_matching_prm  prm;
-  FileName                      fn_tmp;
+    double                        sumCC;
+    DocFile                       DFlib, DFo;
+    SymList                       SL;
+    Prog_projection_matching_prm  prm;
+    FileName                      fn_tmp;
 
-  // Get input parameters
-  try {
-    // Read command line & produce side info
-    prm.read(argc,argv);
-    prm.show();
+    // Get input parameters
+    try
+    {
+        // Read command line & produce side info
+        prm.read(argc, argv);
+        prm.show();
 
-    // Project reference volume etc.
-    prm.produce_Side_info();
+        // Project reference volume etc.
+        prm.produce_Side_info();
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
-  try {
+    try
+    {
 
-    DFo.clear();
-    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), maxCC (7), Z-score (8)");
+        DFo.clear();
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), maxCC (7), Z-score (8)");
 
-    // Process all images
-    prm.PM_loop_over_all_images(prm.SF,DFo,sumCC);
+        // Process all images
+        prm.PM_loop_over_all_images(prm.SF, DFo, sumCC);
 
-    cerr << " Average maxCC = "<<sumCC/prm.SF.ImgNo()<<endl;
-    fn_tmp=prm.fn_root+".doc";
-    DFo.write(fn_tmp);
+        cerr << " Average maxCC = " << sumCC / prm.SF.ImgNo() << endl;
+        fn_tmp = prm.fn_root + ".doc";
+        DFo.write(fn_tmp);
 
-    if (prm.output_classes) prm.write_classes();
+        if (prm.output_classes) prm.write_classes();
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+    }
+    catch (Xmipp_error XE)
+    {
+        cout << XE;
+        prm.usage();
+        exit(0);
+    }
 
 }
 

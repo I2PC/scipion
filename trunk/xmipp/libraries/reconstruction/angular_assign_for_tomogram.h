@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ANGULAR_PREDICT_TOMOGRAPHY
-   #define _PROG_ANGULAR_PREDICT_TOMOGRPAHY
+#define _PROG_ANGULAR_PREDICT_TOMOGRPAHY
 
 #include <data/funcs.h>
 #include <data/progs.h>
@@ -31,81 +31,90 @@
 
 /**@name Angular Predict Tomography*/
 //@{
-class Alignment {
+class Alignment
+{
 public:
-   double rot;
-   double tilt;
-   double psi;
-   double x;
-   double y;
-   double corr;
-   friend ostream & operator << (ostream &out, const Alignment &A) {
-      out << A.rot << "\t" << A.tilt << "\t" << A.psi << "\t" << A.x
-          << "\t" << A.y << "\t" << A.corr << endl;
-      return out;
-   }
-   bool operator < (const Alignment &rhs) const {return corr<rhs.corr;}
-   bool operator > (const Alignment &rhs) const {return corr>rhs.corr;}
+    double rot;
+    double tilt;
+    double psi;
+    double x;
+    double y;
+    double corr;
+    friend ostream & operator << (ostream &out, const Alignment &A)
+    {
+        out << A.rot << "\t" << A.tilt << "\t" << A.psi << "\t" << A.x
+        << "\t" << A.y << "\t" << A.corr << endl;
+        return out;
+    }
+    bool operator < (const Alignment &rhs) const
+    {
+        return corr < rhs.corr;
+    }
+    bool operator > (const Alignment &rhs) const
+    {
+        return corr > rhs.corr;
+    }
 };
 
 /** Angular Predict parameters. */
-class Prog_angular_predict_tomography_prm: public Prog_parameters {
+class Prog_angular_predict_tomography_prm: public Prog_parameters
+{
 public:
-   /** Filename of the reference volume */
-   FileName fn_ref;
-   /** Filename for the output angles.*/
-   FileName fn_out_ang;
-   /** Maximum rotation change. */
-   double max_rot_change;
-   /** Max tilt change */
-   double max_tilt_change;
-   /** Maximum psi change. */
-   double max_psi_change;
-   /** Rot step */
-   double rot_step;
-   /** Tilt step */
-   double tilt_step;
-   /** Psi step */
-   double psi_step;
-   /** Maximum shift change */
-   double max_shift_change;
-   /** Shift step */
-   double shift_step;
-   /** Shifts should be applied only in X */
-   bool onlyX;
-   /** Shifts should be applied only in Y */
-   bool onlyY;
+    /** Filename of the reference volume */
+    FileName fn_ref;
+    /** Filename for the output angles.*/
+    FileName fn_out_ang;
+    /** Maximum rotation change. */
+    double max_rot_change;
+    /** Max tilt change */
+    double max_tilt_change;
+    /** Maximum psi change. */
+    double max_psi_change;
+    /** Rot step */
+    double rot_step;
+    /** Tilt step */
+    double tilt_step;
+    /** Psi step */
+    double psi_step;
+    /** Maximum shift change */
+    double max_shift_change;
+    /** Shift step */
+    double shift_step;
+    /** Shifts should be applied only in X */
+    bool onlyX;
+    /** Shifts should be applied only in Y */
+    bool onlyY;
 public:
-   VolumeXmipp V;
-   vector<Alignment> list_of_assigned;
-   vector<FileName>  image_name;
+    VolumeXmipp V;
+    vector<Alignment> list_of_assigned;
+    vector<FileName>  image_name;
 public:
-   /// Empty constructor
-   Prog_angular_predict_tomography_prm();
+    /// Empty constructor
+    Prog_angular_predict_tomography_prm();
 
-   /// Read argument from command line
-   void read(int argc, char **argv);
+    /// Read argument from command line
+    void read(int argc, char **argv);
 
-   /// Show
-   void show();
+    /// Show
+    void show();
 
-   /// Usage
-   void usage();
+    /// Usage
+    void usage();
 
-   /** Produce side info.
-       An exception is thrown if any of the files is not found*/
-   void produce_side_info();
+    /** Produce side info.
+        An exception is thrown if any of the files is not found*/
+    void produce_side_info();
 
-   /** Predict angles and shift.
-       This function searches in the shift-psi space and for each combination
-       it correlates with the whole reference set. */
-   double predict_angles(ImageXmipp &I,
-      double &assigned_shiftX, double &assigned_shiftY,
-      double &assigned_rot, double &assigned_tilt, double &assigned_psi);
+    /** Predict angles and shift.
+        This function searches in the shift-psi space and for each combination
+        it correlates with the whole reference set. */
+    double predict_angles(ImageXmipp &I,
+                          double &assigned_shiftX, double &assigned_shiftY,
+                          double &assigned_rot, double &assigned_tilt, double &assigned_psi);
 
-   /** Finish processing.
-       Close all output files. */
-   void finish_processing();
+    /** Finish processing.
+        Close all output files. */
+    void finish_processing();
 };
 //@}
 #endif
