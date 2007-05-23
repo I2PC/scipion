@@ -37,7 +37,7 @@ class visualize_particles_class:
                  DoShowZscore,
                  ProtocolName):
 	     
-        import os,sys
+        import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir)
         import visualization

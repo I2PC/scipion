@@ -87,7 +87,7 @@ class visualize_ML3D_class:
                  ProtocolName
                  ):
 	     
-        import os,sys
+        import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import visualization
