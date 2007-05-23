@@ -3,7 +3,7 @@
 # Protocol for visualization of the results of protocol_ML2D.py
 #
 # Example use:
-# python visualize_ml2d.py
+# python visualize_ml2d.py protocol_ml2d.py
 #
 # This script requires that protocol_ml2d.py is in the current directory
 #
@@ -35,19 +35,18 @@ class visualize_ML2D_class:
                  DoShowLastIter,
                  DoShowFractions,
                  DoShowStatsAllIter,
-                 WorkingDir):
+                 ProtocolName):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import log
 
-        
-        self.WorkingDir=WorkingDir
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
-        # Example how to import corresponding protocol
-        #sys.path.append(self.WorkingDir)
-        #import protocol_ml2d_backup
 
         if (DoMatrixAllIter):
             self.show_matrixview_all_iter()
@@ -209,14 +208,14 @@ class visualize_ML2D_class:
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     # create ML2D_class object
     visualize_ML2D=visualize_ML2D_class(DoMatrixAllIter,
                                         DoShowLastIter,
                                         DoShowFractions,
                                         DoShowStatsAllIter,
-                                        WorkingDir)
+                                        ProtocolName)
     # close 
     visualize_ML2D.close()
 

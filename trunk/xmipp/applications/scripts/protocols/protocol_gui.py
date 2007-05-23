@@ -328,7 +328,7 @@ class automated_gui_class:
         self.whichfile=StringVar()
 
         # Script title
-        programname=(os.path.basename(sys.argv[1])).replace('.py','')
+        programname=self.scriptname.replace('.py','')
         self.master.title(programname)
         headertext='GUI for Xmipp '+programname+'\n'
         headertext+="Executed in directory: "+str(os.getcwd())
@@ -638,15 +638,12 @@ class automated_gui_class:
                         columnspan=2,sticky=W+E)
 
     def AnalyseResults(self,event=""):
-        import os
-        import tkFileDialog
-        fname = tkFileDialog.askdirectory()       
-        if (len(fname)>0):
-            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
-                     self.variables["AnalysisScript"][0]+' '+fname+' &'
-            print '*',command
-            os.system(command)
-         
+        self.GuiSave()
+        command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+                 self.variables["AnalysisScript"][0]+' '+self.scriptname+' &'
+        print command
+        os.system(command)
+
     def GuiClose(self,event=""):
         self.master.destroy()
         

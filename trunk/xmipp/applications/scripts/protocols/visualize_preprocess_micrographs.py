@@ -3,7 +3,7 @@
 # Protocol for visualization of the results of protocol_preprocess_micrographs.py
 #
 # Example use:
-# python visualize_preprocess_micrographs.py
+# python visualize_preprocess_micrographs.py protocol_preprocess_micrographs.py
 #
 # This script requires that protocol_preprocess_micrographs.py is in the current directory
 #
@@ -28,18 +28,19 @@ class visualize_micrographs_class:
     def __init__(self,
                  DoShowCTFs,
                  DoShowPSDs,
-                 WorkingDir):
+                 ProtocolName):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
 
-        self.WorkingDir=WorkingDir
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
-        # import corresponding protocol
-        sys.path.append(self.WorkingDir)
-        import protocol_preprocess_micrographs_backup
-        self.MicrographSelfile=protocol_preprocess_micrographs_backup.MicrographSelfile
+        
+        self.MicrographSelfile=protocol.MicrographSelfile
 
         if (DoShowPSDs):
             self.visualize_psds()
@@ -110,11 +111,11 @@ class visualize_micrographs_class:
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     # create preprocess_micrographs_class object
     visualize=visualize_micrographs_class(DoShowCTFs,
                                           DoShowPSDs,
-                                          WorkingDir)
+                                          ProtocolName)
     visualize.close()
 

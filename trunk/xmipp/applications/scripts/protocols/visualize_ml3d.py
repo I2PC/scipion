@@ -3,7 +3,7 @@
 # Protocol for visualization of the results of protocol_ML3D.py
 #
 # Example use:
-# python visualize_ml3d.py
+# python visualize_ml3d.py protocol_ml3d.py
 #
 # This script requires that protocol_ml3d.py is in the current directory
 #
@@ -84,7 +84,7 @@ class visualize_ML3D_class:
                  VisualizeClassDistribution,
                  DoShowStatsAllIter,
                  VisualizeMatrixLastIter,
-                 WorkingDir
+                 ProtocolName
                  ):
 	     
         import os,sys
@@ -108,8 +108,11 @@ class visualize_ML3D_class:
         self.DoShowStatsAllIter=DoShowStatsAllIter
         self.ShowVolumes=[]
         self.ShowSelfiles=[]
-        self.WorkingDir=WorkingDir
 
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
 
         self.visualize_preparation()
@@ -358,7 +361,7 @@ class visualize_ML3D_class:
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     # create ML3D_class object
     visualize_ML3D=visualize_ML3D_class(VisualizeVolZ,
@@ -376,7 +379,7 @@ if __name__ == '__main__':
                                         VisualizeClassDistribution,
                                         DoShowStatsAllIter,
                                         VisualizeMatrixLastIter,
-                                        WorkingDir
+                                        ProtocolName
                                         )
     # close 
     visualize_ML3D.close()

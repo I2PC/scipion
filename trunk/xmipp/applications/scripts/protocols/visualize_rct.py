@@ -3,7 +3,7 @@
 # Protocol for visualization of the results of protocol_rct.py
 #
 # Example use:
-# ./visualize_rct.py
+# ./visualize_rct.py protocol_rct.py
 #
 # This script requires that protocol_rct.py is in the current directory
 #
@@ -61,14 +61,17 @@ class visualize_RCT_class:
                  VisualizeTiltedImages,
                  VisualizeArtVols,
                  VisualizeWbpVols,
-                 WorkingDir):
+                 ProtocolName):
 	     
         import os,sys
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
         import visualization
      
-        self.WorkingDir=WorkingDir
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
         
         ShowVolumes=[]
@@ -128,7 +131,7 @@ class visualize_RCT_class:
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     visualize_RCT=visualize_RCT_class(SelectClasses,
                                       VisualizeVolZ,
@@ -141,5 +144,5 @@ if __name__ == '__main__':
                                       VisualizeTiltedImages,
                                       VisualizeArtVols,
                                       VisualizeWbpVols,
-                                      WorkingDir)
+                                      ProtocolName)
     visualize_RCT.close()

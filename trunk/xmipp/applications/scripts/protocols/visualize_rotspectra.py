@@ -3,7 +3,7 @@
 # Protocol for visualization of the results of protocol_rotspectra.py
 #
 # Example use:
-# python visualize_rotspectra.py
+# python visualize_rotspectra.py protocol_rotspectra.py
 #
 # This script requires that protocol_rotspectra.py is in the current directory
 #
@@ -33,7 +33,7 @@ class visualize_rotspectra_class:
                       _DoShowAverage,
                       _DoShowSpectra,
                       _DoShowSOMSpectra,
-                      _WorkingDir,
+                      _ProtocolName,
                       ):
 	     
         import os,sys,shutil
@@ -41,17 +41,17 @@ class visualize_rotspectra_class:
         sys.path.append(scriptdir) # add default search path
         import log
 
-        self._WorkDirectory=_WorkingDir
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self._WorkDirectory=protocol.WorkDirectory
         os.chdir(self._WorkDirectory)
-        # import corresponding protocol
-        sys.path.append(self._WorkDirectory)
-        import protocol_rotspectra_backup
 
-        _LogDir=protocol_rotspectra_backup.LogDir
-        _ProjectDir=protocol_rotspectra_backup.ProjectDir
-        self._SelFileName=_ProjectDir+'/'+str(protocol_rotspectra_backup.SelFileName)
-        self._SomName=protocol_rotspectra_backup.SomName
-        self._SpectraName=protocol_rotspectra_backup.SpectraName
+        _LogDir=protocol.LogDir
+        _ProjectDir=protocol.ProjectDir
+        self._SelFileName=_ProjectDir+'/'+str(protocol.SelFileName)
+        self._SomName=protocol.SomName
+        self._SpectraName=protocol.SpectraName
         self.mylog=log.init_log_system(_ProjectDir,
                                        _LogDir,
                                        sys.argv[0],
@@ -119,14 +119,14 @@ class visualize_rotspectra_class:
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     # create rotspectra_class object
     visualize_rotspectra=visualize_rotspectra_class(DoShowAlignedImages,
                                                     DoShowAverage,
                                                     DoShowSpectra,
                                                     DoShowSOMSpectra,
-                                                    WorkingDir)
+                                                    ProtocolName)
     # close 
     visualize_rotspectra.close()
 

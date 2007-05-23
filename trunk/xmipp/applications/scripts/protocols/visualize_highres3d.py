@@ -33,10 +33,6 @@ import shutil
 import string
 import sys
 
-scriptdir=os.path.expanduser('~')+'/scripts'
-sys.path.append(scriptdir) # add default search path
-import protocol_highres3d
-
 #===========================================================================
 # Beginning of the protocol
 #===========================================================================
@@ -45,12 +41,14 @@ class VisualizeHighres3DClass:
    # Class constructor
    #------------------------------------------------------------------------
    def __init__(self,
-       _Iterations,
-       _DoShowVolume,
-       _DoShowModel,
-       _DoShowAngleConvergence,
-       _DoShowVectorDifferences,
-       _DoShowDiscreteSummary):
+                _Iterations,
+                _DoShowVolume,
+                _DoShowModel,
+                _DoShowAngleConvergence,
+                _DoShowVectorDifferences,
+                _DoShowDiscreteSummary,
+                _ProtocolName):
+
        self.iterations=_Iterations
        self.doShowVolume=_DoShowVolume
        self.doShowModel=_DoShowModel
@@ -58,42 +56,41 @@ class VisualizeHighres3DClass:
        self.doShowVectorDifferences=_DoShowVectorDifferences
        self.doShowDiscreteSummary=DoShowDiscreteSummary
 
-       # Produce side info
-       self.myHighRes3D=protocol_highres3d.HighRes3DClass(
-      	        protocol_highres3d.SelFileName,
-		protocol_highres3d.ReferenceFileName,
-		protocol_highres3d.WorkDirectory,
-		protocol_highres3d.DoDeleteWorkingDir,
-		protocol_highres3d.NumberofIterations,
-		protocol_highres3d.ProjectDir,
-		protocol_highres3d.LogDir,
-		
-		protocol_highres3d.ParticleRadius,
-		protocol_highres3d.ParticleMass,
-		protocol_highres3d.SymmetryFile,
-		protocol_highres3d.SamplingRate,
-		
-		protocol_highres3d.PyramidLevels,
-		protocol_highres3d.AngularSteps,
-		protocol_highres3d.UseART,
-		protocol_highres3d.SerialART,
-		protocol_highres3d.ARTLambda,
-		protocol_highres3d.DiscreteAssignment,
-		protocol_highres3d.ContinuousAssignment,
-		protocol_highres3d.ComputeResolution,
-		protocol_highres3d.ResumeIteration,
-		
-		protocol_highres3d.CTFDat,
-		protocol_highres3d.AmplitudeCorrection,
-		
-		protocol_highres3d.DoReferenceMask,
-		protocol_highres3d.InitialReferenceMask,
-		protocol_highres3d.FilterReference,
-		protocol_highres3d.SegmentUsingMass,
+        # Import the corresponding protocol
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
 
-		protocol_highres3d.DoParallel,
-		protocol_highres3d.MyNumberOfCPUs,
-		protocol_highres3d.MyMachineFile,
+       # Produce side info
+       self.myHighRes3D=protocol.HighRes3DClass(
+      	        protocol.SelFileName,
+		protocol.ReferenceFileName,
+		protocol.WorkDirectory,
+		protocol.DoDeleteWorkingDir,
+		protocol.NumberofIterations,
+		protocol.ProjectDir,
+		protocol.LogDir,
+		protocol.ParticleRadius,
+		protocol.ParticleMass,
+		protocol.SymmetryFile,
+		protocol.SamplingRate,
+		protocol.PyramidLevels,
+		protocol.AngularSteps,
+		protocol.UseART,
+		protocol.SerialART,
+		protocol.ARTLambda,
+		protocol.DiscreteAssignment,
+		protocol.ContinuousAssignment,
+		protocol.ComputeResolution,
+		protocol.ResumeIteration,
+		protocol.CTFDat,
+		protocol.AmplitudeCorrection,
+		protocol.DoReferenceMask,
+		protocol.InitialReferenceMask,
+		protocol.FilterReference,
+		protocol.SegmentUsingMass,
+		protocol.DoParallel,
+		protocol.MyNumberOfCPUs,
+		protocol.MyMachineFile,
 		
 		False
               )
@@ -231,12 +228,17 @@ def itoa(_number,_length):
 # Main
 #===========================================================================
 if __name__ == '__main__':
-    visualizeHighres3D=VisualizeHighres3DClass(
-       Iterations,
-       DoShowVolume,
-       DoShowModel,
-       DoShowAngleConvergence,
-       DoShowVectorDifferences,
-       DoShowDiscreteSummary)
+
+    import sys
+    ProtocolName=sys.argv[1]
+
+    visualizeHighres3D=VisualizeHighres3DClass(Iterations,
+                                               DoShowVolume,
+                                               DoShowModel,
+                                               DoShowAngleConvergence,
+                                               DoShowVectorDifferences,
+                                               DoShowDiscreteSummary,
+                                               ProtocolName)
+
     visualizeHighres3D.run()
 

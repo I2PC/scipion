@@ -22,7 +22,7 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home2/bioinfo/scheres/work/protocols"
+ProjectDir="/home/scheres/xmipp/applications/scripts/protocols"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
