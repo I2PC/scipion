@@ -578,6 +578,9 @@ class automated_gui_class:
         self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         self.master.bind('<Alt_L><c>', self.GuiClose)
+        self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
+        self.bGet.grid(row=self.buttonrow,column=2)
+        self.master.bind('<Alt_L><a>', self.AnalyseResults)
 
     def GuiTockleExpertMode(self,event=""):
         if (self.expert_mode==True):
@@ -638,11 +641,25 @@ class automated_gui_class:
                         columnspan=2,sticky=W+E)
 
     def AnalyseResults(self,event=""):
-        self.GuiSave()
-        command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
-                 self.variables["AnalysisScript"][0]+' '+self.scriptname+' &'
-        print command
-        os.system(command)
+        if not self.is_setupgui:
+            self.GuiSave()
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+                     self.variables["AnalysisScript"][0]+' '+self.scriptname+' &'
+            print command
+            os.system(command)
+        else:
+            import os,tkFileDialog,shutil
+            fileformats = [('Protocol Scripts ','protocol_*_backup.py')]
+            protname = tkFileDialog.askopenfilename(title='Choose a Protocol',
+                                                    filetypes=fileformats)
+            visname=(os.path.basename(protname)).replace('protocol_','visualize_')
+            visname=visname.replace('_backup.py','.py')
+            src=str(self.SYSTEMSCRIPTDIR)+'/'+visname
+            shutil.copy(src,visname)
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+                     visname+' '+protname+' &'
+            print command
+            os.system(command)
 
     def GuiClose(self,event=""):
         self.master.destroy()
