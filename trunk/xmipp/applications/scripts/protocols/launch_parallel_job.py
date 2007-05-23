@@ -48,18 +48,20 @@ def launch_parallel_job(mpiprogramname,
     if (len(MyMachineFile)==0):
         machineParam=""
 	nr_cpus=MyNumberOfCPUs
-    elif (MyMachineFile[0]=="$"):
-        machinefile=os.environ.get(MyMachineFile[1:])
-        # Get the real number of CPUs from the number of entries in the machinefile
-        fh = open(machinefile)
-        lines = fh.readlines()
-        fh.close()
-        nr_cpus=len(lines)
-	machineParam=' -machinefile ' + machinefile
     else:
-        machinefile=MyMachineFile
-        nr_cpus=MyNumberOfCPUs
-	machineParam=' -machinefile ' + machinefile
+        if (MyMachineFile[0]=="$"):
+            machinefile= os.environ.get(MyMachineFile[1:])
+        else:
+            machinefile= MyMachineFile
+        machineParam=' -machinefile ' +  machinefile
+        if (MyNumberOfCPUs<0):
+            # use the number of entries in the machinefile
+            fh = open(machinefile)
+            lines = fh.readlines()
+            fh.close()
+            nr_cpus=len(lines)
+        else:
+            nr_cpus=MyNumberOfCPUs
 
     command='mpirun -np ' + str(nr_cpus)+machineParam
     command+=' `which '+ str(mpiprogramname) +'` ' + params
