@@ -79,6 +79,17 @@ class selfile:
                return name,state
        return dname,dstate
 
+   # Makes filenames with absolute paths
+   def make_abspath(self):
+       import os
+       newlines=[]
+       for name,state in self.sellines:
+           name=os.path.abspath(name)
+           newlines.append([name,state])
+       newsel=selfile()
+       newsel.set(newlines)
+       return newsel
+
    # Adds 1 directory at the beginning of the path
    def add_1directory_begin(self,directory):
        newlines=[]

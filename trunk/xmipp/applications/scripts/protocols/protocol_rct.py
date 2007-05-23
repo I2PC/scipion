@@ -113,12 +113,10 @@ class RCT_class:
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
+        import log,selfile
         
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.UntiltedSelFile=os.path.abspath(UntiltedSelFile)
-        self.TiltedSelFile=os.path.abspath(TiltedSelFile)
         self.PreviousDirML2D=os.path.abspath(PreviousDirML2D)
         self.PreviousML2DRoot=PreviousML2DRoot
         self.SelectClasses=SelectClasses
@@ -152,6 +150,17 @@ class RCT_class:
             
         if (DoSetHeadersUntilted):
             self.set_headers_untilted()
+
+        # Create selfiles with absolute pathnames in the WorkingDir
+        mysel=selfile.selfile()
+        self.UntiltedSelFile=os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
+        mysel.read(UntiltedSelFile)
+        newsel=mysel.make_abspath()
+        newsel.write(self.UntiltedSelFil)
+        self.TiltedSelFile=os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
+        mysel.read(TiltedSelFile)
+        newsel=mysel.make_abspath()
+        newsel.write(self.TiltedSelFil)
 
         if (DoSetHeadersTilted):
             self.set_headers_tilted()

@@ -1,9 +1,11 @@
 #!/bin/csh
-echo " *** Launching GUI for Xmipp protocols_setup ***" 
-echo " "
-echo " Always execute this command in your ProjectDir! "
 if (!(-e protocol_setup.py)) then
-  cp ~/scripts/protocol_setup.py ./. 
+  echo " *** Xmipp_protocols was never executed before in this directory"
+  echo " *** Making a local copy of protocol_setup.py ... "  
+  cp ~/scripts/protocol_setup.py ./.
+else
+  echo " *** Reading local copy of protocol_setup.py ... "
 endif
+echo " *** Launching GUI for Xmipp protocols_setup ... " 
 python ~/scripts/protocol_gui.py protocol_setup.py &
 

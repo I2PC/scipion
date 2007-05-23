@@ -25,7 +25,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='100.sel'
+SelFileName='all_images.sel'
 # Working subdirectory: 
 WorkDirectory='RotSpectra/test1'
 # Delete working subdirectory if it already exists?
@@ -39,11 +39,11 @@ DisplayResults=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/roberto2/Test/Para_Roberto'
+ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #-----------------------------------------------------------------------------
-# {section} Data Alignment: align2d
+# {section} 2D Pre-alignment
 #-----------------------------------------------------------------------------
 # Perform 2D pre-alignment?
 DoAlign2D=True
@@ -74,14 +74,16 @@ Align2DIterNr=4
 """
 Align2DExtraCommand=''
 #-----------------------------------------------------------------------------
-# {section} Minimize first rotational harmonic: Find_center
+# {section} Find the optimal center of symmetry
 #-----------------------------------------------------------------------------
 # Perform search for symmetry center?
+""" A search will be performed for the center of symmetry by minimizing the first harmonic
+"""
 DoFindCenter=True
 #-----------------------------------------------------------------------------
-# {section} Compute roational harmonics Make_spectra
+# {section} Rotational spectra calculation
 #-----------------------------------------------------------------------------
-# Perform Rotational Spectra calculation?
+# Calculate the rotational spectra?
 DoMakeSpectra=True
 # Inner radius for rotational harmonics calculation:
 """ These values are in pixels from the image center
@@ -94,12 +96,14 @@ SpectraOuterRadius=10
 """ Existing files with this name will be deleted!
 """
 SpectraName='spectra.sim'
+# {expert} Lowest harmonic to calculate
+SpectraLowHarmonic=1
+# {expert} Highest harmonic to calculate
+SpectraHighHarmonic=15
 #-----------------------------------------------------------------------------
 # {section} Classification: classify_kerdensom 
 #-----------------------------------------------------------------------------
 # Perform self-organizing map calculation?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
-"""
 DoKerdensom=True
 # Name of Output SOM:
 """ Existing files with this name will be deleted!
@@ -152,6 +156,8 @@ class rotational_spectra_class:
                 _OuterRadius,
                 _SpectraInnerRadius,
                 _SpectraOuterRadius,
+                _SpectraLowHarmonic,
+                _SpectraHighHarmonic,
                 _Align2DIterNr,
                 _Align2DExtraCommand,
                 _DoFindCenter,
@@ -180,6 +186,8 @@ class rotational_spectra_class:
        self._OuterRadius=_OuterRadius
        self._SpectraInnerRadius=_SpectraInnerRadius
        self._SpectraOuterRadius=_SpectraOuterRadius
+       self._SpectraLowHarmonic=_SpectraLowHarmonic
+       self._SpectraHighHarmonic=_SpectraHighHarmonic
        self._Align2DIterNr=_Align2DIterNr
        self._Align2DExtraCommand=_Align2DExtraCommand
        self._Reverseendian=1
@@ -394,7 +402,10 @@ class rotational_spectra_class:
               ' -o ' + str(self._SpectraName) + \
               ' -x0 '  + str(self.xOffset) + \
               ' -y0 '  + str(self.yOffset) + \
-              ' -r1 '  + str(self._SpectraInnerRadius) +   ' -r2 '   + str(self._SpectraOuterRadius) 
+              ' -r1 '  + str(self._SpectraInnerRadius) + \
+              ' -r2 '   + str(self._SpectraOuterRadius) + \
+              ' -low ' + str(self._SpectraLowHarmonic) + \
+              ' -high ' + str(self._SpectraHighHarmonic)
               
       print '* ',command
       self.mylog.info(command)
@@ -489,6 +500,8 @@ if __name__ == '__main__':
                                       OuterRadius,
                                       SpectraInnerRadius,
                                       SpectraOuterRadius,
+                                      SpectraLowHarmonic,
+                                      SpectraHighHarmonic,
                                       Align2DIterNr,
                                       Align2DExtraCommand,
                                       DoFindCenter,

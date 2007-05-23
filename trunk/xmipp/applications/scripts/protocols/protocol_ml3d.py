@@ -81,7 +81,6 @@ NumberOfIterations=25
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-
 SymmetryFile="/home2/bioinfo/scheres/work/protocols/G40P/6fold.sym"
 # {expert} Additional xmipp_ml_refine3d parameters:
 """ For a complete description see the manual pages:
@@ -142,9 +141,8 @@ class ML3D_class:
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
+        import log,selfile
 
-        self.InSelFile=os.path.abspath(InSelFile)
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
@@ -175,6 +173,13 @@ class ML3D_class:
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+
+        # Create a selfile with absolute pathname in the WorkingDir
+        mysel=selfile.selfile()
+        mysel.read(InSelFile)
+        newsel=mysel.make_abspath()
+        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
+        newsel.write(self.InSelFile)
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],

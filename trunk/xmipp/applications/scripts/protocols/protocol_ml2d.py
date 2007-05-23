@@ -31,7 +31,7 @@ LogDir="Logs"
 # {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
 # Perform 2D maximum-likelihood refinement?
-DoML2D=False
+DoML2D=True
 # Number of references (or classes) to be used:
 NumberOfReferences=3
 # Also include mirror transformation in the alignment?
@@ -91,11 +91,10 @@ class ML2D_class:
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
+        import log,selfile
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.InSelFile=os.path.abspath(InSelFile)
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
@@ -116,6 +115,13 @@ class ML2D_class:
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+
+        # Create a selfile with absolute pathname in the WorkingDir
+        mysel=selfile.selfile()
+        mysel.read(InSelFile)
+        newsel=mysel.make_abspath()
+        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
+        newsel.write(self.InSelFile)
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],

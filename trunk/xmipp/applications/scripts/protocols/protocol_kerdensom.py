@@ -180,6 +180,9 @@ class kerdensom_class:
             self.log.info(message)
             mysel=selfile.selfile()
             mysel.read(self.classselfile)
+            # Get X and Y dimensions of the images
+            # for convert_data2imga in case no mask is used
+            self.xsize,self.ysize=mysel.imgSize()
             newsel=mysel.copy_sel('local_images')
             self.classselfile=os.path.basename(self.classselfile)
             newsel.write(self.classselfile)
@@ -248,6 +251,8 @@ class kerdensom_class:
         import os
         if (maskname==''):
             command='xmipp_convert_data2img -i '+ str(iname) + \
+                     ' -rows ' + str(self.xsize) + \
+                     ' -cols ' + str(self.ysize) + \
                      ' -nomask \n'
         else:
             command='xmipp_convert_data2img -i '+ str(iname) + \

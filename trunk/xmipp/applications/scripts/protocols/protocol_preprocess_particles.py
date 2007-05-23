@@ -42,7 +42,7 @@ OutSelFile='all_images.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
+ProjectDir="/home2/bioinfo/scheres/work/protocols/"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
@@ -350,8 +350,8 @@ class preprocess_particles_class:
         newpos.append(pos[0]) # append header line
         newpos2.append(pos2[0]) # append header line
         for i in range(len(sel)):
-            args=sel[i].split(' ')
-            args2=sel2[i].split(' ')
+            args=sel[i].split()
+            args2=sel2[i].split()
             if ((args[1].find('-1') > -1) or (args2[1].find('-1') > -1)):
                 # remove empty images
                 if (os.path.exists(args[0])):
@@ -365,8 +365,12 @@ class preprocess_particles_class:
                 newsel2.append(sel2[i])
                 newpos.append(pos[i+1])
                 newpos2.append(pos2[i+1])
-                self.allselfile.append(sel[i])
-                self.allselfile2.append(sel2[i])
+                # For allselfiles, use relative paths wrt ProjectDir
+                name= self.ImagesDir+'/'+self.shortname +'/'+os.path.basename(args[0]) +" 1\n"
+                name2=self.ImagesDir+'/'+self.shortname2+'/'+os.path.basename(args2[0])+" 1\n"
+                self.allselfile.append(name)
+                self.allselfile2.append(name2)
+
         # write new selfiles and posfiles
         fh=open(selname, 'w')
         fh.writelines(newsel)
@@ -421,6 +425,8 @@ class preprocess_particles_class:
         print '* ',command
         self.log.info(command)
         os.system(command)
+        
+        # Move selfile inside the subdirectory
         os.rename(selname,selnameb)
 
         # Remove particles near the border:
@@ -441,7 +447,7 @@ class preprocess_particles_class:
         fh.close()
         newpos.append(pos[0])
         for i in range(len(sel)):
-            args=sel[i].split(' ')
+            args=sel[i].split()
             if (args[1].find('-1') > -1):
                 # remove empty image
                 os.remove(args[0])
@@ -450,7 +456,15 @@ class preprocess_particles_class:
                 # or append to new selfile and posfile
                 newsel.append(sel[i])
                 newpos.append(pos[i+1])
-                self.allselfile.append(sel[i])
+                # Update all_images.sel     (relative paths wrt ProjectDir)
+                name=self.ImagesDir+'/'+self.shortname+'/'+os.path.basename(args[0])
+                self.allselfile.append(name+" 1\n")
+                # Update all_images_ctf.dat (relative paths from ProjectDir)
+                self.allctfselfile.append(name + ' ' + \
+                                          self.WorkingDir + '/' + \
+                                          self.shortname + '/' + \
+                                          self.downname + '_Periodogramavg.ctfparam\n')
+
         # write new selfile and posfile
         fh=open(selname, 'w')
         fh.writelines(newsel)
@@ -458,19 +472,16 @@ class preprocess_particles_class:
         fh=open(posname, 'w')
         fh.writelines(newpos)
         fh.close()
-        # Write updated allselfile
+        
+        # Write updated all_images selfile
         outselfname=self.ProjectDir+'/'+self.OutSelFile
         fh=open(outselfname, 'w')
         fh.writelines(self.allselfile)
         fh.close()
 
-        # Update all_images_ctf.sel
-        for i in range(len(newsel)):
-            self.allctfselfile.append(os.getcwd() + '/' + \
-                                       self.shortname + '/' + \
-                                       self.downname + \
-                                       '_Periodogramavg.ctfmodel_halfplane 1\n')
-        ctfselname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_ctf.sel')
+        # Write updated all_images_ctf.dat
+        ctfselname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','')
+        ctfselname+='_ctf.dat'
         fh=open(ctfselname,'w')
         fh.writelines(self.allctfselfile)
         fh.close()
