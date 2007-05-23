@@ -50,7 +50,7 @@ def launch_parallel_job(mpiprogramname,
 	nr_cpus=MyNumberOfCPUs
     elif (MyMachineFile[0]=="$"):
         machinefile=os.environ.get(MyMachineFile[1:])
-        # Get the real number of CPUs available
+        # Get the real number of CPUs from the number of entries in the machinefile
         fh = open(machinefile)
         lines = fh.readlines()
         fh.close()
