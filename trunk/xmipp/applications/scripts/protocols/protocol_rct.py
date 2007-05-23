@@ -141,6 +141,17 @@ class RCT_class:
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
+        # Create selfiles with absolute pathnames in the WorkingDir
+        mysel=selfile.selfile()
+        self.UntiltedSelFile=os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
+        self.TiltedSelFile=os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
+        mysel.read(UntiltedSelFile)
+        mysel2.read(TiltedSelFile)
+        newsel=mysel.make_abspath()
+        newsel2=mysel2.make_abspath()
+        newsel.write(self.UntiltedSelFile)
+        newsel2.write(self.TiltedSelFile)
+
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
@@ -150,17 +161,6 @@ class RCT_class:
             
         if (DoSetHeadersUntilted):
             self.set_headers_untilted()
-
-        # Create selfiles with absolute pathnames in the WorkingDir
-        mysel=selfile.selfile()
-        self.UntiltedSelFile=os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
-        mysel.read(UntiltedSelFile)
-        newsel=mysel.make_abspath()
-        newsel.write(self.UntiltedSelFil)
-        self.TiltedSelFile=os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
-        mysel.read(TiltedSelFile)
-        newsel=mysel.make_abspath()
-        newsel.write(self.TiltedSelFil)
 
         if (DoSetHeadersTilted):
             self.set_headers_tilted()
