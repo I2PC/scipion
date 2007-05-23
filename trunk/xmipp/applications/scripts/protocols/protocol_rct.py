@@ -143,6 +143,7 @@ class RCT_class:
 
         # Create selfiles with absolute pathnames in the WorkingDir
         mysel=selfile.selfile()
+        mysel2=selfile.selfile()
         self.UntiltedSelFile=os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
         self.TiltedSelFile=os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
         mysel.read(UntiltedSelFile)
