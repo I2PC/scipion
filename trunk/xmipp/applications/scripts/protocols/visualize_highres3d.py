@@ -57,8 +57,9 @@ class VisualizeHighres3DClass:
        self.doShowDiscreteSummary=DoShowDiscreteSummary
 
         # Import the corresponding protocol
+        pardir=os.path.abspath(os.getcwd())
+        shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        protocol.__name__=ProtocolName.replace('py','')
 
        # Produce side info
        self.myHighRes3D=protocol.HighRes3DClass(
@@ -94,6 +95,12 @@ class VisualizeHighres3DClass:
 		
 		False
               )
+       # Remove protocol.py(c)
+       if (os.path.exists('protocol.py')):
+           os.remove('protocol.py')
+       if (os.path.exists('protocol.pyc')):
+           os.remove('protocol.pyc')
+
        os.chdir(self.myHighRes3D.workDirectory+"/Results")
        self.expandIterations()
 

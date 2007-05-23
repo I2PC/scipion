@@ -35,8 +35,9 @@ class visualize_micrographs_class:
         sys.path.append(scriptdir) # add default search path
 
         # Import the corresponding protocol, get WorkingDir and go there
+        pardir=os.path.abspath(os.getcwd())
+        shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        protocol.__name__=ProtocolName.replace('py','')
         self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
         
@@ -50,8 +51,12 @@ class visualize_micrographs_class:
             self.visualize_ctfs()
             self.update_micrograph_selfile('all_ctfs.sel')
         
-        # Return to parent dir
-        os.chdir(os.pardir)
+        # Return to parent dir and remove protocol.py(c)
+        os.chdir(pardir)
+        if (os.path.exists('protocol.py')):
+            os.remove('protocol.py')
+        if (os.path.exists('protocol.pyc')):
+            os.remove('protocol.pyc')
             
     def visualize_psds(self):
         import os

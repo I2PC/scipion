@@ -42,8 +42,9 @@ class visualize_rotspectra_class:
         import log
 
         # Import the corresponding protocol, get WorkingDir and go there
+        pardir=os.path.abspath(os.getcwd())
+        shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        protocol.__name__=ProtocolName.replace('py','')
         self._WorkDirectory=protocol.WorkDirectory
         os.chdir(self._WorkDirectory)
 
@@ -66,8 +67,12 @@ class visualize_rotspectra_class:
         if (_DoShowSOMSpectra):
             self.visualize_SOMSpectra(self._SomName,self._SpectraName)
             
-        # Return to parent dir
-        os.chdir(os.pardir)
+        # Return to parent dir and remove protocol.py(c)
+        os.chdir(pardir)
+        if (os.path.exists('protocol.py')):
+            os.remove('protocol.py')
+        if (os.path.exists('protocol.pyc')):
+            os.remove('protocol.pyc')
 
     def visualize_AlignedImages(self,_SelFileName):
          import os

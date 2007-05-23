@@ -43,8 +43,9 @@ class visualize_ML2D_class:
         import log
 
         # Import the corresponding protocol, get WorkingDir and go there
+        pardir=os.path.abspath(os.getcwd())
+        shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        protocol.__name__=ProtocolName.replace('py','')
         self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
 
@@ -57,8 +58,12 @@ class visualize_ML2D_class:
         if (DoShowStatsAllIter):
             self.show_LL_PmaxsumP_all_iter()
 
-        # Return to parent dir
-        os.chdir(os.pardir)
+        # Return to parent dir and remove protocol.py(c)
+        os.chdir(pardir)
+        if (os.path.exists('protocol.py')):
+            os.remove('protocol.py')
+        if (os.path.exists('protocol.pyc')):
+            os.remove('protocol.pyc')
 
     def show_matrixview_all_iter(self):
         import os,glob

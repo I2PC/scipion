@@ -43,8 +43,9 @@ class visualize_particles_class:
         import visualization
 
         # Import the corresponding protocol, get WorkingDir and go there
+        pardir=os.path.abspath(os.getcwd())
+        shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        protocol.__name__=ProtocolName.replace('py','')
         self.WorkingDir=protocol.WorkingDir
         os.chdir(self.WorkingDir)
         
@@ -60,9 +61,12 @@ class visualize_particles_class:
 
         visualization.visualize_images(ShowSelfiles,True)
 
-        # Return to parent dir
-        os.chdir(os.pardir)
-        
+        # Return to parent dir and remove protocol.py(c)
+        os.chdir(pardir)
+        if (os.path.exists('protocol.py')):
+            os.remove('protocol.py')
+        if (os.path.exists('protocol.pyc')):
+            os.remove('protocol.pyc')
 
     def show_z_score(self):
         import os,sys
