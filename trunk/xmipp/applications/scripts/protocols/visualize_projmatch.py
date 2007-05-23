@@ -72,7 +72,7 @@ class visualize_projmatch_class:
                 _MatrixWidth,
                 _DisplayAngularDistribution,
                 _DisplayAngularDistributionAlign2d,
-                _WorkingDir,
+                _ProtocolName,
                 ):
 	     
         import os,sys,shutil
@@ -81,21 +81,21 @@ class visualize_projmatch_class:
         import log,logging,arg
         import visualization
 
-        # import corresponding protocol
-        sys.path.append(_WorkingDir)
-        import protocol_projmatch_backup
-        #os.chdir(os.pardir)
+        # Import the corresponding protocol, get WorkingDir and go there
+        import protocol
+        protocol.__name__=ProtocolName.replace('py','')
+        self._WorkDirectory=protocol.WorkDirectory
 
         self._MatrixWidth=_MatrixWidth
-        self._WorkDirectory=protocol_projmatch_backup.WorkDirectory
-        self._LogDir=protocol_projmatch_backup.LogDir
-        self._ProjectDir=protocol_projmatch_backup.ProjectDir
-        self._multi_align2d_sel=protocol_projmatch_backup.multi_align2d_sel
-        self._align2d_sel=protocol_projmatch_backup.align2d_sel
-        self._align2d_doc=protocol_projmatch_backup.align2d_doc
-        self._SelFileName=self._ProjectDir+'/'+str(protocol_projmatch_backup.SelFileName)
-        self._ReferenceVolume=protocol_projmatch_backup.ReferenceVolume
-        self._Proj_Maching_Output_Root_Name=protocol_projmatch_backup.Proj_Maching_Output_Root_Name
+        self._WorkDirectory=protocol.WorkDirectory
+        self._LogDir=protocol.LogDir
+        self._ProjectDir=protocol.ProjectDir
+        self._multi_align2d_sel=protocol.multi_align2d_sel
+        self._align2d_sel=protocol.align2d_sel
+        self._align2d_doc=protocol.align2d_doc
+        self._SelFileName=self._ProjectDir+'/'+str(protocol.SelFileName)
+        self._ReferenceVolume=protocol.ReferenceVolume
+        self._Proj_Maching_Output_Root_Name=protocol.Proj_Maching_Output_Root_Name
         self._Proj_Maching_Output_Root_Name + '.doc'
         self._mylog=log.init_log_system(self._ProjectDir,
                                        self._LogDir,
@@ -231,7 +231,7 @@ def show_ang_distribution(_ShowPlots,_iteration_number,title):
 if __name__ == '__main__':
 
     import sys
-    WorkingDir=sys.argv[1]
+    ProtocolName=sys.argv[1]
 
     # create projmatch_class object
     visualize_projmatch=visualize_projmatch_class(VisualizeVolZ,
@@ -246,7 +246,7 @@ if __name__ == '__main__':
                                                   MatrixWidth,
                                                   DisplayAngularDistribution,
                                                   DisplayAngularDistributionAlign2d,
-                                                  WorkingDir)
+                                                  ProtocolName)
     # close 
     visualize_projmatch.close()
 
