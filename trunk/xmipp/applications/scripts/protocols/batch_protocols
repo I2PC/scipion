@@ -1,11 +1,19 @@
 #!/bin/csh
 if (!(-e protocol_setup.py)) then
-  echo " *** Xmipp_protocols was never executed before in this directory"
-  echo " *** Making a local copy of protocol_setup.py ... "  
-  cp ~/scripts/protocol_setup.py ./.
+  echo " + Xmipp_protocols was never executed before in this directory."
+  echo " + Make sure you run xmipp_protocols only in your project directory."
+  echo " + You are in directory: "${PWD}
+  echo -n " + Do you want to setup Xmipp protocols here? [y/n]:"
+  set answer = $<
+  if ($answer == y) then
+    echo " + Making a local copy of protocol_setup.py ... "  
+    cp ~/scripts/protocol_setup.py ./.
+  else
+    exit 1
+  endif
 else
-  echo " *** Reading local copy of protocol_setup.py ... "
+  echo " + Reading existing copy of protocol_setup.py ... "
 endif
-echo " *** Launching GUI for Xmipp protocols_setup ... " 
-python ~/scripts/protocol_gui.py protocol_setup.py &
+echo " + Launching GUI ... " 
+python ~/scripts/protocol_gui.py protocol_setup.py
 
