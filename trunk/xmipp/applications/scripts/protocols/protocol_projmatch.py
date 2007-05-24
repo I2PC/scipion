@@ -17,7 +17,7 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+ReferenceFileName=' '
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test'
@@ -33,7 +33,7 @@ NumberofIterations=4
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ContinueAtIteration=2
+ContinueAtIteration=1
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
@@ -99,7 +99,7 @@ AngSamplingRateDeg='10 10 2x5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='2x360 10 5'
+MaxChangeInAngles='2x1000 10 5'
 
 # {expert} Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
@@ -115,7 +115,7 @@ MaxChangeInAngles='2x360 10 5'
 MaxChangeOffset='2x1000 2x10'
 
 # Restrict tilt angle search?
-DoRetricSearchbyTiltAngle=True
+DoRetricSearchbyTiltAngle=False
 
 # Lower-value for restricted tilt angle search
 Tilt0=40
@@ -159,9 +159,10 @@ DisplayAlign2D=False
 InnerRadius=0
 
 # Outer radius for rotational correlation
-""" In pixels from the image center
+""" In pixels from the image center.
 """
 OuterRadius=18
+#set default OuterRadius=dim/2
 
 # {expert} Number of align2d iterations:
 """ Use at least 3
@@ -231,7 +232,7 @@ DoComputeResolution=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=1
+ResolSam=1.
 
 # Display resolution?
 DisplayResolution=False
@@ -240,7 +241,7 @@ DisplayResolution=False
 # {section} Low-pass filtering
 #-----------------------------------------------------------------------------
 # Low-pass filter the 3D reference map?
-"""The volume will be filtrated to a resolution equal to
+"""The volume will be filtered to a resolution equal to
    the max resolution computed with resolution_fsc
    plus the constant provided by the user in the next
    input box. If this option is set to true then the
@@ -248,6 +249,8 @@ DisplayResolution=False
    the user.
 """
 SetResolutiontoZero=False
+#explain this!!!!!!!!!!!
+
 
 # Filter to resolution plus constant
 """ Filter to a given resolution obained with resoltion_fsc 
@@ -416,7 +419,7 @@ class projection_matching_class:
        #self._ConstantToAddToFiltration=_ConstantToAddToFiltration
 
        
-       self._user_suplied_ReferenceVolume=os.path.abspath(_ReferenceVolume)
+       self._user_suplied_ReferenceVolume=self._ReferenceFileName
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
        self._multi_align2d_sel=_multi_align2d_sel
        self._align2d_sel=_align2d_sel
