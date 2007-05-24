@@ -626,6 +626,7 @@ class automated_gui_class:
             self.e.grid(row=self.variables[self.whichfile.get()][6],
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
+        self.master.update()
 
     def GuiBrowseDirectory(self):
         import tkFileDialog
@@ -639,6 +640,7 @@ class automated_gui_class:
             self.e.grid(row=self.variables[self.whichfile.get()][6],
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
+        self.master.update()
 
     def AnalyseResults(self,event=""):
         if not self.is_setupgui:
@@ -686,11 +688,11 @@ class automated_gui_class:
                                       "Use a job queueing system?",
                                       tkMessageBox.QUESTION, 
                                       tkMessageBox.YESNOCANCEL)
-        if (answer=="yes"):
+        if (answer=="yes" or answer==True):
             self.master.update()
             d = MyQueueLaunch(self.master,command)
             self.master.wait_window(d.top)
-        elif (answer=="no"):
+        elif (answer=="no" or answer==False):
             import popen2
             if (self.is_analysis):
                 command="python "+self.scriptname+' '+self.analyse_directory+' &'
@@ -749,12 +751,14 @@ class MyShowMoreHelp:
         text = Text(top)
         hyperlink = HyperlinkManager(text)
 
+        link=' '
         lines=message.splitlines()
         for line in lines:
             words=line.split()
             for word in words:
                 if not (word.find('http:')==-1):
-                    text.insert(END,word,hyperlink.add(lambda: self.click(word)))
+                    link+=word+' '
+                    text.insert(END,word,hyperlink.add(lambda: self.click(link)))
                 else:
                     text.insert(END, word)
                 text.insert(END,' ')
