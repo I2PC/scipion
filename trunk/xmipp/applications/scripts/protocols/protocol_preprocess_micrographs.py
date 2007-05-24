@@ -158,7 +158,7 @@ class preprocess_A_class:
                  StepFocus
                  ):
         
-        import os,sys
+        import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir)
         import log
