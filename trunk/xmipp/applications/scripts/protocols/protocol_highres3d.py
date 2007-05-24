@@ -205,10 +205,10 @@ SegmentUsingMass='50x0'
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=False
+DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=8
+MyNumberOfCPUs=16
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
@@ -322,10 +322,9 @@ class HighRes3DClass:
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
-       self.myMachineFile=os.path.abspath(_MyMachineFile)
+       self.myMachineFile=os.path.abspath(self.projectDir+"/"+_MyMachineFile)
 
        self.verbose=_Verbose
-
        if self.verbose:
 	  self.mylog=log.init_log_system(_ProjectDir,
                                 	 _LogDir,
@@ -774,9 +773,7 @@ class HighRes3DClass:
           return
        if _frame:
           print '# '+'*'*70
-	  self.mylog.info('# '+'*'*148)
-       if len(_message)<150:
-          _message+=' '*(150-len(_message))
+	  self.mylog.info('# '+'*'*70)
        print _message
        if _level=='info':
           self.mylog.info(_message)
@@ -784,7 +781,7 @@ class HighRes3DClass:
           self.mylog.debug(_message)
        if _frame:
           print '# '+'*'*70
-	  self.mylog.info('# '+'*'*148)
+	  self.mylog.info('# '+'*'*70)
 
    #------------------------------------------------------------------------
    # Prealignment
@@ -795,8 +792,6 @@ class HighRes3DClass:
           self.changeDirectory(self.workDirectory+"/Results")
 	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
 	     self.workDirectory+"/Results","..");
-	  self.execute("xmipp_fourier_filter -i preproc.sel "+
-                       "-low_pass 0.25 -fourier_mask raised_cosine 0.02");
 	  params="-i preproc.sel -nref 1 -output_docfile -fast"
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_ml_align2d",
@@ -806,7 +801,8 @@ class HighRes3DClass:
         			       self.myNumberOfCPUs,
         			       self.myMachineFile,
         			       False)
-	  self.copyFile("ml2d.doc","../Src/prealignment.txt")
+          ml2dFiles=glob.glob("ml2d_it?????.doc")
+	  self.copyFile(ml2dFiles[-1],"../Src/prealignment.txt")
 	  self.execute("rm -rf MLalign2D_* ml2d* preproc*")
 
    #------------------------------------------------------------------------
@@ -853,7 +849,7 @@ class HighRes3DClass:
 	     doParallel=False
 	  launch_parallel_job.launch_job(doParallel,
         			       "xmipp_reconstruct_art",
-        			       "xmipp_mpi_art",
+        			       "xmipp_mpi_reconstruct_art",
         			       params,
         			       self.mylog,
         			       self.myNumberOfCPUs,
