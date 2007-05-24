@@ -251,9 +251,9 @@ AC_OUTPUT( \
 	applications/programs/mpi_angular_continuous_assign/Makefile \
 	applications/programs/mpi_angular_discrete_assign/Makefile \
 	applications/programs/mpi_angular_projection_matching/Makefile \
-	applications/programs/mpi_art/Makefile \
 	applications/programs/mpi_ml_align2d/Makefile \
 	applications/programs/mpi_ml_refine3d/Makefile \
+	applications/programs/mpi_reconstruct_art/Makefile \
 	applications/programs/mpi_reconstruct_wbp/Makefile \
 	applications/programs/mpi_run/Makefile \
 	applications/programs/normalize/Makefile \

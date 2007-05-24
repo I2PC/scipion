@@ -2,12 +2,12 @@ OPTIONAL_PROGS =
 
 if BUILD_MPI
 OPTIONAL_PROGS += \
-	mpi_art \
 	mpi_angular_discrete_assign \
 	mpi_angular_continuous_assign \
 	mpi_ml_align2d \
 	mpi_ml_refine3d \
 	mpi_angular_projection_matching \
+	mpi_reconstruct_art \
 	mpi_reconstruct_wbp \
 	mpi_run
 endif

@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#include <reconstruction/reconstruct_art.h>
+#include <reconstruction/art_crystal.h>
 
-#include <Reconstruction/Programs/Prog_art.hh>
-#include <Reconstruction/Programs/Prog_art_crystal.hh>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>

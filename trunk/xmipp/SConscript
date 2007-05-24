@@ -716,13 +716,13 @@ for b in BackwardsBatches:
 # MPI
 if int(env['mpi']):
 
-    AddXmippMPIProgram('mpi_art',            	      	 ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_discrete_assign', 	 ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign',  ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_wbp', 	      	 ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_projection_matching',['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d',     	      	 ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d',    	      	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_projection_matching',['XmippRecons'])
+    AddXmippMPIProgram('mpi_reconstruct_art',         	 ['XmippRecons'])
+    AddXmippMPIProgram('mpi_reconstruct_wbp', 	      	 ['XmippRecons'])
     AddXmippMPIProgram('mpi_run',            	      	 ['XmippReconsMPI'])
 
 # TIFF
