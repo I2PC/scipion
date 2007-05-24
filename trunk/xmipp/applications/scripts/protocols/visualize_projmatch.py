@@ -85,10 +85,9 @@ class visualize_projmatch_class:
         pardir=os.path.abspath(os.getcwd())
         shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        self._WorkDirectory=protocol.WorkDirectory
+        self._WorkDirectory=os.path.abspath(protocol.WorkDirectory)
 
         self._MatrixWidth=_MatrixWidth
-        self._WorkDirectory=protocol.WorkDirectory
         self._LogDir=protocol.LogDir
         self._ProjectDir=protocol.ProjectDir
         self._multi_align2d_sel=protocol.multi_align2d_sel
@@ -104,11 +103,14 @@ class visualize_projmatch_class:
                                        self._WorkDirectory)
         self._mylog.setLevel(logging.DEBUG)
         self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
-        
+
+        # Initialize volume and image vectors
+        self.ShowVolumes=[] 
+        self.ShowSelfiles=[] 
         for self._iteration_number in _DisplayIterationsNo:
            if self._iteration_number==' ':
               continue
-           self._Iteration_Working_Directory=_WorkingDir+'/Iter_'+\
+           self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
                                          str(self._iteration_number)+'/'
 
            self._mylog.debug ("cd " + self._Iteration_Working_Directory)
@@ -116,17 +118,11 @@ class visualize_projmatch_class:
        
            # how many iterations should a process
 
-
            if (_DisplayReference):
-              self.ShowVolumes=[] 
               self.ShowVolumes.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+
                                       '/'+self._ReferenceVolume)
-              visualization.visualize_volumes(self.ShowVolumes,
-                                                   _VisualizeVolZ,
-                                                   _VisualizeVolX,
-                                                   _VisualizeVolY,
-                                                   _VisualizeVolChimera)
+
            if (_DisplayAngularDistribution):
               self._ShowPlots=[]
               self._ShowPlots.append('..'+'/Iter_'+\
@@ -142,17 +138,10 @@ class visualize_projmatch_class:
                                  title )
 
            if (_DisplayProjectionMatching):
-              self.ShowSelfiles=[] 
               self.ShowSelfiles.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+
                                       '/'+\
                                        self._multi_align2d_sel)
-              for selfiles in self.ShowSelfiles:
-                 visualization.visualize_images(self.ShowSelfiles,
-                                                True,
-                                                self._MatrixWidth,
-                                                self._MatrixWidth,
-                                                True)
 
            if (_DisplayAngularDistributionAlign2d):
               self._ShowPlots=[]
@@ -168,16 +157,10 @@ class visualize_projmatch_class:
                                  title )
 
            if (_DisplayReconstruction):
-              self.ShowVolumes=[] 
               self.ShowVolumes.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+
                                       '/reconstruction.vol')
               self._mylog.debug (self.ShowVolumes[0])
-              visualization.visualize_volumes(self.ShowVolumes,
-                                                   _VisualizeVolZ,
-                                                   _VisualizeVolX,
-                                                   _VisualizeVolY,
-                                                   _VisualizeVolChimera)
 
            if (_DisplayResolutionPlots):
               plot=visualization.gnuplot()
@@ -191,6 +174,19 @@ class visualize_projmatch_class:
                           X_col=1,
                           Y_col=2)
 
+        # Perform the actual visualization of all volumes and images
+        visualization.visualize_images(self.ShowSelfiles,
+                                       True,
+                                       self._MatrixWidth,
+                                       self._MatrixWidth,
+                                       True)
+
+        visualization.visualize_volumes(self.ShowVolumes,
+                                        _VisualizeVolZ,
+                                        _VisualizeVolX,
+                                        _VisualizeVolY,
+                                        _VisualizeVolChimera)
+           
         # Return to parent dir and remove protocol.py(c)
         os.chdir(pardir)
         if (os.path.exists('protocol.py')):
