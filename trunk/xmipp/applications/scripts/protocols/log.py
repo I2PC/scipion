@@ -39,7 +39,7 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
        import logging
        mylog = logging.getLogger(scriptname)
        hdlr = logging.FileHandler(LogName)
-       formatter = logging.Formatter('%(levelname)s (%(lineno)d) %(message)s (%(asctime)s)')
+       formatter = logging.Formatter('(%(asctime)s) %(levelname)s (%(lineno)d) %(message)s')
        hdlr.setFormatter(formatter)
        mylog.addHandler(hdlr) 
        mylog.setLevel(logging.INFO)
