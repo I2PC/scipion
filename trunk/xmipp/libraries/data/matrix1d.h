@@ -1815,7 +1815,8 @@ void vT::center_of_mass(matrix1D< double >& center, void* mask)
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
     {
-        if (imask == NULL || VEC_ELEM(*imask, i))
+        if ((imask == NULL || VEC_ELEM(*imask, i)) &&
+	    VEC_ELEM(*this, i))
         {
             XX(center) += i * VEC_ELEM(*this, i);
             mass += VEC_ELEM(*this, i);

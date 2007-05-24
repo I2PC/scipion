@@ -3451,7 +3451,8 @@ void mT::center_of_mass(matrix1D< double >& center, void* mask)
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
     {
-        if (imask == NULL || MAT_ELEM(*imask, i, j))
+        if ((imask == NULL || MAT_ELEM(*imask, i, j)) &&
+	    MAT_ELEM(*this, i, j) > 0)
         {
             XX(center) += j * MAT_ELEM(*this, i, j);
             YY(center) += i * MAT_ELEM(*this, i, j);

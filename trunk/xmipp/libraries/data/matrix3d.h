@@ -3022,7 +3022,8 @@ void VT::center_of_mass(matrix1D< double >& center, void* mask)
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
     {
-        if (imask == NULL || VOL_ELEM(*imask, k, i, j))
+        if ((imask == NULL || VOL_ELEM(*imask, k, i, j)) &&
+	    VOL_ELEM(*this, k, i, j) > 0)
         {
             XX(center) += j * VOL_ELEM(*this, k, i, j);
             YY(center) += i * VOL_ELEM(*this, k, i, j);
