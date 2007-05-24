@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
 
     int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
+    double LL, LL_old, sumw_allrefs, convv, sumcorr;
     bool converged;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+                                       LL, LL_old, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
                                        wsum_sigma_noise, Mwsum_sigma2,
                                        wsum_sigma_offset, sumw, sumw_mirror);
 
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
             converged = prm.check_convergence(conv);
 
             if (prm.write_intermediate)
-                prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                prm.write_output_files(iter, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
             else prm.output_to_screen(iter, sumcorr, LL);
 
             // Calculate new wiener filters
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
             }
 
         } // end loop iterations
-        prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.write_output_files(-1, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)
