@@ -175,6 +175,7 @@ class selfile:
    # and a selfile that is a subset of pattern1,
    # return a selfile that is the corresponding subset from pattern2
    def make_corresponding_subset(self,pattern1,pattern2):
+       import os
        newlines=[]
        for name,state in self.sellines:
            for i in range(len(pattern1.sellines)):

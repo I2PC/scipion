@@ -35,7 +35,8 @@ DoML2D=True
 # Number of references (or classes) to be used:
 NumberOfReferences=3
 # Also include mirror transformation in the alignment?
-"""  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid
+"""  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
+ Note that when you want to use this ML2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
 """
 DoMirror=False
 # Use the fast version of this algorithm?

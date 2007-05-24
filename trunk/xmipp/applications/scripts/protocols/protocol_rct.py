@@ -198,6 +198,17 @@ class RCT_class:
             self.log.error(message)
             sys.exit()
         else:
+            # Check that no mirror option was used
+            lastlogfile=docfiles[-1].replace('.doc','.log')
+            fh=open(lastlogfile,'r')
+            lines=fh.readlines()
+            for line in lines:
+                if (line.find('-mirror')>-1):
+                    message=" * ERROR: you cannot use the -mirror flag if you want to do RCT\n"
+                    message+=" * Repeat the ML2D run without providing this flag\n"
+                    print '*',message
+                    self.log.error(message)
+                    sys.exit()
             # Loop over all classes selected for 3D-reconstruction
             lastitername=docfiles[-1].replace('.doc','')
             refs=self.SelectClasses.split(',')

@@ -643,6 +643,7 @@ class automated_gui_class:
         self.master.update()
 
     def AnalyseResults(self,event=""):
+        import os
         if not self.is_setupgui:
             self.GuiSave()
             command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
