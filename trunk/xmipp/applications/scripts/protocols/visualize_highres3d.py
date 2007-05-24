@@ -56,10 +56,10 @@ class VisualizeHighres3DClass:
        self.doShowVectorDifferences=_DoShowVectorDifferences
        self.doShowDiscreteSummary=DoShowDiscreteSummary
 
-        # Import the corresponding protocol
-        pardir=os.path.abspath(os.getcwd())
-        shutil.copy(ProtocolName,'protocol.py')
-        import protocol
+       # Import the corresponding protocol
+       pardir=os.path.abspath(os.getcwd())
+       shutil.copy(ProtocolName,'protocol.py')
+       import protocol
 
        # Produce side info
        self.myHighRes3D=protocol.HighRes3DClass(
