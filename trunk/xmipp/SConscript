@@ -715,7 +715,6 @@ for b in BackwardsBatches:
 
 # MPI
 if int(env['mpi']):
-
     AddXmippMPIProgram('mpi_angular_discrete_assign', 	 ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign',  ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching',['XmippRecons'])
