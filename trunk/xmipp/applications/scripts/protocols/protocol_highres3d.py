@@ -39,7 +39,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/media/usb_linux/Experiments/TestSencillo'
+ProjectDir='/shared/Data/COSS/TestSencillo'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -208,13 +208,13 @@ SegmentUsingMass='50x0'
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=16
+MyNumberOfCPUs=10
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MyMachineFile=''
+MyMachineFile='../machinefile'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -792,7 +792,7 @@ class HighRes3DClass:
           self.changeDirectory(self.workDirectory+"/Results")
 	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
 	     self.workDirectory+"/Results","..");
-	  params="-i preproc.sel -nref 1 -output_docfile -fast"
+	  params="-i preproc.sel -nref 1 -output_docfile -fast -iter 4"
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_ml_align2d",
         			       "xmipp_mpi_ml_align2d",
