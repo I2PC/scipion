@@ -212,7 +212,7 @@ ReconstructionMethod='3xwbp art'
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
-ARTReconstructionExtraCommand=' '
+ARTReconstructionExtraCommand='-l 0.2 -k 0.5 -n 10 '
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
