@@ -238,6 +238,8 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
+	if (rank == 0)  
+	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)
