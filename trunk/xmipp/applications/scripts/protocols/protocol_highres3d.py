@@ -284,18 +284,18 @@ class HighRes3DClass:
                 ):
        self.projectDir=_ProjectDir
        self.scriptFile=os.path.abspath(sys.argv[0])
-       self.selFileName=os.path.abspath(self.projectDir+"/"+_SelFileName)
-       self.referenceFileName=os.path.abspath(self.projectDir+"/"+_ReferenceFileName)
-       self.workDirectory=os.path.abspath(self.projectDir+"/"+_WorkDirectory)
+       self.selFileName=os.path.abspath(_SelFileName)
+       self.referenceFileName=os.path.abspath(_ReferenceFileName)
+       self.workDirectory=os.path.abspath(_WorkDirectory)
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
-       self.logDir=os.path.abspath(self.projectDir+"/"+_LogDir)
+       self.logDir=os.path.abspath(_LogDir)
 		
        self.particleRadius=_ParticleRadius
        self.particleMass=_ParticleMass
        if _SymmetryFile=="":
           self.symmetryFile=self.workDirectory+"/Src/symmetry.sym"
        else:
-          self.symmetryFile=os.path.abspath(self.projectDir+"/"+_SymmetryFile)
+          self.symmetryFile=os.path.abspath(_SymmetryFile)
        self.samplingRate=_SamplingRate
 
        self.pyramidLevels="0 "+_PyramidLevels
@@ -308,12 +308,12 @@ class HighRes3DClass:
        self.computeResolution="0 "+_ComputeResolution
        self.resumeIteration=_ResumeIteration
 
-       self.CTFDat=os.path.abspath(self.projectDir+_CTFDat)
+       self.CTFDat=os.path.abspath(_CTFDat)
        self.amplitudeCorrection="0 "+_AmplitudeCorrection
 		
        self.doReferenceMask="0 "+_DoReferenceMask
        if not _InitialReferenceMask=="":
-          self.initialReferenceMask=os.path.abspath(self.projectDir+"/"+_InitialReferenceMask)
+          self.initialReferenceMask=os.path.abspath(_InitialReferenceMask)
        else:
           self.initialReferenceMask=""
 	  self.doReferenceMask="0"
@@ -322,7 +322,7 @@ class HighRes3DClass:
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
-       self.myMachineFile=_MyMachineFile
+       self.myMachineFile=os.path.abspath(_MyMachineFile)
 
        self.verbose=_Verbose
 
