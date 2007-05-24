@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
     int                         c, iter, volno, converged = 0;
     ;
-    double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
+    double                      LL, LL_old, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
     vector<matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
     vector<double>              sumw, sumw_cv, sumw_mirror;
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+                                            LL, LL_old, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
                                             wsum_sigma_noise, Mwsum_sigma2,
                                             wsum_sigma_offset, sumw, sumw_mirror);
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
                                        spectral_signal);
 
             // Write intermediate output files
-            ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
             // Write noise images to disc
@@ -171,6 +171,9 @@ int main(int argc, char **argv)
 
             iter++;
         } // end loop iterations
+
+	// Write out converged doc and logfiles
+	ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
 
         if (!converged && prm.verb > 0) cerr << "--> Optimization was stopped before convergence was reached!" << endl;
     }
