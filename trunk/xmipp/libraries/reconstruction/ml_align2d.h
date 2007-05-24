@@ -171,8 +171,9 @@ public:
     vector<matrix1D<double> > Vsig, Vctf, Vdec;
     /** pointers for the different ctf-matrices */
     vector<int> pointer_ctf, pointer_i, pointer_j, pointer_sigctf;
+    vector<int> pointer_old, pointer_i_old, pointer_j_old;
     /** Number of elements in pointers for the different ctf-matrices */
-    int nr_pointer_ctf, nr_pointer_sigctf;
+    int nr_pointer_ctf, nr_pointer_sigctf, nr_pointer_old;
     /** Multiplicative factor for SSNR */
     double reduce_snr;
     /** number of defocus groups */
@@ -187,6 +188,10 @@ public:
     /// IN DEVELOPMENT
     /// Deterministic annealing
     double anneal, anneal_step;
+    /** Flag to output the log-likelihood target value for MLF mode */
+    bool do_output_MLF_LL;
+    /** The log-likelihood target function value of the previous iteration */
+    double LL_prev_iter;
 
 public:
     /// Read arguments from command line
@@ -284,8 +289,9 @@ public:
                                matrix2D<double> &Mwsum_sigma2,
                                double &wsum_sigma_offset, vector<double> &sumw,
                                vector<double> &sumw_mirror,
-                               double &LL, double &fracweight, double &mindiff2, int &opt_refno,
-                               double &opt_psi, matrix1D<double> &opt_offsets,
+                               double &LL, double &LL_old, double &fracweight, 
+			       int &opt_refno, double &opt_psi, 
+			       matrix1D<double> &opt_offsets,
                                vector<double> &opt_offsets_ref,
                                vector<double > &pdf_directions);
 
@@ -296,7 +302,7 @@ public:
                               vector <vector< matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
                               vector<double> &sumw, vector<double> &sumw_mirror,
-                              double &LL, double &fracweight, double &wdiff2,
+                              double &LL, double &fracweight,
                               int &opt_refno, double &opt_psi,
                               matrix1D<double> &opt_offsets,
                               vector<double> &opt_offsets_ref,
@@ -309,7 +315,7 @@ public:
                                vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
                                vector<double> &sumw, vector<double> &sumw_mirror,
-                               double &LL, double &fracweight, double &wdiff2,
+                               double &LL, double &fracweight,
                                int &opt_refno, double &opt_psi,
                                matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
                                vector<double > &pdf_directions);
@@ -327,7 +333,7 @@ public:
 
     /// Integrate over all experimental images
     void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
-                                double &LL, double &sumcorr, DocFile &DFo,
+                                double &LL, double &LL_old, double &sumcorr, DocFile &DFo,
                                 vector<matrix2D<double> > &wsum_Mref,
                                 vector<matrix2D<double> > &wsum_ctfMref,
                                 double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2,
@@ -351,7 +357,7 @@ public:
 
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, DocFile &DFo,
-                            double &sumw_allrefs, double &LL, double &avecorr,
+                            double &sumw_allrefs, double &LL, double &LL_old, double &avecorr,
                             vector<double> &conv);
 
 };
