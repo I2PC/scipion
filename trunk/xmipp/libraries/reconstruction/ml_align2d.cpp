@@ -1908,6 +1908,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     int &opt_refno, double &opt_psi,
     matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
     vector<double > &pdf_directions)
+{
 
     matrix3D<double>                             Mweight;
     matrix2D<double>                             sigma2, ctf, decctf,logsigma2,Mll,Mll_old;
