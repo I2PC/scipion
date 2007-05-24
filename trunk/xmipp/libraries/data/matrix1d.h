@@ -40,7 +40,7 @@
 // FIXME This is a BAD practice..
 #include "multidim_friends.inc"
 
-string FtoA(float F, int _width, int _prec);
+std::string FtoA(float val, int width, int prec);
 
 /// @defgroup Vectors Xmipp Vectors
 
@@ -59,16 +59,6 @@ string FtoA(float F, int _width, int _prec);
 
 /// @defgroup VectorsSizeShape Size and shape
 /// @ingroup VectorsSpeedUp
-
-/** TRUE if both arrays have the same shape
- * @ingroup VectorsSizeShape
- *
- * Two arrays have the same shape if they have the same size and the same
- * starting point. Be aware that this is a macro which simplifies to a boolean.
- */
-#define SAME_SHAPE1D(v1, v2) \
-    ((v1).xdim == (v2).xdim && \
-     (v1).xinit == (v2).xinit)
 
 /** Returns the first valid logical index
  * @ingroup VectorsSizeShape
@@ -191,7 +181,7 @@ string FtoA(float F, int _width, int _prec);
  * val = VEC_ELEM(v, -2);
  * @endcode
  */
-#define VEC_ELEM(v,i) MULTIDIM_ELEM(v, (i) - ((v).xinit))
+#define VEC_ELEM(v, i) MULTIDIM_ELEM(v, (i) - ((v).xinit))
 
 /** Vector element: Physical access
  * @ingroup VectorsMemory
@@ -903,7 +893,7 @@ public:
      */
     bool same_shape(const maT& op) const
     {
-        return SAME_SHAPE1D(*this, op);
+        return xdim == op.xdim && xinit == op.xinit;
     }
 
     /// @defgroup VectorsMemory Memory access
