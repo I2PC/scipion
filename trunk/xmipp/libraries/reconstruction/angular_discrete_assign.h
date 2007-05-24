@@ -42,6 +42,8 @@
 class Prog_angular_predict_prm: public Prog_parameters
 {
 public:
+    /** MPI version */
+    bool MPIversion;
     /** Selfile with the reference images */
     FileName fn_ref;
     /** Filename with the angles. As provided by the movement file

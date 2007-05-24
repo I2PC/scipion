@@ -41,6 +41,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input parameters
+	prm.MPIversion=true;
         prm.read(argc, argv);
     }
     catch (Xmipp_error XE)

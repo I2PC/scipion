@@ -37,6 +37,7 @@
 // Empty constructor =======================================================
 Prog_angular_predict_prm::Prog_angular_predict_prm()
 {
+    MPIversion = false;
     each_image_produces_an_output = true;
 }
 
@@ -69,7 +70,7 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
     if (check_param(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
     search5D = check_param(argc, argv, "-5D");
     summaryRootname = get_param(argc, argv, "-summary", "");
-    if (((string)argv[0]).find("mpirun") == -1) produce_side_info();
+    if (!MPIversion) produce_side_info();
 }
 
 // Show ====================================================================
