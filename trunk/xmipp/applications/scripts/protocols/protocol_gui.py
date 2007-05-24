@@ -482,7 +482,7 @@ class automated_gui_class:
             self.l=Label(self.frame, text=label)
         self.l.configure(wraplength=350)
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
-        self.r=Radiobutton(self.frame,text="What's this?",variable=self.morehelp,
+        self.r=Radiobutton(self.frame,text="Help",variable=self.morehelp,
                            value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
         if (has_browse):
             column=self.columntextentry+3
