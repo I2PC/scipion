@@ -356,29 +356,6 @@ void ShowSel::producePixmapAt(int i)
     xmipp2Pixmap(I, content[i], minGray, maxGray, 0, 0);
 }
 
-/* Resize event ------------------------------------------------------------ */
-void ShowSel::resizeEvent(QResizeEvent *event)
-{
-    if (load_mode == Normal_mode)
-        QTable::resizeEvent(event);
-    else
-    {
-        int Xdim = (event->size().width() - 4) / NumCols;
-        int Ydim = (event->size().height() - 4 - status->height()) / NumRows;
-        for (int i = 0; i < NumCols; i++) setColumnWidth(i, Xdim);
-        for (int i = 0; i < NumRows; i++) setRowHeight(i, Ydim);
-
-        // Reset all flags so that images are reloaded
-        clearContents();
-
-        // Repaint
-        maxWidth = NumCols * Xdim + 4;
-        maxHeight = NumRows * Ydim + 4;
-        adjustStatusLabel();
-        repaintContents();
-    }
-}
-
 /* Grow older all contents ------------------------------------------------- */
 void ShowSel::insert_content_in_queue(int i)
 {

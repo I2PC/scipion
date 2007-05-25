@@ -127,8 +127,6 @@ protected:
 private slots:
     // For updating the status label
     virtual void contentsMouseMoveEvent(QMouseEvent *);
-    // For updating the image size
-    virtual void resizeEvent(QResizeEvent *);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
     /* Reload all images */
