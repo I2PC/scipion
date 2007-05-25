@@ -55,7 +55,7 @@ typedef struct coord
 /* Compute Number of voxels in each feature                                  */
 /* ------------------------------------------------------------------------- */
 void compute_voxels_in_feat(Volume *vol_label,
-                            matrix1D<double> &feat_voxels)
+                            Matrix1D<double> &feat_voxels)
 {
     int sel_feat;
 
@@ -96,7 +96,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
                          const Phantom &phantom_descr,
                          int selected_feat, ostream &out)
 {
-    matrix1D<double> r(3);
+    Matrix1D<double> r(3);
     int true_feat = ABS(selected_feat);
     if (selected_feat > 0)
     {
@@ -342,7 +342,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     }
 
     // Other variables ......................................................
-    matrix1D<double> r(3), corner1(3), corner2(3), aux1(3), aux2(3);
+    Matrix1D<double> r(3), corner1(3), corner2(3), aux1(3), aux2(3);
     Feature *Back       = phantom_descr(sel_feat)->background(back_mode, back_param);
     Feature *Inner_fore = phantom_descr(sel_feat)->scale(1.0 / 3.0);
     Feature *Mid_fore   = phantom_descr(sel_feat)->scale(2.0 / 3.0);
@@ -639,7 +639,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     if (tell&0x8)
     { // This is the flag SAVE_HISTOGRAMS of Prog_evaluate.h
         DocFile DF;
-        matrix1D<double> aux(6);
+        Matrix1D<double> aux(6);
         DF.reserve(XSIZE(Hpf) + 2);
         DF.append_comment("Histograms");
         DF.append_comment("Format: <phantom value> <Back> <Fore> <recons value> <Back> <Fore>");
@@ -681,7 +681,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
 
     // Auxiliar variables ...................................................
     matrix3D<double> rot_phantom, rot_recons, rot_mask;
-    matrix1D<double> RT_phantom, RT_recons, RTno;
+    Matrix1D<double> RT_phantom, RT_recons, RTno;
     histogram1D      hist_recons;
 
     // Rotate volumes .......................................................
@@ -747,7 +747,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     if (tell&0x4)
     { // This is the flag SHOW_PROCESS of Prog_evaluate.h
         DocFile DF;
-        matrix1D<double> aux(4);
+        Matrix1D<double> aux(4);
         DF.reserve(XSIZE(RT_recons) + 2);
         DF.append_comment("Radon Transforms\n");
         DF.append_comment("Format: phantom recons diff no.voxels");
@@ -775,7 +775,7 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     // Some vectors to perform the distance operations
     struct coord    auxcoord;
     vector<coord>   border;
-    matrix1D<double> r(3), v_dist(3);
+    Matrix1D<double> r(3), v_dist(3);
 
     // Search for all voxels in the border ..................................
     FOR_ALL_ELEMENTS_IN_MATRIX3D(L)
@@ -887,7 +887,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
                 const Volume *vol_distance, const FileName &fn_shape)
 {
     DocFile DF;
-    matrix1D<double> aux(3);
+    Matrix1D<double> aux(3);
 
     double r;
 
@@ -1036,7 +1036,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 void compute_resolution(VolumeXmipp &vol_phantom,
                         VolumeXmipp &vol_recons, double &resolution)
 {
-    matrix1D<double> frequency, FSC;
+    Matrix1D<double> frequency, FSC;
     resolution = compute_FSC(vol_phantom, vol_recons, 1, frequency, FSC);
 }
 
@@ -1044,7 +1044,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 // Based on Bsoft
 double compute_FSC(VolumeXmipp &vol_phantom,
                    VolumeXmipp &vol_recons, double sampling_rate,
-                   matrix1D<double> &frequency, matrix1D<double> &FSC)
+                   Matrix1D<double> &frequency, Matrix1D<double> &FSC)
 {
     double resolution = -1;
     frequency.clear();
@@ -1137,7 +1137,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
 // Based on Xmipp
 double compute_FSC(VolumeXmipp &vol_phantom,
                    VolumeXmipp &vol_recons, double sampling_rate,
-                   matrix1D<double> &frequency, matrix1D<double> &FSC)
+                   Matrix1D<double> &frequency, Matrix1D<double> &FSC)
 {
     double resolution = -1;
     frequency.clear();

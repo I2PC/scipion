@@ -39,7 +39,7 @@
 /** Spline value.
     This function returns the value of a Bspline of order 3 at a given
     point */
-inline double spatial_Bspline03(const matrix1D<double> &r)
+inline double spatial_Bspline03(const Matrix1D<double> &r)
 {
     if (-2 <= XX(r) && XX(r) < 2 &&
         -2 <= YY(r) && YY(r) < 2 &&
@@ -55,7 +55,7 @@ double Bspline03LUT(double x);
 /** Spline value with Look-Up Table.
     This function returns the value of a Bspline of order 3 at a given
     point */
-inline double spatial_Bspline03LUT(const matrix1D<double> &r)
+inline double spatial_Bspline03LUT(const Matrix1D<double> &r)
 {
     if (-2 <= XX(r) && XX(r) < 2 &&
         -2 <= YY(r) && YY(r) < 2 &&
@@ -76,7 +76,7 @@ double sum_spatial_Bspline03_Grid(const Grid &grid);
 /** Spline projection.
     This function returns the value of the spline line integral through a
     straight line which passes through the point r with direction u*/
-double spatial_Bspline03_proj(const matrix1D<double> &r, const matrix1D<double> &u);
+double spatial_Bspline03_proj(const Matrix1D<double> &r, const Matrix1D<double> &u);
 
 /** Splines ---> Voxels.
     The voxel size is defined in the same grid as the spline volume.

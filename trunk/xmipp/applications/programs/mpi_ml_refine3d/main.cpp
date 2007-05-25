@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     vector<double>              conv;
     vector<matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
     vector<double>              sumw, sumw_cv, sumw_mirror;
-    matrix1D<double>            spectral_signal;
+    Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
     // For parallelization

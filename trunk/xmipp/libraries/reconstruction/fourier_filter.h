@@ -97,7 +97,7 @@ public:
     XmippCTF ctf;
 
     /** Mask1D */
-    matrix1D< complex<double> > mask1D;
+    Matrix1D< complex<double> > mask1D;
 
     /** Mask2D */
     matrix2D< complex<double> > mask2D;
@@ -289,7 +289,7 @@ public:
         It should have been already generated. The given image is modified.
         An exception is thrown if the mask do not fit the size and shape of
         the */
-    void apply_mask_Fourier(matrix1D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix1D< complex<double> > &v);
 
     /** Apply mask in 2D. */
     void apply_mask_Fourier(matrix2D< complex<double> > &v);
@@ -301,7 +301,7 @@ public:
         It doesn't need to have a mask already generated. If the mask is equal
         to NULL, the apropiate mask is generated if not, nothing is done with
         the mask except filtering. The given image is modified. */
-    void apply_mask_Space(matrix1D<double> &v);
+    void apply_mask_Space(Matrix1D<double> &v);
 
     /** Apply mask in 2D. */
     void apply_mask_Space(matrix2D<double> &v);

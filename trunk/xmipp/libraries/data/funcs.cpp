@@ -91,7 +91,7 @@ double integrateNewtonCotes(double(*f)(double),
     if (N < 2 || N > 9)
         REPORT_ERROR(1, "integrateNewtonCotes: N must be greater than 1");
     double h = (b - a) / (N - 1);
-    matrix1D<double> fx(N);
+    Matrix1D<double> fx(N);
     for (int i = 0; i < N; i++)
         fx(i) = (*f)(a + i * h);
     switch (N)

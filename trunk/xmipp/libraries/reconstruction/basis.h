@@ -139,7 +139,7 @@ public:
                           const matrix2D<double> *D, double R) const;
 
     /** Basis value at a given point. */
-    double value_at(const matrix1D<double> &r) const
+    double value_at(const Matrix1D<double> &r) const
     {
         double module_r, retval;
         switch (type)
@@ -166,7 +166,7 @@ public:
     }
 
     /** Projection at a given direction (u) with a given point (r). */
-    double projection_at(const matrix1D<double> &u, const matrix1D<double> &r)
+    double projection_at(const Matrix1D<double> &u, const Matrix1D<double> &r)
     const
 {
         const double p0 = 1.0 / (2 * PIXEL_SUBSAMPLING) - 0.5;
@@ -209,7 +209,7 @@ public:
     double          sum_on_grid;
 
     /// Auxiliary vector to compute projections
-    matrix1D<double> aux;
+    Matrix1D<double> aux;
 };
 //@}
 #endif

@@ -115,7 +115,7 @@ public:
      * w2 = edge strength (=50)
      * w3 = edge smoothness (=0.02)
      */
-    matrix1D< double > Shah_weight;
+    Matrix1D< double > Shah_weight;
 
     /** Produce Shah edge instead of Shah smooth.
      */
@@ -141,7 +141,7 @@ public:
 public:
     /** EstimatedS of the Bayesian method.
      */
-    matrix1D< double > estimatedS;
+    Matrix1D< double > estimatedS;
 
     /** Empty constructor
      */

@@ -31,7 +31,7 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName         fn_ctf;
-    matrix1D<double> w_dir;
+    Matrix1D<double> w_dir;
     double           w_step;
 
     // Read parameters
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         w_dir /= w_dir.module();
         for (double w = 0; w <= 0.5; w += w_step)
         {
-            matrix1D<double> current_w = w / CTF.Tm * w_dir;
+            Matrix1D<double> current_w = w / CTF.Tm * w_dir;
             double CTF_pure = CTF.CTFpure_at(XX(current_w), YY(current_w));
             double CTF_noise = CTF.CTFnoise_at(XX(current_w), YY(current_w));
             double cont_freq = current_w.module();

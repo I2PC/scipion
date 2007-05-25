@@ -114,9 +114,9 @@ private:
     //history file
     ofstream fh_out;
     // vector that point to neighbours in grid indexes
-    matrix1D<int> FCC_Vectors[FCC_NEIGHBORS+1];
+    Matrix1D<int> FCC_Vectors[FCC_NEIGHBORS+1];
     // vector that point to neighbours in real Space
-    matrix1D<double> FCC_Vectors_RS[FCC_NEIGHBORS+1];
+    Matrix1D<double> FCC_Vectors_RS[FCC_NEIGHBORS+1];
     // Number of valid points (points insside radius R)
     int iNumber_of_points_inside_sphere;
 //   // Number of  points with valid cliques
@@ -256,7 +256,7 @@ public:
         //#define PLOT_SINGLEPOINT
 #ifdef SINGLEPOINT
         {
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
             //               z y x
             cout << "SINGLEPOINT_DEBUG" << endl;
             VOLVOXEL((*_FCC), 0, 0, 2) = 0x1;
@@ -267,7 +267,7 @@ public:
 #ifdef PLOT_SINGLEPOINT
         {
             //print neigh positions and create and openddx file
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
             cout << "\n\tPLOT_SINGLEPOINT enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "SINGLEPOINT_DEBUG_red.dx");
@@ -310,7 +310,7 @@ public:
 #ifdef TWOPLANES
         /**/
         //VOLVOXEL((*FCC_Gibs<T>::_FCC0),0,0,0) = 0;
-        { matrix1D<double> aux_matrix, aux_matrix2;
+        { Matrix1D<double> aux_matrix, aux_matrix2;
             double _dot_product;
 
             aux_matrix.resize(3);
@@ -343,8 +343,8 @@ public:
         //#define BORDERCLICK_DEBGU
 #ifdef BORDERCLICK_DEBGU
         {
-            matrix1D<int> XYZ = vector_R3(0, 0, 0);
-            matrix1D<int> point = vector_R3(1, 0, 0);
+            Matrix1D<int> XYZ = vector_R3(0, 0, 0);
+            Matrix1D<int> point = vector_R3(1, 0, 0);
             cout << "BORDERCLICK_DEBGU" << endl;
 
             XYZ = point + FCC_Vectors[0x0];
@@ -465,9 +465,9 @@ public:
                     cout << hh << endl;
 
             char fh_FileName[32];
-            matrix1D<double>  type_cast_matrix;
-            matrix1D<double> RGB = vector_R3(1., 0., 0.);
-            matrix1D<double> XYZ;
+            Matrix1D<double>  type_cast_matrix;
+            Matrix1D<double> RGB = vector_R3(1., 0., 0.);
+            Matrix1D<double> XYZ;
             int ii;
 
             for (int hh = 0; hh < DIF_CONF ; hh++)
@@ -520,7 +520,7 @@ public:
     void CreateMask(void)
     {
         double R;
-        matrix1D<double>  distance_vector;
+        Matrix1D<double>  distance_vector;
         int flag;
 
 
@@ -572,8 +572,8 @@ public:
         {
             //print neigh positions and create and wrl
             cout << "\n\tCreateMask_DEBUG enabled\n";
-            matrix1D<double> RGB = vector_R3(0., 0., 1.);
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
 
             VrmlFile _VRML((string) "CreateMask_DEBUG.wrl");
             //print grid in blue
@@ -625,7 +625,7 @@ public:
     void Create_Second_Mask(void)
     {
         double R;
-        matrix1D<double>  distance_vector;
+        Matrix1D<double>  distance_vector;
 
         //iNumber_of_valid_points_with_valid_cliques=0;
 
@@ -662,8 +662,8 @@ public:
             //print neigh positions and create and wrl
             cout << "\n\tSecondMask_DEBUG enabled\n";
             VrmlFile _VRML((string) "SecondMask_DEBUG.wrl");
-            matrix1D<double> RGB = vector_R3(0., 0., 1.);
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
 
             //print grid in blue
             _VRML.Sphere(XYZ, RGB, 0.05);
@@ -722,7 +722,7 @@ public:
 #ifdef SecondMask_DX_DEBUG
         {
             //print neigh positions and create and openddx file
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
             cout << "\n\tSecondMask_DX_DEBUG enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "SecondMask_DX_DEBUG_red.dx");
@@ -861,7 +861,7 @@ public:
 #ifdef Alloc_and_Fill_valid_coordinates_vector_after_DX
         {
             //print neigh positions and create and openddx file
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
             cout << "\nAlloc_and_Fill_valid_coordinates_vector_after_DX enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "alloc_and_fill.dx");
@@ -1007,7 +1007,7 @@ public:
 #ifdef FillauxGridVolumewithClicks_DEBUG
         {
             //print neigh positions and create and openddx file
-            matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
             cout << "\n\tFillauxGridVolumewithClicks_DEBUG enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "FillauxGridVolumewithClicks_DEBUG_red.dx");
@@ -1387,7 +1387,7 @@ private:
 
     void InitNeighVector(void)
     {
-        matrix1D<double>  type_cast_matrix;
+        Matrix1D<double>  type_cast_matrix;
         //alloc space for auxiliar vector
         //these vectors conect each grid point with their neighbours
         for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
@@ -1433,11 +1433,11 @@ private:
         {
             //print neigh positions and create and wrl
             //the printed data is in index not real space coordinates
-            matrix1D<double>  matrix_aux;
+            Matrix1D<double>  matrix_aux;
             type_cast(FCC_Vectors[0], type_cast_matrix);
             FCC_grid(0).grid2universe(type_cast_matrix, matrix_aux);
-            matrix1D<double> RGB = vector_R3(0., 0., 1.);
-            matrix1D<double> XYZ = matrix_aux;
+            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
+            Matrix1D<double> XYZ = matrix_aux;
             cout << "\n\tInitNeighVector_DEBUG1 enabled\n";
 
             for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
@@ -1467,9 +1467,9 @@ private:
             for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
                 cout << FCC_Gibs<T>::FCC_Vectors_RS[ii].transpose() << endl;
 
-            matrix1D<double>  matrix_aux;
-            matrix1D<double> RGB = vector_R3(1., 0., 0.);
-            matrix1D<double> XYZ = matrix_aux;
+            Matrix1D<double>  matrix_aux;
+            Matrix1D<double> RGB = vector_R3(1., 0., 0.);
+            Matrix1D<double> XYZ = matrix_aux;
             VrmlFile _VRML((string) "InitNeighVector_DEBUG2.wrl");
             RGB = vector_R3(1., 0., 0.);
             XYZ = vector_R3(0., 0., 0.);

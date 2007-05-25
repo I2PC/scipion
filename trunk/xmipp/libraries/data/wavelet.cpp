@@ -40,8 +40,8 @@
 
 // Bilib wavelets ----------------------------------------------------------
 /* Wavelet transform ------------------------------------------------------- */
-void Bilib_DWT(const matrix1D<double> &input,
-               matrix1D<double> &result, int iterations, int isign)
+void Bilib_DWT(const Matrix1D<double> &input,
+               Matrix1D<double> &result, int iterations, int isign)
 {
     if (iterations < 1)
         REPORT_ERROR(1, "Bilib_DWT 2D: iterations must be >=1");
@@ -81,7 +81,7 @@ void Bilib_DWT(const matrix1D<double> &input,
             int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
 
             // Pick the Lowest subband
-            matrix1D<double> input_aux(xsize), result_aux(xsize);
+            Matrix1D<double> input_aux(xsize), result_aux(xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
             DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
 
@@ -107,7 +107,7 @@ void Bilib_DWT(const matrix1D<double> &input,
             int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
 
             // Pick the Lowest subband
-            matrix1D<double> input_aux(xsize), result_aux(xsize);
+            Matrix1D<double> input_aux(xsize), result_aux(xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
             DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(input, i);
 
@@ -349,7 +349,7 @@ void set_DWT_type(int DWT_type)
 }
 
 // IDWT --------------------------------------------------------------------
-void IDWT(const matrix1D<double> &v, matrix1D<double> &result)
+void IDWT(const Matrix1D<double> &v, Matrix1D<double> &result)
 {
     DWT(v, result, -1);
 }
@@ -487,8 +487,8 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
 void clean_quadrant(matrix2D<double> &I, int scale, const string &quadrant)
 {
     int x1, y1, x2, y2;
-    matrix1D<int> corner1(2), corner2(2);
-    matrix1D<double> r(2);
+    Matrix1D<int> corner1(2), corner2(2);
+    Matrix1D<double> r(2);
     SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
                    YY(corner1), YY(corner2));
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) I(r) = 0;
@@ -498,8 +498,8 @@ void clean_quadrant(matrix3D<double> &I, int scale, const string &quadrant)
 {
     int x1, y1, z1, x2, y2, z2;
     SelectDWTBlock(scale, I, quadrant, x1, x2, y1, y2, z1, z2);
-    matrix1D<int> corner1(3), corner2(3);
-    matrix1D<double> r(3);
+    Matrix1D<int> corner1(3), corner2(3);
+    Matrix1D<double> r(3);
     SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
                    YY(corner1), YY(corner2), ZZ(corner1), ZZ(corner2));
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) I(r) = 0;
@@ -535,8 +535,8 @@ void adaptive_soft_thresholding_block(matrix2D<double> &I, int scale,
                                       const string &quadrant, double sigma)
 {
     // Compute block variance
-    matrix1D<int> corner1(2), corner2(2);
-    matrix1D<double> r(2);
+    Matrix1D<int> corner1(2), corner2(2);
+    Matrix1D<double> r(2);
     SelectDWTBlock(scale, I, quadrant,
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     double dummy, avg, stddev;
@@ -565,8 +565,8 @@ double compute_noise_power(matrix2D<double> &I)
     I.compute_stats(avg, stddev, min_val, max_val);
     hist.init(0, MAX(ABS(min_val), ABS(max_val)), 100);
 
-    matrix1D<int> corner1(2), corner2(2);
-    matrix1D<double> r(2);
+    Matrix1D<int> corner1(2), corner2(2);
+    Matrix1D<double> r(2);
     SelectDWTBlock(0, I, "01",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
@@ -619,7 +619,7 @@ void DWT_Bijaoui_denoise_LL(matrix2D<double> &WI, int scale,
                             const string &orientation,
                             double mu, double S, double N)
 {
-    matrix1D<int> x0(2), xF(2), r(2);
+    Matrix1D<int> x0(2), xF(2), r(2);
     SelectDWTBlock(scale, WI, orientation, XX(x0), XX(xF), YY(x0), YY(xF));
 
     double SN = S + N;
@@ -647,7 +647,7 @@ void DWT_Bijaoui_denoise_LL(matrix3D<double> &WI, int scale,
                             const string &orientation,
                             double mu, double S, double N)
 {
-    matrix1D<int> x0(3), xF(3), r(3);
+    Matrix1D<int> x0(3), xF(3), r(3);
     SelectDWTBlock(scale, WI, orientation, XX(x0), XX(xF), YY(x0), YY(xF),
                    ZZ(x0), ZZ(xF));
 
@@ -674,16 +674,16 @@ void DWT_Bijaoui_denoise_LL(matrix3D<double> &WI, int scale,
 
 //#define DEBUG
 void bayesian_solve_eq_system(
-    const matrix1D<double> &power,
-    const matrix1D<double> &average,
-    const matrix1D<double> &Ncoefs,
+    const Matrix1D<double> &power,
+    const Matrix1D<double> &average,
+    const Matrix1D<double> &Ncoefs,
     double SNR0,
     double SNRF,
     double powerI,
     double power_rest,
     bool white_noise,
     int tell,
-    matrix1D<double> &estimatedS)
+    Matrix1D<double> &estimatedS)
 {
 
     int scale_dim = XSIZE(power);
@@ -704,10 +704,10 @@ void bayesian_solve_eq_system(
         A(i + 2*(scale_dim - 1), i) = -1;
 
     // Constraints on the SNR
-    matrix1D<double> aux0coefs(scale_dim);
+    Matrix1D<double> aux0coefs(scale_dim);
     for (int j = 0;j < scale_dim;j++)
         aux0coefs(j) = Ncoefs(j) * SNR0;
-    matrix1D<double> auxFcoefs(scale_dim);
+    Matrix1D<double> auxFcoefs(scale_dim);
     for (int j = 0;j < scale_dim;j++)
         auxFcoefs(j) = Ncoefs(j) * SNRF;
 
@@ -732,7 +732,7 @@ void bayesian_solve_eq_system(
         }
 
     //initialize the matrix b
-    matrix1D<double> b(A.RowNo());
+    Matrix1D<double> b(A.RowNo());
 
     // Initialize Aeq matrix
     matrix2D<double> Aeq;
@@ -744,7 +744,7 @@ void bayesian_solve_eq_system(
     }
 
     //initialize beq matrix
-    matrix1D<double> beq;
+    Matrix1D<double> beq;
     beq.init_zeros(1);
     beq(0) = powerI - power_rest;
 
@@ -781,7 +781,7 @@ void bayesian_solve_eq_system(
 #endif
 
     // Solve the system
-    matrix1D<double> bl, bu;
+    Matrix1D<double> bl, bu;
     lsqlin(C, power / Ncoefs, A, b, Aeq, beq, bl, bu, estimatedS);
     // COSS
     estimatedS /= 2;
@@ -802,7 +802,7 @@ void bayesian_solve_eq_system(
 #undef DEBUG
 
 //#define DEBUG
-matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_scale,
+Matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_scale,
         double SNR0, double SNRF, bool white_noise, int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */
@@ -826,13 +826,13 @@ matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
 
     /*Calculate the power at each band*/
     //init the scale vector
-    matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
     int scale_dim = scale.get_dim();
 
     //define some vectors
-    matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
-    matrix1D<int> x0(2), xF(2), r(2);
+    Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+    Matrix1D<int> x0(2), xF(2), r(2);
     vector<string> orientation;
     orientation.push_back("01");
     orientation.push_back("10");
@@ -875,7 +875,7 @@ matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
     }
 
     /*Solve the Equation System*/
-    matrix1D<double> estimatedS;
+    Matrix1D<double> estimatedS;
     bayesian_solve_eq_system(power, average, Ncoefs,
                              SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
 
@@ -900,7 +900,7 @@ matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
 #undef DEBUG
 
 void bayesian_wiener_filtering(matrix2D<double> &WI,
-                               int allowed_scale, matrix1D<double> &estimatedS)
+                               int allowed_scale, Matrix1D<double> &estimatedS)
 {
     vector<string> orientation;
     orientation.push_back("01");
@@ -908,7 +908,7 @@ void bayesian_wiener_filtering(matrix2D<double> &WI,
     orientation.push_back("11");
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
-    matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)
@@ -921,7 +921,7 @@ void bayesian_wiener_filtering(matrix2D<double> &WI,
 }
 
 //#define DEBUG
-matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_scale,
+Matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_scale,
         double SNR0, double SNRF, bool white_noise, int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */
@@ -945,13 +945,13 @@ matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
 
     /*Calculate the power at each band*/
     //init the scale vector
-    matrix1D<int> scale(allowed_scale + 1);
+    Matrix1D<int> scale(allowed_scale + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
     int scale_dim = scale.get_dim();
 
     //define some vectors
-    matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
-    matrix1D<int> x0(3), xF(3), r(3);
+    Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+    Matrix1D<int> x0(3), xF(3), r(3);
     vector<string> orientation;
     orientation.push_back("001");
     orientation.push_back("010");
@@ -999,7 +999,7 @@ matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
     }
 
     /*Solve the Equation System*/
-    matrix1D<double> estimatedS;
+    Matrix1D<double> estimatedS;
     bayesian_solve_eq_system(power, average, Ncoefs,
                              SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
     if (tell)
@@ -1022,7 +1022,7 @@ matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
 #undef DEBUG
 
 void bayesian_wiener_filtering(matrix3D<double> &WI,
-                               int allowed_scale, matrix1D<double> &estimatedS)
+                               int allowed_scale, Matrix1D<double> &estimatedS)
 {
     vector<string> orientation;
     orientation.push_back("001");
@@ -1034,7 +1034,7 @@ void bayesian_wiener_filtering(matrix3D<double> &WI,
     orientation.push_back("111");
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
-    matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)

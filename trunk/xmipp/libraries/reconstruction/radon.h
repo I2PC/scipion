@@ -52,12 +52,12 @@
 /**@name Radon Transform */
 /** Radon transform of a volume along a direction */
 void Radon_Transform(Volume *vol, double rot, double psi,
-                     matrix1D<double> &RT);
+                     Matrix1D<double> &RT);
 
 /** Radon transform of a piece of volume along a direction */
 void Local_Radon_Transform(Volume *vol, double rot, double tilt,
-                           int label, Volume *vol_label, matrix1D<double> &RT,
-                           matrix1D<double> &RT_n);
+                           int label, Volume *vol_label, Matrix1D<double> &RT,
+                           Matrix1D<double> &RT_n);
 
 /** Radon transform of an image. */
 void Radon_Transform(const matrix2D<double> &I, double rot_step,

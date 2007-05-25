@@ -145,7 +145,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     SymList          SL;
     FileName         fn_tmp, fn_refs;
     double           mean_ref,stddev_ref,dummy,psi=0.;
-    matrix1D<double> dataline(3);
+    Matrix1D<double> dataline(3);
     int              nl;
 
     // Set nr_psi
@@ -460,7 +460,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
   ImageXmipp img;
   FileName fn_img;
-  matrix1D<double> dataline(8);
+  Matrix1D<double> dataline(8);
   matrix2D<double> A(3,3);
   double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
   int c,nn,imgno,opt_dirno;

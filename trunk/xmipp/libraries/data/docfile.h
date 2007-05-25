@@ -126,14 +126,14 @@ public:
      */
     void set(int i, double val);
 
-    /** Set a vector (matrix1D) as Document line.
+    /** Set a vector (Matrix1D) as Document line.
      * @ingroup DocFileAccess
      *
      * It doesn't matter if it is a row or a column vector. The previous data
      * is overwritten and the key is kept. If it was not a data line, then the
      * new key=0.
      */
-    void set(const matrix1D< double >& v);
+    void set(const Matrix1D< double >& v);
 
     /// @defgroup DocLineStructure Structure information.
     /// @ingroup DocLines
@@ -945,12 +945,12 @@ public:
      *  insertion         m
      *  line              n
      *
-     * matrix1D< double > proj_angles(3);
+     * Matrix1D< double > proj_angles(3);
      * ...
      * new_key = DF.insert_data_line(proj_angles);
      * @encode
      */
-    int insert_data_line(const matrix1D< double >& v);
+    int insert_data_line(const Matrix1D< double >& v);
 
     /** Insert a comment before the current line.
      * @ingroup DocFileModify
@@ -1007,12 +1007,12 @@ public:
      * moved, neither.
      *
      * @code
-     * matrix1D< double > proj_angles(3);
+     * Matrix1D< double > proj_angles(3);
      * ...
      * new_key = DF.append_data_line(proj_angles);
      * @endcode
      */
-    int append_data_line(const matrix1D< double >& v);
+    int append_data_line(const Matrix1D< double >& v);
 
     /** Append angles.
      * @ingroup DocFileModify
@@ -1133,7 +1133,7 @@ public:
     /** Column to vector.
      * @ingroup DocFileHelpful
      *
-     * This function produces a double matrix1D which is composed by all the
+     * This function produces a double Matrix1D which is composed by all the
      * components of a certain column inside the document file. If a given line
      * hasn't got enough data to fill that column (for instance, the line is 3
      * values long and we are asking for column 3 (remember that column
@@ -1141,23 +1141,23 @@ public:
      * 0's.
      *
      * @code
-     * matrix1D< double > tilt_angle = DF.column(1);
+     * Matrix1D< double > tilt_angle = DF.column(1);
      * @endcode
      */
-    matrix1D< double > col(int _col);
+    Matrix1D< double > col(int _col);
 
     /** Row to vector.
      * @ingroup DocFileHelpful
      *
-     * This function produces a double matrix1D which is composed by all the
+     * This function produces a double Matrix1D which is composed by all the
      * components of a certain line inside the document file. If the key doesn't
      * exist then an empty vector is returned.
      *
      * @code
-     * matrix1D< double > tilt_angle = DF.row(700);
+     * Matrix1D< double > tilt_angle = DF.row(700);
      * @endcode
      */
-    matrix1D< double > row(int _key);
+    Matrix1D< double > row(int _key);
 
     /** Vector to column.
      * @ingroup DocFileHelpful
@@ -1175,20 +1175,20 @@ public:
      * DF.set_column(1, tilt_angle);
      * @endcode
      */
-    void setCol(int _col, matrix1D< double >& v);
+    void setCol(int _col, Matrix1D< double >& v);
 
     /** Apply a function to all data lines within a key range.
      * @ingroup DocFileHelpful
      *
-     * The function must take as input a row double matrix1D and produce another
-     * row double matrix1D which will be assigned instead of the input data
+     * The function must take as input a row double Matrix1D and produce another
+     * row double Matrix1D which will be assigned instead of the input data
      * line. There is a renumeration of lines at the end and the current line
      * "pointer" is moved to the beginning of the file. The document file must
      * entered in the routine previously renumerated.
      *
      * @code
      * // This function enlarges the row vector adding 360 at the beginning
-     * void enlarge(const matrix1D< double >&in, matrix1D< double >& out)
+     * void enlarge(const Matrix1D< double >&in, Matrix1D< double >& out)
      * {
      *     out.resize(in.get_dim() + 1);
      *     out(0) = 360;
@@ -1207,8 +1207,8 @@ public:
      *
      * @endcode
      */
-    void for_all_lines(void(*f)(const matrix1D< double >&,
-                                matrix1D< double >&),
+    void for_all_lines(void(*f)(const Matrix1D< double >&,
+                                Matrix1D< double >&),
                        int key0 = -1,
                        int keyF = -1);
 
@@ -1225,8 +1225,8 @@ public:
      * // Apply to line with key=30
      * @endcode
      */
-    void for_one_line(void(*f)(const matrix1D< double >&,
-                               matrix1D< double >&),
+    void for_one_line(void(*f)(const Matrix1D< double >&,
+                               Matrix1D< double >&),
                       int key0)
     {
         for_all_lines(f, key0, key0);

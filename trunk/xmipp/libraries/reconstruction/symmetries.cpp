@@ -38,7 +38,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     double ang_incr, rot_ang;
     int  fold;
     matrix2D<double> L(4, 4), R(4, 4);
-    matrix1D<double> axis(3), shift(3);
+    Matrix1D<double> axis(3), shift(3);
 
     // Open file ---------------------------------------------------------
     if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
@@ -344,7 +344,7 @@ void SymList::set_matrices(int i, const matrix2D<double> &L,
 }
 
 // Get/Set shift ===========================================================
-void SymList::get_shift(int i, matrix1D<double> &shift) const
+void SymList::get_shift(int i, Matrix1D<double> &shift) const
 {
     shift.resize(3);
     XX(shift) = DIRECT_MAT_ELEM(__shift, i, 0);
@@ -352,7 +352,7 @@ void SymList::get_shift(int i, matrix1D<double> &shift) const
     ZZ(shift) = DIRECT_MAT_ELEM(__shift, i, 2);
 }
 
-void SymList::set_shift(int i, const matrix1D<double> &shift)
+void SymList::set_shift(int i, const Matrix1D<double> &shift)
 {
     if (XSIZE(shift) != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
@@ -361,7 +361,7 @@ void SymList::set_shift(int i, const matrix1D<double> &shift)
     DIRECT_MAT_ELEM(__shift, i, 2) = ZZ(shift);
 }
 
-void SymList::add_shift(const matrix1D<double> &shift)
+void SymList::add_shift(const Matrix1D<double> &shift)
 {
     if (XSIZE(shift) != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
@@ -425,7 +425,7 @@ void SymList::compute_subgroup(double accuracy)
     I.init_identity();
     matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4);
     matrix2D<int>    tried(true_symNo, true_symNo);
-    matrix1D<double> shift(3);
+    Matrix1D<double> shift(3);
     shift.init_zeros();
     int i, j;
     int new_chain_length;
@@ -549,13 +549,13 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
 
-void symmetrize_crystal_vectors(matrix1D<double> &aint,
-                                matrix1D<double> &bint,
-                                matrix1D<double> &shift,
+void symmetrize_crystal_vectors(Matrix1D<double> &aint,
+                                Matrix1D<double> &bint,
+                                Matrix1D<double> &shift,
                                 int space_group,
                                 int sym_no,
-                                const matrix1D<double> &eprm_aint,
-                                const matrix1D<double> &eprm_bint)
+                                const Matrix1D<double> &eprm_aint,
+                                const Matrix1D<double> &eprm_bint)
 {
 //Notice that we should use R.inv and not R to relate eprm.aint and aint
     shift.init_zeros();//I think this init is OK even the vector dim=0
@@ -780,8 +780,8 @@ void symmetrize_crystal_vectors(matrix1D<double> &aint,
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
 void symmetrize_crystal_volume(GridVolume &vol_in,
-                               const matrix1D<double> &eprm_aint,
-                               const matrix1D<double> &eprm_bint,
+                               const Matrix1D<double> &eprm_aint,
+                               const Matrix1D<double> &eprm_bint,
                                int eprm_space_group,
                                const matrix2D<int> &mask, int grid_type)
 {
@@ -845,8 +845,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
 void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
@@ -1065,8 +1065,8 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
 void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
@@ -1284,8 +1284,8 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
 void symmetry_P4(Volume &vol, const SimpleGrid &grid,
-                 const matrix1D<double> &eprm_aint,
-                 const matrix1D<double> &eprm_bint,
+                 const Matrix1D<double> &eprm_aint,
+                 const Matrix1D<double> &eprm_bint,
                  const matrix2D<int> &mask, int volume_no, int grid_type)
 {
     int ZZ_lowest = (int) ZZ(grid.lowest);
@@ -1477,8 +1477,8 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
 /* Symmetrizes a simple grid with P4212 symmetry--------------------------*/
 
 void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
@@ -1793,8 +1793,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
 }//symmetryP42_12 end
 /* Symmetrizes a simple grid with P6 symmetry-----------------------------*/
 void symmetry_P6(Volume &vol, const SimpleGrid &grid,
-                 const matrix1D<double> &eprm_aint,
-                 const matrix1D<double> &eprm_bint,
+                 const Matrix1D<double> &eprm_aint,
+                 const Matrix1D<double> &eprm_bint,
                  const matrix2D<int> &mask, int volume_no,
                  int grid_type)
 {

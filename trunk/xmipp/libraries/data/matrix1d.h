@@ -33,9 +33,9 @@
 #include "funcs.h"
 
 // TODO Remove this ASAP
-#define maT matrix1D< T >
-#define maT1 matrix1D< T1 >
-#define maTC matrix1D< std::complex < double > >
+#define maT Matrix1D< T >
+#define maT1 Matrix1D< T1 >
+#define maTC Matrix1D< std::complex < double > >
 
 // FIXME This is a BAD practice..
 #include "multidim_friends.inc"
@@ -112,12 +112,12 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsSizeShape
  *
  * This macro is used to generate loops for a vector in an easy manner. It needs
- * an externally defined matrix1D< double > r(1). Then XX(r) ranges from
+ * an externally defined Matrix1D< double > r(1). Then XX(r) ranges from
  * (int) XX(corner1) to (int) XX(corner2) (included limits) (notice that corner1
- * and corner2 need only to be matrix1D).
+ * and corner2 need only to be Matrix1D).
  *
  * @code
- * matrix1D< double > corner1(1), corner2(1), r(1);
+ * Matrix1D< double > corner1(1), corner2(1), r(1);
  * XX(corner1) = -1;
  * XX(corner2) = 1;
  * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
@@ -260,7 +260,7 @@ std::string floatToString(float val, int width, int prec);
  * the vector is (x, y) in R2.
  *
  * @code
- * matrix1D< double > v(2);
+ * Matrix1D< double > v(2);
  * VECTOR_R2(v, 1, 2);
  * @endcode
  */
@@ -274,7 +274,7 @@ std::string floatToString(float val, int width, int prec);
  * the vector is (x, y, z) in R3.
  *
  * @code
- * matrix1D< double > v(3);
+ * Matrix1D< double > v(3);
  * VECTOR_R2(v, 1, 2, 1);
  * @endcode
  */
@@ -296,7 +296,7 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorOperations2D
  *
  * @code
- * matrix1D< double > a(2), b(2), c(2);
+ * Matrix1D< double > a(2), b(2), c(2);
  * ...;
  * V2_PLUS_V2(a, b, c);
  * @endcode
@@ -309,7 +309,7 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations2D
  *
  * @code
- * matrix1D< double > a(2), b(2), c(2);
+ * Matrix1D< double > a(2), b(2), c(2);
  * ...;
  * V2_MINUS_V2(a, b, c);
  */
@@ -321,12 +321,12 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations2D
  *
  * @code
- * matrix1D< double > a(2), b(2);
+ * Matrix1D< double > a(2), b(2);
  * double k;
  * ...;
  * V2_PLUS_CT(a, b, k);
  *
- * matrix1D< double > a(2), b(2);
+ * Matrix1D< double > a(2), b(2);
  * double k;
  * ...;
  * V2_PLUS_CT(a, b, -k);
@@ -340,12 +340,12 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations2D
  *
  * @code
- * matrix1D< double > a(2), b(2);
+ * Matrix1D< double > a(2), b(2);
  * double k;
  * ...;
  * V2_BY_CT(a, b, k);
  *
- * matrix1D< double > a(2), b(2);
+ * Matrix1D< double > a(2), b(2);
  * double k;
  * ...;
  * V2_BY_CT(a, b, 1/k);
@@ -362,7 +362,7 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorOperations3D
  *
  * @code
- * matrix1D< double > a(3), b(3), c(3);
+ * Matrix1D< double > a(3), b(3), c(3);
  * ...;
  * V3_PLUS_V3(a, b, c);
  * @endcode
@@ -376,7 +376,7 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations3D
  *
  * @code
- * matrix1D< double > a(3), b(3), c(3);
+ * Matrix1D< double > a(3), b(3), c(3);
  * ...;
  * V3_MINUS_V3(a, b, c);
  * @endcode
@@ -390,12 +390,12 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations3D
  *
  * @code
- * matrix1D< double > a(3), b(3);
+ * Matrix1D< double > a(3), b(3);
  * double k;
  * ...;
  * V3_PLUS_CT(a, b, k);
  *
- * matrix1D< double > a(3), b(3);
+ * Matrix1D< double > a(3), b(3);
  * double k;
  * ...;
  * V3_PLUS_CT(a, b, -k);
@@ -410,12 +410,12 @@ std::string floatToString(float val, int width, int prec);
  * @ingroup VectorsOperations3D
  *
  * @code
- * matrix1D< double > a(3), b(3);
+ * Matrix1D< double > a(3), b(3);
  * double k;
  * ...;
  * V3_BY_CT(a, b, k);
  *
- * matrix1D< double > a(3), b(3);
+ * Matrix1D< double > a(3), b(3);
  * double k;
  * ...;
  * V3_BY_CT(a, b, 1/k);
@@ -432,7 +432,7 @@ std::string floatToString(float val, int width, int prec);
 /// Template class for Xmipp vectors
 /// @ingroup Vectors
 template<typename T>
-class matrix1D
+class Matrix1D
 {
 /// FIXME Oh, my...
 #include "multidim_basic.h"
@@ -453,15 +453,15 @@ public:
      * vector (by default), or a row one.
      *
      * @code
-     * matrix1D< double > v1;
-     * matrix1D< double > v1(true);
+     * Matrix1D< double > v1;
+     * Matrix1D< double > v1(true);
      * // both are examples of empty column vectors
      *
-     * matrix1D< int > v1(false);
+     * Matrix1D< int > v1(false);
      * // empty row vector
      * @endcode
      */
-    matrix1D(bool column = true)
+    Matrix1D(bool column = true)
     {
         core_init();
         init_shape(column);
@@ -477,15 +477,15 @@ public:
      * one.
      *
      * @code
-     * matrix1D< double > v1(6);
-     * matrix1D< double > v1(6, 'y');
+     * Matrix1D< double > v1(6);
+     * Matrix1D< double > v1(6, 'y');
      * // both are examples of column vectors of dimensions 6
      *
-     * matrix1D< int > v1('n');
+     * Matrix1D< int > v1('n');
      * // empty row vector
      * @endcode
      */
-    matrix1D(int dim, bool column = true)
+    Matrix1D(int dim, bool column = true)
     {
         core_init();
         init_shape(column);
@@ -505,10 +505,10 @@ public:
      * different memory assignment.
      *
      * @code
-     * matrix1D< double > v2(v1);
+     * Matrix1D< double > v2(v1);
      * @endcode
      */
-    matrix1D(const vT& v)
+    Matrix1D(const vT& v)
     {
         core_init();
         init_shape();
@@ -518,7 +518,7 @@ public:
     /** Destructor
      * @ingroup VectorsConstructors
      */
-    ~matrix1D()
+    ~Matrix1D()
     {
         core_deallocate();
     }
@@ -943,7 +943,7 @@ public:
      * position is determined by a R1 vector. The elements can be used either by
      * value or by reference. No check is done on the validity of the vector.
      */
-    T& operator()(const matrix1D< double >& v) const
+    T& operator()(const Matrix1D< double >& v) const
     {
         return VEC_ELEM(*this, ROUND(XX(v)));
     }
@@ -951,7 +951,7 @@ public:
     /** Matrix element access via integer vector
      * @ingroup VectorsMemory
      */
-    T& operator()(const matrix1D< int >& v) const
+    T& operator()(const Matrix1D< int >& v) const
     {
         return VEC_ELEM(*this, XX(v));
     }
@@ -1217,7 +1217,7 @@ public:
     vT sort() const
     {
         vT temp;
-        matrix1D< double > aux;
+        Matrix1D< double > aux;
 
         if (xdim == 0)
             return temp;
@@ -1245,10 +1245,10 @@ public:
      * v2 = v1.index_sort();
      * @endcode
      */
-    matrix1D< int > index_sort() const
+    Matrix1D< int > index_sort() const
     {
-        matrix1D< int >   indx;
-        matrix1D< double > temp;
+        Matrix1D< int >   indx;
+        Matrix1D< double > temp;
 
         if (xdim == 0)
             return indx;
@@ -1385,7 +1385,7 @@ public:
 /**@defgroup VectorsRelated Related functions.
  * @ingroup Vectors
  *
- * These functions are not methods of matrix1D
+ * These functions are not methods of Matrix1D
  */
 
 /// @defgroup VectorsGeom Geometry with vectors
@@ -1397,10 +1397,10 @@ public:
  * After this function the vector is (x,y) in R2.
  *
  * @code
- * matrix1D< double > v = vector_R2(1, 2);
+ * Matrix1D< double > v = vector_R2(1, 2);
  * @endcode
  */
-matrix1D< double > vector_R2(double x, double y);
+Matrix1D< double > vector_R2(double x, double y);
 
 /** Creates vector in R3
  * @ingroup VectorsGeom
@@ -1408,15 +1408,15 @@ matrix1D< double > vector_R2(double x, double y);
  * After this function the vector is (x,y,z) in R3.
  *
  * @code
- * matrix1D< double > v = vector_R2(1, 2, 1);
+ * Matrix1D< double > v = vector_R2(1, 2, 1);
  * @endcode
  */
-matrix1D< double > vector_R3(double x, double y, double z);
+Matrix1D< double > vector_R3(double x, double y, double z);
 
 /** Creates an integer vector in Z3
  * @ingroup VectorsGeom
  */
-matrix1D< int > vector_R3(int x, int y, int z);
+Matrix1D< int > vector_R3(int x, int y, int z);
 
 /** Dot product.
  * @ingroup VectorsGeom
@@ -1430,14 +1430,14 @@ matrix1D< int > vector_R3(int x, int y, int z);
  * V1y*V2y + V1z*V2z.
  *
  * @code
- * matrix1D< double > v1(1000);
+ * Matrix1D< double > v1(1000);
  * v1.init_random(0, 10, "gaussian");
  * cout << "The power of this vector should be 100 and is " <<
  *     dot_product(v1, v1) << endl;
  * @endcode
  */
 template<typename T>
-T dot_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
+T dot_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
     if (!v1.same_shape(v2))
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
@@ -1459,12 +1459,12 @@ T dot_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
  * or they don't belong to R3.
  *
  * @code
- * matrix1D< T > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0);
+ * Matrix1D< T > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0);
  * cout << "X*Y=Z=" << vector_product(X,Y).transpose() << endl;
  * @endcode
  */
 template<typename T>
-matrix1D< T > vector_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
+Matrix1D< T > vector_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
     if (v1.xdim != 3 || v2.xdim != 3)
         REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
@@ -1472,7 +1472,7 @@ matrix1D< T > vector_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
     if (v1.isRow() != v2.isRow())
         REPORT_ERROR(1007, "Vector_product: vectors are of different shape");
 
-    matrix1D< T > result(3);
+    Matrix1D< T > result(3);
     result.X() = v1.Y() * v2.Z() - v1.Z() * v2.Y();
     result.Y() = v1.Z() * v2.X() - v1.X() * v2.Z();
     result.Z() = v1.X() * v2.Y() - v1.Y() * v2.X();
@@ -1488,14 +1488,14 @@ matrix1D< T > vector_product(const matrix1D< T >& v1, const matrix1D< T >& v2)
  * R3, but not if they don't have the same shape.
  *
  * @code
- * matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
+ * Matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
  *     Z = vector_R3(0, 0, 1);
  * if (are_orthogonal(X, Y, Z))
  *     cout << "Of course, they are orthogonal\n";
  * @endcode
  */
-int are_orthogonal(matrix1D< double >& v1, matrix1D< double >& v2,
-                   matrix1D< double >& v3);
+int are_orthogonal(Matrix1D< double >& v1, Matrix1D< double >& v2,
+                   Matrix1D< double >& v3);
 
 /** True if the three R3 vectors form a coordinate system
  * @ingroup VectorsUtilities
@@ -1507,7 +1507,7 @@ int are_orthogonal(matrix1D< double >& v1, matrix1D< double >& v2,
  * if the vectors do not belong to R3.
  *
  * @code
- * matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
+ * Matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
  *     Z = vector_R3(0, 0, 1);
  * if (are_system(X,Y,Z))
  *     cout << "Of course, they are a system\n";
@@ -1515,8 +1515,8 @@ int are_orthogonal(matrix1D< double >& v1, matrix1D< double >& v2,
  *     cout << "But not in this case even if they are orthogonal\n";
  * @endcode
  */
-int are_system(matrix1D< double >& v1, matrix1D< double >& v2,
-               matrix1D< double >& v3);
+int are_system(Matrix1D< double >& v1, Matrix1D< double >& v2,
+               Matrix1D< double >& v3);
 
 /// @defgroup VectorsMiscellaneous Miscellaneous
 /// @ingroup VectorsRelated
@@ -1529,10 +1529,10 @@ int are_system(matrix1D< double >& v1, matrix1D< double >& v2,
  * automatically computed.
  *
  * @code
- * matrix1D< double > v1(5);
+ * Matrix1D< double > v1(5);
  * v1.startingX() = -2;
  *
- * matrix1D< double > v2(4);
+ * Matrix1D< double > v2(4);
  * v2.startingX() = 0;
  *
  * cut_to_common_size(v1, v2);
@@ -1601,9 +1601,9 @@ void sort_two_vectors(vT& v1, vT& v2)
   *
   * The option show forces the routine to show the convergence path
   */
-void Powell_optimizer(matrix1D< double >& p, int i0, int n,
+void Powell_optimizer(Matrix1D< double >& p, int i0, int n,
                       double(*f)(double* x), double ftol, double& fret,
-                      int& iter, const matrix1D< double >& steps,
+                      int& iter, const Matrix1D< double >& steps,
                       bool show = false);
 
 // TODO Document
@@ -1625,7 +1625,7 @@ void vT::get_size(int* size) const
 
 // TODO Document
 template<typename T>
-bool vT::outside(const matrix1D< double >& v) const
+bool vT::outside(const Matrix1D< double >& v) const
 {
     if (v.xdim < 1)
         REPORT_ERROR(1, "Outside: index vector has got not enough components");
@@ -1649,8 +1649,8 @@ bool vT::intersects(const vT& m) const
 
 // TODO Document
 template<typename T>
-bool vT::intersects(const matrix1D< double >& corner1,
-                    const matrix1D< double >& corner2) const
+bool vT::intersects(const Matrix1D< double >& corner1,
+                    const Matrix1D< double >& corner2) const
 {
     if (corner1.xdim != 1 || corner2.xdim != 1)
         REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
@@ -1673,7 +1673,7 @@ bool vT::intersects(double x0, double xdim) const
 
 // TODO Document
 template<typename T>
-bool vT::isCorner(const matrix1D< double >& v)
+bool vT::isCorner(const Matrix1D< double >& v)
 {
     if (v.xdim < 1)
         REPORT_ERROR(1,
@@ -1684,7 +1684,7 @@ bool vT::isCorner(const matrix1D< double >& v)
 
 // TODO Document
 template<typename T>
-bool vT::isBorder(const matrix1D< int >& v)
+bool vT::isBorder(const Matrix1D< int >& v)
 {
     if (v.xdim < 1)
         REPORT_ERROR(1, "isBorder: index vector has got not enough components");
@@ -1757,11 +1757,11 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
 // TODO Document
 template<typename T>
 void vT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
-                       const matrix1D< double >& corner1,
-                       const matrix1D< double >& corner2) const
+                       const Matrix1D< double >& corner1,
+                       const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
-    matrix1D< double > r(3);
+    Matrix1D< double > r(3);
     double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
@@ -1790,11 +1790,11 @@ void vT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 // TODO Document
 template<typename T>
 void vT::compute_double_minmax(double& min_val, double& max_val,
-                               const matrix1D< double >& corner1,
-                               const matrix1D< double >& corner2) const
+                               const Matrix1D< double >& corner1,
+                               const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
-    matrix1D< double > r(1);
+    Matrix1D< double > r(1);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
     {
@@ -1807,11 +1807,11 @@ void vT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void vT::center_of_mass(matrix1D< double >& center, void* mask)
+void vT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
     center.init_zeros(1);
     double mass = 0;
-    matrix1D< int >* imask = (matrix1D< int >*) mask;
+    Matrix1D< int >* imask = (Matrix1D< int >*) mask;
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
     {

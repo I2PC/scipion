@@ -60,7 +60,7 @@ public:
 
     /** Geographical co-ordinates of the home vertices of the 10 diamonds
     as angles*/
-    vector <matrix1D<double> > vertices_vectors;
+    vector <Matrix1D<double> > vertices_vectors;
 
 
     /** sampling rate in radians */
@@ -81,16 +81,16 @@ public:
     vector<vector<double> > my_neighbors_psi;
 
     /** vector with sampling points described by vectors */
-    vector <matrix1D<double> > sampling_points_vector;
+    vector <Matrix1D<double> > sampling_points_vector;
     /** vector with sampling points described by angles */
-    vector <matrix1D<double> > sampling_points_angles;
+    vector <Matrix1D<double> > sampling_points_angles;
 
     /** vector with sampling points described by vectors, only store
         the non redundant part */
-    vector <matrix1D<double> > no_redundant_sampling_points_vector;
+    vector <Matrix1D<double> > no_redundant_sampling_points_vector;
     /** vector with sampling points described by vectors, only store
         the non redundant part */
-    vector <matrix1D<double> > no_redundant_sampling_points_angles;
+    vector <Matrix1D<double> > no_redundant_sampling_points_angles;
 
     /** Default constructor. sampling in degrees*/
     XmippSampling();
@@ -106,15 +106,15 @@ public:
     */
     void Compute_sampling_points(bool only_half_sphere = true);
     /** fill edge */
-    void fill_edge(matrix1D<double> starting_point,
-                   matrix1D<double> ending_point,
-                   vector <matrix1D<double> > &edge_vector,
+    void fill_edge(Matrix1D<double> starting_point,
+                   Matrix1D<double> ending_point,
+                   vector <Matrix1D<double> > &edge_vector,
                    bool FLAG_END
                   );
     /** fill distance */
-    void fill_distance(matrix1D<double> starting_point,
-                       matrix1D<double> ending_point,
-                       vector <matrix1D<double> > &edge_vector,
+    void fill_distance(Matrix1D<double> starting_point,
+                       Matrix1D<double> ending_point,
+                       vector <Matrix1D<double> > &edge_vector,
                        int number,
                        bool only_half_sphere
                       );
@@ -133,7 +133,7 @@ public:
     //void Usage();
 
     /* sorting criteria for euler angles */
-    int sort_func(matrix1D<double> & a, matrix1D<double> & b);
+    int sort_func(Matrix1D<double> & a, Matrix1D<double> & b);
 
     /** create symmetry file from introduced symmetry
         see  SymList class */

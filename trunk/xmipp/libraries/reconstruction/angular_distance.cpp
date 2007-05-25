@@ -109,7 +109,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     matrix2D<double> E1, E2;
     Euler_angles2matrix(rot1, tilt1, psi1, E1);
     Euler_angles2matrix(rot2, tilt2, psi2, E2);
-    matrix1D<double> v1, v2;
+    Matrix1D<double> v1, v2;
     double axes_dist = 0;
     double N = 0;
     for (int i = 0; i < 3; i++)
@@ -216,8 +216,8 @@ double Prog_angular_distance_prm::compute_distance()
     DF_out.reserve(DF1.dataLineNo());
 
     int dim = DF1.FirstLine_ColNo();
-    matrix1D<double> aux(16);
-    matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
+    Matrix1D<double> aux(16);
+    Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
     rot_diff.resize(DF1.dataLineNo());
     tilt_diff.resize(rot_diff);
     psi_diff.resize(rot_diff);

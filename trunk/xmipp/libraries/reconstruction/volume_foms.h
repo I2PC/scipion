@@ -50,7 +50,7 @@
     feat_voxels contains the result with indexes 0 ... FeatNo().
     See also \Ref{Phantom::label}. */
 void compute_voxels_in_feat(Volume *vol_label,
-                            matrix1D<double> &feat_voxels);
+                            Matrix1D<double> &feat_voxels);
 
 /** Show voxel values in feat.
     This function shows in two columns the values of the voxels corresponding
@@ -254,7 +254,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     The directional FOMs are defined along the line specified by rot and
     psi (1st and 2nd Euler angles respectively).
 
-    The result is stored as a matrix1D<double>
+    The result is stored as a Matrix1D<double>
 
     The directional FOMs are computed in two steps:
     \begin{verbatim}
@@ -397,6 +397,6 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 */
 double compute_FSC(VolumeXmipp &vol_phantom,
                    VolumeXmipp &vol_recons, double sampling_rate,
-                   matrix1D<double> &frequency, matrix1D<double> &FSC);
+                   Matrix1D<double> &frequency, Matrix1D<double> &FSC);
 //@}
 #endif

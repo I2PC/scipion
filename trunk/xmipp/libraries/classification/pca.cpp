@@ -468,7 +468,7 @@ Running_PCA::Running_PCA(int _J, int _d)
 }
 
 /* Update with new sample -------------------------------------------------- */
-void Running_PCA::new_sample(const matrix1D<double> &sample)
+void Running_PCA::new_sample(const Matrix1D<double> &sample)
 {
     n++;
 
@@ -477,7 +477,7 @@ void Running_PCA::new_sample(const matrix1D<double> &sample)
     current_sample_mean = sum_all_samples / n;
 
     // Estimate eigenvectors
-    matrix1D<double> un = sample;
+    Matrix1D<double> un = sample;
     un.row = false;
     for (int j = 0; j < J; j++)
     {
@@ -536,8 +536,8 @@ void Running_PCA::new_sample(const matrix1D<double> &sample)
 }
 
 /* Project a sample vector on the PCA space -------------------------------- */
-void Running_PCA::project(const matrix1D<double> &input,
-                          matrix1D<double> &output) const
+void Running_PCA::project(const Matrix1D<double> &input,
+                          Matrix1D<double> &output) const
 {
     output.init_zeros(J);
     for (int j = 0; j < J; j++)

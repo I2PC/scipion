@@ -210,9 +210,9 @@ double *my_vector(int nl, int nh)
 
 
 // Multidimensional integration --------------------------------------------
-matrix1D<double>  cuhreX0;
-matrix1D<double>  cuhreXX;
-matrix1D<double>  cuhreRange;
+Matrix1D<double>  cuhreX0;
+Matrix1D<double>  cuhreXX;
+Matrix1D<double>  cuhreRange;
 integrand_t       cuhreIntegrand = NULL;
 
 void scaledIntegrand(const int *ndim, const double xx[],
@@ -224,8 +224,8 @@ void scaledIntegrand(const int *ndim, const double xx[],
 }
 
 #ifdef __GNUC__
-double multidimensionalIntegral(const matrix1D<double> &x0,
-                                const matrix1D<double> &xF, integrand_t integrand)
+double multidimensionalIntegral(const Matrix1D<double> &x0,
+                                const Matrix1D<double> &xF, integrand_t integrand)
 {
     // Set some global variables
     cuhreX0 = x0;

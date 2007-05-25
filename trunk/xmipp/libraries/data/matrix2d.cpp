@@ -38,8 +38,8 @@
 #undef maT
 
 /* Interface to numerical recipes: svbksb ---------------------------------- */
-void svbksb(matrix2D<double> &u, matrix1D<double> &w, matrix2D<double> &v,
-            matrix1D<double> &b, matrix1D<double> &x)
+void svbksb(matrix2D<double> &u, Matrix1D<double> &w, matrix2D<double> &v,
+            Matrix1D<double> &b, Matrix1D<double> &x)
 {
     // Call to the numerical recipes routine. Results will be stored in X
     svbksb(u.adapt_for_numerical_recipes2(),
@@ -51,8 +51,8 @@ void svbksb(matrix2D<double> &u, matrix1D<double> &w, matrix2D<double> &v,
 }
 
 /* Solve Cx=d, nonnegative x */
-double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
-                    matrix1D<double> &result)
+double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
+                    Matrix1D<double> &result)
 {
     if (C.xdim == 0)
         REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
@@ -81,11 +81,11 @@ double solve_nonneg(const matrix2D<double> &C, const matrix1D<double> &d,
 }
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
-void solve_via_Cholesky(const matrix2D<double> &A, const matrix1D<double> &b,
-                        matrix1D<double> &result)
+void solve_via_Cholesky(const matrix2D<double> &A, const Matrix1D<double> &b,
+                        Matrix1D<double> &result)
 {
     matrix2D<double> Ap = A;
-    matrix1D<double> p(XSIZE(A));
+    Matrix1D<double> p(XSIZE(A));
     result.resize(XSIZE(A));
     choldc(Ap.adapt_for_numerical_recipes2(), XSIZE(A),
            p.adapt_for_numerical_recipes());
@@ -221,7 +221,7 @@ matrix2D<double> rot2D_matrix(double ang)
 }
 
 /* Translation 2D ---------------------------------------------------------- */
-matrix2D<double> translation2D_matrix(matrix1D<double> v)
+matrix2D<double> translation2D_matrix(Matrix1D<double> v)
 {
     if (v.get_dim() != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
@@ -277,9 +277,9 @@ matrix2D<double> rot3D_matrix(double ang, char axis)
 }
 
 /* Align a vector with Z axis */
-matrix2D<double> align_with_Z(const matrix1D<double> &axis)
+matrix2D<double> align_with_Z(const Matrix1D<double> &axis)
 {
-    matrix1D<double>  Axis;
+    Matrix1D<double>  Axis;
     matrix2D<double>  A(4, 4);
 
     if (axis.get_dim() != 3)
@@ -320,7 +320,7 @@ matrix2D<double> align_with_Z(const matrix1D<double> &axis)
 }
 
 /* Rotation 3D around any axis -------------------------------------------- */
-matrix2D<double> rot3D_matrix(double ang, const matrix1D<double> &axis)
+matrix2D<double> rot3D_matrix(double ang, const Matrix1D<double> &axis)
 {
     // Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
@@ -329,7 +329,7 @@ matrix2D<double> rot3D_matrix(double ang, const matrix1D<double> &axis)
 }
 
 /* Translation 3D ---------------------------------------------------------- */
-matrix2D<double> translation3D_matrix(const matrix1D<double> &v)
+matrix2D<double> translation3D_matrix(const Matrix1D<double> &v)
 {
     if (XSIZE(v) != 3)
         REPORT_ERROR(1002, "Translation3D_matrix: vector is not in R3");
@@ -345,7 +345,7 @@ matrix2D<double> translation3D_matrix(const matrix1D<double> &v)
 }
 
 /* Scale 3D ---------------------------------------------------------------- */
-matrix2D<double> scale3D_matrix(const matrix1D<double> &sc)
+matrix2D<double> scale3D_matrix(const Matrix1D<double> &sc)
 {
     if (XSIZE(sc) != 3)
         REPORT_ERROR(1002, "Scale3D_matrix: vector is not in R3");
@@ -361,8 +361,8 @@ matrix2D<double> scale3D_matrix(const matrix1D<double> &sc)
 }
 
 /* Quadratic form ---------------------------------------------------------- */
-void eval_quadratic(const matrix1D<double> &x, const matrix1D<double> &c,
-                    const matrix2D<double> &H, double &val, matrix1D<double> &grad)
+void eval_quadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
+                    const matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
     if (XSIZE(x) != XSIZE(c))
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and c");
@@ -471,11 +471,11 @@ void quadprog_grcn32(int nparam, int j, double *x, double *gradgj, void(*mydummy
                                 bl<=x<=bu
 
 **************************************************************************/
-void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
-              const matrix2D<double> &A,   const matrix1D<double> &b,
-              const matrix2D<double> &Aeq, const matrix1D<double> &beq,
-              matrix1D<double> &bl,        matrix1D<double> &bu,
-              matrix1D<double> &x)
+void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
+              const matrix2D<double> &A,   const Matrix1D<double> &b,
+              const matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+              Matrix1D<double> &bl,        Matrix1D<double> &bu,
+              Matrix1D<double> &x)
 {
     CDAB prm;
     prm.C = C;
@@ -532,7 +532,7 @@ void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
 
     if (XSIZE(x) == 0)
         x.init_zeros(nparam);
-    matrix1D<double> f(nf), g(nineq + neq), lambda(nineq + neq + nf + nparam);
+    Matrix1D<double> f(nf), g(nineq + neq), lambda(nineq + neq + nf + nparam);
 
     // Call the minimization routine
     cfsqp(nparam, nf, nfsr, nineqn, nineq, neqn, neq, ncsrl, ncsrn, mesh_pts,
@@ -568,11 +568,11 @@ void quadprog(const matrix2D<double> &C, const matrix1D<double> &d,
    x                                Aeq*x=beq
                                 bl<=x<=bu
 **************************************************************************/
-void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
-            const matrix2D<double> &A,   const matrix1D<double> &b,
-            const matrix2D<double> &Aeq, const matrix1D<double> &beq,
-            matrix1D<double> &bl,        matrix1D<double> &bu,
-            matrix1D<double> &x)
+void lsqlin(const matrix2D<double> &C, const Matrix1D<double> &d,
+            const matrix2D<double> &A,   const Matrix1D<double> &b,
+            const matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+            Matrix1D<double> &bl,        Matrix1D<double> &bu,
+            Matrix1D<double> &x)
 {
 
     // Convert d to matrix2D for multiplication
@@ -582,7 +582,7 @@ void lsqlin(const matrix2D<double> &C, const matrix1D<double> &d,
     P = P.transpose();
 
     //Convert back to vector for passing it to quadprog
-    matrix1D<double> newd;
+    Matrix1D<double> newd;
     P.to_vector(newd);
 
     quadprog(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);

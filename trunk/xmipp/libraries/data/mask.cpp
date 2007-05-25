@@ -32,7 +32,7 @@
 /*---------------------------------------------------------------------------*/
 /* 1D Masks                                                                  */
 /*---------------------------------------------------------------------------*/
-void RaisedCosineMask(matrix1D<double> &mask,
+void RaisedCosineMask(Matrix1D<double> &mask,
                       double r1, double r2, int mode, double x0)
 {
     double k = PI / (r2 - r1);
@@ -50,11 +50,11 @@ void RaisedCosineMask(matrix1D<double> &mask,
     }
 }
 
-void RaisedCrownMask(matrix1D<double> &mask,
+void RaisedCrownMask(Matrix1D<double> &mask,
                      double r1, double r2, double pix_width, int mode, double x0)
 {
     RaisedCosineMask(mask, r1 - pix_width, r1 + pix_width, OUTSIDE_MASK, x0);
-    matrix1D<double> aux;
+    Matrix1D<double> aux;
     aux.resize(mask);
     RaisedCosineMask(aux, r2 - pix_width, r2 + pix_width, INNER_MASK, x0);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(mask)
@@ -100,8 +100,8 @@ void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
     mask.init_zeros();
     for (int s = smin; s <= smax; s++)
     {
-        matrix1D<int> corner1(2), corner2(2), r(2);
-        matrix1D<double> center(2);
+        Matrix1D<int> corner1(2), corner2(2), r(2);
+        Matrix1D<double> center(2);
         if (quadrant == "xx")
         {
             DWTCIRCULAR2D_BLOCK(s, "01");
@@ -406,8 +406,8 @@ void BinaryDWTSphericalMask(matrix3D<int> &mask, double radius,
     double radius2 = radius * radius / (4 * (smin + 1));
     for (int s = smin; s <= smax; s++)
     {
-        matrix1D<int> corner1(3), corner2(3), r(3);
-        matrix1D<double> center(3);
+        Matrix1D<int> corner1(3), corner2(3), r(3);
+        Matrix1D<double> center(3);
         if (quadrant == "xxx")
         {
             DWTSPHERICALMASK_BLOCK(s, "001");
@@ -1356,7 +1356,7 @@ void range_adjust_within_mask(const matrix2D<double> *mask,
 {
     matrix2D<double> A(2, 2);
     A.init_zeros();
-    matrix1D<double> b(2);
+    Matrix1D<double> b(2);
     b.init_zeros();
     SPEED_UP_temps;
     // Compute Least squares solution
@@ -1398,7 +1398,7 @@ void range_adjust_within_mask(const matrix3D<double> *mask,
 {
     matrix2D<double> A(2, 2);
     A.init_zeros();
-    matrix1D<double> b(2);
+    Matrix1D<double> b(2);
     b.init_zeros();
     SPEED_UP_temps;
     // Compute Least squares solution

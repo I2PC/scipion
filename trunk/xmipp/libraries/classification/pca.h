@@ -231,7 +231,7 @@ public:
     int d;
 
     /// Current estimate of the population mean
-    matrix1D<double> current_sample_mean;
+    Matrix1D<double> current_sample_mean;
 
     /// Current number of samples seen
     long n;
@@ -246,13 +246,13 @@ public:
     Running_PCA(int _J, int _d);
 
     /** Update estimates with a new sample. */
-    void new_sample(const matrix1D<double> &sample);
+    void new_sample(const Matrix1D<double> &sample);
 
     /** Project a sample vector on the PCA space. */
-    void project(const matrix1D<double> &input, matrix1D<double> &output) const;
+    void project(const Matrix1D<double> &input, Matrix1D<double> &output) const;
 
     /// Get a certain eigenvector.
-    void get_eigenvector(int j, matrix1D<double> &result) const
+    void get_eigenvector(int j, Matrix1D<double> &result) const
     {
         eigenvectors.getCol(j, result);
     }
@@ -266,13 +266,13 @@ public:
     }
 public:
     // Sum of all samples so far
-    matrix1D<double> sum_all_samples;
+    Matrix1D<double> sum_all_samples;
 
     // Sum of all projections so far
-    matrix1D<double> sum_proj;
+    Matrix1D<double> sum_proj;
 
     // Sum of all projections squared so far
-    matrix1D<double> sum_proj2;
+    Matrix1D<double> sum_proj2;
 };
 //@}
 #endif

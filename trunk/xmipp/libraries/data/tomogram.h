@@ -226,8 +226,8 @@ public:
      * is returned. If the suggested length is bigger than the tomogram size,
      * then an exception is thrown.
      */
-    void get_piece(matrix1D< int >& r0,
-                   matrix1D< int >& length,
+    void get_piece(Matrix1D< int >& r0,
+                   Matrix1D< int >& length,
                    matrix3D< double >& piece);
 
     /** Set piece in tomogram.
@@ -236,8 +236,8 @@ public:
      * initial point is assumed to come from it, therefore no check is done
      * on its validity.
      */
-    void set_piece(matrix1D< int >& r0,
-                   matrix1D< int >& length,
+    void set_piece(Matrix1D< int >& r0,
+                   Matrix1D< int >& length,
                    matrix3D< double >& piece);
 };
 

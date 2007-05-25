@@ -34,7 +34,7 @@ public:
     double rot, tilt, psi;
     bool Align_mode;
     bool Axis_mode;
-    matrix1D<double> axis;
+    Matrix1D<double> axis;
     double ang;
     bool wrap;
 

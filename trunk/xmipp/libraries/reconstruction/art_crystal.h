@@ -56,9 +56,9 @@ public:
     /// angle from x axis to a (degrees)
     double ang_x2a_deg;
     /// First lattice vector  (voxel units)
-    matrix1D<double> avox;
+    Matrix1D<double> avox;
     /// Second lattice vector (voxel units)
-    matrix1D<double> bvox;
+    Matrix1D<double> bvox;
     /// Fill space, repeat unit cell all over the space
     bool fill_space;
     //@}
@@ -69,17 +69,17 @@ public:
     /**@name Crystal lattice related */
     //@{
     /// First lattice vector (BCC units)
-    matrix1D<double> a;
+    Matrix1D<double> a;
     /// Second lattice vector (BCC units)
-    matrix1D<double> b;
+    Matrix1D<double> b;
     /// First lattice vector approximated to integer numbers (BCC units)
-    matrix1D<double> aint;
+    Matrix1D<double> aint;
     /// Second lattice vector approximated to integer numbers (BCC units)
-    matrix1D<double> bint;
+    Matrix1D<double> bint;
     /// ai=aint/2 as double numbers
-    matrix1D<double> ai;
+    Matrix1D<double> ai;
     /// bi=aint/2 as double numbers
-    matrix1D<double> bi;
+    Matrix1D<double> bi;
     /// space_group
     int space_group;
     //@}
@@ -125,12 +125,12 @@ public:
        aint = Vinv*a; a=V*aint;
        bint = Vinv*b; b=V*bint;
     \end{verbatim} */
-void compute_integer_lattice(const matrix1D<double> &a,
-                             const matrix1D<double> &b,
+void compute_integer_lattice(const Matrix1D<double> &a,
+                             const Matrix1D<double> &b,
                              double a_mag, double b_mag,
                              double ang_a2b_deg,
-                             matrix1D<double> &aint,
-                             matrix1D<double> &bint,
+                             Matrix1D<double> &aint,
+                             Matrix1D<double> &bint,
                              matrix2D<double> &V,
                              int space_group);
 

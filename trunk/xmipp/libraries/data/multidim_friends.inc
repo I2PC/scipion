@@ -1,6 +1,6 @@
 // Forward declarations
 template<typename T>
-class matrix1D;
+class Matrix1D;
 
 template<typename T>
 class matrix2D;
@@ -9,7 +9,7 @@ template<typename T>
 class matrix3D;
 
 // FIXME Remove this... bad practice
-#define vT matrix1D< T >
+#define vT Matrix1D< T >
 #define mT matrix2D< T >
 #define VT matrix3D< T >
 

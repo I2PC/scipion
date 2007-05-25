@@ -152,14 +152,14 @@ public:
     // time
     /** Lowest index inside the grid coordinate system.
         Although it is a float vector, it should be kept integer all time */
-    matrix1D<double> lowest;
+    Matrix1D<double> lowest;
     /** Highest index inside the grid coordinate system.
         Although it is a float vector, it should be kept integer all time */
-    matrix1D<double> highest;
+    Matrix1D<double> highest;
     /// Measuring unit in the grid coordinate system
     double relative_size;
     /// Origin of the grid in the Universal coordinate system
-    matrix1D<double> origin;
+    Matrix1D<double> origin;
     /** Reconstructed sphere squared radius.
         The reconstruction is supposed to fit within this sphere centered
         at the origin. If this radius is -1, then this feature is not used
@@ -201,43 +201,43 @@ public:
     /**@name Grid structure */
     //@{
     /** Set X vector of the grid.
-        \\Ex: matrix1D<double> X=vector_R3(1,0,0); sg.set_X(X); */
-    void set_X(const matrix1D<double> &v)
+        \\Ex: Matrix1D<double> X=vector_R3(1,0,0); sg.set_X(X); */
+    void set_X(const Matrix1D<double> &v)
     {
         basis.setCol(0, v);
     }
 
     /** Set Y vector of the grid.
-        \\Ex: matrix1D<double> Y=vector_R3(0,1,0); sg.set_Y(Y); */
-    void set_Y(const matrix1D<double> &v)
+        \\Ex: Matrix1D<double> Y=vector_R3(0,1,0); sg.set_Y(Y); */
+    void set_Y(const Matrix1D<double> &v)
     {
         basis.setCol(1, v);
     }
 
     /** Set Z vector of the grid.
-        \\Ex: matrix1D<double> Z=vector_R3(1,1,1); sg.set_Z(Z); */
-    void set_Z(const matrix1D<double> &v)
+        \\Ex: Matrix1D<double> Z=vector_R3(1,1,1); sg.set_Z(Z); */
+    void set_Z(const Matrix1D<double> &v)
     {
         basis.setCol(2, v);
     }
 
     /** Get X vector of the grid.
-        \\Ex: matrix1D<double> X; sg.get_X(X) << endl; */
-    void get_X(matrix1D<double> &v) const
+        \\Ex: Matrix1D<double> X; sg.get_X(X) << endl; */
+    void get_X(Matrix1D<double> &v) const
     {
         basis.getCol(0, v);
     }
 
     /** Get Y vector of the grid.
-        \\Ex: matrix1D<double> Y; sg.get_Y(Y) << endl; */
-    void get_Y(matrix1D<double> &v) const
+        \\Ex: Matrix1D<double> Y; sg.get_Y(Y) << endl; */
+    void get_Y(Matrix1D<double> &v) const
     {
         basis.getCol(1, v);
     }
 
     /** Get Z vector of the grid.
-        \\Ex: matrix1D<double> Z; sg.get_Z(Z) << endl; */
-    void get_Z(matrix1D<double> &v) const
+        \\Ex: Matrix1D<double> Z; sg.get_Z(Z) << endl; */
+    void get_Z(Matrix1D<double> &v) const
     {
         basis.getCol(2, v);
     }
@@ -333,8 +333,8 @@ public:
         \begin{verbatim}
         return origin+(XX(gv)*X+YY(gv)*Y+ZZ(gv)*Z)*relative_size;
         \end{verbatim}
-        \\Ex: matrix1D<double> uv; sg.grid2universe(vector_R3(-1,2,1),uv); */
-    void grid2universe(const matrix1D<double> &gv, matrix1D<double> &uv) const
+        \\Ex: Matrix1D<double> uv; sg.grid2universe(vector_R3(-1,2,1),uv); */
+    void grid2universe(const Matrix1D<double> &gv, Matrix1D<double> &uv) const
     {
         SPEED_UP_temps;
         uv.resize(3);
@@ -365,7 +365,7 @@ public:
            cout << "What is the position within the grid of the origin? "
                 << sg.universe2grid(sg.origin);
         \end{verbatim} */
-    void universe2grid(const matrix1D<double> &uv, matrix1D<double> &gv) const
+    void universe2grid(const Matrix1D<double> &uv, Matrix1D<double> &gv) const
     {
         SPEED_UP_temps;
         gv.resize(3);
@@ -377,7 +377,7 @@ public:
     /** TRUE if the selected universe coordinate is interesting.
         A point is interesting if it is inside the reconstruction radius.
         In case that this radius is -1, then all points are interesting. */
-    bool is_interesting(const matrix1D<double> &uv) const
+    bool is_interesting(const Matrix1D<double> &uv) const
     {
         if (R2 == -1) return true;
         else return XX(uv)*XX(uv) + YY(uv)*YY(uv) + ZZ(uv)*ZZ(uv) < R2;
@@ -397,9 +397,9 @@ public:
         the volume is projecting, but it doesn't tell you the value.
         See \URL[Uproject_to_plane]{Uproject_to_plane.2.html} for more
         information.
-        \\ Ex: matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),45,45,60); */
-    void Gproject_to_plane(const matrix1D<double> &gr,
-                           double rot, double tilt, double psi, matrix1D<double> &result) const
+        \\ Ex: Matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),45,45,60); */
+    void Gproject_to_plane(const Matrix1D<double> &gr,
+                           double rot, double tilt, double psi, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         Uproject_to_plane(result, rot, tilt, psi, result);
@@ -414,10 +414,10 @@ public:
         \\ Ex:
         \begin{verbatim}
         matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
-        matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),euler);
+        Matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),euler);
         \end{verbatim} */
-    void Gproject_to_plane(const matrix1D<double> &gr,
-                           const matrix2D<double> &euler, matrix1D<double> &result) const
+    void Gproject_to_plane(const Matrix1D<double> &gr,
+                           const matrix2D<double> &euler, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         Uproject_to_plane(result, euler, result);
@@ -449,8 +449,8 @@ public:
 
         This function can be used, for instance, to compute the projections
         of the grid axes onto the projection plane. */
-    void Gdir_project_to_plane(const matrix1D<double> &gr,
-                               double rot, double tilt, double psi, matrix1D<double> &result) const
+    void Gdir_project_to_plane(const Matrix1D<double> &gr,
+                               double rot, double tilt, double psi, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         V3_MINUS_V3(result, result, origin);
@@ -463,8 +463,8 @@ public:
         the projection of a whole volume.
         See \URL[Uproject_to_plane]{Uproject_to_plane.3.html} for more
         information about the projecting process. */
-    void Gdir_project_to_plane(const matrix1D<double> &gr,
-                               const matrix2D<double> &euler, matrix1D<double> &result) const
+    void Gdir_project_to_plane(const Matrix1D<double> &gr,
+                               const matrix2D<double> &euler, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         V3_MINUS_V3(result, result, origin);
@@ -593,7 +593,7 @@ public:
     /** Minimum size for a voxel volume if it is to hold the whole grid.
         The returned vectors Gcorner1 and Gcorner2 enclose this grid.
         You can supply a deformation matrix (see \ref{blobs2voxels})*/
-    void voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
+    void voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
                        const matrix2D<double> *V = NULL) const;
 };
 
@@ -646,8 +646,8 @@ public:
     the resulting CC grid is the smallest one which includes the given corners.
 */
 SimpleGrid Create_CC_grid(double relative_size,
-                          const matrix1D<double> &corner1, const matrix1D<double> &corner2,
-                          const matrix1D<double> &origin);
+                          const Matrix1D<double> &corner1, const Matrix1D<double> &corner2,
+                          const Matrix1D<double> &origin);
 
 /** Create a CC grid as a Complex grid (two corners).
     This function makes a call to the previous one with
@@ -663,7 +663,7 @@ SimpleGrid Create_CC_grid(double relative_size,
     asymetries come from the ROUNDnD in the origin calculation.
 */
 Grid Create_CC_grid(double relative_size,
-                    const matrix1D<double> &corner1, const matrix1D<double> &corner2);
+                    const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
 
 /** Create a CC grid as a Complex grid (size).
     This function makes a call to the previous one with
@@ -704,7 +704,7 @@ Grid Create_CC_grid(double relative_size,
     with the other by (0.5,0.5,0.5) units in the grid coordinate system.
 */
 Grid Create_BCC_grid(double relative_size,
-                     const matrix1D<double> &corner1, const matrix1D<double> &corner2);
+                     const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
 
 /** Create a FCC grid as a Complex grid (two corners).
     This function constructs four CC Simple grids with the following
@@ -739,7 +739,7 @@ Grid Create_BCC_grid(double relative_size,
     \end{verbatim}
 */
 Grid Create_FCC_grid(double relative_size,
-                     const matrix1D<double> &corner1, const matrix1D<double> &corner2);
+                     const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
 //@}
 
 /**@name Grids as a single nont orthogonal CC grid. */
@@ -754,9 +754,9 @@ Grid Create_FCC_grid(double relative_size,
        XX(lowest)=-XX(highest);
     \end{verbatim}*/
 SimpleGrid Create_grid_within_sphere(double relative_size,
-                                     const matrix1D<double> &origin,
-                                     const matrix1D<double> &X, const matrix1D<double> &Y,
-                                     const matrix1D<double> &Z, double R2);
+                                     const Matrix1D<double> &origin,
+                                     const Matrix1D<double> &X, const Matrix1D<double> &Y,
+                                     const Matrix1D<double> &Z, double R2);
 
 /** Create a CC grid such that a sphere of radius R and centered
     at the origin is inside.
@@ -904,8 +904,8 @@ public:
         The grid volume is resized such that the space delimited by the
         two given corners is covered. Overlapping grid points are retained
         while non-overlapping ones are set to 0. */
-    void resize(const matrix1D<double> &corner1,
-                const matrix1D<double> &corner2)
+    void resize(const Matrix1D<double> &corner1,
+                const Matrix1D<double> &corner2)
     {
         VolumeT<T> *         Vol_aux;
         vector<VolumeT<T> * > LV_aux;

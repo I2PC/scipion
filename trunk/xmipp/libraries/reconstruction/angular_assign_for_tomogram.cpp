@@ -120,7 +120,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
             // Compare it to all possible rotations and shifts of the experimental
             // image
             ImageXmipp Ip;
-            matrix1D<double> shift(2);
+            Matrix1D<double> shift(2);
             double max_shift_X, max_shift_Y;
             if (onlyX)
             {
@@ -225,7 +225,7 @@ void Prog_angular_predict_tomography_prm::finish_processing()
     DocFile DF;
     DF.reserve(p + 1);
     DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Corr");
-    matrix1D<double> v(6);
+    Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
         v(0) = list_of_assigned[i].rot;

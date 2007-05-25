@@ -111,7 +111,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
             FileName fn_img = SF.NextImg();
             ImageXmipp I;
             I.read(fn_img);
-            matrix1D<double> aux(5);
+            Matrix1D<double> aux(5);
             aux(0) = I.rot();
             aux(1) = I.tilt();
             aux(2) = I.psi();
@@ -198,7 +198,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
         double &rot, double &tilt, double &psi)
 {
 
-    matrix1D<double> pose(5);
+    Matrix1D<double> pose(5);
     pose(0) = rot;
     pose(1) = tilt;
     pose(2) = psi;
@@ -232,7 +232,7 @@ void Prog_angular_predict_continuous_prm::finish_processing()
     DocFile DF;
     DF.reserve(p + 1);
     DF.append_comment("Headerinfo columns: Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Cost");
-    matrix1D<double> v(6);
+    Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
         v(0) = predicted_rot[i];
@@ -255,7 +255,7 @@ double CSTSplineAssignment(
     matrix3D<double> &ImDFTVolume,
     matrix2D<double> &image,
     matrix2D<double> &weight,
-    matrix1D<double> &pose_parameters,
+    Matrix1D<double> &pose_parameters,
     int               max_no_iter
 )
 {
@@ -298,7 +298,7 @@ double CSTSplineAssignment(
     Data.ny_Weight      = YSIZE(weight);
 
     // Set the sampling rates
-    matrix1D<double> sampling_rate(3);
+    Matrix1D<double> sampling_rate(3);
     sampling_rate.init_constant(1);
     Data.VoxelSize      = MULTIDIM_ARRAY(sampling_rate);
     Data.nx_VoxelSize   = 3;
@@ -316,7 +316,7 @@ double CSTSplineAssignment(
     Data.ny_OutputParameters = 5;
 
     // Set performance parameters
-    matrix1D<double> Cost(max_no_iter + 1), TimePerIter(max_no_iter + 1),
+    Matrix1D<double> Cost(max_no_iter + 1), TimePerIter(max_no_iter + 1),
     Failures(max_no_iter + 1);
     long             NumberIterPerformed, NumberSuccPerformed,
     NumberFailPerformed;

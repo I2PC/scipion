@@ -207,7 +207,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     }
 
     // Fill limited translation search vector Vtrans
-    matrix1D<double> offsets(3);
+    Matrix1D<double> offsets(3);
     nr_trans = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Maux)
     {
@@ -743,7 +743,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
     vector<double> Vweight;
     matrix3D<complex<double> > Fimg, Faux;
     matrix2D<double> A(4, 4), A_rot(4, 4), I(4, 4);
-    matrix1D<double> offsets(3);
+    Matrix1D<double> offsets(3);
     vector<double> radavg_sigma2(resol_max);
     vector<vector<double> > Vwsum_sigma2;
     vector<double> refw(nr_ref), pdf_itrans;
@@ -1001,7 +1001,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
 {
 
     matrix3D<double> Mdzero;
-    matrix1D<double> dataline(9), opt_offsets(3), mis_offsets(3);
+    Matrix1D<double> dataline(9), opt_offsets(3), mis_offsets(3);
     matrix2D<double> A_img(4, 4);
     VolumeXmipp      img;
     FileName         fn_img;
@@ -1110,8 +1110,8 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
 {
 
     VolumeXmipp Vaux, Vaux2;
-    matrix1D<double> rmean_sigma2;
-    matrix1D<int> center(3), radial_count;
+    Matrix1D<double> rmean_sigma2;
+    Matrix1D<int> center(3), radial_count;
     matrix3D<complex<double> > Faux, Fsum;
     matrix3D<double> Maux, Msum, Faux_real, Faux_imag;
     double rr, dum, avg, theta_corr, sum_ref = 0.;
@@ -1380,7 +1380,7 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
 {
 
     FileName fn_tmp, fn_base;
-    matrix1D<double> fracline(1);
+    Matrix1D<double> fracline(1);
     string comment;
     VolumeXmipp tmpvol;
     FourierVolumeXmipp Ftmpvol;

@@ -69,11 +69,11 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
     matrix2D<double> &mP = P();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
     {
-        matrix1D<double> r_p(3); // r_p are the coordinates of the
+        Matrix1D<double> r_p(3); // r_p are the coordinates of the
         // pixel being projected in the
         // coordinate system attached to the
         // projection
-        matrix1D<double> p1(3);  // coordinates of the pixel in the
+        Matrix1D<double> p1(3);  // coordinates of the pixel in the
         // universal space
         double ray_sum = 0.0;    // Line integral value
 
@@ -135,8 +135,8 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 #endif
 
             // Compute the first point in the volume intersecting the ray
-            matrix1D<double>  v(3);
-            matrix1D<int>    idx(3);
+            Matrix1D<double>  v(3);
+            Matrix1D<int>    idx(3);
             V3_BY_CT(v, P.direction, alpha_min);
             V3_PLUS_V3(v, p1, v);
 
@@ -253,11 +253,11 @@ void singleWBP(matrix3D<double> &V, Projection &P)
     matrix2D<double> &mP = P();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
     {
-        matrix1D<double> r_p(3); // r_p are the coordinates of the
+        Matrix1D<double> r_p(3); // r_p are the coordinates of the
         // pixel being projected in the
         // coordinate system attached to the
         // projection
-        matrix1D<double> p1(3);  // coordinates of the pixel in the
+        Matrix1D<double> p1(3);  // coordinates of the pixel in the
         // universal space
         double ray_sum = 0.0;    // Line integral value
 
@@ -285,8 +285,8 @@ void singleWBP(matrix3D<double> &V, Projection &P)
         if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
         // Compute the first point in the volume intersecting the ray
-        matrix1D<double>  v(3);
-        matrix1D<int>    idx(3);
+        Matrix1D<double>  v(3);
+        Matrix1D<int>    idx(3);
         V3_BY_CT(v, P.direction, alpha_min);
         V3_PLUS_V3(v, p1, v);
 
@@ -388,44 +388,44 @@ For each blob in the grid
 void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                                 const Basis &basis,
                                 Projection &proj, Projection &norm_proj,
-                                const matrix1D<double> &shift,
-                                const matrix1D<double> &aint, const matrix1D<double> &bint,
+                                const Matrix1D<double> &shift,
+                                const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                                 const matrix2D<double> &D,  const matrix2D<double> &Dinv,
                                 const matrix2D<int> &mask, int FORW, int eq_mode)
 {
-    matrix1D<double> prjX(3);                // Coordinate: Projection of the
-    matrix1D<double> prjY(3);                // 3 grid vectors
-    matrix1D<double> prjZ(3);
-    matrix1D<double> prjOrigin(3);           // Coordinate: Where in the 2D
+    Matrix1D<double> prjX(3);                // Coordinate: Projection of the
+    Matrix1D<double> prjY(3);                // 3 grid vectors
+    Matrix1D<double> prjZ(3);
+    Matrix1D<double> prjOrigin(3);           // Coordinate: Where in the 2D
     // projection plane the origin of
     // the grid projects
-    matrix1D<double> prjaint(3);             // Coordinate: Projection of the
-    matrix1D<double> prjbint(3);             // 2 deformed lattice vectors
-    matrix1D<double> prjDir;                 // Direction of projection
+    Matrix1D<double> prjaint(3);             // Coordinate: Projection of the
+    Matrix1D<double> prjbint(3);             // 2 deformed lattice vectors
+    Matrix1D<double> prjDir;                 // Direction of projection
     // in the deformed space
 
-    matrix1D<double> actprj(3);              // Coord: Actual position inside
+    Matrix1D<double> actprj(3);              // Coord: Actual position inside
     // the projection plane
-    matrix1D<double> defactprj(3);           // Coord: Actual position inside
+    Matrix1D<double> defactprj(3);           // Coord: Actual position inside
     // the deformed projection plane
-    matrix1D<double> beginZ(3);              // Coord: Plane coordinates of the
+    Matrix1D<double> beginZ(3);              // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,YY(lowest),XX(lowest))
-    matrix1D<double> beginY(3);              // Coord: Plane coordinates of the
+    Matrix1D<double> beginY(3);              // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,y0,XX(lowest))
-    matrix1D<double> footprint_size(2);      // The footprint is supposed
+    Matrix1D<double> footprint_size(2);      // The footprint is supposed
     // to be defined between
     // (-vmax,+vmax) in the Y axis,
     // and (-umax,+umax) in the X axis
     // This footprint size is the
     // R2 vector (umax,vmax).
-    matrix1D<double> deffootprint_size(2);   // The footprint size
+    Matrix1D<double> deffootprint_size(2);   // The footprint size
     // in the deformed space
     int XX_corner2, XX_corner1;              // Coord: Corners of the
     int YY_corner2, YY_corner1;              // footprint when it is projected
     // onto the projection plane
-    matrix1D<double> rc(2), r(2);            // Position vector which will
+    Matrix1D<double> rc(2), r(2);            // Position vector which will
     // move from corner1 to corner2.
     // In rc the wrapping is not
     // considered, while it is in r
@@ -535,7 +535,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     XX(footprint_size) = basis.blobprint.umax();
     YY(footprint_size) = basis.blobprint.vmax();
     N_eq = (2 * basis.blobprint.umax() + 1) * (2 * basis.blobprint.vmax() + 1);
-    matrix1D<double> c1(3), c2(3);
+    Matrix1D<double> c1(3), c2(3);
     XX(c1)           = XX(footprint_size);
     YY(c1)           = YY(footprint_size);
     XX(c2)           = -XX(c1);
@@ -594,7 +594,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     footprint2().print_shape();
     cout << endl;
 #endif
-    matrix1D<double> grid_index(3);
+    Matrix1D<double> grid_index(3);
     for (k = ZZ_lowest; k <= ZZ_highest; k++)
     {
         // Corner of the row defined by Y
@@ -749,9 +749,9 @@ void project_Crystal_Volume(
     int              Ydim,                // Dimensions of the projection
     int              Xdim,
     double rot, double tilt, double psi,  // Euler angles
-    const matrix1D<double> &shift,        // Shift to apply to projections
-    const matrix1D<double> &aint,         // First lattice vector (2x1) in voxels
-    const matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
+    const Matrix1D<double> &shift,        // Shift to apply to projections
+    const Matrix1D<double> &aint,         // First lattice vector (2x1) in voxels
+    const Matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
     const matrix2D<double> &D,            // volume deformation matrix
     const matrix2D<double> &Dinv,         // volume deformation matrix
     const matrix2D<int>   &mask,          // volume mask

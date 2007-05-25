@@ -164,11 +164,11 @@ void Prog_SSNR_prm::produce_side_info()
 void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
 {
     // These vectors are for 1D
-    matrix1D<double> S_S21D((int)(XSIZE(S()) / 2 - ring_width)),
+    Matrix1D<double> S_S21D((int)(XSIZE(S()) / 2 - ring_width)),
     S_N21D((int)(XSIZE(S()) / 2 - ring_width)),
     K1D((int)(XSIZE(S()) / 2 - ring_width)),
     S_SSNR1D;
-    matrix1D<double> N_S21D((int)(XSIZE(S()) / 2 - ring_width)),
+    Matrix1D<double> N_S21D((int)(XSIZE(S()) / 2 - ring_width)),
     N_N21D((int)(XSIZE(S()) / 2 - ring_width)),
     N_SSNR1D;
 
@@ -273,8 +273,8 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
         }
 
         // Average over rings
-        matrix1D<int>    idx(2);
-        matrix1D<double> freq(2);
+        Matrix1D<int>    idx(2);
+        Matrix1D<double> freq(2);
 
         STARTINGX(S2s()) = STARTINGY(S2s()) = 0;
         STARTINGX(N2s()) = STARTINGY(N2s()) = 0;
@@ -363,10 +363,10 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
 void Prog_SSNR_prm::Radial_average(matrix2D<double> &output)
 {
     // Compute the radial average ...........................................
-    matrix1D<double> VSSNR_avg((int)(XSIZE(VSSNR()) / 2 - ring_width));
-    matrix1D<double> K1D(VSSNR_avg);
-    matrix1D<int>    idx(3);
-    matrix1D<double> freq(3);
+    Matrix1D<double> VSSNR_avg((int)(XSIZE(VSSNR()) / 2 - ring_width));
+    Matrix1D<double> K1D(VSSNR_avg);
+    Matrix1D<int>    idx(3);
+    Matrix1D<double> freq(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(VSSNR())
     {
         VECTOR_R3(idx, j, i, k);

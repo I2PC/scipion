@@ -99,7 +99,7 @@ int main(int argc, char **argv)
         VolumeXmipp volume_sym, volume_aux;
 
         // Compute center of mass
-        matrix1D<double> center_of_mass;
+        Matrix1D<double> center_of_mass;
         volume().center_of_mass(center_of_mass, &mask_prm.get_binary_mask3D());
         cout << "Center of mass (X,Y,Z)= " << center_of_mass.transpose() << endl;
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         {
             double best_corr = 0, best_rot = rot0 - step_rot, best_tilt = tilt0 - step_tilt;
             matrix2D<double> Euler;
-            matrix1D<double> sym_axis(3);
+            Matrix1D<double> sym_axis(3);
             int maxsteps = FLOOR((rotF - rot0) / step_rot) * FLOOR((tiltF - tilt0) / step_tilt);
             cerr << "Searching symmetry axis ...\n";
             init_progress_bar(maxsteps);
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
                     // Compute symmetry axis
                     matrix2D<double> Euler;
                     Euler_angles2matrix(rot, tilt, 0, Euler);
-                    matrix1D<double> sym_axis(3);
+                    Matrix1D<double> sym_axis(3);
                     Euler.getRow(2, sym_axis);
                     sym_axis.self_transpose();
 

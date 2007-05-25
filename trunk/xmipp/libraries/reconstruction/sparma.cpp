@@ -143,7 +143,7 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
     // Set equation system for AR part of the model
     /**********************************************************************/
     matrix2D<double> Coeficients;
-    matrix1D<double> Indep_terms, ARcoeficients;
+    Matrix1D<double> Indep_terms, ARcoeficients;
     matrix2D<double> N3;
 
     // Assign the support region for the AR part of the model (N1)
@@ -249,7 +249,7 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
                 double dSigma)
 {
     bool apply_final_median_filter = false;
-    matrix1D<double> dDigitalFreq(2);
+    Matrix1D<double> dDigitalFreq(2);
 
     // Resize de Filter to the image dimensions
     Filter.resize(Img.RowNo(), Img.ColNo());

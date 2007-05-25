@@ -618,12 +618,12 @@ int component_no(const string &str)
 }
 
 // Get float vector ========================================================
-matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
+Matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
                                   int dim, int _errno,
                                   string errmsg,
                                   int exit)
 {
-    matrix1D<double> aux;
+    Matrix1D<double> aux;
     bool count_dimensionality = (dim == -1);
 
     // Find and form vector
@@ -1035,13 +1035,13 @@ bool check_param(FILE *fh, const char *param)
 }
 
 // Get vector param from file ==============================================
-matrix1D<double> get_vector_param(FILE *fh, const char *param,
+Matrix1D<double> get_vector_param(FILE *fh, const char *param,
                                   int dim, int _errno,  string errmsg, int exit)
 {
     int    argcp;
     char **argvp = NULL;
     char  *copy = NULL;
-    matrix1D<double> retval;
+    Matrix1D<double> retval;
     if (!generate_command_line(fh, param, argcp, argvp, copy))
         if (dim == -1)
             return retval;

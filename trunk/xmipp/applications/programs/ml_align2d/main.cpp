@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     matrix2D<double> P_phi, Mr2, Maux;
     vector<matrix2D<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
-    matrix1D<double> oneline(0), spectral_signal;
+    Matrix1D<double> oneline(0), spectral_signal;
     DocFile DFo;
 
     Prog_MLalign2D_prm prm;

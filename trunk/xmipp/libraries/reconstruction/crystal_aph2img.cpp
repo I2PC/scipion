@@ -392,10 +392,10 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
     int my_counter_spot = 1;
     int my_counter_film = 1;
 
-    matrix1D<double> normal_plane(3);
-    matrix1D<double> aux_vector(3);
+    Matrix1D<double> normal_plane(3);
+    Matrix1D<double> aux_vector(3);
     int DoesIntersect;
-    matrix1D<double> intersection_point;
+    Matrix1D<double> intersection_point;
     matrix2D<double>  A(3, 3);
 //     double mrc_tilt, mrc_taxa;
     matrix2D<double> E, E2D, vp(2, 2), Vp(2, 2), v(2, 2);

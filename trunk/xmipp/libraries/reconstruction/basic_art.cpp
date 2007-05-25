@@ -382,22 +382,22 @@ void Basic_ART_Parameters::usage_more()
 /* Sort_perpendicular                                                        */
 /* ------------------------------------------------------------------------- */
 void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
-                        matrix1D<int> &ordered_list, int N)
+                        Matrix1D<int> &ordered_list, int N)
 {
     int   i, j, k;
-    matrix1D<short> chosen(numIMG);     // 1 if that image has been already
+    Matrix1D<short> chosen(numIMG);     // 1 if that image has been already
     // chosen
     double min_prod;
     int   min_prod_proj;
     matrix2D<double> v(numIMG, 3);
     matrix2D<double> euler;
-    matrix1D<double> product(numIMG);
+    Matrix1D<double> product(numIMG);
 
     // Initialisation
     ordered_list.resize(numIMG);
     for (i = 0; i < numIMG; i++)
     {
-        matrix1D<double> z;
+        Matrix1D<double> z;
         // Initially no image is chosen
         VEC_ELEM(chosen, i) = 0;
 
@@ -455,7 +455,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 /* ------------------------------------------------------------------------- */
 /* No Sort                                                                   */
 /* ------------------------------------------------------------------------- */
-void no_sort(int numIMG, matrix1D<int> &ordered_list)
+void no_sort(int numIMG, Matrix1D<int> &ordered_list)
 {
     ordered_list.init_linear(0, numIMG - 1);
 }
@@ -463,10 +463,10 @@ void no_sort(int numIMG, matrix1D<int> &ordered_list)
 /* ------------------------------------------------------------------------- */
 /* Random Sort                                                               */
 /* ------------------------------------------------------------------------- */
-void sort_randomly(int numIMG, matrix1D<int> &ordered_list)
+void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 {
     int i;
-    matrix1D<int> chosen;
+    Matrix1D<int> chosen;
 
     // Initialisation
     ordered_list.resize(numIMG);
@@ -664,7 +664,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 Grid grid_basis;
                 if (R == -1)
                 {
-                    matrix1D<double> corner;
+                    Matrix1D<double> corner;
                     if (Zoutput_volume_size == 0)
                         corner = vector_R3((double)projXdim / 2, (double)projXdim / 2,
                                            (double)projXdim / 2);

@@ -46,7 +46,7 @@ void openDX::openDXFile(FileName openDXname)
 }/* openDX */
 
 
-void openDX::Add_Item(const matrix1D<double> XYZ)
+void openDX::Add_Item(const Matrix1D<double> XYZ)
 {
     double X, Y, Z;
     X = XX(XYZ);

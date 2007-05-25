@@ -224,11 +224,11 @@ void VariabilityClass::finishAnalysis()
             REPORT_ERROR(1, "VariabilityClass::finishAnalysis: "
                          "Cannot open PPP.dat for output");
         fh_dat << NFEATURES << " " << nmax << endl;
-        vector< matrix1D<double> > v;
+        vector< Matrix1D<double> > v;
         v.clear();
         for (int n = 0; n < nmax; n++)
         {
-            matrix1D<double> v_aux(NFEATURES);
+            Matrix1D<double> v_aux(NFEATURES);
 
 #ifdef MODE7
             v_aux(0) = VA[n](k,      i, j + xsize);
@@ -302,8 +302,8 @@ void VariabilityClass::finishAnalysis()
     cov-=aux*aux.transpose();
 
         ifstream fh_0;
-        matrix1D<double> avg0(NFEATURES);
-        matrix1D<int>    idx0(nmax);
+        Matrix1D<double> avg0(NFEATURES);
+        Matrix1D<int>    idx0(nmax);
         matrix2D<double> covariance0(NFEATURES, NFEATURES);
         int N0 = 0;
         GET_RESULTS(fh_0, "PPP.0", avg0, covariance0, N0, idx0);
@@ -320,8 +320,8 @@ void VariabilityClass::finishAnalysis()
 #endif
 
         ifstream fh_1;
-        matrix1D<double> avg1(NFEATURES);
-        matrix1D<int>    idx1(nmax);
+        Matrix1D<double> avg1(NFEATURES);
+        Matrix1D<int>    idx1(nmax);
         matrix2D<double> covariance1(NFEATURES, NFEATURES);
         int N1 = 0;
         GET_RESULTS(fh_1, "PPP.1", avg1, covariance1, N1, idx1);
@@ -341,7 +341,7 @@ void VariabilityClass::finishAnalysis()
         if (NFEATURES > 1)
         {
             // Perform T2-Hotelling test
-            matrix1D<double> avg_diff = avg1 - avg0;
+            Matrix1D<double> avg_diff = avg1 - avg0;
             covariance = 1.0 / (N0 + N1 - 2) *
                          ((N0 - 1) * covariance0 + (N1 - 1) * covariance1);
             covariance *= (1.0 / N0 + 1.0 / N1);
@@ -361,7 +361,7 @@ void VariabilityClass::finishAnalysis()
         }
 
         // Analysis of the covariance structure
-        matrix1D<double> eigenvalues;
+        Matrix1D<double> eigenvalues;
         if (NFEATURES > 1)
         {
             matrix2D<double> U, V;

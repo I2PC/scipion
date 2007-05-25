@@ -538,7 +538,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 
 }
 
-void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int iter)
+void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int iter)
 {
 
     SelFile                     SFnoise;
@@ -546,12 +546,12 @@ void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int 
     headerXmipp                 head;
     VolumeXmipp                 vol, nvol;
     FileName                    fn_tmp, fn_tmp2;
-    matrix1D<double>            alpha_signal, alpha_noise, input_signal, avg_alphaS, avg_alphaN;
+    Matrix1D<double>            alpha_signal, alpha_noise, input_signal, avg_alphaS, avg_alphaN;
     matrix2D<double>            alpha_T, alpha_N, Msignal, Maux, Mone, mask;
     Projection                  proj;
     int                         c, dim;
     double                      ssnr, issnr, alpha, resol, volweight, sum;
-    matrix1D<int>               center(2), radial_count;
+    Matrix1D<int>               center(2), radial_count;
 
     // Read in noise reconstruction and calculate alpha's
     SFnoise.read(fn_root + "_noise.sel");

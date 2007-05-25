@@ -113,8 +113,8 @@ protected:
     double* bestSolution;
     double* popEnergy;
     double* population;
-    matrix1D< double > trialGrad;
-    matrix1D< double > stepsGrad;
+    Matrix1D< double > trialGrad;
+    Matrix1D< double > stepsGrad;
 
 private:
     void Best1Exp(int candidate);

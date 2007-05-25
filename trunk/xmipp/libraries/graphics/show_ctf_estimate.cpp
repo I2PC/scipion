@@ -151,11 +151,11 @@ void AssignCTFViewer::drawFirstZero(vector<float> &prm)
     painter.setBrush(brush);
     painter.setRasterOp(XorROP);
 
-    matrix1D<int> previous_point(2);
+    Matrix1D<int> previous_point(2);
     for (double ang = 0; ang <= 360; ang += 1)
     {
-        matrix1D<double> freq(2), dir(2);
-        matrix1D<int>    current_point(2);
+        Matrix1D<double> freq(2), dir(2);
+        Matrix1D<int>    current_point(2);
 
         // Compute first zero in the given direction
         VECTOR_R2(dir, COSD(ang), SIND(ang));

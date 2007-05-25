@@ -51,7 +51,7 @@ double CTF_fitness(double *);
 // Some aliases
 Adjust_CTF_Parameters *global_prm;
 matrix2D<double>      *f;               // The CTF to model
-matrix1D<double>      *global_adjust;   // Current theoretical adjustment
+Matrix1D<double>      *global_adjust;   // Current theoretical adjustment
 
 // Frequency of each point in digital units
 matrix2D<double>       global_x_digfreq;
@@ -61,7 +61,7 @@ matrix2D<double>       global_x_contfreq;
 matrix2D<double>       global_y_contfreq;
 matrix2D<double>       global_w_contfreq;
 matrix2D<double>       global_mask;
-matrix1D<double>       global_w_count;
+Matrix1D<double>       global_w_count;
 
 // Penalization for forbidden values of the parameters
 double         global_heavy_penalization;
@@ -643,8 +643,8 @@ void Adjust_CTF_Parameters::produce_side_info()
     global_y_contfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
     global_w_contfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
 
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_x_digfreq)
     {
         XX(idx) = j;
@@ -725,8 +725,8 @@ void Adjust_CTF_Parameters::produce_side_info()
 /* The model is taken from global_adjust and global_ctfmodel is modified */
 void generate_model_so_far(ImageXmipp &I, bool apply_log = false)
 {
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
     assign_CTF_from_parameters(VEC_ARRAY(*global_adjust), global_ctfmodel,
                                0, ALL_CTF_PARAMETERS, global_prm->astigmatic_noise);
@@ -823,10 +823,10 @@ void save_intermediate_results(const FileName &fn_root, bool
     }
 
     // Generate radial average
-    matrix1D<double> radial_CTFmodel_avg(YSIZE(save()) / 2);
-    matrix1D<double> radial_CTFampl_avg(YSIZE(save()) / 2);
-    matrix1D<double> radial_enhanced_avg(YSIZE(save()) / 2);
-    matrix1D<int>    radial_N(YSIZE(save()) / 2);
+    Matrix1D<double> radial_CTFmodel_avg(YSIZE(save()) / 2);
+    Matrix1D<double> radial_CTFampl_avg(YSIZE(save()) / 2);
+    Matrix1D<double> radial_enhanced_avg(YSIZE(save()) / 2);
+    Matrix1D<int>    radial_N(YSIZE(save()) / 2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
         if (!global_mask(i, j)) continue;
@@ -858,8 +858,8 @@ void save_intermediate_results(const FileName &fn_root, bool
 void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
         matrix2D<double> &model)
 {
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
     // Copy the PSD
     model = global_prm->enhanced_ctftomodel_fullsize();
@@ -905,8 +905,8 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
 void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
         matrix2D<double> &model)
 {
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
     // The right part is the scaled PSD
     model = global_prm->enhanced_ctftomodel_fullsize();
@@ -1192,7 +1192,7 @@ void compute_central_region(double &w1, double &w2, double ang)
 {
     w1 = global_max_freq;
     w2 = global_min_freq;
-    matrix1D<double> freq(2), dir(2);
+    Matrix1D<double> freq(2), dir(2);
 
     // Compute first and third zero in the given direction
     VECTOR_R2(dir, COSD(ang), SIND(ang));
@@ -1288,7 +1288,7 @@ void estimate_background_sqrt_parameters()
     // Find the linear least squares solution for the sqrt part
     matrix2D<double> A(2, 2);
     A.init_zeros();
-    matrix1D<double> b(2);
+    Matrix1D<double> b(2);
     b.init_zeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
@@ -1327,7 +1327,7 @@ void estimate_background_sqrt_parameters()
 
     // Now optimize .........................................................
     double fitness;
-    matrix1D<double> steps;
+    Matrix1D<double> steps;
     steps.resize(SQRT_CTF_PARAMETERS);
     steps.init_constant(0);
     steps(0) = steps(1) = steps(2) = 1;
@@ -1383,9 +1383,9 @@ void estimate_background_gauss_parameters()
         cout << "Computing first background Gaussian parameters ...\n";
 
     // Compute radial averages
-    matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
-    matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
-    matrix1D<int>    radial_N(YSIZE(*f) / 2);
+    Matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
+    Matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
+    Matrix1D<int>    radial_N(YSIZE(*f) / 2);
     double w_max_gauss = 0.25;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
@@ -1403,7 +1403,7 @@ void estimate_background_gauss_parameters()
     // Compute the average radial error
     double error2_avg = 0;
     int N_avg = 0;
-    matrix1D<double> error;
+    Matrix1D<double> error;
     error.init_zeros(radial_CTFmodel_avg);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
     {
@@ -1495,7 +1495,7 @@ void estimate_background_gauss_parameters()
     // Find the linear least squares solution for the gauss part
     matrix2D<double> A(2, 2);
     A.init_zeros();
-    matrix1D<double> b(2);
+    Matrix1D<double> b(2);
     b.init_zeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
@@ -1548,9 +1548,9 @@ void estimate_background_gauss_parameters2()
         cout << "Computing first background Gaussian2 parameters ...\n";
 
     // Compute radial averages
-    matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
-    matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
-    matrix1D<int>    radial_N(YSIZE(*f) / 2);
+    Matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
+    Matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
+    Matrix1D<int>    radial_N(YSIZE(*f) / 2);
     double w_max_gauss = 0.25;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
@@ -1572,7 +1572,7 @@ void estimate_background_gauss_parameters2()
     }
 
     // Compute the average radial error
-    matrix1D<double> error;
+    Matrix1D<double> error;
     error.init_zeros(radial_CTFmodel_avg);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
     {
@@ -1609,7 +1609,7 @@ void estimate_background_gauss_parameters2()
     // Find the linear least squares solution for the gauss part
     matrix2D<double> A(2, 2);
     A.init_zeros();
-    matrix1D<double> b(2);
+    Matrix1D<double> b(2);
     b.init_zeros();
     int N = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
@@ -1619,7 +1619,7 @@ void estimate_background_gauss_parameters2()
         double fmod = global_w_contfreq(i, j);
 
         // Compute the zero on the direction of this point
-        matrix1D<double> u(2), fzero(2);
+        Matrix1D<double> u(2), fzero(2);
         XX(u) = global_x_contfreq(i, j) / fmod;
         YY(u) = global_y_contfreq(i, j) / fmod;
         global_ctfmodel.zero(1, u, fzero);
@@ -1677,7 +1677,7 @@ void estimate_background_gauss_parameters2()
         double fmod = global_w_contfreq(i, j);
 
         // Compute the zero on the direction of this point
-        matrix1D<double> u(2), fzero(2);
+        Matrix1D<double> u(2), fzero(2);
         XX(u) = global_x_contfreq(i, j) / fmod;
         YY(u) = global_y_contfreq(i, j) / fmod;
         global_ctfmodel.zero(1, u, fzero);
@@ -1732,7 +1732,7 @@ void estimate_envelope_parameters()
     global_penalize = false;
     int iter;
     double fitness;
-    matrix1D<double> steps;
+    Matrix1D<double> steps;
     steps.resize(ENVELOPE_PARAMETERS);
     steps.init_constant(1);
     steps(1) = 0; // Do not optimize Cs
@@ -1825,7 +1825,7 @@ void estimate_defoci()
     }
 
     double K_so_far = global_ctfmodel.K;
-    matrix1D<double> steps(DEFOCUS_PARAMETERS);
+    Matrix1D<double> steps(DEFOCUS_PARAMETERS);
     steps.init_constant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
@@ -2025,7 +2025,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     // Some variables needed by all steps
     int iter;
     double fitness;
-    matrix1D<double> steps;
+    Matrix1D<double> steps;
 
     /************************************************************************
       STEPs 1, 2, 3 and 4:  Find background which best fits the CTF

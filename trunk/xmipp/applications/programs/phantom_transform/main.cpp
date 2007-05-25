@@ -36,10 +36,10 @@ public:
     double rot, tilt, psi;
     bool Align_mode;
     bool Axis_mode;
-    matrix1D<double> axis;
+    Matrix1D<double> axis;
     double ang;
-    matrix1D<double> shift;
-    matrix1D<double> scale;
+    Matrix1D<double> shift;
+    Matrix1D<double> scale;
 
     matrix2D<double> A3D;
 

@@ -132,7 +132,7 @@ public:
     /** Number for which limited translation is zero */
     int zero_trans;
     /** Offsets for limited translations */
-    vector<matrix1D<double> > Vtrans;
+    vector<Matrix1D<double> > Vtrans;
     /** Start all optimal offsets from zero values */
     bool zero_offsets;
     /** Limited search range for origin offsets */
@@ -168,7 +168,7 @@ public:
     /** Matrix with resolution value at each Fourier pixel */
     matrix2D<int> Mresol;
     /** Vectors with sigma2 (for each defocus group) */
-    vector<matrix1D<double> > Vsig, Vctf, Vdec;
+    vector<Matrix1D<double> > Vsig, Vctf, Vdec;
     /** pointers for the different ctf-matrices */
     vector<int> pointer_ctf, pointer_i, pointer_j, pointer_sigctf;
     vector<int> pointer_old, pointer_i_old, pointer_j_old;
@@ -218,7 +218,7 @@ public:
 
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
-    void calculate_wiener_defocus_series(matrix1D<double> &spectral_signal, int iter);
+    void calculate_wiener_defocus_series(Matrix1D<double> &spectral_signal, int iter);
 
     /// Generate initial references from random subset averages
     void generate_initial_references();
@@ -262,7 +262,7 @@ public:
     // Calculate the FT of a translated matrix using a phase shift in
     // Fourier space
     void Fourier_translate2D(const matrix2D<complex<double> > &Fimg,
-                             int focus, matrix1D<double> &trans,
+                             int focus, Matrix1D<double> &trans,
                              matrix2D<complex<double> > &Fimg_shift);
 
     // If not determined yet: search optimal offsets using maxCC
@@ -291,7 +291,7 @@ public:
                                vector<double> &sumw_mirror,
                                double &LL, double &LL_old, double &fracweight, 
 			       int &opt_refno, double &opt_psi, 
-			       matrix1D<double> &opt_offsets,
+			       Matrix1D<double> &opt_offsets,
                                vector<double> &opt_offsets_ref,
                                vector<double > &pdf_directions);
 
@@ -304,7 +304,7 @@ public:
                               vector<double> &sumw, vector<double> &sumw_mirror,
                               double &LL, double &fracweight,
                               int &opt_refno, double &opt_psi,
-                              matrix1D<double> &opt_offsets,
+                              Matrix1D<double> &opt_offsets,
                               vector<double> &opt_offsets_ref,
                               vector<double> &pdf_directions);
 
@@ -317,7 +317,7 @@ public:
                                vector<double> &sumw, vector<double> &sumw_mirror,
                                double &LL, double &fracweight,
                                int &opt_refno, double &opt_psi,
-                               matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
+                               Matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
                                vector<double > &pdf_directions);
 
     /// Calculate maxCC averages for new model and new model parameters
@@ -328,7 +328,7 @@ public:
                                vector <vector< matrix2D<double> > > &Msum_imgs,
                                vector<double> &sumw, vector<double> &sumw_mirror,
                                double &minSQ, int &opt_refno, double &opt_psi,
-                               matrix1D<double> &opt_offsets,
+                               Matrix1D<double> &opt_offsets,
                                vector<double> &pdf_directions);
 
     /// Integrate over all experimental images
@@ -347,7 +347,7 @@ public:
                            double &wsum_sigma_offset, vector<double> &sumw,
                            vector<double> &sumw_mirror,
                            double &sumcorr, double &sumw_allrefs,
-                           matrix1D<double> &spectral_signal);
+                           Matrix1D<double> &spectral_signal);
 
     /// check convergence
     bool check_convergence(vector<double> &conv);

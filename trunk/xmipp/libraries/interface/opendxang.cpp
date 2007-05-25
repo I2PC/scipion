@@ -49,7 +49,7 @@ void openDXang::openDXangFile(FileName openDXangname_aux)
 }/* openDXang */
 
 
-void openDXang::Add_Item(const matrix1D<double> RotTiltPsi)
+void openDXang::Add_Item(const Matrix1D<double> RotTiltPsi)
 {
     double Xp, Yp, Zp;
     double X, Y, Z;

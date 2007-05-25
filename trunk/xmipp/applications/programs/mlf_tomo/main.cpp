@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     matrix3D<double> Maux;
     vector<int> count_defocus;
     FileName fn_img, fn_tmp;
-    matrix1D<double> oneline(0);
+    Matrix1D<double> oneline(0);
     DocFile DFo, DFf;
     SelFile SFa;
 

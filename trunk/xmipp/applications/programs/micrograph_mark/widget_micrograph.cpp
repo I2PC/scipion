@@ -142,8 +142,8 @@ void Classification_model::build_model()
     }
 }
 
-double Classification_model::distance(const matrix1D<double> &X,
-                                      const matrix1D<double> &Y)
+double Classification_model::distance(const Matrix1D<double> &X,
+                                      const Matrix1D<double> &Y)
 {
     if (XSIZE(__sigma_inv) == 0) return 1e30;
     matrix2D<double> dif;
@@ -154,10 +154,10 @@ double Classification_model::distance(const matrix1D<double> &X,
 }
 
 double Classification_model::euclidean_distance_to_average(
-    const matrix1D<double> &my_X)
+    const Matrix1D<double> &my_X)
 {
     if (XSIZE(__avg) == 0) return 1e30;
-    matrix1D<double> dif = my_X - __avg;
+    Matrix1D<double> dif = my_X - __avg;
     return dif.sum2();
 }
 
@@ -166,7 +166,7 @@ void Classification_model::compute_largest_distance()
 {
     __largest_distance = 0.0;
     int N = __training_particle.size();
-    matrix1D<double> dist(N);
+    Matrix1D<double> dist(N);
 #ifdef DEBUG
     cout << "Computing largest distance ...\n";
 #endif
@@ -428,7 +428,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     //because we need bigger image for denoising but for scanning
     //particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-    matrix1D<double> v;
+    Matrix1D<double> v;
     int N = 1;
     while (get_corner_piece(top, left, skip_y,
                             next_skip_x, next_skip_y, next_top, next_left))
@@ -657,7 +657,7 @@ void QtWidgetMicrograph::classifyMask()
     matrix2D<int> *classif1 = new matrix2D<int>;
     classif1->copy_shape(mask);
     classif1->init_constant(-1);
-    matrix1D<int> Nrad(__radial_bins);
+    Matrix1D<int> Nrad(__radial_bins);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
         double radius = sqrt((double)(i * i + j * j));
@@ -679,7 +679,7 @@ void QtWidgetMicrograph::classifyMask()
     // Create the holders for the radius values in classif1
     for (int i = 0; i < __radial_bins; i++)
     {
-        matrix1D<int> *aux = new matrix1D<int>;
+        Matrix1D<int> *aux = new Matrix1D<int>;
         aux->init_zeros(Nrad(i));
         __radial_val.push_back(aux);
     }
@@ -699,9 +699,9 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
     __model.clear();
     int num_part = _idx.size();
     __model.reserve_examples(num_part);
-    matrix1D<double> v;
+    Matrix1D<double> v;
 
-    matrix1D<char> visited(num_part);
+    Matrix1D<char> visited(num_part);
     while (visited.sum() < num_part)
     {
         int part_i = 0;
@@ -740,7 +740,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
         }
 
         //make vector from the neighbours
-        vector< matrix1D<int> > nbr;
+        vector< Matrix1D<int> > nbr;
         nbr.reserve(num_part);
         find_nbr(_idx, part_i, x, y, posx, posy, visited, nbr);
         for (int i = 0;i < nbr.size();i++)
@@ -769,7 +769,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
 /* Build classification vector --------------------------------------------- */
 //#define DEBUG
 bool QtWidgetMicrograph::build_vector(int _x, int _y,
-                                      matrix1D<double> &_result)
+                                      Matrix1D<double> &_result)
 {
     // First part is the foreground histogram
     // Second part is the background histogram
@@ -801,7 +801,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     }
 #endif
 
-    matrix1D<int> radial_idx(__radial_bins);
+    Matrix1D<int> radial_idx(__radial_bins);
     matrix2D<double> particle;
     particle.init_zeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
@@ -1049,8 +1049,8 @@ bool QtWidgetMicrograph::prepare_piece()
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
 void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
-                                  int _posx, int _posy, matrix1D<char> &_visited,
-                                  vector< matrix1D<int> > &_nbr)
+                                  int _posx, int _posy, Matrix1D<char> &_visited,
+                                  vector< Matrix1D<int> > &_nbr)
 {
     int piece_xsize = XSIZE(__piece);
     int piece_ysize = YSIZE(__piece);
@@ -1085,7 +1085,7 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
             (nx + xmask2 < right) &&
             (ny + ymask2 < bottom))
         {
-            matrix1D<int> current_nbr;
+            Matrix1D<int> current_nbr;
             current_nbr.init_zeros(3);
             current_nbr(0) = current_part;
             current_nbr(1) = nx - left;
@@ -1189,7 +1189,7 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
     int previous_direction = -1;
     double dist_at_previous = 0, dist_left, dist_right, dist_top, dist_bottom;
     bool improvement = true;
-    matrix1D<double> current_vec;
+    Matrix1D<double> current_vec;
     double current_dist = my_P.dist;
     int    current_x = my_P.x, current_y = my_P.y;
     const matrix2D<int> &mask = __mask.get_binary_mask2D();
@@ -1511,7 +1511,7 @@ void QtWidgetMicrograph::classify_errors()
             for (int l = 0; l < lmax; l++, ptr++)
             {
                 double best_dist = 0;
-                matrix1D<double> &current_vec =
+                Matrix1D<double> &current_vec =
                     error_class.__training_particle.at(l).vec;
                 int source = -1;
                 for (int j = 0; j < __Nerror_models; j++)

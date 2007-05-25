@@ -40,9 +40,9 @@ int main(int argc, char **argv)
     vector<double> sumw, sumw_mirror;
     matrix2D<double> P_phi, Mr2, Maux, Maux2;
     vector<matrix2D<double> > Mwsum_sigma2;
-    vector<matrix1D<double> > spectral_snr;
+    vector<Matrix1D<double> > spectral_snr;
     FileName fn_img, fn_tmp;
-    matrix1D<double> oneline(0), spectral_signal;
+    Matrix1D<double> oneline(0), spectral_signal;
     DocFile DFo;
     // For parallelization
     int rank, size, num_img_tot;

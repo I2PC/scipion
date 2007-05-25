@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     {
 
         DF.reserve(SF.ImgNo());
-        matrix1D<double> docline;
+        Matrix1D<double> docline;
         DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Mirror (7)");
 
         docline.init_zeros(7);

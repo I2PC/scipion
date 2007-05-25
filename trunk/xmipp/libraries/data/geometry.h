@@ -55,7 +55,7 @@
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * matrix1D< double > Z = vector_R3(0, 0, 1), P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > Z = vector_R3(0, 0, 1), P = vector_R3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P,Z,0,Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
  * @endcode
@@ -65,10 +65,10 @@
  *
  * The result and point vectors can be the same one.
  */
-void Uproject_to_plane(const matrix1D< double >& point,
-                       const matrix1D< double >& direction,
+void Uproject_to_plane(const Matrix1D< double >& point,
+                       const Matrix1D< double >& direction,
                        double distance,
-                       matrix1D< double >& result);
+                       Matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler angles)
  * @ingroup GeometricalOperations
@@ -92,7 +92,7 @@ void Uproject_to_plane(const matrix1D< double >& point,
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P, 0, 0, 0, Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
  * @endcode
@@ -102,11 +102,11 @@ void Uproject_to_plane(const matrix1D< double >& point,
  *
  * The result and point vectors can be the same one.
  */
-void Uproject_to_plane(const matrix1D< double >& r,
+void Uproject_to_plane(const Matrix1D< double >& r,
                        double rot,
                        double tilt,
                        double psi,
-                       matrix1D< double >& result);
+                       Matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler matrix)
  * @ingroup GeometricalOperations
@@ -130,7 +130,7 @@ void Uproject_to_plane(const matrix1D< double >& r,
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
  * matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
  * Uproject_to_plane(P, euler, Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
@@ -141,9 +141,9 @@ void Uproject_to_plane(const matrix1D< double >& r,
  *
  * The result and point vectors can be the same one.
  */
-void Uproject_to_plane(const matrix1D< double >& r,
+void Uproject_to_plane(const Matrix1D< double >& r,
                        const matrix2D< double >& euler,
-                       matrix1D< double >& result);
+                       Matrix1D< double >& result);
 
 /** Spherical distance
  * @ingroup GeometricalOperations
@@ -152,8 +152,8 @@ void Uproject_to_plane(const matrix1D< double >& r,
  * the line which goes from one point to the other going over the surface of a
  * sphere, supposing that both points lie on the same sphere.
  */
-double spherical_distance(const matrix1D< double >& r1,
-                          const matrix1D< double >& r2);
+double spherical_distance(const Matrix1D< double >& r1,
+                          const Matrix1D< double >& r2);
 
 /** Point to line distance in 3D
  * @ingroup GeometricalOperations
@@ -161,9 +161,9 @@ double spherical_distance(const matrix1D< double >& r1,
  * Let a line in 3-D be specified by the point a and the vector v, this fuction
  * returns the minimum distance of this line to the point p.
  */
-double point_line_distance_3D(const matrix1D< double >& p,
-                              const matrix1D< double >& a,
-                              const matrix1D< double >& v);
+double point_line_distance_3D(const Matrix1D< double >& p,
+                              const Matrix1D< double >& a,
+                              const Matrix1D< double >& v);
 
 /** Point to plane distance in 3D
  * @ingroup GeometricalOperations
@@ -171,11 +171,11 @@ double point_line_distance_3D(const matrix1D< double >& p,
  * Let a plane in 3-D be specified by the point a and the perpendicular vector
  * v, this fuction returns the minimum distance of this plane to the point p.
  */
-inline double point_plane_distance_3D(const matrix1D< double >& p,
-                                      const matrix1D< double >& a,
-                                      const matrix1D< double >& v)
+inline double point_plane_distance_3D(const Matrix1D< double >& p,
+                                      const Matrix1D< double >& a,
+                                      const Matrix1D< double >& v)
 {
-    static matrix1D< double > p_a(3);
+    static Matrix1D< double > p_a(3);
 
     V3_MINUS_V3(p_a, p, a);
     return (dot_product(p_a, v) / v.module());
@@ -387,11 +387,11 @@ void Bspline_model_fitting(const vector< fit_point >& IN_points,
  *
  * The v0 and vF vectors can be reused as outputs.
  */
-void rectangle_enclosing(const matrix1D< double >& v0,
-                         const matrix1D< double >& vF,
+void rectangle_enclosing(const Matrix1D< double >& v0,
+                         const Matrix1D< double >& vF,
                          const matrix2D< double >& V,
-                         matrix1D< double >& corner1,
-                         matrix1D< double >& corner2);
+                         Matrix1D< double >& corner1,
+                         Matrix1D< double >& corner2);
 
 /** Box which encloses a deformed box
  * @ingroup GeometricalOperations
@@ -406,11 +406,11 @@ void rectangle_enclosing(const matrix1D< double >& v0,
  *
  * The v0 and vF vectors can be reused as outputs.
  */
-void box_enclosing(const matrix1D< double >& v0,
-                   const matrix1D< double >& vF,
+void box_enclosing(const Matrix1D< double >& v0,
+                   const Matrix1D< double >& vF,
                    const matrix2D< double >& V,
-                   matrix1D< double >& corner1,
-                   matrix1D< double >& corner2);
+                   Matrix1D< double >& corner1,
+                   Matrix1D< double >& corner2);
 
 /** Point inside polygon
  * @ingroup GeometricalOperations
@@ -419,8 +419,8 @@ void box_enclosing(const matrix1D< double >& v0,
  * ust be the same), determine whether another point is inside the polygon or
  * not.
  */
-bool point_inside_polygon(const vector< matrix1D< double > > & polygon,
-                          const matrix1D< double >& point);
+bool point_inside_polygon(const vector< Matrix1D< double > > & polygon,
+                          const Matrix1D< double >& point);
 
 /** Line Plane Intersection
  * @ingroup GeometricalOperations
@@ -481,10 +481,10 @@ bool point_inside_polygon(const vector< matrix1D< double > > & polygon,
  * return -1 if line paralell to plane
  * return +1 if line in the plane
  */
-int line_plane_intersection(const matrix1D< double > normal_plane,
-                            const matrix1D< double > vector_line,
-                            matrix1D< double >& intersection_point,
-                            const matrix1D< double > point_line,
+int line_plane_intersection(const Matrix1D< double > normal_plane,
+                            const Matrix1D< double > vector_line,
+                            Matrix1D< double >& intersection_point,
+                            const Matrix1D< double > point_line,
                             double point_plane_at_x_y_zero = 0.);
 
 /// @defgroup EulerOperations Euler operations
@@ -563,7 +563,7 @@ void Euler_Angles_after_compresion(const double rot,
 void Euler_direction(double alpha,
                      double beta,
                      double gamma,
-                     matrix1D< double >& v);
+                     Matrix1D< double >& v);
 
 /** Euler direction2angles
  * @ingroup EulerOperations
@@ -571,7 +571,7 @@ void Euler_direction(double alpha,
  * This function returns the 3 Euler angles associated to the direction given by
  * the vector v. The 3rd Euler angle is set always to 0
  */
-void Euler_direction2angles(matrix1D< double >& v,
+void Euler_direction2angles(Matrix1D< double >& v,
                             double& alpha,
                             double& beta,
                             double& gamma);
@@ -834,8 +834,8 @@ void Euler_rotate(const matrix3D< double >& V,
  * of the intersection. If the ray is tangent to the sphere the length is 0. See
  * Ellipsoid to know how you can intersect any ray with any ellipsoid/sphere.
  */
-double intersection_unit_sphere(const matrix1D< double >& u,
-                                const matrix1D< double >& r);
+double intersection_unit_sphere(const Matrix1D< double >& u,
+                                const Matrix1D< double >& r);
 
 /** Intersection of a ray with a unit cylinder
  * @ingroup Intersections
@@ -849,8 +849,8 @@ double intersection_unit_sphere(const matrix1D< double >& u,
  *
  * See Cylinder to know how you can intersect any ray with any cylinder.
  */
-double intersection_unit_cylinder(const matrix1D< double >& u,
-                                  const matrix1D< double >& r);
+double intersection_unit_cylinder(const Matrix1D< double >& u,
+                                  const Matrix1D< double >& r);
 
 /** Intersection of a ray with a unit cube
  * @ingroup Intersections
@@ -860,7 +860,7 @@ double intersection_unit_cylinder(const matrix1D< double >& u,
  * The ray is defined by its direction (u) and a passing point (r). See Cube to
  * know how you can intersect any ray with any cube.
  */
-double intersection_unit_cube(const matrix1D< double >& u,
-                              const matrix1D< double >& r);
+double intersection_unit_cube(const Matrix1D< double >& u,
+                              const Matrix1D< double >& r);
 
 #endif

@@ -102,7 +102,7 @@ struct blobtype
     \\ Ex:
     \begin{verbatim}
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    matrix1D<double> v=vector_R3(1,1,1);
+    Matrix1D<double> v=vector_R3(1,1,1);
     cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << endl;
     \end{verbatim} */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
@@ -121,7 +121,7 @@ double kaiser_value(double r, double a, double alpha, int m);
     \\ Ex:
     \begin{verbatim}
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    matrix1D<double> v=vector_R3(1,1,1);
+    Matrix1D<double> v=vector_R3(1,1,1);
     cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
          << endl;
     \end{verbatim} */
@@ -267,7 +267,7 @@ double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
     for an explanation of the limit and V parameters.*/
 void voxel_volume_shape(const GridVolume &vol_blobs,
                         const struct blobtype &blob, const matrix2D<double> *D,
-                        matrix1D<int> &corner1, matrix1D<int> &size);
+                        Matrix1D<int> &corner1, Matrix1D<int> &size);
 
 /** Blobs ---> Voxels.
     The voxel size is defined between two coordinates (Gcorner1 and Gcorner2)

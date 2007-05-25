@@ -126,7 +126,7 @@ void Prog_projection_matching_crystal_prm::produce_Side_info()
     double min_shift, max_shift, increment_shift, my_shift2;
     double shift_distance2 = shift_distance * shift_distance;
     shift_vector.clear();
-    matrix1D<double> v_aux(2);
+    Matrix1D<double> v_aux(2);
     //shift already applied to the image
     //psi has not been applied
     min_shift = (-1.0) * shift_distance;
@@ -318,7 +318,7 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images(DocFile &DFo,
     ImageXmipp img;
     FileName fn_img, fn_tmp;
     sumCC = 0.;
-    matrix1D<double> dataline(8);
+    Matrix1D<double> dataline(8);
 
     // Initialize
     nn = SFexp.ImgNo();

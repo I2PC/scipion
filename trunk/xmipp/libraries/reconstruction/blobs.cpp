@@ -139,7 +139,7 @@ double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
                            const matrix2D<double> *D)
 {
     SPEED_UP_temps;
-    matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
+    Matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
     double         actual_radius;
     int          i, j, k;
     double        sum = 0.0;
@@ -397,20 +397,20 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
                              bool FORW = true, int eq_mode = VARTK)
 {
     matrix2D<double> Dinv;                   // Inverse of D
-    matrix1D<double> act_coord(3);           // Coord: Actual position inside
+    Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
-    matrix1D<double> real_position(3);       // Coord: actual position after
+    Matrix1D<double> real_position(3);       // Coord: actual position after
     // applying the V transformation
-    matrix1D<double> beginZ(3);              // Coord: Voxel coordinates of the
+    Matrix1D<double> beginZ(3);              // Coord: Voxel coordinates of the
     // blob at the 3D point
     // (z0,YY(lowest),XX(lowest))
-    matrix1D<double> beginY(3);              // Coord: Voxel coordinates of the
+    Matrix1D<double> beginY(3);              // Coord: Voxel coordinates of the
     // blob at the 3D point
     // (z0,y0,XX(lowest))
-    matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
+    Matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
     // blob in the voxel volume
-    matrix1D<double> gcurrent(3);            // Position in g of current point
-    matrix1D<double> blob_table;             // Something like a blobprint
+    Matrix1D<double> gcurrent(3);            // Position in g of current point
+    Matrix1D<double> blob_table;             // Something like a blobprint
     // but with the values of the
     // blob in space
     double         d;                        // Distance between the center
@@ -467,7 +467,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
     // universal coord. system
     grid.grid2universe(grid.lowest, beginZ);
 
-    matrix1D<double> grid_index(3);
+    Matrix1D<double> grid_index(3);
     for (k = (int) ZZ(grid.lowest); k <= (int) ZZ(grid.highest); k++)
     {
         // Corner of the row defined by Y
@@ -692,9 +692,9 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
 //#define DEBUG
 void voxel_volume_shape(const GridVolume &vol_blobs,
                         const struct blobtype &blob, const matrix2D<double> *D,
-                        matrix1D<int> &corner1, matrix1D<int> &size)
+                        Matrix1D<int> &corner1, Matrix1D<int> &size)
 {
-    matrix1D<double>  Gcorner1(3),  Gcorner2(3);     // lowest and highest coord.
+    Matrix1D<double>  Gcorner1(3),  Gcorner2(3);     // lowest and highest coord.
 
     corner1.resize(3);
     size.resize(3);
@@ -766,7 +766,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
     // Resize and set starting corner .......................................
     if (Zdim == 0 || Ydim == 0 || Xdim == 0)
     {
-        matrix1D<int> size, corner;
+        Matrix1D<int> size, corner;
         voxel_volume_shape(vol_blobs, blob, D, corner, size);
         (*vol_voxels).init_zeros(ZZ(size), YY(size), XX(size));
         (*vol_voxels).startingX() = XX(corner);
@@ -830,7 +830,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
 {
 
     // Compute vol_coefs shape
-    matrix1D<int> corner1, size;
+    Matrix1D<int> corner1, size;
     voxel_volume_shape(vol_blobs, blob, NULL, corner1, size);
     double g_2 = vol_blobs.grid(0).relative_size / 2;
     XX(corner1) = (int)(FLOOR(XX(corner1)) / g_2);
@@ -857,7 +857,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
             for (int i = YY_lowest; i <= YY_highest; i++)
                 for (int j = XX_lowest; j <= XX_highest; j++)
                 {
-                    matrix1D<double> grid_index(3), univ_position(3),
+                    Matrix1D<double> grid_index(3), univ_position(3),
                     coef_position(3);
                     VECTOR_R3(grid_index, j, i, k);
                     vol_blobs.grid(n).grid2universe(grid_index, univ_position);
@@ -1048,7 +1048,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
     Grid grid_blobs;
     if (R == -1)
     {
-        matrix1D<double> corner1(3), corner2(3);
+        Matrix1D<double> corner1(3), corner2(3);
         XX(corner1) = STARTINGX(*vol_voxels);
         YY(corner1) = STARTINGY(*vol_voxels);
         ZZ(corner1) = STARTINGZ(*vol_voxels);

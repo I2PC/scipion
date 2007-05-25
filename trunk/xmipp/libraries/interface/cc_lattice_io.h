@@ -78,9 +78,9 @@ public:
     /** Search origing in MRC coordinates */
     double O[2];
     /** a vector */
-    matrix1D <double> a;
+    Matrix1D <double> a;
     /** b vector */
-    matrix1D <double> b;
+    Matrix1D <double> b;
     /** Index Ranges for a vector **/
     int max_i, min_i;
     /** Index Ranges for b vector **/

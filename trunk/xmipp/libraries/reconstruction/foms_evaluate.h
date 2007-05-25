@@ -195,19 +195,19 @@ public:
     /**@name Structural consistency results*/
     //@{
     /// for features: L2 error
-    matrix1D<double> scL2_FOMs;
+    Matrix1D<double> scL2_FOMs;
     /// for features: L1 error
-    matrix1D<double> scL1_FOMs;
+    Matrix1D<double> scL1_FOMs;
     /// for features: error in the averages
-    matrix1D<double> scmu_FOMs;
+    Matrix1D<double> scmu_FOMs;
     /// for features: error in the stddevs
-    matrix1D<double> scdev_FOMs;
+    Matrix1D<double> scdev_FOMs;
     /// for features: error in the ranges
-    matrix1D<double> scrange_FOMs;
+    Matrix1D<double> scrange_FOMs;
     /// for features: correlation between reconstruction and phantom
-    matrix1D<double> sccorr_FOMs;
+    Matrix1D<double> sccorr_FOMs;
     /// for features: mutual information
-    matrix1D<double> scinf_FOMs;
+    Matrix1D<double> scinf_FOMs;
     /// global: L2 error
     double           scL2_FOM;
     /// global: L1 error
@@ -233,13 +233,13 @@ public:
     /**@name Histogram based results */
     //@{
     /// for double cylinders: vertical error
-    matrix1D<double> hsvr_FOMs;
+    Matrix1D<double> hsvr_FOMs;
     /// for features: error in hot spot
-    matrix1D<double> hsmu_FOMs;
+    Matrix1D<double> hsmu_FOMs;
     /// for features: border separability
-    matrix1D<double> hsbr_FOMs;
+    Matrix1D<double> hsbr_FOMs;
     /// for features: error in detectability
-    matrix1D<double> hsdt_FOMs;
+    Matrix1D<double> hsdt_FOMs;
     /// global: error for double cyilinder elong
     double           hsvr_FOM;
     /// global: error for mean separability
@@ -307,33 +307,33 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
 class FOMs
 {
 public:
-    matrix1D<double> scL2;
-    matrix1D<double> scL1;
-    matrix1D<double> scL2w;
-    matrix1D<double> scL1w;
-    matrix1D<double> scmu;
-    matrix1D<double> scdev;
-    matrix1D<double> scrange;
-    matrix1D<double> sccorr;
-    matrix1D<double> scinf;
-    matrix1D<double> scresol;
-    matrix1D<double> scL20;
-    matrix1D<double> scL10;
-    matrix1D<double> scmu0;
-    matrix1D<double> scdev0;
-    matrix1D<double> scrange0;
-    matrix1D<double> scL21;
-    matrix1D<double> scL11;
-    matrix1D<double> scmu1;
-    matrix1D<double> scdev1;
-    matrix1D<double> scrange1;
-    matrix1D<double> hsvr;
-    matrix1D<double> hsmu;
-    matrix1D<double> hsbr;
-    matrix1D<double> hsdt;
-    matrix1D<double> drrt;
-    matrix1D<double> dsbl;
-    matrix1D<double> dsad;
+    Matrix1D<double> scL2;
+    Matrix1D<double> scL1;
+    Matrix1D<double> scL2w;
+    Matrix1D<double> scL1w;
+    Matrix1D<double> scmu;
+    Matrix1D<double> scdev;
+    Matrix1D<double> scrange;
+    Matrix1D<double> sccorr;
+    Matrix1D<double> scinf;
+    Matrix1D<double> scresol;
+    Matrix1D<double> scL20;
+    Matrix1D<double> scL10;
+    Matrix1D<double> scmu0;
+    Matrix1D<double> scdev0;
+    Matrix1D<double> scrange0;
+    Matrix1D<double> scL21;
+    Matrix1D<double> scL11;
+    Matrix1D<double> scmu1;
+    Matrix1D<double> scdev1;
+    Matrix1D<double> scrange1;
+    Matrix1D<double> hsvr;
+    Matrix1D<double> hsmu;
+    Matrix1D<double> hsbr;
+    Matrix1D<double> hsdt;
+    Matrix1D<double> drrt;
+    Matrix1D<double> dsbl;
+    Matrix1D<double> dsad;
 public:
     /// Empty constructor. n FOMs are expected
     FOMs(int n);

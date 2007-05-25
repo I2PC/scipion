@@ -42,17 +42,17 @@ public:
     FileName        fn_out;
     /** No. of unit cells along the X,Y,Z axis.
     */
-    matrix1D<int> NoCells;
+    Matrix1D<int> NoCells;
     /** Move the phase origin (degrees)
     */
-    matrix1D<double> Phase_Shift;
+    Matrix1D<double> Phase_Shift;
     /** Keep contrast.
         If FALSE then the image is contrast is reversed.
     */
     int             KeepContrast;
     /** number of samples in Real space  (X,Y,Z)
     */
-    matrix1D<int>             Celldim;
+    Matrix1D<int>             Celldim;
     /** This image APH */
     APHFile3D       aph_file;
 public:

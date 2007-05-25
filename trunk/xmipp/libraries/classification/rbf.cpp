@@ -28,7 +28,7 @@
 #define Vij(v,i,j) v.itemAt(i)[j]
 
 // Design Matrix -----------------------------------------------------------
-void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
+void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
                        xmippCTVectors &X, matrix2D<double> &H)
 {
     int p = X.size(); // Number of points to evaluate
@@ -76,7 +76,7 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
     // Select the default radius
     int vsize = X.dimension();
     RBF.r.resize(vsize);
-    matrix1D<double> maxX(vsize), minX(vsize);
+    Matrix1D<double> maxX(vsize), minX(vsize);
     maxX.init_zeros();
     minX.init_zeros();
     for (int i = 0; i < p; i++)
@@ -90,8 +90,8 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
     // Compute model for each scale
     double  aux_error, best_error = 1e38;
     vector<int> aux_idx, best_idx;
-    matrix1D<double> aux_r, best_r;
-    matrix1D<double> aux_w, best_w;
+    Matrix1D<double> aux_r, best_r;
+    Matrix1D<double> aux_w, best_w;
 
     for (double scale = minscale; scale <= maxscale; scale += scalestep)
     {
@@ -135,9 +135,9 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
 // Train a single scale ----------------------------------------------------
 //#define DEBUG
 void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
-               vector<double> &y, matrix1D<double> &r, double scale,
-               vector<int> &idx_out, matrix1D<double> &r_out,
-               matrix1D<double> &w_out, double &error)
+               vector<double> &y, Matrix1D<double> &r, double scale,
+               vector<int> &idx_out, Matrix1D<double> &r_out,
+               Matrix1D<double> &w_out, double &error)
 {
 
     int d = X.dimension(); // Dimension of vectors
@@ -160,7 +160,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     double lam = 1e-9;
 
     matrix2D<double> Hm, Hn, Fm, U;
-    matrix1D<double> Hy, FmFm, Fty, err, hh, aux1D;
+    Matrix1D<double> Hy, FmFm, Fty, err, hh, aux1D;
     double fy, ff, msc, min_msc;
     int age;
 
@@ -180,7 +180,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // It is the first regressor ......................................
             // Compute the change in the cost function due to the
             // first regressor
-            matrix1D<double> FF, Fty, err; // Sum of the squares of F by columns
+            Matrix1D<double> FF, Fty, err; // Sum of the squares of F by columns
             FF.init_zeros(XSIZE(F));
             Fty.init_zeros(XSIZE(F));
             // MATLAB: FF=sum(F.*F,1)';

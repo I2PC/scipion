@@ -110,7 +110,7 @@ public:
     /** Center of the feature.
         The center of the feature is understood differently according to the
         specific class, see them to know exactly how this value is interpreted. */
-    matrix1D<double>   Center;
+    Matrix1D<double>   Center;
 
     /** Maximum distance from the center.
         This value is a precalculated and tells the maximum distance from any
@@ -153,15 +153,15 @@ public:
         is an auxiliar vector with dimension 3 (must be externally resized)
         used to do some computations. This auxiliar vector must be supplied in
         order to gain speed as no memory allocating and freeing is needed. */
-    virtual int point_inside(const matrix1D<double> &r,
-                             matrix1D<double> &aux) const = 0;
+    virtual int point_inside(const Matrix1D<double> &r,
+                             Matrix1D<double> &aux) const = 0;
 
     /** Point inside a feature.
         This function is based in the previous one. It makes the same but
         you needn't supply the auxiliar vector. */
-    int point_inside(const matrix1D<double> &r) const
+    int point_inside(const Matrix1D<double> &r) const
     {
-        matrix1D<double> aux(3);
+        Matrix1D<double> aux(3);
         return point_inside(r, aux);
     }
 
@@ -175,8 +175,8 @@ public:
         is an auxiliar vector with dimension 3 (must be externally resized)
         used to do some computations. This auxiliar vector must be supplied in
         order to gain speed as no memory allocating and freeing is needed. */
-    virtual double density_inside(const matrix1D<double> &r,
-                                  matrix1D<double> &aux) const = 0;
+    virtual double density_inside(const Matrix1D<double> &r,
+                                  Matrix1D<double> &aux) const = 0;
 
 
     /** Speeded up voxel inside a feature.
@@ -185,15 +185,15 @@ public:
         supposed to be 1, and r is the center of the voxel in R3.
         This speeded up function needs
         two vectors with dimension 3 externally resized. */
-    int voxel_inside(const matrix1D<double> &r, matrix1D<double> &aux1,
-                     matrix1D<double> &aux2) const;
+    int voxel_inside(const Matrix1D<double> &r, Matrix1D<double> &aux1,
+                     Matrix1D<double> &aux2) const;
 
     /** Voxel inside a feature.
         This function is based in the previous one. It makes the same but
         you needn't supply the auxiliar vectors. */
-    int voxel_inside(const matrix1D<double> &r) const
+    int voxel_inside(const Matrix1D<double> &r) const
     {
-        matrix1D<double> aux1(3), aux2(3);
+        Matrix1D<double> aux1(3), aux2(3);
         return voxel_inside(r, aux1, aux2);
     }
 
@@ -204,8 +204,8 @@ public:
         in R3. This speeded up function needs
         two vectors with dimension 3 externally resized. */
 
-    double voxel_inside_by_normalized_density(const matrix1D<double> &r, matrix1D<double> &aux1,
-            matrix1D<double> &aux2) const;
+    double voxel_inside_by_normalized_density(const Matrix1D<double> &r, Matrix1D<double> &aux1,
+            Matrix1D<double> &aux2) const;
 
 
     /** Speeded up sphere intersecting feature.
@@ -213,16 +213,16 @@ public:
         inside this feature. r is the center of the sphere in R3.
         This speeded up function needs
         two vectors with dimension 3 externally resized. */
-    int intersects_sphere(const matrix1D<double> &r, double radius,
-                          matrix1D<double> &aux1, matrix1D<double> &aux2, matrix1D<double> &aux3)
+    int intersects_sphere(const Matrix1D<double> &r, double radius,
+                          Matrix1D<double> &aux1, Matrix1D<double> &aux2, Matrix1D<double> &aux3)
     const;
 
     /** Sphere intersecting feature.
         This function is based in the previous one. It makes the same but
         you needn't supply the auxiliar vectors. */
-    int intersects_sphere(const matrix1D<double> &r, double radius) const
+    int intersects_sphere(const Matrix1D<double> &r, double radius) const
     {
-        matrix1D<double> aux1(3), aux2(3), aux3(3);
+        Matrix1D<double> aux1(3), aux2(3), aux3(3);
         return intersects_sphere(r, radius, aux1, aux2, aux3);
     }
 
@@ -270,17 +270,17 @@ public:
         order to gain speed. r is the passing point expressed in the
         feature coordinate system, and u is the direction in the same
         coordinate system. */
-    virtual double intersection(const matrix1D<double> &direction,
-                                const matrix1D<double> &passing_point, matrix1D<double> &r,
-                                matrix1D<double> &u) const = 0;
+    virtual double intersection(const Matrix1D<double> &direction,
+                                const Matrix1D<double> &passing_point, Matrix1D<double> &r,
+                                Matrix1D<double> &u) const = 0;
 
     /** Intersection of a feature with a ray.
         This function does the same as the previous one but you needn't provide
         extra auxiliar vectors. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point) const
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point) const
     {
-        matrix1D<double> r(3), u(3);
+        Matrix1D<double> r(3), u(3);
         return intersection(direction, passing_point, r, u);
     }
 
@@ -332,8 +332,8 @@ public:
                     ...
         }
         \end{verbatim}*/
-    void corners(const Volume *V, matrix1D<double> &corner1,
-                 matrix1D<double> &corner2);
+    void corners(const Volume *V, Matrix1D<double> &corner1,
+                 Matrix1D<double> &corner2);
 
 #define INTERNAL 0
 #define EXTERNAL 1
@@ -500,12 +500,12 @@ public:
     /** Speeded up point inside a sphere.
         This function tells you if a point is inside the sphere or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an Sphere.
         This function tells you the density of the sphere at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -522,9 +522,9 @@ public:
     /** Intersection of a ray with a sphere.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of a sphere.
         This function returns 4/3*PI*radius*radius*radius.
@@ -604,11 +604,11 @@ public:
     /** Speeded up point inside a blob.
         This function tells you if a point is inside the blob or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a blob.
         This function tells you the density of the blob at point r  */
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Return a scaled Blob.
         The center, density, and behaviour of the new blob is exactly the
@@ -624,9 +624,9 @@ public:
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
 //ROB pending
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Mass of a Blob.
         This function returns mass inside a blob. 3 is the dimension
@@ -720,12 +720,12 @@ public:
     /** Speeded up point inside a cylinder.
         This function tells you if a point is inside the cylinder or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an cylinder.
         This function tells you the density of the cylinder at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -742,9 +742,9 @@ public:
     /** Intersection of a ray with a cylinder.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of a cylinder.
         This function returns 4/3*PI*radius*radius*height.
@@ -852,12 +852,12 @@ public:
     /** Speeded up point inside a double cylinder.
         This function tells you if a point is inside any of the cylinders or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a double cylinder.
         This function tells you the density of the double cylinder at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -876,9 +876,9 @@ public:
     /** Intersection of a ray with a double cylinder.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. The ray intersection consider both cylinders, of course. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of a double cylinder.
         This function returns 2* 4/3*PI*radius*radius*height.
@@ -974,12 +974,12 @@ public:
     /** Speeded up point inside a cube.
         This function tells you if a point is inside the cube or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an Cube.
         This function tells you the density of the cube at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -996,9 +996,9 @@ public:
     /** Intersection of a ray with a cube, NOT IMPLEMENTED!!!.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of a cube.
         This function returns xdim*ydim*zdim.
@@ -1094,12 +1094,12 @@ public:
     /** Speeded up point inside an ellipsoid.
         This function tells you if a point is inside the elliposoid or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a Ellipsoid.
         This function tells you the density of the ellipsoid at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -1116,9 +1116,9 @@ public:
     /** Intersection of a ray with an ellipsoid.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of an ellipsoid.
         This function returns 4/3*PI*xradius*yradius*zradius.
@@ -1212,12 +1212,12 @@ public:
     /** Speeded up point inside a cone.
         This function tells you if a point is inside the cone or not.
         See \Ref{Feature::point_inside} */
-    int point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const;
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a cone.
         This function tells you the density of the cone at point r
         for constant valued features is trivial*/
-    double density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     {
         return (1.);
     }
@@ -1234,9 +1234,9 @@ public:
     /** Intersection of a ray with a cone, NOT IMPLEMENTED!!!!.
         See \Ref{Feature::intersection} to know more about the parameters
         meaning. */
-    double intersection(const matrix1D<double> &direction,
-                        const matrix1D<double> &passing_point,
-                        matrix1D<double> &r, matrix1D<double> &u) const;
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
 
     /** Volume of a cone.
         This function returns 1/3*PI*radius*radius*height.
@@ -1438,15 +1438,15 @@ public:
         in order to gain speed in the calculations. This is very useful
         when checking if many voxels are inside any feature. See also
         \Ref{Feature::voxel_inside} to know more. */
-    int voxel_inside_any_feat(const matrix1D<double> &r,
-                              matrix1D<double> &aux1, matrix1D<double> &aux2) const;
+    int voxel_inside_any_feat(const Matrix1D<double> &r,
+                              Matrix1D<double> &aux1, Matrix1D<double> &aux2) const;
 
     /** Voxel inside any feature.
         The same as the previous one but you needn't supply the extra auxiliar
         vectors. */
-    int voxel_inside_any_feat(const matrix1D<double> &r) const
+    int voxel_inside_any_feat(const Matrix1D<double> &r) const
     {
-        matrix1D<double> aux1(3), aux2(3);
+        Matrix1D<double> aux1(3), aux2(3);
         return voxel_inside_any_feat(r, aux1, aux2);
     }
 
@@ -1456,17 +1456,17 @@ public:
         returned.
         This speeded up function needs
         two vectors with dimension 3 externally resized. */
-    int any_feature_intersects_sphere(const matrix1D<double> &r, double radius,
-                                      matrix1D<double> &aux1, matrix1D<double> &aux2, matrix1D<double> &aux3)
+    int any_feature_intersects_sphere(const Matrix1D<double> &r, double radius,
+                                      Matrix1D<double> &aux1, Matrix1D<double> &aux2, Matrix1D<double> &aux3)
     const;
 
     /** Sphere intersecting feature.
         This function is based in the previous one. It makes the same but
         you needn't supply the auxiliar vectors. */
-    int any_feature_intersects_sphere(const matrix1D<double> &r,
+    int any_feature_intersects_sphere(const Matrix1D<double> &r,
                                       double radius) const
     {
-        matrix1D<double> aux1(3), aux2(3), aux3(3);
+        Matrix1D<double> aux1(3), aux2(3), aux3(3);
         return any_feature_intersects_sphere(r, radius, aux1, aux2, aux3);
     }
 //@}

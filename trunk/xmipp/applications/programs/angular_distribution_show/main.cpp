@@ -126,13 +126,13 @@ int main(int argc, char *argv[])
         Euler_up_down(rot,tilt,psi,rot,tilt,psi);
 
         double rot, tilt, psi;
-        vector< matrix1D<double> > v, v_ang;
+        vector< Matrix1D<double> > v, v_ang;
         v.reserve(AngleNo);
         v_ang.reserve(AngleNo);
         for (int i = 0; i < AngleNo; i++)
         {
-            matrix1D<double> aux(3);
-            matrix1D<double> aux_ang(6);
+            Matrix1D<double> aux(3);
+            Matrix1D<double> aux_ang(6);
 
 
             GET_ANGLES(i + 1);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 // Compute histogram of distances =============================================
         if (fn_hist != "")
         {
-            matrix1D<double> dist;
+            Matrix1D<double> dist;
 
 #define di VEC_ELEM(dist,i)
 #define dj VEC_ELEM(dist,j)
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     y=400.0f-x*250.0f/60; \
     x=300.0f+tmp*250.0f/60;
 
-            matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
+            Matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
             matrix2D<double> A, euler_view;
             Euler_angles2matrix(rot_view, tilt_view, 0.0f, euler_view);
             origin.init_zeros();
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
                 // Check if this triangle must be drawn
                 if (solid_sphere)
                 {
-                    matrix1D<double> view_direction, p0p;
+                    Matrix1D<double> view_direction, p0p;
                     euler_view.getRow(2, view_direction);
                     p0p = p0;
                     p0p.resize(3);
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
                 }
 
                 // Project this triangle onto the view plane and write in PS
-                matrix1D<double> pp(3);
+                Matrix1D<double> pp(3);
                 Uproject_to_plane(p1, euler_view, pp);
                 TO_PS(XX(pp), YY(pp));
                 fh_ps << "newpath\n";

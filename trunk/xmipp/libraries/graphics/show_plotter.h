@@ -111,7 +111,7 @@ public:
          int main(int argc, char *argv[]) {
             try {
                // Data to plot
-               matrix1D<double> y;
+               Matrix1D<double> y;
                y.init_linear(1,100);
 
                // Setup the interface
@@ -137,13 +137,13 @@ public:
     ~Plotter();
 
     /** Assign a new curve to the plotter.
-        It needs an ID for the curve and a matrix1D with the curve.
+        It needs an ID for the curve and a Matrix1D with the curve.
         it will be assigned to CurveMap and shown in the plotter.*/
-    void setCurveData(int id, const matrix1D<double> &Y);
+    void setCurveData(int id, const Matrix1D<double> &Y);
 
     /** Assign a new curve to the plotter. */
-    void setCurveData(int id, const matrix1D<double> &X,
-                      const matrix1D<double> &Y);
+    void setCurveData(int id, const Matrix1D<double> &X,
+                      const Matrix1D<double> &Y);
 
     /** Assign a new curve to the plotter.
         The first column is assumed to be the X axis and the second column

@@ -51,7 +51,7 @@ public:
 public:
     /** Set of harmonics.
      */
-    std::vector< matrix1D< double > > Harmonics;
+    std::vector< Matrix1D< double > > Harmonics;
 
     /** Set of images.
      */

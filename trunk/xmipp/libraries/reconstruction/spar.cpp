@@ -43,7 +43,7 @@
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermA(matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
+double ComputeTermA(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
 {
     double A = 0;
 
@@ -80,7 +80,7 @@ double ComputeTermA(matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParamete
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermB(matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
+double ComputeTermB(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
 {
     double B = 0;
 
@@ -195,7 +195,7 @@ double CausalAR(matrix2D<double> &Img,
 
     // Set equation system for AR model
     matrix2D<double> Coeficients;
-    matrix1D<double> Indep_terms, ARcoeficients;
+    Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1) - mF, (lF - l0 + 1)*(mF - m0 + 1) - mF);
 
@@ -340,7 +340,7 @@ double NonCausalAR(matrix2D<double> &Img,
 
     // Set equation system for AR model
     matrix2D<double> Coeficients;
-    matrix1D<double> Indep_terms, ARcoeficients;
+    Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1), (lF - l0 + 1)*(mF - m0 + 1));
 
@@ -434,8 +434,8 @@ void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
        is done */
 
     // Compute the filter
-    matrix1D<int>    iIndex(2);       // index in the Fourier image
-    matrix1D<double> dDigitalFreq(2); // digital frequency corresponding to and
+    Matrix1D<int>    iIndex(2);       // index in the Fourier image
+    Matrix1D<double> dDigitalFreq(2); // digital frequency corresponding to and
     // index
 
 #ifdef DEBUG

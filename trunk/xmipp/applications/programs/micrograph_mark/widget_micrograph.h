@@ -60,7 +60,7 @@ public:
     int idx;                // Index of this particle within the micrograph
     // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
-    matrix1D<double> vec;   // vector of that particle
+    Matrix1D<double> vec;   // vector of that particle
     double dist;          // distance from the avg vector
 
     // Print
@@ -75,7 +75,7 @@ class Classification_model
 {
 public:
     // Average of the model
-    matrix1D<double>           __avg;
+    Matrix1D<double>           __avg;
     // Covariance of the model
     matrix2D<double>           __sigma;
     // Inverse of sigma
@@ -120,16 +120,16 @@ public:
     void compute_largest_distance();
 
     // Distance between two vectors
-    double distance(const matrix1D<double> &my_X, const matrix1D<double> &my_Y);
+    double distance(const Matrix1D<double> &my_X, const Matrix1D<double> &my_Y);
 
     // Distance between a vector and the average
-    double distance_to_average(const matrix1D<double> &my_X)
+    double distance_to_average(const Matrix1D<double> &my_X)
     {
         return distance(__avg, my_X);
     }
 
     // Euclidean distance between a vector and the average
-    double euclidean_distance_to_average(const matrix1D<double> &my_X);
+    double euclidean_distance_to_average(const Matrix1D<double> &my_X);
 
     // Print
     friend ostream & operator << (ostream &_out, const Classification_model &_m);
@@ -166,7 +166,7 @@ private:
     Mask_Params                __mask;
     vector < matrix2D<int> * > __mask_classification;
     bool                       __use_background;
-    vector < matrix1D<int> * > __radial_val;
+    vector < Matrix1D<int> * > __radial_val;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __auto_model;
@@ -306,7 +306,7 @@ public:
     // a reduced version of a piece in the micrograph)
     // (0,0) is the top-left corner
     // Returns true if the vector is successfully built
-    bool build_vector(int _x, int _y, matrix1D<double> &_result);
+    bool build_vector(int _x, int _y, Matrix1D<double> &_result);
 
     // Get a piece of the micrograph centered at position x,y (if possible)
     // the position of (x,y) in the piece is returned in (posx, posy)
@@ -335,8 +335,8 @@ public:
     // and their positions in the piece image
     void find_nbr(vector<int> &_idx, int _index,
                   int _x, int _y,
-                  int _posx, int _posy, matrix1D<char> &_visited,
-                  vector< matrix1D<int> > &_nbr);
+                  int _posx, int _posy, Matrix1D<char> &_visited,
+                  vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
     void automaticallySelectParticles();

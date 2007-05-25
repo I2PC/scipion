@@ -132,8 +132,8 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
 void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
                             Projection &proj, Projection &norm_proj,
                             int Ydim, int Xdim,
-                            double rot, double tilt, double psi, const matrix1D<double> &shift,
-                            const matrix1D<double> &aint, const matrix1D<double> &bint,
+                            double rot, double tilt, double psi, const Matrix1D<double> &shift,
+                            const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                             const matrix2D<double> &D, const matrix2D<double> &Dinv,
                             const matrix2D<int> &mask, int FORW, int eq_mode = ARTK);
 //@}
@@ -194,29 +194,29 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         const VolumeT<int> *VNeq, matrix2D<double> *M,
                         double ray_length)
 {
-    matrix1D<double> zero(3);                // Origin (0,0,0)
-    static matrix1D<double> prjPix(3);       // Position of the pixel within the
+    Matrix1D<double> zero(3);                // Origin (0,0,0)
+    static Matrix1D<double> prjPix(3);       // Position of the pixel within the
     // projection
-    static matrix1D<double> prjX(3);         // Coordinate: Projection of the
-    static matrix1D<double> prjY(3);         // 3 grid vectors
-    static matrix1D<double> prjZ(3);
-    static matrix1D<double> prjOrigin(3);    // Coordinate: Where in the 2D
+    static Matrix1D<double> prjX(3);         // Coordinate: Projection of the
+    static Matrix1D<double> prjY(3);         // 3 grid vectors
+    static Matrix1D<double> prjZ(3);
+    static Matrix1D<double> prjOrigin(3);    // Coordinate: Where in the 2D
     // projection plane the origin of
     // the grid projects
-    static matrix1D<double> prjDir(3);       // Projection direction
+    static Matrix1D<double> prjDir(3);       // Projection direction
 
-    static matrix1D<double> actprj(3);       // Coord: Actual position inside
+    static Matrix1D<double> actprj(3);       // Coord: Actual position inside
     // the projection plane
-    static matrix1D<double> beginZ(3);       // Coord: Plane coordinates of the
+    static Matrix1D<double> beginZ(3);       // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,YY(lowest),XX(lowest))
-    static matrix1D<double> univ_beginY(3);  // Coord: coordinates of the
+    static Matrix1D<double> univ_beginY(3);  // Coord: coordinates of the
     // grid point
     // (z0,y0,XX(lowest))
-    static matrix1D<double> univ_beginZ(3);  // Coord: coordinates of the
+    static Matrix1D<double> univ_beginZ(3);  // Coord: coordinates of the
     // grid point
     // (z0,YY(lowest),XX(lowest))
-    static matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
+    static Matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,y0,XX(lowest))
     double XX_footprint_size;                // The footprint is supposed
@@ -344,9 +344,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     // Compute the grid lattice vectors in space ............................
     static matrix2D<double> grid_basis(3, 3);
     grid_basis = grid.basis * grid.relative_size;
-    static matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
-    static matrix1D<double> gridY(3);  // in universal coordinates
-    static matrix1D<double> gridZ(3);
+    static Matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
+    static Matrix1D<double> gridY(3);  // in universal coordinates
+    static Matrix1D<double> gridZ(3);
     grid_basis.getCol(0, gridX);
     grid_basis.getCol(1, gridY);
     grid_basis.getCol(2, gridZ);
@@ -354,7 +354,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     univ_beginZ = XX(grid.lowest) * gridX + YY(grid.lowest) * gridY +
                   ZZ(grid.lowest) * gridZ + grid.origin;
 
-    static matrix1D<double> univ_position(3);
+    static Matrix1D<double> univ_position(3);
     int number_of_basis = 0;
     for (k = ZZ_lowest; k <= ZZ_highest; k++)
     {
@@ -389,7 +389,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         printf(" 3D universal position (%f,%f,%f) \n",
                                XX(univ_position), YY(univ_position), ZZ(univ_position));
                         cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << endl;
-                        matrix1D<double> aux;
+                        Matrix1D<double> aux;
                         Uproject_to_plane(univ_position, proj.euler, aux);
                         cout << " Center of the basis proj (more accurate) " << aux.transpose() << endl;
                     }

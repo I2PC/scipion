@@ -456,7 +456,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
     double min, max;
     bool accuracy_mode = prm.MeasNo == -1;
     int sample_size = (accuracy_mode) ? 3 : prm.MeasNo;
-    matrix1D<double> training_FOMs(sample_size);
+    Matrix1D<double> training_FOMs(sample_size);
     prm.only_structural = true;
     for (int k = 0; k < sample_size; k++)
     {
@@ -472,19 +472,19 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
             else if (training_FOM == "scL1w") training_FOMs(k) = results.scL1w_FOM;
             else if (training_FOM == "scL21")
             {
-                matrix1D<double> aux = results.scL2_FOMs;
+                Matrix1D<double> aux = results.scL2_FOMs;
                 aux.window(1, XSIZE(aux) - 1);
                 training_FOMs(k) = aux.compute_avg();
             }
             else if (training_FOM == "scL11")
             {
-                matrix1D<double> aux = results.scL1_FOMs;
+                Matrix1D<double> aux = results.scL1_FOMs;
                 aux.window(1, XSIZE(aux) - 1);
                 training_FOMs(k) = aux.compute_avg();
             }
             if (accuracy_mode && k > 0)
             {
-                matrix1D<double> aux = training_FOMs;
+                Matrix1D<double> aux = training_FOMs;
                 aux.window(0, k);
                 aux.compute_stats(training_avg, training_stddev, min, max);
                 double t = student_outside_probb(prm.unluckiness, k + 1);

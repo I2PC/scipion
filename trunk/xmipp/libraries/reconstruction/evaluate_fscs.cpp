@@ -114,12 +114,12 @@ void Prog_Evaluate_FSCs_Parameters::produce_side_info()
 
 /* Compute average resolution ============================================== */
 void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
-    double &avg_resol, double &stddev_resol, matrix1D<double> &resol)
+    double &avg_resol, double &stddev_resol, Matrix1D<double> &resol)
 {
     SF_recons.go_first_ACTIVE();
     resol.init_zeros(SF_recons.ImgNo());
 
-    matrix1D<double> frequency, FSC;
+    Matrix1D<double> frequency, FSC;
     int i = 0;
     cerr << "Estimating average resolution ...\n";
     init_progress_bar(XSIZE(resol));
@@ -138,14 +138,14 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
 
 /* Compute average resolution ============================================== */
 void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
-    matrix1D<double> &frequency,
-    matrix1D<double> &avg_FSC, matrix1D<double> &min_FSC,
-    matrix1D<double> &max_FSC)
+    Matrix1D<double> &frequency,
+    Matrix1D<double> &avg_FSC, Matrix1D<double> &min_FSC,
+    Matrix1D<double> &max_FSC)
 {
     SF_recons.go_first_ACTIVE();
     int N = SF_recons.ImgNo();
 
-    matrix1D<double> FSC;
+    Matrix1D<double> FSC;
     int n = 0;
     cerr << "Estimating average FSC ...\n";
     init_progress_bar(N);
@@ -171,15 +171,15 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
 
 /* Compare two sets ======================================================== */
 void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
-    matrix1D<double> &frequency,
-    matrix1D<double> &avg_diff_FSC, matrix1D<double> &stddev_diff_FSC)
+    Matrix1D<double> &frequency,
+    Matrix1D<double> &avg_diff_FSC, Matrix1D<double> &stddev_diff_FSC)
 {
     SF_recons.go_first_ACTIVE();
     SF_recons2.go_first_ACTIVE();
     int N = SF_recons.ImgNo();
 
     VolumeXmipp reconstruction2;
-    matrix1D<double> FSC1, FSC2;
+    Matrix1D<double> FSC1, FSC2;
     int n = 0;
     cerr << "Estimating average FSC ...\n";
     init_progress_bar(N);
@@ -214,7 +214,7 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
 /* Main routine ============================================================ */
 void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm)
 {
-    matrix1D<double> frequency, FSC, min_FSC, max_FSC, stddev_FSC;
+    Matrix1D<double> frequency, FSC, min_FSC, max_FSC, stddev_FSC;
     double avg_resol, stddev_resol, resolution, avg_FSC;
     int i;
     ofstream fh_out;

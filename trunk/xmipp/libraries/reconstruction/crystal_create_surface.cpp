@@ -147,13 +147,13 @@ public:          //This should be in testinteg
 
 
 // The maping_function maps each (h,k) point in a plane surface into a parabole and/or a cosine surface
-void Prog_create_surface::maping_function(matrix1D<double > a, matrix1D<double > b, int h, int k, surface_coordinates &result)
+void Prog_create_surface::maping_function(Matrix1D<double > a, Matrix1D<double > b, int h, int k, surface_coordinates &result)
 {
 
     int cont;
     double uplimit, lowlimit, middle, vx;
     double integralt, inte_low = 0, inte_high, cteA, cteB, coordx;
-    matrix1D<double> vec(2), normalized_vec(2), normal_vec(3);
+    Matrix1D<double> vec(2), normalized_vec(2), normal_vec(3);
     Func1 cosine;   //cosine surface
     Func2 parabole; //parabole surface
 
@@ -278,7 +278,7 @@ void Prog_create_surface::run()
 
     double x_des = 0, y_des = 0, z_des = 0.0; //Noise parameters (u and std)
     double x_nor_des = 0, y_nor_des = 0, z_nor_des = 0.0; //Noise parameters (u and std)
-    matrix1D<double> data_line(10);
+    Matrix1D<double> data_line(10);
 
     DocFile  DF_report_standard;
     surface_coordinates result;

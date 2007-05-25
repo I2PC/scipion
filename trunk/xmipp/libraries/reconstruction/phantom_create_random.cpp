@@ -329,9 +329,9 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             else                  Xdim = XSIZE(side.VoxelPhantom());
         if (Ydim == -1) Ydim = Xdim;
 
-        matrix1D<double> volume(prm.N_stats);
-        matrix1D<double> proj_power(prm.N_stats);
-        matrix1D<double> proj_area(prm.N_stats);
+        Matrix1D<double> volume(prm.N_stats);
+        Matrix1D<double> proj_power(prm.N_stats);
+        Matrix1D<double> proj_area(prm.N_stats);
         Projection proj;
         double power_avg, power_stddev, area_avg, area_stddev, avg, stddev, dummy;
         init_progress_bar(prm.N_stats);

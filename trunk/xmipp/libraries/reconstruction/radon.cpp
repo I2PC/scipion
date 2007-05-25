@@ -28,7 +28,7 @@
 #include <data/geometry.h>
 
 void Radon_Transform(Volume *vol, double rot, double tilt,
-                     matrix1D<double> &RT)
+                     Matrix1D<double> &RT)
 {
     matrix3D<double>   Rvol;
 
@@ -49,8 +49,8 @@ void Radon_Transform(Volume *vol, double rot, double tilt,
 // The number of voxels in each layer is a double to make easier some
 // computations outside
 void Local_Radon_Transform(Volume *vol, double rot, double tilt,
-                           int label, Volume *vol_label, matrix1D<double> &RT,
-                           matrix1D<double> &RT_n)
+                           int label, Volume *vol_label, Matrix1D<double> &RT,
+                           Matrix1D<double> &RT_n)
 {
     matrix3D<double>   Rvol;
     matrix3D<double>   Lvol;

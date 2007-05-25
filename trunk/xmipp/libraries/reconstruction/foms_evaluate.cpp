@@ -35,7 +35,7 @@
 
 /* Compute special statistics ============================================== */
 /* Average of a vector without counting the -1, starting at index i0 */
-void avg_without__1(matrix1D<double> &v, double &avg, int i0)
+void avg_without__1(Matrix1D<double> &v, double &avg, int i0)
 {
     int N = 0;
     avg = 0;
@@ -50,7 +50,7 @@ void avg_without__1(matrix1D<double> &v, double &avg, int i0)
 }
 
 /* Average and standard deviation  without counting the -1 */
-void stats__1(const matrix1D<double> &v, double &avg, double &stddev)
+void stats__1(const Matrix1D<double> &v, double &avg, double &stddev)
 {
     int N = 0;
     avg = stddev = 0;
@@ -330,7 +330,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
 void compute_FOMs(const Prog_Evaluate_Parameters &prm,
                   EVALUATE_Side_Info &side, EVALUATE_results &results)
 {
-    matrix1D<double> feat_voxels;
+    Matrix1D<double> feat_voxels;
     histogram1D hist_recons;
 
     /* Structural consistency FOMs --------------------------------------------- */
@@ -345,7 +345,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 #ifdef COMPUTE_THROUGH_SINGLE_VALUE
     compute_resolution(side.vol_phantom, side.vol_recons, results.resol_FOM);
 #else
-    matrix1D<double> frequency, FSC;
+    Matrix1D<double> frequency, FSC;
     results.resol_FOM = compute_FSC(side.vol_phantom, side.vol_recons,
                                     1, frequency, FSC);
 #endif

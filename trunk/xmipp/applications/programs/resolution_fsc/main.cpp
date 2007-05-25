@@ -79,7 +79,7 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
 
-    matrix1D<double> freq, frc, dpr, frc_noise;
+    Matrix1D<double> freq, frc, dpr, frc_noise;
 
     fourier_ring_correlation(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise);
     differential_phase_residual(eprm->refI(), img(), eprm->sam, freq, dpr);
@@ -119,7 +119,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
 
-    matrix1D<double> freq, frc, dpr, frc_noise;
+    Matrix1D<double> freq, frc, dpr, frc_noise;
 
     fourier_ring_correlation(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise);
     differential_phase_residual(eprm->refV(), vol(), eprm->sam, freq, dpr);
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         float       sam;
         double      dummy;
         bool        apply_geo;
-        matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
+        Matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
 
         try
         {

@@ -192,7 +192,7 @@ void Prog_centilt_prm::centilt()
     FileName          fn_img;
     ImageXmipp        Iu, It;
     matrix2D<double>  Maux, A(3, 3);
-    matrix1D<double>  dataline(6);
+    Matrix1D<double>  dataline(6);
     double            ccf, outside;
     bool              OK;
     int               imgno, barf, n_images, n_discarded;

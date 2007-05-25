@@ -40,7 +40,7 @@ void histogram1D::clear()
     hmax = 0;
     step_size = 0;
     no_samples = 0;
-    matrix1D<double>::clear();
+    Matrix1D<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -48,7 +48,7 @@ histogram1D & histogram1D::operator =(const histogram1D &H)
 {
     if (this != &H)
     {
-        this->matrix1D<double>::operator = (H);
+        this->Matrix1D<double>::operator = (H);
         hmin       = H.hmin;
         hmax       = H.hmax;
         step_size  = H.step_size;

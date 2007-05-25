@@ -38,13 +38,13 @@ void ROUT_EULER(const double rot,
                 const double d11)
 {
     int i;
-    matrix1D<double> w(3);
-    matrix1D<double> new_w(3);
-    matrix1D<double> D_1byw(3);
+    Matrix1D<double> w(3);
+    Matrix1D<double> new_w(3);
+    Matrix1D<double> D_1byw(3);
     matrix2D<double> D(3, 3), D_1(3, 3);
     double module;
     double newrot, newtilt, newpsi;
-    matrix1D<double> fw(3);
+    Matrix1D<double> fw(3);
     float fnewrot, fnewtilt, fnewpsi;
 
     D(0, 0) = d00;

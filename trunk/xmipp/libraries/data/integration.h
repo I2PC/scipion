@@ -274,8 +274,8 @@ cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
             &integrand) << endl;
 @endcode
  */
-double multidimensionalIntegral(const matrix1D<double> &x0,
-                                const matrix1D<double> &xF, integrand_t integrand);
+double multidimensionalIntegral(const Matrix1D<double> &x0,
+                                const Matrix1D<double> &xF, integrand_t integrand);
 #endif
 
 // TODO Document

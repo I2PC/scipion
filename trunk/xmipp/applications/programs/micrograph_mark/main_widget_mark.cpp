@@ -296,7 +296,7 @@ void QtMainWidgetMark::pass_to_tilted(int _muX, int _muY,
 {
     if (can_use_passing_matrix())
     {
-        matrix1D<double> m(3);
+        Matrix1D<double> m(3);
         SPEED_UP_temps;
 
         VECTOR_R3(m, _muX, _muY, 1);
@@ -335,7 +335,7 @@ void QtMainWidgetMark::pass_to_untilted(int _mtX, int _mtY, int &_muX,
 {
     if (can_use_passing_matrix())
     {
-        matrix1D<double> m(3);
+        Matrix1D<double> m(3);
         SPEED_UP_temps;
 
         VECTOR_R3(m, _mtX, _mtY, 1);
@@ -367,7 +367,7 @@ void QtMainWidgetMark::compute_gamma()
     if (__mTiltedWidget == NULL) return;
 
     int step = CEIL(pow((double)__Nu * __Nu * __Nu / TRIANGLE_NO, 1.0 / 3));
-    matrix1D<int> iju(2), iku(2), ijt(2), ikt(2); // From i to j in untilted
+    Matrix1D<int> iju(2), iku(2), ijt(2), ikt(2); // From i to j in untilted
     // From i to k in untilted
     // From i to j in tilted
     // From i to k in tilted
@@ -440,9 +440,9 @@ void QtMainWidgetMark::compute_alphas()
     if (__mTiltedWidget == NULL) return;
 
 
-    matrix1D<double> angles(2);
+    Matrix1D<double> angles(2);
     angles.init_zeros();
-    matrix1D<double> steps(2);
+    Matrix1D<double> steps(2);
     steps.init_constant(1);
     double fitness;
     int iter;

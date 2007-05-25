@@ -84,7 +84,7 @@ void DocLine::set(int i, double val)
     data[i] = val;
 }
 
-void DocLine::set(const matrix1D< double >& v)
+void DocLine::set(const Matrix1D< double >& v)
 {
     data.clear();
     if (line_type != DATALINE)
@@ -879,7 +879,7 @@ int DocFile::insert_data_line(int count)
     return it->key;
 }
 
-int DocFile::insert_data_line(const matrix1D< double >& v)
+int DocFile::insert_data_line(const Matrix1D< double >& v)
 {
     DocLine tmp;
     tmp.set(v);
@@ -940,7 +940,7 @@ int DocFile::append_data_line(int count)
     return ret;
 }
 
-int DocFile::append_data_line(const matrix1D< double >& v)
+int DocFile::append_data_line(const Matrix1D< double >& v)
 {
     DocLine tmp;
     tmp.set(v);
@@ -963,7 +963,7 @@ void DocFile::append_comment(const std::string& comment)
 int DocFile::append_angles(double rot, double tilt, double psi,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    matrix1D< double > aux(3);
+    Matrix1D< double > aux(3);
 
     if (ang1[0] == 'r')
         VEC_ELEM(aux, 0) = rot;
@@ -993,7 +993,7 @@ int DocFile::append_angles(double rot, double tilt, double psi,
                            double rot1, double tilt1, double psi1,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    matrix1D< double > aux(6);
+    Matrix1D< double > aux(6);
 
     if (ang1[0] == 'r')
         VEC_ELEM(aux, 0) = rot;
@@ -1045,7 +1045,7 @@ int DocFile::append_angles(double rot, double tilt, double psi,
                            double rot2, double tilt2, double psi2,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    matrix1D< double > aux(9);
+    Matrix1D< double > aux(9);
 
     if (ang1[0] == 'r')
         VEC_ELEM(aux, 0) = rot;
@@ -1196,9 +1196,9 @@ DocFile DocFile::random_discard(int n)
     return result;
 }
 
-matrix1D< double > DocFile::col(int c)
+Matrix1D< double > DocFile::col(int c)
 {
-    matrix1D< double > result(no_lines);
+    Matrix1D< double > result(no_lines);
 
     std::vector< DocLine >::iterator current = m.begin();
     std::vector< DocLine >::iterator last = m.end();
@@ -1215,9 +1215,9 @@ matrix1D< double > DocFile::col(int c)
     return result;
 }
 
-matrix1D< double > DocFile::row(int k)
+Matrix1D< double > DocFile::row(int k)
 {
-    matrix1D< double > result;
+    Matrix1D< double > result;
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         return result;
@@ -1231,7 +1231,7 @@ matrix1D< double > DocFile::row(int k)
     return result;
 }
 
-void DocFile::setCol(int c, matrix1D< double >& v)
+void DocFile::setCol(int c, Matrix1D< double >& v)
 {
     go_first_data_line();
 
@@ -1246,8 +1246,8 @@ void DocFile::setCol(int c, matrix1D< double >& v)
         REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 
-void DocFile::for_all_lines(void(*f)(const matrix1D< double >&,
-                                     matrix1D< double >&), int key0, int keyF)
+void DocFile::for_all_lines(void(*f)(const Matrix1D< double >&,
+                                     Matrix1D< double >&), int key0, int keyF)
 {
     int current_key;
 
@@ -1271,8 +1271,8 @@ void DocFile::for_all_lines(void(*f)(const matrix1D< double >&,
         {
             // Get current data line, transform it and insert it before
             // the current position
-            matrix1D< double > v_in = row(current_key);
-            matrix1D< double > v_out;
+            Matrix1D< double > v_in = row(current_key);
+            Matrix1D< double > v_out;
 
             f(v_in, v_out);
             insert_data_line(v_out);

@@ -78,7 +78,7 @@
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void FFT_idx2digfreq(T& v, const matrix1D< int >& idx, matrix1D< double >& freq)
+void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
     if (XSIZE(idx) < 1 || XSIZE(idx) > 3)
         REPORT_ERROR(1, "FFT_idx2digfreq: Index is not of the correct size");
@@ -101,7 +101,7 @@ void FFT_idx2digfreq(T& v, const matrix1D< int >& idx, matrix1D< double >& freq)
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void digfreq2FFT_idx(T& v, const matrix1D< double >& freq, matrix1D< int >& idx)
+void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
     if (XSIZE(freq) < 1 || XSIZE(freq) > 3)
         REPORT_ERROR(1, "digfreq2FFT_idx: freq is not of the correct size");
@@ -121,8 +121,8 @@ void digfreq2FFT_idx(T& v, const matrix1D< double >& freq, matrix1D< int >& idx)
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
  */
-inline void digfreq2contfreq(const matrix1D< double >& digfreq,
-                             matrix1D< double >& contfreq,
+inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
+                             Matrix1D< double >& contfreq,
                              double pixel_size)
 {
     contfreq = digfreq / pixel_size;
@@ -134,8 +134,8 @@ inline void digfreq2contfreq(const matrix1D< double >& digfreq,
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
  */
-inline void contfreq2digfreq(const matrix1D< double >& contfreq,
-                             matrix1D< double >& digfreq,
+inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
+                             Matrix1D< double >& digfreq,
                              double pixel_size)
 {
     digfreq = contfreq * pixel_size;
@@ -179,8 +179,8 @@ void RealImag2Complex(const matrix3D< double > & real,
 /** Direct Fourier Transform 1D
  * @ingroup FourierTransforms
  */
-void FourierTransform(const matrix1D< double >& in,
-                      matrix1D< complex< double > > & out);
+void FourierTransform(const Matrix1D< double >& in,
+                      Matrix1D< complex< double > > & out);
 
 /** Direct Fourier Transform 2D
  * @ingroup FourierTransforms
@@ -197,8 +197,8 @@ void FourierTransform(const matrix3D< double >& in,
 /** Inverse Fourier Transform 1D
  * @ingroup FourierTransforms
  */
-void InverseFourierTransform(const matrix1D< complex< double > > & in,
-                             matrix1D< double >& out);
+void InverseFourierTransform(const Matrix1D< complex< double > > & in,
+                             Matrix1D< double >& out);
 
 /** Inverse Fourier Transform 2D
  * @ingroup FourierTransforms
@@ -233,9 +233,9 @@ void InverseFourierTransformHalf(const matrix2D< complex< double > > & in,
  * @ingroup FourierOperations
  */
 template <typename T>
-void CenterFFT(matrix1D< T >& v, bool forward)
+void CenterFFT(Matrix1D< T >& v, bool forward)
 {
-    matrix1D< T > aux;
+    Matrix1D< T > aux;
     int l, shift;
 
     l = XSIZE(v);
@@ -269,7 +269,7 @@ void CenterFFT(matrix1D< T >& v, bool forward)
 template <typename T>
 void CenterFFT(matrix2D< T >& v, bool forward)
 {
-    matrix1D< T > aux;
+    Matrix1D< T > aux;
     int l, shift;
 
     // Shift in the X direction
@@ -335,7 +335,7 @@ void CenterFFT(matrix2D< T >& v, bool forward)
 template <class T>
 void CenterFFT(matrix3D< T >& v, bool forward)
 {
-    matrix1D< T > aux;
+    Matrix1D< T > aux;
     int l, shift;
 
     // Shift in the X direction
@@ -431,7 +431,7 @@ void CenterFFT(matrix3D< T >& v, bool forward)
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(matrix1D< complex< double > > & v, double xshift);
+void ShiftFFT(Matrix1D< complex< double > > & v, double xshift);
 
 /** FFT shift 2D
  * @ingroup FourierOperations
@@ -457,7 +457,7 @@ void ShiftFFT(matrix3D< complex< double > > & v,
  *
  * Changes the real and the fourier space origin
  */
-void CenterOriginFFT(matrix1D< complex< double > > & v, bool forward);
+void CenterOriginFFT(Matrix1D< complex< double > > & v, bool forward);
 
 /** Place the origin of the 2D FFT at the center of the image and back
  * @ingroup FourierOperations
@@ -476,8 +476,8 @@ void CenterOriginFFT(matrix3D< complex< double > > & v, bool forward);
 /** FFT Magnitude 1D
  * @ingroup FourierOperations
  */
-void FFT_magnitude(const matrix1D< complex< double > > & v,
-                   matrix1D< double >& mag);
+void FFT_magnitude(const Matrix1D< complex< double > > & v,
+                   Matrix1D< double >& mag);
 
 /** FFT Magnitude 2D
  * @ingroup FourierOperations
@@ -494,8 +494,8 @@ void FFT_magnitude(const matrix3D< complex< double > > & v,
 /** FFT Phase 1D
  * @ingroup FourierOperations
  */
-void FFT_phase(const matrix1D< complex< double > > & v,
-               matrix1D< double >& phase);
+void FFT_phase(const Matrix1D< complex< double > > & v,
+               Matrix1D< double >& phase);
 
 /** FFT Phase 2D
  * @ingroup FourierOperations
@@ -569,17 +569,17 @@ template <typename T>
 void fourier_ring_correlation(matrix2D< T > const & m1,
                               matrix2D< T > const & m2,
                               double sampling_rate,
-                              matrix1D< double >& freq,
-                              matrix1D< double >& frc,
-                              matrix1D< double >& frc_noise)
+                              Matrix1D< double >& freq,
+                              Matrix1D< double >& frc,
+                              Matrix1D< double >& frc_noise)
 {
     if (!m1.same_shape(m2))
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
     matrix2D< T > aux(m1);
-    matrix1D< int > origin(3), radial_count;
-    matrix1D< double > tmp1, tmp2;
+    Matrix1D< int > origin(3), radial_count;
+    Matrix1D< double > tmp1, tmp2;
     matrix2D< complex< double > > FT1;
 
     FourierTransform(m1, FT1);
@@ -633,17 +633,17 @@ void fourier_ring_correlation(matrix2D< T > const & m1,
 template <typename T>
 void fourier_ring_correlation(matrix3D< T > const & m1,
                               matrix3D< T > const & m2, double sampling_rate,
-                              matrix1D< double >& freq,
-                              matrix1D< double >& frc,
-                              matrix1D< double >& frc_noise)
+                              Matrix1D< double >& freq,
+                              Matrix1D< double >& frc,
+                              Matrix1D< double >& frc_noise)
 {
     if (!m1.same_shape(m2))
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
     matrix3D< T > aux(m1);
-    matrix1D< int > origin(3), radial_count;
-    matrix1D< double > tmp1, tmp2;
+    Matrix1D< int > origin(3), radial_count;
+    Matrix1D< double > tmp1, tmp2;
 
     matrix3D< complex< double > > FT1;
     FourierTransform(m1, FT1);
@@ -703,17 +703,17 @@ template <typename T>
 void differential_phase_residual(matrix2D< T > const & m1,
                                  matrix2D< T > const & m2,
                                  double sampling_rate,
-                                 matrix1D< double >& freq,
-                                 matrix1D< double >& dpr)
+                                 Matrix1D< double >& freq,
+                                 Matrix1D< double >& dpr)
 {
     if (!m1.same_shape(m2))
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
     matrix2D< T > aux(m1);
-    matrix1D< int > origin(3), radial_count;
-    matrix1D< double > tmp1, tmp2;
-    matrix1D< complex< double > > tmp3;
+    Matrix1D< int > origin(3), radial_count;
+    Matrix1D< double > tmp1, tmp2;
+    Matrix1D< complex< double > > tmp3;
 
     matrix2D< complex< double > > FT1;
     FourierTransform(m1, FT1);
@@ -768,17 +768,17 @@ template <typename T>
 void differential_phase_residual(matrix3D< T > const & m1,
                                  matrix3D< T > const & m2,
                                  double sampling_rate,
-                                 matrix1D< double >& freq,
-                                 matrix1D< double >& dpr)
+                                 Matrix1D< double >& freq,
+                                 Matrix1D< double >& dpr)
 {
     if (!m1.same_shape(m2))
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
     matrix3D< T > aux(m1);
-    matrix1D< int > origin(3), radial_count;
-    matrix1D< double > tmp1, tmp2;
-    matrix1D< complex< double > > tmp3;
+    Matrix1D< int > origin(3), radial_count;
+    Matrix1D< double > tmp1, tmp2;
+    Matrix1D< complex< double > > tmp3;
 
     matrix3D< complex< double > > FT1;
     FourierTransform(m1, FT1);
@@ -833,8 +833,8 @@ void differential_phase_residual(matrix3D< T > const & m1,
  */
 void my_ssnr_step(matrix2D< complex< double > > const & AverageImage,
                   matrix2D< complex< double> > const & FTaverageSubGroup,
-                  matrix1D< double >& ssnr,
-                  matrix1D< double >& pixel,
+                  Matrix1D< double >& ssnr,
+                  Matrix1D< double >& pixel,
                   int n);
 
 /** Signal to noise ratio for 2D
@@ -845,9 +845,9 @@ template <typename T>
 void my_ssnr(matrix2D< T > const & AverageImage,
              SelFile& SF_sel,
              double sampling_rate,
-             matrix1D< double >& freq,
-             matrix1D< double >& ssnr,
-             matrix1D< double >& pixel,
+             Matrix1D< double >& freq,
+             Matrix1D< double >& ssnr,
+             Matrix1D< double >& pixel,
              bool apply_geo)
 {
     Image Iaverage_sub_group, Id;
@@ -941,9 +941,9 @@ void my_ssnr(matrix2D< T > const & AverageImage,
  * Note: Complex numbers are allowed
  */
 template <typename T>
-void series_convolution(matrix1D< T >& series1,
-                        matrix1D< T >& series2,
-                        matrix1D< T >& result,
+void series_convolution(Matrix1D< T >& series1,
+                        Matrix1D< T >& series2,
+                        Matrix1D< T >& result,
                         bool FullConvolution = false)
 {
     // Store dimension of series
@@ -957,10 +957,10 @@ void series_convolution(matrix1D< T >& series1,
     result.resize(series1);
 
     // Fourier Transform the two series
-    matrix1D< complex< double> > FFT1;
+    Matrix1D< complex< double> > FFT1;
     FourierTransform(series1, FFT1);
 
-    matrix1D< complex< double > > FFT2;
+    Matrix1D< complex< double > > FFT2;
     FourierTransform(series2, FFT2);
 
     // Multiply the vectors element by element to do the convolution in the

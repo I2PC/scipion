@@ -106,7 +106,7 @@ public:
     // Number of subbands
     int SBNo;
     // Subband size
-    matrix1D<int> SBsize;
+    Matrix1D<int> SBsize;
     // Selfile with the reference projections
     SelFile SF_ref;
     // Mask disitribution of DWT coefficients.
@@ -185,9 +185,9 @@ public:
 
         m is the subband being studied*/
     void refine_candidate_list_with_correlation(int m,
-            matrix1D<double> &dwt, vector<bool> &candidate_list,
+            Matrix1D<double> &dwt, vector<bool> &candidate_list,
             vector<double> &cumulative_corr,
-            matrix1D<double> &x_power,
+            Matrix1D<double> &x_power,
             vector<double> &sumxy, double th = 50);
 
     /** Evaluate candidates by correlation. The evaluation is returned in

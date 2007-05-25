@@ -135,7 +135,7 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 
     // Count the number of different objects
     int no_comp = label_volume((*V_out)(), aux());
-    matrix1D<double> count(no_comp + 1);
+    Matrix1D<double> count(no_comp + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(aux())
     count((int)aux(k, i, j))++;
 

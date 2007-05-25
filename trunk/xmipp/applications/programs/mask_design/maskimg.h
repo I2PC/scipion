@@ -1799,11 +1799,11 @@ public:
     }
 
 protected:
-    vector< matrix1D<double> > list_of_points;
-    matrix1D<double>           top_left_corner;
-    matrix1D<double>           bottom_right_corner;
-    matrix1D<double>           old_top_left_corner;
-    matrix1D<double>           old_bottom_right_corner;
+    vector< Matrix1D<double> > list_of_points;
+    Matrix1D<double>           top_left_corner;
+    Matrix1D<double>           bottom_right_corner;
+    Matrix1D<double>           old_top_left_corner;
+    Matrix1D<double>           old_bottom_right_corner;
     bool                       close_polygon;
 };
 

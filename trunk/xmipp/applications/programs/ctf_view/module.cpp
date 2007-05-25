@@ -739,8 +739,8 @@ void CTFViewer::generate_ctfmodel()
     if (model(i, j) < 0) model(i, j) = 0;
 
     // Substitute the left part by the CTF model
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
     {
         if (j > Xdim / 2) continue;

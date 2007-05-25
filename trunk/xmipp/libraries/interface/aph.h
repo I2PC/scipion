@@ -62,9 +62,9 @@ public:
     /** Label */
     int label;
     /** a* vector */
-    matrix1D<double> astar;
+    Matrix1D<double> astar;
     /** b* vector */
-    matrix1D<double> bstar;
+    Matrix1D<double> bstar;
     /** Crystal X dimensions */
     int Xdim;
     /** Crystal Y dimensions */

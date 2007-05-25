@@ -588,10 +588,10 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         ImageXmipp input;
         input.read(fn_1, false, false, true);
         input().set_Xmipp_origin();
-        matrix1D<int> center(2);
+        Matrix1D<int> center(2);
         center.init_zeros();
-        matrix1D<double> radial_mean;
-        matrix1D<int> radial_count;
+        Matrix1D<double> radial_mean;
+        Matrix1D<int> radial_count;
         radial_average(input(), center, radial_mean, radial_count);
         radial_mean.write(fn_out);
 
@@ -611,10 +611,10 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         VolumeXmipp input;
         input.read(fn_1);
         input().set_Xmipp_origin();
-        matrix1D<int> center(2);
+        Matrix1D<int> center(2);
         center.init_zeros();
-        matrix1D<double> radial_mean;
-        matrix1D<int> radial_count;
+        Matrix1D<double> radial_mean;
+        Matrix1D<int> radial_count;
         radial_average(input(), center, radial_mean, radial_count);
         radial_mean.write(fn_out);
 

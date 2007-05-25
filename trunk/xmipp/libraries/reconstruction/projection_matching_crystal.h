@@ -72,7 +72,7 @@ public:
     /** Vector with reference library angles */
     double * ref_rot, * ref_tilt;
     /** Vectors to stored valid shifts */
-    vector <matrix1D<double> > shift_vector;
+    vector <Matrix1D<double> > shift_vector;
     /** Maximum allowed shift */
     double max_shift;
     /** Flag whether to store optimal transformations in the image headers */

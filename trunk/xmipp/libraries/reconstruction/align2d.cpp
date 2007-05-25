@@ -139,7 +139,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 {
 
     matrix2D<double> Mimg, Maux, A;
-    matrix1D<double> corr;
+    Matrix1D<double> corr;
     matrix2D<int>    mask;
     int nstep;
     int i, i_maxcorr, avewidth;
@@ -458,7 +458,7 @@ void Prog_align2d_prm::do_pspc()
     imgpspc.clear();
 
     // Center pspc reference wrt to average image
-    matrix1D<double> center(2);
+    Matrix1D<double> center(2);
     matrix2D<double> Mcorr;
     Mcorr.resize(Mref);
     int imax, jmax;
@@ -613,7 +613,7 @@ void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const floa
     matrix2D<int>    mask;
     int dim = Mref.RowNo();
     int nstep = (int)(360 / psi_interval);
-    matrix1D<double> ccf;
+    Matrix1D<double> ccf;
     double psi_actual;
     FileName fn_tmp;
 
@@ -779,7 +779,7 @@ void Prog_align2d_prm::align2d()
         DocFile           DFo;
         DFo.reserve(n_images);
         DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Corr (6)");
-        matrix1D<double>  dataline(6);
+        Matrix1D<double>  dataline(6);
         for (int imgno = 0; imgno < n_images; imgno++)
         {
             dataline(0) = images[imgno].Phi();

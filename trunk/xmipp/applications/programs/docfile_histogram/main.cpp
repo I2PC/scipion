@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     int              StepsNo, StepsNo2;
     histogram1D      hist;
     histogram2D      hist2;
-    matrix1D<double> C, C2;
+    Matrix1D<double> C, C2;
     double           percentil;
 
 // Check the command line ==================================================

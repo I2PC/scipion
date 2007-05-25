@@ -74,7 +74,7 @@ public:
 
     /** parameters included in the input file */
     int hmax, hmin, kmin, kmax;
-    matrix1D<double > a, b;
+    Matrix1D<double > a, b;
     double x_des, y_des, z_des, x_nor_des, y_nor_des, z_nor_des;
 
 
@@ -98,7 +98,7 @@ public:
     void usage();
 
     /** The maping function maps each (h,k) point into a parabole or cosine surface */
-    void maping_function(matrix1D<double > a, matrix1D<double > b, int h, int k,  surface_coordinates &result);
+    void maping_function(Matrix1D<double > a, Matrix1D<double > b, int h, int k,  surface_coordinates &result);
 
     /** Run function. This function carries out the maping
     of the points of the plane lattice into other shape

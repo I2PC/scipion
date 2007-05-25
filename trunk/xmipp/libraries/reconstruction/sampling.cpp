@@ -109,11 +109,11 @@ void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 void XmippSampling::Compute_sampling_points(bool only_half_sphere)
 {
     /** vector to decimate the triangles */
-    vector <matrix1D<double> > edge_vector_start;
+    vector <Matrix1D<double> > edge_vector_start;
     /** vector to decimate the triangles */
-    vector <matrix1D<double> > edge_vector_end;
+    vector <Matrix1D<double> > edge_vector_end;
     // I need 10 auxiliary vector for edges
-    matrix1D<double> starting_point, ending_point;
+    Matrix1D<double> starting_point, ending_point;
     //01a
     starting_point = vertices_vectors[0]; ending_point = vertices_vectors[1];
     fill_edge(starting_point, ending_point, edge_vector_start, false);
@@ -299,7 +299,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
     }
 #endif
 #undef DEBUG3
-    matrix1D<double> aux(3), aux1(3);
+    Matrix1D<double> aux(3), aux1(3);
     ZZ(aux) = 0.;
     double rot, tilt, psi;
     for (int i = 0;
@@ -318,8 +318,8 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
     int bound = sampling_points_angles.size() - 1;
     int t;
     int last_swap;
-    matrix1D<double> aux_angle(3);
-    matrix1D<double> aux_vector(3);
+    Matrix1D<double> aux_angle(3);
+    Matrix1D<double> aux_vector(3);
 
     while (bound)
     {
@@ -358,7 +358,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
 }
 
 // return 1 if a should go first 0 is equal -1 if before
-int XmippSampling::sort_func(matrix1D<double> &t, matrix1D<double> &a)
+int XmippSampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
 {
     if (YY(t) - 0.000001 > YY(a))
     {
@@ -378,13 +378,13 @@ int XmippSampling::sort_func(matrix1D<double> &t, matrix1D<double> &a)
     };
 }
 
-void XmippSampling::fill_edge(matrix1D<double> starting_point,
-                              matrix1D<double> ending_point,
-                              vector <matrix1D<double> > & edge_vector,
+void XmippSampling::fill_edge(Matrix1D<double> starting_point,
+                              Matrix1D<double> ending_point,
+                              vector <Matrix1D<double> > & edge_vector,
                               bool END_FLAG
                              )
 {
-    matrix1D<double> v_aux(3);
+    Matrix1D<double> v_aux(3);
 
     double alpha;
     double beta;
@@ -402,15 +402,15 @@ void XmippSampling::fill_edge(matrix1D<double> starting_point,
         edge_vector.push_back(v_aux);
     }
 }
-void XmippSampling::fill_distance(matrix1D<double> starting_point,
-                                  matrix1D<double> ending_point,
-                                  vector <matrix1D<double> > &
+void XmippSampling::fill_distance(Matrix1D<double> starting_point,
+                                  Matrix1D<double> ending_point,
+                                  vector <Matrix1D<double> > &
                                   sampling_points_vector,
                                   int my_number_of_samples,
                                   bool only_half_sphere
                                  )
 {
-    matrix1D<double> v_aux(3);
+    Matrix1D<double> v_aux(3);
 
     double alpha;
     double beta;
@@ -436,7 +436,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
 {
     matrix2D<double>  L(4, 4), R(4, 4);
     matrix2D<double>  aux(3, 3);
-    matrix1D<double>  row1(3), row2(3);
+    Matrix1D<double>  row1(3), row2(3);
     bool valid = true;
     double rot, tilt, psi = 0;
     double rotp, tiltp, psip = 0.;
@@ -445,7 +445,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
     bool match = false;
 
     //int j_end=0;
-    matrix1D<double>  row(3);
+    Matrix1D<double>  row(3);
 
 
     no_redundant_sampling_points_vector.clear();
@@ -559,11 +559,11 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("t") == 0)
     {//OK
-        matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
+        Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vector_R3(-0.942809, 0., 0.).normalize();
-        matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_3(3);
+        Matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_3(3);
         _3_fold_axis_2_by_3_fold_axis_3 = vector_R3(0.471405, 0.272165, 0.7698).normalize();
-        matrix1D<double>  _3_fold_axis_3_by_3_fold_axis_1(3);
+        Matrix1D<double>  _3_fold_axis_3_by_3_fold_axis_1(3);
         _3_fold_axis_3_by_3_fold_axis_1 = vector_R3(0.471404, 0.816497, 0.).normalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -584,11 +584,11 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("td") == 0)
     {//OK
-        matrix1D<double>  _2_fold_axis_1_by_3_fold_axis_2(3);
+        Matrix1D<double>  _2_fold_axis_1_by_3_fold_axis_2(3);
         _2_fold_axis_1_by_3_fold_axis_2 = vector_R3(-0.942809, 0., 0.).normalize();
-        matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_5(3);
+        Matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_5(3);
         _3_fold_axis_2_by_3_fold_axis_5 = vector_R3(0.471405, 0.272165, 0.7698).normalize();
-        matrix1D<double>  _3_fold_axis_5_by_2_fold_axis_1(3);
+        Matrix1D<double>  _3_fold_axis_5_by_2_fold_axis_1(3);
         _3_fold_axis_5_by_2_fold_axis_1 = vector_R3(0., 0.471405, -0.666667).normalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -609,11 +609,11 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("th") == 0)
     {//OK
-        matrix1D<double>  _3_fold_axis_1_by_2_fold_axis_1(3);
+        Matrix1D<double>  _3_fold_axis_1_by_2_fold_axis_1(3);
         _3_fold_axis_1_by_2_fold_axis_1 = vector_R3(-0.816496, 0., 0.).normalize();
-        matrix1D<double>  _2_fold_axis_1_by_2_fold_axis_2(3);
+        Matrix1D<double>  _2_fold_axis_1_by_2_fold_axis_2(3);
         _2_fold_axis_1_by_2_fold_axis_2 = vector_R3(0.707107, 0.408248, -0.57735).normalize();
-        matrix1D<double>  _2_fold_axis_2_by_3_fold_axis_1(3);
+        Matrix1D<double>  _2_fold_axis_2_by_3_fold_axis_1(3);
         _2_fold_axis_2_by_3_fold_axis_1 = vector_R3(-0.408248, -0.707107, 0.).normalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -634,11 +634,11 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("o") == 0)
     {//OK
-        matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
+        Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vector_R3(0., -1., 1.).normalize();
-        matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
+        Matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
         _3_fold_axis_2_by_4_fold_axis = vector_R3(1., 1., 0.).normalize();
-        matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
+        Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
         _4_fold_axis_by_3_fold_axis_1 = vector_R3(-1., 1., 0.).normalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -660,11 +660,11 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("oh") == 0)
     {//OK
-        matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
+        Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vector_R3(0., -1., 1.).normalize();
-        matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
+        Matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
         _3_fold_axis_2_by_4_fold_axis = vector_R3(1., 1., 0.).normalize();
-        matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
+        Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
         _4_fold_axis_by_3_fold_axis_1 = vector_R3(-1., 1., 0.).normalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -684,13 +684,13 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("i") == 0)
     {//OK
-        matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
         _5_fold_axis_1_by_5_fold_axis_2 = vector_R3(0., 0., 1.).normalize();
-        matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
         _5_fold_axis_2_by_3_fold_axis = vector_R3(0.187592467856686,
                                         -0.303530987314591,
                                         -0.491123477863004).normalize();
-        matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
         _3_fold_axis_by_5_fold_axis_1 = vector_R3(0.187592467856686,
                                         0.303530987314591,
                                         -0.491123477863004).normalize();
@@ -712,7 +712,7 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else if (symmetry.compare("ih") == 0)
     {//OK
-        matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
         _5_fold_axis_2_by_3_fold_axis = vector_R3(0.187592467856686,
                                         -0.303530987314591,
                                         -0.491123477863004).normalize();
@@ -882,7 +882,7 @@ void XmippSampling::compute_neighbors(void)
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
     double my_dot_product;
-    matrix1D<double>  row(3);
+    Matrix1D<double>  row(3);
     matrix2D<double>  L(4, 4), R(4, 4);
     vector<int>  aux_neighbors;
     vector<double> aux_neighbors_psi;

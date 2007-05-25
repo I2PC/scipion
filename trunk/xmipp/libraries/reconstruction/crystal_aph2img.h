@@ -59,7 +59,7 @@ public:
     int             NoCells_Y;
     /** Move the phase origin (degrees)
     */
-    matrix1D<double> Phase_Shift;
+    Matrix1D<double> Phase_Shift;
     /** Keep contrast.
         If FALSE then the image is contrast is reversed.
     */
@@ -84,7 +84,7 @@ public:
     string          str_symmetry_group;
 #ifdef NEVERDEFINED
     /** vector perpendicular to projection plane */
-    matrix1D<double> v_perpendicular_proj_plane;
+    Matrix1D<double> v_perpendicular_proj_plane;
 #endif
 public:
     /* Side information */
@@ -159,9 +159,9 @@ public:
     /** This image APH */
     APHFileorigmerg       aph_file;
     /** crystal vector_a */
-    matrix1D<double> vector_a;
+    Matrix1D<double> vector_a;
     /** crystal vector_b */
-    matrix1D<double> vector_b;
+    Matrix1D<double> vector_b;
     /** Rotational angle */
     double          rot;
     /** Tilt angle */

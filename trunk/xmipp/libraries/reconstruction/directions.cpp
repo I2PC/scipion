@@ -120,7 +120,7 @@ void make_even_distribution(DocFile &DF, double sampling,
     int rot_nstep, tilt_nstep = ROUND(180. / sampling) + 1;
     double rotp, tiltp, psip, rot_sam, tilt, rot, tilt_sam, psi = 0.;
     bool append;
-    matrix1D<double> dataline(3);
+    Matrix1D<double> dataline(3);
     tilt_sam = (180. / tilt_nstep);
 
     DF.clear();

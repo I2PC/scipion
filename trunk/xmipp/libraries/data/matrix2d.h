@@ -75,30 +75,30 @@ void solve(const mT& A, const mT& b, mT& result);
 template<typename T>
 void solve_by_svd(const mT& A,
                   const vT& b,
-                  matrix1D< double >& result,
+                  Matrix1D< double >& result,
                   double tolerance);
 
 // TODO Document
 template<typename T>
-void ludcmp(const mT& A, mT& LU, matrix1D< int >& indx, T& d);
+void ludcmp(const mT& A, mT& LU, Matrix1D< int >& indx, T& d);
 
 // TODO Document
 template<typename T>
-void lubksb(const mT& LU, matrix1D< int >& indx, vT& b);
+void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b);
 
 // TODO Document
 template<typename T>
 void svdcmp(const matrix2D< T >& a,
             matrix2D< double >& u,
-            matrix1D< double >& w,
+            Matrix1D< double >& w,
             matrix2D< double >& v);
 
 // TODO Document
 void svbksb(matrix2D< double >& u,
-            matrix1D< double >& w,
+            Matrix1D< double >& w,
             matrix2D< double >& v,
-            matrix1D< double >& b,
-            matrix1D< double >& x);
+            Matrix1D< double >& b,
+            Matrix1D< double >& x);
 
 // TODO Document
 template<typename T>
@@ -123,7 +123,7 @@ void apply_geom_Bspline(mT& m2,
 matrix2D< double > rot2D_matrix(double ang);
 
 // TODO Document
-matrix2D< double > translation2D_matrix(const matrix1D< double > v);
+matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
 
 // TODO Document
 int best_prec(float F, int _width);
@@ -147,7 +147,7 @@ int best_prec(float F, int _width);
  * @ingroup MatricesSpeedUp
  *
  * Although they are not defined here you can also use STARTINGX and FINISHINGX
- * (defined for matrix1D)
+ * (defined for Matrix1D)
  */
 
 /** TRUE if both arrays have the same shape
@@ -216,14 +216,14 @@ int best_prec(float F, int _width);
  * @ingroup MatricesSizeShape
  *
  * This macro is used to generate loops for a matrix in an easy manner. It needs
- * an externally defined matrix1D< double > r(2). Then YY(r) and XX(r) range
+ * an externally defined Matrix1D< double > r(2). Then YY(r) and XX(r) range
  * from (int) YY(corner1) to (int)YY(corner2), (int) XX(corner1) to (int)
  * XX(corner2) (included limits) respectively. Notice that corner1 and corner2
- * need only be matrix1D.
+ * need only be Matrix1D.
  *
  * @code
- * matrix1D< double > corner1(2), corner2(2);
- * matrix1D< int > r(2);
+ * Matrix1D< double > corner1(2), corner2(2);
+ * Matrix1D< int > r(2);
  * XX(corner1) = -1;
  * XX(corner2) = 1;
  * YY(corner1) = -2;
@@ -357,7 +357,7 @@ int best_prec(float F, int _width);
  * {
  *     SPEED_UP_temps;
  *
- *     matrix1D< double > a(3), b(3);
+ *     Matrix1D< double > a(3), b(3);
  *     matrix2D< double > M(3, 3);
  *
  *     M.init_random(0, 1);
@@ -427,7 +427,7 @@ int best_prec(float F, int _width);
  * {
  *     SPEED_UP_temps;
  *
- *     matrix1D< double > a(2), b(2);
+ *     Matrix1D< double > a(2), b(2);
  *     matrix2D< double > M(2, 2);
  *
  *     M.init_random(0, 1);
@@ -520,10 +520,10 @@ protected:
      * Recipes ones with the same name, but with a better interface LU
      * decomposition
      */
-    friend void ludcmp<>(const mT& A, mT& LU, matrix1D< int >& indx, T& d);
+    friend void ludcmp<>(const mT& A, mT& LU, Matrix1D< int >& indx, T& d);
 
     /// Solving an equation system based on LU. Remember to free LU outside
-    friend void lubksb<>(const mT& LU, matrix1D< int >& indx, vT& b);
+    friend void lubksb<>(const mT& LU, Matrix1D< int >& indx, vT& b);
 
 public:
     /// @defgroup MatricesConstructors Constructors
@@ -722,7 +722,7 @@ public:
      * matrix.
      *
      * @code
-     * matrix1D< double > v;
+     * Matrix1D< double > v;
      * m.to_vector(v);
      * @endcode
      */
@@ -1200,7 +1200,7 @@ public:
      * val = m(vector_R2(1, -2));
      * @endcode
      */
-    T& operator()(const matrix1D< double >& v) const
+    T& operator()(const Matrix1D< double >& v) const
     {
         return MAT_ELEM(*this, ROUND(YY(v)), ROUND(XX(v)));
     }
@@ -1208,7 +1208,7 @@ public:
     /** Matrix element access via intger vector
      * @ingroup MatricesMemory
      */
-    T& operator()(const matrix1D< int >& v) const
+    T& operator()(const Matrix1D< int >& v) const
     {
         return MAT_ELEM(*this, YY(v), XX(v));
     }
@@ -1361,7 +1361,7 @@ public:
      * in the line is N.
      */
     void profile(int x0, int y0, int xF, int yF, int N,
-                 matrix1D< double >& profile) const
+                 Matrix1D< double >& profile) const
     {
         profile.init_zeros(N);
         double tx_step = (double)(xF - x0) / (N - 1);
@@ -1723,7 +1723,7 @@ public:
         }
 
         // Perform decomposition
-        matrix1D< int > indx;
+        Matrix1D< int > indx;
         T d;
         mT LU;
         ludcmp(*this, LU, indx, d);
@@ -1753,7 +1753,7 @@ public:
 
         // Perform SVD decomposition
         matrix2D< double > u, v;
-        matrix1D< double > w;
+        Matrix1D< double > w;
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
         double tol = compute_max() * MAX(XSIZE(*this), YSIZE(*this)) * 1e-14;
@@ -1805,7 +1805,7 @@ public:
      * are thrown if the equation system is not solvable.
      *
      * @code
-     * matrix1D< double > x = m.inv();
+     * Matrix1D< double > x = m.inv();
      * @endcode
      */
     friend void solve<>(const mT& A, const vT& b, vT& result);
@@ -2053,7 +2053,7 @@ public:
      * m2 = m1.translate(vector_R2(0, 2));
      * @endcode
      */
-    void translate(const matrix1D< double >& v, mT& result,
+    void translate(const Matrix1D< double >& v, mT& result,
                    bool wrap = WRAP) const
     {
         matrix2D< double > temp = translation2D_matrix(v);
@@ -2065,7 +2065,7 @@ public:
      *
      * Same as the previous one.
      */
-    mT translate(const matrix1D< double >& v, bool wrap = WRAP) const
+    mT translate(const Matrix1D< double >& v, bool wrap = WRAP) const
     {
         mT aux;
         translate(v, aux, wrap);
@@ -2078,7 +2078,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_translate(const matrix1D< double >& v, bool wrap = WRAP)
+    void self_translate(const Matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
         translate(v, aux, wrap);
@@ -2098,7 +2098,7 @@ public:
      * @endcode
      */
     void translate_Bspline(int Splinedegree,
-                           const matrix1D< double >& v, mT& result,
+                           const Matrix1D< double >& v, mT& result,
                            bool wrap = WRAP) const
     {
         matrix2D< double > temp = translation2D_matrix(v);
@@ -2111,7 +2111,7 @@ public:
      * Same as the previous one.
      */
     mT translate_Bspline(int Splinedegree,
-                         const matrix1D< double >& v, bool wrap = WRAP) const
+                         const Matrix1D< double >& v, bool wrap = WRAP) const
     {
         mT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -2125,7 +2125,7 @@ public:
      * Same as the previous one, but the result is kept in this object
      */
     void self_translate_Bspline(int Splinedegree,
-                                const matrix1D< double >& v, bool wrap = WRAP)
+                                const Matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
         translate_Bspline(Splinedegree, v, aux, wrap);
@@ -2142,7 +2142,7 @@ public:
     void self_translate_center_of_mass_to_center(bool wrap = WRAP)
     {
         set_Xmipp_origin();
-        matrix1D< double > center;
+        Matrix1D< double > center;
         center_of_mass(center);
         center *= -1;
         self_translate(center, wrap);
@@ -2158,7 +2158,7 @@ public:
         int Splinedegree, bool wrap = WRAP)
     {
         set_Xmipp_origin();
-        matrix1D< double > center;
+        Matrix1D< double > center;
         center_of_mass(center);
         center *= -1;
         self_translate_Bspline(Splinedegree, center, wrap);
@@ -2975,7 +2975,7 @@ matrix2D< double > rot2D_matrix(double ang);
  * m = translation2D_matrix(vector_R2(1, 0));
  * @endcode
  */
-matrix2D< double > translation2D_matrix(const matrix1D< double > v);
+matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup MatricesGeometry
@@ -3022,7 +3022,7 @@ matrix2D< double > rot3D_matrix(double ang, char axis);
  * m = rot3D_matrix(60, vector_R3(1, 1, 1));
  * @endcode
  */
-matrix2D< double > rot3D_matrix(double ang, const matrix1D< double >& axis);
+matrix2D< double > rot3D_matrix(double ang, const Matrix1D< double >& axis);
 
 /** Matrix which transforms the given axis into Z
  * @ingroup MatricesGeometry
@@ -3039,7 +3039,7 @@ matrix2D< double > rot3D_matrix(double ang, const matrix1D< double >& axis);
  * The returned matrix is such that A*axis=Z, where Z and axis are column
  * vectors.
  */
-matrix2D< double > align_with_Z(const matrix1D< double >& axis);
+matrix2D< double > align_with_Z(const Matrix1D< double >& axis);
 
 /** Creates a translational matrix (4x4) for volumes
  * @ingroup MatricesGeometry
@@ -3052,7 +3052,7 @@ matrix2D< double > align_with_Z(const matrix1D< double >& axis);
  * m = translation3D_matrix(vector_R3(0, 0, 2));
  * @endcode
  */
-matrix2D< double > translation3D_matrix(const matrix1D< double >& v);
+matrix2D< double > translation3D_matrix(const Matrix1D< double >& v);
 
 /** Creates a scaling matrix (4x4) for volumes
  * @ingroup MatricesGeometry
@@ -3060,7 +3060,7 @@ matrix2D< double > translation3D_matrix(const matrix1D< double >& v);
  * The scaling factors for the different axis must be given as a vector. So
  * that, XX(sc)=scale for X axis, YY(sc)=...
  */
-matrix2D< double > scale3D_matrix(const matrix1D< double >& sc);
+matrix2D< double > scale3D_matrix(const Matrix1D< double >& sc);
 
 /// @defgroup MatricesMisc Miscellaneous
 /// @ingroup MatricesRelated
@@ -3117,16 +3117,16 @@ void cut_to_common_size(mT& m1, mT& m2)
  */
 template<typename T>
 void radial_average(const matrix2D< T >& m,
-                    const matrix1D< int >& center_of_rot,
-                    matrix1D< T >& radial_mean,
-                    matrix1D< int >& radial_count,
+                    const Matrix1D< int >& center_of_rot,
+                    Matrix1D< T >& radial_mean,
+                    Matrix1D< int >& radial_count,
                     const bool& rounding = false)
 {
-    matrix1D< double > idx(2);
+    Matrix1D< double > idx(2);
 
     /* First determine the maximum distance that one should expect,
        to set the dimension of the radial average vector */
-    matrix1D< int > distances(4);
+    Matrix1D< int > distances(4);
     double y = STARTINGY(m) - YY(center_of_rot);
     double x = STARTINGX(m) - XX(center_of_rot);
 
@@ -3191,8 +3191,8 @@ void radial_average(const matrix2D< T >& m,
  *
  * The norm of the vector Ax-b is returned.
  */
-double solve_nonneg(const matrix2D< double >& A, const matrix1D< double >& b,
-                    matrix1D< double >& result);
+double solve_nonneg(const matrix2D< double >& A, const Matrix1D< double >& b,
+                    Matrix1D< double >& result);
 
 /** Solve equation system, symmetric positive-definite matrix
  * @ingroup MatricesMisc
@@ -3202,8 +3202,8 @@ double solve_nonneg(const matrix2D< double >& A, const matrix1D< double >& b,
  * Cholesky factorization and backsubstitution (see Numerical Recipes).
  */
 void solve_via_Cholesky(const matrix2D< double >& A,
-                        const matrix1D< double >& b,
-                        matrix1D< double >& result);
+                        const Matrix1D< double >& b,
+                        Matrix1D< double >& result);
 
 /** Evaluate quadratic form
  * @ingroup MatricesMisc
@@ -3215,9 +3215,9 @@ void solve_via_Cholesky(const matrix2D< double >& A,
  * Exceptions are thrown if the vectors and matrices do not have consistent
  * dimensions.
  */
-void eval_quadratic(const matrix1D< double >& x, const matrix1D< double >& c,
+void eval_quadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
                     const matrix2D< double >& H, double& val,
-                    matrix1D< double >& grad);
+                    Matrix1D< double >& grad);
 
 /** Solves Quadratic programming subproblem
  * @ingroup MatricesMisc
@@ -3228,11 +3228,11 @@ void eval_quadratic(const matrix1D< double >& x, const matrix1D< double >& c,
  *                                   bl<=x<=bu
  * @endcode
  */
-void quadprog(const matrix2D< double >& C, const matrix1D< double >& d,
-              const matrix2D< double >& A, const matrix1D< double >& b,
-              const matrix2D< double >& Aeq, const matrix1D< double >& beq,
-              matrix1D< double >& bl, matrix1D< double >& bu,
-              matrix1D< double >& x);
+void quadprog(const matrix2D< double >& C, const Matrix1D< double >& d,
+              const matrix2D< double >& A, const Matrix1D< double >& b,
+              const matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+              Matrix1D< double >& bl, Matrix1D< double >& bu,
+              Matrix1D< double >& x);
 
 
 /** Solves the least square problem
@@ -3244,11 +3244,11 @@ void quadprog(const matrix2D< double >& C, const matrix1D< double >& d,
  *                                      bl<=x<=bu
  * @endcode
  */
-void lsqlin(const matrix2D< double >& C, const matrix1D< double >& d,
-            const matrix2D< double >& A, const matrix1D< double >& b,
-            const matrix2D< double >& Aeq, const matrix1D< double >& beq,
-            matrix1D< double >& bl, matrix1D< double >& bu,
-            matrix1D< double >& x);
+void lsqlin(const matrix2D< double >& C, const Matrix1D< double >& d,
+            const matrix2D< double >& A, const Matrix1D< double >& b,
+            const matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+            Matrix1D< double >& bl, Matrix1D< double >& bu,
+            Matrix1D< double >& x);
 
 // TODO Document
 template<typename T>
@@ -3270,7 +3270,7 @@ void mT::get_size(int* size) const
 
 // TODO Document
 template<typename T>
-bool mT::outside(const matrix1D< double >& v) const
+bool mT::outside(const Matrix1D< double >& v) const
 {
     if (XSIZE(v) < 2)
         REPORT_ERROR(1, "Outside: index vector has got not enough components");
@@ -3296,8 +3296,8 @@ bool mT::intersects(const mT& m) const
 
 // TODO Document
 template<typename T>
-bool mT::intersects(const matrix1D< double >& corner1,
-                    const matrix1D< double >& corner2) const
+bool mT::intersects(const Matrix1D< double >& corner1,
+                    const Matrix1D< double >& corner2) const
 {
     if (XSIZE(corner1) != 2 || XSIZE(corner2) != 2)
         REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
@@ -3329,7 +3329,7 @@ bool mT::intersects(double x0, double y0, double xdim, double ydim) const
 
 // TODO Document
 template<typename T>
-bool mT::isCorner(const matrix1D< double >& v)
+bool mT::isCorner(const Matrix1D< double >& v)
 {
     if (XSIZE(v) < 2)
         REPORT_ERROR(1, "isCorner: index vector has got not enough components");
@@ -3342,7 +3342,7 @@ bool mT::isCorner(const matrix1D< double >& v)
 
 // TODO Document
 template<typename T>
-bool mT::isBorder(const matrix1D< int >& v)
+bool mT::isBorder(const Matrix1D< int >& v)
 {
     if (XSIZE(v) < 2)
         REPORT_ERROR(1, "isBorder: index vector has got not enough components");
@@ -3392,12 +3392,12 @@ void mT::patch(const mT& patch_array, char operation)
 // TODO Document
 template<typename T>
 void mT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
-                       const matrix1D< double >& corner1,
-                       const matrix1D< double >& corner2) const
+                       const Matrix1D< double >& corner1,
+                       const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
 
-    matrix1D< double > r(3);
+    Matrix1D< double > r(3);
     double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
@@ -3426,11 +3426,11 @@ void mT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 // TODO Document
 template<typename T>
 void mT::compute_double_minmax(double& min_val, double& max_val,
-                               const matrix1D< double >& corner1,
-                               const matrix1D< double >& corner2) const
+                               const Matrix1D< double >& corner1,
+                               const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
-    matrix1D< double > r(2);
+    Matrix1D< double > r(2);
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
     {
@@ -3443,7 +3443,7 @@ void mT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void mT::center_of_mass(matrix1D< double >& center, void* mask)
+void mT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
     center.init_zeros(2);
     double mass = 0;
@@ -3511,7 +3511,7 @@ void solve(const mT& A, const vT& b, vT& result)
         REPORT_ERROR(1107, "Solve: Not correct vector shape");
 
     // Perform LU decomposition and then solve
-    matrix1D< int > indx;
+    Matrix1D< int > indx;
     T d;
     mT LU;
     ludcmp(A, LU, indx, d);
@@ -3521,8 +3521,8 @@ void solve(const mT& A, const vT& b, vT& result)
 
 // TODO Document
 template<typename T>
-void solve_by_svd(const matrix2D< T >& A, const matrix1D< T >& b,
-                  matrix1D< double >& result, double tolerance)
+void solve_by_svd(const matrix2D< T >& A, const Matrix1D< T >& b,
+                  Matrix1D< double >& result, double tolerance)
 {
     if (A.xdim == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
@@ -3539,7 +3539,7 @@ void solve_by_svd(const matrix2D< T >& A, const matrix1D< T >& b,
     // First perform de single value decomposition
     // Xmipp interface that calls to svdcmp of numerical recipes
     matrix2D< double > u, v;
-    matrix1D< double > w;
+    Matrix1D< double > w;
     svdcmp(A, u, w, v);
 
     // Here is checked if eigenvalues of the svd decomposition are acceptable
@@ -3553,7 +3553,7 @@ void solve_by_svd(const matrix2D< T >& A, const matrix1D< T >& b,
     result.resize(b.get_dim());
 
     // Xmipp interface that calls to svdksb of numerical recipes
-    matrix1D< double > bd;
+    Matrix1D< double > bd;
     type_cast(b, bd);
     svbksb(u, w, v, bd, result);
 }
@@ -3580,7 +3580,7 @@ void solve(const mT& A, const mT& b, mT& result)
 
 // TODO Document
 template<typename T>
-void ludcmp(const mT& A, mT& LU, matrix1D< int >& indx, T& d)
+void ludcmp(const mT& A, mT& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
     indx.resize(XSIZE(A));
@@ -3590,7 +3590,7 @@ void ludcmp(const mT& A, mT& LU, matrix1D< int >& indx, T& d)
 
 // TODO Document
 template<typename T>
-void lubksb(const mT& LU, matrix1D< int >& indx, vT& b)
+void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b)
 {
     lubksb(LU.adapt_for_numerical_recipes2(), XSIZE(indx),
            indx.adapt_for_numerical_recipes(),
@@ -3601,7 +3601,7 @@ void lubksb(const mT& LU, matrix1D< int >& indx, vT& b)
 #define VIA_BILIB
 template<typename T>
 void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
-            matrix1D< double >& w, matrix2D< double >& v)
+            Matrix1D< double >& w, matrix2D< double >& v)
 {
     // svdcmp only works with double
     type_cast(a, u);

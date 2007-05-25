@@ -63,7 +63,7 @@ public:
     int sym_order;
 
     /** fil vector with symmetry axis */
-    // vector <matrix1D<double> > symmetry_vectors;
+    // vector <Matrix1D<double> > symmetry_vectors;
 public:
     /** Empty constructor */
     Prog_Sampling_Parameters();
@@ -85,7 +85,7 @@ public:
     void run();
 
     /** get all directions related by symmetry to (1,0,0)  */
-    void get_sym_vectors(vector< matrix1D<double > > &sym_points);
+    void get_sym_vectors(vector< Matrix1D<double > > &sym_points);
 
 };
 //@}

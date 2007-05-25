@@ -147,9 +147,9 @@ void fill_binary_object(matrix2D< double >&I, int neighbourhood = 8);
  * This function returns the number of objects (different from background)
  */
 template <typename T>
-double correlation(const matrix1D< T >& x,
-                   const matrix1D< T >& y,
-                   const matrix1D< int >* mask = NULL,
+double correlation(const Matrix1D< T >& x,
+                   const Matrix1D< T >& y,
+                   const Matrix1D< int >* mask = NULL,
                    int l = 0)
 {
     SPEED_UP_temps;
@@ -266,7 +266,7 @@ double correlation(const matrix3D< T >& x,
  * positions.
  */
 template <typename T>
-double correlation_index(const matrix1D< T >& x, const matrix1D< T >& y)
+double correlation_index(const Matrix1D< T >& x, const Matrix1D< T >& y)
 {
     SPEED_UP_temps;
 
@@ -453,7 +453,7 @@ void best_shift(const matrix2D< double >& I1,
  * Return the SQRT[sum{(x-y)*(x-y)}] in the common positions.
  */
 template <typename T>
-double euclidian_distance(const matrix1D< T >& x, const matrix1D< T >& y)
+double euclidian_distance(const Matrix1D< T >& x, const Matrix1D< T >& y)
 {
     SPEED_UP_temps;
 
@@ -551,8 +551,8 @@ double euclidian_distance(const matrix3D< T >& x,
  * (according to: Tourassi et al. (2001) Med. Phys. 28 pp. 2394-2402.)
  */
 template <typename T>
-double mutual_information(const matrix1D< T >& x,
-                          const matrix1D< T >& y,
+double mutual_information(const Matrix1D< T >& x,
+                          const Matrix1D< T >& y,
                           int nx = 0,
                           int ny = 0)
 {
@@ -561,8 +561,8 @@ double mutual_information(const matrix1D< T >& x,
     long n = 0;
     histogram1D histx, histy;
     histogram2D histxy;
-    matrix1D< T > aux_x, aux_y;
-    matrix1D< double > mx, my;
+    Matrix1D< T > aux_x, aux_y;
+    Matrix1D< double > mx, my;
     matrix2D< double > mxy;
     int xdim, ydim;
     double MI = 0.0;
@@ -635,8 +635,8 @@ double mutual_information(const matrix2D< T >& x,
     long n = 0;
     histogram1D histx, histy;
     histogram2D histxy;
-    matrix1D< T > aux_x, aux_y;
-    matrix1D< double > mx, my;
+    Matrix1D< T > aux_x, aux_y;
+    Matrix1D< double > mx, my;
     matrix2D< double > mxy;
     int xdim, ydim;
     double retval = 0.0;
@@ -712,8 +712,8 @@ double mutual_information(const matrix3D< T >& x,
     long n = 0;
     histogram1D histx, histy;
     histogram2D histxy;
-    matrix1D< T > aux_x, aux_y;
-    matrix1D< double > mx, my;
+    Matrix1D< T > aux_x, aux_y;
+    Matrix1D< double > mx, my;
     matrix2D< double > mxy;
     int xdim, ydim, zdim;
     double retval = 0.0;
@@ -779,10 +779,10 @@ double mutual_information(const matrix3D< T >& x,
  * Return the sqrt(sum{(x-y)*(x-y)}/n) in the common positions.
  */
 template <typename T>
-double rms(const matrix1D< T >& x,
-           const matrix1D< T >& y,
-           const matrix1D< int >* mask = NULL,
-           matrix1D< double >* Contributions = NULL)
+double rms(const Matrix1D< T >& x,
+           const Matrix1D< T >& y,
+           const Matrix1D< int >* mask = NULL,
+           Matrix1D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -958,11 +958,11 @@ void Fourier_Bessel_decomposition(const matrix2D< double >& img_in,
  * @ingroup Filters
  */
 void harmonic_decomposition(const matrix2D< double >& img_in,
-                            matrix1D< double >& v_out);
+                            Matrix1D< double >& v_out);
 
 // TODO Document, check indentation
 template <typename T>
-void sort(T a, T b, T c, matrix1D< T >& v)
+void sort(T a, T b, T c, Matrix1D< T >& v)
 {
     if (a < b)
         if (b < c)
@@ -1004,7 +1004,7 @@ void sort(T a, T b, T c, matrix1D< T >& v)
 }
 
 template <typename T>
-void merge_sort(matrix1D< T >& v1, matrix1D< T >& v2, matrix1D< T >& v)
+void merge_sort(Matrix1D< T >& v1, Matrix1D< T >& v2, Matrix1D< T >& v)
 {
     int i1 = 0, i2 = 0, i = 0;
 
@@ -1027,7 +1027,7 @@ void merge_sort(matrix1D< T >& v1, matrix1D< T >& v2, matrix1D< T >& v)
 // elements. This way is guaranteed a minimum number of comparisons (maximum
 // number of comparisons to perform the sort, 5)
 template <typename T>
-void fast_merge_sort(matrix1D< T >& x, matrix1D< T >& y, matrix1D< T >& v)
+void fast_merge_sort(Matrix1D< T >& x, Matrix1D< T >& y, Matrix1D< T >& v)
 {
     if (x(0) < y(0))
     {
@@ -1215,7 +1215,7 @@ void fast_merge_sort(matrix1D< T >& x, matrix1D< T >& y, matrix1D< T >& v)
 
 // TODO Document
 template <typename T>
-void median(matrix1D< T >& x, matrix1D< T >& y, T& m)
+void median(Matrix1D< T >& x, Matrix1D< T >& y, T& m)
 {
     if (x(0) < y(1))
         if (x(1) < y(1))
@@ -1254,8 +1254,8 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
     int backup_startingy = STARTINGY(m);
 
     STARTINGX(m) = STARTINGY(m) = 0;
-    matrix1D< T > v1(3), v2(3), v3(3), v4(3);
-    matrix1D< T > v(6);
+    Matrix1D< T > v1(3), v2(3), v3(3), v4(3);
+    Matrix1D< T > v(6);
 
     // Set the output matrix size
     out.resize(m);
@@ -1345,7 +1345,7 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
 void Smoothing_Shah(matrix2D< double >& img,
                     matrix2D< double >& surface_strength,
                     matrix2D< double >& edge_strength,
-                    const matrix1D< double >& W,
+                    const Matrix1D< double >& W,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,
@@ -1363,7 +1363,7 @@ void Smoothing_Shah(matrix2D< double >& img,
  */
 void rotational_invariant_moments(const matrix2D< double >& img,
                                   const matrix2D< int >* mask,
-                                  matrix1D< double >& v_out);
+                                  Matrix1D< double >& v_out);
 
 /** Inertia moments
  * @ingroup Filters
@@ -1375,7 +1375,7 @@ void rotational_invariant_moments(const matrix2D< double >& img,
  */
 void inertia_moments(const matrix2D< double >& img,
                      const matrix2D< int >* mask,
-                     matrix1D< double >& v_out,
+                     Matrix1D< double >& v_out,
                      matrix2D< double >& u);
 
 /** Fill a triangle defined by three points

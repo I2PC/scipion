@@ -284,8 +284,8 @@ void ImageViewer::doOption(int item)
     }
     else if (item == ravg)
     {
-        matrix1D<double> radial_profile;
-        matrix1D<int> center_of_rot(2), radial_count;
+        Matrix1D<double> radial_profile;
+        Matrix1D<int> center_of_rot(2), radial_count;
         radial_average(xmippImage(), center_of_rot, radial_profile, radial_count);
         radial_profile.show_with_gnuplot("Radius", "Radial average");
         radial_profile.edit();
@@ -296,7 +296,7 @@ void ImageViewer::doOption(int item)
     }
     else if (item == profile)
     {
-        matrix1D<double> profile;
+        Matrix1D<double> profile;
         xmippImage().profile(
             xi + STARTINGX(xmippImage()), yi + STARTINGY(xmippImage()),
             xf + STARTINGX(xmippImage()), yf + STARTINGY(xmippImage()), 100, profile);

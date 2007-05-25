@@ -94,11 +94,11 @@ void RealImag2Complex(const matrix3D< double > & real,
 }
 
 /** Direct Fourier Transform 1D ------------------------------------------- */
-void FourierTransform(const matrix1D<double> &in,
-                      matrix1D< complex<double> > &out)
+void FourierTransform(const Matrix1D<double> &in,
+                      Matrix1D< complex<double> > &out)
 {
     int N = XSIZE(in);
-    matrix1D<double> re(in), tmp(N), im(N), cas(N);
+    Matrix1D<double> re(in), tmp(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
@@ -137,11 +137,11 @@ void FourierTransform(const matrix3D<double> &in,
 }
 
 /** Inverse Fourier Transform 1D. ----------------------------------------- */
-void InverseFourierTransform(const matrix1D< complex<double> > &in,
-                             matrix1D<double> &out)
+void InverseFourierTransform(const Matrix1D< complex<double> > &in,
+                             Matrix1D<double> &out)
 {
     int N = XSIZE(in);
-    matrix1D<double> tmp(N), im(N), cas(N);
+    Matrix1D<double> tmp(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
@@ -203,7 +203,7 @@ void InverseFourierTransformHalf(const matrix2D< complex<double> > &in,
 }
 
 /* FFT shifts ------------------------------------------------------------ */
-void ShiftFFT(matrix1D< complex< double > > & v,
+void ShiftFFT(Matrix1D< complex< double > > & v,
               double xshift)
 {
     double dotp, a, b, c, d, ac, bd, ab_cd;
@@ -273,7 +273,7 @@ void ShiftFFT(matrix3D< complex< double > > & v,
 }
 
 /* Position origin at center ----------------------------------------------- */
-void CenterOriginFFT(matrix1D< complex< double > > & v, bool forward)
+void CenterOriginFFT(Matrix1D< complex< double > > & v, bool forward)
 {
     double xshift = -(double)(int)(XSIZE(v) / 2);
     if (forward)
@@ -322,8 +322,8 @@ void CenterOriginFFT(matrix3D< complex< double > > & v, bool forward)
 }
 
 /* FFT Magnitude 1D. ------------------------------------------------------- */
-void FFT_magnitude(const matrix1D< complex<double> > &v,
-                   matrix1D<double> &mag)
+void FFT_magnitude(const Matrix1D< complex<double> > &v,
+                   Matrix1D<double> &mag)
 {
     mag.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v) mag(i) = abs(v(i));
@@ -344,8 +344,8 @@ void FFT_magnitude(const matrix3D< complex<double> > &v,
 }
 
 /* FFT Phase 1D. ------------------------------------------------------- */
-void FFT_phase(const matrix1D< complex<double> > &v,
-               matrix1D<double> &phase)
+void FFT_phase(const Matrix1D< complex<double> > &v,
+               Matrix1D<double> &phase)
 {
     phase.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v) phase(i) = atan2(v(i).imag(), v(i).real());
@@ -382,7 +382,7 @@ double distancia2(int x, int y, int m)
 /* SSNR process single image */
 void my_ssnr_step(const matrix2D< complex<double> > &FTAverageImage,
                   const matrix2D< complex<double> > &FTaverageSubGroup,
-                  matrix1D<double> &ssnr, matrix1D<double> &pixel, int z)
+                  Matrix1D<double> &ssnr, Matrix1D<double> &pixel, int z)
 {
     //n -> number of images in the subset
     int top, cont;
@@ -429,8 +429,8 @@ void numerical_derivative(matrix2D<double> &M, matrix2D<double> &D,
     // Set D to be a copy in shape of M
     D.copy_shape(M);
 
-    matrix1D<double> v, rotated;
-    matrix1D<double> ans; // To obtain results
+    Matrix1D<double> v, rotated;
+    Matrix1D<double> ans; // To obtain results
 
     // Wrap around version of the Savitzky-Golay coefficients
     int dim = 2 * window_size + 1;
@@ -446,7 +446,7 @@ void numerical_derivative(matrix2D<double> &M, matrix2D<double> &D,
 
     // Savitzky-Golay filter is returned in wrap-around style, so
     // correct it to use with the convolution routine
-    matrix1D<double> coefficients(dim);
+    Matrix1D<double> coefficients(dim);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(coefficients)
     {
         int j = i + window_size;

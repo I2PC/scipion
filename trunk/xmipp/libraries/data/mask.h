@@ -55,7 +55,7 @@ void apply_geo_cont_2D_mask(matrix2D< double >& mask,
  * 1 - RaisedCosine. When entering, the mask is initialiazed to 0 and then the
  * mask is created.
  */
-void RaisedCosineMask(matrix1D< double >& mask,
+void RaisedCosineMask(Matrix1D< double >& mask,
                       double r1, double r2, int mode = INNER_MASK, double x0 = 0);
 
 /** Creates a 1D RaisedCrown mask for already sized masks
@@ -68,7 +68,7 @@ void RaisedCosineMask(matrix1D< double >& mask,
  * normal RaisedCrowns, and outside masks are 1 - RaisedCrowns. When entering,
  * the mask is initialiazed to 0 and then the mask is created.
  */
-void RaisedCrownMask(matrix1D< double >& mask,
+void RaisedCrownMask(Matrix1D< double >& mask,
                      double r1, double r2, double pix_width,
                      int mode = INNER_MASK,
                      double x0 = 0);
@@ -622,7 +622,7 @@ public:
 
     /** 1D integer mask
      */
-    matrix1D< int > imask1D;
+    Matrix1D< int > imask1D;
 
     /** 2D integer mask
      */
@@ -634,7 +634,7 @@ public:
 
     /** 1D double mask
      */
-    matrix1D< double > dmask1D;
+    Matrix1D< double > dmask1D;
 
     /** 2D double mask
      */
@@ -718,7 +718,7 @@ public:
     /** Resize after a pattern
      */
     template<typename T>
-    void resize(const matrix1D< T>& m)
+    void resize(const Matrix1D< T>& m)
     {
         switch (datatype())
         {
@@ -783,7 +783,7 @@ public:
     /** Generate mask for a signal following a pattern
      */
     template<typename T>
-    void generate_1Dmask(const matrix1D< T >& m)
+    void generate_1Dmask(const Matrix1D< T >& m)
     {
         resize(m);
         generate_1Dmask();
@@ -839,7 +839,7 @@ public:
      * subs_val is the substitute value in case of binary masks
      */
     template<typename T>
-    void apply_mask(const matrix1D< T >& I, matrix1D< T >& result,
+    void apply_mask(const Matrix1D< T >& I, Matrix1D< T >& result,
                     T subs_val = 0)
     {
         switch (datatype())
@@ -906,7 +906,7 @@ public:
      * existing mask.
      */
     template<typename T>
-    void produce_vector(const matrix1D< T >& I, matrix1D< T >& result)
+    void produce_vector(const Matrix1D< T >& I, Matrix1D< T >& result)
     {
         // Resize the output vector
         if (XSIZE(result) == 0)
@@ -955,7 +955,7 @@ public:
      * existing mask.
      */
     template<typename T>
-    void produce_vector(const matrix2D< T >& I, matrix1D< T >& result)
+    void produce_vector(const matrix2D< T >& I, Matrix1D< T >& result)
     {
         // Resize the output vector
         if (XSIZE(result) == 0)
@@ -1004,7 +1004,7 @@ public:
      * existing mask.
      */
     template<typename T>
-    void produce_vector(const matrix3D< T >& I, matrix1D< T >& result)
+    void produce_vector(const matrix3D< T >& I, Matrix1D< T >& result)
     {
         // Resize the output vector
         if (XSIZE(result) == 0)
@@ -1045,28 +1045,28 @@ public:
 
     /** Get binary 1D mask
      */
-    matrix1D< int >& get_binary_mask1D()
+    Matrix1D< int >& get_binary_mask1D()
     {
         return imask1D;
     }
 
     /** Set binary 1D mask
      */
-    void set_binary_mask1D(matrix1D< int >& _imask1D)
+    void set_binary_mask1D(Matrix1D< int >& _imask1D)
     {
         imask1D = _imask1D;
     }
 
     /** Get continuous 1D mask
      */
-    matrix1D< double >& get_cont_mask1D()
+    Matrix1D< double >& get_cont_mask1D()
     {
         return dmask1D;
     }
 
     /** Set continuous 1D mask
      */
-    void set_cont_mask1D(matrix1D< double >& _dmask1D)
+    void set_cont_mask1D(Matrix1D< double >& _dmask1D)
     {
         dmask1D = _dmask1D;
     }
@@ -1233,8 +1233,8 @@ void apply_geo_cont_2D_mask(matrix2D< double >& mask,
  *
  */
 template<typename T>
-void apply_binary_mask(const matrix1D< int >& mask, const matrix1D< T >& m_in,
-                       matrix1D< T >& m_out, T subs_val = (T) 0)
+void apply_binary_mask(const Matrix1D< int >& mask, const Matrix1D< T >& m_in,
+                       Matrix1D< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
 
@@ -1257,8 +1257,8 @@ void apply_binary_mask(const matrix1D< int >& mask, const matrix1D< T >& m_in,
  * same ones. Only the overlapping values are affected by the mask.
  */
 template<typename T>
-void apply_cont_mask(const matrix1D< double >& mask, const matrix1D< T >& m_in,
-                     matrix1D< T >& m_out)
+void apply_cont_mask(const Matrix1D< double >& mask, const Matrix1D< T >& m_in,
+                     Matrix1D< T >& m_out)
 {
     m_out.resize(m_in);
 

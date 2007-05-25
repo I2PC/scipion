@@ -164,8 +164,8 @@ void compute_double_minmax(double& min, double& max) const
  */
 void compute_double_minmax(double& min,
                            double& max,
-                           const matrix1D< double >& corner1,
-                           const matrix1D< double >& corner2) const;
+                           const Matrix1D< double >& corner1,
+                           const Matrix1D< double >& corner2) const;
 
 /** Minimum and maximum within region.
  * @ingroup Statistics
@@ -174,10 +174,10 @@ void compute_double_minmax(double& min,
  */
 void compute_double_minmax(double& min,
                            double& max,
-                           const matrix1D< int >& corner1,
-                           const matrix1D< int >& corner2) const
+                           const Matrix1D< int >& corner1,
+                           const Matrix1D< int >& corner2) const
 {
-    matrix1D< double > dcorner1, dcorner2;
+    Matrix1D< double > dcorner1, dcorner2;
     type_cast(corner1, dcorner1);
     type_cast(corner2, dcorner2);
 
@@ -300,10 +300,10 @@ void compute_stats(double& avg,
                    double& stddev,
                    T& min,
                    T& max,
-                   const matrix1D< int >& corner1,
-                   const matrix1D< int >& corner2) const
+                   const Matrix1D< int >& corner1,
+                   const Matrix1D< int >& corner2) const
 {
-    matrix1D< double > dcorner1, dcorner2;
+    Matrix1D< double > dcorner1, dcorner2;
     type_cast(corner1, dcorner1);
     type_cast(corner2, dcorner2);
 
@@ -319,8 +319,8 @@ void compute_stats(double& avg,
                    double& stddev,
                    T& min,
                    T& max,
-                   const matrix1D< double >& corner1,
-                   const matrix1D< double >& corner2) const;
+                   const Matrix1D< double >& corner1,
+                   const Matrix1D< double >& corner2) const;
 
 /** Adjust the range of the array to a given one.
  * @ingroup Statistics
@@ -843,7 +843,7 @@ void clear()
  * vectors, 2 for matrices and 3 for volumes.
  */
 // This function must be explictly implemented outside
-bool outside(const matrix1D< double >& v) const;
+bool outside(const Matrix1D< double >& v) const;
 
 /** True if this object intersects logically the argument array.
  * @ingroup Size
@@ -858,8 +858,8 @@ bool intersects(const maT& m) const;
  * of the rectangle.
  */
 // This function must be explictly implemented outside
-bool intersects(const matrix1D< double >& corner1,
-                const matrix1D< double >& corner2) const;
+bool intersects(const Matrix1D< double >& corner1,
+                const Matrix1D< double >& corner2) const;
 
 /** True if the given index is in one corner.
  * @ingroup Size
@@ -869,7 +869,7 @@ bool intersects(const matrix1D< double >& corner1,
  * that is, 1 for vectors, 2 for matrices and 3 for volumes.
  */
 // This function must be explictly implemented outside
-bool isCorner(const matrix1D< double >& v);
+bool isCorner(const Matrix1D< double >& v);
 
 /** True if the given index is in a border.
  * @ingroup Size
@@ -879,7 +879,7 @@ bool isCorner(const matrix1D< double >& v);
  * is, 1 for vectors, 2 for matrices and 3 for volumes.
  */
 // This function must be explictly implemented outside
-bool isBorder(const matrix1D< int >& v);
+bool isBorder(const Matrix1D< int >& v);
 
 /** Insert a patch in array.
  * @ingroup Size
@@ -1762,5 +1762,5 @@ friend maT log10(const maT& a)
  * within the object whose mask value is 1 (also in logical indexes)
  * are taken into account.
  */
-void center_of_mass(matrix1D< double >& center, void* mask = NULL);
+void center_of_mass(Matrix1D< double >& center, void* mask = NULL);
 

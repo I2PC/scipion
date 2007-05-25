@@ -117,13 +117,13 @@ int main(int argc, char **argv)
         double mean_1 = V1().compute_avg();
         double mean_2 = V2().compute_avg();
         matrix3D<double> *V, Vaux;
-        matrix1D<double> r(3), sc(3);
+        Matrix1D<double> r(3), sc(3);
         matrix2D<double> A;
 
         // Initialize best_fit
         double best_rot, best_tilt, best_psi;
         double best_sc, best_grey, best_fit, fit;
-        matrix1D<double> best_r(3);
+        Matrix1D<double> best_r(3);
         bool first = true;
 
         // Generate mask

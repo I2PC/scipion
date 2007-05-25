@@ -31,14 +31,14 @@
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
-#define maT matrix1D<T>
-#define ma  matrix1D
+#define maT Matrix1D<T>
+#define ma  Matrix1D
 #include "multidim_basic.inc"
 #undef ma
 #undef maT
 // Special case for complex numbers
 template <>
-ostream& operator << (ostream& out, const matrix1D< complex<double> > & v)
+ostream& operator << (ostream& out, const Matrix1D< complex<double> > & v)
 {
     if (MULTIDIM_SIZE(v) == 0)
         out << "NULL vector\n";
@@ -56,26 +56,26 @@ ostream& operator << (ostream& out, const matrix1D< complex<double> > & v)
 }
 
 /* Vector R2 and R3 -------------------------------------------------------- */
-matrix1D<double> vector_R2(double x, double y)
+Matrix1D<double> vector_R2(double x, double y)
 {
-    matrix1D<double> result(2);
+    Matrix1D<double> result(2);
     VEC_ELEM(result, 0) = x;
     VEC_ELEM(result, 1) = y;
     return result;
 }
 
-matrix1D<double> vector_R3(double x, double y, double z)
+Matrix1D<double> vector_R3(double x, double y, double z)
 {
-    matrix1D<double> result(3);
+    Matrix1D<double> result(3);
     VEC_ELEM(result, 0) = x;
     VEC_ELEM(result, 1) = y;
     VEC_ELEM(result, 2) = z;
     return result;
 }
 
-matrix1D<int> vector_R3(int x, int y, int z)
+Matrix1D<int> vector_R3(int x, int y, int z)
 {
-    matrix1D<int> result(3);
+    Matrix1D<int> result(3);
     VEC_ELEM(result, 0) = x;
     VEC_ELEM(result, 1) = y;
     VEC_ELEM(result, 2) = z;
@@ -83,8 +83,8 @@ matrix1D<int> vector_R3(int x, int y, int z)
 }
 
 /* Are orthogonal ---------------------------------------------------------- */
-int are_orthogonal(matrix1D<double> &v1, matrix1D<double> &v2,
-                   matrix1D<double> &v3)
+int are_orthogonal(Matrix1D<double> &v1, Matrix1D<double> &v2,
+                   Matrix1D<double> &v3)
 {
     if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
         REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
@@ -105,10 +105,10 @@ int are_orthogonal(matrix1D<double> &v1, matrix1D<double> &v2,
 }
 
 /* Are system? ------------------------------------------------------------- */
-int are_system(matrix1D<double> &v1, matrix1D<double> &v2,
-               matrix1D<double> &v3)
+int are_system(Matrix1D<double> &v1, Matrix1D<double> &v2,
+               Matrix1D<double> &v3)
 {
-    matrix1D<double> aux(3);
+    Matrix1D<double> aux(3);
     if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
         REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
     aux = vector_product(v1, v2);
@@ -124,9 +124,9 @@ int are_system(matrix1D<double> &v1, matrix1D<double> &v2,
 }
 
 /* Powell's optimizer ------------------------------------------------------ */
-void Powell_optimizer(matrix1D<double> &p, int i0, int n,
+void Powell_optimizer(Matrix1D<double> &p, int i0, int n,
                       double(*f)(double *x), double ftol, double &fret,
-                      int &iter, const matrix1D<double> &steps, bool show)
+                      int &iter, const Matrix1D<double> &steps, bool show)
 {
     double *xi = NULL;
 

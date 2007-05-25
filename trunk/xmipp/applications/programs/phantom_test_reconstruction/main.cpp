@@ -114,9 +114,9 @@ void show_measured_point(ostream &out, Recons_test_Parameters prm, int i)
 void test_training(Recons_test_Parameters &prm, int nvol,
                    const FileName &fn_hist, const string &training_FOM)
 {
-    matrix1D<double> training_avgs;
-    matrix1D<double> training_devs;
-    matrix1D<double> training_N;
+    Matrix1D<double> training_avgs;
+    Matrix1D<double> training_devs;
+    Matrix1D<double> training_N;
     EVALUATE_results results;
 
     // Open History file

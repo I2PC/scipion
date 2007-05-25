@@ -142,7 +142,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 // Show angles .............................................................
    // Prepare info structure for showing
    DocFile DF;
-   matrix1D<double> v(4);
+   Matrix1D<double> v(4);
    for (int i=0; i<prm.numIMG; i++) {
       v(0)=prm.IMG_Inf[i].rot;
       v(1)=prm.IMG_Inf[i].tilt;

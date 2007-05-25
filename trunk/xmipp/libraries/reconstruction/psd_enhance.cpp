@@ -115,8 +115,8 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
     // Mask the input PSD
     matrix2D<int> mask;
     mask.resize(PSD);
-    matrix1D<int>    idx(2);  // Indexes for Fourier plane
-    matrix1D<double> freq(2); // Frequencies for Fourier plane
+    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
     FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
     {
         XX(idx) = j;

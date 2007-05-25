@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     SelFile      SFlog, SFo, SFa;
     DocFile      DFi, DFo, DFa, DFtmp;
     DocLine      DLi;
-    matrix1D<double> indataline(3), outdataline(3);
+    Matrix1D<double> indataline(3), outdataline(3);
     vector<DocFile> allDFs;
     double       noise, offset, LL, R;
     int          argcp;

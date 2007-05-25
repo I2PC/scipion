@@ -31,7 +31,7 @@ void Usage();
 
 int main(int argc, char **argv)
 {
-    matrix1D<double> a, b;
+    Matrix1D<double> a, b;
     double crystal_size, /*taya,*/ rot, tilt, psi;
     string op;
     /*   bool   MRC;*/

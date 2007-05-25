@@ -203,7 +203,7 @@ void Plotter::zoomIn()
 }
 
 /* Set curve --------------------------------------------------------------- */
-void Plotter::setCurveData(int id, const matrix1D<double> &Y)
+void Plotter::setCurveData(int id, const Matrix1D<double> &Y)
 {
     matrix2D<double> data(XSIZE(Y), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Y)
@@ -214,8 +214,8 @@ void Plotter::setCurveData(int id, const matrix1D<double> &Y)
     setCurveData(id, data);
 }
 
-void Plotter::setCurveData(int id, const matrix1D<double> &X,
-                           const matrix1D<double> &Y)
+void Plotter::setCurveData(int id, const Matrix1D<double> &X,
+                           const Matrix1D<double> &Y)
 {
     if (XSIZE(X) != XSIZE(Y))
         REPORT_ERROR(1, "Plotter::setCurveData: X and Y have different sizes");

@@ -227,10 +227,10 @@ void Tomogram::close_tomogram()
 }
 
 /* Get piece --------------------------------------------------------------- */
-void Tomogram::get_piece(matrix1D<int> &r0, matrix1D<int> &length,
+void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
                          matrix3D<double> &piece)
 {
-    matrix1D<int> rF = r0 + length - 1;
+    Matrix1D<int> rF = r0 + length - 1;
     cout << r0.transpose() << endl;
     cout << length.transpose() << endl;
     cout << Xdim << " " << Ydim << " " << Zdim << endl;
@@ -253,7 +253,7 @@ void Tomogram::get_piece(matrix1D<int> &r0, matrix1D<int> &length,
 }
 
 /* Set piece --------------------------------------------------------------- */
-void Tomogram::set_piece(matrix1D<int> &r0, matrix1D<int> &length,
+void Tomogram::set_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
                          matrix3D<double> &piece)
 {
     int k, i, j, kp, ip, jp;

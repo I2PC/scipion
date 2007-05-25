@@ -102,12 +102,12 @@ ostream & operator << (ostream &o, const Crystal_ART_Parameters &eprm)
 
 /* Compute integer lattice ================================================= */
 /* Compute integer lattice ================================================= */
-void compute_integer_lattice(const matrix1D<double> &a,
-                             const matrix1D<double> &b,
+void compute_integer_lattice(const Matrix1D<double> &a,
+                             const Matrix1D<double> &b,
                              double a_mag_grid, double b_mag_grid,
                              double ang_a2b_deg,
-                             matrix1D<double> &aint,
-                             matrix1D<double> &bint,
+                             Matrix1D<double> &aint,
+                             Matrix1D<double> &bint,
                              matrix2D<double> &D,
                              int space_group)
 {
@@ -239,12 +239,12 @@ void Crystal_ART_Parameters::produce_Side_Info(
 
     // Unit cell mask within volume -----------------------------------------
     // Compute the 4 parallelogram corners
-    matrix1D<double> c1 = ai + bi;
-    matrix1D<double> c2 = -ai + bi;
-    matrix1D<double> c3 = -c1;
-    matrix1D<double> c4 = -c2;
-    matrix1D<double> c1c3 = c1 - c3; // These extra variables are needed because
-    matrix1D<double> c2c4 = c2 - c4; // the compiler messes up
+    Matrix1D<double> c1 = ai + bi;
+    Matrix1D<double> c2 = -ai + bi;
+    Matrix1D<double> c3 = -c1;
+    Matrix1D<double> c4 = -c2;
+    Matrix1D<double> c1c3 = c1 - c3; // These extra variables are needed because
+    Matrix1D<double> c2c4 = c2 - c4; // the compiler messes up
 
     // Resize unit cell mask
     // The unit mask is a little bigger to avoid the possibility of losing
@@ -255,7 +255,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     unit_cell_mask.set_Xmipp_origin();
 
     // Resize the reconstructed volume
-    matrix1D<double> r1(3), r2(3);
+    Matrix1D<double> r1(3), r2(3);
     for (int n = 0; n < vol_basis0.VolumesNo(); n++)
     {
         Volume &V = vol_basis0(n);
@@ -271,7 +271,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     vol_basis0.resize(r1, r2);
 
     // Fill the unit cell mask
-    matrix1D<double> r(2);
+    Matrix1D<double> r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(unit_cell_mask)
     {
         // Position vector of actual BCC element been considered
@@ -279,10 +279,10 @@ void Crystal_ART_Parameters::produce_Side_Info(
         XX(r) = j;
 
         // Vectors from r to each corner
-        matrix1D<double> c1r = c1 - r;
-        matrix1D<double> c2r = c2 - r;
-        matrix1D<double> c3r = c3 - r;
-        matrix1D<double> c4r = c4 - r;
+        Matrix1D<double> c1r = c1 - r;
+        Matrix1D<double> c2r = c2 - r;
+        Matrix1D<double> c3r = c3 - r;
+        Matrix1D<double> c4r = c4 - r;
 
         // Product of each of these vectors with tha parallelogram borders
         int sgn[4];
@@ -380,7 +380,7 @@ void ART_single_step(
                      "ART_single_step: This function only works with blob volumes");
 
 // Compute lattice vectors to be used ......................................
-    matrix1D<double> aint, bint, shift;
+    Matrix1D<double> aint, bint, shift;
     aint.resize(2);
     bint.resize(2);
     shift.resize(3);
@@ -492,7 +492,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
 #endif
 
     // Resize volume ........................................................
-    matrix1D<double> corner1(2), corner2(2);
+    Matrix1D<double> corner1(2), corner2(2);
     VECTOR_R2(corner1,
               FIRST_XMIPP_INDEX(prm.Xoutput_volume_size),
               FIRST_XMIPP_INDEX(prm.Youtput_volume_size));
@@ -500,7 +500,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
               LAST_XMIPP_INDEX(prm.Xoutput_volume_size),
               LAST_XMIPP_INDEX(prm.Youtput_volume_size));
 
-    matrix1D<double> zero(2);
+    Matrix1D<double> zero(2);
     VECTOR_R2(zero, 0, 0);
     int a0, aF, b0, bF;
     // How many lattice units fit inside the output volume
@@ -526,7 +526,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
     vol.resize(corner1, corner2);
 
     // Copy values ..........................................................
-    matrix1D<double> r(3);
+    Matrix1D<double> r(3);
     for (int n = 0; n < vol.VolumesNo(); n++)
     {
         Volume &V = vol(n);

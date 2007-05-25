@@ -34,9 +34,9 @@
 /* ######################################################################### */
 
 /* Project a point to a plane ---------------------------------------------- */
-void Uproject_to_plane(const matrix1D<double> &point,
-                       const matrix1D<double> &direction, double distance,
-                       matrix1D<double> &result)
+void Uproject_to_plane(const Matrix1D<double> &point,
+                       const Matrix1D<double> &direction, double distance,
+                       Matrix1D<double> &result)
 {
 
     if (XSIZE(result) != 3)
@@ -49,8 +49,8 @@ void Uproject_to_plane(const matrix1D<double> &point,
 }
 
 /* Project a point to a plane ---------------------------------------------- */
-void Uproject_to_plane(const matrix1D<double> &r,
-                       double rot, double tilt, double psi, matrix1D<double> &result)
+void Uproject_to_plane(const Matrix1D<double> &r,
+                       double rot, double tilt, double psi, Matrix1D<double> &result)
 {
     static matrix2D<double> euler(3, 3);
     Euler_angles2matrix(rot, tilt, psi, euler);
@@ -58,8 +58,8 @@ void Uproject_to_plane(const matrix1D<double> &r,
 }
 
 /* Project a point to a plane ---------------------------------------------- */
-void Uproject_to_plane(const matrix1D<double> &r,
-                       const matrix2D<double> &euler, matrix1D<double> &result)
+void Uproject_to_plane(const Matrix1D<double> &r,
+                       const matrix2D<double> &euler, Matrix1D<double> &result)
 {
     SPEED_UP_temps;
     if (XSIZE(result) != 3)
@@ -68,7 +68,7 @@ void Uproject_to_plane(const matrix1D<double> &r,
 }
 
 /* Spherical distance ------------------------------------------------------ */
-double spherical_distance(const matrix1D<double> &r1, const matrix1D<double> &r2)
+double spherical_distance(const Matrix1D<double> &r1, const Matrix1D<double> &r2)
 {
     double r1r2 = XX(r1) * XX(r2) + YY(r1) * YY(r2) + ZZ(r1) * ZZ(r2);
     double R1 = sqrt(XX(r1) * XX(r1) + YY(r1) * YY(r1) + ZZ(r1) * ZZ(r1));
@@ -78,9 +78,9 @@ double spherical_distance(const matrix1D<double> &r1, const matrix1D<double> &r2
 }
 /* Point to line distance -------------------------------------------------- */
 
-double point_line_distance_3D(const matrix1D<double> &p,
-                              const matrix1D<double> &a,
-                              const matrix1D<double> &v)
+double point_line_distance_3D(const Matrix1D<double> &p,
+                              const Matrix1D<double> &a,
+                              const Matrix1D<double> &v)
 
 {
 #ifdef NEVEREVER
@@ -112,7 +112,7 @@ double point_line_distance_3D(const matrix1D<double> &p,
         exit(0);
     }
 #endif
-    matrix1D<double> p_a(3);
+    Matrix1D<double> p_a(3);
 
     V3_MINUS_V3(p_a, p, a);
     return (vector_product(p_a, v).module() / v.module());
@@ -209,7 +209,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
     // B=vector of measured values
     int Ncoeff = YSIZE(result.c_ml) * XSIZE(result.c_ml);
     matrix2D<double> A(Npoints, Ncoeff);
-    matrix1D<double> B(Npoints);
+    Matrix1D<double> B(Npoints);
     for (int i = 0; i < Npoints; ++i)
     {
         B(i) = AUX_points[i].z;
@@ -250,19 +250,19 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
             }
     }
 
-    matrix1D<double> x = (A.transpose() * A).inv() * (A.transpose() * B);
+    Matrix1D<double> x = (A.transpose() * A).inv() * (A.transpose() * B);
     for (int m = m0; m <= mF; ++m)
         for (int l = l0; l <= lF; ++l)
             result.c_ml(m, l) = x((m - m0) * XSIZE(result.c_ml) + l - l0);
 }
 
 /* Rectangle enclosing ----------------------------------------------------- */
-void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
-                         const matrix2D<double> &V, matrix1D<double> &corner1,
-                         matrix1D<double> &corner2)
+void rectangle_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
+                         const matrix2D<double> &V, Matrix1D<double> &corner1,
+                         Matrix1D<double> &corner2)
 {
     SPEED_UP_temps;
-    matrix1D<double> v(2);
+    Matrix1D<double> v(2);
     corner1.resize(2);
     corner2.resize(2);
 
@@ -293,12 +293,12 @@ void rectangle_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
 }
 
 /* Rectangle enclosing ----------------------------------------------------- */
-void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
-                   const matrix2D<double> &V, matrix1D<double> &corner1,
-                   matrix1D<double> &corner2)
+void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
+                   const matrix2D<double> &V, Matrix1D<double> &corner1,
+                   Matrix1D<double> &corner2)
 {
     SPEED_UP_temps;
-    matrix1D<double> v(3);
+    Matrix1D<double> v(3);
     corner1.resize(3);
     corner2.resize(3);
 
@@ -342,8 +342,8 @@ void box_enclosing(const matrix1D<double> &v0, const matrix1D<double> &vF,
 }
 
 /* Point inside polygon ---------------------------------------------------- */
-bool point_inside_polygon(const vector< matrix1D<double> > &polygon,
-                          const matrix1D<double> &point)
+bool point_inside_polygon(const vector< Matrix1D<double> > &polygon,
+                          const Matrix1D<double> &point)
 {
     int i, j;
     bool retval = false;
@@ -430,10 +430,10 @@ TEST data (3)
    vector_line = (-1.2,1.,0.)
    point_line  = (0,0,0)
 */
-int line_plane_intersection(const matrix1D<double> normal_plane,
-                            const matrix1D<double> vector_line,
-                            matrix1D<double> &intersection_point,
-                            const matrix1D<double> point_line,
+int line_plane_intersection(const Matrix1D<double> normal_plane,
+                            const Matrix1D<double> vector_line,
+                            Matrix1D<double> &intersection_point,
+                            const Matrix1D<double> point_line,
                             double point_plane_at_x_y_zero)
 {
     double l;
@@ -501,7 +501,7 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
 
 /* Euler direction --------------------------------------------------------- */
 void Euler_direction(double alpha, double beta, double gamma,
-                     matrix1D<double> &v)
+                     Matrix1D<double> &v)
 {
     double ca, sa, cb, sb;
     double cc, cs, sc, ss;
@@ -525,15 +525,15 @@ void Euler_direction(double alpha, double beta, double gamma,
 /* Euler direction2angles ------------------------------- */
 //gamma is useless but I keep it for simmetry
 //with Euler_direction
-void Euler_direction2angles(matrix1D<double> &v0,
+void Euler_direction2angles(Matrix1D<double> &v0,
                             double &alpha, double &beta, double &gamma)
 {
     double abs_ca, abs_sa, sb, cb;
     double aux_alpha;
     double aux_beta;
     double error, newerror;
-    matrix1D<double> v_aux;
-    matrix1D<double> v;
+    Matrix1D<double> v_aux;
+    Matrix1D<double> v;
 
     //if not normalized do it so
     v.resize(3);
@@ -735,8 +735,8 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
                                    double &new_rot, double &new_tilt, double &new_psi,  matrix2D<double> &D)
 {
     int i;
-    matrix1D<double> w(3);
-    matrix1D<double> new_w(3);
+    Matrix1D<double> w(3);
+    Matrix1D<double> new_w(3);
     matrix2D<double> D_1(3, 3);
 
     double module;
@@ -757,11 +757,11 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
     if (fabs(VEC_ELEM(w, 2)) > 0.999847695)/*cos one degree */
     {
         Euler_direction(rot, 10., psi, w);
-        new_w = (matrix1D<double>)(D_1 * w) / ((D_1 * w).module());
+        new_w = (Matrix1D<double>)(D_1 * w) / ((D_1 * w).module());
         Euler_direction2angles(new_w, new_rot, new_tilt, new_psi);
 
         Euler_direction(rot, tilt, psi, w);
-        new_w = (matrix1D<double>)((D_1 * w) / ((D_1 * w).module()));
+        new_w = (Matrix1D<double>)((D_1 * w) / ((D_1 * w).module()));
         new_tilt = SGN(new_tilt) * fabs(ACOSD(VEC_ELEM(new_w, 2)));
         new_psi = psi;
 
@@ -774,7 +774,7 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
     }
     else
     {
-        new_w = (matrix1D<double>)(D_1 * w) / ((D_1 * w).module());
+        new_w = (Matrix1D<double>)(D_1 * w) / ((D_1 * w).module());
         Euler_direction2angles(new_w, new_rot, new_tilt, new_psi);
         new_psi = psi;
     }
@@ -870,8 +870,8 @@ matrix3D<double> Euler_rotate(const matrix3D<double> &V,
 
 /* Intersection with a unit sphere ----------------------------------------- */
 double intersection_unit_sphere(
-    const matrix1D<double> &u,     // direction
-    const matrix1D<double> &r)     // passing point
+    const Matrix1D<double> &u,     // direction
+    const Matrix1D<double> &r)     // passing point
 {
 
     // Some useful constants
@@ -899,8 +899,8 @@ double intersection_unit_sphere(
 
 /* Intersection with a unit cylinder --------------------------------------- */
 double intersection_unit_cylinder(
-    const matrix1D<double> &u,     // direction
-    const matrix1D<double> &r)     // passing point
+    const Matrix1D<double> &u,     // direction
+    const Matrix1D<double> &r)     // passing point
 {
     // Intersect with an infinite cylinder of radius=ry
     double A = XX(u) * XX(u) + YY(u) * YY(u);
@@ -938,8 +938,8 @@ double intersection_unit_cylinder(
 
 /* Intersection with a unit cube ------------------------------------------- */
 double intersection_unit_cube(
-    const matrix1D<double> &u,     // direction
-    const matrix1D<double> &r)     // passing point
+    const Matrix1D<double> &u,     // direction
+    const Matrix1D<double> &r)     // passing point
 {
     double t1, t2, t;
     int found_t = 0;

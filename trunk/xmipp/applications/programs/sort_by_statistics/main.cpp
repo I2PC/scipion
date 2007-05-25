@@ -42,7 +42,7 @@ public:
     double avg_ampl2_1, avg_ampl2_2, avg_ampl2_3, avg_ampl2_4;
     double sig_ampl2_1, sig_ampl2_2, sig_ampl2_3, sig_ampl2_4;
     vector<FileName> names;
-    matrix1D<double> zscore;
+    Matrix1D<double> zscore;
     vector<vector<double> > values;
     FileName fn_out;
 
@@ -74,8 +74,8 @@ public:
         vector<double> dum;
         matrix2D<double> Mrad, ampl2;
         matrix2D<complex<double> > IMG;
-        matrix1D<int> radial_count, center(2);
-        matrix1D<double> rmean_ampl2;
+        Matrix1D<int> radial_count, center(2);
+        Matrix1D<double> rmean_ampl2;
         center.init_zeros();
 
         if (do_means && !do_values)
@@ -289,7 +289,7 @@ public:
     {
 
         double mean, stddev, minval, maxval;
-        matrix1D<int> corner1(2), corner2(2);
+        Matrix1D<int> corner1(2), corner2(2);
 
         sum_quadsig = sum2_quadsig = 0.;
         sum_quadmean = sum2_quadmean = 0.;
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
     SelFile SF, SFout, SFtrain;
     int imgno, dim, nr_imgs, isort;
 
-    matrix1D<int> sorted;
+    Matrix1D<int> sorted;
     FileName fn, fn_train;
     ofstream fh_zsum, fh_zind;
 

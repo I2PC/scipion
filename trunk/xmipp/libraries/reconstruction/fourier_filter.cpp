@@ -254,7 +254,7 @@ void FourierMask::read_mask(const FileName &fn)
 void FourierMask::write_amplitude(const FileName &fn, int dim,
                                   bool do_not_center)
 {
-    matrix1D< complex<double> > aux1D;
+    Matrix1D< complex<double> > aux1D;
     matrix2D< complex<double> > aux2D;
     matrix3D< complex<double> > aux3D;
     switch (dim)
@@ -286,7 +286,7 @@ void FourierMask::write_amplitude(const FileName &fn, int dim,
     }
     if (dim == 1)
     {
-        matrix1D<double> v;
+        Matrix1D<double> v;
         FFT_magnitude(aux1D, v);
         FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
         v(i) = log10(1 + v(i) * v(i));
@@ -331,7 +331,7 @@ void FourierMask::write_mask(const FileName &fn, int dim)
 }
 
 /* Apply mask -------------------------------------------------------------- */
-void FourierMask::apply_mask_Fourier(matrix1D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix1D< complex<double> > &v)
 {
     v *= mask1D;
 }
@@ -344,9 +344,9 @@ void FourierMask::apply_mask_Fourier(matrix3D< complex<double> > &v)
     v *= mask3D;
 }
 
-void FourierMask::apply_mask_Space(matrix1D<double> &v)
+void FourierMask::apply_mask_Space(Matrix1D<double> &v)
 {
-    matrix1D< complex<double> > aux1D;
+    Matrix1D< complex<double> > aux1D;
     FourierTransform(v, aux1D);
     aux1D *= mask1D;
     InverseFourierTransform(aux1D, v);
@@ -382,8 +382,8 @@ void FourierMask::resize_mask(int Zdim, int Ydim, int Xdim)
 /* Mask power -------------------------------------------------------------- */
 double FourierMask::mask2D_power(double wmin, double wmax)
 {
-    matrix1D<int>    idx(2);
-    matrix1D<double> freq(2);
+    Matrix1D<int>    idx(2);
+    Matrix1D<double> freq(2);
     double retval = 0, N = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D)
     {

@@ -63,10 +63,10 @@ public:
     int ir;
 
     ///  Ampcos
-    matrix1D< double > out_ampcos;
+    Matrix1D< double > out_ampcos;
 
     ///  Ampsin
-    matrix1D< double > out_ampsin;
+    Matrix1D< double > out_ampsin;
 
     /// Show this object
     friend std::ostream& operator<<(std::ostream& _out,
@@ -143,7 +143,7 @@ public:
     double dr;
 
     ///  Rotational spectrum.
-    matrix1D< double > rot_spectrum;
+    Matrix1D< double > rot_spectrum;
 
     /// Show.
     friend std::ostream& operator<<(std::ostream& _out,

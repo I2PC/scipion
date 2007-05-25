@@ -100,7 +100,7 @@
  *     << " to " << effF << endl;
  * @endcode
  */
-class histogram1D: public matrix1D< double >
+class histogram1D: public Matrix1D< double >
 {
 public:
     // Structure
@@ -382,15 +382,15 @@ void compute_hist(const T& v, histogram1D& hist,
  */
 template<typename T>
 void compute_hist(const matrix2D< T >& v, histogram1D& hist,
-                  const matrix1D< int >& corner1,
-                  const matrix1D< int >& corner2,
+                  const Matrix1D< int >& corner1,
+                  const Matrix1D< int >& corner2,
                   int no_steps = 100)
 {
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
 
-    matrix1D< int > r(2);
+    Matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
     hist.insert_value(v(r));
 }
@@ -402,15 +402,15 @@ void compute_hist(const matrix2D< T >& v, histogram1D& hist,
  */
 template<typename T>
 void compute_hist(const matrix3D< T >& v, histogram1D& hist,
-                  const matrix1D< int >& corner1,
-                  const matrix1D< int >& corner2,
+                  const Matrix1D< int >& corner1,
+                  const Matrix1D< int >& corner2,
                   int no_steps = 100)
 {
     double min, max;
     v.compute_double_minmax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
 
-    matrix1D< int >r(3);
+    Matrix1D< int >r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
     hist.insert_value(v(r));
 }
@@ -505,7 +505,7 @@ void histogram_equalization(T& v, int bins = 8)
     compute_hist(v, hist, hist_steps);
 
     // Compute the distribution function of the pdf
-    matrix1D< double > norm_sum(hist_steps);
+    Matrix1D< double > norm_sum(hist_steps);
     norm_sum(0) = hist(0);
 
     for (int i = 1; i < hist_steps; i++)
@@ -514,7 +514,7 @@ void histogram_equalization(T& v, int bins = 8)
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
-    matrix1D< double > div(bins - 1);
+    Matrix1D< double > div(bins - 1);
     int index = 0;
 
     for (int current_bin = 1; current_bin < bins; current_bin++)

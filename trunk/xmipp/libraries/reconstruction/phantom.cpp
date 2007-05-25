@@ -517,20 +517,20 @@ ostream& operator << (ostream &o, const Cone &f)
         return 0;}
 
 /* Point inside a sphere --------------------------------------------------- */
-int Sphere::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Sphere::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     DEF_Sph_Blob_point_inside
 }
 
 /* Point inside a Blob --------------------------------------------------- */
-int Blob::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Blob::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     DEF_Sph_Blob_point_inside
 }
 #undef DEF_Sph_Blob_point_inside
 
 /* Density inside a Blob --------------------------------------------------- */
-double Blob::density_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+double Blob::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     /*Express r in the feature coord. system*/
     V3_MINUS_V3(aux, r, Center);
@@ -539,7 +539,7 @@ double Blob::density_inside(const matrix1D<double> &r, matrix1D<double> &aux) co
 }
 
 /* Point inside a cylinder ------------------------------------------------- */
-int Cylinder::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Cylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     SPEED_UP_temps;
     double tx, ty;
@@ -557,7 +557,7 @@ int Cylinder::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) con
 }
 
 /* Point inside a Double cylinder ------------------------------------------ */
-int DCylinder::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int DCylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     SPEED_UP_temps;
 
@@ -576,7 +576,7 @@ int DCylinder::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) co
 }
 
 /* Point inside a cube ----------------------------------------------------- */
-int Cube::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Cube::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     SPEED_UP_temps;
 
@@ -591,7 +591,7 @@ int Cube::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
 }
 
 /* Point inside an ellipsoid ----------------------------------------------- */
-int Ellipsoid::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Ellipsoid::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     SPEED_UP_temps;
     double tx, ty, tz;
@@ -609,7 +609,7 @@ int Ellipsoid::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) co
 }
 
 /* Point inside a cone ----------------------------------------------------- */
-int Cone::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
+int Cone::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     SPEED_UP_temps;
     double Zradius;
@@ -638,8 +638,8 @@ int Cone::point_inside(const matrix1D<double> &r, matrix1D<double> &aux) const
 #else
 #define DEBUG_SHOW
 #endif
-int Feature::voxel_inside(const matrix1D<double> &r, matrix1D<double> &aux1,
-                          matrix1D<double> &aux2) const
+int Feature::voxel_inside(const Matrix1D<double> &r, Matrix1D<double> &aux1,
+                          Matrix1D<double> &aux2) const
 {
 
     // The subvoxels are visited following a Gray code, so the number
@@ -674,9 +674,9 @@ int Feature::voxel_inside(const matrix1D<double> &r, matrix1D<double> &aux1,
 }
 /* voxel_inside_by_normalized_density ------------------------------------*/
 double Feature::voxel_inside_by_normalized_density(
-    const matrix1D<double> &r,
-    matrix1D<double> &aux1,
-    matrix1D<double> &aux2) const
+    const Matrix1D<double> &r,
+    Matrix1D<double> &aux1,
+    Matrix1D<double> &aux2) const
 {
 #ifdef NEVER
     if (Type == "blo")
@@ -729,8 +729,8 @@ double Feature::voxel_inside_by_normalized_density(
 #undef DEBUG
 
 /* Intersects sphere ------------------------------------------------------- */
-int Feature::intersects_sphere(const matrix1D<double> &r, double radius,
-                               matrix1D<double> &aux1, matrix1D<double> &aux2, matrix1D<double> &aux3)
+int Feature::intersects_sphere(const Matrix1D<double> &r, double radius,
+                               Matrix1D<double> &aux1, Matrix1D<double> &aux2, Matrix1D<double> &aux3)
 const
 {
     double radius2 = radius * radius;
@@ -751,8 +751,8 @@ const
 /* Draw in                                                                   */
 /* ------------------------------------------------------------------------- */
 /* Corners ----------------------------------------------------------------- */
-void Feature::corners(const Volume *V, matrix1D<double> &corner1,
-                      matrix1D<double> &corner2)
+void Feature::corners(const Volume *V, Matrix1D<double> &corner1,
+                      Matrix1D<double> &corner2)
 {
     corner1.resize(3);
     corner2.resize(3);
@@ -782,7 +782,7 @@ void Feature::corners(const Volume *V, matrix1D<double> &corner1,
 #define Vr VOLVOXEL((*V),(int)ZZ(r),(int)YY(r),(int)XX(r))
 void Feature::draw_in(Volume *V, int colour_mode, double colour)
 {
-    matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
+    Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               add;
     double             inside;
     double             final_colour;
@@ -838,7 +838,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
 /* Sketch a feature -------------------------------------------------------- */
 void Feature::sketch_in(Volume *V, double colour)
 {
-    matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
+    Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               inside;
 
     corners(V, corner1, corner2);
@@ -861,7 +861,7 @@ void Feature::shift(double shiftX, double shiftY, double shiftZ)
 /* Apply a general transformation to a feature ------------------------------ */
 void Feature::self_apply_geom(const matrix2D<double> &A)
 {
-    matrix1D<double> r(4);
+    Matrix1D<double> r(4);
     XX(r) = XX(Center);
     YY(r) = YY(Center);
     ZZ(r) = ZZ(Center);
@@ -884,10 +884,10 @@ void Feature::self_apply_geom(const matrix2D<double> &A)
 //       t          is a free parameter
 
 double Sphere::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     // This is done in order to correct the different lengths seen by
     // rays with different "speed". It is related to the jacobian of
@@ -902,10 +902,10 @@ double Sphere::intersection(
     return intersection_unit_sphere(u, r) / norm;
 }
 double Blob::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
 #ifdef NEVERDEFINED
     // This is done in order to correct the different lengths seen by
@@ -927,10 +927,10 @@ double Blob::intersection(
 
 //#define DEBUG
 double Cylinder::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     double norm = direction.module();
     SPEED_UP_temps;
@@ -965,10 +965,10 @@ double Cylinder::intersection(
 #undef DEBUG
 
 double DCylinder::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     double norm = direction.module();
     SPEED_UP_temps;
@@ -1006,10 +1006,10 @@ double DCylinder::intersection(
 }
 
 double Cube::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     double norm = direction.module();
     SPEED_UP_temps;
@@ -1033,10 +1033,10 @@ double Cube::intersection(
 }
 
 double Ellipsoid::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     double norm = direction.module();
     SPEED_UP_temps;
@@ -1060,10 +1060,10 @@ double Ellipsoid::intersection(
 }
 
 double Cone::intersection(
-    const matrix1D<double> &direction,
-    const matrix1D<double> &passing_point,
-    matrix1D<double> &r,
-    matrix1D<double> &u) const
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
 {
     return 0;
 }
@@ -1083,12 +1083,12 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
     // avoid numerical errors
 #define SUBSTEP 1/(SUBSAMPLING*2.0)
 
-    matrix1D<double> origin(3);
-    matrix1D<double> direction;
+    Matrix1D<double> origin(3);
+    Matrix1D<double> direction;
     VP.getRow(2, direction);
     direction.self_transpose();
-    matrix1D<double> corner1(3), corner2(3);
-    matrix1D<double> act(3);
+    Matrix1D<double> corner1(3), corner2(3);
+    Matrix1D<double> act(3);
     SPEED_UP_temps;
 
     // Find center of the feature in the projection plane ...................
@@ -1096,7 +1096,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
     //          universal coord system
     M3x3_BY_V3x1(origin, VP, Center);
 
-//   matrix1D<double> origin_debug(3);
+//   Matrix1D<double> origin_debug(3);
 //   Uproject_to_plane(Center,P.direction,0,origin_debug);
 
 //#define DEBUG_LITTLE
@@ -1146,7 +1146,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
     << "Corner2 finally is : " << corner2.transpose() << endl;
 #endif
     /*
-       matrix1D<double> corner1_debug(2),corner2_debug(2);
+       Matrix1D<double> corner1_debug(2),corner2_debug(2);
        VECTOR_R2(corner1_debug, max_distance, max_distance);
        VECTOR_R2(corner2_debug,-max_distance,-max_distance);
        #ifdef DEBUG_LITTLE
@@ -1665,7 +1665,7 @@ void Feature::mean_variance_in_plane(Volume *V, double z, double &mean,
     double sum1 = 0;
     double sum2 = 0;
     double no_points = 0;
-    matrix1D<double> r(3), aux1(3), aux2(3);
+    Matrix1D<double> r(3), aux1(3), aux2(3);
 
     mean = 0;
     var = 0;
@@ -1969,8 +1969,8 @@ void Phantom::write(const FileName &fn_phantom)
 }
 
 /* Voxel Inside any feature ------------------------------------------------ */
-int Phantom::voxel_inside_any_feat(const matrix1D<double> &r,
-                                   matrix1D<double> &aux1, matrix1D<double> &aux2) const
+int Phantom::voxel_inside_any_feat(const Matrix1D<double> &r,
+                                   Matrix1D<double> &aux1, Matrix1D<double> &aux2) const
 {
     int inside, current_i;
     double current_density;
@@ -1989,9 +1989,9 @@ int Phantom::voxel_inside_any_feat(const matrix1D<double> &r,
 }
 
 /* Any feature intersects sphere ------------------------------------------- */
-int Phantom::any_feature_intersects_sphere(const matrix1D<double> &r,
-        double radius, matrix1D<double> &aux1, matrix1D<double> &aux2,
-        matrix1D<double> &aux3) const
+int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
+        double radius, Matrix1D<double> &aux1, Matrix1D<double> &aux2,
+        Matrix1D<double> &aux3) const
 {
     bool intersects;
     for (int i = 0; i < VF.size(); i++)
@@ -2015,7 +2015,7 @@ void Phantom::draw_in(Volume *V)
 // Always suppose CC grid
 void Phantom::label(Volume *V)
 {
-    matrix1D<double> r(3), aux1(3), aux2(3);
+    Matrix1D<double> r(3), aux1(3), aux2(3);
     V->adapt_to_size(zdim, ydim, xdim);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*V))
     {
@@ -2127,7 +2127,7 @@ const
     cout << "zdim:      " << zdim      << endl;
 #endif
 
-    matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
+    Matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
     if (XSIZE((*P)()) == 0) P->adapt_to_size(ydim, xdim);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*P))
     {

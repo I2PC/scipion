@@ -148,7 +148,7 @@ int main(int argc, char **argv)
                     << floatToString(max_val, 10) << ' '
                     << floatToString(avg    , 10) << ' '
                     << floatToString(stddev , 10) << ' ';
-                matrix1D<double> v(4);
+                Matrix1D<double> v(4);
                 v(0) = min_val;
                 v(1) = max_val;
                 v(2) = avg;
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                matrix1D<double> v(4);
+                Matrix1D<double> v(4);
                 v(0) = min_val;
                 v(1) = max_val;
                 v(2) = avg;

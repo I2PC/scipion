@@ -302,7 +302,7 @@ void Prog_angular_predict_prm::produce_library()
     set_DWT_type(DAUB12);
 
     // Create space for all the DWT coefficients of the library
-    matrix1D<int> SBidx(SBNo);
+    Matrix1D<int> SBidx(SBNo);
     for (int m = 0; m < SBNo; m++)
     {
         matrix2D<double> *subband = new matrix2D<double>;
@@ -370,9 +370,9 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
 // Refine candidate list ---------------------------------------------------
 void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
     int m,
-    matrix1D<double> &dwt,
+    Matrix1D<double> &dwt,
     vector<bool> &candidate_list, vector<double> &cumulative_corr,
-    matrix1D<double> &x_power, vector<double> &sumxy,
+    Matrix1D<double> &x_power, vector<double> &sumxy,
     double th)
 {
     histogram1D hist;
@@ -430,12 +430,12 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
     int imax = candidate_list.size();
 
     // Make DWT of the input image and build vectors for comparison
-    vector<matrix1D<double> * > Idwt;
-    matrix1D<double> x_power(SBNo); x_power.init_zeros();
-    matrix1D<int> SBidx(SBNo); SBidx.init_zeros();
+    vector<Matrix1D<double> * > Idwt;
+    Matrix1D<double> x_power(SBNo); x_power.init_zeros();
+    Matrix1D<int> SBidx(SBNo); SBidx.init_zeros();
     for (int m = 0; m < SBNo; m++)
     {
-        matrix1D<double> *subband = new matrix1D<double>;
+        Matrix1D<double> *subband = new Matrix1D<double>;
         subband->resize(SBsize(m));
         Idwt.push_back(subband);
     }
@@ -748,7 +748,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     ImageXmipp Ip;
     Ip = I;
-    matrix1D<double> shift(2);
+    Matrix1D<double> shift(2);
 
     // Get the 2D alignment shift
     double Xoff, Yoff;
@@ -963,10 +963,10 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     // Sort the candidates
     if (tell & TELL_PSI_SHIFT) cout << "\nSelecting image\n";
-    matrix1D<double> score(jmax);
+    Matrix1D<double> score(jmax);
 //   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
     for (int j = 0; j < jmax; j++) score(j) = vscore[candidate_local_maxima[j]];
-    matrix1D<int> idx_score = score.index_sort();
+    Matrix1D<int> idx_score = score.index_sort();
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
@@ -1097,7 +1097,7 @@ void Prog_angular_predict_prm::finish_processing()
     DocFile DF;
     DF.reserve(p + 1);
     DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Corr");
-    matrix1D<double> v(6);
+    Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
         v(0) = predicted_rot[i];
@@ -1165,7 +1165,7 @@ void Prog_angular_predict_prm::produceSummary()
     SelFile SFcomparison;
     DFsummary.reserve(L + 1);
     DFsummary.append_comment("Rot Tilt Psi X Y Weight");
-    matrix1D<double> v(6);
+    Matrix1D<double> v(6);
     for (int l = 0; l < L; l++)
     {
         // Write the reference and assigned reference

@@ -120,7 +120,7 @@ public:
                         int iter, int volno, int noise = 0);
 
 /// Calculate 3D SSNR according to Unser ea. (2005)
-    void calculate_3DSSNR(matrix1D<double> &spectral_signal, int iter);
+    void calculate_3DSSNR(Matrix1D<double> &spectral_signal, int iter);
 
     /// After reconstruction update reference volume selfile
     void remake_SFvol(int iter, bool rewrite = false, bool include_noise = false) ;

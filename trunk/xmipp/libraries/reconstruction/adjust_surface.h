@@ -123,7 +123,7 @@ public:
     /// Working gradient volume
     Vectorial_matrix3D Vsurf_grad;
     /// Working best combination
-    matrix1D<double> p;
+    Matrix1D<double> p;
     //@}
 public:
     /** Read from a command line.

@@ -72,7 +72,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
 {
     matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     VolumeXmipp V_aux, V_aux2;
-    matrix1D<double> sh(3);
+    Matrix1D<double> sh(3);
     V_out = V_in;
     if (show_progress)
     {
@@ -115,7 +115,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
 
     matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     VolumeXmipp V_aux, V_aux2;
-    matrix1D<double> sh(3);
+    Matrix1D<double> sh(3);
     double dum, avg = 0.;
 
     if (do_outside_avg)

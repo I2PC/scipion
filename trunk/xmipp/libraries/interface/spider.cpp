@@ -33,7 +33,7 @@
 // Generate Count File -----------------------------------------------------
 void generate_Spider_count(int imax, DocFile &DF_out)
 {
-    matrix1D<double>   aux(1);
+    Matrix1D<double>   aux(1);
 
     DF_out.clear();
     DF_out.append_comment((string)"Count for Spider up to " + ItoA(imax));
@@ -45,7 +45,7 @@ void generate_Spider_count(int imax, DocFile &DF_out)
 // Translate to Spider selfile ---------------------------------------------
 void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style)
 {
-    matrix1D<double>   aux(1);
+    Matrix1D<double>   aux(1);
     int               selline = 1;
 
     DF_out.clear();
@@ -435,7 +435,7 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     SF.go_first_ACTIVE();
     while (!DF_report.eof())
     {
-        matrix1D<double> data_line(6);
+        Matrix1D<double> data_line(6);
         data_line(0) = DF_report(1); // rot
         data_line(1) = DF_report(2); // tilt
         data_line(2) = DF_report(3); // psi
@@ -615,7 +615,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     DocFile DF_report_standard;
     DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
 
-    matrix1D<double> data_line(6);
+    Matrix1D<double> data_line(6);
     SF.go_first_ACTIVE();
     while (!apmq.eof())
     {

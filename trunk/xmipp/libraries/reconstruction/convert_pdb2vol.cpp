@@ -143,7 +143,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     // Initialization
     center_of_mass.init_zeros(3);
-    matrix1D<double> limit0(3), limitF(3);
+    Matrix1D<double> limit0(3), limitF(3);
     limit0.init_constant(1e30);
     limitF.init_constant(-1e30);
     double total_mass = 0;
@@ -254,7 +254,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         double z = AtoF(next_token());
 
         // Correct position
-        matrix1D<double> r(3);
+        Matrix1D<double> r(3);
         VECTOR_R3(r, x, y, z);
         r -= center_of_mass;
         r /= highTs;
@@ -277,7 +277,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
             for (int i = i0; i <= iF; i++)
                 for (int j = j0; j <= jF; j++)
                 {
-                    matrix1D<double> rdiff(3);
+                    Matrix1D<double> rdiff(3);
                     VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
                     Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
                 }
@@ -306,7 +306,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
     matrix3D<complex<double> > FFTVlow;
     FourierTransform(Vlow(), FFTVlow);
     STARTINGX(FFTVlow) = STARTINGY(FFTVlow) = STARTINGZ(FFTVlow) = 0;
-    matrix1D<double> dig_freq(3);
+    Matrix1D<double> dig_freq(3);
     double freq_c = current_Ts / (2 * Ts);
     cout << "Filtering at " << freq_c << endl;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(FFTVlow)

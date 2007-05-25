@@ -129,7 +129,7 @@ double CSTSplineAssignment(
     matrix3D<double> &ImDFTVolume,
     matrix2D<double> &image,
     matrix2D<double> &weight,
-    matrix1D<double> &pose_parameters,
+    Matrix1D<double> &pose_parameters,
     int               max_no_iter = 60
 );
 

@@ -452,8 +452,8 @@ void tokenize(const std::string& str,
  *
  * These functions try to read N values of the desired type into the given
  * structure (either a STL vector of any numerical type by adding the read
- * values at the end or a matrix1D of any numerical type and then the values are
- * written at PHYSICAL positions 0 ... N-1, the matrix1D must be big enough to
+ * values at the end or a Matrix1D of any numerical type and then the values are
+ * written at PHYSICAL positions 0 ... N-1, the Matrix1D must be big enough to
  * hold all the data since it is not resized internally.
  *
  * If it is not possible to read all parameters an exception is thrown. You can
@@ -557,13 +557,13 @@ void read_float_list(const std::string& str,
     }
 }
 
-/** List to matrix1D.
+/** List to Matrix1D.
  * @ingroup ReadLists
  */
 template <typename T>
 void read_float_list(const char* str,
                      int N,
-                     matrix1D< T >& v,
+                     Matrix1D< T >& v,
                      int _errno = 2105,
                      string errmsg = "Error reading floating list",
                      int exit = 0)
@@ -750,7 +750,7 @@ int component_no(const std::string& str);
  * is thrown. If there is no dimensionality and a single parameter is behind the
  * flag then no brackets are needed
  */
-matrix1D< double > get_vector_param(int argc,
+Matrix1D< double > get_vector_param(int argc,
                                     char** argv,
                                     const char* param,
                                     int dim = 2,
@@ -896,7 +896,7 @@ bool check_param(FILE* fh, const char* param);
  *
  * The same as before but reading is done from a file
  */
-matrix1D< double > get_vector_param(FILE* fh,
+Matrix1D< double > get_vector_param(FILE* fh,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,

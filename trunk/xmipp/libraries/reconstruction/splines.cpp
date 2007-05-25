@@ -29,7 +29,7 @@
 double Bspline03LUT(double x)
 {
     static bool firstCall = true;
-    static matrix1D<double> table(BSPLINE03_SUBSAMPLING);
+    static Matrix1D<double> table(BSPLINE03_SUBSAMPLING);
     static const double deltax = 2.0 / BSPLINE03_SUBSAMPLING;
     static const double ideltax = 1.0 / deltax;
     if (firstCall)
@@ -48,7 +48,7 @@ double Bspline03LUT(double x)
 double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
 {
     SPEED_UP_temps;
-    matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
+    Matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
     double         actual_radius;
     int          i, j, k;
     double        sum = 0.0;
@@ -80,9 +80,9 @@ double sum_spatial_Bspline03_Grid(const Grid &grid)
 }
 
 /* Line integral through a spline ------------------------------------------ */
-static matrix1D<double> global_r;
-static matrix1D<double> global_u;
-static matrix1D<double> global_aux(3);
+static Matrix1D<double> global_r;
+static Matrix1D<double> global_u;
+static Matrix1D<double> global_aux(3);
 double spatial_Bspline03_integralf(double alpha)
 {
     XX(global_aux) = XX(global_r) + alpha * XX(global_u);
@@ -91,8 +91,8 @@ double spatial_Bspline03_integralf(double alpha)
     return spatial_Bspline03LUT(global_aux);
 }
 
-double spatial_Bspline03_integral(const matrix1D<double> &r,
-                                  const matrix1D<double> &u, double alpha0, double alphaF)
+double spatial_Bspline03_integral(const Matrix1D<double> &r,
+                                  const Matrix1D<double> &u, double alpha0, double alphaF)
 {
     global_r = r;
     global_u = u;
@@ -103,10 +103,10 @@ double spatial_Bspline03_integral(const matrix1D<double> &r,
    The code is taken from the function project_Volume of Src/projection.cc */
 //#define DEBUG
 double spatial_Bspline03_proj(
-    const matrix1D<double> &r, const matrix1D<double> &u)
+    const Matrix1D<double> &r, const Matrix1D<double> &u)
 {
     // Avoids divisions by zero and allows orthogonal rays computation
-    static matrix1D<double> ur(3);
+    static Matrix1D<double> ur(3);
     if (XX(u) == 0) XX(ur) = XMIPP_EQUAL_ACCURACY;
     else XX(ur) = XX(u);
     if (YY(u) == 0) YY(ur) = XMIPP_EQUAL_ACCURACY;
@@ -152,7 +152,7 @@ double spatial_Bspline03_proj(
 #endif
 
     // Compute the first point in the volume intersecting the ray
-    static matrix1D<double> v(3);
+    static Matrix1D<double> v(3);
     V3_BY_CT(v, ur, alpha_min);
     V3_PLUS_V3(v, r, v);
 
@@ -209,17 +209,17 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
         matrix3D<double> *vol_voxels,
         const matrix3D<double> *vol_mask = NULL)
 {
-    matrix1D<double> act_coord(3);           // Coord: Actual position inside
+    Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
-    matrix1D<double> beginZ(3);              // Coord: Voxel coordinates of the
+    Matrix1D<double> beginZ(3);              // Coord: Voxel coordinates of the
     // blob at the 3D point
     // (z0,YY(lowest),XX(lowest))
-    matrix1D<double> beginY(3);              // Coord: Voxel coordinates of the
+    Matrix1D<double> beginY(3);              // Coord: Voxel coordinates of the
     // blob at the 3D point
     // (z0,y0,XX(lowest))
-    matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
+    Matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
     // blob in the voxel volume
-    matrix1D<double> gcurrent(3);            // Position in g of current point
+    Matrix1D<double> gcurrent(3);            // Position in g of current point
     double        intx, inty, intz;          // Nearest integer voxel
     int           i, j, k;                   // Index within the blob volume
     bool          process;                   // True if this blob has to be
@@ -250,7 +250,7 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
     // universal coord. system
     grid.grid2universe(grid.lowest, beginZ);
 
-    matrix1D<double> grid_index(3);
+    Matrix1D<double> grid_index(3);
     for (k = (int) ZZ(grid.lowest); k <= (int) ZZ(grid.highest); k++)
     {
         // Corner of the row defined by Y
@@ -387,9 +387,9 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
     // Resize and set starting corner .......................................
     if (Zdim == 0 || Ydim == 0 || Xdim == 0)
     {
-        matrix1D<double> size = vol_splines.grid(0).highest -
+        Matrix1D<double> size = vol_splines.grid(0).highest -
                                 vol_splines.grid(0).lowest;
-        matrix1D<double> corner = vol_splines.grid(0).lowest;
+        Matrix1D<double> corner = vol_splines.grid(0).lowest;
         (*vol_voxels).init_zeros(CEIL(ZZ(size)), CEIL(YY(size)), CEIL(XX(size)));
         (*vol_voxels).startingX() = FLOOR(XX(corner));
         (*vol_voxels).startingY() = FLOOR(YY(corner));

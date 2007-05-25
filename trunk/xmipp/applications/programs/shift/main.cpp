@@ -31,8 +31,8 @@
 class Shift_Scale_parameters: public Prog_parameters
 {
 public:
-    matrix1D<double> shift;
-    matrix1D<double> scale;
+    Matrix1D<double> shift;
+    Matrix1D<double> scale;
     bool             wrap;
     bool             store_in_header;
     bool             center_mass;

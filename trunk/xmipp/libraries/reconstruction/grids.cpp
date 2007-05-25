@@ -107,7 +107,7 @@ int SimpleGrid::get_number_of_samples() const
         int ZZ_highest = (int) ZZ(highest);
         int YY_highest = (int) YY(highest);
         int XX_highest = (int) XX(highest);
-        matrix1D<double> grid_index(3), univ_position(3);
+        Matrix1D<double> grid_index(3), univ_position(3);
         int N = 0;
         for (int k = ZZ_lowest; k <= ZZ_highest; k++)
             for (int i = YY_lowest; i <= YY_highest; i++)
@@ -139,10 +139,10 @@ void SimpleGrid::prepare_grid()
 }
 
 // Minimum size ------------------------------------------------------------
-void Grid::voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
+void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
                          const matrix2D<double> *V) const
 {
-    matrix1D<double> SGcorner1(3), SGcorner2(3);     // Subgrid corners
+    Matrix1D<double> SGcorner1(3), SGcorner2(3);     // Subgrid corners
     SPEED_UP_temps;
 
     // Look for the lowest and highest volume coordinate
@@ -157,7 +157,7 @@ void Grid::voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
             for (int i = (int)YY(LG[n].lowest); i <= YY(LG[n].highest); i++)
                 for (int j = (int)XX(LG[n].lowest); j <= XX(LG[n].highest); j++)
                 {
-                    matrix1D<double> grid_index(3), univ_position(3);
+                    Matrix1D<double> grid_index(3), univ_position(3);
                     VECTOR_R3(grid_index, j, i, k);
                     LG[n].grid2universe(grid_index, univ_position);
                     if (V != NULL)
@@ -213,8 +213,8 @@ void Grid::voxel_corners(matrix1D<double> &Gcorner1, matrix1D<double> &Gcorner2,
 /* Some useful Grids                                                         */
 /*****************************************************************************/
 /* Create CC Simple grid with a given origin ------------------------------- */
-SimpleGrid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
-                          const matrix1D<double> &corner2, const matrix1D<double> &origin)
+SimpleGrid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
+                          const Matrix1D<double> &corner2, const Matrix1D<double> &origin)
 {
     SimpleGrid    grid;
 
@@ -234,13 +234,13 @@ SimpleGrid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
 }
 
 /* Create CC grid ---------------------------------------------------------- */
-Grid Create_CC_grid(double relative_size, const matrix1D<double> &corner1,
-                    const matrix1D<double> &corner2)
+Grid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
+                    const Matrix1D<double> &corner2)
 {
     Grid            result;
     SimpleGrid      aux_grid;
 
-    matrix1D<double> origin = (corner1 + corner2) / 2;
+    Matrix1D<double> origin = (corner1 + corner2) / 2;
     origin.ROUNDnD();
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
@@ -252,7 +252,7 @@ Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim)
     Grid            result;
     SimpleGrid      aux_grid;
 
-    matrix1D<double> origin =
+    Matrix1D<double> origin =
         vector_R3((double)FLOOR(Xdim / 2.0), (double)FLOOR(Ydim / 2.0),
                   (double)FLOOR(Zdim / 2.0));
     aux_grid = Create_CC_grid(relative_size, -origin,
@@ -263,12 +263,12 @@ Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim)
 }
 
 /* Create BCC grid --------------------------------------------------------- */
-Grid Create_BCC_grid(double relative_size, const matrix1D<double> &corner1,
-                     const matrix1D<double> &corner2)
+Grid Create_BCC_grid(double relative_size, const Matrix1D<double> &corner1,
+                     const Matrix1D<double> &corner2)
 {
     Grid             result;
     SimpleGrid       aux_grid;
-    matrix1D<double> origin = (corner1 + corner2) / 2;
+    Matrix1D<double> origin = (corner1 + corner2) / 2;
     origin.ROUNDnD();
 
     //Even Slice
@@ -318,15 +318,15 @@ Grid Create_BCC_grid(double relative_size, const matrix1D<double> &corner1,
 }
 
 /* Create FCC grid --------------------------------------------------------- */
-Grid Create_FCC_grid(double relative_size, const matrix1D<double> &corner1,
-                     const matrix1D<double> &corner2)
+Grid Create_FCC_grid(double relative_size, const Matrix1D<double> &corner1,
+                     const Matrix1D<double> &corner2)
 {
 
     Grid             result;
     SimpleGrid       aux_grid;
-    matrix1D<double> aux_origin;
-    matrix1D<double> cornerb;
-    matrix1D<double> origin = (corner1 + corner2) / 2;
+    Matrix1D<double> aux_origin;
+    Matrix1D<double> cornerb;
+    Matrix1D<double> origin = (corner1 + corner2) / 2;
     origin.ROUNDnD();
 
     //Even Slice
@@ -389,9 +389,9 @@ Grid Create_FCC_grid(double relative_size, const matrix1D<double> &corner1,
 /* CC grid with region of interest ----------------------------------------- */
 //#define DEBUG
 SimpleGrid Create_grid_within_sphere(double relative_size,
-                                     const matrix1D<double> &origin,
-                                     const matrix1D<double> &X, const matrix1D<double> &Y,
-                                     const matrix1D<double> &Z, double R2)
+                                     const Matrix1D<double> &origin,
+                                     const Matrix1D<double> &X, const Matrix1D<double> &Y,
+                                     const Matrix1D<double> &Z, double R2)
 {
     SimpleGrid    grid;
     double R = sqrt(R2);
@@ -408,7 +408,7 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
 
     // Find grid limits
     int iR = CEIL(R);
-    matrix1D<double> univ_position(3), grid_position(3);
+    Matrix1D<double> univ_position(3), grid_position(3);
     for (int k = -iR; k <= iR; k++)
         for (int i = -iR; i <= iR; i++)
             for (int j = -iR; j <= iR; j++)
@@ -443,9 +443,9 @@ Grid Create_CC_grid(double relative_size, double R)
     Grid            result;
     SimpleGrid      aux_grid;
 
-    matrix1D<double> origin(3);
+    Matrix1D<double> origin(3);
     origin.init_zeros();
-    matrix1D<double> x(3), y(3), z(3);
+    Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 1, 0, 0);
     VECTOR_R3(y, 0, 1, 0);
     VECTOR_R3(z, 0, 0, 1);
@@ -460,9 +460,9 @@ Grid Create_BCC_grid(double relative_size, double R)
     Grid            result;
     SimpleGrid      aux_grid;
 
-    matrix1D<double> origin(3);
+    Matrix1D<double> origin(3);
     origin.init_zeros();
-    matrix1D<double> x(3), y(3), z(3);
+    Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 0.5, 0.5, -0.5);
     VECTOR_R3(y, 0.5, -0.5, 0.5);
     VECTOR_R3(z, -0.5, 0.5, 0.5);
@@ -477,9 +477,9 @@ Grid Create_FCC_grid(double relative_size, double R)
     Grid            result;
     SimpleGrid      aux_grid;
 
-    matrix1D<double> origin(3);
+    Matrix1D<double> origin(3);
     origin.init_zeros();
-    matrix1D<double> x(3), y(3), z(3);
+    Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 0.5, 0.5, 0);
     VECTOR_R3(y, 0.5, 0, 0.5);
     VECTOR_R3(z, 0, 0.5, 0.5);

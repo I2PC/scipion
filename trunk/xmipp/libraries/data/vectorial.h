@@ -142,9 +142,9 @@ public:
      * The returned vector is a column 3x1 vector. The integer position are
      * logical indexes inside the matrix3D.
      */
-    matrix1D< double > vector_at(int k, int i, int j) const
+    Matrix1D< double > vector_at(int k, int i, int j) const
     {
-        matrix1D< double > result(3);
+        Matrix1D< double > result(3);
         XX(result) = __X(k, i, j);
         YY(result) = __Y(k, i, j);
         ZZ(result) = __Z(k, i, j);
@@ -154,7 +154,7 @@ public:
     /** Vector at a position, result as argument.
      * @ingroup VectorialAccess
      */
-    void vector_at(int k, int i, int j, matrix1D< double >& result) const
+    void vector_at(int k, int i, int j, Matrix1D< double >& result) const
     {
         result.resize(3);
         XX(result) = __X(k, i, j);

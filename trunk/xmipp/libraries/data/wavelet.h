@@ -51,8 +51,8 @@
  *
  * If the isign=-1 then the inverse wavelet transform is performed.
  */
-void Bilib_DWT(const matrix1D< double >& input,
-               matrix1D< double >& result,
+void Bilib_DWT(const Matrix1D< double >& input,
+               Matrix1D< double >& result,
                int iterations,
                int isign = 1);
 
@@ -91,7 +91,7 @@ void set_DWT_type(int DWT_type);
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const matrix1D< T >& v, matrix1D< double >& result, int isign = 1)
+void DWT(const Matrix1D< T >& v, Matrix1D< double >& result, int isign = 1)
 {
     unsigned long int nn[1];
     unsigned long int* ptr_nn = nn - 1;
@@ -149,7 +149,7 @@ void DWT(const matrix3D< T >& v, matrix3D< double >& result, int isign = 1)
  * The output vector can be the same as the input one. Previously the type of
  * DWT must be set with set_DWT_type.
  */
-void IDWT(const matrix1D< double >& v, matrix1D< double >& result);
+void IDWT(const Matrix1D< double >& v, Matrix1D< double >& result);
 
 /** IDWT of an array.
  * @ingroup WaveletsRecipes
@@ -190,7 +190,7 @@ void DWT_lowpass(const matrix2D< double >& v, matrix2D< double >& result);
  */
 template<typename T>
 void SelectDWTBlock(int scale,
-                    const matrix1D< T >& I,
+                    const Matrix1D< T >& I,
                     const std::string& quadrant,
                     int& x1,
                     int& x2)
@@ -382,7 +382,7 @@ void DWT_keep_central_part(matrix2D< double >& I, double R);
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-matrix1D< double > bayesian_wiener_filtering(matrix2D< double >& WI,
+Matrix1D< double > bayesian_wiener_filtering(matrix2D< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -397,7 +397,7 @@ matrix1D< double > bayesian_wiener_filtering(matrix2D< double >& WI,
  */
 void bayesian_wiener_filtering(matrix2D< double >& WI,
                                int allowed_scale,
-                               matrix1D< double >& estimatedS);
+                               Matrix1D< double >& estimatedS);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising
@@ -410,7 +410,7 @@ void bayesian_wiener_filtering(matrix2D< double >& WI,
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
+Matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -425,6 +425,6 @@ matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
  */
 void bayesian_wiener_filtering(matrix3D< double >& WI,
                                int allowed_scale,
-                               matrix1D< double >& estimatedS);
+                               Matrix1D< double >& estimatedS);
 
 #endif

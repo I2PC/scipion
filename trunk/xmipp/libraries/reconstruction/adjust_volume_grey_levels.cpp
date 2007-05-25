@@ -203,7 +203,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
     // Optimize
     if (optimize)
     {
-        matrix1D<double> p(2), steps(2);
+        Matrix1D<double> p(2), steps(2);
         p(0) = a;
         p(1) = b;
         steps.init_constant(1);

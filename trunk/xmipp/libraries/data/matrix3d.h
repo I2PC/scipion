@@ -78,7 +78,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * @ingroup VolumesSpeedUp
  *
  * Although they are not defined here you can also use STARTINGX and FINISHINGX
- * (defined for matrix1D), or STARTINGY and FINISHINGY (defined for matrix2D)
+ * (defined for Matrix1D), or STARTINGY and FINISHINGY (defined for matrix2D)
  */
 
 /** TRUE if both arrays have the same shape.
@@ -165,10 +165,10 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * (int) YY(corner1) to (int)YY(corner2),
  * (int) XX(corner1) to (int) XX(corner2) (included limits) respectively.
  *
- * Notice that corner1 and corner2 need only be matrix1D.
+ * Notice that corner1 and corner2 need only be Matrix1D.
  *
  * @code
- * matrix1D< double > corner1(3), corner2(3), r(3);
+ * Matrix1D< double > corner1(3), corner2(3), r(3);
  * XX(corner1) = -1; XX(corner2) = 1;
  * YY(corner1) = -2; YY(corner2) = 2;
  * ZZ(corner1) = -3; ZZ(corner2) = 3;
@@ -897,7 +897,7 @@ public:
      * val = V(vector_R3(1, -2, 0));
      * @endcode
      */
-    T& operator()(const matrix1D< double >& v) const
+    T& operator()(const Matrix1D< double >& v) const
     {
         return VOL_ELEM((*this), ROUND(ZZ(v)),
                         ROUND(YY(v)), ROUND(XX(v)));
@@ -906,7 +906,7 @@ public:
     /** Volume element access via integer vector.
      * @ingroup VolumesMemory
      */
-    T& operator()(const matrix1D< int >& v) const
+    T& operator()(const Matrix1D< int >& v) const
     {
         return VOL_ELEM((*this), ZZ(v), YY(v), XX(v));
     }
@@ -1660,7 +1660,7 @@ public:
      * V2 = V1.rotate(60, vector_R3(1, 1, 1));
      * @endcode
      */
-    void rotate(double ang, const matrix1D< double >& axis, VT& result,
+    void rotate(double ang, const Matrix1D< double >& axis, VT& result,
                 bool wrap = DONT_WRAP) const
     {
         matrix2D< double > tmp = rot3D_matrix(ang, axis);
@@ -1671,7 +1671,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void rotate_Bspline(int Splinedegree, double ang,
-                        const matrix1D< double >& axis, VT& result,
+                        const Matrix1D< double >& axis, VT& result,
                         bool wrap = DONT_WRAP, T outside = 0) const
     {
         matrix2D< double > tmp = rot3D_matrix(ang, axis);
@@ -1682,7 +1682,7 @@ public:
     /** Rotate a volume around any axis, return result.
      * @ingroup VolumesGeometrical
      */
-    VT rotate(double ang, const matrix1D< double > v, bool wrap = DONT_WRAP) const
+    VT rotate(double ang, const Matrix1D< double > v, bool wrap = DONT_WRAP) const
     {
         VT aux;
         rotate(ang, v, aux, wrap);
@@ -1692,7 +1692,7 @@ public:
     /** Rotate a volume around any axis, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT rotate_Bspline(int Splinedegree, double ang, const matrix1D< double > v,
+    VT rotate_Bspline(int Splinedegree, double ang, const Matrix1D< double > v,
                       bool wrap = DONT_WRAP) const
     {
         VT aux;
@@ -1703,7 +1703,7 @@ public:
     /** Rotate a volume around any axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_rotate(double ang, const matrix1D< double >& v,
+    void self_rotate(double ang, const Matrix1D< double >& v,
                      bool wrap = DONT_WRAP)
     {
         VT aux;
@@ -1715,7 +1715,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void self_rotate_Bspline(int Splinedegree, double ang,
-                             const matrix1D< double >& v, bool wrap = DONT_WRAP)
+                             const Matrix1D< double >& v, bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate_Bspline(Splinedegree, ang, v, aux, wrap);
@@ -1733,7 +1733,7 @@ public:
      * V2 = V1.translate(vector_R3(0, 0, 2));
      * @endcode
      */
-    void translate(const matrix1D< double >& v, VT& result, bool wrap = WRAP)
+    void translate(const Matrix1D< double >& v, VT& result, bool wrap = WRAP)
     const
     {
         matrix2D< double > tmp = translation3D_matrix(v);
@@ -1743,7 +1743,7 @@ public:
     /** Translate a volume (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void translate_Bspline(int Splinedegree, const matrix1D< double >& v,
+    void translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
                            VT& result, bool wrap = WRAP) const
     {
         matrix2D< double > tmp = translation3D_matrix(v);
@@ -1753,7 +1753,7 @@ public:
     /** Translate a volume, return result.
      * @ingroup VolumesGeometrical
      */
-    VT translate(const matrix1D< double >& v, bool wrap = WRAP) const
+    VT translate(const Matrix1D< double >& v, bool wrap = WRAP) const
     {
         VT aux;
         translate(v, aux, wrap);
@@ -1763,7 +1763,7 @@ public:
     /** Translate a volume, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT translate_Bspline(int Splinedegree, const matrix1D< double >& v,
+    VT translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
                          bool wrap = WRAP) const
     {
         VT aux;
@@ -1774,7 +1774,7 @@ public:
     /** Translate a volume, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_translate(const matrix1D< double >& v, bool wrap = WRAP)
+    void self_translate(const Matrix1D< double >& v, bool wrap = WRAP)
     {
         VT aux;
         translate(v, aux, wrap);
@@ -1784,7 +1784,7 @@ public:
     /** Translate a volume, keep in this object (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_translate_Bspline(int Splinedegree, const matrix1D< double >& v,
+    void self_translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
                                 bool wrap = WRAP)
     {
         VT aux;
@@ -1801,7 +1801,7 @@ public:
     void self_translate_center_of_mass_to_center(bool wrap = WRAP)
     {
         set_Xmipp_origin();
-        matrix1D< double > center;
+        Matrix1D< double > center;
         center_of_mass(center);
         center *= -1;
         self_translate(center, wrap);
@@ -1814,7 +1814,7 @@ public:
         int Splinedegree, bool wrap = WRAP)
     {
         set_Xmipp_origin();
-        matrix1D< double > center;
+        Matrix1D< double > center;
         center_of_mass(center);
         center *= -1;
         self_translate_Bspline(Splinedegree, center, wrap);
@@ -2209,7 +2209,7 @@ void core_array_by_array< complex< double> > (const maTC& op1, const maTC& op2,
 /** @defgroup VolumesRelated Related functions
  * @ingroup Volumes
  *
- * These functions are not methods of matrix1D
+ * These functions are not methods of Matrix1D
  */
 
 /** @defgroup VolumesMisc Miscellaneous
@@ -2275,16 +2275,16 @@ void cut_to_common_size(VT& V1, VT& V2)
  */
 template<typename T>
 void radial_average(const matrix3D< T >& m,
-                    const matrix1D< int >& center_of_rot,
-                    matrix1D< T >& radial_mean,
-                    matrix1D< int >& radial_count,
+                    const Matrix1D< int >& center_of_rot,
+                    Matrix1D< T >& radial_mean,
+                    Matrix1D< int >& radial_count,
                     const bool& rounding = false)
 {
-    matrix1D< double > idx(3);
+    Matrix1D< double > idx(3);
 
     // First determine the maximum distance that one should expect, to set the
     // dimension of the radial average vector
-    matrix1D< int > distances(8);
+    Matrix1D< int > distances(8);
 
     double z = STARTINGZ(m) - ZZ(center_of_rot);
     double y = STARTINGY(m) - YY(center_of_rot);
@@ -2375,7 +2375,7 @@ void VT::get_size(int* size) const
 
 // TODO Document
 template<typename T>
-bool VT::outside(const matrix1D< double >& v) const
+bool VT::outside(const Matrix1D< double >& v) const
 {
     if (XSIZE(v) < 3)
         REPORT_ERROR(1, "Outside: index vector has got not enough components");
@@ -2404,8 +2404,8 @@ bool VT::intersects(const VT& m) const
 
 // TODO Document
 template<typename T>
-bool VT::intersects(const matrix1D< double >& corner1,
-                    const matrix1D< double >& corner2) const
+bool VT::intersects(const Matrix1D< double >& corner1,
+                    const Matrix1D< double >& corner2) const
 {
     if (XSIZE(corner1) != 2 || XSIZE(corner2) != 2)
         REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
@@ -2442,7 +2442,7 @@ bool VT::intersects(double x0, double y0, double z0, double xdim, double ydim,
 
 // TODO Document
 template<typename T>
-bool VT::isCorner(const matrix1D< double >& v)
+bool VT::isCorner(const Matrix1D< double >& v)
 {
     if (XSIZE(v) < 3)
         REPORT_ERROR(1, "isCorner: index vector has got not enough components");
@@ -2467,7 +2467,7 @@ bool VT::isCorner(const matrix1D< double >& v)
 
 // TODO Comment
 template<typename T>
-bool VT::isBorder(const matrix1D< int >& v)
+bool VT::isBorder(const Matrix1D< int >& v)
 {
     if (XSIZE(v) < 3)
         REPORT_ERROR(1, "isBorder: index vector has got not enough components");
@@ -2964,11 +2964,11 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
 // TODO Document
 template<typename T>
 void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
-                       const matrix1D< double >& corner1,
-                       const matrix1D< double >& corner2) const
+                       const Matrix1D< double >& corner1,
+                       const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
-    matrix1D< double > r(3);
+    Matrix1D< double > r(3);
     double N = 0, sum = 0, sum2 = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
@@ -2997,11 +2997,11 @@ void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 // TODO Document
 template <class T>
 void VT::compute_double_minmax(double& min_val, double& max_val,
-                               const matrix1D< double >& corner1,
-                               const matrix1D< double >& corner2) const
+                               const Matrix1D< double >& corner1,
+                               const Matrix1D< double >& corner2) const
 {
     min_val = max_val = (*this)(corner1);
-    matrix1D< double > r(3);
+    Matrix1D< double > r(3);
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
     {
@@ -3014,7 +3014,7 @@ void VT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void VT::center_of_mass(matrix1D< double >& center, void* mask)
+void VT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
     center.init_zeros(3);
     double mass = 0;

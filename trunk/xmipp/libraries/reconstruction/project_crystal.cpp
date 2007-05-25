@@ -183,8 +183,8 @@ void project_crystal(Phantom &phantom, Projection &P,
 
     // Compute lattice vectors in the projection plane
     P.set_angles(rot, tilt, psi);
-    matrix1D<double> proja = P.euler * prm_crystal.a;
-    matrix1D<double> projb = P.euler * prm_crystal.b;
+    Matrix1D<double> proja = P.euler * prm_crystal.a;
+    Matrix1D<double> projb = P.euler * prm_crystal.b;
 
     // Check if orthogonal projections
     // (projXdim,0)'=A*aproj
@@ -254,8 +254,8 @@ void project_crystal(Phantom &phantom, Projection &P,
 #endif
 
     // Compute aproj and bproj in the deformed projection space
-    matrix1D<double> aprojd = A * proja;
-    matrix1D<double> bprojd = A * projb;
+    Matrix1D<double> aprojd = A * proja;
+    Matrix1D<double> bprojd = A * projb;
 #ifdef DEBUG
     cout << "aprojd " << aprojd.transpose() << endl;
     cout << "bprojd " << bprojd.transpose() << endl;
@@ -270,7 +270,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     bprojd.resize(2);
 
     // The unit cell projection size as well
-    matrix1D<double> corner1(2), corner2(2);
+    Matrix1D<double> corner1(2), corner2(2);
     // First in the compressed space
     XX(corner1) = FIRST_XMIPP_INDEX(prm.proj_Xdim);
     YY(corner1) = FIRST_XMIPP_INDEX(prm.proj_Ydim);
@@ -313,7 +313,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     matrix2D<double> AE = A * P.euler;   // From uncompressed to deformed
     matrix2D<double> AEinv = AE.inv(); // From deformed to uncompressed
     // add the shifts to the already compute values
-    matrix1D<double> temp_vect(3);
+    Matrix1D<double> temp_vect(3);
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(exp_shifts_matrix_X)
     {
@@ -357,7 +357,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     if (prm_crystal.orthogonal)
     {
         // Remember to compute de density factor
-        matrix1D<double> projection_direction(3);
+        Matrix1D<double> projection_direction(3);
         (P.euler).getCol(2, projection_direction);
         projection_direction.self_transpose();
         density_factor = (projection_direction * Dinv).module();
@@ -387,7 +387,7 @@ void project_crystal(Phantom &phantom, Projection &P,
         // Remind that displacements are defined in the deformed projection
         // that is why they have to be translated to the Universal
         // coordinate system
-        matrix1D<double> cell_shift(3);
+        Matrix1D<double> cell_shift(3);
         VECTOR_R3(cell_shift, cell_shiftX(i, j), cell_shiftY(i, j), cell_shiftZ(i, j));
         //SHIFT still pending
         //cell_shift = cell_shift*phantom.phantom_scale;
@@ -410,7 +410,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 
 
         // the phantom is mapped into a surface of different shapes (parabole,cosine, etc)
-        matrix1D<double> normal_vector(3);
+        Matrix1D<double> normal_vector(3);
         double alpha, beta, gamma;
         double rota, tilta, psia;
         matrix2D<double> angles_matrix, inverse_angles_matrix;
@@ -465,9 +465,9 @@ void project_crystal(Phantom &phantom, Projection &P,
 /* Find crystal limits ----------------------------------------------------- */
 #define MIN_MODULE 1e-2
 void find_crystal_limits(
-    const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
-    const matrix1D<double> &cell_corner1, const matrix1D<double> &cell_corner2,
-    const matrix1D<double> &a, const matrix1D<double> &b,
+    const Matrix1D<double> &proj_corner1, const Matrix1D<double> &proj_corner2,
+    const Matrix1D<double> &cell_corner1, const Matrix1D<double> &cell_corner2,
+    const Matrix1D<double> &a, const Matrix1D<double> &b,
     int &iamin, int &iamax, int &ibmin, int &ibmax)
 {
     if (a.module() < MIN_MODULE || b.module() < MIN_MODULE)
@@ -488,7 +488,7 @@ void find_crystal_limits(
     M2x2_INV(Ainv, A);
 
     // Now express each corner in the a,b coordinate system
-    matrix1D<double> r(2);
+    Matrix1D<double> r(2);
     VECTOR_R2(r, x0, y0);
     M2x2_BY_V2x1(r, Ainv, r);
     iamin = FLOOR(XX(r));
@@ -529,7 +529,7 @@ void find_crystal_limits(
 
    This function supposes that r is inside the matrix
 */
-void move_following_spiral(matrix1D<double> &r, const matrix2D<int> &visited)
+void move_following_spiral(Matrix1D<double> &r, const matrix2D<int> &visited)
 {
     int r1 = 0, r2 = 0, r3 = 0, c1 = 0, c2 = 0, c3 = 0;
 
@@ -656,9 +656,9 @@ void move_following_spiral(matrix1D<double> &r, const matrix2D<int> &visited)
 /* Fill cell rotations and shifts ------------------------------------------ */
 //#define DEBUG
 void fill_cell_positions(Projection &P,
-                         matrix1D<double> &aproj,   matrix1D<double> &bproj,
-                         matrix1D<double> &aprojd,  matrix1D<double> &bprojd,
-                         matrix1D<double> &corner1, matrix1D<double> &corner2,
+                         Matrix1D<double> &aproj,   Matrix1D<double> &bproj,
+                         Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
+                         Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
                          matrix2D<double> &cell_shiftX,
                          matrix2D<double> &cell_shiftY,
@@ -726,7 +726,7 @@ void fill_cell_positions(Projection &P,
     // Perform the crystal deformation starting in the middle of the
     // crystal and going in spirals until the four corners are visited
     // we find one corner
-    matrix1D<double> r(2), ri(2), sh(2);
+    Matrix1D<double> r(2), ri(2), sh(2);
     r.init_zeros();
 #define INDEX(r) (int)YY(r),(int)XX(r)
     while (!visited.isCorner(r))
@@ -781,7 +781,7 @@ void fill_cell_positions(Projection &P,
             cell_shiftY(i, j) += j * YY(aprojd) + i * YY(bprojd);
 
             // Check if there is intersection
-            matrix1D<double> auxcorner1(2), auxcorner2(2);
+            Matrix1D<double> auxcorner1(2), auxcorner2(2);
             XX(auxcorner1) = XX(corner1) + cell_shiftX(i, j);
             YY(auxcorner1) = YY(corner1) + cell_shiftY(i, j);
             XX(auxcorner2) = XX(corner2) + cell_shiftX(i, j);

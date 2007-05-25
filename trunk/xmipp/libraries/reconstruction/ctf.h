@@ -97,8 +97,8 @@
             Ictf().resize(Xdim,Xdim);
             Ipsd()=Ienv()=Ibg()=Ictf();
 
-            matrix1D<int>    idx(2);  // Indexes for Fourier plane
-            matrix1D<double> freq(2); // Frequencies for Fourier plane
+            Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+            Matrix1D<double> freq(2); // Frequencies for Fourier plane
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Ictf()) {
                XX(idx)=j; YY(idx)=i;
                FFT_idx2digfreq(Ictf(), idx, freq);
@@ -439,7 +439,7 @@ public:
 
     /** Returns the continuous frequency of the zero number n in the direction u.
         u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found */
-    void zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) const;
+    void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const;
 
     /// Apply CTF to an image
     void Apply_CTF(matrix2D < complex<double> > &FFTI) const;

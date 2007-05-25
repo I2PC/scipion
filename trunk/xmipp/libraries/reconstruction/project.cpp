@@ -729,7 +729,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     SF.reserve(side.DF.dataLineNo());
     DocFile DF_movements;
     DF_movements.append_comment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
-    matrix1D<double> movements(8);
+    Matrix1D<double> movements(8);
 
     while (!side.DF.eof())
     {

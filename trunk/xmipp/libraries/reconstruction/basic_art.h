@@ -73,7 +73,7 @@ public:
     int no_it;
 
     /// Relaxation parameter
-    matrix1D<double> lambda_list;
+    Matrix1D<double> lambda_list;
 
     /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
         for parallel computation. This variable establish the way that particles are
@@ -104,7 +104,7 @@ public:
     bool WLS;
 
     /** Relaxation parameter for WLS residual volume */
-    matrix1D<double> kappa_list;
+    Matrix1D<double> kappa_list;
 
     /** Vector containing all residual images for wlsART */
     vector<Projection> residual_imgs;
@@ -293,7 +293,7 @@ public:
     Recons_info     *IMG_Inf;
 
     /// Order in which projections will be presented to algorithm
-    matrix1D<int>   ordered_list;
+    Matrix1D<int>   ordered_list;
 
     /// Total number of images to process (taking symmetries into account)
     int             numIMG;
@@ -445,15 +445,15 @@ public:
    If N!=-1 then the product is done only with the last N images. A very
    useful value is N=2*/
 void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
-                        matrix1D<int> &ordered_list, int N = 2);
+                        Matrix1D<int> &ordered_list, int N = 2);
 
 /** No projection sorting at all.
     This function directly returns the same order as in the selection file */
-void no_sort(int numIMG, matrix1D<int> &ordered_list);
+void no_sort(int numIMG, Matrix1D<int> &ordered_list);
 
 /** Randomize the projections.
    This function sorts randomly a number of images given by numIMG. */
-void sort_randomly(int numIMG, matrix1D<int> &ordered_list);
+void sort_randomly(int numIMG, Matrix1D<int> &ordered_list);
 //@}
 
 /**@name Template routines
@@ -624,7 +624,7 @@ public:
     int Youtput_volume_size;
     int Xoutput_volume_size;
     bool apply_POCS;
-    matrix1D<double> POCS_errors;
+    Matrix1D<double> POCS_errors;
     Basic_ART_Parameters *prm;
 
     /// Constructor

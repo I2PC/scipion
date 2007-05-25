@@ -59,19 +59,19 @@ public:
     /** Draw a first sphere.  By default selects color red and places an sphere
         at the center with radious 0.05.
         */
-    void Sphere(const matrix1D<double> RGB = vector_R3(1., 0., 0.),
-                const matrix1D<double> XYZ = vector_R3(0., 0., 0.),
+    void Sphere(const Matrix1D<double> RGB = vector_R3(1., 0., 0.),
+                const Matrix1D<double> XYZ = vector_R3(0., 0., 0.),
                 const double radius = 0.05);
 
     /** Draw a translated copy of the previous sphere. Use this only after
         Sphere has been called once
       */
-    void Add_sphere(const matrix1D<double> XYZ = vector_R3(0., 0., 0.));
+    void Add_sphere(const Matrix1D<double> XYZ = vector_R3(0., 0., 0.));
 
     /** Draw a transparent sphere. Some wrl browser does not handle
     transparency properly  */
-    void Trans_Sphere(const matrix1D<double> XYZ = vector_R3(1., 0., 0.),
-                      const matrix1D<double> RGB = vector_R3(0., 0., 0.),
+    void Trans_Sphere(const Matrix1D<double> XYZ = vector_R3(1., 0., 0.),
+                      const Matrix1D<double> RGB = vector_R3(0., 0., 0.),
                       const double radius = 0.05);
     /** write a footer and Close file
         */

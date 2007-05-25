@@ -33,8 +33,8 @@ VrmlFile::VrmlFile(FileName vrmlfilename)
     VrmlFile::fh_out << "# (XMIPP libraries) by R. Marabini" << endl ;
 }/* VrmlFile */
 
-void VrmlFile::Sphere(matrix1D<double> XYZ,
-                      matrix1D<double> RGB,
+void VrmlFile::Sphere(Matrix1D<double> XYZ,
+                      Matrix1D<double> RGB,
                       double radius)
 {
     double X, Y, Z;
@@ -73,7 +73,7 @@ void VrmlFile::Sphere(matrix1D<double> XYZ,
 
 }// sphere end
 
-void VrmlFile::Add_sphere(const matrix1D<double> XYZ)
+void VrmlFile::Add_sphere(const Matrix1D<double> XYZ)
 {
     double X, Y, Z;
     X = XX(XYZ);
@@ -84,8 +84,8 @@ void VrmlFile::Add_sphere(const matrix1D<double> XYZ)
 }//add sphere
 
 
-void VrmlFile::Trans_Sphere(const matrix1D<double> XYZ,
-                            const matrix1D<double> RGB,
+void VrmlFile::Trans_Sphere(const Matrix1D<double> XYZ,
+                            const Matrix1D<double> RGB,
                             const double radius)
 {
     double X, Y, Z;

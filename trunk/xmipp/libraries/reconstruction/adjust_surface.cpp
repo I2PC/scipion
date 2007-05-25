@@ -415,7 +415,7 @@ double correlate_surface_and_volume_gradients(const Image *surf,
     }
 
     // Correlate
-    matrix1D<double> grad_in_V(3), grad_in_Vsurf(3);
+    Matrix1D<double> grad_in_V(3), grad_in_Vsurf(3);
     for (int i = STARTINGY(VOL); i <= FINISHINGY(VOL); i++)
         for (int j = STARTINGX(VOL); j <= FINISHINGX(VOL); j++)
         {
@@ -462,7 +462,7 @@ Prog_Adjust_Surface_Parameters *gasprm;
 double eval_surface(double *p)
 {
     // Check valid ranges
-    matrix1D<double> shift(2);
+    Matrix1D<double> shift(2);
     VECTOR_R2(shift, ROUND(p[1]), ROUND(p[2]));
     if (gasprm->shift_mask.outside(shift))               return 1e10;
     if (!gasprm->shift_mask(shift))                      return 1e10;
@@ -605,7 +605,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         prm.p(4) = prm.zbottomF;
         prm.p(5) = (prm.scaleX0 + prm.scaleXF) / 2;
         prm.p(6) = (prm.scaleY0 + prm.scaleYF) / 2;
-        matrix1D<double> steps(7);
+        Matrix1D<double> steps(7);
         steps.init_constant(1);
         int iter = 0;
         Powell_optimizer(prm.p, 1, 7, &eval_surface,

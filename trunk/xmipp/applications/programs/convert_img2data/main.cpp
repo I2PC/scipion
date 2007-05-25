@@ -136,10 +136,10 @@ int main(int argc, char **argv)
                     if (mask(i, j) == 0) image(i, j) = 0;
 
                 // Compute the radial average
-                matrix1D<int> center_of_rot(2);
+                Matrix1D<int> center_of_rot(2);
                 VECTOR_R2(center_of_rot, 0, 0);
-                matrix1D<int> radial_count;
-                matrix1D<double> radial_mean;
+                Matrix1D<int> radial_count;
+                Matrix1D<double> radial_mean;
                 radial_average(image(), center_of_rot, radial_mean, radial_count);
 
                 // Copy radial_mean to vector<float>

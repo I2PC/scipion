@@ -62,9 +62,9 @@ public:
     /// Orthogonalize projections
     bool orthogonal;
     /// Crystal vector a
-    matrix1D<double> a;
+    Matrix1D<double> a;
     /// Crustal vector b
-    matrix1D<double> b;
+    Matrix1D<double> b;
     /// Bias to apply to the magnitude shift
     double    Nshift_avg;
     /// Standard deviation of the magnitude shift
@@ -113,9 +113,9 @@ void project_crystal(Phantom &phantom, Projection &P,
     vectors, unit cell and projection size such that the unit cell intersects
     the projection. */
 void find_crystal_limits(
-    const matrix1D<double> &proj_corner1, const matrix1D<double> &proj_corner2,
-    const matrix1D<double> &corner1, const matrix1D<double> &corner2,
-    const matrix1D<double> &a, const matrix1D<double> &b,
+    const Matrix1D<double> &proj_corner1, const Matrix1D<double> &proj_corner2,
+    const Matrix1D<double> &corner1, const Matrix1D<double> &corner2,
+    const Matrix1D<double> &a, const Matrix1D<double> &b,
     int &iamin, int &iamax, int &ibmin, int &ibmax);
 
 /** Move following a spiral.
@@ -130,7 +130,7 @@ void find_crystal_limits(
 
    r is the actual position in the matrix.
 */
-void move_following_spiral(matrix1D<double> &r, const matrix2D<int> &visited);
+void move_following_spiral(Matrix1D<double> &r, const matrix2D<int> &visited);
 
 /** Fill cell positions.
     This function returns the random shifts corresponding to all cells that
@@ -143,9 +143,9 @@ void move_following_spiral(matrix1D<double> &r, const matrix2D<int> &visited);
     unit cell corners in the deformed space. Output shifts are in the
     deformed space. */
 void fill_cell_positions(Projection &P,
-                         matrix1D<double> &aproj,   matrix1D<double> &bproj,
-                         matrix1D<double> &aprojd,  matrix1D<double> &bprojd,
-                         matrix1D<double> &corner1, matrix1D<double> &corner2,
+                         Matrix1D<double> &aproj,   Matrix1D<double> &bproj,
+                         Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
+                         Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
                          matrix2D<double> &cell_shiftX, matrix2D<double> &cell_shiftY,
                          matrix2D<double> &cell_shiftZ,

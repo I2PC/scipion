@@ -55,7 +55,7 @@ public:
     /** Vector perpendicular to the projection plane.
      * It is calculated as a function of rot and tilt.
      */
-    matrix1D< double > direction;
+    Matrix1D< double > direction;
 
     /** Matrix used to pass from the Universal coordinate system to the
      * projection coordinate system.

@@ -74,7 +74,7 @@ public:
     double               enhanced_weight;
 
     /// Set of parameters for the complete adjustment of the CTF
-    matrix1D<double>     adjust;
+    Matrix1D<double>     adjust;
 public:
     /// Read parameters from file
     void read(const FileName &fn_param);

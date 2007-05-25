@@ -95,16 +95,16 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted)
     same size.
 
     Look the Mark Orr's function rbf_dm */
-void RBF_design_matrix(xmippCTVectors &C, matrix1D<double> &r,
+void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
                        xmippCTVectors &X, matrix2D<double> &H);
 
 /** Compute model given a certain scale.
     The selected centers are chosen via the index_out variable.
     */
 void RBF_train(xmippCTVectors &C,  xmippCTVectors &X,
-               vector<double> &y, matrix1D<double> &r, double scale,
-               vector<int> &idx_out, matrix1D<double> &r_out,
-               matrix1D<double> &w_out, double &error);
+               vector<double> &y, Matrix1D<double> &r, double scale,
+               vector<int> &idx_out, Matrix1D<double> &r_out,
+               Matrix1D<double> &w_out, double &error);
 
 /** RBF class.
     This class holds a RBF. */
@@ -112,9 +112,9 @@ class xmippRBF
 {
 public:
     /// Radii
-    matrix1D<double> r;
+    Matrix1D<double> r;
     /// Vector of weights
-    matrix1D<double> w;
+    Matrix1D<double> w;
     /// Vector of Centers
     xmippCTVectors C;
 public:

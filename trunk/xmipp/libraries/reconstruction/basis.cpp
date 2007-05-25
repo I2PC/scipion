@@ -194,7 +194,7 @@ void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
                              const matrix2D<double> *D, double R) const
 {
     Grid grid;
-    matrix1D<double> corner1(3), corner2(3);
+    Matrix1D<double> corner1(3), corner2(3);
     double R2 = R * R;
     switch (type)
     {

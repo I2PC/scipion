@@ -73,7 +73,7 @@ public:
     /** Number of steps to sample rot, tilt, psi and limited translations */
     int nr_rot, nr_rot_tilt, nr_tilt, nr_psi, nr_trans;
     /** Offsets for limited translations */
-    vector<matrix1D<double> > Vtrans;
+    vector<Matrix1D<double> > Vtrans;
     /** Range and step size for angular searches */
     double rot0,  rotF,  rot_step;
     double tilt0, tiltF, tilt_step;

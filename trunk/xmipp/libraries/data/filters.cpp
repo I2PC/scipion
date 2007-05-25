@@ -31,7 +31,7 @@
 void substract_background_plane(Image *I)
 {
     matrix2D<double> A(3, 3);
-    matrix1D<double> x(3), b(3);
+    Matrix1D<double> x(3), b(3);
 
     // Solve the plane 'x'
     A.init_zeros();
@@ -85,7 +85,7 @@ void region_growing(const matrix2D<double> &I_in, matrix2D<double> &I_out,
 
     while (!iNeighbours.empty())
     {
-        matrix1D<double> r(2);
+        Matrix1D<double> r(2);
 
         /* Take the current pixel to explore */
         iCurrenti = iNeighbours.front();
@@ -142,7 +142,7 @@ void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
 
     while (!iNeighbours.empty())
     {
-        matrix1D<double> r(3);
+        Matrix1D<double> r(3);
 
         /* Take the current pixel to explore */
         iCurrentk = iNeighbours.front();
@@ -243,7 +243,7 @@ void remove_small_components(matrix2D<double> &I, int size,
 {
     matrix2D<double> label;
     int imax = label_image(I, label, neighbourhood);
-    matrix1D<int> nlabel(imax + 1);
+    Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label) nlabel((int)(label(i, j)))++;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     if (nlabel((int)(label(i, j))) < size)
@@ -256,7 +256,7 @@ void keep_biggest_component(matrix2D<double> &I, double percentage,
 {
     matrix2D<double> label;
     int imax = label_image(I, label, neighbourhood);
-    matrix1D<int> nlabel(imax + 1);
+    Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     {
         int idx = (int)(label(i, j));
@@ -264,7 +264,7 @@ void keep_biggest_component(matrix2D<double> &I, double percentage,
             continue;
         nlabel(idx)++;
     }
-    matrix1D<int> best = nlabel.index_sort();
+    Matrix1D<int> best = nlabel.index_sort();
     best -= 1;
     int nbest = XSIZE(best) - 1;
     double total = nlabel.sum();
@@ -423,7 +423,7 @@ void Fourier_Bessel_decomposition(const matrix2D<double> &img_in,
             coefca = h / PI / 2.;
         }
 
-        matrix1D<double> sine(CEIL(my5));
+        Matrix1D<double> sine(CEIL(my5));
         FOR_ALL_ELEMENTS_IN_MATRIX1D(sine) sine(i) = sin((i + 1) * h);
 
     }
@@ -431,7 +431,7 @@ void Fourier_Bessel_decomposition(const matrix2D<double> &img_in,
 
 /* Harmonic decomposition. ------------------------------------------------- */
 void harmonic_decomposition(const matrix2D<double> &img_in,
-                            matrix1D<double> &v_out)
+                            Matrix1D<double> &v_out)
 {}
 
 /* Shah energy ------------------------------------------------------------- */
@@ -439,7 +439,7 @@ void harmonic_decomposition(const matrix2D<double> &img_in,
 double Shah_energy(const matrix2D<double> &img,
                    const matrix2D<double> &surface_strength,
                    const matrix2D<double> &edge_strength,
-                   double K, const matrix1D<double> &W)
+                   double K, const Matrix1D<double> &W)
 {
     int Ydim1 = YSIZE(img) - 1;
     int Xdim1 = XSIZE(img) - 1;
@@ -477,7 +477,7 @@ double Shah_energy(const matrix2D<double> &img,
            + dd(dF/dfxx)/dxx + dd(dF/dfxy)/dxy + dd(dF/dfyy)/dyy */
 double Update_surface_Shah(matrix2D<double> &img,
                            matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
-                           const matrix1D<double> &W)
+                           const Matrix1D<double> &W)
 {
     double Diff = 0.0, Norm = 0.0;
 
@@ -535,7 +535,7 @@ double Update_surface_Shah(matrix2D<double> &img,
    0 = dE/ds = dF/ds - d(dF/dsx)/dx - d(dF/dsy)/dy */
 double Update_edge_Shah(matrix2D<double> &img,
                         matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
-                        double K, const matrix1D<double> &W)
+                        double K, const Matrix1D<double> &W)
 {
     double Diff = 0.0, Norm = 0.0;
 
@@ -579,7 +579,7 @@ double Update_edge_Shah(matrix2D<double> &img,
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
 void Smoothing_Shah(matrix2D<double> &img,
                     matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
-                    const matrix1D<double> &W, int OuterLoops, int InnerLoops,
+                    const Matrix1D<double> &W, int OuterLoops, int InnerLoops,
                     int RefinementLoops, bool adjust_range)
 {
 
@@ -623,7 +623,7 @@ void Smoothing_Shah(matrix2D<double> &img,
 /* Rotational invariant moments -------------------------------------------- */
 void rotational_invariant_moments(const matrix2D<double> &img,
                                   const matrix2D<int> *mask,
-                                  matrix1D<double> &v_out)
+                                  Matrix1D<double> &v_out)
 {
     // Prepare some variables
     double m_11 = 0, m_02 = 0, m_20 = 0, m_12 = 0, m_21 = 0, m_03 = 0, m_30 = 0; //, m_00=0;
@@ -684,7 +684,7 @@ void rotational_invariant_moments(const matrix2D<double> &img,
 /* Inertia moments --------------------------------------------------------- */
 void inertia_moments(const matrix2D<double> &img,
                      const matrix2D<int> *mask,
-                     matrix1D<double> &v_out, matrix2D<double> &u)
+                     Matrix1D<double> &v_out, matrix2D<double> &u)
 {
     // Prepare some variables
     double m_11 = 0, m_02 = 0, m_20 = 0;

@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     double    total_t;  // Program execution time
     double     comms_t_it, aux_t; // communicattions time in one iteration
     GridVolumeT<int> GVNeq_aux;    // This is a buffer for the communication
-    matrix1D<int> Ordered_aux;
+    Matrix1D<int> Ordered_aux;
 
     int      rank, size;       // MPI number of proccess and number of proccesses
 

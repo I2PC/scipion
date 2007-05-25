@@ -113,7 +113,7 @@ public:
     // L and R matrices
     matrix2D<double> __L, __R;
     matrix2D<double> __shift;  // It is used for crystallographic symmetries
-    matrix1D<int>    __chain_length;
+    Matrix1D<int>    __chain_length;
 
     // As the symmetry elements form a subgroup, this is the number of
     // true symmetry elements belonging to the list, the rest of
@@ -172,16 +172,16 @@ public:
 
     /** Get shift.
         Returns the shift associated to a certain symmetry. */
-    void get_shift(int i, matrix1D<double> &shift) const;
+    void get_shift(int i, Matrix1D<double> &shift) const;
 
     /** Set shift.
         Set the shift associated to a certain symmetry. */
-    void set_shift(int i, const matrix1D<double> &shift);
+    void set_shift(int i, const Matrix1D<double> &shift);
 
     /** Add shift.
         Add a shift vector to the shift matrix. An exception is thrown if
         the input vector is not a 3x1 vector.*/
-    void add_shift(const matrix1D<double> &shift);
+    void add_shift(const Matrix1D<double> &shift);
 
     /** Read a symmetry file into a symmetry list.
         The former symmetry list is overwritten with the new one. All the
@@ -262,56 +262,56 @@ public:
  */
 
 
-void symmetrize_crystal_vectors(matrix1D<double> &aint,
-                                matrix1D<double> &bint,
-                                matrix1D<double> &shift,
+void symmetrize_crystal_vectors(Matrix1D<double> &aint,
+                                Matrix1D<double> &bint,
+                                Matrix1D<double> &shift,
                                 int space_group,
                                 int sym_no,
-                                const matrix1D<double> &eprm_aint,
-                                const matrix1D<double> &eprm_bint);
+                                const Matrix1D<double> &eprm_aint,
+                                const Matrix1D<double> &eprm_bint);
 
 /** Symmetrizes a crystal volume.
  */
 
 void symmetrize_crystal_volume(GridVolume &vol,
-                               const matrix1D<double> &eprm_aint,
-                               const matrix1D<double> &eprm_bint,
+                               const Matrix1D<double> &eprm_aint,
+                               const Matrix1D<double> &eprm_bint,
                                int eprm_space_group, const matrix2D<int> &mask,
                                int grid_type);
 
 /** Symmetrizes a simple grid with P2_122  symmetry
 */
 void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
 void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
 void symmetry_P4(Volume &vol, const SimpleGrid &grid,
-                 const matrix1D<double> &eprm_aint,
-                 const matrix1D<double> &eprm_bint,
+                 const Matrix1D<double> &eprm_aint,
+                 const Matrix1D<double> &eprm_bint,
                  const matrix2D<int> &mask, int volume_no,
                  int grid_type);
 /** Symmetrizes a simple grid with P4212 symmetry
 */
 void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
-                     const matrix1D<double> &eprm_aint,
-                     const matrix1D<double> &eprm_bint,
+                     const Matrix1D<double> &eprm_aint,
+                     const Matrix1D<double> &eprm_bint,
                      const matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P6 symmetry
 */
 void symmetry_P6(Volume &vol, const SimpleGrid &grid,
-                 const matrix1D<double> &eprm_aint,
-                 const matrix1D<double> &eprm_bint,
+                 const Matrix1D<double> &eprm_aint,
+                 const Matrix1D<double> &eprm_bint,
                  const matrix2D<int> &mask, int volume_no,
                  int grid_type);
 

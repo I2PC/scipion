@@ -279,7 +279,7 @@ void XmippCTF::Produce_Side_Info()
 
 /* Zero -------------------------------------------------------------------- */
 //#define DEBUG
-void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) const
+void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const
 {
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
@@ -321,8 +321,8 @@ void XmippCTF::zero(int n, const matrix1D<double> &u, matrix1D<double> &freq) co
 /* Apply the CTF to an image ----------------------------------------------- */
 void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const
 {
-    matrix1D<int>    idx(2);
-    matrix1D<double> freq(2);
+    Matrix1D<int>    idx(2);
+    Matrix1D<double> freq(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFTI)
     {
         XX(idx) = j;
@@ -338,8 +338,8 @@ void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const
 void XmippCTF::Generate_CTF(int Ydim, int Xdim,
                             matrix2D < complex<double> > &CTF) const
 {
-    matrix1D<int>    idx(2);
-    matrix1D<double> freq(2);
+    Matrix1D<int>    idx(2);
+    Matrix1D<double> freq(2);
     CTF.resize(Ydim, Xdim);
 #ifdef DEBUG
     cout << "CTF:\n" << *this << endl;

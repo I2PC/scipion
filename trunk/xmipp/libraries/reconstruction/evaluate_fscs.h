@@ -100,19 +100,19 @@ public:
         The vector of all resolutions is provided to check if there is
         any outlier. */
     void compute_average_resolution(double &avg_resol, double &stddev_resol,
-                                    matrix1D<double> &resol);
+                                    Matrix1D<double> &resol);
 
     /** Compute the average, min and max FSC of a selfile.*/
-    void compute_average_FSC(matrix1D<double> &frequency,
-                             matrix1D<double> &avg_FSC, matrix1D<double> &min_FSC,
-                             matrix1D<double> &max_FSC);
+    void compute_average_FSC(Matrix1D<double> &frequency,
+                             Matrix1D<double> &avg_FSC, Matrix1D<double> &min_FSC,
+                             Matrix1D<double> &max_FSC);
 
     /** Compare the FSCs of two selfiles.
         The average of the difference (F2-F1) is returned as well as
         its stddev at each frequency.
     */
-    void compare_two_sets(matrix1D<double> &frequency,
-                          matrix1D<double> &avg_diff_FSC, matrix1D<double> &stddev_diff_FSC);
+    void compare_two_sets(Matrix1D<double> &frequency,
+                          Matrix1D<double> &avg_diff_FSC, Matrix1D<double> &stddev_diff_FSC);
 };
 
 /** Main Evaluation FSCs routine.
