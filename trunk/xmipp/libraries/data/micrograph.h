@@ -359,8 +359,13 @@ public:
                 for (int i = 0; i < Ydim; i++)
                     for (int j = 0; j < Xdim; j++, tmp++)
                     {
-                        if (m16[tmp] > _Max) _Max = m16[tmp];
-                        else if (m16[tmp] < _min) _min = m16[tmp];
+                        short int retval=m16[tmp];
+                        if (__reversed) {
+                        unsigned char *ptr=(unsigned char *)&retval, temp;
+                        SWAP(*ptr,*(ptr+1),temp);
+                        }
+        	        if(retval>_Max) _Max=retval;
+        	        else if(retval<_min) _min=retval;
                     }
                 Dmin = (double)_min;
                 Dmax = (double)_Max;
@@ -373,8 +378,14 @@ public:
                 for (int i = 0; i < Ydim; i++)
                     for (int j = 0; j < Xdim; j++, tmp++)
                     {
-                        if (um16[tmp] > _Max) _Max = um16[tmp];
-                        else if (um16[tmp] < _min) _min = um16[tmp];
+                        unsigned short int retval=um16[tmp];
+                        if (__reversed) 
+                        {
+	                   unsigned char *ptr=(unsigned char *)&retval, temp;
+	                   SWAP(*ptr,*(ptr+1),temp);
+                        }
+        	        if(retval>_Max) _Max=retval;
+        	        else if(retval<_min) _min=retval;
                     }
                 Dmin = (double)_min;
                 Dmax = (double)_Max;
@@ -388,8 +399,15 @@ public:
             for (int i = 0; i < Ydim; i++)
                 for (int j = 0; j < Xdim; j++, tmp++)
                 {
-                    if (m32[tmp] > _Max) _Max = m32[tmp];
-                    else if (m32[tmp] < _min) _min = m32[tmp];
+                    float retval=m32[tmp];
+                    if (__reversed) 
+                    {
+	               unsigned char *ptr=(unsigned char *)&retval, temp;
+	               SWAP(*ptr,*(ptr+3),temp);
+	               SWAP(*(ptr+1),*(ptr+2),temp);
+                    }
+        	    if(retval>_Max) _Max=retval;
+        	    else if(retval<_min) _min=retval;
                 }
 
             Dmin = (double)_min;
