@@ -3484,7 +3484,7 @@ ostream& operator<<(ostream& ostrm, const mT& v)
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
-                ostrm << FtoA((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
+                ostrm << floatToString((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
             }
 
             ostrm << endl;

@@ -1059,7 +1059,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     else vol_recons.write("superfeo2.spi");
 
     // Run bresolve of bsoft to compute resolution
-    string command = (string)"bresolve -s " + FtoA(sampling_rate) +
+    string command = (string)"bresolve -s " + floatToString(sampling_rate) +
                      " -v4 -m superfeo.spi superfeo2.spi > superfeo3";
     system(command.c_str());
 
@@ -1152,7 +1152,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     else vol_recons.write("superfeo2.vol");
 
     // Run bresolve of bsoft to compute resolution
-    string command = (string)"xmipp_resolution -sam " + FtoA(sampling_rate) +
+    string command = (string)"xmipp_resolution -sam " + floatToString(sampling_rate) +
                      " -ref superfeo.vol -i superfeo2.vol";
     system(command.c_str());
 

@@ -130,16 +130,16 @@ string Prog_downsample_prm::command_line() const
         retval += (string)"rectangle" + ItoA(Yrect) + " " + ItoA(Xrect) + " ";
         break;
     case KER_CIRCLE:
-        retval += (string)"circle" + FtoA(r) + " ";
+        retval += (string)"circle" + floatToString(r) + " ";
         break;
     case KER_GAUSSIAN:
-        retval += (string)"gaussian" + FtoA(r) + " " + FtoA(sigma) + " ";
+        retval += (string)"gaussian" + floatToString(r) + " " + floatToString(sigma) + " ";
         break;
     case KER_PICK:
         retval += (string)"pick";
         break;
     case KER_SINC:
-        retval += (string)"sinc" + FtoA(delta) + " " + FtoA(Deltaw) + " ";
+        retval += (string)"sinc" + floatToString(delta) + " " + floatToString(Deltaw) + " ";
         break;
     }
     return retval;

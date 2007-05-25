@@ -911,7 +911,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         string command_line = (string)"xmipp_wbp -i " + Prog_proj_prm.fn_sel_file +
                               " -o " + fn_recons_root + ".vol " +
                               " -radius " + ItoA((int)(proj_prm.proj_Xdim / 2)) +
-                              " -threshold " + FtoA(prm.WBP_threshold[i], 0);
+                              " -threshold " + floatToString(prm.WBP_threshold[i], 0);
         cerr << "Reconstructing with WBP ...\n";
         system(command_line.c_str());
     }

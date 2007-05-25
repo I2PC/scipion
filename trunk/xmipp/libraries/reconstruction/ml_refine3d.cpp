@@ -676,13 +676,13 @@ void Prog_Refine3d_prm::calculate_3DSSNR(matrix1D<double> &spectral_signal, int 
                 out.width(5);
                 out  << ItoA(i);
                 out.width(10);
-                out <<  FtoA(VEC_ELEM(spectral_signal, i));
+                out <<  floatToString(VEC_ELEM(spectral_signal, i));
                 out.width(10);
-                out <<  FtoA(VEC_ELEM(avg_alphaN, i) / VEC_ELEM(avg_alphaS, i));
+                out <<  floatToString(VEC_ELEM(avg_alphaN, i) / VEC_ELEM(avg_alphaS, i));
                 out.width(10);
-                out <<  FtoA(VEC_ELEM(avg_alphaS, i));
+                out <<  floatToString(VEC_ELEM(avg_alphaS, i));
                 out.width(10);
-                out <<  FtoA(VEC_ELEM(avg_alphaN, i));
+                out <<  floatToString(VEC_ELEM(avg_alphaN, i));
                 out << endl;
             }
         }

@@ -164,7 +164,7 @@ int best_prec(float F, int _width)
     return advised_prec;
 }
 
-std::string FtoA(float F, int _width, int _prec)
+std::string floatToString(float F, int _width, int _prec)
 {
 #if GCC_VERSION < 30300
     char aux[15];

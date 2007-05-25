@@ -40,7 +40,7 @@
 // FIXME This is a BAD practice..
 #include "multidim_friends.inc"
 
-std::string FtoA(float val, int width, int prec);
+std::string floatToString(float val, int width, int prec);
 
 /// @defgroup Vectors Xmipp Vectors
 
@@ -1745,9 +1745,9 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
         FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
         {
             if (v.row)
-                out << FtoA((double) VEC_ELEM(v, i), 10, prec) << ' ';
+                out << floatToString((double) VEC_ELEM(v, i), 10, prec) << ' ';
             else
-                out << FtoA((double) VEC_ELEM(v, i), 10, prec) << '\n';
+                out << floatToString((double) VEC_ELEM(v, i), 10, prec) << '\n';
         }
     }
 

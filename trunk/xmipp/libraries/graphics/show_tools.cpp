@@ -102,7 +102,7 @@ void ScrollParam::init(vector<float> &min, vector<float> &max,
         // Add range
         QLabel     *lab2 = new QLabel(this, "lab2");
         lab2->setFont(QFont("times", 12));
-        lab2->setText(((string)"[" + FtoA(min[i], 0) + "," + FtoA(max[i], 0) + "]").c_str());
+        lab2->setText(((string)"[" + floatToString(min[i], 0) + "," + floatToString(max[i], 0) + "]").c_str());
         lab2->setFixedSize(lab2->sizeHint());
         grid->addWidget(lab2, i + 1, 1, AlignCenter);
 

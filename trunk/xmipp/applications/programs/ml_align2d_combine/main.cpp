@@ -221,13 +221,13 @@ int main(int argc, char **argv)
         DFo.go_beginning();
         DFo.remove_current();
         DFo.previous();
-        line = "MLalign2D-logfile: Number of images= " + FtoA(sumweight);
-        if (LL != 0.) line += " LL= " + FtoA(LL, 12, 5);
-        if (R != 0.) line += " R= " + FtoA(R, 12, 5);
+        line = "MLalign2D-logfile: Number of images= " + floatToString(sumweight);
+        if (LL != 0.) line += " LL= " + floatToString(LL, 12, 5);
+        if (R != 0.) line += " R= " + floatToString(R, 12, 5);
         DFo.insert_comment(line);
         DFo.remove_current();
         DFo.previous();
-        line = "-noise " + FtoA(noise, 10, 7) + " -offset " + FtoA(offset, 10, 7) + " -istart " + ItoA(istart);
+        line = "-noise " + floatToString(noise, 10, 7) + " -offset " + floatToString(offset, 10, 7) + " -istart " + ItoA(istart);
         DFo.insert_comment(line);
         DFo.write(fn_oroot + ".log");
 

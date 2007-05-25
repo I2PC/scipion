@@ -99,7 +99,7 @@ void Prog_make_spectra_prm::finish_processing()
         {
             double norm = Harmonics[i].sum() / 100.0;
             for (int j = 0; j < XSIZE(Harmonics[i]); j++)
-                fh_out << FtoA(Harmonics[i](j) / norm, 6, 4) << " ";
+                fh_out << floatToString(Harmonics[i](j) / norm, 6, 4) << " ";
             fh_out << Img_name[i] << endl;
         }
     }

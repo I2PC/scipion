@@ -293,7 +293,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
             DF.next_data_line();
         }
         if (ABS(sumfrac - 1.) > 1e-4)
-            cerr << " ->WARNING: Sum of all expected model fractions (" << FtoA(sumfrac) << ") is not one!" << endl;
+            cerr << " ->WARNING: Sum of all expected model fractions (" << floatToString(sumfrac) << ") is not one!" << endl;
         for (refno = 0; refno < nr_ref; refno++)
         {
             alpha_k[refno] /= sumfrac;
@@ -1432,11 +1432,11 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
 
     // Write out log-file
     DF.go_beginning();
-    comment = "mlf_tomo-logfile: Number of images= " + FtoA(sumw_allrefs);
-    comment += " LL= " + FtoA(LL, 10, 5) + " <Pmax/sumP>= " + FtoA(avecorr, 10, 5);
+    comment = "mlf_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
+    comment += " LL= " + floatToString(LL, 10, 5) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
     DF.insert_comment(comment);
-    comment = "-noise " + fn_base + "_sigma2.dat -offset " + FtoA(sigma_offset, 10, 7) + " -istart " + ItoA(iter + 1);
-    if (theta > 0) comment += " -theta " + FtoA(theta, 6, 3) + " -theta_step " + FtoA(theta_step, 6, 3);
+    comment = "-noise " + fn_base + "_sigma2.dat -offset " + floatToString(sigma_offset, 10, 7) + " -istart " + ItoA(iter + 1);
+    if (theta > 0) comment += " -theta " + floatToString(theta, 6, 3) + " -theta_step " + floatToString(theta_step, 6, 3);
     DF.insert_comment(comment);
     DF.insert_comment("columns: model fraction (1); ");
     fn_tmp = fn_base + ".log";

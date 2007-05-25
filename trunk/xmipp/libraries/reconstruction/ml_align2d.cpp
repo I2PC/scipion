@@ -866,19 +866,19 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(matrix1D<double> &spect
             fh  << "#  Resol    Wiener       CTF      SSNR    signal     noise " << endl;
             for (int irr = 0; irr < hdim; irr++)
             {
-                fh << FtoA((double)irr / (sampling*(double)dim));
+                fh << floatToString((double)irr / (sampling*(double)dim));
                 fh.width(10);
-                fh << FtoA(dVi(Vdec[ifocus], irr));
+                fh << floatToString(dVi(Vdec[ifocus], irr));
                 fh.width(10);
-                fh << FtoA(dVi(Vctf[ifocus], irr));
+                fh << floatToString(dVi(Vctf[ifocus], irr));
                 fh.width(10);
-                fh << FtoA(MIN(25., dVi(Vsnr[ifocus], irr)));
+                fh << floatToString(MIN(25., dVi(Vsnr[ifocus], irr)));
                 fh.width(10);
-                fh << FtoA(dVi(spectral_signal, irr));
+                fh << floatToString(dVi(spectral_signal, irr));
                 fh.width(10);
                 noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
                 noise /= (double)(count_defocus[ifocus] - 1);
-                fh << FtoA(noise);
+                fh << floatToString(noise);
                 fh << endl;
             }
             fh.close();
@@ -3323,15 +3323,15 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 {
     if (verb > 0)
     {
-        if (maxCC_rather_than_ML) cout << "  iter " << iter << " <CC>= " + FtoA(sumcorr, 10, 5);
+        if (maxCC_rather_than_ML) cout << "  iter " << iter << " <CC>= " + floatToString(sumcorr, 10, 5);
         else
         {
-            cout << "  iter " << iter << " noise= " << FtoA(sigma_noise, 10, 7) << " offset= " << FtoA(sigma_offset, 10, 7);
+            cout << "  iter " << iter << " noise= " << floatToString(sigma_noise, 10, 7) << " offset= " << floatToString(sigma_offset, 10, 7);
             cout << "  LL= " << LL << " <Pmax/sumP>= " << sumcorr << endl;
             cout << "  Model  fraction  mirror-fraction " << endl;
             FOR_ALL_MODELS()
             {
-                cout << "  " << ItoA(refno + 1, 5) << " " << FtoA(alpha_k[refno], 10, 7) << " " << FtoA(mirror_fraction[refno], 10, 7) << endl;
+                cout << "  " << ItoA(refno + 1, 5) << " " << floatToString(alpha_k[refno], 10, 7) << " " << floatToString(mirror_fraction[refno], 10, 7) << endl;
             }
         }
     }
@@ -3395,8 +3395,8 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     }
 
     DFl.go_beginning();
-    comment = "MLalign2D-logfile: Number of images= " + FtoA(sumw_allrefs);
-    if (maxCC_rather_than_ML) comment += " <CC>= " + FtoA(avecorr, 10, 5);
+    comment = "MLalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
+    if (maxCC_rather_than_ML) comment += " <CC>= " + floatToString(avecorr, 10, 5);
     else
     {
 	if (do_output_MLF_LL)
@@ -3404,10 +3404,10 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
 	else
 	    dLL = LL - LL_prev_iter;
 	LL_prev_iter = LL;
-        comment += " LL= " + FtoA(dLL, 10, 5) + " <Pmax/sumP>= " + FtoA(avecorr, 10, 5);
+        comment += " LL= " + floatToString(dLL, 10, 5) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
         DFl.insert_comment(comment);
-        comment = "-noise " + FtoA(sigma_noise, 15, 12) + " -offset " + FtoA(sigma_offset, 15, 12) + " -istart " + ItoA(iter + 1);
-        if (anneal > 1.) comment += " -anneal " + FtoA(anneal, 10, 7);
+        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + ItoA(iter + 1);
+        if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
     }
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);

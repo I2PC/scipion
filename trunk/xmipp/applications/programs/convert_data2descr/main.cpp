@@ -45,11 +45,11 @@ int main(int argc, char **argv)
         radius = (double) AtoF(get_param(argc, argv, "-radius", "0"));
         vsize = (double) AtoF(get_param(argc, argv, "-vsize", "1"));
         dimX = AtoI(get_param(argc, argv, "-dimX", "60"));
-        dimY = AtoI(get_param(argc, argv, "-dimY", FtoA(dimX).c_str()));
-        dimZ = AtoI(get_param(argc, argv, "-dimZ", FtoA(dimX).c_str()));
+        dimY = AtoI(get_param(argc, argv, "-dimY", floatToString(dimX).c_str()));
+        dimZ = AtoI(get_param(argc, argv, "-dimZ", floatToString(dimX).c_str()));
         offX = AtoF(get_param(argc, argv, "-offX", "0"));
-        offY = AtoF(get_param(argc, argv, "-offY", FtoA(offX).c_str()));
-        offZ = AtoF(get_param(argc, argv, "-offZ", FtoA(offX).c_str()));
+        offY = AtoF(get_param(argc, argv, "-offY", floatToString(offX).c_str()));
+        offZ = AtoF(get_param(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
     catch (Xmipp_error)
     {

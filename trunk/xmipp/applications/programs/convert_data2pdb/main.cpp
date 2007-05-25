@@ -43,8 +43,8 @@ int main(int argc, char **argv)
         oname = get_param(argc, argv, "-oname");
         vsize = (double) AtoF(get_param(argc, argv, "-vsize", "1"));
         offX = AtoF(get_param(argc, argv, "-offX", "0"));
-        offY = AtoF(get_param(argc, argv, "-offY", FtoA(offX).c_str()));
-        offZ = AtoF(get_param(argc, argv, "-offZ", FtoA(offX).c_str()));
+        offY = AtoF(get_param(argc, argv, "-offY", floatToString(offX).c_str()));
+        offZ = AtoF(get_param(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
     catch (Xmipp_error)
     {

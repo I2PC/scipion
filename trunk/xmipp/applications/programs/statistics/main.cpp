@@ -139,15 +139,15 @@ int main(int argc, char **argv)
                 << ItoA(YSIZE(V), 4, ' ') << 'x'
                 << ItoA(XSIZE(V), 4, ' ') << ' ';
                 if (!short_format)
-                    cout << "min= "    << FtoA(min_val, 10) << ' '
-                    << "max= "    << FtoA(max_val, 10) << ' '
-                    << "avg= "    << FtoA(avg    , 10) << ' '
-                    << "stddev= " << FtoA(stddev , 10) << ' ';
+                    cout << "min= "    << floatToString(min_val, 10) << ' '
+                    << "max= "    << floatToString(max_val, 10) << ' '
+                    << "avg= "    << floatToString(avg    , 10) << ' '
+                    << "stddev= " << floatToString(stddev , 10) << ' ';
                 else
-                    cout << FtoA(min_val, 10) << ' '
-                    << FtoA(max_val, 10) << ' '
-                    << FtoA(avg    , 10) << ' '
-                    << FtoA(stddev , 10) << ' ';
+                    cout << floatToString(min_val, 10) << ' '
+                    << floatToString(max_val, 10) << ' '
+                    << floatToString(avg    , 10) << ' '
+                    << floatToString(stddev , 10) << ' ';
                 matrix1D<double> v(4);
                 v(0) = min_val;
                 v(1) = max_val;
@@ -185,45 +185,45 @@ int main(int argc, char **argv)
                 << ItoA(XSIZE(I), 4, ' ') << ' ';
                 if (!short_format)
                 {
-                    cout << "min= "    << FtoA(min_val, 10) << ' '
-                    << "max= "    << FtoA(max_val, 10) << ' '
-                    << "avg= "    << FtoA(avg    , 10) << ' '
-                    << "stddev= " << FtoA(stddev , 10) << ' ';
+                    cout << "min= "    << floatToString(min_val, 10) << ' '
+                    << "max= "    << floatToString(max_val, 10) << ' '
+                    << "avg= "    << floatToString(avg    , 10) << ' '
+                    << "stddev= " << floatToString(stddev , 10) << ' ';
                     if (show_angles)
                     {
-                        cout << "rot= "    << FtoA(image.rot() , 10) << ' '
-                        << "tilt= "   << FtoA(image.tilt(), 10) << ' '
-                        << "psi= "    << FtoA(image.psi() , 10) << ' ';
+                        cout << "rot= "    << floatToString(image.rot() , 10) << ' '
+                        << "tilt= "   << floatToString(image.tilt(), 10) << ' '
+                        << "psi= "    << floatToString(image.psi() , 10) << ' ';
                         if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
-                            cout << "\nrot1= "  << FtoA(image.rot1() , 10) << ' '
-                            << "tilt1= "   << FtoA(image.tilt1(), 10) << ' '
-                            << "psi1= "    << FtoA(image.psi1() , 10) << ' ';
+                            cout << "\nrot1= "  << floatToString(image.rot1() , 10) << ' '
+                            << "tilt1= "   << floatToString(image.tilt1(), 10) << ' '
+                            << "psi1= "    << floatToString(image.psi1() , 10) << ' ';
                         if (image.Is_flag_set() == 2.0f)
-                            cout << "\nrot2= "    << FtoA(image.rot2() , 10) << ' '
-                            << "tilt2= "   << FtoA(image.tilt2(), 10) << ' '
-                            << "psi2= "    << FtoA(image.psi2() , 10) << ' ';
+                            cout << "\nrot2= "    << floatToString(image.rot2() , 10) << ' '
+                            << "tilt2= "   << floatToString(image.tilt2(), 10) << ' '
+                            << "psi2= "    << floatToString(image.psi2() , 10) << ' ';
                     }
 
                 }
                 else
                 {
-                    cout << FtoA(min_val, 10) << ' '
-                    << FtoA(max_val, 10) << ' '
-                    << FtoA(avg    , 10) << ' '
-                    << FtoA(stddev , 10) << ' ';
+                    cout << floatToString(min_val, 10) << ' '
+                    << floatToString(max_val, 10) << ' '
+                    << floatToString(avg    , 10) << ' '
+                    << floatToString(stddev , 10) << ' ';
                     if (show_angles)
                     {
-                        cout << FtoA(image.rot() , 10) << ' '
-                        << FtoA(image.tilt(), 10) << ' '
-                        << FtoA(image.psi() , 10) << ' ';
+                        cout << floatToString(image.rot() , 10) << ' '
+                        << floatToString(image.tilt(), 10) << ' '
+                        << floatToString(image.psi() , 10) << ' ';
                         if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
-                            cout << FtoA(image.rot1() , 10) << ' '
-                            << FtoA(image.tilt1(), 10) << ' '
-                            << FtoA(image.psi1() , 10) << ' ';
+                            cout << floatToString(image.rot1() , 10) << ' '
+                            << floatToString(image.tilt1(), 10) << ' '
+                            << floatToString(image.psi1() , 10) << ' ';
                         if (image.Is_flag_set() == 2.0f)
-                            cout << FtoA(image.rot2() , 10) << ' '
-                            << FtoA(image.tilt2(), 10) << ' '
-                            << FtoA(image.psi2() , 10) << ' ';
+                            cout << floatToString(image.rot2() , 10) << ' '
+                            << floatToString(image.tilt2(), 10) << ' '
+                            << floatToString(image.psi2() , 10) << ' ';
                     }
                 }
 
@@ -263,15 +263,15 @@ int main(int argc, char **argv)
 
             cout << AtoA(" ", max_length + 13);
             if (!short_format)
-                cout << "min= "    << FtoA(mean_min_val, 10) << ' '
-                << "max= "    << FtoA(mean_max_val, 10) << ' '
-                << "avg= "    << FtoA(mean_avg    , 10) << ' '
-                << "stddev= " << FtoA(mean_stddev , 10) << ' ';
+                cout << "min= "    << floatToString(mean_min_val, 10) << ' '
+                << "max= "    << floatToString(mean_max_val, 10) << ' '
+                << "avg= "    << floatToString(mean_avg    , 10) << ' '
+                << "stddev= " << floatToString(mean_stddev , 10) << ' ';
             else
-                cout << FtoA(mean_min_val, 10) << ' '
-                << FtoA(mean_max_val, 10) << ' '
-                << FtoA(mean_avg    , 10) << ' '
-                << FtoA(mean_stddev , 10) << ' ';
+                cout << floatToString(mean_min_val, 10) << ' '
+                << floatToString(mean_max_val, 10) << ' '
+                << floatToString(mean_avg    , 10) << ' '
+                << floatToString(mean_stddev , 10) << ' ';
             cout << endl;
         }
 

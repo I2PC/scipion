@@ -216,11 +216,11 @@ void Normalize_parameters::show()
 
         if (remove_black_dust)
             std::cout << "Remove black dust particles, using threshold " <<
-            FtoA(thresh_black_dust) << std::endl;
+            floatToString(thresh_black_dust) << std::endl;
 
         if (remove_white_dust)
             std::cout << "Remove white dust particles, using threshold " <<
-            FtoA(thresh_white_dust) << std::endl;
+            floatToString(thresh_white_dust) << std::endl;
     }
 
     if (method == NEWXMIPP && enable_mask)

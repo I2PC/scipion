@@ -1190,7 +1190,7 @@ void Prog_angular_predict_prm::produceSummary()
 
         // Write the assigned images in a selfile
         SFsummary.insert_comment((string)"Images assigned to " + fn_refl);
-        SFsummary.insert_comment((string)"rot=" + FtoA(rot[l]) + " tilt=" + FtoA(tilt[l]));
+        SFsummary.insert_comment((string)"rot=" + floatToString(rot[l]) + " tilt=" + floatToString(tilt[l]));
         if (referenceWeight[l].size() != 0)
         {
             for (int i = 0; i < referenceWeight[l].size(); i++)

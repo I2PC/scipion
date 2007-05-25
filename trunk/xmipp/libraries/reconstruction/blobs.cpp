@@ -348,8 +348,8 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
                     }
         }
 #ifdef DEBUG
-    att.write((string)"att" + FtoA(w) + ".xmp");
-    ops.write((string)"ops" + FtoA(w) + ".xmp");
+    att.write((string)"att" + floatToString(w) + ".xmp");
+    ops.write((string)"ops" + floatToString(w) + ".xmp");
 #endif
     retval.radius = best_a;
     retval.alpha = best_alpha;

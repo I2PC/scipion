@@ -114,7 +114,7 @@
  *     {
  *         for (j=STARTINGX(val); j<=FINISHINGX(val); j++)
  *         {
- *             out << FtoA((float) val(i,j), 10, prec) << ' ';
+ *             out << floatToString((float) val(i,j), 10, prec) << ' ';
  *         }
  *         out << endl;
  *     }
@@ -214,10 +214,10 @@ long long AtoLL(const char* str,
  * minimum width is used.
  *
  * @code
- * REPORT_ERROR(1602, "Value not recognised " + FtoA(val));
+ * REPORT_ERROR(1602, "Value not recognised " + floatToString(val));
  * @endcode
  */
-std::string FtoA(float F, int _width = 8, int _prec = 0);
+std::string floatToString(float F, int _width = 8, int _prec = 0);
 
 /** Integer to string conversion.
  * @ingroup TypeConversions

@@ -2534,7 +2534,7 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
-                ostrm << FtoA((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                ostrm << floatToString((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
             }
             ostrm << std::endl;
         }

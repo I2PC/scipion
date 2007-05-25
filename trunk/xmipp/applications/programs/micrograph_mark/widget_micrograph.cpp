@@ -1639,7 +1639,7 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    lcutoff("High pass cut-off: ", &qgrid);
     QLineEdit cutoff(&qgrid);
-    cutoff.setText(FtoA(__highpass_cutoff).c_str());
+    cutoff.setText(floatToString(__highpass_cutoff).c_str());
 
     QLabel    loutput_scale("Output scale: ", &qgrid);
     QLineEdit output_scale(&qgrid);
@@ -1679,7 +1679,7 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    lkeep("Keep: ", &qgrid);
     QLineEdit keep(&qgrid);
-    keep.setText(FtoA(__keep).c_str());
+    keep.setText(floatToString(__keep).c_str());
 
     QLabel    lNerror_models("#Error models: ", &qgrid);
     QLineEdit Nerror_models(&qgrid);
@@ -1880,7 +1880,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_gamma = new QLabel(this, "label");
     __label_gamma->setFont(QFont("courier", 14));
-    __label_gamma->setText(FtoA(gamma, 3, 2).c_str());
+    __label_gamma->setText(floatToString(gamma, 3, 2).c_str());
     __label_gamma->setFixedSize(__label_gamma->sizeHint());
     grid->addWidget(__label_gamma, 2, 2, AlignCenter);
 
@@ -1891,7 +1891,7 @@ void AdjustContrastWidget::scrollValueChanged(int new_val)
 {
     __label_min  ->setText(ItoA(__scroll_min  ->value(), 3).c_str());
     __label_max  ->setText(ItoA(__scroll_max  ->value(), 3).c_str());
-    __label_gamma->setText(FtoA((__scroll_gamma->value()) / 10.0, 3, 2).c_str());
+    __label_gamma->setText(floatToString((__scroll_gamma->value()) / 10.0, 3, 2).c_str());
     __qtwidgetmicrograph->changeContrast(__scroll_min->value(),
                                          __scroll_max->value(), __scroll_gamma->value() / 10.0);
 }
