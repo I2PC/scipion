@@ -218,6 +218,7 @@ AC_OUTPUT( \
 	applications/programs/ctf_correct_idr/Makefile \
 	applications/programs/ctf_correct_phase/Makefile \
 	applications/programs/ctf_estimate_from_micrograph/Makefile \
+	applications/programs/ctf_estimate_from_psd/Makefile \
 	applications/programs/ctf_profile/Makefile \
 	applications/programs/ctf_view/Makefile \
 	applications/programs/denoise/Makefile \

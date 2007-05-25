@@ -39,6 +39,7 @@ SUBDIRS = \
 	docfile_append \
 	reconstruct_art \
 	ctf_estimate_from_micrograph \
+	ctf_estimate_from_psd \
 	classify_batch_som \
 	break_symmetry \
 	align_tilt_pairs \

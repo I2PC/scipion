@@ -218,7 +218,7 @@ void AssignCTFViewer::okToProceed()
     fh_adjust_param.close();
 
     // Recompute the model
-    system(((string)"( xmipp_adjust_CTF -i " + fn_random + " ; rm " + fn_random + " ) &").c_str());
+    system(((string)"( xmipp_ctf_estimate_from_psd -i " + fn_random + " ; rm " + fn_random + " ) &").c_str());
 
     // Close this window
     close();
