@@ -671,7 +671,7 @@ void ShowSel::editCTFmodel()
         }
     }
     else
-    { // Multiple micrographs all with micrograph_averaging
+    {   // Multiple micrographs all with micrograph_averaging
         // Get the assign filename
         SelFile SF_assign;
         SF_assign.read(fn_assign_sel);
@@ -705,51 +705,80 @@ void ShowSel::editCTFmodel()
 // Recompute CTF model -----------------------------------------------------
 void ShowSel::recomputeCTFmodel()
 {
-    if (fn_assign == "")
+    if (fn_assign == "" && fn_assign_sel == "")
     {
         QMessageBox::about(this, "Error!", "No Assign CTF file provided\n");
         return;
     }
 
-    // Read the Assign CTF parameters
-    Prog_assign_CTF_prm assign_ctf_prm;
-    try
-    {
-        assign_ctf_prm.read(fn_assign);
-    }
-    catch (Xmipp_error XE)
-    {
-        cout << XE;
-        cout << "It seems that " << fn_assign << " is not the parameter file"
-        << " that you used to estimate the CTFs\n";
-        return;
-    }
-
-    // Get the PSD name
-    FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
     FileName fn_psd;
-    if (assign_ctf_prm.compute_at_particle)
+    Prog_assign_CTF_prm assign_ctf_prm;
+    if (fn_assign!="")
     {
-        int i = indexOf(currentRow(), currentColumn());
-        fn_psd = imgnames[i].without_extension() + ".psd";
-    }
-    else if (assign_ctf_prm.micrograph_averaging)
-    {
-        // If it is the average of the micrograph
-        if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-            fn_psd = fn_root + "_ARMAavg.psd";
-        else fn_psd = fn_root + "_Periodogramavg.psd";
+	try
+	{
+            assign_ctf_prm.read(fn_assign);
+	}
+	catch (Xmipp_error XE)
+	{
+            cout << XE;
+            cout << "It seems that " << fn_assign << " is not the parameter file"
+            << " that you used to estimate the CTFs\n";
+            return;
+	}
+
+	// Get the PSD name
+	FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+	FileName fn_psd;
+	if (assign_ctf_prm.compute_at_particle)
+	{
+            int i = indexOf(currentRow(), currentColumn());
+            fn_psd = imgnames[i].without_extension() + ".psd";
+	}
+	else if (assign_ctf_prm.micrograph_averaging)
+	{
+            // If it is the average of the micrograph
+            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+        	fn_psd = fn_root + "_ARMAavg.psd";
+            else fn_psd = fn_root + "_Periodogramavg.psd";
+	}
+	else
+	{
+            // If the micrograph was divided into pieces
+            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+        	fn_psd = fn_root + "_ARMA";
+            else fn_psd = fn_root + "_Periodogram";
+            // Get the piece to recompute
+            int i = indexOf(currentRow(), currentColumn()) + 1;
+            fn_psd += ItoA(i, 5);
+            fn_psd += ".psd";
+	}
     }
     else
-    {
-        // If the micrograph was divided into pieces
-        if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-            fn_psd = fn_root + "_ARMA";
-        else fn_psd = fn_root + "_Periodogram";
-        // Get the piece to recompute
-        int i = indexOf(currentRow(), currentColumn()) + 1;
-        fn_psd += ItoA(i, 5);
-        fn_psd += ".psd";
+    {   // Multiple micrographs all with micrograph_averaging
+        // Get the assign filename
+        SelFile SF_assign;
+        SF_assign.read(fn_assign_sel);
+        SF_assign.jump(indexOf(currentRow(), currentColumn()));
+        FileName fn_assign = SF_assign.get_current_file();
+
+        // Read the corresponding assignment parameter file
+        assign_ctf_prm.read(fn_assign);
+        FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+
+        // Get the piece name
+        if (assign_ctf_prm.micrograph_averaging)
+        {
+            // If it is the average of the micrograph
+            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+                fn_psd = fn_root + "_ARMAavg.psd";
+            else fn_psd = fn_root + "_Periodogramavg.psd";
+        }
+        else
+        {
+            REPORT_ERROR(1, "ShowSel::recomputeCTFmodel: This function is intended"
+                         " only for micrograph averages");
+        }
     }
 
     // Show this image in a separate window to select the main parameters
