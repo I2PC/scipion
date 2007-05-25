@@ -248,7 +248,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 
     // Prepare system matrix for printing ...................................
     if (M != NULL)
-        M->init_zeros(YSIZE(proj())*XSIZE(proj()), grid.get_number_of_samples());
+        M->initZeros(YSIZE(proj())*XSIZE(proj()), grid.get_number_of_samples());
 
     // Project grid axis ....................................................
     // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -689,7 +689,7 @@ void project_Volume(
         proj.reset(Ydim, Xdim);
         proj.set_angles(rot, tilt, psi);
         norm_proj().copy_shape(proj());
-        norm_proj().init_zeros();
+        norm_proj().initZeros();
     }
 
 #ifdef DEBUG_LITTLE

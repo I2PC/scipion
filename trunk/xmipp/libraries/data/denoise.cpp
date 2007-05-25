@@ -46,7 +46,7 @@ Denoising_parameters::Denoising_parameters(): Prog_parameters()
     Shah_outer = 10;
     Shah_inner = 1;
     Shah_refinement = 1;
-    Shah_weight.init_zeros(4);
+    Shah_weight.initZeros(4);
     Shah_weight(1) = Shah_weight(2) = 50;
     Shah_weight(3) = 0.02;
     Shah_edge = false;
@@ -89,7 +89,7 @@ void Denoising_parameters::read(int argc, char **argv)
         Shah_weight = get_vector_param(argc, argv, "-Shah_weight", 4);
     else
     {
-        Shah_weight.init_zeros(4);
+        Shah_weight.initZeros(4);
         Shah_weight(1) = Shah_weight(2) = 50;
         Shah_weight(3) = 0.02;
     }

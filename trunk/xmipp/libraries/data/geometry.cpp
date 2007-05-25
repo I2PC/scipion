@@ -187,7 +187,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
     result.SplineDegree = SplineDegree;
     result.h_x = h_x;
     result.h_y = h_y;
-    result.c_ml.init_zeros(mF - m0 + 1, lF - l0 + 1);
+    result.c_ml.initZeros(mF - m0 + 1, lF - l0 + 1);
     STARTINGY(result.c_ml) = m0;
     STARTINGX(result.c_ml) = l0;
 

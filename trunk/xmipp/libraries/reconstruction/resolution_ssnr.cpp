@@ -246,7 +246,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
         {
             // Compute the SSNR image
             ImageXmipp SSNR2D;
-            SSNR2D().init_zeros(S2s());
+            SSNR2D().initZeros(S2s());
             FOR_ALL_ELEMENTS_IN_MATRIX2D(S2s())
             {
                 double ISSNR = 0, alpha = 0, SSNR = 0;

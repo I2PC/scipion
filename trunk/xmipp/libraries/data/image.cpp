@@ -133,8 +133,8 @@ void ImageOver::init(int _vmin, int _vmax, int _vistep,
     overumax = _umax;
     vistep = _vistep;
     uistep = _uistep;
-    //   img.init_zeros((_vmax-_vmin+1)*_vistep,(_umax-_umin+1)*_uistep);
-    img.init_zeros((_vmax - _vmin)*_vistep + 1, (_umax - _umin)*_uistep + 1);
+    //   img.initZeros((_vmax-_vmin+1)*_vistep,(_umax-_umin+1)*_uistep);
+    img.initZeros((_vmax - _vmin)*_vistep + 1, (_umax - _umin)*_uistep + 1);
     STARTINGY(img) = 0;
     STARTINGX(img) = 0;
     //   STARTINGY(img)=_vmin*_vistep - (_vistep-1)/2;

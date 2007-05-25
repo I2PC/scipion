@@ -251,7 +251,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     // any basis due to a too tight mask.
     int mask_xdim = CEIL(MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
     int mask_ydim = CEIL(MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
-    unit_cell_mask.init_zeros(mask_ydim, mask_xdim);
+    unit_cell_mask.initZeros(mask_ydim, mask_xdim);
     unit_cell_mask.set_Xmipp_origin();
 
     // Resize the reconstructed volume
@@ -384,7 +384,7 @@ void ART_single_step(
     aint.resize(2);
     bint.resize(2);
     shift.resize(3);
-    shift.init_zeros();
+    shift.initZeros();
 
     symmetrize_crystal_vectors(aint, bint, shift, eprm.space_group, sym_no,
                                eprm.aint, eprm.bint);

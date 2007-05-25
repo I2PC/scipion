@@ -390,14 +390,14 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
         Matrix1D<double> size = vol_splines.grid(0).highest -
                                 vol_splines.grid(0).lowest;
         Matrix1D<double> corner = vol_splines.grid(0).lowest;
-        (*vol_voxels).init_zeros(CEIL(ZZ(size)), CEIL(YY(size)), CEIL(XX(size)));
+        (*vol_voxels).initZeros(CEIL(ZZ(size)), CEIL(YY(size)), CEIL(XX(size)));
         (*vol_voxels).startingX() = FLOOR(XX(corner));
         (*vol_voxels).startingY() = FLOOR(YY(corner));
         (*vol_voxels).startingZ() = FLOOR(ZZ(corner));
     }
     else
     {
-        (*vol_voxels).init_zeros(Zdim, Ydim, Xdim);
+        (*vol_voxels).initZeros(Zdim, Ydim, Xdim);
         (*vol_voxels).set_Xmipp_origin();
     }
 

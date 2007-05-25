@@ -197,8 +197,8 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     }
 
     // Passing matrix initialization
-    __Au.init_zeros(3, 3);
-    __Bt.init_zeros(3, 3);
+    __Au.initZeros(3, 3);
+    __Bt.initZeros(3, 3);
     __Nu = 0;
     __gamma = __alpha_u = __alpha_t = 0;
 }
@@ -274,8 +274,8 @@ void QtMainWidgetMark::adjust_passing_matrix(const Particle_coords &U,
 /* Recalculate passing matrix ---------------------------------------------- */
 void QtMainWidgetMark::recalculate_passing_matrix()
 {
-    __Au.init_zeros();
-    __Bt.init_zeros();
+    __Au.initZeros();
+    __Bt.initZeros();
     __Nu = 0;
     for (int i = 0; i < Mu->ParticleNo(); i++)
         add_point(Mu->coord(i), Mt->coord(i));
@@ -441,7 +441,7 @@ void QtMainWidgetMark::compute_alphas()
 
 
     Matrix1D<double> angles(2);
-    angles.init_zeros();
+    angles.initZeros();
     Matrix1D<double> steps(2);
     steps.init_constant(1);
     double fitness;

@@ -206,7 +206,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
      for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++) {
        read_proj.read(prm.IMG_Inf[iact_proj].fn_proj);
        read_proj().set_Xmipp_origin();
-       read_proj().init_zeros();
+       read_proj().initZeros();
        prm.residual_imgs.push_back(read_proj);
      }
    }
@@ -233,7 +233,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    SelFile SF_noise, SF_signal;
    if (prm.noisy_reconstruction) {
      vol_basis_noisy=vol_basis;
-     vol_basis_noisy.init_zeros();
+     vol_basis_noisy.initZeros();
    }
 
    // If SIRT set normalizing factor and create output volume ..............
@@ -241,7 +241,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
   	ART_numIMG=prm.numIMG;
       	vol_basis_out=vol_basis;         // Copy the structure of vol_basis
 	ptr_vol_out=&vol_basis_out;      // Pointer to output volume
-	if (prm.variability_analysis) ptr_vol_out->init_zeros();
+	if (prm.variability_analysis) ptr_vol_out->initZeros();
    } else if ( prm.parallel_mode==Basic_ART_Parameters::pfSIRT ||
        prm.parallel_mode==Basic_ART_Parameters::pSIRT ||
        prm.parallel_mode==Basic_ART_Parameters::pSART ||

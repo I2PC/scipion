@@ -380,7 +380,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 
     vol().resize(dim, dim, dim);
     vol().set_Xmipp_origin();
-    vol().init_zeros();
+    vol().initZeros();
     count_thr = 0;
 
     // Initialize time bar

@@ -71,7 +71,7 @@ void RaisedCrownMask(Matrix1D<double> &mask,
 void BinaryCircularMask(matrix2D<int> &mask,
                         double radius, int mode, double x0, double y0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double radius2 = radius * radius;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -97,7 +97,7 @@ void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
                            int smin, int smax, const string &quadrant)
 {
     double radius2 = radius * radius / (4 * (smin + 1));
-    mask.init_zeros();
+    mask.initZeros();
     for (int s = smin; s <= smax; s++)
     {
         Matrix1D<int> corner1(2), corner2(2), r(2);
@@ -117,7 +117,7 @@ void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
 void BinaryCrownMask(matrix2D<int> &mask,
                      double R1, double R2, int mode, double x0, double y0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double R12 = R1 * R1;
     double R22 = R2 * R2;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -134,7 +134,7 @@ void BinaryCrownMask(matrix2D<int> &mask,
 void BinaryFrameMask(matrix2D<int> &mask,
                      int Xrect, int Yrect, int mode, double x0, double y0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
         bool in_frame =
@@ -354,7 +354,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
 void mask2D_4neig(matrix2D<int> &mask, int value, int center)
 {
     mask.resize(3, 3);
-    mask.init_zeros();
+    mask.initZeros();
     mask(0, 1) = mask(1, 0) = mask(1, 2) = mask(2, 1) = value;
     mask(1, 1) = center;
 
@@ -362,7 +362,7 @@ void mask2D_4neig(matrix2D<int> &mask, int value, int center)
 void mask2D_8neig(matrix2D<int> &mask, int value1, int value2, int center)
 {
     mask.resize(3, 3);
-    mask.init_zeros();
+    mask.initZeros();
     mask(0, 1) = mask(1, 0) = mask(1, 2) = mask(2, 1) = value1;
     mask(0, 0) = mask(0, 2) = mask(2, 0) = mask(2, 2) = value2;
     mask(1, 1) = center;
@@ -375,7 +375,7 @@ void mask2D_8neig(matrix2D<int> &mask, int value1, int value2, int center)
 void BinarySphericalMask(matrix3D<int> &mask,
                          double radius, int mode, double x0, double y0, double z0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double radius2 = radius * radius;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
     {
@@ -402,7 +402,7 @@ void BinarySphericalMask(matrix3D<int> &mask,
 void BinaryDWTSphericalMask(matrix3D<int> &mask, double radius,
                             int smin, int smax, const string &quadrant)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double radius2 = radius * radius / (4 * (smin + 1));
     for (int s = smin; s <= smax; s++)
     {
@@ -427,7 +427,7 @@ void BinaryDWTSphericalMask(matrix3D<int> &mask, double radius,
 void BinaryCrownMask(matrix3D<int> &mask,
                      double R1, double R2, int mode, double x0, double y0, double z0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double R12 = R1 * R1;
     double R22 = R2 * R2;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
@@ -444,7 +444,7 @@ void BinaryCrownMask(matrix3D<int> &mask,
 void BinaryCylinderMask(matrix3D<int> &mask,
                         double R, double H, int mode, double x0, double y0, double z0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     double R2 = R * R;
     double H_2 = H / 2;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
@@ -461,7 +461,7 @@ void BinaryCylinderMask(matrix3D<int> &mask,
 void BinaryFrameMask(matrix3D<int> &mask,
                      int Xrect, int Yrect, int Zrect, int mode, double x0, double y0, double z0)
 {
-    mask.init_zeros();
+    mask.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
     {
         bool in_frame =
@@ -624,7 +624,7 @@ void SincBlackmanMask(matrix3D<double> &mask,
 void mask3D_6neig(matrix3D<int> &mask, int value, int center)
 {
     mask.resize(3, 3, 3);
-    mask.init_zeros();
+    mask.initZeros();
     mask(1, 1, 1) = center;
     mask(1, 1, 0) = mask(1, 1, 2) = mask(0, 1, 1) = mask(2, 1, 1) = mask(1, 0, 1) = mask(1, 2, 1) = value;
 
@@ -633,7 +633,7 @@ void mask3D_6neig(matrix3D<int> &mask, int value, int center)
 void mask3D_18neig(matrix3D<int> &mask, int value1, int value2, int center)
 {
     mask.resize(3, 3, 3);
-    mask.init_zeros();
+    mask.initZeros();
     mask(1, 1, 1) = center;
     //Face neighbors
     mask(1, 1, 0) = mask(1, 1, 2) = mask(0, 1, 1) = mask(2, 1, 1) = mask(1, 0, 1) = mask(1, 2, 1) = value1;
@@ -648,7 +648,7 @@ void mask3D_26neig(matrix3D<int> &mask, int value1, int value2, int value3,
                    int center)
 {
     mask.resize(3, 3, 3);
-    mask.init_zeros();
+    mask.initZeros();
     mask(1, 1, 1) = center;
     //Face neighbors
     mask(1, 1, 0) = mask(1, 1, 2) = mask(0, 1, 1) = mask(2, 1, 1) = mask(1, 0, 1) = mask(1, 2, 1) = value1;
@@ -1355,9 +1355,9 @@ void range_adjust_within_mask(const matrix2D<double> *mask,
                               const matrix2D<double> &m1, matrix2D<double> &m2)
 {
     matrix2D<double> A(2, 2);
-    A.init_zeros();
+    A.initZeros();
     Matrix1D<double> b(2);
-    b.init_zeros();
+    b.initZeros();
     SPEED_UP_temps;
     // Compute Least squares solution
     if (mask == NULL)
@@ -1397,9 +1397,9 @@ void range_adjust_within_mask(const matrix3D<double> *mask,
                               const matrix3D<double> &m1, matrix3D<double> &m2)
 {
     matrix2D<double> A(2, 2);
-    A.init_zeros();
+    A.initZeros();
     Matrix1D<double> b(2);
-    b.init_zeros();
+    b.initZeros();
     SPEED_UP_temps;
     // Compute Least squares solution
     if (mask == NULL)

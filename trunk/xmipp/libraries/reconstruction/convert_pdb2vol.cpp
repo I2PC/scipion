@@ -142,7 +142,7 @@ void Prog_PDBPhantom_Parameters::show()
 void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     // Initialization
-    center_of_mass.init_zeros(3);
+    center_of_mass.initZeros(3);
     Matrix1D<double> limit0(3), limitF(3);
     limit0.init_constant(1e30);
     limitF.init_constant(-1e30);
@@ -155,7 +155,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::protein_geometry:"
                      "Cannot open " + fn_pdb + " for reading");
 
-    // Process all lines of the fileñ
+    // Process all lines of the fileï¿½
     while (!fh_pdb.eof())
     {
         // Read a ATOM line
@@ -218,7 +218,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
 {
     // Create an empty volume to hold the protein
-    Vhigh().init_zeros((int)NEXT_POWER_OF_2(output_dim / highTs),
+    Vhigh().initZeros((int)NEXT_POWER_OF_2(output_dim / highTs),
                        (int)NEXT_POWER_OF_2(output_dim / highTs),
                        (int)NEXT_POWER_OF_2(output_dim / highTs));
     Vhigh().set_Xmipp_origin();

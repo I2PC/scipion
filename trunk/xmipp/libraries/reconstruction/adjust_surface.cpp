@@ -213,7 +213,7 @@ void Prog_Adjust_Surface_Parameters::produce_Side_Info()
 void create_surface_mask(const Image *surf, const Volume *V, Volume *Vsurf,
                          int direction)
 {
-    (*Vsurf)().init_zeros((*V)());
+    (*Vsurf)().initZeros((*V)());
     switch (direction)
     {
     case TOP2BOTTOM:
@@ -289,7 +289,7 @@ double correlate_surface_and_volume_3D(const Image *surf, const Volume *V,
     if (tell & MANUAL_ORDER)
     {
         VolumeXmipp save;
-        save().init_zeros((*Vsurf)());
+        save().initZeros((*Vsurf)());
         for (int k = ktop; k <= kbottom; k++)
             for (int i = STARTINGY(VOL); i <= FINISHINGY(VOL); i++)
                 for (int j = STARTINGX(VOL); j <= FINISHINGX(VOL); j++)
@@ -317,7 +317,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
     int   N = XSIZE(IMGMATRIX(*surf)) * YSIZE(IMGMATRIX(*surf));
 
     // Project Volume
-    (*Vsurf)().init_zeros(1, YSIZE(VOL), XSIZE(VOL));
+    (*Vsurf)().initZeros(1, YSIZE(VOL), XSIZE(VOL));
     STARTINGZ((*Vsurf)()) = 0;
     STARTINGY((*Vsurf)()) = STARTINGY(VOL);
     STARTINGX((*Vsurf)()) = STARTINGX(VOL);
@@ -597,7 +597,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
     else
     {
         // Search with Powell ...................................................
-        prm.p.init_zeros();
+        prm.p.initZeros();
         prm.p(0) = prm.shiftX0;
         prm.p(1) = prm.shiftY0;
         prm.p(2) = prm.angle0;

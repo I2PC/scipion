@@ -591,27 +591,27 @@ void fourier_ring_correlation(matrix2D< T > const & m1,
     matrix2D< double > realFT1;
     realFT1.resize(FT1);
     int dim = (int) FT1.RowNo() / 2;
-    origin.init_zeros();
+    origin.initZeros();
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
         dMij(aux, i, j) = abs(dMij(FT1, i, j)) * abs(dMij(FT1, i, j));
     }
-    tmp1.init_zeros();
+    tmp1.initZeros();
     radial_average(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
         dMij(aux, i, j) = abs(dMij(FT2, i, j)) * abs(dMij(FT2, i, j));
     }
-    tmp2.init_zeros();
+    tmp2.initZeros();
     radial_average(aux, origin, tmp2, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FT1)
     {
         dMij(realFT1, i, j) = real(conj(dMij(FT1, i, j)) * dMij(FT2, i, j));
     }
-    frc.init_zeros();
+    frc.initZeros();
     radial_average(realFT1, origin, frc, radial_count, true);
     frc.resize(dim);
     frc_noise.resize(dim);
@@ -656,14 +656,14 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
     matrix3D< double > realFT1;
     realFT1.resize(FT1);
     int dim = (int) FT1.RowNo() / 2;
-    origin.init_zeros();
+    origin.initZeros();
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
     {
         dVkij(aux, k, i, j) = abs(dVkij(FT1, k, i, j)) *
                               abs(dVkij(FT1, k, i, j));
     }
-    tmp1.init_zeros();
+    tmp1.initZeros();
     radial_average(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
@@ -671,7 +671,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
         dVkij(aux, k, i, j) = abs(dVkij(FT2, k, i, j)) *
                               abs(dVkij(FT2, k, i, j));
     }
-    tmp2.init_zeros();
+    tmp2.initZeros();
     radial_average(aux, origin, tmp2, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
@@ -679,7 +679,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
         dVkij(realFT1, k, i, j) = real(conj(dVkij(FT1, k, i, j)) *
                                        dVkij(FT2, k, i, j));
     }
-    frc.init_zeros();
+    frc.initZeros();
     radial_average(realFT1, origin, frc, radial_count, true);
     frc.resize(dim);
     frc_noise.resize(dim);
@@ -730,7 +730,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
         dMij(aux, i, j) = abs(dMij(FT1, i, j)) + abs(dMij(FT2, i, j));
     }
 
-    tmp1.init_zeros();
+    tmp1.initZeros();
     radial_average(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
@@ -746,7 +746,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
                                     -180, 180);
     }
 
-    tmp2.init_zeros();
+    tmp2.initZeros();
     radial_average(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
     dpr = SQRTnD(dpr);
@@ -796,7 +796,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
                               j));
     }
 
-    tmp1.init_zeros();
+    tmp1.initZeros();
     radial_average(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
@@ -811,7 +811,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
                                         -180, 180);
     }
 
-    tmp2.init_zeros();
+    tmp2.initZeros();
     radial_average(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
     dpr = SQRTnD(dpr);

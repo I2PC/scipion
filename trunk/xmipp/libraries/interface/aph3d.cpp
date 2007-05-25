@@ -165,15 +165,15 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
 #undef DEBUG_max
 
     // Ask for memory
-    spots_abs.init_zeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
+    spots_abs.initZeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(spots_abs) = hmin;
     STARTINGY(spots_abs) = kmin;
     STARTINGZ(spots_abs) = lmin;
-    spots_arg.init_zeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
+    spots_arg.initZeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(spots_arg) = hmin;
     STARTINGY(spots_arg) = kmin;
     STARTINGZ(spots_arg) = lmin;
-    FOM.init_zeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
+    FOM.initZeros(lmax - lmin + 1, kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(FOM) = hmin;
     STARTINGY(FOM) = kmin;
     STARTINGZ(FOM) = lmin;

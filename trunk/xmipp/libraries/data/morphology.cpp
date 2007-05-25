@@ -167,12 +167,12 @@ void opening2D(const matrix2D<double> &in, matrix2D<double> &out, int neig,
 void border(const matrix2D<double> &img, matrix2D<double> &border)
 {
     /*
-    border.init_zeros(img);
+    border.initZeros(img);
     erode2D(img,border,8,0,1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(border)
        border(i,j)=img(i,j)-border(i,j);
     */
-    border.init_zeros(img);
+    border.initZeros(img);
     for (int i = STARTINGY(border) + 1; i <= FINISHINGY(border) - 1; i++)
         for (int j = STARTINGX(border) + 1; j <= FINISHINGX(border) - 1; j++)
             if (img(i, j))
@@ -197,7 +197,7 @@ void simplify_border(const matrix2D<double> &border,
                      matrix2D<double> &simplified_border)
 {
     matrix2D<double> aux;
-    aux.init_zeros(border);
+    aux.initZeros(border);
     for (int i = STARTINGY(border) + 1; i <= FINISHINGY(border) - 1; i++)
         for (int j = STARTINGX(border) + 1; j <= FINISHINGX(border) - 1; j++)
             if (border(i, j))
@@ -217,7 +217,7 @@ void simplify_border(const matrix2D<double> &border,
             }
 
     // Again removing all those without any 4 neighbour
-    simplified_border.init_zeros(aux);
+    simplified_border.initZeros(aux);
     for (int i = STARTINGY(border) + 1; i <= FINISHINGY(border) - 1; i++)
         for (int j = STARTINGX(border) + 1; j <= FINISHINGX(border) - 1; j++)
             if (aux(i, j))
@@ -277,7 +277,7 @@ void random_convex_hull(const matrix2D<double> &img, matrix2D<double> &hull,
     }
     /*
     matrix2D<double> aux;
-    aux.init_zeros(hull);
+    aux.initZeros(hull);
     closing2D(hull,aux,8,0,1);
     hull=aux;
     */

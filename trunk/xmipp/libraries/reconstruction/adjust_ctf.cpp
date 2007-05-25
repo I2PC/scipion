@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.uam.es)
- *              Carlos Oscar Sánchez Sorzano (coss@cnb.uam.es)
+ *              Carlos Oscar Sï¿½nchez Sorzano (coss@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -636,12 +636,12 @@ void Adjust_CTF_Parameters::produce_side_info()
     f = &(ctftomodel());
 
     // Resize the frequency
-    global_x_digfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
-    global_y_digfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
-    global_w_digfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
-    global_x_contfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
-    global_y_contfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
-    global_w_contfreq.init_zeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_x_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_y_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_w_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_x_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_y_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_w_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
 
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -664,8 +664,8 @@ void Adjust_CTF_Parameters::produce_side_info()
     }
 
     // Build frequency mask
-    global_mask.init_zeros(global_w_digfreq);
-    global_w_count.init_zeros(XSIZE(global_w_digfreq));
+    global_mask.initZeros(global_w_digfreq);
+    global_w_count.initZeros(XSIZE(global_w_digfreq));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
         if (global_w_digfreq(i, j) >= max_freq ||
@@ -1287,9 +1287,9 @@ void estimate_background_sqrt_parameters()
 
     // Find the linear least squares solution for the sqrt part
     matrix2D<double> A(2, 2);
-    A.init_zeros();
+    A.initZeros();
     Matrix1D<double> b(2);
-    b.init_zeros();
+    b.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
         if (!global_mask(i, j)) continue;
@@ -1404,7 +1404,7 @@ void estimate_background_gauss_parameters()
     double error2_avg = 0;
     int N_avg = 0;
     Matrix1D<double> error;
-    error.init_zeros(radial_CTFmodel_avg);
+    error.initZeros(radial_CTFmodel_avg);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
@@ -1494,9 +1494,9 @@ void estimate_background_gauss_parameters()
 
     // Find the linear least squares solution for the gauss part
     matrix2D<double> A(2, 2);
-    A.init_zeros();
+    A.initZeros();
     Matrix1D<double> b(2);
-    b.init_zeros();
+    b.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
         if (!global_mask(i, j)) continue;
@@ -1573,7 +1573,7 @@ void estimate_background_gauss_parameters2()
 
     // Compute the average radial error
     Matrix1D<double> error;
-    error.init_zeros(radial_CTFmodel_avg);
+    error.initZeros(radial_CTFmodel_avg);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
@@ -1608,9 +1608,9 @@ void estimate_background_gauss_parameters2()
 
     // Find the linear least squares solution for the gauss part
     matrix2D<double> A(2, 2);
-    A.init_zeros();
+    A.initZeros();
     Matrix1D<double> b(2);
-    b.init_zeros();
+    b.initZeros();
     int N = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
@@ -2034,7 +2034,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     global_ctfmodel.enable_CTF = false;
     global_evaluation_reduction = 4;
 
-    // If initial parameters weren´t supplied for the gaussian curve,
+    // If initial parameters werenï¿½t supplied for the gaussian curve,
     // estimate them from the CTF file
     global_action = 0;
     if (prm.adjust(FIRST_SQRT_PARAMETER) == 0)

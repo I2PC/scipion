@@ -351,7 +351,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 #endif
 
     // Local measures
-    results.scL2_FOMs.init_zeros(side.num_feat + 1); // 0, 1, ..., FeatNo()
+    results.scL2_FOMs.initZeros(side.num_feat + 1); // 0, 1, ..., FeatNo()
     results.scL2_FOMs.init_constant(-1);
     results.scL1_FOMs = results.scmu_FOMs = results.scdev_FOMs =
                                                 results.scrange_FOMs = results.sccorr_FOMs = results.scinf_FOMs =

@@ -253,7 +253,7 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
 
     // Resize de Filter to the image dimensions
     Filter.resize(Img.RowNo(), Img.ColNo());
-    Filter.init_zeros();
+    Filter.initZeros();
 
     // Compute the filter (only half the values are computed)
     // The other half is computed based in symmetry.

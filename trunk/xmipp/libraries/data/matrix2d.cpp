@@ -65,7 +65,7 @@ double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
     DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
 
-    result.init_zeros(YSIZE(Ct));
+    result.initZeros(YSIZE(Ct));
     double rnorm;
 
     // Watch out that matrix Ct is transformed.
@@ -245,7 +245,7 @@ matrix2D<double> rot3D_matrix(double ang, char axis)
     cosine = cos(ang);
     sine = sin(ang);
 
-    result.init_zeros();
+    result.initZeros();
     DIRECT_MAT_ELEM(result, 3, 3) = 1;
     switch (axis)
     {
@@ -370,7 +370,7 @@ void eval_quadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and H");
 
     // H*x, store in grad
-    grad.init_zeros(XSIZE(x));
+    grad.initZeros(XSIZE(x));
     for (int i = 0; i < YSIZE(H); i++)
         for (int j = 0; j < XSIZE(x); j++)
             DIRECT_VEC_ELEM(grad, i) += DIRECT_MAT_ELEM(H, i, j) *
@@ -480,8 +480,8 @@ void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
     CDAB prm;
     prm.C = C;
     prm.D.from_vector(d);
-    prm.A.init_zeros(YSIZE(A) + YSIZE(Aeq), XSIZE(A));
-    prm.B.init_zeros(YSIZE(prm.A), 1);
+    prm.A.initZeros(YSIZE(A) + YSIZE(Aeq), XSIZE(A));
+    prm.B.initZeros(YSIZE(prm.A), 1);
 
 
     // Copy Inequalities
@@ -531,7 +531,7 @@ void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
     int    ncsrl = 0, ncsrn = 0, nfsr = 0, mesh_pts[] = {0};
 
     if (XSIZE(x) == 0)
-        x.init_zeros(nparam);
+        x.initZeros(nparam);
     Matrix1D<double> f(nf), g(nineq + neq), lambda(nineq + neq + nf + nparam);
 
     // Call the minimization routine

@@ -37,7 +37,7 @@ void Radon_Transform(Volume *vol, double rot, double tilt,
     else Rvol = VOLMATRIX(*vol);
 
     // Project onto one line
-    RT.init_zeros(Rvol.zdim);
+    RT.initZeros(Rvol.zdim);
     STARTINGX(RT) = STARTINGZ(Rvol);
 
     for (int k = STARTINGZ(Rvol); k < FINISHINGZ(Rvol); k++)
@@ -68,7 +68,7 @@ void Local_Radon_Transform(Volume *vol, double rot, double tilt,
     }
 
     // Project onto one line
-    RT.init_zeros(Rvol.zdim);
+    RT.initZeros(Rvol.zdim);
     STARTINGX(RT) = STARTINGZ(Rvol);
     RT_n = RT;
 
@@ -87,7 +87,7 @@ void Radon_Transform(const matrix2D<double> &I, double rot_step,
                      matrix2D<double> &RT)
 {
     matrix2D<double> rot_I;
-    RT.init_zeros(CEIL(360.0 / rot_step), XSIZE(I));
+    RT.initZeros(CEIL(360.0 / rot_step), XSIZE(I));
     STARTINGX(RT) = STARTINGX(I);
     int l = 0;
     for (double rot = 0; rot < 360; rot += rot_step, l++)

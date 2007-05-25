@@ -97,7 +97,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
 
     // Read symmetry parameters
     i = 0;
-    shift.init_zeros();
+    shift.initZeros();
     while (fgets(line, 79, fpoii) != NULL)
     {
         if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
@@ -162,19 +162,19 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             L.init_identity();
 
             // With 0 shift
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = R(1, 1) = -1;
             R(2, 2) = 1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(2, 2) = -1;
             R(0, 1) = R(1, 0) = 1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(2, 2) = R(0, 1) = R(1, 0) = -1;
             set_shift(i, shift);
@@ -182,25 +182,25 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.5, 0.5, 0);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 1) = -1;
             R(1, 0) = R(2, 2) = 1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(1, 0) = -1;
             R(0, 1) = R(2, 2) = 1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = R(2, 2) = -1;
             R(1, 1) = 1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(1, 1) = R(2, 2) = -1;
             R(0, 0) = 1;
@@ -216,7 +216,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             L.init_identity();
 
             // With 0 shift
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = -1;
             R(1, 1) = -1;
@@ -226,14 +226,14 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.5, 0.0, 0.0);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = -1;
             R(1, 1) = 1;
             R(2, 2) = -1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = 1;
             R(1, 1) = -1;
@@ -249,7 +249,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             L.init_identity();
 
             // With 0 shift
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = -1;
             R(1, 1) = -1;
@@ -259,14 +259,14 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
 
             // With 1/2 shift
             VECTOR_R3(shift, 0.0, 0.5, 0.0);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = 1;
             R(1, 1) = -1;
             R(2, 2) = -1;
             set_shift(i, shift);
             set_matrices(i++, L, R);
-            R.init_zeros();
+            R.initZeros();
             R(3, 3) = 1;
             R(0, 0) = -1;
             R(1, 1) = 1;
@@ -320,8 +320,8 @@ void SymList::get_matrices(int i, matrix2D<double> &L, matrix2D<double> &R)
 const
 {
     int k, l;
-    L.init_zeros(4, 4);
-    R.init_zeros(4, 4);
+    L.initZeros(4, 4);
+    R.initZeros(4, 4);
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
@@ -426,7 +426,7 @@ void SymList::compute_subgroup(double accuracy)
     matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4);
     matrix2D<int>    tried(true_symNo, true_symNo);
     Matrix1D<double> shift(3);
-    shift.init_zeros();
+    shift.initZeros();
     int i, j;
     int new_chain_length;
     while (found_not_tried(tried, i, j, true_symNo))
@@ -558,7 +558,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
                                 const Matrix1D<double> &eprm_bint)
 {
 //Notice that we should use R.inv and not R to relate eprm.aint and aint
-    shift.init_zeros();//I think this init is OK even the vector dim=0
+    shift.initZeros();//I think this init is OK even the vector dim=0
     switch (space_group)
     {
     case(sym_undefined):

@@ -29,7 +29,7 @@
 /* Reset =================================================================== */
 void Projection::reset(int Ydim, int Xdim)
 {
-    img.init_zeros(Ydim, Xdim);
+    img.initZeros(Ydim, Xdim);
     move_origin_to_center();
 }
 

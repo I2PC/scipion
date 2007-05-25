@@ -227,7 +227,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     }
 
     // Read in all reference images in memory
-    Maux.init_zeros(dim, dim, dim);
+    Maux.initZeros(dim, dim, dim);
     Maux.set_Xmipp_origin();
     nr_ref = 0;
     SFr.go_beginning();
@@ -829,7 +829,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
                             {
                                 radavg_sigma2[i] = 0.;
                             }
-                            if (debug) Vt().init_zeros();
+                            if (debug) Vt().initZeros();
                             for (int ipoint = 0; ipoint < nr_pointer[iwedge]; ipoint++)
                             {
                                 ii = pointer[iwedge][ipoint];
@@ -1117,7 +1117,7 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
     double rr, dum, avg, theta_corr, sum_ref = 0.;
 
     // Pre-calculate sumw_allrefs
-    Msum.init_zeros(dim, dim, dim);
+    Msum.initZeros(dim, dim, dim);
     Msum.set_Xmipp_origin();
     sumw_allrefs = 0.;
     for (int refno = 0;refno < nr_ref; refno++)
@@ -1179,8 +1179,8 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
         {
             for (int itrans = 0; itrans < nr_trans; itrans++)
             {
-                Fref_trans[refno][2*itrans].init_zeros();
-                Fref_trans[refno][2*itrans+1].init_zeros();
+                Fref_trans[refno][2*itrans].initZeros();
+                Fref_trans[refno][2*itrans+1].initZeros();
             }
         }
     }

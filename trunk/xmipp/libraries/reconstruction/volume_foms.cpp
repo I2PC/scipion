@@ -708,7 +708,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     RT_recons.resize(rot_recons.SliNo());
     RT_recons.startingX() = rot_recons.startingZ();
     RT_phantom = RT_recons;
-    RTno.init_zeros(RT_recons);
+    RTno.initZeros(RT_recons);
 
     // Run over the volume ..................................................
     FOR_ALL_ELEMENTS_IN_MATRIX3D(rot_phantom)
@@ -818,7 +818,7 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     int bmax = border.size();
 
     // Compute distance map .................................................
-    (*vol_distance)().init_zeros(L);
+    (*vol_distance)().initZeros(L);
 
     init_progress_bar(ZSIZE(L));
     for (int k = STARTINGZ(L); k <= FINISHINGZ(L); k++)

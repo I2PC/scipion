@@ -694,20 +694,20 @@ void fill_cell_positions(Projection &P,
     weight(-1, -1) = weight(1, 1) = 1 / (aproj + bproj).module();
 
     // Resize all needed matrices
-    cell_shiftX.init_zeros(ibmax - ibmin + 1, iamax - iamin + 1);
+    cell_shiftX.initZeros(ibmax - ibmin + 1, iamax - iamin + 1);
     STARTINGX(cell_shiftX) = iamin;
     STARTINGY(cell_shiftX) = ibmin;
-    cell_shiftY.init_zeros(cell_shiftX);
+    cell_shiftY.initZeros(cell_shiftX);
     //in this routine cell_shiftZ is set to zero and nothing else
-    cell_shiftZ.init_zeros(cell_shiftX);
-    cell_inside.init_zeros(ibmax - ibmin + 1, iamax - iamin + 1);
+    cell_shiftZ.initZeros(cell_shiftX);
+    cell_inside.initZeros(ibmax - ibmin + 1, iamax - iamin + 1);
     STARTINGX(cell_inside) = iamin;
     STARTINGY(cell_inside) = ibmin;
 
     // Visited has got one cell more than the rest in all directions
     matrix2D<int> visited;
     int visited_size = MAX(iamax - iamin + 1, ibmax - ibmin + 1) + 2;
-    visited.init_zeros(visited_size, visited_size);
+    visited.initZeros(visited_size, visited_size);
     STARTINGX(visited) = iamin - (visited_size - (iamax - iamin + 1) + 1) / 2;
     STARTINGY(visited) = ibmin - (visited_size - (ibmax - ibmin + 1) + 1) / 2;
 #ifdef DEBUG
@@ -727,7 +727,7 @@ void fill_cell_positions(Projection &P,
     // crystal and going in spirals until the four corners are visited
     // we find one corner
     Matrix1D<double> r(2), ri(2), sh(2);
-    r.init_zeros();
+    r.initZeros();
 #define INDEX(r) (int)YY(r),(int)XX(r)
     while (!visited.isCorner(r))
     {
@@ -823,18 +823,18 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
     DocFile        aux_DF_shift;//crystal_param is cont
     aux_DF_shift = prm_crystal.DF_shift;
     exp_shifts_matrix_X.resize(cell_inside);
-    exp_shifts_matrix_X.init_zeros();
+    exp_shifts_matrix_X.initZeros();
     exp_shifts_matrix_Y.resize(cell_inside);
-    exp_shifts_matrix_Y.init_zeros();
+    exp_shifts_matrix_Y.initZeros();
     exp_shifts_matrix_Z.resize(cell_inside);
-    exp_shifts_matrix_Z.init_zeros();
+    exp_shifts_matrix_Z.initZeros();
 
     exp_normal_shifts_matrix_X.resize(cell_inside);
-    exp_normal_shifts_matrix_X.init_zeros();
+    exp_normal_shifts_matrix_X.initZeros();
     exp_normal_shifts_matrix_Y.resize(cell_inside);
-    exp_normal_shifts_matrix_Y.init_zeros();
+    exp_normal_shifts_matrix_Y.initZeros();
     exp_normal_shifts_matrix_Z.resize(cell_inside);
-    exp_normal_shifts_matrix_Z.init_zeros();
+    exp_normal_shifts_matrix_Z.initZeros();
 
     //#define DEBUG2
 #ifdef DEBUG2

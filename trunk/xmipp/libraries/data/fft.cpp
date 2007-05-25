@@ -35,7 +35,7 @@ void Whole2Half(const matrix2D<complex<double> > &in, matrix2D<complex<double> >
     // This assumes squared images...
     int ldim = (int)(YSIZE(in) / 2) + 1;
 
-    out.init_zeros(ldim, XSIZE(in));
+    out.initZeros(ldim, XSIZE(in));
     // Fill first column only half
     for (int j = 0; j < ldim; j++)
         dMij(out, 0, j) = dMij(in, 0, j);

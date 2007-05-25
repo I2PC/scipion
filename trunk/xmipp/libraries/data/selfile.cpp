@@ -703,7 +703,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
     if (n > 0)
         _ave() /= n;
     _sd = _ave;
-    _sd().init_zeros();
+    _sd().initZeros();
     // Calculate SD
     go_beginning();
     while ((!eof()))

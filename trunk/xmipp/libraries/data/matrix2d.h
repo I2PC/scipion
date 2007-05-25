@@ -662,10 +662,10 @@ public:
      * Be careful to the size order (Ydim, Xdim).
      *
      * @code
-     * v1.init_zeros(6, 3);
+     * v1.initZeros(6, 3);
      * @endcode
      */
-    void init_zeros(int Ydim, int Xdim)
+    void initZeros(int Ydim, int Xdim)
     {
         resize(Ydim, Xdim);
         init_constant((T) 0);
@@ -1363,7 +1363,7 @@ public:
     void profile(int x0, int y0, int xF, int yF, int N,
                  Matrix1D< double >& profile) const
     {
-        profile.init_zeros(N);
+        profile.initZeros(N);
         double tx_step = (double)(xF - x0) / (N - 1);
         double ty_step = (double)(yF - y0) / (N - 1);
         double tx = x0, ty = y0;
@@ -1757,7 +1757,7 @@ public:
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
         double tol = compute_max() * MAX(XSIZE(*this), YSIZE(*this)) * 1e-14;
-        result.init_zeros(XSIZE(*this), YSIZE(*this));
+        result.initZeros(XSIZE(*this), YSIZE(*this));
 
         // Compute W^-1
         bool invertible = false;
@@ -2272,7 +2272,7 @@ public:
      */
     void superpixel_reduce(mT& result, int size = 2) const
     {
-        result.init_zeros(YSIZE(*this) / size, XSIZE(*this) / size);
+        result.initZeros(YSIZE(*this) / size, XSIZE(*this) / size);
         int size2 = size * size;
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
@@ -2294,7 +2294,7 @@ public:
      */
     void superpixel_expand(mT& result, int size = 2) const
     {
-        result.init_zeros(YSIZE(*this) * size, XSIZE(*this) * size);
+        result.initZeros(YSIZE(*this) * size, XSIZE(*this) * size);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
         {
@@ -2355,7 +2355,7 @@ public:
     void produce_spline_coeffs(matrix2D< double >& coeffs,
                                int SplineDegree = 3) const
     {
-        coeffs.init_zeros(YSIZE(*this), XSIZE(*this));
+        coeffs.initZeros(YSIZE(*this), XSIZE(*this));
 
         STARTINGX(coeffs) = STARTINGX(*this);
         STARTINGY(coeffs) = STARTINGY(*this);
@@ -2376,7 +2376,7 @@ public:
     void produce_image_from_spline_coeffs(
         matrix2D<double> &img, int SplineDegree = 3) const
     {
-        img.init_zeros(YSIZE(*this), XSIZE(*this));
+        img.initZeros(YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
         STARTINGY(img) = STARTINGY(*this);
         int Status;
@@ -2656,7 +2656,7 @@ public:
         if (!op1.isCol())
             REPORT_ERROR(1102, "Vector is not a column");
 
-        result.init_zeros(YSIZE(*this));
+        result.initZeros(YSIZE(*this));
 
         for (int i = 0; i < YSIZE(*this); i++)
             for (int j = 0; j < XSIZE(op1); j++)
@@ -3150,9 +3150,9 @@ void radial_average(const matrix2D< T >& m,
 
     // Define the vectors
     radial_mean.resize(dim);
-    radial_mean.init_zeros();
+    radial_mean.initZeros();
     radial_count.resize(dim);
-    radial_count.init_zeros();
+    radial_count.initZeros();
 
     /* Perform the radial sum and count pixels that contribute to
        every distance */
@@ -3445,7 +3445,7 @@ void mT::compute_double_minmax(double& min_val, double& max_val,
 template<typename T>
 void mT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
-    center.init_zeros(2);
+    center.initZeros(2);
     double mass = 0;
     matrix2D< int>* imask = (matrix2D< int >*) mask;
 
@@ -3607,8 +3607,8 @@ void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
     type_cast(a, u);
 
     // Set size of matrices
-    w.init_zeros(u.ColNo());
-    v.init_zeros(u.ColNo(), u.ColNo());
+    w.initZeros(u.ColNo());
+    v.initZeros(u.ColNo(), u.ColNo());
 
     // Call to the numerical recipes routine
 #ifdef VIA_NR
@@ -4019,7 +4019,7 @@ void mul_matrix(const mT& op1, const mT& op2, mT& result)
     if (XSIZE(op1) != YSIZE(op2))
         REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
 
-    result.init_zeros(YSIZE(op1), XSIZE(op2));
+    result.initZeros(YSIZE(op1), XSIZE(op2));
     for (int i = 0; i < YSIZE(op1); i++)
         for (int j = 0; j < XSIZE(op2); j++)
             for (int k = 0; k < XSIZE(op1); k++)
@@ -4042,7 +4042,7 @@ vT vT::operator*(const mT& M)
     if (!isRow())
         REPORT_ERROR(1102, "Vector is not a row");
 
-    result.init_zeros(XSIZE(M));
+    result.initZeros(XSIZE(M));
     for (int j = 0; j < XSIZE(M); j++)
         for (int i = 0; i < YSIZE(M); i++)
             DIRECT_VEC_ELEM(result, j) += DIRECT_VEC_ELEM(*this, i) *

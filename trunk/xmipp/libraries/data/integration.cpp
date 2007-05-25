@@ -230,7 +230,7 @@ double multidimensionalIntegral(const Matrix1D<double> &x0,
     // Set some global variables
     cuhreX0 = x0;
     cuhreRange = xF - x0;
-    cuhreXX.init_zeros(x0);
+    cuhreXX.initZeros(x0);
     cuhreIntegrand = integrand;
 
     // Set Cuhre specific variables

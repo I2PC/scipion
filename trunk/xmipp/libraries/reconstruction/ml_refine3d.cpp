@@ -411,7 +411,7 @@ void Prog_Refine3d_prm::make_noise_images(vector<ImageXmipp> &Iref)
     for (int i = 0; i < Iref.size(); i++)
     {
         img = Iref[i];
-        img().init_zeros();
+        img().initZeros();
         img().add_noise(0, 1, "gaussian");
         if (Iref[i].weight() > 1.) img() /= sqrt(Iref[i].weight());
         fn_img = fn_root + "_noise";
@@ -557,7 +557,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
     SFnoise.read(fn_root + "_noise.sel");
     SFnoise.ImgSize(dim, dim);
 
-    center.init_zeros();
+    center.initZeros();
     proj().resize(dim, dim);
     proj().set_Xmipp_origin();
     mask.resize(dim, dim);
@@ -631,9 +631,9 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
         alpha_T.set_Xmipp_origin();
         alpha_N.set_Xmipp_origin();
         Msignal.set_Xmipp_origin();
-        alpha_signal.init_zeros();
-        alpha_noise.init_zeros();
-        input_signal.init_zeros();
+        alpha_signal.initZeros();
+        alpha_noise.initZeros();
+        input_signal.initZeros();
         radial_average(alpha_T, center, alpha_signal, radial_count, true);
         radial_average(alpha_N, center, alpha_noise, radial_count, true);
         radial_average(Msignal, center, input_signal, radial_count, true);
@@ -1007,8 +1007,8 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
         vol.read(fn_vol);
         vol().set_Xmipp_origin();
         dim = vol().RowNo();
-        old_vol().init_zeros(vol());
-        diff_vol().init_zeros(vol());
+        old_vol().initZeros(vol());
+        diff_vol().initZeros(vol());
 
         // Only consider voxels within the spherical mask
         mask_prm.R1 = dim / 2;

@@ -340,7 +340,7 @@ void ShowSel::producePixmapAt(int i)
     }
     else
         // Unknown image
-        I().init_zeros(projYdim, projXdim);
+        I().initZeros(projYdim, projXdim);
 
     // Scale and normalize
     int minGray = 0, maxGray = 0;

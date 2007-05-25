@@ -457,7 +457,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 /* ------------------------------------------------------------------------- */
 void no_sort(int numIMG, Matrix1D<int> &ordered_list)
 {
-    ordered_list.init_linear(0, numIMG - 1);
+    ordered_list.initLinear(0, numIMG - 1);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -470,7 +470,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 
     // Initialisation
     ordered_list.resize(numIMG);
-    chosen.init_zeros(numIMG);
+    chosen.initZeros(numIMG);
 
     cerr << "Randomizing projections ...\n";
     init_progress_bar(numIMG - 1);
@@ -641,7 +641,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             }
             sum_weight += weight;
             /*
-            read_proj().init_zeros();
+            read_proj().initZeros();
             fn_resi+="."+fn_root+"_residual";
             if (IMG_Inf[iact_proj].sym>-1)
             fn_resi+=ItoA(IMG_Inf[iact_proj].sym);
@@ -728,7 +728,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
 {
     if (GVNeq == NULL) GVNeq = new GridVolumeT<int>;
     GVNeq->resize(vol_basis0);
-    GVNeq->init_zeros();
+    GVNeq->initZeros();
 
     Projection read_proj;
     if (debug_level > 0)

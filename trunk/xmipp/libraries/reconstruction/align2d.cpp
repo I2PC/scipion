@@ -500,7 +500,7 @@ void Prog_align2d_prm::refinement()
     Msum.resize(Mref);
     Maux.set_Xmipp_origin();
     Msum.set_Xmipp_origin();
-    Msum.init_zeros();
+    Msum.initZeros();
     barf = MAX(1, (int)(1 + (n_images / 60)));
 
     n_refined = 0;
@@ -756,9 +756,9 @@ void Prog_align2d_prm::align2d()
     else
     {
         med().resize(Iref().RowNo(), Iref().ColNo());
-        med().init_zeros();
+        med().initZeros();
         sig().resize(Iref().RowNo(), Iref().ColNo());
-        sig().init_zeros();
+        sig().initZeros();
     }
     fn_img = fn_sel.without_extension() + ".xmp";
     if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);

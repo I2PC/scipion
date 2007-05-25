@@ -104,7 +104,7 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
         // Cosine stretching, store stretched image in Maux
         A.init_identity();
         A(0, 0) = COSD(It.Theta());
-        Maux.init_zeros();
+        Maux.initZeros();
         apply_geom(Maux, A, It(), IS_INV, DONT_WRAP);
     }
     else Maux = It();

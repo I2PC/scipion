@@ -262,7 +262,7 @@ public:
      */
     void adapt_to_size(int Ydim, int Xdim)
     {
-        img.init_zeros(Ydim, Xdim);
+        img.initZeros(Ydim, Xdim);
         move_origin_to_center();
     }
 

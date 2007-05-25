@@ -76,7 +76,7 @@ public:
         matrix2D<complex<double> > IMG;
         Matrix1D<int> radial_count, center(2);
         Matrix1D<double> rmean_ampl2;
-        center.init_zeros();
+        center.initZeros();
 
         if (do_means && !do_values)
             cerr << " Processing training set ..." << endl;
@@ -141,7 +141,7 @@ public:
             FFT_magnitude(IMG, ampl2);
             CenterFFT(ampl2, true);
             ampl2 *= ampl2;
-            rmean_ampl2.init_zeros();
+            rmean_ampl2.initZeros();
             radial_average(ampl2, center, rmean_ampl2, radial_count);
             ampl2_1 = dVi(rmean_ampl2, 1);
             ampl2_2 = dVi(rmean_ampl2, 2);

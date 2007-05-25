@@ -33,7 +33,7 @@ void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
 {
     int p = X.size(); // Number of points to evaluate
     int m = C.size(); // Number of centers
-    H.init_zeros(p, m);
+    H.initZeros(p, m);
 
     if (p == m && m == 0) return;
     if (X.dimension() != C.dimension())
@@ -77,8 +77,8 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
     int vsize = X.dimension();
     RBF.r.resize(vsize);
     Matrix1D<double> maxX(vsize), minX(vsize);
-    maxX.init_zeros();
-    minX.init_zeros();
+    maxX.initZeros();
+    minX.initZeros();
     for (int i = 0; i < p; i++)
         for (int l = 0; l < vsize; l++)
         {
@@ -165,11 +165,11 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     int age;
 
     // Resize all matrices to the maximum possible size
-    Hm.init_zeros(YSIZE(F), M);
-    Hn.init_zeros(YSIZE(F), M);
-    Hy.init_zeros(M);
+    Hm.initZeros(YSIZE(F), M);
+    Hn.initZeros(YSIZE(F), M);
+    Hy.initZeros(M);
     hh.resize(M);
-    U.init_zeros(M, M);
+    U.initZeros(M, M);
 
     while (!finished)
     {
@@ -181,8 +181,8 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // Compute the change in the cost function due to the
             // first regressor
             Matrix1D<double> FF, Fty, err; // Sum of the squares of F by columns
-            FF.init_zeros(XSIZE(F));
-            Fty.init_zeros(XSIZE(F));
+            FF.initZeros(XSIZE(F));
+            Fty.initZeros(XSIZE(F));
             // MATLAB: FF=sum(F.*F,1)';
             // MATLAB: err=((F'*y).^2.*(2*lam+FF))./(lam+FF).^2
             FOR_ALL_ELEMENTS_IN_MATRIX2D(F)
@@ -190,7 +190,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
                 FF(j) += F(i, j) * F(i, j);
                 Fty(j) += F(i, j) * y[i];
             }
-            err.init_zeros(XSIZE(F));
+            err.initZeros(XSIZE(F));
             FOR_ALL_ELEMENTS_IN_MATRIX1D(err)
             err(i) = Fty(i) * Fty(i) * (2 * lam + FF(i)) / ((lam + FF(i)) * (lam + FF(i)));
 
@@ -223,7 +223,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // MATLAB: Fm=F-Hn*(Hm'*F);
             // MATLAB: FmFm=sum(Fm.*Fm,1);
             Fm = F;
-            aux1D.init_zeros(XSIZE(F));
+            aux1D.initZeros(XSIZE(F));
             // Compute Hm'*F
             for (int i = 0; i < XSIZE(F); i++)
                 for (int j = 0; j < YSIZE(Hm); j++)
@@ -232,7 +232,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
             Fm(i, j) -= Hn(i, m - 1) * aux1D(j);
             //Fm=F-Hn*(Hm.transpose()*F);
-            FmFm.init_zeros(XSIZE(F)); // Squared sum of Fm by rows
+            FmFm.initZeros(XSIZE(F)); // Squared sum of Fm by rows
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
             FmFm(j) += Fm(i, j) * Fm(i, j);
 
@@ -249,7 +249,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // MATLAB: denominator(subset)=ones(m-1,1)
             // MATLAB: err=numerator./denominator;
             // MATLAB: err(subset)=zeros(m-1,1);
-            Fty.init_zeros(XSIZE(Fm));
+            Fty.initZeros(XSIZE(Fm));
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
             Fty(j) += Fm(i, j) * y[i];
             int imax = idx_out.size();
@@ -294,7 +294,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // Recompute Fm ready for the next computation
             // MATLAB: Fm=Fm-Hn(:,m)*(Hm(:,m)'*Fm)
             // Fm-=Hncol*(Hmcol_t*Fm);
-            aux1D.init_zeros(XSIZE(Fm));
+            aux1D.initZeros(XSIZE(Fm));
             // Compute Hm(:,m)'*Fm
             for (int i = 0; i < XSIZE(Fm); i++)
                 for (int j = 0; j < YSIZE(Hm); j++)
@@ -302,7 +302,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             // Compute Fm-Hn(:,m)*(Hm(:,m)'*Fm)
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
             Fm(i, j) -= Hn(i, m - 1) * aux1D(j);
-            FmFm.init_zeros(XSIZE(Fm)); // Squared sum of Fm by rows
+            FmFm.initZeros(XSIZE(Fm)); // Squared sum of Fm by rows
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Fm)
             FmFm(j) += Fm(i, j) * Fm(i, j);
 

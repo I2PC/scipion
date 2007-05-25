@@ -397,10 +397,10 @@ public:
      * Be careful to the size order (Zdim, Ydim, Xdim).
      *
      * @code
-     * v1.init_zeros(6, 3);
+     * v1.initZeros(6, 3);
      * @endcode
      */
-    void init_zeros(int Zdim, int Ydim, int Xdim)
+    void initZeros(int Zdim, int Ydim, int Xdim)
     {
         resize(Zdim, Ydim, Xdim);
         init_constant(static_cast<T>(0));
@@ -1948,7 +1948,7 @@ public:
     void produce_spline_coeffs(matrix3D< double >& coeffs, int SplineDegree = 3)
     const
     {
-        coeffs.init_zeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        coeffs.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(coeffs) = STARTINGX(*this);
         STARTINGY(coeffs) = STARTINGY(*this);
         STARTINGZ(coeffs) = STARTINGZ(*this);
@@ -1970,7 +1970,7 @@ public:
     void produce_image_from_spline_coeffs(
         matrix3D< double >& img, int SplineDegree = 3) const
     {
-        img.init_zeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        img.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
         STARTINGY(img) = STARTINGY(*this);
         STARTINGZ(img) = STARTINGZ(*this);
@@ -2319,9 +2319,9 @@ void radial_average(const matrix3D< T >& m,
 
     // Define the vectors
     radial_mean.resize(dim);
-    radial_mean.init_zeros();
+    radial_mean.initZeros();
     radial_count.resize(dim);
-    radial_count.init_zeros();
+    radial_count.initZeros();
 
     // Perform the radial sum and count pixels that contribute to every
     // distance
@@ -3016,7 +3016,7 @@ void VT::compute_double_minmax(double& min_val, double& max_val,
 template<typename T>
 void VT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
-    center.init_zeros(3);
+    center.initZeros(3);
     double mass = 0;
     matrix3D< int >* imask = (matrix3D< int >*) mask;
 

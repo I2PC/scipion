@@ -185,7 +185,7 @@ void APHFileorigmerg::unasymmetrization(const double a_mag, const  double b_mag,
 {
     int ksize = MAX(ABS(min_k), ABS(max_k));
     int hsize = MAX(ABS(min_h), ABS(max_h));
-    Counter.init_zeros(2*ksize + 1, 2*hsize + 1);
+    Counter.initZeros(2*ksize + 1, 2*hsize + 1);
     STARTINGY(Counter) = -ksize;
     STARTINGX(Counter) = -hsize;
     //Set right symmetrization matrices and unsymmetrice vector

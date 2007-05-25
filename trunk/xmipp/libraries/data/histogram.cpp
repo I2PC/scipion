@@ -68,7 +68,7 @@ void histogram1D::init(double min_val, double max_val, int n_steps)
     hmin = min_val;
     hmax = max_val;
     step_size = (double)(max_val - min_val) / (double) n_steps; // CO: n_steps-1->n_steps
-    init_zeros(n_steps);
+    initZeros(n_steps);
     no_samples = 0;
 }
 
@@ -303,7 +303,7 @@ void histogram2D::init(double imin_val, double imax_val, int in_steps,
     jmax = jmax_val;
     jstep_size = (double)(jmax_val - jmin_val) / (double) jn_steps;
 
-    init_zeros(in_steps, jn_steps);
+    initZeros(in_steps, jn_steps);
     no_samples = 0;
 }
 

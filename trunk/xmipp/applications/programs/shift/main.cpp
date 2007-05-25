@@ -93,7 +93,7 @@ public:
             }
 
             if (!check_param(argc, argv, "-shift") && !center_mass)
-                shift.init_zeros(my_dim);
+                shift.initZeros(my_dim);
             if (!check_param(argc, argv, "-scale"))
             {
                 scale.resize(my_dim);

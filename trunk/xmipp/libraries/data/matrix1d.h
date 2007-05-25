@@ -537,20 +537,20 @@ public:
      * default working mode for the function.
      *
      * @code
-     * v1.init_linear(1, 3); // v1=[1 2 3]
-     * v1.init_linear(1.5, 3.1); // v1=[1.5 2.5]
-     * v1.init_linear(0, 10, 3); // v1=[0 3 6 9]
-     * v1.init_linear(0, 10, 3, "incr"); // v1=[0 3 6 9]
+     * v1.initLinear(1, 3); // v1=[1 2 3]
+     * v1.initLinear(1.5, 3.1); // v1=[1.5 2.5]
+     * v1.initLinear(0, 10, 3); // v1=[0 3 6 9]
+     * v1.initLinear(0, 10, 3, "incr"); // v1=[0 3 6 9]
      * @endcode
      *
      * Step functionality: The given range is divided in as many points as
      * indicated (in the example 6 points).
      *
      * @code
-     * v1.init_linear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
+     * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
-    void init_linear(T minF, T maxF, int n = 1, const string& mode = "incr")
+    void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
     {
         double slope;
         int steps;
@@ -583,10 +583,10 @@ public:
      * @ingroup VectorsInitialization
      *
      * @code
-     * v1.init_zeros(6);
+     * v1.initZeros(6);
      * @endcode
      */
-    void init_zeros(int dim)
+    void initZeros(int dim)
     {
         resize(dim);
         init_constant((T) 0);
@@ -1201,7 +1201,7 @@ public:
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
             *this /= (T) m;
         else
-            init_zeros();
+            initZeros();
     }
 
     /** Sort vector elements
@@ -1809,7 +1809,7 @@ void vT::compute_double_minmax(double& min_val, double& max_val,
 template<typename T>
 void vT::center_of_mass(Matrix1D< double >& center, void* mask)
 {
-    center.init_zeros(1);
+    center.initZeros(1);
     double mass = 0;
     Matrix1D< int >* imask = (Matrix1D< int >*) mask;
 

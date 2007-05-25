@@ -591,8 +591,8 @@ void Prog_MLalign2D_prm::produce_Side_info()
             }
             CenterFFT(Maux, true);
             Maux.set_Xmipp_origin();
-            center.init_zeros();
-            rmean_ctf.init_zeros();
+            center.initZeros();
+            rmean_ctf.initZeros();
             radial_average(Maux, center, rmean_ctf, radial_count, true);
             Vctf[ifocus].resize(hdim);
             for (int irr = 0; irr < hdim; irr++)
@@ -664,7 +664,7 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
     int                         focus, c, nn;
     ofstream                    fh;
 
-    center.init_zeros();
+    center.initZeros();
 
     // For first iteration only: calculate sigma2 (& spectral noise) from power
     // spectra of all images and subtract power spectrum of average image
@@ -685,12 +685,12 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
         Mave.resize(nr_focus);
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            Msigma2[ifocus].init_zeros(dim, dim);
+            Msigma2[ifocus].initZeros(dim, dim);
             Msigma2[ifocus].set_Xmipp_origin();
-            Mave[ifocus].init_zeros(dim, dim);
+            Mave[ifocus].initZeros(dim, dim);
             Mave[ifocus].set_Xmipp_origin();
         }
-        Maux.init_zeros(dim, dim);
+        Maux.initZeros(dim, dim);
         SF.go_beginning();
         int imgno = 0;
         while (!SF.eof())
@@ -719,10 +719,10 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
             Maux.set_Xmipp_origin();
             Maux *= Maux;
             CenterFFT(Maux, true);
-            rmean_signal.init_zeros();
+            rmean_signal.initZeros();
             radial_average(Maux, center, rmean_signal, radial_count, true);
             CenterFFT(Msigma2[ifocus], true);
-            rmean_noise.init_zeros();
+            rmean_noise.initZeros();
             radial_average(Msigma2[ifocus], center, rmean_noise, radial_count, true);
             rmean_noise /= count_defocus[ifocus];
             // Subtract signal terms
@@ -771,8 +771,8 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     FileName                   fn_base, fn_tmp;
 
     // Pre-calculate average CTF^2 and initialize Vsnr
-    Vavgctf2.init_zeros(hdim);
-    Vzero.init_zeros(hdim);
+    Vavgctf2.initZeros(hdim);
+    Vzero.initZeros(hdim);
     FOR_ALL_DEFOCUS_GROUPS()
     {
         Vsnr.push_back(Vzero);
@@ -820,7 +820,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     }
 
     // Pre-calculate denominator of eq 2.32b of Frank's book (2nd ed.)
-    Vdenom.init_zeros(hdim);
+    Vdenom.initZeros(hdim);
     for (int irr = 0; irr < hdim; irr++)
     {
         FOR_ALL_DEFOCUS_GROUPS()
@@ -889,7 +889,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     // Pixel use in probability calculations: pointer_sigctf
     // Pixel use in weighted sums of images: pointer_ctf
     // And pointers to the original i and j coordinates
-    Maux.init_zeros(dim, dim);
+    Maux.initZeros(dim, dim);
     Maux.set_Xmipp_origin();
     FourierTransformHalf(Maux, Faux);
     highres_limit = maxres + increase_highres_limit;
@@ -1138,7 +1138,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         Matrix1D<int>                center(2), radial_count;
         ifstream                     fh;
 
-        center.init_zeros();
+        center.initZeros();
         // Calculate average spectral signal
         int c = 0;
         FOR_ALL_MODELS()
@@ -1151,7 +1151,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
                 Maux *= Maux;
                 Maux *= alpha_k[refno] * (double)nr_exp_images;
                 Maux.set_Xmipp_origin();
-                rmean_signal2.init_zeros();
+                rmean_signal2.initZeros();
                 radial_average(Maux, center, rmean_signal2, radial_count, true);
                 if (c == 0) spectral_signal = rmean_signal2;
                 else spectral_signal += rmean_signal2;
@@ -1322,7 +1322,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,
     matrix2D<int> mask, omask;
     matrix2D<double> cmask;
 
-    Maux.init_zeros(dim, dim);
+    Maux.initZeros(dim, dim);
     Maux.set_Xmipp_origin();
     Fref.clear();
     Mref.clear();
@@ -1415,7 +1415,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
 
     FOR_ALL_MODELS()
     {
-        Maux.init_zeros();
+        Maux.initZeros();
         Mnew.push_back(Maux);
         FOR_ALL_ROTATIONS()
         {
@@ -1507,7 +1507,7 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(
     Maux2.set_Xmipp_origin();
     sigma_noise2 = sigma_noise * sigma_noise;
     Xi2 = Mimg.sum2();
-    Msignificant.init_zeros();
+    Msignificant.initZeros();
 
     // Flip images and calculate correlations and maximum correlation
     FOR_ALL_MODELS()
@@ -1625,7 +1625,7 @@ void Prog_MLalign2D_prm::Fourier_translate2D(const matrix2D<complex<double> > &F
     xxshift = -trans(0) / (double)dim;
     yyshift = -trans(1) / (double)dim;
     Fimg_shift.resize(Fimg);
-    Fimg_shift.init_zeros();
+    Fimg_shift.initZeros();
     for (int ipoint = 0; ipoint < nr_pointer_ctf; ipoint++)
     {
         ii = pointer_ctf[ipoint];
@@ -1948,9 +1948,9 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculate_fourier_offsets(Mimg, focus, Fref, ctf, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
 
-    Mweight.init_zeros(nr_trans, n_ref, nr_flip*nr_psi);
-    Mll.init_zeros(n_ref,nr_flip*nr_psi);
-    Mll_old.init_zeros(n_ref,nr_flip*nr_psi);
+    Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
+    Mll.initZeros(n_ref,nr_flip*nr_psi);
+    Mll_old.initZeros(n_ref,nr_flip*nr_psi);
     FOR_ALL_MODELS()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -2331,7 +2331,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                                 Mimg_trans, Moffsets, Moffsets_mirror);
 
     // Calculate all squared differences & mindiff2 (for optimal offsets only)
-    Mweight.init_zeros(nr_trans, n_ref, nr_flip*nr_psi);
+    Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
     Xi2 = Mimg.sum2();
     FOR_ALL_MODELS()
     {
@@ -2735,7 +2735,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                         {
                             Mweight[refno][irot] /= sum_refw;
                             // Use Maux, because Mweight is smaller than dim x dim!
-                            Maux.init_zeros();
+                            Maux.initZeros();
                             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot])
                             {
                                 MAT_ELEM(Maux, i, j) = MAT_ELEM(Mweight[refno][irot], i, j);
@@ -2959,12 +2959,12 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
         Mwsum_sigma2.resize(nr_focus);
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            Mwsum_sigma2[ifocus].init_zeros(hdim + 1, dim);
+            Mwsum_sigma2[ifocus].initZeros(hdim + 1, dim);
         }
     }
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
-    trans.init_zeros();
+    trans.initZeros();
     FOR_ALL_MODELS()
     {
         sumw.push_back(0.);
@@ -3193,10 +3193,10 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
         else
         {
             Iref[refno].weight() = 0.;
-            Iref[refno]().init_zeros(dim, dim);
+            Iref[refno]().initZeros(dim, dim);
             if (fourier_mode)
             {
-                Ictf[refno]().init_zeros();
+                Ictf[refno]().initZeros();
                 Ictf[refno].weight() = 0.;
             }
         }
@@ -3241,8 +3241,8 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
                 FFT_magnitude(Faux2, Maux);
                 CenterFFT(Maux, true);
                 Maux.set_Xmipp_origin();
-                center.init_zeros();
-                rmean_sigma2.init_zeros();
+                center.initZeros();
+                rmean_sigma2.initZeros();
                 radial_average(Maux, center, rmean_sigma2, radial_count, true);
                 // Factor 2 here, because the Gaussian distribution is 2D!
                 Vsig[ifocus] = rmean_sigma2 / (double)(2 * count_defocus[ifocus]);
@@ -3267,8 +3267,8 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
                 Maux *= Maux;
                 Maux *= sumw[refno];
                 Maux.set_Xmipp_origin();
-                center.init_zeros();
-                rmean_signal2.init_zeros();
+                center.initZeros();
+                rmean_signal2.initZeros();
                 radial_average(Maux, center, rmean_signal2, radial_count, true);
                 if (c == 0) spectral_signal = rmean_signal2;
                 else spectral_signal += rmean_signal2;

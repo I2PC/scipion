@@ -919,10 +919,10 @@ void init_constant(T val)
  * adopted.
  *
  * @code
- * v2.init_zeros(v1);
+ * v2.initZeros(v1);
  * @endcode
  */
-void init_zeros(const maT& op)
+void initZeros(const maT& op)
 {
     resize(op);
     init_constant(static_cast< T >(0));
@@ -935,10 +935,10 @@ void init_zeros(const maT& op)
  * an error if the array is empty, then nothing is done.
  *
  * @code
- * v.init_zeros();
+ * v.initZeros();
  * @endcode
  */
-void init_zeros()
+void initZeros()
 {
     init_constant(static_cast< T >(0));
 }

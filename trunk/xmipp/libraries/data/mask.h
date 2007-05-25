@@ -926,7 +926,7 @@ public:
                     size++;
                 break;
             }
-            result.init_zeros(size);
+            result.initZeros(size);
         }
 
         int p = 0;
@@ -975,7 +975,7 @@ public:
                     size++;
                 break;
             }
-            result.init_zeros(size);
+            result.initZeros(size);
         }
 
         int p = 0;
@@ -1024,7 +1024,7 @@ public:
                     size++;
                 break;
             }
-            result.init_zeros(size);
+            result.initZeros(size);
         }
 
         int p = 0;

@@ -51,7 +51,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
                      (string)"Bilib_DWT 1D: Xsize must be a multiple of " +
                      ItoA(size_multiple));
 
-    result.init_zeros(input);
+    result.initZeros(input);
     TWaveletStruct TW;
     if (isign == 1)
         TW.Operation = "Analysis";
@@ -149,7 +149,7 @@ void Bilib_DWT(const matrix2D<double> &input,
                      (string)"Bilib_DWT 2D: Ysize must be a multiple of " +
                      ItoA(size_multiple));
 
-    result.init_zeros(input);
+    result.initZeros(input);
     TWaveletStruct TW;
     if (isign == 1)
         TW.Operation = "Analysis";
@@ -253,7 +253,7 @@ void Bilib_DWT(const matrix3D<double> &input,
                      (string)"Bilib_DWT 3D: Zsize must be a multiple of " +
                      ItoA(size_multiple));
 
-    result.init_zeros(input);
+    result.initZeros(input);
     TWaveletStruct TW;
     if (isign == 1)
         TW.Operation = "Analysis";
@@ -368,7 +368,7 @@ void IDWT(const matrix3D<double> &v, matrix3D<double> &result)
 void DWT_lowpass(const matrix2D<double> &v, matrix2D<double> &result)
 {
     matrix2D<double> dwt, aux;
-    result.init_zeros(YSIZE(v), XSIZE(v) / 2);
+    result.initZeros(YSIZE(v), XSIZE(v) / 2);
     DWT(v, dwt);
     int Nx = Get_Max_Scale(XSIZE(v));
     for (int s = 0; s < Nx; s++)
@@ -692,7 +692,7 @@ void bayesian_solve_eq_system(
     int extra_constraints = 0;
     if (white_noise)
         extra_constraints += (scale_dim - 1);
-    A.init_zeros(2*(scale_dim - 1) + 2*scale_dim + 2 + extra_constraints, 2*scale_dim);
+    A.initZeros(2*(scale_dim - 1) + 2*scale_dim + 2 + extra_constraints, 2*scale_dim);
     for (int i = 1;i < scale_dim;i++)
     {
         A(i - 1, i - 1) = 1;
@@ -736,7 +736,7 @@ void bayesian_solve_eq_system(
 
     // Initialize Aeq matrix
     matrix2D<double> Aeq;
-    Aeq.init_zeros(1, 2*scale_dim);
+    Aeq.initZeros(1, 2*scale_dim);
     for (int j = 0;j < scale_dim;j++)
     {
         Aeq(0, j) = Ncoefs(j);
@@ -745,12 +745,12 @@ void bayesian_solve_eq_system(
 
     //initialize beq matrix
     Matrix1D<double> beq;
-    beq.init_zeros(1);
+    beq.initZeros(1);
     beq(0) = powerI - power_rest;
 
     //initialization of Matrix C (cost matrix)
     matrix2D<double> C;
-    C.init_zeros(scale_dim, 2*scale_dim);
+    C.initZeros(scale_dim, 2*scale_dim);
     for (int j = 0;j < scale_dim;j++)
     {
         C(j, j) = 1;
@@ -758,7 +758,7 @@ void bayesian_solve_eq_system(
     }
 
     // initialise the estimatedS which will contain the solution vector
-    estimatedS.init_zeros(2*scale_dim);
+    estimatedS.initZeros(2*scale_dim);
 #ifdef DEBUG
     //Writing the matrices to ASCII files for comparing with matlab
     C.write("./matrices/C.txt");

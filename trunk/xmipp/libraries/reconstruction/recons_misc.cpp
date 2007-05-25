@@ -149,7 +149,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
     // Convert from basis to voxels
     prm->basis.changeToVoxels(*ptr_vol_out, &(vol_voxels()),
                               Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-    (*ptr_vol_out).init_zeros();
+    (*ptr_vol_out).initZeros();
     N++;
 
     // Make the DWT
@@ -200,9 +200,9 @@ void VariabilityClass::finishAnalysis()
     int zsize2 = ZSIZE(VA[0]) / 4;
     int ysize2 = YSIZE(VA[0]) / 4;
     int xsize2 = XSIZE(VA[0]) / 4;
-    SignificantT2().init_zeros(zsize, ysize, xsize);
-    SignificantMaxRatio().init_zeros(zsize, ysize, xsize);
-    SignificantMinRatio().init_zeros(zsize, ysize, xsize);
+    SignificantT2().initZeros(zsize, ysize, xsize);
+    SignificantMaxRatio().initZeros(zsize, ysize, xsize);
+    SignificantMinRatio().initZeros(zsize, ysize, xsize);
     cerr << "Classifying voxels ...\n";
     init_progress_bar(MULTIDIM_SIZE(SignificantT2()));
     int counter = 0, nxny = ysize * zsize;
@@ -356,7 +356,7 @@ void VariabilityClass::finishAnalysis()
             double variance = ((N0 - 1) * covariance0(0, 0) + (N1 - 1) * covariance1(0, 0)) /
                               (N0 + N1 - 2);
             double t = (avg1(0) - avg0(0)) / sqrt(variance * (1.0 / N0 + 1.0 / N1));
-            T2.init_zeros(1, 1);
+            T2.initZeros(1, 1);
             T2(0, 0) = t;
         }
 
@@ -420,7 +420,7 @@ POCSClass::POCSClass(Basic_ART_Parameters *_prm,
     POCS_vec_i = 0;
     POCS_used = 0;
     POCS_N = 0;
-    POCS_errors.init_zeros(POCS_N_measure);
+    POCS_errors.initZeros(POCS_N_measure);
     Zoutput_volume_size = _Zoutput_volume_size;
     Youtput_volume_size = _Youtput_volume_size;
     Xoutput_volume_size = _Xoutput_volume_size;
@@ -467,7 +467,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         else
         {
             vol_POCS().resize(vol_voxels());
-            vol_POCS().init_zeros();
+            vol_POCS().initZeros();
         }
         if (prm->tell&TELL_SAVE_AT_EACH_STEP)
         {
@@ -574,7 +574,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             }
             else
             {
-                vol_basis(0)().init_zeros();
+                vol_basis(0)().initZeros();
                 FOR_ALL_ELEMENTS_IN_MATRIX3D((*desired_volume)())
                 vol_basis(0)(k, i, j) = (*desired_volume)(k, i, j);
             }

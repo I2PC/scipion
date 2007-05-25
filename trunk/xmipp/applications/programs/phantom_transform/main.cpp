@@ -76,7 +76,7 @@ public:
             A3D.init_identity(4);
         if (check_param(argc, argv, "-shift"))
             shift = get_vector_param(argc, argv, "-shift", 3);
-        else shift.init_zeros(3);
+        else shift.initZeros(3);
         if (check_param(argc, argv, "-scale"))
             scale = get_vector_param(argc, argv, "-scale", 3);
         else

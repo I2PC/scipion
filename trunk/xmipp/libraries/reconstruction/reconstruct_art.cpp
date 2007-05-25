@@ -98,7 +98,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     matrix2D<int>    mask;
 
     residual_vol.resize(vol_basis);
-    residual_vol.init_zeros();
+    residual_vol.initZeros();
 
     // Calculate volume from all backprojected residual images
     cerr << "Backprojection of residual images " << endl;
@@ -287,7 +287,7 @@ void ART_single_step(
     // projection, ie, the projection of an all-1 volume
     matrix2D<double> *A = NULL;
     if (prm.print_system_matrix) A = new matrix2D<double>;
-    corr_proj().init_zeros();
+    corr_proj().initZeros();
     project_Volume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,

@@ -309,7 +309,7 @@ void Prog_angular_predict_prm::produce_library()
         subband->resize(number_of_imgs, SBsize(m));
         library.push_back(subband);
     }
-    library_power.init_zeros(number_of_imgs, SBNo);
+    library_power.initZeros(number_of_imgs, SBNo);
 
     cerr << "Generating reference library ...\n";
     init_progress_bar(number_of_imgs);
@@ -322,7 +322,7 @@ void Prog_angular_predict_prm::produce_library()
         // Make and distribute its DWT coefficients in the different PCA bins
         I().statistics_adjust(0, 1);
         DWT(I(), I());
-        SBidx.init_zeros();
+        SBidx.initZeros();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask_no)
         {
             int m = Mask_no(i, j);
@@ -431,8 +431,8 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     // Make DWT of the input image and build vectors for comparison
     vector<Matrix1D<double> * > Idwt;
-    Matrix1D<double> x_power(SBNo); x_power.init_zeros();
-    Matrix1D<int> SBidx(SBNo); SBidx.init_zeros();
+    Matrix1D<double> x_power(SBNo); x_power.initZeros();
+    Matrix1D<int> SBidx(SBNo); SBidx.initZeros();
     for (int m = 0; m < SBNo; m++)
     {
         Matrix1D<double> *subband = new Matrix1D<double>;

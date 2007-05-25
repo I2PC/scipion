@@ -397,7 +397,7 @@ int Micrograph::scissor(const Particle_coords &P, Image &result,
     range = Dmax - Dmin;
     if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
     {
-        result().init_zeros();
+        result().initZeros();
         retval = 0;
     }
     else

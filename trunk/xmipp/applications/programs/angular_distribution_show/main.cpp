@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     }
 
             // Compute minimum distance table
-            dist.init_zeros(AngleNo);
+            dist.initZeros(AngleNo);
             for (int i = 0; i < AngleNo; i++)
                 for (int j = i + 1; j < AngleNo; j++)
                 {
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
             Matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
             matrix2D<double> A, euler_view;
             Euler_angles2matrix(rot_view, tilt_view, 0.0f, euler_view);
-            origin.init_zeros();
+            origin.initZeros();
             double tmp;
             for (int i = 0; i < AngleNo; i++)
             {

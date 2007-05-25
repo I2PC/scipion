@@ -111,22 +111,22 @@ void APHFile2D::read(const FileName &fn)
 #endif
 
     // Ask for memory
-    spots_l.init_zeros(kmax - kmin + 1, hmax - hmin + 1);
+    spots_l.initZeros(kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(spots_l) = hmin;
     STARTINGY(spots_l) = kmin;
-    spots_abs.init_zeros(kmax - kmin + 1, hmax - hmin + 1);
+    spots_abs.initZeros(kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(spots_abs) = hmin;
     STARTINGY(spots_abs) = kmin;
-    spots_arg.init_zeros(kmax - kmin + 1, hmax - hmin + 1);
+    spots_arg.initZeros(kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(spots_arg) = hmin;
     STARTINGY(spots_arg) = kmin;
-    IQ.init_zeros(kmax - kmin + 1, hmax - hmin + 1);
+    IQ.initZeros(kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(IQ) = hmin;
     STARTINGY(IQ) = kmin;
-    background.init_zeros(kmax - kmin + 1, hmax - hmin + 1);
+    background.initZeros(kmax - kmin + 1, hmax - hmin + 1);
     STARTINGX(background) = hmin;
     STARTINGY(background) = kmin;
-    CTF.init_zeros(background);
+    CTF.initZeros(background);
 
     // Read each line (again) and copy values to the matrices
     fh_aph.close();
@@ -377,7 +377,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group)
     CTF       .window(new_kmin, new_hmin, new_kmax, new_hmax);
 
     matrix2D<int> visited;
-    visited.init_zeros(YSIZE(spots_abs), XSIZE(spots_abs));
+    visited.initZeros(YSIZE(spots_abs), XSIZE(spots_abs));
     STARTINGY(visited) = STARTINGY(spots_abs);
     STARTINGX(visited) = STARTINGX(spots_abs);
 

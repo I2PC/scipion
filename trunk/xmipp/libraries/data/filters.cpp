@@ -34,8 +34,8 @@ void substract_background_plane(Image *I)
     Matrix1D<double> x(3), b(3);
 
     // Solve the plane 'x'
-    A.init_zeros();
-    b.init_zeros();
+    A.initZeros();
+    b.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*I))
     {
         A(0, 0) += j * j;
@@ -591,7 +591,7 @@ void Smoothing_Shah(matrix2D<double> &img,
     for (int k = 1; k <= RefinementLoops; k++)
     {
         // Initialize Edge Image.
-        edge_strength.init_zeros();
+        edge_strength.initZeros();
 
         double diffsurface = MAXFLOAT; // Reset surface difference
         for (int i = 0; ((i < OuterLoops) && OuterLoops) ||
@@ -871,7 +871,7 @@ void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
 {
     // Convolve the input image with the kernel
     matrix2D<double> convolved;
-    convolved.init_zeros(img);
+    convolved.initZeros(img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {
         if (mask != NULL)
@@ -902,7 +902,7 @@ void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
 
     // Substract the original from the convolved image and threshold
     result.copy_shape(img);
-    result.init_zeros();
+    result.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {
         if (mask != NULL)

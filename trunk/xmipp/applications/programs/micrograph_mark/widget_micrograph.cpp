@@ -108,12 +108,12 @@ void Classification_model::build_model()
     }
 
     // Compute the average
-    __avg.init_zeros(XSIZE(__training_particle.at(0).vec));
+    __avg.initZeros(XSIZE(__training_particle.at(0).vec));
     for (int i = 0; i < N; i++) __avg += __training_particle.at(i).vec;
     __avg /= N;
 
     // Compute the covariance
-    __sigma.init_zeros(XSIZE(__avg), XSIZE(__avg));
+    __sigma.initZeros(XSIZE(__avg), XSIZE(__avg));
     for (int i = 0;i < N;i++)
     {
         matrix2D<double> X;
@@ -129,7 +129,7 @@ void Classification_model::build_model()
         // Keep only the diagonal
         cout << "The training model is not well posed.\n"
         << "A weak independent model used instead\n";
-        __sigma_inv.init_zeros(__sigma);
+        __sigma_inv.initZeros(__sigma);
         for (int i = 0; i < XSIZE(__sigma); i++)
             __sigma_inv(i, i) = 1 / __sigma(i, i);
     }
@@ -680,7 +680,7 @@ void QtWidgetMicrograph::classifyMask()
     for (int i = 0; i < __radial_bins; i++)
     {
         Matrix1D<int> *aux = new Matrix1D<int>;
-        aux->init_zeros(Nrad(i));
+        aux->initZeros(Nrad(i));
         __radial_val.push_back(aux);
     }
 
@@ -775,7 +775,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Second part is the background histogram
     // Third part is the radial mass distribution
     // The input image is supposed to be between 0 and bins-1
-    _result.init_zeros(__radial_bins*(__gray_bins - 1) + (__numax - __numin + 1));
+    _result.initZeros(__radial_bins*(__gray_bins - 1) + (__numax - __numin + 1));
     const matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
@@ -791,7 +791,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         save() = __piece;
         save.write("PPP0.xmp");
         cout << "Particle is at (y,x)=" << _y << "," << _x << endl;
-        save().init_zeros(YSIZE(mask), XSIZE(mask));
+        save().initZeros(YSIZE(mask), XSIZE(mask));
         STARTINGY(save()) = STARTINGY(mask);
         STARTINGX(save()) = STARTINGX(mask);
         savefg() = save();
@@ -803,7 +803,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 
     Matrix1D<int> radial_idx(__radial_bins);
     matrix2D<double> particle;
-    particle.init_zeros(YSIZE(mask), XSIZE(mask));
+    particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
 
@@ -1086,7 +1086,7 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
             (ny + ymask2 < bottom))
         {
             Matrix1D<int> current_nbr;
-            current_nbr.init_zeros(3);
+            current_nbr.initZeros(3);
             current_nbr(0) = current_part;
             current_nbr(1) = nx - left;
             current_nbr(2) = ny - top;

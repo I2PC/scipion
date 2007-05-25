@@ -156,7 +156,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I)
         matrix2D<double> aux;
         ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
-        aux.init_zeros(2*Ydim, 2*Xdim);
+        aux.initZeros(2*Ydim, 2*Xdim);
         ctf.generate_mask(aux);
         ctf.ctf.DeltafU = ctf.ctf.DeltafU;
         ctf.ctf.DeltafV = ctf.ctf.DeltafV;

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Author:     Javier Rodríguez Fernández (javrodri@gmail.com)
+ * Author:     Javier Rodrï¿½guez Fernï¿½ndez (javrodri@gmail.com)
  *             Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -112,7 +112,7 @@ public:
             try {
                // Data to plot
                Matrix1D<double> y;
-               y.init_linear(1,100);
+               y.initLinear(1,100);
 
                // Setup the interface
                QApplication app(argc,argv);

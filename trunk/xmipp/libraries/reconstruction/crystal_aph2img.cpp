@@ -232,7 +232,7 @@ ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm)
 void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
           int ydim, int xdim)
 {
-    I.init_zeros(ydim, xdim);
+    I.initZeros(ydim, xdim);
     time_config();
     init_progress_bar(YSIZE(I));
     for (int k = 0; k < YSIZE(I); k++)
@@ -324,7 +324,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     //When data is copied to FT move it from degrees to radians.
     //It is done inside the polar function
     matrix2D< complex<double> > FT;
-    FT.init_zeros(2*ksize + 1, 2*hsize + 1);
+    FT.initZeros(2*ksize + 1, 2*hsize + 1);
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
 
@@ -429,7 +429,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 
         // compute z*
         // from euler angles get normal vector
-        // compute intersección central plane with drid line
+        // compute intersecciï¿½n central plane with drid line
 //tenemos que calcular los vectores de red en espacio real y quitar  el 128
 //  DoesIntersect=line_plane_intersection(normal_plane,
 //                           vector_R3(0.,0.,1.),
@@ -569,7 +569,7 @@ void DFT(const matrix2D<double> &I, matrix2D< complex<double> > &FT)
     int xdim = I.ColNo();
     int ydim = I.RowNo();
     double myreal, myimag;
-    FT.init_zeros(ydim, xdim);
+    FT.initZeros(ydim, xdim);
     FT.set_Xmipp_origin();
 
     time_config();

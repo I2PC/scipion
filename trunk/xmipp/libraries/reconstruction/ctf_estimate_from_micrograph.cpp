@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.uam.es)
- *              Carlos Oscar Sánchez Sorzano
+ *              Carlos Oscar Sï¿½nchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -126,7 +126,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
 
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
-    psd.init_zeros(small_piece);
+    psd.initZeros(small_piece);
     for (int ii = 0; ii < Nside_piece; ii++)
         for (int jj = 0; jj < Nside_piece; jj++)
         {
@@ -142,7 +142,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
 
             // Compute the PSD of the small piece
             matrix2D<double> small_psd;
-            small_psd.init_zeros(small_piece);
+            small_psd.initZeros(small_piece);
             if (PSD_mode == ARMA)
             {
                 // Compute the ARMA model

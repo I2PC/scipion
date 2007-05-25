@@ -188,8 +188,8 @@ ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
 void ImageViewer::generateFFTImage(matrix2D<double> &out)
 {
     matrix2D<int> Isubs;
-    Isubs.init_zeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
-    out.init_zeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
+    Isubs.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
+    out.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     double min_positive;
     bool first = true;
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(xmippImageFourier)

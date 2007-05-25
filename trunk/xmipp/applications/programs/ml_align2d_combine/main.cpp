@@ -138,7 +138,7 @@ int main(int argc, char **argv)
             {
                 fn_img = ((DFo.get_current_line()).get_text()).erase(0, 3);
                 sumimg.read(fn_img);
-                sumimg().init_zeros();
+                sumimg().initZeros();
                 sumimg.weight() = 0.;
             }
             else REPORT_ERROR(1, "MLalign2D-log files does not have expected format");
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
             DFo.remove_current();
             DFo.previous();
             DFo.insert_comment(fn_img);
-            outdataline.init_zeros();
+            outdataline.initZeros();
             for (n = 0; n < nlog; n++)
             {
                 allDFs[n].go_beginning();
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
             DFo.previous();
             DFo.insert_data_line(outdataline);
             if (sumimg.weight() > 0) sumimg() /= sumimg.weight();
-            else sumimg().init_zeros();
+            else sumimg().initZeros();
             SFo.insert(fn_img);
             sumimg.write(fn_img);
             l++;

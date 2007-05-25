@@ -460,11 +460,11 @@ Running_PCA::Running_PCA(int _J, int _d)
     J = _J;
     d = _d;
     n = 0;
-    sum_all_samples.init_zeros(d);
-    current_sample_mean.init_zeros(d);
-    sum_proj.init_zeros(d);
-    sum_proj2.init_zeros(d);
-    eigenvectors.init_zeros(d, J);
+    sum_all_samples.initZeros(d);
+    current_sample_mean.initZeros(d);
+    sum_proj.initZeros(d);
+    sum_proj2.initZeros(d);
+    eigenvectors.initZeros(d, J);
 }
 
 /* Update with new sample -------------------------------------------------- */
@@ -539,7 +539,7 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
 void Running_PCA::project(const Matrix1D<double> &input,
                           Matrix1D<double> &output) const
 {
-    output.init_zeros(J);
+    output.initZeros(J);
     for (int j = 0; j < J; j++)
         for (int i = 0; i < d; i++)
             DIRECT_VEC_ELEM(output, j) +=

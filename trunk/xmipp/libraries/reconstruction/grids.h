@@ -966,9 +966,9 @@ public:
     }
 
     /** Set to zero with the actual size and origin. */
-    void init_zeros()
+    void initZeros()
     {
-        for (int i = 0; i < VolumesNo(); i++)(*this)(i)().init_zeros();
+        for (int i = 0; i < VolumesNo(); i++)(*this)(i)().initZeros();
     }
 
     /** Clear the volume */
@@ -1270,7 +1270,7 @@ public:
         if (Xdim*Ydim < 25) Ydim = (int) CEIL(25.0f / Xdim);
 
         // A slice is added for control information for each subvolume
-        VOLMATRIX(V).init_zeros(Zdim + VolumesNo(), Ydim, Xdim);
+        VOLMATRIX(V).initZeros(Zdim + VolumesNo(), Ydim, Xdim);
 
         // Write Grid volume ....................................................
 #define PACK_DOUBLE(v) \
@@ -1464,7 +1464,7 @@ public:
 
             // Set volume size and origin
             sV = new VolumeT<T>;
-            VOLMATRIX(*sV).init_zeros(Zdim, Ydim, Xdim);
+            VOLMATRIX(*sV).initZeros(Zdim, Ydim, Xdim);
             STARTINGZ(VOLMATRIX(*sV)) = Zinit;
             STARTINGY(VOLMATRIX(*sV)) = Yinit;
             STARTINGX(VOLMATRIX(*sV)) = Xinit;

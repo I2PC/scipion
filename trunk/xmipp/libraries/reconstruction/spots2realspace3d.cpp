@@ -236,7 +236,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     int hsize = MAX(ABS(hmin), ABS(hmax));
 
     matrix3D< complex<double> > FT;
-    FT.init_zeros(2*lsize + 1, 2*ksize + 1, 2*hsize + 1);
+    FT.initZeros(2*lsize + 1, 2*ksize + 1, 2*hsize + 1);
     STARTINGZ(FT) = -lsize;
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
@@ -270,7 +270,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
         YY(prm.Celldim) = XSIZE(FT);
         XX(prm.Celldim) = YSIZE(FT);
     }
-    V1().init_zeros(ZZ(prm.Celldim),
+    V1().initZeros(ZZ(prm.Celldim),
                     YY(prm.Celldim),
                     XX(prm.Celldim));
     V1().set_Xmipp_origin();

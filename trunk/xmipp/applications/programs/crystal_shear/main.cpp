@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     VolumeXmipp    V_in, V_out;
     matrix2D<double> D(4, 4);
 
-    D.init_zeros();
+    D.initZeros();
     D(0, 0) = D(1, 1) = D(2, 2) = D(3, 3) = 1.0f;
 
     // Get command line parameters ------------------------------------------

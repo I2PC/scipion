@@ -117,7 +117,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
     double &avg_resol, double &stddev_resol, Matrix1D<double> &resol)
 {
     SF_recons.go_first_ACTIVE();
-    resol.init_zeros(SF_recons.ImgNo());
+    resol.initZeros(SF_recons.ImgNo());
 
     Matrix1D<double> frequency, FSC;
     int i = 0;
@@ -155,7 +155,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
         compute_FSC(phantom, reconstruction, sampling_rate, frequency, FSC);
         if (n == 0)
         {
-            avg_FSC.init_zeros(FSC);
+            avg_FSC.initZeros(FSC);
             max_FSC = min_FSC = FSC;
         }
         avg_FSC   += FSC;
@@ -191,8 +191,8 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
         compute_FSC(phantom, reconstruction2, sampling_rate, frequency, FSC2);
         if (n == 0)
         {
-            avg_diff_FSC.init_zeros(FSC1);
-            stddev_diff_FSC.init_zeros(FSC1);
+            avg_diff_FSC.initZeros(FSC1);
+            stddev_diff_FSC.initZeros(FSC1);
         }
         FOR_ALL_ELEMENTS_IN_MATRIX1D(FSC1)
         {

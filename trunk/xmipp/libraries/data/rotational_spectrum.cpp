@@ -200,7 +200,7 @@ void Cylindrical_Wave_Decomposition::compute_cwd(matrix2D<double> &img)
         }
     }
 
-    out_ampcos.init_zeros((numax - numin + 1)*ir);
+    out_ampcos.initZeros((numax - numin + 1)*ir);
     out_ampsin = out_ampcos;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(out_ampcos)
     {
@@ -332,7 +332,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     }
 
     // Keep results .........................................................
-    rot_spectrum.init_zeros(n - j1 + 1);
+    rot_spectrum.initZeros(n - j1 + 1);
     for (k = 1; k <= nvez; k++)
     {
         k1 = 13 * (k - 1) + 1;

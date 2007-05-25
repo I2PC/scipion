@@ -768,14 +768,14 @@ void blobs2voxels(const GridVolume &vol_blobs,
     {
         Matrix1D<int> size, corner;
         voxel_volume_shape(vol_blobs, blob, D, corner, size);
-        (*vol_voxels).init_zeros(ZZ(size), YY(size), XX(size));
+        (*vol_voxels).initZeros(ZZ(size), YY(size), XX(size));
         (*vol_voxels).startingX() = XX(corner);
         (*vol_voxels).startingY() = YY(corner);
         (*vol_voxels).startingZ() = ZZ(corner);
     }
     else
     {
-        (*vol_voxels).init_zeros(Zdim, Ydim, Xdim);
+        (*vol_voxels).initZeros(Zdim, Ydim, Xdim);
         (*vol_voxels).set_Xmipp_origin();
     }
 
@@ -839,7 +839,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
     YY(size) = (int)(CEIL(YY(size)) / g_2);
     ZZ(corner1) = (int)(FLOOR(ZZ(corner1)) / g_2);
     ZZ(size) = (int)(CEIL(ZZ(size)) / g_2);
-    (*vol_coefs).init_zeros(ZZ(size), YY(size), XX(size));
+    (*vol_coefs).initZeros(ZZ(size), YY(size), XX(size));
     (*vol_coefs).startingX() = XX(corner1);
     (*vol_coefs).startingY() = YY(corner1);
     (*vol_coefs).startingZ() = ZZ(corner1);
@@ -905,18 +905,18 @@ void ART_voxels2blobs_single_step(
     // Resize output volumes ................................................
     if (read_vol != NULL)
     {
-        (*theo_vol).init_zeros(*read_vol);
+        (*theo_vol).initZeros(*read_vol);
     }
     else if (mask_vol != NULL)
     {
-        (*theo_vol).init_zeros(*mask_vol);
+        (*theo_vol).initZeros(*mask_vol);
     }
     else
     {
         REPORT_ERROR(1,
                      "ART_voxels2blobs_single_step: Mask and voxel volumes are empty");
     }
-    (*corr_vol).init_zeros(*theo_vol);
+    (*corr_vol).initZeros(*theo_vol);
 
     // Translate actual blob volume to voxels ...............................
     for (int i = 0; i < vol_in.VolumesNo(); i++)

@@ -153,8 +153,8 @@ void ImUmbend::UnBending()
     Nk = (int)ceil(min(abs(ExpLat.dim[0] / ExpLat.a(0)), abs(ExpLat.dim[0] / ExpLat.b(0))));
     Nh = (int)ceil(min(abs(ExpLat.dim[1] / ExpLat.a(1)), abs(ExpLat.dim[1] / ExpLat.b(1))));
     matrix2D <double> MatIncrX, MatIncrY;
-    MatIncrX.init_zeros(Nh, Nk);
-    MatIncrY.init_zeros(Nh, Nk);
+    MatIncrX.initZeros(Nh, Nk);
+    MatIncrY.initZeros(Nh, Nk);
 
 #undef DEBUG
     //   #define DEBUG

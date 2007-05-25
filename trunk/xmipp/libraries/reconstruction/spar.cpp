@@ -186,7 +186,7 @@ double CausalAR(matrix2D<double> &Img,
 
     // Compute correlation matrix (we'll name it R)
     matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
-    R.init_zeros();
+    R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
     cerr << "Generating correlation coefficients ...\n";
@@ -331,7 +331,7 @@ double NonCausalAR(matrix2D<double> &Img,
 
     // Compute correlation matrix (we'll name it R)
     matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
-    R.init_zeros();
+    R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
     cerr << "Generating correlation coefficients ...\n";

@@ -61,7 +61,7 @@ ostream& operator <<(ostream& o, const SimpleGrid &grid)
     o << "   Vector 2: " << ((grid.basis).Col(1)).transpose() << endl;
     o << "   Vector 3: " << ((grid.basis).Col(2)).transpose() << endl;
     o << "   Relative size:         " << grid.relative_size       << endl;
-    o << "   Interest radius²:      " << grid.R2                  << endl;
+    o << "   Interest radiusï¿½:      " << grid.R2                  << endl;
     o << "   Origin (univ.coords)   " << grid.origin.transpose()  << endl;
     o << "   Highest (grid. coord)  " << grid.highest.transpose() << endl;
     o << "   Lowest (grid. coord)   " << grid.lowest.transpose()  << endl;
@@ -402,8 +402,8 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
     grid.relative_size = relative_size;
     grid.origin        = origin;
     grid.R2 = R2;
-    grid.lowest.init_zeros(3);
-    grid.highest.init_zeros(3);
+    grid.lowest.initZeros(3);
+    grid.highest.initZeros(3);
     grid.prepare_grid();
 
     // Find grid limits
@@ -444,7 +444,7 @@ Grid Create_CC_grid(double relative_size, double R)
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin(3);
-    origin.init_zeros();
+    origin.initZeros();
     Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 1, 0, 0);
     VECTOR_R3(y, 0, 1, 0);
@@ -461,7 +461,7 @@ Grid Create_BCC_grid(double relative_size, double R)
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin(3);
-    origin.init_zeros();
+    origin.initZeros();
     Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 0.5, 0.5, -0.5);
     VECTOR_R3(y, 0.5, -0.5, 0.5);
@@ -478,7 +478,7 @@ Grid Create_FCC_grid(double relative_size, double R)
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin(3);
-    origin.init_zeros();
+    origin.initZeros();
     Matrix1D<double> x(3), y(3), z(3);
     VECTOR_R3(x, 0.5, 0.5, 0);
     VECTOR_R3(y, 0.5, 0, 0.5);

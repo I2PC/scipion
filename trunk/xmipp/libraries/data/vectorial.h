@@ -116,11 +116,11 @@ public:
     /** Init zeros.
      * @ingroup VectorialShape
      */
-    void init_zeros()
+    void initZeros()
     {
-        __X.init_zeros();
-        __Y.init_zeros();
-        __Z.init_zeros();
+        __X.initZeros();
+        __Y.initZeros();
+        __Z.initZeros();
     }
 
     /** Set Xmipp origin.
