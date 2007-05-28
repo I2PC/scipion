@@ -234,7 +234,7 @@ double multidimensionalIntegral(const Matrix1D<double> &x0,
     cuhreIntegrand = integrand;
 
     // Set Cuhre specific variables
-    const double EPSREL  = 1e-3;
+    const double EPSREL  = 1e-6;
     const double EPSABS  = 1e-12;
     const int    VERBOSE = 0;
     const int    MINEVAL = 0;
