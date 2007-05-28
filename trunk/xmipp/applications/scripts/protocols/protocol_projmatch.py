@@ -17,7 +17,8 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName=' '
+#ReferenceFileName=' '
+ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test'
@@ -207,12 +208,31 @@ DisplayReconstruction=False
     Note: if there are more values than iterations the extra value are ignored
 """
 ReconstructionMethod='3xwbp art'
+#ReconstructionMethod='3xart wbp'
+
+# {expert} Values of lambda for art
+""" IMPORTANT: ou must specify a value of lambda for each iteration even
+    if art has not been selected.
+    IMPORTANT: NOte that we are using the WLS version of ART that 
+    uses geater lambdas than the plain art.
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
+        for details
+    You must specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, ".1 .1 .3 .3" 
+    specifies 4 iterations, the first two set the value to 0.1 
+    (no restriction)
+    and the last  two to .3. An alternative compact notation 
+    is ("2x.1 2x.3").
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+ARTLambda='0.2'
 
 # {expert} Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
-ARTReconstructionExtraCommand='-l 0.2 -k 0.5 -n 10 '
+ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
@@ -240,21 +260,24 @@ DisplayResolution=False
 #-----------------------------------------------------------------------------
 # {section} Low-pass filtering
 #-----------------------------------------------------------------------------
-# Low-pass filter the 3D reference map?
-"""The volume will be filtered to a resolution equal to
-   the max resolution computed with resolution_fsc
-   plus the constant provided by the user in the next
+# Provide your own filtration frequecy?
+"""By default the volume will be filtered at a frecuency equal to
+   the  resolution computed with resolution_fsc
+   plus a constant provided by the user in the next
    input box. If this option is set to true then the
-   filtration will be made at the resolution provided by
-   the user.
+   filtration will be made at the constant value provided by
+   the user WITHOUT adding the resolution computed by resolution_fsc.
 """
 SetResolutiontoZero=False
-#explain this!!!!!!!!!!!
 
 
-# Filter to resolution plus constant
-""" Filter to a given resolution obained with resoltion_fsc 
-    plus a constant in pix^-1.
+# Constant to by add to the estimate resolution
+""" The meaning of this field depends on the previous flag.
+    If set as False then  the volume will be filtered at a frecuency equal to
+    the  resolution computed with resolution_fsc
+    plus the value provided in this field (units pixel^-1)
+    If set to False  the volume will be filtered at the resolution
+    provided in this field.
     Set this value to any value larger than .5 to avoid filtration.
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
@@ -318,6 +341,7 @@ multi_align2d_sel="multi_align2d.sel"
 align2d_sel="align2d.sel"
 align2d_doc="align2d.doc"
 docfile_with_original_angles='docfile_with_original_angles.doc'
+images_dir='images'
 
 class projection_matching_class:
 
@@ -349,6 +373,7 @@ class projection_matching_class:
                 _DisplayResolution,
                 _DoReconstruction,
                 _ReconstructionMethod,
+                _ARTLambda,
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
                 _DoComputeResolution,
@@ -412,6 +437,7 @@ class projection_matching_class:
        self._MyMachineFile=os.path.abspath(_MyMachineFile)
        self._Symfile=os.path.abspath(str(_Symfile))
        #self._iteration_number=1
+       #self._ARTLambda=_ARTLambda
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
        #self._ReconstructionMethod=_ReconstructionMethod
@@ -457,7 +483,8 @@ class projection_matching_class:
        if _ContinueAtIteration==1:
           copy_images_to_local_disk(self._mylog,
                                     self._SelFileName,
-                                    self._WorkDirectory)
+                                    self._WorkDirectory,
+                                    images_dir)
        
        
        #change to working dir
@@ -501,7 +528,7 @@ class projection_matching_class:
           os.chdir(Iteration_Working_Directory)
 
           #save initial header
-          docfile_with_original_angles='docfile_with_original_angles.doc'
+          #docfile_with_original_angles='docfile_with_original_angles.doc'
           command='xmipp_header_extract -i '
           command=command+self._SelFileName + \
                          ' -o ' + docfile_with_original_angles 
@@ -588,6 +615,8 @@ class projection_matching_class:
 
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
                                                         _iteration_number-1)
+          self._ARTLambda=arg.getComponentFromVector(_ARTLambda,\
+                                                        _iteration_number-1)
           if (_DoReconstruction):
              execute_reconstruction(self._mylog, 
                                     self._ARTReconstructionExtraCommand,
@@ -598,6 +627,7 @@ class projection_matching_class:
                                     self._MyNumberOfCPUs,
                                     self._MyMachineFile,
                                     self._ReconstructionMethod,
+                                    self._ARTLambda,
                                     self._align2d_sel,
                                     self._Symfile)
           else:
@@ -616,7 +646,8 @@ class projection_matching_class:
                            self._MyNumberOfCPUs,
                            self._MyMachineFile,
                            self._Symfile,
-                           self._DisplayResolution)
+                           self._DisplayResolution,
+                           self._ARTLambda)
 
           else:
              self._mylog.info("Skipped Resolution") 
@@ -662,13 +693,13 @@ def create_working_directory(_mylog,_WorkDirectory):
 #------------------------------------------------------------------------
 #           copy files to local dir
 #------------------------------------------------------------------------
-def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory):
+def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory,images_dir):
       import os,selfile
       print '*********************************************************************'
       print '* Copying images to working directory ...'
       mysel=selfile.selfile()
       mysel.read(_SelFileName)
-      newsel=mysel.copy_sel(_WorkDirectory)
+      newsel=mysel.copy_sel(_WorkDirectory+'/'+images_dir)
       newsel.write(_WorkDirectory+'/'+_SelFileName)
       _mylog.info("copy files to local directory")
 
@@ -947,6 +978,7 @@ def execute_reconstruction(_mylog,
                            _MyNumberOfCPUs,
                            _MyMachineFile,
                            _ReconstructionMethod,
+                           _ARTLambda,
                            _align2d_sel,
                            _Symfile):
    import os,shutil
@@ -980,6 +1012,8 @@ def execute_reconstruction(_mylog,
                  ' -WLS '
       if len(_Symfile)>1:
          parameters = parameters + ' -sym ' + _Symfile + ' '
+      if len(_ARTLambda)>1:
+         parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1024,7 +1058,8 @@ def  execute_resolution(_mylog,
                         _MyNumberOfCPUs,
                         _MyMachineFile,
                         _Symfile,
-                        _DisplayResolution):
+                        _DisplayResolution,
+                        _ARTLambda):
     import os
     # Split selfiles
     #the user should be able to delete images
@@ -1069,6 +1104,8 @@ def  execute_resolution(_mylog,
                      ' -WLS '
           if len(_Symfile)>1:
              parameters = parameters + ' -sym ' + _Symfile + ' '
+          if len(_ARTLambda)>1:
+             parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1197,6 +1234,7 @@ if __name__ == '__main__':
                 DisplayResolution,          
                 DoReconstruction,
                 ReconstructionMethod,
+                ARTLambda,
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
                 DoComputeResolution,
