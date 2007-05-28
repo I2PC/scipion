@@ -128,7 +128,7 @@ void XmippCTF::Usage()
     << "  [sampling_rate=<Tm=1>]            : Angstroms/pixel\n"
     << "  [voltage=<kV=100>]                : Accelerating voltage (kV)\n"
     << "  [spherical_aberration=<Cs=0>]     : Milimiters. Ex: 5.6\n"
-    << "  [chromatic_aberration=<Ca=0>]     : Milimiters. Ex: 4\n"
+    << "  [chromatic_aberration=<Ca=0>]     : Milimiters. Ex: 2\n"
     << "  [energy_loss=<espr=0>]            : eV. Ex: 1\n"
     << "  [lens_stability=<ispr=0>]         : ppm. Ex: 1\n"
     << "  [convergence_cone=<alpha=0>]      : mrad. Ex: 0.5\n"
@@ -373,7 +373,7 @@ bool XmippCTF::physical_meaning()
             espr >= 0    && espr <= 20      &&
             ispr >= 0    && ispr <= 20      &&
             Cs >= 0      && Cs <= 20        &&
-            Ca >= 0      && Ca <= 20        &&
+            Ca >= 0      && Ca <= 3         &&
             alpha >= 0   && alpha <= 5      &&
             DeltaF >= 0  && DeltaF <= 1000  &&
             DeltaR >= 0  && DeltaR <= 100   &&
@@ -389,11 +389,11 @@ bool XmippCTF::physical_meaning()
             << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << endl
             << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << endl
             << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << endl
-            << "Ca>=0      && Ca<=20        " << (Ca >= 0      && Ca <= 20)       << endl
+            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << endl
             << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << endl
             << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << endl
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << endl
-            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)        << endl
+            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << endl
             << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << endl
             << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << endl
             ;
@@ -490,7 +490,7 @@ void XmippCTF::force_physical_meaning()
         if (Cs < 0)        Cs = 0;
         if (Cs > 20)       Cs = 20;
         if (Ca < 0)        Ca = 0;
-        if (Ca > 20)       Ca = 20;
+        if (Ca > 3)        Ca = 3;
         if (alpha < 0)     alpha = 0;
         if (alpha > 5)     alpha = 5;
         if (DeltaF < 0)    DeltaF = 0;
